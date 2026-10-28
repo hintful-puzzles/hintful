@@ -58,7 +58,27 @@ describe("the falsifier's six forms, each without an escape", () => {
     ];
     expect(pronoun(NOTE, notes)).toBe("it");
     expect(pronoun(NOTE, [...notes, { x: 3, y: 2, n: 1 }])).toBe("them");
-    expect(mark.this("ring", NOTE, notes, "cell").text).toBe("this cell");
+  });
+
+  it("a deictic never names a cell by a mark drawn inside it", () => {
+    // Pressed, "this cell" would show the struck 4 and not the cell
+    // (`point-a-cell-reference-at-its-cell`).
+    const four = [{ x: 2, y: 2, n: 4 }];
+    expect(() => mark.this("strike", NOTE, four, "cell")).toThrow(/drawn inside/);
+    expect(() => mark.the("strike", NOTE, four, "note")).toThrow(/drawn inside/);
+    expect(mark.as("strike", NOTE, four, "the 4").text).toBe("the 4");
+  });
+
+  it("a remark redraws a reference in another role, on the elements it names", () => {
+    const at = { x: 1, y: 2 };
+    const words = phrase`puts 4 in ${mark.this("ring", CELL, [at], "cell")}`;
+    const outlined = words.remarked((r) => (r.role === "ring" ? "outline" : null));
+    expect(outlined.text).toBe("puts 4 in this cell");
+    expect(keysOf(outlined.refs)).toEqual(["outline|cell|1,2"]);
+    // Words that say the old role's word would name a mark the board no
+    // longer draws.
+    const ringed = mark.the("ring", CELL, [at], "cell");
+    expect(() => ringed.remarked(() => "outline")).toThrow(/says "ringed"/);
   });
 
   it("parenthetical references name the role in brackets", () => {
@@ -153,14 +173,15 @@ describe("narrow", () => {
     notes,
     (ms) => `we must cross out ${ms.map((m) => m.n).join(" and ")}`,
   );
-  const sentence = phrase`${mark.this("ring", NOTE, notes, "cell").capitalized()} loses them, so ${conclusion}.`;
+  const sentence = phrase`${mark.this("ring", CELL, [{ x: 0, y: 0 }], "cell").capitalized()} loses them, so ${conclusion}.`;
 
   it("re-renders the words a reference builds from its elements", () => {
     const narrowed = sentence.narrow((_r, _k, key) => key !== "0,0:2");
     expect(sentence.text).toBe("This cell loses them, so we must cross out 2 and 4.");
     expect(narrowed.text).toBe("This cell loses them, so we must cross out 4.");
-    // Naming a note names the cell it is drawn in.
     expect(keysOf(narrowed.refs)).toEqual(["ring|cell|0,0", "ring|note|0,0:4"]);
+    // A mark on a note is drawn on the cell it sits in (`MarkKind.within`).
+    expect(keysOf(conclusion.refs)).toContain("ring|cell|0,0");
   });
 
   it("keeps an emptied reference's words and drops its mark", () => {

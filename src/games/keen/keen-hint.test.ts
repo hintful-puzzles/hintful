@@ -16,7 +16,12 @@ import {
   describeHintKindPins,
   describeHintPins,
 } from "../../engine/testing/hint-positions.ts";
-import { expectRing, markSides, ringsOf } from "../../engine/testing/mark-shape.ts";
+import {
+  expectContour,
+  expectRing,
+  markSides,
+  ringsOf,
+} from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -478,13 +483,18 @@ describe("keen hint render", () => {
       pinnedMarked("cageRuledOut"),
       { defaultBackground: DEFAULT_BACKGROUND },
     );
-    // "This cage" is hatched, one hatch per cell of it, and nothing in it is
-    // outlined: the cage is the region, not a particular cell.
-    const cage = (hint?.highlights as { hatch?: unknown[] }).hatch ?? [];
+    // "This cage" is hatched, one hatch per cell of it, and "this cell", the
+    // one the step strikes in, is outlined: one contour of four sides, so its
+    // reference points at the cell and not at the struck note.
+    type Cells = readonly { x: number; y: number }[];
+    const hl = hint?.highlights as { hatch?: Cells; area: Cells; targets: Cells };
+    const cage = hl.hatch ?? [];
     expect(cage.length).toBeGreaterThan(0);
     const hatches = opsOfKind(recording.ops, "hatch");
     expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(cage.length);
-    expect(markSides(recording.ops, COL_HINT_CELL)).toEqual([]);
+    const at = (cs: Cells) => cs.map((c) => `${c.x},${c.y}`);
+    expect(at(hl.area)).toEqual(at(hl.targets));
+    expectContour(recording.ops, COL_HINT_CELL, 1);
     // The struck candidate keeps its COL_PENCIL digit, crossed through in COL_PENCIL.
     expect(recording.ops.some((o) => o.op === "line" && o.color === COL_PENCIL)).toBe(
       true,
@@ -492,8 +502,8 @@ describe("keen hint render", () => {
     expect(recording.ops.some((o) => o.op === "text" && o.color === COL_PENCIL)).toBe(
       true,
     );
-    // A strike step rings nothing: its struck notes mark the cell, which a
-    // ring could not go round clear of its notes (`make-rings-round`, D6).
+    // A strike step rings nothing: a ring marks what a step decides, and this
+    // one decides the struck note (`point-a-cell-reference-at-its-cell`, D1).
     expect(ringsOf(recording.ops)).toEqual([]);
     expect(recording.ops).toMatchSnapshot();
   });

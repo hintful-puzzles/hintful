@@ -257,11 +257,13 @@ describe("salad hint — journeys and highlights", () => {
           far++;
         } else {
           // The near arm outlines the squares it walks across, known empty; the
-          // square it decides is outlined too only when it is the whole premise,
-          // the one the clue sees straight away ("the outlined square nearest
-          // it").
+          // square it decides is outlined too when it is the whole premise, the
+          // one the clue sees straight away ("the outlined square nearest it"),
+          // or when the step strikes notes in it, since a ring marks only what
+          // a step decides.
           const whole = /square nearest it/.test(step.explanation);
-          for (const t of hl.targets) expect(inArea(t)).toBe(whole);
+          const strikes = (step.move as { type: string }).type === "pencilStrike";
+          for (const t of hl.targets) expect(inArea(t)).toBe(whole || strikes);
           near++;
         }
       }

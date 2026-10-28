@@ -53,9 +53,16 @@ const bitsOf = (notes: readonly Note[]): number => notes.reduce((b, k) => b | k.
 /** The cells the step decides, as "this cell" / "these cells". */
 const thisCell = (m: Marked): Narration => mark.this("ring", CELL, m.targets, "cell");
 
-/** The cells a step strikes notes in, named by their strikes: a ring round
- * the cell would cross the notes the step leaves standing. */
-const struckCell = (m: Marked): Narration => mark.this("strike", NOTE, m.notes, "cell");
+/** The cells a step strikes notes in, striped: the step decides the notes,
+ * which their strikes mark, and a cell on the sightline lies inside its
+ * outline, where an outline of its own would not show. */
+const struckCell = (m: Marked): Narration =>
+  mark.this(
+    "stripes",
+    CELL,
+    [...new Map(m.notes.map((k) => [CELL.key(k), { x: k.x, y: k.y }])).values()],
+    "cell",
+  );
 
 /** The struck pencil marks, "the struck ghost and vampire", in words that
  * follow them when a step shrinks. Several cells' notes of one monster are

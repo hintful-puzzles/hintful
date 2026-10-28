@@ -501,8 +501,9 @@ describe("mathrax hint render", () => {
     // board the clue does not constrain (`hint-mark.ts`'s `outlineSides`).
     expect(markSides(recording.ops, COL_HINT_CELL)).toHaveLength(8);
     // The struck candidate keeps its COL_PENCIL digit, crossed through in the
-    // same color, and that strike is the step's only mark on its cell: a strike
-    // step rings nothing (`make-rings-round`, D6).
+    // same color. A strike step rings nothing: a ring marks what a step
+    // decides, and this one decides the struck note
+    // (`point-a-cell-reference-at-its-cell`, D1).
     expect(recording.ops.some((o) => o.op === "line" && o.color === COL_PENCIL)).toBe(
       true,
     );
@@ -520,7 +521,7 @@ describe("mathrax hint render", () => {
     // A 2x2 block's contour is its eight outer sides — four per-cell rings would
     // be sixteen, so the count still tells the two apart.
     expect(markSides(recording.ops, COL_HINT_CELL)).toHaveLength(8);
-    // It strikes the parity it rules out, so it rings nothing (D6).
+    // It strikes the parity it rules out, so it rings nothing.
     expect((hint?.highlights as AnyStep)?.marks.length).toBeGreaterThan(0);
     expect(ringsOf(recording.ops)).toEqual([]);
     expect(recording.ops).toMatchSnapshot();

@@ -479,17 +479,20 @@ describe("hintKeepTrack", () => {
 
 describe("highlights", () => {
   it("arrows point at a neighbor cell; a collapse points at tally sets", () => {
+    // "This cell" is striped: the cell the ringed letter sits in, and no other.
+    const cellOfSlot = (marks: ReturnType<typeof stepMarks>) =>
+      marks.of("ring", SLOT).map((s) => ({ x: s.x, y: s.y }));
     const arrow = stepMarks(pinned("arrowKnown").step);
     expect(arrow.of("outline", CELL).length).toBeGreaterThan(0);
     expect(arrow.of("outline", TALLY_SET).length).toBe(0);
-    expect(arrow.of("stripes", CELL).length).toBe(0);
+    expect(arrow.of("stripes", CELL)).toEqual(cellOfSlot(arrow));
 
     const collapse = stepMarks(pinned("collapse").step);
     expect(collapse.of("outline", TALLY_SET).length).toBeGreaterThan(0);
     // A collapse points at the surviving sets in the tally, plus at most one
     // grid cell — the excluded competitor's blocker.
     expect(collapse.of("outline", CELL).length).toBeLessThanOrEqual(1);
-    expect(collapse.of("stripes", CELL).length).toBe(0);
+    expect(collapse.of("stripes", CELL)).toEqual(cellOfSlot(collapse));
   });
 
   it("a hidden single spotlights its set's one candidate cell (the target)", () => {

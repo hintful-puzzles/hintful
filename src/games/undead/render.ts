@@ -931,6 +931,7 @@ export function redraw(
           COL_FLASH,
           COL_FLASH_LEAD,
         );
+        ds.hint.drawHatch(dr, xy, cell, ds.tileSize);
         dr.drawUpdate(cell);
         if (xi < 0) {
           drawMirror(dr, ds, x, y, c);

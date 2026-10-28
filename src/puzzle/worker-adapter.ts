@@ -38,10 +38,9 @@ import type {
 import { Drawing } from "./drawing.ts";
 import type { HintReferenceMarks, PuzzleEngineSurface } from "./engine-surface.ts";
 import {
-  inkCoverage,
-  markAlpha,
   markBox,
   type ReferenceMarks,
+  referenceAlpha,
   withoutSpecks,
 } from "./mark-flash.ts";
 
@@ -155,12 +154,11 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
     this.engine.forceRedraw(drawing);
     const { width, height } = drawn.shown;
     const refs: ReferenceMarks[] = drawn.hidden.map((hidden, i) => {
-      const alpha = markAlpha(drawn.shown.data, hidden);
-      const ink = inkCoverage(
+      const alpha = referenceAlpha(
+        { shown: drawn.shown.data, hidden },
         { shown: white.shown.data, hidden: white.hidden[i] },
         { shown: black.shown.data, hidden: black.hidden[i] },
       );
-      for (let p = 0; p < alpha.length; p++) if (ink[p] > 0) alpha[p] = ink[p];
       const marks = withoutSpecks(alpha, width);
       return { alpha: marks, box: markBox(marks, width) };
     });

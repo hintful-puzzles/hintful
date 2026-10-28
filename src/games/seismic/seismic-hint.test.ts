@@ -366,7 +366,13 @@ describe.each(
           case "starve":
           case "fold": {
             const area = (hl.hatch ?? []).map((c) => cellIndex(state, c));
-            expect(hl.area, where).toEqual([]);
+            // The cells outlined are the ones a strike's premise names ("within
+            // 3 cells of this cell"); a note-less cell is ringed instead.
+            const indices = (ps: readonly { x: number; y: number }[]) =>
+              ps.map((c) => cellIndex(state, c)).sort((a, b) => a - b);
+            expect(indices(hl.area), where).toEqual(
+              m.type === "pencilStrike" ? indices(hl.targets) : [],
+            );
             expect(area.length, `${where}: a whole area`).toBe(state.dsf.size(area[0]));
             // The area's notes are the premise, so they are on the board.
             for (const j of area)
@@ -625,21 +631,24 @@ describe("the sentences at their extremes", () => {
 // --- frames -----------------------------------------------------------------
 
 describe("the frames a hint draws", () => {
-  it("rings no struck cell, hatches the starved area, and strikes each note through", () => {
+  it("outlines each struck cell, hatches the starved area, and strikes each note through", () => {
     const found = renderPinnedHint(seismicGame, pinned("starvedArea"));
     const { step } = found;
     const hl = step.highlights as SeismicHint;
     const ops = found.recording.ops;
 
-    // A strike step rings nothing: its struck notes mark each cell, which a
-    // ring could not go round clear of its notes (`make-rings-round`, D6).
+    // A strike step rings nothing: a ring marks what a step decides, and this
+    // one decides the struck notes (`point-a-cell-reference-at-its-cell`, D1).
     expect(ringsOf(ops)).toEqual([]);
-    // The area the sentence names is hatched, cell by cell, and outlined nowhere.
+    // The area the sentence names is hatched, cell by cell; the cells it
+    // strikes in, which it names, are outlined, and nothing else is.
     const area = hl.hatch ?? [];
     expect(area.length).toBeGreaterThan(1);
     const hatched = opsOfKind(ops, "hatch");
     expect(new Set(hatched.map((h) => `${h.x},${h.y}`)).size).toBe(area.length);
-    expect(ops.filter((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toEqual([]);
+    expect(hl.area).toEqual(expect.arrayContaining(hl.targets));
+    expect(hl.area).toHaveLength(hl.targets.length);
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
     // Each struck note is crossed out with an X: two strokes (`drawStrike`).
     expect(
       ops.filter((o) => o.op === "line" && o.color === COL_NUM_PENCIL),

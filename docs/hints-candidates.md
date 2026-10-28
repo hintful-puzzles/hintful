@@ -239,6 +239,11 @@ premise says how its conclusion refers to the struck notes".
   misstate them. A premise that already named the values is still followed
   by them ("puts 2 in this cell, so the 2 must go"): "it" is no thing on the
   board to press.
+- Name the cell with `thisCell`, as a placement does. Where the step strikes
+  notes in it, the walk draws that reference as an outline on the cell, so
+  pressing "this cell" points at the cell and "the 2" at its X
+  ([`hints-marks.md`](./hints-marks.md) § "Outline the evidence"). Never
+  name the cell by its notes: `mark.this` over a note throws.
 
 ## The row/column preset
 
@@ -1073,7 +1078,9 @@ follows. Exemplar: [`map/hint.ts`](../src/games/map/hint.ts).
   The ends take no noun of their own (owner, 2026-10-28, who declined "an
   end", "a partner" and "a pincer"): the role word names them. The candidate
   games' wing is the same sentence (`wingPremise`), and strikes one cell a
-  firing so that "this cell" is true whatever the game's strike axis. A
+  firing so that "this cell" is true whatever the game's strike axis. Its
+  ends are "another outlined cell", because the cell it strikes in is outlined
+  too ([`hints-marks.md`](./hints-marks.md) § "Outline the evidence"). A
   legend that teaches a reference by its words ("the middle cell") is what
   lets the marks guard accept it without a role word.
 - **Name an element by its mark, never by an id the board may not show**:

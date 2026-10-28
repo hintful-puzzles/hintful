@@ -78,11 +78,15 @@ export const say = {
     const letter = mark.as("ring", SLOT, [m.slot], L);
     const known = set.type === "known";
     const act = known ? phrase`mark ${letter} present` : phrase`clear ${letter}`;
-    // The cell the step fills: a hidden single's one home when it is drawn,
-    // else the cell the ringed letter sits in.
-    const here = m.spotlight.length
-      ? mark.this("stripes", CELL, m.spotlight, "cell")
-      : mark.this("ring", SLOT, [m.slot], "cell");
+    // The cell the step fills, striped: a hidden single's one home when it is
+    // drawn, else the cell the ringed letter sits in. Not the letter's ring,
+    // which "A" already names and which is no mark of the cell's.
+    const here = mark.this(
+      "stripes",
+      CELL,
+      m.spotlight.length ? m.spotlight : [{ x: m.slot.x, y: m.slot.y }],
+      "cell",
+    );
     // A continuation leg rests on the lead's reasoning, and names its own
     // referent so it never leans on a bare pronoun.
     const again = (basis: Narration): Sentence =>

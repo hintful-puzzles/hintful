@@ -484,8 +484,8 @@ describe("unequal hint render", () => {
     expect(recording.ops.some((o) => o.op === "text" && o.color === COL_PENCIL)).toBe(
       true,
     );
-    // A strike step rings nothing: its struck note marks the cell, which a
-    // ring could not go round clear of its notes (`make-rings-round`, D6).
+    // A strike step rings nothing: a ring marks what a step decides, and this
+    // one decides the struck note (`point-a-cell-reference-at-its-cell`, D1).
     expect(ringsOf(recording.ops)).toEqual([]);
     // Clue glyphs (the > polygons) are still drawn.
     expect(recording.ops.some((o) => o.op === "polygon")).toBe(true);

@@ -366,19 +366,20 @@ function recordedReads(reason: unknown): readonly Point[] {
   return (reason as { reads?: readonly Point[] }).reads ?? [];
 }
 
-/** `premise` with each ring on cells the step strikes notes in drawn as those
- * strikes instead: a grid of notes leaves no room for a round ring round the
- * cell (`make-rings-round`, D6), and the strikes already say where the step
- * acts. */
-function struckCellsByStrikes(premise: Narration, struck: readonly Mark[]): Narration {
-  return premise.remarked((ref) => {
-    if (ref.role !== "ring" || ref.kind.name !== CELL.name) return null;
-    const cells = new Set(ref.elements.map((e) => ref.kind.key(e)));
-    const notes = struck.filter((m) => cells.has(CELL.key(m)));
-    const covered = new Set(notes.map((m) => CELL.key(m)));
-    if (covered.size !== cells.size) return null;
-    return { role: "strike", kind: NOTE, elements: notes };
-  });
+/** `premise` with each ring on cells the step strikes notes in drawn as an
+ * outline on those cells instead. The step decides the notes, which its
+ * strikes mark, and reasons from what can go in the cell; a ring means what a
+ * step decides (`point-a-cell-reference-at-its-cell`, D1). The cell keeps a
+ * mark of its own, so its reference points at the cell and not at a note. */
+function struckCellsOutlined(premise: Narration, struck: readonly Mark[]): Narration {
+  const cells = new Set(struck.map((m) => CELL.key(m)));
+  return premise.remarked((ref) =>
+    ref.role === "ring" &&
+    ref.kind.name === CELL.name &&
+    ref.elements.every((e) => cells.has(ref.kind.key(e)))
+      ? "outline"
+      : null,
+  );
 }
 
 /** The cells `marks` act on, each once, in the order they first appear. */
@@ -1220,7 +1221,7 @@ class CandidateWalk<
     const { what, after } = this.plan.conclude.strike({ where, struck: noun });
     const struckNotes = mark.as("strike", NOTE, marks, (live) => what(valuesOf(live)));
     const said = so({
-      look: struckCellsByStrikes(premise, marks),
+      look: struckCellsOutlined(premise, marks),
       move: phrase`${struckNotes} ${after}`,
     });
     return {

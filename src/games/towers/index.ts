@@ -626,9 +626,9 @@ export const towersGame: Game<
     roles: {
       ring: "the cell the step fills in with a height.",
       strike:
-        "the heights the step crosses out of the pencil marks, crossed through in their own color, and so the cell they are in.",
+        "the heights the step crosses out of the pencil marks, crossed through in their own color.",
       outline:
-        "what the step reasons from: the clue it counts, in its slot beside the grid, the tower just placed, the cells of a set, or “the middle cell” a step weighs and the cells it reads.",
+        "what the step reasons from: “this cell”, whose heights it crosses out, the clue it counts, in its slot beside the grid, the tower just placed, the cells of a set, or “the middle cell” a step weighs and the cells it reads.",
       stripes:
         "the line the sentence names: the row or column a clue sees along, through the clue slots at both its ends. Or the several rows or columns it names together, such as “these 2 columns”, where one height fits only the outlined cells.",
     },

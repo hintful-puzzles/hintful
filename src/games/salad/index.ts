@@ -375,9 +375,9 @@ export const saladGame: Game<
   hintMarks: {
     roles: {
       ring: "the square the step fills in. What to enter there is previewed in it in the hint color: a letter or number, an X for “empty”, or a circle for “holds a letter” (or number).",
-      strike: "the pencil marks the step crosses out, and so the squares they are in.",
+      strike: "the pencil marks the step crosses out.",
       outline:
-        "what the step reasons from: the squares a clue looks across before its letter, the run of squares its letter must lie in, squares that between them already account for the letters being crossed out or for all of a line’s empty squares, the letter just placed, or “the middle square” a step weighs and the squares it reads. The clue a sentence names (“this column’s top clue”) is lit in the hint color.",
+        "what the step reasons from: “this square”, whose pencil marks it crosses out, the squares a clue looks across before its letter, the run of squares its letter must lie in, squares that between them already account for the letters being crossed out or for all of a line’s empty squares, the letter just placed, or “the middle square” a step weighs and the squares it reads. The clue a sentence names (“this column’s top clue”) is lit in the hint color.",
       stripes:
         "the row or column the sentence calls “this row” or “this column”, including the line a named clue looks along. Or the several it names together, such as “these 2 columns”, where one mark fits only the outlined squares.",
     },

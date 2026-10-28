@@ -130,8 +130,8 @@ export class OverlaySidecar {
       this.outline[i] = outlineSides(a.x, a.y, isEvidence);
     }
     for (const t of marks.of("ring", CELL)) this.add(index(t.x, t.y), HINT_TARGET);
-    // A struck note is its own mark: a grid of notes leaves no room for a
-    // ring round its cell.
+    // A struck note is its own mark, never its cell's: a cell the words name
+    // is outlined or striped in its own right.
     if (markBits !== null)
       for (const m of marks.of("strike", NOTE))
         this.struck[index(m.x, m.y)] |= markBits(m);

@@ -469,8 +469,8 @@ describe("rome hint render", () => {
     const hatches = opsOfKind(recording.ops, "hatch");
     expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(area.length);
     expect(markSides(recording.ops, COL_HINT_CELL)).toHaveLength(4);
-    // A strike step rings nothing: its struck marks show the square
-    // (`make-rings-round`, D6).
+    // A strike step rings nothing: a ring marks what a step decides, and this
+    // one decides the struck marks (`point-a-cell-reference-at-its-cell`, D1).
     expect(ringsOf(recording.ops)).toEqual([]);
     expect(recording.ops).toMatchSnapshot();
   });
@@ -485,10 +485,13 @@ describe("rome hint render", () => {
     const { recording, hint } = renderPinnedHint(romeGame, pinned("opensOnLoop"), {
       defaultBackground: DEFAULT_BACKGROUND,
     });
-    // The outline is the squares whose arrows make the walk; the struck square
-    // is not one of them.
-    const area = (hint?.highlights as { area: unknown[] }).area;
-    expect(area.length).toBeGreaterThanOrEqual(1);
+    // The outline is the squares whose arrows make the walk, and the struck
+    // square they lead back to, which "this square" names.
+    type Cells = readonly { x: number; y: number }[];
+    const { area, targets } = hint?.highlights as { area: Cells; targets: Cells };
+    const at = (cs: Cells) => cs.map((c) => `${c.x},${c.y}`);
+    expect(area.length).toBeGreaterThanOrEqual(2);
+    expect(at(area)).toEqual(expect.arrayContaining(at(targets)));
     expect(
       recording.ops.filter((o) => o.op === "text" && o.color === COL_HINT_CELL),
     ).toEqual([]);

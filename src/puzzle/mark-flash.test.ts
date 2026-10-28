@@ -10,6 +10,7 @@ import {
   markBox,
   nearestMarked,
   type ReferenceMarks,
+  referenceAlpha,
   tinted,
   withoutSpecks,
 } from "./mark-flash.ts";
@@ -42,6 +43,15 @@ describe("a reference's marks", () => {
   it("are reached at their nearest pixel, not their box's", () => {
     // From below the right column: the box's nearest point, (2, 2), is bare.
     expect(nearestMarked(alpha, 3, 2.5, 5)).toEqual({ x: 1.5, y: 1.5 });
+  });
+
+  it("are reached on a translucent mark, which holds no pixel whole", () => {
+    // Stripes at the hatch's coverage, about 0.3 of a pixel, with a fainter
+    // rim: the leader still finds the bands, and not the rim.
+    const stripes = new Uint8ClampedArray([0, 76, 30, 0, 0, 76]);
+    expect(nearestMarked(stripes, 3, 0, 0)).toEqual({ x: 1.5, y: 0.5 });
+    // The rim at (2, 0) is nearest, and passed over.
+    expect(nearestMarked(stripes, 3, 2.5, 0)).toEqual({ x: 2.5, y: 1.5 });
   });
 
   it("keep a core's rim and drop a speck's run, which has no core", () => {
@@ -89,6 +99,27 @@ describe("a reference's marks", () => {
     expect([...tinted(alpha, [255, 255, 255]).subarray(4, 12)]).toEqual([
       255, 255, 255, 255, 255, 255, 255, 60,
     ]);
+  });
+
+  it("are not a mark that is drawn only without them", () => {
+    // Three pixels: the reference's own side, in the ink; the side a joined
+    // neighbor draws once this reference no longer joins it, in the ink too;
+    // and a clue that shows once the reference's mark, in a game's own
+    // color, no longer covers it.
+    const pixels = (...p: number[][]) => new Uint8ClampedArray(p.flat());
+    const clue = [200, 30, 30, 255];
+    const struck = [90, 60, 160, 255];
+    const frames = (ink: number[]) => ({
+      shown: pixels(ink, board, struck),
+      hidden: pixels(board, ink, clue),
+    });
+    const a = referenceAlpha(
+      frames([40, 132, 32, 255]),
+      frames([255, 255, 255, 255]),
+      frames([0, 0, 0, 255]),
+    );
+    expect([...a]).toEqual([255, 0, markAlpha(pixels(struck), pixels(clue))[0]]);
+    expect(a[2]).toBeGreaterThan(0);
   });
 });
 

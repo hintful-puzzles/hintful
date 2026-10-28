@@ -145,8 +145,8 @@ export const say = {
 
   /** A candidate that would join a chain of arrows, `path`, leading back to its
    * own square. `n` is the struck direction, so the chain starts at the
-   * neighbor it points at. `at` is the square, named by its own mark, so only
-   * the squares whose arrows make the walk are outlined. */
+   * neighbor it points at. `at` is the square, named by its own mark and not
+   * among the arrows: a strike outlines it too, as "this square". */
   loop: (path: readonly Point[], n: number, at: Point): Narration => {
     const arrows = path.filter((p) => p.x !== at.x || p.y !== at.y);
     return arrows.length === 1

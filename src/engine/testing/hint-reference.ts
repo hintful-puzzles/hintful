@@ -20,6 +20,10 @@
  *    that names its thing by a relation to another ("its partner", "the same
  *    row", "the edge between them", "one end").
  *
+ * A reference built on a role's word fails beside another reference in that
+ * role and kind, with the same noun, that marks other elements: the word no
+ * longer singles it out.
+ *
  * What this cannot see: a clause whose verb is not in {@link VERB} reads as a
  * noun phrase, and a value or a relation is taken on its word, not checked to
  * single the thing out. The verb list is the census's (2026-10-19,
@@ -30,7 +34,12 @@
  */
 
 import type { HintMarkLegend } from "../game.ts";
-import { type MarkRef, type Narration, ROLE_ADJECTIVES } from "../hint-words.ts";
+import {
+  type MarkRef,
+  type Narration,
+  ROLE_ADJECTIVES,
+  roleAdjective,
+} from "../hint-words.ts";
 
 /** The roles' words, read from the engine's roles. */
 const ROLE_WORD = new RegExp(`\\b(?:${ROLE_ADJECTIVES.join("|")})\\b`, "i");
@@ -148,6 +157,36 @@ export function referenceDefects(words: Narration, legend: HintMarkLegend): stri
     deictic.set(key, roles);
   }
   const out: string[] = [];
+  // A role's word on a noun singles its mark out only while no other mark in
+  // that role is said with the same noun: "an outlined cell in line with this
+  // cell" does not say which outlined cell. Another noun ("the outlined tent"
+  // beside "the outlined tree"), another word ("the nearer ringed square",
+  // "another outlined cell") or a set the other lies in tells them apart.
+  const keys = (r: MarkRef) => new Set(r.elements.map((e) => r.kind.key(e)));
+  const plainNoun = (i: number): string | null => {
+    const m = new RegExp(
+      `^(?:a|an|the)\\s+${roleAdjective(refs[i].role)}\\s+(\\w+)$`,
+      "i",
+    ).exec(said.get(i) ?? "");
+    return m ? m[1].toLowerCase().replace(/s$/, "") : null;
+  };
+  for (const [i, ref] of refs.entries()) {
+    const noun = plainNoun(i);
+    if (noun === null) continue;
+    const mine = keys(ref);
+    const rival = refs.findIndex(
+      (r, j) =>
+        j !== i &&
+        r.role === ref.role &&
+        r.kind.name === ref.kind.name &&
+        [...keys(r)].every((k) => !mine.has(k)) &&
+        (plainNoun(j) ?? deicticNoun(said.get(j) ?? "")) === noun,
+    );
+    if (rival >= 0)
+      out.push(
+        `its ${ref.role} reference "${said.get(i)}" says "${roleAdjective(ref.role)} ${noun}" beside another ${ref.role} ${noun}, "${said.get(rival)}", so the word does not say which`,
+      );
+  }
   for (const [i, ref] of refs.entries()) {
     const text = said.get(i) ?? "";
     const taught = (legend.roles[ref.role] ?? "").toLowerCase();

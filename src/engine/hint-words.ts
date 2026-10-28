@@ -109,6 +109,9 @@ export const ROLE_ADJECTIVES: readonly string[] = Object.values(MARK_ROLES).map(
   (r) => r.adjective,
 );
 
+/** `role`'s adjective, as a sentence says it: "outlined". */
+export const roleAdjective = (role: MarkRole): string => MARK_ROLES[role].adjective;
+
 /** A literal that says what only a reference may. "There" names a place except
  * as the existential ("there is one way left"), which points at nothing; "there
  * would" alone is still a place ("a bulb there would…"). */
@@ -128,8 +131,8 @@ export interface MarkKind<E> {
   /** The unit a noun about these elements counts. Default: the element. */
   unit?(e: E): string;
   /** The element of another kind this one is drawn inside, as that kind's name
-   * and key. A mark on this element marks that one with it, and naming this
-   * one names that one: a struck note's ring is its cell's. */
+   * and key: a mark on this element is drawn on that one too. Such an element
+   * is named by its value, never by a noun for that one ({@link mark.this}). */
   within?(e: E): { kind: string; key: string };
 }
 
@@ -318,18 +321,18 @@ export class Narration {
     );
   }
 
-  /** The same words with other marks: each reference `to` returns a mark for
-   * is drawn as that mark instead, and keeps the words it was said in. A cell
-   * a step strikes notes in is marked by its strikes ({@link MarkRole}). */
-  remarked(to: (ref: MarkRef) => MarkRef | null): this {
+  /** The same words with other marks: each reference `to` returns a role for
+   * is drawn in that role instead, on the same elements. Only the role: the
+   * words name those elements, and on others they would point the player at
+   * something they do not name (`point-a-cell-reference-at-its-cell`, D3). */
+  remarked(to: (ref: MarkRef) => MarkRole | null): this {
     return this.remade(
       this.parts.map((p) => {
         if (!isReference(p)) return p;
-        const next = to(p);
-        if (next === null) return p;
-        const said = p.words(p.elements);
-        checkAdjective(next.role, said);
-        return { ...next, words: () => said } as Reference<unknown>;
+        const role = to(p);
+        if (role === null) return p;
+        checkAdjective(role, p.words(p.elements));
+        return { ...p, role };
       }),
     );
   }
@@ -608,6 +611,17 @@ function nounFor(noun: Noun, plural: boolean): string {
  * outlined tile", "each ringed cell"). */
 const SINGULAR_DETERMINERS = new Set(["either", "each", "every", "neither"]);
 
+/** A noun with a determiner names a thing the board shows whole, and pressing
+ * it shows its marks: an element drawn inside another (a note in its cell) is
+ * named by its value, or its words would name the cell and point at the note
+ * (`point-a-cell-reference-at-its-cell`, D3). */
+function checkWhole<E>(kind: MarkKind<E>, noun: Noun): void {
+  if (kind.within)
+    throw new Error(
+      `hint words: "${nounFor(noun, false)}" names a ${kind.name}, which is drawn inside another element; name it with mark.as by its value`,
+    );
+}
+
 /** The references a sentence makes to its marks. */
 export const mark = {
   /** Deixis: "this cell", "these cells". */
@@ -617,6 +631,7 @@ export const mark = {
     elements: readonly E[],
     noun: Noun,
   ): Narration {
+    checkWhole(kind, noun);
     return Narration.ref({
       role,
       kind,
@@ -637,6 +652,7 @@ export const mark = {
     noun: Noun,
     det = "the",
   ): Narration {
+    checkWhole(kind, noun);
     const adj = MARK_ROLES[role].adjective;
     return Narration.ref({
       role,

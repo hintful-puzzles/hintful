@@ -6395,6 +6395,16 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 305,
   },
   {
+    "color": 16,
+    "h": 63,
+    "op": "hatch",
+    "period": 21,
+    "rgb": "rgb(194, 85, 22)",
+    "w": 63,
+    "x": 369,
+    "y": 305,
+  },
+  {
     "h": 17,
     "op": "clip",
     "w": 29,

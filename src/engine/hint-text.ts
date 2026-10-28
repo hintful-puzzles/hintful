@@ -378,8 +378,8 @@ export function confinedPremise(
 
 /**
  * A wing: whichever value the outlined middle cell takes, one of the other
- * outlined cells that shares a line with the struck cell, or where `self` the
- * middle itself, must have `value`. Every way is read off the notes the walk
+ * outlined cells that shares a line with the outlined struck cell, or where
+ * `self` the middle itself, must have `value`. Every way is read off the notes the walk
  * has written on the middle and the ends, so the words name the cells and the
  * value and leave the ways to the notes, as Map's weighing does. The ends take
  * no noun of their own (owner, 2026-10-28): they are named by their mark.
@@ -393,7 +393,9 @@ export function wingPremise(
   cell = "cell",
   beside = "in line with",
 ): Narration {
-  const end = mark.as("outline", CELL, wing.ends, `an outlined ${cell}`);
+  // "Another": the struck cell is outlined too, and an end is any outlined
+  // cell but it (`point-a-cell-reference-at-its-cell`, D4).
+  const end = mark.as("outline", CELL, wing.ends, `another outlined ${cell}`);
   const which = wing.self ? phrase`it or ${end}` : end;
   return phrase`Whatever goes in ${mark.as("outline", CELL, [wing.middle], `the middle ${cell}`)}, ${which} ${beside} ${thisCell(at, cell)} must have ${value}`;
 }

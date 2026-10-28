@@ -754,9 +754,9 @@ export const soloGame: Game<
   hintMarks: {
     roles: {
       ring: "the cell the step fills in with a number.",
-      strike: "the pencil marks the step crosses out, and so the cell they are in.",
+      strike: "the pencil marks the step crosses out.",
       outline:
-        "the cells the reason rests on: a number just placed, whose copies are being crossed out around it; the other cells of a block, row or column that between them already account for some numbers; the cells a killer sum is left to; the only cells that several rows or columns leave for one number; or “the middle cell” a step weighs and the cells it reads.",
+        "the cells the reason rests on: “this cell”, whose pencil marks the step crosses out; a number just placed, whose copies are being crossed out around it; the other cells of a block, row or column that between them already account for some numbers; the cells a killer sum is left to; the only cells that several rows or columns leave for one number; or “the middle cell” a step weighs and the cells it reads.",
       stripes:
         'the row, column, block, diagonal or killer cage the sentence names, or the several rows or columns it names together: "in this block", "this killer cage", "these 2 columns".',
     },

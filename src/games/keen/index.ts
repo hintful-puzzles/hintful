@@ -453,9 +453,9 @@ export const keenGame: Game<
   hintMarks: {
     roles: {
       ring: "the cell the step fills in with a number.",
-      strike: "the pencil marks the step crosses out, and so the cell they are in.",
+      strike: "the pencil marks the step crosses out.",
       outline:
-        "what the step reasons from: cells that between them already account for the numbers being crossed out, the number just placed, or “the middle cell” a step weighs and the cells it reads.",
+        "what the step reasons from: “this cell”, whose pencil marks it crosses out, cells that between them already account for the numbers being crossed out, the number just placed, or “the middle cell” a step weighs and the cells it reads.",
       stripes:
         'the cage, row or column the sentence names: "this cage", "this row" or "this column". Or the several rows or columns it names together, such as "these 2 columns", where one number fits only the outlined cells.',
     },

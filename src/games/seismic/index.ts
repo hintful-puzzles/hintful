@@ -313,9 +313,9 @@ export const seismicGame: Game<
   hintMarks: {
     roles: {
       ring: "the cell the step fills in: the number to enter there, or the marks to write.",
-      strike: "the pencil marks the step crosses out, and so the cell they are in.",
+      strike: "the pencil marks the step crosses out.",
       outline:
-        "the number just placed, when a step crosses that number out of the cells it rules out.",
+        "“this cell”, whose pencil marks the step crosses out, and the number just placed, when a step crosses that number out of the cells it rules out.",
       stripes: "the area the step reasons from.",
     },
   },

@@ -5448,7 +5448,7 @@ exports[`unequal: pinned hint positions > says, at each pin 1`] = `
   "regionsFull": "This cell's row and column already hold every other number, so it can only be 2.",
   "set": "The outlined cells already account for 4 and 5 between them, so 4 and 5 must go.",
   "single": "Every other number has been ruled out in this cell, so it can only be 2.",
-  "wing": "Whatever goes in the middle cell, an outlined cell in line with this cell must have 1, so the 1 must go.",
+  "wing": "Whatever goes in the middle cell, another outlined cell in line with this cell must have 1, so the 1 must go.",
 }
 `;
 

@@ -349,9 +349,9 @@ export const abcdGame: Game<
   hintMarks: {
     roles: {
       ring: "the cell the step fills in with a letter.",
-      strike: "the pencil marks the step crosses out, and so the cell they are in.",
+      strike: "the pencil marks the step crosses out.",
       outline:
-        'the particular cells the reason rests on: the letters a row already holds, the cells that can still take a letter, or the letter just placed. The number the sentence reads ("its one A", "needs 2 more Bs") is drawn in the hint color among the clues.',
+        'the particular cells the reason rests on: "this cell", whose pencil marks it crosses out, the letters a row already holds, the cells that can still take a letter, or the letter just placed. The number the sentence reads ("its one A", "needs 2 more Bs") is drawn in the hint color among the clues.',
       stripes: 'the row or column the step reasons from: "this row", "this column".',
     },
   },

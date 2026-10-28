@@ -45,7 +45,7 @@ export function markAlpha(
  * without them. Whatever lies under an ink, a pixel it covers by `a` is `255a`
  * lighter in white than in black, and a pixel drawn alike either way, the
  * marks' or not, cancels out. */
-export function inkCoverage(
+function inkCoverage(
   white: { shown: Uint8ClampedArray; hidden: Uint8ClampedArray },
   black: { shown: Uint8ClampedArray; hidden: Uint8ClampedArray },
 ): Uint8ClampedArray<ArrayBuffer> {
@@ -60,6 +60,35 @@ export function inkCoverage(
     out[p] = d;
   }
   return out;
+}
+
+/** A board drawn with a reference's marks (`shown`) and without them
+ * (`hidden`), as RGBA. */
+export interface FramePair {
+  readonly shown: Uint8ClampedArray;
+  readonly hidden: Uint8ClampedArray;
+}
+
+/** How much each pixel is one reference's marks, from the board drawn as it
+ * is and with the hint inks in white and in black ({@link inkCoverage}). A
+ * pixel the inks cover is the marks' by its coverage, and any other by its
+ * difference ({@link markAlpha}). A pixel the inks cover more without the
+ * reference is no mark of its: another mark is drawn there in its absence, as
+ * the side two outlined cells share is once one of them is not outlined. */
+export function referenceAlpha(
+  drawn: FramePair,
+  white: FramePair,
+  black: FramePair,
+): Uint8ClampedArray<ArrayBuffer> {
+  const alpha = markAlpha(drawn.shown, drawn.hidden);
+  const ink = inkCoverage(white, black);
+  const swapped = ({ shown, hidden }: FramePair) => ({ shown: hidden, hidden: shown });
+  const gained = inkCoverage(swapped(white), swapped(black));
+  for (let p = 0; p < alpha.length; p++) {
+    if (ink[p] > 0) alpha[p] = ink[p];
+    else if (gained[p] > 0) alpha[p] = 0;
+  }
+  return alpha;
 }
 
 /** The marks without the specks a canvas leaves between two frames. Chrome's
@@ -132,17 +161,22 @@ export function markBox(alpha: Uint8ClampedArray, width: number): MarkBox | null
 }
 
 /** The pixel the marks hold most of that lies nearest (`x`, `y`), in canvas
- * pixels; `null` where they hold none. */
+ * pixels; `null` where they hold none. "Most of" is half the marks' strongest
+ * pixel, not half a pixel: stripes are drawn translucent, and hold no pixel
+ * whole. */
 export function nearestMarked(
   alpha: Uint8ClampedArray,
   width: number,
   x: number,
   y: number,
 ): { x: number; y: number } | null {
+  let strongest = 0;
+  for (const a of alpha) if (a > strongest) strongest = a;
+  const most = Math.max(1, Math.ceil(strongest / 2));
   let best: { x: number; y: number } | null = null;
   let bestD = Number.POSITIVE_INFINITY;
   for (let p = 0; p < alpha.length; p++) {
-    if (alpha[p] < 128) continue;
+    if (alpha[p] < most) continue;
     const px = p % width;
     const py = (p - px) / width;
     const d = (px - x) ** 2 + (py - y) ** 2;

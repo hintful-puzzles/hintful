@@ -45,6 +45,26 @@ describe("a reference names a thing and its mark", () => {
     expect(defects(nouns)).toEqual([]);
   });
 
+  it("fails a role's word on a noun another mark in that role is said with", () => {
+    // The wing once its cell was outlined (2026-10-28).
+    const wing = phrase`${mark.as("outline", CELL, [b], "an outlined cell")} in line with ${mark.this("outline", CELL, [a], "cell")}`;
+    expect(defects(wing)).toEqual([
+      'its outline reference "an outlined cell" says "outlined cell" beside another outline cell, "this cell", so the word does not say which',
+    ]);
+    // Another noun or value tells them apart, and so does the same cell said
+    // twice, or the other mark in another role.
+    for (const told of [
+      phrase`${mark.as("outline", CELL, [b], "another outlined cell")} in line with ${mark.this("outline", CELL, [a], "cell")}`,
+      phrase`${mark.the("outline", CELL, [b], "arrow")} points back to ${mark.this("outline", CELL, [a], "square")}`,
+      phrase`${mark.as("outline", CELL, [b], "the outlined 1")} and ${mark.as("outline", CELL, [a], "the outlined 2")}`,
+      phrase`${mark.as("outline", CELL, [b], "the outlined yellow dot")} beside ${mark.as("outline", CELL, [a], "the outlined yellow tile")}`,
+      phrase`${mark.the("ring", CELL, [a, b], "square")}, and ${mark.this("ring", CELL, [a], "square")}`,
+      phrase`${mark.the("outline", CELL, [b], "cell")} and ${mark.this("outline", CELL, [b], "cell")}`,
+      phrase`${mark.the("outline", CELL, [b], "cell")} beside ${mark.this("ring", CELL, [a], "cell")}`,
+    ])
+      expect(defects(told), told.text).toEqual([]);
+  });
+
   it("passes a role's word, a value, a taught phrase, a relation and the move", () => {
     for (const words of [
       mark.the("ring", CELL, [a], "one"),

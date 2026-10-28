@@ -261,8 +261,8 @@ describe("salad hint frames", () => {
     expect(
       recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL),
     ).toBe(true);
-    // A strike step rings nothing: its struck notes show the squares it acts
-    // on (`make-rings-round`, D6).
+    // A strike step rings nothing: a ring marks what a step decides, and this
+    // one decides the struck notes (`point-a-cell-reference-at-its-cell`, D1).
     expect(ringsOf(recording.ops)).toEqual([]);
     expect(recording.ops).toMatchSnapshot();
   });

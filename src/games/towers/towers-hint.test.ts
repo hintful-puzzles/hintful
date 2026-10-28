@@ -578,8 +578,8 @@ describe("towers hint render", () => {
     expect(recording.ops.some((o) => o.op === "text" && o.color === COL_PENCIL)).toBe(
       true,
     );
-    // A strike step rings nothing: its struck candidates mark the cell
-    // (`make-rings-round`, D6).
+    // A strike step rings nothing: a ring marks what a step decides, and this
+    // one decides the struck candidates (`point-a-cell-reference-at-its-cell`, D1).
     expect(ringsOf(recording.ops)).toEqual([]);
     // Clues are still drawn (text).
     expect(recording.ops.some((o) => o.op === "text")).toBe(true);

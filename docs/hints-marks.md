@@ -344,6 +344,18 @@ comes out as one contour and a scattered set as one ring a cell.
   target sits in a different one, the mark is the only thing saying which.
 - **A line or region the sentence names is not evidence**: it is striped
   (§ "Hatch the line the sentence names").
+- **A cell a step strikes notes in is outlined where the sentence names it.**
+  The step decides the notes, which their strikes mark, and reasons from what
+  can go in the cell. A ring keeps its one meaning, what a step decides (owner,
+  2026-10-28). Where an outlined region already holds the cell (Undead's
+  sightline), its outline would not show, so it is striped. A reference names
+  the thing it marks: "this cell" over the notes inside it would point the
+  player at a note, so `mark.this` and `mark.the` refuse an element drawn
+  inside another, and `Narration.remarked` changes only a reference's role.
+- **A role's word on a bare noun singles one mark out.** "An outlined cell"
+  beside an outlined "this cell" does not say which. Tell them apart by
+  another noun, value or word ("another outlined cell"), as
+  `referenceDefects` requires.
 
 ### Guarding the mark's shape
 

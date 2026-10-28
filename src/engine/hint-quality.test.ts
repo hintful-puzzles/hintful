@@ -109,7 +109,7 @@ const PEARL_CARRIES_ON =
 
 /** Why a wing's step runs long. */
 const WING_NAMES_ITS_CELLS =
-  "The owner's 2026-10-28 wording: \"whatever goes in the middle cell, an " +
+  "The owner's 2026-10-28 wording: \"whatever goes in the middle cell, another " +
   'outlined cell in line with this cell must have 2", which names the cells ' +
   "by their mark rather than a noun of their own, and takes the room where " +
   "the middle could hold the value too, Solo's sees a block, or Map's " +
