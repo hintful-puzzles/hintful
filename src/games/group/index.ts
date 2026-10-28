@@ -799,7 +799,7 @@ export const groupGame: Game<
       ring: "the cell the step fills in with a letter.",
       strike: "the pencil marks the step crosses out, and so the cell they are in.",
       outline:
-        "what the step reasons from: the three products an associativity step reads, the product that gives away (or rules out) the identity, a group of cells that between them already account for the letters being crossed out, the letter just placed, or a wing's “the middle cell” and “an end”.",
+        "what the step reasons from: the three products an associativity step reads, the product that gives away (or rules out) the identity, a group of cells that between them already account for the letters being crossed out, the letter just placed, or “the middle cell” a step weighs and the cells it reads.",
       stripes:
         'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one letter fits only the outlined cells.',
     },

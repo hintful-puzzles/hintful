@@ -547,7 +547,7 @@ export const mapGame: Game<
     roles: {
       ring: 'the region the step decides, the one it calls "this region": a circle in the hint color inside it, where its number goes, round the number when one is shown. A region being dotted keeps its number.',
       outline:
-        'a region the step reasons from: a thin dashed line in a second color, set in from its border. "The outlined pair" are the two regions drawn this way, and so are "the middle region" and "an outlined end" of a weighing.',
+        'a region the step reasons from: a thin dashed line in a second color, set in from its border. "The outlined pair" are the two regions drawn this way, and so are "the middle region" of a weighing and the regions it reads.',
     },
   },
   hintKeepTrack,

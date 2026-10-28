@@ -107,12 +107,36 @@ const PEARL_CARRIES_ON =
   "draws the line on through a white pearl it runs into, and says so in a " +
   "second sentence after its own deduction, whichever deduction that is.";
 
+/** Why a wing's step runs long. */
+const WING_NAMES_ITS_CELLS =
+  "The owner's 2026-10-28 wording: \"whatever goes in the middle cell, an " +
+  'outlined cell in line with this cell must have 2", which names the cells ' +
+  "by their mark rather than a noun of their own, and takes the room where " +
+  "the middle could hold the value too, Solo's sees a block, or Map's " +
+  "conclusion dots the colors left.";
+
 const LONG_NARRATIONS: {
   games: string[];
   rungs: string[];
   why: string;
   spokenOn: Record<string, string>;
 }[] = [
+  {
+    games: ["solo"],
+    rungs: ["wing"],
+    why: WING_NAMES_ITS_CELLS,
+    spokenOn: {
+      solo: "3x3de:a1a3c9c6_8b2a5b5b9a7_3f6c4a6a2a5c1f1_5a9b3b3a8b1_5c7c6a8a",
+    },
+  },
+  {
+    games: ["map"],
+    rungs: ["weighRegion"],
+    why: WING_NAMES_ITS_CELLS,
+    spokenOn: {
+      map: "15x20n30dh:faiaaaaaafdabamaacabacabdaabdabbacdbaafaaafeaaababbadbbdkaaalacaadcdgadabaaacaccahdabcbagbbbdaaaccbadaccdaafadbabbebcadadaacdcccacfacabbjadcacgaabdadbdadbfabahabbbabafcbabbagbaladabdecbaaaaabaaaaddaaaabaabbfbaabadalccac,02033322d31a303f11a022",
+    },
+  },
   {
     games: ["pearl"],
     rungs: ["whiteTurnsOpposite"],

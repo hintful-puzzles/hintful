@@ -30831,11 +30831,11 @@ exports[`map: pinned hint positions > says, at each pin 1`] = `
   "sharedPair": "This region's neighbors show pink and violet, so it can only be yellow or teal: dot those.",
   "touches": "This region touches pink, teal and violet, so it must be yellow.",
   "weighDot": "This region's neighbors show teal and violet, so it can only be pink or yellow: dot those.",
-  "weighEnds": "Whatever the middle region is, an end beside this region is violet, so it can't be violet: dot pink and yellow.",
-  "weighMark": "Whatever the middle region is, an end beside this region is violet, so it can't be violet: dot pink and yellow.",
-  "weighPlace": "Whatever the middle region is, an end beside this region is yellow, so it can't be yellow and must be teal.",
+  "weighEnds": "Whatever goes in the middle region, an outlined region by this region must have violet, so it can't be violet: dot pink and yellow.",
+  "weighMark": "Whatever goes in the middle region, an outlined region by this region must have violet, so it can't be violet: dot pink and yellow.",
+  "weighPlace": "Whatever goes in the middle region, an outlined region by this region must have yellow, so it can't be yellow and must be teal.",
   "weighRegion": "This region's neighbors show teal and violet, so it can only be pink or yellow: dot those.",
-  "weighSelf": "Whatever the middle region is, it or an end beside this region is violet, so it can't be violet: dot pink and yellow.",
-  "weighStrike": "Whatever the middle region is, an end beside this region is violet, so it can't be violet: its violet dot must go.",
+  "weighSelf": "Whatever goes in the middle region, it or an outlined region by this region must have violet, so it can't be violet: dot pink and yellow.",
+  "weighStrike": "Whatever goes in the middle region, an outlined region by this region must have violet, so it can't be violet: its violet dot must go.",
 }
 `;

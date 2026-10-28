@@ -429,7 +429,7 @@ Tie by something the code guarantees, cheapest first:
   use distinct ones.
 - **A reference of its own for a part the words single out.** Where the
   second mark covers parts that play different roles, name each part by its
-  place ("the middle region", "an end"), each its own reference with its own
+  place ("the middle region", "an outlined region"), each its own reference with its own
   pill, and keep "this cell" for the ringed one. Exemplar: `weigh` in
   [`map/hint-text.ts`](../src/games/map/hint-text.ts).
 

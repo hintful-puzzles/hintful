@@ -26,10 +26,10 @@ export function wingHelp(cell = "cell"): string {
   return (
     "On the hardest boards that need no guessing, a step may be a **wing**. " +
     `Take a ${cell} whose pencil marks are down to two values, say *a* or ` +
-    `*b*, and two ${cell}s it can't repeat a value with, the *ends*: one ` +
-    "marked *a* and *c*, the other *b* and *c*. Whichever the middle " +
-    `${cell} is, one end is left *c*, so a ${cell} that can't repeat a ` +
-    "value with either end can't be *c*. If the middle " +
+    `*b*, and two ${cell}s it can't repeat a value with, both outlined: one ` +
+    "marked *a* and *c*, the other *b* and *c*. Whatever goes in the middle " +
+    `${cell}, one of the outlined ${cell}s must have *c*, so a ${cell} that ` +
+    "can't repeat a value with either of them can't be *c*. If the middle " +
     `${cell} could be *c* as well, the same holds for a ${cell} that can't ` +
     `repeat a value with the middle ${cell} either.`
   );

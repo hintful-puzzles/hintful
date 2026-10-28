@@ -377,12 +377,14 @@ export function confinedPremise(
 }
 
 /**
- * A wing: whichever value the outlined middle cell takes, an outlined end that
- * shares a line with the struck cell, or where `self` the middle itself, is
- * `value`. Every way is read off the notes the walk has written on the middle
- * and the ends, so the words name the cells and the value and leave the ways
- * to the notes, as Map's weighing does. `beside` says how an end and the
- * struck cell are related, in the game's regions.
+ * A wing: whichever value the outlined middle cell takes, one of the other
+ * outlined cells that shares a line with the struck cell, or where `self` the
+ * middle itself, must have `value`. Every way is read off the notes the walk
+ * has written on the middle and the ends, so the words name the cells and the
+ * value and leave the ways to the notes, as Map's weighing does. The ends take
+ * no noun of their own (owner, 2026-10-28): they are named by their mark.
+ * `beside` says how an end and the struck cell are related, in the game's
+ * regions.
  */
 export function wingPremise(
   wing: { middle: Point; ends: readonly Point[]; self: boolean },
@@ -391,9 +393,9 @@ export function wingPremise(
   cell = "cell",
   beside = "in line with",
 ): Narration {
-  const end = mark.as("outline", CELL, wing.ends, "an end");
+  const end = mark.as("outline", CELL, wing.ends, `an outlined ${cell}`);
   const which = wing.self ? phrase`it or ${end}` : end;
-  return phrase`Whatever ${mark.as("outline", CELL, [wing.middle], `the middle ${cell}`)} is, ${which} ${beside} ${thisCell(at, cell)} is ${value}`;
+  return phrase`Whatever goes in ${mark.as("outline", CELL, [wing.middle], `the middle ${cell}`)}, ${which} ${beside} ${thisCell(at, cell)} must have ${value}`;
 }
 
 /** The premise of a generic Latin strike (the placement cull, a set), shared

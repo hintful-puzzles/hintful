@@ -1067,13 +1067,15 @@ follows. Exemplar: [`map/hint.ts`](../src/games/map/hint.ts).
   that writes them down first (`premiseDots`). Check every rung for the gap
   once one has it.
 - **A weighing names its parts and leaves the ways to the dots**: "whatever
-  the middle region is, an end beside this region is violet". Each color the
-  middle region can take is read off one end's two dots, which the premise
-  legs wrote, so the sentence does not recite them. The candidate games' wing
-  is the same sentence (`wingPremise`), and strikes one cell a firing so that
-  "this cell" is true whatever the game's strike axis. A legend that teaches a
-  reference by its words ("the middle cell", "an end") is what lets the marks
-  guard accept it without a role word.
+  goes in the middle region, an outlined region beside this region must have
+  violet". Each color the middle region can take is read off one end's two
+  dots, which the premise legs wrote, so the sentence does not recite them.
+  The ends take no noun of their own (owner, 2026-10-28, who declined "an
+  end", "a partner" and "a pincer"): the role word names them. The candidate
+  games' wing is the same sentence (`wingPremise`), and strikes one cell a
+  firing so that "this cell" is true whatever the game's strike axis. A
+  legend that teaches a reference by its words ("the middle cell") is what
+  lets the marks guard accept it without a role word.
 - **Name an element by its mark, never by an id the board may not show**:
   "this region", "the outlined pair", "the middle region". Name a color that is a value by its word, kept beside its fill
   (`FOUR_NAMES` in `engine/color/colors.ts`), which is a word for each

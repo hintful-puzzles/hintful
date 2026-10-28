@@ -620,7 +620,7 @@ export const unequalGame: Game<
       ring: "the cell the step fills in with a number.",
       strike: "the pencil marks the step crosses out, and so the cell they are in.",
       outline:
-        'what the step reasons from: the two cells either side of a sign, of a bar, or of no bar at all (the one whose marks are struck, and "the outlined smaller side" or "larger side" across it, or "its neighbor"), the cells that already account for the numbers being crossed out, the number just placed, or a wing’s "the middle cell" and "an end".',
+        'what the step reasons from: the two cells either side of a sign, of a bar, or of no bar at all (the one whose marks are struck, and "the outlined smaller side" or "larger side" across it, or "its neighbor"), the cells that already account for the numbers being crossed out, the number just placed, or "the middle cell" a step weighs and the cells it reads.',
       stripes:
         'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one number fits only the outlined cells.',
     },

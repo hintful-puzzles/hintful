@@ -181,11 +181,11 @@ export const say = {
     c: Conclusion,
   ): Sentence => {
     const hue = colorName(color);
-    const end = mark.as("outline", REGION, ends, "an end");
+    const end = mark.as("outline", REGION, ends, "an outlined region");
     const which = self ? phrase`it or ${end}` : end;
     const said = (beside: string) =>
       so({
-        look: phrase`whatever ${mark.as("outline", REGION, [middle], "the middle region")} is, ${which} ${beside} ${thisRegion(r)} is ${hue}`.capitalized(),
+        look: phrase`whatever goes in ${mark.as("outline", REGION, [middle], "the middle region")}, ${which} ${beside} ${thisRegion(r)} must have ${hue}`.capitalized(),
         ...conclude(c, phrase`it can't be ${hue}`),
       });
     const told = said("beside");

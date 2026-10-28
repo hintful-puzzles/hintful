@@ -576,15 +576,16 @@ out. Such a leg SHALL ring the region it dots and outline nothing.
 ### Requirement: Hint: The weighing step names its middle region and its ends
 
 The weighing step SHALL name the middle region and the ends, each a reference
-of its own, and say that whatever the middle region is, it or an end beside
-the ringed region is the struck color. The dots its regions show are the
-ways, and the sentence SHALL NOT recite them color by color.
+of its own, and say that whatever goes in the middle region, it or an
+outlined region beside the ringed region must have the struck color. The ends
+SHALL take no noun of their own. The dots its regions show are the ways, and
+the sentence SHALL NOT recite them color by color.
 
 #### Scenario: A weighing is named by its parts
 
 - **WHEN** a weighing step is spoken
 - **THEN** pressing "the middle region" finds that region alone, and pressing
-  "an end" finds the ends
+  "an outlined region" finds the ends
 
 ### Requirement: Look: Map's adjacency error markers are always on
 

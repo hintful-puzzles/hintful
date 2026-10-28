@@ -455,7 +455,7 @@ export const keenGame: Game<
       ring: "the cell the step fills in with a number.",
       strike: "the pencil marks the step crosses out, and so the cell they are in.",
       outline:
-        "what the step reasons from: cells that between them already account for the numbers being crossed out, the number just placed, or a wing's “the middle cell” and “an end”.",
+        "what the step reasons from: cells that between them already account for the numbers being crossed out, the number just placed, or “the middle cell” a step weighs and the cells it reads.",
       stripes:
         'the cage, row or column the sentence names: "this cage", "this row" or "this column". Or the several rows or columns it names together, such as "these 2 columns", where one number fits only the outlined cells.',
     },
