@@ -8,11 +8,10 @@
     press, a tap in Right-click mode) reach it through `Midend.processInput`,
     and each UI-only change is announced by `afterTransition`. So the engine
     reports `pencilMode` on `game-state-change`, next to `hasPencilMarks`.
-- [ ] 1.2 Show the owner the Marks key's on and off looks, both schemes, desktop and phone, and take their choice
+- [x] 1.2 Show the owner the Marks key's on and off looks, both schemes, desktop and phone, and take their choice
   - Built to the bar's convention for a mode in force (`bar.ts`, Right-click
     mode): the caption and icon never change, and the key is filled in the
-    brand color while the mode is on. Shown to the owner 2026-10-28; awaiting
-    their word.
+    brand color while the mode is on. Accepted by the owner 2026-10-28.
 
 ## 2. Build
 
@@ -28,7 +27,7 @@
 
 ## 3. Finish
 
-- [ ] 3.1 The app run with mouse, keyboard and touch; the sticky-pencil help sentence, `engine-notes`, the gate, green
+- [x] 3.1 The app run with mouse, keyboard and touch; the sticky-pencil help sentence, `engine-notes`, the gate, green
   - Run in Chrome: right-click, Marks, `p` and a left-click (desktop, light
     and dark); a touch tap on Marks at phone width; Keen's help page shows the
     new sentence.
