@@ -2,8 +2,8 @@
 
 ## 1. Measure
 
-- [ ] 1.1 Reproduce both rings in the app (the proposal's board and step), and find every game and cell kind where a placement's ring crosses a number or lands off its cell: corner clues and notes, at phone, tablet and desktop widths, both schemes
-- [ ] 1.2 First approach (owner): a centered ring in the padding between the cell's content and its edge, enclosing clue and notes. Measure each game's padding and what that ring needs, per size, and where it fits
+- [x] 1.1 Reproduce both rings in the app (the proposal's board and step), and find every game and cell kind where a placement's ring crosses a number or lands off its cell: corner clues and notes, at phone, tablet and desktop widths, both schemes
+- [x] 1.2 First approach (owner): a centered ring in the padding between the cell's content and its edge, enclosing clue and notes. Measure each game's padding and what that ring needs, per size, and where it fits
 - [ ] 1.3 Only for the cells where 1.2 does not fit: show the owner a comparison of ways to make room (padding grown, notes laid out to leave the ring room) and take their choice
 
 ## 2. Build
