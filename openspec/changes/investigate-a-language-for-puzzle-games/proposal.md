@@ -1,9 +1,10 @@
 # investigate-a-language-for-puzzle-games
 
-**Status: scaffolded, not started (2026-10-08). For down the line.** Filed on
-the owner's word the same day, as a long-term effort. It waits for the owner
-to say when, and a session choosing its next change passes over it
-(`docs/work-management.md` § "What a session files").
+**Status: started on the owner's word (2026-10-28).** Filed 2026-10-08 as a
+long-term effort. On 2026-10-28 the owner set its first goal, a taxonomy of
+the catalog (`design.md` § "The first goal: a taxonomy"), and said to start.
+The session that takes it up writes `tasks.md` from `design.md` § "The order
+of work".
 
 This is an investigation. It ends with a report and a recommendation, and
 builds nothing the app runs.
@@ -23,6 +24,14 @@ further, with three aims in order of distance:
    the structure of a game's deductive rules.
 
 A paper is a possible outcome.
+
+**First, a taxonomy** (the owner, 2026-10-28). Before any language: a
+consistent account of what makes a game, a ruleset, a modifier and a board
+shape. Today a variation is filed by two tests about the shape of its
+settings, not about the puzzle, and the catalog disagrees with itself as a
+result. Whatever the catalog decides from here on should be decided from one
+consistent position. This is research: nothing in the catalog changes because
+of it.
 
 Two findings from a first search make it worth a proper look
 (`design.md` § "Prior art"):
@@ -61,6 +70,10 @@ here.
 Nothing in the app, the engine or the specs. The change produces, in its own
 directory:
 
+- **A taxonomy**: the parts a puzzle's description falls into, each of the
+  catalog's words (game, ruleset, modifier, board shape) defined by which
+  part a variation touches, and the current catalog re-classified under it
+  with every disagreement listed.
 - **A reading of the prior art in full**, each system tried against the same
   few of our games.
 - **A reading of our own withdrawals** and of what the tree already declares
@@ -92,4 +105,4 @@ None. The change sets `skip_specs`.
 
 ## Acceptance
 
-The owner's: the report, and their decision on its recommendation.
+The owner's: the taxonomy and the report, and their decision on each.

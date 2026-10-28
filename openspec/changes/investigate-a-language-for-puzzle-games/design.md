@@ -86,7 +86,76 @@ engine consumed it, and "the game written in declarations" lost each time to
 "a helper the game calls". A description language that nothing runs is the
 shape `docs/doctrine.md` § "One source of truth" warns about.
 
+## The first goal: a taxonomy
+
+**The owner's words (2026-10-28).** The effort starts as research toward a new
+taxonomy of the catalog: what makes a game, a ruleset, a modifier and a board
+shape. It does not have to match the catalog's current typology, and it
+changes nothing on the ground, so that later decisions about the catalog are
+made from one consistent position. Breaking compatibility is acceptable where
+a later change needs it. The prompt was Net and Netslide, which the owner
+feels should be rulesets of one game rather than two games. On the questions
+raised so far:
+
+- **Which cut makes a game** is open, to be investigated and decided later.
+  The owner leans toward a shared goal, combined with at least some aspects
+  of the freedom (below).
+- **The catalog stays a tree.** A clear catalog is what makes it usable. That
+  is a strong initial position, and it is open to influence from data. A
+  faceted view, where a game sits in two families, may be kept as analysis
+  that justifies the tree, never as the catalog itself.
+
+**What the catalog files by today (2026-10-28).** Two tests, both in
+`docs/mechanics.md`, and both about the shape of a game's settings rather than
+about its puzzle. The deal test: candidates that combine freely are
+modifiers, and candidates that exclude each other are one ruleset field. The
+neighbor test: "a field that changes which squares are neighbors is a
+ruleset", but a tiling, which also changes neighbors, is a `kind`. Read
+against the declared rule sentences (`git grep -n "rule:" -- src/games`):
+
+| Structurally alike | Filed as |
+| --- | --- |
+| Star Battle's stars per unit; Bridges' most bridges per pair (a number inside one constraint) | ruleset; modifier |
+| Salad's Letters or Numbers; Solo's Killer (a change of the clues' vocabulary) | ruleset; modifier |
+| Flip's Crosses or Random (a change of what a move does) | ruleset |
+| Net's walls wrap around (a change of topology, the board becoming a torus) | modifier |
+| Twiddle's orientation matters (a change of what a cell holds, and of the goal) | modifier |
+
+**The working decomposition**, a hypothesis for experiment B to break. A
+puzzle's description falls into: the *space* (cells, adjacency, regions,
+topology); the *domain* (what a cell holds); the *clue vocabulary* (what kinds
+of givens exist and what they mean); the *goal* (the predicates a finished
+board satisfies, with their parameters); the *freedom* (how the dealt position
+relates to the positions the player may reach: filling blanks, an independent
+change per cell, a global permutation, a linear toggle); and the
+*distribution* (what the generator deals, which is no rule at all). The
+catalog's words then name which part a variation touches. A board shape
+changes only the space. A modifier adds, removes or bounds one goal predicate.
+A ruleset changes the domain or the clue vocabulary, replaces a predicate, or
+changes a parameter of the freedom. A separate game changes the kind of
+freedom. A generator setting changes only the distribution.
+
+**The tension a goal-first tree has to resolve.** Net and Netslide share
+space, domain, clues and goal, and differ in the kind of freedom: Net's
+choice is per cell, so it is a constraint problem and its hint deduces, while
+Netslide's row and column shifts make a permutation puzzle, whose hint plans
+with the `slide-planner` it shares with Sixteen (`src/games/netslide/hint.ts`,
+2026-10-28). Netslide is Net's goal with Sixteen's freedom, and Fifteen and
+Sixteen in turn share a goal. So a tree cut by goal has to say how far a
+change of freedom may go before it makes a separate game, and the taxonomy
+states that line so that it decides every pair, not only Net's.
+
+**A candidate measure for the cut**: how much of the technique ladder
+transfers between two variants. Flip's two rulesets keep their method; Net
+and Netslide share no technique, since Netslide has no ladder. Experiment A's
+traces can read this for every game with rulesets.
+
 ## The questions the investigation answers
+
+0. **What makes a game, a ruleset, a modifier and a board shape?** Answered
+   from "The first goal: a taxonomy" and experiments A and B, as a definition
+   of each word over the decomposition, a rule for the cut that makes a game,
+   and the catalog re-classified under them.
 
 1. **What does the language describe?** Candidate layers, most covered by
    prior art first: the board's structure; the solution's variables and their
@@ -160,12 +229,33 @@ shape `docs/doctrine.md` § "One source of truth" warns about.
 
 - Where experiment code that is worth keeping lives in the repository.
 - Which venue a paper would suit. Decided only if the report supports one.
+- Which cut defines a game: a shared goal, the kind of freedom, the
+  techniques, or a combination. The owner's, informed by step 0.
 
 ## The order of work
 
-The change has no `tasks.md` while it waits, which is what makes it a draft
-(`docs/work-management.md` § "What a session files"). The session that
-takes it up writes `tasks.md` from this list.
+The session that takes the change up writes `tasks.md` from this list. Step
+0 comes first, and draws on steps 1 and 2 only as far as it needs them; its
+deliverable is `taxonomy.md` in this directory, for the owner's decision
+before the remaining steps go on.
+
+**0. Taxonomy**
+
+- 0.1 Read how the prior art in the table divides a puzzle into parts, and
+  where any of it defines a variant, a ruleset or a family.
+- 0.2 State the decomposition, each catalog word defined over it, and two or
+  three candidate rules for the cut that makes a game, each tested against
+  Net and Netslide, Fifteen and Sixteen, and Seismic and Tectonic.
+- 0.3 Re-classify every game's declared rulesets, modifiers, kinds and
+  parameters under each candidate (`git grep -l -E "rulesetItem|modifierItem"
+  -- src/games` for the population, plus the games that declare neither), and
+  list every disagreement with the catalog and every case the decomposition
+  could not place.
+- 0.4 Measure what can be measured for the cut: which techniques two variants
+  share, for every game with rulesets.
+- 0.5 `taxonomy.md`: the recommendation, what it would move in the catalog
+  and at what cost to saves and links, and what was not checked. The owner's
+  decision is recorded in it.
 
 **1. Read the prior art in full**
 
