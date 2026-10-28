@@ -120,7 +120,7 @@ export const say = {
 
   treeDiagonal: (cell: Point, tree: Point, pair: readonly Point[]): Sentence =>
     so({
-      look: phrase`${mark.as("outline", CELL, [tree], "The outlined tree")}'s tent must go in one of ${mark.the("outline", CELL, pair, "square", "the two")}; either touches ${mark.as("ring", CELL, [cell], "the ringed one")}`,
+      look: phrase`${mark.this("outline", CELL, [tree], "tree").capitalized()}'s tent must go in one of ${mark.the("outline", CELL, pair, "square", "the two")}; either touches ${mark.as("ring", CELL, [cell], "the ringed one")}`,
       move: phrase`it must be grass`,
     }),
 
@@ -135,14 +135,14 @@ export const say = {
     link: HintLink,
   ): Sentence => {
     const joined = phrase`with ${theLink(link)}`;
-    const theTree = mark.as("outline", CELL, [tree], "the outlined tree");
+    const theTree = mark.this("outline", CELL, [tree], "tree");
     return taken.length
       ? so({
           look: phrase`${mark.the("outline", CELL, taken, "tent")} ${taken.length > 1 ? "belong to other trees" : "belongs to another tree"}`,
           move: phrase`${theTree}'s tent must go in ${mark.as("ring", CELL, [square], "its only open square")}, ${joined}`,
         })
       : so({
-          look: phrase`${theTree}'s only open square is ${mark.as("ring", CELL, [square], "the ringed one")}`,
+          look: phrase`${theTree.capitalized()}'s only open square is ${mark.as("ring", CELL, [square], "the ringed one")}`,
           move: phrase`its tent must go in it, ${joined}`,
         });
   },

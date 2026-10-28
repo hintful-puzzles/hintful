@@ -150,8 +150,8 @@ export const say = {
   loop: (path: readonly Point[], n: number, at: Point): Narration => {
     const arrows = path.filter((p) => p.x !== at.x || p.y !== at.y);
     return arrows.length === 1
-      ? phrase`${mark.as("outline", CELL, arrows, "The outlined arrow")} in the square ${neighbor(n)} points back to ${here(at)}`
-      : phrase`${mark.as("outline", CELL, arrows, "The outlined arrows")} from the square ${neighbor(n)} lead back to ${here(at)}`;
+      ? phrase`${mark.as("outline", CELL, arrows, `The arrow in the square ${neighbor(n)}`)} points back to ${here(at)}`
+      : phrase`${mark.as("outline", CELL, arrows, `The arrows from the square ${neighbor(n)}`)} lead back to ${here(at)}`;
   },
 
   /** A four-square area, `region`, with only one home left for an arrow, seen

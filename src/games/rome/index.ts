@@ -708,7 +708,7 @@ export const romeGame: Game<
       ring: "the square the step decides: the arrow to place, or the marks to pencil in.",
       strike: "the marks the step crosses off.",
       outline:
-        'the squares it reasons from: "this square", whose marks it crosses off, the arrow the area already has, a neighbor that can only point two ways, or the two squares of a pair. A trail of arrows is outlined when a sentence says "the outlined arrows … lead back to this square": follow the arrows from the square next door.',
+        'the squares it reasons from: "this square", whose marks it crosses off, the arrow the area already has, a neighbor that can only point two ways, or the two squares of a pair. A trail of arrows is outlined when a sentence says "the arrows from the square below lead back to this square": follow the arrows from the square next door.',
       stripes:
         'the area the sentence calls "its area" or "this area", or "the striped group": a goal and the squares already leading into it.',
     },

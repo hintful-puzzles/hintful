@@ -434,14 +434,10 @@ describe("rome loop sentence", () => {
     // which is named by its own mark, so it is not among the outlined arrows.
     const at = { x: 1, y: 1 };
     const one = say.loop([{ x: 1, y: 2 }, at], 2, at);
-    expect(one.text).toBe(
-      "The outlined arrow in the square below points back to this square",
-    );
+    expect(one.text).toBe("The arrow in the square below points back to this square");
     expect(one.refs[0].elements).toEqual([{ x: 1, y: 2 }]);
     const two = say.loop([{ x: 1, y: 2 }, { x: 0, y: 2 }, at], 2, at);
-    expect(two.text).toBe(
-      "The outlined arrows from the square below lead back to this square",
-    );
+    expect(two.text).toBe("The arrows from the square below lead back to this square");
     expect(two.refs[0].elements).toEqual([
       { x: 1, y: 2 },
       { x: 0, y: 2 },
@@ -478,8 +474,8 @@ describe("rome hint render", () => {
   /**
    * The reachability frame — the one Rome was picked for. A `loop` firing's
    * evidence is the chain of arrows leading back to the struck square, drawn as
-   * an outlined contour: "the outlined arrows lead back to this square" is a
-   * claim the player walks by following the arrows themselves.
+   * an outlined contour: "the arrows from the square below lead back to this
+   * square" is a claim the player walks by following the arrows themselves.
    */
   it("outlines the arrow chain a loop deduction walks, with no number on it", () => {
     const { recording, hint } = renderPinnedHint(romeGame, pinned("opensOnLoop"), {
