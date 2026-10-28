@@ -2613,6 +2613,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       boardBefore: other(first > 0, this.before.length > 0),
       boardAfter: other(last < this.moveLog.length, this.after.length > 0),
       hasPencilMarks: this.hasPencilMarks(),
+      // Read off the flag {@link takesNotes} keys the Marks key on, so the key
+      // and its state cannot disagree about which games have the mode.
+      pencilMode: (this.ui as { pencilMode?: unknown } | null)?.pencilMode === true,
       ...(this.game.encodeUi ? { uiState: this.game.encodeUi(this.ui) } : {}),
     });
   }

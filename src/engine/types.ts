@@ -111,6 +111,14 @@ export type NotifyGameStateChange = {
    */
   hasPencilMarks: boolean;
   /**
+   * Whether the game's pencil mode is on, for a game whose keypad has the Marks
+   * key; always `false` for one without the mode. Sent with every transition,
+   * because four inputs flip the mode (the Marks key, the P shortcut, a sticky
+   * right press, and a tap in Right-click mode) and the key shows it whichever
+   * did.
+   */
+  pencilMode: boolean;
+  /**
    * This game's saveable `Ui`, as `Game.encodeUi` renders it — left out
    * entirely for a game that has no such hook, which is most of them.
    *

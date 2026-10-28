@@ -87,6 +87,7 @@ function fullyCapablePuzzle(overrides: FakePuzzle = {}): FakePuzzle {
     canCheck: true,
     hasReference: true,
     hasPencilMarks: false,
+    pencilMode: false,
     ignoresSecondaryButton: false,
     wantsStatusbar: true,
     statusbarText: "3 lights placed",

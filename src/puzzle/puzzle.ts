@@ -274,6 +274,7 @@ export class Puzzle {
         update(this._boardBefore, message.boardBefore);
         update(this._boardAfter, message.boardAfter);
         update(this._hasPencilMarks, message.hasPencilMarks);
+        update(this._pencilMode, message.pencilMode);
         update(this._uiState, message.uiState ?? "");
         break;
       case "params-change":
@@ -349,6 +350,8 @@ export class Puzzle {
    * control say `Fill` on a bare board and `Update` once there is something to
    * narrow. Always false for a game without the press. */
   private _hasPencilMarks = signal(false);
+  /** Whether the game's pencil mode is on, which the Marks key shows. */
+  private _pencilMode = signal(false);
   /** This game's saveable `Ui`, as the midend encodes it; empty for a game with
    * no `encodeUi`. Watched so that composing a Guess row — a `Ui` edit and not
    * a move — refreshes the autosave. See {@link NotifyGameStateChange.uiState}. */
@@ -603,6 +606,10 @@ export class Puzzle {
 
   public get hasPencilMarks(): boolean {
     return this._hasPencilMarks.get();
+  }
+
+  public get pencilMode(): boolean {
+    return this._pencilMode.get();
   }
 
   public get uiState(): string {

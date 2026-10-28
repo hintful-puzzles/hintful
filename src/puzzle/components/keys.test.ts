@@ -12,7 +12,9 @@
  */
 import "../../test-setup/element-internals.ts";
 import "../../test-setup/resize-and-animations.ts";
+import { signal } from "@lit-labs/signals";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { pencilModeKey } from "../../engine/key-labels.ts";
 import type { KeyLabel } from "../../engine/types.ts";
 import { cssColorToOKLCH, oklchToCSSColor } from "../../utils/color.ts";
 import { PuzzleContext } from "./context.ts";
@@ -133,6 +135,46 @@ describe("a key that names a color", () => {
         const css = oklchToCSSColor([l, c, 27]);
         expect(cssColorToOKLCH(css)[0]).toBeCloseTo(l, 2);
       }
+  });
+});
+
+describe("the Marks key shows the mode it toggles", () => {
+  it("is pressed while the game's pencil mode is on, and follows it", async () => {
+    // The mode is read off the puzzle, not kept by the key: the key is not the
+    // only way to flip it, so a copy would show it as the key last left it.
+    const pencilMode = signal(false);
+    const context = new PuzzleContext();
+    (context as unknown as { _puzzle: unknown })._puzzle = {
+      palette: PALETTE,
+      get pencilMode() {
+        return pencilMode.get();
+      },
+      delete: async () => {},
+    };
+    const panel = document.createElement("puzzle-keys");
+    panel.keys = [{ button: 0x31, label: "1" }, pencilModeKey];
+    context.append(panel);
+    document.body.append(context);
+    mounted.push(context);
+    await panel.updateComplete;
+    // What a screen reader is told, and whether the key is drawn lit.
+    const shown = () =>
+      buttons(panel).map((b) => [
+        b.querySelector(".spoken")?.textContent ?? null,
+        b.classList.contains("mode-on"),
+      ]);
+
+    // A key that types has no state at all.
+    expect(shown()).toEqual([
+      [null, false],
+      ["off", false],
+    ]);
+    pencilMode.set(true);
+    await panel.updateComplete;
+    expect(shown()[1]).toEqual(["on", true]);
+    pencilMode.set(false);
+    await panel.updateComplete;
+    expect(shown()[1]).toEqual(["off", false]);
   });
 });
 

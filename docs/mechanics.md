@@ -1052,8 +1052,10 @@ does".
   candidate marks (`engine-notes`, "The engine gives every note-taking game
   its Marks key"). The game answers the code: a note-taking cell game
   routes it, and Enter on the highlight, through `toggleNoteTakingMode`,
-  and the app's bare `P` sends the same code. `pencil-mode-key.test.ts`
-  holds the key to being there and to acting.
+  and the app's bare `P` sends the same code. The key is lit from
+  `ui.pencilMode`, which the midend reports after every transition, so a
+  mode kept under another name never lights it. `pencil-mode-key.test.ts`
+  holds the key to being there, to acting, and to showing the mode.
 - **Sticky pencil mode is a `pencilSticky` boolean on the `Ui`, default
   true, offered through `prefs`.** The shared arm does the rest
   (`engine-notes`, "The sticky pencil toggle is a mode switch, not a

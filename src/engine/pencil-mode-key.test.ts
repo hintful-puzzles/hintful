@@ -21,6 +21,10 @@
  * 2. **Does the key do anything when pressed?** The engine can put a key on the
  *    panel; only the game can make it act. A key that is offered and inert is a
  *    worse failure than no key, because it looks like the feature is there.
+ * 3. **Does the key show the mode, whatever switched it?** A right press, the P
+ *    shortcut and a tap in Right-click mode flip the mode without the key, and
+ *    a key that showed only its own presses read "off" with the mode on (the
+ *    owner, playtesting Keen, 2026-10-28).
  *
  * ## The failure this replaced
  *
@@ -39,8 +43,17 @@ import { UI_UPDATE } from "./game.ts";
 import { Midend } from "./index.ts";
 import { pencilModeKey, takesNotes } from "./key-labels.ts";
 import { PENCIL_MODE_BUTTON } from "./pointer.ts";
+import { randomNew } from "./random/index.ts";
+import { observeMidend } from "./testing/drive-midend.ts";
 import { builtGames } from "./testing/enrollment.ts";
+import {
+  type AnyGame,
+  GESTURE_KINDS,
+  probeBoard,
+  randomGesture,
+} from "./testing/input-probe.ts";
 import { preferredDrawState } from "./testing/preferred-draw-state.ts";
+import { itOverWholeSweep } from "./testing/slow.ts";
 
 beforeAll(registerAllGames);
 
@@ -54,6 +67,9 @@ beforeAll(registerAllGames);
  * **Empty is the goal, and empty still asserts something.**
  */
 const NO_MODE: Record<string, string> = {};
+
+/** The games in which an input other than the Marks key flipped the mode. */
+let flippedByOtherInput = 0;
 
 /** Every note-taking game, derived from what each game *is*. */
 const noteTaking = builtGames().filter((g) => takesNotes(g.state, g.ui));
@@ -126,6 +142,46 @@ describe("every game that takes notes offers the Marks key", () => {
       .map((g) => g.id);
     expect(offered).toEqual(noteTaking.map((g) => g.id));
   });
+
+  for (const { id, game } of noteTaking) {
+    it(`${id}: the mode the app is told is the mode the Ui holds, after every input`, () => {
+      const b = probeBoard(game as AnyGame, id);
+      // Replaces the probe's own callbacks, whose move count this does not read.
+      const d = observeMidend(b.m);
+      const rs = randomNew(`pencil-report-${id}`);
+      const reported = () => d.last("game-state-change")?.pencilMode;
+      const held = () => (b.ui() as { pencilMode: boolean }).pencilMode;
+      const flips = { key: 0, other: 0 };
+
+      b.reset();
+      let mode = held();
+      expect(reported(), `${id}: a fresh board is reported`).toBe(mode);
+      for (let step = 0; step < 60; step++) {
+        const byKey = step % 7 === 3;
+        if (byKey) b.m.processInput(0, 0, PENCIL_MODE_BUTTON);
+        else if (step % 13 === 12) b.m.undo();
+        else randomGesture(b.m, b.size, rs, GESTURE_KINDS[step % GESTURE_KINDS.length]);
+        const now = held();
+        expect(reported(), `${id}: step ${step}`).toBe(now);
+        if (now !== mode) flips[byKey ? "key" : "other"]++;
+        mode = now;
+      }
+      // The key's own presses flipped it, or nothing above was measured. What
+      // else flips it varies by game (a right press arms it in the cell games
+      // and draws a cross in Loopy), so that is counted across the games.
+      expect(flips.key).toBeGreaterThan(0);
+      if (flips.other > 0) flippedByOtherInput++;
+    });
+  }
+
+  // The path the owner tripped over is a right press, and the walk's blind
+  // gestures reach it in most cell games; a handful would mean they stopped.
+  itOverWholeSweep(
+    "saw an input other than the key flip the mode in most games",
+    () => {
+      expect(flippedByOtherInput).toBeGreaterThanOrEqual(10);
+    },
+  );
 
   it("no game lists the key itself, so there is one source", () => {
     // The engine appends it. A game that also lists it is a second statement of

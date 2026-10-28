@@ -34,6 +34,7 @@ function makePuzzle() {
       boardBefore: null,
       boardAfter: null,
       hasPencilMarks: false,
+      pencilMode: false,
       ...change,
     });
   return { puzzle, state };

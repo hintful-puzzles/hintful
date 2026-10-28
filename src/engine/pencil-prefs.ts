@@ -106,7 +106,8 @@ export const STICKY_PENCIL_PLACEHOLDER = "{{sticky-pencil}}";
  */
 export const STICKY_PENCIL_HELP =
   "Pencil mode is *sticky*: once a right-click switches it on, it stays on " +
-  "wherever you click, until you right-click again. To have it last only until " +
+  "wherever you click, until you right-click again. The **Marks** key is lit " +
+  "while it is on, and pressing the key also switches it. To have it last only until " +
   `your next click, turn off **${STICKY_PENCIL_NAME}** in the preferences.`;
 
 /** Keep the mouse highlight on the cell after a pencil mark changes. */

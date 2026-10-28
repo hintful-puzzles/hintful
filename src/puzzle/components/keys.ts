@@ -3,6 +3,7 @@ import { SignalWatcher } from "@lit-labs/signals";
 import { css, html, LitElement, nothing } from "lit";
 import { customElement, eventOptions, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
+import { PENCIL_MODE_BUTTON } from "../../engine/pointer.ts";
 import type { KeyLabel } from "../../engine/types.ts";
 import { cssColorToOKLCH } from "../../utils/color.ts";
 import { cssStackedButton, cssWATweaks } from "../../utils/css.ts";
@@ -125,10 +126,12 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
     const label = key.label;
     const icon = this.labelIcons[label];
     const fill = this.swatchFill(key);
+    const mode = this.modeIn(key);
     const classes = classMap({
       single: !this.labeled && (icon || label.length === 1),
       stacked: this.labeled && Boolean(icon),
       swatch: fill !== null,
+      "mode-on": mode === true,
     });
     const content = !icon
       ? label
@@ -137,6 +140,12 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
             <wa-icon name=${icon}></wa-icon><span>${label}</span>
           </span>`
         : html`<wa-icon name=${icon} label=${label}></wa-icon>`;
+    // The state is part of the key's name, not an `aria-pressed`: `wa-button`
+    // draws its own `<button>` and passes no `aria-pressed` on to it.
+    const state =
+      mode === null
+        ? nothing
+        : html`<span class="spoken">${mode ? "on" : "off"}</span>`;
     // Exclude virtual keys from keyboard navigation
     // (they're not helpful for a keyboard user).
     return html`
@@ -145,7 +154,7 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
           style=${fill === null ? nothing : swatchProperties(fill)}
           data-button=${key.button}
           tabindex="-1"
-        >${content}</wa-button>
+        >${content}${state}</wa-button>
     `;
   };
 
@@ -160,6 +169,18 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
   private swatchFill(key: KeyLabel): string | null {
     if (key.swatch === undefined) return null;
     return this.puzzle?.palette[key.swatch] ?? null;
+  }
+
+  /**
+   * Whether the mode a key toggles is on, or `null` for a key that types.
+   *
+   * Read off the game's own `Ui` through `puzzle.pencilMode`, never kept here:
+   * a right press, the P shortcut and Right-click mode flip the mode without
+   * this key, and a copy would show the mode as the key last left it.
+   */
+  private modeIn(key: KeyLabel): boolean | null {
+    if (key.button !== PENCIL_MODE_BUTTON) return null;
+    return this.puzzle?.pencilMode ?? false;
   }
 
   @eventOptions({ passive: false })
@@ -233,6 +254,24 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
         /* A default wa-button's border is transparent; a key painted in a pale
          * board color needs an edge to read as a key. */
         border-color: var(--swatch-edge);
+      }
+
+      /* A mode in force changes what every tap on the board does, so it is
+       * filled as the bar's Right-click mode is. */
+      .mode-on::part(base) {
+        background-color: var(--wa-color-brand-fill-loud);
+        border-color: var(--wa-color-brand-fill-loud);
+        color: var(--wa-color-brand-on-loud);
+      }
+
+      /* Read out and not drawn: the fill shows the same thing. */
+      .spoken {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
       }
       
       wa-button {
