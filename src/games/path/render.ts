@@ -79,7 +79,7 @@ const COL_GIVEN = 3;
 /** A line reaching no number. */
 export const COL_LINE = 4;
 const COL_RULED_OUT = 5;
-const COL_TEXT = 6;
+export const COL_TEXT = 6;
 /** A line that breaks a rule already: it closes a loop, or joins two
  * different numbers. */
 export const COL_ERROR = 7;
@@ -100,7 +100,7 @@ const COL_PAIR = 15;
  * the dark scheme sits near the white of a line reaching no number. */
 const PAIRS = 9;
 /** The first of the numbers on a pair's filled disc, one slot a color. */
-const COL_PAIR_TEXT = COL_PAIR + PAIRS;
+export const COL_PAIR_TEXT = COL_PAIR + PAIRS;
 /** A wall between two squares. */
 export const COL_WALL = COL_PAIR_TEXT + PAIRS;
 

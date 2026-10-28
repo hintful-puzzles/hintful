@@ -427,10 +427,12 @@ describe("a game with the search's tiers deals its Unreasonable boards through t
   });
 
   // What a params string with no `d` decodes to is the default's tier, and a
-  // link written before a game had tiers names an Easy board.
-  it("has Easy for the tier of every such game's default", () => {
-    for (const { id, game } of searchTiered)
-      expect(tierOf(game, game.defaultParams()), id).toBe(0);
+  // link written before a game had the search's tiers names a board deduction
+  // solves: Easy where the game had no tiers, and its old default where it
+  // had some, as Path's Normal.
+  it("has a tier below Unreasonable for every such game's default", () => {
+    for (const { id, game, tiers } of searchTiered)
+      expect(tierOf(game, game.defaultParams()), id).toBeLessThan(tiers.length - 1);
   });
 
   for (const t of searchTiered) {
