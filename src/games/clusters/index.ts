@@ -12,8 +12,8 @@
  * break.
  */
 
+import { type Answer, solveFromAnswer } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import {
   type Game,
@@ -45,7 +45,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   buttonVerb,
   digitKey,
@@ -59,7 +58,7 @@ import {
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newClustersDesc } from "./generator.ts";
-import { colorName, type Marked, say } from "./hint-text.ts";
+import { colorName, say, type Tile } from "./hint-text.ts";
 import {
   border,
   type ClustersDrawState,
@@ -70,6 +69,7 @@ import {
   redraw,
 } from "./render.ts";
 import {
+  answerSearch,
   CLUSTERS_RUNGS,
   type ClustersDeduction,
   type ClustersRung,
@@ -98,6 +98,7 @@ import {
   newState,
   opposite,
   paramConfig,
+  TIERS,
   textFormat,
   validateParams,
 } from "./state.ts";
@@ -293,36 +294,39 @@ function status(s: ClustersState): GameStatus {
   return clustersStatus(s.grid, s.w, s.h) === COMPLETE ? "solved" : "ongoing";
 }
 
+/** The last board's answer, by its givens. A state keeps no part every state
+ * of its board shares, which `answerCache` would key on, and an Unreasonable
+ * board's search is too dear to run on every move the mistake check sees. */
+let lastAnswer: { key: string; answer: Answer<Uint8Array> } | null = null;
+
+/** The answer of `state`'s board, from its givens alone: only a given carries
+ * `F_SINGLE`. The ladder finishes a board below Unreasonable at once. */
+function answerOf(state: ClustersState): Answer<Uint8Array> {
+  const { grid, w, h } = state;
+  const givens = grid.map((tile) => (tile & F_SINGLE ? tile : 0));
+  const key = `${w}x${h}:${givens.join(",")}`;
+  if (lastAnswer?.key !== key) lastAnswer = { key, answer: answerSearch(givens, w, h) };
+  return lastAnswer.answer;
+}
+
 function solve(orig: ClustersState): SolveResult<ClustersMove> {
-  const grid = orig.grid.slice();
-  // Always the deepest rung: Solve and the hint are "try as hard as you can",
-  // where the tier the board was *generated* at is irrelevant — an Easy board
-  // is solved by the easy rung anyway, and running the lookahead over it costs
-  // only the time it takes to find nothing left to do.
-  solveGame(grid, orig.w, orig.h, 1);
-  if (clustersStatus(grid, orig.w, orig.h) === INVALID) {
-    return { ok: false, error: NO_SOLUTION };
-  }
-  const fills: ClustersFill[] = Array.from(
-    grid,
-    (byte) => (byte & COLMASK) as ClustersFill,
-  );
-  return { ok: true, move: { kind: "solve", fills } };
+  return solveFromAnswer(answerOf(orig), (grid) => ({
+    kind: "solve",
+    fills: Array.from(grid, (byte) => (byte & COLMASK) as ClustersFill),
+  }));
 }
 
 function findMistakes(state: ClustersState): readonly ClustersMistake[] {
   const { grid, w, h } = state;
   const at = (index: number): ClustersMistake => ({ index });
-  // The answer is the solve from the givens alone: only a given carries
-  // `F_SINGLE`.
-  const answer = grid.map((tile) => (tile & F_SINGLE ? tile : 0));
-  // A board the solver cannot finish has no answer to compare with, and a
-  // broken rule is then all there is to report.
-  if (solveGame(answer, w, h, 1) !== COMPLETE) return findErrors(grid, w, h).map(at);
+  const answer = answerOf(state);
+  // A board without one answer has none to compare with, and a broken rule
+  // is then all there is to report.
+  if (answer.kind !== "one") return findErrors(grid, w, h).map(at);
   const color = (tiles: Uint8Array): Uint8Array => tiles.map((tile) => tile & COLMASK);
   return entryMistakes(
     {
-      answer: color(answer),
+      answer: color(answer.solution),
       entry: color(grid),
       fixed: (i) => (grid[i] & F_SINGLE) !== 0,
     },
@@ -333,63 +337,68 @@ function findMistakes(state: ClustersState): readonly ClustersMistake[] {
 // --- hint ------------------------------------------------------------------
 
 /** What a Clusters hint step's marks carry beyond the cells its words name
- * (see the hint marks block in render.ts's palette). `danger` is the tile the refuted
- * coloring would break — the one element the narration calls "outlined" —
- * when that isn't the target itself; `chain` is a lookahead firing's what-if
- * walk, each cell marked with the color the hypothesis would force it to. The
- * renderer paints either only where the words outline it, and reads it from
- * here because a danger tile can also be a link of the chain, and the words
- * name that square once. No other premise needs a highlight or a palette
- * role: every tile the three local rules read sits orthogonally adjacent to
- * the target or the danger tile, so it is already in view. */
+ * (see the hint marks block in render.ts's palette): the tiles the step
+ * reasons from, each framed thin where the words outline it. That is the tile
+ * the refuted coloring would break, where it isn't the target itself, or the
+ * two tiles whose counts a Normal step reads. No other premise needs a
+ * highlight or a palette role: every tile the rules read sits orthogonally
+ * adjacent to the target or to those, so it is already in view. */
 export interface ClustersHintHighlights {
-  danger?: Point;
-  chain: (Point & { fill: ClustersFill })[];
+  outlined: Point[];
 }
 
-/** Narrate the proof by contradiction, ringing `target` and outlining the
- * cells `hl` carries. The words, and how each ties "this cell" to the
- * outlined tile, are [`hint-text.ts`](./hint-text.ts)'s. */
+/** A tile the words name: where it is, its color and whether it is a dot. */
+const tileAt = (grid: Uint8Array, w: number, i: number): Tile => ({
+  at: { x: i % w, y: (i / w) | 0 },
+  fill: (grid[i] & COLMASK) as ClustersFill,
+  dot: (grid[i] & F_SINGLE) !== 0,
+});
+
+/** Narrate the step, ringing `target` and outlining the tiles it reasons
+ * from. The words, and how each ties "this cell" to an outlined tile, are
+ * [`hint-text.ts`](./hint-text.ts)'s. `grid` is the board the deduction read. */
 function narrate(
   d: ClustersDeduction,
   target: Point,
-  hl: ClustersHintHighlights,
+  grid: Uint8Array,
+  w: number,
 ): Sentence {
-  const m: Marked = { target, danger: hl.danger ?? null, chain: hl.chain };
-  return d.reason.kind === "chain" ? say.chain(d, m) : say.direct(d, m);
+  const { reason } = d;
+  if (reason.kind === "count")
+    return say.count(d, target, tileAt(grid, w, reason.a), tileAt(grid, w, reason.b));
+  const danger =
+    reason.at.cell !== d.index
+      ? { x: reason.at.cell % w, y: (reason.at.cell / w) | 0 }
+      : null;
+  return say.direct(d, { target, danger });
 }
 
 function buildHighlights(d: ClustersDeduction, w: number): ClustersHintHighlights {
   const pt = (i: number): Point => ({ x: i % w, y: (i / w) | 0 });
-  const at = d.reason.at;
-  return {
-    danger: at.cell !== d.index ? pt(at.cell) : undefined,
-    chain:
-      d.reason.kind === "chain"
-        ? d.reason.steps.map((s) => ({ ...pt(s.index), fill: s.fill }))
-        : [],
-  };
+  const { reason } = d;
+  if (reason.kind === "count") return { outlined: [pt(reason.a), pt(reason.b)] };
+  return { outlined: reason.at.cell !== d.index ? [pt(reason.at.cell)] : [] };
 }
 
 function hint(
   state: ClustersState,
 ): HintResult<ClustersMove, ClustersHintHighlights, ClustersRung> {
   const plan = deduceHintPlan(state.grid, state.w, state.h);
-  // COMPLETE certifies the position (the error rules are monotone, so a wrong
-  // tile can never extend to a zero-error grid). INVALID means some tile
-  // already placed must be wrong, and hinting would lead deeper in.
-  // `findMistakes` names that tile wherever the solver finishes the board from
-  // its givens, so this is reached only on a board it cannot, where there is
-  // no answer to say which tile it is. The stall below is such a board too.
+  // INVALID means some tile already placed must be wrong, and hinting would
+  // lead deeper in. `findMistakes` names that tile wherever the board has one
+  // answer, so this is reached only on a board without one. A plan that stops
+  // short is an Unreasonable board's, whose steps up to the stall are
+  // deductions all the same: the midend hints only a board with no mistake.
   if (plan.verdict === INVALID) return { ok: false, error: CONTRADICTION_UNLOCALIZED };
-  if (plan.verdict !== COMPLETE || plan.deductions.length === 0) {
-    return { ok: false, error: DEDUCTION_EXHAUSTED };
-  }
+  if (plan.deductions.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
+  // The board each step was found on, for the tiles its words name.
+  const board = state.grid.slice();
   const steps: HintStep<ClustersMove, ClustersHintHighlights, ClustersRung>[] =
     plan.deductions.map((d) => {
       const highlights = buildHighlights(d, state.w);
       const target = { x: d.index % state.w, y: (d.index / state.w) | 0 };
-      const words = narrate(d, target, highlights);
+      const words = narrate(d, target, board, state.w);
+      board[d.index] = d.fill;
       return {
         move: { kind: "paint", cells: [{ index: d.index, fill: d.fill }] },
         rung: d.reason.kind,
@@ -438,18 +447,14 @@ function hintGesture(
   );
 }
 
-/** Clusters' difficulty contract (`engine/difficulty.ts`). The two tiers are
- * nested rungs of one fixpoint (`maxdiff` 0 is `solverTry` alone, ≥ 1 adds
- * `solverRecurse`), which is why `solvableAtExactlyTier` asks the cheap rung
- * first — the deeper solve resumes from that same fixpoint. */
-const difficulty: DifficultyContract<ClustersParams> = {
-  solveAtCap: (p, desc, cap) => {
-    const s = newState(p, desc);
-    const grid = s.grid.slice();
-    const ret = solveGame(grid, s.w, s.h, cap);
-    return ret === COMPLETE ? "solved" : ret === INVALID ? "impossible" : "unsolved";
-  },
-};
+/** Clusters' difficulty contract (`engine/difficulty.ts`). Below Unreasonable
+ * the tiers are nested rungs of one fixpoint (`maxdiff` 0 is `solverTry`
+ * alone, 1 adds `solverCount`); Unreasonable is the search's one answer. */
+const difficulty = TIERS.contract<ClustersParams, ClustersState>({
+  newState,
+  deductionFinishes: (s, cap) => solveGame(s.grid.slice(), s.w, s.h, cap) === COMPLETE,
+  answerOf,
+});
 
 export const clustersGame: Game<
   ClustersParams,
@@ -487,7 +492,7 @@ export const clustersGame: Game<
     roles: {
       ring: "the square the step colors. It is drawn empty: the sentence says which color it must be.",
       outline:
-        "the squares the step reasons from. A thin ring is on the dot or square where the other color would break a rule. On Normal boards, the small pieces, each in an outlined square and of the color that square would be, show what supposing the other color would force: they are only a supposition, and nothing is placed there.",
+        "the squares the step reasons from, each in a thin ring: the dot or square where the other color would break a rule, or, on Normal boards, the two whose counts the step reads.",
     },
   },
   hintRungs: CLUSTERS_RUNGS,

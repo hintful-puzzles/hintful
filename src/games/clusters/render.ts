@@ -65,10 +65,9 @@ export const COL_1_DOT = 5; // the dot on a given `F_COLOR_1` piece
 export const COL_ERROR = 6;
 export const COL_CURSOR = 7;
 // Hint marks: the forced cell is ringed by the engine; the tile the refuted
-// coloring would break gets a thin COL_HINT_CELL frame, an outline because the
-// tile's own color *is* part of the premise; a lookahead chain's what-if cells
-// are outlined COL_HINT_CELL with a small piece of the color each would be
-// forced to.
+// coloring would break, and the two tiles a count reads, get a thin
+// COL_HINT_CELL frame, an outline because a tile's own color *is* part of the
+// premise.
 /** The outlines. */
 export const COL_HINT_CELL = 8;
 /** The surface of a cell. */
@@ -99,8 +98,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_CURSOR] = CURSOR;
-  // The chain is outlined rather than washed, so it takes the mark form of the
-  // evidence role.
+  // The tiles reasoned from are outlined rather than washed, so they take the
+  // mark form of the evidence role.
   out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
@@ -125,9 +124,7 @@ const K_LIT = 11; // bits 11-12: the win flash's tone on this cell
 // Hint-overlay bits, packed per cell into the OverlaySidecar, which is part of
 // the diff key (docs/rendering.md § "Overlay sidecars").
 const HB_TARGET = 1; // the forced cell — ringed
-const HB_DANGER = 1 << 1; // tile that would break — a thin COL_HINT_CELL ring
-const HB_CHAIN_0 = 1 << 2; // what-if cell forced `F_COLOR_0` in the hypothetical
-const HB_CHAIN_1 = 1 << 3; // what-if cell forced `F_COLOR_1` in the hypothetical
+const HB_DANGER = 1 << 1; // a tile the step reasons from — a thin COL_HINT_CELL ring
 
 export interface ClustersDrawState {
   started: boolean;
@@ -136,8 +133,8 @@ export interface ClustersDrawState {
   h: number;
   cache: Int32Array;
   hint: OverlaySidecar;
-  /** The hint target's ring and the chain's outline, drawn after the tile
-   * loop. See {@link markBand}. */
+  /** The hint target's ring, drawn after the tile loop. See
+   * {@link markBand}. */
   marks: HintMarks;
 }
 
@@ -194,12 +191,10 @@ function drawTile(
   const px = x * ts + b;
   const py = y * ts + b;
 
-  // The cell keeps its own color under a hint: the target is ringed and the
-  // chain outlined, both on the cell's border in `redraw`. In a game whose move
-  // *is* "give this cell a color", a solid fill is not merely a legibility
-  // question — it says with the board what the narration is still proposing, and
-  // it buries the what-if mark's color, which is the whole content of a chain
-  // cell.
+  // The cell keeps its own color under a hint: the target is ringed on the
+  // cell's border in `redraw`. In a game whose move *is* "give this cell a
+  // color", a solid fill is not merely a legibility question — it says with
+  // the board what the narration is still proposing.
   const surface = { x: px, y: py, w: ts - 1, h: ts - 1 };
   const piece = (fill: number, grown: number): void =>
     drawPiece(
@@ -221,11 +216,6 @@ function drawTile(
           : COL_CELL,
   );
   if (tile & COLMASK) piece(tile, 1);
-
-  // The small piece of the color a what-if cell would be forced to — a
-  // deliberately piece-unlike size, so it reads as hypothetical, not placed.
-  if (hintBits & (HB_CHAIN_0 | HB_CHAIN_1))
-    piece(hintBits & HB_CHAIN_0 ? F_COLOR_0 : F_COLOR_1, 0.4);
 
   if (tile & F_SINGLE) {
     const dot = tile & F_COLOR_1 ? COL_1_DOT : COL_0_DOT;
@@ -306,28 +296,19 @@ export function redraw(
   const outlined = new Set(marks.of("outline", CELL).map((p) => p.y * w + p.x));
   ds.hint.clear();
   for (const p of marks.of("ring", CELL)) ds.hint.add(p.y * w + p.x, HB_TARGET);
-  if (hl?.danger && outlined.has(hl.danger.y * w + hl.danger.x))
-    ds.hint.add(hl.danger.y * w + hl.danger.x, HB_DANGER);
-  for (const c of hl?.chain ?? []) {
-    const i = c.y * w + c.x;
-    if (!outlined.has(i)) continue;
-    ds.hint.add(i, c.fill === F_COLOR_0 ? HB_CHAIN_0 : HB_CHAIN_1);
-  }
+  for (const p of hl?.outlined ?? [])
+    if (outlined.has(p.y * w + p.x)) ds.hint.add(p.y * w + p.x, HB_DANGER);
 
   const targets: MarkCell[] = [];
-  const chain: MarkCell[] = [];
-  for (let i = 0; i < w * h; i++) {
-    const c = { x: i % w, y: (i / w) | 0 };
-    if (ds.hint.packed[i] & HB_TARGET) targets.push(c);
-    if (ds.hint.packed[i] & (HB_CHAIN_0 | HB_CHAIN_1)) chain.push(c);
-  }
+  for (let i = 0; i < w * h; i++)
+    if (ds.hint.packed[i] & HB_TARGET) targets.push({ x: i % w, y: (i / w) | 0 });
   const markStyle = {
     band: (x: number, y: number) => markBand(ds, x, y),
     // A forced cell shows a piece or a dot, never text.
     text: () => NO_TEXT,
     evidenceColor: COL_HINT_CELL,
   };
-  ds.marks.eraseBeforeTiles(dr, targets, chain, markStyle, COL_GRID, (x, y) => {
+  ds.marks.eraseBeforeTiles(dr, targets, [], markStyle, COL_GRID, (x, y) => {
     if (x >= 0 && x < w && y >= 0 && y < h) ds.cache[y * w + x] = -1;
   });
 
@@ -363,5 +344,5 @@ export function redraw(
 
   // The hint marks, after the tile loop and outside every clip, because they
   // straddle the grid line.
-  ds.marks.paint(dr, targets, chain, markStyle);
+  ds.marks.paint(dr, targets, [], markStyle);
 }

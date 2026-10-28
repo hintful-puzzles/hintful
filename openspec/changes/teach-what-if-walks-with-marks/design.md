@@ -130,6 +130,22 @@ Unreasonable 4x4 1.3 / 6.1 s → 0.6 / 2.0, 5x7 5.1 / 11.2 s → 4.0 / 11.3,
 before needs the old look-ahead at times, and then opens at Unreasonable,
 which Spokes already has.
 
+## D9. Clusters' Normal is the count, in two forms that go past one clue
+
+Of a two-tile count's conclusions, only those on tile A's neighbors outside
+the shared squares need tile B: what falls inside the shared squares follows
+from one clue alone, which the Easy rung already decides. So the count has two
+forms: `full`, where A is a dot whose last tile of its color B's count places
+among the shared squares, and `short`, where B allows too few of A's color
+there for what A needs. Dealing, median / max, HEAD then now (10 to 16 boards
+a cell): Normal 7x7 49 / 945 ms → 55 / 217, 6x8 70 / 610 → 41 / 185, 9x9 673 /
+5746 → 351 / 1900. Unreasonable is dealt by the climb Normal makes, to a board
+the count stops short on, with a search of at most 200 positions a
+candidate: 7x7 115 / 436 ms, 9x9 645 / 1354, 9x11 844 / 2327. Of 90 Normal
+boards dealt at HEAD, 74 need the old supposition and open at Unreasonable;
+the search proves each in at most 25 positions. On the menu, Unreasonable
+joins Normal at 7x7, 6x8 and 9x9.
+
 ## D7. A board a player already has opens at Unreasonable (owner, 2026-10-28)
 
 A Normal or Tricky board dealt before this change may need a lookahead the

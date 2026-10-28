@@ -9,9 +9,9 @@
  * the given bytes stay clean for the desc encoder.
  */
 
+import { searchTiers } from "../../engine/answer-search.ts";
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
@@ -22,14 +22,22 @@ import type { GridCursor } from "../../engine/pointer.ts";
 
 /** Solvable by the single-cell proof by contradiction alone. */
 export const DIFF_EASY = 0;
-/** Needs the one-level hypothetical: assume a color, follow the forced
- * consequences, and find the contradiction there. */
+/** Needs two tiles' counts read over the squares both touch. */
 export const DIFF_TRICKY = 1;
 
-export const DIFF_NAMES: readonly string[] = tierNames(2);
+/** The tiers: two the ladder finishes, then Unreasonable, which a search
+ * proves has one answer. Unreasonable came with Normal's count (2026-10-28),
+ * so that a board dealt before it, which may need the supposition Normal had
+ * until then, still opens. */
+export const TIERS = searchTiers(2);
+
+/** Has one answer the ladder does not reach. */
+export const DIFF_UNREASONABLE = TIERS.unreasonable;
+
+export const DIFF_NAMES: readonly string[] = TIERS.names;
 
 /** The `d<char>` param suffix, index = tier. */
-const DIFF_CHARS = "et";
+const DIFF_CHARS = "etu";
 
 // --- cell flag bits (upstream) ---------------------------------------------
 
@@ -118,9 +126,10 @@ export const menu: PresetBoards<ClustersParams> = {
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<ClustersParams>[] = [
   ...dimensionParamConfig<ClustersParams>({ doc: "Size of the grid in squares." }),
-  difficultyItem(DIFF_NAMES, "diff", {
-    doc: "Both settings always have exactly one solution, and neither ever needs a guess.<p><em>Easy</em> puzzles can be finished a square at a time: for each empty square, one of the two colors breaks a rule outright, so the other one is forced.</p><p><em>Normal</em> puzzles need at least one step where that is not enough, and you must suppose a color, follow the squares it forces, and find the contradiction further along. Normal boards are guaranteed to need this at least once: a board an Easy player could finish is not offered as Normal.</p>",
-  }),
+  TIERS.item(
+    "diff",
+    "Every puzzle has exactly one solution.<p><em>Easy</em> puzzles can be finished a square at a time: for each empty square, one of the two colors breaks a rule outright, so the other one is forced.</p><p><em>Normal</em> puzzles also need two tiles' counts read together over the squares both touch. A board an Easy player could finish is not offered as Normal.</p><p><em>Unreasonable</em> puzzles may need you to try a color and follow where it leads.</p>",
+  ),
 ];
 
 /**
@@ -148,7 +157,10 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
  * Area alone is not the rule, which is why both halves are stated. A 1×N strip
  * never binds *at any length* — 1×20 failed all five seeds — because a cell in a
  * one-wide board has at most two neighbors, so the single-cell rule decides it
- * immediately or not at all, and there is no chain for the lookahead to follow.
+ * immediately or not at all, and there is no second tile for a count to read.
+ * Measured for Normal's lookahead; with the count in its place the same
+ * shapes bound and failed, five deals each (2026-10-28). Unreasonable is not
+ * refused: nothing has proved where its boards end.
  *
  * Refusing is the collection's rule for a tier with no boards: silently handing
  * back an Easy board is the same defect as a tier that does not bind, and an
@@ -171,7 +183,7 @@ export function validateParams(p: ClustersParams, full: boolean): string | null 
   // still loads at any size, because `full` is false there.
   if (
     full &&
-    p.diff > DIFF_EASY &&
+    p.diff === DIFF_TRICKY &&
     (Math.min(p.w, p.h) < 2 || p.w * p.h < MIN_TRICKY_AREA)
   ) {
     return `${DIFF_NAMES[DIFF_TRICKY]} needs a board of at least 12 squares, at least two wide.`;

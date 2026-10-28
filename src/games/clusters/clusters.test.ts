@@ -161,7 +161,7 @@ describe("params", () => {
     expect(check(tricky(2, 5), true)).toBe(refusal); // 10 squares
     expect(check(tricky(3, 3), true)).toBe(refusal); // 9 squares
     // A one-wide strip never binds however long it is: a cell there has at most
-    // two neighbors, so there is no chain for the lookahead to follow.
+    // two neighbors, so there is no second tile for a count to read.
     expect(check(tricky(1, 20), true)).toBe(refusal);
     // A saved game or a game ID carrying its own description still loads.
     expect(check(tricky(3, 3), false)).toBeNull();
@@ -189,7 +189,7 @@ describe("difficulty tiers", () => {
     }
   });
 
-  it("a Normal board needs the lookahead: unsolvable at level 0, solved at 1", () => {
+  it("a Normal board needs the count: unsolvable at level 0, solved at 1", () => {
     for (const [w, h] of SIZES) {
       const p = { w, h, diff: DIFF_TRICKY };
       const { desc } = newClustersDesc(p, randomNew(`clusters-tricky-${w}`));
@@ -200,7 +200,7 @@ describe("difficulty tiers", () => {
 
   it("every preset generates a board at exactly the tier it names", () => {
     const menu = presetMenu(clustersGame).submenu ?? [];
-    expect(menu.length).toBe(7);
+    expect(menu.length).toBe(10);
     for (const entry of menu) {
       const p = entry.params;
       if (!p) throw new Error("preset menu entry without params");

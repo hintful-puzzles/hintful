@@ -104,10 +104,13 @@ flip:allowloops  full=7x7i30e10m2Ld0  brief=7x7m2L"
 exports[`encoded params are byte-stable > clusters 1`] = `
 "default  full=7x7de  brief=7x7
 preset:7x7 Normal  full=7x7dt  brief=7x7
+preset:7x7 Unreasonable  full=7x7du  brief=7x7
 preset:6x8 Easy  full=6x8de  brief=6x8
 preset:6x8 Normal  full=6x8dt  brief=6x8
+preset:6x8 Unreasonable  full=6x8du  brief=6x8
 preset:9x9 Easy  full=9x9de  brief=9x9
 preset:9x9 Normal  full=9x9dt  brief=9x9
+preset:9x9 Unreasonable  full=9x9du  brief=9x9
 preset:9x11 Easy  full=9x11de  brief=9x11
 bump:w  full=8x7de  brief=8x7
 bump:h  full=7x8de  brief=7x8"

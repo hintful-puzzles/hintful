@@ -8,12 +8,15 @@
  * `break`, and the `force`-every-100 cadence each decide which board a seed
  * produces.
  *
- * The two difficulty tiers change only *which candidates are kept*, never how
- * one is built.
+ * The tiers change only *which candidates are kept*, never how one is built:
+ * Easy and Normal by the ladder, Unreasonable by the search where the ladder
+ * stops short.
  */
+import { dealUnreasonable } from "../../engine/answer-search.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import {
+  answerSearch,
   type ClustersStatus,
   COMPLETE,
   INVALID,
@@ -25,6 +28,7 @@ import {
   COLMASK,
   DIFF_EASY,
   DIFF_TRICKY,
+  DIFF_UNREASONABLE,
   encodeDesc,
   F_COLOR_0,
   F_COLOR_1,
@@ -33,6 +37,13 @@ import {
 
 const DX = [-1, 1, 0, 0];
 const DY = [0, 0, -1, 1];
+
+/** How many positions an Unreasonable candidate's search may try, far inside
+ * what a loaded board is allowed. A candidate with several answers costs the
+ * search its whole budget to prove so on a large board: at the loaded board's
+ * 5000, a 9x11 deal took up to 143 s, and at this, with the climb below, at
+ * most 2.3 s in six (2026-10-28). */
+const DEALING_SEARCH = 200;
 
 /** The cadence at which a stuck run re-randomizes every cell rather than only
  * the blank ones (upstream `clusters_generate`'s `force` argument). */
@@ -82,6 +93,19 @@ function clustersGenerate(
   force: boolean,
   diff: number,
 ): ClustersStatus {
+  drawClues(grid, w, h, rng, force);
+  return graded(grid, w, h, rng, diff);
+}
+
+/** Steps 1 to 4: a two-color fill of `grid`'s blank cells (every cell where
+ * `force`), and the dots it gives, the rest cleared. */
+function drawClues(
+  grid: Uint8Array,
+  w: number,
+  h: number,
+  rng: RandomState,
+  force: boolean,
+): void {
   const s = w * h;
   const counts = new Int32Array(s);
 
@@ -131,11 +155,21 @@ function clustersGenerate(
       grid[i - w] = 0;
     }
   }
+}
 
+/** Solve the dots `grid` holds as tier `diff` keeps a candidate, in place. */
+function graded(
+  grid: Uint8Array,
+  w: number,
+  h: number,
+  rng: RandomState,
+  diff: number,
+): ClustersStatus {
+  const s = w * h;
   // The tiers are named after the solver's own two rungs and share its scale, so
   // a tier *is* the `maxdiff` to solve at. The easy rung goes first, on the grid
   // itself: it is much the cheaper of the two, and running it to its fixpoint
-  // before the lookahead costs the deeper solve nothing, because `solveGame`
+  // before the count costs the deeper solve nothing, because `solveGame`
   // begins with that same fixpoint and the deduction is confluent (a refuted
   // coloring stays refuted as more cells fill in — see solver.ts), so the
   // two-call sequence reaches the identical grid.
@@ -178,6 +212,27 @@ function clustersGenerate(
  */
 export function newClustersDesc(p: ClustersParams, rng: RandomState): { desc: string } {
   const { w, h } = p;
+  if (p.diff === DIFF_UNREASONABLE) {
+    // The climb the other tiers make, to a board the ladder stops short on:
+    // what it proved is kept and the rest re-rolled, and one it finishes has a
+    // cell flipped, as `graded` does.
+    const grid = new Uint8Array(w * h);
+    let climbed = 0;
+    const dealt = dealUnreasonable<Uint8Array>({
+      label: "clusters: Unreasonable",
+      draw: () => {
+        climbed++;
+        drawClues(grid, w, h, rng, climbed % FORCE_EVERY === 0);
+        const status = solveGame(grid, w, h, DIFF_TRICKY);
+        if (status === COMPLETE) grid[randomUpto(rng, w * h)] ^= COLMASK;
+        if (status !== UNFINISHED) return null;
+        return grid.map((tile) => (tile & F_SINGLE ? tile : 0));
+      },
+      deduced: (givens) => solveGame(givens.slice(), w, h, DIFF_TRICKY) === COMPLETE,
+      answer: (givens, budget) => answerSearch(givens, w, h, budget ?? DEALING_SEARCH),
+    });
+    return { desc: encodeDesc(dealt, w, h) };
+  }
   const grid = new Uint8Array(w * h);
   const attempt = retryLimit("clusters: generation attempts");
   let attempts = 0;

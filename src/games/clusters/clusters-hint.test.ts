@@ -9,8 +9,8 @@
  * mid-game boards fiddly to craft, and a property checked on a real firing is
  * the stronger assertion anyway.
  *
- * Tier 2.5: render-scenario frames — the ringed target, the danger double
- * ring, and a chain's what-if marks all reach the canvas, plus a snapshot.
+ * Tier 2.5: render-scenario frames — the ringed target and the thin rings on
+ * the tiles a step reads all reach the canvas, plus a snapshot.
  *
  * Cross-game guards (resume walk, overlay-reaches-cache, narration form) run
  * from `engine/testing/hint-games.ts` enrollment, not here.
@@ -18,19 +18,15 @@
 import { describe, expect, it } from "vitest";
 import { resolvePalette } from "../../engine/color/color-mkhighlight.ts";
 import { TWO_NAMES } from "../../engine/color/colors.ts";
-import { CELL, mark, phrase, stepMarks, unshaped } from "../../engine/hint-words.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
-  DEFAULT_BACKGROUND,
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
-import { NO_FLASH } from "../../engine/win-wave.ts";
 import { type ClustersHintHighlights, clustersGame } from "./index.ts";
 import { border, COL_0, COL_1, COL_HINT_CELL, PREFERRED_TILE_SIZE } from "./render.ts";
 import {
@@ -78,12 +74,24 @@ const breaks =
   (rule: ClustersRuleKind, atTarget?: true) =>
   (step: { rung: ClustersRung }, state: ClustersState): boolean => {
     const d = openingDeduction(state);
-    if (step.rung !== "direct" || d?.reason.at.kind !== rule) return false;
+    if (step.rung !== "direct" || d?.reason.kind !== "direct") return false;
+    if (d.reason.at.kind !== rule) return false;
     return !atTarget || d.reason.at.cell === d.index;
   };
 
+/** A count step of one form, which no step field says, so the opening
+ * deduction is asked. */
+const counts =
+  (form: "full" | "short") =>
+  (step: { rung: ClustersRung }, state: ClustersState): boolean => {
+    const d = openingDeduction(state);
+    return (
+      step.rung === "count" && d?.reason.kind === "count" && d.reason.form === form
+    );
+  };
+
 /** A position for each rung, for the rules a direct step's refuted color
- * breaks, and the chain step whose frame is asserted below. */
+ * breaks, and for each form of a count. */
 const pinned = describeHintPins({
   game: clustersGame,
   params: [P],
@@ -91,34 +99,31 @@ const pinned = describeHintPins({
     surroundedAtTarget: breaks("surrounded", true),
     reachTwoAtTarget: breaks("reachTwo", true),
     dotOvercount: breaks("dotOvercount"),
-    // A what-if step that ends at a contradiction the frame can ring.
-    chainWithDanger: (step) =>
-      step.rung === "chain" && Boolean(step.highlights?.danger),
+    countFull: counts("full"),
+    countShort: counts("short"),
   },
   pins: {
-    /** Held on 12 of 433 positions walked. */
+    /** Held on 6 of 449 positions walked. */
     surroundedAtTarget: "7x7dt:bcAbeICacDCIaca",
-    /** Held on 134 of 433 positions walked. */
+    /** Held on 151 of 449 positions walked. */
     reachTwoAtTarget: "7x7dt:cGadAadGgKbb",
-    /** Held on 128 of 433 positions walked. */
+    /** Held on 135 of 449 positions walked. */
     dotOvercount: {
       id: "7x7dt:cGadAadGgKbb",
       moves: [{ kind: "paint", cells: [{ index: 3, fill: 1 }] }],
     },
-    /** Held on 14 of 433 positions walked. */
-    chainWithDanger: {
-      id: "7x7dt:bcAbeICacDCIaca",
+    /** Held on 16 of 449 positions walked. */
+    countFull: "7x7dt:DgfcfBEdHe",
+    /** Held on 3 of 449 positions walked. */
+    countShort: {
+      id: "7x7dt:CCaHCaejAaiAd",
       moves:
-        '[{"kind":"paint","cells":[{"index":0,"fill":1}]},{"kind":"paint","cells":[{"index":2,"fill":2}]},{"kind":"paint","cells":[{"index":3,"fill":2}]},{"kind":"paint","cells":[{"index":6,"fill":2}]},{"kind":"paint","cells":[{"index":8,"fill":2}]},{"kind":"paint","cells":[{"index":9,"fill":2}]},{"kind":"paint","cells":[{"index":10,"fill":2}]},{"kind":"paint","cells":[{"index":11,"fill":1}]},{"kind":"paint","cells":[{"index":13,"fill":2}]},{"kind":"paint","cells":[{"index":14,"fill":2}]},{"kind":"paint","cells":[{"index":15,"fill":2}]},{"kind":"paint","cells":[{"index":19,"fill":2}]},{"kind":"paint","cells":[{"index":20,"fill":2}]},{"kind":"paint","cells":[{"index":22,"fill":1}]},{"kind":"paint","cells":[{"index":23,"fill":1}]},{"kind":"paint","cells":[{"index":29,"fill":1}]},{"kind":"paint","cells":[{"index":42,"fill":2}]},{"kind":"paint","cells":[{"index":36,"fill":1}]},{"kind":"paint","cells":[{"index":43,"fill":2}]},{"kind":"paint","cells":[{"index":37,"fill":1}]},{"kind":"paint","cells":[{"index":30,"fill":1}]}]',
+        '[{"kind":"paint","cells":[{"index":13,"fill":1}]},{"kind":"paint","cells":[{"index":42,"fill":1}]},{"kind":"paint","cells":[{"index":28,"fill":2}]},{"kind":"paint","cells":[{"index":21,"fill":2}]},{"kind":"paint","cells":[{"index":7,"fill":1}]},{"kind":"paint","cells":[{"index":0,"fill":1}]},{"kind":"paint","cells":[{"index":1,"fill":1}]},{"kind":"paint","cells":[{"index":8,"fill":1}]},{"kind":"paint","cells":[{"index":15,"fill":1}]},{"kind":"paint","cells":[{"index":29,"fill":2}]},{"kind":"paint","cells":[{"index":36,"fill":2}]},{"kind":"paint","cells":[{"index":43,"fill":1}]},{"kind":"paint","cells":[{"index":37,"fill":2}]},{"kind":"paint","cells":[{"index":10,"fill":1}]}]',
     },
-    /** Held on 433 of 433 positions walked. */
+    /** Held on 449 of 449 positions walked. */
     direct: "7x7dt:cGadAadGgKbb",
-    /** Held on 347 of 433 positions walked. */
-    chain: {
-      id: "7x7dt:aBaCEjcAlEabAc",
-      moves:
-        '[{"kind":"paint","cells":[{"index":35,"fill":2}]},{"kind":"paint","cells":[{"index":44,"fill":1}]},{"kind":"paint","cells":[{"index":30,"fill":2}]},{"kind":"paint","cells":[{"index":36,"fill":2}]},{"kind":"paint","cells":[{"index":29,"fill":2}]},{"kind":"paint","cells":[{"index":28,"fill":2}]},{"kind":"paint","cells":[{"index":38,"fill":2}]},{"kind":"paint","cells":[{"index":31,"fill":2}]},{"kind":"paint","cells":[{"index":39,"fill":2}]},{"kind":"paint","cells":[{"index":32,"fill":2}]},{"kind":"paint","cells":[{"index":18,"fill":1}]},{"kind":"paint","cells":[{"index":17,"fill":1}]},{"kind":"paint","cells":[{"index":19,"fill":1}]},{"kind":"paint","cells":[{"index":23,"fill":2}]},{"kind":"paint","cells":[{"index":26,"fill":1}]},{"kind":"paint","cells":[{"index":47,"fill":1}]},{"kind":"paint","cells":[{"index":40,"fill":1}]},{"kind":"paint","cells":[{"index":48,"fill":1}]},{"kind":"paint","cells":[{"index":41,"fill":1}]}]',
-    },
+    /** Held on 293 of 449 positions walked. */
+    count: "7x7dt:DgfcfBEdHe",
   },
 });
 
@@ -166,14 +171,15 @@ describe("deduceHintPlan", () => {
   });
 
   it("is recompute-stable: applying the first move leaves the rest of the plan", () => {
+    // Only the first: a plan takes the firing beside its last step, and a
+    // fresh one has no last step, so after two moves it may start elsewhere
+    // among firings as easy (as Bricks' twin test holds it).
     const state = generate("plan-a");
     const plan = deduceHintPlan(state.grid, state.w, state.h);
     const grid = state.grid.slice();
-    for (let i = 0; i < Math.min(8, plan.deductions.length - 1); i++) {
-      grid[plan.deductions[i].index] = plan.deductions[i].fill;
-      const replan = deduceHintPlan(grid, state.w, state.h);
-      expect(replan.deductions).toEqual(plan.deductions.slice(i + 1));
-    }
+    grid[plan.deductions[0].index] = plan.deductions[0].fill;
+    const replan = deduceHintPlan(grid, state.w, state.h);
+    expect(replan.deductions).toEqual(plan.deductions.slice(1));
   });
 
   it("a surrounded-at-target firing really has every neighbor the forced color", () => {
@@ -202,18 +208,24 @@ describe("deduceHintPlan", () => {
     expect(sameNeighbors(hit.grid, dot, P.w, P.h)).toBe(1);
   });
 
-  it("a chain firing: what-if cells are empty, distinct, and the end is adjacent to the last mark", () => {
-    const hit = findDeduction("chain");
-    if (hit.d.reason.kind !== "chain") throw new Error("not a chain firing");
-    const { steps, at } = hit.d.reason;
-    expect(steps.length).toBeGreaterThan(0);
-    const indices = steps.map((s) => s.index);
-    expect(new Set(indices).size).toBe(indices.length);
-    for (const s of steps) expect(hit.grid[s.index]).toBe(0);
-    // The contradiction surfaces where the last hypothetical fill landed:
-    // at that cell or one of its neighbors.
-    const last = indices[indices.length - 1];
-    expect([last, ...neighborsOf(last, P.w, P.h)]).toContain(at.cell);
+  it.each([
+    "countFull",
+    "countShort",
+  ] as const)("a %s firing: the cell is a neighbor of the first tile that the shared squares leave out, and the answer's color", (kind) => {
+    const hit = findDeduction(kind);
+    if (hit.d.reason.kind !== "count") throw new Error("not a count firing");
+    const { a, b, shared } = hit.d.reason;
+    expect(hit.grid[a] & COLMASK).not.toBe(0);
+    expect(hit.grid[b] & COLMASK).not.toBe(0);
+    for (const u of shared) {
+      expect(neighborsOf(a, P.w, P.h)).toContain(u);
+      expect(neighborsOf(b, P.w, P.h)).toContain(u);
+    }
+    expect(neighborsOf(a, P.w, P.h)).toContain(hit.d.index);
+    expect(shared).not.toContain(hit.d.index);
+    const solved = clustersGame.solve?.(hit.state, hit.state);
+    if (!solved?.ok || solved.move.kind !== "solve") throw new Error("no answer");
+    expect(solved.move.fills[hit.d.index]).toBe(hit.d.fill);
   });
 });
 
@@ -230,39 +242,38 @@ describe("hint", () => {
       expect(stepMarks(step).of("ring", CELL)).toEqual([
         { x: d.index % P.w, y: Math.floor(d.index / P.w) },
       ]);
-      const kind = d.reason.at.kind;
-      if (d.reason.kind === "chain") {
+      if (d.reason.kind === "count") {
         expect(step.explanation).toMatch(
-          new RegExp(
-            `^If (${TWO_NAMES.map((w) => w.light).join("|")}), this cell forces the small pieces?\\b`,
-          ),
+          /must also touch|allows (?:no|at most \w+) \w+ beside/,
         );
-        expect(hl.chain.length).toBe(d.reason.steps.length);
-      } else if (kind === "dotOvercount") {
-        expect(step.explanation).toMatch(
-          new RegExp(
-            `already touches its one (?:${TWO_NAMES.map((w) => w.light).join("|")}) tile`,
-          ),
-        );
-        expect(hl.danger).toBeDefined();
-      } else if (kind === "surrounded" && d.reason.at.cell !== d.index) {
-        expect(step.explanation).toContain("seal");
-      } else if (kind === "reachTwo") {
-        expect(step.explanation).toContain("touch two");
+        expect(hl.outlined).toHaveLength(2);
+      } else {
+        const kind = d.reason.at.kind;
+        if (kind === "dotOvercount") {
+          expect(step.explanation).toMatch(
+            new RegExp(
+              `already touches its one (?:${TWO_NAMES.map((w) => w.light).join("|")}) tile`,
+            ),
+          );
+          expect(hl.outlined).toHaveLength(1);
+        } else if (kind === "surrounded" && d.reason.at.cell !== d.index) {
+          expect(step.explanation).toContain("seal");
+        } else if (kind === "reachTwo") {
+          expect(step.explanation).toContain("touch two");
+        }
       }
-      // "outlined" is uttered iff the danger ring is on display.
-      expect(step.explanation.includes("outlined")).toBe(hl.danger !== undefined);
+      // "outlined" is uttered iff a ring is on display.
+      expect(step.explanation.includes("outlined")).toBe(hl.outlined.length > 0);
 
       // A bare "this cell" points at nothing once a *second* mark is on the
       // board, so wherever one exists the sentence must tie the target to it,
       // and the tie is geometric rather than a color name (`hints.md`: color is
       // never the only cue). `beside this cell` / `its outlined … neighbor` for
-      // the adjacent break, `this cell forces` for a chain, whose break is
-      // adjacent to the last link instead.
-      const secondMark = hl.danger !== undefined || hl.chain.length > 0;
-      if (secondMark) {
+      // the adjacent break; for a count, "this cell" is the first tile's
+      // neighbor that does not touch the second.
+      if (hl.outlined.length > 0) {
         expect(
-          /beside this cell|its outlined \w+ neighbor|from it|this cell forces/.test(
+          /beside this cell|its outlined \w+ neighbor|from it|also touch|beside the/.test(
             step.explanation,
           ),
           `${step.explanation} — a second mark is shown but "this cell" is not tied to it`,
@@ -298,10 +309,10 @@ describe("hint", () => {
   });
 
   it("names the tile on a wrong-but-locally-clean board", () => {
-    // Painting a *chain* firing's refuted color breaks no local rule (the
-    // contradiction needs the lookahead), so only the answer can say which
+    // Painting a *count* firing's refuted color breaks no local rule (the
+    // contradiction needs the two counts), so only the answer can say which
     // tile is wrong, and the midend then never asks the hint about the board.
-    const hit = findDeduction("chain");
+    const hit = findDeduction("countFull");
     const grid = hit.grid.slice();
     grid[hit.d.index] = hit.d.refuted;
     const wrong: ClustersState = { ...hit.state, grid };
@@ -407,105 +418,31 @@ describe("hint rendering (tier 2.5)", () => {
     expect(result.recording.ops).toMatchSnapshot();
   });
 
-  it("a chain frame paints the what-if marks and the danger ring", () => {
-    const result = renderPinnedHint(clustersGame, pinned("chainWithDanger"));
-    const { step } = result;
-    const hl = step.highlights as ClustersHintHighlights;
-    expect(hl.chain.length).toBeGreaterThan(0);
+  it("a count frame rings both tiles it reads", () => {
+    const result = renderPinnedHint(clustersGame, pinned("countFull"));
+    const hl = result.step.highlights as ClustersHintHighlights;
+    expect(hl.outlined).toHaveLength(2);
     const ops = result.recording.ops;
-    // Every what-if cell is outlined COL_HINT_CELL and carries a small piece
-    // of the color the hypothesis would force: smaller than any placed piece.
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
-    const width = (o: (typeof ops)[number]): number | null => {
-      if (o.op === "circle" && o.fill === COL_0) return 2 * o.r;
-      if (o.op !== "polygon" || o.fill !== COL_1) return null;
-      const xs = o.points.map((p) => p[0]);
-      return Math.max(...xs) - Math.min(...xs);
-    };
-    const widths = ops.map(width).filter((v): v is number => v !== null);
-    expect(Math.min(...widths)).toBeLessThan(Math.max(...widths) / 2);
-    // One ring round the danger tile, which is four bands: doubled, it
-    // crossed the piece.
-    const danger = hl.danger;
-    if (!danger) throw new Error("the pinned chain has no danger tile");
+    // One thin ring round each tile, which is four bands: doubled, it would
+    // cross the piece.
     const ts = PREFERRED_TILE_SIZE;
     const side = ts - 3;
     const rt = Math.max(2, Math.floor(ts / 12));
-    const px = danger.x * ts + border(ts) + 1;
-    const py = danger.y * ts + border(ts) + 1;
-    expect(
-      ops.filter(
-        (o) =>
-          o.op === "rect" &&
-          o.color === COL_HINT_CELL &&
-          Math.min(o.w, o.h) === rt &&
-          Math.max(o.w, o.h) === side &&
-          (o.x === px || o.x === px + side - rt) &&
-          (o.y === py || o.y === py + side - rt),
-      ),
-    ).toHaveLength(4);
-
-    // …and no number is drawn on any of them: the pieces are the chain.
-    expect(ops.filter((o) => o.op === "text" && o.color === COL_HINT_CELL)).toEqual([]);
-
+    for (const tile of hl.outlined) {
+      const px = tile.x * ts + border(ts) + 1;
+      const py = tile.y * ts + border(ts) + 1;
+      expect(
+        ops.filter(
+          (o) =>
+            o.op === "rect" &&
+            o.color === COL_HINT_CELL &&
+            Math.min(o.w, o.h) === rt &&
+            Math.max(o.w, o.h) === side &&
+            (o.x === px || o.x === px + side - rt) &&
+            (o.y === py || o.y === py + side - rt),
+        ),
+      ).toHaveLength(4);
+    }
     expect(ops).toMatchSnapshot();
-  });
-
-  it("a chain cell whose outline side closes repaints, keeping its own overlay", () => {
-    // The chain's outline joins neighboring cells, so a cell can keep its role,
-    // and color while a neighbor joining it removes the side between
-    // them — the one change the overlay bits cannot see.
-    const state = generate("join-side");
-    const ts = clustersGame.preferredTileSize ?? 32;
-    const size = clustersGame.computeSize(P, ts);
-    const palette = clustersGame.colors(DEFAULT_BACKGROUND);
-    const step = (chain: ClustersHintHighlights["chain"]) => ({
-      move: { kind: "paint", cells: [] } satisfies ClustersMove,
-      rung: "chain" as const,
-      explanation: "",
-      words: unshaped(
-        phrase`${mark.this("ring", CELL, [{ x: 0, y: 0 }], "cell")} and ${mark.the("outline", CELL, chain, "cell")}`,
-        "evident",
-      ),
-      highlights: { chain } satisfies ClustersHintHighlights,
-    });
-    const alone = step([{ x: 3, y: 3, fill: F_COLOR_0 }]);
-    const joined = step([
-      { x: 3, y: 3, fill: F_COLOR_0 },
-      { x: 2, y: 3, fill: F_COLOR_0 },
-    ]);
-    const frame = (
-      ds: ReturnType<typeof clustersGame.newDrawState>,
-      hint: typeof alone,
-    ) => {
-      const rec = new RecordingDrawing(palette);
-      clustersGame.redraw(
-        rec,
-        ds,
-        null,
-        state,
-        0,
-        clustersGame.newUi(state),
-        0,
-        NO_FLASH,
-        hint,
-      );
-      return rec.ops;
-    };
-
-    const ds = clustersGame.newDrawState(state, ts);
-    const warm = new BoxRaster(size.w, size.h);
-    warm.apply(frame(ds, alone));
-    warm.apply(frame(ds, joined));
-    const fresh = new BoxRaster(size.w, size.h);
-    fresh.apply(frame(clustersGame.newDrawState(state, ts), joined));
-
-    // Known positive: the lone cell's left side is drawn in the first frame.
-    const left = new BoxRaster(size.w, size.h);
-    left.apply(frame(clustersGame.newDrawState(state, ts), alone));
-    const differing = (a: BoxRaster, b: BoxRaster) =>
-      [...a.px.keys()].filter((i) => a.px[i] !== b.px[i]).length;
-    expect(differing(left, fresh)).toBeGreaterThan(0);
-    expect(differing(warm, fresh), "pixels a warm canvas shows differently").toBe(0);
   });
 });

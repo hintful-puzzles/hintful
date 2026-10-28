@@ -21,7 +21,9 @@ This puzzle type was invented by Inaba Naoki under the name *クラスター*, o
 
 {{hint-marks}}
 
-On Normal boards one color can lead further before it fails. The hint then supposes the ringed square were that color, and outlines the squares it would force, each holding a small piece of the color it would take.
+On Normal boards a step reads two tiles' counts together, over the squares both touch. A dot that needs one more of its color, where the other tile's count leaves at least one of the shared squares that color, has its last one there, so its other empty neighbors take the other color. A tile that needs more of its color than the other tile's count allows among the shared squares takes its color on its other neighbors. The hint outlines both tiles.
+
+On Unreasonable boards there may come a point where no deduction is left and the only way on is to try a color and see whether it works. The hint says so rather than guessing for you: save your position, try it, and undo if it breaks.
 
 The rules a step shows breaking are the ones the puzzle states: a dot touches exactly one square of its own color, and every other square touches at least two. A square whose neighbors are all the other color, or that can only ever match one of them, can't be that color.
 

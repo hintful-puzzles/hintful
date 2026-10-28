@@ -1,16 +1,18 @@
 /**
  * Clusters solver — port of `clusters_validate` / `clusters_solver_try` /
- * `clusters_solver_recurse` / `clusters_solve_game` in
- * `puzzles/unreleased/clusters.c`.
+ * `clusters_solve_game` in `puzzles/unreleased/clusters.c`.
  *
- * It is contradiction-based deduction, not guess-and-backtrack search:
+ * It is deduction, not guess-and-backtrack search:
  *   - `clustersValidate` classifies a grid COMPLETE / UNFINISHED / INVALID
  *     from local neighbor counts;
  *   - `solverTry` (difficulty 0, Easy) forces an empty cell's color whenever
  *     the opposite color would make the board INVALID — a single-cell proof by
  *     contradiction;
- *   - `solverRecurse` (difficulty 1, Normal) does the same one hypothetical
- *     level deep, re-running the difficulty-0 fixpoint on a scratch copy.
+ *   - `solverCount` (difficulty 1, Normal) reads two tiles' counts over the
+ *     squares both touch. Upstream's Normal ran the Easy fixpoint from a
+ *     supposed color, a Search, which the count replaced on 2026-10-28; a board
+ *     that needs it is Unreasonable, and the search for its answer is
+ *     {@link answerSearch}.
  * Because the generator is solver-gated, this solver's exact verdict on every
  * intermediate board decides which puzzles exist.
  *
@@ -28,6 +30,8 @@
  * {@link findErrors}) do not mutate, so persisted state and the renderer stay
  * `F_ERROR`-free.
  */
+
+import { type Answer, searchAnswers } from "../../engine/answer-search.ts";
 import {
   findingTechniques,
   runDeductionFixpoint,
@@ -38,6 +42,7 @@ import { stepBudget } from "../../engine/step-budget.ts";
 import {
   type ClustersFill,
   COLMASK,
+  DIFF_TRICKY,
   F_COLOR_0,
   F_COLOR_1,
   F_ERROR,
@@ -175,25 +180,105 @@ function solverTry(grid: Uint8Array, w: number, h: number): number {
   return ret;
 }
 
-/** Difficulty-1 lookahead: for each empty cell, tentatively color it and run
- * the whole difficulty-0 fixpoint on a scratch copy; if that reaches a
- * contradiction, force the opposite color. Mutates `grid` in place. */
-function solverRecurse(grid: Uint8Array, w: number, h: number): number {
+/** The empty orthogonal neighbors of cell `i`. */
+function emptyAround(grid: Uint8Array, w: number, h: number, i: number): number[] {
+  const x = i % w;
+  const y = (i - x) / w;
+  const out: number[] = [];
+  for (let d = 0; d < 4; d++) {
+    const nx = x + DX[d];
+    const ny = y + DY[d];
+    if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+    if (grid[ny * w + nx] === 0) out.push(ny * w + nx);
+  }
+  return out;
+}
+
+/** How many of tile `i`'s empty neighbors can still take its color: at least
+ * `lo` and at most `hi`. A dot takes exactly one tile of its color, and any
+ * other tile at least two. */
+function colorRange(
+  grid: Uint8Array,
+  w: number,
+  h: number,
+  i: number,
+): { open: number[]; lo: number; hi: number } {
+  const col = grid[i] & COLMASK;
+  const x = i % w;
+  const { same } = neighborCounts(grid, w, h, x, (i - x) / w, col);
+  const open = emptyAround(grid, w, h, i);
+  if (grid[i] & F_SINGLE) return { open, lo: 1 - same, hi: 1 - same };
+  return { open, lo: Math.max(0, 2 - same), hi: open.length };
+}
+
+/**
+ * Normal's rung: two tiles' counts over the squares both touch. Tile `b`
+ * bounds how many of those shared squares can take tile `a`'s color, and that
+ * settles `a`'s other empty neighbors: where every one `a` may still take is
+ * bound to be among the shared squares (`a` a dot whose one is there), the
+ * others take the other color; where too few can be there for what `a` needs,
+ * the others take `a`'s color. Every premise is a count of colors on the
+ * board, and nothing is supposed. Yields one deduction for each square
+ * settled, in scan order of `a`, then `b`. Leaves `grid` unchanged.
+ */
+function* countDeductions(
+  grid: Uint8Array,
+  w: number,
+  h: number,
+): Generator<ClustersDeduction> {
   const s = w * h;
-  let ret = 0;
-  for (let i = 0; i < s; i++) {
-    if (grid[i] !== 0) continue;
-    for (let d = 0; d <= 1; d++) {
-      const snapshot = grid.slice();
-      grid[i] = d ? F_COLOR_1 : F_COLOR_0;
-      const result = solveGame(grid, w, h, 0);
-      grid.set(snapshot); // undo the whole hypothetical, cell i included
-      if (result === INVALID) {
-        grid[i] = d ? F_COLOR_0 : F_COLOR_1;
-        ret++;
-        break;
+  const tiles: number[] = [];
+  for (let i = 0; i < s; i++)
+    if (grid[i] & COLMASK && emptyAround(grid, w, h, i).length) tiles.push(i);
+  for (const a of tiles) {
+    const ca = (grid[a] & COLMASK) as ClustersFill;
+    const A = colorRange(grid, w, h, a);
+    for (const b of tiles) {
+      if (b === a) continue;
+      const shared = A.open.filter((u) => emptyAround(grid, w, h, b).includes(u));
+      if (shared.length === 0) continue;
+      const rest = A.open.filter((u) => !shared.includes(u));
+      if (rest.length === 0) continue;
+      // How many shared squares can take `a`'s color, by `b`'s count alone.
+      const B = colorRange(grid, w, h, b);
+      const bOther = B.open.filter((u) => !shared.includes(u)).length;
+      const sameColor = (grid[b] & COLMASK) === ca;
+      const least = sameColor
+        ? Math.max(0, B.lo - bOther)
+        : Math.max(0, shared.length - B.hi);
+      const most = sameColor
+        ? Math.min(shared.length, B.hi)
+        : shared.length - Math.max(0, B.lo - bOther);
+      let fill: ClustersFill | null = null;
+      let form: "full" | "short" | null = null;
+      // `b` must add something: `a`'s count alone is the Easy rung's.
+      if (A.hi > 0 && least >= A.hi) {
+        fill = opposite(ca);
+        form = "full";
+      } else if (A.lo - most >= rest.length && most < shared.length) {
+        fill = ca;
+        form = "short";
       }
+      if (fill === null || form === null) continue;
+      for (const index of rest)
+        yield {
+          index,
+          fill,
+          refuted: opposite(fill),
+          reason: { kind: "count", a, b, shared, form, most },
+        };
     }
+  }
+}
+
+/** Normal's rung for the solver: colors every square
+ * {@link countDeductions} settles. Mutates `grid` in place. */
+function solverCount(grid: Uint8Array, w: number, h: number): number {
+  let ret = 0;
+  for (const d of countDeductions(grid, w, h)) {
+    if (grid[d.index] !== 0) continue;
+    grid[d.index] = d.fill;
+    ret++;
   }
   return ret;
 }
@@ -201,7 +286,7 @@ function solverRecurse(grid: Uint8Array, w: number, h: number): number {
 /**
  * Run the solver to a fixpoint on the shared ordered technique ladder
  * (`engine/deduction-fixpoint.ts`). `maxdiff` 0 uses `solverTry` only; ≥ 1 adds
- * `solverRecurse`. Returns the final verdict — COMPLETE if fully solved,
+ * `solverCount`. Returns the final verdict — COMPLETE if fully solved,
  * INVALID on a contradiction, UNFINISHED if it gets stuck. Mutates `grid`.
  *
  * `clustersValidate` both stops the loop *and* supplies the verdict, while the
@@ -220,7 +305,7 @@ export function solveGame(
   runDeductionFixpoint({
     techniques: [
       { id: "single-cell-refutation", tier: 0, run: () => solverTry(grid, w, h) },
-      { id: "lookahead-chain", tier: 1, run: () => solverRecurse(grid, w, h) },
+      { id: "count", tier: 1, run: () => solverCount(grid, w, h) },
     ],
     maxTier: maxdiff,
     settled: () => {
@@ -229,6 +314,44 @@ export function solveGame(
     },
   });
   return status;
+}
+
+/** How many positions {@link answerSearch} may try. Lowering it refuses
+ * boards in saved games: those of Unreasonable, and those dealt at Normal
+ * before 2026-10-28, which may need the supposition Normal then had. Of 90 of
+ * those, dealt at 7x7, 6x8 and 9x9, 74 do, and each took at most 25 positions
+ * (2026-10-28). */
+const ANSWER_BUDGET = 5000;
+
+/**
+ * The answers of the board `givens` holds, counted to two by trial and error
+ * over the whole ladder: where it stops, an empty square is tried in each
+ * color and the ladder run again. The answer is the board's colors.
+ */
+export function answerSearch(
+  givens: Uint8Array,
+  w: number,
+  h: number,
+  budget = ANSWER_BUDGET,
+): Answer<Uint8Array> {
+  return searchAnswers<Uint8Array, Uint8Array>({
+    start: givens.slice(),
+    deduce: (grid) => {
+      const status = solveGame(grid, w, h, DIFF_TRICKY);
+      if (status === COMPLETE) return "solved";
+      return status === INVALID ? "contradiction" : "stuck";
+    },
+    assume: (grid) => {
+      const i = grid.indexOf(0);
+      return [F_COLOR_0, F_COLOR_1].map((fill) => {
+        const copy = grid.slice();
+        copy[i] = fill;
+        return copy;
+      });
+    },
+    solution: (grid) => grid.map((tile) => tile & ~F_ERROR),
+    budget,
+  });
 }
 
 // --- hint plan --------------------------------------------------------------
@@ -242,15 +365,13 @@ export function solveGame(
 // contradiction in detail.
 //
 // The plan discipline deliberately differs from `solveGame`'s pass-sweeps:
-// single-cell firings restart the row-major scan after each firing (one
-// deduction = one plan step, cheapest first), and a lookahead stall takes the
-// firing whose forcing chain is *shortest* (measured: median 2–3 forced cells
-// against 6 for first-in-scan-order). Both rungs are deterministic, so a
-// recomputed plan continues exactly where the previous one left off.
-// Confluence makes the different order safe: a refuted coloring stays refuted
-// as more cells fill in (the three error conditions are monotone — filling
-// cells can only create errors, never cure them), so any scan order reaches
-// the same verdict as the C solver's.
+// firings restart the row-major scan after each firing (one deduction = one
+// plan step, cheapest first). Both rungs are deterministic, so a recomputed
+// plan continues exactly where the previous one left off. Confluence makes
+// the different order safe: a refuted coloring stays refuted as more cells
+// fill in (the three error conditions are monotone — filling cells can only
+// create errors, never cure them), and a count's bounds only narrow, so any
+// scan order reaches the same verdict.
 
 /** Which of `errorKind`'s three rules a refuted coloring breaks. */
 export type ClustersRuleKind = "surrounded" | "dotOvercount" | "reachTwo";
@@ -262,18 +383,23 @@ export interface ClustersContradiction {
   cell: number;
 }
 
-/** One forced consequence inside a lookahead hypothetical. */
-export interface ChainStep {
-  index: number;
-  fill: ClustersFill;
-}
-
 export type ClustersReason =
   | { kind: "direct"; at: ClustersContradiction }
-  | { kind: "chain"; steps: ChainStep[]; at: ClustersContradiction };
+  /** Tile `b`'s count over the squares it shares with tile `a` settles
+   * `a`'s other empty neighbors: `full` where `a`'s last tile of its color
+   * must be among them, `short` where at most `most` of them can take `a`'s
+   * color and `a` needs every other. */
+  | {
+      kind: "count";
+      a: number;
+      b: number;
+      shared: number[];
+      form: "full" | "short";
+      most: number;
+    };
 
 /** The rungs a hint step can be: the reasons' kinds. */
-export const CLUSTERS_RUNGS = ["direct", "chain"] as const;
+export const CLUSTERS_RUNGS = ["direct", "count"] as const;
 export type ClustersRung = (typeof CLUSTERS_RUNGS)[number];
 
 /** One forced move: coloring `index` with `refuted` breaks `reason`, so it
@@ -355,8 +481,8 @@ function* directDeductions(
 }
 
 /** The cells a deduction's premise reads, which a hint plan continues from:
- * the cell and the cell whose rule its trial broke, each with the cells
- * beside it, and a chain's own cells. */
+ * the cell, and the cell whose rule its trial broke or the two tiles whose
+ * counts it reads, each with the cells beside it. */
 function readsOf(d: ClustersDeduction, w: number, h: number): number[] {
   const around = (c: number): number[] => {
     const x = c % w;
@@ -370,97 +496,14 @@ function readsOf(d: ClustersDeduction, w: number, h: number): number[] {
     ];
   };
   const { reason } = d;
-  return [
-    ...around(d.index),
-    ...around(reason.at.cell),
-    ...(reason.kind === "chain" ? reason.steps.map((s) => s.index) : []),
-  ];
-}
-
-/** Play out the hypothetical "cell `i` is `refuted`": propagate single-cell
- * forcings one at a time (restarting the scan after each, stopping the moment
- * the board breaks). Returns the forced chain and the final contradiction, or
- * null when the hypothetical settles without breaking (not refuted this way).
- * Operates on a scratch copy. */
-function chainToContradiction(
-  grid: Uint8Array,
-  w: number,
-  h: number,
-  i: number,
-  refuted: ClustersFill,
-  budget: { tick(): void },
-): { steps: ChainStep[]; at: ClustersContradiction } | null {
-  const s = w * h;
-  const dup = grid.slice();
-  dup[i] = refuted;
-  const steps: ChainStep[] = [];
-  let at = contradictionAround(dup, w, h, i);
-  if (at) return { steps, at };
-  for (;;) {
-    budget.tick();
-    let fired = false;
-    for (let j = 0; j < s && !fired; j++) {
-      if (dup[j] !== 0) continue;
-      for (let d = 0; d <= 1; d++) {
-        const t: ClustersFill = d ? F_COLOR_1 : F_COLOR_0;
-        dup[j] = t;
-        if (contradictionAround(dup, w, h, j)) {
-          const fill = opposite(t);
-          dup[j] = fill;
-          steps.push({ index: j, fill });
-          at = contradictionAround(dup, w, h, j);
-          if (at) return { steps, at };
-          fired = true;
-          break;
-        }
-        dup[j] = 0;
-      }
-    }
-    if (!fired) return null;
-  }
-}
-
-/** At a single-cell stall, the lookahead firing whose forcing chain is
- * shortest (earliest in scan order on a tie — deterministic, so a recomputed
- * plan picks the same firing). Leaves `grid` unchanged. */
-function shortestChainDeduction(
-  grid: Uint8Array,
-  w: number,
-  h: number,
-  budget: { tick(): void },
-): ClustersDeduction | null {
-  const s = w * h;
-  let best: {
-    index: number;
-    refuted: ClustersFill;
-    chain: { steps: ChainStep[]; at: ClustersContradiction };
-  } | null = null;
-  for (let i = 0; i < s; i++) {
-    if (grid[i] !== 0) continue;
-    for (let d = 0; d <= 1; d++) {
-      const refuted: ClustersFill = d ? F_COLOR_1 : F_COLOR_0;
-      const chain = chainToContradiction(grid, w, h, i, refuted, budget);
-      if (chain) {
-        if (!best || chain.steps.length < best.chain.steps.length) {
-          best = { index: i, refuted, chain };
-        }
-        break; // this cell is decided; its other color needs no trial
-      }
-    }
-  }
-  if (!best) return null;
-  return {
-    index: best.index,
-    fill: opposite(best.refuted),
-    refuted: best.refuted,
-    reason: { kind: "chain", steps: best.chain.steps, at: best.chain.at },
-  };
+  const read = reason.kind === "direct" ? [reason.at.cell] : [reason.a, reason.b];
+  return [...around(d.index), ...read.flatMap(around)];
 }
 
 /** Run the deduction from the player's current grid, recording every forced
- * move in order with the rule its refuted coloring would break — the data a
- * hint narrates. Single-cell firings lead; a stall falls back to the
- * shortest-chain lookahead firing. Operates on a clone. */
+ * move in order with the rule its refuted coloring would break, or the counts
+ * that settle it — the data a hint narrates. Single-cell firings lead; a
+ * stall falls back to the two-tile count. Operates on a clone. */
 export function deduceHintPlan(
   grid0: Uint8Array,
   w: number,
@@ -474,16 +517,7 @@ export function deduceHintPlan(
     techniques: findingTechniques<ClustersDeduction>(
       [
         { id: "direct", tier: 0, find: () => directDeductions(board, w, h) },
-        // Only the shortest chain: each is a search, and the shortest is the
-        // one worth teaching wherever the plan is.
-        {
-          id: "chain",
-          tier: 1,
-          find: () => {
-            const d = shortestChainDeduction(board, w, h, budget);
-            return d ? [d] : [];
-          },
-        },
+        { id: "count", tier: 1, find: () => countDeductions(board, w, h) },
       ],
       (d) => {
         board[d.index] = d.fill;
