@@ -29,15 +29,9 @@ import {
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
-import {
-  type CellText,
-  HintMarks,
-  type MarkBand,
-  type MarkCell,
-  NO_TEXT,
-} from "../../engine/hint-mark.ts";
+import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { textBox } from "../../engine/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import {
   type Flash,
@@ -192,13 +186,13 @@ function digitText(ts: number, x: number, y: number) {
 }
 
 /** The text cell `(x, y)` shows, for a hint's ring to keep clear of. */
-function cellText(state: FillingState, ts: number, x: number, y: number): CellText {
+function cellText(state: FillingState, ts: number, x: number, y: number): RingClear {
   const { w, h, board } = state;
-  if (x < 0 || y < 0 || x >= w || y >= h) return NO_TEXT;
+  if (x < 0 || y < 0 || x >= w || y >= h) return NOTHING_TO_CLEAR;
   const n = board[y * w + x];
-  if (!n) return NO_TEXT;
+  if (!n) return NOTHING_TO_CLEAR;
   const { origin, options } = digitText(ts, x, y);
-  return { enclose: [textBox(origin, options, String(n))], avoid: [], notes: [] };
+  return { enclose: [textBox(origin, options, String(n))], avoid: [] };
 }
 
 // --- tile drawing --------------------------------------------------------

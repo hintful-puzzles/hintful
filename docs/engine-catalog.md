@@ -331,6 +331,9 @@ own `Move`. Exemplar: `keen/index.ts`.
   [`rendering.md`](./rendering.md) § "The note-taking cell's picture".
 - **Offer both pencil preferences, both on by default**, so a gesture does
   the same thing in every member. `note-taking-cell.test.ts` holds both.
+- **Lay notes out with `noteGrid`**, in the cell's `ringTextBox`, so a hint's
+  ring goes round them; `sizedBy` gives cells whose note areas differ one
+  size.
 
 ### `grid/index.ts` — planar-grid geometry (upstream `grid.c`)
 
@@ -1001,11 +1004,13 @@ hue, by index into it. Exemplar: the Path ruleset's line in
 ### `ring.ts` — the round ring
 
 The ring is the engine's: a game calls `GameDrawing.drawRing(box, clear,
-thickness, { room, inside })`, and every drawing strokes the shape
+thickness, { room, inside, centered })`, and every drawing strokes the shape
 `ringShape` fits, the one nearest `box` at the roundest that clears the
 text: a circle or a pill where it can, a rounded square where text sits in
 the corners, and a throw where nothing at least `RING_MIN_ROUNDNESS` round
-fits. `clear` is `{ enclose, avoid }`, built from `textBox`, which takes what
+fits (`ringFits` asks without throwing). `centered` keeps it on the box's
+middle; `ringContentBox` is the box text keeps inside for a centered ring to
+go round it. `clear` is `{ enclose, avoid }`, built from `textBox`, which takes what
 a game passes `drawText`; `NOTHING_TO_CLEAR` where there is no text.
 `inside` draws the move's shape within the ring in its ink, the only way to
 that ink. `MARK_EDGE_PX` is the app's edge round a mark, which a ring keeps
@@ -1018,8 +1023,10 @@ Draw a hint's two cell marks with it: a round ring around the cell the
 deduction acts on, through `drawRing`, and an outline around the region it
 reasons from, a band on the cell's border. Neither goes behind content: no
 fill behind content stays readable in every hue and both schemes. The game
-says what text each cell shows (`HintMarkStyle.text`, a `CellText`; `NO_TEXT`
-for none). Exemplar: `src/skeleton/grid/render.ts`.
+says what text each cell shows (`HintMarkStyle.text`, a `RingClear`;
+`NOTHING_TO_CLEAR` for none), and lays its notes and corner clue out in the
+cell's `ringTextBox`, so the centered ring on the cell goes round them.
+Exemplar: `src/skeleton/grid/render.ts`.
 
 - **`MarkBand` says where the game's border lives**: outside the content
   box for a `COL_GRID`-backed game, inside it for one that draws its own

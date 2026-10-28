@@ -33,17 +33,17 @@ import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import {
-  type CellText,
   HintMarks,
   type MarkBand,
   type MarkCell,
-  NO_TEXT,
+  ringTextBox,
 } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
+  noteGrid,
   winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
@@ -57,7 +57,7 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import { textBox } from "../../engine/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import {
@@ -301,7 +301,7 @@ function drawTile(
     );
   } else {
     const shown = pencilValues(w, tile >> DF_PENCIL_SHIFT);
-    pencilSlots(ts, x, y, drawClue, shown.length).forEach(({ origin, options }, j) => {
+    pencilSlots(ts, x, y, shown.length).forEach(({ origin, options }, j) => {
       const i = shown[j];
       dr.drawText(origin, options, COL_PENCIL, String(i));
       // A hint-ruled-out candidate keeps its normal pencil color with a
@@ -366,30 +366,31 @@ const tileOrigin = (ts: number, x: number, y: number): Point => {
   return { x: border(ts) + x * ts + 1 + ge, y: border(ts) + y * ts + 1 + ge };
 };
 
-/** The cage clue in the top-left of its minimal cell `(x, y)`. */
+/** The cage clue in the top-left corner of its minimal cell `(x, y)`'s
+ * {@link ringTextBox}. */
 function clueText(
   state: KeenState,
   ts: number,
   x: number,
   y: number,
 ): TileText & { text: string } {
+  const area = ringTextBox(markBand(ts, x, y));
   const { dsf, clues } = state.clues;
   const cell = y * state.params.w + x;
-  const t = tileOrigin(ts, x, y);
-  const ge = gridExtra(ts);
   const clue = clues[cell];
   const onlyOneOp = dsf.size(cell) === 1 || state.params.multiplicationOnly;
-  return {
-    origin: { x: t.x + ge * 2, y: t.y + ge * 2 + ((ts / 4) | 0) },
-    options: {
-      align: "left",
-      baseline: "alphabetic",
-      fontType: "variable",
-      size: (ts / 4) | 0,
-    },
-    text: `${clueVal(clue)}${onlyOneOp ? "" : OP_SYMBOL[clueOp(clue)]}`,
-  };
+  const options = clueFont(ts);
+  const text = `${clueVal(clue)}${onlyOneOp ? "" : OP_SYMBOL[clueOp(clue)]}`;
+  const ink = textBox({ x: 0, y: 0 }, options, text);
+  return { origin: { x: area.x - ink.x, y: area.y - ink.y }, options, text };
 }
+
+const clueFont = (ts: number): DrawTextOptions => ({
+  align: "left",
+  baseline: "alphabetic",
+  fontType: "variable",
+  size: (ts / 4) | 0,
+});
 
 /** A placed digit, in the middle of the tile. */
 function digitText(ts: number, x: number, y: number): TileText {
@@ -404,78 +405,44 @@ function digitText(ts: number, x: number, y: number): TileText {
 const pencilValues = (w: number, bits: number): number[] =>
   Array.from({ length: w }, (_, i) => i + 1).filter((i) => bits & (1 << i));
 
-/**
- * Where `count` pencil marks go in cell `(x, y)`, in order: `pw` columns ×
- * `rows(pw)` (at least two rows), with `pw` chosen to maximize the font size in
- * the area below the clue.
- */
-function pencilSlots(
-  ts: number,
-  x: number,
-  y: number,
-  drawClue: boolean,
-  count: number,
-): TileText[] {
-  if (!count) return [];
-  const ge = gridExtra(ts);
-  const t = tileOrigin(ts, x, y);
-  const areaW = ts - ge;
-  const areaH = ts - ge - (drawClue ? (ts / 4) | 0 : 0);
-  const rows = (cols: number): number => Math.max(((count + cols - 1) / cols) | 0, 2);
-  let bestsize = 0;
-  let pw = 0;
-  for (let cols = 3; cols < Math.max(count, 4); cols++) {
-    const fs = Math.min(areaW / cols, areaH / rows(cols));
-    if (fs > bestsize) {
-      bestsize = fs;
-      pw = cols;
-    }
-  }
-  const ph = rows(pw);
-  const fontsize = Math.min((areaW / pw) | 0, (areaH / ph) | 0);
-  const pl = t.x + (((ts - fontsize * pw) / 2) | 0);
-  let pt = t.y + (((ts - fontsize * ph) / 2) | 0);
-  if (drawClue) pt = Math.max(pt, t.y + ge * 3 + ((ts / 4) | 0));
-  return Array.from({ length: count }, (_, j) => ({
-    origin: {
-      x: pl + (((fontsize * (2 * (j % pw) + 1)) / 2) | 0),
-      y: pt + (((fontsize * (2 * ((j / pw) | 0) + 1)) / 2) | 0),
-    },
-    options: glyphFont(fontsize),
-  }));
+/** Where `count` pencil marks go in cell `(x, y)`, in order: the part of the
+ * cell's {@link ringTextBox} below where a cage clue goes, in every cell, so
+ * that a clue neither shrinks a cell's notes nor moves them off its
+ * neighbors' rows. */
+function pencilSlots(ts: number, x: number, y: number, count: number): TileText[] {
+  const area = ringTextBox(markBand(ts, x, y));
+  // A clue's digits and signs ink one height whatever they say.
+  const clue = textBox({ x: 0, y: 0 }, clueFont(ts), "0");
+  const top = area.y + clue.h + gridExtra(ts);
+  return noteGrid({ ...area, y: top, h: area.y + area.h - top }, count);
 }
 
 /** The text cell `(x, y)` shows, for a hint's ring to keep clear of. */
-function cellText(state: KeenState, ts: number, x: number, y: number): CellText {
+function cellText(state: KeenState, ts: number, x: number, y: number): RingClear {
   const w = state.params.w;
-  if (x < 0 || y < 0 || x >= w || y >= w) return NO_TEXT;
+  if (x < 0 || y < 0 || x >= w || y >= w) return NOTHING_TO_CLEAR;
   const cell = y * w + x;
-  const drawClue = state.clues.minimal[cell] === cell;
   const avoid: Rect[] = [];
-  if (drawClue) {
+  if (state.clues.minimal[cell] === cell) {
     const clue = clueText(state, ts, x, y);
     avoid.push(textBox(clue.origin, clue.options, clue.text));
   }
   const digit = state.grid[cell];
   if (digit) {
     const { origin, options } = digitText(ts, x, y);
-    return { enclose: [textBox(origin, options, String(digit))], avoid, notes: [] };
+    return { enclose: [textBox(origin, options, String(digit))], avoid };
   }
   const shown = pencilValues(w, state.pencil[cell]);
-  const notes = pencilSlots(ts, x, y, drawClue, shown.length).map(
-    ({ origin, options }, j) => textBox(origin, options, String(shown[j])),
+  const notes = pencilSlots(ts, x, y, shown.length).map(({ origin, options }, j) =>
+    textBox(origin, options, String(shown[j])),
   );
-  return { enclose: [], avoid, notes };
+  return { enclose: notes, avoid };
 }
 
 /**
  * Where a hint mark sits around cell `(x, y)`: **entirely in the gutter**, the
- * grid line around the tile, rather than inside it.
- *
- * **There is no room inside the tile**, so this is not a matter of taste. Keen
- * lays its pencil marks across the *whole* tile — `pl = tx + (ts − fontsize·pw) /
- * 2` is a block as wide as the cell — leaving a glyph only its own few pixels of
- * font padding at the edge. Anything thick enough to read eats into it.
+ * grid line around the tile, rather than inside it, so the cell's text gives
+ * up as little as it can to the ring's corners ({@link ringTextBox}).
  *
  * Thickness is the gutter's **exact** width: neighboring cell contents are
  * `2·ge + 1` apart (cell `x` ends at `border + x·ts − ge`, cell `x + 1` starts at
@@ -485,8 +452,7 @@ function cellText(state: KeenState, ts: number, x: number, y: number): CellText 
  * band covers it there, which is why erasing one repaints the neighbors (see
  * `redraw`).
  */
-function markBand(ds: KeenDrawState, x: number, y: number): MarkBand {
-  const ts = ds.tileSize;
+function markBand(ts: number, x: number, y: number): MarkBand {
   const ge = gridExtra(ts);
   const inner = ts - 1 - 2 * ge;
   return {
@@ -566,8 +532,8 @@ export function redraw(
     if (ds.hint.packed[i] & HINT_AREA) evidence.push(cell);
   }
   const markStyle = {
-    band: (x: number, y: number) => markBand(ds, x, y),
-    text: (x: number, y: number) => cellText(state, ds.tileSize, x, y),
+    band: (x: number, y: number) => markBand(ts, x, y),
+    text: (x: number, y: number) => cellText(state, ts, x, y),
     evidenceColor: COL_HINT_CELL,
   };
   ds.marks.eraseBeforeTiles(dr, targets, evidence, markStyle, COL_GRID, (x, y) => {

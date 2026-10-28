@@ -29,7 +29,7 @@ import { drawRectCorners, glyphFont, strokeScaledPolygon } from "../../engine/dr
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import { textBox } from "../../engine/ring.ts";
+import { ringContentBox, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect } from "../../engine/types.ts";
 import { type Flash, WIN_NONE, winSlot } from "../../engine/win-wave.ts";
 import type { AscentHighlights } from "./hint.ts";
@@ -138,6 +138,58 @@ function numberText(
   tileSize: number,
 ): { origin: Point; options: DrawTextOptions } {
   return { origin: center, options: glyphFont(Math.trunc(tileSize / 2)) };
+}
+
+/** The box a hint's ring on the square centered at `center` goes round, the
+ * room it may grow into, and its thickness. */
+function ringFrame(center: Point, tileSize: number, hex: boolean) {
+  return {
+    box: centeredSquare(center, tileSize * HINT_MARK_SCALE),
+    room: centeredSquare(center, hex ? tileSize * HEX_RING_ROOM : tileSize - 2),
+    thickness: Math.max(2, Math.round(tileSize / 14)),
+  };
+}
+
+/** The numbers an open path end offers on either side of it, in the corners
+ * of the box a ring on its square goes round (`ringContentBox`): what comes
+ * before it up-left, and after it down-right. */
+function pathEndTexts(
+  center: Point,
+  tileSize: number,
+  hex: boolean,
+  prev: number,
+  next: number,
+): { origin: Point; options: DrawTextOptions; text: string }[] {
+  const { box, room, thickness } = ringFrame(center, tileSize, hex);
+  const area = ringContentBox(box, thickness, room);
+  // A third of the tile, or as large as the longer number fits across the
+  // area with the two of them one above the other.
+  const unit = textBox({ x: 0, y: 0 }, glyphFont(1), String(Math.max(prev, next) + 1));
+  const options = glyphFont(
+    Math.floor(Math.min(tileSize / 3, area.w / unit.w, area.h / (2 * unit.h))),
+  );
+  const at = (
+    text: string,
+    cornerX: number,
+    cornerY: number,
+    sx: number,
+    sy: number,
+  ) => {
+    const ink = textBox({ x: 0, y: 0 }, options, text);
+    // Where the origin goes for the ink's corner (sx, sy ∈ {0, 1}) to sit on
+    // the area's.
+    return {
+      origin: { x: cornerX - ink.x - sx * ink.w, y: cornerY - ink.y - sy * ink.h },
+      options,
+      text,
+    };
+  };
+  return [
+    ...(prev >= 0 ? [at(String(prev + 1), area.x, area.y, 0, 0)] : []),
+    ...(next >= 0
+      ? [at(String(next + 1), area.x + area.w, area.y + area.h, 1, 1)]
+      : []),
+  ];
 }
 
 const ERROR_MARGIN = 0.1;
@@ -857,17 +909,26 @@ export function redrawAscent(
      * line stays inside the square and its neighbor draws the other half. */
     if (hintMarks[i] & HINT_TARGET) {
       const { origin, options } = numberText(center, tileSize);
+      // The numbers a path end offers in the corners are drawn only where no
+      // number is, and the ring goes round them as it does a number.
+      const corners =
+        sn >= 0 || isNumberEdge(sn) || sn === NUMBER_CLEAR
+          ? []
+          : pathEndTexts(center, tileSize, hex, ui.prevhints[i], ui.nexthints[i]);
+      const { box, room, thickness } = ringFrame(center, tileSize, hex);
       dr.drawRing(
-        centeredSquare(center, tileSize * HINT_MARK_SCALE),
-        // The offered numbers in the corners are the square's notes, which the
-        // number a step places replaces (design D7), so the ring may cross them.
+        box,
         {
-          enclose: sn >= 0 ? [textBox(origin, options, String(sn + 1))] : [],
+          enclose: [
+            ...(sn >= 0 ? [textBox(origin, options, String(sn + 1))] : []),
+            ...corners.map((t) => textBox(t.origin, t.options, t.text)),
+          ],
           avoid: [],
         },
-        Math.max(2, Math.round(tileSize / 14)),
+        thickness,
         {
-          room: centeredSquare(center, hex ? tileSize * HEX_RING_ROOM : tileSize - 2),
+          centered: true,
+          room,
           inside: routeBits[i]
             ? (ink) => {
                 for (let dir = 0; dir < movement.dircount; dir++) {
@@ -995,20 +1056,14 @@ export function redrawAscent(
         String(fromNumberEdge(sn) + 1),
       );
     } else if (sn !== NUMBER_CLEAR) {
-      if (ui.prevhints[i] >= 0)
-        dr.drawText(
-          { x: tx1 - Math.trunc(tileSize / 4), y: ty1 - Math.trunc(tileSize / 4) },
-          glyphFont(Math.trunc(tileSize / 3)),
-          COL_BORDER,
-          String(ui.prevhints[i] + 1),
-        );
-      if (ui.nexthints[i] >= 0)
-        dr.drawText(
-          { x: tx1 + Math.trunc(tileSize / 4), y: ty1 + Math.trunc(tileSize / 4) },
-          glyphFont(Math.trunc(tileSize / 3)),
-          COL_BORDER,
-          String(ui.nexthints[i] + 1),
-        );
+      for (const t of pathEndTexts(
+        center,
+        tileSize,
+        hex,
+        ui.prevhints[i],
+        ui.nexthints[i],
+      ))
+        dr.drawText(t.origin, t.options, COL_BORDER, t.text);
     }
 
     /* findMistakes overlay: an inset red outline. */

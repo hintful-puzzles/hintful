@@ -9,20 +9,22 @@
  * strikethrough, evidence `COL_HINT_CELL`, cage clue glyphs still drawn).
  */
 import { describe, expect, it } from "vitest";
+import { resolvePalette } from "../../engine/color/color-mkhighlight.ts";
+import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeHintKindPins,
   describeHintPins,
 } from "../../engine/testing/hint-positions.ts";
 import { expectRing, markSides, ringsOf } from "../../engine/testing/mark-shape.ts";
-import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { newKeenDesc } from "./generator.ts";
 import { keenGame } from "./index.ts";
-import { COL_HINT_CELL, COL_PENCIL } from "./render.ts";
+import { COL_HINT_CELL, COL_PENCIL, computeSize, coord, gridExtra } from "./render.ts";
 import { type HintReason, recordKeenDeductions } from "./solver.ts";
 import {
   DIFF_EXTREME,
@@ -494,6 +496,46 @@ describe("keen hint render", () => {
     // ring could not go round clear of its notes (`make-rings-round`, D6).
     expect(ringsOf(recording.ops)).toEqual([]);
     expect(recording.ops).toMatchSnapshot();
+  });
+
+  // The board the owner saw a ring cross a cell's notes on (2026-10-28,
+  // `keep-rings-off-a-cells-numbers`): at 87 px the ring found was a circle
+  // round one note, and at 108 px and up a rounded square shifted up and left
+  // over the notes 3 and 4.
+  it.each([
+    ["87", 436],
+    ["138", 714],
+  ])("the placement's ring on the proposal's board goes round its whole %s px cell", (_, side) => {
+    const midend = new Midend(keenGame);
+    midend.newGameFromId("4dx:_a_a_aac_6aa,m8a5s1s1a5m4s1");
+    const board = midend.size({ w: side, h: side });
+    let ts = 1;
+    while (computeSize({ w: 4 }, ts + 1).w <= board.w) ts++;
+    expect(midend.hint()).toBeNull();
+    for (let i = 0; i < 20; i++) {
+      if (
+        /rules out 3, so this cell must be 3/.test(
+          midend.activeHintStep()?.explanation ?? "",
+        )
+      )
+        break;
+      midend.executeHint();
+    }
+    const step = midend.activeHintStep() as AnyStep;
+    expect(step?.explanation).toMatch(/rules out 3, so this cell must be 3/);
+    const recording = new RecordingDrawing(
+      resolvePalette(keenGame, DEFAULT_BACKGROUND),
+    );
+    midend.redraw(recording);
+    expectRing(recording.ops);
+    const [ring] = ringsOf(recording.ops);
+    const { x, y } = step.highlights.targets[0];
+    const ge = gridExtra(ts);
+    const center = (v: number) => coord(v, ts) + 1 + ge + (ts - 1 - 2 * ge) / 2;
+    expect(Math.abs(ring.x + ring.w / 2 - center(x))).toBeLessThanOrEqual(1);
+    expect(Math.abs(ring.y + ring.h / 2 - center(y))).toBeLessThanOrEqual(1);
+    // Round the whole cell, not a part of it.
+    expect(ring.w).toBeGreaterThanOrEqual(ts - 1 - 2 * ge);
   });
 
   it("a hidden-single placement hatches the whole line and rings the target", () => {

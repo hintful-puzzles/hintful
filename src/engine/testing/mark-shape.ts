@@ -12,7 +12,8 @@
  * Dev/test-only; never imported by production code.
  */
 import { expect } from "vitest";
-import { RING_MIN_ROUNDNESS } from "../ring.ts";
+import { RING_MIN_ROUNDNESS, ringSide, textBox } from "../ring.ts";
+import type { DrawTextOptions } from "../types.ts";
 import { type DrawOp, opsOfKind, paintsWith } from "./recording-drawing.ts";
 
 interface RectOp {
@@ -35,6 +36,53 @@ export function markSides(ops: readonly RectOp[], color: number): RectOp[] {
   return ops.filter((o) => o.op === "rect" && o.color === color);
 }
 
+/**
+ * Every ring of a frame that crosses text the frame draws, with the text: the
+ * claim "a ring crosses no number" read off what is drawn, not off the text a
+ * game hands its ring. Text in the ring's own ink is drawn inside the ring
+ * (`RingOptions.inside`) and is not counted, and nor is text on a filled disc
+ * painted over the ring, which hides the ring there (Mathrax's clues). The
+ * recorder rounds to whole pixels, so a pixel's overlap with the stroke is
+ * allowed for.
+ */
+export function ringCrossings(ops: readonly DrawOp[]): string[] {
+  const crossings: string[] = [];
+  ops.forEach((r, at) => {
+    if (r.op !== "ring") return;
+    const shape = {
+      rect: { x: r.x, y: r.y, w: r.w, h: r.h },
+      radius: r.radius,
+      thickness: r.thickness,
+    };
+    const discs = ops
+      .slice(at + 1)
+      .flatMap((o) => (o.op === "circle" && o.fill >= 0 ? [o] : []));
+    for (const t of opsOfKind(ops, "text")) {
+      if (t.color === r.color) continue;
+      const options = {
+        align: t.align,
+        baseline: t.baseline,
+        fontType: t.fontType,
+        size: t.size,
+      } as DrawTextOptions;
+      const box = textBox(t, options, t.text);
+      const onDisc = discs.some((d) =>
+        [
+          [box.x, box.y],
+          [box.x + box.w, box.y],
+          [box.x, box.y + box.h],
+          [box.x + box.w, box.y + box.h],
+        ].every(([px, py]) => Math.hypot(px - d.cx, py - d.cy) <= d.r),
+      );
+      if (!onDisc && ringSide(shape, box, -1) === "crossed")
+        crossings.push(
+          `a ${r.w}×${r.h} ring at (${r.x}, ${r.y}) crosses "${t.text}" at (${t.x}, ${t.y})`,
+        );
+    }
+  });
+  return crossings;
+}
+
 /** The rings a frame draws (`GameDrawing.drawRing`). */
 export function ringsOf(ops: readonly DrawOp[]): Extract<DrawOp, { op: "ring" }>[] {
   return opsOfKind(ops, "ring");
@@ -42,8 +90,8 @@ export function ringsOf(ops: readonly DrawOp[]): Extract<DrawOp, { op: "ring" }>
 
 /**
  * The cells a deduction acts on are **ringed**: `rings` ring ops, each at least
- * {@link RING_MIN_ROUNDNESS} round, and nothing else drawn in the ring's ink.
- * A step may act on more than one cell.
+ * {@link RING_MIN_ROUNDNESS} round and crossing no text, and nothing else
+ * drawn in the ring's ink. A step may act on more than one cell.
  */
 export function expectRing(
   ops: readonly DrawOp[],
@@ -51,6 +99,7 @@ export function expectRing(
 ): void {
   const found = ringsOf(ops);
   expect(found.length, `${rings} target ring(s)`).toBe(rings);
+  expect(ringCrossings(ops), "a ring crosses no number").toEqual([]);
   for (const r of found) {
     const half = Math.min(r.w, r.h) / 2;
     expect(r.radius, `a ${r.w}×${r.h} ring is round`).toBeGreaterThanOrEqual(

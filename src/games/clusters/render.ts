@@ -27,15 +27,11 @@ import {
 } from "../../engine/color/palette.ts";
 import { drawThickRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import {
-  HintMarks,
-  type MarkBand,
-  type MarkCell,
-  NO_TEXT,
-} from "../../engine/hint-mark.ts";
+import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { ClustersHintHighlights, ClustersMistake } from "./index.ts";
@@ -305,7 +301,7 @@ export function redraw(
   const markStyle = {
     band: (x: number, y: number) => markBand(ds, x, y),
     // A forced cell shows a piece or a dot, never text.
-    text: () => NO_TEXT,
+    text: () => NOTHING_TO_CLEAR,
     evidenceColor: COL_HINT_CELL,
   };
   ds.marks.eraseBeforeTiles(dr, targets, [], markStyle, COL_GRID, (x, y) => {

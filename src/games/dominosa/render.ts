@@ -24,16 +24,14 @@ import {
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
-  type CellText,
   type HintMarkStyle,
   HintMarks,
   type MarkBand,
   type MarkCell,
   MarkOutlines,
-  NO_TEXT,
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { textBox } from "../../engine/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, WIN_LEAD } from "../../engine/win-wave.ts";
 import { SPOT } from "./hint-text.ts";
@@ -223,12 +221,12 @@ function numberText(ts: number, x: number, y: number) {
 }
 
 /** The number square `(x, y)` shows, for a hint's ring to keep clear of. */
-function squareText(state: DominosaState, ts: number, x: number, y: number): CellText {
+function squareText(state: DominosaState, ts: number, x: number, y: number): RingClear {
   const { w, h } = state;
-  if (x < 0 || y < 0 || x >= w || y >= h) return NO_TEXT;
+  if (x < 0 || y < 0 || x >= w || y >= h) return NOTHING_TO_CLEAR;
   const { origin, options } = numberText(ts, x, y);
   const text = String(state.numbers[y * w + x]);
-  return { enclose: [textBox(origin, options, text)], avoid: [], notes: [] };
+  return { enclose: [textBox(origin, options, text)], avoid: [] };
 }
 
 /**

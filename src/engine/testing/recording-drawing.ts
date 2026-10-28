@@ -246,9 +246,9 @@ export class RecordingDrawing implements GameDrawing {
     box: Rect,
     clear: RingClear,
     thickness: number,
-    { room, inside }: RingOptions = {},
+    { room, inside, centered }: RingOptions = {},
   ): void {
-    const { rect, radius } = ringShape(box, clear, thickness, room);
+    const { rect, radius } = ringShape(box, clear, thickness, room, centered);
     const color = this.palette.length - 2;
     this.ops.push({
       op: "ring",

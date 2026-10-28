@@ -34,8 +34,8 @@ import {
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
-import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
-import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
+import { ringFits, textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { MosaicHint } from "./hint.ts";
 import { BLOCK, blockOf } from "./hint-marks.ts";
@@ -139,19 +139,26 @@ export interface MosaicDrawState {
    * forces a draw (docs/rendering.md § "The tile cache and the diff
    * key"). */
   cache: Int32Array;
+  /** The squares the last frame ringed, as `y * width + x`: their rings may
+   * reach into the tiles round them, which repaint when the rings go. */
+  ringed: number[];
 }
 
 export function newDrawState(state: MosaicState, tileSize: number): MosaicDrawState {
   return {
     tileSize,
     cache: new Int32Array((state.width + 1) * (state.height + 1)).fill(-1),
+    ringed: [],
   };
 }
 
 // --- cell drawing ---------------------------------------------------------------
 
 /** Where the number of the square at `(startX, startY)` is written: read by
- * the text and by the ring round the square. */
+ * the text and by the ring round the square. Three fifths of the tile, and a
+ * pixel less on a tile of 6 px or under, where a ring fits between a 3 px
+ * number and its neighbors' by no step of its search (measured 2026-10-28,
+ * `keep-rings-off-a-cells-numbers`). */
 function clueText(
   startX: number,
   startY: number,
@@ -159,7 +166,7 @@ function clueText(
 ): { origin: Point; options: DrawTextOptions } {
   return {
     origin: { x: startX + Math.floor(ts / 2) - 1, y: startY + Math.floor(ts / 2) - 1 },
-    options: glyphFont(Math.floor((ts * 3) / 5)),
+    options: glyphFont(Math.floor((ts * 3) / 5) - (ts <= 6 ? 1 : 0)),
   };
 }
 
@@ -253,8 +260,8 @@ function drawCell(
       dr.drawText(at, clue.options, textColor, String(clueVal));
     }
 
-    // The hint's marks lie inside the tile, so its own repaint undoes them:
-    // the block's outline over its edge, then the ring round the square.
+    // The block's outline lies inside the tile, so its own repaint undoes it.
+    // The ring round a square is drawn by `redraw`, after every tile.
     const sides = cell >>> HINT_SIDES_SHIFT;
     const band: MarkBand = {
       box,
@@ -262,20 +269,6 @@ function drawCell(
       inner: Math.max(2, ts >> 4),
     };
     drawMarkSides(dr, band, (sides >> 4) & MARK_ALL, COL_HINT_EVIDENCE);
-    if (sides & MARK_ALL)
-      dr.drawRing(
-        box,
-        clueVal >= 0
-          ? {
-              enclose: [textBox(clue.origin, clue.options, String(clueVal))],
-              avoid: [],
-            }
-          : NOTHING_TO_CLEAR,
-        band.inner,
-        // The number sits a pixel off the square's center at small sizes,
-        // so the ring may use the whole tile to center on it.
-        { room: tile },
-      );
     // The number a step names is circled, inside the square and clear of its
     // edge, so it shows on a square the step also rings. On the piece the
     // circle takes the number's own ink: the evidence color against the piece
@@ -326,6 +319,20 @@ export function redraw(
 
   const mistakeSet = new Set(mistakes?.map((m) => m.y * width + m.x));
 
+  // A ring may reach into the tiles round its square, so when the rings
+  // change those tiles repaint, before the rings that stay are drawn again.
+  const ringed = marks.of("ring", CELL).map((c) => c.y * width + c.x);
+  if (ringed.join() !== ds.ringed.join())
+    for (const i of ds.ringed)
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dx = -1; dx <= 1; dx++) {
+          const x = (i % width) + dx;
+          const y = Math.floor(i / width) + dy;
+          if (x >= 0 && y >= 0 && x <= width && y <= height)
+            ds.cache[y * (width + 1) + x] = -1;
+        }
+  ds.ringed = ringed;
+
   for (let y = 0; y <= height; y++) {
     for (let x = 0; x <= width; x++) {
       const inBounds = x < width && y < height;
@@ -352,4 +359,60 @@ export function redraw(
       }
     }
   }
+
+  // Every frame, since a tile a ring reaches into may have repainted.
+  for (const i of ringed)
+    drawSquareRing(dr, state, ts, i % width, Math.floor(i / width));
+}
+
+/** The number square `(x, y)` shows, as a ring keeps clear of it, or none. */
+function numberBox(state: MosaicState, ts: number, x: number, y: number): Rect | null {
+  if (x < 0 || y < 0 || x >= state.width || y >= state.height) return null;
+  const clueVal = state.board.clues[y * state.width + x];
+  if (clueVal < 0) return null;
+  const clue = clueText(x * ts + margin(ts), y * ts + margin(ts), ts);
+  return textBox(clue.origin, clue.options, String(clueVal));
+}
+
+/**
+ * The ring round square `(x, y)`, round its number. Inside the tile where
+ * one fits there; where none does (50×50 on a phone) it reaches half a tile
+ * into the neighbors, between their numbers, with the thinnest stroke.
+ */
+function drawSquareRing(
+  dr: GameDrawing,
+  state: MosaicState,
+  ts: number,
+  x: number,
+  y: number,
+): void {
+  const startX = x * ts + margin(ts);
+  const startY = y * ts + margin(ts);
+  const box = { x: startX, y: startY, w: ts - 1, h: ts - 1 };
+  const tile = { x: startX - 1, y: startY - 1, w: ts, h: ts };
+  const own = numberBox(state, ts, x, y);
+  const avoid: Rect[] = [];
+  for (let dy = -1; dy <= 1; dy++)
+    for (let dx = -1; dx <= 1; dx++) {
+      const n = dx || dy ? numberBox(state, ts, x + dx, y + dy) : null;
+      if (n) avoid.push(n);
+    }
+  const clear = { enclose: own ? [own] : [], avoid };
+  // The number sits a pixel off the square's center at small sizes, so the
+  // ring may use the whole tile to center on it.
+  const thickness = Math.max(2, ts >> 4);
+  if (ringFits(box, clear, thickness, tile)) {
+    dr.drawRing(box, clear, thickness, { room: tile });
+    dr.drawUpdate(tile);
+    return;
+  }
+  const reach = Math.floor(ts / 2);
+  const room = {
+    x: tile.x - reach,
+    y: tile.y - reach,
+    w: tile.w + 2 * reach,
+    h: tile.h + 2 * reach,
+  };
+  dr.drawRing(box, clear, 1, { room });
+  dr.drawUpdate(room);
 }

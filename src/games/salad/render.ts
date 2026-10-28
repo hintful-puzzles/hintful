@@ -37,11 +37,10 @@ import { drawRectOutline, drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import {
-  type CellText,
   HintMarks,
   type MarkBand,
   type MarkCell,
-  NO_TEXT,
+  ringTextBox,
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import {
@@ -49,6 +48,7 @@ import {
   cellHighlight,
   drawCellBackground,
   highlightFill,
+  noteGrid,
   winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
@@ -62,7 +62,7 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import { textBox } from "../../engine/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { SaladHint } from "./hint.ts";
@@ -269,8 +269,7 @@ export function newDrawState(s: SaladState, tileSize: number): SaladDrawState {
  * ghosted preview, up to three struck notes — is laid out inside the square's
  * `drawBall`/`drawGhost` insets rather than to its edge.
  */
-function markBand(ds: SaladDrawState, x: number, y: number): MarkBand {
-  const ts = ds.tileSize;
+function markBand(ts: number, x: number, y: number): MarkBand {
   return {
     box: { x: cellOrigin(x, ts), y: cellOrigin(y, ts), w: ts, h: ts },
     outer: 0,
@@ -466,43 +465,27 @@ function pencilSlots(
   y: number,
 ): (TileText & { n: number })[] {
   const o = s.order;
-  const inBall = s.holes[y * o + x] === CIRCLE;
-  const ts = inBall ? Math.floor(tileSize * 0.8) : tileSize;
-  const inset = (v: number) => Math.floor((v + 1.1) * tileSize) + pad(tileSize);
-  const tx = inBall ? inset(x) : cellOrigin(x, tileSize);
-  const ty = inBall ? inset(y) : cellOrigin(y, tileSize);
   const mmx = s.nums + 1;
   const marks = s.pencil[y * o + x];
-
-  let nhints = 0;
-  for (let i = 0; i < mmx; i++) if (marks & (1 << i)) nhints++;
-  if (!nhints) return [];
-
-  let hw = 1;
-  while (hw * hw < nhints) hw++;
-  if (hw < 3) hw = 3;
-  let hh = Math.floor((nhints + hw - 1) / hw);
-  if (hh < 2) hh = 2;
-  const hmax = Math.max(hw, hh);
-  const fontsz = Math.floor(ts / Math.floor((hmax * (11 - hmax)) / 8));
-
-  const slots: (TileText & { n: number })[] = [];
-  for (let i = 0; i < mmx; i++) {
-    if (!(marks & (1 << i))) continue;
-    const j = slots.length;
-    const hx = j % hw;
-    const hy = Math.floor(j / hw);
-    slots.push({
-      origin: {
-        x: tx + Math.floor(((4 * hx + 3) * ts) / (4 * hw + 2)),
-        y: ty + Math.floor(((4 * hy + 3) * ts) / (4 * hh + 2)),
-      },
-      options: glyphFont(fontsz),
-      text: i === mmx - 1 ? "X" : symbolChar(s.mode, i + 1),
-      n: i + 1,
-    });
-  }
-  return slots;
+  const shown = Array.from({ length: mmx }, (_, i) => i).filter(
+    (i) => marks & (1 << i),
+  );
+  const side = Math.floor(tileSize * 0.8);
+  const inset = (v: number) => Math.floor((v + 1.1) * tileSize) + pad(tileSize);
+  const band = markBand(tileSize, x, y);
+  const square = ringTextBox(band);
+  const ball = ringTextBox(band, {
+    within: { x: inset(x), y: inset(y), w: side, h: side },
+  });
+  // Where the board has balls, every square's notes take the size a ball
+  // leaves them, so a ball does not shrink a square's notes.
+  const sizedBy = s.holes.includes(CIRCLE) ? [square, ball] : [square];
+  const area = s.holes[y * o + x] === CIRCLE ? ball : square;
+  return noteGrid(area, shown.length, sizedBy).map((slot, j) => ({
+    ...slot,
+    text: shown[j] === mmx - 1 ? "X" : symbolChar(s.mode, shown[j] + 1),
+    n: shown[j] + 1,
+  }));
 }
 
 /** A symbol in the middle of square `(x, y)`: the placed one, or the one a
@@ -531,17 +514,17 @@ function clueIndex(o: number, x: number, y: number): number {
 /** The text square `(x, y)` shows this frame, a margin tile's border clue
  * included, for a hint's ring to keep clear of. A preview the hint draws is
  * enclosed as the value is: it is the value the step writes. */
-function cellText(s: SaladState, ds: SaladDrawState, x: number, y: number): CellText {
+function cellText(s: SaladState, ds: SaladDrawState, x: number, y: number): RingClear {
   const o = s.order;
   const ts = ds.tileSize;
   const clue = clueIndex(o, x, y);
   if (clue >= 0) {
-    if (!s.borderclues[clue]) return NO_TEXT;
+    if (!s.borderclues[clue]) return NOTHING_TO_CLEAR;
     const { origin, options } = symbolText(ts, x, y);
     const text = String.fromCharCode(64 + s.borderclues[clue]);
-    return { enclose: [textBox(origin, options, text)], avoid: [], notes: [] };
+    return { enclose: [textBox(origin, options, text)], avoid: [] };
   }
-  if (x < 0 || y < 0 || x >= o || y >= o) return NO_TEXT;
+  if (x < 0 || y < 0 || x >= o || y >= o) return NOTHING_TO_CLEAR;
   const i = y * o + x;
   const ghost = (ds.hint.packed[i] & HINT_GHOST_MASK) >> HINT_GHOST_SHIFT;
   const enclose: Rect[] = [];
@@ -556,7 +539,7 @@ function cellText(s: SaladState, ds: SaladDrawState, x: number, y: number): Cell
           textBox(origin, options, text),
         )
       : [];
-  return { enclose, avoid: [], notes };
+  return { enclose: [...enclose, ...notes], avoid: [] };
 }
 
 /** The entry a hint step is asking for, previewed inside the square's ring in
@@ -729,7 +712,7 @@ export function redraw(
       }
     }
     ds.marks.paint(dr, targets, evidence, {
-      band: (x, y) => markBand(ds, x, y),
+      band: (x, y) => markBand(ds.tileSize, x, y),
       text: (x, y) => cellText(s, ds, x, y),
       evidenceColor: COL_HINT_CELL,
       // The entry the hint asks for, inside the ring on its square.

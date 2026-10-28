@@ -34,16 +34,16 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import {
-  type CellText,
   HintMarks,
   type MarkBand,
   type MarkCell,
-  NO_TEXT,
+  ringTextBox,
 } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
   cellHighlight,
   drawCellBackground,
+  noteGrid,
   winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
@@ -58,7 +58,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
-import { textBox } from "../../engine/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone } from "../../engine/win-wave.ts";
 import type { UnequalMove } from "./state.ts";
@@ -244,8 +244,7 @@ export function newDrawState(state: UnequalState, tileSize: number): UnequalDraw
  * where a clue flag is set — so `HintMarks` is told the resting color and undoes
  * a mark that moved itself.
  */
-function markBand(ds: UnequalDrawState, x: number, y: number): MarkBand {
-  const ts = ds.tileSize;
+function markBand(ts: number, x: number, y: number): MarkBand {
   return {
     box: { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts },
     outer: Math.max(2, ts >> 4),
@@ -521,21 +520,10 @@ function digitText(ts: number, x: number, y: number): TileText {
 const pencilValues = (o: number, bits: number): number[] =>
   Array.from({ length: o }, (_, i) => i + 1).filter((i) => bits & (1 << i));
 
-/** Where `count` pencil marks go in cell `(x, y)`, in order: upstream
- * `draw_hints`'s grid, stolen from solo. */
+/** Where `count` pencil marks go in cell `(x, y)`, in order: its
+ * {@link ringTextBox}. */
 function pencilSlots(ts: number, x: number, y: number, count: number): TileText[] {
-  if (count === 0) return [];
-  const hw = Math.max(3, Math.ceil(Math.sqrt(count)));
-  const hh = Math.max(2, Math.ceil(count / hw));
-  const hmax = Math.max(hw, hh);
-  const fontsz = Math.floor(ts / ((hmax * (11 - hmax)) / 8));
-  return Array.from({ length: count }, (_, j) => ({
-    origin: {
-      x: coord(x, ts) + Math.floor(((4 * (j % hw) + 3) * ts) / (4 * hw + 2)),
-      y: coord(y, ts) + Math.floor(((4 * Math.floor(j / hw) + 3) * ts) / (4 * hh + 2)),
-    },
-    options: glyphFont(fontsz),
-  }));
+  return noteGrid(ringTextBox(markBand(ts, x, y)), count);
 }
 
 /** The pencil-mark grid. A candidate in `struck` (bit `1 << n`) is a
@@ -562,23 +550,22 @@ function drawHints(
 
 /** The text cell `(x, y)` shows, for a hint's ring to keep clear of. The
  * clue signs between cells are drawn shapes, outside the ring's band. */
-function cellText(state: UnequalState, ts: number, x: number, y: number): CellText {
+function cellText(state: UnequalState, ts: number, x: number, y: number): RingClear {
   const o = state.order;
-  if (x < 0 || y < 0 || x >= o || y >= o) return NO_TEXT;
+  if (x < 0 || y < 0 || x >= o || y >= o) return NOTHING_TO_CLEAR;
   const num = state.grid[y * o + x];
   if (num > 0) {
     const { origin, options } = digitText(ts, x, y);
     return {
       enclose: [textBox(origin, options, displayChar(num, o))],
       avoid: [],
-      notes: [],
     };
   }
   const shown = pencilValues(o, state.pencil[y * o + x]);
   const notes = pencilSlots(ts, x, y, shown.length).map(({ origin, options }, j) =>
     textBox(origin, options, displayChar(shown[j], o)),
   );
-  return { enclose: [], avoid: [], notes };
+  return { enclose: notes, avoid: [] };
 }
 
 /** The three palette indices the shared glyph is drawn in; the engine draws it
@@ -637,7 +624,7 @@ export function redraw(
     if (ds.hint.packed[i] & HINT_AREA) evidence.push(c);
   }
   const markStyle = {
-    band: (x: number, y: number) => markBand(ds, x, y),
+    band: (x: number, y: number) => markBand(ds.tileSize, x, y),
     text: (x: number, y: number) => cellText(state, ts, x, y),
     evidenceColor: COL_HINT_CELL,
   };

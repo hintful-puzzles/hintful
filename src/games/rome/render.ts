@@ -49,13 +49,7 @@ import {
 } from "../../engine/color/palette.ts";
 import { drawRectOutline, drawStrike } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import {
-  type CellText,
-  HintMarks,
-  type MarkBand,
-  type MarkCell,
-  NO_TEXT,
-} from "../../engine/hint-mark.ts";
+import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
@@ -77,7 +71,7 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import { textBox } from "../../engine/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { RomeHint } from "./hint.ts";
@@ -291,10 +285,10 @@ function armedText(
 
 /** The text square `(x, y)` shows, for a hint's ring to keep clear of: only
  * the armed cursor's `?`, since arrows and their marks are strokes. */
-function squareText(ts: number, armed: Point | null, x: number, y: number): CellText {
-  if (!armed || armed.x !== x || armed.y !== y) return NO_TEXT;
+function squareText(ts: number, armed: Point | null, x: number, y: number): RingClear {
+  if (!armed || armed.x !== x || armed.y !== y) return NOTHING_TO_CLEAR;
   const { origin: at, options } = armedText(ts, x, y);
-  return { enclose: [textBox(at, options, "?")], avoid: [], notes: [] };
+  return { enclose: [textBox(at, options, "?")], avoid: [] };
 }
 
 // --- primitives -------------------------------------------------------------

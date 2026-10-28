@@ -44,7 +44,6 @@ import {
   type MarkBand,
   type MarkCell,
   MarkOutlines,
-  NO_TEXT,
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
@@ -660,7 +659,7 @@ export function redraw(
     band: (x, y) => markBand(ts, x, y),
     // A square shows a tree, a tent or grass, never text; the clues lie
     // outside the grid, past any ring's reach.
-    text: () => NO_TEXT,
+    text: () => NOTHING_TO_CLEAR,
     evidenceColor: COL_HINT_CELL,
   };
   const outlines = new MarkOutlines(hintTargets, area, markStyle);

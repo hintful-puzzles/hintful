@@ -36,6 +36,7 @@
  * data, which is where the line is.
  */
 
+import { glyphFont } from "./draw.ts";
 import { type GameDrawing, UI_UPDATE, type UiUpdate } from "./game.ts";
 import { click, key, type PointerAction } from "./hint-gesture.ts";
 import {
@@ -47,7 +48,8 @@ import {
   RIGHT_BUTTON,
   RIGHT_RELEASE,
 } from "./pointer.ts";
-import type { Point, Rect } from "./types.ts";
+import { textBox } from "./ring.ts";
+import type { DrawTextOptions, Point, Rect } from "./types.ts";
 import { WIN_LEAD, WIN_NONE, type WinTone } from "./win-wave.ts";
 
 /**
@@ -502,4 +504,59 @@ export function drawCellBackground(
     wash,
     wash,
   );
+}
+
+/** Where one note is drawn: what a game passes `drawText` but the color. */
+export interface NoteSlot {
+  readonly origin: Point;
+  readonly options: DrawTextOptions;
+}
+
+/**
+ * Where `count` notes go in `area`, in reading order: one glyph each, a font
+ * size apart, on the grid of at least three columns and two rows that gives
+ * them the largest font, with every glyph's ink inside `area`. A game hands
+ * it the cell's `ringTextBox`, less any clue it draws there, so a hint's ring
+ * goes round all of a cell's notes.
+ *
+ * The font is the largest that fits `count` notes in every one of `sizedBy`
+ * as well. A game whose cells leave its notes areas of more than one shape (a
+ * cell with a cage clue, and one without) passes them all, so that a cell's
+ * notes are as large as any other cell's with as many notes (the owner,
+ * 2026-10-28: "make them all the same").
+ */
+export function noteGrid(
+  area: Rect,
+  count: number,
+  sizedBy: readonly Rect[] = [area],
+): NoteSlot[] {
+  if (!count) return [];
+  // A glyph's ink per unit of font size.
+  const ink = textBox({ x: 0, y: 0 }, glyphFont(1), "0");
+  const rows = (cols: number): number => Math.max(Math.ceil(count / cols), 2);
+  let size = 0;
+  let cols = 3;
+  for (let c = 3; c <= Math.max(count, 3); c++) {
+    const s = Math.min(
+      ...[area, ...sizedBy].map((a) =>
+        Math.min(a.w / (c - 1 + ink.w), a.h / (rows(c) - 1 + ink.h)),
+      ),
+    );
+    if (s > size) {
+      size = s;
+      cols = c;
+    }
+  }
+  size = Math.floor(size);
+  const across = size * (cols - 1 + ink.w);
+  const down = size * (rows(cols) - 1 + ink.h);
+  const left = area.x + (area.w - across) / 2 + (size * ink.w) / 2;
+  const top = area.y + (area.h - down) / 2 + (size * ink.h) / 2;
+  return Array.from({ length: count }, (_, j) => ({
+    origin: {
+      x: left + size * (j % cols),
+      y: top + size * Math.floor(j / cols),
+    },
+    options: glyphFont(size),
+  }));
 }

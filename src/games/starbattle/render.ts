@@ -24,16 +24,12 @@ import {
 } from "../../engine/color/palette.ts";
 import { drawRectCorners } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import {
-  HintMarks,
-  type MarkBand,
-  type MarkCell,
-  NO_TEXT,
-} from "../../engine/hint-mark.ts";
+import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
 import { regionFills } from "../../engine/region-fill.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { StarbattleMistake } from "./index.ts";
@@ -384,7 +380,7 @@ export function redraw(
   ds.marks.paint(dr, targets, evidence, {
     band: (x, y) => markBand(ds, size, x, y),
     // A square shows no text: a star and a cross are shapes.
-    text: () => NO_TEXT,
+    text: () => NOTHING_TO_CLEAR,
     evidenceColor: COL_HINT_EVIDENCE,
   });
 }

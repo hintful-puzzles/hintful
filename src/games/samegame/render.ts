@@ -15,11 +15,11 @@ import {
   HintMarks,
   type MarkBand,
   type MarkCell,
-  NO_TEXT,
 } from "../../engine/hint-mark.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import type { SamegameMove, SamegameState, SamegameUi } from "./state.ts";
@@ -288,7 +288,7 @@ export function redraw(
   const style: HintMarkStyle = {
     band: (x, y) => markBand(ds, x, y),
     // A tile is a color, never text.
-    text: () => NO_TEXT,
+    text: () => NOTHING_TO_CLEAR,
     evidenceColor: COL_HINT_EVIDENCE,
     // A step rings one group: one pill where it is straight, and a ring per
     // square where it bends.

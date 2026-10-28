@@ -224,9 +224,9 @@ export class Drawing implements GameDrawing<Blitter> {
     box: Rect,
     clear: RingClear,
     thickness: number,
-    { room, inside }: RingOptions = {},
+    { room, inside, centered }: RingOptions = {},
   ): void {
-    const { rect, radius } = ringShape(box, clear, thickness, room);
+    const { rect, radius } = ringShape(box, clear, thickness, room, centered);
     const ink = this.palette.length - 2;
     const path = (): void => {
       this.context.beginPath();

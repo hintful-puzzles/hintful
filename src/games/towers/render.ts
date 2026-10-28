@@ -35,11 +35,10 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import {
-  type CellText,
   HintMarks,
   type MarkBand,
   type MarkCell,
-  NO_TEXT,
+  ringTextBox,
 } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
@@ -47,6 +46,7 @@ import {
   cellHighlight,
   drawCellBackground,
   highlightFill,
+  noteGrid,
   winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
@@ -60,7 +60,7 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import { textBox } from "../../engine/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import {
@@ -226,8 +226,7 @@ const PENCIL_BOX = (w: number, ts: number) =>
  * `x`/`y` are play coordinates, so `-1` and `w` are the clue ring — a hint's
  * evidence names the clue it reasons from as well as the line it sees.
  */
-function markBand(ds: TowersDrawState, x: number, y: number): MarkBand {
-  const ts = ds.tileSize;
+function markBand(ts: number, x: number, y: number): MarkBand {
   return {
     box: { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts },
     outer: 0,
@@ -346,7 +345,7 @@ function drawTile(
     dr.drawText(origin, options, color, String(digit));
   } else {
     const shown = pencilValues(w, tile);
-    pencilSlots(ts, w, threeD, { x: tx, y: ty }, shown.length).forEach(
+    pencilSlots(ts, w, threeD, markBand(ts, x, y), shown.length).forEach(
       ({ origin, options }, j) => {
         const i = shown[j];
         // A struck candidate keeps its pencil color, so it still reads as the
@@ -441,45 +440,25 @@ const pencilValues = (w: number, tile: number): number[] =>
     (i) => tile & (1 << (i + DF_PENCIL_SHIFT)),
   );
 
-/** Where `count` pencil marks go on the face at `face`, in order, on the grid
- * layout that maximizes the font size. In 3D they keep clear of the reach of
- * the tallest tower next door. */
+/** Where `count` pencil marks go in a cell of `band`, in order: its
+ * {@link ringTextBox}, kept in 3D clear of the reach of the tallest tower
+ * next door. */
 function pencilSlots(
   ts: number,
   w: number,
   threeD: boolean,
-  face: Point,
+  band: MarkBand,
   count: number,
 ): TileText[] {
-  if (!count) return [];
-  const minph = 2;
-  let pl = face.x + (threeD ? x3d(w, w, ts) : 0);
-  const pr = face.x + ts;
-  const pt = face.y;
-  const pb = face.y + ts - (threeD ? y3d(w, w, ts) : 0);
-  const rows = (pw: number): number =>
-    Math.max(Math.floor((count + pw - 1) / pw), minph);
-
-  let bestsize = 0;
-  let pw = 0;
-  for (let cols = 3; cols < Math.max(count, 4); cols++) {
-    const fs = Math.min((pr - pl) / cols, (pb - pt) / rows(cols));
-    if (fs > bestsize) {
-      bestsize = fs;
-      pw = cols;
-    }
-  }
-  const ph = rows(pw);
-  const fontsize = Math.min(Math.floor((pr - pl) / pw), Math.floor((pb - pt) / ph));
-  pl = pl + Math.floor((pr - pl - fontsize * pw) / 2);
-  const pt2 = pt + Math.floor((pb - pt - fontsize * ph) / 2);
-  return Array.from({ length: count }, (_, j) => ({
-    origin: {
-      x: pl + Math.floor((fontsize * (2 * (j % pw) + 1)) / 2),
-      y: pt2 + Math.floor((fontsize * (2 * Math.floor(j / pw) + 1)) / 2),
-    },
-    options: glyphFont(fontsize),
-  }));
+  if (!threeD) return noteGrid(ringTextBox(band), count);
+  const { x, y } = band.box;
+  const within = {
+    x: x + x3d(w, w, ts),
+    y,
+    w: ts - x3d(w, w, ts),
+    h: ts - y3d(w, w, ts),
+  };
+  return noteGrid(ringTextBox(band, { within }), count);
 }
 
 /** The text tile `(x, y)` shows this frame (play coordinates, the clue ring
@@ -489,21 +468,21 @@ function cellText(
   threeD: boolean,
   x: number,
   y: number,
-): CellText {
+): RingClear {
   const { tileSize: ts, w } = ds;
-  if (x < -1 || y < -1 || x > w || y > w) return NO_TEXT;
+  if (x < -1 || y < -1 || x > w || y > w) return NOTHING_TO_CLEAR;
   const tile = ds.tiles[(y + 1) * (w + 2) + (x + 1)];
   const face = faceOrigin(ts, w, threeD, x, y, tile);
   const digit = tile & DF_DIGIT_MASK;
   if (digit) {
     const { origin, options } = digitText(ts, face, tile);
-    return { enclose: [textBox(origin, options, String(digit))], avoid: [], notes: [] };
+    return { enclose: [textBox(origin, options, String(digit))], avoid: [] };
   }
   const shown = pencilValues(w, tile);
-  const notes = pencilSlots(ts, w, threeD, face, shown.length).map(
+  const notes = pencilSlots(ts, w, threeD, markBand(ts, x, y), shown.length).map(
     ({ origin, options }, j) => textBox(origin, options, String(shown[j])),
   );
-  return { enclose: [], avoid: [], notes };
+  return { enclose: notes, avoid: [] };
 }
 
 // --- hint overlay ----------------------------------------------------------
@@ -646,7 +625,7 @@ export function redraw(
     if (ds.hint.packed[i] & HINT_AREA) evidence.push(c);
   }
   ds.marks.paint(dr, targets, evidence, {
-    band: (x, y) => markBand(ds, x, y),
+    band: (x, y) => markBand(ds.tileSize, x, y),
     text: (x, y) => cellText(ds, threeD, x, y),
     evidenceColor: COL_HINT_CELL,
   });

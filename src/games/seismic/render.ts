@@ -46,11 +46,10 @@ import {
 import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
-  type CellText,
   HintMarks,
   type MarkBand,
   type MarkCell,
-  NO_TEXT,
+  ringTextBox,
 } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
@@ -58,6 +57,7 @@ import {
   cellHighlight,
   drawCellBackground,
   HIGHLIGHT_NONE,
+  noteGrid,
   winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
@@ -72,7 +72,7 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import { textBox } from "../../engine/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { SeismicHint } from "./hint.ts";
@@ -259,25 +259,10 @@ interface TileText {
 const pencilValues = (marks: number): number[] =>
   Array.from({ length: 9 }, (_, n) => n + 1).filter((n) => marks & (1 << (n - 1)));
 
-/** Where `count` notes go in the cell whose fill starts at `(cx, cy)`, in
- * order: upstream's auto-sized grid arithmetic verbatim, integer division
- * throughout. */
-function pencilSlots(ts: number, cx: number, cy: number, count: number): TileText[] {
-  if (!count) return [];
-  let hw = 1;
-  while (hw * hw < count) hw++;
-  if (hw < 3) hw = 3;
-  let hh = ((count + hw - 1) / hw) | 0;
-  if (hh < 2) hh = 2;
-  const hmax = Math.max(hw, hh);
-  const fontsz = (ts / (((hmax * (11 - hmax)) / 8) | 0)) | 0;
-  return Array.from({ length: count }, (_, j) => ({
-    origin: {
-      x: cx + ((((4 * (j % hw) + 3) * ts) / (4 * hw + 2)) | 0),
-      y: cy + ((((4 * ((j / hw) | 0) + 3) * ts) / (4 * hh + 2)) | 0),
-    },
-    options: glyphFont(fontsz),
-  }));
+/** Where `count` notes go in a cell of `band`, in order: its
+ * {@link ringTextBox}. */
+function pencilSlots(band: MarkBand, count: number): TileText[] {
+  return noteGrid(ringTextBox(band), count);
 }
 
 /** A placed number, in the middle of the tile. */
@@ -295,15 +280,13 @@ function digitText(ts: number, x: number, y: number): TileText {
  * rules out, drawn with a line through it. */
 function drawPencilMarks(
   dr: GameDrawing,
-  ts: number,
-  cx: number,
-  cy: number,
+  band: MarkBand,
   marks: number,
   struck: number,
   tile: Rect,
 ): void {
   const shown = pencilValues(marks);
-  pencilSlots(ts, cx, cy, shown.length).forEach(({ origin: at, options }, j) => {
+  pencilSlots(band, shown.length).forEach(({ origin: at, options }, j) => {
     const n = shown[j];
     dr.drawText(at, options, COL_NUM_PENCIL, String(n));
     // The struck note keeps its own color, so it still reads as the player's
@@ -313,24 +296,22 @@ function drawPencilMarks(
 }
 
 /** The text cell `(x, y)` shows, for a hint's ring to keep clear of. */
-function cellText(state: SeismicState, ts: number, x: number, y: number): CellText {
+function cellText(state: SeismicState, ts: number, x: number, y: number): RingClear {
   const { w, h } = state;
-  if (x < 0 || y < 0 || x >= w || y >= h) return NO_TEXT;
+  if (x < 0 || y < 0 || x >= w || y >= h) return NOTHING_TO_CLEAR;
   const i = y * w + x;
   if (state.grid[i]) {
     const { origin: at, options } = digitText(ts, x, y);
     return {
       enclose: [textBox(at, options, String(state.grid[i]))],
       avoid: [],
-      notes: [],
     };
   }
-  const { cx, cy } = cellRect(state, x, y, ts);
   const shown = pencilValues(state.pencil[i]);
-  const notes = pencilSlots(ts, cx, cy, shown.length).map(
+  const notes = pencilSlots(markBand(state, x, y, ts), shown.length).map(
     ({ origin: at, options }, j) => textBox(at, options, String(shown[j])),
   );
-  return { enclose: [], avoid: [], notes };
+  return { enclose: notes, avoid: [] };
 }
 
 function drawTile(
@@ -393,7 +374,12 @@ function drawTile(
     corner(tx + ts - far, ty + ts - far, far, far);
 
   if (grid[i] === 0) {
-    drawPencilMarks(dr, ts, cx, cy, pencil[i], struck, { x: tx, y: ty, w: ts, h: ts });
+    drawPencilMarks(dr, markBand(state, x, y, ts), pencil[i], struck, {
+      x: tx,
+      y: ty,
+      w: ts,
+      h: ts,
+    });
   } else {
     const ink =
       flags[i] & FM_FIXED

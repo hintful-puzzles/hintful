@@ -107,7 +107,9 @@ export const NOTHING_TO_CLEAR: RingClear = { enclose: [], avoid: [] };
  * the box's short side, and draw in from it or shift off its center by up to
  * a quarter, to step round a corner's text. The shape nearest the box wins,
  * at the roundest it fits: a circle where the box's corners are free, and a
- * rounded square where text sits in them (the owner's pick, D5).
+ * rounded square where text sits in them (the owner's pick, D5). A
+ * `centered` ring never shifts: it marks the whole box, and one off the
+ * box's middle reads as marking something beside it.
  *
  * Throws where none is at least {@link RING_MIN_ROUNDNESS} round.
  */
@@ -116,14 +118,56 @@ export function ringShape(
   { enclose, avoid }: RingClear,
   thickness: number,
   room: Rect = box,
+  centered = false,
 ): RingShape {
-  const shape = roundestFit(box, { enclose, avoid }, thickness, room);
+  const shape = ringFits(box, { enclose, avoid }, thickness, room, centered);
   if (!shape)
     throw new Error(
       `No round ring fits round (${box.x}, ${box.y}, ${box.w}×${box.h}) clear of its ` +
         "text: pad the text, or mark this element with another role",
     );
   return shape;
+}
+
+/** The ring {@link ringShape} draws, or `null` where none fits: for a game
+ * that has a second way to ring an element where the first leaves no room. */
+export function ringFits(
+  box: Rect,
+  clear: RingClear,
+  thickness: number,
+  room: Rect = box,
+  centered = false,
+): RingShape | null {
+  return roundestFit(box, clear, thickness, room, centered);
+}
+
+/**
+ * The box a cell's text keeps inside so that a ring centered on the cell goes
+ * round all of it: the largest ring with its stroke in `room`, as round as
+ * {@link RING_MIN_ROUNDNESS}, and the cell's box drawn in until its corners
+ * clear that ring's. The ring {@link ringShape} then finds is one of the
+ * moves and roundnesses it tries.
+ */
+export function ringContentBox(box: Rect, thickness: number, room: Rect = box): Rect {
+  const reach = thickness / 2 + MARK_EDGE_PX;
+  const grow = Math.min(
+    box.x - room.x,
+    box.y - room.y,
+    room.x + room.w - (box.x + box.w),
+    room.y + room.h - (box.y + box.h),
+  );
+  const path = inflate(box, Math.floor(grow / STEP) * STEP - thickness / 2);
+  const radius = (RING_MIN_ROUNDNESS * Math.min(path.w, path.h)) / 2;
+  // The corner of the drawn-in box is the last of it to come inside.
+  let lo = 0;
+  let hi = Math.min(box.w, box.h) / 2;
+  while (hi - lo > STEP / 4) {
+    const inset = (lo + hi) / 2;
+    const c = inflate(box, -inset);
+    if (roundedDistance(path, radius, c.x, c.y) <= -reach) hi = inset;
+    else lo = inset;
+  }
+  return inflate(box, -hi);
 }
 
 /** A ring's way off its box: grown by `grow` all round (drawn in where it is
@@ -139,24 +183,57 @@ interface Move {
  * first (`|grow| + |dx| + |dy|`), and of moves as near, a centered one first,
  * since a ring off its element's middle looks as if it marks something beside
  * it: growth up to half the short side, and drawing in or shifting up to a
- * quarter of it. Made as they are tried, so a ring that fits at once costs one
- * check, and a large box no list.
+ * quarter of it, or not shifting at all where it is `centered`. Made as they
+ * are tried, so a ring that fits at once costs one check, and a large box no
+ * list.
  */
-function* movesFor(short: number): Generator<Move> {
+function* movesFor(short: number, centered: boolean): Generator<Move> {
   const most = Math.floor(short / 4);
+  const shiftMost = centered ? 0 : most;
   const maxGrow = short / 2;
-  for (let cost = 0; cost <= maxGrow + 2 * most; cost += STEP)
-    for (let shift = 0; shift <= Math.min(Math.floor(cost), 2 * most); shift++) {
+  for (let cost = 0; cost <= maxGrow + 2 * shiftMost; cost += STEP)
+    for (let shift = 0; shift <= Math.min(Math.floor(cost), 2 * shiftMost); shift++) {
       const g = cost - shift;
       for (const grow of g === 0 ? [0] : [-g, g]) {
         if (grow < -most || grow > maxGrow) continue;
-        for (let dx = -Math.min(shift, most); dx <= Math.min(shift, most); dx++) {
+        for (
+          let dx = -Math.min(shift, shiftMost);
+          dx <= Math.min(shift, shiftMost);
+          dx++
+        ) {
           const rest = shift - Math.abs(dx);
-          if (rest > most) continue;
+          if (rest > shiftMost) continue;
           for (const dy of rest === 0 ? [0] : [-rest, rest]) yield { grow, dx, dy };
         }
       }
     }
+}
+
+/**
+ * Which side of the ring `shape` the rect `c` lies on: wholly inside it or
+ * wholly outside it, its stroke and `edge` beyond the stroke kept off, or
+ * `crossed` by them.
+ */
+export function ringSide(
+  { rect, radius, thickness }: RingShape,
+  c: Rect,
+  edge = MARK_EDGE_PX,
+): "inside" | "outside" | "crossed" {
+  const reach = thickness / 2 + edge;
+  // Inside: every corner of the rect is `reach` within the path, which is
+  // convex, so the whole rect is.
+  const corners = [
+    [c.x, c.y],
+    [c.x + c.w, c.y],
+    [c.x, c.y + c.h],
+    [c.x + c.w, c.y + c.h],
+  ] as const;
+  if (corners.every(([px, py]) => roundedDistance(rect, radius, px, py) <= -reach))
+    return "inside";
+  // Outside: the band's outer rim is the path's inner rect pushed out by
+  // radius + reach, so a rect clears it when it keeps that far from that rect.
+  if (rectDistance(inflate(rect, -radius), c) >= radius + reach) return "outside";
+  return "crossed";
 }
 
 /** How round a fit is tried, roundest first, down to the floor. */
@@ -167,28 +244,17 @@ function roundestFit(
   { enclose, avoid }: RingClear,
   thickness: number,
   room: Rect,
+  centered: boolean,
 ): RingShape | null {
-  const reach = thickness / 2 + MARK_EDGE_PX;
   const fits = (path: Rect, radius: number): boolean => {
-    // Inside: every corner of the rect is `reach` within the path, which is
-    // convex, so the whole rect is.
-    const inside = (c: Rect): boolean =>
-      (
-        [
-          [c.x, c.y],
-          [c.x + c.w, c.y],
-          [c.x, c.y + c.h],
-          [c.x + c.w, c.y + c.h],
-        ] as const
-      ).every(([px, py]) => roundedDistance(path, radius, px, py) <= -reach);
-    // Outside: the band's outer rim is the path's inner rect pushed out by
-    // radius + reach, so a rect clears it when it keeps that far from that rect.
-    const core = inflate(path, -radius);
-    const outside = (c: Rect): boolean => rectDistance(core, c) >= radius + reach;
-    return enclose.every(inside) && avoid.every((c) => inside(c) || outside(c));
+    const shape = { rect: path, radius, thickness };
+    return (
+      enclose.every((c) => ringSide(shape, c) === "inside") &&
+      avoid.every((c) => ringSide(shape, c) !== "crossed")
+    );
   };
 
-  for (const { grow, dx, dy } of movesFor(Math.min(box.w, box.h))) {
+  for (const { grow, dx, dy } of movesFor(Math.min(box.w, box.h), centered)) {
     // The stroke's outer rim, which `room` must hold.
     const x = box.x - grow + dx;
     const y = box.y - grow + dy;

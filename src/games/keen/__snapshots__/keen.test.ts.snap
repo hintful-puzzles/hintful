@@ -54,7 +54,7 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "rgb": "rgb(0, 0, 0)",
     "size": 12,
     "text": "2÷",
-    "x": 30,
+    "x": 33,
     "y": 42,
   },
   {
@@ -149,7 +149,7 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "rgb": "rgb(0, 0, 0)",
     "size": 12,
     "text": "1−",
-    "x": 126,
+    "x": 129,
     "y": 42,
   },
   {
@@ -235,7 +235,7 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "rgb": "rgb(0, 0, 0)",
     "size": 12,
     "text": "9+",
-    "x": 30,
+    "x": 33,
     "y": 90,
   },
   {
@@ -302,7 +302,7 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "rgb": "rgb(0, 0, 0)",
     "size": 12,
     "text": "4×",
-    "x": 78,
+    "x": 81,
     "y": 90,
   },
   {
@@ -369,7 +369,7 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "rgb": "rgb(0, 0, 0)",
     "size": 12,
     "text": "2÷",
-    "x": 126,
+    "x": 129,
     "y": 90,
   },
   {
@@ -583,7 +583,7 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "rgb": "rgb(0, 0, 0)",
     "size": 12,
     "text": "6×",
-    "x": 126,
+    "x": 129,
     "y": 138,
   },
   {
@@ -715,7 +715,7 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "rgb": "rgb(0, 0, 0)",
     "size": 12,
     "text": "2−",
-    "x": 78,
+    "x": 81,
     "y": 186,
   },
   {

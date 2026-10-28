@@ -32,7 +32,8 @@ already does it.
    `commit` put them in the tile's diff key.
 5. Say where a cell's mark sits with a `markBand` (§ "Where the band goes,
    and who rubs it out"), and what text a cell shows with
-   `HintMarkStyle.text` (§ "Shade vs ring").
+   `HintMarkStyle.text`; lay notes out with `noteGrid` in the cell's
+   `ringTextBox` (§ "Shade vs ring").
 6. Call `HintMarks.eraseBeforeTiles` before the tile loop and
    `HintMarks.paint` after it, outside any clip.
 7. Ring the target round what the cell already shows, never draw the move's
@@ -139,32 +140,52 @@ and a square's ring with the "must be empty" cross inside.
 **The acted-on cell is ringed in every game, with no exceptions, and an
 evidence area is outlined.** Neither is drawn behind the content.
 
-**A ring is round, and only the engine draws one**
+**A ring is round, crosses no number, and only the engine draws one**
 ([`engine/ring.ts`](../src/engine/ring.ts), `GameDrawing.drawRing`;
-requirement "A ring is round, and only the engine draws one"; the owner,
-2026-10-25: "a ring should actually be round"). The ring's ink is the
+requirement "A ring is round, crosses no number, and only the engine draws
+one"; the owner, 2026-10-25: "a ring should actually be round", and
+2026-10-28: "it doesn't write over numbers"). The ring's ink is the
 engine's, appended to every palette, so a game cannot draw a "ringed" mark
 in another shape. `drawRing` takes the element's box and the text round it,
 and picks the shape nearest the box at the roundest that fits: a circle
 where the corners are free, a rounded square (a corner radius of a third of
 the short side, the least it allows) where text sits in them. It never
-crosses text: a game hands it the boxes from `textBox`, called with what it
-passes `drawText`, so it never estimates a glyph. Where nothing round fits,
-it throws, and the element is not a ring's: the game pads its text or marks
-it in another role.
+crosses text, the ringed cell's own notes included: a game hands it the
+boxes from `textBox`, called with what it passes `drawText`, so it never
+estimates a glyph. Where nothing round fits, it throws, and the element is
+not a ring's: the game makes room for it (Mosaic's ring reaches between its
+neighbors' numbers on a tile too small to hold one, through `ringFits`) or
+marks it in another role.
+
+**A cell's text leaves the ring room, in every frame.** A grid of notes or a
+corner clue reaches the corners a round ring passes through, so a cell lays
+its text out inside `ringTextBox(band)`: the box a ring centered on the cell,
+in the band's room, goes round. Notes go there through `noteGrid`
+([`engine/note-taking-cell.ts`](../src/engine/note-taking-cell.ts)), and a
+clue in the corner of the same box. A cell with a clue takes its notes on
+the rows and at the size of one without (the owner, 2026-10-28: "make them
+all the same"): Keen and Killer lay every cell's notes below where a clue
+goes, and `noteGrid`'s `sizedBy` gives one size to cells whose areas differ
+(Salad's balls). Laying the text out only on the ringed cell was refused:
+text that moves with a mark is drawn into the mark when the app measures a
+reference. A clue drawn on a disc painted over the marks (Mathrax) is not
+text a ring keeps clear of: the ring passes under it.
 
 The engine gives [`engine/hint-mark.ts`](../src/engine/hint-mark.ts):
 `MarkBand` says where a cell's band sits, `HintMarks` paints the outline's
-band and the ring around the tile loop, `MarkOutlines` gives each cell's
-sides, and `HintMarkStyle.text` says what text each cell shows: its value,
-which a ring encloses, a clue in its corner, which it goes round, and its
-notes, which a ring on the cell may cross, because the step decides the cell
-and replaces them. Requirements "A hint mark is drawn on the cell's border"
-and "A hint marks beside the content, never behind it" are the rule.
-Exemplars: [`keen/render.ts`](../src/games/keen/render.ts) (`markBand`,
-`cellText`, and the block after the tiles) for a game with a gutter between
-cells and a clue in a corner, [`skeleton/grid/render.ts`](../src/skeleton/grid/render.ts)
-for a number in the middle.
+band and the ring, centered on the cell, around the tile loop, `MarkOutlines`
+gives each cell's sides, and `HintMarkStyle.text` says what text each cell
+shows: what a ring on the cell encloses (its value and its notes), and a
+clue in its corner, which it goes round. Requirements "A hint mark is drawn
+on the cell's border" and "A hint marks beside the content, never behind it"
+are the rule. `ringCrossings` in
+[`engine/testing/mark-shape.ts`](../src/engine/testing/mark-shape.ts) reads
+the claim off a recorded frame, and `expectRing` asserts it. Exemplars:
+[`keen/render.ts`](../src/games/keen/render.ts) (`markBand`, `clueText`,
+`pencilSlots`, and the block after the tiles) for a game with a gutter
+between cells and a clue in a corner,
+[`skeleton/grid/render.ts`](../src/skeleton/grid/render.ts) for a number in
+the middle.
 
 The target is ringed even where a fill would hide nothing: one mark means one
 thing across the collection, and in a shading game the move is "give this
@@ -173,8 +194,9 @@ still proposing.
 
 **A note a step rules out is struck, not ringed** (requirement "A note a step
 rules out is struck"). A grid of notes leaves no room for a ring round one
-note or round a cell's notes, so a candidate game's strike step crosses each
-note out with an X, in the note's own ink, and rings nothing. Draw it with
+note, and a ring round the cell says the step decides the cell, so a
+candidate game's strike step crosses each note out with an X, in the note's
+own ink, and rings nothing. Draw it with
 `drawStrike` ([`engine/draw.ts`](../src/engine/draw.ts)), which gives every
 game one strike: an X that one stroke always carries across the stripes, and
 one "\" through a note that is a shape. A

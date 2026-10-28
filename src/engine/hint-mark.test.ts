@@ -17,12 +17,12 @@
  * in `docs/hints-marks.md` § "Shade vs ring".
  */
 import { describe, expect, it } from "vitest";
-import { type HintMarkStyle, HintMarks, type MarkCell, NO_TEXT } from "./hint-mark.ts";
+import { type HintMarkStyle, HintMarks, type MarkCell } from "./hint-mark.ts";
 import { Midend } from "./index.ts";
-import { RING_MIN_ROUNDNESS } from "./ring.ts";
+import { NOTHING_TO_CLEAR, RING_MIN_ROUNDNESS } from "./ring.ts";
 import { beginDealt } from "./testing/dealt.ts";
 import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
-import { outsideRings, ringsOf } from "./testing/mark-shape.ts";
+import { outsideRings, ringCrossings, ringsOf } from "./testing/mark-shape.ts";
 import {
   type DrawOp,
   paintsWith,
@@ -138,6 +138,10 @@ describe("a hint marks beside the content, never behind it", () => {
           ).toBeGreaterThanOrEqual(
             Math.floor((RING_MIN_ROUNDNESS * Math.min(r.w, r.h)) / 2),
           );
+        const crossed = ringCrossings(ops);
+        expect(crossed, `${id}: a ring crosses no number: ${crossed[0]}`).toHaveLength(
+          0,
+        );
         if (typeof evidence === "number") {
           const washes = solidFills(ops, evidence, cell);
           expect(
@@ -208,7 +212,7 @@ describe("HintMarks undoes a mark the way a fresh canvas never had it", () => {
   ) {
     const style: HintMarkStyle = {
       band: () => band,
-      text: () => NO_TEXT,
+      text: () => NOTHING_TO_CLEAR,
       evidenceColor: EVIDENCE,
     };
     const [targets, evidence] = role === "ring" ? [marked, []] : [[], marked];
@@ -286,7 +290,7 @@ describe("HintMarks undoes a mark the way a fresh canvas never had it", () => {
   it("does nothing before the tiles while the marks stand", () => {
     const style: HintMarkStyle = {
       band: () => ({ box: { x: 5, y: 5, w: 20, h: 20 }, outer: 1, inner: 3 }),
-      text: () => NO_TEXT,
+      text: () => NOTHING_TO_CLEAR,
       evidenceColor: EVIDENCE,
     };
     const marks = new HintMarks();

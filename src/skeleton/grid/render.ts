@@ -25,17 +25,11 @@ import {
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import {
-  type CellText,
-  HintMarks,
-  type MarkBand,
-  type MarkCell,
-  NO_TEXT,
-} from "../../engine/hint-mark.ts";
+import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
-import { textBox } from "../../engine/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { SkeletonMistake } from "./index.ts";
@@ -158,13 +152,13 @@ function numberText(ts: number, x: number, y: number) {
 }
 
 /** The text square `(x, y)` shows, for a hint's ring to keep clear of. */
-function squareText(state: SkeletonState, ts: number, x: number, y: number): CellText {
+function squareText(state: SkeletonState, ts: number, x: number, y: number): RingClear {
   const { w, h } = state;
-  if (x < 0 || y < 0 || x >= w || y >= h) return NO_TEXT;
+  if (x < 0 || y < 0 || x >= w || y >= h) return NOTHING_TO_CLEAR;
   const clue = state.clues[y * w + x];
-  if (clue === NO_CLUE) return NO_TEXT;
+  if (clue === NO_CLUE) return NOTHING_TO_CLEAR;
   const { origin, options } = numberText(ts, x, y);
-  return { enclose: [textBox(origin, options, String(clue))], avoid: [], notes: [] };
+  return { enclose: [textBox(origin, options, String(clue))], avoid: [] };
 }
 
 // --- one square -------------------------------------------------------------

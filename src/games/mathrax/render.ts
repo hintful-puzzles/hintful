@@ -40,11 +40,10 @@ import {
 import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
-  type CellText,
   HintMarks,
   type MarkBand,
   type MarkCell,
-  NO_TEXT,
+  ringTextBox,
 } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
@@ -52,6 +51,7 @@ import {
   cellHighlight,
   drawCellBackground,
   HIGHLIGHT_NONE,
+  noteGrid,
   winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
@@ -66,8 +66,8 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import { textBox } from "../../engine/ring.ts";
-import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import {
   clueLabel,
@@ -237,8 +237,7 @@ export function newDrawState(state: MathraxState, tileSize: number): MathraxDraw
  * as a highlighted grid line passing behind the clue, which is what the
  * unmarked frame already shows in `COL_GRID`, and the label stays on top.
  */
-function markBand(ds: MathraxDrawState, x: number, y: number): MarkBand {
-  const ts = ds.tileSize;
+function markBand(ts: number, x: number, y: number): MarkBand {
   return {
     box: { x: origin(ts) + x * ts, y: origin(ts) + y * ts, w: ts, h: ts },
     outer: 0,
@@ -309,35 +308,22 @@ const digitText = (ts: number, tx: number, ty: number): TileText => ({
 });
 
 /** The text cell `(x, y)` shows, for a hint's ring to keep clear of: its digit
- * or notes, and the labels of the clues on its four corners. */
-function cellText(state: MathraxState, ts: number, x: number, y: number): CellText {
+ * or notes. The clues on its corners are not among it: each sits on a disc
+ * that `redraw` paints again over the marks, so a ring passes under them. */
+function cellText(state: MathraxState, ts: number, x: number, y: number): RingClear {
   const o = state.params.o;
-  if (x < 0 || y < 0 || x >= o || y >= o) return NO_TEXT;
-  const co = o - 1;
+  if (x < 0 || y < 0 || x >= o || y >= o) return NOTHING_TO_CLEAR;
   const i = y * o + x;
   const tx = origin(ts) + x * ts;
   const ty = origin(ts) + y * ts;
-  const avoid: Rect[] = [];
-  for (const [cx, cy] of [
-    [x - 1, y - 1],
-    [x, y - 1],
-    [x - 1, y],
-    [x, y],
-  ]) {
-    if (cx < 0 || cy < 0 || cx >= co || cy >= co) continue;
-    const clue = state.clues[cy * co + cx];
-    if (!clue) continue;
-    const label = clueText(ts, origin(ts) + (cx + 1) * ts, origin(ts) + (cy + 1) * ts);
-    avoid.push(textBox(label.origin, label.options, clueLabel(clue)));
-  }
   if (state.grid[i]) {
     const { origin: at, options } = digitText(ts, tx, ty);
-    return { enclose: [textBox(at, options, String(state.grid[i]))], avoid, notes: [] };
+    return { enclose: [textBox(at, options, String(state.grid[i]))], avoid: [] };
   }
-  const notes = pencilSlots(ts, tx, ty, state.pencil[i], o).map((s) =>
+  const notes = pencilSlots(state, ts, x, y, state.pencil[i]).map((s) =>
     textBox(s.origin, s.options, String(s.n)),
   );
-  return { enclose: [], avoid, notes };
+  return { enclose: notes, avoid: [] };
 }
 
 // --- tile drawing ----------------------------------------------------------
@@ -396,7 +382,7 @@ function drawTile(
       String(state.grid[i]),
     );
   } else if (state.pencil[i]) {
-    drawPencilMarks(dr, ts, tx, ty, state.pencil[i], o, struck);
+    drawPencilMarks(dr, state, ts, x, y, struck);
   }
 
   drawCornerClues(dr, ts, state, x, y, fs);
@@ -418,19 +404,20 @@ function drawTile(
   dr.unclip();
 }
 
-/** The auto-sized pencil-mark grid (upstream's layout arithmetic verbatim —
- * integer division throughout). Note the marks bitmap is in this port's
+/** Cell `(x, y)`'s pencil marks. The marks bitmap is in this port's
  * player-facing convention, bit `n` for candidate `n`. */
 function drawPencilMarks(
   dr: GameDrawing,
+  state: MathraxState,
   ts: number,
-  tx: number,
-  ty: number,
-  marks: number,
-  o: number,
+  x: number,
+  y: number,
   struck: number,
 ): void {
-  for (const { origin: at, options, n } of pencilSlots(ts, tx, ty, marks, o)) {
+  const tx = origin(ts) + x * ts;
+  const ty = origin(ts) + y * ts;
+  const marks = state.pencil[y * state.params.o + x];
+  for (const { origin: at, options, n } of pencilSlots(state, ts, x, y, marks)) {
     // A struck candidate keeps its pencil color, so it still reads as the
     // player's note; the same-color strikethrough is what says the hint rules it
     // out (docs/hints-marks.md § "The engine colors the marks").
@@ -440,36 +427,21 @@ function drawPencilMarks(
   }
 }
 
-/** Where the marks in `marks` go in the tile at `(tx, ty)`, each with its
- * candidate. */
+/** Where the marks in `marks` go in cell `(x, y)`, each with its candidate:
+ * its {@link ringTextBox}. */
 function pencilSlots(
+  state: MathraxState,
   ts: number,
-  tx: number,
-  ty: number,
+  x: number,
+  y: number,
   marks: number,
-  o: number,
 ): (TileText & { n: number })[] {
-  const shown = Array.from({ length: o }, (_, i) => i + 1).filter(
+  const shown = Array.from({ length: state.params.o }, (_, i) => i + 1).filter(
     (n) => marks & (1 << n),
   );
-  const nhints = shown.length;
-  if (!nhints) return [];
-
-  let hw = 1;
-  while (hw * hw < nhints) hw++;
-  if (hw < 3) hw = 3;
-  let hh = ((nhints + hw - 1) / hw) | 0;
-  if (hh < 2) hh = 2;
-  const hmax = Math.max(hw, hh);
-  const fontsz = (ts / (((hmax * (11 - hmax)) / 8) | 0)) | 0;
-
-  return shown.map((n, j) => ({
-    origin: {
-      x: tx + ((((4 * (j % hw) + 3) * ts) / (4 * hw + 2)) | 0),
-      y: ty + ((((4 * ((j / hw) | 0) + 3) * ts) / (4 * hh + 2)) | 0),
-    },
-    options: glyphFont(fontsz),
-    n,
+  return noteGrid(ringTextBox(markBand(ts, x, y)), shown.length).map((slot, j) => ({
+    ...slot,
+    n: shown[j],
   }));
 }
 
@@ -548,14 +520,14 @@ export function redraw(
     if (ds.hint.packed[i] & HINT_AREA) evidence.push(c);
   }
   ds.marks.paint(dr, targets, evidence, {
-    band: (x, y) => markBand(ds, x, y),
+    band: (x, y) => markBand(ts, x, y),
     text: (x, y) => cellText(state, ts, x, y),
     evidenceColor: COL_HINT_CELL,
   });
   // A mark passes behind the clues on its cell's corners, never over their
   // labels: each marked cell draws its quarters of them again, on top.
   for (const c of [...targets, ...evidence]) {
-    const box = markBand(ds, c.x, c.y).box;
+    const box = markBand(ts, c.x, c.y).box;
     dr.clip(box);
     drawCornerClues(dr, ts, state, c.x, c.y, state.flags[c.y * o + c.x]);
     dr.unclip();

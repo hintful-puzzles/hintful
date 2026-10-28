@@ -46,17 +46,17 @@ import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import {
-  type CellText,
   HintMarks,
   type MarkBand,
   type MarkCell,
-  NO_TEXT,
+  ringTextBox,
 } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
+  noteGrid,
   winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
@@ -70,7 +70,7 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import { textBox } from "../../engine/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import {
@@ -227,8 +227,7 @@ export function newDrawState(state: SoloState, tileSize: number): SoloDrawState 
  * `redraw`); the block boundary — the wide gutter — is where the ring is
  * thickest and reads best.
  */
-function markBand(ds: SoloDrawState, x: number, y: number): MarkBand {
-  const ts = ds.tileSize;
+function markBand(ts: number, x: number, y: number): MarkBand {
   const ge = gridExtra(ts);
   const inner = ts - 1 - 2 * ge;
   return {
@@ -404,7 +403,7 @@ function drawNumber(
 
   // Killer cage-sum clue.
   if (killer?.kgrid[cell]) {
-    const { origin, options } = killerText(ts, x, y);
+    const { origin, options } = killerText(ts, x, y, killer.kgrid[cell]);
     dr.drawText(origin, options, colKiller, String(killer.kgrid[cell]));
   }
 
@@ -485,19 +484,30 @@ const tileOrigin = (ts: number, x: number, y: number): Point => {
   return { x: border(ts) + x * ts + 1 + ge, y: border(ts) + y * ts + 1 + ge };
 };
 
-/** A killer cage's sum, in the top-left of its cell `(x, y)`. */
-function killerText(ts: number, x: number, y: number): TileText {
-  const t = tileOrigin(ts, x, y);
+/** A killer cage's sum `sum`, its ink in the top-left corner of its cell
+ * `(x, y)`'s {@link killerArea}. */
+function killerText(ts: number, x: number, y: number, sum: number): TileText {
+  const area = killerArea(ts, x, y);
+  const options = killerFont(ts);
+  const ink = textBox({ x: 0, y: 0 }, options, String(sum));
+  return { origin: { x: area.x - ink.x, y: area.y - ink.y }, options };
+}
+
+const killerFont = (ts: number): DrawTextOptions => ({
+  align: "left",
+  baseline: "alphabetic",
+  fontType: "variable",
+  size: (ts / 4) | 0,
+});
+
+/** Where a Killer cell's text keeps: its {@link ringTextBox}, inside where a
+ * cage's outline may run, in every cell whether or not one runs along its
+ * sides, so that a cage does not move or shrink a cell's text. */
+function killerArea(ts: number, x: number, y: number): Rect {
   const ge = gridExtra(ts);
-  return {
-    origin: { x: t.x + ge * 4, y: t.y + ge * 4 + ((ts / 4) | 0) },
-    options: {
-      align: "left",
-      baseline: "alphabetic",
-      fontType: "variable",
-      size: (ts / 4) | 0,
-    },
-  };
+  const t = tileOrigin(ts, x, y);
+  const within = { x: t.x + ge * 4, y: t.y + ge * 4, w: ts - ge * 8, h: ts - ge * 8 };
+  return ringTextBox(markBand(ts, x, y), { within });
 }
 
 /** A placed digit, in the middle of the tile. */
@@ -513,8 +523,10 @@ function digitText(ts: number, x: number, y: number): TileText {
 const pencilValues = (cr: number, bits: number): number[] =>
   Array.from({ length: cr }, (_, i) => i + 1).filter((i) => bits & (1 << i));
 
-/** Where `count` pencil marks go in the empty cell `(x, y)`, in order: the
- * auto-sized grid of draw_number's else branch. */
+/** Where `count` pencil marks go in the empty cell `(x, y)`, in order: its
+ * {@link ringTextBox}, and in Killer the part of its {@link killerArea} below
+ * where a sum goes, in every cell, so that a sum neither shrinks a cell's
+ * notes nor moves them off its neighbors' rows. */
 function pencilSlots(
   state: SoloState,
   ts: number,
@@ -522,76 +534,35 @@ function pencilSlots(
   y: number,
   count: number,
 ): TileText[] {
-  if (!count) return [];
-  const cell = y * state.cr + x;
-  const ge = gridExtra(ts);
-  const { x: tx, y: ty } = tileOrigin(ts, x, y);
-  const minph = 2;
-  let pl = tx + ge;
-  let pr = pl + ts - ge;
-  let pt = ty + ge;
-  let pb = pt + ts - ge;
-  const sum =
-    state.killer && state.killerData !== null && state.killerData.kgrid[cell] !== 0;
-  if (state.killer) {
-    // Reserve uniform space for the cage outline (and the sum clue when present),
-    // regardless of which sides actually carry a cage edge.
-    pl += ge * 3;
-    pr -= ge * 3;
-    pt += ge * 3;
-    pb -= ge * 3;
-    if (sum) pt += (ts / 4) | 0;
-  }
-
-  // Choose the grid layout maximizing the font size.
-  let bestsize = 0;
-  let pbest = 0;
-  for (let pw = 3; pw < Math.max(count, 4); pw++) {
-    const ph = Math.max(((count + pw - 1) / pw) | 0, minph);
-    const fs = Math.min((pr - pl) / pw, (pb - pt) / ph);
-    if (fs >= bestsize) {
-      bestsize = fs;
-      pbest = pw;
-    }
-  }
-  const pw = pbest;
-  const ph = Math.max(((count + pw - 1) / pw) | 0, minph);
-  const fontsize = Math.min(((pr - pl) / pw) | 0, ((pb - pt) / ph) | 0);
-
-  pl = tx + (((ts - fontsize * pw) / 2) | 0);
-  pt = ty + (((ts - fontsize * ph) / 2) | 0);
-  if (sum) pt = Math.max(pt, ty + ge * 3 + ((ts / 4) | 0));
-
-  return Array.from({ length: count }, (_, j) => ({
-    origin: {
-      x: pl + (((fontsize * (2 * (j % pw) + 1)) / 2) | 0),
-      y: pt + (((fontsize * (2 * ((j / pw) | 0) + 1)) / 2) | 0),
-    },
-    options: glyphFont(fontsize),
-  }));
+  if (!state.killer) return noteGrid(ringTextBox(markBand(ts, x, y)), count);
+  const area = killerArea(ts, x, y);
+  // A sum's digits ink one height whatever they say.
+  const sumInk = textBox({ x: 0, y: 0 }, killerFont(ts), "0");
+  const top = area.y + sumInk.h + gridExtra(ts);
+  return noteGrid({ ...area, y: top, h: area.y + area.h - top }, count);
 }
 
 /** The text cell `(x, y)` shows, for a hint's ring to keep clear of. */
-function cellText(state: SoloState, ts: number, x: number, y: number): CellText {
+function cellText(state: SoloState, ts: number, x: number, y: number): RingClear {
   const cr = state.cr;
-  if (x < 0 || y < 0 || x >= cr || y >= cr) return NO_TEXT;
+  if (x < 0 || y < 0 || x >= cr || y >= cr) return NOTHING_TO_CLEAR;
   const cell = y * cr + x;
   const avoid: Rect[] = [];
   const sum = state.killerData?.kgrid[cell] ?? 0;
   if (sum) {
-    const { origin, options } = killerText(ts, x, y);
+    const { origin, options } = killerText(ts, x, y, sum);
     avoid.push(textBox(origin, options, String(sum)));
   }
   const d = state.grid[cell];
   if (d) {
     const { origin, options } = digitText(ts, x, y);
-    return { enclose: [textBox(origin, options, digitChar(d))], avoid, notes: [] };
+    return { enclose: [textBox(origin, options, digitChar(d))], avoid };
   }
   const shown = pencilValues(cr, state.pencil[cell]);
   const notes = pencilSlots(state, ts, x, y, shown.length).map(
     ({ origin, options }, j) => textBox(origin, options, digitChar(shown[j])),
   );
-  return { enclose: [], avoid, notes };
+  return { enclose: notes, avoid };
 }
 
 // --- pencil-mode indicator -------------------------------------------------
@@ -690,7 +661,7 @@ export function redraw(
     if (ds.hint.packed[i] & HINT_AREA) evidence.push(c);
   }
   const markStyle = {
-    band: (x: number, y: number) => markBand(ds, x, y),
+    band: (x: number, y: number) => markBand(ds.tileSize, x, y),
     text: (x: number, y: number) => cellText(state, ts, x, y),
     evidenceColor: COL_HINT_CELL,
   };

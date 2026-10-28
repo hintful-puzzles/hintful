@@ -30,16 +30,14 @@ import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import {
-  type CellText,
   type HintMarkStyle,
   HintMarks,
   type MarkBand,
   type MarkCell,
   MarkOutlines,
-  NO_TEXT,
 } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import { textBox } from "../../engine/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import {
   type Flash,
@@ -197,14 +195,14 @@ function notNeutralText(ts: number, x: number, y: number) {
 /** The text square `(x, y)` shows, for a hint's ring to keep clear of: only
  * the `?` the player marks an undecided square with, a note a placement
  * replaces. A pole and the other marks are shapes. */
-function squareText(state: MagnetsState, ts: number, x: number, y: number): CellText {
+function squareText(state: MagnetsState, ts: number, x: number, y: number): RingClear {
   const { w, h, grid, flags } = state;
-  if (x < 0 || y < 0 || x >= w || y >= h) return NO_TEXT;
+  if (x < 0 || y < 0 || x >= w || y >= h) return NOTHING_TO_CLEAR;
   const i = y * w + x;
   if (grid[i] !== EMPTY || flags[i] & GS_SET || !(flags[i] & GS_NOTNEUTRAL))
-    return NO_TEXT;
+    return NOTHING_TO_CLEAR;
   const { origin, options } = notNeutralText(ts, x, y);
-  return { enclose: [], avoid: [], notes: [textBox(origin, options, "?")] };
+  return { enclose: [textBox(origin, options, "?")], avoid: [] };
 }
 
 function drawSym(

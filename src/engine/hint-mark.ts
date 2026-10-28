@@ -40,7 +40,7 @@
  */
 
 import type { GameDrawing } from "./game.ts";
-import type { RingClear } from "./ring.ts";
+import { type RingClear, ringContentBox } from "./ring.ts";
 import type { Rect } from "./types.ts";
 
 const MARK_TOP = 1;
@@ -114,26 +114,17 @@ export function outlineSides(
   );
 }
 
-/** A cell's text as a ring sees it ({@link HintMarkStyle.text}). */
-export interface CellText extends RingClear {
-  readonly notes: readonly Rect[];
-}
-
-/** A cell that shows no text. */
-export const NO_TEXT: CellText = { enclose: [], avoid: [], notes: [] };
-
 export interface HintMarkStyle {
   /** Where cell `(x, y)`'s band sits. */
   band(x: number, y: number): MarkBand;
   /**
    * The text cell `(x, y)` shows this frame, for a ring to keep clear of: what
-   * a ring on the cell encloses (its value), what it leaves outside (a cage
-   * clue in its corner), and its notes, which a ring on the cell may cross,
-   * because the step decides the cell and replaces them. Called for the
-   * target's neighbors too, which may lie off the board; a ring leaves all of
-   * a neighbor's text outside.
+   * a ring on the cell encloses (its value and its notes), and what it may
+   * enclose or leave outside but never cross (a cage clue in its corner).
+   * Called for the target's neighbors too, which may lie off the board; a
+   * ring leaves all of a neighbor's text outside.
    */
-  text(x: number, y: number): CellText;
+  text(x: number, y: number): RingClear;
   /** The outline around the region it reasons from. */
   evidenceColor: number;
   /**
@@ -279,8 +270,8 @@ const bounds = (rects: readonly Rect[]): Rect => {
 const ringThickness = (band: MarkBand): number => Math.max(2, band.outer + band.inner);
 
 /** One ring round `piece`, within the band its cells' repaint and erase
- * answer for, enclosing the piece's value, over its notes, and clear of the
- * rest of the text round it. */
+ * answer for, enclosing the piece's values and notes, and clear of the rest
+ * of the text round it. */
 function drawPieceRing(
   dr: GameDrawing,
   piece: readonly MarkCell[],
@@ -299,7 +290,7 @@ function drawPieceRing(
         const n = { x: c.x + dx, y: c.y + dy };
         if (inPiece.has(key(n))) continue;
         const theirs = style.text(n.x, n.y);
-        avoid.push(...theirs.enclose, ...theirs.avoid, ...theirs.notes);
+        avoid.push(...theirs.enclose, ...theirs.avoid);
       }
   }
   dr.drawRing(
@@ -307,17 +298,44 @@ function drawPieceRing(
     { enclose, avoid },
     ringThickness(bands[0]),
     {
-      room: bounds(
-        bands.map((b) => ({
-          x: b.box.x - b.outer,
-          y: b.box.y - b.outer,
-          w: b.box.w + 2 * b.outer,
-          h: b.box.h + 2 * b.outer,
-        })),
-      ),
+      room: bounds(bands.map(bandRoom)),
       inside: style.inside?.(piece) ?? undefined,
+      centered: true,
     },
   );
+}
+
+/** The pixels a cell's repaint and erase answer for: its box and the band's
+ * part outside it. */
+const bandRoom = ({ box, outer }: MarkBand): Rect => ({
+  x: box.x - outer,
+  y: box.y - outer,
+  w: box.w + 2 * outer,
+  h: box.h + 2 * outer,
+});
+
+/**
+ * The box a cell of `band` keeps its text inside, so that the ring
+ * {@link HintMarks} draws on the cell goes round all of it, centered and in
+ * the cell's room. A game whose notes or corner clue reach past it lays them
+ * out inside it, on every cell and in every frame, so that a hint does not
+ * move the text it rings (the owner's choice, `keep-rings-off-a-cells-numbers`
+ * D2). `within` is the part of the cell a game keeps its notes to for its own
+ * reasons (a cage's outline, a neighbor's tower).
+ */
+export function ringTextBox(
+  band: MarkBand,
+  { within = band.box }: { within?: Rect } = {},
+): Rect {
+  const r = ringContentBox(band.box, ringThickness(band), bandRoom(band));
+  const x = Math.max(r.x, within.x);
+  const y = Math.max(r.y, within.y);
+  return {
+    x,
+    y,
+    w: Math.max(0, Math.min(r.x + r.w, within.x + within.w) - x),
+    h: Math.max(0, Math.min(r.y + r.h, within.y + within.h) - y),
+  };
 }
 
 /**

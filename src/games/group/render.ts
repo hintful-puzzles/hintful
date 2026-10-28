@@ -29,11 +29,10 @@ import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import {
-  type CellText,
   HintMarks,
   type MarkBand,
   type MarkCell,
-  NO_TEXT,
+  ringTextBox,
 } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
@@ -42,6 +41,7 @@ import {
   drawCellBackground,
   HIGHLIGHT_ENTRY,
   HIGHLIGHT_NONE,
+  noteGrid,
   winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
@@ -55,7 +55,7 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import { textBox } from "../../engine/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { GroupMove } from "./state.ts";
@@ -267,8 +267,7 @@ const PENCIL_BOX = (w: number, ts: number) =>
  * overlay by grid cell precisely so a mark follows its element through a reorder,
  * and this is the other half of that.
  */
-function markBand(ds: GroupDrawState, x: number, y: number): MarkBand {
-  const ts = ds.tileSize;
+function markBand(ts: number, x: number, y: number): MarkBand {
   return {
     box: { x: coord(x, ts) + 1, y: coord(y, ts) + 1, w: ts - 1, h: ts - 1 },
     outer: 1,
@@ -333,8 +332,8 @@ function annotations(
   return out;
 }
 
-/** Where display cell `(x, y)`'s pencil marks go, each with its value: an
- * auto-sized grid within the cell. */
+/** Where display cell `(x, y)`'s pencil marks go, each with its value: its
+ * {@link ringTextBox}. */
 function pencilSlots(
   ts: number,
   w: number,
@@ -345,43 +344,9 @@ function pencilSlots(
   const values = Array.from({ length: w }, (_, i) => i + 1).filter(
     (i) => pencil & (1 << i),
   );
-  const npencil = values.length;
-  if (!npencil) return [];
-  const tx = coord(x, ts) + 1;
-  const ty = coord(y, ts) + 1;
-  const minph = 2;
-  const pl0 = tx + gridextra(ts);
-  const pr = pl0 + ts - gridextra(ts);
-  const pt0 = ty + gridextra(ts);
-  const pb = pt0 + ts - gridextra(ts);
-
-  let bestsize = 0;
-  let pbest = 0;
-  for (let pw = 3; pw < Math.max(npencil, 4); pw++) {
-    let ph = Math.trunc((npencil + pw - 1) / pw);
-    ph = Math.max(ph, minph);
-    const fw = (pr - pl0) / pw;
-    const fh = (pb - pt0) / ph;
-    const fs = Math.min(fw, fh);
-    if (fs > bestsize) {
-      bestsize = fs;
-      pbest = pw;
-    }
-  }
-  const pw = pbest;
-  let ph = Math.trunc((npencil + pw - 1) / pw);
-  ph = Math.max(ph, minph);
-
-  const fontsize = Math.min(Math.trunc((pr - pl0) / pw), Math.trunc((pb - pt0) / ph));
-  const pl = tx + Math.trunc((ts - fontsize * pw) / 2);
-  const pt = ty + Math.trunc((ts - fontsize * ph) / 2);
-  return values.map((value, j) => ({
-    origin: {
-      x: pl + Math.trunc((fontsize * (2 * (j % pw) + 1)) / 2),
-      y: pt + Math.trunc((fontsize * (2 * Math.trunc(j / pw) + 1)) / 2),
-    },
-    options: glyphFont(fontsize),
-    value,
+  return noteGrid(ringTextBox(markBand(ts, x, y)), values.length).map((slot, j) => ({
+    ...slot,
+    value: values[j],
   }));
 }
 
@@ -392,9 +357,9 @@ function cellText(
   state: GroupState,
   x: number,
   y: number,
-): CellText {
+): RingClear {
   const { w, id, tileSize: ts } = ds;
-  if (x < 0 || y < 0 || x >= w || y >= w) return NO_TEXT;
+  if (x < 0 || y < 0 || x >= w || y >= w) return NOTHING_TO_CLEAR;
   const gi = ds.sequence[y] * w + ds.sequence[x];
   const digit = state.grid[gi];
   if (digit) {
@@ -404,13 +369,12 @@ function cellText(
       avoid: annotations(ts, x, y, ds.errtmp[gi], id).map((a) =>
         textBox(a.origin, a.options, a.text),
       ),
-      notes: [],
     };
   }
   const notes = pencilSlots(ts, w, x, y, state.pencil[gi]).map(
     ({ origin, options, value }) => textBox(origin, options, toChar(value, id)),
   );
-  return { enclose: [], avoid: [], notes };
+  return { enclose: notes, avoid: [] };
 }
 
 // --- per-tile drawing (draw_tile) ------------------------------------------
@@ -590,7 +554,7 @@ export function redraw(
     }
   }
   const markStyle = {
-    band: (x: number, y: number) => markBand(ds, x, y),
+    band: (x: number, y: number) => markBand(ds.tileSize, x, y),
     text: (x: number, y: number) => cellText(ds, state, x, y),
     evidenceColor: COL_HINT_CELL,
   };

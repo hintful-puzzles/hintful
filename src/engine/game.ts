@@ -314,6 +314,9 @@ export interface PresetMenu<Params> {
 export interface RingOptions {
   readonly room?: Rect;
   readonly inside?: (ink: number) => void;
+  /** Keep the ring on the box's center: it may grow or draw in, never shift
+   * aside (`ringShape`). */
+  readonly centered?: boolean;
 }
 
 /**

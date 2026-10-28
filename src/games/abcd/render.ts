@@ -39,17 +39,17 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as geometryFromCoord } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import {
-  type CellText,
   HintMarks,
   type MarkBand,
   type MarkCell,
-  NO_TEXT,
+  ringTextBox,
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
+  noteGrid,
   winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
@@ -64,7 +64,7 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import { textBox } from "../../engine/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { AbcdHint } from "./hint.ts";
@@ -322,8 +322,8 @@ interface TileText {
   readonly options: DrawTextOptions;
 }
 
-/** Where cell `(x, y)`'s pencil marks go, laid out by upstream's arithmetic,
- * each with its letter index. */
+/** Where cell `(x, y)`'s pencil marks go, in its {@link ringTextBox}, each
+ * with its letter index. */
 function pencilSlots(
   state: AbcdState,
   ts: number,
@@ -332,31 +332,15 @@ function pencilSlots(
 ): (TileText & { letter: number })[] {
   const { w, n } = state.params;
   const notes = state.pencil[y * w + x];
-  const ox = innerCoord(x, ts, n);
-  const oy = innerCoord(y, ts, n);
   const letters = Array.from({ length: n }, (_, i) => i).filter(
     (i) => notes & letterBit(i),
   );
-  const nhints = letters.length;
-  if (nhints === 0) return [];
-
-  let hw = 1;
-  while (hw * hw < nhints) hw++;
-  if (hw < 3) hw = 3;
-  let hh = ((nhints + hw - 1) / hw) | 0;
-  if (hh < 2) hh = 2;
-  const hmax = Math.max(hw, hh);
-  const denom = ((hmax * (11 - hmax)) / 8) | 0;
-  const fontsz = denom > 0 ? (ts / denom) | 0 : ts;
-
-  return letters.map((letter, j) => ({
-    origin: {
-      x: (ox + ((4 * (j % hw) + 3) * ts) / (4 * hw + 2)) | 0,
-      y: (oy + ((4 * ((j / hw) | 0) + 3) * ts) / (4 * hh + 2)) | 0,
-    },
-    options: glyphFont(fontsz),
-    letter,
-  }));
+  return noteGrid(ringTextBox(markBand(x, y, ts, n)), letters.length).map(
+    (slot, j) => ({
+      ...slot,
+      letter: letters[j],
+    }),
+  );
 }
 
 /** A placed letter, in the middle of cell `(x, y)`. */
@@ -369,22 +353,21 @@ function letterText(ts: number, n: number, x: number, y: number): TileText {
 }
 
 /** The text cell `(x, y)` shows, for a hint's ring to keep clear of. */
-function cellText(state: AbcdState, ts: number, x: number, y: number): CellText {
+function cellText(state: AbcdState, ts: number, x: number, y: number): RingClear {
   const { w, h, n } = state.params;
-  if (x < 0 || y < 0 || x >= w || y >= h) return NO_TEXT;
+  if (x < 0 || y < 0 || x >= w || y >= h) return NOTHING_TO_CLEAR;
   const letter = state.grid[y * w + x];
   if (letter !== EMPTY) {
     const { origin, options } = letterText(ts, n, x, y);
     return {
       enclose: [textBox(origin, options, String.fromCharCode(64 + letter))],
       avoid: [],
-      notes: [],
     };
   }
   const notes = pencilSlots(state, ts, x, y).map(({ origin, options, letter: l }) =>
     textBox(origin, options, String.fromCharCode(65 + l)),
   );
-  return { enclose: [], avoid: [], notes };
+  return { enclose: notes, avoid: [] };
 }
 
 /** The box a cell's background fills, and so where a hint's band sits inside

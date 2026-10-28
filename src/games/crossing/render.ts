@@ -50,13 +50,12 @@ import {
 } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
-  type CellText,
   drawMarkSides,
   HintMarks,
   MARK_ALL,
   type MarkBand,
   type MarkCell,
-  NO_TEXT,
+  ringTextBox,
 } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
@@ -66,6 +65,7 @@ import {
   HIGHLIGHT_NOTES,
   highlightFill,
   highlightIsOn,
+  noteGrid,
   winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
@@ -79,7 +79,7 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import { textBox } from "../../engine/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { LISTED } from "./hint-text.ts";
@@ -341,8 +341,7 @@ export function newDrawState(
  * in the center and the pencil-mark grid is inset from the edge, so the
  * outermost pixels hold no content.
  */
-function markBand(ds: CrossingDrawState, x: number, y: number): MarkBand {
-  const ts = ds.tileSize;
+function markBand(ts: number, x: number, y: number): MarkBand {
   return {
     box: { x: tileOrigin(x, ts), y: tileOrigin(y, ts), w: ts + 1, h: ts + 1 },
     outer: 0,
@@ -400,44 +399,32 @@ function drawErrRectangle(
 function drawMarks(
   dr: GameDrawing,
   ts: number,
-  tx: number,
-  ty: number,
+  x: number,
+  y: number,
   marks: number,
   struck: number,
   ink: number,
 ): void {
-  for (const { i, origin, options } of markSlots(ts, tx, ty, marks)) {
+  const tile = { x: tileOrigin(x, ts), y: tileOrigin(y, ts), w: ts, h: ts };
+  for (const { i, origin, options } of markSlots(ts, x, y, marks)) {
     dr.drawText(origin, options, ink, String(i + 1));
-    if (struck & (1 << i))
-      drawStrike(dr, origin, options.size, ink, { x: tx, y: ty, w: ts, h: ts });
+    if (struck & (1 << i)) drawStrike(dr, origin, options.size, ink, tile);
   }
 }
 
-/** Where the pencil marks in `marks` (bit `i` for digit `i + 1`) go in the
- * tile at `(tx, ty)`, in order: the arguments `drawText` takes but the color,
- * so the tile and a hint's ring read one place. */
+/** Where the pencil marks in `marks` (bit `i` for digit `i + 1`) go in cell
+ * `(x, y)`, in order: its {@link ringTextBox}, and the arguments `drawText`
+ * takes but the color, so the tile and a hint's ring read one place. */
 function markSlots(
   ts: number,
-  tx: number,
-  ty: number,
+  x: number,
+  y: number,
   marks: number,
 ): { i: number; origin: Point; options: DrawTextOptions }[] {
   const shown = Array.from({ length: 9 }, (_, i) => i).filter((i) => marks & (1 << i));
-  if (shown.length === 0) return [];
-  let hw = 1;
-  while (hw * hw < shown.length) hw++;
-  if (hw < 3) hw = 3;
-  let hh = Math.floor((shown.length + hw - 1) / hw);
-  if (hh < 2) hh = 2;
-  const hmax = Math.max(hw, hh);
-  const fontsz = Math.floor(ts / Math.floor((hmax * (11 - hmax)) / 8));
-  return shown.map((i, j) => ({
-    i,
-    origin: {
-      x: tx + Math.floor(((4 * (j % hw) + 3) * ts) / (4 * hw + 2)),
-      y: ty + Math.floor(((4 * Math.floor(j / hw) + 3) * ts) / (4 * hh + 2)),
-    },
-    options: textOpts(fontsz, "center", "mathematical"),
+  return noteGrid(ringTextBox(markBand(ts, x, y)), shown.length).map((slot, j) => ({
+    ...slot,
+    i: shown[j],
   }));
 }
 
@@ -458,23 +445,20 @@ function squareText(
   ts: number,
   x: number,
   y: number,
-): CellText {
+): RingClear {
   const { w, h, walls } = state.puzzle;
-  if (x < 0 || y < 0 || x >= w || y >= h) return NO_TEXT;
+  if (x < 0 || y < 0 || x >= w || y >= h) return NOTHING_TO_CLEAR;
   const i = y * w + x;
-  if (walls[i]) return NO_TEXT;
+  if (walls[i]) return NOTHING_TO_CLEAR;
   const digit = state.grid[i] || ghost[i];
   if (digit) {
     const { origin, options } = digitText(ts, x, y);
-    return { enclose: [textBox(origin, options, String(digit))], avoid: [], notes: [] };
+    return { enclose: [textBox(origin, options, String(digit))], avoid: [] };
   }
-  const notes = markSlots(
-    ts,
-    tileOrigin(x, ts),
-    tileOrigin(y, ts),
-    state.pencil[i],
-  ).map(({ i: n, origin, options }) => textBox(origin, options, String(n + 1)));
-  return { enclose: [], avoid: [], notes };
+  const notes = markSlots(ts, x, y, state.pencil[i]).map(({ i: n, origin, options }) =>
+    textBox(origin, options, String(n + 1)),
+  );
+  return { enclose: notes, avoid: [] };
 }
 
 /** The Check-&-Save mistake overlay (fork addition): a red box inset well
@@ -608,8 +592,8 @@ function drawCell(
     drawMarks(
       dr,
       ts,
-      tx,
-      ty,
+      x,
+      y,
       (flags >> K_MARKS) & 0x1ff,
       struck,
       highlightFill(highlight, COL_SELECTED, surface, COL_FLASH, COL_FLASH_LEAD) ===
@@ -995,7 +979,7 @@ export function redraw(
     if (ds.hint.packed[i] & HINT_AREA) evidence.push(c);
   }
   ds.marks.paint(dr, targets, evidence, {
-    band: (x, y) => markBand(ds, x, y),
+    band: (x, y) => markBand(ds.tileSize, x, y),
     text: (x, y) => squareText(state, ghost, ts, x, y),
     evidenceColor: COL_HINT_CELL,
   });

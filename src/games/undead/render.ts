@@ -35,13 +35,7 @@ import {
 } from "../../engine/color/palette-games.ts";
 import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import {
-  type CellText,
-  HintMarks,
-  type MarkBand,
-  type MarkCell,
-  NO_TEXT,
-} from "../../engine/hint-mark.ts";
+import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
   cellHighlight,
@@ -60,7 +54,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
-import { textBox } from "../../engine/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import {
@@ -579,20 +573,20 @@ function cellText(
   ascii: boolean,
   x: number,
   y: number,
-): CellText {
+): RingClear {
   const { common } = state;
-  if (!ascii || x < 1 || y < 1 || x > common.w || y > common.h) return NO_TEXT;
+  if (!ascii || x < 1 || y < 1 || x > common.w || y > common.h) return NOTHING_TO_CLEAR;
   const xi = common.xinfo[x + y * (common.w + 2)];
-  if (xi < 0) return NO_TEXT;
+  if (xi < 0) return NOTHING_TO_CLEAR;
   if (isSingleton(state.guess[xi])) {
     const { origin, options } = bigMonsterText(ds, x, y);
     const letter = monsterLetter(state.guess[xi]);
-    return { enclose: [textBox(origin, options, letter)], avoid: [], notes: [] };
+    return { enclose: [textBox(origin, options, letter)], avoid: [] };
   }
   const notes = pencilSlots(ds, x, y, state.pencil[xi]).map(({ m, origin, options }) =>
     textBox(origin, options, monsterLetter(m)),
   );
-  return { enclose: [], avoid: [], notes };
+  return { enclose: notes, avoid: [] };
 }
 
 function drawPencils(
