@@ -1018,6 +1018,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "cache",
+      "ringed",
       "tileSize",
     ],
     "id": "mosaic",
