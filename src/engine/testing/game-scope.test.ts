@@ -6,7 +6,9 @@
  *
  * The names below are joined the way vitest joins them before matching `-t`:
  * each describe title, then the test's own, separated by single spaces with no
- * file prefix (checked against `vitest list -t` on 2026-09-27, vitest 4.1). A
+ * file prefix (checked against `vitest list -t` on 2026-09-27, vitest 4.1, and
+ * against `vitest run -t` with the hook's own pattern on 2026-10-28, vitest
+ * 5.0). A
  * vitest that joined them differently would make the filter skip nothing, which
  * costs time and never a case.
  */

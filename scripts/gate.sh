@@ -483,21 +483,25 @@ node scripts/checks/select-tests.ts --verify
 TEST_COST_RUN=$(mktemp)
 export TEST_COST_RUN
 trap 'rm -f "$TEST_COST_RUN"' EXIT
+# `--update=none` is what vitest picks by itself under CI: a snapshot entry no
+# test checked fails its file, and a missing one fails rather than being written
+# into the tree after the commit's files were staged. Vitest's default, `new`,
+# only lists an orphaned entry in a summary nobody reads after a green run.
 run_tests() {
   if [ "$plan" = "ALL" ]; then
-    GATE_TEST_PASS=$1 $NICE_TESTS npx vitest run --passWithNoTests
+    GATE_TEST_PASS=$1 $NICE_TESTS npx vitest run --passWithNoTests --update=none
     return
   fi
   tests_rc=0
   # shellcheck disable=SC2086 # the lists are newline-separated paths, no globs.
   if [ -n "$whole" ]; then
     GATE_TEST_PASS=$1 $NICE_TESTS npx vitest run --passWithNoTests \
-      $(printf '%s ' $whole) || tests_rc=$?
+      --update=none $(printf '%s ' $whole) || tests_rc=$?
   fi
   # shellcheck disable=SC2086
   if [ -n "$narrow" ]; then
     GATE_TEST_PASS=$1 GATE_GAME_SCOPE=$scope $NICE_TESTS npx vitest run \
-      --passWithNoTests $(printf '%s ' $narrow) || tests_rc=$?
+      --passWithNoTests --update=none $(printf '%s ' $narrow) || tests_rc=$?
   fi
   return $tests_rc
 }

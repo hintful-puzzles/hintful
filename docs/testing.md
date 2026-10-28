@@ -300,6 +300,11 @@ positions").
   diff. Re-baseline an intended change with `vitest -u` and commit the
   regenerated `__snapshots__/*.snap`. Pair every snapshot with a targeted
   assertion, so a careless `-u` cannot erase the guarantee.
+- **The gate writes no snapshot and keeps no orphan.** It runs vitest with
+  `--update=none`, as CI does: run a new snapshot's file yourself before
+  committing, and after renaming or deleting a snapshotting test, drop its old
+  entry with `npx vitest run --update=all <file>`. A bare `-u` takes the next
+  word as its value and runs every file.
 - **`toSvg(ops, size)`**
   ([`svg-drawing.ts`](../src/engine/testing/svg-drawing.ts)) renders the
   record as SVG for a frame that needs eyeballing. Keep it out of committed
