@@ -17,4 +17,4 @@
 ## 3. Finish
 
 - [x] 3.1 Render snapshots verified by the shape of their diff; the app run on the proposal's board at both sizes, and on a Killer Solo and a Mathrax clue cell
-- [ ] 3.2 Guides (`hints-marks.md`), the gate, green
+- [x] 3.2 Guides (`hints-marks.md`), the gate, green

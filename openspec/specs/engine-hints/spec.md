@@ -2656,26 +2656,6 @@ Building a hint sentence SHALL refuse a literal "here", or a "there" that names 
 - **WHEN** a hint sentence says "a line on [this edge] would", the edge a reference to its ring
 - **THEN** it builds
 
-### Requirement: A ring is round, and only the engine draws one
-
-Every mark in the ring role SHALL be round, as round as the element's content
-allows and never rounder than a corner radius of a third of its short side
-less, and SHALL NOT cover any of the content's text. The engine SHALL draw it,
-and a game SHALL have no way to draw in the ring's ink but the engine's ring,
-so "ringed" names a round mark in every game.
-
-#### Scenario: A ring clears the content
-
-- **WHEN** a step rings a cell holding a digit or pencil notes
-- **THEN** no stroke of the ring, nor its edge, crosses the cell's text, nor
-  the text of a neighbor it reaches past the cell into
-- **AND** a cell with nothing at its corners is ringed by a circle
-
-#### Scenario: A placement crosses only the notes it replaces
-
-- **WHEN** a step places a value in a cell that shows notes
-- **THEN** the cell's ring may cross that cell's own notes, and no other text
-
 ### Requirement: A note a step rules out is struck
 
 The engine SHALL own a fourth mark role, the strike, with the noun "strike"
@@ -2731,3 +2711,33 @@ ring and within it, and SHALL NOT stand in for the ring.
 
 - **WHEN** a Tracks or Path step asks for a line on an edge
 - **THEN** the edge is ringed by a pill, and the line is drawn inside the pill
+
+### Requirement: A ring is round, crosses no number, and only the engine draws one
+
+Every mark in the ring role SHALL be round, as round as the element's content
+allows and never rounder than a corner radius of a third of its short side
+less, and SHALL NOT cross any text: not the element's own, notes included,
+and not a neighbor's. A ring on a cell SHALL be centered on it. The engine
+SHALL draw it, and a game SHALL have no way to draw in the ring's ink but the
+engine's ring, so "ringed" names a round mark in every game.
+
+#### Scenario: A ring clears the content
+
+- **WHEN** a step rings a cell holding a digit or pencil notes
+- **THEN** no stroke of the ring, nor its edge, crosses the cell's text, nor
+  the text of a neighbor it reaches past the cell into
+- **AND** a cell with nothing at its corners is ringed by a circle
+
+#### Scenario: A placement rings the whole cell, round its notes
+
+- **WHEN** a step places a value in a cell that shows notes and a cage clue
+- **THEN** the cell's ring is centered on the cell and goes round every one
+  of its notes and its clue, crossing none of them
+
+#### Scenario: A cell's text leaves a ring room
+
+- **WHEN** a cell shows notes, whether or not the step rings it
+- **THEN** its notes and its clue lie inside the box a ring centered on the
+  cell leaves, in every frame, so a hint does not move them
+- **AND** a cell with a clue shows its notes at the size and on the rows of a
+  cell without one
