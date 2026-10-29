@@ -25,23 +25,22 @@ language with the computed cut, and with it which catalog moves to file.
 ## The result
 
 **The computed cut puts every pair the old table got wrong on the solver's
-side but one, and its two misses were predicted.** Of the 63 pairs decided
-outright, 61 got the word expected of them; of the corpus's 15 wrong pairs,
-14. The other five are ours, and every check of them so far agrees with
-their expected word. The two misses
+side but one, and its two misses were predicted.** Of the 65 pairs decided,
+63 got the word expected of them; of the corpus's 15 wrong pairs, 14. Three
+of ours are undecided (C8, C9, C12): their checks on the larger boards were
+stopped (2026-10-29, the owner agreeing) after hours under heavy load, since
+no outcome of them could move the decision. Every check of them that
+finished is sound, which is the word expected; by `test.md` an undecided
+pair counts as a miss, which would make five. The two misses
 (§ "The misses") were written into `test.md` § "Predictions" before anything
 ran: Icosian and Knight's Tour, and ball sort's added tube. The second is a
 correction to the theory, not a defect of the method.
 
 Against the line `test.md` drew, more than 5 misses overall or more than 2 of
-group A, it passes. The owner's reading (2026-10-29) is that the line is
-context, not the verdict: the decision is qualitative, and it waits for
-`build-a-game-from-its-description`. What the result does and does not
+group A, it passes, at the line. The owner's reading (2026-10-29) is that the
+line is context, not the verdict: the decision is qualitative, and it waits
+for `build-a-game-from-its-description`. What the result does and does not
 support is § "What the result does not show".
-
-Five of group C's pairs were still running on their larger boards when this
-was written (§ "Group C" marks each); every check of them that finished is
-sound, on every board it reached.
 
 ## The pairs
 
@@ -86,17 +85,17 @@ All twenty-four are two games, by vocabulary in both directions
 | # | Pair | Decided by | Computed | Word | Expected |
 | --- | --- | --- | --- | --- | --- |
 | C1 | Solo, X | E | one | modifier | one |
-| C2 | Solo, Jigsaw | S, both ways | one, on 4x4 (running: 6x6) | board shape | one |
+| C2 | Solo, Jigsaw | S, both ways | one, on 4x4: every rung sound in plain Solo and every jigsaw; on 6x6, four of eight sound in plain Solo, the jigsaw not reached | board shape | one |
 | C3 | Solo, Killer | E; V back | one | modifier | one |
 | C4 | Ascent Classic, Orthogonal | S, both ways | one | board shape | one |
 | C5 | Ascent Classic, Hex | S, both ways | one | board shape | one |
 | C6 | Ascent Classic, Edges | E; V back | one | modifier | one |
 | C7 | Ascent, a board shape with a wall | S, both ways | one | board shape | one |
-| C8 | Star Battle, one star and two | S, both ways | running: the ladder is sound for one star on 5x5 and 6x6; two stars from 7x7 | | one |
-| C9 | Star Battle, one star and three | S, both ways | running: three stars fit on no board under 12x12; on a dealt 12x12, every rung checked so far is sound | | one |
+| C8 | Star Battle, one star and two | S, both ways | **undecided**: the ladder is sound for one star on 5x5 and 6x6; two stars fit on no board under 8x8, and on 8x8 two of its eight rungs were checked, both sound | | one |
+| C9 | Star Battle, one star and three | S, both ways | **undecided**: three stars fit on no board under 12x12; on a dealt 12x12, three of eight rungs checked, all sound | | one |
 | C10 | Salad Numbers, Letters | E; V back | one | modifier | one |
 | C11 | Unequal, Adjacent | V both ways | two | | two |
-| C12 | Seismic, Tectonic | S, both ways | running: three of four rungs sound in Seismic on 4x4; Tectonic not yet reached | | one |
+| C12 | Seismic, Tectonic | S, both ways | **undecided**: on 4x4, three of the four rungs sound in Seismic and in Tectonic, each reading its game's `clash`; `starve` ran over two hours in each without settling | | one |
 | C13 | Path, Pairs | S, both ways | one | ruleset | one |
 | C14 | Flip Crosses, Random | S, both ways | one | ruleset | one |
 | C15 | Twiddle, rows only | argued, both ways | one | ruleset | one |
@@ -106,7 +105,7 @@ All twenty-four are two games, by vocabulary in both directions
 | C19 | Unruly, unique | E; V back | one | modifier | one |
 | C20 | Group, identity hidden | E both ways | one | generator setting | one |
 | C21 | Guess, no duplicates | E; V back | one | modifier | one |
-| C22 | Net, wrapping | S, both ways | one, on 3x3 (running: wrapping 4x3, bordered 4x3 sound) | board shape | one |
+| C22 | Net, wrapping | S, both ways | one, on 3x3: every rung sound bordered and wrapping; on 4x3, every rung sound bordered, and `side` wrapping | board shape | one |
 | C23 | Netslide, wrapping | P, both ways | one | board shape | one |
 | C24 | Net, Netslide | V both ways | two | | two |
 | C25 | Keen, multiplication only | E both ways | one | generator setting | one |
@@ -173,7 +172,10 @@ bounded filling asserted is fresh variables; denied, its assignments are
 enumerated (`ExistsFill.cap` gives up past 20,000). `validate.py` reruns all
 of experiment C on the new compiler, and catches a planted defect in each new
 form: a reach asserted and denied together, a cage filling striking the wrong
-digit, a denied filling read with the wrong sum. Every result is as expected.
+digit, a denied filling read with the wrong sum. Every result through 5x4 is
+as expected; its Range checks on 6x6 ran for hours without settling and were
+stopped. `planted.py` holds a defect in each of group C's ladders, and every
+one is caught.
 
 **The verifier.** Every counterexample is read back and judged by a plain
 Python reading of the other game's rules, written apart from its z3 encoding;

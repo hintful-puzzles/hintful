@@ -1,3 +1,24 @@
+C2   Solo's hiddenSingle in Solo 4x4                            sound                            0.8s
+C2   Solo's nakedSingle in Solo 4x4                             sound                            0.5s
+C2   Solo's intersect in Solo 4x4                               sound                           12.3s
+C2   Solo's subset in Solo 4x4                                  sound                          120.1s
+C2   Solo's hiddenPair in Solo 4x4                              sound                           60.0s
+C2   Solo's fish in Solo 4x4                                    sound                            6.7s
+C2   Solo's wing in Solo 4x4                                    sound                          361.3s
+C2   Solo's forcingChain in Solo 4x4                            sound                         1181.1s
+C2   Solo's hiddenSingle in Solo Jigsaw 4x4                     sound                           26.7s
+C2   Solo's nakedSingle in Solo Jigsaw 4x4                      sound                            0.2s
+C2   Solo's intersect in Solo Jigsaw 4x4                        sound                          309.8s
+C2   Solo's subset in Solo Jigsaw 4x4                           sound                          213.8s
+C2   Solo's hiddenPair in Solo Jigsaw 4x4                       sound                          116.0s
+C2   Solo's fish in Solo Jigsaw 4x4                             sound                            8.7s
+C2   Solo's wing in Solo Jigsaw 4x4                             sound                          926.9s
+C2   Solo's forcingChain in Solo Jigsaw 4x4                     sound                         1689.6s
+C2   Solo's hiddenSingle in Solo 6x6                            sound                            3.5s
+C2   Solo's nakedSingle in Solo 6x6                             sound                            0.3s
+C2   Solo's intersect in Solo 6x6                               sound                           85.1s
+C2   Solo's subset in Solo 6x6                                  sound                         3424.5s
+C2   Solo's hiddenPair in Solo 6x6, then the 6x6 jigsaw         undecided (stopped)         
 C4   Ascent's singlePosition in Ascent classic 3x3              sound                            6.8s
 C4   Ascent's proximity in Ascent classic 3x3                   sound                            8.8s
 C4   Ascent's overlap in Ascent classic 3x3                     sound                            6.6s
@@ -38,6 +59,36 @@ C4   Ascent's proximity in Ascent classic walled 4x3            sound           
 C4   Ascent's overlap in Ascent classic walled 4x3              sound                           52.0s
 C4   Ascent's deadEnd in Ascent classic walled 4x3              sound                            0.0s
 C4   Ascent's singleNumber in Ascent classic walled 4x3         sound                            0.6s
+C8   one star 5x5's around in Star Battle k=1 5x5               sound                            1.9s
+C8   one star 5x5's full in Star Battle k=1 5x5                 sound                           15.2s
+C8   one star 5x5's exact in Star Battle k=1 5x5                sound                           23.7s
+C8   one star 5x5's confinedLine in Star Battle k=1 5x5         sound                          234.8s
+C8   one star 5x5's confinedRegion in Star Battle k=1 5x5       sound                          294.7s
+C8   one star 5x5's needed in Star Battle k=1 5x5               sound                           22.0s
+C8   one star 5x5's crowded in Star Battle k=1 5x5              sound                           63.5s
+C8   one star 5x5's starved in Star Battle k=1 5x5              sound                          756.3s
+C8   one star 6x6's around in Star Battle k=1 6x6               sound                            3.1s
+C8   one star 6x6's full in Star Battle k=1 6x6                 sound                           31.8s
+C8   one star 6x6's exact in Star Battle k=1 6x6                sound                           46.9s
+C8   one star 6x6's confinedLine in Star Battle k=1 6x6         sound                          672.7s
+C8   one star 6x6's confinedRegion in Star Battle k=1 6x6       sound                         1658.4s
+C8   one star 6x6's needed in Star Battle k=1 6x6               sound                           24.8s
+C8   one star 6x6's crowded in Star Battle k=1 6x6              sound                          377.3s
+C8   one star 6x6's starved in Star Battle k=1 6x6              sound                         3056.0s
+C8   one star's, k read from two stars 8x8's around in Star Battle k=2 8x8 sound                           18.4s
+C8   one star's, k read from two stars 8x8's full in Star Battle k=2 8x8 sound                         1291.8s
+C8   one star's exact and on, k from two stars 8x8              undecided (stopped)         
+C9   one star's, k from three stars, board 1's around in Star Battle k=3 12x12 sound                          312.8s
+C9   one star's, k from three stars, board 1's full in Star Battle k=3 12x12 sound                          239.5s
+C9   one star's, k from three stars, board 1's exact in Star Battle k=3 12x12 sound                          273.6s
+C9   one star's confinedLine and on, three stars board 1; board 2 undecided (stopped)         
+C12  Seismic 4x4's nakedSingle in Seismic                       sound                            0.4s
+C12  Seismic 4x4's strike in Seismic                            sound                            1.4s
+C12  Seismic 4x4's hiddenSingle in Seismic                      sound                         1160.8s
+C12  Seismic 4x4's nakedSingle in Tectonic                      sound                            0.4s
+C12  Seismic 4x4's strike in Tectonic                           sound                            2.5s
+C12  Seismic 4x4's hiddenSingle in Tectonic                     sound                         1191.7s
+C12  Seismic's starve in Seismic 4x4 and in Tectonic 4x4; 5x4   undecided (stopped)         
 C13  Path's forced in Path 3x3                                  sound                            4.7s
 C13  Path's joined in Path 3x3                                  sound                           19.3s
 C13  Path's closed in Path 3x3                                  sound                            0.1s
@@ -61,3 +112,17 @@ C14  Flip's lastChance in Flip random 4x3                       sound           
 C18  Bridges most 1 entails most 2                              entails                          0.0s
 C18  Bridges most 2 entails most 3                              entails                          0.0s
 C18  Bridges most 3 entails most 4                              entails                          0.0s
+C22  Net's side in Net 3x3                                      sound                            0.5s
+C22  Net's loop in Net 3x3                                      sound                            9.3s
+C22  Net's sealed in Net 3x3                                    sound                           19.2s
+C22  Net's neighbor in Net 3x3                                  sound                            0.3s
+C22  Net's side in Net wrapping 3x3                             sound                            1.2s
+C22  Net's loop in Net wrapping 3x3                             sound                          453.3s
+C22  Net's sealed in Net wrapping 3x3                           sound                          215.0s
+C22  Net's neighbor in Net wrapping 3x3                         sound                            5.2s
+C22  Net's side in Net 4x3                                      sound                            2.3s
+C22  Net's loop in Net 4x3                                      sound                          192.0s
+C22  Net's sealed in Net 4x3                                    sound                          146.9s
+C22  Net's neighbor in Net 4x3                                  sound                            2.6s
+C22  Net's side in Net wrapping 4x3                             sound                            7.0s
+C22  Net's loop and on in Net wrapping 4x3                      undecided (stopped)         

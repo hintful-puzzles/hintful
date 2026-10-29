@@ -80,6 +80,16 @@ def c12():
                       {"nakedSingle": 1, "strike": 2, "hiddenSingle": 1, "starve": 2})
 
 
+@pair("C12T")
+def c12t():
+    """C12's deciding direction alone: Seismic's ladder, reading Tectonic's
+    clash, in Tectonic on 4x4."""
+    g = Grid(4, 4)
+    tect = L.seismic(g, 4, True)
+    ladder_in("C12", "4x4", L.seismic_ladder(g, tect), "Seismic 4x4", tect,
+              {"nakedSingle": 1, "strike": 2, "hiddenSingle": 1, "starve": 2})
+
+
 @pair("C8")
 def c8():
     # One star, the plain game, and two stars, on boards where two fit.
