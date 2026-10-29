@@ -1,0 +1,53 @@
+A9   Neko's isolated in Neko 3x3 [270/2304 positions]           sound                            0.1s
+A9   Neko's stuck in Neko 3x3 [135/2304 positions]              sound                            0.0s
+A9   Neko's isolated in Hiroimono 3x3 [798/5887 positions]      sound                            0.1s
+A9   Neko's stuck in Hiroimono 3x3 [495/5887 positions]         sound                            0.0s
+A9   Hiroimono's noReverse in Hiroimono 3x3 [552/5887 positions] sound                            0.0s
+A9   Neko's isolated in Neko 4x3 [2160/24576 positions]         sound                            0.5s
+A9   Neko's stuck in Neko 4x3 [756/24576 positions]             sound                            0.1s
+A9   Neko's isolated in Hiroimono 4x3 [6396/63487 positions]    sound                            1.0s
+A9   Neko's stuck in Hiroimono 4x3 [2898/63487 positions]       sound                            0.2s
+A9   Hiroimono's noReverse in Hiroimono 4x3 [4190/63487 positions] sound                            0.6s
+A9   Neko's isolated in Neko 4x4 [34656/524288 positions]       sound                           31.3s
+A9   Neko's stuck in Neko 4x4 [8176/524288 positions]           sound                            2.5s
+A9   Neko's isolated in Hiroimono 4x4 [102912/1376255 positions] sound                          102.0s
+A9   Neko's stuck in Hiroimono 4x4 [32704/1376255 positions]    sound                           46.5s
+A9   Hiroimono's noReverse in Hiroimono 4x4 [57296/1376255 positions] sound                           50.0s
+A9   Hiroimono's noReverse in Neko                              not expressible                  0.0s   at Neko's position has no last direction
+C15  Twiddle's library sequences in rows only                   sound (argued, not run)          0.0s   at a cell holding its tile holds a tile of its row
+C15  rows only's sequences in Twiddle                           sound (argued, not run)          0.0s   at with every value distinct, a same-valued tile is the tile
+C16  Twiddle's library sequences in orientation, 3x3 [1088 sequences] sound                            0.0s
+C16  orientation's twists in Twiddle                            not expressible                  0.0s   at plain Twiddle has no turns
+C23  the arm prunes over every answer of Netslide 3x3 [192 trees] sound                            0.0s
+C23  the arm prunes over every answer of Netslide wrapping 3x3 [11664 trees] sound                            0.6s
+C23  the arm prunes over every answer of Netslide 4x3 [2415 trees] sound                            0.1s
+C23  the arm prunes over every answer of Netslide wrapping 4x3 [367500 trees] sound                           38.2s
+C23  the parity prune, 3x3 slide group [20160 arrangements]     sound                            0.5s
+D1   ball sort's noPour in ball sort, 2 colors, 2 high, 1 empty [0/24 positions] sound (never fires)              0.0s
+D1   ball sort's pourRun in ball sort, 2 colors, 2 high, 1 empty sound                            0.0s
+D1   ball sort's noPour in ball sort with the tube, 2 colors, 2 high, 1 empty [0/94 positions] sound (never fires)              0.0s
+D1   ball sort's pourRun in ball sort with the tube, 2 colors, 2 high, 1 empty sound                            0.0s
+D1   ball sort's noPour in ball sort, 2 colors, 3 high, 1 empty [0/92 positions] sound (never fires)              0.0s
+D1   ball sort's pourRun in ball sort, 2 colors, 3 high, 1 empty sound                            0.0s
+D1   ball sort's noPour in ball sort with the tube, 2 colors, 3 high, 1 empty [0/414 positions] sound (never fires)              0.0s
+D1   ball sort's pourRun in ball sort with the tube, 2 colors, 3 high, 1 empty sound                            0.0s
+D1   ball sort's noPour in ball sort, 3 colors, 2 high, 1 empty [36/468 positions] sound                            0.0s
+D1   ball sort's pourRun in ball sort, 3 colors, 2 high, 1 empty sound                            0.0s
+D1   ball sort's noPour in ball sort with the tube, 3 colors, 2 high, 1 empty unsound                          0.0s   at (((0, 2), (1,), (1, 2), (0,)), 1)
+D1   ball sort's pourRun in ball sort with the tube, 3 colors, 2 high, 1 empty sound                            0.1s
+D1   ball sort's noPour in ball sort, 3 colors, 3 high, 1 empty [756/9840 positions] sound                            0.1s
+D1   ball sort's pourRun in ball sort, 3 colors, 3 high, 1 empty sound                            0.2s
+D1   ball sort's noPour in ball sort with the tube, 3 colors, 3 high, 1 empty unsound                          0.0s   at (((2, 1, 0), (1, 2, 0), (0, 1), (2,)), 1)
+D1   ball sort's pourRun in ball sort with the tube, 3 colors, 3 high, 1 empty sound                            2.3s
+D1   the tube's addTube in plain ball sort                      not expressible                  0.0s   at plain ball sort has no such move
+D2   Knight's Tour's deadEnds in Knight's Tour 3x4 [28/758 positions] sound                            0.0s
+D2   the closed tour's noReturn in Knight's Tour 3x4            unsound                          0.0s   at ((2, 0), (0, 2), frozenset({(0, 1), (1, 2), (2, 1), (0, 0), (2, 0), (0, 2), (2, 2), (1, 0), (1, 3)}))
+D2   Knight's Tour's deadEnds in the closed tour 3x4 [28/758 positions] sound                            0.0s
+D2   the closed tour's noReturn in the closed tour 3x4 [152/758 positions] sound                            0.0s
+D2   closed tours exist on 3x4                                  no: closed checks are vacuous     0.0s
+D2   Knight's Tour's deadEnds in Knight's Tour 3x5 [2000/5303 positions] sound                            0.1s
+D2   the closed tour's noReturn in Knight's Tour 3x5 [1840/5303 positions] sound                            0.0s
+D2   Knight's Tour's deadEnds in the closed tour 3x5 [2000/5303 positions] sound                            0.0s
+D2   the closed tour's noReturn in the closed tour 3x5 [1840/5303 positions] sound                            0.0s
+D2   closed tours exist on 3x5                                  no: closed checks are vacuous     0.0s
+D2   Knight's Tour's prunes in the closed tour, by entailment   kept                             0.0s   at the same moves, and the closed finish implies the open one

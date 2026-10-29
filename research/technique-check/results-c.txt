@@ -1,0 +1,63 @@
+C4   Ascent's singlePosition in Ascent classic 3x3              sound                            6.8s
+C4   Ascent's proximity in Ascent classic 3x3                   sound                            8.8s
+C4   Ascent's overlap in Ascent classic 3x3                     sound                            6.6s
+C4   Ascent's deadEnd in Ascent classic 3x3                     sound                            0.0s
+C4   Ascent's singleNumber in Ascent classic 3x3                sound                            0.2s
+C4   Ascent's singlePosition in Ascent orth 3x3                 sound                            0.7s
+C4   Ascent's proximity in Ascent orth 3x3                      sound                           17.1s
+C4   Ascent's overlap in Ascent orth 3x3                        sound                            1.9s
+C4   Ascent's deadEnd in Ascent orth 3x3                        sound                            0.0s
+C4   Ascent's singleNumber in Ascent orth 3x3                   sound                            0.5s
+C4   Ascent's singlePosition in Ascent hex 3x3                  sound                            4.7s
+C4   Ascent's proximity in Ascent hex 3x3                       sound                           15.0s
+C4   Ascent's overlap in Ascent hex 3x3                         sound                            3.6s
+C4   Ascent's deadEnd in Ascent hex 3x3                         sound                            0.0s
+C4   Ascent's singleNumber in Ascent hex 3x3                    sound                            0.2s
+C4   Ascent's singlePosition in Ascent classic walled 3x3       sound                            1.5s
+C4   Ascent's proximity in Ascent classic walled 3x3            sound                            6.8s
+C4   Ascent's overlap in Ascent classic walled 3x3              sound                            6.4s
+C4   Ascent's deadEnd in Ascent classic walled 3x3              sound                            0.0s
+C4   Ascent's singleNumber in Ascent classic walled 3x3         sound                            0.1s
+C4   Ascent's singlePosition in Ascent classic 4x3              sound                          108.7s
+C4   Ascent's proximity in Ascent classic 4x3                   sound                           54.3s
+C4   Ascent's overlap in Ascent classic 4x3                     sound                          128.1s
+C4   Ascent's deadEnd in Ascent classic 4x3                     sound                            0.0s
+C4   Ascent's singleNumber in Ascent classic 4x3                sound                            0.5s
+C4   Ascent's singlePosition in Ascent orth 4x3                 sound                            3.8s
+C4   Ascent's proximity in Ascent orth 4x3                      sound                           48.6s
+C4   Ascent's overlap in Ascent orth 4x3                        sound                            7.2s
+C4   Ascent's deadEnd in Ascent orth 4x3                        sound                            0.0s
+C4   Ascent's singleNumber in Ascent orth 4x3                   sound                            0.7s
+C4   Ascent's singlePosition in Ascent hex 4x3                  sound                           29.6s
+C4   Ascent's proximity in Ascent hex 4x3                       sound                          124.2s
+C4   Ascent's overlap in Ascent hex 4x3                         sound                           32.0s
+C4   Ascent's deadEnd in Ascent hex 4x3                         sound                            0.0s
+C4   Ascent's singleNumber in Ascent hex 4x3                    sound                            1.3s
+C4   Ascent's singlePosition in Ascent classic walled 4x3       sound                           66.5s
+C4   Ascent's proximity in Ascent classic walled 4x3            sound                           40.7s
+C4   Ascent's overlap in Ascent classic walled 4x3              sound                           52.0s
+C4   Ascent's deadEnd in Ascent classic walled 4x3              sound                            0.0s
+C4   Ascent's singleNumber in Ascent classic walled 4x3         sound                            0.6s
+C13  Path's forced in Path 3x3                                  sound                            4.7s
+C13  Path's joined in Path 3x3                                  sound                           19.3s
+C13  Path's closed in Path 3x3                                  sound                            0.1s
+C13  Path's stuck in Path 3x3                                   sound                            4.6s
+C13  Path's forced in Pairs 3x3                                 sound                            1.4s
+C13  Path's joined in Pairs 3x3                                 sound                           28.9s
+C13  Path's closed in Pairs 3x3                                 sound                            0.3s
+C13  Path's stuck in Pairs 3x3                                  sound                            5.3s
+C13  Path's forced in Path 4x3                                  sound                           16.2s
+C13  Path's joined in Path 4x3                                  sound                          199.7s
+C13  Path's closed in Path 4x3                                  sound                            1.6s
+C13  Path's stuck in Path 4x3                                   sound                           22.0s
+C13  Path's forced in Pairs 4x3                                 sound                            6.5s
+C13  Path's joined in Pairs 4x3                                 sound                          137.8s
+C13  Path's closed in Pairs 4x3                                 sound                            1.4s
+C13  Path's stuck in Pairs 4x3                                  sound                           22.1s
+C14  Flip's lastChance in Flip crosses 3x3                      sound                            0.7s
+C14  Flip's lastChance in Flip random 3x3                       sound                            0.7s
+C14  Flip's lastChance in Flip crosses 4x3                      sound                            1.8s
+C14  Flip's lastChance in Flip random 4x3                       sound                            1.4s
+C18  Bridges most 1 entails most 2                              entails                          0.0s
+C18  Bridges most 2 entails most 3                              entails                          0.0s
+C18  Bridges most 3 entails most 4                              entails                          0.0s

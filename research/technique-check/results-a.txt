@@ -1,0 +1,76 @@
+A1   Nurikabe's unreachable in Nurikabe 4x4                     sound                           64.1s
+A1   Nurikabe's unreachable in Mochikoro 4x4                    unsound                          0.2s   at {'c': '(0, 0)'}
+A1   Mochikoro's rectangle in Mochikoro 4x4                     sound                            0.7s
+A1   Mochikoro's rectangle in Nurikabe 4x4                      unsound                          2.9s   at {'q': '((0, 0), (1, 0), (0, 1), (1, 1))', 'c': '(1, 1)'}
+A1   Nurikabe's unreachable in Nurikabe 5x4                     sound                          382.4s
+A1   Nurikabe's unreachable in Mochikoro 5x4                    unsound                          0.2s   at {'c': '(0, 0)'}
+A1   Mochikoro's rectangle in Mochikoro 5x4                     sound                            1.0s
+A1   Mochikoro's rectangle in Nurikabe 5x4                      unsound                          3.7s   at {'q': '((0, 0), (1, 0), (0, 1), (1, 1))', 'c': '(1, 1)'}
+A2   LITS's four in LITS 4x4                                    sound                           36.8s
+A2   LITS's four in Norinori 4x4                                unsound                          1.8s   at {'c': '(0, 0)'}
+A2   Norinori's pair in Norinori 4x4                            sound                           10.3s
+A2   Norinori's pair in LITS 4x4                                unsound                          0.7s   at {'s': '(0, 0)', 't': '(0, 1)', 'c': '(1, 0)'}
+A2   LITS's four in LITS 5x4                                    sound                           97.2s
+A2   LITS's four in Norinori 5x4                                unsound                          0.2s   at {'c': '(0, 0)'}
+A2   Norinori's pair in Norinori 5x4                            sound                            7.5s
+A2   Norinori's pair in LITS 5x4                                unsound                          1.2s   at {'s': '(0, 0)', 't': '(0, 1)', 'c': '(1, 0)'}
+A3   Heyawake's adjacent in Heyawake 4x4                        sound                            0.5s
+A3   Heyawake's adjacent in Hinge 4x4                           unsound                          0.1s   at {'s': '(0, 0)', 'c': '(1, 0)'}
+A3   Hinge's alone in Hinge 4x4                                 sound                            0.3s
+A3   Hinge's alone in Heyawake 4x4                              unsound                          0.1s   at {'c': '(0, 0)'}
+A3   Heyawake's adjacent in Heyawake 5x4                        sound                            0.9s
+A3   Heyawake's adjacent in Hinge 5x4                           unsound                          0.1s   at {'s': '(0, 0)', 'c': '(1, 0)'}
+A3   Hinge's alone in Hinge 5x4                                 sound                            0.6s
+A3   Hinge's alone in Heyawake 5x4                              unsound                          0.3s   at {'c': '(0, 0)'}
+A4   Yin-Yang's no2x2 in Yin-Yang 4x4                           sound                            1.2s
+A4   Yin-Yang's no2x2 in Unruly 4x4                             unsound                          0.1s   at {'q': '((0, 0), (1, 0), (0, 1), (1, 1))', 'c': '(0, 0)', 'x': '1'}
+A4   Unruly's threes in Unruly 4x4                              sound                            0.8s
+A4   Unruly's threes in Yin-Yang 4x4                            unsound                          0.0s   at {'t': '((0, 0), (1, 0), (2, 0))', 'x': '1'}
+A4   Yin-Yang's no2x2 in Yin-Yang 6x6                           sound                            3.4s
+A4   Yin-Yang's no2x2 in Unruly 6x6                             unsound                          0.3s   at {'q': '((0, 0), (1, 0), (0, 1), (1, 1))', 'c': '(0, 1)', 'x': '1'}
+A4   Unruly's threes in Unruly 6x6                              sound                            2.8s
+A4   Unruly's threes in Yin-Yang 6x6                            unsound                          0.3s   at {'t': '((0, 0), (1, 0), (2, 0))', 'x': '0'}
+A5   Range's connect in Range 4x4                               sound                            3.3s
+A5   Range's connect in Cave 4x4                                unsound                          0.4s   at {'c': '(0, 0)', 'p': '(0, 3)', 'q': '(2, 1)'}
+A5   Range's adjacency in Range 4x4                             sound                            0.5s
+A5   Range's adjacency in Cave 4x4                              unsound                          0.3s   at {'s': '(0, 0)', 'c': '(1, 0)'}
+A5   Cave's enclosed in Cave 4x4                                sound                            0.3s
+A5   Cave's enclosed in Range 4x4                               unsound                          0.1s   at {'c': '(1, 1)'}
+A5   Range's connect in Range 5x4                               sound                           15.5s
+A5   Range's connect in Cave 5x4                                unsound                          0.5s   at {'c': '(0, 0)', 'p': '(1, 0)', 'q': '(4, 3)'}
+A5   Range's adjacency in Range 5x4                             sound                            0.6s
+A5   Range's adjacency in Cave 5x4                              unsound                          0.5s   at {'s': '(0, 0)', 'c': '(0, 1)'}
+A5   Cave's enclosed in Cave 5x4                                sound                            0.6s
+A5   Cave's enclosed in Range 5x4                               unsound                          0.1s   at {'c': '(1, 1)'}
+A7   Stostone's column in Stostone 4x4                          sound                            2.2s
+A7   Stostone's column in Shimaguni 4x4                         unsound                          0.2s   at {'c': '(0, 0)'}
+A7   Shimaguni's differ in Shimaguni 4x4                        sound                           57.3s
+A7   Shimaguni's differ in Stostone 4x4                         unsound                          1.8s   at {'a': '(0, 0)', 'b': '(1, 0)', 'c': '(0, 1)'}
+A7   Stostone's column in Stostone 5x4                          sound                            8.9s
+A7   Stostone's column in Shimaguni 5x4                         unsound                          0.5s   at {'c': '(0, 0)'}
+A7   Shimaguni's differ in Shimaguni 5x4                        sound                          128.0s
+A7   Shimaguni's differ in Stostone 5x4                         unsound                          2.9s   at {'a': '(0, 0)', 'b': '(1, 0)', 'c': '(0, 0)'}
+A8   Pipe Link's corner in Pipe Link 3x3                        sound                            0.5s
+A8   Pipe Link's corner in Reflect Link 3x3                     unsound                          0.2s   at {'c': '(0, 0)', 'e': '((0, 0), (1, 0))'}
+A8   Pipe Link's corner in Pipe Link 4x4                        sound                            2.5s
+A8   Pipe Link's corner in Reflect Link 4x4                     unsound                          0.2s   at {'c': '(0, 0)', 'e': '((0, 0), (1, 0))'}
+A10  Sukoro's full in Sukoro 4x4                                sound                            2.7s
+A10  Sukoro's full in View 4x4                                  unsound                          0.1s   at {'c': '(0, 0)', 'n': '(0, 1)'}
+A10  View's seen in View 4x4                                    sound                            2.0s
+A10  View's seen in Sukoro 4x4                                  unsound                          0.1s   at {'c': '(0, 0)', 'd': '(1, 0)'}
+A10  Sukoro's full in Sukoro 5x4                                sound                            3.2s
+A10  Sukoro's full in View 5x4                                  unsound                          0.3s   at {'c': '(0, 0)', 'n': '(1, 0)'}
+A10  View's seen in View 5x4                                    sound                            3.7s
+A10  View's seen in Sukoro 5x4                                  unsound                          0.1s   at {'c': '(0, 0)', 'd': '(0, 1)'}
+A11  the two writings of Symmetry Area 2x3 [9 answers]          same answers                     0.8s
+A11  Filling's rules hold of Symmetry Area's answers 2x3        entails                          0.6s
+A11  Symmetry Area's straightThree in Symmetry Area 2x3         sound                            0.0s
+A11  Symmetry Area's straightThree in Filling 2x3 [33 answers]  unsound                          0.0s   at ((0, 1), (0, 2), (1, 2))
+A11  the two writings of Symmetry Area 2x4 [24 answers]         same answers                   135.0s
+A11  Filling's rules hold of Symmetry Area's answers 2x4        entails                        152.5s
+A11  Symmetry Area's straightThree in Symmetry Area 2x4         sound                            0.0s
+A11  Symmetry Area's straightThree in Filling 2x4 [138 answers] unsound                          0.0s   at ((0, 1), (0, 2), (1, 2))
+A14  N-Queens's diagonal in N-Queens 5x5                        sound                            2.1s
+A14  N-Queens's diagonal in Star Battle 5x5                     unsound                          0.3s   at {'q': '(1, 0)', 'c': '(4, 3)'}
+A14  N-Queens's diagonal in N-Queens 6x6                        sound                            3.0s
+A14  N-Queens's diagonal in Star Battle 6x6                     unsound                          0.9s   at {'q': '(0, 0)', 'c': '(4, 4)'}
