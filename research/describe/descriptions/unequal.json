@@ -1,0 +1,58 @@
+{
+  "$schema": "../description.schema.json",
+  "game": "unequal",
+  "name": "Unequal",
+  "family": "latin",
+  "note": "Unequal's Unequal ruleset. Adjacent replaces the clue kind, so it is another game of the family (adjacent.json).",
+  "sizes": { "order": { "min": 3, "max": 16 } },
+  "space": {
+    "grid": { "w": "order", "h": "order" },
+    "edges": true,
+    "units": ["rows", "cols"]
+  },
+  "answer": { "value": { "sort": "cell", "domain": "range(1, order)" } },
+  "given": ["value"],
+  "marks": {
+    "cand": { "sort": "cell", "notation": "set of range(1, order)" },
+    "done": {
+      "sort": "edge",
+      "notation": "bool",
+      "note": "a play aid with no meaning for the answer"
+    }
+  },
+  "define": {
+    "lesser(k)": "other(at(k), v(k))"
+  },
+  "shape": ["latin(value, lines)"],
+  "clues": {
+    "greater": {
+      "at": "edge",
+      "value": "ends(at)",
+      "means": "value(v) > value(other(at, v))",
+      "note": "v is the end at the open side of the sign"
+    }
+  },
+  "freedom": { "kind": "fill" },
+  "deal": {
+    "clues": "which true inequalities show, fewer at higher tiers",
+    "givens": "how many",
+    "tier": "one of the tiers"
+  },
+  "tiers": ["Trivial", "Easy", "Tricky", "Extreme", "Recursive"],
+  "techniques": [
+    { "use": "latin.placed", "tier": "Trivial", "rung": "dup" },
+    { "use": "latin.single", "tier": "Trivial", "rung": "single" },
+    { "use": "latin.hiddenSingle", "tier": "Trivial", "rung": "hiddenSingle" },
+    {
+      "id": "sign",
+      "tier": "Easy",
+      "rung": ["greater", "lesser"],
+      "note": "One sign, both its ends: the larger end is larger than the smaller end's least candidate, and the smaller end smaller than the larger end's greatest.",
+      "for": "k in clues(greater), big = v(k), small = lesser(k)",
+      "conclude": "(forall d in cand(big) where forall d2 in cand(small): d <= d2: strike(big, d)) and (forall d in cand(small) where forall d2 in cand(big): d >= d2: strike(small, d))"
+    },
+    { "use": "latin.set", "tier": "Tricky", "rung": "set" },
+    { "use": "latin.fish", "tier": "Extreme", "rung": "set" },
+    { "use": "latin.wing", "tier": "Extreme", "rung": "wing" }
+  ]
+}

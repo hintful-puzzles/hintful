@@ -1,0 +1,6 @@
+Seeds per params: 3.
+
+unequal: 45 boards; 1342 of 1342 firings covered, 1342 matched by one binding
+  by rung (firings, covered, matched): single 849/849/849, greater+lesser 256/256/256, lesser 103/103/103, greater 107/107/107, set 15/15/15, wing 12/12/12
+adjacent: 36 boards; 1288 of 1288 firings covered, 1288 matched by one binding
+  by rung (firings, covered, matched): single 709/709/709, adjacent 329/329/329, adjacentSet 234/234/234, set 16/16/16

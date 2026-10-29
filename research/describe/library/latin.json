@@ -1,0 +1,36 @@
+{
+  "library": "latin",
+  "note": "The Latin engine's techniques (src/engine/latin.ts), stated once over the names every Latin space has: cells, units, lines, rows, cols, peers(c) and domain. A game places each at its own tier with `use`.",
+  "techniques": {
+    "placed": {
+      "note": "A placed value leaves its peers: latin.ts's place(), which strikes the value from its row and column as it writes it.",
+      "for": "c in cells where known(c), p in peers(c) where value(c) in cand(p)",
+      "conclude": "strike(p, value(c))"
+    },
+    "single": {
+      "note": "A cell down to one candidate holds it.",
+      "for": "c in cells where not known(c) and |cand(c)| = 1",
+      "conclude": "place(c, the(d in cand(c)))"
+    },
+    "hiddenSingle": {
+      "note": "A value with one place left in a unit goes there.",
+      "for": "u in units, d in domain where not (exists c in cells(u): value(c) = d), c = the(c2 in cells(u) where d in cand(c2)) where c != none",
+      "conclude": "place(c, d)"
+    },
+    "set": {
+      "note": "Naked sets in a unit: k open cells whose candidates are k values between them hold those values, so the unit's other cells cannot. A hidden set is the naked set of the unit's other open cells, so one statement covers both.",
+      "for": "u in units, open = {c in cells(u) where not known(c)}, S in subsets(open) where 2 <= |S| and |S| < |open|, D = set(d over c in S, d in cand(c)) where |D| = |S|",
+      "conclude": "forall c in open - S, d in D: strike(c, d)"
+    },
+    "fish": {
+      "note": "One value confined in k columns to the same k rows leaves the rest of those rows (X-wing, swordfish). The transposed case, rows confined to columns, is the same firing read from its complement.",
+      "for": "d in domain, X in subsets({L in cols where not (exists c in cells(L): value(c) = d)}) where |X| >= 2, Y = set(row(c) over L in X, c in cells(L) where d in cand(c)) where |Y| = |X|",
+      "conclude": "forall R in Y, c in cells(R) where col(c) not in X: strike(c, d)"
+    },
+    "wing": {
+      "note": "engine/wing.ts: for each value of an open middle cell but x, an end that sees the middle and is down to that value and x; a cell seeing every end, and the middle too where the middle could be x, cannot be x. XY-wing and XYZ-wing.",
+      "for": "m in cells where not known(m), x in domain, ends = {k in peers(m) where not known(k) and |cand(k)| = 2 and x in cand(k)}, E in subsets(ends) where |E| >= 1 and |E| = |cand(m) - {x}| and set(a over k in E, a in cand(k) - {x}) = cand(m) - {x}, t in cells where t != m and t not in E and not known(t) and x in cand(t) and (forall k in E: k in peers(t)) and (x not in cand(m) or m in peers(t))",
+      "conclude": "strike(t, x)"
+    }
+  }
+}

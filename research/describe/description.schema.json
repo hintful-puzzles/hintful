@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "description.schema.json",
+  "title": "A puzzle game's description",
+  "description": "The rules and techniques of a game, for research/describe/. Every string marked a formula is in the formula syntax of research/describe/README.md § \"The formula syntax\", and the loader parses each; one that does not parse fails the load.",
+  "type": "object",
+  "required": ["game", "name", "family", "sizes", "space", "answer", "freedom"],
+  "additionalProperties": false,
+  "$defs": {
+    "formula": { "type": "string", "minLength": 1, "description": "A formula." },
+    "note": {
+      "type": "string",
+      "description": "What a comment would say: read by people, by nothing else."
+    },
+    "rung": {
+      "description": "The game's hint rungs a firing of this is recorded under, among its hintRungs: one, or several where one firing records under more than one (an Unequal sign's two ends).",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" }, "minItems": 2 }
+      ]
+    },
+    "technique": {
+      "oneOf": [
+        {
+          "type": "object",
+          "description": "A technique stated here.",
+          "required": ["id", "tier", "for", "conclude"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string" },
+            "tier": { "type": "string", "description": "One of `tiers`." },
+            "rung": { "$ref": "#/$defs/rung" },
+            "note": { "$ref": "#/$defs/note" },
+            "for": {
+              "$ref": "#/$defs/formula",
+              "description": "The binders, as after `forall`: `x in S where P, y = t, ...`."
+            },
+            "premise": {
+              "$ref": "#/$defs/formula",
+              "description": "Over the marks; absent is true."
+            },
+            "conclude": {
+              "$ref": "#/$defs/formula",
+              "description": "`strike(c, d)` and `place(c, d)` facts, joined by `and`, under `forall` where it ranges."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "A library's technique placed at a tier of this game's.",
+          "required": ["use", "tier"],
+          "additionalProperties": false,
+          "properties": {
+            "use": {
+              "type": "string",
+              "pattern": "^[a-z]+\\.[A-Za-z]+$",
+              "description": "`<library>.<technique>`, as research/describe/library/ states it."
+            },
+            "tier": { "type": "string" },
+            "rung": { "$ref": "#/$defs/rung" },
+            "note": { "$ref": "#/$defs/note" }
+          }
+        }
+      ]
+    }
+  },
+  "properties": {
+    "$schema": { "type": "string" },
+    "game": {
+      "type": "string",
+      "pattern": "^[a-z]+$",
+      "description": "The id, as the app's registry has it, or a family's other game."
+    },
+    "name": { "type": "string" },
+    "family": {
+      "type": "string",
+      "description": "What the player produces (theory.md): latin, shading, loop, ..."
+    },
+    "note": { "$ref": "#/$defs/note" },
+    "sizes": {
+      "type": "object",
+      "description": "The numbers that scale an instance, each a range.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["min", "max"],
+        "additionalProperties": false,
+        "properties": { "min": { "type": "integer" }, "max": { "type": "integer" } }
+      }
+    },
+    "space": {
+      "type": "object",
+      "required": ["grid", "units"],
+      "additionalProperties": false,
+      "properties": {
+        "grid": {
+          "type": "object",
+          "required": ["w", "h"],
+          "additionalProperties": false,
+          "properties": {
+            "w": { "$ref": "#/$defs/formula" },
+            "h": { "$ref": "#/$defs/formula" }
+          }
+        },
+        "slots": {
+          "type": "boolean",
+          "description": "One slot beyond each end of every row and column, seeing along it: `slots`, `sight(s)`, `opposite(s)`."
+        },
+        "edges": {
+          "type": "boolean",
+          "description": "The orthogonal pairs: `edges`, `ends(e)`, `end1(e)`, `end2(e)`, `other(e, c)`, `edge(a, b)`."
+        },
+        "diagonals": {
+          "type": "boolean",
+          "description": "The two diagonals of a square grid: `diagonals`."
+        },
+        "regions": {
+          "type": "object",
+          "description": "Named partitions of the cells: `dealt`, from the board, or a library partition such as `blocks(rw, rh)`.",
+          "additionalProperties": { "type": "string" }
+        },
+        "units": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "The named sets of lines and regions in which no value repeats: `units`, `units_of(c)` and `peers(c)` read them."
+        }
+      }
+    },
+    "answer": {
+      "type": "object",
+      "required": ["value"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": "object",
+          "required": ["sort", "domain"],
+          "additionalProperties": false,
+          "properties": {
+            "sort": { "const": "cell" },
+            "domain": { "$ref": "#/$defs/formula" }
+          }
+        }
+      }
+    },
+    "given": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The answer functions the board may give values of: givens, not clues."
+    },
+    "marks": {
+      "type": "object",
+      "description": "What the player can write down.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["sort", "notation"],
+        "additionalProperties": false,
+        "properties": {
+          "sort": { "type": "string" },
+          "notation": { "type": "string" },
+          "note": { "$ref": "#/$defs/note" }
+        }
+      }
+    },
+    "define": {
+      "type": "object",
+      "description": "Named terms and predicates, `name(params)` to a formula.",
+      "propertyNames": { "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\([A-Za-z_, ]*\\))?$" },
+      "additionalProperties": { "$ref": "#/$defs/formula" }
+    },
+    "shape": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/formula" },
+      "description": "The answer's shape."
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/formula" },
+      "description": "Goal predicates, by name."
+    },
+    "clues": {
+      "type": "object",
+      "description": "Clue kinds: where one sits, its values, and what it means, reading `at` and `v`.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["at", "value", "means"],
+        "additionalProperties": false,
+        "properties": {
+          "at": { "type": "string" },
+          "value": { "$ref": "#/$defs/formula" },
+          "means": { "$ref": "#/$defs/formula" },
+          "complete": {
+            "type": "boolean",
+            "description": "Every place carries one, so an absent clue is a fact."
+          },
+          "note": { "$ref": "#/$defs/note" }
+        }
+      }
+    },
+    "freedom": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["fill", "act", "permute", "transition", "query"] },
+        "note": { "$ref": "#/$defs/note" }
+      }
+    },
+    "deal": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "What the generator chooses, in words: consumed by nothing yet."
+    },
+    "tiers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The ladder, lowest first; the last is the search where the game has one."
+    },
+    "techniques": { "type": "array", "items": { "$ref": "#/$defs/technique" } }
+  }
+}

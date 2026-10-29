@@ -1,0 +1,36 @@
+{
+  "$schema": "../description.schema.json",
+  "game": "towers",
+  "name": "Towers",
+  "family": "latin",
+  "sizes": { "w": { "min": 3, "max": 9 } },
+  "space": {
+    "grid": { "w": "w", "h": "w" },
+    "slots": true,
+    "units": ["rows", "cols"]
+  },
+  "answer": { "value": { "sort": "cell", "domain": "range(1, w)" } },
+  "given": ["value"],
+  "marks": {
+    "cand": { "sort": "cell", "notation": "set of range(1, w)" },
+    "done": {
+      "sort": "slot",
+      "notation": "bool",
+      "note": "a play aid with no meaning for the answer"
+    }
+  },
+  "define": {
+    "visible(s)": "count(c in sight(s) where forall c2 in before(c, sight(s)): value(c2) < value(c))"
+  },
+  "shape": ["latin(value, lines)"],
+  "clues": {
+    "sees": { "at": "slot", "value": "range(1, w)", "means": "visible(at) = v" }
+  },
+  "freedom": { "kind": "fill" },
+  "deal": {
+    "clues": "which slots show",
+    "givens": "how many",
+    "tier": "one of the tiers"
+  },
+  "tiers": ["Easy", "Hard", "Extreme", "Unreasonable"]
+}
