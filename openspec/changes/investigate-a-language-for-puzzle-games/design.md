@@ -53,8 +53,8 @@ Written as queries, since the answers move:
   squares its deduction reads. For the candidate walks, `firing-replay.ts`
   replays each recorded firing and checks that it follows from the premise its
   step names. So a trace exists for a dealt board (which technique fired, on
-  what premise, in what order), and a form of experiment C already runs in the
-  gate for one family of games. How far it reaches is step 2.2.
+  what premise, in what order). It is not experiment C: it checks a premise
+  against the game's own technique, not a technique against the rules (below).
 - **Declared parameters, rulesets and modifiers**, which the engine consumes
   (`envision-the-game-contract`, archived, and the changes it scaffolded).
 - **Games that plan and do not deduce** (Fifteen, Flood, Inertia, Slide,
@@ -63,28 +63,89 @@ Written as queries, since the answers move:
 
 What it does not have: the rules of a game stated anywhere but in code. A
 ladder is an array literal built inside a solve, closing over the board
-(`engine-difficulty`, "The difficulty tier list is not a projection of the
-technique ladder").
+(`engine-difficulty`, "A game's tiers are read from its difficulty item").
+
+### What a game declares that the engine consumes (step 2.2, 2026-10-29)
+
+Each line is a query over `src/games/*/*.ts` without tests, so it can be run
+again. The figures are 2026-10-29's, of 59 game directories.
+
+| Declaration | What consumes it | Query (games) |
+| --- | --- | --- |
+| `id`, `menu`, the params codec | routing, saves, links, the preset menu | every game |
+| `paramConfig` | the Custom dialog, the codec, the params label, the help's settings list | `paramConfig` (all) |
+| A ruleset's or modifier's `rule` sentence | the help page's list of rulesets and modifiers, a title's words | `rule:` (23); `rulesetItem` (7), `modifierItem` (9) |
+| A difficulty item and contract | tier names, the dialog, `solveAtCap`, the tier guards | `difficulty:` (39) |
+| `hintRungs`, `hintMarks` | every cross-game hint guard; the help's legend of marks | each (all) |
+| A ladder of `DeductionTechnique` `{ id, tier, run }` | `runDeductionFixpoint`: grade, cap, census | `runDeductionFixpoint` (24); the Latin solver, `engine/latin` (13) |
+
+So the engine already consumes, per game: its parameters, the sentence of
+each rule a setting changes, its tier names, and the names of its techniques.
+It consumes **no statement of the rules themselves**. The base rules are
+stated four times in four forms, none read by the others: the help page
+(`help/games/<id>.md`), the spec's `Rules:` requirements (every game's spec
+has them), `status()` and `findMistakes` (the checker), and the solver (whose
+techniques presuppose the rules and never state them).
+
+**How far the premise audit reaches.** `firing-replay.test.ts` audits the
+games whose hint is the candidate walk (`CandidatePlan(` in the hint): the
+Latin family (Solo, Keen, Towers, Unequal, Group, Salad, Mathrax) and Rome
+offer a replay; ABCD and Seismic walk without recording (`RECORDS_NOTHING`).
+Rome's `expand` and two of Mathrax's clue firings are ledgered as gated. What
+it checks is narrower than experiment C: that a firing **follows from the
+cells its step names, by the same technique**. It replays the game's own code.
+It cannot find a technique that is unsound against the rules, since the rules
+are nowhere for it to read. Experiment C asks the other question, and needs
+the rules stated.
 
 ## What the earlier withdrawals bind
 
-Not yet read for this purpose; step 2.1. Their headlines, from the postmortems'
-own summaries:
+Read for step 2.1, 2026-10-29: the seven postmortems under
+`openspec/postmortems/` and the archived `retire-the-framework-vision`. The
+question for each is whether its finding binds a description language, and
+for which of the three aims (maintainability, reasoning about the space,
+invention).
 
-- **The definition adapter** was withdrawn because no declaration needed to
-  know about another: each stood alone as a helper, so there was nothing for a
-  definition object to compile.
-- **The board model** was withdrawn because the board was already `grid/`,
-  `geometry.ts` and a typed array.
-- **The gesture table** was withdrawn because what it wanted was a shared
-  mechanic module.
-- **The tile renderer** and, earlier, the scene graph were withdrawn, and
-  presentation stays imperative.
+| Postmortem | Its finding | Binds |
+| --- | --- | --- |
+| Scene graph (2026-05-21) | A declarative scene tree diffed per frame was slow, and the cache risk it addressed had imperative fixes | Nothing here: rendering is outside the language (question 1) |
+| Retiring the `MODIFIED` delta (2026-08-24) | A tool's defect was worked around in four layers; the tool's next version had fixed it | Method only: check a dependency's version before building around it |
+| Gesture table (2026-09-05) | A drag game's keyboard half is a design reached by playtest, not derivable from the pointer gesture; the derivable part had already shipped as helpers | Aim 1, if the language described input. It does not: input stays out |
+| Board model (2026-09-06) | `grid/` already models every planar tiling, and 55 games decline it because a typed array is right for a square board; cloning is a per-field judgment; the desc codec is frozen | **Aim 1**: a language must not generate a game's state, its clone or its codec. Not aims 2 and 3: a description of the space is mathematics, and needs no game to represent its board that way |
+| Definition adapter (2026-09-06) | No declaration needed another, so there was nothing to compile; "a game joins a shared mechanic by having it" | **Aim 1**: a definition object compiled into a `Game` is refused. The language is not a way to write a game |
+| Tile loop (2026-09-09) | The headline number ("~80 lines of bookkeeping") was wrong by four and inverted | Method: measure a proposal's number. This change's own number is "the rules are spread over four places"; it is measured above |
+| Untangle unflip (2026-09-26) | A cause assumed in a design did not survive measurement | Method only |
 
-The pattern to take seriously: a declaration earned its place only when the
-engine consumed it, and "the game written in declarations" lost each time to
-"a helper the game calls". A description language that nothing runs is the
-shape `docs/doctrine.md` § "One source of truth" warns about.
+`retire-the-framework-vision` records that every row of the vision reported
+and that its deduction end's last open question, splitting a technique into
+`find`, `apply` and `narrate`, was declined
+(`docs/solver-and-generator.md` § "What the runner does not carry: the
+record"): a rung holds several premises, and is graded together and narrated
+apart. A language's technique is that rung's unit or below, and it does not
+replace the runner's.
+
+**What this leaves of each aim.**
+
+- **Maintainability is not a reason to build this.** Every withdrawal that
+  touched it found the same thing: a statement of the game that the game's code
+  does not run lost to a helper the game calls. A description from which the
+  app's code is generated is the definition adapter again. The one form of
+  aim 1 that survives is narrower: a description that a check compares, on
+  dealt boards, with the game's own verdict (question 3). It is consumed, and a
+  drift fails it. Whether that is worth a second statement of each game's rules
+  is for the report, and `docs/doctrine.md` § "One source of truth" is the bar:
+  a statement read only by a check is refused, unless the check is what keeps
+  the four statements we have today from disagreeing.
+- **Reasoning about the space, and invention, are not touched by any
+  postmortem.** Each withdrawal asked whether a declaration could build the
+  app. None asked whether a game could be described in order to compare it
+  with another, or to search for a new one, and those are the aims a
+  description that builds nothing serves.
+- **The refusal in `engine-difficulty`** ("A game's tiers are read from its
+  difficulty item") names three conditions under which projecting tiers from
+  techniques would be reconsidered. One of them, a ladder declared without a
+  board, is what the language's deduction layer would be. The report says
+  whether it meets it, and does not move the tiers either way.
 
 ## The first goal: a taxonomy
 

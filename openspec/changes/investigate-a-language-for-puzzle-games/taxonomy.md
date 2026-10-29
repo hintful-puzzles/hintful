@@ -340,6 +340,75 @@ The Latin games share one engine's rung names (`dup`, `single`,
 be compared across games, and it is the answer shape's half of the ladder,
 which is why that half is the family.
 
+## The open cases, read in step 2
+
+Read 2026-10-29 for `tasks.md` 2.3 and 2.4, from the hint and solver code.
+They change no decision above; the theory (`theory.md`) builds on them.
+
+**Fifteen, Sixteen and Twiddle do not teach one method.** Each hint names a
+tile and serves it ("Working on tile 7: …"), which is the stable-subgoal
+contract every planning game's hint keeps (`docs/hints-search.md` § "Hold a
+stable subgoal"), so the sentences look alike. The methods under them do not:
+
+| Game | How the plan is found | What a step teaches |
+| --- | --- | --- |
+| Fifteen | upstream's greedy method (`fifteen/solver.ts`): the shorter of the top row and the left column, tile by tile, then a table for the 3×2 corner | walk the hole round the tile; `goalHome`, `goalCloser`, `goalReposition`, `tileHome`, `outOfWay` |
+| Twiddle | stages in reading order (`twiddle/hint.ts`), each finished by a named run | a **tuck**, a **cycle**, **small cycles**, a **twist**, **lining up**: commutators of block turns |
+| Sixteen | the shared slide planner (`engine/slide-planner.ts`): an exact shortest path where it fits, A* otherwise, over the whole board at once | which tile this slide carries; `home` and `settingUp` only |
+
+Fifteen and Twiddle stage in reading order and Sixteen does not, and the
+moves inside a stage share nothing: the hole's walk, block commutators, line
+shifts. By the principle the owner's decision rests on, a ruleset keeps its
+game's techniques, so **these are three games** in the "tiles in order"
+family, as candidate C said. Candidate B made them one game, because their
+moves are all of the same kind. That is where the principle and B's
+structural statement part, and the theory states why: a method for moves that
+commute does not depend on which moves there are (Flip's Crosses and Random
+share their 3 rungs, since presses over GF(2) are solved by linear algebra
+whatever a press toggles), and a method for moves that do not commute does
+(a commutator is built from the generators it has). So the kind of freedom is
+not the move set's commuting alone; for a non-commuting freedom the move set
+is the kind.
+
+**Salad's Numbers is the plain game, and Letters adds a clue kind.** Numbers'
+givens are the answer itself, coarsened: a ball says a square holds a symbol,
+a cross that it is empty, a digit what it holds. Every fill puzzle has givens
+of that sort, and they are no clue vocabulary. Letters (ABC End View) keeps
+the grid's givens, writes letters and crosses but never a ball, and adds the
+border clues. The rungs say the same: Salad's ladder is the Latin family's
+populate rungs, the empty-square rungs both modes use, and `borderNear` and
+`borderFar`, which only Letters fires (§ "What the techniques share", 11 of 14
+shared). So the case is not a replaced vocabulary, and V-strict does not split
+it. It is the "added clue kind" of § "Cases the decomposition could not
+place", and Ascent's Edges is the other.
+
+**Path's Pairs keeps Path's techniques, at a finer grain than its rungs.**
+Path's three rungs are broad, so the reasons under them were read
+(`path/solver.ts`). Every firing is one of: a square with as many live edges as
+lines it needs (`forced`); a line that would break the board at once
+(`breaks`); every way a square could take its two lines, weighed (`weighed`).
+What breaks a board is one of four clashes, `crowded`, `stuck`, `closed` and
+`joined`, and the two modes differ in two lines: which numbers a line may
+join (consecutive in Path, equal in Pairs) and whether a piece may close on
+itself. No rung, reason or clash is one mode's own. The clue is the same kind
+in both, a number on a square that a line ends at or passes, and what changes
+is the predicate that relates two numbers, with the answer's shape (one path
+or several). So Pairs is **a ruleset of Path**, a replaced predicate, as the
+taxonomy's table filed it; V-strict does not split it.
+
+**The Salad reading moves Killer, one of the two confident splits.** If
+givens of the answer are no clue vocabulary, plain Solo has none, and Killer
+does not replace a vocabulary: it adds cages to a game that had only givens,
+as Letters adds border clues. The measurement says the same. Killer fires 7
+of the 8 rungs plain Solo fires and adds its three cage rungs, the "nearly
+all" row of the ladder table, beside Star Battle's 7 of 8. So by the
+principle the owner decided on, Killer stays what the catalog files it as, a
+modifier of Solo. Unequal's Adjacent is the one confident split left: Unequal
+and Adjacent each add a clue kind to a Latin square no game ships plain, and
+each loses the other's rungs (6 of 11 shared). **This revises how V-strict
+applies, not the decision**: V-strict is unchanged, and "replaced" is now
+defined (`theory.md`). The owner should see it before the catalog moves.
+
 ## What a move would cost
 
 A game's id keys the page's path (`/netslide`), its help page, its saves and

@@ -23,10 +23,10 @@ to it". Nothing in the catalog moves before then.
 
 ## 2. Read our own history and tree
 
-- [ ] 2.1 Read every postmortem under `openspec/postmortems/` and `retire-the-framework-vision`; say for each whether its finding binds a description language, and which aim; rewrite "What the earlier withdrawals bind"
-- [ ] 2.2 Inventory, by query, what a game declares that the engine consumes, and how far the premise audit in `firing-replay.ts` reaches
-- [ ] 2.3 Read the hint narrations of Fifteen, Sixteen and Twiddle: do they teach one staged method? This is the open case of question 1 in `taxonomy.md`
-- [ ] 2.4 Settle the two open cases of question 2: Salad's Numbers (the plain game, or a clue kind?) and Path's Pairs (its rungs are too broad to compare)
+- [x] 2.1 Read every postmortem under `openspec/postmortems/` and `retire-the-framework-vision`; say for each whether its finding binds a description language, and which aim; rewrite "What the earlier withdrawals bind"
+- [x] 2.2 Inventory, by query, what a game declares that the engine consumes, and how far the premise audit in `firing-replay.ts` reaches
+- [x] 2.3 Read the hint narrations of Fifteen, Sixteen and Twiddle: do they teach one staged method? This is the open case of question 1 in `taxonomy.md`
+- [x] 2.4 Settle the two open cases of question 2: Salad's Numbers (the plain game, or a clue kind?) and Path's Pairs (its rungs are too broad to compare)
 
 ## 3. The theory and a basic language
 
