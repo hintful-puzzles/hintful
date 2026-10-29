@@ -5,6 +5,11 @@ theory's parts, precise enough for a program to read, and nothing the app
 runs. Experiment B (`collection.md`) writes the collection in it, and the
 corpus test (`corpus.md`) writes a hundred outside puzzles in it.
 
+**This is the second version.** The first (commit `cf61715c`) described 37
+of the collection's 60 games; experiment B listed what the other 23 needed,
+and § "The second version" says what changed and why. The corpus test runs
+against this version and changes nothing in it.
+
 ## Sections
 
 | Section | What it holds |
@@ -17,6 +22,7 @@ corpus test (`corpus.md`) writes a hundred outside puzzles in it.
 | Techniques and tiers | the deduction layer, which no prior language has for many games |
 | Variations, and the word each gets | how the catalog's words are computed, not declared |
 | Where each layer came from | the prior art taken, and what was not |
+| The second version | what experiment B changed, and why |
 | The six sample games | Solo, Loopy, Range, Ascent, Palisade, Sokoban |
 | What is ready for games not yet written | the claim of "future ready", and its limits |
 
@@ -55,6 +61,9 @@ shape  <predicate>, ...             # the answer shape
 clue   <kind> at <placement> value <set> means <predicate>
 rule   <name>: <predicate>          # goal predicates
 freedom <kind> ...                  # fill | act | permute | transition | query
+move   <name>(<args>) when <formula> do <assignments>   # inside a freedom
+finish <predicate>                  # a planning game's end
+objective maximize <term>           # an optimization's ranking
 deal   <name>: <description>        # distribution: what the generator chooses
 technique <id> tier <tier> ...      # deduction or planning techniques
 tier   <name> = { <technique ids> } # optional where the technique lines carry tiers
@@ -72,8 +81,10 @@ head is a claim that the computation checks.
 
 ## Expressions
 
-Rules, clue meanings and techniques are written in one many-sorted
-first-order logic over the finite structure an instance is, with counting.
+Rules, clue meanings and techniques are written in one many-sorted logic
+over the finite structure an instance is: first-order, with counting,
+aggregates, least fixed points, and quantifiers over the fillings of a set
+the board bounds.
 
 - **Sorts**: the space's element sorts (`cell`, `edge`, `vertex`, `face`,
   `region`, `line`, `slot`) and finite value sets (`1..n`, `{shaded, clear}`,
@@ -86,12 +97,31 @@ first-order logic over the finite structure an instance is, with counting.
 - **Aggregates**: `count x in S where P`, `sum x in S of t`, `S where P`,
   `distinct(t over S)` (every value different), `set(t over S)`.
 - **Sequences**: a line is an ordered sort, so `first x in L where P`,
-  `seen from <slot> until P` (a sightline) and `run`s are expressible.
+  `seen from <slot> until P` (a sightline) and `run`s are expressible; a
+  value may be a list (`|v|`, `v[k]`), as a Nonogram clue is.
+- **Folds**: `fold(op, t over S)` for an associative `op`; `sum` and `prod`
+  are its instances.
+- **Fixed points**: `lfp R(x̄) = <formula in R>`, the least relation closed
+  under a rule, over tuples of any arity. Transitive closure (`chain`) is
+  its commonest instance; Black Box's ray over (cell, direction) pairs and
+  Pegs' cut-off test are others.
+- **Bounded fillings**: `exists fill f of S [from marks]: P` and
+  `forall fill f of S [from marks]: P`, where `S` is a set the board bounds (a
+  cage, a line, a sightline, a component) and `f` assigns each element of `S`
+  a value of its domain, from its candidates where `from marks` is said; and
+  `exists subset T of S: P`. This is second-order over a bounded set:
+  Keen's cage rungs, Towers' `arrangement`, Tents' matching of tents to trees
+  and Solo's naked sets all need it.
+- **Clues as terms**: `clue(x)` is the value of the clue on `x`, or `none`, so
+  a rule may compare two clues (Path's "which numbers may meet", Singles' "no
+  number twice among the clear").
 
 A description has a **meaning** on every instance: the set of answers that
-satisfy `shape`, every dealt clue's `means`, and every `rule`. That set is
-finite and computable by enumeration on small boards, which is what a checker
-and experiment C need.
+satisfy `shape`, every dealt clue's `means`, and every `rule`. On a finite
+domain that set is finite and computable by enumeration on small boards,
+which is what a checker and experiment C need; every construct above keeps it
+so. A domain that is not finite (Untangle's points) is stated, and has no
+such meaning.
 
 ## The library
 
@@ -125,6 +155,25 @@ the core. Each entry says what it is defined as.
 | `no_adjacent(S, adj)` | no two elements of `S` are adjacent |
 | `sightline(c, dir) until P` | the cells from `c` in direction `dir`, up to but not including the first where `P` holds |
 | `degree(v, E)` | `count e in edges(v) where e in E` |
+| `step(c, d)`, `edge(c, d)`, `ray(c, d)` | the neighbor, the edge and the cells in direction `d` from `c`: direction-labeled incidence |
+| `segments(L, P)`, `runs(L, P)` | the maximal runs of a line's cells where `P` holds, in order |
+| `component(x, S, adj)` | the elements of `S` joined to `x` by `adj` steps inside `S` (`chain`) |
+| `bijection(f)`, `perfect_matching(E)` | the usual |
+| `visible(L)` | the cells of a line taller than every cell before them (Towers) |
+
+**Clue placements.** A clue kind sits `at <sort>` (one element), `at
+region <dealt partition>`, `at slot` (outside the board), `at board` (one
+clue for the instance, such as Undead's totals), or `at <sort> × <set>` (one
+per line and letter, as ABCD's). `where <formula>` restricts a placement by
+the clue's value (Keen's − and ÷ cages have two cells). A clue kind placed
+`at every <sort>` is **complete**: an element without a clue of the kind
+holds `none`, and `none` has a meaning too (Adjacent's missing bar says two
+cells are not consecutive).
+
+**Marks.** A `marks` line may say what a mark means about the answer
+(`marks link : cell -> cell means next(c) = link(c)`), which experiment C
+needs for marks the answer does not record (Signpost's links, Bridges' "at
+most", Slant's same-slant mark).
 
 The table holds what the six samples and experiment B needed. Connectivity
 and one loop are the two the prior art calls hard: here they are library
@@ -133,9 +182,9 @@ state and to check, and is not how a solver should search.
 
 ## Freedom
 
-The block names one of the five kinds of `theory.md` § "Freedom". Whether
-moves commute is computed for `act` and `permute` from the moves' effects,
-and is a property the language reports, not one a description asserts.
+The block writes the moves; the kind of `theory.md` § "Freedom" is
+**computed** from them (whether every move can be undone by a move, and
+whether any two commute), and the keyword is a claim the computation checks.
 
 ```pzl
 freedom fill                                 # set any element's value; the answer is the position
@@ -146,11 +195,25 @@ freedom transition rules { ... } [bound moves <= m]              # Sokoban, Floo
 freedom query reveal(c: cell) shows <clue kind> at c             # Mines
 ```
 
-**A transition system is written as rewrite rules**, PuzzleScript's form: a
+**A move is a guarded assignment**: `move <name>(<args>) when <formula> do
+<assignments>`, where an assignment may range over a set (`for c in
+component(x, ...): color(c) := k`) or be the result of a fixed point (a
+slide that runs until it stops). **Rewrite rules**, PuzzleScript's form (a
 pattern of adjacent elements along the move's direction, rewritten to
-another, applied where it matches. **A finish** for a planning game is a
-predicate over the position (`all crate on target`), and the position is the
-answer the predicate reads. A path bound is a clause of the freedom.
+another), are shorthand for the common case. **A finish** for a planning
+game is a predicate over the position (`all crate on target`). A path
+bound is a clause of the freedom (`bound moves <= m`), with `lose` when it
+runs out.
+
+**A query** reveals a set: `query reveal(c) shows <clue kind> at S(c)`, where
+`S(c)` may be a fixed point (Mines' zero cascade) or two places (Black Box's
+entry and exit). `budget <n> queries` and `lose when <formula>` bound it;
+`deal after first query` lets the hidden answer depend on the first one, as
+Mines' first click is safe.
+
+**An objective** ranks finished positions: `objective maximize <term over
+the path>` (Same Game's score). A game with one is an optimization, and its
+techniques are heuristics.
 
 ## Techniques and tiers
 
@@ -167,6 +230,18 @@ technique hiddenSingle tier Normal
 
 - **Premise** is a formula over marks and clues; **conclusion** is a set of
   mark facts (`value(c) = d`, `d not in cand(c)`, `line(e)`, `cross(e)`).
+- **Three forms of premise, one per class** of
+  `docs/solver-and-generator.md` § "Check, Tactic, Search":
+  - `premise <formula>`: read the marks. A Tactic when a chain of such
+    techniques is needed, each writing its mark.
+  - `look <fact>: breaks <rule instance>`: place one value (or weigh every
+    value of one element, or every filling of one bounded set) and see one
+    clue, count or neighbor break at once. A **Check**, markable, at any tier.
+  - `suppose <fact>: <propagation>`: run the rules from a hypothesis. A
+    **Search**, unmarkable, at Unreasonable only.
+
+  The first version had only the first and last, and would have filed eight
+  games' Checks as Search (`collection.md`).
 - **Sound** means: for every instance and every answer satisfying the rules,
   if the answer agrees with the marks the premise reads, it satisfies the
   conclusion. Experiment C checks this by enumeration on small boards.
@@ -193,11 +268,23 @@ The word is computed from what the block contains:
 | Contains only | Computed word |
 | --- | --- |
 | `space` changes | board shape |
-| `add rule` or `add clue` (and `deal` that goes with them) | modifier |
-| `replace rule`, a changed parameter, `replace answer` domain, `replace freedom` of a commuting kind with another commuting move set | ruleset |
-| `deal` changes | generator setting |
+| `add rule`, `add clue`, or a changed parameter of a rule (and `deal` that goes with them) | modifier |
+| `replace rule`, `replace answer` domain, `replace finish`, `replace objective`, `replace freedom` with another move set of the same commuting kind | ruleset |
+| `deal` changes, including which givens are dealt and how a dealt space is dealt | generator setting |
 | `size` changes | size |
-| `replace clue`, `remove clue`, or `replace freedom` to another kind or other generators | not a variation: a separate game, which the language reports |
+| `replace clue`, `remove clue`, or `replace freedom` to another kind, or to other generators of a non-commuting kind | not a variation: a separate game, which the language reports |
+
+A block that mixes changes takes the strongest word among them, in the order
+separate game, ruleset, modifier, board shape, generator setting, size.
+
+**A number is a parameter or a size by what reads it**: a parameter when a
+rule or the freedom reads it other than as the extent of the space or the
+domain, a size otherwise (`theory.md` § "The catalog's words"). A changed
+size that changes a non-commuting freedom's generators (Twiddle's block size)
+is reported, since the theory leaves it open.
+
+**The family is computed too**, from what the player produces: the answer's
+sorts and domain (`theory.md`). The `family` line is a claim it checks.
 
 A modifier must also pass the deal test (it combines with the game's other
 modifiers); the language checks it by forming each combination and asking
@@ -220,6 +307,44 @@ plain game's plus its own, with no check needed.
 
 `prior-art.md` holds the full readings and a sample game in each of those
 languages (step 1).
+
+## The second version
+
+What experiment B (`collection.md`) found the first version could not say,
+and what this version does about each. Each change was made where at least
+two games of the collection needed it, or where one game's rule could not be
+stated at all.
+
+| Needed by | Change |
+| --- | --- |
+| Keen, Towers, Undead, Filling, Dominosa, Mines, Pattern, Tents, and Solo's own `set` | bounded fillings and subsets in the logic (§ "Expressions") |
+| Path, Spokes, Singles, Light Up, Boats, Star Battle, Clusters, Sticks | the `look` premise, a Check (§ "Techniques and tiers") |
+| Cube, Inertia, Slide, Flood, Same Game, Numgame | moves as guarded assignments (§ "Freedom") |
+| Mines, Black Box, Guess | queries that reveal a set, budgets, a lost state, a deal after the first query |
+| Pegs, Black Box, Pattern, Tents | least fixed points over tuples, in place of transitive closure alone |
+| Path, Singles | clues as terms a rule reads |
+| Unequal's Adjacent, Subsets | complete clue kinds, where an absent clue is a fact |
+| Pattern | list values |
+| Keen | folds |
+| Crossing, Undead, ABCD, Keen | clue placements at the board, at a product, and with a condition |
+| Signpost, Bridges, Slant, Tents | a stated meaning for a mark |
+| Fifteen, Flip, Untangle | the freedom's kind computed from the moves |
+| Same Game | an objective |
+| Star Battle, Bridges, Boats, Twiddle, Flip, Guess | the variation table: a parameter is a modifier, the size test, rows for a finish, an objective and a dealt space, and mixed blocks |
+| every row of the taxonomy | the family computed from what the player produces |
+
+Not changed, and why:
+
+- **A domain that is not finite** (Untangle, Numgame) is stated without the
+  finite meaning; making it computable would need a theory of the plane or
+  of the integers, which no other game needs.
+- **Flip's word depending on where the toggle pattern is written** stays a
+  defect of notation: the rule given is to write a move's effect in the
+  freedom, never as a relation of the space.
+- **The word depending on how a rule is factored** (Path and Pairs) is a
+  limit of the theory (`theory.md` § "Limits"), not something notation fixes.
+- **Prose that is a table or a process**: Fifteen's 3×2 endgame table and
+  Pegs' Random board are data and a generator, not rules, and stay outside.
 
 ## The six sample games
 
@@ -435,6 +560,7 @@ these:
 - **Nothing in it is about rendering or input**, which every withdrawal found
   per-game (`design.md` § "What the earlier withdrawals bind").
 
-What it is not ready for: an objective rather than a finish (Same Game's
-score), a continuous domain beyond stating it (Untangle), and techniques
-over a planning game whose hint is a search.
+What it is not ready for: reasoning about an objective (Same Game's score
+is stated and not reasoned about), a domain that is not finite beyond
+stating it (Untangle, Numgame), and techniques over a planning game whose
+hint is a search.

@@ -89,10 +89,10 @@ a sequence, solving is finding a path, and a hint plans.
 
 | Kind | Moves | What is chosen, or sought | Games |
 | --- | --- | --- | --- |
-| **Fill** | set an element's value; undo is the only reverse | the answer itself | most of the catalog |
-| **Commuting action** | each move acts on the position, and any two commute | how often each move is made: a vector over a cyclic group per element (Net's turns), or over GF(2) (Flip's presses), or a final place per element (Untangle) | Net, Flip, Untangle |
-| **Non-commuting action** | moves are invertible and generate a group that is not abelian | a word in the generators | Fifteen, Sixteen, Twiddle, Netslide |
-| **Transition system** | moves are partial or irreversible, and are not a group | a path through positions | Sokoban, Inertia, Pegs, Cube, Slide, Flood, Same Game |
+| **Fill** | set an element's value, over what it held | the answer itself | most of the catalog, and Untangle (a point's place, over a continuous domain) |
+| **Commuting action** | each move acts on the position, and any two commute | how often each move is made: a vector over a cyclic group per element (Net's turns), or over GF(2) (Flip's presses) | Net, Flip |
+| **Non-commuting action** | moves are invertible and do not commute: a group, or, where a move's availability depends on the position (Fifteen's gap, Slide's blocks), a groupoid | a word in the moves | Fifteen, Sixteen, Twiddle, Netslide, Slide |
+| **Transition system** | some moves cannot be undone by a move | a path through positions | Sokoban, Inertia, Pegs, Cube, Flood, Same Game |
 | **Query** | a move reveals part of a fixed hidden answer as a clue | the hidden answer, from what is revealed | Mines, Black Box, Guess |
 
 The first two kinds are **constraint problems**, and the last three are not:
@@ -102,6 +102,13 @@ constraint problem whose clues arrive in play.
 Net and Flip are the instructive cases. They look like moving games, and are
 constraint problems, because their moves commute. Netslide is Net's answer
 reached by Sixteen's freedom, and is a planning problem.
+
+**The kind is computed from the moves, never declared**: whether every move
+can be undone by a move, and whether any two commute. Experiment B found the
+first version reading it from how a description was written, and filing
+Fifteen with Sokoban (`collection.md`). In a commuting action the answer the
+rules read is the position, and the choice the techniques read (how often each
+move is made) is derived from the moves; both are the game's.
 
 **Within a planning kind, the move set is the kind.** For a commuting freedom,
 a method does not depend on which moves there are: Flip's Crosses and Random
@@ -184,17 +191,33 @@ Each word names what a variation touches. The first five are within a game.
 - **Modifier**: adds a rule, a goal predicate or a clue kind, or bounds one
   by a parameter; combines freely with the game's other modifiers (the deal
   test, which stays). Keeps every technique (1).
-- **Ruleset**: changes the domain, replaces a goal predicate or a parameter
-  of one, or changes the move set of a commuting freedom, and keeps the
-  game's techniques (3). Rulesets exclude each other.
+- **Ruleset**: changes the domain, replaces a goal predicate, or changes the
+  move set of a commuting freedom, and keeps the game's techniques (3).
+  Rulesets exclude each other. A changed **parameter** of a rule (Star
+  Battle's stars per unit, Bridges' most bridges per pair) is not a ruleset:
+  it bounds the rule, and is a modifier, as the engine's choice modifier
+  already is.
+- **Parameter or size**: a number is a **parameter** when a rule reads it
+  other than as the extent of the space or the domain, and a **size**
+  otherwise. Bridges' most bridges per pair and Boats' fleet are parameters;
+  Solo's block size and Twiddle's block size are sizes of the space. Twiddle's
+  block size also changes the generators, which makes it a separate game by
+  the cut, a case the theory names and does not settle (§ "Limits").
 - **Generator setting**: changes only the distribution, including the tier.
   Keeps every technique, since no rule changes.
 - **Size**: a number of the instance. Keeps every technique.
 - **Game**: one answer shape, one clue vocabulary, and one kind of freedom,
   where a non-commuting freedom's kind is its generators. Its variations are
   the five above.
-- **Family**: one answer shape, with the freedom's division into constraint
-  and planning problems. Its games differ in clue vocabulary or in freedom.
+- **Family**: one **product**, what the player makes: the answer's sorts and
+  domain (shaded cells; edges in a loop or path; numbers in cells; a division
+  into regions; objects placed; a network), with the freedom's division into
+  constraint and planning problems. Its games differ in answer shape, clue
+  vocabulary or freedom. (Revised after experiment B: the first version cut
+  a family by answer shape, and the catalog's rows do not share one; the loop
+  and path row has five shape predicates. A cut by product is puzz.link's,
+  `prior-art.md`.) The answer shape is the level below: the Latin games are
+  one shape within the numbers family.
 
 **The asymmetry of adding.** A variation that adds is filed against the game
 it adds to. Killer adds cages to Solo and is a modifier of Solo; Solo is not a
@@ -216,7 +239,8 @@ from § "What a variation keeps":
 | --- | --- | --- |
 | touches only space | yes, where stated over relations | board shape |
 | adds a rule or clue kind | yes, by monotonicity | modifier |
-| changes a parameter, the domain, a predicate in place, or a commuting move set | yes, where general in it | ruleset |
+| changes a parameter of a rule | yes, where general in it | modifier |
+| changes the domain, a predicate in place, or a commuting move set | yes, where general in it | ruleset |
 | changes only the distribution | yes | generator setting |
 | replaces a clue kind | no: the clue's rungs go | separate game |
 | changes the freedom's kind, or a non-commuting freedom's generators | no | separate game |
@@ -274,8 +298,8 @@ Each case `taxonomy.md` § "Cases the decomposition could not place" named.
   part of the instance where the parameters do not fix it, and the
   distribution deals it, as Jigsaw's blocks are dealt.
 - **A continuous domain (Untangle's points).** Named as a limit. The theory
-  places Untangle (a commuting action: each point's final place is all that
-  matters; the answer shape is a planar straight-line drawing of a given
+  places Untangle (a fill over a continuous domain: each point's final place
+  is all that matters; the answer shape is a planar straight-line drawing of a given
   graph), but no technique over a continuous domain is markable, and its hint
   is a heuristic. The language states its rules and no techniques.
 
@@ -294,5 +318,13 @@ Each case `taxonomy.md` § "Cases the decomposition could not place" named.
   test alone.
 - **Objectives and continuous domains** are described and not reasoned
   about.
+- **The word can depend on how a rule is written.** Path and Pairs are one
+  game when "which numbers a line may join" is one predicate with a relation
+  for its parameter, and two when each gives the number its own meaning
+  (`collection.md`). The theory says the factoring that keeps the shared
+  techniques visible is the right one, which makes the measure, not the
+  structure, the arbiter in such a case.
+- **A size that changes the generators** (Twiddle's block size) is a
+  separate game by the cut and a size by the parameter test. Not settled.
 - **No player's judgment** stands behind any of this. Whether players find
   the cut clear is not measured.
