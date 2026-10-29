@@ -51,6 +51,16 @@ themselves. And **JSON or YAML with a strong schema** in place of the
 investigation's exploratory notation, for parsing and editing; formulas
 inside need an expression syntax the schema names.
 
+**The technique checker comes with it** (the owner, 2026-10-29,
+`compute-the-cut-by-technique-transfer` § "The owner's decision on the
+checker"): if this goes ahead, `research/technique-check/` is ported from
+Python to TypeScript with the `z3-solver` package, so that it imports the
+games. That makes possible the experiment the cut's report ranks first: a
+**differential check**, each stated technique and the game's own rung run on
+the same marks, which shows whether a description and the code are held
+together. Measure the WebAssembly solver's speed on the heaviest checks
+before porting.
+
 **A first family**: the Latin games share one engine
 (`git grep -l engine/latin -- src/games`), and their descriptions and
 techniques were written in experiment B (`collection/latin-and-numbers.md`).

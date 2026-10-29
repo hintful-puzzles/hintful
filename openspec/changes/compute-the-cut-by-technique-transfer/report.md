@@ -291,8 +291,19 @@ that, and a built ladder means generated or interpreted TypeScript.
 **Where the checker lives.** It is Python, inherited from experiment C, since
 z3's Python binding is its fullest; it is a second language the typecheck and
 biome never see, and it cannot import the games, which the differential check
-needs. If the build investigation goes ahead, the checker's home is a
-question for it.
+needs.
+
+**The owner's decision on the checker (2026-10-29).** Keep the Python and z3
+checker as a research tool, unextended past this change. If building from
+descriptions goes ahead, port it to TypeScript with z3's official
+`z3-solver` package as part of `build-a-game-from-its-description`, so that
+it imports the games; its validate and planted cases are the port's
+acceptance test, and the WebAssembly build's speed on the heaviest checks
+(Solo's `wing`, Range's `connect` on 6x6) is measured first. A proof
+assistant (Lean or Rocq) proves a claim for every board size, which z3's
+bounded checks cannot, but finds no counterexamples and has no link to the
+code: it is for a few cornerstone theorems, if a claim ever needs one, as
+its own change.
 
 **Catalog moves, if the owner commits.** The computed words, against the
 catalog's filing today; none is proposed until then, and each would be its
