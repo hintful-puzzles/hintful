@@ -9,8 +9,10 @@ work: a theory and a basic language, tried on about a hundred puzzles from
 outside the collection before anything is committed to (`tasks.md`). Steps 1
 to 4 ended on 2026-10-29: the language states the rules of 101 of 106
 outside puzzles and its variation table fails the cut, so `report.md`
-recommends not committing yet, and a next change. **Waiting on the owner's
-decision** (`report.md` § "The recommendation").
+recommends not committing yet, and a next change. The owner decided the same
+day (`report.md` § "The owner's decision"): keep iterating, explore building
+from the description, and a scope for Hintful puzzle games. What follows is
+filed as its own changes.
 
 This is an investigation. It ends with a report and a recommendation, and
 builds nothing the app runs.

@@ -116,16 +116,20 @@ replace the runner's.
 
 **What this leaves of each aim.**
 
-- **Maintainability is not a reason to build this.** Every withdrawal that
-  touched it found the same thing: a statement of the game that the game's code
-  does not run lost to a helper the game calls. A description from which the
-  app's code is generated is the definition adapter again. The one form of
-  aim 1 that survives is narrower: a description that a check compares, on
-  dealt boards, with the game's own verdict (question 3). It is consumed, and a
-  drift fails it. Whether that is worth a second statement of each game's rules
-  is for the report, and `docs/doctrine.md` § "One source of truth" is the bar:
-  a statement read only by a check is refused, unless the check is what keeps
-  the four statements we have today from disagreeing.
+- **Maintainability is where the withdrawals were, and they do not settle
+  it.** Every withdrawal that touched it found that a declaration of how a
+  game is implemented (its gestures, its board, its definition object, its
+  tile loop) said nothing a helper did not, and lost to the helper. None had a
+  description of the rules and techniques with an executable meaning to build
+  from, which is the changed circumstance. (Corrected after the owner's
+  review, 2026-10-29: the first wording said a description that builds code
+  "is the definition adapter again"; the owner's direction is that a
+  rejected direction is revisited where circumstances have changed,
+  `report.md` § "Correction".) The question is open, and
+  `build-a-game-from-its-description` tests it. Short of building, a
+  description that a check compares with the game's own verdict on dealt
+  boards (question 3) is consumed, and `docs/doctrine.md` § "One source of
+  truth" is the bar for it.
 - **Reasoning about the space, and invention, are not touched by any
   postmortem.** Each withdrawal asked whether a declaration could build the
   app. None asked whether a game could be described in order to compare it

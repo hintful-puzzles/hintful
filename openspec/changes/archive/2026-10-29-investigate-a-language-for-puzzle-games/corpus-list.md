@@ -1217,6 +1217,42 @@ Nearest: 75 Logic grid (a permutation constraint); collection `twiddle`.
 
 ---
 
+## Added after the test
+
+Added 2026-10-29 at the owner's request, after the corpus test had run. They
+are not part of the fixed sample and do not count in its result
+(`corpus.md` § "Added after the test"). Each is a game the owner wants in the
+collection.
+
+**107. Patches** (LinkedIn)
+Source: LinkedIn's game, from the owner's screenshot of its "How to play".
+Rules: divide the grid into rectangles that cover it, each holding exactly
+one clue. A clue names a shape: a square, a tall rectangle, a wide rectangle,
+or any of the three. If a clue has a number, its rectangle has that many
+cells.
+Nearest neighbor: Rect (Shikaku), in the collection.
+
+**108. Ball sort** (also water sort; the owner's "test tube color sort")
+Source: the owner's screenshot of one of many implementations.
+Rules: tubes of equal capacity hold colored balls, with some tubes empty. A
+move takes the top ball of one tube and puts it on another tube that has
+room and is empty or has a ball of the same color on top. The puzzle is
+solved when every tube is empty or full of one color. A position with no move
+that helps is a dead end. Variants: a move that pours the whole run of one
+color on top at once (water sort); the player may add an empty tube (the
+owner's suggested way out of a dead end).
+Nearest neighbor: Sixteen and Slide in the collection; Tower of Hanoi (81)
+in the corpus.
+
+**109. Wend** (LinkedIn)
+Source: the owner's screenshot. **The rules are read from that one image and
+are unverified.**
+Rules: a grid of letters, with some cells blocked. Divide the letters into
+words, each a path of orthogonally adjacent letters read in order, using
+every letter once; the lengths of the words are listed beside the grid.
+Nearest neighbor: Path (Numberlink's division into paths) in the collection;
+Codeword (77) for the word list.
+
 ## Counts
 
 Shading 17, loops and paths 14, connecting and drawn movement 7, region

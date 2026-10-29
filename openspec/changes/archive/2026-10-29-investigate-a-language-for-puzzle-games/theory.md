@@ -10,6 +10,7 @@ down so a program can read it. Nothing here moves the catalog.
 
 | Section | What it settles |
 | --- | --- |
+| Scope | which games the theory is about |
 | The parts | the eight parts a description falls into, each defined |
 | Freedom, and why it decides how a game is solved | the four kinds of freedom, and the one fact that separates them |
 | Techniques | what a technique and a tier are, for deducing and for planning |
@@ -18,6 +19,18 @@ down so a program can read it. Nothing here moves the catalog.
 | The cut | the principle, and its structural tests |
 | The open cases | each case `taxonomy.md` could not place, resolved or named as a limit |
 | Limits | what the theory does not cover |
+
+## Scope
+
+**A Hintful puzzle game has no chance during play, no adversary and no time
+limit** (the owner, 2026-10-29). Chance in the deal is in scope, and so is a
+deal made after the first move (Mines' safe first click). A bound on the
+number of moves is in scope (Flood's limit stays). The plane is not excluded:
+Untangle is in the collection, and the language states it without reasoning
+about it. A rule the language does not describe well may be declared out of
+scope, in conversation with the owner, once the language describes the
+typical games well. Definition-based word games (crosswords) are not wanted
+for now; word-list games are.
 
 ## The parts
 

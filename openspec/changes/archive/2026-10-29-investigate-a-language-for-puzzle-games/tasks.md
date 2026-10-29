@@ -50,4 +50,4 @@ to it". Nothing in the catalog moves before then.
 ## 5. Report
 
 - [x] 5.1 Answer the seven questions of `design.md`, each from the steps it rests on, saying what was not checked
-- [ ] 5.2 The recommendation: commit to the theory and language or not, and what would move in the catalog; the owner's decision recorded in the report
+- [x] 5.2 The recommendation: commit to the theory and language or not, and what would move in the catalog; the owner's decision recorded in the report

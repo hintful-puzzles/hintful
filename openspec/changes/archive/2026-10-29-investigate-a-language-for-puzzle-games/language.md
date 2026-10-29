@@ -24,6 +24,7 @@ against this version and changes nothing in it.
 | Where each layer came from | the prior art taken, and what was not |
 | The second version | what experiment B changed, and why |
 | The six sample games | Solo, Loopy, Range, Ascent, Palisade, Sokoban |
+| The notation is for exploration | what an implementation would read instead |
 | What is ready for games not yet written | the claim of "future ready", and its limits |
 
 ## What it is for
@@ -540,6 +541,15 @@ Ascent). The computed words disagree with the catalog where `taxonomy.md`
 said they would (Ascent's rulesets are board shapes and a modifier). The
 expected failure failed in the way expected: Sokoban's rules state, and it
 has no techniques to state.
+
+## The notation is for exploration
+
+The `pzl` syntax here was invented to think in, and is not what an
+implementation would read. The owner's direction (2026-10-29): once
+implemented, a description is **JSON or YAML with a strong schema**, for
+parsing and editing. The blocks map to the schema's top-level fields one for
+one; the formulas inside them need an expression syntax of their own, as a
+string the schema names or as a tree, which is that change's to decide.
 
 ## What is ready for games not yet written
 

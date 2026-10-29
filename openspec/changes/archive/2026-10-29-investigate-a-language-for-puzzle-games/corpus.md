@@ -162,3 +162,99 @@ recursive macro the language does not have; its iterative restatement fits.
 **The verdict of the test: the language describes outside puzzles' rules,
 and its variation table does not decide the cut.** Three criteria pass, the
 fourth fails.
+
+**Under the owner's scope** (`theory.md` § "Scope", decided after the test),
+four of the five puzzles not described are out of scope: Chase and 2048
+(chance during play), Mate in n (an adversary), Atomix (a time limit). Of the
+102 in scope, the rules of 101 are stated; Tangram is the one left. The cut's
+result does not change: all 15 wrong pairs are in scope.
+
+## Added after the test
+
+Three games the owner wants in the collection, added to `corpus-list.md`
+(107 to 109) on 2026-10-29 after the test had run, and described by the
+session against the second version. They count in no figure above.
+
+**107. Patches.**
+
+```pzl
+game patches "Patches"
+family regions
+size w, h
+space grid(w, h)
+answer patch : cell -> cell                     # the clue cell of the rectangle a cell is in
+shape forall c: rectangle(cells where patch = patch(c)),
+      forall c: clue(patch(c)) != none and patch(patch(c)) = patch(c)
+clue patch at cell value {square, tall, wide, any} × (1..w*h | none)
+  means let r = cells where patch = at, x = width(r), y = height(r):
+        (kind(v) = square implies x = y) and (kind(v) = tall implies y > x)
+        and (kind(v) = wide implies x > y)
+        and (size(v) != none implies |r| = size(v))
+freedom fill
+deal sizes: which clues show their number
+```
+
+Described with an extension: `rectangle`, `width`, `height` (Rect's, from
+experiment B). **The cut, against Rect.** Rect's clue is Patches' with kind
+`any` and a number always shown. So Patches is Rect with a clue kind's value
+widened by a shape (added predicates: a modifier, by monotonicity) and its
+numbers sometimes hidden (a generator setting). Rect's techniques stay sound,
+since each reads a clue's number and fires only where one is shown. **By the
+theory Patches is a variation of Rect, not a game of its own.** Whether the
+catalog shows it as one is a player-visible choice for `add-patches`.
+
+**108. Ball sort.**
+
+```pzl
+game ballsort "Ball sort"
+family position
+size k colors, h capacity, e empty tubes
+space tubes 1..k+e, each a stack of h slots
+answer ball : (tube, slot) -> color | empty, stacked   # no gap below a ball
+given ball                                              # the dealt start
+freedom transition
+  move pour(a, b) when a != b and top(a) != none and height(b) < h
+       and (top(b) = none or color(top(b)) = color(top(a)))
+    do push(b, pop(a))
+finish forall t: height(t) = 0 or (height(t) = h and one color in t)
+
+ruleset WaterSort {
+  replace freedom move pour(a, b) when ... do
+    repeat push(b, pop(a)) while top(a) has that color and height(b) < h
+}
+```
+
+Described with an extension: `top`, `height`, `push`, `pop` over a stack
+sort, each defined from the slots. The moves are not always reversible (a
+ball moved onto a matching color can return only if what it left is the same
+color too), so the computed kind is a **transition system**, with dead ends.
+**The owner's added tube** is one more move, `move addTube() when spare > 0 do
+open a new empty tube`, and it is a case the variation table has no row for:
+a move added to a planning freedom. Every plan stays legal when a move is
+added, which is the planning counterpart of monotonicity, so it should be a
+modifier; `compute-the-cut-by-technique-transfer` is where that row belongs.
+WaterSort replaces a move with another of the same kind, a ruleset by the
+table; whether players' methods carry over is not measured.
+
+**109. Wend** (rules from one screenshot).
+
+```pzl
+game wend "Wend"
+family regions
+size w, h
+space grid(w, h), blocked = dealt set of cell, letters = cells - blocked
+given letter : letters -> A..Z
+answer word : letters -> 1..m, order : letters -> 1..
+shape forall i in 1..m: simple_path(cells where word = i, ordered by order, adj4)
+rule words: forall i: string(letter over cells where word = i, by order) in dict
+clue lengths at board value list of N
+  means sorted(|cells where word = i| over i) = sorted(v)
+freedom fill
+```
+
+Described with an extension: `dict` (a word list, as a library table, the
+owner's ruling) and `string` (the letters of a path in order), with
+`simple_path` from experiment B. **The cut**: Path's Pairs divides cells into
+paths joined at given ends; Wend divides them into paths spelling words, with
+no ends given. Different clue kinds and a different rule, so two games of the
+regions family.

@@ -197,9 +197,11 @@ parts, its variations are filed by computation, and its techniques are
 checked sound before any hint narrates them. The corpus test is the
 evidence for the first claim.
 
-**What it does not do**, by the postmortems (`design.md` § "What the earlier
-withdrawals bind"): it builds no part of a game. A description from which a
-`Game` is generated is the definition adapter again, and is not proposed.
+**Building from it** is the further consumer, and the strongest reason to
+go ahead if it works: the answer check and the solver's ladder generated from
+the description, measured against the hand-written code. The postmortems do
+not rule it out (§ "Correction"); `build-a-game-from-its-description`
+explores it.
 
 ## The recommendation
 
@@ -273,7 +275,49 @@ step 2 and experiment B revised it:
 3. **Whether a word list is a library table** (Codeword, Word Ladder,
    Wordle). It changes three corpus verdicts and no conclusion.
 
-**The owner's decision**: not yet given.
+## The owner's decision (2026-10-29)
+
+1. **Not committed yet; keep iterating.** The next change computes the cut
+   by technique transfer (`compute-the-cut-by-technique-transfer`).
+2. **Build from the description, explored as its own change**
+   (`build-a-game-from-its-description`). The owner's words: if the
+   structured description could build parts of a game, "or otherwise have
+   the structured description help implement and maintain the game and its
+   deductions, that would be a strong reason to go ahead, and to exclude games
+   that don't fit well". The postmortems are not to be read as ruling it out
+   (§ "Correction", below). Two directions from the owner, details left to
+   that change: something akin to C#'s or Java's XML dependency-injection
+   configuration, written and kept with tooling and agents rather than by
+   hand; and, once implemented, **JSON or YAML with a strong schema** in place
+   of the exploratory notation, for parsing and editing.
+3. **Scope: "Hintful Puzzle Games" excludes games with chance during play,
+   an adversary, or a time limit.** No game in the collection has any of the
+   three. The plane stays open. Recorded in `theory.md` § "Scope".
+4. **Flood's move limit stays.** Without a limit or a target Flood is
+   meaningless; the owner raised it as an example. They would like a
+   **ball-sort game** (colored balls sorted among tubes), whose dead end
+   might be met by letting the player add a tube; filed as `add-ball-sort`.
+5. **Killer**: whichever fits the language better, which is a modifier of
+   Solo (`taxonomy.md` § "The open cases, read in step 2").
+6. **A word list is a library table.** Randomly generated word-list puzzles
+   are wanted in a future change, Wordle and LinkedIn's Wend first, filed as
+   `add-word-list-puzzles`. Crosswords and other definition-based games are
+   not, since they need authorial intent. LinkedIn's **Patches** is among the
+   next few games the owner wants, filed as `add-patches`, and is added to the
+   corpus (`corpus.md` § "Added after the test").
+
+## Correction
+
+The first draft of this report and of `design.md` § "What the earlier
+withdrawals bind" said that the postmortems rule out building a game from a
+description. They do not. They withdrew declarations of how a game is
+implemented (a gesture table, a board model, a definition object, a tile
+loop), each of which said nothing a helper did not, so there was nothing to
+build from. A description of the rules and techniques with an executable
+meaning did not exist then, and is the changed circumstance. The owner
+(2026-10-29): a direction failing before is not a reason it must fail again,
+and rejected directions are to be revisited wherever circumstances have
+changed.
 
 ## What was not checked
 
