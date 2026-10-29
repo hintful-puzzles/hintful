@@ -391,4 +391,10 @@ and preferences (`src/store/settings.ts`), and the front of every game ID and
 
 ## The owner's decision
 
-Not yet given.
+**Tentatively decided, 2026-10-29: the recommendation, candidate B with
+V-strict**, on the principle that a ruleset keeps its game's techniques.
+Nothing in the catalog is moved on it yet. The owner's words: record it "as
+tentatively decided, but don't act on it yet". It stands as the position the
+theory and the language are built from (`tasks.md` § 3). Whether the catalog
+moves is decided after the language has been tried on a corpus of puzzles
+from outside the collection (`tasks.md` § 4).

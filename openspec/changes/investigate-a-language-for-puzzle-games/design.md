@@ -198,9 +198,11 @@ traces can read this for every game with rulesets.
 
 ## Decisions
 
-- **No language is designed before the experiments.** Each of the three
-  experiments in step 3 can come back negative and end the effort
-  cheaply, which is how the earlier withdrawals were kept cheap.
+- **The language is tested before it is committed to.** The owner revised
+  the order on 2026-10-29: a basic language is now designed over the theory
+  that step 0 began. The cheap way out moves to the corpus test in
+  `tasks.md` § 4. A language that does not describe outside puzzles well is
+  not committed to, as the earlier withdrawals were kept cheap.
 - **Experiment A needs no language.** It reads traces from the engine as it
   is. If the ladders we have say nothing interesting about a game's learning
   curve, a language built on them will not either.

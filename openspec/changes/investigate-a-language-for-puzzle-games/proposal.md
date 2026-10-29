@@ -3,8 +3,10 @@
 **Status: started on the owner's word (2026-10-28).** Filed 2026-10-08 as a
 long-term effort. On 2026-10-28 the owner set its first goal, a taxonomy of
 the catalog (`design.md` § "The first goal: a taxonomy"), and said to start.
-The session that takes it up writes `tasks.md` from `design.md` § "The order
-of work".
+Step 0 ended on 2026-10-29 with the cut tentatively decided and not acted on
+(`taxonomy.md` § "The owner's decision"). The owner then set the rest of the
+work: a theory and a basic language, tried on about a hundred puzzles from
+outside the collection before anything is committed to (`tasks.md`).
 
 This is an investigation. It ends with a report and a recommendation, and
 builds nothing the app runs.
