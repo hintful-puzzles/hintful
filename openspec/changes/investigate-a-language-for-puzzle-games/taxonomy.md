@@ -48,10 +48,13 @@ Lantz and others' "Depth in Strategic Games" (2017, secondary sources only).
 
 **What it says for the taxonomy.**
 
-- **No work cuts by goal or by technique.** Where variants are separated at
-  all, it is by shared implementation (pzprjs) or by whatever an author could
-  write as a substitution (Ludii); an added constraint made a new file in both
-  Ludii and Demystify.
+- **No work cuts by technique, and one list cuts by goal.** Where variants
+  are separated at all, it is by shared implementation (pzprjs) or by whatever
+  an author could write as a substitution (Ludii); an added constraint made a
+  new file in both Ludii and Demystify. (Corrected in step 1: puzz.link's
+  genre list groups genres by what the player produces, shading, loop,
+  connecting, dividing into areas, numbers, which is close to a cut by
+  answer shape; `prior-art.md`.)
 - **The modifier has a precedent**, in pzprjs's variant flag, and it is the
   same definition as ours: one rule toggled, off by default, in the link.
 - **The cut between moves that commute and moves that do not is the prior

@@ -218,7 +218,8 @@ plain game's plus its own, with no check needed.
 | Tiers | HoDoKu's levels as sets of techniques, and this repository's ladders | a summed score overriding the hardest technique (HoDoKu): a tier here means exactly its rung |
 | Variations | pzprjs's variant flag and Ludii's options, as precedents for a modifier | both declare a variation's kind; here it is computed |
 
-`design.md` § "Prior art" holds the full readings (step 1).
+`prior-art.md` holds the full readings and a sample game in each of those
+languages (step 1).
 
 ## The six sample games
 

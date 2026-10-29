@@ -1,43 +1,33 @@
 # Design of the investigation
 
-Written 2026-10-08 from one evening's search and a first look at the tree.
-Everything under "Prior art" is from abstracts, documentation pages and search
-summaries, not from reading the works in full; step 1 of "The order of work"
-is that reading.
+Written 2026-10-08 from one evening's search and a first look at the tree,
+and corrected as the steps reported. Step 1 read the prior art in full
+(`prior-art.md`, 2026-10-29); the section below is its summary.
 
 ## Prior art
 
-| Work | What it describes | What it leaves out |
-| --- | --- | --- |
-| PuzzleScript (Lavelle, 2013) | Movement puzzles as pattern-rewrite rules over a tile grid; Sokoban is one line | Deduction puzzles |
-| Ludii (Browne, Piette and others) | Games as trees of "ludemes"; deduction puzzles are compiled to a constraint solver through XCSP | How a person solves; a 2024 thesis still says no system represents all deduction puzzles well |
-| Maeda and Inoue, 2025 | Pencil-puzzle rules as mathematics: grid elements, their relations, composed structures, constraints and domains | About a quarter of existing puzzles covered; no solver or generator built on it |
-| Demystify (Espasa, Gent, Hoffmann, Jefferson, Lynch, 2021) | Puzzles in a language based on Essence; each solving step is explained by a small unsatisfiable subset of the rules | Named techniques and tiers. The nearest work to our hints |
-| grilops | Nikoli-style rules as constraints over a symbol set and a lattice, with regions, shapes and loops, solved by z3 | A library, not a language; rules and solving only |
-| Answer set programming encodings | Nurikabe, Heyawake, Masyu as logic programs | Rules and solving only. Connectedness and the single loop are the hard part |
-| pzprjs with cspuz | Over a hundred pencil puzzles with rule checking, and a SAT solver | A framework in code |
-| Ludi (Browne, 2008 to 2012) | Board games as rule trees, evolved, filtered for playability and scored on aesthetic measures fitted to human rankings; produced Yavalath | Two-player board games, not puzzles |
-| Pelánek, Sudoku difficulty | A model of human solving predicts difficulty at a correlation of 0.95 with solve times; difficulty has two sources, the complexity of a step and the dependency among steps | One puzzle |
+`prior-art.md` holds the reading: each work's correction to the first table
+(written from abstracts), the works found since, and a sample game in each
+language. Its findings, in short:
 
-Sources:
-<https://www.boristhebrave.com/2024/06/10/puzzlescript-rules>,
-<https://ar5iv.labs.arxiv.org/html/1907.00245>,
-<https://arxiv.org/abs/2501.01433>,
-<https://arxiv.org/abs/2104.15040>,
-<https://pypi.org/project/grilops>,
-<https://research.sabanciuniv.edu/5086>,
-<https://arxiv.org/pdf/2603.02119>,
-<https://gpbib.cs.ucl.ac.uk/gp-html/Browne_2012_sigevolution.html>,
-<https://ar5iv.org/html/1403.7373>.
-
-Named and not yet found or read: Browne's work on deductive search for logic
-puzzles, and Lantz and others, "Depth in Strategic Games" (2017), which
-proposes depth as a measurable property of a game.
-
-**What the table says.** The solution side is well covered and we should
-borrow it. The deduction side, with techniques, tiers and explanations as
-first-class things, is where nobody has a language, and it is the side "easy
-to learn, hard to master" is a statement about.
+- **The solution side is well covered**, and the language borrows it:
+  cspuz's and Ludii's separation of the space from the rules, the named
+  connectivity and loop primitives of grilops and cspuz, PuzzleScript's
+  rewrite rules for movement.
+- **The deduction side has a language for one genre and explanations for
+  any.** Butler, Torlak and Popović (2017) write Nonogram techniques as
+  programs a solver checks sound. Demystify and cspuz's Analyzer explain any
+  model's steps by minimal sets of named rules, and say they explain
+  connectivity and loops poorly. Nobody has **named techniques with tiers
+  across many genres**, which this collection has in code. That is the side
+  "easy to learn, hard to master" is a statement about.
+- **Lantz and others' depth (2017) is a technique ladder** measured over a
+  distribution, and Browne's deductive search (2013) prices a technique by
+  the lookahead it saves. Neither has been computed for a puzzle genre.
+- **Three figures in the first table were overstated**: Ludii's XCSP route
+  is a six-puzzle prototype absent from its public code; Maeda and Inoue
+  confirmed 10 of 46 rules; Pelánek's 0.95 is the best of 13 metrics on one
+  dataset.
 
 ## What this repository already has
 

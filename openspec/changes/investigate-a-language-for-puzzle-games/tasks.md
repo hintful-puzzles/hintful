@@ -18,8 +18,8 @@ to it". Nothing in the catalog moves before then.
 
 ## 1. Read the prior art in full
 
-- [ ] 1.1 Read each work in "Prior art" whole, and find the two named there as not yet found; correct the table where the full text differs
-- [ ] 1.2 For each language, write one of the sample games in it, or say what stopped it
+- [x] 1.1 Read each work in "Prior art" whole, and find the two named there as not yet found; correct the table where the full text differs
+- [x] 1.2 For each language, write one of the sample games in it, or say what stopped it
 
 ## 2. Read our own history and tree
 
