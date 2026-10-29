@@ -16,7 +16,14 @@ It is run by hand and not by the gate. It needs Python 3 and z3
 | `python3 validate.py` | experiment C's checks again, and a planted defect for each form; exits non-zero if any comes out other than expected |
 | `python3 run_a.py [A1 ...]` | the test's group A pairs the solver decides; writes `results-a.txt` |
 | `python3 planning.py` | the planning pairs, by exhaustive search; writes `results-planning.txt` |
+| `python3 symarea.py` | A11: Symmetry Area's two writings, and Filling, by enumerating every answer |
 | `python3 run_c.py [C2 ...]` | the test's group C pairs that need stated ladders; writes `results-c.txt` |
+| `python3 planted.py` | a planted defect in each of group C's ladders, each of which must come out unsound |
+
+`starbattle-12x12-3.txt` holds two three-star boards the game's generator
+dealt (seeds "cut a" and "cut b"), one region map a line, row by row: three
+stars fit on no smaller board, and z3 does not settle 12x12 with the regions
+as variables.
 
 ## How a check works
 
