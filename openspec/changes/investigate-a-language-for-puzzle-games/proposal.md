@@ -6,7 +6,11 @@ the catalog (`design.md` § "The first goal: a taxonomy"), and said to start.
 Step 0 ended on 2026-10-29 with the cut tentatively decided and not acted on
 (`taxonomy.md` § "The owner's decision"). The owner then set the rest of the
 work: a theory and a basic language, tried on about a hundred puzzles from
-outside the collection before anything is committed to (`tasks.md`).
+outside the collection before anything is committed to (`tasks.md`). Steps 1
+to 4 ended on 2026-10-29: the language states the rules of 101 of 106
+outside puzzles and its variation table fails the cut, so `report.md`
+recommends not committing yet, and a next change. **Waiting on the owner's
+decision** (`report.md` § "The recommendation").
 
 This is an investigation. It ends with a report and a recommendation, and
 builds nothing the app runs.

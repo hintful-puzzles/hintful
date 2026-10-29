@@ -64,3 +64,101 @@ these hold:
 
 A pass on all four is what "described well" means for committing. A pass on
 some is reported as such, with what would have to change.
+
+## The corpus
+
+`corpus-list.md`, 106 puzzles in eleven families, collected 2026-10-29 by an
+agent that read only § "The sample" above and never the language, and
+committed (`683b4bf2`) before any was described. Its rules come from each
+source's own text where the source states them (pzprjs, Ludii, PuzzleScript
+source, Demystify's models); the planning, word and toggle puzzles' rules are
+the standard statements, and the list says which.
+
+## The result
+
+Run 2026-10-29 against the second version of the language (commit
+`506d7adc`), by three agents, each told to apply this test strictly, bend no
+rule, and leave the language unchanged. Their write-ups are the record:
+
+| File | Families | Puzzles |
+| --- | --- | --- |
+| `corpus/shading-and-loops.md` | A shading, B loops and paths | 31 |
+| `corpus/connecting-regions-numbers-placement.md` | C connecting, D regions, E numbers, F placement and geometry | 37 |
+| `corpus/graphs-words-planning.md` | G graphs, H queries, I logic and words, J planning, K toggles and permutations | 38 |
+
+**The verdicts on the rules** (criterion 1):
+
+| Verdict | A, B | C to F | G to K | All |
+| --- | --- | --- | --- | --- |
+| Described well | 7 | 13 | 15 | 35 |
+| Described with an extension | 24 | 23 | 19 | 66 |
+| Not described | 0 | 1 | 4 | 5 |
+
+The five not described, and what the core lacks for each: **Tangram**
+(positions and angles in the plane, Untangle's limit); **Chase** and **2048**
+(chance during play, where the core has chance only in the deal); **Mate in
+n** (an adversary: "against every reply"); **Atomix** (a time limit in
+seconds). Three verdicts rest on a ruling the owner may overturn: a word
+list counted as a library table (Codeword, Word Ladder, Wordle; experiment B
+counted Cube's roll table the same way), and Wumpus's walk written as
+queries.
+
+**Against the four failing results:**
+
+1. **Described well or with an extension: 101 of 106**, against a floor of
+   75. Read strictly, counting a puzzle out when any pair it is in computed
+   wrongly (criterion 3), about 78; the three agents drew that line a little
+   differently, so the strict figure is approximate. **Passes** either way.
+2. **Needing a change to the core: 5**, against a ceiling of 10. **Passes.**
+3. **Library additions few and shared.** Of the 66 puzzles described with an
+   extension, 20 use only additions no other puzzle in their quarter uses
+   (3, 8 and 9), before merging across quarters, which can only lower it.
+   Under half. **Passes.** The most shared: a cell-centered loop (9
+   puzzles), a walk along drawn edges as a fixed point (5), the 2×2 windows
+   (6), a run's length from a cell (4), a region of a cell (4).
+4. **The cut: 15 distinct pairs computed wrongly**, against a ceiling of 5.
+   **Fails.** In 10 of them the theory can name the part that differs, and in
+   5 it cannot (Stostone and Shimaguni, Pipe Link and Reflect Link, Hiroimono
+   and Neko, Symmetry Area and Filling, Icosian and Knight's Tour). The test
+   asked for both, more than 5 pairs wrong and the theory unable to say; the
+   second clause sits at its boundary. It is counted a failure here, without
+   argument over the boundary.
+
+**What the cut failures share.** Ten of the fifteen are two puzzles with no
+clue kind between them, or the same one, that differ in a rule that reads no
+clue: Nurikabe and Mochikoro, LITS and Norinori, Hinge and Heyawake,
+Yin-Yang and Unruly, Cave and Range, Aquarium and Thermometers, Sukoro and
+View, Hakoiri and Star Battle, Toichika and Hakoiri, N-Queens and Star
+Battle. The variation table files a replaced rule as a ruleset, so it calls
+each pair one game, and a solver calls each two. The theory's principle
+calls them two as well: the techniques that read the replaced rule do not
+stay sound. The structural test is what is too generous. The other five turn
+on how a puzzle is written: as a fill of a sequence or as moves that extend
+it (Icosian and Knight's Tour, Hiroimono and Neko), as walls or as numbers
+(Symmetry Area and Filling), or with the theory itself filing a real
+difference as a ruleset (Stostone and Shimaguni, Pipe Link and Reflect
+Link).
+
+**The cut, computed instead of read off.** Experiment C has one of these
+pairs measured: Range's `connect`, checked against Cave's rules, is unsound
+(`experiment-c.md`), which is the principle saying "two games" by
+computation, with no choice of how to file a rule. That is what a fix looks
+like; it was found after the test, and the test's result stands as above.
+
+**Other variant words a player would dispute.** A changed move set in a
+planning game computes as a separate game (Shisen-Sho's gravity, Bloxorz's
+split switches, Word Ladder's insertion), where players call each an option.
+The table has no row for an added finish, a changed clue placement with an
+unchanged meaning, or a guard that only removes moves (Hiroimono's no
+reversal), and the theory leaves a size that changes the generators open
+(Hanoi's four pegs, the Rubik's cube's n). Families cannot be computed for an
+answer of `cell -> bool`, which is shading in Squaro and placement in Shinro.
+
+**Techniques**, reported apart: few sources name any. Every one that does
+fit the technique form (Cryptarithm's carry, Nurikabe's unreachable square,
+Yajilin's satisfied arrow), except Hanoi's recursive method, which needs a
+recursive macro the language does not have; its iterative restatement fits.
+
+**The verdict of the test: the language describes outside puzzles' rules,
+and its variation table does not decide the cut.** Three criteria pass, the
+fourth fails.

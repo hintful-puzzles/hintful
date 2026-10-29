@@ -44,3 +44,8 @@ for w, h in ((3, 3), (4, 4), (5, 4)):
     report("connect, planted", name, b, g.RANGE_RULES, g.RANGE_CONSISTENT, g.CONNECT_UNSOUND)
     report("connect, no no_adjacent", name, b, [g.RANGE_DOMAIN, g.RANGE_CONNECTED],
            g.RANGE_CONSISTENT, g.CONNECT)
+
+# The cut: Range's technique under Cave's rules.
+for w, h in ((3, 3), (4, 4)):
+    report("connect, under Cave", f"Cave {w}x{h}", g.cave_board(w, h), g.CAVE_RULES,
+           g.RANGE_CONSISTENT, g.CONNECT)

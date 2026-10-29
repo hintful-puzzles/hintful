@@ -149,6 +149,25 @@ CONNECT = (
              ("!=", fn("mark", V("x")), 1))),
     ("=", fn("value", V("c")), 0),
 )
+def cave_board(w, h):
+    """Range's board with one more element, `out`, beside every edge square and
+    always shaded, so that "every shaded area reaches the edge" is the shaded
+    squares and `out` being connected."""
+    b = range_board(w, h)
+    cells = b.sets["cells"]
+    border = [(x, y) for (x, y) in cells if x in (0, w - 1) or y in (0, h - 1)]
+    b.adj = {**{c: list(a) + (["out"] if c in border else []) for c, a in b.adj.items()},
+             "out": border}
+    b.sets["all"] = cells + ["out"]
+    b.functions["value"]["out"] = z3.IntVal(1)
+    return b
+
+
+# Cave's rules: the clear squares connected, and every shaded area reaching the
+# edge; no rule against shaded squares touching.
+CAVE_RULES = [RANGE_DOMAIN, RANGE_CONNECTED,
+              ("connected", "c", "all", ("=", fn("value", V("c")), 1))]
+
 # Planted: separation read among the squares known clear, which unknown squares may still join
 CONNECT_UNSOUND = (
     CONNECT[0],

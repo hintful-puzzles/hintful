@@ -95,6 +95,22 @@ It also says something to the cut: a game with Range's connectivity rule and
 not its no-adjacency rule (the corpus's Cave) cannot take Range's `connect`
 as it is.
 
+**The checker computes the cut where the variation table cannot.** The
+corpus test found the table filing two clue-free games that differ in one
+rule as one game (`corpus.md`); Cave and Range are such a pair. Cave keeps
+Range's "the clear squares are connected", drops "no two shaded squares
+touch", and adds "every shaded area reaches the edge" (`cave_board` and
+`CAVE_RULES` in `experiment-c/expc_games.py`, the edge as one more always
+shaded element beside every edge square). Range's `connect` checked against
+Cave's rules is **unsound** on 4×4, at the third binding: a lone unknown
+square on the edge, walled off by shaded squares, may be shaded in Cave and
+not in Range. (On 3×3 the counterexample is the all-shaded board, which a
+dealt Cave board's clues forbid; the 4×4 one is not degenerate.) So by the
+principle, a ruleset keeps its game's techniques, Cave is not a ruleset of
+Range, and the check says so without anyone choosing how to file the rule.
+Run every technique of one game against the other's rules, and the
+principle becomes a computation.
+
 **What it does not show.** The premise audit the gate already runs
 (`firing-replay.test.ts`) asks whether a firing follows from the cells its
 step names, by the game's own code. This asks whether a technique follows

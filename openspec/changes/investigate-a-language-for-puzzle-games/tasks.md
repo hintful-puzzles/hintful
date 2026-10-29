@@ -39,15 +39,15 @@ to it". Nothing in the catalog moves before then.
 - [x] 3.3 Design a basic language over the theory's parts, taking from the prior art what fits, and say for each layer where it came from and why
 - [x] 3.4 Write the six sample games of `design.md` § "Decisions" in it, and then every game of the collection; list every rule that did not fit (this is experiment B)
 - [x] 3.5 Experiment C: three techniques from three games stated so a solver checks each sound on small boards, passing for the three and failing for a planted unsound variant
-- [ ] 3.6 Say what would consume a description (`design.md` question 3), and why the language is ready for games not yet written
+- [x] 3.6 Say what would consume a description (`design.md` question 3), and why the language is ready for games not yet written
 
 ## 4. The corpus test
 
 - [x] 4.1 Fix the test before looking at the corpus. Write down what "described well" means: the rules stated with no rule left as prose, the variants placed by the theory's words, and the cut deciding each pair. State the result that would fail the language
-- [ ] 4.2 Collect about a hundred puzzle games from outside the collection (genre lists, puzzle sites, the prior art's corpora), chosen to span the families and freedoms, not to suit the language
-- [ ] 4.3 Describe each one, and tally which were described well, which needed an extension, and which could not be described
+- [x] 4.2 Collect about a hundred puzzle games from outside the collection (genre lists, puzzle sites, the prior art's corpora), chosen to span the families and freedoms, not to suit the language
+- [x] 4.3 Describe each one, and tally which were described well, which needed an extension, and which could not be described
 
 ## 5. Report
 
-- [ ] 5.1 Answer the seven questions of `design.md`, each from the steps it rests on, saying what was not checked
+- [x] 5.1 Answer the seven questions of `design.md`, each from the steps it rests on, saying what was not checked
 - [ ] 5.2 The recommendation: commit to the theory and language or not, and what would move in the catalog; the owner's decision recorded in the report
