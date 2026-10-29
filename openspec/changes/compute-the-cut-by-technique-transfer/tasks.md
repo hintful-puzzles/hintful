@@ -2,8 +2,8 @@
 
 ## 1. Fix the test
 
-- [ ] 1.1 List the pairs: the corpus's 15 wrong pairs and its 24 right ones in families A and B, `taxonomy.md`'s 23 measured pairs, and every declared ruleset and modifier of the catalog
-- [ ] 1.2 For each, write the expected word and where it comes from (a solver's judgment, or the rung overlap), and the number of misses that fails the computed cut; commit before stating any technique
+- [x] 1.1 List the pairs: the corpus's 15 wrong pairs and its 24 right ones in families A and B, `taxonomy.md`'s 23 measured pairs, and every declared ruleset and modifier of the catalog
+- [x] 1.2 For each, write the expected word and where it comes from (a solver's judgment, or the rung overlap), and the number of misses that fails the computed cut; commit before stating any technique
 
 ## 2. State the techniques
 
