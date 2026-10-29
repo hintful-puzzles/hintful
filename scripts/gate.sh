@@ -67,7 +67,7 @@ fi
 # says why these, and what holds the list to that.
 doc_only() {
   [ -n "$changed" ] && ! printf '%s\n' "$changed" |
-    grep -qvE '^(docs/|openspec/|AGENTS\.md$|CLAUDE\.md$|CREDITS\.md$)'
+    grep -qvE '^(docs/|openspec/|research/|AGENTS\.md$|CLAUDE\.md$|CREDITS\.md$)'
 }
 # What the push runs and a commit does not shows first as a red CI run, and
 # nobody watches one, so both hooks end by saying so when the last finished run
@@ -367,7 +367,8 @@ fi
 # **The allowlist is provable, and it is proved.** These paths are read by no
 # test and are not build inputs — `openspec/` is already covered by the
 # `validate --all --strict` above, and `docs/` and `AGENTS.md` are read by
-# nothing at all. `src/gate-scope.test.ts` asserts that, by scanning for any
+# nothing at all. `research/` holds development tools run by hand, in Python,
+# which no test, build or gate step loads. `src/gate-scope.test.ts` asserts that, by scanning for any
 # glob, file read or import naming them, so the day a test starts reading
 # `docs/` this path stops being safe *and says so*. It takes the list from the
 # pattern in `doc_only` above, so there is no second copy to fall behind. `help/` is
