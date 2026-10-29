@@ -91,7 +91,19 @@ import ts from "typescript";
  *
  * @type {Record<string, string>}
  */
-const KEPT_UNUSED = {};
+const KEPT_UNUSED = {
+  // The compiler (src/describe/compile.ts) writes calls to these into a
+  // compiled module, by name, for a statement that uses the form; no module
+  // compiled today does.
+  "src/engine/describe-runtime.ts::rangeMask":
+    "called by compiled code for range(a, b)",
+  "src/engine/describe-runtime.ts::sameSet":
+    "called by compiled code for = on element sets",
+  "src/engine/describe-runtime.ts::subsetOf":
+    "called by compiled code for subset on element sets",
+  "src/engine/describe-runtime.ts::union":
+    "called by compiled code for + on element sets",
+};
 
 /** Files whose exports are reached from outside the TypeScript graph. */
 const ENTRY = [

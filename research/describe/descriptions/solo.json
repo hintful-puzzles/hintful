@@ -1,5 +1,5 @@
 {
-  "$schema": "../description.schema.json",
+  "$schema": "../../../src/describe/description.schema.json",
   "game": "solo",
   "name": "Solo",
   "family": "latin",

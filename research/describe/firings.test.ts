@@ -13,7 +13,7 @@ import type { DeductionRecord } from "../../src/engine/deduction-record.ts";
 import { adjacentBinding, type Binding, unequalBinding } from "./bindings.ts";
 import type { Instance } from "./description.ts";
 import type { Fact } from "./evaluate.ts";
-import { fireEach, givenMarks, type Marks } from "./ladder.ts";
+import { fire, fireEach, givenMarks, type Marks } from "./ladder.ts";
 import { deal, label, progress, seedsPerParams, writeResult } from "./pilot.ts";
 
 const SEEDS = seedsPerParams(3);
@@ -72,7 +72,9 @@ function judge(
   let matched = false;
   for (const t of inst.d.techniques) {
     if (!t.rungs.some((r) => rungs.includes(r))) continue;
-    for (const each of fireEach(inst, t, m)) {
+    const fired = fireEach(inst, t, m);
+    if (fired === "contradiction") continue;
+    for (const each of fired) {
       const got = live(m, each).map(key);
       for (const k of got) concluded.add(k);
       if (got.length === want.size && got.every((k) => want.has(k))) matched = true;
@@ -99,7 +101,9 @@ function compare<P, S>(b: Binding<P, S>, t: Tally): void {
       const placed = inst.d.techniques.find((x) => x.rungs.includes("dup"));
       if (placed === undefined)
         throw new Error("no technique for a placement's strikes");
-      applyFacts(m, fireEach(inst, placed, m).flat());
+      const struck = fire(inst, placed, m);
+      if (struck === "contradiction") throw new Error(`${where}: the givens clash`);
+      applyFacts(m, struck);
       const records = own(state, inst.d.tiers.length - 2);
       for (let k = 0; k < records.length; ) {
         const group = records[k].group;

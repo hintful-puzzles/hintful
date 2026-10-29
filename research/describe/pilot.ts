@@ -5,17 +5,12 @@
 
 import { appendFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { type LibraryJson, loadDescription } from "../../src/describe/description.ts";
+import latin from "../../src/engine/latin.description.json" with { type: "json" };
 import { randomNew } from "../../src/engine/random/index.ts";
 import { RetryLimitExceeded } from "../../src/engine/retry-limit.ts";
 import type { Binding } from "./bindings.ts";
-import {
-  type Instance,
-  instantiate,
-  type LibraryJson,
-  loadDescription,
-  withVariations,
-} from "./description.ts";
-import latin from "./library/latin.json" with { type: "json" };
+import { type Instance, instantiate, withVariations } from "./description.ts";
 
 export const LIBRARIES: readonly LibraryJson[] = [latin as LibraryJson];
 

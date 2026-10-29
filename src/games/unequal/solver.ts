@@ -10,14 +10,29 @@
  */
 
 import {
+  clueAt,
+  clueList,
+  greatest,
+  latinSpace,
+  least,
+} from "../../engine/describe-runtime.ts";
+import {
+  CHECK,
+  compareRuns,
+  compiledRung,
   type DeductionRecord,
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
+  LATIN_RUNGS,
+  type LatinLadder,
   type LatinReason,
+  type LatinRung,
   type LatinSolver,
+  type LatinSolverConfig,
   latinSolver,
 } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
+import * as adjacent from "./adjacent.compiled.ts";
 import {
   ADJTHAN,
   DIFF_EXTREME,
@@ -26,6 +41,7 @@ import {
   DIFF_SET,
   type Mode,
 } from "./state.ts";
+import * as unequal from "./unequal.compiled.ts";
 
 export { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE };
 
@@ -322,6 +338,117 @@ function unequalValid(solver: LatinSolver, ctx: UnequalCtx): boolean {
   return true;
 }
 
+// --- the described ladder ----------------------------------------------------
+
+const xy = (c: number, o: number) => ({ x: c % o, y: (c / o) | 0 });
+
+/** A struck end's other end can be no less (or, for the smaller end, no more)
+ * than this, as the board stood: its least or greatest candidate, past the
+ * values altogether when it has none. */
+function signReason(
+  { big, small }: unequal.SignBinding,
+  cell: number,
+  solver: LatinSolver,
+): UnequalReason {
+  const o = solver.o;
+  if (cell === big) {
+    const m = solver.cand(small);
+    const { x, y } = xy(small, o);
+    return { kind: "greater", ox: x, oy: y, bound: m === 0 ? o + 1 : least(m) };
+  }
+  const m = solver.cand(big);
+  const { x, y } = xy(big, o);
+  return { kind: "lesser", ox: x, oy: y, bound: m === 0 ? 1 : greatest(m) };
+}
+
+const UNEQUAL_RUNGS: Record<unequal.LadderId, (cl: unequal.Clues) => LatinRung> = {
+  "latin.hiddenSingle": () => LATIN_RUNGS["latin.hiddenSingle"],
+  "latin.single": () => LATIN_RUNGS["latin.single"],
+  sign: (cl) =>
+    compiledRung(unequal.sign, cl, (binding, cell, _n, solver) =>
+      signReason(binding, cell, solver),
+    ),
+  "latin.set": () => LATIN_RUNGS["latin.set"],
+  "latin.fish": () => LATIN_RUNGS["latin.fish"],
+  "latin.wing": () => LATIN_RUNGS["latin.wing"],
+};
+
+const ADJACENT_RUNGS: Record<adjacent.LadderId, (cl: adjacent.Clues) => LatinRung> = {
+  "latin.hiddenSingle": () => LATIN_RUNGS["latin.hiddenSingle"],
+  "latin.single": () => LATIN_RUNGS["latin.single"],
+  adjacent: (cl) =>
+    compiledRung(
+      adjacent.adjacent,
+      cl,
+      ({ a, e }, _c, _n, solver): UnequalReason => ({
+        kind: "adjacent",
+        ...oxy(a, solver.o),
+        v: solver.value(a),
+        bar: clueAt(cl.bar, e) === 1,
+      }),
+    ),
+  adjacentSet: (cl) =>
+    compiledRung(
+      adjacent.adjacentSet,
+      cl,
+      ({ a, e }, _c, _n, solver): UnequalReason => ({
+        kind: "adjacentSet",
+        ...oxy(a, solver.o),
+        bar: clueAt(cl.bar, e) === 1,
+      }),
+    ),
+  "latin.set": () => LATIN_RUNGS["latin.set"],
+  "latin.fish": () => LATIN_RUNGS["latin.fish"],
+  "latin.wing": () => LATIN_RUNGS["latin.wing"],
+};
+
+const oxy = (c: number, o: number) => ({ ox: c % o, oy: (c / o) | 0 });
+
+/**
+ * The board's clues as its description deals them. A sign is flagged at its
+ * greater end, taken column by column and each cell's signs up, right, down,
+ * left; a bar from both ends, so an edge's clue reads either.
+ */
+function describedLadder(o: number, mode: Mode, flags: Int32Array): LatinLadder {
+  const sp = latinSpace(o);
+  const edges = sp.edgeEnds.length / 2;
+  if (mode === "unequal") {
+    const at: number[] = [];
+    const v: number[] = [];
+    for (let x = 0; x < o; x++)
+      for (let y = 0; y < o; y++)
+        for (const dir of ADJTHAN)
+          if (flags[y * o + x] & dir.f) {
+            const big = y * o + x;
+            at.push(sp.edgeOf(big, (y + dir.dy) * o + x + dir.dx));
+            v.push(big);
+          }
+    const cl: unequal.Clues = { greater: clueList(at, v, edges) };
+    return {
+      ladder: unequal.ladder.map(({ id, tier }) => ({
+        tier,
+        run: UNEQUAL_RUNGS[id](cl),
+      })),
+    };
+  }
+  const at: number[] = [];
+  const v: number[] = [];
+  for (let e = 0; e < edges; e++) {
+    const a = sp.edgeEnds[2 * e];
+    const b = sp.edgeEnds[2 * e + 1];
+    const dir = b === a + 1 ? ADJTHAN[1] : ADJTHAN[2];
+    at.push(e);
+    v.push(flags[a] & dir.f ? 1 : 0);
+  }
+  const cl: adjacent.Clues = { bar: clueList(at, v, edges) };
+  return {
+    ladder: adjacent.ladder.map(({ id, tier }) => ({
+      tier,
+      run: ADJACENT_RUNGS[id](cl),
+    })),
+  };
+}
+
 // --- driver ----------------------------------------------------------------
 
 /**
@@ -343,18 +470,28 @@ export function solveUnequal(
   recorder?: (rec: DeductionRecord) => void,
 ): number {
   const ctx = newCtx(o, mode, flags);
-  return latinSolver<UnequalCtx>(soln, o, {
+  const common = {
     maxdiff,
-    diffSimple: DIFF_LATIN,
-    diffSet0: DIFF_SET,
-    diffSet1: DIFF_EXTREME,
     diffRecursive: DIFF_RECURSIVE,
-    usersolvers: [null, solverEasy, solverSet, null, null],
     valid: unequalValid,
     ctx,
     cubeOut,
     recorder,
-  });
+  };
+  const built: LatinSolverConfig<UnequalCtx> = {
+    ...common,
+    ...describedLadder(o, mode, flags),
+  };
+  const hand: LatinSolverConfig<UnequalCtx> = {
+    ...common,
+    diffSimple: DIFF_LATIN,
+    diffSet0: DIFF_SET,
+    diffSet1: DIFF_EXTREME,
+    usersolvers: [null, solverEasy, solverSet, null, null],
+  };
+  if (CHECK.selfCheck) compareRuns(soln, o, hand, built);
+  if (CHECK.handWritten) return latinSolver<UnequalCtx>(soln, o, hand);
+  return latinSolver<UnequalCtx>(soln, o, built);
 }
 
 /**

@@ -4,9 +4,9 @@
  * a search that knows the rules and nothing else.
  */
 
+import type { Expr } from "../../src/describe/expr.ts";
 import type { Instance } from "./description.ts";
 import { type Board, evaluate, satisfiable, UNDECIDED } from "./evaluate.ts";
-import type { Expr } from "./expr.ts";
 import type { Elem, Value } from "./space.ts";
 
 /** One ground rule: a rule's outermost `forall` bound, or one dealt clue. */

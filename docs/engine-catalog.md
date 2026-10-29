@@ -523,7 +523,13 @@ generation and leave it out for a deterministic existence check
 (`tents/`). The cube's index space, `usersolvers`, the `seed` hook, `cubeOut`
 and the family's generator shapes are in
 [`solver-and-generator.md`](./solver-and-generator.md). Exemplar:
-`keen/solver.ts`.
+`keen/solver.ts`. Its singles, sets, fish and wing are
+`latin.compiled.ts`, compiled from `latin.description.json` by
+`npm run describe` and never edited by hand; `LATIN_RUNGS` pairs each with
+its reason, and `compiledRung` pairs a described game's own
+([`descriptions.md`](./descriptions.md); exemplar `unequal/solver.ts`).
+`describe-runtime.ts` is what compiled code reads: the marks, the numbered
+grid (`latinSpace`) and a game's `ClueList`s.
 
 ## Solving and deduction
 

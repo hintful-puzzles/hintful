@@ -4,9 +4,9 @@
  * cell by cell, and the grade. Writes `results-ladder.txt`.
  */
 import { describe, expect, it } from "vitest";
+import type { TechniqueJson } from "../../src/describe/description.ts";
 import { searchAnswers } from "./answer-check.ts";
 import { adjacentBinding, type Binding, unequalBinding } from "./bindings.ts";
-import type { TechniqueJson } from "./description.ts";
 import { runLadder } from "./ladder.ts";
 import { deal, label, progress, seedsPerParams, writeResult } from "./pilot.ts";
 

@@ -4,7 +4,8 @@
  * until none changes the marks.
  */
 
-import type { Instance, Technique } from "./description.ts";
+import type { Technique } from "../../src/describe/description.ts";
+import type { Instance } from "./description.ts";
 import { type Board, bindings, evaluate, type Fact } from "./evaluate.ts";
 
 /** Marks by cell index: a value (0 is none) and a candidate bitmask, bit
@@ -50,24 +51,35 @@ function boardOf(inst: Instance, m: Marks): Board {
   };
 }
 
-/** Every fact one technique concludes on these marks. */
-export function fire(inst: Instance, t: Technique, m: Marks): Fact[] {
-  return fireEach(inst, t, m).flat();
+/** Every fact one technique concludes on these marks, or `"contradiction"`
+ * where a binding's conclusion is false. */
+export function fire(inst: Instance, t: Technique, m: Marks): Fact[] | "contradiction" {
+  const each = fireEach(inst, t, m);
+  return each === "contradiction" ? each : each.flat();
 }
 
 /** The facts of each binding of a technique whose premise holds: one entry a
- * firing, as a hint would narrate it. */
-export function fireEach(inst: Instance, t: Technique, m: Marks): Fact[][] {
+ * firing, as a hint would narrate it. A conclusion that is false proves the
+ * marks inconsistent. */
+export function fireEach(
+  inst: Instance,
+  t: Technique,
+  m: Marks,
+): Fact[][] | "contradiction" {
   const out: Fact[][] = [];
   const base = inst.ctx(boardOf(inst, m), false);
+  let contradiction = false;
   bindings(t.binders, new Map(), base, (env) => {
     if (t.premise !== null && evaluate(t.premise, env, base) !== true) return true;
     const facts: Fact[] = [];
-    evaluate(t.conclude, env, { ...base, facts });
+    if (evaluate(t.conclude, env, { ...base, facts }) === false) {
+      contradiction = true;
+      return false;
+    }
     out.push(facts);
     return true;
   });
-  return out;
+  return contradiction ? "contradiction" : out;
 }
 
 /** Apply the facts; returns those that changed something, or `null` on a
@@ -107,7 +119,8 @@ export function runLadder(
   let impossible = false;
   outer: for (;;) {
     for (const t of ts) {
-      const changed = apply(m, fire(inst, t, m));
+      const facts = fire(inst, t, m);
+      const changed = facts === "contradiction" ? null : apply(m, facts);
       if (changed === null) {
         impossible = true;
         break outer;

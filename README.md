@@ -166,6 +166,7 @@ This table is the one index of them.
 | Pointer, keyboard, touch, the keypad | [`docs/input.md`](docs/input.md) |
 | Redraw, tile cache, palette, animation | [`docs/rendering.md`](docs/rendering.md) |
 | Solver, generator, difficulty tiers, `findMistakes` | [`docs/solver-and-generator.md`](docs/solver-and-generator.md) |
+| A technique stated in a description, and the compiler that builds it | [`docs/descriptions.md`](docs/descriptions.md) |
 | A hint: the quality bar, its words, its plan, refusals, the guards | [`docs/hints.md`](docs/hints.md) |
 | A hint's marks on the board, how a step is grouped, the facts it may rest on | [`docs/hints-marks.md`](docs/hints-marks.md) |
 | The hint of a game with candidate notes | [`docs/hints-candidates.md`](docs/hints-candidates.md) |

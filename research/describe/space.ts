@@ -246,15 +246,20 @@ export function buildSpace(spec: SpaceSpec): Space {
     for (const c of lineCells.get(u) ?? [])
       unitsOf.set(c, [...(unitsOf.get(c) ?? []), u]);
   fns.set("units_of", ([c]) => unitsOf.get(asElem(c, "cell")) ?? []);
+  // A cell's row and column interleaved by index, the row's first at each, as
+  // the Latin engine visits them (`src/engine/describe-runtime.ts`), then the cells
+  // of its other units in their order.
   const peers = new Map<Elem, Elem[]>();
   for (const c of cells) {
+    const { x, y } = where(c);
     const ps = new Set<Elem>();
+    for (let i = 0; i < Math.max(w, h); i++) {
+      if (i < w && i !== x && units.includes(rows[y])) ps.add(cells[y * w + i]);
+      if (i < h && i !== y && units.includes(cols[x])) ps.add(cells[i * w + x]);
+    }
     for (const u of unitsOf.get(c) ?? [])
       for (const d of lineCells.get(u) ?? []) if (d !== c) ps.add(d);
-    peers.set(
-      c,
-      [...ps].sort((a, b) => a.id - b.id),
-    );
+    peers.set(c, [...ps]);
   }
   fns.set("peers", ([c]) => peers.get(asElem(c, "cell")) ?? []);
 

@@ -33,6 +33,6 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!!!notes", "!**/metrics"]
+    "includes": ["**", "!!!notes", "!**/metrics", "!**/*.compiled.ts"]
   }
 }

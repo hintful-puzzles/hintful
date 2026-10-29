@@ -40,6 +40,14 @@
 
 import { type DeductionTechnique, runDeductionFixpoint } from "./deduction-fixpoint.ts";
 import type { DeductionRecorder } from "./deduction-record.ts";
+import {
+  type Facts,
+  type Fire,
+  type GridSpace,
+  latinSpace,
+  type Marks,
+  STRIKE,
+} from "./describe-runtime.ts";
 import type { DifficultyVerdict } from "./difficulty.ts";
 import {
   auditingPremises,
@@ -47,6 +55,7 @@ import {
   FiringReplay,
   offerReplay,
 } from "./firing-replay.ts";
+import * as compiled from "./latin.compiled.ts";
 import { type RandomState, randomUpto } from "./random/index.ts";
 import { shuffle } from "./shuffle.ts";
 import { type StepBudget, stepBudget } from "./step-budget.ts";
@@ -79,7 +88,7 @@ export function latinVerdict(ret: number): DifficultyVerdict {
  * or −1 (reached a contradiction). */
 export type UserSolver<Ctx> = (solver: LatinSolver, ctx: Ctx) => number;
 /** Validate a *completed* grid against the game's extra constraints. */
-export type Validator<Ctx> = (solver: LatinSolver, ctx: Ctx) => boolean;
+type Validator<Ctx> = (solver: LatinSolver, ctx: Ctx) => boolean;
 
 /** Why a *generic* Latin deduction forced a candidate change — the premise a
  * hint narrates. A game's user-solvers attach their own (game-specific) reason
@@ -209,8 +218,11 @@ export type {
   DeductionRecorder,
 } from "./deduction-record.ts";
 
-export class LatinSolver {
+export class LatinSolver implements Marks {
   readonly o: number;
+  /** The grid as a compiled technique reads it. */
+  readonly sp: GridSpace;
+  readonly domain: number;
   /** Distinct symbols: `o` for a Latin square, `o − times + 1` with a repeat. */
   readonly symbols: number;
   /** The repeated symbol (always `symbols`), or `0` when there is none. */
@@ -265,6 +277,8 @@ export class LatinSolver {
       this.repeat = 0;
     }
     const s = this.symbols;
+    this.sp = latinSpace(o);
+    this.domain = ((1 << (s + 1)) - 1) & ~1;
     this.cube = new Uint8Array(o * o * s);
     this.grid = new Uint8Array(o * o);
     this.row = new Uint8Array(o * s);
@@ -287,6 +301,51 @@ export class LatinSolver {
   }
   cubeGet(x: number, y: number, n: number): boolean {
     return this.cube[this.cubepos(x, y, n)] !== 0;
+  }
+
+  // The marks a compiled technique reads, its cells numbered `y·o + x`.
+  known(c: number): boolean {
+    return this.grid[c] !== 0;
+  }
+  value(c: number): number {
+    return this.grid[c] || -1;
+  }
+  cand(c: number): number {
+    const base = this.cubepos(c % this.o, (c / this.o) | 0, 1);
+    let m = 0;
+    for (let n = 1; n <= this.symbols; n++) if (this.cube[base + n - 1]) m |= 1 << n;
+    return m;
+  }
+  has(c: number, d: number): boolean {
+    return this.cube[this.cubepos(c % this.o, (c / this.o) | 0, d)] !== 0;
+  }
+
+  /**
+   * Make a compiled firing's facts, recording each with the reason `reasonOf`
+   * gives it. Every reason is taken before any fact is made, from the marks
+   * the firing read.
+   */
+  applyFacts(facts: Facts, reasonOf: ((i: number) => unknown) | null): void {
+    const o = this.o;
+    const rec = this.recorder;
+    const reasons: unknown[] = [];
+    if (rec && reasonOf)
+      for (let i = 0; i < facts.length; i += 3) reasons.push(reasonOf(i));
+    for (let i = 0; i < facts.length; i += 3) {
+      const c = facts[i + 1];
+      const n = facts[i + 2];
+      const x = c % o;
+      const y = (c / o) | 0;
+      const reason = rec ? reasons[i / 3] : null;
+      if (facts[i] !== STRIKE) {
+        this.place(x, y, n, reason);
+        continue;
+      }
+      const pos = this.cubepos(x, y, n);
+      if (rec && this.cube[pos])
+        rec({ kind: "elim", x, y, n, reason, group: this.group });
+      this.cube[pos] = 0;
+    }
   }
 
   /** Reset the cube/row/col and seed from `grid` (written back in place).
@@ -332,6 +391,13 @@ export class LatinSolver {
       // `dup` reason below because its narration names the one placement.
       if (inRow === this.times) this.strikeRepeatFromLine(x, y, n, "row");
       if (inCol === this.times) this.strikeRepeatFromLine(x, y, n, "col");
+      return;
+    }
+
+    if (!this.repeat && !CHECK.handWritten) {
+      compiled.placed(this, this.sp, y * o + x, (_, facts) =>
+        this.applyFacts(facts, () => ({ kind: "dup", n, px: x, py: y })),
+      );
       return;
     }
 
@@ -987,19 +1053,139 @@ function popcount(v: number): number {
   return c;
 }
 
-/** How `latinSolver` runs: the difficulty level each generic technique sits at,
- * the game's own deductions and validator, and the hint-path hooks. */
-export interface LatinSolverConfig<Ctx> {
+/** One technique of a ladder, run on a solver: `-1`, `0` or `1`, as a rung. */
+export type LatinRung = (solver: LatinSolver) => number;
+
+/**
+ * A compiled technique as a rung: its firing made through
+ * {@link LatinSolver.applyFacts}, each fact recorded with the reason `reason`
+ * builds from the firing's binding, on the marks before the firing.
+ */
+export function compiledRung<B, C>(
+  run: (b: Marks, sp: GridSpace, cl: C, fire: Fire<B>) => number,
+  cl: C,
+  reason: (binding: B, cell: number, n: number, solver: LatinSolver) => unknown,
+): LatinRung {
+  return (solver) =>
+    run(solver, solver.sp, cl, (binding, facts) =>
+      solver.applyFacts(facts, (i) =>
+        reason(binding, facts[i + 1], facts[i + 2], solver),
+      ),
+    );
+}
+
+/** {@link compiledRung} of a library's technique, which reads no clues. */
+function libraryRung<B>(
+  run: (b: Marks, sp: GridSpace, fire: Fire<B>) => number,
+  reason: (binding: B, cell: number, n: number, solver: LatinSolver) => unknown,
+): LatinRung {
+  return compiledRung(
+    (b, sp, _: null, fire: Fire<B>) => run(b, sp, fire),
+    null,
+    reason,
+  );
+}
+
+const cellAt = (o: number) => (c: number) => ({ x: c % o, y: (c / o) | 0 });
+
+/** The library's techniques (`latin.description.json`) as rungs, by the id a
+ * description places them with. */
+export const LATIN_RUNGS = {
+  "latin.hiddenSingle": libraryRung(
+    compiled.hiddenSingle,
+    (): LatinReason => ({ kind: "single" }),
+  ),
+  "latin.single": libraryRung(compiled.single, (): LatinReason => ({ kind: "single" })),
+  "latin.set": libraryRung(
+    compiled.set,
+    ({ S }, _c, _n, solver): LatinReason => ({
+      kind: "set",
+      cells: S.map(cellAt(solver.o)),
+    }),
+  ),
+  "latin.fish": libraryRung(
+    compiled.fish,
+    (binding, _c, _n, solver): LatinReason => fishReason(binding, solver),
+  ),
+  "latin.wing": libraryRung(
+    compiled.wing,
+    ({ m, x, E }, _c, _n, solver): LatinReason => ({
+      kind: "wing",
+      n: x,
+      middle: cellAt(solver.o)(m),
+      ends: E.map(cellAt(solver.o)),
+      self: solver.has(m, x),
+    }),
+  ),
+} satisfies Record<string, LatinRung>;
+
+/**
+ * A fish confines its value two ways at once, and either gives its strikes:
+ * the columns `X` hold it only in the rows `Y0 − T`, and the rows `T` hold it
+ * only in the other columns. The one over fewer lines is recorded, the smaller
+ * pattern for a player to check, with the places the value can take in it.
+ */
+function fishReason(
+  { d, X0, Y0, T, X }: compiled.FishBinding,
+  solver: LatinSolver,
+): LatinReason {
+  const o = solver.o;
+  const byColumn = X.length <= T.length;
+  const cols = byColumn ? X : X0.filter((L) => !X.includes(L));
+  const rows = byColumn ? Y0.filter((R) => !T.includes(R)) : T;
+  const cells: { x: number; y: number }[] = [];
+  for (const L of cols)
+    for (const y of rows)
+      if (solver.has(y * o + (L - o), d)) cells.push({ x: L - o, y });
+  const lines = byColumn
+    ? confinedLines(
+        "col",
+        X.map((L) => L - o),
+        o,
+      )
+    : confinedLines("row", [...T], o);
+  return { kind: "set", cells, lines };
+}
+
+/** The Latin rungs of a game that is not described yet: the game's own
+ * deductions by level, and the difficulty level each library technique sits
+ * at. */
+export interface LatinLevels<Ctx> {
+  diffSimple: number;
+  diffSet0: number;
+  diffSet1: number;
+  usersolvers: (UserSolver<Ctx> | null)[];
+}
+
+/** The rungs of a described game: every technique its description places,
+ * in its order, each run at its tier. */
+export interface LatinLadder {
+  ladder: readonly { tier: number; run: LatinRung }[];
+}
+
+/** Process-wide switches for comparing the compiled ladder with the
+ * hand-written one it replaces; both go once the comparison is done
+ * (`openspec/changes/compile-the-latin-ladder/tasks.md` 3.5). */
+export const CHECK = {
+  handWritten: false,
+  selfCheck: false,
+  inside: false,
+  compared: 0,
+  mismatches: 0,
+};
+
+/** How `latinSolver` runs: its rungs, the game's validator, and the hint-path
+ * hooks. */
+export type LatinSolverConfig<Ctx> = LatinSolverCommon<Ctx> &
+  (LatinLevels<Ctx> | LatinLadder);
+
+interface LatinSolverCommon<Ctx> {
   /** Declare the last symbol as repeating `times` per line (a pseudo-Latin
    * puzzle). Leave unset or `null` for a Latin square; see {@link LatinRepeats}. */
   repeats?: LatinRepeats | null;
   maxdiff: number;
-  diffSimple: number;
-  diffSet0: number;
-  diffSet1: number;
   /** The searching level: forcing chains, then guess-and-verify recursion. */
   diffRecursive: number;
-  usersolvers: (UserSolver<Ctx> | null)[];
   valid: Validator<Ctx> | null;
   ctx: Ctx;
   /** Per-recursion context cloning (upstream `ctxnew`); a game whose ctx is
@@ -1042,15 +1228,33 @@ function latinRung<Ctx>(
   cfg: LatinSolverConfig<Ctx>,
   i: number,
 ): number {
-  const { diffSimple, diffSet0, diffSet1, diffRecursive, usersolvers, ctx } = cfg;
   let ret = 0;
-  if (usersolvers[i]) ret = (usersolvers[i] as UserSolver<Ctx>)(solver, ctx);
-  if (ret === 0 && i === diffSimple) ret = solver.diffSimple();
-  if (ret === 0 && i === diffSet0) ret = solver.diffSet(false);
-  if (ret === 0 && i === diffSet1) ret = solver.diffSet(true);
-  // The wing is a check of what the notes show, so it shares the top
-  // deductive level with the set eliminations rather than the search's.
-  if (ret === 0 && i === diffSet1) ret = solver.wing();
+  if ("ladder" in cfg) {
+    for (const rung of cfg.ladder) {
+      if (rung.tier !== i) continue;
+      ret = rung.run(solver);
+      if (ret !== 0) return ret;
+    }
+  } else {
+    const { diffSimple, diffSet0, diffSet1, usersolvers, ctx } = cfg;
+    const library = !solver.repeat && !CHECK.handWritten;
+    if (usersolvers[i]) ret = (usersolvers[i] as UserSolver<Ctx>)(solver, ctx);
+    if (ret === 0 && i === diffSimple) {
+      if (library) {
+        ret = LATIN_RUNGS["latin.hiddenSingle"](solver);
+        if (ret === 0) ret = LATIN_RUNGS["latin.single"](solver);
+      } else ret = solver.diffSimple();
+    }
+    if (ret === 0 && i === diffSet0)
+      ret = library ? LATIN_RUNGS["latin.set"](solver) : solver.diffSet(false);
+    if (ret === 0 && i === diffSet1)
+      ret = library ? LATIN_RUNGS["latin.fish"](solver) : solver.diffSet(true);
+    // The wing is a check of what the notes show, so it shares the top
+    // deductive level with the set eliminations rather than the search's.
+    if (ret === 0 && i === diffSet1)
+      ret = library ? LATIN_RUNGS["latin.wing"](solver) : solver.wing();
+  }
+  const { diffRecursive } = cfg;
   // A forcing chain is a supposition, so it shares the level of the other
   // search, the recursion, and no game can place it lower.
   if (ret === 0 && i === diffRecursive) ret = solver.forcing();
@@ -1058,7 +1262,8 @@ function latinRung<Ctx>(
 }
 
 function latinSolverTop<Ctx>(solver: LatinSolver, cfg: LatinSolverConfig<Ctx>): number {
-  const { maxdiff, diffSimple, diffRecursive } = cfg;
+  const { maxdiff, diffRecursive } = cfg;
+  const diffSimple = "ladder" in cfg ? 0 : cfg.diffSimple;
   // Rung `i` **is** difficulty level `i` here — `diffSimple`, `diffSet0`,
   // `diffSet1` and `diffRecursive` are level numbers the game hands in, and
   // `latinRung` dispatches on them — so the technique's tier is its index, and
@@ -1188,6 +1393,78 @@ export function latinSolver<Ctx>(
   o: number,
   cfg: LatinSolverConfig<Ctx>,
 ): number {
+  if (CHECK.selfCheck && !CHECK.inside && !("ladder" in cfg))
+    compareRuns(grid, o, cfg, cfg);
+  return latinSolverOnce(grid, o, cfg, true);
+}
+
+/** Run `hand` hand-written and `built` compiled, each on copies, and throw
+ * where they differ in what they return, the grid, the cube, or the records:
+ * the comparison that licenses removing the hand-written layer
+ * (`research/describe/compare-compiled.test.ts`), removed with it. */
+export function compareRuns<A, B>(
+  grid: Uint8Array,
+  o: number,
+  hand: LatinSolverConfig<A>,
+  built: LatinSolverConfig<B>,
+): void {
+  const run = <C>(cfg: LatinSolverConfig<C>, handWritten: boolean) => {
+    const g = grid.slice();
+    const recs: unknown[] = [];
+    const cube = cfg.cubeOut ? new Uint8Array(cfg.cubeOut.length) : undefined;
+    let ctx = cfg.ctx;
+    if (cfg.ctxNew) ctx = cfg.ctxNew(cfg.ctx);
+    else
+      try {
+        ctx = structuredClone(cfg.ctx);
+      } catch {
+        ctx = cfg.ctx;
+      }
+    CHECK.handWritten = handWritten;
+    CHECK.inside = true;
+    try {
+      const ret = latinSolverOnce(
+        g,
+        o,
+        {
+          ...cfg,
+          ctx,
+          cubeOut: cube,
+          recorder: cfg.recorder ? (r) => recs.push(r) : undefined,
+        },
+        false,
+      );
+      return { ret, g: Array.from(g), cube: cube ? Array.from(cube) : null, recs };
+    } finally {
+      CHECK.handWritten = false;
+      CHECK.inside = false;
+    }
+  };
+  const a = run(hand, true);
+  const b = run(built, false);
+  for (const k of ["ret", "g", "cube", "recs"] as const) {
+    const ja = JSON.stringify(a[k]);
+    const jb = JSON.stringify(b[k]);
+    if (ja !== jb) {
+      CHECK.mismatches++;
+      let i = 0;
+      while (i < ja.length && ja[i] === jb[i]) i++;
+      throw new Error(
+        `compiled ladder differs in ${k} (o=${o}, grid ${Array.from(grid).join("")}, maxdiff ${hand.maxdiff}, ctx ${JSON.stringify(hand.ctx, (_, v) => (v instanceof Int32Array ? Array.from(v) : v))}): ` +
+          `hand ...${ja.slice(Math.max(0, i - 120), i + 200)}\n` +
+          `built ...${jb.slice(Math.max(0, i - 120), i + 200)}`,
+      );
+    }
+  }
+  CHECK.compared++;
+}
+
+function latinSolverOnce<Ctx>(
+  grid: Uint8Array,
+  o: number,
+  cfg: LatinSolverConfig<Ctx>,
+  audit: boolean,
+): number {
   const solver = new LatinSolver(o, cfg.repeats);
   if (!solver.alloc(grid)) {
     if (cfg.cubeOut) cfg.cubeOut.set(solver.cube);
@@ -1200,7 +1477,8 @@ export function latinSolver<Ctx>(
     solver.recorder = cfg.recorder;
     solver.budget = stepBudget(cfg.budgetLabel ?? "towers hint");
   }
-  const replay = cfg.recorder && auditingPremises() ? latinReplay(solver, cfg) : null;
+  const replay =
+    audit && cfg.recorder && auditingPremises() ? latinReplay(solver, cfg) : null;
   const ret = latinSolverTop(solver, cfg);
   if (replay) offerReplay(replay);
   // Expose the final candidate cube (upstream's `memcpy(state->hints, ...)`),

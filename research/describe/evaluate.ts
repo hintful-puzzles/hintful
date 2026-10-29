@@ -8,7 +8,8 @@
  * the cell may take.
  */
 
-import type { Binder, Expr } from "./expr.ts";
+import type { Definition } from "../../src/describe/description.ts";
+import type { Binder, Expr } from "../../src/describe/expr.ts";
 import {
   asElem,
   asNum,
@@ -33,11 +34,6 @@ export class Unknown extends Error {
   constructor(readonly cell: Elem) {
     super(`unknown ${cell.label}`);
   }
-}
-
-export interface Definition {
-  params: string[];
-  body: Expr;
 }
 
 /** A dealt clue: its kind, where it sits and its value. */
@@ -276,18 +272,14 @@ function range(a: number, b: number): number[] {
   return out;
 }
 
+/** The subsets of `s` (of size `k`, if given), counted in binary with `s`'s
+ * last member as the lowest bit, as the compiler enumerates them. */
 function subsets(s: Value[], k: number | null): Value[][] {
   const out: Value[][] = [];
-  const walk = (i: number, acc: Value[]) => {
-    if (k !== null && acc.length > k) return;
-    if (i === s.length) {
-      if (k === null || acc.length === k) out.push(acc);
-      return;
-    }
-    walk(i + 1, [...acc, s[i]]);
-    walk(i + 1, acc);
-  };
-  walk(0, []);
+  for (let m = 0; m < 1 << s.length; m++) {
+    const sub = s.filter((_, i) => (m >> (s.length - 1 - i)) & 1);
+    if (k === null || sub.length === k) out.push(sub);
+  }
   return out;
 }
 

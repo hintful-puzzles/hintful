@@ -1,5 +1,5 @@
 {
-  "$schema": "../description.schema.json",
+  "$schema": "../../../src/describe/description.schema.json",
   "game": "towers",
   "name": "Towers",
   "family": "latin",

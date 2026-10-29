@@ -29,6 +29,7 @@
     "game": "node scripts/game.ts",
     "hint-scan": "node scripts/hint-scan.ts",
     "deal-walk": "node scripts/deal-walk.ts",
+    "describe": "node scripts/describe.ts",
     "dead-exports": "node scripts/checks/unused-exports.mjs",
     "absence": "node scripts/checks/absence-spelling.mjs"
   },
@@ -79,7 +80,8 @@
     "vitest": "^5.0.5",
     "workbox-core": "^7.3.0",
     "workbox-precaching": "^7.3.0",
-    "workbox-window": "^7.3.0"
+    "workbox-window": "^7.3.0",
+    "z3-solver": "^5.3.3"
   },
   "overrides": {
     "@babel/plugin-transform-modules-systemjs": "^7.29.4",

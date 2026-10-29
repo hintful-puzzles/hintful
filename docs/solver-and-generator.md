@@ -1645,20 +1645,26 @@ pass's flags and adds one for a cell the answer contradicts, and
 
 **A game on a Latin square builds on
 [`engine/latin.ts`](../src/engine/latin.ts): its `solver.ts` is its own clue
-deductions (`usersolvers`), a `valid` callback over completed grids, and a
-thin driver mapping its difficulty levels onto the `latinSolver` config.**
-The engine gives the candidate cube, positional, numeric and set
-elimination, the wing at the single-number set's level `diffSet1`, forcing
-chains and guess-and-verify recursion at the searching level `diffRecursive` (the recursion doubling as the uniqueness check), and
-the generator (`matching`, `latinGenerate`, `latinGenerateRect`).
+deductions, a `valid` callback over completed grids, and a thin driver
+mapping its difficulty levels onto the `latinSolver` config.** A described
+game (Unequal) states its deductions and its ladder in a description and
+passes the compiled `ladder` ([descriptions.md](./descriptions.md)); a game
+not yet described passes `usersolvers` and the levels `diffSimple`,
+`diffSet0` and `diffSet1` the library's techniques run at. The engine gives
+the candidate cube, the library's techniques compiled from
+[`latin.description.json`](../src/engine/latin.description.json) (singles,
+set and single-number set elimination, the wing), forcing chains and
+guess-and-verify recursion at the searching level `diffRecursive` (the
+recursion doubling as the uniqueness check), and the generator (`matching`,
+`latinGenerate`, `latinGenerateRect`).
 The population is `git grep -l engine/latin.ts src/games`. The hint side
 starts at [hints-candidates.md](./hints-candidates.md) § "What every game does".
 
 Exemplars: [`group/solver.ts`](../src/games/group/solver.ts) for the plain
 shape, two `usersolvers` and a `valid`;
 [`towers/solver.ts`](../src/games/towers/solver.ts) for clue heuristics;
-[`unequal/solver.ts`](../src/games/unequal/solver.ts) for two modes off
-`ctx.mode`; [`keen/solver.ts`](../src/games/keen/solver.ts) for per-cage
+[`unequal/solver.ts`](../src/games/unequal/solver.ts) for a described game,
+its two modes two descriptions; [`keen/solver.ts`](../src/games/keen/solver.ts) for per-cage
 arithmetic; [`salad/solver.ts`](../src/games/salad/solver.ts) for a repeated
 symbol.
 
@@ -1685,7 +1691,15 @@ symbol.
   runs `setGeneral`, and forcing chains never link through it. Read the
   marker array back off the final cube (`cubeOut`). The extension is inert
   when not declared (`latin-repeats.test.ts`), and a game with exactly one
-  such symbol per line needs no declaration.
+  such symbol per line needs no declaration. The library's description has
+  no repeated symbol, so a cube that declares one runs the engine's own
+  multiplicity deductions in its place, until Salad is described.
+- **The deductions are what refuse a broken grid, not only `valid`.** A
+  game's `valid` may check less than its rules (Unequal's Adjacent mode skips
+  the last row and column, as upstream's does), and then a contradiction a
+  deduction misses lets the recursion accept a broken grid and report the
+  board ambiguous (descriptions.md § "A conclusion that is false is a
+  contradiction").
 - **Three generator shapes.** Derive every clue from the full square, then
   remove (Towers). Assemble clues greedily onto a blank board, reading the
   solver's remaining-possibility counts through `latinSolver`'s optional

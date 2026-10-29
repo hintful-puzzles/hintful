@@ -137,19 +137,19 @@ export const MODULES = [
         replace: "  const o = Math.min(w, h);\n  const latin = latinGenerate(o, rs);",
       },
       {
-        within: "latinSolver",
+        within: "latinSolverOnce",
         why: "the seed hook (Salad's ball/cross clues) never runs",
         find: "  cfg.seed?.(solver);",
         replace: "  void cfg.seed;",
       },
       {
-        within: "latinSolver",
+        within: "latinSolverOnce",
         why: "the final candidate cube is not written back to cubeOut",
         find: "  if (cfg.cubeOut) cfg.cubeOut.set(solver.cube);\n  return ret;",
         replace: "  return ret;",
       },
       {
-        within: "latinSolver",
+        within: "latinSolverOnce",
         why: "an inconsistent set of givens is graded solvable, not impossible",
         find: "  if (!solver.alloc(grid)) {",
         replace: "  if (false) {",

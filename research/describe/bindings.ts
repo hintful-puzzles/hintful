@@ -4,6 +4,7 @@
  * for the pilot, and task 2.3 measures it.
  */
 
+import type { DescriptionJson } from "../../src/describe/description.ts";
 import type { DeductionRecord } from "../../src/engine/deduction-record.ts";
 import type { Game } from "../../src/engine/game.ts";
 import { soloGame } from "../../src/games/solo/index.ts";
@@ -19,6 +20,9 @@ import {
 } from "../../src/games/solo/state.ts";
 import { towersGame } from "../../src/games/towers/index.ts";
 import type { TowersParams, TowersState } from "../../src/games/towers/state.ts";
+import adjacent from "../../src/games/unequal/adjacent.description.json" with {
+  type: "json",
+};
 import { unequalGame } from "../../src/games/unequal/index.ts";
 import {
   recordUnequalDeductions,
@@ -29,11 +33,12 @@ import {
   type UnequalParams,
   type UnequalState,
 } from "../../src/games/unequal/state.ts";
-import type { Dealt, DescriptionJson } from "./description.ts";
-import adjacent from "./descriptions/adjacent.json" with { type: "json" };
+import unequal from "../../src/games/unequal/unequal.description.json" with {
+  type: "json",
+};
+import type { Dealt } from "./description.ts";
 import solo from "./descriptions/solo.json" with { type: "json" };
 import towers from "./descriptions/towers.json" with { type: "json" };
-import unequal from "./descriptions/unequal.json" with { type: "json" };
 import type { Clue } from "./evaluate.ts";
 import type { Elem, Space } from "./space.ts";
 

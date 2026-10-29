@@ -1,5 +1,2 @@
-# No delta yet. The session that designs it decides which specs the compiled
-# ladder touches (the Latin engine's, difficulty's) and adds their deltas.
 schema: spec-driven
 created: 2026-10-29
-skip_specs: true
