@@ -128,7 +128,7 @@ answer reached by Sixteen's freedom, and its hint is Sixteen's planner
 - **Size**: a number of the instance. No catalog word.
 - **Game**: one answer shape, one clue vocabulary (question 2), one kind of
   freedom (question 1).
-- **Family**: one answer shape, with the kind of freedom.
+- **Family**: one answer shape.
 
 **A number inside a predicate** (Star Battle's stars per unit, Bridges' most
 bridges per pair) is a size-like parameter of a goal predicate, so a
@@ -156,33 +156,58 @@ Question 2 is separate from these and applies to each of them. Under
 | Technique evidence (§ "What the techniques share") | A replaced vocabulary brings its own rungs and shares none of the clue rungs: Unequal and Adjacent share only the Latin rungs, and Killer only Solo's | — |
 | Prior art | Ludii and Demystify file Killer and X Sudoku apart; pzprjs gives a genre its own id | pzprjs groups genres by shared code, which is close to V-loose but is not a rule |
 
-**The recommendation, for the owner's decision: candidate A with V-strict.**
+**The recommendation: candidate B with V-strict**, revised 2026-10-29. The
+first draft recommended A with V-strict. That pair is inconsistent by the
+measure that ranks every kind of variation. A merges Net and Netslide, which
+share no rung, while V-strict splits Unequal from Adjacent, which share half
+their rungs.
 
-- **A because the goal is what a player names a puzzle by.** "Connect the
-  network", "put the tiles in order": the way of moving is how they play it.
-  It is also the owner's own lean, and the Net and Netslide prompt is the case
-  it answers. The price is a game whose rulesets share no hint method: Net
-  deduces and Netslide plans. The engine already carries that, since a hint
-  reads its params. The other consequence has to be accepted with it:
-  Fifteen, Sixteen and Twiddle become one game with three ways of moving.
-- **V-strict because V-loose cannot be stopped short of folding the Latin
-  family into one game.** A replaced vocabulary is also where the techniques
-  stop transferring.
-- **Against B.** Its line is real: it is the one divide the prior art agrees
-  on, and the one the hint follows. But it is a line between families, and B
-  makes it a line between games. B keeps Net and Netslide apart, which is the
-  pair the owner raised.
-- **Against C.** It is the most measurable, but it splits Fifteen, Sixteen and
-  Twiddle over planners that differ only in how they were written. A rung id
-  is per game, so the measure is only as good as the names. It serves best
-  as A's check: where a ruleset of a candidate shares no technique, the help
-  page has to say so.
+**One principle answers both questions.** A ruleset keeps its game's
+techniques. A variant whose own techniques do not carry over is another game
+in the same family. The measurement orders the kinds of variation by how much
+of the ladder survives:
 
-A family under the recommendation is an answer shape together with whether
-the moves commute. Read that way, the catalog's own families disagree in
+| Variation | How much of the ladder survives | Word |
+| --- | --- | --- |
+| A board shape, or a change of adjacency | all of it | board shape |
+| A modifier | all, plus the one rung of the predicate it adds | modifier |
+| A number in a predicate; a move set of the same kind | nearly all (Star Battle 7/8; Flip 3/3) | modifier; ruleset |
+| A replaced clue vocabulary | the family's half only (Unequal and Adjacent, Killer) | separate game |
+| A move of the other kind | none (Net and Netslide 0) | separate game |
+
+B and V-strict are the structural statements of where that line falls. Each
+reads off a declaration, whether the moves commute and which clue kinds
+exist, so neither depends on rung names. The measure is their check.
+
+- **Question 1: no, within a kind of freedom; yes, across kinds.** Net and
+  Netslide stay two games, side by side in one family: the same network,
+  reached by deduction in one and by planning in the other. Fifteen, Sixteen
+  and Twiddle become one game with three move sets. This is held with less
+  confidence: their rungs cannot be compared, since the three planners name
+  them differently. What would settle it is whether their hints teach the
+  same staged method, putting the pieces home in reading order. Step 2 can
+  read that off the three planners' narrations.
+- **Question 2: yes.** The confident splits are Killer and Adjacent: the clue
+  rungs on each side are disjoint. Two cases need a closer look before
+  either moves:
+  - **Salad's Numbers** has no clue rungs of its own: a ball or a cross is a
+    given of the answer itself. So it may be the plain game, and Letters the
+    variant that adds a clue kind, as Ascent's Edges does.
+  - **Path's rungs** are too broad (`forced`, `breaks`) to say whether Pairs
+    is solved the same way.
+- **Why not A.** The owner's prompt was Net and Netslide. Under A they share a
+  page and a menu, and nothing a player learns in one helps in the other.
+  Their kinship is real, and it is the family's to show: one family, side by
+  side.
+- **Why not V-loose.** It cannot be stopped short of folding the Latin family
+  into one game.
+
+A family under the recommendation is an answer shape, and whether the moves
+commute separates games within it. The catalog's families mix the two in
 three places. Flip, in "Moves & planning", and Net and Untangle, in
-"Rearranging", are constraint puzzles whose moves commute. This document
-proposes no family change; it records where the tree and the reasoning part.
+"Rearranging", are filed with planning games, though their moves commute.
+This document proposes no family change; it records where the tree and the
+reasoning part.
 
 ## Disagreements with the catalog
 
