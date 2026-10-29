@@ -18,4 +18,4 @@ went (`design.md`).
 
 ## 3. Report
 
-- [ ] 3.1 What to adopt, for which games, and what would be excluded for fitting badly; the owner's decision recorded
+- [x] 3.1 What to adopt, for which games, and what would be excluded for fitting badly; the owner's decision recorded (`report.md` § "The owner's decision"; next: `compile-the-latin-ladder`)

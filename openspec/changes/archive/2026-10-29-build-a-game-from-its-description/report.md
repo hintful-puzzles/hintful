@@ -310,6 +310,15 @@ holding the spec's rules to a description is possible and was not tried.
    which is cheaper and is a second statement held to the first rather than
    one statement.
 
+## The owner's decision (2026-10-29)
+
+**Go ahead, with the ladder compiled from the description.** Filed as
+`compile-the-latin-ladder`: the Latin library's techniques and Unequal's
+compiled into the functions the deduction fixpoint runs, replacing the
+hand-written ones, with this pilot's comparisons as the acceptance test and
+the generator's speed measured; then the other Latin games in order of fit;
+and the technique checker ported to TypeScript.
+
 ## What was not checked
 
 - **The ladder of any game but Unequal's two modes.** Towers' and Solo's

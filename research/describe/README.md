@@ -2,7 +2,7 @@
 
 A development tool, never part of the app: it reads a game's rules and
 techniques from a JSON description and runs them, to compare what they say
-with what the game's code does. `openspec/changes/build-a-game-from-its-description/`
+with what the game's code does. `openspec/changes/archive/2026-10-29-build-a-game-from-its-description/`
 says what it was built to test and what it found.
 
 It is run by hand and not by the gate, which compiles it
