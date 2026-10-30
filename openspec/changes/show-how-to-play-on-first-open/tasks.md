@@ -1,6 +1,7 @@
 # Tasks
 
-The session that takes this up revises these as it designs.
+The session that takes this up revises these as it designs. It starts once
+`describe-games-in-yaml-with-their-help` is archived.
 
 ## 1. Consult and design
 

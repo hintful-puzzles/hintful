@@ -7,6 +7,19 @@ texts "to see that they really are newbie friendly" in the same change. The
 owner left the details to the session that takes this up, and suggested a
 UX / technical-writer subagent as a consultant.
 
+**It starts after `describe-games-in-yaml-with-their-help` is archived**
+(the owner's decision, 2026-10-30). That change moves every game's help page
+into its description, with the page's sections as fields a schema requires,
+and builds the page from it. So by the time this one starts:
+
+- a short summary for the first open can be a section of the description,
+  or be read off one, with no second copy of the rules;
+- the review below edits descriptions, not `help/games/*.md`, and a fix
+  that several pages share (the Solo-style controls) is a reference to one
+  shared source, which that change provides;
+- the facts below about where pages live and how they are built were taken
+  before it, and the session re-checks them.
+
 ## Why
 
 A player who opens a game for the first time meets a board with no idea of
