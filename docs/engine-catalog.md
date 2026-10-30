@@ -524,7 +524,7 @@ generation and leave it out for a deterministic existence check
 and the family's generator shapes are in
 [`solver-and-generator.md`](./solver-and-generator.md). Exemplar:
 `keen/solver.ts`. Its singles, sets, fish and wing are
-`latin.compiled.ts`, compiled from `latin.description.json` by
+`latin.compiled.ts`, compiled from `latin.description.yaml` by
 `npm run describe` and never edited by hand; `LATIN_RUNGS` pairs each with
 its reason, and `compiledRung` pairs a described game's own
 ([`descriptions.md`](./descriptions.md); exemplar `unequal/solver.ts`).

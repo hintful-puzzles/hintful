@@ -27,17 +27,16 @@ writes a line of progress per board.
 
 ## The files
 
-The descriptions the app compiles live beside their code
-(`src/engine/latin.description.json`, `src/games/unequal/*.description.json`),
-and the parser and the schema in `src/describe/`. Towers' and Solo's, which
-nothing compiles yet, are here.
+Every description lives beside its code (`src/engine/latin.description.yaml`,
+`src/games/<id>/*.description.yaml`), Towers' and Solo's, which nothing
+compiles yet, included; the loader, the parser and the schema are in
+`src/describe/`.
 
 | File | What it holds |
 | --- | --- |
-| `descriptions/` | the descriptions of games not yet compiled |
 | `bindings.ts` | each game's binding: its state read as an instance of its description |
 | `evaluate.ts`, `space.ts` | a formula's meaning on a board, and the library's spaces |
-| `description.ts` | a description instantiated on a dealt board |
+| `description.ts` | reading a description, and one instantiated on a dealt board |
 | `answer-check.ts` | the rules on a full board, and a search for every answer that knows only the rules |
 | `ladder.ts` | the techniques run as a ladder |
 

@@ -10,7 +10,8 @@
  * the build.
  */
 
-import path from "node:path";
+import { descriptionPath } from "../src/describe/paths.ts";
+import { pageGame } from "./description-page.ts";
 import type { Transform } from "./extra-pages.ts";
 import { gameCode } from "./game-code.ts";
 
@@ -28,16 +29,16 @@ function expand(
   const has = source.includes(placeholder);
   if (owed && !has)
     throw new Error(
-      `help/games/${id}.md: the game ${what}, so its Controls section writes ${placeholder} where the generated sentence goes`,
+      `${descriptionPath(id)}: the game ${what}, so its Controls section writes ${placeholder} where the generated sentence goes`,
     );
   if (!owed && has)
-    throw new Error(`help/games/${id}.md: ${placeholder} needs a game that ${what}`);
+    throw new Error(`${descriptionPath(id)}: ${placeholder} needs a game that ${what}`);
   return owed ? source.replace(placeholder, sentence) : source;
 }
 
 /** The transform: the page's game is its file's name. */
 export const withNoteControls: Transform = async (data, addWatchFile) => {
-  const id = path.basename(String(data.sourceFile ?? ""), ".md");
+  const id = pageGame(data);
   const {
     getTsGame,
     MARK_ALL_HELP,

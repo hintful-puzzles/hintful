@@ -5,13 +5,19 @@
  */
 
 import { compileGame, compileLibrary } from "./compile.ts";
-import type { DescriptionJson, LibraryJson } from "./description.ts";
+import { type DescriptionFile, isFormal, isLibrary } from "./description.ts";
 
 const RUNTIME = "src/engine/describe-runtime.ts";
 
-/** `x.description.json` compiles to `x.compiled.ts` beside it. */
+/** `x.description.yaml` compiles to `x.compiled.ts` beside it. */
 export function compiledPath(source: string): string {
-  return source.replace(/\.description\.json$/, ".compiled.ts");
+  return source.replace(/\.description\.yaml$/, ".compiled.ts");
+}
+
+/** A library compiles, and a description that states techniques; one that
+ * is a help page, or rules nothing runs yet, does not. */
+export function compiles(file: DescriptionFile): boolean {
+  return isLibrary(file) || ("techniques" in file && file.techniques !== undefined);
 }
 
 /** The import path from `from`'s directory to `to`, both from the root. */
@@ -25,18 +31,17 @@ function importPath(from: string, to: string): string {
   return up.length === 0 ? `./${path}` : path;
 }
 
-function isLibrary(json: unknown): json is LibraryJson {
-  return typeof json === "object" && json !== null && "library" in json;
-}
-
 /** The module `source` compiles to, given every description by path. */
 export function compileSource(
   source: string,
-  all: ReadonlyMap<string, unknown>,
+  all: ReadonlyMap<string, DescriptionFile>,
 ): string {
-  const json = all.get(source);
+  const file = all.get(source);
+  if (file === undefined || !compiles(file))
+    throw new Error(`${source} does not compile`);
   const runtime = importPath(compiledPath(source), RUNTIME);
-  if (isLibrary(json)) return compileLibrary(json, source, runtime);
+  if (isLibrary(file)) return compileLibrary(file, source, runtime);
   const libraries = [...all.values()].filter(isLibrary);
-  return compileGame(json as DescriptionJson, libraries, source, runtime);
+  if (!isFormal(file)) throw new Error(`${source} states no rules`);
+  return compileGame(file, libraries, source, runtime);
 }

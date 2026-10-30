@@ -12,7 +12,7 @@
  * board says which clue, and the sentence names it so the player can point at
  * it — but "add to 7" is the technique, and a hint that only cites the glyph
  * teaches nothing the board did not already show (docs/hints.md
- * § "Lead with the indication"). The rules are in `help/games/mathrax.md` too;
+ * § "Lead with the indication"). The rules are in `mathrax.description.yaml` too;
  * one clause per step is what earns its room here.
  *
  * The subtraction arms read correctly at the degenerate value: a `0−` clue is

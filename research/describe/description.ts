@@ -4,8 +4,16 @@
  * compiler shares.
  */
 
-import type { Description, DescriptionJson } from "../../src/describe/description.ts";
+import { readFileSync } from "node:fs";
+import {
+  type Description,
+  type DescriptionJson,
+  isFormal,
+  isLibrary,
+  type LibraryJson,
+} from "../../src/describe/description.ts";
 import { parse } from "../../src/describe/expr.ts";
+import { loadDescriptionFile } from "../../src/describe/load.ts";
 import { type Board, type Clue, type Ctx, evaluate } from "./evaluate.ts";
 import {
   blocks,
@@ -15,6 +23,26 @@ import {
   type SpaceSpec,
   type Value,
 } from "./space.ts";
+
+const ROOT = new URL("../../", import.meta.url).pathname;
+
+function load(path: string) {
+  return loadDescriptionFile(readFileSync(ROOT + path, "utf8"), path);
+}
+
+/** The rules of the description at `path`, from the repository's root. */
+export function describedGame(path: string): DescriptionJson {
+  const file = load(path);
+  if (!isFormal(file)) throw new Error(`${path} states no rules`);
+  return file;
+}
+
+/** The library at `path`, from the repository's root. */
+export function describedLibrary(path: string): LibraryJson {
+  const file = load(path);
+  if (!isLibrary(file)) throw new Error(`${path} is not a library`);
+  return file;
+}
 
 /** The description with the named variations applied, in order. Only the
  * interpreter reads a variation: no compiled game has one yet. */

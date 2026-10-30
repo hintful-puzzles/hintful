@@ -1,4 +1,4 @@
-// Compiled by `npm run describe` from src/games/unequal/unequal.description.json: edit that, not this.
+// Compiled by `npm run describe` from src/games/unequal/unequal.description.yaml: edit that, not this.
 
 import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE } from "../../engine/describe-runtime.ts";
 

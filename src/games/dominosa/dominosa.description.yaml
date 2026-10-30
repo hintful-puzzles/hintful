@@ -1,0 +1,37 @@
+# yaml-language-server: $schema=../../describe/description.schema.json
+
+game: dominosa
+help:
+  rules: |-
+    Tile the rectangle with dominoes (1×2 rectangles) so that
+    every possible domino appears exactly once (that is, every possible
+    pair of numbers, including doubles).
+  controls: |-
+    {{controls}}
+
+    Aim a click between the two numbers, nearer their shared edge than the
+    middle of either; the keyboard's cursor moves by half a square, so it
+    rests on those edges. Dominoes light up red if two identical ones
+    appear on the grid.
+
+    A new domino replaces any dominoes it overlaps, and clears the lines around it. A line can only go between two squares that are not part of a domino.
+
+    Right-click the middle of a square, or type a number, to highlight every square showing that number; up to two numbers can be highlighted at once, and doing it again turns the highlight off.
+
+    The reference panel lists every domino in the set, marking the ones you have placed and flagging any placed twice. Pick one to highlight where on the board it could still go.
+  hints: |-
+    **Hint** explains the next step rather than simply making it. It reasons from the dominoes you have placed, so it carries on from wherever you are, as long as none of them is wrong; if one is, it asks you to fix the highlighted mistakes first. It does not rely on the lines you have drawn between numbers: it works each one out for itself, and leaves out a step whose line is already on the board. A *spot*, in its words, is a pair of neighboring squares a domino could cover.
+
+    {{hint-marks}}
+
+    When one reason rules out several spots, the hint shows them one after another, saying "for the same reason" rather than repeating it.
+
+    A few ideas are worth learning by name:
+
+    * **A square with one neighbor left** must pair with it.
+    * **A domino with one spot left** must go there.
+    * **Each domino is used once.** A domino here that would force a second copy of itself somewhere else can't go here.
+    * **Every remaining spot overlaps.** If another domino's spot overlaps every spot left for some domino, putting a domino there would leave that one nowhere to go, so the spot is ruled out. The spots left need not share a square for one spot to overlap them all.
+    * On harder boards, **odd regions**: a domino that would cut the empty squares into regions with an odd number of squares can't go there, because dominoes can't fill them.
+
+    On an Unreasonable board the hint may stop and say that nothing further follows by deduction.

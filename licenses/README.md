@@ -15,7 +15,7 @@ of upstream contributors that [`../LICENSE.md`](../LICENSE.md) and
 
 Covers: every game and engine module ported from upstream C into `../src/games/`
 and `../src/engine/`, and the per-puzzle help text adopted from upstream's
-overview pages into `../help/games/`.
+overview pages into each game's description, `../src/games/<id>/<id>.description.yaml`.
 
 - Upstream: <https://www.chiark.greenend.org.uk/~sgtatham/puzzles/>
 

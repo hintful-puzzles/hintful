@@ -1,0 +1,50 @@
+# yaml-language-server: $schema=../../describe/description.schema.json
+
+game: slide
+help:
+  rules: |-
+    Slide the blocks to move the blue key block to the green exit area.
+    Blocks can slide up, down, left or right into empty spaces.
+    Only the key block can slide into the exit gate.
+  controls: |-
+    Use the mouse or a finger to drag the blocks around. A block follows the
+    pointer and settles on the nearest space it can actually reach, so you can
+    aim roughly and let it snap.
+
+    You can also play entirely from the keyboard. The arrow keys move a red
+    cursor around the board. Press Enter or Space on a block to pick it up: it
+    lights up, and the arrow keys then walk it one square at a time through the
+    spaces it can reach, refusing any step it cannot make. Press Enter or Space
+    again to put it down, or Escape, Backspace or Delete to hand it back to where you found it.
+
+    However far a block travels in one journey, by drag or by keyboard, it
+    counts as a single move — and sliding it straight back where it came from
+    takes that move off again.
+  sections:
+    - heading: Generating a puzzle
+      body: |-
+        Generating a new puzzle takes a moment, and longer on the larger sizes —
+        the generator solves the board from scratch after every change it makes,
+        to be sure the puzzle it hands you is still solvable.
+  hints: |-
+    **Hint** shows the next move rather than making it. No move in Slide is
+    forced: every move leaves a board that can still be finished, only in more
+    moves or fewer. So the hint finds a shortest way to get the key block out
+    and shows it to you a few moves at a time, each one with what it is for.
+
+    {{hint-marks}}
+
+    Most of Slide is getting other blocks out of the way. The key block can
+    only move once there is room, and making room for it usually means moving
+    a block that is itself stuck until a third one moves. The hint shows that
+    errand one move at a time, starting from the far end: each move makes room
+    for the outlined block, and that block is the next one to move. When the
+    key block has room, the hint moves it and tells you how few moves it can
+    now be out in. Now and then the room a move makes is for a block that moves
+    a little later, or a block stops part way and moves on once there is room.
+
+    Every move the hint shows is on a shortest way out. Play some moves of your
+    own and ask again at any point: the hint finds a way from wherever you are.
+    The search has a limit, which no board as dealt comes near; if a position
+    were ever past it, the hint would say so, and *Show solution…* would finish
+    from the board as it was dealt.

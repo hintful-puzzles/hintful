@@ -19,7 +19,7 @@
  * other project: the lineage is credited in the About dialog and the help
  * pages on the collection's origin, and the unsupported-browser page links to
  * the predecessors as other places to play. Every player-facing sentence
- * outside `help/games/` is this project's own writing; those pages keep
+ * outside the per-game help pages is this project's own writing; those pages keep
  * upstream's wording on purpose. The logo (`public/favicon.svg`) is this project's own
  * drawing, and no third-party logo ships.
  *

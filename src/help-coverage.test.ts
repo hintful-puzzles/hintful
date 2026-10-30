@@ -1,6 +1,7 @@
 /*
- * The catalog and `help/games/` are two lists of games, and they must be the
- * same list — asserted in **both** directions, like `catalog-registry.test.ts`.
+ * The catalog and the games' descriptions that carry help are two lists of
+ * games, and they must be the same list — asserted in **both** directions,
+ * like `catalog-registry.test.ts`.
  *
  * Written because its absence hid a real gap. Until `retire-the-upstream-help-tree`
  * the per-puzzle help came from two sources in two formats — 43 upstream HTML
@@ -18,6 +19,15 @@
 
 import ts from "typescript";
 import { beforeAll, describe, expect, it } from "vitest";
+import { renderHelpPage } from "./describe/help-page.ts";
+import {
+  gameDescriptions,
+  gameHelp,
+  helpPage,
+  helpProse,
+} from "./describe/help-pages.ts";
+import { loadDescriptionFile } from "./describe/load.ts";
+import { descriptionPath } from "./describe/paths.ts";
 import { MARK_ALL_HELP, MARK_ALL_PLACEHOLDER } from "./engine/candidate-hint.ts";
 import { TWO_NAMES } from "./engine/color/colors.ts";
 import { difficultyChoiceItem, difficultyTiers } from "./engine/difficulty.ts";
@@ -43,7 +53,7 @@ import { puzzleDataMap, puzzleIds } from "./puzzle/catalog.ts";
 
 beforeAll(registerAllGames);
 
-const helpPages = import.meta.glob<string>("../help/games/*.md", {
+const skeletons = import.meta.glob<string>("./skeleton/*/skeleton.description.yaml", {
   query: "?raw",
   import: "default",
   eager: true,
@@ -56,95 +66,71 @@ const puzzlesPage = import.meta.glob<string>("../help/puzzles.md", {
   eager: true,
 })["../help/puzzles.md"];
 
-const pageIds = Object.keys(helpPages).map(
-  (path) => /([^/]+)\.md$/.exec(path)?.[1] ?? path,
-);
-
 describe("help page coverage", () => {
+  // A description that carries help is a cataloged game's, at its path; the
+  // skeletons' are the copies `scripts/new-game.sh` stamps.
+  const helped = [...gameDescriptions]
+    .filter(([path, text]) => "help" in loadDescriptionFile(text, path))
+    .map(([path]) => path);
+
   it("has a help page for every cataloged puzzle", () => {
-    const known = new Set(pageIds);
-    const missing = puzzleIds.filter((id) => !known.has(id));
-    expect(missing, "add help/games/<puzzleId>.md for each").toEqual([]);
+    const missing = puzzleIds.filter((id) => !helped.includes(descriptionPath(id)));
+    expect(missing, "add help to src/games/<id>/<id>.description.yaml").toEqual([]);
   });
 
   it("has no help page for an uncataloged game", () => {
-    const known = new Set<string>(puzzleIds);
-    const orphaned = pageIds.filter((id) => !known.has(id));
-    expect(orphaned, "help/games/<id>.md names no cataloged game").toEqual([]);
+    const known = new Set<string>(puzzleIds.map(descriptionPath));
+    const orphaned = helped.filter((path) => !known.has(path));
+    expect(orphaned, "a description carrying help names no cataloged game").toEqual([]);
   });
 
-  it("is not vacuous — the glob found the pages", () => {
-    expect(pageIds.length).toBeGreaterThan(50);
+  it("is not vacuous — the globs found the pages", () => {
+    expect(helped.length).toBeGreaterThan(50);
+    expect(Object.keys(skeletons).length).toBeGreaterThan(1);
+  });
+
+  it.each(
+    Object.entries(skeletons),
+  )("the %s skeleton's page renders, as the copy's will", (path, text) => {
+    const file = loadDescriptionFile(text, path);
+    if (!("help" in file) || file.help === undefined)
+      throw new Error(`${path}: no help`);
+    const facts = {
+      name: "Skeleton",
+      rulesets: false,
+      parameters: PARAMETERS_PLACEHOLDER,
+    };
+    expect(renderHelpPage(file.help, facts, path)).toContain("## Hints");
   });
 });
 
 describe("every game's page has the one skeleton", () => {
-  // The rules, unheaded; `## Controls`; any sections of the game's own; then
-  // `## Hints` when the game has a hint, and `## <Name> parameters` last. Every
-  // part of that is read off the game, never off a list: `hint()` decides the
-  // Hints section and `paramConfig` decides what the parameters section names.
+  // The renderer writes the skeleton (`describe/help-page.ts`): the order of
+  // the sections, their headings, the origins heading's number and the
+  // parameters placeholder. What a page owes is read off the game, never off a
+  // list: `hint()` decides the Hints section.
   //
   // A hint's sentence names its marks ("the striped and outlined regions", "the
   // ringed dot"), and a player who was never told what they mean has to decode
   // them on the spot, which is what the Hints section is for. For a game whose
   // hint declares `hintMarks`, the list of marks is generated from it (the
   // placeholder check below). For the rest, the check is PRESENCE, NOT
-  // CONTENT: a heading proves a section exists and nothing about whether it
+  // CONTENT: a field proves a section exists and nothing about whether it
   // teaches the marks.
-  //
-  // The parameters section is generated from `paramConfig`
-  // (`vite-plugins/parameters.ts`), so a page owes only the placeholder;
-  // `engine/params-declared.test.ts` holds each field's doc to naming its
-  // modes, which is where Unequal's Adjacent went unexplained.
   const hinted = new Set(HINT_GAMES.map(([id]) => id));
-
-  function sections(page: string): string[] {
-    return [...page.matchAll(/^## (.+)$/gm)].map((m) => m[1].trim());
-  }
-
-  function sectionBody(page: string, heading: string): string {
-    const at = page.indexOf(`\n## ${heading}\n`);
-    if (at < 0) return "";
-    const rest = page.slice(at + 1);
-    const next = rest.indexOf("\n## ", 1);
-    return next < 0 ? rest : rest.slice(0, next);
-  }
 
   it("is not vacuous — the registry offered hinted games", () => {
     expect(hinted.size).toBeGreaterThan(30);
   });
 
-  it.each(puzzleIds)("%s: has its sections, in order", (id) => {
-    const page = helpPages[`../help/games/${id}.md`] ?? "";
-    const name = puzzleDataMap[id].name;
-    const have = sections(page);
-    const where = (h: string) => have.indexOf(h);
-    const params = `${name} parameters`;
-
-    expect(where("Controls"), `help/games/${id}.md has no "## Controls"`).toBe(0);
-    if (hinted.has(id))
-      expect(where("Hints"), `${id} has a hint, and no "## Hints"`).toBeGreaterThan(0);
-    else expect(where("Hints"), `${id} has no hint, but a "## Hints"`).toBe(-1);
-    expect(have.at(-1), `the last section is "## ${params}"`).toBe(params);
-    expect(have.filter((h) => h === params)).toHaveLength(1);
-    if (hinted.has(id)) expect(where("Hints")).toBe(have.length - 2);
+  it.each(puzzleIds)("%s: has a Hints section iff it has a hint", (id) => {
+    expect(gameHelp(id).hints !== undefined, descriptionPath(id)).toBe(hinted.has(id));
   });
 
   // Who invented a puzzle, what else it is called and where more of it is to
   // be found is a credit worth keeping, and nothing a reader needs on the way
-  // from the rules to the controls. A page that has one gives it a section of
-  // its own, after the game's own sections and before Hints. A game with
-  // rulesets is several puzzles, and its heading says so.
-  const ORIGINS = /^Where the puzzles? comes? from$/;
-
-  function originsHeading(id: string): string {
-    const game = getTsGame(id);
-    if (!game) throw new Error(`${id} is not registered`);
-    return rulesetField(game) === null
-      ? "Where the puzzle comes from"
-      : "Where the puzzles come from";
-  }
-
+  // from the rules to the controls, so it is the description's `origins`.
+  //
   // A credit is told from a rule by its WORDS, which is the only way a test
   // can tell one: these are the words every credit on these pages used when
   // they were moved (2026-10-07). It is a floor. A credit written in other
@@ -154,24 +140,12 @@ describe("every game's page has the one skeleton", () => {
   let credited = 0;
 
   it.each(puzzleIds)("%s: its origins are in their own section", (id) => {
-    const page = helpPages[`../help/games/${id}.md`] ?? "";
-    const have = sections(page);
-    const heading = originsHeading(id);
-    const found = have.filter((h) => ORIGINS.test(h));
-    const body = sectionBody(page, heading);
-    if (CREDIT.test(body)) credited++;
-
-    if (found.length > 0) {
-      expect(found, `help/games/${id}.md`).toEqual([heading]);
-      expect(
-        have.indexOf(heading),
-        `"## ${heading}" comes after the game's own sections, before Hints`,
-      ).toBe(have.length - (hinted.has(id) ? 3 : 2));
-    }
-    const credit = CREDIT.exec(page.replace(body, ""));
+    const { origins = "" } = gameHelp(id);
+    if (CREDIT.test(origins)) credited++;
+    const credit = CREDIT.exec(helpProse(id).replace(origins, ""));
     expect(
       credit?.[0],
-      `help/games/${id}.md credits its puzzle outside "## ${heading}"`,
+      `${descriptionPath(id)} credits its puzzle outside its origins`,
     ).toBeUndefined();
   });
 
@@ -184,9 +158,10 @@ describe("every game's page has the one skeleton", () => {
   // placeholder the build fills, and no other page does. The build refuses both
   // mismatches too; this says so before a ten-minute gate reaches `vite build`.
   it.each(puzzleIds)("%s: carries the list-of-marks placeholder iff bound", (id) => {
-    const page = helpPages[`../help/games/${id}.md`] ?? "";
     const bound = getTsGame(id)?.hintMarks !== undefined;
-    expect(page.includes(HINT_MARKS_PLACEHOLDER), `help/games/${id}.md`).toBe(bound);
+    expect(helpPage(id).includes(HINT_MARKS_PLACEHOLDER), descriptionPath(id)).toBe(
+      bound,
+    );
   });
 
   // A game whose hint can be a wing says what one is in its Hints section, in
@@ -196,10 +171,10 @@ describe("every game's page has the one skeleton", () => {
   it.each(
     puzzleIds,
   )("%s: carries the wing placeholder iff its hint can be one", (id) => {
-    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    const page = helpPage(id);
     const owed = getTsGame(id)?.hintRungs?.includes("wing") ?? false;
     const count = (text: string) => text.match(WING_PLACEHOLDER)?.length ?? 0;
-    expect(count(sectionBody(page, "Hints")), `help/games/${id}.md`).toBe(owed ? 1 : 0);
+    expect(count(gameHelp(id).hints ?? ""), descriptionPath(id)).toBe(owed ? 1 : 0);
     expect(count(page)).toBe(owed ? 1 : 0);
     if (owed) wingPages++;
   });
@@ -214,12 +189,12 @@ describe("every game's page has the one skeleton", () => {
   // leave behind.
   let pairPages = 0;
   it.each(puzzleIds)("%s: a page naming the pair types neither name", (id) => {
-    const page = helpPages[`../help/games/${id}.md`] ?? "";
-    expect(() => expandPair(page), `help/games/${id}.md`).not.toThrow();
+    const page = helpPage(id);
+    expect(() => expandPair(page), `${descriptionPath(id)}`).not.toThrow();
     if (expandPair(page) === page) return;
     pairPages++;
     for (const name of TWO_NAMES)
-      expect(page.toLowerCase(), `help/games/${id}.md`).not.toContain(name.only);
+      expect(page.toLowerCase(), `${descriptionPath(id)}`).not.toContain(name.only);
   });
 
   itOverWholeSweep("is not vacuous — some page names the pair", () => {
@@ -232,20 +207,22 @@ describe("every game's page has the one skeleton", () => {
   // renders and leads nowhere.
   const linked = [MARK_ALL_HELP];
   it.each(puzzleIds)("%s: a link out of the help names a game", (id) => {
-    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    const page = helpPage(id);
     for (const source of [page, ...linked])
       for (const [, target] of source.matchAll(/\]\(\.\.\/([^)#]*)/g))
-        expect(puzzleIds, `help/games/${id}.md links ../${target}`).toContain(target);
+        expect(puzzleIds, `${descriptionPath(id)} links ../${target}`).toContain(
+          target,
+        );
   });
 
   // A game declaring `targetVerbs` has its Controls paragraph generated
   // (`vite-plugins/controls.ts`), inside its Controls section, and no other page
   // carries the placeholder. The build refuses both mismatches too.
   it.each(puzzleIds)("%s: carries the controls placeholder iff it has verbs", (id) => {
-    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    const page = helpPage(id);
     const declares = getTsGame(id)?.targetVerbs !== undefined;
-    const controls = sectionBody(page, "Controls");
-    expect(controls.includes(CONTROLS_PLACEHOLDER), `help/games/${id}.md`).toBe(
+    const { controls } = gameHelp(id);
+    expect(controls.includes(CONTROLS_PLACEHOLDER), `${descriptionPath(id)}`).toBe(
       declares,
     );
     expect(page.split(CONTROLS_PLACEHOLDER).length - 1).toBe(declares ? 1 : 0);
@@ -270,10 +247,10 @@ describe("every game's page has the one skeleton", () => {
   ];
   let noteSentencePages = 0;
   it.each(puzzleIds)("%s: carries each note-taking sentence iff it is owed", (id) => {
-    const page = helpPages[`../help/games/${id}.md`] ?? "";
-    const controls = sectionBody(page, "Controls");
+    const page = helpPage(id);
+    const { controls } = gameHelp(id);
     for (const { placeholder, owed } of noteSentences) {
-      const where = `help/games/${id}.md, ${placeholder}`;
+      const where = `${descriptionPath(id)}, ${placeholder}`;
       expect(controls.includes(placeholder), where).toBe(owed(id));
       expect(page.split(placeholder).length - 1, where).toBe(owed(id) ? 1 : 0);
       if (owed(id)) noteSentencePages++;
@@ -284,32 +261,19 @@ describe("every game's page has the one skeleton", () => {
     expect(noteSentencePages).toBeGreaterThanOrEqual(2);
   });
 
-  // The build refuses a page without it too; this says so before a ten-minute
-  // gate reaches `vite build`.
-  it.each(puzzleIds)("%s: its parameters section carries the generated list", (id) => {
-    const name = puzzleDataMap[id].name;
-    const section = sectionBody(
-      helpPages[`../help/games/${id}.md`] ?? "",
-      `${name} parameters`,
-    );
-    expect(section.split(PARAMETERS_PLACEHOLDER), `help/games/${id}.md`).toHaveLength(
-      2,
-    );
-  });
-
   // A game with rulesets has its list of them generated from the declaration
   // (`engine/ruleset.ts`), in the unheaded rules at the top of its page, and no
   // other page carries the placeholder. The build refuses both mismatches too.
   let withRulesets = 0;
 
   it.each(puzzleIds)("%s: carries the rulesets placeholder iff it has them", (id) => {
-    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    const page = helpPage(id);
     const game = getTsGame(id);
     if (!game) throw new Error(`${id} is not registered`);
     const declares = rulesetField(game) !== null;
     if (declares) withRulesets++;
-    const rules = page.slice(0, page.indexOf("\n## "));
-    expect(rules.split(RULESETS_PLACEHOLDER).length - 1, `help/games/${id}.md`).toBe(
+    const { rules } = gameHelp(id);
+    expect(rules.split(RULESETS_PLACEHOLDER).length - 1, `${descriptionPath(id)}`).toBe(
       declares ? 1 : 0,
     );
     expect(page.split(RULESETS_PLACEHOLDER).length - 1).toBe(declares ? 1 : 0);
@@ -324,15 +288,16 @@ describe("every game's page has the one skeleton", () => {
   let withModifiers = 0;
 
   it.each(puzzleIds)("%s: carries the modifiers placeholder iff it has them", (id) => {
-    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    const page = helpPage(id);
     const game = getTsGame(id);
     if (!game) throw new Error(`${id} is not registered`);
     const declares = modifiersOf(game).length > 0;
     if (declares) withModifiers++;
-    const rules = page.slice(0, page.indexOf("\n## "));
-    expect(rules.split(MODIFIERS_PLACEHOLDER).length - 1, `help/games/${id}.md`).toBe(
-      declares ? 1 : 0,
-    );
+    const { rules } = gameHelp(id);
+    expect(
+      rules.split(MODIFIERS_PLACEHOLDER).length - 1,
+      `${descriptionPath(id)}`,
+    ).toBe(declares ? 1 : 0);
     expect(page.split(MODIFIERS_PLACEHOLDER).length - 1).toBe(declares ? 1 : 0);
   });
 
@@ -350,11 +315,11 @@ describe("every game's page has the one skeleton", () => {
   let expanded = 0;
 
   it.each(puzzleIds)("%s: names a field's choice through the placeholder", (id) => {
-    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    const page = helpPage(id);
     const game = getTsGame(id);
     if (!game) throw new Error(`${id} is not registered`);
     const config = game.paramConfig ?? [];
-    expect(() => expandChoices(config, page), `help/games/${id}.md`).not.toThrow();
+    expect(() => expandChoices(config, page), `${descriptionPath(id)}`).not.toThrow();
     expanded += page.split("{{choice:").length - 1;
 
     const tiers = difficultyChoiceItem(game);
@@ -369,7 +334,7 @@ describe("every game's page has the one skeleton", () => {
           typed.push(`"${name}" is {{choice:${item.kw}:${index}}}`);
       });
     }
-    expect(typed, `help/games/${id}.md types a choice's name`).toEqual([]);
+    expect(typed, `${descriptionPath(id)} types a choice's name`).toEqual([]);
   });
 
   itOverWholeSweep("is not vacuous — choices were read, and pages name some", () => {
@@ -420,11 +385,11 @@ describe("a help page introduces the puzzle, not its implementation", () => {
   // a trap that fires on those would be turned off rather than fixed.
   const STATUS_LABEL = /^(?:#{1,6}\s*status\b|\*\*status:?\*\*)/im;
 
-  it.each(Object.entries(helpPages))("%s", (path, source) => {
-    const match = STATUS_LABEL.exec(source);
+  it.each(puzzleIds)("%s", (id) => {
+    const match = STATUS_LABEL.exec(helpPage(id));
     expect(
       match?.[0],
-      `${path} carries a development-status note. Help pages describe how to play.`,
+      `${descriptionPath(id)} carries a development-status note. Help pages describe how to play.`,
     ).toBeUndefined();
   });
 });
@@ -470,12 +435,18 @@ const featuresPage = import.meta.glob<string>("../help/features.md", {
   eager: true,
 })["../help/features.md"];
 
-/** Every markdown page the app serves, site-level and per-game alike. */
-const allHelpPages = import.meta.glob<string>("../help/**/*.md", {
-  query: "?raw",
-  import: "default",
-  eager: true,
-});
+/** The words of every page the app serves: the site-level pages, and each
+ * game's description. */
+const allHelpPages = [
+  ...Object.values(
+    import.meta.glob<string>("../help/*.md", {
+      query: "?raw",
+      import: "default",
+      eager: true,
+    }),
+  ),
+  ...gameDescriptions.values(),
+];
 
 /** The app's icon map as text — the naming convention a help glyph follows.
  * (It is not the *resolution* path: see "the help's glyphs are a closed set".) */
@@ -762,14 +733,14 @@ describe("the help's glyphs are a closed set", () => {
    */
   const used = [
     ...new Set(
-      Object.values(allHelpPages).flatMap((page) =>
+      allHelpPages.flatMap((page) =>
         [...page.matchAll(/::([a-z0-9-]+)(?:\|[^:]*)?::/g)].map((m) => m[1]),
       ),
     ),
   ].sort();
 
   it("is not vacuous — the pages were read and the glyph pattern matched", () => {
-    expect(Object.keys(allHelpPages).length).toBeGreaterThan(50);
+    expect(allHelpPages.length).toBeGreaterThan(50);
     expect(used.length).toBeGreaterThan(10);
   });
 

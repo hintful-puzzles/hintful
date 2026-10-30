@@ -1,0 +1,86 @@
+# yaml-language-server: $schema=../describe/description.schema.json
+
+# The Latin engine's techniques, stated once over the names every Latin space
+# has: cells, units, rows, cols, peers(c) and domain. A game places each at its
+# own tier with `use`. `npm run describe` compiles them to latin.compiled.ts,
+# which latin.ts runs. Each is stated to scan the board in the order the engine
+# always has, because a hint narrates the first firing found: the binders are
+# enumerated in the order written, and subsets(S) counts in binary with S's
+# last member as the lowest bit.
+library: latin
+techniques:
+  # A placed value leaves its peers, its column's first and then its row's. The
+  # engine runs it as each value is placed, one firing a placement.
+  placed:
+    on: place
+    for: "c in cells where known(c)"
+    conclude: >-
+      (forall p in cells(col(c)) where p != c: strike(p, value(c)))
+      and (forall p in cells(row(c)) where p != c: strike(p, value(c)))
+
+  # A value with one place left in a unit goes there, the rows before the
+  # columns. With no place left, the marks are inconsistent.
+  hiddenSingle:
+    for: >-
+      u in units,
+      placed = set(value(c) over c in cells(u) where known(c)),
+      d in domain - placed,
+      n = count(c in cells(u) where d in cand(c)) where n < 2
+    conclude: "n = 1 and place(the(c in cells(u) where d in cand(c)), d)"
+
+  # A cell down to one candidate holds it, column by column. A cell with none
+  # left makes the marks inconsistent.
+  single:
+    for: "L in cols, c in cells(L) where not known(c) and |cand(c)| < 2"
+    conclude: "|cand(c)| = 1 and place(c, first(cand(c)))"
+
+  # Within a unit, the open cells that avoid a set T of its unplaced values V
+  # are as many as the values left besides, V - T, so they hold those values
+  # and the unit's other open cells cannot: a naked set, and T the hidden set
+  # beside it. More cells than values is a contradiction. The empty T comes
+  # first, and on it the unit is checked for a cell, placed or open, with no
+  # candidate left, which a clue's strike can leave and nothing else would
+  # notice.
+  set:
+    for: >-
+      u in units,
+      V = domain - set(value(c) over c in cells(u) where known(c)),
+      open = {c in cells(u) where not known(c)},
+      T in subsets(V) where |T| = 0 or (2 <= |T| and |T| <= |V| - 2),
+      S = {c in open where not (exists d in T: d in cand(c))} where |S| >= |V| - |T|
+    conclude: >-
+      (|T| > 0 or (forall c in cells(u): |cand(c)| > 0))
+      and |S| = |V| - |T|
+      and (forall c in open where c not in S, d in V - T where d in cand(c): strike(c, d))
+
+  # One value d: the columns lacking it that have no place for it in a set T of
+  # the rows lacking it are as many as those rows' others, Y0 - T, so they hold
+  # d in those rows, and the other columns cannot (X-wing, swordfish). More
+  # columns than rows is a contradiction. The empty T comes first, and on it
+  # every column is checked for a place left for d. Rows are named by their
+  # index, y, so a set of them is a set of numbers.
+  fish:
+    for: >-
+      d in domain,
+      X0 = {L in cols where not (exists c in cells(L): value(c) = d)},
+      Y0 = range(0, h - 1) - set(y(c) over c in cells where value(c) = d),
+      T in subsets(Y0) where |T| = 0 or (2 <= |T| and |T| <= |X0| - 2),
+      X = {L in X0 where not (exists c in cells(L): y(c) in T and d in cand(c))} where |X| >= |X0| - |T|
+    conclude: >-
+      (|T| > 0 or (forall L in cols: exists c in cells(L): d in cand(c)))
+      and |X| = |X0| - |T|
+      and (forall L in X0 - X, c in cells(L) where y(c) in Y0 - T and d in cand(c): strike(c, d))
+
+  # engine/wing.ts: for each value a of an open middle cell m but x, an end that
+  # sees m and is down to a and x; a cell t seeing every end, and m too where m
+  # could be x, cannot be x (XY-wing, XYZ-wing). Each t is reached from an end
+  # of m's least other value, and each end is the first of its kind that sees t.
+  wing:
+    for: >-
+      m in cells where not known(m),
+      x in domain,
+      R = cand(m) - {x} where |R| >= 1 and (forall a in R: exists k in peers(m): not known(k) and cand(k) = {a, x}),
+      k0 in peers(m) where not known(k0) and cand(k0) = {min(a in R), x},
+      t in peers(k0) where t != m and not known(t) and x in cand(t) and (x not in cand(m) or t in peers(m)) and (forall a in R: exists k in peers(m): not known(k) and cand(k) = {a, x} and k != t and k in peers(t)),
+      E = set(first({k in peers(m) where not known(k) and cand(k) = {a, x} and k != t and k in peers(t)}) over a in R)
+    conclude: "strike(t, x)"

@@ -11,7 +11,7 @@
  * **Derived where a source exists.** Five games' help pages state an
  * alternative name outright — "This puzzle is best known as *Battleships*" —
  * and those are not a matter of opinion. The scan below pulls every
- * `known as *X*` / `implementation of *X*` from `help/games/`, and requires the
+ * `known as *X*` / `implementation of *X*` from the help pages, and requires the
  * catalog to carry it. A name the project has already published and cannot be
  * searched for is the specific gap that would otherwise reopen quietly, one
  * help-page edit at a time.
@@ -23,14 +23,9 @@
  * (which would make a search for it ambiguous in a way a player cannot see).
  */
 import { describe, expect, it } from "vitest";
+import { gameDescriptions, helpProse } from "../describe/help-pages.ts";
 import { puzzleDataMap, puzzleIds } from "./catalog.ts";
 import { matchesQuery } from "./catalog-search.ts";
-
-const helpPages = import.meta.glob<string>("../../help/games/*.md", {
-  query: "?raw",
-  import: "default",
-  eager: true,
-});
 
 /**
  * Alternative names a help page states, per puzzle id.
@@ -45,9 +40,8 @@ function statedInHelp(): Map<string, string[]> {
   const out = new Map<string, string[]>();
   const PHRASES =
     /(?:\bknown as|\bimplementation of|\bnon-trademarked name)\s+\*([^*]+)\*/gi;
-  for (const [path, text] of Object.entries(helpPages)) {
-    const puzzleId = path.split("/").pop()?.replace(/\.md$/, "") ?? "";
-    const names = [...text.matchAll(PHRASES)].map((m) => m[1].trim());
+  for (const puzzleId of puzzleIds) {
+    const names = [...helpProse(puzzleId).matchAll(PHRASES)].map((m) => m[1].trim());
     if (names.length > 0) out.set(puzzleId, names);
   }
   return out;
@@ -61,7 +55,7 @@ describe("catalog aliases", () => {
   it("reads the help pages and finds names in them", () => {
     // Both floors are vacuity guards: a broken glob or a phrasing that stopped
     // matching would make the derivation below assert nothing at all.
-    expect(Object.keys(helpPages).length).toBeGreaterThan(50);
+    expect(gameDescriptions.size).toBeGreaterThan(50);
     expect(stated.size).toBeGreaterThan(3);
   });
 

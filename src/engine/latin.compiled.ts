@@ -1,4 +1,4 @@
-// Compiled by `npm run describe` from src/engine/latin.description.json: edit that, not this.
+// Compiled by `npm run describe` from src/engine/latin.description.yaml: edit that, not this.
 
 import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, least, minus, popcount, rangeMask, valuesOf } from "./describe-runtime.ts";
 

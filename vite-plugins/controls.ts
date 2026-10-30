@@ -9,7 +9,8 @@
  * without the placeholder, or another game's page with one, fails the build.
  */
 
-import path from "node:path";
+import { descriptionPath } from "../src/describe/paths.ts";
+import { pageGame } from "./description-page.ts";
 import type { Transform } from "./extra-pages.ts";
 import { type GameCode, gameCode } from "./game-code.ts";
 
@@ -20,18 +21,18 @@ function expandControls(code: GameCode, id: string, source: string): string {
   const has = source.includes(CONTROLS_PLACEHOLDER);
   if (verbs && !has)
     throw new Error(
-      `help/games/${id}.md: the game declares targetVerbs, so its Controls section writes ${CONTROLS_PLACEHOLDER} where the generated paragraph goes`,
+      `${descriptionPath(id)}: the game declares targetVerbs, so its Controls section writes ${CONTROLS_PLACEHOLDER} where the generated paragraph goes`,
     );
   if (!verbs && has)
     throw new Error(
-      `help/games/${id}.md: ${CONTROLS_PLACEHOLDER} needs the game to declare targetVerbs`,
+      `${descriptionPath(id)}: ${CONTROLS_PLACEHOLDER} needs the game to declare targetVerbs`,
     );
   return verbs ? source.replace(CONTROLS_PLACEHOLDER, controlsMarkdown(verbs)) : source;
 }
 
 /** The transform: the page's game is its file's name. */
 export const withControls: Transform = async (data, addWatchFile) => {
-  const id = path.basename(String(data.sourceFile ?? ""), ".md");
+  const id = pageGame(data);
   const code = await gameCode(addWatchFile);
   return { ...data, source: expandControls(code, id, String(data.source ?? "")) };
 };

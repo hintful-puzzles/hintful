@@ -16,7 +16,8 @@
  * placeholder fails the build.
  */
 
-import path from "node:path";
+import { descriptionPath } from "../src/describe/paths.ts";
+import { pageGame } from "./description-page.ts";
 import type { Transform } from "./extra-pages.ts";
 import { type GameCode, gameCode } from "./game-code.ts";
 
@@ -36,8 +37,8 @@ function withList(
   if (written !== (list ? 1 : 0))
     throw new Error(
       list
-        ? `help/games/${id}.md: the game declares ${what}, so its rules write ${placeholder} once, where their list goes`
-        : `help/games/${id}.md: ${placeholder} needs the game to declare ${what}`,
+        ? `${descriptionPath(id)}: the game declares ${what}, so its rules write ${placeholder} once, where their list goes`
+        : `${descriptionPath(id)}: ${placeholder} needs the game to declare ${what}`,
     );
   return list ? source.replace(placeholder, list) : source;
 }
@@ -57,10 +58,10 @@ function expandParameters(code: GameCode, id: string, source: string): string {
     rulesetsMarkdown,
   } = code;
   const game = getTsGame(id);
-  if (!game) throw new Error(`help/games/${id}.md: no registered game "${id}"`);
+  if (!game) throw new Error(`${descriptionPath(id)}: no registered game "${id}"`);
   if (!source.includes(PARAMETERS_PLACEHOLDER))
     throw new Error(
-      `help/games/${id}.md: its parameters section writes ${PARAMETERS_PLACEHOLDER} where the generated list goes`,
+      `${descriptionPath(id)}: its parameters section writes ${PARAMETERS_PLACEHOLDER} where the generated list goes`,
     );
   const config = game.paramConfig ?? [];
   const rulesets = rulesetField(game)?.rulesets ?? [];
@@ -78,13 +79,13 @@ function expandParameters(code: GameCode, id: string, source: string): string {
       parametersMarkdown(config),
     );
   } catch (e) {
-    throw new Error(`help/games/${id}.md: ${e instanceof Error ? e.message : e}`);
+    throw new Error(`${descriptionPath(id)}: ${e instanceof Error ? e.message : e}`);
   }
 }
 
 /** The transform: the page's game is its file's name. */
 export const withParameters: Transform = async (data, addWatchFile) => {
-  const id = path.basename(String(data.sourceFile ?? ""), ".md");
+  const id = pageGame(data);
   const code = await gameCode(addWatchFile);
   return { ...data, source: expandParameters(code, id, String(data.source ?? "")) };
 };

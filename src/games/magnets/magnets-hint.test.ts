@@ -546,7 +546,7 @@ describe("magnets hint sentences", () => {
     expect(all.filter((s) => /\btiles?\b/.test(s)).length).toBeGreaterThan(20);
     for (const s of all) expect(s, s).not.toMatch(/domino/i);
     const help = Object.values(
-      import.meta.glob<string>("../../../help/games/magnets.md", {
+      import.meta.glob<string>("./magnets.description.yaml", {
         query: "?raw",
         import: "default",
         eager: true,

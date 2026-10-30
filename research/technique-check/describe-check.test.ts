@@ -8,11 +8,12 @@ import { fileURLToPath } from "node:url";
 import { globSync } from "tinyglobby";
 import { expect, it } from "vitest";
 import {
-  type DescriptionJson,
-  type LibraryJson,
+  isFormal,
+  isLibrary,
   loadDescription,
   type Technique,
 } from "../../src/describe/description.ts";
+import { loadDescriptionFile } from "../../src/describe/load.ts";
 import {
   CHECKED_ORDERS,
   gameFingerprint,
@@ -105,34 +106,32 @@ async function checkAll(
 it("the techniques the app compiles are sound, and each planted defect is not", async () => {
   const bad: string[] = [];
   const verdicts: Record<string, string> = {};
-  const sources = globSync("src/**/*.description.json", { cwd: ROOT }).sort();
-  const jsons = new Map(
-    sources.map((s) => [s, JSON.parse(readFileSync(`${ROOT}${s}`, "utf8"))]),
+  const sources = globSync("src/**/*.description.yaml", { cwd: ROOT }).sort();
+  const files = new Map(
+    sources.map((s) => [
+      s,
+      loadDescriptionFile(readFileSync(`${ROOT}${s}`, "utf8"), s),
+    ]),
   );
-  const libraries = [...jsons.values()].filter((j): j is LibraryJson => "library" in j);
-  for (const [source, json] of jsons) {
-    if ("library" in json) {
-      const library = libraryDescription(json as LibraryJson);
-      const failed = await checkAll(json.library, library.d, library.techniques);
+  const libraries = [...files.values()].filter(isLibrary);
+  for (const [source, file] of files) {
+    if (isLibrary(file)) {
+      const library = libraryDescription(file);
+      const failed = await checkAll(file.library, library.d, library.techniques);
       bad.push(...failed);
-      for (const id of Object.keys((json as LibraryJson).techniques))
+      for (const id of Object.keys(file.techniques))
         if (!failed.some((f) => f.startsWith(`${id} `)))
-          verdicts[soundnessKey(source, id)] = libraryFingerprint(
-            json as LibraryJson,
-            id,
-          );
+          verdicts[soundnessKey(source, id)] = libraryFingerprint(file, id);
       continue;
     }
-    const d = loadDescription(json as DescriptionJson, libraries);
+    if (!isFormal(file) || file.techniques === undefined) continue;
+    const d = loadDescription(file, libraries);
     const own = d.techniques.filter((t) => !t.id.includes("."));
-    const failed = await checkAll((json as DescriptionJson).game, d, own);
+    const failed = await checkAll(file.game, d, own);
     bad.push(...failed);
-    for (const stated of (json as DescriptionJson).techniques ?? [])
+    for (const stated of file.techniques)
       if (!("use" in stated) && !failed.some((f) => f.startsWith(`${stated.id} `)))
-        verdicts[soundnessKey(source, stated.id)] = gameFingerprint(
-          json as DescriptionJson,
-          stated,
-        );
+        verdicts[soundnessKey(source, stated.id)] = gameFingerprint(file, stated);
   }
   writeFileSync(
     fileURLToPath(new URL("results-describe.txt", import.meta.url)),

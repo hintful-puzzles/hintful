@@ -877,7 +877,7 @@ function libraryRung<B>(
 
 const cellAt = (o: number) => (c: number) => ({ x: c % o, y: (c / o) | 0 });
 
-/** The library's techniques (`latin.description.json`) as rungs, by the id a
+/** The library's techniques (`latin.description.yaml`) as rungs, by the id a
  * description places them with. */
 export const LATIN_RUNGS = {
   "latin.hiddenSingle": libraryRung(

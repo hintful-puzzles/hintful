@@ -328,8 +328,8 @@ function pushLines(change: Change, graph: Graph): string[] {
   return leavesOut(commitLines(change, graph), push) ? push : ["NOTHING"];
 }
 
-/** The paths that are one game's, tracked or not: its directory, its help
- * page and its icons. */
+/** The paths that are one game's, tracked or not: its directory, its
+ * description and help page among them, and its icons. */
 function gamePaths(id: string): string[] {
   return git([
     "ls-files",
@@ -338,7 +338,6 @@ function gamePaths(id: string): string[] {
     "--exclude-standard",
     "--",
     `src/games/${id}/`,
-    `help/games/${id}.md`,
     `src/assets/icons/${id}-*`,
   ])
     .split("\n")
@@ -437,10 +436,11 @@ function verify(): void {
     "a changed snapshot selects its own test",
   );
 
-  const help = push(["help/games/pearl.md"]);
+  const help = push(["src/games/pearl/pearl.description.yaml"]);
   expect(
-    help.lines.includes("whole src/help-coverage.test.ts"),
-    "a help page selects help-coverage through its glob",
+    help.scope.join() === "pearl" &&
+      help.lines.includes("narrow src/help-coverage.test.ts"),
+    "a description selects help-coverage through its glob, narrowed to its game",
   );
 
   // The commit's plan: the same files, and no game's boards but its own.
@@ -492,7 +492,10 @@ function verify(): void {
     owed(["vitest.config.ts"]).join() === "ALL",
     "the push that carries such a commit runs everything",
   );
-  for (const paths of [["src/games/pearl/hint.ts"], ["help/games/pearl.md"]]) {
+  for (const paths of [
+    ["src/games/pearl/hint.ts"],
+    ["src/games/pearl/pearl.description.yaml"],
+  ]) {
     expect(
       owed(paths).join() === "NOTHING",
       `a push of ${paths.join()} alone repeats nothing its commit ran`,

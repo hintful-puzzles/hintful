@@ -1,6 +1,6 @@
 /**
  * Unequal solver: the ladder its two descriptions state
- * (`unequal.description.json` for the signs, `adjacent.description.json` for
+ * (`unequal.description.yaml` for the signs, `adjacent.description.yaml` for
  * the bars), compiled, with the reason each records for the hint, and the
  * validator from `unequal.c`, on the shared `LatinSolver` (`engine/latin.ts`),
  * whose forcing chains and recursion are the search above the ladder.

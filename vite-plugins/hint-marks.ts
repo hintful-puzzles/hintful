@@ -10,7 +10,8 @@
  * its game does not, fails the build.
  */
 
-import path from "node:path";
+import { descriptionPath } from "../src/describe/paths.ts";
+import { pageGame } from "./description-page.ts";
 import type { Transform } from "./extra-pages.ts";
 import { type GameCode, gameCode } from "./game-code.ts";
 
@@ -21,11 +22,11 @@ function expandHintMarks(code: GameCode, id: string, source: string): string {
   const has = source.includes(HINT_MARKS_PLACEHOLDER);
   if (legend && !has)
     throw new Error(
-      `help/games/${id}.md: the game declares hintMarks, so its Hints section writes ${HINT_MARKS_PLACEHOLDER} where its list of marks goes`,
+      `${descriptionPath(id)}: the game declares hintMarks, so its Hints section writes ${HINT_MARKS_PLACEHOLDER} where its list of marks goes`,
     );
   if (!legend && has)
     throw new Error(
-      `help/games/${id}.md: ${HINT_MARKS_PLACEHOLDER} needs the game to declare hintMarks`,
+      `${descriptionPath(id)}: ${HINT_MARKS_PLACEHOLDER} needs the game to declare hintMarks`,
     );
   return legend
     ? source.replace(HINT_MARKS_PLACEHOLDER, legendMarkdown(legend.roles))
@@ -39,16 +40,16 @@ function expandWing(code: GameCode, id: string, source: string): string {
   const has = source.match(WING_PLACEHOLDER) !== null;
   if (owed && !has)
     throw new Error(
-      `help/games/${id}.md: the game's hint can be a wing, so its Hints section writes {{wing}} among the ideas it teaches`,
+      `${descriptionPath(id)}: the game's hint can be a wing, so its Hints section writes {{wing}} among the ideas it teaches`,
     );
   if (!owed && has)
-    throw new Error(`help/games/${id}.md: {{wing}} needs a hint that can be a wing`);
+    throw new Error(`${descriptionPath(id)}: {{wing}} needs a hint that can be a wing`);
   return source.replace(WING_PLACEHOLDER, (_, cell?: string) => wingHelp(cell));
 }
 
 /** The transform: the page's game is its file's name. */
 export const withHintMarks: Transform = async (data, addWatchFile) => {
-  const id = path.basename(String(data.sourceFile ?? ""), ".md");
+  const id = pageGame(data);
   const code = await gameCode(addWatchFile);
   const source = expandHintMarks(code, id, String(data.source ?? ""));
   return { ...data, source: expandWing(code, id, source) };

@@ -40,7 +40,7 @@ Each step names the file of `src/skeleton/grid/` that already does it.
 7. **Paint the marks from the words** in `render.ts`, from `stepMarks(hint)`.
    How is [`hints-marks.md`](./hints-marks.md).
 8. **Write the help page's `## Hints` section**, with `{{hint-marks}}`
-   (`help.md`, stamped to `help/games/<id>.md`; § "The help teaches the
+   (the `hints` of `<id>.description.yaml`; § "The help teaches the
    marks").
 9. **Pin a position for every rung and test the plan** in
    `skeleton-hint.test.ts`: `describeHintPins`, `npm run hint-scan`, and
@@ -699,7 +699,7 @@ against the picture.
   `hint-quality.test.ts` fails a sentence that numbers a line.
 - **Re-read a name at the degenerate size** (even against odd, `w = 1`).
 - **A word the hint introduces is taught by the help page**
-  (`help/games/<game>.md`), in the same word (§ "The help teaches the
+  (`<game>.description.yaml`), in the same word (§ "The help teaches the
   marks").
 
 ### Rules belong in the help
@@ -733,7 +733,7 @@ for them. A sentence can then use a mark without defining it.
 Write it from the game's `hint-text.ts` and one rendered hint, never from
 memory. A change to what a hint draws or calls its marks updates the section
 in the same change. `src/help-coverage.test.ts` checks only that the section
-is there. Exemplar: `src/skeleton/grid/help.md`.
+is there. Exemplar: `src/skeleton/grid/skeleton.description.yaml`.
 
 ### Hint the move that advances the goal
 

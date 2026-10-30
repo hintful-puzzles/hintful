@@ -29,7 +29,8 @@ already; a copy changes the verbs and keeps the shape.
    above that line, which tests that the button is a pointer button before it
    reads a position, and answers `null` for a button it did not act on
    (§ "A button you did not act on must not be claimed").
-5. Write `{{controls}}` in [`help.md`](../src/skeleton/grid/help.md) where the
+5. Write `{{controls}}` in the description's `controls`
+   ([the skeleton's](../src/skeleton/grid/skeleton.description.yaml)) where the
    Controls paragraph goes, and after it only what the game does beyond its
    verbs.
 6. Build `hintGesture` from the same verbs with `verbClicks`

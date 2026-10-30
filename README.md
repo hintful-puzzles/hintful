@@ -78,8 +78,8 @@ Everything below is for building or contributing.
 
 - **`puzzles/`** was a frozen git subtree of the upstream C collection, read as
   a *reference* while porting. It is gone. What outlived it moved to where it
-  belongs: upstream's per-puzzle help text into this project's own pages under
-  [help/games/](help/games), the MIT
+  belongs: upstream's per-puzzle help text into this project's own pages, in
+  each game's description, the MIT
   notices to [licenses/](licenses), and the two unbuilt experimental sources
   kept for future greenfield games to the openspec changes that read them. The
   C itself is in git history.
@@ -114,11 +114,11 @@ templates under [templates/](templates/). `src/` is organized by role:
 
 The UI uses Lit web components and [Web Awesome][Web Awesome] design
 tokens; reactive state via `@lit-labs/signals`; offline via a Workbox
-service worker; telemetry via Sentry. The in-app help all lives under
-[help/](help), in one format: site-level pages at the top level and one page
-per game in [help/games/](help/games), all of them this project's own markdown.
-`src/help-coverage.test.ts` holds that directory and the catalog to each other
-in both directions.
+service worker; telemetry via Sentry. The in-app help is this project's own
+markdown: the site-level pages under [help/](help), and each game's page in its
+description, `src/games/<id>/<id>.description.yaml`, which the help build
+renders. `src/help-coverage.test.ts` holds the descriptions and the catalog to
+each other in both directions.
 
 [Web Awesome]: https://webawesome.com/docs/
 
@@ -196,6 +196,6 @@ of what was built is `openspec/changes/archive/` and the git log.
 The web app code (including local modifications/additions to the puzzles
 code) is MIT — see [LICENSE.md](./LICENSE.md). The upstream notices in
 [licenses/](licenses) cover the ported games and the upstream help text
-adopted into [help/games/](help/games), also MIT. The built app bundles several open
+adopted into the games' descriptions, also MIT. The built app bundles several open
 source packages; required notices are in the app's *About* dialog (open
 an issue if any seem missing).

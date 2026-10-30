@@ -19,6 +19,7 @@
  */
 import { describe, expect, it } from "vitest";
 import "./games/index.ts";
+import { gameDescriptions, helpProse } from "./describe/help-pages.ts";
 import { mkhighlightBackground } from "./engine/color/color-mkhighlight.ts";
 import { darkValue } from "./engine/color/color-token.ts";
 import { FLASH, FLASH_LEAD, SHADED } from "./engine/color/palette.ts";
@@ -26,12 +27,6 @@ import { getTsGame } from "./engine/registry.ts";
 import { colorToOKLCH } from "./engine/testing/oklch.ts";
 import type { Color } from "./engine/types.ts";
 import { puzzleIds } from "./puzzle/catalog.ts";
-
-const helpPages = import.meta.glob<string>("../help/games/*.md", {
-  query: "?raw",
-  import: "default",
-  eager: true,
-});
 
 type Kind = "dark" | "light";
 
@@ -42,7 +37,6 @@ const WORDS: Record<Kind, RegExp> = {
 
 /** `game` to the kinds its page names without meaning a piece's color. */
 const NOT_A_PIECE: Record<string, Partial<Record<Kind, string>>> = {
-  blackbox: { dark: "the game's name" },
   bridges: { light: "'light up' is what a mistake does, in red" },
   map: { light: "'light up' is what a mistake does, in red" },
   rome: { dark: "a shaded square is a tint of the board, not a piece" },
@@ -74,11 +68,11 @@ function holdsPinned(palette: readonly Color[], kind: Kind): boolean {
 
 describe("a lightness a help page names is pinned in the palette", () => {
   it("finds the pages", () => {
-    expect(Object.keys(helpPages).length).toBeGreaterThan(50);
+    expect(gameDescriptions.size).toBeGreaterThan(50);
   });
 
   for (const id of puzzleIds) {
-    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    const page = helpProse(id);
     for (const kind of ["dark", "light"] as const) {
       const named = WORDS[kind].test(page);
       const excused = NOT_A_PIECE[id]?.[kind];

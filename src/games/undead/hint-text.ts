@@ -94,7 +94,7 @@ export const say = {
     }),
 
   // Which monster shows where is the game's rule, and the help teaches it
-  // (help/games/undead.md); the step says only what this sightline's two
+  // (undead.description.yaml); the step says only what this sightline's two
   // clues decide (docs/hints.md § "Rules belong in the help").
   /** The sightline's clues `a` and `b` leave no room for `bits` in the cell. */
   sightline: (a: number, b: number, bits: number, m: Marked): Sentence =>

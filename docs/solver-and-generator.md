@@ -1652,7 +1652,7 @@ passes the compiled `ladder` ([descriptions.md](./descriptions.md)); a game
 not yet described passes `usersolvers` and the levels `diffSimple`,
 `diffSet0` and `diffSet1` the library's techniques run at. The engine gives
 the candidate cube, the library's techniques compiled from
-[`latin.description.json`](../src/engine/latin.description.json) (singles,
+[`latin.description.yaml`](../src/engine/latin.description.yaml) (singles,
 set and single-number set elimination, the wing), forcing chains and
 guess-and-verify recursion at the searching level `diffRecursive` (the
 recursion doubling as the uniqueness check), and the generator (`matching`,

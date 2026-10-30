@@ -21,7 +21,8 @@ implementation, MIT-licensed, and still actively maintained.
 This repository used to carry a `puzzles/` subtree of upstream's C sources,
 read as a reference while porting. The C is gone (`retire-c-engine`). Of the
 help material it was left holding, the per-puzzle overview text was adopted
-into this project's own pages under [`help/games/`](./help/games), keeping
+into this project's own pages, each in its game's description
+(`src/games/<id>/<id>.description.yaml`), keeping
 Simon's words (`retire-the-upstream-help-tree`); the long-form desktop manual
 was deleted rather than served, because it documents his desktop builds and not
 this app. The MIT notice is preserved verbatim in [`licenses/`](./licenses) to
@@ -33,7 +34,7 @@ Thirteen of the games here — ABCD, Ascent, Boats, Bricks, Clusters, Crossing,
 Mathrax, Rome, Salad, Seismic, Spokes, Sticks and Subsets — are ports of
 Lennard Sprong's `puzzles-unreleased`, a collection of contributions to
 Simon Tatham's puzzles written over more than a decade and MIT-licensed.
-Their in-app help pages under [`help/games/`](./help/games) are adapted from
+Their in-app help pages, in each game's description, are adapted from
 the documentation shipped with that project.
 
 - Source: <https://github.com/x-sheep/puzzles-unreleased>

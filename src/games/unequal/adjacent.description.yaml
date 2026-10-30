@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=../../describe/description.schema.json
+
+# Unequal's Adjacent ruleset, which the app deals under Unequal's id, so its
+# help is Unequal's page. Its clue kind is complete: every edge carries a bar
+# or none, and none says the two are not consecutive. `npm run describe`
+# compiles the techniques to adjacent.compiled.ts, which solver.ts runs.
+game: adjacent
+name: Adjacent
+family: latin
+sizes:
+  order: { min: 3, max: 16 }
+space:
+  grid: { w: "order", h: "order" }
+  edges: true
+  units: [rows, cols]
+answer:
+  value: { sort: cell, domain: "range(1, order)" }
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, order)" }
+  # A play aid with no meaning for the answer.
+  done: { sort: edge, notation: "bool" }
+define:
+  fits(e, a, b): "(clue(bar, e) = 1) = (abs(a - b) = 1)"
+shape:
+  - "latin(value, lines)"
+clues:
+  # 1 is a bar, 0 none.
+  bar:
+    at: edge
+    value: "{0, 1}"
+    complete: true
+    means: "(v = 1) = (abs(value(end1(at)) - value(end2(at))) = 1)"
+freedom: { kind: fill }
+deal:
+  givens: how many
+  tier: one of the tiers
+tiers: [Trivial, Easy, Tricky, Extreme, Recursive]
+techniques:
+  - { use: latin.placed, tier: Trivial, rung: dup }
+  - { use: latin.hiddenSingle, tier: Trivial, rung: hiddenSingle }
+  - { use: latin.single, tier: Trivial, rung: single }
+  # A placed number leaves its neighbor across an edge only the numbers the
+  # edge's clue allows: column by column, each placed cell's neighbors up,
+  # right, down, left.
+  - id: adjacent
+    tier: Easy
+    rung: adjacent
+    for: "L in cols, a in cells(L) where known(a), b in adj4(a), e = edge(a, b)"
+    conclude: "forall d in cand(b) where not fits(e, value(a), d): strike(b, d)"
+  # A number is struck across an edge when none of the other end's candidates
+  # fits it, in the same order over every cell.
+  - id: adjacentSet
+    tier: Tricky
+    rung: adjacentSet
+    for: "L in cols, a in cells(L), b in adj4(a), e = edge(a, b)"
+    conclude: >-
+      forall d in cand(b) where not (exists d2 in cand(a): d2 != d and fits(e, d2, d)):
+      strike(b, d)
+  - { use: latin.set, tier: Tricky, rung: set }
+  - { use: latin.fish, tier: Extreme, rung: set }
+  - { use: latin.wing, tier: Extreme, rung: wing }

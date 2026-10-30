@@ -23,7 +23,7 @@ already does it.
    it names, a strike on a note it rules out (`hints.md` § "Bind the words to
    the marks").
 2. Declare the roles the steps name as `hintMarks.roles` in `index.ts`, and
-   put `{{hint-marks}}` in the `## Hints` section of `help.md`.
+   put `{{hint-marks}}` in the `hints` of the game's description.
 3. In `render.ts`, export a `COL_HINT_CELL` slot holding `HINT_OUTLINE`, and
    draw each mark in its role's ink and nothing else (§ "The engine colors
    the marks"). Hold no ring ink: the engine draws every ring.

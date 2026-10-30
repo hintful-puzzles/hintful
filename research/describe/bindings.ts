@@ -20,9 +20,6 @@ import {
 } from "../../src/games/solo/state.ts";
 import { towersGame } from "../../src/games/towers/index.ts";
 import type { TowersParams, TowersState } from "../../src/games/towers/state.ts";
-import adjacent from "../../src/games/unequal/adjacent.description.json" with {
-  type: "json",
-};
 import { unequalGame } from "../../src/games/unequal/index.ts";
 import {
   recordUnequalDeductions,
@@ -33,12 +30,7 @@ import {
   type UnequalParams,
   type UnequalState,
 } from "../../src/games/unequal/state.ts";
-import unequal from "../../src/games/unequal/unequal.description.json" with {
-  type: "json",
-};
-import type { Dealt } from "./description.ts";
-import solo from "./descriptions/solo.json" with { type: "json" };
-import towers from "./descriptions/towers.json" with { type: "json" };
+import { type Dealt, describedGame } from "./description.ts";
 import type { Clue } from "./evaluate.ts";
 import type { Elem, Space } from "./space.ts";
 
@@ -83,7 +75,7 @@ const cellAt = (space: { cells: Elem[] }, i: number): Elem => space.cells[i];
 
 export const towersBinding: Binding<TowersParams, TowersState> = {
   game: towersGame,
-  description: towers as DescriptionJson,
+  description: describedGame("src/games/towers/towers.description.yaml"),
   params: tiers([4, 5, 6], ["easy", "hard", "extreme", "unreasonable"] as const),
   dealt: (s) => ({
     sizes: { w: s.w },
@@ -105,7 +97,7 @@ export const towersBinding: Binding<TowersParams, TowersState> = {
 
 export const soloBinding: Binding<SoloParams, SoloState> = {
   game: soloGame,
-  description: solo as DescriptionJson,
+  description: describedGame("src/games/solo/solo.description.yaml"),
   params: [
     ...[DIFF_BLOCK, DIFF_SIMPLE, DIFF_INTERSECT].map((diff) => ({
       ...soloGame.defaultParams(),
@@ -238,7 +230,7 @@ const unequalDiffs = ["trivial", "easy", "tricky", "extreme", "recursive"] as co
 
 export const unequalBinding: Binding<UnequalParams, UnequalState> = {
   ...unequalCommon,
-  description: unequal as DescriptionJson,
+  description: describedGame("src/games/unequal/unequal.description.yaml"),
   params: tiers([4, 5, 6], unequalDiffs).map((p) => ({
     order: p.w,
     mode: "unequal",
@@ -248,7 +240,7 @@ export const unequalBinding: Binding<UnequalParams, UnequalState> = {
 
 export const adjacentBinding: Binding<UnequalParams, UnequalState> = {
   ...unequalCommon,
-  description: adjacent as DescriptionJson,
+  description: describedGame("src/games/unequal/adjacent.description.yaml"),
   params: tiers([4, 5, 6], unequalDiffs).map((p) => ({
     order: p.w,
     mode: "adjacent",

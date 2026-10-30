@@ -14,9 +14,11 @@ and builds the page from it. So by the time this one starts:
 
 - a short summary for the first open can be a section of the description,
   or be read off one, with no second copy of the rules;
-- the review below edits descriptions, not `help/games/*.md`, and a fix
-  that several pages share (the Solo-style controls) is a reference to one
-  shared source, which that change provides;
+- the review below edits descriptions, and a fix that several pages share
+  (the Solo-style controls) is a placeholder rendered from one declaration,
+  as `{{mark-all}}` is: that change kept placeholders as the one way, and
+  left writing this one to the review, since it changes the pages' words
+  (its `design.md` § "A shared sentence");
 - the facts below about where pages live and how they are built were taken
   before it, and the session re-checks them.
 
@@ -54,10 +56,13 @@ deltas, implements, and fixes every page the review flags.
 
 **Where How to play lives and how it is shown.**
 
-- One markdown page per game in `help/games/<puzzleId>.md`, rendered by the
-  `help/games/*.md` entry in `vite.config.ts` through
-  `help/_game.html.hbs` and served at `/help/<puzzleId>`. Site-level pages are
-  `help/*.md`. The page count is `ls help/games/*.md | wc -l`.
+- One page per game, the `help` of `src/games/<puzzleId>/<puzzleId>.description.yaml`,
+  rendered by `src/describe/help-page.ts` and the per-game virtual pages in
+  `vite.config.ts` (first transform `vite-plugins/description-page.ts`)
+  through `help/_game.html.hbs`, and served at `/help/<puzzleId>`. Site-level
+  pages are `help/*.md`. A page is a description's fields (`rules`,
+  `controls`, `sections`, `origins`, `hints`, `parameters`); the page count
+  is the catalog's.
 - The menu's row is the `help-link` entry in `src/puzzle/command-list.ts`
   (label `How to play <Game>`), rendered as a real link by
   `src/puzzle/components/menu.ts`. `Screen.interceptCommandAndHrefClicks`
@@ -106,16 +111,16 @@ deltas, implements, and fixes every page the review flags.
   no words" binds an adoption, not a later fix; the session confirms that
   reading before rewording adopted text.
 - Examples of a page that does not stand alone (a sample, not a census;
-  the query is `git grep -n -i "same control\|similar to Solo\|as Solo" help/games/`):
-  - `help/games/abcd.md`, `crossing.md`, `mathrax.md`, `salad.md` and
-    `seismic.md` open their Controls with "uses the same control scheme as
+  the query is `git grep -n -i "same control\|similar to Solo\|as Solo" -- 'src/games/*.description.yaml'`):
+  - ABCD's, Crossing's, Mathrax's, Salad's and Seismic's descriptions
+    open their Controls with "uses the same control scheme as
     Solo" (Salad: "similar to Solo"), then each restates part of it in its
     own words.
-  - `help/games/group.md`: "If you don't already know what a group is, I
+  - Group's: "If you don't already know what a group is, I
     don't really recommend trying to play this game", and the rules lean on
     linked Wikipedia articles.
-  - Pages that say "the same as pressing 'M'" (`abcd.md`, `keen.md`,
-    `towers.md`, `group.md`, `solo.md`, `unequal.md`) name a key the reader
+  - Pages that say "the same as pressing 'M'" (ABCD, Keen, Towers, Group,
+    Solo, Unequal) name a key the reader
     may not have met yet in that page.
 - `help-pages.md` § "A game's page": a sentence several pages would each
   write is the engine's, rendered from a placeholder (`{{mark-all}}`,

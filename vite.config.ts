@@ -18,6 +18,7 @@ import { puzzleIds, puzzleCatalog as puzzles } from "./src/puzzle/catalog-data.t
 import { canonicalCoverage } from "./vite-plugins/canonical-coverage.ts";
 import { withControls } from "./vite-plugins/controls.ts";
 import { dependencyNotices } from "./vite-plugins/dependency-notices.ts";
+import { withDescription } from "./vite-plugins/description-page.ts";
 import { draftPuzzles } from "./vite-plugins/draft-puzzles.ts";
 import {
   extraPages,
@@ -550,8 +551,6 @@ export default defineConfig(async ({ command, mode }) => {
           },
           {
             // Our own help pages, served at /help/...
-            // Deliberately non-recursive: `help/games/` is rendered by its own
-            // entry below, with the per-puzzle template.
             sources: "help/*.md",
             transforms: [
               renderMarkdown({
@@ -566,12 +565,13 @@ export default defineConfig(async ({ command, mode }) => {
           },
           {
             // The per-puzzle help pages, one per cataloged game, served at
-            // /help/<puzzleId>.html. All 57 are this project's own markdown:
-            // `help-coverage.test.ts` holds the directory and the catalog to
-            // each other in both directions.
-            sources: "help/games/*.md",
-            resolve: { url: "help/", path: "help/games/" },
+            // /help/<puzzleId>.html and rendered from the game's description.
+            virtualPages: Object.entries(puzzles).map(([gameId, { name }]) => ({
+              urlPathname: `help/${gameId}.html`,
+              data: { gameId, gameName: name },
+            })),
             transforms: [
+              withDescription,
               (data) => ({ ...commonTemplateData, ...data }),
               withControls,
               withNoteControls,

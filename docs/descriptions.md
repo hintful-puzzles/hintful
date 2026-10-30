@@ -15,10 +15,14 @@ the soundness checker, are under [`research/`](../research/).
 
 ## What every game does
 
-1. **States its techniques in `<name>.description.json`** beside the code
+Every game has a description, `src/games/<id>/<id>.description.yaml`, which
+holds at least its help page ([`help-pages.md`](./help-pages.md)); the file
+itself is § "The file". A game whose techniques are stated:
+
+1. **States its techniques in `<name>.description.yaml`** beside the code
    that runs them, placing the library's with `use` and stating its own
    (§ "The formula syntax", § "A statement's order is behavior"). The Latin
-   library is [`engine/latin.description.json`](../src/engine/latin.description.json).
+   library is [`engine/latin.description.yaml`](../src/engine/latin.description.yaml).
 2. **Runs `npm run describe`**, which writes `<name>.compiled.ts` beside each
    description. Edit the description, never the compiled module:
    `src/describe/compile.test.ts` compiles every description again in the
@@ -41,12 +45,38 @@ the soundness checker, are under [`research/`](../research/).
 
 | Section | Read it when |
 | --- | --- |
+| The file | you write a description, or one fails to load |
 | The formula syntax | you write or read a technique |
 | What a technique compiles to | you read a compiled module, or a statement is slow |
 | A statement's order is behavior | you restate a technique, or a hint changes after a description edit |
 | A conclusion that is false is a contradiction | a technique must refuse a board, or a solver reports a false ambiguity |
 | A firing's reason is built from its binding | a hint's words need a fact about a firing |
 | Checking a technique sound | you state or edit a technique, or the gate reports one unchecked |
+
+## The file
+
+A description is YAML, read by one loader
+([`describe/load.ts`](../src/describe/load.ts)) under YAML 1.2's core schema
+and validated against
+[`description.schema.json`](../src/describe/description.schema.json), which
+says every field. `npm run describe`, the help build, the tests and the
+research tools all read through it; the app never does.
+
+- **Quote every formula, or write it as a block scalar** (`>-` folds a long
+  one onto several lines, joined by spaces). Unquoted, `forall c in cells:
+  known(c)` is a map and a leading `{` a flow mapping; the load then fails at
+  the field, or at YAML's own parse, rather than reading as something else.
+- **A comment is a `#` line above what it explains.** There is no `note`
+  field: the soundness fingerprint reads the statement, never its comment.
+- **A game's description states its help first and its rules after**, so a
+  reader meets the prose rules beside the formal ones. A rules section whole
+  or not at all: `space` brings `name`, `family`, `sizes`, `answer` and
+  `freedom` with it, and `techniques` brings `space` and `tiers`.
+- **Only a library or a description with techniques compiles.** Solo's and
+  Towers' state rules only the interpreter under `research/describe/` reads.
+- **A family member another game deals is a second description beside it**
+  (Unequal's `adjacent.description.yaml`), with no help: its game's page
+  names it through `{{rulesets}}`.
 
 ## The formula syntax
 

@@ -21,8 +21,8 @@ state and one set of marks, so the writing is not divided among agents.
    sections of each guide the game needs, and the rest are skipped.
 3. **Scaffold.** `scripts/new-game.sh <gameId> [kind]` copies the skeleton
    of the game's kind, `grid` or `edges`
-   ([`src/skeleton/`](../src/skeleton/README.md)), to `src/games/<gameId>/` and
-   `help/games/<gameId>.md`, renamed for the game. It checks that the copy
+   ([`src/skeleton/`](../src/skeleton/README.md)), to `src/games/<gameId>/`,
+   renamed for the game; its help page is the copy's `<gameId>.description.yaml`. It checks that the copy
    compiles, lints and passes its tests, and prints what the copy leaves
    undone, which is the list to work through: the puzzle, the registration,
    the hint's pins, the help page, the icons, the spec. No existing game is required reading: the skeleton is a small game

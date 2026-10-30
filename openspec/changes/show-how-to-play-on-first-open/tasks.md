@@ -16,10 +16,9 @@ The session that takes this up revises these as it designs. It starts once
 
 ## 3. The help review
 
-- [ ] 3.1 Apply the checklist to every page in `help/games/`; list what each fails
+- [ ] 3.1 Apply the checklist to every game's page (its description's `help`); list what each fails
 - [ ] 3.2 Fix every finding, a sentence several pages share as a generated placeholder (`docs/help-pages.md` § "A game's page"); add a check where the checklist has a checkable item
 - [ ] 3.3 Record the checklist in `docs/help-pages.md`
-- [ ] 3.4 In passing: a comment in `vite.config.ts` counts the help pages as "All 57", and `help/games/` holds more; replace the count with what it means
 
 ## 4. Verify
 

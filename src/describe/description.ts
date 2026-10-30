@@ -1,19 +1,35 @@
 /**
- * A description as its JSON states it, loaded: every formula parsed, so a
+ * A description as its YAML states it, loaded: every formula parsed, so a
  * description that loads has no syntax error left in it. The compiler
  * (`compile.ts`) builds techniques from it, and the development tools under
- * `research/` read its rules too.
+ * `research/` read its rules too. Reading the file is `load.ts`'s.
  */
 
 import { type Binder, type Expr, parse } from "./expr.ts";
 
-/** The JSON, as `description.schema.json` states it. */
-export interface DescriptionJson {
-  $schema?: string;
+/** A game's help page, as `description.schema.json` states it. */
+export interface HelpJson {
+  rules: string;
+  controls: string;
+  sections?: { heading: string; body: string }[];
+  origins?: string;
+  hints?: string;
+  parameters?: { before?: string; after?: string };
+}
+
+/** A game's description that is its help page and no formal rules yet. */
+export interface HelpOnlyJson {
   game: string;
+  help: HelpJson;
+}
+
+/** A description with its formal rules, as `description.schema.json` states
+ * it, and the help page of a cataloged game. */
+export interface DescriptionJson {
+  game: string;
+  help?: HelpJson;
   name: string;
   family: string;
-  note?: string;
   sizes: Record<string, { min: number; max: number }>;
   space: {
     grid: { w: string; h: string };
@@ -25,15 +41,15 @@ export interface DescriptionJson {
   };
   answer: { value: { sort: "cell"; domain: string } };
   given?: string[];
-  marks?: Record<string, { sort: string; notation: string; note?: string }>;
+  marks?: Record<string, { sort: string; notation: string }>;
   define?: Record<string, string>;
   shape?: string[];
   rules?: Record<string, string>;
   clues?: Record<
     string,
-    { at: string; value: string; means: string; complete?: boolean; note?: string }
+    { at: string; value: string; means: string; complete?: boolean }
   >;
-  freedom: { kind: string; note?: string };
+  freedom: { kind: string };
   deal?: Record<string, string>;
   tiers?: string[];
   techniques?: TechniqueJson[];
@@ -44,7 +60,6 @@ export interface DescriptionJson {
  * the same name. */
 export interface VariationJson {
   word: "board shape" | "modifier" | "ruleset" | "generator setting";
-  note?: string;
   add?: Pick<DescriptionJson, "define" | "rules" | "clues" | "shape" | "techniques">;
   replace?: { space?: Partial<DescriptionJson["space"]> };
 }
@@ -57,7 +72,6 @@ export type TechniqueJson =
 
 /** What a technique says, wherever it is stated. */
 export interface StatedTechnique {
-  note?: string;
   /** `"place"`: the engine runs it as each value is placed, with its first
    * binder bound to the placed cell, and not as a rung of the ladder. */
   on?: "place";
@@ -69,8 +83,19 @@ export interface StatedTechnique {
 /** Techniques stated once, for every game that places them. */
 export interface LibraryJson {
   library: string;
-  note?: string;
   techniques: Record<string, StatedTechnique>;
+}
+
+/** Whatever a `*.description.yaml` holds, once it has loaded. */
+export type DescriptionFile = LibraryJson | DescriptionJson | HelpOnlyJson;
+
+export function isLibrary(file: DescriptionFile): file is LibraryJson {
+  return "library" in file;
+}
+
+/** A game's description that states its rules, not only its help page. */
+export function isFormal(file: DescriptionFile): file is DescriptionJson {
+  return "space" in file;
 }
 
 export interface Technique {

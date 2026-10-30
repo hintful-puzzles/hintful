@@ -1,14 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { CompileError, compileLibrary } from "./compile.ts";
-import type { DescriptionJson, LibraryJson } from "./description.ts";
+import { isFormal, isLibrary } from "./description.ts";
+import { loadDescriptionFile } from "./load.ts";
 import soundnessJson from "./soundness.json" with { type: "json" };
 import { gameFingerprint, libraryFingerprint, soundnessKey } from "./soundness.ts";
-import { compiledPath, compileSource } from "./sources.ts";
+import { compiledPath, compileSource, compiles } from "./sources.ts";
 
 const soundness: Record<string, string> = soundnessJson;
 
-const descriptions = import.meta.glob<unknown>("../**/*.description.json", {
+const texts = import.meta.glob<string>("../**/*.description.yaml", {
   eager: true,
+  query: "?raw",
   import: "default",
 });
 const modules = import.meta.glob<string>("../**/*.compiled.ts", {
@@ -19,31 +21,35 @@ const modules = import.meta.glob<string>("../**/*.compiled.ts", {
 
 /** From the root, as `npm run describe` names them. */
 const fromRoot = (p: string): string => `src/${p.slice("../".length)}`;
-const sources = new Map(Object.entries(descriptions).map(([p, j]) => [fromRoot(p), j]));
+const sources = new Map(
+  Object.entries(texts).map(([p, t]) => [
+    fromRoot(p),
+    loadDescriptionFile(t, fromRoot(p)),
+  ]),
+);
 const compiled = new Map(Object.entries(modules).map(([p, m]) => [fromRoot(p), m]));
 
 describe("compiled descriptions", () => {
-  it("finds the descriptions", () => {
-    expect(sources.size).toBeGreaterThan(0);
+  it("finds the descriptions that compile", () => {
+    expect([...sources.values()].filter(compiles).length).toBeGreaterThan(0);
   });
 
-  for (const source of sources.keys())
-    it(`${source} is compiled as it reads now (npm run describe)`, () => {
-      expect(compiled.get(compiledPath(source))).toBe(compileSource(source, sources));
-    });
+  for (const [source, file] of sources)
+    if (compiles(file))
+      it(`${source} is compiled as it reads now (npm run describe)`, () => {
+        expect(compiled.get(compiledPath(source))).toBe(compileSource(source, sources));
+      });
 
   it("compiles only techniques checked sound as they read now", () => {
     const unchecked: string[] = [];
-    for (const [source, json] of sources) {
-      if (typeof json !== "object" || json === null) continue;
-      if ("library" in json) {
-        const lib = json as LibraryJson;
-        for (const id of Object.keys(lib.techniques))
-          if (soundness[soundnessKey(source, id)] !== libraryFingerprint(lib, id))
+    for (const [source, d] of sources) {
+      if (isLibrary(d)) {
+        for (const id of Object.keys(d.techniques))
+          if (soundness[soundnessKey(source, id)] !== libraryFingerprint(d, id))
             unchecked.push(soundnessKey(source, id));
         continue;
       }
-      const d = json as DescriptionJson;
+      if (!isFormal(d)) continue;
       for (const t of d.techniques ?? [])
         if (
           !("use" in t) &&
@@ -58,7 +64,7 @@ describe("compiled descriptions", () => {
 
   it("leaves no compiled module without its description", () => {
     const orphans = [...compiled.keys()].filter(
-      (m) => ![...sources.keys()].some((s) => compiledPath(s) === m),
+      (m) => ![...sources].some(([s, file]) => compiles(file) && compiledPath(s) === m),
     );
     expect(orphans).toEqual([]);
   });

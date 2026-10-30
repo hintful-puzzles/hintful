@@ -37,7 +37,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 SRC="${REPO_ROOT}/src/skeleton/${KIND}"
 DIR="${REPO_ROOT}/src/games/${GAME}"
-HELP="${REPO_ROOT}/help/games/${GAME}.md"
 
 if [ ! -d "${SRC}" ]; then
   echo "no skeleton of kind '${KIND}' (looked in ${SRC})" >&2
@@ -75,12 +74,10 @@ tests for each."
     exit 2
     ;;
 esac
-for existing in "${DIR}" "${HELP}"; do
-  if [ -e "${existing}" ]; then
-    echo "refusing to overwrite existing ${existing}" >&2
-    exit 1
-  fi
-done
+if [ -e "${DIR}" ]; then
+  echo "refusing to overwrite existing ${DIR}" >&2
+  exit 1
+fi
 
 # The three spellings the skeleton uses for its own name, and the game's.
 PASCAL="$(printf '%s' "${GAME}" | awk '{ print toupper(substr($0,1,1)) substr($0,2) }')"
@@ -90,14 +87,10 @@ rename() {
   sed -e "s/SKELETON/${UPPER}/g" -e "s/Skeleton/${PASCAL}/g" -e "s/skeleton/${GAME}/g"
 }
 
-# Every file of the skeleton, under its renamed path. The help page goes to
-# help/games/, where the build reads it.
+# Every file of the skeleton, under its renamed path: its description, which
+# holds the help page, among them.
 (cd "${SRC}" && find . -type f | sort) | while IFS= read -r file; do
-  if [ "${file}" = "./help.md" ]; then
-    target="${HELP}"
-  else
-    target="${DIR}/$(printf '%s' "${file#./}" | rename)"
-  fi
+  target="${DIR}/$(printf '%s' "${file#./}" | rename)"
   mkdir -p "$(dirname "${target}")"
   rename < "${SRC}/${file}" > "${target}"
 done
@@ -132,7 +125,7 @@ npx vitest run "src/games/${GAME}"
 cat <<EOF
 
 src/games/${GAME}/ is a copy of the '${KIND}' skeleton that plays as the
-skeleton's own puzzle, and help/games/${GAME}.md is its help page.
+skeleton's own puzzle, and ${GAME}.description.yaml there holds its help page.
 
 What the copy has, each on the shared way: ${HAS}
 
@@ -151,8 +144,8 @@ What is left to do, and the copy does none of it:
        - the snapshots of capability-surface.test.ts and
          params-stability.test.ts (run each with --update and read the diff)
      and one thing the copy has no reason to hold yet refuses it later:
-       - a help page that says where the puzzle comes from says it under
-         "## Where the puzzle comes from" (help-coverage.test.ts)
+       - a help page that says where the puzzle comes from says it in its
+         description's help.origins (help-coverage.test.ts)
      ${ROLES} is
      drawn by the copy; one the puzzle's hint never names goes, with its
      line in the legend (warm-repaint.test.ts holds the two together).

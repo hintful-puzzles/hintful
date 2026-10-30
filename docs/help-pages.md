@@ -1,15 +1,17 @@
 # Help pages
 
-The rules for the pages under `help/`. What must hold is the
-[`help-pages`](../openspec/specs/help-pages/spec.md) capability, and
-`src/help-coverage.test.ts` holds most of it; read it for what is checked.
-This guide is the part a test cannot say.
+The rules for the help the app serves. What must hold is the
+[`help-pages`](../openspec/specs/help-pages/spec.md) capability; the
+renderer (`src/describe/help-page.ts`) writes a game page's skeleton, and
+`src/help-coverage.test.ts` holds most of the rest; read it for what is
+checked. This guide is the part a test cannot say.
 
-## One directory, owned by this project
+## Owned by this project
 
 Every page the app serves is this project's own markdown, whoever first wrote
-the words: site-level pages at the top of `help/`, one page per game in
-`help/games/`.
+the words: site-level pages in `help/`, and each game's page in the `help` of
+its description, `src/games/<id>/<id>.description.yaml`
+([`descriptions.md`](./descriptions.md)).
 
 - **Never split help by authorship.** A page describing a game this project
   changes has to be correctable by the change that alters it.
@@ -25,17 +27,27 @@ the words: site-level pages at the top of `help/`, one page per game in
 
 ## A game's page
 
-One skeleton: the rules, unheaded; `## Controls`; any sections of the game's
-own; `## Where the puzzle comes from` when the page credits its puzzle;
-`## Hints` exactly when the game has a `hint()`; and `## <Name> parameters`
-last, naming every field the Custom dialog offers and every choice that is a
-word.
+One skeleton, which the renderer writes from the description's `help`
+fields: `rules`, unheaded; `controls` under `## Controls`; each of
+`sections` under its `heading`; `origins` under `## Where the puzzle comes
+from`; `hints` under `## Hints`, exactly when the game has a `hint()`; and
+`## <Name> parameters` last, its generated list between `parameters.before`
+and `parameters.after`. The title is the catalog's name. A field writes no
+`#` or `##` heading and no `{{parameters}}`, and the load refuses one that
+does; a `###` subheading is the section's own.
 
-- **A puzzle's inventor, its other names and a link to more of it go under
-  "Where the puzzle comes from"**, never in the rules: a reader on the way to
-  the controls wants to know how to play. A game with rulesets is several
-  puzzles, so its heading is "Where the puzzles come from", and it names each
-  one by `{{choice:ruleset:<index>}}`. The words are a credit to the people
+- **Write every field as a `|-` block scalar.** Markdown starting with `*`,
+  `[` or `{{` reads as something else in a plain scalar, and a block
+  scalar never does. The schema comment on the file's first line lets an
+  editor check the fields against the schema as you type.
+- **Read the page in the running app**, not the YAML: an editor shows a
+  block scalar as a string, and nothing formats it.
+
+- **A puzzle's inventor, its other names and a link to more of it go in
+  `origins`**, never in the rules: a reader on the way to the controls wants
+  to know how to play. A game with rulesets is several puzzles, so the
+  renderer heads it "Where the puzzles come from", and it names each one by
+  `{{choice:ruleset:<index>}}`. The words are a credit to the people
   who designed the puzzle: move them, do not rewrite them.
 - **The check finds a credit left in the rules by its words**, which is a
   floor: a credit phrased in none of them passes. Read the page.
