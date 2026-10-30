@@ -1,5 +1,7 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
+# Group's rules, its own techniques, and the game's help page. `npm run
+# describe` compiles the techniques to group.compiled.ts, which solver.ts runs.
 game: group
 help:
   rules: |-
@@ -104,3 +106,80 @@ help:
     follow the elements to wherever you've dragged them. On an Unreasonable
     board, deduction can run out before the grid is full; the hint says so
     rather than guessing.
+name: Group
+family: latin
+sizes:
+  order: { min: 3, max: 26 }
+space:
+  grid: { w: "order", h: "order" }
+  units: [rows, cols]
+answer:
+  value: { sort: cell, domain: "range(1, order)" }
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, order)" }
+define:
+  # Row a, column b holds the product a·b, the elements numbered from 1.
+  mul(a, b): "cell(b - 1, a - 1)"
+  # The two factors of a cell's product: its row's element and its column's.
+  left(c): "y(c) + 1"
+  right(c): "x(c) + 1"
+shape:
+  - "latin(value, lines)"
+rules:
+  # A Latin square whose product is associative is a group's table: the
+  # identity and the inverses follow.
+  associative: >-
+    forall a in domain, b in domain, c in domain:
+    value(mul(value(mul(a, b)), c)) = value(mul(a, value(mul(b, c))))
+freedom: { kind: fill }
+deal:
+  givens: how many
+  tier: one of the tiers
+tiers: [Trivial, Normal, Hard, Extreme, Unreasonable]
+techniques:
+  - { use: latin.placed, tier: Trivial, rung: dup }
+  - { use: latin.hiddenSingle, tier: Trivial, rung: hiddenSingle }
+  - { use: latin.single, tier: Trivial, rung: single }
+  # Placed a·b, b·c and one of (a·b)·c and a·(b·c), the other is the same
+  # element, where its cell can still hold it: a, b and c in order, the first
+  # changing slowest.
+  - id: associativity
+    tier: Normal
+    rung: associativity
+    for: >-
+      a in domain, b in domain, p = mul(a, b) where known(p),
+      c in domain, q = mul(b, c) where known(q),
+      l = mul(value(p), c), r = mul(a, value(q)) where known(l) != known(r)
+    conclude: >-
+      ((known(l) and value(l) in cand(r)) implies place(r, value(l)))
+      and ((known(r) and value(r) in cand(l)) implies place(l, value(r)))
+  # The first placed product, in reading order, that is one of its own
+  # factors shows the other factor is the identity, e, so e's row and column
+  # are the elements in order: for each j, j·e and then e·j. A cell that can
+  # no longer hold its element makes the marks inconsistent.
+  - id: identity
+    tier: Normal
+    rung: identityFill
+    for: >-
+      w0 = first({c in cells where known(c) and (value(c) = left(c) or value(c) = right(c))})
+      where w0 != none,
+      e in domain where (value(w0) = left(w0) and e = right(w0))
+      or (value(w0) != left(w0) and e = left(w0))
+    conclude: >-
+      forall j in domain, c in {mul(j, e), mul(e, j)} where not known(c):
+      j in cand(c) and place(c, j)
+  # A placed product of a with some j that is not j shows a is not the
+  # identity, so no j·a or a·j can be j. The witness, o, is the least such j.
+  - id: notIdentity
+    tier: Hard
+    rung: identityElim
+    for: >-
+      a in domain,
+      o = min(j in domain where (known(mul(j, a)) and value(mul(j, a)) != j)
+      or (known(mul(a, j)) and value(mul(a, j)) != j))
+      where o != none
+    conclude: "forall j in domain: strike(mul(j, a), j) and (j = a or strike(mul(a, j), j))"
+  - { use: latin.set, tier: Hard, rung: set }
+  - { use: latin.fish, tier: Extreme, rung: set }
+  - { use: latin.wing, tier: Extreme, rung: wing }

@@ -863,8 +863,9 @@ export function compiledRung<B, C>(
     );
 }
 
-/** {@link compiledRung} of a library's technique, which reads no clues. */
-function libraryRung<B>(
+/** {@link compiledRung} of a technique that reads no clues: every library
+ * technique, and a game's own that reads only the marks. */
+export function uncluedRung<B>(
   run: (b: Marks, sp: GridSpace, fire: Fire<B> | null) => number,
   reason: (binding: B, cell: number, n: number, solver: LatinSolver) => unknown,
 ): LatinRung {
@@ -880,23 +881,23 @@ const cellAt = (o: number) => (c: number) => ({ x: c % o, y: (c / o) | 0 });
 /** The library's techniques (`latin.description.yaml`) as rungs, by the id a
  * description places them with. */
 export const LATIN_RUNGS = {
-  "latin.hiddenSingle": libraryRung(
+  "latin.hiddenSingle": uncluedRung(
     compiled.hiddenSingle,
     (): LatinReason => ({ kind: "single" }),
   ),
-  "latin.single": libraryRung(compiled.single, (): LatinReason => ({ kind: "single" })),
-  "latin.set": libraryRung(
+  "latin.single": uncluedRung(compiled.single, (): LatinReason => ({ kind: "single" })),
+  "latin.set": uncluedRung(
     compiled.set,
     ({ S }, _c, _n, solver): LatinReason => ({
       kind: "set",
       cells: S.map(cellAt(solver.o)),
     }),
   ),
-  "latin.fish": libraryRung(
+  "latin.fish": uncluedRung(
     compiled.fish,
     (binding, _c, _n, solver): LatinReason => fishReason(binding, solver),
   ),
-  "latin.wing": libraryRung(
+  "latin.wing": uncluedRung(
     compiled.wing,
     ({ m, x, E }, _c, _n, solver): LatinReason => ({
       kind: "wing",

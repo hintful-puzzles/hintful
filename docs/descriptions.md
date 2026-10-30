@@ -26,7 +26,9 @@ itself is § "The file". A game whose techniques are stated:
 2. **Runs `npm run describe`**, which writes `<name>.compiled.ts` beside each
    description. Edit the description, never the compiled module:
    `src/describe/compile.test.ts` compiles every description again in the
-   gate and fails where a module differs.
+   gate and fails where a module differs. A module new to the tree reads
+   there as missing until `npx vitest --clearCache`: Vitest's module cache
+   keeps the test's glob as it was first expanded.
 3. **Checks every technique it states sound** with
    `npx vitest run -c research/technique-check/vitest.config.ts describe-check`,
    which records each verdict in `src/describe/soundness.json`; the gate
@@ -36,7 +38,9 @@ itself is § "The file". A game whose techniques are stated:
    `Record` keyed by the compiled module's `LadderId`, so a technique the
    description adds and the game does not pair is a type error
    ([`unequal/solver.ts`](../src/games/unequal/solver.ts)'s
-   `UNEQUAL_RUNGS`; § "A firing's reason is built from its binding").
+   `UNEQUAL_RUNGS`, through `compiledRung`; a technique that reads no clues
+   through `uncluedRung`, as [`group/solver.ts`](../src/games/group/solver.ts)'s;
+   § "A firing's reason is built from its binding").
 5. **Deals its clues as the description reads them**: one `ClueList` a
    kind, in the order the techniques should meet them
    (`describedLadder` in the same file).
@@ -111,8 +115,8 @@ what the space gives: `cells`, `rows`, `cols`, `lines`, `units`.
 
 **Functions**: `value(c)`, `cand(c)` the candidates the marks leave,
 `known(c)`; `range(a, b)`, `abs(a)`, `subsets(S)`, `first(L)`; the grid's
-`x(c)`, `y(c)`, `row(c)`, `col(c)`, `cells(L)`, `adj4(c)` (up, right, down,
-left), `peers(c)` (row and column interleaved by index), `ends(e)`,
+`x(c)`, `y(c)`, `cell(x, y)` (on the grid: the compiled code does not check),
+`row(c)`, `col(c)`, `cells(L)`, `adj4(c)` (up, right, down, left), `peers(c)` (row and column interleaved by index), `ends(e)`,
 `end1(e)`, `end2(e)`, `other(e, c)`, `edge(a, b)`; the clues' `clues(kind)`
 (a binder's set only), `at(k)`, `v(k)`, `clue(kind, x)`; and, in a
 technique's conclusion only, `strike(c, d)` and `place(c, d)`. The
@@ -150,11 +154,23 @@ candidate mask once read, and clears them after a firing it goes on from;
 whose body is membership (`exists d in T: d in cand(c)`) compiles to one
 bitwise test. A set of elements is an array: a statement that binds subsets
 of rows binds their indices, `y(c)`, as a set of numbers instead (the
-library's `fish`). And a value read for every binding of an inner loop is
-better bound once outside it (`set`'s `open`, `hiddenSingle`'s `placed`).
-`research/describe/` measured the compiled ladder per deal against the
-hand-written one it replaced
-(`openspec/changes/archive/*-compile-the-latin-ladder/report.md` § "Speed").
+library's `fish`).
+
+**A term is computed once where its names are bound.** Each binder and each
+definition's parameter opens a slot just after it, and a term that binds
+nothing, reads no candidate and makes no fact is computed in the slot of the
+last name it reads, where that takes it out of a loop. A read (`value`,
+`known`, a clue, a set's size) goes to its slot even inside the same loop, so
+that every use after it shares one. Such a term is then computed whether or
+not the guard around it holds, which is why none may throw. `value` and
+`known` move only in a technique that concludes no placement: a solve makes
+each fact as it concludes it, and a strike changes neither. A comprehension
+or quantifier is never moved, so a set a loop reads whole is still better
+bound once outside it by the statement itself (`set`'s `open`,
+`hiddenSingle`'s `placed`). `research/describe/` measured the compiled ladder
+per deal against the hand-written one it replaced
+(`openspec/changes/archive/*-compile-the-latin-ladder/report.md` § "Speed",
+and `*-describe-group/report.md` for the hoisting).
 
 ## A statement's order is behavior
 

@@ -26,11 +26,16 @@
 
 import {
   type DeductionRecord,
+  LATIN_RUNGS,
+  type LatinLadder,
   type LatinReason,
+  type LatinRung,
   type LatinSolver,
   latinSolver,
+  uncluedRung,
 } from "../../engine/latin.ts";
 import type { Point } from "../../engine/types.ts";
+import * as group from "./group.compiled.ts";
 import { DIFF_EXTREME, DIFF_HARD, DIFF_TRIVIAL, DIFF_UNREASONABLE } from "./state.ts";
 
 /** Why a Group-specific deduction placed or eliminated — the premise the hint
@@ -348,7 +353,189 @@ export function solveGroup(
   maxdiff: number,
   recorder?: (rec: DeductionRecord) => void,
 ): number {
+  if (COMPARE.handWritten) return solveHandWritten(grid, w, maxdiff, recorder);
+  if (!COMPARE.on) return solveDescribed(grid, w, maxdiff, recorder);
+  // Both ladders on copies, compared in what they return, the grid, the cube
+  // and every record; the compiled one's results are the call's.
+  const input = grid.join(",");
+  const g1 = grid.slice();
+  const c0 = new Uint8Array(w * w * w);
+  const c1 = new Uint8Array(w * w * w);
+  const r0: DeductionRecord[] = [];
+  const r1: DeductionRecord[] = [];
+  const hand = solveHandWritten(
+    g1,
+    w,
+    maxdiff,
+    recorder ? (r) => r0.push(r) : undefined,
+    c1,
+  );
+  const built = solveDescribed(
+    grid,
+    w,
+    maxdiff,
+    recorder ? (r) => r1.push(r) : undefined,
+    c0,
+  );
+  COMPARE.compared++;
+  for (const r of r0) {
+    const k = (r.reason as { kind?: string } | null)?.kind ?? "none";
+    COMPARE.reasons.set(k, (COMPARE.reasons.get(k) ?? 0) + 1);
+  }
+  const a = r0.map((r) => JSON.stringify(r));
+  const b = r1.map((r, i) => JSON.stringify(sortKeysLike(r, r0[i] ?? null)));
+  let at = 0;
+  while (at < a.length && a[at] === b[at]) at++;
+  const what = [
+    hand !== built ? "return" : "",
+    g1.some((v, i) => v !== grid[i]) ? "grid" : "",
+    c0.some((v, i) => v !== c1[i]) ? "cube" : "",
+    at < a.length || at < b.length ? "records" : "",
+  ].filter((s) => s !== "");
+  if (what.length > 0)
+    COMPARE.mismatches.push({
+      what: what.join(" "),
+      input,
+      w,
+      maxdiff,
+      hand,
+      built,
+      record: at,
+      handRecord: a[at] ?? null,
+      builtRecord: b[at] ?? null,
+    });
+  for (const r of r1) recorder?.(r);
+  return built;
+}
+
+/** The comparison's switch and tally (`describe-group` tasks 2.2). */
+export const COMPARE = {
+  on: false,
+  /** Run the hand-written deductions alone, for the speed runs. */
+  handWritten: false,
+  compared: 0,
+  mismatches: [] as Record<string, unknown>[],
+  /** The hand-written records compared, by their reason's kind. */
+  reasons: new Map<string, number>(),
+};
+
+/** `r`'s JSON with its reason's keys in `like`'s order, so key order is not a
+ * difference. */
+function sortKeysLike(r: DeductionRecord, like: DeductionRecord | null): unknown {
+  if (like === null) return r;
+  const order = (a: unknown, b: unknown): unknown => {
+    if (a === null || typeof a !== "object" || b === null || typeof b !== "object")
+      return a;
+    if (Array.isArray(a))
+      return a.map((x, i) => order(x, Array.isArray(b) ? b[i] : undefined));
+    const out: Record<string, unknown> = {};
+    const ao = a as Record<string, unknown>;
+    const bo = b as Record<string, unknown>;
+    for (const k of Object.keys(bo)) if (k in ao) out[k] = order(ao[k], bo[k]);
+    for (const k of Object.keys(ao)) if (!(k in out)) out[k] = ao[k];
+    return out;
+  };
+  return order(r, like);
+}
+
+const cellAt = (o: number, c: number): Point => ({ x: c % o, y: (c / o) | 0 });
+
+/** Which way an element fails as the identity, for the reason of the
+ * firing that rules it out: `o·a ≠ o` first, else `a·o ≠ o`. */
+function identityElim(
+  { a, o }: group.NotIdentityBinding,
+  solver: LatinSolver,
+): GroupReason {
+  const w = solver.o;
+  const right = (o - 1) * w + (a - 1);
+  const left = !(solver.known(right) && solver.value(right) !== o);
+  const c = left ? (a - 1) * w + (o - 1) : right;
+  const { x: wx, y: wy } = cellAt(w, c);
+  return {
+    kind: "identityElim",
+    elem: a,
+    other: o,
+    product: solver.value(c),
+    wx,
+    wy,
+    left,
+  };
+}
+
+const GROUP_LADDER: Record<group.LadderId, LatinRung> = {
+  "latin.hiddenSingle": LATIN_RUNGS["latin.hiddenSingle"],
+  "latin.single": LATIN_RUNGS["latin.single"],
+  associativity: uncluedRung(
+    group.associativity,
+    ({ a, b, c, p, q, l, r }, cell, n, solver): GroupReason => {
+      const o = solver.o;
+      const knownLeft = cell === r;
+      return {
+        kind: "associativity",
+        a,
+        b,
+        c,
+        ab: solver.value(p),
+        bc: solver.value(q),
+        v: n,
+        knownLeft,
+        abCell: cellAt(o, p),
+        bcCell: cellAt(o, q),
+        thirdCell: cellAt(o, knownLeft ? l : r),
+      };
+    },
+  ),
+  identity: uncluedRung(group.identity, ({ w0, e }, _c, _n, solver): GroupReason => {
+    const { x, y } = cellAt(solver.o, w0);
+    return {
+      kind: "identityFill",
+      e,
+      viaX: x,
+      viaY: y,
+      a: y + 1,
+      b: x + 1,
+      prod: solver.value(w0),
+    };
+  }),
+  notIdentity: uncluedRung(group.notIdentity, (binding, _c, _n, solver) =>
+    identityElim(binding, solver),
+  ),
+  "latin.set": LATIN_RUNGS["latin.set"],
+  "latin.fish": LATIN_RUNGS["latin.fish"],
+  "latin.wing": LATIN_RUNGS["latin.wing"],
+};
+
+const describedLadder: LatinLadder = {
+  ladder: group.ladder.map(({ id, tier }) => ({ tier, run: GROUP_LADDER[id] })),
+};
+
+function solveDescribed(
+  grid: Uint8Array,
+  w: number,
+  maxdiff: number,
+  recorder?: (rec: DeductionRecord) => void,
+  cubeOut?: Uint8Array,
+): number {
   return latinSolver<null>(grid, w, {
+    maxdiff,
+    diffRecursive: DIFF_UNREASONABLE,
+    valid: groupValid,
+    ctx: null,
+    recorder,
+    cubeOut,
+    ...describedLadder,
+  });
+}
+
+function solveHandWritten(
+  grid: Uint8Array,
+  w: number,
+  maxdiff: number,
+  recorder?: (rec: DeductionRecord) => void,
+  cubeOut?: Uint8Array,
+): number {
+  return latinSolver<null>(grid, w, {
+    cubeOut,
     maxdiff,
     diffSimple: DIFF_TRIVIAL,
     diffSet0: DIFF_HARD,

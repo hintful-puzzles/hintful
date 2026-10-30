@@ -47,27 +47,29 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<Adjacent
     const _a9 = sp.lineCells[v_L];
     for (let _i10 = 0; _i10 < _a9.length; _i10++) {
       const v_a = _a9[_i10];
-      if (!(b.known(v_a))) continue;
-      const _a11 = sp.adj4[v_a];
-      for (let _i12 = 0; _i12 < _a11.length; _i12++) {
-        const v_b = _a11[_i12];
+      const _h11 = b.known(v_a);
+      const _h17 = b.value(v_a);
+      if (!(_h11)) continue;
+      const _a12 = sp.adj4[v_a];
+      for (let _i13 = 0; _i13 < _a12.length; _i13++) {
+        const v_b = _a12[_i13];
         const v_e = sp.edgeOf(v_a, v_b);
+        const _h18 = (clueAt(cl.bar, v_e) === 1);
         facts.length = 0;
         changed = false;
-        let _q13 = true;
-        Q14: {
-          for (let _m15 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cand(v_b))); _m15 !== 0; _m15 &= _m15 - 1) {
-            const v_d = 31 - Math.clz32(_m15 & -_m15);
-            const _t16 = b.value(v_a);
-            if (!(!(((clueAt(cl.bar, v_e) === 1) === (Math.abs((_t16 - v_d)) === 1))))) continue;
+        let _q14 = true;
+        Q15: {
+          for (let _m16 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cand(v_b))); _m16 !== 0; _m16 &= _m16 - 1) {
+            const v_d = 31 - Math.clz32(_m16 & -_m16);
+            if (!(!((_h18 === (Math.abs((_h17 - v_d)) === 1))))) continue;
             if (b.has(v_b, v_d)) { if (fire === null) { b.strikeAt(v_b, v_d); changed = true; } else facts.push(STRIKE, v_b, v_d); }
             if (!(true)) {
-              _q13 = false;
-              break Q14;
+              _q14 = false;
+              break Q15;
             }
           }
         }
-        if (!(_q13)) return -1;
+        if (!(_q14)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ L: v_L, a: v_a, b: v_b, e: v_e }, facts)) return 1;
@@ -96,41 +98,42 @@ export function adjacentSet(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<Adjac
   if (adjacentSetCands.length < sp.cells.length) adjacentSetCands = new Int32Array(sp.cells.length);
   const cands = adjacentSetCands;
   cands.fill(-1);
-  const _a23 = sp.cols;
-  for (let _i24 = 0; _i24 < _a23.length; _i24++) {
-    const v_L = _a23[_i24];
-    const _a25 = sp.lineCells[v_L];
-    for (let _i26 = 0; _i26 < _a25.length; _i26++) {
-      const v_a = _a25[_i26];
-      const _a27 = sp.adj4[v_a];
-      for (let _i28 = 0; _i28 < _a27.length; _i28++) {
-        const v_b = _a27[_i28];
+  const _a25 = sp.cols;
+  for (let _i26 = 0; _i26 < _a25.length; _i26++) {
+    const v_L = _a25[_i26];
+    const _a27 = sp.lineCells[v_L];
+    for (let _i28 = 0; _i28 < _a27.length; _i28++) {
+      const v_a = _a27[_i28];
+      const _a29 = sp.adj4[v_a];
+      for (let _i30 = 0; _i30 < _a29.length; _i30++) {
+        const v_b = _a29[_i30];
         const v_e = sp.edgeOf(v_a, v_b);
+        const _h37 = (clueAt(cl.bar, v_e) === 1);
         facts.length = 0;
         changed = false;
-        let _q29 = true;
-        Q30: {
-          for (let _m31 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cand(v_b))); _m31 !== 0; _m31 &= _m31 - 1) {
-            const v_d = 31 - Math.clz32(_m31 & -_m31);
-            let _q32 = false;
-            Q33: {
-              for (let _m34 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cand(v_a))); _m34 !== 0; _m34 &= _m34 - 1) {
-                const v_d2 = 31 - Math.clz32(_m34 & -_m34);
-                if (((v_d2 !== v_d) && ((clueAt(cl.bar, v_e) === 1) === (Math.abs((v_d2 - v_d)) === 1)))) {
-                  _q32 = true;
-                  break Q33;
+        let _q31 = true;
+        Q32: {
+          for (let _m33 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cand(v_b))); _m33 !== 0; _m33 &= _m33 - 1) {
+            const v_d = 31 - Math.clz32(_m33 & -_m33);
+            let _q34 = false;
+            Q35: {
+              for (let _m36 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cand(v_a))); _m36 !== 0; _m36 &= _m36 - 1) {
+                const v_d2 = 31 - Math.clz32(_m36 & -_m36);
+                if (((v_d2 !== v_d) && (_h37 === (Math.abs((v_d2 - v_d)) === 1)))) {
+                  _q34 = true;
+                  break Q35;
                 }
               }
             }
-            if (!(!(_q32))) continue;
+            if (!(!(_q34))) continue;
             if (b.has(v_b, v_d)) { if (fire === null) { b.strikeAt(v_b, v_d); changed = true; } else facts.push(STRIKE, v_b, v_d); }
             if (!(true)) {
-              _q29 = false;
-              break Q30;
+              _q31 = false;
+              break Q32;
             }
           }
         }
-        if (!(_q29)) return -1;
+        if (!(_q31)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ L: v_L, a: v_a, b: v_b, e: v_e }, facts)) return 1;

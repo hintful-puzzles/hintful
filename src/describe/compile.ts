@@ -42,6 +42,28 @@ const setOf = (of: Sort): Sort => ({ k: "set", of });
 interface Val {
   code: string;
   sort: Sort;
+  /** For a name a term may read: the slot from which it is defined. */
+  at?: Slot;
+}
+
+/**
+ * A place in the code, just after a name is bound, where a term that reads
+ * nothing bound later can be computed once (§ "What a technique compiles
+ * to"). `loops` counts the loops open there, so a term used inside more of
+ * them is computed fewer times in the slot.
+ */
+interface Slot {
+  seq: number;
+  indent: number;
+  loops: number;
+  lines: Line[];
+  /** The terms computed here, by their code, each to its name. */
+  made: Map<string, Val>;
+}
+
+interface Line {
+  indent: number;
+  text: string;
 }
 
 function show(s: Sort): string {
@@ -72,16 +94,18 @@ function tsType(s: Sort): string {
 
 class CompileError extends Error {}
 
-/** The code being written: statements at an indent, and fresh names. */
+/** The code being written: statements at an indent, the slots among them,
+ * and fresh names. */
 class Out {
-  readonly lines: string[] = [];
+  readonly entries: (Line | Slot)[] = [];
   private depth: number;
   private static n = 0;
+  private static slots = 0;
   constructor(depth: number) {
     this.depth = depth;
   }
   emit(line: string): void {
-    this.lines.push(`${"  ".repeat(this.depth)}${line}`);
+    this.entries.push({ indent: this.depth, text: line });
   }
   open(line: string): void {
     this.emit(line);
@@ -91,11 +115,39 @@ class Out {
     this.depth--;
     this.emit(line);
   }
+  /** A slot here, `loops` deep. */
+  slot(loops: number): Slot {
+    const s: Slot = {
+      seq: ++Out.slots,
+      indent: this.depth,
+      loops,
+      lines: [],
+      made: new Map(),
+    };
+    this.entries.push(s);
+    return s;
+  }
+  /** `inner`'s statements and slots here, at this indent. */
+  append(inner: Out): void {
+    for (const e of inner.entries) {
+      e.indent += this.depth;
+      this.entries.push(e);
+    }
+  }
+  text(): string[] {
+    const pad = (n: number): string => "  ".repeat(n);
+    return this.entries.flatMap((e) =>
+      "text" in e
+        ? [`${pad(e.indent)}${e.text}`]
+        : e.lines.map((l) => `${pad(e.indent + l.indent)}${l.text}`),
+    );
+  }
   static fresh(prefix: string): string {
     return `${prefix}${++Out.n}`;
   }
   static reset(): void {
     Out.n = 0;
+    Out.slots = 0;
   }
 }
 
@@ -119,6 +171,19 @@ interface Env {
   memo: boolean;
   /** Whether the code reads the clues, so the function takes them. */
   readsClues: { yes: boolean };
+  /** Where a technique's body moves terms to; `null` outside one, and in
+   * code that is compiled only for its sort. */
+  hoist: Hoist | null;
+}
+
+interface Hoist {
+  /** The function's start, for a term that reads no bound name. */
+  root: Slot;
+  /** The loops open where the code is being written. */
+  loops: number;
+  /** Whether `value` and `known` may be read early: only where nothing the
+   * technique concludes is a placement, the one fact that changes them. */
+  marks: boolean;
 }
 
 type Scope = ReadonlyMap<string, Val>;
@@ -166,6 +231,150 @@ const candOf = (c: string): string =>
   `(cands[${c}] >= 0 ? cands[${c}] : (cands[${c}] = b.cand(${c})))`;
 
 function compileExpr(e: Expr, scope: Scope, env: Env, out: Out): Val {
+  if (env.hoist !== null && e.k !== "num" && e.k !== "name") {
+    const v = hoisted(e, scope, env, env.hoist);
+    if (v !== null) return v;
+  }
+  return compileNode(e, scope, env, out);
+}
+
+/** The functions a term may call and still be computed early: none reads
+ * the candidates, binds a name, or makes a fact. */
+const EARLY = new Set([
+  "value",
+  "known",
+  "clue",
+  "at",
+  "v",
+  "x",
+  "y",
+  "cell",
+  "row",
+  "col",
+  "edge",
+  "end1",
+  "end2",
+  "other",
+  "abs",
+  "range",
+]);
+
+/**
+ * Whether `e` can be computed anywhere its names are bound: it binds no name
+ * of its own, reads no candidate, makes no fact and calls no definition that
+ * does. `bound` says which names are its inputs; `marks` is set where it
+ * reads `value` or `known`.
+ */
+function early(
+  e: Expr,
+  bound: (n: string) => boolean,
+  env: Env,
+  marks: { read: boolean },
+): boolean {
+  const all = (xs: readonly Expr[]): boolean =>
+    xs.every((x) => early(x, bound, env, marks));
+  switch (e.k) {
+    case "num":
+      return true;
+    case "name":
+      return (
+        bound(e.name) ||
+        NAMES[e.name] !== undefined ||
+        e.name === "order" ||
+        e.name === "w" ||
+        e.name === "h"
+      );
+    case "set":
+      return all(e.elems);
+    case "size":
+    case "not":
+    case "neg":
+      return early(e.of, bound, env, marks);
+    case "bin":
+      if ((e.op === "in" || e.op === "notin") && e.b.k === "call" && e.b.fn === "cand")
+        return false;
+      return all([e.a, e.b]);
+    case "quant":
+    case "agg":
+      return false;
+    case "call": {
+      if (e.fn === "value" || e.fn === "known") marks.read = true;
+      if (e.fn === "clue") return all(e.args.slice(1));
+      if (EARLY.has(e.fn)) return all(e.args);
+      const def = env.defs.get(e.fn);
+      if (def === undefined || !all(e.args)) return false;
+      return early(def.body, (n) => def.params.includes(n), env, marks);
+    }
+  }
+}
+
+/** The names `e` reads from its scope; a definition's body reads only its
+ * parameters, which are its arguments. */
+function namesIn(e: Expr, into: Set<string>, env: Env): void {
+  switch (e.k) {
+    case "name":
+      into.add(e.name);
+      return;
+    case "set":
+      for (const x of e.elems) namesIn(x, into, env);
+      return;
+    case "size":
+    case "not":
+    case "neg":
+      namesIn(e.of, into, env);
+      return;
+    case "bin":
+      namesIn(e.a, into, env);
+      namesIn(e.b, into, env);
+      return;
+    case "call":
+      for (const x of e.fn === "clue" ? e.args.slice(1) : e.args) namesIn(x, into, env);
+      return;
+    default:
+      return;
+  }
+}
+
+/** A read a slot keeps for every use after it, though no loop is left. */
+const isRead = (e: Expr): boolean =>
+  e.k === "size" ||
+  (e.k === "call" && (e.fn === "value" || e.fn === "known" || e.fn === "clue"));
+
+/**
+ * `e` computed in the slot of the last name it reads, where that takes it out
+ * of a loop or it is a read the slot can share: the name it is kept under,
+ * or `null` where it is computed where it stands.
+ */
+function hoisted(e: Expr, scope: Scope, env: Env, h: Hoist): Val | null {
+  const marks = { read: false };
+  if (!early(e, (n) => scope.has(n), env, marks)) return null;
+  if (marks.read && !h.marks) return null;
+  const names = new Set<string>();
+  namesIn(e, names, env);
+  let slot = h.root;
+  for (const n of names) {
+    const v = scope.get(n);
+    if (v === undefined) continue;
+    if (v.at === undefined) return null;
+    if (v.at.seq > slot.seq) slot = v.at;
+  }
+  if (slot.loops === h.loops && !isRead(e)) return null;
+  const tmp = new Out(0);
+  const v = compileNode(e, scope, { ...env, hoist: null }, tmp);
+  if (isArray(v.sort) || v.sort.k === "subsets" || v.sort.k === "clues") return null;
+  if (tmp.entries.length === 0) {
+    const made = slot.made.get(v.code);
+    if (made !== undefined) return made;
+  }
+  const t = Out.fresh("_h");
+  for (const l of tmp.entries) if ("text" in l) slot.lines.push(l);
+  slot.lines.push({ indent: 0, text: `const ${t} = ${v.code};` });
+  const val: Val = { code: t, sort: v.sort, at: slot };
+  if (tmp.entries.length === 0) slot.made.set(v.code, val);
+  return val;
+}
+
+function compileNode(e: Expr, scope: Scope, env: Env, out: Out): Val {
   switch (e.k) {
     case "num":
       return { code: String(e.v), sort: NUM };
@@ -251,12 +460,12 @@ function shortCircuit(
   const vb = compileExpr(b, scope, env, inner);
   expect(vb, "bool", op);
   const left = op === "implies" ? `!(${va.code})` : va.code;
-  if (inner.lines.length === 0)
+  if (inner.entries.length === 0)
     return { code: `(${left} ${op === "and" ? "&&" : "||"} ${vb.code})`, sort: BOOL };
   const r = Out.fresh("_c");
   out.emit(`let ${r} = ${left};`);
   out.open(op === "and" ? `if (${r}) {` : `if (!${r}) {`);
-  for (const line of inner.lines) out.emit(line);
+  out.append(inner);
   out.emit(`${r} = ${vb.code};`);
   out.close();
   return { code: r, sort: BOOL };
@@ -426,14 +635,22 @@ function bindingLoops(
         out.emit(`const ${v} = ${a}[${ix}];`);
       } else throw new CompileError(`${bnd.name} in ${show(s.sort)}: not a set`);
     }
+    // Every binder of a set opened one loop.
+    const h = env.hoist;
+    if (h !== null && bnd.kind === "in") h.loops++;
     const inner = new Map(sc);
-    inner.set(bnd.name, { code: v, sort });
+    inner.set(bnd.name, {
+      code: v,
+      sort,
+      at: h === null ? undefined : out.slot(h.loops),
+    });
     if (bnd.where !== null) {
       const w = compileExpr(bnd.where, inner, env, out);
       expect(w, "bool", `where of ${bnd.name}`);
       out.emit(`if (!(${w.code})) ${skip};`);
     }
     walk(i + 1, inner);
+    if (h !== null && bnd.kind === "in") h.loops--;
     if (bnd.kind === "in" || closeBlock) out.close();
   };
   walk(0, scope);
@@ -495,7 +712,7 @@ function setQuantifier(
   if (body.k !== "bin" || (body.op !== "in" && body.op !== "notin")) return null;
   if (body.a.k !== "name" || body.a.name !== b.name || reads(body.b, b.name))
     return null;
-  const probe: Env = { ...env, used: new Set(), scratch: null };
+  const probe: Env = { ...env, used: new Set(), scratch: null, hoist: null };
   if (!isMask(compileExpr(b.of, scope, probe, new Out(0)).sort)) return null;
   if (!isMask(compileExpr(body.b, scope, probe, new Out(0)).sort)) return null;
   const s = compileExpr(b.of, scope, env, out);
@@ -620,7 +837,7 @@ function aggregate(
       // The term's sort decides the result's representation, so it is read
       // off a pass whose code is thrown away before the result is declared.
       let termSort: Sort = NUM;
-      const probe: Env = { ...env, used: new Set(), scratch: null };
+      const probe: Env = { ...env, used: new Set(), scratch: null, hoist: null };
       bindingLoops(e.binders, scope, probe, new Out(0), (sc) => {
         termSort =
           e.term === null
@@ -698,6 +915,11 @@ function call(
     case "y":
       arity(1);
       return { code: `((${cell(0)} / sp.w) | 0)`, sort: NUM };
+    case "cell":
+      arity(2);
+      expect(vs[0], "num", fn);
+      expect(vs[1], "num", fn);
+      return { code: `(${vs[1].code} * sp.w + ${vs[0].code})`, sort: elem("cell") };
     case "edge":
       arity(2);
       return { code: `sp.edgeOf(${cell(0)}, ${cell(1)})`, sort: elem("edge") };
@@ -797,8 +1019,18 @@ function call(
     if (def.params.length !== vs.length)
       throw new CompileError(`${fn} takes ${def.params.length}, given ${vs.length}`);
     const inner = new Map<string, Val>();
+    const h = env.hoist;
     def.params.forEach((p, i) => {
-      inner.set(p, once(vs[i], out));
+      const v = once(vs[i], out);
+      // A parameter is a name the body may read early, from where it is
+      // bound: a literal anywhere, the argument's own name from its slot.
+      const at =
+        h === null
+          ? undefined
+          : /^-?\d+$/.test(v.code)
+            ? h.root
+            : (v.at ?? out.slot(h.loops));
+      inner.set(p, { ...v, at });
     });
     return compileExpr(def.body, inner, env, out);
   }
@@ -816,7 +1048,7 @@ function binderSorts(t: Technique, env: Env): { name: string; sort: Sort }[] {
   bindingLoops(
     t.binders,
     new Map(),
-    { ...env, used: new Set(), scratch: null },
+    { ...env, used: new Set(), scratch: null, hoist: null },
     probe,
     (sc) => {
       for (const b of t.binders) {
@@ -836,13 +1068,16 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   // A rung reads a cell's candidates many times a scan, so it keeps them;
   // a technique run on placing reads few, on every placement, and does not.
   const scratch: string[] = [];
-  const tenv: Env = { ...env, readsClues, memo: !onPlace, scratch };
+  const tenv: Env = { ...env, readsClues, memo: !onPlace, scratch, hoist: null };
   const sorts = binderSorts(t, tenv);
   const fields = sorts.map((s) => `  ${s.name}: ${tsType(s.sort)};`);
   const body = new Out(1);
   body.emit(`const facts = ${fnName}Facts;`);
   body.emit("let fired = 0;");
   body.emit("let changed = false;");
+  // A solve makes each fact as it concludes it, so a placement would change
+  // a `value` or `known` read before it; a strike changes neither.
+  tenv.hoist = { root: body.slot(0), loops: 0, marks: !places(t.conclude, env) };
   // The facts and the kept candidates live in one buffer each a function,
   // emptied each call: a technique never runs inside its own call (a firing
   // that places runs only the technique run on placing), and `fire` reads the
@@ -887,11 +1122,14 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
       throw new CompileError(
         `${t.id}: a technique run on placing binds the placed cell first`,
       );
-    const of = compileExpr(first.of, new Map(), tenv, new Out(0));
+    const of = compileExpr(first.of, new Map(), { ...tenv, hoist: null }, new Out(0));
     if (!(of.sort.k === "set" && of.sort.of.k === "elem" && of.sort.of.e === "cell"))
       throw new CompileError(`${t.id}: its first binder is not over cells`);
     const sc = new Map<string, Val>([
-      [first.name, { code: `v_${first.name}`, sort: elem("cell") }],
+      [
+        first.name,
+        { code: `v_${first.name}`, sort: elem("cell"), at: tenv.hoist.root },
+      ],
     ]);
     if (first.where !== null) {
       const w = compileExpr(first.where, sc, tenv, body);
@@ -916,10 +1154,46 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
     "",
     `export function ${fnName}(b: Marks, sp: GridSpace, ${clueParam}${params}fire: Fire<${bindingType}> | null): number {`,
     ...scratch.map((d) => `  ${d}`),
-    ...body.lines,
+    ...body.text(),
     "}",
   ];
   return { code: lines.join("\n"), clues: readsClues.yes };
+}
+
+/** Whether `e` makes a placement, in a definition it calls included. */
+function places(e: Expr, env: Env): boolean {
+  switch (e.k) {
+    case "num":
+    case "name":
+      return false;
+    case "set":
+      return e.elems.some((x) => places(x, env));
+    case "size":
+    case "not":
+    case "neg":
+      return places(e.of, env);
+    case "bin":
+      return places(e.a, env) || places(e.b, env);
+    case "quant":
+      return (
+        e.binders.some(
+          (b) => places(b.of, env) || (b.where !== null && places(b.where, env)),
+        ) || places(e.body, env)
+      );
+    case "agg":
+      return (
+        e.binders.some((b) => places(b.of, env)) ||
+        (e.term !== null && places(e.term, env))
+      );
+    case "call": {
+      if (e.fn === "place") return true;
+      const def = env.defs.get(e.fn);
+      return (
+        e.args.some((x) => places(x, env)) ||
+        (def !== undefined && places(def.body, env))
+      );
+    }
+  }
 }
 
 // --- modules ----------------------------------------------------------------
@@ -959,6 +1233,7 @@ export function compileLibrary(
     memo: false,
     scratch: null,
     readsClues: { yes: false },
+    hoist: null,
   };
   const parts = Object.entries(lib.techniques).map(([id, stated]) => {
     const t: Technique = {
@@ -1022,17 +1297,22 @@ export function compileGame(
     memo: false,
     scratch: null,
     readsClues: { yes: false },
+    hoist: null,
   };
   for (const [kind, c] of d.clueKinds)
     clues.set(kind, clueSorts(kind, c.at, c.value, env));
   const own = d.techniques.filter((t) => !t.id.includes("."));
   const parts = own.map((t) => compileTechnique(t, env).code);
-  const clueLines = [
-    "/** The dealt clues, by kind. */",
-    "export interface Clues {",
-    ...[...clues.keys()].map((k) => `  ${k}: ClueList;`),
-    "}",
-  ];
+  const clueLines =
+    clues.size === 0
+      ? []
+      : [
+          "/** The dealt clues, by kind. */",
+          "export interface Clues {",
+          ...[...clues.keys()].map((k) => `  ${k}: ClueList;`),
+          "}",
+          "",
+        ];
   const ids = d.techniques.filter((t) => t.on === null).map((t) => t.id);
   const ladder = [
     "/** Every technique a rung runs, by id: the description's, in its order. */",
@@ -1051,10 +1331,9 @@ export function compileGame(
   return `${[
     HEADER(source),
     "",
-    runtimeImport(used, true, runtime),
+    runtimeImport(used, clues.size > 0, runtime),
     "",
     ...clueLines,
-    "",
     ...ladder,
     "",
     parts.join("\n\n"),

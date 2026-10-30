@@ -675,6 +675,16 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       return cellFn((c) => ({ k: "num", v: c % sp.w }));
     case "y":
       return cellFn((c) => ({ k: "num", v: (c / sp.w) | 0 }));
+    case "cell": {
+      // Off the grid is none, which a guard on the grid never reaches.
+      const x = num(vs[0], fn);
+      const y = num(vs[1], fn);
+      const at: Alt[] = sp.cells.map(
+        (c) => [c, and(cmp("=", x, c % sp.w), cmp("=", y, (c / sp.w) | 0))] as const,
+      );
+      at.push([-1, not(or(...at.map(([, g]) => g)))]);
+      return { k: "elem", sort: "cell", alts: at.filter(([, g]) => g !== false) };
+    }
     case "edge":
       return lift(vs[0], fn, (a) =>
         lift(vs[1], fn, (b) => elem("edge", sp.edgeOf(a, b))),

@@ -66,6 +66,16 @@ const PLANTS: Record<string, { conclude?: string; for?: string }> = {
   adjacent: {
     conclude: "forall d in cand(b) where fits(e, value(a), d): strike(b, d)",
   },
+  associativity: {
+    conclude:
+      "((known(l) and value(l) in cand(r)) implies place(r, value(q))) and ((known(r) and value(r) in cand(l)) implies place(l, value(r)))",
+  },
+  identity: {
+    for: "w0 = first({c in cells where known(c)}) where w0 != none, e in domain where (value(w0) = left(w0) and e = right(w0)) or (value(w0) != left(w0) and e = left(w0))",
+  },
+  notIdentity: {
+    for: "a in domain, o = min(j in domain where known(mul(j, a)) or (known(mul(a, j)) and value(mul(a, j)) != j)) where o != none",
+  },
   adjacentSet: {
     conclude:
       "forall d in cand(b) where exists d2 in cand(a): d2 != d and not fits(e, d2, d): strike(b, d)",

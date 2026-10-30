@@ -5,6 +5,9 @@
   "src/engine/latin.description.yaml#set": "c7e0a6c4c0ab66d4",
   "src/engine/latin.description.yaml#single": "6ab3ab0f1610abbf",
   "src/engine/latin.description.yaml#wing": "7af3cb897f06d4d1",
+  "src/games/group/group.description.yaml#associativity": "1cbd65edae24cbf3",
+  "src/games/group/group.description.yaml#identity": "66982cf6ea3a5546",
+  "src/games/group/group.description.yaml#notIdentity": "256d4cc761cd14b3",
   "src/games/unequal/adjacent.description.yaml#adjacent": "2fb58118aa866778",
   "src/games/unequal/adjacent.description.yaml#adjacentSet": "14ea8ea02dde0804",
   "src/games/unequal/unequal.description.yaml#sign": "e8b4c171334b86a5"
