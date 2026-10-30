@@ -305,15 +305,17 @@ already have open, and not a line in `AGENTS.md`.
 
 The repository SHALL hold a skeleton game under `src/skeleton/` as source the
 gate's typecheck and test run read, and `scripts/new-game.sh <gameId>` SHALL
-create `src/games/<gameId>/` and `help/games/<gameId>.md` as a renamed copy
-of it. The skeleton SHALL NOT be registered as a game or shipped. The script
-SHALL refuse to overwrite an existing game.
+create `src/games/<gameId>/` as a renamed copy of it, its description and the
+help page that description carries included. The skeleton SHALL NOT be
+registered as a game or shipped. The script SHALL refuse to overwrite an
+existing game.
 
 #### Scenario: Scaffolding a new game
 
 - **WHEN** a contributor runs `scripts/new-game.sh singles`
 - **THEN** `src/games/singles/` holds the skeleton's modules, tests and
-  snapshots, named for the new game, and `help/games/singles.md` its help page
+  snapshots, named for the new game, and `singles.description.yaml` its help
+  page
 - **AND** the copy registers itself as `singles`
 
 #### Scenario: The contract moves under the skeleton
@@ -330,8 +332,7 @@ SHALL refuse to overwrite an existing game.
 
 #### Scenario: The game directory already exists
 
-- **WHEN** the script is run with the id of a game that has a directory or a
-  help page
+- **WHEN** the script is run with the id of a game that has a directory
 - **THEN** it refuses and writes nothing
 
 ### Requirement: The scaffold checks its copy and prints what it leaves undone

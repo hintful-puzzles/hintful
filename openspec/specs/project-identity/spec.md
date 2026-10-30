@@ -56,8 +56,8 @@ Every sentence a player reads outside the per-game help pages SHALL be this
 project's own writing, in its own voice: the front page, the page titles and
 descriptions, the help site's own pages, the unsupported-browser and not-found
 pages, and the privacy notes. Text inherited from `puzzles-web` SHALL NOT
-survive verbatim on those surfaces. The per-game pages under `help/games/` are
-excluded on purpose and keep upstream's wording.
+survive verbatim on those surfaces. The per-game pages, built from each game's
+description, are excluded on purpose and keep upstream's wording.
 
 #### Scenario: A page outside the per-game help is written or revised
 

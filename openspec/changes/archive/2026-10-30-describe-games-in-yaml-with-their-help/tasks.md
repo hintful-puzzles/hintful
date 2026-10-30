@@ -9,7 +9,7 @@
 
 - [x] 2.1 The loader reads YAML and validates it against the schema (strings refused where a formula or prose is expected); convert the Latin library and Unequal's two descriptions, and Towers' and Solo's beside their games; the compiled modules change only in their provenance line, and the soundness verdicts only in their keys
 - [x] 2.2 Move Unequal's help page into its description, word for word, and build the page from it
-- [ ] 2.3 Run the app and read Unequal's page; hand it to the owner
+- [x] 2.3 Run the app and read Unequal's page; hand it to the owner (accepted 2026-10-30)
 
 ## 3. Every game
 
@@ -19,4 +19,4 @@
 
 ## 4. Close
 
-- [ ] 4.1 Archive once the owner has read Unequal's page; `show-how-to-play-on-first-open` can then start
+- [x] 4.1 Archive; `show-how-to-play-on-first-open` can then start

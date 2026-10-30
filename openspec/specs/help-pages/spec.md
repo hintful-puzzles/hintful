@@ -10,22 +10,6 @@ these, and how to write a page is `docs/help-pages.md`.
 
 ## Requirements
 
-### Requirement: Every help page the app serves lives under `help/`
-
-Every help page the app serves to players SHALL live under `help/`, and SHALL
-be this project's own page, maintained by this project. There SHALL be one help
-source directory in one format: `help/*.md` for the site-level pages and
-`help/games/<puzzleId>.md` for the per-puzzle ones, rendered to
-`/help/<puzzleId>.html`. There SHALL NOT be an `upstream/` subdirectory under
-`help/`: a page describing a game must be correctable by the change that alters
-the game.
-
-#### Scenario: A help page is served from one place in one format
-
-- **WHEN** the help sources are located
-- **THEN** every served page is markdown under `help/`
-- **AND** no served page is read from a directory that forbids editing it
-
 ### Requirement: No served page documents a platform this app is not
 
 No page the app serves SHALL document a platform this app is not: menus, file
@@ -47,8 +31,10 @@ name a cataloged game. Both directions SHALL be asserted automatically.
 #### Scenario: Every cataloged puzzle has a help page
 
 - **WHEN** the help coverage is checked
-- **THEN** every `puzzleId` in the catalog has a `help/games/<puzzleId>.md`
-- **AND** every `help/games/*.md` names a cataloged game
+- **THEN** every `puzzleId` in the catalog has a description at
+  `src/games/<puzzleId>/<puzzleId>.description.yaml` that carries `help`
+- **AND** every description that carries `help` names a cataloged game and
+  sits at that game's path, the skeletons' aside
 - **AND** both directions are asserted, so a page orphaned by a rename is caught
   as well as a game with no page
 
@@ -61,15 +47,15 @@ question, which the notices under `licenses/` and `LICENSE.md` discharge.
 
 #### Scenario: Adoption changes no URL and no words
 
-- **WHEN** an upstream-authored help page is adopted into `help/games/`
+- **WHEN** a help page is moved into a game's description
 - **THEN** it is served at the same URL as before
 - **AND** its words and the project's attribution are unchanged
 
 ### Requirement: A help source directory does not shadow a served URL directory
 
 A help source directory SHALL NOT shadow a URL directory the build emits pages
-into. Sources whose pages render to the top level, as `help/games/` renders to
-`/help/<puzzleId>.html`, are unaffected.
+into. A game's page renders to the top level, `/help/<puzzleId>.html`, from
+wherever its description is.
 
 #### Scenario: A help source directory does not shadow a served URL directory
 
@@ -205,28 +191,6 @@ assumed.
 - **THEN** a rule defining that icon exists in the help stylesheet
 - **AND** the reference is checked, because an unresolved one fails silently
 
-### Requirement: Every game's help page has one skeleton, read off the game
-
-Every page under `help/games/` SHALL have the same skeleton: the rules first
-and unheaded; then `## Controls`; then any sections of the game's own; then,
-when the page credits its puzzle, its origins section; then `## Hints` when,
-and only when, the game declares `hint()`; and last, `## <Name> parameters`,
-where `<Name>` is the game's catalog name.
-
-#### Scenario: A page is missing a section, or has them out of order
-
-- **WHEN** a page's first `##` heading is not `Controls`, or its last is not
-  `<Name> parameters`, or `## Hints` is not immediately before the parameters
-  section
-- **THEN** the help-coverage guard fails, naming the game
-
-#### Scenario: A help-only commit runs the guard
-
-- **WHEN** a commit stages only a page under `help/games/`
-- **THEN** the pre-commit hook selects the help-coverage guard, because
-  `help/` is outside the documentation-only shortcut and the test selector
-  reaches a help page through the guard's glob
-
 ### Requirement: The sections a page owes are derived from the game
 
 Which sections a page owes SHALL be derived from the game, never from a list:
@@ -235,34 +199,9 @@ what the parameters section names.
 
 #### Scenario: A hinted game has no Hints section, or a hintless one has one
 
-- **WHEN** a game declares `hint()` and its page has no `## Hints`, or declares
-  none and its page has one
+- **WHEN** a game declares `hint()` and its description has no `hints`, or
+  declares none and its description has one
 - **THEN** the help-coverage guard fails, naming the game
-
-### Requirement: A puzzle's credits sit under the origins heading and nowhere else
-
-A puzzle's inventor, its other names and a link to more of it SHALL be under
-the origins heading and nowhere else on the page. The heading SHALL read
-`## Where the puzzles come from` for a game that declares rulesets, which is
-several puzzles, and `## Where the puzzle comes from` for any other.
-
-#### Scenario: A page's origins section is misplaced or misnamed
-
-- **WHEN** a page has an origins heading that is not immediately before
-  `## Hints` (or before the parameters section, on a hintless game's page), or
-  that is the singular on a page whose game declares rulesets, or the plural on
-  one whose game does not
-- **THEN** the help-coverage guard fails, naming the game
-
-#### Scenario: A credit is left in the rules
-
-- **WHEN** a page says who invented its puzzle, who designed it, what it is
-  known as or what it is an implementation of, anywhere outside its origins
-  section
-- **THEN** the help-coverage guard fails, naming the game and the words it
-  found
-- **AND** a credit phrased in none of those words passes, since the words are
-  the only thing a test can tell a credit by
 
 ### Requirement: A game's Hints section teaches its hint marks
 
@@ -277,27 +216,6 @@ and draws, and whoever writes or changes either holds it to that.
 
 - **WHEN** a change alters what a game's hint draws or the words it uses for a mark
 - **THEN** the same change updates that game's `## Hints` section
-
-### Requirement: A game's parameters section is generated from its paramConfig
-
-A page's `## <Name> parameters` section SHALL write `{{parameters}}` where its
-list of fields goes, and the help build SHALL replace it with a list generated
-from the game's `paramConfig`: each field's dialog label, its `doc`, and a
-sentence stating its declared `bounds`, with the difficulty field's standard
-text linking to what the tier names mean. Prose around the placeholder stays
-hand-written.
-
-#### Scenario: A page without the placeholder
-
-- **WHEN** a game page's parameters section does not carry `{{parameters}}`
-- **THEN** the help-coverage guard fails, naming the page
-- **AND** the help build refuses it too
-
-#### Scenario: A game gains a field
-
-- **WHEN** a game adds a `paramConfig` field
-- **THEN** its page lists the field with no edit to the page, and the field's
-  `doc` is what the page says of it
 
 ### Requirement: A help page names a field's choice through a placeholder
 
@@ -435,3 +353,82 @@ its source is in.
 
 - **WHEN** a game's page links `../features#difficulty`
 - **THEN** the help-coverage guard fails, naming the page and the target
+
+### Requirement: A game's help page is built from its description
+
+Every help page the app serves SHALL be this project's own. The site-level
+pages SHALL be `help/*.md`, and each cataloged game's page SHALL be built from
+the `help` of its description, `src/games/<puzzleId>/<puzzleId>.description.yaml`,
+and served at `/help/<puzzleId>.html`. There SHALL NOT be an `upstream/`
+subdirectory under `help/`: a page describing a game must be correctable by
+the change that alters the game.
+
+#### Scenario: A game's page is read from its description
+
+- **WHEN** the help build renders a game's page
+- **THEN** it reads the game's description and no other source
+- **AND** no served page is read from a directory that forbids editing it
+
+### Requirement: A game's help page has one skeleton, which its renderer writes
+
+A game's page SHALL be rendered from its description's help fields in one
+order: the catalog's name as its title; `rules`, unheaded; `controls` under
+`## Controls`; each of `sections` under its own heading; `origins`; `hints`
+under `## Hints`; and `## <Name> parameters` last. Every `#` and `##` heading
+SHALL be the renderer's, and a prose field that writes one SHALL fail the
+load, naming the file and the field.
+
+#### Scenario: A prose field writes a section heading
+
+- **WHEN** a description's `controls` holds a line `## Keyboard`
+- **THEN** rendering the page fails, naming the description and `controls`
+- **AND** a `### Keyboard` line is the section's own and renders
+
+#### Scenario: A description-only commit runs the guard
+
+- **WHEN** a commit stages only a game's description
+- **THEN** the pre-commit hook selects the help-coverage guard, because the
+  test selector reaches a description through the help pages' glob
+
+### Requirement: A puzzle's credits are its description's origins
+
+A puzzle's inventor, its other names and a link to more of it SHALL be in its
+description's `origins` and nowhere else on the page. The renderer SHALL head
+it `## Where the puzzles come from` for a game that declares rulesets, which
+is several puzzles, and `## Where the puzzle comes from` for any other.
+
+#### Scenario: A game gains rulesets
+
+- **WHEN** a game whose page has an origins section declares rulesets
+- **THEN** its heading reads "Where the puzzles come from" with no edit to
+  the description
+
+#### Scenario: A credit is left in the rules
+
+- **WHEN** a page says who invented its puzzle, who designed it, what it is
+  known as or what it is an implementation of, anywhere outside its origins
+  section
+- **THEN** the help-coverage guard fails, naming the game and the words it
+  found
+- **AND** a credit phrased in none of those words passes, since the words are
+  the only thing a test can tell a credit by
+
+### Requirement: A game's parameter list is generated from its paramConfig
+
+The renderer SHALL write `{{parameters}}` between a description's
+`parameters.before` and `parameters.after`, and the help build SHALL replace
+it with a list generated from the game's `paramConfig`: each field's dialog
+label, its `doc`, and a sentence stating its declared `bounds`, with the
+difficulty field's standard text linking to what the tier names mean. A
+prose field that writes `{{parameters}}` SHALL fail the load.
+
+#### Scenario: A description writes the list's placeholder
+
+- **WHEN** a description's `hints` holds `{{parameters}}`
+- **THEN** rendering the page fails, naming the description and `hints`
+
+#### Scenario: A game gains a field
+
+- **WHEN** a game adds a `paramConfig` field
+- **THEN** its page lists the field with no edit to the description, and the
+  field's `doc` is what the page says of it

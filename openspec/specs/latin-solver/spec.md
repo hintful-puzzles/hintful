@@ -107,7 +107,7 @@ firing, and SHALL weigh no cell that could still hold a repeated symbol.
 
 ### Requirement: The Latin ladder is compiled from its description
 
-The library's techniques SHALL be stated once in `latin.description.json`, and
+The library's techniques SHALL be stated once in `latin.description.yaml`, and
 a described game's ladder in its description, and SHALL run as the functions
 `npm run describe` compiles from them. A technique SHALL scan in the order its
 binders are written and fire the first binding whose conclusion changes the
