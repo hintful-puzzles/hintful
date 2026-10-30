@@ -23,12 +23,17 @@ the soundness checker, are under [`research/`](../research/).
    description. Edit the description, never the compiled module:
    `src/describe/compile.test.ts` compiles every description again in the
    gate and fails where a module differs.
-3. **Pairs each technique with the reason its records carry**, in a
+3. **Checks every technique it states sound** with
+   `npx vitest run -c research/technique-check/vitest.config.ts describe-check`,
+   which records each verdict in `src/describe/soundness.json`; the gate
+   fails on a compiled technique with no verdict for its statement as it
+   reads now (§ "Checking a technique sound").
+4. **Pairs each technique with the reason its records carry**, in a
    `Record` keyed by the compiled module's `LadderId`, so a technique the
    description adds and the game does not pair is a type error
    ([`unequal/solver.ts`](../src/games/unequal/solver.ts)'s
    `UNEQUAL_RUNGS`; § "A firing's reason is built from its binding").
-4. **Deals its clues as the description reads them**: one `ClueList` a
+5. **Deals its clues as the description reads them**: one `ClueList` a
    kind, in the order the techniques should meet them
    (`describedLadder` in the same file).
 
@@ -41,6 +46,7 @@ the soundness checker, are under [`research/`](../research/).
 | A statement's order is behavior | you restate a technique, or a hint changes after a description edit |
 | A conclusion that is false is a contradiction | a technique must refuse a board, or a solver reports a false ambiguity |
 | A firing's reason is built from its binding | a hint's words need a fact about a firing |
+| Checking a technique sound | you state or edit a technique, or the gate reports one unchecked |
 
 ## The formula syntax
 
@@ -100,10 +106,25 @@ of elements an ordered array, an element its index, `none` is `-1`.
 `d in cand(c)` reads one place of the cube. A formula that mixes sorts or
 names what the grid does not have is refused at compile time.
 
-A comprehension or a `set(...)` allocates an array each time it is
-evaluated, so a statement that only counts says `count(...)`, and one that
-names a single member says `the(...)` in the conclusion, where it runs once
-a firing (the library's `hiddenSingle`).
+**A hint and a solve run the same function two ways.** A hint passes `fire`,
+is told each firing before any fact is made, and stops at the first, so its
+reasons read the marks the firing read. A solve passes `null`: the function
+makes each fact as it concludes it and goes on through every binding, which
+reaches the same fixpoint, because a fact concluded on marks a firing has
+narrowed still holds. The library's statements were compared in both ways
+against the engine they replaced.
+
+**What a statement costs.** Within one call a rung keeps each cell's whole
+candidate mask once read, and clears them after a firing it goes on from;
+`d in cand(c)` is one read of the cube. A quantifier over a set of values
+whose body is membership (`exists d in T: d in cand(c)`) compiles to one
+bitwise test. A set of elements is an array: a statement that binds subsets
+of rows binds their indices, `y(c)`, as a set of numbers instead (the
+library's `fish`). And a value read for every binding of an inner loop is
+better bound once outside it (`set`'s `open`, `hiddenSingle`'s `placed`).
+`research/describe/` measured the compiled ladder per deal against the
+hand-written one it replaced
+(`openspec/changes/archive/*-compile-the-latin-ladder/report.md` § "Speed").
 
 ## A statement's order is behavior
 
@@ -138,3 +159,24 @@ function that turns its binding and one fact into the reason the record
 carries, read off the marks before any of the firing's facts is made. A
 reason is not the bare binding where its words quote the board: a sign's
 quotes the other end's least candidate as it stood when the step fired.
+
+## Checking a technique sound
+
+[`research/technique-check/describe-check.ts`](../research/technique-check/describe-check.ts)
+reads a description's own formulas on small boards (orders 3 and 4) as z3
+constraints: the answer and the marks are variables, the marks consistent
+with the answer, and every clue the board could be dealt is present or not,
+so one check covers every layout. A technique is sound when no binding's
+premise holds while its conclusion fails under the rules. Library techniques
+are checked on a plain Latin square, which is the weakest rule set any Latin
+game adds to.
+
+Each technique has a planted defect beside it in `describe-check.test.ts`
+that must come out unsound. A plant that only makes a technique strike
+less, or that drops a condition consistent marks already give, is not a
+defect, and the checker rightly calls it sound: three of the first plants
+were that, and were replaced.
+
+The verdict is recorded under a fingerprint of the statement, the rules it
+was checked against and the orders (`src/describe/soundness.ts`), so editing
+either makes it unchecked until the check runs again.

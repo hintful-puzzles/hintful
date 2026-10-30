@@ -153,6 +153,19 @@ stripped.
 - **THEN** a bar is flagged, from both ends, between every pair of neighboring
   cells whose solution values differ by exactly 1, and between no other pair
 
+### Requirement: Solver: Unequal's ladder is its two descriptions
+
+Unequal's solver SHALL run the ladder of `unequal.description.json` in
+Unequal mode and of `adjacent.description.json` in Adjacent mode: the sign
+and bar techniques they state and the Latin library's they place, each at the
+tier the description gives it. The search above them stays the engine's.
+
+#### Scenario: A sign fires as its description states it
+
+- **WHEN** a sign's smaller end has 3 as its least candidate and the larger
+  end still notes 2 and 3, at a cap of Easy or above
+- **THEN** the solver strikes 2 and 3 from the larger end in one firing
+
 ### Requirement: Controls: A digit places a number or toggles its pencil mark, and Backspace or Space clears
 
 Unequal SHALL take its selection from the engine's note-taking cell

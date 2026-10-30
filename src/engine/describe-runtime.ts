@@ -21,6 +21,10 @@ export interface Marks {
   cand(c: number): number;
   /** Whether the cell may still hold `d`. */
   has(c: number, d: number): boolean;
+  /** Strike `d` from the cell, where a technique has no `fire` to tell. */
+  strikeAt(c: number, d: number): void;
+  /** Place `d` in the cell, where a technique has no `fire` to tell. */
+  placeAt(c: number, d: number): void;
 }
 
 /** One firing's facts, three numbers each: {@link STRIKE} or {@link PLACE},
@@ -29,9 +33,18 @@ export type Facts = readonly number[];
 export const STRIKE = 0;
 export const PLACE = 1;
 
-/** Called once a binding's conclusion has facts that change the marks, with
- * the binding's names and the facts, before any is applied. */
-export type Fire<B> = (binding: B, facts: Facts) => void;
+/**
+ * Called once a binding's conclusion has facts that change the marks, with
+ * the binding's names and the facts, before any is applied: what a hint
+ * records. It returns whether the technique goes on to its later bindings.
+ *
+ * Where a technique is given no `fire` (`null`), nothing records, and it
+ * makes each fact as it concludes it (`strikeAt`, `placeAt`) and goes on to
+ * every later binding. That is sound because a fact concluded on marks a
+ * firing has narrowed still holds, and a solve reaches the same fixpoint
+ * whichever order its facts come in.
+ */
+export type Fire<B> = (binding: B, facts: Facts) => boolean;
 
 /** A clue kind as dealt: the element each clue sits at and its value, by
  * clue index, and the clue at each element (`-1` where there is none). */
@@ -170,10 +183,12 @@ function gridSpace(w: number, h: number): GridSpace {
 
 // --- what the generated code calls for its set algebra -------------------
 
+/** The members of a set of values, counted in a fixed number of steps, as
+ * compiled code counts a subset many times a scan. */
 export function popcount(m: number): number {
-  let c = 0;
-  for (let v = m; v; v &= v - 1) c++;
-  return c;
+  let v = m - ((m >>> 1) & 0x55555555);
+  v = (v & 0x33333333) + ((v >>> 2) & 0x33333333);
+  return (Math.imul((v + (v >>> 4)) & 0x0f0f0f0f, 0x01010101) >>> 24) & 0xff;
 }
 
 /** The least value of a set of values, or `-1`. */

@@ -40,9 +40,9 @@ descriptions are restated to scan as the engine scans:
 | --- | --- |
 | `hiddenSingle` | rows then columns, values ascending |
 | `single` | column by column, top to bottom |
-| `placed` | the placed cell's column, then its row |
-| `set` | rows then columns; within a line, the subsets of its unplaced values counted in binary from the largest value |
-| `fish` | by value; the subsets of the rows lacking it, counted the same way |
+| `placed` | the placed cell's column, then its row, one firing a placement |
+| `set` | rows then columns; within a line, the empty subset first (the line's check for an emptied cell), then the subsets of its unplaced values counted in binary from the largest value |
+| `fish` | by value; the empty subset first (every column checked for a place left), then the subsets of the rows lacking it, by index, counted the same way |
 | `wing` | middle in reading order, `x` ascending, then each target as seen from an end of the middle's least other value |
 | `sign` | each clue in the game's order, both ends' strikes interleaved by value |
 | `adjacent`, `adjacentSet` | column by column, then up, right, down, left |
@@ -66,10 +66,16 @@ set of values than it holds. The interpreter detected only the first, at the
 strike. A conclusion is now a formula that must hold: `strike` and `place` are
 true, and a binding whose conclusion is false proves the marks inconsistent.
 `single` concludes `|cand(c)| = 1 and place(...)`, which is false on an empty
-cell; `hiddenSingle` the same of a value's places. The checker reads a false
-conclusion as "the premise is unsatisfiable under the rules", which is the
-soundness of a contradiction. Strikes do not check for an emptied cell: the
-technique that would see it does, as the engine always has.
+cell; `hiddenSingle` the same of a value's places; `set` and `fish` check, on
+their empty subset, for a cell or column with nothing left, placed cells
+included, as the engine's set search did before looking for a set. The
+checker reads a false conclusion as "the premise is unsatisfiable under the
+rules", which is the soundness of a contradiction. Strikes do not check for
+an emptied cell: the technique that would see it does, as the engine always
+has. The first statement of `set` left that check out, and the comparison
+found it: a clue can strike a placed cell's own value, Unequal's Adjacent
+`valid` skips the last row and column, and the recursion accepted a broken
+grid as a second answer.
 
 ### 3. Generated TypeScript, checked in, held current by a test
 
@@ -84,9 +90,10 @@ Where things live:
 
 | What | Where |
 | --- | --- |
-| The formula parser, the compiler and the runtime the generated code calls | `src/describe/` |
-| The Latin library, and what it compiles to | `src/engine/latin.description.json`, `src/engine/latin-techniques.ts` |
-| Unequal's two descriptions, and what they compile to | `src/games/unequal/{unequal,adjacent}.description.json`, `src/games/unequal/techniques.ts` |
+| The formula parser and the compiler | `src/describe/` |
+| The runtime the compiled code calls (the engine's, since the engine and games import nothing above them) | `src/engine/describe-runtime.ts` |
+| The Latin library, and what it compiles to | `src/engine/latin.description.json`, `src/engine/latin.compiled.ts` |
+| Unequal's two descriptions, and what they compile to | `src/games/unequal/{unequal,adjacent}.description.json`, `.compiled.ts` beside each |
 | The interpreter, the pilot's comparisons, the checker | `research/describe/`, `research/technique-check/`, reading the descriptions where they now live |
 
 ### 4. Types decide the representation
@@ -101,10 +108,15 @@ interpreter was 15 to 146 times slower because every value was a boxed array.
 
 ### 5. A firing hands its binding to the engine, which records it
 
-A compiled technique calls `fire(binding, facts)` with the binding as an
-object of its named binders and the facts it would apply, before applying
-them. The engine applies them and, on the recording path, records each with a
-reason built from the binding and the board before the firing. Those builders
+On the recording path a compiled technique calls `fire(binding, facts)` with
+the binding as an object of its named binders and the facts it would apply,
+before applying them, and stops there. The engine applies them and records
+each with a reason built from the binding and the board before the firing.
+On a solve no one records, so the technique is given no `fire`: it makes
+each fact as it concludes it and goes on through every binding. That reaches
+the same fixpoint, because a fact concluded on marks a firing has narrowed
+still holds, and it is what brought the compiled ladder near the
+hand-written one's speed (the report's § "Speed"). Those builders
 (one a technique, in `latin.ts` and Unequal's `solver.ts`) replace the reason
 construction scattered through the hand-written techniques, and the reason
 objects, so the hint words, are unchanged. A reason cannot be the bare binding:
@@ -132,19 +144,23 @@ library techniques, until their own changes describe them.
 ### 8. The repeated symbol stays hand-written, for Salad's change
 
 A solver with a repeated symbol (Salad) runs the hand-written multiplicity
-path: the library has no repeated symbol, and the report puts Salad last in
-order of fit. That path is the `repeat` branch only, and is removed when
-Salad is described.
+path for its rungs (`diffSimple`, `setGeneral`, the wing with the repeat
+left out) and for placing the repeated symbol: the library has no repeated
+symbol, and the report puts Salad last in order of fit. An ordinary value
+placed in such a cube runs the library's `placed`, which strikes the same
+cells in the same order. That path is removed when Salad is described.
 
 ### 9. Soundness is checked before compiling
 
-`npm run describe` checks each technique sound against its description's
-rules on small boards with the ported checker before it writes the module,
-and records each verdict under a hash of what was checked (the technique,
-the rules, the sizes). The compiler refuses a technique whose hash has no
-sound verdict, and the gate's test checks the hashes against the
-descriptions, so a technique edited without being checked fails the gate
-without running z3 there.
+The checker reads each technique from its description and checks it sound
+against the description's rules on boards of order 3 and 4
+(`research/technique-check/describe-check.ts`), and records each verdict
+under a fingerprint of what was checked (the statement, the rules, the
+orders) in `src/describe/soundness.json`. The gate's test fails on a compiled
+technique whose fingerprint has no verdict, so a technique edited without
+being checked fails the gate without running z3 there. The check runs under
+vitest rather than inside `npm run describe`, because the checker's modules
+are research's and run only there.
 
 ## Risks
 

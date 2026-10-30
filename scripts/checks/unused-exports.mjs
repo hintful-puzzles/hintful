@@ -95,14 +95,18 @@ const KEPT_UNUSED = {
   // The compiler (src/describe/compile.ts) writes calls to these into a
   // compiled module, by name, for a statement that uses the form; no module
   // compiled today does.
-  "src/engine/describe-runtime.ts::rangeMask":
-    "called by compiled code for range(a, b)",
   "src/engine/describe-runtime.ts::sameSet":
     "called by compiled code for = on element sets",
   "src/engine/describe-runtime.ts::subsetOf":
     "called by compiled code for subset on element sets",
   "src/engine/describe-runtime.ts::union":
     "called by compiled code for + on element sets",
+  "src/engine/describe-runtime.ts::setOf":
+    "called by compiled code for a literal set of elements",
+  // Read by the soundness checker under research/, which this scan does not
+  // read, so that it checks at the orders the fingerprint names.
+  "src/describe/soundness.ts::CHECKED_ORDERS":
+    "read by research/technique-check/describe-check.test.ts",
 };
 
 /** Files whose exports are reached from outside the TypeScript graph. */

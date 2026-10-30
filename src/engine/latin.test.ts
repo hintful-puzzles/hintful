@@ -35,6 +35,7 @@ import {
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
   DIFF_UNFINISHED,
+  LATIN_RUNGS,
   LatinSolver,
   type LatinSolverConfig,
   latinGenerate,
@@ -171,7 +172,7 @@ describe("latin deductions", () => {
     const s = blank(4);
     for (const x of [0, 1, 2]) only(s, x, 0, [1, 2]);
     only(s, 3, 0, [3, 4]);
-    expect(s.set(s.cubepos(0, 0, 1), 4 * 4, 1)).toBe(-1);
+    expect(LATIN_RUNGS["latin.set"](s)).toBe(-1);
   });
 
   // A value confined across lines is two facts, and the solver's search finds
@@ -189,7 +190,7 @@ describe("latin deductions", () => {
       }
     const recorded: DeductionRecord[] = [];
     s.recorder = (r) => recorded.push(r);
-    expect(s.diffSet(true)).toBe(1);
+    expect(LATIN_RUNGS["latin.fish"](s)).toBe(1);
     const reason = recorded[0].reason as {
       cells: { x: number; y: number }[];
       lines: { axis: string; count: number; cells: { x: number; y: number }[] };

@@ -1,0 +1,11 @@
+{
+  "src/engine/latin.description.json#fish": "8f1c3e467cc50d34",
+  "src/engine/latin.description.json#hiddenSingle": "fb1a5cda590431e2",
+  "src/engine/latin.description.json#placed": "5dd52ce2a48baee8",
+  "src/engine/latin.description.json#set": "c7e0a6c4c0ab66d4",
+  "src/engine/latin.description.json#single": "6ab3ab0f1610abbf",
+  "src/engine/latin.description.json#wing": "7af3cb897f06d4d1",
+  "src/games/unequal/adjacent.description.json#adjacent": "2fb58118aa866778",
+  "src/games/unequal/adjacent.description.json#adjacentSet": "14ea8ea02dde0804",
+  "src/games/unequal/unequal.description.json#sign": "e8b4c171334b86a5"
+}

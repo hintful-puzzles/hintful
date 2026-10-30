@@ -53,9 +53,9 @@ export const MODULES = [
     cases: [
       {
         within: "LatinSolver.place",
-        why: "a placed digit is no longer ruled out of the rest of its column",
-        find: "      if (i === x) continue;",
-        replace: "      if (true) continue;",
+        why: "a placed digit is no longer ruled out of the rest of its row and column",
+        find: "    compiled.placed(this, this.sp, y * o + x, fire);",
+        replace: "    void fire;",
       },
       {
         // Was EQUIVALENT while the ledger was a scan-skipping optimization
@@ -92,12 +92,6 @@ export const MODULES = [
         why: "the repeated symbol is placed as soon as one cell can take it, instead of once exactly `times` can",
         find: "    const need = positional ? this.multiplicity(1 + (start % s)) : 1;",
         replace: "    const need = 1;",
-      },
-      {
-        within: "LatinSolver.set",
-        why: "set elimination's over-count check no longer reports a contradiction",
-        find: "        if (rows > n - count) return -1;",
-        replace: "        if (rows > n - count) return 0;",
       },
       {
         within: "LatinSolver.forcing",
@@ -137,19 +131,19 @@ export const MODULES = [
         replace: "  const o = Math.min(w, h);\n  const latin = latinGenerate(o, rs);",
       },
       {
-        within: "latinSolverOnce",
+        within: "latinSolver",
         why: "the seed hook (Salad's ball/cross clues) never runs",
         find: "  cfg.seed?.(solver);",
         replace: "  void cfg.seed;",
       },
       {
-        within: "latinSolverOnce",
+        within: "latinSolver",
         why: "the final candidate cube is not written back to cubeOut",
         find: "  if (cfg.cubeOut) cfg.cubeOut.set(solver.cube);\n  return ret;",
         replace: "  return ret;",
       },
       {
-        within: "latinSolverOnce",
+        within: "latinSolver",
         why: "an inconsistent set of givens is graded solvable, not impossible",
         find: "  if (!solver.alloc(grid)) {",
         replace: "  if (false) {",

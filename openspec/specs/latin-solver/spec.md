@@ -12,12 +12,12 @@ empty square, that may repeat in a line, and what the generator promises.
 ### Requirement: The solver applies the generic deductions up to the difficulty ceiling
 
 The engine SHALL provide one generic Latin-square solver, `latinSolver`, for
-every Latin-square game. It SHALL apply, up to `maxdiff`, positional and
-numeric elimination, row and column set elimination, single-number set
-elimination, forcing chains, and guess-and-verify recursion. These SHALL be
-interleaved with the game's own `usersolvers` at their declared difficulty
-levels and validated by the game's `valid` callback. A forcing chain, a
-supposition, SHALL run only at the recursive level.
+every Latin-square game. It SHALL apply, up to `maxdiff`, the Latin library's
+techniques (singles, set and single-number set elimination, the wing),
+forcing chains, and guess-and-verify recursion, interleaved with the game's
+own deductions at their levels, or a described game's ladder, and validated
+by the game's `valid` callback. A forcing chain, a supposition, SHALL run only
+at the recursive level.
 
 #### Scenario: Respects the difficulty ceiling
 
@@ -104,3 +104,38 @@ firing, and SHALL weigh no cell that could still hold a repeated symbol.
   and 3, a cell in its column is down to 2 and 3, a fourth cell shares a line
   with both of those, and `maxdiff` reaches the single-number set level
 - **THEN** 3 is struck from the fourth cell
+
+### Requirement: The Latin ladder is compiled from its description
+
+The library's techniques SHALL be stated once in `latin.description.json`, and
+a described game's ladder in its description, and SHALL run as the functions
+`npm run describe` compiles from them. A technique SHALL scan in the order its
+binders are written and fire the first binding whose conclusion changes the
+marks; a binding whose conclusion is false SHALL prove the marks
+inconsistent. A cube with a repeated symbol SHALL run the engine's own
+multiplicity deductions instead.
+
+#### Scenario: A value with no place left is a contradiction
+
+- **WHEN** a row's open cells have all lost a value the row still lacks
+- **THEN** the hidden single's conclusion is false for that row and value
+- **AND** `latinSolver` returns `DIFF_IMPOSSIBLE`
+
+#### Scenario: The scan order is the statement's
+
+- **WHEN** two naked sets in different rows could each fire
+- **THEN** the one in the earlier row fires, because `set` binds its unit
+  first and the units are the rows before the columns
+
+### Requirement: A compiled firing is recorded with a reason built from its binding
+
+On the recording path, each fact of a compiled firing SHALL be recorded with
+a reason built from the firing's binding and the marks as they stood before
+the firing, so a hint's words read the same reason objects whatever stated
+the technique.
+
+#### Scenario: A sign quotes its bound as the step found it
+
+- **WHEN** a sign's firing strikes values from both its ends
+- **THEN** every strike's reason quotes the other end's least or greatest
+  candidate as it stood before any of the firing's strikes

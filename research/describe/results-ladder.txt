@@ -1,6 +1,6 @@
 Seeds per params: 10.
 
-unequal: 150 boards; 600 of 600 closures equal cell by cell; 150 of 150 grades equal; ladder median 1.5 ms, max 35.4 ms
-  boards each technique changed the marks on: latin.placed 150, latin.single 135, sign 120, latin.hiddenSingle 114, latin.set 47, latin.wing 23, latin.fish 13
-adjacent: 120 boards; 480 of 480 closures equal cell by cell; 120 of 120 grades equal; ladder median 2.6 ms, max 282.3 ms
-  boards each technique changed the marks on: latin.placed 120, latin.single 100, adjacent 90, latin.hiddenSingle 66, adjacentSet 58, latin.set 14, latin.fish 20
+unequal: 150 boards; 600 of 600 closures equal cell by cell; 150 of 150 grades equal; ladder median 1.0 ms, max 16.1 ms
+  boards each technique changed the marks on: latin.placed 150, latin.hiddenSingle 146, sign 120, latin.set 47, latin.single 67, latin.wing 23, latin.fish 13
+adjacent: 120 boards; 480 of 480 closures equal cell by cell; 120 of 120 grades equal; ladder median 1.0 ms, max 28.1 ms
+  boards each technique changed the marks on: latin.placed 120, latin.hiddenSingle 100, adjacent 90, latin.single 53, adjacentSet 58, latin.set 14, latin.fish 20

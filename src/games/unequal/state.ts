@@ -36,9 +36,8 @@ import type { Ruleset } from "../../engine/ruleset.ts";
 
 export type Difficulty = "trivial" | "easy" | "tricky" | "extreme" | "recursive";
 
-export const DIFF_LATIN = 0;
 const DIFF_EASY = 1;
-export const DIFF_SET = 2;
+const DIFF_SET = 2;
 export const DIFF_EXTREME = 3;
 export const DIFF_RECURSIVE = 4;
 

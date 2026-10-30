@@ -109,8 +109,14 @@ interface Env {
   clues: ReadonlyMap<string, ClueKind>;
   /** The runtime helpers the code calls, to import. */
   used: Set<string>;
+  /** The declarations of the arrays a technique's comprehensions reuse, made
+   * once a call; `null` outside a technique's body. */
+  scratch: string[] | null;
   /** Whether `strike` and `place` may be called: in a conclusion only. */
   concluding: boolean;
+  /** Whether the function keeps each cell's candidates as it first reads
+   * them (`cands`), until a firing it goes on from changes the marks. */
+  memo: boolean;
   /** Whether the code reads the clues, so the function takes them. */
   readsClues: { yes: boolean };
 }
@@ -154,6 +160,10 @@ function sameSort(a: Sort, b: Sort): boolean {
   if (a.k === "set" && b.k === "set") return sameSort(a.of, b.of);
   return true;
 }
+
+/** A cell's candidates through the function's `cands`, read once a cell. */
+const candOf = (c: string): string =>
+  `(cands[${c}] >= 0 ? cands[${c}] : (cands[${c}] = b.cand(${c})))`;
 
 function compileExpr(e: Expr, scope: Scope, env: Env, out: Out): Val {
   switch (e.k) {
@@ -256,7 +266,8 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
   const { op } = e;
   if (op === "and" || op === "or" || op === "implies")
     return shortCircuit(op, e.a, e.b, scope, env, out);
-  // `d in cand(c)` reads one place of the cube, not the cell's whole mask.
+  // `d in cand(c)` reads one place of the cube, which is cheaper than any
+  // kept mask: a mask is kept for what reads the whole of it.
   if ((op === "in" || op === "notin") && e.b.k === "call" && e.b.fn === "cand") {
     const d = compileExpr(e.a, scope, env, out);
     expect(d, "num", op);
@@ -435,6 +446,70 @@ function clueKindArg(args: readonly Expr[], env: Env): string {
   return a.name;
 }
 
+/** Whether `name` is read anywhere in `e`. */
+function reads(e: Expr, name: string): boolean {
+  switch (e.k) {
+    case "num":
+      return false;
+    case "name":
+      return e.name === name;
+    case "set":
+      return e.elems.some((x) => reads(x, name));
+    case "size":
+    case "not":
+    case "neg":
+      return reads(e.of, name);
+    case "bin":
+      return reads(e.a, name) || reads(e.b, name);
+    case "call":
+      return e.args.some((x) => reads(x, name));
+    case "quant":
+    case "agg":
+      return (
+        e.binders.some(
+          (b) => reads(b.of, name) || (b.where !== null && reads(b.where, name)),
+        ) ||
+        (e.k === "quant"
+          ? reads(e.body, name)
+          : e.term !== null && reads(e.term, name)) ||
+        (e.k === "agg" && e.where !== null && reads(e.where, name))
+      );
+  }
+}
+
+/**
+ * `exists d in S: d in T` and `forall d in S: d in T` (or `not in`), where
+ * both are sets of values, as the bitwise test it is: one AND, not a loop
+ * over `S`'s members. `null` where the quantifier has another shape.
+ */
+function setQuantifier(
+  e: Extract<Expr, { k: "quant" }>,
+  scope: Scope,
+  env: Env,
+  out: Out,
+): Val | null {
+  const [b, ...more] = e.binders;
+  const body = e.body;
+  if (b === undefined || more.length > 0 || b.kind !== "in" || b.where !== null)
+    return null;
+  if (body.k !== "bin" || (body.op !== "in" && body.op !== "notin")) return null;
+  if (body.a.k !== "name" || body.a.name !== b.name || reads(body.b, b.name))
+    return null;
+  const probe: Env = { ...env, used: new Set(), scratch: null };
+  if (!isMask(compileExpr(b.of, scope, probe, new Out(0)).sort)) return null;
+  if (!isMask(compileExpr(body.b, scope, probe, new Out(0)).sort)) return null;
+  const s = compileExpr(b.of, scope, env, out);
+  const t = compileExpr(body.b, scope, env, out);
+  // The members of S that the body holds of: in T, or outside it.
+  const hit = body.op === "in" ? `(${s.code} & ${t.code})` : `(${s.code} & ~${t.code})`;
+  const miss =
+    body.op === "in" ? `(${s.code} & ~${t.code})` : `(${s.code} & ${t.code})`;
+  return {
+    code: e.q === "exists" ? `(${hit} !== 0)` : `(${miss} === 0)`,
+    sort: BOOL,
+  };
+}
+
 function quantifier(
   e: Extract<Expr, { k: "quant" }>,
   scope: Scope,
@@ -442,6 +517,8 @@ function quantifier(
   out: Out,
 ): Val {
   const forall = e.q === "forall";
+  const masked = setQuantifier(e, scope, env, out);
+  if (masked !== null) return masked;
   const r = Out.fresh("_q");
   const label = Out.fresh("Q");
   out.emit(`let ${r} = ${forall};`);
@@ -543,16 +620,24 @@ function aggregate(
       // The term's sort decides the result's representation, so it is read
       // off a pass whose code is thrown away before the result is declared.
       let termSort: Sort = NUM;
-      bindingLoops(e.binders, scope, { ...env, used: new Set() }, new Out(0), (sc) => {
+      const probe: Env = { ...env, used: new Set(), scratch: null };
+      bindingLoops(e.binders, scope, probe, new Out(0), (sc) => {
         termSort =
           e.term === null
-            ? name(last.name, sc, env, new Out(0)).sort
-            : compileExpr(e.term, sc, { ...env, used: new Set() }, new Out(0)).sort;
+            ? name(last.name, sc, probe, new Out(0)).sort
+            : compileExpr(e.term, sc, probe, new Out(0)).sort;
       });
       if (!scalar(termSort) || termSort.k === "none")
         throw new CompileError(`set(…) of ${show(termSort)}`);
       sort = setOf(termSort);
-      out.emit(isMask(sort) ? `let ${r} = 0;` : `const ${r}: number[] = [];`);
+      if (isMask(sort)) out.emit(`let ${r} = 0;`);
+      else if (env.scratch !== null) {
+        // One array a site, emptied each time the site is evaluated: its
+        // value is read only until the site is evaluated again, and a
+        // reason copies what it keeps.
+        env.scratch.push(`const ${r}: number[] = [];`);
+        out.emit(`${r}.length = 0;`);
+      } else out.emit(`const ${r}: number[] = [];`);
       loops((sc) => {
         const t = once(term(sc), out);
         if (t.sort.k === "num") out.emit(`${r} |= 1 << ${t.code};`);
@@ -644,7 +729,11 @@ function call(
       return { code: `b.value(${cell(0)})`, sort: NUM };
     case "cand":
       arity(1);
-      return { code: `b.cand(${cell(0)})`, sort: setOf(NUM) };
+      if (!env.memo) return { code: `b.cand(${cell(0)})`, sort: setOf(NUM) };
+      return {
+        code: candOf(once({ code: cell(0), sort: vs[0].sort }, out).code),
+        sort: setOf(NUM),
+      };
     case "abs":
       arity(1);
       expect(vs[0], "num", fn);
@@ -696,8 +785,8 @@ function call(
       // where its conclusion changes the marks.
       out.emit(
         fn === "strike"
-          ? `if (b.has(${c.code}, ${d.code})) facts.push(STRIKE, ${c.code}, ${d.code});`
-          : `if (!b.known(${c.code})) facts.push(PLACE, ${c.code}, ${d.code});`,
+          ? `if (b.has(${c.code}, ${d.code})) { if (fire === null) { b.strikeAt(${c.code}, ${d.code}); changed = true; } else facts.push(STRIKE, ${c.code}, ${d.code}); }`
+          : `if (!b.known(${c.code})) { if (fire === null) { b.placeAt(${c.code}, ${d.code}); changed = true; } else facts.push(PLACE, ${c.code}, ${d.code}); }`,
       );
       env.used.add(fn === "strike" ? "STRIKE" : "PLACE");
       return { code: "true", sort: BOOL };
@@ -724,12 +813,18 @@ const capitalized = (id: string): string => id[0].toUpperCase() + id.slice(1);
 function binderSorts(t: Technique, env: Env): { name: string; sort: Sort }[] {
   const sorts: { name: string; sort: Sort }[] = [];
   const probe = new Out(0);
-  bindingLoops(t.binders, new Map(), { ...env, used: new Set() }, probe, (sc) => {
-    for (const b of t.binders) {
-      const v = sc.get(b.name);
-      if (v !== undefined) sorts.push({ name: b.name, sort: v.sort });
-    }
-  });
+  bindingLoops(
+    t.binders,
+    new Map(),
+    { ...env, used: new Set(), scratch: null },
+    probe,
+    (sc) => {
+      for (const b of t.binders) {
+        const v = sc.get(b.name);
+        if (v !== undefined) sorts.push({ name: b.name, sort: v.sort });
+      }
+    },
+  );
   return sorts;
 }
 
@@ -737,12 +832,29 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   const fnName = t.id.includes(".") ? t.id.slice(t.id.indexOf(".") + 1) : t.id;
   const bindingType = `${capitalized(fnName)}Binding`;
   const readsClues = { yes: false };
-  const tenv: Env = { ...env, readsClues };
+  const onPlace = t.on === "place";
+  // A rung reads a cell's candidates many times a scan, so it keeps them;
+  // a technique run on placing reads few, on every placement, and does not.
+  const scratch: string[] = [];
+  const tenv: Env = { ...env, readsClues, memo: !onPlace, scratch };
   const sorts = binderSorts(t, tenv);
   const fields = sorts.map((s) => `  ${s.name}: ${tsType(s.sort)};`);
   const body = new Out(1);
-  body.emit("const facts: number[] = [];");
-  const onPlace = t.on === "place";
+  body.emit(`const facts = ${fnName}Facts;`);
+  body.emit("let fired = 0;");
+  body.emit("let changed = false;");
+  // The facts and the kept candidates live in one buffer each a function,
+  // emptied each call: a technique never runs inside its own call (a firing
+  // that places runs only the technique run on placing), and `fire` reads the
+  // facts before it returns.
+  const buffer = `${fnName}Cands`;
+  if (!onPlace) {
+    body.emit(
+      `if (${buffer}.length < sp.cells.length) ${buffer} = new Int32Array(sp.cells.length);`,
+    );
+    body.emit(`const cands = ${buffer};`);
+    body.emit("cands.fill(-1);");
+  }
   const fire = (sc: Scope): void => {
     if (t.premise !== null) {
       const p = compileExpr(t.premise, sc, tenv, body);
@@ -750,18 +862,23 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
       body.emit(`if (!(${p.code})) continue;`);
     }
     body.emit("facts.length = 0;");
+    body.emit("changed = false;");
     const c = compileExpr(t.conclude, sc, { ...tenv, concluding: true }, body);
     expect(c, "bool", "conclusion");
     const binding = `{ ${sorts.map((s) => `${s.name}: v_${s.name}`).join(", ")} }`;
     // A conclusion that is false proves the marks inconsistent.
     body.emit(`if (!(${c.code})) return -1;`);
-    if (onPlace) body.emit(`if (facts.length > 0) fire(${binding}, facts);`);
+    body.open("if (changed || facts.length > 0) {");
+    body.emit("fired = 1;");
+    // A technique run on placing makes every firing; a rung stops at the
+    // first unless `fire` asks for the rest.
+    if (onPlace) body.emit(`if (fire !== null) fire(${binding}, facts);`);
     else {
-      body.open("if (facts.length > 0) {");
-      body.emit(`fire(${binding}, facts);`);
-      body.emit("return 1;");
-      body.close();
+      body.emit(`if (fire !== null && !fire(${binding}, facts)) return 1;`);
+      // The firing changed the marks the kept candidates were read from.
+      body.emit("cands.fill(-1);");
     }
+    body.close();
   };
   let params: string;
   if (onPlace) {
@@ -787,14 +904,18 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
     bindingLoops(t.binders, new Map(), tenv, body, fire);
     params = "";
   }
-  body.emit("return 0;");
+  body.emit("return fired;");
   const clueParam = readsClues.yes ? "cl: Clues, " : "";
   const lines = [
     `export interface ${bindingType} {`,
     ...fields,
     "}",
     "",
-    `export function ${fnName}(b: Marks, sp: GridSpace, ${clueParam}${params}fire: Fire<${bindingType}>): number {`,
+    `const ${fnName}Facts: number[] = [];`,
+    ...(onPlace ? [] : [`let ${buffer} = new Int32Array(0);`]),
+    "",
+    `export function ${fnName}(b: Marks, sp: GridSpace, ${clueParam}${params}fire: Fire<${bindingType}> | null): number {`,
+    ...scratch.map((d) => `  ${d}`),
     ...body.lines,
     "}",
   ];
@@ -835,6 +956,8 @@ export function compileLibrary(
     clues: new Map(),
     used,
     concluding: false,
+    memo: false,
+    scratch: null,
     readsClues: { yes: false },
   };
   const parts = Object.entries(lib.techniques).map(([id, stated]) => {
@@ -896,6 +1019,8 @@ export function compileGame(
     clues,
     used,
     concluding: false,
+    memo: false,
+    scratch: null,
     readsClues: { yes: false },
   };
   for (const [kind, c] of d.clueKinds)

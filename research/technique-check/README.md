@@ -26,6 +26,7 @@ npx vitest run -c research/technique-check/vitest.config.ts [run]
 | `symarea` | A11: Symmetry Area's two writings, and Filling, by enumerating every answer |
 | `run_c` | the test's group C pairs that need stated ladders; writes `results-c.txt` |
 | `planted` | a planted defect in each of group C's ladders, each of which must come out unsound |
+| `describe-check` | every technique the app compiles, read from its description and checked against the description's own rules, with a planted defect in each; records each verdict in `src/describe/soundness.json` (`docs/descriptions.md` § "Checking a technique sound") and writes `results-describe.txt` |
 
 The times in the results tables are those of the tool's first version, in
 Python with z3 4.16.

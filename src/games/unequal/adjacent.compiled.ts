@@ -31,8 +31,16 @@ export interface AdjacentBinding {
   e: number;
 }
 
-export function adjacent(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<AdjacentBinding>): number {
-  const facts: number[] = [];
+const adjacentFacts: number[] = [];
+let adjacentCands = new Int32Array(0);
+
+export function adjacent(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<AdjacentBinding> | null): number {
+  const facts = adjacentFacts;
+  let fired = 0;
+  let changed = false;
+  if (adjacentCands.length < sp.cells.length) adjacentCands = new Int32Array(sp.cells.length);
+  const cands = adjacentCands;
+  cands.fill(-1);
   const _a7 = sp.cols;
   for (let _i8 = 0; _i8 < _a7.length; _i8++) {
     const v_L = _a7[_i8];
@@ -45,13 +53,14 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<Adjacent
         const v_b = _a11[_i12];
         const v_e = sp.edgeOf(v_a, v_b);
         facts.length = 0;
+        changed = false;
         let _q13 = true;
         Q14: {
-          for (let _m15 = b.cand(v_b); _m15 !== 0; _m15 &= _m15 - 1) {
+          for (let _m15 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cand(v_b))); _m15 !== 0; _m15 &= _m15 - 1) {
             const v_d = 31 - Math.clz32(_m15 & -_m15);
             const _t16 = b.value(v_a);
             if (!(!(((clueAt(cl.bar, v_e) === 1) === (Math.abs((_t16 - v_d)) === 1))))) continue;
-            if (b.has(v_b, v_d)) facts.push(STRIKE, v_b, v_d);
+            if (b.has(v_b, v_d)) { if (fire === null) { b.strikeAt(v_b, v_d); changed = true; } else facts.push(STRIKE, v_b, v_d); }
             if (!(true)) {
               _q13 = false;
               break Q14;
@@ -59,14 +68,15 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<Adjacent
           }
         }
         if (!(_q13)) return -1;
-        if (facts.length > 0) {
-          fire({ L: v_L, a: v_a, b: v_b, e: v_e }, facts);
-          return 1;
+        if (changed || facts.length > 0) {
+          fired = 1;
+          if (fire !== null && !fire({ L: v_L, a: v_a, b: v_b, e: v_e }, facts)) return 1;
+          cands.fill(-1);
         }
       }
     }
   }
-  return 0;
+  return fired;
 }
 
 export interface AdjacentSetBinding {
@@ -76,8 +86,16 @@ export interface AdjacentSetBinding {
   e: number;
 }
 
-export function adjacentSet(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<AdjacentSetBinding>): number {
-  const facts: number[] = [];
+const adjacentSetFacts: number[] = [];
+let adjacentSetCands = new Int32Array(0);
+
+export function adjacentSet(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<AdjacentSetBinding> | null): number {
+  const facts = adjacentSetFacts;
+  let fired = 0;
+  let changed = false;
+  if (adjacentSetCands.length < sp.cells.length) adjacentSetCands = new Int32Array(sp.cells.length);
+  const cands = adjacentSetCands;
+  cands.fill(-1);
   const _a23 = sp.cols;
   for (let _i24 = 0; _i24 < _a23.length; _i24++) {
     const v_L = _a23[_i24];
@@ -89,13 +107,14 @@ export function adjacentSet(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<Adjac
         const v_b = _a27[_i28];
         const v_e = sp.edgeOf(v_a, v_b);
         facts.length = 0;
+        changed = false;
         let _q29 = true;
         Q30: {
-          for (let _m31 = b.cand(v_b); _m31 !== 0; _m31 &= _m31 - 1) {
+          for (let _m31 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cand(v_b))); _m31 !== 0; _m31 &= _m31 - 1) {
             const v_d = 31 - Math.clz32(_m31 & -_m31);
             let _q32 = false;
             Q33: {
-              for (let _m34 = b.cand(v_a); _m34 !== 0; _m34 &= _m34 - 1) {
+              for (let _m34 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cand(v_a))); _m34 !== 0; _m34 &= _m34 - 1) {
                 const v_d2 = 31 - Math.clz32(_m34 & -_m34);
                 if (((v_d2 !== v_d) && ((clueAt(cl.bar, v_e) === 1) === (Math.abs((v_d2 - v_d)) === 1)))) {
                   _q32 = true;
@@ -104,7 +123,7 @@ export function adjacentSet(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<Adjac
               }
             }
             if (!(!(_q32))) continue;
-            if (b.has(v_b, v_d)) facts.push(STRIKE, v_b, v_d);
+            if (b.has(v_b, v_d)) { if (fire === null) { b.strikeAt(v_b, v_d); changed = true; } else facts.push(STRIKE, v_b, v_d); }
             if (!(true)) {
               _q29 = false;
               break Q30;
@@ -112,12 +131,13 @@ export function adjacentSet(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<Adjac
           }
         }
         if (!(_q29)) return -1;
-        if (facts.length > 0) {
-          fire({ L: v_L, a: v_a, b: v_b, e: v_e }, facts);
-          return 1;
+        if (changed || facts.length > 0) {
+          fired = 1;
+          if (fire !== null && !fire({ L: v_L, a: v_a, b: v_b, e: v_e }, facts)) return 1;
+          cands.fill(-1);
         }
       }
     }
   }
-  return 0;
+  return fired;
 }

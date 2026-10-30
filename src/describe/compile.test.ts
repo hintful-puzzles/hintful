@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { CompileError, compileLibrary } from "./compile.ts";
+import type { DescriptionJson, LibraryJson } from "./description.ts";
+import soundnessJson from "./soundness.json" with { type: "json" };
+import { gameFingerprint, libraryFingerprint, soundnessKey } from "./soundness.ts";
 import { compiledPath, compileSource } from "./sources.ts";
+
+const soundness: Record<string, string> = soundnessJson;
 
 const descriptions = import.meta.glob<unknown>("../**/*.description.json", {
   eager: true,
@@ -26,6 +31,30 @@ describe("compiled descriptions", () => {
     it(`${source} is compiled as it reads now (npm run describe)`, () => {
       expect(compiled.get(compiledPath(source))).toBe(compileSource(source, sources));
     });
+
+  it("compiles only techniques checked sound as they read now", () => {
+    const unchecked: string[] = [];
+    for (const [source, json] of sources) {
+      if (typeof json !== "object" || json === null) continue;
+      if ("library" in json) {
+        const lib = json as LibraryJson;
+        for (const id of Object.keys(lib.techniques))
+          if (soundness[soundnessKey(source, id)] !== libraryFingerprint(lib, id))
+            unchecked.push(soundnessKey(source, id));
+        continue;
+      }
+      const d = json as DescriptionJson;
+      for (const t of d.techniques ?? [])
+        if (
+          !("use" in t) &&
+          soundness[soundnessKey(source, t.id)] !== gameFingerprint(d, t)
+        )
+          unchecked.push(soundnessKey(source, t.id));
+    }
+    // Run `npx vitest run -c research/technique-check/vitest.config.ts
+    // describe-check`, which records each technique it finds sound.
+    expect(unchecked).toEqual([]);
+  });
 
   it("leaves no compiled module without its description", () => {
     const orphans = [...compiled.keys()].filter(
