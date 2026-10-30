@@ -1,0 +1,6 @@
+# Scaffolded without a delta: the session that takes it up decides which
+# specs the budget and the split touch, writes the deltas and removes
+# skip_specs.
+schema: spec-driven
+created: 2026-10-30
+skip_specs: true
