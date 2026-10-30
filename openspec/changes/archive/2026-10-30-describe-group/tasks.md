@@ -9,12 +9,12 @@
 
 - [x] 2.1 Group runs its compiled ladder, with its reasons built from the bindings (`uncluedRung`)
 - [x] 2.2 Compare it with the hand-written deductions on every deal and hint walk, the hidden-identity tiers included (returns, grids, cubes, records); see the comparison fail on a plant
-- [ ] 2.3 Remove `solverNormal` and `solverHard`; every Group test, the differential and the hint guards pass
+- [x] 2.3 Remove `solverNormal` and `solverHard`; every Group test, the differential and the hint guards pass; the description's tiers are pinned to the difficulty constants
 
 ## 3. Speed
 
-- [ ] 3.1 The compiler hoists loop-invariant reads; check it changes no deal or hint on any Latin game against HEAD's modules; measure Group and Unequal per deal against `compile-the-latin-ladder`'s report
+- [x] 3.1 The compiler hoists loop-invariant reads; every Latin game's deals and hint walks trace identical against HEAD's modules, and a planted defect is seen; Group and Unequal measured per deal against the hand-written engine
 
 ## 4. Close
 
-- [ ] 4.1 Run the app, write the report, update the guides, archive, file the next Latin game
+- [x] 4.1 Run the app, write the report, update the guides, archive, file the next Latin game (`describe-towers`)

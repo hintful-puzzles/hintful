@@ -27,6 +27,7 @@ import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { newGameDesc } from "./generator.ts";
+import { tiers as ladderTiers } from "./group.compiled.ts";
 import { groupGame } from "./index.ts";
 import {
   COL_FLASH,
@@ -44,6 +45,7 @@ import {
   DIFF_HARD,
   DIFF_NAMES,
   DIFF_NORMAL,
+  DIFF_TRIVIAL,
   DIFF_UNREASONABLE,
   decodeParams,
   encodeGrid,
@@ -130,6 +132,21 @@ describe("params codec", () => {
     );
     expect(error(P(6, DIFF_NORMAL, false))).toBeNull();
     expect(error(P(2, DIFF_NORMAL, true))).toBe("Grid size must be at least 3.");
+  });
+});
+
+describe("the description's tiers", () => {
+  // The ladder runs each technique at its tier's index in the description,
+  // and the params encode a tier by its constant: one order, held twice.
+  it("are the difficulty levels, in order", () => {
+    expect(ladderTiers).toHaveLength(DIFF_NAMES.length);
+    expect([
+      ladderTiers[DIFF_TRIVIAL],
+      ladderTiers[DIFF_NORMAL],
+      ladderTiers[DIFF_HARD],
+      ladderTiers[DIFF_EXTREME],
+      ladderTiers[DIFF_UNREASONABLE],
+    ]).toEqual(["Trivial", "Normal", "Hard", "Extreme", "Unreasonable"]);
   });
 });
 

@@ -101,10 +101,6 @@ const KEPT_UNUSED = {
     "called by compiled code for subset on element sets",
   "src/engine/describe-runtime.ts::union":
     "called by compiled code for + on element sets",
-  // Read by research/describe/'s comparison of Group's two ladders, which
-  // goes with the hand-written one.
-  "src/games/group/solver.ts::COMPARE":
-    "read by research/describe/compare-group.test.ts",
   // Read by the soundness checker under research/, which this scan does not
   // read, so that it checks at the orders the fingerprint names.
   "src/describe/soundness.ts::CHECKED_ORDERS":

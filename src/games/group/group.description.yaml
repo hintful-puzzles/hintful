@@ -143,7 +143,8 @@ techniques:
   - { use: latin.single, tier: Trivial, rung: single }
   # Placed a·b, b·c and one of (a·b)·c and a·(b·c), the other is the same
   # element, where its cell can still hold it: a, b and c in order, the first
-  # changing slowest.
+  # changing slowest. A cell that cannot is passed over, not a contradiction,
+  # as in upstream's shipped build (its `return -1` is STANDALONE_SOLVER's).
   - id: associativity
     tier: Normal
     rung: associativity

@@ -198,7 +198,7 @@ describe("group hint — plan solves boards", () => {
 
   it("solves an identity-hidden Tricky board, teaching an identity-mark elimination", () => {
     // The identity-hidden `DIFF_HARD` (Tricky) tier is the one that exercises
-    // solverHard, which the shared first-leaf resume never reaches.
+    // `notIdentity`, which the shared first-leaf resume never reaches.
     let { state } = pinned("identityElim");
     expect(state.id, "the elimination is an identity-hidden board's").toBe(false);
     for (let i = 0; i < 500 && groupGame.status(state) === "ongoing"; i++) {

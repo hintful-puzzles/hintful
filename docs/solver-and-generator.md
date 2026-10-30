@@ -1647,7 +1647,7 @@ pass's flags and adds one for a cell the answer contradicts, and
 [`engine/latin.ts`](../src/engine/latin.ts): its `solver.ts` is its own clue
 deductions, a `valid` callback over completed grids, and a thin driver
 mapping its difficulty levels onto the `latinSolver` config.** A described
-game (Unequal) states its deductions and its ladder in a description and
+game (Unequal, Group) states its deductions and its ladder in a description and
 passes the compiled `ladder` ([descriptions.md](./descriptions.md)); a game
 not yet described passes `usersolvers` and the levels `diffSimple`,
 `diffSet0` and `diffSet1` the library's techniques run at. The engine gives
@@ -1660,11 +1660,12 @@ recursion doubling as the uniqueness check), and the generator (`matching`,
 The population is `git grep -l engine/latin.ts src/games`. The hint side
 starts at [hints-candidates.md](./hints-candidates.md) § "What every game does".
 
-Exemplars: [`group/solver.ts`](../src/games/group/solver.ts) for the plain
-shape, two `usersolvers` and a `valid`;
-[`towers/solver.ts`](../src/games/towers/solver.ts) for clue heuristics;
-[`unequal/solver.ts`](../src/games/unequal/solver.ts) for a described game,
-its two modes two descriptions; [`keen/solver.ts`](../src/games/keen/solver.ts) for per-cage
+Exemplars: [`group/solver.ts`](../src/games/group/solver.ts) for a described
+game with no clues, its techniques reading the grid as a table, and a
+`valid`; [`unequal/solver.ts`](../src/games/unequal/solver.ts) for one with
+clues, its two modes two descriptions;
+[`towers/solver.ts`](../src/games/towers/solver.ts) for `usersolvers` and
+clue heuristics; [`keen/solver.ts`](../src/games/keen/solver.ts) for per-cage
 arithmetic; [`salad/solver.ts`](../src/games/salad/solver.ts) for a repeated
 symbol.
 
@@ -1719,5 +1720,6 @@ symbol.
 - **What a solver does not do can decide boards as much as what it does.**
   Where upstream's shipped build skips a `usersolver` contradiction that sits
   inside `#ifdef STANDALONE_SOLVER`, the port keeps the shipped behavior,
-  with a comment at the site
-  ([`group/solver.ts`](../src/games/group/solver.ts)).
+  and says so where it is stated (Group's `associativity` places only where
+  the cell can still hold the product, and goes on otherwise:
+  [`group.description.yaml`](../src/games/group/group.description.yaml)).

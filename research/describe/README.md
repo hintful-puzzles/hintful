@@ -24,6 +24,8 @@ writes a line of progress per board.
 | `ladder` | the stated techniques to a fixpoint at every tier cap, against the game's own solver, cell by cell, and its grade, with three planted defects; writes `results-ladder.txt` |
 | `firings` | every firing of the game's recording solver, which its hint narrates, against the technique stated under the firing's rung on the same marks; writes `results-firings.txt` |
 | `measure` | the stated ladder's time against the game's solver's; writes `results-measure.txt` |
+| `speed-group` | the generator's time per deal on every Group and Unequal preset, each run twice and the second kept |
+| `trace-latin` | every Latin game's deals and hint walks, step by step, to `TRACE_OUT`: run it on two builds of the compiled modules and diff the files |
 
 ## The files
 
@@ -45,7 +47,7 @@ compiles yet, included; the loader, the parser and the schema are in
 The syntax is [`docs/descriptions.md`](../../docs/descriptions.md) § "The
 formula syntax". The interpreter also reads what the rules and the
 undescribed games need: `subsets(S, k)`, `index(x, L)`, `before(x, L)`,
-`nth(L, i)`, `cell(x, y)`, `units_of(c)`, `sight(s)`, `opposite(s)`, the
+`nth(L, i)`, `units_of(c)`, `sight(s)`, `opposite(s)`, the
 names `slots`, `edges`, `diagonals` and each named partition, and the
 library predicate `latin(f, U)`. Inside a clue's `means`, `at` and `v` name
 the clue's place and value.
