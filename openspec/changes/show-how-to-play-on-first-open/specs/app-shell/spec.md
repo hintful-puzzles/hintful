@@ -19,12 +19,13 @@ reach the board.
 - **WHEN** the player taps the board outside the card
 - **THEN** the card closes and the board is unchanged
 
-### Requirement: A game once met never shows the first-open card again
+### Requirement: A game shows its first-open card once, whoever opens it
 
-A game is met once the card has been shown for it, or once it has dealt or
-opened a board here (its remembered board). A met game SHALL NOT show the card
-again unless its settings are cleared, and whether a game is met SHALL never
-be counted or shown.
+The card SHALL be shown once for each game, and only its having been shown
+SHALL keep it from showing: a game a player had played before the card
+existed, or has a game in progress in, SHALL show it on its next open. Once
+shown it SHALL NOT show again unless the game's settings are cleared, and
+whether it has been shown SHALL never be counted or shown.
 
 #### Scenario: The second open
 
@@ -33,8 +34,9 @@ be counted or shown.
 
 #### Scenario: A game played before the card existed
 
-- **WHEN** a player opens a game whose remembered board is recorded
-- **THEN** no card is shown
+- **WHEN** a player opens a game whose remembered board was recorded before
+  the card existed
+- **THEN** the card is shown once, over that board
 
 #### Scenario: A shared link to a board
 
@@ -46,7 +48,7 @@ be counted or shown.
 The card SHALL take its words from the game's served help page, the part
 between its title and its first section heading, so that its words have one
 source and it works offline wherever the help does. A page that cannot be
-read SHALL show no card and SHALL NOT record the game as met.
+read SHALL show no card and SHALL NOT record it as shown.
 
 #### Scenario: The card offline
 

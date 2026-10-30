@@ -3,8 +3,9 @@
 A UX / technical-writer consultant, briefed with the proposal's facts and the
 pages but not this session's conclusions, recommended the card, the seen
 record and the checklist below. It found a clear winner on both of the
-proposal's questions for the owner, so neither was put to them; acceptance
-in the running app is still theirs.
+proposal's questions for the owner, so neither was put to them at first. On
+seeing the card, the owner answered the second themselves: every existing
+player sees each game's card once (2026-10-30, below).
 
 ## What a first open shows: a card of the rules
 
@@ -46,29 +47,27 @@ correctly on a plain board and on a shared variant alike.
 
 ## What records the first open
 
-A new optional `PuzzleSettings.introduced`. A game is met when it is set
-**or** `lastGameId` is set:
+A new optional `PuzzleSettings.introduced`, and nothing else: a record
+written before it reads as unset, so **every existing player sees each game's
+card once**, on its next open (the owner's decision, 2026-10-30, on trying
+the card). The consultant had recommended counting a remembered board
+(`lastGameId`) as met too, so that players who know a game were not shown up
+to 61 cards; the owner preferred that they meet the card, and the help
+it leads to, once like everyone else. `lastGameId` alone was never an option:
+it is cleared when a remembered board will not load, which would bring the
+card back at the moment something has just gone wrong.
 
-- `lastGameId` alone was the cheapest reading, but it is cleared when a
-  remembered board will not load, which would show the card at the moment
-  something has just gone wrong.
-- `introduced` alone would show every existing player a card on each game they
-  already play, which reads as nagging.
-- Both together: a player who has played a game never sees its card, and once
-  shown it never comes back; only `clearPuzzleSettings`, an explicit reset,
-  brings it back.
+It is written when the card is shown, not when it is dismissed: "never again
+unasked" outranks "might have missed it". Only `clearPuzzleSettings` or a
+reset of the preferences, both explicit, brings it back. It is never counted
+or displayed, so it is not a progression feature. The settings backup
+carries it with the rest of the record.
 
-It is read before the board loads, since dealing writes `lastGameId`, and it
-is written when the card is shown, not when it is dismissed: "never again
-unasked" outranks "might have missed it". It is never counted or displayed,
-so it is not a progression feature. The settings backup carries it with the
-rest of the record.
-
-**When it fires**: on the puzzle screen's load, whenever the game is not met,
-whether the board came from a shared link, a type in the URL or a fresh deal.
-A shared link's recipient is the likeliest newcomer of all, and the card
-shows over the shared board. A restored autosave means `lastGameId` was
-written, so it never fires over one.
+**When it fires**: on the puzzle screen's load, whenever the card has not
+been shown, whether the board came from a shared link, a restored game in
+progress, a type in the URL or a fresh deal. A shared link's recipient is the
+likeliest newcomer of all, and the card shows over the shared board; for an
+existing player it shows once over the game they had going.
 
 ## The review's checklist
 

@@ -479,15 +479,10 @@ class Settings {
     });
   }
 
-  /**
-   * Whether the player has met this puzzle here: its first-open card was
-   * shown, or it has remembered a board. The second keeps a player who played
-   * it before the card existed from being shown one, and `introduced` keeps a
-   * dropped remembered board from bringing the card back.
-   */
-  async hasMetPuzzle(puzzleId: PuzzleId): Promise<boolean> {
+  /** Whether this puzzle's first-open card has been shown here. */
+  async isIntroduced(puzzleId: PuzzleId): Promise<boolean> {
     const puzzleRecord = await this.getPuzzleSettings(puzzleId);
-    return puzzleRecord?.introduced === true || puzzleRecord?.lastGameId !== undefined;
+    return puzzleRecord?.introduced === true;
   }
 
   async setIntroduced(puzzleId: PuzzleId): Promise<void> {

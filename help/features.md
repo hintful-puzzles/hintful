@@ -14,8 +14,7 @@ The first time you open a puzzle, its rules appear in a card over the board.
 **Play** closes it, as do Escape and a tap anywhere outside it, and **Full
 rules and controls** opens the puzzle's whole page. The card is shown once
 for each puzzle and does not come back; the page is always in the Menu, as
-*How to play*. A puzzle you had already played before the card was added
-does not show it.
+*How to play*.
 
 ## On-screen keyboard {#virtual-keyboard}
 

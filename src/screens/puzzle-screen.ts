@@ -1153,10 +1153,8 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     this.requestUpdate();
 
     await settings.loaded;
-    // Read before the board deals, since dealing records the board, which
-    // counts as having met the game. Fetched alongside the deal, which can be
-    // the slower of the two.
-    const firstOpenRules = (await settings.hasMetPuzzle(puzzle.puzzleId))
+    // Fetched alongside the deal, which can be the slower of the two.
+    const firstOpenRules = (await settings.isIntroduced(puzzle.puzzleId))
       ? null
       : import("../components/first-open-card.ts").then((m) =>
           m.fetchRules(puzzle.puzzleId),

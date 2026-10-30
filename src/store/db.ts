@@ -75,9 +75,9 @@ export interface PuzzleSettings {
 
   /**
    * Whether this game's first-open card has been shown. Never counted or shown
-   * to the player. A record with `lastGameId` but not this was written by a
-   * player who played the game before the card existed, and counts as met too
-   * (`Settings.hasMetPuzzle`).
+   * to the player. Only this says so, and not `lastGameId`: a player who
+   * played the game before the card existed is shown it once too (owner,
+   * 2026-10-30).
    */
   introduced?: true;
 }
