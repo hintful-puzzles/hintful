@@ -23,4 +23,4 @@
 ## 4. Verify
 
 - [x] 4.1 Run the app in Chrome (`playwright-cli`) on a phone-sized and a desktop-sized window: first open, dismissal by touch, keyboard and mouse, a second open, offline; read the changed pages in the app
-- [ ] 4.2 Hand to the owner for acceptance, then archive
+- [x] 4.2 Hand to the owner for acceptance, then archive (accepted 2026-10-30, after the card was made to fit its rules and Back to close it)
