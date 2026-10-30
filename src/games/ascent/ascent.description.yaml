@@ -3,7 +3,7 @@
 game: ascent
 help:
   rules: |-
-    Your objective is to place each number in the grid exactly once, so a path is formed from the lowest number (i.e. 1) to the highest number. Two numbers that are in sequence must be in neighboring squares, and several numbers are already in the grid. Which squares are neighbors depends on the game mode, and the Type menu has a section for each, the one with the fewest neighbors first:
+    Place each number once, so they form a path from 1 to the highest, each in a square neighboring the one before. Some are given. Which squares are neighbors depends on the game mode:
 
     {{rulesets}}
   controls: |-

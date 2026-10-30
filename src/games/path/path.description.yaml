@@ -3,13 +3,10 @@
 game: path
 help:
   rules: |-
-    You have a grid of squares, some of which hold a number. Draw lines running
-    from square to square through the middles of the squares, never diagonally.
-    Lines may not cross or branch, so every square without a number takes two
-    lines, one in and one out. Some boards have walls between squares, drawn as
-    thick bars, which no line crosses. Every square must be used. What the
-    numbers ask depends on the game mode, and the Type menu has a section for
-    each:
+    Draw lines through the middles of the squares, never diagonally, using
+    every square. Lines may not cross or branch, so a square without a
+    number takes one line in and one out. No line crosses a wall, a thick
+    bar between squares. What the numbers ask depends on the game mode:
 
     {{rulesets}}
   controls: |-

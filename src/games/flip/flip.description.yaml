@@ -3,12 +3,10 @@
 game: flip
 help:
   rules: |-
-    Try to light up all the squares in the grid by flipping combinations
-    of them. An unlit square holds a {{pair:0}} square and a lit one holds a
-    {{pair:1}} disc, so the board is done when every piece is a {{pair:1}}
-    disc. Pressing a square flips a group of squares, each from one piece to
-    the other, and which group depends on the game mode. The Type menu has a
-    section for each:
+    Light up every square: an unlit square holds a {{pair:0}} square and a
+    lit one a {{pair:1}} disc. Pressing a square flips a group of squares,
+    each from one piece to the other. Which group depends on the game mode,
+    and the Type menu has a section for each:
 
     {{rulesets}}
   controls: |-

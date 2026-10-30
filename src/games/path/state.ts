@@ -79,11 +79,11 @@ export const MODE_PAIRS = 1;
 const RULESETS: Ruleset[] = [
   {
     name: "Path",
-    rule: "The numbers run from 1 up, each on one square. Draw one line from the 1 to the highest number that passes the numbers in order, so the 1 and the highest number take one line and every other square two.",
+    rule: "The numbers run from 1 up. Draw one line from the 1 to the highest number, passing the numbers in order.",
   },
   {
     name: "Pairs",
-    rule: "Every number is on two squares. Join each pair of like numbers with a line of its own, so a numbered square takes one line.",
+    rule: "Every number is on two squares. Join each pair with a line of its own.",
   },
 ];
 

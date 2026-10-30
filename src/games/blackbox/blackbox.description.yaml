@@ -3,11 +3,10 @@
 game: blackbox
 help:
   rules: |-
-    Balls are hidden in the box. Fire lasers in from the squares around its
-    edge, and work out where the balls are from what each beam does. A beam
-    goes straight across unless:
+    Balls are hidden in the box. Fire lasers in from its edge, and find the
+    balls from what each beam does. A beam goes straight across unless:
 
-    - it meets a ball head-on, which absorbs it: its result is **H**;
+    - it meets a ball head-on, which absorbs it: **H**;
     - a ball diagonally ahead of it turns it 90 degrees away from the ball;
     - it comes back out where it went in, or a ball beside its entry square
       would turn it before it enters: it is reflected, **R**.

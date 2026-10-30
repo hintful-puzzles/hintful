@@ -32,7 +32,11 @@ import { MARK_ALL_HELP, MARK_ALL_PLACEHOLDER } from "./engine/candidate-hint.ts"
 import { TWO_NAMES } from "./engine/color/colors.ts";
 import { difficultyChoiceItem, difficultyTiers } from "./engine/difficulty.ts";
 import { HINT_MARKS_PLACEHOLDER } from "./engine/hint-words.ts";
-import { MODIFIERS_PLACEHOLDER, modifiersOf } from "./engine/modifier.ts";
+import {
+  MODIFIERS_PLACEHOLDER,
+  modifiersMarkdown,
+  modifiersOf,
+} from "./engine/modifier.ts";
 import { expandChoices, PARAMETERS_PLACEHOLDER } from "./engine/param-help.ts";
 import {
   offersStickyPencil,
@@ -41,7 +45,11 @@ import {
 import { expandPair } from "./engine/piece.ts";
 import { getTsGame, registeredGameIds } from "./engine/registry.ts";
 import { RULES_OUT_PLACEHOLDER } from "./engine/rules-out.ts";
-import { RULESETS_PLACEHOLDER, rulesetField } from "./engine/ruleset.ts";
+import {
+  RULESETS_PLACEHOLDER,
+  rulesetField,
+  rulesetsMarkdown,
+} from "./engine/ruleset.ts";
 import { CONTROLS_PLACEHOLDER } from "./engine/target-verb.ts";
 import { HINT_GAMES } from "./engine/testing/hint-games.ts";
 import { itOverWholeSweep } from "./engine/testing/slow.ts";
@@ -376,18 +384,29 @@ describe("the All-the-puzzles page lists the whole collection", () => {
 // are what a game's first open shows (`first-open-card.ts`), so they are short
 // enough to read over the board, and a reader needs nothing but this page.
 describe("a game's page stands alone for a newcomer", () => {
-  const RULES_WORDS = 100;
-  const words = (text: string) =>
-    text
-      .replace(/\{\{[^}]*\}\}/g, " ")
-      .split(/\s+/)
-      .filter(Boolean).length;
+  // Measured on a 360×640 phone (2026-10-30): a card whose rules come to 90
+  // words as the card shows them fits without scrolling, and the generated
+  // lists of modes and settings are most of what overflowed.
+  const RULES_WORDS = 90;
+  const shownRules = (id: string): string => {
+    const game = getTsGame(id);
+    if (!game) throw new Error(`no game ${id}`);
+    const lists = gameHelp(id)
+      .rules.replace(
+        RULESETS_PLACEHOLDER,
+        rulesetsMarkdown(rulesetField(game)?.rulesets ?? []),
+      )
+      .replace(MODIFIERS_PLACEHOLDER, modifiersMarkdown(modifiersOf(game)));
+    return expandPair(expandChoices(game.paramConfig ?? [], lists));
+  };
 
   it.each(puzzleIds)("%s: its rules are a summary", (id) => {
-    const count = words(gameHelp(id).rules);
+    const count = shownRules(id)
+      .split(/\s+/)
+      .filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
     expect(
       count,
-      `${descriptionPath(id)}: the rules are ${count} words; move what is past ${RULES_WORDS} under a heading of its own`,
+      `${descriptionPath(id)}: the first-open card shows ${count} words of rules; move what is past ${RULES_WORDS} under a heading of its own`,
     ).toBeLessThanOrEqual(RULES_WORDS);
   });
 

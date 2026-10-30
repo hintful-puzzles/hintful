@@ -12,9 +12,6 @@ help:
     - Each numbered cell can see precisely that many clear squares in
       total by looking in all four orthogonal directions, counting itself.
       Shaded squares block the view.
-
-    The numbered cells sit on a lighter square. They are always clear, and
-    cannot be changed.
   controls: |-
     {{controls}}
 
@@ -32,6 +29,9 @@ help:
         adjacent to three shaded squares or grid edges, and in the fourth
         direction there must be one clear square and then a shaded one beyond
         it.
+
+        The numbered cells sit on a lighter square. They are always clear, and
+        cannot be changed.
   hints: |-
     **Hint** explains the next step rather than simply making it. It reasons
     only from the numbers, your {{pair:0}} squares and your crosses, so it

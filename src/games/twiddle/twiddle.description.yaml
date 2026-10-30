@@ -6,9 +6,8 @@ help:
     Rotate square sections of the grid to arrange the squares into
     numerical order starting from the top left.
 
-    When you master the basic game, go to the Type menu to try it with
-    larger rotating groups. Or try a setting that changes the rules. Or both! A
-    board's name in the Type menu says which it has:
+    Settings change the rules, and a board's name in the Type menu says
+    which it has:
 
     {{modifiers}}
   controls: |-

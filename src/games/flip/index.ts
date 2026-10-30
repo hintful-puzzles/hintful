@@ -72,11 +72,11 @@ const paramConfig: ParamConfigItem<FlipParams>[] = [
     [
       {
         name: "Crosses",
-        rule: "Pressing a square flips it and the squares directly above, below and to either side of it.",
+        rule: "Pressing a square flips it and the squares above, below and to either side.",
       },
       {
         name: "Random",
-        rule: "Pressing a square flips it and a selection of the eight squares around it. Every square has a selection of its own, which the diagram in the square shows.",
+        rule: "Pressing a square flips it and some of the eight around it, as the diagram in the square shows.",
       },
     ],
     {

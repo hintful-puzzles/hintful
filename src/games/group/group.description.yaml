@@ -3,18 +3,15 @@
 game: group
 help:
   rules: |-
-    Fill in the grid with the letters shown to the top and left of it. Read
-    the letter in row *a*, column *b* as the product *a·b*; the finished grid
-    satisfies four conditions:
+    Fill the grid with the letters along its top and left. With row *a*,
+    column *b* read as *a·b*:
 
     - **Latin square**: every row and column holds each letter once.
     - **Identity**: one letter leaves every letter unchanged.
-    - **Inverses**: every letter has a partner whose product with it, either
-      way round, is the identity.
-    - **Associativity**: (*a·b*)·*c* and *a*·(*b·c*) are always the same letter.
+    - **Inverses**: each letter has a partner it makes the identity with.
+    - **Associativity**: (*a·b*)·*c* and *a*·(*b·c*) are the same letter.
 
-    One setting changes what you are given, and a board's name in the Type
-    menu says when it is on:
+    A board's name says when this setting is on:
 
     {{modifiers}}
   controls: |-

@@ -244,22 +244,22 @@ const ON_THE_RECTANGLE = { [SHAPE_KW]: [SHAPE_RECTANGLE] };
 const RULESETS: Ruleset[] = [
   {
     name: "Orthogonal",
-    rule: "Two numbers in sequence must be horizontally or vertically adjacent, and never diagonally.",
+    rule: "Squares side by side, never diagonally.",
     only: ON_THE_RECTANGLE,
   },
   {
     name: "Hex",
-    rule: `The board is made of hexagons, and two numbers in sequence must be in hexagons that share a side. The board is a ${ASCENT_SHAPE_NAMES[SHAPE_HONEYCOMB]} or a ${ASCENT_SHAPE_NAMES[SHAPE_HEXAGON]}.`,
+    rule: "Hexagons that share a side.",
     only: { [SHAPE_KW]: [SHAPE_HONEYCOMB, SHAPE_HEXAGON] },
   },
   {
     name: CLASSIC,
-    rule: "Two numbers in sequence must be horizontally, vertically or diagonally adjacent. The squares have their corners cut off, as a reminder that the path may cross them.",
+    rule: "Squares side by side or diagonal; corners are cut off to show the path may cross them.",
     only: ON_THE_RECTANGLE,
   },
   {
     name: EDGES,
-    rule: `The neighbors are those of ${CLASSIC}, and the grid is surrounded by numbers placed inside arrows. An arrow points to the row, column or diagonal where this number appears in the path.`,
+    rule: `As in ${CLASSIC}, and a number in an arrow round the grid points along the row, column or diagonal it lies on.`,
     only: {
       ...ON_THE_RECTANGLE,
       "symmetrical-clues": false,

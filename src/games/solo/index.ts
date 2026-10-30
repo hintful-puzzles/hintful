@@ -692,7 +692,7 @@ export const soloGame: Game<
       words: "Jigsaw",
       // The size's words say it: a jigsaw is "9 Jigsaw" where a 3x3 is "3x3".
       slot: null,
-      rule: "the grid keeps its size, but its blocks are random shapes rather than rectangles.",
+      rule: "the blocks are random shapes rather than rectangles.",
       get: (p) => p.r === 1,
       set: (p, v) => {
         if (v) {
@@ -708,7 +708,7 @@ export const soloGame: Game<
       when: true,
       words: "Killer",
       slot: "kind",
-      rule: "instead of given numbers, the grid is divided into cages, each labeled with the total its numbers must add up to, and a number may not repeat within a cage.",
+      rule: "instead of given numbers, cages are labeled with the sum of their numbers, which may not repeat within a cage.",
       note: "Killer grids hold at most 9 numbers.",
       get: (p) => p.killer,
       set: (p, v) => {

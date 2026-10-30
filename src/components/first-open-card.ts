@@ -106,14 +106,12 @@ export class FirstOpenCard extends LitElement {
       wa-dialog {
         --width: 34rem;
       }
-      wa-dialog::part(body) {
-        max-height: 50dvh;
-      }
       wa-dialog::part(footer) {
         flex-wrap: wrap;
       }
 
-      /* A phone's card sits low, so the board above it stays in view. */
+      /* A phone's card sits at the bottom and grows to fit the rules, which
+         the player has come to read; what is left of the board shows above. */
       @media (max-width: 40rem) {
         wa-dialog::part(dialog) {
           margin-block: auto 0;

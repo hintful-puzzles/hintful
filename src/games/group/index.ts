@@ -770,7 +770,7 @@ export const groupGame: Game<
       when: false,
       words: "identity hidden",
       slot: "tail",
-      rule: "you have to work out which letter is the identity.",
+      rule: "you work out which letter is the identity.",
       note: "When on, the identity is always <em>e</em>, and its row and column are filled in for you. 3×3 grids must show it.",
       only: { difficulty: HIDDEN_IDENTITY_TIERS },
       get: (p) => p.id,

@@ -3,7 +3,8 @@
 ### Requirement: A game's rules stand alone as a newcomer's summary
 
 A game page's rules, the unheaded section the first-open card shows, SHALL be
-at most 100 words before its placeholders expand, and SHALL contain no link.
+at most 90 words as the card shows them, generated lists included, so the
+card fits a 360×640 phone without scrolling, and SHALL contain no link.
 Neither the rules nor the Controls SHALL name another cataloged game, and no
 field but `origins` SHALL speak in an author's first person. Detail past the
 budget SHALL go under a heading of its own.
@@ -15,7 +16,8 @@ budget SHALL go under a heading of its own.
 
 #### Scenario: Rules that run long
 
-- **WHEN** a page's rules are over 100 words
+- **WHEN** a page's rules, with its list of game modes expanded, are over 90
+  words
 - **THEN** the help-coverage guard fails, naming the page and its count
 
 ### Requirement: Every Controls section opens with the touch line

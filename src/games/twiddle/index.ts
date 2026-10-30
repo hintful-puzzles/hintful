@@ -283,7 +283,7 @@ export const twiddleGame: Game<
       when: true,
       words: "rows only",
       slot: "kind",
-      rule: "every square in a row carries the same number, the row's own, so the puzzle is solved when each row holds only its own number and it doesn't matter which of those squares goes where.",
+      rule: "the squares of a row all carry the row's number, so it doesn't matter which of them goes where in it.",
       get: (p) => p.rowsonly,
       set: (p, v) => {
         p.rowsonly = v;

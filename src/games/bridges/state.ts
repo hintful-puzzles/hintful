@@ -111,7 +111,7 @@ export const paramConfig: ParamConfigItem<BridgesParams>[] = [
     when: false,
     words: "no loops",
     slot: "tail",
-    rule: "the bridges may not form a closed loop, so no solution contains one and a board with a loop of bridges on it does not count as finished.",
+    rule: "the bridges may not form a closed loop.",
     get: (p) => p.allowloops,
     set: (p, v) => {
       p.allowloops = v;
@@ -123,7 +123,7 @@ export const paramConfig: ParamConfigItem<BridgesParams>[] = [
     type: "choices",
     choices: ["1", "2", "3", "4"],
     words: "max bridges",
-    rule: "the most bridges that may join one pair of islands is 2, unless the board's name gives another number.",
+    rule: "at most 2 bridges join a pair of islands, unless the board's name says otherwise.",
     // With one bridge a line no "at most" limit can exist, and sealing a group
     // off is Normal's, so Tricky has almost nothing left that a Normal board
     // could not need: measured, generation gave up on most seeds. It is rare

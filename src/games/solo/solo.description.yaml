@@ -7,13 +7,11 @@
 game: solo
 help:
   rules: |-
-    Fill in a number in every square so that every number appears
-    exactly once in each row, each column and each block marked by thick
-    lines.
+    Fill every square with a number so that each number appears once in
+    every row, every column and every block marked by thick lines.
 
-    When you master the basic game, try a setting that changes the rules,
-    or all of them at once! A board's name in the Type menu says which it
-    has:
+    Settings change the rules, and a board's name in the Type menu says
+    which it has:
 
     {{modifiers}}
   controls: |-

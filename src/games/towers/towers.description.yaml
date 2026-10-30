@@ -10,9 +10,7 @@ help:
     column, and each clue around the edge counts the towers visible when
     looking into the grid from that direction. (Taller towers hide shorter ones behind them. So the
     sequence 2,1,4,3,5 would match a clue of 3 on the left, because the
-    1 is hidden behind the 2 and the 3 is hidden behind the 4. On the
-    right, it would match a clue of 1 because the 5 hides everything
-    else.)
+    1 is hidden behind the 2 and the 3 is hidden behind the 4.)
   controls: |-
     To place a tower, click in a square to select it, then type the
     desired height on the keyboard. To erase a tower, click to select a

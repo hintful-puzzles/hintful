@@ -13,6 +13,10 @@ installErrorHandlers();
 // Install our icon library
 import "./icons";
 
+import { installBackCloses } from "./utils/back-closes.ts";
+
+installBackCloses();
+
 // Install PWA service worker
 import { pwaManager } from "./utils/pwa.ts";
 

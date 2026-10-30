@@ -3,11 +3,9 @@
 game: starbattle
 help:
   rules: |-
-    You have a square grid divided into regions by heavy lines. Each region is tinted so that it is easy to tell from the ones beside it, and the colors mean nothing more than that. Place stars so that every row, every column and every region holds the same number of them, and no two stars touch, not even at a corner. How many stars is the game mode:
+    Place stars so that every row, every column and every region holds the same number of them, and no two stars touch, not even at a corner. Heavy lines divide the regions; their tints only tell neighbors apart. How many stars is the game mode:
 
     {{rulesets}}
-
-    Every puzzle has exactly one solution, and none needs a guess.
   controls: |-
     {{controls}}
 

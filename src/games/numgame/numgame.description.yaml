@@ -5,7 +5,7 @@ help:
   rules: |-
     You are given six numbers and a target from 100 to 999. Combine the numbers two at a time with +, −, × and ÷ until one of them is the target.
 
-    Combining two numbers replaces them with their result, which you can combine again. Every result must be a positive whole number: you cannot subtract a number from one that is not larger, nor divide where there would be a remainder. Each number is used at most once, and you need not use them all.
+    Combining two numbers replaces them with their result. Every result must be a positive whole number: you cannot subtract a number from one that is not larger, nor divide where there would be a remainder. Each number is used at most once, and you need not use them all.
 
     Every target can be made exactly.
   controls: |-

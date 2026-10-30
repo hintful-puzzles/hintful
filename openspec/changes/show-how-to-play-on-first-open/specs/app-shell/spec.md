@@ -55,3 +55,22 @@ read SHALL show no card and SHALL NOT record it as shown.
 - **WHEN** a player with the app installed opens a game for the first time
   while offline
 - **THEN** the card shows that game's rules
+
+### Requirement: Back closes an open dialog or drawer
+
+While a dialog or drawer is open over a page, the browser's Back, or a
+phone's, SHALL close it and leave the player on the page. Once it has been
+closed some other way, Back SHALL leave the page as it would have with none
+opened, and a dialog that hands over to another, as the first-open card does
+to the help, SHALL leave one Back to close the second.
+
+#### Scenario: Back over the help
+
+- **WHEN** a player has the How to play drawer open over a game and presses
+  Back
+- **THEN** the drawer closes and the same game is on screen
+
+#### Scenario: Back after closing the card
+
+- **WHEN** a player closes the first-open card with Play and presses Back
+- **THEN** the page before the game is shown, with no Back press spent first

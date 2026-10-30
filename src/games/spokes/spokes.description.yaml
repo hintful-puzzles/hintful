@@ -3,7 +3,7 @@
 game: spokes
 help:
   rules: |-
-    You are given a grid filled with hubs with numbers on them. Your objective is to draw lines between them while following these rules:
+    Draw lines between the numbered hubs, following these rules:
 
     1. You can only draw a line starting from a hub's point. If there is no point visible, you cannot draw a line.
     2. Only one line can be drawn between two hubs.

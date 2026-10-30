@@ -3,18 +3,16 @@
 game: unruly
 help:
   rules: |-
-    Fill every square with one of two pieces, a {{pair:0}} square or a
-    {{pair:1}} disc, in such a way that:
+    Fill every square with a {{pair:0}} square or a {{pair:1}} disc so that:
 
     - no three consecutive squares, horizontally or vertically, hold
       the same piece
     - each row and column contains the same number of each.
 
-    The pieces the puzzle starts with sit on a lighter square, and cannot be
-    changed.
+    Given pieces sit on a lighter square and cannot be changed.
 
-    One setting adds a rule: **Unique rows and columns**, from ‘Custom
-    type…’ on the ‘Type’ menu. A board's name says when it is on:
+    One setting adds a rule, and a board's name in the Type menu says when
+    it is on:
 
     {{modifiers}}
   controls: |-

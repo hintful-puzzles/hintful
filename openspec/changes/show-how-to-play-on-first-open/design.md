@@ -23,10 +23,13 @@ So the card is:
 It is a `wa-dialog` with `light-dismiss` (the reading rule in
 `dialog-dismissal.test.ts`), so it closes on Play, the close button, Escape and a
 tap outside, and the native modal's backdrop takes the dismissing tap, so the
-board never sees it. On a narrow window it sits at the bottom, below the
-board's middle, at most about half the window high and scrolling inside; on a
-wide one it is centered. The board is visible, dimmed, behind it, since the
-rules point at it ("the numbers on the edge").
+board never sees it. On a narrow window it sits at the bottom and grows to
+fit the rules; on a wide one it is centered. What is left of the board shows,
+dimmed, behind it. It was first capped at half the window, to keep more board
+in view, but on a phone the board was mostly covered anyway and the rules
+scrolled; the owner asked for it bigger (2026-10-30). The rules are what the
+player came to read, so the card fits them, and the word budget below keeps
+them short enough to fit without scrolling on a 360×640 phone.
 
 **Its words are the page's rules, with no second copy.** The catalog's
 `objective` is too thin to play from ("Find the fleet in the grid.") and
@@ -75,9 +78,12 @@ The checklist lives in `docs/help-pages.md` § "A page stands alone for a
 newcomer". The checks it adds are in `src/help-coverage.test.ts`:
 
 - the rules name no other cataloged game, and nor do the Controls;
-- the rules are within the word budget, 100 words before placeholders
-  expand (the consultant suggested about 90; at 100 the card fits half a
-  phone's height, and 7 pages between 80 and 100 already read well);
+- the rules are within the word budget: 90 words as the card shows them,
+  the generated lists of modes and settings included. Measured on a 360×640
+  phone, every card over about 90 shown words scrolled, and the generated
+  lists were most of what overflowed (Ascent's four modes put it 307px
+  over), so the budget counts them and their words were cut in the game's
+  code where they are declared;
 - no first-person author voice outside `origins`;
 - no link in the rules.
 

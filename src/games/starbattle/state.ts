@@ -82,15 +82,15 @@ export interface StarbattleUi {
 const RULESETS: readonly Ruleset[] = [
   {
     name: "One star",
-    rule: "Every row, column and region holds one star. This is the puzzle also known as <em>Queens</em>.",
+    rule: "One in each, the puzzle also known as <em>Queens</em>.",
   },
   {
     name: "Two stars",
-    rule: "Every row, column and region holds two stars. This is the puzzle also known as <em>Two Not Touch</em>.",
+    rule: "Two in each, the puzzle also known as <em>Two Not Touch</em>.",
   },
   {
     name: "Three stars",
-    rule: "Every row, column and region holds three stars.",
+    rule: "Three in each.",
   },
 ];
 

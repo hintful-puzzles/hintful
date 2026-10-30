@@ -8,14 +8,10 @@ game: unequal
 help:
   rules: |-
     Fill in the grid with numbers from 1 to the grid size, so that every
-    number appears exactly once in each row and column. The clue signs
-    between squares carry a further rule, and which rule depends on the
-    game mode:
+    number appears exactly once in each row and column. The clues between
+    squares depend on the game mode:
 
     {{rulesets}}
-
-    Each has its own section of the ‘Type’ menu, and ‘Custom type…’ has a
-    **Game mode** setting as well.
   controls: |-
     To place a number, click in a square to select it, then type the
     number on the keyboard. To erase a number, click to select a square

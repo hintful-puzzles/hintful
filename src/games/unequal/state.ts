@@ -68,11 +68,11 @@ export type Mode = "unequal" | "adjacent";
 export const RULESETS: Ruleset[] = [
   {
     name: "Unequal",
-    rule: "The clues are `<` signs, and all of them must represent true inequalities (i.e. the number at the pointed end is smaller than the number at the open end). Not every true inequality is shown, particularly at the harder difficulties.",
+    rule: "The clues are `<` signs, each pointing at the smaller of its two numbers. Not every one is shown, especially at harder difficulties.",
   },
   {
     name: "Adjacent",
-    rule: "The clues are bars, and a bar means the two squares it separates hold consecutive numbers: one is exactly one higher than the other. Every bar the solution calls for is shown, so the *absence* of a bar between two squares tells you their numbers are definitely not consecutive.",
+    rule: "The clues are bars, and a bar means its two squares' numbers differ by exactly one. Every such bar is shown, so two squares without one never differ by one.",
   },
 ];
 const ADJACENT = RULESETS[1].name;

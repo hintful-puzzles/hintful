@@ -256,7 +256,7 @@ export const netslideGame: Game<
       when: true,
       words: "wrapping",
       slot: "kind",
-      rule: "the network may run off one edge of the grid and come back on the opposite edge, so the outside of the grid is no longer a wall.",
+      rule: "the network may run off one edge of the grid and come back on the opposite one.",
       get: (p) => p.wrapping,
       set: (p, v) => {
         p.wrapping = v;

@@ -3,10 +3,9 @@
 game: undead
 help:
   rules: |-
-    Fill in every grid square which doesn't contain a mirror with either a
-    ghost, a vampire, or a zombie. The numbers round the grid edges show
-    how many monsters must be visible along your line of sight if you look
-    directly into the grid from that position, along a row or column.
+    Fill every square without a mirror with a ghost, a vampire or a zombie.
+    The numbers round the grid edges show how many monsters you see looking
+    into the grid from there, along a row or column.
     Zombies are always visible; ghosts are only visible when reflected in
     at least one mirror; vampires are only visible when not reflected in
     any mirror. The counts at the top of the grid say how many ghosts,

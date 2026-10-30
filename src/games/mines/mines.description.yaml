@@ -12,8 +12,7 @@ help:
 
     The first square you open is guaranteed to be safe, and you are
     guaranteed to be able to solve the whole grid by deduction rather than
-    guesswork. (Deductions may require you to think about
-    the total number of mines.)
+    guesswork.
   controls: |-
     {{controls}}
 

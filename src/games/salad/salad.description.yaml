@@ -3,7 +3,7 @@
 game: salad
 help:
   rules: |-
-    You have a square grid; each square may contain a character from A (or 1) to a given maximum. Your objective is to put characters in some of the squares, so each character appears exactly once in each row and column.
+    Put characters from A (or 1) up to a given maximum in some of the squares, so each character appears exactly once in each row and column.
 
     The rules vary depending on the game mode, and the Type menu has a section for each:
 

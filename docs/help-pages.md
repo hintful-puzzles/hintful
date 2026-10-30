@@ -97,8 +97,10 @@ they are written for someone who has never played it and is reading on a
 phone. Apply this to a page you write or change; the items marked *checked*
 are in `src/help-coverage.test.ts`.
 
-1. **The rules are a summary** (*checked*: at most 100 words before
-   placeholders expand). The first sentence states the goal in the board's
+1. **The rules are a summary** (*checked*: at most 90 words as the card
+   shows them, which is what fits a 360×640 phone unscrolled). A ruleset's
+   or a modifier's `rule` is part of the count, so it is a phrase, not a
+   paragraph. The first sentence states the goal in the board's
    terms. Detail, examples past the first and asides go under a heading of
    their own, which moves words and changes none.
 2. **No other game is needed** (*checked*: the rules and Controls name no

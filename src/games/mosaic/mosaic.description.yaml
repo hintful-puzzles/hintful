@@ -7,18 +7,20 @@ help:
     Each number indicates how many {{pair:0}} squares are in the 3×3 square
     surrounding the number – *including* the clue square
     itself.
-
-    A square you have made clear turns {{pair:1}}, which tells it from a
-    square you have not decided yet. It carries a faint cross too, unless it
-    has a number, which then has the square to itself. A number is drawn on top
-    of whatever its square holds, and fades once its 3×3 square is fully
-    decided and agrees with it.
   controls: |-
     {{controls}}
 
     The drag works for clearing too: start on a shaded square and the
     shaded squares you pass over are cleared with it. A whole drag is one
     step of Undo.
+  sections:
+    - heading: What the squares show
+      body: |-
+        A square you have made clear turns {{pair:1}}, which tells it from a
+        square you have not decided yet. It carries a faint cross too, unless it
+        has a number, which then has the square to itself. A number is drawn on top
+        of whatever its square holds, and fades once its 3×3 square is fully
+        decided and agrees with it.
   hints: |-
     **Hint** explains the next step rather than simply making it. It
     reasons only from the numbers and the squares you have already made
