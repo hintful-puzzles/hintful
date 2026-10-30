@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { PARAMETERS_PLACEHOLDER } from "../engine/param-help.ts";
+import { TOUCH_PLACEHOLDER } from "../engine/touch-help.ts";
 import type { HelpJson } from "./description.ts";
 import { renderHelpPage } from "./help-page.ts";
 
-const facts = { name: "Test", rulesets: false, parameters: PARAMETERS_PLACEHOLDER };
+const facts = {
+  name: "Test",
+  rulesets: false,
+  parameters: PARAMETERS_PLACEHOLDER,
+  touch: TOUCH_PLACEHOLDER,
+};
 
 const help: HelpJson = {
   rules: "Play it.",
@@ -21,6 +27,7 @@ describe("a help page rendered from its description", () => {
         "# Test",
         "Play it.",
         "## Controls",
+        TOUCH_PLACEHOLDER,
         "Click.\n\n### Keyboard\n\nType.",
         "## Notes",
         "A note.",
@@ -60,6 +67,13 @@ describe("a help page rendered from its description", () => {
     const bad = { ...help, hints: `Hints. ${PARAMETERS_PLACEHOLDER}` };
     expect(() => renderHelpPage(bad, facts, "t.yaml")).toThrow(
       /^t\.yaml: help\.hints writes \{\{parameters\}\}/,
+    );
+  });
+
+  it("refuses the touch sentence's placeholder in a prose field", () => {
+    const bad = { ...help, controls: `${TOUCH_PLACEHOLDER}\n\nClick.` };
+    expect(() => renderHelpPage(bad, facts, "t.yaml")).toThrow(
+      /^t\.yaml: help\.controls writes \{\{touch\}\}/,
     );
   });
 });

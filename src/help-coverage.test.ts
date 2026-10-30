@@ -45,11 +45,13 @@ import { RULESETS_PLACEHOLDER, rulesetField } from "./engine/ruleset.ts";
 import { CONTROLS_PLACEHOLDER } from "./engine/target-verb.ts";
 import { HINT_GAMES } from "./engine/testing/hint-games.ts";
 import { itOverWholeSweep } from "./engine/testing/slow.ts";
+import { TOUCH_PLACEHOLDER } from "./engine/touch-help.ts";
 import { WING_PLACEHOLDER } from "./engine/wing.ts";
 // Registers every ported game; `beforeAll` re-runs it in case a sibling file
 // reset the shared registry under `isolate: false`.
 import { registerAllGames } from "./games/index.ts";
 import { puzzleDataMap, puzzleIds } from "./puzzle/catalog.ts";
+import { type CommandPuzzle, commandList } from "./puzzle/command-list.ts";
 
 beforeAll(registerAllGames);
 
@@ -99,6 +101,7 @@ describe("help page coverage", () => {
       name: "Skeleton",
       rulesets: false,
       parameters: PARAMETERS_PLACEHOLDER,
+      touch: TOUCH_PLACEHOLDER,
     };
     expect(renderHelpPage(file.help, facts, path)).toContain("## Hints");
   });
@@ -366,6 +369,101 @@ describe("the All-the-puzzles page lists the whole collection", () => {
 
   it("is not vacuous — the row pattern matched", () => {
     expect(listed.length).toBe(puzzleIds.length);
+  });
+});
+
+// `help-pages`, "A game's rules stand alone as a newcomer's summary": the rules
+// are what a game's first open shows (`first-open-card.ts`), so they are short
+// enough to read over the board, and a reader needs nothing but this page.
+describe("a game's page stands alone for a newcomer", () => {
+  const RULES_WORDS = 100;
+  const words = (text: string) =>
+    text
+      .replace(/\{\{[^}]*\}\}/g, " ")
+      .split(/\s+/)
+      .filter(Boolean).length;
+
+  it.each(puzzleIds)("%s: its rules are a summary", (id) => {
+    const count = words(gameHelp(id).rules);
+    expect(
+      count,
+      `${descriptionPath(id)}: the rules are ${count} words; move what is past ${RULES_WORDS} under a heading of its own`,
+    ).toBeLessThanOrEqual(RULES_WORDS);
+  });
+
+  it.each(puzzleIds)("%s: its rules link nowhere", (id) => {
+    const link = /\]\(|https?:\/\//.exec(gameHelp(id).rules);
+    expect(
+      link?.[0],
+      `${descriptionPath(id)}: a link belongs in origins`,
+    ).toBeUndefined();
+  });
+
+  // A catalog name, as a name: case-sensitive, so "the path" and "a flip" are
+  // words and "Path" and "Flip" are games, except where a sentence starts.
+  let read = 0;
+  it.each(puzzleIds)("%s: its rules and Controls name no other game", (id) => {
+    const { rules, controls } = gameHelp(id);
+    read++;
+    for (const other of puzzleIds) {
+      if (other === id) continue;
+      const name = puzzleDataMap[other].name;
+      const named = new RegExp(`(?<!^\\s*|[.!?]\\s+)\\b${name}\\b`, "m").exec(
+        `${rules}\n\n${controls}`,
+      );
+      expect(
+        named?.[0],
+        `${descriptionPath(id)} names ${name}: say it in this page's own words`,
+      ).toBeUndefined();
+    }
+  });
+
+  itOverWholeSweep("is not vacuous — every page was read", () => {
+    expect(read).toBe(puzzleIds.length);
+  });
+
+  // A control a page names in bold is spelled as the app spells it: a reader
+  // looks for those words on the screen. The labels are the command list's,
+  // read in each state that changes one.
+  const labels = new Map<string, string>();
+  for (const on of [false, true]) {
+    const stub: CommandPuzzle = {
+      puzzleId: "solo",
+      canUndo: on,
+      canRedo: on,
+      canHint: on,
+      canSolve: on,
+      canCheck: on,
+      isSolved: on,
+      hintPending: on,
+      hintArmedToApply: on,
+      autoHintActive: on,
+    };
+    for (const { label } of commandList(stub, "Solo"))
+      if (label) labels.set(label.toLowerCase(), label);
+  }
+  let bolded = 0;
+  it.each(puzzleIds)("%s: names a command in bold as the app does", (id) => {
+    for (const [, bold] of helpProse(id).matchAll(/\*\*([^*]+)\*\*/g)) {
+      const label = labels.get(bold.toLowerCase());
+      if (label === undefined) continue;
+      bolded++;
+      expect(bold, `${descriptionPath(id)} spells a command's label`).toBe(label);
+    }
+  });
+
+  itOverWholeSweep("is not vacuous — pages name commands in bold", () => {
+    expect(bolded).toBeGreaterThanOrEqual(10);
+  });
+
+  // An author's own voice, "I recommend", "I've had reports": a newcomer does
+  // not know who is speaking. Credits are the origins', in their author's words.
+  it.each(puzzleIds)("%s: speaks in no author's first person", (id) => {
+    const { origins = "" } = gameHelp(id);
+    const voice = /\b(?:I(?:'m|'ve|'d|'ll|’m|’ve|’d|’ll)?|[Mm]y|me)\b(?![-'’])/.exec(
+      helpProse(id).replace(origins, ""),
+    );
+    expect(voice?.[0], `${descriptionPath(id)} speaks as its author`).toBeUndefined();
   });
 });
 

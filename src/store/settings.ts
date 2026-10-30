@@ -479,6 +479,26 @@ class Settings {
     });
   }
 
+  /**
+   * Whether the player has met this puzzle here: its first-open card was
+   * shown, or it has remembered a board. The second keeps a player who played
+   * it before the card existed from being shown one, and `introduced` keeps a
+   * dropped remembered board from bringing the card back.
+   */
+  async hasMetPuzzle(puzzleId: PuzzleId): Promise<boolean> {
+    const puzzleRecord = await this.getPuzzleSettings(puzzleId);
+    return puzzleRecord?.introduced === true || puzzleRecord?.lastGameId !== undefined;
+  }
+
+  async setIntroduced(puzzleId: PuzzleId): Promise<void> {
+    const current = (await this.getPuzzleSettings(puzzleId)) ?? {};
+    await db.settings.put({
+      id: puzzleId,
+      type: "puzzle",
+      data: { ...current, introduced: true },
+    });
+  }
+
   // No `get`/`setLastUnfinishedAlert`. They throttled a warning about
   // unfinished puzzles to once a day, and no puzzle has ever been unfinished.
 

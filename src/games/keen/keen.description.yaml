@@ -4,10 +4,13 @@ game: keen
 help:
   rules: |-
     Fill in the grid with digits from 1 to the grid size, so that every
-    digit appears exactly once in each row and column, and so that all
-    the arithmetic clues are satisfied (i.e. the clue number in each
-    thick box should be possible to construct from the digits in the box
-    using the specified arithmetic operation).
+    digit appears exactly once in each row and column.
+
+    Thick lines divide the grid into *cages*, each with a clue. A clue's
+    number is what the cage's digits make by its sign: added (+) or
+    multiplied (×), or, in a cage of two cells, the larger less the smaller
+    (−) or divided by the smaller (÷). A digit may appear twice in a cage, as
+    long as its row and column allow it.
   controls: |-
     To place a number, click in a square to select it, then type the
     number on the keyboard. To erase a number, click to select a square
@@ -25,7 +28,7 @@ help:
     of each the numbers already placed in its row and column.
   hints: |-
     **Hint** explains the next step rather than simply making it. It starts
-    by filling in every cell's pencil marks (the same as pressing 'M') and
+    by filling in every cell's pencil marks (the same as pressing **Fill marks**) and
     crossing out the numbers already standing in each row and column, then
     works from your own marks, so it carries on from wherever you are. If a
     number you've placed is wrong, or a cell's pencil marks have crossed

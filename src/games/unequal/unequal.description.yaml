@@ -48,7 +48,7 @@ help:
     counts as holding every number its row and column don't already hold,
     and the hint writes a cell's marks only when its next step crosses one
     out or reasons from them. If you would rather it filled in every cell's
-    marks first (the same as pressing 'M'), set **Hints pencil in** to
+    marks first (the same as pressing **Fill marks**), set **Hints pencil in** to
     **Every candidate first** in the preferences.
 
     {{hint-marks}}

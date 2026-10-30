@@ -9,8 +9,6 @@ help:
 
     {{rulesets}}
   controls: |-
-    Salad uses a control scheme similar to Solo, but with the ability to mark empty squares.
-
     Left-click to select a cell, then type a letter or number on your keyboard to enter it. Press Backspace or Space to clear a cell.
 
     Press 'X' to mark a cell as empty, or press 'O' to mark a cell as "definitely not empty"; '-' and '_' do what 'X' does, and '+' and '=' what 'O' does. 0 clears a cell as well. A letter and its number are the same key to the game, whichever the board shows: A is 1, B is 2, and so on.
@@ -23,7 +21,7 @@ help:
   origins: |-
     {{choice:ruleset:0}} is the puzzle called ABC End View, whose designer is unknown. {{choice:ruleset:1}} is the puzzle called Number Ball, invented by Inaba Naoki; the original puzzles are available here: http://www.janko.at/Raetsel/Nanbaboru/index.htm
   hints: |-
-    **Hint** explains the next step rather than simply making it. When a step needs pencil marks, it starts by filling in every candidate, 'X' included, in each empty square that has none yet (the same as pressing 'M'), then works from your own marks, so it carries on from wherever you are. If a letter, 'X' or 'O' you've entered is wrong, or a square's pencil marks have crossed out its answer, it asks you to fix the highlighted mistakes first.
+    **Hint** explains the next step rather than simply making it. When a step needs pencil marks, it starts by filling in every candidate, 'X' included, in each empty square that has none yet (the same as pressing **Fill marks**), then works from your own marks, so it carries on from wherever you are. If a letter, 'X' or 'O' you've entered is wrong, or a square's pencil marks have crossed out its answer, it asks you to fix the highlighted mistakes first.
 
     {{hint-marks}}
 

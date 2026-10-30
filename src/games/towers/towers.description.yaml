@@ -6,10 +6,9 @@ game: towers
 help:
   rules: |-
     Fill in the grid with towers whose heights range from 1 to the grid
-    size, so that every possible height appears exactly once in each row
-    and column, and so that each clue around the edge counts the number
-    of towers that are visible when looking into the grid from that
-    direction. (Taller towers hide shorter ones behind them. So the
+    size, so that every height appears exactly once in each row and
+    column, and each clue around the edge counts the towers visible when
+    looking into the grid from that direction. (Taller towers hide shorter ones behind them. So the
     sequence 2,1,4,3,5 would match a clue of 3 on the left, because the
     1 is hidden behind the 2 and the 3 is hidden behind the 4. On the
     right, it would match a clue of 1 because the 5 hides everything
@@ -41,7 +40,7 @@ help:
     **Hint** explains the next step rather than simply making it. It begins
     with any clue of 1 or of the full grid size, which place towers outright
     with no pencil marks needed, then fills in every cell's pencil marks
-    (the same as pressing 'M'), crosses out the heights already standing
+    (the same as pressing **Fill marks**), crosses out the heights already standing
     in each row and column, and then works from your own
     marks, so it carries on from wherever you are. If a tower you've placed
     is wrong, or a cell's pencil marks have crossed out its answer, it asks

@@ -20,6 +20,8 @@ export interface PageFacts {
   rulesets: boolean;
   /** The placeholder the build replaces with the parameter list. */
   parameters: string;
+  /** The placeholder the build replaces with the touch sentence. */
+  touch: string;
 }
 
 /**
@@ -38,16 +40,23 @@ export function renderHelpPage(
       throw new DescriptionError(
         `${where}: help.${field} writes a heading ("${text.slice(heading.index).split("\n")[0]}"); give it a section of its own`,
       );
-    if (text.includes(facts.parameters))
-      throw new DescriptionError(
-        `${where}: help.${field} writes ${facts.parameters}, which the page puts in its parameters section`,
-      );
+    for (const [placeholder, home] of [
+      [facts.parameters, "in its parameters section"],
+      [facts.touch, "at the start of its Controls"],
+    ])
+      if (text.includes(placeholder))
+        throw new DescriptionError(
+          `${where}: help.${field} writes ${placeholder}, which the page puts ${home}`,
+        );
     return text.trimEnd();
   };
+  // Nothing but the rules comes between the title and the first `##`: the
+  // first-open card shows that span.
   const parts = [
     `# ${facts.name}`,
     prose(help.rules, "rules"),
     "## Controls",
+    facts.touch,
     prose(help.controls, "controls"),
   ];
   for (const [i, s] of (help.sections ?? []).entries())

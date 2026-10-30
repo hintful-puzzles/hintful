@@ -40,6 +40,33 @@ describe("the last dealt board", () => {
   });
 });
 
+describe("whether a puzzle has been met", () => {
+  it("is not, until its first-open card is shown, and then is for good", async () => {
+    await settings.loaded;
+    expect(await settings.hasMetPuzzle("mines")).toBe(false);
+    await settings.setIntroduced("mines");
+    expect(await settings.hasMetPuzzle("mines")).toBe(true);
+    // The remembered board is written as the board deals, and dropped when it
+    // will not load: neither touches the card's record.
+    await settings.setLastGameId("mines", "9x9:board");
+    await settings.setLastGameId("mines", null);
+    expect(await settings.hasMetPuzzle("mines")).toBe(true);
+  });
+
+  it("is, for a puzzle played before the card existed", async () => {
+    await settings.loaded;
+    await settings.setLastGameId("net", "5x5:board");
+    expect(await settings.hasMetPuzzle("net")).toBe(true);
+  });
+
+  it("is not again once the puzzle's settings are cleared", async () => {
+    await settings.loaded;
+    await settings.setIntroduced("cube");
+    await settings.clearPuzzleSettings("cube");
+    expect(await settings.hasMetPuzzle("cube")).toBe(false);
+  });
+});
+
 describe("favorites", () => {
   it("start empty, and hold exactly what the player marks", async () => {
     // Owner, 2026-09-24: a fresh install had six favorites the player never

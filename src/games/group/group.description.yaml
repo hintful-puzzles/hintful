@@ -3,35 +3,15 @@
 game: group
 help:
   rules: |-
-    Fill in the grid with the letters shown to the top and left of it, so
-    that the full grid is a valid
-    [Cayley table](http://en.wikipedia.org/wiki/Cayley_table)
-    for a
-    [group](http://en.wikipedia.org/wiki/Group_(mathematics)).
+    Fill in the grid with the letters shown to the top and left of it. Read
+    the letter in row *a*, column *b* as the product *a·b*; the finished grid
+    satisfies four conditions:
 
-    If you don't already know what a group is, I don't really recommend
-    trying to play this game. But if you want to try anyway, the above is
-    equivalent to saying that the following conditions must be satisfied:
-
-    - **Latin square**. Every row and column must contain
-      exactly one of each letter.
-    - **Identity**. There must be some letter *e* such
-      that, for all *a*, the letter in row *e* column *a* and
-      the one in row *a* column *e* are both *a*. In the
-      default mode, this letter is always *e* and its row and column
-      are filled in for you; by reconfiguring the game using the Type menu,
-      you can select a mode in which you have to work out which letter is
-      the identity.
-    - **Inverses**. For every letter *a*, there must be
-      some letter *b* (which may sometimes be the same letter
-      as *a*) such that the letters in row *a* column *b* and
-      in row *b* column *a* are both the identity letter (as
-      defined above).
-    - **Associativity**. For every combination of
-      letters *a*, *b*, and *c*, denote the letter in
-      row *a* column *b* by *d*, and the one in row *b*
-      column *c* by *e*. Then the letters in row *d*
-      column *c* and in row *a* column *e* must be the same.
+    - **Latin square**: every row and column holds each letter once.
+    - **Identity**: one letter leaves every letter unchanged.
+    - **Inverses**: every letter has a partner whose product with it, either
+      way round, is the identity.
+    - **Associativity**: (*a·b*)·*c* and *a*·(*b·c*) are always the same letter.
 
     One setting changes what you are given, and a board's name in the Type
     menu says when it is on:
@@ -43,7 +23,7 @@ help:
     and then press Backspace.
 
     Right-click in a square and then type a letter to add or remove the
-    number as a pencil mark, indicating letters that you think
+    letter as a pencil mark, indicating letters that you think
     *might* go in that square.
 
     You can rearrange the order of elements in the rows and columns by
@@ -68,6 +48,34 @@ help:
     the rows and columns stay in sync either way. Press | to add or remove
     the thick line after the selected column, and - for the line below the
     selected row.
+  sections:
+    - heading: The four conditions in full
+      body: |-
+        A grid that meets them is the
+        [Cayley table](http://en.wikipedia.org/wiki/Cayley_table)
+        of a
+        [group](http://en.wikipedia.org/wiki/Group_(mathematics)), but the
+        game needs no more of the mathematics than this:
+
+        - **Latin square**. Every row and column must contain
+          exactly one of each letter.
+        - **Identity**. There must be some letter *e* such
+          that, for all *a*, the letter in row *e* column *a* and
+          the one in row *a* column *e* are both *a*. In the
+          default mode, this letter is always *e* and its row and column
+          are filled in for you; by reconfiguring the game using the Type menu,
+          you can select a mode in which you have to work out which letter is
+          the identity.
+        - **Inverses**. For every letter *a*, there must be
+          some letter *b* (which may sometimes be the same letter
+          as *a*) such that the letters in row *a* column *b* and
+          in row *b* column *a* are both the identity letter (as
+          defined above).
+        - **Associativity**. For every combination of
+          letters *a*, *b*, and *c*, denote the letter in
+          row *a* column *b* by *d*, and the one in row *b*
+          column *c* by *e*. Then the letters in row *d*
+          column *c* and in row *a* column *e* must be the same.
   hints: |-
     **Hint** explains the next step rather than simply making it. It works
     from your own letters and pencil marks, so it carries on from wherever
@@ -77,7 +85,7 @@ help:
     with no marks counts as holding every element its row and column don't
     already hold, and the hint writes a cell's marks only when its next
     step crosses one out or reasons from them. If you would rather it
-    filled in every cell's marks first (the same as pressing 'M'), set
+    filled in every cell's marks first (the same as pressing **Fill marks**), set
     **Hints pencil in** to **Every candidate first** in the preferences.
 
     {{hint-marks}}

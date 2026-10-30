@@ -90,6 +90,38 @@ does; a `###` subheading is the section's own.
   and the words its sentences use for them
   ([`hints.md`](./hints.md) § "The help teaches the marks").
 
+## A page stands alone for a newcomer
+
+A game's rules are what its first open shows, in a card over the board, so
+they are written for someone who has never played it and is reading on a
+phone. Apply this to a page you write or change; the items marked *checked*
+are in `src/help-coverage.test.ts`.
+
+1. **The rules are a summary** (*checked*: at most 100 words before
+   placeholders expand). The first sentence states the goal in the board's
+   terms. Detail, examples past the first and asides go under a heading of
+   their own, which moves words and changes none.
+2. **No other game is needed** (*checked*: the rules and Controls name no
+   other game). A page that says "the same controls as Solo" sends a newcomer
+   to a game they have not played; say the controls here.
+3. **The rules hold rules and link nowhere** (*checked*: no link). A credit
+   or a link out is `origins`; a definition with a link is a section.
+4. **No author's voice** (*checked*: no first person outside `origins`). A
+   newcomer does not know who "I" is, and an aside that discourages or scolds
+   them ("think harder!") is cut or said plainly.
+5. **A control is named as the app names it** (*checked* for the command
+   list's labels in bold). Name the button a phone has, **Fill marks**, and
+   not only the key a keyboard has, M.
+6. **Every term is plain or defined where it is first used**, and one thing
+   has one name across the rules, Controls and Hints (Keen's "box" and
+   "cage" were one thing).
+7. **A counting clue gets a worked example**, as Towers' 2,1,4,3,5 does.
+
+Touch needs no item: the renderer writes `{{touch}}` as the first paragraph
+of every Controls section, and the build says a tap, a long press and the
+on-screen keys from what the game declares (`src/engine/touch-help.ts`), so
+a page's own Controls are written for a mouse and keyboard.
+
 ## A generated section reads the game when it renders
 
 A transform that reads a game takes the collection from

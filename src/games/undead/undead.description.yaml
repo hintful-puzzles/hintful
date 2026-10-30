@@ -44,7 +44,7 @@ help:
 
     Its steps work on pencil marks, so if some empty square has none, its
     first step pencils every monster into each empty square that has no marks
-    yet. You can do the same yourself by pressing M. A square you have already
+    yet. You can do the same yourself by pressing **Fill marks**. A square you have already
     narrowed down keeps its marks.
 
     {{hint-marks}}

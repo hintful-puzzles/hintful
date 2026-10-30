@@ -6,33 +6,34 @@ help:
     Try to expose every square in the grid that is not one of the hidden
     mines, without opening any square that is a mine.
 
-    The first square you open is guaranteed to be safe, and you are
-    guaranteed to be able to solve the whole grid by deduction rather than
-    guesswork. (Deductions may require you to think about
-    the total number of mines.)
-
-    The mines are laid out around the first square you open. If you undo
-    that first move, the board is not laid out any more: whichever square
-    you open next is safe in the same way, and gets a board of its own.
-
-    If you think you've found a grid which can't be solved without
-    guessing, **think harder!** Mines was written in 2005, and since it
-    was written, I've had over 50 reports claiming that a grid had two
-    solutions, or required guessing at a safe square to
-    open. *None* of those reports turned out to be a real bug in
-    the game generation.
-  controls: |-
-    {{controls}}
-
     Every opened square is marked with the number of mines in the
     surrounding 8 squares, if there are any; if not, all the surrounding
     squares are automatically opened.
 
-    **Check & Save** checks your flags against the mines, as it checks your
+    The first square you open is guaranteed to be safe, and you are
+    guaranteed to be able to solve the whole grid by deduction rather than
+    guesswork. (Deductions may require you to think about
+    the total number of mines.)
+  controls: |-
+    {{controls}}
+
+    **Check & save** checks your flags against the mines, as it checks your
     answers in every other puzzle, and highlights a flag on a square with no
     mine under it.
+  sections:
+    - heading: The first square, and guessing
+      body: |-
+        The mines are laid out around the first square you open. If you undo
+        that first move, the board is not laid out any more: whichever square
+        you open next is safe in the same way, and gets a board of its own.
+
+        If a grid seems to need a guess, look again: there is a deduction to
+        find, perhaps one about the total number of mines. Every report since
+        the game was written in 2005 of a grid with two solutions, or one that
+        needed a guess at a safe square, has turned out to be a deduction
+        missed rather than a fault in how the grid was made.
   hints: |-
-    **Hint** explains the next step rather than simply making it. Each step flags squares that must be mines or opens squares that must be safe. It waits until no flag is wrong, as Check & Save does. The hint reasons only from the numbers you have opened, never from your flags, since a flag may be a lucky guess until the numbers prove a mine under it: a mine it mentions is one the numbers prove, and flagged by an earlier step if you had not flagged it already. An *unopened* square, in its words, is one that is neither opened nor proved.
+    **Hint** explains the next step rather than simply making it. Each step flags squares that must be mines or opens squares that must be safe. It waits until no flag is wrong, as **Check & save** does. The hint reasons only from the numbers you have opened, never from your flags, since a flag may be a lucky guess until the numbers prove a mine under it: a mine it mentions is one the numbers prove, and flagged by an earlier step if you had not flagged it already. An *unopened* square, in its words, is one that is neither opened nor proved.
 
     {{hint-marks}}
 

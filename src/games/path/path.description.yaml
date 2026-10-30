@@ -12,10 +12,6 @@ help:
     each:
 
     {{rulesets}}
-
-    The puzzle is solved when every square has its lines and they join the
-    numbers as the mode asks. Every puzzle has exactly one solution, and none
-    needs a guess.
   controls: |-
     Drag from square to square to draw a line along the edges you pass. A drag
     only adds: passing back over a square it has already drawn through does
@@ -65,6 +61,12 @@ help:
     numbers that may not meet. In {{choice:ruleset:0}} that is two that are not
     one apart, such as a line from the 3 that reaches the 5 before the 4, and in
     {{choice:ruleset:1}} two different numbers.
+  sections:
+    - heading: When it is solved
+      body: |-
+        The puzzle is solved when every square has its lines and they join the
+        numbers as the mode asks. Every puzzle has exactly one solution, and none
+        needs a guess.
   origins: |-
     {{choice:ruleset:0}} is the puzzle LinkedIn publishes daily as *Zip*.
     {{choice:ruleset:1}} is Nikoli's *Numberlink*, also published as *Arukone*,

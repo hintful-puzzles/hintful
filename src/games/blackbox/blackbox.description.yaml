@@ -3,8 +3,16 @@
 game: blackbox
 help:
   rules: |-
-    Determine where the hidden balls are in the box, by observing the
-    behavior of light beams fired into the box from the sides.
+    Balls are hidden in the box. Fire lasers in from the squares around its
+    edge, and work out where the balls are from what each beam does. A beam
+    goes straight across unless:
+
+    - it meets a ball head-on, which absorbs it: its result is **H**;
+    - a ball diagonally ahead of it turns it 90 degrees away from the ball;
+    - it comes back out where it went in, or a ball beside its entry square
+      would turn it before it enters: it is reflected, **R**.
+
+    Otherwise a number marks where it went in and where it came out.
   controls: |-
     {{controls}}
 
@@ -24,7 +32,7 @@ help:
     A square marked as known takes no ball until you right-click it again.
 
     Every board has exactly one answer: once every laser is fired, only one
-    set of balls sends them all where they go. So **Check & Save** can check
+    set of balls sends them all where they go. So **Check & save** can check
     your marks against it, as it does in every other puzzle, and highlights a
     ball on a square that holds none and a square marked as known that holds
     a ball. A game ID whose lasers allow more than one answer won't open.

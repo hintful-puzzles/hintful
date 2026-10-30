@@ -12,7 +12,7 @@ help:
 
     Right-click and drag to place a pencil mark, or press the Marks button below the grid to make ordinary drags — and the arrow buttons — leave marks until you press it again. A right-click without a drag does the same as the Marks button and selects the square, as it does in the other note-taking puzzles. The selected square is shaded while the buttons enter arrows, and shows a small triangle in its corner while they enter marks. A pencil appears in the top right corner while it is on. {{sticky-pencil}}
 
-    {{mark-all}} A mark records an arrow you think a square could still hold, so a square's marks are the arrows the grid's edges leave open, and once every empty square has marks the press crosses off the ones each square's own area has already used. Check & Save treats a square whose marks have ruled out its answer as a mistake, in the same way it treats a wrong arrow.
+    {{mark-all}} A mark records an arrow you think a square could still hold, so a square's marks are the arrows the grid's edges leave open, and once every empty square has marks the press crosses off the ones each square's own area has already used. **Check & save** treats a square whose marks have ruled out its answer as a mistake, in the same way it treats a wrong arrow.
 
     Squares whose arrows already lead to a goal are shaded, so you can see how much of the grid is settled. A second preference shades squares caught in a loop instead, which can never reach a goal; it is off by default. Both are in the game's preferences.
 

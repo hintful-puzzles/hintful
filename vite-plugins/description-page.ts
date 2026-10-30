@@ -35,6 +35,7 @@ export const withDescription: Transform = async (data, addWatchFile) => {
     name: String(data["gameName"]),
     rulesets: code.rulesetField(game) !== null,
     parameters: code.PARAMETERS_PLACEHOLDER,
+    touch: code.TOUCH_PLACEHOLDER,
   });
   return { ...data, sourceFile, source };
 };

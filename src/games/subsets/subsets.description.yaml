@@ -24,7 +24,7 @@ help:
 
     With a keyboard, move the cursor down past the bottom row of the grid into the tally, keeping the cell you were on in focus. The arrow keys move between sets, Enter or Space rules one out, Backspace takes a rule-out back, and moving up from the tally's top row returns to the grid.
 
-    Check & Save treats a letter marked or crossed out against the solution as a mistake, and draws it in red. It treats a set ruled out of the cell it belongs in the same way.
+    **Check & save** treats a letter marked or crossed out against the solution as a mistake, and draws it in red. It treats a set ruled out of the cell it belongs in the same way.
   origins: |-
     This puzzle type was invented by Inaba Naoki under the name *サブセットリンク*, released as a [Java Applet](http://inabapuzzle.com/honkaku/subset.html) with a puzzle generator.
   hints: |-

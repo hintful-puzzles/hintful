@@ -8,6 +8,15 @@ Simon Tatham’s manual for the original collection describes his desktop
 builds, and much of its [common features][sgt-common] chapter applies here
 too. Where the two disagree, this page describes the app you are using.
 
+## The first time you open a puzzle {#first-open}
+
+The first time you open a puzzle, its rules appear in a card over the board.
+**Play** closes it, as do Escape and a tap anywhere outside it, and **Full
+rules and controls** opens the puzzle's whole page. The card is shown once
+for each puzzle and does not come back; the page is always in the Menu, as
+*How to play*. A puzzle you had already played before the card was added
+does not show it.
+
 ## On-screen keyboard {#virtual-keyboard}
 
 Puzzles you solve by typing, such as Solo and Keen, show an on-screen keypad

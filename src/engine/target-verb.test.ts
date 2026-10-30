@@ -189,7 +189,7 @@ describe("the model", () => {
 
   it("the Controls paragraph names each verb's button and key", () => {
     expect(controlsMarkdown(verbs)).toBe(
-      "Click a square to fill it. Right-click it (on a touch screen, a long press) " +
+      "Click a square to fill it. Right-click it " +
         "to dot it.\n\nWith the keyboard, the arrow keys move a cursor around the " +
         "board. Enter does what a click does to the square under it, and Space (or D) " +
         "what a right-click does.",

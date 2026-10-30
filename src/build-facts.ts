@@ -35,4 +35,5 @@ export {
 } from "./engine/ruleset.ts";
 export { draftSections, notApplicableMarkdown } from "./engine/sections.ts";
 export { CONTROLS_PLACEHOLDER, controlsMarkdown } from "./engine/target-verb.ts";
+export { TOUCH_PLACEHOLDER, touchHelp } from "./engine/touch-help.ts";
 export { WING_PLACEHOLDER, wingHelp } from "./engine/wing.ts";

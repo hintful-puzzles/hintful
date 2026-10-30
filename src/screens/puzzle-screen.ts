@@ -1153,6 +1153,14 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     this.requestUpdate();
 
     await settings.loaded;
+    // Read before the board deals, since dealing records the board, which
+    // counts as having met the game. Fetched alongside the deal, which can be
+    // the slower of the two.
+    const firstOpenRules = (await settings.hasMetPuzzle(puzzle.puzzleId))
+      ? null
+      : import("../components/first-open-card.ts").then((m) =>
+          m.fetchRules(puzzle.puzzleId),
+        );
     const prefs = await settings.getPuzzlePreferences(puzzle.puzzleId);
     await puzzle.setPreferences(prefs);
 
@@ -1285,6 +1293,29 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
 
     this.puzzleLoaded = true;
     await this.shadowRoot?.querySelector("puzzle-context")?.updateComplete;
+
+    const rules = await firstOpenRules;
+    if (rules && this.puzzleId === puzzle.puzzleId) {
+      await this.showFirstOpenCard(puzzle.puzzleId, puzzle.displayName, rules);
+    }
+  }
+
+  /** The game's rules over its board, on its first open. Recorded as it is
+   * shown, so a card closed by quitting the app does not come back. */
+  private async showFirstOpenCard(
+    puzzleId: string,
+    name: string,
+    rules: DocumentFragment,
+  ) {
+    await settings.setIntroduced(puzzleId);
+    // The card hands focus back to whatever had it as it opened.
+    this.focusBoard();
+    await new Promise<void>(queueMicrotask);
+    const card = await this.dynamicContent?.addItem({
+      tagName: "first-open-card",
+      render: () => html`<first-open-card></first-open-card>`,
+    });
+    await card?.show(puzzleId, name, rules);
   }
 
   private async chooseFirstPreset(puzzle: Puzzle): Promise<void> {

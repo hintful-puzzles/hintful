@@ -7,9 +7,7 @@ help:
 
     {{rulesets}}
   controls: |-
-    Seismic uses the same control scheme as Solo, but the interface automatically enforces the maximum number on each area, so it's not possible to enter numbers that are out of range.
-
-    Left-click to select a cell, then type a number on your keyboard to enter it. Press Backspace, Delete, Space or 0 to clear a cell.
+    Left-click to select a cell, then type a number on your keyboard to enter it. A number larger than the cell's area is not accepted. Press Backspace, Delete, Space or 0 to clear a cell.
 
     Right-click a cell, then type a number to add a pencil mark. Pencil marks can be used for any purpose. {{sticky-pencil}}
 
@@ -21,7 +19,7 @@ help:
 
     The inventor of {{choice:ruleset:1}} is unknown.
   hints: |-
-    **Hint** explains the next step rather than simply making it. It works from your own pencil marks, and a cell with none counts as holding every number its area and the numbers near it haven't ruled out yet, so an Easy board needs no marks at all. When a step reasons from a cell's possibilities, the hint writes that cell's marks first. If you would rather it start by filling in every cell's marks (the same as pressing 'M'), set **Hints pencil in** to **Every candidate first** in the preferences. As long as none of your marks has crossed out a cell's answer, it carries on from wherever you are.
+    **Hint** explains the next step rather than simply making it. It works from your own pencil marks, and a cell with none counts as holding every number its area and the numbers near it haven't ruled out yet, so an Easy board needs no marks at all. When a step reasons from a cell's possibilities, the hint writes that cell's marks first. If you would rather it start by filling in every cell's marks (the same as pressing **Fill marks**), set **Hints pencil in** to **Every candidate first** in the preferences. As long as none of your marks has crossed out a cell's answer, it carries on from wherever you are.
 
     {{hint-marks}}
 

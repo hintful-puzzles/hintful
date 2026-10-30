@@ -8,6 +8,7 @@
 import { PARAMETERS_PLACEHOLDER } from "../engine/param-help.ts";
 import { getTsGame } from "../engine/registry.ts";
 import { rulesetField } from "../engine/ruleset.ts";
+import { TOUCH_PLACEHOLDER } from "../engine/touch-help.ts";
 import { puzzleDataMap } from "../puzzle/catalog.ts";
 import type { HelpJson } from "./description.ts";
 import { gameHelpPage } from "./help-page.ts";
@@ -43,6 +44,7 @@ export function helpPage(id: string): string {
       name: puzzleDataMap[id].name,
       rulesets: rulesetField(game) !== null,
       parameters: PARAMETERS_PLACEHOLDER,
+      touch: TOUCH_PLACEHOLDER,
     });
     pages.set(id, page);
   }

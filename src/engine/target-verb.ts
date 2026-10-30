@@ -788,10 +788,7 @@ export function controlsMarkdown<S, U, D, T, M>(verbs: Verbs<S, U, D, T, M>): st
   const noun = verbs.geometry.noun;
   const a = /^[aeiou]/i.test(noun) ? "an" : "a";
   const pointer = [`Click ${a} ${noun} to ${verbs.primary.does}.`];
-  if (verbs.secondary)
-    pointer.push(
-      `Right-click it (on a touch screen, a long press) to ${verbs.secondary.does}.`,
-    );
+  if (verbs.secondary) pointer.push(`Right-click it to ${verbs.secondary.does}.`);
 
   const keyboard = verbs.secondary
     ? `${keyNames("Enter", verbs.primary)} does what a click does to the ${noun} ` +

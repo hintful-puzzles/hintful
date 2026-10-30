@@ -72,6 +72,14 @@ export interface PuzzleSettings {
    * no schema bump needed.
    */
   lastGameId?: string;
+
+  /**
+   * Whether this game's first-open card has been shown. Never counted or shown
+   * to the player. A record with `lastGameId` but not this was written by a
+   * player who played the game before the card existed, and counts as met too
+   * (`Settings.hasMetPuzzle`).
+   */
+  introduced?: true;
 }
 
 export type SettingsRecord =

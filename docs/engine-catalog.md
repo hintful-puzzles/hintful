@@ -1549,6 +1549,10 @@ What no game imports:
 - `save.ts`: the versioned save envelope.
 - `index.ts`: the app's barrel.
 - `fake-game.ts`: the midend test suite's minimal game.
+- `touch-help.ts`: the sentence opening every help page's Controls, said
+  from `ignoresSecondaryButton` and `requestKeys`; the renderer places
+  `{{touch}}` and the help build fills it
+  ([`help-pages.md`](./help-pages.md) § "A page stands alone for a newcomer").
 
 ## Testing harness
 

@@ -46,7 +46,7 @@ help:
     hint writes a cell's marks only when its next step crosses one out or
     reasons from them. Much of a puzzle then needs no marks at all. If you
     would rather it filled in every cell's marks first (the same as
-    pressing 'M'), set **Hints pencil in** to **Every candidate first** in
+    pressing **Fill marks**), set **Hints pencil in** to **Every candidate first** in
     the preferences.
 
     {{hint-marks}}

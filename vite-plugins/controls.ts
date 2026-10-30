@@ -2,7 +2,8 @@
  * The Controls paragraph of a game whose input is targets and verbs, generated
  * from its `Game.targetVerbs`: its page writes `{{controls}}` where the
  * paragraph goes, and the help build replaces it before the markdown is
- * rendered.
+ * rendered. The sentence on touch that opens every page's Controls is
+ * replaced here too.
  *
  * Read from the games themselves (`game-code.ts`), as `hint-marks.ts` does, so
  * the page cannot name a key the game does not bind. A declaring game's page
@@ -30,9 +31,18 @@ function expandControls(code: GameCode, id: string, source: string): string {
   return verbs ? source.replace(CONTROLS_PLACEHOLDER, controlsMarkdown(verbs)) : source;
 }
 
+/** `source` with the touch sentence the renderer placed at the start of its
+ * Controls, said of game `id`. */
+function expandTouch(code: GameCode, id: string, source: string): string {
+  const game = code.getTsGame(id);
+  if (!game) throw new Error(`${descriptionPath(id)}: no registered game "${id}"`);
+  return source.replace(code.TOUCH_PLACEHOLDER, code.touchHelp(game));
+}
+
 /** The transform: the page's game is its file's name. */
 export const withControls: Transform = async (data, addWatchFile) => {
   const id = pageGame(data);
   const code = await gameCode(addWatchFile);
-  return { ...data, source: expandControls(code, id, String(data.source ?? "")) };
+  const source = expandControls(code, id, String(data.source ?? ""));
+  return { ...data, source: expandTouch(code, id, source) };
 };

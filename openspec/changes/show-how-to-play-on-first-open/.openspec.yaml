@@ -1,6 +1,2 @@
-# No delta yet. The session that designs it decides which specs the first-open
-# panel and the help review touch (app-shell's, help-pages') and adds their
-# deltas.
 schema: spec-driven
 created: 2026-10-30
-skip_specs: true

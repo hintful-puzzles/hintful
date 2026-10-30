@@ -6,11 +6,7 @@ help:
     Slide the grid squares around so that they all join up into a single
     connected network with no loops.
 
-    One square is the *source*: the solid box the power comes from. It
-    never moves — the row and the column it sits in cannot be slid, which is why
-    no arrows are drawn beside them. So a square sharing the source's row can
-    only be shifted by sliding its column, and vice versa, and the network has to
-    be built up around the source where it stands.
+    One square is the *source*: the solid box the power comes from.
 
     Squares connected to the source are lit up. Aim to light up
     every square in the grid (not just the endpoint blobs).
@@ -33,6 +29,14 @@ help:
     On the keyboard, the arrow keys move a cursor round the arrows at the
     edges, skipping the source's row and column, and Enter or Space presses
     the arrow under it.
+  sections:
+    - heading: The source stays put
+      body: |-
+        The source never moves — the row and the column it sits in cannot be
+        slid, which is why no arrows are drawn beside them. So a square sharing
+        the source's row can only be shifted by sliding its column, and vice
+        versa, and the network has to be built up around the source where it
+        stands.
   hints: |-
     **Hint** shows the next slide rather than simply making it. Nothing in
     Netslide is forced by logic, so the hint searches for a way to finish
