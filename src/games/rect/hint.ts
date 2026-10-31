@@ -37,7 +37,14 @@ import { stepBudget } from "../../engine/step-budget.ts";
 import type { Rect } from "../../engine/types.ts";
 import type { RectEdge } from "./hint-marks.ts";
 import { say } from "./hint-text.ts";
-import { executeMove, hrange, isSolved, vrange } from "./moves.ts";
+import {
+  type Claims,
+  executeMove,
+  hrange,
+  isSolved,
+  readClaims,
+  vrange,
+} from "./moves.ts";
 import { clueDimensions, HIDDEN, type RectMove, type RectState } from "./state.ts";
 
 export type RectFiring =
@@ -49,6 +56,8 @@ export type RectFiring =
       offBoard: boolean;
       blockers: number[];
       crossesLine: boolean;
+      /** Some would leave out squares of the clue's own drawn rectangle. */
+      leavesOut: boolean;
     }
   | { kind: "reach"; clue: number; rect: Rect; square: number }
   | { kind: "overlap"; clue: number; rect: Rect; other: number; core: number[] }
@@ -81,6 +90,13 @@ const covers = (r: Rect, i: number, w: number): boolean => {
   return x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h;
 };
 
+/** Whether `outer` holds every square of `inner`. */
+const contains = (outer: Rect, inner: Rect): boolean =>
+  inner.x >= outer.x &&
+  inner.y >= outer.y &&
+  inner.x + inner.w <= outer.x + outer.w &&
+  inner.y + inner.h <= outer.y + outer.h;
+
 const overlap = (a: Rect, b: Rect): boolean =>
   a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 
@@ -91,8 +107,11 @@ const cellsOf = (r: Rect, w: number): number[] => {
   return out;
 };
 
-/** Does a drawn line run through the inside of `r`? */
-function crossesLine(s: RectState, r: Rect): boolean {
+/** Does a line of these run through the inside of `r`? */
+function crossesLine(
+  s: { readonly w: number; readonly hedge: Uint8Array; readonly vedge: Uint8Array },
+  r: Rect,
+): boolean {
   const { w } = s;
   for (let y = r.y; y < r.y + r.h; y++)
     for (let x = r.x + 1; x < r.x + r.w; x++) if (s.vedge[y * w + x]) return true;
@@ -118,60 +137,78 @@ function shapesAround(s: RectState, clue: number): Rect[] {
   return out;
 }
 
-type Verdict = "fits" | "offBoard" | { clue: number } | "line";
+/**
+ * Why a rectangle around a clue is not a fit: off the board, taking in
+ * another clue, crossing a line or another clue's drawn rectangle, or leaving
+ * out part of the clue's own (`short`).
+ */
+type Verdict = "fits" | "offBoard" | { clue: number } | "line" | "short";
 
-function judge(s: RectState, clue: number, r: Rect): Verdict {
+function judge(s: RectState, claims: Claims, clue: number, r: Rect): Verdict {
   const { w, h, grid } = s;
   if (r.x < 0 || r.y < 0 || r.x + r.w > w || r.y + r.h > h) return "offBoard";
-  for (const i of cellsOf(r, w)) if (i !== clue && grid[i]) return { clue: i };
-  return crossesLine(s, r) ? "line" : "fits";
-}
-
-function fitsOf(s: RectState, clue: number): Rect[] {
-  return shapesAround(s, clue).filter((r) => judge(s, clue, r) === "fits");
+  const cells = cellsOf(r, w);
+  for (const i of cells) if (i !== clue && grid[i]) return { clue: i };
+  for (const i of cells)
+    if (claims.owner[i] >= 0 && claims.owner[i] !== clue) return "line";
+  if (crossesLine({ w, hedge: claims.hedge, vedge: claims.vedge }, r)) return "line";
+  const mine = claims.boxes.get(clue)?.box;
+  return mine && !contains(r, mine) ? "short" : "fits";
 }
 
 /** Each clue's fits, the clues in reading order. */
 type Fits = ReadonlyMap<number, readonly Rect[]>;
 
 function readFits(s: RectState): Fits {
+  const claims = readClaims(s);
   const fits = new Map<number, readonly Rect[]>();
   for (let clue = 0; clue < s.grid.length; clue++)
-    if (s.grid[clue]) fits.set(clue, closed(s, fitsOf(s, clue)));
+    if (s.grid[clue])
+      fits.set(
+        clue,
+        shapesAround(s, clue).filter((r) => judge(s, claims, clue, r) === "fits"),
+      );
   return fits;
 }
 
-/**
- * A clue's fits, or the one drawn all round where there is one. Any other
- * fit lies inside it, since it crosses no line, and would leave squares of
- * the drawn box that no other clue reaches without crossing one. Only a clue
- * with no number has such fits: inside a box there is no other of its size.
- */
-function closed(s: RectState, fits: readonly Rect[]): readonly Rect[] {
-  if (fits.length < 2) return fits;
-  const drawn = fits.find((r) => isDrawn(s, r));
-  return drawn ? [drawn] : fits;
+/** Whether `r` takes in both squares either side of `edge`. */
+function crossesEdge(r: Rect, edge: RectEdge): boolean {
+  const { x, y } = edge;
+  return edge.edge === "v"
+    ? r.x < x && x < r.x + r.w && r.y <= y && y < r.y + r.h
+    : r.y < y && y < r.y + r.h && r.x <= x && x < r.x + r.w;
 }
 
 /**
- * The fits left on `t`, the board `f` made of the one `fits` were read from.
- * A firing only draws lines, so it only takes fits away, and only ones over a
- * square beside a line it drew. Reading every shape again at every step was
- * most of the time a large board took to deal.
+ * The fits left once `f` is known: a line rules out every fit across it, and
+ * a rectangle is its clue's one fit and rules out every other clue's that
+ * takes a square of it. That holds whether or not the firing draws anything,
+ * which it does not where the player drew it already. Reading every shape
+ * again at every step was most of the time a large board took to deal.
  */
-function fitsAfter(fits: Fits, t: RectState, f: RectFiring): Fits {
-  const beside: Rect =
-    f.kind === "line" ? { x: f.edge.x, y: f.edge.y, w: 1, h: 1 } : f.rect;
+function fitsAfter(fits: Fits, f: RectFiring): Fits {
   const left = new Map<number, readonly Rect[]>();
-  for (const [clue, rects] of fits)
-    left.set(
-      clue,
-      closed(
-        t,
-        rects.filter((r) => !(overlap(r, beside) && crossesLine(t, r))),
-      ),
-    );
+  for (const [clue, rects] of fits) {
+    if (f.kind === "line")
+      left.set(
+        clue,
+        rects.filter((r) => !crossesEdge(r, f.edge)),
+      );
+    else
+      left.set(
+        clue,
+        clue === f.clue ? [f.rect] : rects.filter((r) => !overlap(r, f.rect)),
+      );
+  }
   return left;
+}
+
+/** Whether `f` changes the board: a rectangle or a line the player has not
+ * already drawn. */
+function drawsSomething(s: RectState, f: RectFiring): boolean {
+  if (f.kind === "line")
+    return !(f.edge.edge === "h" ? s.hedge : s.vedge)[f.edge.y * s.w + f.edge.x];
+  return !(isDrawn(s, f.rect) && !crossesLine(s, f.rect));
 }
 
 /** For each square, the clues with a fit over it, in reading order. */
@@ -223,6 +260,7 @@ export function* firingsOn(
     return !(f.length === 1 && isDrawn(s, f[0]));
   });
   const isOpen = new Set(open);
+  const claims = readClaims(s);
 
   for (const clue of open) {
     const f = fitsFor(clue);
@@ -230,10 +268,12 @@ export function* firingsOn(
     const blockers = new Set<number>();
     let offBoard = false;
     let line = false;
+    let short = false;
     for (const r of shapesAround(s, clue)) {
-      const v = judge(s, clue, r);
+      const v = judge(s, claims, clue, r);
       if (v === "offBoard") offBoard = true;
       else if (v === "line") line = true;
+      else if (v === "short") short = true;
       else if (v !== "fits") blockers.add(v.clue);
     }
     yield {
@@ -243,6 +283,7 @@ export function* firingsOn(
       offBoard,
       blockers: [...blockers].sort((a, b) => a - b),
       crossesLine: line,
+      leavesOut: short,
     };
   }
 
@@ -348,8 +389,10 @@ export function* firingsOn(
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       const edges: [boolean, RectEdge, number][] = [
-        [vrange(w, h, x, y) && !s.vedge[i], { edge: "v", x, y }, i - 1],
-        [hrange(w, h, x, y) && !s.hedge[i], { edge: "h", x, y }, i - w],
+        // An edge already a line is left; a drawn side of a rectangle that
+        // may still grow is not one yet, so it can be proved one.
+        [vrange(w, h, x, y) && !claims.vedge[i], { edge: "v", x, y }, i - 1],
+        [hrange(w, h, x, y) && !claims.hedge[i], { edge: "h", x, y }, i - w],
       ];
       for (const [open, edge, j] of edges) {
         const across = open ? crossing(j, i) : null;
@@ -409,8 +452,8 @@ export function rungsFinish(s: RectState): boolean {
   while (!isSolved(t)) {
     const f = nextFiring(t, fits);
     if (!f) return false;
-    t = executeMove(t, moveOf(f));
-    fits = fitsAfter(fits, t, f);
+    if (drawsSomething(t, f)) t = executeMove(t, moveOf(f));
+    fits = fitsAfter(fits, f);
   }
   return true;
 }
@@ -443,9 +486,13 @@ export function rectHint(state: RectState): HintResult<RectMove, RectHint, RectR
     techniques: findingTechniques(
       [{ id: "rect", tier: 0, find: () => firingsOn(board.s, board.fits) }],
       (f) => {
-        steps.push(stepOf(board.s, f));
-        board.s = executeMove(board.s, moveOf(f));
-        board.fits = fitsAfter(board.fits, board.s, f);
+        // A rectangle the player drew already, proved whole, or a side of
+        // one proved a line, is no step: nothing is left to draw.
+        if (drawsSomething(board.s, f)) {
+          steps.push(stepOf(board.s, f));
+          board.s = executeMove(board.s, moveOf(f));
+        }
+        board.fits = fitsAfter(board.fits, f);
       },
       { reads: (f) => readsOf(board.s, f), writes: (f) => writesOf(board.s, f) },
     ),

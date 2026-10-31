@@ -141,6 +141,11 @@ export interface RectState {
   readonly vedge: Uint8Array;
   /** Horizontal edges (top of each cell), `w*h`, value 0/1. */
   readonly hedge: Uint8Array;
+  /** The rectangles the player drew, by a drag or a resize, oldest first:
+   * what they mean by a rectangle, where a box their lines happen to close is
+   * not one (`readClaims`). One a later move broke is still listed, and is
+   * read as nothing. */
+  readonly drawn: readonly Rect[];
   /** Per-cell correctness overlay (1 = part of a valid rectangle), `w*h`.
    * Recomputed after every move; drives the gray fill + completion. */
   readonly correct: Uint8Array;
@@ -184,6 +189,9 @@ export interface RectDrawState {
   /** Per-cell key of the hint rings last drawn through it: a ring reaches
    * past its element, so no side bits in the word can say which it was. */
   rings: string[];
+  /** Per-cell key of the line colors last drawn round it (`render.ts`),
+   * beside the word, which has no room for them. */
+  tints: Int32Array;
 }
 
 /** A flagged edge that the unique solution does not contain. */

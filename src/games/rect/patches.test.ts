@@ -15,8 +15,8 @@ import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { rectHint } from "./hint.ts";
 import { rectGame } from "./index.ts";
-import { executeMove, isSolved, newState } from "./moves.ts";
-import { newDrawState, redraw } from "./render.ts";
+import { executeMove, isSolved, newState, outlinedBoxAt } from "./moves.ts";
+import { COL_EDGE_TINT, COL_MISTAKE, newDrawState, redraw } from "./render.ts";
 import { answerOf } from "./solver.ts";
 import {
   decodeParams,
@@ -27,6 +27,7 @@ import {
   MODE_RECT,
   type RectMove,
   type RectParams,
+  type RectState,
   SHAPE_ANY,
   SHAPE_SQUARE,
   SHAPE_TALL,
@@ -135,5 +136,89 @@ describe("Patches' look", () => {
     expect(texts.filter((t) => t === "?")).toHaveLength(2);
     // Two frames of four sides each.
     expect(opsOfKind(dr.ops, "line")).toHaveLength(8);
+  });
+
+  /** The colors the rects of a frame were drawn in. */
+  const colorsOf = (s: RectState): Set<number> => {
+    const dr = new RecordingDrawing(rectGame.colors(DEFAULT_BACKGROUND));
+    redraw(dr, newDrawState(s, 32), null, s, 1, rectGame.newUi(s), 0, NO_FLASH);
+    return new Set(opsOfKind(dr.ops, "rect").map((o) => o.color));
+  };
+  const tinted = (colors: Set<number>) =>
+    [...colors].some((c) => c >= COL_EDGE_TINT && c < COL_EDGE_TINT + 4);
+
+  it("outlines a drawn rectangle that may still grow in its clue's color", () => {
+    const s = executeMove(newState(patches(3, 2), SMALL), rect(0, 0, 1, 1));
+    const colors = colorsOf(s);
+    expect(tinted(colors)).toBe(true);
+    expect(colors.has(COL_MISTAKE)).toBe(false);
+  });
+
+  it("draws one with its clue's number in ink", () => {
+    // A 2 drawn as its two squares: the left column of `2a2c`'s 3×2.
+    const p = { ...patches(3, 2), mode: MODE_RECT };
+    const s = executeMove(newState(p, "2a4c"), rect(0, 0, 1, 2));
+    expect(tinted(colorsOf(s))).toBe(false);
+  });
+
+  it("reddens one no rectangle its clue allows can contain", () => {
+    // A tall clue's rectangle two squares wide on a board two high.
+    const s = executeMove(newState(patches(3, 2), SMALL), rect(1, 0, 2, 2));
+    const colors = colorsOf(s);
+    expect(colors.has(COL_MISTAKE)).toBe(true);
+    expect(tinted(colors)).toBe(false);
+  });
+});
+
+describe("a rectangle drawn round one clue", () => {
+  const mistakes = (s: RectState) => rectGame.findMistakes?.(s) ?? [];
+
+  it("is no mistake while it is smaller than its clue's", () => {
+    // The square clue's is the left 2×2; a 1×1 and a 1×2 are inside it.
+    const start = newState(patches(3, 2), SMALL);
+    expect(mistakes(executeMove(start, rect(0, 0, 1, 1)))).toEqual([]);
+    expect(mistakes(executeMove(start, rect(0, 0, 1, 2)))).toEqual([]);
+  });
+
+  it("is a mistake where it takes a square its clue's does not", () => {
+    // The tall clue's is the right column alone.
+    const s = executeMove(newState(patches(3, 2), SMALL), rect(1, 0, 2, 1));
+    expect(mistakes(s)).toContainEqual({ edge: "v", x: 1, y: 0 });
+  });
+
+  it("is a lower bound to the hint, which carries on from it", () => {
+    const s = executeMove(newState(patches(3, 2), SMALL), rect(0, 0, 1, 1));
+    const hint = rectHint(s);
+    if (!hint.ok) throw new Error(`no hint: ${hint.error}`);
+    const end = hint.steps.reduce((t, step) => executeMove(t, step.move), s);
+    expect(isSolved(end)).toBe(true);
+  });
+
+  it("drawn already as its clue's whole, is no step of the hint", () => {
+    const p = patches(7, 7);
+    const { desc } = rectGame.newDesc(p, randomNew("drawn-whole"));
+    const start = newState(p, desc);
+    const answer = answerOf(start);
+    if (answer.kind !== "one") throw new Error("no answer");
+    // A clue with no number, and its rectangle in the answer, drawn.
+    const clue = Array.from(start.grid).indexOf(HIDDEN);
+    const whole = outlinedBoxAt(
+      { w: 7, h: 7, ...answer.solution },
+      clue % 7,
+      Math.floor(clue / 7),
+    );
+    if (!whole) throw new Error("no rectangle");
+    const s = executeMove(start, { type: "rect", erasing: false, ...whole });
+    const hint = rectHint(s);
+    if (!hint.ok) throw new Error(`no hint: ${hint.error}`);
+    const same = (m: RectMove) =>
+      m.type === "rect" &&
+      m.x === whole.x &&
+      m.y === whole.y &&
+      m.w === whole.w &&
+      m.h === whole.h;
+    expect(hint.steps.some((step) => same(step.move))).toBe(false);
+    const end = hint.steps.reduce((t, step) => executeMove(t, step.move), s);
+    expect(isSolved(end)).toBe(true);
   });
 });

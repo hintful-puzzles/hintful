@@ -1361,6 +1361,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "rings",
       "started",
       "tileSize",
+      "tints",
       "tone",
       "visible",
       "w",

@@ -18,7 +18,7 @@
  * whole, once it is drawn.
  */
 
-import { REGION_FILLS } from "../../engine/color/colors.ts";
+import { REGION_FILLS, REGION_LINES } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
@@ -42,7 +42,15 @@ import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/typ
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { RectHint } from "./hint.ts";
 import { LINE, RECTANGLE } from "./hint-marks.ts";
-import { gridDrawRect, hrange, outlinedBoxAt, resizeEdges, vrange } from "./moves.ts";
+import {
+  type Claims,
+  gridDrawRect,
+  hrange,
+  outlinedBoxAt,
+  readClaims,
+  resizeEdges,
+  vrange,
+} from "./moves.ts";
 import {
   HIDDEN,
   type RectDrawState,
@@ -74,6 +82,8 @@ export const COL_FLASH = 10;
 export const COL_FLASH_LEAD = 11;
 /** The first of the clues' fills, one for each of {@link FILLS}. */
 export const COL_FILL = 12;
+/** The first of the clues' line colors, indexed as {@link COL_FILL}. */
+export const COL_EDGE_TINT = 16;
 
 /** The first four region fills, as Star Battle takes them: the next four are
  * a step darker in the dark scheme, too near the plain cell they border
@@ -92,6 +102,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_DRAGERASE] = DRAG_REMOVE;
   FILLS.forEach((fill, k) => {
     out[COL_FILL + k] = fill;
+    out[COL_EDGE_TINT + k] = REGION_LINES[k];
   });
   out[COL_LINE] = INK;
   out[COL_TEXT] = INK;
@@ -150,6 +161,82 @@ function clueFills(state: RectState): Int32Array {
   return out;
 }
 
+/** The line color index of each edge, by the edge grids' layout, and of each
+ * corner, by its square's top left, or {@link UNTINTED}. */
+interface Tints {
+  readonly h: Int8Array;
+  readonly v: Int8Array;
+  readonly corner: Int8Array;
+}
+
+/**
+ * Where a rectangle the player drew round a clue may still grow, its sides
+ * that are not lines take its clue's line color (`readClaims`), so it reads
+ * as theirs to shape and not as walls. A corner takes it where every line
+ * that meets there does. One beyond mending is not tinted: its sides are
+ * red, as a broken rule's are.
+ */
+function lineTints(state: RectState, claims: Claims): Tints {
+  const { w, h } = state;
+  const fill = clueFills(state);
+  const tints: Tints = {
+    h: new Int8Array(w * h).fill(UNTINTED),
+    v: new Int8Array(w * h).fill(UNTINTED),
+    corner: new Int8Array(w * h).fill(UNTINTED),
+  };
+  for (const [clue, { box, final, broken }] of claims.boxes) {
+    if (final || broken) continue;
+    const k = fill[clue];
+    const tint = (lines: Uint8Array, settled: Uint8Array, i: number) => {
+      if (lines[i] && !settled[i]) tints[lines === state.hedge ? "h" : "v"][i] = k;
+    };
+    for (let x = box.x; x < box.x + box.w; x++) {
+      if (hrange(w, h, x, box.y)) tint(state.hedge, claims.hedge, box.y * w + x);
+      const b = box.y + box.h;
+      if (hrange(w, h, x, b)) tint(state.hedge, claims.hedge, b * w + x);
+    }
+    for (let y = box.y; y < box.y + box.h; y++) {
+      if (vrange(w, h, box.x, y)) tint(state.vedge, claims.vedge, y * w + box.x);
+      const r = box.x + box.w;
+      if (vrange(w, h, r, y)) tint(state.vedge, claims.vedge, y * w + r);
+    }
+  }
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      // The lines that meet at the top-left corner of (x, y).
+      const meeting: number[] = [];
+      if (hrange(w, h, x - 1, y) && state.hedge[y * w + x - 1])
+        meeting.push(tints.h[y * w + x - 1]);
+      if (hrange(w, h, x, y) && state.hedge[y * w + x])
+        meeting.push(tints.h[y * w + x]);
+      if (vrange(w, h, x, y - 1) && state.vedge[(y - 1) * w + x])
+        meeting.push(tints.v[(y - 1) * w + x]);
+      if (vrange(w, h, x, y) && state.vedge[y * w + x])
+        meeting.push(tints.v[y * w + x]);
+      if (meeting.length > 0 && meeting.every((t) => t === meeting[0]))
+        tints.corner[y * w + x] = meeting[0];
+    }
+  return tints;
+}
+
+/** The colors round square `(x, y)`, as {@link RectDrawState.tints} keys
+ * them: its four sides and four corners, three bits each. */
+function tintKey(tints: Tints, w: number, h: number, x: number, y: number): number {
+  const at = (a: Int8Array, i: number, inside: boolean) => (inside ? a[i] + 1 : 0);
+  const i = y * w + x;
+  const parts = [
+    at(tints.h, i, true),
+    at(tints.h, i + w, y + 1 < h),
+    at(tints.v, i, true),
+    at(tints.v, i + 1, x + 1 < w),
+    at(tints.corner, i, true),
+    at(tints.corner, i + 1, x + 1 < w),
+    at(tints.corner, i + w, y + 1 < h),
+    at(tints.corner, i + w + 1, x + 1 < w && y + 1 < h),
+  ];
+  return parts.reduce((key, part, n) => key | (part << (3 * n)), 0);
+}
+
 /** The fill each square wears, by the same index, or -1: its clue's, if it
  * has one, and over a rectangle the clue allows, the clue's on every square
  * of it. */
@@ -199,8 +286,20 @@ export function newDrawState(state: RectState, tileSize: number): RectDrawState 
     visible: new Int32Array(state.w * state.h).fill(-1),
     tone: new Uint8Array(state.w * state.h),
     rings: new Array<string>(state.w * state.h).fill(""),
+    tints: new Int32Array(state.w * state.h).fill(-1),
   };
 }
+
+/** No tint: the line is ink. */
+const UNTINTED = -1;
+
+/**
+ * The color a drawn edge or corner of value `v` takes: a line the player has
+ * not settled in its clue's line color, `tint`, and every other as its value
+ * says.
+ */
+const edgeColor = (v: number, tint: number): number =>
+  v === 1 && tint !== UNTINTED ? COL_EDGE_TINT + tint : colorOf(v);
 
 function drawTile(
   dr: GameDrawing,
@@ -215,6 +314,7 @@ function drawTile(
   mistake: number,
   tone: WinTone,
   rings: readonly TileRing[],
+  tints: Tints,
 ): void {
   const { w, h } = state;
   const cx = coord(x, tile);
@@ -268,7 +368,7 @@ function drawTile(
       mistake & M_TOP
         ? COL_MISTAKE
         : hrange(w, h, x, y)
-          ? colorOf(hedge[y * w + x])
+          ? edgeColor(hedge[y * w + x], tints.h[y * w + x])
           : COL_LINE,
     );
   if (!hrange(w, h, x, y + 1) || hedge[(y + 1) * w + x])
@@ -280,7 +380,7 @@ function drawTile(
       mistake & M_BOTTOM
         ? COL_MISTAKE
         : hrange(w, h, x, y + 1)
-          ? colorOf(hedge[(y + 1) * w + x])
+          ? edgeColor(hedge[(y + 1) * w + x], tints.h[(y + 1) * w + x])
           : COL_LINE,
     );
   if (!vrange(w, h, x, y) || vedge[y * w + x])
@@ -292,7 +392,7 @@ function drawTile(
       mistake & M_LEFT
         ? COL_MISTAKE
         : vrange(w, h, x, y)
-          ? colorOf(vedge[y * w + x])
+          ? edgeColor(vedge[y * w + x], tints.v[y * w + x])
           : COL_LINE,
     );
   if (!vrange(w, h, x + 1, y) || vedge[y * w + (x + 1)])
@@ -304,18 +404,19 @@ function drawTile(
       mistake & M_RIGHT
         ? COL_MISTAKE
         : vrange(w, h, x + 1, y)
-          ? colorOf(vedge[y * w + (x + 1)])
+          ? edgeColor(vedge[y * w + (x + 1)], tints.v[y * w + (x + 1)])
           : COL_LINE,
     );
 
   // Corners.
-  if (corners[y * w + x]) rect(cx, cy, 2, 2, colorOf(corners[y * w + x]));
+  const corner = (i: number) => edgeColor(corners[i], tints.corner[i]);
+  if (corners[y * w + x]) rect(cx, cy, 2, 2, corner(y * w + x));
   if (x + 1 < w && corners[y * w + (x + 1)])
-    rect(cx + tile - 1, cy, 2, 2, colorOf(corners[y * w + (x + 1)]));
+    rect(cx + tile - 1, cy, 2, 2, corner(y * w + (x + 1)));
   if (y + 1 < h && corners[(y + 1) * w + x])
-    rect(cx, cy + tile - 1, 2, 2, colorOf(corners[(y + 1) * w + x]));
+    rect(cx, cy + tile - 1, 2, 2, corner((y + 1) * w + x));
   if (x + 1 < w && y + 1 < h && corners[(y + 1) * w + (x + 1)])
-    rect(cx + tile - 1, cy + tile - 1, 2, 2, colorOf(corners[(y + 1) * w + (x + 1)]));
+    rect(cx + tile - 1, cy + tile - 1, 2, 2, corner((y + 1) * w + (x + 1)));
 
   // The hint's outline, just inside the cell's own lines so it hides none,
   // and over it each ring that reaches the square, in its part of the ring:
@@ -590,14 +691,29 @@ export function redraw(
     }
 
   const fills = squareFills(state);
+  const claims = readClaims(state);
+  const tints = lineTints(state, claims);
 
-  // Wrong-edge overlay from findMistakes.
+  // Wrong-edge overlay from findMistakes, and the sides of a drawn rectangle
+  // beyond mending, a broken rule shown live in the same red, as the
+  // border-grid games show theirs (`engine/border-grid-render.ts`).
   const wrongH = new Uint8Array(w * h);
   const wrongV = new Uint8Array(w * h);
   if (mistakes) {
     for (const m of mistakes) {
       if (m.edge === "h") wrongH[m.y * w + m.x] = 1;
       else wrongV[m.y * w + m.x] = 1;
+    }
+  }
+  for (const { box, broken } of claims.boxes.values()) {
+    if (!broken) continue;
+    for (let x = box.x; x < box.x + box.w; x++) {
+      if (hrange(w, h, x, box.y)) wrongH[box.y * w + x] = 1;
+      if (hrange(w, h, x, box.y + box.h)) wrongH[(box.y + box.h) * w + x] = 1;
+    }
+    for (let y = box.y; y < box.y + box.h; y++) {
+      if (vrange(w, h, box.x, y)) wrongV[y * w + box.x] = 1;
+      if (vrange(w, h, box.x + box.w, y)) wrongV[y * w + box.x + box.w] = 1;
     }
   }
 
@@ -648,10 +764,12 @@ export function redraw(
       const ringKey = tileRings
         .map(({ box: b }) => `${b.x},${b.y},${b.w},${b.h}`)
         .join(" ");
+      const tintsKey = tintKey(tints, w, h, x, y);
       if (
         ds.visible[y * w + x] !== c ||
         ds.tone[y * w + x] !== tone ||
-        ds.rings[y * w + x] !== ringKey
+        ds.rings[y * w + x] !== ringKey ||
+        ds.tints[y * w + x] !== tintsKey
       ) {
         drawTile(
           dr,
@@ -666,10 +784,12 @@ export function redraw(
           mistake,
           tone,
           tileRings,
+          tints,
         );
         ds.visible[y * w + x] = c;
         ds.tone[y * w + x] = tone;
         ds.rings[y * w + x] = ringKey;
+        ds.tints[y * w + x] = tintsKey;
       }
     }
 }

@@ -29,6 +29,34 @@ board SHALL be completed when every cell is correct.
 - **THEN** the first is solved, and in the second the tall clue's square
   rectangle is not correct
 
+### Requirement: Rules: Rectangles flags a drawn edge the solution lacks
+
+`findMistakes` SHALL return every line the player has drawn that the board's
+one answer does not contain, a line being every drawn edge but the sides of
+a rectangle the player drew round one clue short of its number
+(`Hint: A rectangle the player drew round one clue is a lower bound`). Such a
+rectangle's sides the answer lacks SHALL be returned only where it takes a
+square its clue's rectangle in the answer does not. A missing edge SHALL NOT
+be a mistake.
+
+#### Scenario: A wall the solution does not contain is flagged
+
+- **WHEN** the player has drawn an edge that the unique solution does not
+  contain, and `findMistakes` is invoked
+- **THEN** that edge is returned as a mistake
+
+#### Scenario: A rectangle smaller than its clue's is no mistake
+
+- **WHEN** on `3x2p:SaTc` the player draws a 1×1 or a 1×2 round the square
+  clue, inside its 2×2
+- **THEN** `findMistakes` returns nothing
+
+#### Scenario: A rectangle taking another clue's square is a mistake
+
+- **WHEN** on `3x2p:SaTc` the player draws the 2×1 at (1,0) round the tall
+  clue, whose rectangle is the right column
+- **THEN** its left side is returned as a mistake
+
 ### Requirement: Params: Rectangles' parameters and their encoding
 
 Params SHALL be `w`, `h`, the ruleset, `expandfactor`, a non-negative float
@@ -96,9 +124,10 @@ refused.
 ### Requirement: Hint: A Rectangles hint step draws one rectangle or one line, and reads only the board
 
 Every step of the hint SHALL draw one rectangle or one line, reasoning only
-from the clues and the lines drawn. A clue's fits are the rectangles it
-allows that contain it, stay on the board, take in no other clue and cross
-no drawn line.
+from the clues and the player's marks. A clue's fits are the rectangles it
+allows that contain it, stay on the board, take in no other clue, cross no
+line and take no square of another clue's drawn rectangle, and contain its
+own (`Hint: A rectangle the player drew round one clue is a lower bound`).
 
 #### Scenario: The player draws the rectangle a side at a time
 
@@ -189,12 +218,45 @@ drawn rectangle.
 - **WHEN** a drag inside a drawn 3×3 starts on a grid corner
 - **THEN** it draws a rectangle of its own
 
+### Requirement: Hint: A rectangle the player drew round one clue is a lower bound
+
+A rectangle the player drew, by a drag or a resize, that is still closed
+round one clue SHALL be read as saying its squares are that clue's. Short
+of the clue's number its sides SHALL NOT be lines, but for one with another
+such rectangle across it. Where the hint proves one the whole of its
+clue's, it SHALL go on without a step.
+
+#### Scenario: The hint carries on from a rectangle too small
+
+- **WHEN** on `3x2p:SaTc` the player draws a 1×1 round the square clue and
+  asks for a hint
+- **THEN** the hint finishes the board
+
+#### Scenario: A rectangle drawn whole is no step
+
+- **WHEN** a dealt 7×7 Patches board has one clue without a number drawn
+  as its rectangle in the answer, and the hint is followed
+- **THEN** no step draws that rectangle, and the board is finished
+
+#### Scenario: A box the lines close by chance is not drawn
+
+- **WHEN** on `3x2p:SaTc` the player draws a 1×2 down the left column, which
+  leaves the tall clue a 2×2 box
+- **THEN** that box is no rectangle of the tall clue's, and no mistake
+
 ### Requirement: Look: A clue's fill marks its square, and its rectangle once the clue allows it
 
 Each clue SHALL take one of the region fills, so that clues whose nearest
 squares meet differ; the fills SHALL NOT be chosen from the answer. A clue's
 square SHALL be drawn in its fill, and a rectangle the game counts as
 correct SHALL fill whole with its clue's.
+
+#### Scenario: A drawn rectangle shows whether it is settled
+
+- **WHEN** the player draws a rectangle round one clue
+- **THEN** its sides are in the clue's line color while it may still grow,
+  in ink once it has the clue's number of squares, and red where no
+  rectangle the clue allows on the board contains it
 
 #### Scenario: A finished rectangle takes its clue's fill
 

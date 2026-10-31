@@ -13,7 +13,9 @@
 - [x] 10. Commit and push
 - [x] 11. The owner's playtest (2026-10-31): a drag from a drawn rectangle resizes it, and each clue takes a region fill, in both rulesets
 - [x] 12. The second playtest (2026-10-31): a resize follows the square under the finger, where a drag into the near half of the next square had counted for nothing
-- [ ] 13. The owner's answer on what a drawn rectangle claims (a lower bound, or its sides as lines), and the owner's word on the playtest's changes
+- [x] 13. The owner's answer (2026-10-31): a drawn rectangle is a lower bound; its sides are lines once it has its clue's number
+- [x] 14. Its look (owner, 2026-10-31): outlined in its clue's line color while it may grow, ink once final, red live where no rectangle the clue allows contains it, as the border-grid games show a broken rule
+- [ ] 15. The owner's word on the playtest's changes
 
 ## Measured (2026-10-31, eight deals a size)
 
@@ -36,6 +38,15 @@ and "only one clue reaches a square" each do about a third of the work.
   drawn rectangle, which is what the owner chose where LinkedIn's own pages
   said nothing of it. A drag from a grid corner still draws anew, so the
   hint's corner-to-corner drag and a rectangle inside another still work.
+- **A drawn rectangle is the player's own** (2026-10-31): the state keeps
+  the rectangles drawn by a drag or a resize (`RectState.drawn`), and only
+  one of those, still closed round one clue, is read as a lower bound,
+  resized or grown up to. A box lines close by chance, such as what is left
+  beside one drawn across the board, is not: read as one, it flagged the
+  player's correct work as a mistake.
+- **The line colors are the palette's** (`REGION_LINES`): a fill is too
+  pale to read as a line on the light board, so the light value goes down
+  the fill's hue to a mark's lightness; the dark value is the fill's mark.
 - **What a resize takes hold of**: a closed rectangle round exactly one
   clue. The owner's playtest found a blank board resized as one box, the
   board's edge its outline, into a line across it (2026-10-31).

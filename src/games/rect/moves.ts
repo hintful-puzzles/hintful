@@ -10,6 +10,7 @@ import { descValue } from "../../engine/desc-error.ts";
 import type { GameStatus, Rect } from "../../engine/types.ts";
 import {
   clueAllows,
+  clueDimensions,
   HIDDEN,
   parseDesc,
   type RectMove,
@@ -79,17 +80,96 @@ export function outlinedBoxAt(
 }
 
 /**
- * The rectangle drawn round the square `(x, y)` and round one clue: the
- * player's rectangle for that clue, which a drag from it resizes. The whole
+ * The box closed round the square `(x, y)` and round one clue. The whole
  * board before any line, or a box holding several clues or none, is not one.
  */
-export function clueBoxAt(s: RectState, x: number, y: number): Rect | null {
+function clueBoxAt(s: RectState, x: number, y: number): Rect | null {
   const box = outlinedBoxAt(s, x, y);
   if (!box) return null;
   let clues = 0;
   for (let yy = box.y; yy < box.y + box.h; yy++)
     for (let xx = box.x; xx < box.x + box.w; xx++) if (s.grid[yy * s.w + xx]) clues++;
   return clues === 1 ? box : null;
+}
+
+/**
+ * The rectangle the player drew round the square `(x, y)`, by a drag or a
+ * resize, while it is still closed round one clue: what the player means by
+ * a rectangle, which a drag from it resizes and the hint reads as theirs. A
+ * box their lines close by chance, such as what is left beside one drawn
+ * across the board, is not one.
+ */
+export function drawnBoxAt(s: RectState, x: number, y: number): Rect | null {
+  const box = clueBoxAt(s, x, y);
+  if (!box) return null;
+  const drew = s.drawn.some(
+    (d) => d.x === box.x && d.y === box.y && d.w === box.w && d.h === box.h,
+  );
+  return drew ? box : null;
+}
+
+/**
+ * What the player's marks say, read as the hint and the mistake check read
+ * them. A rectangle drawn round one clue ({@link drawnBoxAt}) says its
+ * squares are that clue's:
+ * the clue's rectangle contains it. It is **final** where it has its clue's
+ * number of squares, since then no other of that size contains it; until
+ * then it may still grow, and its sides are not lines, but for one with
+ * another clue's rectangle across it, which two clues' squares settle.
+ * Every other drawn edge is a line.
+ */
+export interface Claims {
+  /** For each square, the clue whose drawn rectangle holds it, or -1. */
+  readonly owner: Int32Array;
+  /** Each clue's drawn rectangle, by the clue's square: whether it is final,
+   * and whether it is beyond mending, no rectangle the clue allows on the
+   * board containing it, which is a rule broken before any answer is asked. */
+  readonly boxes: ReadonlyMap<
+    number,
+    { readonly box: Rect; readonly final: boolean; readonly broken: boolean }
+  >;
+  /** The drawn edges that are lines, in the state's layout. */
+  readonly hedge: Uint8Array;
+  readonly vedge: Uint8Array;
+}
+
+export function readClaims(s: RectState): Claims {
+  const { w, h, grid } = s;
+  const owner = new Int32Array(w * h).fill(-1);
+  const boxes = new Map<number, { box: Rect; final: boolean; broken: boolean }>();
+  for (let c = 0; c < w * h; c++) {
+    if (!grid[c]) continue;
+    const box = drawnBoxAt(s, c % w, Math.floor(c / w));
+    if (!box) continue;
+    const mendable = clueDimensions(s.shapes[c], grid[c], w, h).some(
+      ([rw, rh]) => rw >= box.w && rh >= box.h && rw <= w && rh <= h,
+    );
+    boxes.set(c, {
+      box,
+      final: grid[c] !== HIDDEN && box.w * box.h === grid[c],
+      broken: !mendable,
+    });
+    for (let y = box.y; y < box.y + box.h; y++)
+      for (let x = box.x; x < box.x + box.w; x++) owner[y * w + x] = c;
+  }
+  const hedge = s.hedge.slice();
+  const vedge = s.vedge.slice();
+  const claimed = (x: number, y: number): boolean =>
+    x >= 0 && y >= 0 && x < w && y < h && owner[y * w + x] >= 0;
+  for (const { box, final } of boxes.values()) {
+    if (final) continue;
+    for (let x = box.x; x < box.x + box.w; x++) {
+      if (!claimed(x, box.y - 1)) hedge[box.y * w + x] = 0;
+      const b = box.y + box.h;
+      if (b < h && !claimed(x, b)) hedge[b * w + x] = 0;
+    }
+    for (let y = box.y; y < box.y + box.h; y++) {
+      if (!claimed(box.x - 1, y)) vedge[y * w + box.x] = 0;
+      const r = box.x + box.w;
+      if (r < w && !claimed(r, y)) vedge[y * w + r] = 0;
+    }
+  }
+  return { owner, boxes, hedge, vedge };
 }
 
 /**
@@ -240,8 +320,11 @@ export function newState(params: RectParams, desc: string): RectState {
   const vedge = new Uint8Array(area);
   const hedge = new Uint8Array(area);
   const correct = getCorrect(w, h, grid, shapes, hedge, vedge);
-  return { w, h, grid, shapes, vedge, hedge, correct };
+  return { w, h, grid, shapes, vedge, hedge, drawn: [], correct };
 }
+
+const overlaps = (a: Rect, b: Rect): boolean =>
+  a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 
 export function cloneRectState(s: RectState): RectState {
   return {
@@ -260,8 +343,12 @@ export function executeMove(from: RectState, move: RectMove): RectState {
   const next = cloneRectState(from);
   const hedge = next.hedge;
   const vedge = next.vedge;
+  // A rectangle drawn, or resized, replaces any drawn before that it lies
+  // over; a clearing drag takes away those it reaches.
+  let drawn = from.drawn;
 
   if (move.type === "solve") {
+    drawn = [];
     // Row-major bit runs over the meaningful edges; a short run leaves the
     // remaining edges clear.
     let i = 0;
@@ -284,17 +371,24 @@ export function executeMove(from: RectState, move: RectMove): RectState {
       move.x + move.w,
       move.y + move.h,
     );
+    const r = { x: move.x, y: move.y, w: move.w, h: move.h };
+    drawn = drawn.filter((d) => !overlaps(d, r));
+    if (!move.erasing) drawn = [...drawn, r];
   } else if (move.type === "edge") {
     if (move.edge === "h") hedge[move.y * w + move.x] ^= 1;
     else vedge[move.y * w + move.x] ^= 1;
   } else if (move.type === "resize") {
     resizeEdges(from, move.from, move.to, hedge, vedge, 1, 0);
+    drawn = [
+      ...drawn.filter((d) => !overlaps(d, move.from) && !overlaps(d, move.to)),
+      move.to,
+    ];
   } else {
     return assertNever(move, "rect: executeMove");
   }
 
   const correct = getCorrect(w, h, next.grid, next.shapes, hedge, vedge);
-  return { ...next, correct };
+  return { ...next, drawn, correct };
 }
 
 /** Solved: every cell lies in a valid rectangle. */

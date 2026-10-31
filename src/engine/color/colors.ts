@@ -476,6 +476,23 @@ export const REGION_FILLS: readonly Color[] = REGION_ORDER.map((name) =>
   ),
 );
 
+/**
+ * **The first four region fills as a line**, indexed as
+ * {@link REGION_FILLS}: a side drawn in a region's color on a surface that is
+ * not it, such as the outline of a rectangle Rectangles has not yet settled,
+ * in its clue's fill. A fill is too pale to read as a line on the light
+ * board, so the light value goes down its own hue to the lightness a mark
+ * reads at there, 0.58 or so and below (as {@link HINT_REFERENCE_COLORS}
+ * found), with the chroma that keeps the hue; the dark value is the fill's
+ * `mark`, made for the same job.
+ */
+export const REGION_LINES: readonly Color[] = REGION_ORDER.slice(0, 4).map((name) => {
+  const d = REGION_DESIGN[name];
+  if (!("mark" in d)) throw new Error(`${name} has no mark step`);
+  const [, chroma, hue] = d.light;
+  return fill([0.55, chroma * 1.8, hue], d.mark);
+});
+
 /** Where Map's four are in {@link REGION_FILLS}, in the order of the numbers
  * a save holds: the pink is where a red was, and the other three are where
  * they were. */

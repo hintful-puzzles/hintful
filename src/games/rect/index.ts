@@ -44,7 +44,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { Point } from "../../engine/types.ts";
+import type { Point, Rect } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import {
   RECT_RUNGS,
@@ -56,12 +56,13 @@ import {
   rungsFinish,
 } from "./hint.ts";
 import {
-  clueBoxAt,
+  drawnBoxAt,
   executeMove,
   gridDrawRect,
   hrange,
   newState,
   outlinedBoxAt,
+  readClaims,
   status,
   textFormat,
   vrange,
@@ -182,7 +183,7 @@ function updateResizeBox(ui: RectUi, state: RectState, x: number, y: number): vo
       for (let xx = x1; xx < x2; xx++) {
         const inside =
           xx >= from.x && xx < from.x + from.w && yy >= from.y && yy < from.y + from.h;
-        if (!inside && outlinedBoxAt(state, xx, yy)) return false;
+        if (!inside && drawnBoxAt(state, xx, yy)) return false;
       }
     return true;
   };
@@ -301,13 +302,13 @@ function interpretMove(
     startDrag(ui.drag, xc, yc);
     ui.dragged = false;
     ui.erasing = erasing;
-    // A drag from a square of a rectangle drawn round its clue resizes it.
-    // One from a grid corner draws corner to corner, as the hint's drag does,
-    // wherever it is.
+    // A drag from a square of a rectangle the player drew round its clue
+    // resizes it. One from a grid corner draws corner to corner, as the
+    // hint's drag does, wherever it is.
     const corner = !(xc & 1) && !(yc & 1);
     const from =
       !erasing && !corner && sx >= 0 && sy >= 0 && sx < w && sy < h
-        ? clueBoxAt(state, sx, sy)
+        ? drawnBoxAt(state, sx, sy)
         : null;
     ui.resizing = from && { from, x: sx, y: sy };
     if (from)
@@ -457,13 +458,43 @@ function findMistakes(state: RectState): readonly RectMistake[] {
   if (answer.kind !== "one") return [];
   const { hedge, vedge } = answer.solution;
 
+  // A line the answer lacks is wrong. So is a side of a rectangle still
+  // short of its clue's number, but only where the rectangle takes a square
+  // its clue's own does not: one smaller than the answer is not a mistake.
+  const claims = readClaims(state);
+  const answerBox = (c: number): Rect | null =>
+    outlinedBoxAt({ w, h, hedge, vedge }, c % w, Math.floor(c / w));
+  const overreaching = new Set<number>();
+  for (const [c, { box, final }] of claims.boxes) {
+    const right = answerBox(c);
+    const inside =
+      right !== null &&
+      box.x >= right.x &&
+      box.y >= right.y &&
+      box.x + box.w <= right.x + right.w &&
+      box.y + box.h <= right.y + right.h;
+    if (!final && !inside) overreaching.add(c);
+  }
+  /** Whether a drawn edge between squares `a` and `b` counts: a line, or a
+   * side of an overreaching rectangle. */
+  const counts = (line: number, a: number, b: number): boolean =>
+    line !== 0 ||
+    overreaching.has(claims.owner[a]) ||
+    overreaching.has(claims.owner[b]);
+
   const out: RectMistake[] = [];
   for (let y = 1; y < h; y++)
-    for (let x = 0; x < w; x++)
-      if (state.hedge[y * w + x] && !hedge[y * w + x]) out.push({ edge: "h", x, y });
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      if (state.hedge[i] && !hedge[i] && counts(claims.hedge[i], i, i - w))
+        out.push({ edge: "h", x, y });
+    }
   for (let y = 0; y < h; y++)
-    for (let x = 1; x < w; x++)
-      if (state.vedge[y * w + x] && !vedge[y * w + x]) out.push({ edge: "v", x, y });
+    for (let x = 1; x < w; x++) {
+      const i = y * w + x;
+      if (state.vedge[i] && !vedge[i] && counts(claims.vedge[i], i, i - 1))
+        out.push({ edge: "v", x, y });
+    }
   return out;
 }
 

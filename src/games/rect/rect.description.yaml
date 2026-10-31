@@ -15,7 +15,7 @@ help:
     grid edge to draw or erase it.
 
     A drag that starts on a square of a rectangle you have drawn round one
-    clue resizes that rectangle instead: its corner farthest from where you pressed stays
+    clue, by a drag, resizes that rectangle instead: its corner farthest from where you pressed stays
     put, and the corner nearest follows the pointer. Its old sides are taken
     up, but for those it shares with another rectangle you have drawn, and
     it stops growing where it would run into one. To draw a new rectangle
@@ -34,7 +34,10 @@ help:
 
     Each clue has a color of its own. Its square shows it from the start,
     and a rectangle takes it whole once it is drawn round the clue at a size
-    and shape the clue allows.
+    and shape the clue allows. A rectangle you have drawn round a clue is
+    outlined in the clue's color while it may still grow, and its sides
+    become plain lines once it has the clue's number of squares. One that
+    no rectangle the clue allows could contain is outlined in red.
   hints: |-
     **Hint** explains the next rectangle rather than simply drawing it, and
     says why no other will do. It reads only what is on the board: the
@@ -66,8 +69,13 @@ help:
       are in different rectangles, so the edge must be a line. Drawing it
       keeps what you worked out: a fit that crosses a line no longer counts.
 
-    A clue's rectangle drawn all round is its only fit: any smaller one
-    inside would leave squares of it that no other clue can reach.
+    A rectangle you have drawn round a clue tells the hint that those
+    squares are the clue's: its fits are the ones that contain it, and no
+    other clue's may use them. Until it has the clue's number of squares it
+    may still grow, so its sides are not taken as lines, and it is not a
+    mistake for being too small, only for taking a square the clue's
+    rectangle does not have. Where the hint finds that one is the whole of
+    its clue's already, it moves on without a step.
 
     On an Unreasonable board there comes a point where none of these settles
     a rectangle or a line. The hint then says that nothing further follows by

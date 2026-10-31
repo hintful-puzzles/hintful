@@ -129,6 +129,8 @@ export const say = {
             phrase`take in ${mark.the("outline", CELL, f.blockers.map(at), "clue")}`,
           );
         if (f.crossesLine) why.push(Narration.plain("cross a line"));
+        if (f.leavesOut)
+          why.push(Narration.plain("leave out some of its drawn rectangle"));
         return so({
           look: phrase`Elsewhere the ${n} would ${joinOr(why)}`,
           move: phrase`only ${rect} fits`,

@@ -885,7 +885,10 @@ names the one it applies.
   settled side and says which reading it is at the assignment.
 - **A selected cell is `highlightWash` and a finished region is
   `REGION_DONE`**, so neither is taken for a given. A finished region is
-  never a step of gray.
+  never a step of gray. A game whose clues each wear a region fill
+  (`REGION_FILLS`) finishes a region in its clue's fill instead, and draws
+  a line in that hue from `REGION_LINES`, never from the fill itself, which
+  is too pale to read as a line. Exemplar: `rect/render.ts`.
 - **A wall is one flat strong fill** (`wallFill`), not a bevel and not a
   game's own black. A digit on it is the pinned `WHITE`.
 - **A glyph that sits on a piece is a badge**: its own disc, with the glyph
