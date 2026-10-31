@@ -1,0 +1,5 @@
+# Scaffolded without a delta: the session writes the `help-pages` delta, and
+# removes skip_specs.
+schema: spec-driven
+created: 2026-10-31
+skip_specs: true
