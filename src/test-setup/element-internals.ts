@@ -17,9 +17,7 @@
  * it. `valid: true` is what an unset control reports in a browser, so a
  * component's own "am I invalid" branch takes the same path it would there.
  *
- * Import it *before* the component modules, the same ordering rule
- * `indexeddb.ts` documents — a constructor runs at custom-element definition
- * time, which is import time.
+ * `dom.ts` installs it for every `happy-dom` file; no test imports it.
  *
  * Dev/test-only, like everything under this directory.
  */

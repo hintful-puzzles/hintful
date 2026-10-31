@@ -10,8 +10,6 @@
  * So the menu is mounted both ways, under a real `<puzzle-context>` provider,
  * and the real dialog is opened from each.
  */
-import "../../test-setup/element-internals.ts";
-import "../../test-setup/resize-and-animations.ts";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PuzzleContext } from "./context.ts";
 import "./type-menu.ts";

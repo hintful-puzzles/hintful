@@ -22,8 +22,6 @@
  * Bar does not show, in the list's order, which is what makes the Menu's
  * contents predictable from where the Bar stops.
  */
-import "../test-setup/element-internals.ts";
-import "../test-setup/resize-and-animations.ts";
 import { render, type TemplateResult } from "lit";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 

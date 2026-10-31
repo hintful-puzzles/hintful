@@ -10,9 +10,7 @@
  */
 import * as Sentry from "@sentry/browser";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import "../test-setup/element-internals.ts";
 import "../test-setup/icons.ts";
-import "../test-setup/resize-and-animations.ts";
 import { reportError } from "../dialogs/crash-dialog.ts";
 import { ReportConsent, reportConsent } from "./report-consent.ts";
 import { initSentry } from "./sentry.ts";

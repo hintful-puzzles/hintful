@@ -10,8 +10,6 @@
  * only when nothing at all is focused, so a `mousedown` landing on a key left
  * the physical keyboard dead until the player clicked the board again.
  */
-import "../../test-setup/element-internals.ts";
-import "../../test-setup/resize-and-animations.ts";
 import { signal } from "@lit-labs/signals";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { pencilModeKey } from "../../engine/key-labels.ts";

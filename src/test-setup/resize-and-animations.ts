@@ -21,8 +21,7 @@
  * Neither reports anything: a controller that never observes, and no running
  * animations. Nothing here should be asserted against.
  *
- * Import it *before* the component modules, the same ordering rule
- * `element-internals.ts` documents.
+ * `dom.ts` installs it for every `happy-dom` file; no test imports it.
  *
  * Dev/test-only, like everything under this directory.
  */

@@ -103,10 +103,10 @@ smoke only. The tiers are the
 - **Tier 3**, components and persistence: opt the file into `happy-dom` for
   Lit components. Every file has a fake IndexedDB
   (`src/test-setup/indexeddb.ts`); import that module only for `resetDb`.
-  Mounting Web Awesome controls needs `src/test-setup/element-internals.ts`,
-  and opening a `wa-dialog` that holds a config form needs
-  `src/test-setup/resize-and-animations.ts` too. Each module's header says
-  what fails without it.
+  Every `happy-dom` file gets the stubs Web Awesome needs to mount and open,
+  and an empty body after it (`src/test-setup/dom.ts`), so do not import
+  them. A component one file defines is defined in every later file in its
+  worker, so a bare `<wa-dialog>` stand-in can be the real one.
 
 ### Stand in for a module with a spy
 

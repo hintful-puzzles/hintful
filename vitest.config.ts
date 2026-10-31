@@ -199,6 +199,7 @@ export default defineConfig({
     setupFiles: [
       "./scripts/checks/test-cost-setup.ts",
       "./src/test-setup/indexeddb.ts",
+      "./src/test-setup/dom.ts",
     ],
     maxWorkers: maxWorkers(),
     // ONE generous ceiling for the whole suite; no test sets its own.

@@ -13,7 +13,6 @@
  * ids it tried is the catalog's, so a scan over an empty list cannot report
  * health.
  */
-import "../test-setup/element-internals.ts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { puzzleDataMap, puzzleIds, puzzlesInFamily } from "../puzzle/catalog.ts";
 import { PuzzleSwitcher } from "./puzzle-switcher.ts";

@@ -20,7 +20,6 @@
  * subclass adds its own — and the help is checked against that. A command that
  * stops being registered fails this without anyone remembering to look.
  */
-import "./test-setup/element-internals.ts";
 import { describe, expect, it } from "vitest";
 import { HomeScreen } from "./screens/home-screen.ts";
 import { PuzzleScreen } from "./screens/puzzle-screen.ts";

@@ -8,7 +8,6 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { getTsGame, registeredGameIds } from "../engine/registry.ts";
 import { draftSections } from "../engine/sections.ts";
 import { registerAllGames } from "../games/index.ts";
-import "../test-setup/element-internals.ts";
 import "../test-setup/icons.ts";
 import type { CatalogCard } from "./catalog-card.ts";
 import "./catalog-card.ts";
