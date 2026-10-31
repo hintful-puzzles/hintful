@@ -1,5 +1,7 @@
 # Tasks
 
+- [ ] 0. **Before anything else:** CI's Gate run went red on 3a48e89e (run 41241268134): `src/games/twiddle/twiddle-hint.test.ts` took 228 s against the gate's 120 s budget a file, near the budget already on 1fd745a3. Not caused by this change (docs only); fix it per `docs/testing.md` § "Right-sizing the gate", in its own commit
+
 - [x] 1. Brief the writer and the reviewer (the rules by citation, the per-guide report)
 - [x] 2. The guides read whole, smallest first: `method.md`, `help-pages.md`, `doctrine.md`, `work-management.md` (work-management's "Which hintless game comes next" retired: every game declares a hint)
 - [x] 2a. Owner (2026-10-31): a significant simplification that improves maintainability is a benefit in its own right; the rule is judgment, not dogma. `doctrine.md` § "Nothing is sacred" says so
