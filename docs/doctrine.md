@@ -106,7 +106,10 @@ breaking an earlier assumption would simplify it, consider that actively.
   control that behaves differently. Breaking compatibility is on the table,
   and it is the owner's call.
 
-A simplification still needs a stated benefit, and tidiness alone is not one.
+A simplification states its benefit, and a significant simplification that
+makes the code easier to maintain is a benefit in its own right (owner,
+2026-10-31). This is a judgment, not dogma: what falls short is a change that
+is only tidier, with no gain to show.
 
 **The smell is complexity spent preserving a promise nothing consumes.** A
 change pushes against the grain when it duplicates source lines the probe
