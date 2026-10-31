@@ -49,6 +49,9 @@ import {
   clueIndex,
   cluePos,
   DIFF_EASY,
+  DIFF_EXTREME,
+  DIFF_HARD,
+  DIFF_UNREASONABLE,
   decodeParams,
   diffToLevel,
   encodeParams,
@@ -60,6 +63,7 @@ import {
   type TowersParams,
   type TowersState,
 } from "./state.ts";
+import { tiers as ladderTiers } from "./towers.compiled.ts";
 
 function gen(w: number, diff: TowersParams["diff"], seed: string) {
   const p: TowersParams = { w, diff };
@@ -174,6 +178,18 @@ describe("towers generator", () => {
 });
 
 describe("towers solver", () => {
+  // The ladder runs each technique at its tier's index in the description,
+  // and the params encode a tier by its constant: one order, held twice.
+  it("runs the description's tiers at the difficulty levels, in order", () => {
+    expect(ladderTiers).toHaveLength(4);
+    expect([
+      ladderTiers[DIFF_EASY],
+      ladderTiers[DIFF_HARD],
+      ladderTiers[DIFF_EXTREME],
+      ladderTiers[DIFF_UNREASONABLE],
+    ]).toEqual(["Easy", "Hard", "Extreme", "Unreasonable"]);
+  });
+
   it("places a tower once where a row's facing pair and a column's agree", () => {
     // Column 0 reads 1 from above and 4 from below, row 0 1 from the left and
     // 4 from the right: both put the 4 in the corner, in one firing.

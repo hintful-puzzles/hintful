@@ -10,7 +10,7 @@
 - [x] 2.1 State Towers' techniques in the order `towers/solver.ts` scans: `facing` (a technique, one firing for every pair; design § 4), `bounds` (`lineFull` and `lowerBound` as one, clue by clue; design § 3), `arrangement`
 - [x] 2.2 Check each sound at orders 3 and 4, with a planted defect each; see all three unsound with the clue's meaning taken away, and a plant on `bounds`' run reading caught
 - [x] 2.3 Run the compiled ladder beside the hand-written one on every deal and hint walk; see the comparison fail on a plant that changes the deductions and on one that changes only their order
-- [ ] 2.4 Remove `solverEasy` and `solverHard`; every Towers test and hint guard passes
+- [x] 2.4 Remove `solverEasy` and `solverHard`; every Towers test and hint guard passes, the description's tiers are pinned to the difficulty constants, and the Towers trace is byte-identical to the hand-written one's
 
 ## 3. Close
 
