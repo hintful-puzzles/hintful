@@ -43,9 +43,11 @@ function presets(game: AnyGame): unknown[] {
 it("trace", () => {
   const out = process.env["TRACE_OUT"];
   if (out === undefined) throw new Error("TRACE_OUT names the file to write");
+  // TRACE_GAMES narrows the walk to some games, by name, comma-separated.
+  const only = process.env["TRACE_GAMES"]?.split(",") ?? null;
   const lines: string[] = [];
   const hidden = [2, 3, 4].map((diff) => ({ w: 8, diff, id: false }));
-  for (const [name, g] of GAMES)
+  for (const [name, g] of GAMES.filter(([n]) => only === null || only.includes(n)))
     for (const p of [
       g.defaultParams(),
       ...presets(g),

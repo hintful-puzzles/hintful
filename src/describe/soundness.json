@@ -8,6 +8,9 @@
   "src/games/group/group.description.yaml#associativity": "1cbd65edae24cbf3",
   "src/games/group/group.description.yaml#identity": "66982cf6ea3a5546",
   "src/games/group/group.description.yaml#notIdentity": "256d4cc761cd14b3",
+  "src/games/towers/towers.description.yaml#arrangement": "311822269a07a3ea",
+  "src/games/towers/towers.description.yaml#bounds": "24e50d4ab3fc4c78",
+  "src/games/towers/towers.description.yaml#facing": "49ab76706cb7b30e",
   "src/games/unequal/adjacent.description.yaml#adjacent": "2fb58118aa866778",
   "src/games/unequal/adjacent.description.yaml#adjacentSet": "14ea8ea02dde0804",
   "src/games/unequal/unequal.description.yaml#sign": "e8b4c171334b86a5"

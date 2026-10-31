@@ -76,6 +76,18 @@ const PLANTS: Record<string, { conclude?: string; for?: string }> = {
   notIdentity: {
     for: "a in domain, o = min(j in domain where known(mul(j, a)) or (known(mul(a, j)) and value(mul(a, j)) != j)) where o != none",
   },
+  facing: {
+    conclude:
+      "forall s in P, c = nth(sight(s), clue(sees, s)): w in cand(c) and place(c, w)",
+  },
+  bounds: {
+    conclude:
+      "(near implies (forall h in short(L, far(L, R)): strike(c0, h))) and (near or (forall K = (domain - P) + set(value(c) over c in L where known(c) and not (exists c2 in before(c, L): value(c2) > value(c) + 1)), i in domain, h = w + 1 - i where h in K, j in range(0, v - |K - range(1, h)| - 1): strike(nth(L, j), h)))",
+  },
+  arrangement: {
+    conclude:
+      "forall d in cand(c) where not (exists fill f of L from cand where distinct(f(x) over x in L) and f(c) = d: seen(f, L) = v + 1): strike(c, d)",
+  },
   adjacentSet: {
     conclude:
       "forall d in cand(b) where exists d2 in cand(a): d2 != d and not fits(e, d2, d): strike(b, d)",

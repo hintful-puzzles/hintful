@@ -101,6 +101,13 @@ export interface GridSpace {
   readonly edgeEnds: Int32Array;
   /** The edge between two orthogonal neighbors, or `-1`. */
   edgeOf(a: number, b: number): number;
+  /** One slot beyond each end of every line, numbered as Towers deals its
+   * clues: above each column, below each, left of each row, right of each. */
+  readonly slots: readonly number[];
+  /** Each slot's line, nearest the slot first. */
+  readonly sight: readonly (readonly number[])[];
+  /** The slot at the other end of each slot's line. */
+  readonly opposite: Int32Array;
 }
 
 const spaces = new Map<number, GridSpace>();
@@ -158,6 +165,17 @@ function gridSpace(w: number, h: number): GridSpace {
       ends.push(c, c + w);
     }
   }
+  const colCells = lineCells.slice(h);
+  const rowCells = lineCells.slice(0, h);
+  const sight = [
+    ...colCells,
+    ...colCells.map((cs) => cs.toReversed()),
+    ...rowCells,
+    ...rowCells.map((cs) => cs.toReversed()),
+  ];
+  const opposite = Int32Array.from(sight, (_, s) =>
+    s < 2 * w ? (s < w ? s + w : s - w) : s < 2 * w + h ? s + h : s - h,
+  );
   return {
     w,
     h,
@@ -178,6 +196,9 @@ function gridSpace(w: number, h: number): GridSpace {
       if (b === a + w) return down[a];
       return -1;
     },
+    slots: sight.map((_, s) => s),
+    sight,
+    opposite,
   };
 }
 
@@ -237,8 +258,18 @@ export function sameSet(a: readonly number[], b: readonly number[]): boolean {
   return a.length === b.length && subsetOf(a, b);
 }
 
+/** `before(x, L)`: the members of `L` ahead of `x`, none where `x` is not
+ * one. */
+export function before(x: number, L: readonly number[]): readonly number[] {
+  const i = L.indexOf(x);
+  return i < 0 ? [] : L.slice(0, i);
+}
+
 /** `range(a, b)` as a set of values. */
 export function rangeMask(a: number, b: number): number {
+  if (a > b) return 0;
+  // Bits a to b at once, where both are places of a 32-bit mask.
+  if (a >= 0 && b < 30) return (2 << b) - (1 << a);
   let m = 0;
   for (let d = a; d <= b; d++) m |= 1 << d;
   return m;

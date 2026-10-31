@@ -22,7 +22,7 @@ import {
 } from "./description.ts";
 import type { Binder, Expr } from "./expr.ts";
 
-type ElemSort = "cell" | "line" | "edge" | `clue ${string}`;
+type ElemSort = "cell" | "line" | "edge" | "slot" | `clue ${string}`;
 
 type Sort =
   | { k: "num" }
@@ -31,7 +31,9 @@ type Sort =
   | { k: "elem"; e: ElemSort }
   | { k: "set"; of: Sort }
   | { k: "subsets"; of: Sort }
-  | { k: "clues"; kind: string };
+  | { k: "clues"; kind: string }
+  /** A filling's values, read `f(x)`: an array by cell, `-1` off its set. */
+  | { k: "fill" };
 
 const NUM: Sort = { k: "num" };
 const BOOL: Sort = { k: "bool" };
@@ -44,6 +46,9 @@ interface Val {
   sort: Sort;
   /** For a name a term may read: the slot from which it is defined. */
   at?: Slot;
+  /** For a name bound by a loop over an array: the array's code and the
+   * loop's counter, which is the name's index in it. */
+  pos?: { arr: string; i: string };
 }
 
 /**
@@ -174,6 +179,10 @@ interface Env {
   /** Where a technique's body moves terms to; `null` outside one, and in
    * code that is compiled only for its sort. */
   hoist: Hoist | null;
+  /** Whether a technique's body keeps a projection of fillings, valid while
+   * the kept candidates are: then it counts their generations in `_epoch`.
+   * `null` outside a technique. */
+  epoch: { used: boolean } | null;
 }
 
 interface Hoist {
@@ -194,6 +203,7 @@ const NAMES: Record<string, Val> = {
   cols: { code: "sp.cols", sort: setOf(elem("line")) },
   lines: { code: "sp.lines", sort: setOf(elem("line")) },
   units: { code: "sp.units", sort: setOf(elem("line")) },
+  slots: { code: "sp.slots", sort: setOf(elem("slot")) },
   domain: { code: "b.domain", sort: setOf(NUM) },
   true: { code: "true", sort: BOOL },
   false: { code: "false", sort: BOOL },
@@ -257,6 +267,10 @@ const EARLY = new Set([
   "other",
   "abs",
   "range",
+  "sight",
+  "opposite",
+  "nth",
+  "index",
 ]);
 
 /**
@@ -576,11 +590,18 @@ function bindingLoops(
       return;
     }
     const bnd = binders[i];
-    const v = `v_${bnd.name}`;
+    let v = `v_${bnd.name}`;
     let closeBlock = false;
     let skip = "continue";
     let sort: Sort;
-    if (bnd.kind === "let") {
+    let pos: Val["pos"];
+    let where = bnd.where;
+    if (bnd.kind === "fill") {
+      const f = fillLoop(bnd, sc, env, out);
+      v = f.code;
+      sort = { k: "fill" };
+      where = f.rest;
+    } else if (bnd.kind === "let") {
       const t = compileExpr(bnd.of, sc, env, out);
       sort = t.sort;
       if (bnd.where !== null) {
@@ -595,6 +616,25 @@ function bindingLoops(
       env.readsClues.yes = true;
       sort = elem(`clue ${kind}`);
       out.open(`for (let ${v} = 0; ${v} < cl.${kind}.at.length; ${v}++) {`);
+    } else if (bnd.of.k === "call" && bnd.of.fn === "before") {
+      // The members ahead of x, read in place up to x's index.
+      const [xe, le] = bnd.of.args;
+      if (bnd.of.args.length !== 2) throw new CompileError("before takes 2");
+      const L = compileExpr(le, sc, env, out);
+      const x = compileExpr(xe, sc, env, out);
+      if (!isArray(L.sort) || L.sort.k !== "set" || !sameSort(x.sort, L.sort.of))
+        throw new CompileError(`before(${show(x.sort)}, ${show(L.sort)})`);
+      sort = L.sort.of;
+      const a = Out.fresh("_a");
+      const n = Out.fresh("_n");
+      const ix = Out.fresh("_i");
+      out.emit(`const ${a} = ${L.code};`);
+      out.emit(
+        `const ${n} = ${x.pos?.arr === L.code ? x.pos.i : `${a}.indexOf(${x.code})`};`,
+      );
+      out.open(`for (let ${ix} = 0; ${ix} < ${n}; ${ix}++) {`);
+      out.emit(`const ${v} = ${a}[${ix}];`);
+      pos = { arr: L.code, i: ix };
     } else {
       const s = compileExpr(bnd.of, sc, env, out);
       if (s.sort.k === "subsets") {
@@ -633,27 +673,172 @@ function bindingLoops(
         out.emit(`const ${a} = ${s.code};`);
         out.open(`for (let ${ix} = 0; ${ix} < ${a}.length; ${ix}++) {`);
         out.emit(`const ${v} = ${a}[${ix}];`);
+        pos = { arr: s.code, i: ix };
       } else throw new CompileError(`${bnd.name} in ${show(s.sort)}: not a set`);
     }
-    // Every binder of a set opened one loop.
+    // Every binder of a set, and every filling, opened one loop.
+    const loop = bnd.kind !== "let";
     const h = env.hoist;
-    if (h !== null && bnd.kind === "in") h.loops++;
+    if (h !== null && loop) h.loops++;
     const inner = new Map(sc);
     inner.set(bnd.name, {
       code: v,
       sort,
       at: h === null ? undefined : out.slot(h.loops),
+      ...(pos === undefined ? {} : { pos }),
     });
-    if (bnd.where !== null) {
-      const w = compileExpr(bnd.where, inner, env, out);
+    if (where !== null) {
+      const w = compileExpr(where, inner, env, out);
       expect(w, "bool", `where of ${bnd.name}`);
       out.emit(`if (!(${w.code})) ${skip};`);
     }
     walk(i + 1, inner);
-    if (h !== null && bnd.kind === "in") h.loops--;
-    if (bnd.kind === "in" || closeBlock) out.close();
+    if (h !== null && loop) h.loops--;
+    if (loop || closeBlock) out.close();
   };
   walk(0, scope);
+}
+
+/** `e`'s conjuncts, `a and b and c` as `[a, b, c]`. */
+const conjuncts = (e: Expr): Expr[] =>
+  e.k === "bin" && e.op === "and" ? [...conjuncts(e.a), ...conjuncts(e.b)] : [e];
+
+/** `f(t)`'s argument, where `e` is a read of the filling `f`; else `null`. */
+const readOf = (e: Expr, f: string): Expr | null =>
+  e.k === "call" && e.fn === f && e.args.length === 1 ? e.args[0] : null;
+
+/** `f(x) = t`, either way round, where neither `x` nor `t` reads `f`. */
+function pinOf(c: Expr, f: string): { x: Expr; t: Expr } | null {
+  if (c.k !== "bin" || c.op !== "=") return null;
+  for (const [r, t] of [
+    [c.a, c.b],
+    [c.b, c.a],
+  ]) {
+    const x = readOf(r, f);
+    if (x !== null && !reads(x, f) && !reads(t, f)) return { x, t };
+  }
+  return null;
+}
+
+/**
+ * Open the depth-first enumeration of a filling `fill f of S [from cand]`:
+ * each element of `S` in order takes each of its values ascending, and the
+ * code after this runs once a whole assignment, where `continue` goes on to
+ * the next. Two kinds of `where` conjunct are kept as each element is
+ * assigned rather than once it is whole, which bounds the work and not the
+ * result: `distinct(f(x) over x in T)` passes over a value an earlier member
+ * of `T` holds, and `f(x) = t` gives `x` the one value `t`. `rest` is the
+ * conjuncts left for the whole assignment. The values are kept by cell, so
+ * `f(x)` is one read, and are `-1` off `S`.
+ */
+function fillLoop(
+  bnd: Binder,
+  scope: Scope,
+  env: Env,
+  out: Out,
+): { code: string; arr: string; rest: Expr | null } {
+  const f = bnd.name;
+  const s = compileExpr(bnd.of, scope, env, out);
+  if (!(isArray(s.sort) && s.sort.k === "set" && sameSort(s.sort.of, elem("cell"))))
+    throw new CompileError(`fill ${f} of ${show(s.sort)}: not a set of cells`);
+  if (bnd.from !== undefined && bnd.from !== "cand")
+    throw new CompileError(`fill ${f} from ${bnd.from}: only from cand`);
+  const a = Out.fresh("_a");
+  const fv = Out.fresh("_f");
+  const last = Out.fresh("_l");
+  const st = Out.fresh("_s");
+  // Each a call: the values by cell, the set they were last given over, so
+  // the next enumeration clears it, and each depth's last value tried.
+  const decls = [
+    `const ${fv} = new Int32Array(sp.cells.length).fill(-1);`,
+    `let ${last}: readonly number[] = [];`,
+    `const ${st}: number[] = [];`,
+  ];
+  if (env.scratch !== null) env.scratch.push(...decls);
+  else for (const d of decls) out.emit(d);
+  out.emit(`const ${a} = ${s.code};`);
+  const pins: string[] = [];
+  const distinct: string[] = [];
+  const rest: Expr[] = [];
+  const e = Out.fresh("_e");
+  const d = Out.fresh("_d");
+  const i = Out.fresh("_i");
+  const j = Out.fresh("_j");
+  for (const c of bnd.where === null ? [] : conjuncts(bnd.where)) {
+    const pinned = pinOf(c, f);
+    const term = c.k === "agg" && c.fn === "distinct" ? c.term : null;
+    const over = c.k === "agg" ? c.binders : [];
+    if (pinned !== null) {
+      const x = once(compileExpr(pinned.x, scope, env, out), out);
+      expectElem(x, "cell", f);
+      const t = once(compileExpr(pinned.t, scope, env, out), out);
+      expect(t, "num", f);
+      pins.push(`if (${e} === ${x.code} && ${d} !== ${t.code}) continue;`);
+    } else if (
+      term !== null &&
+      over.length === 1 &&
+      over[0].kind === "in" &&
+      over[0].where === null &&
+      !reads(over[0].of, f) &&
+      readOf(term, f)?.k === "name" &&
+      (readOf(term, f) as { name: string }).name === over[0].name
+    ) {
+      const T = once(compileExpr(over[0].of, scope, env, out), out);
+      if (!sameSort(T.sort, s.sort))
+        throw new CompileError(`distinct(${f}(…) over ${show(T.sort)})`);
+      const inT = (x: string): string =>
+        T.code === s.code ? "true" : `${T.code}.includes(${x})`;
+      distinct.push(
+        `if (${inT(e)}) { let ${j} = 0; while (${j} < ${i} && !(${fv}[${a}[${j}]] === ${d} && ${inT(`${a}[${j}]`)})) ${j}++; if (${j} < ${i}) continue; }`,
+      );
+    } else rest.push(c);
+  }
+  const mask =
+    bnd.from === undefined ? "b.domain" : env.memo ? candOf(e) : `b.cand(${e})`;
+  const r = Out.fresh("_r");
+  const once0 = Out.fresh("_o");
+  out.emit(`for (const ${e} of ${last}) ${fv}[${e}] = -1;`);
+  out.emit(`${last} = ${a};`);
+  out.emit(`let ${i} = 0;`);
+  out.emit(`${st}[0] = 0;`);
+  // The empty set has one filling, the empty one.
+  out.emit(`let ${once0} = ${a}.length === 0;`);
+  out.open("for (;;) {");
+  out.open(`if (${a}.length === 0) {`);
+  out.emit(`if (!${once0}) break;`);
+  out.emit(`${once0} = false;`);
+  out.close();
+  out.open(`while (${a}.length > 0 && ${i} >= 0) {`);
+  out.emit(`const ${e} = ${a}[${i}];`);
+  out.emit(`if (${st}[${i}] > 0) ${fv}[${e}] = -1;`);
+  out.emit(`let ${r} = ${mask} & ~((2 << ${st}[${i}]) - 1);`);
+  out.emit(`let ${d} = 0;`);
+  out.open(`for (; ${r} !== 0; ${r} &= ${r} - 1) {`);
+  out.emit(`${d} = 31 - Math.clz32(${r} & -${r});`);
+  for (const p of pins) out.emit(p);
+  for (const p of distinct) out.emit(p);
+  out.emit("break;");
+  out.close();
+  out.open(`if (${r} === 0) {`);
+  out.emit(`${st}[${i}] = 0;`);
+  out.emit(`${i}--;`);
+  out.emit("continue;");
+  out.close();
+  out.emit(`${st}[${i}] = ${d};`);
+  out.emit(`${fv}[${e}] = ${d};`);
+  out.emit(`if (${i} === ${a}.length - 1) break;`);
+  out.emit(`${i}++;`);
+  out.emit(`${st}[${i}] = 0;`);
+  out.close();
+  out.emit(`if (${i} < 0) break;`);
+  return {
+    code: fv,
+    arr: a,
+    rest:
+      rest.length === 0
+        ? null
+        : rest.reduce((x, y) => ({ k: "bin", op: "and", a: x, b: y })),
+  };
 }
 
 function clueKindArg(args: readonly Expr[], env: Env): string {
@@ -679,7 +864,7 @@ function reads(e: Expr, name: string): boolean {
     case "bin":
       return reads(e.a, name) || reads(e.b, name);
     case "call":
-      return e.args.some((x) => reads(x, name));
+      return e.fn === name || e.args.some((x) => reads(x, name));
     case "quant":
     case "agg":
       return (
@@ -727,6 +912,141 @@ function setQuantifier(
   };
 }
 
+/** The names `e` reads that it does not bind, function names included. */
+function freeNames(e: Expr, into: Set<string>, bound: ReadonlySet<string>): void {
+  switch (e.k) {
+    case "num":
+      return;
+    case "name":
+      if (!bound.has(e.name)) into.add(e.name);
+      return;
+    case "set":
+      for (const x of e.elems) freeNames(x, into, bound);
+      return;
+    case "size":
+    case "not":
+    case "neg":
+      freeNames(e.of, into, bound);
+      return;
+    case "bin":
+      freeNames(e.a, into, bound);
+      freeNames(e.b, into, bound);
+      return;
+    case "call":
+      if (!bound.has(e.fn)) into.add(e.fn);
+      for (const x of e.args) freeNames(x, into, bound);
+      return;
+    case "quant":
+    case "agg": {
+      const inner = new Set(bound);
+      for (const b of e.binders) {
+        freeNames(b.of, into, inner);
+        inner.add(b.name);
+        if (b.where !== null) freeNames(b.where, into, inner);
+      }
+      if (e.k === "quant") freeNames(e.body, into, inner);
+      else {
+        if (e.term !== null) freeNames(e.term, into, inner);
+        if (e.where !== null) freeNames(e.where, into, inner);
+      }
+      return;
+    }
+  }
+}
+
+/**
+ * `exists fill f of S where ... and f(x) = t: B`, asked inside loops that
+ * bind only `x` and `t`, as the projection it is: every filling the rest
+ * allows, enumerated once where the rest's names are bound, keeps the values
+ * it gives each cell, and the question is whether `t` is among `x`'s. It is
+ * enumerated again only once the kept candidates it read are cleared
+ * (`_epoch`), so it answers as the pinned enumeration would. `null` where
+ * the quantifier has another shape, or computing it earlier saves no loop.
+ */
+function projection(
+  e: Extract<Expr, { k: "quant" }>,
+  scope: Scope,
+  env: Env,
+  out: Out,
+): Val | null {
+  const h = env.hoist;
+  const [bnd, ...more] = e.binders;
+  if (e.q !== "exists" || more.length > 0 || h === null || env.epoch === null)
+    return null;
+  if (bnd.kind !== "fill" || bnd.where === null) return null;
+  const f = bnd.name;
+  const cs = conjuncts(bnd.where);
+  const at = cs.findIndex((c) => pinOf(c, f) !== null);
+  if (at < 0) return null;
+  const pin = pinOf(cs[at], f) as { x: Expr; t: Expr };
+  const rest = cs.filter((_, i) => i !== at);
+  const names = new Set<string>();
+  const own = new Set([f]);
+  freeNames(bnd.of, names, new Set());
+  for (const c of rest) freeNames(c, names, own);
+  freeNames(e.body, names, own);
+  let slot = h.root;
+  for (const n of names) {
+    const v = scope.get(n);
+    if (v === undefined) continue;
+    if (v.at === undefined) return null;
+    if (v.at.seq > slot.seq) slot = v.at;
+  }
+  if (slot.loops >= h.loops) return null;
+  if (!env.epoch.used) {
+    env.epoch.used = true;
+    h.root.lines.push({ indent: 0, text: "let _epoch = 0;" });
+  }
+  const pj = Out.fresh("_p");
+  const last = Out.fresh("_l");
+  const any = Out.fresh("_y");
+  const made = Out.fresh("_g");
+  const decls = [
+    `const ${pj} = new Int32Array(sp.cells.length);`,
+    `let ${last}: readonly number[] = [];`,
+    `let ${any} = false;`,
+  ];
+  if (env.scratch !== null) env.scratch.push(...decls);
+  else for (const d of decls) out.emit(d);
+  // The rest's names are bound anew there, so the projection is due again.
+  slot.lines.push({ indent: 0, text: `let ${made} = -1;` });
+  out.open(`if (${made} !== _epoch) {`);
+  out.emit(`${made} = _epoch;`);
+  const x0 = Out.fresh("_e");
+  out.emit(`for (const ${x0} of ${last}) ${pj}[${x0}] = 0;`);
+  out.emit(`${any} = false;`);
+  const where =
+    rest.length === 0
+      ? null
+      : rest.reduce((a, b): Expr => ({ k: "bin", op: "and", a, b }));
+  const fl = fillLoop({ ...bnd, where }, scope, env, out);
+  h.loops++;
+  const inner = new Map(scope);
+  inner.set(f, { code: fl.code, sort: { k: "fill" }, at: out.slot(h.loops) });
+  for (const cond of [fl.rest, e.body]) {
+    if (cond === null) continue;
+    const v = compileExpr(cond, inner, env, out);
+    expect(v, "bool", "exists fill");
+    out.emit(`if (!(${v.code})) continue;`);
+  }
+  out.emit(`${last} = ${fl.arr};`);
+  out.emit(`${any} = true;`);
+  out.emit(`for (const ${x0} of ${fl.arr}) ${pj}[${x0}] |= 1 << ${fl.code}[${x0}];`);
+  h.loops--;
+  out.close();
+  out.close();
+  const x = once(compileExpr(pin.x, scope, env, out), out);
+  expectElem(x, "cell", f);
+  const t = once(compileExpr(pin.t, scope, env, out), out);
+  expect(t, "num", f);
+  const s = compileExpr(bnd.of, scope, env, out);
+  // Off S, f(x) is -1, which only a t of -1 equals.
+  return {
+    code: `((((${pj}[${x.code}] >> ${t.code}) & 1) !== 0) || (${t.code} === -1 && ${any} && !${s.code}.includes(${x.code})))`,
+    sort: BOOL,
+  };
+}
+
 function quantifier(
   e: Extract<Expr, { k: "quant" }>,
   scope: Scope,
@@ -736,6 +1056,8 @@ function quantifier(
   const forall = e.q === "forall";
   const masked = setQuantifier(e, scope, env, out);
   if (masked !== null) return masked;
+  const projected = projection(e, scope, env, out);
+  if (projected !== null) return projected;
   const r = Out.fresh("_q");
   const label = Out.fresh("Q");
   out.emit(`let ${r} = ${forall};`);
@@ -888,6 +1210,14 @@ function call(
     env.used.add("clueAt");
     return { code: `clueAt(cl.${a.name}, ${x.code})`, sort: kind.v };
   }
+  const filling = scope.get(fn);
+  if (filling?.sort.k === "fill") {
+    if (args.length !== 1)
+      throw new CompileError(`${fn} takes 1, given ${args.length}`);
+    const x = compileExpr(args[0], scope, env, out);
+    expectElem(x, "cell", fn);
+    return { code: `${filling.code}[${x.code}]`, sort: NUM };
+  }
   const vs = args.map((x) => compileExpr(x, scope, env, out));
   const arity = (n: number): void => {
     if (vs.length !== n) throw new CompileError(`${fn} takes ${n}, given ${vs.length}`);
@@ -909,6 +1239,39 @@ function call(
     case "adj4":
       arity(1);
       return { code: `sp.${fn}[${cell(0)}]`, sort: setOf(elem("cell")) };
+    case "sight":
+      arity(1);
+      expectElem(vs[0], "slot", fn);
+      return { code: `sp.sight[${vs[0].code}]`, sort: setOf(elem("cell")) };
+    case "opposite":
+      arity(1);
+      expectElem(vs[0], "slot", fn);
+      return { code: `sp.opposite[${vs[0].code}]`, sort: elem("slot") };
+    case "nth": {
+      arity(2);
+      const L = vs[0];
+      if (!isArray(L.sort) || L.sort.k !== "set")
+        throw new CompileError(`nth of ${show(L.sort)}: not an ordered set`);
+      expect(vs[1], "num", fn);
+      return { code: `(${L.code}[${vs[1].code}] ?? -1)`, sort: L.sort.of };
+    }
+    case "index":
+    case "before": {
+      arity(2);
+      const [x, L] = vs;
+      if (!isArray(L.sort) || L.sort.k !== "set" || !sameSort(x.sort, L.sort.of))
+        throw new CompileError(`${fn}(${show(x.sort)}, ${show(L.sort)})`);
+      if (fn === "before") {
+        env.used.add("before");
+        return { code: `before(${x.code}, ${L.code})`, sort: L.sort };
+      }
+      // A name bound by a loop over the same array is at the loop's counter,
+      // and the space numbers its own elements in the order it lists them.
+      if (x.pos?.arr === L.code) return { code: x.pos.i, sort: NUM };
+      if (L.code === "sp.cells" || L.code === "sp.slots" || L.code === "sp.lines")
+        return { code: x.code, sort: NUM };
+      return { code: `${L.code}.indexOf(${x.code})`, sort: NUM };
+    }
     case "x":
       arity(1);
       return { code: `(${cell(0)} % sp.w)`, sort: NUM };
@@ -1068,7 +1431,17 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   // A rung reads a cell's candidates many times a scan, so it keeps them;
   // a technique run on placing reads few, on every placement, and does not.
   const scratch: string[] = [];
-  const tenv: Env = { ...env, readsClues, memo: !onPlace, scratch, hoist: null };
+  const epoch = { used: false };
+  const tenv: Env = {
+    ...env,
+    readsClues,
+    memo: !onPlace,
+    scratch,
+    hoist: null,
+    epoch: onPlace ? null : epoch,
+  };
+  if (t.binders.some((b) => b.kind === "fill"))
+    throw new CompileError(`${t.id}: a filling binds in a quantifier, not a technique`);
   const sorts = binderSorts(t, tenv);
   const fields = sorts.map((s) => `  ${s.name}: ${tsType(s.sort)};`);
   const body = new Out(1);
@@ -1112,6 +1485,7 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
       body.emit(`if (fire !== null && !fire(${binding}, facts)) return 1;`);
       // The firing changed the marks the kept candidates were read from.
       body.emit("cands.fill(-1);");
+      if (epoch.used) body.emit("_epoch++;");
     }
     body.close();
   };
@@ -1234,6 +1608,7 @@ export function compileLibrary(
     scratch: null,
     readsClues: { yes: false },
     hoist: null,
+    epoch: null,
   };
   const parts = Object.entries(lib.techniques).map(([id, stated]) => {
     const t: Technique = {
@@ -1254,13 +1629,7 @@ export function compileLibrary(
 /** The sort of a clue kind's place and value, from its declaration. */
 function clueSorts(kind: string, at: string, value: Expr, env: Env): ClueKind {
   const atSort: Sort =
-    at === "edge"
-      ? elem("edge")
-      : at === "cell"
-        ? elem("cell")
-        : at === "line"
-          ? elem("line")
-          : NUM;
+    at === "edge" || at === "cell" || at === "line" || at === "slot" ? elem(at) : NUM;
   if (atSort.k === "num")
     throw new CompileError(`clue ${kind}: no element sort "${at}"`);
   const v = compileExpr(
@@ -1298,6 +1667,7 @@ export function compileGame(
     scratch: null,
     readsClues: { yes: false },
     hoist: null,
+    epoch: null,
   };
   for (const [kind, c] of d.clueKinds)
     clues.set(kind, clueSorts(kind, c.at, c.value, env));

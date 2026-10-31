@@ -12,7 +12,7 @@ ok  latin      single                         4  sound    (want sound   )     4 
 ok  latin      single (planted)               4  unsound  (want unsound )     1 queries    0.0s   at line 4
 ok  latin      set                            3  sound    (want sound   )     6 queries    0.1s
 ok  latin      set                            4  sound    (want sound   )     8 queries    0.5s
-ok  latin      set (planted)                  4  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  latin      set (planted)                  4  unsound  (want unsound )     1 queries    0.1s   at line 0
 ok  latin      fish                           3  sound    (want sound   )     3 queries    0.0s
 ok  latin      fish                           4  sound    (want sound   )     4 queries    0.2s
 ok  latin      fish (planted)                 4  unsound  (want unsound )     1 queries    0.0s   at 1
@@ -26,19 +26,31 @@ ok  group      associativity                  4  sound    (want sound   )     4 
 ok  group      associativity (planted)        4  unsound  (want unsound )     1 queries    0.1s   at 1
 ok  group      identity                       3  sound    (want sound   )     1 queries    0.0s
 ok  group      identity (planted)             3  unsound  (want unsound )     1 queries    0.0s   at ?
-ok  group      identity                       4  sound    (want sound   )     1 queries    0.0s
+ok  group      identity                       4  sound    (want sound   )     1 queries    0.1s
 ok  group      identity (planted)             4  unsound  (want unsound )     1 queries    0.0s   at ?
 ok  group      notIdentity                    3  sound    (want sound   )     3 queries    0.0s
 ok  group      notIdentity (planted)          3  unsound  (want unsound )     1 queries    0.0s   at 1
 ok  group      notIdentity                    4  sound    (want sound   )     4 queries    0.0s
 ok  group      notIdentity (planted)          4  unsound  (want unsound )     1 queries    0.0s   at 1
+ok  towers     facing                         3  sound    (want sound   )     1 queries    0.0s
+ok  towers     facing (planted)               3  unsound  (want unsound )     1 queries    0.0s   at eset
+ok  towers     facing                         4  sound    (want sound   )     1 queries    0.3s
+ok  towers     facing (planted)               4  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  towers     bounds                         3  sound    (want sound   )    12 queries    0.2s
+ok  towers     bounds (planted)               3  unsound  (want unsound )     1 queries    0.0s   at clue sees 0
+ok  towers     bounds                         4  sound    (want sound   )    16 queries    0.7s
+ok  towers     bounds (planted)               4  unsound  (want unsound )     1 queries    0.1s   at clue sees 0
+ok  towers     arrangement                    3  sound    (want sound   )    12 queries    0.1s
+ok  towers     arrangement (planted)          3  unsound  (want unsound )     1 queries    0.0s   at clue sees 0
+ok  towers     arrangement                    4  sound    (want sound   )    16 queries    0.7s
+ok  towers     arrangement (planted)          4  unsound  (want unsound )     1 queries    0.3s   at clue sees 0
 ok  adjacent   adjacent                       3  sound    (want sound   )     3 queries    0.1s
 ok  adjacent   adjacent (planted)             3  unsound  (want unsound )     1 queries    0.0s   at line 3
-ok  adjacent   adjacent                       4  sound    (want sound   )     4 queries    0.3s
+ok  adjacent   adjacent                       4  sound    (want sound   )     4 queries    0.4s
 ok  adjacent   adjacent (planted)             4  unsound  (want unsound )     1 queries    0.0s   at line 4
 ok  adjacent   adjacentSet                    3  sound    (want sound   )     3 queries    0.0s
 ok  adjacent   adjacentSet (planted)          3  unsound  (want unsound )     1 queries    0.0s   at line 3
-ok  adjacent   adjacentSet                    4  sound    (want sound   )     4 queries    0.2s
+ok  adjacent   adjacentSet                    4  sound    (want sound   )     4 queries    0.3s
 ok  adjacent   adjacentSet (planted)          4  unsound  (want unsound )     1 queries    0.0s   at line 4
 ok  unequal    sign                           3  sound    (want sound   )    24 queries    0.1s
 ok  unequal    sign (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at clue greater 0

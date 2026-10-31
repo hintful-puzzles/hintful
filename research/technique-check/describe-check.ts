@@ -45,7 +45,9 @@ type V =
   | { k: "vset"; mem: readonly Bx[] }
   | { k: "eset"; sort: string; mem: readonly Alt[] }
   | { k: "subsets"; of: V }
-  | { k: "clues"; kind: string };
+  | { k: "clues"; kind: string }
+  /** One assignment of a filling, its values by cell. */
+  | { k: "fill"; vals: ReadonlyMap<number, number> };
 
 // --- truths and numbers that simplify their constants -----------------------
 
@@ -207,6 +209,14 @@ const allOf = (sort: string, ids: readonly number[]): V => ({
   mem: ids.map((id) => [id, true] as const),
 });
 
+/** An ordered set's members where every one is certain, as a line or a
+ * slot's sight is: what reading a position in it needs. */
+function known(v: V, what: string): number[] {
+  if (v.k !== "eset" || v.mem.some(([, g]) => g !== true))
+    throw new TypeError(`${what}: not a set whose members are known`);
+  return v.mem.map(([id]) => id);
+}
+
 /** A value per alternative of an element, joined under the alternatives'
  * guards, which are exclusive. */
 function lift(v: V, what: string, f: (id: number) => V): V {
@@ -296,6 +306,8 @@ function evaluate(e: Expr, env: Env, ctx: Ctx): V {
         case "lines":
         case "units":
           return allOf("line", sp.lines);
+        case "slots":
+          return allOf("slot", sp.slots);
         case "domain":
           return vsetOf(board, (d) => d >= 1 && d <= board.order);
         case "order":
@@ -486,6 +498,32 @@ function bindings(
     next(evaluate(b.of, env, ctx), true);
     return;
   }
+  if (b.kind === "fill") {
+    // Every assignment of a value to each member, each under its values
+    // being candidates where it is drawn from the marks.
+    const cells = known(evaluate(b.of, env, ctx), `fill ${b.name}`);
+    const vals = new Map<number, number>();
+    const assign = (j: number, g: Bx): void => {
+      if (g === false) return;
+      if (j === cells.length) {
+        next({ k: "fill", vals: new Map(vals) }, g);
+        return;
+      }
+      const c = cells[j];
+      for (let d = 1; d <= ctx.board.order; d++) {
+        vals.set(c, d);
+        if (b.from !== undefined && b.from !== "cand")
+          throw new Error(`fill ${b.name} from ${b.from}`);
+        assign(
+          j + 1,
+          and(g, b.from === "cand" ? (ctx.board.cand[c][d] ?? false) : true),
+        );
+      }
+      vals.delete(c);
+    };
+    assign(0, true);
+    return;
+  }
   const s = evaluate(b.of, env, ctx);
   if (s.k === "clues") {
     (ctx.board.clues.get(s.kind) ?? []).forEach((k, i) => {
@@ -551,6 +589,15 @@ function aggregate(e: Extract<Expr, { k: "agg" }>, env: Env, ctx: Ctx): V {
   switch (e.fn) {
     case "count":
       return { k: "num", v: sumOf(parts.map((p) => ite(p.g, 1, 0))) };
+    case "distinct": {
+      const pairs: Bx[] = [];
+      for (let i = 0; i < parts.length; i++)
+        for (let j = i + 1; j < parts.length; j++)
+          pairs.push(
+            implies(and(parts[i].g, parts[j].g), not(equal(parts[i].t, parts[j].t))),
+          );
+      return { k: "bool", v: and(...pairs) };
+    }
     case "sum":
       return { k: "num", v: sumOf(parts.map((p) => ite(p.g, num(p.t, "sum"), 0))) };
     case "min":
@@ -641,6 +688,11 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       ),
     };
   }
+  const filling = env.get(fn);
+  if (filling?.k === "fill") {
+    const x = evaluate(args[0], env, ctx);
+    return lift(x, fn, (c) => ({ k: "num", v: filling.vals.get(c) ?? -1 }));
+  }
   const vs = args.map((x) => evaluate(x, env, ctx));
   // None, which an element may be under some guard, reads as nothing: no
   // value, no candidates, no fact about it holding.
@@ -671,6 +723,35 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       return cellFn((c) => allOf("cell", sp.peers[c]));
     case "adj4":
       return cellFn((c) => allOf("cell", sp.adj4[c]));
+    case "sight":
+      return lift(vs[0], fn, (s) => allOf("cell", sp.sight[s]));
+    case "opposite":
+      return lift(vs[0], fn, (s) => elem("slot", sp.opposite[s]));
+    case "nth": {
+      // Past either end is none.
+      const L = known(vs[0], fn);
+      const v0 = vs[0];
+      const i = num(vs[1], fn);
+      const at: Alt[] = L.map((id, j) => [id, cmp("=", i, j)] as const);
+      at.push([-1, not(or(...at.map(([, g]) => g)))]);
+      return {
+        k: "elem",
+        sort: v0.k === "eset" ? v0.sort : "?",
+        alts: at.filter(([, g]) => g !== false),
+      };
+    }
+    case "index": {
+      const L = known(vs[1], fn);
+      return lift(vs[0], fn, (id) => ({ k: "num", v: L.indexOf(id) }));
+    }
+    case "before": {
+      const L = known(vs[1], fn);
+      const sort = vs[1].k === "eset" ? vs[1].sort : "?";
+      return lift(vs[0], fn, (id) => {
+        const i = L.indexOf(id);
+        return allOf(sort, i < 0 ? [] : L.slice(0, i));
+      });
+    }
     case "x":
       return cellFn((c) => ({ k: "num", v: c % sp.w }));
     case "y":
@@ -726,9 +807,8 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
     case "range": {
       const a = num(vs[0], fn);
       const b = num(vs[1], fn);
-      if (typeof a !== "number" || typeof b !== "number")
-        throw new Error("range of unknowns");
-      return vsetOf(board, (d) => d >= a && d <= b);
+      // Each member under its being between the ends, which may be unknown.
+      return vsetOf(board, (d) => and(cmp(">=", d, a), cmp("<=", d, b)));
     }
     case "subsets":
       return { k: "subsets", of: vs[0] };
@@ -751,12 +831,17 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       return { k: "elem", sort: s.sort, alts: out };
     }
     case "at":
-    case "v":
+    case "v": {
+      const k = vs[0];
+      const sort =
+        k.k === "elem" ? ctx.d.clueKinds.get(k.sort.slice("clue ".length))?.at : "?";
       return join(
-        clueOf(ctx, vs[0]).map(
-          ({ clue, g }) => [g, fn === "at" ? elem("edge", clue.at) : clue.v] as const,
+        clueOf(ctx, k).map(
+          ({ clue, g }) =>
+            [g, fn === "at" ? elem(sort ?? "?", clue.at) : clue.v] as const,
         ),
       );
+    }
     case "strike":
     case "place": {
       if (!ctx.concluding) throw new Error(`${fn} outside a conclusion`);
@@ -787,13 +872,18 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
 function dealSymbolically(d: Description, board: Board): void {
   const ctx: Ctx = { board, d, mode: "rule", concluding: false };
   for (const [kind, c] of d.clueKinds) {
-    if (c.at !== "edge")
-      throw new Error(`clue ${kind}: only edge clues are checked yet`);
+    const places =
+      c.at === "edge"
+        ? board.sp.edgeEnds.length / 2
+        : c.at === "slot"
+          ? board.sp.slots.length
+          : null;
+    if (places === null)
+      throw new Error(`clue ${kind}: only edge and slot clues are checked yet`);
     const complete = d.json.clues?.[kind]?.complete === true;
     const list: ClueSym[] = [];
-    const places = board.sp.edgeEnds.length / 2;
     for (let e = 0; e < places; e++) {
-      const values = evaluate(c.value, new Map([["at", elem("edge", e)]]), ctx);
+      const values = evaluate(c.value, new Map([["at", elem(c.at, e)]]), ctx);
       if (values.k === "eset") {
         for (const [id] of values.mem)
           list.push({
@@ -844,7 +934,7 @@ function worldOf(d: Description, board: Board): Bx[] {
             evaluate(
               c.means,
               new Map([
-                ["at", elem("edge", k.at)],
+                ["at", elem(c.at, k.at)],
                 ["v", k.v],
               ]),
               ctx,

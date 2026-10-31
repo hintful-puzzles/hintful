@@ -90,6 +90,16 @@ marks:
   done: { sort: slot, notation: "bool" }
 define:
   visible(s): "count(c in sight(s) where forall c2 in before(c, sight(s)): value(c2) < value(c))"
+  # The towers a filling of a line shows from its first cell.
+  seen(f, L): "count(c in L where forall c2 in before(c, L): f(c2) < f(c))"
+  # The index along a line of the nearest of the heights R placed in it, or
+  # the line's length where none is.
+  far(L, R): "min(i in range(0, w) where i = w or value(nth(L, i)) in R)"
+  # The least i - 1 of the heights that can stand before index i of a line:
+  # those not placed at i or beyond.
+  short(L, i): "least(domain - set(value(c) over c in L where known(c) and index(c, L) >= i), i - 1)"
+  # The least k members of a set of heights.
+  least(H, k): "{h in H where |H - range(h, w)| < k}"
 shape:
   - "latin(value, lines)"
 clues:
@@ -100,3 +110,64 @@ deal:
   givens: how many
   tier: one of the tiers
 tiers: [Easy, Hard, Extreme, Unreasonable]
+techniques:
+  - { use: latin.placed, tier: Easy, rung: dup }
+  # Facing clues that sum to w + 1 see a line climbing to its tallest tower
+  # from both ends, so the tallest stands as many cells from one clue as that
+  # clue says. Every such line in one firing, the columns before the rows, as
+  # upstream's one-off did. A cell that can no longer hold it makes the marks
+  # inconsistent.
+  - id: facing
+    tier: Easy
+    rung: facing
+    for: >-
+      P = {s in slots where index(s, slots) < index(opposite(s), slots)
+      and clue(sees, s) + clue(sees, opposite(s)) = w + 1}
+      where |P| > 0
+    conclude: >-
+      forall s in P, c = nth(sight(s), clue(sees, s) - 1):
+      w in cand(c) and place(c, w)
+  # Clue by clue, in the order dealt, two readings of the towers its line
+  # already shows; the first that strikes anything is the firing.
+  #
+  # The tallest heights placed, from w down to the first that is not, are a
+  # run R. Where the clue sees one more tower than it sees of R, the cell
+  # nearest the clue holds the tallest of the cells before the nearest of R,
+  # so it cannot hold the shortest of the heights that can stand there
+  # (`near`). Only then are those read, under `and`.
+  #
+  # Otherwise, a height that can still be seen, K (not placed behind one at
+  # least two taller, as upstream's loop reads it), with r of K above it,
+  # cannot stand within v - r - 1 cells of the clue: the tallest first.
+  - id: bounds
+    tier: Easy
+    rung: [lineFull, lowerBound]
+    for: >-
+      k in clues(sees), s = at(k), v = v(k), L = sight(s), c0 = first(L),
+      P = set(value(c) over c in L where known(c)),
+      R = {h in domain where range(h, w) subset P},
+      near = (v = count(c in L where value(c) in R
+      and (forall c2 in before(c, L): value(c2) < value(c))) + 1
+      and far(L, R) > 1 and (exists h in short(L, far(L, R)): h in cand(c0)))
+    conclude: >-
+      (near implies (forall h in short(L, far(L, R)): strike(c0, h)))
+      and (near or (forall K = (domain - P) + set(value(c) over c in L where known(c)
+      and not (exists c2 in before(c, L): value(c2) > value(c) + 1)),
+      i in domain, h = w + 1 - i where h in K,
+      j in range(0, v - |K - range(1, h)| - 2): strike(nth(L, j), h)))
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }
+  # Clue by clue, and cell by cell along its line: a height no filling of the
+  # line from its candidates, every height once, that shows the clue's count
+  # puts in the cell, is struck from it. One cell a firing.
+  - id: arrangement
+    tier: Hard
+    rung: arrangement
+    for: "k in clues(sees), s = at(k), v = v(k), L = sight(s), c in L"
+    conclude: >-
+      forall d in cand(c) where not (exists fill f of L from cand
+      where distinct(f(x) over x in L) and f(c) = d: seen(f, L) = v):
+      strike(c, d)
+  - { use: latin.set, tier: Hard, rung: set }
+  - { use: latin.fish, tier: Extreme, rung: set }
+  - { use: latin.wing, tier: Extreme, rung: wing }

@@ -57,12 +57,16 @@ export type AggFn =
   | "set"
   | "the";
 
-/** `x in S`, `S` evaluated with the binders before it in scope, or `x = t`,
- * a name for a term; either may be followed by `where P`, which filters. */
+/** `x in S`, `S` evaluated with the binders before it in scope; `x = t`, a
+ * name for a term; or `fill f of S [from m]`, each assignment of a value to
+ * every element of `S`, from the mark `m` where it is said, read `f(x)`.
+ * Any may be followed by `where P`, which filters. */
 export interface Binder {
   name: string;
-  kind: "in" | "let";
+  kind: "in" | "let" | "fill";
   of: Expr;
+  /** A filling's mark function, which its values are drawn from. */
+  from?: string;
   where: Expr | null;
 }
 
@@ -90,6 +94,8 @@ const KEYWORDS: ReadonlySet<string> = new Set([
   "of",
   "over",
   "mod",
+  "fill",
+  "from",
 ]);
 
 interface Token {
@@ -175,9 +181,14 @@ export function parse(src: string): Expr {
   function binders(): Binder[] {
     const out: Binder[] = [];
     for (;;) {
+      const fill = isKw("fill");
+      if (fill) p++;
       const name = ident();
       let kind: Binder["kind"];
-      if (isKw("in")) {
+      if (fill) {
+        eat("of");
+        kind = "fill";
+      } else if (isKw("in")) {
         p++;
         kind = "in";
       } else if (isOp("=")) {
@@ -185,18 +196,28 @@ export function parse(src: string): Expr {
         kind = "let";
       } else return fail('expected "in" or "="');
       const of = additive();
+      let from: string | null = null;
+      if (fill && isKw("from")) {
+        p++;
+        from = ident();
+      }
       let where: Expr | null = null;
       if (isKw("where")) {
         p++;
         where = implication();
       }
-      out.push({ name, kind, of, where });
+      out.push({ name, kind, of, ...(from === null ? {} : { from }), where });
       if (!isOp(",")) return out;
       // A comma inside binders starts another binder only if a name and
-      // `in` or `=` follow; otherwise it ends them (an argument list).
+      // `in` or `=` follow, or `fill`; otherwise it ends them (an argument
+      // list).
       const next = toks[p + 1];
       const after = toks[p + 2];
-      if (next?.t === "id" && (after?.s === "in" || after?.s === "=")) p++;
+      if (
+        next?.t === "id" &&
+        (next.s === "fill" || after?.s === "in" || after?.s === "=")
+      )
+        p++;
       else return out;
     }
   }

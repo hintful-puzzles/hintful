@@ -76,8 +76,8 @@ research tools all read through it; the app never does.
   reader meets the prose rules beside the formal ones. A rules section whole
   or not at all: `space` brings `name`, `family`, `sizes`, `answer` and
   `freedom` with it, and `techniques` brings `space` and `tiers`.
-- **Only a library or a description with techniques compiles.** Solo's and
-  Towers' state rules only the interpreter under `research/describe/` reads.
+- **Only a library or a description with techniques compiles.** Solo's
+  states rules only the interpreter under `research/describe/` reads.
 - **A family member another game deals is a second description beside it**
   (Unequal's `adjacent.description.yaml`), with no help: its game's page
   names it through `{{rulesets}}`.
@@ -103,7 +103,11 @@ rule. Lowest precedence first:
 **Binders**, after `forall`, `exists`, an aggregate and a technique's `for`:
 `x in S` (each member), `x = t` (a name for a term), each optionally followed
 by `where P`, which skips a binding. A binder's set may read the binders
-before it.
+before it. A quantifier or aggregate, not a technique's `for`, may also bind
+`fill f of S [from cand]`: each assignment of a value to every cell of `S`,
+from its candidates where `from cand` is said, read `f(x)`, and `-1` off `S`.
+A filling satisfies only what its `where` says, the Latin rule included:
+Towers' line says `distinct(f(x) over x in L)`.
 
 **Aggregates**: `count(B)`, `sum(B of t)`, `prod(B of t)`, `min(B of t)`,
 `max(B of t)`, `the(B)` (the single binding's last name, or `none`),
@@ -111,16 +115,21 @@ before it.
 binder.
 
 **Names**: `true`, `false`, `none`, the description's sizes, `domain`, and
-what the space gives: `cells`, `rows`, `cols`, `lines`, `units`.
+what the space gives: `cells`, `rows`, `cols`, `lines`, `units`, `slots`
+(one beyond each end of every line, numbered as Towers deals its clues: above
+each column, below each, left of each row, right of each).
 
 **Functions**: `value(c)`, `cand(c)` the candidates the marks leave,
-`known(c)`; `range(a, b)`, `abs(a)`, `subsets(S)`, `first(L)`; the grid's
+`known(c)`; `range(a, b)`, `abs(a)`, `subsets(S)`, `first(L)`; an ordered
+set's `nth(L, i)` (none past its ends), `index(x, L)` (`-1` where `x` is not
+in it), `before(x, L)`; the grid's
 `x(c)`, `y(c)`, `cell(x, y)` (on the grid: the compiled code does not check),
 `row(c)`, `col(c)`, `cells(L)`, `adj4(c)` (up, right, down, left), `peers(c)` (row and column interleaved by index), `ends(e)`,
-`end1(e)`, `end2(e)`, `other(e, c)`, `edge(a, b)`; the clues' `clues(kind)`
+`end1(e)`, `end2(e)`, `other(e, c)`, `edge(a, b)`, `sight(s)` (a slot's line,
+nearest it first), `opposite(s)`; the clues' `clues(kind)`
 (a binder's set only), `at(k)`, `v(k)`, `clue(kind, x)`; and, in a
 technique's conclusion only, `strike(c, d)` and `place(c, d)`. The
-interpreter reads more (`slots`, `sight`, `index`, `latin(f, U)` and others,
+interpreter reads more (`latin(f, U)` and others,
 [`research/describe/README.md`](../research/describe/README.md)); the
 compiler refuses what it does not have, naming it.
 
@@ -156,6 +165,29 @@ bitwise test. A set of elements is an array: a statement that binds subsets
 of rows binds their indices, `y(c)`, as a set of numbers instead (the
 library's `fish`).
 
+**Reading a position costs nothing where the name came from a loop.**
+`index(x, L)` where `x` was bound by a loop over the same `L` is that loop's
+counter, and `index(x, slots)` (or `cells`, `lines`) is `x` itself. A binder
+`y in before(x, L)` loops up to `x`'s place in `L`; `before` read as a set
+copies.
+
+**A filling is enumerated depth-first** in its set's order, each cell's
+values ascending, and two kinds of `where` conjunct are kept as each cell is
+assigned rather than once the assignment is whole: `distinct(f(x) over x in
+T)` passes over a value an earlier member of `T` holds, and `f(x) = t` gives
+`x` the one value `t`. The rest of the `where`, and a quantifier's body, are
+read once it is whole. Write a filling's conditions in those forms where they
+hold: on a line of 6 with one cell pinned, they leave 120 assignments of
+46,656. Towers' `arrangement` is the example.
+
+**An `exists fill` asked once per cell and value is enumerated once.** Where
+the only part of it that reads the loops around it is its pin `f(x) = t`,
+the compiler enumerates every filling the rest allows where the rest's names
+are bound, keeps the values they give each cell, and answers each question
+with one bit. It enumerates again only after the technique's kept
+candidates are cleared, so it answers as the pinned search would. State a
+cage's or a line's per-cell question in that shape.
+
 **A term is computed once where its names are bound.** Each binder and each
 definition's parameter opens a slot just after it, and a term that binds
 nothing, reads no candidate and makes no fact is computed in the slot of the
@@ -184,6 +216,12 @@ the order the hand-written engine scanned, and were compared with it record
 for record on every Latin game before it was removed
 (`openspec/changes/archive/*-compile-the-latin-ladder/report.md`). Restate a
 technique only with that comparison, or as a change the owner accepts.
+
+A rung runs its techniques in turn, each over all of its bindings, so two
+readings the scan interleaves (each clue's first reading, then its second,
+then the next clue's) are one technique bound by the clue, its conclusion
+the first reading where that changes the marks and the second otherwise.
+A let binder says which, for the reason: Towers' `bounds` and its `near`.
 
 ## A conclusion that is false is a contradiction
 

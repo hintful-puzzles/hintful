@@ -39,10 +39,16 @@ import {
   redraw,
   type TowersHint,
 } from "./render.ts";
-import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, solveTowers } from "./solver.ts";
+import {
+  DIFF_AMBIGUOUS,
+  DIFF_IMPOSSIBLE,
+  recordTowersDeductions,
+  solveTowers,
+} from "./solver.ts";
 import {
   clueIndex,
   cluePos,
+  DIFF_EASY,
   decodeParams,
   diffToLevel,
   encodeParams,
@@ -165,6 +171,29 @@ describe("towers generator", () => {
       );
     });
   }
+});
+
+describe("towers solver", () => {
+  it("places a tower once where a row's facing pair and a column's agree", () => {
+    // Column 0 reads 1 from above and 4 from below, row 0 1 from the left and
+    // 4 from the right: both put the 4 in the corner, in one firing.
+    const clues = new Int32Array(16);
+    clues[0] = 1;
+    clues[4] = 4;
+    clues[8] = 1;
+    clues[12] = 4;
+    const ops = recordTowersDeductions(4, clues, new Uint8Array(16), DIFF_EASY);
+    const facing = ops.filter((op) => op.reason.kind === "facing");
+    expect(facing).toEqual([
+      expect.objectContaining({
+        kind: "place",
+        x: 0,
+        y: 0,
+        n: 4,
+        reason: { kind: "facing", clue: 0, clue2: 4, clueVal: 1 },
+      }),
+    ]);
+  });
 });
 
 describe("towers desc parsing", () => {

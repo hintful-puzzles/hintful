@@ -343,7 +343,10 @@ export class LatinSolver implements Marks {
       const c = facts[i + 1];
       const n = facts[i + 2];
       if (facts[i] !== STRIKE) {
-        this.place(c % o, (c / o) | 0, n, reasons ? reasons[i / 3] : null);
+        // Two facts of one firing can place one cell (Towers' facing pairs
+        // of a row and a column); the cell was open when both were made.
+        if (this.grid[c] === 0)
+          this.place(c % o, (c / o) | 0, n, reasons ? reasons[i / 3] : null);
         continue;
       }
       const pos = this.cellBase[c] + n;
