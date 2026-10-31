@@ -28,4 +28,4 @@
 - [x] 5.1 Run the app at 390×844: the menu's two sections; a 7×7 Patches Normal board hinted to the end, a starve step among its sentences; a 9×12 Patches Normal board's line step, "Only the outlined ? clue can cross this edge, and it would miss the outlined square only it reaches, so the edge is a line."
 - [x] 5.2 The help page says which ideas each tier needs, and the tier item says the three tiers
 - [x] 5.3 Gate, commit, push
-- [ ] 5.4 The owner's acceptance in the running app, then archive
+- [x] 5.4 The owner's acceptance in the running app ("Accepted", 2026-10-31), then archive
