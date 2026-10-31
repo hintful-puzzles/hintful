@@ -53,6 +53,29 @@ each file gzipped on its own (an approximation of what the host serves):
   growth is seen in the commit that causes it (`docs/method.md`: a guard
   measures the thing it claims to guard).
 
+## Show the download's size and progress everywhere (the owner, 2026-10-31)
+
+Asked by name, while an offline download took a long time: **the download
+size and percentage should always show.** Today the settings opened from the
+main page show a percentage while it downloads, the settings opened from a
+game do not, and nothing shows the size anywhere. What the code says
+(2026-10-31, re-check before relying on it):
+
+- The percentage is files, not bytes: `src/sw.ts` posts
+  `PRECACHE_PROGRESS` with `count` of `manifest.length` files cached, and
+  `src/utils/pwa.ts` rounds `count / total` to a percent. One large file
+  (the game worker, 642 KiB of 1,748) moves it as much as one small icon, so
+  the figure is uneven as well as file-counted.
+- The precache manifest carries a URL and a revision per file, no size, so
+  showing "x of y MB" needs the build to put each file's size beside it.
+- The status is rendered by `renderOfflineStatus()` in
+  `src/dialogs/settings-dialog.ts`, the dialog both entry points open; why
+  the game's opening shows no percentage is not yet traced.
+
+This is player-visible (`AGENTS.md`), and the owner has already asked for
+it: the session shows the total size before and during the download, a
+percentage by bytes, and the same status from either entry point.
+
 ## Questions for the owner
 
 1. **Which of the three to do, and in what order**: the icons are cheap and
