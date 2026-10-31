@@ -834,7 +834,7 @@ describe("findMistakes", () => {
  * Find a square of a fixed-seed board where a *legal-looking* wrong arrow can
  * be placed: empty, with the solution's arrow known, and some other direction
  * that breaks no rule on its own. The fixed-seed scan is the deterministic way
- * to reach a specific position without hand-authoring a board (docs/testing.md § "Render scenarios", the fixed-seed scan idiom).
+ * to reach a specific position without hand-authoring a board (docs/testing.md § "Seed-deterministic, never clock-gated").
  */
 function firstDeviatingPlacement(): {
   state: RomeState;
