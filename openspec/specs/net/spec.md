@@ -140,6 +140,18 @@ grid one square wide and longer SHALL be admitted at Easy.
 - **THEN** the 1×1 is refused with "At least one of width and height must be
   greater than one.", the 1000×1001 as too large, and the other two admitted
 
+### Requirement: Params: Net's game modes are Bordered and Wrapping
+
+Net SHALL offer wrapping as a ruleset, Bordered or Wrapping
+(`wrappingRulesetItem`, `engine/ruleset.ts`), each a section of the Type
+menu, with the encoding's `w` unchanged.
+
+#### Scenario: A wrapping board's label
+
+- **WHEN** a 7×9 wrapping board at Easy with a quarter of its places barred is
+  labeled
+- **THEN** the label reads "Wrapping: 7x9 Easy, 25% barriers"
+
 ### Requirement: Description: A Net description is the shared wire grid, read under the params' wrap
 
 A Net description SHALL be its tiles and barriers as `encodeWireDesc` writes

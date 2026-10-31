@@ -64,7 +64,10 @@ the two words now mean:
   balls (Number Ball), each added to a base with no clues. Read off that
   shape, each is a modifier of a base nobody plays, and the code makes them
   exclude each other; the cut, by vocabulary both ways, makes them two
-  games. The guard flags it, and the owner decides.
+  games. **Decided by the owner (2026-10-31): they stay Salad's two
+  rulesets**, which share one ladder and keep a Type menu section each. The
+  guard does not see them: Salad's description deals both clue kinds and
+  states no variation.
 - **Rectangles' Patches**, filed after the cut ran, is computed when
   Rectangles' rules are stated; until then its word is declared unchecked.
 

@@ -52,10 +52,10 @@ Edges.
 
 ### Requirement: Params: One mode letter names an Ascent ruleset and its shape
 
-The params encoding SHALL hold the ruleset and the board's shape, which the
-Custom dialog asks for as separate fields, in one mode letter: `O` for
-Orthogonal, `H` and `C` for Hex, `R` for Classic and `E` for Edges. A string
-that names no mode SHALL decode as Classic.
+The params encoding SHALL hold the ruleset, Edges and the board's shape, which
+the Custom dialog asks for as separate fields, in one mode letter: `O` for
+Orthogonal, `H` and `C` for Hex, `R` for Classic and `E` for Classic with
+Edges. A string that names no mode SHALL decode as Classic.
 
 #### Scenario: Hex is chosen in the dialog
 
@@ -156,6 +156,17 @@ Nothing SHALL write the word.
 - **WHEN** a save whose params are `6x7mundefinedde` is opened
 - **THEN** it opens as the 6×7 Classic board it was played as, and its params
   are written back as `6x7mRde`
+
+### Requirement: Params: Edges is a rule a Classic board adds
+
+Ascent SHALL offer Edges as a modifier, "Edge clues", which only a Classic
+board takes: the Orthogonal and Hex rulesets SHALL hold it off. While it is on,
+the board SHALL offer no Easy and no symmetrical clues.
+
+#### Scenario: Edges is ticked and Hex chosen
+
+- **WHEN** the player ticks Edge clues and then chooses the game mode Hex
+- **THEN** Edge clues is shown off and disabled, and Easy is offered again
 
 ### Requirement: Description: Ascent descriptions use the upstream run-length encoding
 

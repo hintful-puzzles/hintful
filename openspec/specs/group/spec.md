@@ -48,8 +48,9 @@ Easy board cannot hide its identity.
 ### Requirement: Params: Hiding the identity leaves every tier but Easy
 
 Group SHALL declare that hiding the identity leaves every tier but Easy (the
-modifier's `only`), because an identity-hidden board has two blank rows and
-columns that only a deduction above Easy can tell apart.
+field's `only`), because an identity-hidden board has two blank rows and
+columns that only a deduction above Easy can tell apart. Hiding it changes
+only what is dealt, so it SHALL be a setting and not a rule modifier.
 
 #### Scenario: An identity-hidden Easy deal is refused
 

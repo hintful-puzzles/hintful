@@ -97,6 +97,18 @@ dealt the same way, and a board is harder only for showing fewer walls.
 - **THEN** "3x3 easy" is `3x3b1`, "3x3 medium" is `3x3` and "3x3 hard" is
   `3x3w`
 
+### Requirement: Params: Netslide's game modes are Bordered and Wrapping
+
+Netslide SHALL offer wrapping as a ruleset, Bordered or Wrapping
+(`wrappingRulesetItem`, `engine/ruleset.ts`), each a section of the Type
+menu, with the encoding's `w` unchanged.
+
+#### Scenario: The Type menu's sections
+
+- **WHEN** the preset menu is read
+- **THEN** it has a Bordered section opening with "3x3 easy" and a Wrapping
+  section opening with "3x3 hard"
+
 ### Requirement: Description: A Netslide description is the shared wire grid, read under the params' wrap
 
 A Netslide description SHALL be its tiles and barriers as `encodeWireDesc`
