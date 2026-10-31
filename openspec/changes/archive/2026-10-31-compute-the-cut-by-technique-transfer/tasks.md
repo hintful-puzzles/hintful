@@ -20,4 +20,4 @@
 ## 4. Run and report
 
 - [x] 4.1 Run every pair on at least two board sizes; tally against the test (65 of 68 decided; C8, C9 and C12 undecided, their larger boards stopped with the owner's agreement, `report.md` § "The result")
-- [ ] 4.2 Report: pass or fail, the misses and why, and if it passes, the catalog moves to propose and what each would cost to saves and links; the owner's decision recorded (written; the owner decides after `build-a-game-from-its-description`)
+- [x] 4.2 Report: pass or fail, the misses and why, and if it passes, the catalog moves to propose and what each would cost to saves and links; the owner's decision recorded (`report.md` § "The owner's decision (2026-10-31)")

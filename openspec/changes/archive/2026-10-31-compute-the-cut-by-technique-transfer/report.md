@@ -21,6 +21,7 @@ language with the computed cut, and with it which catalog moves to file.
 | What the checker became | tasks 3.1 to 3.4, and what was measured |
 | What the result does not show | the limits a reader should weigh |
 | The recommendation | commit or not, and the catalog moves |
+| The owner's decision (2026-10-31) | what was adopted, in two words |
 
 ## The result
 
@@ -327,3 +328,34 @@ techniques and not the other way, a modifier as filed; and Star Battle's
 ladder is one, general in the star count, so on the boards checked so far
 each count keeps the others' techniques, a ruleset as filed. On both, the
 computation sides with the catalog.
+
+## The owner's decision (2026-10-31)
+
+**Commit to the computed cut, in two words and as few terms as will do**
+("simplify simplify simplify"). Compatibility does not bind the moves while
+the app is in beta. The aim is to grow the catalog by about 200% in a year,
+so the measure is what makes a new game cheaper to add.
+
+- **Two words, the engine's own.** A **ruleset** is a variation whose
+  techniques and the plain game's each stay sound in the other; what this
+  report calls a board shape is one. A **modifier** adds a rule: the plain
+  game's techniques stay sound with it, and not back. A change only to how
+  boards are dealt is no variation but a setting, as size is, so "generator
+  setting" goes. A variation that keeps neither direction is another game.
+  Read the catalog moves above in these words: a board shape is a ruleset,
+  and Group's identity hidden a setting.
+- **One declaration.** A variation's word is stated once, in the game's
+  description, and the engine builds its field from it; where the techniques
+  are stated, the checker computes the word and the gate refuses a declared
+  one that disagrees. Filed as `declare-variations-once`.
+- **Unequal and Adjacent become two games.** Filed as
+  `split-adjacent-from-unequal`.
+- **The transfer, rung by rung, plans a new game.** Which techniques of an
+  existing ladder a candidate inherits is what the checker computes and what
+  decides the candidate's cost. Filed as `report-technique-inheritance`.
+
+The review that led here: the engine's two words said how a setting is
+shown, the research's four which way techniques carry, and a description's
+`word` was read by nothing, so Solo's Jigsaw was a board shape in its
+description and a modifier in its code. Making the description's word the
+engine's removes the second copy.
