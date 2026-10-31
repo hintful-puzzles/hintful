@@ -138,10 +138,10 @@ export function decodeParams(s: string): KeenParams {
  * Build, for the dsf over `a` cells, a map `minimal[i]` = the smallest-indexed
  * cell in `i`'s class (upstream `dsf_minimal`). Keen stores each cage's clue at
  * its minimal cell and the desc lists clues in minimal-cell order, so this
- * identity, not just connectivity, is load-bearing. The shared `Dsf` doesn't
- * track a minimal element, so it is computed once after all merges (nothing
- * reads a minimal mid-merge): in an ascending pass, the first cell seen for
- * each root is its minimum.
+ * identity, not just connectivity, is load-bearing. Nothing reads a minimal
+ * mid-merge, so it is computed once after all merges rather than tracked by
+ * `Dsf.withMinimal`: in an ascending pass, the first cell seen for each root is
+ * its minimum.
  */
 export function buildMinimal(dsf: Dsf, a: number): Int32Array {
   const rootMin = new Int32Array(a).fill(-1);

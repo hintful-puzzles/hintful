@@ -100,10 +100,7 @@ and grader run it with the recorder off, and the hint runs the same rungs
 with the recorder on.** The techniques that decide which boards exist are
 then the techniques the hint narrates, so no board is accepted on a technique
 the hint cannot explain. `solve()` and `findMistakes` reuse the same solver
-and do not grow a second opinion.
-
-The engine gives `runDeductionFixpoint` and `singleFirings` in
-[`engine/deduction-fixpoint.ts`](../src/engine/deduction-fixpoint.ts). Read
+and do not grow a second opinion. Read
 [`skeleton/grid/solver.ts`](../src/skeleton/grid/solver.ts): `solveSkeleton`
 is the first projection and `skeletonRecordingPass` the second, over one
 `ladder`.
@@ -112,37 +109,30 @@ is the first projection and `skeletonRecordingPass` the second, over one
 
 **Build a logic game's solver and hint loop on `runDeductionFixpoint`
 ([`engine/deduction-fixpoint.ts`](../src/engine/deduction-fixpoint.ts)) and
-do not hand-roll it.** The loop is an ordered ladder of techniques, easiest
-first. It restarts from the top the moment a technique fires, so one firing
-is one hint group, and stops when nothing fires or the ladder has settled.
-What the runner owns:
+do not hand-roll it.** The loop is an ordered ladder, easiest first, that
+restarts from the top the moment a technique fires, so one firing is one hint
+group. `DeductionTechnique` and `DeductionFixpointOptions` document the
+contract and each option. What a game must get right:
 
-- **The technique contract.** A technique is `{ id, tier, run }`: a stable
-  name, the difficulty tier it belongs to, and a `run` that applies it once
-  and returns `> 0` (fired), `0` (nothing to do) or `< 0` (contradiction
-  proved). Both `id` and `tier` are required.
-- **The grade**: the highest `tier` that fired, never a position in the
-  array. Several techniques may share a tier.
-- **The `maxTier` cap.** It excludes by tier wherever the technique sits, so
-  a ladder whose tiers do not increase along the array is legal. Pass it
-  while grading, so a tier does not pay for techniques it cannot use.
-- **The recording-path step budget.** Pass a
-  [`stepBudget`](../src/engine/step-budget.ts) on the hint call and omit it
-  on the generator call. A technique that reports progress without changing
-  the board then fails loud on the hint path, and the thrown error names the
-  techniques by firing count, most-fired first.
-- **The `settled` early-out**: "there is nothing left for the ladder to do",
-  which is broader than "solved". It may stop on a contradiction, on a
-  complete-or-invalid board, or on a tier's own action budget.
-- **The `beforeTechnique` hook**, which `latinSolverTop` uses to give one
-  firing's records a shared `group`.
-- **The `firings` tally**, an optional sink that counts each rung's firings
-  for a census. Forward one optional parameter to it; do not wrap the ladder
-  in a closure to observe firings.
-
-**A technique that is only sometimes available guards itself in `run` and
-returns `0`.** The runner has no `when` predicate and takes none: it would
-be indistinguishable from returning `0`.
+- **Declare both `id` and `tier`.** `run` applies the technique once and
+  returns `> 0` (fired), `0` (nothing to do) or `< 0` (contradiction proved).
+- **The grade is the highest `tier` that fired, never a position in the
+  array**, and several techniques may share a tier. `maxTier` excludes by
+  tier wherever the technique sits, so a ladder whose tiers do not increase
+  along the array is legal. Pass it while grading, so a tier does not pay for
+  techniques it cannot use.
+- **Pass a step budget ([`step-budget.ts`](../src/engine/step-budget.ts)) on
+  the hint call and omit it on the generator call.**
+  A technique that reports progress without changing the board then fails
+  loud on the hint path, and the error names the techniques by firing count.
+- **`settled` means "there is nothing left for the ladder to do"**, which is
+  broader than "solved": a contradiction, a complete-or-invalid board, or a
+  tier's own action budget.
+- **Observe firings through the `firings` tally**, for a census: forward one
+  optional parameter to it, and do not wrap the ladder in a closure.
+- **A technique that is only sometimes available guards itself in `run` and
+  returns `0`.** The runner takes no `when` predicate: it would be
+  indistinguishable from returning `0`.
 
 Every call site is `git grep -l runDeductionFixpoint src`. The ones to read
 for a ladder that is not the plain shape:
@@ -174,32 +164,29 @@ board is dealt at one tier and solves at another once loaded.
 - **Test with a shuffle**: rebuild a board with its population listed in
   another order and compare the verdict at every cap. Pin the boards that
   split as descs. A census over dealt boards cannot be the guard alone, since
-  the defect may show on a few boards in a hundred.
-
-Exemplar: `bridges.test.ts`, "the grade does not depend on island order".
+  the defect may show on a few boards in a hundred. Exemplar:
+  `bridges.test.ts`, "the grade does not depend on island order".
 
 ### Proving an adoption: the fixtures are not enough
 
 **Prove a ladder by a census of which rungs fire, and plant a defect in each
 upper-tier rung before trusting the corpus.** A byte-match differential
 certifies only the rungs it fires and cannot say which those are: a rung that
-fires on no recorded board can be deleted with every test green.
-
-The engine gives `describeLadderCensus`
+fires on no recorded board can be deleted with every test green. The census
+is `describeLadderCensus`
 ([`engine/testing/ladder-census.ts`](../src/engine/testing/ladder-census.ts)),
-which walks a corpus at every cap and asserts which rungs fired, and reads
-the runner's `firings` tally through one optional parameter of the game's
-solve. Exemplar:
+which reads the runner's `firings` tally through one optional parameter of
+the game's solve. Exemplar:
 [`skeleton-generation.test.ts`](../src/skeleton/grid/skeleton-generation.test.ts).
 
 - **While moving a solver onto the runner, compare against the loop being
-  replaced.** The two agree on verdict, grade and full board state, at every
-  cap, over a corpus the census shows reaches every rung. Then delete the old
-  loop in the same change.
-- **Record a rung the corpus cannot reach with its reason**, in the census's
-  `unreached`, and check it against the C first: an unreachable deduction is
-  the shape a porting bug takes. An `unreached` entry may be structural, a
-  rung foreclosed by the one beneath it; then say so
+  replaced**: verdict, grade and full board state, at every cap, over a corpus
+  the census shows reaches every rung. Then delete the old loop in the same
+  change.
+- **Record a rung the corpus cannot reach in the census's `unreached`, with
+  its reason, and check it against the C first**: an unreachable deduction is
+  the shape a porting bug takes. An entry may be structural, a rung foreclosed
+  by the one beneath it; then say so
   ([`magnets-ladder.test.ts`](../src/games/magnets/magnets-ladder.test.ts)).
 - **A census cannot see a mis-tiered or reordered rung**, because the rung
   still fires. A frozen differential can. A game with no differential has
@@ -214,19 +201,18 @@ solve. Exemplar:
   the verdicts, and the board comparison stays green
   ([`abcd-ladder.test.ts`](../src/games/abcd/abcd-ladder.test.ts)).
 - **A rung's firing count says it runs, not that anything depends on it.**
-  To find whether a board depends on a rung, solve with the rung silenced and
-  see whether the board still finishes
+  Solve with the rung silenced and see whether the board still finishes
   ([`tents-ladder.test.ts`](../src/games/tents/tents-ladder.test.ts)).
 - **Give a Tricky deduction its own rung where upstream folds it into an
   Easy sweep**, with a Tricky `tier`, so a census can say whether it is
-  reached. Have the split rung write only what the Tricky half deduces. On a
-  ladder of sound, monotone rungs this changes when the deduction runs and
-  not what the ladder concludes; the board comparison at every cap proves it.
+  reached, and have it write only what the Tricky half deduces. On a ladder
+  of sound, monotone rungs this changes when the deduction runs and not what
+  the ladder concludes; the board comparison at every cap proves it.
 
 ### What the runner does not carry: the record
 
 **Thread the game's own recorder through its rungs; the runner carries the
-loop and not the record.** A technique's `run` returns a number and the
+loop and not the record.** A technique's `run` returns a number, and the
 runner does not know what the firing recorded.
 
 **Do not split a technique into `find`, `apply` and `narrate`** to make an
@@ -250,40 +236,29 @@ pre-pass at the top of each iteration, a verdict richer than a boolean, and
 a sweep of the whole ladder before restarting have each adopted, because a
 technique can hold state and guard itself; the table under § "The deduction
 fixpoint" names where for the first four, and the last is
-[`abcd/solver.ts`](../src/games/abcd/solver.ts).
-
-The solvers that break a promise, which
+[`abcd/solver.ts`](../src/games/abcd/solver.ts). The solvers that break a
+promise, and the promise each breaks, are listed in
 [`engine/deduction-fixpoint.ts`](../src/engine/deduction-fixpoint.ts)'s
-header also lists:
-
-| Game | The promise it breaks |
-| --- | --- |
-| Loopy | *A pass attempts every technique at or below the cap.* Each firing reports the cheapest rung that could use the new information, and the next pass skips the techniques below it. |
-| Lightup | *Return after first firing.* Its two techniques are interleaved per cell inside one grid scan whose order decides which boards exist, and the pass sweeps the whole grid before restarting. |
+header.
 
 - **Re-derive a recorded no-go when the runner's contract changes.** Read the
   loop, not the reason somebody recorded for it, and when a `continue` looks
   as if it decides the walk, check whether anything can reach it.
 - **A no-go has dissolved when the adoption needs no new option on the
   runner and the game's byte-match differential passes untouched.**
-- **Do not move one of the two onto the runner to tidy the tree.** A refactor
+- **Do not move one of them onto the runner to tidy the tree.** A refactor
   that changes a solver verdict changes which boards exist
   (§ "Solver-gated generation").
 
 #### What a bespoke loop still owes
 
 A bespoke loop meets three obligations, stated for the game and not assumed
-(`engine-helpers`, "A bespoke loop carries three obligations"):
-
-- **Narratability survives**: every accepted board is walkable to completion
-  by a hint that runs the solver's own rungs with a recorder.
-- **Grading stays honest**: tiers bind to real technique differences, and
-  generation is capped at the requested tier.
-- **Budgets apply**: the recording path ticks a `stepBudget`, so
-  non-termination fails loud.
-
-Exemplars: `nextFiring` in Loopy's hint, and `solveSub` and `deduceHintPlan`
-in Lightup's solver.
+(`engine-helpers`, "A bespoke loop carries three obligations"): every
+accepted board is walkable to completion by a hint that runs the solver's own
+rungs with a recorder; tiers bind to real technique differences and
+generation is capped at the requested tier; and the recording path ticks a
+`stepBudget`, so non-termination fails loud. Exemplars: `hintFirings` in
+Loopy's solver, and `solveSub` and `deduceHintPlan` in Lightup's.
 
 ## Guess-free generation
 
@@ -374,16 +349,15 @@ Rectangles'.
 - **Where the solver's own rule stops firing as the player fills squares,
   the hint keeps the solver's run from the clues.** This is for a hint that
   replans from the board at every step over a technique that is not monotone
-  and cannot be made so. Find it by the same trace turned round: log every
-  fill the solver makes from the clues, and take the first that the solver,
-  restarted from the stalled board, no longer makes. When replanning finds
-  nothing, the plan takes the next fill of the run from the clues whose
-  square is still empty, and reads its evidence again from the board it is
-  shown on. Every earlier fill is on the board, so the step is as true there,
-  the plan finishes every mistake-free position, and the generator can go on
-  asking the solver alone. A rule the hint never had is still a missing rung.
-  Exemplar: `deduceHintPlan` in
-  [`filling/solver.ts`](../src/games/filling/solver.ts).
+  and cannot be made so. Find it by the same trace turned round: take the
+  first fill the solver makes from the clues that the solver, restarted from
+  the stalled board, no longer makes. When replanning finds nothing, the plan
+  takes the next fill of the run from the clues whose square is still empty,
+  and reads its evidence again from the board it is shown on. Every earlier
+  fill is on the board, so the step is as true there, the plan finishes every
+  mistake-free position, and the generator can go on asking the solver alone.
+  A rule the hint never had is still a missing rung. Exemplar:
+  `deduceHintPlan` in [`filling/solver.ts`](../src/games/filling/solver.ts).
 
 ### Giving a deductive game an Unreasonable tier
 
@@ -391,28 +365,28 @@ Rectangles'.
 three things for [`engine/answer-search.ts`](../src/engine/answer-search.ts):
 the deduction with a verdict, what to assume where it stops, and what the
 deal draws.** The loop, its bound, the contract and the caching are the
-engine's. Copy [`pattern/`](../src/games/pattern/). A player meets "trial and
-error" only on a tier with that name.
+engine's, and its header says which export is which. Copy
+[`pattern/`](../src/games/pattern/). A player meets "trial and error" only on
+a tier with that name.
 
-- **`searchAnswers` counts answers to two**, by trial and error over the
-  game's own deduction. Its verdicts are one answer, several, none, and out
-  of reach once a budget of positions is spent. The game gives it `deduce`,
-  which says `solved`, `stuck` or `contradiction` of a position, and
-  `assume`, which divides a stuck position by one undecided thing.
+- **`searchAnswers` counts answers to two** by trial and error over the
+  game's own deduction: one answer, several, none, or out of reach once its
+  budget of positions is spent. The game gives it
+  `deduce`, which says `solved`, `stuck` or `contradiction` of a position,
+  and `assume`, which divides a stuck position by one undecided thing.
 - **`dealUnreasonable` keeps a board only where the deduction stops short
-  and the search says one.** The game writes no loop for the tier. It gives
-  `draw`, optionally `strip`, `deduced` and `answer` (§ "What an Unreasonable
-  deal draws and strips").
-- **`searchTierContract` is the difficulty contract.** The lower cap is the
-  game's deduction finishing the board and its hint finishing it too
-  (`hintFinishes`); the upper cap is "the search says one". The game has no
-  `finishesByDeduction`, which is an untiered game's.
-- **Solve and the mistake check take the answer from the search**, at either
-  tier, cached on the board's shared part with `answerCache`.
-  `solveFromAnswer` says `MULTIPLE_SOLUTIONS` or `NO_SOLUTION` where the
-  search proved it, which is what refuses such a board at load. The cache is
-  keyed on something every state of a game holds by reference, so a game
-  whose moves clone every array shares the part no move changes.
+  and the search says one**, and the game writes no loop for the tier
+  (§ "What an Unreasonable deal draws and strips").
+- **`searchTierContract` is the difficulty contract**: the lower cap is the
+  deduction and the hint (`hintFinishes`) finishing the board, the upper "the
+  search says one". The game has no `finishesByDeduction`, which is an
+  untiered game's.
+- **Solve and the mistake check take the answer from the search** at either
+  tier, cached with `answerCache`. `solveFromAnswer` says
+  `MULTIPLE_SOLUTIONS` or `NO_SOLUTION` where the search proved it, which is
+  what refuses such a board at load. The cache is keyed on something every
+  state of a game holds by reference, so a game whose moves clone every array
+  shares the part no move changes.
 - **The hint does not change.** It already ends in `DEDUCTION_EXHAUSTED`
   where nothing follows, and the midend lets that through on a tier named
   Unreasonable.
@@ -444,9 +418,8 @@ Writing the verdict:
   every square of a block is decided is right and slow.
 - **A solver that is sound from an empty board may not be from a position.**
   Upstream's solvers were only ever run from the opening. Run the agreement
-  test, against the counter with no search in it, on the tier's own boards
-  before measuring anything, and fix the fault in the deduction, not in the
-  search.
+  test against the counter on the tier's own boards before measuring
+  anything, and fix the fault in the deduction, not in the search.
 - **A solver's final verdict may forget what its loop found**, such as a
   loop that breaks off on an uncoverable square and then recomputes its
   answer from counts. The search reads the break itself.
@@ -492,19 +465,11 @@ The budget and the order:
 
 **Start `draw` from what the Easy generator already makes, and measure which
 start and which strip suit the game before copying another game's.**
-`dealUnreasonable` takes four things:
-
-- **`draw`**: a candidate, or `null` where this try gave none.
-- **`strip`**, where the board shows something a player could do without.
-  Take it away a thing at a time (a clue, a given, the order of two letters),
-  asking the `one` the engine hands over after each and putting back what it
-  refuses. The engine asks within `DEALING_BUDGET` and hands the strip only a
-  board that already passes. Left out, a candidate is kept or thrown away as
-  drawn.
-- **`deduced`**: whether the solver finishes the board. Add the hint only
-  where it finishes boards the solver does not: asking it of every candidate
-  costs a whole replay on each.
-- **`answer`**: the game's `searchAnswers`, with the budget passed through.
+`UnreasonableDeal` in
+[`engine/answer-search.ts`](../src/engine/answer-search.ts) says what
+`draw`, `strip`, `deduced` and `answer` each are. In `deduced`, add the hint
+only where it finishes boards the solver does not: asking it of every
+candidate costs a whole replay on each.
 
 Which shape a game is, is the game's to measure:
 
@@ -531,7 +496,8 @@ Rules for all four:
 
 - **A step that strips runs the board to the search's limit, so it takes a
   budget of its own.** Asked at the full budget, every stripped board comes
-  out at the edge of it. `DEALING_BUDGET` is that smaller budget.
+  out at the edge of it. `DEALING_BUDGET` is that smaller budget, and the
+  engine hands the strip only a board that already passes within it.
 - **The hiding budget is the tier's difficulty.** It is where the boards stop
   being a missing rule. On a new game's boards, count what a Check
   (§ "Check, Tactic, Search") finishes at the engine's number before trusting
@@ -658,9 +624,9 @@ Crossing's solver and hint.
 ### A middle tier below Unreasonable
 
 **Give a deduction its own tier where it is its own step for a player and
-the boards that need it are a large share.** `searchTiers(2)` is
-`Easy · Normal · Unreasonable`, and the two-tier names are `searchTiers(1)`
-([`engine/answer-search.ts`](../src/engine/answer-search.ts)). The contract
+the boards that need it are a large share.** `searchTiers(2)` gives
+`Easy · Normal · Unreasonable`
+([`engine/answer-search.ts`](../src/engine/answer-search.ts)); its contract
 asks `deductionFinishes(state, cap)` below Unreasonable, and the game grades
 a rung a tier there (§ "A tier means exactly its rung"). Exemplar: Mosaic.
 
@@ -696,8 +662,8 @@ mark for a supposition is ever added.
 **A supposition rung runs only at Unreasonable**: the Latin forcing chain
 runs at `diffRecursive`, and the config has no field to put it lower. Where
 moving one would leave its tier with nothing to deal, find the markable
-technique that deals the tier first (the next bullets): every such tier so
-far was filled by one element's value, weighed.
+technique that deals the tier first: every tier so far that a markable
+technique filled was filled by one element's value, weighed (the bullets below).
 
 **Nothing enforces the tier column, so decide a rung's class from this table
 when you add or move one, and say so in the change.** `hint-quality.test.ts`
@@ -715,14 +681,14 @@ asks whether its tier is named `Unreasonable`, and for a game with no
   of lines a square's value is which of its edges take its lines, so two
   lines placed on one square and looked at once is a Check (owner,
   2026-10-28). A supposed mark that forces one square, which then breaks
-  the board, is the same look; most of Path's lookahead walks were that
-  long. Weighing every value of one element, each read by a look, and
-  keeping what they all share, is a Check too. Exemplars: `findBreaks` and
-  `findWeighed` in [`path/solver.ts`](../src/games/path/solver.ts), and
-  `weighWing` in [`engine/wing.ts`](../src/engine/wing.ts), the XY- and
-  XYZ-wing, where each value of one element is read off the notes of an
-  element it sees: Map's regions by their dots, where a three-region forcing
-  chain turned out to be exactly that, and every candidate game's cells.
+  the board, is the same look. Weighing every value of one element, each read
+  by a look, and keeping what they all share, is a Check too. Exemplars:
+  `findBreaks` and `findWeighed` in
+  [`path/solver.ts`](../src/games/path/solver.ts), and `weighWing` in
+  [`engine/wing.ts`](../src/engine/wing.ts), the XY- and XYZ-wing, where each
+  value of one element is read off the notes of an element it sees (Map's
+  regions by their dots, where a three-region forcing chain turned out to be
+  exactly that, and every candidate game's cells).
 - **A Tactic is legitimate at a middle tier**: a chain of local rules that
   assumes nothing, where every link is glanceable and the player has a
   notation for the links (`hints-marks.md` § "Give the facts a notation").
@@ -733,11 +699,11 @@ asks whether its tier is named `Unreasonable`, and for a game with no
 - **Nested speculation is Search twice over**, and so is every true
   recursion tier. Exemplars of a Search: `forcingPass` in Undead's solver,
   `solverRecurse` in Bricks' and `deduceForcingChain` in Dominosa's.
-- **A bounded walk is still a supposition.** A propagation from a supposed
-  state, bounded by deductions or by firings, made Spokes' and Path's middle
-  tiers until 2026-10-28. Measured, the walks at their stalls were mostly one
-  firing long, and that firing was one element's value (the bullet above).
-  Look for that value before bounding a walk.
+- **A bounded walk is still a supposition**, whether a propagation from a
+  supposed state is bounded by deductions or by firings. Measured at their
+  stalls, such walks were mostly one firing long, and that firing was one
+  element's value (the bullet above): look for that value before bounding a
+  walk.
 - **A Check and a Search that refute alike emit the same words**, so no
   narration guard separates them. Make the guarantee structural: assert that
   planning at the top tier gives the same plan as planning at the tier below,
@@ -812,10 +778,9 @@ candidate game that is not on a Latin square:
   cannot use is rejected anyway.
 - **Count a candidate rung's firings on the boards the ladder stalls on
   before writing its words.** A rung a person would name first may decide
-  nothing the others do not: Path's cut (crossing this edge would shut
-  squares off) and reach (no number's path can get here) fired on none of
-  hundreds of boards at either tier, and a one-edge lookahead finished every
-  board with one answer.
+  nothing the others do not: Path's cut and reach rungs fired on none of
+  hundreds of boards at either tier, where a one-edge lookahead finished
+  every board with one answer.
 - **Measure the recursion-only residual before deciding to ship an
   Unreasonable tier.** It may be zero: every uniquely solvable board cracked
   by the ladder, and the rest non-unique and rejected already.
@@ -846,8 +811,8 @@ omits it. Exemplar: `difficulty` in
 - **`solveAtCap` is written per game.** Only `newState(p, desc)` is shared;
   the verdict mapping is the game's. `latinVerdict` is the one shared mapping.
 - **Build a fresh state in `solveAtCap`.** A reused scratch carries an
-  earlier candidate's side effects and under-rejects (the `engine-difficulty`
-  requirement on a fresh tier probe).
+  earlier candidate's side effects and under-rejects (`engine-difficulty`, "A
+  tier probe runs on state uncontaminated by earlier candidates").
 - **`solveAtCap` runs whenever a board is loaded, not only when one is
   dealt.** The midend grades an ID that has no tier outright, and keeps a
   tier pinned by an ID or a save only if the board solves there
@@ -860,10 +825,8 @@ omits it. Exemplar: `difficulty` in
 **Accept a board for tier `t` only if it solves at `t` and does not solve at
 `t − 1`, through `solvableAtExactlyTier`
 ([`engine/difficulty.ts`](../src/engine/difficulty.ts)).** It asks the cheap
-question first (`t − 1`), which a retrying generator pays for far more often
-than the deep solve. It takes a closure and not a `Game`, since a generator
-cannot import its own `index.ts` without a cycle; `cappedSolveFor` makes the
-closure from a contract. Exemplar:
+question (`t − 1`) first, and its doc says why it takes a closure and not a
+`Game`; `cappedSolveFor` makes the closure from a contract. Exemplar:
 [`skeleton/grid/generator.ts`](../src/skeleton/grid/generator.ts).
 
 - **A tier that cannot bind is refused, not downgraded** (§ "A size that
@@ -897,8 +860,8 @@ closure from a contract. Exemplar:
 default a game writes nothing for a size that lacks a tier**
 (`engine-difficulty`, "A generator never settles for a lower tier"). A
 generator that finds no board is ended by the deal's deadline (§ "Every retry
-loop is bounded"). The midend (`Midend.deal`) keeps the board in play and
-returns `dealGaveUp`'s sentence
+loop is bounded"), and the midend keeps the board in play and returns
+`dealGaveUp`'s sentence
 ([`engine/difficulty.ts`](../src/engine/difficulty.ts)), which says the tier
 may be rare or absent. Never catch the run-out in the game to deal something
 else.
@@ -922,9 +885,9 @@ refused, not silently downgraded"):
    behind `full`, and the generator trusts it. A board that arrives with its
    desc is graded by what it needs, whatever its ID says, since boards dealt
    under the old label are in saved games.
-2. **Uses `noSuchTier`**, so the sentence is the same in every game: "No 3x3
-   puzzle is Tricky." Name the boards as the menu does, and add whatever else
-   about them makes the tier absent.
+2. **Uses `noSuchTier`**, so the sentence is the same in every game. Name the
+   boards as the menu does, and add whatever else about them makes the tier
+   absent.
 3. **Is said in the size field's `doc`**, which is the help page's Parameters
    section.
 4. **Is pinned with `describeAbsentTiers`**
@@ -944,19 +907,16 @@ Tricky."
 **Rare is not absent: a rare cell is dealt, with nothing written for it**
 (`engine-difficulty`, "A rare tier is dealt under the deadline"). The
 deadline counts no tries. What decides is seconds a board: a cell found once
-in `m` seconds runs the deadline out with chance `e^(-120/m)`, and the app
-deals the next board ahead in a second worker
+in `m` seconds runs a deadline of `D` seconds out with chance `e^(-D/m)`, and
+the app deals the next board ahead in a second worker
 ([`deal-ahead.ts`](../src/puzzle/deal-ahead.ts)), so the wait is the first
 board's only. Keep a type that takes more than a second or two off the
 preset menu, and write nothing else for it.
 
 **A cell too rare for the deadline is left to the deadline too, and never
-refused.** The deal's deadline already answers it: a board that turns up in
-time is dealt, the player is told when none does, and they can stop the
-wait. A line drawn from deal times moves with every solver and every device,
-so none is written (§ "A Custom size is not refused for its wait"). A rare
-cell may be pinned with `describeDealtTiers(game, cells, { seldom: true })`,
-which deals one board a cell in the slow tier; none is owed.
+refused** (§ "A Custom size is not refused for its wait"). A rare cell may be pinned with
+`describeDealtTiers(game, cells, { seldom: true })`, which deals one board a
+cell in the slow tier; none is owed.
 
 ### Measuring whether a size has a tier
 
@@ -997,21 +957,19 @@ at all.
   difference (§ "A fixpoint is order-independent only if every rule is
   monotone").
 
-**The instrument is the tier walk**, `scripts/checks/tier-walk.test.ts`: for
-every tiered game, every numeric field from its declared minimum to the
-menu's largest, every tier, a few deals a cell, each board's lowest solving
-cap beside the tier asked. It takes a choice field only as a preset has it,
-so the cells beside a refusal are yours to count. It is a report, minutes
-long, and not a gate. Run it with
-`TIER_WALK_GAMES=group,unequal npx vitest run -c scripts/checks/diff.vitest.config.mts tier-walk`.
+**The instrument is the tier walk**,
+[`scripts/checks/tier-walk.test.ts`](../scripts/checks/tier-walk.test.ts),
+whose header says what it walks, how each cell comes out and how to run it.
+It is a report, not a gate.
 
 - A cell it lists as **below** was dealt under its tier: the defect of
   § "A size that cannot carry a tier".
-- A cell that **gave up** found no board in the house count of tries. The
-  tier is absent there or rarer than that count, and the app's deadline deals
-  a rare one. Nothing is owed for it but a refusal that clears the bar.
-- A cell it does not list was dealt at its tier three times, which clears
-  little. Raise `TIER_WALK_SEEDS` for a cell that matters.
+- A cell that **gave up** found no board in the house count of tries: the
+  tier is absent there or rarer than that count. Nothing is owed for it but a refusal that clears the bar.
+- A cell that passes is not cleared: a few deals say little. Raise
+  `TIER_WALK_SEEDS` for a cell that matters.
+- It takes a choice field only as a preset has it, so the cells beside a
+  refusal on such a field are yours to count.
 
 ### A capped solver must be monotone in its cap
 
@@ -1074,27 +1032,23 @@ solver.
 
 **A "generate until it works" loop calls a `retryLimit` guard
 ([`engine/retry-limit.ts`](../src/engine/retry-limit.ts)) once per pass,
-given a label and no number.** A generator is synchronous, so an unbounded
-loop that never succeeds owns its thread: test timeouts cannot fire.
-Exhaustion throws `RetryLimitExceeded` and returns no fallback. Exemplar:
-`newSkeletonDesc` in
+given a label and no number.** Exhaustion throws `RetryLimitExceeded` and
+returns no fallback. The header says why every such loop needs a bound and
+why there are two: a deadline when the app deals (`generate` in
+[`engine/deal.ts`](../src/engine/deal.ts)), so a size with no board is
+answered after the same wait in every game, and a count of tries
+(`MAX_REGENERATE`) when a test or a census calls the generator directly.
+Exemplar: `newSkeletonDesc` in
 [`skeleton/grid/generator.ts`](../src/skeleton/grid/generator.ts).
 
-- **The bound is the engine's, and it is two bounds.** When the app deals,
-  `generate` ([`engine/deal.ts`](../src/engine/deal.ts)) arms a deadline,
-  `DEAL_DEADLINE_MS`, and a guard given no count gives up when it passes. So
-  a size with no board is answered after the same wait in every game, and a
-  board found once in 100,000 cheap tries is dealt. Called directly, by a
-  test or a census, the same guard counts `MAX_REGENERATE` tries and reads no
-  clock. A generator states no budget for its deal, and nothing about a game
-  is measured to size one.
+- **A generator states no budget for its deal**, and nothing about a game is
+  measured to size one.
 - **Pass a count only where the number is the algorithm's**: a stage that
-  hands over when it is spent (draw another patch once so many boards on
-  this one have failed, by catching the run-out), or a maximum the board
-  itself sets (at most `w * h + 1` clues). Such a guard counts under a
-  deadline as well. The test: would the generator deal a different board, or
-  none where it deals one, if the number were ten times as large? For a
-  budget, never; leave a budget out.
+  hands over when it is spent (catching the run-out to draw another patch),
+  or a maximum the board itself sets (at most `w * h + 1` clues). Such a
+  guard counts under a deadline as well. The test: would the generator deal a
+  different board, or none where it deals one, if the number were ten times
+  as large? For a budget, never; leave a budget out.
 - **Where the algorithm has a natural recovery, recover into it** and let an
   outer `retryLimit` bound the recovery.
 - **A test that deals a rare board calls `dealRare`**
@@ -1108,12 +1062,12 @@ Exhaustion throws `RetryLimitExceeded` and returns no fallback. Exemplar:
   never ends. Do not end a counting `for` with its own `throw new Error(…)`.
 
 **The gate holds the rule in its fast pass**, in
-[`retry-bound.test.ts`](../src/engine/retry-bound.test.ts). It reads every
-loop under `src/games/` and `src/engine/` whose header does not count and
-whose body draws from the RNG, and requires that the loop call a guard
-initialized from `retryLimit` in its own body, or that the test's
-`BOUNDED_OTHERWISE` ledger say what ends it. It also refuses a `throw`
-standing straight after a loop that draws. What a new generator owes it:
+[`retry-bound.test.ts`](../src/engine/retry-bound.test.ts), whose header
+says which loops it reads. Each open loop that draws from the RNG must call a
+`retryLimit` guard in its own body, or have a line in the test's
+`BOUNDED_OTHERWISE` ledger saying what ends it, and a `throw` straight after
+a loop that draws must throw `RetryLimitExceeded`. What a new generator owes
+it:
 
 - **A loop that deals a whole board again until one is good takes a guard**,
   however seldom it fails. A generator needs no such loop for a board that
@@ -1124,7 +1078,8 @@ standing straight after a loop that draws. What a new generator owes it:
 - **Rejection sampling for one item** (a free square, an unused color) takes
   a ledger line saying what keeps an acceptable draw on offer, usually a
   `validateParams` bound. Do not give it a guard with no count: called
-  directly that gives up at 10,000 draws and would throw on a legal board.
+  directly, that gives up at `MAX_REGENERATE` draws and would throw on a
+  legal board.
 - **A hand-rolled counter inside an open loop needs a ledger line**, and a
   counting `for` header needs nothing.
 
@@ -1195,7 +1150,7 @@ Diagnose first:
   small failures.** Mended one at a time the cost grows with `n`; drawing
   whole boards it grows with `r^-n`.
 
-Then one of three mends:
+Then one of these mends:
 
 - **Build the property into the draw.** A filter that throws away what a
   draw could have been made to produce is replaced by a draw that produces
@@ -1216,8 +1171,8 @@ Then one of three mends:
   need.** Where a clue settles what is around it, put one on something the
   stalled ladder left open, and run the ladder again until it finishes;
   then remove clues in a random order wherever it still finishes without
-  them. The second half is not optional: Path's boards carried a third more
-  numbers than they needed without it. Exemplar: `mend` and `strip` in
+  them. The second half is not optional: without it Path's boards carried a
+  third more numbers than they needed. Exemplar: `mend` and `strip` in
   [`path/generator.ts`](../src/games/path/generator.ts).
 
 Rules for any of them:
@@ -1260,9 +1215,8 @@ Rules for any of them:
 - **Try a neighboring game's mend, and say when it does not carry.**
 - **Measure and say which boards the change deals.**
 - **Time a generator as the browser runs it, not under vitest**, which ran
-  Star Battle's about twice as slow as Chrome (2026-10-15). Node on the
-  code bundled by `rolldown` came within a third of Chrome, a little
-  slower.
+  Star Battle's about twice as slow as Chrome (2026-10-15). Node on the code
+  bundled by `rolldown` came within a third of Chrome, a little slower.
 
 ### A division into regions is the engine's
 
@@ -1287,19 +1241,14 @@ states what it wants:
   Regions that must each hold a number of placed things are grown one to a
   thing and then joined toward the count.
 - **A game keeps a division of its own only where its rule cannot be said
-  as one of these, and says so at the division.** Three do: Filling's rule
-  obliges a join where these permit one, Galaxies grows a cell and its
-  mirror image together, and Keen and Solo's Killer lay dominoes before they
-  fold single cells in, because they want pairs and a merge under a largest
-  size deals regions at that size.
+  as one of these, and says so at the division**, as Filling (its rule
+  obliges a join where these permit one), Galaxies (a cell grows with its
+  mirror image) and Keen and Solo's Killer (they want pairs, and a merge
+  under a largest size deals regions at that size) do.
 - **Where the regions are the board's only clue, a division dealt at random
-  seldom has one answer, and the engine mends it.** Star Battle's regions
-  grown round its stars gave no board its ladder finishes in 300 draws at
-  8x8. `mendDivision`
-  ([`mend-division.ts`](../src/engine/mend-division.ts)) moves one cell at a
-  time between two regions that are there: a cell that breaks a second
-  answer the game's search met, or one its ladder left open, kept unless
-  more cells are left open. The game supplies the judge, with its ladder
+  seldom has one answer, and the engine mends it** with `mendDivision`
+  ([`mend-division.ts`](../src/engine/mend-division.ts)), whose doc says what
+  it moves and keeps. The game supplies the judge, with its ladder
   capped at the tier asked for. Exemplar: `judgeOf` in
   [`starbattle/generator.ts`](../src/games/starbattle/generator.ts).
   `redivide.ts` mends only regions of one size.
@@ -1312,9 +1261,10 @@ states what it wants:
 **Before setting or raising a bound, repeat the sizes near it across several
 seeds: one seed per size is not a measurement.** The bounds drawn from time
 are the preset menu's; a Custom size is refused for memory, never for its
-wait (§ "A Custom size is not refused for its wait"). A sweep with zero failures
-says every size is reachable; only the tail says whether to offer it, and a
-median of a few seconds can hide a worst case several times as long.
+wait (§ "A Custom size is not refused for its wait"). A sweep with zero
+failures says every size is reachable; only the tail says whether to offer
+it, and a median of a few seconds can hide a worst case several times as
+long.
 
 - **Optimize first, then bound.** A bound drawn from the slow number forbids
   boards the fixed code deals quickly. Profile a deal before choosing what to
@@ -1322,7 +1272,6 @@ median of a few seconds can hide a worst case several times as long.
   rescans the whole board where upstream kept incremental state: a pure
   function of the board can be made incremental without moving a verdict, so
   no seed's board moves and the frozen differential guards the speed-up.
-  Pearl's loop bias was 83% of a deal.
 - **Check whether the wall is time or memory.** A retry budget assumes
   failure is recoverable; an out-of-memory in the worker is a crash, so that
   boundary belongs in `validateParams`. Measure at least one size past the
@@ -1341,20 +1290,18 @@ median of a few seconds can hide a worst case several times as long.
   name the cell and count a dozen (`DEAL_WALK_CELLS`).
 
 **The instrument past the menu is the deal walk**, `npm run deal-walk`
-([`scripts/deal-walk.ts`](../scripts/deal-walk.ts)): every game, each menu's
-largest size at every tier and then 1.5 to 8 times it, a few deals a cell,
-each in a watched process so a deal that never returns is killed and written
-down. It writes `metrics/deal-walk.md`. Expect a ladder to pass ten seconds a
-board somewhere between 1.5 and 4 times the menu's largest. A cell it lists
-is a few deals, enough to find where a ladder leaves a second and not enough
-to place a line; count the sizes each side of a bound before writing it.
+([`scripts/deal-walk.ts`](../scripts/deal-walk.ts)), whose header says what
+it deals, how it watches a deal that never returns, and its settings. Expect
+a ladder to pass ten seconds a board somewhere between 1.5 and 4 times the
+menu's largest. A cell it lists is a few deals, enough to find where a ladder
+leaves a second and not enough to place a line; count the sizes each side of
+a bound before writing it.
 
-**The census of a generator you are writing is the same tool**, with the
-cells named: `DEAL_WALK_CELLS="8s2dn 9s2dt" DEAL_WALK_SEEDS=20 npm run
-deal-walk -- <game>` prints each cell's time, its deals' tries at the
-outermost retry loop, and its boards by the easiest tier that finishes each.
-The game must be registered. Do not write a throwaway test that throws its
-table.
+**The census of a generator you are writing is the same tool with the cells
+named** (`DEAL_WALK_CELLS`, `DEAL_WALK_SEEDS`): it prints each cell's time,
+its deals' tries at the outermost retry loop, and its boards by the easiest
+tier that finishes each. The game must be registered. Do not write a
+throwaway test that throws its table.
 
 ### A Custom size is not refused for its wait
 
@@ -1648,15 +1595,13 @@ pass's flags and adds one for a cell the answer contradicts, and
 its ladder in a description, and its `solver.ts` deals the board as the
 compiled ladder reads it, pairs each technique with its reason, and passes a
 `valid` callback over completed grids and the compiled `ladder` to
-`latinSolver`** ([descriptions.md](./descriptions.md)). The engine gives
-the candidate cube, the library's techniques compiled from
-[`latin.description.yaml`](../src/engine/latin.description.yaml) (singles,
-set and single-number set elimination, the wing), forcing chains and
-guess-and-verify recursion at the searching level `diffRecursive` (the
-recursion doubling as the uniqueness check), and the generator (`matching`,
-`latinGenerate`, `latinGenerateRect`).
-The population is `git grep -l engine/latin.ts src/games`. The hint side
-starts at [hints-candidates.md](./hints-candidates.md) § "What every game does".
+`latinSolver`** ([descriptions.md](./descriptions.md)). `latin.ts`'s header
+says what the engine gives: the candidate cube, the library's techniques
+([`latin.description.yaml`](../src/engine/latin.description.yaml)), forcing
+chains and guess-and-verify recursion at `diffRecursive` (the recursion
+doubling as the uniqueness check), and the generator. The population is
+`git grep -l engine/latin.ts src/games`. The hint side starts at
+[hints-candidates.md](./hints-candidates.md) § "What every game does".
 
 Exemplars: [`group/solver.ts`](../src/games/group/solver.ts) for a described
 game with no clues, its techniques reading the grid as a table, and a
@@ -1668,13 +1613,12 @@ grid; [`keen/solver.ts`](../src/games/keen/solver.ts) for per-cage
 arithmetic; [`salad/solver.ts`](../src/games/salad/solver.ts) for a repeated
 symbol.
 
-- **The cube is indexed `(x·o + y)·o + (n−1)`.** Read a slice as a line's
-  cell list and `cubeGet(x, y, n)`. Where upstream works in a transposed
-  index space with dense flat reads, port the flat reads verbatim with a
-  comment: re-deriving them moves solver verdicts. The same holds for a
-  generator that reads the cube through a transposed index, and for one that
-  shuffles two clue lists in two separate `shuffle` calls: both decide the
-  board, so reproduce them
+- **Read a cube slice as a line's cell list and `cubeGet(x, y, n)`.** Where
+  upstream works in a transposed index space with dense flat reads, port the
+  flat reads verbatim with a comment: re-deriving them moves solver verdicts.
+  The same holds for a generator that reads the cube through a transposed
+  index, and for one that shuffles two clue lists in two separate `shuffle`
+  calls: both decide the board, so reproduce them
   ([`engine/edge-clue-latin/generator.ts`](../src/engine/edge-clue-latin/generator.ts)).
 - **A clue that constrains a cell without placing a digit uses the `seed`
   hook.** `latinSolver` seeds its cube from the working grid, which covers
@@ -1683,16 +1627,13 @@ symbol.
   is sound only for a game that never recurses: check the recursion setting
   before relying on it.
 - **A game with a symbol that repeats in a line declares it; it does not
-  fake it.** `LatinSolverConfig.repeats: { times }` makes the last symbol
-  repeat, and its description says the same (`answer.value.repeat`,
-  descriptions.md § "The formula syntax"); the library's techniques then
-  read its multiplicity, `times(d)`: the hidden single places it when
-  exactly as many cells of a line can still take it as the line has copies
-  left, placing it strikes the line only once the line's count is full
-  (recorded as `repeatFull`, apart from `LatinReason`), the set and the fish
-  count copies, the wing never weighs it, and forcing chains never link
-  through it. Read the marker array back off the final cube (`cubeOut`). A
-  game with exactly one such symbol per line needs no declaration.
+  fake it.** `LatinSolverConfig.repeats` makes the last symbol repeat, and
+  its description says the same (`answer.value.repeat`, descriptions.md
+  § "The formula syntax"); the comments of
+  [`latin.description.yaml`](../src/engine/latin.description.yaml) say how
+  the library's techniques then read its multiplicity. Read the marker array back off the
+  final cube (`cubeOut`). A game with exactly one such symbol per line needs
+  no declaration.
 - **The deductions are what refuse a broken grid, not only `valid`.** Where
   a game's `valid` checks less than its rules, a contradiction a deduction
   misses lets the recursion accept a broken grid and report the board
@@ -1706,11 +1647,12 @@ symbol.
   structurally over a generated square, then solver-gate on exactly the
   target difficulty
   ([`keen/generator.ts`](../src/games/keen/generator.ts)).
-- **A cage or region game over the shared `Dsf` precomputes its
-  minimal-element map** (`buildMinimal` in
-  [`keen/state.ts`](../src/games/keen/state.ts)) and does not grow a
-  min-tracking dsf: a single ascending pass after all merges is exact
-  whichever root union-by-size picks. First check whether the algorithm needs
+- **A cage or region game takes its minimal elements from the shared
+  `Dsf`, and grows no min-tracking dsf of its own**: `Dsf.withMinimal` where
+  something reads a minimum mid-merge, or a map precomputed once after all
+  merges where nothing does (`buildMinimal` in
+  [`keen/state.ts`](../src/games/keen/state.ts)): a single ascending pass is
+  exact whichever root union-by-size picks. First check whether the algorithm needs
   a minimum at all, or only a same-class test, and whether the root's
   identity matters elsewhere (§ "Solver-gated generation");
   [`engine/dsf.ts`](../src/engine/dsf.ts)'s header says which call returns
