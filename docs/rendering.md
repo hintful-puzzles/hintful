@@ -95,31 +95,28 @@ The skeleton's [`render.ts`](../src/skeleton/grid/render.ts) does steps 1 to
 ## The first frame and a fresh draw state
 
 **The engine lays the ground; the game paints everything above it.** On the
-first redraw of a fresh draw state the midend fills the whole canvas
-(`computeSize` at the current tile size) in color 0 before `game.redraw`
-runs, and on every other redraw it paints nothing. The requirement is
-`engine-drawing` § "The midend repaints on every transition, rebuilds the
-draw state for a new tile size, and lays the ground under a fresh one".
+first redraw of a fresh draw state the midend fills the whole canvas in color
+0 before `game.redraw` runs, and on every other redraw it paints nothing
+(`engine-drawing` § "The midend repaints on every transition, rebuilds the
+draw state for a new tile size, and lays the ground under a fresh one").
+`src/engine/first-frame-coverage.test.ts` holds every game's first frame to
+full coverage.
 
-- A first-frame branch draws only what is the game's own (grid frame,
+- **A first-frame branch draws only what is the game's own** (grid frame,
   border, fixed artwork) and never repeats the color-0 fill.
-- A game whose ground is another color paints that fill itself on its first
-  frame, over the midend's (exemplars: Rect, Untangle).
-- A game that repaints its whole board every frame keeps its own fill,
+- **A ground of another color is the game's to paint**, on its first frame,
+  over the midend's (exemplars: Rect, Untangle).
+- **A game that repaints its whole board every frame keeps its own fill**,
   because it is erasing the last frame (exemplars: Cube, Loopy).
-- A fresh draw state is the only cache-stale signal. The midend builds one
-  when the tile size changes, when the canvas backing store is recreated
-  (`canvasCleared()`) and when the palette or font is replaced
-  (`forceRedraw`). `Midend.size` touches nothing at an unchanged tile size.
-  A game invalidates nothing for any of these.
-- The midend repaints on every transition and drives the animation and
-  flash timer. A game never schedules its own frames.
-- Full or incremental redraw is the game's own policy. Use the tile cache
-  for any game with per-cell state: a full repaint per frame is visibly slow
-  on a large board, and the cache is what makes overlays correct.
-
-`src/engine/first-frame-coverage.test.ts` rasterizes every game's first
-frame and holds it to full coverage.
+- **A fresh draw state is the only cache-stale signal, and a game
+  invalidates nothing.** The midend builds one for a new tile size, a
+  recreated backing store (`canvasCleared()`) and a replaced palette or font
+  (`forceRedraw`); `Midend.size` touches nothing at an unchanged tile size.
+- **The midend repaints on every transition and drives the animation and
+  flash timer.** A game never schedules its own frames.
+- **Full or incremental redraw is the game's own policy, but a game with
+  per-cell state uses the tile cache.** A full repaint per frame is visibly
+  slow on a large board, and the cache is what makes overlays correct.
 
 ## The tile cache and the diff key
 
@@ -129,46 +126,41 @@ records what it painted. The skeleton's `redraw` is the shape.
 
 - **Every word of the key is an `Int32Array` element, never a
   `BigInt64Array` one.** `BigInt` is expensive on the hot path. A key that
-  needs more than one word's bits grows by a second `Int32Array` beside the
-  first, an overlay sidecar or a parallel array, and the two are compared
-  together (§ "When the packed key runs out of bits").
-  Exemplars: [`galaxies/render.ts`](../src/games/galaxies/render.ts),
+  needs more bits grows by a second `Int32Array` beside the first, an overlay
+  sidecar or a parallel array, compared together (§ "When the packed key runs
+  out of bits"). Exemplars:
+  [`galaxies/render.ts`](../src/games/galaxies/render.ts),
   [`range/render.ts`](../src/games/range/render.ts).
 - **When the candidate set alone exceeds about 26 bits, keep two parallel
-  cache arrays** and compare them together, not a digit and a pencil bitmap
-  in one word. A `1 << n` mark for `n` up to 31 still fits an `Int32`, sign
-  bit and all. Candidate masks go through `engine/candidate-bits.ts`, which
-  throws where a shift would wrap. Exemplar:
-  [`solo/render.ts`](../src/games/solo/render.ts) (`SoloDrawState.tiles`,
-  `.pencil`, `.wrong`); Keen packs both in one word because its order leaves
-  room.
+  cache arrays** compared together, not a digit and a pencil bitmap in one
+  word. A `1 << n` mark for `n` up to 31 still fits an `Int32`, sign bit and
+  all. Candidate masks go through `engine/candidate-bits.ts`, which throws
+  where a shift would wrap. Exemplar:
+  [`solo/render.ts`](../src/games/solo/render.ts) (`SoloDrawState`); Keen
+  packs both in one word because its order leaves room.
 
 ### Overlay sidecars
 
 **Every overlay that is not in the tile value must be in the diff test, or it
-silently fails to repaint.** A mistake, hint or highlight overlay is applied
-on top of a cell, and Check & Save or a hint runs a frame after the move
-that drew the cell, so an overlay compared nowhere never shows.
+silently fails to repaint.** A mistake, hint or highlight is painted on top of
+a cell, and Check & Save or a hint runs a frame after the move that drew the
+cell, so an overlay compared nowhere never shows.
 
 **Never hand-write the two-array comparison.** `OverlaySidecar`
 ([`engine/overlay-sidecar.ts`](../src/engine/overlay-sidecar.ts)) owns
-repack, stale and commit for any overlay. Give each overlay its own instance
-on the draw state. Each frame: pack it once, use `ds.<overlay>.stale(i)` as a
-clause of the cache-miss test, hand `ds.<overlay>.packed[i]` to the cell
-painter, and call `ds.<overlay>.commit(i)` after drawing.
-
-| You have | Call | Exemplar |
-| --- | --- | --- |
-| A hint step's marks (ringed cells and notes, outlined and striped cells) | `pack(stepMarks(step), indexFn, markBitsFn)`, with no `markBitsFn` in a game without notes | [`towers/render.ts`](../src/games/towers/render.ts), [`starbattle/render.ts`](../src/games/starbattle/render.ts) |
-| A `findMistakes` cell list | `packCells(mistakes, indexFn)` | `towers/render.ts` `ds.wrong` |
-| An overlay with its own topology | `clear()` then `add(i, bits)` | [`galaxies/render.ts`](../src/games/galaxies/render.ts) `ds.wrongEdges`: a wrong wall is a shared edge, so it lights a different bit in each of its two tiles |
+repack, stale and commit, one instance per overlay on the draw state; its
+header gives the four calls a frame makes. Pack a hint step's marks with
+`pack` (no `markBits` in a game without notes), a `findMistakes` list with
+`packCells`, and an overlay with its own topology with `clear` and `add`, as
+Galaxies' `ds.wrongEdges` lights a different bit in each of a wrong wall's
+two tiles. Exemplars: [`towers/render.ts`](../src/games/towers/render.ts),
+[`starbattle/render.ts`](../src/games/starbattle/render.ts).
 
 `pack` also keys each evidence cell on its outline sides, so a cell that
 stays evidence while the shape around it changes still repaints
-(`hints-marks.md` § "Where the band goes, and who rubs it out").
-
-A game that folds the overlay bit into the packed tile value, as the
-skeleton does with its mistake flag, cannot leave it out of the diff test.
+(`hints-marks.md` § "Where the band goes, and who rubs it out"). A game that
+folds the overlay bit into the packed tile value, as the skeleton does with
+its mistake flag, cannot leave it out of the diff test.
 
 ### A cue with no tile to live in
 
@@ -176,26 +168,25 @@ skeleton does with its mistake flag, cannot leave it out of the diff test.
 A second cache is a second key to forget an input from, and the failure is
 silent.
 
-- A second cache is right only when the cue has no tile: a panel below the
-  board, a margin outside the grid. Then name every input the painter reads
-  in its key.
-- The pencil-mode indicator is the shared case. The engine picks its
-  position (`pencilIndicatorBox`), a game with the mode keeps
-  `ds.pencilModeShown` beside its tile cache and repaints through
-  `repaintPencilIndicator`
+- **A second cache is right only when the cue has no tile**: a panel below
+  the board, a margin outside the grid. Then name every input the painter
+  reads in its key.
+- **The pencil-mode indicator is the shared case.** The engine picks its
+  position, and a game with the mode keeps `ds.pencilModeShown` beside its
+  tile cache and repaints through `repaintPencilIndicator`
   ([`engine/pencil-indicator.ts`](../src/engine/pencil-indicator.ts)).
 - **When a cue stops being drawn as something the key already reads, give it
-  its own term in the key.** Turning a cue from a color class into a box, and
-  passing it to the painter as a separate predicate, drops it from a key that
-  was the color class. Exemplar:
+  its own term in the key.** Turning a cue from a color class into a box,
+  passed to the painter as a separate predicate, drops it from a key that was
+  the color class. Exemplar:
   [`crossing/render.ts`](../src/games/crossing/render.ts) (`panelState`).
-- A key's comment is a claim about coverage. When a class leaves the key,
+- **A key's comment is a claim about coverage.** When a class leaves the key,
   remove its label in the same edit.
 - **Test it on a reused draw state.** A test that builds a draw state per
   frame meets a cold cache and cannot see a missing key term. A render
-  snapshot cannot see it either: `RecordingDrawing` keeps `drawUpdate` out
-  of `ops`, so assert on its `updates` channel, as `pencil-indicator.ts`'s
-  own test does.
+  snapshot cannot either: `RecordingDrawing` keeps `drawUpdate` out of `ops`,
+  so assert on its `updates` channel, as `pencil-indicator.ts`'s own test
+  does.
 
 ### When the packed key runs out of bits
 
@@ -205,13 +196,12 @@ nothing warns when they are gone.**
 1. Look first for a flag that is written and never read: one that appears
    exactly twice, its definition and one `val |=`, is dead. A flag for the
    state the painter takes as its `else` is the usual one.
-2. With no dead flag, give the key a second word: an `OverlaySidecar` or a
-   parallel `Int32Array`, compared with the first in the cache-miss test.
-   Do not narrow an existing field to free a bit, and do not change the
-   array's type to `BigInt64Array`. The key is a repaint cache and not a
-   wire format, so nothing outside the renderer constrains how many words
-   it has. Say what each word holds in a comment, because a field that
-   overflows fails silently.
+2. With no dead flag, give the key a second word, an `OverlaySidecar` or a
+   parallel `Int32Array`, compared with the first in the cache-miss test. Do
+   not narrow an existing field to free a bit, and do not change the array's
+   type to `BigInt64Array`. The key is a repaint cache, not a wire format, so
+   nothing outside the renderer limits its words. Say what each word holds in
+   a comment, because a field that overflows fails silently.
 
 Exemplars: [`slide/render.ts`](../src/games/slide/render.ts) (a full word),
 [`map/render.ts`](../src/games/map/render.ts) (a second word per cell).
@@ -220,18 +210,16 @@ Exemplars: [`slide/render.ts`](../src/games/slide/render.ts) (a full word),
 
 **A frame drawn on a warm draw state must look like a fresh paint of the
 same state.** `src/engine/warm-repaint.test.ts` holds every registered game
-to it, by driving a real `Midend` through seeded input and comparing each
-frame with its fresh twin (`engine/testing/repaint-differential.ts`). Run it
-with `npx vitest run src/engine/warm-repaint.test.ts -t <game>`.
-
-When it names a game, the cause is one of these, and each is a rule:
+to it by driving a real `Midend` through seeded input; its header and
+`engine/testing/repaint-differential.ts`'s say what is compared and why. Run
+it with `npx vitest run src/engine/warm-repaint.test.ts -t <game>`. When it
+names a game, the cause is one of these, and each is a rule:
 
 - **Every input the painter reads is a term of the key.** A `Ui` field or a
   mode read in the painter and named by no key term leaves the past on
   screen. Give it a bit and make the painter read that bit.
 - **No field is wider than its lane.** A shift counts mod 32, so a value past
-  bit 31 lands on another field. Candidate masks go through
-  `engine/candidate-bits.ts`, which throws.
+  bit 31 lands on another field (`engine/candidate-bits.ts` throws).
 - **A tile paints only its own box.** Paint to `ts - 1` and let the neighbor
   fill from its own edge.
 - **Tiles that share pixels repaint together.** A shared border row, or a
@@ -256,30 +244,30 @@ it, the first differing pixel, what each canvas shows there and which frame
 painted the warm one. Suspect the instrument too: it is an estimate for text
 and thick lines.
 
-**A hinted game must have painted every mark its renderer asks for.** The
-test requires each `role|kind` the renderer reads through
-`StepMarks.of(role, kind)`, in a role the legend (`hintMarks`) lists, to
-have been painted, and every role in the legend to be asked for.
+**A hinted game must have painted every mark its renderer asks for**: each
+`role|kind` read through `StepMarks.of(role, kind)` in a role the legend
+(`hintMarks`) lists, and every role in the legend must be asked for.
 
-- A mark the seeded run never shows needs a board that does. Name it in the
-  test's `PINNED` as the board itself (`params:desc`), never as a seed. Find
-  one by walking deals across the presets until the plan paints the pair.
-- A pin must paint something the seeded run does not; one the run has caught
-  up with fails and is removed.
-- A mark no board reaches goes in `UNREACHED` with its reason.
-- A mark that is not a hint mark is outside that requirement. Pin its board
-  and event seed in the game's own test (exemplar: `bricks.test.ts`, "takes
-  an edge diamond away whole, ground included").
+- **A mark the seeded run never shows needs a board that does**, named in
+  the test's `PINNED` as the board itself (`params:desc`), never as a seed.
+  Find one by walking deals across the presets until the plan paints the
+  pair.
+- **A pin must paint something the seeded run does not**; one the run has
+  caught up with fails and is removed.
+- **A mark no board reaches goes in `UNREACHED`** with its reason.
+- **A mark that is not a hint mark is outside that requirement.** Pin its
+  board and event seed in the game's own test (exemplar: `bricks.test.ts`,
+  "takes an edge diamond away whole, ground included").
 
 **A game that finds mistakes must have painted its mistake overlay on a warm
 frame.** The run's check puts the overlay on a board already painted, and
-the next event takes it off, which are the two frames a key without the
-overlay gets wrong. Where the seeded run never checks a wrong board, name
-one in the test's `WRONG`: the board and the moves that make it wrong, since
-no desc holds a player's mistake. Find the moves by playing seeded input on
-the run's own deal until `findMistakes` flags the board, then drop each move
-the mistake does not need. A pin the seeded run has caught up with fails
-and is removed.
+the next event takes it off: the two frames a key without the overlay gets
+wrong. Where the seeded run never checks a wrong board, name one in the
+test's `WRONG`, the board and the moves that make it wrong, since no desc
+holds a player's mistake. Find the moves by playing seeded input on the
+run's own deal until `findMistakes` flags the board, then drop each move the
+mistake does not need. A pin the seeded run has caught up with fails and is
+removed.
 
 ### A mark that crosses tiles
 
@@ -287,21 +275,20 @@ and is removed.
 identity.** The choice is the game's, and there is no engine helper for
 either.
 
-- **By piece.** The tile's key says which piece of the mark it draws: a
-  side, a direction, half a bar. The piece is the game's own geometry.
-  Region outlines are the shared case (`MarkOutlines.packed`,
-  `engine/hint-mark.ts`). Exemplars: Bridges' spans, Pearl's edges, Net's
-  sides, Bricks' rule flags.
-- **By identity.** The tile's key names the marks crossing it, and the tile
+- **By piece**, the tile's key says which piece of the mark it draws: a
+  side, a direction, half a bar, in the game's own geometry. Region outlines
+  are the shared case (`MarkOutlines.packed`, `engine/hint-mark.ts`).
+  Exemplars: Bridges' spans, Pearl's edges, Net's sides, Bricks' rule flags.
+- **By identity**, the tile's key names the marks crossing it, and the tile
   draws each one whole while clipped to its box. It suits a mark whose shape
   is not a grid's, such as an arrow over three squares, at the cost of a key
   that lists marks. Exemplar: [`pegs/render.ts`](../src/games/pegs/render.ts).
 
 **A line drawn as two halves is one stroke where it runs straight.** Lines
-have round ends, so two halves meeting in a square's middle overlap there,
-and their soft edges, drawn twice, darken into a knob that shows at every
-square a line passes. Draw a square's two opposite halves as one stroke, and
-let only a turn meet in the middle. Exemplar: the strokes in
+have round ends, so two halves meeting in a square's middle overlap, and
+their soft edges, drawn twice, darken into a knob at every square a line
+passes. Draw a square's two opposite halves as one stroke, and let only a
+turn meet in the middle. Exemplar:
 [`path/render.ts`](../src/games/path/render.ts).
 
 **A cross on a side is drawn by both squares, so the hint's outline goes
@@ -319,10 +306,10 @@ misses the cache, so an overlay missing from the diff test still paints.
   [`hint-overlay.test.ts`](../src/engine/hint-overlay.test.ts). A game owes
   it nothing.
 - **The mistake overlay is guarded for every game that finds mistakes** by
-  the same test, which requires a warm mistaken frame and compares it, and
-  the frame that takes the overlay off, with a fresh paint (§ "A warm frame
-  must match a fresh one"). A game owes it at most a `WRONG` pin, whether
-  the flag rides a sidecar or the tile key.
+  `warm-repaint.test.ts`, which compares a warm mistaken frame, and the frame
+  that takes the overlay off, with a fresh paint (§ "A warm frame must match
+  a fresh one"). A game owes it at most a `WRONG` pin, whether the flag rides
+  a sidecar or the tile key.
 - **What the game's own test owes is the look.**
   `src/mistake-overlay-coverage.test.ts` requires a test that paints the
   overlay and asserts what it drew; a `renderScenario` `showMistakes` frame
@@ -338,9 +325,9 @@ misses the cache, so an overlay missing from the diff test still paints.
 
 **A game that repaints its whole frame needs none of this.** With no tile
 cache it adds no sidecar and erases nothing: `redraw` reads the displayed
-step and draws its marks every frame. What it owes is the z-order. A mark
-goes under the content it points at, so the content stays legible, and
-labels go last, so nothing covers them. Exemplar:
+step and draws its marks every frame. It owes the z-order: a mark goes under
+the content it points at, so the content stays legible, and labels go last,
+so nothing covers them. Exemplar:
 [`loopy/render.ts`](../src/games/loopy/render.ts).
 
 ### A mark band with `outer: 0` lies inside the tile's clip
@@ -349,11 +336,10 @@ labels go last, so nothing covers them. Exemplar:
 outline it draws, and check the two against each other.** `HintMarks` with
 `MarkBand.outer` 0 keeps no history: the cell's own repaint, which the hint
 `OverlaySidecar` triggers, erases the band. That holds only for pixels the
-cell may paint. A game that traces its cell outline a pixel outside its clip
-rect leaves the band's outer row in nobody's tile.
-
-The symptom: marks accumulate as the hint walks, and a reload clears them.
-No recorded single frame shows it, so run the app. Exemplar:
+cell may paint, so a game that traces its cell outline a pixel outside its
+clip rect leaves the band's outer row in nobody's tile. The symptom is marks
+that accumulate as the hint walks and clear on a reload. No recorded single
+frame shows it, so run the app. Exemplar:
 [`mathrax/render.ts`](../src/games/mathrax/render.ts).
 
 ## Drag previews and blitters
@@ -425,12 +411,12 @@ candidate rings in one word).
 
 **A color derived from the board cannot be prominent against the board, in
 either scheme.** A tint computed from the background is pale in the light
-scheme, and dark mode adapts it by calculation into another faint tint.
-
-Take a meaning from [`color/palette.ts`](../src/engine/color/palette.ts):
-`CURSOR` for the keyboard cursor, `DRAG_ADD` for "let go and this is laid".
-Those are authored for each scheme. Keep board-relative derivation for
-fills, grids and shades that are meant to sit close to the board.
+scheme, and dark mode adapts it by calculation into another faint tint. Take
+a meaning authored for each scheme from
+[`color/palette.ts`](../src/engine/color/palette.ts): `CURSOR` for the
+keyboard cursor, `DRAG_ADD` for "let go and this is laid". Keep
+board-relative derivation for fills, grids and shades meant to sit close to
+the board.
 
 ### A cursor is usually a cache key, not a blitter
 
@@ -444,9 +430,9 @@ of the cell key).
 
 - **The exception is a cell repaint that does not clear the whole cell.**
   Folding the cursor into the key erases it only because the repaint paints
-  over where it was. Check what the repaint clears; where the cursor lands
-  outside it, the blitter is right, and its draw ops are still recorded,
-  since the double no-ops only `blitterSave` and `blitterLoad`. Exemplar:
+  over where it was. Where the cursor lands outside what the repaint clears,
+  the blitter is right, and its draw ops are still recorded, since the
+  double no-ops only `blitterSave` and `blitterLoad`. Exemplar:
   [`spokes/render.ts`](../src/games/spokes/render.ts) (module header).
 - **Draw the cursor inside the thing it selects, not merely in the right
   cell.** Ask what the selection is before asking where its mark goes: a
@@ -467,13 +453,10 @@ preview shows only where the release will chord.
 ## When two games share a mechanic, they share its look too
 
 **A renderer is shared when what it draws is a shared mechanic, not when it
-merely resembles another renderer.** The second is true of almost any grid
-game. Exemplar:
-[`engine/border-grid-render.ts`](../src/engine/border-grid-render.ts), which
-Palisade and Separate both draw through. It owns the mechanic's look (the
-error model, the half-grid cursor, the edge rects keyed off the border bits,
-the tile skeleton), takes each game's palette indices and a `drawContent`
-callback for the clue layer, and never asks which game it is drawing.
+merely resembles another renderer**, which is true of almost any grid game.
+Exemplar: [`engine/border-grid-render.ts`](../src/engine/border-grid-render.ts),
+which Palisade and Separate both draw through; its header says what it owns
+and what each game supplies, and it never asks which game it is drawing.
 
 - **Use a callback when order is the point.** Content goes under the edges,
   and the clip, unclip and `drawUpdate` wrap all of it. Exporting separate
@@ -493,20 +476,16 @@ callback for the clue layer, and never asks which game it is drawing.
 it the rect the game paints. The selected cell then looks the same in every
 note-taking game, whether the mouse or the keyboard put it there: the whole
 cell washed when typing enters a value, a triangle in its top-left corner
-when typing enters a note.
+when typing enters a note. The function's doc says how the triangle is sized
+and why it is background, under any clue or note in its corner.
 
 - **Pack `cellHighlight(ui, x, y)`, three bits, into the tile key**, or the
   old cell never repaints when the highlight leaves.
-- A game that hides the highlight for its own reasons passes
-  `HIGHLIGHT_NONE` and still makes the call. A cell the win flash is on
-  passes `winHighlight(tone) ?? cellHighlight(ui, x, y)` and the two flash
-  slots.
-- The triangle is background: it is drawn with the rect, before any content,
-  so a clue or a note in the same corner sits on top.
-- The triangle's legs are half of the rect the game hands over, not half a
-  tile.
-- The color is `highlightWash(background)`, at an index the game names. It
-  is not a choice a game makes.
+- **A game that hides the highlight for its own reasons still makes the
+  call**, passing `HIGHLIGHT_NONE`. A cell the win flash is on passes
+  `winHighlight(tone) ?? cellHighlight(ui, x, y)` and the two flash slots.
+- **The color is `highlightWash(background)`**, at an index the game names.
+  It is not a choice a game makes.
 
 **What differs stays in the game, and says more than the picture can.** A
 square with no background to wash keeps a mark of its own (Crossing's wall
@@ -522,29 +501,27 @@ corner triangle in the region's first cell. Exemplar: `drawBands` in
 ### A shape another game also draws
 
 **A single shape any other game also draws belongs in
-[`engine/draw.ts`](../src/engine/draw.ts)**: the recessed frame
-(`drawRecessedBorder`), the raised tile (`drawRaisedTile`,
-`raisedBevelWidth`), the rect outlines (`drawRectOutline`,
-`drawThickRectOutline`), the corner brackets (`drawRectCorners`), the move
-arrow (`drawMoveArrow`). A primitive takes a rect and colors and draws; it
-needs no callback and no shared cache key.
+[`engine/draw.ts`](../src/engine/draw.ts)**: a recessed frame, a raised tile
+and its bevel width, a rect outline, corner brackets, a move arrow. A
+primitive takes a rect and colors and draws; it needs no callback and no
+shared cache key.
 
 - **Pass `drawRaisedTile` the pixels the tile covers.** For a tile inside a
   grid line that is `{ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 }`. It
   draws the face too.
-- Take a bevel's thickness from `raisedBevelWidth`, so one idiom is one
+- **Take a bevel's thickness from `raisedBevelWidth`**, so one idiom is one
   width at one tile size in every game.
 
 When promoting a shape:
 
-- Check whether the dimensions drifted across the copies too. Put the
+- **Check whether the dimensions drifted across the copies too.** Put the
   extraction (no pixels move) and the sizing fix (pixels move) in two
   commits.
-- If every caller follows the helper with the same next call, the helper
-  stopped one call short.
-- Break the helper deliberately and see what goes red before trusting an
+- **If every caller follows the helper with the same next call, the helper
+  stopped one call short.**
+- **Break the helper deliberately** and see what goes red before trusting an
   unchanged snapshot.
-- The copies may disagree on something invisible in the frame, such as
+- **The copies may disagree on something invisible in the frame**, such as
   vertex order in a polygon. A snapshot records it, so move those games in
   the commit where a moved recording is expected.
 
@@ -557,8 +534,8 @@ geometry". On the draw side:
 
 - **Force the tile size even** (`ts & ~1`) in both `computeSize` and
   `newDrawState`, so half-tile shears are exact.
-- The shear, origin and bevel choices are display: match the look and keep
-  the code clean.
+- **The shear, origin and bevel choices are display**: match the look and
+  keep the code clean.
 - **Check a shear with an SVG dump.** `toSvg` a `renderScenario` frame and
   rasterize it ([`testing.md`](./testing.md)). A wrong offset shows as a
   staircase.
@@ -585,11 +562,10 @@ Three shapes a port meets on the drawing path.
 **Do not fold a clue margin's four per-side erase rects into one uniform
 rect.** A game with a margin of clues repaints one clue tile at a time, and
 on one edge the grid's outermost border line lands on the clue tile's first
-pixel, so a symmetric erase wipes it. The asymmetry is load-bearing.
-
-Pin the invariant, "no clue-tile erase overlaps the grid's outline box", and
-not the pixel offset. Exemplar: `salad-render.test.ts` ("does not let a
-border clue's erase wipe the grid's outline").
+pixel, so a symmetric erase wipes it. The asymmetry is load-bearing. Pin the
+invariant, "no clue-tile erase overlaps the grid's outline box", and not the
+pixel offset. Exemplar: `salad-render.test.ts` ("does not let a border
+clue's erase wipe the grid's outline").
 
 ### Negative-space grids
 
@@ -597,10 +573,9 @@ border clue's erase wipe the grid's outline").
 find.** The first frame floods the canvas with the border color, and every
 square paints its own background rect, inset by one pixel everywhere and
 further on each side that meets a different region. What the fills leave is
-the grid; stroking the boundaries draws it twice.
-
-Assert the inset in a render test: a square whose neighbor shares its region
-against one whose neighbor does not, expecting a wider rect. Exemplar:
+the grid; stroking the boundaries draws it twice. Assert the inset in a
+render test: a square whose neighbor shares its region against one whose
+neighbor does not, expecting a wider rect. Exemplar:
 [`rome/render.ts`](../src/games/rome/render.ts) and `rome-render.test.ts`
 ("insets a square's fill on each side that meets a different region").
 
@@ -611,10 +586,10 @@ port.** On the drawing path a visual improvement is the point of the fork.
 
 - **Tell:** a frame counter, phase index or animation step stored in a
   `bool` or a `char`; any bitmask copied into a narrower local before use.
-- A snapshot alone does not show that an animation is moving.
-- When the input that exposes it is one the generator never produces, build
-  the board by hand through the game's own codec for the regression test.
-  That also proves the input is reachable in play.
+- **A snapshot alone does not show that an animation is moving.**
+- **When the input that exposes it is one the generator never produces,
+  build the board by hand through the game's own codec** for the regression
+  test. That also proves the input is reachable in play.
 
 Exemplar: [`seismic/render.ts`](../src/games/seismic/render.ts) and
 `seismic.test.ts` ("draws every pencil mark, including a 9").
@@ -694,11 +669,11 @@ exemplar `tracks-flash.test.ts`).
 **`flashLength(a, b, dir, ui)` is for a flash of the game's own**: a death
 (Inertia, Mines), a board with no move left (Same Game), a loss (Flood).
 
-- Return 0 for a win. The midend asks on every transition, and a nonzero
+- **Return 0 for a win.** The midend asks on every transition, and a nonzero
   answer replaces the win flash.
-- Read it in `redraw` as `flash.time`, seconds in. `flash.time` is 0 through
-  a win and `flash.winning` is false through a flash of the game's own, so a
-  redraw needs no `Ui` field to tell which it is drawing.
+- **Read it in `redraw` as `flash.time`**, seconds in. `flash.time` is 0
+  through a win and `flash.winning` is false through a flash of the game's
+  own, so a redraw needs no `Ui` field to tell which it is drawing.
 - **A game that reacts to becoming solved in another way, such as hiding its
   cursor, does it in `changedState` on the transition into solved**, never
   as a side effect of drawing the flash.
@@ -709,14 +684,13 @@ exemplar `tracks-flash.test.ts`).
 `newDrawState(state, tileSize)` builds the draw state at the chosen size.**
 Derive any tile-size geometry (radii, gaps, offsets) in `newDrawState`, so
 `interpretMove`'s coordinate mapping and `redraw` agree. `preferredTileSize`
-is the baseline, 32 by default.
+is the baseline (its default is on `Game.preferredTileSize`).
 
 - **A draw state lives at one tile size, so a game writes no resize
   invalidation** (`engine-drawing` § "A draw state is at one tile size for
-  its whole life"). No
-  `if (ds.tileSize !== ts)` guard, no cache wipe, no dropping a wrongly
-  sized blitter: for a blitter allocated lazily in `redraw`, `if (!ds.bl)`
-  is the whole check.
+  its whole life"). No `if (ds.tileSize !== ts)` guard, no cache wipe, no
+  dropping a wrongly sized blitter: for a blitter allocated lazily in
+  `redraw`, `if (!ds.bl)` is the whole check.
 - **`redraw` and `interpretMove` are handed a draw state that is non-null
   and at the size on screen** (`engine-drawing` § "A game is handed a draw
   state, never the absence of one"). No `if (!ds) return;` and no
@@ -730,30 +704,28 @@ is the baseline, 32 by default.
   `pencilIndicatorReach`**, or grows its canvas with `pencilIndicatorCanvas`
   where its own corner is taken
   ([`engine/pencil-indicator.ts`](../src/engine/pencil-indicator.ts)).
-- A border constant that looks surprisingly small is upstream's
-  `NARROW_BORDERS` variant. Leave it.
+- **A border constant that looks surprisingly small is upstream's
+  `NARROW_BORDERS` variant.** Leave it.
 
 ## The palette: three layers, meaning first
 
 **A game contains no color value. Not one** (`engine-colors` § "A game
 contains no color value"). Every color a game shows is a reference into the
 collection's color system, or a call to a shared function from it. The
-skeleton's `colors` is the shape: `out[COL_ERROR] = ERROR`. Three layers,
-and which one you reach for is the decision:
+skeleton's `colors` is the shape: `out[COL_ERROR] = ERROR`. Which of three
+layers you reach for is the decision:
 
 - [`engine/color/palette.ts`](../src/engine/color/palette.ts) holds **the
-  meanings**, and is the default: `ERROR`, `HINT_OUTLINE`,
-  `CURSOR`, `HELD`, `DRAG_ADD`, `FLASH`, `RULED_OUT`, `SHADED`,
-  `REGION_DONE`, `INK`, `PAPER` and the rest of its exports, with the
-  functions of the background (`cellSurface`, `surfaceGrid`, `givenSurface`,
-  `wallFill`, `highlightWash`, `pencilColor`, `clueDoneColor`).
+  meanings**, and is the default: roles such as `ERROR`, `CURSOR` and
+  `SHADED`, and functions of the background such as `cellSurface` and
+  `highlightWash`.
 - [`engine/color/colors.ts`](../src/engine/color/colors.ts) holds **the
   palette itself**: the named colors, most at three intensities (base,
   `_WASH`, `_BOLD`), and the sets made to be told apart (`FREE`,
-  `FREE_NAMES`, `REGION_FILLS`, `FOUR_FILLS`).
+  `REGION_FILLS`, `FOUR_FILLS`).
 - [`engine/color/palette-games.ts`](../src/engine/color/palette-games.ts)
   holds colors a game defines **relative to its own board**, prefixed with
-  its id (`slantGrounded`, `undeadGhost`). Functions, not values.
+  its id (`slantGrounded`). Functions, not values.
 
 A token has no `COL_` prefix, which here means a palette index, so a game's
 index constants and the tokens never collide. Nothing outside a game
@@ -769,22 +741,23 @@ its own.
 - **Reach past a meaning to a named color only where the name is
   load-bearing to the player**: a member of a set whose job is to be told
   apart (`FREE`), or a color the game says out loud (`FREE_NAMES`, read off
-  `FREE` so word and color cannot drift). A name is a `ColorWord`
-  (`engine/color/color-word.ts`), a word for each scheme, since a dark
-  value can leave its light word (Map's dark yellow is a brown). A sentence
-  takes it as a `phrase` part and is shown in the scheme in force. A text
-  shown alike in every scheme, a help page, a control's `does` or a mark's
-  own words, takes `.only`, which refuses a color with two words.
-  `colors.test.ts` holds every word to its color in both schemes.
+  `FREE` so word and color cannot drift).
+- **A color's name is a `ColorWord`** (`engine/color/color-word.ts`), a word
+  for each scheme, since a dark value can leave its light word (Map's dark
+  yellow is a brown). A sentence takes it as a `phrase` part and is shown in
+  the scheme in force. A text shown alike in every scheme, a help page, a
+  control's `does` or a mark's own words, takes `.only`, which refuses a
+  color with two words. `colors.test.ts` holds every word to its color in
+  both schemes.
 - **Pieces told apart by a color that means nothing take `FREE`**, the one
   such set, its first members first: Flood's tiles and Guess's pegs, whose
   color is all that tells them apart, and Path's pairs, whose numbers say
   which is which. Only a game with that second carrier may repeat it past
   its ten, spread by `spreadColors` (`engine/spread-colors.ts`). No member
   is near the error, the cursor, the drag or the hint's first ring and
-  outline, so a piece never hides a mark; a game drawing pale members as
-  lines on the light cell edges them in `BLACK`, as Path does. A game that
-  writes a number on one takes `FREE_TEXT`. Exemplar:
+  outline, so a piece never hides a mark. A game drawing pale members as
+  lines on the light cell edges them in `BLACK`, and one that writes a
+  number on a member takes `FREE_TEXT`. Exemplar:
   [`path/render.ts`](../src/games/path/render.ts).
 - **A game whose board has spent the default may pick a different named
   color, and says why on the assignment's line or the line above**
@@ -796,11 +769,11 @@ its own.
   [`spokes/render.ts`](../src/games/spokes/render.ts) (`PURPLE` cursor).
 - **Pick the replacement against everything it lands on, in both schemes.**
   A cursor sits on every material the board has, and the lightness ladder
-  flips in the dark scheme, so an argument from where a color sits in one
-  scheme's ordering fails in the other. Where no lightness clears both ends,
-  choose by chroma and hue: a strong color against a neutral reads at equal
-  lightness, and it should be opposite in hue to the materials, not adjacent.
-  Exemplar: [`slide/render.ts`](../src/games/slide/render.ts).
+  flips in the dark scheme, so an argument from one scheme's ordering fails
+  in the other. Where no lightness clears both ends, choose by chroma and
+  hue: a strong color against a neutral reads at equal lightness, and it
+  should be opposite in hue to the materials, not adjacent. Exemplar:
+  [`slide/render.ts`](../src/games/slide/render.ts).
 - **If nothing in the palette fits**, record a function in
   `palette-games.ts` under the game's prefix, with why no meaning and no
   named color serves. Aim to add none.
@@ -816,14 +789,14 @@ names the one it applies.
   `cellSurface`, the line between cells is `surfaceGrid`, thin, and the
   frame around the grid is no heavier than it.
 - **A region the puzzle gives may take a fill in place of `cellSurface`**
-  ("The palette holds one set of fills for regions"). The fill is one of
-  `REGION_FILLS`, the region palette: eight faint fills of which a board
-  takes the first four, six or eight, and `regionFills`
-  ([`engine/region-fill.ts`](../src/engine/region-fill.ts)) says which
-  region takes which, so that regions sharing a side differ. It says only
-  "these cells are one region": the heavy border still tells two regions
-  apart, and everything else is drawn over the fill as it is over the plain
-  surface. A mistake's wash and the win flash take its place. Exemplar:
+  ("The palette holds one set of fills for regions"): one of `REGION_FILLS`,
+  the region palette, eight faint fills of which a board takes the first
+  four, six or eight, with `regionFills`
+  ([`engine/region-fill.ts`](../src/engine/region-fill.ts)) choosing so
+  that regions sharing a side differ. It says only "these cells are one
+  region": the heavy border still tells two regions apart, and everything
+  else is drawn over the fill as over the plain surface. A mistake's wash
+  and the win flash take its place. Exemplar:
   [`starbattle/render.ts`](../src/games/starbattle/render.ts), on the first
   four.
   - **A region's color is one value a scheme in every game** (the owner,
@@ -911,13 +884,13 @@ is a function of the background, and an absolute color is a named one.
 
 **A color that means "this piece is black" or "white" is `BLACK` or `WHITE`
 from `colors.ts`, not `INK` or `PAPER`.** They look the same in the light
-scheme. `INK`, `PAPER` and a bevel's highlight invert in the dark scheme; a
-piece's color is its identity and is pinned.
+scheme, but `INK`, `PAPER` and a bevel's highlight invert in the dark
+scheme, and a piece's color is its identity and is pinned.
 
 - **A color your words name is a piece's color.** If the help page, a hint
   or a parameter label calls something black, white, shaded or lit, paint it
   in a pinned color. Where the thing really is ink, fix the word.
-- A digit on a pinned cell is pinned with it, and a grid between
+- **A digit on a pinned cell is pinned with it**, and a grid between
   pinned-white cells is `GRID_DARK`.
 - [`help-lightness-words.test.ts`](../src/help-lightness-words.test.ts)
   holds the help page to this. It checks that the palette holds such a
@@ -936,13 +909,13 @@ decision removed, and no test catches that in general.
 games declare nothing. It names slots and never a color: a color that is
 wrong in the dark scheme is fixed by authoring the dark value on its token.
 
-- `darkSwaps`: the pairs dark mode exchanges. A bevel drawn from
+- **`darkSwaps` are the pairs dark mode exchanges.** A bevel drawn from
   `mkhighlight` lists its `[COL_HIGHLIGHT, COL_LOWLIGHT]` to stay lit from
   one side. A highlight used as a cursor or a selection is not a bevel and
   stays out. A bevel built with `mkhighlightSpecific` from a base that
   authors its dark value needs no swap.
-- `board`: the color the board is painted in, when it is not color 0. The
-  page around the canvas takes it. Exemplar: Untangle.
+- **`board` is the color the board is painted in, when it is not color 0.**
+  The page around the canvas takes it. Exemplar: Untangle.
 - **A bevel's color that is also a tint or a fill takes two slots holding
   the one color, and only the bevel's is swapped.** A swap changes the dark
   value of every use of the slot, and a tint wants the opposite of what a
@@ -977,8 +950,8 @@ highlight upstream draws as pure white may be invisible here. Take the
 surfaces of § "What a board looks like: pieces on a quiet surface". When a
 game's own color nearly equals its background, fix it.
 
-Pair the cue with a `GamePref` when it is a solving aid and not game state.
-Exemplars: [`spokes/render.ts`](../src/games/spokes/render.ts)
+**Pair the cue with a `GamePref` when it is a solving aid and not game
+state.** Exemplars: [`spokes/render.ts`](../src/games/spokes/render.ts)
 (`COL_SATISFIED`, under the `mark-satisfied` pref of its `index.ts`),
 [`bridges/render.ts`](../src/games/bridges/render.ts) (`auto-mark-complete`
 likewise).
@@ -1000,9 +973,9 @@ never sees a dark background; the app adapts the returned palette, taking a
 token's authored dark value first, calculation otherwise, and the game's
 `paletteScheme` on top. A luminance test in a game is dead code.
 
-When a derived dark value is wrong, author the dark value on the shared role
-with `token(light, dark)`; do not patch the game. Exemplar: `lineMaybeColor`
-in [`palette.ts`](../src/engine/color/palette.ts), used by
+**When a derived dark value is wrong, author the dark value on the shared
+role with `token(light, dark)`**; do not patch the game. Exemplar:
+`lineMaybeColor` in [`palette.ts`](../src/engine/color/palette.ts), used by
 [`loopy/render.ts`](../src/games/loopy/render.ts).
 
 ### When a palette guard names your game
@@ -1022,21 +995,21 @@ Each guard reads every game without being told about it.
   some hint steps in, so a color only input brings out is not covered.
 - [`mark-collisions.test.ts`](../src/puzzle/mark-collisions.test.ts) fails
   when two slots a player cannot tell apart by color in one scheme are drawn
-  as the same mark: a bar, a slash, a fill, a disc, a ring, a polygon of as
-  many corners, or text, at less than twice the other's thickness and reach.
-  A digit and a grid line in one ink pass, and a wall and a line in one ink
-  do not. Give one of the two a color of its own, as Path's walls took
-  `wallFill`. A pair that is one meaning (a number in ink on a cell and in
-  white on a dark piece), or that the player tells apart by more than the
-  stroke (an arrow's head), goes in its `DECLARED` with the reason. A rim is
-  no mark of its own, and neither are a bevel's `darkSwaps` edges. It reads
-  the deal and the board half solved by the hint, so a slot only a drag, a
-  mistake or the flash brings out is not covered.
+  as the same kind of mark at less than twice the other's thickness and
+  reach; the `MarkKind` doc in `src/puzzle/mark-collisions.ts` lists the
+  kinds. A digit and a grid line in one ink pass, and a wall and a line in one ink do not. Give one of the two a color
+  of its own, as Path's walls took `wallFill`. A pair that is one meaning (a
+  number in ink on a cell and in white on a dark piece), or that the player
+  tells apart by more than the stroke (an arrow's head), goes in its
+  `DECLARED` with the reason. A rim is no mark of its own, and neither are a
+  bevel's `darkSwaps` edges. It reads the deal and the board half solved by
+  the hint, so a slot only a drag, a mistake or the flash brings out is not
+  covered.
 - [`bevels.test.ts`](../src/puzzle/bevels.test.ts) fails when a bevel's
   lighter color is not the lighter one in both schemes, which is a forgotten
   `darkSwaps` pair, and when a game draws the shared bevel shape itself. It
-  finds bevels by the shape `drawRaisedTile`, `drawRaisedBevel` and
-  `drawRecessedBorder` emit, so draw through them where the shape allows.
+  finds bevels by the shape `engine/draw.ts`'s bevel primitives emit, so
+  draw through them where the shape allows.
 - `colors.test.ts` and `palette.test.ts` hold the palette's own sets and
   meanings; a game meets them only by changing `colors.ts` or `palette.ts`.
 
