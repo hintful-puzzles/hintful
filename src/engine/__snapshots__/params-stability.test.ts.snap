@@ -34,9 +34,7 @@ preset:Classic/Classic: 6x7 Easy  full=6x7mRde  brief=6x7mR
 preset:Classic/Classic: 6x7 Normal  full=6x7mRdn  brief=6x7mR
 preset:Classic/Classic: 6x7 Tricky  full=6x7mRdt  brief=6x7mR
 preset:Classic/Classic: 6x7 Hard  full=6x7mRdh  brief=6x7mR
-preset:Edges/Edges: 5x5 Normal  full=5x5mEEdn  brief=5x5mE
-preset:Edges/Edges: 5x5 Tricky  full=5x5mEEdt  brief=5x5mE
-preset:Edges/Edges: 5x5 Hard  full=5x5mEEdh  brief=5x5mE
+preset:Classic/Classic: 5x5 Edges Normal  full=5x5mEEdn  brief=5x5mE
 bump:w  full=7x7mOde  brief=7x7mO
 bump:h  full=6x8mOde  brief=6x8mO
 flip:removeends  full=6x7mOEde  brief=6x7mO
@@ -383,32 +381,35 @@ flip:aggressive  full=10x10h0de  brief=10x10"
 
 exports[`encoded params are byte-stable > net 1`] = `
 "default  full=5x5de  brief=5x5
-preset:7x7 Easy  full=7x7de  brief=7x7
-preset:7x7 Unreasonable  full=7x7du  brief=7x7
-preset:9x11 Easy  full=9x11de  brief=9x11
-preset:9x11 Unreasonable  full=9x11du  brief=9x11
-preset:11x11 Easy  full=11x11de  brief=11x11
-preset:11x11 Unreasonable  full=11x11du  brief=11x11
-preset:11x13 Easy  full=11x13de  brief=11x13
-preset:11x13 Unreasonable  full=11x13du  brief=11x13
-preset:7x7 wrapping Easy  full=7x7wde  brief=7x7w
+preset:Bordered/Bordered: 7x7 Easy  full=7x7de  brief=7x7
+preset:Bordered/Bordered: 7x7 Unreasonable  full=7x7du  brief=7x7
+preset:Bordered/Bordered: 9x11 Easy  full=9x11de  brief=9x11
+preset:Bordered/Bordered: 9x11 Unreasonable  full=9x11du  brief=9x11
+preset:Bordered/Bordered: 11x11 Easy  full=11x11de  brief=11x11
+preset:Bordered/Bordered: 11x11 Unreasonable  full=11x11du  brief=11x11
+preset:Bordered/Bordered: 11x13 Easy  full=11x13de  brief=11x13
+preset:Bordered/Bordered: 11x13 Unreasonable  full=11x13du  brief=11x13
+preset:Wrapping/Wrapping: 5x5 Easy  full=5x5wde  brief=5x5w
+preset:Wrapping/Wrapping: 7x9 Easy  full=7x9wde  brief=7x9w
+preset:Wrapping/Wrapping: 7x9 Unreasonable  full=7x9wdu  brief=7x9w
+preset:Wrapping/Wrapping: 9x11 Easy  full=9x11wde  brief=9x11w
+preset:Wrapping/Wrapping: 9x11 Unreasonable  full=9x11wdu  brief=9x11w
 tier:1  full=5x5du  brief=5x5
 bump:w  full=6x5de  brief=6x5
 bump:h  full=5x6de  brief=5x6
-flip:wrapping  full=5x5wde  brief=5x5w
 bump:barrierProbability  full=5x5b1de  brief=5x5"
 `;
 
 exports[`encoded params are byte-stable > netslide 1`] = `
 "default  full=3x3b1  brief=3x3
-preset:3x3 medium  full=3x3
-preset:3x3 hard  full=3x3w
-preset:4x4 easy  full=4x4b1  brief=4x4
-preset:4x4 medium  full=4x4
-preset:4x4 hard  full=4x4w
-preset:4x6 easy  full=4x6b1  brief=4x6
-preset:4x6 medium  full=4x6
-preset:4x6 hard  full=4x6w
+preset:Bordered/3x3 medium  full=3x3
+preset:Bordered/4x4 easy  full=4x4b1  brief=4x4
+preset:Bordered/4x4 medium  full=4x4
+preset:Bordered/4x6 easy  full=4x6b1  brief=4x6
+preset:Bordered/4x6 medium  full=4x6
+preset:Wrapping/3x3 hard  full=3x3w
+preset:Wrapping/4x4 hard  full=4x4w
+preset:Wrapping/4x6 hard  full=4x6w
 bump:w  full=4x3b1  brief=4x3
 bump:h  full=3x4b1  brief=3x4
 flip:wrapping  full=3x3wb1  brief=3x3w
@@ -712,18 +713,23 @@ bump:h  full=10x13"
 
 exports[`encoded params are byte-stable > solo 1`] = `
 "default  full=3x3
-preset:2x3 Easy  full=2x3
-preset:2x3 Normal  full=2x3db  brief=2x3
-preset:2x3 Tricky  full=2x3di  brief=2x3
-preset:3x3 Easy  full=3x3
-preset:3x3 Normal  full=3x3db  brief=3x3
-preset:3x3 Tricky  full=3x3di  brief=3x3
-preset:3x3 Hard  full=3x3da  brief=3x3
-preset:3x3 Extreme  full=3x3de  brief=3x3
-preset:3x3 Unreasonable  full=3x3du  brief=3x3
-preset:3x3 X Normal  full=3x3xdb  brief=3x3x
-preset:9 Jigsaw Normal  full=9jdb  brief=9j
-preset:3x3 Killer Easy  full=3x3ka  brief=3x3k
+preset:Standard/Standard: 2x3 Easy  full=2x3
+preset:Standard/Standard: 2x3 Normal  full=2x3db  brief=2x3
+preset:Standard/Standard: 2x3 Tricky  full=2x3di  brief=2x3
+preset:Standard/Standard: 3x3 Easy  full=3x3
+preset:Standard/Standard: 3x3 Normal  full=3x3db  brief=3x3
+preset:Standard/Standard: 3x3 Tricky  full=3x3di  brief=3x3
+preset:Standard/Standard: 3x3 Hard  full=3x3da  brief=3x3
+preset:Standard/Standard: 3x3 Extreme  full=3x3de  brief=3x3
+preset:Standard/Standard: 3x3 Unreasonable  full=3x3du  brief=3x3
+preset:Standard/Standard: 3x3 X Normal  full=3x3xdb  brief=3x3x
+preset:Standard/Standard: 3x3 Killer Easy  full=3x3ka  brief=3x3k
+preset:Jigsaw/Jigsaw: 9x9 Easy  full=9j
+preset:Jigsaw/Jigsaw: 9x9 Normal  full=9jdb  brief=9j
+preset:Jigsaw/Jigsaw: 9x9 Tricky  full=9jdi  brief=9j
+preset:Jigsaw/Jigsaw: 9x9 Hard  full=9jda  brief=9j
+preset:Jigsaw/Jigsaw: 9x9 Extreme  full=9jde  brief=9j
+preset:Jigsaw/Jigsaw: 9x9 Unreasonable  full=9jdu  brief=9j
 tier:1  full=3x3db  brief=3x3
 tier:2  full=3x3di  brief=3x3
 tier:3  full=3x3da  brief=3x3
@@ -841,12 +847,14 @@ flip:singleOnes  full=8x8dto  brief=8x8"
 
 exports[`encoded params are byte-stable > twiddle 1`] = `
 "default  full=3x3n2
-preset:3x3 rows only  full=3x3n2r
-preset:3x3 orientable  full=3x3n2o
-preset:4x4  full=4x4n2
-preset:4x5, rotating 3x3 blocks  full=4x5n3
-preset:5x5, rotating 3x3 blocks  full=5x5n3
-preset:6x7, rotating 4x4 blocks  full=6x7n4
+preset:Standard/Standard: 3x3 orientable  full=3x3n2o
+preset:Standard/Standard: 4x4  full=4x4n2
+preset:Standard/Standard: 4x5, rotating 3x3 blocks  full=4x5n3
+preset:Standard/Standard: 5x5, rotating 3x3 blocks  full=5x5n3
+preset:Standard/Standard: 6x7, rotating 4x4 blocks  full=6x7n4
+preset:Rows only/Rows only: 3x3  full=3x3n2r
+preset:Rows only/Rows only: 4x4  full=4x4n2r
+preset:Rows only/Rows only: 5x5, rotating 3x3 blocks  full=5x5n3r
 bump:w  full=4x3n2
 bump:h  full=3x4n2
 bump:n  full=3x3n3

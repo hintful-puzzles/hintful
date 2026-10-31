@@ -14,13 +14,13 @@ import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import { DESC_CONTRADICTORY, DESC_NOT_UNIQUE } from "../../engine/desc-error.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
-import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import { itSlow } from "../../engine/testing/slow.ts";
 import { encodeWireDesc, growSpanningTree } from "../../engine/wires.ts";
 import { finishes } from "./deduce.ts";
@@ -634,8 +634,8 @@ describe("the tier in Net's params", () => {
   });
 
   it("is on the menu from 7x7 up, and every board on the menu is dealt", () => {
-    const menu = (presetMenu(netGame).submenu ?? []).map((item) =>
-      netGame.encodeParams(item.params as NetParams, true),
+    const menu = leafPresets(netGame).map((item) =>
+      netGame.encodeParams(item.params, true),
     );
     expect(menu).toEqual([
       "5x5de",
@@ -647,7 +647,11 @@ describe("the tier in Net's params", () => {
       "11x11du",
       "11x13de",
       "11x13du",
-      "7x7wde",
+      "5x5wde",
+      "7x9wde",
+      "7x9wdu",
+      "9x11wde",
+      "9x11wdu",
     ]);
     for (const id of menu) expect(refusal(id), id).toBeNull();
   });

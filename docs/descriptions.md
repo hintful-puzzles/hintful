@@ -89,6 +89,14 @@ research tools all read through it; the app never does.
   ladder runs on every board the game deals, and a name a board's variations
   leave out is empty there, so a technique over it binds nothing (Solo's
   killer techniques on a board with no cages).
+- **A variation's word is read off what it does, never written**: one that
+  only `add`s (rules, clues, units, a partition of a new name) is a modifier,
+  since an added rule only removes answers and every sound technique stays
+  sound; one that `replace`s a block is a ruleset, checked on its boards and
+  the plain game's. A change to the deal alone is a setting and has no
+  variation. The variation is named as the game offers it, a ruleset's name
+  or a modifier's words, and `src/variations.test.ts` refuses a game whose
+  field declares the other word.
 - **A family member another game deals is a second description beside it**
   (Unequal's `adjacent.description.yaml`), with no help: its game's page
   names it through `{{rulesets}}`.
@@ -330,11 +338,14 @@ every part dealt. A technique is sound when no binding's premise holds while
 its conclusion fails under the rules.
 
 Where a partition is among the units, the board is a Sudoku whose boxes are
-its `blocks(a, b)` at the sizes that make the order, the squarest first; a
-board shape that deals its boxes (Jigsaw) is checked on these. A description
-with variations is checked in each world it deals: every modifier that deals
-a partition or a clue always applied, since a partition into single cells is
-among what it deals, and each other modifier on and off. A technique must be
+its `blocks(a, b)` at the sizes that make the order, the squarest first.
+Boxes a board deals are not built, so Solo's Jigsaw world is named in the
+results as unchecked: as fixed boards, every 4x4 jigsaw up to symmetry
+would multiply Solo's check twentyfold. A description with variations is
+checked in each world it deals, on the plain board and each ruleset's:
+every modifier that deals a partition or a clue always applied, since a
+partition into single cells is among what it deals, and each other modifier
+on and off. A technique must be
 sound in every world, at every order where the world has an answer, and its
 plant unsound in one: no order-3 Latin square has both diagonals distinct,
 so Solo's X world is checked at order 4 only, and the results say so.

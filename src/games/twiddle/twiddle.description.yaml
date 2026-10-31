@@ -4,10 +4,12 @@ game: twiddle
 help:
   rules: |-
     Rotate square sections of the grid to arrange the squares into
-    numerical order starting from the top left.
+    numerical order starting from the top left. The game mode says what
+    the squares carry:
 
-    Settings change the rules, and a board's name in the Type menu says
-    which it has:
+    {{rulesets}}
+
+    A setting adds a rule, which a board's name says:
 
     {{modifiers}}
   controls: |-

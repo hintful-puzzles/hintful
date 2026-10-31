@@ -9,10 +9,9 @@ help:
     Squares connected to the middle square are lit up. Aim to light up
     every square in the grid (not just the endpoint blobs).
 
-    One setting changes the rules, and a board's name in the Type menu
-    says when it is on:
+    The game mode says where the network may run:
 
-    {{modifiers}}
+    {{rulesets}}
   controls: |-
     {{controls}}
 

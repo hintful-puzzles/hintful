@@ -39,6 +39,7 @@ import {
 } from "../../engine/square-edges.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
@@ -89,12 +90,10 @@ const hexGrid = (aux: string) => Uint8Array.from(aux, (c) => Number.parseInt(c, 
 
 describe("netslide params", () => {
   it("round-trips every preset", () => {
-    const presets = presetMenu(netslideGame).submenu ?? [];
+    const presets = leafPresets(netslideGame);
     expect(presets).toHaveLength(9);
-    for (const { params } of presets) {
-      const p = params as NetslideParams;
-      expect(decodeParams(encodeParams(p, true))).toEqual(p);
-    }
+    for (const { params } of presets)
+      expect(decodeParams(encodeParams(params, true))).toEqual(params);
   });
 
   it("round-trips wrapping, a fractional barrier probability and a move target", () => {
@@ -145,8 +144,12 @@ describe("netslide params", () => {
   });
 
   it("names its presets, and labels a custom grid by its fields", () => {
-    const titles = (presetMenu(netslideGame).submenu ?? []).map((m) => m.title);
-    expect(titles.slice(0, 3)).toEqual(["3x3 easy", "3x3 medium", "3x3 hard"]);
+    const sections = presetMenu(netslideGame).submenu ?? [];
+    expect(sections.map((s) => s.title)).toEqual(["Bordered", "Wrapping"]);
+    expect(sections.map((s) => s.submenu?.[0]?.title)).toEqual([
+      "3x3 easy",
+      "3x3 hard",
+    ]);
     expect(
       describeParams(netslideGame, {
         w: 4,
@@ -155,7 +158,7 @@ describe("netslide params", () => {
         barrierProbability: 0.5,
         movetarget: 12,
       }),
-    ).toBe("4x5 wrapping, 50% barriers, 12 shuffles");
+    ).toBe("Wrapping: 4x5, 50% barriers, 12 shuffles");
   });
 });
 

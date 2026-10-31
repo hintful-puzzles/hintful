@@ -19,6 +19,7 @@ import type {
 import { UI_UPDATE } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { clearKey, numberKeys } from "../../engine/key-labels.ts";
+import { modifierItem } from "../../engine/modifier.ts";
 import {
   AREA_TOO_LARGE,
   dimensionParamConfig,
@@ -227,59 +228,50 @@ const BOARDS: AscentParams[] = [
   mk(6, 8, 0, MODE_HONEYCOMB, false, false),
   mk(7, 7, DIFF_NORMAL, MODE_HEXAGON, false, false),
   mk(6, 7, 0, MODE_RECT, false, false),
-  mk(5, 5, DIFF_NORMAL, MODE_EDGES, true, false),
 ];
 
 const RULESET_ORTHOGONAL = 0;
 const RULESET_HEX = 1;
 const RULESET_CLASSIC = 2;
-const RULESET_EDGES = 3;
 const CLASSIC = "Classic";
 const EDGES = "Edges";
 const SHAPE_KW = "board-shape";
+const EDGES_KW = "edges";
 const ON_THE_RECTANGLE = { [SHAPE_KW]: [SHAPE_RECTANGLE] };
 
-/** The four puzzles, told apart by which squares are neighbors, fewest first:
- * four (Numbrix), six, eight (Hidato), and eight with arrows (1to25). */
+/** The three puzzles, told apart by which squares are neighbors, fewest
+ * first: four (Numbrix), six, and eight (Hidato). Edges (1to25) adds a clue
+ * to Classic, so it is a modifier of it. */
 const RULESETS: Ruleset[] = [
   {
     name: "Orthogonal",
     rule: "Squares side by side, never diagonally.",
-    only: ON_THE_RECTANGLE,
+    only: { ...ON_THE_RECTANGLE, [EDGES_KW]: false },
   },
   {
     name: "Hex",
     rule: "Hexagons that share a side.",
-    only: { [SHAPE_KW]: [SHAPE_HONEYCOMB, SHAPE_HEXAGON] },
+    only: { [SHAPE_KW]: [SHAPE_HONEYCOMB, SHAPE_HEXAGON], [EDGES_KW]: false },
   },
   {
     name: CLASSIC,
     rule: "Squares side by side or diagonal; corners are cut off to show the path may cross them.",
     only: ON_THE_RECTANGLE,
   },
-  {
-    name: EDGES,
-    rule: `As in ${CLASSIC}, and a number in an arrow round the grid points along the row, column or diagonal it lies on.`,
-    only: {
-      ...ON_THE_RECTANGLE,
-      "symmetrical-clues": false,
-      [DIFFICULTY_KW]: [DIFF_NORMAL, DIFF_TRICKY, DIFF_HARD],
-    },
-  },
 ];
 
 /** Which of {@link RULESETS} a mode plays. */
 function rulesetOf(mode: number): number {
   if (mode === MODE_ORTHOGONAL) return RULESET_ORTHOGONAL;
-  if (isHexagonal(mode)) return RULESET_HEX;
-  return mode === MODE_EDGES ? RULESET_EDGES : RULESET_CLASSIC;
+  return isHexagonal(mode) ? RULESET_HEX : RULESET_CLASSIC;
 }
 
 const menu: PresetBoards<AscentParams> = {
   boards: BOARDS,
-  // Edges has no Easy, and the Honeycomb's is the Hex section's.
-  tiers: (p) =>
-    p.mode === MODE_EDGES || p.mode === MODE_HEXAGON ? [DIFF_NORMAL, DIFF_HARD] : null,
+  // The Honeycomb's Easy is the Hex section's.
+  tiers: (p) => (p.mode === MODE_HEXAGON ? [DIFF_NORMAL, DIFF_HARD] : null),
+  // Edges has no Easy.
+  variants: [mk(5, 5, DIFF_NORMAL, MODE_EDGES, true, false)],
 };
 
 // --- params codec --------------------------------------------------
@@ -409,15 +401,34 @@ function boardWords(mode: number): string {
     : RULESETS[rulesetOf(mode)].name;
 }
 
-// One `mode` holds the ruleset and the shape. The ruleset is set first and
-// picks a mode of its own; the shape then chooses between the two hexagonal
-// modes and is nothing's to set on a Rectangle.
+// One `mode` holds the ruleset, Edges and the shape. The ruleset is set first
+// and picks a mode of its own; Edges then turns a Classic mode into its own
+// or back; the shape chooses between the two hexagonal modes and is nothing's
+// to set on a Rectangle.
 const paramConfig: ParamConfigItem<AscentParams>[] = [
   rulesetItem<AscentParams>(RULESETS, {
     get: (p) => rulesetOf(p.mode),
     set: (p, v) => {
       if (v === rulesetOf(p.mode)) return;
-      p.mode = [MODE_ORTHOGONAL, MODE_HONEYCOMB, MODE_RECT, MODE_EDGES][v];
+      p.mode = [MODE_ORTHOGONAL, MODE_HONEYCOMB, MODE_RECT][v];
+    },
+  }),
+  modifierItem<AscentParams>({
+    kw: EDGES_KW,
+    name: "Edge clues",
+    type: "boolean",
+    when: true,
+    words: EDGES,
+    slot: "kind",
+    rule: "a number in an arrow round the grid points along the row, column or diagonal it lies on.",
+    only: {
+      "symmetrical-clues": false,
+      [DIFFICULTY_KW]: [DIFF_NORMAL, DIFF_TRICKY, DIFF_HARD],
+    },
+    get: (p) => p.mode === MODE_EDGES,
+    set: (p, v) => {
+      if (v && p.mode === MODE_RECT) p.mode = MODE_EDGES;
+      else if (!v && p.mode === MODE_EDGES) p.mode = MODE_RECT;
     },
   }),
   ...dimensionParamConfig<AscentParams>({

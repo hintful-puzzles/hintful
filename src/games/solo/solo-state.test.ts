@@ -151,13 +151,15 @@ describe("solo params codec", () => {
   });
 
   it("titles presets by size, mode and tier", () => {
-    const titles = presetMenu(soloGame).submenu?.map((m) => m.title);
-    expect(titles).toContain("3x3 X Normal");
-    expect(titles).toContain("9 Jigsaw Normal");
-    expect(titles).toContain("3x3 Killer Easy");
+    const sections = presetMenu(soloGame).submenu ?? [];
+    expect(sections.map((s) => s.title)).toEqual(["Standard", "Jigsaw"]);
+    const labels = sections.flatMap((s) => (s.submenu ?? []).map((m) => m.label));
+    expect(labels).toContain("Standard: 3x3 X Normal");
+    expect(labels).toContain("Jigsaw: 9x9 Normal");
+    expect(labels).toContain("Standard: 3x3 Killer Easy");
     expect(
       describeParams(soloGame, { ...defaultParams(), c: 9, r: 1, xtype: true }),
-    ).toMatch(/^9 Jigsaw X /);
+    ).toMatch(/^Jigsaw: 9x9 X /);
   });
 
   it("names symmetry only when it is not the mode's default", () => {

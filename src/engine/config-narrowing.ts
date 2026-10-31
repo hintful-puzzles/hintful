@@ -31,15 +31,35 @@ export function offeredOf(
  * `values` with every narrowed field at a value it is offered: a checkbox at
  * its one value, and a choice that is not offered moved to the nearest that
  * is, the lower of two. The value a field was given is kept by the caller, so
- * a field narrowed for a while returns to it.
+ * a field narrowed for a while returns to it. A deciding field the ruleset
+ * narrows decides at the value it is offered, so the pass is repeated until
+ * the deciding values settle.
  */
 export function offeredValues(
   config: ConfigDescription,
   values: ConfigValues,
 ): ConfigValues {
+  let deciding = values;
+  for (;;) {
+    const out = offeredOnce(config, deciding, values);
+    const settled = (config.narrowing ?? []).every(
+      ({ by }) => out[by] === deciding[by],
+    );
+    if (settled) return out;
+    deciding = out;
+  }
+}
+
+/** One pass of {@link offeredValues}: each field's offer read at the
+ * `deciding` values, and its value moved from the one it was given. */
+function offeredOnce(
+  config: ConfigDescription,
+  deciding: ConfigValues,
+  values: ConfigValues,
+): ConfigValues {
   const out = { ...values };
   for (const id of Object.keys(config.items)) {
-    const offered = offeredOf(config, values, id);
+    const offered = offeredOf(config, deciding, id);
     if (offered === null) continue;
     if (typeof offered === "boolean") {
       out[id] = offered;

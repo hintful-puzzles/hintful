@@ -74,12 +74,28 @@ export function withVariations(
   for (const name of names) {
     const v = json.variations?.[name];
     if (v === undefined) throw new Error(`${json.game}: no variation ${name}`);
+    const added = v.add?.space;
+    for (const r of Object.keys(added?.regions ?? {}))
+      if (out.space.regions?.[r] !== undefined)
+        throw new Error(`${json.game}: ${name} adds region ${r}, which it has`);
+    for (const r of Object.keys(v.replace?.space?.regions ?? {}))
+      if (out.space.regions?.[r] === undefined)
+        throw new Error(`${json.game}: ${name} replaces region ${r}, which it lacks`);
     out = {
       ...out,
       space: {
         ...out.space,
         ...v.replace?.space,
-        regions: { ...out.space.regions, ...v.replace?.space?.regions },
+        ...(added?.diagonals ? { diagonals: true } : {}),
+        regions: {
+          ...out.space.regions,
+          ...v.replace?.space?.regions,
+          ...added?.regions,
+        },
+        units: [
+          ...(v.replace?.space?.units ?? out.space.units),
+          ...(added?.units ?? []),
+        ],
       },
       define: { ...out.define, ...v.add?.define },
       rules: { ...out.rules, ...v.add?.rules },
@@ -101,10 +117,24 @@ export function withEveryVariation(json: DescriptionJson): DescriptionJson {
 /** A variation: blocks added to the description, or replacing its blocks of
  * the same name. */
 export interface VariationJson {
-  word: "board shape" | "modifier" | "ruleset" | "generator setting";
-  add?: Pick<DescriptionJson, "define" | "rules" | "clues" | "shape" | "techniques">;
+  add?: Pick<DescriptionJson, "define" | "rules" | "clues" | "shape" | "techniques"> & {
+    space?: {
+      diagonals?: true;
+      regions?: Record<string, "dealt" | string>;
+      units?: string[];
+    };
+  };
   replace?: { space?: Partial<DescriptionJson["space"]> };
 }
+
+/**
+ * What a variation is, read off what it does. One that only adds is a
+ * modifier: an added rule, clue or unit can only remove answers, so a
+ * technique sound without it stays sound with it. One that replaces is a
+ * ruleset, whose techniques are checked on its boards and the plain game's.
+ */
+export const variationWord = (v: VariationJson): "modifier" | "ruleset" =>
+  v.replace === undefined ? "modifier" : "ruleset";
 
 /** A technique stated in the description, or one of a library's placed at a
  * tier of the game's (`use`: `"<library>.<id>"`). */

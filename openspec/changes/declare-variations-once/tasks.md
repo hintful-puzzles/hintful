@@ -1,6 +1,6 @@
 # Tasks
 
-- [ ] 1. The two words in the schema, the loader and `docs/descriptions.md`; Solo's Jigsaw a ruleset in its description
-- [ ] 2. The engine builds a game's ruleset and modifier fields from its description's variations; the game keeps only what a rule does not say, keyed by variation name; every game with a variation moved
-- [ ] 3. The catalog moves (Solo, Net, Netslide, Twiddle, Ascent, Salad, Group), each run in the app
-- [ ] 4. The guard: a computed word recorded per variation, refused when missing or different; seen to fail on a planted wrong word; Rectangles' Patches computed
+- [x] 1. `word` out of the schema, the loader and `docs/descriptions.md`; additions to `space` written as `add` (Solo's X and Killer); the checker's worlds include every ruleset (a world whose boxes are dealt, Solo's Jigsaw, is named unchecked: twentyfold Solo's 44-minute check)
+- [x] 2. The guard (`src/variations.test.ts`): a description variation read as a modifier or a ruleset, refused where the game's field declares the other; seen to fail on Solo's Jigsaw before the move
+- [x] 3. The catalog moves, each run in the app: Solo's Jigsaw, Net's and Netslide's wrapping (`wrappingRulesetItem`) and Twiddle's rows only rulesets; Ascent's Edges a modifier of Classic; Group's identity hidden a setting. `only` moved onto the field, so a setting may declare one, and a ruleset may narrow a field that narrows others (the dialog settles in two passes)
+- [ ] 4. Salad's Letters and Numbers brought to the owner with a recommendation

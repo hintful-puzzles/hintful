@@ -330,19 +330,29 @@
         "techniques": { "$ref": "#/$defs/techniques" },
         "variations": {
           "type": "object",
-          "description": "Blocks added to the description, or replacing its blocks of the same name, under a name the game offers. The compiler reads the description with every variation applied, so a technique may read what one deals, and finds it empty on a board without it.",
+          "description": "Blocks added to the description, or replacing its blocks of the same name, under the name the game offers it by: a modifier's words, or a ruleset's name. A variation that only adds is a modifier, and one that replaces is a ruleset. The compiler reads the description with every variation applied, so a technique may read what one deals, and finds it empty on a board without it.",
           "additionalProperties": {
             "type": "object",
-            "required": ["word"],
+            "minProperties": 1,
             "additionalProperties": false,
             "properties": {
-              "word": {
-                "enum": ["board shape", "modifier", "ruleset", "generator setting"]
-              },
               "add": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
+                  "space": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "description": "Partitions of new names, units after the description's, and the diagonals.",
+                    "properties": {
+                      "diagonals": { "const": true },
+                      "regions": {
+                        "type": "object",
+                        "additionalProperties": { "type": "string" }
+                      },
+                      "units": { "type": "array", "items": { "type": "string" } }
+                    }
+                  },
                   "define": { "$ref": "#/$defs/define" },
                   "rules": { "$ref": "#/$defs/rules" },
                   "clues": { "$ref": "#/$defs/clues" },

@@ -179,6 +179,41 @@ describe("a form shows and submits a narrowed field at a value it is offered", (
   });
 });
 
+describe("a ruleset may narrow a field that narrows others, and no other field may", () => {
+  // Fancy fixes the mirror off, and the mirror on takes Easy away.
+  const chained = configOf({ ...FANCY, only: { mirror: false } }).map((i) =>
+    i.kw === "mirror" ? { ...i, only: { 1: { difficulty: [1, 2] } } } : i,
+  );
+  const form: ConfigDescription = {
+    items: Object.fromEntries(
+      chained.map((i): [string, ConfigItem] => [
+        i.kw,
+        i.type === "choices"
+          ? { type: "choices", name: i.name, choicenames: i.choices }
+          : { type: "boolean", name: i.name },
+      ]),
+    ),
+    narrowing: configNarrowing(chained),
+  };
+
+  it("settles the narrowed field before reading what it narrows", () => {
+    const chosen = { ruleset: 1, difficulty: 0, kind: 1, mirror: true };
+    expect(offeredValues(form, chosen)).toEqual({ ...chosen, mirror: false });
+    expect(offeredValues(form, { ...chosen, ruleset: 0 })).toEqual({
+      ...chosen,
+      ruleset: 0,
+      difficulty: 1,
+    });
+  });
+
+  it("refuses the same chain from a field that is not the ruleset", () => {
+    const fromKind = chained.map((i) =>
+      i.kw === "kind" ? { ...i, only: { 1: { mirror: false } } } : i,
+    );
+    expect(() => configNarrowing(fromKind)).toThrow(/narrows fields itself/);
+  });
+});
+
 interface M {
   diff: number;
   shown: boolean;

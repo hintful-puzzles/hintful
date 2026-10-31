@@ -8,10 +8,12 @@ game: solo
 help:
   rules: |-
     Fill every square with a number so that each number appears once in
-    every row, every column and every block marked by thick lines.
+    every row, every column and every block marked by thick lines. The game
+    mode gives the blocks' shape:
 
-    Settings change the rules, and a board's name in the Type menu says
-    which it has:
+    {{rulesets}}
+
+    Settings add rules, which a board's name says:
 
     {{modifiers}}
   controls: |-
@@ -96,21 +98,17 @@ deal:
 variations:
   # The game deals a jigsaw board at r = 1.
   Jigsaw:
-    word: board shape
     replace:
       space:
         regions: { box: dealt }
   # The diagonals are units, after the rest.
   X:
-    word: modifier
-    replace:
-      space: { diagonals: true, units: [box, rows, cols, diagonals] }
+    add:
+      space: { diagonals: true, units: [diagonals] }
   Killer:
-    word: modifier
-    replace:
+    add:
       space:
         regions: { cage: dealt }
-    add:
       # Every cage shows its total.
       clues:
         total:

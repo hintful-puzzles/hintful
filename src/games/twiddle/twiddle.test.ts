@@ -12,7 +12,7 @@ import {
   validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_LEFT,
@@ -25,6 +25,7 @@ import {
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import type { Point } from "../../engine/types.ts";
 import { twiddleGame } from "./index.ts";
 import {
@@ -116,33 +117,32 @@ describe("Twiddle params", () => {
 
 describe("Twiddle presets", () => {
   it("offers upstream's presets with one orientable board, all valid", () => {
-    const menu = presetMenu(twiddleGame);
-    expect(menu.submenu?.map((item) => item.title)).toEqual([
-      "3x3 rows only",
-      "3x3",
-      "3x3 orientable",
-      "4x4",
-      "4x5, rotating 3x3 blocks",
-      "5x5, rotating 3x3 blocks",
-      "6x7, rotating 4x4 blocks",
+    expect(leafPresets(twiddleGame).map((item) => item.title)).toEqual([
+      "Standard: 3x3",
+      "Standard: 3x3 orientable",
+      "Standard: 4x4",
+      "Standard: 4x5, rotating 3x3 blocks",
+      "Standard: 5x5, rotating 3x3 blocks",
+      "Standard: 6x7, rotating 4x4 blocks",
+      "Rows only: 3x3",
+      "Rows only: 4x4",
+      "Rows only: 5x5, rotating 3x3 blocks",
     ]);
-    for (const item of menu.submenu ?? []) {
-      expect(item.params).toBeDefined();
-      expect(paramsError(twiddleGame, item.params as TwiddleParams, true)).toBeNull();
-    }
+    for (const item of leafPresets(twiddleGame))
+      expect(paramsError(twiddleGame, item.params, true)).toBeNull();
   });
 
   it("labels a custom game's shuffle target", () => {
     expect(describeParams(twiddleGame, params({ w: 5, h: 5, movetarget: 12 }))).toBe(
-      "5x5, 12 shuffles",
+      "Standard: 5x5, 12 shuffles",
     );
   });
 });
 
 describe("Twiddle generation", () => {
   it("terminates for every preset and produces a non-solved scramble", () => {
-    for (const item of presetMenu(twiddleGame).submenu ?? []) {
-      const p = item.params as TwiddleParams;
+    for (const item of leafPresets(twiddleGame)) {
+      const p = item.params;
       const { desc } = newDesc(p, randomNew(`twiddle-gen-${encodeParams(p, false)}`));
       const state = newState(p, desc);
       expect(state.numbers).toHaveLength(p.w * p.h);

@@ -29,35 +29,44 @@ the two words now mean:
 
 ## What Changes
 
-- **The words.** The description's `word` is `ruleset` or `modifier`; "board
-  shape" and "generator setting" go from the schema, the loader's types and
-  the docs.
-- **One declaration.** A game's variations are stated in its description,
-  and the engine's ruleset and modifier fields are built from it, so the
-  code cannot file a variation differently. What a field still needs that a
-  rule does not say (its params key, its codec, what it leaves of other
-  fields) stays with the game, keyed by the variation's name so a variation
-  without it is a type error.
+- **The word is read off the description, not written in it.** A variation
+  that only adds (rules, clues, a partition, units) is a modifier: an added
+  rule can only remove answers, so every technique sound before stays sound,
+  which is a proof and needs no solver. A variation that replaces a block is
+  a ruleset, and its techniques are checked in both worlds. A change only to
+  the deal has no variation block. So `word`, and with it "board shape" and
+  "generator setting", go from the schema; Solo's X and Killer, which add
+  units and a partition, are written as additions.
+- **One declaration, the code's.** The engine reads `paramConfig` at run
+  time, and no description ships (`build-pipeline`), so the field stays the
+  declaration: `rulesetItem` or `modifierItem`. The gate refuses a game
+  whose description's variation is read as one word and whose field
+  declares the other, by the variation's name (a ruleset's name, a
+  modifier's words). A game whose rules are not stated declares its word
+  unchecked, and is checked once its description states them. (Filed
+  2026-10-31 as the engine building its fields from the description; the
+  YAML never reaches the app, so that would have meant compiling a second
+  module per game for what the field already says.)
 - **The catalog moves**, from the report's table read in two words:
   Solo's Jigsaw, Net's and Netslide's wrapping and Twiddle's rows only become
-  rulesets; Ascent's Edges and Salad's Letters become modifiers; Group's
-  identity hidden becomes a setting. Ascent's Orthogonal, Hex and Classic
-  stay rulesets, so its Type menu keeps its sections.
-- **The guard.** For a game whose techniques are stated, the checker computes
-  each variation's word, recorded as `soundness.json` records verdicts, and
-  the gate refuses a declared word with no verdict or one that disagrees.
-  Rectangles' Patches, filed after the cut ran, is the first pair to compute.
+  rulesets; Ascent's Edges becomes a modifier of Classic; Group's identity
+  hidden becomes a setting. Ascent's Orthogonal, Hex and Classic stay
+  rulesets, so its Type menu keeps its sections.
+- **The checker** checks a description's techniques in every ruleset's
+  world as well as every modifier's, so a ruleset's soundness both ways is
+  what its verdicts record.
 
 ## Open
 
-- **How a game without stated techniques declares its variations.** The
-  word is declared and unchecked until its techniques are stated; whether a
-  description holding only help and variations is enough, or the
-  declaration waits, is for the session to settle by trying it on one such
-  game (Net).
-- **Salad's Letters as a modifier.** Letters is Numbers with border clues
-  added. The checkbox's name and title words are player-visible; the session
-  proposes them.
+- **Salad's Letters and Numbers.** The report filed Letters as a modifier of
+  Numbers (C10), reading it as Numbers with border clues added. The
+  description deals one clue kind a board: border letters (ABC End View) or
+  balls (Number Ball), each added to a base with no clues. Read off that
+  shape, each is a modifier of a base nobody plays, and the code makes them
+  exclude each other; the cut, by vocabulary both ways, makes them two
+  games. The guard flags it, and the owner decides.
+- **Rectangles' Patches**, filed after the cut ran, is computed when
+  Rectangles' rules are stated; until then its word is declared unchecked.
 
 ## Impact
 

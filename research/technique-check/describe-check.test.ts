@@ -15,6 +15,7 @@ import {
   loadDescription,
   type Technique,
   type VariationJson,
+  variationWord,
   withVariations,
 } from "../../src/describe/description.ts";
 import { loadDescriptionFile } from "../../src/describe/load.ts";
@@ -31,6 +32,7 @@ import {
   libraryDescription,
   planted,
   sizings,
+  unbuilt,
   type Verdict,
 } from "./describe-check.ts";
 
@@ -279,25 +281,32 @@ async function checkAll(worlds: readonly World[], ids: readonly string[]) {
  * The worlds a description's techniques are checked in: every modifier that
  * deals a partition or a clue always applied, since a partition into single
  * cells and clues that say nothing are among what it deals; each other
- * modifier on and off. A board shape is checked on the description's own
- * shape.
+ * modifier on and off; and all of it on the description's own board and
+ * each ruleset's, so that a ruleset's techniques and the plain game's are
+ * each checked on the other's boards.
  */
 function worldsOf(file: DescriptionJson, libraries: readonly LibraryJson[]): World[] {
-  const modifiers = Object.entries(file.variations ?? {}).filter(
-    ([, v]) => v.word === "modifier",
-  );
+  const variations = Object.entries(file.variations ?? {});
+  const modifiers = variations.filter(([, v]) => variationWord(v) === "modifier");
+  const rulesets = variations
+    .filter(([, v]) => variationWord(v) === "ruleset")
+    .map(([n]) => [n]);
   const dealing = (v: VariationJson): boolean =>
-    Object.values(v.replace?.space?.regions ?? {}).includes("dealt") ||
+    Object.values(v.add?.space?.regions ?? {}).includes("dealt") ||
     Object.keys(v.add?.clues ?? {}).length > 0;
   const always = modifiers.filter(([, v]) => dealing(v)).map(([n]) => n);
   const toggled = modifiers.filter(([, v]) => !dealing(v)).map(([n]) => n);
-  return Array.from({ length: 1 << toggled.length }, (_, mask) => {
-    const on = [...always, ...toggled.filter((_, i) => mask & (1 << i))];
-    return {
-      where: [file.game, ...on.map((n) => `+${n}`)].join(" "),
-      d: loadDescription(withVariations(file, on), libraries),
-    };
-  });
+  return [[], ...rulesets].flatMap((ruleset) =>
+    Array.from({ length: 1 << toggled.length }, (_, mask) => {
+      const on = [...ruleset, ...always, ...toggled.filter((_, i) => mask & (1 << i))];
+      const where = [file.game, ...on.map((n) => `+${n}`)].join(" ");
+      const d = loadDescription(withVariations(file, on), libraries);
+      const why = unbuilt(d);
+      if (why === null) return [{ where, d }];
+      say(`--  ${where}: not checked, since ${why}`);
+      return [];
+    }).flat(),
+  );
 }
 
 it("the techniques the app compiles are sound, and each planted defect is not", async () => {

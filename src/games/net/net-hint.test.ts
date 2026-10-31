@@ -12,11 +12,11 @@ import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { presetMenu } from "../../engine/param-label.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { anticlockwise, clockwise } from "../../engine/square-edges.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { Facts, nextStep } from "./deduce.ts";
 import { newDesc } from "./generator.ts";
@@ -117,8 +117,8 @@ const pinned = describeHintPins({
 describe("the plan", () => {
   // The Easy boards: an Unreasonable one is where the plan stops short
   // (`net-tier.test.ts`).
-  for (const item of presetMenu(netGame).submenu ?? []) {
-    const p = item.params as NetParams;
+  for (const item of leafPresets(netGame)) {
+    const p = item.params;
     if (p.diff !== DIFF_EASY) continue;
     it(`${item.title}: finishes the board, every step agreeing with the solution`, () => {
       const { state, solution } = board(p, `net-hint-${item.title}`);

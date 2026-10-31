@@ -106,39 +106,53 @@ describe("ascent generation + solving", () => {
   }
 });
 
-describe("ascent's dialog asks for the ruleset and the board's shape separately", () => {
+describe("ascent's dialog asks for the ruleset, Edges and the board's shape separately", () => {
   const field = (kw: string) => {
     const item = ascentGame.paramConfig?.find((i) => i.kw === kw);
     if (item?.type !== "choices") throw new Error(`no choices field ${kw}`);
     return item;
   };
+  const edges = (() => {
+    const item = ascentGame.paramConfig?.find((i) => i.kw === "edges");
+    if (item?.type !== "boolean") throw new Error("no edges checkbox");
+    return item;
+  })();
   const MODES = [MODE_ORTHOGONAL, MODE_RECT, MODE_HEXAGON, MODE_HONEYCOMB, MODE_EDGES];
   /** The dialog's submission over a board of mode `from`: each field set in
    * order on a copy. */
-  const submit = (from: number, ruleset: number, shape: number) => {
+  const submit = (from: number, ruleset: number, edged: boolean, shape: number) => {
     const p = { ...ascentGame.defaultParams(), mode: from };
     for (const item of ascentGame.paramConfig ?? []) {
       if (item.kw === "ruleset") field("ruleset").set(p, ruleset);
+      else if (item.kw === "edges") edges.set(p, edged);
       else if (item.kw === "board-shape") field("board-shape").set(p, shape);
     }
     return p;
   };
 
   it("offers the rulesets by how many neighbors a square has, fewest first", () => {
-    expect(field("ruleset").choices).toEqual(["Orthogonal", "Hex", "Classic", "Edges"]);
+    expect(field("ruleset").choices).toEqual(["Orthogonal", "Hex", "Classic"]);
     expect(MODES.map((mode) => field("ruleset").get(mk(5, 5, 1, mode)))).toEqual([
-      0, 2, 1, 1, 3,
+      0, 2, 1, 1, 2,
+    ]);
+    expect(MODES.map((mode) => edges.get(mk(5, 5, 1, mode)))).toEqual([
+      false,
+      false,
+      false,
+      false,
+      true,
     ]);
     expect(field("board-shape").choices).toEqual(["Rectangle", "Honeycomb", "Hexagon"]);
   });
 
-  it("reads every mode back as the pair that makes it, whatever it is set over", () => {
+  it("reads every mode back as the fields that make it, whatever it is set over", () => {
     for (const mode of MODES) {
       const p = mk(5, 5, 1, mode);
       for (const from of MODES) {
         const again = submit(
           from,
           field("ruleset").get(p),
+          edges.get(p),
           field("board-shape").get(p),
         );
         expect(again.mode, `${mode} over ${from}`).toBe(mode);
@@ -153,20 +167,22 @@ describe("ascent's dialog asks for the ruleset and the board's shape separately"
     expect(label(MODE_RECT)).toBe("Classic: 6x7 Normal");
     expect(label(MODE_HONEYCOMB)).toBe("Hex: 6x7 Honeycomb Normal");
     expect(label(MODE_HEXAGON, 7, 7)).toBe("Hex: Size 7 Hexagon Normal");
-    expect(label(MODE_EDGES)).toBe("Edges: 6x7 Normal");
+    expect(label(MODE_EDGES)).toBe("Classic: 6x7 Edges Normal");
   });
 
-  it("refuses a shape the ruleset does not have", () => {
-    const custom = (ruleset: number, shape: number) =>
+  it("refuses a shape the ruleset does not have, and Edges off Classic", () => {
+    const custom = (ruleset: number, shape: number, edged = false) =>
       new Midend(ascentGame).encodeCustomParams({
         ruleset,
+        edges: edged,
         "board-shape": shape,
         difficulty: 1,
       });
-    expect(custom(3, SHAPE_HEXAGON)).toEqual({
+    expect(custom(1, SHAPE_HEXAGON, true)).toEqual({
       ok: false,
-      error: "Board shape must be Rectangle for Edges.",
+      error: "Edge clues must be off for Hex.",
     });
+    expect(custom(2, SHAPE_RECTANGLE, true).ok).toBe(true);
     expect(custom(0, SHAPE_HONEYCOMB)).toEqual({
       ok: false,
       error: "Board shape must be Rectangle for Orthogonal.",
@@ -191,11 +207,11 @@ describe("ascent's dialog asks for the ruleset and the board's shape separately"
   it("refuses a game ID asking Edges for what it does not offer", () => {
     const easy = mk(5, 5, 0, MODE_EDGES, true);
     expect(paramsError(ascentGame, easy, true)).toBe(
-      "Difficulty must be Normal, Tricky or Hard for Edges.",
+      "Difficulty must be Normal, Tricky or Hard while Edge clues is on.",
     );
     const symmetric = mk(5, 5, 1, MODE_EDGES, true, true);
     expect(paramsError(ascentGame, symmetric, true)).toBe(
-      "Symmetrical clues must be off for Edges.",
+      "Symmetrical clues must be off while Edge clues is on.",
     );
     // A board that arrives written out is not held to what a deal offers.
     expect(paramsError(ascentGame, easy, false)).toBeNull();

@@ -19,6 +19,7 @@ import type { PointerAction } from "./hint-gesture.ts";
 import type { HintRefusal, MarkedDeadEnd } from "./hint-refusal.ts";
 import type { MarkRole, Sentence } from "./hint-words.ts";
 import type { Modifier } from "./modifier.ts";
+import type { OnlyOf } from "./only.ts";
 import type { RandomState } from "./random/index.ts";
 import type { RingClear } from "./ring.ts";
 import type { Ruleset } from "./ruleset.ts";
@@ -252,6 +253,10 @@ interface ParamItemCommon<Params> {
   /** Set by `modifierItem` alone (`engine/modifier.ts`): the rule this field
    * changes, and the words for a board it applies to. */
   modifier?: Modifier;
+  /** What the field leaves of the others, by its value: a choice's index, or
+   * 0 and 1 for a checkbox off and on (`only.ts`). `rulesetItem` builds it
+   * from each ruleset's `only`. */
+  only?: Readonly<Record<number, OnlyOf>>;
 }
 
 /** Inclusive limits on a numeric field. */

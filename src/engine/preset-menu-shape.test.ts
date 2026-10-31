@@ -151,25 +151,6 @@ describe("a tiered game's menu is a grid", () => {
   });
 });
 
-/**
- * Games whose modifier is a level of every size instead of one line, with why.
- * The check holds each to exactly that: one line of the modifier a size.
- */
-const MODIFIER_ON_EVERY_SIZE: Record<string, string> = {
-  netslide: "wrapping is the hardest of the three levels its menu names at each size",
-};
-
-/** How many sizes a menu holds, by the words its size fields say. */
-function sizes(g: AnyGame, leaves: readonly { params: unknown }[]): number {
-  const fields = (g.paramConfig ?? []).filter((i) => i.label?.slot === "size");
-  // A dimension pair's words are on its width field alone: "4x6".
-  return new Set(
-    leaves.map((l) =>
-      fields.map((i) => i.label?.words?.(l.params) ?? i.get(l.params)).join(" "),
-    ),
-  ).size;
-}
-
 describe("a rule modifier has one line of the menu", () => {
   let modifiers = 0;
 
@@ -183,22 +164,17 @@ describe("a rule modifier has one line of the menu", () => {
       modifiers++;
       const { when, words } = item.modifier;
       const lines = leaves.filter((l) => item.get(l.params) === when);
-      const expected = id in MODIFIER_ON_EVERY_SIZE ? sizes(g, leaves) : 1;
       expect(
         lines.map((l) => l.title),
         `${id}: "${words}" is on ${lines.length} lines`,
-      ).toHaveLength(expected);
+      ).toHaveLength(1);
     }
-  });
-
-  it("ledgers only games there are", () => {
-    for (const id of Object.keys(MODIFIER_ON_EVERY_SIZE)) expect(ids).toContain(id);
   });
 
   // A floor over every game: a commit the hook narrows to a few games looks
   // at a few games' modifiers.
   itOverWholeSweep("looked at the modifiers", () => {
-    expect(modifiers).toBeGreaterThan(8);
+    expect(modifiers).toBeGreaterThan(6);
   });
 });
 

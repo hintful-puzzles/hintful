@@ -64,6 +64,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point, Size } from "../../engine/types.ts";
@@ -121,9 +122,10 @@ import {
 } from "./state.ts";
 
 /**
- * The 6x6 board at its first three tiers, the 9x9 at all six, then one board
- * for each of X, Jigsaw and Killer. Twelve lines is what a section holds, so
- * the 4x4, 12x12 and 16x16 boards upstream listed are a Custom away.
+ * The 6x6 board at its first three tiers and the 9x9 at all six, then one
+ * board for each of X and Killer; the 9x9 Jigsaw at all six. Eighteen lines is
+ * what a menu holds, so the 4x4, 12x12 and 16x16 boards upstream listed and
+ * the 6x6 Jigsaw are a Custom away.
  */
 const plainBoard = (c: number, r: number, diff = DIFF_BLOCK): SoloParams => ({
   c,
@@ -136,17 +138,33 @@ const plainBoard = (c: number, r: number, diff = DIFF_BLOCK): SoloParams => ({
 });
 
 const menu: PresetBoards<SoloParams> = {
-  boards: [plainBoard(2, 3), plainBoard(3, 3)],
+  boards: [plainBoard(2, 3), plainBoard(3, 3), plainBoard(9, 1)],
   // A 6×6 has fewer places to hide a `set` deduction than a 9×9, so Hard
   // costs its generator roughly fifty times what 3x3 Hard does, and the
   // small board stops at Tricky.
   tiers: (p) => (p.c === 2 ? [DIFF_BLOCK, DIFF_INTERSECT] : null),
   variants: [
     { ...plainBoard(3, 3, DIFF_SIMPLE), xtype: true },
-    plainBoard(9, 1, DIFF_SIMPLE),
     { ...plainBoard(3, 3), symm: SYMM_NONE, kdiff: DIFF_KINTERSECT, killer: true },
   ],
 };
+
+const RULESET_STANDARD = 0;
+const RULESET_JIGSAW = 1;
+
+/** The two puzzles, told apart by the shape of the blocks. */
+const RULESETS: Ruleset[] = [
+  { name: "Standard", rule: "The blocks are rectangles." },
+  { name: "Jigsaw", rule: "The blocks are irregular shapes." },
+];
+
+/** The squarest rectangular blocks of an `order` grid, `[c, r]` with `c ≤ r`,
+ * or a jigsaw's `[order, 1]` where the order is prime. */
+function blocksOf(order: number): [number, number] {
+  for (let c = Math.floor(Math.sqrt(order)); c >= 2; c--)
+    if (order % c === 0) return [c, order / c];
+  return [order, 1];
+}
 
 /** The Custom dialog's symmetry choices, indexed by the `SYMM_*` constants. */
 const SYMMETRY_NAMES = [
@@ -652,18 +670,18 @@ export const soloGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
-  // Upstream's `custom_params` reads columns and rows, then folds jigsaw
-  // (`c *= r; r = 1`), so the `jigsaw` item MUST come after the column/row
-  // items: the midend applies `set`s in array order and jigsaw's setter reads
-  // the new `c`/`r`. A jigsaw board is stored `r === 1, c === order`;
-  // unchecking jigsaw leaves c/r as they are, as upstream does.
+  // A jigsaw board is stored `r === 1, c === order`, so the game mode MUST
+  // come after the column/row items: the midend applies `set`s in array order
+  // and the mode's setter folds the new `c`/`r` (`c *= r; r = 1`), as
+  // upstream's `custom_params` does.
   paramConfig: [
     numberItem<SoloParams>("columns-of-sub-blocks", "Columns of sub-blocks", "c", {
       doc: "How many blocks the grid has across and down. Their product is the width and height of the grid, and the largest number in it: 3 and 3 make the usual 9×9 grid of 3×3 blocks, while 2 and 3 make a 6×6 grid of blocks 3 wide and 2 high. The grid can hold at most 31 numbers. The three smallest grids, a 2 or 3 Jigsaw and a 2x2, have only Easy puzzles, and a 4 Jigsaw has none above Tricky. A 2 Jigsaw has no Killer puzzle at all.",
       bounds: { min: 2, max: ORDER_MAX },
       label: {
         slot: "size",
-        words: (p) => (p.r === 1 ? `${p.c * p.r} Jigsaw` : `${p.c}x${p.r}`),
+        // A jigsaw's blocks have no width and height, so it says its grid's.
+        words: (p) => (p.r === 1 ? `${p.c}x${p.c}` : `${p.c}x${p.r}`),
       },
     }),
     numberItem<SoloParams>("rows-of-sub-blocks", "Rows of sub-blocks", "r", {
@@ -684,20 +702,14 @@ export const soloGame: Game<
         p.xtype = v;
       },
     }),
-    modifierItem<SoloParams>({
-      kw: "jigsaw",
-      name: "Jigsaw (irregularly shaped sub-blocks)",
-      type: "boolean",
-      when: true,
-      words: "Jigsaw",
-      // The size's words say it: a jigsaw is "9 Jigsaw" where a 3x3 is "3x3".
-      slot: null,
-      rule: "the blocks are random shapes rather than rectangles.",
-      get: (p) => p.r === 1,
-      set: (p, v) => {
-        if (v) {
+    rulesetItem<SoloParams>(RULESETS, {
+      get: (p) => (p.r === 1 ? RULESET_JIGSAW : RULESET_STANDARD),
+      set: (p, i) => {
+        if (i === RULESET_JIGSAW && p.r !== 1) {
           p.c *= p.r;
           p.r = 1;
+        } else if (i === RULESET_STANDARD && p.r === 1) {
+          [p.c, p.r] = blocksOf(p.c);
         }
       },
     }),

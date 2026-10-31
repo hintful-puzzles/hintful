@@ -10,10 +10,9 @@ help:
     are lit up. Aim to light up every square. No connection may
     cross a barrier, a heavy gray line between squares.
 
-    One setting changes the rules, and a board's name in the Type menu
-    says when it is on:
+    The game mode says where the network may run:
 
-    {{modifiers}}
+    {{rulesets}}
   controls: |-
     Click on the arrows at the edges of the grid to move a row or column
     left, right, up or down. The square that falls off the end of the

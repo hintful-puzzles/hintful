@@ -12,10 +12,6 @@ help:
     - **Identity**: one letter leaves every letter unchanged.
     - **Inverses**: each letter has a partner it makes the identity with.
     - **Associativity**: (*a·b*)·*c* and *a*·(*b·c*) are the same letter.
-
-    A board's name says when this setting is on:
-
-    {{modifiers}}
   controls: |-
     To place a letter, click in a square to select it, then type the
     letter on the keyboard. To erase a letter, click to select a square

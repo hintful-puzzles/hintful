@@ -89,6 +89,8 @@ const SHAPES: AscentParams[] = [
     custom(7, 7, d, MODE_RECT, false, true),
   ]),
   ...[1, 2, 3].map((d) => custom(6, 8, d, MODE_HONEYCOMB, true, true)),
+  // The menu's Edges line is its Normal.
+  ...[2, 3].map((d) => custom(5, 5, d, MODE_EDGES, true)),
 ];
 const SEEDS = ["ah-a", "ah-b"];
 

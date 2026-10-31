@@ -221,24 +221,43 @@ function connectedRegions(sp: GridSpace, most: number): number[][] {
 
 let boardCount = 0;
 
+const BLOCKS = /^blocks\((\w+), *(\w+)\)$/;
+
+/** The partition among `d`'s units, by name and how it is made. */
+function unitRegion(d?: Description): [string, string] | null {
+  const space = d?.json.space;
+  return (
+    Object.entries(space?.regions ?? {}).find(([n]) => space?.units.includes(n)) ?? null
+  );
+}
+
+/**
+ * Why no board of `d` can be built, or `null`. Boxes a board deals (Solo's
+ * Jigsaw) are not built: as fixed boards, every 4x4 jigsaw up to symmetry
+ * would multiply Solo's 44-minute check twentyfold.
+ */
+export function unbuilt(d: Description): string | null {
+  const unit = unitRegion(d);
+  return unit === null || BLOCKS.test(unit[1])
+    ? null
+    : `its ${unit[0]} partition is ${unit[1]}, and only blocks(a, b) is built`;
+}
+
 /**
  * The grid of `d`'s board of `order`: a Latin square, or where a partition is
  * among its units, a Sudoku whose boxes are that partition's `blocks(a, b)`
  * at the sizes that make the order, the squarest boxes first, with its
- * diagonals where `d` has them. A board shape that deals its boxes is checked
- * on these.
+ * diagonals where `d` has them.
  */
 function spaceOf(
   order: number,
   d?: Description,
 ): { sp: GridSpace; sizes: ReadonlyMap<string, number> } {
   const space = d?.json.space;
-  const unit = Object.entries(space?.regions ?? {}).find(([n]) =>
-    space?.units.includes(n),
-  );
-  if (d === undefined || unit === undefined)
+  const unit = unitRegion(d);
+  if (d === undefined || unit === null)
     return { sp: latinSpace(order), sizes: new Map() };
-  const m = /^blocks\((\w+), *(\w+)\)$/.exec(unit[1]);
+  const m = BLOCKS.exec(unit[1]);
   if (m === null) throw new Error(`${unit[0]}: only blocks(a, b) is checked`);
   const range = (name: string): number[] => {
     const s = d.json.sizes[name];

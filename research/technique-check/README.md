@@ -5,8 +5,8 @@ technique, stated in the language of
 `openspec/changes/archive/2026-10-29-investigate-a-language-for-puzzle-games/language.md`,
 is sound against a game's rules on small boards, and computes the cut between
 two games by checking each game's techniques against the other's rules.
-`openspec/changes/compute-the-cut-by-technique-transfer/` says what it was
-built to test and what it found.
+`openspec/changes/archive/2026-10-31-compute-the-cut-by-technique-transfer/`
+says what it was built to test and what it found.
 
 It is run by hand and not by the gate, which compiles it
 (`tsconfig.node.json`) and runs none of its tests. It uses z3 through the

@@ -17,7 +17,6 @@ import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click } from "../../engine/hint-gesture.ts";
-import { modifierItem } from "../../engine/modifier.ts";
 import {
   atof,
   dimensionParamConfig,
@@ -34,6 +33,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { wrappingRulesetItem } from "../../engine/ruleset.ts";
 import { SOLUTION_UNKNOWN } from "../../engine/solve-failure.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
@@ -249,19 +249,7 @@ export const netslideGame: Game<
       doc: "Size of the grid in squares.",
       bounds: { min: 2 },
     }),
-    modifierItem<NetslideParams>({
-      kw: "walls-wrap-around",
-      name: "Walls wrap around",
-      type: "boolean",
-      when: true,
-      words: "wrapping",
-      slot: "kind",
-      rule: "the network may run off one edge of the grid and come back on the opposite one.",
-      get: (p) => p.wrapping,
-      set: (p, v) => {
-        p.wrapping = v;
-      },
-    }),
+    wrappingRulesetItem<NetslideParams>("network"),
     {
       kw: "barrier-probability",
       name: "Barrier probability",

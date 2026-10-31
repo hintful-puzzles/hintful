@@ -111,7 +111,7 @@ describe("params codec", () => {
         barrierProbability: 0.25,
         diff: DIFF_EASY,
       }),
-    ).toBe("7x9 wrapping Easy, 25% barriers");
+    ).toBe("Wrapping: 7x9 Easy, 25% barriers");
   });
 });
 

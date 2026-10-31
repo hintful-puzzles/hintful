@@ -23,9 +23,6 @@ export interface Modifier {
   /** For a checkbox, the value at which the rule applies. A choice bounds its
    * rule at every value and has none. */
   readonly when?: boolean;
-  /** What the field leaves of the other fields, by the value it has: a
-   * choice's index, or 0 and 1 for a checkbox off and on (`only.ts`). */
-  readonly only?: Readonly<Record<number, OnlyOf>>;
 }
 
 type Slot = ParamLabel<unknown>["slot"];
@@ -85,7 +82,8 @@ export function modifierItem<P>(
       name,
       type: "choices",
       choices: spec.choices,
-      modifier: spec.only ? { ...modifier, only: spec.only } : modifier,
+      modifier,
+      ...(spec.only ? { only: spec.only } : {}),
       doc: `${capitalized(rule)}${note}`,
       label: spec.label,
       get: spec.get,
@@ -97,11 +95,8 @@ export function modifierItem<P>(
     kw,
     name,
     type: "boolean",
-    modifier: {
-      ...modifier,
-      when,
-      ...(spec.only ? { only: { [Number(when)]: spec.only } } : {}),
-    },
+    modifier: { ...modifier, when },
+    ...(spec.only ? { only: { [Number(when)]: spec.only } } : {}),
     doc: `When ${when ? "on" : "off"}, ${rule}${note}`,
     ...(slot === null
       ? {}

@@ -19,7 +19,6 @@ import type { Game, GamePref, SolveResult } from "../../engine/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
-import { modifierItem } from "../../engine/modifier.ts";
 import {
   atof,
   dimensionParamConfig,
@@ -47,6 +46,7 @@ import {
 } from "../../engine/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { wrappingRulesetItem } from "../../engine/ruleset.ts";
 import {
   anticlockwise,
   clockwise,
@@ -134,8 +134,10 @@ const BOARDS: readonly NetParams[] = [
   board(9, 11),
   board(11, 11),
   board(11, 13),
+  board(5, 5, true),
+  board(7, 9, true),
+  board(9, 11, true),
 ];
-const VARIANTS: readonly NetParams[] = [board(7, 7, true)];
 
 /* ----------------------------------------------------------------------
  * Moves.
@@ -787,7 +789,6 @@ export const netGame: Game<
     // The hint finishes nearly every 5x5 board the solver stops on, so an
     // Unreasonable one takes seconds to find, too long for the menu.
     tiers: (b) => (b.w === 5 && b.h === 5 ? [DIFF_EASY, DIFF_EASY] : null),
-    variants: VARIANTS,
   },
   encodeParams,
   decodeParams,
@@ -796,23 +797,10 @@ export const netGame: Game<
   transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<NetParams>({
-      doc: "Size of the grid in squares. At least one of them must be more than 1.",
+      doc: "Size of the grid in squares. At least one of them must be more than 1, and a wrapping grid cannot be exactly 2 squares wide or high, since such a grid can never have just one solution.",
       bounds: { min: 1 },
     }),
-    modifierItem<NetParams>({
-      kw: "walls-wrap-around",
-      name: "Walls wrap around",
-      type: "boolean",
-      when: true,
-      words: "wrapping",
-      slot: "kind",
-      rule: "the network may run off one edge of the grid and come back on the opposite one.",
-      note: "The grid cannot then be exactly 2 squares wide or high, since such a grid can never have just one solution.",
-      get: (p) => p.wrapping,
-      set: (p, v) => {
-        p.wrapping = v;
-      },
-    }),
+    wrappingRulesetItem<NetParams>("network"),
     {
       kw: "barrier-probability",
       name: "Barrier probability",

@@ -1,8 +1,9 @@
 /**
  * What one setting leaves of the others: a ruleset that does not take every
- * tier (`Ruleset.only`), or a rule modifier that takes a tier away while it
- * applies (`modifierItem`'s `only`). It is declared once, on the deciding
- * field, and the three things that follow are built here: the refusal of a
+ * tier (`Ruleset.only`), a rule modifier that takes a tier away while it
+ * applies (`modifierItem`'s `only`), or any other field's value that does
+ * (the item's `only`). It is declared once, on the deciding field, and the
+ * three things that follow are built here: the refusal of a
  * deal that asks for more ({@link onlyError}), what the Custom dialog offers
  * ({@link configNarrowing}), and the sentence in the narrowed field's help
  * entry ({@link onlySentences}).
@@ -39,8 +40,8 @@ function valueName<P>(by: Deciding<P>["by"], index: number): string {
   return by.choices[index] ?? String(index);
 }
 
-/** Every deciding value in `config`: the rulesets first, then the modifiers
- * in dialog order. */
+/** Every deciding value in `config`: the rulesets first, then the other
+ * fields in dialog order. */
 function deciding<P>(config: readonly ParamConfigItem<P>[]): Deciding<P>[] {
   const out: Deciding<P>[] = [];
   const all = [
@@ -49,18 +50,16 @@ function deciding<P>(config: readonly ParamConfigItem<P>[]): Deciding<P>[] {
   ];
   for (const by of all) {
     if (by.type === "string") continue;
-    const rulesets = by.type === "choices" ? by.rulesets : undefined;
-    rulesets?.forEach((ruleset, index) => {
-      if (ruleset.only)
-        out.push({ by, index, only: ruleset.only, ruleset: ruleset.name });
-    });
-    for (const [index, only] of Object.entries(by.modifier?.only ?? {})) {
-      const known = by.type === "boolean" || by.choices[Number(index)] !== undefined;
+    for (const [key, only] of Object.entries(by.only ?? {})) {
+      const index = Number(key);
+      const known = by.type === "boolean" || by.choices[index] !== undefined;
       if (!known)
         throw new Error(
           `"${by.kw}" declares what choice ${index} leaves, and has none`,
         );
-      out.push({ by, index: Number(index), only, ruleset: null });
+      const ruleset =
+        by.type === "choices" ? (by.rulesets?.[index]?.name ?? null) : null;
+      out.push({ by, index, only, ruleset });
     }
   }
   return out;
@@ -88,9 +87,11 @@ function narrowedBy<P>(
     const item = config.find((i) => i.kw === kw);
     const bad = (why: string) => new Error(`${who} narrows "${kw}", ${why}`);
     if (!item || item.kw === d.by.kw) throw bad("which is no other field");
-    // A form works a field's offer out from the values as chosen, in one
-    // pass, so a field that decides is never itself decided.
-    if (deciders.has(kw)) throw bad("which narrows fields itself");
+    // A form settles a field's offer from the deciding fields' values, so a
+    // field that decides may itself be decided only by the ruleset, which
+    // nothing decides: the chain is two long and settles in two passes.
+    if (deciders.has(kw) && (d.by.kw !== RULESET_KW || kw === RULESET_KW))
+      throw bad("which narrows fields itself");
     if (typeof only === "boolean") {
       if (item.type !== "boolean") throw bad("which is not a checkbox");
       return { item, only };

@@ -124,6 +124,8 @@ function preset(
 export const menu: PresetBoards<TwiddleParams> = {
   boards: [
     preset(3, 3, 2, true, false),
+    preset(4, 4, 2, true, false),
+    preset(5, 5, 3, true, false),
     preset(3, 3, 2, false, false),
     preset(3, 3, 2, false, true),
     preset(4, 4, 2, false, false),

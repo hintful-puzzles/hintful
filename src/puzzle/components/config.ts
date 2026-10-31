@@ -125,7 +125,9 @@ abstract class PuzzleConfigForm extends SignalWatcher(LitElement) {
 
   private renderConfigItem(id: string, config: ConfigItem) {
     const value = this.shown[id];
-    const offered = this.config ? offeredOf(this.config, this.chosen, id) : null;
+    // Read at the values shown, where a deciding field the ruleset narrows
+    // decides at the value it is offered.
+    const offered = this.config ? offeredOf(this.config, this.shown, id) : null;
     const narrowed = (choice: number) =>
       Array.isArray(offered) && !offered.includes(choice);
     // A leading "%" reads badly (Bridges), and "Size (s*s)" better as

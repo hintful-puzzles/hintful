@@ -60,16 +60,48 @@ export function rulesetItem<P>(
           },
         };
   const names = rulesets.map((r) => r.name);
+  const only = Object.fromEntries(
+    rulesets.flatMap((r, i) => (r.only ? [[i, r.only] as const] : [])),
+  );
   return {
     kw: RULESET_KW,
     name: "Game mode",
     type: "choices",
     choices: names,
     rulesets,
+    ...(Object.keys(only).length > 0 ? { only } : {}),
     doc: `Which puzzle to play: ${names.slice(0, -1).join(", ")} or ${names.at(-1)}. The rules of each are at the top of this page.`,
     get: access.get,
     set: access.set,
   };
+}
+
+const BORDERED = 0;
+const WRAPPING = 1;
+
+/**
+ * The game mode of a grid that may wrap, Net's and Netslide's: `what` runs
+ * inside the grid, or off one edge and back on the opposite one. Each keeps
+ * the other's techniques, so wrapping is a ruleset and not a rule added.
+ */
+export function wrappingRulesetItem<P extends { wrapping: boolean }>(
+  what: string,
+): ParamConfigItem<P> {
+  return rulesetItem<P>(
+    [
+      { name: "Bordered", rule: `The ${what} stays inside the grid.` },
+      {
+        name: "Wrapping",
+        rule: `The ${what} may run off one edge of the grid and come back on the opposite one.`,
+      },
+    ],
+    {
+      get: (p) => (p.wrapping ? WRAPPING : BORDERED),
+      set: (p, i) => {
+        p.wrapping = i === WRAPPING;
+      },
+    },
+  );
 }
 
 /** The game's {@link rulesetItem}, or `null` for a game with one puzzle. */

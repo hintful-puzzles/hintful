@@ -19,6 +19,7 @@ import {
 } from "../../engine/params.ts";
 import { MOD_MASK, MOD_NUM_KEYPAD, newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { rulesetItem } from "../../engine/ruleset.ts";
 import {
   interpretTargetVerbs,
   squareGrid,
@@ -276,19 +277,23 @@ export const twiddleGame: Game<
         words: (p) => (p.n === 2 ? null : `rotating ${p.n}x${p.n} blocks`),
       },
     }),
-    modifierItem<TwiddleParams>({
-      kw: "one-number-per-row",
-      name: "One number per row",
-      type: "boolean",
-      when: true,
-      words: "rows only",
-      slot: "kind",
-      rule: "the squares of a row all carry the row's number, so it doesn't matter which of them goes where in it.",
-      get: (p) => p.rowsonly,
-      set: (p, v) => {
-        p.rowsonly = v;
+    // Each keeps the other's techniques, so rows only is a ruleset and not a
+    // rule added.
+    rulesetItem<TwiddleParams>(
+      [
+        { name: "Standard", rule: "Every square carries a number of its own." },
+        {
+          name: "Rows only",
+          rule: "The squares of a row all carry the row's number, so it doesn't matter which of them goes where in it.",
+        },
+      ],
+      {
+        get: (p) => (p.rowsonly ? 1 : 0),
+        set: (p, i) => {
+          p.rowsonly = i === 1;
+        },
       },
-    }),
+    ),
     modifierItem<TwiddleParams>({
       kw: "orientation-matters",
       name: "Orientation matters",
