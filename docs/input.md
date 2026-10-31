@@ -94,15 +94,12 @@ values, keys of its own, pixel coordinates in its state.
 
 ## Button codes and a key held with Shift
 
-Take every button code, class predicate and modifier mask from
-[`engine/pointer.ts`](../src/engine/pointer.ts), and never restate one: no
+**Take every button code, class predicate and modifier mask from
+[`engine/pointer.ts`](../src/engine/pointer.ts), and never restate one**: no
 local `const MOD_MASK`, no renamed copy, no magic number where a named button
-exists (`0x0209` for `CURSOR_UP`). The module exports `LEFT_BUTTON` to
-`CURSOR_SELECT2`, `isMouseDown` / `isMouseDrag` / `isMouseRelease`, the
-`MOD_*` masks and `stripModifiers`.
-[`emittable-keys.test.ts`](../src/engine/emittable-keys.test.ts) derives the
-export list from the module and fails on a game-local declaration that shadows
-one.
+exists. [`emittable-keys.test.ts`](../src/engine/emittable-keys.test.ts)
+derives the export list from the module and fails on a game-local
+declaration that shadows one.
 
 A press reaches a game from `puzzle/components/view-interactive.ts`, through
 the worker, as `Midend.processInput` calling `interpretMove`. A key arrives as
@@ -111,9 +108,9 @@ a bare character code from the view's `puzzleKeyMap`.
 **Shift on a key is yours to read, and you need not strip it.** A key held
 with Shift arrives with `MOD_SHFT` set, a capital letter included. If the game
 declines it, the midend offers the same key again without Shift
-(`withoutShift`), so `button === 'D'` matches. Shift with an arrow is a
-gesture, and declining it is final. A game that gives a shifted key its own
-meaning answers the first offer. Ctrl and the keypad bit are not taken off.
+(`withoutShift`), so `button === 'D'` matches. A game that gives a shifted key
+its own meaning answers the first offer. Shift with an arrow is a gesture, and
+declining it is final. Ctrl and the keypad bit are not taken off.
 
 ## An upstream editor-only key is not wired
 
@@ -166,19 +163,19 @@ questions the guards ask, so two guards cannot drift apart.
 - **Never credit a game because it consumed the input.** Consuming
   `RIGHT_BUTTON` with a bare repaint is not a meaning: ask what the player
   can perceive, now or after the next input, in the frame or the save.
-- **Button codes are not Unicode.** `MOD_MASK` is `0x7000`, so a private-use
-  code such as `0xE000` decodes as modifier bits on another key. Take a code
-  no game acts on from `UNACTIONABLE` in
+- **Button codes are not Unicode.** A private-use code such as `0xE000`
+  carries bits of `MOD_MASK`, so it decodes as modifiers on another key. Take
+  a code no game acts on from `UNACTIONABLE` in
   [`input-parity.test.ts`](../src/engine/input-parity.test.ts), which derives
   why each is safe from the vocabulary.
 
 ## The numeric keypad never arrives
 
 **A keypad binding is never the only route to an input: bind the bare digits
-too.** `MOD_NUM_KEYPAD | '7'` does fire, but only with Num Lock on. With it
-off the key is `Home`, which `puzzleKeyMap` does not carry, and a laptop may
-have no numpad. Where the game gives those digits no other meaning, read a
-bare digit as the pad's: `numpadDirection(button | MOD_NUM_KEYPAD)`. Exemplar:
+too.** `MOD_NUM_KEYPAD | '7'` fires only with Num Lock on. With it off the
+key is `Home`, which `puzzleKeyMap` does not carry, and a laptop may have no
+numpad. Where the game gives those digits no other meaning, read a bare digit
+as the pad's: `numpadDirection(button | MOD_NUM_KEYPAD)`. Exemplar:
 [`inertia/index.ts`](../src/games/inertia/index.ts) (`keyDirection`).
 
 The keypad bit rides a digit and nothing else. With Num Lock off the pad's 8
@@ -189,24 +186,22 @@ is the plain `CURSOR_UP` and its Enter the plain `CURSOR_SELECT`.
 `CURSOR_SELECT`, so `button == ' '` never matches. Accept the button this
 frontend sends; keeping the literal beside it costs nothing.
 
-[`emittable-keys.test.ts`](../src/engine/emittable-keys.test.ts) reads the
-codes the frontend can produce and the codes the game sources test, and fails
-on a test with no producer. The on-screen panel is a second emitter, so the
-set is computed for each game: `8` reaches a game that offers `clearKey` and
-no other.
+`emittable-keys.test.ts` reads the codes the frontend can produce and the
+codes the game sources test, and fails on a test with no producer. The
+on-screen panel is a second emitter, so the set is computed for each game:
+`8` reaches a game that offers `clearKey` and no other.
 
 ### An erase or cancel key
 
 **Never write the codes.** Test `isEraseKey(button)` (8 or 127) and
-`isCancelKey(button)` (27, 8 or 127), from
-[`engine/pointer.ts`](../src/engine/pointer.ts); a game with both meanings
-tests them in separate branches. The keyboard sends 127 for Backspace, Delete
-and Clear, never upstream's `'\b'` (8).
+`isCancelKey(button)` (27, 8 or 127), from `engine/pointer.ts`; a game with
+both meanings tests them in separate branches. The keyboard sends 127 for
+Backspace, Delete and Clear, never upstream's `'\b'` (8).
 
 - **A clear that is a verb takes `keys: ERASE_KEYS`**
   ([`engine/target-verb.ts`](../src/engine/target-verb.ts)) and tests no
   button: a `keyOnly` verb whose route is `cycle`. Exemplar: the skeleton's
-  [`index.ts`](../src/skeleton/grid/index.ts).
+  `index.ts`.
 - **An arm of the game's own calls `isEraseKey` where it decides what the
   key means**, and passes the decision on, never the button. Exemplar:
   `isClear` in [`keen/index.ts`](../src/games/keen/index.ts).
@@ -250,35 +245,36 @@ not in the vocabulary:
   modifier on a key (Shift+arrow, Ctrl+arrow) is a keyboard gesture and stays.
 - **`MOD_STYLUS`.** A game has no touch-only behavior.
 
-**Every action is reachable with the two buttons alone, clicks and drags, and
-every action is reachable from the keyboard alone.** Where a third action has
-no button to spare, put it in a mode the player turns on (a tap in notes mode,
-a key that arms the next tap) or on the on-screen keypad. A clear rarely needs
-a control: a button cycle that passes through empty reaches it, and Backspace
-stays as a `keyOnly` verb whose route is `cycle`. A pointer gesture with no
-key gets one the same way, such as Shift+arrow for a drag.
+**Every action is reachable with the two buttons alone, clicks and drags,
+and from the keyboard alone.** Where a third action has no button to spare,
+put it in a mode the player turns on (a tap in notes mode, a key that arms
+the next tap) or on the on-screen keypad. A clear rarely needs a control: a
+button cycle that passes through empty reaches it, and Backspace stays as a
+`keyOnly` verb whose route is `cycle`. A pointer gesture with no key gets one
+the same way, such as Shift+arrow for a drag.
 
-Inside the target-verb model the rule is structural: a `keyOnly` verb without
-a `pointer` route is a type error, and its route is tested. An arm of the
-game's own, handled before `interpretTargetVerbs`, is checked by nothing. Put
-an action in the model whenever it fits.
+**Put an action in the target-verb model whenever it fits**: there the rule is
+structural. A `keyOnly` verb without a `pointer` route is a type error, and
+its route is tested. An arm of the game's own, handled before
+`interpretTargetVerbs`, is checked by nothing.
 
 ## A touch hold arrives as the right button
 
-A finger that stays within 8 px for 350 ms is delivered as `RIGHT_BUTTON`, and
-its drag and release follow (`detectSecondaryButton`, `src/utils/touch.ts`).
-"Press, pause to aim, then drag" is such a press, so **every press-and-drag
-gesture must survive the promotion**. Choose by what the right button means:
+A finger held still is delivered as `RIGHT_BUTTON`, and its drag and release
+follow (`detectSecondaryButton`, its defaults in `src/utils/touch.ts`; the player
+can change the window and the radius in Settings). "Press, pause to aim, then drag" is such a press, so **every
+press-and-drag gesture must survive the promotion**. Choose by what the right
+button means:
 
 - **Nothing of its own: declare `Game.ignoresSecondaryButton`, and test only
   the left button's codes.** The view then skips the detection and delivers
-  the press at once, the bar offers no "Right click" toggle, and the midend
+  the press at once, the Bar offers no "Right click" toggle, and the midend
   hands the game a mouse's right button as the left, so a right click plays
-  as a click. `input-parity.test.ts` asserts the biconditional: the flag is
-  declared exactly when no secondary gesture changes anything a player can
-  perceive, in the frame or the save, that the primary gesture would not,
-  and a declaring game does nothing with a right button handed to it
-  directly. A game never folds the right button onto the left itself. A
+  as a click. A game never folds the right button onto the left itself.
+  `input-parity.test.ts` asserts the biconditional: the flag is declared
+  exactly when no secondary gesture changes anything a player can perceive,
+  in the frame or the save, that the primary gesture would not, and a
+  declaring game does nothing with a right button handed to it directly. A
   pencil press through `pressNoteTakingCell` counts as an action with no
   `RIGHT_BUTTON` branch of the game's own. The flag is not upstream's
   `REQUIRE_RBUTTON` inverted: a game may use the right button without
@@ -312,11 +308,10 @@ keyboard back to the board".
 ## The app's shortcut keys
 
 **A game that takes a bare letter keeps it and declares nothing.**
-[`puzzle/shortcuts.ts`](../src/puzzle/shortcuts.ts) is the one table: the
-chords (`Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z`, `Ctrl+Y`, `Ctrl/Cmd+S`,
-`Ctrl/Cmd+K`) are always the app's, and bare `u`, `r`, `n` and `h` sit behind
-the `oneKeyShortcuts` preference. A bare letter is offered to the game first
-and becomes an app command only when the game declines it: `interpretMove`
+[`puzzle/shortcuts.ts`](../src/puzzle/shortcuts.ts) is the one table: its
+chords are always the app's, and bare `u`, `r`, `n` and `h` sit behind the
+`oneKeyShortcuts` preference. A bare letter is offered to the game first and
+becomes an app command only when the game declines it: `interpretMove`
 returned `null` and left what the `Ui` shows as it was.
 
 Add a shortcut as a row of that table. The key drawn on a Bar slot and a Menu
@@ -365,18 +360,15 @@ declare it and write no press handling.** Set `Game.targetVerbs` and end
 a geometry and a verb for each button; a verb is a `does` phrase for the help
 and an `apply(state, target, ui)` that returns the game's own `Move`, `null`,
 or `UI_UPDATE` for a verb that only changes what is shown. Exemplars: the
-skeleton's [`index.ts`](../src/skeleton/grid/index.ts);
-[`lightup/index.ts`](../src/games/lightup/index.ts) (verbs only);
-[`unruly/index.ts`](../src/games/unruly/index.ts) (verbs, a digit arm and an
-erase key).
+skeleton's `index.ts`; [`lightup/index.ts`](../src/games/lightup/index.ts)
+(verbs only); [`unruly/index.ts`](../src/games/unruly/index.ts) (verbs, a
+digit arm and an erase key).
 
-The model owns, and a game does not write:
-
-- a press parks the cursor, hidden, on the target it hit;
-- the first Enter or Space on a hidden cursor only shows it;
-- Enter applies `primary`, Space applies `secondary` (or `primary` again where
-  there is none), and a verb's own `keys` apply it;
-- a press on no target, or a button with no verb, is `null`.
+The model owns, and a game does not write: a press parks the cursor, hidden,
+on the target it hit; the first Enter or Space on a hidden cursor only shows
+it; Enter applies `primary`, Space applies `secondary` (or `primary` again
+where there is none), and a verb's own `keys` apply it; a press on no target,
+or a button with no verb, is `null`.
 
 What a game decides:
 
@@ -385,23 +377,22 @@ What a game decides:
 - **Verb semantics are functions, never flags.** A refusal, a three-state
   cycle or "either button clears" is a line of the verb's `apply`.
 - **The left button places what the puzzle is about, and the right button
-  says "nothing here".** A cross, a dot or any other mark that rules a
-  target out is the `secondary` verb, declared as `secondary:
-  rulingOut({ … })` with the game's own words and mark, or a cycle whose
-  first press makes that mark. `primary` does not typecheck with it, however
-  much oftener the player makes the mark than the placement: one meaning a
-  button across the collection is worth more than a click saved in one game
-  (the owner's ruling, 2026-10-13, on Star Battle, which first shipped the
-  other way round). Where a placement rules the crosses out, the engine's
-  preference can make them for the player (`docs/mechanics.md` §
-  "Preferences", `rulesOut`), and `target-verb.test.ts` holds such a game to
-  a ruling-out right button.
+  says "nothing here".** A cross, a dot or any other mark that rules a target
+  out is the `secondary` verb, declared as `secondary: rulingOut({ … })` with
+  the game's own words and mark, or a cycle whose first press makes that
+  mark. `primary` does not typecheck with it, however much oftener the player
+  makes the mark than the placement: one meaning a button across the
+  collection is worth more than a click saved in one game (the owner's
+  ruling, 2026-10-13). Where a placement rules the crosses out, the engine's
+  preference can make them for the player (`mechanics.md` § "Preferences",
+  `rulesOut`), and `target-verb.test.ts` holds such a game to a ruling-out
+  right button.
 - **Space is always the right button's verb.** A verb that wants another key
   takes `keys`; it does not remap Space.
-- **Keys use the model's spellings**: `letterKey("T")` for a letter in either
-  case, `digitKey(1)` for a digit on the main row or the numpad, `ERASE_KEYS`
-  for Backspace and Delete. Write a character code only for a key that is none
-  of these.
+- **Keys use the model's spellings**: `letterKey` for a letter in either
+  case, `digitKey` for a digit on the main row or the numpad, `ERASE_KEYS`
+  for Backspace and Delete. Write a character code only for a key that is
+  none of these.
 - **Write each `does` as the end of "Click a square to …"**, for the common
   case. The help page writes `{{controls}}` (`vite-plugins/controls.ts`) and
   adds after it only what the game does beyond its verbs, a cycle's full
@@ -427,30 +418,23 @@ rests on, before bending the model to it.
 ### A key-only verb and its pointer route
 
 **A verb no button applies directly goes in `keyOnly`, with its `keys` and the
-pointer's route to the same move.** It does not typecheck without
-`pointer: PointerRoute`:
-
-- `repeat`: the button pressed `times` times (a half turn is two quarter
-  turns);
-- `cycle`: a button whose cycle passes through the result (an erase key);
-- `notes`: the button pressed in notes mode, at `where` on the target when the
-  game reads where a press lands.
-
-The Controls paragraph says the route, and `target-verb.test.ts` holds it to
-what the key does at the same target, comparing boards as the player sees
-them (`boardsReached` with `bySight`). The route is pressed at the target's
-`pointAt`, so a `notes` route's `where` is that point. Exemplars: [`net/index.ts`](../src/games/net/index.ts)
-(`repeat` and `notes`); the skeleton's
-[`index.ts`](../src/skeleton/grid/index.ts) (`cycle`).
+pointer's route to the same move.** It does not typecheck without a `pointer`
+route; `PointerRoute`'s doc says each kind (`repeat` the button, a `cycle`
+that passes through the result, a press in `notes` mode). The Controls
+paragraph says the route, and `target-verb.test.ts` holds it to what the key
+does at the same target, comparing boards as the player sees them
+(`boardsReached` with `bySight`). The route is pressed at the target's
+`pointAt`, so a `notes` route's `where` is that point. Exemplars:
+[`net/index.ts`](../src/games/net/index.ts) (`repeat` and `notes`); the
+skeleton's `index.ts` (`cycle`).
 
 ### A target that is not a grid square
 
-**Say what a target is in the geometry, and nowhere else.** `squareGrid({
-size, border })` serves a grid of tile-sized catchments, a block grid
-included, where `border` reads the block size from the state. For anything
-else write a `TargetGeometry`: `pointerTarget`, its inverse `pointAt`,
-`cursorTarget`, `parkCursor` and `moveCursor`. `pointerTarget` receives the
-`Ui` for a view the player scrolls.
+**Say what a target is in the geometry, and nowhere else.** `squareGrid`
+serves a grid of tile-sized catchments, a block grid included, where `border`
+reads the block size from the state. For anything else write a
+`TargetGeometry`; `pointerTarget` receives the `Ui` for a view the player
+scrolls.
 
 The model reads only `ui.cursor.visible`; where the cursor is and how it moves
 belong to the geometry. A cursor position that rests on no target makes Enter
@@ -459,17 +443,17 @@ do nothing there, and the guard walks through it without pressing.
 Exemplars: `borderGridGeometry` in
 [`engine/border-grid.ts`](../src/engine/border-grid.ts) (an edge between two
 cells); [`magnets/index.ts`](../src/games/magnets/index.ts) (tiles and the
-clues round them); [`net/index.ts`](../src/games/net/index.ts) (a scrolled
-origin); [`numgame/index.ts`](../src/games/numgame/index.ts) (a board that
-is no grid: six places and four buttons).
+clues round them); `net/index.ts` (a scrolled origin);
+[`numgame/index.ts`](../src/games/numgame/index.ts) (a board that is no grid).
 
 ### A move picked in parts
 
 **Where a move takes several presses, one verb picks a part a press**, and
-holds what is picked on the `Ui` until the last part makes the move: Target's
-number, operator and second number. Every board change clears what was
-picked (`changedState`). The guards arm such a move with the presses before
-its last, so nothing is declared for them. Two things are the game's own:
+holds what is picked on the `Ui` until the last part makes the move. Every
+board change clears what was picked (`changedState`). The guards arm such a
+move of up to three parts (two presses, then the one that makes it), so
+nothing is declared for them; a longer one is armed by nothing. Two
+things are the game's own:
 
 - **Its `hintGesture` taps each part**, from the selection as it stands.
   `verbClicks` needs every click to make a move the step keeps, which a click
@@ -477,7 +461,7 @@ its last, so nothing is declared for them. Two things are the game's own:
 - **A key for a part picks the part under the cursor too** where nothing is
   picked yet, so the keyboard needs no more presses than the pointer.
 
-Exemplar: [`numgame/index.ts`](../src/games/numgame/index.ts).
+Exemplar: `numgame/index.ts`.
 
 ### A drag game declares its click half
 
@@ -495,23 +479,23 @@ read one function. A key the drag has no button for is a `keyOnly` verb on a
 ### A mark that drags is a sweep
 
 **Where a button's verb is a mark the player wants on several targets (shade,
-cross, wall, flag), declare `sweep` and write no drag.** `sweep.holds(state,
-target)` says what a target holds, as a value `===` compares. A drag on from a
-press then repeats the press on every further target that held what the
-pressed one held before its press, so it paints and never toggles. The midend
-undoes the whole drag in one step, and the Controls paragraph says the drag.
+cross, wall, flag), declare `sweep` and write no drag.** `sweep.holds` says
+what a target holds, as a value `===` compares. A drag on from a press then
+repeats the press on every further target that held what the pressed one
+held before its press, so it paints and never toggles. The midend undoes the
+whole drag in one step, and the Controls paragraph says the drag.
 
-Four knobs, each a fact about the puzzle:
+Its knobs are facts about the puzzle, each documented on the `sweep` type:
 
-- `buttons`: leave a button out where its verb is a move (rotate, slide, fire,
-  open) or a mark never wanted in a row;
-- `reaches(first, next)`: where a drag from one kind of target must not take
-  another;
-- `within(ds)`: **every edge geometry needs it.** An edge's catchment meets
-  its neighbors' at each corner, so without a reach a drag along a wall clips
-  the edges crossing it. With one, an edge is taken only where the pointer
-  passes near its middle;
-- `says`: where the default sentence would not describe the gesture.
+- **Leave a button out of `buttons`** where its verb is a move (rotate,
+  slide, fire, open) or a mark never wanted in a row.
+- **`reaches`** keeps a drag from one kind of target off another.
+- **Every edge geometry needs `within`.** An edge's catchment meets its
+  neighbors' at each corner, so without a reach a drag along a wall clips the
+  edges crossing it. With one, an edge is taken only where the pointer passes
+  near its middle.
+- **`says`** replaces the default sentence where it would not describe the
+  gesture.
 
 **A game whose own arm takes the press** opens the same drag with
 `beginSweep`, continues it with `sweepTo`, and asks `endSweep` on the release
@@ -545,48 +529,40 @@ in [`towers/index.ts`](../src/games/towers/index.ts); `crossDrag` in
 
 ## Keyboard cursors
 
-**Hold the keyboard cursor as `ui.cursor`, a `GridCursor` (`x`, `y`,
-`visible`) from [`engine/pointer.ts`](../src/engine/pointer.ts), and give
-nothing about it a second name.** Build it with `newCursor(x?, y?, visible?)`.
-[`cursor-vocabulary.test.ts`](../src/engine/cursor-vocabulary.test.ts) finds a
-cursor by its shape, read off `newCursor()`, and fails on one held anywhere
-else.
+**Hold the keyboard cursor as `ui.cursor`, a `GridCursor` from
+`engine/pointer.ts` built by `newCursor`, and give nothing about it a second
+name.** [`cursor-vocabulary.test.ts`](../src/engine/cursor-vocabulary.test.ts)
+finds a cursor by its shape, read off `newCursor()`, and fails on one held
+anywhere else. The cursor helpers' docs say what each returns. For a
+traversal that is not a bounded grid step (a half-grid cursor, corner
+skipping, lock modes), build on `cursorDelta`, `isCursorMove` and
+`gridCursorMove`; a half-grid cursor between cells is `moveBorderCursor` in
+`engine/border-grid.ts`.
 
-- `moveCursor(cursor, button, w, h, wrap?)` reveals and moves in one press and
-  returns whether anything changed. On `false` (a non-cursor button, or a
-  clamped press at the edge on a visible cursor) return `null`, not
-  `UI_UPDATE`.
-- `showCursor(cursor)` reveals in place, for a select press or an arrow that
-  acts; `hideCursor(cursor)` hides when a pointer takes over. Each returns
-  whether it changed anything, which is usually the `UI_UPDATE` answer.
-- For a traversal that is not a bounded grid step (a half-grid cursor, corner
-  skipping, lock modes), build on `cursorDelta` (button to unit delta),
-  `isCursorMove` and `gridCursorMove` (the clamp, `null` on a no-op). A
-  half-grid cursor between cells is `moveBorderCursor` in
-  [`engine/border-grid.ts`](../src/engine/border-grid.ts).
-
-A cursor move that changes only the `Ui` returns `UI_UPDATE`
-([`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE").
-
-**The first arrow press reveals and moves**, in every game
-(`cursor-vocabulary.test.ts` presses one in each). The one exception is a
-rule: **an arrow that is itself an action only reveals on the first
-press**, so the board does not move under a player who cannot yet see where it
-would act. That path calls `showCursor` and returns early; the plain arrow
-beside it reveals and moves. Exemplar:
-[`range/index.ts`](../src/games/range/index.ts), the shifted arrow.
-
-What a game does while the cursor moves is its own: read `ui.cursor` either
-side of a `moveCursor` call. Exemplar:
-[`tents/index.ts`](../src/games/tents/index.ts).
-
-**A fact kept beside the cursor is a field beside it, never a second cursor.**
-`cursorFromKeyboard` is the collection's name and polarity: `true` when the
-keyboard revealed or moved the cursor, `false` when a pointer took it over.
-For the other reading, name a predicate and add no field. Exemplar:
-`keyboardCursor` and `mouseCursor` in
-[`ascent/ui.ts`](../src/games/ascent/ui.ts). A field that says what the cursor
-is armed for never says whether it is shown.
+- **Answer `null` when `moveCursor` reports no change** (a non-cursor button,
+  or a clamped press at the edge on a visible cursor), not `UI_UPDATE`. A
+  cursor move that changes only the `Ui` returns `UI_UPDATE`
+  ([`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE").
+- **Reveal in place with `showCursor`** for a select press or an arrow that
+  acts, and **hide with `hideCursor` when a pointer takes over**. Each
+  returns whether it changed anything, which is usually the `UI_UPDATE`
+  answer.
+- **The first arrow press reveals and moves**, in every game
+  (`cursor-vocabulary.test.ts` presses one in each).
+- **The one exception: an arrow that is itself an action only reveals on the
+  first press**, so the board does not move under a player who cannot yet see
+  where it would act. That path calls `showCursor` and returns early; the
+  plain arrow beside it reveals and moves. Exemplar:
+  [`range/index.ts`](../src/games/range/index.ts), the shifted arrow.
+- **What a game does while the cursor moves is its own**: read `ui.cursor`
+  either side of a `moveCursor` call. Exemplar: `tents/index.ts`.
+- **A fact kept beside the cursor is a field beside it, never a second
+  cursor.** `cursorFromKeyboard` is the collection's name and polarity: `true`
+  when the keyboard revealed or moved the cursor, `false` when a pointer took
+  it over. For the other reading, name a predicate and add no field.
+  Exemplar: `keyboardCursor` and `mouseCursor` in
+  [`ascent/ui.ts`](../src/games/ascent/ui.ts). A field that says what the
+  cursor is armed for never says whether it is shown.
 
 ### The keyboard equivalent of a drag is a design, not a derivation
 
@@ -594,9 +570,9 @@ is armed for never says whether it is shown.
 derive the bindings from a table of the pointer's gestures: that was tried and
 withdrawn (`openspec/postmortems/2026-09-05-gesture-table-withdrawal.md`), and
 no shipped drag game's keyboard is what a derivation would produce. What is
-derivable is the cursor itself, which `moveCursor` gives. Read the keyboard
-requirements of the specs of `slide`, `loopy`, `galaxies`, `bridges`,
-`untangle`, `pegs` and `sixteen` for seven designs.
+derivable is the cursor itself, which `moveCursor` gives. For worked designs,
+read the keyboard requirements of the specs of `slide`, `loopy`, `galaxies`,
+`bridges`, `untangle`, `pegs` and `sixteen`.
 
 ### Giving a drag game a keyboard
 
@@ -608,8 +584,7 @@ the same two functions the pointer arm calls. Exemplar:
 `releaseGrab`.
 
 - **Name the drag state for what it now is**: `grabbed`, not a `dragging` that
-  a keypress sets, and the flags and colors named after it likewise
-  (`FG_GRABBED`, `COL_GRABBED`).
+  a keypress sets, and the flags and colors named after it likewise.
 - **One cell a press, not slide-to-the-end**, which cannot stop inside a
   corridor and so cannot reach every cell the drag reaches.
 - **Keep the cursor out of the grab.** A grab is canceled when the board moves
@@ -664,7 +639,7 @@ split, the blitter and canceling a dangling drag in `changedState` are in
 
 A rectangle-fill drag ([`pattern/index.ts`](../src/games/pattern/index.ts))
 and a slide-follow drag ([`sixteen/index.ts`](../src/games/sixteen/index.ts),
-[`slide/index.ts`](../src/games/slide/index.ts)) keep lifecycles of their own.
+`slide/index.ts`) keep lifecycles of their own.
 
 **Continue every drag on the button class** (`isMouseDrag`, `isMouseRelease`),
 never on the exact press code (§ "A touch hold arrives as the right button").
@@ -672,21 +647,11 @@ never on the exact press code (§ "A touch hold arrives as the right button").
 ### The line drag
 
 **Where the player draws lines along the edges between squares by dragging
-through them, declare `LineRules` and write no input.**
-[`engine/line-drawing.ts`](../src/engine/line-drawing.ts) is the whole
-input: the drag, the click on an edge, the right button's cross sweep and
-the keys. Its header says what each does; a pointer's drag only adds, and
-the keyboard's takes a step back. A game declares three facts, and two
-more where it needs them:
-
-- `mark`: what an edge holds, read from the game's own state;
-- `takes`: how many lines a square takes, which no drag, click or key
-  exceeds;
-- `loops`: whether a drag back onto its first square closes a loop;
-- `fixed`: an edge no input changes, as Path's walls;
-- `restarts`: the lines a drag from a square replaces, as Path's line ahead
-  of a number, which the release takes up where the drag does not lay them
-  again.
+through them, declare `LineRules` and write no input.** `engine/line-drawing.ts`
+is the whole input: the drag, the click on an edge, the right button's cross
+sweep and the keys. Its header says what each does, and `LineRules`' doc
+comments say what a game declares: three facts, and two more where it needs
+them.
 
 The rules go in `moves.ts`, since `render.ts` previews the drag with
 `dragPreview` from them. `lineDrawing(rules, { layout, move })` in `index.ts`
@@ -702,19 +667,17 @@ passes it, through the sweep, and its square drag fills one row or column.
 ### The accreting-paint drag
 
 The press picks a paint value, the drag gathers the cells the pointer passes
-over, and the release commits them as one move. Two `Ui` fields carry it
-(`dragType: number`, `drag: number[]`). Write the three phases in
+over, and the release commits them as one move. Write the three phases in
 `interpretMove`; there is no shared helper, and a third game of this shape is
 the time to weigh one against the two exemplars.
 
-- **Press** (`isMouseDown`, after the bounds check): reset, pick `dragType` by
-  cycling the pressed cell's value (left and right cycle opposite ways), seed
-  `drag` with the pressed cell, return `UI_UPDATE`.
-- **Drag** (`isMouseDrag`, guarded by `dragType !== -1`): skip a cell already
-  gathered, already the drag value, or a clear that changes nothing; else push
-  and return `UI_UPDATE`.
-- **Release** (`isMouseRelease`, a non-empty drag): build one move from the
-  gathered cells, leaving out givens; else `UI_UPDATE`.
+- **The press** cycles the pressed cell's value to pick the paint (left and
+  right cycle opposite ways), seeds the drag with that cell, and returns
+  `UI_UPDATE`.
+- **A drag event** skips a cell already gathered, already the paint, or a
+  clear that changes nothing.
+- **The release** builds one move from the gathered cells, leaving out
+  givens.
 
 Preview the drag by recoloring the gathered cells, and put the recoloring in
 the diff key ([`rendering.md`](./rendering.md) § "The tile cache and the diff
@@ -724,9 +687,8 @@ key"). Exemplars: [`clusters/index.ts`](../src/games/clusters/index.ts);
 ### A line-fill drag picks a transformation
 
 The drag fills one row or column, and the press decides a `from → to` pair:
-every square of the line dragged out that reads `from` becomes `to`. Four `Ui`
-fields carry it (`dragFrom`, `dragTo`, the anchor, the current end). Exemplar:
-[`boats/index.ts`](../src/games/boats/index.ts).
+every square of the line dragged out that reads `from` becomes `to`.
+Exemplar: `boats/index.ts`.
 
 - **Choose the axis at each drag event, not at the press.** Whichever
   coordinate has moved less snaps back to the anchor, so a drag can change
@@ -742,13 +704,12 @@ fields carry it (`dragFrom`, `dragTo`, the anchor, the current end). Exemplar:
 ### A sprite drag
 
 **Copy [`pegs/index.ts`](../src/games/pegs/index.ts); do not bend `GridDrag`
-to it.** The `Ui` holds `sx`/`sy`, the anchor in grid cells; `dx`/`dy`, the
-pointer in pixels; and `dragging`. `GridDrag` keeps both ends in one
-coordinate space, and here the release does not read the far end: it derives
-the target cell from the pixel position again. The place the blitter saved the
-background is `dragX`/`dragY` on the draw state, half a tile off the pointer.
-Second exemplar: [`signpost/index.ts`](../src/games/signpost/index.ts). A
-third sprite drag is the time to build an anchor-only drag in the engine.
+to it.** `GridDrag` keeps both ends in one coordinate space, and here the
+`Ui` holds the anchor in grid cells and the pointer in pixels, and the
+release does not read the far end: it derives the target cell from the pixel
+position again. Second exemplar:
+[`signpost/index.ts`](../src/games/signpost/index.ts). A third sprite drag is
+the time to build an anchor-only drag in the engine.
 
 ### The aim drag
 
@@ -761,9 +722,8 @@ in the `Ui` and hold to four rules:
   differs on a finger's lift;
 - the preview and `executeMove` share one legality function (in `moves.ts`).
 
-Exemplars: [`inertia/index.ts`](../src/games/inertia/index.ts) (an octant off
-the ball); [`galaxies/index.ts`](../src/games/galaxies/index.ts) (a snapped
-drop tile, either end of the pair moving).
+Exemplars: `inertia/index.ts` (an octant off the ball); `galaxies/index.ts`
+(a snapped drop tile, either end of the pair moving).
 
 **Where either end of a pair can be the one that moves**, write the legality,
 the preview and the commit in terms of the pair. The second direction then
@@ -789,7 +749,7 @@ in [`sokoban/index.ts`](../src/games/sokoban/index.ts). Then:
 records where it landed and returns `UI_UPDATE` (§ "A press you do not act on
 must still be consumed"). Travel beyond a few pixels makes it a drag from the
 press point, and a release that never traveled is the click. Exemplar:
-[`galaxies/index.ts`](../src/games/galaxies/index.ts).
+`galaxies/index.ts`.
 
 - **Measure the release against the press, not against a flag.** A release can
   arrive far from its press with no drag event the game took as one. A
@@ -805,18 +765,16 @@ press point, and a release that never traveled is the click. Exemplar:
 - **Where a drag was only ever "a click at its start", resolve by where it
   ends.** Take the drag only when its two ends make the gesture's pair, and
   let one function answer "is this the gesture?" for the preview, the release
-  and the error feedback. Exemplar: `dragLink` in
-  [`tents/index.ts`](../src/games/tents/index.ts).
+  and the error feedback. Exemplar: `dragLink` in `tents/index.ts`.
 
 ## A press you do not act on must still be consumed
 
 **A press that defers its decision to the drag or the release returns
 `UI_UPDATE`, even when nothing on screen changes.** A `null` from a press
 means "I do not want this gesture": `view-interactive.ts` tracks the pointer
-only for a consumed press, so no drag event follows.
-
-The tell is a drag lifecycle that looks right and is never entered: the
-release arrives at the press coordinates and does the click's thing.
+only for a consumed press, so no drag event follows. The tell is a drag
+lifecycle that looks right and is never entered: the release arrives at the
+press coordinates and does the click's thing.
 
 **A game with no drag at all inverts it.** Decline the press, act on the
 release, and the frontend hands over the release at the press point, so a
@@ -831,9 +789,7 @@ claimed").
 is pressed with a pointer down, `Midend.cancelPress` puts back the `Ui` it
 copied at the press ([`engine/ui-snapshot.ts`](../src/engine/ui-snapshot.ts))
 and the place in the history. Normative: `engine-input`, "A canceled press
-leaves the game as it was before the press".
-
-What it asks of a game:
+leaves the game as it was before the press". What it asks of a game:
 
 - **Keep what a gesture changes in the `Ui` or the state.** What a press
   writes to the draw state or to a module variable outlives a cancel.
@@ -864,9 +820,9 @@ a finger still down on a cell goes into it. A key's move ends every `GridDrag`
 and closes the open press, and no more. So **write a `changedState` that
 clears a pointer drag only for a key's move**, and only where the drag is in
 fields of the game's own and a key can move the board while it is held.
-Exemplar: [`sokoban/index.ts`](../src/games/sokoban/index.ts). Do not write
-one for Undo. What else `changedState` is for is in
-[`mechanics.md`](./mechanics.md) § "changedState".
+Exemplar: `sokoban/index.ts`. Do not write one for Undo. What else
+`changedState` is for is in [`mechanics.md`](./mechanics.md) §
+"changedState".
 
 Guard: [`drag-cancel.test.ts`](../src/engine/drag-cancel.test.ts).
 
@@ -929,16 +885,14 @@ absolute sets and not toggles. Exemplar: `setEdge` in
 
 **A game that types values implements `requestKeys(params): KeyLabel[]`.** An
 absent hook is an empty keypad, and on touch the panel is the only way to
-type. Normative: the on-screen-keys requirements of
-[`engine-input`](../openspec/specs/engine-input/spec.md). Exemplars:
-[`solo/index.ts`](../src/games/solo/index.ts),
-[`keen/index.ts`](../src/games/keen/index.ts),
+type. Normative: the on-screen-keys requirements of `engine-input`.
+Exemplars: [`solo/index.ts`](../src/games/solo/index.ts), `keen/index.ts`,
 [`undead/index.ts`](../src/games/undead/index.ts) (keys with word labels).
 
 - **Build digits with `digitKeys(n)`** from
-  [`engine/key-labels.ts`](../src/engine/key-labels.ts): `'1'` to `'9'`, then
-  `'a'`, `'b'` and on, then `clearKey`. Size `n` from the params. The label
-  `"Clear"` is what the panel turns into the clear icon, so do not reword it.
+  [`engine/key-labels.ts`](../src/engine/key-labels.ts), sizing `n` from the
+  params. The label `"Clear"` is what the panel turns into the clear icon, so
+  do not reword it.
 - **Do not list the Marks key.** `Midend.requestKeys` appends `pencilModeKey`
   for any game `takesNotes` recognizes. The game owes that the key acts: it
   sends `PENCIL_MODE_BUTTON`, as the app's bare `P` shortcut does, and
@@ -971,8 +925,7 @@ per-cell set**: select a cell, tap a value, and in notes mode the same key
 toggles it as a mark. Send the character codes typed entry already answers, so
 the keys cost no input path. Exemplars:
 [`rome/index.ts`](../src/games/rome/index.ts),
-[`map/index.ts`](../src/games/map/index.ts),
-[`guess/index.ts`](../src/games/guess/index.ts).
+[`map/index.ts`](../src/games/map/index.ts), `guess/index.ts`.
 
 - **A panel key enters at the keyboard cursor, so a tap must be able to place
   one.** Put the selection on a tap that is otherwise a no-op (press and
@@ -1010,8 +963,7 @@ the keys cost no input path. Exemplars:
 **Offer the key always, decline it when the precondition fails, and say why
 somewhere the player sees** (the status bar). `requestKeys` cannot offer a key
 conditionally and `KeyLabel` has no disabled state, and a silent refusal reads
-as a broken key. Exemplar: the Submit key of
-[`guess/index.ts`](../src/games/guess/index.ts).
+as a broken key. Exemplar: the Submit key of `guess/index.ts`.
 
 The inert-panel-key probe of `input-parity.test.ts` primes the board with the
 panel's first key, and with a run of keys, before it tries the key under test.
@@ -1029,18 +981,17 @@ value" differ, and the first replaces Clear at nine.
 
 A quirk of the game's own gets a builder of the game's own (`edgeClueKeys` in
 [`engine/edge-clue-latin/play.ts`](../src/engine/edge-clue-latin/play.ts),
-Unequal's and Adjacent's). A quirk that is a fact
-about the digits lives in the engine (`colorKeysZeroIsTen`), because
-`decimal.test.ts` allows one statement of the digit codes. Explicit labels are
-carried word for word.
+Unequal's and Adjacent's). A quirk that is a fact about the digits lives in
+the engine (`colorKeysZeroIsTen`), because `decimal.test.ts` forbids a
+game source to restate the digit codes. Explicit labels are carried word for word.
 
 ### Size the panel to the boards you generate
 
 **Offer no key that is inert on every board the generator makes, and derive
-the bound: do not write it.** Compute it from the generator's distribution
-(`Math.max(...)` over the array), assert in a structural test that every
-generated board fits it, and pin the `KeyLabel[]`, so widening the
-distribution fails a test. Exemplar: `maxGeneratedRegionSize` in
+the bound: do not write it.** Compute it from the generator's distribution,
+assert in a structural test that every generated board fits it, and pin the
+`KeyLabel[]`, so widening the distribution fails a test. Exemplar:
+`maxGeneratedRegionSize` in
 [`seismic/generator.ts`](../src/games/seismic/generator.ts).
 
 ### A notes mode added to a game
@@ -1058,5 +1009,4 @@ the board paints the new margin once. Exemplar:
 side of the square it lands nearest. From the keyboard a select picks a
 square, a select on a neighbor marks the side between them, and Escape lets
 go. Do not give the board a second, half-cell cursor for it. Exemplars:
-[`slant/index.ts`](../src/games/slant/index.ts),
-[`net/index.ts`](../src/games/net/index.ts).
+[`slant/index.ts`](../src/games/slant/index.ts), `net/index.ts`.

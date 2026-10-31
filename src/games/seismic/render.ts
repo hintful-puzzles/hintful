@@ -167,8 +167,8 @@ export function computeSize(p: SeismicParams, ts: number): Size {
 }
 
 /** Upstream `FROMCOORD` — C integer division, which **truncates** toward zero,
- * so a pointer inside the two-pixel border maps to row/column 0 rather than −1
- * (docs/input.md § "The accreting-paint drag"). This declines the shared
+ * so a pointer inside the two-pixel border maps to row/column 0 rather than −1.
+ * This declines the shared
  * `fromCoord` of `engine/geometry.ts`, whose floor would put that pointer off
  * the grid. */
 export function fromCoord(v: number, ts: number): number {

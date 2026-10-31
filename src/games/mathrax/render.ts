@@ -173,8 +173,8 @@ export function computeSize(p: { o: number }, ts: number): Size {
 }
 
 /** Upstream `FROMCOORD`: C integer division **truncates**, so a pointer inside
- * the one-pixel border maps to row/column 0 rather than −1 (the Sticks idiom,
- * docs/input.md § "The accreting-paint drag"). This declines the shared
+ * the one-pixel border maps to row/column 0 rather than −1 (the Sticks
+ * idiom). This declines the shared
  * `fromCoord` of `engine/geometry.ts`, whose floor would put that pointer off
  * the grid. */
 export function fromCoord(v: number, ts: number): number {
