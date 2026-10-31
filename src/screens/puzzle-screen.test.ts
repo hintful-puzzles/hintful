@@ -498,6 +498,9 @@ describe("which board a puzzle page opens with", () => {
     await settings.loaded;
     await settings.setLastGameId("abcd", null);
     await settings.setParams("abcd", null);
+    // Not a first open: that fetches the rules page, which nothing serves
+    // here, and the card it opens outlives the test.
+    await settings.setIntroduced("abcd");
   });
 
   it("re-deals the board it last showed, when no move was ever made", async () => {
