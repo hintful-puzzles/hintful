@@ -952,9 +952,10 @@ export interface LatinLevels<Ctx> {
 }
 
 /** The rungs of a described game: every technique its description places,
- * in its order, each run at its tier. */
+ * in its order, each run at its tier, and only at a cap below its `until`
+ * where it has one. */
 export interface LatinLadder {
-  ladder: readonly { tier: number; run: LatinRung }[];
+  ladder: readonly { tier: number; until?: number; run: LatinRung }[];
 }
 
 /** How `latinSolver` runs: its rungs, the game's validator, and the hint-path
@@ -1014,7 +1015,8 @@ function latinRung<Ctx>(
   let ret = 0;
   if ("ladder" in cfg) {
     for (const rung of cfg.ladder) {
-      if (rung.tier !== i) continue;
+      if (rung.tier !== i || (rung.until !== undefined && cfg.maxdiff >= rung.until))
+        continue;
       ret = rung.run(solver);
       if (ret !== 0) return ret;
     }

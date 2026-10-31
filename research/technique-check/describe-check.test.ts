@@ -88,6 +88,18 @@ const PLANTS: Record<string, { conclude?: string; for?: string }> = {
     conclude:
       "forall d in cand(c) where not (exists fill f of L from cand where distinct(f(x) over x in L) and f(c) = d: seen(f, L) = v + 1): strike(c, d)",
   },
+  cageEasy: {
+    for: "r in cage, K = cells(r), D = set(f(x) over fill f of K from cand where apart(f, K) and makes(f, r), x in K where x != first(K))",
+  },
+  // Keen lets a value repeat in a cage where its cells share no line.
+  cage: {
+    conclude:
+      "forall c in K, d in cand(c) where not (exists fill f of K from cand where distinct(f(x) over x in K) and makes(f, r) and f(c) = d: true): strike(c, d)",
+  },
+  cageLine: {
+    conclude:
+      "forall d in domain where (forall fill f of K from cand where apart(f, K) and makes(f, r): exists x in cells(L): x in K and f(x) = d), c in cells(L): strike(c, d)",
+  },
   adjacentSet: {
     conclude:
       "forall d in cand(b) where exists d2 in cand(a): d2 != d and not fits(e, d2, d): strike(b, d)",

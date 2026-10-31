@@ -148,6 +148,13 @@ interface ClueSym {
   v: V;
 }
 
+/** A partition the board may be dealt: every connected region it could have
+ * up to {@link REGION_CELLS} cells, each a part or not. */
+interface PartitionSym {
+  parts: number[][];
+  present: B[];
+}
+
 interface Board {
   sp: GridSpace;
   order: number;
@@ -157,8 +164,42 @@ interface Board {
   known: B[];
   cand: Bx[][];
   clues: Map<string, ClueSym[]>;
-  /** Constraints on the clue variables themselves (a value's range). */
+  regions: Map<string, PartitionSym>;
+  /** Constraints on the clue variables themselves (a value's range), and on
+   * which regions a partition has. */
   clueDomain: Bx[];
+}
+
+/**
+ * The most cells a region of a dealt partition is checked with, by order. A
+ * Keen cage holds up to six, but every region of four on a 4×4 board took
+ * the checker past a 4 GB heap (2026-10-31), so a technique that reads one
+ * region is checked on every shape up to these sizes and no larger.
+ */
+const REGION_CELLS: Readonly<Record<number, number>> = { 3: 4, 4: 3 };
+
+/** Every connected set of up to `most` cells of the grid, each in reading
+ * order, smaller first. */
+function connectedRegions(sp: GridSpace, most: number): number[][] {
+  const seen = new Set<string>();
+  let layer: number[][] = sp.cells.map((c) => [c]);
+  const out: number[][] = [];
+  for (let size = 1; size <= most && layer.length > 0; size++) {
+    out.push(...layer);
+    const next: number[][] = [];
+    for (const r of layer)
+      for (const c of r)
+        for (const n of sp.adj4[c]) {
+          if (r.includes(n)) continue;
+          const grown = [...r, n].sort((a, b) => a - b);
+          const key = grown.join(",");
+          if (seen.has(key)) continue;
+          seen.add(key);
+          next.push(grown);
+        }
+    layer = next;
+  }
+  return out;
 }
 
 let boardCount = 0;
@@ -175,8 +216,42 @@ function makeBoard(order: number): Board {
       (_, d): Bx => (d === 0 ? false : Z3.Bool.const(`${tag}_cand_${c}_${d}`)),
     ),
   );
-  return { sp, order, top: order, ans, known, cand, clues: new Map(), clueDomain: [] };
+  return {
+    sp,
+    order,
+    top: order,
+    ans,
+    known,
+    cand,
+    clues: new Map(),
+    regions: new Map(),
+    clueDomain: [],
+  };
 }
+
+/** Every partition the description deals, symbolically, and the rule that
+ * the regions present cover each cell once. */
+function dealPartitions(d: Description, board: Board): void {
+  for (const [name, how] of Object.entries(d.json.space.regions ?? {})) {
+    if (how !== "dealt")
+      throw new Error(`partition ${name}: only a dealt one is checked`);
+    const parts = connectedRegions(board.sp, REGION_CELLS[board.order] ?? 2);
+    const present = parts.map((_, i) => Z3.Bool.const(`${name}_${i}_${boardCount}`));
+    board.regions.set(name, { parts, present });
+    for (const c of board.sp.cells) {
+      const holding = present.filter((_, i) => parts[i].includes(c));
+      board.clueDomain.push(or(...holding));
+      for (let i = 0; i < holding.length; i++)
+        for (let j = i + 1; j < holding.length; j++)
+          board.clueDomain.push(not(and(holding[i], holding[j])));
+    }
+  }
+}
+
+/** The element sort a clue kind's place is: a partition's region, or a
+ * sort of the grid's own. */
+const placeSort = (board: Board, at: string): string =>
+  board.regions.has(at) ? `region ${at}` : at;
 
 // --- evaluation ---------------------------------------------------------------
 
@@ -315,6 +390,13 @@ function evaluate(e: Expr, env: Env, ctx: Ctx): V {
         case "h":
           return { k: "num", v: board.order };
       }
+      const part = board.regions.get(e.name);
+      if (part !== undefined)
+        return {
+          k: "eset",
+          sort: `region ${e.name}`,
+          mem: part.present.map((g, i) => [i, g] as const),
+        };
       const def = ctx.d.defs.get(e.name);
       if (def !== undefined && def.params.length === 0)
         return evaluate(def.body, new Map(), ctx);
@@ -600,6 +682,14 @@ function aggregate(e: Extract<Expr, { k: "agg" }>, env: Env, ctx: Ctx): V {
     }
     case "sum":
       return { k: "num", v: sumOf(parts.map((p) => ite(p.g, num(p.t, "sum"), 0))) };
+    case "prod":
+      return {
+        k: "num",
+        v: parts.reduce<Nx>(
+          (acc, p) => arith("*", acc, ite(p.g, num(p.t, "prod"), 1)),
+          1,
+        ),
+      };
     case "min":
     case "max": {
       let acc: Nx = -1;
@@ -713,8 +803,15 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       return v;
     });
   switch (fn) {
-    case "cells":
+    case "cells": {
+      const s = vs[0];
+      const part =
+        s.k === "elem" && s.sort.startsWith("region ")
+          ? board.regions.get(s.sort.slice("region ".length))
+          : undefined;
+      if (part !== undefined) return lift(s, fn, (r) => allOf("cell", part.parts[r]));
       return lift(vs[0], fn, (L) => allOf("cell", sp.lineCells[L]));
+    }
     case "row":
       return cellFn((c) => elem("line", sp.rowOf[c]));
     case "col":
@@ -833,12 +930,14 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
     case "at":
     case "v": {
       const k = vs[0];
-      const sort =
-        k.k === "elem" ? ctx.d.clueKinds.get(k.sort.slice("clue ".length))?.at : "?";
+      const at =
+        k.k === "elem"
+          ? ctx.d.clueKinds.get(k.sort.slice("clue ".length))?.at
+          : undefined;
+      const sort = at === undefined ? "?" : placeSort(board, at);
       return join(
         clueOf(ctx, k).map(
-          ({ clue, g }) =>
-            [g, fn === "at" ? elem(sort ?? "?", clue.at) : clue.v] as const,
+          ({ clue, g }) => [g, fn === "at" ? elem(sort, clue.at) : clue.v] as const,
         ),
       );
     }
@@ -872,18 +971,38 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
 function dealSymbolically(d: Description, board: Board): void {
   const ctx: Ctx = { board, d, mode: "rule", concluding: false };
   for (const [kind, c] of d.clueKinds) {
+    const part = board.regions.get(c.at);
     const places =
       c.at === "edge"
         ? board.sp.edgeEnds.length / 2
         : c.at === "slot"
           ? board.sp.slots.length
-          : null;
+          : part !== undefined
+            ? part.parts.length
+            : null;
     if (places === null)
-      throw new Error(`clue ${kind}: only edge and slot clues are checked yet`);
+      throw new Error(`clue ${kind}: only edge, slot and region clues are checked yet`);
     const complete = d.json.clues?.[kind]?.complete === true;
     const list: ClueSym[] = [];
     for (let e = 0; e < places; e++) {
-      const values = evaluate(c.value, new Map([["at", elem(c.at, e)]]), ctx);
+      const here = new Map([["at", elem(placeSort(board, c.at), e)]]);
+      // A range of numbers is read as its bounds, which a value set of the
+      // board's own size could not hold: a cage's sum runs past the order.
+      if (c.value.k === "call" && c.value.fn === "range" && !complete) {
+        const [lo, hi] = c.value.args.map((a) => num(evaluate(a, here, ctx), "range"));
+        const v = Z3.Int.const(`clue_${kind}_${e}_v_${boardCount}`);
+        const present = Z3.Bool.const(`clue_${kind}_${e}_${boardCount}`);
+        board.clueDomain.push(and(cmp(">=", v, lo), cmp("<=", v, hi)));
+        if (part !== undefined)
+          board.clueDomain.push(implies(present, part.present[e]));
+        list.push({ at: e, present, v: { k: "num", v } });
+        continue;
+      }
+      if (part !== undefined)
+        throw new Error(
+          `clue ${kind}: a region's clue is checked with a range of values`,
+        );
+      const values = evaluate(c.value, here, ctx);
       if (values.k === "eset") {
         for (const [id] of values.mem)
           list.push({
@@ -934,7 +1053,7 @@ function worldOf(d: Description, board: Board): Bx[] {
             evaluate(
               c.means,
               new Map([
-                ["at", elem(c.at, k.at)],
+                ["at", elem(placeSort(board, c.at), k.at)],
                 ["v", k.v],
               ]),
               ctx,
@@ -965,6 +1084,7 @@ export async function checkTechnique(
 ): Promise<Verdict> {
   const t0 = performance.now();
   const board = makeBoard(order);
+  dealPartitions(d, board);
   dealSymbolically(d, board);
   const world = worldOf(d, board);
   const ctx: Ctx = { board, d, mode: "technique", concluding: false };
@@ -1045,6 +1165,7 @@ export function libraryDescription(lib: LibraryJson): {
     ([id, stated]): Technique => ({
       ...parseTechnique(lib.library, id, stated),
       tier: 0,
+      until: null,
       rungs: [],
     }),
   );

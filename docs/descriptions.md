@@ -41,9 +41,11 @@ itself is § "The file". A game whose techniques are stated:
    `UNEQUAL_RUNGS`, through `compiledRung`; a technique that reads no clues
    through `uncluedRung`, as [`group/solver.ts`](../src/games/group/solver.ts)'s;
    § "A firing's reason is built from its binding").
-5. **Deals its clues as the description reads them**: one `ClueList` a
-   kind, in the order the techniques should meet them
-   (`describedLadder` in the same file).
+5. **Deals its board as the description reads it**, the compiled module's
+   `Dealt`: one `ClueList` a kind, in the order the techniques should meet
+   them, and one `Partition` a dealt partition (`describedLadder` in
+   [`towers/solver.ts`](../src/games/towers/solver.ts), and in
+   [`keen/solver.ts`](../src/games/keen/solver.ts) for cages).
 
 ## Sections
 
@@ -117,14 +119,17 @@ binder.
 **Names**: `true`, `false`, `none`, the description's sizes, `domain`, and
 what the space gives: `cells`, `rows`, `cols`, `lines`, `units`, `slots`
 (one beyond each end of every line, numbered as Towers deals its clues: above
-each column, below each, left of each row, right of each).
+each column, below each, left of each row, right of each), and each dealt
+partition by its name (`regions: { cage: dealt }`: `cage`, its parts in the
+order dealt). A clue kind may sit at a part (`at: cage`), and a partition and
+a clue kind may not share a name, since both are fields of `Dealt`.
 
 **Functions**: `value(c)`, `cand(c)` the candidates the marks leave,
 `known(c)`; `range(a, b)`, `abs(a)`, `subsets(S)`, `first(L)`; an ordered
 set's `nth(L, i)` (none past its ends), `index(x, L)` (`-1` where `x` is not
 in it), `before(x, L)`; the grid's
 `x(c)`, `y(c)`, `cell(x, y)` (on the grid: the compiled code does not check),
-`row(c)`, `col(c)`, `cells(L)`, `adj4(c)` (up, right, down, left), `peers(c)` (row and column interleaved by index), `ends(e)`,
+`row(c)`, `col(c)`, `cells(L)` (a line's, or a part's in reading order), `adj4(c)` (up, right, down, left), `peers(c)` (row and column interleaved by index), `ends(e)`,
 `end1(e)`, `end2(e)`, `other(e, c)`, `edge(a, b)`, `sight(s)` (a slot's line,
 nearest it first), `opposite(s)`; the clues' `clues(kind)`
 (a binder's set only), `at(k)`, `v(k)`, `clue(kind, x)`; and, in a
@@ -136,7 +141,10 @@ compiler refuses what it does not have, naming it.
 A technique is `for` (its binders), an optional `premise`, and `conclude`.
 A library technique may say `"on": "place"`: the engine runs it as each
 value is placed, with its first binder bound to the placed cell, and not as
-a rung.
+a rung. A game's may say `until: <tier>`, a tier above its own: the ladder
+runs it only at a cap below that tier, for a weaker reading a higher
+technique strikes all of, which a grade at a higher cap should not rest on
+(Keen's `cageEasy`, as upstream omits it above Easy).
 
 ## What a technique compiles to
 
@@ -172,13 +180,25 @@ counter, and `index(x, slots)` (or `cells`, `lines`) is `x` itself. A binder
 copies.
 
 **A filling is enumerated depth-first** in its set's order, each cell's
-values ascending, and two kinds of `where` conjunct are kept as each cell is
-assigned rather than once the assignment is whole: `distinct(f(x) over x in
-T)` passes over a value an earlier member of `T` holds, and `f(x) = t` gives
-`x` the one value `t`. The rest of the `where`, and a quantifier's body, are
-read once it is whole. Write a filling's conditions in those forms where they
-hold: on a line of 6 with one cell pinned, they leave 120 assignments of
-46,656. Towers' `arrangement` is the example.
+values ascending, and these `where` conjuncts are kept as each cell is
+assigned rather than once the assignment is whole:
+
+- `distinct(f(x) over x in T)` passes over a value an earlier member of `T`
+  holds, and `f(x) = t` gives `x` the one value `t`;
+- `forall x in S, y in before(x, S) where P: B`, over the filling's own set,
+  is read for each pair as the later of the two is assigned;
+- `sum(x in S of f(x)) = t` passes over a value that takes the sum so far
+  past `t`, and the `prod` one a value whose product so far does not divide
+  `t`; either may be the right side of an `or` whose left reads no filling,
+  as a guard. Both are read again once the filling is whole.
+
+The rest of the `where`, and a quantifier's body, are read once it is whole.
+A conjunct that calls a definition is read as the definition's body, and a
+name bound by `=` as the term it names, so a condition stated once
+(`apart(f, K)`, over `K = cells(r)`) is kept wherever it is written. Write a
+filling's conditions in those forms where they hold: on a line of 6 with one
+cell pinned, they leave 120 assignments of 46,656. Towers' `arrangement` and
+Keen's `makes` are the examples.
 
 **An `exists fill` asked once per cell and value is enumerated once.** Where
 the only part of it that reads the loops around it is its pin `f(x) = t`,
@@ -202,8 +222,9 @@ bound once outside it by the statement itself (`set`'s `open`,
 `hiddenSingle`'s `placed`). `research/describe/` measured the compiled ladder
 per deal against the hand-written one it replaced
 (`openspec/changes/archive/*-compile-the-latin-ladder/report.md` § "Speed",
-`*-describe-group/report.md` for the hoisting, and
-`*-describe-towers/report.md` for fillings and the projection).
+`*-describe-group/report.md` for the hoisting,
+`*-describe-towers/report.md` for fillings and the projection, and
+`*-describe-keen/report.md` for a cage's).
 
 ## A statement's order is behavior
 
@@ -251,7 +272,12 @@ quotes the other end's least candidate as it stood when the step fired.
 reads a description's own formulas on small boards (orders 3 and 4) as z3
 constraints: the answer and the marks are variables, the marks consistent
 with the answer, and every clue the board could be dealt is present or not,
-so one check covers every layout. A technique is sound when no binding's
+so one check covers every layout. A dealt partition is every connected
+region the board could have, up to the size `REGION_CELLS` gives each order,
+each a part or not, the parts covering every cell once; a technique that
+reads one region is checked on every shape of that size, but no larger.
+A clue whose values are a `range` is checked over its bounds, which may run
+past the board's order. A technique is sound when no binding's
 premise holds while its conclusion fails under the rules. Library techniques
 are checked on a plain Latin square, which is the weakest rule set any Latin
 game adds to.

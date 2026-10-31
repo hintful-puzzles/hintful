@@ -2,16 +2,17 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE } from "../../engine/describe-runtime.ts";
 
-/** The dealt clues, by kind. */
-export interface Clues {
+/** What the board deals: its partitions by name, and its clues by kind. */
+export interface Dealt {
   greater: ClueList;
 }
 
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "latin.hiddenSingle" | "latin.single" | "sign" | "latin.set" | "latin.fish" | "latin.wing";
 
-/** The ladder: each technique's tier, in the order the description lists them. */
-export const ladder: readonly { id: LadderId; tier: number }[] = [
+/** The ladder: each technique's tier, and the cap from which it no longer
+ * runs where it has one, in the order the description lists them. */
+export const ladder: readonly { id: LadderId; tier: number; until?: number }[] = [
   { id: "latin.hiddenSingle", tier: 0 },
   { id: "latin.single", tier: 0 },
   { id: "sign", tier: 1 },
@@ -32,7 +33,7 @@ export interface SignBinding {
 const signFacts: number[] = [];
 let signCands = new Int32Array(0);
 
-export function sign(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<SignBinding> | null): number {
+export function sign(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SignBinding> | null): number {
   const facts = signFacts;
   let fired = 0;
   let changed = false;

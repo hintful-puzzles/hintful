@@ -67,8 +67,13 @@ export interface VariationJson {
 /** A technique stated in the description, or one of a library's placed at a
  * tier of the game's (`use`: `"<library>.<id>"`). */
 export type TechniqueJson =
-  | ({ id: string; tier: string; rung?: string | string[] } & StatedTechnique)
-  | { use: string; tier: string; rung?: string | string[] };
+  | ({
+      id: string;
+      tier: string;
+      until?: string;
+      rung?: string | string[];
+    } & StatedTechnique)
+  | { use: string; tier: string; until?: string; rung?: string | string[] };
 
 /** What a technique says, wherever it is stated. */
 export interface StatedTechnique {
@@ -101,6 +106,9 @@ export function isFormal(file: DescriptionFile): file is DescriptionJson {
 export interface Technique {
   id: string;
   tier: number;
+  /** The tier from which the ladder no longer runs it, at a cap that high;
+   * `null` where it runs at every cap from its own. */
+  until: number | null;
   /** The hint rungs a firing of it is recorded under. */
   rungs: string[];
   on: "place" | null;
@@ -136,7 +144,7 @@ export function parseTechnique(
   where: string,
   id: string,
   stated: StatedTechnique,
-): Omit<Technique, "tier" | "rungs"> {
+): Omit<Technique, "tier" | "until" | "rungs"> {
   const at = (part: string, src: string): Expr => {
     try {
       return parse(src);
@@ -196,7 +204,7 @@ export function loadDescription(
     });
   const tiers = json.tiers ?? [];
   const techniques = (json.techniques ?? []).map((t): Technique => {
-    let parsed: Omit<Technique, "tier" | "rungs">;
+    let parsed: Omit<Technique, "tier" | "until" | "rungs">;
     if ("use" in t) {
       const [lib, name] = t.use.split(".");
       const found = libraries.find((l) => l.library === lib)?.techniques[name];
@@ -209,9 +217,15 @@ export function loadDescription(
     const tier = tiers.indexOf(t.tier);
     if (tier < 0)
       throw new SyntaxError(`${json.game} ${parsed.id}: no tier "${t.tier}"`);
+    const until = t.until === undefined ? null : tiers.indexOf(t.until);
+    if (until !== null && until <= tier)
+      throw new SyntaxError(
+        `${json.game} ${parsed.id}: until "${t.until}" is no tier above its own`,
+      );
     return {
       ...parsed,
       tier,
+      until,
       rungs: t.rung === undefined ? [] : typeof t.rung === "string" ? [t.rung] : t.rung,
     };
   });

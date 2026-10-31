@@ -30,8 +30,8 @@ writes a line of progress per board.
 ## The files
 
 Every description lives beside its code (`src/engine/latin.description.yaml`,
-`src/games/<id>/*.description.yaml`), Towers' and Solo's, which nothing
-compiles yet, included; the loader, the parser and the schema are in
+`src/games/<id>/*.description.yaml`), Solo's, which nothing compiles yet,
+included; the loader, the parser and the schema are in
 `src/describe/`.
 
 | File | What it holds |

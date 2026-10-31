@@ -1,7 +1,8 @@
 Seeds per params: 3. Mutants per board: 24. Planted boards: 6.
 
-towers: 36 boards, 36 with one answer by the rules and it the game's; status compared on 1086 full boards (186 broken by clues alone), findMistakes on 216; search median 434.2 ms, max 56396.1 ms, median 211 nodes; 0 disagreements
-unequal: 45 boards, 45 with one answer by the rules and it the game's; status compared on 1267 full boards (142 broken by clues alone), findMistakes on 270; search median 5.1 ms, max 962.3 ms, median 173 nodes; 0 disagreements
+towers: 36 boards, 36 with one answer by the rules and it the game's; status compared on 1086 full boards (186 broken by clues alone), findMistakes on 216; search median 81.3 ms, max 13132.1 ms, median 211 nodes; 0 disagreements
+unequal: 45 boards, 45 with one answer by the rules and it the game's; status compared on 1267 full boards (142 broken by clues alone), findMistakes on 270; search median 1.5 ms, max 398.9 ms, median 173 nodes; 0 disagreements
 adjacent: not dealt: adjacent 4adk, adjacent 4adx, adjacent 4adr
-adjacent: 36 boards, 36 with one answer by the rules and it the game's; status compared on 1032 full boards (133 broken by clues alone), findMistakes on 216; search median 5.5 ms, max 218.9 ms, median 51 nodes; 0 disagreements
-solo: 27 boards, 27 with one answer by the rules and it the game's; status compared on 766 full boards (25 broken by clues alone), findMistakes on 162; search median 0.5 ms, max 509.5 ms, median 2 nodes; 0 disagreements
+adjacent: 36 boards, 36 with one answer by the rules and it the game's; status compared on 1032 full boards (133 broken by clues alone), findMistakes on 216; search median 2.5 ms, max 69.8 ms, median 51 nodes; 0 disagreements
+solo: 27 boards, 27 with one answer by the rules and it the game's; status compared on 766 full boards (25 broken by clues alone), findMistakes on 162; search median 0.2 ms, max 232.7 ms, median 2 nodes; 0 disagreements
+keen: 45 boards, 45 with one answer by the rules and it the game's; status compared on 1342 full boards (217 broken by clues alone), findMistakes on 270; search median 2.9 ms, max 47.3 ms, median 86 nodes; 0 disagreements

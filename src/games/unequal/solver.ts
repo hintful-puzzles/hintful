@@ -154,7 +154,7 @@ function signReason(
   return { kind: "lesser", ...across(big, o), bound: m === 0 ? 1 : greatest(m) };
 }
 
-const UNEQUAL_RUNGS: Record<unequal.LadderId, (cl: unequal.Clues) => LatinRung> = {
+const UNEQUAL_RUNGS: Record<unequal.LadderId, (cl: unequal.Dealt) => LatinRung> = {
   "latin.hiddenSingle": () => LATIN_RUNGS["latin.hiddenSingle"],
   "latin.single": () => LATIN_RUNGS["latin.single"],
   sign: (cl) =>
@@ -166,7 +166,7 @@ const UNEQUAL_RUNGS: Record<unequal.LadderId, (cl: unequal.Clues) => LatinRung> 
   "latin.wing": () => LATIN_RUNGS["latin.wing"],
 };
 
-const ADJACENT_RUNGS: Record<adjacent.LadderId, (cl: adjacent.Clues) => LatinRung> = {
+const ADJACENT_RUNGS: Record<adjacent.LadderId, (cl: adjacent.Dealt) => LatinRung> = {
   "latin.hiddenSingle": () => LATIN_RUNGS["latin.hiddenSingle"],
   "latin.single": () => LATIN_RUNGS["latin.single"],
   adjacent: (cl) =>
@@ -214,7 +214,7 @@ function describedLadder(o: number, mode: Mode, flags: Int32Array): LatinLadder 
             at.push(sp.edgeOf(big, (y + dir.dy) * o + x + dir.dx));
             v.push(big);
           }
-    const cl: unequal.Clues = { greater: clueList(at, v, edges) };
+    const cl: unequal.Dealt = { greater: clueList(at, v, edges) };
     return {
       ladder: unequal.ladder.map(({ id, tier }) => ({
         tier,
@@ -231,7 +231,7 @@ function describedLadder(o: number, mode: Mode, flags: Int32Array): LatinLadder 
     at.push(e);
     v.push(flags[a] & dir.f ? 1 : 0);
   }
-  const cl: adjacent.Clues = { bar: clueList(at, v, edges) };
+  const cl: adjacent.Dealt = { bar: clueList(at, v, edges) };
   return {
     ladder: adjacent.ladder.map(({ id, tier }) => ({
       tier,

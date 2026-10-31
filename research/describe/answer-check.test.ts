@@ -9,6 +9,7 @@ import { brokenRules, searchAnswers } from "./answer-check.ts";
 import {
   adjacentBinding,
   type Binding,
+  keenBinding,
   soloBinding,
   towersBinding,
   unequalBinding,
@@ -188,6 +189,7 @@ describe("the answer check from the description", () => {
       unequalBinding,
       adjacentBinding,
       soloBinding,
+      keenBinding,
     ] as Binding<unknown, unknown>[];
     for (const b of games.filter(
       (g) => only === null || only.includes(g.description.game),
@@ -243,6 +245,12 @@ describe("the answer check from the description", () => {
       adjacentBinding as Binding<unknown, unknown>,
       "bar",
       "v = 1 implies abs(value(end1(at)) - value(end2(at))) = 1",
+    ],
+    [
+      "Keen, a product read as a sum",
+      keenBinding as Binding<unknown, unknown>,
+      "product",
+      "sum(c in cells(at) of value(c)) = v",
     ],
   ];
   for (const [name, b, kind, means] of planted)

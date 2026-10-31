@@ -7,6 +7,17 @@
 import type { DescriptionJson } from "../../src/describe/description.ts";
 import type { DeductionRecord } from "../../src/engine/deduction-record.ts";
 import type { Game } from "../../src/engine/game.ts";
+import { keenGame } from "../../src/games/keen/index.ts";
+import {
+  C_ADD,
+  C_DIV,
+  C_MUL,
+  C_SUB,
+  clueOp,
+  clueVal,
+  type KeenParams,
+  type KeenState,
+} from "../../src/games/keen/state.ts";
 import { soloGame } from "../../src/games/solo/index.ts";
 import {
   DIFF_BLOCK,
@@ -92,6 +103,54 @@ export const towersBinding: Binding<TowersParams, TowersState> = {
     ...s,
     grid: Int8Array.from(values),
     pencil: notes ? Int32Array.from(notes) : new Int32Array(s.w * s.w),
+  }),
+};
+
+const KEEN_KIND: Readonly<Record<number, string>> = {
+  [C_ADD]: "sum",
+  [C_MUL]: "product",
+  [C_SUB]: "difference",
+  [C_DIV]: "quotient",
+};
+
+/** Keen's cages, in the order of their least cells, each in reading order. */
+function keenCages(s: KeenState): number[][] {
+  const { minimal } = s.clues;
+  const at = new Map<number, number[]>();
+  minimal.forEach((m, i) => {
+    at.set(m, [...(at.get(m) ?? []), i]);
+  });
+  return [...at.values()];
+}
+
+export const keenBinding: Binding<KeenParams, KeenState> = {
+  game: keenGame,
+  description: describedGame("src/games/keen/keen.description.yaml"),
+  params: tiers([4, 5, 6], [
+    "easy",
+    "normal",
+    "hard",
+    "extreme",
+    "unreasonable",
+  ] as const).map((p) => ({ ...p, multiplicationOnly: false })),
+  dealt: (s) => ({
+    sizes: { w: s.params.w },
+    regions: { cage: keenCages(s) },
+    givens: new Int8Array(s.grid.length),
+    clues: (space) => {
+      const cages = space.names.get("cage") as Elem[];
+      return keenCages(s).map((cells, i) => {
+        const clue = s.clues.clues[cells[0]];
+        return { kind: KEEN_KIND[clueOp(clue)], at: cages[i], v: clueVal(clue) };
+      });
+    },
+  }),
+  entries: (s) => s.grid,
+  notes: (s) => s.pencil,
+  withEntries: (s, values, notes) => ({
+    ...s,
+    grid: Int8Array.from(values),
+    pencil: notes ? Int32Array.from(notes) : new Int32Array(s.grid.length),
   }),
 };
 

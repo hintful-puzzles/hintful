@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
-# Towers' help page, and its rules, which the interpreter under
-# research/describe/ reads. Nothing compiles it yet: it states no techniques.
+# Towers' help page, its rules, and the techniques `npm run describe`
+# compiles to towers.compiled.ts, which solver.ts runs.
 game: towers
 help:
   rules: |-

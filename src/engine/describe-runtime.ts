@@ -4,7 +4,8 @@
  * else, so these are the whole of a technique's view of a board.
  *
  * An element is its index: a cell `y·w + x`, a line its row `y` or `h + x`
- * for a column, an edge its place in {@link GridSpace.edgeEnds}. `-1` is
+ * for a column, an edge its place in {@link GridSpace.edgeEnds}, a region
+ * its part's index in its {@link Partition}. `-1` is
  * `none`, for an element and for a value alike, since no value is negative.
  * A set of values is a bitmask (bit `d`); a set of elements an ordered array.
  */
@@ -71,6 +72,21 @@ export function clueList(
 export function clueAt(list: ClueList, x: number): number {
   const k = x < 0 ? -1 : list.byAt[x];
   return k < 0 ? -1 : list.v[k];
+}
+
+/** A partition of the cells the board deals: its parts by index, and each
+ * part's cells in reading order. */
+export interface Partition {
+  readonly parts: readonly number[];
+  readonly cells: readonly (readonly number[])[];
+}
+
+/** The partition whose parts, in order, hold `cells`. */
+export function partition(cells: readonly (readonly number[])[]): Partition {
+  return {
+    parts: cells.map((_, r) => r),
+    cells: cells.map((cs) => cs.toSorted((a, b) => a - b)),
+  };
 }
 
 /** A rectangular grid's elements and relations, numbered. */

@@ -103,7 +103,7 @@ function towersValid(solver: LatinSolver, ctx: TowersCtx): boolean {
 function facingReason(
   P: readonly number[],
   cell: number,
-  cl: towers.Clues,
+  cl: towers.Dealt,
   sp: LatinSolver["sp"],
 ): TowersReason {
   const s = P.find((s) => sp.sight[s][clueAt(cl.sees, s) - 1] === cell) as number;
@@ -115,7 +115,7 @@ function facingReason(
   };
 }
 
-const TOWERS_LADDER: Record<towers.LadderId, (cl: towers.Clues) => LatinRung> = {
+const TOWERS_LADDER: Record<towers.LadderId, (cl: towers.Dealt) => LatinRung> = {
   facing: (cl) =>
     compiledRung(towers.facing, cl, ({ P }, cell, _n, solver) =>
       facingReason(P, cell, cl, solver.sp),
@@ -153,7 +153,7 @@ function describedLadder(w: number, clues: Int32Array): LatinLadder {
       v.push(n);
     }
   });
-  const cl: towers.Clues = { sees: clueList(at, v, 4 * w) };
+  const cl: towers.Dealt = { sees: clueList(at, v, 4 * w) };
   return {
     ladder: towers.ladder.map(({ id, tier }) => ({ tier, run: TOWERS_LADDER[id](cl) })),
   };

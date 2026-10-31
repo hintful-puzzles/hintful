@@ -1,5 +1,7 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
+# Keen's help page, its rules, and the techniques `npm run describe`
+# compiles to keen.compiled.ts, which solver.ts runs.
 game: keen
 help:
   rules: |-
@@ -53,3 +55,97 @@ help:
     tidying to the placement rather than spelling it out as a step of its
     own. On an Unreasonable board, deduction can run out before the grid is
     full; the hint says so rather than guessing.
+
+name: Keen
+family: latin
+sizes:
+  w: { min: 3, max: 9 }
+space:
+  grid: { w: "w", h: "w" }
+  regions: { cage: dealt }
+  units: [rows, cols]
+answer:
+  value: { sort: cell, domain: "range(1, w)" }
+marks:
+  cand: { sort: cell, notation: "set of range(1, w)" }
+define:
+  # The larger and the smaller value of a cage of two.
+  larger(r): "max(c in cells(r) of value(c))"
+  smaller(r): "min(c in cells(r) of value(c))"
+  # Two cells of a filling of K that share a line hold different values.
+  apart(f, K): >-
+    forall x in K, y in before(x, K) where row(x) = row(y) or col(x) = col(y):
+    f(x) != f(y)
+  # A filling of a cage's cells makes its clue, whichever sign it has.
+  makes(f, r): >-
+    (clue(sum, r) = none or sum(x in cells(r) of f(x)) = clue(sum, r))
+    and (clue(product, r) = none or prod(x in cells(r) of f(x)) = clue(product, r))
+    and (clue(difference, r) = none
+    or max(x in cells(r) of f(x)) - min(x in cells(r) of f(x)) = clue(difference, r))
+    and (clue(quotient, r) = none
+    or max(x in cells(r) of f(x)) = clue(quotient, r) * min(x in cells(r) of f(x)))
+shape:
+  - "latin(value, lines)"
+# A cage's sign is its clue's kind. The values are those its cells could
+# make, as the game reads a board: a difference and a quotient only of two.
+clues:
+  sum:
+    at: cage
+    value: "range(1, |cells(at)| * w)"
+    means: "sum(c in cells(at) of value(c)) = v"
+  product:
+    at: cage
+    value: "range(1, prod(c in cells(at) of w))"
+    means: "prod(c in cells(at) of value(c)) = v"
+  difference:
+    at: cage
+    value: "range(1, w - 1)"
+    means: "larger(at) - smaller(at) = v"
+  quotient:
+    at: cage
+    value: "range(2, w)"
+    means: "larger(at) = v * smaller(at)"
+freedom: { kind: fill }
+deal:
+  cages: the partition, connected cages of at most six cells, and each cage's sign and value
+  tier: one of the tiers
+tiers: [Easy, Normal, Hard, Extreme, Unreasonable]
+techniques:
+  - { use: latin.placed, tier: Easy, rung: dup }
+  # Cage by cage: a value no filling of the cage from its candidates that
+  # makes its clue puts anywhere in it is struck from each of its cells. One
+  # cage a firing. Normal's reading strikes all this does, so upstream reads
+  # it only where the cap is Easy.
+  - id: cageEasy
+    tier: Easy
+    until: Normal
+    rung: cage
+    for: >-
+      r in cage, K = cells(r),
+      D = set(f(x) over fill f of K from cand where apart(f, K) and makes(f, r), x in K)
+    conclude: "forall c in K, d in cand(c) where d not in D: strike(c, d)"
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }
+  # Cage by cage: a value no filling of the cage that makes its clue puts in
+  # a cell is struck from it. One cage a firing.
+  - id: cage
+    tier: Normal
+    rung: cage
+    for: "r in cage, K = cells(r)"
+    conclude: >-
+      forall c in K, d in cand(c) where not (exists fill f of K from cand
+      where apart(f, K) and makes(f, r) and f(c) = d: true): strike(c, d)
+  # Cage by cage, and line by line, the columns before the rows: a value
+  # every filling of the cage that makes its clue puts in its part of the
+  # line is struck from the rest of the line. One line a firing.
+  - id: cageLine
+    tier: Hard
+    rung: cageLine
+    for: "r in cage, K = cells(r), L in cols + rows"
+    conclude: >-
+      forall d in domain where (forall fill f of K from cand
+      where apart(f, K) and makes(f, r): exists x in cells(L): x in K and f(x) = d),
+      c in cells(L) where c not in K: strike(c, d)
+  - { use: latin.set, tier: Hard, rung: set }
+  - { use: latin.fish, tier: Extreme, rung: set }
+  - { use: latin.wing, tier: Extreme, rung: wing }

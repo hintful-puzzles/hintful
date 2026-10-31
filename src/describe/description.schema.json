@@ -16,6 +16,10 @@
         { "type": "array", "items": { "type": "string" }, "minItems": 2 }
       ]
     },
+    "until": {
+      "type": "string",
+      "description": "A tier above the technique's own: at a cap that high the ladder does not run it, where a technique there strikes all it does and a grade should not rest on the weaker one."
+    },
     "statement": {
       "type": "object",
       "description": "What a technique says, wherever it is stated.",
@@ -49,6 +53,7 @@
           "properties": {
             "id": { "type": "string" },
             "tier": { "type": "string", "description": "One of `tiers`." },
+            "until": { "$ref": "#/$defs/until" },
             "rung": { "$ref": "#/$defs/rung" }
           },
           "unevaluatedProperties": false
@@ -65,6 +70,7 @@
               "description": "`<library>.<technique>`, as the library states it."
             },
             "tier": { "type": "string" },
+            "until": { "$ref": "#/$defs/until" },
             "rung": { "$ref": "#/$defs/rung" }
           }
         }

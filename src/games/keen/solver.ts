@@ -20,16 +20,22 @@
  */
 
 import { valuesOneTo } from "../../engine/candidate-bits.ts";
+import { type ClueList, clueList, partition } from "../../engine/describe-runtime.ts";
 import {
+  compiledRung,
   type DeductionRecord,
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
+  LATIN_RUNGS,
+  type LatinLadder,
   type LatinReason,
+  type LatinRung,
   type LatinSolver,
   latinSolver,
 } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
 import type { Point } from "../../engine/types.ts";
+import * as keen from "./keen.compiled.ts";
 import {
   C_ADD,
   C_DIV,
@@ -421,12 +427,13 @@ function keenValid(solver: LatinSolver, ctx: KeenCtx): boolean {
  * `solver()` driver: Easy→simple, Tricky→set₀, Hard→set₁,
  * Unreasonable→forcing and recursion through the shared `latinSolver`.
  */
-export function solveKeen(
+function solveHandWritten(
   w: number,
   kclues: KeenClues,
   soln: Uint8Array,
   maxdiff: number,
   recorder?: (rec: DeductionRecord) => void,
+  cubeOut?: Uint8Array,
 ): number {
   const ctx = buildCtx(w, kclues, maxdiff);
   return latinSolver<KeenCtx>(soln, w, {
@@ -439,8 +446,227 @@ export function solveKeen(
     valid: keenValid,
     ctx,
     recorder,
+    cubeOut,
   });
 }
+
+// --- the described ladder ----------------------------------------------------
+
+/** The cages in the order of their least cells, each cage's cells in reading
+ * order, and its clue: what the description's techniques read, and their
+ * reasons quote. */
+interface Cages {
+  cells: number[][];
+  clues: number[];
+}
+
+function cagesOf(w: number, kclues: KeenClues): Cages {
+  const out: Cages = { cells: [], clues: [] };
+  const index = new Map<number, number>();
+  for (let i = 0; i < w * w; i++) {
+    const m = kclues.minimal[i];
+    let r = index.get(m);
+    if (r === undefined) {
+      r = out.cells.length;
+      index.set(m, r);
+      out.cells.push([]);
+      out.clues.push(kclues.clues[m]);
+    }
+    out.cells[r].push(i);
+  }
+  return out;
+}
+
+type ClueKind = Exclude<keyof keen.Dealt, "cage">;
+
+const KIND_OF_OP = new Map<number, ClueKind>([
+  [C_ADD, "sum"],
+  [C_MUL, "product"],
+  [C_SUB, "difference"],
+  [C_DIV, "quotient"],
+]);
+
+function cageReason(
+  cages: Cages,
+  r: number,
+  w: number,
+): { op: number; value: number; cells: Point[] } {
+  const clue = cages.clues[r];
+  return {
+    op: clueOp(clue),
+    value: clueVal(clue),
+    cells: cages.cells[r].map((c) => ({ x: c % w, y: (c / w) | 0 })),
+  };
+}
+
+function describedLadder(w: number, kclues: KeenClues): LatinLadder {
+  const cages = cagesOf(w, kclues);
+  const n = cages.cells.length;
+  // Each cage's clue is of the kind its sign names, at the cage.
+  const ofKind = (kind: ClueKind): ClueList => {
+    const rs = cages.clues.flatMap((clue, r) =>
+      KIND_OF_OP.get(clueOp(clue)) === kind ? [r] : [],
+    );
+    return clueList(
+      rs,
+      rs.map((r) => clueVal(cages.clues[r])),
+      n,
+    );
+  };
+  const dl: keen.Dealt = {
+    cage: partition(cages.cells),
+    sum: ofKind("sum"),
+    product: ofKind("product"),
+    difference: ofKind("difference"),
+    quotient: ofKind("quotient"),
+  };
+  const ladder: Record<keen.LadderId, () => LatinRung> = {
+    cageEasy: () =>
+      compiledRung(
+        keen.cageEasy,
+        dl,
+        ({ r }): KeenReason => ({
+          kind: "cage",
+          ...cageReason(cages, r, w),
+        }),
+      ),
+    "latin.hiddenSingle": () => LATIN_RUNGS["latin.hiddenSingle"],
+    "latin.single": () => LATIN_RUNGS["latin.single"],
+    cage: () =>
+      compiledRung(
+        keen.cage,
+        dl,
+        ({ r }): KeenReason => ({
+          kind: "cage",
+          ...cageReason(cages, r, w),
+        }),
+      ),
+    cageLine: () =>
+      compiledRung(
+        keen.cageLine,
+        dl,
+        ({ r, L }): KeenReason => ({
+          kind: "cageLine",
+          ...cageReason(cages, r, w),
+          horizontal: L < w,
+        }),
+      ),
+    "latin.set": () => LATIN_RUNGS["latin.set"],
+    "latin.fish": () => LATIN_RUNGS["latin.fish"],
+    "latin.wing": () => LATIN_RUNGS["latin.wing"],
+  };
+  return {
+    ladder: keen.ladder.map(({ id, tier, until }) => ({
+      tier,
+      until,
+      run: ladder[id](),
+    })),
+  };
+}
+
+function solveDescribed(
+  w: number,
+  kclues: KeenClues,
+  soln: Uint8Array,
+  maxdiff: number,
+  recorder?: (rec: DeductionRecord) => void,
+  cubeOut?: Uint8Array,
+): number {
+  const ctx = buildCtx(w, kclues, maxdiff);
+  return latinSolver<KeenCtx>(soln, w, {
+    maxdiff,
+    diffRecursive: DIFF_UNREASONABLE,
+    valid: keenValid,
+    ctx,
+    recorder,
+    cubeOut,
+    ...describedLadder(w, kclues),
+  });
+}
+
+export function solveKeen(
+  w: number,
+  kclues: KeenClues,
+  soln: Uint8Array,
+  maxdiff: number,
+  recorder?: (rec: DeductionRecord) => void,
+): number {
+  if (COMPARE.handWritten) return solveHandWritten(w, kclues, soln, maxdiff, recorder);
+  if (!COMPARE.on) return solveDescribed(w, kclues, soln, maxdiff, recorder);
+  // Both ladders on copies, compared in what they return, the grid, the cube
+  // and every record; the compiled one's results are the call's.
+  const input = soln.join(",");
+  const g1 = soln.slice();
+  const c0 = new Uint8Array(w * w * w);
+  const c1 = new Uint8Array(w * w * w);
+  const r0: DeductionRecord[] = [];
+  const r1: DeductionRecord[] = [];
+  const hand = solveHandWritten(
+    w,
+    kclues,
+    g1,
+    maxdiff,
+    recorder ? (r) => r0.push(r) : undefined,
+    c1,
+  );
+  const built = solveDescribed(
+    w,
+    kclues,
+    soln,
+    maxdiff,
+    recorder ? (r) => r1.push(r) : undefined,
+    c0,
+  );
+  COMPARE.compared++;
+  for (const r of r0) {
+    const k = (r.reason as { kind?: string } | null)?.kind ?? "none";
+    COMPARE.reasons.set(k, (COMPARE.reasons.get(k) ?? 0) + 1);
+  }
+  const a = r0.map(canonical);
+  const b = r1.map(canonical);
+  let at = 0;
+  while (at < a.length && a[at] === b[at]) at++;
+  const what = [
+    hand !== built ? "return" : "",
+    g1.some((v, i) => v !== soln[i]) ? "grid" : "",
+    c0.some((v, i) => v !== c1[i]) ? "cube" : "",
+    at < a.length || at < b.length ? "records" : "",
+  ].filter((s) => s !== "");
+  if (what.length > 0)
+    COMPARE.mismatches.push({
+      what: what.join(" "),
+      input,
+      w,
+      maxdiff,
+      hand,
+      built,
+      record: at,
+      handRecord: a[at] ?? null,
+      builtRecord: b[at] ?? null,
+    });
+  for (const r of r1) recorder?.(r);
+  return built;
+}
+
+/** `x`'s JSON with every object's keys sorted, so key order is no difference. */
+function canonical(x: unknown): string {
+  return JSON.stringify(x, (_k, v: unknown) =>
+    v !== null && typeof v === "object" && !Array.isArray(v)
+      ? Object.fromEntries(Object.entries(v).sort(([p], [q]) => (p < q ? -1 : 1)))
+      : v,
+  );
+}
+
+/** The comparison's switch and tally (`describe-keen` tasks 2.4). */
+export const COMPARE = {
+  on: false,
+  /** Run the hand-written deductions alone, for the speed runs. */
+  handWritten: false,
+  compared: 0,
+  mismatches: [] as Record<string, unknown>[],
+  /** The hand-written records compared, by their reason's kind. */
+  reasons: new Map<string, number>(),
+};
 
 /**
  * Run the recording solver on a sound candidate cube seeded from `grid` (the

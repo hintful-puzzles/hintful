@@ -2,16 +2,17 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, clueAt, popcount, rangeMask } from "../../engine/describe-runtime.ts";
 
-/** The dealt clues, by kind. */
-export interface Clues {
+/** What the board deals: its partitions by name, and its clues by kind. */
+export interface Dealt {
   sees: ClueList;
 }
 
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "facing" | "bounds" | "latin.hiddenSingle" | "latin.single" | "arrangement" | "latin.set" | "latin.fish" | "latin.wing";
 
-/** The ladder: each technique's tier, in the order the description lists them. */
-export const ladder: readonly { id: LadderId; tier: number }[] = [
+/** The ladder: each technique's tier, and the cap from which it no longer
+ * runs where it has one, in the order the description lists them. */
+export const ladder: readonly { id: LadderId; tier: number; until?: number }[] = [
   { id: "facing", tier: 0 },
   { id: "bounds", tier: 0 },
   { id: "latin.hiddenSingle", tier: 0 },
@@ -32,7 +33,7 @@ export interface FacingBinding {
 const facingFacts: number[] = [];
 let facingCands = new Int32Array(0);
 
-export function facing(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<FacingBinding> | null): number {
+export function facing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FacingBinding> | null): number {
   const _g8: number[] = [];
   const facts = facingFacts;
   let fired = 0;
@@ -101,7 +102,7 @@ export interface BoundsBinding {
 const boundsFacts: number[] = [];
 let boundsCands = new Int32Array(0);
 
-export function bounds(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<BoundsBinding> | null): number {
+export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBinding> | null): number {
   const facts = boundsFacts;
   let fired = 0;
   let changed = false;
@@ -339,7 +340,7 @@ export interface ArrangementBinding {
 const arrangementFacts: number[] = [];
 let arrangementCands = new Int32Array(0);
 
-export function arrangement(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<ArrangementBinding> | null): number {
+export function arrangement(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ArrangementBinding> | null): number {
   const _p212 = new Int32Array(sp.cells.length);
   let _l213: readonly number[] = [];
   let _y214 = false;
@@ -376,56 +377,56 @@ export function arrangement(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<Arran
             _l219 = _a217;
             let _i223 = 0;
             _s220[0] = 0;
-            let _o226 = _a217.length === 0;
+            let _o227 = _a217.length === 0;
             for (;;) {
               if (_a217.length === 0) {
-                if (!_o226) break;
-                _o226 = false;
+                if (!_o227) break;
+                _o227 = false;
               }
               while (_a217.length > 0 && _i223 >= 0) {
                 const _e221 = _a217[_i223];
                 if (_s220[_i223] > 0) _f218[_e221] = -1;
-                let _r225 = (cands[_e221] >= 0 ? cands[_e221] : (cands[_e221] = b.cand(_e221))) & ~((2 << _s220[_i223]) - 1);
+                let _r226 = (cands[_e221] >= 0 ? cands[_e221] : (cands[_e221] = b.cand(_e221))) & ~((2 << _s220[_i223]) - 1);
                 let _d222 = 0;
-                for (; _r225 !== 0; _r225 &= _r225 - 1) {
-                  _d222 = 31 - Math.clz32(_r225 & -_r225);
+                for (; _r226 !== 0; _r226 &= _r226 - 1) {
+                  _d222 = 31 - Math.clz32(_r226 & -_r226);
+                  _f218[_e221] = _d222;
                   if (true) { let _j224 = 0; while (_j224 < _i223 && !(_f218[_a217[_j224]] === _d222 && true)) _j224++; if (_j224 < _i223) continue; }
                   break;
                 }
-                if (_r225 === 0) {
+                if (_r226 === 0) {
                   _s220[_i223] = 0;
                   _i223--;
                   continue;
                 }
                 _s220[_i223] = _d222;
-                _f218[_e221] = _d222;
                 if (_i223 === _a217.length - 1) break;
                 _i223++;
                 _s220[_i223] = 0;
               }
               if (_i223 < 0) break;
-              let _g227 = 0;
-              G228: {
-                const _a229 = v_L;
-                for (let _i230 = 0; _i230 < _a229.length; _i230++) {
-                  const v_c = _a229[_i230];
-                  let _q231 = true;
-                  Q232: {
-                    const _a233 = v_L;
-                    const _n234 = _i230;
-                    for (let _i235 = 0; _i235 < _n234; _i235++) {
-                      const v_c2 = _a233[_i235];
+              let _g228 = 0;
+              G229: {
+                const _a230 = v_L;
+                for (let _i231 = 0; _i231 < _a230.length; _i231++) {
+                  const v_c = _a230[_i231];
+                  let _q232 = true;
+                  Q233: {
+                    const _a234 = v_L;
+                    const _n235 = _i231;
+                    for (let _i236 = 0; _i236 < _n235; _i236++) {
+                      const v_c2 = _a234[_i236];
                       if (!((_f218[v_c2] < _f218[v_c]))) {
-                        _q231 = false;
-                        break Q232;
+                        _q232 = false;
+                        break Q233;
                       }
                     }
                   }
-                  if (!(_q231)) continue;
-                  _g227++;
+                  if (!(_q232)) continue;
+                  _g228++;
                 }
               }
-              if (!((_g227 === v_v))) continue;
+              if (!((_g228 === v_v))) continue;
               _l213 = _a217;
               _y214 = true;
               for (const _e216 of _a217) _p212[_e216] |= 1 << _f218[_e216];

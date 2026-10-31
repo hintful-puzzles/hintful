@@ -2,16 +2,17 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, clueAt } from "../../engine/describe-runtime.ts";
 
-/** The dealt clues, by kind. */
-export interface Clues {
+/** What the board deals: its partitions by name, and its clues by kind. */
+export interface Dealt {
   bar: ClueList;
 }
 
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "latin.hiddenSingle" | "latin.single" | "adjacent" | "adjacentSet" | "latin.set" | "latin.fish" | "latin.wing";
 
-/** The ladder: each technique's tier, in the order the description lists them. */
-export const ladder: readonly { id: LadderId; tier: number }[] = [
+/** The ladder: each technique's tier, and the cap from which it no longer
+ * runs where it has one, in the order the description lists them. */
+export const ladder: readonly { id: LadderId; tier: number; until?: number }[] = [
   { id: "latin.hiddenSingle", tier: 0 },
   { id: "latin.single", tier: 0 },
   { id: "adjacent", tier: 1 },
@@ -34,7 +35,7 @@ export interface AdjacentBinding {
 const adjacentFacts: number[] = [];
 let adjacentCands = new Int32Array(0);
 
-export function adjacent(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<AdjacentBinding> | null): number {
+export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AdjacentBinding> | null): number {
   const facts = adjacentFacts;
   let fired = 0;
   let changed = false;
@@ -91,7 +92,7 @@ export interface AdjacentSetBinding {
 const adjacentSetFacts: number[] = [];
 let adjacentSetCands = new Int32Array(0);
 
-export function adjacentSet(b: Marks, sp: GridSpace, cl: Clues, fire: Fire<AdjacentSetBinding> | null): number {
+export function adjacentSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AdjacentSetBinding> | null): number {
   const facts = adjacentSetFacts;
   let fired = 0;
   let changed = false;
