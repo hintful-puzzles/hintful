@@ -125,7 +125,81 @@ no drawn line.
 - **THEN** its words name the square clue or the tall clue, and following it
   finishes the board
 
+### Requirement: Look: Rectangles draws its squares on the collection's quiet surface
+
+`redraw` SHALL draw every square on the collection's cell surface, with the
+surface's thin grid line between squares, but for the squares a clue's fill
+takes. The clue itself SHALL stay in ink. The edges of the player's
+rectangles, and the board's outer edge, which bounds every rectangle that
+reaches it, are content and SHALL stay in ink at their full width.
+
+#### Scenario: A number is told by the cell under it
+
+- **WHEN** an untouched board is drawn
+- **THEN** every square holding a clue is in that clue's fill
+- **AND** every other square is the plain cell surface
+
+## REMOVED Requirements
+
+### Requirement: Look: A finished rectangle fills whole with the finished-region role
+
+**Reason**: A finished rectangle now takes its clue's own fill, one of the
+region fills, as LinkedIn's Patches colors its patches (the owner,
+2026-10-31, for both rulesets).
+
+**Migration**: "Look: A clue's fill marks its square, and its rectangle once
+the clue allows it".
+
 ## ADDED Requirements
+
+### Requirement: Controls: A drag from a drawn rectangle resizes it
+
+A left-drag, or the cursor's Enter, that starts on a square of a rectangle
+drawn round one clue, and not on a grid corner, SHALL resize it: the corner
+farthest from the square pressed stays, and the nearest moves as the pointer
+does. The move SHALL take up the old sides but those another drawn rectangle
+shares, and draw the new outline. The rectangle SHALL stop short of another
+drawn rectangle.
+
+#### Scenario: A rectangle grows from its corner
+
+- **WHEN** a 2×2 rectangle drawn at (2,2) on a blank 7×7 board is dragged from
+  its top-left square to the square above and left of it
+- **THEN** the move resizes it to the 3×3 at (1,1)
+
+#### Scenario: A shrink keeps a neighbor's side
+
+- **WHEN** that 2×2 has a 1×2 drawn beside it at (4,2), and is dragged from
+  its right column a square left
+- **THEN** it becomes the 1×2 at (2,2), and the neighbor is still drawn whole
+
+#### Scenario: Growth stops at another rectangle
+
+- **WHEN** a 1×1 at (2,2) is dragged right past a 1×1 drawn at (4,2)
+- **THEN** it grows to the 2×1 at (2,2) and no further
+
+#### Scenario: The board before any line is not a rectangle to resize
+
+- **WHEN** on `7x7:2_2c3f2_2a2b3c2_4b3c3_6_3b2_4i6b`, with no line drawn, a
+  drag runs from the top-left square to the one below it
+- **THEN** it draws the 1×2 rectangle those squares span
+
+#### Scenario: A drag from a grid corner draws anew
+
+- **WHEN** a drag inside a drawn 3×3 starts on a grid corner
+- **THEN** it draws a rectangle of its own
+
+### Requirement: Look: A clue's fill marks its square, and its rectangle once the clue allows it
+
+Each clue SHALL take one of the region fills, so that clues whose nearest
+squares meet differ; the fills SHALL NOT be chosen from the answer. A clue's
+square SHALL be drawn in its fill, and a rectangle the game counts as
+correct SHALL fill whole with its clue's.
+
+#### Scenario: A finished rectangle takes its clue's fill
+
+- **WHEN** a board is solved
+- **THEN** every square is drawn in the fill of its rectangle's clue
 
 ### Requirement: Generation: A Patches board hides what its clues need not say
 

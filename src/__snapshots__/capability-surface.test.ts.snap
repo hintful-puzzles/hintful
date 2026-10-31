@@ -1389,6 +1389,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "drag",
       "dragged",
       "erasing",
+      "resizing",
       "x1",
       "x2",
       "y1",

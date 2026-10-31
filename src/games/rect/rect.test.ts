@@ -26,13 +26,20 @@ import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import { rungsFinish } from "./hint.ts";
 import { rectGame } from "./index.ts";
-import { cloneRectState, executeMove, newState, status } from "./moves.ts";
+import {
+  cloneRectState,
+  executeMove,
+  newState,
+  outlinedBoxAt,
+  status,
+} from "./moves.ts";
 import { BORDER, COL_MISTAKE, newDrawState, redraw } from "./render.ts";
 import {
   decodeParams,
   encodeNumbers,
   encodeParams,
   MODE_RECT,
+  type RectMove,
   type RectParams,
   type RectState,
 } from "./state.ts";
@@ -374,6 +381,104 @@ describe("rect input → moves", () => {
       CURSOR_UP,
     );
     expect(ui.cursor.visible).toBe(true);
+  });
+});
+
+describe("rect resize", () => {
+  /** A 7×7 board with a clue at (2,2) and one at (4,2), and these rectangles
+   * drawn. */
+  const drawn = (...rects: [number, number, number, number][]): RectState =>
+    rects.reduce(
+      (s, [x, y, w, h]) => executeMove(s, { type: "rect", erasing: false, x, y, w, h }),
+      newState(P(), "p4a2zd"),
+    );
+
+  /** The move a left-drag through these grid points makes, the first the
+   * press and the last the release. */
+  const dragThrough = (st: RectState, points: [number, number][]) => {
+    const ui = rectGame.newUi(st);
+    const ds = preferredDrawState(rectGame, st);
+    const at = ([x, y]: [number, number]) => ({ x: px(x), y: px(y) });
+    rectGame.interpretMove(st, ui, ds, at(points[0]), LEFT_BUTTON);
+    for (const p of points.slice(1))
+      rectGame.interpretMove(st, ui, ds, at(p), LEFT_DRAG);
+    return rectGame.interpretMove(
+      st,
+      ui,
+      ds,
+      at(points[points.length - 1]),
+      LEFT_RELEASE,
+    );
+  };
+
+  it("grows a drawn rectangle from the square pressed, its far corner fixed", () => {
+    const st = drawn([2, 2, 2, 2]);
+    // Pressed on its top-left square, released on the square up and left.
+    const move = dragThrough(st, [
+      [2.5, 2.5],
+      [1.5, 1.5],
+    ]);
+    expect(move).toEqual({
+      type: "resize",
+      from: { x: 2, y: 2, w: 2, h: 2 },
+      to: { x: 1, y: 1, w: 3, h: 3 },
+    });
+    const next = executeMove(st, move as RectMove);
+    expect(outlinedBoxAt(next, 1, 1)).toEqual({ x: 1, y: 1, w: 3, h: 3 });
+  });
+
+  it("shrinks one, taking up the sides it leaves but a neighbor's", () => {
+    const st = drawn([2, 2, 2, 2], [4, 2, 1, 2]);
+    // Pressed on its right column, dragged a square left.
+    const move = dragThrough(st, [
+      [3.5, 2.5],
+      [2.5, 2.5],
+    ]);
+    expect(move).toEqual({
+      type: "resize",
+      from: { x: 2, y: 2, w: 2, h: 2 },
+      to: { x: 2, y: 2, w: 1, h: 2 },
+    });
+    const next = executeMove(st, move as RectMove);
+    expect(outlinedBoxAt(next, 2, 2)).toEqual({ x: 2, y: 2, w: 1, h: 2 });
+    // The neighbor keeps the side the two shared.
+    expect(outlinedBoxAt(next, 4, 2)).toEqual({ x: 4, y: 2, w: 1, h: 2 });
+    // The square left behind has no line above it.
+    expect(next.hedge[2 * 7 + 3]).toBe(0);
+  });
+
+  it("stops growing at another drawn rectangle", () => {
+    const st = drawn([2, 2, 1, 1], [4, 2, 1, 1]);
+    const move = dragThrough(st, [
+      [2.5, 2.5],
+      [3.5, 2.5],
+      [5.5, 2.5],
+    ]);
+    expect(move).toEqual({
+      type: "resize",
+      from: { x: 2, y: 2, w: 1, h: 1 },
+      to: { x: 2, y: 2, w: 2, h: 1 },
+    });
+  });
+
+  it("draws a rectangle of its own from a box holding several clues or none", () => {
+    // The owner's board, 2026-10-31: before any line the whole board is a
+    // box, and a drag down from its top-left square resized it to a line.
+    const st = newState(P(), "2_2c3f2_2a2b3c2_4b3c3_6_3b2_4i6b");
+    const move = dragThrough(st, [
+      [0.5, 0.5],
+      [0.5, 1.5],
+    ]);
+    expect(move).toEqual({ type: "rect", erasing: false, x: 0, y: 0, w: 1, h: 2 });
+  });
+
+  it("draws a rectangle of its own from a grid corner inside one", () => {
+    const st = drawn([2, 2, 3, 3]);
+    const move = dragThrough(st, [
+      [3, 3],
+      [4, 4],
+    ]);
+    expect(move).toEqual({ type: "rect", erasing: false, x: 3, y: 3, w: 1, h: 1 });
   });
 });
 

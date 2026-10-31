@@ -1,7 +1,7 @@
 /**
  * Tier-2.5 render scenarios for Rectangles: drive a real Midend to a target
- * frame and capture `redraw`. Targeted op assertions (number text, the gray
- * correct-rectangle fill after solving, the red mistake overlay) plus a
+ * frame and capture `redraw`. Targeted op assertions (number text, the clues'
+ * fills over every rectangle after solving, the red mistake overlay) plus a
  * snapshot so a render regression is a reviewable text diff (`vitest -u`
  * re-baselines; the targeted assertions survive a careless `-u`).
  */
@@ -9,7 +9,10 @@ import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  type DrawOp,
+  RecordingDrawing,
+} from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
@@ -21,7 +24,7 @@ import { rectGame } from "./index.ts";
 import { newState } from "./moves.ts";
 import {
   BORDER,
-  COL_CORRECT,
+  COL_FILL,
   COL_FLASH,
   COL_FLASH_LEAD,
   COL_MISTAKE,
@@ -33,17 +36,21 @@ const P: RectParams = { w: 7, h: 7, expandfactor: 0, diff: DIFF_EASY, mode: MODE
 const ID = `${rectGame.encodeParams(P, true)}#rect-scenario`;
 
 describe("rect render scenarios", () => {
-  it("opener frame: number text drawn, no correct-fill yet", () => {
+  /** How many squares are grounded in a clue's fill. */
+  const filled = (ops: readonly DrawOp[]): number =>
+    ops.filter((o) => o.op === "rect" && o.color >= COL_FILL).length;
+
+  it("opener frame: number text drawn, and only the clues' squares filled", () => {
     const { recording } = renderScenario({ game: rectGame, id: ID });
     expect(recording.ops.some((o) => o.op === "text")).toBe(true);
-    // Nothing is complete on a blank board, so no gray correct fill.
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_CORRECT)).toBe(
-      false,
-    );
+    // Nothing is complete on a blank board, so a fill is a clue's own.
+    const { desc } = newDesc(P, randomNew("rect-scenario"));
+    const clues = Array.from(newState(P, desc).grid).filter(Boolean).length;
+    expect(filled(recording.ops)).toBe(clues);
     expect(recording.ops).toMatchSnapshot();
   });
 
-  it("solved frame: gray correct fill covers the board", () => {
+  it("solved frame: every square wears its clue's fill", () => {
     // Build the solve move from the same id's board.
     const { desc } = newDesc(P, randomNew("rect-scenario"));
     const st = newState(P, desc);
@@ -54,10 +61,8 @@ describe("rect render scenarios", () => {
       id: ID,
       moves: [solveMove.move],
     });
-    // Every cell is correct → gray COL_CORRECT fill appears; flash is 0 here.
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_CORRECT)).toBe(
-      true,
-    );
+    // Every cell is correct, so each is grounded in a fill; flash is 0 here.
+    expect(filled(recording.ops)).toBeGreaterThanOrEqual(P.w * P.h);
   });
 
   it("win flash: lights each cell's ground in turn, bottom left to top right", () => {

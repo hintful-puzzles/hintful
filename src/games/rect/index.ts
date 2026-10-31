@@ -56,10 +56,12 @@ import {
   rungsFinish,
 } from "./hint.ts";
 import {
+  clueBoxAt,
   executeMove,
   gridDrawRect,
   hrange,
   newState,
+  outlinedBoxAt,
   status,
   textFormat,
   vrange,
@@ -121,6 +123,7 @@ function newUi(_state: RectState): RectUi {
     drag: newDrag(),
     dragged: false,
     erasing: false,
+    resizing: null,
     x1: -1,
     y1: -1,
     x2: -1,
@@ -137,6 +140,59 @@ function resetUi(ui: RectUi): void {
   ui.x2 = -1;
   ui.y2 = -1;
   ui.dragged = false;
+  ui.resizing = null;
+}
+
+/**
+ * One side of a resize: the cells `lo..hi` of the rectangle, pressed at
+ * `press` and the pointer now at `at`, on a board `n` long. The end nearer
+ * the press moves with the pointer and the far one stays, so a press anywhere
+ * is the nearest corner grabbed; from the middle, the end the pointer moves
+ * toward. A side the pointer has not moved along keeps its extent.
+ */
+function resizeSide(
+  lo: number,
+  hi: number,
+  press: number,
+  at: number,
+  n: number,
+): [number, number] {
+  const d = at - press;
+  if (d === 0) return [lo, hi];
+  const nearLo = press - lo < hi - press || (press - lo === hi - press && d < 0);
+  const fixed = nearLo ? hi : lo;
+  const moving = Math.max(0, Math.min(n - 1, (nearLo ? lo : hi) + d));
+  return [Math.min(fixed, moving), Math.max(fixed, moving)];
+}
+
+/**
+ * The box a resize drag spans with the pointer on the square `(x, y)`. It
+ * stops short of any other rectangle drawn: where the box would take in one
+ * of its squares, it keeps the last box's extent on a side, or both.
+ */
+function updateResizeBox(ui: RectUi, state: RectState, x: number, y: number): void {
+  const resizing = ui.resizing;
+  if (!resizing) return;
+  const { from } = resizing;
+  const [nx1, nx2] = resizeSide(from.x, from.x + from.w - 1, resizing.x, x, state.w);
+  const [ny1, ny2] = resizeSide(from.y, from.y + from.h - 1, resizing.y, y, state.h);
+  const prev = { x1: ui.x1, x2: ui.x2, y1: ui.y1, y2: ui.y2 };
+  const free = (x1: number, x2: number, y1: number, y2: number): boolean => {
+    for (let yy = y1; yy < y2; yy++)
+      for (let xx = x1; xx < x2; xx++) {
+        const inside =
+          xx >= from.x && xx < from.x + from.w && yy >= from.y && yy < from.y + from.h;
+        if (!inside && outlinedBoxAt(state, xx, yy)) return false;
+      }
+    return true;
+  };
+  const tries: [number, number, number, number][] = [
+    [nx1, nx2 + 1, ny1, ny2 + 1],
+    [prev.x1, prev.x2, ny1, ny2 + 1],
+    [nx1, nx2 + 1, prev.y1, prev.y2],
+  ];
+  const box = tries.find(([x1, x2, y1, y2]) => free(x1, x2, y1, y2));
+  if (box) [ui.x1, ui.x2, ui.y1, ui.y2] = box;
 }
 
 /** Recompute the cell rectangle the current drag spans, or clear it when the
@@ -172,6 +228,9 @@ function interpretMove(
   const inTiles = (px: number) => (px - BORDER) / tile;
 
   let [xc, yc] = coordRound(inTiles(p.x), inTiles(p.y));
+  // The square under the pointer, or the cursor's, which a resize follows.
+  let sx = Math.floor(inTiles(p.x));
+  let sy = Math.floor(inTiles(p.y));
 
   let startdrag = false;
   let enddrag = false;
@@ -197,6 +256,7 @@ function interpretMove(
     active = true;
     if (!ui.cursorDragging || !changed) return changed ? UI_UPDATE : null;
     [xc, yc] = coordRound(ui.cursor.x + 0.5, ui.cursor.y + 0.5);
+    [sx, sy] = [ui.cursor.x, ui.cursor.y];
   } else if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
     // Ignore a keyboard drag start while a mouse drag is in progress.
     if (ui.drag.live && !ui.cursorDragging) return null;
@@ -205,6 +265,7 @@ function interpretMove(
       return UI_UPDATE;
     }
     [xc, yc] = coordRound(ui.cursor.x + 0.5, ui.cursor.y + 0.5);
+    [sx, sy] = [ui.cursor.x, ui.cursor.y];
     erasing = button === CURSOR_SELECT2;
     if (ui.cursorDragging) {
       ui.cursorDragging = false;
@@ -240,10 +301,22 @@ function interpretMove(
     startDrag(ui.drag, xc, yc);
     ui.dragged = false;
     ui.erasing = erasing;
+    // A drag from a square of a rectangle drawn round its clue resizes it.
+    // One from a grid corner draws corner to corner, as the hint's drag does,
+    // wherever it is.
+    const corner = !(xc & 1) && !(yc & 1);
+    const from =
+      !erasing && !corner && sx >= 0 && sy >= 0 && sx < w && sy < h
+        ? clueBoxAt(state, sx, sy)
+        : null;
+    ui.resizing = from && { from, x: sx, y: sy };
+    if (from)
+      [ui.x1, ui.x2, ui.y1, ui.y2] = [from.x, from.x + from.w, from.y, from.y + from.h];
     active = true;
   } else if (moveDrag(ui.drag, xc, yc)) {
     ui.dragged = true;
-    updateDragBox(ui, w, h, xc, yc);
+    if (ui.resizing) updateResizeBox(ui, state, sx, sy);
+    else updateDragBox(ui, w, h, xc, yc);
     active = true;
   }
 
@@ -251,7 +324,13 @@ function interpretMove(
 
   if (enddrag && ui.drag.live) {
     if (xc >= 0 && xc <= 2 * w && yc >= 0 && yc <= 2 * h && erasing === ui.erasing) {
-      if (ui.dragged) {
+      const resizing = ui.resizing;
+      if (ui.dragged && resizing) {
+        const to = { x: ui.x1, y: ui.y1, w: ui.x2 - ui.x1, h: ui.y2 - ui.y1 };
+        const { from } = resizing;
+        if (to.x !== from.x || to.y !== from.y || to.w !== from.w || to.h !== from.h)
+          ret = { type: "resize", from, to };
+      } else if (ui.dragged) {
         // Only emit if the rectangle would actually change something.
         if (
           gridDrawRect(
@@ -322,7 +401,9 @@ function hintGesture(
           button: m.erasing ? "secondary" : "primary",
         }),
       ];
+    // A step never solves or resizes.
     case "solve":
+    case "resize":
       return [];
     default:
       return assertNever(m, "rect hint gesture");

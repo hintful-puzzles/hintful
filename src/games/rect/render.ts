@@ -12,10 +12,13 @@
  * edges before the corner pass, so it too lives entirely in the word.
  *
  * The look is the collection's: squares on the quiet cell surface with a thin
- * grid, a number on the lifted surface of a given, and the rectangles' edges,
- * the board's outer edge among them, in ink.
+ * grid, and the rectangles' edges, the board's outer edge among them, in ink.
+ * Each clue takes one of the region fills, as LinkedIn's Patches colors its
+ * clues: its square wears it, and so does a rectangle that the clue allows,
+ * whole, once it is drawn.
  */
 
+import { REGION_FILLS } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
@@ -24,10 +27,8 @@ import {
   ERROR,
   FLASH,
   FLASH_LEAD,
-  givenSurface,
   HINT_OUTLINE,
   INK,
-  REGION_DONE,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
@@ -35,12 +36,13 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { regionFills } from "../../engine/region-fill.ts";
 import { type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { RectHint } from "./hint.ts";
 import { LINE, RECTANGLE } from "./hint-marks.ts";
-import { gridDrawRect, hrange, vrange } from "./moves.ts";
+import { gridDrawRect, hrange, outlinedBoxAt, resizeEdges, vrange } from "./moves.ts";
 import {
   HIDDEN,
   type RectDrawState,
@@ -57,21 +59,26 @@ export const BORDER = 1;
 
 // --- palette ---------------------------------------------------------------
 export const COL_BACKGROUND = 0;
-export const COL_CORRECT = 1;
-export const COL_LINE = 2;
-export const COL_TEXT = 3;
-export const COL_GRID = 4;
-export const COL_DRAG = 5;
-export const COL_DRAGERASE = 6;
-export const COL_CURSOR = 7;
-export const COL_MISTAKE = 8;
-export const COL_HINT_CELL = 9;
-export const COL_CELL = 10; // the surface of a square with no number
-export const COL_GIVEN = 11; // the lifted surface under a number
+export const COL_LINE = 1;
+export const COL_TEXT = 2;
+export const COL_GRID = 3;
+export const COL_DRAG = 4;
+export const COL_DRAGERASE = 5;
+export const COL_CURSOR = 6;
+export const COL_MISTAKE = 7;
+export const COL_HINT_CELL = 8;
+export const COL_CELL = 9; // the surface of a square with no clue
 /** The ground of a square the win flash is on: its body, and its leading
  * edge. */
-export const COL_FLASH = 12;
-export const COL_FLASH_LEAD = 13;
+export const COL_FLASH = 10;
+export const COL_FLASH_LEAD = 11;
+/** The first of the clues' fills, one for each of {@link FILLS}. */
+export const COL_FILL = 12;
+
+/** The first four region fills, as Star Battle takes them: the next four are
+ * a step darker in the dark scheme, too near the plain cell they border
+ * (`neighbor-contrast.test.ts`). */
+const FILLS = REGION_FILLS.slice(0, 4);
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -79,12 +86,13 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BACKGROUND] = bg;
   out[COL_GRID] = surfaceGrid(bg);
   out[COL_CELL] = cellSurface(bg);
-  out[COL_GIVEN] = givenSurface(bg);
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_DRAG] = DRAG_ADD;
   out[COL_DRAGERASE] = DRAG_REMOVE;
-  out[COL_CORRECT] = REGION_DONE;
+  FILLS.forEach((fill, k) => {
+    out[COL_FILL + k] = fill;
+  });
   out[COL_LINE] = INK;
   out[COL_TEXT] = INK;
   out[COL_CURSOR] = CURSOR;
@@ -94,12 +102,80 @@ export function colors(defaultBackground: Color): Color[] {
 }
 
 // --- cache-word bits -------------------------------------------------------
-const F_CORRECT = 1 << 16;
 const F_CURSOR = 1 << 17;
 const M_TOP = 1 << 18;
 const M_BOTTOM = 1 << 19;
 const M_LEFT = 1 << 20;
 const M_RIGHT = 1 << 21;
+/** The fill the square wears, one more than its index in {@link FILLS}, or
+ * 0 for none: bits 22–25. */
+const FILL_SHIFT = 22;
+const FILL_MASK = 15;
+
+/** Each clue's fill, as an index in {@link FILLS}, by its square: one
+ * the board keeps, so it is worked out once for a board's clues. */
+const clueFillCache = new WeakMap<Int32Array, Int32Array>();
+
+/**
+ * Each clue's fill, by its square. The fills color the board's division
+ * into the squares nearest each clue, so that clues side by side differ. It
+ * is not the answer's division: a fill must not say which clues' rectangles
+ * meet.
+ */
+function clueFills(state: RectState): Int32Array {
+  const cached = clueFillCache.get(state.grid);
+  if (cached) return cached;
+  const { w, h, grid } = state;
+  const clues: number[] = [];
+  for (let i = 0; i < grid.length; i++) if (grid[i]) clues.push(i);
+  const out = new Int32Array(w * h).fill(-1);
+  if (clues.length > 0) {
+    const nearest = new Int32Array(w * h);
+    for (let i = 0; i < w * h; i++) {
+      let best = 0;
+      let bestDistance = Number.POSITIVE_INFINITY;
+      clues.forEach((c, k) => {
+        const d =
+          Math.abs((c % w) - (i % w)) + Math.abs(Math.floor(c / w) - Math.floor(i / w));
+        if (d < bestDistance) [best, bestDistance] = [k, d];
+      });
+      nearest[i] = best;
+    }
+    const fills = regionFills(nearest, w, FILLS.length);
+    clues.forEach((c, k) => {
+      out[c] = fills[k];
+    });
+  }
+  clueFillCache.set(state.grid, out);
+  return out;
+}
+
+/** The fill each square wears, by the same index, or -1: its clue's, if it
+ * has one, and over a rectangle the clue allows, the clue's on every square
+ * of it. */
+function squareFills(state: RectState): Int32Array {
+  const { w, h, grid } = state;
+  const clue = clueFills(state);
+  const out = clue.slice();
+  const filled = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      if (!state.correct[y * w + x] || filled[y * w + x]) continue;
+      // A correct square is in a rectangle drawn round one clue.
+      const box = outlinedBoxAt(state, x, y);
+      if (!box) continue;
+      let fill = -1;
+      for (let yy = box.y; yy < box.y + box.h; yy++)
+        for (let xx = box.x; xx < box.x + box.w; xx++)
+          if (grid[yy * w + xx]) fill = clue[yy * w + xx];
+      for (let yy = box.y; yy < box.y + box.h; yy++)
+        for (let xx = box.x; xx < box.x + box.w; xx++) {
+          out[yy * w + xx] = fill;
+          filled[yy * w + xx] = 1;
+        }
+    }
+  return out;
+}
 /** The hint's marks on the cell: the sides of its outline (bits 26–29), in
  * `hint-mark.ts`'s side bits, and whether it is striped. Its rings are keyed
  * apart (`RectDrawState.rings`). */
@@ -148,8 +224,9 @@ function drawTile(
 
   const num = state.grid[y * w + x];
 
-  // A finished rectangle shades whole, its number's square included; until
-  // then the number sits on the lifted surface of a given.
+  // A finished rectangle shades whole in its clue's fill, the clue's square
+  // included; until then only the clue's square wears it.
+  const fill = (bgflags >> FILL_SHIFT) & FILL_MASK;
   rect(cx, cy, tile + 1, tile + 1, COL_GRID);
   rect(
     cx + 1,
@@ -158,11 +235,9 @@ function drawTile(
     tile - 1,
     tone
       ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
-      : bgflags & F_CORRECT
-        ? COL_CORRECT
-        : num
-          ? COL_GIVEN
-          : COL_CELL,
+      : fill
+        ? COL_FILL + fill - 1
+        : COL_CELL,
   );
   // The line or area the hint's sentence names, under the clue.
   if (bgflags & F_STRIPES)
@@ -479,19 +554,23 @@ export function redraw(
   ) {
     hedge = state.hedge.slice();
     vedge = state.vedge.slice();
-    gridDrawRect(
-      w,
-      h,
-      hedge,
-      vedge,
-      ui.erasing ? 3 : 2,
-      true,
-      true,
-      ui.x1,
-      ui.y1,
-      ui.x2,
-      ui.y2,
-    );
+    const to = { x: ui.x1, y: ui.y1, w: ui.x2 - ui.x1, h: ui.y2 - ui.y1 };
+    // A resize takes up the sides its move would in the erasing color.
+    if (ui.resizing) resizeEdges(state, ui.resizing.from, to, hedge, vedge, 2, 3);
+    else
+      gridDrawRect(
+        w,
+        h,
+        hedge,
+        vedge,
+        ui.erasing ? 3 : 2,
+        true,
+        true,
+        ui.x1,
+        ui.y1,
+        ui.x2,
+        ui.y2,
+      );
   }
 
   // Corners: a corner pixel lights to the max value of the edges meeting it.
@@ -509,6 +588,8 @@ export function redraw(
         if (x + 1 < w && corners[y * w + (x + 1)] < e) corners[y * w + (x + 1)] = e;
       }
     }
+
+  const fills = squareFills(state);
 
   // Wrong-edge overlay from findMistakes.
   const wrongH = new Uint8Array(w * h);
@@ -551,7 +632,7 @@ export function redraw(
       if (x + 1 < w) c |= corners[y * w + (x + 1)] << 10;
       if (y + 1 < h) c |= corners[(y + 1) * w + x] << 12;
       if (x + 1 < w && y + 1 < h) c |= corners[(y + 1) * w + (x + 1)] << 14;
-      if (state.correct[y * w + x]) c |= F_CORRECT;
+      c |= (fills[y * w + x] + 1) << FILL_SHIFT;
       const tone = flash.win(sweepStep(x, y));
       if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y) c |= F_CURSOR;
 

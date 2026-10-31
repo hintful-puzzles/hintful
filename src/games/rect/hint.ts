@@ -508,7 +508,9 @@ export function rectRefreshStep(
       return (m.edge === "h" ? state.hedge : state.vedge)[m.y * state.w + m.x]
         ? null
         : step;
+    // A step draws a rectangle or a line; it never solves or resizes.
     case "solve":
+    case "resize":
       return step;
     default:
       return assertNever(m, "rect hint refresh");

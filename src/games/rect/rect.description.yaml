@@ -8,15 +8,18 @@ help:
     asks for. What a clue can ask depends on the game mode:
 
     {{rulesets}}
-
-    In {{choice:ruleset:1}}, a square clue's rectangle has equal sides, a
-    tall one's is higher than it is wide, and a wide one's is wider than it
-    is high. A square of one cell counts as a square.
   controls: |-
     Click and drag from one grid corner to another, or from one square
     center to another, to draw a rectangle. You can also drag along a
     grid line to just draw a line at a time, or just click on a single
     grid edge to draw or erase it.
+
+    A drag that starts on a square of a rectangle you have drawn round one
+    clue resizes that rectangle instead: its corner farthest from where you pressed stays
+    put, and the corner nearest follows the pointer. Its old sides are taken
+    up, but for those it shares with another rectangle you have drawn, and
+    it stops growing where it would run into one. To draw a new rectangle
+    from inside a drawn one, start the drag on a grid corner.
 
     While you drag, the status line shows the size of the rectangle.
     Drawing a rectangle also clears any lines inside it. Right-drag across
@@ -24,9 +27,14 @@ help:
 
     With the keyboard, the arrow keys move a cursor from square to square.
     Press Enter to start a rectangle at the cursor, move the cursor, and
-    press Enter again to draw it; use Space in place of Enter to clear the
+    press Enter again to draw it; on a square of a rectangle you have drawn
+    round one clue, the same keys resize it. Use Space in place of Enter to clear the
     lines inside the area instead. Escape abandons a rectangle you have
     started.
+
+    Each clue has a color of its own. Its square shows it from the start,
+    and a rectangle takes it whole once it is drawn round the clue at a size
+    and shape the clue allows.
   hints: |-
     **Hint** explains the next rectangle rather than simply drawing it, and
     says why no other will do. It reads only what is on the board: the
@@ -68,6 +76,15 @@ help:
     few forced rectangles later some clue has no fit left, or a square has
     no rectangle that can cover it. The hint carries on from whatever you
     draw.
+  sections:
+    - heading: The clues in {{choice:ruleset:1}}
+      body: |-
+        A clue drawn in a frame names its rectangle's shape: a square frame
+        asks for equal sides, a tall one for a rectangle higher than it is
+        wide, and a wide one for one wider than it is high. A square of one
+        cell counts as a square. A clue with no frame allows any shape. A
+        number is how many squares the rectangle has, and a question mark
+        says nothing of it.
   origins: |-
     {{choice:ruleset:0}} is Nikoli's *Shikaku*. {{choice:ruleset:1}} is the
-    puzzle LinkedIn publishes daily as *Patches*.
+    puzzle LinkedIn publishes daily under that name.

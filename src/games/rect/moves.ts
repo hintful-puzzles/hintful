@@ -7,7 +7,7 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { descValue } from "../../engine/desc-error.ts";
-import type { GameStatus } from "../../engine/types.ts";
+import type { GameStatus, Rect } from "../../engine/types.ts";
 import {
   clueAllows,
   HIDDEN,
@@ -52,6 +52,76 @@ function isOutlined(
       if (e !== (xx === x || xx === x + rw)) return false;
     }
   return true;
+}
+
+/**
+ * The rectangle drawn round the square `(x, y)`: every side a line or the
+ * board's edge, and no line inside. Null where the square is in none. With no
+ * line inside, the box runs from the square to the first line each way.
+ */
+export function outlinedBoxAt(
+  s: Pick<RectState, "w" | "h" | "hedge" | "vedge">,
+  x: number,
+  y: number,
+): Rect | null {
+  const { w, h, hedge, vedge } = s;
+  let x0 = x;
+  while (x0 > 0 && !vedge[y * w + x0]) x0--;
+  let x1 = x + 1;
+  while (x1 < w && !vedge[y * w + x1]) x1++;
+  let y0 = y;
+  while (y0 > 0 && !hedge[y0 * w + x]) y0--;
+  let y1 = y + 1;
+  while (y1 < h && !hedge[y1 * w + x]) y1++;
+  return isOutlined(w, h, hedge, vedge, x0, y0, x1 - x0, y1 - y0)
+    ? { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
+    : null;
+}
+
+/**
+ * The rectangle drawn round the square `(x, y)` and round one clue: the
+ * player's rectangle for that clue, which a drag from it resizes. The whole
+ * board before any line, or a box holding several clues or none, is not one.
+ */
+export function clueBoxAt(s: RectState, x: number, y: number): Rect | null {
+  const box = outlinedBoxAt(s, x, y);
+  if (!box) return null;
+  let clues = 0;
+  for (let yy = box.y; yy < box.y + box.h; yy++)
+    for (let xx = box.x; xx < box.x + box.w; xx++) if (s.grid[yy * s.w + xx]) clues++;
+  return clues === 1 ? box : null;
+}
+
+/**
+ * The resize a player's drag makes of the rectangle `from`: its sides are
+ * taken up, but for those that are a side of another drawn rectangle as well,
+ * and `to` is drawn, clearing any line inside it. `really` as in
+ * {@link gridDrawRect}; `c` is what a drawn side becomes, and `off` what a
+ * side taken up becomes, which the drag's preview colors.
+ */
+export function resizeEdges(
+  s: Pick<RectState, "w" | "h" | "hedge" | "vedge">,
+  from: Rect,
+  to: Rect,
+  hedge: Uint8Array,
+  vedge: Uint8Array,
+  c: number,
+  off: number,
+): void {
+  const { w, h } = s;
+  const shared = (x: number, y: number): boolean =>
+    x >= 0 && y >= 0 && x < w && y < h && outlinedBoxAt(s, x, y) !== null;
+  for (let x = from.x; x < from.x + from.w; x++) {
+    if (hrange(w, h, x, from.y) && !shared(x, from.y - 1)) hedge[from.y * w + x] = off;
+    const b = from.y + from.h;
+    if (hrange(w, h, x, b) && !shared(x, b)) hedge[b * w + x] = off;
+  }
+  for (let y = from.y; y < from.y + from.h; y++) {
+    if (vrange(w, h, from.x, y) && !shared(from.x - 1, y)) vedge[y * w + from.x] = off;
+    const r = from.x + from.w;
+    if (vrange(w, h, r, y) && !shared(r, y)) vedge[y * w + r] = off;
+  }
+  gridDrawRect(w, h, hedge, vedge, c, true, true, to.x, to.y, to.x + to.w, to.y + to.h);
 }
 
 /**
@@ -217,6 +287,8 @@ export function executeMove(from: RectState, move: RectMove): RectState {
   } else if (move.type === "edge") {
     if (move.edge === "h") hedge[move.y * w + move.x] ^= 1;
     else vedge[move.y * w + move.x] ^= 1;
+  } else if (move.type === "resize") {
+    resizeEdges(from, move.from, move.to, hedge, vedge, 1, 0);
   } else {
     return assertNever(move, "rect: executeMove");
   }

@@ -10,8 +10,9 @@
 - [x] 7. The menu's Patches section, the catalog alias, the help page; Patches' tests and the spec delta
 - [x] 8. The game verdict, green
 - [x] 9. Run the app: deal, hint to the end, light and dark, a phone at 10x10
-- [ ] 10. Commit and push
-- [ ] 11. The owner's playtest
+- [x] 10. Commit and push
+- [x] 11. The owner's playtest (2026-10-31): a drag from a drawn rectangle resizes it, and each clue takes a region fill, in both rulesets
+- [ ] 12. The owner's word on the playtest's changes
 
 ## Measured (2026-10-31, eight deals a size)
 
@@ -29,6 +30,20 @@ and "only one clue reaches a square" each do about a third of the work.
 - **A ruleset of Rect** (owner, 2026-10-31), as Zip is of Path and Queens of
   Star Battle: found under Rect, in its own section of the Type menu, and
   as "Patches" in the game list's search.
+- **Resize** (owner, 2026-10-31): a drag from a square of a drawn rectangle
+  resizes it, the corner farthest from the press fixed; it stops at another
+  drawn rectangle, which is what the owner chose where LinkedIn's own pages
+  said nothing of it. A drag from a grid corner still draws anew, so the
+  hint's corner-to-corner drag and a rectangle inside another still work.
+- **What a resize takes hold of**: a closed rectangle round exactly one
+  clue. The owner's playtest found a blank board resized as one box, the
+  board's edge its outline, into a line across it (2026-10-31).
+- **Fills** (owner, 2026-10-31): each clue takes one of the first four
+  region fills, as Star Battle does; the next four failed the dark scheme's
+  contrast floor against the plain cell beside them. Its square
+  wears it, and a rectangle the clue allows fills whole with it. The fills
+  color the squares nearest each clue, never the answer, so a color says
+  nothing of which rectangles meet.
 - **For the playtest** (proposed 2026-10-31, the owner's to overrule): the
   strip hides every size and shape the tier allows, so a board shows few
   numbers and many plain `?` clues; a framed clue's text is smaller than a

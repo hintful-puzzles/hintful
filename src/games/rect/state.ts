@@ -31,6 +31,7 @@ import {
 } from "../../engine/params.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
+import type { Rect } from "../../engine/types.ts";
 
 /** The two puzzles, indexed by `mode`. */
 export const MODE_RECT = 0;
@@ -43,7 +44,7 @@ const RULESETS: readonly Ruleset[] = [
   },
   {
     name: "Patches",
-    rule: "A clue names a shape: a square, a tall rectangle, a wide rectangle, or any of the three (a plain clue). A clue with a number has that many squares; one with a question mark could have any number.",
+    rule: "A clue may name a shape, and has a number of squares or a question mark.",
   },
 ];
 
@@ -119,6 +120,9 @@ export interface RectParams {
 export type RectMove =
   | { type: "rect"; erasing: boolean; x: number; y: number; w: number; h: number }
   | { type: "edge"; edge: "h" | "v"; x: number; y: number }
+  /** A drawn rectangle made `to`: a drag from one of its squares
+   * (`resizeEdges`). */
+  | { type: "resize"; from: Rect; to: Rect }
   /** The full solution edges (from `solve`/`aux`), applied wholesale. The two
    * strings are `'0'`/`'1'` bit runs in upstream's `S` order (vedge for x≥1
    * row-major, then hedge for y≥1 row-major). */
@@ -155,6 +159,9 @@ export interface RectUi {
   dragged: boolean;
   /** True while erasing interior edges (right-drag). */
   erasing: boolean;
+  /** The drawn rectangle a drag resizes, and the square it was pressed on,
+   * or null where the drag draws a rectangle of its own. */
+  resizing: { from: Rect; x: number; y: number } | null;
   /** The current drag box, cell coords, or -1. */
   x1: number;
   y1: number;
