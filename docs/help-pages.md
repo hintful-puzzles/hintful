@@ -27,14 +27,12 @@ its description, `src/games/<id>/<id>.description.yaml`
 
 ## A game's page
 
-The renderer writes one skeleton from the description's `help` fields:
-`rules`, unheaded; `controls` under `## Controls`; each of `sections` under
-its `heading`; `origins` under `## Where the puzzle comes from`; `hints` under
-`## Hints`, which the test requires exactly when the game has a `hint()`; and
-`## <Name> parameters` last, its generated list between `parameters.before`
-and `parameters.after`. The title is the catalog's name. A field writes no
-`#` or `##` heading and no `{{parameters}}` or `{{touch}}`, and the renderer
-refuses one that does; a `###` subheading is the section's own.
+The renderer writes the page's title, its headings and their order from the
+description's `help` fields; `src/describe/help-page.ts` shows which field
+lands where. A field writes no `#` or `##` heading and none of the
+renderer's placeholders, and the renderer refuses one that does; a `###`
+subheading is the section's own. The test requires `hints` exactly when the
+game has a `hint()`.
 
 - **Write every field as a `|-` block scalar.** In a plain scalar, markdown
   starting with `*`, `[` or `{{` reads as something else. The schema comment
@@ -43,16 +41,15 @@ refuses one that does; a `###` subheading is the section's own.
   scalar as a string, and nothing formats it.
 - **A puzzle's inventor, its other names and a link to more of it go in
   `origins`, never in the rules.** A reader on the way to the controls wants
-  to know how to play. A game with rulesets is several puzzles, so the
-  renderer heads it "Where the puzzles come from", and it names each one by
-  `{{choice:ruleset:<index>}}`.
+  to know how to play. A game with rulesets is several puzzles, and `origins`
+  names each one by `{{choice:ruleset:<index>}}`.
 - **Move a credit's words; do not rewrite them.** They credit the people who
   designed the puzzle.
 - **The check finds a credit left in the rules by its words, which is a
   floor.** A credit phrased in none of them passes; read the page.
 - **A ruleset does not carry its origin.** A generated list would need each
   credit recast as a "Name: …" line, and a credit or link can belong to the
-  whole game or to a ruleset with a modifier (Ascent's has both). The
+  whole game or to a ruleset with a modifier. The
   placeholder already keeps a renamed ruleset's credit with it.
 - **The page names every mode the game's Type menu offers.** The pages adopted
   from upstream describe the headline rule only, and an omission inherited
@@ -68,7 +65,7 @@ refuses one that does; a `###` subheading is the section's own.
   on `paramConfig`").
 - **A piece's color is typed nowhere.** A page about pieces of the two-state
   pair writes `{{pair:0}}` and `{{pair:1}}`, and the build says the palette's
-  word (`TWO_NAMES`).
+  word (`TWO_NAMES` in `src/engine/color/colors.ts`).
 - **Say the shape with the color** ("a {{pair:0}} square"). A shape is what a
   player who cannot tell the hues goes by.
 - **A sentence several pages would each write is the engine's.** The Mark-all
@@ -77,13 +74,11 @@ refuses one that does; a `###` subheading is the section's own.
   game's own, such as what a second press crosses out.
 - **Before writing a sentence about a key, a preference's default or a shared
   control on a second page, ask what declaration it could be rendered from.**
-  Hand-copied, it goes stale on every page at once: ten pages said sticky
-  pencil mode was something "a preference switches on" after every game had
-  come to start with it on.
+  Hand-copied, it goes stale on every page at once.
 - **Read hand-written Controls prose against `interpretMove`, key by key,
   when the game's input changes.** Nothing else holds it: a page can name a
   key the game does not answer, and leave out one it does.
-- **A link to a site-level help page is its bare name** (`features#mark-all`),
+- **A link to a site-level help page is its bare name** (`features#hints`),
   and `../x` is the game `x`. Every page is served from `/help/`, so a link
   written to the source tree's shape renders and leads nowhere.
 - **The Hints section is checked for presence, not content.** It says what
@@ -98,11 +93,12 @@ written for someone who has never played it and is reading on a phone. Apply
 this list to a page you write or change; items marked *checked* are in
 `src/help-coverage.test.ts`.
 
-1. **The rules are a summary** (*checked*: at most 90 words as the card shows
-   them, what fits a 360×640 phone unscrolled). A ruleset's or a modifier's
-   `rule` counts, so it is a phrase, not a paragraph. The first sentence
-   states the goal in the board's terms. Detail, examples past the first and
-   asides go under a heading of their own, which moves words and changes none.
+1. **The rules are a summary** (*checked*: a word count of the rules as the
+   card shows them, set to what fits a phone unscrolled). The generated lists
+   of rulesets and modifiers count, so a ruleset's or a modifier's `rule` is a
+   phrase, not a paragraph. The first sentence states the goal in the board's
+   terms. Detail, examples past the first and asides go under a heading of
+   their own, which moves words and changes none.
 2. **No other game is needed** (*checked*: the rules and Controls name no
    other game). "The same controls as Solo" sends a newcomer to a game they
    have not played; say the controls here.
@@ -115,8 +111,7 @@ this list to a page you write or change; items marked *checked* are in
    list's labels in bold). Name the button a phone has, **Fill marks**, not
    only the key a keyboard has, M.
 6. **Every term is plain or defined where it is first used, and one thing has
-   one name** across the rules, Controls and Hints (Keen's "box" and "cage"
-   were one thing).
+   one name** across the rules, Controls and Hints.
 7. **A counting clue gets a worked example**, as Towers' 2,1,4,3,5 does.
 
 Touch needs no item. The renderer writes `{{touch}}` as the first paragraph
@@ -127,8 +122,10 @@ write a page's own Controls for a mouse and keyboard.
 ## A generated section reads the game when it renders
 
 A transform that reads a game takes the collection from
-`await gameCode(addWatchFile)` (`vite-plugins/game-code.ts`), and what it
-needs from the engine is re-exported by `src/build-facts.ts`. Nothing under
+`gameCode(addWatchFile)` (`vite-plugins/game-code.ts`) when it renders, passing
+its own `addWatchFile` so that editing a game rebuilds the page, and what it
+needs from the engine
+is re-exported by `src/build-facts.ts`. Nothing under
 `vite-plugins/`, and nothing `vite.config.ts` imports, imports `src/games/`
 or `src/engine/`, not even lazily or for one constant.
 

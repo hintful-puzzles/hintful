@@ -103,10 +103,9 @@ What is open is `openspec list`.
      for many games.
 
   Ask the third and fourth before deciding a finding is only the game's. Two
-  games' improvements can be one engine defect: Seismic's Mark-all stopping
-  at the fill and Group's refusing a small `m` were each a game reading a
-  letter for a control, and the engine's fix also caught a control typing 22
-  into a Solo square.
+  games' improvements can be one engine defect, such as two games each
+  reading a letter for a control, and the engine's fix then mends games
+  nobody looked at.
 - **A finding that qualifies is filed, unasked, and handed on** (owner,
   2026-10-09). After your own change is archived, scaffold its change with
   its `tasks.md` and hand it to a fresh session. The proposal carries what an
@@ -115,8 +114,7 @@ What is open is `openspec list`.
 - **Before filing, ask what the engine could do so that no game has the
   finding** (owner, 2026-10-10), and file that. A finding with the same shape
   in two games is one change to the shared layer, never a change a game: a
-  board dealt already solved, found in Rectangles, was one loop in the
-  engine's deal, which mended Netslide unasked.
+  board dealt already solved is one loop in the engine's deal.
 - **A quick, low-risk fix is always made in passing**, whatever game it is in
   and whatever the session came for: a help page that says what the game does
   not do, a wrong label, a stale comment. It goes in with the work in hand or
@@ -140,10 +138,10 @@ What is open is `openspec list`.
   change waits as a draft while the session takes another. An ask that says
   what the session did not check is not ready (owner, 2026-10-08).
 - **A change filed for later is a draft: it has no `tasks.md`.** The tool
-  reports it apart from the changes in progress (`openspec view`, and
-  `no-tasks` in `openspec list --json`), and a session picking its next change
-  passes over it. Its plan is in its `design.md`; writing `tasks.md` from that
-  is how a session takes it up, on the owner's word.
+  reports it apart from the changes in progress (its status in
+  `openspec list --json`), and a session picking its
+  next change passes over it. Its plan is in its `design.md`; writing
+  `tasks.md` from that is how a session takes it up, on the owner's word.
 
 ## New work is the engine's
 
@@ -186,11 +184,10 @@ Two rules make a sweep across the collection affordable:
   invisible and takes spot acceptance for its batch; one that re-baselines a
   single snapshot takes the full acceptance gate.
 - **A capability diff per game.** A sweep's risk is silent capability loss:
-  a game stops having hints, mistakes, preferences, a keypad, a reference aid
-  or tiers. The set is derived from what the game is, its optional `Game`
-  members and the `Ui` its `newUi` returns, and never declared;
-  [`contract-surface.test.ts`](../src/contract-surface.test.ts) reads the
-  optional surface off the interface.
+  a game stops having something it had. The set is derived from what the
+  game is, and never declared:
+  [`capability-surface.test.ts`](../src/capability-surface.test.ts) is the
+  diff, and its header says what it reads.
 
 ## Before archiving
 
@@ -202,8 +199,8 @@ Two rules make a sweep across the collection affordable:
   rule that holds, with no mention of the change that made it
   (`openspec/config.yaml`, the rules for `specs`).
 - **Put a game's spec back in order before committing the archive.**
-  Archiving appends an added requirement to the end of the spec, after
-  `Look`, and the gate refuses the commit until
+  Archiving appends an added requirement to the end of the spec, and the
+  gate refuses the commit until
   `node scripts/checks/spec-subjects.mjs --fix` has restored the order of its
   subjects ([`new-game.md`](./new-game.md) § "What a game's spec holds").
 - **No script of ours writes into a change directory.** Archiving renames it.
