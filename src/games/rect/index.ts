@@ -315,8 +315,21 @@ function interpretMove(
     active = true;
   } else if (moveDrag(ui.drag, xc, yc)) {
     ui.dragged = true;
-    if (ui.resizing) updateResizeBox(ui, state, sx, sy);
-    else updateDragBox(ui, w, h, xc, yc);
+    if (!ui.resizing) updateDragBox(ui, w, h, xc, yc);
+    active = true;
+  }
+  // A resize follows the square under the pointer, the release's included.
+  // The half-grid point above cannot: the near half of the square past an
+  // edge rounds to that same edge, so a drag into it moved nothing.
+  const resizing = ui.resizing;
+  if (
+    resizing &&
+    ui.drag.live &&
+    !startdrag &&
+    (ui.dragged || sx !== resizing.x || sy !== resizing.y)
+  ) {
+    ui.dragged = true;
+    updateResizeBox(ui, state, sx, sy);
     active = true;
   }
 
@@ -324,7 +337,6 @@ function interpretMove(
 
   if (enddrag && ui.drag.live) {
     if (xc >= 0 && xc <= 2 * w && yc >= 0 && yc <= 2 * h && erasing === ui.erasing) {
-      const resizing = ui.resizing;
       if (ui.dragged && resizing) {
         const to = { x: ui.x1, y: ui.y1, w: ui.x2 - ui.x1, h: ui.y2 - ui.y1 };
         const { from } = resizing;

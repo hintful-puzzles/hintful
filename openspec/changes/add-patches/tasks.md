@@ -12,7 +12,8 @@
 - [x] 9. Run the app: deal, hint to the end, light and dark, a phone at 10x10
 - [x] 10. Commit and push
 - [x] 11. The owner's playtest (2026-10-31): a drag from a drawn rectangle resizes it, and each clue takes a region fill, in both rulesets
-- [ ] 12. The owner's word on the playtest's changes
+- [x] 12. The second playtest (2026-10-31): a resize follows the square under the finger, where a drag into the near half of the next square had counted for nothing
+- [ ] 13. The owner's answer on what a drawn rectangle claims (a lower bound, or its sides as lines), and the owner's word on the playtest's changes
 
 ## Measured (2026-10-31, eight deals a size)
 

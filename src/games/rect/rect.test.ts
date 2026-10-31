@@ -447,6 +447,23 @@ describe("rect resize", () => {
     expect(next.hedge[2 * 7 + 3]).toBe(0);
   });
 
+  it("follows the square under the pointer, not the edge it is nearest", () => {
+    // The owner's playtest, 2026-10-31: released in the near half of the
+    // square above, which rounds to the edge already passed, the drag did
+    // not count.
+    const st = drawn([2, 2, 1, 1]);
+    const move = dragThrough(st, [
+      [2.5, 2.5],
+      [2.5, 2.2],
+      [2.5, 1.8],
+    ]);
+    expect(move).toEqual({
+      type: "resize",
+      from: { x: 2, y: 2, w: 1, h: 1 },
+      to: { x: 2, y: 1, w: 1, h: 2 },
+    });
+  });
+
   it("stops growing at another drawn rectangle", () => {
     const st = drawn([2, 2, 1, 1], [4, 2, 1, 1]);
     const move = dragThrough(st, [
