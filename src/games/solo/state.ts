@@ -54,11 +54,10 @@ const DIFF_CHARS = "tbiaeu";
 
 // --- killer difficulty (independent axis) ----------------------------------
 // kdiff is fixed per preset, so it has neither a param encoding nor display
-// names.
+// names. The values are the tiers of the description's `killer` scale.
 
 export const DIFF_KSINGLE = 0;
 export const DIFF_KMINMAX = 1;
-export const DIFF_KSUMS = 2;
 export const DIFF_KINTERSECT = 3;
 
 // --- symmetry --------------------------------------------------------------

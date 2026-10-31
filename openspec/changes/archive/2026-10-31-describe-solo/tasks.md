@@ -12,8 +12,8 @@
 - [x] 2.1 State Solo's techniques in the order `SolverUsage.ladder` declares them, the library's where they are the library's
 - [x] 2.2 Check each sound, with a planted defect, in each world the variations deal
 - [x] 2.3 Run the compiled ladder beside the hand-written one on every deal and hint walk, every variation; see the comparison fail on a plant
-- [ ] 2.4 Remove the hand-written rungs; every Solo test and hint guard passes
+- [x] 2.4 Remove the hand-written rungs; every Solo test and hint guard passes
 
 ## 3. Close
 
-- [ ] 3.1 Measure the speed per deal, run the app, write the report, update the guides, archive, file the next Latin game
+- [x] 3.1 Measure the speed per deal, run the app, write the report, update the guides, archive, file the next Latin game (`describe-salad`)

@@ -22,10 +22,7 @@ above them stay Solo's.
 ### Requirement: Solver: Solo's solver is a certified deduction ladder whose rungs run alone
 
 Solo's solver SHALL run its techniques as a `runDeductionFixpoint` ladder of
-named rungs in the order its description states them: the box single, the
-killer single, the region rule, the cages' and the partial cages' min/max,
-the cages' and the partial cages' sums, the hidden and naked singles, the
-intersection, the set, the single-digit set, the wing, and the forcing
+named rungs, in the order its description states them, then the forcing
 chain. A rung SHALL read nothing a rung before it left behind in the same
 pass, so that the premise audit's replay runs a firing's own rung alone. No
 hand-written technique loop SHALL be kept beside it.

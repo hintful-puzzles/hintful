@@ -158,7 +158,7 @@ for a ladder that is not the plain shape:
 | a rung that runs at one tier and not at the tier above, so it guards itself | [`ascent/solver.ts`](../src/games/ascent/solver.ts) `ascentLadder` |
 | a rung that sweeps a whole population before reporting, which is legal: the restart after a firing is the ladder's, not the rung's | [`bridges/solver.ts`](../src/games/bridges/solver.ts) `Solver.ladder` |
 | a rung that exists only for the player's notation and touches nothing the generator reads | [`separate/solver.ts`](../src/games/separate/solver.ts) `separateLadder` |
-| two grades with a cap each, so the runner's grade and `maxTier` go unused | [`solo/solver.ts`](../src/games/solo/solver.ts) `SolverUsage.ladder` |
+| two grades with a cap each, the scales its description declares, so the runner's grade and `maxTier` go unused | [`solo/solver.ts`](../src/games/solo/solver.ts) `SolverUsage.ladder` |
 | a hint-only recording ladder | [`pattern/solver.ts`](../src/games/pattern/solver.ts) |
 
 ### A fixpoint is order-independent only if every rule is monotone

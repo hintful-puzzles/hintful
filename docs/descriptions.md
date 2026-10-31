@@ -47,7 +47,10 @@ itself is § "The file". A game whose techniques are stated:
    [`towers/solver.ts`](../src/games/towers/solver.ts), and in
    [`keen/solver.ts`](../src/games/keen/solver.ts) for cages), on the grid
    its units are: `latinSpace(o)`, or `sudokuSpace(boxes, diagonals)` for a
-   board with boxes ([`solo/solver.ts`](../src/games/solo/solver.ts)).
+   board with boxes ([`solo/solver.ts`](../src/games/solo/solver.ts)). Keep
+   what it deals no longer than the structure it reads stays as it was:
+   Solo's generator merges cages in place between solves, and a partition
+   kept for the cage structure's life read stale cages.
 
 ## Sections
 
@@ -249,8 +252,10 @@ per deal against the hand-written one it replaced
 (`openspec/changes/archive/*-compile-the-latin-ladder/report.md` § "Speed",
 `*-describe-group/report.md` for the hoisting,
 `*-describe-towers/report.md` for fillings and the projection,
-`*-describe-keen/report.md` for a cage's, and `*-describe-mathrax/report.md`
-for a binder's order and a moved term's reads).
+`*-describe-keen/report.md` for a cage's, `*-describe-mathrax/report.md`
+for a binder's order and a moved term's reads, and
+`*-describe-solo/report.md` for a statement that reads every part of a
+partition for each unit).
 
 ## A statement's order is behavior
 

@@ -20,11 +20,13 @@ Written 2026-10-31. The guide is `docs/descriptions.md`; the decisions are
    deliberate changes**, each isolated by a switch in the comparison
    (§ "The comparison"): a killer min/max step strikes only what the board
    as shown forces; a Killer board below 9×9 reads its sums over its own
-   values; and the killer grade follows the compiled ladder's steps, which
-   deals a different board on about one Killer deal in a hundred.
+   values; and the killer grade follows the compiled ladder's steps. With
+   the sums, that deals a different board on 13 of 34 6×6 Killer deals, and
+   on no 9×9 one (§ "What a player meets").
 4. **Each technique is sound** in each world Solo's variations deal, at
    orders 3 and 4, and each plant unsound (§ "Soundness").
-5. **Speed**: § "Speed".
+5. **Boards without cages deal at the hand-written speed; Killer at 2.1 to
+   3.4 times it**, up to 176 ms a deal (§ "Speed").
 
 ## The comparison
 
@@ -62,8 +64,11 @@ scale that changes nothing, since its techniques run in tier order; on the
 killer scale, whose region rule runs before the cages' readings, it changes
 which killer tier a solve reaches (design § 3).
 
-**Without them**, the same corpus differs in records on most killer
-solves, and in TBD deals (§ "What a player meets").
+**Without them**, 433,618 of 1,360,917 solves differ, all on Killer boards,
+nearly all (429,247) in records alone, and 13 deals, all 6×6 Killer
+(§ "What a player meets"). The grades that differ are on the killer scale,
+and on 6×6 Killer on the sudoku scale too, where the stronger sums finish a
+board the hand-written reading stopped short on at the cap.
 
 **Two plants were caught**: the intersection scanning the columns before
 the rows (108 of 6,615 solves differ, in records only, on 9×9 Tricky), and
@@ -98,18 +103,92 @@ alike, and of the 21 Killer walks 16 depart:
   no such sum has 1 or 2", four different values from 1 to 6 making 18 only
   as 3, 4, 5 and 6, which upstream's reading, counting 7 to 9, missed.
 
+After the hand-written ladder went, Solo's trace was byte for byte the
+compiled ladder's before it.
+
+## What a player meets
+
+- **On every 9×9 board, plain, X, Jigsaw or Killer, the same deals**; and
+  on every board but Killer the same hint walks.
+- **On a Killer board, a min/max step sometimes splits in two**, each
+  half resting on the notes as its step shows them.
+- **On Killer below 9×9, a different board now and then, and sums hints
+  the old reading missed**: 13 of the comparison's 34 6×6 Killer deals
+  differ, and none of its 3 4×4 or 35 9×9 ones. The menu's Killer board is
+  9×9; smaller ones are a Custom away.
+
 ## Soundness
 
-TBD
+`research/technique-check/results-describe.txt`. Solo's techniques are
+checked in two worlds, Killer applied (its cages may be single cells, so
+it covers the plain board) and Killer with X, at orders 3 (3×1 boxes) and 4
+(2×2 boxes); no order-3 board with both diagonals has an answer, so the X
+world is checked at order 4 only, and the results say so. Every technique
+is sound in each world and order with an answer, and every plant is
+unsound in one: a box single with two places left, a cage's last cell
+given one less, the region total with its whole cages left in, a min/max
+bound one too generous, sums one off, an intersection with a box it only
+meets, and the single-digit set one row short.
+
+The region rule and the partial cages' readings bind sets over every
+region the board could hold, so they are the dear queries: the region rule
+took 21 to 26 minutes at order 4 in each world, the whole check of Solo 54
+minutes.
+
+**What the checker could not have seen at first**: every cage shows its
+total, which the description now says (`complete`), and without which the
+checker dealt cages with no total and found the killer readings unsound.
+The library's techniques are checked on a Latin square, as every game
+places them; Solo runs them over its boxes and diagonals too, which are
+units in the same sense.
 
 ## Speed
 
-TBD
+Generator time per deal, six seeds, the second of two passes kept, both
+ladders in one process (`research/describe/speed-solo.test.ts` in the
+change's first commit):
+
+| Params | Hand-written | Compiled | Ratio |
+| --- | --- | --- | --- |
+| 6×6 Easy | 0.3 ms | 0.3 ms | 0.73 |
+| 6×6 Normal | 0.8 ms | 1.1 ms | 1.44 |
+| 6×6 Tricky | 126.7 ms | 146.2 ms | 1.15 |
+| 9×9 Easy | 0.7 ms | 0.7 ms | 0.91 |
+| 9×9 Normal | 0.9 ms | 0.9 ms | 1.04 |
+| 9×9 Tricky | 13.5 ms | 14.4 ms | 1.07 |
+| 9×9 Hard | 91.7 ms | 100.3 ms | 1.09 |
+| 9×9 Extreme | 80.9 ms | 63.9 ms | 0.79 |
+| 9×9 Unreasonable | 66.4 ms | 61.2 ms | 0.92 |
+| 9×9 X Normal | 1.4 ms | 1.3 ms | 0.95 |
+| 9 Jigsaw Normal | 23.8 ms | 24.6 ms | 1.04 |
+| 9×9 Killer Easy | 3.7 ms | 12.8 ms | 3.43 |
+| 6×6 Killer Tricky | 62.4 ms | 132.4 ms | 2.12 |
+| 6 Jigsaw Killer Tricky | 78.3 ms | 175.9 ms | 2.24 |
+| 9×9 Killer Tricky | 50.0 ms | 157.7 ms | 3.15 |
+
+Every board without cages runs at the hand-written speed. Killer is two to
+three and a half times slower: the region rule and both partial-cage
+readings work out, for each row, column and box, which cages lie within it
+and which cells it leaves, by reading every cage, where the hand-written
+rule matched cages to the unit's cells once a pass. `L`'s order, cage by
+cage, is what a partial cage's step records, so a statement binding the
+unit's cells instead would change those records. A deal at 176 ms is not a
+wait a player sees.
 
 ## The app
 
-TBD
+Run in Chrome on the census's 9×9 Killer board, hinted for 250 steps from
+empty: placements from the region rule ("This block must total 45; the
+cages and digits inside it account for all but 7, so this cell must be
+7"), cage singles, cage sums ("No way to make … total 10 uses 5"), min/max
+strikes including split ones ("This killer cage must total 12; its other
+cells leave no room for 9", then "for 7 or 9"), hidden singles with the
+row hatched and the cell ringed.
 
 ## What was not checked
 
-TBD
+- **Jigsaw's boxes in the soundness checker**, which builds rectangular
+  ones; a box is a unit whatever its shape, and the comparison covers
+  Jigsaw at 5, 6 and 9.
+- **Killer above order 4 in the checker**, and cages of more than three
+  cells at order 4: the killer readings rest on the comparison there.
