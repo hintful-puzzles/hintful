@@ -16,4 +16,4 @@
 
 ## 3. Close
 
-- [ ] 3.1 Measure the speed per deal, run the app, write the report, update the guides, archive, file the next Latin game
+- [x] 3.1 Measure the speed per deal, run the app (and fix a cage-line step's words, which named one value of several), write the report, update the guides, archive, file the next Latin game (`describe-mathrax`)
