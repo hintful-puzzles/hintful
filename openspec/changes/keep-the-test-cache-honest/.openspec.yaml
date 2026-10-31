@@ -1,5 +1,0 @@
-# Scaffolded without a delta: the session writes the `testing` or
-# `build-pipeline` delta once the fix is chosen, and removes skip_specs.
-schema: spec-driven
-created: 2026-10-31
-skip_specs: true
