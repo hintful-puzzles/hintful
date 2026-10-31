@@ -38,6 +38,7 @@ import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/mathrax-c-reference.json" with { type: "json" };
 import { mathraxCandidateClue, newMathraxDesc } from "./generator.ts";
 import { mathraxGame } from "./index.ts";
+import { ladder, tiers as ladderTiers } from "./mathrax.compiled.ts";
 import {
   COL_ERROR,
   COL_FLASH,
@@ -274,41 +275,44 @@ describe("mathrax clue semantics", () => {
 
   it("enumerates the partners an arithmetic clue admits", () => {
     // "sum to 7" against a confirmed 3 admits only 4.
-    expect(mathraxOptions(CLUE_ADD | setClueNum(7), bitOf(3), false)).toBe(bitOf(4));
+    expect(mathraxOptions(CLUE_ADD | setClueNum(7), bitOf(3))).toBe(bitOf(4));
     // "differ by 2" against a confirmed 3 admits 1 and 5.
-    expect(mathraxOptions(CLUE_SUB | setClueNum(2), bitOf(3), false)).toBe(
+    expect(mathraxOptions(CLUE_SUB | setClueNum(2), bitOf(3))).toBe(
       bitOf(1) | bitOf(5),
     );
     // Equality is "differ by 0".
-    expect(mathraxOptions(CLUE_SUB | setClueNum(0), bitOf(3), false)).toBe(bitOf(3));
+    expect(mathraxOptions(CLUE_SUB | setClueNum(0), bitOf(3))).toBe(bitOf(3));
     // "multiply to 12" against a confirmed 3 admits only 4.
-    expect(mathraxOptions(CLUE_MUL | setClueNum(12), bitOf(3), false)).toBe(bitOf(4));
+    expect(mathraxOptions(CLUE_MUL | setClueNum(12), bitOf(3))).toBe(bitOf(4));
     // "ratio 3" against a confirmed 3 admits 1 and 9 (3/1 and 9/3).
-    expect(mathraxOptions(CLUE_DIV | setClueNum(3), bitOf(3), false)).toBe(
+    expect(mathraxOptions(CLUE_DIV | setClueNum(3), bitOf(3))).toBe(
       bitOf(1) | bitOf(9),
     );
   });
 
   it("returns the fixed even/odd masks, and 'no constraint' for no clue", () => {
-    expect(mathraxOptions(CLUE_EVN, ALL(9), false) & ALL(9)).toBe(
+    expect(mathraxOptions(CLUE_EVN, ALL(9)) & ALL(9)).toBe(
       bitOf(2) | bitOf(4) | bitOf(6) | bitOf(8),
     );
-    expect(mathraxOptions(CLUE_ODD, ALL(9), false) & ALL(9)).toBe(
+    expect(mathraxOptions(CLUE_ODD, ALL(9)) & ALL(9)).toBe(
       bitOf(1) | bitOf(3) | bitOf(5) | bitOf(7) | bitOf(9),
     );
-    expect(mathraxOptions(0, bitOf(1), false) & ALL(9)).toBe(ALL(9));
+    expect(mathraxOptions(0, bitOf(1)) & ALL(9)).toBe(ALL(9));
   });
 
-  it("declines an arithmetic clue in Easy mode until the opposite cell is confirmed", () => {
-    const twoCandidates = bitOf(3) | bitOf(4);
-    // Unconfirmed opposite + simple ⇒ no constraint at all…
-    expect(mathraxOptions(CLUE_ADD | setClueNum(7), twoCandidates, true) & ALL(9)).toBe(
-      ALL(9),
-    );
-    // …whereas the harder tiers do the full enumeration.
-    expect(mathraxOptions(CLUE_ADD | setClueNum(7), twoCandidates, false)).toBe(
-      bitOf(3) | bitOf(4),
-    );
+  it("runs the description's tiers at the difficulty levels, in order", () => {
+    expect(ladderTiers).toHaveLength(4);
+    expect([
+      ladderTiers[DIFF_EASY],
+      ladderTiers[DIFF_NORMAL],
+      ladderTiers[DIFF_TRICKY],
+      ladderTiers[DIFF_RECURSIVE],
+    ]).toEqual(["Easy", "Normal", "Tricky", "Unreasonable"]);
+    expect(ladder.filter((t) => t.id.startsWith("clue")).map((t) => t.tier)).toEqual([
+      DIFF_EASY,
+      DIFF_NORMAL,
+      DIFF_TRICKY,
+    ]);
   });
 
   it("follows upstream's candidate-clue precedence cascade", () => {

@@ -10,7 +10,7 @@
 - [x] 2.2 State Mathrax's techniques in the order `mathrax/solver.ts` scans: `clueEasy`, `clue`, `clueTricky`, three statements over shared definitions (design § 3)
 - [x] 2.3 Check each sound at orders 3 and 4, with a planted defect each; the checker now names each clue kind no board of an order can hold, which leaves a quotient checked at neither
 - [x] 2.4 Run the compiled ladder beside the hand-written one on every deal and hint walk; see the comparison fail on a plant that changes the deductions and on one that changes only their order
-- [ ] 2.5 Remove `applyOptions`, its mirror and its callers; every Mathrax test and hint guard passes, and the Mathrax trace is byte-identical to the hand-written one's
+- [x] 2.5 Remove `applyOptions`, its mirror and its callers, and `mathraxOptions`'s Easy gate, which only it read; every Mathrax test and hint guard passes, and the Mathrax trace is byte-identical to the hand-written one's
 
 ## 3. Close
 

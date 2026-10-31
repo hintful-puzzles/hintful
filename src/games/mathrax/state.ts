@@ -9,13 +9,11 @@
  * that result; `=` means each diagonal pair is equal; `E`/`O` mean all four
  * digits are even / odd.
  *
- * **Two bitmask conventions, deliberately.** The solver's candidate masks
- * (`solver.ts`) keep upstream's `BIT(d) = 1 << (d−1)`, because they decide the
- * solver's verdict and so the generated description
- * (docs/solver-and-generator.md § "Solver-gated generation"). The player's
- * pencil marks use the Latin-family `1 << n` (bits `1..o`), which
- * `engine/candidate-hint.ts` reads. Marks never reach the desc or a save (the
- * save replays moves), so the divergence is free.
+ * **Two bitmask conventions.** {@link mathraxOptions} and
+ * {@link mathraxValidate} keep upstream's `BIT(d) = 1 << (d−1)`, as the C they
+ * port reads it. The player's pencil marks use the Latin-family `1 << n` (bits
+ * `1..o`), which `engine/candidate-hint.ts` reads. Marks never reach the desc
+ * or a save (the save replays moves), so the divergence is free.
  */
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
@@ -434,17 +432,14 @@ export const STATUS_COMPLETE = 0;
 export const STATUS_UNFINISHED = 1;
 export const STATUS_INVALID = 2;
 
-/** Upstream `BIT(d)` — the *solver-side* convention, bit `d − 1`. Used by
- * {@link mathraxOptions} / {@link mathraxValidate} and `solver.ts` only; the
- * player's pencil marks use `1 << n` (see the module note). */
+/** Upstream `BIT(d)`, bit `d − 1`, as {@link mathraxOptions} and
+ * {@link mathraxValidate} read it; the player's pencil marks use `1 << n` (see
+ * the module note). */
 export function bitOf(d: number): number {
   return 1 << (d - 1);
 }
 
-/** "No constraint": upstream's `~0`, every bit set. Not masked to
- * `(1 << o) − 1`: the `simple` early return below hands it straight back, and a
- * different value could change a solver verdict and so the description
- * (docs/solver-and-generator.md § "Solver-gated generation"). */
+/** "No constraint": upstream's `~0`, every bit set. */
 const ALL_DIGITS = ~0;
 
 /**
@@ -452,23 +447,17 @@ const ALL_DIGITS = ~0;
  * the candidate mask of the cell diagonally opposite (upstream
  * `mathrax_options`). Arithmetic clues enumerate every `(a, b)` pair satisfying
  * the operation; `E`/`O` return the fixed even/odd masks; equality arrives as
- * `CLUE_SUB` with number 0, so `|a − b| == 0` handles it.
- *
- * `simple` is the Easy-difficulty gate: only read an arithmetic clue when the
- * opposite cell is *confirmed* (a single candidate bit).
- *
- * Shared with {@link mathraxValidate}, which is why it lives here rather than in
- * `solver.ts` — a clue's admissible digits are the clue's meaning.
+ * `CLUE_SUB` with number 0, so `|a − b| == 0` handles it. What
+ * {@link mathraxValidate} flags a cell by; the solver reads the clues as
+ * `mathrax.description.yaml` states them.
  */
-export function mathraxOptions(clue: number, mark: number, simple: boolean): number {
+export function mathraxOptions(clue: number, mark: number): number {
   const type = clueType(clue);
   switch (type) {
     case CLUE_ADD:
     case CLUE_SUB:
     case CLUE_MUL:
     case CLUE_DIV: {
-      if (simple && mark & (mark - 1)) return ALL_DIGITS;
-
       const cnum = clueNum(clue);
       let ret = 0;
       // Upstream enumerates 1..9 regardless of the grid order; the caller's
@@ -548,7 +537,7 @@ export function mathraxValidate(
       // cell and the cell `(ox, oy)` diagonally across its intersection.
       const corner = (clue: number, ox: number, oy: number, bit: number): void => {
         const other = grid[oy * o + ox];
-        const opts = mathraxOptions(clues[clue], other ? bitOf(other) : maxbits, false);
+        const opts = mathraxOptions(clues[clue], other ? bitOf(other) : maxbits);
         if (!(opts & bits)) flags[i] |= bit;
       };
       if (y < co && x < co) corner(y * co + x, x + 1, y + 1, FE_BOTRIGHT);
