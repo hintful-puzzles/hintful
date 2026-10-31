@@ -27,8 +27,9 @@ Each step names the file of `src/skeleton/grid/` that already does it.
    and returns a `HintRefusal` where there is no step (§ "The shared plan
    loop: deduceHintPlan", § "The step budget", § "Refusal wording comes from
    one module").
-3. **Turn each firing into a `HintStep`**: its `move`, `rung: reason.kind`,
-   its `words` and `explanation: words.text` (`stepOf` in `hint.ts`).
+3. **Turn each firing into a `HintStep`**: its `move`, its reason's kind as
+   its `rung`, its `words` and `explanation: words.text` (`stepOf` in
+   `hint.ts`).
 4. **Write every sentence in `hint-text.ts`**, exported as `say`, as a
    `Sentence` whose pointing words are references to marks (§ "Writing the
    narration").
@@ -214,8 +215,8 @@ is the smallest example of all of them.
 
 Build a step's words as a `Sentence`
 ([`engine/hint-words.ts`](../src/engine/hint-words.ts)) with `sentence(said)`,
-its shorthand `so(...)`, or `unshaped(...)`. The game hands over the parts and
-the engine writes the joins. Five rules hold:
+its shorthand `so(...)`, or `unshaped(...)`. The game hands over the parts
+(`Said`'s doc names them) and the engine writes the joins. Five rules hold:
 
 1. Look, then what follows, then the move. Start with what the player should
    pay attention to.
@@ -226,28 +227,12 @@ the engine writes the joins. Five rules hold:
 4. Leave the move to the board when the board makes it obvious.
 5. Omit needless words.
 
-The parts are `look` (the indication, and whatever follows in the same
-clause), an optional `follows` (a consequence the move rests on), the `move`
-as it reads mid-sentence, an optional `aim` (a stable subgoal) and the
-`relation`, which picks the engine's words. The forms are `Relation` in
-`hint-words.ts`, pinned word for word in `hint-words.test.ts`:
-
-| relation | reads |
-|---|---|
-| forced (`so`) | "L, so M." / "L, so F: M." |
-| oneOf | "L. One of them: M." |
-| answers | "L. One way to save it: M." (the game's words before the colon) |
-| effect | "L. M: E." (a move no rule forces, narrated by what it does) |
-| sequence | "L. First, M." / "Next, L, M." / "Last, L, M." |
-| again | "…and M, for B." (a journey's later leg) |
-| serves | "Working on A: M." |
-
-Any form takes an aim ("Working on A: …"). Where the words after it open on a
-sentence with a colon of its own (an effect with no look, or "L, so F: M."),
-the aim takes a comma instead: "Working on A, M: E.", since one sentence with
-two colons reads as a list. A run's effect after an aim needs a look between
-them. `sentence` capitalizes the result, so a look that opens on a reference
-needs no `.capitalized()`.
+The `relation` picks the engine's words: `Relation`'s doc gives each one's
+form, pinned word for word in `hint-words.test.ts`. Any form takes an aim
+("Working on A: …"), which takes a comma instead before words that have a
+colon of their own, since one sentence with two colons reads as a list. A
+run's effect after an aim needs a look between them. `sentence` capitalizes
+the result, so a look that opens on a reference needs no `.capitalized()`.
 
 - **Rule 3 is checked in a game whose hint searches.** `forced` there must
   carry the proof that every rival was judged lost, a value only `judgeRivals`
@@ -258,9 +243,7 @@ needs no `.capitalized()`.
 - **Rule 4 is `mark.move(words)`**: a ring on the step's own move (the
   engine's `MOVE` kind), which the renderer draws as it draws any move.
 - **The exceptions are a closed set, each with a property the walk checks**:
-  `bare` (nothing to say but the move; names only ring marks), `setup` (the
-  method's opening procedure; names no outline or stripes) and `evident` (a
-  look alone whose ringed squares say the move; names a ring). A step that
+  `bare`, `setup` and `evident`, which `Unshaped`'s doc defines. A step that
   fits none is first a question about the relations, and a new kind is an
   engine change with its reason.
 - **A refusal stays a `Narration`**, not a `Sentence` (§ "Refusal wording
@@ -290,8 +273,6 @@ The existential "there is", "there are", "there's" and "there would be"
 builds. A supposition names its place as the pill ("a line on [this edge]
 would…, so it must be crossed out"), never "a line here would…"; where an "it"
 in the premise already means something else, the move names the place again.
-The words re-render from a reference's elements, so `Narration.narrow`
-rewrites the sentence of a step whose marks shrink.
 
 **The declaration.** Every hinted game declares `hintMarks`: the roles its
 steps name, in the words its help page gives them. The page writes
@@ -300,21 +281,18 @@ steps name, in the words its help page gives them. The page writes
 
 **The paint.** `stepMarks(hint)` is the step's references grouped by role and
 kind, and `marks.of("outline", CELL)` is what the words outline, once each,
-carrying what the reference named (an outlined cell keeps its chain ordinal).
-Nothing else is a source for a mark. A highlight field may carry data that is
-not a mark (a ghost glyph, a route, an animation), painted only where a named
-mark is. Because nothing else is, the engine can take one reference out: a
-player who presses a reference's words in the hint sees that reference's marks
-light up while the rest stay drawn, with no code in the game: the worker draws
-the step with and without them (`Narration.withoutMarksOf`,
+carrying what the reference named. Nothing else is a source for a mark. A
+highlight field may carry data that is not a mark (a ghost glyph, a route, an
+animation), painted only where a named mark is. Because nothing else is, a
+player who presses a reference's words sees that reference's marks light up
+while the rest stay drawn, with no code in the game: the worker draws the
+step with and without them (`Narration.withoutMarksOf`,
 `Midend.hideHintReference`), and the pixels that differ are theirs
-(`markPixels`). So a reference's words
-are what a player presses, and the fewer words around the mark's own name a
-reference takes, the shorter its pill.
-The glyph a role
-takes on a kind is the game's. The shared painters
-read the words too: `OverlaySidecar.pack(stepMarks(hint), …)` for candidate
-games and `hintTileBits` for the border grid. A contained kind marks its
+(`puzzle/mark-flash.ts`). So the fewer words around the mark's own name a
+reference takes, the shorter the pill a player presses. The glyph a role
+takes on a kind is the game's. The shared painters read the words too:
+`OverlaySidecar.pack(stepMarks(hint), …)` for candidate games and
+`hintTileBits` for the border grid. A contained kind marks its
 container (`MarkKind.within`): a struck note marks its cell, in the strike's
 role, even when no reference names the cell, and a strike step's "this cell"
 is outlined (`hints-marks.md` § "Outline the evidence").
@@ -341,7 +319,8 @@ What binding a hint turns up:
 - **A strike ends on a reference to the struck notes**, so a refresh that
   finds some gone rewrites "cross out 2 and 4" as "cross out the 4".
 - **A step that shrinks on keep-track narrows its words** with
-  `Narration.narrow` and resets `explanation` (`skeletonKeepTrack`).
+  `Narration.narrow`, which re-renders them from the references' remaining
+  elements, and resets `explanation` (`skeletonKeepTrack`).
 - **Two marks of one role are told apart by their kind, not their color.**
   Where a step decides two different things, give one a kind of its own and
   let the game draw its ring, so the sentence can say "this arrow" and "the
@@ -373,9 +352,8 @@ calls for:
 
 Choose by the move, not the genre: a deductive game's step that recommends a
 non-forced move uses the imperative. A necessity premise may carry an
-imperative tail where the premise already states the forcing (Palisade: "Clue
-c reaches its count only if every remaining edge is a wall", then "draw them
-all").
+imperative tail where the premise already states the forcing (Palisade's "…
+reaches its count only if every ringed edge is a wall, so draw them all").
 
 `src/engine/hint-quality.test.ts` holds every deductive game's forced steps to
 the shared necessity vocabulary. The step's relation says whether it is a
@@ -540,22 +518,15 @@ already says to write N), and do not repeat the number.
 sentence has to read against the board without a press: "the striped
 column", "the outlined 6", "the ringed square", never a bare "here" or
 "this" beside other marks, and never a clause as the pill ("means none below
-either"). The owner (2026-10-19, of Tracks): "before, it was possible to look
-at the hint against the board and understand what's going on, but now it's
-impossible without clicking." Each pill and its marks share a color of their
+either") (owner, 2026-10-19). Each pill and its marks share a color of their
 own, which ties the two but does not stand in for the words. Cut the rest:
 "the outlined 3s and 2s", not "a pair of 3s in one column and a pair of 2s in
 the next". Keep the premise and the reason, which no mark shows, and the rule
 the step teaches where the help does not already state it.
 
 `testing/hint-reference.ts` holds every step of the bound walk to it, reading
-each reference's own words. A reference passes as the move, as a role's word
-(or "numbered", for a chain), as a value (a number, a letter, an operator),
-as a phrase the game's legend teaches for the role, or as a noun phrase that
-is "this cell" or names its thing by a relation ("its partner", "the same
-row"). It fails as a clause, as a bare pro-form ("it", "here", "the rest"),
-as words that open on no determiner, and as "this cell" said in two roles of
-one kind. So:
+each reference's own words; its header lists what a reference passes and
+fails as, and what it cannot see. So:
 
 - **Put the verb outside the reference.** "so [the ringed squares] must all
   be mines", not "so [these must all be mines]". A literal "it" after the
@@ -577,9 +548,9 @@ bound walk in `hint-quality.test.ts` holds every leg to it (`journeyDefects`).
 every step to the limit, over a board of every mode and tier into the middle
 game. A sentence over the limit fails the commit that wrote it.
 
-**A sentence that needs more room is listed in `LONG_NARRATIONS`**: an entry
-per reason, with the `rungs` that speak it, a `games` roster, and for each
-game a board that speaks it (`spokenOn`), held to 300.
+**A sentence that needs more room is listed in `LONG_NARRATIONS`**, held to
+300, with a board that speaks it for each game listed; its doc says what an
+entry holds.
 
 - **Shortening a sentence means deleting its listing.** The ledger fails an
   unlisted long step, and a listing whose pinned board no longer speaks it
@@ -747,7 +718,8 @@ only has to be forced.
   the solve; if suppressing it would stall the plan, narrate it.
 
 Exemplar: Spokes, which hints a line before a mark and skips the rule-out
-between two finished hubs, with the safety asserted in `spokes-hint.test.ts`.
+between two finished hubs: the skip is asserted in `spokes-hint.test.ts`,
+and why it is safe is argued at `markHelps` in `spokes/solver.ts`.
 
 ### Show only what the board does not already say
 
@@ -786,19 +758,21 @@ time (Spokes).
 
 ## The hooks a hinted game implements
 
-Implement these on `Game`. The contract and the `Midend` lifecycle are the
+Implement these on `Game`, whose doc on each hook in
+[`engine/game.ts`](../src/engine/game.ts) says what it is handed and returns.
+The contract and the `Midend` lifecycle are the
 [`engine-hints`](../openspec/specs/engine-hints/spec.md) spec, and the
 implementation is [`src/engine/midend.ts`](../src/engine/midend.ts). Exemplar:
 `src/skeleton/grid/index.ts` and `hint.ts`.
 
-- **`hint(state, aux?, ui?): HintResult`** returns `{ ok: true, steps }` or
+- **`hint(state, aux?, ui?)`** returns `{ ok: true, steps }` or
   `{ ok: false, error }` with a `HintRefusal`. Compute the whole remaining
   plan once; the midend advances it as the player follows or auto-play runs.
   Each `HintStep` carries `move`, `rung`, `words` and `highlights`
   (game-specific render data). `aux` is the generator's solution where there
-  is one, for a hint that falls back on it (`hints-search.md`
-  § "What every game does"). `ui` is the midend's, for a game that
-  reads a preference.
+  is one; when a hint may lean on it is `hints-search.md` § "Recover the
+  answer from the board". `ui` is the midend's, for a game that reads a
+  preference.
 - **`hintKeepTrack(move, step, state)`** returns `"completed"` when the move
   matches the step's intent, `"onTrack"` for partial progress on a step of
   several moves, else `"off"`, which drops the plan. It is handed the state
@@ -881,14 +855,13 @@ the step, a key no on-screen control sends, or a gesture that ends before the
 step completes throws, and `hint-gesture.test.ts` walks every plan.
 
 - **A game that declares `targetVerbs` names its step's targets and no
-  more.** `verbClicks(targetVerbs, { executeMove, hintKeepTrack }, state, ui,
-  ds, step, targets)` clicks each target once with the first button whose
-  verb makes a move `hintKeepTrack` keeps on the step, at the geometry's
-  `pointAt`. It is one click a target because the midend refuses a move off
-  the step, so a target reached only by cycling through a value the step does
-  not want cannot be played. A step that presses a target several times over
-  values the step accepts, or drags, keeps its own gesture. Exemplars: the
-  skeleton's `hintGesture`, Pattern, Mosaic.
+  more.** `verbClicks` (`target-verb.ts`, whose doc says how it picks the
+  button) clicks each target once with a button whose verb makes a move
+  `hintKeepTrack` keeps on the step. Once, because the midend refuses a move
+  off the step, so a target reached only by cycling through a value the step
+  does not want cannot be played. A step that presses a target several
+  times over values the step accepts, or drags, keeps its own gesture.
+  Exemplars: the skeleton's `hintGesture`, Pattern, Mosaic.
 - **Aim at the middle of what the move changes**, computed from `ds.tileSize`
   with the helper the renderer uses to place the square or edge.
 - **A step the pointer makes in several moves is several actions.**
@@ -949,7 +922,8 @@ themselves. Decide first where the record comes from:
 - **Parallel**: separate code over the solver's primitives that the generator
   never calls. Choose it where the hint needs the deduction in another order
   or at another grain than the generator, which needs only that it fires
-  (`hints-candidates.md` § "A candidate game off the shared walk"). Exemplar:
+  (for a candidate game, `hints-candidates.md` § "Record off a bespoke
+  solver: thread or parallel"). Exemplar:
   Clusters, which restarts its scan after each firing and takes the shortest
   chain.
 
@@ -957,12 +931,11 @@ A ladder on `runDeductionFixpoint` still makes that choice: a technique's
 `run` returns a number and its `firings` tally counts by rung id, which is
 not a record. What the ladder gives is the driver and a certified rung list:
 
-- **Drive it with `singleFirings({ techniques, maxTier, budget,
-  beforeTechnique })`**
+- **Drive it with `singleFirings`**
   ([`deduction-fixpoint.ts`](../src/engine/deduction-fixpoint.ts)), built
-  once over the working board. `next()` returns the technique that
-  fired or `null`, and `impossible()` is sticky. Wrap it in a `next()` that
-  turns the recorder into a firing and hand that to `deduceHintPlan`.
+  once over the working board, whose doc says what it takes and returns.
+  Wrap it in a `next()` that turns the recorder into a firing and hand that
+  to `deduceHintPlan`.
   Exemplars: `skeletonRecordingPass`, and `tracksRecordingPass` in
   [`tracks/solver.ts`](../src/games/tracks/solver.ts).
 - **Pass `continuing: true`, and give every rung `available()`**: every
@@ -1083,9 +1056,7 @@ hint's positions" says how to tell the cases apart.
 
 Return a refusal as a `HintRefusal` from
 [`src/engine/hint-refusal.ts`](../src/engine/hint-refusal.ts), never a string
-of your own: `DEDUCTION_EXHAUSTED`, `CONTRADICTION_UNLOCALIZED`,
-`NO_MOVE_WORTH_MAKING`, `SEARCH_OUT_OF_REACH`, `GAME_OVER`,
-`PUZZLE_NOT_REASONABLE` and the rest. The wording is shared because
+of your own; the type lists every kind. The wording is shared because
 `help/features.md` teaches "there is a mistake" and "deduction has run out"
 as a pair that call for opposite responses.
 
@@ -1125,9 +1096,9 @@ What a game answers for itself:
   and only a game that checked it may say it, as a backstop in a construction
   that cannot come back empty on an unsolved board. `hint-resume.test.ts`
   accepts `SEARCH_OUT_OF_REACH` from exactly the games whose code names it
-  (`SEARCH_REACH_GAMES` in `testing/hint-games.ts`, with a reason for each):
-  a deductive game emitting it fails, and so does a searching game emitting
-  anything else.
+  (`SEARCH_REACH_GAMES` in `testing/hint-games.ts`), each with a reason in
+  the test's own ledger: a deductive game emitting it fails, and so does a
+  searching game emitting anything else.
 - **`puzzleDeadEnd(sentence)` for a dead end only this puzzle has**, in its
   own words (Inertia's dead ball). `hint-refusal.test.ts` reads every call and
   fails a sentence two games pass, one that spells out a shared kind, and one
@@ -1195,13 +1166,13 @@ hint is computed from the current state.
   (`hints-search.md` § "Recompute-stable plans").
 
 [`hint-resume.test.ts`](../src/engine/hint-resume.test.ts) walks a fresh
-board to solved one freshly computed hint at a time, applying only
-`steps[0]`. It walks one preset for each value of every axis the game's
-`paramConfig` varies, and a board for each value the Custom dialog offers
-that no preset holds ([`testing.md`](./testing.md) § "Slicing a preset sweep
-for the gate"). The one refusal it accepts is `DEDUCTION_EXHAUSTED` on a
-board whose tier permits search; on any other tier, or in a game with no
-difficulty contract, a refusal fails.
+board to solved by the hint's own plans, asking afresh as `RECOMPUTES`' doc says, over
+the boards `gatePresets` gives ([`testing.md`](./testing.md) § "Slicing a
+preset sweep for the gate"). Besides a searching game's
+`SEARCH_OUT_OF_REACH` (§ "Refusal wording comes from one module"), the one
+refusal it accepts is `DEDUCTION_EXHAUSTED` on a board whose tier permits
+search; on any other tier, or in a game with no difficulty contract, a
+refusal fails.
 
 ### A hint carries on from an entry the player made first
 
@@ -1271,10 +1242,11 @@ at each step. Every difference is a sentence that is false when it is read.
   wait until they show it (`hints-marks.md` § "A solver's silent bookkeeping
   is the player's work").
 
-`hint-resume.test.ts` ("a kept hint plan's every step changes what the board
-draws") holds the first for every game. A step fails only when both the plain
-frame and the frame with the step on it stand still, so a mark shown only for
-the square in focus is safe when the step brings its square into focus.
+`hint-resume.test.ts` ("a kept hint plan leaves the board alone, and its
+every step changes it") holds the first for every game. A step fails only
+when both the plain frame and the frame with the step on it stand still, so
+a mark shown only for the square in focus is safe when the step brings its
+square into focus.
 
 No walk holds the second, so each game holds its own. The candidate walk has
 the premise audit (`hints-candidates.md` § "A premise names everything its

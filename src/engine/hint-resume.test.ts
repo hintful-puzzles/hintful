@@ -15,10 +15,11 @@
  *    vertex sat on its (jittering) target pixel.
  *
  * The probe drives the importable scenario both bugs traveled: ask for a fresh
- * hint, apply only its first step, repeat. (In the app, a self-played move
- * drops any stored plan, so the next hint recomputes from the current state —
- * exactly this.) Recomputing every step exercises resumption from many
- * arbitrary partial positions; a correct hint must never give up before solved.
+ * hint from a position the plan reached, as the app does after a self-played
+ * move drops any stored plan, and follow it. It asks afresh at up to
+ * {@link RECOMPUTES} evenly spaced moves of each board and follows the plan in
+ * between, which exercises resumption from many arbitrary partial positions; a
+ * correct hint must never give up before solved.
  */
 import { describe, expect, it } from "vitest";
 import { permitsSearch } from "./difficulty.ts";
