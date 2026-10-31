@@ -1,0 +1,4 @@
+# A test fix: no requirement changes.
+schema: spec-driven
+created: 2026-10-31
+skip_specs: true

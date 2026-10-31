@@ -18,7 +18,7 @@
 - [x] 15. A drawn rectangle fills with its clue's color from the start, and the side two drawn rectangles share is in color, never a wall's (owner, 2026-10-31): the sides carry whether it is settled, so the fill no longer needs to say it fits
 - [x] 16. A resize out of the rectangle grows it to take in the pointer's square, and within it shrinks it from the pressed side; a press near a corner of a square resizes too (the owner's playtest, 2026-10-31: a drag down and right from a 2×1's left square had pulled its left side in)
 - [x] 17. A status line keeps its room while it says nothing (app-shell): Rectangles' size readout came in as a drag began, shrank the board from 437 to 402 pixels under the pointer, and a long drag ended a square off (measured 2026-10-31)
-- [ ] 18. The owner's word on the playtest's changes
+- [x] 18. The owner's word on the playtest's changes (2026-10-31: "the affordances work well now"); the hints' wording and Patches' tiers go to a change of their own, on the owner's word
 
 ## Measured (2026-10-31, eight deals a size)
 

@@ -2,7 +2,8 @@
 
 ## Purpose
 Rectangles (Shikaku), the puzzle of dividing a grid into rectangles that each
-contain exactly one number, equal to its area: its params and description
+contain exactly one clue, a number equal to its area, and its Patches
+ruleset, whose clues name a shape and may hide the number: its params and description
 encodings, what its generator promises of a board, completion and mistake
 reporting, its hint, its input, and the look that is its own.
 
@@ -11,9 +12,11 @@ reporting, its hint, its input, and the look that is its own.
 ### Requirement: Rules: Rectangles reports completion and mistakes
 
 A cell SHALL be correct if and only if it belongs to a valid rectangle: all of
-its boundary edges present, none interior, and exactly one contained number,
-equal to the rectangle's area. The board SHALL be completed when every cell is
-correct.
+its boundary edges present, none interior, and exactly one contained clue,
+which allows the rectangle. A clue with a number SHALL allow the rectangles of
+that area, and one with a shape only rectangles of that shape: a square with
+equal sides, a tall one higher than wide, a wide one wider than high. The
+board SHALL be completed when every cell is correct.
 
 #### Scenario: The last rectangle completes the board
 
@@ -26,10 +29,22 @@ correct.
 - **WHEN** the player's edges enclose a rectangle that holds two numbers
 - **THEN** none of its cells is correct
 
+#### Scenario: A Patches rectangle of the wrong shape is not correct
+
+- **WHEN** on the Patches board `3x2p:SaTc` the player draws the left 2×2 and
+  the right column, and then instead the left column and the right 2×2
+- **THEN** the first is solved, and in the second the tall clue's square
+  rectangle is not correct
+
 ### Requirement: Rules: Rectangles flags a drawn edge the solution lacks
 
-`findMistakes` SHALL return every edge the player has drawn that the board's
-one answer does not contain. A missing edge SHALL NOT be a mistake.
+`findMistakes` SHALL return every line the player has drawn that the board's
+one answer does not contain, a line being every drawn edge but the sides of
+a rectangle the player drew round one clue short of its number
+(`Hint: A rectangle the player drew round one clue is a lower bound`). Such a
+rectangle's sides the answer lacks SHALL be returned only where it takes a
+square its clue's rectangle in the answer does not. A missing edge SHALL NOT
+be a mistake.
 
 #### Scenario: A wall the solution does not contain is flagged
 
@@ -37,15 +52,26 @@ one answer does not contain. A missing edge SHALL NOT be a mistake.
   contain, and `findMistakes` is invoked
 - **THEN** that edge is returned as a mistake
 
+#### Scenario: A rectangle smaller than its clue's is no mistake
+
+- **WHEN** on `3x2p:SaTc` the player draws a 1×1 or a 1×2 round the square
+  clue, inside its 2×2
+- **THEN** `findMistakes` returns nothing
+
+#### Scenario: A rectangle taking another clue's square is a mistake
+
+- **WHEN** on `3x2p:SaTc` the player draws the 2×1 at (1,0) round the tall
+  clue, whose rectangle is the right column
+- **THEN** its left side is returned as a mistake
+
 ### Requirement: Params: Rectangles' parameters and their encoding
 
-Params SHALL be `w`, `h`, `expandfactor`, a non-negative float that defaults
-to 0, and the difficulty. They SHALL encode as `{w}x{h}`, followed in the
-full form only by an `e{%g}` suffix for a non-zero expansion factor and then
-the difficulty, Easy as `de` or Unreasonable as `du`; the short form SHALL
-write neither. A bare `{n}` SHALL decode as a
-square of that side, and an ID with no difficulty letter SHALL decode as Easy.
-A grid whose area is less than 2 SHALL be refused.
+Params SHALL be `w`, `h`, the ruleset, `expandfactor`, a non-negative float
+that defaults to 0, and the difficulty. They SHALL encode as `{w}x{h}`, a
+`p` for Patches and nothing for Rectangles, then in the full form only an
+`e{%g}` suffix for a non-zero expansion factor and the difficulty, `de` or
+`du`. A bare `{n}` SHALL decode as a square of that side, and an ID with no
+difficulty letter as Easy. A grid of area less than 2 SHALL be refused.
 
 #### Scenario: Params round-trip
 
@@ -68,6 +94,11 @@ A grid whose area is less than 2 SHALL be refused.
 
 - **WHEN** params of a 1×1 grid are validated
 - **THEN** they are refused with an error string
+
+#### Scenario: The Patches ruleset round-trips
+
+- **WHEN** `6x6pdu` is decoded and encoded in full
+- **THEN** the result is `6x6pdu`, and `6x6du` decodes to Rectangles
 
 ### Requirement: Params: Rectangles reads past upstream's unchecked-board letter
 
@@ -155,15 +186,18 @@ seldom draws one ("A rare tier is dealt under the deadline").
 
 ### Requirement: Description: Rectangles descriptions use the upstream encoding
 
-The desc SHALL encode the `w × h` grid row-major as a run-length string: a
-lowercase letter `a`–`z` for a run of 1–26 consecutive empty (non-numbered)
-squares, a decimal number for each numbered square, and a `_` between two
-adjacent numbers. A desc with an unknown character, or whose decoded square
-count does not exactly fill the grid, SHALL be refused.
+The desc SHALL encode the grid row-major as a run-length string: a letter
+`a`–`z` for a run of 1–26 squares with no clue, and a clue for each other
+square, with a `_` between two numbers side by side. A clue SHALL be a
+decimal number; under Patches it MAY be `S`, `T` or `W` for a shape, then a
+number or nothing, or `A` alone for a plain clue with no number. A desc with
+an unknown character, or that does not exactly fill the grid, SHALL be
+refused.
 
 #### Scenario: A description round-trips
 
-- **WHEN** a generated desc is parsed by `newState` and re-encoded
+- **WHEN** a generated desc of either ruleset is parsed by `newState` and
+  re-encoded
 - **THEN** the re-encoded desc equals the original
 
 #### Scenario: A malformed description is rejected
@@ -171,6 +205,12 @@ count does not exactly fill the grid, SHALL be refused.
 - **WHEN** a desc with too much or too little data to fill the grid is
   validated
 - **THEN** the result is a non-null error string
+
+#### Scenario: A shape letter is Patches' alone
+
+- **WHEN** `SaTc` is read as a 3×2 board under each ruleset
+- **THEN** under Patches it is a square clue and a tall clue, neither with a
+  number, and under Rectangles it is refused
 
 ### Requirement: Description: A Rectangles description's number is from 1 to the grid's area
 
@@ -284,6 +324,21 @@ wide, whatever the expansion factor.
   of 2
 - **THEN** each is dealt, and the hint's steps finish it
 
+### Requirement: Generation: A Patches board hides what its clues need not say
+
+Under Patches each clue SHALL first name its rectangle's shape and size. The
+generator SHALL then hide each clue's size, and then widen each clue's shape
+to plain, in a random order, keeping each change only where an Easy board's
+hint still finishes it, or an Unreasonable board's search still proves one
+answer.
+
+#### Scenario: A dealt Patches board hides some sizes
+
+- **WHEN** Patches boards are dealt at 6×6, 7×7 and 8×8, Easy and
+  Unreasonable
+- **THEN** each has exactly one answer, its tier is the one asked for, and
+  some clue on it shows no number
+
 ### Requirement: Solver: Rectangles' Solve returns the generator's answer, or the search's, as edges
 
 `solve` SHALL return the generator's `aux` when it is present, and otherwise
@@ -364,12 +419,57 @@ started.
 - **WHEN** Enter is pressed twice with no arrow between
 - **THEN** no move is made
 
+### Requirement: Controls: A drag from a drawn rectangle resizes it
+
+A left-drag, or the cursor's Enter, that starts anywhere on a square of a
+rectangle the player drew round one clue SHALL resize it. With the pointer
+out of it, it SHALL grow to take in the pointer's square; within it, the
+side nearer the square pressed SHALL follow the pointer. The move SHALL take
+up the old sides but those another drawn rectangle shares, and draw the new
+outline. The rectangle SHALL stop short of another drawn rectangle.
+
+#### Scenario: A rectangle grows from its corner
+
+- **WHEN** a 2×2 rectangle drawn at (2,2) on a blank 7×7 board is dragged from
+  its top-left square to the square above and left of it
+- **THEN** the move resizes it to the 3×3 at (1,1)
+
+#### Scenario: A shrink keeps a neighbor's side
+
+- **WHEN** that 2×2 has a 1×2 drawn beside it at (4,2), and is dragged from
+  its right column a square left
+- **THEN** it becomes the 1×2 at (2,2), and the neighbor is still drawn whole
+
+#### Scenario: Growth stops at another rectangle
+
+- **WHEN** a 1×1 at (2,2) is dragged right past a 1×1 drawn at (4,2)
+- **THEN** it grows to the 2×1 at (2,2) and no further
+
+#### Scenario: The board before any line is not a rectangle to resize
+
+- **WHEN** on `7x7:2_2c3f2_2a2b3c2_4b3c3_6_3b2_4i6b`, with no line drawn, a
+  drag runs from the top-left square to the one below it
+- **THEN** it draws the 1×2 rectangle those squares span
+
+#### Scenario: A rectangle grows toward the pointer, pressed near a corner
+
+- **WHEN** a 2×1 drawn at (2,2) is pressed on its left square near that
+  square's bottom-left corner and dragged to the square below its right one
+- **THEN** the move resizes it to the 2×2 at (2,2)
+
+#### Scenario: The hint's drag draws round a rectangle the player drew
+
+- **WHEN** the hint's rectangle holds the one the player drew round its
+  clue, at its top-left square, and the hint's drag is played
+- **THEN** the board's lines are the hint's rectangle's
+
 ### Requirement: Hint: A Rectangles hint step draws one rectangle or one line, and reads only the board
 
 Every step of the hint SHALL draw one rectangle or one line, reasoning only
-from the clues and the lines drawn. A clue's fits are the rectangles of its
-area that contain it, stay on the board, take in no other clue and cross no
-drawn line.
+from the clues and the player's marks. A clue's fits are the rectangles it
+allows that contain it, stay on the board, take in no other clue, cross no
+line and take no square of another clue's drawn rectangle, and contain its
+own (`Hint: A rectangle the player drew round one clue is a lower bound`).
 
 #### Scenario: The player draws the rectangle a side at a time
 
@@ -389,6 +489,12 @@ drawn line.
 - **WHEN** the hint is followed on an Unreasonable board, and the solution's
   rectangle is drawn wherever the hint stops
 - **THEN** the hint finishes the board
+
+#### Scenario: A Patches clue is named by what it shows
+
+- **WHEN** the hint is asked on `3x2p:SaTc`
+- **THEN** its words name the square clue or the tall clue, and following it
+  finishes the board
 
 ### Requirement: Hint: A Rectangles hint step is one of five deductions
 
@@ -459,6 +565,32 @@ next.
   line
 - **THEN** the step draws the clue's rectangle
 
+### Requirement: Hint: A rectangle the player drew round one clue is a lower bound
+
+A rectangle the player drew, by a drag or a resize, that is still closed
+round one clue SHALL be read as saying its squares are that clue's. Short
+of the clue's number its sides SHALL NOT be lines, but for one with another
+such rectangle across it. Where the hint proves one the whole of its
+clue's, it SHALL go on without a step.
+
+#### Scenario: The hint carries on from a rectangle too small
+
+- **WHEN** on `3x2p:SaTc` the player draws a 1×1 round the square clue and
+  asks for a hint
+- **THEN** the hint finishes the board
+
+#### Scenario: A rectangle drawn whole is no step
+
+- **WHEN** a dealt 7×7 Patches board has one clue without a number drawn
+  as its rectangle in the answer, and the hint is followed
+- **THEN** no step draws that rectangle, and the board is finished
+
+#### Scenario: A box the lines close by chance is not drawn
+
+- **WHEN** on `3x2p:SaTc` the player draws a 1×2 down the left column, which
+  leaves the tall clue a 2×2 box
+- **THEN** that box is no rectangle of the tall clue's, and no mistake
+
 ### Requirement: Status bar: The Rectangles status bar gives the size of a dragged rectangle
 
 While a rectangle is being dragged, the status bar SHALL show its size as
@@ -490,30 +622,16 @@ error color.
 ### Requirement: Look: Rectangles draws its squares on the collection's quiet surface
 
 `redraw` SHALL draw every square on the collection's cell surface, with the
-surface's thin grid line between squares. A square that holds a number SHALL
-sit on the lifted surface of a given, so the numbers the puzzle fixed are told
-by the cell under them, and the number itself SHALL stay in ink. The edges of
-the player's rectangles, and the board's outer edge, which bounds every
-rectangle that reaches it, are content and SHALL stay in ink at their full
-width.
+surface's thin grid line between squares, but for the squares a clue's fill
+takes. The clue itself SHALL stay in ink. The edges of the player's
+rectangles, and the board's outer edge, which bounds every rectangle that
+reaches it, are content and SHALL stay in ink at their full width.
 
 #### Scenario: A number is told by the cell under it
 
 - **WHEN** an untouched board is drawn
-- **THEN** every square holding a number is the lifted surface
+- **THEN** every square holding a clue is in that clue's fill
 - **AND** every other square is the plain cell surface
-
-### Requirement: Look: A finished rectangle fills whole with the finished-region role
-
-A rectangle the game counts as correct SHALL fill whole with the shared
-finished-region role. The fill SHALL cover the number's square too.
-
-#### Scenario: A finished rectangle shades whole
-
-- **WHEN** the player's edges enclose a rectangle holding exactly one number,
-  equal to its area
-- **THEN** every square of it, the number's included, is drawn in the
-  completed-region color
 
 ### Requirement: Look: The Rectangles cursor is brackets at its square's corners
 
@@ -525,3 +643,36 @@ square, beside the number, and SHALL take no fill.
 - **WHEN** the keyboard cursor rests on a square
 - **THEN** the square keeps the surface it had
 - **AND** the cursor is drawn at its corners in the cursor color
+
+### Requirement: Look: A clue's fill marks its square, and its rectangle once the clue allows it
+
+Each clue SHALL take one of the region fills, so that clues whose nearest
+squares meet differ; the fills SHALL NOT be chosen from the answer. A clue's
+square SHALL be drawn in its fill, a rectangle the player drew round it
+SHALL fill whole with it from the start, and any other rectangle the game
+counts as correct SHALL fill whole with its clue's.
+
+#### Scenario: A drawn rectangle shows whether it is settled
+
+- **WHEN** the player draws a rectangle round one clue
+- **THEN** it is filled with its clue's fill at once, and its sides are in
+  the clue's line color while it may still grow, the side it shares with
+  another such rectangle included, in ink once it has the clue's number of
+  squares, and red where no rectangle the clue allows on the board contains
+  it
+
+#### Scenario: A finished rectangle takes its clue's fill
+
+- **WHEN** a board is solved
+- **THEN** every square is drawn in the fill of its rectangle's clue
+
+### Requirement: Look: A Patches clue is drawn in its shape's frame
+
+A clue that names a shape SHALL be drawn as its number, or `?` where it has
+none, inside an outlined frame of that shape: square, tall or wide. A plain
+clue SHALL be its number alone, or `?`.
+
+#### Scenario: A shaped clue's frame
+
+- **WHEN** `3x2p:SaTc` is drawn
+- **THEN** a square frame and a tall frame are outlined, each around a `?`

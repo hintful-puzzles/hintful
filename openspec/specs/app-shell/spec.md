@@ -1020,13 +1020,12 @@ not of commands.
 
 ### Requirement: A hint's words sit under the board
 
-The hint's explanation, and the status line of a game that prints one, SHALL be
-shown under the board, and under the Game controls where they are under it, at
-every window size, and in no panel. Showing or clearing a hint SHALL NOT move
-the board or any control in a panel, nor SHALL the Hint control's caption
-changing. In a game with a hint, the room the longest hint the engine allows
-takes at the window's width SHALL be kept while no hint shows, in every game
-alike.
+The hint's explanation, and a game's status line, SHALL be shown under the
+board, and under the Game controls where they are under it, at every window
+size, and in no panel. Showing or clearing either, or the Hint control's
+caption changing, SHALL NOT move the board or any control in a panel. The room
+the longest hint takes at the window's width SHALL be kept while no hint
+shows, in every game with a hint, and a status line's room while it is empty.
 
 #### Scenario: A hint is shown on a desktop
 
@@ -1052,6 +1051,13 @@ alike.
 
 - **WHEN** the explanation needs more lines than the room keeps
 - **THEN** it is shown whole, and the board gives up the height beyond the room
+
+#### Scenario: A status line that speaks only during a drag leaves the board as it was
+
+- **WHEN** a player drags a rectangle in Rectangles, whose status line gives
+  the dragged rectangle's size and is empty otherwise
+- **THEN** the board is the same size and in the same place before, during
+  and after the drag
 
 ### Requirement: A player can choose where the panels dock
 

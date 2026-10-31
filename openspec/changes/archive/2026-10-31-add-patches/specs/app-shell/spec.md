@@ -4,13 +4,12 @@
 
 ### Requirement: A hint's words sit under the board
 
-The hint's explanation, and the status line of a game that prints one, SHALL be
-shown under the board, and under the Game controls where they are under it, at
-every window size, and in no panel. Showing or clearing a hint, or a status
-line's text, SHALL NOT move the board or any control in a panel, nor SHALL the
-Hint control's caption changing. In a game with a hint, the room the longest
-hint the engine allows takes at the window's width SHALL be kept while no hint
-shows, and in a game with a status line, its line's room while it says nothing.
+The hint's explanation, and a game's status line, SHALL be shown under the
+board, and under the Game controls where they are under it, at every window
+size, and in no panel. Showing or clearing either, or the Hint control's
+caption changing, SHALL NOT move the board or any control in a panel. The room
+the longest hint takes at the window's width SHALL be kept while no hint
+shows, in every game with a hint, and a status line's room while it is empty.
 
 #### Scenario: A hint is shown on a desktop
 
