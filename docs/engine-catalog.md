@@ -9,14 +9,9 @@ the `engine-helpers` spec and the engine specs an entry names.
 ## What every game does
 
 1. **Start from the skeleton's imports.** `src/skeleton/grid/` already calls
-   the helper for each common concern: `params-codec.ts`, `preset-grid.ts`,
-   `desc-reader.ts` and `desc-error.ts` in `state.ts`; `target-verb.ts`,
-   `pointer.ts` and `entry-mistakes.ts` in `index.ts`;
-   `deduction-fixpoint.ts` and `step-budget.ts` in `solver.ts`;
-   `retry-limit.ts` in `generator.ts`; `hint-plan.ts`, `hint-words.ts` and
-   `hint-gesture.ts` for the hint; `hint-mark.ts`, `overlay-sidecar.ts`,
-   `piece.ts`, `draw.ts` and `win-wave.ts` in `render.ts`.
-2. **Before writing a helper, scan the table below** for your situation.
+   the helper for each common concern; what its files import is the list.
+2. **Before writing a helper, scan the table below**: each heading names
+   what its module does. An entry's first line says when to reach for it.
    Read the entry, then the module's header.
 3. **Import a shared thing from the module it lives in.** Do not re-export
    it through the game's `state.ts` or restate it beside the call.
@@ -28,126 +23,128 @@ the `engine-helpers` spec and the engine specs an entry names.
 
 ## Sections
 
-| Section | Read it when |
-| --- | --- |
-| Sharing a helper | you are about to write, extract or promote a helper |
-| – What decides whether something is shared | two games hold the same code |
-| – Measure before proposing an extraction | a duplication tool reports a clone |
-| – Where a promoted helper lands | you are placing a new engine module |
-| – Byte-match critical entries | you change a helper whose order reaches a desc |
-| Board structure and geometry | you need connectivity, a board mechanic or pixel geometry |
-| – `dsf.ts` — union-find | your state is a partition of cells |
-| – `square-edges.ts` — square-grid edges | you name a direction or an edge |
-| – `line-drawing.ts` — drawn lines | lines are drawn by dragging |
-| – `border-grid.ts` — the shared border-marking mechanic | the player marks edges between cells as walls |
-| – `border-grid-render.ts` — that mechanic's look | you draw a border-marking game's tiles |
-| – `border-grid-hint.ts` — that mechanic's explained hint | you write a border-marking game's hint |
-| – `target-verb.ts` — aim at a target, apply a verb | each button does one thing to what it lands on |
-| – `ui-snapshot.ts` — a `Ui` kept to be put back | your `Ui` holds more than plain data |
-| – `same-value.ts` — whether two values hold the same thing | the midend throws comparing your state or `Ui` |
-| – `note-taking-cell.ts` — the shared highlight-and-type mechanic | the player types values and pencils candidates |
-| – `grid/index.ts` — planar-grid geometry (upstream `grid.c`) | your board is a tiling, not a square grid |
-| – `geometry.ts` — cell ↔ pixel | you turn a pointer position into a cell |
-| – `findloop.ts` — loop/bridge finding | you highlight a closed loop as an error |
-| – `n-times-root-k.ts` — exact `round(n · √k)` | an irrational coordinate becomes pixels |
-| Ordered collections and small leaves | you port a `tree234`, a shuffle or a combination loop |
-| – `sorted-multiset.ts` — `tree234`, idiomatically | upstream's code uses a `tree234` |
-| – `shuffle.ts` — Fisher–Yates + permutation parity | a generator shuffles or checks parity |
-| – `combi/` — r-of-n combination iterator | you enumerate every r-subset of n |
-| Generation | you are writing a generator |
-| – `retry-limit.ts` — a bound on generate-until-it-works | a generator retries until a board passes |
-| – `divvy.ts` — random equal-omino partition | a generator divides a rectangle into equal regions |
-| – `redivide.ts` — divide a few regions of a partition again | a generator mends a division into equal regions |
-| – `divide.ts` — regions of unequal size | a generator divides a grid into unequal regions |
-| – `mend-division.ts` — mend a division until it has one answer | a board's regions are its only clue |
-| – `laydomino.ts` — random domino tiling | a generator tiles a board with dominoes |
-| – `symmetric-blacks.ts` — symmetric black-square placement | black squares are placed symmetrically |
-| – `loopgen.ts` — random loop generation | a generator needs a random closed loop |
-| – `wires.ts` — the Net/Netslide wire model | your tiles carry wires from a source |
-| – `obfuscate.ts` — solution masking in descs | your desc carries the answer |
-| – `latin.ts` — Latin-square solver *and* generator | your board is a Latin square, or you need a matching |
-| Solving and deduction | you write a solver, a tier or a board's verdict |
-| – `deduction-fixpoint.ts` — the shared technique ladder | your solver runs ordered techniques to a fixpoint |
-| – `step-budget.ts` — the fixpoint non-termination guard | a hint pass loops until nothing changes |
-| – `difficulty.ts` — the cross-game difficulty contract | your game has difficulty tiers |
-| – `hint-finishes.ts` — whether deduction finishes a board | your game is untiered, or has an Unreasonable tier |
-| – `answer-search.ts` — a deductive game's Unreasonable tier | some boards need trial and error, or a generator wants a second answer |
-| – `sections.ts` — contract sections and the draft label | your game leaves out a contract section |
-| – `deduction-record.ts` — the recorded-firing shape | your solver records firings for a candidate hint |
-| – `wing.ts` — the XY- and XYZ-wing | your notes are candidate sets |
-| – `firing-replay.ts` — the premise audit | a candidate game has a solver of its own |
-| Hint machinery | you are writing a hint |
-| – `hint-plan.ts` — the plan-accumulation loop | a hint takes one forced firing at a time |
-| – `hint-track.ts` — following a step that asks for several things | one step decides several squares or edges |
-| – `hint-gesture.ts` — how the pointer makes a hint step | your game has a hint |
-| – `apart-by-position.ts` — two things of one name, told apart | a sentence names two clues of one value |
-| – `rival-judging.ts` — what a searched move's rivals let it say | a hint says something about the other moves |
-| – `search-outcome.ts` — what a budgeted search for a line established | your game can be lost and is solved by search |
-| – `finish-search.ts` — the depth-first search that finds a line or proves none | your hint proves a position lost |
-| – `candidate-hint.ts` — candidate-elimination plan plumbing | your hint strikes pencil notes |
-| – `entry-mistakes.ts` — Check & Save for one value or a set of marks per cell | the player places one value a cell |
-| – `candidate-plan.ts` — the candidate-elimination plan walk | you write a notes game's `buildSteps` |
-| – `hint-frontier.ts` — which available firing a plan takes next | a plan wanders, or is not on a grid |
-| – `latin-hint.ts` — truthful Latin single classification | a Latin game's hint narrates a single |
-| – `hint-words.ts` — a hint's words bound to its marks | you write a hint step's sentence |
-| – `hint-text.ts` — the sentences several games share | another game already says your sentence |
-| – `slide-planner.ts` — sliding-permutation search | the player slides tiles into one arrangement |
-| – `permutation-planner.ts` — a staged plan over any permutation moves | a hint places pieces in reading order |
-| – `position-store.ts` — the positions a breadth-first search reached | a hint searches breadth-first |
-| – `piece.ts` — a piece on its cell | a cell holds a piece, is shaded or is ruled out |
-| – `region-fill.ts` — a fill for each region of a division | regions are colored, or pieces outnumber their colors |
-| – `ring.ts` — the round ring | a hint rings |
-| – `hint-mark.ts` — the ring and the outline | you draw a hint's marks on cells |
-| – `edge-hint.ts` — a hint on an edge between squares | a hint names a side of a square |
-| – `hatch.ts` — the stripes on the line a step names | a hint sentence names a row or column |
-| – `hint-refusal.ts` — what a hint says when it will not give one | your `hint` returns an error |
-| – `solve-failure.ts` — what Solve says when it will not solve | your `solve` returns an error |
-| Input | you write `interpretMove` or the keypad |
-| – `pointer.ts` — button codes and cursor helpers | you read a button, a digit or the cursor |
-| – `key-labels.ts` — on-screen keypad builders | your game has an on-screen keypad |
-| Game IDs: descs and params | you write a desc, a params string or the Custom dialog |
-| – `run-length.ts` — the letter-run desc grammar | your desc is value characters and blank runs |
-| – `wall-runs.ts` — a region layout as a run-length wall list | your desc ships regions as walls |
-| – `dot-runs.ts` — blanks and dots of two kinds | your desc is sparse marks of two kinds |
-| – `desc-alphabet.ts` — one character per small number | a desc character stands for a number over nine |
-| – `desc-error.ts` — why a game ID will not load | you write `parseDesc`, or refuse a desc |
-| – `desc-reader.ts` — the cursor a desc parser drives | you read a desc token by token |
-| – `decimal.ts` — decimal digits in a game ID | a desc or params string holds a number |
-| – `params-codec.ts` — the declared params codec | you write `encodeParams` and `decodeParams` |
-| – `params.ts` — param-string decoding + config helpers | you declare `paramConfig` or validate params |
-| – `param-label.ts` — the one label of a params set | you need a preset's or a board's name |
-| – `preset-grid.ts` — the preset menu, built from a game's boards | you write a game's `menu` |
-| – `ruleset.ts` — the puzzles a game plays on one board | your game plays more than one puzzle |
-| – `only.ts` — what one setting leaves of the others | one setting restricts another |
-| – `config-narrowing.ts` — what a form offers of a narrowed field | a form or test reads a narrowed field |
-| – `modifier.ts` — the settings that change one rule | a setting adds, removes or bounds a rule |
-| – `param-help.ts` — the generated Parameters section | you write a help page's Parameters |
-| Rendering and affordance helpers | you are writing `redraw` |
-| – `overlay-sidecar.ts` — the overlay diff-key rule as a type | a tile shows a hint or a mistake |
-| – `candidate-bits.ts` — one candidate encoding, range-checked | you hold candidates as a bit mask |
-| – `draw.ts` — shared drawing primitives | you draw a bevel, outline, cursor, glyph or arrow |
-| – `completion-status.ts` — the status bar's completion words | you write `statusbarText` |
-| – `win-wave.ts` — the win flash | you draw the win flash |
-| – `pencil-indicator.ts` — the pencil-mode indicator | your game has a pencil mode |
-| – `pencil-prefs.ts` — shared pencil `GamePref` declarations | a notes game declares preferences |
-| – `rules-out.ts` — the key and help words of `Game.rulesOut`'s preference | a placement rules squares out at a glance |
-| – `color/` — the palette | you need a color |
-| RNG and persistence | you draw random numbers or dispatch on a move |
-| – `random/` — the bit-identical RNG | a generator draws a random number |
-| – `assert-never.ts` — refusing a move the dispatch has no arm for | a chain over move types ends |
-| – The contract, and the engine's own modules | an engine file has no entry of its own |
-| Testing harness | a test needs a draw record, a dealt board or a hint pin |
+| Section |
+| --- |
+| Sharing a helper |
+| – What decides whether something is shared |
+| – Measure before proposing an extraction |
+| – Where a promoted helper lands |
+| – Byte-match critical entries |
+| Board structure and geometry |
+| – `dsf.ts` — union-find |
+| – `square-edges.ts` — square-grid edges |
+| – `line-drawing.ts` — drawn lines |
+| – `border-grid.ts` — the shared border-marking mechanic |
+| – `border-grid-render.ts` — that mechanic's look |
+| – `border-grid-hint.ts` — that mechanic's explained hint |
+| – `target-verb.ts` — aim at a target, apply a verb |
+| – `ui-snapshot.ts` — a `Ui` kept to be put back |
+| – `same-value.ts` — whether two values hold the same thing |
+| – `note-taking-cell.ts` — the shared highlight-and-type mechanic |
+| – `grid/index.ts` — planar-grid geometry (upstream `grid.c`) |
+| – `geometry.ts` — cell ↔ pixel |
+| – `findloop.ts` — loop/bridge finding |
+| – `n-times-root-k.ts` — exact `round(n · √k)` |
+| Ordered collections and small leaves |
+| – `sorted-multiset.ts` — `tree234`, idiomatically |
+| – `shuffle.ts` — Fisher–Yates + permutation parity |
+| – `combi/` — r-of-n combination iterator |
+| Generation |
+| – `retry-limit.ts` — a bound on generate-until-it-works |
+| – `divvy.ts` — random equal-omino partition |
+| – `redivide.ts` — divide a few regions of a partition again |
+| – `divide.ts` — regions of unequal size |
+| – `mend-division.ts` — mend a division until it has one answer |
+| – `laydomino.ts` — random domino tiling |
+| – `symmetric-blacks.ts` — symmetric black-square placement |
+| – `loopgen.ts` — random loop generation |
+| – `wires.ts` — the Net/Netslide wire model |
+| – `obfuscate.ts` — solution masking in descs |
+| – `latin.ts` — Latin-square solver *and* generator |
+| Solving and deduction |
+| – `deduction-fixpoint.ts` — the shared technique ladder |
+| – `step-budget.ts` — the fixpoint non-termination guard |
+| – `difficulty.ts` — the cross-game difficulty contract |
+| – `hint-finishes.ts` — whether deduction finishes a board |
+| – `answer-search.ts` — a deductive game's Unreasonable tier |
+| – `sections.ts` — contract sections and the draft label |
+| – `deduction-record.ts` — the recorded-firing shape |
+| – `wing.ts` — the XY- and XYZ-wing |
+| – `firing-replay.ts` — the premise audit |
+| Hint machinery |
+| – `hint-plan.ts` — the plan-accumulation loop |
+| – `hint-track.ts` — following a step that asks for several things |
+| – `hint-gesture.ts` — how the pointer makes a hint step |
+| – `apart-by-position.ts` — two things of one name, told apart |
+| – `rival-judging.ts` — what a searched move's rivals let it say |
+| – `search-outcome.ts` — what a budgeted search for a line established |
+| – `finish-search.ts` — the depth-first search that finds a line or proves none |
+| – `candidate-hint.ts` — candidate-elimination plan plumbing |
+| – `entry-mistakes.ts` — Check & Save for one value or a set of marks per cell |
+| – `candidate-plan.ts` — the candidate-elimination plan walk |
+| – `hint-frontier.ts` — which available firing a plan takes next |
+| – `latin-hint.ts` — truthful Latin single classification |
+| – `hint-words.ts` — a hint's words bound to its marks |
+| – `hint-text.ts` — the sentences several games share |
+| – `slide-planner.ts` — sliding-permutation search |
+| – `permutation-planner.ts` — a staged plan over any permutation moves |
+| – `position-store.ts` — the positions a breadth-first search reached |
+| – `piece.ts` — a piece on its cell |
+| – `region-fill.ts` — a fill for each region of a division |
+| – `ring.ts` — the round ring |
+| – `hint-mark.ts` — the ring and the outline |
+| – `edge-hint.ts` — a hint on an edge between squares |
+| – `hatch.ts` — the stripes on the line a step names |
+| – `hint-refusal.ts` — what a hint says when it will not give one |
+| – `solve-failure.ts` — what Solve says when it will not solve |
+| Input |
+| – `pointer.ts` — button codes and cursor helpers |
+| – `key-labels.ts` — on-screen keypad builders |
+| Game IDs: descs and params |
+| – `run-length.ts` — the letter-run desc grammar |
+| – `wall-runs.ts` — a region layout as a run-length wall list |
+| – `dot-runs.ts` — blanks and dots of two kinds |
+| – `desc-alphabet.ts` — one character per small number |
+| – `desc-error.ts` — why a game ID will not load |
+| – `desc-reader.ts` — the cursor a desc parser drives |
+| – `decimal.ts` — decimal digits in a game ID |
+| – `params-codec.ts` — the declared params codec |
+| – `params.ts` — param-string decoding + config helpers |
+| – `param-label.ts` — the one label of a params set |
+| – `preset-grid.ts` — the preset menu, built from a game's boards |
+| – `ruleset.ts` — the puzzles a game plays on one board |
+| – `only.ts` — what one setting leaves of the others |
+| – `config-narrowing.ts` — what a form offers of a narrowed field |
+| – `modifier.ts` — the settings that change one rule |
+| – `param-help.ts` — the generated Parameters section |
+| Rendering and affordance helpers |
+| – `overlay-sidecar.ts` — the overlay diff-key rule as a type |
+| – `candidate-bits.ts` — one candidate encoding, range-checked |
+| – `draw.ts` — shared drawing primitives |
+| – `completion-status.ts` — the status bar's completion words |
+| – `win-wave.ts` — the win flash |
+| – `pencil-indicator.ts` — the pencil-mode indicator |
+| – `pencil-prefs.ts` — shared pencil `GamePref` declarations |
+| – `rules-out.ts` — the key and help words of `Game.rulesOut`'s preference |
+| – `color/` — the palette |
+| RNG and persistence |
+| – `random/` — the bit-identical RNG |
+| – `assert-never.ts` — refusing a move the dispatch has no arm for |
+| – The contract, and the engine's own modules |
+| Testing harness |
 
 ## Sharing a helper
 
-Check here before writing a union-find, a sorted collection, a loop finder
-or a random partition. **A game-local helper that gains a second consumer is
+Read this part before you write, extract or promote a helper, and check the
+catalog before writing a union-find, a sorted collection, a loop finder or a
+random partition. **A game-local helper that gains a second consumer is
 promoted to `src/engine/`.** A helper with one consumer stays in its game:
 the rule is a trigger, not a mandate to abstract ahead of need.
 
 ### What decides whether something is shared
 
-A shared helper is right when the thing shared is a fact. A module owning a
+Read it when two games hold the same code. A shared helper is right when
+the thing shared is a fact. A module owning a
 mechanic is right when the thing shared is a shape. Something stays per-game
 only when you can say what a game would legitimately want to do differently.
 
@@ -163,8 +160,8 @@ only when you can say what a game would legitimately want to do differently.
 
 ### Measure before proposing an extraction
 
-A duplication tool counts text. Read what it counted, because three
-different things look the same to it:
+When a duplication tool reports a clone, read what it counted. It counts
+text, and three different things look the same to it:
 
 - **The `Game` object literal and the import blocks.** Every game implements
   one interface and imports the same helpers, so two files with the same
@@ -198,6 +195,9 @@ shows in generated descs, and a frozen differential fails when one moves
 and for whom, is § "`random/` — the bit-identical RNG".
 
 ## Board structure and geometry
+
+Read this part when you need connectivity, a board mechanic or pixel
+geometry.
 
 ### `dsf.ts` — union-find
 
@@ -293,14 +293,16 @@ declaring game's keys to its buttons. Adopting it: [`input.md`](./input.md)
 
 ### `ui-snapshot.ts` — a `Ui` kept to be put back
 
-A game calls neither `copyUi` nor `restoreUi`; the midend does, for a
+Read it when your `Ui` holds more than plain data. A game calls neither
+`copyUi` nor `restoreUi`; the midend does, for a
 canceled press ([`input.md`](./input.md) § "A canceled press is the
 engine's"). Keep the `Ui` to what the copy can take: plain objects, arrays,
 typed arrays, `Map`, `Set`, and classes whose content is their own fields.
 
 ### `same-value.ts` — whether two values hold the same thing
 
-A game calls neither `sameValue` nor `sameShown`; the midend does, to keep
+Read it when the midend throws comparing your state or `Ui`. A game calls
+neither `sameValue` nor `sameShown`; the midend does, to keep
 a move that changed nothing out of the history and to see whether an input
 changed what the `Ui` shows ([`mechanics.md`](./mechanics.md) §
 "interpretMove and UI_UPDATE"). Keep the state and the `Ui` to the kinds
@@ -309,7 +311,8 @@ changed what the `Ui` shows ([`mechanics.md`](./mechanics.md) §
 ### `note-taking-cell.ts` — the shared highlight-and-type mechanic
 
 Reach for it in every game that carries `ui.pencilMode` and
-`ui.cursorFromKeyboard`. The game keeps its coordinates, its symbols and its
+`ui.cursorFromKeyboard`: the player types values and pencils candidates. The
+game keeps its coordinates, its symbols and its
 own `Move`. Exemplar: `keen/index.ts`.
 
 - **Input.** `pressNoteTakingCell` resolves a press against the game's
@@ -337,12 +340,10 @@ own `Move`. Exemplar: `keen/index.ts`.
 
 ### `grid/index.ts` — planar-grid geometry (upstream `grid.c`)
 
-Reach for it when the board is a tiling: `Grid`, `GridFace`, `GridEdge` and
-`GridDot` with full incidence, every tiling under `tilings/`,
-`gridComputeSize`, `gridValidateParams`, `gridNearestEdge`,
-`gridFindIncenter`, `gridTrimVigorously` and the
-`gridNewDesc`/`gridValidateDesc` round trip. **Import the barrel, not the
-parts.** Exemplar: `loopy/state.ts`.
+Reach for it when the board is a tiling, not a square grid: `Grid`,
+`GridFace`, `GridEdge` and `GridDot` with full incidence, every tiling under
+`tilings/`, and the sizing, params, geometry, trim and desc helpers. **Import the
+barrel, not the parts.** Exemplar: `loopy/state.ts`.
 
 `gridNewDesc` is the only function that consumes randomness; `gridNew` is a
 pure function of `(type, width, height, desc)`. A new tiling follows four
@@ -365,9 +366,9 @@ rules:
 
 ### `geometry.ts` — cell ↔ pixel
 
-Start `interpretMove` here: `coord` and `fromCoord` map between cells and
-pixels, with the game's border passed in. `fromCoord` floors, which is
-right for a pixel in the border.
+Start `interpretMove` here, to turn a pointer position into a cell: `coord`
+and `fromCoord` map between cells and pixels, with the game's border passed
+in. `fromCoord` floors, which is right for a pixel in the border.
 
 **Read a press and its release with one function.** A floor or truncation
 of a division by the tile size outside this module is a call to `fromCoord`
@@ -389,12 +390,13 @@ disagreement of one unit splits a shared corner into two dots.
 
 ## Ordered collections and small leaves
 
+Read this part when you port a `tree234`, a shuffle or a combination loop.
+
 ### `sorted-multiset.ts` — `tree234`, idiomatically
 
-Reach for `SortedMultiset` where upstream uses a `tree234` as a sorted set:
-`add` for `add234`, `delete` for `del234` (a no-op when absent), `removeAt`
-for `delpos234` (an index into sorted order), `size` for `count234`.
-Exemplar: `pegs/generator.ts`.
+Reach for `SortedMultiset` where upstream uses a `tree234` as a sorted set;
+the methods' comments name the upstream calls they replace. Exemplar:
+`pegs/generator.ts`.
 
 - **Port the comparator exactly.** `removeAt(randomUpto(set.size))` indexes
   the sorted order, so the comparator is byte-match critical.
@@ -417,10 +419,12 @@ Exemplar: `fifteen/state.ts`.
 
 ### `combi/` — r-of-n combination iterator
 
-Enumerates r-of-n combinations in lexicographic order. Exemplar:
-`lightup/solver.ts`.
+Reach for it to enumerate every r-subset of n, in lexicographic order.
+Exemplar: `lightup/solver.ts`.
 
 ## Generation
+
+Read this part when you are writing a generator.
 
 ### `retry-limit.ts` — a bound on generate-until-it-works
 
@@ -487,8 +491,9 @@ critical. Exemplar: `dominosa/generator.ts`.
 
 ### `symmetric-blacks.ts` — symmetric black-square placement
 
-`placeSymmetricBlacks`, with the `SYMM_*` values and their Custom-dialog
-labels. It works through callbacks over the caller's board, and **the
+Reach for `placeSymmetricBlacks` when black squares are placed
+symmetrically; the `SYMM_*` values and their Custom-dialog labels are beside
+it. It works through callbacks over the caller's board, and **the
 caller clears its board first**. Byte-match critical, the `SYMM_ROT4`
 odd-center `<=` included. Exemplar: `lightup/generator.ts`.
 
@@ -517,11 +522,11 @@ Exemplar: `mines/state.ts`.
 
 ### `latin.ts` — Latin-square solver *and* generator
 
-`latinSolver`, `latinGenerate` and `latinGenerateRect`. Its bipartite
-`matching` is usable outside the family: pass `rs` for a random matching in
-generation and leave it out for a deterministic existence check
-(`tents/`). The cube's index space, a repeated symbol, the `seed` hook, `cubeOut`
-and the family's generator shapes are in
+Reach for `latinSolver`, `latinGenerate` and `latinGenerateRect` when the
+board is a Latin square. Its bipartite `matching` is usable outside the
+family: pass `rs` for a random matching in generation and leave it out for a
+deterministic existence check (`tents/`). The cube's index space, a repeated
+symbol, the `seed` hook, `cubeOut` and the family's generator shapes are in
 [`solver-and-generator.md`](./solver-and-generator.md). Exemplar:
 `keen/solver.ts`. Its singles, sets, fish and wing are
 `latin.compiled.ts`, compiled from `latin.description.yaml` by
@@ -540,6 +545,8 @@ compiled ladder, its drawing and its text glyph) and writes its own `Game`,
 its reasons and its hint's sentences. Exemplars: `unequal/`, `adjacent/`.
 
 ## Solving and deduction
+
+Read this part when you write a solver, a tier or a board's verdict.
 
 ### `deduction-fixpoint.ts` — the shared technique ladder
 
@@ -621,7 +628,8 @@ deductive game an Unreasonable tier").
 
 ### `answer-search.ts` — a deductive game's Unreasonable tier
 
-Reach for it in a deductive game with the two tiers Easy and Unreasonable
+Reach for it where some boards need trial and error (a deductive game with
+the tiers Easy and Unreasonable), or where a generator wants a second answer
 ([`solver-and-generator.md`](./solver-and-generator.md) § "Giving a
 deductive game an Unreasonable tier"). The deduction, what to assume where
 it stops, the search's budget and what a deal draws and strips stay the
@@ -645,6 +653,7 @@ game's. Exemplar: `mosaic/solver.ts`.
 
 ### `sections.ts` — contract sections and the draft label
 
+Read it when your game leaves out a contract section.
 `sectionState(game, section)` reads whether `hint`, `findMistakes`, `solve`
 or `transposeParams` is implemented, not applicable (with the reason from
 `Game.notApplicable`) or absent. `SQUARE_GRID` is the shared
@@ -657,6 +666,7 @@ draft".
 
 ### `deduction-record.ts` — the recorded-firing shape
 
+Reach for it when your solver records firings for a candidate hint.
 `DeductionRecord` and `DeductionRecorder` are the seam between a game's
 recording deduction pass and the shared candidate-hint mechanics. `reason`
 is `unknown`, so each game attaches its own. `group` ties the records of
@@ -667,7 +677,8 @@ outline, and the candidate walk makes them premise. Exemplar:
 
 ### `wing.ts` — the XY- and XYZ-wing
 
-`weighWing` finds Sudoku's XY- and XYZ-wing over any elements that "see"
+Reach for it when your notes are candidate sets. `weighWing` finds
+Sudoku's XY- and XYZ-wing over any elements that "see"
 each other: a middle element, an end per value it can take, each down to
 that value and `x`, and a target that sees every end, and the middle too
 where the middle could be `x`. The game supplies the elements, their
@@ -680,7 +691,8 @@ page. Exemplar: `map/solver.ts`.
 
 ### `firing-replay.ts` — the premise audit
 
-Test-only, and idle unless `auditRecordedPremises` runs: it checks that
+Read it when a candidate game has a solver of its own. Test-only, and idle
+unless `auditRecordedPremises` runs: it checks that
 each recorded firing the candidate walk offers still follows once every
 cell outside its premise is returned to the recording's start. A solver
 joins through a `ReplayAdapter`. `latinSolver` builds one for every Latin
@@ -691,11 +703,12 @@ its deduction reads".
 
 ## Hint machinery
 
-How to write a hint is [`hints.md`](./hints.md). These entries are the
-inventory.
+Read this part when you are writing a hint. How to write one is
+[`hints.md`](./hints.md); these entries are the inventory.
 
 ### `hint-plan.ts` — the plan-accumulation loop
 
+Reach for it when a hint takes one forced firing at a time.
 `deduceHintPlan` is the loop "while unfinished, ask for the next forced
 firing, apply it, record it". The rung order, the reason type and the
 sentences stay the game's. It takes a `planCap`, which bounds what the
@@ -730,6 +743,7 @@ game's keypad offers, the Marks key, or mark-all (`markAllPress`). See
 
 ### `apart-by-position.ts` — two things of one name, told apart
 
+Reach for it when a sentence names two clues of one value.
 `apartByPosition(things, at, name)` names each thing a sentence points at
 when two would get the same words ("the upper 3", "the lower 3"). Build it
 over every such thing the one sentence names. Exemplar:
@@ -738,6 +752,7 @@ value".
 
 ### `rival-judging.ts` — what a searched move's rivals let it say
 
+Reach for it when a hint says something about the other moves.
 `judgeRivals(rivals, allowance, judge)`: the game judges each rival of the
 move its hint offers as finishing, lost or unsettled, within one allowance
 counted in positions, and gets back the verdicts and the claim they allow,
@@ -787,7 +802,8 @@ Exemplars: `pegs/solver.ts` (in place, one try) and `samegame/solver.ts`
 
 ### `candidate-hint.ts` — candidate-elimination plan plumbing
 
-The pure helpers of a pencil-notes game's hint: `availableFirings`,
+Reach for it when your hint strikes pencil notes. These are the pure
+helpers of a pencil-notes game's hint: `availableFirings`,
 `emitObviousCleanStep`, `Reach` and `regionReach` (what a placed value
 rules out), the move dialect `CandidateMoveAdapter`, and
 `keepCandidateHintTrack` and `refreshCandidateHintStep`. A board scan reads
@@ -827,6 +843,7 @@ without its cell's answer. Exemplar: `src/skeleton/grid/index.ts`.
 
 ### `candidate-plan.ts` — the candidate-elimination plan walk
 
+Reach for it when you write a notes game's `buildSteps`.
 `runCandidatePlan` is a pencil-notes game's whole `buildSteps` walk: the
 singles, the recorded strikes and placements as rungs around the game's
 own, populate and the obvious clean, a placement's cull, and each next
@@ -849,7 +866,8 @@ regions, words and strike-split axis. See
 
 ### `hint-frontier.ts` — which available firing a plan takes next
 
-`HintFrontier` takes, among the firings a candidate plan could make at
+Read it when a plan wanders, or is not on a grid. `HintFrontier` takes,
+among the firings a candidate plan could make at
 once, the one that continues from what the plan's latest steps wrote, with
 the ladder order as the tiebreak. `runCandidatePlan` drives it for a grid
 game, keyed by `gridKey(w, h)`. A game whose steps act on something other
@@ -885,7 +903,8 @@ ask at every per-premise return.
 
 ### `latin-hint.ts` — truthful Latin single classification
 
-It re-derives from the working board whether a recorded `single` is naked
+Reach for it when a Latin game's hint narrates a single. It re-derives
+from the working board whether a recorded `single` is naked
 or hidden, so a game never says every other number is ruled out of a cell
 that visibly holds several candidates. It throws on a placement that is
 neither, which is a strike the plan skipped. `availablePlacements` lists
@@ -918,7 +937,8 @@ Write every step's words through it. Exemplar:
 
 ### `hint-text.ts` — the sentences several games share
 
-The engine's half of the hint-text convention; a game's own sentences are
+Read it when another game already says your sentence. It is the engine's
+half of the hint-text convention; a game's own sentences are
 its `hint-text.ts`. Nothing here decides which sentence fires. See
 [`hints.md`](./hints.md) § "The sentences live in one file per game".
 
@@ -964,12 +984,13 @@ seen. The game packs a position into a fixed number of words in a buffer it
 reuses, and the store keeps them in one pool with an open-addressed index,
 parent links and `lineTo`; a level's frontier is the index range the level
 before appended. Measured, it is several times faster than a string key in
-a `Map`, which costs about 2 µs a position. Exemplars: `cube/solver.ts`,
+a `Map`. Exemplars: `cube/solver.ts`,
 and the exact search in `slide-planner.ts`.
 
 ### `piece.ts` — a piece on its cell
 
-Take a piece's shape and name by index, and name neither a hue nor a shape
+Reach for it when a cell holds a piece, is shaded or is ruled out. Take a
+piece's shape and name by index, and name neither a hue nor a shape
 of your own ([`rendering.md`](./rendering.md) § "What a board looks like:
 pieces on a quiet surface"). `drawPiece` draws what a cell holds, with
 `grown` for one being placed or taken away. `TWO_SHAPES` goes with `TWO`
@@ -982,8 +1003,10 @@ Exemplar: `src/skeleton/grid/render.ts`.
 ### `region-fill.ts` — a fill for each region of a division
 
 Reach for it wherever regions are colored so that two sharing a side
-differ. There is one walk, `colorRegions(beside, fills, choice)`: the region
-with the fewest fills left goes next, a fill that leads to a dead end is
+differ; pieces that outnumber their colors take `spread-colors.ts` instead
+(below). There is one walk,
+`colorRegions(beside, fills, choice)`: the region with the fewest fills
+left goes next, a fill that leads to a dead end is
 taken back, and `choice` says which of the tied regions and in what order
 its fills are tried. Two callers, which differ only in that choice:
 
@@ -1017,8 +1040,9 @@ hue, by index into it. Exemplar: the Path ruleset's line in
 
 ### `ring.ts` — the round ring
 
-The ring is the engine's: a game calls `GameDrawing.drawRing(box, clear,
-thickness, { room, inside, centered })`, and every drawing strokes the shape
+When a hint rings, the ring is the engine's: a game calls
+`GameDrawing.drawRing(box, clear, thickness, { room, inside, centered })`,
+and every drawing strokes the shape
 `ringShape` fits, the one nearest `box` at the roundest that clears the
 text: a circle or a pill where it can, a rounded square where text sits in
 the corners, and a throw where nothing at least `RING_MIN_ROUNDNESS` round
@@ -1061,22 +1085,23 @@ Exemplar: `src/skeleton/grid/render.ts`.
 Name an edge a step decides or reasons from by its `EDGE` kind, keyed by
 the `square-edges.ts` edge number, so one edge is one mark from either
 square; a side on the board's rim is named by its square and direction.
-`stepEdgeHints` reads a step's edges from its words, its move and its
-chain (`EdgeChainLink`), and `trackEdgeStep` is the `hintKeepTrack` of a
-step that sets edges, shrinking its move and its rings together.
+`stepEdgeHints` reads a step's edges from its words, its move and the
+edges its sentence gives a shape (`ShapedEdge`), and `trackEdgeStep` is the
+`hintKeepTrack` of a step that sets edges, shrinking its move and its rings together.
 `edgeHintWords` gives each square its tile-key word for those edges, set on
 both squares. In the tile, `drawEdgeHints` asks the game's declared
 `EdgeShapes` for its own line and cross in the outline's ink, and for where
 an asked side's ring goes (`ring`), drawing the ring with the asked shape
 inside, under the square's content. The word's low
 `EDGE_HINT_BITS` bits are the module's; a game keeps its own hint bits
-above them. Exemplars: `path/render.ts`, with a chain; `tracks/render.ts`,
+above them. Exemplars: `path/render.ts`, with shaped edges; `tracks/render.ts`,
 whose outline role draws a bar.
 
 ### `hatch.ts` — the stripes on the line a step names
 
-The third board mark: translucent diagonal bands over the squares, and the
-clue slots, of the row or column a step's sentence names.
+Reach for it when a hint sentence names a row or column. It is the third
+board mark: translucent diagonal bands over the squares, and the clue slots,
+of that row or column.
 `GameDrawing.drawHatch` draws them from `hatchBands`, laid on the canvas
 and not the rect, so tiles hatched one at a time join into one strip.
 **Draw it after a square's background and before its content**, with
@@ -1120,7 +1145,8 @@ solver established.**
 
 ## Input
 
-How to write input is [`input.md`](./input.md).
+Read this part when you write `interpretMove` or the keypad. How to write
+input is [`input.md`](./input.md).
 
 ### `pointer.ts` — button codes and cursor helpers
 
@@ -1168,6 +1194,8 @@ Build `Game.requestKeys` from these and do not spell digit codes in a game;
 
 ## Game IDs: descs and params
 
+Read this part when you write a desc, a params string or the Custom dialog.
+
 ### `run-length.ts` — the letter-run desc grammar
 
 Reach for it when everything in the desc that is not a run of blanks is a
@@ -1203,6 +1231,7 @@ Exemplar: `rome/state.ts`.
 
 ### `dot-runs.ts` — blanks and dots of two kinds
 
+Reach for it when your desc is sparse marks of two kinds.
 `writeDotRuns(s, kindAt)` and `readDotRuns(r, s, place)`: one letter per
 dot, its offset the blanks before it and its case the dot's kind. The
 reader takes the `DescReader`, so it sits inside a game's one parse. **It
@@ -1213,7 +1242,8 @@ Exemplar: `unruly/state.ts`.
 
 ### `desc-alphabet.ts` — one character per small number
 
-A value codec, one character per cell: `n2c(n)` writes digits, then
+Reach for it when a desc character stands for a number over nine. It is a
+value codec, one character per cell: `n2c(n)` writes digits, then
 lowercase, then capitals, and `c2n(c)` inverts it, with `null` for anything
 else. Exemplar: `singles/state.ts`.
 
@@ -1239,11 +1269,8 @@ inside the parse: a throw after `descValue` is a bug and propagates.
 Exemplar: `src/skeleton/grid/state.ts`.
 
 - **A parse fails with a `DescError`**, a branded string only this module
-  makes: `DESC_TOO_SHORT`, `DESC_TOO_LONG`, `DESC_OUT_OF_RANGE`,
-  `DESC_REPEATED`, `DESC_CONTRADICTORY`, `DESC_MALFORMED`,
-  `DESC_NOT_UNIQUE`, `DESC_NOT_DEDUCIBLE`, `DESC_NO_SINGLE_ANSWER`,
-  `DESC_NO_SOLUTION`, `descBadCharacter(ch)` and `descNeedsOne(noun,
-  found)`. A helper on the desc path returns `DescError | null` too. A
+  makes; its `DESC_*` constants and `desc…` builders are the kinds. A helper on the desc path returns
+  `DescError | null` too. A
   scanner reports what it read and never words a refusal; its caller picks
   the kind.
 - **`puzzleDescError(sentence)` is for the puzzle's own rules**, not the
@@ -1258,10 +1285,9 @@ Exemplar: `src/skeleton/grid/state.ts`.
 
 ### `desc-reader.ts` — the cursor a desc parser drives
 
-`readDesc(desc, (r) => …)` runs a parser and returns its `DescParse`. The
-`DescReader` reads forward: `peek()`, `peekIs(ok)`, `accept(s)`,
-`expect(s)`, `char(ok?)`, `int(lo, hi)`, `rest()`, `end()`, `fail(error)`.
-Each read that cannot be made fails with the right `DescError` on its own,
+Reach for it to read a desc token by token. `readDesc(desc, (r) => …)` runs
+a parser and returns its `DescParse`. The `DescReader` reads forward, and
+each read that cannot be made fails with the right `DescError` on its own,
 so a parser writes no length check. Exemplar: `fifteen/state.ts`.
 
 - **`int` has no unbounded form.** An unbounded number reaches a typed
@@ -1275,8 +1301,9 @@ so a parser writes no length check. Exemplar: `fifteen/state.ts`.
 
 ### `decimal.ts` — decimal digits in a game ID
 
-`isDigit(c)`, `digitValue(c)` (`0`–`9` or `null`) and `parseLeadingInt(s,
-pos)`, the maximal digit run at `pos` as `{ value, next }`: `0` with no
+Reach for it when a desc or params string holds a number: `isDigit(c)`,
+`digitValue(c)` (`0`–`9` or `null`) and `parseLeadingInt(s, pos)`, the
+maximal digit run at `pos` as `{ value, next }`: `0` with no
 advance on a non-digit, which is how a caller tells "no number here" from
 "zero".
 
@@ -1305,6 +1332,8 @@ written as a letter per choice is `letters`. Exemplar:
   `params-stability.test.ts` asserts.
 
 ### `params.ts` — param-string decoding + config helpers
+
+Reach for it when you declare `paramConfig` or validate params.
 
 - **Call `paramsError` wherever you would have asked
   `game.validateParams`.** It is the one validity check: every item's
@@ -1348,7 +1377,8 @@ Exemplar: `seismic/state.ts`.
 
 ### `only.ts` — what one setting leaves of the others
 
-A ruleset's `only` and a `modifierItem`'s `only` are one declaration with
+Read it when one setting restricts another. A ruleset's `only` and a
+`modifierItem`'s `only` are one declaration with
 three readers, none of which a game calls: `onlyError` (the refusal, for
 `paramsError` and the midend), `configNarrowing` (the dialog's side) and
 `onlySentences` (the help). **A declaration no form could show throws
@@ -1358,6 +1388,7 @@ of a third.
 
 ### `config-narrowing.ts` — what a form offers of a narrowed field
 
+Read it when a form or test reads a narrowed field.
 `offeredOf(description, values, id)` is what the deciding fields leave of
 one field, and `offeredValues(description, values)` the values a form shows
 and submits. It reads the `ConfigDescription` alone, so the form on the
@@ -1383,12 +1414,13 @@ with that choice's name and throws on one that names no choice.
 
 ## Rendering and affordance helpers
 
-How to write a renderer is [`rendering.md`](./rendering.md).
+Read this part when you are writing `redraw`. How to write a renderer is
+[`rendering.md`](./rendering.md).
 
 ### `overlay-sidecar.ts` — the overlay diff-key rule as a type
 
-**Never hand-write the two-array dance** for an overlay that is not in the
-packed tile value: `OverlaySidecar` owns the repack, the stale test and the
+Reach for it when a tile shows a hint or a mistake. **Never hand-write the
+two-array dance** for an overlay that is not in the packed tile value: `OverlaySidecar` owns the repack, the stale test and the
 commit. Use `pack` for a hint step's highlights, `packCells` for a
 `findMistakes` list, and `clear()` with `add()` for an overlay with its own
 topology. A step's struck marks go in the `struck` lane, in the game's
@@ -1398,7 +1430,8 @@ roles: a candidate mask needs every bit a cell's values reach. Exemplar:
 
 ### `candidate-bits.ts` — one candidate encoding, range-checked
 
-Value `n` is bit `n` (`valueBit`), and `valuesOneTo` is the full set 1..n.
+Reach for it when you hold candidates as a bit mask. Value `n` is bit `n`
+(`valueBit`), and `valuesOneTo` is the full set 1..n.
 Both throw on a value out of range, where a bare shift counts mod 32 and
 lands on another value's bit. **Take a game's size limit from
 `MAX_CANDIDATE_VALUE`** and write no number beside it.
@@ -1433,7 +1466,8 @@ break the helper on purpose and see what fails.
 
 ### `completion-status.ts` — the status bar's completion words
 
-**A game never writes `COMPLETED!`, `Auto-solved.` or `Auto-solver used.`**
+Read it when you write `statusbarText`. **A game never writes
+`COMPLETED!`, `Auto-solved.` or `Auto-solver used.`**
 The midend calls `completionStatus` and prefixes the words to whatever
 `statusbarText` returns. An outcome that is not completion ("DEAD!",
 "FAILED!") is the game's own phrase. `completion-status.test.ts` fails a
@@ -1451,7 +1485,8 @@ unordered links in route order first. The rules and the table of routes:
 
 ### `pencil-indicator.ts` — the pencil-mode indicator
 
-The "pencil mode is on" glyph, the same in every game and in the same
+Reach for it when your game has a pencil mode. It is the "pencil mode is
+on" glyph, the same in every game and in the same
 place: the canvas's top-right corner. The position is the engine's; a game
 picks its three palette indices (`PencilIndicatorStyle`) and finds the
 room. Exemplar: `keen/render.ts`.
@@ -1488,27 +1523,31 @@ Find the room in this order:
 
 ### `pencil-prefs.ts` — shared pencil `GamePref` declarations
 
-The factories for the sticky-pencil, keep-highlight and hint-notes
+Reach for it when a notes game declares preferences. It holds the
+factories for the sticky-pencil, keep-highlight and hint-notes
 (`candidateReadingPref`) preferences, each constrained to a `Ui` field, so
 a game without the field fails to compile. The auto-pencil preference takes
 its sentence from the game, because its label names the game's regions.
 
 ### `rules-out.ts` — the key and help words of `Game.rulesOut`'s preference
 
-The `auto-cross` key the midend offers to a game declaring `rulesOut`, and
+Read it when a placement rules squares out at a glance. It holds the
+`auto-cross` key the midend offers to a game declaring `rulesOut`, and
 the help sentence `{{rules-out}}` writes from the game's words for it. The
 behavior is the midend's (`docs/mechanics.md` § "Preferences").
 
 ### `color/` — the palette
 
-Import `palette.ts`, the meanings. Beneath it `colors.ts` holds the named
-colors, and beside it `palette-games.ts` the board-relative colors of
+When you need a color, import `palette.ts`, the meanings. Beneath it
+`colors.ts` holds the named colors, and beside it `palette-games.ts` the board-relative colors of
 single games; `color-token.ts` is how a color is declared and combined, and
 `color-mkhighlight.ts` derives a bevel's highlight and lowlight. The rules:
 [`rendering.md`](./rendering.md) § "The palette: three layers, meaning
 first".
 
 ## RNG and persistence
+
+Read this part when you draw random numbers or dispatch on a move.
 
 ### `random/` — the bit-identical RNG
 
@@ -1542,7 +1581,8 @@ type checker. `rejectMove` is for a move type with no union to narrow.
 
 ### The contract, and the engine's own modules
 
-What every game imports:
+Read it when an engine file has no entry of its own. What every game
+imports:
 
 - `game.ts`: the `Game` contract ([`mechanics.md`](./mechanics.md)).
 - `types.ts`: the shared vocabulary (`Color`, `Point`, `Rect`, config
@@ -1564,6 +1604,7 @@ What no game imports:
 
 ## Testing harness
 
+Read it when a test needs a draw record, a dealt board or a hint pin.
 [`src/engine/testing/`](../src/engine/testing/) is the in-process harness.
 How to use it is [`testing.md`](./testing.md). The modules a game's own
 test or a cross-game guard reaches for:

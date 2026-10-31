@@ -13,6 +13,7 @@ export class SortedMultiset<T> {
 
   constructor(private readonly compare: (a: T, b: T) => number) {}
 
+  /** How many members it holds (upstream `count234`). */
   get size(): number {
     return this.items.length;
   }
