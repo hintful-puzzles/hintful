@@ -21,6 +21,12 @@
   test now does, and fails when a right-click stops marking a clue.
 - **Adjacent says "bar".** Unequal and Adjacent share one drag declaration, so
   it is now built once per `ClueKind`, which names its clue.
+- **The sentence names a thing the rules named.** The owner, reading
+  Unequal's, could not tell what "clue" meant: its rules called the `<`
+  signs "clues" in passing and the page "signs" after. Unequal's noun is
+  now "sign". Undead's and Magnets' rules said only "the numbers round the
+  grid" while their Controls and Hints said "clue", so their rules now
+  name the numbers as the clues. Towers and Adjacent already did.
 - **Each page reads the engine's drag sentence** ("Keep the left button down
   and drag to do the same to every clue you pass over that looked the same as
   the first"), the wording every generated Controls paragraph uses, in place

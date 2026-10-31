@@ -26,7 +26,7 @@ import { signLadder } from "./solver.ts";
 /** A sign: the cell it is flagged at holds the greater number. */
 export const SIGNS: ClueKind = {
   game: "unequal",
-  noun: "clue",
+  noun: "sign",
   holds: (a, b) => a > b,
   complete: false,
   bothEnds: false,

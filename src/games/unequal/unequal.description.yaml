@@ -6,9 +6,9 @@ game: unequal
 help:
   rules: |-
     Fill in the grid with numbers from 1 to the grid size, so that every
-    number appears exactly once in each row and column. The clues between
-    squares are `<` signs, each pointing at the smaller of its two numbers.
-    Not every one is shown, especially at harder difficulties.
+    number appears exactly once in each row and column. A `<` sign between
+    two squares points at the smaller of their two numbers. Not every sign
+    is shown, especially at harder difficulties.
   controls: |-
     To place a number, click in a square to select it, then type the
     number on the keyboard. To erase a number, click to select a square
@@ -25,7 +25,7 @@ help:
     You can also use the arrow keys to move the selected square around.
     Press Enter to toggle between entering numbers and entering pencil
     marks, and Backspace or Space to clear a square. Shift or Ctrl with an
-    arrow key marks the clue between the selected square and its neighbor
+    arrow key marks the sign between the selected square and its neighbor
     that way as done.
 
     {{mark-all}} Once every empty square has marks, the press crosses out

@@ -6,9 +6,9 @@ help:
     Each tile covers two squares. Fill each one with either a magnet
     (consisting of a + and − pole) or a neutral tile (green).
 
-    The number of + poles in each row and column must match the
-    numbers along the top and left; the number of − poles must
-    match the numbers along the bottom and right. Two + poles may not be
+    The clues are the numbers round the grid. The number of + poles in
+    each row and column must match the clues along the top and left; the
+    number of − poles must match the clues along the bottom and right. Two + poles may not be
     orthogonally adjacent to each other, and similarly two − poles.
   controls: |-
     {{controls}}
