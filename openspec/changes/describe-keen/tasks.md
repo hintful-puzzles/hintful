@@ -12,7 +12,7 @@
 - [x] 2.2 State Keen's techniques in the order `keen/solver.ts` scans: `cageEasy` (Easy, until Normal), `cage` (Normal), `cageLine` (Hard)
 - [x] 2.3 Check each sound at orders 3 and 4, with a planted defect each; see all three unsound with the clues' meaning taken away
 - [x] 2.4 Run the compiled ladder beside the hand-written one on every deal and hint walk; see the comparison fail on a plant that changes the deductions and on one that changes only their order
-- [ ] 2.5 Remove `solverCommon` and its callers; every Keen test and hint guard passes, and the Keen trace is byte-identical to the hand-written one's
+- [x] 2.5 Remove `solverCommon` and its callers; every Keen test and hint guard passes, and the Keen trace is byte-identical to the hand-written one's
 
 ## 3. Close
 

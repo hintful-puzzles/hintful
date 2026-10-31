@@ -1,25 +1,21 @@
 /**
- * Keen solver — the Keen-specific *cage* deductions and validator from
- * `keen.c`, riding on the shared generic `LatinSolver` (`engine/latin.ts`).
+ * Keen solver: the ladder `keen.description.yaml` states, compiled, with the
+ * reason each technique records for the hint, and the validator
+ * (`keen_valid`), on the shared `LatinSolver` (`engine/latin.ts`), whose
+ * forcing chains and recursion are the search above the ladder. The tiers:
  *
- * The generic Latin layers (positional/numeric elimination, set elimination,
- * forcing chains, recursion) supply everything Latin; Keen adds three
- * difficulty-keyed user-solvers (`solverEasy`/`solverNormal`/`solverHard`, all
- * via the shared `solverCommon`) that, for each cage, enumerate the digit
- * layouts consistent with the cage's arithmetic clue + the current candidate
- * cube and prune the cube accordingly.
+ *   Easy (`DIFF_EASY`)         → each cage's values amalgamated, only at a cap
+ *                                of Easy, and the library's singles.
+ *   Normal (`DIFF_NORMAL`)     → each cage's values cell by cell.
+ *   Hard (`DIFF_HARD`)         → a value every layout of a cage puts in a
+ *                                line, then the library's set elimination.
+ *   Extreme (`DIFF_EXTREME`)   → the library's fish and wing.
+ *   Unreasonable               → the engine's forcing chains and recursion.
  *
- * Index conventions are kept verbatim from C (docs/solver-and-generator.md
- * § "The Latin family": re-deriving the transpositions is error-prone and would
- * diverge the differential): the cage `boxlist`/`whichbox`/`sq` all live in the
- * **transposed** cell space
- * `s = x·w + y`, so a candidate read is `solver.cube[s·w + n−1]` (which equals
- * `cubeGet(x, y, n)` because `latin.ts`'s `cubepos(x,y,n) = (x·o+y)·o+n−1`), and
- * the result grid (reading order `y·w+x`) is read in `keenValid` via
- * `grid[transpose(s)]`.
+ * A cage is its index among the cages in the order of their least cells, its
+ * cells in reading order; its clue is of the kind its sign names.
  */
 
-import { valuesOneTo } from "../../engine/candidate-bits.ts";
 import { type ClueList, clueList, partition } from "../../engine/describe-runtime.ts";
 import {
   compiledRung,
@@ -43,10 +39,6 @@ import {
   C_SUB,
   clueOp,
   clueVal,
-  DIFF_EASY,
-  DIFF_EXTREME,
-  DIFF_HARD,
-  DIFF_NORMAL,
   DIFF_UNREASONABLE,
   type KeenClues,
 } from "./state.ts";
@@ -58,10 +50,10 @@ export { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE };
  * positional/set deductions) it covers every technique the recording
  * solver fires; the `kind` fields never collide with the Latin reasons.
  *
- * `cage` is the `DIFF_EASY`/`DIFF_NORMAL` per-square pruning: no arrangement of
- * the cage's digits consistent with its clue leaves this candidate possible in
- * this cell. `cageLine` is the `DIFF_HARD` cross-line pruning: a digit appears
- * in every consistent layout of the cage somewhere along a row/column, so it is
+ * `cage` is the Easy and Normal per-square pruning: no arrangement of the
+ * cage's digits consistent with its clue leaves this candidate possible in
+ * this cell. `cageLine` is the Hard cross-line pruning: a digit appears in
+ * every consistent layout of the cage somewhere along a row/column, so it is
  * ruled out of the rest of that line outside the cage (`horizontal` = the line
  * is a row). Both carry the cage's packed operation/value and its cells for
  * narration + evidence shading. */
@@ -81,380 +73,9 @@ export interface HintOp extends DeductionRecord {
   reason: HintReason;
 }
 
-/** Reading-order index of the transposed cell index `s = x·w + y`. */
-function transpose(s: number, w: number): number {
-  return (s % w) * w + ((s / w) | 0);
-}
-
-/** The cage decomposition the solver iterates over — built once from the
- * (immutable) dsf, shared across the fixpoint and recursion (it never mutates,
- * so no `ctxNew` clone is needed). */
-interface KeenCtx {
-  w: number;
-  /** The solve target — `solverEasy` is omitted above Easy (upstream hack). */
-  diff: number;
-  nboxes: number;
-  /** Cage cells in transposed (`x·w+y`) space, grouped by cage. */
-  boxlist: Int32Array;
-  /** `boxes[box] .. boxes[box+1]` is cage `box`'s slice of `boxlist`. */
-  boxes: Int32Array;
-  /** Packed `op | value` clue per cage. */
-  clues: Int32Array;
-  /** Transposed cell index → its cage number. */
-  whichbox: Int32Array;
-  /** Per-square candidate digits (scratch, length `a+1`). */
-  dscratch: Int32Array;
-  /** Accumulator bitmaps (scratch, length `max(a+1, 4w)`). */
-  iscratch: Int32Array;
-}
-
-function buildCtx(w: number, kclues: KeenClues, maxdiff: number): KeenCtx {
-  const a = w * w;
-  const minimal = kclues.minimal;
-  const canon: number[] = [];
-  for (let i = 0; i < a; i++) if (minimal[i] === i) canon.push(i);
-  const nboxes = canon.length;
-
-  const boxlist = new Int32Array(a);
-  const boxes = new Int32Array(nboxes + 1);
-  const clues = new Int32Array(nboxes);
-  const whichbox = new Int32Array(a);
-
-  let m = 0;
-  for (let n = 0; n < nboxes; n++) {
-    const ci = canon[n];
-    clues[n] = kclues.clues[ci];
-    boxes[n] = m;
-    for (let j = 0; j < a; j++) {
-      if (minimal[j] === ci) {
-        const t = (j % w) * w + ((j / w) | 0); // transpose
-        boxlist[m++] = t;
-        whichbox[t] = n;
-      }
-    }
-  }
-  boxes[nboxes] = m;
-
-  return {
-    w,
-    diff: maxdiff,
-    nboxes,
-    boxlist,
-    boxes,
-    clues,
-    whichbox,
-    dscratch: new Int32Array(a + 1),
-    iscratch: new Int32Array(Math.max(a + 1, 4 * w)),
-  };
-}
-
-/**
- * A candidate digit layout for a cage (its digits in `dscratch`) is consistent
- * with the cage's clue; fold it into `iscratch`. The three difficulty variants
- * accumulate completely differently (see upstream's long comment):
- * - EASY: amalgamate every value and OR it into every square (deliberately
- *   weakened so EASY proves easier than NORMAL);
- * - NORMAL: OR each square's own value into that square's bitmap;
- * - HARD: track, per row/column, the digits that appear in *every* layout (the
- *   running intersection), so they can later be ruled out of the rest of that
- *   row/column.
- */
-function solverClueCandidate(ctx: KeenCtx, diff: number, box: number): void {
-  const w = ctx.w;
-  const n = ctx.boxes[box + 1] - ctx.boxes[box];
-  const { dscratch, iscratch } = ctx;
-
-  if (diff === DIFF_EASY) {
-    let mask = 0;
-    for (let j = 0; j < n; j++) mask |= 1 << dscratch[j];
-    for (let j = 0; j < n; j++) iscratch[j] |= mask;
-  } else if (diff === DIFF_NORMAL) {
-    for (let j = 0; j < n; j++) iscratch[j] |= 1 << dscratch[j];
-  } else {
-    // HARD: iscratch[2w..4w-1] are this-layout scratch; iscratch[0..2w-1] the
-    // running intersection (per column 0..w-1, then per row 0..w-1).
-    const sqStart = ctx.boxes[box];
-    for (let j = 0; j < 2 * w; j++) iscratch[2 * w + j] = 0;
-    for (let j = 0; j < n; j++) {
-      const s = ctx.boxlist[sqStart + j];
-      const x = (s / w) | 0;
-      const y = s % w;
-      iscratch[2 * w + x] |= 1 << dscratch[j];
-      iscratch[3 * w + y] |= 1 << dscratch[j];
-    }
-    for (let j = 0; j < 2 * w; j++) iscratch[j] &= iscratch[2 * w + j];
-  }
-}
-
-/** Iterate every cage, enumerate its consistent digit layouts, accumulate into
- * `iscratch`, then prune the cube. Faithful to `solver_common`. */
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: the shared latin rung specialized for Keen's arithmetic cages.
-function solverCommon(solver: LatinSolver, ctx: KeenCtx, diff: number): number {
-  const w = ctx.w;
-  const cube = solver.cube;
-  const { dscratch, iscratch, boxlist, boxes } = ctx;
-  let ret = 0;
-
-  for (let box = 0; box < ctx.nboxes; box++) {
-    const sqStart = boxes[box];
-    const n = boxes[box + 1] - boxes[box];
-    const value = clueVal(ctx.clues[box]);
-    const op = clueOp(ctx.clues[box]);
-    const sq = (j: number): number => boxlist[sqStart + j];
-
-    // Cage cells, computed once per cage on the hint path only, for narration +
-    // evidence shading.
-    let cageCells: Point[] | null = null;
-    const getCageCells = (): Point[] => {
-      if (!cageCells) {
-        cageCells = [];
-        for (let k = 0; k < n; k++) {
-          const t = sq(k);
-          cageCells.push({ x: (t / w) | 0, y: t % w });
-        }
-      }
-      return cageCells;
-    };
-
-    // Initialize iscratch for this cage.
-    if (diff === DIFF_HARD) {
-      for (let i = 0; i < 2 * w; i++) iscratch[i] = valuesOneTo(w);
-    } else {
-      for (let i = 0; i < n; i++) iscratch[i] = 0;
-    }
-
-    if (op === C_SUB || op === C_DIV) {
-      // Always a domino. Try every valid (i, j) digit pair both ways round.
-      for (let i = 1; i <= w; i++) {
-        const j = op === C_SUB ? i + value : i * value;
-        if (j > w) break;
-
-        if (cube[sq(0) * w + i - 1] && cube[sq(1) * w + j - 1]) {
-          dscratch[0] = i;
-          dscratch[1] = j;
-          solverClueCandidate(ctx, diff, box);
-        }
-        if (cube[sq(0) * w + j - 1] && cube[sq(1) * w + i - 1]) {
-          dscratch[0] = j;
-          dscratch[1] = i;
-          solverClueCandidate(ctx, diff, box);
-        }
-      }
-    } else {
-      // ADD / MUL: iterate over all digit combinations, `i` the next cell to
-      // increment, `total` the running residual (identity 0 for ADD, 1 for MUL).
-      let i = 0;
-      dscratch[i] = 0;
-      let total = value;
-      while (true) {
-        if (i < n) {
-          let j = dscratch[i] + 1;
-          for (; j <= w; j++) {
-            if (op === C_ADD ? total < j : total % j !== 0) continue; // won't fit
-            if (!cube[sq(i) * w + j - 1]) continue; // ruled out already
-            let k = 0;
-            for (; k < i; k++) {
-              if (
-                dscratch[k] === j &&
-                (sq(k) % w === sq(i) % w || ((sq(k) / w) | 0) === ((sq(i) / w) | 0))
-              )
-                break; // clashes with another in the same row/column
-            }
-            if (k < i) continue;
-            break; // found one
-          }
-
-          if (j > w) {
-            // No valid values left; drop back.
-            i--;
-            if (i < 0) break; // iteration finished
-            total = op === C_ADD ? total + dscratch[i] : total * dscratch[i];
-          } else {
-            // Got a value; store it and move on.
-            dscratch[i++] = j;
-            total = op === C_ADD ? total - j : (total / j) | 0;
-            dscratch[i] = 0;
-          }
-        } else {
-          if (total === (op === C_ADD ? 0 : 1)) solverClueCandidate(ctx, diff, box);
-          i--;
-          total = op === C_ADD ? total + dscratch[i] : total * dscratch[i];
-        }
-      }
-    }
-
-    // Apply the accumulated deductions.
-    if (diff < DIFF_HARD) {
-      for (let i = 0; i < n; i++) {
-        for (let j = 1; j <= w; j++) {
-          if (cube[sq(i) * w + j - 1] && !(iscratch[i] & (1 << j))) {
-            if (solver.recorder) {
-              const t = sq(i);
-              solver.recorder({
-                kind: "elim",
-                x: (t / w) | 0,
-                y: t % w,
-                n: j,
-                reason: { kind: "cage", op, value, cells: getCageCells() },
-                group: solver.group,
-              });
-            }
-            cube[sq(i) * w + j - 1] = 0;
-            ret = 1;
-          }
-        }
-      }
-      // On the hint-recording path, return as soon as one cage fires, so each
-      // recorded firing (one `solver.group`) covers a single cage and a hint step
-      // never narrates one cage while striking marks from another. Without a
-      // recorder it keeps accumulating across cages, as upstream does.
-      if (solver.recorder && ret) return ret;
-    } else {
-      // HARD: rule a required digit out of the rest of its row/column.
-      for (let i = 0; i < 2 * w; i++) {
-        const start = i < w ? i * w : i - w;
-        const step = i < w ? 1 : w;
-        const horizontal = i >= w; // i<w ⇒ fixed-x column; i≥w ⇒ fixed-y row
-        let lineFired = false;
-        for (let j = 1; j <= w; j++) {
-          if (iscratch[i] & (1 << j)) {
-            for (let k = 0; k < w; k++) {
-              const pos = start + k * step;
-              if (ctx.whichbox[pos] !== box && cube[pos * w + j - 1]) {
-                if (solver.recorder) {
-                  solver.recorder({
-                    kind: "elim",
-                    x: (pos / w) | 0,
-                    y: pos % w,
-                    n: j,
-                    reason: {
-                      kind: "cageLine",
-                      op,
-                      value,
-                      cells: getCageCells(),
-                      horizontal,
-                    },
-                    group: solver.group,
-                  });
-                }
-                cube[pos * w + j - 1] = 0;
-                ret = 1;
-                lineFired = true;
-              }
-            }
-          }
-        }
-        // One line's required-digit strike is one firing on the recording path,
-        // so each `cageLine` group narrates a single digit-out-of-one-line.
-        if (solver.recorder && lineFired) return ret;
-      }
-      // Revert to easier deductions after one cross-box hit, so diagnostics
-      // don't make the puzzle look harder than it is.
-      if (ret) return ret;
-    }
-  }
-
-  return ret;
-}
-
-function solverEasy(solver: LatinSolver, ctx: KeenCtx): number {
-  // Omit EASY deductions above Easy: NORMAL is a superset, and this keeps the
-  // difficulty grading honest (the generator double-checks the level below).
-  if (ctx.diff > DIFF_EASY) return 0;
-  return solverCommon(solver, ctx, DIFF_EASY);
-}
-function solverNormal(solver: LatinSolver, ctx: KeenCtx): number {
-  return solverCommon(solver, ctx, DIFF_NORMAL);
-}
-function solverHard(solver: LatinSolver, ctx: KeenCtx): number {
-  return solverCommon(solver, ctx, DIFF_HARD);
-}
-
-/** Does the completed grid satisfy every cage clue? (`keen_valid`.) */
-function keenValid(solver: LatinSolver, ctx: KeenCtx): boolean {
-  const w = ctx.w;
-  const grid = solver.grid;
-  const g = (s: number): number => grid[transpose(s, w)];
-
-  for (let box = 0; box < ctx.nboxes; box++) {
-    const sqStart = ctx.boxes[box];
-    const n = ctx.boxes[box + 1] - ctx.boxes[box];
-    const value = clueVal(ctx.clues[box]);
-    const op = clueOp(ctx.clues[box]);
-    const sq = (j: number): number => ctx.boxlist[sqStart + j];
-    let fail = false;
-
-    switch (op) {
-      case C_ADD: {
-        let sum = 0;
-        for (let i = 0; i < n; i++) sum += g(sq(i));
-        fail = sum !== value;
-        break;
-      }
-      case C_MUL: {
-        let remaining = value;
-        for (let i = 0; i < n; i++) {
-          const v = g(sq(i));
-          if (remaining % v) {
-            fail = true;
-            break;
-          }
-          remaining = (remaining / v) | 0;
-        }
-        if (remaining !== 1) fail = true;
-        break;
-      }
-      case C_SUB:
-        if (value !== Math.abs(g(sq(0)) - g(sq(1)))) fail = true;
-        break;
-      case C_DIV: {
-        const num = Math.max(g(sq(0)), g(sq(1)));
-        const den = Math.min(g(sq(0)), g(sq(1)));
-        if (den * value !== num) fail = true;
-        break;
-      }
-    }
-
-    if (fail) return false;
-  }
-  return true;
-}
-
-/**
- * Solve the `w × w` Keen board (cage partition + clues in `kclues`) into `soln`
- * (0 = blank), up to difficulty `maxdiff`. Returns the difficulty level reached,
- * or a `DIFF_IMPOSSIBLE`/`DIFF_AMBIGUOUS`/`DIFF_UNFINISHED` sentinel. Mirrors the
- * `solver()` driver: Easy→simple, Tricky→set₀, Hard→set₁,
- * Unreasonable→forcing and recursion through the shared `latinSolver`.
- */
-function solveHandWritten(
-  w: number,
-  kclues: KeenClues,
-  soln: Uint8Array,
-  maxdiff: number,
-  recorder?: (rec: DeductionRecord) => void,
-  cubeOut?: Uint8Array,
-): number {
-  const ctx = buildCtx(w, kclues, maxdiff);
-  return latinSolver<KeenCtx>(soln, w, {
-    maxdiff,
-    diffSimple: DIFF_EASY,
-    diffSet0: DIFF_HARD,
-    diffSet1: DIFF_EXTREME,
-    diffRecursive: DIFF_UNREASONABLE,
-    usersolvers: [solverEasy, solverNormal, solverHard, null, null],
-    valid: keenValid,
-    ctx,
-    recorder,
-    cubeOut,
-  });
-}
-
-// --- the described ladder ----------------------------------------------------
-
 /** The cages in the order of their least cells, each cage's cells in reading
- * order, and its clue: what the description's techniques read, and their
- * reasons quote. */
+ * order, and its packed clue: what the techniques read, their reasons quote,
+ * and the validator checks. */
 interface Cages {
   cells: number[][];
   clues: number[];
@@ -476,6 +97,30 @@ function cagesOf(w: number, kclues: KeenClues): Cages {
   }
   return out;
 }
+
+// --- validator -------------------------------------------------------------
+
+/** Does the completed grid satisfy every cage clue? (`keen_valid`.) */
+function keenValid(solver: LatinSolver, cages: Cages): boolean {
+  return cages.cells.every((cells, r) => {
+    const value = clueVal(cages.clues[r]);
+    const vs = cells.map((c) => solver.grid[c]);
+    switch (clueOp(cages.clues[r])) {
+      case C_ADD:
+        return vs.reduce((a, b) => a + b, 0) === value;
+      case C_MUL:
+        return vs.reduce((a, b) => a * b, 1) === value;
+      case C_SUB:
+        return Math.max(...vs) - Math.min(...vs) === value;
+      case C_DIV:
+        return Math.max(...vs) === value * Math.min(...vs);
+      default:
+        return false;
+    }
+  });
+}
+
+// --- the described ladder ----------------------------------------------------
 
 type ClueKind = Exclude<keyof keen.Dealt, "cage">;
 
@@ -499,8 +144,7 @@ function cageReason(
   };
 }
 
-function describedLadder(w: number, kclues: KeenClues): LatinLadder {
-  const cages = cagesOf(w, kclues);
+function describedLadder(w: number, cages: Cages): LatinLadder {
   const n = cages.cells.length;
   // Each cage's clue is of the kind its sign names, at the cage.
   const ofKind = (kind: ClueKind): ClueList => {
@@ -525,10 +169,7 @@ function describedLadder(w: number, kclues: KeenClues): LatinLadder {
       compiledRung(
         keen.cageEasy,
         dl,
-        ({ r }): KeenReason => ({
-          kind: "cage",
-          ...cageReason(cages, r, w),
-        }),
+        ({ r }): KeenReason => ({ kind: "cage", ...cageReason(cages, r, w) }),
       ),
     "latin.hiddenSingle": () => LATIN_RUNGS["latin.hiddenSingle"],
     "latin.single": () => LATIN_RUNGS["latin.single"],
@@ -536,10 +177,7 @@ function describedLadder(w: number, kclues: KeenClues): LatinLadder {
       compiledRung(
         keen.cage,
         dl,
-        ({ r }): KeenReason => ({
-          kind: "cage",
-          ...cageReason(cages, r, w),
-        }),
+        ({ r }): KeenReason => ({ kind: "cage", ...cageReason(cages, r, w) }),
       ),
     cageLine: () =>
       compiledRung(
@@ -564,26 +202,15 @@ function describedLadder(w: number, kclues: KeenClues): LatinLadder {
   };
 }
 
-function solveDescribed(
-  w: number,
-  kclues: KeenClues,
-  soln: Uint8Array,
-  maxdiff: number,
-  recorder?: (rec: DeductionRecord) => void,
-  cubeOut?: Uint8Array,
-): number {
-  const ctx = buildCtx(w, kclues, maxdiff);
-  return latinSolver<KeenCtx>(soln, w, {
-    maxdiff,
-    diffRecursive: DIFF_UNREASONABLE,
-    valid: keenValid,
-    ctx,
-    recorder,
-    cubeOut,
-    ...describedLadder(w, kclues),
-  });
-}
+// --- driver ----------------------------------------------------------------
 
+/**
+ * Solve the `w × w` Keen board (cage partition + clues in `kclues`) into `soln`
+ * (0 = blank), up to difficulty `maxdiff`. Returns the difficulty level reached,
+ * or a `DIFF_IMPOSSIBLE`/`DIFF_AMBIGUOUS`/`DIFF_UNFINISHED` sentinel, as
+ * `keen.c`'s `solver()` does. `recorder` (hint path only) captures every
+ * deduction in solver order.
+ */
 export function solveKeen(
   w: number,
   kclues: KeenClues,
@@ -591,82 +218,16 @@ export function solveKeen(
   maxdiff: number,
   recorder?: (rec: DeductionRecord) => void,
 ): number {
-  if (COMPARE.handWritten) return solveHandWritten(w, kclues, soln, maxdiff, recorder);
-  if (!COMPARE.on) return solveDescribed(w, kclues, soln, maxdiff, recorder);
-  // Both ladders on copies, compared in what they return, the grid, the cube
-  // and every record; the compiled one's results are the call's.
-  const input = soln.join(",");
-  const g1 = soln.slice();
-  const c0 = new Uint8Array(w * w * w);
-  const c1 = new Uint8Array(w * w * w);
-  const r0: DeductionRecord[] = [];
-  const r1: DeductionRecord[] = [];
-  const hand = solveHandWritten(
-    w,
-    kclues,
-    g1,
+  const cages = cagesOf(w, kclues);
+  return latinSolver<Cages>(soln, w, {
     maxdiff,
-    recorder ? (r) => r0.push(r) : undefined,
-    c1,
-  );
-  const built = solveDescribed(
-    w,
-    kclues,
-    soln,
-    maxdiff,
-    recorder ? (r) => r1.push(r) : undefined,
-    c0,
-  );
-  COMPARE.compared++;
-  for (const r of r0) {
-    const k = (r.reason as { kind?: string } | null)?.kind ?? "none";
-    COMPARE.reasons.set(k, (COMPARE.reasons.get(k) ?? 0) + 1);
-  }
-  const a = r0.map(canonical);
-  const b = r1.map(canonical);
-  let at = 0;
-  while (at < a.length && a[at] === b[at]) at++;
-  const what = [
-    hand !== built ? "return" : "",
-    g1.some((v, i) => v !== soln[i]) ? "grid" : "",
-    c0.some((v, i) => v !== c1[i]) ? "cube" : "",
-    at < a.length || at < b.length ? "records" : "",
-  ].filter((s) => s !== "");
-  if (what.length > 0)
-    COMPARE.mismatches.push({
-      what: what.join(" "),
-      input,
-      w,
-      maxdiff,
-      hand,
-      built,
-      record: at,
-      handRecord: a[at] ?? null,
-      builtRecord: b[at] ?? null,
-    });
-  for (const r of r1) recorder?.(r);
-  return built;
+    diffRecursive: DIFF_UNREASONABLE,
+    valid: keenValid,
+    ctx: cages,
+    recorder,
+    ...describedLadder(w, cages),
+  });
 }
-
-/** `x`'s JSON with every object's keys sorted, so key order is no difference. */
-function canonical(x: unknown): string {
-  return JSON.stringify(x, (_k, v: unknown) =>
-    v !== null && typeof v === "object" && !Array.isArray(v)
-      ? Object.fromEntries(Object.entries(v).sort(([p], [q]) => (p < q ? -1 : 1)))
-      : v,
-  );
-}
-
-/** The comparison's switch and tally (`describe-keen` tasks 2.4). */
-export const COMPARE = {
-  on: false,
-  /** Run the hand-written deductions alone, for the speed runs. */
-  handWritten: false,
-  compared: 0,
-  mismatches: [] as Record<string, unknown>[],
-  /** The hand-written records compared, by their reason's kind. */
-  reasons: new Map<string, number>(),
-};
 
 /**
  * Run the recording solver on a sound candidate cube seeded from `grid` (the

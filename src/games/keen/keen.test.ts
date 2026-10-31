@@ -67,6 +67,7 @@ describe("multiplication alone, where a tier is found seldom", () => {
 
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
+import { ladder, tiers as ladderTiers } from "./keen.compiled.ts";
 import {
   border,
   COL_ERROR,
@@ -85,6 +86,11 @@ import {
   CMASK,
   cloneState,
   clueOp,
+  DIFF_EASY,
+  DIFF_EXTREME,
+  DIFF_HARD,
+  DIFF_NORMAL,
+  DIFF_UNREASONABLE,
   decodeParams,
   diffToLevel,
   encodeParams,
@@ -244,6 +250,29 @@ describe("keen generator", () => {
 // --- tier 1: solver --------------------------------------------------------
 
 describe("keen solver", () => {
+  // The ladder runs each technique at its tier's index in the description,
+  // and the params encode a tier by its constant: one order, held twice.
+  it("runs the description's tiers at the difficulty levels, in order", () => {
+    expect(ladderTiers).toHaveLength(5);
+    expect([
+      ladderTiers[DIFF_EASY],
+      ladderTiers[DIFF_NORMAL],
+      ladderTiers[DIFF_HARD],
+      ladderTiers[DIFF_EXTREME],
+      ladderTiers[DIFF_UNREASONABLE],
+    ]).toEqual(["Easy", "Normal", "Hard", "Extreme", "Unreasonable"]);
+  });
+
+  it("reads a cage's values amalgamated only at a cap of Easy", () => {
+    const easy = ladder.find((t) => t.id === "cageEasy");
+    expect(easy).toMatchObject({ tier: DIFF_EASY, until: DIFF_NORMAL });
+    // An Easy board needs a cage reading, so at a cap of Normal, where the
+    // Easy one does not run, Normal's is the one it rests on.
+    const st = newState(P4, D4);
+    expect(solveKeen(4, st.clues, new Uint8Array(16), DIFF_EASY)).toBe(DIFF_EASY);
+    expect(solveKeen(4, st.clues, new Uint8Array(16), DIFF_NORMAL)).toBe(DIFF_NORMAL);
+  });
+
   it("solves a known board to its unique solution", () => {
     const st = newState(P4, D4);
     const soln = new Uint8Array(16);
