@@ -9,6 +9,7 @@ import { it } from "vitest";
 import type { PresetMenu } from "../../src/engine/game.ts";
 import { presetMenu } from "../../src/engine/param-label.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
+import { adjacentGame } from "../../src/games/adjacent/index.ts";
 import { groupGame } from "../../src/games/group/index.ts";
 import { keenGame } from "../../src/games/keen/index.ts";
 import { mathraxGame } from "../../src/games/mathrax/index.ts";
@@ -25,6 +26,7 @@ type AnyGame = any;
 
 const GAMES: [string, AnyGame][] = [
   ["unequal", unequalGame],
+  ["adjacent", adjacentGame],
   ["towers", towersGame],
   ["keen", keenGame],
   ["group", groupGame],

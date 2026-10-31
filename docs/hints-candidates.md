@@ -450,9 +450,9 @@ them".
   `hint-resume.test.ts` "hint() leaves the state unchanged": compress once
   when it is built.
 
-Exemplar: `recordUnequalDeductions` in
-[`unequal/solver.ts`](../src/games/unequal/solver.ts) over
-[`engine/latin.ts`](../src/engine/latin.ts).
+Exemplar: `recordEdgeClueDeductions` in
+[`engine/edge-clue-latin/solver.ts`](../src/engine/edge-clue-latin/solver.ts)
+over [`engine/latin.ts`](../src/engine/latin.ts).
 
 ## Record off a bespoke solver: thread or parallel
 

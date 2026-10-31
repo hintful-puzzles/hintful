@@ -1,0 +1,550 @@
+/**
+ * The edge-clue Latin square's rendering — port of `game_redraw` /
+ * `draw_furniture` from `unequal.c`.
+ *
+ * The board is an `order × order` grid of tiles with a half-tile gap between
+ * cells. The clues live in those gaps, drawn by the game's
+ * `ClueKind.drawClues`, each colored red when currently violated, gray when
+ * struck through ("spent"), else normal ({@link clueColor}). Filled cells show
+ * their number; empty cells show their pencil marks in an auto-sized grid.
+ * Cells are diffed against a per-tile cache (number + composed flag word +
+ * pencil bitmap + mistake + pencil-mode overlay).
+ */
+
+import { valueBit } from "../candidate-bits.ts";
+import { mkhighlight } from "../color/color-mkhighlight.ts";
+import {
+  cellSurface,
+  ERROR,
+  FLASH,
+  FLASH_LEAD,
+  GRID_MID,
+  givenSurface,
+  HINT_OUTLINE,
+  highlightWash,
+  INK,
+  PENCIL_BODY,
+  pencilColor,
+  playerEntryColor,
+  surfaceGrid,
+} from "../color/palette.ts";
+import { drawStrike, glyphFont } from "../draw.ts";
+import type { GameDrawing, HintStep } from "../game.ts";
+import { fromCoord as fromCoordE } from "../geometry.ts";
+import { hatchPeriod } from "../hatch.ts";
+import { HintMarks, type MarkBand, type MarkCell, ringTextBox } from "../hint-mark.ts";
+import { stepMarks } from "../hint-words.ts";
+import {
+  cellHighlight,
+  drawCellBackground,
+  noteGrid,
+  winHighlight,
+} from "../note-taking-cell.ts";
+import { HINT_AREA, HINT_TARGET, OverlaySidecar } from "../overlay-sidecar.ts";
+import {
+  type PencilIndicatorStyle,
+  pencilIndicatorBox,
+  pencilIndicatorReach,
+  repaintPencilIndicator,
+} from "../pencil-indicator.ts";
+import { type GridCursor, newCursor } from "../pointer.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../ring.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../types.ts";
+import { type Flash, sweepStep, type WinTone } from "../win-wave.ts";
+import {
+  checkComplete,
+  displayChar,
+  type EdgeClueMove,
+  type EdgeClueState,
+  type EdgeClueUi,
+  F_ERROR,
+} from "./state.ts";
+
+export const PREFERRED_TILE_SIZE = 32;
+
+// --- palette (index-for-index with the upstream COL_* enum) ----------------
+
+export const COL_BACKGROUND = 0;
+export const COL_GRID = 1;
+export const COL_TEXT = 2;
+const COL_GUESS = 3;
+export const COL_ERROR = 4;
+export const COL_PENCIL = 5;
+const COL_HIGHLIGHT = 6;
+const COL_LOWLIGHT = 7;
+const COL_SPENT = COL_LOWLIGHT;
+// Fork additions, appended past the upstream enum.
+const COL_PENCIL_BODY = 8; // the yellow body of the pencil-mode indicator
+/** The driving clue's cells, outlined (drawn in redraw's last block). */
+export const COL_HINT_CELL = 9;
+/** The ground of a cell the win flash is on. */
+export const COL_FLASH = 10;
+/** The keyboard cursor: the cell's fill (or its pencil-mode corner triangle).
+ * Upstream drew it in the bevel highlight. */
+const COL_CURSOR = 11;
+const COL_CELL = 12; // the surface of a box the player fills
+const COL_GIVEN = 13; // the lifted surface of a box holding a given
+/** A box's own outline. The clues between boxes keep their own colors. */
+const COL_LINE = 14;
+/** The ground of a cell the win flash's leading edge is on. */
+export const COL_FLASH_LEAD = 15;
+
+export function colors(defaultBackground: Color): Color[] {
+  const { background: bg, highlight, lowlight } = mkhighlight(defaultBackground);
+  const out: Color[] = [];
+  out[COL_BACKGROUND] = bg;
+  out[COL_GRID] = GRID_MID;
+  out[COL_TEXT] = INK;
+  out[COL_GUESS] = playerEntryColor(bg);
+  out[COL_ERROR] = ERROR;
+  out[COL_PENCIL] = pencilColor(bg);
+  out[COL_HIGHLIGHT] = highlight;
+  out[COL_LOWLIGHT] = lowlight;
+  out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
+  // The cursor is a wash under the cell's digit and pencil marks, not a mark
+  // beside them, so it takes the "you are here" wash the Latin family shares
+  // (Solo, Keen, Towers, Undead) rather than the green line cursor: green is
+  // the player's own digits here, and a fill has to keep them legible.
+  out[COL_CURSOR] = highlightWash(bg);
+  out[COL_PENCIL_BODY] = PENCIL_BODY;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
+  out[COL_CELL] = cellSurface(bg);
+  out[COL_GIVEN] = givenSurface(bg);
+  out[COL_LINE] = surfaceGrid(bg);
+  return out;
+}
+
+/** Highlight payload a hint step carries. The
+ * marks (docs/hints-marks.md § "The engine colors the marks"): the driving
+ * clue's cells outlined `COL_HINT_CELL`, the acted-on cell(s) ringed by the
+ * engine, the ruled-out candidate(s) shown struck. Outline and ring reach into
+ * the gap around a cell, and the ring keeps clear of the cell's text. */
+export interface EdgeClueHint {
+  /** The driving clue's cells (evidence), outlined `COL_HINT_CELL`. */
+  area: Point[];
+  /** The cell(s) the deduction acts on, ringed. */
+  targets: Point[];
+  /** The candidate number(s) ruled out, shown struck among the pencil marks. */
+  marks: { x: number; y: number; n: number }[];
+}
+
+// --- geometry --------------------------------------------------------------
+
+export const gap = (ts: number): number => Math.floor(ts / 2);
+const square = (ts: number): number => ts + gap(ts);
+/** Half a tile, or the pencil indicator's reach where that is wider: the glyph
+ * has a floor, and a small tile's half would put it on the top-right cell. */
+const border = (ts: number): number =>
+  Math.max(Math.floor(ts / 2), pencilIndicatorReach(ts));
+export const coord = (v: number, ts: number): number => v * square(ts) + border(ts);
+
+export function fromCoord(v: number, ts: number): number {
+  // The stride is a cell plus its inequality gap, not the bare tile size.
+  return fromCoordE(v, square(ts), border(ts));
+}
+
+function drawSize(order: number, ts: number): number {
+  return ts * order + gap(ts) * (order - 1) + border(ts) * 2;
+}
+
+export function computeSize(p: { order: number }, ts: number): Size {
+  const s = drawSize(p.order, ts);
+  return { w: s, h: s };
+}
+
+// --- draw state ------------------------------------------------------------
+
+export interface EdgeClueDrawState {
+  started: boolean;
+  tileSize: number;
+  order: number;
+  /** `order²` last-drawn numbers. */
+  nums: Int8Array;
+  /** `order²` last-drawn composed flag word (clue | spent | error | immutable). */
+  flags: Int32Array;
+  /** `order³` last-drawn pencil bitmaps (one byte per candidate). */
+  hints: Uint8Array;
+  /** `order²` hint-overlay sidecar (fork addition): bit 0 = target cell, bit 1 =
+   * evidence, struck candidates at `valueBit(n)` in its `struck` lane. Owns the
+   * repack/stale/commit dance that keeps the overlay in the cache diff key
+   * (docs/rendering.md § "The tile cache and the diff key"). */
+  hint: OverlaySidecar;
+  /** `order²` mistake-overlay sidecar (fork addition) — same dance, so that a
+   * Check & Save repaints the red highlight on an already-drawn cell. */
+  wrong: OverlaySidecar;
+  /** `order²` scratch error flags, refilled each redraw by `checkComplete`. */
+  errFlags: Int32Array;
+  cursor: GridCursor;
+  pencilMode: boolean;
+  /** `order²`: the win flash's tone on the cell as last drawn. */
+  lit: Uint8Array;
+  /** Whether the pencil-mode indicator was on last frame (fork addition). */
+  pencilModeShown: boolean | null;
+  /** The hint target's ring and the evidence region's outline (fork additions),
+   * both drawn in the **gap** between cells, which no cell repaints. See
+   * {@link markBand}. */
+  marks: HintMarks;
+}
+
+export function newDrawState(
+  state: EdgeClueState,
+  tileSize: number,
+): EdgeClueDrawState {
+  const o = state.order;
+  return {
+    started: false,
+    tileSize,
+    order: o,
+    nums: new Int8Array(o * o).fill(-1),
+    flags: new Int32Array(o * o).fill(-1),
+    hints: new Uint8Array(o * o * o).fill(255),
+    hint: new OverlaySidecar(o * o),
+    wrong: new OverlaySidecar(o * o),
+    errFlags: new Int32Array(o * o),
+    cursor: newCursor(),
+    pencilMode: false,
+    lit: new Uint8Array(o * o),
+    pencilModeShown: null,
+    marks: new HintMarks(),
+  };
+}
+
+/**
+ * Where a hint mark sits around cell `(x, y)`: **entirely outside the cell**, in
+ * the `TILESIZE/2` gap the clues live in.
+ *
+ * The gap is generous, but it is not free: a clue may reach to within
+ * `GAP/4 − 1` of a cell (a greater-than chevron of the cell it points away
+ * from), so the band is bounded by that rather than by taste. `TILESIZE/16`
+ * clears it at every tile size (the clue's clearance grows twice as fast), and
+ * the mark still costs the cell's own digits and pencil marks nothing.
+ *
+ * That gap belongs to no cell, a clue repainting only its own band, so
+ * `HintMarks` is told the resting color and undoes a mark that moved itself.
+ */
+function markBand(ts: number, x: number, y: number): MarkBand {
+  return {
+    box: { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts },
+    outer: Math.max(2, ts >> 4),
+    inner: 0,
+  };
+}
+
+// --- inter-cell clue drawing -----------------------------------------------
+
+/** Color for a clue direction: error (red) > spent (gray) > the normal `fg`. */
+export function clueColor(
+  f: number,
+  errBit: number,
+  spentBit: number,
+  fg: number,
+): number {
+  if (f & errBit) return COL_ERROR;
+  if (f & spentBit) return COL_SPENT;
+  return fg;
+}
+
+/** A stroked rectangle outline (the canvas `Drawing` has no native one), on the
+ * `w × h` pixels from `(x, y)`: the far edges sit at `x + w - 1` and `y + h - 1`,
+ * as upstream's `draw_rect_outline` has them, because a stroke at `x + w` lands
+ * in the next pixel column, outside the rect whose repaint is meant to own it. */
+export function rectOutline(
+  dr: GameDrawing,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  color: number,
+): void {
+  const r = x + w - 1;
+  const b = y + h - 1;
+  dr.drawPolygon(
+    [
+      { x, y },
+      { x: r, y },
+      { x: r, y: b },
+      { x, y: b },
+    ],
+    -1,
+    color,
+  );
+}
+
+// --- per-cell drawing ------------------------------------------------------
+
+const DF_IMMUTABLE = 1 << 20; // composed flag (clear of F_* bits)
+
+function drawCell(
+  dr: GameDrawing,
+  ts: number,
+  state: EdgeClueState,
+  ui: EdgeClueUi,
+  x: number,
+  y: number,
+  num: number,
+  flags: number,
+  pencil: number,
+  wrong: boolean,
+  hflash: WinTone,
+  struck: number,
+  hatched: boolean,
+): void {
+  const o = state.order;
+  const ox = coord(x, ts);
+  const oy = coord(y, ts);
+
+  // Hint overlay (docs/hints-marks.md § "The engine colors the marks"): both
+  // cell-level marks are read in `redraw`, which rings the target and outlines
+  // the evidence region in the gap around the cell, so a hint never paints over
+  // the digits it is talking about. What is left here is `struck`, the set of
+  // candidates this firing rules out (bit n ⇒ candidate n), drawn crossed
+  // through among the marks.
+  drawCellBackground(
+    dr,
+    { x: ox, y: oy, w: ts, h: ts },
+    winHighlight(hflash) ?? cellHighlight(ui, x, y),
+    COL_CURSOR,
+    flags & DF_IMMUTABLE ? COL_GIVEN : COL_CELL,
+    COL_FLASH,
+    COL_FLASH_LEAD,
+  );
+  if (hatched) dr.drawHatch({ x: ox, y: oy, w: ts, h: ts }, hatchPeriod(ts));
+
+  rectOutline(dr, ox, oy, ts, ts, COL_LINE);
+  dr.drawUpdate({ x: ox, y: oy, w: ts, h: ts });
+
+  state.kind.drawClues(dr, ts, ox, oy, flags);
+
+  if (num > 0) {
+    const color =
+      flags & DF_IMMUTABLE ? COL_TEXT : flags & F_ERROR ? COL_ERROR : COL_GUESS;
+    const { origin, options } = digitText(ts, x, y);
+    dr.drawText(origin, options, color, displayChar(num, o));
+  } else {
+    drawHints(dr, ts, o, x, y, { x: ox, y: oy, w: ts, h: ts }, pencil, struck);
+  }
+
+  // Check & Save mistake overlay (fork addition): an inset red outline.
+  if (wrong) {
+    for (const inset of [2, 3])
+      rectOutline(
+        dr,
+        ox + inset,
+        oy + inset,
+        ts - 2 * inset,
+        ts - 2 * inset,
+        COL_ERROR,
+      );
+  }
+}
+
+/** A piece of text a cell draws: what it passes `drawText` but the color. */
+interface TileText {
+  readonly origin: Point;
+  readonly options: DrawTextOptions;
+}
+
+/** A placed number, in the middle of cell `(x, y)`. */
+function digitText(ts: number, x: number, y: number): TileText {
+  return {
+    origin: {
+      x: coord(x, ts) + Math.floor(ts / 2),
+      y: coord(y, ts) + Math.floor(ts / 2),
+    },
+    options: glyphFont(Math.floor((3 * ts) / 4)),
+  };
+}
+
+/** The values set in a cell's pencil-mark bits (bit `i` is value `i`). */
+const pencilValues = (o: number, bits: number): number[] =>
+  Array.from({ length: o }, (_, i) => i + 1).filter((i) => bits & (1 << i));
+
+/** Where `count` pencil marks go in cell `(x, y)`, in order: its
+ * {@link ringTextBox}. */
+function pencilSlots(ts: number, x: number, y: number, count: number): TileText[] {
+  return noteGrid(ringTextBox(markBand(ts, x, y)), count);
+}
+
+/** The pencil-mark grid. A candidate in `struck` (bit `1 << n`) is a
+ * hint-ruled-out mark, drawn in its normal pencil color with a same-color
+ * strikethrough — high-contrast, reads as a real note, and the line is the
+ * "ruled out" cue (docs/hints-marks.md § "The engine colors the marks"). */
+function drawHints(
+  dr: GameDrawing,
+  ts: number,
+  o: number,
+  x: number,
+  y: number,
+  cell: Rect,
+  pencil: number,
+  struck = 0,
+): void {
+  const shown = pencilValues(o, pencil);
+  pencilSlots(ts, x, y, shown.length).forEach(({ origin, options }, j) => {
+    const n = shown[j];
+    dr.drawText(origin, options, COL_PENCIL, displayChar(n, o));
+    if (struck & (1 << n)) drawStrike(dr, origin, options.size, COL_PENCIL, cell);
+  });
+}
+
+/** The text cell `(x, y)` shows, for a hint's ring to keep clear of. The
+ * clue signs between cells are drawn shapes, outside the ring's band. */
+function cellText(state: EdgeClueState, ts: number, x: number, y: number): RingClear {
+  const o = state.order;
+  if (x < 0 || y < 0 || x >= o || y >= o) return NOTHING_TO_CLEAR;
+  const num = state.grid[y * o + x];
+  if (num > 0) {
+    const { origin, options } = digitText(ts, x, y);
+    return {
+      enclose: [textBox(origin, options, displayChar(num, o))],
+      avoid: [],
+    };
+  }
+  const shown = pencilValues(o, state.pencil[y * o + x]);
+  const notes = pencilSlots(ts, x, y, shown.length).map(({ origin, options }, j) =>
+    textBox(origin, options, displayChar(shown[j], o)),
+  );
+  return { enclose: notes, avoid: [] };
+}
+
+/** The three palette indices the shared glyph is drawn in; the engine draws it
+ * and decides where. */
+const PENCIL_STYLE: PencilIndicatorStyle = {
+  background: COL_BACKGROUND,
+  body: COL_PENCIL_BODY,
+  ink: COL_GRID,
+};
+/** The room reserved for it is the border corner, outside every cell and gap
+ * clue: `border` is never narrower than `pencilIndicatorReach`. */
+const PENCIL_BOX = (order: number, ts: number) => {
+  const side = drawSize(order, ts);
+  return pencilIndicatorBox({ w: side, h: side }, ts);
+};
+
+// --- redraw ----------------------------------------------------------------
+
+export function redraw(
+  dr: GameDrawing,
+  ds: EdgeClueDrawState,
+  _prev: EdgeClueState | null,
+  state: EdgeClueState,
+  _dir: number,
+  ui: EdgeClueUi,
+  _animTime: number,
+  flash: Flash,
+  hint?: HintStep<EdgeClueMove, EdgeClueHint>,
+  mistakes?: readonly Point[],
+): void {
+  const ts = ds.tileSize;
+  const o = state.order;
+
+  if (!ds.started) {
+    ds.marks.reset(); // the midend's ground just erased every gap
+  }
+
+  checkComplete(state, ds.errFlags);
+
+  // Pack both overlays per cell.
+  const index = (x: number, y: number) => y * o + x;
+  ds.hint.pack(stepMarks(hint), index, (m) => valueBit(m.n));
+  ds.wrong.packCells(mistakes ?? null, index);
+
+  const hchanged =
+    ds.cursor.x !== ui.cursor.x ||
+    ds.cursor.y !== ui.cursor.y ||
+    ds.cursor.visible !== ui.cursor.visible ||
+    ds.pencilMode !== ui.pencilMode;
+
+  const targets: MarkCell[] = [];
+  const evidence: MarkCell[] = [];
+  for (let i = 0; i < o * o; i++) {
+    const c = { x: i % o, y: (i / o) | 0 };
+    if (ds.hint.packed[i] & HINT_TARGET) targets.push(c);
+    if (ds.hint.packed[i] & HINT_AREA) evidence.push(c);
+  }
+  const markStyle = {
+    band: (x: number, y: number) => markBand(ds.tileSize, x, y),
+    text: (x: number, y: number) => cellText(state, ts, x, y),
+    evidenceColor: COL_HINT_CELL,
+  };
+  const underErased = new Uint8Array(o * o);
+  ds.marks.eraseBeforeTiles(
+    dr,
+    targets,
+    evidence,
+    markStyle,
+    COL_BACKGROUND,
+    (x, y) => {
+      if (x >= 0 && x < o && y >= 0 && y < o) underErased[y * o + x] = 1;
+    },
+  );
+
+  for (let x = 0; x < o; x++) {
+    for (let y = 0; y < o; y++) {
+      const i = y * o + x;
+      const num = state.grid[i];
+      const flags =
+        state.clueFlags[i] |
+        state.spent[i] |
+        ds.errFlags[i] |
+        (state.immutable[i] ? DF_IMMUTABLE : 0);
+      const pencil = num === 0 ? state.pencil[i] : 0;
+
+      const hflash = flash.win(sweepStep(x, y));
+      let stale = !ds.started || hflash !== ds.lit[i] || underErased[i] === 1;
+      if (
+        hchanged &&
+        ((x === ui.cursor.x && y === ui.cursor.y) ||
+          (x === ds.cursor.x && y === ds.cursor.y))
+      )
+        stale = true;
+      if (ds.nums[i] !== num) stale = true;
+      if (ds.flags[i] !== flags) stale = true;
+      if (ds.hint.stale(i)) stale = true;
+      if (ds.wrong.stale(i)) stale = true;
+      if (num === 0) {
+        for (let n = 0; n < o; n++) {
+          if (ds.hints[i * o + n] !== ((pencil >> (n + 1)) & 1)) stale = true;
+        }
+      }
+
+      if (stale) {
+        drawCell(
+          dr,
+          ts,
+          state,
+          ui,
+          x,
+          y,
+          num,
+          flags,
+          pencil,
+          ds.wrong.at(i),
+          hflash,
+          ds.hint.struck[i],
+          ds.hint.hatched[i] === 1,
+        );
+        ds.nums[i] = num;
+        ds.flags[i] = flags;
+        ds.lit[i] = hflash;
+        ds.hint.commit(i);
+        ds.wrong.commit(i);
+        for (let n = 0; n < o; n++) ds.hints[i * o + n] = (pencil >> (n + 1)) & 1;
+      }
+    }
+  }
+
+  // The hint marks, after the tile loop, because they live in the gap between
+  // cells.
+  ds.marks.paint(dr, targets, evidence, markStyle);
+
+  // Pencil-mode indicator (fork addition).
+  repaintPencilIndicator(dr, ds, ui.pencilMode, PENCIL_BOX(o, ts), PENCIL_STYLE);
+
+  ds.cursor.x = ui.cursor.x;
+  ds.cursor.y = ui.cursor.y;
+  ds.cursor.visible = ui.cursor.visible;
+  ds.pencilMode = ui.pencilMode;
+  ds.started = true;
+}

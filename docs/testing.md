@@ -972,6 +972,19 @@ import closure reaches nothing under `src/games/`. One import of
 `build-pipeline`, "The gate runs the source-scan tests as a pass ahead of the
 rest of the suite".
 
+A game's own source, to such a guard, is its directory and each engine game
+family it imports (`testing/enrollment.ts`'s `gameSourceFiles`, which says
+what a family is). Read it through that, never through a glob of
+`src/games/` alone, or a game whose mechanic lives in a family reads as
+having none.
+
+**A new file is invisible to an unchanged glob on this machine.** Vitest
+caches a transformed test in `node_modules/.vitest-cache`, keyed on the
+test's own text, and the `import.meta.glob` is expanded in that transform. A
+guard whose file did not change still sees the files its glob matched when
+it was cached, and a game added since is not among them. CI starts empty. After adding a game or a file a glob should match,
+`rm -rf node_modules/.vitest-cache` before trusting a local run.
+
 ### One concept under several names
 
 To find one concept spelled several ways across games (a `dragType` beside a

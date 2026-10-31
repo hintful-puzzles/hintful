@@ -1,19 +1,13 @@
 /**
  * Unequal — native TS port of `unequal.c`. Fill an `order × order` grid so every
- * row and column holds each number `1..order` once, subject to clues between
- * adjacent cells: greater-than signs (Unequal mode) or differ-by-1 bars
- * (Adjacent mode). Left-click selects a cell for an entry and right-click for
- * pencil marks; on the keyboard, select toggles pencil mode; a digit enters (or
- * pencil-toggles) that number; clicking a clue sign in the gap between two cells
- * grays it out ("spent"). Rule violations highlight live; Check & Save
- * additionally flags cells that contradict the unique solution.
+ * row and column holds each number `1..order` once, subject to greater-than
+ * signs between adjacent cells. The board, its input and its drawing are the
+ * shared edge-clue Latin square's (`engine/edge-clue-latin/`), which Adjacent
+ * plays too; what is Unequal's is its sign.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import { MAX_CANDIDATE_VALUE } from "../../engine/candidate-bits.ts";
 import {
-  adaptiveMarkAllMove,
-  applyNoteMove,
   type CandidatePlanPrefs,
   candidateGesture,
   candidateHint,
@@ -25,18 +19,52 @@ import {
   LATIN_RUNGS,
   type PlanRung,
   runLatinCandidatePlan,
-  valuesOf,
 } from "../../engine/candidate-plan.ts";
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
-import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
+import { difficultyItem } from "../../engine/difficulty.ts";
+import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
+import { edgeClueVocab } from "../../engine/edge-clue-latin/hint-text.ts";
 import {
-  type Game,
-  type HintResult,
-  type HintStep,
-  type HintTrackVerdict,
-  type SolveResult,
-  UI_UPDATE,
-  type UiUpdate,
+  changedState,
+  type EdgeClueMistake,
+  edgeClueDifficulty,
+  edgeClueKeys,
+  executeMove,
+  findMistakes,
+  interpretMove,
+  markAll,
+  solve,
+} from "../../engine/edge-clue-latin/play.ts";
+import {
+  colors,
+  computeSize,
+  coord,
+  type EdgeClueDrawState,
+  type EdgeClueHint,
+  newDrawState,
+  PREFERRED_TILE_SIZE,
+  redraw,
+} from "../../engine/edge-clue-latin/render.ts";
+import { recordEdgeClueDeductions } from "../../engine/edge-clue-latin/solver.ts";
+import {
+  DIFF_EXTREME,
+  DIFF_NAMES,
+  diffFromLevel,
+  diffToLevel,
+  type EdgeClueMove,
+  type EdgeClueParams,
+  type EdgeClueState,
+  type EdgeClueUi,
+  encodeParams,
+  newState,
+  newUi,
+  status,
+  textFormat,
+} from "../../engine/edge-clue-latin/state.ts";
+import type {
+  Game,
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
 } from "../../engine/game.ts";
 import {
   latinPremise,
@@ -44,15 +72,6 @@ import {
   type Premise,
 } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
-import { clearKey } from "../../engine/key-labels.ts";
-import { latinVerdict } from "../../engine/latin.ts";
-import { rowColRegions } from "../../engine/latin-hint.ts";
-import {
-  noOpEntryResult,
-  pressNoteTakingCell,
-  releaseHighlightAfterEntry,
-  toggleNoteTakingMode,
-} from "../../engine/note-taking-cell.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
 import {
   autoPencilPref,
@@ -60,366 +79,21 @@ import {
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
-import {
-  CURSOR_DOWN,
-  CURSOR_LEFT,
-  CURSOR_RIGHT,
-  CURSOR_UP,
-  isCursorMove,
-  isMouseDrag,
-  LEFT_BUTTON,
-  MOD_CTRL,
-  MOD_SHFT,
-  moveCursor,
-  RIGHT_BUTTON,
-  stripModifiers,
-} from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { rulesetItem } from "../../engine/ruleset.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
-import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
-import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/target-verb.ts";
-import type { KeyLabel, Point } from "../../engine/types.ts";
-import { newUnequalDesc } from "./generator.ts";
-import { say, unequalVocab } from "./hint-text.ts";
-import {
-  colors,
-  computeSize,
-  coord,
-  fromCoord,
-  newDrawState,
-  PREFERRED_TILE_SIZE,
-  redraw,
-  type UnequalDrawState,
-  type UnequalHint,
-} from "./render.ts";
-import {
-  DIFF_AMBIGUOUS,
-  DIFF_IMPOSSIBLE,
-  type HintOp,
-  type HintReason,
-  recordUnequalDeductions,
-  solveUnequal,
-} from "./solver.ts";
-import {
-  ADJTHAN,
-  adjToSpent,
-  charValue,
-  cloneState,
-  DIFF_EXTREME,
-  DIFF_NAMES,
-  DIFF_RECURSIVE,
-  decodeParams,
-  defaultParams,
-  diffFromLevel,
-  diffToLevel,
-  encodeParams,
-  F_ADJ_DOWN,
-  F_ADJ_LEFT,
-  F_ADJ_RIGHT,
-  F_ADJ_UP,
-  F_SPENT_DOWN,
-  F_SPENT_LEFT,
-  F_SPENT_RIGHT,
-  F_SPENT_UP,
-  menu,
-  newState,
-  newUi,
-  RULESETS,
-  status,
-  textFormat,
-  type UnequalMove,
-  type UnequalParams,
-  type UnequalState,
-  type UnequalUi,
-  validateParams,
-} from "./state.ts";
-
-/** A player marking that contradicts the unique solution:
- * - `"cell"` — a filled-in number that is wrong;
- * - `"note"` — an empty cell whose non-empty pencil notes have crossed out the
- *   cell's solution value. */
-export interface UnequalMistake {
-  kind: "cell" | "note";
-  x: number;
-  y: number;
-}
-
-type SpentMove = Extract<UnequalMove, { type: "spent" }>;
-
-/** The move that flips the clue in the gap a press at `p` lands in, below or
- * to the right of its cell, or `null` where that gap holds no clue. */
-function clueInGap(
-  state: UnequalState,
-  ds: UnequalDrawState,
-  p: Point,
-): SpentMove | null {
-  const o = state.order;
-  const ts = ds.tileSize;
-  const tx = fromCoord(p.x, ts);
-  const ty = fromCoord(p.y, ts);
-  if (tx < 0 || tx >= o || ty < 0 || ty >= o) return null;
-  const gapBelow = p.y - coord(ty, ts) > ts;
-  const gapRight = p.x - coord(tx, ts) > ts;
-  if (gapBelow === gapRight) return null;
-  if (gapBelow) {
-    if (state.clueFlags[ty * o + tx] & F_ADJ_DOWN)
-      return { type: "spent", x: tx, y: ty, flag: F_SPENT_DOWN };
-    if (ty + 1 < o && state.clueFlags[(ty + 1) * o + tx] & F_ADJ_UP)
-      return { type: "spent", x: tx, y: ty + 1, flag: F_SPENT_UP };
-    return null;
-  }
-  if (state.clueFlags[ty * o + tx] & F_ADJ_RIGHT)
-    return { type: "spent", x: tx, y: ty, flag: F_SPENT_RIGHT };
-  if (tx + 1 < o && state.clueFlags[ty * o + tx + 1] & F_ADJ_LEFT)
-    return { type: "spent", x: tx + 1, y: ty, flag: F_SPENT_LEFT };
-  return null;
-}
-
-/** The "this clue is spent" mark, which a drag through the gaps repeats. The
- * target is the move itself: it names its clue. */
-export const spentDrag = dragMarkVerbs<
-  UnequalState,
-  UnequalUi,
-  UnequalDrawState,
-  SpentMove,
-  UnequalMove
->({
-  noun: "clue",
-  target: clueInGap,
-  apply: (_state, clue) => clue,
-  sweep: {
-    holds: (state, { x, y, flag }) => (state.spent[y * state.order + x] & flag ? 1 : 0),
-  },
-});
-
-function interpretMove(
-  state: UnequalState,
-  ui: UnequalUi,
-  ds: UnequalDrawState,
-  p: Point,
-  rawButton: number,
-): UnequalMove | null | UiUpdate {
-  const o = state.order;
-  const ts = ds.tileSize;
-  const shiftOrCtrl = (rawButton & (MOD_SHFT | MOD_CTRL)) !== 0;
-  const button = stripModifiers(rawButton);
-
-  const tx = fromCoord(p.x, ts);
-  const ty = fromCoord(p.y, ts);
-  const inGrid = tx >= 0 && tx < o && ty >= 0 && ty < o;
-
-  if (isMouseDrag(button)) return sweepTo(spentDrag, state, ui, ds, p);
-
-  if (inGrid && (button === LEFT_BUTTON || button === RIGHT_BUTTON)) {
-    // A click in the gap below/right of a cell toggles that clue's spent flag,
-    // and a drag on through the gaps marks the clues that looked the same.
-    const gapBelow = p.y - coord(ty, ts) > ts;
-    const gapRight = p.x - coord(tx, ts) > ts;
-    if (gapBelow && gapRight) return null;
-    if (gapBelow || gapRight) {
-      const clue = clueInGap(state, ds, p);
-      if (clue === null) return null;
-      // Either button marks, so the drag is opened as the one it declares.
-      beginSweep(spentDrag, state, ui, clue, LEFT_BUTTON, p, true);
-      return clue;
-    }
-
-    pressNoteTakingCell(ui, button, tx, ty, {
-      canEnter: !state.immutable[ty * o + tx],
-      canMark: state.grid[ty * o + tx] === 0,
-    });
-    return UI_UPDATE;
-  }
-
-  if (isCursorMove(button)) {
-    if (shiftOrCtrl) {
-      // Toggle the spent state of the clue between the cursor cell and the cell
-      // the arrow points to.
-      let nx = ui.cursor.x;
-      let ny = ui.cursor.y;
-      if (button === CURSOR_LEFT) nx = Math.max(nx - 1, 0);
-      else if (button === CURSOR_RIGHT) nx = Math.min(nx + 1, o - 1);
-      else if (button === CURSOR_UP) ny = Math.max(ny - 1, 0);
-      else if (button === CURSOR_DOWN) ny = Math.min(ny + 1, o - 1);
-      ui.cursor.visible = true;
-      ui.cursorFromKeyboard = true;
-
-      let i = 0;
-      for (; i < 4; i++) {
-        if (nx === ui.cursor.x + ADJTHAN[i].dx && ny === ui.cursor.y + ADJTHAN[i].dy)
-          break;
-      }
-      if (i === 4) return UI_UPDATE; // not a single step in a clue direction
-
-      const here = state.clueFlags[ui.cursor.y * o + ui.cursor.x];
-      const there = state.clueFlags[ny * o + nx];
-      if (!(here & ADJTHAN[i].f || there & ADJTHAN[i].fo)) return UI_UPDATE; // no clue
-
-      // A sign's spent flag sits on its greater end; a bar's, which both ends
-      // flag, on the cell above or left of it.
-      const self =
-        state.mode === "adjacent"
-          ? ADJTHAN[i].dx >= 0 && ADJTHAN[i].dy >= 0
-          : (here & ADJTHAN[i].f) !== 0;
-      return self
-        ? {
-            type: "spent",
-            x: ui.cursor.x,
-            y: ui.cursor.y,
-            flag: adjToSpent(ADJTHAN[i].f),
-          }
-        : { type: "spent", x: nx, y: ny, flag: adjToSpent(ADJTHAN[i].fo) };
-    }
-    ui.cursorFromKeyboard = true;
-    return moveCursor(ui.cursor, button, o, o) ? UI_UPDATE : null;
-  }
-
-  const toggled = toggleNoteTakingMode(ui, button);
-  if (toggled) return toggled;
-
-  const n = charValue(button, o);
-  if (ui.cursor.visible && n >= 0 && n <= o) {
-    const i = ui.cursor.y * o + ui.cursor.x;
-    if (state.immutable[i]) return null; // can't edit a given
-    if (ui.pencilMode && state.grid[i] > 0) return null; // can't pencil a filled cell
-
-    // No-op: setting a cell to what it already holds (and no pencil marks).
-    if ((!ui.pencilMode || n === 0) && state.grid[i] === n && state.pencil[i] === 0)
-      return noOpEntryResult(ui);
-
-    const pencil = ui.pencilMode && n > 0;
-    releaseHighlightAfterEntry(ui);
-    return pencil
-      ? { type: "set", x: ui.cursor.x, y: ui.cursor.y, n, pencil }
-      : {
-          type: "set",
-          x: ui.cursor.x,
-          y: ui.cursor.y,
-          n,
-          pencil,
-          autoElim: ui.autoPencil,
-        };
-  }
-
-  return null;
-}
-
-/** Fill all pencil marks, then (on a fully-noted board) clean the obvious
- * row/column candidates — the basic-region opening, in one press. */
-function markAll(state: UnequalState): UnequalMove | null {
-  const o = state.order;
-  return adaptiveMarkAllMove<UnequalMove>(state.grid, state.pencil, o, (x, y) =>
-    rowColRegions(x, y, o),
-  );
-}
-
-function executeMove(state: UnequalState, move: UnequalMove): UnequalState {
-  const o = state.order;
-  const next = cloneState(state);
-
-  switch (move.type) {
-    case "set": {
-      const i = move.y * o + move.x;
-      if (state.immutable[i]) throw new Error("unequal: move into an immutable cell");
-      if (move.pencil && move.n > 0) {
-        next.pencil[i] ^= 1 << move.n;
-      } else {
-        next.grid[i] = move.n;
-        next.pencil[i] = 0;
-        if (move.autoElim && move.n > 0) {
-          const bit = ~(1 << move.n);
-          for (let k = 0; k < o; k++) {
-            if (k !== move.x) next.pencil[move.y * o + k] &= bit;
-            if (k !== move.y) next.pencil[k * o + move.x] &= bit;
-          }
-        }
-      }
-      return next;
-    }
-    case "spent": {
-      next.spent[move.y * o + move.x] ^= move.flag;
-      return next;
-    }
-    case "pencilAll":
-    case "pencilStrike":
-    case "pencilAdd":
-      applyNoteMove(move, next.grid, next.pencil, o);
-      return next;
-    case "solve": {
-      for (let i = 0; i < o * o; i++) {
-        next.grid[i] = move.grid[i];
-        next.pencil[i] = 0;
-      }
-      return next;
-    }
-    default:
-      return assertNever(move, "unequal: executeMove");
-  }
-}
-
-function changedState(
-  ui: UnequalUi,
-  _old: UnequalState | null,
-  newSt: UnequalState,
-): void {
-  const o = newSt.order;
-  if (
-    ui.cursor.visible &&
-    ui.pencilMode &&
-    !ui.cursorFromKeyboard &&
-    newSt.grid[ui.cursor.y * o + ui.cursor.x] !== 0
-  ) {
-    ui.cursor.visible = false;
-  }
-}
-
-function solve(
-  orig: UnequalState,
-  _curr: UnequalState,
-  aux?: string,
-): SolveResult<UnequalMove> {
-  const o = orig.order;
-  if (aux) {
-    const grid: number[] = [];
-    for (let i = 0; i < o * o; i++) grid[i] = charValue(aux.charCodeAt(i + 1), o);
-    return { ok: true, move: { type: "solve", grid } };
-  }
-  const soln = Uint8Array.from(orig.immutable);
-  const ret = solveUnequal(o, orig.mode, orig.clueFlags, soln, DIFF_RECURSIVE);
-  if (ret === DIFF_IMPOSSIBLE) return { ok: false, error: NO_SOLUTION };
-  if (ret === DIFF_AMBIGUOUS) return { ok: false, error: MULTIPLE_SOLUTIONS };
-  return { ok: true, move: { type: "solve", grid: Array.from(soln) } };
-}
-
-function findMistakes(state: UnequalState): readonly UnequalMistake[] {
-  const o = state.order;
-  // The solution is derived from the placed givens only — never from the notes.
-  const soln = Uint8Array.from(state.immutable);
-  const ret = solveUnequal(o, state.mode, state.clueFlags, soln, DIFF_RECURSIVE);
-  if (ret === DIFF_IMPOSSIBLE || ret === DIFF_AMBIGUOUS) return [];
-  return entryMistakes(
-    {
-      answer: soln,
-      entry: state.grid,
-      notes: state.pencil,
-      fixed: (i) => state.immutable[i] !== 0,
-    },
-    gridCell(o),
-  );
-}
+import { say } from "./hint-text.ts";
+import type { HintOp, HintReason } from "./solver.ts";
+import { decodeParams, defaultParams, menu, SIGNS, validateParams } from "./state.ts";
 
 // --- hint ------------------------------------------------------------------
 
 /** Why a strike is forced (docs/hints.md § "Writing the narration"):
  * indication, then reasoning, which the walk concludes with the move it makes.
- * `ns` is the struck value list; `o` is the grid order. Two-mode aware. The
- * words, and how they read at the value extremes, are
- * [`hint-text.ts`](./hint-text.ts)'s. */
+ * `o` is the grid order. The words, and how they read at the value extremes,
+ * are [`hint-text.ts`](./hint-text.ts)'s. */
 function premise(reason: HintReason, marks: readonly Mark[], o: number): Premise {
-  const ns = valuesOf(marks);
-  // A clue deduction outlines the struck cell *and* the cell across the sign
-  // or bar that constrains it, so the player sees the pair.
+  // A sign deduction outlines the struck cell *and* the cell across the sign,
+  // so the player sees the pair.
   const pair = (r: { ox: number; oy: number }) => ({
     at: { x: marks[0].x, y: marks[0].y },
     other: { x: r.ox, y: r.oy },
@@ -429,54 +103,41 @@ function premise(reason: HintReason, marks: readonly Mark[], o: number): Premise
       return { premise: say.greater(pair(reason), reason.bound, o) };
     case "lesser":
       return { premise: say.lesser(pair(reason), reason.bound, o) };
-    case "adjacent":
-      return { premise: say.adjacent(pair(reason), reason.bar, reason.v, o) };
-    case "adjacentSet":
-      return { premise: say.adjacentSet(pair(reason), reason.bar, ns, o) };
     // The generic Latin arms (dup / set) read identically to Keen's
     // — narrated once, shared.
     default:
-      return latinPremise(reason, marks, unequalVocab(o));
+      return latinPremise(reason, marks, edgeClueVocab(o));
   }
 }
 
-/** Why a placement is forced: always a generic single, since no sign or bar
- * places. */
+/** Why a placement is forced: always a generic single, since no sign places. */
 function narrate(reason: HintReason, m: Mark, o: number): Sentence {
   switch (reason.kind) {
     case "greater":
     case "lesser":
-    case "adjacent":
-    case "adjacentSet":
       throw new Error(`a ${reason.kind} deduction strikes`);
     default:
-      return narrateLatinReason(reason, m, o, unequalVocab(o));
+      return narrateLatinReason(reason, m, o, edgeClueVocab(o));
   }
 }
 
 /** Every rung an Unequal step can be: the Latin family's, and the kinds of
  * `UnequalReason`. */
-export const UNEQUAL_RUNGS = [
-  ...LATIN_RUNGS,
-  "greater",
-  "lesser",
-  "adjacent",
-  "adjacentSet",
-] as const;
+export const UNEQUAL_RUNGS = [...LATIN_RUNGS, "greater", "lesser"] as const;
 export type UnequalRung = (typeof UNEQUAL_RUNGS)[number];
 
 /** Build the hint plan by walking a working copy of the board the way a person
  * solves it (`runLatinCandidatePlan`), under the player's two pencil
  * preferences. */
 function buildSteps(
-  state: UnequalState,
+  state: EdgeClueState,
   { autoClean, reading }: CandidatePlanPrefs,
-): HintStep<UnequalMove, UnequalHint, UnequalRung>[] {
+): HintStep<EdgeClueMove, EdgeClueHint, UnequalRung>[] {
   const o = state.order;
-  const steps: HintStep<UnequalMove, UnequalHint, PlanRung<HintReason>>[] = [];
+  const steps: HintStep<EdgeClueMove, EdgeClueHint, PlanRung<HintReason>>[] = [];
   const wGrid = Int8Array.from(state.grid);
   const maxdiff = Math.min(diffToLevel(state.diff), DIFF_EXTREME);
-  runLatinCandidatePlan<UnequalMove, UnequalHint, HintOp, HintReason>({
+  runLatinCandidatePlan<EdgeClueMove, EdgeClueHint, HintOp, HintReason>({
     w: o,
     steps,
     grid: wGrid,
@@ -485,38 +146,38 @@ function buildSteps(
     reading,
     label: "unequal hint plan",
     record: () =>
-      recordUnequalDeductions(
+      recordEdgeClueDeductions(
         o,
-        state.mode,
+        SIGNS,
         state.clueFlags,
         Uint8Array.from(wGrid),
         maxdiff,
-      ),
+      ) as HintOp[],
     placeWords: (m, reason) => ({ words: narrate(reason, m, o) }),
     strikeWords: (marks, reason) => premise(reason, marks, o),
     // The narration names a cell's relationship to its neighbor, so a firing is
     // one leg per cell: a link's two ends, greater and lesser, are two legs.
     strikeAxis: (op) => op.y * o + op.x,
-    notes: { noun: "number", placedVerb: "standing", value: unequalVocab(o).value },
+    notes: { noun: "number", placedVerb: "standing", value: edgeClueVocab(o).value },
   });
   return steps;
 }
 
 function hint(
-  state: UnequalState,
+  state: EdgeClueState,
   _aux?: string,
-  ui?: UnequalUi,
-): HintResult<UnequalMove, UnequalHint, UnequalRung> {
+  ui?: EdgeClueUi,
+): HintResult<EdgeClueMove, EdgeClueHint, UnequalRung> {
   return candidateHint(state, ui ?? newUi(state), buildSteps);
 }
 
 /** Classify a player move against the displayed hint step (shared
- * candidate-elimination keep-track; `UnequalHint` is structurally
+ * candidate-elimination keep-track; `EdgeClueHint` is structurally
  * `CandidateHighlights`). */
 function hintKeepTrack(
-  m: UnequalMove,
-  step: HintStep<UnequalMove, UnequalHint>,
-  state: UnequalState,
+  m: EdgeClueMove,
+  step: HintStep<EdgeClueMove, EdgeClueHint>,
+  state: EdgeClueState,
 ): HintTrackVerdict {
   return keepCandidateHintTrack(m, step, state.pencil, state.order);
 }
@@ -524,52 +185,20 @@ function hintKeepTrack(
 /** Re-validate a stored hint step against the current board before it is
  * (re-)displayed (shared "never show a stale step" guarantee). */
 function refreshHintStep(
-  step: HintStep<UnequalMove, UnequalHint>,
-  state: UnequalState,
-): HintStep<UnequalMove, UnequalHint> | null {
+  step: HintStep<EdgeClueMove, EdgeClueHint>,
+  state: EdgeClueState,
+): HintStep<EdgeClueMove, EdgeClueHint> | null {
   return refreshCandidateHintStep(step, state.grid, state.pencil, state.order);
 }
 
-/**
- * The on-screen keypad, faithful to upstream `game_request_keys`. Unlike the
- * shared `digitKeys`, Unequal switches to a `'0'`-based keypad for order ≥ 10
- * (`'0'..'9'` = 1..10, then `'a','b',…` = 11.., mirroring `c2n`), then the
- * clear key. The size's bounds in `paramConfig` admit orders past 10, so the
- * letter range is reachable.
- */
-function unequalKeys(order: number): KeyLabel[] {
-  const keys: KeyLabel[] = [];
-  let off = (order > 9 ? "0" : "1").charCodeAt(0);
-  for (let i = 0; i < order; i++) {
-    if (i === 10) off = "a".charCodeAt(0) - 10;
-    const button = i + off;
-    keys.push({ button, label: String.fromCharCode(button) });
-  }
-  keys.push(clearKey);
-  return keys;
-}
-
-/** Unequal's difficulty contract (`engine/difficulty.ts`). `solveUnequal`
- * follows the shared latin-family return convention — the difficulty reached, or
- * one of `latin.ts`'s sentinels — so `latinVerdict` reads it. Seeded from the
- * immutable givens; `mode` and the clue flags come from the desc. */
-const difficulty: DifficultyContract<UnequalParams> = {
-  solveAtCap: (p, desc, cap) => {
-    const s = newState(p, desc);
-    return latinVerdict(
-      solveUnequal(s.order, s.mode, s.clueFlags, Uint8Array.from(s.immutable), cap),
-    );
-  },
-};
-
 export const unequalGame: Game<
-  UnequalParams,
-  UnequalState,
-  UnequalMove,
-  UnequalUi,
-  UnequalDrawState,
-  UnequalMistake,
-  UnequalHint,
+  EdgeClueParams,
+  EdgeClueState,
+  EdgeClueMove,
+  EdgeClueUi,
+  EdgeClueDrawState,
+  EdgeClueMistake,
+  EdgeClueHint,
   UnequalRung
 > = {
   id: "unequal",
@@ -581,28 +210,22 @@ export const unequalGame: Game<
   decodeParams,
   validateParams,
   paramConfig: [
-    rulesetItem<UnequalParams>(RULESETS, {
-      get: (p) => (p.mode === "adjacent" ? 1 : 0),
-      set: (p, v) => {
-        p.mode = v === 1 ? "adjacent" : "unequal";
-      },
-    }),
-    numberItem<UnequalParams>("size", "Size", "order", {
-      doc: `Width and height of the grid, which is also the largest number in it. Above 9, the numbers are written 0 to 9 and then A, B, C and so on, so each still takes one character. ${RULESETS[1].name} puzzles at Tricky or above need a size of at least 5. A 3x3 has no Tricky or Hard puzzles.`,
+    numberItem<EdgeClueParams>("size", "Size", "order", {
+      doc: "Width and height of the grid, which is also the largest number in it. Above 9, the numbers are written 0 to 9 and then A, B, C and so on, so each still takes one character. A 3x3 has no Tricky or Unreasonable puzzles.",
       // One more would not fit a candidate mask (`engine/candidate-bits.ts`).
       bounds: { min: 3, max: MAX_CANDIDATE_VALUE },
       label: { slot: "size", words: squareSize("order") },
     }),
     difficultyItem(DIFF_NAMES, {
-      get: (p: UnequalParams) => diffToLevel(p.diff),
-      set: (p: UnequalParams, tier: number) => {
+      get: (p: EdgeClueParams) => diffToLevel(p.diff),
+      set: (p: EdgeClueParams, tier: number) => {
         p.diff = diffFromLevel(tier);
       },
     }),
   ],
 
-  newDesc: newUnequalDesc,
-  newState,
+  newDesc: (p, rng) => newEdgeClueDesc(SIGNS, p, rng),
+  newState: (p, desc) => newState(SIGNS, p, desc),
   newUi,
   changedState,
 
@@ -612,7 +235,7 @@ export const unequalGame: Game<
   notApplicable: { transposeParams: SQUARE_GRID },
 
   solve,
-  difficulty,
+  difficulty: edgeClueDifficulty(SIGNS),
   hint,
   hintRungs: UNEQUAL_RUNGS,
   hintMarks: {
@@ -620,7 +243,7 @@ export const unequalGame: Game<
       ring: "the cell the step fills in with a number.",
       strike: "the pencil marks the step crosses out.",
       outline:
-        'what the step reasons from: the two cells either side of a sign, of a bar, or of no bar at all (the one whose marks are struck, and "the outlined smaller side" or "larger side" across it, or "its neighbor"), the cells that already account for the numbers being crossed out, the number just placed, or "the middle cell" a step weighs and the cells it reads.',
+        'what the step reasons from: the two cells either side of a sign (the one whose marks are struck, and "the outlined smaller side" or "larger side" across it), the cells that already account for the numbers being crossed out, the number just placed, or "the middle cell" a step weighs and the cells it reads.',
       stripes:
         'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one number fits only the outlined cells.',
     },
@@ -631,7 +254,7 @@ export const unequalGame: Game<
   hintGesture: (s, ui, ds, m) => {
     const ts = ds.tileSize;
     const mid = (v: number) => coord(v, ts) + ((ts / 2) | 0);
-    const keys = unequalKeys(s.order);
+    const keys = edgeClueKeys(s.order);
     return candidateGesture(
       m,
       ui,
@@ -643,16 +266,16 @@ export const unequalGame: Game<
   },
   refreshHintStep,
   findMistakes,
-  requestKeys: (p): KeyLabel[] => unequalKeys(p.order),
+  requestKeys: (p) => edgeClueKeys(p.order),
   textFormat,
 
   prefs: [
-    autoPencilPref<UnequalUi>(
+    autoPencilPref<EdgeClueUi>(
       "When you place a number, remove it from pencil marks in its row and column",
     ),
-    stickyPencilPref<UnequalUi>(),
-    pencilKeepHighlightPref<UnequalUi>(),
-    candidateReadingPref<UnequalUi>(),
+    stickyPencilPref<EdgeClueUi>(),
+    pencilKeepHighlightPref<EdgeClueUi>(),
+    candidateReadingPref<EdgeClueUi>(),
   ],
 
   colors,

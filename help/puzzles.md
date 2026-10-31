@@ -8,6 +8,7 @@ instructions. The last column names puzzles you may know it as elsewhere.
 | Puzzle                   | Instructions     | Similar/related puzzles[\*](#tm)                                                |
 |--------------------------|------------------|---------------------------------------------------------------------------------|
 | [ABCD](../abcd)          | [help](abcd)     | ABC-Kombi                                                                       |
+| [Adjacent](../adjacent)  | [help](adjacent) |                                                                                 |
 | [Ascent](../ascent)      | [help](ascent)   | Hidato®, Hidoku, King's Journey, Numbrix                                        |
 | [Black Box](../blackbox) | [help](blackbox) |                                                                                 |
 | [Boats](../boats)        | [help](boats)    | Battleships Solitaire, Bimaru, Marinespiel                                      |
@@ -64,7 +65,7 @@ instructions. The last column names puzzles you may know it as elsewhere.
 | [Tracks](../tracks)      | [help](tracks)   |                                                                                 |
 | [Twiddle](../twiddle)    | [help](twiddle)  |                                                                                 |
 | [Undead](../undead)      | [help](undead)   | Haunted Mirror Maze, Spukschloss                                                |
-| [Unequal](../unequal)    | [help](unequal)  | Adjacent, Futoshiki (ふと指揮)                                                      |
+| [Unequal](../unequal)    | [help](unequal)  | Futoshiki (ふと指揮)                                                              |
 | [Unruly](../unruly)      | [help](unruly)   | Tohu-Wa-Vohu, Binairo, Tic-Tac-Logic                                            |
 | [Untangle](../untangle)  | [help](untangle) | Planarity                                                                       |
 

@@ -24,6 +24,7 @@ import { puzzleCatalog } from "./catalog-data.ts";
  */
 const UPSTREAM: Record<string, string[]> = {
   abcd: ["4x4n4", "4x4n4D", "4x4n4R", "5x5n4DR"],
+  adjacent: ["5a", "5ade", "6adr"],
   ascent: [
     "7x6mR",
     "7x6mRde",
@@ -115,7 +116,9 @@ const UPSTREAM: Record<string, string[]> = {
   tracks: ["8x8", "8x8de", "8x8dt", "15x15dh", "8x8dto", "10x8deo"],
   twiddle: ["3x3n2", "3x3n2r", "3x3n2o", "3x3n2rom10", "4x4n2m5"],
   undead: ["4x4", "4x4de", "4x4dn", "4x4dt"],
-  unequal: ["4", "5a", "4de", "5dk", "5ade", "5dx", "6adr", "4dt"],
+  // Upstream's Adjacent is Unequal's mode `a`; here it is a game of its own,
+  // which reads that letter, and Unequal refuses it.
+  unequal: ["4", "4de", "5dk", "5dx", "4dt"],
   unruly: ["8x8", "8x8u", "8x8dt", "8x8de", "10x10dn", "8x8udn"],
   untangle: ["6", "25"],
 };

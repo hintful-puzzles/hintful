@@ -38,7 +38,7 @@ itself is § "The file". A game whose techniques are stated:
    `Record` keyed by the compiled module's `LadderId`, so a technique the
    description adds and the game does not pair is a type error
    ([`unequal/solver.ts`](../src/games/unequal/solver.ts)'s
-   `UNEQUAL_RUNGS`, through `compiledRung`; a technique that reads no clues
+   `RUNGS`, through `compiledRung`; a technique that reads no clues
    through `uncluedRung`, as [`group/solver.ts`](../src/games/group/solver.ts)'s;
    § "A firing's reason is built from its binding").
 5. **Deals its board as the description reads it**, the compiled module's
@@ -97,9 +97,6 @@ research tools all read through it; the app never does.
   variation. The variation is named as the game offers it, a ruleset's name
   or a modifier's words, and `src/variations.test.ts` refuses a game whose
   field declares the other word.
-- **A family member another game deals is a second description beside it**
-  (Unequal's `adjacent.description.yaml`), with no help: its game's page
-  names it through `{{rulesets}}`.
 
 ## The formula syntax
 
@@ -310,9 +307,8 @@ reads the cell sees it. The library states the engine's checks: `single`
 and `hiddenSingle` on an open cell or a value with no place left, and `set`
 and `fish` on their empty subset, which comes first, for any cell or column
 with nothing left. A game whose `valid` does not check every clue relies on
-them: Unequal's Adjacent mode skips the last row and column, and a statement
-that dropped `set`'s check let its recursion accept a broken grid as a second
-answer.
+them, and a statement that dropped `set`'s check let its recursion accept a
+broken grid as a second answer.
 
 ## A firing's reason is built from its binding
 

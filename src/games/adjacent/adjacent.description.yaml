@@ -1,0 +1,120 @@
+# yaml-language-server: $schema=../../describe/description.schema.json
+
+# Adjacent's techniques and help page. Its clue kind is complete: every edge
+# carries a bar or none, and none says the two are not consecutive.
+# `npm run describe` compiles the techniques to adjacent.compiled.ts, which
+# solver.ts runs.
+game: adjacent
+help:
+  rules: |-
+    Fill in the grid with numbers from 1 to the grid size, so that every
+    number appears exactly once in each row and column. A bar between two
+    squares means their numbers differ by exactly one. Every such bar is
+    shown, so two squares without one never differ by one.
+  controls: |-
+    To place a number, click in a square to select it, then type the
+    number on the keyboard. To erase a number, click to select a square
+    and then press Backspace.
+
+    Right-click in a square and then type a number to add or remove the
+    number as a pencil mark, indicating numbers that you think
+    *might* go in that square.
+
+    Click on a bar, with either button, to mark it as done (gray it out).
+    To unmark a bar as done, click on it again. Drag on through other bars to do
+    the same to each one you pass over.
+
+    {{sticky-pencil}}
+
+    You can also use the arrow keys to move the selected square around.
+    Press Enter to toggle between entering numbers and entering pencil
+    marks, and Backspace or Space to clear a square. Shift or Ctrl with an
+    arrow key marks the bar between the selected square and its neighbor
+    that way as done.
+
+    {{mark-all}} Once every empty square has marks, the press crosses out
+    of each the numbers already placed in its row and column.
+  hints: |-
+    **Hint** explains the next step rather than simply making it. It works
+    from your own numbers and pencil marks, so it carries on from wherever
+    you are; if a number you've placed is wrong, or a cell's pencil marks
+    have crossed out its answer, it asks you to fix the highlighted
+    mistakes first. It pencils in only as it needs to: a cell with no marks
+    counts as holding every number its row and column don't already hold,
+    and the hint writes a cell's marks only when its next step crosses one
+    out or reasons from them. If you would rather it filled in every cell's
+    marks first (the same as pressing **Fill marks**), set **Hints pencil in** to
+    **Every candidate first** in the preferences.
+
+    {{hint-marks}}
+
+    The hint reasons from the bars and from their absence. A number is
+    *open* in a cell while it is still possible there: in the cell's pencil
+    marks, or, in a cell with no marks, not yet ruled out by its row and
+    column. So "a neighbor with nothing open one away from 6" means no
+    number that could still go in the neighbor is 5 or 7, and a bar there
+    rules 6 out.
+
+    {{wing}}
+
+    If you've turned on the preference that removes a number from pencil
+    marks in its row and column when you place it, the hint leaves that
+    tidying to the placement rather than spelling it out as a step of its
+    own. On an Unreasonable board, deduction can run out before the grid is
+    full; the hint says so rather than guessing.
+
+name: Adjacent
+family: latin
+sizes:
+  order: { min: 3, max: 16 }
+space:
+  grid: { w: "order", h: "order" }
+  edges: true
+  units: [rows, cols]
+answer:
+  value: { sort: cell, domain: "range(1, order)" }
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, order)" }
+  # A play aid with no meaning for the answer.
+  done: { sort: edge, notation: "bool" }
+define:
+  fits(e, a, b): "(clue(bar, e) = 1) = (abs(a - b) = 1)"
+shape:
+  - "latin(value, lines)"
+clues:
+  # 1 is a bar, 0 none.
+  bar:
+    at: edge
+    value: "{0, 1}"
+    complete: true
+    means: "(v = 1) = (abs(value(end1(at)) - value(end2(at))) = 1)"
+freedom: { kind: fill }
+deal:
+  givens: how many
+  tier: one of the tiers
+tiers: [Trivial, Easy, Tricky, Extreme, Recursive]
+techniques:
+  - { use: latin.placed, tier: Trivial, rung: dup }
+  - { use: latin.hiddenSingle, tier: Trivial, rung: hiddenSingle }
+  - { use: latin.single, tier: Trivial, rung: single }
+  # A placed number leaves its neighbor across an edge only the numbers the
+  # edge's clue allows: column by column, each placed cell's neighbors up,
+  # right, down, left.
+  - id: adjacent
+    tier: Easy
+    rung: adjacent
+    for: "L in cols, a in cells(L) where known(a), b in adj4(a), e = edge(a, b)"
+    conclude: "forall d in cand(b) where not fits(e, value(a), d): strike(b, d)"
+  # A number is struck across an edge when none of the other end's candidates
+  # fits it, in the same order over every cell.
+  - id: adjacentSet
+    tier: Tricky
+    rung: adjacentSet
+    for: "L in cols, a in cells(L), b in adj4(a), e = edge(a, b)"
+    conclude: >-
+      forall d in cand(b) where not (exists d2 in cand(a): d2 != d and fits(e, d2, d)):
+      strike(b, d)
+  - { use: latin.set, tier: Tricky, rung: set }
+  - { use: latin.fish, tier: Extreme, rung: set }
+  - { use: latin.wing, tier: Extreme, rung: wing }

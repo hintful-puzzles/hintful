@@ -6,7 +6,17 @@
 
 import type { DescriptionJson } from "../../src/describe/description.ts";
 import type { DeductionRecord } from "../../src/engine/deduction-record.ts";
+import {
+  recordEdgeClueDeductions,
+  solveEdgeClues,
+} from "../../src/engine/edge-clue-latin/solver.ts";
+import {
+  ADJTHAN,
+  type EdgeClueParams,
+  type EdgeClueState,
+} from "../../src/engine/edge-clue-latin/state.ts";
 import type { Game } from "../../src/engine/game.ts";
+import { adjacentGame } from "../../src/games/adjacent/index.ts";
 import { keenGame } from "../../src/games/keen/index.ts";
 import {
   C_ADD,
@@ -61,15 +71,6 @@ import {
 import { towersGame } from "../../src/games/towers/index.ts";
 import type { TowersParams, TowersState } from "../../src/games/towers/state.ts";
 import { unequalGame } from "../../src/games/unequal/index.ts";
-import {
-  recordUnequalDeductions,
-  solveUnequal,
-} from "../../src/games/unequal/solver.ts";
-import {
-  ADJTHAN,
-  type UnequalParams,
-  type UnequalState,
-} from "../../src/games/unequal/state.ts";
 import { type Dealt, describedGame } from "./description.ts";
 import type { Clue } from "./evaluate.ts";
 import type { Elem, Space } from "./space.ts";
@@ -360,8 +361,9 @@ export const saladBinding: Binding<SaladParams, SaladState> = {
   mistakeKinds: { cross: "cell" },
 };
 
-/** One binding for both modes: the state says which description it is. */
-function unequalDealt(s: UnequalState): Dealt {
+/** One reading for both games: the state's clue kind says which description
+ * it is. */
+function edgeClueDealt(s: EdgeClueState): Dealt {
   const o = s.order;
   return {
     sizes: { order: o },
@@ -375,7 +377,7 @@ function unequalDealt(s: UnequalState): Dealt {
           if (x < 0 || y < 0 || x >= o || y >= o) continue;
           const j = y * o + x;
           const flagged = (s.clueFlags[i] & d.f) !== 0;
-          if (s.mode === "unequal") {
+          if (!s.kind.complete) {
             if (flagged)
               out.push({
                 kind: "greater",
@@ -398,13 +400,12 @@ function edgeOf(space: Space, i: number, j: number): Elem {
   return edge([space.cells[i], space.cells[j]]) as Elem;
 }
 
-const unequalCommon = {
-  game: unequalGame,
-  dealt: unequalDealt,
-  entries: (s: UnequalState) => s.grid,
-  notes: (s: UnequalState) => s.pencil,
+const edgeClueCommon = {
+  dealt: edgeClueDealt,
+  entries: (s: EdgeClueState) => s.grid,
+  notes: (s: EdgeClueState) => s.pencil,
   withEntries: (
-    s: UnequalState,
+    s: EdgeClueState,
     values: ArrayLike<number>,
     notes?: ArrayLike<number>,
   ) => ({
@@ -412,12 +413,12 @@ const unequalCommon = {
     grid: Int8Array.from(values),
     pencil: notes ? Int32Array.from(notes) : new Int32Array(s.order * s.order),
   }),
-  ownLadder: (s: UnequalState, cap: number) => {
+  ownLadder: (s: EdgeClueState, cap: number) => {
     const o = s.order;
     const cube = new Uint8Array(o * o * o);
-    const level = solveUnequal(
+    const level = solveEdgeClues(
       o,
-      s.mode,
+      s.kind,
       s.clueFlags,
       Uint8Array.from(s.immutable),
       cap,
@@ -425,33 +426,27 @@ const unequalCommon = {
     );
     return { level, masks: cubeMasks(cube, o) };
   },
-  ownFirings: (s: UnequalState, cap: number) =>
-    recordUnequalDeductions(
+  ownFirings: (s: EdgeClueState, cap: number) =>
+    recordEdgeClueDeductions(
       s.order,
-      s.mode,
+      s.kind,
       s.clueFlags,
       Uint8Array.from(s.immutable),
       cap,
     ),
 };
-const unequalDiffs = ["trivial", "easy", "tricky", "extreme", "recursive"] as const;
+const edgeClueDiffs = ["trivial", "easy", "tricky", "extreme", "recursive"] as const;
 
-export const unequalBinding: Binding<UnequalParams, UnequalState> = {
-  ...unequalCommon,
+export const unequalBinding: Binding<EdgeClueParams, EdgeClueState> = {
+  ...edgeClueCommon,
+  game: unequalGame,
   description: describedGame("src/games/unequal/unequal.description.yaml"),
-  params: tiers([4, 5, 6], unequalDiffs).map((p) => ({
-    order: p.w,
-    mode: "unequal",
-    diff: p.diff,
-  })),
+  params: tiers([4, 5, 6], edgeClueDiffs).map((p) => ({ order: p.w, diff: p.diff })),
 };
 
-export const adjacentBinding: Binding<UnequalParams, UnequalState> = {
-  ...unequalCommon,
-  description: describedGame("src/games/unequal/adjacent.description.yaml"),
-  params: tiers([4, 5, 6], unequalDiffs).map((p) => ({
-    order: p.w,
-    mode: "adjacent",
-    diff: p.diff,
-  })),
+export const adjacentBinding: Binding<EdgeClueParams, EdgeClueState> = {
+  ...edgeClueCommon,
+  game: adjacentGame,
+  description: describedGame("src/games/adjacent/adjacent.description.yaml"),
+  params: tiers([4, 5, 6], edgeClueDiffs).map((p) => ({ order: p.w, diff: p.diff })),
 };

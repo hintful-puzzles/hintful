@@ -368,6 +368,7 @@ describe("the enrolled population is derived, not listed", () => {
     // and only a release that commits nothing selects.
     expect(noteTaking.ids).toEqual([
       "abcd",
+      "adjacent",
       "crossing",
       "group",
       "keen",

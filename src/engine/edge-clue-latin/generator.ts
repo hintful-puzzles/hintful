@@ -1,15 +1,15 @@
 /**
- * Unequal generator — port of `new_game_desc` (+ `game_assemble`/`game_strip`/
- * the `gg_*` clue machinery) from `unequal.c`.
+ * The edge-clue Latin square's generator — port of `new_game_desc` (+
+ * `game_assemble`/`game_strip`/the `gg_*` clue machinery) from `unequal.c`.
  *
  * Generate a full Latin square as the solution, then build a minimal clue set:
- * greedily *assemble* clues (number givens + inequality signs) onto a blank
- * board until the graded solver solves it, then *strip* redundant clues. In
- * Adjacent mode every adjacency flag implied by the solution is present from the
- * start, so only number givens are added/removed. RNG-faithful to upstream over
- * the bit-identical `random.ts`, so the emitted desc matches C byte-for-byte for
- * the same seed, except where upstream gave up on the tier: after fifty boards
- * the tier below could solve it dealt at that tier, and this keeps looking.
+ * greedily *assemble* clues (number givens and the kind's clues) onto a blank
+ * board until the graded solver solves it, then *strip* redundant clues. A
+ * complete kind's clues are all dealt from the start, so only number givens
+ * are added and removed. RNG-faithful to upstream over the bit-identical
+ * `random.ts`, so the emitted desc matches C byte-for-byte for the same seed,
+ * except where upstream gave up on the tier: after fifty boards the tier below
+ * could solve it dealt at that tier, and this keeps looking.
  */
 
 import {
@@ -17,38 +17,34 @@ import {
   DIFF_IMPOSSIBLE,
   DIFF_UNFINISHED,
   latinGenerate,
-} from "../../engine/latin.ts";
-import type { RandomState } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
-import { solveUnequal } from "./solver.ts";
+} from "../latin.ts";
+import type { RandomState } from "../random/index.ts";
+import { retryLimit } from "../retry-limit.ts";
+import { shuffle } from "../shuffle.ts";
+import { solveEdgeClues } from "./solver.ts";
 import {
   ADJTHAN,
+  type ClueKind,
   DIFF_RECURSIVE,
   diffToLevel,
   displayChar,
-  F_ADJ_DOWN,
-  F_ADJ_LEFT,
-  F_ADJ_RIGHT,
-  F_ADJ_UP,
-  type Mode,
-  type UnequalParams,
+  type EdgeClueParams,
 } from "./state.ts";
 
-/** The board being assembled: number givens, adjacency flags, and the solver's
+/** The board being assembled: number givens, clue flags, and the solver's
  * last candidate cube (`state->hints`). */
 interface GenState {
   o: number;
-  mode: Mode;
+  kind: ClueKind;
   nums: Uint8Array; // o²
   flags: Int32Array; // o² (F_ADJ_*)
   hints: Uint8Array; // o³ (candidate cube)
 }
 
-function blankGen(o: number, mode: Mode): GenState {
+function blankGen(o: number, kind: ClueKind): GenState {
   return {
     o,
-    mode,
+    kind,
     nums: new Uint8Array(o * o),
     flags: new Int32Array(o * o),
     hints: new Uint8Array(o * o * o),
@@ -58,7 +54,7 @@ function blankGen(o: number, mode: Mode): GenState {
 function cloneGen(g: GenState): GenState {
   return {
     o: g.o,
-    mode: g.mode,
+    kind: g.kind,
     nums: g.nums.slice(),
     flags: g.flags.slice(),
     hints: g.hints.slice(),
@@ -72,7 +68,7 @@ function cloneGen(g: GenState): GenState {
  * `-1` impossible · `0` unfinished · `1` solved uniquely · `2` ambiguous.
  */
 function solverState(g: GenState, maxdiff: number): number {
-  const ret = solveUnequal(g.o, g.mode, g.flags, g.nums, maxdiff, g.hints);
+  const ret = solveEdgeClues(g.o, g.kind, g.flags, g.nums, maxdiff, g.hints);
   if (ret === DIFF_IMPOSSIBLE) return -1;
   if (ret === DIFF_UNFINISHED) return 0;
   if (ret === DIFF_AMBIGUOUS) return 2;
@@ -80,8 +76,8 @@ function solverState(g: GenState, maxdiff: number): number {
 }
 
 /** Returns true if it placed (or, with `checkonly`, could have placed) the clue.
- * A clue code is `loc*5 + which`; `which == 4` adds the number given, `0..3` an
- * inequality flag toward the matching `ADJTHAN` direction. */
+ * A clue code is `loc*5 + which`; `which == 4` adds the number given, `0..3` a
+ * clue flag toward the matching `ADJTHAN` direction. */
 function ggPlaceClue(
   g: GenState,
   ccode: number,
@@ -98,12 +94,12 @@ function ggPlaceClue(
     if (g.nums[loc] !== 0) return false;
     if (!checkonly) g.nums[loc] = latin[loc];
   } else {
-    if (g.mode === "adjacent") return false; // flags always all present
+    if (g.kind.complete) return false; // flags always all present
     if (g.flags[loc] & ADJTHAN[which].f) return false;
     const lx = x + ADJTHAN[which].dx;
     const ly = y + ADJTHAN[which].dy;
     if (lx < 0 || ly < 0 || lx >= o || ly >= o) return false;
-    if (latin[loc] <= latin[ly * o + lx]) return false; // flag would be incorrect
+    if (!g.kind.holds(latin[loc], latin[ly * o + lx])) return false;
     if (!checkonly) g.flags[loc] |= ADJTHAN[which].f;
   }
   return true;
@@ -118,7 +114,7 @@ function ggRemoveClue(g: GenState, ccode: number, checkonly: boolean): boolean {
     if (g.nums[loc] === 0) return false;
     if (!checkonly) g.nums[loc] = 0;
   } else {
-    if (g.mode === "adjacent") return false;
+    if (g.kind.complete) return false;
     if (!(g.flags[loc] & ADJTHAN[which].f)) return false;
     if (!checkonly) g.flags[loc] &= ~ADJTHAN[which].f;
   }
@@ -151,7 +147,8 @@ function ggBestClue(g: GenState, scratch: Int32Array, latin: Int32Array): number
       minclues = nclues;
     }
   }
-  if (best === -1) throw new Error("unequal: gg_best_clue found no placeable clue");
+  if (best === -1)
+    throw new Error(`${g.kind.game}: gg_best_clue found no placeable clue`);
   return best;
 }
 
@@ -184,7 +181,7 @@ function gameStrip(
   latin: Int32Array,
   difficulty: number,
 ): void {
-  const copy = blankGen(g.o, g.mode);
+  const copy = blankGen(g.o, g.kind);
 
   for (const ccode of scratch) {
     if (!ggRemoveClue(g, ccode, false)) continue;
@@ -193,30 +190,30 @@ function gameStrip(
     if (solverState(copy, difficulty) !== 1) {
       // Can't solve without it — put it back.
       const ok = ggPlaceClue(g, ccode, latin, false);
-      if (!ok) throw new Error("unequal: failed to restore a required clue");
+      if (!ok) throw new Error(`${g.kind.game}: failed to restore a required clue`);
     }
   }
 }
 
-/** Seed every adjacency flag implied by the solution (Adjacent mode). */
-function addAdjacentFlags(g: GenState, latin: Int32Array): void {
+/** Flag every clue the solution makes true: a complete kind's whole deal. */
+function addEveryClue(g: GenState, latin: Int32Array): void {
   const o = g.o;
   for (let y = 0; y < o; y++) {
     for (let x = 0; x < o; x++) {
-      if (x < o - 1 && Math.abs(latin[y * o + x] - latin[y * o + x + 1]) === 1) {
-        g.flags[y * o + x] |= F_ADJ_RIGHT;
-        g.flags[y * o + x + 1] |= F_ADJ_LEFT;
-      }
-      if (y < o - 1 && Math.abs(latin[y * o + x] - latin[(y + 1) * o + x]) === 1) {
-        g.flags[y * o + x] |= F_ADJ_DOWN;
-        g.flags[(y + 1) * o + x] |= F_ADJ_UP;
+      for (const dir of ADJTHAN) {
+        const nx = x + dir.dx;
+        const ny = y + dir.dy;
+        if (nx < 0 || ny < 0 || nx >= o || ny >= o) continue;
+        if (g.kind.holds(latin[y * o + x], latin[ny * o + nx]))
+          g.flags[y * o + x] |= dir.f;
       }
     }
   }
 }
 
-export function newUnequalDesc(
-  p: UnequalParams,
+export function newEdgeClueDesc(
+  kind: ClueKind,
+  p: EdgeClueParams,
   rng: RandomState,
 ): { desc: string; aux: string } {
   const o = p.order;
@@ -224,32 +221,32 @@ export function newUnequalDesc(
   const diff = diffToLevel(p.diff);
 
   // Clue codes, randomized later. Numbers (which == 4) come before the
-  // inequalities (which 0..3), in `(i%o2)*5 + 4 - (i/o2)` order.
+  // clue flags (which 0..3), in `(i%o2)*5 + 4 - (i/o2)` order.
   const scratch = new Int32Array(o2 * 5);
   for (let i = 0; i < scratch.length; i++)
     scratch[i] = (i % o2) * 5 + 4 - ((i / o2) | 0);
 
-  // The rarest tier measured (2026-10-05, twenty deals a cell, orders 3 to 7 in
-  // both modes) was a 3x3 at Hard, then the forcing chain's tier: 119 tries at
-  // the median and 877 at worst.
-  const attempt = retryLimit(`unequal: generation (${o}${p.mode})`);
+  // The rarest tier measured (2026-10-05, twenty deals a cell, orders 3 to 7,
+  // signs and bars) was a 3x3 at Hard, then the forcing chain's tier: 119 tries
+  // at the median and 877 at worst.
+  const attempt = retryLimit(`${kind.game}: generation (${o})`);
   while (true) {
     attempt();
 
     const sq = latinGenerate(o, rng);
 
-    // Separately shuffle the numeric (first o²) and inequality (rest) codes.
+    // Separately shuffle the numeric (first o²) and clue-flag (rest) codes.
     shuffleRange(scratch, 0, o2, rng);
     shuffleRange(scratch, o2, scratch.length - o2, rng);
 
-    const state = blankGen(o, p.mode);
-    if (p.mode === "adjacent") addAdjacentFlags(state, sq);
+    const state = blankGen(o, kind);
+    if (kind.complete) addEveryClue(state, sq);
 
     gameAssemble(state, scratch, sq, diff);
     gameStrip(state, scratch, sq, diff);
 
     // Too easy when the tier below solves it. A tier no board of this size
-    // needs never gets here: `validateParams` refuses it.
+    // needs never gets here: the game's `validateParams` refuses it.
     if (diff > 0 && solverState(cloneGen(state), diff - 1) > 0) continue;
 
     return { desc: encodeDesc(state), aux: encodeAux(sq, o) };

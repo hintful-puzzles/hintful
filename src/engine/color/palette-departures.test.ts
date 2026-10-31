@@ -23,17 +23,12 @@
  */
 import { describe, expect, it } from "vitest";
 import { registeredGameIds } from "../registry.ts";
+import { gameSourceFiles } from "../testing/enrollment.ts";
 import { colorToOKLCH } from "../testing/oklch.ts";
 import type { Color } from "../types.ts";
 import "../../games/index.ts";
 import * as colors from "./colors.ts";
 import * as palette from "./palette.ts";
-
-const sourceModules = import.meta.glob<string>("../../games/**/*.ts", {
-  query: "?raw",
-  import: "default",
-  eager: true,
-});
 
 /** A meaning, the slot names that say it, and the role(s) that cover it. */
 const ROLES: Record<string, { slot: RegExp; roles: readonly string[] }> = {
@@ -49,6 +44,7 @@ const ROLES: Record<string, { slot: RegExp; roles: readonly string[] }> = {
 };
 
 interface Assignment {
+  game: string;
   file: string;
   slot: string;
   value: string;
@@ -67,29 +63,30 @@ const POSITIONAL = /^\s*([^/]+?),\s*\/\/\s*(?:\d+\s+)?(COL_[A-Z0-9_]+)(.*)$/;
 
 function assignments(): Assignment[] {
   const found: Assignment[] = [];
-  for (const [file, source] of Object.entries(sourceModules)) {
-    if (file.endsWith(".test.ts")) continue;
-    const lines = source.split("\n");
-    lines.forEach((text, i) => {
-      const previous = lines[i - 1] ?? "";
-      const previousIsComment = /^\s*\/\//.test(previous) || /\*\/\s*$/.test(previous);
-      const m = ASSIGNMENT.exec(text);
-      if (m) {
-        const [, slot, value, trailing] = m;
-        const explained =
-          trailing !== undefined || previousIsComment || /\/\*/.test(text);
-        found.push({ file, slot, value, line: i + 1, explained });
-        return;
-      }
-      const p = POSITIONAL.exec(text);
-      if (p) {
-        const [, value, slot, rest] = p;
-        const explained =
-          /\S/.test(rest.replace(/^\s*(\(.*?\))?\s*$/, "")) || previousIsComment;
-        found.push({ file, slot, value: value.trim(), line: i + 1, explained });
-      }
-    });
-  }
+  for (const [game, files] of gameSourceFiles)
+    for (const { path: file, text: source } of files) {
+      const lines = source.split("\n");
+      lines.forEach((text, i) => {
+        const previous = lines[i - 1] ?? "";
+        const previousIsComment =
+          /^\s*\/\//.test(previous) || /\*\/\s*$/.test(previous);
+        const m = ASSIGNMENT.exec(text);
+        if (m) {
+          const [, slot, value, trailing] = m;
+          const explained =
+            trailing !== undefined || previousIsComment || /\/\*/.test(text);
+          found.push({ game, file, slot, value, line: i + 1, explained });
+          return;
+        }
+        const p = POSITIONAL.exec(text);
+        if (p) {
+          const [, value, slot, rest] = p;
+          const explained =
+            /\S/.test(rest.replace(/^\s*(\(.*?\))?\s*$/, "")) || previousIsComment;
+          found.push({ game, file, slot, value: value.trim(), line: i + 1, explained });
+        }
+      });
+    }
   return found;
 }
 
@@ -106,7 +103,7 @@ describe("a departure from a shared role is stated at the assignment", () => {
     // nothing. Every registered game contributes at least one assignment,
     // including the ones that build their palette positionally, which the
     // first shape alone could not see.
-    const games = new Set(all.map((a) => a.file.split("/")[3]));
+    const games = new Set(all.map((a) => a.game));
     expect([...games].sort()).toEqual(registeredGameIds().sort());
     // Each meaning is found under its slot name, and found holding its role:
     // a name that matched nothing, or a value the comparison below could not
@@ -155,15 +152,11 @@ describe("a departure from a shared role is stated at the assignment", () => {
     const swallowed = all
       .filter((a) => marks.some((slot) => slot.test(a.slot)))
       .filter((a) => pairHued.includes(a.value))
-      .filter((a) => {
-        const game = a.file.split("/")[3];
-        return Object.entries(sourceModules).some(
-          ([file, source]) =>
-            file.split("/")[3] === game &&
-            !file.endsWith(".test.ts") &&
-            takesPair.test(source.replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g, "")),
-        );
-      });
+      .filter((a) =>
+        (gameSourceFiles.get(a.game) ?? []).some(({ text }) =>
+          takesPair.test(text.replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g, "")),
+        ),
+      );
     expect(
       swallowed.map(
         (a) => `${a.file.replace("../../games/", "")}:${a.line} ${a.slot} = ${a.value}`,

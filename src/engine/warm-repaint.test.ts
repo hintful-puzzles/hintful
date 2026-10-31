@@ -121,6 +121,11 @@ const WRONG: Readonly<Record<string, { board: string; moves: readonly unknown[] 
       "5x5n4de:3,1,1,0,0,1,2,2,2,2,1,0,2,1,2,0,2,0,1,2,2,1,0,2,2,1,2,0,1,2,1,1,1,1,2,1,3,0,2,0,",
     moves: [{ type: "enter", x: 1, y: 4, letter: 2 }],
   },
+  adjacent: {
+    board:
+      "5de:5,0,0D,0R,0DL,0,3,0UR,0DL,0UD,0R,0DL,0RD,0UL,0U,0D,0UR,0UL,0,0D,0UR,0RL,0L,0R,0UL,",
+    moves: [{ type: "set", x: 1, y: 0, n: 2, pencil: false }],
+  },
   bridges: {
     board: "7x7i30e10m2d0:2b4a4g25b4d1c3a4e4g2b2a1a",
     moves: [{ ops: [{ op: "M", x: 0, y: 0 }] }],

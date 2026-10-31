@@ -306,8 +306,8 @@ not only of the hint.
 
 Exemplars: [`range/solver.ts`](../src/games/range/solver.ts) keeps a board
 only if it is uniquely solvable without guessing, and
-[`unequal/generator.ts`](../src/games/unequal/generator.ts) caps assembly
-below the recursive level.
+[`engine/edge-clue-latin/generator.ts`](../src/engine/edge-clue-latin/generator.ts)
+(Unequal's and Adjacent's) caps assembly below the recursive level.
 
 ### No option switches the generator's checks off
 
@@ -1661,7 +1661,8 @@ starts at [hints-candidates.md](./hints-candidates.md) § "What every game does"
 Exemplars: [`group/solver.ts`](../src/games/group/solver.ts) for a described
 game with no clues, its techniques reading the grid as a table, and a
 `valid`; [`unequal/solver.ts`](../src/games/unequal/solver.ts) for one with
-clues, its two modes two descriptions;
+clues, which shares its driver with Adjacent's
+([`engine/edge-clue-latin/solver.ts`](../src/engine/edge-clue-latin/solver.ts));
 [`towers/solver.ts`](../src/games/towers/solver.ts) for clues beside the
 grid; [`keen/solver.ts`](../src/games/keen/solver.ts) for per-cage
 arithmetic; [`salad/solver.ts`](../src/games/salad/solver.ts) for a repeated
@@ -1674,7 +1675,7 @@ symbol.
   generator that reads the cube through a transposed index, and for one that
   shuffles two clue lists in two separate `shuffle` calls: both decide the
   board, so reproduce them
-  ([`unequal/generator.ts`](../src/games/unequal/generator.ts)).
+  ([`engine/edge-clue-latin/generator.ts`](../src/engine/edge-clue-latin/generator.ts)).
 - **A clue that constrains a cell without placing a digit uses the `seed`
   hook.** `latinSolver` seeds its cube from the working grid, which covers
   every given digit; `LatinSolverConfig.seed` is where a mark that only rules
@@ -1692,12 +1693,12 @@ symbol.
   count copies, the wing never weighs it, and forcing chains never link
   through it. Read the marker array back off the final cube (`cubeOut`). A
   game with exactly one such symbol per line needs no declaration.
-- **The deductions are what refuse a broken grid, not only `valid`.** A
-  game's `valid` may check less than its rules (Unequal's Adjacent mode skips
-  the last row and column, as upstream's does), and then a contradiction a
-  deduction misses lets the recursion accept a broken grid and report the
-  board ambiguous (descriptions.md § "A conclusion that is false is a
-  contradiction").
+- **The deductions are what refuse a broken grid, not only `valid`.** Where
+  a game's `valid` checks less than its rules, a contradiction a deduction
+  misses lets the recursion accept a broken grid and report the board
+  ambiguous (descriptions.md § "A conclusion that is false is a
+  contradiction"). Prefer a `valid` that reads the same predicate as the
+  game's error check, as the edge-clue games' does (`breaksClue`).
 - **Three generator shapes.** Derive every clue from the full square, then
   remove (Towers). Assemble clues greedily onto a blank board, reading the
   solver's remaining-possibility counts through `latinSolver`'s optional

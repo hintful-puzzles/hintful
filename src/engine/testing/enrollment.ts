@@ -194,26 +194,63 @@ export function capabilitySets(): CapabilitySet[] {
   }));
 }
 
-/** Every game's own sources, by game id — test files excluded, because a guard
- * asking "does this game hand-roll the mechanic" must not be satisfied by a
- * test that merely mentions the helper. */
-const sourceText = (() => {
+/** A source file a guard reads, by its path from this module. */
+export interface SourceFile {
+  path: string;
+  text: string;
+}
+
+/** Every game's own source files, by game id — test files excluded, because a
+ * guard asking "does this game hand-roll the mechanic" must not be satisfied by
+ * a test that merely mentions the helper.
+ *
+ * A game's own code includes each **game family** it imports: an engine
+ * directory whose modules build part of a `Game` (they import the contract,
+ * `../game.ts`), such as `edge-clue-latin/`, which Unequal and Adjacent play
+ * on. What two games share cannot live in either, and a game that runs the
+ * shared mechanic there has neither hand-rolled it nor hidden it. The engine's
+ * libraries (`grid/`, `color/`) and flat helpers are not a game's own code:
+ * they are the mechanics the guards ask after. */
+export const gameSourceFiles: ReadonlyMap<string, readonly SourceFile[]> = (() => {
   const modules = import.meta.glob<string>("../../games/*/**/*.ts", {
     query: "?raw",
     import: "default",
     eager: true,
   });
-  const byGame = new Map<string, string[]>();
+  const engineDirs = import.meta.glob<string>("../*/*.ts", {
+    query: "?raw",
+    import: "default",
+    eager: true,
+  });
+  const families = new Map<string, SourceFile[]>();
+  for (const [path, text] of Object.entries(engineDirs)) {
+    if (path.includes(".test.")) continue;
+    const dir = path.split("/")[1];
+    families.set(dir, [...(families.get(dir) ?? []), { path, text }]);
+  }
+  for (const [dir, files] of families)
+    if (!files.some((f) => f.text.includes('from "../game.ts"'))) families.delete(dir);
+
+  const byGame = new Map<string, SourceFile[]>();
+  const familiesOf = new Map<string, Set<string>>();
   for (const [path, text] of Object.entries(modules)) {
     if (path.includes(".test.")) continue;
     const id = path.split("/")[3];
     if (!id) continue;
-    const list = byGame.get(id) ?? [];
-    list.push(text);
-    byGame.set(id, list);
+    byGame.set(id, [...(byGame.get(id) ?? []), { path, text }]);
+    const dirs = familiesOf.get(id) ?? new Set<string>();
+    for (const m of text.matchAll(/from "\.\.\/\.\.\/engine\/([a-z-]+)\/[^"]+"/g))
+      if (families.has(m[1])) dirs.add(m[1]);
+    familiesOf.set(id, dirs);
   }
+  for (const [id, dirs] of familiesOf)
+    for (const dir of dirs) byGame.get(id)?.push(...(families.get(dir) ?? []));
   return byGame;
 })();
+
+const sourceText = new Map(
+  [...gameSourceFiles].map(([id, files]) => [id, files.map((f) => f.text)]),
+);
 
 /** How many game source files were scanned — the source sweep's own vacuity
  * number. An unmatched glob yields `{}`, and every check over it then passes. */

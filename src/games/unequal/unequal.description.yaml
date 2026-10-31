@@ -1,17 +1,14 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
-# Unequal's Unequal ruleset, and the game's help page. Adjacent replaces the
-# clue kind, so it is another description (adjacent.description.yaml).
-# `npm run describe` compiles the techniques to unequal.compiled.ts, which
-# solver.ts runs.
+# Unequal's techniques and help page. `npm run describe` compiles the
+# techniques to unequal.compiled.ts, which solver.ts runs.
 game: unequal
 help:
   rules: |-
     Fill in the grid with numbers from 1 to the grid size, so that every
     number appears exactly once in each row and column. The clues between
-    squares depend on the game mode:
-
-    {{rulesets}}
+    squares are `<` signs, each pointing at the smaller of its two numbers.
+    Not every one is shown, especially at harder difficulties.
   controls: |-
     To place a number, click in a square to select it, then type the
     number on the keyboard. To erase a number, click to select a square
@@ -52,12 +49,7 @@ help:
     The hint calls every `<` sign a *greater-than sign*, and reasons from
     it both ways: the cell on its larger side can't hold anything as small
     as the smallest its partner could be, nor the one on its smaller side
-    anything as large as the largest. In {{choice:ruleset:1}} mode it reasons from the
-    bars and from their absence. A number is *open* in a cell while it is
-    still possible there: in the cell's pencil marks, or, in a cell with no
-    marks, not yet ruled out by its row and column. So "a neighbor with
-    nothing open one away from 6" means no number that could still go in
-    the neighbor is 5 or 7, and a bar there rules 6 out.
+    anything as large as the largest.
 
     {{wing}}
 

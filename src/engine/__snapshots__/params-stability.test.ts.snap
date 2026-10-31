@@ -18,6 +18,18 @@ bump:n  full=5x5n5de  brief=5x5n5
 flip:diag  full=5x5n4Dde  brief=5x5n4D"
 `;
 
+exports[`encoded params are byte-stable > adjacent 1`] = `
+"default  full=5de  brief=5
+preset:5x5 Easy  full=5dt  brief=5
+preset:5x5 Tricky  full=5dk  brief=5
+preset:5x5 Hard  full=5dx  brief=5
+preset:7x7 Tricky  full=7dk  brief=7
+preset:7x7 Hard  full=7dx  brief=7
+preset:7x7 Unreasonable  full=7dr  brief=7
+tier:4  full=5dr  brief=5
+bump:order  full=6de  brief=6"
+`;
+
 exports[`encoded params are byte-stable > ascent 1`] = `
 "default  full=6x7mOde  brief=6x7mO
 preset:Orthogonal/Orthogonal: 6x7 Normal  full=6x7mOdn  brief=6x7mO
@@ -877,21 +889,14 @@ bump:h  full=4x5dn  brief=4x5"
 
 exports[`encoded params are byte-stable > unequal 1`] = `
 "default  full=4de  brief=4
-preset:Unequal/Unequal: 4x4 Easy  full=4dt  brief=4
-preset:Unequal/Unequal: 5x5 Easy  full=5dt  brief=5
-preset:Unequal/Unequal: 5x5 Normal  full=5de  brief=5
-preset:Unequal/Unequal: 5x5 Tricky  full=5dk  brief=5
-preset:Unequal/Unequal: 5x5 Hard  full=5dx  brief=5
-preset:Unequal/Unequal: 7x7 Tricky  full=7dk  brief=7
-preset:Unequal/Unequal: 7x7 Hard  full=7dx  brief=7
-preset:Unequal/Unequal: 7x7 Unreasonable  full=7dr  brief=7
-preset:Adjacent/Adjacent: 5x5 Easy  full=5adt  brief=5a
-preset:Adjacent/Adjacent: 5x5 Normal  full=5ade  brief=5a
-preset:Adjacent/Adjacent: 5x5 Tricky  full=5adk  brief=5a
-preset:Adjacent/Adjacent: 5x5 Hard  full=5adx  brief=5a
-preset:Adjacent/Adjacent: 7x7 Tricky  full=7adk  brief=7a
-preset:Adjacent/Adjacent: 7x7 Hard  full=7adx  brief=7a
-preset:Adjacent/Adjacent: 7x7 Unreasonable  full=7adr  brief=7a
+preset:4x4 Easy  full=4dt  brief=4
+preset:5x5 Easy  full=5dt  brief=5
+preset:5x5 Normal  full=5de  brief=5
+preset:5x5 Tricky  full=5dk  brief=5
+preset:5x5 Hard  full=5dx  brief=5
+preset:7x7 Tricky  full=7dk  brief=7
+preset:7x7 Hard  full=7dx  brief=7
+preset:7x7 Unreasonable  full=7dr  brief=7
 tier:2  full=4dk  brief=4
 tier:3  full=4dx  brief=4
 tier:4  full=4dr  brief=4"

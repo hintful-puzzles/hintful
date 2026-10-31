@@ -153,10 +153,6 @@ describe("the per-commit preset slice is derived, and did not collapse", () => {
       "no Solo jigsaw board",
     ).toBe(true);
     expect(
-      carries("unequal", (p) => p["mode"] === "adjacent"),
-      "no Unequal Adjacent board",
-    ).toBe(true);
-    expect(
       carries("seismic", (p) => p["mode"] === 1),
       "no Seismic Tectonic board",
     ).toBe(true);

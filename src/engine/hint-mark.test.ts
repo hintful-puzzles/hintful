@@ -21,6 +21,7 @@ import { type HintMarkStyle, HintMarks, type MarkCell } from "./hint-mark.ts";
 import { Midend } from "./index.ts";
 import { NOTHING_TO_CLEAR, RING_MIN_ROUNDNESS } from "./ring.ts";
 import { beginDealt } from "./testing/dealt.ts";
+import { gameSourceFiles } from "./testing/enrollment.ts";
 import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 import { outsideRings, ringCrossings, ringsOf } from "./testing/mark-shape.ts";
 import {
@@ -34,6 +35,20 @@ import type { Color, Rect } from "./types.ts";
 const RENDERERS = import.meta.glob<Record<string, unknown>>("../games/*/render.ts", {
   eager: true,
 });
+/** The renderers of the engine's game families, which draw for the games that
+ * play on them (`testing/enrollment.ts`'s `gameSourceFiles`). */
+const FAMILY_RENDERERS = import.meta.glob<Record<string, unknown>>("./*/render.ts", {
+  eager: true,
+});
+
+/** A game's `COL_HINT_CELL`: its own renderer's, or its family's. */
+function evidenceColor(id: string, own: Record<string, unknown> | null): unknown {
+  if (own?.["COL_HINT_CELL"] !== undefined) return own["COL_HINT_CELL"];
+  const family = (gameSourceFiles.get(id) ?? []).find(
+    (f) => /^\.\.\/[^/]+\/render\.ts$/.test(f.path) && !f.path.startsWith("../../"),
+  );
+  return family && FAMILY_RENDERERS[`.${family.path.slice(2)}`]?.["COL_HINT_CELL"];
+}
 
 interface Op {
   op: string;
@@ -118,7 +133,7 @@ describe("a hint marks beside the content, never behind it", () => {
   });
 
   for (const [id, game] of HINT_GAMES) {
-    const evidence = byId.get(id)?.["COL_HINT_CELL"];
+    const evidence = evidenceColor(id, byId.get(id) ?? null);
 
     it(`${id}: a ring is round, and nothing is filled`, () => {
       const frames = hintFrames(game);

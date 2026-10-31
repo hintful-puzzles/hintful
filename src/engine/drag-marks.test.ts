@@ -18,7 +18,7 @@ import { crossDrag } from "../games/pearl/index.ts";
 import { markDrag } from "../games/slant/index.ts";
 import { clueDrag as towersClueDrag } from "../games/towers/index.ts";
 import { clueDrag as undeadClueDrag } from "../games/undead/index.ts";
-import { spentDrag } from "../games/unequal/index.ts";
+import { spentDrag } from "./edge-clue-latin/play.ts";
 import { PENCIL_MODE_BUTTON } from "./pointer.ts";
 import { getTsGame } from "./registry.ts";
 import type { AnyGame } from "./testing/input-probe.ts";
@@ -41,8 +41,11 @@ describe("a mark declared with dragMarkVerbs is what its drag does", () => {
   it("Undead: a clue marked done", () => {
     expectDragRepeatsThePress(game("undead"), "undead", undeadClueDrag);
   });
-  it("Unequal: a clue marked spent", () => {
+  it("Unequal: a sign marked spent", () => {
     expectDragRepeatsThePress(game("unequal"), "unequal", spentDrag);
+  });
+  it("Adjacent: a bar marked spent", () => {
+    expectDragRepeatsThePress(game("adjacent"), "adjacent", spentDrag);
   });
   it("Slant, in notes mode: the mark between two squares", () => {
     expectDragRepeatsThePress(game("slant"), "slant", markDrag, [PENCIL_MODE_BUTTON]);

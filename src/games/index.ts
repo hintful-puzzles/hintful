@@ -21,6 +21,7 @@
 
 import { registerGame } from "../engine/registry.ts";
 import { abcdGame } from "./abcd/index.ts";
+import { adjacentGame } from "./adjacent/index.ts";
 import { ascentGame } from "./ascent/index.ts";
 import { blackboxGame } from "./blackbox/index.ts";
 import { boatsGame } from "./boats/index.ts";
@@ -91,6 +92,7 @@ import { untangleGame } from "./untangle/index.ts";
  */
 export function registerAllGames(): void {
   registerGame(abcdGame);
+  registerGame(adjacentGame);
   registerGame(ascentGame);
   registerGame(blackboxGame);
   registerGame(bridgesGame);

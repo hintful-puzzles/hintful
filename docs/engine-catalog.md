@@ -531,6 +531,14 @@ its reason, and `compiledRung` pairs a described game's own
 `describe-runtime.ts` is what compiled code reads: the marks, the numbered
 grid (`latinSpace`) and a game's `ClueList`s.
 
+A Latin square whose clues sit in the gaps between neighboring cells is
+`edge-clue-latin/`: the board and its desc, the moves, the input with its
+spent-clue drag, the cell drawing, the solver's driver and the generator
+(*byte-match critical*). The game declares its clue as a `ClueKind` (what it
+says, whether every true one is dealt, whether both ends flag it, its
+compiled ladder, its drawing and its text glyph) and writes its own `Game`,
+its reasons and its hint's sentences. Exemplars: `unequal/`, `adjacent/`.
+
 ## Solving and deduction
 
 ### `deduction-fixpoint.ts` — the shared technique ladder

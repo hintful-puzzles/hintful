@@ -105,7 +105,6 @@ const NO_OVERLAY_TEST = [
   // game's `findMistakes` flagged, so none of the spellings above match it.
   "range",
   "undead",
-  "unequal",
 ];
 
 describe("a game that finds mistakes has a test that paints them", () => {

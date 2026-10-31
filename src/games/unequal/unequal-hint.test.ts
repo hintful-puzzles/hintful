@@ -1,15 +1,28 @@
 /**
  * Unequal explained-hint tests.
  *
- * Tier 1 — the recording solver records a reason per technique in both modes and
- * its replayed placements complete a generated board; `hint` populates, strikes
- * (basic-Latin culls + the two-mode clue eliminations) and places with quality-bar
- * narration; refusal on solved / on mistakes; `hintKeepTrack` verdicts; resume to
- * solved in both modes. Tier 2.5 — a render-scenario snapshot of a clue-elimination
- * journey frame in each mode (struck candidate's strikethrough, evidence
- * `COL_HINT_CELL`, clue glyphs still drawn).
+ * Tier 1 — the recording solver records a reason per technique and its
+ * replayed placements complete a generated board; `hint` populates, strikes
+ * (basic-Latin culls + the sign eliminations) and places with quality-bar
+ * narration; refusal on solved / on mistakes; `hintKeepTrack` verdicts; resume
+ * to solved. Tier 2.5 — a render-scenario snapshot of a sign-elimination
+ * journey frame (struck candidate's strikethrough, evidence `COL_HINT_CELL`,
+ * clue glyphs still drawn).
  */
 import { describe, expect, it } from "vitest";
+import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
+import { COL_HINT_CELL, COL_PENCIL } from "../../engine/edge-clue-latin/render.ts";
+import { recordEdgeClueDeductions } from "../../engine/edge-clue-latin/solver.ts";
+import {
+  DIFF_EXTREME,
+  diffToLevel,
+  type EdgeClueMove,
+  type EdgeClueParams,
+  type EdgeClueState,
+  newState,
+  newUi,
+  status,
+} from "../../engine/edge-clue-latin/state.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeHintKindPins,
@@ -20,73 +33,55 @@ import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
-import { newUnequalDesc } from "./generator.ts";
 import { unequalGame } from "./index.ts";
-import { COL_HINT_CELL, COL_PENCIL } from "./render.ts";
-import { type HintReason, recordUnequalDeductions } from "./solver.ts";
-import {
-  DIFF_EXTREME,
-  diffToLevel,
-  newState,
-  newUi,
-  status,
-  type UnequalMove,
-  type UnequalParams,
-  type UnequalState,
-} from "./state.ts";
+import type { HintReason } from "./solver.ts";
+import { SIGNS } from "./state.ts";
 
-function gen(p: UnequalParams, seed: string) {
-  const { desc, aux } = newUnequalDesc(p, randomNew(seed));
-  return { p, desc, aux, st: newState(p, desc) };
+function gen(p: EdgeClueParams, seed: string) {
+  const { desc, aux } = newEdgeClueDesc(SIGNS, p, randomNew(seed));
+  return { p, desc, aux, st: newState(SIGNS, p, desc) };
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: structural access to hint highlights/move in tests.
 type AnyStep = any;
 
-const UNEQ: UnequalParams = { order: 5, mode: "unequal", diff: "tricky" };
-const ADJ: UnequalParams = { order: 5, mode: "adjacent", diff: "tricky" };
+const UNEQ: EdgeClueParams = { order: 5, diff: "tricky" };
 
 // --- tier 1: recording solver ----------------------------------------------
 
 describe("unequal recording solver", () => {
-  for (const [label, p, want] of [
-    ["unequal", UNEQ, ["greater", "lesser"]],
-    ["adjacent", ADJ, ["adjacent"]],
-  ] as const) {
-    it(`records ${label}-mode reasons and its placements complete the board`, () => {
-      const { st } = gen(p, `rec-${label}`);
-      const ops = recordUnequalDeductions(
-        st.order,
-        st.mode,
-        st.clueFlags,
-        Uint8Array.from(st.grid),
-        Math.min(diffToLevel(p.diff), DIFF_EXTREME),
-      );
-      expect(ops.length).toBeGreaterThan(0);
-      const kinds = new Set(ops.map((o) => (o.reason as HintReason).kind));
-      // The mode's signature deduction is exercised.
-      expect(want.some((k) => kinds.has(k as HintReason["kind"]))).toBe(true);
+  it("records sign reasons and its placements complete the board", () => {
+    const { st } = gen(UNEQ, "rec-unequal");
+    const ops = recordEdgeClueDeductions(
+      st.order,
+      SIGNS,
+      st.clueFlags,
+      Uint8Array.from(st.grid),
+      Math.min(diffToLevel(UNEQ.diff), DIFF_EXTREME),
+    );
+    expect(ops.length).toBeGreaterThan(0);
+    const kinds = new Set(ops.map((o) => (o.reason as HintReason).kind));
+    // The sign's deduction is exercised.
+    expect(kinds.has("greater") || kinds.has("lesser")).toBe(true);
 
-      // Replaying the placements reconstructs the full (unique) solution.
-      const filled = Uint8Array.from(st.immutable);
-      for (const op of ops)
-        if (op.kind === "place") filled[op.y * st.order + op.x] = op.n;
-      for (let i = 0; i < st.order * st.order; i++)
-        expect(filled[i]).toBeGreaterThan(0);
-    });
-  }
+    // Replaying the placements reconstructs the full (unique) solution.
+    const filled = Uint8Array.from(st.immutable);
+    for (const op of ops)
+      if (op.kind === "place") filled[op.y * st.order + op.x] = op.n;
+    for (let i = 0; i < st.order * st.order; i++) expect(filled[i]).toBeGreaterThan(0);
+  });
 });
 
 // --- tier 1: hint plan ------------------------------------------------------
 
-function firstHint(st: UnequalState) {
+function firstHint(st: EdgeClueState) {
   const res = unequalGame.hint?.(st);
   if (!res) throw new Error("no hint method");
   return res;
 }
 
 /** The hint under the populate reading, which is not Unequal's default. */
-function populateHint(st: UnequalState) {
+function populateHint(st: EdgeClueState) {
   const res = unequalGame.hint?.(st, undefined, {
     ...newUi(st),
     candidateReading: "populate",
@@ -101,7 +96,7 @@ describe("unequal hint", () => {
     const res = populateHint(st);
     expect(res.ok).toBe(true);
     if (!res.ok) return;
-    const moves = res.steps.map((s) => (s.move as UnequalMove).type);
+    const moves = res.steps.map((s) => (s.move as EdgeClueMove).type);
     const populateAt = moves.indexOf("pencilAll");
     const firstStrike = moves.indexOf("pencilStrike");
     expect(populateAt).toBe(0);
@@ -116,7 +111,7 @@ describe("unequal hint", () => {
     const res = firstHint(populated);
     expect(res.ok).toBe(true);
     if (!res.ok) return;
-    expect((res.steps[0].move as UnequalMove).type).not.toBe("pencilAll");
+    expect((res.steps[0].move as EdgeClueMove).type).not.toBe("pencilAll");
   });
 
   it("surfaces a naked single as the next move ahead of any elimination", () => {
@@ -153,36 +148,21 @@ describe("unequal hint", () => {
   });
 
   it("every deduction conclusion uses the necessity voice", () => {
-    for (const p of [UNEQ, ADJ]) {
-      const { st } = gen(p, `voice-${p.mode}`);
-      const populated = unequalGame.executeMove(st, { type: "pencilAll" });
-      const res = unequalGame.hint?.(populated);
-      expect(res?.ok).toBe(true);
-      if (!res?.ok) continue;
-      // A strike concludes "we must cross out …" or "… cross them out"; a
-      // placement "it can only be N"; never a bare "is/are/stays". (The populate
-      // fill and the bulk obvious-clean are setup instructions, not deductions,
-      // so they are exempt.)
-      const modal = /can only|can't|must (be|go)/i;
-      const isSetup = (s: (typeof res.steps)[number]) =>
-        s.rung === "populate" || s.rung === "clean";
-      for (const s of res.steps) {
-        if (isSetup(s)) continue;
-        expect(s.explanation).toMatch(modal);
-      }
-    }
-  });
-
-  it("differ-by-1 narration reads correctly at the value extremes", () => {
-    // The adjacency clue must never say "N−1 or N+1" (wrong at N=1 or N=o); it
-    // says "one away from N".
-    const { st } = gen(ADJ, "adj-extreme");
+    const { st } = gen(UNEQ, "voice-unequal");
     const populated = unequalGame.executeMove(st, { type: "pencilAll" });
     const res = unequalGame.hint?.(populated);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
+    // A strike concludes "we must cross out …" or "… cross them out"; a
+    // placement "it can only be N"; never a bare "is/are/stays". (The populate
+    // fill and the bulk obvious-clean are setup instructions, not deductions,
+    // so they are exempt.)
+    const modal = /can only|can't|must (be|go)/i;
+    const isSetup = (s: (typeof res.steps)[number]) =>
+      s.rung === "populate" || s.rung === "clean";
     for (const s of res.steps) {
-      expect(s.explanation).not.toMatch(/-\s*1 or|\+\s*1/);
+      if (isSetup(s)) continue;
+      expect(s.explanation).toMatch(modal);
     }
   });
 
@@ -206,28 +186,26 @@ describe("unequal hint", () => {
     expect(off.steps.length).toBeGreaterThan(on.steps.length);
   });
 
-  it("a clue-strike step's marks all lie in its narrated cell (no bleed)", () => {
+  it("a sign-strike step's marks all lie in its narrated cell (no bleed)", () => {
     let checked = 0;
-    for (const p of [UNEQ, ADJ]) {
-      for (let s = 0; s < 8; s++) {
-        const { st } = gen(p, `bleed-${p.mode}-${s}`);
-        const res = unequalGame.hint?.(st);
-        if (!res?.ok) continue;
-        for (const step of res.steps as AnyStep[]) {
-          if (step.move.type !== "pencilStrike") continue;
-          const marks = step.move.marks as { x: number; y: number; n: number }[];
-          // A clue strike (greater/lesser/adjacent/adjacentSet) shades two evidence
-          // cells and acts on exactly one of them; every mark is in that one cell.
-          // Basic-Latin/dup steps shade ≤1 cell; a set outlines the cells that
-          // account for what it strikes, which lie outside them.
-          const area: { x: number; y: number }[] = step.highlights?.area ?? [];
-          if (area.length !== 2 || step.rung === "set") continue;
-          const cells = new Set(marks.map((m) => `${m.x},${m.y}`));
-          expect(cells.size).toBe(1);
-          for (const m of marks) {
-            expect(area.some((a) => a.x === m.x && a.y === m.y)).toBe(true);
-            checked++;
-          }
+    for (let s = 0; s < 8; s++) {
+      const { st } = gen(UNEQ, `bleed-unequal-${s}`);
+      const res = unequalGame.hint?.(st);
+      if (!res?.ok) continue;
+      for (const step of res.steps as AnyStep[]) {
+        if (step.move.type !== "pencilStrike") continue;
+        const marks = step.move.marks as { x: number; y: number; n: number }[];
+        // A sign strike (greater/lesser) shades two evidence cells and acts on
+        // exactly one of them; every mark is in that one cell. Basic-Latin/dup
+        // steps shade ≤1 cell; a set outlines the cells that account for what
+        // it strikes, which lie outside them.
+        const area: { x: number; y: number }[] = step.highlights?.area ?? [];
+        if (area.length !== 2 || step.rung === "set") continue;
+        const cells = new Set(marks.map((m) => `${m.x},${m.y}`));
+        expect(cells.size).toBe(1);
+        for (const m of marks) {
+          expect(area.some((a) => a.x === m.x && a.y === m.y)).toBe(true);
+          checked++;
         }
       }
     }
@@ -263,7 +241,7 @@ describe("unequal hintKeepTrack", () => {
     const { st } = gen(UNEQ, "kt-pop");
     const res = populateHint(st);
     if (!res.ok) throw new Error("refused");
-    const step = res.steps.find((s) => (s.move as UnequalMove).type === "pencilAll");
+    const step = res.steps.find((s) => (s.move as EdgeClueMove).type === "pencilAll");
     if (!step) throw new Error("no populate step");
     expect(unequalGame.hintKeepTrack?.({ type: "pencilAll" }, step, st)).toBe(
       "completed",
@@ -319,23 +297,21 @@ describe("unequal hintKeepTrack", () => {
   });
 });
 
-// --- tier 1: resume to solved (both modes) ----------------------------------
+// --- tier 1: resume to solved ------------------------------------------------
 
 describe("unequal hint resumes to solved", () => {
-  for (const p of [UNEQ, ADJ]) {
-    it(`completes a fresh ${p.mode}-mode board one recomputed hint at a time`, () => {
-      const { st: start, aux } = gen(p, `resume-${p.mode}`);
-      let state = start;
-      for (let moves = 0; moves < 600; moves++) {
-        if (status(state) === "solved") return;
-        const res = unequalGame.hint?.(state, aux);
-        expect(res?.ok).toBe(true);
-        if (!res?.ok) throw new Error(`gave up: ${res?.error}`);
-        state = unequalGame.executeMove(state, res.steps[0].move);
-      }
-      throw new Error("did not converge");
-    });
-  }
+  it("completes a fresh board one recomputed hint at a time", () => {
+    const { st: start, aux } = gen(UNEQ, "resume-unequal");
+    let state = start;
+    for (let moves = 0; moves < 600; moves++) {
+      if (status(state) === "solved") return;
+      const res = unequalGame.hint?.(state, aux);
+      expect(res?.ok).toBe(true);
+      if (!res?.ok) throw new Error(`gave up: ${res?.error}`);
+      state = unequalGame.executeMove(state, res.steps[0].move);
+    }
+    throw new Error("did not converge");
+  });
 });
 
 // --- tier 2.5: render ------------------------------------------------------
@@ -345,7 +321,7 @@ const strikes = (step: AnyStep): number =>
 
 /** How many of a board's cells carry a clue, which splits the boards a scan
  * deals in two. */
-const clueSum = (s: UnequalState): number => s.clueFlags.filter((f) => f !== 0).length;
+const clueSum = (s: EdgeClueState): number => s.clueFlags.filter((f) => f !== 0).length;
 
 /**
  * Every rung on a position whose plan speaks it. A plan is asked under one
@@ -354,59 +330,55 @@ const clueSum = (s: UnequalState): number => s.clueFlags.filter((f) => f !== 0).
  */
 describeHintPins({
   game: unequalGame,
-  params: [UNEQ, ADJ, { ...UNEQ, diff: "extreme" }],
+  params: [UNEQ, { ...UNEQ, diff: "extreme" }],
   ui: (s) => ({
     ...newUi(s),
     candidateReading: clueSum(s) % 2 === 0 ? "populate" : "implicit",
   }),
   pins: {
-    /** Held on 16 of 2313 positions walked. */
+    /** Held on 8 of 1559 positions walked. */
     populate: "5dk:0,0,0,0,0,0,0,0,0,0,0,0L,0L,0D,0U,0,0,0,0RL,0D,0,0U,0,0U,0,",
-    /** Held on 560 of 2313 positions walked. */
+    /** Held on 358 of 1559 positions walked. */
     clean: {
       id: "5dk:0,0,0R,0R,0,0,0U,0,0,0U,1,0D,0U,0R,0,5,0R,0,0,0U,0,0L,0,0L,0,",
       moves: [{ type: "pencilAll" }],
     },
-    /** Held on 525 of 2313 positions walked. */
+    /** Held on 495 of 1559 positions walked. */
     note: "5dk:0,0,0R,0R,0,0,0U,0,0,0U,1,0D,0U,0R,0,5,0R,0,0,0U,0,0L,0,0L,0,",
-    /** Held on 2194 of 2313 positions walked. */
+    /** Held on 1480 of 1559 positions walked. */
     dup: "5dk:0,0,0,0,0,0,0,0,0,0,0,0L,0L,0D,0U,0,0,0,0RL,0D,0,0U,0,0U,0,",
-    /** Held on 2313 of 2313 positions walked. */
+    /** Held on 1559 of 1559 positions walked. */
     single: {
       id: "5dk:3D,0,0,0,0,0,0,0L,0,1,0D,0U,0D,0,0,0,0,0,0D,0,0,0,0R,3,0,",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":3},{"x":2,"y":0,"n":3},{"x":3,"y":0,"n":3},{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":3},{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":3},{"x":1,"y":1,"n":1},{"x":2,"y":1,"n":1},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":0,"y":2,"n":3},{"x":3,"y":2,"n":3},{"x":4,"y":2,"n":1},{"x":0,"y":3,"n":3},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":3},{"x":1,"y":4,"n":3},{"x":2,"y":4,"n":3},{"x":4,"y":4,"n":1},{"x":4,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":4},{"x":0,"y":1,"n":5}]}]',
     },
-    /** Held on 1086 of 2313 positions walked. */
+    /** Held on 906 of 1559 positions walked. */
     regionsFull: {
       id: "5dx:0,0R,0,0L,0,0U,0,0,4,0,0R,0,0,0D,0,0U,0,0D,0,0,0R,0,2R,0,0,",
       moves:
         '[{"type":"pencilAdd","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":3},{"x":0,"y":0,"n":4},{"x":0,"y":0,"n":5}]},{"type":"pencilAdd","marks":[{"x":0,"y":1,"n":2},{"x":0,"y":1,"n":3},{"x":0,"y":1,"n":5}]},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":5}]},{"type":"pencilAdd","marks":[{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3},{"x":1,"y":2,"n":4},{"x":1,"y":2,"n":5}]},{"type":"pencilAdd","marks":[{"x":0,"y":2,"n":2},{"x":0,"y":2,"n":3},{"x":0,"y":2,"n":4},{"x":0,"y":2,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":5}]},{"type":"pencilAdd","marks":[{"x":0,"y":3,"n":3},{"x":0,"y":3,"n":4},{"x":0,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":0,"y":2,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":4}]},{"type":"pencilAdd","marks":[{"x":1,"y":4,"n":1},{"x":1,"y":4,"n":3},{"x":1,"y":4,"n":4},{"x":1,"y":4,"n":5}]},{"type":"pencilAdd","marks":[{"x":0,"y":4,"n":3},{"x":0,"y":4,"n":4},{"x":0,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":5}]},{"type":"pencilAdd","marks":[{"x":2,"y":3,"n":3},{"x":2,"y":3,"n":4},{"x":2,"y":3,"n":5}]},{"type":"set","x":3,"y":4,"n":1,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":1}]},{"type":"pencilStrike","marks":[{"x":0,"y":4,"n":3}]},{"type":"set","x":0,"y":0,"n":1,"pencil":false,"autoElim":false},{"type":"pencilAdd","marks":[{"x":2,"y":0,"n":3},{"x":2,"y":0,"n":4},{"x":2,"y":0,"n":5}]},{"type":"pencilAdd","marks":[{"x":1,"y":0,"n":4},{"x":1,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":5}]},{"type":"set","x":3,"y":0,"n":5,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":5}]},{"type":"set","x":1,"y":0,"n":4,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":4},{"x":1,"y":4,"n":4}]},{"type":"set","x":2,"y":0,"n":3,"pencil":false,"autoElim":false}]',
     },
-    /** Held on 1588 of 2313 positions walked. */
-    hiddenSingle: {
-      id: "5adk:2,0RD,0L,0,0,0RD,0UL,0R,0RDL,0DL,0U,0,0R,0URDL,0UL,0,0RD,0L,0UR,0DL,0R,0UL,0,1,0U,",
-      moves:
-        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":2},{"x":2,"y":0,"n":2},{"x":3,"y":0,"n":1},{"x":3,"y":0,"n":2},{"x":4,"y":0,"n":2},{"x":0,"y":1,"n":2},{"x":3,"y":1,"n":1},{"x":0,"y":2,"n":2},{"x":3,"y":2,"n":1},{"x":0,"y":3,"n":2},{"x":3,"y":3,"n":1},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":1,"y":4,"n":1},{"x":2,"y":4,"n":1},{"x":4,"y":4,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":3}]},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":2}]},{"type":"pencilStrike","marks":[{"x":4,"y":4,"n":2}]},{"type":"pencilStrike","marks":[{"x":2,"y":4,"n":2}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":1}]}]',
-    },
-    /** Held on 767 of 2313 positions walked. */
+    /** Held on 1134 of 1559 positions walked. */
+    hiddenSingle: "5dk:0,0,0,0,0,0,0,0,0,0,0,0L,0L,0D,0U,0,0,0,0RL,0D,0,0U,0,0U,0,",
+    /** Held on 738 of 1559 positions walked. */
     set: {
       id: "5dk:3D,0,0,0,0,0,0,0L,0,1,0D,0U,0D,0,0,0,0,0,0D,0,0,0,0R,3,0,",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":3},{"x":2,"y":0,"n":3},{"x":3,"y":0,"n":3},{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":3},{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":3},{"x":1,"y":1,"n":1},{"x":2,"y":1,"n":1},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":0,"y":2,"n":3},{"x":3,"y":2,"n":3},{"x":4,"y":2,"n":1},{"x":0,"y":3,"n":3},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":3},{"x":1,"y":4,"n":3},{"x":2,"y":4,"n":3},{"x":4,"y":4,"n":1},{"x":4,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":4},{"x":0,"y":1,"n":5}]},{"type":"set","x":0,"y":1,"n":2,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":2},{"x":2,"y":1,"n":2},{"x":3,"y":1,"n":2},{"x":0,"y":2,"n":2},{"x":0,"y":3,"n":2},{"x":0,"y":4,"n":2}]},{"type":"pencilStrike","marks":[{"x":0,"y":2,"n":1}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":2,"y":2,"n":1}]},{"type":"pencilStrike","marks":[{"x":2,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":2}]}]',
     },
-    /** Held on 353 of 2313 positions walked. */
+    /** Held on 353 of 1559 positions walked. */
     wing: {
       id: "5dx:0R,0,0,0L,2,0,0U,3D,0,0U,0,0,0,0,0,0R,0D,0D,0,0,0,0,0L,0U,0L,",
       moves:
         '[{"type":"pencilAdd","marks":[{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":3},{"x":1,"y":0,"n":4},{"x":1,"y":0,"n":5}]},{"type":"pencilAdd","marks":[{"x":0,"y":0,"n":3},{"x":0,"y":0,"n":4},{"x":0,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":5}]},{"type":"pencilAdd","marks":[{"x":1,"y":3,"n":1},{"x":1,"y":3,"n":2},{"x":1,"y":3,"n":3},{"x":1,"y":3,"n":4},{"x":1,"y":3,"n":5}]},{"type":"pencilAdd","marks":[{"x":0,"y":3,"n":2},{"x":0,"y":3,"n":3},{"x":0,"y":3,"n":4},{"x":0,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":5}]},{"type":"pencilAdd","marks":[{"x":1,"y":1,"n":2},{"x":1,"y":1,"n":4},{"x":1,"y":1,"n":5}]},{"type":"pencilAdd","marks":[{"x":1,"y":4,"n":1},{"x":1,"y":4,"n":2},{"x":1,"y":4,"n":3},{"x":1,"y":4,"n":4},{"x":1,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":4},{"x":1,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":2}]},{"type":"pencilAdd","marks":[{"x":2,"y":2,"n":1},{"x":2,"y":2,"n":2}]},{"type":"pencilAdd","marks":[{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":2},{"x":2,"y":4,"n":4},{"x":2,"y":4,"n":5}]},{"type":"pencilAdd","marks":[{"x":2,"y":3,"n":2},{"x":2,"y":3,"n":4},{"x":2,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":4,"n":1}]},{"type":"pencilStrike","marks":[{"x":2,"y":3,"n":2}]},{"type":"pencilAdd","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":4},{"x":2,"y":0,"n":5}]},{"type":"pencilAdd","marks":[{"x":3,"y":0,"n":3},{"x":3,"y":0,"n":4},{"x":3,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":5}]},{"type":"pencilAdd","marks":[{"x":4,"y":1,"n":4},{"x":4,"y":1,"n":5}]},{"type":"set","x":2,"y":3,"n":5,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":4}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":3}]},{"type":"pencilAdd","marks":[{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":2},{"x":3,"y":3,"n":3},{"x":3,"y":3,"n":4}]},{"type":"pencilAdd","marks":[{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":3},{"x":3,"y":4,"n":4},{"x":3,"y":4,"n":5}]},{"type":"pencilAdd","marks":[{"x":4,"y":4,"n":3},{"x":4,"y":4,"n":4},{"x":4,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":3,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":4}]}]',
     },
-    /** Held on 853 of 2313 positions walked. */
+    /** Held on 853 of 1559 positions walked. */
     greater: {
       id: "5dk:0,0,0,0,0,0,0,0,0,0,0,0L,0L,0D,0U,0,0,0,0RL,0D,0,0U,0,0U,0,",
       moves: [{ type: "pencilAll" }],
     },
-    /** Held on 935 of 2313 positions walked. */
+    /** Held on 935 of 1559 positions walked. */
     lesser: {
       id: "5dk:0,0,0,0,0,0,0,0,0,0,0,0L,0L,0D,0U,0,0,0,0RL,0D,0,0U,0,0U,0,",
       moves: [
@@ -414,50 +386,30 @@ describeHintPins({
         { type: "pencilStrike", marks: [{ x: 1, y: 2, n: 1 }] },
       ],
     },
-    /** Held on 610 of 2313 positions walked. */
-    adjacent: {
-      id: "5adk:0D,0RD,0DL,0,5,0UD,0U,0UR,0L,0,0UD,0D,1,0RD,0DL,0U,0URD,0L,0UR,0UL,0,0UR,0L,0,0,",
-      moves:
-        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":5},{"x":1,"y":0,"n":5},{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":5},{"x":3,"y":0,"n":5},{"x":2,"y":1,"n":1},{"x":4,"y":1,"n":5},{"x":0,"y":2,"n":1},{"x":1,"y":2,"n":1},{"x":3,"y":2,"n":1},{"x":4,"y":2,"n":1},{"x":4,"y":2,"n":5},{"x":2,"y":3,"n":1},{"x":4,"y":3,"n":5},{"x":2,"y":4,"n":1},{"x":4,"y":4,"n":5}]}]',
-    },
-    /** Held on 249 of 2313 positions walked. */
-    adjacentSet: {
-      id: "5adk:0R,0DL,0RD,0L,0,0,0UR,0UDL,0D,0,0RD,0L,0UD,0UR,0L,0U,0R,0URDL,0RL,0DL,2,0,0U,0,0U,",
-      moves:
-        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":0,"y":1,"n":2},{"x":0,"y":2,"n":2},{"x":0,"y":3,"n":2},{"x":1,"y":4,"n":2},{"x":2,"y":4,"n":2},{"x":3,"y":4,"n":2},{"x":4,"y":4,"n":2}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":1},{"x":1,"y":4,"n":3}]}]',
-    },
   },
 });
 
-/** Positions on a board with every candidate penciled in first, each mode's
- * clue strike among them. */
+/** Positions on a board with every candidate penciled in first, a sign's
+ * strike among them. */
 const pinned = describeHintKindPins({
   game: unequalGame,
-  params: [UNEQ, ADJ],
-  opening: (): UnequalMove[] => [{ type: "pencilAll" }],
+  params: [UNEQ],
+  opening: (): EdgeClueMove[] => [{ type: "pencilAll" }],
   kinds: {
     multiMarkStrike: (step) => strikes(step) >= 2,
     greaterThanStrike: (step) =>
       strikes(step) > 0 && (step.rung === "greater" || step.rung === "lesser"),
-    barStrike: (step) =>
-      strikes(step) > 0 && (step.rung === "adjacent" || step.rung === "adjacentSet"),
   },
   pins: {
-    /** Held on 461 of 1506 positions walked. */
+    /** Held on 230 of 747 positions walked. */
     multiMarkStrike: {
       id: "5dk:0,0,0R,0R,0,0,0U,0,0,0U,1,0D,0U,0R,0,5,0R,0,0,0U,0,0L,0,0L,0,",
       moves: [{ type: "pencilAll" }],
     },
-    /** Held on 254 of 1506 positions walked. */
+    /** Held on 254 of 747 positions walked. */
     greaterThanStrike: {
       id: "5dk:0,0,0,0,0,0,0,0,0,0,0,0L,0L,0D,0U,0,0,0,0RL,0D,0,0U,0,0U,0,",
       moves: [{ type: "pencilAll" }],
-    },
-    /** Held on 286 of 1506 positions walked. */
-    barStrike: {
-      id: "5adk:0D,0RD,0DL,0,5,0UD,0U,0UR,0L,0,0UD,0D,1,0RD,0DL,0U,0URD,0L,0UR,0UL,0,0UR,0L,0,0,",
-      moves:
-        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":5},{"x":1,"y":0,"n":5},{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":5},{"x":3,"y":0,"n":5},{"x":2,"y":1,"n":1},{"x":4,"y":1,"n":5},{"x":0,"y":2,"n":1},{"x":1,"y":2,"n":1},{"x":3,"y":2,"n":1},{"x":4,"y":2,"n":1},{"x":4,"y":2,"n":5},{"x":2,"y":3,"n":1},{"x":4,"y":3,"n":5},{"x":2,"y":4,"n":1},{"x":4,"y":4,"n":5}]}]',
     },
   },
 });
@@ -471,7 +423,7 @@ function hintFrame(kind: Parameters<typeof pinned>[0]) {
 }
 
 describe("unequal hint render", () => {
-  it("an Unequal-mode link elimination outlines the pair and strikes the candidate", () => {
+  it("a sign's elimination outlines the pair and strikes the candidate", () => {
     const { recording } = hintFrame("greaterThanStrike");
     // The two clue cells are **outlined** COL_HINT_CELL evidence: the pair is
     // adjacent (a greater-than sign joins them), so the contour is one two-cell
@@ -489,15 +441,6 @@ describe("unequal hint render", () => {
     expect(ringsOf(recording.ops)).toEqual([]);
     // Clue glyphs (the > polygons) are still drawn.
     expect(recording.ops.some((o) => o.op === "polygon")).toBe(true);
-    expect(recording.ops).toMatchSnapshot();
-  });
-
-  it("an Adjacent-mode elimination outlines the pair and strikes the candidate", () => {
-    const { recording } = hintFrame("barStrike");
-    expectContour(recording.ops, COL_HINT_CELL, 2);
-    expect(recording.ops.some((o) => o.op === "line" && o.color === COL_PENCIL)).toBe(
-      true,
-    );
     expect(recording.ops).toMatchSnapshot();
   });
 });

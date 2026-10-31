@@ -1027,8 +1027,9 @@ params the game admits and at the width below each rollover.**
 key follows the values, so "rewrite the tenth entry" and "rewrite the tenth
 value" differ, and the first replaces Clear at nine.
 
-A quirk of the game's own gets a builder of the game's own (`unequalKeys` in
-[`unequal/index.ts`](../src/games/unequal/index.ts)). A quirk that is a fact
+A quirk of the game's own gets a builder of the game's own (`edgeClueKeys` in
+[`engine/edge-clue-latin/play.ts`](../src/engine/edge-clue-latin/play.ts),
+Unequal's and Adjacent's). A quirk that is a fact
 about the digits lives in the engine (`colorKeysZeroIsTen`), because
 `decimal.test.ts` allows one statement of the digit codes. Explicit labels are
 carried word for word.

@@ -1,0 +1,8 @@
+ok  adjacent   adjacent                       3  sound    (want sound   )     3 queries    0.1s
+ok  adjacent   adjacent (planted)             3  unsound  (want unsound )     1 queries    0.0s   at line 3
+ok  adjacent   adjacent                       4  sound    (want sound   )     4 queries    0.4s
+ok  adjacent   adjacent (planted)             4  unsound  (want unsound )     1 queries    0.0s   at line 4
+ok  adjacent   adjacentSet                    3  sound    (want sound   )     3 queries    0.0s
+ok  adjacent   adjacentSet (planted)          3  unsound  (want unsound )     1 queries    0.0s   at line 3
+ok  adjacent   adjacentSet                    4  sound    (want sound   )     4 queries    0.3s
+ok  adjacent   adjacentSet (planted)          4  unsound  (want unsound )     1 queries    0.0s   at line 4

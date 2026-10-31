@@ -1,9 +1,12 @@
 /**
- * Behavioral tests for the Unequal port (tier 1 + tier 2.5).
+ * Behavioral tests for the Unequal port (tier 1 + tier 2.5), and through it the
+ * edge-clue Latin square both it and Adjacent play: moves, input, the keypad,
+ * the frame.
  */
 
 import { describe, expect, it } from "vitest";
 import {
+  DESC_CONTRADICTORY,
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -11,7 +14,28 @@ import {
   validateDesc,
 } from "../../engine/desc-error.ts";
 import { cappedSolveFor, lowestSolvingCap } from "../../engine/difficulty.ts";
+import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
+import {
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  computeSize,
+  coord,
+  PREFERRED_TILE_SIZE,
+} from "../../engine/edge-clue-latin/render.ts";
+import { solveEdgeClues } from "../../engine/edge-clue-latin/solver.ts";
+import {
+  checkComplete,
+  cloneState,
+  diffToLevel,
+  type EdgeClueParams,
+  type EdgeClueState,
+  encodeParams,
+  newState,
+  newUi,
+} from "../../engine/edge-clue-latin/state.ts";
 import { Midend } from "../../engine/index.ts";
+import { DIFF_IMPOSSIBLE } from "../../engine/latin.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -25,51 +49,30 @@ import {
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
-import { newUnequalDesc } from "./generator.ts";
 import { unequalGame } from "./index.ts";
-import {
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  computeSize,
-  coord,
-  PREFERRED_TILE_SIZE,
-} from "./render.ts";
-import { DIFF_IMPOSSIBLE, solveUnequal } from "./solver.ts";
-import {
-  checkComplete,
-  cloneState,
-  decodeParams,
-  diffToLevel,
-  encodeParams,
-  type Mode,
-  newState,
-  newUi,
-  type UnequalParams,
-  type UnequalState,
-} from "./state.ts";
+import { decodeParams, SIGNS } from "./state.ts";
 
 function gen(
   order: number,
-  mode: Mode,
-  diff: UnequalParams["diff"],
+  diff: EdgeClueParams["diff"],
   seed: string,
-): { p: UnequalParams; desc: string; aux: string; st: UnequalState } {
-  const p: UnequalParams = { order, mode, diff };
-  const { desc, aux } = newUnequalDesc(p, randomNew(seed));
-  return { p, desc, aux, st: newState(p, desc) };
+): { p: EdgeClueParams; desc: string; aux: string; st: EdgeClueState } {
+  const p: EdgeClueParams = { order, diff };
+  const { desc, aux } = newEdgeClueDesc(SIGNS, p, randomNew(seed));
+  return { p, desc, aux, st: newState(SIGNS, p, desc) };
 }
 
 /** The lowest tier whose deductions solve a board, by the game's own contract. */
-function lowestCap(p: UnequalParams, desc: string): number | null {
+function lowestCap(p: EdgeClueParams, desc: string): number | null {
   const { difficulty } = unequalGame;
   if (!difficulty) throw new Error("unequal: expected a difficulty contract");
   return lowestSolvingCap(cappedSolveFor(difficulty, p, desc), 5);
 }
 
 /** The unique solution of a board, derived from its givens only. */
-function solveBoard(st: UnequalState): Uint8Array {
+function solveBoard(st: EdgeClueState): Uint8Array {
   const soln = Uint8Array.from(st.immutable);
-  const ret = solveUnequal(st.order, st.mode, st.clueFlags, soln, 4);
+  const ret = solveEdgeClues(st.order, SIGNS, st.clueFlags, soln, 4);
   expect(ret).not.toBe(DIFF_IMPOSSIBLE);
   return soln;
 }
@@ -77,38 +80,29 @@ function solveBoard(st: UnequalState): Uint8Array {
 // --- params + codec --------------------------------------------------------
 
 describe("unequal params", () => {
-  it("round-trips both modes", () => {
-    const u: UnequalParams = { order: 6, mode: "unequal", diff: "extreme" };
+  it("round-trips", () => {
+    const u: EdgeClueParams = { order: 6, diff: "extreme" };
     expect(encodeParams(u, true)).toBe("6dx");
     expect(encodeParams(u, false)).toBe("6");
     expect(decodeParams("6dx")).toEqual(u);
-
-    const a: UnequalParams = { order: 5, mode: "adjacent", diff: "tricky" };
-    expect(encodeParams(a, true)).toBe("5adk");
-    expect(encodeParams(a, false)).toBe("5a");
-    expect(decodeParams("5adk")).toEqual(a);
+    expect(decodeParams("5")).toEqual({ order: 5, diff: "easy" });
   });
 
   it("rejects invalid params, naming the dialog's Size field", () => {
-    expect(
-      paramsError(unequalGame, { order: 2, mode: "unequal", diff: "easy" }, true),
-    ).toBe("Size must be at least 3.");
-    expect(
-      paramsError(unequalGame, { order: 33, mode: "unequal", diff: "easy" }, true),
-    ).toBe("Size must be at most 31.");
-    // Adjacent below order 5 at Tricky+ is invalid.
-    expect(
-      paramsError(unequalGame, { order: 4, mode: "adjacent", diff: "tricky" }, true),
-    ).toBe("Size must be at least 5 for Adjacent puzzles of this difficulty.");
-    expect(
-      paramsError(unequalGame, { order: 5, mode: "adjacent", diff: "tricky" }, true),
-    ).toBeNull();
+    expect(paramsError(unequalGame, { order: 2, diff: "easy" }, true)).toBe(
+      "Size must be at least 3.",
+    );
+    expect(paramsError(unequalGame, { order: 33, diff: "easy" }, true)).toBe(
+      "Size must be at most 31.",
+    );
+    // A 4x4 deals every tier: the Adjacent bound is Adjacent's.
+    expect(paramsError(unequalGame, { order: 4, diff: "tricky" }, true)).toBeNull();
   });
 });
 
 describe("unequal desc codec", () => {
   it("round-trips through generate and decode", () => {
-    const { p, desc, st } = gen(5, "unequal", "tricky", "codec-1");
+    const { p, desc, st } = gen(5, "tricky", "codec-1");
     expect(validateDesc(unequalGame, p, desc)).toBeNull();
     // Every given appears in both immutable and grid; non-givens empty.
     for (let i = 0; i < st.order * st.order; i++) {
@@ -121,8 +115,13 @@ describe("unequal desc codec", () => {
   });
 
   it("rejects malformed descriptions", () => {
-    const p: UnequalParams = { order: 4, mode: "unequal", diff: "easy" };
+    const p: EdgeClueParams = { order: 4, diff: "easy" };
     const zeros = "0,".repeat(15);
+    // A sign flagged from both its ends says each is the greater.
+    expect(validateDesc(unequalGame, p, `0R,0L,${"0,".repeat(14)}`)).toBe(
+      DESC_CONTRADICTORY,
+    );
+    expect(validateDesc(unequalGame, p, `0R,0,${"0,".repeat(14)}`)).toBeNull();
     expect(validateDesc(unequalGame, p, "0,0,0")).toBe(DESC_TOO_SHORT); // too few cells
     // A flag pointing off the grid (top-left cell with an UP clue).
     expect(validateDesc(unequalGame, p, `0U,${zeros}`)).toBe(DESC_OUT_OF_RANGE);
@@ -143,28 +142,25 @@ describe("unequal desc codec", () => {
 
 describe("unequal generator", () => {
   it.each([
-    [5, "unequal", "tricky"],
-    [5, "adjacent", "tricky"],
-    [6, "unequal", "extreme"],
-  ] as const)("generates an exactly-graded board: %s %s %s", (order, mode, diff) => {
-    const { p, desc, st } = gen(order, mode, diff, `g-${order}-${mode}-${diff}`);
+    [5, "tricky"],
+    [6, "extreme"],
+  ] as const)("generates an exactly-graded board: %s %s", (order, diff) => {
+    const { p, desc, st } = gen(order, diff, `g-${order}-unequal-${diff}`);
     expect(validateDesc(unequalGame, p, desc)).toBeNull();
     const want = diffToLevel(diff);
     const soln = Uint8Array.from(st.immutable);
-    expect(solveUnequal(order, mode, st.clueFlags, soln, want)).toBe(want);
+    expect(solveEdgeClues(order, SIGNS, st.clueFlags, soln, want)).toBe(want);
     expect(lowestCap(p, desc)).toBe(want);
   });
 
   // The cells where a board of the tier is rare: most deals take more than
   // fifty tries, which is where the generator used to hand back the tier below.
   it.each([
-    [3, "unequal", "extreme"],
-    [4, "unequal", "tricky"],
-    [5, "adjacent", "extreme"],
-    [6, "adjacent", "extreme"],
-  ] as const)("deals a rare tier at its tier: %s %s %s", (order, mode, diff) => {
+    [3, "extreme"],
+    [4, "tricky"],
+  ] as const)("deals a rare tier at its tier: %s %s", (order, diff) => {
     for (let seed = 0; seed < 4; seed++) {
-      const { p, desc } = gen(order, mode, diff, `rare-${order}-${mode}-${seed}`);
+      const { p, desc } = gen(order, diff, `rare-${order}-unequal-${seed}`);
       expect(lowestCap(p, desc), `seed ${seed}`).toBe(diffToLevel(diff));
     }
   });
@@ -172,8 +168,8 @@ describe("unequal generator", () => {
 
 describe("a 3x3's tiers", () => {
   it("are refused by name, and the tier between them deals", () => {
-    const refusal = (diff: UnequalParams["diff"]) =>
-      paramsError(unequalGame, { order: 3, mode: "unequal", diff }, true);
+    const refusal = (diff: EdgeClueParams["diff"]) =>
+      paramsError(unequalGame, { order: 3, diff }, true);
     expect(refusal("tricky")).toBe("No 3x3 puzzle is Tricky.");
     expect(refusal("recursive")).toBe("No 3x3 puzzle is Unreasonable.");
     // Dealt in "deals a rare tier" above.
@@ -187,7 +183,7 @@ describe("a 3x3's tiers", () => {
 
 describe("unequal moves", () => {
   it("enters and pencil-toggles numbers", () => {
-    const { st } = gen(5, "unequal", "easy", "moves-1");
+    const { st } = gen(5, "easy", "moves-1");
     const i = [...st.immutable].indexOf(0);
     const x = i % st.order;
     const y = (i / st.order) | 0;
@@ -214,7 +210,7 @@ describe("unequal moves", () => {
   });
 
   it("auto-pencil strikes the placed number from its row and column", () => {
-    const { st } = gen(5, "unequal", "easy", "moves-auto");
+    const { st } = gen(5, "easy", "moves-auto");
     const o = st.order;
     // Pencil-fill the board, then place a number with autoElim.
     const all = unequalGame.executeMove(st, { type: "pencilAll" });
@@ -244,7 +240,7 @@ describe("unequal moves", () => {
   });
 
   it("toggles a clue's spent flag", () => {
-    const { st } = gen(5, "unequal", "tricky", "moves-spent");
+    const { st } = gen(5, "tricky", "moves-spent");
     // Find a cell with a RIGHT clue.
     let idx = -1;
     for (let i = 0; i < st.order * st.order; i++)
@@ -262,7 +258,7 @@ describe("unequal moves", () => {
   });
 
   it("completes when the final correct number is placed", () => {
-    const { st } = gen(5, "unequal", "easy", "complete-1");
+    const { st } = gen(5, "easy", "complete-1");
     const o = st.order;
     const soln = solveBoard(st);
     let cur = cloneState(st);
@@ -288,7 +284,7 @@ describe("unequal moves", () => {
 
 describe("unequal findMistakes", () => {
   it("flags a wrong number, a note-mistake, and ignores ordinary notes", () => {
-    const { st } = gen(5, "unequal", "tricky", "mistake-1");
+    const { st } = gen(5, "tricky", "mistake-1");
     const o = st.order;
     const soln = solveBoard(st);
     const empties: number[] = [];
@@ -314,6 +310,37 @@ describe("unequal findMistakes", () => {
   });
 });
 
+describe("unequal mistake overlay", () => {
+  it("boxes a wrong number in red, inset in its cell", () => {
+    const { desc, st } = gen(5, "tricky", "mistake-paint");
+    const o = st.order;
+    const soln = solveBoard(st);
+    const i = [...st.immutable].indexOf(0);
+    const x = i % o;
+    const y = (i / o) | 0;
+    const r = renderScenario({
+      game: unequalGame,
+      id: `5dk:${desc}`,
+      moves: [{ type: "set", x, y, n: soln[i] === o ? 1 : soln[i] + 1, pencil: false }],
+      showMistakes: true,
+    });
+    expect(r.mistakeCount).toBe(1);
+    const corner = [
+      coord(x, PREFERRED_TILE_SIZE) + 2,
+      coord(y, PREFERRED_TILE_SIZE) + 2,
+    ];
+    expect(
+      r.recording.ops.some(
+        (op) =>
+          op.op === "polygon" &&
+          op.outline === COL_ERROR &&
+          op.points[0][0] === corner[0] &&
+          op.points[0][1] === corner[1],
+      ),
+    ).toBe(true);
+  });
+});
+
 // --- Solve via a real Midend ----------------------------------------------
 
 describe("unequal Solve via Midend", () => {
@@ -321,14 +348,14 @@ describe("unequal Solve via Midend", () => {
     const me = new Midend(unequalGame);
     expect(me.newGameFromId("5dk#unequal-solve")).toBeNull();
     expect(me.solve()).toBeNull();
-    const solved = (me as unknown as { state: UnequalState }).state;
+    const solved = (me as unknown as { state: EdgeClueState }).state;
     expect(unequalGame.status(solved)).toBe("solved");
   });
 
   it("save round-trips a played board", () => {
     const me = new Midend(unequalGame);
     expect(me.newGameFromId("5de#unequal-save")).toBeNull();
-    const st = (me as unknown as { state: UnequalState }).state;
+    const st = (me as unknown as { state: EdgeClueState }).state;
     const i = [...st.immutable].indexOf(0);
     me.playMoves([
       { type: "set", x: i % st.order, y: (i / st.order) | 0, n: 1, pencil: false },
@@ -336,7 +363,7 @@ describe("unequal Solve via Midend", () => {
     const saved = me.saveGame();
     const me2 = new Midend(unequalGame);
     expect(me2.loadGame(saved)).toBeNull();
-    expect((me2 as unknown as { state: UnequalState }).state.grid[i]).toBe(1);
+    expect((me2 as unknown as { state: EdgeClueState }).state.grid[i]).toBe(1);
   });
 });
 
@@ -350,7 +377,7 @@ describe("unequal interpretMove", () => {
   });
 
   it("rejects digit entry into an immutable cell", () => {
-    const { st } = gen(5, "unequal", "easy", "im-1");
+    const { st } = gen(5, "easy", "im-1");
     const ui = newUi(st);
     const i = [...st.immutable].findIndex((v) => v !== 0);
     const x = i % st.order;
@@ -377,7 +404,7 @@ describe("unequal interpretMove", () => {
   });
 
   it("maps 'M' to a fill-all-pencil-marks move", () => {
-    const { st } = gen(5, "unequal", "easy", "mk-1");
+    const { st } = gen(5, "easy", "mk-1");
     const move = unequalGame.markAll?.(st);
     expect(move).toEqual({ type: "pencilAll" });
   });
@@ -386,8 +413,8 @@ describe("unequal interpretMove", () => {
 // --- tier 2.5: render scenarios --------------------------------------------
 
 describe("unequal render", () => {
-  it("draws greater-than chevrons in Unequal mode", () => {
-    const { desc } = gen(5, "unequal", "tricky", "render-u");
+  it("draws greater-than chevrons", () => {
+    const { desc } = gen(5, "tricky", "render-u");
     const r = renderScenario({ game: unequalGame, id: `5dk:${desc}` });
     // The chevrons are filled polygons; some clue must be present.
     const polys = r.recording.ops.filter((o) => o.op === "polygon");
@@ -395,17 +422,8 @@ describe("unequal render", () => {
     expect(r.recording.ops).toMatchSnapshot();
   });
 
-  it("draws adjacency bars in Adjacent mode", () => {
-    const { desc } = gen(5, "adjacent", "tricky", "render-a");
-    const r = renderScenario({ game: unequalGame, id: `5adk:${desc}` });
-    // Adjacency bars are filled rects in the gaps; the board has many of them.
-    const rects = r.recording.ops.filter((o) => o.op === "rect");
-    expect(rects.length).toBeGreaterThan(0);
-    expect(r.recording.ops).toMatchSnapshot();
-  });
-
   it("renders pencil marks on a partially-filled board", () => {
-    const { desc, st } = gen(5, "unequal", "easy", "render-p");
+    const { desc, st } = gen(5, "easy", "render-p");
     const size = computeSize({ order: st.order }, PREFERRED_TILE_SIZE);
     expect(size.w).toBeGreaterThan(0);
     const r = renderScenario({
@@ -422,7 +440,11 @@ describe("unequal render", () => {
   it("a repainted tile leaves the canvas a fresh paint would show", () => {
     // (2, 0) has no clue to its right, so nothing else paints that gap; moving
     // the cursor onto it from below repaints it alone.
-    const st = newState(decodeParams("4de"), "0,0,0L,0L,0,0,0,0U,0,0,0L,0D,0,0,0,0,");
+    const st = newState(
+      SIGNS,
+      decodeParams("4de"),
+      "0,0,0L,0L,0,0,0,0U,0,0,0L,0D,0,0,0,0,",
+    );
     const palette = unequalGame.colors(DEFAULT_BACKGROUND);
     const size = computeSize({ order: st.order }, PREFERRED_TILE_SIZE);
     const at = (y: number) => ({ ...newUi(st), cursor: { x: 2, y, visible: true } });
@@ -473,7 +495,7 @@ describe("on-screen keys (requestKeys)", () => {
 
 describe("unequal: the win flash sweeps the cells", () => {
   const TS = PREFERRED_TILE_SIZE;
-  const start = gen(4, "unequal", "easy", "win-flash").st;
+  const start = gen(4, "easy", "win-flash").st;
   const answer = unequalGame.solve?.(start, start);
   if (!answer?.ok) throw new Error("the board does not solve");
   const state = unequalGame.executeMove(start, answer.move);
