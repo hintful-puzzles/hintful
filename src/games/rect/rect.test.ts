@@ -4,7 +4,7 @@
  * completion, `findMistakes`, and the mistake render overlay.
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { DESC_NOT_UNIQUE, loadVerdict, validateDesc } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
@@ -35,6 +35,8 @@ import {
 } from "./moves.ts";
 import { BORDER, COL_MISTAKE, newDrawState, redraw } from "./render.ts";
 import {
+  DIFF_NORMAL,
+  DIFF_UNREASONABLE,
   decodeParams,
   encodeNumbers,
   encodeParams,
@@ -94,6 +96,7 @@ describe("rect params codec", () => {
     expect(encodeParams(P({ expandfactor: 0.5, diff: DIFF_UNREASONABLE }), true)).toBe(
       "7x7e0.5du",
     );
+    expect(encodeParams(P({ diff: DIFF_NORMAL }), true)).toBe("7x7dn");
     expect(encodeParams(P({ expandfactor: 0.5 }), false)).toBe("7x7"); // non-full drops suffixes
   });
 
@@ -637,14 +640,16 @@ describe("rect loading", () => {
     expect(loadVerdict(rectGame, p, "a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c")).toBeNull();
   });
 
-  it("opens a board only the hint's rungs finish as Easy", () => {
+  it("opens a board only the hint's rungs finish as Normal", () => {
     // The rungs look one fit ahead (`starve`), which the solver does not, so
     // they finish this board and the solver stalls on it. A board the hint
     // finishes needs no trial and error, and the answer the mistake check
-    // goes by is the search's, which has one here.
+    // goes by is the search's, which has one here. Looking ahead is a Normal
+    // rung, so Easy's do not finish it.
     const desc = "b4c2b3a2_2a2b3c4a4b3_6b6h4e2a2a";
     expect(rungsFinish(newState(P(), desc))).toBe(true);
-    expect(tierOf(P(), desc)).toBe("7x7de");
+    expect(rungsFinish(newState(P(), desc), DIFF_EASY)).toBe(false);
+    expect(tierOf(P(), desc)).toBe("7x7dn");
   });
 });
 

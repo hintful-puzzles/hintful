@@ -33,11 +33,12 @@ const SHAPE_WORDS = ["", "square", "tall", "wide"];
 
 /** A clue as it reads on the board, for "the …": its number ("6"), after its
  * shape where it names one ("square 4"); without a number, its shape and
- * "clue" ("tall clue"), or the question mark a plain one shows ("?"). */
+ * "clue" ("tall clue"), or the question mark a plain one shows ("? clue"),
+ * since a bare "?" reads in a sentence as a stray symbol. */
 function clueName(s: RectState, clue: number): string {
   const n = s.grid[clue];
   const shape = SHAPE_WORDS[s.shapes[clue]];
-  if (n === HIDDEN) return shape ? `${shape} clue` : "?";
+  if (n === HIDDEN) return `${shape || "?"} clue`;
   return shape ? `${shape} ${n}` : String(n);
 }
 
@@ -50,8 +51,9 @@ function joinAnd(parts: readonly string[]): string {
 
 /**
  * Why the clues with fits across an edge cannot cross it: "Only the outlined 4
- * can cross this edge, taking the striped square the 21 always covers".
- * Several clues share one clause, since a clause each runs to a paragraph.
+ * can cross this edge, and it would take the striped square the 21 always
+ * covers". Several clues share one clause, since a clause each runs to a
+ * paragraph.
  */
 function crossings(s: RectState, f: Extract<RectFiring, { kind: "line" }>): Narration {
   const at = (i: number): Point => ({ x: i % s.w, y: Math.floor(i / s.w) });
@@ -75,39 +77,39 @@ function crossings(s: RectState, f: Extract<RectFiring, { kind: "line" }>): Narr
       ? mark.as("stripes", CELL, takes.map(at), "striped square")
       : mark.the("stripes", CELL, takes.map(at), "square");
     // The clue that covers it is outlined beside the one crossing, so its
-    // value names it.
+    // value names it, and "other" where the two read alike.
+    const crosser = clueName(s, f.across[0].clue);
     const owner = mark.as(
       "outline",
       CELL,
       owners.map(at),
       several
         ? "another outlined clue"
-        : `the ${joinAnd(owners.map((c) => clueName(s, c)))}`,
+        : `the ${joinAnd(owners.map((c) => (clueName(s, c) === crosser ? `other ${crosser}` : clueName(s, c))))}`,
     );
     why.push(
       several
-        ? phrase`taking ${owner}'s ${striped}`
-        : phrase`taking ${striped} ${owner} always ${owners.length > 1 ? "cover" : "covers"}`,
+        ? phrase`take ${owner}'s ${striped}`
+        : phrase`take ${striped} ${owner} always ${owners.length > 1 ? "cover" : "covers"}`,
     );
   }
   if (misses.length > 0) {
     const missed = several
       ? mark.as("outline", CELL, misses.map(at), "an outlined square")
       : mark.the("outline", CELL, misses.map(at), "square");
-    // The starve rung's words: no other clue reaches it, or it would not be
-    // left uncovered.
-    why.push(phrase`leaving ${missed} uncovered`);
+    // Missing a square is a reason only because no other clue can cover it,
+    // so the words say so.
+    why.push(phrase`miss ${missed} only it reaches`);
   }
   const edge = mark.this("ring", LINE, [f.edge], "edge");
-  // A plural subject already reads one by one; "each" would only lengthen it.
-  return phrase`Only ${named(f.across.map((c) => c.clue))} can cross ${edge}, ${joinOr(why)}`;
+  return phrase`Only ${named(f.across.map((c) => c.clue))} can cross ${edge}, and ${several ? "each" : "it"} would ${joinOr(why)}`;
 }
 
 export const say = {
   firing(s: RectState, f: RectFiring): Sentence {
     const at = (i: number): Point => ({ x: i % s.w, y: Math.floor(i / s.w) });
     if (f.kind === "line")
-      return so({ look: crossings(s, f), move: phrase`it must be a line` });
+      return so({ look: crossings(s, f), move: phrase`the edge is a line` });
     const n = clueName(s, f.clue);
     const rect = mark.this(
       "ring",
@@ -130,7 +132,7 @@ export const say = {
           );
         if (f.crossesLine) why.push(Narration.plain("cross a line"));
         if (f.leavesOut)
-          why.push(Narration.plain("leave out some of its drawn rectangle"));
+          why.push(Narration.plain("leave out part of the rectangle drawn round it"));
         return so({
           look: phrase`Elsewhere the ${n} would ${joinOr(why)}`,
           move: phrase`only ${rect} fits`,
@@ -146,8 +148,9 @@ export const say = {
         const core = f.core.map(at);
         return so({
           look: phrase`Wherever ${mark.the("outline", CELL, [at(f.other)], clueName(s, f.other))} goes, it covers ${mark.the("stripes", CELL, core, "square")}`,
-          follows: phrase`the ${n} can't use ${pronoun(CELL, core)}`,
-          move: phrase`it fits only ${rect}`,
+          // Two clues that read alike are this one and the outlined other.
+          follows: phrase`the ${n === clueName(s, f.other) ? "other " : ""}${n} can't use ${pronoun(CELL, core)}`,
+          move: phrase`${rect} is all it has left`,
         });
       }
       case "starve": {
@@ -163,7 +166,7 @@ export const say = {
         // Both reasons in one sentence have to fit the length a step is held
         // to (`hint-quality.test.ts`), so each is a few words.
         return so({
-          look: phrase`Elsewhere the ${n} leaves ${joinOr(why)}`,
+          look: phrase`Elsewhere the ${n} would leave ${joinOr(why)}`,
           move: phrase`it must take ${rect}`,
         });
       }

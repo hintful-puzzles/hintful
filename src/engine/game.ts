@@ -289,6 +289,12 @@ export interface PresetBoards<Params> {
    * takes seconds, a tier with nothing to deduce at that size.
    */
   tiers?(board: Params): readonly [first: number, last: number] | null;
+  /**
+   * The tiers between a board's first and last that it is not offered at: a
+   * tier its ruleset seldom needs, which the menu leaves out to make room. The
+   * menu guard's ledger gives the reason for each.
+   */
+  skips?(board: Params): readonly number[];
   /** The boards after the grid, as they stand: one for each modifier or kind. */
   readonly variants?: readonly Params[];
   /** Boards in a section of their own after the rest, headed "More...", for a

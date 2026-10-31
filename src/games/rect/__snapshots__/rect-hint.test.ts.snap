@@ -1521,12 +1521,12 @@ exports[`rect: pinned hint positions > says, at each pin 1`] = `
 {
   "blockedByClue": "Elsewhere the 3 would run off the board or take in the outlined clue, so only this rectangle fits.",
   "fit": "Elsewhere the 3 would run off the board or take in the outlined clue, so only this rectangle fits.",
-  "line": "Only the outlined 8 and 4 can cross this edge, taking another outlined clue's striped square, so it must be a line.",
-  "lineMisses": "Only the outlined 4 can cross this edge, leaving the outlined square uncovered, so it must be a line.",
-  "lineTakes": "Only the outlined 4 can cross this edge, taking the striped square the 5 always covers, so it must be a line.",
-  "overlap": "Wherever the outlined 18 goes, it covers the striped squares, so the 18 can't use them: it fits only this rectangle.",
+  "line": "Only the outlined 8 and 4 can cross this edge, and each would take another outlined clue's striped square, so the edge is a line.",
+  "lineMisses": "Only the outlined 4 can cross this edge, and it would miss the outlined square only it reaches, so the edge is a line.",
+  "lineTakes": "Only the outlined 4 can cross this edge, and it would take the striped square the 5 always covers, so the edge is a line.",
+  "overlap": "Wherever the outlined 18 goes, it covers the striped squares, so the other 18 can't use them: this rectangle is all it has left.",
   "reach": "No other clue can reach the outlined square, so the 4 must cover it: this rectangle is the only way it can.",
   "rectangle": "Elsewhere the 3 would run off the board or take in the outlined clue, so only this rectangle fits.",
-  "starve": "Elsewhere the 3 leaves the outlined clues no room, so it must take this rectangle.",
+  "starve": "Elsewhere the 3 would leave the outlined clues no room, so it must take this rectangle.",
 }
 `;

@@ -6,14 +6,14 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { loadVerdict } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
-import { rectHint } from "./hint.ts";
+import { rectHint, TIER_RUNGS } from "./hint.ts";
 import { rectGame } from "./index.ts";
 import { executeMove, isSolved, newState, outlinedBoxAt } from "./moves.ts";
 import {
@@ -25,6 +25,7 @@ import {
 } from "./render.ts";
 import { answerOf } from "./solver.ts";
 import {
+  DIFF_NORMAL,
   decodeParams,
   encodeNumbers,
   encodeParams,
@@ -37,6 +38,7 @@ import {
   SHAPE_ANY,
   SHAPE_SQUARE,
   SHAPE_TALL,
+  TIERS,
 } from "./state.ts";
 
 const patches = (w: number, h: number, diff = DIFF_EASY): RectParams => ({
@@ -117,9 +119,9 @@ describe("Patches' hint", () => {
 });
 
 describe("a dealt Patches board", () => {
-  for (const diff of [DIFF_EASY, DIFF_UNREASONABLE])
+  for (const [diff, name] of TIERS.names.entries())
     for (const side of [6, 7, 8])
-      it(`at ${side}x${side} ${diff === DIFF_EASY ? "Easy" : "Unreasonable"} has one answer, its tier, and hidden sizes`, () => {
+      it(`at ${side}x${side} ${name} has one answer, its tier, and hidden sizes`, () => {
         const p = patches(side, side, diff);
         const { desc } = rectGame.newDesc(p, randomNew(`patches-${side}-${diff}`));
         const s = newState(p, desc);
@@ -130,6 +132,45 @@ describe("a dealt Patches board", () => {
         expect(me.getParams()).toBe(encodeParams(p, true));
         expect(encodeNumbers(s.grid, side * side, s.shapes)).toBe(desc);
       });
+});
+
+describe("the hint on a dealt Patches board", () => {
+  // Three boards a size and tier is what turns up both Normal rungs and a
+  // plain clue named in a line's sentence.
+  const plans = [6, 7, 8].flatMap((side) =>
+    [...TIERS.names.keys()].slice(0, TIERS.unreasonable).flatMap((diff) =>
+      [0, 1, 2].map((seed) => {
+        const p = patches(side, side, diff);
+        const { desc } = rectGame.newDesc(
+          p,
+          randomNew(`patches-hint-${side}-${diff}-${seed}`),
+        );
+        const plan = rectHint(newState(p, desc));
+        if (!plan.ok) throw new Error(`${side}x${side}p:${desc}: ${plan.error}`);
+        return { diff, steps: plan.steps };
+      }),
+    ),
+  );
+
+  it("takes only Easy rungs on an Easy board, and Normal ones on a Normal board", () => {
+    const rungsAt = (diff: number) =>
+      new Set(
+        plans.filter((p) => p.diff === diff).flatMap((p) => p.steps.map((s) => s.rung)),
+      );
+    expect(
+      [...rungsAt(DIFF_EASY)].filter((r) => !TIER_RUNGS[DIFF_EASY].includes(r)),
+    ).toEqual([]);
+    expect(
+      [...rungsAt(DIFF_NORMAL)].filter((r) => TIER_RUNGS[DIFF_NORMAL].includes(r)),
+    ).not.toEqual([]);
+  });
+
+  it("names a plain clue as the ? clue", () => {
+    const said = plans.flatMap((p) => p.steps.map((s) => s.explanation));
+    const plain = said.filter((t) => t.includes("?"));
+    expect(plain.length).toBeGreaterThan(0);
+    for (const t of plain) expect(t, t).not.toMatch(/\?(?! clue)/);
+  });
 });
 
 describe("Patches' look", () => {

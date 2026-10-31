@@ -221,6 +221,7 @@ preset:6x6 Easy  full=6dt  brief=6
 preset:8x8 Easy  full=8dt  brief=8
 preset:8x8 Normal  full=8dn  brief=8
 preset:8x8 Tricky  full=8dh  brief=8
+preset:8x8 Unreasonable  full=8du  brief=8
 preset:12x12 Normal  full=12dn  brief=12
 preset:8x8 Normal, identity hidden  full=8dni  brief=8i
 tier:2  full=6dh  brief=6
@@ -544,11 +545,12 @@ preset:Rectangles/Rectangles: 15x15 Unreasonable  full=15x15du  brief=15x15
 preset:Rectangles/Rectangles: 15x19 Easy  full=15x19de  brief=15x19
 preset:Rectangles/Rectangles: 19x19 Easy  full=19x19de  brief=19x19
 preset:Patches/Patches: 7x7 Easy  full=7x7pde  brief=7x7p
+preset:Patches/Patches: 7x7 Normal  full=7x7pdn  brief=7x7p
 preset:Patches/Patches: 7x7 Unreasonable  full=7x7pdu  brief=7x7p
 preset:Patches/Patches: 6x8 Easy  full=6x8pde  brief=6x8p
-preset:Patches/Patches: 6x8 Unreasonable  full=6x8pdu  brief=6x8p
-preset:Patches/Patches: 9x12 Easy  full=9x12pde  brief=9x12p
-preset:Patches/Patches: 9x12 Unreasonable  full=9x12pdu  brief=9x12p
+preset:Patches/Patches: 6x8 Normal  full=6x8pdn  brief=6x8p
+preset:Patches/Patches: 9x12 Normal  full=9x12pdn  brief=9x12p
+tier:1  full=7x7dn  brief=7x7
 bump:w  full=8x7de  brief=8x7
 bump:h  full=7x8de  brief=7x8
 bump:expandfactor  full=7x7e1de  brief=7x7"

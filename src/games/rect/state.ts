@@ -14,10 +14,8 @@
 
 import {
   DIFF_EASY,
-  DIFF_UNREASONABLE,
-  SEARCH_TIER_NAMES,
-  searchTierItem,
   searchTierSegment,
+  searchTiers,
 } from "../../engine/answer-search.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse } from "../../engine/desc-error.ts";
@@ -47,6 +45,15 @@ const RULESETS: readonly Ruleset[] = [
     rule: "A clue may name a shape, and has a number of squares or a question mark.",
   },
 ];
+
+/** Easy and Normal, a tier for each part of the hint's rungs
+ * (`TIER_LAST_RUNG` in `hint.ts`), and the search's above them. */
+export const TIERS = searchTiers(2);
+/** A board the hint finishes once it may leave out a placement for what that
+ * does to another clue, or draw a line. */
+export const DIFF_NORMAL = 1;
+/** A board with a single answer that the solver and the hint do not reach. */
+export const DIFF_UNREASONABLE = TIERS.unreasonable;
 
 /** What a clue says of its rectangle's shape, by `shapes`. */
 export const SHAPE_ANY = 0;
@@ -107,9 +114,9 @@ export interface RectParams {
    * stretched. Default 0 (all presets). A byte-match float hazard, so encoded
    * `%g` and decoded `atof`. */
   expandfactor: number;
-  /** `DIFF_EASY`, a board the solver and the hint finish, or
-   * `DIFF_UNREASONABLE`, one with a single answer that they do not reach.
-   * Generation-time only. */
+  /** `DIFF_EASY` or {@link DIFF_NORMAL}, a board the hint's rungs of that
+   * tier finish, or {@link DIFF_UNREASONABLE}, one with a single answer that
+   * they do not reach. Generation-time only. */
   diff: number;
   /** {@link MODE_RECT} or {@link MODE_PATCHES}. */
   mode: number;
@@ -238,9 +245,9 @@ export const BOARDS: readonly RectParams[] = [
 export const rulesetField = rulesetItem<RectParams>(RULESETS, "mode");
 
 /** The Custom dialog's difficulty field, which the codec writes as well. */
-export const tierItem = searchTierItem<RectParams>(
+export const tierItem = TIERS.item<RectParams>(
   "diff",
-  "An Easy puzzle can be finished one forced rectangle or line at a time: there is always a number with one rectangle left, or a line every rectangle left agrees on. An Unreasonable one has a single solution that those steps stop short of, so somewhere you have to try a rectangle and see what follows. The Hint button stops where the forced steps do.",
+  "An Easy puzzle can be finished one forced rectangle at a time: there is always a clue with one rectangle left, a square only one clue can reach, or squares one clue covers wherever it goes. A Normal one also asks you to rule a rectangle out for what it leaves another clue, or to draw a line no rectangle left can cross. An Unreasonable one has a single solution that those steps stop short of, so somewhere you have to try a rectangle and see what follows. The Hint button stops where the forced steps do.",
 );
 
 // Last, in the full form only. Upstream's IDs lack it, and without one a
@@ -289,7 +296,7 @@ export function validateParams(p: RectParams, full: boolean): string | null {
 }
 
 function unreasonableRefusal(p: RectParams): string | null {
-  const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
+  const tier = TIERS.names[DIFF_UNREASONABLE] as string;
   const short = Math.min(p.w, p.h);
   const long = Math.max(p.w, p.h);
   // On a strip the first number's rectangle starts at the end and is as long

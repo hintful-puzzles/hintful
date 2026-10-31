@@ -71,6 +71,10 @@ help:
       are in different rectangles, so the edge must be a line. Drawing it
       keeps what you worked out: a fit that crosses a line no longer counts.
 
+    An Easy puzzle needs only the first three; a Normal one needs the last
+    two as well, and the hint uses them only where the first three have
+    nothing left.
+
     A rectangle you have drawn round a clue tells the hint that those
     squares are the clue's: its fits are the ones that contain it, and no
     other clue's may use them. Until it has the clue's number of squares it

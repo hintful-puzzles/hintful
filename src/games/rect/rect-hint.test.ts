@@ -3,7 +3,7 @@
  * deals only boards the rungs finish, keep-track, and the frame a step paints.
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -23,7 +23,13 @@ import {
 import { rectGame } from "./index.ts";
 import { executeMove, isSolved, newState } from "./moves.ts";
 import { COL_HINT_CELL } from "./render.ts";
-import { MODE_RECT, type RectMove, type RectParams, type RectState } from "./state.ts";
+import {
+  MODE_RECT,
+  type RectMove,
+  type RectParams,
+  type RectState,
+  TIERS,
+} from "./state.ts";
 
 const params = (w: number, h: number, expandfactor = 0): RectParams => ({
   w,
@@ -118,7 +124,7 @@ describe("rect hint rungs", () => {
     // lines cross. `firingsOn` on a board alone reads them all again. The plan
     // takes the one beside its last step, which need not be the first.
     const rungs = new Set<string>();
-    for (const diff of [DIFF_EASY, DIFF_UNREASONABLE])
+    for (const diff of TIERS.names.keys())
       for (let seed = 0; seed < 6; seed++) {
         const p = { ...params(9, 9, seed % 2), diff };
         let s = newState(p, newDesc(p, randomNew(`afresh-${seed}`)).desc);
@@ -136,10 +142,10 @@ describe("rect hint rungs", () => {
 
   it("a line says which of its two reasons rules the crossing out", () => {
     expect(pinned("lineTakes").step.explanation).toMatch(
-      /^Only the outlined \d+ can cross this edge, taking the striped square the \d+ always covers, so it must be a line\.$/,
+      /^Only the outlined \d+ can cross this edge, and it would take the striped square the \d+ always covers, so the edge is a line\.$/,
     );
     expect(pinned("lineMisses").step.explanation).toMatch(
-      /^Only the outlined \d+ can cross this edge, leaving the outlined square uncovered, so it must be a line\.$/,
+      /^Only the outlined \d+ can cross this edge, and it would miss the outlined square only it reaches, so the edge is a line\.$/,
     );
   });
 
@@ -155,7 +161,7 @@ describe("rect hint rungs", () => {
     const res = rectHint(s);
     if (!res.ok) throw new Error(res.error);
     expect(res.steps[0].explanation).toBe(
-      "Only the outlined 12, 24 and 24 can cross this edge, taking another outlined clue's striped square, so it must be a line.",
+      "Only the outlined 12, 24 and 24 can cross this edge, and each would take another outlined clue's striped square, so the edge is a line.",
     );
   });
 

@@ -397,10 +397,13 @@ What a game does to fit it:
   ones says so with `tiers`**, for a deal that takes seconds, a tier
   that means nothing at that size, or the twelve lines. Write which at the
   menu.
-- **A tier left off every board of a ruleset, for a reason other than every
-  board refusing it, goes in the test's `TIERS_NOT_OFFERED`** with the
-  reason, under the ruleset's name, so that each ruleset's reason is its
-  own.
+- **A ruleset's tiers are its own.** Rulesets can be very different puzzles,
+  so one may offer tiers another does not, and a board's run is of the tiers
+  its ruleset's lines offer. A board that leaves out a tier between its first
+  and last says so with `skips`, and writes why at the menu. Exemplar:
+  Rectangles, whose sizes skip the Normal that Patches offers.
+- **A tier left off the whole menu, for a reason other than every board
+  refusing it, goes in the test's `TIERS_NOT_OFFERED`** with the reason.
 - **A rule modifier, or a second kind of board, has one line after the
   grid.** A second kind of board may instead have a short run of tiers.
 - **The smallest board at the easiest tier goes first.** `puzzle-screen.ts`

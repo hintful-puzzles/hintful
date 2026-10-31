@@ -42,6 +42,7 @@ import {
   solverFinishes,
 } from "./solver.ts";
 import {
+  DIFF_UNREASONABLE,
   encodeNumbers,
   HIDDEN,
   MODE_PATCHES,
@@ -375,10 +376,11 @@ function auxOf(w: number, h: number, grid: Int32Array): string {
  */
 const MAX_NUMBERS_MOVED = 200;
 
-/** An Easy board, upstream's only kind made stricter: its numbers placed by
- * the solver so that it settles every rectangle, and kept if the hint
- * finishes it too. `null` when this division did not give one. */
-function easyBoard(
+/** An Easy or a Normal board, upstream's only kind made stricter: its numbers
+ * placed by the solver so that it settles every rectangle, and kept where the
+ * hint's rungs of the tier finish it and the tier below's do not. `null` when
+ * this division did not give one. */
+function deducedBoard(
   params: RectParams,
   rs: RandomState,
   grid: Int32Array,
@@ -396,11 +398,17 @@ function easyBoard(
   }
 
   // A board the hint could not finish would leave a player it had helped
-  // stranded with a refusal that blames the board's difficulty, which Easy
-  // does not excuse. Deal again.
-  const finishes = () => rungsFinish(newState(params, descOf(w * h, clues)));
-  if (!finishes()) return null;
-  if (params.mode === MODE_PATCHES) stripClues(rs, clues, finishes);
+  // stranded with a refusal that blames the board's difficulty, which these
+  // tiers do not excuse. Deal again.
+  const finishes = (tier: number) => () =>
+    rungsFinish(newState(params, descOf(w * h, clues)), tier);
+  if (!finishes(params.diff)()) return null;
+  // Each tier strips what the one below left, so a Normal board is an Easy
+  // one with more taken. Hiding never makes a board easier.
+  if (params.mode === MODE_PATCHES)
+    for (let tier = DIFF_EASY; tier <= params.diff; tier++)
+      stripClues(rs, clues, finishes(tier));
+  if (params.diff > DIFF_EASY && finishes(params.diff - 1)()) return null;
   return { desc: descOf(w * h, clues), aux: auxOf(w, h, grid) };
 }
 
@@ -416,8 +424,8 @@ const descOf = (area: number, { grid, shapes }: RectClues): string =>
  * Take from a Patches board, in place, what its clues say, asking `keeps`
  * after each thing taken and putting back what it refuses: first each clue's
  * size, then each clue's shape, the clues in a random order each time. `keeps`
- * is Easy's "the hint finishes it" or Unreasonable's "the search proves one
- * answer".
+ * is Easy's or Normal's "the hint's rungs of the tier finish it", or
+ * Unreasonable's "the search proves one answer".
  */
 function stripClues(rs: RandomState, clues: RectClues, keeps: () => boolean): void {
   const { grid, shapes } = clues;
@@ -537,7 +545,7 @@ export function newDesc(
 ): { desc: string; aux: string } {
   const { w, h } = params;
   const label = `rect: generation (${w}x${h})`;
-  if (params.diff !== DIFF_EASY) {
+  if (params.diff === DIFF_UNREASONABLE) {
     const { grid, clues } = dealUnreasonable({
       label,
       draw() {
@@ -560,7 +568,7 @@ export function newDesc(
   for (;;) {
     attempt();
     const { grid, nd } = division(params, rs);
-    const board = easyBoard(params, rs, grid, nd);
+    const board = deducedBoard(params, rs, grid, nd);
     if (board) return board;
   }
 }

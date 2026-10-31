@@ -45,39 +45,19 @@ function kindItems(g: AnyGame): Item[] {
   );
 }
 
-/** The key of a game's ledger entry when it has no ruleset. */
-const EVERY_BOARD = "every board";
-
 /**
- * Tiers a game's menu leaves out, with why, by ruleset: the ruleset's name,
- * or {@link EVERY_BOARD}. A tier every board of the menu refuses needs no
- * entry: the check finds that by asking `paramsError`.
+ * Tiers a game's menu leaves out, with why. A tier every board of the menu
+ * refuses needs no entry: the check finds that by asking `paramsError`. A
+ * ruleset that offers fewer tiers than another needs none either, since
+ * rulesets can be very different puzzles (the owner, 2026-10-31).
  */
-const TIERS_NOT_OFFERED: Record<string, Record<string, Record<string, string>>> = {
-  starbattle: {
-    "Three stars": {
-      Normal:
-        "a 12x12 board takes two seconds, the 95th percentile of 100 deals (2026-10-15)",
-      Tricky:
-        "a 12x12 board takes thirteen seconds, the 95th percentile of 33 deals (2026-10-15)",
-    },
-  },
+const TIERS_NOT_OFFERED: Record<string, Record<string, string>> = {
   path: {
-    Path: {
-      Unreasonable:
-        "the menu is as long as a menu may be with the three tiers the ladder deals; the tier came so that boards dealt before 2026-10-28 still open",
-    },
-    Pairs: {
-      Unreasonable:
-        "the menu is as long as a menu may be with the three tiers the ladder deals; the tier came so that boards dealt before 2026-10-28 still open",
-    },
+    Unreasonable:
+      "the menu is as long as a menu may be with the three tiers the ladder deals; the tier came so that boards dealt before 2026-10-28 still open",
   },
   group: {
-    [EVERY_BOARD]: {
-      Hard: "the menu's 6x6 and 8x8 refuse it with the identity shown, and a 12x12 takes eleven seconds",
-      Unreasonable:
-        "6x6 and 8x8 deal it, and it would stand a tier apart from the rest of either board's run",
-    },
+    Hard: "the menu's 6x6 and 8x8 refuse it with the identity shown, and a 12x12 takes eleven seconds",
   },
 };
 
@@ -112,11 +92,28 @@ describe("a tiered game's menu is a grid", () => {
     const g = game(id);
     const tier = difficultyChoiceItem(g);
     if (tier === null) throw new Error("unreachable");
-    // Each board with the line it starts on and the tiers it is offered at.
-    const rows = new Map<string, { from: number; tiers: number[] }>();
-    leafPresets(g).forEach((leaf, line) => {
+    const ruleset = rulesetField(g);
+    const leaves = leafPresets(g);
+    const rulesetOf = (params: unknown): number => (ruleset ? ruleset.get(params) : 0);
+    // A ruleset's tiers are its own: the run is of the tiers its lines offer,
+    // so one that has no use for a tier leaves it out of every board's run.
+    const offered = new Map<number, number[]>();
+    for (const leaf of leaves) {
+      const r = rulesetOf(leaf.params);
+      const held = offered.get(r) ?? [];
+      const t = tier.get(leaf.params);
+      if (!held.includes(t)) held.push(t);
+      offered.set(r, held);
+    }
+    // Each board with the line it starts on, the tiers it is offered at, and
+    // the tiers its ruleset offers, easiest first.
+    const rows = new Map<string, { from: number; tiers: number[]; ladder: number[] }>();
+    leaves.forEach((leaf, line) => {
       const key = g.encodeParams(withTier(g, leaf.params, 0), true);
-      const row = rows.get(key) ?? { from: line, tiers: [] };
+      const ladder = (offered.get(rulesetOf(leaf.params)) ?? []).toSorted(
+        (a, b) => a - b,
+      );
+      const row = rows.get(key) ?? { from: line, tiers: [], ladder };
       rows.set(key, row);
       // A board met again after another board's lines is out of its run.
       expect(line, `${id}: "${leaf.title}" is apart from its board`).toBe(
@@ -124,8 +121,9 @@ describe("a tiered game's menu is a grid", () => {
       );
       row.tiers.push(tier.get(leaf.params));
     });
-    for (const [key, { tiers }] of rows) {
-      const run = tiers.map((_, i) => (tiers[0] ?? 0) + i);
+    for (const [key, { tiers, ladder }] of rows) {
+      const from = ladder.indexOf(tiers[0] ?? 0);
+      const run = ladder.slice(from, from + tiers.length);
       expect(
         tiers,
         `${id}: ${key} is offered at ${tiers.map((t) => tier.choices[t]).join(", ")}`,
@@ -133,35 +131,18 @@ describe("a tiered game's menu is a grid", () => {
     }
   });
 
-  it.each(tiered)("%s: every tier is on the menu, in each ruleset", (id) => {
+  it.each(tiered)("%s: every tier is on the menu", (id) => {
     const g = game(id);
     const tier = difficultyChoiceItem(g);
     if (tier === null) throw new Error("unreachable");
-    const ruleset = rulesetField(g);
     const leaves = leafPresets(g);
-    const groups: [string, typeof leaves][] = ruleset
-      ? ruleset.choices.map((name, r) => [
-          name,
-          leaves.filter((l) => ruleset.get(l.params) === r),
-        ])
-      : [[EVERY_BOARD, leaves]];
-    const missing: Record<string, string[]> = {};
-    for (const [name, group] of groups) {
-      const held = new Set(group.map((l) => tier.get(l.params)));
-      const left = tier.choices.filter(
-        (_, t) =>
-          !held.has(t) &&
-          group.some((l) => paramsError(g, withTier(g, l.params, t), true) === null),
-      );
-      if (left.length > 0) missing[name] = left.sort();
-    }
-    const ledger = Object.fromEntries(
-      Object.entries(TIERS_NOT_OFFERED[id] ?? {}).map(([name, reasons]) => [
-        name,
-        Object.keys(reasons).sort(),
-      ]),
+    const held = new Set(leaves.map((l) => tier.get(l.params)));
+    const missing = tier.choices.filter(
+      (_, t) =>
+        !held.has(t) &&
+        leaves.some((l) => paramsError(g, withTier(g, l.params, t), true) === null),
     );
-    expect(missing).toEqual(ledger);
+    expect(missing.sort()).toEqual(Object.keys(TIERS_NOT_OFFERED[id] ?? {}).sort());
   });
 
   it("looked at the tiered games", () => {

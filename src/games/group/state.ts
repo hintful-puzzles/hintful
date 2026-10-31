@@ -101,7 +101,9 @@ export interface GroupParams {
  * hidden. A 6x6 at Tricky and an 8x8 at Hard take ten seconds a board
  * (48,000 and 6,400 tries, measured 2026-10-05 over 75 seconds a cell) and
  * are left to the Custom dialog, and a 12x12 took up to two seconds at Tricky
- * and eleven at Hard, measured 2026-10-05 over three deals each.
+ * and eleven at Hard, measured 2026-10-05 over three deals each. An 8x8 at
+ * Unreasonable takes 19 ms a board, 124 ms at most (20 deals, 2026-10-31), so
+ * it follows the 8x8's Tricky.
  */
 export const menu: PresetBoards<GroupParams> = {
   boards: [
@@ -111,8 +113,9 @@ export const menu: PresetBoards<GroupParams> = {
   ],
   tiers: ({ w }) => {
     if (w === 6) return [DIFF_TRIVIAL, DIFF_NORMAL];
-    return w === 8 ? [DIFF_TRIVIAL, DIFF_HARD] : [DIFF_NORMAL, DIFF_NORMAL];
+    return w === 8 ? [DIFF_TRIVIAL, DIFF_UNREASONABLE] : [DIFF_NORMAL, DIFF_NORMAL];
   },
+  skips: () => [DIFF_EXTREME],
   variants: [{ w: 8, diff: DIFF_NORMAL, id: false }],
 };
 

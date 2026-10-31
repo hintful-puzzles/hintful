@@ -34,8 +34,10 @@ export function presetGrid<P>(
   const grid = menu.boards.flatMap((board) => {
     if (tierCount === 0) return [{ ...board }];
     const [first, last] = menu.tiers?.(board) ?? [0, tierCount - 1];
+    const skipped = new Set(menu.skips?.(board));
     const row: P[] = [];
-    for (let tier = first; tier <= last; tier++) row.push(withTier(game, board, tier));
+    for (let tier = first; tier <= last; tier++)
+      if (!skipped.has(tier)) row.push(withTier(game, board, tier));
     return row;
   });
   const line = (params: P): PresetMenu<P> => {

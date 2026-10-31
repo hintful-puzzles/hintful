@@ -14,10 +14,12 @@
  * The fixtures are a frozen recording from upstream's `auxiliary/rect-trace.c`
  * harness; neither it nor `rect.c` is in this repo.
  *
- * The generator deals only boards the hint's rungs finish (`rungsFinish`), and
- * deals again where C would return one they do not, so a seed whose C board is
- * one of those diverges from C there on purpose. No fixture here is such a
- * board; `rect-hint.test.ts` pins one as the board the gate turns away. The two
+ * The generator deals only boards the hint's rungs of the tier asked finish
+ * (`rungsFinish`), and deals again where C would return one they do not, so a
+ * seed whose C board is one of those diverges from C there on purpose. Each
+ * fixture is dealt at the tier its C board needs, which takes C's first board
+ * as C did; no fixture here is a board the rungs cannot finish, and
+ * `rect-hint.test.ts` pins one as the board the gate turns away. The two
  * fixtures C dealt with "Ensure unique solution" off are retired with the
  * option.
  */
@@ -28,8 +30,10 @@ import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import reference from "./__fixtures__/rect-c-reference.json" with { type: "json" };
 import { newDesc } from "./generator.ts";
+import { rungsFinish } from "./hint.ts";
 import { rectGame } from "./index.ts";
-import { MODE_RECT, type RectParams } from "./state.ts";
+import { newState } from "./moves.ts";
+import { DIFF_NORMAL, MODE_RECT, type RectParams } from "./state.ts";
 
 interface RectFixture {
   w: number;
@@ -42,13 +46,16 @@ interface RectFixture {
 
 const FIXTURES: readonly RectFixture[] = reference.fixtures;
 
-const paramsOf = (f: RectFixture): RectParams => ({
-  w: f.w,
-  h: f.h,
-  expandfactor: f.expandfactor,
-  diff: DIFF_EASY,
-  mode: MODE_RECT,
-});
+const paramsOf = (f: RectFixture): RectParams => {
+  const p = {
+    w: f.w,
+    h: f.h,
+    expandfactor: f.expandfactor,
+    diff: DIFF_EASY,
+    mode: MODE_RECT,
+  };
+  return rungsFinish(newState(p, f.desc), DIFF_EASY) ? p : { ...p, diff: DIFF_NORMAL };
+};
 
 describe("rect differential (vs C reference)", () => {
   for (const f of FIXTURES) {

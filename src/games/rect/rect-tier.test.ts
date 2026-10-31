@@ -9,7 +9,7 @@
  * whether those two are right that a board has one answer.
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { DESC_CONTRADICTORY, DESC_NOT_UNIQUE } from "../../engine/desc-error.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
@@ -27,6 +27,7 @@ import { rectGame } from "./index.ts";
 import { executeMove, isSolved, newState } from "./moves.ts";
 import { answerOf, searchAnswers, solverFinishes } from "./solver.ts";
 import {
+  DIFF_UNREASONABLE,
   encodeNumbers,
   MODE_RECT,
   type RectClues,
@@ -507,5 +508,14 @@ describe("the tier in Rectangles' params", () => {
       "15x19de",
       "19x19de",
     ]);
+  });
+
+  it("offers Normal on Patches alone, its larger sizes from Normal up", () => {
+    const [, patches] = presetMenu(rectGame).submenu ?? [];
+    const menu = (patches?.submenu ?? []).map((item) =>
+      rectGame.encodeParams(item.params as RectParams, true),
+    );
+    expect(patches?.title).toBe("Patches");
+    expect(menu).toEqual(["7x7pde", "7x7pdn", "7x7pdu", "6x8pde", "6x8pdn", "9x12pdn"]);
   });
 });

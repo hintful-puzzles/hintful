@@ -69,6 +69,25 @@ export const RECT_RUNGS = ["fit", "reach", "overlap", "starve", "line"] as const
 export type RectRung = (typeof RECT_RUNGS)[number];
 
 /**
+ * The rungs each tier below Unreasonable may use, by tier. An Easy step leans
+ * on at most one fact the board does not show, a claim about every placement
+ * of one clue: none for fit, that no other clue reaches the square for reach,
+ * the squares another clue always covers for overlap. Starve makes that claim
+ * once for each fit it rules out, and line makes two, that only these clues
+ * cross the edge and why none of them can.
+ */
+export const TIER_RUNGS: readonly (readonly RectRung[])[] = [
+  ["fit", "reach", "overlap"],
+  ["starve", "line"],
+];
+
+/** The rungs a board of `tier` may use: its own and every easier tier's. */
+const rungsUpTo = (tier: number): ReadonlySet<RectRung> =>
+  new Set(TIER_RUNGS.slice(0, tier + 1).flat());
+
+const EVERY_RUNG: ReadonlySet<RectRung> = new Set(RECT_RUNGS);
+
+/**
  * A clue with fits across an edge, and why none of them stands: each takes a
  * square (`takes`) that another clue (`owners`) covers wherever it goes, or
  * leaves out a square (`misses`) that no other clue reaches.
@@ -246,11 +265,12 @@ export function nextFiring(s: RectState, fits: Fits = readFits(s)): RectFiring |
   return null;
 }
 
-/** Every firing on `s`, cheapest rung first and in reading order within one:
- * {@link nextFiring}'s scan carried on. */
+/** Every firing on `s` of `rungs`, cheapest rung first and in reading order
+ * within one: {@link nextFiring}'s scan carried on. */
 export function* firingsOn(
   s: RectState,
   fits: Fits = readFits(s),
+  rungs: ReadonlySet<RectRung> = EVERY_RUNG,
 ): Generator<RectFiring> {
   const { w, h } = s;
   const clues = [...fits.keys()];
@@ -261,8 +281,10 @@ export function* firingsOn(
   });
   const isOpen = new Set(open);
   const claims = readClaims(s);
+  // A rung not asked for is skipped whole, so a tier's scan pays for its own.
+  const asked = (rung: RectRung) => (rungs.has(rung) ? open : []);
 
-  for (const clue of open) {
+  for (const clue of asked("fit")) {
     const f = fitsFor(clue);
     if (f.length !== 1) continue;
     const blockers = new Set<number>();
@@ -288,7 +310,7 @@ export function* firingsOn(
   }
 
   const reachers = reachersOf(s, fits);
-  for (let i = 0; i < w * h; i++) {
+  for (let i = 0; rungs.has("reach") && i < w * h; i++) {
     const who = reachers[i];
     if (who.length !== 1 || !isOpen.has(who[0])) continue;
     const through = fitsFor(who[0]).filter((r) => covers(r, i, w));
@@ -305,7 +327,7 @@ export function* firingsOn(
 
   for (const [other, core] of sure) {
     if (core.w * core.h === 1) continue;
-    for (const clue of open) {
+    for (const clue of asked("overlap")) {
       if (clue === other) continue;
       const f = fitsFor(clue);
       // No fit takes in another clue, so one that overlaps `core` takes a
@@ -317,7 +339,7 @@ export function* firingsOn(
     }
   }
 
-  for (const clue of open) {
+  for (const clue of asked("starve")) {
     const f = fitsFor(clue);
     if (f.length < 2) continue;
     const starved = new Set<number>();
@@ -356,6 +378,7 @@ export function* firingsOn(
   // every fit across it is out, and the line is how the player keeps that. An
   // edge no fit crosses is left alone: a line there would cut no fit, so no
   // later step could tell it had been drawn.
+  if (!rungs.has("line")) return;
   const sole = new Map<number, number[]>();
   reachers.forEach((who, i) => {
     if (who.length !== 1) return;
@@ -444,13 +467,17 @@ function common(fits: readonly Rect[]): Rect | null {
   return x2 > x && y2 > y ? { x, y, w: x2 - x, h: y2 - y } : null;
 }
 
-/** Whether the rungs alone finish `s`. The generator deals only boards they
- * do, so the hint never runs out on a board it dealt. */
-export function rungsFinish(s: RectState): boolean {
+/** Whether the rungs of `tier` and the tiers below it finish `s`, by default
+ * all of them. The generator deals only boards they do, so the hint never
+ * runs out on a board it dealt. Its cheapest firing is one of these rungs
+ * wherever these rungs have one, so a board they finish the whole ladder
+ * finishes the same way, and the answer is monotone in `tier`. */
+export function rungsFinish(s: RectState, tier = TIER_RUNGS.length - 1): boolean {
+  const rungs = rungsUpTo(tier);
   let t = s;
   let fits = readFits(t);
   while (!isSolved(t)) {
-    const f = nextFiring(t, fits);
+    const f = firingsOn(t, fits, rungs).next().value;
     if (!f) return false;
     if (drawsSomething(t, f)) t = executeMove(t, moveOf(f));
     fits = fitsAfter(fits, f);
@@ -481,10 +508,16 @@ export function rectHint(state: RectState): HintResult<RectMove, RectHint, RectR
   const board = { s: state, fits: readFits(state) };
   const steps: HintStep<RectMove, RectHint, RectRung>[] = [];
   const pass = singleFirings({
-    // One technique holding every rung, so the scan's order, cheapest rung
-    // first, breaks a tie between firings that both continue.
+    // A technique for each tier's rungs, so that a plan continuing from its
+    // last step takes no Normal step while an Easy one is left anywhere.
+    // Within one, the scan's order, cheapest rung first, breaks a tie between
+    // firings that both continue.
     techniques: findingTechniques(
-      [{ id: "rect", tier: 0, find: () => firingsOn(board.s, board.fits) }],
+      TIER_RUNGS.map((rungs, tier) => ({
+        id: rungs.join("+"),
+        tier,
+        find: () => firingsOn(board.s, board.fits, new Set(rungs)),
+      })),
       (f) => {
         // A rectangle the player drew already, proved whole, or a side of
         // one proved a line, is no step: nothing is left to draw.

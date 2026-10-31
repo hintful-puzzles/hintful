@@ -9,11 +9,7 @@
  * is ported exactly. A drag or click that changes nothing produces no move.
  */
 
-import {
-  DIFF_EASY,
-  searchTierContract,
-  solveFromAnswer,
-} from "../../engine/answer-search.ts";
+import { DIFF_EASY, solveFromAnswer } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
@@ -78,9 +74,11 @@ import {
 import { answerOf } from "./solver.ts";
 import {
   BOARDS,
+  DIFF_NORMAL,
   decodeParams,
   defaultParams,
   encodeParams,
+  MODE_PATCHES,
   type RectDrawState,
   type RectMistake,
   type RectMove,
@@ -88,6 +86,7 @@ import {
   type RectState,
   type RectUi,
   rulesetField,
+  TIERS,
   tierItem,
   validateParams,
 } from "./state.ts";
@@ -544,8 +543,22 @@ export const rectGame: Game<
   menu: {
     boards: BOARDS,
     // Seven sizes at two tiers is two lines more than a section of the menu
-    // holds, so the two largest are offered at Easy alone. Custom deals both.
-    tiers: (board) => (board.w * board.h > 15 * 15 ? [DIFF_EASY, DIFF_EASY] : null),
+    // holds, so the two largest are offered at Easy alone. Patches has the six
+    // lines left of the menu: its square board at every tier, the upright one
+    // at Easy and Normal, and the largest at Normal, where most of its boards
+    // are. Custom deals every tier at every size.
+    tiers: (board) => {
+      if (board.mode === MODE_PATCHES) {
+        if (board.w === board.h) return null;
+        return board.w * board.h > 7 * 7
+          ? [DIFF_NORMAL, DIFF_NORMAL]
+          : [DIFF_EASY, DIFF_NORMAL];
+      }
+      return board.w * board.h > 15 * 15 ? [DIFF_EASY, DIFF_EASY] : null;
+    },
+    // About one Rectangles board in thirty needs a Normal rung, and those need
+    // it for one step or two, so its menu has no Normal.
+    skips: (board) => (board.mode === MODE_PATCHES ? [] : [DIFF_NORMAL]),
   },
   encodeParams,
   decodeParams,
@@ -586,13 +599,14 @@ export const rectGame: Game<
 
   solve,
   findMistakes,
-  // Easy is a board the hint finishes. The hint rules out placements the
-  // solver does not, so it finishes boards the solver stops on, and such a
-  // board needs no trial and error. It is asked for its one answer as well:
-  // the rungs are trusted to explain a board, not to prove it has one.
-  difficulty: searchTierContract<RectParams, RectState>({
+  // Easy and Normal are boards the hint's rungs of the tier finish. The hint
+  // rules out placements the solver does not, so it finishes boards the
+  // solver stops on, and such a board needs no trial and error. It is asked
+  // for its one answer as well: the rungs are trusted to explain a board, not
+  // to prove it has one.
+  difficulty: TIERS.contract<RectParams, RectState>({
     newState,
-    deductionFinishes: (s) => rungsFinish(s) && answerOf(s).kind === "one",
+    deductionFinishes: (s, cap) => rungsFinish(s, cap) && answerOf(s).kind === "one",
     answerOf,
   }),
 
