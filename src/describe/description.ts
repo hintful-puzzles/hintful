@@ -35,6 +35,7 @@ export interface DescriptionJson {
     grid: { w: string; h: string };
     slots?: boolean;
     edges?: boolean;
+    corners?: boolean;
     diagonals?: boolean;
     regions?: Record<string, "dealt" | string>;
     units: string[];

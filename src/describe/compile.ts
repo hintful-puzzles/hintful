@@ -28,6 +28,7 @@ type ElemSort =
   | "line"
   | "edge"
   | "slot"
+  | "corner"
   | `clue ${string}`
   | `region ${string}`;
 
@@ -220,6 +221,7 @@ const NAMES: Record<string, Val> = {
   lines: { code: "sp.lines", sort: setOf(elem("line")) },
   units: { code: "sp.units", sort: setOf(elem("line")) },
   slots: { code: "sp.slots", sort: setOf(elem("slot")) },
+  corners: { code: "sp.corners", sort: setOf(elem("corner")) },
   domain: { code: "b.domain", sort: setOf(NUM) },
   true: { code: "true", sort: BOOL },
   false: { code: "false", sort: BOOL },
@@ -285,6 +287,7 @@ const EARLY = new Set([
   "range",
   "sight",
   "opposite",
+  "across",
   "nth",
   "index",
 ]);
@@ -390,8 +393,11 @@ function hoisted(e: Expr, scope: Scope, env: Env, h: Hoist): Val | null {
     if (v.at.seq > slot.seq) slot = v.at;
   }
   if (slot.loops === h.loops && !isRead(e)) return null;
+  // Its own terms are moved as it is, so a read it makes is the one every
+  // other term there shares: `clue(sum, k)` and `clue(sum, k) = none` read
+  // the clue once.
   const tmp = new Out(0);
-  const v = compileNode(e, scope, { ...env, hoist: null }, tmp);
+  const v = compileNode(e, scope, env, tmp);
   if (isArray(v.sort) || v.sort.k === "subsets" || v.sort.k === "clues") return null;
   if (tmp.entries.length === 0) {
     const made = slot.made.get(v.code);
@@ -1488,6 +1494,8 @@ function call(
           sort: setOf(elem("cell")),
         };
       }
+      if (s.k === "elem" && s.e === "corner")
+        return { code: `sp.cornerCells[${vs[0].code}]`, sort: setOf(elem("cell")) };
       expectElem(vs[0], "line", fn);
       return { code: `sp.lineCells[${vs[0].code}]`, sort: setOf(elem("cell")) };
     }
@@ -1507,6 +1515,17 @@ function call(
       arity(1);
       expectElem(vs[0], "slot", fn);
       return { code: `sp.opposite[${vs[0].code}]`, sort: elem("slot") };
+    case "corners":
+      arity(1);
+      return { code: `sp.cellCorners[${cell(0)}]`, sort: setOf(elem("corner")) };
+    case "across": {
+      // A corner's diagonal pairs each sum to its first and last cells' sum.
+      arity(2);
+      expectElem(vs[0], "corner", fn);
+      const k = once(vs[0], out);
+      const cs = `sp.cornerCells[${k.code}]`;
+      return { code: `(${cs}[0] + ${cs}[3] - ${cell(1)})`, sort: elem("cell") };
+    }
     case "nth": {
       arity(2);
       const L = vs[0];
@@ -1528,7 +1547,12 @@ function call(
       // A name bound by a loop over the same array is at the loop's counter,
       // and the space numbers its own elements in the order it lists them.
       if (x.pos?.arr === L.code) return { code: x.pos.i, sort: NUM };
-      if (L.code === "sp.cells" || L.code === "sp.slots" || L.code === "sp.lines")
+      if (
+        L.code === "sp.cells" ||
+        L.code === "sp.slots" ||
+        L.code === "sp.lines" ||
+        L.code === "sp.corners"
+      )
         return { code: x.code, sort: NUM };
       return { code: `${L.code}.indexOf(${x.code})`, sort: NUM };
     }
@@ -1893,7 +1917,7 @@ export function compileLibrary(
 /** The sort of a clue kind's place and value, from its declaration. */
 function clueSorts(kind: string, at: string, value: Expr, env: Env): ClueKind {
   const atSort: Sort =
-    at === "edge" || at === "cell" || at === "line" || at === "slot"
+    at === "edge" || at === "cell" || at === "line" || at === "slot" || at === "corner"
       ? elem(at)
       : env.regions.has(at)
         ? elem(`region ${at}`)

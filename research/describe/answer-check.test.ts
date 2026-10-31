@@ -10,6 +10,7 @@ import {
   adjacentBinding,
   type Binding,
   keenBinding,
+  mathraxBinding,
   soloBinding,
   towersBinding,
   unequalBinding,
@@ -40,6 +41,9 @@ interface Tally {
   disagreements: string[];
   /** Params the game refuses, or whose generator gives up. */
   undealt: string[];
+  /** The clues dealt on the boards, by kind: a kind no board deals goes
+   * uncompared. */
+  kinds: Map<string, number>;
 }
 
 function mistakeKey(ms: readonly unknown[]): string {
@@ -69,6 +73,8 @@ function check<P, S>(b: Binding<P, S>, t: Tally): void {
       const w = inst.space.names.get("w") as number;
       const n = inst.space.cells.length;
       t.boards++;
+      for (const [kind, list] of inst.clues)
+        t.kinds.set(kind, (t.kinds.get(kind) ?? 0) + list.length);
 
       const solved = g.solve?.(state, state);
       if (solved === undefined || !solved.ok) {
@@ -190,6 +196,7 @@ describe("the answer check from the description", () => {
       adjacentBinding,
       soloBinding,
       keenBinding,
+      mathraxBinding,
     ] as Binding<unknown, unknown>[];
     for (const b of games.filter(
       (g) => only === null || only.includes(g.description.game),
@@ -204,8 +211,14 @@ describe("the answer check from the description", () => {
         nodes: [],
         disagreements: [],
         undealt: [],
+        kinds: new Map(),
       };
       check(b, t);
+      for (const kind of Object.keys(b.description.clues ?? {}))
+        if ((t.kinds.get(kind) ?? 0) === 0)
+          t.disagreements.push(
+            `no board deals a ${kind} clue, so its meaning went uncompared`,
+          );
       if (t.undealt.length > 0)
         lines.push(`${b.description.game}: not dealt: ${t.undealt.join(", ")}`);
       lines.push(
@@ -213,7 +226,8 @@ describe("the answer check from the description", () => {
           `status compared on ${t.statusCompared} full boards (${t.clueOnly} broken by clues alone), ` +
           `findMistakes on ${t.mistakesCompared}; ` +
           `search median ${median(t.searchMs).toFixed(1)} ms, max ${Math.max(...t.searchMs).toFixed(1)} ms, ` +
-          `median ${median(t.nodes)} nodes; ${t.disagreements.length} disagreements`,
+          `median ${median(t.nodes)} nodes; clues ${[...t.kinds].map(([k, n]) => `${k} ${n}`).join(", ")}; ` +
+          `${t.disagreements.length} disagreements`,
       );
       for (const d of t.disagreements) lines.push(`  ${d}`);
       all.push(...t.disagreements);
@@ -252,6 +266,12 @@ describe("the answer check from the description", () => {
       "product",
       "sum(c in cells(at) of value(c)) = v",
     ],
+    [
+      "Mathrax, E read as O",
+      mathraxBinding as Binding<unknown, unknown>,
+      "parity",
+      "forall c in cells(at): value(c) mod 2 != v",
+    ],
   ];
   for (const [name, b, kind, means] of planted)
     it(`sees a planted defect: ${name}`, () => {
@@ -269,6 +289,7 @@ describe("the answer check from the description", () => {
         nodes: [],
         disagreements: [],
         undealt: [],
+        kinds: new Map(),
       };
       // The middle size only. On 4x4 Adjacent, two boards, the bars alone
       // decide every mutant and the answer, so that defect goes unseen there.

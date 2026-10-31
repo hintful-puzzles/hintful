@@ -18,6 +18,24 @@ import {
   type KeenParams,
   type KeenState,
 } from "../../src/games/keen/state.ts";
+import { mathraxGame } from "../../src/games/mathrax/index.ts";
+import {
+  CLUE_ADD,
+  CLUE_DIV,
+  CLUE_EVN,
+  CLUE_MUL,
+  CLUE_ODD,
+  CLUE_SUB,
+  F_IMMUTABLE,
+  OPTIONSMASK as MATHRAX_OPTIONS,
+  type MathraxParams,
+  type MathraxState,
+  clueNum as mathraxClueNum,
+  clueType as mathraxClueType,
+  OPTION_DIV,
+  OPTION_EQL,
+  OPTION_ODD,
+} from "../../src/games/mathrax/state.ts";
 import { soloGame } from "../../src/games/solo/index.ts";
 import {
   DIFF_BLOCK,
@@ -150,6 +168,53 @@ export const keenBinding: Binding<KeenParams, KeenState> = {
   withEntries: (s, values, notes) => ({
     ...s,
     grid: Int8Array.from(values),
+    pencil: notes ? Int32Array.from(notes) : new Int32Array(s.grid.length),
+  }),
+};
+
+const MATHRAX_KIND: Readonly<Record<number, string>> = {
+  [CLUE_ADD]: "sum",
+  [CLUE_SUB]: "difference",
+  [CLUE_MUL]: "product",
+  [CLUE_DIV]: "quotient",
+  [CLUE_EVN]: "parity",
+  [CLUE_ODD]: "parity",
+};
+
+export const mathraxBinding: Binding<MathraxParams, MathraxState> = {
+  game: mathraxGame,
+  description: describedGame("src/games/mathrax/mathrax.description.yaml"),
+  // With every kind allowed the generator's cascade all but never reaches a
+  // quotient or a parity, and equality comes before a quotient in it, so
+  // boards of a quotient and a parity alone, and equality and a parity.
+  params: [4, 5, 6].flatMap((o) =>
+    [MATHRAX_OPTIONS, OPTION_DIV | OPTION_ODD, OPTION_EQL | OPTION_ODD].flatMap(
+      (options) =>
+        (["easy", "normal", "tricky", "recursive"] as const).map((diff) => ({
+          o,
+          diff,
+          options,
+        })),
+    ),
+  ),
+  dealt: (s) => ({
+    sizes: { w: s.params.o },
+    givens: Array.from(s.grid, (v, i) => (s.flags[i] & F_IMMUTABLE ? v : 0)),
+    clues: (space) => {
+      const corners = space.names.get("corners") as Elem[];
+      return [...s.clues].flatMap((clue, k) => {
+        const t = mathraxClueType(clue);
+        if (t === 0) return [];
+        const v = t === CLUE_EVN ? 0 : t === CLUE_ODD ? 1 : mathraxClueNum(clue);
+        return [{ kind: MATHRAX_KIND[t], at: corners[k], v }];
+      });
+    },
+  }),
+  entries: (s) => s.grid,
+  notes: (s) => s.pencil,
+  withEntries: (s, values, notes) => ({
+    ...s,
+    grid: Uint8Array.from(values),
     pencil: notes ? Int32Array.from(notes) : new Int32Array(s.grid.length),
   }),
 };

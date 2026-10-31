@@ -114,6 +114,10 @@
           "type": "boolean",
           "description": "The orthogonal pairs: `edges`, `ends(e)`, `end1(e)`, `end2(e)`, `other(e, c)`, `edge(a, b)`."
         },
+        "corners": {
+          "type": "boolean",
+          "description": "Every point inside the grid where four cells meet: `corners`, `cells(k)`, `corners(c)`, `across(k, c)`."
+        },
         "diagonals": {
           "type": "boolean",
           "description": "The two diagonals of a square grid: `diagonals`."

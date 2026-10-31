@@ -22,6 +22,7 @@ import {
 } from "../../src/describe/soundness.ts";
 import {
   checkTechnique,
+  impossibleKinds,
   libraryDescription,
   planted,
   type Verdict,
@@ -100,6 +101,21 @@ const PLANTS: Record<string, { conclude?: string; for?: string }> = {
     conclude:
       "forall d in domain where (forall fill f of K from cand where apart(f, K) and makes(f, r): exists x in cells(L): x in K and f(x) = d), c in cells(L): strike(c, d)",
   },
+  // Mathrax's clues read against the cell's own candidates, not those across
+  // the corner.
+  clueEasy: {
+    conclude:
+      "|M| > 0 and (forall d in cand(c) where not (matches(k, d) and (not arithmetic(k) or (exists e in cand(c): makes(k, d, e)))): strike(c, d))",
+  },
+  clue: {
+    conclude:
+      "|M| > 0 and (forall d in cand(c) where not (matches(k, d) and (not arithmetic(k) or (exists e in cand(c): makes(k, d, e)))): strike(c, d))",
+  },
+  // A diagonal pair read as never equal, though its cells share no line.
+  clueTricky: {
+    conclude:
+      "|M| > 0 and (forall d in cand(c) where not (matches(k, d) and (not arithmetic(k) or (exists e in cand(across(k, c)) where e != d: makes(k, d, e)))): strike(c, d))",
+  },
   adjacentSet: {
     conclude:
       "forall d in cand(b) where exists d2 in cand(a): d2 != d and not fits(e, d2, d): strike(b, d)",
@@ -160,6 +176,14 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
     }
     if (!isFormal(file) || file.techniques === undefined) continue;
     const d = loadDescription(file, libraries);
+    // A kind no board of an order can hold goes unchecked there, which the
+    // verdicts alone would not say.
+    for (const order of ORDERS)
+      for (const kind of await impossibleKinds(d, order)) {
+        const s = `--  ${file.game.padEnd(10)} no board of order ${order} holds a ${kind} clue, so no reading of one is checked there`;
+        console.log(s);
+        lines.push(s);
+      }
     const own = d.techniques.filter((t) => !t.id.includes("."));
     const failed = await checkAll(file.game, d, own);
     bad.push(...failed);

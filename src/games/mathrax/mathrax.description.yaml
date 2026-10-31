@@ -33,3 +33,119 @@ help:
     {{wing}}
 
     If you've turned on the preference that removes a number from pencil marks in its row and column when you place it, the hint leaves that tidying to the placement rather than spelling it out as a step of its own. On an Unreasonable board, deduction can run out before the grid is full; the hint says so rather than guessing.
+
+name: Mathrax
+family: latin
+sizes:
+  w: { min: 3, max: 9 }
+space:
+  grid: { w: "w", h: "w" }
+  corners: true
+  units: [rows, cols]
+answer:
+  value: { sort: cell, domain: "range(1, w)" }
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, w)" }
+define:
+  # Values d and e diagonally across corner k make its arithmetic clue,
+  # whichever kind it is.
+  makes(k, d, e): >-
+    (clue(sum, k) = none or d + e = clue(sum, k))
+    and (clue(difference, k) = none or abs(d - e) = clue(difference, k))
+    and (clue(product, k) = none or d * e = clue(product, k))
+    and (clue(quotient, k) = none or d = clue(quotient, k) * e or e = clue(quotient, k) * d)
+  # Whether corner k holds a clue that reads the cell across it.
+  arithmetic(k): >-
+    clue(sum, k) != none or clue(difference, k) != none
+    or clue(product, k) != none or clue(quotient, k) != none
+  # Whether corner k's clue can rule a value out of a cell: a corner with
+  # none, and at Easy an arithmetic clue with two values open across it,
+  # allow every one.
+  constrains(k): "clue(parity, k) != none or arithmetic(k)"
+  constrainsEasy(k, c): "clue(parity, k) != none or (arithmetic(k) and |cand(across(k, c))| < 2)"
+  # Whether the parity clue at corner k, where it has one, allows d.
+  matches(k, d): "clue(parity, k) = none or d mod 2 = clue(parity, k)"
+  # The clue at corner k allows d in cell c, with something open across it
+  # to make its arithmetic clue.
+  allows(k, c, d): >-
+    matches(k, d)
+    and (not arithmetic(k) or (exists e in cand(across(k, c)): makes(k, d, e)))
+  # As allows, reading an arithmetic clue only where the cell across has at
+  # most one value open.
+  allowsEasy(k, c, d): >-
+    matches(k, d)
+    and (not arithmetic(k) or |cand(across(k, c))| > 1
+    or (exists e in cand(across(k, c)): makes(k, d, e)))
+shape:
+  - "latin(value, lines)"
+# An arithmetic clue's sign is its kind, = a difference of 0, and E and O one
+# kind whose value is the remainder each cell leaves by 2. The values are
+# those two cells could make.
+clues:
+  sum:
+    at: corner
+    value: "range(2, 2 * w)"
+    means: "forall c in cells(at): value(c) + value(across(at, c)) = v"
+  difference:
+    at: corner
+    value: "range(0, w - 1)"
+    means: "forall c in cells(at): abs(value(c) - value(across(at, c))) = v"
+  product:
+    at: corner
+    value: "range(1, w * w)"
+    means: "forall c in cells(at): value(c) * value(across(at, c)) = v"
+  quotient:
+    at: corner
+    value: "range(2, w)"
+    means: >-
+      forall c in cells(at):
+      value(c) = v * value(across(at, c)) or value(across(at, c)) = v * value(c)
+  parity:
+    at: corner
+    value: "range(0, 1)"
+    means: "forall c in cells(at): value(c) mod 2 = v"
+freedom: { kind: fill }
+deal:
+  clues: which corners carry a clue, and its kind, from the kinds the options allow
+  givens: how many
+  tier: one of the tiers
+tiers: [Easy, Normal, Tricky, Unreasonable]
+# The clue readings, cell by cell and each cell's corners in turn: M is what
+# every clue at the cell's corners allows it, and a cell with none is a
+# contradiction. The Easy and Normal readings go on to the corners only where
+# M is at most one value; a firing is one clue's strikes at one cell.
+techniques:
+  - { use: latin.placed, tier: Easy, rung: dup }
+  - id: clueEasy
+    tier: Easy
+    rung: clue
+    for: >-
+      c in cells,
+      M = cand(c) - set(d over j in corners(c) where constrainsEasy(j, c),
+      d in cand(c) where not allowsEasy(j, c, d)) where |M| < 2,
+      k in corners(c)
+    conclude: "|M| > 0 and (forall d in cand(c) where not allowsEasy(k, c, d): strike(c, d))"
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }
+  - id: clue
+    tier: Normal
+    rung: clue
+    for: >-
+      c in cells,
+      M = cand(c) - set(d over j in corners(c) where constrains(j),
+      d in cand(c) where not allows(j, c, d)) where |M| < 2,
+      k in corners(c)
+    conclude: "|M| > 0 and (forall d in cand(c) where not allows(k, c, d): strike(c, d))"
+  - { use: latin.set, tier: Normal, rung: set }
+  - id: clueTricky
+    tier: Tricky
+    rung: clue
+    for: >-
+      c in cells,
+      M = cand(c) - set(d over j in corners(c) where constrains(j),
+      d in cand(c) where not allows(j, c, d)),
+      k in corners(c)
+    conclude: "|M| > 0 and (forall d in cand(c) where not allows(k, c, d): strike(c, d))"
+  - { use: latin.fish, tier: Tricky, rung: set }
+  - { use: latin.wing, tier: Tricky, rung: wing }

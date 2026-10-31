@@ -119,17 +119,20 @@ binder.
 **Names**: `true`, `false`, `none`, the description's sizes, `domain`, and
 what the space gives: `cells`, `rows`, `cols`, `lines`, `units`, `slots`
 (one beyond each end of every line, numbered as Towers deals its clues: above
-each column, below each, left of each row, right of each), and each dealt
+each column, below each, left of each row, right of each), `corners` (each
+point inside the grid where four cells meet, in reading order, the one below
+and right of cell `(x, y)` numbered `y·(w − 1) + x`), and each dealt
 partition by its name (`regions: { cage: dealt }`: `cage`, its parts in the
-order dealt). A clue kind may sit at a part (`at: cage`), and a partition and
-a clue kind may not share a name, since both are fields of `Dealt`.
+order dealt). A clue kind may sit at a part (`at: cage`) or a corner
+(`at: corner`), and a partition and a clue kind may not share a name, since
+both are fields of `Dealt`.
 
 **Functions**: `value(c)`, `cand(c)` the candidates the marks leave,
 `known(c)`; `range(a, b)`, `abs(a)`, `subsets(S)`, `first(L)`; an ordered
 set's `nth(L, i)` (none past its ends), `index(x, L)` (`-1` where `x` is not
 in it), `before(x, L)`; the grid's
 `x(c)`, `y(c)`, `cell(x, y)` (on the grid: the compiled code does not check),
-`row(c)`, `col(c)`, `cells(L)` (a line's, or a part's in reading order), `adj4(c)` (up, right, down, left), `peers(c)` (row and column interleaved by index), `ends(e)`,
+`row(c)`, `col(c)`, `cells(L)` (a line's, or a part's or a corner's in reading order), `adj4(c)` (up, right, down, left), `peers(c)` (row and column interleaved by index), `corners(c)` (below right, above right, below left, above left: upstream Mathrax's order, which decides the clue its hint names), `across(k, c)` (the cell diagonally across corner `k` from `c`), `ends(e)`,
 `end1(e)`, `end2(e)`, `other(e, c)`, `edge(a, b)`, `sight(s)` (a slot's line,
 nearest it first), `opposite(s)`; the clues' `clues(kind)`
 (a binder's set only), `at(k)`, `v(k)`, `clue(kind, x)`; and, in a
@@ -213,7 +216,8 @@ definition's parameter opens a slot just after it, and a term that binds
 nothing, reads no candidate and makes no fact is computed in the slot of the
 last name it reads, where that takes it out of a loop. A read (`value`,
 `known`, a clue, a set's size) goes to its slot even inside the same loop, so
-that every use after it shares one. Such a term is then computed whether or
+that every use after it shares one, a read inside a moved term included.
+Such a term is then computed whether or
 not the guard around it holds, which is why none may throw. `value` and
 `known` move only in a technique that concludes no placement: a solve makes
 each fact as it concludes it, and a strike changes neither. A comprehension
@@ -223,8 +227,9 @@ bound once outside it by the statement itself (`set`'s `open`,
 per deal against the hand-written one it replaced
 (`openspec/changes/archive/*-compile-the-latin-ladder/report.md` § "Speed",
 `*-describe-group/report.md` for the hoisting,
-`*-describe-towers/report.md` for fillings and the projection, and
-`*-describe-keen/report.md` for a cage's).
+`*-describe-towers/report.md` for fillings and the projection,
+`*-describe-keen/report.md` for a cage's, and `*-describe-mathrax/report.md`
+for a binder's order and a moved term's reads).
 
 ## A statement's order is behavior
 
@@ -278,7 +283,14 @@ each a part or not, the parts covering every cell once; a technique that
 reads one region is checked on every shape of that size, but no larger.
 A clue whose values are a `range` is checked over its bounds, which may run
 past the board's order. A technique is sound when no binding's
-premise holds while its conclusion fails under the rules. Library techniques
+premise holds while its conclusion fails under the rules.
+
+A small board may hold no clue of a kind at all, and then a technique's
+reading of that kind is checked there on nothing, whatever its verdict. The
+results name each such kind and order (`--` lines): no Latin square below
+order 6 has a Mathrax quotient, two disjoint pairs of one ratio around a
+corner, so that reading rests on the answer check and the comparison with
+the code it replaced. Library techniques
 are checked on a plain Latin square, which is the weakest rule set any Latin
 game adds to.
 

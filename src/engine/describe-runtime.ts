@@ -4,7 +4,8 @@
  * else, so these are the whole of a technique's view of a board.
  *
  * An element is its index: a cell `y·w + x`, a line its row `y` or `h + x`
- * for a column, an edge its place in {@link GridSpace.edgeEnds}, a region
+ * for a column, an edge its place in {@link GridSpace.edgeEnds}, a corner
+ * `y·(w − 1) + x` for the one below and right of cell `(x, y)`, a region
  * its part's index in its {@link Partition}. `-1` is
  * `none`, for an element and for a value alike, since no value is negative.
  * A set of values is a bitmask (bit `d`); a set of elements an ordered array.
@@ -124,6 +125,13 @@ export interface GridSpace {
   readonly sight: readonly (readonly number[])[];
   /** The slot at the other end of each slot's line. */
   readonly opposite: Int32Array;
+  /** Every point where four cells meet, in reading order. */
+  readonly corners: readonly number[];
+  /** Each corner's four cells, in reading order. */
+  readonly cornerCells: readonly (readonly number[])[];
+  /** Each cell's corners, those inside the grid: below right, above right,
+   * below left, above left, the order Mathrax has always read its clues in. */
+  readonly cellCorners: readonly (readonly number[])[];
 }
 
 const spaces = new Map<number, GridSpace>();
@@ -189,6 +197,21 @@ function gridSpace(w: number, h: number): GridSpace {
     ...rowCells,
     ...rowCells.map((cs) => cs.toReversed()),
   ];
+  const cw = w - 1;
+  const corners = Array.from({ length: cw * (h - 1) }, (_, k) => k);
+  const cornerCells = corners.map((k) => {
+    const c = ((k / cw) | 0) * w + (k % cw);
+    return [c, c + 1, c + w, c + w + 1];
+  });
+  const cellCorners = cells.map((c) => {
+    const x = c % w;
+    const y = (c / w) | 0;
+    const out: number[] = [];
+    for (const kx of [x, x - 1])
+      for (const ky of [y, y - 1])
+        if (kx >= 0 && ky >= 0 && kx < cw && ky < h - 1) out.push(ky * cw + kx);
+    return out;
+  });
   const opposite = Int32Array.from(sight, (_, s) =>
     s < 2 * w ? (s < w ? s + w : s - w) : s < 2 * w + h ? s + h : s - h,
   );
@@ -215,6 +238,9 @@ function gridSpace(w: number, h: number): GridSpace {
     slots: sight.map((_, s) => s),
     sight,
     opposite,
+    corners,
+    cornerCells,
+    cellCorners,
   };
 }
 

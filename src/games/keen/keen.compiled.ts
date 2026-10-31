@@ -54,12 +54,12 @@ export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasy
     const v_r = _a120[_i121];
     const _h188 = clueAt(cl.sum, v_r);
     const _h190 = clueAt(cl.product, v_r);
-    const _h197 = (clueAt(cl.sum, v_r) === -1);
-    const _h203 = (clueAt(cl.product, v_r) === -1);
-    const _h210 = (clueAt(cl.difference, v_r) === -1);
-    const _h221 = clueAt(cl.difference, v_r);
-    const _h224 = (clueAt(cl.quotient, v_r) === -1);
-    const _h230 = clueAt(cl.quotient, v_r);
+    const _h197 = (_h188 === -1);
+    const _h203 = (_h190 === -1);
+    const _h210 = clueAt(cl.difference, v_r);
+    const _h211 = (_h210 === -1);
+    const _h224 = clueAt(cl.quotient, v_r);
+    const _h225 = (_h224 === -1);
     const v_K = cl.cage.cells[v_r];
     let _g122 = 0;
     G123: {
@@ -142,41 +142,41 @@ export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasy
         }
         let _c223 = _c209;
         if (_c223) {
-          let _c222 = _h210;
+          let _c222 = _h211;
           if (!_c222) {
-            let _g211 = -1;
-            G212: {
-              const _a213 = cl.cage.cells[v_r];
-              for (let _i214 = 0; _i214 < _a213.length; _i214++) {
-                const v_x = _a213[_i214];
-                const _t215 = _f180[v_x];
-                if (_g211 === -1 || _t215 > _g211) _g211 = _t215;
+            let _g212 = -1;
+            G213: {
+              const _a214 = cl.cage.cells[v_r];
+              for (let _i215 = 0; _i215 < _a214.length; _i215++) {
+                const v_x = _a214[_i215];
+                const _t216 = _f180[v_x];
+                if (_g212 === -1 || _t216 > _g212) _g212 = _t216;
               }
             }
-            let _g216 = -1;
-            G217: {
-              const _a218 = cl.cage.cells[v_r];
-              for (let _i219 = 0; _i219 < _a218.length; _i219++) {
-                const v_x = _a218[_i219];
-                const _t220 = _f180[v_x];
-                if (_g216 === -1 || _t220 < _g216) _g216 = _t220;
+            let _g217 = -1;
+            G218: {
+              const _a219 = cl.cage.cells[v_r];
+              for (let _i220 = 0; _i220 < _a219.length; _i220++) {
+                const v_x = _a219[_i220];
+                const _t221 = _f180[v_x];
+                if (_g217 === -1 || _t221 < _g217) _g217 = _t221;
               }
             }
-            _c222 = ((_g211 - _g216) === _h221);
+            _c222 = ((_g212 - _g217) === _h210);
           }
           _c223 = _c222;
         }
         let _c237 = _c223;
         if (_c237) {
-          let _c236 = _h224;
+          let _c236 = _h225;
           if (!_c236) {
-            let _g225 = -1;
-            G226: {
-              const _a227 = cl.cage.cells[v_r];
-              for (let _i228 = 0; _i228 < _a227.length; _i228++) {
-                const v_x = _a227[_i228];
-                const _t229 = _f180[v_x];
-                if (_g225 === -1 || _t229 > _g225) _g225 = _t229;
+            let _g226 = -1;
+            G227: {
+              const _a228 = cl.cage.cells[v_r];
+              for (let _i229 = 0; _i229 < _a228.length; _i229++) {
+                const v_x = _a228[_i229];
+                const _t230 = _f180[v_x];
+                if (_g226 === -1 || _t230 > _g226) _g226 = _t230;
               }
             }
             let _g231 = -1;
@@ -188,7 +188,7 @@ export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasy
                 if (_g231 === -1 || _t235 < _g231) _g231 = _t235;
               }
             }
-            _c236 = (_g225 === (_h230 * _g231));
+            _c236 = (_g226 === (_h224 * _g231));
           }
           _c237 = _c236;
         }
@@ -255,14 +255,14 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
   const _a248 = cl.cage.parts;
   for (let _i249 = 0; _i249 < _a248.length; _i249++) {
     const v_r = _a248[_i249];
-    const _h269 = (clueAt(cl.sum, v_r) === -1);
-    const _h270 = clueAt(cl.sum, v_r);
-    const _h271 = (clueAt(cl.product, v_r) === -1);
-    const _h272 = clueAt(cl.product, v_r);
-    const _h289 = (clueAt(cl.difference, v_r) === -1);
-    const _h300 = clueAt(cl.difference, v_r);
-    const _h303 = (clueAt(cl.quotient, v_r) === -1);
-    const _h309 = clueAt(cl.quotient, v_r);
+    const _h269 = clueAt(cl.sum, v_r);
+    const _h270 = (_h269 === -1);
+    const _h271 = clueAt(cl.product, v_r);
+    const _h272 = (_h271 === -1);
+    const _h289 = clueAt(cl.difference, v_r);
+    const _h290 = (_h289 === -1);
+    const _h303 = clueAt(cl.quotient, v_r);
+    const _h304 = (_h303 === -1);
     const v_K = cl.cage.cells[v_r];
     let _g258 = -1;
     facts.length = 0;
@@ -302,15 +302,15 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
                     if (!(((sp.rowOf[_e264] === sp.rowOf[_y275]) || (sp.colOf[_e264] === sp.colOf[_y275])))) continue;
                     if (!((_f261[_e264] !== _f261[_y275]))) continue V268;
                   }
-                  if (!_h269) {
+                  if (!_h270) {
                     let _t276 = _d265;
                     for (let _j267 = 0; _j267 < _i266; _j267++) _t276 += _f261[_a260[_j267]];
-                    if (_t276 > _h270) continue;
+                    if (_t276 > _h269) continue;
                   }
-                  if (!_h271) {
+                  if (!_h272) {
                     let _t277 = _d265;
                     for (let _j267 = 0; _j267 < _i266; _j267++) _t277 *= _f261[_a260[_j267]];
-                    if (_t277 > 0 && _h272 % _t277 !== 0) continue;
+                    if (_t277 > 0 && _h271 % _t277 !== 0) continue;
                   }
                   break;
                 }
@@ -325,7 +325,7 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
                 _s263[_i266] = 0;
               }
               if (_i266 < 0) break;
-              let _c282 = _h269;
+              let _c282 = _h270;
               if (!_c282) {
                 let _g278 = 0;
                 G279: {
@@ -335,11 +335,11 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
                     _g278 += _f261[v_x];
                   }
                 }
-                _c282 = (_g278 === _h270);
+                _c282 = (_g278 === _h269);
               }
               let _c288 = _c282;
               if (_c288) {
-                let _c287 = _h271;
+                let _c287 = _h272;
                 if (!_c287) {
                   let _g283 = 1;
                   G284: {
@@ -349,47 +349,47 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
                       _g283 *= _f261[v_x];
                     }
                   }
-                  _c287 = (_g283 === _h272);
+                  _c287 = (_g283 === _h271);
                 }
                 _c288 = _c287;
               }
               let _c302 = _c288;
               if (_c302) {
-                let _c301 = _h289;
+                let _c301 = _h290;
                 if (!_c301) {
-                  let _g290 = -1;
-                  G291: {
-                    const _a292 = cl.cage.cells[v_r];
-                    for (let _i293 = 0; _i293 < _a292.length; _i293++) {
-                      const v_x = _a292[_i293];
-                      const _t294 = _f261[v_x];
-                      if (_g290 === -1 || _t294 > _g290) _g290 = _t294;
+                  let _g291 = -1;
+                  G292: {
+                    const _a293 = cl.cage.cells[v_r];
+                    for (let _i294 = 0; _i294 < _a293.length; _i294++) {
+                      const v_x = _a293[_i294];
+                      const _t295 = _f261[v_x];
+                      if (_g291 === -1 || _t295 > _g291) _g291 = _t295;
                     }
                   }
-                  let _g295 = -1;
-                  G296: {
-                    const _a297 = cl.cage.cells[v_r];
-                    for (let _i298 = 0; _i298 < _a297.length; _i298++) {
-                      const v_x = _a297[_i298];
-                      const _t299 = _f261[v_x];
-                      if (_g295 === -1 || _t299 < _g295) _g295 = _t299;
+                  let _g296 = -1;
+                  G297: {
+                    const _a298 = cl.cage.cells[v_r];
+                    for (let _i299 = 0; _i299 < _a298.length; _i299++) {
+                      const v_x = _a298[_i299];
+                      const _t300 = _f261[v_x];
+                      if (_g296 === -1 || _t300 < _g296) _g296 = _t300;
                     }
                   }
-                  _c301 = ((_g290 - _g295) === _h300);
+                  _c301 = ((_g291 - _g296) === _h289);
                 }
                 _c302 = _c301;
               }
               let _c316 = _c302;
               if (_c316) {
-                let _c315 = _h303;
+                let _c315 = _h304;
                 if (!_c315) {
-                  let _g304 = -1;
-                  G305: {
-                    const _a306 = cl.cage.cells[v_r];
-                    for (let _i307 = 0; _i307 < _a306.length; _i307++) {
-                      const v_x = _a306[_i307];
-                      const _t308 = _f261[v_x];
-                      if (_g304 === -1 || _t308 > _g304) _g304 = _t308;
+                  let _g305 = -1;
+                  G306: {
+                    const _a307 = cl.cage.cells[v_r];
+                    for (let _i308 = 0; _i308 < _a307.length; _i308++) {
+                      const v_x = _a307[_i308];
+                      const _t309 = _f261[v_x];
+                      if (_g305 === -1 || _t309 > _g305) _g305 = _t309;
                     }
                   }
                   let _g310 = -1;
@@ -401,7 +401,7 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
                       if (_g310 === -1 || _t314 < _g310) _g310 = _t314;
                     }
                   }
-                  _c315 = (_g304 === (_h309 * _g310));
+                  _c315 = (_g305 === (_h303 * _g310));
                 }
                 _c316 = _c315;
               }
@@ -454,14 +454,14 @@ export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLine
   const _a321 = cl.cage.parts;
   for (let _i322 = 0; _i322 < _a321.length; _i322++) {
     const v_r = _a321[_i322];
-    const _h339 = (clueAt(cl.sum, v_r) === -1);
-    const _h340 = clueAt(cl.sum, v_r);
-    const _h341 = (clueAt(cl.product, v_r) === -1);
-    const _h342 = clueAt(cl.product, v_r);
-    const _h359 = (clueAt(cl.difference, v_r) === -1);
-    const _h370 = clueAt(cl.difference, v_r);
-    const _h373 = (clueAt(cl.quotient, v_r) === -1);
-    const _h379 = clueAt(cl.quotient, v_r);
+    const _h339 = clueAt(cl.sum, v_r);
+    const _h340 = (_h339 === -1);
+    const _h341 = clueAt(cl.product, v_r);
+    const _h342 = (_h341 === -1);
+    const _h359 = clueAt(cl.difference, v_r);
+    const _h360 = (_h359 === -1);
+    const _h373 = clueAt(cl.quotient, v_r);
+    const _h374 = (_h373 === -1);
     const v_K = cl.cage.cells[v_r];
     const _a323 = union(sp.cols, sp.rows);
     for (let _i324 = 0; _i324 < _a323.length; _i324++) {
@@ -498,15 +498,15 @@ export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLine
                     if (!(((sp.rowOf[_e334] === sp.rowOf[_y345]) || (sp.colOf[_e334] === sp.colOf[_y345])))) continue;
                     if (!((_f331[_e334] !== _f331[_y345]))) continue V338;
                   }
-                  if (!_h339) {
+                  if (!_h340) {
                     let _t346 = _d335;
                     for (let _j337 = 0; _j337 < _i336; _j337++) _t346 += _f331[_a330[_j337]];
-                    if (_t346 > _h340) continue;
+                    if (_t346 > _h339) continue;
                   }
-                  if (!_h341) {
+                  if (!_h342) {
                     let _t347 = _d335;
                     for (let _j337 = 0; _j337 < _i336; _j337++) _t347 *= _f331[_a330[_j337]];
-                    if (_t347 > 0 && _h342 % _t347 !== 0) continue;
+                    if (_t347 > 0 && _h341 % _t347 !== 0) continue;
                   }
                   break;
                 }
@@ -521,7 +521,7 @@ export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLine
                 _s333[_i336] = 0;
               }
               if (_i336 < 0) break;
-              let _c352 = _h339;
+              let _c352 = _h340;
               if (!_c352) {
                 let _g348 = 0;
                 G349: {
@@ -531,11 +531,11 @@ export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLine
                     _g348 += _f331[v_x];
                   }
                 }
-                _c352 = (_g348 === _h340);
+                _c352 = (_g348 === _h339);
               }
               let _c358 = _c352;
               if (_c358) {
-                let _c357 = _h341;
+                let _c357 = _h342;
                 if (!_c357) {
                   let _g353 = 1;
                   G354: {
@@ -545,47 +545,47 @@ export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLine
                       _g353 *= _f331[v_x];
                     }
                   }
-                  _c357 = (_g353 === _h342);
+                  _c357 = (_g353 === _h341);
                 }
                 _c358 = _c357;
               }
               let _c372 = _c358;
               if (_c372) {
-                let _c371 = _h359;
+                let _c371 = _h360;
                 if (!_c371) {
-                  let _g360 = -1;
-                  G361: {
-                    const _a362 = cl.cage.cells[v_r];
-                    for (let _i363 = 0; _i363 < _a362.length; _i363++) {
-                      const v_x = _a362[_i363];
-                      const _t364 = _f331[v_x];
-                      if (_g360 === -1 || _t364 > _g360) _g360 = _t364;
+                  let _g361 = -1;
+                  G362: {
+                    const _a363 = cl.cage.cells[v_r];
+                    for (let _i364 = 0; _i364 < _a363.length; _i364++) {
+                      const v_x = _a363[_i364];
+                      const _t365 = _f331[v_x];
+                      if (_g361 === -1 || _t365 > _g361) _g361 = _t365;
                     }
                   }
-                  let _g365 = -1;
-                  G366: {
-                    const _a367 = cl.cage.cells[v_r];
-                    for (let _i368 = 0; _i368 < _a367.length; _i368++) {
-                      const v_x = _a367[_i368];
-                      const _t369 = _f331[v_x];
-                      if (_g365 === -1 || _t369 < _g365) _g365 = _t369;
+                  let _g366 = -1;
+                  G367: {
+                    const _a368 = cl.cage.cells[v_r];
+                    for (let _i369 = 0; _i369 < _a368.length; _i369++) {
+                      const v_x = _a368[_i369];
+                      const _t370 = _f331[v_x];
+                      if (_g366 === -1 || _t370 < _g366) _g366 = _t370;
                     }
                   }
-                  _c371 = ((_g360 - _g365) === _h370);
+                  _c371 = ((_g361 - _g366) === _h359);
                 }
                 _c372 = _c371;
               }
               let _c386 = _c372;
               if (_c386) {
-                let _c385 = _h373;
+                let _c385 = _h374;
                 if (!_c385) {
-                  let _g374 = -1;
-                  G375: {
-                    const _a376 = cl.cage.cells[v_r];
-                    for (let _i377 = 0; _i377 < _a376.length; _i377++) {
-                      const v_x = _a376[_i377];
-                      const _t378 = _f331[v_x];
-                      if (_g374 === -1 || _t378 > _g374) _g374 = _t378;
+                  let _g375 = -1;
+                  G376: {
+                    const _a377 = cl.cage.cells[v_r];
+                    for (let _i378 = 0; _i378 < _a377.length; _i378++) {
+                      const v_x = _a377[_i378];
+                      const _t379 = _f331[v_x];
+                      if (_g375 === -1 || _t379 > _g375) _g375 = _t379;
                     }
                   }
                   let _g380 = -1;
@@ -597,7 +597,7 @@ export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLine
                       if (_g380 === -1 || _t384 < _g380) _g380 = _t384;
                     }
                   }
-                  _c385 = (_g374 === (_h379 * _g380));
+                  _c385 = (_g375 === (_h373 * _g380));
                 }
                 _c386 = _c385;
               }

@@ -273,10 +273,10 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
             for (let _i186 = 0; _i186 < _a185.length; _i186++) {
               const v_c = _a185[_i186];
               const _h187 = b.known(v_c);
-              const _h194 = (b.value(v_c) + 1);
-              const _h196 = b.value(v_c);
-              let _c195 = _h187;
-              if (_c195) {
+              const _h194 = b.value(v_c);
+              const _h195 = (_h194 + 1);
+              let _c196 = _h187;
+              if (_c196) {
                 let _q188 = false;
                 Q189: {
                   const _a190 = v_L;
@@ -284,16 +284,16 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
                   for (let _i192 = 0; _i192 < _n191; _i192++) {
                     const v_c2 = _a190[_i192];
                     const _h193 = b.value(v_c2);
-                    if ((_h193 > _h194)) {
+                    if ((_h193 > _h195)) {
                       _q188 = true;
                       break Q189;
                     }
                   }
                 }
-                _c195 = !(_q188);
+                _c196 = !(_q188);
               }
-              if (!(_c195)) continue;
-              _g175 |= 1 << _h196;
+              if (!(_c196)) continue;
+              _g175 |= 1 << _h194;
             }
           }
           const v_K = ((b.domain & ~v_P) | _g175);

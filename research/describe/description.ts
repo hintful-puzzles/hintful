@@ -129,6 +129,7 @@ export function instantiate(d: Description, dealt: Dealt): Instance {
     grid: { w: num(d.json.space.grid.w), h: num(d.json.space.grid.h) },
     slots: d.json.space.slots,
     edges: d.json.space.edges,
+    corners: d.json.space.corners,
     diagonals: d.json.space.diagonals,
     regions,
     units: d.json.space.units,

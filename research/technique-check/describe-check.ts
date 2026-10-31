@@ -136,6 +136,14 @@ function arith(op: string, a: Nx, b: Nx): Nx {
   }
   throw new Error(`no arithmetic ${op} here`);
 }
+/** `a mod b` as the compiled code's `%` reads it, its sign the left side's:
+ * z3's own is never negative. */
+function remainder(a: Nx, b: Nx): Nx {
+  if (typeof a === "number" && typeof b === "number") return a % b;
+  const x = asZ3(a);
+  const y = asZ3(b);
+  return Z3.If(x.lt(0), x.neg().mod(y).neg(), x.mod(y));
+}
 const sumOf = (xs: Nx[]): Nx => xs.reduce<Nx>((s, x) => arith("+", s, x), 0);
 
 // --- a small board ------------------------------------------------------------
@@ -383,6 +391,8 @@ function evaluate(e: Expr, env: Env, ctx: Ctx): V {
           return allOf("line", sp.lines);
         case "slots":
           return allOf("slot", sp.slots);
+        case "corners":
+          return allOf("corner", sp.corners);
         case "domain":
           return vsetOf(board, (d) => d >= 1 && d <= board.order);
         case "order":
@@ -507,8 +517,9 @@ function binary(e: Extract<Expr, { k: "bin" }>, env: Env, ctx: Ctx): V {
     }
     case "*":
       return { k: "num", v: arith("*", num(a, op), num(b, op)) };
-    case "/":
     case "mod":
+      return { k: "num", v: remainder(num(a, op), num(b, op)) };
+    case "/":
       throw new Error(`${op} is not checked yet`);
   }
 }
@@ -794,6 +805,7 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
     place: { k: "bool", v: false },
     x: { k: "num", v: -1 },
     y: { k: "num", v: -1 },
+    corners: allOf("corner", []),
   };
   const cellFn = (f: (c: number) => V): V =>
     lift(vs[0], fn, (c) => {
@@ -810,6 +822,8 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
           ? board.regions.get(s.sort.slice("region ".length))
           : undefined;
       if (part !== undefined) return lift(s, fn, (r) => allOf("cell", part.parts[r]));
+      if (s.k === "elem" && s.sort === "corner")
+        return lift(s, fn, (k) => allOf("cell", sp.cornerCells[k]));
       return lift(vs[0], fn, (L) => allOf("cell", sp.lineCells[L]));
     }
     case "row":
@@ -824,6 +838,15 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       return lift(vs[0], fn, (s) => allOf("cell", sp.sight[s]));
     case "opposite":
       return lift(vs[0], fn, (s) => elem("slot", sp.opposite[s]));
+    case "corners":
+      return cellFn((c) => allOf("corner", sp.cellCorners[c]));
+    case "across":
+      return lift(vs[0], fn, (k) =>
+        lift(vs[1], fn, (c) => {
+          const cs = sp.cornerCells[k];
+          return elem("cell", cs[3 - cs.indexOf(c)]);
+        }),
+      );
     case "nth": {
       // Past either end is none.
       const L = known(vs[0], fn);
@@ -977,11 +1000,15 @@ function dealSymbolically(d: Description, board: Board): void {
         ? board.sp.edgeEnds.length / 2
         : c.at === "slot"
           ? board.sp.slots.length
-          : part !== undefined
-            ? part.parts.length
-            : null;
+          : c.at === "corner"
+            ? board.sp.corners.length
+            : part !== undefined
+              ? part.parts.length
+              : null;
     if (places === null)
-      throw new Error(`clue ${kind}: only edge, slot and region clues are checked yet`);
+      throw new Error(
+        `clue ${kind}: only edge, slot, corner and region clues are checked yet`,
+      );
     const complete = d.json.clues?.[kind]?.complete === true;
     const list: ClueSym[] = [];
     for (let e = 0; e < places; e++) {
@@ -1073,6 +1100,36 @@ export interface Verdict {
   seconds: number;
   /** The first binding found unsound, by its names' concrete values. */
   at?: string;
+}
+
+/**
+ * The clue kinds a board of `order` cannot hold one of under the rules. A
+ * technique's reading of such a kind is checked on no board, however sound
+ * its verdict: Mathrax's quotient needs two disjoint pairs of one ratio
+ * around a corner, which no Latin square smaller than 6 has.
+ */
+export async function impossibleKinds(
+  d: Description,
+  order: number,
+): Promise<string[]> {
+  const board = makeBoard(order);
+  dealPartitions(d, board);
+  dealSymbolically(d, board);
+  const solver = new Z3.Solver();
+  for (const w of worldOf(d, board)) solver.add(asZ3(w));
+  const out: string[] = [];
+  for (const [kind, list] of board.clues) {
+    const any = or(...list.map((k) => k.present));
+    if (any === false) {
+      out.push(kind);
+      continue;
+    }
+    solver.push();
+    solver.add(asZ3(any));
+    if ((await solver.check()) === "unsat") out.push(kind);
+    solver.pop();
+  }
+  return out;
 }
 
 /** Check one technique sound against `d`'s rules on an `order` board. */

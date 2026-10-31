@@ -27,17 +27,32 @@ import type {
   DeductionRecord,
   DeductionRecorder,
 } from "../../engine/deduction-record.ts";
+import { type ClueList, clueList } from "../../engine/describe-runtime.ts";
 import {
+  compiledRung,
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
   DIFF_UNFINISHED,
+  LATIN_RUNGS,
+  type LatinLadder,
   type LatinReason,
+  type LatinRung,
   type LatinSolver,
   latinSolver,
 } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
+import * as mathrax from "./mathrax.compiled.ts";
 import {
   bitOf,
+  CLUE_ADD,
+  CLUE_DIV,
+  CLUE_EVN,
+  CLUE_MUL,
+  CLUE_ODD,
+  CLUE_SUB,
+  clueLabel,
+  clueNum,
+  clueType,
   DIFF_EASY,
   DIFF_NORMAL,
   DIFF_RECURSIVE,
@@ -220,11 +235,205 @@ export function mathraxSolve(
   maxdiff: number,
   recorder?: DeductionRecorder,
 ): number {
+  const diff = COMPARE.handWritten
+    ? solveHandWritten(o, grid, clues, maxdiff, recorder)
+    : COMPARE.on
+      ? solveCompared(o, grid, clues, maxdiff, recorder)
+      : solveDescribed(o, grid, clues, maxdiff, recorder);
+  if (diff === DIFF_IMPOSSIBLE) return SOLVE_IMPOSSIBLE;
+  if (diff === DIFF_UNFINISHED) return SOLVE_STUCK;
+  if (diff === DIFF_AMBIGUOUS) return SOLVE_AMBIGUOUS;
+  return SOLVE_UNIQUE;
+}
+
+const KIND_OF_TYPE = new Map<number, keyof mathrax.Dealt>([
+  [CLUE_ADD, "sum"],
+  [CLUE_SUB, "difference"],
+  [CLUE_MUL, "product"],
+  [CLUE_DIV, "quotient"],
+  [CLUE_EVN, "parity"],
+  [CLUE_ODD, "parity"],
+]);
+
+/** The clues as the description reads them, each at its corner: a sign's
+ * kind with its number, and E and O a parity of 0 and 1. */
+function dealtOf(clues: Int32Array): mathrax.Dealt {
+  const ofKind = (kind: keyof mathrax.Dealt): ClueList => {
+    const ks: number[] = [];
+    const vs: number[] = [];
+    clues.forEach((clue, k) => {
+      if (KIND_OF_TYPE.get(clueType(clue)) !== kind) return;
+      ks.push(k);
+      vs.push(
+        clueType(clue) === CLUE_EVN
+          ? 0
+          : clueType(clue) === CLUE_ODD
+            ? 1
+            : clueNum(clue),
+      );
+    });
+    return clueList(ks, vs, clues.length);
+  };
+  return {
+    sum: ofKind("sum"),
+    difference: ofKind("difference"),
+    product: ofKind("product"),
+    quotient: ofKind("quotient"),
+    parity: ofKind("parity"),
+  };
+}
+
+function describedLadder(o: number, clues: Int32Array): LatinLadder {
+  const dl = dealtOf(clues);
+  const co = o - 1;
+  const reason = ({ k }: { k: number }): MathraxReason => ({
+    kind: "clue",
+    clue: clues[k],
+    cx: k % co,
+    cy: (k / co) | 0,
+  });
+  const ladder: Record<mathrax.LadderId, () => LatinRung> = {
+    clueEasy: () => compiledRung(mathrax.clueEasy, dl, reason),
+    "latin.hiddenSingle": () => LATIN_RUNGS["latin.hiddenSingle"],
+    "latin.single": () => LATIN_RUNGS["latin.single"],
+    clue: () => compiledRung(mathrax.clue, dl, reason),
+    "latin.set": () => LATIN_RUNGS["latin.set"],
+    clueTricky: () => compiledRung(mathrax.clueTricky, dl, reason),
+    "latin.fish": () => LATIN_RUNGS["latin.fish"],
+    "latin.wing": () => LATIN_RUNGS["latin.wing"],
+  };
+  return {
+    ladder: mathrax.ladder.map(({ id, tier, until }) => ({
+      tier,
+      until,
+      run: ladder[id](),
+    })),
+  };
+}
+
+function solveDescribed(
+  o: number,
+  grid: Uint8Array,
+  clues: Int32Array,
+  maxdiff: number,
+  recorder?: DeductionRecorder,
+  cubeOut?: Uint8Array,
+): number {
+  return latinSolver<null>(grid, o, {
+    maxdiff,
+    diffRecursive: DIFF_RECURSIVE,
+    valid: null,
+    ctx: null,
+    recorder,
+    budgetLabel: "mathrax hint",
+    cubeOut,
+    ...describedLadder(o, clues),
+  });
+}
+
+/** Both ladders on copies, compared in what they return, the grid, the cube
+ * and every record; the compiled one's results are the call's. */
+function solveCompared(
+  o: number,
+  grid: Uint8Array,
+  clues: Int32Array,
+  maxdiff: number,
+  recorder?: DeductionRecorder,
+): number {
+  const input = grid.join(",");
+  const g1 = grid.slice();
+  const c0 = new Uint8Array(o * o * o);
+  const c1 = new Uint8Array(o * o * o);
+  const r0: DeductionRecord[] = [];
+  const r1: DeductionRecord[] = [];
+  const hand = solveHandWritten(
+    o,
+    g1,
+    clues,
+    maxdiff,
+    recorder ? (r) => r0.push(r) : undefined,
+    c1,
+  );
+  const built = solveDescribed(
+    o,
+    grid,
+    clues,
+    maxdiff,
+    recorder ? (r) => r1.push(r) : undefined,
+    c0,
+  );
+  COMPARE.compared++;
+  for (const r of r0) {
+    const reason = r.reason as HintReason | null;
+    // A clue's firings by its sign, so each kind is seen compared.
+    const k =
+      reason === null
+        ? "none"
+        : reason.kind === "clue"
+          ? `clue ${clueLabel(reason.clue).replace(/\d+/g, "")}`
+          : reason.kind;
+    COMPARE.reasons.set(k, (COMPARE.reasons.get(k) ?? 0) + 1);
+  }
+  const a = r0.map(canonical);
+  const b = r1.map(canonical);
+  let at = 0;
+  while (at < a.length && a[at] === b[at]) at++;
+  const what = [
+    hand !== built ? "return" : "",
+    g1.some((v, i) => v !== grid[i]) ? "grid" : "",
+    c0.some((v, i) => v !== c1[i]) ? "cube" : "",
+    at < a.length || at < b.length ? "records" : "",
+  ].filter((s) => s !== "");
+  if (what.length > 0)
+    COMPARE.mismatches.push({
+      what: what.join(" "),
+      input,
+      clues: [...clues].join(","),
+      o,
+      maxdiff,
+      hand,
+      built,
+      record: at,
+      handRecord: a[at] ?? null,
+      builtRecord: b[at] ?? null,
+    });
+  for (const r of r1) recorder?.(r);
+  return built;
+}
+
+/** `x`'s JSON with every object's keys sorted, so key order is no difference. */
+function canonical(x: unknown): string {
+  return JSON.stringify(x, (_k, v: unknown) =>
+    v !== null && typeof v === "object" && !Array.isArray(v)
+      ? Object.fromEntries(Object.entries(v).sort(([p], [q]) => (p < q ? -1 : 1)))
+      : v,
+  );
+}
+
+/** The comparison's switch and tally (`describe-mathrax` tasks 2.4). */
+export const COMPARE = {
+  on: false,
+  /** Run the hand-written deductions alone, for the speed runs. */
+  handWritten: false,
+  compared: 0,
+  mismatches: [] as Record<string, unknown>[],
+  /** The hand-written records compared, by their reason's kind. */
+  reasons: new Map<string, number>(),
+};
+
+function solveHandWritten(
+  o: number,
+  grid: Uint8Array,
+  clues: Int32Array,
+  maxdiff: number,
+  recorder?: DeductionRecorder,
+  cubeOut?: Uint8Array,
+): number {
   const maxbits = (1 << o) - 1;
   const marks = new Int32Array(o * o);
   for (let i = 0; i < o * o; i++) marks[i] = grid[i] ? bitOf(grid[i]) : maxbits;
 
-  const diff = latinSolver<MathraxCtx>(grid, o, {
+  return latinSolver<MathraxCtx>(grid, o, {
     maxdiff,
     diffSimple: DIFF_EASY,
     diffSet0: DIFF_NORMAL,
@@ -240,12 +449,8 @@ export function mathraxSolve(
     ctxNew: (c) => ({ marks: c.marks.slice(), clues: c.clues }),
     recorder,
     budgetLabel: "mathrax hint",
+    cubeOut,
   });
-
-  if (diff === DIFF_IMPOSSIBLE) return SOLVE_IMPOSSIBLE;
-  if (diff === DIFF_UNFINISHED) return SOLVE_STUCK;
-  if (diff === DIFF_AMBIGUOUS) return SOLVE_AMBIGUOUS;
-  return SOLVE_UNIQUE;
 }
 
 /**

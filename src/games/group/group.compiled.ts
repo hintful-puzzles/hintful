@@ -121,36 +121,40 @@ export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding> | 
   }
   L38: {
     const v_w0 = (_g32.length > 0 ? _g32[0] : -1);
-    const _h40 = (((v_w0 / sp.w) | 0) + 1);
-    const _h41 = ((v_w0 % sp.w) + 1);
+    const _h40 = ((v_w0 / sp.w) | 0);
+    const _h41 = (_h40 + 1);
+    const _h42 = _h41;
+    const _h43 = (v_w0 % sp.w);
+    const _h44 = (_h43 + 1);
+    const _h45 = _h44;
     if (!((v_w0 !== -1))) break L38;
     for (let _m39 = b.domain; _m39 !== 0; _m39 &= _m39 - 1) {
       const v_e = 31 - Math.clz32(_m39 & -_m39);
-      const _h45 = (v_e - 1);
-      if (!((((b.value(v_w0) === _h40) && (v_e === _h41)) || ((b.value(v_w0) !== _h40) && (v_e === _h40))))) continue;
+      const _h49 = (v_e - 1);
+      if (!((((b.value(v_w0) === _h42) && (v_e === _h45)) || ((b.value(v_w0) !== _h42) && (v_e === _h42))))) continue;
       facts.length = 0;
       changed = false;
-      let _q42 = true;
-      Q43: {
-        for (let _m44 = b.domain; _m44 !== 0; _m44 &= _m44 - 1) {
-          const v_j = 31 - Math.clz32(_m44 & -_m44);
-          const _a46 = setOf(((v_j - 1) * sp.w + _h45), (_h45 * sp.w + (v_j - 1)));
-          for (let _i47 = 0; _i47 < _a46.length; _i47++) {
-            const v_c = _a46[_i47];
+      let _q46 = true;
+      Q47: {
+        for (let _m48 = b.domain; _m48 !== 0; _m48 &= _m48 - 1) {
+          const v_j = 31 - Math.clz32(_m48 & -_m48);
+          const _a50 = setOf(((v_j - 1) * sp.w + _h49), (_h49 * sp.w + (v_j - 1)));
+          for (let _i51 = 0; _i51 < _a50.length; _i51++) {
+            const v_c = _a50[_i51];
             if (!(!(b.known(v_c)))) continue;
-            let _c48 = b.has(v_c, v_j);
-            if (_c48) {
+            let _c52 = b.has(v_c, v_j);
+            if (_c52) {
               if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, v_j); changed = true; } else facts.push(PLACE, v_c, v_j); }
-              _c48 = true;
+              _c52 = true;
             }
-            if (!(_c48)) {
-              _q42 = false;
-              break Q43;
+            if (!(_c52)) {
+              _q46 = false;
+              break Q47;
             }
           }
         }
       }
-      if (!(_q42)) return -1;
+      if (!(_q46)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ w0: v_w0, e: v_e }, facts)) return 1;
@@ -176,49 +180,49 @@ export function notIdentity(b: Marks, sp: GridSpace, fire: Fire<NotIdentityBindi
   if (notIdentityCands.length < sp.cells.length) notIdentityCands = new Int32Array(sp.cells.length);
   const cands = notIdentityCands;
   cands.fill(-1);
-  for (let _m54 = b.domain; _m54 !== 0; _m54 &= _m54 - 1) {
-    const v_a = 31 - Math.clz32(_m54 & -_m54);
-    const _h66 = (v_a - 1);
-    let _g55 = -1;
-    G56: {
-      for (let _m57 = b.domain; _m57 !== 0; _m57 &= _m57 - 1) {
-        const v_j = 31 - Math.clz32(_m57 & -_m57);
-        const _h58 = b.known(((v_j - 1) * sp.w + (v_a - 1)));
-        const _h59 = b.value(((v_j - 1) * sp.w + (v_a - 1)));
-        const _h60 = b.known(((v_a - 1) * sp.w + (v_j - 1)));
-        const _h61 = b.value(((v_a - 1) * sp.w + (v_j - 1)));
-        if (!(((_h58 && (_h59 !== v_j)) || (_h60 && (_h61 !== v_j))))) continue;
-        if (_g55 === -1 || v_j < _g55) _g55 = v_j;
+  for (let _m58 = b.domain; _m58 !== 0; _m58 &= _m58 - 1) {
+    const v_a = 31 - Math.clz32(_m58 & -_m58);
+    const _h62 = (v_a - 1);
+    let _g59 = -1;
+    G60: {
+      for (let _m61 = b.domain; _m61 !== 0; _m61 &= _m61 - 1) {
+        const v_j = 31 - Math.clz32(_m61 & -_m61);
+        const _h63 = b.known(((v_j - 1) * sp.w + _h62));
+        const _h64 = b.value(((v_j - 1) * sp.w + _h62));
+        const _h65 = b.known((_h62 * sp.w + (v_j - 1)));
+        const _h66 = b.value((_h62 * sp.w + (v_j - 1)));
+        if (!(((_h63 && (_h64 !== v_j)) || (_h65 && (_h66 !== v_j))))) continue;
+        if (_g59 === -1 || v_j < _g59) _g59 = v_j;
       }
     }
-    L62: {
-      const v_o = _g55;
-      if (!((v_o !== -1))) break L62;
+    L67: {
+      const v_o = _g59;
+      if (!((v_o !== -1))) break L67;
       facts.length = 0;
       changed = false;
-      let _q63 = true;
-      Q64: {
-        for (let _m65 = b.domain; _m65 !== 0; _m65 &= _m65 - 1) {
-          const v_j = 31 - Math.clz32(_m65 & -_m65);
-          const _t67 = ((v_j - 1) * sp.w + _h66);
-          if (b.has(_t67, v_j)) { if (fire === null) { b.strikeAt(_t67, v_j); changed = true; } else facts.push(STRIKE, _t67, v_j); }
-          let _c70 = true;
-          if (_c70) {
-            let _c69 = (v_j === v_a);
-            if (!_c69) {
-              const _t68 = (_h66 * sp.w + (v_j - 1));
-              if (b.has(_t68, v_j)) { if (fire === null) { b.strikeAt(_t68, v_j); changed = true; } else facts.push(STRIKE, _t68, v_j); }
-              _c69 = true;
+      let _q68 = true;
+      Q69: {
+        for (let _m70 = b.domain; _m70 !== 0; _m70 &= _m70 - 1) {
+          const v_j = 31 - Math.clz32(_m70 & -_m70);
+          const _t71 = ((v_j - 1) * sp.w + _h62);
+          if (b.has(_t71, v_j)) { if (fire === null) { b.strikeAt(_t71, v_j); changed = true; } else facts.push(STRIKE, _t71, v_j); }
+          let _c74 = true;
+          if (_c74) {
+            let _c73 = (v_j === v_a);
+            if (!_c73) {
+              const _t72 = (_h62 * sp.w + (v_j - 1));
+              if (b.has(_t72, v_j)) { if (fire === null) { b.strikeAt(_t72, v_j); changed = true; } else facts.push(STRIKE, _t72, v_j); }
+              _c73 = true;
             }
-            _c70 = _c69;
+            _c74 = _c73;
           }
-          if (!(_c70)) {
-            _q63 = false;
-            break Q64;
+          if (!(_c74)) {
+            _q68 = false;
+            break Q69;
           }
         }
       }
-      if (!(_q63)) return -1;
+      if (!(_q68)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ a: v_a, o: v_o }, facts)) return 1;

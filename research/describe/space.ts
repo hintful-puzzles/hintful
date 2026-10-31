@@ -65,6 +65,8 @@ export interface SpaceSpec {
   slots?: boolean;
   /** The orthogonal pairs, as `edge` elements. */
   edges?: boolean;
+  /** The points inside the grid where four cells meet (Mathrax's clues). */
+  corners?: boolean;
   /** The two diagonals of a square grid, as lines (Solo's X). */
   diagonals?: boolean;
   /** Named partitions of the cells: each part's cell indices. A partition the
@@ -227,6 +229,41 @@ export function buildSpace(spec: SpaceSpec): Space {
           return (p === a && q === b) || (p === b && q === a);
         }) ?? null,
     );
+  }
+
+  if (spec.corners) {
+    // In reading order, each the corner below and right of cell (x, y), its
+    // cells in reading order; a cell's are read below right, above right,
+    // below left, above left, as the compiled code reads them.
+    const corners: Elem[] = [];
+    const cornerAt = new Map<string, Elem>();
+    for (let y = 0; y + 1 < h; y++)
+      for (let x = 0; x + 1 < w; x++) {
+        const k = line("corner", corners.length, `corner (${x},${y})`, [
+          cells[y * w + x],
+          cells[y * w + x + 1],
+          cells[(y + 1) * w + x],
+          cells[(y + 1) * w + x + 1],
+        ]);
+        corners.push(k);
+        cornerAt.set(`${x},${y}`, k);
+      }
+    names.set("corners", corners);
+    fns.set("corners", ([c]) => {
+      const { x, y } = where(c);
+      return [
+        [x, y],
+        [x, y - 1],
+        [x - 1, y],
+        [x - 1, y - 1],
+      ].flatMap(([kx, ky]) => cornerAt.get(`${kx},${ky}`) ?? []);
+    });
+    fns.set("across", ([k, c]) => {
+      const cs = lineCells.get(asElem(k, "corner")) ?? [];
+      const i = cs.indexOf(asElem(c, "cell"));
+      if (i < 0) throw new TypeError(`${show(c)} is not at ${show(k)}`);
+      return cs[3 - i];
+    });
   }
 
   const units: Elem[] = spec.units.flatMap((n) => {
