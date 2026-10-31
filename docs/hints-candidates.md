@@ -14,7 +14,7 @@ shares are in [`hints.md`](./hints.md), and how a step is drawn is in
 
 What a game with notes does beyond the skeleton, in order. The file that does
 each of these the shared way is
-[`unequal/index.ts`](../src/games/unequal/index.ts).
+[`keen/index.ts`](../src/games/keen/index.ts).
 
 1. Take the cell's highlight, entry and pencil mode from
    `note-taking-cell.ts` (`pressNoteTakingCell`, `toggleNoteTakingMode`):
@@ -86,28 +86,32 @@ Write `buildSteps` as one call to `runCandidatePlan`
 ([`engine/candidate-plan.ts`](../src/engine/candidate-plan.ts)), or to
 `runLatinCandidatePlan` for a plain row/column Latin square (§ "The
 row/column preset"). The walk owns the loop and builds every step; the game
-supplies what carries its meaning. Exemplar:
-[`keen/index.ts`](../src/games/keen/index.ts)'s `buildSteps`. Requirements:
-"A shared candidate-elimination hint plan", "The walk owns the ladder", "The
-walk builds every step from the game's words", "The game keeps what carries
-its meaning".
+supplies what carries its meaning, each a field of `CandidatePlan`, whose
+docs say what each decides and, for an optional hook, the game-shaped fact
+that needs it. Exemplar: [`keen/index.ts`](../src/games/keen/index.ts)'s
+`buildSteps`. Requirements: "A shared candidate-elimination hint plan", "The
+walk owns the ladder", "The walk builds every step from the game's words",
+"The game keeps what carries its meaning".
 
 What the walk does, so a game does not:
 
 - **The ladder is fixed.** Naked singles, then the game's `rungs`, then the
   recorded strikes, then the recorded placements. A deduction of the game's
-  own goes in `rungs`, never in a reordered ladder.
+  own goes in `rungs` (§ "A rung of the game's own"), never in a reordered
+  ladder.
 - **Until the setup is done only the singles and the game's `rungs` are
   offered**: the note-free opening, which holds the recorded strikes back.
   Under the implicit reading the setup is done unless a stale note waits for
   the obvious clean, so a fresh board has no opening and every rung competes
   from the first step ("The implicit reading opens only on a stale note").
-- **A firing is data.** A rung returns firings as lists of legs
-  (`Leg`: a placement, a strike, or a `step` of the game's own with an
-  `apply`). The walk builds each leg's step from `placeWords` /
+- **A firing is data.** A rung returns firings as lists of legs (`Leg`
+  lists the kinds). The walk builds each leg's step from `placeWords` /
   `strikeWords` and adds the move, the `targets` and the `marks`, so none can
   disagree with the move. It reads `area` and `hatch` off the words
   (`evidenceOf`): a step cannot draw evidence its sentence does not name.
+  The words carry `reads` for the cells a step's candidates rest on beyond
+  those they outline (a cage deduction stripes the cage and reads every cell
+  of it).
 - **Each leg is played on the working board**, and after a placement the
   walk strikes the value from every cell it reaches: a leg continuing the
   journey, or silent under auto-pencil with the move carrying the same cull.
@@ -116,25 +120,10 @@ What the walk does, so a game does not:
   journey. Do not emit one cell per turn and re-link by `group`: the frontier
   could take something else in between and split one deduction into two
   hints.
-- **The choice of the next firing**, the budget and the cap (§ "Continue from
-  the last step").
+- **The walk chooses the next firing** and owns the budget and the cap (§
+  "Continue from the last step").
 
-What the game decides, each a field of `CandidatePlan`:
-
-- `record`, its recording solver, and `rungs`, its own deductions (§ "A rung
-  of the game's own").
-- `placeWords` and `strikeWords`, with `reads` for the cells a step's
-  candidates rest on beyond those its words outline (a cage deduction stripes
-  the cage and reads every cell of it).
-- `strikeAxis`, how a firing's strikes split into legs (§ "Solve the way a
-  human does").
-- `regionsOf` and `reach`, where they are a decision at all (§ "A cell's
-  regions are one definition", § "A value's reach depends on the value").
-- The optional hooks `singles`, `placeable`, `placed`, `placement`, `onPlace`
-  and `stuck`, each documented at its field with the game-shaped fact that
-  needs it.
-
-Pass `w` as the row stride only. The helpers read the board's length off
+**Pass `w` as the row stride only.** The helpers read the board's length off
 `grid`, so a board that is not square needs nothing more.
 
 ## A cell's regions are one definition
@@ -146,7 +135,7 @@ cannot disagree. Requirements: "A cell's regions are one definition per
 relation", "Every notes cull reads every declared region", "Only two kinds of
 region are declared".
 
-- A row/column game passes none: the preset supplies `rowColRegions(x, y, w)`
+- **A row/column game passes none**: the preset supplies `rowColRegions`
   from [`engine/latin-hint.ts`](../src/engine/latin-hint.ts).
 - **Return every region a value may not repeat in, as a `CellRegion`, and
   flag each `holdsEvery`.** "Holds every value" and "forbids repeats" are two
@@ -180,11 +169,11 @@ a fold's check of what an earlier fold placed. Requirements: "What a placed
 value rules out may depend on the value", "The default reach is the cell's
 regions".
 
-- The default is `regionReach`, every cell of `regionsOf`, so a game whose
-  rule is its regions passes nothing.
-- `regionsOf` keeps the job that does not depend on a value: the regions a
-  hidden single is found in.
-- The relation must be symmetric. The helpers read the reach outward from
+- **The default is `regionReach`**, every cell of `regionsOf`, so a game
+  whose rule is its regions passes nothing.
+- **`regionsOf` keeps the job that does not depend on a value**: the regions
+  a hidden single is found in.
+- **The relation must be symmetric.** The helpers read the reach outward from
   each placed value, which equals asking what reaches a cell only when "two
   equal values may not stand together" runs both ways.
 
@@ -200,16 +189,16 @@ type, never from a second list. Requirements: "A region's name is read off
 the region", "A region's word is not the tag that names a hidden single", "A
 citation repeats names, not regions".
 
-- The name cannot ride the hidden-single tag: a region that only forbids
+- **The name cannot ride the hidden-single tag**: a region that only forbids
   repeats is untagged and still has to be named.
-- Dedupe on the name, not the region: a cell on both diagonals says
+- **Dedupe on the name, not the region**: a cell on both diagonals says
   "diagonal" once.
-- Where the sentence speaks for the whole board, take the union over the
-  board, so a cell on neither diagonal is still told its notes were cleaned
+- **Where the sentence speaks for the whole board, take the union over the
+  board**, so a cell on neither diagonal is still told its notes were cleaned
   against them.
-- The name is the game's, not the engine's `CellRegion`'s. A game with one
-  kind of region says "this area" and carries no name; a game on the preset
-  has a constant phrase.
+- **The name is the game's, not the engine's `CellRegion`'s.** A game with
+  one kind of region says "this area" and carries no name; a game on the
+  preset has a constant phrase.
 
 Exemplar: `regionsOf` and `noRepeatRegionNames` in
 [`solo/index.ts`](../src/games/solo/index.ts), guarded by
@@ -227,21 +216,21 @@ The walk builds the reference: the struck values ("2 and 4") or "this cell",
 never the clause, since a reference is what the player presses
 (`hints.md` § "Keep the narration terse").
 Requirements: "A candidate strike SHALL end in the walk's conclusion", "A
-premise says how its conclusion refers to the struck notes".
+strike's conclusion names the struck values, even after its premise".
 
-- `conclude` comes from the preset's `notes` vocabulary, or from
+- **`conclude` comes from the preset's `notes` vocabulary**, or from
   `candidateConclusions` in the game's own value words, or is written by a
   game whose values are not listable that way (Rome's, in the ways a square
   points).
-- Two optional fields of the premise say how the ending refers to the
-  struck notes: `where` for a strike that reaches past "this cell" ("from the
-  other cells they pass through"), and `struck` where a list of values would
-  misstate them. A premise that already named the values is still followed
-  by them ("puts 2 in this cell, so the 2 must go"): "it" is no thing on the
-  board to press.
-- Name the cell with `thisCell`, as a placement does. Where the step strikes
-  notes in it, the walk draws that reference as an outline on the cell, so
-  pressing "this cell" points at the cell and "the 2" at its X
+- **Two optional fields of the premise say how the ending refers to the
+  struck notes**: `where` for a strike that reaches past "this cell" ("from
+  the other cells they pass through"), and `struck` where a list of values
+  would misstate them. A premise that already named the values is still
+  followed by them ("puts 2 in this cell, so the 2 must go"): "it" is no
+  thing on the board to press.
+- **Name the cell with `thisCell`, as a placement does.** Where the step
+  strikes notes in it, the walk draws that reference as an outline on the
+  cell, so pressing "this cell" points at the cell and "the 2" at its X
   ([`hints-marks.md`](./hints-marks.md) § "Outline the evidence"). Never
   name the cell by its notes: `mark.this` over a note throws.
 
@@ -251,19 +240,15 @@ A game whose values may not repeat in a row or a column, and nowhere else,
 calls `runLatinCandidatePlan`
 ([`engine/candidate-plan.ts`](../src/engine/candidate-plan.ts)) and supplies
 its recording solver, its rungs and its words. It is `runCandidatePlan` with
-the answers a row and a column force filled in. Exemplar:
+the answers a row and a column force filled in; its doc lists each and why
+it is not a parameter. Exemplar:
 [`mathrax/index.ts`](../src/games/mathrax/index.ts)'s `buildSteps`.
 Requirements: "A row/column Latin square answers no question its regions
 already settle", "The fields the row/column preset supplies", "A game
 reasoning over other regions cannot take the preset".
 
-| Field | What the preset supplies |
-| --- | --- |
-| `regionsOf` | `rowColRegions(x, y, w)` |
-| `singleReason` | `singleReasonOf`, the only inhabitant of that signature once the region is a `RowColRegion` |
-| a hidden single's evidence | its own line, `hiddenSingleLine`; the game's `placeWords` still says why |
-| the setup sentences and `conclude` | built from the game's `notes: { noun, placedVerb, value?, cell? }`. A game with a `setUp` of its own still gives `notes`, for the conclusions |
-
+- **A game with a `setUp` of its own still gives the `notes` vocabulary**,
+  for the conclusions.
 - **A game that differs is turned back by the checker.** The parameter type
   carries `NarratesSingles<Reason>`, which is `never` unless the game's
   reason union can hold the `SingleReason` the preset synthesizes. A game
@@ -288,7 +273,7 @@ reasoning over other regions cannot take the preset".
   well, or one value where the shared arm lists several). One vocabulary
   cannot express a per-arm difference. A recorded local narrator conforms: "A
   shared narrator for generic Latin placements and strike premises", "A game
-  whose generic wording diverges keeps its own narration". The same test
+  whose generic wording diverges narrates its own arms". The same test
   decides any extraction here: ask, per field, what a game would legitimately
   do differently ([`doctrine.md`](./doctrine.md) § "Convention over
   configuration").
@@ -302,10 +287,9 @@ difference to the helpers instead
 Requirement: "The shared track and refresh read a game's move dialect".
 
 - **`CandidateMoveAdapter<M>`** for a move union that is not `{ type: "set" |
-  "pencilStrike" | "pencilAll" }`: `read(m)` maps a game move onto the
-  canonical `CandidateMove`, or `null` for "not one of these, so off-plan";
-  `strike(marks)` builds a strike in the game's shape; `populate` writes its
-  fill-all; `bit(n)` gives the mask encoding. `keepCandidateHintTrack`,
+  "pencilStrike" | "pencilAll" }`: it reads a game move as the canonical
+  `CandidateMove`, or `null` for "not one of these, so off-plan", and builds
+  the game's own moves. `keepCandidateHintTrack`,
   `refreshCandidateHintStep` and the plan (`moves`) take it. Exemplars:
   [`group/index.ts`](../src/games/group/index.ts) (moves carrying a cell
   list), [`crossing/index.ts`](../src/games/crossing/index.ts) (a `kind`
@@ -313,9 +297,9 @@ Requirement: "The shared track and refresh read a game's move dialect".
 - **Emit the hint's placement as the game's native move**, so a player
   following the hint produces the exact move the plan expects. Add only the
   note moves the hint needs.
-- **`NoteEncoding { bit?(n), values?, all?(i) }`** for the notes: `values` is
-  the highest candidate a cell may note when that is shorter than the grid
-  order; `all(i)` is the full note set of cell `i` where it is not
+- **`NoteEncoding`** for notes that are not `1 << n` up to the grid order:
+  its fields say how a candidate maps to a bit, the highest candidate a cell
+  may note, and `all(i)`, cell `i`'s full note set where it is not
   board-wide (bounded by the grid edge, or by a region's size).
 - **The game's own `pencilAll` is the authority for `all(i)`.** A populate
   that fills more than the player's Mark-all teaches strikes on notes the
@@ -447,7 +431,7 @@ them".
   settles a cell with a marker seeds the cube from the grid and the markers.
 - **The hint never writes the state.** A shared structure read through an
   accessor that mutates as it reads (a `Dsf` compressing paths) breaks
-  `hint-resume.test.ts` "hint() leaves the state unchanged": compress once
+  `hint-resume.test.ts`, which asks that asking change nothing: compress once
   when it is built.
 
 Exemplar: `recordEdgeClueDeductions` in
@@ -489,8 +473,9 @@ When threading:
   cannot re-derive (a cage-sum forcing) keeps its recorded reason.
 - **A slow variant's hint walk takes no timeout of its own**
   ([`testing.md`](./testing.md) § "Seed-deterministic, never clock-gated").
-  `hint-resume.test.ts` walks one preset per declared tier; breadth across
-  variants that are not tiers stays in the game's own hint test.
+  Which presets `hint-resume.test.ts` walks, and which it leaves to the slow
+  tier, is `gatePresets`'s doc
+  ([`engine/testing/hint-games.ts`](../src/engine/testing/hint-games.ts)).
 
 ## Deduce from the notes when the mistake check vouches for them
 
@@ -545,8 +530,8 @@ reason carries the cells its words do not name".
   value confined across several lines shows the lines").
 - **A fish has two readings; name the smaller.** `k` columns holding a value
   in only `k` rows is also the other rows holding it in only the other
-  columns. Pick by count when recording (`confinedSet` in `latin.ts`), and
-  test each way round.
+  columns. Pick by count when recording, as `fishReason` in `latin.ts` does, and test each
+  way round.
 - **Say what the sentence rests on, not what the solver's state is.** A cage
   the solver has shrunk by filling cells is still the cage the player sees,
   so "the rest of this cage is filled in" reads those cells.
@@ -564,20 +549,20 @@ every cell outside a step's premise to where the recording started and runs
 the firing's technique again ("The engine audits a premise by replaying its
 firing"). What a game owes it:
 
-- A solver on `latinSolver` takes part with no code. A bespoke one writes a
-  `ReplayAdapter` (Rome's, Solo's).
+- **A solver on `latinSolver` takes part with no code.** A bespoke one writes
+  a `ReplayAdapter` (Rome's, Solo's).
 - **The replay runs one technique, not the ladder**, so a rung reads nothing
   a rung before it left behind in the same pass: work such state out from
   the board inside the rung.
-- An adapter whose replay does not make the recorded firing again from the
-  untouched state fails the guard as `unreproduced`, before any premise is
-  judged with it.
-- A technique that reads more to decide whether to fire than its conclusion
-  rests on is flagged though its premise is honest: ledger the gate in the
-  guard against a pinned board ("A technique that reads more than its
-  conclusion rests on is pinned").
-- Where the audit cannot reach a read (it counts what it tested), hold it
-  with a recording test in the game's own hint test.
+- **An adapter whose replay does not make the recorded firing again** from
+  the untouched state fails the guard as `unreproduced`, before any premise
+  is judged with it.
+- **A technique that reads more to decide whether to fire than its
+  conclusion rests on is flagged** though its premise is honest: ledger the
+  gate in the guard against a pinned board ("A technique that reads more
+  than its conclusion rests on is pinned").
+- **Where the audit cannot reach a read** (it counts what it tested), hold
+  it with a recording test in the game's own hint test.
 
 ## Persist, populate, and the moves
 
@@ -639,11 +624,12 @@ player's deductions as soon as one cell is blank.
 - **The plan's working copy mirrors the additive fill exactly**, or the plan
   teaches strikes on candidates the player already crossed out. `lazyPopulate`
   does.
-- A resetting move kept in the union for the replay of saved move logs is
+- **A resetting move kept in the union for the replay of saved move logs** is
   documented at its arm as unreachable from input.
-- Guard: [`engine/mark-all.test.ts`](../src/engine/mark-all.test.ts), which a
-  game joins by declaring `markAll`. A test of this rule must narrow a cell
-  by hand: a resetting fill writes back exactly what was there otherwise.
+- **A test of this rule must narrow a cell by hand**: a resetting fill writes
+  back exactly what was there otherwise. The guard is
+  [`engine/mark-all.test.ts`](../src/engine/mark-all.test.ts), which a game
+  joins by declaring `markAll`.
 
 ## Two readings of an unmarked cell
 
@@ -702,14 +688,14 @@ strike's marks lie in one blank, note-less cell and its premise has no
 `where`, the step ends in the move the board calls for: "…differ by 3, so
 this cell must be 2", or "…so this cell can only be 1 or 4". The limits:
 
-- A cell an earlier leg of the firing reads is noted first and struck as
-  written, since its candidates are that leg's premise. A cage firing notes
+- **A cell an earlier leg of the firing reads is noted first and struck as
+  written**, since its candidates are that leg's premise. A cage firing notes
   the cage's other cells, folds the first, and strikes the rest.
-- A strike with a `where` never folds: it speaks for cells other than "this
-  cell".
-- A later fold sees an earlier fold's placement in the same firing
+- **A strike with a `where` never folds**: it speaks for cells other than
+  "this cell".
+- **A later fold sees an earlier fold's placement in the same firing**
   (`candidate-plan.test.ts` pins the shape).
-- The populate reading never folds ("Nothing folds under the populate
+- **The populate reading never folds** ("Nothing folds under the populate
   reading").
 
 **The note legs cover every cell a step's candidates rest on**: the outlined
@@ -735,15 +721,13 @@ distinguishes naked and hidden singles", "A naked single shades its cell and
 a hidden single its region", "A placement is classified against the
 candidates the board shows".
 
-- The walk classifies with `classifyPlacementInRegions`
+- **The walk classifies with `classifyPlacementInRegions`**
   ([`engine/latin-hint.ts`](../src/engine/latin-hint.ts)) over the game's
-  `regionsOf`; `classifyPlacement` is the row/column form and
-  `singlePlacementReason` maps the answer to the `single` / `hiddenSingle`
-  reasons.
-- A hidden single names its region ("Every other cell in this row rules out
-  3, so this cell must be 3") and shades the whole of it.
-- Reclassify only a recorded `single`. A placement with a reason of its own
-  (a clue, a cage) keeps it.
+  `regionsOf`.
+- **A hidden single names its region** ("Every other cell in this row rules
+  out 3, so this cell must be 3") and shades the whole of it.
+- **Reclassify only a recorded `single`.** A placement with a reason of its
+  own (a clue, a cage) keeps it.
 
 **The classifier throws when the placement is neither.** The notes then show
 a candidate the solver ruled out, so the plan skipped a strike the placement
@@ -828,7 +812,7 @@ Exemplar: `leads` in [`group/index.ts`](../src/games/group/index.ts).
 - **A placement that forces others is one firing.** Give the plan a
   `placement` hook returning the whole journey, the cell that revealed it
   shaded on every leg, not one hint per forced cell.
-- Placing first means classifying on a board with few notes: the obvious
+- **Placing first means classifying on a board with few notes**: the obvious
   clean runs ahead of the placement arm, and a note-less cell reads by what
   its regions leave it (§ "Re-derive a placement's why").
 - **A fill-all move the hint needs may be added as a real play move**, with
@@ -849,7 +833,8 @@ game handles it at four sites. Exemplar:
 - **The adapter reads the marker move as `null`**, and the game's
   `hintKeepTrack` and `refreshHintStep` judge it before delegating.
   `refreshHintStep` resolves a marker step from the marker array: the shared
-  placement arm waits for `grid[cell] !== 0`, which never comes.
+  refresh keeps any step whose move its adapter reads as `null`, so it would
+  never resolve one.
 - **The plan gives `placed`**, the cells already decided, since a cell
   settled by a marker stays blank in `grid`. Judging by `grid` alone leaves
   that operation unmade for good and holds back every firing whose premise
@@ -950,11 +935,11 @@ false and checkable. Exemplar:
 Where a sentence says that following something leads somewhere ("Following
 the arrows from the square above leads back here"), compute the walk and
 throw if it does not arrive, with the termination argument written beside
-it. Number the walk on the board ("A premise that asserts a walk is computed
-and numbered"). Exemplar: `arrowPath` in
-[`rome/solver.ts`](../src/games/rome/solver.ts).
+it. Outline the walk's cells on the board, with no number on them ("A
+premise that asserts a walk is computed and outlined"). Exemplar:
+`arrowPath` in [`rome/solver.ts`](../src/games/rome/solver.ts).
 
-A test of a named walk holds each step to the one before it, not only to
+**A test of a named walk holds each step to the one before it**, not only to
 its own cell: a check that each named value is among its cell's candidates
 passes a walk shifted by one, where each cell's candidates are the previous
 cell's value and its own.
@@ -994,8 +979,8 @@ candidates eliminated: the list is long and dishonestly precise. Exemplars:
   against the surviving values, highlighted where the player counts them.
   Name one excluded competitor and why, preferring "already placed
   elsewhere", and highlight the blocker.
-- A parallel recorder that loops to a fixpoint keeps its cube and its
-  reasons across iterations.
+- **A parallel recorder that loops to a fixpoint keeps its cube and its
+  reasons across iterations.**
 
 ## A candidate game off the shared walk
 
@@ -1027,9 +1012,9 @@ step refresh, and the frontier, which takes a key of the game's choosing (§
   solving every shipped tier guess-free allows
   ([`solver-and-generator.md`](./solver-and-generator.md) § "Guess-free
   generation").
-- A game that plans without the walk and writes a cell's notes only when a
-  narrowing needs them: [`hints-marks.md`](./hints-marks.md) § "Place the
-  notes a fixpoint rests on".
+- **A game that plans without the walk and writes a cell's notes only when
+  a narrowing needs them** reads [`hints-marks.md`](./hints-marks.md) §
+  "Place the notes a fixpoint rests on".
 
 ## A graph, not a grid (Map)
 
@@ -1045,7 +1030,7 @@ follows. Exemplar: [`map/hint.ts`](../src/games/map/hint.ts).
   does to the board, not by the move's `type`.
 - **The frontier takes a key**: `gridKey(w, h)` for a grid, the region index
   here ("The hint frontier keys on whatever a game's steps act on"). Since
-  `plan-continuity.ts` reads a square grid, `hint-frontier.test.ts` holds a
+  `plan-continuity.ts` reads a grid of cells, `hint-frontier.test.ts` holds a
   game driving the frontier directly to a ledger naming its own continuity
   guard ("A game taking the frontier directly is held by a ledger").
 - **Draw the ring as the game's own selection band**, in the hint color
@@ -1084,6 +1069,7 @@ follows. Exemplar: [`map/hint.ts`](../src/games/map/hint.ts).
   legend that teaches a reference by its words ("the middle cell") is what
   lets the marks guard accept it without a role word.
 - **Name an element by its mark, never by an id the board may not show**:
-  "this region", "the outlined pair", "the middle region". Name a color that is a value by its word, kept beside its fill
-  (`FOUR_NAMES` in `engine/color/colors.ts`), which is a word for each
-  scheme: put it in a `phrase`, and list several with `listOf`.
+  "this region", "the outlined pair", "the middle region". Name a color that
+  is a value by its word, kept beside its fill (`FOUR_NAMES` in
+  `engine/color/colors.ts`), which is a word for each scheme: put it in a
+  `phrase`, and list several with `listOf`.

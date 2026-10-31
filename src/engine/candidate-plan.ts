@@ -265,7 +265,8 @@ export interface CandidatePlan<
   /** Iteration cap, a backstop for a rung that fires without progress. Default
    * `4w³ + 4`. */
   cap?: number;
-  /** Whether the working board is finished. Default: no cell is empty. */
+  /** Whether the working board is finished. Default: no cell is empty. A game
+   * whose finished board leaves cells empty says so here (Salad's holes). */
   finished?: () => boolean;
   /** Run the recording solver on the working board. Called at the start and
    * after every firing that decides a cell. */
@@ -333,7 +334,9 @@ export interface CandidatePlan<
   /** The firing a placement belongs to, where one placement forces others
    * (Group's identity row and column). Default: the placement alone. */
   placement?: (m: Mark, reason: Reason, ops: readonly R[]) => Firing<M, H, Reason>;
-  /** Called after a placement is written to the working board. */
+  /** Called after a placement is written to the working board: where a game
+   * keeps state of its own beside `grid` that a placement also settles
+   * (Salad marks the square as no hole). */
   onPlace?: (x: number, y: number, n: number) => void;
   /** Called when nothing fires, before the plan ends: the place for a check
    * that the solver forces nothing the plan could not explain. */
