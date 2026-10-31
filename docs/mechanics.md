@@ -175,14 +175,11 @@ compatibility decision for the owner.
 
 - **Declare the codec once.** `paramsCodec(defaultParams, segments)`
   ([`engine/params-codec.ts`](../src/engine/params-codec.ts)) derives both
-  halves from one ordered list of `dims`, `size`, `num`, `letters`,
-  `choice`, `flag` and `unusedLetter` (`engine-params`, "The codec grammar
-  is a prefix, tagged segments, flags and letters"). `full: true` marks a
-  field only the generator needs, which the brief encoding omits;
-  `means: false` writes the letter when the field is off; `omitWhen` and
-  `whenAbsent` cover a field written only when non-zero and a default
-  computed from other params. Exemplar: the skeleton's
-  [`state.ts`](../src/skeleton/grid/state.ts).
+  halves from one ordered list of segments (`engine-params`, "The codec
+  grammar is a prefix, tagged segments, flags and letters"). The module's
+  doc comments say what each segment and option writes; `full` marks a field
+  only the generator needs, which the brief encoding omits. Exemplar: the
+  skeleton's [`state.ts`](../src/skeleton/grid/state.ts).
 - **A segment names a `paramConfig` field by its `kw`** and uses that item's
   accessors, whatever representation the game gave the field.
 - **Hand-write a grammar the segments do not fit**, and add no segment
@@ -289,10 +286,10 @@ carries:
   range only. A limit that depends on another field, or that holds only
   when generating (`full`), stays in `validateParams` (`engine-params`, "A
   generation-only bound is gated on full").
-- **`label`**: which slot of the params label the field's words fill, of
-  `[ruleset: ]size[ kind…][ tier][, tail…]` (`engine-params`, "One describer
-  labels every params set"). `words` returning `null` leaves a default
-  unsaid. A checkbox must give words; a choices field says its choice's
+- **`label`**: which slot of the params label the field's words fill
+  (`engine-params`, "One describer labels every params set"; the slots are
+  drawn in [`param-label.ts`](../src/engine/param-label.ts)'s header). `words` returning `null` leaves a
+  default unsaid. A checkbox must give words; a choices field says its choice's
   name by default.
 
 **A preset's name is its params' label.** Give the menu a `title` only for
@@ -372,10 +369,10 @@ at least three and smallest first, and the engine writes each at every tier
 in order, then one board for each thing that is neither a size nor a tier
 (`variants`). A game without tiers lists its boards. `defaultParams()` is
 the start-up choice. Exemplar: the skeleton's
-[`state.ts`](../src/skeleton/grid/state.ts). Two options are for one game
-each so far: `title` names a line upstream named (Guess's "Super"), and
-`more` puts boards in a "More..." section after the rest (Loopy's tilings);
-a game with rulesets has its sections already and takes no `more`.
+[`state.ts`](../src/skeleton/grid/state.ts). `title` names a line upstream
+named (Guess's "Super"), and `more` puts boards in a "More..." section after
+the rest (Loopy's tilings); a game with rulesets has its sections already
+and takes no `more`.
 
 A test that wants the menu's lines reads `leafPresets(game)` or
 `presetMenu(game)`, never a list of its own: a copy of the menu in a test
@@ -388,15 +385,15 @@ enough to choose from", "A board's tiers are one run of lines, and every
 tier is offered" and "A checkbox rule modifier has one line of the menu").
 What a game does to fit it:
 
-- **Eighteen lines a menu (`MENU_LINES`)**: a game with several rulesets
-  offers one board of each, and a game with many kinds of board one of each
+- **A menu is held to `MENU_LINES`**: a game with several rulesets offers
+  one board of each, and a game with many kinds of board one of each
   family. The Custom dialog reaches the rest.
-- **Twelve lines a section (`MENU_SECTION_LINES`)**: trade sizes against
+- **A section is held to `MENU_SECTION_LINES`**: trade sizes against
   tiers.
 - **A board that stops short of the hard tiers or starts above the easy
   ones says so with `tiers`**, for a deal that takes seconds, a tier
-  that means nothing at that size, or the twelve lines. Write which at the
-  menu.
+  that means nothing at that size, or the section's limit. Write which at
+  the menu.
 - **A ruleset's tiers are its own.** Rulesets can be very different puzzles,
   so one may offer tiers another does not, and a board's run is of the tiers
   its ruleset's lines offer. A board that leaves out a tier between its first
@@ -443,8 +440,8 @@ submission onto a copy of the params and validates with `paramsError`, so
 the dialog rejects exactly what a game ID would. Every registered game
 declares a non-empty one
 ([`custom-params.test.ts`](../src/engine/custom-params.test.ts)).
-Exemplars: [`pattern/index.ts`](../src/games/pattern/index.ts) (width and
-height), [`towers/index.ts`](../src/games/towers/index.ts) (size and
+Exemplars: [`pattern/state.ts`](../src/games/pattern/state.ts) (width and
+height), [`towers/state.ts`](../src/games/towers/state.ts) (size and
 difficulty), [`solo/index.ts`](../src/games/solo/index.ts) (a fold).
 
 - **A key matches the C config slug.** `get` returns an index for a choice
@@ -582,14 +579,13 @@ that loads also draws, and junk is refused at least once, which catches a
 
 Read and write digits through the engine, whatever the grammar:
 
-- [`engine/decimal.ts`](../src/engine/decimal.ts): `isDigit(c)`,
-  `digitValue(c)` (`0`–`9` or `null`) and `parseLeadingInt(s, pos)` for a
-  run of digits (`{ value, next }`, where `next === pos` means no number
-  here). Write a single digit as `String(n)`.
+- [`engine/decimal.ts`](../src/engine/decimal.ts) for a digit or a run of
+  digits (`isDigit`, `digitValue`, `parseLeadingInt`). Write a single digit
+  as `String(n)`.
 - [`engine/desc-alphabet.ts`](../src/engine/desc-alphabet.ts) for a value
-  above nine: `n2c`/`c2n` (62 values) where every character is a value, and
-  `n2cUpper`/`c2nUpper` (`0`–`9`, `A`–`Z`) where the desc is run-length and
-  has spent the lowercase on blanks.
+  above nine: `n2c`/`c2n` where every character is a value, and
+  `n2cUpper`/`c2nUpper` where the desc is run-length and has spent the
+  lowercase on blanks.
 - Hex that is hex (a nibble bitmap) is `Number.parseInt(c, 16)`.
 
 Never write `c >= "0" && c <= "9"`, `c.charCodeAt(0) - 48`,
@@ -741,8 +737,7 @@ Exemplar: `status` in the skeleton's
   state and the new.**
 - **The words a player reads are the engine's.** A refused Solve returns a
   `SolveFailure` ([`solve-failure.ts`](../src/engine/solve-failure.ts)). The
-  midend prefixes the completion words (`COMPLETED!`, `Auto-solved.`,
-  `Auto-solver used.`) to whatever `statusbarText` returns
+  midend prefixes the completion words to whatever `statusbarText` returns
   ([`completion-status.ts`](../src/engine/completion-status.ts)), so
   `statusbarText` returns only the game's own phrase. The engine catalog's
   entries for both say which failure a solver's verdict entitles it to.
@@ -755,16 +750,15 @@ generator's aux".
 
 **Offer a capability by having its method, never by declaring a flag beside
 it.** `Midend.getStaticProperties` derives the app's flags from the methods,
-and the shell's controls follow them:
+and the shell's controls follow them; read it for the list. For `hint`
+read [`hints.md`](./hints.md), and for `reference` "The reference aid".
 
-| App flag | Derived from | Note |
-| --- | --- | --- |
-| `wantsStatusbar` | `statusbarText` | the timer is not in it and has its own chrome |
-| `canSolve` | `solve` | test through a real `Midend` when `aux` matters |
-| `canHint` | `hint` | [`hints.md`](./hints.md) |
-| `canCheck` | `findMistakes` or `hint` | a hint alone checks only for a dead end |
-| `hasReference` | `reference` | "The reference aid" |
-
+- **`wantsStatusbar` comes from `statusbarText`.** The timer is not in it and
+  has its own chrome.
+- **`canSolve` comes from `solve`.** Test it through a real `Midend` when
+  `aux` matters.
+- **`canCheck` comes from `findMistakes` or `hint`.** A hint alone checks
+  only for a dead end ("Mistake checking is part of done").
 - **`textFormat` present means a text panel.**
 - **Where a capability depends on the params, widen the method's return; do
   not add a hook.** `textFormat` returns `string | null`, and the midend and
@@ -873,10 +867,9 @@ notes declares the shared ones ("Pencil marks: the full note-taking UX").
 
 - **Add nothing to repaint for a render-only preference.** The midend drops
   the draw state on `setPreferences`, which forces a full repaint.
-- **The app overrides `newUi` defaults per puzzle.** `getPuzzlePreferences`
-  in `src/store/settings.ts` applies a small map of defaults on every load.
-  When a checkbox comes up "wrong" in the app, read that map before your
-  hook.
+- **A stored choice overrides `newUi`'s default.** When a checkbox comes up
+  "wrong" in the app, read what `getPuzzlePreferences` in
+  `src/store/settings.ts` returns for the puzzle before your hook.
 - **What a placement rules out at a glance is declared, not a preference.**
   Where placing a thing rules out squares the player would otherwise cross
   out by hand (the squares round a star or a tent), declare `rulesOut` on the
@@ -1003,8 +996,8 @@ does".
   fills, or on a fully noted board strikes the obvious candidates, and is
   `null` when there is nothing to do (`engine-notes`, "Mark-all is adaptive
   in a game with an obvious-candidate rule"). Such a game is one with a
-  `regionsOf` ([`hints-candidates.md`](./hints-candidates.md) § "What every
-  game does").
+  `regionsOf` ([`hints-candidates.md`](./hints-candidates.md) § "A cell's
+  regions are one definition").
   Pass the `regionsOf` the hint's plan declares: a Keen cage is not a
   region, and a Solo Killer cage, which forbids repeats, is one, flagged
   `holdsEvery: false`. A game without a row and column model keeps a plain
@@ -1028,13 +1021,13 @@ does".
 - **Do not write the pointer arm by hand.** Call `pressNoteTakingCell`
   ([`engine/note-taking-cell.ts`](../src/engine/note-taking-cell.ts)) with
   two predicates about the cell (`canEnter`, `canMark`) and your
-  coordinates. It resolves the press and reports `"moved"`, `"unmoved"` or
-  `null`, so a game that layers something on the selection hangs it off the
-  result. `releaseHighlightAfterEntry` and `noOpEntryResult` are the rules
-  for what a symbol entry does to the highlight; decoding the keystroke and
-  the no-op predicate stay the game's. A game with `ui.pencilMode` and
-  `ui.cursorFromKeyboard` that does not call `pressNoteTakingCell` fails
-  `note-taking-cell.test.ts`.
+  coordinates. It resolves the press and reports what the selection did, so
+  a game that layers something on the selection hangs it off the result.
+  `releaseHighlightAfterEntry` and `noOpEntryResult` are the rules for what
+  a symbol entry does to the highlight; decoding the keystroke and the no-op
+  predicate stay the game's. A game with `ui.pencilMode` and
+  `ui.cursorFromKeyboard` that calls neither `pressNoteTakingCell` nor
+  `tapNoteTakingCell` fails `note-taking-cell.test.ts`.
 - **Where a press starts a drag, the press changes nothing about the
   highlight and the release resolves the gesture** (`engine-notes`, "A press
   that may become a drag changes nothing in the selection"). Call
