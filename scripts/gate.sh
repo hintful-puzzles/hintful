@@ -282,7 +282,7 @@ node scripts/checks/absence-spelling.mjs
 # retiring the verb and writing its own scenario-survival check; the actual cause
 # was an openspec CLI nine months and fifteen releases stale, which had fixed it
 # in 1.6.0 (archive refuses the loss) and 1.8.0 (validate reports it at authoring
-# time). See `docs/work-management.md`.
+# time).
 #
 # So the floor is load-bearing, not hygiene: below 1.6.0 the archiver will apply
 # the loss silently, and this line would still print a cheerful pass. `npx`

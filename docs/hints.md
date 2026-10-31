@@ -129,11 +129,9 @@ these numbers:
    marks, one a step (§ "Cognitive load: one step per hint").
 
 A game with no deduction is exempt from deduction only, not from the bar
-(`hints-search.md` § "What every game does"). The games still
-without a hint are the registered games that declare no `hint`, derived by
-[`engine/testing/hint-games.ts`](../src/engine/testing/hint-games.ts), and
-[`work-management.md`](./work-management.md) § "Which hintless game comes
-next" orders them.
+(`hints-search.md` § "What every game does"). The hinted games are the
+registered games that declare a `hint`, derived by
+[`engine/testing/hint-games.ts`](../src/engine/testing/hint-games.ts).
 
 Exemplars: Palisade (grouped multi-leg deductions),
 [`src/games/range/`](../src/games/range/) (a recording solver, `hint` and
