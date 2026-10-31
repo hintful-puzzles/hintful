@@ -514,18 +514,23 @@ takes it back.
 
 ### A mark outside the verbs that drags
 
-**Declare it with `dragMarkVerbs`, export the declaration, and add it to
-[`drag-marks.test.ts`](../src/engine/drag-marks.test.ts).** This is for a clue
-marked done beside cells that take a keypad, a mark of notes mode, or the one
-button a drag game's own drag does not use. The game declares the one mark,
-where a press lands on it and what it holds, and drives the drag with
-`beginSweep`, `sweepTo` and `endSweep`.
+**Declare it with `dragMarkVerbs`.** This is for a clue marked done beside
+cells that take a keypad, a mark of notes mode, or the one button a drag
+game's own drag does not use. The game declares the one mark, where a press
+lands on it and what it holds, and drives the drag with `beginSweep`,
+`sweepTo` and `endSweep`.
 
-The declaration is no `Game` member, so no guard finds it unless it is added
-to that test, which runs the sweep check (`testing/sweep-probe.ts`). A `holds`
-that reads the wrong array typechecks and drags nothing. Exemplars: `clueDrag`
-in [`towers/index.ts`](../src/games/towers/index.ts); `crossDrag` in
-[`engine/line-drawing.ts`](../src/engine/line-drawing.ts).
+- **A clue marked done is the game's `doneClues`**, even where its targets
+  are also verbs' (Magnets, whose verbs delegate to it). The help writes the
+  page's sentence from it and
+  [`drag-marks.test.ts`](../src/engine/drag-marks.test.ts) plays it, both
+  finding it on the `Game`.
+- **Any other such mark is exported and named in that test**, since no `Game`
+  member carries it and no guard finds it otherwise. A `holds` that reads the
+  wrong array typechecks and drags nothing.
+
+Exemplars: `clueDrag` in [`towers/index.ts`](../src/games/towers/index.ts);
+`crossDrag` in [`engine/line-drawing.ts`](../src/engine/line-drawing.ts).
 
 ## Keyboard cursors
 

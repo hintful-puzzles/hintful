@@ -18,9 +18,7 @@ help:
     number as a pencil mark, indicating numbers that you think
     *might* go in that square.
 
-    Click on a clue, with either button, to mark it as done (gray it out).
-    To unmark a clue as done, click on it again. Drag on through other clues to do
-    the same to each one you pass over.
+    {{done-clues}}
 
     {{sticky-pencil}}
 

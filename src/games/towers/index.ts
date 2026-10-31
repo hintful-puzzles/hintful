@@ -140,7 +140,7 @@ function inGrid(w: number, x: number, y: number): boolean {
 }
 
 /** The "this clue is done" mark, which a drag along the clues repeats. */
-export const clueDrag = dragMarkVerbs<
+const clueDrag = dragMarkVerbs<
   TowersState,
   TowersUi,
   TowersDrawState,
@@ -614,6 +614,7 @@ export const towersGame: Game<
   changedState,
 
   interpretMove,
+  doneClues: clueDrag,
   executeMove,
   status,
   notApplicable: { transposeParams: SQUARE_GRID },

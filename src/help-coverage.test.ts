@@ -50,7 +50,7 @@ import {
   rulesetField,
   rulesetsMarkdown,
 } from "./engine/ruleset.ts";
-import { CONTROLS_PLACEHOLDER } from "./engine/target-verb.ts";
+import { CONTROLS_PLACEHOLDER, DONE_CLUES_PLACEHOLDER } from "./engine/target-verb.ts";
 import { HINT_GAMES } from "./engine/testing/hint-games.ts";
 import { itOverWholeSweep } from "./engine/testing/slow.ts";
 import { TOUCH_PLACEHOLDER } from "./engine/touch-help.ts";
@@ -239,9 +239,10 @@ describe("every game's page has the one skeleton", () => {
     expect(page.split(CONTROLS_PLACEHOLDER).length - 1).toBe(declares ? 1 : 0);
   });
 
-  // The Mark-all press and the sticky pencil preference are each described by
-  // one generated sentence (`vite-plugins/note-controls.ts`), in the Controls
-  // section of a game that has the thing and on no other page.
+  // The Mark-all press, the sticky pencil preference, what a placement rules
+  // out and a clue marked done are each described by one generated sentence
+  // (`vite-plugins/note-controls.ts`), in the Controls section of a game that
+  // has the thing and on no other page.
   const noteSentences = [
     {
       placeholder: MARK_ALL_PLACEHOLDER,
@@ -254,6 +255,10 @@ describe("every game's page has the one skeleton", () => {
     {
       placeholder: RULES_OUT_PLACEHOLDER,
       owed: (id: string) => getTsGame(id)?.rulesOut !== undefined,
+    },
+    {
+      placeholder: DONE_CLUES_PLACEHOLDER,
+      owed: (id: string) => getTsGame(id)?.doneClues !== undefined,
     },
   ];
   let noteSentencePages = 0;
@@ -706,6 +711,10 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
   targetVerbs: {
     kind: "internal",
     why: "the game page's Controls paragraph, generated from it rather than told once",
+  },
+  doneClues: {
+    kind: "internal",
+    why: "the game page's sentence on marking a clue done, generated from it",
   },
   refreshHintStep: { kind: "internal", why: "re-validating a stored step" },
   uiUpdateClearsHint: { kind: "internal", why: "when a UI change invalidates a step" },

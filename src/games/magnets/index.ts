@@ -13,6 +13,7 @@ import { gridCursorMove, newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
+  dragMarkVerbs,
   interpretTargetVerbs,
   type TargetGeometry,
   type TargetVerbs,
@@ -123,6 +124,26 @@ const geometry: TargetGeometry<MagnetsState, MagnetsUi, MagnetsDrawState, Point>
   },
 };
 
+/** The "this clue is done" mark, which the verbs below make on a clue and a
+ * drag along the clues repeats. Its target is the clue's index. */
+const doneClues = dragMarkVerbs<
+  MagnetsState,
+  MagnetsUi,
+  MagnetsDrawState,
+  number,
+  MagnetsMove
+>({
+  noun: "clue",
+  target(s, ds, p, ui) {
+    const t = geometry.pointerTarget(s, ds, p, ui);
+    return t !== null && isClue(s.w, s.h, t.x, t.y)
+      ? clueIndex(s.w, s.h, t.x, t.y)
+      : null;
+  },
+  apply: (_s, clue) => ({ type: "clue", clue }),
+  sweep: { holds: (s, clue) => s.countsDone[clue] },
+});
+
 /** The tile's index, or `null` for a clue or a singleton, which never holds a
  * magnet. */
 function tileAt(s: MagnetsState, { x, y }: Point): number | null {
@@ -145,9 +166,9 @@ const targetVerbs: TargetVerbs<
       "the magnet round, and a third time to empty it",
     // empty → + → − → empty; can't cycle a magnet from a placed neutral. On a
     // clue, marks it done or not.
-    apply(s, t) {
+    apply(s, t, ui) {
       if (isClue(s.w, s.h, t.x, t.y))
-        return { type: "clue", clue: clueIndex(s.w, s.h, t.x, t.y) };
+        return doneClues.primary.apply(s, clueIndex(s.w, s.h, t.x, t.y), ui);
       const idx = tileAt(s, t);
       if (idx === null) return null;
       const curr = s.grid[idx];
@@ -174,7 +195,7 @@ const targetVerbs: TargetVerbs<
   sweep: {
     holds(s, t) {
       if (isClue(s.w, s.h, t.x, t.y))
-        return `clue ${s.countsDone[clueIndex(s.w, s.h, t.x, t.y)]}`;
+        return `clue ${doneClues.sweep?.holds(s, clueIndex(s.w, s.h, t.x, t.y))}`;
       const idx = tileAt(s, t);
       if (idx === null) return "none";
       return `${s.grid[idx]} ${s.flags[idx] & (GS_SET | GS_NOTNEUTRAL)}`;
@@ -272,6 +293,7 @@ export const magnetsGame: Game<
   changedState,
 
   targetVerbs,
+  doneClues,
   interpretMove,
   executeMove,
   status,

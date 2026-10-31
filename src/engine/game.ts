@@ -539,6 +539,10 @@ export interface Game<
    * `interpretTargetVerbs`, and the help renders its Controls paragraph from
    * this; `target-verb.test.ts` holds the two to each other. */
   readonly targetVerbs?: TargetVerbs<State, Ui, DrawState, unknown, Move>;
+  /** The mark a player puts on a clue they are done with, declared with
+   * `dragMarkVerbs`. The help writes the page's sentence about it from this,
+   * and `drag-marks.test.ts` plays a drag of it through `interpretMove`. */
+  readonly doneClues?: TargetVerbs<State, Ui, DrawState, unknown, Move>;
   /** Pure: returns a NEW state. Throws if the move is illegal. */
   executeMove(s: State, m: Move): State;
 

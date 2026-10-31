@@ -104,22 +104,38 @@ function clueInGap(
   return null;
 }
 
-/** The "this clue is spent" mark, which a drag through the gaps repeats. The
- * target is the move itself: it names its clue. */
-export const spentDrag = dragMarkVerbs<
-  EdgeClueState,
-  EdgeClueUi,
-  EdgeClueDrawState,
-  SpentMove,
-  EdgeClueMove
->({
-  noun: "clue",
-  target: clueInGap,
-  apply: (_state, clue) => clue,
-  sweep: {
-    holds: (state, { x, y, flag }) => (state.spent[y * state.order + x] & flag ? 1 : 0),
-  },
-});
+const spentDrags = new WeakMap<ClueKind, ReturnType<typeof newSpentDrag>>();
+
+function newSpentDrag(kind: ClueKind) {
+  return dragMarkVerbs<
+    EdgeClueState,
+    EdgeClueUi,
+    EdgeClueDrawState,
+    SpentMove,
+    EdgeClueMove
+  >({
+    noun: kind.noun,
+    target: clueInGap,
+    apply: (_state, clue) => clue,
+    button: "either",
+    sweep: {
+      holds: (state, { x, y, flag }) =>
+        state.spent[y * state.order + x] & flag ? 1 : 0,
+    },
+  });
+}
+
+/** The "this clue is spent" mark of `kind`'s game, which a drag through the
+ * gaps repeats. The target is the move itself: it names its clue. One object
+ * a kind, since a drag is carried on only with the declaration it opened on. */
+export function spentDrag(kind: ClueKind): ReturnType<typeof newSpentDrag> {
+  let drag = spentDrags.get(kind);
+  if (!drag) {
+    drag = newSpentDrag(kind);
+    spentDrags.set(kind, drag);
+  }
+  return drag;
+}
 
 export function interpretMove(
   state: EdgeClueState,
@@ -137,7 +153,7 @@ export function interpretMove(
   const ty = fromCoord(p.y, ts);
   const inGrid = tx >= 0 && tx < o && ty >= 0 && ty < o;
 
-  if (isMouseDrag(button)) return sweepTo(spentDrag, state, ui, ds, p);
+  if (isMouseDrag(button)) return sweepTo(spentDrag(state.kind), state, ui, ds, p);
 
   if (inGrid && (button === LEFT_BUTTON || button === RIGHT_BUTTON)) {
     // A click in the gap below/right of a cell toggles that clue's spent flag,
@@ -148,8 +164,7 @@ export function interpretMove(
     if (gapBelow || gapRight) {
       const clue = clueInGap(state, ds, p);
       if (clue === null) return null;
-      // Either button marks, so the drag is opened as the one it declares.
-      beginSweep(spentDrag, state, ui, clue, LEFT_BUTTON, p, true);
+      beginSweep(spentDrag(state.kind), state, ui, clue, button, p, true);
       return clue;
     }
 

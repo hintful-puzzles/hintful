@@ -17,9 +17,8 @@ help:
     and one − to that line, whichever way round it turns out, so it
     counts toward both of the line's numbers.
 
-    Click a clue to mark it as done (gray it out), and again to unmark it.
-    The keyboard's cursor can step off the grid onto the clues, where Enter
-    does the same.
+    {{done-clues}} The keyboard's cursor can step off the grid onto the
+    clues, where Enter does the same.
   hints: |-
     **Hint** explains the next step rather than simply making it. It reasons
     only from the numbers, the tiles you have filled in and your ? marks, so

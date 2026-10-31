@@ -290,7 +290,7 @@ function interpretMove(
 }
 
 /** The "this clue is done" mark, which a drag along the clues repeats. */
-export const clueDrag = dragMarkVerbs<
+const clueDrag = dragMarkVerbs<
   UndeadState,
   UndeadUi,
   UndeadDrawState,
@@ -928,6 +928,7 @@ export const undeadGame: Game<
   changedState,
 
   interpretMove,
+  doneClues: clueDrag,
   executeMove,
   status: (s): GameStatus => status(s),
 

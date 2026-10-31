@@ -505,7 +505,9 @@ export function sweepTo<S, U extends object, D, T, M>(
  *
  * Not a `Game.targetVerbs`: no cursor rests on these targets and no Controls
  * paragraph is generated from them, since the keyboard reaches the mark by a
- * key of the game's own.
+ * key of the game's own. A clue's "done" mark is the game's `doneClues`, from
+ * which its page's sentence about the mark is generated
+ * ({@link doneCluesMarkdown}).
  */
 export function dragMarkVerbs<S, U, D, T, M>(mark: {
   /** What the targets are called. */
@@ -514,14 +516,15 @@ export function dragMarkVerbs<S, U, D, T, M>(mark: {
   target(state: S, ds: D, p: Point, ui: U): T | null;
   /** The move that marks `target`, or `null` where it takes none. */
   apply(state: S, target: T, ui: U): M | null;
-  /** The button that marks; the left one, where absent. */
-  button?: VerbButton;
+  /** The button that marks, or `"either"`; the left one, where absent. */
+  button?: VerbButton | "either";
   /** A point a press addresses `target` from, which `sweep.within` measures
    * from; needed only with a reach. */
   pointAt?(state: S, ds: D, target: T, ui: U): Point;
   sweep: Sweep<S, D, T>;
 }): Verbs<S, U, D, T, M> {
   const slot = mark.button ?? "primary";
+  const buttons: VerbButton[] = slot === "either" ? ["primary", "secondary"] : [slot];
   const verb = { does: `mark the ${mark.noun}`, apply: mark.apply };
   const none = { does: "", apply: () => null };
   return {
@@ -537,10 +540,33 @@ export function dragMarkVerbs<S, U, D, T, M>(mark: {
       parkCursor() {},
       moveCursor: () => false,
     },
-    primary: slot === "primary" ? verb : none,
-    secondary: slot === "secondary" ? verb : undefined,
-    sweep: { ...mark.sweep, buttons: [slot] },
+    primary: buttons.includes("primary") ? verb : none,
+    secondary: buttons.includes("secondary") ? verb : undefined,
+    sweep: { ...mark.sweep, buttons },
   };
+}
+
+/** Where the help page of a game declaring `Game.doneClues` writes
+ * {@link doneCluesMarkdown}, in its Controls section. */
+export const DONE_CLUES_PLACEHOLDER = "{{done-clues}}";
+
+/** What a help page says of marking a clue done, from the mark's
+ * {@link dragMarkVerbs}: what is marked, with which button, and that a drag
+ * repeats it. */
+export function doneCluesMarkdown<S, U, D, T, M>(verbs: Verbs<S, U, D, T, M>): string {
+  const noun = verbs.geometry.noun;
+  const left = verbs.sweep?.buttons?.includes("primary") ?? false;
+  const right = verbs.sweep?.buttons?.includes("secondary") ?? false;
+  const [press, again] =
+    left && right
+      ? [`Click on a ${noun}, with either button,`, "click"]
+      : left
+        ? [`Left-click on a ${noun}`, "left-click"]
+        : [`Right-click on a ${noun}`, "right-click"];
+  return (
+    `${press} to mark it as done (gray it out), and ${again} it again to ` +
+    `unmark it.${sweepWords(verbs)}`
+  );
 }
 
 /** The Controls paragraph's sentence about the drag. */

@@ -20,9 +20,7 @@ help:
     number as a pencil mark, indicating numbers that you think
     *might* go in that square.
 
-    Click on a bar, with either button, to mark it as done (gray it out).
-    To unmark a bar as done, click on it again. Drag on through other bars to do
-    the same to each one you pass over.
+    {{done-clues}}
 
     {{sticky-pencil}}
 

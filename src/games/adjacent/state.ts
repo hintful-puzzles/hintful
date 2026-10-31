@@ -24,6 +24,7 @@ import { barLadder } from "./solver.ts";
  * neighbors without one never do, and a bar is flagged from both its cells. */
 export const BARS: ClueKind = {
   game: "adjacent",
+  noun: "bar",
   holds: (a, b) => Math.abs(a - b) === 1,
   complete: true,
   bothEnds: true,

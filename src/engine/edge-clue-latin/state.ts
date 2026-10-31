@@ -39,6 +39,9 @@ export type GapSide = "right" | "down";
 export interface ClueKind {
   /** The game's id, which the shared code's errors name. */
   game: string;
+  /** What the player calls a clue, which the help's sentence about marking
+   * one done names. */
+  noun: string;
   /** Whether the clue flagged at a cell holding `a`, toward a neighbor holding
    * `b`, is true of them. */
   holds(a: number, b: number): boolean;

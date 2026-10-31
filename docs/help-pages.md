@@ -69,7 +69,8 @@ game has a `hint()`.
 - **Say the shape with the color** ("a {{pair:0}} square"). A shape is what a
   player who cannot tell the hues goes by.
 - **A sentence several pages would each write is the engine's.** The Mark-all
-  press is `{{mark-all}}` and sticky pencil mode is `{{sticky-pencil}}`
+  press is `{{mark-all}}`, sticky pencil mode is `{{sticky-pencil}}` and a
+  clue marked done is `{{done-clues}}`, from the game's `doneClues`
   (`vite-plugins/note-controls.ts`); the page adds after it only what is the
   game's own, such as what a second press crosses out.
 - **Before writing a sentence about a key, a preference's default or a shared

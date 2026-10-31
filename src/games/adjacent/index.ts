@@ -35,6 +35,7 @@ import {
   interpretMove,
   markAll,
   solve,
+  spentDrag,
 } from "../../engine/edge-clue-latin/play.ts";
 import {
   colors,
@@ -233,6 +234,7 @@ export const adjacentGame: Game<
   changedState,
 
   interpretMove,
+  doneClues: spentDrag(BARS),
   executeMove,
   status,
   notApplicable: { transposeParams: SQUARE_GRID },
