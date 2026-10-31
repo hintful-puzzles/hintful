@@ -277,7 +277,8 @@ function compileExpr(e: Expr, scope: Scope, env: Env, out: Out): Val {
 }
 
 /** The functions a term may call and still be computed early: none reads
- * the candidates, binds a name, or makes a fact. */
+ * the candidates, binds a name, or makes a fact. Nor may one throw: a moved
+ * term is computed whether or not the guard around it holds. */
 const EARLY = new Set([
   "value",
   "known",

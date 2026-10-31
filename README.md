@@ -173,7 +173,7 @@ This table is the one index of them.
 | The hint of a game solved by search or a heuristic | [`docs/hints-search.md`](docs/hints-search.md) |
 | A test, a render scenario, a cross-game guard | [`docs/testing.md`](docs/testing.md) |
 | A shared engine helper | [`docs/engine-catalog.md`](docs/engine-catalog.md) |
-| Judging tests, or quoting a measurement | [`docs/test-strength.md`](docs/test-strength.md) |
+| Judging whether a test is strong enough | [`docs/test-strength.md`](docs/test-strength.md) |
 | A check, a census, a bulk edit, a number in a proposal | [`docs/method.md`](docs/method.md) |
 | An openspec change, acceptance, pushing, a deploy | [`docs/work-management.md`](docs/work-management.md) |
 | A help page | [`docs/help-pages.md`](docs/help-pages.md) |

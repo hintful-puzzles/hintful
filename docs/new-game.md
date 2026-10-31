@@ -422,8 +422,8 @@ A game, or a change to one, is done when all of these hold:
       holds to the game ([`hints.md`](./hints.md) § "The help teaches the
       marks"). A mode the page names is written as a choice token
       ([`mechanics.md`](./mechanics.md) § "Params are declared once, on `paramConfig`").
-- [ ] The app was run and the game played, and the owner has accepted it
-      (§ "The acceptance gate").
+- [ ] The app was run and the game played, and the owner has accepted its
+      rendering, animation and input (§ "The acceptance gate").
 - [ ] The openspec change was kept current and is archived on acceptance
       ([`work-management.md`](./work-management.md) § "Before archiving").
 
