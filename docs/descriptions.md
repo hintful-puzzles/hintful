@@ -202,7 +202,8 @@ bound once outside it by the statement itself (`set`'s `open`,
 `hiddenSingle`'s `placed`). `research/describe/` measured the compiled ladder
 per deal against the hand-written one it replaced
 (`openspec/changes/archive/*-compile-the-latin-ladder/report.md` § "Speed",
-and `*-describe-group/report.md` for the hoisting).
+`*-describe-group/report.md` for the hoisting, and
+`*-describe-towers/report.md` for fillings and the projection).
 
 ## A statement's order is behavior
 

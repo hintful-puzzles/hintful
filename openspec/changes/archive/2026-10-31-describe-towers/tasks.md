@@ -14,4 +14,4 @@
 
 ## 3. Close
 
-- [ ] 3.1 Measure the speed per deal, run the app, write the report, update the guides, archive, file the next Latin game
+- [x] 3.1 Measure the speed per deal (and recover what the first compiled ladder lost: the filling's projection, `bounds` read lazily), run the app, write the report, update the guides, archive, file the next Latin game (`describe-keen`)
