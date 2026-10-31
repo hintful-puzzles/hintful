@@ -11,4 +11,4 @@
 - [x] 4. The large guides: `rendering.md`, `testing.md`, `input.md`, `hints-candidates.md`, `mechanics.md`, `hints-marks.md`, `hints.md`, `solver-and-generator.md`
 - [x] 5. `engine-catalog.md`, its index under budget with a quarter free (shorter rows: 11,988 → 7,286 bytes, 39% free; a catalog per area measured smaller but needs a `guide-sections` change, so not taken)
 - [x] 6. `README.md` § "Documentation" follows the guides, and states the owner's rule for any guide: a guide points and the code details; a detail found stale is deleted, not corrected
-- [ ] 7. The owner reads a sample and accepts
+- [x] 7. The owner reads a sample and accepts (accepted, 2026-10-31)
