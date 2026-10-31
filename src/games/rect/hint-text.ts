@@ -16,7 +16,7 @@ import {
 import type { Point } from "../../engine/types.ts";
 import type { Crossing, RectFiring } from "./hint.ts";
 import { LINE, RECTANGLE } from "./hint-marks.ts";
-import type { RectState } from "./state.ts";
+import { HIDDEN, type RectState } from "./state.ts";
 
 /** "a", "a or b", "a, b or c". */
 function joinOr(parts: readonly Narration[]): Narration {
@@ -27,6 +27,18 @@ function joinOr(parts: readonly Narration[]): Narration {
       i === rest.length - 1 ? phrase`${acc} or ${p}` : phrase`${acc}, ${p}`,
     first,
   );
+}
+
+const SHAPE_WORDS = ["", "square", "tall", "wide"];
+
+/** A clue as it reads on the board, for "the …": its number ("6"), after its
+ * shape where it names one ("square 4"); without a number, its shape and
+ * "clue" ("tall clue"), or the question mark a plain one shows ("?"). */
+function clueName(s: RectState, clue: number): string {
+  const n = s.grid[clue];
+  const shape = SHAPE_WORDS[s.shapes[clue]];
+  if (n === HIDDEN) return shape ? `${shape} clue` : "?";
+  return shape ? `${shape} ${n}` : String(n);
 }
 
 /** "a", "a and b", "a, b and c". */
@@ -48,7 +60,7 @@ function crossings(s: RectState, f: Extract<RectFiring, { kind: "line" }>): Narr
       "outline",
       CELL,
       clues.map(at),
-      `the outlined ${joinAnd(clues.map((c) => String(s.grid[c])))}`,
+      `the outlined ${joinAnd(clues.map((c) => clueName(s, c)))}`,
     );
   const union = (pick: (c: Crossing) => readonly number[]): number[] => [
     ...new Set(f.across.flatMap(pick)),
@@ -70,7 +82,7 @@ function crossings(s: RectState, f: Extract<RectFiring, { kind: "line" }>): Narr
       owners.map(at),
       several
         ? "another outlined clue"
-        : `the ${joinAnd(owners.map((c) => String(s.grid[c])))}`,
+        : `the ${joinAnd(owners.map((c) => clueName(s, c)))}`,
     );
     why.push(
       several
@@ -96,16 +108,16 @@ export const say = {
     const at = (i: number): Point => ({ x: i % s.w, y: Math.floor(i / s.w) });
     if (f.kind === "line")
       return so({ look: crossings(s, f), move: phrase`it must be a line` });
-    const n = s.grid[f.clue];
+    const n = clueName(s, f.clue);
     const rect = mark.this(
       "ring",
       RECTANGLE,
       [f.rect],
-      n === 1 ? "square" : "rectangle",
+      f.rect.w * f.rect.h === 1 ? "square" : "rectangle",
     );
     switch (f.kind) {
       case "fit": {
-        if (n === 1)
+        if (s.grid[f.clue] === 1)
           return so({
             look: phrase`A 1 needs no other square`,
             move: phrase`${rect} is its whole rectangle`,
@@ -131,7 +143,7 @@ export const say = {
       case "overlap": {
         const core = f.core.map(at);
         return so({
-          look: phrase`Wherever ${mark.the("outline", CELL, [at(f.other)], String(s.grid[f.other]))} goes, it covers ${mark.the("stripes", CELL, core, "square")}`,
+          look: phrase`Wherever ${mark.the("outline", CELL, [at(f.other)], clueName(s, f.other))} goes, it covers ${mark.the("stripes", CELL, core, "square")}`,
           follows: phrase`the ${n} can't use ${pronoun(CELL, core)}`,
           move: phrase`it fits only ${rect}`,
         });

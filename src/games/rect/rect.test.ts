@@ -32,6 +32,7 @@ import {
   decodeParams,
   encodeNumbers,
   encodeParams,
+  MODE_RECT,
   type RectParams,
   type RectState,
 } from "./state.ts";
@@ -41,6 +42,7 @@ const P = (over: Partial<RectParams> = {}): RectParams => ({
   h: 7,
   expandfactor: 0,
   diff: DIFF_EASY,
+  mode: MODE_RECT,
   ...over,
 });
 
@@ -113,9 +115,9 @@ describe("rect params codec", () => {
 
   it("labels a custom grid with its expansion", () => {
     expect(describeParams(rectGame, P({ w: 9, h: 7, expandfactor: 0.5 }))).toBe(
-      "9x7 Easy, 50% expansion",
+      "Rectangles: 9x7 Easy, 50% expansion",
     );
-    expect(presetMenu(rectGame).submenu?.[0]?.title).toBe("7x7 Easy");
+    expect(presetMenu(rectGame).submenu?.[0]?.submenu?.[0]?.title).toBe("7x7 Easy");
   });
 });
 

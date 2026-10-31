@@ -29,7 +29,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import reference from "./__fixtures__/rect-c-reference.json" with { type: "json" };
 import { newDesc } from "./generator.ts";
 import { rectGame } from "./index.ts";
-import type { RectParams } from "./state.ts";
+import { MODE_RECT, type RectParams } from "./state.ts";
 
 interface RectFixture {
   w: number;
@@ -47,6 +47,7 @@ const paramsOf = (f: RectFixture): RectParams => ({
   h: f.h,
   expandfactor: f.expandfactor,
   diff: DIFF_EASY,
+  mode: MODE_RECT,
 });
 
 describe("rect differential (vs C reference)", () => {

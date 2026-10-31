@@ -84,6 +84,7 @@ import {
   type RectParams,
   type RectState,
   type RectUi,
+  rulesetField,
   tierItem,
   validateParams,
 } from "./state.ts";
@@ -426,6 +427,7 @@ export const rectGame: Game<
       },
     },
     tierItem,
+    rulesetField,
   ],
 
   newDesc,

@@ -30,7 +30,7 @@ import {
   REGION_DONE,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
+import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
@@ -41,13 +41,15 @@ import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-w
 import type { RectHint } from "./hint.ts";
 import { LINE, RECTANGLE } from "./hint-marks.ts";
 import { gridDrawRect, hrange, vrange } from "./moves.ts";
-import type {
-  RectDrawState,
-  RectMistake,
-  RectMove,
-  RectParams,
-  RectState,
-  RectUi,
+import {
+  HIDDEN,
+  type RectDrawState,
+  type RectMistake,
+  type RectMove,
+  type RectParams,
+  type RectState,
+  type RectUi,
+  SHAPE_ANY,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 24;
@@ -167,8 +169,18 @@ function drawTile(
     dr.drawHatch({ x: cx + 1, y: cy + 1, w: tile - 1, h: tile - 1 }, hatchPeriod(tile));
 
   if (num) {
-    const { origin, options } = numberText(tile, x, y);
-    dr.drawText(origin, options, COL_TEXT, String(num));
+    const { text, origin, options, frame } = clueInk(state, tile, x, y);
+    if (frame)
+      drawRectOutline(
+        dr,
+        frame.x,
+        frame.y,
+        frame.w,
+        frame.h,
+        COL_TEXT,
+        frameThickness(tile),
+      );
+    dr.drawText(origin, options, COL_TEXT, text);
   }
 
   // Edges. A boundary edge (outside the grid) is always a solid black line.
@@ -291,29 +303,66 @@ interface TileRing {
 
 const ringThickness = (tile: number): number => Math.max(2, Math.round(tile / 16));
 
-/** Where the number of the square at `(x, y)` is written: read by the text
- * and by the rings near it. */
-function numberText(
+/** A Patches shape's frame, as fractions of the room it has: wide and
+ * high. */
+const FRAME_SIZES: readonly (readonly [number, number])[] = [
+  [0, 0],
+  [0.9, 0.9],
+  [0.7, 1],
+  [1, 0.7],
+];
+
+/** A digit's width, as a share of its font size, which sets how large a
+ * number fits inside a narrow frame. */
+const DIGIT_WIDTH = 0.62;
+
+/**
+ * How the clue of the square at `(x, y)` is drawn, read by the drawing and
+ * by the rings near it: its text, a number or `?`, and for a clue that names
+ * a shape, the frame of that shape around the text, which is smaller to fit.
+ * A frame keeps inside the band the hint's outline draws round a square
+ * (`drawTile`), so an outlined clue shows all of its frame.
+ */
+function clueInk(
+  state: RectState,
   tile: number,
   x: number,
   y: number,
-): { origin: Point; options: DrawTextOptions } {
-  return {
-    origin: {
-      x: coord(x, tile) + Math.floor(tile / 2),
-      y: coord(y, tile) + Math.floor(tile / 2),
-    },
-    options: glyphFont(Math.floor(tile / 2)),
+): { text: string; origin: Point; options: DrawTextOptions; frame: Rect | null } {
+  const i = y * state.w + x;
+  const n = state.grid[i];
+  const shape = state.shapes[i];
+  const origin = {
+    x: coord(x, tile) + Math.floor(tile / 2),
+    y: coord(y, tile) + Math.floor(tile / 2),
   };
+  const text = n === HIDDEN ? "?" : String(n);
+  if (shape === SHAPE_ANY)
+    return { text, origin, options: glyphFont(Math.floor(tile / 2)), frame: null };
+  const room = tile - 2 * (3 + 2 * ringThickness(tile));
+  const [fw, fh] = FRAME_SIZES[shape];
+  const w = Math.round(room * fw);
+  const h = Math.round(room * fh);
+  const frame = {
+    x: origin.x - Math.floor(w / 2),
+    y: origin.y - Math.floor(h / 2),
+    w,
+    h,
+  };
+  const size = Math.floor(
+    Math.min(tile * 0.4, h * 0.95, (w * 0.9) / (DIGIT_WIDTH * text.length)),
+  );
+  return { text, origin, options: glyphFont(size), frame };
 }
 
-/** The ink of the number in the square at `(x, y)`, none off the board. */
+const frameThickness = (tile: number): number => Math.max(1, Math.round(tile / 32));
+
+/** The ink of the clue in the square at `(x, y)`, none off the board. */
 function numberBoxes(state: RectState, tile: number, x: number, y: number): Rect[] {
   if (x < 0 || y < 0 || x >= state.w || y >= state.h) return [];
-  const num = state.grid[y * state.w + x];
-  if (!num) return [];
-  const { origin, options } = numberText(tile, x, y);
-  return [textBox(origin, options, String(num))];
+  if (!state.grid[y * state.w + x]) return [];
+  const { text, origin, options, frame } = clueInk(state, tile, x, y);
+  return [frame ?? textBox(origin, options, text)];
 }
 
 /** The displayed hint step's rings, by the squares that draw them: a

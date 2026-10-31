@@ -353,9 +353,10 @@ export const puzzleCatalog = {
   },
   rect: {
     name: "Rectangles",
-    aliases: ["Shikaku"],
+    aliases: ["Shikaku", "Patches"],
     description: "Rectangles puzzle",
-    objective: "Divide the grid into rectangles with areas equal to the numbers.",
+    objective:
+      "Divide the grid into rectangles, each holding one clue and the size or shape it asks for.",
     collection: "original",
     family: "regions",
   },

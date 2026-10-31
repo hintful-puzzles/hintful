@@ -26,7 +26,13 @@ import { rungsFinish } from "./hint.ts";
 import { rectGame } from "./index.ts";
 import { executeMove, isSolved, newState } from "./moves.ts";
 import { answerOf, searchAnswers, solverFinishes } from "./solver.ts";
-import { encodeNumbers, type RectMove, type RectParams } from "./state.ts";
+import {
+  encodeNumbers,
+  MODE_RECT,
+  type RectClues,
+  type RectMove,
+  type RectParams,
+} from "./state.ts";
 
 /** Call `visit` with each rectangle whose top left is square `i`, lies on
  * squares `covered` leaves free, and has at least `minArea` squares. */
@@ -95,6 +101,7 @@ const sized = (w: number, h: number, diff: number, expandfactor = 0): RectParams
   h,
   expandfactor,
   diff,
+  mode: MODE_RECT,
 });
 
 /** A 5x5 board for each thing a board can be. */
@@ -112,6 +119,12 @@ const NO_ANSWER = "5d5d5d5d6d";
 const MANY_ANSWERS_4X4 = "2b2_2a2b2b2a2_2";
 
 const numbersOf = (p: RectParams, desc: string): Int32Array => newState(p, desc).grid;
+
+/** A Rectangles board's numbers as the solver takes them: every clue plain. */
+const plain = (grid: Int32Array): RectClues => ({
+  grid,
+  shapes: new Uint8Array(grid.length),
+});
 
 describe("the count of a Rectangles board's answers that the tests go by", () => {
   it("counts the boards whose answers are known", () => {
@@ -133,14 +146,15 @@ describe("the count of a Rectangles board's answers that the tests go by", () =>
 
 describe("rect's search for a board's answers", () => {
   const answers = (desc: string, budget?: number) =>
-    searchAnswers(5, 5, numbersOf(FIVE, desc), budget).kind;
+    searchAnswers(5, 5, plain(numbersOf(FIVE, desc)), budget).kind;
 
   it("says one, several or none", () => {
     expect(answers(NEEDS_SEARCH)).toBe("one");
     expect(answers(SOLVER_FINISHES)).toBe("one");
     expect(answers(NO_ANSWER)).toBe("none");
     expect(
-      searchAnswers(4, 4, numbersOf(sized(4, 4, DIFF_EASY), MANY_ANSWERS_4X4)).kind,
+      searchAnswers(4, 4, plain(numbersOf(sized(4, 4, DIFF_EASY), MANY_ANSWERS_4X4)))
+        .kind,
     ).toBe("several");
     // No number at all: nothing divides the grid.
     expect(answers("y")).toBe("none");
@@ -164,7 +178,9 @@ describe("rect's search for a board's answers", () => {
       const p = sized(side, side, DIFF_EASY);
       for (let seed = 0; seed < 8; seed++) {
         const { desc } = rectGame.newDesc(p, randomNew(`one-position-${seed}`));
-        expect(searchAnswers(side, side, numbersOf(p, desc), 1).kind, desc).toBe("one");
+        expect(searchAnswers(side, side, plain(numbersOf(p, desc)), 1).kind, desc).toBe(
+          "one",
+        );
       }
     }
   });
@@ -182,7 +198,7 @@ describe("rect's search for a board's answers", () => {
       [7, 7],
     ] as const) {
       const judge = (grid: Int32Array, label: string): void => {
-        const answer = searchAnswers(w, h, grid);
+        const answer = searchAnswers(w, h, plain(grid));
         tally[answer.kind]++;
         const count = countDivisions(w, h, grid);
         expect(answer.kind, label).toBe(
@@ -234,7 +250,7 @@ describe("an Unreasonable Rectangles board", () => {
     for (let seed = 0; seed < 3; seed++) {
       const { desc, aux } = rectGame.newDesc(p, randomNew(`unreasonable-${seed}`));
       const state = newState(p, desc);
-      expect(solverFinishes(p.w, p.h, state.grid), desc).toBe(false);
+      expect(solverFinishes(p.w, p.h, state), desc).toBe(false);
       expect(rungsFinish(state), desc).toBe(false);
       if (p.w * p.h <= 49) expect(countDivisions(p.w, p.h, state.grid), desc).toBe(1);
       // The answer the mistake check goes by is the division the board was
@@ -303,7 +319,7 @@ describe("an Unreasonable Rectangles board", () => {
     let boards = 0;
     eachBoard(w, h, (grid) => {
       boards++;
-      if (solverFinishes(w, h, grid)) return;
+      if (solverFinishes(w, h, plain(grid))) return;
       if (countDivisions(w, h, grid) !== 1) return;
       if (!rungsFinish(newState(p, encodeNumbers(grid, w * h)))) found++;
     });
@@ -472,9 +488,11 @@ describe("the tier in Rectangles' params", () => {
   });
 
   it("offers the two largest sizes on the menu at Easy alone", () => {
-    const menu = (presetMenu(rectGame).submenu ?? []).map((item) =>
+    const [rect] = presetMenu(rectGame).submenu ?? [];
+    const menu = (rect?.submenu ?? []).map((item) =>
       rectGame.encodeParams(item.params as RectParams, true),
     );
+    expect(rect?.title).toBe("Rectangles");
     expect(menu).toEqual([
       "7x7de",
       "7x7du",

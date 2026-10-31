@@ -532,17 +532,23 @@ bump:h  full=6x10de  brief=6x10"
 
 exports[`encoded params are byte-stable > rect 1`] = `
 "default  full=7x7de  brief=7x7
-preset:7x7 Unreasonable  full=7x7du  brief=7x7
-preset:8x10 Easy  full=8x10de  brief=8x10
-preset:8x10 Unreasonable  full=8x10du  brief=8x10
-preset:11x11 Easy  full=11x11de  brief=11x11
-preset:11x11 Unreasonable  full=11x11du  brief=11x11
-preset:12x14 Easy  full=12x14de  brief=12x14
-preset:12x14 Unreasonable  full=12x14du  brief=12x14
-preset:15x15 Easy  full=15x15de  brief=15x15
-preset:15x15 Unreasonable  full=15x15du  brief=15x15
-preset:15x19 Easy  full=15x19de  brief=15x19
-preset:19x19 Easy  full=19x19de  brief=19x19
+preset:Rectangles/Rectangles: 7x7 Unreasonable  full=7x7du  brief=7x7
+preset:Rectangles/Rectangles: 8x10 Easy  full=8x10de  brief=8x10
+preset:Rectangles/Rectangles: 8x10 Unreasonable  full=8x10du  brief=8x10
+preset:Rectangles/Rectangles: 11x11 Easy  full=11x11de  brief=11x11
+preset:Rectangles/Rectangles: 11x11 Unreasonable  full=11x11du  brief=11x11
+preset:Rectangles/Rectangles: 12x14 Easy  full=12x14de  brief=12x14
+preset:Rectangles/Rectangles: 12x14 Unreasonable  full=12x14du  brief=12x14
+preset:Rectangles/Rectangles: 15x15 Easy  full=15x15de  brief=15x15
+preset:Rectangles/Rectangles: 15x15 Unreasonable  full=15x15du  brief=15x15
+preset:Rectangles/Rectangles: 15x19 Easy  full=15x19de  brief=15x19
+preset:Rectangles/Rectangles: 19x19 Easy  full=19x19de  brief=19x19
+preset:Patches/Patches: 7x7 Easy  full=7x7pde  brief=7x7p
+preset:Patches/Patches: 7x7 Unreasonable  full=7x7pdu  brief=7x7p
+preset:Patches/Patches: 6x8 Easy  full=6x8pde  brief=6x8p
+preset:Patches/Patches: 6x8 Unreasonable  full=6x8pdu  brief=6x8p
+preset:Patches/Patches: 9x12 Easy  full=9x12pde  brief=9x12p
+preset:Patches/Patches: 9x12 Unreasonable  full=9x12pdu  brief=9x12p
 bump:w  full=8x7de  brief=8x7
 bump:h  full=7x8de  brief=7x8
 bump:expandfactor  full=7x7e1de  brief=7x7"

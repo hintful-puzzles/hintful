@@ -30,10 +30,13 @@ import {
 import type { RandomState } from "../../engine/random/index.ts";
 import { randomUpto } from "../../engine/random/index.ts";
 import type { Point, Rect } from "../../engine/types.ts";
-import type { RectState } from "./state.ts";
+import { clueDimensions, HIDDEN, type RectClues, type RectState } from "./state.ts";
 
 export interface NumberData {
+  /** The rectangle's size, or {@link HIDDEN} where the clue shows none. */
   area: number;
+  /** What the clue says of its rectangle's shape, a `SHAPE_*`. */
+  shape: number;
   npoints: number;
   /** Candidate positions; only the first `npoints` are live. Mutated in
    * place (swap-with-end) exactly as upstream. */
@@ -122,13 +125,14 @@ export interface RectSolution {
 }
 export type RectAnswer = Answer<RectSolution>;
 
-/** A board's numbers as the solver takes them, each fixed where it is. */
-function fixedNumbers(w: number, grid: ArrayLike<number>): NumberData[] {
+/** A board's clues as the solver takes them, each fixed where it is. */
+function fixedNumbers(w: number, { grid, shapes }: RectClues): NumberData[] {
   const numbers: NumberData[] = [];
   for (let i = 0; i < grid.length; i++)
     if (grid[i])
       numbers.push({
         area: grid[i],
+        shape: shapes[i],
         npoints: 1,
         points: [{ x: i % w, y: Math.floor(i / w) }],
       });
@@ -136,8 +140,8 @@ function fixedNumbers(w: number, grid: ArrayLike<number>): NumberData[] {
 }
 
 /** Whether the solver alone settles every rectangle of a board. */
-export function solverFinishes(w: number, h: number, grid: ArrayLike<number>): boolean {
-  return rectSolver(w, h, fixedNumbers(w, grid), null, null, null) === SOLVE_UNIQUE;
+export function solverFinishes(w: number, h: number, clues: RectClues): boolean {
+  return rectSolver(w, h, fixedNumbers(w, clues), null, null, null) === SOLVE_UNIQUE;
 }
 
 /**
@@ -149,17 +153,16 @@ const SEARCH_BUDGET = 2_000;
 
 /**
  * Count a board's answers up to two, by trial and error over the solver:
- * where it stops, take the first number with the fewest placements left and
- * assume each in turn. `grid` is the numbers, row-major, 0 where there is
- * none.
+ * where it stops, take the first clue with the fewest placements left and
+ * assume each in turn.
  */
 export function searchAnswers(
   w: number,
   h: number,
-  grid: ArrayLike<number>,
+  clues: RectClues,
   budget: number = SEARCH_BUDGET,
 ): RectAnswer {
-  const search = boardSearch(w, h, grid, budget);
+  const search = boardSearch(w, h, clues, budget);
   return search ? searchBoard(search) : { kind: "none" };
 }
 
@@ -171,42 +174,50 @@ export function searchAnswers(
 export function firstTwoAnswers(
   w: number,
   h: number,
-  grid: ArrayLike<number>,
+  clues: RectClues,
   budget: number,
 ): Rect[][] | null {
-  const search = boardSearch(w, h, grid, budget);
+  const search = boardSearch(w, h, clues, budget);
   if (!search) return [];
   const found = solvedPositions(search, 2);
   return found?.map((position) => position.map(({ rects }) => rects[0])) ?? null;
 }
 
-/** The search of a board's numbers, or null where they do not come to the
- * grid's area, which rectangles that divide it have between them. */
+/** The search of a board's clues, or null where their sizes, all shown, do
+ * not come to the grid's area, which rectangles that divide it have between
+ * them. */
 function boardSearch(
   w: number,
   h: number,
-  grid: ArrayLike<number>,
+  clues: RectClues,
   budget: number,
 ): AnswerSearch<RectPositions[], RectSolution> | null {
-  const numbers = fixedNumbers(w, grid);
-  if (numbers.reduce((sum, n) => sum + n.area, 0) !== w * h) return null;
+  const numbers = fixedNumbers(w, clues);
+  if (
+    numbers.every((n) => n.area !== HIDDEN) &&
+    numbers.reduce((sum, n) => sum + n.area, 0) !== w * h
+  )
+    return null;
   const covered = new Uint8Array(w * h);
-  /** Whether the one placement each rectangle has left overlaps no other.
-   * With the grid's area between them, they then cover it. This is what
-   * makes "solved" a division checked and not one merely settled. No board
-   * was found where it says no: the search agrees with a count that has no
-   * solver in it on 450 boards of every kind with it taken out (2026-10-10). */
+  /** Whether the one placement each rectangle has left overlaps no other,
+   * and between them they cover the grid. This is what makes "solved" a
+   * division checked and not one merely settled. Where every size shows, no
+   * board was found where it says no: the search agrees with a count that has
+   * no solver in it on 450 boards of every kind with it taken out
+   * (2026-10-10). */
   const divides = (position: RectPositions[]): boolean => {
     covered.fill(0);
+    let count = 0;
     for (const { rects } of position) {
       const r = rects[0];
       for (let y = r.y; y < r.y + r.h; y++)
         for (let x = r.x; x < r.x + r.w; x++) {
           if (covered[y * w + x]) return false;
           covered[y * w + x] = 1;
+          count++;
         }
     }
-    return true;
+    return count === w * h;
   };
   return {
     start: allPlacements(w, h, numbers),
@@ -245,13 +256,14 @@ function boardSearch(
   };
 }
 
-/** Keyed on a state's numbers, which every state of one game shares. */
+/** Keyed on a state's sizes, which every state of one game shares, and
+ * which are made with its shapes. */
 const answers = answerCache<Int32Array, RectSolution>();
 
-/** What a search of a state's numbers established about their answers. The
+/** What a search of a state's clues established about their answers. The
  * player's lines are not read. */
 export function answerOf(state: RectState): RectAnswer {
-  return answers(state.grid, () => searchAnswers(state.w, state.h, state.grid));
+  return answers(state.grid, () => searchAnswers(state.w, state.h, state));
 }
 
 /** Draw the edges of `r` that are inside the grid into the edge grids. */
@@ -272,14 +284,13 @@ function drawRect(
   }
 }
 
-/** Every placement of each number's rectangle that fits the grid and holds
- * one of the number's candidate positions: what the solver whittles down, and
- * a position of the answer search. */
+/** Every placement of each clue's rectangle that its clue allows, fits the
+ * grid and holds one of the clue's candidate positions: what the solver
+ * whittles down, and a position of the answer search. */
 function allPlacements(w: number, h: number, numbers: NumberData[]): RectPositions[] {
   const nrects = numbers.length;
   const rectpositions: RectPositions[] = [];
   for (let i = 0; i < nrects; i++) {
-    const area = numbers[i].area;
     let minx = w;
     let miny = h;
     let maxx = -1;
@@ -294,10 +305,8 @@ function allPlacements(w: number, h: number, numbers: NumberData[]): RectPositio
     }
 
     const rlist: Rect[] = [];
-    for (let rw = 1; rw <= area && rw <= w; rw++) {
-      if (area % rw) continue;
-      const rh = area / rw;
-      if (rh > h) continue;
+    for (const [rw, rh] of clueDimensions(numbers[i].shape, numbers[i].area, w, h)) {
+      if (rw > w || rh > h) continue;
 
       for (let y = miny - rh + 1; y <= maxy; y++) {
         if (y < 0 || y + rh > h) continue;

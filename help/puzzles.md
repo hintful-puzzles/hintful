@@ -41,7 +41,7 @@ instructions. The last column names puzzles you may know it as elsewhere.
 | [Pearl](../pearl)        | [help](pearl)    | Masyu                                                                           |
 | [Pegs](../pegs)          | [help](pegs)     | Peg Solitaire (classic marble jumping puzzle)                                   |
 | [Range](../range)        | [help](range)    | Kurodoko (黒どこ), Kuromasu                                                        |
-| [Rectangles](../rect)    | [help](rect)     | Shikaku                                                                         |
+| [Rectangles](../rect)    | [help](rect)     | Shikaku, Patches                                                                |
 | [Rome](../rome)          | [help](rome)     | Arrows, Roma                                                                    |
 | [Salad](../salad)        | [help](salad)    | ABC End View, Nanbaboru (ナンバーボール), Number Ball                                  |
 | [Same Game](../samegame) | [help](samegame) | Chain Shot, Clickomania, Mahki                                                  |

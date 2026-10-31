@@ -19,7 +19,7 @@ import {
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
-import { parseLeadingInt } from "../../engine/decimal.ts";
+import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
@@ -30,6 +30,74 @@ import {
   parseLeadingFloat,
 } from "../../engine/params.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
+import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
+
+/** The two puzzles, indexed by `mode`. */
+export const MODE_RECT = 0;
+export const MODE_PATCHES = 1;
+
+const RULESETS: readonly Ruleset[] = [
+  {
+    name: "Rectangles",
+    rule: "Every clue is a number, and its rectangle has that many squares.",
+  },
+  {
+    name: "Patches",
+    rule: "A clue names a shape: a square, a tall rectangle, a wide rectangle, or any of the three (a plain clue). A clue with a number has that many squares; one with a question mark could have any number.",
+  },
+];
+
+/** What a clue says of its rectangle's shape, by `shapes`. */
+export const SHAPE_ANY = 0;
+export const SHAPE_SQUARE = 1;
+export const SHAPE_TALL = 2;
+const SHAPE_WIDE = 3;
+
+/** A clue's size in `grid` where the clue shows none. */
+export const HIDDEN = -1;
+
+/** Whether a `rw × rh` rectangle is one a clue of `shape` and `size` asks
+ * for. */
+export function clueAllows(
+  shape: number,
+  size: number,
+  rw: number,
+  rh: number,
+): boolean {
+  if (size !== HIDDEN && rw * rh !== size) return false;
+  if (shape === SHAPE_SQUARE) return rw === rh;
+  if (shape === SHAPE_TALL) return rh > rw;
+  if (shape === SHAPE_WIDE) return rw > rh;
+  return true;
+}
+
+/** The shape a `rw × rh` rectangle is. */
+export const shapeOf = (rw: number, rh: number): number =>
+  rw === rh ? SHAPE_SQUARE : rh > rw ? SHAPE_TALL : SHAPE_WIDE;
+
+/**
+ * Each `[width, height]` a clue of `shape` and `size` allows, by width and
+ * then height. A clue with a size gives each width that divides it, however
+ * large; one without gives every rectangle of `w × h` or less.
+ */
+export function clueDimensions(
+  shape: number,
+  size: number,
+  w: number,
+  h: number,
+): [number, number][] {
+  const out: [number, number][] = [];
+  if (size !== HIDDEN) {
+    for (let rw = 1; rw <= size; rw++)
+      if (size % rw === 0 && clueAllows(shape, size, rw, size / rw))
+        out.push([rw, size / rw]);
+    return out;
+  }
+  for (let rw = 1; rw <= w; rw++)
+    for (let rh = 1; rh <= h; rh++)
+      if (clueAllows(shape, size, rw, rh)) out.push([rw, rh]);
+  return out;
+}
 
 export interface RectParams {
   w: number;
@@ -42,6 +110,8 @@ export interface RectParams {
    * `DIFF_UNREASONABLE`, one with a single answer that they do not reach.
    * Generation-time only. */
   diff: number;
+  /** {@link MODE_RECT} or {@link MODE_PATCHES}. */
+  mode: number;
 }
 
 /** A player action; upstream's move strings `R x,y,w,h` / `E x,y,w,h` /
@@ -57,8 +127,12 @@ export type RectMove =
 export interface RectState {
   readonly w: number;
   readonly h: number;
-  /** The numbers, row-major (`0` = empty). Immutable after `newState`. */
+  /** The clues' sizes, row-major: `0` where there is no clue, {@link HIDDEN}
+   * where one shows none. Immutable after `newState`. */
   readonly grid: Int32Array;
+  /** Each clue's `SHAPE_*`: {@link SHAPE_ANY} off the clues, and on every
+   * clue of a Rectangles board. */
+  readonly shapes: Uint8Array;
   /** Vertical edges (left side of each cell), `w*h`, value 0/1. */
   readonly vedge: Uint8Array;
   /** Horizontal edges (top of each cell), `w*h`, value 0/1. */
@@ -116,11 +190,12 @@ export interface RectMistake {
  * Params.
  */
 
-const board = (w: number, h = w): RectParams => ({
+const board = (w: number, h = w, mode = MODE_RECT): RectParams => ({
   w,
   h,
   expandfactor: 0,
   diff: DIFF_EASY,
+  mode,
 });
 
 export function defaultParams(): RectParams {
@@ -137,7 +212,15 @@ export const BOARDS: readonly RectParams[] = [
   board(15),
   board(15, 19),
   board(19),
+  // Three sizes at two tiers fill the menu, upright ones among them as on
+  // Rectangles' own.
+  board(7, 7, MODE_PATCHES),
+  board(6, 8, MODE_PATCHES),
+  board(9, 12, MODE_PATCHES),
 ];
+
+/** The Custom dialog's game mode field. */
+export const rulesetField = rulesetItem<RectParams>(RULESETS, "mode");
 
 /** The Custom dialog's difficulty field, which the codec writes as well. */
 export const tierItem = searchTierItem<RectParams>(
@@ -150,7 +233,8 @@ export const tierItem = searchTierItem<RectParams>(
 const tierSegment = searchTierSegment([tierItem]);
 
 export function encodeParams(p: RectParams, full: boolean): string {
-  let s = `${p.w}x${p.h}`;
+  // A `p` for Patches; Rectangles writes nothing, as its strings always have.
+  let s = `${p.w}x${p.h}${p.mode === MODE_PATCHES ? "p" : ""}`;
   if (full && p.expandfactor) s += `e${formatG(p.expandfactor)}`;
   return s + tierSegment.encode(p, full);
 }
@@ -164,6 +248,10 @@ export function decodeParams(s: string): RectParams {
     const h = parseLeadingInt(s, i + 1);
     p.h = h.value;
     i = h.next;
+  }
+  if (s[i] === "p") {
+    p.mode = MODE_PATCHES;
+    i++;
   }
   if (s[i] === "e") {
     const factor = parseLeadingFloat(s, i + 1);
@@ -203,33 +291,53 @@ function unreasonableRefusal(p: RectParams): string | null {
 }
 
 /* ----------------------------------------------------------------------
- * Description codec (run-length: a–z gaps, `_` separators, decimal numbers).
+ * Description codec (run-length: a–z gaps, `_` separators, decimal numbers,
+ * and Patches' shape letters).
  */
 
 const CODE_A = "a".charCodeAt(0);
 
-/** Encode a numbers array (row-major, 0 = empty) into the upstream desc. */
-export function encodeNumbers(numbers: ArrayLike<number>, area: number): string {
+/** A clue's letter in the desc, by `SHAPE_*`: a plain clue writes `A` only
+ * where it has no number, so a Rectangles desc has no letter at all. */
+const SHAPE_LETTERS = "ASTW";
+
+/** The clues of a board: sizes and shapes, row-major, as `RectState` holds
+ * them. */
+export interface RectClues {
+  readonly grid: Int32Array;
+  readonly shapes: Uint8Array;
+}
+
+/** Encode the clues (row-major, 0 = no clue) into the desc. Without
+ * `shapes`, every clue is plain, and the desc is upstream's. */
+export function encodeNumbers(
+  numbers: ArrayLike<number>,
+  area: number,
+  shapes?: ArrayLike<number>,
+): string {
   let out = "";
   let run = 0;
+  let afterClue = false;
   for (let i = 0; i <= area; i++) {
     const n = i < area ? numbers[i] : -1;
     if (n === 0) {
       run++;
-    } else {
-      if (run) {
-        while (run > 0) {
-          const gap = Math.min(run, 26);
-          out += String.fromCharCode(CODE_A - 1 + gap);
-          run -= gap;
-        }
-      } else if (out.length > 0 && n > 0) {
-        // No unnecessary `_` before a number at the very top-left.
-        out += "_";
-      }
-      if (n > 0) out += String(n);
-      run = 0;
+      continue;
     }
+    while (run > 0) {
+      const gap = Math.min(run, 26);
+      out += String.fromCharCode(CODE_A - 1 + gap);
+      run -= gap;
+      afterClue = false;
+    }
+    if (i === area) break;
+    const shape = shapes?.[i] ?? SHAPE_ANY;
+    const letter = shape !== SHAPE_ANY || n === HIDDEN ? SHAPE_LETTERS[shape] : "";
+    // A number straight after a clue would read as part of it; a letter
+    // starts a clue of its own.
+    if (!letter && afterClue) out += "_";
+    out += letter + (n === HIDDEN ? "" : String(n));
+    afterClue = true;
   }
   return out;
 }
@@ -239,29 +347,39 @@ function isRunLetter(c: string): boolean {
   return c >= "a" && c <= "z";
 }
 
+const isShapeLetter = (c: string): boolean => SHAPE_LETTERS.includes(c);
+
 /**
- * Read the numbers {@link encodeNumbers} writes, row-major with `0` for an
- * empty square: numbers, run letters, and a `_` exactly between two adjacent
- * numbers. A number is a rectangle's area, so it lies in `1..w*h`.
+ * Read the clues {@link encodeNumbers} writes, row-major with `0` for an
+ * empty square: run letters and clues, a `_` exactly between a clue and a
+ * bare number straight after it. A clue is a shape letter, a number, or a
+ * letter and then a number;
+ * a number is a rectangle's area, so it lies in `1..w*h`. Only Patches has
+ * shape letters.
  */
-export function parseDesc(p: RectParams, desc: string): DescParse<Int32Array> {
+export function parseDesc(p: RectParams, desc: string): DescParse<RectClues> {
   const area = p.w * p.h;
   return readDesc(desc, (r) => {
     const grid = new Int32Array(area);
+    const shapes = new Uint8Array(area);
     let i = 0;
-    let afterNumber = false;
+    let afterClue = false;
     while (i < area) {
       if (r.peekIs(isRunLetter)) {
         i += r.char().charCodeAt(0) - CODE_A + 1;
         if (i > area) r.fail(DESC_TOO_LONG);
-        afterNumber = false;
+        afterClue = false;
+      } else if (p.mode === MODE_PATCHES && r.peekIs(isShapeLetter)) {
+        shapes[i] = SHAPE_LETTERS.indexOf(r.char());
+        grid[i++] = r.peekIs(isDigit) ? r.int(1, area) : HIDDEN;
+        afterClue = true;
       } else {
-        if (afterNumber) r.expect("_");
+        if (afterClue) r.expect("_");
         grid[i++] = r.int(1, area);
-        afterNumber = true;
+        afterClue = true;
       }
     }
     r.end();
-    return grid;
+    return { grid, shapes };
   });
 }

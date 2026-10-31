@@ -1,5 +1,2 @@
-# Scaffolded without a delta: the game's spec waits on the owner's answer in
-# proposal.md. The session writes the delta and removes skip_specs.
 schema: spec-driven
 created: 2026-10-29
-skip_specs: true

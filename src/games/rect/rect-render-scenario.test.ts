@@ -27,9 +27,9 @@ import {
   COL_MISTAKE,
   PREFERRED_TILE_SIZE,
 } from "./render.ts";
-import type { RectMove, RectParams } from "./state.ts";
+import { MODE_RECT, type RectMove, type RectParams } from "./state.ts";
 
-const P: RectParams = { w: 7, h: 7, expandfactor: 0, diff: DIFF_EASY };
+const P: RectParams = { w: 7, h: 7, expandfactor: 0, diff: DIFF_EASY, mode: MODE_RECT };
 const ID = `${rectGame.encodeParams(P, true)}#rect-scenario`;
 
 describe("rect render scenarios", () => {

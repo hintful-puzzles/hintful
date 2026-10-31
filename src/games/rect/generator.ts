@@ -13,7 +13,9 @@
  *     expand rows again, transpose back — distributing the extra rows randomly.
  *  4. Enumerate the rectangles, and run the solver to winnow the number
  *     placements to a unique solution; place one number per rectangle.
- *  5. Encode `aux` (the solution edges) and the run-length desc.
+ *  5. Encode `aux` (the solution edges) and the run-length desc. A Patches
+ *     board first names each rectangle's shape on its clue, and then hides
+ *     what the board can do without (`stripClues`).
  *
  * The grid holds, per cell, the flat top-left index of the rectangle covering it
  * (`y*w + x`), or `-1` (empty) / `-2` (known singleton) during construction.
@@ -27,6 +29,7 @@ import {
 import type { RandomState } from "../../engine/random/index.ts";
 import { randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
+import { shuffle } from "../../engine/shuffle.ts";
 import type { Point, Rect } from "../../engine/types.ts";
 import { rungsFinish } from "./hint.ts";
 import { newState } from "./moves.ts";
@@ -38,7 +41,15 @@ import {
   searchAnswers,
   solverFinishes,
 } from "./solver.ts";
-import { encodeNumbers, type RectParams } from "./state.ts";
+import {
+  encodeNumbers,
+  HIDDEN,
+  MODE_PATCHES,
+  type RectClues,
+  type RectParams,
+  SHAPE_ANY,
+  shapeOf,
+} from "./state.ts";
 
 /**
  * Count (when `pick` is undefined) or select the `pick`-th of the possible
@@ -322,7 +333,14 @@ function division(
         const points: Point[] = [];
         for (let j = 0; j < r.h; j++)
           for (let k = 0; k < r.w; k++) points.push({ x: k + r.x, y: j + r.y });
-        nd.push({ area: r.w * r.h, npoints: r.w * r.h, points });
+        nd.push({
+          area: r.w * r.h,
+          // A Patches clue starts out naming its rectangle's shape, which
+          // `stripClues` may widen.
+          shape: params.mode === MODE_PATCHES ? shapeOf(r.w, r.h) : SHAPE_ANY,
+          npoints: r.w * r.h,
+          points,
+        });
       }
     }
 
@@ -370,18 +388,53 @@ function easyBoard(
   // give up and go round again
   if (rectSolver(w, h, nd, null, null, rs) !== SOLVE_UNIQUE) return null;
 
-  const numbers = new Int32Array(w * h);
-  for (const { area, npoints, points } of nd) {
+  const clues = blankClues(w * h);
+  for (const { area, shape, npoints, points } of nd) {
     const p = points[randomUpto(rs, npoints)];
-    numbers[p.y * w + p.x] = area;
+    clues.grid[p.y * w + p.x] = area;
+    clues.shapes[p.y * w + p.x] = shape;
   }
 
-  const desc = encodeNumbers(numbers, w * h);
   // A board the hint could not finish would leave a player it had helped
   // stranded with a refusal that blames the board's difficulty, which Easy
   // does not excuse. Deal again.
-  if (!rungsFinish(newState(params, desc))) return null;
-  return { desc, aux: auxOf(w, h, grid) };
+  const finishes = () => rungsFinish(newState(params, descOf(w * h, clues)));
+  if (!finishes()) return null;
+  if (params.mode === MODE_PATCHES) stripClues(rs, clues, finishes);
+  return { desc: descOf(w * h, clues), aux: auxOf(w, h, grid) };
+}
+
+const blankClues = (area: number): RectClues => ({
+  grid: new Int32Array(area),
+  shapes: new Uint8Array(area),
+});
+
+const descOf = (area: number, { grid, shapes }: RectClues): string =>
+  encodeNumbers(grid, area, shapes);
+
+/**
+ * Take from a Patches board, in place, what its clues say, asking `keeps`
+ * after each thing taken and putting back what it refuses: first each clue's
+ * size, then each clue's shape, the clues in a random order each time. `keeps`
+ * is Easy's "the hint finishes it" or Unreasonable's "the search proves one
+ * answer".
+ */
+function stripClues(rs: RandomState, clues: RectClues, keeps: () => boolean): void {
+  const { grid, shapes } = clues;
+  const at: number[] = [];
+  for (let i = 0; i < grid.length; i++) if (grid[i]) at.push(i);
+  shuffle(at, rs);
+  for (const i of at) {
+    const size = grid[i];
+    grid[i] = HIDDEN;
+    if (!keeps()) grid[i] = size;
+  }
+  shuffle(at, rs);
+  for (const i of at) {
+    const shape = shapes[i];
+    shapes[i] = SHAPE_ANY;
+    if (!keeps()) shapes[i] = shape;
+  }
 }
 
 /**
@@ -412,15 +465,16 @@ function mendedNumbers(
   params: RectParams,
   rs: RandomState,
   nd: NumberData[],
-): Int32Array | null {
+): RectClues | null {
   const { w, h } = params;
   // Each rectangle as dealt, the square its number is on, and the rectangle
   // each square is in.
   const dealt: Rect[] = [];
   const at: number[] = [];
   const within = new Int32Array(w * h);
-  const numbers = new Int32Array(w * h);
-  for (const { area, npoints, points } of nd) {
+  const clues = blankClues(w * h);
+  const { grid: numbers, shapes } = clues;
+  for (const { area, shape, npoints, points } of nd) {
     const first = points[0];
     const last = points[npoints - 1];
     for (const p of points) within[p.y * w + p.x] = dealt.length;
@@ -433,10 +487,11 @@ function mendedNumbers(
     const p = points[randomUpto(rs, npoints)];
     at.push(p.y * w + p.x);
     numbers[p.y * w + p.x] = area;
+    shapes[p.y * w + p.x] = shape;
   }
 
   for (let moved = 0; moved <= MAX_NUMBERS_MOVED; moved++) {
-    const answers = firstTwoAnswers(w, h, numbers, DEALING_BUDGET);
+    const answers = firstTwoAnswers(w, h, clues, DEALING_BUDGET);
     if (answers === null) return null;
     // An answer lists its rectangles in the reading order of the numbers.
     const holders: number[] = [];
@@ -449,7 +504,7 @@ function mendedNumbers(
       )
       .find((astray) => astray.length > 0);
     // The division as dealt is an answer, so with no other it is the only one.
-    if (!strayed) return numbers;
+    if (!strayed) return clues;
     const { k, rect } = strayed[randomUpto(rs, strayed.length)];
     const outside = nd[k].points.filter(
       (p) =>
@@ -462,8 +517,10 @@ function mendedNumbers(
     );
     const to = outside[randomUpto(rs, outside.length)];
     numbers[at[k]] = 0;
+    shapes[at[k]] = SHAPE_ANY;
     at[k] = to.y * w + to.x;
     numbers[at[k]] = nd[k].area;
+    shapes[at[k]] = nd[k].shape;
   }
   return null;
 }
@@ -481,19 +538,23 @@ export function newDesc(
   const { w, h } = params;
   const label = `rect: generation (${w}x${h})`;
   if (params.diff !== DIFF_EASY) {
-    const { grid, numbers } = dealUnreasonable({
+    const { grid, clues } = dealUnreasonable({
       label,
       draw() {
         const { grid, nd } = division(params, rs);
-        const numbers = mendedNumbers(params, rs, nd);
-        return numbers && { grid, numbers };
+        const clues = mendedNumbers(params, rs, nd);
+        return clues && { grid, clues };
       },
-      deduced: ({ numbers }) =>
-        solverFinishes(w, h, numbers) ||
-        rungsFinish(newState(params, encodeNumbers(numbers, w * h))),
-      answer: ({ numbers }, budget) => searchAnswers(w, h, numbers, budget),
+      strip:
+        params.mode === MODE_PATCHES
+          ? ({ clues }, one) => stripClues(rs, clues, one)
+          : undefined,
+      deduced: ({ clues }) =>
+        solverFinishes(w, h, clues) ||
+        rungsFinish(newState(params, descOf(w * h, clues))),
+      answer: ({ clues }, budget) => searchAnswers(w, h, clues, budget),
     });
-    return { desc: encodeNumbers(numbers, w * h), aux: auxOf(w, h, grid) };
+    return { desc: descOf(w * h, clues), aux: auxOf(w, h, grid) };
   }
   const attempt = retryLimit(label);
   for (;;) {

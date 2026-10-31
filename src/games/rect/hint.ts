@@ -38,7 +38,7 @@ import type { Rect } from "../../engine/types.ts";
 import type { RectEdge } from "./hint-marks.ts";
 import { say } from "./hint-text.ts";
 import { executeMove, hrange, isSolved, vrange } from "./moves.ts";
-import type { RectMove, RectState } from "./state.ts";
+import { clueDimensions, HIDDEN, type RectMove, type RectState } from "./state.ts";
 
 export type RectFiring =
   | {
@@ -101,20 +101,20 @@ function crossesLine(s: RectState, r: Rect): boolean {
   return false;
 }
 
-/** Every rectangle of the clue's area that contains the clue, on the board or
- * not. */
+/** Every rectangle the clue allows that contains the clue: on the board or
+ * not where the clue has a size, and on the board where it has none, since
+ * past it there are rectangles without end. */
 function shapesAround(s: RectState, clue: number): Rect[] {
-  const { w } = s;
-  const a = s.grid[clue];
+  const { w, h } = s;
   const cx = clue % w;
   const cy = Math.floor(clue / w);
+  const sized = s.grid[clue] !== HIDDEN;
   const out: Rect[] = [];
-  for (let rw = 1; rw <= a; rw++) {
-    if (a % rw) continue;
-    const rh = a / rw;
+  for (const [rw, rh] of clueDimensions(s.shapes[clue], s.grid[clue], w, h))
     for (let y = cy - rh + 1; y <= cy; y++)
-      for (let x = cx - rw + 1; x <= cx; x++) out.push({ x, y, w: rw, h: rh });
-  }
+      for (let x = cx - rw + 1; x <= cx; x++)
+        if (sized || (x >= 0 && y >= 0 && x + rw <= w && y + rh <= h))
+          out.push({ x, y, w: rw, h: rh });
   return out;
 }
 
@@ -135,10 +135,22 @@ function fitsOf(s: RectState, clue: number): Rect[] {
 type Fits = ReadonlyMap<number, readonly Rect[]>;
 
 function readFits(s: RectState): Fits {
-  const fits = new Map<number, Rect[]>();
+  const fits = new Map<number, readonly Rect[]>();
   for (let clue = 0; clue < s.grid.length; clue++)
-    if (s.grid[clue]) fits.set(clue, fitsOf(s, clue));
+    if (s.grid[clue]) fits.set(clue, closed(s, fitsOf(s, clue)));
   return fits;
+}
+
+/**
+ * A clue's fits, or the one drawn all round where there is one. Any other
+ * fit lies inside it, since it crosses no line, and would leave squares of
+ * the drawn box that no other clue reaches without crossing one. Only a clue
+ * with no number has such fits: inside a box there is no other of its size.
+ */
+function closed(s: RectState, fits: readonly Rect[]): readonly Rect[] {
+  if (fits.length < 2) return fits;
+  const drawn = fits.find((r) => isDrawn(s, r));
+  return drawn ? [drawn] : fits;
 }
 
 /**
@@ -154,7 +166,10 @@ function fitsAfter(fits: Fits, t: RectState, f: RectFiring): Fits {
   for (const [clue, rects] of fits)
     left.set(
       clue,
-      rects.filter((r) => !(overlap(r, beside) && crossesLine(t, r))),
+      closed(
+        t,
+        rects.filter((r) => !(overlap(r, beside) && crossesLine(t, r))),
+      ),
     );
   return left;
 }

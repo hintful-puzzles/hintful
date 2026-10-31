@@ -8,7 +8,15 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import type { GameStatus } from "../../engine/types.ts";
-import { parseDesc, type RectMove, type RectParams, type RectState } from "./state.ts";
+import {
+  clueAllows,
+  HIDDEN,
+  parseDesc,
+  type RectMove,
+  type RectParams,
+  type RectState,
+  SHAPE_ANY,
+} from "./state.ts";
 
 /* Upstream's `HRANGE` / `VRANGE`: an hedge is meaningful only for
  * `y ∈ [1, h-1]`, a vedge only for `x ∈ [1, w-1]`. */
@@ -49,13 +57,14 @@ function isOutlined(
 /**
  * Recompute the per-cell correctness overlay (upstream `get_correct`). A cell
  * is correct (1) iff it belongs to a valid rectangle — every boundary edge
- * present, no interior edge, and exactly one contained number equal to the
- * rectangle's area; otherwise 0.
+ * present, no interior edge, and exactly one contained clue, which allows the
+ * rectangle's size and shape; otherwise 0.
  */
 function getCorrect(
   w: number,
   h: number,
   grid: Int32Array,
+  shapes: Uint8Array,
   hedge: Uint8Array,
   vedge: Uint8Array,
 ): Uint8Array {
@@ -77,20 +86,17 @@ function getCorrect(
         continue;
       }
 
-      // We have a rectangle. Count its numbers and area.
-      let num = 0;
-      let area = 0;
+      // We have a rectangle. Find its one clue.
+      let clue = -1;
       for (let xx = x; xx < x + rw; xx++) {
         for (let yy = y; yy < y + rh; yy++) {
-          area++;
-          const g = grid[yy * w + xx];
-          if (g) {
-            if (num > 0) valid = false; // two numbers
-            num = g;
+          if (grid[yy * w + xx]) {
+            if (clue >= 0) valid = false; // two clues
+            clue = yy * w + xx;
           }
         }
       }
-      if (num !== area) valid = false;
+      if (clue < 0 || !clueAllows(shapes[clue], grid[clue], rw, rh)) valid = false;
 
       const fill = valid ? 1 : 0;
       for (let xx = x; xx < x + rw; xx++)
@@ -160,11 +166,11 @@ export function gridDrawRect(
 export function newState(params: RectParams, desc: string): RectState {
   const { w, h } = params;
   const area = w * h;
-  const grid = descValue(parseDesc(params, desc));
+  const { grid, shapes } = descValue(parseDesc(params, desc));
   const vedge = new Uint8Array(area);
   const hedge = new Uint8Array(area);
-  const correct = getCorrect(w, h, grid, hedge, vedge);
-  return { w, h, grid, vedge, hedge, correct };
+  const correct = getCorrect(w, h, grid, shapes, hedge, vedge);
+  return { w, h, grid, shapes, vedge, hedge, correct };
 }
 
 export function cloneRectState(s: RectState): RectState {
@@ -215,7 +221,7 @@ export function executeMove(from: RectState, move: RectMove): RectState {
     return assertNever(move, "rect: executeMove");
   }
 
-  const correct = getCorrect(w, h, next.grid, hedge, vedge);
+  const correct = getCorrect(w, h, next.grid, next.shapes, hedge, vedge);
   return { ...next, correct };
 }
 
@@ -228,13 +234,22 @@ export function status(s: RectState): GameStatus {
   return isSolved(s) ? "solved" : "ongoing";
 }
 
-export function textFormat(state: RectState): string {
-  const { w, h, grid, hedge, vedge } = state;
+/** A clue as the text format writes it: its number, or `?` where it shows
+ * none, after `S`, `T` or `W` for a shape. */
+function clueText(state: RectState, i: number): string {
+  const n = state.grid[i];
+  if (!n) return "";
+  const shape = state.shapes[i] === SHAPE_ANY ? "" : " STW"[state.shapes[i]];
+  return shape + (n === HIDDEN ? "?" : String(n));
+}
 
-  // Column width: at least 2, else the widest number.
+export function textFormat(state: RectState): string {
+  const { w, h, hedge, vedge } = state;
+
+  // Column width: at least 2, else the widest clue.
   let col = 2;
   for (let i = 0; i < w * h; i++) {
-    const len = String(grid[i]).length;
+    const len = clueText(state, i).length;
     if (col < len) col = len;
   }
 
@@ -251,8 +266,7 @@ export function textFormat(state: RectState): string {
       const cx = Math.floor(x / 2);
       const cy = Math.floor(y / 2);
       if (x & y & 1) {
-        const v = grid[cy * w + cx];
-        out += (v ? String(v) : "").padStart(col);
+        out += clueText(state, cy * w + cx).padStart(col);
       } else if (x & 1) {
         out += (hOn(cx, cy) ? "-" : " ").repeat(col);
       } else if (y & 1) {

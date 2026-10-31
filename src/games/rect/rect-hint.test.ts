@@ -23,13 +23,14 @@ import {
 import { rectGame } from "./index.ts";
 import { executeMove, isSolved, newState } from "./moves.ts";
 import { COL_HINT_CELL } from "./render.ts";
-import type { RectMove, RectParams, RectState } from "./state.ts";
+import { MODE_RECT, type RectMove, type RectParams, type RectState } from "./state.ts";
 
 const params = (w: number, h: number, expandfactor = 0): RectParams => ({
   w,
   h,
   expandfactor,
   diff: DIFF_EASY,
+  mode: MODE_RECT,
 });
 const P7 = params(7, 7);
 
