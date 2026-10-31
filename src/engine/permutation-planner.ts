@@ -146,18 +146,18 @@ interface Word {
  * nothing, and a hint would say "turn it" and then "turn it back".
  */
 function reduced(moves: readonly Move[], roles: readonly Role[]): [Move[], Role[]] {
-  const ms: Move[] = [];
-  const rs: Role[] = [];
+  const at = kept(moves);
+  return [at.map((i) => moves[i]), at.map((i) => roles[i])];
+}
+
+/** The indices of the moves `reduced` keeps. */
+function kept(moves: readonly Move[]): number[] {
+  const at: number[] = [];
   moves.forEach((m, i) => {
-    if (ms.length > 0 && ms[ms.length - 1] === (m ^ 1)) {
-      ms.pop();
-      rs.pop();
-    } else {
-      ms.push(m);
-      rs.push(roles[i]);
-    }
+    if (at.length > 0 && moves[at[at.length - 1]] === (m ^ 1)) at.pop();
+    else at.push(i);
   });
-  return [ms, rs];
+  return at;
 }
 
 const fill = (n: number, r: Role): Role[] => Array.from({ length: n }, () => r);
@@ -207,6 +207,34 @@ function compose(g: Effect, h: Effect, spins: number): Effect {
   return { src, spin };
 }
 
+/** `s c s⁻¹`. */
+function conjugated(s: Effect, c: Effect, spins: number): Effect {
+  const size = s.src.length;
+  const back = new Int32Array(size);
+  for (let x = 0; x < size; x++) back[s.src[x]] = x;
+  const out = { src: new Int32Array(size), spin: new Uint8Array(size) };
+  conjugateInto(out, s, back, c, spins);
+  return out;
+}
+
+/** `s c s⁻¹` written into `out`, in one pass, `back` being where `s` sends
+ * each cell's piece: the closure tries one for every placing and keeps few,
+ * so it reuses one `out`. */
+function conjugateInto(
+  out: Effect,
+  s: Effect,
+  back: Int32Array,
+  c: Effect,
+  spins: number,
+): void {
+  for (let x = 0; x < out.src.length; x++) {
+    const y = back[x];
+    const from = c.src[y];
+    out.src[x] = s.src[from];
+    out.spin[x] = (s.spin[from] + c.spin[y] + spins - s.spin[y]) % spins;
+  }
+}
+
 function inverse(e: Effect, spins: number): Effect {
   const size = e.src.length;
   const src = new Int32Array(size);
@@ -218,8 +246,23 @@ function inverse(e: Effect, spins: number): Effect {
   return { src, spin };
 }
 
+// Keys are UTF-16 strings of one code unit a cell, decoded from a reused
+// buffer: a library's build keys millions of effects, and spreading a typed
+// array into `String.fromCharCode` costs several times as much. A cell index
+// stays below the surrogates (0xD800), which the decoder would replace.
+const utf16 = new TextDecoder("utf-16le");
+let keyUnits = new Uint16Array(0);
+
+function unitsKey(parts: readonly ArrayLike<number>[]): string {
+  const length = parts.reduce((n, p) => n + p.length, 0);
+  if (keyUnits.length !== length) keyUnits = new Uint16Array(length);
+  let at = 0;
+  for (const p of parts) for (let i = 0; i < p.length; i++) keyUnits[at++] = p[i];
+  return utf16.decode(keyUnits);
+}
+
 function keyOf(e: Effect): string {
-  return String.fromCharCode(...e.src) + String.fromCharCode(...e.spin);
+  return unitsKey([e.src, e.spin]);
 }
 
 function supportOf(e: Effect): number[] {
@@ -281,7 +324,7 @@ function hasOddMove(generators: readonly Effect[], size: number): boolean {
 }
 
 /** Which pieces an effect moves where, whatever it turns them by. */
-const permutationKey = (e: Effect): string => String.fromCharCode(...e.src);
+const permutationKey = (e: Effect): string => unitsKey([e.src]);
 
 function shortestByPermutation(words: readonly Word[]): Map<string, Word> {
   const shortest = new Map<string, Word>();
@@ -334,9 +377,7 @@ function parityProducts(
       return;
     }
     const length = factors.reduce((n, f) => n + f.moves.length, 0);
-    const k =
-      permutationKey(e) +
-      String.fromCharCode(...e.spin.map((o, c) => (e.src[c] === c ? o : 0)));
+    const k = unitsKey([e.src, e.spin.map((o, c) => (e.src[c] === c ? o : 0))]);
     const had = rough.get(k);
     if (!had || had.length > length) rough.set(k, { effect: e, length, factors });
   };
@@ -439,23 +480,24 @@ class Library {
         ],
       );
     };
-    const conjugate = (s: Word, c: Word): Word => {
-      const [ms, roles] = reduced(
-        [...s.moves, ...c.moves, ...undo(s.moves)],
-        [
-          ...fill(s.moves.length, "lineUp"),
-          ...c.roles,
-          ...fill(s.moves.length, "lineBack"),
-        ],
-      );
+    const conjugate = (
+      s: Word,
+      c: Word,
+      effect = conjugated(s.effect, c.effect, spins),
+    ): Word => {
+      const ms = [...s.moves, ...c.moves, ...undo(s.moves)];
+      const at = kept(ms);
+      const inner = s.moves.length + c.moves.length;
       return {
-        effect: compose(
-          compose(s.effect, c.effect, spins),
-          inverse(s.effect, spins),
-          spins,
+        effect,
+        moves: at.map((i) => ms[i]),
+        roles: at.map((i) =>
+          i < s.moves.length
+            ? "lineUp"
+            : i < inner
+              ? c.roles[i - s.moves.length]
+              : "lineBack",
         ),
-        moves: ms,
-        roles,
       };
     };
     const single: Word[] = moves.map((effect, m) => ({
@@ -497,21 +539,31 @@ class Library {
     if (first.length > 0) {
       const least = Math.min(...first.map((c) => movedOf(c.effect).length));
       const narrow = first.filter((c) => movedOf(c.effect).length <= least + 1);
+      const placed = setups.flatMap((s) =>
+        narrow.map((b0) => {
+          const b = conjugate(s, b0);
+          return { b, moved: movedOf(b.effect), back: inverse(b.effect, spins) };
+        }),
+      );
       const seen = new Set<string>();
       for (const a of narrow) {
         const inA = new Set(movedOf(a.effect));
-        for (const s of setups)
-          for (const b0 of narrow) {
-            const b = conjugate(s, b0);
-            let meet = 0;
-            for (const c of movedOf(b.effect)) if (inA.has(c) && ++meet > 1) break;
-            if (meet !== 1) continue;
-            const c = commutator(a, b, "cycles");
-            const k = keyOf(c.effect);
-            if (seen.has(k)) continue;
-            seen.add(k);
-            second.push(c);
-          }
+        const aBack = inverse(a.effect, spins);
+        for (const { b, moved, back } of placed) {
+          let meet = 0;
+          for (const c of moved) if (inA.has(c) && ++meet > 1) break;
+          if (meet !== 1) continue;
+          // Keyed by its effect before its word is built: most repeat one.
+          const effect = compose(
+            compose(compose(a.effect, b.effect, spins), aBack, spins),
+            back,
+            spins,
+          );
+          const k = keyOf(effect);
+          if (seen.has(k)) continue;
+          seen.add(k);
+          second.push(commutator(a, b, "cycles"));
+        }
       }
     }
 
@@ -555,13 +607,28 @@ class Library {
         closure.set(k, c);
         front.push(c);
       }
+      const placing: Effect = { src: new Int32Array(size), spin: new Uint8Array(size) };
       while (front.length > 0 && closure.size < CLOSURE_CAP) {
         const next: Word[] = [];
         for (const c of front)
           for (const s of single) {
-            const d = conjugate(s, c);
-            const k = keyFor(d.effect);
+            // Most placings are found already, so the word, which costs more
+            // than its effect, is built only for one that may be kept. Every
+            // word is reduced, so placing it cancels at most `s` both ways.
+            conjugateInto(
+              placing,
+              s.effect,
+              this.moveDest[s.moves[0]],
+              c.effect,
+              spins,
+            );
+            const k = keyFor(placing);
             const had = closure.get(k);
+            if (had && had.moves.length <= c.moves.length - 2) continue;
+            const d = conjugate(s, c, {
+              src: placing.src.slice(),
+              spin: placing.spin.slice(),
+            });
             if (had && had.moves.length <= d.moves.length) continue;
             closure.set(k, d);
             next.push(d);
@@ -737,7 +804,7 @@ class Library {
       }
       return out;
     };
-    const key = (a: Uint16Array) => String.fromCharCode(...a);
+    const key = (a: Uint16Array) => unitsKey([a]);
     type Seen = Map<string, { prev: string | null; move: Move }>;
     const fwd: Seen = new Map([[key(start), { prev: null, move: -1 }]]);
     const bwd: Seen = new Map([[key(goal), { prev: null, move: -1 }]]);

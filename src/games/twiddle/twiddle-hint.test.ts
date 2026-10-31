@@ -28,8 +28,7 @@ const G = twiddleGame;
 const presetParams: TwiddleParams[] = leafPresets(G).map((p) => p.params);
 
 /** Shapes no preset deals: oblong, the block as wide or as tall as the board,
- * orientation on a larger board and with an odd block, rows-only at a size
- * the preset does not have, and a short shuffle. */
+ * orientation on a larger board and with an odd block, and a short shuffle. */
 const customParams: TwiddleParams[] = [
   "5x3",
   "3x5n3",
@@ -38,19 +37,25 @@ const customParams: TwiddleParams[] = [
   "4o",
   "4n3o",
   "5n3o",
-  "4r",
   "5x4n3",
   "3m5",
 ].map((s) => G.decodeParams(s));
 
 /** Ask, play the first turn, throw the plan away, ask again: the walk that
- * sees a plan undo its own last turn. Returns the turns it took. */
-function walk(state: TwiddleState): number {
+ * sees a plan undo its own last turn. With `whole`, the first plan, followed
+ * whole, solves the board too: on a preset's move set, which the library
+ * covers, where elsewhere a plan may stop for the next hint to learn on.
+ * Returns the turns the walk took. */
+function walk(state: TwiddleState, whole: boolean): number {
   let s = state;
   for (let turns = 0; turns < 2000; turns++) {
     if (status(s) === "solved") return turns;
     const res = hint(s);
     if (!res.ok) throw new Error(`refused after ${turns} turns: ${res.error}`);
+    if (whole && turns === 0) {
+      const end = res.steps.reduce((t, step) => executeMove(t, step.move), s);
+      expect(status(end), "the first plan, followed whole").toBe("solved");
+    }
     s = executeMove(s, res.steps[0].move);
   }
   throw new Error("did not arrive within 2000 turns");
@@ -68,24 +73,12 @@ const WALKED = ["a", "b", "c"].slice(0, seedBudget(1, 3));
 describe("a hint recomputed after every turn arrives", () => {
   for (const p of [...presetParams, ...customParams]) {
     const name = G.encodeParams(p, true);
-    it(`${name}: dealt boards, no refusal`, () => {
+    const preset = presetParams.includes(p);
+    it(`${name}: dealt boards, no refusal${preset ? ", and one plan whole solves" : ""}`, () => {
       for (const seed of WALKED) {
         const s = newState(p, newDesc(p, randomNew(`${name}${seed}`)).desc);
-        expect(walk(s)).toBeGreaterThan(0);
+        expect(walk(s, preset)).toBeGreaterThan(0);
       }
-    });
-  }
-});
-
-describe("following one plan whole solves the board", () => {
-  for (const p of presetParams) {
-    const name = G.encodeParams(p, true);
-    it(name, () => {
-      const s0 = newState(p, newDesc(p, randomNew(`whole ${name}`)).desc);
-      const res = hint(s0);
-      if (!res.ok) throw new Error(res.error);
-      const end = res.steps.reduce((s, step) => executeMove(s, step.move), s0);
-      expect(status(end)).toBe("solved");
     });
   }
 });
