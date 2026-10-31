@@ -10,5 +10,5 @@
 - [x] 3a. Review the mid-sized guides' pointer pass with a reviewer that did not write them (old text = the commit before `docs: rewrite the mid-sized guides`): lost rules as opposed to detail; every "X's header says/lists" pointer opened and confirmed; descriptions.md's five "What a statement costs" shapes against `compile.ts`; anything outside test-strength.md quoting a figure it no longer holds; the change ids no longer cited (72 ids, 64 resolving vs 75/67 before)
 - [ ] 4. The large guides: `rendering.md`, `testing.md`, `input.md`, `hints-candidates.md`, `mechanics.md`, `hints-marks.md`, `hints.md`, `solver-and-generator.md`
 - [x] 5. `engine-catalog.md`, its index under budget with a quarter free (shorter rows: 11,988 → 7,286 bytes, 39% free; a catalog per area measured smaller but needs a `guide-sections` change, so not taken)
-- [ ] 6. `README.md` § "Documentation" follows the guides, and states the owner's rule for any guide: a guide points and the code details; a detail found stale is deleted, not corrected
+- [x] 6. `README.md` § "Documentation" follows the guides, and states the owner's rule for any guide: a guide points and the code details; a detail found stale is deleted, not corrected
 - [ ] 7. The owner reads a sample and accepts

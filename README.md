@@ -159,6 +159,12 @@ written to be looked up by section rather than read through: a guide about
 writing a game opens with what every game does and a table of its sections.
 This table is the one index of them.
 
+**A guide points, and the code details**: a guide says what matters, where
+it lives and why, and the file it names says the rest. **A detail found
+stale in a guide is deleted, not corrected**: that it went stale shows it
+was too far into the weeds. A stale rule, decision, reason or trap is not a
+detail; it is corrected, or raised.
+
 | Working on | Guide |
 | --- | --- |
 | A new game, or any game: the route through the guides by kind of game, the lifecycle, the definition of done | [`docs/new-game.md`](docs/new-game.md) |
