@@ -11,9 +11,17 @@ and changes how they are said:
   incident narratives beyond the shape to look for), census (a count or list
   of games that a query would give), and prose that describes what the code
   plainly shows.
-- **Correct** every claim about the code against the tree: a file, export,
-  flag or behavior a sentence names must exist and do what it says, or the
-  sentence goes.
+- **A guide points; the code details.** A guide is a high-level map: what
+  matters, where it lives, and why. The details are read in the code (owner,
+  2026-10-31).
+- **A detail found stale is deleted, not corrected** (owner, 2026-10-31).
+  That it went stale is the signal that it was too far into the weeds and
+  would keep changing. Keep a pointer to the code that holds it, if the reader
+  needs one. A stale *rule, decision, reason or trap* is not a detail: it is
+  corrected, or raised.
+- **Check** every claim about the code that survives against the tree: a
+  file, export, flag or behavior a sentence names must exist and do what it
+  says.
 - **Keep** each `##`/`###` heading unless a new one is plainly better.
   Citations are by heading text across the tree; a renamed heading repoints
   every citation in the same commit (`node scripts/checks/guide-sections.mjs`

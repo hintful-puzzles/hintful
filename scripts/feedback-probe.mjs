@@ -364,13 +364,11 @@ function main() {
   );
   if (verifyOnly) return;
 
-  // Restore **only the module that currently holds a plant** — never every
-  // module from its start-of-run copy. A run takes 30–45 minutes, and an edit
-  // made to a not-yet-probed (or already-probed) module during that time is
-  // legitimate; a blanket restore in `finally` silently reverted a session's
-  // worth of `latin.ts` edits once, because it wrote back the copy it had read
-  // an hour earlier. Only the planted module is ever dirty, so only it needs
-  // putting back.
+  // A run is long, and an edit made during it to any module but the one being
+  // probed is legitimate. So each module is read again when its turn comes, and
+  // plants and restores from that copy, and only the module that holds a plant
+  // is ever restored: writing back a copy read earlier reverts whatever was
+  // edited since.
   let planted = null;
   const restore = () => {
     if (planted) writeFileSync(planted, sources.get(planted));
@@ -386,7 +384,8 @@ function main() {
   const scores = [];
   try {
     for (const mod of modules) {
-      const source = sources.get(mod.module);
+      const source = readFileSync(mod.module, "utf8");
+      sources.set(mod.module, source);
       const tests = testsFor(mod, files);
       process.stdout.write(`\n${mod.module}\n  vs ${tests.join(" ")}\n  `);
       let caught = 0;

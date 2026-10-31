@@ -32,13 +32,24 @@ gets every rule, reason and trap with the least reading.
 - **Cut** restatement (keep a rule where it binds; cite it elsewhere),
   history and incident narrative beyond the shape to look for, census (a
   count or list a query would give), and prose that only restates the code.
-- **Verify every claim about the code** against the tree: files, exports,
-  scripts, flags, behaviors, and the numbers in examples. Correct a false one
-  and report it; keep one you cannot verify and report it.
+- **A guide points; the code details** (the owner's rule). Keep the map:
+  what matters, where it lives, why. Cut detail a reader gets by opening the
+  file the guide points to: lists of what a function takes or owns, exact
+  orders, internal names, figures and examples that only illustrate.
+- **A detail found stale is deleted, not corrected** (the owner's rule):
+  going stale shows it was too deep and will keep changing. Leave a pointer
+  to the code if the reader needs one. A stale rule, decision, reason or trap
+  is not a detail: correct it and report it.
+- **Verify every claim that survives** against the tree. Keep one you cannot
+  verify and report it.
 - **Keep headings.** They are cited by text from code and other docs. Rename
   one only if it is plainly wrong, then repoint every citation
   (`git grep -n '<guide> § "'`, and bare `§ "` inside the guide; citations
   can break across lines) and say so.
+- **A rewrite does not grow the guide.** A bold lead replaces the words it
+  summarizes rather than restating them before the paragraph says them again;
+  where a lead or a split sentence adds bytes, find the restatement it makes
+  redundant and cut that. A guide that ends longer says why in the report.
 - **Voice**: a bold lead per bullet that states the rule, then one sentence
   of mechanism or example; present tense; one short paragraph per section; a
   "shapes to search for" list where there is a pattern to grep for. Split a

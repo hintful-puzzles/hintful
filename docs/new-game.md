@@ -20,28 +20,23 @@ state and one set of marks, so the writing is not divided among agents.
 2. **Find the game's kind** in § "The route by kind of game". It names the
    sections of each guide the game needs, and the rest are skipped.
 3. **Scaffold.** `scripts/new-game.sh <gameId> [kind]` copies the skeleton
-   of the game's kind, `grid` or `edges`
-   ([`src/skeleton/`](../src/skeleton/README.md)), to `src/games/<gameId>/`,
-   renamed for the game; its help page is the copy's `<gameId>.description.yaml`. It checks that the copy
+   of the game's kind ([`src/skeleton/`](../src/skeleton/README.md)) to
+   `src/games/<gameId>/`, renamed for the game, checks that the copy
    compiles, lints and passes its tests, and prints what the copy leaves
-   undone, which is the list to work through: the puzzle, the registration,
-   the hint's pins, the help page, the icons, the spec. No existing game is required reading: the skeleton is a small game
-   that plays, on the shared way for every concern that has one, and § "File
-   anatomy" says what each of its files holds.
-4. **Replace the skeleton's puzzle with yours, a concern at a time**, keeping
-   `npm run game -- <gameId>` green once the game is registered, and its own
-   tests before that ([`testing.md`](./testing.md) § "A game's verdict in one
-   command"): the board and the moves (`state.ts`), the rules
-   (`solver.ts`), the generator, the picture, the hint's sentences. Before
-   each concern, read the opening of its guide and the sections the route
-   names. Where your puzzle fits the shared way, change the puzzle's part and
-   leave the shape. Where it does not, the guide for the concern says what
-   else a game may do.
+   undone: the list to work through. No existing game is required reading:
+   the skeleton is a small game that plays, on the shared way for every
+   concern that has one, and § "File anatomy" maps its files.
+4. **Replace the skeleton's puzzle with yours, a concern at a time**: the
+   board and the moves, the rules, the generator, the picture, the hint's
+   sentences. Keep the game's own tests green, and `npm run game -- <gameId>`
+   once it is registered ([`testing.md`](./testing.md) § "A game's verdict
+   in one command"). Where your puzzle fits the shared way, change the
+   puzzle's part and leave the shape. Where it does not, the guide for the
+   concern says what else a game may do.
 5. **Register the game**: § "Registering a game".
 6. **Write the help page and the spec**: [`help-pages.md`](./help-pages.md),
    and § "What a game's spec holds".
-7. **Capture the icons**: two committed PNGs,
-   `src/assets/icons/<gameId>-{64,128}d8.png`, taken from the running game in
+7. **Capture the icons**: two committed PNGs, taken from the running game in
    the dev-only `?screenshot` mode
    ([`puzzle-icons`](../openspec/specs/puzzle-icons/spec.md)).
 8. **Run the app and play it**, with pointer, keyboard and touch, and ask for
@@ -66,10 +61,10 @@ state and one set of marks, so the writing is not divided among agents.
 
 ## The route by kind of game
 
-Read the opening of each guide when you reach its concern: its `## What
-every game does` and its `## Sections` table. Then read the sections below
-for your kind, and any other whose "Read it when" is true of your game. A
-`##` section named here is read with its `###` parts. Everything else in the
+Before each concern, read the opening of its guide (its `## What every
+game does` and its `## Sections` table), then the sections below for your
+kind, and any other whose "Read it when" is true of your game. A `##`
+section named here is read with its `###` parts. Everything else in the
 guides is for a game that is not yours.
 
 **Which kind.** Ask what the player marks and how the board is solved:
@@ -86,8 +81,9 @@ guides is for a game that is not yours.
 - [`mechanics.md`](./mechanics.md) § "The params codec and validation";
   `mechanics.md` § "Params are declared once, on `paramConfig`";
   `mechanics.md` § "The preset menu is a grid"; `mechanics.md` § "The Custom
-  dialog"; `mechanics.md` § "interpretMove and UI_UPDATE"; `mechanics.md` § "A move you do not
-  recognize is refused, never guessed"; `mechanics.md` § "Status".
+  dialog"; `mechanics.md` § "interpretMove and UI_UPDATE"; `mechanics.md` §
+  "A move you do not recognize is refused, never guessed"; `mechanics.md` §
+  "Status".
 - [`input.md`](./input.md) § "Targets and verbs"; `input.md` § "Button codes
   and a key held with Shift"; `input.md` § "A touch hold arrives as the right
   button"; `input.md` § "Keyboard cursors".
@@ -153,7 +149,7 @@ guides is for a game that is not yours.
   board does not show.
 - `solver-and-generator.md` § "Giving a deductive game an Unreasonable tier",
   only where the game is to deal boards its deductions do not finish.
-- It skips `hints-candidates.md`, the keypad and the drag models.
+- It skips the keypad and the drag models.
 
 **Edges and loops** adds:
 
@@ -171,7 +167,7 @@ guides is for a game that is not yours.
   draws walls between regions.
 - `mechanics.md` § "Bespoke geometry" and `input.md` § "Giving a geometric
   game a keyboard", only where the board is not a grid of squares.
-- It skips `hints-candidates.md` and the keypad.
+- It skips the keypad.
 
 **Moves and search** adds:
 
@@ -185,8 +181,8 @@ guides is for a game that is not yours.
 - `solver-and-generator.md` § "Solve and the generator's aux";
   `solver-and-generator.md` § "One answer, even when it is hidden", where the
   answer is hidden.
-- It skips `hints-candidates.md`, the deduction sections above, and
-  difficulty tiers unless the game has them.
+- It skips the deduction sections above, and difficulty tiers unless the
+  game has them.
 
 ## Before you start
 
@@ -207,7 +203,7 @@ reproduces is the one outcome to avoid.
 | "Did this move change anything?" by comparing states | The engine's: the midend keeps a move that left the board as it was out of the history. Write no comparison of your own: [`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE". |
 | Editor-only move letters (upstream `#ifdef EDITOR`) | Do not map them, and say so in `design.md`. |
 | "Print this puzzle" | No printing exists. Do not promise it. |
-| A params string upstream's encoder writes (a game ported from upstream) | Record every form the C `encode_params` writes in `UPSTREAM` in [`upstream-params.test.ts`](../src/puzzle/upstream-params.test.ts), so each still decodes. A game whose catalog `collection` is not `own` fails without an entry; a game written here has none. |
+| A params string upstream's encoder writes (a game ported from upstream) | Record every form the C `encode_params` writes in [`upstream-params.test.ts`](../src/puzzle/upstream-params.test.ts), so each still decodes. |
 
 ## File anatomy
 
@@ -219,16 +215,16 @@ the population of any row with `ls src/games/*/<file>`.
 
 | File | Holds |
 | --- | --- |
-| `index.ts` | The `Game<…>` object and its glue: the target verbs, `status`, `solve`, `findMistakes`, the difficulty contract, `hintGesture`, `registerGame(...)`. |
-| `state.ts` | The state, params, move and `Ui` types; `paramConfig`, the presets and the params codec; the desc codec, `newState`, `cloneState`; and `executeMove`, here so that `hint.ts` can run a move without importing `index.ts`. |
-| `solver.ts` | The deduction ladder, declared once and run two ways: to a fixpoint (the generator's gate, `solve`, `findMistakes`) and one firing at a time (the hint). The rung list, as the kinds of reason a firing carries. |
-| `generator.ts` | `newDesc`: a board, and the retry until it needs exactly the tier asked for. |
-| `render.ts` | `redraw`, the palette indices, `computeSize`, the per-tile cache, the hint's marks. |
-| `hint.ts` | The hint's plan: the solver's firings turned into steps, and `hintKeepTrack`. Always its own file, however short. |
-| `hint-text.ts` | Every sentence the hint speaks, exported as `say` ([`hints.md`](./hints.md) § "The sentences live in one file per game"). |
-| `<game>.test.ts` | The game's own behavior: codecs, moves, completion, the mistake check, a save, the frame. |
+| `index.ts` | The `Game` object and its glue. |
+| `state.ts` | The types, params and desc, and `executeMove`, here so that `hint.ts` can run a move without importing `index.ts`. |
+| `solver.ts` | The deduction ladder, declared once and run two ways: to a fixpoint (the generator's gate, `solve`, `findMistakes`) and one firing at a time (the hint). |
+| `generator.ts` | A board, and the retry until it needs exactly the tier asked for. |
+| `render.ts` | The picture, its tile cache and the hint's marks. |
+| `hint.ts` | The hint's plan: the solver's firings turned into steps. Always its own file, however short. |
+| `hint-text.ts` | Every sentence the hint speaks ([`hints.md`](./hints.md) § "The sentences live in one file per game"). |
+| `<game>.test.ts` | The game's own behavior. |
 | `<game>-generation.test.ts` | Every board dealt needs its tier, and every rung fires on dealt boards. |
-| `<game>-hint.test.ts` | A pinned position and sentence for every rung, and what holds of any plan. |
+| `<game>-hint.test.ts` | A pinned position and sentence for every rung. |
 
 A game with a drag preview adds a small `moves.ts`, so that `render.ts` can
 simulate the release move without an import cycle
@@ -236,25 +232,24 @@ simulate the release move without an import cycle
 
 ## Registering a game
 
-Two edits, made together because `catalog-registry.test.ts` holds them to
-each other: import the game in [`src/games/index.ts`](../src/games/index.ts)
-and add its catalog entry to
+**Registration is two edits, made together**, because
+[`catalog-registry.test.ts`](../src/catalog-registry.test.ts) holds them to
+each other: the game in [`src/games/index.ts`](../src/games/index.ts), whose
+header says how, and its catalog entry in
 [`src/puzzle/catalog-data.ts`](../src/puzzle/catalog-data.ts). A game absent
-from the registry cannot be played, and one that is registered is visible to
+from the registry cannot be played. One that is registered is visible to
 every player at once, so the entry goes in with the first registration.
 
-Until it is registered no cross-game guard reads the game. Once it is, a few
-records kept by hand refuse it until each has it: its row in
-`help/puzzles.md`, and entries or snapshots in the guards that pin every
-game's params and capabilities. `scripts/new-game.sh` prints the list when
-it finishes, and the failing guard names each.
+**No cross-game guard reads the game until it is registered.** Once it is, a
+few records kept by hand refuse it until each has it. `scripts/new-game.sh`
+prints them, and the failing guard names each.
 
-The entry names the game's family, one of `puzzleFamilies`, which a player
-browses by. Choose the family whose other members a player of the new game
-would most want to try next. If none fits, add a family, but only once it has
-a second member: `catalog-families.test.ts` refuses a family of one. Work
-that needs a family as its population writes `puzzlesInFamily("latin")` and
-never types the list.
+**The entry names the game's family**, one of `puzzleFamilies`, which a
+player browses by. Choose the family whose other members a player of the new
+game would most want to try next. If none fits, add a family, but only once
+it has a second member: `catalog-families.test.ts` refuses a family of one.
+Work that needs a family as its population writes `puzzlesInFamily("latin")`
+and never types the list.
 
 ## What a game's spec holds
 
@@ -281,32 +276,27 @@ ordered by subject"). Working on one concern of a game, read its subject.
 | `Status bar` | the words of the status bar, and when each shows |
 | `Look` | a decision about how the game is drawn that is the game's own |
 
-A requirement is filed under one subject. Where it covers two: anything about
-the hint is `Hint`; which cells are flagged is `Rules` and how the flag is
-drawn is `Look`; what a move does is `Rules` and which input makes it is
-`Controls`; a refusal by `validateParams` is `Params` whatever it is about. A
-difference from upstream goes under the subject it is a difference in.
+**A requirement is filed under one subject.** Where it covers two: anything
+about the hint is `Hint`; which cells are flagged is `Rules` and how the flag
+is drawn is `Look`; what a move does is `Rules` and which input makes it is
+`Controls`; a refusal by `validateParams` is `Params` whatever it is about.
+A difference from upstream goes under the subject it is a difference in.
 
 `scripts/checks/spec-subjects.mjs`, in the gate, holds the titles, the order,
-and that a spec has the subjects its game owes: `Rules`, `Params`,
-`Description` and `Controls` always, `Hint` for a game with a hint, `Status
-bar` for one with a status bar, `Generation` for one with tiers. It reads the
-title and cannot tell that a requirement sits under the wrong subject, so move
-one you find misfiled. A game whose change is not archived yet has its spec
-only as that change's delta, and the check holds the delta: the game is
-committed and pushed before the owner accepts it, and archiving merges the
-spec as for any change. Archiving appends the requirements a delta adds to the
-end of the file; `node scripts/checks/spec-subjects.mjs --fix` puts the spec
-back in order and changes no word.
+and the subjects a game owes, and its refusal names what is missing and how
+to sort a spec. It reads the title and cannot tell that a requirement sits
+under the wrong subject, so move one you find misfiled. A game whose change
+is not archived yet has its spec only as that change's delta, and the check
+holds the delta: the game is committed and pushed before the owner accepts
+it, and archiving merges the spec as for any change.
 
-A spec does not hold a second copy of something stated elsewhere:
+**A spec does not hold a second copy of something stated elsewhere:**
 
 - **what the game declares to the engine**, which the engine consumes and the
-  help page is built from: the field list of `paramsCodec` and `paramConfig`,
-  the preset table, `prefs`, `targetVerbs` and `requestKeys`, the hint's
-  legend, the palette. State the promise the declaration cannot: what a
-  missing field decodes to, why a size is refused, what a verb is for where
-  its `does` string does not say;
+  help page is built from, such as `paramConfig`, the presets, `prefs`,
+  `targetVerbs` and the hint's legend. State the promise the declaration
+  cannot: what a missing field decodes to, why a size is refused, what a
+  verb is for where its `does` string does not say;
 - **a rule of the collection that the game merely follows**, which the engine
   capability states once. A requirement that would read the same with another
   game's name in it belongs there. Where the game departs, the departure is
@@ -339,19 +329,18 @@ with notes and a hand-written codec;
 [`inertia`](../openspec/specs/inertia/spec.md) for a game of movement and
 search, which declares little and so states most of itself.
 
-A requirement is one behavior in `SHALL` sentences, within the 500 characters
-the validator allows before the first scenario, with no date, no change id and
-no account of how it was decided. The gate holds those; the rest is in
-`openspec/config.yaml`, which the tool shows whoever writes a delta. A change
-to something the spec already covers modifies that requirement, so the spec
-keeps reading as the game and not as its history.
+**A requirement is one behavior**, with no date, no change id and no
+account of how it was decided. The gate holds its form, and
+`openspec/config.yaml`, which the tool shows whoever writes a delta, holds
+the rest. A change to something the spec already covers modifies that
+requirement, so the spec keeps reading as the game and not as its history.
 
-Writing a requirement from the code finds the code's bugs, and a requirement
-never states one as the rule: it states what the help page and the rest of the
-spec intend, its scenarios keep off the broken case, and the bug is filed. Run
-every string and sentence a scenario quotes through the game. A scenario that
-says what a hint's first step is names the board it was seen on, because an
-earlier line firing first makes the general claim false.
+Writing a requirement from the code finds the code's bugs, and **a
+requirement never states one as the rule**: it states what the help page and
+the rest of the spec intend, its scenarios keep off the broken case, and the
+bug is filed. Run every string and sentence a scenario quotes through the
+game. A scenario that says what a hint's first step is names the board it was
+seen on, because an earlier line firing first makes the general claim false.
 
 ## Comments, and what earns one
 
@@ -363,14 +352,11 @@ describe what `state.ts` holds, how the midend will call you, or what another
 game decided: those sentences are true when written and wrong within weeks.
 
 **Point, don't paraphrase.** When the reader needs the neighbor, name it and
-stop. `see runDeductionFixpoint` beats three sentences on what it does,
-because the function is one jump away and is never out of date. Cite a guide
+stop: the name is one jump away and never out of date. Cite a guide
 by file and heading name, never by a section number.
 
-**An assertion about behavior is a claim.** If a test checks it, say which:
-"every generated board is uniquely solvable at its tier, the generation test
-asserts it" survives the next change. "Draws the clue in its run's color" is
-a description the next render change falsifies.
+**An assertion about behavior is a claim.** If a test checks it, say which,
+and it survives the next change; unbacked, the next change falsifies it.
 
 **Keep, always:** provenance (which upstream behavior this derives from), a
 constraint that still binds together with the reason it binds, and why
@@ -379,8 +365,9 @@ code.
 
 **Delete on sight:** a restatement of the line below it, a narration of how
 the code used to be, a bare change id or design tag standing in for an
-explanation, and a count written in prose. Write the query, not its answer:
-"the games that call `latinSolver`" cannot go stale.
+explanation, and a count written in prose, whose query goes in its place
+([`method.md`](./method.md) § "A count written in prose is a census nobody
+re-runs").
 
 ## A game with no upstream to check against
 
@@ -412,9 +399,8 @@ A game, or a change to one, is done when all of these hold:
 - [ ] The interface risks were checked before starting (§ "Before you start").
 - [ ] Idiomatic TypeScript, not a transliteration
       ([`mechanics.md`](./mechanics.md) § "Idiomatic state, not a C transliteration").
-- [ ] The render cache is keyed on an `Int32Array`, every overlay is in the
-      diff key, and the first frame paints over the midend's color-0 ground
-      and never repeats it ([`rendering.md`](./rendering.md)).
+- [ ] The render cache, its diff key and the first frame follow
+      [`rendering.md`](./rendering.md)'s opening.
 - [ ] The config-summary header renders, preferences go through the `prefs`
       hook, and the Custom dialog is wired ([`mechanics.md`](./mechanics.md)).
 - [ ] A uniquely solvable game ships `findMistakes`, which Check & Save
@@ -432,14 +418,12 @@ A game, or a change to one, is done when all of these hold:
       clock-gated ([`testing.md`](./testing.md)).
 - [ ] An explained hint that meets the quality bar ([`hints.md`](./hints.md)).
       A new game ships with its hint, and a game without one is a draft.
-- [ ] A help page in the standard shape: rules, `## Controls`, `## Hints`
-      when there is a hint, `## <Name> parameters` last, which
-      `src/help-coverage.test.ts` holds to the game's `hint()` and
-      `paramConfig` ([`hints.md`](./hints.md) § "The help teaches the marks").
-      Where the page names a mode it writes `{{choice:<kw>:<index>}}`
+- [ ] A help page in the standard shape, which `src/help-coverage.test.ts`
+      holds to the game ([`hints.md`](./hints.md) § "The help teaches the
+      marks"). A mode the page names is written as a choice token
       ([`mechanics.md`](./mechanics.md) § "Params are declared once, on `paramConfig`").
-- [ ] The app was run and the game played, and the owner has accepted its
-      rendering, animation and input (§ "The acceptance gate").
+- [ ] The app was run and the game played, and the owner has accepted it
+      (§ "The acceptance gate").
 - [ ] The openspec change was kept current and is archived on acceptance
       ([`work-management.md`](./work-management.md) § "Before archiving").
 

@@ -32,12 +32,6 @@ export const HINT_GAMES: [string, AnyGame][] = REGISTERED_GAMES.filter(
  * planner), never declared. The marker carries its opening paren so importing
  * the planner without calling it does not count.
  *
- * **It bounds what the *gate* walks**, in `hint-quality.test.ts` and
- * `hint-resume.test.ts`, because a search is the one hint shape whose cost explodes
- * with board size: the walk is quadratic in it twice over (one full search per
- * move, and more moves on a bigger board), so walked at every size these games
- * would be a large share of the whole suite's test time.
- *
  * Which games may *refuse* as a search past its reach is a different question,
  * answered by {@link SEARCH_REACH_GAMES}: Guess and Pegs search without this
  * planner.

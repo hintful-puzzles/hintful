@@ -127,12 +127,7 @@ export interface SliceOptions {
    *
    * `false` takes the near end alone — **every mode, each on the smallest
    * board offering it, and no large board at all.** It is for a sweep whose
-   * cost is superlinear in board size and whose subject is not: a hint that
-   * plans by *searching* pays for size twice over (one full search per move,
-   * and more moves to make), so the gate takes its modes and leaves its sizes
-   * to the slow tier. Which games those are is derived, not listed — see
-   * {@link SEARCH_PLANNING_GAMES} — and {@link gatePresets} is the one place
-   * that decides it.
+   * cost is superlinear in board size and whose subject is not.
    */
   readonly scalarEnds?: boolean;
 }

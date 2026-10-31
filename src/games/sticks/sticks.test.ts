@@ -566,7 +566,7 @@ describe("sticks text format", () => {
     const text = textFormat(state);
     // The WHOLE rendering, not a `toContain` per glyph: a one-character needle
     // cannot notice a missing glyph, nor tell its glyph from a superstring of
-    // it (`docs/test-strength.md` §7).
+    // it (`docs/test-strength.md` §3).
     expect(text).toMatchInlineSnapshot(`
       "| - . #
       . . . .
