@@ -8,7 +8,7 @@
  * `narrate`); this file decides only how it reads.
  */
 
-import { indefinite, joinOr, thisCell } from "../../engine/hint-text.ts";
+import { indefinite, joinOr, joinWith, thisCell } from "../../engine/hint-text.ts";
 import { CELL, mark, type Narration, phrase, whole } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { C_ADD, C_DIV, C_MUL, C_SUB } from "./state.ts";
@@ -50,14 +50,15 @@ export const say = {
   ): Narration =>
     phrase`No way to make ${thisCage(cage)} ${cageGoal(op, value)} puts ${joinOr(ns)} in ${thisCell(at)}`,
 
-  /** Every way to fill `cage` places `n` in the row (`horizontal`) or column
-   * the cage lies along. */
+  /** Every way to fill `cage` places each of `ns` in the row (`horizontal`) or
+   * column the cage lies along: a step strikes each value its firing found
+   * required there, so it names them all. */
   cageLine: (
     cage: readonly Point[],
     op: number,
     value: number,
-    n: number,
+    ns: number[],
     horizontal: boolean,
   ): Narration =>
-    phrase`${thisCage(cage).capitalized()} must ${cageGoal(op, value)}, and every way to fill it places ${indefinite(String(n))} ${n} in its ${horizontal ? "row" : "column"}`,
+    phrase`${thisCage(cage).capitalized()} must ${cageGoal(op, value)}, and every way to fill it places ${joinWith(ns.map((n) => `${indefinite(String(n))} ${n}`))} in its ${horizontal ? "row" : "column"}`,
 };

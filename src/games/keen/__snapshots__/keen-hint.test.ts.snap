@@ -6084,7 +6084,7 @@ exports[`keen hint render > a hidden-single placement hatches the whole line and
 exports[`keen: pinned hint positions > says, at each pin 1`] = `
 {
   "cage": "No way to make this cage sum to 7 puts 1 or 2 in this cell, so this cell can only be 3 or 4.",
-  "cageLine": "This cage must multiply to 10, and every way to fill it places a 1 in its row, so 1 and 2 must go.",
+  "cageLine": "This cage must multiply to 10, and every way to fill it places a 1 and a 2 in its row, so 1 and 2 must go.",
   "clean": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",
   "dup": "The 3 just placed can't repeat in its row and column, so the 3 must go from the other cells.",
   "hiddenSingle": "Every other cell in this column rules out 3, so this cell must be 3.",

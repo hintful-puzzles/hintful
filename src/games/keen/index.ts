@@ -314,7 +314,7 @@ function premise(reason: HintReason, marks: readonly Mark[]): Premise {
           reason.cells,
           reason.op,
           reason.value,
-          ns[0],
+          ns,
           reason.horizontal,
         ),
       };

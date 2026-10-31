@@ -34,11 +34,14 @@ describe("a number after an article gets the article it is pronounced with", () 
 
   it("Keen's cage line", () => {
     const cage = [{ x: 0, y: 0 }];
-    expect(keen.cageLine(cage, 0, 15, 8, true).text).toContain(
+    expect(keen.cageLine(cage, 0, 15, [8], true).text).toContain(
       "places an 8 in its row",
     );
-    expect(keen.cageLine(cage, 0, 15, 3, false).text).toContain(
+    expect(keen.cageLine(cage, 0, 15, [3], false).text).toContain(
       "places a 3 in its column",
+    );
+    expect(keen.cageLine(cage, 0, 15, [1, 8], false).text).toContain(
+      "places a 1 and an 8 in its column",
     );
   });
 
