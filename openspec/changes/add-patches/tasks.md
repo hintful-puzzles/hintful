@@ -15,7 +15,10 @@
 - [x] 12. The second playtest (2026-10-31): a resize follows the square under the finger, where a drag into the near half of the next square had counted for nothing
 - [x] 13. The owner's answer (2026-10-31): a drawn rectangle is a lower bound; its sides are lines once it has its clue's number
 - [x] 14. Its look (owner, 2026-10-31): outlined in its clue's line color while it may grow, ink once final, red live where no rectangle the clue allows contains it, as the border-grid games show a broken rule
-- [ ] 15. The owner's word on the playtest's changes
+- [x] 15. A drawn rectangle fills with its clue's color from the start, and the side two drawn rectangles share is in color, never a wall's (owner, 2026-10-31): the sides carry whether it is settled, so the fill no longer needs to say it fits
+- [x] 16. A resize out of the rectangle grows it to take in the pointer's square, and within it shrinks it from the pressed side; a press near a corner of a square resizes too (the owner's playtest, 2026-10-31: a drag down and right from a 2×1's left square had pulled its left side in)
+- [x] 17. A status line keeps its room while it says nothing (app-shell): Rectangles' size readout came in as a drag began, shrank the board from 437 to 402 pixels under the pointer, and a long drag ended a square off (measured 2026-10-31)
+- [ ] 18. The owner's word on the playtest's changes
 
 ## Measured (2026-10-31, eight deals a size)
 

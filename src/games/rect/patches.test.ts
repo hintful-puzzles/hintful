@@ -16,7 +16,13 @@ import { NO_FLASH } from "../../engine/win-wave.ts";
 import { rectHint } from "./hint.ts";
 import { rectGame } from "./index.ts";
 import { executeMove, isSolved, newState, outlinedBoxAt } from "./moves.ts";
-import { COL_EDGE_TINT, COL_MISTAKE, newDrawState, redraw } from "./render.ts";
+import {
+  COL_EDGE_TINT,
+  COL_FILL,
+  COL_MISTAKE,
+  newDrawState,
+  redraw,
+} from "./render.ts";
 import { answerOf } from "./solver.ts";
 import {
   decodeParams,
@@ -159,6 +165,29 @@ describe("Patches' look", () => {
     const p = { ...patches(3, 2), mode: MODE_RECT };
     const s = executeMove(newState(p, "2a4c"), rect(0, 0, 1, 2));
     expect(tinted(colorsOf(s))).toBe(false);
+  });
+
+  it("fills one from the start, and draws the side two share in color", () => {
+    // A square clue drawn as a 1×2, which no square is, and a plain clue
+    // beside it drawn as its own square: two rectangles that may still grow.
+    const p = patches(3, 3);
+    let s = newState(p, "SAg");
+    s = executeMove(executeMove(s, rect(0, 0, 1, 2)), rect(1, 0, 1, 1));
+    const dr = new RecordingDrawing(rectGame.colors(DEFAULT_BACKGROUND));
+    redraw(dr, newDrawState(s, 32), null, s, 1, rectGame.newUi(s), 0, NO_FLASH);
+    const rects = opsOfKind(dr.ops, "rect");
+    // Its square below the square clue wears the clue's fill, though the
+    // 1×2 is no rectangle the clue allows: the two clues' and that one.
+    const ground = rects.filter((o) => o.w === 31 && o.h === 31);
+    expect(
+      ground.filter((o) => o.color >= COL_FILL && o.color < COL_FILL + 4),
+    ).toHaveLength(3);
+    // The side the two share, at x = 32 to 34, is drawn, and not in ink.
+    const shared = rects.filter((o) => o.w === 2 && o.x >= 32 && o.x <= 33 && o.y < 32);
+    expect(shared.length).toBeGreaterThan(0);
+    expect(
+      shared.every((o) => o.color >= COL_EDGE_TINT && o.color < COL_EDGE_TINT + 4),
+    ).toBe(true);
   });
 
   it("reddens one no rectangle its clue allows can contain", () => {

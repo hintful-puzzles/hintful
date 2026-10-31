@@ -15,11 +15,11 @@ help:
     grid edge to draw or erase it.
 
     A drag that starts on a square of a rectangle you have drawn round one
-    clue, by a drag, resizes that rectangle instead: its corner farthest from where you pressed stays
-    put, and the corner nearest follows the pointer. Its old sides are taken
-    up, but for those it shares with another rectangle you have drawn, and
-    it stops growing where it would run into one. To draw a new rectangle
-    from inside a drawn one, start the drag on a grid corner.
+    clue, by a drag, resizes that rectangle instead. Drag out of it and it
+    grows to take in the square under the pointer; drag within it and the
+    side nearest where you pressed follows the pointer in. Its old sides are
+    taken up, but for those it shares with another rectangle you have drawn,
+    and it stops growing where it would run into one.
 
     While you drag, the status line shows the size of the rectangle.
     Drawing a rectangle also clears any lines inside it. Right-drag across
@@ -33,11 +33,13 @@ help:
     started.
 
     Each clue has a color of its own. Its square shows it from the start,
-    and a rectangle takes it whole once it is drawn round the clue at a size
-    and shape the clue allows. A rectangle you have drawn round a clue is
-    outlined in the clue's color while it may still grow, and its sides
-    become plain lines once it has the clue's number of squares. One that
-    no rectangle the clue allows could contain is outlined in red.
+    and a rectangle you draw round it fills with it as soon as you draw it.
+    Its sides are in the clue's color while it may still grow, the side two
+    such rectangles share among them, and become plain lines once it has the
+    clue's number of squares. One that no rectangle the clue allows could
+    contain is outlined in red. A rectangle closed by lines drawn one at a
+    time takes its clue's color once it is a size and shape the clue
+    allows.
   hints: |-
     **Hint** explains the next rectangle rather than simply drawing it, and
     says why no other will do. It reads only what is on the board: the

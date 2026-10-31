@@ -489,13 +489,40 @@ describe("rect resize", () => {
     expect(move).toEqual({ type: "rect", erasing: false, x: 0, y: 0, w: 1, h: 2 });
   });
 
-  it("draws a rectangle of its own from a grid corner inside one", () => {
-    const st = drawn([2, 2, 3, 3]);
+  it("grows toward the pointer, from a press near a corner of a square", () => {
+    // The owner's playtest, 2026-10-31: a 2×1 pressed on its left square,
+    // near that square's bottom-left corner, and dragged down and right to
+    // make a 2×2. The press was taken for a corner, and the drag for the
+    // left side pulled in.
+    const st = drawn([2, 2, 2, 1]);
     const move = dragThrough(st, [
-      [3, 3],
-      [4, 4],
+      [2.1, 2.9],
+      [3.5, 3.5],
     ]);
-    expect(move).toEqual({ type: "rect", erasing: false, x: 3, y: 3, w: 1, h: 1 });
+    expect(move).toEqual({
+      type: "resize",
+      from: { x: 2, y: 2, w: 2, h: 1 },
+      to: { x: 2, y: 2, w: 2, h: 2 },
+    });
+  });
+
+  it("lets the hint draw a rectangle round one the player drew", () => {
+    // The clue at (2,2) drawn as its own square, the top-left one of the
+    // hint's 2×2, where a drag from the top-left corner would resize it.
+    const st = drawn([2, 2, 1, 1]);
+    const goal: RectMove = { type: "rect", erasing: false, x: 2, y: 2, w: 2, h: 2 };
+    const ui = rectGame.newUi(st);
+    const ds = preferredDrawState(rectGame, st);
+    const step = { move: goal, rung: "fit", explanation: "", highlights: null };
+    const [gesture] = rectGame.hintGesture?.(st, ui, ds, goal, step) ?? [];
+    if (gesture?.kind !== "drag") throw new Error("no drag");
+    rectGame.interpretMove(st, ui, ds, gesture.from, LEFT_BUTTON);
+    rectGame.interpretMove(st, ui, ds, gesture.to, LEFT_DRAG);
+    const move = rectGame.interpretMove(st, ui, ds, gesture.to, LEFT_RELEASE);
+    const made = executeMove(st, move as RectMove);
+    const want = executeMove(st, goal);
+    expect(Array.from(made.hedge)).toEqual(Array.from(want.hedge));
+    expect(Array.from(made.vedge)).toEqual(Array.from(want.vedge));
   });
 });
 

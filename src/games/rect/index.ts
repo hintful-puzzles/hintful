@@ -145,10 +145,10 @@ function resetUi(ui: RectUi): void {
 }
 
 /**
- * One side of a resize: the cells `lo..hi` of the rectangle, pressed at
- * `press` and the pointer now at `at`, on a board `n` long. The end nearer
+ * One side of a resize that shrinks: the cells `lo..hi` of the rectangle,
+ * pressed at `press` and the pointer now at `at`, inside it. The end nearer
  * the press moves with the pointer and the far one stays, so a press anywhere
- * is the nearest corner grabbed; from the middle, the end the pointer moves
+ * is the nearest edge grabbed; from the middle, the end the pointer moves
  * toward. A side the pointer has not moved along keeps its extent.
  */
 function resizeSide(
@@ -156,27 +156,39 @@ function resizeSide(
   hi: number,
   press: number,
   at: number,
-  n: number,
 ): [number, number] {
   const d = at - press;
   if (d === 0) return [lo, hi];
   const nearLo = press - lo < hi - press || (press - lo === hi - press && d < 0);
   const fixed = nearLo ? hi : lo;
-  const moving = Math.max(0, Math.min(n - 1, (nearLo ? lo : hi) + d));
+  const moving = Math.max(lo, Math.min(hi, (nearLo ? lo : hi) + d));
   return [Math.min(fixed, moving), Math.max(fixed, moving)];
 }
 
 /**
- * The box a resize drag spans with the pointer on the square `(x, y)`. It
- * stops short of any other rectangle drawn: where the box would take in one
- * of its squares, it keeps the last box's extent on a side, or both.
+ * The box a resize drag spans with the pointer on the square `(x, y)`. Out
+ * of the rectangle, the pointer's square is taken in, the rectangle growing
+ * toward it and no side drawn in: a drag down and to the right from a 1×2's
+ * left square, meant to make it a 2×2, had taken in its left column (the
+ * owner's playtest, 2026-10-31). Within it, it shrinks by {@link resizeSide}.
+ * It stops short of any other rectangle drawn: where the box would take in
+ * one of its squares, it keeps the last box's extent on a side, or both.
  */
 function updateResizeBox(ui: RectUi, state: RectState, x: number, y: number): void {
   const resizing = ui.resizing;
   if (!resizing) return;
   const { from } = resizing;
-  const [nx1, nx2] = resizeSide(from.x, from.x + from.w - 1, resizing.x, x, state.w);
-  const [ny1, ny2] = resizeSide(from.y, from.y + from.h - 1, resizing.y, y, state.h);
+  const ax = Math.max(0, Math.min(state.w - 1, x));
+  const ay = Math.max(0, Math.min(state.h - 1, y));
+  const right = from.x + from.w - 1;
+  const bottom = from.y + from.h - 1;
+  const outside = ax < from.x || ax > right || ay < from.y || ay > bottom;
+  const [nx1, nx2] = outside
+    ? [Math.min(from.x, ax), Math.max(right, ax)]
+    : resizeSide(from.x, right, resizing.x, ax);
+  const [ny1, ny2] = outside
+    ? [Math.min(from.y, ay), Math.max(bottom, ay)]
+    : resizeSide(from.y, bottom, resizing.y, ay);
   const prev = { x1: ui.x1, x2: ui.x2, y1: ui.y1, y2: ui.y2 };
   const free = (x1: number, x2: number, y1: number, y2: number): boolean => {
     for (let yy = y1; yy < y2; yy++)
@@ -303,11 +315,10 @@ function interpretMove(
     ui.dragged = false;
     ui.erasing = erasing;
     // A drag from a square of a rectangle the player drew round its clue
-    // resizes it. One from a grid corner draws corner to corner, as the
-    // hint's drag does, wherever it is.
-    const corner = !(xc & 1) && !(yc & 1);
+    // resizes it, from anywhere in the square: a finger near a corner of it
+    // is on the square, not asking for a rectangle of its own.
     const from =
-      !erasing && !corner && sx >= 0 && sy >= 0 && sx < w && sy < h
+      !erasing && sx >= 0 && sy >= 0 && sx < w && sy < h
         ? drawnBoxAt(state, sx, sy)
         : null;
     ui.resizing = from && { from, x: sx, y: sy };
@@ -389,10 +400,19 @@ function interpretMove(
   return null;
 }
 
+/** How far into its corner squares a hint's drag runs from the corners:
+ * within the reach `coordRound` gives a corner, and on the rectangle's own
+ * squares, not their neighbors. */
+const CORNER_NUDGE = 0.05;
+
 /**
  * A line is a click on the middle of its edge. A rectangle is a drag from its
  * top-left corner to its bottom-right one: corner to corner addresses a single
- * square too, where a drag between two centers would be a click on one.
+ * square too, where a drag between two centers would be a click on one. Both
+ * ends are just inside the rectangle's corner squares. Where the first is in
+ * a rectangle the player drew round the clue, the press resizes that one,
+ * which the hint's holds, and growing it to take in the last square makes the
+ * hint's; from a corner exactly, it took in the square past it.
  */
 function hintGesture(
   _state: RectState,
@@ -410,9 +430,11 @@ function hintGesture(
       return [click(m.edge === "h" ? at(m.x + 0.5, m.y) : at(m.x, m.y + 0.5))];
     case "rect":
       return [
-        drag(at(m.x, m.y), at(m.x + m.w, m.y + m.h), {
-          button: m.erasing ? "secondary" : "primary",
-        }),
+        drag(
+          at(m.x + CORNER_NUDGE, m.y + CORNER_NUDGE),
+          at(m.x + m.w - CORNER_NUDGE, m.y + m.h - CORNER_NUDGE),
+          { button: m.erasing ? "secondary" : "primary" },
+        ),
       ];
     // A step never solves or resizes.
     case "solve":

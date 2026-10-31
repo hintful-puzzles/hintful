@@ -513,14 +513,20 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     // Read here, so the leader is drawn again when the marks are measured.
     this.leaderFor =
       flashing === null ? null : { ref: flashing, marks: puzzle?.hintMarks ?? null };
-    const status = puzzle?.wantsStatusbar ? puzzle.statusbarText : null;
+    const wantsStatus = puzzle?.wantsStatusbar ?? false;
+    const status = wantsStatus ? puzzle?.statusbarText : null;
     return html`
       <div class="words">
         ${
           // A status line is part of the board, not a command: Flood's move
-          // limit, Mines' remaining count. Absent, not blank, for a game with
-          // nothing to say.
-          status ? html`<div class="status" role="status">${status}</div>` : nothing
+          // limit, Mines' remaining count. Absent for a game that has none.
+          // A game that has one keeps its room while it says nothing, as the
+          // hint's is kept: Rectangles' says a rectangle's size only while
+          // one is dragged, and its line coming in shrank the board under
+          // the pointer mid-drag, a square off by the drag's end.
+          wantsStatus
+            ? html`<div class="status" role="status">${status || " "}</div>`
+            : nothing
         }
         ${
           // Apart from the hint: the board in play takes moves and hints while

@@ -183,12 +183,12 @@ the clue allows it".
 
 ### Requirement: Controls: A drag from a drawn rectangle resizes it
 
-A left-drag, or the cursor's Enter, that starts on a square of a rectangle
-drawn round one clue, and not on a grid corner, SHALL resize it: the corner
-farthest from the square pressed stays, and the nearest moves as the pointer
-does. The move SHALL take up the old sides but those another drawn rectangle
-shares, and draw the new outline. The rectangle SHALL stop short of another
-drawn rectangle.
+A left-drag, or the cursor's Enter, that starts anywhere on a square of a
+rectangle the player drew round one clue SHALL resize it. With the pointer
+out of it, it SHALL grow to take in the pointer's square; within it, the
+side nearer the square pressed SHALL follow the pointer. The move SHALL take
+up the old sides but those another drawn rectangle shares, and draw the new
+outline. The rectangle SHALL stop short of another drawn rectangle.
 
 #### Scenario: A rectangle grows from its corner
 
@@ -213,10 +213,17 @@ drawn rectangle.
   drag runs from the top-left square to the one below it
 - **THEN** it draws the 1×2 rectangle those squares span
 
-#### Scenario: A drag from a grid corner draws anew
+#### Scenario: A rectangle grows toward the pointer, pressed near a corner
 
-- **WHEN** a drag inside a drawn 3×3 starts on a grid corner
-- **THEN** it draws a rectangle of its own
+- **WHEN** a 2×1 drawn at (2,2) is pressed on its left square near that
+  square's bottom-left corner and dragged to the square below its right one
+- **THEN** the move resizes it to the 2×2 at (2,2)
+
+#### Scenario: The hint's drag draws round a rectangle the player drew
+
+- **WHEN** the hint's rectangle holds the one the player drew round its
+  clue, at its top-left square, and the hint's drag is played
+- **THEN** the board's lines are the hint's rectangle's
 
 ### Requirement: Hint: A rectangle the player drew round one clue is a lower bound
 
@@ -248,15 +255,18 @@ clue's, it SHALL go on without a step.
 
 Each clue SHALL take one of the region fills, so that clues whose nearest
 squares meet differ; the fills SHALL NOT be chosen from the answer. A clue's
-square SHALL be drawn in its fill, and a rectangle the game counts as
-correct SHALL fill whole with its clue's.
+square SHALL be drawn in its fill, a rectangle the player drew round it
+SHALL fill whole with it from the start, and any other rectangle the game
+counts as correct SHALL fill whole with its clue's.
 
 #### Scenario: A drawn rectangle shows whether it is settled
 
 - **WHEN** the player draws a rectangle round one clue
-- **THEN** its sides are in the clue's line color while it may still grow,
-  in ink once it has the clue's number of squares, and red where no
-  rectangle the clue allows on the board contains it
+- **THEN** it is filled with its clue's fill at once, and its sides are in
+  the clue's line color while it may still grow, the side it shares with
+  another such rectangle included, in ink once it has the clue's number of
+  squares, and red where no rectangle the clue allows on the board contains
+  it
 
 #### Scenario: A finished rectangle takes its clue's fill
 

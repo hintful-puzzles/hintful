@@ -171,10 +171,13 @@ interface Tints {
 
 /**
  * Where a rectangle the player drew round a clue may still grow, its sides
- * that are not lines take its clue's line color (`readClaims`), so it reads
- * as theirs to shape and not as walls. A corner takes it where every line
- * that meets there does. One beyond mending is not tinted: its sides are
- * red, as a broken rule's are.
+ * take its clue's line color, so it reads as theirs to shape and not as
+ * walls (`readClaims`). That holds where it meets another such rectangle,
+ * filled as it is, maybe in the same color: the side between them must show,
+ * and a wall's color there would say it is settled (the owner, 2026-10-31).
+ * A side against a rectangle with its number is that one's wall, in ink. A
+ * corner takes the color where every line that meets there has it. One
+ * beyond mending is not tinted: its sides are red, as a broken rule's are.
  */
 function lineTints(state: RectState, claims: Claims): Tints {
   const { w, h } = state;
@@ -184,21 +187,28 @@ function lineTints(state: RectState, claims: Claims): Tints {
     v: new Int8Array(w * h).fill(UNTINTED),
     corner: new Int8Array(w * h).fill(UNTINTED),
   };
+  /** Whether the square `(x, y)` is in a rectangle drawn to its number. */
+  const settled = (x: number, y: number): boolean => {
+    const c = x >= 0 && y >= 0 && x < w && y < h ? claims.owner[y * w + x] : -1;
+    return c >= 0 && claims.boxes.get(c)?.final === true;
+  };
   for (const [clue, { box, final, broken }] of claims.boxes) {
     if (final || broken) continue;
     const k = fill[clue];
-    const tint = (lines: Uint8Array, settled: Uint8Array, i: number) => {
-      if (lines[i] && !settled[i]) tints[lines === state.hedge ? "h" : "v"][i] = k;
+    const tint = (a: Int8Array, lines: Uint8Array, i: number, x: number, y: number) => {
+      if (lines[i] && !settled(x, y)) a[i] = k;
     };
     for (let x = box.x; x < box.x + box.w; x++) {
-      if (hrange(w, h, x, box.y)) tint(state.hedge, claims.hedge, box.y * w + x);
+      if (hrange(w, h, x, box.y))
+        tint(tints.h, state.hedge, box.y * w + x, x, box.y - 1);
       const b = box.y + box.h;
-      if (hrange(w, h, x, b)) tint(state.hedge, claims.hedge, b * w + x);
+      if (hrange(w, h, x, b)) tint(tints.h, state.hedge, b * w + x, x, b);
     }
     for (let y = box.y; y < box.y + box.h; y++) {
-      if (vrange(w, h, box.x, y)) tint(state.vedge, claims.vedge, y * w + box.x);
+      if (vrange(w, h, box.x, y))
+        tint(tints.v, state.vedge, y * w + box.x, box.x - 1, y);
       const r = box.x + box.w;
-      if (vrange(w, h, r, y)) tint(state.vedge, claims.vedge, y * w + r);
+      if (vrange(w, h, r, y)) tint(tints.v, state.vedge, y * w + r, r, y);
     }
   }
   for (let y = 0; y < h; y++)
@@ -238,12 +248,15 @@ function tintKey(tints: Tints, w: number, h: number, x: number, y: number): numb
 }
 
 /** The fill each square wears, by the same index, or -1: its clue's, if it
- * has one, and over a rectangle the clue allows, the clue's on every square
- * of it. */
-function squareFills(state: RectState): Int32Array {
+ * has one; over a rectangle the player drew round a clue, the clue's from
+ * the moment it is drawn, as a patch (the owner, 2026-10-31); and over any
+ * other rectangle the clue allows, the clue's on every square of it. */
+function squareFills(state: RectState, claims: Claims): Int32Array {
   const { w, h, grid } = state;
   const clue = clueFills(state);
   const out = clue.slice();
+  for (let i = 0; i < w * h; i++)
+    if (claims.owner[i] >= 0) out[i] = clue[claims.owner[i]];
   const filled = new Uint8Array(w * h);
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
@@ -690,8 +703,8 @@ export function redraw(
       }
     }
 
-  const fills = squareFills(state);
   const claims = readClaims(state);
+  const fills = squareFills(state, claims);
   const tints = lineTints(state, claims);
 
   // Wrong-edge overlay from findMistakes, and the sides of a drawn rectangle
