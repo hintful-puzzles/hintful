@@ -14,4 +14,4 @@
 
 ## 3. Close
 
-- [ ] 3.1 Measure the speed per deal, run the app, write the report, update the guides, archive, file the next Latin game
+- [x] 3.1 Measure the speed per deal (and restate the techniques, and share a moved term's reads, which took it from 4.4-6.4 to 1.6-2.0 times the hand-written time), run the app, write the report, update the guides, archive, file the next Latin game (`describe-solo`)
