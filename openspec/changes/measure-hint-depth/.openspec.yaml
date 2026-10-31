@@ -1,0 +1,5 @@
+# Scaffolded without a delta: the requirement is written once the
+# declaration's shape is settled. The session writes it and removes skip_specs.
+schema: spec-driven
+created: 2026-10-31
+skip_specs: true
