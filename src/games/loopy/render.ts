@@ -78,9 +78,9 @@ export const PREFERRED_TILE_SIZE = 32;
 export const COL_BACKGROUND = 0;
 export const COL_FOREGROUND = 1;
 export const COL_LINEUNKNOWN = 2;
-export const COL_HIGHLIGHT = 3;
+const COL_HIGHLIGHT = 3;
 export const COL_MISTAKE = 4;
-export const COL_SATISFIED = 5;
+const COL_SATISFIED = 5;
 export const COL_FAINT = 6;
 /** The keyboard cursor — this fork's addition; upstream has no cursor here. */
 export const COL_CURSOR = 7;
@@ -92,7 +92,7 @@ export const COL_PENCIL = 9;
 /** The notes-mode indicator's pencil body. */
 export const COL_PENCIL_BODY = 10;
 /** The leading edge of the win flash, on an edge of the loop. */
-export const COL_HIGHLIGHT_LEAD = 11;
+const COL_HIGHLIGHT_LEAD = 11;
 
 /**
  * The subset of the game UI the renderer reads. The full `LoopyUi` lives in

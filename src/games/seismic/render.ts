@@ -96,7 +96,7 @@ const BORDER = GRIDEXTRA * 2;
 
 // --- palette ---------------------------------------------------------------
 
-export const COL_BACKGROUND = 0; // the board around the grid
+const COL_BACKGROUND = 0; // the board around the grid
 /** The surface of a cell the player fills. */
 export const COL_CELL = 1;
 /** The lifted surface under a number the puzzle fixed. */

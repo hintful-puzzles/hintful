@@ -55,16 +55,16 @@ export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette ---------------------------------------------------------------
 
-export const COL_BACKGROUND = 0; // the board around the grid
+const COL_BACKGROUND = 0; // the board around the grid
 export const COL_GRID = 1; // the line between two cells, and the frame
 export const COL_CELL = 2; // the surface of a cell the puzzle left open
 /** The surface under a clue. */
 export const COL_GIVEN = 3;
 export const COL_SHADED = 4; // the piece in a shaded cell
 export const COL_RULED_OUT = 5; // the cross in a cell marked clear
-export const COL_TEXT = 6; // a clue's number
+const COL_TEXT = 6; // a clue's number
 export const COL_ERROR = 7;
-export const COL_CURSOR = 8;
+const COL_CURSOR = 8;
 export const COL_HINT_CELL = 9; // the deduction's premise/area cells — outlined
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 10;

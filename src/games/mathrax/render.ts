@@ -90,23 +90,23 @@ const BORDER = 1;
 
 // --- palette ---------------------------------------------------------------
 
-export const COL_BACKGROUND = 0; // the board around the grid
-export const COL_GRID = 1; // the line between two cells, and the frame
+const COL_BACKGROUND = 0; // the board around the grid
+const COL_GRID = 1; // the line between two cells, and the frame
 /** The surface of a cell the player fills. */
-export const COL_CELL = 2;
+const COL_CELL = 2;
 /** Ink: a given digit, a clue's ring and its label. */
-export const COL_BORDER = 3;
-export const COL_GUESS = 4;
+const COL_BORDER = 3;
+const COL_GUESS = 4;
 export const COL_PENCIL = 5;
 export const COL_ERROR = 6;
-export const COL_ERRORBG = 7;
+const COL_ERRORBG = 7;
 /** Fork addition, appended past the upstream enum: the pencil-mode indicator's
  * body. */
-export const COL_PENCIL_BODY = 8;
+const COL_PENCIL_BODY = 8;
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 9;
 export const COL_FLASH_LEAD = 13;
-export const COL_CURSOR = 10;
+const COL_CURSOR = 10;
 /** The hint's outline around the cells a deduction reasons from
  * (docs/hints-marks.md § "The engine colors the marks"). It replaces a cell's
  * own border rather than its background, so it is not read through the digits
@@ -114,7 +114,7 @@ export const COL_CURSOR = 10;
 export const COL_HINT_CELL = 11;
 /** The lifted surface of what the puzzle fixed: the cell under a given digit,
  * and the disc of a clue. */
-export const COL_GIVEN = 12;
+const COL_GIVEN = 12;
 
 export function colors(background: Color): Color[] {
   const out: Color[] = [];

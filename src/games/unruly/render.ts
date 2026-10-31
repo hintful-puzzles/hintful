@@ -56,7 +56,7 @@ export const PREFERRED_TILE_SIZE = 32;
 export const PLACE_ANIM_TIME = 0.13;
 
 // --- palette -------------------------------------------------------------
-export const COL_BACKGROUND = 0;
+const COL_BACKGROUND = 0;
 export const COL_GRID = 1;
 /** The surface of a cell, which is all an undecided cell is. */
 export const COL_EMPTY = 2;

@@ -38,14 +38,14 @@ import type { TwiddleMove, TwiddleState, TwiddleUi } from "./state.ts";
 // --- constants --------------------------------------------------------
 
 export const PREFERRED_TILE_SIZE = 48;
-export const ANIM_PER_BLKSIZE_UNIT = 0.13;
+const ANIM_PER_BLKSIZE_UNIT = 0.13;
 
 const HIGHLIGHT_WIDTH_DIV = 20;
 
 // --- color indices ---------------------------------------------------
 
-export const COL_BACKGROUND = 0;
-export const COL_TEXT = 1;
+const COL_BACKGROUND = 0;
+const COL_TEXT = 1;
 export const COL_HIGHLIGHT = 2;
 export const COL_HIGHLIGHT_GENTLE = 3;
 export const COL_LOWLIGHT = 4;
@@ -56,7 +56,7 @@ export const COL_LOWCURSOR = 7;
  * off the well it turns in, in both schemes. */
 export const COL_TILE = 8;
 /** The well: what a turning block uncovers. */
-export const COL_WELL = 9;
+const COL_WELL = 9;
 /** The face of a tile the win flash is on. */
 export const COL_FLASH = 10;
 /** The face of a tile the win flash's leading edge is on. */
@@ -66,7 +66,7 @@ export const COL_HINT_EVIDENCE = 12;
 /** The dot at every block's pivot: the cursor's color, which marks where a
  * click acts. */
 export const COL_PIVOT = 13;
-export const NCOLORS = 14;
+const NCOLORS = 14;
 
 // --- cursor edge flags ------------------------------------------------
 

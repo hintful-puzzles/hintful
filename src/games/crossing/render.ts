@@ -108,7 +108,7 @@ export const COL_CELL = 2;
 /** The ground of a square the win flash is on: its body, and
  * (`COL_FLASH_LEAD`) its leading edge. */
 export const COL_FLASH = 3;
-export const COL_GRID = 4; // the line between two squares, and the frame
+const COL_GRID = 4; // the line between two squares, and the frame
 export const COL_ERROR = 5;
 /** The lifted surface of a square that holds a digit. */
 export const COL_PLACED = 6;
@@ -117,7 +117,7 @@ export const COL_WALL = 7;
 /** Ink: a placed digit, and a clue in the list. */
 export const COL_TEXT = 8;
 export const COL_PENCIL = 9;
-export const COL_PENCIL_BODY = 10;
+const COL_PENCIL_BODY = 10;
 /** The preview of a held clue number, ghosted into the runs it still fits. */
 export const COL_GHOST = 11;
 /** Outline drawn round the clue currently held. Held is a passing state, so it

@@ -317,7 +317,7 @@ read the words too: `OverlaySidecar.pack(stepMarks(hint), …)` for candidate
 games and `hintTileBits` for the border grid. A contained kind marks its
 container (`MarkKind.within`): a struck note marks its cell, in the strike's
 role, even when no reference names the cell, and a strike step's "this cell"
-is drawn by its strikes (`hints-marks.md` § "Shade vs ring").
+is outlined (`hints-marks.md` § "Outline the evidence").
 
 **The check.** `testing/hint-binding.ts` renders every step the hint-quality
 walk visits and ablates the words: narrowing any one named element out must

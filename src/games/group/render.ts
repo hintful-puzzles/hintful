@@ -76,27 +76,27 @@ import {
 
 // --- palette (game_colours) ------------------------------------------------
 
-export const COL_BACKGROUND = 0;
+const COL_BACKGROUND = 0;
 export const COL_GRID = 1;
-export const COL_USER = 2;
-export const COL_HIGHLIGHT = 3;
-export const COL_ERROR = 4;
-export const COL_PENCIL = 5;
+const COL_USER = 2;
+const COL_HIGHLIGHT = 3;
+const COL_ERROR = 4;
+const COL_PENCIL = 5;
 /** The stroke through the cells where an element meets itself: a mark, since a
  * shade of the surface would be a step of gray beside a given's lifted cell. */
 export const COL_DIAGONAL = 6;
 /** The Check & Save mistake outline. */
-export const COL_MISTAKE = 7;
+const COL_MISTAKE = 7;
 /** Hint overlay: the premise cells outlined as evidence (associativity's three
  * known products, an identity fill's revealing cell). */
 export const COL_HINT_CELL = 8;
 /** The yellow body of the pencil-mode indicator glyph. */
-export const COL_PENCIL_BODY = 9;
-export const COL_CELL = 10; // the surface of a cell the player fills
-export const COL_GIVEN = 11; // the lifted surface under a given element
+const COL_PENCIL_BODY = 9;
+const COL_CELL = 10; // the surface of a cell the player fills
+const COL_GIVEN = 11; // the lifted surface under a given element
 /** The line between two cells, and the frame. A subgroup divider is the
  * player's own mark and stays `COL_GRID`. */
-export const COL_LINE = 12;
+const COL_LINE = 12;
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 13;
 export const COL_FLASH_LEAD = 14;

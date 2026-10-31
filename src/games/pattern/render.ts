@@ -47,18 +47,18 @@ import {
 export const PREFERRED_TILE_SIZE = 24;
 
 // --- palette -------------------------------------------------------------
-export const COL_BACKGROUND = 0;
+const COL_BACKGROUND = 0;
 /** The surface of a cell known to be empty. */
 export const COL_CLEAR = 1;
 /** The piece in a full cell. */
 export const COL_FULL = 2;
-export const COL_TEXT = 3;
+const COL_TEXT = 3;
 /** The surface of a cell, whatever it holds. */
 export const COL_CELL = 4;
 export const COL_GRID = 5;
-export const COL_CURSOR = 6;
-export const COL_ERROR = 7;
-export const COL_CURSOR_GUIDE = 8;
+const COL_CURSOR = 6;
+const COL_ERROR = 7;
+const COL_CURSOR_GUIDE = 8;
 // The hint's outline ink: a cited cell and the reasoned line's clue are
 // outlined COL_HINT_CELL.
 export const COL_HINT_CELL = 9;

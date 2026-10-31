@@ -59,19 +59,19 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette --------------------------------------------------------------
-export const COL_BACKGROUND = 0;
+const COL_BACKGROUND = 0;
 export const COL_GRID = 1;
-export const COL_INK = 2;
+const COL_INK = 2;
 export const COL_ERROR = 3;
-export const COL_CURSOR = 4;
+const COL_CURSOR = 4;
 /** The surface of a square, slashed or not: the slash is the content. */
-export const COL_CELL = 5;
+const COL_CELL = 5;
 export const COL_GROUNDED = 6;
 export const COL_HINT_CELL = 7; // evidence area and cited anchors, outlined
 export const COL_PENCIL = 8; // the player's same-slant marks
-export const COL_PENCIL_BODY = 9; // the notes-mode indicator's pencil
+const COL_PENCIL_BODY = 9; // the notes-mode indicator's pencil
 /** The lifted disc under a clue. */
-export const COL_GIVEN = 10;
+const COL_GIVEN = 10;
 /** The ground of a square the win flash is on: its body, and its leading
  * edge. */
 export const COL_FLASH = 11;

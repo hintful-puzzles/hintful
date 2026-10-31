@@ -79,20 +79,20 @@ export const PREFERRED_TILE_SIZE = 48;
 
 // --- palette (index-for-index with the upstream COL_* enum) ----------------
 
-export const COL_BACKGROUND = 0;
-export const COL_GRID = 1;
-export const COL_USER = 2;
-export const COL_HIGHLIGHT = 3;
+const COL_BACKGROUND = 0;
+const COL_GRID = 1;
+const COL_USER = 2;
+const COL_HIGHLIGHT = 3;
 export const COL_ERROR = 4;
 export const COL_PENCIL = 5;
 // Fork additions, appended past the upstream enum.
 export const COL_PENCIL_BODY = 6; // the yellow body of the pencil-mode indicator
 /** The driving cage's outline (drawn in redraw's last block). */
 export const COL_HINT_CELL = 7;
-export const COL_CELL = 8; // the surface of a cell the player fills
+const COL_CELL = 8; // the surface of a cell the player fills
 /** The thin line between two cells of one cage. A cage's own edge is content
  * and stays `COL_GRID`. */
-export const COL_LINE = 9;
+const COL_LINE = 9;
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 10;
 export const COL_FLASH_LEAD = 11;

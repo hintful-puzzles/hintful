@@ -88,21 +88,21 @@ export const COL_BACKGROUND = 0;
 /** The ground of a square the win flash is on: its body, and its leading
  * edge ({@link COL_FLASH_LEAD}). */
 export const COL_FLASH = 1;
-export const COL_GIVEN = 2; // the lifted surface of a square the puzzle filled
-export const COL_BORDER = 3;
+const COL_GIVEN = 2; // the lifted surface of a square the puzzle filled
+const COL_BORDER = 3;
 export const COL_BORDERCLUE = 4;
 export const COL_PENCIL = 5;
-export const COL_I_NUM = 6; // immutable (given) colors
-export const COL_I_BALL = 7;
+const COL_I_NUM = 6; // immutable (given) colors
+const COL_I_BALL = 7;
 export const COL_I_BALLBG = 8;
 export const COL_I_HOLE = 9;
-export const COL_G_NUM = 10; // the player's own guesses
-export const COL_G_BALL = 11;
-export const COL_G_BALLBG = 12;
+const COL_G_NUM = 10; // the player's own guesses
+const COL_G_BALL = 11;
+const COL_G_BALLBG = 12;
 export const COL_G_HOLE = 13;
-export const COL_E_BORDERCLUE = 14; // live rule errors
-export const COL_E_NUM = 15;
-export const COL_E_HOLE = 16;
+const COL_E_BORDERCLUE = 14; // live rule errors
+const COL_E_NUM = 15;
+const COL_E_HOLE = 16;
 /** Fork addition: the Check & Save overlay outline. */
 export const COL_MISTAKE = 17;
 /** Fork addition: the yellow body of the pencil-mode indicator glyph. */
@@ -114,7 +114,7 @@ export const COL_HINT_CELL = 19;
 /** Fork addition: the keyboard cursor's cell fill. Upstream used the bevel
  * lowlight, a tint of the board. */
 export const COL_CURSOR = 20;
-export const COL_CELL = 21; // the surface of a square the player fills
+const COL_CELL = 21; // the surface of a square the player fills
 export const COL_FLASH_LEAD = 22;
 
 export function colors(defaultBackground: Color): Color[] {

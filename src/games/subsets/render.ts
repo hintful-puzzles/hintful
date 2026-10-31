@@ -72,18 +72,18 @@ export const PREFERRED_TILE_SIZE = 36;
 
 // --- palette ----------------------------------------------------------------
 
-export const COL_OUTERBG = 0; // the board around and between the cell blocks
+const COL_OUTERBG = 0; // the board around and between the cell blocks
 /** The surface of a letter slot in a cell the player fills. */
 export const COL_CELL = 1;
-export const COL_GRID = 2; // the line between two slots of a cell
+const COL_GRID = 2; // the line between two slots of a cell
 /** The lifted slot surface of a cell whose set the puzzle gave. */
 export const COL_GIVEN = 3;
 /** A tally entry placed once, and the idle inspect badge's ring. */
-export const COL_DONE = 4;
-export const COL_FIXED = 5;
+const COL_DONE = 4;
+const COL_FIXED = 5;
 export const COL_GUESS = 6;
 export const COL_ERROR = 7;
-export const COL_CURSOR = 8;
+const COL_CURSOR = 8;
 // Hint / reference-aid legend: what the current step decides (a slot, or the
 // tally entry of a set it rules out) is ringed by the engine; a highlighted
 // neighbor cell (across a horseshoe) or highlighted tally set is
@@ -93,7 +93,7 @@ export const COL_CURSOR = 8;
 export const COL_HINT_CELL = 9;
 export const COL_HINT_SPOT = 10;
 // The cell where a clicked, already *placed* set sits.
-export const COL_HINT_PLACED = 11;
+const COL_HINT_PLACED = 11;
 /** The cross in a slot whose letter is cleared. */
 export const COL_RULED_OUT = 12;
 /** The ground of every slot of a cell the win flash is on. */

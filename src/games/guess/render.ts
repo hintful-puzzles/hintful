@@ -59,15 +59,15 @@ import {
 
 // --- color indices (upstream enum) -----------------------------------
 
-export const COL_BACKGROUND = 0;
-export const COL_FRAME = 1;
+const COL_BACKGROUND = 0;
+const COL_FRAME = 1;
 export const COL_CURSOR = 2;
-export const COL_FLASH = 3;
+const COL_FLASH = 3;
 export const COL_HOLD = 4;
-export const COL_EMPTY = 5; // must be COL_1 - 1
+const COL_EMPTY = 5; // must be COL_1 - 1
 export const COL_1 = 6; // COL_1..COL_10 = 6..15
 export const COL_CORRECTPLACE = 16;
-export const COL_CORRECTCOLOR = 17;
+const COL_CORRECTCOLOR = 17;
 /** The hint's evidence: an outline round an answer slot it reads. */
 export const COL_HINT_CELL = 18;
 /** The answer row's well, darker than every peg color in both schemes. */
@@ -76,12 +76,12 @@ const COL_WELL = 19;
 export const COL_WRONG = 20;
 /** The rim of an empty hole, which with {@link COL_EMPTY} inside it is a cell
  * of the collection's quiet surface, drawn round. */
-export const COL_HOLE_RIM = 21;
+const COL_HOLE_RIM = 21;
 /** The box of a peg or a hole the win flash is on: under the highlight's
  * body, and under its leading edge. */
 export const COL_LIT = 22;
 export const COL_LIT_LEAD = 23;
-export const NCOLORS = 24;
+const NCOLORS = 24;
 
 // --- peg overlay flags (upstream PEG_*) -------------------------------
 

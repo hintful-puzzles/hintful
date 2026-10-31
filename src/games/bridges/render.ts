@@ -59,11 +59,10 @@ export function border(tileSize: number): number {
 }
 
 // --- Colors ---
-export const COL_BACKGROUND = 0;
+const COL_BACKGROUND = 0;
 export const COL_FOREGROUND = 1;
 /** What the win flash is on: an island's face, and a bridge's bars. */
 export const COL_FLASH = 2;
-export const COL_LOWLIGHT = 3;
 export const COL_SELECTED = 4;
 /** **Settled**: the face of an island marked completed, or whose count is
  * met, and the band under a bridge such a mark has locked. The lifted
@@ -72,19 +71,12 @@ export const COL_MARK = 5;
 /**
  * Upstream's `COL_HINT`, renamed. It is the bevel shade the "Show possible
  * bridge locations" preference draws a span in, and has nothing to do with the
- * hint system: it says *a bridge could go here*, not *this one must*.
- *
- * The rename is not tidying. `hint-mark.test.ts` finds each game's hint colors
- * by reading the `COL_HINT` export out of its own `render.ts`, so a game that
- * already owns that identifier for something else does not fail the guard, it
- * **silently redirects it** at a color no hint ever paints. That is
- * `docs/method.md` § "A scan that keys on a name" from the other end: the sweep keys
- * on a name and the name was taken.
+ * hint system: it says *a bridge could go here*, not *this one must*, and a
+ * reader of a name beginning `COL_HINT` would take it for a hint's ink.
  */
-export const COL_POSSIBLE = 6;
-export const COL_GRID = 7;
-export const COL_WARNING = 8;
-export const COL_CURSOR = 9;
+const COL_POSSIBLE = 6;
+const COL_WARNING = 8;
+const COL_CURSOR = 9;
 /** The hint's evidence color: the islands and bridges the argument counts.
  * The span a step decides is ringed by the engine. */
 export const COL_HINT_CELL = 10;
@@ -235,11 +227,11 @@ export function colors(defaultBackground: Color): Color[] {
     background, // COL_BACKGROUND
     INK, // COL_FOREGROUND
     FLASH, // COL_FLASH
-    lowlight, // COL_LOWLIGHT
+    lowlight, // drawn in by nothing; holds its place for the slots after it
     HELD, // COL_SELECTED
     givenSurface(background), // COL_MARK
     lowlight, // COL_POSSIBLE (= LOWLIGHT): the "possible bridge" bevel line
-    GRID_MID, // COL_GRID
+    GRID_MID, // drawn in by nothing; holds its place for the slots after it
     ERROR_WASH, // COL_WARNING (also the mistake overlay color)
     // COL_CURSOR — not `CURSOR`: green is the island a bridge is being drawn
     // from, and the cursor *fills* the island under its clue digit, which is

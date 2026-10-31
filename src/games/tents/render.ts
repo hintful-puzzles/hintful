@@ -79,23 +79,23 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette ---------------------------------------------------------------
-export const COL_BACKGROUND = 0;
+const COL_BACKGROUND = 0;
 export const COL_GRID = 1; // the line between two squares, and the frame
-export const COL_GRASS = 2;
-export const COL_TREETRUNK = 3;
+const COL_GRASS = 2;
+const COL_TREETRUNK = 3;
 export const COL_TREELEAF = 4;
 export const COL_TENT = 5;
 export const COL_ERROR = 6;
-export const COL_ERRTEXT = 7;
-export const COL_ERRTRUNK = 8;
+const COL_ERRTEXT = 7;
+const COL_ERRTRUNK = 8;
 // The findMistakes overlay, appended past upstream's enum.
 export const COL_MISTAKE = 9;
 /** The hint's evidence outline, and the clue it counts with. The ring round
  * what a step decides is the engine's (`GameDrawing.drawRing`). */
 export const COL_HINT_CELL = 10;
-export const COL_CELL = 11; // the surface of a square not yet decided
+const COL_CELL = 11; // the surface of a square not yet decided
 /** The clues, the keyboard cursor and the edge of an error diamond. */
-export const COL_INK = 12;
+const COL_INK = 12;
 /** A link between a tent and its tree: the ink of the clues, the color of the
  * player's own notation. */
 export const COL_LINK = COL_INK;
@@ -201,14 +201,14 @@ export function newDrawState(state: TentsState, tileSize: number): TentsDrawStat
 
 // --- live error analysis (upstream find_errors) ---------------------------
 
-export interface TentsErrors {
+interface TentsErrors {
   /** Per-cell error bitmask (ERR_ADJ_* / ERR_OVERCOMMITTED bits). */
   cell: Int32Array;
   /** Per-edge-number error flag (0/1), columns then rows. */
   num: Uint8Array;
 }
 
-export function findErrors(
+function findErrors(
   w: number,
   h: number,
   grid: Int8Array,

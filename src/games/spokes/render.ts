@@ -74,16 +74,16 @@ const HINT_RING_WIDTH = 5;
 
 // --- palette (index-for-index with the upstream COL_* enum) ------------------
 
-export const COL_BACKGROUND = 0;
-export const COL_BORDER = 1;
+const COL_BACKGROUND = 0;
+const COL_BORDER = 1;
 export const COL_HOLDING = 2;
 export const COL_LINE = 3;
-export const COL_MARK = 4;
+const COL_MARK = 4;
 /** The face of a hub the win flash is on. Upstream's white, which also
  * filled a finished hub; see {@link COL_SATISFIED} for that fill here. */
 export const COL_DONE = 5;
 export const COL_ERROR = 6;
-export const COL_CURSOR = 7;
+const COL_CURSOR = 7;
 /**
  * The face of a hub that already has as many spokes as its clue asks for — the
  * "stop thinking about this one" cue, the same fork aid Bridges lifts a

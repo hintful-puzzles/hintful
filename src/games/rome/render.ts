@@ -125,11 +125,11 @@ const SIDE_SIZE = 0.6;
 
 // --- palette ----------------------------------------------------------------
 
-export const COL_BACKGROUND = 0; // the board around the grid
+const COL_BACKGROUND = 0; // the board around the grid
 /** The surface of a square the player fills. */
-export const COL_CELL = 1;
+const COL_CELL = 1;
 /** The lifted surface under an arrow the puzzle fixed, and under the goal. */
-export const COL_GIVEN = 2;
+const COL_GIVEN = 2;
 /** A region's outline, and the frame, which is the outer regions' outline. */
 export const COL_BORDER = 3;
 export const COL_ARROW_FIXED = 4;
@@ -145,7 +145,7 @@ export const COL_HINT_CELL = 12;
 /** The selected square's wash, and its notes triangle. */
 export const COL_CURSOR = 13;
 /** The thin line between two squares of one region. */
-export const COL_GRID = 14;
+const COL_GRID = 14;
 /** The ground of a square the win flash is on: its body, and its leading
  * edge. */
 export const COL_FLASH = 15;
@@ -316,7 +316,7 @@ function line(
  * in-progress mouse entry is blue, a fixed clue black, a duplicated arrow red,
  * and a player's own arrow green.
  */
-export function drawArrow(
+function drawArrow(
   dr: GameDrawing,
   tx: number,
   ty: number,

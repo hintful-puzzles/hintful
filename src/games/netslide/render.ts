@@ -63,21 +63,21 @@ export function border(tileSize: number): number {
 }
 
 // --- palette ---------------------------------------------------------------
-export const COL_BACKGROUND = 0; // the board around the grid, where the arrows are
+const COL_BACKGROUND = 0; // the board around the grid, where the arrows are
 /** A tile's face while the win flash is on it. */
 export const COL_FLASHING = 1;
 export const COL_BORDER = 2; // the line between two tiles, and the frame
 export const COL_WIRE = 3;
-export const COL_ENDPOINT = 4;
+const COL_ENDPOINT = 4;
 export const COL_POWERED = 5;
 export const COL_BARRIER = 6;
 export const COL_LOWLIGHT = 7;
-export const COL_TEXT = 8;
+const COL_TEXT = 8;
 
 /** The keyboard cursor's gutter arrow, which upstream drew in the
  * powered-wire color. */
-export const COL_CURSOR = 9;
-export const COL_CELL = 10; // a tile's face
+const COL_CURSOR = 9;
+const COL_CELL = 10; // a tile's face
 /** A tile's face under the win flash's leading edge. */
 export const COL_FLASHING_LEAD = 11;
 

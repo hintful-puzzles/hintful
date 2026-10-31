@@ -71,22 +71,22 @@ export const PREFERRED_TILE_SIZE = 48;
 // --- palette ----------------------------------------------------------------
 
 /** The ground beside the sheared rows, where no cell is. */
-export const COL_BACKGROUND = 0;
-export const COL_GRID = 1;
+const COL_BACKGROUND = 0;
+const COL_GRID = 1;
 /** The surface of a cell, which is all an undecided cell is. */
-export const COL_EMPTY = 2;
+const COL_EMPTY = 2;
 /** The surface under a clue. */
-export const COL_GIVEN = 3;
-export const COL_SHADE = 4;
+const COL_GIVEN = 3;
+const COL_SHADE = 4;
 export const COL_ERROR = 5;
-export const COL_CURSOR = 6;
+const COL_CURSOR = 6;
 export const COL_HINT_CELL = 7; // the deduction's evidence — an outline inside it
 /** The digit on a clue's lifted cell. */
-export const COL_NUMBER = 8;
+const COL_NUMBER = 8;
 /** The faint cross in a cell the player has made clear. */
 export const COL_CLEAR_MARK = 9;
 /** The `!` on a gravity diamond, and the diamond's rim. */
-export const COL_ERROR_TEXT = 10;
+const COL_ERROR_TEXT = 10;
 /** The surface of a cell the player has made clear. */
 export const COL_CLEAR = 11;
 /** The ground of a cell the win flash is on: its body, and its leading edge. */

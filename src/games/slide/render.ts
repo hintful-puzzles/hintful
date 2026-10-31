@@ -82,26 +82,26 @@ import {
 // --- palette (indices C-identical; see the module header) ---------------
 
 export const COL_BACKGROUND = 0;
-export const COL_HIGHLIGHT = 1;
-export const COL_LOWLIGHT = 2;
+const COL_HIGHLIGHT = 1;
+const COL_LOWLIGHT = 2;
 export const COL_GRABBED = 3;
-export const COL_GRABBED_HIGHLIGHT = 4;
-export const COL_GRABBED_LOWLIGHT = 5;
+const COL_GRABBED_HIGHLIGHT = 4;
+const COL_GRABBED_LOWLIGHT = 5;
 export const COL_MAIN = 6;
-export const COL_MAIN_HIGHLIGHT = 7;
-export const COL_MAIN_LOWLIGHT = 8;
+const COL_MAIN_HIGHLIGHT = 7;
+const COL_MAIN_LOWLIGHT = 8;
 export const COL_MAIN_GRABBED = 9;
-export const COL_MAIN_GRABBED_HIGHLIGHT = 10;
-export const COL_MAIN_GRABBED_LOWLIGHT = 11;
+const COL_MAIN_GRABBED_HIGHLIGHT = 10;
+const COL_MAIN_GRABBED_LOWLIGHT = 11;
 export const COL_TARGET = 12;
-export const COL_TARGET_HIGHLIGHT = 13;
-export const COL_TARGET_LOWLIGHT = 14;
+const COL_TARGET_HIGHLIGHT = 13;
+const COL_TARGET_LOWLIGHT = 14;
 export const COL_WALL = 15;
 export const COL_WALL_HIGHLIGHT = 16;
 export const COL_WALL_LOWLIGHT = 17;
 export const COL_BLOCK = 18;
-export const COL_BLOCK_HIGHLIGHT = 19;
-export const COL_BLOCK_LOWLIGHT = 20;
+const COL_BLOCK_HIGHLIGHT = 19;
+const COL_BLOCK_LOWLIGHT = 20;
 /** The keyboard cursor. Flat, so it needs no bevel trio and no swap: the token
  * carries its own dark value. */
 export const COL_CURSOR = 21;
@@ -123,7 +123,7 @@ export const COL_FLASH = 22;
 export const COL_FLASH_LEAD = 23;
 /** A hint's outline. */
 export const COL_HINT_EVIDENCE = 24;
-export const NCOLORS = 25;
+const NCOLORS = 25;
 
 /** Upstream `raise_colour`: two parts `src` to one part `limit`. */
 function raise(src: Color, limit: Color): Color {

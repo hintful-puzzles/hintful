@@ -93,23 +93,23 @@ const idiv = (a: number, b: number): number => Math.trunc(a / b);
 
 // --- palette ---------------------------------------------------------------
 
-export const COL_BACKGROUND = 0; // the board around the grid
-export const COL_GRID = 1; // the line between two cells, and the frame
+const COL_BACKGROUND = 0; // the board around the grid
+const COL_GRID = 1; // the line between two cells, and the frame
 export const COL_TEXT = 2;
-export const COL_ERROR = 3;
-export const COL_HIGHLIGHT = 4;
+const COL_ERROR = 3;
+const COL_HIGHLIGHT = 4;
 export const COL_FLASH = 5;
-export const COL_GHOST = 6;
-export const COL_ZOMBIE = 7;
-export const COL_VAMPIRE = 8;
-export const COL_DONE = 9;
-export const COL_PENCIL_BODY = 10;
+const COL_GHOST = 6;
+const COL_ZOMBIE = 7;
+const COL_VAMPIRE = 8;
+const COL_DONE = 9;
+const COL_PENCIL_BODY = 10;
 // The explained-hint legend (docs/hints-marks.md § "The engine colors the
 // marks"); the ring on the cell(s) the deduction acts on is the engine's.
 export const COL_HINT_CELL = 11; // the driving sightline's bounce path (evidence)
-export const COL_CELL = 12; // the surface of a cell the player fills
+const COL_CELL = 12; // the surface of a cell the player fills
 /** The lifted surface of what the puzzle fixed: a mirror, or a given monster. */
-export const COL_GIVEN = 13;
+const COL_GIVEN = 13;
 /** The ground of a cell, a clue or a count the win flash's leading edge is
  * on; its body is {@link COL_FLASH}. */
 export const COL_FLASH_LEAD = 14;

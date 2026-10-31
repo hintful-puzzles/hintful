@@ -64,7 +64,7 @@ export const COL_LIFTED = 13;
 /** The frame round the field. */
 const COL_GRID = 14;
 /** The cursor on a tile. */
-export const COL_ON_TILE = 15;
+const COL_ON_TILE = 15;
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 16;
 export const COL_FLASH_LEAD = 17;

@@ -43,14 +43,14 @@ import type { MapMistake, MapMove, MapParams, MapState, MapUi } from "./state.ts
 
 // --- palette ---------------------------------------------------------
 
-export const COL_BACKGROUND = 0;
+const COL_BACKGROUND = 0;
 export const COL_GRID = 1;
 export const COL_0 = 2;
-export const COL_1 = 3;
-export const COL_2 = 4;
+const COL_1 = 3;
+const COL_2 = 4;
 export const COL_3 = 5;
 export const COL_ERROR = 6;
-export const COL_ERRTEXT = 7;
+const COL_ERRTEXT = 7;
 /** Appended past the upstream enum — a wrong-region outline. */
 export const COL_MISTAKE = 8;
 /** The selected region's band and its notes triangle. */
@@ -58,7 +58,7 @@ export const COL_CURSOR = 9;
 /** The regions a hint step's premise rests on: their band. */
 export const COL_HINT_CELL = 10;
 /** A region with no color yet: the quiet cell surface. */
-export const COL_UNCOLORED = 11;
+const COL_UNCOLORED = 11;
 /** The ground of a region the win flash is on. */
 export const COL_FLASH = 12;
 /** And under the flash's leading edge. */
@@ -66,7 +66,7 @@ export const COL_FLASH_LEAD = 13;
 /** The first of the four colors as a pencil stipple, a dot on a region with
  * no color yet: stronger than the fill in the dark scheme, where a dot of the
  * fill's own value does not show on that surface. */
-export const COL_MARK_0 = 14;
+const COL_MARK_0 = 14;
 
 const FOUR = 4;
 const FIVE = 5;
@@ -158,7 +158,7 @@ function epsilonY(button: number): number {
  * the tile center — resolving a diagonally-split cell to one of its two
  * regions. Upstream `region_from_logical_coords`.
  */
-export function regionFromLogicalCoords(
+function regionFromLogicalCoords(
   map: MapData,
   tx: number,
   ty: number,

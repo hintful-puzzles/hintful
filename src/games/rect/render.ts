@@ -66,16 +66,16 @@ export const PREFERRED_TILE_SIZE = 24;
 export const BORDER = 1;
 
 // --- palette ---------------------------------------------------------------
-export const COL_BACKGROUND = 0;
-export const COL_LINE = 1;
-export const COL_TEXT = 2;
-export const COL_GRID = 3;
-export const COL_DRAG = 4;
-export const COL_DRAGERASE = 5;
-export const COL_CURSOR = 6;
+const COL_BACKGROUND = 0;
+const COL_LINE = 1;
+const COL_TEXT = 2;
+const COL_GRID = 3;
+const COL_DRAG = 4;
+const COL_DRAGERASE = 5;
+const COL_CURSOR = 6;
 export const COL_MISTAKE = 7;
 export const COL_HINT_CELL = 8;
-export const COL_CELL = 9; // the surface of a square with no clue
+const COL_CELL = 9; // the surface of a square with no clue
 /** The ground of a square the win flash is on: its body, and its leading
  * edge. */
 export const COL_FLASH = 10;

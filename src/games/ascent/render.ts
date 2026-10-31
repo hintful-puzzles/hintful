@@ -70,13 +70,13 @@ import {
 
 // --- palette -------------------------------------------------------
 
-export const COL_MIDLIGHT = 0; // the board, and the margin an edge number sits in
+const COL_MIDLIGHT = 0; // the board, and the margin an edge number sits in
 export const COL_LOWLIGHT = 1;
-export const COL_HIGHLIGHT = 2;
+const COL_HIGHLIGHT = 2;
 /** Ink: a wall, and a number the puzzle fixed. */
-export const COL_BORDER = 3;
+const COL_BORDER = 3;
 /** The player's own: the number they placed and the line they drew. */
-export const COL_LINE = 4;
+const COL_LINE = 4;
 /**
  * The path the board draws for itself between consecutive numbers. It runs
  * through plain cells and lifted ones, and has to carry across both: the
@@ -84,8 +84,8 @@ export const COL_LINE = 4;
  * line's tone sank into a plain dark cell.
  */
 export const COL_PATH = 5;
-export const COL_ERROR = 6;
-export const COL_CURSOR = 7;
+const COL_ERROR = 6;
+const COL_CURSOR = 7;
 export const COL_ARROW = 8;
 /** The hint's evidence outline. */
 export const COL_HINT_CELL = 9;
@@ -99,7 +99,7 @@ export const COL_GRID = 12;
 /** The cell the player is holding, typing into or has selected: the
  * collection's "you are here" wash, which sinks below a plain cell and a
  * lifted one in both schemes. */
-export const COL_HELD = 13;
+const COL_HELD = 13;
 /** Where the held number leads: the nearest placed number on either side of
  * it, and the row or column an edge number is dragged along, which ends on
  * the two arrows it lines up with and wears their color. */
@@ -107,12 +107,12 @@ export const COL_TARGET = 14;
 /** A number offered and not placed: what a click here would write. A note in
  * every other entry game's sense, and legible on a dark cell where the bevel's
  * gray was not. */
-export const COL_OFFERED = 15;
+const COL_OFFERED = 15;
 /** The ground of a square the win flash is on. */
 export const COL_FLASH = 16;
 /** And under the flash's leading edge. */
 export const COL_FLASH_LEAD = 17;
-export const NCOLORS = 18;
+const NCOLORS = 18;
 
 /** A cell's part in the displayed hint, one bit per mark: its diff key. */
 const HINT_TARGET = 1;
@@ -284,11 +284,11 @@ export function newAscentDrawState(
 // cell outline and pixel→cell hit-testing differ.
 
 /** Hexagon circumradius (center → vertex) for a given tile width. */
-export function hexR(tileSize: number): number {
+function hexR(tileSize: number): number {
   return tileSize / Math.sqrt(3);
 }
 /** Vertical distance between adjacent hex rows. */
-export function hexVpitch(tileSize: number): number {
+function hexVpitch(tileSize: number): number {
   return (tileSize * Math.sqrt(3)) / 2;
 }
 /** Total pixel height of `h` hex rows (top vertex at y = 0). */

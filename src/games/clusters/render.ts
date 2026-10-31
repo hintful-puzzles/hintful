@@ -52,14 +52,14 @@ export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette ---------------------------------------------------------------
 
-export const COL_BACKGROUND = 0;
-export const COL_GRID = 1;
+const COL_BACKGROUND = 0;
+const COL_GRID = 1;
 export const COL_0 = 2; // an `F_COLOR_0` piece
 export const COL_1 = 3; // an `F_COLOR_1` piece
-export const COL_0_DOT = 4; // the dot on a given `F_COLOR_0` piece
-export const COL_1_DOT = 5; // the dot on a given `F_COLOR_1` piece
+const COL_0_DOT = 4; // the dot on a given `F_COLOR_0` piece
+const COL_1_DOT = 5; // the dot on a given `F_COLOR_1` piece
 export const COL_ERROR = 6;
-export const COL_CURSOR = 7;
+const COL_CURSOR = 7;
 // Hint marks: the forced cell is ringed by the engine; the tile the refuted
 // coloring would break, and the two tiles a count reads, get a thin
 // COL_HINT_CELL frame, an outline because a tile's own color *is* part of the
@@ -67,9 +67,9 @@ export const COL_CURSOR = 7;
 /** The outlines. */
 export const COL_HINT_CELL = 8;
 /** The surface of a cell. */
-export const COL_CELL = 9;
+const COL_CELL = 9;
 /** The surface under a given. */
-export const COL_GIVEN = 10;
+const COL_GIVEN = 10;
 /** The surface under a tile Check & Save found wrong. */
 export const COL_WRONG = 11;
 /** The ground of a cell the win flash is on: its body, and its leading edge. */

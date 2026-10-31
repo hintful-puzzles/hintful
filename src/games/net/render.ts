@@ -71,27 +71,27 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 export const ROTATE_TIME = 0.13;
 
-export const COL_BACKGROUND = 0; // the board around the grid
+const COL_BACKGROUND = 0; // the board around the grid
 /** The surface under a locked tile, lifted: the player has fixed it, as the
  * puzzle fixes a given. */
 export const COL_LOCKED = 1;
 export const COL_BORDER = 2; // the line between two tiles, and the frame
 export const COL_WIRE = 3;
-export const COL_ENDPOINT = 4;
+const COL_ENDPOINT = 4;
 export const COL_POWERED = 5;
 export const COL_BARRIER = 6;
 export const COL_ERR = 7;
 /** Appended past the C enum: the keyboard cursor's ring. Upstream drew it in
  * the locked tint, or the board on a locked tile — a tint of the board either
  * way, which is the one thing a cursor must not be. */
-export const COL_CURSOR = 8;
+const COL_CURSOR = 8;
 /** The player's side notes and the tile a keyboard note starts from. */
 export const COL_PENCIL = 9;
 /** The notes-mode indicator's pencil. */
-export const COL_PENCIL_BODY = 10;
+const COL_PENCIL_BODY = 10;
 /** A hint's outlines: what the step reasons from. */
-export const COL_HINT_CELL = 11;
-export const COL_CELL = 12; // the surface of a tile the player may still turn
+const COL_HINT_CELL = 11;
+const COL_CELL = 12; // the surface of a tile the player may still turn
 /** The ground of a tile the win flash is on. */
 export const COL_FLASH = 13;
 /** And under the flash's leading edge. */

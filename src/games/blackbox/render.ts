@@ -56,7 +56,7 @@ import {
 
 // --- color indices -------------------------------------------------------
 
-export const COL_BACKGROUND = 0; // the board, and a laser square not fired yet
+const COL_BACKGROUND = 0; // the board, and a laser square not fired yet
 const COL_GRID = 1; // the line between two squares
 export const COL_CELL = 2; // the surface of a square of the box
 /** The surface of what is settled: a square marked as known, a fired laser

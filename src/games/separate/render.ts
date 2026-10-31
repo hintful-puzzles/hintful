@@ -61,15 +61,15 @@ const A = "A".charCodeAt(0);
 
 // --- palette (mirrors Palisade's COL_* enum) ------------------------------
 
-export const COL_BACKGROUND = 0;
+const COL_BACKGROUND = 0;
 export const COL_FLASH = 1;
-export const COL_GRID = 2; // == letter color == wall color
-export const COL_LINE_MAYBE = 3;
-export const COL_LINE_NO = 4;
+const COL_GRID = 2; // == letter color == wall color
+const COL_LINE_MAYBE = 3;
+const COL_LINE_NO = 4;
 export const COL_ERROR = 5;
 export const COL_CORRECT = 6; // a completed, correct region
 export const COL_HINT_CELL = 7; // the outline on a square a hint step cites
-export const COL_CELL = 8; // the surface of every cell
+const COL_CELL = 8; // the surface of every cell
 /** The body of a cell under the win flash's leading edge, where `COL_FLASH` is
  * under its body. */
 export const COL_FLASH_LEAD = 9;

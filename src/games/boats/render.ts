@@ -93,25 +93,25 @@ export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette ---------------------------------------------------------------
 
-export const COL_BACKGROUND = 0;
-export const COL_GRID = 1; // the line between two squares, and the frame
-export const COL_CURSOR = 2;
+const COL_BACKGROUND = 0;
+const COL_GRID = 1; // the line between two squares, and the frame
+const COL_CURSOR = 2;
 export const COL_WATER = 3;
 /** A boat segment: the player's, the puzzle's, and a boat still to be found
  * in the fleet tally, which is the same piece. */
 export const COL_SHIP = 4;
 export const COL_SHIP_ERROR = 5;
-export const COL_SHIP_FLEET_DONE = 6;
-export const COL_SHIP_FLEET_STRIPE = 7;
-export const COL_COUNT = 8;
-export const COL_COUNT_ERROR = 9;
+const COL_SHIP_FLEET_DONE = 6;
+const COL_SHIP_FLEET_STRIPE = 7;
+const COL_COUNT = 8;
+const COL_COUNT_ERROR = 9;
 export const COL_COLLISION_ERROR = 10;
 export const COL_COLLISION_TEXT = 11;
 export const COL_HINT_CELL = 12;
-export const COL_CELL = 13; // the surface of an undecided square
+const COL_CELL = 13; // the surface of an undecided square
 export const COL_GIVEN = 14; // the lifted surface under a segment the puzzle gave
 /** The waves on a given water square and the edge of a collision diamond. */
-export const COL_INK = 15;
+const COL_INK = 15;
 export const COL_FLASH = 16; // the ground of a square the win flash's body is on
 export const COL_FLASH_LEAD = 17; // and of one its leading edge is on
 

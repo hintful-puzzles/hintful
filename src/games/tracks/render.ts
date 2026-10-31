@@ -82,28 +82,28 @@ import {
 export const PREFERRED_TILE_SIZE = 33;
 
 // --- palette --------------------------------------------------------------
-export const COL_BACKGROUND = 0;
-export const COL_GIVEN = 1; // the lifted surface under track the puzzle laid
-export const COL_GRID = 2;
-export const COL_CLUE = 3;
+const COL_BACKGROUND = 0;
+const COL_GIVEN = 1; // the lifted surface under track the puzzle laid
+const COL_GRID = 2;
+const COL_CLUE = 3;
 export const COL_CURSOR = 4;
-export const COL_TRACK = 5;
-export const COL_CELL = 6; // the surface of a square the player works
-export const COL_SLEEPER = 7;
-export const COL_DRAGON = 8;
-export const COL_DRAGOFF = 9;
+const COL_TRACK = 5;
+const COL_CELL = 6; // the surface of a square the player works
+const COL_SLEEPER = 7;
+const COL_DRAGON = 8;
+const COL_DRAGOFF = 9;
 export const COL_ERROR = 10;
 export const COL_FLASH = 11;
-export const COL_ERROR_BACKGROUND = 12;
+const COL_ERROR_BACKGROUND = 12;
 /** The outline's ink, past the end of the C enum: what a step reasons from,
  * and the clue it counts with. */
 export const COL_HINT_CELL = 13;
 /** The player's no-track crosses, on squares and edges. Their own slot rather
  * than the rails' `COL_TRACK`, which upstream shared: a rail is the picture
  * and a cross is a note beside it. */
-export const COL_NOTRACK = 14;
+const COL_NOTRACK = 14;
 /** The bed under a square that carries track, whole piece or not. */
-export const COL_TRACK_BACKGROUND = 15;
+const COL_TRACK_BACKGROUND = 15;
 export const COL_FLASH_LEAD = 16;
 
 export function colors(defaultBackground: Color): Color[] {
@@ -193,7 +193,7 @@ export function metrics(tileSize: number): Metrics {
   };
 }
 
-export const coord = (n: number, m: Metrics) => (n + 1) * m.tile + m.border;
+const coord = (n: number, m: Metrics) => (n + 1) * m.tile + m.border;
 export const centeredCoord = (n: number, m: Metrics) =>
   coord(n, m) + Math.floor(m.tile / 2);
 

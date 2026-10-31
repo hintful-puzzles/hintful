@@ -58,7 +58,7 @@ const COL_BACKGROUND = 0;
 /** The surface of a square that is in no chain yet. */
 const COL_CELL = 1;
 /** The lifted surface of a square whose number the puzzle fixed. */
-export const COL_GIVEN = 2;
+const COL_GIVEN = 2;
 const COL_GRID = 3;
 const COL_CURSOR = 4;
 const COL_ERROR = 5;
@@ -74,7 +74,7 @@ const COL_M0 = COL_B0 + 1 * NBACKGROUNDS;
 const COL_D0 = COL_B0 + 2 * NBACKGROUNDS;
 const COL_X0 = COL_B0 + 3 * NBACKGROUNDS;
 /** The outline on a square the hint reasons from. */
-export const COL_HINT_CELL = COL_X0 + NBACKGROUNDS;
+const COL_HINT_CELL = COL_X0 + NBACKGROUNDS;
 /** The ground of a square the win flash is on. */
 export const COL_FLASH = COL_HINT_CELL + 1;
 /** And under the flash's leading edge. */

@@ -64,18 +64,18 @@ export const PREFERRED_TILE_SIZE = 48;
 
 // --- palette --------------------------------------------------------------
 
-export const COL_BACKGROUND = 0;
+const COL_BACKGROUND = 0;
 /** The lifted surface under a clue. */
-export const COL_GIVEN = 1;
+const COL_GIVEN = 1;
 export const COL_GRID = 2; // == COL_CLUE == COL_LINE_YES
 export const COL_LINE_MAYBE = 3;
-export const COL_LINE_NO = 4;
+const COL_LINE_NO = 4;
 export const COL_ERROR = 5;
 export const COL_HINT_CELL = 6; // referenced-cell outline, inset inside the cell
 export const COL_CORRECT = 7; // a completed, correct region
 /** The keyboard cursor's box, which upstream drew in the grid's own ink. */
 export const COL_CURSOR = 8;
-export const COL_CELL = 9; // the surface of a cell with no clue
+const COL_CELL = 9; // the surface of a cell with no clue
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 10;
 export const COL_FLASH_LEAD = 11;

@@ -84,20 +84,20 @@ export const PREFERRED_TILE_SIZE = 36;
 
 // --- palette (index-for-index with the upstream COL_* enum) ----------------
 
-export const COL_OUTERBG = 0;
-export const COL_INNERBG = 1;
-export const COL_GRID = 2;
-export const COL_BORDERLETTER = 3;
-export const COL_TEXT = 4;
-export const COL_GUESS = 5;
+const COL_OUTERBG = 0;
+const COL_INNERBG = 1;
+const COL_GRID = 2;
+const COL_BORDERLETTER = 3;
+const COL_TEXT = 4;
+const COL_GUESS = 5;
 export const COL_ERROR = 6;
-export const COL_PENCIL = 7;
+const COL_PENCIL = 7;
 /** The ground of a cell the win flash is on: its body, and (`COL_FLASH_LEAD`)
  * its leading edge. */
 export const COL_FLASH = 8;
 /** The line between two cells, and the frame. The diagonal-mode corner crosses
  * are a rule and stay `COL_GRID`. */
-export const COL_LINE = 9;
+const COL_LINE = 9;
 // Fork addition, appended past the upstream enum: the yellow body of the shared
 // pencil-mode indicator glyph.
 export const COL_PENCIL_BODY = 10;
@@ -108,7 +108,7 @@ export const COL_CURSOR = 11;
 /** The hint's evidence color: the outline of the squares a reason rests on,
  * and the clue it reads. */
 export const COL_HINT_CELL = 12;
-export const COL_CELL = 13; // the surface of a cell the player fills
+const COL_CELL = 13; // the surface of a cell the player fills
 export const COL_FLASH_LEAD = 14;
 
 export function colors(defaultBackground: Color): Color[] {

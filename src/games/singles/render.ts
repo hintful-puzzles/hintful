@@ -45,24 +45,24 @@ export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette ---------------------------------------------------------------
 
-export const COL_BACKGROUND = 0;
+const COL_BACKGROUND = 0;
 export const COL_GRID = 1;
 /** The surface of a cell, which is all an undecided cell is. */
-export const COL_EMPTY = 2;
+const COL_EMPTY = 2;
 /** The ground of a cell the win flash is on, under its piece or its ring. */
 export const COL_FLASH = 3;
 /** The number of a cell that holds no piece. */
-export const COL_TEXT = 4;
-export const COL_SHADED = 5;
+const COL_TEXT = 4;
+const COL_SHADED = 5;
 /** The number on the shaded piece: pinned, because the piece is one color in
  * both schemes and ink is not. */
-export const COL_SHADED_NUM = 6;
+const COL_SHADED_NUM = 6;
 /** The ring round a number the player has marked as kept. */
-export const COL_KEPT = 7;
-export const COL_CURSOR = 8;
+const COL_KEPT = 7;
+const COL_CURSOR = 8;
 export const COL_ERROR = 9;
 /** The number on a piece drawn in {@link COL_ERROR}. */
-export const COL_ERROR_TEXT = 10;
+const COL_ERROR_TEXT = 10;
 /** A cell the deduction reasons from, decided or not, and the corner a
  * corner-deduction protects. */
 export const COL_HINT_CELL = 11;

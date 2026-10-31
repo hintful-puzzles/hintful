@@ -52,20 +52,20 @@ export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette -------------------------------------------------------------------
 
-export const COL_BACKGROUND = 0;
+const COL_BACKGROUND = 0;
 export const COL_GRID = 1; // the line between two cells, and the frame
 export const COL_WALL = 2;
 export const COL_LIGHT = 3; // white: bulbs and clue digits
 export const COL_LIT = 4; // yellow lit-square fill
 export const COL_ERROR = 5;
-export const COL_CURSOR = 6;
+const COL_CURSOR = 6;
 // Fork hint inks.
 /** The evidence and the squares a deduction is about, outlined, and the
  * outline round a hint's driving clue, on its wall. */
 export const COL_HINT_CELL = 7;
 /** The player's "no light here" cross. */
 export const COL_RULED_OUT = 8;
-export const COL_CELL = 9; // the surface of an open square no bulb lights
+const COL_CELL = 9; // the surface of an open square no bulb lights
 /** The ground of an open square under the completion flash's body. The slot
  * for its leading edge is {@link COL_FLASH_LEAD}. */
 export const COL_FLASH = 10;
@@ -106,7 +106,7 @@ export function colors(defaultBackground: Color): Color[] {
 // --- geometry -----------------------------------------------------------------
 
 export const border = (ts: number): number => Math.floor(ts / 2);
-export const coord = (v: number, ts: number): number => v * ts + border(ts);
+const coord = (v: number, ts: number): number => v * ts + border(ts);
 
 export function computeSize(p: { w: number; h: number }, ts: number): Size {
   return { w: p.w * ts + 2 * border(ts), h: p.h * ts + 2 * border(ts) };

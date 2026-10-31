@@ -53,13 +53,13 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette --------------------------------------------------------------
-export const COL_BACKGROUND = 0; // the board around the grid
-export const COL_GRID = 1; // the thin line between two cells, and the frame
-export const COL_HIGHLIGHT = 2; // selected-cell background
+const COL_BACKGROUND = 0; // the board around the grid
+const COL_GRID = 1; // the thin line between two cells, and the frame
+const COL_HIGHLIGHT = 2; // selected-cell background
 export const COL_CORRECT = 3; // completed-region background
 export const COL_ERROR = 4; // overfull / boxed-in region background
-export const COL_USER = 5; // player-filled digit
-export const COL_CURSOR = 6;
+const COL_USER = 5; // player-filled digit
+const COL_CURSOR = 6;
 export const COL_HINT_CELL = 7; // the deduction's evidence cells — outlined
 export const COL_INK = 8; // a clue's digit, and a region's border
 export const COL_CELL = 9; // the surface of a cell the player fills

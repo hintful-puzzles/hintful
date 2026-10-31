@@ -7,8 +7,7 @@ player can make. It also holds two things that are not about drawing: how a
 firing is grouped into a step or a journey of legs (§ "Group one firing into
 one step" and the sections after it), and which facts a hint may rest on
 (§ "Give the facts a notation"). The words of a step are
-[`hints.md`](./hints.md)'s. The
-normative rules are in
+[`hints.md`](./hints.md)'s. The normative rules are in
 [`engine-hints`](../openspec/specs/engine-hints/spec.md), and a game's own
 marks are in its spec.
 
@@ -24,9 +23,9 @@ already does it.
    the marks").
 2. Declare the roles the steps name as `hintMarks.roles` in `index.ts`, and
    put `{{hint-marks}}` in the `hints` of the game's description.
-3. In `render.ts`, export a `COL_HINT_CELL` slot holding `HINT_OUTLINE`, and
-   draw each mark in its role's ink and nothing else (§ "The engine colors
-   the marks"). Hold no ring ink: the engine draws every ring.
+3. In `render.ts`, give the outline a slot holding `HINT_OUTLINE`, and draw
+   each mark in its role's ink and nothing else (§ "The engine colors the
+   marks"). Hold no ring ink: the engine draws every ring.
 4. In `redraw`, read the marks with `stepMarks(hint)` and from nowhere else,
    and fold them into the draw state's `OverlaySidecar`, so that `stale` and
    `commit` put them in the tile's diff key.
@@ -101,117 +100,105 @@ already does it.
 
 **A displayed hint marks the cell to act on and does not draw the move's
 result.** Ring the target, keep the cell's own number or state visible
-inside the ring, and let the narration say which mark to place. Do
-not fill the cell with the black square, circle, color or digit the move
-would place: it hides what the cell holds, and it reads as already done when
-the move is still the player's to make.
+inside the ring, and let the narration say which mark to place. Filling the
+cell with the black square, circle, color or digit the move would place hides
+what the cell holds, and reads as done while the move is still the player's.
 
-The move is made for real only when the hint is played: `executeHint` sends
-the step's gesture through the game's `interpretMove` and applies nothing
-itself (requirement "executeHint sends the gesture and never applies the
-move"), and the cell then draws as the actual mark with its placement
-animation. The Hint
+The move is made only when the hint is played: `executeHint` sends the step's
+gesture through the game's `interpretMove` and applies nothing itself
+(requirement "executeHint sends the gesture and never applies the move"), and
+the cell then draws as the actual mark with its placement animation. The Hint
 button's show-then-apply alternation is the midend's and needs nothing from a
 game's `hint()` (requirement "The toolbar Hint button alternates show and
-apply"). It does mean a player meets the plan one step at a time, so the
+apply"). A player therefore meets the plan one step at a time, so the
 grouping of § "Group one firing into one step" is what makes it read well.
 
 ## Echo the move's shape in the hint color
 
 **Where a game's moves come in more than one visible kind, the hint rings the
-element and draws, inside the ring, the shape the game already draws for
-that action, in the ring's ink.** It never invents a shape the player has to
-translate, and never shows the shape of the wrong action: a line drawn for a
+element and draws inside the ring, in the ring's ink, the shape the game
+already draws for that action.** It never invents a shape the player has to
+translate, and never shows the wrong action's shape: a line drawn for a
 rule-out says "connect these", the opposite of its sentence.
 
 The shape goes in `drawRing`'s `inside`, which is clipped to the ring and is
 the only way to the ring's ink, so it adds to the ring and never stands in
-for it: the word "ringed" names the round mark round it (requirement "A
-move's shape is shown inside its ring"). This is the converse of
-§ "Highlight, never perform": the hint shows where and which action without
-performing it. A uniform tint cannot express an orientation or a kind.
-
-Exemplars: [`tracks/render.ts`](../src/games/tracks/render.ts)'s
-`drawHintMarks`, a pill across a side with its rail stubs or cross inside,
-and a square's ring with the "must be empty" cross inside.
+for it: "ringed" names the round mark round it (requirement "A move's shape
+is shown inside its ring"). The hint shows where and which action without
+performing it (§ "Highlight, never perform"); a uniform tint cannot express
+an orientation or a kind. Exemplar: `drawHintMarks` in
+[`tracks/render.ts`](../src/games/tracks/render.ts), a pill across a side
+with its rail stubs or cross inside, and a square's ring with the "must be
+empty" cross inside.
 
 ## Shade vs ring
 
 **The acted-on cell is ringed in every game, with no exceptions, and an
-evidence area is outlined.** Neither is drawn behind the content.
+evidence area is outlined.** Neither is drawn behind the content. The target
+is ringed even where a fill would hide nothing: one mark means one thing
+across the collection, and in a shading game, where the move is "give this
+cell a color", a fill says with the board what the narration is still
+proposing.
 
 **A ring is round, crosses no number, and only the engine draws one**
-([`engine/ring.ts`](../src/engine/ring.ts), `GameDrawing.drawRing`;
+(`GameDrawing.drawRing`, [`engine/ring.ts`](../src/engine/ring.ts);
 requirement "A ring is round, crosses no number, and only the engine draws
 one"; the owner, 2026-10-25: "a ring should actually be round", and
-2026-10-28: "it doesn't write over numbers"). The ring's ink is the
-engine's, appended to every palette, so a game cannot draw a "ringed" mark
-in another shape. `drawRing` takes the element's box and the text round it,
-and picks the shape nearest the box at the roundest that fits: a circle
-where the corners are free, a rounded square (a corner radius of a third of
-the short side, the least it allows) where text sits in them. It never
-crosses text, the ringed cell's own notes included: a game hands it the
-boxes from `textBox`, called with what it passes `drawText`, so it never
-estimates a glyph. Where nothing round fits, it throws, and the element is
-not a ring's: the game makes room for it (Mosaic's ring reaches between its
-neighbors' numbers on a tile too small to hold one, through `ringFits`) or
-marks it in another role.
+2026-10-28: "it doesn't write over numbers"). Its ink is the engine's,
+appended to every palette, so a game cannot draw a "ringed" mark in another
+shape. `drawRing` fits the roundest shape that clears the text round the
+element (`ring.ts` says how), the ringed cell's own notes included. A game
+hands it the boxes from `textBox`, called with what it passes `drawText`, so
+it never estimates a glyph. Where nothing round fits, it throws, and the
+element is not a ring's: the game makes room for it (Mosaic's ring reaches
+between its neighbors' numbers on a tile too small to hold one, through
+`ringFits`) or marks it in another
+role.
 
-**A cell's text leaves the ring room, in every frame.** A grid of notes or a
-corner clue reaches the corners a round ring passes through, so a cell lays
-its text out inside `ringTextBox(band)`: the box a ring centered on the cell,
-in the band's room, goes round. Notes go there through `noteGrid`
-([`engine/note-taking-cell.ts`](../src/engine/note-taking-cell.ts)), and a
-clue in the corner of the same box. A cell with a clue takes its notes on
-the rows and at the size of one without (the owner, 2026-10-28: "make them
-all the same"): Keen and Killer lay every cell's notes below where a clue
-goes, and `noteGrid`'s `sizedBy` gives one size to cells whose areas differ
-(Salad's balls). Laying the text out only on the ringed cell was refused:
+**A cell's text leaves the ring room, in every frame.** Notes and a corner
+clue reach the corners a round ring passes through, so a cell lays its text
+out inside `ringTextBox(band)`, the box a ring centered on the cell goes
+round: notes through `noteGrid`
+([`engine/note-taking-cell.ts`](../src/engine/note-taking-cell.ts)), a clue
+in the same box's corner. A cell with a clue takes its notes on the rows and
+at the size of one without (the owner, 2026-10-28: "make them all the
+same"), as Keen and Killer do; `noteGrid`'s `sizedBy` gives one size to cells
+whose areas differ. Laying the text out only on the ringed cell was refused:
 text that moves with a mark is drawn into the mark when the app measures a
 reference. A clue drawn on a disc painted over the marks (Mathrax) is not
 text a ring keeps clear of: the ring passes under it.
 
-The engine gives [`engine/hint-mark.ts`](../src/engine/hint-mark.ts):
-`MarkBand` says where a cell's band sits, `HintMarks` paints the outline's
-band and the ring, centered on the cell, around the tile loop, `MarkOutlines`
-gives each cell's sides, and `HintMarkStyle.text` says what text each cell
-shows: what a ring on the cell encloses (its value and its notes), and a
-clue in its corner, which it goes round. Requirements "A hint mark is drawn
-on the cell's border" and "A hint marks beside the content, never behind it"
-are the rule. `ringCrossings` in
-[`engine/testing/mark-shape.ts`](../src/engine/testing/mark-shape.ts) reads
-the claim off a recorded frame, and `expectRing` asserts it. Exemplars:
-[`keen/render.ts`](../src/games/keen/render.ts) (`markBand`, `clueText`,
-`pencilSlots`, and the block after the tiles) for a game with a gutter
-between cells and a clue in a corner,
+The parts are in [`engine/hint-mark.ts`](../src/engine/hint-mark.ts), whose
+exports' comments say what each owns: `MarkBand`, `HintMarks` (the band and
+the ring, around the tile loop), `MarkOutlines`, and `HintMarkStyle.text`
+(what a ring on the cell encloses, and the corner clue it goes round).
+Requirements "A hint mark is drawn on the cell's border" and "A hint marks
+beside the content, never behind it" are the rule, and `expectRing` in
+[`engine/testing/mark-shape.ts`](../src/engine/testing/mark-shape.ts)
+asserts it on a recorded frame. Exemplars:
+[`keen/render.ts`](../src/games/keen/render.ts) for a gutter between cells
+and a clue in a corner,
 [`skeleton/grid/render.ts`](../src/skeleton/grid/render.ts) for a number in
 the middle.
 
-The target is ringed even where a fill would hide nothing: one mark means one
-thing across the collection, and in a shading game the move is "give this
-cell a color", so a solid fill says with the board what the narration is
-still proposing.
-
 **A note a step rules out is struck, not ringed** (requirement "A note a step
 rules out is struck"). A grid of notes leaves no room for a ring round one
-note, and a ring round the cell says the step decides the cell, so a
-candidate game's strike step crosses each note out with an X, in the note's
-own ink, and rings nothing. Draw it with
-`drawStrike` ([`engine/draw.ts`](../src/engine/draw.ts)), which gives every
-game one strike: an X that one stroke always carries across the stripes, and
-one "\" through a note that is a shape. A
-premise's "this cell" on that cell is drawn by its strikes
-(`struckCellsByStrikes` in [`engine/candidate-plan.ts`](../src/engine/candidate-plan.ts)),
-so its words must not say "ringed". Measured, the alternative cost 9×9 Keen
-about 40% of its pencil marks' size (`make-rings-round`, D6).
+note, and a ring round the cell says the step decides the cell, so a strike
+step crosses each note out, in the note's own ink, and rings nothing. Draw it
+with `drawStrike` ([`engine/draw.ts`](../src/engine/draw.ts)), every game's
+one strike. A premise's "this cell" on a cell whose notes are struck is not
+ringed but outlined, by the engine (`struckCellsOutlined` in
+[`engine/candidate-plan.ts`](../src/engine/candidate-plan.ts); § "Outline the
+evidence"), so its words must not say "ringed".
+Measured, the alternative cost 9×9 Keen about 40% of its pencil marks' size
+(`make-rings-round`, D6).
 
 ### A mark on something that is not a cell
 
 **`HintMarks` rings and outlines a cell, so use it for a cell and only for
-a cell.** Where the decided element is something else, ring it with
-`drawRing` round its own box, and draw the shape the game already draws for
-the action inside (§ "Echo the move's shape in the hint color"). A box
-longer than it is wide is ringed by a pill.
+a cell.** Ring another element with `drawRing` round its own box, with the
+shape the game draws for the action inside (§ "Echo the move's shape in the
+hint color"). A box longer than it is wide is ringed by a pill.
 
 | The element | The ring, and what goes inside it | Exemplar |
 | --- | --- | --- |
@@ -223,17 +210,16 @@ longer than it is wide is ringed by a pill.
 
 **A side of a square is the engine's `EDGE` mark**, and
 [`engine/edge-hint.ts`](../src/engine/edge-hint.ts) packs it into both
-squares' tile keys. A game declares how its line and cross look, and where a
-side's ring goes (`EdgeShapes.ring`): both squares of the side draw that one
-ring, each in its own clip, with the asked shape inside.
+squares' tile keys. A game declares how its line and cross look and where a
+side's ring goes (`EdgeShapes.ring`); both squares draw that one ring, each
+in its own clip, with the asked shape inside.
 
-Edge games on the border grid take their marks from `hintTileBits` in
-[`engine/border-grid-render.ts`](../src/engine/border-grid-render.ts), whose
-notation has one shape, the edge, for a wall and a not-wall alike: a wall
-ask is the edge in the ring's ink, and a not-wall ask a cross on the edge,
+On the border grid ([`engine/border-grid-render.ts`](../src/engine/border-grid-render.ts),
+`hintTileBits`) a wall and a not-wall share one shape, the edge: a wall ask
+is the edge in the ring's ink, and a not-wall ask a cross on the edge,
 because the edge in that ink would read as a wall. **A mark drawn in a hint
-ink cannot be covered**: the app repaints each ink's marks over the board,
-so a shape the step does not ask for is never drawn in one.
+ink cannot be covered**: the app repaints each ink's marks over the board, so
+a shape the step does not ask for is never drawn in one.
 
 ### A piece is ringed as one shape
 
@@ -249,31 +235,29 @@ never join and evidence always does.
 The relation may come from the hint and not the board: a piece not yet placed
 joins the two squares of a placement and leaves the two sides of a barrier
 apart ([`dominosa/render.ts`](../src/games/dominosa/render.ts)). A game that
-keys its own tile word and passes a join relation takes the sides from
+keys its own tile word and passes a join relation keys on
 `MarkOutlines.packed`, because a target whose partner leaves keeps its role
 while its sides change (requirement "A joined mark inside the content box
-keys its repaint on its sides"). `expectPieceRing` in
-[`engine/testing/mark-shape.ts`](../src/engine/testing/mark-shape.ts) holds
-a two-square piece to one pill. Population:
-`git grep -l joinTargets src/games`.
+keys its repaint on its sides"). `expectPieceRing` holds a two-square piece
+to one pill. Population: `git grep -l joinTargets src/games`.
 
 ### A square the move brings along takes a lighter mark
 
 **When one move decides a square by deduction and another by a symmetry or
 rule the player already knows, mark the deduced one more heavily and still
-mark the other.** Marking both alike makes "this cell" ambiguous, and
-dropping the second mark breaks another rule: a step may not change a square
-it never marked.
+mark the other.** Marking both alike makes "this cell" ambiguous. Dropping
+the second mark breaks another rule: a step may not change a square it never
+marked.
 
-- Leave the lighter mark's surroundings alone. Filter only the acted-on cell
-  out of its own evidence; taking the partner out too puts its outline on
-  bare board, where it reads louder, and makes a described area false.
-- A one-pixel stroke is not a highlight. Weight comes from a filled halo with
-  the element repainted on top, which also keeps the element's own color for
-  the sentence to name.
-- Do not ring what the step has just filled in the action color: name that
-  element by position in the sentence, and skip its ring in the renderer, the
-  two changing together.
+- **Filter only the acted-on cell out of its own evidence.** Taking the
+  partner out too puts its outline on bare board, where it reads louder, and
+  makes a described area false.
+- **A one-pixel stroke is not a highlight.** Weight comes from a filled halo
+  with the element repainted on top, which also keeps the element's own color
+  for the sentence to name.
+- **Do not ring what the step has just filled in the action color.** Name it
+  by position in the sentence and skip its ring in the renderer, the two
+  changing together.
 
 Exemplar: [`galaxies/hint-marks.ts`](../src/games/galaxies/hint-marks.ts),
 where the deduced cell is ringed twice and its 180° partner once.
@@ -287,38 +271,37 @@ would make the cell a hint points at look like the cell that is wrong. The
 measurements are in the header of
 [`engine/hint-mark.ts`](../src/engine/hint-mark.ts). The palette carries no
 fill role for the action color (requirement "The palette carries no fill for
-the acted-on color"), so the question is not reopened by retuning.
-
-A mark on the border is read against a surface and not through it, so it can
-take a strong color, as the engine's are.
+the acted-on color"), so retuning does not reopen the question. A mark on the
+border is read against a surface and not through it, so it can take a strong
+color, as the engine's do.
 
 ### Where the band goes, and who rubs it out
 
 **Give the band the width of the border it replaces, and place it by what the
 cell's border means in your game.** It reads as a highlight by color, not by
-weight. `MarkBand` is the cell's content box plus how far the band reaches
-outside it (`outer`) and inside it (`inner`), and that choice decides who
-undoes the mark. `HintMarks` draws a cell's ring as thick as the band and
-within the band's reach (`drawRing`'s `room`), so the same erase and repaint
-undo it.
+weight. A `MarkBand` reaches outside the content box (`outer`) and inside it
+(`inner`), and that choice decides who undoes the mark, as the header of
+[`engine/hint-mark.ts`](../src/engine/hint-mark.ts) explains. A cell's ring is
+as thick as the band and within its reach (`drawRing`'s `room`), so the same
+erase and repaint undo it.
 
 - **Outside (`outer > 0`)**, where there is a gutter between cells. Call
-  `HintMarks.eraseBeforeTiles(…, gutterColor, overlaps)` before the tile loop
-  and dirty the tiles `overlaps` names; `paint` after the loop restamps every
-  mark every frame, because a neighbor repainting for its own reasons can
-  paint over a side. Erase before the tiles, because no color painted after
-  them is right everywhere a band reaches. The erase runs when the marks'
-  shape changes, so the game keys nothing on it. Exemplar:
+  `HintMarks.eraseBeforeTiles` before the tile loop and dirty the tiles its
+  `overlaps` names; `paint` after the loop restamps every mark every frame,
+  because a neighbor repainting for its own reasons can paint over a side.
+  Erase before the tiles, because no color painted after them is right
+  everywhere a band reaches. The erase runs when the marks' shape changes, so
+  the game keys nothing on it. Exemplar:
   [`keen/render.ts`](../src/games/keen/render.ts).
 - **Inside (`outer = 0`)**, where cells tile exactly and draw their own
   outline, or where the gap between cells is what walls are made of. Nothing
   needs erasing: the cell whose overlay changed repaints and takes its mark
-  with it, so the mark may be drawn from `drawTile`. A cell whose outline
-  changed while it stayed evidence counts as changed; `OverlaySidecar.pack`
-  puts the outline sides in its diff key, with nothing to wire. Exemplar:
-  [`filling/render.ts`](../src/games/filling/render.ts). A game with no
+  with it, so the mark may be drawn from `drawTile`. `OverlaySidecar.pack`
+  puts the outline sides in the diff key, so a cell whose outline changed
+  while it stayed evidence repaints with nothing to wire. A game with no
   notes passes `pack` no `markBits`, and its struck notes are not asked for
-  ([`starbattle/render.ts`](../src/games/starbattle/render.ts)).
+  ([`starbattle/render.ts`](../src/games/starbattle/render.ts)). Exemplar:
+  [`filling/render.ts`](../src/games/filling/render.ts).
 - **Both**, a pixel of real gutter plus some of the cell's own edge. The
   `outer` part makes it an outside-band game, and the erase covers the inside
   part too. Exemplar: [`clusters/render.ts`](../src/games/clusters/render.ts).
@@ -326,9 +309,9 @@ undo it.
   lives and a mark there would read as one. Exemplar:
   [`galaxies/render.ts`](../src/games/galaxies/render.ts).
 
-Bound the inner reach by the content, by arithmetic on the glyph's geometry
-and not by eye, and record the bound at the game's `markBand`. Requirement "A
-mark outside the content box is driven by the drawstate".
+**Bound the inner reach by the content**, by arithmetic on the glyph's
+geometry and not by eye, and record the bound at the game's `markBand`
+(requirement "A mark outside the content box is driven by the drawstate").
 
 ### Outline the evidence
 
@@ -346,12 +329,13 @@ comes out as one contour and a scattered set as one ring a cell.
   (§ "Hatch the line the sentence names").
 - **A cell a step strikes notes in is outlined where the sentence names it.**
   The step decides the notes, which their strikes mark, and reasons from what
-  can go in the cell. A ring keeps its one meaning, what a step decides (owner,
-  2026-10-28). Where an outlined region already holds the cell (Undead's
-  sightline), its outline would not show, so it is striped. A reference names
-  the thing it marks: "this cell" over the notes inside it would point the
-  player at a note, so `mark.this` and `mark.the` refuse an element drawn
-  inside another, and `Narration.remarked` changes only a reference's role.
+  can go in the cell; a ring keeps its one meaning, what a step decides
+  (owner, 2026-10-28). Where an outlined region already holds the cell
+  (Undead's sightline), its outline would not show, so it is striped.
+- **A reference names the thing it marks.** "This cell" over the notes inside
+  it would point the player at a note, so `mark.this` and `mark.the` refuse
+  an element drawn inside another, and `Narration.remarked` changes only a
+  reference's role.
 - **A role's word on a bare noun singles one mark out.** "An outlined cell"
   beside an outlined "this cell" does not say which. Tell them apart by
   another noun, value or word ("another outlined cell"), as
@@ -362,22 +346,19 @@ comes out as one contour and a scattered set as one ring a cell.
 **Test the shape of a mark, not its color.** "Some rect is in the outline's
 ink" is what a fill also satisfies.
 
-- No game names `HINT_RING`
+- **No game names `HINT_RING`**
   ([`palette-source.test.ts`](../src/engine/color/palette-source.test.ts)),
   so a ring is the engine's and round by construction.
-- [`hint-mark.test.ts`](../src/engine/hint-mark.test.ts) walks every hinting
-  game: nothing in the ring's ink but rings and the shapes inside them, every
-  ring round, and no rect in the outline's ink cell-sized and thick in both
-  directions. It reads a game's outline slot from the `COL_HINT_CELL` export
-  of its `render.ts`, so export that name for the outline's slot and for
-  nothing else ([`method.md`](./method.md) § "A scan that keys on a name").
-- In the game's own test,
-  [`mark-shape.ts`](../src/engine/testing/mark-shape.ts) gives `expectRing`
-  (round rings, nothing else in their ink), `ringsOf`, `expectContour`
-  (`2w + 2` sides for a `w`-cell row, where a ring a cell would give `4w`)
-  and `expectPieceRing` (one pill).
-- The hatch draws no rect, so this guard does not see it; its own guards are
-  in § "Hatch the line the sentence names".
+- **[`hint-mark.test.ts`](../src/engine/hint-mark.test.ts) walks every
+  hinting game**: nothing in the ring's ink but rings and the shapes inside
+  them, every ring round, and no rect in the outline's ink cell-sized and
+  thick in both directions. It finds the outline's slots by their value,
+  `HINT_OUTLINE`, in the game's palette, so whatever a game names the slot it
+  is checked ([`method.md`](./method.md) § "A scan that keys on a name").
+- **In the game's own test**, `mark-shape.ts` gives `expectRing`, `ringsOf`,
+  `expectContour` (one contour, not a ring a cell) and `expectPieceRing`.
+- **The hatch draws no rect**, so this guard does not see it; its own guards
+  are in § "Hatch the line the sentence names".
 
 ## Show the evidence as an area
 
@@ -386,11 +367,11 @@ make the words and the picture agree**: if the narration says "the striped
 run", a run is striped. The target stays the one ring.
 
 - **Compute each step's area against the board as that step fires**, not the
-  board the hint was asked on. The plan is computed once and a frozen area
+  board the hint was asked on: the plan is computed once and a frozen area
   goes stale. Thread the solver's working grid through each recorded move and
-  build the marks from that snapshot; the snapshot has the move applied, so
-  see § "Whether the target belongs in its own evidence". Exemplar:
-  `markedOf` in [`range/index.ts`](../src/games/range/index.ts).
+  build the marks from that snapshot, which has the move applied (§ "Whether
+  the target belongs in its own evidence"). Exemplar: `markedOf` in
+  [`range/index.ts`](../src/games/range/index.ts).
 - **Assert in the game's test that each deduction's evidence is non-empty.**
   The cross-game walk in `hint-quality.test.ts` asks only that a step shows
   something, marks or words. A filter is the usual cause of an empty area: a
@@ -398,8 +379,8 @@ run", a run is striped. The target stays the one ring.
   non-black neighbors, not only the cells marked white.
 - **Where a sentence states a number, give the evidence exactly that many
   entries and assert it**: a run's length, the room left, the sides a clue
-  has. The player checks it every time they look, and it fails when a later
-  edit marks a convenient approximation.
+  has. The player checks it every time they look, and the assertion fails
+  when a later edit marks a convenient approximation.
 
 ### Evidence for a count is what rules the other squares out
 
@@ -435,8 +416,8 @@ seeded sample rarely deals.
 reasoned over; do not filter it out as a house rule.** A run whose length is
 the argument contains the target. A clue's already-counted neighbors do not.
 Filtering everywhere empties the step whose counted span is the target
-itself, and the non-empty assertion of § "Show the evidence as an area" is
-what catches it. Exemplar: the `unreachable` rung in
+itself, which the non-empty assertion of § "Show the evidence as an area"
+catches. Exemplar: the `unreachable` rung in
 [`sticks/index.ts`](../src/games/sticks/index.ts).
 
 ### A deictic promises a number of marks
@@ -445,17 +426,18 @@ what catches it. Exemplar: the `unreachable` rung in
 one of its kind.** A plural over a single mark cannot be followed at all, and
 a singular beside two rings of one kind leaves the player to guess.
 
-- Count the distinct places a step marks, not its role fields: two roles
+- **Count the distinct places a step marks, not its role fields**: two roles
   naming one cell are one mark.
-- Where the plural is true and the frame lacks the set, record the premise
-  and mark it: the region a count was taken over, the cells a pattern is
+- **Where the plural is true and the frame lacks the set, record the premise
+  and mark it**: the region a count was taken over, the cells a pattern is
   locked into.
-- A second ring is acceptable where it is tied by kind: a mark of another
+- **A second ring is acceptable where it is tied by kind**: a mark of another
   shape beside the one the sentence names, both halves of "this tile", or a
   partner the same sentence names.
-- `scripts/checks/hint-deixis.test.ts` looks only at steps with two marks, so
-  it sees neither case. Highlight fields differ by game, so the check lives
-  in the game's own hint test, beside the vocabulary that can judge it.
+- **The check lives in the game's own hint test.**
+  `scripts/checks/hint-deixis.test.ts` looks only at steps with two marks, so
+  it sees neither case, and highlight fields differ by game, so only the
+  game's vocabulary can judge them.
 
 The rule for two marks under one "this cell" is [`hints.md`](./hints.md)
 § "Two marks of one kind: tie them, and never by color".
@@ -492,7 +474,7 @@ sentence groups its rivals by.
 
 When adding techniques to one mode, hold the others to their old plans by
 construction, the techniques being absent from their ladder, and check plan
-for plan against the previous commit. Proving the ladder unchanged is cheaper
+for plan against the previous commit: proving the ladder unchanged is cheaper
 than a census of its output. Exemplar:
 [`ascent/hint-edges.ts`](../src/games/ascent/hint-edges.ts) and
 [`ascent/premises.ts`](../src/games/ascent/premises.ts).
@@ -538,11 +520,11 @@ the step rules out.** A dead-end firing traps a point that may have nothing
 placed on it, so the component alone comes back empty and the step shows no
 evidence.
 
-- Seed the recording solver by replaying the player's marks through the same
-  function that keeps the connectivity structures in step. Copying the grid
-  leaves the union-find behind. The recorder and the seed are both optional
-  arguments the generator never passes.
-- A clue firing groups as `continuesPrevious` legs, each carrying the
+- **Seed the recording solver by replaying the player's marks** through the
+  same function that keeps the connectivity structures in step: copying the
+  grid leaves the union-find behind. The recorder and the seed are both
+  optional arguments the generator never passes.
+- **A clue firing groups as `continuesPrevious` legs**, each carrying the
   necessity voice, so the voice guard passes on every leg.
 
 Exemplar: `componentSquares` and `incidentSquares` in
@@ -553,15 +535,17 @@ Exemplar: `componentSquares` and `incidentSquares` in
 
 **A step whose sentence names a row or column stripes that line**:
 translucent diagonal bands over its squares and on through its clue slots, in
-the engine's stripes ink ([`engine/hatch.ts`](../src/engine/hatch.ts)). **A region
-the sentence is about is striped the same way**: a cage, a block, a run, an
-area. Requirements "A hint hatches the one line its sentence names" and "A
-hint hatches the region its sentence is about".
+the engine's stripes ink ([`engine/hatch.ts`](../src/engine/hatch.ts)). **A
+region the sentence is about is striped the same way**: a cage, a block, a
+run, an area. Requirements "A hint hatches the one line its sentence names"
+and "A hint hatches the region its sentence is about". Stripes work where a
+flat tint cannot because half the surface keeps its own color and the content
+is drawn over the bands.
 
 - **At most one line a step**: "this row", "this column", or the one line a
   step about a single piece names as "its column". An outline of a line and
   an outline of the squares a reason rests on are the same mark, so a line is
-  never outlined, and an outline then only ever marks particular things.
+  never outlined, and an outline only ever marks particular things.
 - **The sentence says "this cage" or "the striped area", never "the outlined
   …"**. What stays outlined is a piece or particular squares.
 - **Several lines are striped only as one counted set**: "these 3 columns",
@@ -580,28 +564,26 @@ hint hatches the region its sentence is about".
   over the stripes, or name a destination by the mark on it;
   `hint-quality.test.ts` rejects "row 3" in any sentence.
 
-To draw it: a game on `OverlaySidecar` names the cells as stripes in its
-words and calls `ds.hint.drawHatch(dr, i, rect, ts)` after the
-cell's background and before its content
-([`rome/render.ts`](../src/games/rome/render.ts)). A game with its own tile
-word calls `dr.drawHatch(tileRect, hatchPeriod(ts))` at the same
-point and puts the flag in the tile's diff key (`drawTileCol` and `drawNum`
-in [`magnets/render.ts`](../src/games/magnets/render.ts)). The bands are laid
-on the canvas and not the rect, so tiles striped one at a time join. A clue
-slot on the line paints even when its clue was stripped, since stripes can
-arrive on it and leave.
+**Draw the stripes after the cell's background and before its content.** A
+game on `OverlaySidecar` names the cells as stripes in its words and calls
+`ds.hint.drawHatch` ([`rome/render.ts`](../src/games/rome/render.ts)). A game
+with its own tile word calls `dr.drawHatch(tileRect, hatchPeriod(ts))` and
+puts the flag in the tile's diff key
+([`magnets/render.ts`](../src/games/magnets/render.ts)). The bands are laid on
+the canvas and not the rect, so tiles striped one at a time join. A clue slot
+on the line paints even when its clue was stripped, since stripes can arrive
+on it and leave.
 
-`HATCH_OPACITY` is 0.3, and two guards in `puzzle/hatch-contrast.test.ts`
-bracket it: a floor near 0.27, stripes visible on every hatching game's board
-in both schemes, and a ceiling near 0.35, no symbol losing more than a
-quarter of its contrast unless it stays at 4.5:1. The app repaints stripes at
-the hatch's own coverage, so the bars hold for every stripes color a
-reference can take, and a game's legibility check under the hatch measures
-each. It goes in that file, because the app's palettes are built in
-`src/puzzle/`, which no game may import. The same file holds the cross-game
-guard "a step that names a line or region draws it, and only then". Stripes
-work where a flat tint cannot because half the surface keeps its own color
-and the content is drawn over the bands.
+**`HATCH_OPACITY` is held from both sides** by
+`puzzle/hatch-contrast.test.ts`: a floor at which the stripes show on every
+hatching game's board in both schemes, and a ceiling past which a symbol
+loses too much contrast (the bounds are in the test). The app repaints
+stripes at the hatch's own coverage, so the bounds hold for every stripes
+color a reference can take, and a game's legibility check under the hatch
+measures each. That check goes in the same file, because the app's palettes
+are built in `src/puzzle/`, which no game may import. The file also holds the
+cross-game guard "a step that names a line or region draws it, and only
+then".
 
 ### Two regions in one sentence take two mark shapes
 
@@ -612,8 +594,8 @@ what it holds. Two regions that cross at the target, and are named by their
 direction, may both be striped, since the crossing tells them apart
 (`crossRuns` in [`crossing/hint-text.ts`](../src/games/crossing/hint-text.ts)).
 The border grid's hint layer
-([`engine/border-grid-hint.ts`](../src/engine/border-grid-hint.ts), folded in
-by `border-grid-render.ts`) carries both marks. Exemplar:
+([`engine/border-grid-hint.ts`](../src/engine/border-grid-hint.ts)) carries
+both marks. Exemplar:
 [`separate/hint-text.ts`](../src/games/separate/hint-text.ts).
 
 ## The engine colors the marks
@@ -623,11 +605,10 @@ edges.** While a hint shows, the app repaints each reference's marks in a
 color of its own from `HINT_REFERENCE_COLORS`
 ([`engine/color/colors.ts`](../src/engine/color/colors.ts)), the color its
 words are tinted with, edged in black or white so that it reads on whatever
-lies under it (`edgeFor` and `edged` in
-[`puzzle/mark-flash.ts`](../src/puzzle/mark-flash.ts)). Copy image lays the
-same repaint over the board (`Puzzle.getImage`). The normative rule is
-[`app-shell`](../openspec/specs/app-shell/spec.md) requirement "The engine
-colors every hint mark".
+lies under it ([`puzzle/mark-flash.ts`](../src/puzzle/mark-flash.ts)). Copy
+image lays the same repaint over the board (`Puzzle.getImage`). The normative
+rule is [`app-shell`](../openspec/specs/app-shell/spec.md) requirement "The
+engine colors every hint mark".
 
 - **Draw an outline in `HINT_OUTLINE`**, in a palette slot of its own, and a
   mark in nothing else. A recolored clue digit is an outline.
@@ -659,19 +640,18 @@ reference of each role looks the same before and after.
 implement `Game.uiUpdateClearsHint(step, state, ui)`.** `hintKeepTrack` is
 consulted for moves only. In a game where a click is a `UI_UPDATE` (a
 selection), nothing else dismisses the hint, and the player who touches the
-suppressed surface sees no change at all and no way out.
-
-The midend calls the hook on every `UI_UPDATE` while a plan is stored, with
-the `ui` after `interpretMove` has moved the cursor, and drops the plan when
-it returns true.
+suppressed surface sees no change and no way out. The midend calls the hook
+on every `UI_UPDATE` while a plan is stored, with the `ui` after
+`interpretMove` has moved the cursor, and drops the plan when it returns
+true.
 
 - **`() => true`** dismisses on any UI change. It is enough when the hint
   marks nothing the player has to select in order to follow it.
 - **Answer by step** to keep the hint while the player works inside it. A
-  step that is followed by touching the suppressed surface stays, by its kind
+  step followed by touching the suppressed surface stays, by its kind
   ([`subsets/index.ts`](../src/games/subsets/index.ts)); a step followed by
-  selecting its squares stays while the selection is on one of them, and its
-  marks already say where that is, so nothing new is stored
+  selecting its squares stays while the selection is on one of them, which
+  its marks already say, so nothing new is stored
   ([`crossing/index.ts`](../src/games/crossing/index.ts)).
 - **If it answers false anywhere the hint marks, the selection must still
   read there.** A ring leaves the square's background to the selection, so
@@ -680,7 +660,7 @@ it returns true.
   selection draws the same with the hint up as without, and only the hinted
   frame carries the ring (`crossing-hint.test.ts`, "keeps the cursor visible
   on a square the hint has marked").
-- Dropping the plan costs nothing when the deduction is deterministic and
+- **Dropping the plan costs nothing** when the deduction is deterministic and
   cheap; weigh it when the hint is expensive.
 
 The trigger is suppression, not selection: a selection game whose hint
@@ -698,18 +678,18 @@ below are for anonymous pieces, where the hint must name a cell index.
 - **A mark on a tile rides the animation**: paint it as part of the tile,
   which is drawn offset from its cell while it moves.
 - **Mid-animation, the displayed step's cell indices still refer to the board
-  just left.** The midend advances the plan when the animation ends. Resolve
-  the tile's cell in the board being drawn: where it lands while this step's
-  own move is animating, where it stands otherwise.
+  just left**, since the midend advances the plan when the animation ends.
+  Resolve the tile's cell in the board being drawn: where it lands while this
+  step's own move is animating, where it stands otherwise.
 - **A mark on a cell does not ride the animation.** Draw cell marks in a pass
   of their own after every tile, at the cell's unshifted position, which also
   stops a sliding tile covering them. Keep the mark's bit in the tile's cache
   word all the same, so the tile under a stale outline repaints when the hint
   moves on.
-- **Test at a mid-animation frame**: call `redraw` with the state before the
-  move as `prev`, the state after it, and half the animation time, and assert
-  the drawn coordinates of each mark. The still frames either side are
-  correct, so a snapshot of them cannot catch this.
+- **Test at a mid-animation frame**: `redraw` with the state before the move
+  as `prev`, the state after it, and half the animation time, asserting each
+  mark's drawn coordinates. The still frames either side are correct, so a
+  snapshot of them cannot catch this.
 
 Exemplar: [`netslide/render.ts`](../src/games/netslide/render.ts) and
 [`netslide-hint.test.ts`](../src/games/netslide/netslide-hint.test.ts);
@@ -734,8 +714,8 @@ grow branch in [`unruly/render.ts`](../src/games/unruly/render.ts).
 
 **When one deduction forces several cells at once, emit one `HintStep` whose
 move makes all of them, and ring them all.** The other form of "one firing is
-one journey" is `continuesPrevious` legs
-(requirement "One deduction firing is one journey").
+one journey" is `continuesPrevious` legs (requirement "One deduction firing
+is one journey").
 
 - **Find the whole forced set of a firing**, against the board as handed in.
   A set that appears only after applying the first cell is a chain, and
@@ -763,7 +743,7 @@ one journey" is `continuesPrevious` legs
   off answers itself. A board with one value a cell diffs with
   `changedCells`; another kind of element keys its own, and an element stored
   in two places is keyed once.
-- **A step or a journey?** The numbers in the narration decide. Where each
+- **A step or a journey? The numbers in the narration decide.** Where each
   forced square has a different figure to quote, each is a leg with its own
   sentence; where one sentence is true of all, they are one step.
 - **For legs from a shared helper**, thread the recorder through the helper
@@ -771,7 +751,7 @@ one journey" is `continuesPrevious` legs
   continue it (`fillRow` in
   [`unruly/solver.ts`](../src/games/unruly/solver.ts)).
 
-Exemplars: `nextRegionGroup` in
+Exemplars: `regionGroups` in
 [`filling/solver.ts`](../src/games/filling/solver.ts), the plan and
 `hintKeepTrack` in [`filling/index.ts`](../src/games/filling/index.ts), and
 `skeletonKeepTrack` in the skeleton's `hint.ts`.
@@ -790,9 +770,8 @@ on the way to the leg's value, or the first press drops the plan
 (`magnetsKeepTrack` in [`magnets/hint.ts`](../src/games/magnets/hint.ts)).
 `verbClicks` hands the same judge each button's click and takes the one that
 completes the step, then one that shrinks it, so a press only on the way is
-never the gesture's.
-Guard: walk a real journey and assert each leg's verdict is `"completed"`
-(`boats-hint.test.ts`, "completes a journey leg by leg").
+never the gesture's. Guard: walk a real journey and assert each leg's verdict
+is `"completed"` (`boats-hint.test.ts`, "completes a journey leg by leg").
 
 ### A move must not reach past the squares the step claimed
 
@@ -820,10 +799,10 @@ it, not from the rules' return codes.** A rule that also settles a cell's
 partner makes the partner report "nothing to do" at its own turn, and the
 step then says "this cell" while its move fills two.
 
-Mask scratch state out of the comparison: a rung that rewrites a scratch bit
-whether or not it fires otherwise reports a firing at the end of every plan.
-Decide whether a rung fired from its return value, and what it did from the
-masked diff. Exemplars:
+**Mask scratch state out of the comparison**: a rung that rewrites a scratch
+bit whether or not it fires otherwise reports a firing at the end of every
+plan. Decide whether a rung fired from its return value, and what it did from
+the masked diff. Exemplars:
 [`galaxies/hint.ts`](../src/games/galaxies/hint.ts) and
 [`magnets/hint.ts`](../src/games/magnets/hint.ts).
 
@@ -842,15 +821,15 @@ the plan cap"; exemplar: the cap in
 **After a step starts a sequence the player would write down at once, ask the
 same techniques about that sequence alone, none harder than the one that
 began it, and make the placements one journey of legs, each with its own
-sentence.**
+sentence.** Whenever a technique finds a placement, ask first whether its
+whole sequence is forced.
 
-Where the whole sequence has exactly one arrangement, say so once: one step
-placing all of it, drawn as the game's own line in the hint color. Count the
-arrangements; never infer uniqueness from the deductions that found the
+**Where the whole sequence has exactly one arrangement, say so once**: one
+step placing all of it, drawn as the game's own line in the hint color. Count
+the arrangements; never infer uniqueness from the deductions that found the
 members, and recount by brute force in the test. A neighbor left without room
 is a count too: the step may fire when exactly one arrangement leaves the
-neighboring sequence at least one. Whenever a technique finds a placement,
-ask first whether its whole sequence is forced.
+neighboring sequence at least one.
 
 Exemplar: `runRoutes` and `leavesRoom` in
 [`ascent/hint.ts`](../src/games/ascent/hint.ts), with requirements "Ascent's
@@ -865,11 +844,11 @@ reads the result after the mistake check has seen it. Exemplar: a number
 landing at the end of a drawn line in
 [`ascent/hint.ts`](../src/games/ascent/hint.ts).
 
-- **Marks a declared rule-out brings end the plan without the game's
-  help.** With the `auto-cross` preference on, the midend cuts a plan after
-  its first step that brings marks, and judges each step by the player's
-  move alone (`Game.rulesOut`, `docs/mechanics.md` § "Preferences"). The
-  game's hint plans as if the preference were off.
+**Marks a declared rule-out brings end the plan without the game's help.**
+With the `auto-cross` preference on, the midend cuts a plan after its first
+step that brings marks, and judges each step by the player's move alone
+(`Game.rulesOut`, `docs/mechanics.md` § "Preferences"). The game's hint
+plans as if the preference were off.
 
 ## Re-derive the named technique
 
@@ -889,10 +868,10 @@ the case.
 - **Keep the hint's functions separate from the generator's solver**, so the
   generator is untouched by construction.
 - **Word a premise without a flat state-of-being verb** ("has nowhere to
-  slide", not "is pinned"); a guard aimed at the conclusion clause catches
+  slide", not "is pinned"): a guard aimed at the conclusion clause catches
   "is", and the guard is not loosened for it.
-- A move over an arbitrary set of cells lets one firing group cells that do
-  not touch and lets `hintKeepTrack` shrink it in place.
+- **A move over an arbitrary set of cells** lets one firing group cells that
+  do not touch and lets `hintKeepTrack` shrink it in place.
 
 Exemplars: `packLeft`, `packRight` and `analyzeLine` in
 [`pattern/solver.ts`](../src/games/pattern/solver.ts), and `fillCells` in
@@ -903,7 +882,8 @@ Exemplars: `packLeft`, `packRight` and `analyzeLine` in
 **Where the solver forces a move by contradiction and the validity check
 already says which rule broke and where, build the reason from the rejected
 trial's errors.** No separate recorder is needed, and the evidence cells are
-the flagged positions.
+the flagged positions. This fits any game whose `findMistakes` or live-error
+check marks which rule each cell breaks.
 
 - **The reason is in the rejected trial, not the accepted move.** Set the
   trial value, validate into an errors array, classify, restore. A fixed
@@ -926,9 +906,7 @@ Exemplars: `nextForcedMove` in
 [`bricks/solver.ts`](../src/games/bricks/solver.ts) with
 [`bricks/index.ts`](../src/games/bricks/index.ts), and the classifier ending
 in `unfinishable` in
-[`boats/hint-solver.ts`](../src/games/boats/hint-solver.ts). This fits any
-game whose `findMistakes` or live-error check marks which rule each cell
-breaks.
+[`boats/hint-solver.ts`](../src/games/boats/hint-solver.ts).
 
 ## A deduction the player can run with a gesture is its own rung
 
@@ -936,11 +914,11 @@ breaks.
 give the hint a rung that says so**, hint-only, so no board changes. It is a
 shorter story than the general argument that otherwise covers those cases.
 
-Measure that the control and the deduction agree before making the claim: a
-control's predicate may be more lenient than the solver's, and "only one
-lights up" is then false at firings the general rung makes. Adding the rung
-is what makes the claim true wherever it is made. Exemplar: the cell-to-dot
-drag rung in [`galaxies/hint.ts`](../src/games/galaxies/hint.ts).
+**Measure that the control and the deduction agree before making the
+claim**: a control's predicate may be more lenient than the solver's, and
+"only one lights up" is then false at firings the general rung makes. Adding
+the rung is what makes the claim true wherever it is made. Exemplar: the
+cell-to-dot drag rung in [`galaxies/hint.ts`](../src/games/galaxies/hint.ts).
 
 ## Give the facts a notation
 
@@ -959,23 +937,23 @@ Search"). Try the notation first, and say what made it unmanageable.
 
 The order of work is the order of the sections below: check, measure, then
 either make the hint forgetful or design a mark and place it. Exemplar of a
-full notation: [`games/loopy/`](../src/games/loopy/), with requirement "Loopy
-explains the next deduction from notes the player can make" in its spec.
+full notation: [`games/loopy/`](../src/games/loopy/), with requirement "A
+fact a hinted line rests on is first placed as a note" in its spec.
 
 ### Check a game for facts the player cannot mark
 
 **Read what each sentence cites, and ask whether an earlier deduction found
-that fact and nothing on the board records it.** The shapes to look for:
+that fact and nothing on the board records it.** Shapes to search for:
 
-- **An arm whose comment says the notes lag the solver.**
-- **A recorder state that persists across the plan and is not the board**: a
+- An arm whose comment says the notes lag the solver.
+- A recorder state that persists across the plan and is not the board: a
   union-find, a candidate cube. Where the game has a shallow derivation from
   the board alone, check each firing's premise against it.
-- **Every arm that reads that state**, not only the one whose sentence gave
-  it away. Search the solver for reads of the field.
-- **A state field the solver writes and no player move does.** No sentence
-  need name it: the steps leaning on it are ordinary sentences, false only on
-  the player's board.
+- Every arm that reads that state, not only the one whose sentence gave it
+  away. Search the solver for reads of the field.
+- A state field the solver writes and no player move does. No sentence need
+  name it: the steps leaning on it are ordinary sentences, false only on the
+  player's board.
 
 **The guard, for any game whose hint runs on a working copy**: replay only
 the shown steps onto a player's board through the real `executeMove`, and
@@ -985,8 +963,8 @@ sentence may lean on unseen, so the guard needs no knowledge of the premises.
 Exemplar: "every step stands on the board the player can see" in
 `bridges-hint.test.ts`.
 
-Before seeding a recording pass from the player's marks, list what the
-solver's state implies that the marks do not say. Each item is a rung or a
+**Before seeding a recording pass from the player's marks, list what the
+solver's state implies that the marks do not say.** Each item is a rung or a
 missing notation.
 
 ### Measure what the recordable facts reach first
@@ -997,11 +975,11 @@ notation a decision and names its size.
 
 - **List the writers of the hidden state, and every rule that reads it**,
   and ask of each what the board already says about its conclusion; record
-  only what the board cannot derive. If every writer is a rule over
-  things already drawn, state that reading in one module and hold every bit
-  the solver sets to it in a test. Only then may the hint hide the firings
-  that set them (`hints.md` § "Show only what the board does not already
-  say"). Exemplar: [`magnets/reading.ts`](../src/games/magnets/reading.ts).
+  only what the board cannot derive. If every writer is a rule over things
+  already drawn, state that reading in one module and hold every bit the
+  solver sets to it in a test. Only then may the hint hide the firings that
+  set them (`hints.md` § "Show only what the board does not already say").
+  Exemplar: [`magnets/reading.ts`](../src/games/magnets/reading.ts).
 - **Ask whether the hidden fact is ever needed, not only whether it exists.**
   Build the forgetful solver, which re-reads everything off the board before
   each firing, and compare its verdicts with the real one on the boards the
@@ -1208,8 +1186,8 @@ check passes may be a guess, and reasoning from it would teach the guess: a
 mark counts once a deduction proves it, and the plan places it in an earlier
 step if the player had not.
 
-A game without tiers cannot refuse on a board its generator promised
-solvable (`hint-resume.test.ts`). Run the narrated ladder beside the
+**A game without tiers cannot refuse on a board its generator promised
+solvable** (`hint-resume.test.ts`). Run the narrated ladder beside the
 generator's certifier over a sample of boards, widen it rung by rung until it
 never stalls where the certifier finishes, and record the sample in the
 change's design.
@@ -1227,9 +1205,10 @@ boundary open, and a plan that narrates only the solver's own firings ends on
 a board that is never solved. The rung narrates as a real deduction and
 writes only state the generator does not read.
 
-A rung that is not monotone, whose choices can grow as the board fills, owes
-a test from the player's positions: the cross-game resume walk follows only
-the hint's own moves, so walk from random correct partial boards as well.
+**A rung that is not monotone, whose choices can grow as the board fills,
+owes a test from the player's positions**: the cross-game resume walk follows
+only the hint's own moves, so walk from random correct partial boards as
+well.
 
 Exemplars: `walled-apart` in
 [`separate/solver.ts`](../src/games/separate/solver.ts) and
@@ -1242,9 +1221,9 @@ about another, the plan has a rung that turns the notation into the answer.**
 A plan of notation alone is sound, teachable and never finishes the board,
 which the resume guard catches.
 
-Rung order is a narration decision, and measurement picks it. Where solver
-order lets the hardest rule win every race, split it into rungs and demote
-the hard one to last, as a parameter that defaults to the solver's behavior
-so the generator's path is unchanged. Exemplar: the wall rungs in
+**Rung order is a narration decision, and measurement picks it.** Where
+solver order lets the hardest rule win every race, split it into rungs and
+demote the hard one to last, as a parameter that defaults to the solver's
+behavior so the generator's path is unchanged. Exemplar: the wall rungs in
 [`galaxies/hint.ts`](../src/games/galaxies/hint.ts), with requirement "The
 hint plan finishes the board with walls" in its spec.

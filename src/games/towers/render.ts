@@ -75,13 +75,13 @@ export const PREFERRED_TILE_SIZE = 48;
 
 // --- palette (index-for-index with the upstream COL_* enum) ----------------
 
-export const COL_BACKGROUND = 0;
-export const COL_GRID = 1;
-export const COL_USER = 2;
-export const COL_HIGHLIGHT = 3;
+const COL_BACKGROUND = 0;
+const COL_GRID = 1;
+const COL_USER = 2;
+const COL_HIGHLIGHT = 3;
 export const COL_ERROR = 4;
 export const COL_PENCIL = 5;
-export const COL_DONE = 6;
+const COL_DONE = 6;
 // Fork addition: the yellow body of the pencil-mode indicator glyph (a classic
 // #2 school pencil). Appended past the upstream enum.
 export const COL_PENCIL_BODY = 7;
@@ -89,11 +89,11 @@ export const COL_PENCIL_BODY = 7;
 /** The driving clue's line of sight, outlined (drawn once per frame in
  * redraw). */
 export const COL_HINT_CELL = 8;
-export const COL_CELL = 9; // the surface of a play cell, and of a tower built on it
-export const COL_GIVEN = 10; // the lifted surface of a given tower
+const COL_CELL = 9; // the surface of a play cell, and of a tower built on it
+const COL_GIVEN = 10; // the lifted surface of a given tower
 /** The line between two play cells. A tower's own edges are content and stay
  * `COL_GRID`. */
-export const COL_LINE = 11;
+const COL_LINE = 11;
 /** The ground of a square the win flash is on. */
 export const COL_FLASH = 12;
 /** The ground of a square the win flash's leading edge is on. */
@@ -134,7 +134,7 @@ const DF_DIGIT_MASK = 0x00ff;
 
 /** Wide enough for the clue ring, or the pencil indicator's reach where that
  * is wider: the glyph has a floor, which a small enough tile falls under. */
-export const border = (ts: number): number =>
+const border = (ts: number): number =>
   Math.max(Math.floor((ts * 9) / 8), pencilIndicatorReach(ts));
 export const coord = (v: number, ts: number): number => v * ts + border(ts);
 export const x3d = (height: number, w: number, ts: number): number =>

@@ -5,7 +5,7 @@
  * One sweep over the `hint-games.ts` enrollment, so a newly ported game with a
  * `hint()` is covered by adding the one line it already has to add. The ring's
  * ink is the engine's (`resolvePalette`), so its index is known for every game;
- * a game's own `COL_HINT_CELL` is read out of its `render.ts` exports.
+ * the outline's slots are the palette's entries holding `HINT_OUTLINE`.
  *
  * The ring cannot be drawn in another shape (`GameDrawing.drawRing` is the
  * only way to its ink), so the sweep holds the frames to what that promises:
@@ -17,11 +17,11 @@
  * in `docs/hints-marks.md` § "Shade vs ring".
  */
 import { describe, expect, it } from "vitest";
+import { HINT_OUTLINE } from "./color/palette.ts";
 import { type HintMarkStyle, HintMarks, type MarkCell } from "./hint-mark.ts";
 import { Midend } from "./index.ts";
 import { NOTHING_TO_CLEAR, RING_MIN_ROUNDNESS } from "./ring.ts";
 import { beginDealt } from "./testing/dealt.ts";
-import { gameSourceFiles } from "./testing/enrollment.ts";
 import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 import { outsideRings, ringCrossings, ringsOf } from "./testing/mark-shape.ts";
 import {
@@ -32,22 +32,14 @@ import {
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import type { Color, Rect } from "./types.ts";
 
-const RENDERERS = import.meta.glob<Record<string, unknown>>("../games/*/render.ts", {
-  eager: true,
-});
-/** The renderers of the engine's game families, which draw for the games that
- * play on them (`testing/enrollment.ts`'s `gameSourceFiles`). */
-const FAMILY_RENDERERS = import.meta.glob<Record<string, unknown>>("./*/render.ts", {
-  eager: true,
-});
-
-/** A game's `COL_HINT_CELL`: its own renderer's, or its family's. */
-function evidenceColor(id: string, own: Record<string, unknown> | null): unknown {
-  if (own?.["COL_HINT_CELL"] !== undefined) return own["COL_HINT_CELL"];
-  const family = (gameSourceFiles.get(id) ?? []).find(
-    (f) => /^\.\.\/[^/]+\/render\.ts$/.test(f.path) && !f.path.startsWith("../../"),
-  );
-  return family && FAMILY_RENDERERS[`.${family.path.slice(2)}`]?.["COL_HINT_CELL"];
+/** The slots of a game's palette that hold the outline's ink. Found by value,
+ * never by an export's name, which a game is free to choose and a guard keyed
+ * on would skip unseen. */
+function outlineSlots(game: (typeof HINT_GAMES)[number][1]): number[] {
+  const [r, g, b] = HINT_OUTLINE;
+  return game
+    .colors(DEFAULT_BACKGROUND)
+    .flatMap((c, i) => (c[0] === r && c[1] === g && c[2] === b ? [i] : []));
 }
 
 interface Op {
@@ -66,19 +58,6 @@ function solidFills(ops: readonly Op[], color: number, cell: number): Op[] {
     const h = o.h ?? 0;
     return Math.min(w, h) * 4 >= Math.max(w, h) && Math.min(w, h) >= cell / 2;
   });
-}
-
-/** Every `render.ts` in the games tree, by puzzle id. */
-function renderersById(): Map<string, Record<string, unknown>> {
-  const byId = new Map<string, Record<string, unknown>>();
-  for (const [path, mod] of Object.entries(RENDERERS)) {
-    const m = path.match(/\/games\/([^/]+)\//);
-    // Throwing rather than skipping: a path shape this does not recognize is a
-    // module silently dropped from the sweep, which is how a guard goes quiet.
-    if (!m) throw new Error(`unexpected renderer path ${path}`);
-    byId.set(m[1], mod);
-  }
-  return byId;
 }
 
 /**
@@ -119,22 +98,16 @@ function hintFrames(
 }
 
 describe("a hint marks beside the content, never behind it", () => {
-  const byId = renderersById();
-
-  it("looks at every game's renderer", () => {
-    // The "how many things did I look at?" guard. An `import.meta.glob` that
-    // matches nothing yields `{}` and every assertion below then passes
-    // vacuously — this repo has been bitten by that exact silence before.
-    expect(byId.size).toBeGreaterThanOrEqual(50);
-    // **Every hinting game's renderer is findable**, so the list is empty —
-    // and an empty list still asserts something, because a game that hides its
-    // renderer shows up here.
-    expect(HINT_GAMES.filter(([id]) => !byId.has(id)).map(([id]) => id)).toEqual([]);
+  it("finds the outline's ink in most hinting games' palettes", () => {
+    // The "how many things did I look at?" guard. A game that outlines
+    // nothing holds no `HINT_OUTLINE` and has nothing to wash with it, so it
+    // is not required to; but a lookup that stopped finding the ink would
+    // pass every game vacuously, and this floor is where that shows.
+    const checked = HINT_GAMES.filter(([, game]) => outlineSlots(game).length > 0);
+    expect(checked.length).toBeGreaterThanOrEqual(50);
   });
 
   for (const [id, game] of HINT_GAMES) {
-    const evidence = evidenceColor(id, byId.get(id) ?? null);
-
     it(`${id}: a ring is round, and nothing is filled`, () => {
       const frames = hintFrames(game);
       expect(frames.length, `${id} produced no hint frame to check`).toBeGreaterThan(0);
@@ -157,11 +130,11 @@ describe("a hint marks beside the content, never behind it", () => {
         expect(crossed, `${id}: a ring crosses no number: ${crossed[0]}`).toHaveLength(
           0,
         );
-        if (typeof evidence === "number") {
-          const washes = solidFills(ops, evidence, cell);
+        for (const slot of outlineSlots(game)) {
+          const washes = solidFills(ops, slot, cell);
           expect(
             washes,
-            `${id} washes a cell with its evidence color: ${JSON.stringify(washes[0])}`,
+            `${id} washes a cell with the outline's ink: ${JSON.stringify(washes[0])}`,
           ).toHaveLength(0);
         }
       }
