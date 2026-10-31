@@ -250,7 +250,9 @@ candidates are cleared, so it answers as the pinned search would. State a
 cage's or a line's per-cell question in that shape.
 
 **A term is computed once where its names are bound.** Each binder and each
-definition's parameter opens a slot just after it, and a term that binds
+definition's parameter opens a slot just after it (a binder with a `where`,
+a second just past it, which the rest of the statement's terms go to, so a
+binding the filter skips pays for none of them), and a term that binds
 nothing, reads no candidate and makes no fact is computed in the slot of the
 last name it reads, where that takes it out of a loop. A read (`value`,
 `known`, a clue, a set's size) goes to its slot even inside the same loop, so
@@ -269,7 +271,8 @@ per deal against the hand-written one it replaced
 `*-describe-keen/report.md` for a cage's, `*-describe-mathrax/report.md`
 for a binder's order and a moved term's reads, and
 `*-describe-solo/report.md` for a statement that reads every part of a
-partition for each unit).
+partition for each unit, and `*-describe-salad/report.md` for the library
+read with a multiplicity).
 
 ## A statement's order is behavior
 

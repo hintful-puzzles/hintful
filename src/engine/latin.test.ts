@@ -8,8 +8,8 @@
  * rather than as the deduction that broke.
  *
  * So the blocks below assert each deduction **directly**, in the vocabulary of
- * the technique it implements: `elim` places on a last remaining candidate and
- * reports a contradiction on none, `set` refuses three cells sharing two
+ * the technique it implements: the hidden single places on a last remaining
+ * position and reports a contradiction on none, `set` refuses three cells sharing two
  * digits, `forcing` follows a chain of two-candidate cells to an elimination.
  * That is the same reasoning a hint narrates, which is why the tests read as
  * sentences about Latin squares rather than as pokes at an array.
@@ -46,16 +46,19 @@ import {
 import { randomNew, randomUpto } from "./random/index.ts";
 
 /** A plain Latin-square config: no game-specific deductions or validator,
- * the generic layers keyed simple=0/set0=1/set1=2/recursive=4, and nothing
- * at 3. */
+ * the library's singles at 0, its set at 1, its fish and wing at 2, the
+ * search at 4, and nothing at 3. */
 function cfg(maxdiff: number): LatinSolverConfig<null> {
   return {
     maxdiff,
-    diffSimple: 0,
-    diffSet0: 1,
-    diffSet1: 2,
+    ladder: [
+      { tier: 0, run: LATIN_RUNGS["latin.hiddenSingle"] },
+      { tier: 0, run: LATIN_RUNGS["latin.single"] },
+      { tier: 1, run: LATIN_RUNGS["latin.set"] },
+      { tier: 2, run: LATIN_RUNGS["latin.fish"] },
+      { tier: 2, run: LATIN_RUNGS["latin.wing"] },
+    ],
     diffRecursive: 4,
-    usersolvers: [null, null, null, null, null],
     valid: null,
     ctx: null,
   };
@@ -140,29 +143,29 @@ describe("latin deductions", () => {
     for (let n = 1; n <= 4; n++) expect(s.cubeGet(0, 0, n)).toBe(true);
   });
 
-  it("elim places only on the *last* remaining candidate", () => {
-    // The line between deduction and guessing. `elim` sweeps the o positions
-    // digit `n` could take in row `y`; two survivors means the row is not
-    // decided yet, and placing one would be a guess dressed as a deduction.
+  it("the hidden single places only on the *last* remaining position", () => {
+    // The line between deduction and guessing. Two positions left for digit 1
+    // in row 0 means the row is not decided yet, and placing one would be a
+    // guess dressed as a deduction.
     const s = blank(4);
-    const row0 = (n: number) => s.elim(s.cubepos(0, 0, n), 4 * 4);
+    const hiddenSingle = LATIN_RUNGS["latin.hiddenSingle"];
 
     s.cube[s.cubepos(2, 0, 1)] = 0;
     s.cube[s.cubepos(3, 0, 1)] = 0;
-    expect(row0(1)).toBe(0); // two positions left for digit 1 — no progress
+    expect(hiddenSingle(s)).toBe(0); // two positions left for digit 1 — no progress
     expect(s.grid[0]).toBe(0);
 
     s.cube[s.cubepos(1, 0, 1)] = 0;
-    expect(row0(1)).toBe(1); // one left — placed
+    expect(hiddenSingle(s)).toBe(1); // one left — placed
     expect(s.grid[0]).toBe(1);
   });
 
-  it("elim reports a contradiction when a digit has nowhere left to go", () => {
+  it("the hidden single reports a contradiction when a digit has nowhere left to go", () => {
     // The negative half of the same sweep, and the one that decides whether an
     // unsolvable board is *reported* unsolvable or silently graded.
     const s = blank(4);
     for (let x = 0; x < 4; x++) s.cube[s.cubepos(x, 0, 1)] = 0;
-    expect(s.elim(s.cubepos(0, 0, 1), 4 * 4)).toBe(-1);
+    expect(LATIN_RUNGS["latin.hiddenSingle"](s)).toBe(-1);
   });
 
   it("set elimination rejects three cells that share only two digits", () => {

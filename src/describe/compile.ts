@@ -736,17 +736,26 @@ function bindingLoops(
     const h = env.hoist;
     if (h !== null && loop) h.loops++;
     const inner = new Map(sc);
-    inner.set(bnd.name, {
+    const bound: Val = {
       code: v,
       sort,
       at: h === null ? undefined : out.slot(h.loops),
       ...(pos === undefined ? {} : { pos }),
       ...(names === null ? {} : { names }),
-    });
+    };
+    inner.set(bnd.name, bound);
     if (where !== null) {
       const w = compileExpr(where, inner, env, out);
       expect(w, "bool", `where of ${bnd.name}`);
       out.emit(`if (!(${w.code})) ${skip};`);
+      // What the rest reads of this name is computed past the filter, so a
+      // binding it skips does not pay for it; what the filter computed is
+      // shared.
+      if (bound.at !== undefined && h !== null) {
+        const after = out.slot(h.loops);
+        after.made = bound.at.made;
+        inner.set(bnd.name, { ...bound, at: after });
+      }
     }
     walk(i + 1, inner);
     if (h !== null && loop) h.loops--;
@@ -1646,7 +1655,7 @@ function call(
     case "times":
       arity(1);
       expect(vs[0], "num", fn);
-      return { code: `b.multiplicity(${vs[0].code})`, sort: NUM };
+      return { code: `(${vs[0].code} === b.repeat ? b.times : 1)`, sort: NUM };
     case "range":
       arity(2);
       expect(vs[0], "num", fn);

@@ -412,8 +412,8 @@ export function cageMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageMi
       for (let _i235 = 0; _i235 < _a234.length; _i235++) {
         const v_c = _a234[_i235];
         const _h236 = b.known(v_c);
-        const _h237 = b.value(v_c);
         if (!(_h236)) continue;
+        const _h237 = b.value(v_c);
         _g232 += _h237;
       }
     }
@@ -586,8 +586,8 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
         for (let _i384 = 0; _i384 < _a383.length; _i384++) {
           const v_c = _a383[_i384];
           const _h385 = b.known(v_c);
-          const _h386 = b.value(v_c);
           if (!(_h385)) continue;
+          const _h386 = b.value(v_c);
           _g381 += _h386;
         }
       }
@@ -603,8 +603,8 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
             for (let _i395 = 0; _i395 < _a394.length; _i395++) {
               const v_c = _a394[_i395];
               const _h396 = b.known(v_c);
-              const _h397 = b.value(v_c);
               if (!(_h396)) continue;
+              const _h397 = b.value(v_c);
               _g392 += _h397;
             }
           }
@@ -633,8 +633,8 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
           for (let _i411 = 0; _i411 < _a410.length; _i411++) {
             const v_c = _a410[_i411];
             const _h412 = b.known(v_c);
-            const _h413 = b.value(v_c);
             if (!(_h412)) continue;
+            const _h413 = b.value(v_c);
             _g408 += _h413;
           }
         }
@@ -782,8 +782,8 @@ export function cageSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSums
       for (let _i477 = 0; _i477 < _a476.length; _i477++) {
         const v_c = _a476[_i477];
         const _h478 = b.known(v_c);
-        const _h479 = b.value(v_c);
         if (!(_h478)) continue;
+        const _h479 = b.value(v_c);
         _g474 += _h479;
       }
     }
@@ -981,8 +981,8 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
         for (let _i647 = 0; _i647 < _a646.length; _i647++) {
           const v_c = _a646[_i647];
           const _h648 = b.known(v_c);
-          const _h649 = b.value(v_c);
           if (!(_h648)) continue;
+          const _h649 = b.value(v_c);
           _g644 += _h649;
         }
       }
@@ -998,8 +998,8 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
             for (let _i658 = 0; _i658 < _a657.length; _i658++) {
               const v_c = _a657[_i658];
               const _h659 = b.known(v_c);
-              const _h660 = b.value(v_c);
               if (!(_h659)) continue;
+              const _h660 = b.value(v_c);
               _g655 += _h660;
             }
           }
@@ -1028,8 +1028,8 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
           for (let _i674 = 0; _i674 < _a673.length; _i674++) {
             const v_c = _a673[_i674];
             const _h675 = b.known(v_c);
-            const _h676 = b.value(v_c);
             if (!(_h675)) continue;
+            const _h676 = b.value(v_c);
             _g671 += _h676;
           }
         }
@@ -1383,8 +1383,8 @@ export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | 
       let v_T = 0;
       for (let _j872 = 0; _j872 < _e870.length; _j872++) if ((_k871 >> (_e870.length - 1 - _j872)) & 1) v_T |= 1 << _e870[_j872];
       const _h873 = popcount(v_T);
-      const _h907 = (v_X0 & ~v_T);
       if (!(((_h873 === 0) || ((2 <= _h873) && (_h873 <= _h875))))) continue;
+      const _h907 = (v_X0 & ~v_T);
       _g876.length = 0;
       G877: {
         const _a884 = v_Y0;

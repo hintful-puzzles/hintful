@@ -52,8 +52,8 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjacent
     for (let _i10 = 0; _i10 < _a9.length; _i10++) {
       const v_a = _a9[_i10];
       const _h11 = b.known(v_a);
-      const _h17 = b.value(v_a);
       if (!(_h11)) continue;
+      const _h17 = b.value(v_a);
       const _a12 = sp.adj4[v_a];
       for (let _i13 = 0; _i13 < _a12.length; _i13++) {
         const v_b = _a12[_i13];

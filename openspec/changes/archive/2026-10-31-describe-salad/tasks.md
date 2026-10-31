@@ -10,8 +10,8 @@
 - [x] 2.2 State the library's `placed`, `hiddenSingle`, `set`, `fish` and `wing` with the multiplicity, and Salad's border technique; a size the grid does not give (`nums`) is dealt
 - [x] 2.3 Check each sound, the library on a Latin square and on one with a repeated value, Salad at every `nums` of orders 3 and 4, with a planted defect, and one that reads a multiplicity as one
 - [x] 2.4 Run the compiled ladder beside the hand-written one on every deal and hint walk; isolate each difference with a switch; see the comparison fail on a plant; trace every other Latin game byte for byte against HEAD
-- [ ] 2.5 Remove the hand-written rungs and the engine's levels path; every Salad test and hint guard passes
+- [x] 2.5 Remove the hand-written rungs and the engine's levels path; every Salad test and hint guard passes
 
 ## 3. Close
 
-- [ ] 3.1 Measure the speed per deal, every Latin game against HEAD; run the app; write the report; update the guides; archive; file what comes next
+- [x] 3.1 Measure the speed per deal, every Latin game against HEAD; run the app; write the report; update the guides; archive; file what comes next

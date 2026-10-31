@@ -292,9 +292,8 @@ class SolverUsage implements Marks {
 
   // --- the marks, as a compiled technique reads them -------------------------
 
-  multiplicity(): number {
-    return 1;
-  }
+  readonly repeat = 0;
+  readonly times = 1;
   known(c: number): boolean {
     return this.grid[c] !== 0;
   }

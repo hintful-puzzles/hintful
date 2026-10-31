@@ -64,22 +64,10 @@ export const MODULES = [
         replace: "    return (y * this.o + x) * this.symbols + n - 1;",
       },
       {
-        within: "LatinSolver.elim",
-        why: "elimination fires with one candidate too many left (two for a digit, times+1 for the repeated symbol)",
-        find: "    if (m === need) {",
-        replace: "    if (m === need + 1) {",
-      },
-      {
-        within: "LatinSolver.elim",
-        why: "a cell with no candidates left (or a line short of its repeated symbol) is not reported as a contradiction",
-        find: "    } else if (m < need) {\n      return -1;",
-        replace: "    } else if (m < need) {\n      return 0;",
-      },
-      {
-        within: "LatinSolver.elim",
-        why: "the repeated symbol is placed as soon as one cell can take it, instead of once exactly `times` can",
-        find: "    const need = positional ? this.multiplicity(1 + (start % s)) : 1;",
-        replace: "    const need = 1;",
+        within: "LatinSolver.multiplicity",
+        why: "the repeated symbol is read as appearing once a line, so its line is struck at its first placement and a line holding its places for all its copies places none",
+        find: "    return n === this.repeat ? this.times : 1;",
+        replace: "    return 1;",
       },
       {
         within: "LatinSolver.forcing",

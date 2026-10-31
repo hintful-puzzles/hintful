@@ -17,6 +17,7 @@ import {
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
   DIFF_UNFINISHED,
+  LATIN_RUNGS,
   LatinSolver,
   type LatinSolverConfig,
   latinSolver,
@@ -40,15 +41,20 @@ const SOLUTION = Uint8Array.from(
     .map((v) => (v > 3 ? HOLE : v)),
 );
 
+/** The library's singles at 1, its set at 2, its fish and wing at 3, and the
+ * search at 4. */
 function cfg(maxdiff: number, repeats = true): LatinSolverConfig<null> {
   return {
     repeats: repeats ? { times: TIMES } : undefined,
     maxdiff,
-    diffSimple: 1,
-    diffSet0: 2,
-    diffSet1: 3,
+    ladder: [
+      { tier: 1, run: LATIN_RUNGS["latin.hiddenSingle"] },
+      { tier: 1, run: LATIN_RUNGS["latin.single"] },
+      { tier: 2, run: LATIN_RUNGS["latin.set"] },
+      { tier: 3, run: LATIN_RUNGS["latin.fish"] },
+      { tier: 3, run: LATIN_RUNGS["latin.wing"] },
+    ],
     diffRecursive: 4,
-    usersolvers: [null, null, null, null, null],
     valid: null,
     ctx: null,
   };
@@ -117,7 +123,7 @@ describe("the cube with a repeated symbol", () => {
     expect(struck).toBe(O - 1);
   });
 
-  it("positional elimination places the repeated symbol when exactly `times` cells can take it", () => {
+  it("the hidden single places the repeated symbol when exactly `times` cells can take it", () => {
     const s = new LatinSolver(O, { times: TIMES });
     const grid = new Uint8Array(O * O);
     // Row 0: symbols 1, 2, 3 placed in the first three cells; the last two
@@ -126,7 +132,7 @@ describe("the cube with a repeated symbol", () => {
     grid[1] = 2;
     grid[2] = 3;
     expect(s.alloc(grid)).toBe(true);
-    expect(s.diffSimple()).toBe(1);
+    expect(LATIN_RUNGS["latin.hiddenSingle"](s)).toBe(1);
     expect(grid[3]).toBe(HOLE);
     expect(grid[4]).toBe(HOLE);
   });
@@ -136,30 +142,33 @@ describe("the cube with a repeated symbol", () => {
     s.alloc(new Uint8Array(O * O));
     // Rule the hole out of four of row 0's five cells: only one place for two.
     for (let x = 0; x < 4; x++) s.cube[s.cubepos(x, 0, HOLE)] = 0;
-    expect(s.elim(s.cubepos(0, 0, HOLE), O * s.symbols)).toBe(-1);
+    expect(LATIN_RUNGS["latin.hiddenSingle"](s)).toBe(-1);
   });
 
   it("set elimination weighs the repeated symbol by its multiplicity", () => {
-    // Row 0, cells × symbols. Cells 0 and 1 can only be holes (a naked pair of
-    // weight 2 = the two holes), so the hole must leave the other three cells.
+    // Row 0: cells 0, 1 and 2 can hold only 1 or the hole, three cells for its
+    // three copies (one 1, two holes), so neither goes anywhere else in the
+    // row; read the other way, 2 and 3 have only cells 3 and 4 left.
     const s = new LatinSolver(O, { times: TIMES });
     s.alloc(new Uint8Array(O * O));
-    for (const x of [0, 1])
-      for (let n = 1; n < HOLE; n++) s.cube[s.cubepos(x, 0, n)] = 0;
-    expect(s.diffSet(false)).toBe(1);
-    for (let x = 2; x < O; x++) expect(s.cubeGet(x, 0, HOLE)).toBe(false);
-    for (const x of [0, 1]) expect(s.cubeGet(x, 0, HOLE)).toBe(true);
+    for (const x of [0, 1, 2]) for (const n of [2, 3]) s.cube[s.cubepos(x, 0, n)] = 0;
+    expect(LATIN_RUNGS["latin.set"](s)).toBe(1);
+    for (const x of [3, 4]) {
+      expect(s.cubeGet(x, 0, 1)).toBe(false);
+      expect(s.cubeGet(x, 0, HOLE)).toBe(false);
+    }
+    for (const x of [0, 1, 2]) expect(s.cubeGet(x, 0, HOLE)).toBe(true);
   });
 
-  it("set elimination, the other way round: three cells sharing three symbols and a hole-free row", () => {
-    // Cells 2, 3, 4 of row 0 can hold only symbols 1..3 (a naked triple), so
-    // those symbols leave cells 0 and 1 — which then hold the holes.
+  it("a naked pair that ignores the hole's second copy is not a set", () => {
+    // Cells 0 and 1 can hold only 1 or the hole: two cells, but three copies
+    // left between those values, so another cell of the row still holds one.
     const s = new LatinSolver(O, { times: TIMES });
     s.alloc(new Uint8Array(O * O));
-    for (const x of [2, 3, 4]) s.cube[s.cubepos(x, 0, HOLE)] = 0;
-    expect(s.diffSet(false)).toBe(1);
-    for (const x of [0, 1])
-      for (let n = 1; n < HOLE; n++) expect(s.cubeGet(x, 0, n)).toBe(false);
+    for (const x of [0, 1]) for (const n of [2, 3]) s.cube[s.cubepos(x, 0, n)] = 0;
+    const before = s.cube.slice();
+    expect(LATIN_RUNGS["latin.set"](s)).toBe(0);
+    expect([...s.cube]).toEqual([...before]);
   });
 
   it("a forcing chain never starts from or runs through the repeated symbol", () => {

@@ -520,7 +520,7 @@ Exemplar: `mines/state.ts`.
 `latinSolver`, `latinGenerate` and `latinGenerateRect`. Its bipartite
 `matching` is usable outside the family: pass `rs` for a random matching in
 generation and leave it out for a deterministic existence check
-(`tents/`). The cube's index space, `usersolvers`, the `seed` hook, `cubeOut`
+(`tents/`). The cube's index space, a repeated symbol, the `seed` hook, `cubeOut`
 and the family's generator shapes are in
 [`solver-and-generator.md`](./solver-and-generator.md). Exemplar:
 `keen/solver.ts`. Its singles, sets, fish and wing are

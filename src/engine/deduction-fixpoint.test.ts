@@ -116,7 +116,7 @@ describe("runDeductionFixpoint", () => {
   });
 
   it("keeps baseGrade as a floor even when a lower tier fires", () => {
-    // `baseGrade` is the difficulty floor (`latinSolverTop` passes `diffSimple`),
+    // `baseGrade` is the difficulty floor (Tracks passes `DIFF_EASY`),
     // not merely the nothing-fired default — a technique below it firing must
     // not grade the board easier than the floor.
     let once = 1;

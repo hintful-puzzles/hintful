@@ -123,17 +123,17 @@ export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding> | 
   }
   L38: {
     const v_w0 = (_g32.length > 0 ? _g32[0] : -1);
+    if (!((v_w0 !== -1))) break L38;
     const _h40 = ((v_w0 / sp.w) | 0);
     const _h41 = (_h40 + 1);
     const _h42 = _h41;
     const _h43 = (v_w0 % sp.w);
     const _h44 = (_h43 + 1);
     const _h45 = _h44;
-    if (!((v_w0 !== -1))) break L38;
     for (let _m39 = b.domain; _m39 !== 0; _m39 &= _m39 - 1) {
       const v_e = 31 - Math.clz32(_m39 & -_m39);
-      const _h49 = (v_e - 1);
       if (!((((b.value(v_w0) === _h42) && (v_e === _h45)) || ((b.value(v_w0) !== _h42) && (v_e === _h42))))) continue;
+      const _h49 = (v_e - 1);
       facts.length = 0;
       changed = false;
       let _q46 = true;

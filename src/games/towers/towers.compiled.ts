@@ -125,8 +125,8 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
       for (let _i89 = 0; _i89 < _a88.length; _i89++) {
         const v_c = _a88[_i89];
         const _h90 = b.known(v_c);
-        const _h91 = b.value(v_c);
         if (!(_h90)) continue;
+        const _h91 = b.value(v_c);
         _g84 |= 1 << _h91;
       }
     }
@@ -197,8 +197,8 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
         for (let _i139 = 0; _i139 < _a138.length; _i139++) {
           const v_c = _a138[_i139];
           const _h140 = b.known(v_c);
-          const _h141 = b.value(v_c);
           if (!((_h140 && (_i139 >= _g130)))) continue;
+          const _h141 = b.value(v_c);
           _g134 |= 1 << _h141;
         }
       }
@@ -237,8 +237,8 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
           for (let _i161 = 0; _i161 < _a160.length; _i161++) {
             const v_c = _a160[_i161];
             const _h162 = b.known(v_c);
-            const _h163 = b.value(v_c);
             if (!((_h162 && (_i161 >= _g152)))) continue;
+            const _h163 = b.value(v_c);
             _g156 |= 1 << _h163;
           }
         }
@@ -304,8 +304,8 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
             const v_i = 31 - Math.clz32(_m197 & -_m197);
             L199: {
               const v_h = (_h198 - v_i);
-              const _h200 = popcount((v_K & ~rangeMask(1, v_h)));
               if (!((((v_K >> v_h) & 1) !== 0))) break L199;
+              const _h200 = popcount((v_K & ~rangeMask(1, v_h)));
               for (let _m201 = rangeMask(0, ((v_v - _h200) - 2)); _m201 !== 0; _m201 &= _m201 - 1) {
                 const v_j = 31 - Math.clz32(_m201 & -_m201);
                 const _t202 = (v_L[v_j] ?? -1);

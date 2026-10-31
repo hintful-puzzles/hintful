@@ -16,8 +16,12 @@
 export interface Marks {
   /** Every value of the answer's domain, as a bitmask. */
   readonly domain: number;
-  /** How many times `d` appears in each unit: `times(d)`. */
-  multiplicity(d: number): number;
+  /** The one value that appears more than once in each unit, or 0 where
+   * none does, and how many times (1 where none does): `times(d)` is
+   * `times` for `repeat` and 1 for every other value. Fields, not a method,
+   * so a compiled read is two loads every Latin game can inline. */
+  readonly repeat: number;
+  readonly times: number;
   /** Whether the cell holds a value. */
   known(c: number): boolean;
   /** The cell's value, or `-1` where it has none. */

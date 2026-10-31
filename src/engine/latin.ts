@@ -2,17 +2,17 @@
  * Generic Latin-square solver and generator: upstream `latin.c`'s solver, and
  * its RNG-faithful generator with `matching.c`.
  *
- * Shared by the games that call `latinSolver`. A game supplies its own
- * `usersolvers` (extra deductions keyed to its difficulty levels) and a `valid`
- * callback (does a completed grid satisfy the game's extra constraints?), and
- * `latinSolver` interleaves them with the generic deductions — positional/numeric
- * elimination, set elimination and the wing — and, at the recursive level, forcing chains
- * and guess-and-verify recursion (which doubles as the generators' uniqueness
- * check).
+ * Shared by the games that call `latinSolver`. A game supplies its ladder,
+ * compiled from its description, which places the library's techniques
+ * (`latin.description.yaml`: singles, set elimination and the wing) among its
+ * own, and a `valid` callback (does a completed grid satisfy the game's extra
+ * constraints?); `latinSolver` runs them, and at the recursive level forcing
+ * chains and guess-and-verify recursion (which doubles as the generators'
+ * uniqueness check).
  *
  * The `o³` candidate cube is indexed as upstream's
- * `cubepos(x,y,n) = (x·o + y)·o + (n−1)`, `place`/`elim`/`set`/`forcing` are
- * upstream's deductions, and the negative-result sentinels keep upstream's
+ * `cubepos(x,y,n) = (x·o + y)·o + (n−1)`, `forcing` is upstream's deduction,
+ * and the negative-result sentinels keep upstream's
  * numeric values so a game's `ret <= diff` / `ret != diff` comparisons read as
  * upstream's. Scratch buffers are owned by the solver instance; recursion
  * allocates a sub-solver per guess.
@@ -28,14 +28,10 @@
  * against that encoding. So the cube can be told, via {@link LatinRepeats},
  * that its **last** symbol appears `times` times per line: the cube then has
  * `symbols = o − times + 1` distinct values, `cubepos` strides by `symbols`,
- * positional elimination places the repeated symbol when exactly `times`
- * candidate cells remain, placing it strikes the rest of the line only once the
- * line's count is full, set elimination generalizes to multiplicities
- * ({@link LatinSolver.setGeneral}), and forcing chains never link through it
- * (a link relies on the value appearing once). **Every one of those paths
- * reduces to the C's when no repeat is declared** — `symbols = o`, every
- * multiplicity 1 — and the Latin family's byte-match differentials are the
- * proof that it does.
+ * the library's techniques read each value's {@link LatinSolver.multiplicity}
+ * (`times(d)`), and forcing chains never link through it (a link relies on the
+ * value appearing once). With no repeat declared, `symbols = o` and every
+ * multiplicity is 1, and the techniques read as on a Latin square.
  */
 
 import { type DeductionTechnique, runDeductionFixpoint } from "./deduction-fixpoint.ts";
@@ -60,7 +56,6 @@ import * as compiled from "./latin.compiled.ts";
 import { type RandomState, randomUpto } from "./random/index.ts";
 import { shuffle } from "./shuffle.ts";
 import { type StepBudget, stepBudget } from "./step-budget.ts";
-import { weighWing } from "./wing.ts";
 
 /** Upstream `enum { diff_impossible = 10, diff_ambiguous, diff_unfinished }`
  * — positive sentinels larger than any real difficulty level, so a
@@ -85,9 +80,6 @@ export function latinVerdict(ret: number): DifficultyVerdict {
   return "solved";
 }
 
-/** A game-specific deduction. Returns +1 (made progress), 0 (no progress),
- * or −1 (reached a contradiction). */
-export type UserSolver<Ctx> = (solver: LatinSolver, ctx: Ctx) => number;
 /** Validate a *completed* grid against the game's extra constraints. */
 type Validator<Ctx> = (solver: LatinSolver, ctx: Ctx) => boolean;
 
@@ -104,7 +96,7 @@ export type LatinReason =
   | LatinSetReason
   | LatinWingReason;
 
-/** A wing ({@link weighWing}): whichever value the `middle` cell takes, one
+/** A wing (`wing.ts`): whichever value the `middle` cell takes, one
  * of the `ends`, or where `self` the middle itself, is `n`, and the struck
  * cell shares a line with each. The words outline the middle and the ends,
  * which are every cell it reads. */
@@ -117,16 +109,11 @@ export interface LatinWingReason {
 }
 
 /** A set elimination. `cells` are the subset: the cells whose candidates
- * account for the struck values between them. `reads` is the rest of the line
- * whose candidates the set rests on, present only when there is one: a naked
- * set reads its own cells, but a hidden set ({@link LatinSolver.setGeneral}'s)
- * reads where the values are *not*, across every other cell of its line. The
- * candidate walk treats it as premise (`DeductionRecord`). One value confined
- * across lines has `lines` instead. */
+ * account for the struck values between them. One value confined across
+ * lines has `lines` too. */
 type LatinSetReason = {
   kind: "set";
   cells: readonly { x: number; y: number }[];
-  reads?: readonly { x: number; y: number }[];
   lines?: ConfinedLines;
 };
 
@@ -153,33 +140,6 @@ export function confinedLines(
     ),
   );
   return { axis, count: indices.length, cells };
-}
-
-/** Cube positions gathered as the distinct cells they lie in, in the order
- * first met. `stride` is the cube's symbols per cell. */
-class CellList {
-  readonly cells: { x: number; y: number }[] = [];
-  private readonly seen = new Set<number>();
-  constructor(
-    private readonly o: number,
-    private readonly stride: number,
-    /** Cells already listed elsewhere, left out of this one. */
-    skip?: CellList,
-  ) {
-    if (skip) for (const c of skip.seen) this.seen.add(c);
-  }
-  add(pos: number): void {
-    const c = (pos / this.stride) | 0;
-    if (this.seen.has(c)) return;
-    this.seen.add(c);
-    this.cells.push({ x: (c / this.o) | 0, y: c % this.o });
-  }
-}
-
-function setReason(cells: CellList, reads: CellList): LatinSetReason {
-  return reads.cells.length > 0
-    ? { kind: "set", cells: cells.cells, reads: reads.cells }
-    : { kind: "set", cells: cells.cells };
 }
 
 /**
@@ -238,11 +198,6 @@ export class LatinSolver implements Marks {
   readonly cube: Uint8Array;
   /** `o²` result grid (0 = blank); written back to the caller's array. */
   grid: Uint8Array;
-  /** `o·symbols`; `row[y·symbols + n−1]` counts placements of `n` in row `y`
-   * (0 or 1 for an ordinary symbol; up to `times` for the repeated one). */
-  readonly row: Uint8Array;
-  /** `o·symbols`; the column counterpart of {@link row}. */
-  readonly col: Uint8Array;
 
   // Scratch buffers for forcing chains (instance-owned).
   private readonly sGrid: Uint8Array;
@@ -285,8 +240,6 @@ export class LatinSolver implements Marks {
     this.domain = ((1 << (s + 1)) - 1) & ~1;
     this.cube = new Uint8Array(o * o * s);
     this.grid = new Uint8Array(o * o);
-    this.row = new Uint8Array(o * s);
-    this.col = new Uint8Array(o * s);
     this.sGrid = new Uint8Array(o * o);
     this.sNeighbors = new Int32Array(3 * o);
     this.sBfsqueue = new Int32Array(o * o);
@@ -363,14 +316,12 @@ export class LatinSolver implements Marks {
     }
   }
 
-  /** Reset the cube/row/col and seed from `grid` (written back in place).
-   * Returns false if a given digit is already ruled out (inconsistent). */
+  /** Reset the cube and seed from `grid` (written back in place). Returns
+   * false if a given digit is already ruled out (inconsistent). */
   alloc(grid: Uint8Array): boolean {
     const o = this.o;
     this.grid = grid;
     this.cube.fill(1);
-    this.row.fill(0);
-    this.col.fill(0);
     for (let x = 0; x < o; x++) {
       for (let y = 0; y < o; y++) {
         const n = grid[y * o + x];
@@ -396,8 +347,6 @@ export class LatinSolver implements Marks {
     }
     for (let i = 1; i <= s; i++) if (i !== n) this.cube[this.cubepos(x, y, i)] = 0;
     this.grid[y * o + x] = n;
-    ++this.row[y * s + n - 1];
-    ++this.col[x * s + n - 1];
 
     // The library's `placed`, which a recording records as `dup` strikes, or
     // for the repeated symbol, which leaves a line only once it holds every
@@ -424,47 +373,6 @@ export class LatinSolver implements Marks {
         }
       : null;
     compiled.placed(this, this.sp, y * o + x, fire);
-  }
-
-  /** Positional/numeric elimination over the cube slice `start, start+step,
-   * …` (o entries): if exactly one possibility remains, place it; if none,
-   * report a contradiction. */
-  elim(start: number, step: number): number {
-    const o = this.o;
-    const s = this.symbols;
-    // A numeric slice (`step === 1`) runs over a cell's `symbols` candidates; a
-    // positional slice runs over a line's `o` cells for one symbol — and for
-    // the repeated symbol, "exactly one place left" is "exactly `times` left".
-    const positional = step !== 1;
-    const len = positional ? o : s;
-    const need = positional ? this.multiplicity(1 + (start % s)) : 1;
-    let m = 0;
-    let fpos = -1;
-    for (let i = 0; i < len; i++) {
-      if (this.cube[start + i * step]) {
-        fpos = start + i * step;
-        m++;
-      }
-    }
-    if (m === need) {
-      let placed = 0;
-      for (let i = 0; i < len; i++) {
-        fpos = start + i * step;
-        if (!this.cube[fpos]) continue;
-        const n = 1 + (fpos % s);
-        const rest = (fpos / s) | 0;
-        const y = rest % o;
-        const x = (rest / o) | 0;
-        if (!this.grid[y * o + x]) {
-          this.place(x, y, n, this.recorder ? { kind: "single" } : null);
-          placed++;
-        }
-      }
-      if (placed > 0) return 1;
-    } else if (m < need) {
-      return -1;
-    }
-    return 0;
   }
 
   /** Forcing chains (upstream `latin_solver_forcing`): a chain of two-candidate
@@ -552,257 +460,6 @@ export class LatinSolver implements Marks {
     }
     return 0;
   }
-
-  /** Looped positional + numeric elimination (the "simple" difficulty). */
-  diffSimple(): number {
-    const o = this.o;
-    const s = this.symbols;
-    for (let y = 0; y < o; y++) {
-      for (let n = 1; n <= s; n++) {
-        if (this.row[y * s + n - 1] < this.multiplicity(n)) {
-          const ret = this.elim(this.cubepos(0, y, n), o * s);
-          if (ret !== 0) return ret;
-        }
-      }
-    }
-    for (let x = 0; x < o; x++) {
-      for (let n = 1; n <= s; n++) {
-        if (this.col[x * s + n - 1] < this.multiplicity(n)) {
-          const ret = this.elim(this.cubepos(x, 0, n), s);
-          if (ret !== 0) return ret;
-        }
-      }
-    }
-    for (let x = 0; x < o; x++) {
-      for (let y = 0; y < o; y++) {
-        if (!this.grid[y * o + x]) {
-          const ret = this.elim(this.cubepos(x, y, 1), 1);
-          if (ret !== 0) return ret;
-        }
-      }
-    }
-    return 0;
-  }
-
-  /** Looped set elimination with a repeated symbol, through
-   * {@link setGeneral}; `extreme` is the single-number (row-vs-column)
-   * variant. A cube with no repeat runs the library's `set` and `fish`. */
-  diffSet(extreme: boolean): number {
-    return this.diffSetGeneral(extreme);
-  }
-
-  /** The first wing ({@link weighWing}) on the board, over the cells, two of
-   * which see each other when they share a row or column. It strikes one
-   * cell, so its words can call the cell "this cell" whatever a game's strike
-   * axis. */
-  wing(): number {
-    const o = this.o;
-    const s = this.symbols;
-    const masks = new Int32Array(o * o);
-    for (let x = 0; x < o; x++)
-      for (let y = 0; y < o; y++)
-        for (let n = 1; n <= s; n++)
-          if (this.cube[this.cubepos(x, y, n)]) masks[y * o + x] |= 1 << (n - 1);
-    const found: {
-      middle: number;
-      x: number;
-      ends: readonly number[];
-      target: number;
-    }[] = [];
-    weighWing(
-      {
-        size: o * o,
-        values: this.repeat ? s - 1 : s,
-        open: (c) => !this.grid[c],
-        mask: (c) => masks[c],
-        seers: (c) => lineSeers(o, c),
-        sees: (a, b) => a !== b && (a % o === b % o || ((a / o) | 0) === ((b / o) | 0)),
-      },
-      (middle, x, ends, target) => found.push({ middle, x, ends, target }),
-    );
-    if (found.length === 0) return 0;
-    const { middle, x, ends, target } = found[0];
-    const at = (c: number) => ({ x: c % o, y: (c / o) | 0 });
-    const t = at(target);
-    if (this.recorder) {
-      const reason: LatinWingReason = {
-        kind: "wing",
-        n: x + 1,
-        middle: at(middle),
-        ends: ends.map(at),
-        self: (masks[middle] & (1 << x)) !== 0,
-      };
-      this.recorder({ kind: "elim", ...t, n: x + 1, reason, group: this.group });
-    }
-    this.cube[this.cubepos(t.x, t.y, x + 1)] = 0;
-    return 1;
-  }
-
-  /** The three set-elimination sweeps of {@link diffSet}, through
-   * {@link setGeneral}: per row and per column the cells × symbols matrix (a
-   * cell takes one symbol, a symbol fills `multiplicity` cells); per symbol the
-   * columns × rows matrix (the symbol appears `multiplicity` times in each). */
-  private diffSetGeneral(extreme: boolean): number {
-    const o = this.o;
-    const s = this.symbols;
-    if (!extreme) {
-      const ones: number[] = new Array(o).fill(1);
-      const bySymbol = Array.from({ length: s }, (_, k) => this.multiplicity(k + 1));
-      for (let y = 0; y < o; y++) {
-        const ret = this.setGeneral(o, s, ones, bySymbol, (x, k) =>
-          this.cubepos(x, y, k + 1),
-        );
-        if (ret !== 0) return ret;
-      }
-      for (let x = 0; x < o; x++) {
-        const ret = this.setGeneral(o, s, ones, bySymbol, (y, k) =>
-          this.cubepos(x, y, k + 1),
-        );
-        if (ret !== 0) return ret;
-      }
-    } else {
-      for (let n = 1; n <= s; n++) {
-        const m: number[] = new Array(o).fill(this.multiplicity(n));
-        const ret = this.setGeneral(o, o, m, m, (x, y) => this.cubepos(x, y, n), true);
-        if (ret !== 0) return ret;
-      }
-    }
-    return 0;
-  }
-
-  /**
-   * Set elimination with multiplicities — the theorem behind {@link set},
-   * stated so a repeated symbol fits it.
-   *
-   * The `rows × cols` 0/1 matrix `at(i, j)` says whether row `i` may still pair
-   * with column `j`; in the solution row `i` pairs exactly `demand[i]` times and
-   * column `j` exactly `supply[j]` times (totals equal). For a subset `R` of
-   * rows, every one of its pairings lands in `N(R)`, the columns some row of `R`
-   * still admits. If `N(R)` can supply exactly what `R` demands, then every
-   * pairing into `N(R)` comes from `R`, so any row *outside* `R` loses its
-   * candidates in `N(R)`; if `N(R)` supplies less than `R` demands, the position
-   * is contradictory. Column subsets are the same argument transposed, and
-   * with every multiplicity 1 both collapse to the classic hidden/naked set —
-   * the zero-rectangle `set` searches for.
-   *
-   * Subsets are enumerated outright: the matrices here are at most `o × o`
-   * with `o ≤ 9`, and only a consumer with a repeat pays for it.
-   */
-  setGeneral(
-    rows: number,
-    cols: number,
-    demand: readonly number[],
-    supply: readonly number[],
-    at: (i: number, j: number) => number,
-    acrossLines = false,
-  ): number {
-    const cube = this.cube;
-    const rec = this.recorder;
-    const s = this.symbols;
-    const cellOf = (pos: number): { x: number; y: number } => {
-      const rest = (pos / s) | 0;
-      return { x: (rest / this.o) | 0, y: rest % this.o };
-    };
-    const strike = (pos: number, reason: LatinSetReason | null): void => {
-      if (rec && reason) {
-        rec({
-          kind: "elim",
-          ...cellOf(pos),
-          n: 1 + (pos % s),
-          reason,
-          group: this.group,
-        });
-      }
-      cube[pos] = 0;
-    };
-
-    // One pass over row subsets, one over column subsets; `side` names which
-    // index runs along the subset.
-    for (const side of ["rows", "cols"] as const) {
-      const nSub = side === "rows" ? rows : cols;
-      const nOther = side === "rows" ? cols : rows;
-      const want = side === "rows" ? demand : supply;
-      const give = side === "rows" ? supply : demand;
-      const live = (a: number, b: number): boolean =>
-        cube[side === "rows" ? at(a, b) : at(b, a)] !== 0;
-
-      for (let mask = 1; mask < 1 << nSub; mask++) {
-        // Skip singletons and the full set: a singleton is `elim`'s job, and the
-        // full set's neighborhood is everything.
-        const size = popcount(mask);
-        if (size < 2 || size >= nSub) continue;
-        let demanded = 0;
-        for (let a = 0; a < nSub; a++) if (mask & (1 << a)) demanded += want[a];
-        let neighborhood = 0;
-        let supplied = 0;
-        for (let b = 0; b < nOther; b++) {
-          for (let a = 0; a < nSub; a++) {
-            if (mask & (1 << a) && live(a, b)) {
-              neighborhood |= 1 << b;
-              supplied += give[b];
-              break;
-            }
-          }
-        }
-        if (supplied < demanded) return -1;
-        if (supplied !== demanded) continue;
-        const pos = (a: number, b: number): number =>
-          side === "rows" ? at(a, b) : at(b, a);
-        // The subset's own live pairings, as cells: the premise a hint outlines.
-        // It reads its rows' every pairing, the dead ones too.
-        let premise: LatinSetReason | null = null;
-        if (rec) {
-          const cells = new CellList(this.o, s);
-          for (let a = 0; a < nSub; a++)
-            for (let b = 0; b < nOther; b++)
-              if (mask & (1 << a) && live(a, b)) cells.add(pos(a, b));
-          // After `cells` is whole: the list leaves out what it is given then.
-          const reads = new CellList(this.o, s, cells);
-          for (let a = 0; a < nSub; a++)
-            for (let b = 0; b < nOther; b++) if (mask & (1 << a)) reads.add(pos(a, b));
-          const members: number[] = [];
-          for (let a = 0; a < nSub; a++) if (mask & (1 << a)) members.push(a);
-          // Over one value's places the matrix rows are the board's columns.
-          premise = acrossLines
-            ? {
-                kind: "set",
-                cells: cells.cells,
-                lines: confinedLines(side === "rows" ? "col" : "row", members, this.o),
-              }
-            : setReason(cells, reads);
-        }
-        let progress = false;
-        for (let a = 0; a < nSub; a++) {
-          if (mask & (1 << a)) continue;
-          for (let b = 0; b < nOther; b++) {
-            if (neighborhood & (1 << b) && live(a, b)) {
-              strike(pos(a, b), premise);
-              progress = true;
-            }
-          }
-        }
-        if (progress) return 1;
-      }
-    }
-    return 0;
-  }
-}
-
-/** The other cells of cell `c`'s row and column, cells numbered `y·o + x`. */
-function* lineSeers(o: number, c: number): Generator<number> {
-  const x = c % o;
-  const y = (c / o) | 0;
-  for (let i = 0; i < o; i++) {
-    if (i !== x) yield y * o + i;
-    if (i !== y) yield i * o + x;
-  }
-}
-
-/** Number of set bits in a small non-negative integer. */
-function popcount(v: number): number {
-  let c = 0;
-  for (let m = v; m; m &= m - 1) c++;
-  return c;
 }
 
 /** One technique of a ladder, run on a solver: `-1`, `0` or `1`, as a rung. */
@@ -912,16 +569,6 @@ function fishReason(
   return { kind: "set", cells, lines };
 }
 
-/** The Latin rungs of a game that is not described yet: the game's own
- * deductions by level, and the difficulty level each library technique sits
- * at. */
-export interface LatinLevels<Ctx> {
-  diffSimple: number;
-  diffSet0: number;
-  diffSet1: number;
-  usersolvers: (UserSolver<Ctx> | null)[];
-}
-
 /** The rungs of a described game: every technique its description places,
  * in its order, each run at its tier, and only at a cap below its `until`
  * where it has one. */
@@ -931,8 +578,7 @@ export interface LatinLadder {
 
 /** How `latinSolver` runs: its rungs, the game's validator, and the hint-path
  * hooks. */
-export type LatinSolverConfig<Ctx> = LatinSolverCommon<Ctx> &
-  (LatinLevels<Ctx> | LatinLadder);
+export type LatinSolverConfig<Ctx> = LatinSolverCommon<Ctx> & LatinLadder;
 
 interface LatinSolverCommon<Ctx> {
   /** Declare the last symbol as repeating `times` per line (a pseudo-Latin
@@ -975,55 +621,31 @@ interface LatinSolverCommon<Ctx> {
   cubeOut?: Uint8Array;
 }
 
-/** Rung `i` of the ladder (0..maxdiff): the game's own `usersolvers[i]` first,
- * then whichever built-in technique that difficulty level maps to. Returns
- * `-1` (contradiction) / `0` (nothing) / `>0` (fired), the runner's contract. */
+/** Rung `i` of the ladder (0..maxdiff): the techniques the game's ladder
+ * places at tier `i`, in its order, then at the searching level the forcing
+ * chain. Returns `-1` (contradiction) / `0` (nothing) / `>0` (fired), the
+ * runner's contract. */
 function latinRung<Ctx>(
   solver: LatinSolver,
   cfg: LatinSolverConfig<Ctx>,
   i: number,
 ): number {
-  let ret = 0;
-  if ("ladder" in cfg) {
-    for (const rung of cfg.ladder) {
-      if (rung.tier !== i || (rung.until !== undefined && cfg.maxdiff >= rung.until))
-        continue;
-      ret = rung.run(solver);
-      if (ret !== 0) return ret;
-    }
-  } else {
-    const { diffSimple, diffSet0, diffSet1, usersolvers, ctx } = cfg;
-    const library = !solver.repeat;
-    if (usersolvers[i]) ret = (usersolvers[i] as UserSolver<Ctx>)(solver, ctx);
-    if (ret === 0 && i === diffSimple) {
-      if (library) {
-        ret = LATIN_RUNGS["latin.hiddenSingle"](solver);
-        if (ret === 0) ret = LATIN_RUNGS["latin.single"](solver);
-      } else ret = solver.diffSimple();
-    }
-    if (ret === 0 && i === diffSet0)
-      ret = library ? LATIN_RUNGS["latin.set"](solver) : solver.diffSet(false);
-    if (ret === 0 && i === diffSet1)
-      ret = library ? LATIN_RUNGS["latin.fish"](solver) : solver.diffSet(true);
-    // The wing is a check of what the notes show, so it shares the top
-    // deductive level with the set eliminations rather than the search's.
-    if (ret === 0 && i === diffSet1)
-      ret = library ? LATIN_RUNGS["latin.wing"](solver) : solver.wing();
+  for (const rung of cfg.ladder) {
+    if (rung.tier !== i || (rung.until !== undefined && cfg.maxdiff >= rung.until))
+      continue;
+    const ret = rung.run(solver);
+    if (ret !== 0) return ret;
   }
-  const { diffRecursive } = cfg;
   // A forcing chain is a supposition, so it shares the level of the other
   // search, the recursion, and no game can place it lower.
-  if (ret === 0 && i === diffRecursive) ret = solver.forcing();
-  return ret;
+  return i === cfg.diffRecursive ? solver.forcing() : 0;
 }
 
 function latinSolverTop<Ctx>(solver: LatinSolver, cfg: LatinSolverConfig<Ctx>): number {
   const { maxdiff, diffRecursive } = cfg;
-  const diffSimple = "ladder" in cfg ? 0 : cfg.diffSimple;
-  // Rung `i` **is** difficulty level `i` here — `diffSimple`, `diffSet0`,
-  // `diffSet1` and `diffRecursive` are level numbers the game hands in, and
-  // `latinRung` dispatches on them — so the technique's tier is its index, and
-  // the cap is the game's own `maxdiff` rather than a position derived from it.
+  // Rung `i` **is** tier `i` here, and `diffRecursive` a tier number the game
+  // hands in, so the technique's tier is its index, and the cap is the game's
+  // own `maxdiff` rather than a position derived from it.
   const techniques: DeductionTechnique[] = [];
   for (let i = 0; i <= maxdiff; i++) {
     techniques.push({
@@ -1036,7 +658,6 @@ function latinSolverTop<Ctx>(solver: LatinSolver, cfg: LatinSolverConfig<Ctx>): 
   const fp = runDeductionFixpoint({
     techniques,
     maxTier: maxdiff,
-    baseGrade: diffSimple,
     budget: solver.budget,
     beforeTechnique: (technique) => {
       solver.group++;
