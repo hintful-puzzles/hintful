@@ -44,33 +44,6 @@ export function describedLibrary(path: string): LibraryJson {
   return file;
 }
 
-/** The description with the named variations applied, in order. Only the
- * interpreter reads a variation: no compiled game has one yet. */
-export function withVariations(
-  json: DescriptionJson,
-  names: readonly string[],
-): DescriptionJson {
-  let out = json;
-  for (const name of names) {
-    const v = json.variations?.[name];
-    if (v === undefined) throw new Error(`${json.game}: no variation ${name}`);
-    out = {
-      ...out,
-      space: {
-        ...out.space,
-        ...v.replace?.space,
-        regions: { ...out.space.regions, ...v.replace?.space?.regions },
-      },
-      define: { ...out.define, ...v.add?.define },
-      rules: { ...out.rules, ...v.add?.rules },
-      clues: { ...out.clues, ...v.add?.clues },
-      shape: [...(out.shape ?? []), ...(v.add?.shape ?? [])],
-      techniques: [...(out.techniques ?? []), ...(v.add?.techniques ?? [])],
-    };
-  }
-  return out;
-}
-
 /** What a game hands over for its board to be read by a description: the one
  * per-game piece (design.md § "What a game still writes"). */
 export interface Dealt {

@@ -10,9 +10,11 @@ export interface Dealt {
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "facing" | "bounds" | "latin.hiddenSingle" | "latin.single" | "arrangement" | "latin.set" | "latin.fish" | "latin.wing";
 
-/** The ladder: each technique's tier, and the cap from which it no longer
- * runs where it has one, in the order the description lists them. */
-export const ladder: readonly { id: LadderId; tier: number; until?: number }[] = [
+/** The ladder: each technique's tier, on its scale where that is not the
+ * description's tiers, the least cap it runs at where that is above its
+ * tier, and the cap from which it no longer runs where it has one, in the
+ * order the description lists them. */
+export const ladder: readonly { id: LadderId; tier: number; scale?: string; from?: number; until?: number }[] = [
   { id: "facing", tier: 0 },
   { id: "bounds", tier: 0 },
   { id: "latin.hiddenSingle", tier: 0 },

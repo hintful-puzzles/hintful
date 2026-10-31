@@ -53,8 +53,43 @@ export interface DescriptionJson {
   freedom: { kind: string };
   deal?: Record<string, string>;
   tiers?: string[];
+  /** Grading scales besides `tiers`, by name, each its tiers easiest first. */
+  scales?: Record<string, string[]>;
   techniques?: TechniqueJson[];
   variations?: Record<string, VariationJson>;
+}
+
+/** The description with the named variations applied, in order. */
+export function withVariations(
+  json: DescriptionJson,
+  names: readonly string[],
+): DescriptionJson {
+  let out = json;
+  for (const name of names) {
+    const v = json.variations?.[name];
+    if (v === undefined) throw new Error(`${json.game}: no variation ${name}`);
+    out = {
+      ...out,
+      space: {
+        ...out.space,
+        ...v.replace?.space,
+        regions: { ...out.space.regions, ...v.replace?.space?.regions },
+      },
+      define: { ...out.define, ...v.add?.define },
+      rules: { ...out.rules, ...v.add?.rules },
+      clues: { ...out.clues, ...v.add?.clues },
+      shape: [...(out.shape ?? []), ...(v.add?.shape ?? [])],
+      techniques: [...(out.techniques ?? []), ...(v.add?.techniques ?? [])],
+    };
+  }
+  return out;
+}
+
+/** The description as the compiled code reads it: every variation applied,
+ * since one ladder runs on every board the game deals, and a name a board's
+ * variations leave out is empty there. */
+export function withEveryVariation(json: DescriptionJson): DescriptionJson {
+  return withVariations(json, Object.keys(json.variations ?? {}));
 }
 
 /** A variation: blocks added to the description, or replacing its blocks of
@@ -68,13 +103,16 @@ export interface VariationJson {
 /** A technique stated in the description, or one of a library's placed at a
  * tier of the game's (`use`: `"<library>.<id>"`). */
 export type TechniqueJson =
-  | ({
-      id: string;
-      tier: string;
-      until?: string;
-      rung?: string | string[];
-    } & StatedTechnique)
-  | { use: string; tier: string; until?: string; rung?: string | string[] };
+  | ({ id: string } & Placing & StatedTechnique)
+  | ({ use: string } & Placing);
+
+/** Where a technique sits on the ladder. */
+interface Placing {
+  tier: string;
+  from?: string;
+  until?: string;
+  rung?: string | string[];
+}
 
 /** What a technique says, wherever it is stated. */
 export interface StatedTechnique {
@@ -106,7 +144,14 @@ export function isFormal(file: DescriptionFile): file is DescriptionJson {
 
 export interface Technique {
   id: string;
+  /** Its tier, on its scale. */
   tier: number;
+  /** The scale it grades on: one of the description's `scales`, or `null`
+   * for its `tiers`. */
+  scale: string | null;
+  /** The least cap on its scale at which the ladder runs it, where that is
+   * above its tier; `null` where it runs at every cap from its own. */
+  from: number | null;
   /** The tier from which the ladder no longer runs it, at a cap that high;
    * `null` where it runs at every cap from its own. */
   until: number | null;
@@ -140,12 +185,24 @@ function parseBinders(src: string): Binder[] {
   return e.binders;
 }
 
+/** What a technique's place on a game's ladder gives it. */
+type Placed = "tier" | "scale" | "from" | "until" | "rungs";
+
+/** A technique placed on no ladder: a library's, read alone. */
+export const UNPLACED: Pick<Technique, Placed> = {
+  tier: 0,
+  scale: null,
+  from: null,
+  until: null,
+  rungs: [],
+};
+
 /** A library's or a description's technique, parsed. */
 export function parseTechnique(
   where: string,
   id: string,
   stated: StatedTechnique,
-): Omit<Technique, "tier" | "until" | "rungs"> {
+): Omit<Technique, Placed> {
   const at = (part: string, src: string): Expr => {
     try {
       return parse(src);
@@ -204,8 +261,9 @@ export function loadDescription(
       means: at(`clue ${kind}`, c.means),
     });
   const tiers = json.tiers ?? [];
+  const scales = Object.entries(json.scales ?? {});
   const techniques = (json.techniques ?? []).map((t): Technique => {
-    let parsed: Omit<Technique, "tier" | "until" | "rungs">;
+    let parsed: Omit<Technique, Placed>;
     if ("use" in t) {
       const [lib, name] = t.use.split(".");
       const found = libraries.find((l) => l.library === lib)?.techniques[name];
@@ -215,17 +273,31 @@ export function loadDescription(
     } else {
       parsed = parseTechnique(json.game, t.id, t);
     }
-    const tier = tiers.indexOf(t.tier);
-    if (tier < 0)
+    const [scale, onScale] = tiers.includes(t.tier)
+      ? [null, tiers]
+      : (scales.find(([, ts]) => ts.includes(t.tier)) ?? [null, null]);
+    if (onScale === null)
       throw new SyntaxError(`${json.game} ${parsed.id}: no tier "${t.tier}"`);
-    const until = t.until === undefined ? null : tiers.indexOf(t.until);
-    if (until !== null && until <= tier)
-      throw new SyntaxError(
-        `${json.game} ${parsed.id}: until "${t.until}" is no tier above its own`,
-      );
+    const tier = onScale.indexOf(t.tier);
+    // A tier above the technique's own, on its scale.
+    const above = (field: string, name?: string): number | null => {
+      if (name === undefined) return null;
+      const i = onScale.indexOf(name);
+      if (i <= tier)
+        throw new SyntaxError(
+          `${json.game} ${parsed.id}: ${field} "${name}" is no tier above its own`,
+        );
+      return i;
+    };
+    const from = above("from", t.from);
+    const until = above("until", t.until);
+    if (from !== null && until !== null && until <= from)
+      throw new SyntaxError(`${json.game} ${parsed.id}: until is not above from`);
     return {
       ...parsed,
       tier,
+      scale,
+      from,
       until,
       rungs: t.rung === undefined ? [] : typeof t.rung === "string" ? [t.rung] : t.rung,
     };

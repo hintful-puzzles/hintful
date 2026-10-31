@@ -5,9 +5,11 @@ import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, setOf } from "../
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "latin.hiddenSingle" | "latin.single" | "associativity" | "identity" | "notIdentity" | "latin.set" | "latin.fish" | "latin.wing";
 
-/** The ladder: each technique's tier, and the cap from which it no longer
- * runs where it has one, in the order the description lists them. */
-export const ladder: readonly { id: LadderId; tier: number; until?: number }[] = [
+/** The ladder: each technique's tier, on its scale where that is not the
+ * description's tiers, the least cap it runs at where that is above its
+ * tier, and the cap from which it no longer runs where it has one, in the
+ * order the description lists them. */
+export const ladder: readonly { id: LadderId; tier: number; scale?: string; from?: number; until?: number }[] = [
   { id: "latin.hiddenSingle", tier: 0 },
   { id: "latin.single", tier: 0 },
   { id: "associativity", tier: 1 },

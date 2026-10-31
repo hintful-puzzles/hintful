@@ -13,6 +13,9 @@ import { groupGame } from "../../src/games/group/index.ts";
 import { keenGame } from "../../src/games/keen/index.ts";
 import { mathraxGame } from "../../src/games/mathrax/index.ts";
 import { saladGame } from "../../src/games/salad/index.ts";
+import { soloGame } from "../../src/games/solo/index.ts";
+import { COMPARE as SOLO } from "../../src/games/solo/solver.ts";
+import { DIFF_INTERSECT, DIFF_SET, SYMM_NONE } from "../../src/games/solo/state.ts";
 import { towersGame } from "../../src/games/towers/index.ts";
 import { unequalGame } from "../../src/games/unequal/index.ts";
 
@@ -26,7 +29,21 @@ const GAMES: [string, AnyGame][] = [
   ["group", groupGame],
   ["mathrax", mathraxGame],
   ["salad", saladGame],
+  ["solo", soloGame],
 ];
+
+/** Boards beyond the presets: Killer at other sizes and tiers, and with X. */
+const EXTRA: Record<string, unknown[]> = {
+  group: [2, 3, 4].map((diff) => ({ w: 8, diff, id: false })),
+  solo: [
+    { c: 2, r: 3, diff: DIFF_INTERSECT },
+    { c: 3, r: 3, diff: DIFF_INTERSECT },
+    { c: 3, r: 3, diff: DIFF_SET },
+    { c: 6, r: 1, diff: DIFF_INTERSECT },
+    { c: 3, r: 3, xtype: true },
+    { c: 3, r: 3, xtype: true, killer: true },
+  ].map((p) => ({ ...soloGame.defaultParams(), symm: SYMM_NONE, killer: true, ...p })),
+};
 const SEEDS = 3;
 const STEPS = 200;
 
@@ -46,13 +63,22 @@ it("trace", () => {
   // TRACE_GAMES narrows the walk to some games, by name, comma-separated.
   const only = process.env["TRACE_GAMES"]?.split(",") ?? null;
   const lines: string[] = [];
-  const hidden = [2, 3, 4].map((diff) => ({ w: 8, diff, id: false }));
+  // SOLO_HAND_WRITTEN runs Solo's hand-written ladder, while it is there.
+  SOLO.handWritten = process.env["SOLO_HAND_WRITTEN"] !== undefined;
+  // SOLO_READ_AT_START has its min/max read each cage as the call found it.
+  SOLO.readAtStart = process.env["SOLO_READ_AT_START"] !== undefined;
+  // SOLO_DOMAIN_SUMS has its sums count only the board's values.
+  SOLO.domainSums = process.env["SOLO_DOMAIN_SUMS"] !== undefined;
+  // SOLO_SOLVE_PATH sets the comparison's switches that change only how much
+  // one solve-path firing does, so the generator deals what the compiled
+  // ladder deals.
+  const solvePath = process.env["SOLO_SOLVE_PATH"] !== undefined;
+  SOLO.splitParts = solvePath;
+  SOLO.onePlacement = solvePath;
+  SOLO.freshCages = solvePath;
+  SOLO.oneAtATime = solvePath;
   for (const [name, g] of GAMES.filter(([n]) => only === null || only.includes(n)))
-    for (const p of [
-      g.defaultParams(),
-      ...presets(g),
-      ...(name === "group" ? hidden : []),
-    ])
+    for (const p of [g.defaultParams(), ...presets(g), ...(EXTRA[name] ?? [])])
       for (let s = 0; s < SEEDS; s++) {
         const { desc } = g.newDesc(p, randomNew(`trace ${name} ${s}`));
         lines.push(`${name} ${g.encodeParams(p, true)} ${s}: ${desc}`);

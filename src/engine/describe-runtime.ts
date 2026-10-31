@@ -3,8 +3,9 @@
  * and the dealt clues. `compile.ts` writes code against these and nothing
  * else, so these are the whole of a technique's view of a board.
  *
- * An element is its index: a cell `y·w + x`, a line its row `y` or `h + x`
- * for a column, an edge its place in {@link GridSpace.edgeEnds}, a corner
+ * An element is its index: a cell `y·w + x`, a line its row `y`, `h + x`
+ * for a column, and after the columns a space's boxes and then its
+ * diagonals, an edge its place in {@link GridSpace.edgeEnds}, a corner
  * `y·(w − 1) + x` for the one below and right of cell `(x, y)`, a region
  * its part's index in its {@link Partition}. `-1` is
  * `none`, for an element and for a value alike, since no value is negative.
@@ -75,18 +76,26 @@ export function clueAt(list: ClueList, x: number): number {
   return k < 0 ? -1 : list.v[k];
 }
 
-/** A partition of the cells the board deals: its parts by index, and each
- * part's cells in reading order. */
+/** A partition of the cells the board deals: its parts by index, each
+ * part's cells in reading order, and the part holding each cell (`-1` where
+ * none does). */
 export interface Partition {
   readonly parts: readonly number[];
   readonly cells: readonly (readonly number[])[];
+  readonly of: Int32Array;
 }
 
-/** The partition whose parts, in order, hold `cells`. */
-export function partition(cells: readonly (readonly number[])[]): Partition {
+/** The partition of a board of `n` cells whose parts, in order, hold
+ * `cells`. */
+export function partition(cells: readonly (readonly number[])[], n: number): Partition {
+  const of = new Int32Array(n).fill(-1);
+  cells.forEach((cs, r) => {
+    for (const c of cs) of[c] = r;
+  });
   return {
     parts: cells.map((_, r) => r),
     cells: cells.map((cs) => cs.toSorted((a, b) => a - b)),
+    of,
   };
 }
 
@@ -99,16 +108,26 @@ export interface GridSpace {
   readonly cols: readonly number[];
   /** The rows, then the columns. */
   readonly lines: readonly number[];
+  /** A Sudoku's boxes, as lines: the parts of the partition its description
+   * lists among its units. None on a Latin square. */
+  readonly boxes: readonly number[];
+  /** The two diagonals, as lines, where the description has them: the main
+   * one, then the other, each top to bottom. */
+  readonly diagonals: readonly number[];
   /** The lines no value repeats in. */
   readonly units: readonly number[];
-  /** Each line's cells: a row's left to right, a column's top to bottom. */
+  /** Each line's cells: a row's left to right, a column's top to bottom, a
+   * box's in reading order. */
   readonly lineCells: readonly (readonly number[])[];
   readonly rowOf: Int32Array;
   readonly colOf: Int32Array;
+  /** The box holding each cell, `-1` where there are none. */
+  readonly boxOf: Int32Array;
   /**
-   * The cells sharing a unit with each cell, each once: the row's and the
-   * column's interleaved by index (the row's first at each), as the Latin
-   * engine has always visited them.
+   * The cells sharing a unit with each cell, each once: on a Latin square the
+   * row's and the column's interleaved by index (the row's first at each),
+   * as the Latin engine has always visited them; where there are boxes, in
+   * reading order, as Solo always has.
    */
   readonly peers: readonly (readonly number[])[];
   /** Up, right, down, left, those on the grid. */
@@ -146,18 +165,60 @@ export function latinSpace(o: number): GridSpace {
   return sp;
 }
 
-function gridSpace(w: number, h: number): GridSpace {
+const sudokus = new WeakMap<readonly (readonly number[])[], GridSpace[]>();
+
+/**
+ * The Sudoku grid whose boxes hold `boxCells`, with its two diagonals as
+ * units too where `diagonals` is set. Its units are the boxes, then the rows,
+ * then the columns, then the diagonals: the order Solo has always scanned
+ * them in. Kept for the life of `boxCells`, which a board shares across every
+ * solve of it.
+ */
+export function sudokuSpace(
+  boxCells: readonly (readonly number[])[],
+  diagonals: boolean,
+): GridSpace {
+  let both = sudokus.get(boxCells);
+  if (both === undefined) {
+    both = [];
+    sudokus.set(boxCells, both);
+  }
+  const at = diagonals ? 1 : 0;
+  both[at] ??= gridSpace(boxCells.length, boxCells.length, boxCells, diagonals);
+  return both[at];
+}
+
+function gridSpace(
+  w: number,
+  h: number,
+  boxCells: readonly (readonly number[])[] = [],
+  hasDiagonals = false,
+): GridSpace {
   const n = w * h;
   const cells = Array.from({ length: n }, (_, c) => c);
   const rows = Array.from({ length: h }, (_, y) => y);
   const cols = Array.from({ length: w }, (_, x) => h + x);
   const lines = [...rows, ...cols];
+  const boxes = boxCells.map((_, i) => h + w + i);
+  const diagonals = hasDiagonals
+    ? [h + w + boxes.length, h + w + boxes.length + 1]
+    : [];
   const lineCells = [
     ...rows.map((y) => Array.from({ length: w }, (_, x) => y * w + x)),
     ...cols.map((L) => Array.from({ length: h }, (_, y) => y * w + (L - h))),
+    ...boxCells.map((cs) => cs.toSorted((a, b) => a - b)),
+    ...(hasDiagonals
+      ? [
+          Array.from({ length: w }, (_, i) => i * w + i),
+          Array.from({ length: w }, (_, i) => i * w + (w - 1 - i)),
+        ]
+      : []),
   ];
+  const units = boxes.length > 0 ? [...boxes, ...lines, ...diagonals] : lines;
   const rowOf = new Int32Array(n);
   const colOf = new Int32Array(n);
+  const boxOf = new Int32Array(n).fill(-1);
+  for (const L of boxes) for (const c of lineCells[L]) boxOf[c] = L;
   const peers: number[][] = [];
   const adj4: number[][] = [];
   const right = new Int32Array(n).fill(-1);
@@ -215,6 +276,13 @@ function gridSpace(w: number, h: number): GridSpace {
   const opposite = Int32Array.from(sight, (_, s) =>
     s < 2 * w ? (s < w ? s + w : s - w) : s < 2 * w + h ? s + h : s - h,
   );
+  if (boxes.length > 0) {
+    const unitsOf = cells.map((c) => units.filter((L) => lineCells[L].includes(c)));
+    for (const c of cells)
+      peers[c] = cells.filter(
+        (k) => k !== c && unitsOf[k].some((L) => unitsOf[c].includes(L)),
+      );
+  }
   return {
     w,
     h,
@@ -222,10 +290,13 @@ function gridSpace(w: number, h: number): GridSpace {
     rows,
     cols,
     lines,
-    units: lines,
+    boxes,
+    diagonals,
+    units,
     lineCells,
     rowOf,
     colOf,
+    boxOf,
     peers,
     adj4,
     edgeEnds: Int32Array.from(ends),

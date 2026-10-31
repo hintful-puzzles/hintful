@@ -19,6 +19,8 @@ import {
   loadDescription,
   parseTechnique,
   type Technique,
+  UNPLACED,
+  withEveryVariation,
 } from "./description.ts";
 import type { Binder, Expr } from "./expr.ts";
 
@@ -180,6 +182,11 @@ interface Env {
   clues: ReadonlyMap<string, ClueKind>;
   /** The partitions the board deals, by name. */
   regions: ReadonlySet<string>;
+  /** The partition among the units, whose parts are the space's boxes: its
+   * name, or `null` where there is none. */
+  boxes: string | null;
+  /** Whether the space has its diagonals. */
+  diagonals: boolean;
   /** The runtime helpers the code calls, to import. */
   used: Set<string>;
   /** The declarations of the arrays a technique's comprehensions reuse, made
@@ -314,6 +321,8 @@ function early(
         bound(e.name) ||
         NAMES[e.name] !== undefined ||
         env.regions.has(e.name) ||
+        e.name === env.boxes ||
+        (e.name === "diagonals" && env.diagonals) ||
         e.name === "order" ||
         e.name === "w" ||
         e.name === "h"
@@ -334,7 +343,7 @@ function early(
     case "call": {
       if (e.fn === "value" || e.fn === "known") marks.read = true;
       if (e.fn === "clue") return all(e.args.slice(1));
-      if (EARLY.has(e.fn)) return all(e.args);
+      if (EARLY.has(e.fn) || partOf(e.fn, env)) return all(e.args);
       const def = env.defs.get(e.fn);
       if (def === undefined || !all(e.args)) return false;
       return early(def.body, (n) => def.params.includes(n), env, marks);
@@ -449,6 +458,10 @@ function compileNode(e: Expr, scope: Scope, env: Env, out: Out): Val {
   }
 }
 
+/** Whether `fn` names a partition, which as a function gives a cell's part. */
+const partOf = (fn: string, env: Env): boolean =>
+  env.regions.has(fn) || fn === env.boxes;
+
 function name(n: string, scope: Scope, env: Env, out: Out): Val {
   const bound = scope.get(n);
   if (bound !== undefined) return bound;
@@ -458,6 +471,9 @@ function name(n: string, scope: Scope, env: Env, out: Out): Val {
     env.readsClues.yes = true;
     return { code: `cl.${n}.parts`, sort: setOf(elem(`region ${n}`)) };
   }
+  if (n === env.boxes) return { code: "sp.boxes", sort: setOf(elem("line")) };
+  if (n === "diagonals" && env.diagonals)
+    return { code: "sp.diagonals", sort: setOf(elem("line")) };
   if (n === "order" || n === "w") return { code: "sp.w", sort: NUM };
   if (n === "h") return { code: "sp.h", sort: NUM };
   const def = env.defs.get(n);
@@ -1467,6 +1483,16 @@ function call(
     env.used.add("clueAt");
     return { code: `clueAt(cl.${a.name}, ${x.code})`, sort: kind.v };
   }
+  if (partOf(fn, env)) {
+    // A partition named as a function: the part holding a cell.
+    if (args.length !== 1)
+      throw new CompileError(`${fn} takes 1, given ${args.length}`);
+    const c = compileExpr(args[0], scope, env, out);
+    expectElem(c, "cell", fn);
+    if (fn === env.boxes) return { code: `sp.boxOf[${c.code}]`, sort: elem("line") };
+    env.readsClues.yes = true;
+    return { code: `cl.${fn}.of[${c.code}]`, sort: elem(`region ${fn}`) };
+  }
   const filling = scope.get(fn);
   if (filling?.sort.k === "fill") {
     if (args.length !== 1)
@@ -1889,6 +1915,8 @@ export function compileLibrary(
     defs: new Map(),
     clues: new Map(),
     regions: new Set(),
+    boxes: null,
+    diagonals: false,
     used,
     concluding: false,
     memo: false,
@@ -1898,12 +1926,7 @@ export function compileLibrary(
     epoch: null,
   };
   const parts = Object.entries(lib.techniques).map(([id, stated]) => {
-    const t: Technique = {
-      ...parseTechnique(lib.library, id, stated),
-      tier: 0,
-      until: null,
-      rungs: [],
-    };
+    const t: Technique = { ...parseTechnique(lib.library, id, stated), ...UNPLACED };
     const out = compileTechnique(t, env);
     if (out.clues)
       throw new CompileError(
@@ -1948,13 +1971,18 @@ export function compileGame(
   runtime: string,
 ): string {
   Out.reset();
-  const d = loadDescription(json, libraries);
+  const d = loadDescription(withEveryVariation(json), libraries);
   const used = new Set<string>();
   const clues = new Map<string, ClueKind>();
+  const { space } = d.json;
+  const parts = Object.keys(space.regions ?? {});
+  const unitParts = parts.filter((name) => space.units.includes(name));
+  if (unitParts.length > 1)
+    throw new CompileError(`${unitParts.join(", ")}: one partition among the units`);
+  // A partition among the units is the space's boxes, dealt or not.
+  const boxes = unitParts[0] ?? null;
   const regions = new Set(
-    Object.entries(d.json.space.regions ?? {}).flatMap(([name, how]) =>
-      how === "dealt" ? [name] : [],
-    ),
+    parts.filter((name) => name !== boxes && space.regions?.[name] === "dealt"),
   );
   for (const kind of d.clueKinds.keys())
     if (regions.has(kind))
@@ -1965,6 +1993,8 @@ export function compileGame(
     defs: d.defs,
     clues,
     regions,
+    boxes,
+    diagonals: space.diagonals === true,
     used,
     concluding: false,
     memo: false,
@@ -1976,7 +2006,8 @@ export function compileGame(
   for (const [kind, c] of d.clueKinds)
     clues.set(kind, clueSorts(kind, c.at, c.value, env));
   const own = d.techniques.filter((t) => !t.id.includes("."));
-  const parts = own.map((t) => compileTechnique(t, env).code);
+  const code = own.map((t) => compileTechnique(t, env).code);
+  const scales = Object.entries(d.json.scales ?? {});
   const clueLines =
     clues.size + regions.size === 0
       ? []
@@ -1993,19 +2024,34 @@ export function compileGame(
     "/** Every technique a rung runs, by id: the description's, in its order. */",
     `export type LadderId = ${ids.map((id) => JSON.stringify(id)).join(" | ")};`,
     "",
-    "/** The ladder: each technique's tier, and the cap from which it no longer",
-    " * runs where it has one, in the order the description lists them. */",
-    "export const ladder: readonly { id: LadderId; tier: number; until?: number }[] = [",
+    "/** The ladder: each technique's tier, on its scale where that is not the",
+    " * description's tiers, the least cap it runs at where that is above its",
+    " * tier, and the cap from which it no longer runs where it has one, in the",
+    " * order the description lists them. */",
+    "export const ladder: readonly { id: LadderId; tier: number; scale?: string; from?: number; until?: number }[] = [",
     ...d.techniques
       .filter((t) => t.on === null)
-      .map(
-        (t) =>
-          `  { id: ${JSON.stringify(t.id)}, tier: ${t.tier}${t.until === null ? "" : `, until: ${t.until}`} },`,
-      ),
+      .map((t) => {
+        const fields = [
+          `id: ${JSON.stringify(t.id)}`,
+          `tier: ${t.tier}`,
+          ...(t.scale === null ? [] : [`scale: ${JSON.stringify(t.scale)}`]),
+          ...(t.from === null ? [] : [`from: ${t.from}`]),
+          ...(t.until === null ? [] : [`until: ${t.until}`]),
+        ];
+        return `  { ${fields.join(", ")} },`;
+      }),
     "];",
     "",
     `/** The description's tiers, by name. */`,
     `export const tiers: readonly string[] = ${JSON.stringify(d.tiers)};`,
+    ...(scales.length === 0
+      ? []
+      : [
+          "",
+          "/** Its other scales' tiers, by scale. */",
+          `export const scales: Readonly<Record<string, readonly string[]>> = ${JSON.stringify(Object.fromEntries(scales))};`,
+        ]),
   ];
   return `${[
     HEADER(source),
@@ -2015,7 +2061,7 @@ export function compileGame(
     ...clueLines,
     ...ladder,
     "",
-    parts.join("\n\n"),
+    code.join("\n\n"),
   ].join("\n")}\n`;
 }
 

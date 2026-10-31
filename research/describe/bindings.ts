@@ -261,7 +261,7 @@ export const soloBinding: Binding<SoloParams, SoloState> = {
       if (k === null) return [];
       const cages = space.names.get("cage") as Elem[];
       return k.kblocks.blocks.map((cells, i) => ({
-        kind: "cage",
+        kind: "total",
         at: cages[i],
         v: Math.max(...cells.map((c) => k.kgrid[c])),
       }));

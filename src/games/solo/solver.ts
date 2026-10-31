@@ -28,11 +28,22 @@ import {
   runDeductionFixpoint,
 } from "../../engine/deduction-fixpoint.ts";
 import {
+  clueList,
+  type Fire,
+  type GridSpace,
+  type Marks,
+  PLACE,
+  partition,
+  sudokuSpace,
+  valuesOf,
+} from "../../engine/describe-runtime.ts";
+import {
   auditingPremises,
   type CellBoard,
   FiringReplay,
   offerReplay,
 } from "../../engine/firing-replay.ts";
+import * as latinTechniques from "../../engine/latin.compiled.ts";
 import {
   type ConfinedLines,
   confinedLines,
@@ -42,6 +53,7 @@ import {
 } from "../../engine/latin.ts";
 import type { Point } from "../../engine/types.ts";
 import { weighWing } from "../../engine/wing.ts";
+import * as solo from "./solo.compiled.ts";
 import type { BlockStructure, SoloState } from "./state.ts";
 import {
   DIFF_AMBIGUOUS,
@@ -267,9 +279,20 @@ function compactIndices(arr: Uint8Array, cr: number): number {
 
 // --- solver usage -----------------------------------------------------------
 
-class SolverUsage {
+const NO_CAGES: solo.Dealt = { cage: partition([], 0), total: clueList([], [], 0) };
+
+class SolverUsage implements Marks {
   readonly cr: number;
   readonly blocks: BlockStructure;
+  /** The grid as the compiled techniques read it. */
+  readonly sp: GridSpace;
+  /** The killer cages and their totals as the compiled techniques read them;
+   * none on a board without them. */
+  private readonly dealt: solo.Dealt;
+  /** The comparison's: whether the technique now running stops at its first
+   * firing on the solve path. */
+  private oneAtATime = false;
+  readonly domain: number;
   /** The killer cages as given, which the working cages start from. */
   private readonly cages: BlockStructure | null;
   private readonly xtype: boolean;
@@ -350,9 +373,18 @@ class SolverUsage {
         }
       }
       this.killer = { kblocks: dupCages(kblocks), kclues, totals: kclues.slice() };
+      // Built each solve: the generator merges cages in place between them.
+      const cage = partition(kblocks.blocks, area);
+      this.dealt = {
+        cage,
+        total: clueList(cage.parts, kclues.slice(0, nclues), nclues),
+      };
     } else {
       this.killer = null;
+      this.dealt = NO_CAGES;
     }
+    this.sp = sudokuSpace(blocks.blocks, xtype);
+    this.domain = (1 << (cr + 1)) - 2;
 
     this.cube = new Uint8Array(area * cr).fill(1);
     this.row = new Uint8Array(area);
@@ -368,6 +400,70 @@ class SolverUsage {
     this.sBfsqueue = new Int32Array(area);
     this.sIndexlist = new Int32Array(area);
     this.sIndexlist2 = new Int32Array(cr);
+  }
+
+  // --- the marks, as a compiled technique reads them -------------------------
+
+  known(c: number): boolean {
+    return this.grid[c] !== 0;
+  }
+  value(c: number): number {
+    return this.grid[c] || -1;
+  }
+  cand(c: number): number {
+    const cr = this.cr;
+    let m = 0;
+    for (let n = 1, p = c * cr; n <= cr; n++, p++) if (this.cube[p]) m |= 1 << n;
+    return m;
+  }
+  has(c: number, d: number): boolean {
+    return this.cube[c * this.cr + d - 1] !== 0;
+  }
+  strikeAt(c: number, d: number): void {
+    this.cube[c * this.cr + d - 1] = 0;
+  }
+  placeAt(c: number, d: number): void {
+    this.place(c % this.cr, (c / this.cr) | 0, d);
+  }
+
+  /**
+   * What a compiled technique is given to tell its firings to: on the hint
+   * path, each fact made and recorded with the reason `reason` builds from
+   * the binding, on the marks before any of the firing's facts is made, and
+   * one firing a call; on the solve path nothing, so the technique makes its
+   * facts itself and goes on.
+   */
+  private fire<B>(
+    reason: (binding: B, cell: number, n: number) => SoloReason,
+  ): Fire<B> | null {
+    const cr = this.cr;
+    if (!this.recorder) {
+      if (!this.oneAtATime) return null;
+      // The comparison's switch: one firing a call on the solve path too.
+      return (_, facts) => {
+        for (let i = 0; i < facts.length; i += 3) {
+          const c = facts[i + 1];
+          if (facts[i] === PLACE) this.placeAt(c, facts[i + 2]);
+          else this.strikeAt(c, facts[i + 2]);
+        }
+        return false;
+      };
+    }
+    return (binding, facts) => {
+      const why: SoloReason[] = [];
+      for (let i = 0; i < facts.length; i += 3)
+        why.push(reason(binding, facts[i + 1], facts[i + 2]));
+      for (let i = 0; i < facts.length; i += 3) {
+        const c = facts[i + 1];
+        const n = facts[i + 2];
+        if (facts[i] === PLACE) this.place(c % cr, (c / cr) | 0, n, why[i / 3]);
+        else {
+          this.recElim(c, n, why[i / 3]);
+          this.strikeAt(c, n);
+        }
+      }
+      return false;
+    };
   }
 
   // cube accessors (cubepos / cubepos2 macros)
@@ -778,7 +874,7 @@ class SolverUsage {
   }
 
   /** Cell indices → reading-order `{x, y}` (for a recorded cage reason). */
-  private cellsXY(cells: number[]): Point[] {
+  private cellsXY(cells: readonly number[]): Point[] {
     const cr = this.cr;
     return cells.map((c) => ({ x: c % cr, y: (c / cr) | 0 }));
   }
@@ -813,6 +909,9 @@ class SolverUsage {
       this.recElim(xy, n, { kind: "cageMinMax", cells: cageCells, clue, ...note });
     };
 
+    // The comparison's switch: each cell read against the cube as the call
+    // found it, as the compiled reading does.
+    const seen = COMPARE.readAtStart ? this.cube.slice() : this.cube;
     for (let i = 0; i < nsquares; i++) {
       const x = cells[i];
       for (let n = 1; n <= cr; n++) {
@@ -823,12 +922,12 @@ class SolverUsage {
           if (i === j) continue;
           const yy = cells[j];
           for (let m = 1; m <= cr; m++)
-            if (this.cube2At(yy, m)) {
+            if (seen[yy * cr + m - 1]) {
               minval += m;
               break;
             }
           for (let m = cr; m > 0; m--)
-            if (this.cube2At(yy, m)) {
+            if (seen[yy * cr + m - 1]) {
               maxval += m;
               break;
             }
@@ -897,6 +996,8 @@ class SolverUsage {
     for (let i = 0; i < maxSums; i++) {
       const bits = sumbits[i];
       if (bits === 0) break;
+      // The comparison's switch: no way with a value above the board's.
+      if (COMPARE.domainSums && bits >> (cr + 1) !== 0) continue;
       let j = 0;
       for (; j < nsquares; j++) {
         let squareBits = bits;
@@ -963,13 +1064,24 @@ class SolverUsage {
           }
         }
       }
-      if (matched !== kblocks.blocks[b].length) {
+      // The comparison's switch: a cage's cells filled since its working cage
+      // was last brought up to date count as filled, as the compiled reading
+      // reads them.
+      let fresh = 0;
+      let freshSum = 0;
+      if (COMPARE.freshCages)
+        for (const c of kblocks.blocks[b])
+          if (this.grid[c]) {
+            fresh++;
+            freshSum += this.grid[c];
+          }
+      if (matched !== kblocks.blocks[b].length - fresh || matched === 0) {
         off += matched;
         continue;
       }
       for (let k = off; k + matched < n; k++) squares[k] = squares[k + matched];
       n -= matched;
-      filteredSum += kclues[b];
+      filteredSum += kclues[b] - freshSum;
       whole?.push(b);
     }
     return { len: off, filteredSum };
@@ -1274,6 +1386,7 @@ class SolverUsage {
       if (!this.placeCageSingle(kblocks.blocks[b][0], kclues[b], this.cageNote(k, b)))
         return -1;
       changed = 1;
+      if (this.recorder && COMPARE.onePlacement) return changed;
     }
     return changed;
   }
@@ -1335,6 +1448,7 @@ class SolverUsage {
           if (place) {
             if (!this.placeCageSingle(cells[0], sum, regionNote)) return -1;
             changed = 1;
+            if (this.recorder && COMPARE.onePlacement) return changed;
           }
           continue;
         }
@@ -1373,6 +1487,7 @@ class SolverUsage {
           if (place) {
             if (!this.placeCageSingle(rest[0], clue, note)) return -1;
             changed = 1;
+            if (this.recorder && COMPARE.onePlacement) return changed;
           }
         } else if (rest.length > 1) {
           parts.push({ cells: rest, clue, inCage: true, note });
@@ -1395,12 +1510,16 @@ class SolverUsage {
   /** Killer min/max (`DIFF_KMINMAX`) over every cage, then every partial cage
    * when `regions` (the region rule is in reach). One cage is one firing on the
    * hint path. */
-  private killerMinmaxAll(k: KillerWork, regions: boolean): number {
+  private killerMinmaxAll(
+    k: KillerWork,
+    regions: boolean,
+    which: "both" | "cages" | "parts" = "both",
+  ): number {
     if (this.reduceCages(k) < 0) return -1;
     const { kblocks, kclues } = k;
-    const parts = regions ? this.regionPartials(k) : [];
+    const parts = regions && which !== "cages" ? this.regionPartials(k) : [];
     let changed = 0;
-    for (let b = 0; b < kblocks.blocks.length; b++) {
+    for (let b = 0; b < (which === "parts" ? 0 : kblocks.blocks.length); b++) {
       if (this.killerMinmax(kblocks.blocks[b], kclues[b], this.cageNote(k, b)) > 0) {
         changed = 1;
         if (this.recorder) return changed;
@@ -1417,12 +1536,16 @@ class SolverUsage {
 
   /** Killer sums (`DIFF_KSUMS`) over every cage, then every partial cage when
    * `regions`. One cage is one firing on the hint path. */
-  private killerSumsAll(k: KillerWork, regions: boolean): number {
+  private killerSumsAll(
+    k: KillerWork,
+    regions: boolean,
+    which: "both" | "cages" | "parts" = "both",
+  ): number {
     if (this.reduceCages(k) < 0) return -1;
     const { kblocks, kclues } = k;
-    const parts = regions ? this.regionPartials(k) : [];
+    const parts = regions && which !== "cages" ? this.regionPartials(k) : [];
     let changed = 0;
-    for (let b = 0; b < kblocks.blocks.length; b++) {
+    for (let b = 0; b < (which === "parts" ? 0 : kblocks.blocks.length); b++) {
       const ret = this.killerSums(
         kblocks.blocks[b],
         kclues[b],
@@ -1464,6 +1587,271 @@ class SolverUsage {
     dlev: Difficulty,
     grade: { diff: number; kdiff: number },
   ): DeductionTechnique[] {
+    return COMPARE.handWritten
+      ? this.handWrittenLadder(dlev, grade)
+      : this.compiledLadder(dlev, grade);
+  }
+
+  /** The region a sentence names for a unit of {@link sp}. */
+  private regionOf(u: number): SoloRegion {
+    const cr = this.cr;
+    if (u < cr) return { kind: "row", index: u };
+    if (u < 2 * cr) return { kind: "col", index: u - cr };
+    const diag = this.sp.diagonals.indexOf(u);
+    if (diag === 0) return { kind: "diag0" };
+    if (diag === 1) return { kind: "diag1" };
+    return { kind: "block", index: u - 2 * cr };
+  }
+
+  /** What cage `r`'s open cells rest on, its total less `owed` being what its
+   * filled cells make. */
+  private cageOf(r: number, owed: number): CageNote {
+    const cells = this.dealt.cage.cells[r];
+    const total = this.dealt.total.v[r];
+    return {
+      origin: { kind: "cage", total, placed: total - owed },
+      reads: this.cellsXY(cells.filter((c) => this.grid[c] !== 0)),
+    };
+  }
+
+  /** What the cells unit `u` leaves once its filled cells and the cages `W`
+   * whose open cells lie in it are taken out rest on: the unit, and those
+   * cages' cells outside it. */
+  private leftOf(u: number, W: readonly number[]): CageNote {
+    const inside = this.sp.lineCells[u];
+    const outside = W.flatMap((r) =>
+      this.dealt.cage.cells[r].filter((c) => !inside.includes(c)),
+    );
+    return {
+      origin: { kind: "region", region: this.regionOf(u) },
+      reads: this.cellsXY([...inside, ...outside]),
+    };
+  }
+
+  /** What the open cells of `L`'s cage outside unit `u` rest on, `L` being
+   * what `u` leaves, making `s`. */
+  private outsideOf(
+    u: number,
+    W: readonly number[],
+    L: readonly number[],
+    s: number,
+  ): CageNote {
+    const left = this.leftOf(u, W);
+    const r = this.dealt.cage.of[L[0]];
+    const cells = this.dealt.cage.cells[r];
+    let placed = 0;
+    for (const c of cells) placed += this.grid[c];
+    return {
+      origin: {
+        kind: "outside",
+        region: this.regionOf(u),
+        total: this.dealt.total.v[r],
+        placed,
+        inside: this.cellsXY([...L]),
+        insideSum: s,
+      },
+      reads: [...left.reads, ...this.cellsXY(cells)],
+    };
+  }
+
+  /** The reason of a reading of the cells `u` leaves, `L`, or of the rest of
+   * their cage, `R`: whichever holds `cell`. */
+  private partOf(
+    kind: "cageMinMax" | "cageSums",
+    { u, W, L, s, R, t }: solo.PartMinMaxBinding | solo.PartSumsBinding,
+    cell: number,
+  ): SoloReason {
+    return L.includes(cell)
+      ? { kind, cells: this.cellsXY([...L]), clue: s, ...this.leftOf(u, W) }
+      : { kind, cells: this.cellsXY([...R]), clue: t, ...this.outsideOf(u, W, L, s) };
+  }
+
+  /** A {@link digitSet} firing as the lines its value is confined in: the
+   * columns `T` hold it only in the rows `Y0 − Y`, and the rows `Y` only in
+   * the other columns, and the one over fewer lines is recorded. */
+  private digitSetReason({ d, Y0, X0, T, Y }: solo.DigitSetBinding): SoloReason {
+    const cr = this.cr;
+    const chosen = valuesOf(T);
+    const byColumn = chosen.length <= Y0.length - chosen.length;
+    const cells: Point[] = [];
+    for (const y of Y0) {
+      if (Y.includes(y) === byColumn) continue;
+      for (const x of valuesOf(X0))
+        if (((T >> x) & 1) === (byColumn ? 1 : 0) && this.has(y * cr + x, d))
+          cells.push({ x, y });
+    }
+    const lines = byColumn
+      ? confinedLines("col", chosen, cr)
+      : confinedLines("row", [...Y], cr);
+    return { kind: "set", lines, cells };
+  }
+
+  /**
+   * The ladder `solo.description.yaml` states, compiled, at `dlev`'s caps: a
+   * technique on the killer scale is capped and graded by `kdiff`, every
+   * other by `diff`, and the forcing chain, which no description states,
+   * after them. A killer technique first brings the working cages up to
+   * date, striking each filled cell's value from the rest of its cage, as
+   * upstream did at the start of each.
+   */
+  private compiledLadder(
+    dlev: Difficulty,
+    grade: { diff: number; kdiff: number },
+  ): DeductionTechnique[] {
+    const { sp, dealt, killer } = this;
+    const at = (c: number): Point => ({ x: c % this.cr, y: (c / this.cr) | 0 });
+    const single = (): SoloReason => ({ kind: "single" });
+    const runs: Record<solo.LadderId, () => number> = {
+      boxSingle: () => solo.boxSingle(this, sp, this.fire(single)),
+      cageSingle: () =>
+        solo.cageSingle(
+          this,
+          sp,
+          dealt,
+          this.fire(({ r, c, t }) => ({
+            kind: "cageSingle",
+            cells: [at(c)],
+            clue: t,
+            ...this.cageOf(r, t),
+          })),
+        ),
+      regionRule: () =>
+        solo.regionRule(
+          this,
+          sp,
+          dealt,
+          this.fire(({ u, W, L, s, t }, cell) =>
+            cell === L[0] && L.length === 1
+              ? { kind: "cageSingle", cells: [at(cell)], clue: s, ...this.leftOf(u, W) }
+              : {
+                  kind: "cageSingle",
+                  cells: [at(cell)],
+                  clue: t,
+                  ...this.outsideOf(u, W, L, s),
+                },
+          ),
+        ),
+      cageMinMax: () =>
+        solo.cageMinMax(
+          this,
+          sp,
+          dealt,
+          this.fire(({ r, K, t }) => ({
+            kind: "cageMinMax",
+            cells: this.cellsXY([...K]),
+            clue: t,
+            ...this.cageOf(r, t),
+          })),
+        ),
+      partMinMax: () =>
+        solo.partMinMax(
+          this,
+          sp,
+          dealt,
+          this.fire((b, cell) => this.partOf("cageMinMax", b, cell)),
+        ),
+      cageSums: () =>
+        solo.cageSums(
+          this,
+          sp,
+          dealt,
+          this.fire(({ r, K, t }) => ({
+            kind: "cageSums",
+            cells: this.cellsXY([...K]),
+            clue: t,
+            ...this.cageOf(r, t),
+          })),
+        ),
+      partSums: () =>
+        solo.partSums(
+          this,
+          sp,
+          dealt,
+          this.fire((b, cell) => this.partOf("cageSums", b, cell)),
+        ),
+      "latin.hiddenSingle": () =>
+        latinTechniques.hiddenSingle(this, sp, this.fire(single)),
+      "latin.single": () => latinTechniques.single(this, sp, this.fire(single)),
+      intersect: () =>
+        solo.intersect(
+          this,
+          sp,
+          this.fire(({ L, b, d, first }) => {
+            const line = this.regionOf(L);
+            const block = this.regionOf(b);
+            return first
+              ? { kind: "intersect", n: d, confined: line, target: block }
+              : { kind: "intersect", n: d, confined: block, target: line };
+          }),
+        ),
+      "latin.set": () =>
+        latinTechniques.set(
+          this,
+          sp,
+          this.fire(({ u, open, S }) => ({
+            kind: "set",
+            region: this.regionOf(u),
+            cells: open.filter((c) => !S.includes(c)).map(at),
+          })),
+        ),
+      digitSet: () =>
+        solo.digitSet(
+          this,
+          sp,
+          this.fire((b) => this.digitSetReason(b)),
+        ),
+      "latin.wing": () =>
+        latinTechniques.wing(
+          this,
+          sp,
+          this.fire(({ m, x, E }) => ({
+            kind: "wing",
+            n: x,
+            middle: at(m),
+            ends: E.map(at),
+            self: this.has(m, x),
+          })),
+        ),
+    };
+    const rungs: DeductionTechnique[] = [];
+    for (const { id, tier, scale, from, until } of solo.ladder) {
+      const onKiller = scale === "killer";
+      if (onKiller && killer === null) continue;
+      const cap = onKiller ? dlev.maxkdiff : dlev.maxdiff;
+      if (tier > cap || (from !== undefined && cap < from)) continue;
+      if (until !== undefined && cap >= until) continue;
+      const run = runs[id];
+      const graded = onKiller ? "kdiff" : "diff";
+      rungs.push({
+        id,
+        tier,
+        run: () => {
+          if (killer !== null && onKiller && this.reduceCages(killer) < 0) return -1;
+          this.oneAtATime = COMPARE.oneAtATime && !onKiller;
+          const ret = run();
+          if (ret > 0 && tier > grade[graded]) grade[graded] = tier;
+          return ret;
+        },
+      });
+    }
+    if (dlev.maxdiff >= DIFF_RECURSIVE)
+      rungs.push({
+        id: "forcing-chain",
+        tier: DIFF_RECURSIVE,
+        run: () => {
+          const ret = this.forcing();
+          if (ret > 0 && DIFF_RECURSIVE > grade.diff) grade.diff = DIFF_RECURSIVE;
+          return ret;
+        },
+      });
+    return rungs;
+  }
+
+  /** The hand-written ladder the compiled one replaces, for the comparison. */
+  private handWrittenLadder(
+    dlev: Difficulty,
+    grade: { diff: number; kdiff: number },
+  ): DeductionTechnique[] {
     const rungs: DeductionTechnique[] = [];
     const rung = (
       scale: "diff" | "kdiff",
@@ -1490,12 +1878,23 @@ class SolverUsage {
       rung("kdiff", "killer-region", DIFF_KINTERSECT, () =>
         this.killerRegions(killer, true),
       );
+      // The comparison's switch: the cages' reading and the partial cages'
+      // as rungs of their own, as the compiled ladder has them.
+      const split = COMPARE.splitParts;
       rung("kdiff", "killer-minmax", DIFF_KMINMAX, () =>
-        this.killerMinmaxAll(killer, regions),
+        this.killerMinmaxAll(killer, regions, split ? "cages" : "both"),
       );
+      if (split && regions)
+        rung("kdiff", "killer-minmax-parts", DIFF_KMINMAX, () =>
+          this.killerMinmaxAll(killer, regions, "parts"),
+        );
       rung("kdiff", "killer-sums", DIFF_KSUMS, () =>
-        this.killerSumsAll(killer, regions),
+        this.killerSumsAll(killer, regions, split ? "cages" : "both"),
       );
+      if (split && regions)
+        rung("kdiff", "killer-sums-parts", DIFF_KSUMS, () =>
+          this.killerSumsAll(killer, regions, "parts"),
+        );
     }
     rung("diff", "line-single", DIFF_SIMPLE, () => this.lineSingles());
     if (diag) rung("diff", "diag-single", DIFF_SIMPLE, () => this.diagSingles(diag));
@@ -1533,6 +1932,57 @@ class SolverUsage {
    * `firings` is the ladder census's channel (`solo-ladder.test.ts`).
    */
   run(dlev: Difficulty, firings?: FiringTally): void {
+    if (!COMPARE.on || COMPARE.depth > 0) {
+      COMPARE.depth++;
+      try {
+        this.solve(dlev, firings);
+      } finally {
+        COMPARE.depth--;
+      }
+      return;
+    }
+    // The hand-written ladder on a copy, then the compiled one, each record
+    // of both kept.
+    const copy = new SolverUsage(
+      this.cr,
+      this.blocks,
+      this.cages,
+      this.xtype,
+      this.grid.slice(),
+      this.kgrid,
+    );
+    const theirs: DeductionRecord[] = [];
+    const ours: DeductionRecord[] = [];
+    const pending = this.pendingRecorder;
+    if (pending) {
+      copy.pendingRecorder = (r) => theirs.push(r);
+      this.pendingRecorder = (r) => {
+        ours.push(r);
+        pending(r);
+      };
+    }
+    const dcopy = { ...dlev };
+    COMPARE.depth++;
+    COMPARE.handWritten = true;
+    try {
+      copy.solve(dcopy);
+    } finally {
+      COMPARE.handWritten = false;
+    }
+    try {
+      this.solve(dlev, firings);
+    } finally {
+      COMPARE.depth--;
+      this.pendingRecorder = pending;
+    }
+    compareRuns(
+      { dlev: dcopy, grid: copy.grid, cube: copy.cube, records: theirs },
+      { dlev, grid: this.grid, cube: this.cube, records: ours },
+    );
+  }
+
+  /** {@link run}'s solve. */
+  private solve(dlev: Difficulty, firings?: FiringTally): void {
     const cr = this.cr;
     const grid = this.grid;
     const grade = { diff: DIFF_BLOCK, kdiff: DIFF_KSINGLE };
@@ -1616,6 +2066,94 @@ class SolverUsage {
 
     finish(diff);
   }
+}
+
+/**
+ * The compiled ladder against the hand-written one it replaces
+ * (`research/describe/compare-solo.test.ts`): with `on`, every solve not made
+ * inside another runs both, the hand-written one on a copy, and tallies where
+ * they differ.
+ */
+export const COMPARE = {
+  on: false,
+  /** Whether the solver now running runs the hand-written ladder. */
+  handWritten: false,
+  /** Whether the hand-written min/max reads a cage against the cube as the
+   * call found it, rather than as its own strikes leave it. */
+  readAtStart: false,
+  /** Whether the hand-written sums count only the board's values, as the
+   * compiled reading does, rather than upstream's 1 to 9 at every size. */
+  domainSums: false,
+  /** Whether the hand-written min/max and sums read the cages and the
+   * partial cages as rungs of their own, as the compiled ladder does. */
+  splitParts: false,
+  /** Whether the hand-written killer singles and region rule stop at their
+   * first placement on the hint path, one firing being one binding. */
+  onePlacement: false,
+  /** Whether the hand-written region rule reads a cage's cells filled in its
+   * own pass as filled, rather than as its working cage still holds them. */
+  freshCages: false,
+  /** Whether the compiled sudoku techniques stop at their first firing on
+   * the solve path too, as the hand-written rungs did. */
+  oneAtATime: false,
+  /** How deep in solves the solver now running is. */
+  depth: 0,
+  compared: 0,
+  mismatches: [] as { what: string[]; theirs: unknown; ours: unknown }[],
+  /** The hand-written records compared, by kind. */
+  reasons: new Map<string, number>(),
+};
+
+interface RunResult {
+  dlev: Difficulty;
+  grid: Int8Array;
+  cube: Uint8Array;
+  records: DeductionRecord[];
+}
+
+/** A record as compared: its group numbered by first appearance, since the
+ * two ladders count their attempts differently, and its reason's keys in
+ * order. */
+function comparable(records: readonly DeductionRecord[]): string[] {
+  const groups = new Map<number, number>();
+  const sorted = (v: unknown): unknown =>
+    Array.isArray(v)
+      ? v.map(sorted)
+      : v !== null && typeof v === "object"
+        ? Object.fromEntries(
+            Object.entries(v)
+              .sort(([a], [b]) => (a < b ? -1 : 1))
+              .map(([k, x]) => [k, sorted(x)]),
+          )
+        : v;
+  return records.map((r) => {
+    if (!groups.has(r.group)) groups.set(r.group, groups.size);
+    return JSON.stringify(sorted({ ...r, group: groups.get(r.group) }));
+  });
+}
+
+function compareRuns(theirs: RunResult, ours: RunResult): void {
+  COMPARE.compared++;
+  for (const r of theirs.records) {
+    const k = (r.reason as { kind: string }).kind;
+    COMPARE.reasons.set(k, (COMPARE.reasons.get(k) ?? 0) + 1);
+  }
+  const what: string[] = [];
+  if (theirs.dlev.diff !== ours.dlev.diff) what.push("diff");
+  if (theirs.dlev.kdiff !== ours.dlev.kdiff) what.push("kdiff");
+  if (theirs.grid.join() !== ours.grid.join()) what.push("grid");
+  if (theirs.cube.join() !== ours.cube.join()) what.push("cube");
+  const a = comparable(theirs.records);
+  const b = comparable(ours.records);
+  if (a.join("\n") !== b.join("\n")) what.push("records");
+  if (what.length === 0) return;
+  let i = 0;
+  while (i < a.length && a[i] === b[i]) i++;
+  COMPARE.mismatches.push({
+    what,
+    theirs: { diff: theirs.dlev.diff, kdiff: theirs.dlev.kdiff, record: a[i], at: i },
+    ours: { diff: ours.dlev.diff, kdiff: ours.dlev.kdiff, record: b[i], n: b.length },
+  });
 }
 
 /**

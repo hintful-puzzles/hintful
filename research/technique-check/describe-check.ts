@@ -27,10 +27,16 @@ import {
   loadDescription,
   parseTechnique,
   type Technique,
+  UNPLACED,
 } from "../../src/describe/description.ts";
 import type { Binder, Expr } from "../../src/describe/expr.ts";
 import { parse } from "../../src/describe/expr.ts";
-import { type GridSpace, latinSpace } from "../../src/engine/describe-runtime.ts";
+import {
+  type GridSpace,
+  latinSpace,
+  sudokuSpace,
+} from "../../src/engine/describe-runtime.ts";
+import { blocks } from "../describe/space.ts";
 import { asZ3, type B, type I, Z3 } from "./pzl.ts";
 
 type Bx = B | boolean;
@@ -176,6 +182,9 @@ interface Board {
   /** Constraints on the clue variables themselves (a value's range), and on
    * which regions a partition has. */
   clueDomain: Bx[];
+  /** The description's sizes the board was built at, where they are not its
+   * order alone. */
+  sizes: ReadonlyMap<string, number>;
 }
 
 /**
@@ -212,8 +221,47 @@ function connectedRegions(sp: GridSpace, most: number): number[][] {
 
 let boardCount = 0;
 
-function makeBoard(order: number): Board {
-  const sp = latinSpace(order);
+/**
+ * The grid of `d`'s board of `order`: a Latin square, or where a partition is
+ * among its units, a Sudoku whose boxes are that partition's `blocks(a, b)`
+ * at the sizes that make the order, the squarest boxes first, with its
+ * diagonals where `d` has them. A board shape that deals its boxes is checked
+ * on these.
+ */
+function spaceOf(
+  order: number,
+  d?: Description,
+): { sp: GridSpace; sizes: ReadonlyMap<string, number> } {
+  const space = d?.json.space;
+  const unit = Object.entries(space?.regions ?? {}).find(([n]) =>
+    space?.units.includes(n),
+  );
+  if (d === undefined || unit === undefined)
+    return { sp: latinSpace(order), sizes: new Map() };
+  const m = /^blocks\((\w+), *(\w+)\)$/.exec(unit[1]);
+  if (m === null) throw new Error(`${unit[0]}: only blocks(a, b) is checked`);
+  const range = (name: string): number[] => {
+    const s = d.json.sizes[name];
+    if (s === undefined) throw new Error(`blocks: no size ${name}`);
+    return Array.from({ length: s.max - s.min + 1 }, (_, i) => s.min + i);
+  };
+  const fits = range(m[1])
+    .flatMap((a) => range(m[2]).map((b) => [a, b] as const))
+    .filter(([a, b]) => a * b === order)
+    .sort((x, y) => Math.min(...y) - Math.min(...x));
+  if (fits.length === 0) throw new Error(`no board of order ${order}`);
+  const [a, b] = fits[0];
+  return {
+    sp: sudokuSpace(blocks(a, b), space?.diagonals === true),
+    sizes: new Map([
+      [m[1], a],
+      [m[2], b],
+    ]),
+  };
+}
+
+function makeBoard(order: number, d?: Description): Board {
+  const { sp, sizes } = spaceOf(order, d);
   const tag = `b${boardCount++}`;
   const n = order * order;
   const ans = Array.from({ length: n }, (_, c) => Z3.Int.const(`${tag}_ans_${c}`));
@@ -234,6 +282,7 @@ function makeBoard(order: number): Board {
     clues: new Map(),
     regions: new Map(),
     clueDomain: [],
+    sizes,
   };
 }
 
@@ -241,6 +290,8 @@ function makeBoard(order: number): Board {
  * the regions present cover each cell once. */
 function dealPartitions(d: Description, board: Board): void {
   for (const [name, how] of Object.entries(d.json.space.regions ?? {})) {
+    // A partition among the units is the space's boxes.
+    if (d.json.space.units.includes(name)) continue;
     if (how !== "dealt")
       throw new Error(`partition ${name}: only a dealt one is checked`);
     const parts = connectedRegions(board.sp, REGION_CELLS[board.order] ?? 2);
@@ -387,8 +438,11 @@ function evaluate(e: Expr, env: Env, ctx: Ctx): V {
         case "cols":
           return allOf("line", sp.cols);
         case "lines":
-        case "units":
           return allOf("line", sp.lines);
+        case "units":
+          return allOf("line", sp.units);
+        case "diagonals":
+          return allOf("line", sp.diagonals);
         case "slots":
           return allOf("slot", sp.slots);
         case "corners":
@@ -400,6 +454,9 @@ function evaluate(e: Expr, env: Env, ctx: Ctx): V {
         case "h":
           return { k: "num", v: board.order };
       }
+      const size = board.sizes.get(e.name);
+      if (size !== undefined) return { k: "num", v: size };
+      if (ctx.d.json.space.units.includes(e.name)) return allOf("line", sp.boxes);
       const part = board.regions.get(e.name);
       if (part !== undefined)
         return {
@@ -814,6 +871,20 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       if (v === undefined) throw new Error(`${fn} of none`);
       return v;
     });
+  // A partition named as a function: the part holding a cell, and of none,
+  // none.
+  const none: V = { k: "elem", sort: "none", alts: [[-1, true]] };
+  if (ctx.d.json.space.units.includes(fn) && board.regions.get(fn) === undefined)
+    return lift(vs[0], fn, (c) => (c < 0 ? none : elem("line", sp.boxOf[c])));
+  const holding = board.regions.get(fn);
+  if (holding !== undefined)
+    return lift(vs[0], fn, (c) => {
+      if (c < 0) return none;
+      const at = holding.parts.flatMap((p, i) =>
+        p.includes(c) ? [[i, holding.present[i]] as const] : [],
+      );
+      return { k: "elem", sort: `region ${fn}`, alts: at };
+    });
   switch (fn) {
     case "cells": {
       const s = vs[0];
@@ -821,7 +892,8 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
         s.k === "elem" && s.sort.startsWith("region ")
           ? board.regions.get(s.sort.slice("region ".length))
           : undefined;
-      if (part !== undefined) return lift(s, fn, (r) => allOf("cell", part.parts[r]));
+      if (part !== undefined)
+        return lift(s, fn, (r) => allOf("cell", r < 0 ? [] : part.parts[r]));
       if (s.k === "elem" && s.sort === "corner")
         return lift(s, fn, (k) => allOf("cell", sp.cornerCells[k]));
       return lift(vs[0], fn, (L) => allOf("cell", sp.lineCells[L]));
@@ -1015,11 +1087,20 @@ function dealSymbolically(d: Description, board: Board): void {
       const here = new Map([["at", elem(placeSort(board, c.at), e)]]);
       // A range of numbers is read as its bounds, which a value set of the
       // board's own size could not hold: a cage's sum runs past the order.
-      if (c.value.k === "call" && c.value.fn === "range" && !complete) {
+      // A complete kind at a partition's regions is on every region dealt.
+      if (
+        c.value.k === "call" &&
+        c.value.fn === "range" &&
+        (!complete || part !== undefined)
+      ) {
         const [lo, hi] = c.value.args.map((a) => num(evaluate(a, here, ctx), "range"));
         const v = Z3.Int.const(`clue_${kind}_${e}_v_${boardCount}`);
-        const present = Z3.Bool.const(`clue_${kind}_${e}_${boardCount}`);
         board.clueDomain.push(and(cmp(">=", v, lo), cmp("<=", v, hi)));
+        if (complete && part !== undefined) {
+          list.push({ at: e, present: part.present[e], v: { k: "num", v } });
+          continue;
+        }
+        const present = Z3.Bool.const(`clue_${kind}_${e}_${boardCount}`);
         if (part !== undefined)
           board.clueDomain.push(implies(present, part.present[e]));
         list.push({ at: e, present, v: { k: "num", v } });
@@ -1112,7 +1193,7 @@ export async function impossibleKinds(
   d: Description,
   order: number,
 ): Promise<string[]> {
-  const board = makeBoard(order);
+  const board = makeBoard(order, d);
   dealPartitions(d, board);
   dealSymbolically(d, board);
   const solver = new Z3.Solver();
@@ -1132,6 +1213,17 @@ export async function impossibleKinds(
   return out;
 }
 
+/** Whether `d`'s rules allow any answer on an `order` board: where they do
+ * not, every technique is sound there and says nothing. */
+export async function hasAnswer(d: Description, order: number): Promise<boolean> {
+  const board = makeBoard(order, d);
+  dealPartitions(d, board);
+  dealSymbolically(d, board);
+  const solver = new Z3.Solver();
+  for (const w of worldOf(d, board)) solver.add(asZ3(w));
+  return (await solver.check()) === "sat";
+}
+
 /** Check one technique sound against `d`'s rules on an `order` board. */
 export async function checkTechnique(
   d: Description,
@@ -1140,7 +1232,7 @@ export async function checkTechnique(
   split = 1,
 ): Promise<Verdict> {
   const t0 = performance.now();
-  const board = makeBoard(order);
+  const board = makeBoard(order, d);
   dealPartitions(d, board);
   dealSymbolically(d, board);
   const world = worldOf(d, board);
@@ -1221,9 +1313,7 @@ export function libraryDescription(lib: LibraryJson): {
   const techniques = Object.entries(lib.techniques).map(
     ([id, stated]): Technique => ({
       ...parseTechnique(lib.library, id, stated),
-      tier: 0,
-      until: null,
-      rungs: [],
+      ...UNPLACED,
     }),
   );
   return { d, techniques };

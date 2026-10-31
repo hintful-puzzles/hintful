@@ -16,6 +16,10 @@
         { "type": "array", "items": { "type": "string" }, "minItems": 2 }
       ]
     },
+    "from": {
+      "type": "string",
+      "description": "A tier above the technique's own, on its scale: the ladder runs it only at a cap that high, and a firing grades at its own tier. Solo's reading of the partial cages the region rule works out grades as a cage's reading, and only where the region rule is in reach."
+    },
     "until": {
       "type": "string",
       "description": "A tier above the technique's own: at a cap that high the ladder does not run it, where a technique there strikes all it does and a grade should not rest on the weaker one."
@@ -52,7 +56,11 @@
           "required": ["id", "tier"],
           "properties": {
             "id": { "type": "string" },
-            "tier": { "type": "string", "description": "One of `tiers`." },
+            "tier": {
+              "type": "string",
+              "description": "One of `tiers`, or of one of `scales`."
+            },
+            "from": { "$ref": "#/$defs/from" },
             "until": { "$ref": "#/$defs/until" },
             "rung": { "$ref": "#/$defs/rung" }
           },
@@ -70,6 +78,7 @@
               "description": "`<library>.<technique>`, as the library states it."
             },
             "tier": { "type": "string" },
+            "from": { "$ref": "#/$defs/from" },
             "until": { "$ref": "#/$defs/until" },
             "rung": { "$ref": "#/$defs/rung" }
           }
@@ -303,10 +312,15 @@
           "items": { "type": "string" },
           "description": "The ladder, lowest first; the last is the search where the game has one."
         },
+        "scales": {
+          "type": "object",
+          "description": "Grading scales besides `tiers`, each graded and capped on its own, by name: each its tiers, lowest first. A technique on one names one of its tiers.",
+          "additionalProperties": { "type": "array", "items": { "type": "string" } }
+        },
         "techniques": { "$ref": "#/$defs/techniques" },
         "variations": {
           "type": "object",
-          "description": "Blocks added to the description, or replacing its blocks of the same name, under a name the game offers. Only the interpreter reads one.",
+          "description": "Blocks added to the description, or replacing its blocks of the same name, under a name the game offers. The compiler reads the description with every variation applied, so a technique may read what one deals, and finds it empty on a board without it.",
           "additionalProperties": {
             "type": "object",
             "required": ["word"],

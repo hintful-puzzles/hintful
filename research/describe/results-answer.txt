@@ -1,10 +1,10 @@
 Seeds per params: 3. Mutants per board: 24. Planted boards: 6.
 
-towers: 36 boards, 36 with one answer by the rules and it the game's; status compared on 1086 full boards (186 broken by clues alone), findMistakes on 216; search median 74.0 ms, max 11210.0 ms, median 211 nodes; clues sees 372; 0 disagreements
-unequal: 45 boards, 45 with one answer by the rules and it the game's; status compared on 1267 full boards (142 broken by clues alone), findMistakes on 270; search median 1.6 ms, max 361.8 ms, median 173 nodes; clues greater 309; 0 disagreements
+towers: 36 boards, 36 with one answer by the rules and it the game's; status compared on 1086 full boards (186 broken by clues alone), findMistakes on 216; search median 75.0 ms, max 11720.5 ms, median 211 nodes; clues sees 372; 0 disagreements
+unequal: 45 boards, 45 with one answer by the rules and it the game's; status compared on 1267 full boards (142 broken by clues alone), findMistakes on 270; search median 1.5 ms, max 368.0 ms, median 173 nodes; clues greater 309; 0 disagreements
 adjacent: not dealt: adjacent 4adk, adjacent 4adx, adjacent 4adr
-adjacent: 36 boards, 36 with one answer by the rules and it the game's; status compared on 1032 full boards (133 broken by clues alone), findMistakes on 216; search median 2.3 ms, max 72.3 ms, median 51 nodes; clues bar 1644; 0 disagreements
-solo: 27 boards, 27 with one answer by the rules and it the game's; status compared on 766 full boards (25 broken by clues alone), findMistakes on 162; search median 0.2 ms, max 246.4 ms, median 2 nodes; clues cage 106; 0 disagreements
-keen: 45 boards, 45 with one answer by the rules and it the game's; status compared on 1342 full boards (217 broken by clues alone), findMistakes on 270; search median 3.7 ms, max 50.7 ms, median 86 nodes; clues sum 127, product 147, difference 150, quotient 90; 0 disagreements
+adjacent: 36 boards, 36 with one answer by the rules and it the game's; status compared on 1032 full boards (133 broken by clues alone), findMistakes on 216; search median 2.3 ms, max 69.4 ms, median 51 nodes; clues bar 1644; 0 disagreements
+solo: 27 boards, 27 with one answer by the rules and it the game's; status compared on 766 full boards (25 broken by clues alone), findMistakes on 162; search median 0.4 ms, max 254.5 ms, median 1 nodes; clues total 106; 0 disagreements
+keen: 45 boards, 45 with one answer by the rules and it the game's; status compared on 1342 full boards (217 broken by clues alone), findMistakes on 270; search median 3.1 ms, max 51.8 ms, median 86 nodes; clues sum 127, product 147, difference 150, quotient 90; 0 disagreements
 mathrax: not dealt: mathrax 4dnDO, mathrax 4dtDO, mathrax 4drDO, mathrax 4drEO
-mathrax: 96 boards, 96 with one answer by the rules and it the game's; status compared on 2699 full boards (299 broken by clues alone), findMistakes on 576; search median 0.7 ms, max 818.2 ms, median 26 nodes; clues sum 65, difference 124, product 11, quotient 30, parity 26; 0 disagreements
+mathrax: 96 boards, 96 with one answer by the rules and it the game's; status compared on 2699 full boards (299 broken by clues alone), findMistakes on 576; search median 0.7 ms, max 710.6 ms, median 26 nodes; clues sum 65, difference 124, product 11, quotient 30, parity 26; 0 disagreements

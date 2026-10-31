@@ -72,6 +72,7 @@ export function gameFingerprint(d: DescriptionJson, t: StatedTechnique): string 
         rules: d.rules ?? {},
         clues: d.clues ?? {},
         space: d.space,
+        ...(d.variations === undefined ? {} : { variations: d.variations }),
       },
       orders: CHECKED_ORDERS,
     }),

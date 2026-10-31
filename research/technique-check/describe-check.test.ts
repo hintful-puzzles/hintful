@@ -3,15 +3,19 @@
  * rules (`describe-check.ts`), and a planted defect in each that must come
  * out unsound. Writes `results-describe.txt`.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { globSync } from "tinyglobby";
 import { expect, it } from "vitest";
 import {
+  type DescriptionJson,
   isFormal,
   isLibrary,
+  type LibraryJson,
   loadDescription,
   type Technique,
+  type VariationJson,
+  withVariations,
 } from "../../src/describe/description.ts";
 import { loadDescriptionFile } from "../../src/describe/load.ts";
 import {
@@ -22,6 +26,7 @@ import {
 } from "../../src/describe/soundness.ts";
 import {
   checkTechnique,
+  hasAnswer,
   impossibleKinds,
   libraryDescription,
   planted,
@@ -116,6 +121,45 @@ const PLANTS: Record<string, { conclude?: string; for?: string }> = {
     conclude:
       "|M| > 0 and (forall d in cand(c) where not (matches(k, d) and (not arithmetic(k) or (exists e in cand(across(k, c)) where e != d: makes(k, d, e)))): strike(c, d))",
   },
+  // Solo: a box's value placed with two places left.
+  boxSingle: {
+    for: "u in box, placed = set(value(c) over c in cells(u) where known(c)), d in domain - placed, n = count(c in cells(u) where d in cand(c)) where n < 3",
+    conclude: "n >= 1 and place(first({c in cells(u) where d in cand(c)}), d)",
+  },
+  // A cage's last cell given one less than its total leaves.
+  cageSingle: {
+    for: "r in cage, K = {c in cells(r) where not known(c)} where |K| = 1, c = first(K), t = owed(r) - 1",
+  },
+  // A unit's sum left with its whole cages' totals not taken out.
+  regionRule: {
+    for: "u in rows + cols + box, W = {r in cage where inside(r, u)}, L = set(c over r in cage where r not in W, c in cells(r) where not known(c) and c in cells(u)) where |L| > 0 and |L| < w, s = sum(d in domain of d) - sum(c in cells(u) where known(c) of value(c)), R = {c in cells(cage(first(L))) where not known(c) and c not in L}, t = owed(cage(first(L))) - s",
+  },
+  // A value struck that the others' extreme only just reaches.
+  cageMinMax: {
+    conclude:
+      "forall c in K, d in cand(c) where d + sum(x in K where x != c of max(e in cand(x))) <= t: strike(c, d)",
+  },
+  partMinMax: {
+    conclude: "forall c in K, d in cand(c) where beyond(K, v + 1, c, d): strike(c, d)",
+  },
+  cageSums: {
+    conclude:
+      "|K| > 0 and (|K| < 2 or |K| > 4 or (forall P = sums(K, t - 1): |P| > 0 and (forall c in K, d in cand(c) where d not in P: strike(c, d))))",
+  },
+  partSums: {
+    conclude:
+      "forall P = sums(K, v - 1): |P| > 0 and (forall c in K, d in cand(c) where d not in P: strike(c, d))",
+  },
+  // A line's value struck from the rest of a box it merely meets.
+  intersect: {
+    conclude:
+      "forall c in cells(b) where c not in cells(L) and d in cand(c): strike(c, d)",
+  },
+  digitSet: {
+    for: "d in domain, Y0 = {L in rows where not (exists c in cells(L): value(c) = d)}, X0 = range(0, w - 1) - set(x(c) over c in cells where value(c) = d), T in subsets(X0) where |T| = 0 or (2 <= |T| and |T| <= |Y0| - 2), Y = {L in Y0 where not (exists c in cells(L): x(c) in T and d in cand(c))} where |Y| >= |Y0| - |T| - 1",
+    conclude:
+      "(|T| > 0 or (forall L in rows: exists c in cells(L): d in cand(c))) and (forall L in Y0 - Y, c in cells(L) where x(c) in X0 - T and d in cand(c): strike(c, d))",
+  },
   adjacentSet: {
     conclude:
       "forall d in cand(b) where exists d2 in cand(a): d2 != d and not fits(e, d2, d): strike(b, d)",
@@ -123,34 +167,85 @@ const PLANTS: Record<string, { conclude?: string; for?: string }> = {
 };
 
 const lines: string[] = [];
-const line = (where: string, v: Verdict, want: string): void => {
-  const ok = v.verdict === want;
-  const s = `${ok ? "ok " : "BAD"} ${where.padEnd(10)} ${v.technique.padEnd(30)} ${String(v.order).padEnd(2)} ${v.verdict.padEnd(8)} (want ${want.padEnd(8)}) ${String(v.queries).padStart(5)} queries ${v.seconds.toFixed(1).padStart(6)}s${v.at ? `   at ${v.at}` : ""}`;
+/** A result line, and to `CHECK_LOG` as it comes, for a long run's watching. */
+const say = (s: string): void => {
   console.log(s);
   lines.push(s);
+  const log = process.env["CHECK_LOG"];
+  if (log) appendFileSync(log, `${s}\n`);
+};
+const line = (where: string, v: Verdict, want: string): void => {
+  const ok = v.verdict === want || want === "either";
+  say(
+    `${ok ? "ok " : "BAD"} ${where.padEnd(10)} ${v.technique.padEnd(30)} ${String(v.order).padEnd(2)} ${v.verdict.padEnd(8)} (want ${want.padEnd(8)}) ${String(v.queries).padStart(5)} queries ${v.seconds.toFixed(1).padStart(6)}s${v.at ? `   at ${v.at}` : ""}`,
+  );
 };
 
-async function checkAll(
-  where: string,
-  d: ReturnType<typeof loadDescription>,
-  ts: readonly Technique[],
-) {
+/** A description under one set of its variations. */
+interface World {
+  where: string;
+  d: ReturnType<typeof loadDescription>;
+}
+
+/**
+ * Each technique sound in every world at every order where the world has an
+ * answer, and its planted defect unsound in at least one of them.
+ */
+async function checkAll(worlds: readonly World[], ids: readonly string[]) {
   const bad: string[] = [];
-  for (const t of ts) {
-    const name = t.id.includes(".") ? t.id.slice(t.id.indexOf(".") + 1) : t.id;
+  for (const id of ids) {
+    const name = id.includes(".") ? id.slice(id.indexOf(".") + 1) : id;
+    const plant = PLANTS[name];
     for (const order of ORDERS) {
-      const v = await checkTechnique(d, t, order);
-      line(where, v, "sound");
-      if (v.verdict !== "sound") bad.push(`${t.id} ${order}`);
-      const plant = PLANTS[name];
-      if (plant === undefined) continue;
-      if (order === 3 && (name === "set" || name === "fish")) continue;
-      const p = await checkTechnique(d, planted(t, plant), order);
-      line(where, p, "unsound");
-      if (p.verdict !== "unsound") bad.push(`${t.id} planted ${order}`);
+      let caught = false;
+      let tried = false;
+      for (const { where, d } of worlds) {
+        if (!(await hasAnswer(d, order))) continue;
+        const t = d.techniques.find((x) => x.id === id) as Technique;
+        const v = await checkTechnique(d, t, order);
+        line(where, v, "sound");
+        if (v.verdict !== "sound") bad.push(`${id} ${order}`);
+        if (plant === undefined) continue;
+        if (order === 3 && (name === "set" || name === "fish" || name === "digitSet"))
+          continue;
+        tried = true;
+        const p = await checkTechnique(d, planted(t, plant), order);
+        line(
+          where,
+          p,
+          p.verdict === "unsound" || worlds.length === 1 ? "unsound" : "either",
+        );
+        if (p.verdict === "unsound") caught = true;
+      }
+      if (tried && !caught) bad.push(`${id} planted ${order}`);
     }
   }
   return bad;
+}
+
+/**
+ * The worlds a description's techniques are checked in: every modifier that
+ * deals a partition or a clue always applied, since a partition into single
+ * cells and clues that say nothing are among what it deals; each other
+ * modifier on and off. A board shape is checked on the description's own
+ * shape.
+ */
+function worldsOf(file: DescriptionJson, libraries: readonly LibraryJson[]): World[] {
+  const modifiers = Object.entries(file.variations ?? {}).filter(
+    ([, v]) => v.word === "modifier",
+  );
+  const dealing = (v: VariationJson): boolean =>
+    Object.values(v.replace?.space?.regions ?? {}).includes("dealt") ||
+    Object.keys(v.add?.clues ?? {}).length > 0;
+  const always = modifiers.filter(([, v]) => dealing(v)).map(([n]) => n);
+  const toggled = modifiers.filter(([, v]) => !dealing(v)).map(([n]) => n);
+  return Array.from({ length: 1 << toggled.length }, (_, mask) => {
+    const on = [...always, ...toggled.filter((_, i) => mask & (1 << i))];
+    return {
+      where: [file.game, ...on.map((n) => `+${n}`)].join(" "),
+      d: loadDescription(withVariations(file, on), libraries),
+    };
+  });
 }
 
 it("the techniques the app compiles are sound, and each planted defect is not", async () => {
@@ -164,10 +259,18 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
     ]),
   );
   const libraries = [...files.values()].filter(isLibrary);
+  // CHECK_GAMES narrows the run to some descriptions, by game or library
+  // name, comma-separated; their verdicts then join the others recorded.
+  const only = process.env["CHECK_GAMES"]?.split(",") ?? null;
   for (const [source, file] of files) {
+    const name = isLibrary(file) ? file.library : file.game;
+    if (only !== null && !only.includes(name)) continue;
     if (isLibrary(file)) {
       const library = libraryDescription(file);
-      const failed = await checkAll(file.library, library.d, library.techniques);
+      const failed = await checkAll(
+        [{ where: file.library, d: { ...library.d, techniques: library.techniques } }],
+        library.techniques.map((t) => t.id),
+      );
       bad.push(...failed);
       for (const id of Object.keys(file.techniques))
         if (!failed.some((f) => f.startsWith(`${id} `)))
@@ -175,31 +278,64 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
       continue;
     }
     if (!isFormal(file) || file.techniques === undefined) continue;
-    const d = loadDescription(file, libraries);
-    // A kind no board of an order can hold goes unchecked there, which the
-    // verdicts alone would not say.
-    for (const order of ORDERS)
-      for (const kind of await impossibleKinds(d, order)) {
-        const s = `--  ${file.game.padEnd(10)} no board of order ${order} holds a ${kind} clue, so no reading of one is checked there`;
-        console.log(s);
-        lines.push(s);
+    const worlds = worldsOf(file, libraries);
+    // A world or a clue kind no board of an order can hold goes unchecked
+    // there, which the verdicts alone would not say.
+    const note = say;
+    for (const { where, d } of worlds)
+      for (const order of ORDERS) {
+        if (!(await hasAnswer(d, order))) {
+          note(
+            `--  ${where}: no board of order ${order} has an answer, so nothing is checked there`,
+          );
+          continue;
+        }
+        for (const kind of await impossibleKinds(d, order))
+          note(
+            `--  ${where.padEnd(10)} no board of order ${order} holds a ${kind} clue, so no reading of one is checked there`,
+          );
       }
-    const own = d.techniques.filter((t) => !t.id.includes("."));
-    const failed = await checkAll(file.game, d, own);
+    const own = worlds[0].d.techniques.filter((t) => !t.id.includes("."));
+    const failed = await checkAll(
+      worlds,
+      own.map((t) => t.id),
+    );
     bad.push(...failed);
     for (const stated of file.techniques)
       if (!("use" in stated) && !failed.some((f) => f.startsWith(`${stated.id} `)))
         verdicts[soundnessKey(source, stated.id)] = gameFingerprint(file, stated);
   }
   writeFileSync(
-    fileURLToPath(new URL("results-describe.txt", import.meta.url)),
+    fileURLToPath(
+      new URL(
+        only === null
+          ? "results-describe.txt"
+          : `results-describe-${only.join("-")}.txt`,
+        import.meta.url,
+      ),
+    ),
     `${lines.join("\n")}\n`,
   );
   // Only the planted defects may fail; a verdict is recorded only for a
-  // technique found sound.
+  // technique found sound. A narrowed run keeps the others' verdicts, less
+  // those of the descriptions it checked.
+  const path = `${ROOT}src/describe/soundness.json`;
+  const checked = [...files]
+    .filter(
+      ([, f]) => only === null || only.includes(isLibrary(f) ? f.library : f.game),
+    )
+    .map(([s]) => `${s}#`);
+  const kept: Record<string, string> =
+    only === null
+      ? {}
+      : Object.fromEntries(
+          Object.entries(
+            JSON.parse(readFileSync(path, "utf8")) as Record<string, string>,
+          ).filter(([k]) => !checked.some((s) => k.startsWith(s))),
+        );
   writeFileSync(
-    `${ROOT}src/describe/soundness.json`,
-    `${JSON.stringify(Object.fromEntries(Object.entries(verdicts).sort()), null, 2)}\n`,
+    path,
+    `${JSON.stringify(Object.fromEntries(Object.entries({ ...kept, ...verdicts }).sort()), null, 2)}\n`,
   );
   expect(bad).toEqual([]);
 });

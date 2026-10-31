@@ -80,7 +80,8 @@ sizes:
 space:
   grid: { w: "c * r", h: "c * r" }
   regions: { box: "blocks(r, c)" }
-  units: [rows, cols, box]
+  # In the order the techniques scan them.
+  units: [box, rows, cols]
 answer:
   value: { sort: cell, domain: "range(1, c * r)" }
 given: [value]
@@ -99,21 +100,194 @@ variations:
     replace:
       space:
         regions: { box: dealt }
+  # The diagonals are units, after the rest.
   X:
     word: modifier
     replace:
-      space: { diagonals: true }
-    add:
-      rules:
-        diagonals: "forall L in diagonals: distinct(value(c) over c in cells(L))"
+      space: { diagonals: true, units: [box, rows, cols, diagonals] }
   Killer:
     word: modifier
     replace:
       space:
         regions: { cage: dealt }
     add:
+      # Every cage shows its total.
       clues:
-        cage:
-          at: region
+        total:
+          at: cage
+          complete: true
           value: "range(1, 45)"
           means: "sum(c in cells(at) of value(c)) = v and distinct(value(c) over c in cells(at))"
+define:
+  # What a cage's total leaves once its filled cells are taken out.
+  owed(r): "clue(total, r) - sum(c in cells(r) where known(c) of value(c))"
+  # A cage with an open cell, every one of them in unit u.
+  inside(r, u): >-
+    (exists c in cells(r): not known(c))
+    and (forall c in cells(r) where not known(c): c in cells(u))
+  # The values a set of open cells K could make t from, as different values:
+  # a set of |K| of them each cell of K can take one of. Upstream's reading,
+  # which does not ask that the cells take different ones, but over the
+  # board's values, where upstream's counted 1 to 9 at every size.
+  sums(K, t): >-
+    set(d over T in subsets(domain) where |T| = |K| and sum(e in T of e) = t
+    and (forall x in K: exists e in T: e in cand(x)), d in T)
+  # Whether value d of cell c of K is out of reach of t, given only the least
+  # and greatest the other cells of K can take.
+  beyond(K, t, c, d): >-
+    d + sum(x in K where x != c of max(e in cand(x))) < t
+    or d + sum(x in K where x != c of min(e in cand(x))) > t
+tiers: [Easy, Normal, Tricky, Hard, Extreme, Unreasonable]
+# Killer's cage readings grade on a scale of their own, as upstream's do: a
+# board's grade is a tier on each.
+scales:
+  killer: [Single, MinMax, Sums, Region]
+techniques:
+  # A value with one place left in a box goes there. With no place left, the
+  # marks are inconsistent.
+  - id: boxSingle
+    tier: Easy
+    for: >-
+      u in box,
+      placed = set(value(c) over c in cells(u) where known(c)),
+      d in domain - placed,
+      n = count(c in cells(u) where d in cand(c)) where n < 2
+    conclude: "n = 1 and place(the(c in cells(u) where d in cand(c)), d)"
+  # A cage with one open cell holds what its total leaves there.
+  - id: cageSingle
+    tier: Single
+    for: >-
+      r in cage,
+      K = {c in cells(r) where not known(c)} where |K| = 1,
+      c = first(K), t = owed(r)
+    conclude: "t >= 1 and t <= w and t in cand(c) and place(c, t)"
+  # A row, column or box, the rows first and the boxes last, holds every
+  # value once, so its open cells outside every cage whose open cells lie
+  # within it, L, make the rest of its sum: one of them alone holds it. Where
+  # L lies in one cage, the cage's other open cells, R, make what is left of
+  # its total: one of them alone holds that. L in the order of its cages. A
+  # sum of nothing or less left is a contradiction.
+  - id: regionRule
+    tier: Region
+    for: >-
+      u in rows + cols + box,
+      W = {r in cage where inside(r, u)},
+      L = set(c over r in cage where r not in W, c in cells(r)
+      where not known(c) and c in cells(u))
+      where |L| > 0 and |L| < w,
+      s = sum(d in domain of d) - sum(c in cells(u) where known(c) of value(c))
+      - sum(r in W of owed(r)),
+      R = {c in cells(cage(first(L))) where not known(c) and c not in L},
+      t = owed(cage(first(L))) - s
+    conclude: >-
+      s > 0
+      and (|L| != 1 or (s <= w and s in cand(first(L)) and place(first(L), s)))
+      and (|L| = 1 or |R| != 1 or (exists c in L: cage(c) != cage(first(L)))
+      or (t >= 1 and t <= w and t in cand(first(R)) and place(first(R), t)))
+  # Cage by cage: a value too small or too large for its cell, with the least
+  # or the greatest each other open cell can take, to make what the cage's
+  # total leaves, is struck. One cage a firing.
+  - id: cageMinMax
+    tier: MinMax
+    for: >-
+      r in cage, K = {c in cells(r) where not known(c)}, t = owed(r)
+      where t != 0
+    conclude: "forall c in K, d in cand(c) where beyond(K, t, c, d): strike(c, d)"
+  # The same reading of each partial cage the region rule works out, unit by
+  # unit: the open cells it leaves the unit, L (i = 0), and where they lie in
+  # one cage, that cage's other open cells, R (i = 1), K either. One partial
+  # cage a firing. It grades as the cages' reading, and runs where the region
+  # rule is in reach.
+  - id: partMinMax
+    tier: MinMax
+    from: Region
+    for: >-
+      u in rows + cols + box,
+      W = {r in cage where inside(r, u)},
+      L = set(c over r in cage where r not in W, c in cells(r)
+      where not known(c) and c in cells(u))
+      where |L| > 1 and |L| < w,
+      s = sum(d in domain of d) - sum(c in cells(u) where known(c) of value(c))
+      - sum(r in W of owed(r)) where s > 0,
+      R = {c in cells(cage(first(L))) where not known(c) and c not in L},
+      t = owed(cage(first(L))) - s,
+      i in range(0, 1),
+      K = {c in L + R where (i = 0) = (c in L)},
+      v = s * (1 - i) + t * i
+      where |K| > 1 and v != 0
+      and (i = 0 or (forall c in L: cage(c) = cage(first(L))))
+    conclude: "forall c in K, d in cand(c) where beyond(K, v, c, d): strike(c, d)"
+  # Cage by cage, of two to four open cells: a value in no set of different
+  # values that makes what the cage's total leaves, and that each open cell
+  # can take one of, is struck. With none, or a cage filled short of its
+  # total, the marks are inconsistent. One cage a firing.
+  - id: cageSums
+    tier: Sums
+    for: >-
+      r in cage, K = {c in cells(r) where not known(c)}, t = owed(r)
+      where t != 0
+    conclude: >-
+      |K| > 0 and (|K| < 2 or |K| > 4 or (forall P = sums(K, t):
+      |P| > 0 and (forall c in K, d in cand(c) where d not in P: strike(c, d))))
+  # The same reading of each partial cage of two to four cells, as
+  # `partMinMax` binds them. With no set of values left, the marks are
+  # inconsistent.
+  - id: partSums
+    tier: Sums
+    from: Region
+    for: >-
+      u in rows + cols + box,
+      W = {r in cage where inside(r, u)},
+      L = set(c over r in cage where r not in W, c in cells(r)
+      where not known(c) and c in cells(u))
+      where |L| > 1 and |L| < w,
+      s = sum(d in domain of d) - sum(c in cells(u) where known(c) of value(c))
+      - sum(r in W of owed(r)) where s > 0,
+      R = {c in cells(cage(first(L))) where not known(c) and c not in L},
+      t = owed(cage(first(L))) - s,
+      i in range(0, 1),
+      K = {c in L + R where (i = 0) = (c in L)},
+      v = s * (1 - i) + t * i
+      where |K| > 1 and |K| <= 4 and v != 0
+      and (i = 0 or (forall c in L: cage(c) = cage(first(L))))
+    conclude: >-
+      forall P = sums(K, v): |P| > 0
+      and (forall c in K, d in cand(c) where d not in P: strike(c, d))
+  - { use: latin.hiddenSingle, tier: Normal }
+  - { use: latin.single, tier: Normal }
+  # A value whose places left in a row, column or diagonal all lie in one
+  # box is struck from the rest of the box; failing that, one whose places
+  # left in the box all lie in the line is struck from the rest of the line.
+  - id: intersect
+    tier: Tricky
+    for: >-
+      L in rows + cols + diagonals,
+      b in box where (exists c in cells(L): box(c) = b),
+      d in domain where not (exists c in cells(L): value(c) = d)
+      and not (exists c in cells(b): value(c) = d),
+      first = ((forall c in cells(L) where d in cand(c): box(c) = b)
+      and (exists c in cells(b) where c not in cells(L): d in cand(c)))
+    conclude: >-
+      (first implies (forall c in cells(b) where c not in cells(L) and d in cand(c): strike(c, d)))
+      and (first or ((forall c in cells(b) where d in cand(c): c in cells(L))
+      implies (forall c in cells(L) where box(c) != b and d in cand(c): strike(c, d))))
+  - { use: latin.set, tier: Hard }
+  # One value d: the rows lacking it that have no place for it in a set T of
+  # the columns lacking it are as many as those columns' others, X0 - T, so
+  # they hold d in those columns, and the other rows cannot. More rows than
+  # columns is a contradiction. The empty T comes first, and on it every row
+  # is checked for a place left for d. `latin.fish` with the rows and the
+  # columns swapped, as upstream's matrix has them.
+  - id: digitSet
+    tier: Extreme
+    for: >-
+      d in domain,
+      Y0 = {L in rows where not (exists c in cells(L): value(c) = d)},
+      X0 = range(0, w - 1) - set(x(c) over c in cells where value(c) = d),
+      T in subsets(X0) where |T| = 0 or (2 <= |T| and |T| <= |Y0| - 2),
+      Y = {L in Y0 where not (exists c in cells(L): x(c) in T and d in cand(c))} where |Y| >= |Y0| - |T|
+    conclude: >-
+      (|T| > 0 or (forall L in rows: exists c in cells(L): d in cand(c)))
+      and |Y| = |Y0| - |T|
+      and (forall L in Y0 - Y, c in cells(L) where x(c) in X0 - T and d in cand(c): strike(c, d))
+  - { use: latin.wing, tier: Extreme }

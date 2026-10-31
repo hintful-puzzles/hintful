@@ -8,6 +8,7 @@
  * `maxdiff * 10 + maxkdiff`, and every pair is walked.
  */
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
+import * as solo from "./solo.compiled.ts";
 import { solveSolo } from "./solver.ts";
 import {
   DIFF_EXTREME,
@@ -74,6 +75,13 @@ const BOARDS: { label: string; board: string }[] = [
       "aa_a__a_aaaba_a_aa_a__a_a___aaa__,15_14_8_8a5_12_11d19c5_10_7_11_8_12a14_11f10c" +
       "12_4a15b9a12a6_17a17a9_10a13a14a12e14a8a6_10a11f11a15a",
   },
+  {
+    label: "3x3 Killer, partial cage sums",
+    board:
+      "3x3k:zzzc,__aaa__aa__a______aa____a________________aa__aa__aaa_ab___ab___aa_" +
+      "aaa_a_aa__aa_a_aaa_aaa__aaa_aaaa_,8_9_13a6a16a10b23a4a5_6a7a14a12_10b10_12e10_" +
+      "17a4a8_6_15_15b6_11_17d8_5c18a12c16_22c10a14d8b11a7a",
+  },
 ];
 
 function stateOf(board: string): SoloState {
@@ -128,23 +136,9 @@ for (let maxdiff = 0; maxdiff <= DIFF_EXTREME; maxdiff++)
 
 describeLadderCensus<SoloState>({
   game: "solo",
-  rungs: [
-    "block-single",
-    "killer-single",
-    "killer-region",
-    "killer-minmax",
-    "killer-sums",
-    "line-single",
-    "diag-single",
-    "naked-single",
-    "line-intersect",
-    "diag-intersect",
-    "region-set",
-    "diag-set",
-    "digit-set",
-    "wing",
-    "forcing-chain",
-  ],
+  // The ladder the description states, then the forcing chain no description
+  // states.
+  rungs: [...solo.ladder.map((t) => t.id), "forcing-chain"],
   unreached: {},
   caps,
   cases,

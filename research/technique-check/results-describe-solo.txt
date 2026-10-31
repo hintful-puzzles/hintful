@@ -1,0 +1,54 @@
+--  solo +Killer +X: no board of order 3 has an answer, so nothing is checked there
+ok  solo +Killer boxSingle                      3  sound    (want sound   )     3 queries    0.1s
+ok  solo +Killer boxSingle (planted)            3  unsound  (want unsound )     1 queries    0.1s   at line 6
+ok  solo +Killer boxSingle                      4  sound    (want sound   )     4 queries    0.3s
+ok  solo +Killer boxSingle (planted)            4  unsound  (want unsound )     1 queries    0.1s   at line 8
+ok  solo +Killer +X boxSingle                      4  sound    (want sound   )     4 queries    0.3s
+ok  solo +Killer +X boxSingle (planted)            4  unsound  (want unsound )     1 queries    0.1s   at line 8
+ok  solo +Killer cageSingle                     3  sound    (want sound   )    79 queries    1.9s
+ok  solo +Killer cageSingle (planted)           3  unsound  (want unsound )     1 queries    0.1s   at region cage 0
+ok  solo +Killer cageSingle                     4  sound    (want sound   )    92 queries    2.4s
+ok  solo +Killer cageSingle (planted)           4  unsound  (want unsound )     1 queries    0.1s   at region cage 0
+ok  solo +Killer +X cageSingle                     4  sound    (want sound   )    92 queries    2.3s
+ok  solo +Killer +X cageSingle (planted)           4  unsound  (want unsound )     1 queries    0.1s   at region cage 0
+ok  solo +Killer regionRule                     3  sound    (want sound   )     9 queries   26.4s
+ok  solo +Killer regionRule (planted)           3  unsound  (want unsound )     1 queries    0.2s   at line 0
+ok  solo +Killer regionRule                     4  sound    (want sound   )    12 queries 1586.9s
+ok  solo +Killer regionRule (planted)           4  unsound  (want unsound )     1 queries    0.2s   at line 0
+ok  solo +Killer +X regionRule                     4  sound    (want sound   )    12 queries 1256.1s
+ok  solo +Killer +X regionRule (planted)           4  unsound  (want unsound )     1 queries    0.1s   at line 0
+ok  solo +Killer cageMinMax                     3  sound    (want sound   )    79 queries    2.2s
+ok  solo +Killer cageMinMax (planted)           3  unsound  (want unsound )     1 queries    0.1s   at region cage 0
+ok  solo +Killer cageMinMax                     4  sound    (want sound   )    92 queries    5.4s
+ok  solo +Killer cageMinMax (planted)           4  unsound  (want unsound )     1 queries    0.1s   at region cage 0
+ok  solo +Killer +X cageMinMax                     4  sound    (want sound   )    92 queries    6.3s
+ok  solo +Killer +X cageMinMax (planted)           4  unsound  (want unsound )     1 queries    0.1s   at region cage 0
+ok  solo +Killer partMinMax                     3  sound    (want sound   )     9 queries    5.3s
+ok  solo +Killer partMinMax (planted)           3  unsound  (want unsound )     1 queries    0.4s   at line 0
+ok  solo +Killer partMinMax                     4  sound    (want sound   )    12 queries   97.0s
+ok  solo +Killer partMinMax (planted)           4  unsound  (want unsound )     1 queries    1.3s   at line 0
+ok  solo +Killer +X partMinMax                     4  sound    (want sound   )    12 queries  108.8s
+ok  solo +Killer +X partMinMax (planted)           4  unsound  (want unsound )     1 queries    1.4s   at line 0
+ok  solo +Killer cageSums                       3  sound    (want sound   )    79 queries    1.6s
+ok  solo +Killer cageSums (planted)             3  unsound  (want unsound )    10 queries    0.2s   at region cage 9
+ok  solo +Killer cageSums                       4  sound    (want sound   )    92 queries    3.3s
+ok  solo +Killer cageSums (planted)             4  unsound  (want unsound )    17 queries    0.3s   at region cage 16
+ok  solo +Killer +X cageSums                       4  sound    (want sound   )    92 queries    3.7s
+ok  solo +Killer +X cageSums (planted)             4  unsound  (want unsound )    17 queries    0.3s   at region cage 16
+ok  solo +Killer partSums                       3  sound    (want sound   )     9 queries    4.1s
+ok  solo +Killer partSums (planted)             3  unsound  (want unsound )     1 queries    0.2s   at line 0
+ok  solo +Killer partSums                       4  sound    (want sound   )    12 queries   66.9s
+ok  solo +Killer partSums (planted)             4  unsound  (want unsound )     1 queries    0.4s   at line 0
+ok  solo +Killer +X partSums                       4  sound    (want sound   )    12 queries   61.6s
+ok  solo +Killer +X partSums (planted)             4  unsound  (want unsound )     1 queries    0.3s   at line 0
+ok  solo +Killer intersect                      3  sound    (want sound   )     3 queries    0.1s
+ok  solo +Killer intersect (planted)            3  unsound  (want unsound )     1 queries    0.1s   at line 0
+ok  solo +Killer intersect                      4  sound    (want sound   )     8 queries    0.3s
+ok  solo +Killer intersect (planted)            4  unsound  (want unsound )     1 queries    0.1s   at line 0
+ok  solo +Killer +X intersect                      4  sound    (want sound   )    10 queries    0.4s
+ok  solo +Killer +X intersect (planted)            4  unsound  (want unsound )     1 queries    0.1s   at line 0
+ok  solo +Killer digitSet                       3  sound    (want sound   )     3 queries    0.1s
+ok  solo +Killer digitSet                       4  sound    (want sound   )     4 queries    0.8s
+ok  solo +Killer digitSet (planted)             4  unsound  (want unsound )     1 queries    0.1s   at 1
+ok  solo +Killer +X digitSet                       4  sound    (want sound   )     4 queries    0.4s
+ok  solo +Killer +X digitSet (planted)             4  unsound  (want unsound )     1 queries    0.1s   at 1

@@ -163,6 +163,11 @@ export function buildSpace(spec: SpaceSpec): Space {
       ),
     );
     names.set(name, rs);
+    // A partition named as a function: the part holding a cell.
+    fns.set(name, ([c]) => {
+      const i = asElem(c, "cell").id;
+      return rs[parts.findIndex((p) => p.includes(i))] ?? null;
+    });
   }
   names.set("lines", [...rows, ...cols]);
 
@@ -283,19 +288,23 @@ export function buildSpace(spec: SpaceSpec): Space {
     for (const c of lineCells.get(u) ?? [])
       unitsOf.set(c, [...(unitsOf.get(c) ?? []), u]);
   fns.set("units_of", ([c]) => unitsOf.get(asElem(c, "cell")) ?? []);
-  // A cell's row and column interleaved by index, the row's first at each, as
-  // the Latin engine visits them (`src/engine/describe-runtime.ts`), then the cells
-  // of its other units in their order.
+  // As `src/engine/describe-runtime.ts` orders them: on a Latin square a
+  // cell's row and column interleaved by index, the row's first at each;
+  // with other units, every cell sharing one, in reading order.
+  const latin = units.every((u) => rows.includes(u) || cols.includes(u));
   const peers = new Map<Elem, Elem[]>();
   for (const c of cells) {
     const { x, y } = where(c);
     const ps = new Set<Elem>();
-    for (let i = 0; i < Math.max(w, h); i++) {
-      if (i < w && i !== x && units.includes(rows[y])) ps.add(cells[y * w + i]);
-      if (i < h && i !== y && units.includes(cols[x])) ps.add(cells[i * w + x]);
-    }
-    for (const u of unitsOf.get(c) ?? [])
-      for (const d of lineCells.get(u) ?? []) if (d !== c) ps.add(d);
+    if (latin)
+      for (let i = 0; i < Math.max(w, h); i++) {
+        if (i < w && i !== x && units.includes(rows[y])) ps.add(cells[y * w + i]);
+        if (i < h && i !== y && units.includes(cols[x])) ps.add(cells[i * w + x]);
+      }
+    else
+      for (const d of cells)
+        if (d !== c && (unitsOf.get(d) ?? []).some((u) => unitsOf.get(c)?.includes(u)))
+          ps.add(d);
     peers.set(c, [...ps]);
   }
   fns.set("peers", ([c]) => peers.get(asElem(c, "cell")) ?? []);

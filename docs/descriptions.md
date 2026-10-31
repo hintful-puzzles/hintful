@@ -45,7 +45,9 @@ itself is § "The file". A game whose techniques are stated:
    `Dealt`: one `ClueList` a kind, in the order the techniques should meet
    them, and one `Partition` a dealt partition (`describedLadder` in
    [`towers/solver.ts`](../src/games/towers/solver.ts), and in
-   [`keen/solver.ts`](../src/games/keen/solver.ts) for cages).
+   [`keen/solver.ts`](../src/games/keen/solver.ts) for cages), on the grid
+   its units are: `latinSpace(o)`, or `sudokuSpace(boxes, diagonals)` for a
+   board with boxes ([`solo/solver.ts`](../src/games/solo/solver.ts)).
 
 ## Sections
 
@@ -78,8 +80,11 @@ research tools all read through it; the app never does.
   reader meets the prose rules beside the formal ones. A rules section whole
   or not at all: `space` brings `name`, `family`, `sizes`, `answer` and
   `freedom` with it, and `techniques` brings `space` and `tiers`.
-- **Only a library or a description with techniques compiles.** Solo's
-  states rules only the interpreter under `research/describe/` reads.
+- **Only a library or a description with techniques compiles.**
+- **The compiler reads a description with every variation applied**: one
+  ladder runs on every board the game deals, and a name a board's variations
+  leave out is empty there, so a technique over it binds nothing (Solo's
+  killer techniques on a board with no cages).
 - **A family member another game deals is a second description beside it**
   (Unequal's `adjacent.description.yaml`), with no help: its game's page
   names it through `{{rulesets}}`.
@@ -121,11 +126,15 @@ what the space gives: `cells`, `rows`, `cols`, `lines`, `units`, `slots`
 (one beyond each end of every line, numbered as Towers deals its clues: above
 each column, below each, left of each row, right of each), `corners` (each
 point inside the grid where four cells meet, in reading order, the one below
-and right of cell `(x, y)` numbered `y·(w − 1) + x`), and each dealt
-partition by its name (`regions: { cage: dealt }`: `cage`, its parts in the
-order dealt). A clue kind may sit at a part (`at: cage`) or a corner
-(`at: corner`), and a partition and a clue kind may not share a name, since
-both are fields of `Dealt`.
+and right of cell `(x, y)` numbered `y·(w − 1) + x`), `diagonals` (the main
+one, then the other, where the space has them), and each partition by its
+name (`regions: { cage: dealt }`: `cage`, its parts in the order dealt).
+Named as a function, a partition gives the part holding a cell
+(`cage(c)`). The one partition listed among the `units` is the space's
+boxes, lines like the rows, dealt or not (Solo's `box`), and the space lists
+its units in the description's order. A clue kind may sit at a part
+(`at: cage`) or a corner (`at: corner`), and a partition and a clue kind may
+not share a name, since both are fields of `Dealt`.
 
 **Functions**: `value(c)`, `cand(c)` the candidates the marks leave,
 `known(c)`; `range(a, b)`, `abs(a)`, `subsets(S)`, `first(L)`; an ordered
@@ -147,7 +156,19 @@ value is placed, with its first binder bound to the placed cell, and not as
 a rung. A game's may say `until: <tier>`, a tier above its own: the ladder
 runs it only at a cap below that tier, for a weaker reading a higher
 technique strikes all of, which a grade at a higher cap should not rest on
-(Keen's `cageEasy`, as upstream omits it above Easy).
+(Keen's `cageEasy`, as upstream omits it above Easy). `from: <tier>` is the
+converse: the ladder runs it only at a cap that high, and a firing grades at
+its own tier (Solo's readings of the partial cages its region rule works
+out).
+
+A game that grades on more than one scale names the others
+(`scales: { killer: [...] }`), and a technique's tier is a tier of one of
+them; the compiled ladder gives each entry's `scale`, and the game caps and
+grades it on that scale. A grade is the same whatever path a solve takes only
+where a scale's techniques run in tier order: Solo's killer scale does not
+(its region rule comes before the cages' readings, as upstream's did), so
+there how much one firing does decides the grade, and a technique is one
+rung, as everywhere.
 
 ## What a technique compiles to
 
@@ -282,8 +303,19 @@ region the board could have, up to the size `REGION_CELLS` gives each order,
 each a part or not, the parts covering every cell once; a technique that
 reads one region is checked on every shape of that size, but no larger.
 A clue whose values are a `range` is checked over its bounds, which may run
-past the board's order. A technique is sound when no binding's
-premise holds while its conclusion fails under the rules.
+past the board's order. A clue kind marked `complete` at a partition is on
+every part dealt. A technique is sound when no binding's premise holds while
+its conclusion fails under the rules.
+
+Where a partition is among the units, the board is a Sudoku whose boxes are
+its `blocks(a, b)` at the sizes that make the order, the squarest first; a
+board shape that deals its boxes (Jigsaw) is checked on these. A description
+with variations is checked in each world it deals: every modifier that deals
+a partition or a clue always applied, since a partition into single cells is
+among what it deals, and each other modifier on and off. A technique must be
+sound in every world, at every order where the world has an answer, and its
+plant unsound in one: no order-3 Latin square has both diagonals distinct,
+so Solo's X world is checked at order 4 only, and the results say so.
 
 A small board may hold no clue of a kind at all, and then a technique's
 reading of that kind is checked there on nothing, whatever its verdict. The

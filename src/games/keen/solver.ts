@@ -158,7 +158,7 @@ function describedLadder(w: number, cages: Cages): LatinLadder {
     );
   };
   const dl: keen.Dealt = {
-    cage: partition(cages.cells),
+    cage: partition(cages.cells, n),
     sum: ofKind("sum"),
     product: ofKind("product"),
     difference: ofKind("difference"),
