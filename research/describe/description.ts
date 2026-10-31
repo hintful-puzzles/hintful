@@ -135,6 +135,16 @@ export function instantiate(d: Description, dealt: Dealt): Instance {
   if (!Array.isArray(dom) || !dom.every((x) => typeof x === "number"))
     throw new TypeError(`${d.json.game}: the domain is not a set of numbers`);
   space.names.set("domain", dom);
+  const repeat =
+    d.repeat === null
+      ? null
+      : {
+          value: evaluate(d.repeat.value, new Map(), ctx(NO_BOARD, false)),
+          times: evaluate(d.repeat.times, new Map(), ctx(NO_BOARD, false)),
+        };
+  space.fns.set("times", ([v]) =>
+    repeat !== null && v === repeat.value ? repeat.times : 1,
+  );
   return {
     d,
     space,

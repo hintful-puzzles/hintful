@@ -396,63 +396,34 @@ export class LatinSolver implements Marks {
     }
     for (let i = 1; i <= s; i++) if (i !== n) this.cube[this.cubepos(x, y, i)] = 0;
     this.grid[y * o + x] = n;
-    const inRow = ++this.row[y * s + n - 1];
-    const inCol = ++this.col[x * s + n - 1];
+    ++this.row[y * s + n - 1];
+    ++this.col[x * s + n - 1];
 
-    if (n === this.repeat) {
-      // The repeated symbol leaves the rest of its line alone until the line
-      // holds all `times` of it; then it is struck from every other cell. An
-      // ordinary symbol is the `times = 1` case of the same rule, but keeps the
-      // `dup` reason below because its narration names the one placement.
-      if (inRow === this.times) this.strikeRepeatFromLine(x, y, n, "row");
-      if (inCol === this.times) this.strikeRepeatFromLine(x, y, n, "col");
-      return;
-    }
-
-    // The library's `placed`, which a recording records as `dup` strikes.
+    // The library's `placed`, which a recording records as `dup` strikes, or
+    // for the repeated symbol, which leaves a line only once it holds every
+    // copy, as `repeatFull`: the count forces it, not this placement.
     const fire: Fire<compiled.PlacedBinding> | null = rec
       ? (_, facts) => {
-          this.applyFacts(facts, () => ({ kind: "dup", n, px: x, py: y }));
+          this.applyFacts(
+            facts,
+            n === this.repeat
+              ? (i): LatinRepeatReason => {
+                  const c = facts[i + 1];
+                  const inRow = ((c / o) | 0) === y;
+                  return {
+                    kind: "repeatFull",
+                    n,
+                    line: inRow ? "row" : "col",
+                    index: inRow ? y : x,
+                    times: this.times,
+                  };
+                }
+              : () => ({ kind: "dup", n, px: x, py: y }),
+          );
           return true;
         }
       : null;
     compiled.placed(this, this.sp, y * o + x, fire);
-  }
-
-  /** The repeated symbol's line is full: strike it from every cell of the line
-   * that does not hold it. */
-  private strikeRepeatFromLine(
-    x: number,
-    y: number,
-    n: number,
-    line: "row" | "col",
-  ): void {
-    const o = this.o;
-    const rec = this.recorder;
-    const index = line === "row" ? y : x;
-    for (let i = 0; i < o; i++) {
-      const cx = line === "row" ? i : x;
-      const cy = line === "row" ? y : i;
-      if (this.grid[cy * o + cx] === n) continue;
-      const pos = this.cubepos(cx, cy, n);
-      if (rec && this.cube[pos]) {
-        rec({
-          kind: "elim",
-          x: cx,
-          y: cy,
-          n,
-          reason: {
-            kind: "repeatFull",
-            n,
-            line,
-            index,
-            times: this.times,
-          } satisfies LatinRepeatReason,
-          group: this.group,
-        });
-      }
-      this.cube[pos] = 0;
-    }
   }
 
   /** Positional/numeric elimination over the cube slice `start, start+step,

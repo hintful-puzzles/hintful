@@ -58,18 +58,6 @@ export const MODULES = [
         replace: "    void fire;",
       },
       {
-        // Was EQUIVALENT while the ledger was a scan-skipping optimization
-        // (`diffSimple` skips a line whose digit is placed; run anyway, the
-        // sweep places nothing). `add-latin-repeats-support` made it
-        // load-bearing: for the repeated symbol the row count is what decides
-        // when the line is full and the symbol is struck from the rest of it,
-        // so a count that never grows leaves every hole line unstruck.
-        within: "LatinSolver.place",
-        why: "placing a symbol no longer counts towards its row, so a repeated symbol's line is never struck once full",
-        find: "    const inRow = ++this.row[y * s + n - 1];",
-        replace: "    const inRow = this.row[y * s + n - 1];",
-      },
-      {
         within: "LatinSolver.cubepos",
         why: "the candidate cube is indexed transposed (x and y swapped)",
         find: "    return (x * this.o + y) * this.symbols + n - 1;",

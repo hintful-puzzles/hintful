@@ -1644,13 +1644,11 @@ pass's flags and adds one for a cell the answer contradicts, and
 ## The Latin family
 
 **A game on a Latin square builds on
-[`engine/latin.ts`](../src/engine/latin.ts): its `solver.ts` is its own clue
-deductions, a `valid` callback over completed grids, and a thin driver
-mapping its difficulty levels onto the `latinSolver` config.** A described
-game (Unequal, Group) states its deductions and its ladder in a description and
-passes the compiled `ladder` ([descriptions.md](./descriptions.md)); a game
-not yet described passes `usersolvers` and the levels `diffSimple`,
-`diffSet0` and `diffSet1` the library's techniques run at. The engine gives
+[`engine/latin.ts`](../src/engine/latin.ts): it states its deductions and
+its ladder in a description, and its `solver.ts` deals the board as the
+compiled ladder reads it, pairs each technique with its reason, and passes a
+`valid` callback over completed grids and the compiled `ladder` to
+`latinSolver`** ([descriptions.md](./descriptions.md)). The engine gives
 the candidate cube, the library's techniques compiled from
 [`latin.description.yaml`](../src/engine/latin.description.yaml) (singles,
 set and single-number set elimination, the wing), forcing chains and
@@ -1664,8 +1662,8 @@ Exemplars: [`group/solver.ts`](../src/games/group/solver.ts) for a described
 game with no clues, its techniques reading the grid as a table, and a
 `valid`; [`unequal/solver.ts`](../src/games/unequal/solver.ts) for one with
 clues, its two modes two descriptions;
-[`towers/solver.ts`](../src/games/towers/solver.ts) for `usersolvers` and
-clue heuristics; [`keen/solver.ts`](../src/games/keen/solver.ts) for per-cage
+[`towers/solver.ts`](../src/games/towers/solver.ts) for clues beside the
+grid; [`keen/solver.ts`](../src/games/keen/solver.ts) for per-cage
 arithmetic; [`salad/solver.ts`](../src/games/salad/solver.ts) for a repeated
 symbol.
 
@@ -1685,16 +1683,15 @@ symbol.
   before relying on it.
 - **A game with a symbol that repeats in a line declares it; it does not
   fake it.** `LatinSolverConfig.repeats: { times }` makes the last symbol
-  repeat, and the generic rungs then reason with its multiplicity:
-  positional elimination places it when exactly `times` cells of a line can
-  still take it, placing it strikes the line only once the line's count is
-  full (recorded as `repeatFull`, apart from `LatinReason`), set elimination
-  runs `setGeneral`, and forcing chains never link through it. Read the
-  marker array back off the final cube (`cubeOut`). The extension is inert
-  when not declared (`latin-repeats.test.ts`), and a game with exactly one
-  such symbol per line needs no declaration. The library's description has
-  no repeated symbol, so a cube that declares one runs the engine's own
-  multiplicity deductions in its place, until Salad is described.
+  repeat, and its description says the same (`answer.value.repeat`,
+  descriptions.md § "The formula syntax"); the library's techniques then
+  read its multiplicity, `times(d)`: the hidden single places it when
+  exactly as many cells of a line can still take it as the line has copies
+  left, placing it strikes the line only once the line's count is full
+  (recorded as `repeatFull`, apart from `LatinReason`), the set and the fish
+  count copies, the wing never weighs it, and forcing chains never link
+  through it. Read the marker array back off the final cube (`cubeOut`). A
+  game with exactly one such symbol per line needs no declaration.
 - **The deductions are what refuse a broken grid, not only `valid`.** A
   game's `valid` may check less than its rules (Unequal's Adjacent mode skips
   the last row and column, as upstream's does), and then a contradiction a

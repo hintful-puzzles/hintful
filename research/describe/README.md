@@ -24,15 +24,17 @@ writes a line of progress per board.
 | `ladder` | the stated techniques to a fixpoint at every tier cap, against the game's own solver, cell by cell, and its grade, with three planted defects; writes `results-ladder.txt` |
 | `firings` | every firing of the game's recording solver, which its hint narrates, against the technique stated under the firing's rung on the same marks; writes `results-firings.txt` |
 | `measure` | the stated ladder's time against the game's solver's; writes `results-measure.txt` |
-| `speed-group` | the generator's time per deal on every Group and Unequal preset, each run twice and the second kept |
+| `speed-latin` | the generator's time per deal on every Latin game's presets (`SPEED_GAMES` narrows it), each run twice and the second kept: run it on two builds and compare the lines |
 | `trace-latin` | every Latin game's deals and hint walks, step by step, to `TRACE_OUT`: run it on two builds of the compiled modules and diff the files |
+
+A build to compare against is a worktree of it in the session's scratchpad,
+its `node_modules` a link to this one's.
 
 ## The files
 
 Every description lives beside its code (`src/engine/latin.description.yaml`,
-`src/games/<id>/*.description.yaml`), Solo's, which nothing compiles yet,
-included; the loader, the parser and the schema are in
-`src/describe/`.
+`src/games/<id>/*.description.yaml`); the loader, the parser and the
+schema are in `src/describe/`.
 
 | File | What it holds |
 | --- | --- |

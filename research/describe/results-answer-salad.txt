@@ -1,0 +1,4 @@
+Seeds per params: 3. Mutants per board: 24. Planted boards: 6.
+
+salad: not dealt: salad 4n2Ldx, salad 4n3Bdx
+salad: 51 boards, 51 with one answer by the rules and it the game's; status compared on 1453 full boards (170 broken by clues alone), findMistakes on 306; search median 3.2 ms, max 14600.6 ms, median 22 nodes; clues border 204, ball 41; 0 disagreements

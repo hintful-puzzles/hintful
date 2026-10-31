@@ -338,14 +338,18 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): Value {
       return k === undefined ? null : (ctx.clueOf.get(k)?.v ?? null);
     }
     case "latin": {
-      // `latin(f, U)`: no value of `f` twice in any unit of `U`. The solver
-      // recognizes the call and propagates it natively.
+      // `latin(f, U)`: no value of `f` more than `times` of it in any unit of
+      // `U`, once but for a repeated value; a full unit then holds each
+      // exactly that often. The solver recognizes the call and propagates it
+      // natively.
       const f = asName(args[0]);
+      const times = ctx.space.fns.get("times");
       for (const u of asSet(arg(1), "latin")) {
         const seen: Value[] = [];
         for (const c of asSet(ctx.space.fns.get("cells")?.([u]) ?? null, "latin")) {
           const v = call(f, [{ k: "name", name: "$c" }], new Map([["$c", c]]), ctx);
-          if (member(v, seen)) return false;
+          const most = times === undefined ? 1 : asNum(times([v]), "times");
+          if (seen.filter((s) => same(s, v)).length >= most) return false;
           seen.push(v);
         }
       }

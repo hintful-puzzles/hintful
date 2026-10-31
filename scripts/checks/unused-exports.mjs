@@ -107,6 +107,8 @@ const KEPT_UNUSED = {
     "read by research/technique-check/describe-check.test.ts",
   "src/describe/description.ts::withVariations":
     "read by the interpreter and the soundness checker under research/",
+  "src/games/salad/solver.ts::COMPARE":
+    "the switch research/describe/compare-salad.test.ts runs both ladders by, until the hand-written one goes",
 };
 
 /** Files whose exports are reached from outside the TypeScript graph. */

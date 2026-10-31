@@ -11,6 +11,7 @@ import {
   type Binding,
   keenBinding,
   mathraxBinding,
+  saladBinding,
   soloBinding,
   towersBinding,
   unequalBinding,
@@ -46,11 +47,14 @@ interface Tally {
   kinds: Map<string, number>;
 }
 
-function mistakeKey(ms: readonly unknown[]): string {
+function mistakeKey(
+  ms: readonly unknown[],
+  kinds: Readonly<Record<string, string>> = {},
+): string {
   return ms
     .map((m) => {
       const { x, y, kind } = m as { x: number; y: number; kind: string };
-      return `${x},${y},${kind}`;
+      return `${x},${y},${kinds[kind] ?? kind}`;
     })
     .sort()
     .join(" ");
@@ -159,11 +163,16 @@ function check<P, S>(b: Binding<P, S>, t: Tally): void {
         const notes = new Array<number>(n).fill(0);
         for (const c of open) {
           const r = rnd();
-          if (r < 0.3) entry[c] = inst.domain[Math.floor(rnd() * inst.domain.length)];
-          else if (r < 0.6)
+          if (r < 0.3) {
+            const v = inst.domain[Math.floor(rnd() * inst.domain.length)];
+            if (!b.refuses?.(state, c, v)) entry[c] = v;
+          } else if (r < 0.6)
             for (const v of inst.domain) if (rnd() < 0.5) notes[c] |= 1 << v;
         }
-        const own = mistakeKey(g.findMistakes(b.withEntries(state, entry, notes)));
+        const own = mistakeKey(
+          g.findMistakes(b.withEntries(state, entry, notes)),
+          b.mistakeKinds,
+        );
         const stated = mistakeKey(
           entryMistakes(
             { answer, entry, notes, fixed: (c) => inst.givens[c] !== 0 },
@@ -197,6 +206,7 @@ describe("the answer check from the description", () => {
       soloBinding,
       keenBinding,
       mathraxBinding,
+      saladBinding,
     ] as Binding<unknown, unknown>[];
     for (const b of games.filter(
       (g) => only === null || only.includes(g.description.game),
@@ -271,6 +281,18 @@ describe("the answer check from the description", () => {
       mathraxBinding as Binding<unknown, unknown>,
       "parity",
       "forall c in cells(at): value(c) mod 2 != v",
+    ],
+    [
+      "Salad, a border letter read as anywhere in its line",
+      saladBinding as Binding<unknown, unknown>,
+      "border",
+      "exists c in sight(at): value(c) = v",
+    ],
+    [
+      "Salad, a ball read as nothing",
+      saladBinding as Binding<unknown, unknown>,
+      "ball",
+      "true",
     ],
   ];
   for (const [name, b, kind, means] of planted)

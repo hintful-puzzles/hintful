@@ -1,0 +1,62 @@
+ok  latin      placed                         3  sound    (want sound   )     9 queries    0.0s
+ok  latin      placed (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  latin +repeat placed                         3  sound    (want sound   )     9 queries    0.1s
+ok  latin +repeat placed (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  latin      placed                         4  sound    (want sound   )    16 queries    0.1s
+ok  latin      placed (planted)               4  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  latin +repeat placed                         4  sound    (want sound   )    16 queries    0.5s
+ok  latin +repeat placed (planted)               4  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  latin      hiddenSingle                   3  sound    (want sound   )     6 queries    0.1s
+ok  latin      hiddenSingle (planted)         3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  latin      hiddenSingle (planted once)    3  sound    (want either  )     6 queries    0.1s
+ok  latin +repeat hiddenSingle                   3  sound    (want sound   )     6 queries    0.1s
+ok  latin +repeat hiddenSingle (planted)         3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  latin +repeat hiddenSingle (planted once)    3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  latin      hiddenSingle                   4  sound    (want sound   )     8 queries    0.2s
+ok  latin      hiddenSingle (planted)         4  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  latin      hiddenSingle (planted once)    4  sound    (want either  )     8 queries    0.3s
+ok  latin +repeat hiddenSingle                   4  sound    (want sound   )     8 queries    0.3s
+ok  latin +repeat hiddenSingle (planted)         4  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  latin +repeat hiddenSingle (planted once)    4  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  latin      single                         3  sound    (want sound   )     3 queries    0.0s
+ok  latin      single (planted)               3  unsound  (want unsound )     1 queries    0.0s   at line 3
+ok  latin +repeat single                         3  sound    (want sound   )     3 queries    0.0s
+ok  latin +repeat single (planted)               3  unsound  (want unsound )     1 queries    0.0s   at line 3
+ok  latin      single                         4  sound    (want sound   )     4 queries    0.1s
+ok  latin      single (planted)               4  unsound  (want unsound )     1 queries    0.0s   at line 4
+ok  latin +repeat single                         4  sound    (want sound   )     4 queries    0.1s
+ok  latin +repeat single (planted)               4  unsound  (want unsound )     1 queries    0.0s   at line 4
+ok  latin      set                            3  sound    (want sound   )     6 queries    0.1s
+ok  latin +repeat set                            3  sound    (want sound   )     6 queries    0.1s
+ok  latin      set                            4  sound    (want sound   )     8 queries    0.6s
+ok  latin      set (planted)                  4  unsound  (want unsound )     1 queries    0.1s   at line 0
+ok  latin      set (planted once)             4  sound    (want either  )     8 queries    0.6s
+ok  latin +repeat set                            4  sound    (want sound   )     8 queries    0.3s
+ok  latin +repeat set (planted)                  4  sound    (want either  )     8 queries    0.3s
+ok  latin +repeat set (planted once)             4  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  latin      fish                           3  sound    (want sound   )     3 queries    0.0s
+ok  latin +repeat fish                           3  sound    (want sound   )     2 queries    0.1s
+ok  latin      fish                           4  sound    (want sound   )     4 queries    0.3s
+ok  latin      fish (planted)                 4  unsound  (want unsound )     1 queries    0.0s   at 1
+ok  latin      fish (planted once)            4  sound    (want either  )     4 queries    0.2s
+ok  latin +repeat fish                           4  sound    (want sound   )     3 queries    3.7s
+ok  latin +repeat fish (planted)                 4  unsound  (want unsound )     1 queries    0.0s   at 1
+ok  latin +repeat fish (planted once)            4  unsound  (want unsound )     3 queries    0.2s   at 3
+ok  latin      wing                           3  sound    (want sound   )     9 queries    0.1s
+ok  latin      wing (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  latin      wing (planted once)            3  sound    (want either  )     9 queries    0.1s
+ok  latin +repeat wing                           3  sound    (want sound   )     9 queries    0.0s
+ok  latin +repeat wing (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  latin +repeat wing (planted once)            3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  latin      wing                           4  sound    (want sound   )    16 queries    2.9s
+ok  latin      wing (planted)                 4  unsound  (want unsound )     1 queries    1.0s   at cell 0
+ok  latin      wing (planted once)            4  sound    (want either  )    16 queries    2.8s
+ok  latin +repeat wing                           4  sound    (want sound   )    16 queries    1.3s
+ok  latin +repeat wing (planted)                 4  unsound  (want unsound )     1 queries    0.8s   at cell 0
+ok  latin +repeat wing (planted once)            4  unsound  (want unsound )     1 queries    0.8s   at cell 0
+ok  salad nums=2 border                         3  sound    (want sound   )    12 queries    0.1s
+ok  salad nums=2 border (planted)               3  unsound  (want unsound )     1 queries    0.0s   at clue border 0
+ok  salad nums=2 border                         4  sound    (want sound   )    16 queries    0.3s
+ok  salad nums=2 border (planted)               4  unsound  (want unsound )     1 queries    0.0s   at clue border 0
+ok  salad nums=3 border                         4  sound    (want sound   )    16 queries    0.7s
+ok  salad nums=3 border (planted)               4  unsound  (want unsound )     1 queries    0.0s   at clue border 0

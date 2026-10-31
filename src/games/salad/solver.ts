@@ -34,15 +34,24 @@
  * generic set elimination.
  */
 
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
+import type {
+  DeductionRecord,
+  DeductionRecorder,
+} from "../../engine/deduction-record.ts";
+import { clueList } from "../../engine/describe-runtime.ts";
 import { type EntryBoard, entryMistake } from "../../engine/entry-mistakes.ts";
 import {
+  compiledRung,
   DIFF_IMPOSSIBLE,
+  LATIN_RUNGS,
+  type LatinLadder,
   type LatinRepeats,
+  type LatinRung,
   LatinSolver,
   type LatinSolverConfig,
   latinSolver,
 } from "../../engine/latin.ts";
+import * as salad from "./salad.compiled.ts";
 import {
   borderScans,
   CIRCLE,
@@ -322,6 +331,89 @@ function seedMarkers(solver: LatinSolver, b: SaladBoard): void {
   }
 }
 
+// --- the described ladder ----------------------------------------------------
+
+/** A border slot as the space numbers it (above each column, below each,
+ * left of each row, right of each), as Salad's clue array numbers it (top,
+ * left, bottom, right). */
+function clueOfSlot(slot: number, o: number): number {
+  const side = (slot / o) | 0;
+  return [0, 2, 1, 3][side] * o + (slot % o);
+}
+
+/** A border strike's reason: the clue's own letter struck past its reach,
+ * any other letter near the clue. */
+function borderReason(
+  { k, L, H, reach, stop }: salad.BorderBinding,
+  cell: number,
+  n: number,
+  cl: salad.Dealt,
+  o: number,
+): BorderReason {
+  const clue = clueOfSlot(cl.border.at[k], o);
+  const clueVal = cl.border.v[k];
+  if (n !== clueVal)
+    return { kind: "borderNear", clue, clueVal, skipped: L.indexOf(cell) };
+  return {
+    kind: "borderFar",
+    clue,
+    clueVal,
+    reach,
+    holes: H,
+    tightenedBy: H - reach,
+    circleAt: stop >= 0 && stop <= reach ? L[stop] : null,
+  };
+}
+
+const SALAD_LADDER: Record<salad.LadderId, (cl: salad.Dealt) => LatinRung> = {
+  border: (cl) =>
+    compiledRung(salad.border, cl, (binding, cell, n, solver) =>
+      borderReason(binding, cell, n, cl, solver.o),
+    ),
+  "latin.hiddenSingle": () => LATIN_RUNGS["latin.hiddenSingle"],
+  "latin.single": () => LATIN_RUNGS["latin.single"],
+  "latin.set": () => (solver) =>
+    COMPARE.handSet && solver.repeat
+      ? solver.diffSet(false)
+      : LATIN_RUNGS["latin.set"](solver),
+  "latin.fish": () => (solver) =>
+    COMPARE.handFish && solver.repeat
+      ? solver.diffSet(true)
+      : LATIN_RUNGS["latin.fish"](solver),
+  "latin.wing": () => LATIN_RUNGS["latin.wing"],
+};
+
+/** The board as its description deals it: the border letters in the order
+ * the scan meets them, each line's top, left, bottom and right in turn; the
+ * balls, which no technique reads, since a ball is seeded as a strike. */
+function describedLadder(b: SaladBoard): LatinLadder {
+  const o = b.order;
+  const at: number[] = [];
+  const v: number[] = [];
+  const slots = [0, 2, 1, 3];
+  for (let i = 0; i < o; i++)
+    for (let side = 0; side < 4; side++) {
+      const clue = b.borderclues[side * o + i];
+      if (!clue) continue;
+      at.push(slots[side] * o + i);
+      v.push(clue);
+    }
+  const balls: number[] = [];
+  for (let c = 0; c < o * o; c++) if (b.gridclues[c] === CIRCLE) balls.push(c);
+  const cl: salad.Dealt = {
+    border: clueList(at, v, 4 * o),
+    ball: clueList(
+      balls,
+      balls.map(() => holeSymbol(b.nums)),
+      o * o,
+    ),
+    nums: b.nums,
+  };
+  return {
+    ladder: salad.ladder.map(({ id, tier }) => ({ tier, run: SALAD_LADDER[id](cl) })),
+  };
+}
+
 /** The shared config for a solve at `maxdiff` over `b`, seeded by `seed`. */
 function configFor(
   b: SaladBoard,
@@ -332,19 +424,147 @@ function configFor(
   return {
     repeats: repeatsFor(b),
     maxdiff,
-    diffSimple: DIFF_EASY,
-    diffSet0: DIFF_HARD,
-    diffSet1: DIFF_HARD,
+    ...(COMPARE.handWritten
+      ? {
+          diffSimple: DIFF_EASY,
+          diffSet0: DIFF_HARD,
+          diffSet1: DIFF_HARD,
+          usersolvers: [saladSolverEasy, null],
+        }
+      : describedLadder(b)),
     // Never search, by forcing chain or recursion: both tiers are pure
     // deduction (the guess-free policy).
     diffRecursive: DIFF_IMPOSSIBLE,
-    usersolvers: [saladSolverEasy, null],
     // Salad has no whole-grid post-check beyond `latinholesCheck`.
     valid: () => true,
     ctx: b,
     seed,
     cubeOut,
   };
+}
+
+// --- the comparison ----------------------------------------------------------
+
+/** The compiled ladder against the hand-written one: with `on`, every solve
+ * runs both, the hand-written one on a copy, and tallies where they differ
+ * (`research/describe/compare-salad.test.ts`). */
+export const COMPARE = {
+  on: false,
+  /** Whether the solve now running runs the hand-written ladder. */
+  handWritten: false,
+  /** Whether the compiled ladder's set and its fish run the engine's own
+   * multiplicity code where the empty square repeats. */
+  handSet: false,
+  handFish: false,
+  compared: 0,
+  mismatches: [] as { what: string[]; theirs: unknown; ours: unknown }[],
+  /** The hand-written records compared, by kind. */
+  reasons: new Map<string, number>(),
+};
+
+interface RunResult {
+  ret: number;
+  grid: Uint8Array;
+  cube: Uint8Array;
+  records: DeductionRecord[];
+}
+
+/** A record as compared: its group numbered by first appearance, since the
+ * two ladders count their attempts differently, and its reason's keys in
+ * order. */
+function comparable(records: readonly DeductionRecord[]): string[] {
+  const groups = new Map<number, number>();
+  const sorted = (v: unknown): unknown =>
+    Array.isArray(v)
+      ? v.map(sorted)
+      : v !== null && typeof v === "object"
+        ? Object.fromEntries(
+            Object.entries(v)
+              .sort(([a], [b]) => (a < b ? -1 : 1))
+              .map(([k, x]) => [k, sorted(x)]),
+          )
+        : v;
+  return records.map((r) => {
+    if (!groups.has(r.group)) groups.set(r.group, groups.size);
+    return JSON.stringify(sorted({ ...r, group: groups.get(r.group) }));
+  });
+}
+
+function compareRuns(theirs: RunResult, ours: RunResult, where: string): void {
+  COMPARE.compared++;
+  for (const r of theirs.records) {
+    const k = (r.reason as { kind: string }).kind;
+    COMPARE.reasons.set(k, (COMPARE.reasons.get(k) ?? 0) + 1);
+  }
+  const what: string[] = [];
+  if (theirs.ret !== ours.ret) what.push("diff");
+  if (theirs.grid.join() !== ours.grid.join()) what.push("grid");
+  if (theirs.cube.join() !== ours.cube.join()) what.push("cube");
+  const a = comparable(theirs.records);
+  const b = comparable(ours.records);
+  if (a.join("\n") !== b.join("\n")) what.push("records");
+  if (what.length === 0) return;
+  let i = 0;
+  while (i < a.length && a[i] === b[i]) i++;
+  const left = (cube: Uint8Array) => cube.reduce((n, x) => n + (x ? 1 : 0), 0);
+  COMPARE.mismatches.push({
+    what,
+    theirs: { where, diff: theirs.ret, left: left(theirs.cube), record: a[i], at: i },
+    ours: { diff: ours.ret, left: left(ours.cube), record: b[i], n: b.length },
+  });
+}
+
+/** `latinSolver` over `b` at `maxdiff`, the compiled ladder; with
+ * `COMPARE.on`, the hand-written one too, on a copy, and the two compared. */
+function solveSalad(
+  grid: Uint8Array,
+  b: SaladBoard,
+  maxdiff: number,
+  seed: (b: SaladBoard, solver: LatinSolver) => void,
+  cube: Uint8Array,
+  recorder: DeductionRecorder | null,
+): number {
+  const o = b.order;
+  const run = (
+    board: SaladBoard,
+    g: Uint8Array,
+    out: Uint8Array,
+    rec: DeductionRecorder | null,
+  ): number =>
+    latinSolver(g, o, {
+      ...configFor(board, maxdiff, (solver) => seed(board, solver), out),
+      ...(rec ? { recorder: rec, budgetLabel: "salad hint" } : {}),
+    });
+  if (!COMPARE.on) return run(b, grid, cube, recorder);
+  const theirs: DeductionRecord[] = [];
+  const ours: DeductionRecord[] = [];
+  const g = grid.slice();
+  const c = new Uint8Array(cube.length);
+  const copy: SaladBoard = { ...b, grid: g, holes: b.holes.slice() };
+  COMPARE.handWritten = true;
+  let theirRet: number;
+  try {
+    theirRet = run(copy, g, c, recorder ? (r) => theirs.push(r) : null);
+  } finally {
+    COMPARE.handWritten = false;
+  }
+  const ret = run(
+    b,
+    grid,
+    cube,
+    recorder
+      ? (r) => {
+          ours.push(r);
+          recorder(r);
+        }
+      : null,
+  );
+  compareRuns(
+    { ret: theirRet, grid: g, cube: c, records: theirs },
+    { ret, grid, cube, records: ours },
+    `${o}n${b.nums}${b.mode === GAMEMODE_LETTERS ? "L" : "B"} cap ${maxdiff}${recorder ? " hint" : ""}`,
+  );
+  return ret;
 }
 
 /** The final candidate cube's size for `b` — `order² × symbols`. */
@@ -373,19 +593,20 @@ export interface SaladDeductions {
  * pass `diffRecursive = DIFF_IMPOSSIBLE`, so there is nothing to cap.
  */
 export function recordSaladDeductions(b: SaladBoard, maxdiff: number): SaladDeductions {
-  const o = b.order;
   const grid = b.grid.slice();
   const holes = b.holes.slice();
   const work: SaladBoard = { ...b, grid, holes };
   const ops: DeductionRecord[] = [];
   const cube = new Uint8Array(cubeSize(b));
 
-  const cfg: LatinSolverConfig<SaladBoard> = {
-    ...configFor(work, maxdiff, (solver) => seedMarkers(solver, work), cube),
-    recorder: (rec) => ops.push(rec),
-    budgetLabel: "salad hint",
-  };
-  latinSolver(grid, o, cfg);
+  solveSalad(
+    grid,
+    work,
+    maxdiff,
+    (board, solver) => seedMarkers(solver, board),
+    cube,
+    (rec) => ops.push(rec),
+  );
   markersFromCube(work, grid, cube);
 
   return { ops, holes, grid };
@@ -419,10 +640,13 @@ export function saladSolve(b: SaladBoard, maxdiff: number): boolean {
   }
 
   const cube = new Uint8Array(cubeSize(b));
-  latinSolver(
+  solveSalad(
     b.grid,
-    o,
-    configFor(b, maxdiff, (solver) => seedGridClues(solver, b), cube),
+    b,
+    maxdiff,
+    (board, solver) => seedGridClues(solver, board),
+    cube,
+    null,
   );
   markersFromCube(b, b.grid, cube);
 

@@ -30,6 +30,7 @@ import {
   impossibleKinds,
   libraryDescription,
   planted,
+  sizings,
   type Verdict,
 } from "./describe-check.ts";
 
@@ -38,11 +39,39 @@ const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 /** The orders each is checked at: 4 is the least a set or fish of two fits. */
 const ORDERS = CHECKED_ORDERS;
 
+type Plant = { conclude?: string; for?: string };
+
+/** The library's techniques with a value's multiplicity read as one: each
+ * is its statement on a Latin square, so it must come out unsound where a
+ * value repeats. */
+const ONCE: Record<string, Plant> = {
+  // A repeated value's placed copies not counted among its places.
+  hiddenSingle: {
+    for: "u in units, placed = set(value(c) over c in cells(u) where known(c) and times(value(c)) = 1), d in domain - placed, n = count(c in cells(u) where d in cand(c) and not known(c)) where n <= times(d)",
+  },
+  // The repeated value's surplus copies not counted.
+  set: {
+    for: "u in units, V = domain - set(value(c) over c in cells(u) where known(c) and times(value(c)) = 1), open = {c in cells(u) where not known(c)}, R = {d in V where times(d) > 1}, extra = |open| - |V|, T in subsets(V) where |T| = 0 or (2 <= |T| and |T| <= |V| - 2), S = {c in open where not (exists d in T: d in cand(c))} where |S| >= |V| - |T|",
+    conclude:
+      "(|T| > 0 or (forall c in cells(u): |cand(c)| > 0)) and |S| = |V| - |T| and (forall c in open where c not in S, d in V - T where d in cand(c): strike(c, d))",
+  },
+  // A repeated value's columns counted as lines, not copies.
+  fish: {
+    for: "d in domain, k = times(d), X0 = {L in cols where not (exists c in cells(L): value(c) = d) or (k > 1 and count(c in cells(L) where value(c) = d) < k)}, Y0 = range(0, h - 1) - set(y(c) over c in cells where value(c) = d and (k = 1 or count(p in cells(row(c)) where value(p) = d) >= k)), T in subsets(Y0) where |T| = 0 or (2 <= |T| and |T| <= |X0| - 2), X = {L in X0 where not (exists c in cells(L): y(c) in T and d in cand(c) and (k = 1 or not known(c)))} where |X| >= |X0| - |T|",
+    conclude:
+      "(|T| > 0 or (forall L in cols: exists c in cells(L): d in cand(c))) and |X| = |X0| - |T| and (forall L in X0 - X, c in cells(L) where y(c) in Y0 - T and d in cand(c) and (k = 1 or not known(c)): strike(c, d))",
+  },
+  // The repeated value weighed as x.
+  wing: {
+    for: "m in cells where not known(m), x in domain, R = cand(m) - {x} where |R| >= 1 and (forall a in R: exists k in peers(m): not known(k) and cand(k) = {a, x}), k0 in peers(m) where not known(k0) and cand(k0) = {min(a in R), x}, t in peers(k0) where t != m and not known(t) and x in cand(t) and (x not in cand(m) or t in peers(m)) and (forall a in R: exists k in peers(m): not known(k) and cand(k) = {a, x} and k != t and k in peers(t)), E = set(first({k in peers(m) where not known(k) and cand(k) = {a, x} and k != t and k in peers(t)}) over a in R)",
+  },
+};
+
 /** Planted defects: one condition loosened in each, so each claims a strike
  * or a contradiction the rules do not force. A loosening that only makes a
  * technique strike less, or that drops a condition consistency already
  * gives, is not a defect, and the checker rightly calls it sound. */
-const PLANTS: Record<string, { conclude?: string; for?: string }> = {
+const PLANTS: Record<string, Plant> = {
   placed: { conclude: "forall p in cells(col(c)): strike(p, value(c))" },
   hiddenSingle: {
     for: "u in units, placed = set(value(c) over c in cells(u) where known(c)), d in domain - placed, n = count(c in cells(u) where d in cand(c)) where n < 3",
@@ -164,6 +193,11 @@ const PLANTS: Record<string, { conclude?: string; for?: string }> = {
     conclude:
       "forall d in cand(b) where exists d2 in cand(a): d2 != d and not fits(e, d2, d): strike(b, d)",
   },
+  // Salad: the clue's letter given one square less reach than the empties
+  // allow.
+  border: {
+    for: "k in clues(border), L = sight(at(k)), H = order - nums, f = index(first({c in L where not (known(c) and value(c) = nums + 1)}), L), reach = H - 1 - count(c in L where index(c, L) >= H and known(c) and value(c) = nums + 1), stop = index(first({c in L where nums + 1 not in cand(c)}), L)",
+  },
 };
 
 const lines: string[] = [];
@@ -195,29 +229,47 @@ async function checkAll(worlds: readonly World[], ids: readonly string[]) {
   const bad: string[] = [];
   for (const id of ids) {
     const name = id.includes(".") ? id.slice(id.indexOf(".") + 1) : id;
-    const plant = PLANTS[name];
+    const plants = [
+      { label: "planted", plant: PLANTS[name] },
+      { label: "planted once", plant: ONCE[name] },
+    ].filter((p): p is { label: string; plant: Plant } => p.plant !== undefined);
     for (const order of ORDERS) {
-      let caught = false;
+      const caught = plants.map(() => false);
       let tried = false;
-      for (const { where, d } of worlds) {
-        if (!(await hasAnswer(d, order))) continue;
+      // Each world at each assignment of the sizes the order leaves free.
+      const boards = worlds.flatMap(({ where, d }) =>
+        sizings(d, order).map((sizes) => ({
+          where: [where, ...[...sizes].map(([n, v]) => `${n}=${v}`)].join(" "),
+          d,
+          sizes,
+        })),
+      );
+      for (const { where, d, sizes } of boards) {
+        if (!(await hasAnswer(d, order, sizes))) continue;
         const t = d.techniques.find((x) => x.id === id) as Technique;
-        const v = await checkTechnique(d, t, order);
+        const v = await checkTechnique(d, t, order, sizes);
         line(where, v, "sound");
         if (v.verdict !== "sound") bad.push(`${id} ${order}`);
-        if (plant === undefined) continue;
         if (order === 3 && (name === "set" || name === "fish" || name === "digitSet"))
           continue;
-        tried = true;
-        const p = await checkTechnique(d, planted(t, plant), order);
-        line(
-          where,
-          p,
-          p.verdict === "unsound" || worlds.length === 1 ? "unsound" : "either",
-        );
-        if (p.verdict === "unsound") caught = true;
+        for (const [i, { label, plant }] of plants.entries()) {
+          tried = true;
+          const p = await checkTechnique(
+            d,
+            { ...planted(t, plant), id: `${t.id} (${label})` },
+            order,
+            sizes,
+          );
+          line(
+            where,
+            p,
+            p.verdict === "unsound" || boards.length === 1 ? "unsound" : "either",
+          );
+          if (p.verdict === "unsound") caught[i] = true;
+        }
       }
-      if (tried && !caught) bad.push(`${id} planted ${order}`);
+      for (const [i, c] of caught.entries())
+        if (tried && !c) bad.push(`${id} ${plants[i].label} ${order}`);
     }
   }
   return bad;
@@ -266,10 +318,17 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
     const name = isLibrary(file) ? file.library : file.game;
     if (only !== null && !only.includes(name)) continue;
     if (isLibrary(file)) {
-      const library = libraryDescription(file);
+      const square = libraryDescription(file);
+      const repeated = libraryDescription(file, true);
       const failed = await checkAll(
-        [{ where: file.library, d: { ...library.d, techniques: library.techniques } }],
-        library.techniques.map((t) => t.id),
+        [
+          { where: file.library, d: { ...square.d, techniques: square.techniques } },
+          {
+            where: `${file.library} +repeat`,
+            d: { ...repeated.d, techniques: repeated.techniques },
+          },
+        ],
+        square.techniques.map((t) => t.id),
       );
       bad.push(...failed);
       for (const id of Object.keys(file.techniques))
@@ -283,18 +342,20 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
     // there, which the verdicts alone would not say.
     const note = say;
     for (const { where, d } of worlds)
-      for (const order of ORDERS) {
-        if (!(await hasAnswer(d, order))) {
-          note(
-            `--  ${where}: no board of order ${order} has an answer, so nothing is checked there`,
-          );
-          continue;
+      for (const order of ORDERS)
+        for (const sizes of sizings(d, order)) {
+          const at = [where, ...[...sizes].map(([n, v]) => `${n}=${v}`)].join(" ");
+          if (!(await hasAnswer(d, order, sizes))) {
+            note(
+              `--  ${at}: no board of order ${order} has an answer, so nothing is checked there`,
+            );
+            continue;
+          }
+          for (const kind of await impossibleKinds(d, order, sizes))
+            note(
+              `--  ${at.padEnd(10)} no board of order ${order} holds a ${kind} clue, so no reading of one is checked there`,
+            );
         }
-        for (const kind of await impossibleKinds(d, order))
-          note(
-            `--  ${where.padEnd(10)} no board of order ${order} holds a ${kind} clue, so no reading of one is checked there`,
-          );
-      }
     const own = worlds[0].d.techniques.filter((t) => !t.id.includes("."));
     const failed = await checkAll(
       worlds,

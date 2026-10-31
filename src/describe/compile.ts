@@ -187,6 +187,9 @@ interface Env {
   boxes: string | null;
   /** Whether the space has its diagonals. */
   diagonals: boolean;
+  /** The description's sizes the grid does not give, which the board deals
+   * where a technique reads one: those read, by name. */
+  sizes: { names: ReadonlySet<string>; read: Set<string> };
   /** The runtime helpers the code calls, to import. */
   used: Set<string>;
   /** The declarations of the arrays a technique's comprehensions reuse, made
@@ -291,6 +294,7 @@ const EARLY = new Set([
   "end2",
   "other",
   "abs",
+  "times",
   "range",
   "sight",
   "opposite",
@@ -323,6 +327,7 @@ function early(
         env.regions.has(e.name) ||
         e.name === env.boxes ||
         (e.name === "diagonals" && env.diagonals) ||
+        env.sizes.names.has(e.name) ||
         e.name === "order" ||
         e.name === "w" ||
         e.name === "h"
@@ -476,6 +481,11 @@ function name(n: string, scope: Scope, env: Env, out: Out): Val {
     return { code: "sp.diagonals", sort: setOf(elem("line")) };
   if (n === "order" || n === "w") return { code: "sp.w", sort: NUM };
   if (n === "h") return { code: "sp.h", sort: NUM };
+  if (env.sizes.names.has(n)) {
+    env.sizes.read.add(n);
+    env.readsClues.yes = true;
+    return { code: `cl.${n}`, sort: NUM };
+  }
   const def = env.defs.get(n);
   if (def !== undefined && def.params.length === 0)
     return compileExpr(def.body, new Map(), env, out);
@@ -1633,6 +1643,10 @@ function call(
       arity(1);
       expect(vs[0], "num", fn);
       return { code: `Math.abs(${vs[0].code})`, sort: NUM };
+    case "times":
+      arity(1);
+      expect(vs[0], "num", fn);
+      return { code: `b.multiplicity(${vs[0].code})`, sort: NUM };
     case "range":
       arity(2);
       expect(vs[0], "num", fn);
@@ -1917,6 +1931,7 @@ export function compileLibrary(
     regions: new Set(),
     boxes: null,
     diagonals: false,
+    sizes: { names: new Set(), read: new Set() },
     used,
     concluding: false,
     memo: false,
@@ -1951,7 +1966,12 @@ function clueSorts(kind: string, at: string, value: Expr, env: Env): ClueKind {
   const v = compileExpr(
     value,
     new Map([["at", { code: "at", sort: atSort }]]),
-    { ...env, used: new Set(), readsClues: { yes: false } },
+    {
+      ...env,
+      used: new Set(),
+      readsClues: { yes: false },
+      sizes: { ...env.sizes, read: new Set() },
+    },
     new Out(0),
   );
   if (v.sort.k !== "set")
@@ -1995,6 +2015,21 @@ export function compileGame(
     regions,
     boxes,
     diagonals: space.diagonals === true,
+    // A size the grid is not measured in: `order`, `w` and `h` are the
+    // space's own.
+    sizes: {
+      names: new Set(
+        Object.keys(d.json.sizes).filter(
+          (n) =>
+            n !== "order" &&
+            n !== "w" &&
+            n !== "h" &&
+            n !== space.grid.w &&
+            n !== space.grid.h,
+        ),
+      ),
+      read: new Set(),
+    },
     used,
     concluding: false,
     memo: false,
@@ -2008,14 +2043,17 @@ export function compileGame(
   const own = d.techniques.filter((t) => !t.id.includes("."));
   const code = own.map((t) => compileTechnique(t, env).code);
   const scales = Object.entries(d.json.scales ?? {});
+  const sizes = [...env.sizes.read].sort();
   const clueLines =
-    clues.size + regions.size === 0
+    clues.size + regions.size + sizes.length === 0
       ? []
       : [
-          "/** What the board deals: its partitions by name, and its clues by kind. */",
+          "/** What the board deals: its partitions by name, its clues by kind, and",
+          " * the sizes a technique reads that the grid does not give. */",
           "export interface Dealt {",
           ...[...regions].map((r) => `  ${r}: Partition;`),
           ...[...clues.keys()].map((k) => `  ${k}: ClueList;`),
+          ...sizes.map((n) => `  ${n}: number;`),
           "}",
           "",
         ];

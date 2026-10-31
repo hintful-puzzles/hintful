@@ -49,12 +49,13 @@ const statement = (t: StatedTechnique) => ({
   on: t.on ?? null,
 });
 
-/** A library technique's fingerprint: it is checked on a plain Latin square. */
+/** A library technique's fingerprint: it is checked on a plain Latin square,
+ * and on one whose last value appears twice in a line. */
 export function libraryFingerprint(lib: LibraryJson, id: string): string {
   return fingerprint(
     canonical({
       technique: statement(lib.techniques[id]),
-      rules: "latin",
+      rules: ["latin", "latin with a value twice a line"],
       orders: CHECKED_ORDERS,
     }),
   );

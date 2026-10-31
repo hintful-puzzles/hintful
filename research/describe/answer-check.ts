@@ -33,20 +33,11 @@ export function ruleInstances(inst: Instance): RuleInstance[] {
         out.push({
           label: `${rule.name}: ${(u as Elem).label}`,
           expr: {
-            k: "agg",
-            fn: "distinct",
-            binders: [
-              {
-                name: "$c",
-                kind: "in",
-                of: { k: "name", name: "$cells" },
-                where: null,
-              },
-            ],
-            where: null,
-            term: { k: "call", fn: "value", args: [{ k: "name", name: "$c" }] },
+            k: "call",
+            fn: "latin",
+            args: [e.args[0], { k: "name", name: "$u" }],
           },
-          env: new Map<string, Value>([["$cells", cells]]),
+          env: new Map<string, Value>([["$u", [u]]]),
           latinUnit: cells,
         });
       }
@@ -141,6 +132,11 @@ export function searchAnswers(
   const n = inst.space.cells.length;
   const dom = inst.domain;
   const all = dom.reduce((m, v) => m | (1 << v), 0);
+  const timesFn = inst.space.fns.get("times");
+  /** How many of `v` a `latin` unit holds. */
+  const times = (v: number): number =>
+    timesFn === undefined ? 1 : (timesFn([v]) as number);
+  const unitSize = dom.reduce((s, v) => s + times(v), 0);
   const rules = ruleInstances(inst);
   const latinUnits = rules.flatMap((r) =>
     r.latinUnit === null ? [] : [r.latinUnit.map((c) => c.id)],
@@ -204,9 +200,11 @@ export function searchAnswers(
         touching[c.id].push(i);
       }
       // A completion keeps `latin`'s units distinct too, so a clue's line is
-      // tried only with values its row or column leaves.
+      // tried only with values its row or column leaves. A value that repeats
+      // is left to the rule.
       const taken = new Set<number>();
-      for (const [d, v] of tried) if (latinPeers[c.id].has(d.id)) taken.add(v);
+      for (const [d, v] of tried)
+        if (latinPeers[c.id].has(d.id) && times(v) === 1) taken.add(v);
       return domain(c).filter((v) => !taken.has(v));
     });
     if (res === UNDECIDED) {
@@ -220,25 +218,33 @@ export function searchAnswers(
     while (queue.length > 0) {
       const c = queue.pop() as number;
       const v = values[c];
-      for (const u of unitsOf[c])
+      // A value leaves the rest of a unit once the unit holds all of it.
+      for (const u of unitsOf[c]) {
+        if (
+          times(v) > 1 &&
+          latinUnits[u].filter((d) => values[d] === v).length < times(v)
+        )
+          continue;
         for (const d of latinUnits[u])
-          if (d !== c && !strike(d, v, trail, queue)) return false;
+          if (
+            d !== c &&
+            (times(v) === 1 || values[d] !== v) &&
+            !strike(d, v, trail, queue)
+          )
+            return false;
+      }
       for (const i of touching[c]) dirty.add(i);
       if (queue.length === 0) {
-        // Hidden singles in the latin units, and a value with no place left.
+        // Hidden singles in the latin units, and a value with too few places
+        // left.
         for (const u of latinUnits) {
-          if (u.length !== dom.length) continue;
+          if (u.length !== unitSize) continue;
           for (const x of dom) {
-            let place = -1;
-            let count = 0;
-            for (const d of u)
-              if (masks[d] & (1 << x)) {
-                place = d;
-                count++;
-              }
-            if (count === 0) return false;
-            if (count === 1 && values[place] === 0 && !assign(place, x, trail, queue))
-              return false;
+            const places = u.filter((d) => masks[d] & (1 << x));
+            if (places.length < times(x)) return false;
+            if (places.length === times(x))
+              for (const d of places)
+                if (values[d] === 0 && !assign(d, x, trail, queue)) return false;
           }
         }
       }

@@ -267,7 +267,17 @@
               "additionalProperties": false,
               "properties": {
                 "sort": { "const": "cell" },
-                "domain": { "$ref": "#/$defs/formula" }
+                "domain": { "$ref": "#/$defs/formula" },
+                "repeat": {
+                  "type": "object",
+                  "description": "The one value of the domain that appears more than once in a unit, and how many times: `times(d)` reads it, 1 for every other value. Salad's empty square.",
+                  "required": ["value", "times"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "value": { "$ref": "#/$defs/formula" },
+                    "times": { "$ref": "#/$defs/formula" }
+                  }
+                }
               }
             }
           }

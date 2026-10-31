@@ -2,7 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, clueAt } from "../../engine/describe-runtime.ts";
 
-/** What the board deals: its partitions by name, and its clues by kind. */
+/** What the board deals: its partitions by name, its clues by kind, and
+ * the sizes a technique reads that the grid does not give. */
 export interface Dealt {
   bar: ClueList;
 }

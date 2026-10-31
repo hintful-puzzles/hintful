@@ -40,7 +40,13 @@ export interface DescriptionJson {
     regions?: Record<string, "dealt" | string>;
     units: string[];
   };
-  answer: { value: { sort: "cell"; domain: string } };
+  answer: {
+    value: {
+      sort: "cell";
+      domain: string;
+      repeat?: { value: string; times: string };
+    };
+  };
   given?: string[];
   marks?: Record<string, { sort: string; notation: string }>;
   define?: Record<string, string>;
@@ -175,6 +181,9 @@ export interface Description {
   rules: { name: string; expr: Expr }[];
   clueKinds: Map<string, { at: string; value: Expr; means: Expr }>;
   domain: Expr;
+  /** The value of the domain that may appear more than once in a unit, and
+   * how many times; `null` where each appears once. */
+  repeat: { value: Expr; times: Expr } | null;
   techniques: Technique[];
   tiers: string[];
 }
@@ -308,6 +317,13 @@ export function loadDescription(
     rules,
     clueKinds,
     domain: at("answer domain", json.answer.value.domain),
+    repeat:
+      json.answer.value.repeat === undefined
+        ? null
+        : {
+            value: at("answer repeat value", json.answer.value.repeat.value),
+            times: at("answer repeat times", json.answer.value.repeat.times),
+          },
     techniques,
     tiers,
   };

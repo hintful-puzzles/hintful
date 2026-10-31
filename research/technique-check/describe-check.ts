@@ -260,8 +260,14 @@ function spaceOf(
   };
 }
 
-function makeBoard(order: number, d?: Description): Board {
-  const { sp, sizes } = spaceOf(order, d);
+function makeBoard(
+  order: number,
+  d?: Description,
+  more: ReadonlyMap<string, number> = new Map(),
+): Board {
+  const space = spaceOf(order, d);
+  const { sp } = space;
+  const sizes = new Map([...space.sizes, ...more]);
   const tag = `b${boardCount++}`;
   const n = order * order;
   const ans = Array.from({ length: n }, (_, c) => Z3.Int.const(`${tag}_ans_${c}`));
@@ -415,6 +421,15 @@ function cellValue(ctx: Ctx, c: number): Nx {
   return ctx.mode === "rule" ? a : ite(ctx.board.known[c], a, -1);
 }
 
+/** `times(d)`: the repeated value's count, 1 for every other. */
+function timesOf(ctx: Ctx, d: Nx): Nx {
+  const r = ctx.d.repeat;
+  if (r === null) return 1;
+  const at = num(evaluate(r.value, new Map(), ctx), "repeat value");
+  const times = num(evaluate(r.times, new Map(), ctx), "repeat times");
+  return ite(cmp("=", d, at), times, 1);
+}
+
 function evaluate(e: Expr, env: Env, ctx: Ctx): V {
   const { board } = ctx;
   const { sp } = board;
@@ -448,7 +463,7 @@ function evaluate(e: Expr, env: Env, ctx: Ctx): V {
         case "corners":
           return allOf("corner", sp.corners);
         case "domain":
-          return vsetOf(board, (d) => d >= 1 && d <= board.order);
+          return evaluate(ctx.d.domain, new Map(), ctx);
         case "order":
         case "w":
         case "h":
@@ -834,16 +849,31 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
     });
   }
   if (fn === "latin") {
-    // `latin(value, lines)`: the answer distinct in every line.
+    // `latin(value, lines)`: the answer distinct in every line, or where a
+    // value repeats, each value of the domain `times(d)` times in each.
     const lines = evaluate(args[1], env, ctx);
     if (lines.k !== "eset") throw new TypeError("latin(f, lines)");
+    const dom = evaluate(ctx.d.domain, new Map(), ctx);
+    if (dom.k !== "vset")
+      throw new TypeError("latin: the domain is not a set of values");
+    const each = (cells: readonly number[]): Bx =>
+      ctx.d.repeat === null
+        ? Z3.Distinct(...cells.map((c) => board.ans[c]))
+        : and(
+            ...dom.mem.map((g, n) =>
+              implies(
+                g,
+                cmp(
+                  "=",
+                  sumOf(cells.map((c) => ite(board.ans[c].eq(n), 1, 0))),
+                  timesOf(ctx, n),
+                ),
+              ),
+            ),
+          );
     return {
       k: "bool",
-      v: and(
-        ...lines.mem.map(([L, g]) =>
-          implies(g, Z3.Distinct(...sp.lineCells[L].map((c) => board.ans[c]))),
-        ),
-      ),
+      v: and(...lines.mem.map(([L, g]) => implies(g, each(sp.lineCells[L])))),
     };
   }
   const filling = env.get(fn);
@@ -996,6 +1026,8 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
             : ite(cmp("<", a, 0), arith("-", 0, a), a),
       };
     }
+    case "times":
+      return { k: "num", v: timesOf(ctx, num(vs[0], fn)) };
     case "range": {
       const a = num(vs[0], fn);
       const b = num(vs[1], fn);
@@ -1074,12 +1106,14 @@ function dealSymbolically(d: Description, board: Board): void {
           ? board.sp.slots.length
           : c.at === "corner"
             ? board.sp.corners.length
-            : part !== undefined
-              ? part.parts.length
-              : null;
+            : c.at === "cell"
+              ? board.sp.cells.length
+              : part !== undefined
+                ? part.parts.length
+                : null;
     if (places === null)
       throw new Error(
-        `clue ${kind}: only edge, slot, corner and region clues are checked yet`,
+        `clue ${kind}: only edge, slot, corner, cell and region clues are checked yet`,
       );
     const complete = d.json.clues?.[kind]?.complete === true;
     const list: ClueSym[] = [];
@@ -1141,6 +1175,10 @@ function worldOf(d: Description, board: Board): Bx[] {
     throw new TypeError("the answer's domain is not a set of values");
   board.ans.forEach((a, c) => {
     out.push(or(...dom.mem.map((g, n) => and(g, a.eq(n)))));
+    // A mark is of a value of the domain, which may be fewer than the order.
+    board.cand[c].forEach((g, n) => {
+      if (n > 0) out.push(implies(g, dom.mem[n] ?? false));
+    });
     // Consistent marks: the answer is never struck, and a placed cell holds
     // just it.
     out.push(or(...board.cand[c].map((g, n) => and(g, a.eq(n)))));
@@ -1192,8 +1230,9 @@ export interface Verdict {
 export async function impossibleKinds(
   d: Description,
   order: number,
+  sizes: ReadonlyMap<string, number> = new Map(),
 ): Promise<string[]> {
-  const board = makeBoard(order, d);
+  const board = makeBoard(order, d, sizes);
   dealPartitions(d, board);
   dealSymbolically(d, board);
   const solver = new Z3.Solver();
@@ -1213,10 +1252,53 @@ export async function impossibleKinds(
   return out;
 }
 
+/**
+ * Each assignment of the sizes an `order` board does not fix (Salad's
+ * `nums`), over their ranges, where a repeated value appears at least once,
+ * which is where the rest of the domain fits the board: one map a board,
+ * and one empty map where there are none.
+ */
+export function sizings(d: Description, order: number): Map<string, number>[] {
+  const { grid } = d.json.space;
+  const fixed = new Set([
+    "order",
+    "w",
+    "h",
+    grid.w,
+    grid.h,
+    ...spaceOf(order, d).sizes.keys(),
+  ]);
+  const free = Object.entries(d.json.sizes).filter(([n]) => !fixed.has(n));
+  if (free.length > 0 && d.repeat === null)
+    throw new Error(
+      `${d.json.game}: a size the board does not fix is checked with a repeat`,
+    );
+  let out: Map<string, number>[] = [new Map()];
+  for (const [name, { min, max }] of free)
+    out = out.flatMap((m) =>
+      Array.from({ length: max - min + 1 }, (_, i) => new Map([...m, [name, min + i]])),
+    );
+  return out.filter((sizes) => {
+    const ctx: Ctx = {
+      board: makeBoard(order, d, sizes),
+      d,
+      mode: "rule",
+      concluding: false,
+    };
+    if (d.repeat === null) return true;
+    const times = num(evaluate(d.repeat.times, new Map(), ctx), "repeat times");
+    return typeof times === "number" && times >= 1;
+  });
+}
+
 /** Whether `d`'s rules allow any answer on an `order` board: where they do
  * not, every technique is sound there and says nothing. */
-export async function hasAnswer(d: Description, order: number): Promise<boolean> {
-  const board = makeBoard(order, d);
+export async function hasAnswer(
+  d: Description,
+  order: number,
+  sizes: ReadonlyMap<string, number> = new Map(),
+): Promise<boolean> {
+  const board = makeBoard(order, d, sizes);
   dealPartitions(d, board);
   dealSymbolically(d, board);
   const solver = new Z3.Solver();
@@ -1229,10 +1311,11 @@ export async function checkTechnique(
   d: Description,
   t: Technique,
   order: number,
+  sizes: ReadonlyMap<string, number> = new Map(),
   split = 1,
 ): Promise<Verdict> {
   const t0 = performance.now();
-  const board = makeBoard(order, d);
+  const board = makeBoard(order, d, sizes);
   dealPartitions(d, board);
   dealSymbolically(d, board);
   const world = worldOf(d, board);
@@ -1293,8 +1376,13 @@ function show(v: V | null): string {
 }
 
 /** A library's techniques as a description's: placed on a Latin square of
- * the library's own, whose only rule is that no value repeats in a line. */
-export function libraryDescription(lib: LibraryJson): {
+ * the library's own, whose only rule is that no value repeats in a line, or
+ * with `repeat`, that its last value appears twice in each and the others
+ * once. */
+export function libraryDescription(
+  lib: LibraryJson,
+  repeat = false,
+): {
   d: Description;
   techniques: Technique[];
 } {
@@ -1304,7 +1392,15 @@ export function libraryDescription(lib: LibraryJson): {
     family: lib.library,
     sizes: { order: { min: 3, max: 16 } },
     space: { grid: { w: "order", h: "order" }, edges: true, units: ["rows", "cols"] },
-    answer: { value: { sort: "cell", domain: "range(1, order)" } },
+    answer: {
+      value: repeat
+        ? {
+            sort: "cell",
+            domain: "range(1, order - 1)",
+            repeat: { value: "order - 1", times: "2" },
+          }
+        : { sort: "cell", domain: "range(1, order)" },
+    },
     shape: ["latin(value, lines)"],
     freedom: { kind: "fill" },
     tiers: ["any"],

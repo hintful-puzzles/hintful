@@ -43,7 +43,8 @@ itself is § "The file". A game whose techniques are stated:
    § "A firing's reason is built from its binding").
 5. **Deals its board as the description reads it**, the compiled module's
    `Dealt`: one `ClueList` a kind, in the order the techniques should meet
-   them, and one `Partition` a dealt partition (`describedLadder` in
+   them, one `Partition` a dealt partition, and each size a technique reads
+   that the grid is not measured in (Salad's `nums`) (`describedLadder` in
    [`towers/solver.ts`](../src/games/towers/solver.ts), and in
    [`keen/solver.ts`](../src/games/keen/solver.ts) for cages), on the grid
    its units are: `latinSpace(o)`, or `sudokuSpace(boxes, diagonals)` for a
@@ -124,7 +125,9 @@ Towers' line says `distinct(f(x) over x in L)`.
 `distinct(t over B)`, `set(t over B)`. Without `of`, a term is the last
 binder.
 
-**Names**: `true`, `false`, `none`, the description's sizes, `domain`, and
+**Names**: `true`, `false`, `none`, the description's sizes (one the grid
+is not measured in, such as Salad's `nums`, is read from what the board
+deals), `domain`, and
 what the space gives: `cells`, `rows`, `cols`, `lines`, `units`, `slots`
 (one beyond each end of every line, numbered as Towers deals its clues: above
 each column, below each, left of each row, right of each), `corners` (each
@@ -140,7 +143,8 @@ its units in the description's order. A clue kind may sit at a part
 not share a name, since both are fields of `Dealt`.
 
 **Functions**: `value(c)`, `cand(c)` the candidates the marks leave,
-`known(c)`; `range(a, b)`, `abs(a)`, `subsets(S)`, `first(L)`; an ordered
+`known(c)`; `times(d)`, how many times `d` appears in each unit;
+`range(a, b)`, `abs(a)`, `subsets(S)`, `first(L)`; an ordered
 set's `nth(L, i)` (none past its ends), `index(x, L)` (`-1` where `x` is not
 in it), `before(x, L)`; the grid's
 `x(c)`, `y(c)`, `cell(x, y)` (on the grid: the compiled code does not check),
@@ -152,6 +156,16 @@ technique's conclusion only, `strike(c, d)` and `place(c, d)`. The
 interpreter reads more (`latin(f, U)` and others,
 [`research/describe/README.md`](../research/describe/README.md)); the
 compiler refuses what it does not have, naming it.
+
+**A value that repeats.** A description may declare one value of its domain
+that appears more than once in a unit (`answer.value.repeat: { value, times
+}`, Salad's empty square), and `times(d)` reads it: that count for the
+repeated value, 1 for every other and for every value of a game that
+declares none. The compiled code reads it off the marks, which the Latin cube
+knows. The library's techniques read it behind a test that holds where it is
+1 (`times(d) = 1 or ...`), so a Latin square's ladder reads as it would
+without it; state a library technique's multiplicity the same way, or every
+Latin game pays for a count only Salad needs.
 
 A technique is `for` (its binders), an optional `premise`, and `conclude`.
 A library technique may say `"on": "place"`: the engine runs it as each
@@ -322,6 +336,11 @@ sound in every world, at every order where the world has an answer, and its
 plant unsound in one: no order-3 Latin square has both diagonals distinct,
 so Solo's X world is checked at order 4 only, and the results say so.
 
+A size the order does not fix (Salad's `nums`) is checked at each value in
+its range where the repeated value appears at least once, which is where the
+domain fits the board: Salad at order 3 with two letters, and at order 4
+with two and with three, so the empty square once a line and twice.
+
 A small board may hold no clue of a kind at all, and then a technique's
 reading of that kind is checked there on nothing, whatever its verdict. The
 results name each such kind and order (`--` lines): no Latin square below
@@ -329,10 +348,12 @@ order 6 has a Mathrax quotient, two disjoint pairs of one ratio around a
 corner, so that reading rests on the answer check and the comparison with
 the code it replaced. Library techniques
 are checked on a plain Latin square, which is the weakest rule set any Latin
-game adds to.
+game adds to, and on one whose last value appears twice in each line.
 
 Each technique has a planted defect beside it in `describe-check.test.ts`
-that must come out unsound. A plant that only makes a technique strike
+that must come out unsound, and each library technique that reads a
+multiplicity a second, the technique reading it as one, which must come out
+unsound where a value repeats. A plant that only makes a technique strike
 less, or that drops a condition consistent marks already give, is not a
 defect, and the checker rightly calls it sound: three of the first plants
 were that, and were replaced.

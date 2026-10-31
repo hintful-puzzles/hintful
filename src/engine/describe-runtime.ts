@@ -16,6 +16,8 @@
 export interface Marks {
   /** Every value of the answer's domain, as a bitmask. */
   readonly domain: number;
+  /** How many times `d` appears in each unit: `times(d)`. */
+  multiplicity(d: number): number;
   /** Whether the cell holds a value. */
   known(c: number): boolean;
   /** The cell's value, or `-1` where it has none. */

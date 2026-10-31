@@ -1,5 +1,9 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
+# Salad's two rulesets, and the game's help page. ABC End View deals border
+# letters and Number Ball deals balls; one description holds both clue kinds,
+# and a board holds the one its ruleset deals. `npm run describe` compiles the
+# techniques to salad.compiled.ts, which solver.ts runs.
 game: salad
 help:
   rules: |-
@@ -28,3 +32,69 @@ help:
     The hint speaks of *squares*, and a clue *sees* the first letter along its line. The pencil-mark 'X', the note that a square might be empty, is its *empty-square mark*, and a sentence that lists what a square can still be writes it as X. It is crossed out like any other pencil mark: a square left with only that mark must be empty, and a square that has lost it must hold a letter. Each row and column has a fixed number of empty squares, so counting them is half the game: once a line has all its empty squares, the rest must hold letters, and once it has all its letters, the rest must be empty. In {{choice:ruleset:1}}, where every symbol is a number, the hint says "number" wherever this says "letter".
 
     {{wing:square}}
+
+name: Salad
+family: latin
+sizes:
+  order: { min: 3, max: 10 }
+  nums: { min: 2, max: 9 }
+space:
+  grid: { w: "order", h: "order" }
+  slots: true
+  units: [rows, cols]
+answer:
+  # nums + 1 is the empty square, which fills the rest of each line.
+  value:
+    sort: cell
+    domain: "range(1, nums + 1)"
+    repeat: { value: "nums + 1", times: "order - nums" }
+# A given cross is the empty square given.
+given: [value]
+marks:
+  # The empty-square mark is nums + 1.
+  cand: { sort: cell, notation: "set of range(1, nums + 1)" }
+shape:
+  - "latin(value, lines)"
+clues:
+  # ABC End View: the first square from the clue that is not empty holds it.
+  border:
+    at: slot
+    value: "range(1, nums)"
+    means: >-
+      exists c in sight(at):
+      value(c) = v and (forall c2 in before(c, sight(at)): value(c2) = nums + 1)
+  # Number Ball: a ball's square is not empty, the value it names.
+  ball: { at: cell, value: "{nums + 1}", means: "value(at) != v" }
+freedom: { kind: fill }
+deal:
+  clues: which border letters show, or which balls, and their numbers
+  givens: which letters, numbers and crosses
+  tier: one of the tiers
+tiers: [Easy, Normal]
+techniques:
+  - { use: latin.placed, tier: Easy, rung: dup }
+  # Upstream's salad_letters_solver_dir, one clue a binding, square by
+  # square from the clue: near it, every square up to the first not known
+  # empty holds no letter but the clue's, since the empties before its
+  # letter are all the clue looks across. And the clue's letter sits no
+  # further in than the line's empties reach, less those known empty beyond
+  # anywhere it could sit, nor past the first square known to hold a letter.
+  - id: border
+    tier: Easy
+    rung: [borderNear, borderFar]
+    for: >-
+      k in clues(border),
+      L = sight(at(k)),
+      H = order - nums,
+      f = index(first({c in L where not (known(c) and value(c) = nums + 1)}), L),
+      reach = H - count(c in L where index(c, L) >= H and known(c) and value(c) = nums + 1),
+      stop = index(first({c in L where nums + 1 not in cand(c)}), L)
+    conclude: >-
+      forall c in L, i = index(c, L):
+      ((f < 0 or i <= f) implies (forall e in domain where e != v(k) and e <= nums: strike(c, e)))
+      and (((stop >= 0 and i > stop) or i > reach) implies strike(c, v(k)))
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }
+  - { use: latin.set, tier: Normal, rung: set }
+  - { use: latin.fish, tier: Normal, rung: set }
+  - { use: latin.wing, tier: Normal, rung: wing }
