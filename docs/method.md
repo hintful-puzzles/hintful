@@ -1,16 +1,16 @@
 # Method: make the check check the thing
 
-How to trust a check, a measurement or a bulk edit in this repository. It
-applies to the engine, the games, the app shell and the scripts alike.
-[`test-strength.md`](./test-strength.md) is the companion for assessing tests;
-its §7 catalogs instruments that measured the wrong unit, and its numbers
-should not be quoted without reading it.
+How to trust a check, a measurement or a bulk edit anywhere in this
+repository: engine, games, app shell and scripts. Its companion for assessing
+tests is [`test-strength.md`](./test-strength.md), whose §7 catalogs
+instruments that measured the wrong unit. Do not quote that guide's numbers
+without reading it.
 
 ## A guard measures the thing it claims to guard
 
 A guard that measures a neighbor of its subject passes, so nobody looks. Ask
 what would have to break for the assertion to fail. If the answer names
-something other than the behavior you care about, rewrite it.
+something other than the behavior you care about, rewrite the guard.
 
 Shapes to search for:
 
@@ -23,16 +23,16 @@ Shapes to search for:
   another.
 - A hash of output whose order is not stable.
 - A round trip through the two halves under test (`get` after `set`, decode
-  after encode), which agrees with itself whatever both got wrong: a test
-  whose only observer is the thing under test cannot establish ground truth.
+  after encode). It agrees with itself whatever both got wrong: a test whose
+  only observer is the thing under test cannot establish ground truth.
 
 ## See a guard fail before trusting it
 
 Break the thing deliberately, watch the guard go red, restore. A guard nobody
 has seen fail is a guard nobody has seen work.
 
-Plant the defect again before leaning on an old guard. A guard that was red
-once can stop reaching its case as the code around it moves, and it keeps
+Plant the defect again before leaning on an old guard. As the code around it
+moves, a guard that was once red can stop reaching its case, and it keeps
 passing.
 
 ## Count what the check looked at
@@ -40,16 +40,16 @@ passing.
 An unmatched `import.meta.glob` yields `{}`, an empty directory yields no
 iterations, and a filter can exclude everything. Every assertion downstream
 then passes over nothing. Count the inputs and assert the count. The count is
-a floor set well below the true value, because its job is to tell working
-from resolving nothing; it is not one of the ratcheted thresholds of
-`docs/testing.md` § "Metrics and instruments".
+a floor set well below the true value: its job is to tell working from
+resolving nothing. It is not one of the ratcheted thresholds of
+[`testing.md`](./testing.md) § "Metrics and instruments".
 
 ## A sweep that finds zero owes a power argument
 
 Counting inputs answers "did I look at anything?". A sweep that reports none
-also has to answer "did I look at enough?": say how many it would have taken
+must also answer "did I look at enough?": say how many inputs it would take
 to see one. A rung that fires on one board in sixty is missed by 36 boards
-more than a third of the time.
+more than half the time.
 
 Widen until a positive appears, or argue the absence from the code. Once a
 firing case is found, pin it as the input the code consumes, such as a desc.
@@ -65,19 +65,19 @@ appears verbatim in the destination, and nothing was added.
 
 ## Check the instrument before the finding
 
-Check a measurement against something outside the tool that produced it,
+Check a measurement against something outside the tool that produced it
 before reasoning from it.
 
-The same goes for a dependency. What the installed version of a tool does is
-not what the tool does. When you find yourself building a workaround layer,
-overriding generated content, or writing a guard for a guard, check the
-version first.
+A dependency is an instrument too: what the installed version of a tool does
+is not what the tool does. When you find yourself building a workaround
+layer, overriding generated content, or writing a guard for a guard, check
+the version first.
 
 ## A scan that keys on a name
 
-A scan that matches a name finds only the things that were named that way,
-and reports a census of the whole collection with the others silently absent.
-The errors run both ways: it can miss members and convict innocent ones.
+A scan that matches a name finds only what was named that way, and reports a
+census of the whole collection with the rest silently absent. The error runs
+both ways: it can miss members and convict innocent ones.
 
 - **Key on the shape**: `{ ok: false, error: <literal> }` wherever it
   appears, a `?` on an interface member. Accept the superset that gives you
@@ -95,26 +95,26 @@ The errors run both ways: it can miss members and convict innocent ones.
   before answering. It does not see a renamed copy, a typed-out value, or
   source read through a `?raw` glob.
 - **Who references a member is not who implements it.** The references to
-  `Game.hint` include tests that name hintless games. The population is the
+  `Game.hint` include tests that build hintless games. The population is the
   implementations.
 
 ## Our own code keys on a reference, a type or an id
 
-A regex over a sentence the code itself wrote is a name-keyed scan aimed at
-our own output: a rewording empties it without a sound. When a check reads
-prose to learn a fact, give the producer a field for the fact, as
-`HintStep.rung` does ([`hints.md`](./hints.md) § "Name the rung a
-step speaks"). A regex stays right where the wording is the thing under test.
+A regex over a sentence our own code wrote is a name-keyed scan aimed at our
+own output: a rewording empties it without a sound. When a check reads prose
+to learn a fact, give the producer a field for the fact, as `HintStep.rung`
+does ([`hints.md`](./hints.md) § "Name the rung a step speaks"). A regex
+stays right where the wording is the thing under test.
 
 ## A count written in prose is a census nobody re-runs
 
-Write the query, not its answer. "The games that call
-`latinSolver`" cannot go stale; "the eleven latin-family games" does. Where a
-number is the point, assert it in a test so it fails when it drifts.
-`AGENTS.md` holds no census of the tree at all.
+Write the query, not its answer. "The games that call `latinSolver`" cannot
+go stale; "the eleven latin-family games" does. Where a number is the point,
+assert it in a test so it fails when it drifts. `AGENTS.md` holds no census
+of the tree.
 
 A fact about the code goes stale the same way. Date a claim about the code
-when you write it into a change, and re-verify a constraint that says "don't
+when you write it into a change. Re-verify a constraint that says "don't
 bother looking" before obeying it: that phrasing is the one that stops anyone
 noticing it has expired.
 
