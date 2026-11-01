@@ -205,12 +205,15 @@ Measured 2026-11-01. A candidate a step takes on is named in its row.
 Each binds every step. All are internal but the hint's order, which is the
 owner's.
 
-- **Power is kept, so no saved board breaks.** A step's compiled ladder
-  solves every board the hand-written one solved at its tier, measured on
-  every deal and fixture the game's tests hold, and so do Solve and the
-  mistake check (Path's `ANSWER_BUDGET` exists so saved boards keep solving).
-  Where a faithful statement is weaker, the step adds the technique that
-  closes the gap or brings it to the owner as a compatibility break.
+- **A saved game or shared board may break where that simplifies** (the
+  owner, 2026-11-01: there are few players yet, so take the chance). A step
+  states the simplest sound ladder, rules and moves it can, and need not
+  match the hand-written ladder's power at a tier, nor keep an old save, game
+  ID or shared link opening. It measures and reports what changed: which
+  boards no longer solve at their tier, and which saves or links no longer
+  load. Keeping power is a reason to add a technique only where a tier would
+  otherwise lose its boards (Path's `ANSWER_BUDGET`, kept so saved boards
+  solve, is one such choice to revisit).
 - **Boards and grades may move.** The app hands out boards, not seeds. A
   byte-match fixture whose quirk no sound statement reproduces (Filling's
   non-monotone bitmap, Magnets' `ndom`, Subsets' sync order, Rome's dsf root,

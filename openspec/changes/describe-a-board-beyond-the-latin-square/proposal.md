@@ -61,17 +61,18 @@ domain per part).
 
 ## Decisions it inherits
 
-`describe-the-whole-catalog/design.md` § "Decisions made here": power is
-kept so no saved board breaks; boards and grades may move, reported; a
+`describe-the-whole-catalog/design.md` § "Decisions made here": a saved game
+or shared board may break where that simplifies, reported; boards and grades
+may move, reported; a
 search tier stays engine search over the compiled ladder; a hint whose
 order moves follows the owner's answer on hint order, recorded there.
 
 ## Acceptance
 
 Unruly and Seismic run compiled ladders with no hand-written technique left,
-each technique checked sound with a planted defect unsound; every board
-their hand-written ladders solved at a tier the compiled ones solve at that
-tier; Solo and the Latin games run on the new runtime with their traces
+each technique checked sound with a planted defect unsound; what the
+compiled ladders solve at each tier compared with the hand-written ones and
+reported, with any save or link that no longer loads; Solo and the Latin games run on the new runtime with their traces
 unchanged (`research/describe/trace-latin.test.ts`); the app run on all
 three games' hints; the guides updated (`docs/descriptions.md`,
 `docs/solver-and-generator.md`).
