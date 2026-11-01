@@ -18,11 +18,13 @@ import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { describedSpace, partition, rangeMask } from "../../engine/describe-runtime.ts";
 import type { Dsf } from "../../engine/dsf.ts";
+import { auditingPremises, offerReplay } from "../../engine/firing-replay.ts";
 import {
   CellMarks,
   compiledRung,
   describedLadder,
   type Ladder,
+  ladderReplay,
   ladderTechniques,
   placingRung,
   runLadder,
@@ -164,10 +166,22 @@ export function recordSeismicDeductions(
   if (m === null) return ops;
   m.recorder = (rec) => ops.push(rec);
   m.budget = stepBudget("seismic hint");
-  runLadder(
-    m,
-    ladderTechniques(m, ladder.entries, { [TIERS]: maxDiff }, { [TIERS]: DIFF_EASY }),
-  );
+  const techniquesOn = (on: CellMarks) =>
+    ladderTechniques(on, ladder.entries, { [TIERS]: maxDiff }, { [TIERS]: DIFF_EASY });
+  const replay = auditingPremises()
+    ? ladderReplay(
+        m,
+        (values) => {
+          const fresh = marksOf(board, Uint8Array.from(values), dl, ladder);
+          if (fresh === null)
+            throw new Error("seismic replay: the edited board clashes");
+          return fresh;
+        },
+        techniquesOn,
+      )
+    : null;
+  runLadder(m, techniquesOn(m));
+  if (replay) offerReplay(replay);
   return ops;
 }
 

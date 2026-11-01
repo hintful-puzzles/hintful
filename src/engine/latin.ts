@@ -39,18 +39,14 @@ import type { DeductionTechnique } from "./deduction-fixpoint.ts";
 import type { DeductionRecorder } from "./deduction-record.ts";
 import { latinSpace, valuesOf } from "./describe-runtime.ts";
 import type { DifficultyVerdict } from "./difficulty.ts";
-import {
-  auditingPremises,
-  type CellBoard,
-  FiringReplay,
-  offerReplay,
-} from "./firing-replay.ts";
+import { auditingPremises, type FiringReplay, offerReplay } from "./firing-replay.ts";
 import {
   CellMarks,
   type CompiledLadder,
   describedLadder,
   type Ladder,
   type Library,
+  ladderReplay,
   ladderTechniques,
   type OwnRungs,
   type PlaceRung,
@@ -187,10 +183,6 @@ export class LatinSolver extends CellMarks {
   private readonly sGrid: Uint8Array;
   private readonly sNeighbors: Int32Array;
   private readonly sBfsqueue: Int32Array;
-
-  /** Called as each technique is about to run, after {@link group} moves on.
-   * Set only while a premise audit records this solver (`latinReplay`). */
-  onGroup?: (id: string) => void;
 
   /** `placing`: what runs as each value is placed, the compiled module's
    * where a game's ladder gives it, and the library's `placed` otherwise. */
@@ -491,9 +483,7 @@ function latinTechniques<Ctx>(
 function latinSolverTop<Ctx>(solver: LatinSolver, cfg: LatinSolverConfig<Ctx>): number {
   const { maxdiff, diffRecursive } = cfg;
   const grades = { [TIERS]: 0 };
-  const impossible = runLadder(solver, latinTechniques(solver, cfg, grades), {
-    onTechnique: (id) => solver.onGroup?.(id),
-  });
+  const impossible = runLadder(solver, latinTechniques(solver, cfg, grades));
   if (impossible) return finish(solver, cfg, DIFF_IMPOSSIBLE);
   let diff = grades[TIERS];
 
@@ -622,9 +612,8 @@ export function latinSolver<Ctx>(
 }
 
 /**
- * The premise audit's replay of a recording run (`firing-replay.ts`), installed
- * on the solver the recording uses before it runs. A firing's technique is its
- * rung, run alone from the edited state.
+ * The premise audit's replay of a recording run (`ladderReplay`), installed on
+ * the solver the recording uses before it runs.
  *
  * The replay starts from the context the run started with, because a context
  * may narrow as the run goes (Mathrax mirrors the cube in its own marks, and
@@ -638,38 +627,16 @@ function latinReplay<Ctx>(
   const clone = (ctx: Ctx): Ctx =>
     cfg.ctxNew ? cfg.ctxNew(ctx) : structuredClone(ctx);
   const ctx = clone(cfg.ctx);
-  const capture = (from: LatinSolver): CellBoard => ({
-    values: Int32Array.from(from.grid),
-    cands: from.snapshot(),
-  });
-  const replay = new FiringReplay<string>({
-    w: o,
-    h: o,
-    capture: () => capture(solver),
-    name: (id) => id,
-    run: (board, id) => {
+  return ladderReplay(
+    solver,
+    (values) => {
       const run = new LatinSolver(o, cfg.repeats, cfg.ladder.placing);
-      if (!run.alloc(Uint8Array.from(board.values)))
+      if (!run.alloc(Uint8Array.from(values)))
         throw new Error("latin replay: the edited state is inconsistent");
-      for (let c = 0; c < o * o; c++) run.cands[c] &= board.cands[c];
-      // The recording path's techniques behave as recorded only with a recorder.
-      run.recorder = () => {};
-      const replayed = { ...cfg, ctx: clone(ctx) };
-      const technique = latinTechniques(run, replayed, { [TIERS]: 0 }).find(
-        (t) => t.id === id,
-      );
-      if (!technique) throw new Error(`latin replay: no technique ${id}`);
-      return () => {
-        const ret = technique.run();
-        return { after: capture(run), ret };
-      };
+      return run;
     },
-  });
-  solver.onGroup = (id) => {
-    replay.before(id);
-    replay.open(solver.group);
-  };
-  return replay;
+    (run) => latinTechniques(run, { ...cfg, ctx: clone(ctx) }, { [TIERS]: 0 }),
+  );
 }
 
 // --- generator (matching.c / latin.c, RNG-faithful) ------------------------

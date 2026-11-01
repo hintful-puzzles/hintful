@@ -10,7 +10,7 @@
  */
 
 import type { DeductionTechnique, FiringTally } from "./deduction-fixpoint.ts";
-import { runDeductionFixpoint } from "./deduction-fixpoint.ts";
+import { runDeductionFixpoint, singleFirings } from "./deduction-fixpoint.ts";
 import type { DeductionRecorder } from "./deduction-record.ts";
 import {
   type Facts,
@@ -19,8 +19,8 @@ import {
   type Marks,
   STRIKE,
 } from "./describe-runtime.ts";
-import { HintFrontier } from "./hint-frontier.ts";
-import type { StepBudget } from "./step-budget.ts";
+import { type CellBoard, FiringReplay } from "./firing-replay.ts";
+import { type StepBudget, stepBudget } from "./step-budget.ts";
 
 /** Why a placement struck a value from a cell: the value just placed at
  * `(px, py)`. */
@@ -76,6 +76,9 @@ export class CellMarks implements Marks {
   /** The firing being made: bumped before each technique is tried, so every
    * record of one firing shares it. */
   group = 0;
+  /** The premise audit's replay of this run, only while one runs
+   * ({@link ladderReplay}). */
+  replay: FiringReplay<string> | null = null;
 
   constructor(
     sp: GridSpace,
@@ -448,14 +451,12 @@ export function ladderTechniques<S extends CellMarks>(
 
 /**
  * Run `techniques` on `m` to a fixpoint, each firing its own group, and say
- * whether one proved the marks inconsistent. `onTechnique` is told each
- * technique as it is tried, after the group moves on (the premise audit's
- * replay).
+ * whether one proved the marks inconsistent.
  */
 export function runLadder(
   m: CellMarks,
   techniques: readonly DeductionTechnique[],
-  opts: { firings?: FiringTally; onTechnique?: (id: string) => void } = {},
+  opts: { firings?: FiringTally } = {},
 ): boolean {
   const { impossible } = runDeductionFixpoint({
     techniques,
@@ -463,10 +464,51 @@ export function runLadder(
     firings: opts.firings,
     beforeTechnique: (t) => {
       m.group++;
-      opts.onTechnique?.(t.id);
+      m.replay?.before(t.id);
+      m.replay?.open(m.group);
     },
   });
   return impossible;
+}
+
+/**
+ * The premise audit's replay of the recording run about to be made on `m`
+ * (`firing-replay.ts`), set as `m.replay` for {@link runLadder} to mark each
+ * firing on: a firing's technique is run alone on fresh marks holding the
+ * edited state. `fresh` builds marks from the values placed, as the recording
+ * run's were built, and `techniquesOn` the run's techniques on them, at the
+ * run's caps. Call it once the recorder is on, so the replay starts where the
+ * recording does.
+ */
+export function ladderReplay<S extends CellMarks>(
+  m: S,
+  fresh: (values: Int32Array) => S,
+  techniquesOn: (fresh: S) => readonly DeductionTechnique[],
+): FiringReplay<string> {
+  const capture = (from: CellMarks): CellBoard => ({
+    values: Int32Array.from(from.grid),
+    cands: from.snapshot(),
+  });
+  const replay = new FiringReplay<string>({
+    w: m.sp.w,
+    h: m.sp.h,
+    capture: () => capture(m),
+    name: (id) => id,
+    run: (board, id) => {
+      const run = fresh(board.values);
+      for (let c = 0; c < run.cands.length; c++) run.cands[c] &= board.cands[c];
+      // The recording path's techniques behave as recorded only with a recorder.
+      run.recorder = () => {};
+      const technique = techniquesOn(run).find((t) => t.id === id);
+      if (!technique) throw new Error(`ladder replay: no technique ${id}`);
+      return () => {
+        const ret = technique.run();
+        return { after: capture(run), ret };
+      };
+    },
+  });
+  m.replay = replay;
+  return replay;
 }
 
 /** A firing a walk took, with the ladder entry that made it. */
@@ -489,7 +531,8 @@ export interface LadderWalk<S extends CellMarks = CellMarks> {
  * the ladder's order would take, so a hint never teaches harder reasoning
  * than the board needs where it stands. `reads` says which cells a firing's
  * premise reads. Each firing is made on `m` as a group of its own, recorded
- * where `m` has a recorder; `m.budget` is ticked once a call.
+ * where `m` has a recorder. The walk is `singleFirings`' continuing driver
+ * over the compiled firings, so it is the one every ladder hint is.
  */
 export function ladderWalk<S extends CellMarks>(
   m: S,
@@ -497,55 +540,49 @@ export function ladderWalk<S extends CellMarks>(
   caps: Caps,
   reads: (firing: Taken<S>) => readonly number[],
 ): LadderWalk<S> {
-  const admitted = entries.filter((e) => admits(e, caps));
-  const frontier = new HintFrontier<number>((c) => c);
   const cellsOf = (facts: readonly number[]): number[] => {
     const out: number[] = [];
     for (let i = 0; i < facts.length; i += 3) out.push(facts[i + 1]);
     return out;
   };
+  let taken: Taken<S> | null = null;
+  const techniques = entries
+    .filter((e) => admits(e, caps))
+    .map((entry): DeductionTechnique => {
+      const { firings } = entry.run;
+      if (!firings) throw new Error(`${entry.id}: its rung lists no firings`);
+      return {
+        id: entry.id,
+        tier: entry.tier,
+        run: () => entry.run(m),
+        available: () => {
+          const got = firings(m);
+          if (got === "contradiction") return got;
+          return got.map((firing) => {
+            const f: Taken<S> = { ...firing, entry };
+            return {
+              reads: () => reads(f),
+              writes: () => cellsOf(f.facts),
+              take: () => {
+                m.group++;
+                m.applyFacts(f.facts, (i) => f.reasons[i / 3]);
+                taken = f;
+              },
+            };
+          });
+        },
+      };
+    });
+  const driver = singleFirings({
+    techniques,
+    budget: m.budget ?? stepBudget("ladder walk"),
+    continuing: true,
+  });
   return {
     next() {
-      m.budget?.tick();
-      let contradiction = false;
-      const lists = new Map<number, readonly Taken<S>[]>();
-      const ask = (k: number): readonly Taken<S>[] => {
-        const seen = lists.get(k);
-        if (seen) return seen;
-        const entry = admitted[k];
-        const firings = entry.run.firings;
-        if (!firings) throw new Error(`${entry.id}: its rung lists no firings`);
-        const got = firings(m);
-        if (got === "contradiction") contradiction = true;
-        const list = got === "contradiction" ? [] : got.map((f) => ({ ...f, entry }));
-        lists.set(k, list);
-        return list;
-      };
-      let ceiling: number | null = null;
-      const tierNow = (): number => {
-        if (ceiling === null) {
-          const k = admitted.findIndex((_, j) => contradiction || ask(j).length > 0);
-          ceiling = k < 0 ? Number.NEGATIVE_INFINITY : admitted[k].tier;
-        }
-        return ceiling;
-      };
-      const rungs = admitted.map(
-        (entry, k) => () =>
-          entry.tier > tierNow()
-            ? []
-            : ask(k).map((f) => ({
-                f,
-                reads: () => reads(f),
-                writes: () => cellsOf(f.facts),
-                take: () => {
-                  m.group++;
-                  m.applyFacts(f.facts, (i) => f.reasons[i / 3]);
-                },
-              })),
-      );
-      const taken = frontier.takeContinuing(rungs, () => contradiction);
-      if (contradiction) return "contradiction";
-      return taken?.f ?? null;
+      taken = null;
+      if (driver.next() === null) return driver.impossible() ? "contradiction" : null;
+      return taken;
     },
   };
 }

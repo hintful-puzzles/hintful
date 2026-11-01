@@ -205,9 +205,9 @@ const keyOf = (f: { reason: unknown; technique: string }): string =>
  * of its own (`rome-hint.test.ts`).
  */
 const GATED: Record<string, string> = {
-  "mathrax: clue @ latin-level-0":
+  "mathrax: clue @ clueEasy":
     "Easy strikes a cell's candidates only once every clue at its corners leaves it one digit; the strike rests on the one clue and its partner the step names",
-  "mathrax: clue @ latin-level-1": "Normal keeps Easy's gate",
+  "mathrax: clue @ clue": "Normal keeps Easy's gate",
   "rome: reach @ expand":
     "the rung fires only while exactly one mark on the whole board points into any goal's group; the strike rests on this group and its border",
 };
@@ -238,12 +238,12 @@ const UNREPLAYED: Record<string, string> = {};
  * technique reads. */
 const PINNED: { key: string; id: string; board: string }[] = [
   {
-    key: "mathrax: clue @ latin-level-0",
+    key: "mathrax: clue @ clueEasy",
     id: "mathrax",
     board: "5dn:g3q,dS1S2A7aS0dOb",
   },
   {
-    key: "mathrax: clue @ latin-level-1",
+    key: "mathrax: clue @ clue",
     id: "mathrax",
     board: "5dt:n3j,cA7bS1S0aA6aS1d",
   },
@@ -272,7 +272,6 @@ const EXTRA_BOARDS: Record<string, readonly string[]> = {
 /** Walk games whose plan records nothing, so nothing is offered by premise. */
 const RECORDS_NOTHING: Record<string, string> = {
   abcd: "its rungs are its own and read the board",
-  seismic: "its rungs are its own and read the board",
 };
 
 /**

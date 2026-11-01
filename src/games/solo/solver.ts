@@ -23,16 +23,12 @@ import {
   partition,
   valuesOf,
 } from "../../engine/describe-runtime.ts";
-import {
-  auditingPremises,
-  type CellBoard,
-  FiringReplay,
-  offerReplay,
-} from "../../engine/firing-replay.ts";
+import { auditingPremises, offerReplay } from "../../engine/firing-replay.ts";
 import {
   CellMarks,
   compiledRung,
   type Ladder,
+  ladderReplay,
   ladderTechniques,
   runLadder,
   TIERS,
@@ -234,8 +230,6 @@ class SolverUsage extends CellMarks {
   /** Called once the givens are placed and the recorder is on: where the
    * premise audit starts its replay (`recordSoloDeductions`). */
   onSeeded?: () => void;
-  /** The premise audit's replay of this run, only while it runs. */
-  replay: FiringReplay<string> | null = null;
 
   constructor(
     cr: number,
@@ -643,13 +637,7 @@ class SolverUsage extends CellMarks {
     this.recorder = this.pendingRecorder;
     this.onSeeded?.();
 
-    const impossible = runLadder(this, this.techniques(dlev, grades), {
-      firings,
-      onTechnique: (id) => {
-        this.replay?.before(id);
-        this.replay?.open(this.group);
-      },
-    });
+    const impossible = runLadder(this, this.techniques(dlev, grades), { firings });
     if (impossible) {
       finish(DIFF_IMPOSSIBLE);
       return;
@@ -782,9 +770,7 @@ export function recordSoloDeductions(
   usage.pendingRecorder = (rec) => ops.push(rec as HintOp);
   if (auditingPremises()) {
     const caps = { ...dlev };
-    usage.onSeeded = () => {
-      usage.replay = soloReplay(usage, s, caps);
-    };
+    usage.onSeeded = () => soloReplay(usage, s, caps);
   }
   usage.run(dlev);
   if (usage.replay) offerReplay(usage.replay);
@@ -792,48 +778,28 @@ export function recordSoloDeductions(
 }
 
 /**
- * The premise audit's replay of a recording run (`firing-replay.ts`): a
- * firing's technique is its rung, run alone on a fresh solver holding the
- * edited state, with the recording's caps.
+ * The premise audit's replay of a recording run (`ladderReplay`), with the
+ * recording's caps.
  */
-function soloReplay(
-  usage: SolverUsage,
-  s: SoloState,
-  dlev: Difficulty,
-): FiringReplay<string> {
+function soloReplay(usage: SolverUsage, s: SoloState, dlev: Difficulty): void {
   const { cr, blocks, xtype } = s;
   const kblocks = s.killerData?.kblocks ?? null;
   const kgrid = s.killerData?.kgrid ?? null;
-  const capture = (from: SolverUsage): CellBoard => ({
-    values: Int32Array.from(from.grid),
-    cands: from.snapshot(),
-  });
-  return new FiringReplay<string>({
-    w: cr,
-    h: cr,
-    capture: () => capture(usage),
-    name: (id) => id,
-    run: (board, id) => {
+  ladderReplay(
+    usage,
+    (values) => {
       const fresh = new SolverUsage(
         cr,
         blocks,
         kblocks,
         xtype,
-        Int8Array.from(board.values),
+        Int8Array.from(values),
         kgrid,
       );
       if (!fresh.seedGivens())
         throw new Error("solo replay: the edited board's digits clash");
-      for (let c = 0; c < cr * cr; c++) fresh.cands[c] &= board.cands[c];
-      // The recording path's techniques behave as recorded only with a recorder.
-      fresh.recorder = () => {};
-      const grades = { [TIERS]: DIFF_BLOCK, killer: DIFF_KSINGLE };
-      const technique = fresh.techniques(dlev, grades).find((t) => t.id === id);
-      if (!technique) throw new Error(`solo replay: no technique ${id}`);
-      return () => {
-        const ret = technique.run();
-        return { after: capture(fresh), ret };
-      };
+      return fresh;
     },
-  });
+    (fresh) => fresh.techniques(dlev, { [TIERS]: DIFF_BLOCK, killer: DIFF_KSINGLE }),
+  );
 }

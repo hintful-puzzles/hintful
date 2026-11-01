@@ -543,7 +543,8 @@ Reach for `CellMarks` and `describedLadder` when a game's techniques are
 stated in a description: the engine's marks, the pairing of each technique
 with its reason, and `ladderTechniques` and `runLadder` to run it capped per
 scale. `ladderWalk` is a hint's walk over the same firings for a game with no
-notes. Exemplars: `unruly/solver.ts`, `seismic/solver.ts`; the guide is
+notes, and `ladderReplay` the premise audit's replay of a recording run.
+Exemplars: `unruly/solver.ts`, `seismic/solver.ts`; the guide is
 [`descriptions.md`](./descriptions.md) § "The runtime a ladder runs on".
 
 A Latin square whose clues sit in the gaps between neighboring cells is

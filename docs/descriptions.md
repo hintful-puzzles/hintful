@@ -246,7 +246,13 @@ uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
 - **A hint walks the same firings.** A candidate game records them into the
   candidate walk (`record`); one without notes walks them with
   `ladderWalk`, which takes the firing that continues from the walk's last
-  steps and never one harder than the ladder's own next firing.
+  steps and never one harder than the ladder's own next firing. It is
+  `singleFirings`' continuing driver, so the continuity guard measures it as
+  it does every other ladder's.
+- **A recording run offers the premise audit its replay** through
+  `ladderReplay`: the game says how to build fresh marks from the values
+  placed and its techniques on them, and `runLadder` marks each firing. A
+  candidate game that records and offers none fails `firing-replay.test.ts`.
 
 ## A statement's order is behavior
 

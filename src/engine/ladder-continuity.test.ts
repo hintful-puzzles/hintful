@@ -39,10 +39,14 @@ const MAX_SEEDS = 8;
 
 /**
  * The games whose hint builds a continuing driver, found by running each hint
- * that drives the ladder at all (its code calls `singleFirings(`) on its first
- * board and seeing a continuing driver built, never by reading for the option.
+ * that drives the ladder at all (its code calls `singleFirings(`, or
+ * `ladderWalk(`, which builds one) on its first board and seeing a continuing
+ * driver built, never by reading for the option.
  */
-const CONTINUING: readonly string[] = mentioning("singleFirings(").filter((id) => {
+const DRIVING = [
+  ...new Set([...mentioning("singleFirings("), ...mentioning("ladderWalk(")]),
+];
+const CONTINUING: readonly string[] = DRIVING.filter((id) => {
   const [{ game, state }] = corpus(id);
   return ladderContinuity(game, state).continuing > 0;
 });
