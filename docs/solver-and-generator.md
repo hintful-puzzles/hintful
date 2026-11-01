@@ -139,9 +139,8 @@ for a ladder that is not the plain shape:
 
 | Read this for | Where |
 | --- | --- |
-| the plain ladder: several techniques sharing tiers, one `maxTier` | [`unruly/solver.ts`](../src/games/unruly/solver.ts) `solveGame` |
+| a described game's ladder: one technique an entry, capped and graded per scale | [`engine/ladder-runtime.ts`](../src/engine/ladder-runtime.ts) `ladderTechniques` |
 | an untiered ladder: every technique on tier 0, the grade unused | [`filling/solver.ts`](../src/games/filling/solver.ts) `FillingSolver.run` |
-| a ladder built per difficulty level, so `tier` is the level | [`engine/latin.ts`](../src/engine/latin.ts) `latinSolverTop` |
 | a verdict richer than a boolean, carried out through `settled` | [`clusters/solver.ts`](../src/games/clusters/solver.ts) `solveGame` |
 | a pre-pass at the top of each iteration, as a non-firing technique in position 0, and a flag mapped onto the `-1` arm | [`singles/solver.ts`](../src/games/singles/solver.ts) `solveSpecific` |
 | a ladder that is not a tier prefix, a clamped cap, and a cost accumulated across firings through `settled` | [`spokes/solver.ts`](../src/games/spokes/solver.ts) `spokesSolve` |
@@ -1596,7 +1595,8 @@ its ladder in a description, and its `solver.ts` deals the board as the
 compiled ladder reads it, pairs each technique with its reason, and passes a
 `valid` callback over completed grids and the compiled `ladder` to
 `latinSolver`** ([descriptions.md](./descriptions.md)). `latin.ts`'s header
-says what the engine gives: the candidate cube, the library's techniques
+says what the engine gives: the marks (`engine/ladder-runtime.ts`'s
+`CellMarks`), the library's techniques
 ([`latin.description.yaml`](../src/engine/latin.description.yaml)), forcing
 chains and guess-and-verify recursion at `diffRecursive` (the recursion
 doubling as the uniqueness check), and the generator. The population is
@@ -1613,7 +1613,7 @@ grid; [`keen/solver.ts`](../src/games/keen/solver.ts) for per-cage
 arithmetic; [`salad/solver.ts`](../src/games/salad/solver.ts) for a repeated
 symbol.
 
-- **Read a cube slice as a line's cell list and `cubeGet(x, y, n)`.** Where
+- **Read a candidate as `has(c, n)` or `cubeGet(x, y, n)`.** Where
   upstream works in a transposed index space with dense flat reads, port the
   flat reads verbatim with a comment: re-deriving them moves solver verdicts.
   The same holds for a generator that reads the cube through a transposed
@@ -1621,7 +1621,7 @@ symbol.
   calls: both decide the board, so reproduce them
   ([`engine/edge-clue-latin/generator.ts`](../src/engine/edge-clue-latin/generator.ts)).
 - **A clue that constrains a cell without placing a digit uses the `seed`
-  hook.** `latinSolver` seeds its cube from the working grid, which covers
+  hook.** `latinSolver` seeds its marks from the working grid, which covers
   every given digit; `LatinSolverConfig.seed` is where a mark that only rules
   candidates out is applied. It is not re-applied inside the recursion, so it
   is sound only for a game that never recurses: check the recursion setting

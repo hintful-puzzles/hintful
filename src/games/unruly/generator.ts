@@ -13,8 +13,6 @@ import { type Cell, DIFF_TRIVIAL, EMPTY, ONE, ZERO } from "./constants.ts";
 import {
   type GridView,
   isComplete,
-  newScratch,
-  type Scratch,
   solveCopy,
   solveGame,
   validateCounts,
@@ -22,8 +20,8 @@ import {
 import { encodeGrid, type UnrulyParams } from "./state.ts";
 
 /** Fill a blank grid to a valid complete solution, or return false to
- * retry. Mutates `view`/`scratch`. */
-function fillGame(view: GridView, scratch: Scratch, rng: RandomState): boolean {
+ * retry. Mutates `view`. */
+function fillGame(view: GridView, rng: RandomState): boolean {
   const { w2, h2, grid } = view;
   const s = w2 * h2;
   const spaces = Array.from({ length: s }, (_, i) => i);
@@ -31,16 +29,8 @@ function fillGame(view: GridView, scratch: Scratch, rng: RandomState): boolean {
 
   for (const i of spaces) {
     if (grid[i] !== EMPTY) continue;
-    if (randomUpto(rng, 2)) {
-      grid[i] = ONE;
-      scratch.onesRows[Math.floor(i / w2)]++;
-      scratch.onesCols[i % w2]++;
-    } else {
-      grid[i] = ZERO;
-      scratch.zerosRows[Math.floor(i / w2)]++;
-      scratch.zerosCols[i % w2]++;
-    }
-    solveGame(view, scratch, Number.MAX_SAFE_INTEGER);
+    grid[i] = randomUpto(rng, 2) ? ONE : ZERO;
+    solveGame(view, Number.MAX_SAFE_INTEGER);
   }
 
   return isComplete(view);
@@ -66,12 +56,10 @@ export function newDesc(p: UnrulyParams, rng: RandomState): { desc: string } {
       unique: p.unique,
       grid: new Uint8Array(s),
     };
-    let scratch = newScratch(view);
     const fill = retryLimit("unruly: fillGame");
-    while (!fillGame(view, scratch, rng)) {
+    while (!fillGame(view, rng)) {
       fill();
       view.grid.fill(EMPTY);
-      scratch = newScratch(view);
     }
     const grid = view.grid;
 

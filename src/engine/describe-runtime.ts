@@ -114,14 +114,17 @@ export interface GridSpace {
   readonly cols: readonly number[];
   /** The rows, then the columns. */
   readonly lines: readonly number[];
-  /** A Sudoku's boxes, as lines: the parts of the partition its description
-   * lists among its units. None on a Latin square. */
+  /** The parts of the partition its description lists among its units, as
+   * lines: a Sudoku's boxes, Seismic's areas. None on a Latin square. */
   readonly boxes: readonly number[];
   /** The two diagonals, as lines, where the description has them: the main
    * one, then the other, each top to bottom. */
   readonly diagonals: readonly number[];
-  /** The lines no value repeats in. */
+  /** The lines no value repeats in, in the order the description lists
+   * them. */
   readonly units: readonly number[];
+  /** The units holding each cell, in {@link units}' order. */
+  readonly unitsOf: readonly (readonly number[])[];
   /** Each line's cells: a row's left to right, a column's top to bottom, a
    * box's in reading order. */
   readonly lineCells: readonly (readonly number[])[];
@@ -132,7 +135,7 @@ export interface GridSpace {
   /**
    * The cells sharing a unit with each cell, each once: on a Latin square the
    * row's and the column's interleaved by index (the row's first at each),
-   * as the Latin engine has always visited them; where there are boxes, in
+   * as the Latin engine has always visited them; on any other units, in
    * reading order, as Solo always has.
    */
   readonly peers: readonly (readonly number[])[];
@@ -159,48 +162,53 @@ export interface GridSpace {
   readonly cellCorners: readonly (readonly number[])[];
 }
 
-const spaces = new Map<number, GridSpace>();
+const plain = new Map<string, GridSpace>();
+const parted = new WeakMap<readonly (readonly number[])[], Map<string, GridSpace>>();
 
-/** The `o × o` Latin grid: its units are its rows and columns. */
-export function latinSpace(o: number): GridSpace {
-  let sp = spaces.get(o);
+/**
+ * The `w × h` grid whose units are `units`, a compiled module's: `rows`,
+ * `cols` (or `lines`, both), `diagonals`, and the name of the one partition
+ * among them, whose parts are `parts`. Rows and columns are lines whether or
+ * not they are units. Kept for the life of `parts` where there are any,
+ * which a board shares across every solve of it.
+ */
+export function describedSpace(
+  units: readonly string[],
+  w: number,
+  h: number,
+  parts: readonly (readonly number[])[] = [],
+): GridSpace {
+  const key = `${units.join(",")} ${w} ${h}`;
+  let cache = plain;
+  if (parts.length > 0) {
+    let byKey = parted.get(parts);
+    if (byKey === undefined) {
+      byKey = new Map();
+      parted.set(parts, byKey);
+    }
+    cache = byKey;
+  }
+  let sp = cache.get(key);
   if (sp === undefined) {
-    sp = gridSpace(o, o);
-    spaces.set(o, sp);
+    sp = gridSpace(units, w, h, parts);
+    cache.set(key, sp);
   }
   return sp;
 }
 
-const sudokus = new WeakMap<readonly (readonly number[])[], GridSpace[]>();
-
-/**
- * The Sudoku grid whose boxes hold `boxCells`, with its two diagonals as
- * units too where `diagonals` is set. Its units are the boxes, then the rows,
- * then the columns, then the diagonals: the order Solo has always scanned
- * them in. Kept for the life of `boxCells`, which a board shares across every
- * solve of it.
- */
-export function sudokuSpace(
-  boxCells: readonly (readonly number[])[],
-  diagonals: boolean,
-): GridSpace {
-  let both = sudokus.get(boxCells);
-  if (both === undefined) {
-    both = [];
-    sudokus.set(boxCells, both);
-  }
-  const at = diagonals ? 1 : 0;
-  both[at] ??= gridSpace(boxCells.length, boxCells.length, boxCells, diagonals);
-  return both[at];
+/** The `o × o` Latin grid: its units are its rows and columns. */
+export function latinSpace(o: number): GridSpace {
+  return describedSpace(["rows", "cols"], o, o);
 }
 
 function gridSpace(
+  unitNames: readonly string[],
   w: number,
   h: number,
-  boxCells: readonly (readonly number[])[] = [],
-  hasDiagonals = false,
+  boxCells: readonly (readonly number[])[],
 ): GridSpace {
   const n = w * h;
+  const hasDiagonals = unitNames.includes("diagonals");
   const cells = Array.from({ length: n }, (_, c) => c);
   const rows = Array.from({ length: h }, (_, y) => y);
   const cols = Array.from({ length: w }, (_, x) => h + x);
@@ -220,7 +228,21 @@ function gridSpace(
         ]
       : []),
   ];
-  const units = boxes.length > 0 ? [...boxes, ...lines, ...diagonals] : lines;
+  const units = unitNames.flatMap((u) =>
+    u === "rows"
+      ? rows
+      : u === "cols"
+        ? cols
+        : u === "lines"
+          ? lines
+          : u === "diagonals"
+            ? diagonals
+            : boxes,
+  );
+  const unitsOf = cells.map((c) => units.filter((L) => lineCells[L].includes(c)));
+  // The Latin engine has always visited a cell's peers row and column
+  // interleaved.
+  const latin = units.length === lines.length && lines.every((L) => units.includes(L));
   const rowOf = new Int32Array(n);
   const colOf = new Int32Array(n);
   const boxOf = new Int32Array(n).fill(-1);
@@ -282,8 +304,7 @@ function gridSpace(
   const opposite = Int32Array.from(sight, (_, s) =>
     s < 2 * w ? (s < w ? s + w : s - w) : s < 2 * w + h ? s + h : s - h,
   );
-  if (boxes.length > 0) {
-    const unitsOf = cells.map((c) => units.filter((L) => lineCells[L].includes(c)));
+  if (!latin) {
     for (const c of cells)
       peers[c] = cells.filter(
         (k) => k !== c && unitsOf[k].some((L) => unitsOf[c].includes(L)),
@@ -299,6 +320,7 @@ function gridSpace(
     boxes,
     diagonals,
     units,
+    unitsOf,
     lineCells,
     rowOf,
     colOf,

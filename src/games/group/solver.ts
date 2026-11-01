@@ -14,15 +14,13 @@
  * Cells are numbered `y·o + x`; row `a`, column `b` holds the product `a·b`.
  */
 
+import { type CellMarks, uncluedRung } from "../../engine/ladder-runtime.ts";
 import {
   type DeductionRecord,
-  LATIN_RUNGS,
-  type LatinLadder,
   type LatinReason,
-  type LatinRung,
   type LatinSolver,
+  latinLadder,
   latinSolver,
-  uncluedRung,
 } from "../../engine/latin.ts";
 import type { Point } from "../../engine/types.ts";
 import * as group from "./group.compiled.ts";
@@ -123,9 +121,9 @@ const cellAt = (o: number, c: number): Point => ({ x: c % o, y: (c / o) | 0 });
  * firing that rules it out: `o·a ≠ o` first, else `a·o ≠ o`. */
 function identityElim(
   { a, o }: group.NotIdentityBinding,
-  solver: LatinSolver,
+  solver: CellMarks,
 ): GroupReason {
-  const w = solver.o;
+  const w = solver.sp.w;
   const right = (o - 1) * w + (a - 1);
   const left = !(solver.known(right) && solver.value(right) !== o);
   const c = left ? (a - 1) * w + (o - 1) : right;
@@ -141,13 +139,11 @@ function identityElim(
   };
 }
 
-const GROUP_LADDER: Record<group.LadderId, LatinRung> = {
-  "latin.hiddenSingle": LATIN_RUNGS["latin.hiddenSingle"],
-  "latin.single": LATIN_RUNGS["latin.single"],
+const describedLadder = latinLadder(group, {
   associativity: uncluedRung(
     group.associativity,
     ({ a, b, c, p, q, l, r }, cell, n, solver): GroupReason => {
-      const o = solver.o;
+      const o = solver.sp.w;
       const knownLeft = cell === r;
       return {
         kind: "associativity",
@@ -165,7 +161,7 @@ const GROUP_LADDER: Record<group.LadderId, LatinRung> = {
     },
   ),
   identity: uncluedRung(group.identity, ({ w0, e }, _c, _n, solver): GroupReason => {
-    const { x, y } = cellAt(solver.o, w0);
+    const { x, y } = cellAt(solver.sp.w, w0);
     return {
       kind: "identityFill",
       e,
@@ -179,14 +175,7 @@ const GROUP_LADDER: Record<group.LadderId, LatinRung> = {
   notIdentity: uncluedRung(group.notIdentity, (binding, _c, _n, solver) =>
     identityElim(binding, solver),
   ),
-  "latin.set": LATIN_RUNGS["latin.set"],
-  "latin.fish": LATIN_RUNGS["latin.fish"],
-  "latin.wing": LATIN_RUNGS["latin.wing"],
-};
-
-const describedLadder: LatinLadder = {
-  ladder: group.ladder.map(({ id, tier }) => ({ tier, run: GROUP_LADDER[id] })),
-};
+});
 
 // --- driver ----------------------------------------------------------------
 
@@ -208,7 +197,7 @@ export function solveGroup(
     valid: groupValid,
     ctx: null,
     recorder,
-    ...describedLadder,
+    ladder: describedLadder,
   });
 }
 

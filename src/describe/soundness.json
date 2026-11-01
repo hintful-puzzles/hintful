@@ -1,7 +1,7 @@
 {
   "src/engine/latin.description.yaml#fish": "655c8b81fe0798b1",
   "src/engine/latin.description.yaml#hiddenSingle": "e5e97baf69fa65cf",
-  "src/engine/latin.description.yaml#placed": "c85da38220710508",
+  "src/engine/latin.description.yaml#placed": "f965cdcac2c540d2",
   "src/engine/latin.description.yaml#set": "b5ac302d9954e973",
   "src/engine/latin.description.yaml#single": "0791b39aed8af914",
   "src/engine/latin.description.yaml#wing": "e104ec34cad128f8",
@@ -17,6 +17,10 @@
   "src/games/mathrax/mathrax.description.yaml#clueEasy": "356b96bffe0a1985",
   "src/games/mathrax/mathrax.description.yaml#clueTricky": "0228a20000ae028a",
   "src/games/salad/salad.description.yaml#border": "6690332696d689ec",
+  "src/games/seismic/seismic.description.yaml#areaSingle": "37b6727ed4a4457c",
+  "src/games/seismic/seismic.description.yaml#cull": "f00bb7de25e2b356",
+  "src/games/seismic/seismic.description.yaml#lone": "60fa9bfbc2213c43",
+  "src/games/seismic/seismic.description.yaml#starve": "532d97bd98819607",
   "src/games/solo/solo.description.yaml#boxSingle": "d3b16c0dfb4c6a33",
   "src/games/solo/solo.description.yaml#cageMinMax": "634c7528dcc126fc",
   "src/games/solo/solo.description.yaml#cageSingle": "057daa6f045f5ee7",
@@ -29,5 +33,10 @@
   "src/games/towers/towers.description.yaml#arrangement": "311822269a07a3ea",
   "src/games/towers/towers.description.yaml#bounds": "24e50d4ab3fc4c78",
   "src/games/towers/towers.description.yaml#facing": "49ab76706cb7b30e",
-  "src/games/unequal/unequal.description.yaml#sign": "e8b4c171334b86a5"
+  "src/games/unequal/unequal.description.yaml#sign": "e8b4c171334b86a5",
+  "src/games/unruly/unruly.description.yaml#lastGap": "d25402246679832c",
+  "src/games/unruly/unruly.description.yaml#lastOne": "5f8db97e84387f92",
+  "src/games/unruly/unruly.description.yaml#quota": "49ce2d2f7ece83ad",
+  "src/games/unruly/unruly.description.yaml#threes": "16e34239c3d46b13",
+  "src/games/unruly/unruly.description.yaml#unique": "05a5bd8e33f1544e"
 }

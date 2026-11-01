@@ -22,7 +22,6 @@ import { newDesc } from "./generator.ts";
 import { unrulyGame } from "./index.ts";
 import {
   findMistakes,
-  newScratch,
   solveGame,
   solveToString,
   validateCounts,
@@ -177,8 +176,7 @@ describe("generator + solver", () => {
     // The deductive solver at the board's difficulty completes it.
     const grid = Uint8Array.from(state.grid);
     const work = { w2: p.w2, h2: p.h2, unique: p.unique, grid };
-    const scratch = newScratch(work);
-    solveGame(work, scratch, p.diff);
+    solveGame(work, p.diff);
     expect(validateCounts(work, null)).toBe(0);
     expect(validateRows(work, null)).toBe(0);
   });
@@ -201,8 +199,7 @@ describe("generator + solver", () => {
     const state = newState(p, desc);
     const grid = Uint8Array.from(state.grid);
     const work = { w2: p.w2, h2: p.h2, unique: p.unique, grid };
-    const scratch = newScratch(work);
-    solveGame(work, scratch, DIFF_EASY);
+    solveGame(work, DIFF_EASY);
     // EASY solver must NOT complete a NORMAL board (else it was too easy).
     expect(validateCounts(work, null)).not.toBe(0);
   });

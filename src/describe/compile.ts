@@ -187,6 +187,9 @@ interface Env {
   boxes: string | null;
   /** Whether the space has its diagonals. */
   diagonals: boolean;
+  /** Whether the answer's domain is a cell's (it reads `c`), so `domain`
+   * alone names nothing. */
+  cellDomain: boolean;
   /** The description's sizes the grid does not give, which the board deals
    * where a technique reads one: those read, by name. */
   sizes: { names: ReadonlySet<string>; read: Set<string> };
@@ -471,6 +474,8 @@ const partOf = (fn: string, env: Env): boolean =>
 function name(n: string, scope: Scope, env: Env, out: Out): Val {
   const bound = scope.get(n);
   if (bound !== undefined) return bound;
+  if (n === "domain" && env.cellDomain)
+    throw new CompileError("the domain is each cell's here: read a cell's candidates");
   const known = NAMES[n];
   if (known !== undefined) return known;
   if (env.regions.has(n)) {
@@ -1553,6 +1558,9 @@ function call(
     case "adj4":
       arity(1);
       return { code: `sp.${fn}[${cell(0)}]`, sort: setOf(elem("cell")) };
+    case "units_of":
+      arity(1);
+      return { code: `sp.unitsOf[${cell(0)}]`, sort: setOf(elem("line")) };
     case "sight":
       arity(1);
       expectElem(vs[0], "slot", fn);
@@ -1941,6 +1949,7 @@ export function compileLibrary(
     regions: new Set(),
     boxes: null,
     diagonals: false,
+    cellDomain: false,
     sizes: { names: new Set(), read: new Set() },
     used,
     concluding: false,
@@ -1987,6 +1996,24 @@ function clueSorts(kind: string, at: string, value: Expr, env: Env): ClueKind {
   if (v.sort.k !== "set")
     throw new CompileError(`clue ${kind}: its values are not a set`);
   return { at: atSort, v: v.sort.of };
+}
+
+/**
+ * The ladder's order: the description's, but a technique a variation adds,
+ * which the description lists after its own, goes before the first of a
+ * higher tier on its scale, so a ladder in tier order stays in tier order
+ * with the variation on.
+ */
+function rungOrder(
+  techniques: readonly Technique[],
+  addedBy: ReadonlyMap<string, string>,
+): Technique[] {
+  const out = techniques.filter((t) => !addedBy.has(t.id));
+  for (const t of techniques.filter((x) => addedBy.has(x.id))) {
+    const at = out.findIndex((x) => x.scale === t.scale && x.tier > t.tier);
+    out.splice(at < 0 ? out.length : at, 0, t);
+  }
+  return out;
 }
 
 /**
@@ -2040,6 +2067,7 @@ export function compileGame(
       ),
       read: new Set(),
     },
+    cellDomain: false,
     used,
     concluding: false,
     memo: false,
@@ -2050,6 +2078,7 @@ export function compileGame(
   };
   for (const [kind, c] of d.clueKinds)
     clues.set(kind, clueSorts(kind, c.at, c.value, env));
+  const domainLines = cellDomain(d.domain, env, d.json.sizes);
   const own = d.techniques.filter((t) => !t.id.includes("."));
   const code = own.map((t) => compileTechnique(t, env).code);
   const scales = Object.entries(d.json.scales ?? {});
@@ -2068,27 +2097,49 @@ export function compileGame(
           "",
         ];
   const ids = d.techniques.filter((t) => t.on === null).map((t) => t.id);
+  const placing = d.techniques.filter((t) => t.on === "place").map((t) => t.id);
+  // A technique a variation adds runs only on a board the variation is on.
+  const addedBy = new Map<string, string>();
+  for (const [name, v] of Object.entries(json.variations ?? {}))
+    for (const t of v.add?.techniques ?? [])
+      addedBy.set("use" in t ? t.use : t.id, name);
+  const quoted = (xs: readonly string[]): string =>
+    xs.length === 0 ? "never" : xs.map((id) => JSON.stringify(id)).join(" | ");
   const ladder = [
+    "/** The units no value repeats in, in the description's order: the",
+    " * engine builds the space from them. */",
+    `export const units: readonly string[] = ${JSON.stringify(space.units)};`,
+    "",
     "/** Every technique a rung runs, by id: the description's, in its order. */",
-    `export type LadderId = ${ids.map((id) => JSON.stringify(id)).join(" | ")};`,
+    `export type LadderId = ${quoted(ids)};`,
+    "",
+    "/** Every technique run as each value is placed, by id. */",
+    `export type PlacingId = ${quoted(placing)};`,
+    "",
+    "/** The techniques run as each value is placed, in the description's order. */",
+    `export const placing: readonly PlacingId[] = ${JSON.stringify(placing)};`,
     "",
     "/** The ladder: each technique's tier, on its scale where that is not the",
     " * description's tiers, the least cap it runs at where that is above its",
-    " * tier, and the cap from which it no longer runs where it has one, in the",
-    " * order the description lists them. */",
-    "export const ladder: readonly { id: LadderId; tier: number; scale?: string; from?: number; until?: number }[] = [",
-    ...d.techniques
-      .filter((t) => t.on === null)
-      .map((t) => {
-        const fields = [
-          `id: ${JSON.stringify(t.id)}`,
-          `tier: ${t.tier}`,
-          ...(t.scale === null ? [] : [`scale: ${JSON.stringify(t.scale)}`]),
-          ...(t.from === null ? [] : [`from: ${t.from}`]),
-          ...(t.until === null ? [] : [`until: ${t.until}`]),
-        ];
-        return `  { ${fields.join(", ")} },`;
-      }),
+    " * tier, the cap from which it no longer runs where it has one, and the",
+    " * variation that adds it where one does, in the order the description",
+    " * lists them, a variation's before the first of a higher tier. */",
+    "export const ladder: readonly { id: LadderId; tier: number; scale?: string; from?: number; until?: number; variation?: string }[] = [",
+    ...rungOrder(
+      d.techniques.filter((t) => t.on === null),
+      addedBy,
+    ).map((t) => {
+      const by = addedBy.get(t.id);
+      const fields = [
+        `id: ${JSON.stringify(t.id)}`,
+        `tier: ${t.tier}`,
+        ...(t.scale === null ? [] : [`scale: ${JSON.stringify(t.scale)}`]),
+        ...(t.from === null ? [] : [`from: ${t.from}`]),
+        ...(t.until === null ? [] : [`until: ${t.until}`]),
+        ...(by === undefined ? [] : [`variation: ${JSON.stringify(by)}`]),
+      ];
+      return `  { ${fields.join(", ")} },`;
+    }),
     "];",
     "",
     `/** The description's tiers, by name. */`,
@@ -2108,9 +2159,43 @@ export function compileGame(
     "",
     ...clueLines,
     ...ladder,
+    ...domainLines,
     "",
     code.join("\n\n"),
   ].join("\n")}\n`;
+}
+
+/**
+ * Where the answer's domain is a cell's (it reads `c`, as Seismic's is its
+ * area's numbers), the function the engine seeds each cell's candidates
+ * from, and `domain` alone is then refused in a technique; nothing where it
+ * is the board's.
+ */
+function cellDomain(
+  domain: Expr,
+  env: Env,
+  sizes: Readonly<Record<string, unknown>>,
+): string[] {
+  const names = new Set<string>();
+  freeNames(domain, names, new Set());
+  // Solo's board is measured in a `c`, which is no cell.
+  if (!names.has("c") || "c" in sizes) return [];
+  env.cellDomain = true;
+  const out = new Out(1);
+  const scope = new Map<string, Val>([["c", { code: "v_c", sort: elem("cell") }]]);
+  const v = compileExpr(domain, scope, env, out);
+  if (!isMask(v.sort)) throw new CompileError("the domain is not a set of values");
+  const cl = env.readsClues.yes ? "cl: Dealt, " : "_cl: Dealt, ";
+  env.readsClues.yes = false;
+  const body = [...out.text(), `  return ${v.code};`];
+  const sp = body.some((l) => /\bsp\./.test(l)) ? "sp" : "_sp";
+  return [
+    "",
+    "/** The values each cell may hold, by cell: its domain. */",
+    `export function domainOf(${sp}: GridSpace, ${cl}v_c: number): number {`,
+    ...body,
+    "}",
+  ];
 }
 
 export { CompileError };

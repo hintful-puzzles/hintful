@@ -34,24 +34,27 @@ itself is § "The file". A game whose techniques are stated:
    which records each verdict in `src/describe/soundness.json`. The gate
    fails on a compiled technique with no verdict for its statement as it
    reads now (§ "Checking a technique sound").
-4. **Pairs each technique with the reason its records carry**, in a
-   `Record` keyed by the compiled module's `LadderId`, so a technique the
+4. **Pairs each of its own techniques with the reason its records carry**,
+   by `describedLadder`, or `latinLadder` where it places the Latin library,
+   whose techniques the engine pairs: a technique of its own the
    description adds and the game does not pair is a type error. It pairs
-   through `compiledRung` ([`unequal/solver.ts`](../src/games/unequal/solver.ts)'s
-   `RUNGS`), or through `uncluedRung` for a technique that reads no clues
-   ([`group/solver.ts`](../src/games/group/solver.ts)); § "A firing's reason
-   is built from its binding".
+   through `compiledRung`, or `uncluedRung` for a technique that reads
+   nothing the board deals, and `placingRung` for one run on placing
+   ([`seismic/solver.ts`](../src/games/seismic/solver.ts)); § "A firing's
+   reason is built from its binding".
 5. **Deals its board as the description reads it**, the compiled module's
    `Dealt`: one `ClueList` a kind, in the order the techniques should meet
    them; one `Partition` a dealt partition; and each size a technique reads
-   that the grid is not measured in (Salad's `nums`). `describedLadder` deals
-   clues in [`towers/solver.ts`](../src/games/towers/solver.ts) and cages in
-   [`keen/solver.ts`](../src/games/keen/solver.ts). The board goes on the
-   grid its units are: `latinSpace(o)`, or `sudokuSpace(boxes, diagonals)`
-   for a board with boxes ([`solo/solver.ts`](../src/games/solo/solver.ts)).
-   Keep what it deals no longer than the structure it reads stays as it was:
-   Solo's generator merges cages in place between solves, so a partition
-   kept for the cage structure's life reads stale cages.
+   that the grid is not measured in (Salad's `nums`, Seismic's `mode`).
+   [`towers/solver.ts`](../src/games/towers/solver.ts) deals clues and
+   [`keen/solver.ts`](../src/games/keen/solver.ts) cages. The board goes on
+   the space the module's `units` declare, `describedSpace(units, w, h,
+   parts)` (`latinSpace(o)` is a Latin square's), and where its domain is a
+   cell's, each cell holds what the module's `domainOf` gives it
+   (§ "The runtime a ladder runs on"). Keep what it deals no longer than the
+   structure it reads stays as it was: Solo's generator merges cages in
+   place between solves, so a partition kept for the cage structure's life
+   reads stale cages.
 
 ## Sections
 
@@ -60,6 +63,7 @@ itself is § "The file". A game whose techniques are stated:
 | The file | you write a description, or one fails to load |
 | The formula syntax | you write or read a technique |
 | What a technique compiles to | you read a compiled module, or a statement is slow |
+| The runtime a ladder runs on | you solve or hint a described game, or its board is not a Latin square |
 | A statement's order is behavior | you restate a technique, or a hint changes after a description edit |
 | A conclusion that is false is a contradiction | a technique must refuse a board, or a solver reports a false ambiguity |
 | A firing's reason is built from its binding | a hint's words need a fact about a firing |
@@ -141,9 +145,6 @@ description author acts on:
   part holding a cell (`cage(c)`). The one partition listed among the
   `units` is the space's boxes, dealt or not (Solo's `box`). A partition and
   a clue kind may not share a name, since both are fields of `Dealt`.
-- **The compiled space orders its units itself, and the interpreter follows
-  the description**, so a description that lists its units in another order
-  than `sudokuSpace` makes the two fire in different orders.
 - **`cell(x, y)` must be on the grid**: the compiled code does not check.
 - **`strike(c, d)` and `place(c, d)` belong to a technique's conclusion
   only.**
@@ -159,9 +160,10 @@ reads as it would without it. State a library technique's multiplicity the
 same way, or every Latin game pays for a count only Salad needs.
 
 A technique is `for` (its binders), an optional `premise`, and `conclude`.
-A library technique may say `"on": "place"`: the engine runs it as each
-value is placed, with its first binder bound to the placed cell, and not as
-a rung. A game's may say `until: <tier>`, a tier above its own: the ladder
+A technique may say `"on": "place"`: the engine runs it as each value is
+placed, with its first binder bound to the placed cell, and not as a rung
+(the library's `placed`, over `units_of(c)`; Seismic's `cull`, which reads
+its keep-apart rule). A game's may say `until: <tier>`, a tier above its own: the ladder
 runs it only at a cap below that tier, for a weaker reading a higher
 technique strikes all of, which a grade at a higher cap should not rest on
 (Keen's `cageEasy`, as upstream omits it above Easy). `from: <tier>` is the
@@ -218,6 +220,34 @@ The measurements behind these are in the `report.md` of
 `openspec/changes/archive/*-compile-the-latin-ladder` (its section on
 speed) and of each `*-describe-<game>` change.
 
+## The runtime a ladder runs on
+
+[`engine/ladder-runtime.ts`](../src/engine/ladder-runtime.ts) owns the marks
+(`CellMarks`: a value and a candidate mask a cell), makes a firing's facts,
+runs the module's `placing` techniques as each value is placed (recording
+their strikes as the placement's cull), and runs the ladder: one technique
+an entry, in the module's order, capped per scale. A game's solver extends
+`CellMarks` only to keep what no description states, a Search (`LatinSolver`
+and Solo's forcing chains and recursion); a game whose solve is its ladder
+uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
+
+- **The space is the module's.** `units` lists the description's units in
+  its order, and `describedSpace` builds the grid from them: rows and
+  columns are lines whether or not they are units, and the one partition
+  among the units gives the space its boxes. Seismic keeps its areas a
+  dealt partition outside the units, which the checker can build.
+- **A domain may be a cell's.** Where the answer's domain reads `c`
+  (Seismic's `range(1, |cells(area(c))|)`), the module exports `domainOf`,
+  `CellMarks.seed` starts each cell from it, and `domain` alone is refused
+  in a technique.
+- **A variation's techniques** run only where the board has it on
+  (`describedLadder`'s `variations`), and the ladder places each before the
+  first technique of a higher tier on its scale.
+- **A hint walks the same firings.** A candidate game records them into the
+  candidate walk (`record`); one without notes walks them with
+  `ladderWalk`, which takes the firing that continues from the walk's last
+  steps and never one harder than the ladder's own next firing.
+
 ## A statement's order is behavior
 
 Binders are enumerated in the order written, each set in its own order. The
@@ -255,7 +285,9 @@ function that turns its binding and one fact into the reason the record
 carries, read off the marks before any of the firing's facts is made. A
 reason is not the bare binding where its words quote the board: a sign's
 reason quotes the other end's least candidate as it stood when the step
-fired.
+fired. A reason names the unit it reads where that is not a row or a
+column (Solo's blocks and diagonals), so the engine's Latin sentences
+(`engine/hint-text.ts`) speak it in every game.
 
 ## Checking a technique sound
 
@@ -267,8 +299,9 @@ is sound when no binding's premise holds while its conclusion fails under
 the rules. What a small board cannot cover:
 
 - **A dealt partition is checked only up to the region size `REGION_CELLS`
-  gives each order**, so a technique that reads a larger region is not
-  checked on it.
+  gives each order**, or one more in a world no board of those regions has
+  an answer in (Tectonic's, `regionCells`), so a technique that reads a
+  larger region is not checked on it.
 - **Boxes a board deals are not built**, so Solo's Jigsaw world is named in
   the results as unchecked.
 - **A world or a kind a small board cannot hold is checked on nothing**,
@@ -277,7 +310,9 @@ the rules. What a small board cannot cover:
   code it replaced.
 
 A description with variations is checked in each world it deals, on the
-plain board and each ruleset's, and a technique must be sound in every one.
+plain board and each ruleset's, and a technique must be sound in every one
+that has it: a modifier's own technique (Unruly's `unique`) is checked where
+the modifier is on.
 Library techniques are checked on a plain Latin square, the weakest rule set
 any Latin game adds to, and on one with a repeated value.
 

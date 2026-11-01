@@ -1,8 +1,10 @@
 /**
- * Every Latin game's deals and hint walks, written out step by step (the
+ * Every described game's deals and hint walks, written out step by step (the
  * board each deal gives, and each hint step's rung, move and words), so two
  * builds of the compiled modules can be diffed. `describe-group` ran it with
- * the compiler's hoisting off and on (tasks 3.1).
+ * the compiler's hoisting off and on (tasks 3.1). A record's firing `group`
+ * is printed where a step's words carry the record, and is a counter, so
+ * mask it before diffing two runners.
  */
 import { writeFileSync } from "node:fs";
 import { it } from "vitest";
@@ -14,10 +16,12 @@ import { groupGame } from "../../src/games/group/index.ts";
 import { keenGame } from "../../src/games/keen/index.ts";
 import { mathraxGame } from "../../src/games/mathrax/index.ts";
 import { saladGame } from "../../src/games/salad/index.ts";
+import { seismicGame } from "../../src/games/seismic/index.ts";
 import { soloGame } from "../../src/games/solo/index.ts";
 import { DIFF_INTERSECT, DIFF_SET, SYMM_NONE } from "../../src/games/solo/state.ts";
 import { towersGame } from "../../src/games/towers/index.ts";
 import { unequalGame } from "../../src/games/unequal/index.ts";
+import { unrulyGame } from "../../src/games/unruly/index.ts";
 
 // biome-ignore lint/suspicious/noExplicitAny: a walk over any Latin game.
 type AnyGame = any;
@@ -31,6 +35,8 @@ const GAMES: [string, AnyGame][] = [
   ["mathrax", mathraxGame],
   ["salad", saladGame],
   ["solo", soloGame],
+  ["unruly", unrulyGame],
+  ["seismic", seismicGame],
 ];
 
 /** Boards beyond the presets: Killer at other sizes and tiers, and with X. */

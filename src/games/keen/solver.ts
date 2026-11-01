@@ -17,16 +17,14 @@
  */
 
 import { type ClueList, clueList, partition } from "../../engine/describe-runtime.ts";
+import { compiledRung, type Ladder } from "../../engine/ladder-runtime.ts";
 import {
-  compiledRung,
   type DeductionRecord,
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
-  LATIN_RUNGS,
-  type LatinLadder,
   type LatinReason,
-  type LatinRung,
   type LatinSolver,
+  latinLadder,
   latinSolver,
 } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
@@ -144,7 +142,7 @@ function cageReason(
   };
 }
 
-function describedLadder(w: number, cages: Cages): LatinLadder {
+function describedLadder(w: number, cages: Cages): Ladder<LatinSolver> {
   const n = cages.cells.length;
   // Each cage's clue is of the kind its sign names, at the cage.
   const ofKind = (kind: ClueKind): ClueList => {
@@ -164,42 +162,27 @@ function describedLadder(w: number, cages: Cages): LatinLadder {
     difference: ofKind("difference"),
     quotient: ofKind("quotient"),
   };
-  const ladder: Record<keen.LadderId, () => LatinRung> = {
-    cageEasy: () =>
-      compiledRung(
-        keen.cageEasy,
-        dl,
-        ({ r }): KeenReason => ({ kind: "cage", ...cageReason(cages, r, w) }),
-      ),
-    "latin.hiddenSingle": () => LATIN_RUNGS["latin.hiddenSingle"],
-    "latin.single": () => LATIN_RUNGS["latin.single"],
-    cage: () =>
-      compiledRung(
-        keen.cage,
-        dl,
-        ({ r }): KeenReason => ({ kind: "cage", ...cageReason(cages, r, w) }),
-      ),
-    cageLine: () =>
-      compiledRung(
-        keen.cageLine,
-        dl,
-        ({ r, L }): KeenReason => ({
-          kind: "cageLine",
-          ...cageReason(cages, r, w),
-          horizontal: L < w,
-        }),
-      ),
-    "latin.set": () => LATIN_RUNGS["latin.set"],
-    "latin.fish": () => LATIN_RUNGS["latin.fish"],
-    "latin.wing": () => LATIN_RUNGS["latin.wing"],
-  };
-  return {
-    ladder: keen.ladder.map(({ id, tier, until }) => ({
-      tier,
-      until,
-      run: ladder[id](),
-    })),
-  };
+  return latinLadder(keen, {
+    cageEasy: compiledRung(
+      keen.cageEasy,
+      dl,
+      ({ r }): KeenReason => ({ kind: "cage", ...cageReason(cages, r, w) }),
+    ),
+    cage: compiledRung(
+      keen.cage,
+      dl,
+      ({ r }): KeenReason => ({ kind: "cage", ...cageReason(cages, r, w) }),
+    ),
+    cageLine: compiledRung(
+      keen.cageLine,
+      dl,
+      ({ r, L }): KeenReason => ({
+        kind: "cageLine",
+        ...cageReason(cages, r, w),
+        horizontal: L < w,
+      }),
+    ),
+  });
 }
 
 // --- driver ----------------------------------------------------------------
@@ -225,7 +208,7 @@ export function solveKeen(
     valid: keenValid,
     ctx: cages,
     recorder,
-    ...describedLadder(w, cages),
+    ladder: describedLadder(w, cages),
   });
 }
 

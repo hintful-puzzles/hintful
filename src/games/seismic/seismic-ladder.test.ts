@@ -38,7 +38,7 @@ const cases = SHAPES.flatMap((params) =>
 
 describeLadderCensus({
   game: "seismic",
-  rungs: ["marks", "areas", "attempt"],
+  rungs: ["lone", "areaSingle", "starve"],
   unreached: {},
   caps: [DIFF_EASY, DIFF_NORMAL],
   cases,

@@ -1,10 +1,11 @@
 /**
  * Every sentence Towers' hint speaks, and the words inside them.
  *
- * Towers keeps its own version of the generic Latin arms rather than the
- * engine's (`engine/hint-text.ts`), because its values need qualifying in some
- * arms and not others ("every other cell in this row rules out height 5, so
- * this cell must be 5"), which one vocabulary cannot say. Its two setup steps
+ * Towers speaks the generic Latin arms in the engine's words
+ * (`engine/hint-text.ts`, by {@link TOWERS_VOCAB}) but its hidden single and
+ * set, whose values it qualifies in one clause and not the other ("every other
+ * cell in this row rules out height 5, so this cell must be 5"), which one
+ * vocabulary cannot say. Its two setup steps
  * are built by the row/column preset from the two words Towers gives it
  * (`index.ts`'s `notes`).
  *
@@ -17,12 +18,7 @@
  * `narrate`); this file decides only how it reads.
  */
 
-import {
-  confinedPremise,
-  placedRulesOut,
-  thisCell,
-  wingPremise,
-} from "../../engine/hint-text.ts";
+import { type LatinVocab, placedRulesOut, thisCell } from "../../engine/hint-text.ts";
 import {
   CELL,
   derived,
@@ -34,7 +30,6 @@ import {
   so,
   whole,
 } from "../../engine/hint-words.ts";
-import type { ConfinedLines, LatinWingReason } from "../../engine/latin.ts";
 import type { Point } from "../../engine/types.ts";
 
 /** A clue and the line it sees along, as the sentence names them: the clue's
@@ -123,18 +118,6 @@ export const say = {
   /** Where the placement's cull strikes from. */
   dupWhere: "from the other cells",
 
-  single: (at: Point, n: number): Sentence =>
-    so({
-      look: phrase`Every other height has been ruled out in ${thisCell(at)}`,
-      move: phrase`it can only be ${n}`,
-    }),
-
-  regionsFull: (at: Point, n: number): Sentence =>
-    so({
-      look: phrase`${thisCell(at)}'s row and column already hold every other height`,
-      move: phrase`it can only be ${n}`,
-    }),
-
   hiddenSingle: (
     kind: "row" | "col",
     cells: readonly Point[],
@@ -150,14 +133,9 @@ export const say = {
 
   set: (cells: readonly Point[], n: number): Narration =>
     phrase`${mark.the("outline", CELL, cells, "cell").capitalized()} already account for a fixed set of heights that includes ${n}`,
-
-  /** One height `n` confined across the parallel `lines` to the outlined
-   * `cells`, in the engine's words for it. The height goes bare: it is said
-   * twice, and the qualified sentence runs past the narration limit. */
-  confined: (lines: ConfinedLines, cells: readonly Point[], n: number): Narration =>
-    confinedPremise(lines, cells, String(n)),
-
-  /** A wing, in the engine's words for it, the height bare as `confined`'s. */
-  wing: (wing: LatinWingReason, at: Point): Narration =>
-    wingPremise(wing, at, String(wing.n)),
 };
+
+/** Towers' values in the engine's sentences: heights, bare where a confined
+ * height or a wing's is said twice, since the qualified sentence runs past
+ * the narration limit. */
+export const TOWERS_VOCAB: LatinVocab = { noun: "height", value: String };

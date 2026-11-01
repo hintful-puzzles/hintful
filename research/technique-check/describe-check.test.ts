@@ -13,9 +13,9 @@ import {
   isLibrary,
   type LibraryJson,
   loadDescription,
-  type Technique,
   type VariationJson,
   variationWord,
+  withEveryVariation,
   withVariations,
 } from "../../src/describe/description.ts";
 import { loadDescriptionFile } from "../../src/describe/load.ts";
@@ -31,6 +31,7 @@ import {
   impossibleKinds,
   libraryDescription,
   planted,
+  regionCells,
   sizings,
   unbuilt,
   type Verdict,
@@ -200,6 +201,42 @@ const PLANTS: Record<string, Plant> = {
   border: {
     for: "k in clues(border), L = sight(at(k)), H = order - nums, f = index(first({c in L where not (known(c) and value(c) = nums + 1)}), L), reach = H - 1 - count(c in L where index(c, L) >= H and known(c) and value(c) = nums + 1), stop = index(first({c in L where nums + 1 not in cand(c)}), L)",
   },
+  // Unruly: a window with one square of a piece read as two.
+  threes: {
+    for: "L in lines, i in range(0, |cells(L)| - 3), W = window(L, i), x in W where not known(x), d in domain where (exists c in W where c != x: value(c) = d)",
+  },
+  // A line's empty squares filled with the other piece while it lacks one d.
+  lastGap: {
+    for: "L in lines, n = |cells(L)| / 2, d in domain where count(c in cells(L) where value(c) = d) = n - 1 and count(c in cells(L) where value(c) = flip(d)) = n - 1",
+  },
+  quota: {
+    for: "L in lines, n = |cells(L)| / 2, d in domain where count(c in cells(L) where value(c) = d) >= n - 1 and count(c in cells(L) where value(c) = flip(d)) < n",
+  },
+  // The last d's window allowed to hold a d already.
+  lastOne: {
+    for: "L in lines, n = |cells(L)| / 2, d in domain where count(c in cells(L) where value(c) = d) = n - 1 and count(c in cells(L) where value(c) = flip(d)) <= n - 2, i in range(0, |cells(L)| - 3), W = window(L, i) where count(c in W where not known(c)) >= 2",
+  },
+  // Seismic: a placed number struck one square past its reach.
+  cull: {
+    for: "c in cells where known(c), n = value(c), p in cells where p != c and (area(p) = area(c) or near(c, p, n + 1))",
+  },
+  lone: {
+    for: "c in cells where not known(c) and |cand(c)| < 3",
+    conclude: "|cand(c)| >= 1 and place(c, first(cand(c)))",
+  },
+  areaSingle: {
+    for: "r in area, n in range(1, |cells(r)|) where not (exists c in cells(r): value(c) = n), k = count(c in cells(r) where n in cand(c)) where k < 3",
+    conclude: "k >= 1 and place(first({c in cells(r) where n in cand(c)}), n)",
+  },
+  // A square near only one of the area's homes struck.
+  starve: {
+    conclude:
+      "forall c in cells where area(c) != r and not known(c) and n in cand(c) and (exists h in H: near(c, h, n)): strike(c, n)",
+  },
+  // The second line's d not asked to sit where the first's do.
+  unique: {
+    for: "A in lines, n = |cells(A)| / 2, d in domain where count(c in cells(A) where value(c) = d) = n, B in lines where B != A and (A in rows) = (B in rows) and count(c in cells(B) where value(c) = d) = n - 1, j in range(0, |cells(A)| - 1) where value(sq(A, j)) = d and not known(sq(B, j))",
+  },
 };
 
 const lines: string[] = [];
@@ -247,9 +284,11 @@ async function checkAll(worlds: readonly World[], ids: readonly string[]) {
         })),
       );
       for (const { where, d, sizes } of boards) {
-        if (!(await hasAnswer(d, order, sizes))) continue;
-        const t = d.techniques.find((x) => x.id === id) as Technique;
-        const v = await checkTechnique(d, t, order, sizes);
+        // A technique a modifier adds is checked where the modifier is on.
+        const t = d.techniques.find((x) => x.id === id);
+        const cells = await regionCells(d, order, sizes);
+        if (t === undefined || !(await hasAnswer(d, order, sizes, cells))) continue;
+        const v = await checkTechnique(d, t, order, sizes, 1, cells);
         line(where, v, "sound");
         if (v.verdict !== "sound") bad.push(`${id} ${order}`);
         if (order === 3 && (name === "set" || name === "fish" || name === "digitSet"))
@@ -261,6 +300,8 @@ async function checkAll(worlds: readonly World[], ids: readonly string[]) {
             { ...planted(t, plant), id: `${t.id} (${label})` },
             order,
             sizes,
+            1,
+            cells,
           );
           line(
             where,
@@ -354,24 +395,26 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
       for (const order of ORDERS)
         for (const sizes of sizings(d, order)) {
           const at = [where, ...[...sizes].map(([n, v]) => `${n}=${v}`)].join(" ");
-          if (!(await hasAnswer(d, order, sizes))) {
+          const cells = await regionCells(d, order, sizes);
+          if (!(await hasAnswer(d, order, sizes, cells))) {
             note(
               `--  ${at}: no board of order ${order} has an answer, so nothing is checked there`,
             );
             continue;
           }
-          for (const kind of await impossibleKinds(d, order, sizes))
+          for (const kind of await impossibleKinds(d, order, sizes, cells))
             note(
               `--  ${at.padEnd(10)} no board of order ${order} holds a ${kind} clue, so no reading of one is checked there`,
             );
         }
-    const own = worlds[0].d.techniques.filter((t) => !t.id.includes("."));
-    const failed = await checkAll(
-      worlds,
-      own.map((t) => t.id),
+    const own = new Set(
+      worlds.flatMap(({ d }) =>
+        d.techniques.filter((t) => !t.id.includes(".")).map((t) => t.id),
+      ),
     );
+    const failed = await checkAll(worlds, [...own]);
     bad.push(...failed);
-    for (const stated of file.techniques)
+    for (const stated of withEveryVariation(file).techniques ?? [])
       if (!("use" in stated) && !failed.some((f) => f.startsWith(`${stated.id} `)))
         verdicts[soundnessKey(source, stated.id)] = gameFingerprint(file, stated);
   }

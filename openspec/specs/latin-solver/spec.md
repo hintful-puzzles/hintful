@@ -43,35 +43,23 @@ difficulty level at which it solved, or one of the sentinels `DIFF_IMPOSSIBLE`,
   completion
 - **THEN** it returns `DIFF_AMBIGUOUS`
 
-### Requirement: The candidate cube is indexed by cell and then by symbol
-
-The candidate cube SHALL be indexed `(x·o + y)·symbols + (n−1)`, where
-`symbols` is the number of distinct values: `o` for a Latin square, and
-`o − times + 1` when a symbol is declared to repeat `times` per line (see "The
-Latin cube supports a symbol that may repeat in a line").
-
-#### Scenario: A repeated symbol narrows the cube
-
-- **WHEN** a solver of order `o` is built with a symbol declared to repeat
-  `times` per line
-- **THEN** each cell has `o − times + 1` candidates in the cube, and the
-  candidates of one cell are adjacent in it
-
 ### Requirement: The Latin cube supports a symbol that may repeat in a line
 
 The shared Latin-square solver SHALL support puzzles in which one declared
 symbol may appear a stated number of times in each row and column, rather than
-exactly once, and SHALL express it in the cube, so that deduction techniques can
-be written about it. The support SHALL be opt-in, and SHALL be inert when not
-requested: a puzzle that declares no repeatable symbol SHALL produce exactly the
-deductions, in exactly the order, that it produces without the support.
+exactly once, and SHALL express it in its candidates, so that deduction
+techniques can be written about it. The support SHALL be opt-in, and SHALL be
+inert when not requested: a puzzle that declares no repeatable symbol SHALL
+produce exactly the deductions, in exactly the order, that it produces without
+the support.
 
 #### Scenario: A pseudo-Latin puzzle is expressed directly
 
 - **WHEN** a puzzle declares a symbol with a per-line multiplicity greater than
   one
-- **THEN** the solver reasons about that symbol's placements in the cube, without
-  the caller translating it into and out of a single-occurrence encoding
+- **THEN** the solver reasons about that symbol's placements in its
+  candidates, without the caller translating it into and out of a
+  single-occurrence encoding
 
 #### Scenario: Existing consumers are unaffected
 
@@ -269,3 +257,12 @@ board of each checked order can hold.
 - **WHEN** Salad's border technique reads `nums`
 - **THEN** its compiled function reads the board's count of symbols from what
   the game deals
+
+### Requirement: The cube a generator reads is written from the marks
+
+Where a generator reads upstream's candidate cube (Unequal's, Salad's), `latinSolver` SHALL write it from its marks at every exit that is not a recursion, indexed `(x·o + y)·symbols + (n−1)`, where `symbols` is `o` for a Latin square and `o − times + 1` where a symbol repeats `times` a line.
+
+#### Scenario: A rejected board still writes its cube
+
+- **WHEN** `latinSolver` is given a grid whose givens clash, and a cube to write
+- **THEN** it returns `DIFF_IMPOSSIBLE` and the cube holds the marks as they stood

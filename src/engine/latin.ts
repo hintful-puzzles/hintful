@@ -10,12 +10,13 @@
  * chains and guess-and-verify recursion (which doubles as the generators'
  * uniqueness check).
  *
- * The `o³` candidate cube is indexed as upstream's
- * `cubepos(x,y,n) = (x·o + y)·o + (n−1)`, `forcing` is upstream's deduction,
- * and the negative-result sentinels keep upstream's
- * numeric values so a game's `ret <= diff` / `ret != diff` comparisons read as
- * upstream's. Scratch buffers are owned by the solver instance; recursion
- * allocates a sub-solver per guess.
+ * The candidates are the engine's marks (`ladder-runtime.ts`'s `CellMarks`),
+ * a mask a cell; upstream's `o³` cube survives only where a generator reads
+ * it ({@link LatinSolver.writeCube}). `forcing` is upstream's deduction, and
+ * the negative-result sentinels keep upstream's numeric values so a game's
+ * `ret <= diff` / `ret != diff` comparisons read as upstream's. Scratch
+ * buffers are owned by the solver instance; recursion allocates a sub-solver
+ * per guess.
  *
  * ## A symbol that may repeat (this fork's extension)
  *
@@ -25,26 +26,18 @@
  * are reinterpreted as holes, which works but leaves the solver reasoning about
  * *which* interchangeable hole symbol sits where, a question the puzzle never
  * asks; the natural deductions about "the empty square" cannot be written
- * against that encoding. So the cube can be told, via {@link LatinRepeats},
- * that its **last** symbol appears `times` times per line: the cube then has
- * `symbols = o − times + 1` distinct values, `cubepos` strides by `symbols`,
+ * against that encoding. So the solver can be told, via {@link LatinRepeats},
+ * that its **last** symbol appears `times` times per line: it then has
+ * `symbols = o − times + 1` distinct values,
  * the library's techniques read each value's {@link LatinSolver.multiplicity}
  * (`times(d)`), and forcing chains never link through it (a link relies on the
  * value appearing once). With no repeat declared, `symbols = o` and every
  * multiplicity is 1, and the techniques read as on a Latin square.
  */
 
-import { type DeductionTechnique, runDeductionFixpoint } from "./deduction-fixpoint.ts";
+import type { DeductionTechnique } from "./deduction-fixpoint.ts";
 import type { DeductionRecorder } from "./deduction-record.ts";
-import {
-  type Facts,
-  type Fire,
-  type GridSpace,
-  latinSpace,
-  type Marks,
-  STRIKE,
-  valuesOf,
-} from "./describe-runtime.ts";
+import { latinSpace, valuesOf } from "./describe-runtime.ts";
 import type { DifficultyVerdict } from "./difficulty.ts";
 import {
   auditingPremises,
@@ -52,10 +45,25 @@ import {
   FiringReplay,
   offerReplay,
 } from "./firing-replay.ts";
+import {
+  CellMarks,
+  type CompiledLadder,
+  describedLadder,
+  type Ladder,
+  type Library,
+  ladderTechniques,
+  type OwnRungs,
+  type PlaceRung,
+  type Rung,
+  runLadder,
+  TIERS,
+  uncluedPlacingRung,
+  uncluedRung,
+} from "./ladder-runtime.ts";
 import * as compiled from "./latin.compiled.ts";
 import { type RandomState, randomUpto } from "./random/index.ts";
 import { shuffle } from "./shuffle.ts";
-import { type StepBudget, stepBudget } from "./step-budget.ts";
+import { stepBudget } from "./step-budget.ts";
 
 /** Upstream `enum { diff_impossible = 10, diff_ambiguous, diff_unfinished }`
  * — positive sentinels larger than any real difficulty level, so a
@@ -143,24 +151,6 @@ export function confinedLines(
 }
 
 /**
- * The one reason only a solver with {@link LatinRepeats} ever records: the
- * repeated symbol `n` has been placed all `times` times in this line, so it is
- * ruled out of the rest of the line — the multiplicity analog of `dup`, which
- * names one placement where here it is the count that forces. Kept apart from
- * {@link LatinReason} so the Latin-square games, whose narrations switch over
- * that union exhaustively, are not asked to narrate a case they cannot meet. A
- * repeats consumer adds it to its own reason union, or drops the record where
- * a deduction of its own says the same.
- */
-interface LatinRepeatReason {
-  kind: "repeatFull";
-  n: number;
-  line: "row" | "col";
-  index: number;
-  times: number;
-}
-
-/**
  * One symbol that may appear more than once per line — what a pseudo-Latin
  * puzzle needs (Salad's empty square). The repeated symbol is always the
  * **last** one, `symbols = o − times + 1`, so a consumer's real symbols keep
@@ -179,74 +169,54 @@ export type {
   DeductionRecorder,
 } from "./deduction-record.ts";
 
-export class LatinSolver implements Marks {
+/** The library's `placed`, run as each value is placed on a Latin square. */
+const LATIN_PLACING: readonly PlaceRung[] = [uncluedPlacingRung(compiled.placed)];
+
+/**
+ * The marks of an `o × o` Latin square, cells numbered `y·o + x`, and the
+ * forcing chain, which no description states: a supposition, run only at the
+ * recursive level.
+ */
+export class LatinSolver extends CellMarks {
   readonly o: number;
-  /** The grid as a compiled technique reads it. */
-  readonly sp: GridSpace;
-  readonly domain: number;
-  /** By cell `y·o + x`, the cube index one below the cell's first symbol, so
-   * `cellBase[c] + n` is `cubepos(x, y, n)` with no division a read. */
-  private readonly cellBase: Int32Array;
   /** Distinct symbols: `o` for a Latin square, `o − times + 1` with a repeat. */
   readonly symbols: number;
-  /** The repeated symbol (always `symbols`), or `0` when there is none. */
-  readonly repeat: number;
-  /** How many times {@link repeat} appears per line (`1` when there is none). */
-  readonly times: number;
-  /** `o²·symbols` possibility bitmap; `cube[cubepos(x,y,n)]` truthy ⇒ symbol
-   * `n` is still possible at `(x, y)`. */
-  readonly cube: Uint8Array;
-  /** `o²` result grid (0 = blank); written back to the caller's array. */
-  grid: Uint8Array;
+  declare grid: Uint8Array;
 
   // Scratch buffers for forcing chains (instance-owned).
   private readonly sGrid: Uint8Array;
   private readonly sNeighbors: Int32Array;
   private readonly sBfsqueue: Int32Array;
 
-  /** Hint-only deduction recorder; left unset on the generator/solve path so
-   * those run with no recording overhead and byte-for-byte unchanged. */
-  recorder?: DeductionRecorder;
-  /** Hint-only fixpoint budget (set alongside `recorder`). */
-  budget?: StepBudget;
-  /** Current firing id — bumped once per top-level deduction attempt so every
-   * record of one firing shares a `group`. */
-  group = 0;
-  /** Called as each rung is about to run, after {@link group} moves on. Set
-   * only while a premise audit records this solver (`latinReplay`). */
-  onGroup?: (rung: number) => void;
+  /** Called as each technique is about to run, after {@link group} moves on.
+   * Set only while a premise audit records this solver (`latinReplay`). */
+  onGroup?: (id: string) => void;
 
-  constructor(o: number, repeats: LatinRepeats | null = null) {
-    this.o = o;
-    if (repeats) {
-      if (!(repeats.times >= 2 && repeats.times <= o)) {
-        throw new Error(
-          `latin: a repeated symbol must appear 2..${o} times, not ${repeats.times}`,
-        );
-      }
-      this.times = repeats.times;
-      this.symbols = o - repeats.times + 1;
-      this.repeat = this.symbols;
-    } else {
-      this.times = 1;
-      this.symbols = o;
-      this.repeat = 0;
+  /** `placing`: what runs as each value is placed, the compiled module's
+   * where a game's ladder gives it, and the library's `placed` otherwise. */
+  constructor(
+    o: number,
+    repeats: LatinRepeats | null = null,
+    placing: readonly PlaceRung[] = LATIN_PLACING,
+  ) {
+    if (repeats && !(repeats.times >= 2 && repeats.times <= o)) {
+      throw new Error(
+        `latin: a repeated symbol must appear 2..${o} times, not ${repeats.times}`,
+      );
     }
-    const s = this.symbols;
-    this.sp = latinSpace(o);
-    this.cellBase = new Int32Array(o * o);
-    for (let c = 0; c < o * o; c++)
-      this.cellBase[c] = ((c % o) * o + ((c / o) | 0)) * s - 1;
-    this.domain = ((1 << (s + 1)) - 1) & ~1;
-    this.cube = new Uint8Array(o * o * s);
-    this.grid = new Uint8Array(o * o);
+    const s = repeats ? o - repeats.times + 1 : o;
+    super(
+      latinSpace(o),
+      ((1 << (s + 1)) - 1) & ~1,
+      new Uint8Array(o * o),
+      repeats ? { value: s, times: repeats.times } : null,
+    );
+    this.o = o;
+    this.symbols = s;
+    this.placing = placing;
     this.sGrid = new Uint8Array(o * o);
     this.sNeighbors = new Int32Array(3 * o);
     this.sBfsqueue = new Int32Array(o * o);
-  }
-
-  cubepos(x: number, y: number, n: number): number {
-    return (x * this.o + y) * this.symbols + n - 1;
   }
 
   /** How many times symbol `n` appears in each line. */
@@ -254,125 +224,23 @@ export class LatinSolver implements Marks {
     return n === this.repeat ? this.times : 1;
   }
   cubeGet(x: number, y: number, n: number): boolean {
-    return this.cube[this.cubepos(x, y, n)] !== 0;
+    return this.has(y * this.o + x, n);
   }
 
-  // The marks a compiled technique reads, its cells numbered `y·o + x`.
-  known(c: number): boolean {
-    return this.grid[c] !== 0;
-  }
-  value(c: number): number {
-    return this.grid[c] || -1;
-  }
-  cand(c: number): number {
-    const base = this.cellBase[c];
-    let m = 0;
-    for (let n = 1; n <= this.symbols; n++) if (this.cube[base + n]) m |= 1 << n;
-    return m;
-  }
-  has(c: number, d: number): boolean {
-    return this.cube[this.cellBase[c] + d] !== 0;
-  }
-
-  strikeAt(c: number, d: number): void {
-    this.cube[this.cellBase[c] + d] = 0;
-  }
-  placeAt(c: number, d: number): void {
-    this.place(c % this.o, (c / this.o) | 0, d);
-  }
-
-  /**
-   * Make a compiled firing's facts, recording each with the reason `reasonOf`
-   * gives it. Every reason is taken before any fact is made, from the marks
-   * the firing read.
-   */
-  applyFacts(facts: Facts, reasonOf: ((i: number) => unknown) | null): void {
-    const o = this.o;
-    const rec = this.recorder;
-    const reasons: unknown[] | null = rec ? [] : null;
-    if (reasons && reasonOf)
-      for (let i = 0; i < facts.length; i += 3) reasons.push(reasonOf(i));
-    for (let i = 0; i < facts.length; i += 3) {
-      const c = facts[i + 1];
-      const n = facts[i + 2];
-      if (facts[i] !== STRIKE) {
-        // Two facts of one firing can place one cell (Towers' facing pairs
-        // of a row and a column); the cell was open when both were made.
-        if (this.grid[c] === 0)
-          this.place(c % o, (c / o) | 0, n, reasons ? reasons[i / 3] : null);
-        continue;
-      }
-      const pos = this.cellBase[c] + n;
-      if (rec && this.cube[pos])
-        rec({
-          kind: "elim",
-          x: c % o,
-          y: (c / o) | 0,
-          n,
-          reason: reasons ? reasons[i / 3] : null,
-          group: this.group,
-        });
-      this.cube[pos] = 0;
-    }
-  }
-
-  /** Reset the cube and seed from `grid` (written back in place). Returns
-   * false if a given digit is already ruled out (inconsistent). */
+  /** Seed the marks from `grid` (written back in place). Returns false if a
+   * given digit is already ruled out (inconsistent). */
   alloc(grid: Uint8Array): boolean {
-    const o = this.o;
-    this.grid = grid;
-    this.cube.fill(1);
-    for (let x = 0; x < o; x++) {
-      for (let y = 0; y < o; y++) {
-        const n = grid[y * o + x];
-        if (n) {
-          if (this.cubeGet(x, y, n)) this.place(x, y, n);
-          else return false;
-        }
-      }
-    }
-    return true;
+    return this.seed(grid);
   }
 
-  /** Commit digit `n` at `(x, y)`: rule out other digits here, this digit
-   * elsewhere in the row/column, and record the placement. `reason` (hint path
-   * only) explains *why* the cell was placed; the row/column eliminations it
-   * implies are recorded as `dup` strikes so a hint can teach them too. */
-  place(x: number, y: number, n: number, reason: unknown = null): void {
-    const o = this.o;
-    const s = this.symbols;
-    const rec = this.recorder;
-    if (rec && reason !== null) {
-      rec({ kind: "place", x, y, n, reason, group: this.group });
-    }
-    for (let i = 1; i <= s; i++) if (i !== n) this.cube[this.cubepos(x, y, i)] = 0;
-    this.grid[y * o + x] = n;
-
-    // The library's `placed`, which a recording records as `dup` strikes, or
-    // for the repeated symbol, which leaves a line only once it holds every
-    // copy, as `repeatFull`: the count forces it, not this placement.
-    const fire: Fire<compiled.PlacedBinding> | null = rec
-      ? (_, facts) => {
-          this.applyFacts(
-            facts,
-            n === this.repeat
-              ? (i): LatinRepeatReason => {
-                  const c = facts[i + 1];
-                  const inRow = ((c / o) | 0) === y;
-                  return {
-                    kind: "repeatFull",
-                    n,
-                    line: inRow ? "row" : "col",
-                    index: inRow ? y : x,
-                    times: this.times,
-                  };
-                }
-              : () => ({ kind: "dup", n, px: x, py: y }),
-          );
-          return true;
-        }
-      : null;
-    compiled.placed(this, this.sp, y * o + x, fire);
+  /** The candidate cube upstream's generators read (`state->hints`), at
+   * `cubepos(x, y, n) = (x·o + y)·symbols + n − 1`. */
+  writeCube(out: Uint8Array): void {
+    const { o, symbols: s } = this;
+    for (let x = 0; x < o; x++)
+      for (let y = 0; y < o; y++)
+        for (let n = 1; n <= s; n++)
+          out[(x * o + y) * s + n - 1] = this.has(y * o + x, n) ? 1 : 0;
   }
 
   /** Forcing chains (upstream `latin_solver_forcing`): a chain of two-candidate
@@ -450,7 +318,7 @@ export class LatinSolver implements Marks {
               }
 
               if (currn === orign && (xt === x || yt === y)) {
-                this.cube[this.cubepos(xt, yt, orign)] = 0;
+                this.strikeAt(yt * o + xt, orign);
                 return 1;
               }
             }
@@ -462,52 +330,7 @@ export class LatinSolver implements Marks {
   }
 }
 
-/** One technique of a ladder, run on a solver: `-1`, `0` or `1`, as a rung. */
-export type LatinRung = (solver: LatinSolver) => number;
-
-/**
- * A compiled technique as a rung: its firing made through
- * {@link LatinSolver.applyFacts}, each fact recorded with the reason `reason`
- * builds from the firing's binding, on the marks before the firing.
- */
-export function compiledRung<B, C>(
-  run: (b: Marks, sp: GridSpace, cl: C, fire: Fire<B> | null) => number,
-  cl: C,
-  reason: (binding: B, cell: number, n: number, solver: LatinSolver) => unknown,
-): LatinRung {
-  // A solve gives no `fire`, so the technique makes each fact as it
-  // concludes it; a hint is told each firing, records it, and stops there,
-  // one firing a call being one step.
-  return (solver) =>
-    run(
-      solver,
-      solver.sp,
-      cl,
-      solver.recorder
-        ? (binding, facts) => {
-            solver.applyFacts(facts, (i) =>
-              reason(binding, facts[i + 1], facts[i + 2], solver),
-            );
-            return false;
-          }
-        : null,
-    );
-}
-
-/** {@link compiledRung} of a technique that reads no clues: every library
- * technique, and a game's own that reads only the marks. */
-export function uncluedRung<B>(
-  run: (b: Marks, sp: GridSpace, fire: Fire<B> | null) => number,
-  reason: (binding: B, cell: number, n: number, solver: LatinSolver) => unknown,
-): LatinRung {
-  return compiledRung(
-    (b, sp, _: null, fire: Fire<B> | null) => run(b, sp, fire),
-    null,
-    reason,
-  );
-}
-
-const cellAt = (o: number) => (c: number) => ({ x: c % o, y: (c / o) | 0 });
+const cellAt = (w: number) => (c: number) => ({ x: c % w, y: (c / w) | 0 });
 
 /** The library's techniques (`latin.description.yaml`) as rungs, by the id a
  * description places them with. */
@@ -519,26 +342,42 @@ export const LATIN_RUNGS = {
   "latin.single": uncluedRung(compiled.single, (): LatinReason => ({ kind: "single" })),
   "latin.set": uncluedRung(
     compiled.set,
-    ({ S }, _c, _n, solver): LatinReason => ({
+    ({ S }, _c, _n, m): LatinReason => ({
       kind: "set",
-      cells: S.map(cellAt(solver.o)),
+      cells: S.map(cellAt(m.sp.w)),
     }),
   ),
   "latin.fish": uncluedRung(
     compiled.fish,
-    (binding, _c, _n, solver): LatinReason => fishReason(binding, solver),
+    (binding, _c, _n, m): LatinReason => fishReason(binding, m),
   ),
   "latin.wing": uncluedRung(
     compiled.wing,
-    ({ m, x, E }, _c, _n, solver): LatinReason => ({
+    ({ m: mid, x, E }, _c, _n, m): LatinReason => ({
       kind: "wing",
       n: x,
-      middle: cellAt(solver.o)(m),
-      ends: E.map(cellAt(solver.o)),
-      self: solver.has(m, x),
+      middle: cellAt(m.sp.w)(mid),
+      ends: E.map(cellAt(m.sp.w)),
+      self: m.has(mid, x),
     }),
   ),
-} satisfies Record<string, LatinRung>;
+} satisfies Record<string, Rung>;
+
+/** The Latin library, as the engine pairs it for every game that places
+ * it. */
+const LATIN_LIBRARY: Library = {
+  rungs: LATIN_RUNGS,
+  placing: { "latin.placed": LATIN_PLACING[0] },
+};
+
+/** A Latin game's ladder: its compiled module's, its own techniques paired
+ * by `own` and the library's by the engine. */
+export function latinLadder<Id extends string, P extends string, S extends CellMarks>(
+  module: CompiledLadder<Id, P>,
+  own: OwnRungs<Id, P, S>,
+): Ladder<S> {
+  return describedLadder(module, own, LATIN_LIBRARY);
+}
 
 /**
  * A fish confines its value two ways at once, and either gives its strikes:
@@ -548,17 +387,16 @@ export const LATIN_RUNGS = {
  */
 function fishReason(
   { d, X0, Y0, T, X }: compiled.FishBinding,
-  solver: LatinSolver,
+  m: CellMarks,
 ): LatinReason {
-  const o = solver.o;
+  const o = m.sp.w;
   const chosen = valuesOf(T);
   const byColumn = X.length <= chosen.length;
   const cols = byColumn ? X : X0.filter((L) => !X.includes(L));
   const rows = byColumn ? valuesOf(Y0 & ~T) : chosen;
   const cells: { x: number; y: number }[] = [];
   for (const L of cols)
-    for (const y of rows)
-      if (solver.has(y * o + (L - o), d)) cells.push({ x: L - o, y });
+    for (const y of rows) if (m.has(y * o + (L - o), d)) cells.push({ x: L - o, y });
   const lines = byColumn
     ? confinedLines(
         "col",
@@ -569,16 +407,11 @@ function fishReason(
   return { kind: "set", cells, lines };
 }
 
-/** The rungs of a described game: every technique its description places,
- * in its order, each run at its tier, and only at a cap below its `until`
- * where it has one. */
-export interface LatinLadder {
-  ladder: readonly { tier: number; until?: number; run: LatinRung }[];
-}
-
 /** How `latinSolver` runs: its rungs, the game's validator, and the hint-path
  * hooks. */
-export type LatinSolverConfig<Ctx> = LatinSolverCommon<Ctx> & LatinLadder;
+export type LatinSolverConfig<Ctx> = LatinSolverCommon<Ctx> & {
+  ladder: Ladder<LatinSolver>;
+};
 
 interface LatinSolverCommon<Ctx> {
   /** Declare the last symbol as repeating `times` per line (a pseudo-Latin
@@ -621,51 +454,48 @@ interface LatinSolverCommon<Ctx> {
   cubeOut?: Uint8Array;
 }
 
-/** Rung `i` of the ladder (0..maxdiff): the techniques the game's ladder
- * places at tier `i`, in its order, then at the searching level the forcing
- * chain. Returns `-1` (contradiction) / `0` (nothing) / `>0` (fired), the
- * runner's contract. */
-function latinRung<Ctx>(
+/** The forcing chain's id among a ladder's techniques. */
+const FORCING = "forcing-chain";
+
+/**
+ * The game's ladder at `cfg.maxdiff`, then at the searching level the forcing
+ * chain. Every Latin game lists its techniques in tier order, so they run as
+ * a ladder grouped by tier would; the forcing chain is a supposition, so it
+ * shares the level of the other search, the recursion, and comes after every
+ * technique.
+ */
+function latinTechniques<Ctx>(
   solver: LatinSolver,
   cfg: LatinSolverConfig<Ctx>,
-  i: number,
-): number {
-  for (const rung of cfg.ladder) {
-    if (rung.tier !== i || (rung.until !== undefined && cfg.maxdiff >= rung.until))
-      continue;
-    const ret = rung.run(solver);
-    if (ret !== 0) return ret;
-  }
-  // A forcing chain is a supposition, so it shares the level of the other
-  // search, the recursion, and no game can place it lower.
-  return i === cfg.diffRecursive ? solver.forcing() : 0;
+  grades: Record<string, number>,
+): DeductionTechnique[] {
+  const techniques = ladderTechniques(
+    solver,
+    cfg.ladder.entries,
+    { [TIERS]: cfg.maxdiff },
+    grades,
+  );
+  if (cfg.maxdiff >= cfg.diffRecursive)
+    techniques.push({
+      id: FORCING,
+      tier: cfg.diffRecursive,
+      run: () => {
+        const ret = solver.forcing();
+        if (ret > 0) grades[TIERS] = Math.max(grades[TIERS], cfg.diffRecursive);
+        return ret;
+      },
+    });
+  return techniques;
 }
 
 function latinSolverTop<Ctx>(solver: LatinSolver, cfg: LatinSolverConfig<Ctx>): number {
   const { maxdiff, diffRecursive } = cfg;
-  // Rung `i` **is** tier `i` here, and `diffRecursive` a tier number the game
-  // hands in, so the technique's tier is its index, and the cap is the game's
-  // own `maxdiff` rather than a position derived from it.
-  const techniques: DeductionTechnique[] = [];
-  for (let i = 0; i <= maxdiff; i++) {
-    techniques.push({
-      id: `latin-level-${i}`,
-      tier: i,
-      run: () => latinRung(solver, cfg, i),
-    });
-  }
-
-  const fp = runDeductionFixpoint({
-    techniques,
-    maxTier: maxdiff,
-    budget: solver.budget,
-    beforeTechnique: (technique) => {
-      solver.group++;
-      solver.onGroup?.(technique.tier);
-    },
+  const grades = { [TIERS]: 0 };
+  const impossible = runLadder(solver, latinTechniques(solver, cfg, grades), {
+    onTechnique: (id) => solver.onGroup?.(id),
   });
-  if (fp.impossible) return finish(solver, cfg, DIFF_IMPOSSIBLE);
-  let diff = fp.grade;
+  if (impossible) return finish(solver, cfg, DIFF_IMPOSSIBLE);
+  let diff = grades[TIERS];
 
   if (maxdiff === diffRecursive) {
     const nsol = latinSolverRecurse(solver, cfg);
@@ -738,7 +568,7 @@ function latinSolverRecurse<Ctx>(
     outgrid[y * o + x] = guess;
 
     const newctx = cfg.ctxNew ? cfg.ctxNew(cfg.ctx) : cfg.ctx;
-    const sub = new LatinSolver(o, cfg.repeats);
+    const sub = new LatinSolver(o, cfg.repeats, cfg.ladder.placing);
     const ret = sub.alloc(outgrid)
       ? latinSolverTop(sub, { ...cfg, maxdiff: cfg.diffRecursive, ctx: newctx })
       : DIFF_IMPOSSIBLE;
@@ -770,9 +600,9 @@ export function latinSolver<Ctx>(
   o: number,
   cfg: LatinSolverConfig<Ctx>,
 ): number {
-  const solver = new LatinSolver(o, cfg.repeats);
+  const solver = new LatinSolver(o, cfg.repeats, cfg.ladder.placing);
   if (!solver.alloc(grid)) {
-    if (cfg.cubeOut) cfg.cubeOut.set(solver.cube);
+    if (cfg.cubeOut) solver.writeCube(cfg.cubeOut);
     return DIFF_IMPOSSIBLE;
   }
   cfg.seed?.(solver);
@@ -787,7 +617,7 @@ export function latinSolver<Ctx>(
   if (replay) offerReplay(replay);
   // Expose the final candidate cube (upstream's `memcpy(state->hints, ...)`),
   // for a generator that grades clues by remaining possibilities (Unequal).
-  if (cfg.cubeOut) cfg.cubeOut.set(solver.cube);
+  if (cfg.cubeOut) solver.writeCube(cfg.cubeOut);
   return ret;
 }
 
@@ -803,43 +633,40 @@ export function latinSolver<Ctx>(
 function latinReplay<Ctx>(
   solver: LatinSolver,
   cfg: LatinSolverConfig<Ctx>,
-): FiringReplay<number> {
-  const { o, symbols: s } = solver;
+): FiringReplay<string> {
+  const { o } = solver;
   const clone = (ctx: Ctx): Ctx =>
     cfg.ctxNew ? cfg.ctxNew(ctx) : structuredClone(ctx);
   const ctx = clone(cfg.ctx);
-  const capture = (from: LatinSolver): CellBoard => {
-    const values = Int32Array.from(from.grid);
-    const cands = new Int32Array(o * o);
-    for (let c = 0; c < o * o; c++)
-      for (let n = 1; n <= s; n++)
-        if (from.cubeGet(c % o, (c / o) | 0, n)) cands[c] |= 1 << n;
-    return { values, cands };
-  };
-  const replay = new FiringReplay<number>({
+  const capture = (from: LatinSolver): CellBoard => ({
+    values: Int32Array.from(from.grid),
+    cands: from.snapshot(),
+  });
+  const replay = new FiringReplay<string>({
     w: o,
     h: o,
     capture: () => capture(solver),
-    name: (rung) => `latin-level-${rung}`,
-    run: (board, rung) => {
-      const run = new LatinSolver(o, cfg.repeats);
+    name: (id) => id,
+    run: (board, id) => {
+      const run = new LatinSolver(o, cfg.repeats, cfg.ladder.placing);
       if (!run.alloc(Uint8Array.from(board.values)))
         throw new Error("latin replay: the edited state is inconsistent");
-      for (let c = 0; c < o * o; c++)
-        for (let n = 1; n <= s; n++)
-          if (!(board.cands[c] & (1 << n)))
-            run.cube[run.cubepos(c % o, (c / o) | 0, n)] = 0;
+      for (let c = 0; c < o * o; c++) run.cands[c] &= board.cands[c];
       // The recording path's techniques behave as recorded only with a recorder.
       run.recorder = () => {};
       const replayed = { ...cfg, ctx: clone(ctx) };
+      const technique = latinTechniques(run, replayed, { [TIERS]: 0 }).find(
+        (t) => t.id === id,
+      );
+      if (!technique) throw new Error(`latin replay: no technique ${id}`);
       return () => {
-        const ret = latinRung(run, replayed, rung);
+        const ret = technique.run();
         return { after: capture(run), ret };
       };
     },
   });
-  solver.onGroup = (rung) => {
-    replay.before(rung);
+  solver.onGroup = (id) => {
+    replay.before(id);
     replay.open(solver.group);
   };
   return replay;

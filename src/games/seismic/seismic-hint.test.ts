@@ -10,25 +10,24 @@
 import { describe, expect, it } from "vitest";
 import { type CandidateReading, nakedSingles } from "../../engine/candidate-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
+import type { CellMarks, Firing } from "../../engine/ladder-runtime.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
+import { placeNumber, regionsViable } from "./generator.ts";
 import {
-  areasOf,
-  hiddenSingles,
   hintKeepTrack,
   refreshHintStep,
   type SeismicHint,
   type SeismicRung,
-  starves,
   workingBoard,
 } from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { seismicGame } from "./index.ts";
 import { COL_HINT_CELL, COL_NUM_PENCIL } from "./render.ts";
-import { placeNumber, regionsViable } from "./solver.ts";
+import { dealtOf, marksOf, seismicLadder } from "./solver.ts";
 import {
   areaBits,
   DIFF_EASY,
@@ -242,7 +241,22 @@ function rungRejects(state: SeismicState): string[] {
   return out.sort();
 }
 
-describe("the starved-area finder", () => {
+/** Every firing the described technique `id` could make on the player's
+ * notes, every placed number placed. */
+function firingsOn(state: SeismicState, id: string): readonly Firing[] {
+  const b = workingBoard(state);
+  const dl = dealtOf(b);
+  const ladder = seismicLadder(dl);
+  const m = marksOf(b, b.grid.slice(), dl, ladder) as CellMarks;
+  for (let c = 0; c < b.grid.length; c++)
+    if (b.grid[c] === 0) m.cands[c] = b.pencil[c] << 1;
+  const firings = ladder.entries.find((e) => e.id === id)?.run.firings?.(m);
+  if (firings === undefined || firings === "contradiction")
+    throw new Error(`${id}: no firings to read`);
+  return firings;
+}
+
+describe("the starved area", () => {
   it("strikes exactly what the trial rung rejects, wherever it is the next step", () => {
     // The populate reading, so every cell's notes are on the board and the
     // rung reads the same candidates the finder does.
@@ -255,17 +269,17 @@ describe("the starved-area finder", () => {
         if (isStarve(plan[0])) {
           points++;
           const b = workingBoard(state);
-          const areas = areasOf(b);
           // Where it fires, the singles are spent: that is when the trial rung
           // rejects nothing but a starved area's clashes.
           expect(
             nakedSingles(b.grid, b.pencil, b.w, { bit: numBit, values: 9 }),
           ).toEqual([]);
-          expect(hiddenSingles(b, areas)).toEqual([]);
+          expect(firingsOn(state, "areaSingle")).toEqual([]);
           // A set: two areas can each rule out the same note.
           const found = new Set<string>();
-          for (const s of starves(b, areas))
-            for (const c of s.targets) found.add(`${c}:${s.n}`);
+          for (const { facts } of firingsOn(state, "starve"))
+            for (let i = 0; i < facts.length; i += 3)
+              found.add(`${facts[i + 1]}:${facts[i + 2]}`);
           expect([...found].sort(), `${label} move ${move}`).toEqual(
             rungRejects(state),
           );

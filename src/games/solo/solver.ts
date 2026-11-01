@@ -1,8 +1,8 @@
 /**
  * Solo (Sudoku) solver: the ladder `solo.description.yaml` states, compiled,
- * run by the shared `runDeductionFixpoint` ({@link SolverUsage.ladder}), each
- * rung able to run alone; then upstream's forcing chain (`solver_forcing`)
- * and bounded recursion.
+ * on the engine's marks and runner (`engine/ladder-runtime.ts`), each rung
+ * able to run alone; then upstream's forcing chain (`solver_forcing`) and
+ * bounded recursion, which no description states.
  *
  * The solver doubles as the generator's grading oracle: the solver-gated
  * minimizer removes givens while this solver still solves at the target
@@ -13,19 +13,14 @@
  * `block_structure`; a cage keeps its index as its filled cells leave it.
  */
 
-import {
-  type DeductionTechnique,
-  type FiringTally,
-  runDeductionFixpoint,
+import type {
+  DeductionTechnique,
+  FiringTally,
 } from "../../engine/deduction-fixpoint.ts";
 import {
   clueList,
-  type Fire,
-  type GridSpace,
-  type Marks,
-  PLACE,
+  describedSpace,
   partition,
-  sudokuSpace,
   valuesOf,
 } from "../../engine/describe-runtime.ts";
 import {
@@ -34,13 +29,23 @@ import {
   FiringReplay,
   offerReplay,
 } from "../../engine/firing-replay.ts";
-import * as latinTechniques from "../../engine/latin.compiled.ts";
+import {
+  CellMarks,
+  compiledRung,
+  type Ladder,
+  ladderTechniques,
+  runLadder,
+  TIERS,
+  uncluedRung,
+} from "../../engine/ladder-runtime.ts";
+import { set as latinSet } from "../../engine/latin.compiled.ts";
 import {
   type ConfinedLines,
   confinedLines,
   type DeductionRecord,
   type DeductionRecorder,
   type LatinWingReason,
+  latinLadder,
 } from "../../engine/latin.ts";
 import type { Point } from "../../engine/types.ts";
 import * as solo from "./solo.compiled.ts";
@@ -200,43 +205,32 @@ function removeFromBlock(cages: Cages, b: number, n: number): void {
 
 const NO_CAGES: solo.Dealt = { cage: partition([], 0), total: clueList([], [], 0) };
 
-class SolverUsage implements Marks {
+class SolverUsage extends CellMarks {
   readonly cr: number;
   readonly blocks: BlockStructure;
-  /** The grid as the compiled techniques read it. */
-  readonly sp: GridSpace;
   /** The killer cages and their totals as the compiled techniques read them;
    * none on a board without them. */
   private readonly dealt: solo.Dealt;
-  readonly domain: number;
   /** The killer cages as given. */
   private readonly cages: BlockStructure | null;
   private readonly xtype: boolean;
   private readonly kgrid: ArrayLike<number> | null;
   /** The killer working cages, null on a board without cages. */
   private readonly killer: KillerWork | null;
-
-  /** Candidate cube: cube[(y*cr+x)*cr + n-1] truthy ⇒ digit n possible there. */
-  readonly cube: Uint8Array;
+  /** The ladder over this board's cages. */
+  private readonly rungs: Ladder<SolverUsage>;
   /** The grid we write deductions into (the caller's grid, mutated in place). */
-  readonly grid: Int8Array;
+  declare grid: Int8Array;
 
   // The forcing chain's scratch buffers (solver_scratch).
   private readonly sGrid: Uint8Array;
   private readonly sNeighbors: Int32Array;
   private readonly sBfsqueue: Int32Array;
 
-  /** Hint-only deduction recorder; enabled by `run` only *after* the given
-   * clues are placed (so cube-seeding dups aren't mistaken for teachable
-   * deductions), left unset on the generator/solve path so that path is
-   * byte-for-byte unchanged. */
-  recorder?: DeductionRecorder;
   /** Stashed by {@link recordSoloDeductions}; promoted to `recorder` after the
-   * givens are placed. */
+   * givens are placed, so that seeding them is not mistaken for teachable
+   * deductions. */
   pendingRecorder?: DeductionRecorder;
-  /** Current firing id — bumped before each technique attempt so every record
-   * of one firing shares a `group`. */
-  group = 0;
   /** Called once the givens are placed and the recorder is on: where the
    * premise audit starts its replay (`recordSoloDeductions`). */
   onSeeded?: () => void;
@@ -252,12 +246,14 @@ class SolverUsage implements Marks {
     kgrid: ArrayLike<number> | null,
   ) {
     const area = cr * cr;
+    // The diagonals are units only on an X board.
+    const units = solo.units.filter((u) => u !== "diagonals" || xtype);
+    super(describedSpace(units, cr, cr, blocks.blocks), (1 << (cr + 1)) - 2, grid);
     this.cr = cr;
     this.blocks = blocks;
     this.cages = kblocks;
     this.xtype = xtype;
     this.kgrid = kgrid;
-    this.grid = grid;
 
     // Killer state exists iff we have both the cages and the clue grid (upstream
     // gates every killer deduction on `kclues != NULL`, which is built only when
@@ -281,131 +277,16 @@ class SolverUsage implements Marks {
       this.killer = null;
       this.dealt = NO_CAGES;
     }
-    this.sp = sudokuSpace(blocks.blocks, xtype);
-    this.domain = (1 << (cr + 1)) - 2;
+    this.rungs = this.describedLadder();
+    this.placing = this.rungs.placing;
 
-    this.cube = new Uint8Array(area * cr).fill(1);
     this.sGrid = new Uint8Array(area);
     this.sNeighbors = new Int32Array(5 * cr);
     this.sBfsqueue = new Int32Array(area);
   }
 
-  // --- the marks, as a compiled technique reads them -------------------------
-
-  readonly repeat = 0;
-  readonly times = 1;
-  known(c: number): boolean {
-    return this.grid[c] !== 0;
-  }
-  value(c: number): number {
-    return this.grid[c] || -1;
-  }
-  cand(c: number): number {
-    const cr = this.cr;
-    let m = 0;
-    for (let n = 1, p = c * cr; n <= cr; n++, p++) if (this.cube[p]) m |= 1 << n;
-    return m;
-  }
-  has(c: number, d: number): boolean {
-    return this.cube[c * this.cr + d - 1] !== 0;
-  }
-  strikeAt(c: number, d: number): void {
-    this.cube[c * this.cr + d - 1] = 0;
-  }
-  placeAt(c: number, d: number): void {
-    this.place(c % this.cr, (c / this.cr) | 0, d);
-  }
-
-  /**
-   * What a compiled technique is given to tell its firings to: on the hint
-   * path, each fact made and recorded with the reason `reason` builds from
-   * the binding, on the marks before any of the firing's facts is made, and
-   * one firing a call; on the solve path nothing, so the technique makes its
-   * facts itself and goes on.
-   */
-  private fire<B>(
-    reason: (binding: B, cell: number, n: number) => SoloReason,
-  ): Fire<B> | null {
-    if (!this.recorder) return null;
-    const cr = this.cr;
-    return (binding, facts) => {
-      const why: SoloReason[] = [];
-      for (let i = 0; i < facts.length; i += 3)
-        why.push(reason(binding, facts[i + 1], facts[i + 2]));
-      for (let i = 0; i < facts.length; i += 3) {
-        const c = facts[i + 1];
-        const n = facts[i + 2];
-        if (facts[i] === PLACE) this.place(c % cr, (c / cr) | 0, n, why[i / 3]);
-        else {
-          this.recElim(c, n, why[i / 3]);
-          this.strikeAt(c, n);
-        }
-      }
-      return false;
-    };
-  }
-
-  // cube accessors (cubepos / cubepos2 macros)
-  private cubeAt(x: number, y: number, n: number): number {
-    return this.cube[(y * this.cr + x) * this.cr + n - 1];
-  }
-  private setCube(x: number, y: number, n: number, v: number): void {
-    this.cube[(y * this.cr + x) * this.cr + n - 1] = v;
-  }
-  private setCube2(xy: number, n: number, v: number): void {
-    this.cube[xy * this.cr + n - 1] = v;
-  }
-
-  /** Record an `elim` op at cube cell index `xy` for digit `n`. */
-  private recElim(xy: number, n: number, reason: SoloReason): void {
-    this.recorder?.({
-      kind: "elim",
-      x: xy % this.cr,
-      y: (xy / this.cr) | 0,
-      n,
-      reason,
-      group: this.group,
-    });
-  }
-
-  /** `solver_place`: commit digit `n` at (x, y) and propagate the eliminations.
-   * On the recording path the placement op is recorded with `reason` (default a
-   * generic `single`, re-derived at emit time); the propagated row/col/block/
-   * diagonal dup strikes are NOT recorded, because the hint plan culls them
-   * from the working notes itself when it places (`runCandidatePlan`). */
-  place(x: number, y: number, n: number, reason?: SoloReason): void {
-    const cr = this.cr;
-    const sqindex = y * cr + x;
-
-    this.recorder?.({
-      kind: "place",
-      x,
-      y,
-      n,
-      reason: reason ?? { kind: "single" },
-      group: this.group,
-    });
-
-    for (let i = 1; i <= cr; i++) if (i !== n) this.setCube(x, y, i, 0);
-    for (let i = 0; i < cr; i++) if (i !== y) this.setCube(x, i, n, 0);
-    for (let i = 0; i < cr; i++) if (i !== x) this.setCube(i, y, n, 0);
-
-    const bi = this.blocks.whichblock[sqindex];
-    for (let i = 0; i < cr; i++) {
-      const bp = this.blocks.blocks[bi][i];
-      if (bp !== sqindex) this.setCube2(bp, n, 0);
-    }
-
-    this.grid[sqindex] = n;
-
-    if (this.xtype) {
-      if (onDiag0(sqindex, cr))
-        for (let i = 0; i < cr; i++)
-          if (diag0(i, cr) !== sqindex) this.setCube2(diag0(i, cr), n, 0);
-      if (onDiag1(sqindex, cr))
-        for (let i = 0; i < cr; i++)
-          if (diag1(i, cr) !== sqindex) this.setCube2(diag1(i, cr), n, 0);
-    }
+  private cubeAt(x: number, y: number, n: number): boolean {
+    return this.has(y * this.cr + x, n);
   }
 
   /** `solver_forcing`: forcing-chain deduction via per-candidate BFS. +1 / 0.
@@ -486,7 +367,7 @@ class SolverUsage implements Marks {
                     ((onDiag0(yt * cr + xt, cr) && onDiag0(y * cr + x, cr)) ||
                       (onDiag1(yt * cr + xt, cr) && onDiag1(y * cr + x, cr)))))
               ) {
-                this.setCube(xt, yt, orign, 0);
+                this.strikeAt(yt * cr + xt, orign);
                 return 1;
               }
             }
@@ -524,7 +405,7 @@ class SolverUsage implements Marks {
         if (t > kclues[b]) return -1;
         kclues[b] -= t;
         for (let nn = 0; nn < kblocks.blocks[b].length; nn++)
-          this.setCube2(kblocks.blocks[b][nn], t, 0);
+          this.strikeAt(kblocks.blocks[b][nn], t);
       }
     }
     return 0;
@@ -625,161 +506,106 @@ class SolverUsage implements Marks {
   }
 
   /**
-   * The ladder `solo.description.yaml` states, compiled, at `dlev`'s caps,
-   * easiest first in its order: a technique on the killer scale is capped
-   * and graded by `kdiff`, every other by `diff`, and a rung that fires
-   * raises its own scale's grade; the forcing chain, which no description
-   * states, comes after them. A killer technique first brings the working
-   * cages up to date, striking each filled cell's value from the rest of its
-   * cage, as upstream did at the start of each.
+   * The ladder `solo.description.yaml` states, its own techniques paired
+   * here with the reason each records, the library's by the engine but its
+   * set, whose reason names the region it reads.
    */
-  ladder(
-    dlev: Difficulty,
-    grade: { diff: number; kdiff: number },
-  ): DeductionTechnique[] {
-    const { sp, dealt } = this;
-    const killer = this.killer;
+  private describedLadder(): Ladder<SolverUsage> {
+    const { dealt } = this;
     const at = (c: number): Point => ({ x: c % this.cr, y: (c / this.cr) | 0 });
     const single = (): SoloReason => ({ kind: "single" });
-    const runs: Record<solo.LadderId, () => number> = {
-      boxSingle: () => solo.boxSingle(this, sp, this.fire(single)),
-      cageSingle: () =>
-        solo.cageSingle(
-          this,
-          sp,
-          dealt,
-          this.fire(({ r, c, t }) => ({
-            kind: "cageSingle",
-            cells: [at(c)],
-            clue: t,
-            ...this.cageOf(r, t),
-          })),
-        ),
-      regionRule: () =>
-        solo.regionRule(
-          this,
-          sp,
-          dealt,
-          this.fire(({ u, W, L, s, t }, cell) =>
-            cell === L[0] && L.length === 1
-              ? { kind: "cageSingle", cells: [at(cell)], clue: s, ...this.leftOf(u, W) }
-              : {
-                  kind: "cageSingle",
-                  cells: [at(cell)],
-                  clue: t,
-                  ...this.outsideOf(u, W, L, s),
-                },
-          ),
-        ),
-      cageMinMax: () =>
-        solo.cageMinMax(
-          this,
-          sp,
-          dealt,
-          this.fire(({ r, K, t }) => ({
-            kind: "cageMinMax",
-            cells: this.cellsXY([...K]),
-            clue: t,
-            ...this.cageOf(r, t),
-          })),
-        ),
-      partMinMax: () =>
-        solo.partMinMax(
-          this,
-          sp,
-          dealt,
-          this.fire((b, cell) => this.partOf("cageMinMax", b, cell)),
-        ),
-      cageSums: () =>
-        solo.cageSums(
-          this,
-          sp,
-          dealt,
-          this.fire(({ r, K, t }) => ({
-            kind: "cageSums",
-            cells: this.cellsXY([...K]),
-            clue: t,
-            ...this.cageOf(r, t),
-          })),
-        ),
-      partSums: () =>
-        solo.partSums(
-          this,
-          sp,
-          dealt,
-          this.fire((b, cell) => this.partOf("cageSums", b, cell)),
-        ),
-      "latin.hiddenSingle": () =>
-        latinTechniques.hiddenSingle(this, sp, this.fire(single)),
-      "latin.single": () => latinTechniques.single(this, sp, this.fire(single)),
-      intersect: () =>
-        solo.intersect(
-          this,
-          sp,
-          this.fire(({ L, b, d, first }) => {
-            const line = this.regionOf(L);
-            const block = this.regionOf(b);
-            return first
-              ? { kind: "intersect", n: d, confined: line, target: block }
-              : { kind: "intersect", n: d, confined: block, target: line };
-          }),
-        ),
-      "latin.set": () =>
-        latinTechniques.set(
-          this,
-          sp,
-          this.fire(({ u, open, S }) => ({
-            kind: "set",
-            region: this.regionOf(u),
-            cells: open.filter((c) => !S.includes(c)).map(at),
-          })),
-        ),
-      digitSet: () =>
-        solo.digitSet(
-          this,
-          sp,
-          this.fire((b) => this.digitSetReason(b)),
-        ),
-      "latin.wing": () =>
-        latinTechniques.wing(
-          this,
-          sp,
-          this.fire(({ m, x, E }) => ({
-            kind: "wing",
-            n: x,
-            middle: at(m),
-            ends: E.map(at),
-            self: this.has(m, x),
-          })),
-        ),
-    };
-    const rungs: DeductionTechnique[] = [];
-    for (const { id, tier, scale, from, until } of solo.ladder) {
-      const onKiller = scale === "killer";
-      if (onKiller && killer === null) continue;
-      const cap = onKiller ? dlev.maxkdiff : dlev.maxdiff;
-      if (tier > cap || (from !== undefined && cap < from)) continue;
-      if (until !== undefined && cap >= until) continue;
-      const run = runs[id];
-      const graded = onKiller ? "kdiff" : "diff";
-      rungs.push({
-        id,
-        tier,
-        run: () => {
-          if (killer !== null && onKiller && this.reduceCages(killer) < 0) return -1;
-          const ret = run();
-          if (ret > 0 && tier > grade[graded]) grade[graded] = tier;
-          return ret;
-        },
-      });
-    }
+    return latinLadder(solo, {
+      boxSingle: uncluedRung(solo.boxSingle, single),
+      cageSingle: compiledRung(
+        solo.cageSingle,
+        dealt,
+        ({ r, c, t }): SoloReason => ({
+          kind: "cageSingle",
+          cells: [at(c)],
+          clue: t,
+          ...this.cageOf(r, t),
+        }),
+      ),
+      regionRule: compiledRung(
+        solo.regionRule,
+        dealt,
+        ({ u, W, L, s, t }, cell): SoloReason =>
+          cell === L[0] && L.length === 1
+            ? { kind: "cageSingle", cells: [at(cell)], clue: s, ...this.leftOf(u, W) }
+            : {
+                kind: "cageSingle",
+                cells: [at(cell)],
+                clue: t,
+                ...this.outsideOf(u, W, L, s),
+              },
+      ),
+      cageMinMax: compiledRung(
+        solo.cageMinMax,
+        dealt,
+        ({ r, K, t }): SoloReason => ({
+          kind: "cageMinMax",
+          cells: this.cellsXY([...K]),
+          clue: t,
+          ...this.cageOf(r, t),
+        }),
+      ),
+      partMinMax: compiledRung(solo.partMinMax, dealt, (b, cell) =>
+        this.partOf("cageMinMax", b, cell),
+      ),
+      cageSums: compiledRung(
+        solo.cageSums,
+        dealt,
+        ({ r, K, t }): SoloReason => ({
+          kind: "cageSums",
+          cells: this.cellsXY([...K]),
+          clue: t,
+          ...this.cageOf(r, t),
+        }),
+      ),
+      partSums: compiledRung(solo.partSums, dealt, (b, cell) =>
+        this.partOf("cageSums", b, cell),
+      ),
+      intersect: uncluedRung(solo.intersect, ({ L, b, d, first }): SoloReason => {
+        const line = this.regionOf(L);
+        const block = this.regionOf(b);
+        return first
+          ? { kind: "intersect", n: d, confined: line, target: block }
+          : { kind: "intersect", n: d, confined: block, target: line };
+      }),
+      "latin.set": uncluedRung(
+        latinSet,
+        ({ u, open, S }): SoloReason => ({
+          kind: "set",
+          region: this.regionOf(u),
+          cells: open.filter((c) => !S.includes(c)).map(at),
+        }),
+      ),
+      digitSet: uncluedRung(solo.digitSet, (b) => this.digitSetReason(b)),
+    });
+  }
+
+  /**
+   * The ladder at `dlev`'s caps, easiest first in its order: a technique on
+   * the killer scale is capped and graded by `kdiff`, every other by `diff`;
+   * the forcing chain, which no description states, comes after them. A
+   * killer technique first brings the working cages up to date, striking
+   * each filled cell's value from the rest of its cage, as upstream did at
+   * the start of each.
+   */
+  techniques(dlev: Difficulty, grades: Record<string, number>): DeductionTechnique[] {
+    const killer = this.killer;
+    const caps: Record<string, number> = { [TIERS]: dlev.maxdiff };
+    if (killer !== null) caps["killer"] = dlev.maxkdiff;
+    const rungs = ladderTechniques(this, this.rungs.entries, caps, grades, (entry) =>
+      killer !== null && entry.scale === "killer" ? this.reduceCages(killer) : 0,
+    );
     if (dlev.maxdiff >= DIFF_RECURSIVE)
       rungs.push({
         id: "forcing-chain",
         tier: DIFF_RECURSIVE,
         run: () => {
           const ret = this.forcing();
-          if (ret > 0 && DIFF_RECURSIVE > grade.diff) grade.diff = DIFF_RECURSIVE;
+          if (ret > 0 && DIFF_RECURSIVE > grades[TIERS]) grades[TIERS] = DIFF_RECURSIVE;
           return ret;
         },
       });
@@ -787,16 +613,8 @@ class SolverUsage implements Marks {
   }
 
   /** Place every given; false if two of them clash. */
-  seed(): boolean {
-    const cr = this.cr;
-    for (let x = 0; x < cr; x++)
-      for (let y = 0; y < cr; y++) {
-        const n = this.grid[y * cr + x];
-        if (!n) continue;
-        if (!this.cubeAt(x, y, n)) return false;
-        this.place(x, y, n);
-      }
-    return true;
+  seedGivens(): boolean {
+    return this.seed(this.grid);
   }
 
   /**
@@ -808,13 +626,13 @@ class SolverUsage implements Marks {
   run(dlev: Difficulty, firings?: FiringTally): void {
     const cr = this.cr;
     const grid = this.grid;
-    const grade = { diff: DIFF_BLOCK, kdiff: DIFF_KSINGLE };
+    const grades = { [TIERS]: DIFF_BLOCK, killer: DIFF_KSINGLE };
     const finish = (d: number): void => {
       dlev.diff = d;
-      dlev.kdiff = grade.kdiff;
+      dlev.kdiff = grades.killer;
     };
 
-    if (!this.seed()) {
+    if (!this.seedGivens()) {
       finish(DIFF_IMPOSSIBLE);
       return;
     }
@@ -825,12 +643,10 @@ class SolverUsage implements Marks {
     this.recorder = this.pendingRecorder;
     this.onSeeded?.();
 
-    const { impossible } = runDeductionFixpoint({
-      techniques: this.ladder(dlev, grade),
+    const impossible = runLadder(this, this.techniques(dlev, grades), {
       firings,
-      beforeTechnique: (t) => {
-        this.group++;
-        this.replay?.before(t.id);
+      onTechnique: (id) => {
+        this.replay?.before(id);
         this.replay?.open(this.group);
       },
     });
@@ -838,7 +654,7 @@ class SolverUsage implements Marks {
       finish(DIFF_IMPOSSIBLE);
       return;
     }
-    let diff = grade.diff;
+    let diff = grades[TIERS];
 
     // Recursion, if permitted and the grid is not yet full.
     if (dlev.maxdiff >= DIFF_RECURSIVE) {
@@ -988,13 +804,10 @@ function soloReplay(
   const { cr, blocks, xtype } = s;
   const kblocks = s.killerData?.kblocks ?? null;
   const kgrid = s.killerData?.kgrid ?? null;
-  const capture = (from: SolverUsage): CellBoard => {
-    const values = Int32Array.from(from.grid);
-    const cands = new Int32Array(cr * cr);
-    for (let c = 0; c < cr * cr; c++)
-      for (let n = 1; n <= cr; n++) if (from.cube[c * cr + n - 1]) cands[c] |= 1 << n;
-    return { values, cands };
-  };
+  const capture = (from: SolverUsage): CellBoard => ({
+    values: Int32Array.from(from.grid),
+    cands: from.snapshot(),
+  });
   return new FiringReplay<string>({
     w: cr,
     h: cr,
@@ -1009,15 +822,13 @@ function soloReplay(
         Int8Array.from(board.values),
         kgrid,
       );
-      if (!fresh.seed())
+      if (!fresh.seedGivens())
         throw new Error("solo replay: the edited board's digits clash");
-      for (let c = 0; c < cr * cr; c++)
-        for (let n = 1; n <= cr; n++)
-          if (!(board.cands[c] & (1 << n))) fresh.cube[c * cr + n - 1] = 0;
+      for (let c = 0; c < cr * cr; c++) fresh.cands[c] &= board.cands[c];
       // The recording path's techniques behave as recorded only with a recorder.
       fresh.recorder = () => {};
-      const grade = { diff: DIFF_BLOCK, kdiff: DIFF_KSINGLE };
-      const technique = fresh.ladder(dlev, grade).find((t) => t.id === id);
+      const grades = { [TIERS]: DIFF_BLOCK, killer: DIFF_KSINGLE };
+      const technique = fresh.techniques(dlev, grades).find((t) => t.id === id);
       if (!technique) throw new Error(`solo replay: no technique ${id}`);
       return () => {
         const ret = technique.run();

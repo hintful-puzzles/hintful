@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CompileError, compileLibrary } from "./compile.ts";
-import { isFormal, isLibrary } from "./description.ts";
+import { isFormal, isLibrary, withEveryVariation } from "./description.ts";
 import { loadDescriptionFile } from "./load.ts";
 import soundnessJson from "./soundness.json" with { type: "json" };
 import { gameFingerprint, libraryFingerprint, soundnessKey } from "./soundness.ts";
@@ -50,7 +50,8 @@ describe("compiled descriptions", () => {
         continue;
       }
       if (!isFormal(d)) continue;
-      for (const t of d.techniques ?? [])
+      // A variation's techniques are compiled too.
+      for (const t of withEveryVariation(d).techniques ?? [])
         if (
           !("use" in t) &&
           soundness[soundnessKey(source, t.id)] !== gameFingerprint(d, t)

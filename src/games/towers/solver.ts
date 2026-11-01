@@ -16,16 +16,14 @@
  */
 
 import { clueAt, clueList } from "../../engine/describe-runtime.ts";
+import { compiledRung, type Ladder } from "../../engine/ladder-runtime.ts";
 import {
-  compiledRung,
   type DeductionRecord,
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
-  LATIN_RUNGS,
-  type LatinLadder,
   type LatinReason,
-  type LatinRung,
   type LatinSolver,
+  latinLadder,
   latinSolver,
 } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
@@ -115,36 +113,9 @@ function facingReason(
   };
 }
 
-const TOWERS_LADDER: Record<towers.LadderId, (cl: towers.Dealt) => LatinRung> = {
-  facing: (cl) =>
-    compiledRung(towers.facing, cl, ({ P }, cell, _n, solver) =>
-      facingReason(P, cell, cl, solver.sp),
-    ),
-  bounds: (cl) =>
-    compiledRung(
-      towers.bounds,
-      cl,
-      ({ s, v, near }, _c, n): TowersReason =>
-        near
-          ? { kind: "lineFull", clue: s, clueVal: v }
-          : { kind: "lowerBound", clue: s, clueVal: v, height: n },
-    ),
-  "latin.hiddenSingle": () => LATIN_RUNGS["latin.hiddenSingle"],
-  "latin.single": () => LATIN_RUNGS["latin.single"],
-  arrangement: (cl) =>
-    compiledRung(
-      towers.arrangement,
-      cl,
-      ({ s, v }): TowersReason => ({ kind: "arrangement", clue: s, clueVal: v }),
-    ),
-  "latin.set": () => LATIN_RUNGS["latin.set"],
-  "latin.fish": () => LATIN_RUNGS["latin.fish"],
-  "latin.wing": () => LATIN_RUNGS["latin.wing"],
-};
-
 /** The ladder over the dealt clues: each clue at its slot, which is its index
  * in `clues`, in that order. */
-function describedLadder(w: number, clues: Int32Array): LatinLadder {
+function describedLadder(w: number, clues: Int32Array): Ladder<LatinSolver> {
   const at: number[] = [];
   const v: number[] = [];
   clues.forEach((n, s) => {
@@ -154,9 +125,24 @@ function describedLadder(w: number, clues: Int32Array): LatinLadder {
     }
   });
   const cl: towers.Dealt = { sees: clueList(at, v, 4 * w) };
-  return {
-    ladder: towers.ladder.map(({ id, tier }) => ({ tier, run: TOWERS_LADDER[id](cl) })),
-  };
+  return latinLadder(towers, {
+    facing: compiledRung(towers.facing, cl, ({ P }, cell, _n, m) =>
+      facingReason(P, cell, cl, m.sp),
+    ),
+    bounds: compiledRung(
+      towers.bounds,
+      cl,
+      ({ s, v, near }, _c, n): TowersReason =>
+        near
+          ? { kind: "lineFull", clue: s, clueVal: v }
+          : { kind: "lowerBound", clue: s, clueVal: v, height: n },
+    ),
+    arrangement: compiledRung(
+      towers.arrangement,
+      cl,
+      ({ s, v }): TowersReason => ({ kind: "arrangement", clue: s, clueVal: v }),
+    ),
+  });
 }
 
 // --- driver ----------------------------------------------------------------
@@ -181,7 +167,7 @@ export function solveTowers(
     valid: towersValid,
     ctx: { w, clues },
     recorder,
-    ...describedLadder(w, clues),
+    ladder: describedLadder(w, clues),
   });
 }
 

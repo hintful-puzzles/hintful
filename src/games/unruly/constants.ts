@@ -9,7 +9,8 @@
 import { tierNames } from "../../engine/difficulty.ts";
 
 // --- cell values (upstream `enum { EMPTY, N_ONE, N_ZERO, BOGUS }`) -------
-// BOGUS is a solver-internal temporary fill, so it lives in solver.ts.
+// BOGUS was upstream's solver-internal temporary fill, which the described
+// ladder does not need. ONE and ZERO are the description's values 1 and 2.
 export const EMPTY = 0;
 export const ONE = 1;
 export const ZERO = 2;

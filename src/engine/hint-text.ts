@@ -272,14 +272,14 @@ export function candidateConclusions(vocab: {
  * `${noun}s`, which is right for every value word in the collection. `value`
  * renders one value.
  *
- * **Who declines, and why** (measured against the arms, not assumed):
- * **Towers** needs the value *qualified* in some arms and bare in others
- * ("every other cell in this row rules out height 5, so this cell must be 5"),
- * i.e. two renderers
- * for six arms; **Solo** names a different region set per arm ("row, column
- * **and** block", plus block/diagonal region names in `hiddenSingle`). Both stay
- * on their own `narrate` — one vocabulary can't express a per-arm difference,
- * and forcing it would read worse than the duplication (docs/hints-candidates.md § "Persist, populate, and the moves"'s
+ * A reason names the units it reads where they are not a row and a column
+ * (Solo's blocks and diagonals), so every game speaks these arms here but
+ * where its words differ, measured against the arms: **Towers** qualifies the
+ * value in its hidden single and set and leaves it bare after ("every other
+ * cell in this row rules out height 5, so this cell must be 5"), and **Solo**
+ * says a set's cells as "other cells in this block". One vocabulary can't
+ * express a per-arm difference, and forcing it would read worse than the
+ * duplication (docs/hints-candidates.md § "Persist, populate, and the moves"'s
  * standing rule).
  */
 export interface LatinVocab {
@@ -290,6 +290,9 @@ export interface LatinVocab {
   /** What the game calls a board position. Default "cell"; Salad's board is
    * squares, and mixing the two words inside one game's hints reads as sloppy. */
   cell?: string;
+  /** How a wing's ends share a unit with the struck cell, in the game's
+   * units. Default "in line with". */
+  beside?: string;
 }
 
 const NUMBER_VOCAB: LatinVocab = { noun: "number", value: (n) => String(n) };
@@ -323,17 +326,18 @@ export function narrateLatinReason(
       });
     case "regionsFull":
       return so({
-        look: phrase`${here}'s row and column already hold every other ${noun}`,
+        look: phrase`${here}'s ${"regions" in reason ? joinWith([...reason.regions]) : "row and column"} already hold every other ${noun}`,
         move: phrase`it can only be ${v(at.n)}`,
       });
     case "hiddenSingle": {
-      const name = reason.line === "row" ? "row" : "column";
-      const line = mark.this(
-        "stripes",
-        whole(CELL),
-        hiddenSingleLine(reason.line, reason.index, w),
-        name,
-      );
+      const unit =
+        "unit" in reason
+          ? reason.unit
+          : {
+              name: reason.line === "row" ? "row" : "column",
+              cells: hiddenSingleLine(reason.line, reason.index, w),
+            };
+      const line = mark.this("stripes", whole(CELL), unit.cells, unit.name);
       return so({
         look: phrase`Every other ${cell} in ${line} rules out ${v(reason.n)}`,
         move: phrase`${here} must be ${v(reason.n)}`,
@@ -355,7 +359,7 @@ export function narrateLatinReason(
  * counts are the argument, so both are said. Kept short: the walk may end it
  * with every value a cell keeps, and the whole must fit the narration limit.
  */
-export function confinedPremise(
+function confinedPremise(
   lines: {
     axis: "row" | "col";
     count: number;
@@ -386,7 +390,7 @@ export function confinedPremise(
  * `beside` says how an end and the struck cell are related, in the game's
  * regions.
  */
-export function wingPremise(
+function wingPremise(
   wing: { middle: Point; ends: readonly Point[]; self: boolean },
   at: Point,
   value: string,
@@ -426,7 +430,9 @@ export function latinPremise(
         premise: phrase`${mark.the("outline", CELL, reason.cells, cell).capitalized()} already account for ${joinWith(distinct(marks.map((m) => m.n)).map(v))} between them`,
       };
     case "wing":
-      return { premise: wingPremise(reason, marks[0], v(reason.n), cell) };
+      return {
+        premise: wingPremise(reason, marks[0], v(reason.n), cell, vocab.beside),
+      };
     default:
       throw new Error(`a ${reason.kind} places, and is narrated by narrateLatinReason`);
   }

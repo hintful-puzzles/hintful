@@ -24,15 +24,14 @@ import type {
   DeductionRecorder,
 } from "../../engine/deduction-record.ts";
 import { type ClueList, clueList } from "../../engine/describe-runtime.ts";
+import { compiledRung, type Ladder } from "../../engine/ladder-runtime.ts";
 import {
-  compiledRung,
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
   DIFF_UNFINISHED,
-  LATIN_RUNGS,
-  type LatinLadder,
   type LatinReason,
-  type LatinRung,
+  type LatinSolver,
+  latinLadder,
   latinSolver,
 } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
@@ -117,7 +116,7 @@ function dealtOf(clues: Int32Array): mathrax.Dealt {
   };
 }
 
-function describedLadder(o: number, clues: Int32Array): LatinLadder {
+function describedLadder(o: number, clues: Int32Array): Ladder<LatinSolver> {
   const dl = dealtOf(clues);
   const co = o - 1;
   const reason = ({ k }: { k: number }): MathraxReason => ({
@@ -126,23 +125,11 @@ function describedLadder(o: number, clues: Int32Array): LatinLadder {
     cx: k % co,
     cy: (k / co) | 0,
   });
-  const ladder: Record<mathrax.LadderId, () => LatinRung> = {
-    clueEasy: () => compiledRung(mathrax.clueEasy, dl, reason),
-    "latin.hiddenSingle": () => LATIN_RUNGS["latin.hiddenSingle"],
-    "latin.single": () => LATIN_RUNGS["latin.single"],
-    clue: () => compiledRung(mathrax.clue, dl, reason),
-    "latin.set": () => LATIN_RUNGS["latin.set"],
-    clueTricky: () => compiledRung(mathrax.clueTricky, dl, reason),
-    "latin.fish": () => LATIN_RUNGS["latin.fish"],
-    "latin.wing": () => LATIN_RUNGS["latin.wing"],
-  };
-  return {
-    ladder: mathrax.ladder.map(({ id, tier, until }) => ({
-      tier,
-      until,
-      run: ladder[id](),
-    })),
-  };
+  return latinLadder(mathrax, {
+    clueEasy: compiledRung(mathrax.clueEasy, dl, reason),
+    clue: compiledRung(mathrax.clue, dl, reason),
+    clueTricky: compiledRung(mathrax.clueTricky, dl, reason),
+  });
 }
 
 /**
@@ -172,7 +159,7 @@ export function mathraxSolve(
     ctx: null,
     recorder,
     budgetLabel: "mathrax hint",
-    ...describedLadder(o, clues),
+    ladder: describedLadder(o, clues),
   });
   if (diff === DIFF_IMPOSSIBLE) return SOLVE_IMPOSSIBLE;
   if (diff === DIFF_UNFINISHED) return SOLVE_STUCK;

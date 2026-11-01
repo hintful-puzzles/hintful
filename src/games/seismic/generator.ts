@@ -44,16 +44,79 @@ import type { Dsf } from "../../engine/dsf.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { placeNumber, regionsViable, SOLVE_FAILED, solveGame } from "./solver.ts";
+import { SOLVE_FAILED, solveGame } from "./solver.ts";
 import {
   areaBits,
   blankBoard,
   encodeDesc,
+  MODE_SEISMIC,
   MODE_TECTONIC,
   numBit,
   type SeismicBoard,
   type SeismicParams,
 } from "./state.ts";
+
+// --- the fill search's propagator -------------------------------------------
+// The search below fills hundreds of thousands of trial positions a board, on
+// the board's packed notes, which the described ladder's marks are too dear
+// to copy that often; so it keeps this fast copy of the rules the description
+// states (`cull`, and the starved area's test).
+
+/** Remove candidate `n` from `(x, y)`, if in bounds and present. */
+function unset(board: SeismicBoard, x: number, y: number, n: number): void {
+  const { w, h, pencil } = board;
+  if (x < 0 || y < 0 || x >= w || y >= h) return;
+  pencil[y * w + x] &= ~numBit(n);
+}
+
+/**
+ * Place `n` at `(x, y)`: the cell's candidates collapse to `n`, and `n` is
+ * ruled out of every cell the keep-apart rule forbids it in and of the rest
+ * of the cell's region (Seismic bars `n` from the `n` cells either side along
+ * both axes, Tectonic from all eight neighbors).
+ */
+export function placeNumber(
+  board: SeismicBoard,
+  x: number,
+  y: number,
+  n: number,
+): void {
+  const { w, h, grid, pencil, dsf } = board;
+  if (x < 0 || y < 0 || x >= w || y >= h) return;
+  const i = y * w + x;
+  grid[i] = n;
+  pencil[i] = numBit(n);
+  if (board.mode === MODE_SEISMIC) {
+    for (let j = 1; j <= n; j++) {
+      unset(board, x + j, y, n);
+      unset(board, x - j, y, n);
+      unset(board, x, y + j, n);
+      unset(board, x, y - j, n);
+    }
+  } else {
+    for (let dx = -1; dx <= 1; dx++)
+      for (let dy = -1; dy <= 1; dy++) if (dx || dy) unset(board, x + dx, y + dy, n);
+  }
+  const region = dsf.canonify(i);
+  for (let j = 0; j < w * h; j++)
+    if (j !== i && dsf.canonify(j) === region) unset(board, j % w, (j / w) | 0, n);
+}
+
+/**
+ * Can every region still house every number it owes? `areas` is `w·h` scratch.
+ * Candidate sets only ever shrink from `areaBits(size)`, so anything short of
+ * equality means some number has lost every home.
+ */
+export function regionsViable(board: SeismicBoard, areas: Int32Array): boolean {
+  const { w, h, pencil, dsf } = board;
+  const s = w * h;
+  areas.fill(0);
+  for (let j = 0; j < s; j++) areas[dsf.canonify(j)] |= pencil[j];
+  for (let j = 0; j < s; j++) {
+    if (j === dsf.canonify(j) && areas[j] !== areaBits(dsf.size(j))) return false;
+  }
+  return true;
+}
 
 // --- the constructive generator (stages 1–2, replacing upstream's) ----------
 
@@ -159,10 +222,9 @@ const FILL_NODE_BUDGET = 200_000;
 /**
  * **Stage 2 (new): fill the partition with a complete, legal solution.**
  *
- * Reuses the solver's own {@link placeNumber} as the propagator rather than
- * writing a second one — place `n`, and it strikes `n` from the cells the mode's
- * keep-apart rule forbids it in and from the rest of that cell's region. So the
- * rules this enforces are, by construction, the ones the solver judges by.
+ * Propagates by {@link placeNumber} — place `n`, and it strikes `n` from the
+ * cells the mode's keep-apart rule forbids it in and from the rest of that
+ * cell's region, as the description's `cull` does.
  *
  * The search is most-constrained-cell-first with candidates tried in random
  * order and chronological backtracking. Because every cell's candidate set
@@ -183,8 +245,8 @@ function fillRegions(board: SeismicBoard, rng: RandomState): boolean {
   for (let i = 0; i < s; i++) pencil[i] = areaBits(dsf.size(i));
 
   let budget = FILL_NODE_BUDGET;
-  // Scratch for {@link regionsViable}, the solver's Normal-rung test reused as
-  // the search's pruning rule. Forward-checking alone — all {@link placeNumber}
+  // Scratch for {@link regionsViable}, the starved area's test, as the search's
+  // pruning rule. Forward-checking alone — all {@link placeNumber}
   // does — is far too weak: Seismic's keep-apart rule bars an `n` from the `n`
   // cells either side on *both* axes, so a placement can starve a distant region
   // of its last home for some number without touching any cell it looks at.

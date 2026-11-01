@@ -11,14 +11,11 @@ import {
   least,
 } from "../../engine/describe-runtime.ts";
 import { ADJTHAN, type ClueKind } from "../../engine/edge-clue-latin/state.ts";
+import { type CellMarks, compiledRung } from "../../engine/ladder-runtime.ts";
 import {
-  compiledRung,
   type DeductionRecord,
-  LATIN_RUNGS,
-  type LatinLadder,
   type LatinReason,
-  type LatinRung,
-  type LatinSolver,
+  latinLadder,
 } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
 import * as unequal from "./unequal.compiled.ts";
@@ -56,34 +53,22 @@ const across = (c: number, o: number) => ({ ox: c % o, oy: (c / o) | 0 });
 function signReason(
   { big, small }: unequal.SignBinding,
   cell: number,
-  solver: LatinSolver,
+  marks: CellMarks,
 ): UnequalReason {
-  const o = solver.o;
+  const o = marks.sp.w;
   if (cell === big) {
-    const m = solver.cand(small);
+    const m = marks.cand(small);
     return { kind: "greater", ...across(small, o), bound: m === 0 ? o + 1 : least(m) };
   }
-  const m = solver.cand(big);
+  const m = marks.cand(big);
   return { kind: "lesser", ...across(big, o), bound: m === 0 ? 1 : greatest(m) };
 }
-
-const RUNGS: Record<unequal.LadderId, (cl: unequal.Dealt) => LatinRung> = {
-  "latin.hiddenSingle": () => LATIN_RUNGS["latin.hiddenSingle"],
-  "latin.single": () => LATIN_RUNGS["latin.single"],
-  sign: (cl) =>
-    compiledRung(unequal.sign, cl, (binding, cell, _n, solver) =>
-      signReason(binding, cell, solver),
-    ),
-  "latin.set": () => LATIN_RUNGS["latin.set"],
-  "latin.fish": () => LATIN_RUNGS["latin.fish"],
-  "latin.wing": () => LATIN_RUNGS["latin.wing"],
-};
 
 /**
  * The board's signs as the description deals them: flagged at the greater end,
  * taken column by column and each cell's signs up, right, down, left.
  */
-export const signLadder: ClueKind["ladder"] = (o, flags): LatinLadder => {
+export const signLadder: ClueKind["ladder"] = (o, flags) => {
   const sp = latinSpace(o);
   const edges = sp.edgeEnds.length / 2;
   const at: number[] = [];
@@ -97,7 +82,9 @@ export const signLadder: ClueKind["ladder"] = (o, flags): LatinLadder => {
           v.push(big);
         }
   const cl: unequal.Dealt = { greater: clueList(at, v, edges) };
-  return {
-    ladder: unequal.ladder.map(({ id, tier }) => ({ tier, run: RUNGS[id](cl) })),
-  };
+  return latinLadder(unequal, {
+    sign: compiledRung(unequal.sign, cl, (binding, cell, _n, m) =>
+      signReason(binding, cell, m),
+    ),
+  });
 };

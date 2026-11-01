@@ -35,7 +35,11 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import type { Premise } from "../../engine/hint-text.ts";
+import {
+  latinPremise,
+  narrateLatinReason,
+  type Premise,
+} from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
@@ -74,7 +78,7 @@ import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newTowersDesc } from "./generator.ts";
-import { type ClueSight, say } from "./hint-text.ts";
+import { type ClueSight, say, TOWERS_VOCAB } from "./hint-text.ts";
 import {
   colors,
   computeSize,
@@ -408,9 +412,8 @@ function narrate(reason: HintReason, m: Mark, w: number, continues = false): Sen
         m,
       );
     case "single":
-      return say.single(m, n);
     case "regionsFull":
-      return say.regionsFull(m, n);
+      return narrateLatinReason(reason, m, w, TOWERS_VOCAB);
     case "hiddenSingle":
       return say.hiddenSingle(
         reason.line,
@@ -451,10 +454,10 @@ function premise(reason: HintReason, marks: readonly Mark[], w: number): Premise
       };
     case "set":
       return reason.lines
-        ? { premise: say.confined(reason.lines, reason.cells, n) }
+        ? latinPremise(reason, marks, TOWERS_VOCAB)
         : { premise: say.set(reason.cells, n) };
     case "wing":
-      return { premise: say.wing(reason, marks[0]) };
+      return latinPremise(reason, marks, TOWERS_VOCAB);
     default:
       throw new Error(`a ${reason.kind} deduction places`);
   }

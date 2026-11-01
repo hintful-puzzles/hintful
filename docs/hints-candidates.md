@@ -178,7 +178,7 @@ regions".
   equal values may not stand together" runs both ways.
 
 Exemplar: [`seismic/hint.ts`](../src/games/seismic/hint.ts), whose `reach`
-asks the game's own `clashes` of every cell once.
+is what its description's `cull` strikes, asked once a cell and value.
 
 ## A sentence names which kinds of region
 
@@ -352,12 +352,11 @@ could take now, and the frontier chooses. Its duties:
   it trials.** A rung that places a candidate and asks whether the board
   survives may be one placement and one look, a Check
   ([`hints.md`](./hints.md) § "The forcing boundary"), and then every cell
-  the same fact rules out is one firing. Seismic's `attempt` is the case.
+  the same fact rules out is one firing. Seismic's trial placement is the
+  case, stated as its `starve` technique.
 
-Exemplars: `extremeClueLines` in
-[`towers/index.ts`](../src/games/towers/index.ts) (note-free), the finders of
-[`seismic/hint.ts`](../src/games/seismic/hint.ts) (reading `shown`, the
-starve rung on `nothingEarlier`).
+Exemplar: `extremeClueLines` in
+[`towers/index.ts`](../src/games/towers/index.ts) (note-free).
 
 ## Continue from the last step
 
@@ -502,8 +501,7 @@ of `findMistakes` in the same change.
   not against itself. Exemplar: `runsForce` in
   [`abcd/solver.ts`](../src/games/abcd/solver.ts), `abcd-hint.test.ts`.
 
-Exemplars: [`seismic/hint.ts`](../src/games/seismic/hint.ts) with
-`seismic-hint.test.ts`; [`abcd/hint.ts`](../src/games/abcd/hint.ts).
+Exemplar: [`abcd/hint.ts`](../src/games/abcd/hint.ts).
 
 ## A premise names everything its deduction reads
 

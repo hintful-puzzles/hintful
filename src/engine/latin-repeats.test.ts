@@ -20,6 +20,7 @@ import {
   LATIN_RUNGS,
   LatinSolver,
   type LatinSolverConfig,
+  latinLadder,
   latinSolver,
 } from "./latin.ts";
 
@@ -47,13 +48,19 @@ function cfg(maxdiff: number, repeats = true): LatinSolverConfig<null> {
   return {
     repeats: repeats ? { times: TIMES } : undefined,
     maxdiff,
-    ladder: [
-      { tier: 1, run: LATIN_RUNGS["latin.hiddenSingle"] },
-      { tier: 1, run: LATIN_RUNGS["latin.single"] },
-      { tier: 2, run: LATIN_RUNGS["latin.set"] },
-      { tier: 3, run: LATIN_RUNGS["latin.fish"] },
-      { tier: 3, run: LATIN_RUNGS["latin.wing"] },
-    ],
+    ladder: latinLadder(
+      {
+        ladder: [
+          { id: "latin.hiddenSingle", tier: 1 },
+          { id: "latin.single", tier: 1 },
+          { id: "latin.set", tier: 2 },
+          { id: "latin.fish", tier: 3 },
+          { id: "latin.wing", tier: 3 },
+        ],
+        placing: ["latin.placed"],
+      },
+      {},
+    ),
     diffRecursive: 4,
     valid: null,
     ctx: null,
@@ -61,16 +68,12 @@ function cfg(maxdiff: number, repeats = true): LatinSolverConfig<null> {
 }
 
 describe("a repeated symbol is inert when not declared", () => {
-  it("keeps the C's shape: o symbols, no repeat, stride o", () => {
+  it("keeps the C's shape: o symbols, no repeat", () => {
     const s = new LatinSolver(4);
     expect(s.symbols).toBe(4);
     expect(s.repeat).toBe(0);
     expect(s.times).toBe(1);
-    expect(s.cube.length).toBe(64);
-    for (let x = 0; x < 4; x++)
-      for (let y = 0; y < 4; y++)
-        for (let n = 1; n <= 4; n++)
-          expect(s.cubepos(x, y, n)).toBe((x * 4 + y) * 4 + n - 1);
+    expect(s.domain).toBe(0b11110);
   });
 
   it("refuses a multiplicity outside 2..o", () => {
@@ -85,7 +88,7 @@ describe("the cube with a repeated symbol", () => {
     expect(s.symbols).toBe(4);
     expect(s.repeat).toBe(HOLE);
     expect(s.times).toBe(TIMES);
-    expect(s.cube.length).toBe(O * O * 4);
+    expect(s.domain).toBe(0b11110);
     expect(s.multiplicity(1)).toBe(1);
     expect(s.multiplicity(HOLE)).toBe(TIMES);
   });
@@ -93,14 +96,14 @@ describe("the cube with a repeated symbol", () => {
   it("placing the repeated symbol once leaves the rest of its line open; the times-th placement strikes it", () => {
     const s = new LatinSolver(O, { times: TIMES });
     s.alloc(new Uint8Array(O * O));
-    s.place(0, 0, HOLE);
+    s.place(0, HOLE);
     // Still possible elsewhere in row 0 and column 0 — the line has room for one more.
     expect(s.cubeGet(1, 0, HOLE)).toBe(true);
     expect(s.cubeGet(0, 1, HOLE)).toBe(true);
     // ...and every other symbol is gone from the placed cell.
     for (let n = 1; n < HOLE; n++) expect(s.cubeGet(0, 0, n)).toBe(false);
 
-    s.place(1, 0, HOLE);
+    s.place(1, HOLE);
     // Row 0 now holds both of its holes: none of the other three cells can be one.
     for (let x = 2; x < O; x++) expect(s.cubeGet(x, 0, HOLE)).toBe(false);
     // Column 1 holds one hole and column 0 one: both still open below.
@@ -111,7 +114,7 @@ describe("the cube with a repeated symbol", () => {
   it("an ordinary symbol still strikes its line on a single placement", () => {
     const s = new LatinSolver(O, { times: TIMES });
     s.alloc(new Uint8Array(O * O));
-    s.place(2, 2, 1);
+    s.place(2 * O + 2, 1);
     let struck = 0;
     for (let i = 0; i < O; i++) {
       if (i !== 2) {
@@ -141,7 +144,7 @@ describe("the cube with a repeated symbol", () => {
     const s = new LatinSolver(O, { times: TIMES });
     s.alloc(new Uint8Array(O * O));
     // Rule the hole out of four of row 0's five cells: only one place for two.
-    for (let x = 0; x < 4; x++) s.cube[s.cubepos(x, 0, HOLE)] = 0;
+    for (let x = 0; x < 4; x++) s.strikeAt(x, HOLE);
     expect(LATIN_RUNGS["latin.hiddenSingle"](s)).toBe(-1);
   });
 
@@ -151,7 +154,7 @@ describe("the cube with a repeated symbol", () => {
     // row; read the other way, 2 and 3 have only cells 3 and 4 left.
     const s = new LatinSolver(O, { times: TIMES });
     s.alloc(new Uint8Array(O * O));
-    for (const x of [0, 1, 2]) for (const n of [2, 3]) s.cube[s.cubepos(x, 0, n)] = 0;
+    for (const x of [0, 1, 2]) for (const n of [2, 3]) s.strikeAt(x, n);
     expect(LATIN_RUNGS["latin.set"](s)).toBe(1);
     for (const x of [3, 4]) {
       expect(s.cubeGet(x, 0, 1)).toBe(false);
@@ -165,10 +168,10 @@ describe("the cube with a repeated symbol", () => {
     // left between those values, so another cell of the row still holds one.
     const s = new LatinSolver(O, { times: TIMES });
     s.alloc(new Uint8Array(O * O));
-    for (const x of [0, 1]) for (const n of [2, 3]) s.cube[s.cubepos(x, 0, n)] = 0;
-    const before = s.cube.slice();
+    for (const x of [0, 1]) for (const n of [2, 3]) s.strikeAt(x, n);
+    const before = s.snapshot();
     expect(LATIN_RUNGS["latin.set"](s)).toBe(0);
-    expect([...s.cube]).toEqual([...before]);
+    expect([...s.cands]).toEqual([...before]);
   });
 
   it("a forcing chain never starts from or runs through the repeated symbol", () => {
@@ -177,12 +180,12 @@ describe("the cube with a repeated symbol", () => {
     // link "this cell is the hole, so its neighbor cannot be" is false.
     const s = new LatinSolver(O, { times: TIMES });
     s.alloc(new Uint8Array(O * O));
-    for (const x of [0, 1]) for (const n of [2, 3]) s.cube[s.cubepos(x, 0, n)] = 0;
+    for (const x of [0, 1]) for (const n of [2, 3]) s.strikeAt(x, n);
     // Give the chain somewhere to go if it (wrongly) linked through the hole.
-    for (const n of [2, 3]) s.cube[s.cubepos(0, 1, n)] = 0;
-    const before = s.cube.slice();
+    for (const n of [2, 3]) s.strikeAt(O, n);
+    const before = s.snapshot();
     expect(s.forcing()).toBe(0);
-    expect([...s.cube]).toEqual([...before]);
+    expect([...s.cands]).toEqual([...before]);
   });
 });
 

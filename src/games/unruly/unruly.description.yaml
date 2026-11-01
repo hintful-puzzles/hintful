@@ -48,3 +48,95 @@ help:
 
     When one idea settles several squares at once, the hint walks through
     them one at a time as a single step.
+name: Unruly
+family: shading
+sizes:
+  w: { min: 6, max: 30 }
+  h: { min: 6, max: 30 }
+space:
+  grid: { w: "w", h: "h" }
+  # Rows and columns are lines, but a value repeats in them.
+  units: []
+answer:
+  # 1 is the first of the pair, 2 the second.
+  value: { sort: cell, domain: "range(1, 2)" }
+given: [value]
+define:
+  # The other piece.
+  flip(d): "3 - d"
+  # Three cells in a row of a line, from its i-th.
+  window(L, i): "{sq(L, i), sq(L, i + 1), sq(L, i + 2)}"
+  # A line's i-th square.
+  sq(L, i): "nth(cells(L), i)"
+shape:
+  - >-
+    forall L in lines, i in range(0, |cells(L)| - 3):
+    not (value(sq(L, i)) = value(sq(L, i + 1)) and value(sq(L, i + 1)) = value(sq(L, i + 2)))
+  - "forall L in lines, d in domain: 2 * count(c in cells(L) where value(c) = d) = |cells(L)|"
+freedom: { kind: fill }
+deal:
+  givens: which squares show their piece, fewer at higher tiers
+  tier: one of the tiers
+variations:
+  unique:
+    add:
+      shape:
+        - >-
+          forall A in lines, B in lines where B != A and (A in rows) = (B in rows):
+          exists i in range(0, |cells(A)| - 1): value(sq(A, i)) != value(sq(B, i))
+      techniques:
+        # A line holding all its d, and a parallel line holding all but one of
+        # its own where the first has them: putting its last d where the first
+        # has its remaining one would make the two the same, so that square is
+        # the other piece.
+        - id: unique
+          tier: Easy
+          for: >-
+            A in lines, n = |cells(A)| / 2,
+            d in domain where count(c in cells(A) where value(c) = d) = n,
+            B in lines where B != A and (A in rows) = (B in rows)
+            and count(c in cells(B) where value(c) = d) = n - 1
+            and (forall j in range(0, |cells(A)| - 1) where value(sq(B, j)) = d: value(sq(A, j)) = d),
+            j in range(0, |cells(A)| - 1) where value(sq(A, j)) = d and not known(sq(B, j))
+          conclude: "place(sq(B, j), flip(d))"
+tiers: [Trivial, Easy, Normal]
+techniques:
+  # Two of three squares in a row of a line hold one piece, so the third holds
+  # the other.
+  - id: threes
+    tier: Trivial
+    for: >-
+      L in lines, i in range(0, |cells(L)| - 3), W = window(L, i),
+      x in W where not known(x),
+      d in domain where (forall c in W where c != x: value(c) = d)
+    conclude: "place(x, flip(d))"
+  # A line holding all its d and all but one of the other piece: its one empty
+  # square holds the other piece.
+  - id: lastGap
+    tier: Trivial
+    for: >-
+      L in lines, n = |cells(L)| / 2,
+      d in domain where count(c in cells(L) where value(c) = d) = n
+      and count(c in cells(L) where value(c) = flip(d)) = n - 1
+    conclude: "forall c in cells(L) where not known(c): place(c, flip(d))"
+  # A line holding all its d: every empty square holds the other piece.
+  - id: quota
+    tier: Easy
+    for: >-
+      L in lines, n = |cells(L)| / 2,
+      d in domain where count(c in cells(L) where value(c) = d) = n
+      and count(c in cells(L) where value(c) = flip(d)) < n
+    conclude: "forall c in cells(L) where not known(c): place(c, flip(d))"
+  # A line with one d left to place and at least two of the other piece: three
+  # squares in a row holding no d, two of them empty, would be three of the
+  # other piece unless the last d goes among them, so it does, and every
+  # empty square of the line outside them holds the other piece.
+  - id: lastOne
+    tier: Normal
+    for: >-
+      L in lines, n = |cells(L)| / 2,
+      d in domain where count(c in cells(L) where value(c) = d) = n - 1
+      and count(c in cells(L) where value(c) = flip(d)) <= n - 2,
+      i in range(0, |cells(L)| - 3), W = window(L, i)
+      where (forall c in W: value(c) != d) and count(c in W where not known(c)) >= 2
+    conclude: "forall c in cells(L) where not known(c) and c not in W: place(c, flip(d))"

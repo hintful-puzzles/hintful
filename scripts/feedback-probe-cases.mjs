@@ -52,16 +52,17 @@ export const MODULES = [
     module: "src/engine/latin.ts",
     cases: [
       {
-        within: "LatinSolver.place",
+        within: "LatinSolver",
         why: "a placed digit is no longer ruled out of the rest of its row and column",
-        find: "    compiled.placed(this, this.sp, y * o + x, fire);",
-        replace: "    void fire;",
+        find: "    this.placing = placing;",
+        replace: "    this.placing = [];",
       },
       {
-        within: "LatinSolver.cubepos",
-        why: "the candidate cube is indexed transposed (x and y swapped)",
-        find: "    return (x * this.o + y) * this.symbols + n - 1;",
-        replace: "    return (y * this.o + x) * this.symbols + n - 1;",
+        within: "LatinSolver.writeCube",
+        why: "the candidate cube a generator reads is written transposed (x and y swapped)",
+        find: "          out[(x * o + y) * s + n - 1] = this.has(y * o + x, n) ? 1 : 0;",
+        replace:
+          "          out[(y * o + x) * s + n - 1] = this.has(y * o + x, n) ? 1 : 0;",
       },
       {
         within: "LatinSolver.multiplicity",
@@ -115,7 +116,7 @@ export const MODULES = [
       {
         within: "latinSolver",
         why: "the final candidate cube is not written back to cubeOut",
-        find: "  if (cfg.cubeOut) cfg.cubeOut.set(solver.cube);\n  return ret;",
+        find: "  if (cfg.cubeOut) solver.writeCube(cfg.cubeOut);\n  return ret;",
         replace: "  return ret;",
       },
       {

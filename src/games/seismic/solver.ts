@@ -1,33 +1,37 @@
 /**
- * Seismic's deduction engine — the candidate-mark solver from `seismic.c`.
+ * Seismic's solver: the ladder `seismic.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/ladder-runtime.ts`), with the reason
+ * each technique records for the hint; and the board's validation.
  *
- * One engine serves three callers: the generator (which strips a clue only while
- * the board still solves, so the solver's verdict on every intermediate board
- * decides which puzzles exist), `solve()`, and `findMistakes` (a board the
- * solver drives to completion is *forced*, hence uniquely solved — there is no
- * backtracking at any rung). A future explained hint is the fourth projection of
- * the same rungs (the narratable-deduction doctrine).
+ * One ladder serves the generator (which strips a clue only while the board
+ * still solves, so the solver's verdict on every intermediate board decides
+ * which puzzles exist), `solve()`, `findMistakes` (a board the ladder drives to
+ * completion is *forced*, hence uniquely solved: no rung supposes anything)
+ * and the hint, which records it.
  *
- * Two deduction rungs:
- *  - **Easy** — a *naked single* (a cell down to one candidate) and a *hidden
- *    single in a region* (a candidate with only one home in its region).
- *  - **Normal** — a *trial placement*: tentatively place a candidate and, if that
- *    alone leaves some region unable to house one of the numbers it owes, rule
- *    the candidate out.
- *
- * The rungs mutate the board in place as they sweep, and the sweeps run in
- * ascending cell order — which is observable (a later cell sees what an earlier
- * one placed), so the order is part of the algorithm, not an implementation
- * detail.
+ * Easy is the singles, a square's and an area's; Normal adds the starved area,
+ * which is upstream's trial placement as the deduction it always comes to once
+ * the singles are spent (`seismic-hint.test.ts` holds it to the trial).
  */
 
+import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+import type { DeductionRecord } from "../../engine/deduction-record.ts";
+import { describedSpace, partition, rangeMask } from "../../engine/describe-runtime.ts";
+import type { Dsf } from "../../engine/dsf.ts";
 import {
-  type DeductionTechnique,
-  type FiringTally,
-  runDeductionFixpoint,
-} from "../../engine/deduction-fixpoint.ts";
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  placingRung,
+  runLadder,
+  TIERS,
+  uncluedRung,
+} from "../../engine/ladder-runtime.ts";
+import { stepBudget } from "../../engine/step-budget.ts";
+import * as seismic from "./seismic.compiled.ts";
 import {
-  areaBits,
   DIFF_EASY,
   DIFF_NORMAL,
   FM_ERRORDIST,
@@ -44,184 +48,127 @@ export const STATUS_COMPLETE = 0;
 export const STATUS_UNFINISHED = 1;
 export const STATUS_INVALID = 2;
 
-/** Remove candidate `n` from `(x, y)`, if in bounds and present. Returns the
- * number of changes (zero or one) — the rungs sum these and treat a non-zero
- * total as "this rung fired". */
-function unset(board: SeismicBoard, x: number, y: number, n: number): number {
-  const { w, h, pencil } = board;
-  if (x < 0 || y < 0 || x >= w || y >= h) return 0;
-  const i = y * w + x;
-  if (pencil[i] & numBit(n)) {
-    pencil[i] &= ~numBit(n);
-    return 1;
+/** Why a number is placed or ruled out, as the solver records it. */
+export type SeismicRecordReason =
+  /** Its square is down to one number. */
+  | { kind: "single" }
+  /** No other square of its area can hold the number. */
+  | { kind: "hidden"; area: readonly number[] }
+  /** Every home the area has left for `n` is near the struck squares. */
+  | { kind: "starve"; n: number; area: readonly number[] };
+
+const areasByDsf = new WeakMap<Dsf, ReturnType<typeof partition>>();
+
+/** The board as the description deals it: its areas, in the order of their
+ * first square, and its keep-apart rule. The partition is kept for the life
+ * of the board's areas, which every solve of it shares. */
+export function dealtOf(board: SeismicBoard): seismic.Dealt {
+  let area = areasByDsf.get(board.dsf);
+  if (area === undefined) {
+    const byRoot = new Map<number, number[]>();
+    for (let i = 0; i < board.grid.length; i++) {
+      const root = board.dsf.canonify(i);
+      const cells = byRoot.get(root);
+      if (cells) cells.push(i);
+      else byRoot.set(root, [i]);
+    }
+    area = partition([...byRoot.values()], board.grid.length);
+    areasByDsf.set(board.dsf, area);
   }
-  return 0;
+  return { area, mode: board.mode };
+}
+
+/** The ladder over the dealt areas, each technique with its reason. */
+export function seismicLadder(dl: seismic.Dealt): Ladder {
+  return describedLadder(seismic, {
+    cull: placingRung(seismic.cull, dl),
+    lone: uncluedRung(seismic.lone, (): SeismicRecordReason => ({ kind: "single" })),
+    areaSingle: compiledRung(
+      seismic.areaSingle,
+      dl,
+      ({ r }): SeismicRecordReason => ({ kind: "hidden", area: dl.area.cells[r] }),
+    ),
+    starve: compiledRung(
+      seismic.starve,
+      dl,
+      ({ r, n }): SeismicRecordReason => ({
+        kind: "starve",
+        n,
+        area: dl.area.cells[r],
+      }),
+    ),
+  });
 }
 
 /**
- * Place `n` at `(x, y)` and propagate: the cell's candidates collapse to `n`,
- * and `n` is ruled out of every cell the keep-apart rule forbids it in and of
- * the rest of the cell's region.
- *
- * The keep-apart rule is the game's only mode-dependent behavior: Seismic bars
- * `n` from the `n` cells either side along both axes, Tectonic from all eight
- * neighbors.
+ * The marks over `grid`, each square able to hold what its area admits, the
+ * numbers on it placed and culled; `null` where two of them clash. The marks
+ * are the solver's own, never the player's notes.
  */
-export function placeNumber(
+export function marksOf(
   board: SeismicBoard,
-  x: number,
-  y: number,
-  n: number,
+  grid: Uint8Array,
+  dl: seismic.Dealt,
+  ladder: Ladder,
+): CellMarks | null {
+  const largest = Math.max(...dl.area.cells.map((cs) => cs.length));
+  const m = new CellMarks(
+    describedSpace(seismic.units, board.w, board.h),
+    rangeMask(1, largest),
+    grid,
+  );
+  m.placing = ladder.placing;
+  return m.seed(grid, (c) => seismic.domainOf(m.sp, dl, c)) ? m : null;
+}
+
+/**
+ * Run the ladder to a fixpoint, no harder than `maxDiff`, filling `board`'s
+ * grid in place and leaving its notes the solver's candidates. Returns the
+ * difficulty needed, or {@link SOLVE_FAILED} if the board did not come out
+ * complete and valid.
+ *
+ * Callers that need the original back (the generator's clue-stripping loop)
+ * snapshot it first.
+ */
+export function solveGame(
+  board: SeismicBoard,
+  maxDiff: number,
+  firings?: FiringTally,
 ): number {
-  const { w, h, grid, pencil, dsf } = board;
-  if (x < 0 || y < 0 || x >= w || y >= h) return 0;
-
-  const i = y * w + x;
-  let changes = 0;
-  if (grid[i] !== n) {
-    grid[i] = n;
-    changes++;
-  }
-  if (pencil[i] !== numBit(n)) {
-    pencil[i] = numBit(n);
-    changes++;
-  }
-
-  if (board.mode === MODE_SEISMIC) {
-    for (let j = 1; j <= n; j++) {
-      changes += unset(board, x + j, y, n);
-      changes += unset(board, x - j, y, n);
-      changes += unset(board, x, y + j, n);
-      changes += unset(board, x, y - j, n);
-    }
-  } else {
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dy = -1; dy <= 1; dy++) {
-        if (!dx && !dy) continue;
-        changes += unset(board, x + dx, y + dy, n);
-      }
-    }
-  }
-
-  const region = dsf.canonify(i);
-  for (let j = 0; j < w * h; j++) {
-    if (j === i) continue;
-    if (dsf.canonify(j) === region) changes += unset(board, j % w, (j / w) | 0, n);
-  }
-
-  return changes;
-}
-
-/** Seed every cell's candidates to its region's full set, then apply the givens
- * already on the board. */
-function solverInit(board: SeismicBoard): void {
-  const { w, h, grid, pencil, dsf } = board;
-  const s = w * h;
-  for (let i = 0; i < s; i++) pencil[i] = areaBits(dsf.size(i));
-  for (let i = 0; i < s; i++) {
-    if (grid[i] !== 0) placeNumber(board, i % w, (i / w) | 0, grid[i]);
-  }
-}
-
-/** **Easy rung, naked single**: a cell with exactly one candidate left takes it. */
-function solverMarks(board: SeismicBoard): number {
-  const { w, h, grid, pencil } = board;
-  const s = w * h;
-  let changes = 0;
-  for (let i = 0; i < s; i++) {
-    if (grid[i] !== 0) continue;
-    for (let n = 1; n <= 9; n++) {
-      if (pencil[i] === numBit(n)) changes += placeNumber(board, i % w, (i / w) | 0, n);
-    }
-  }
-  return changes;
+  const dl = dealtOf(board);
+  const ladder = seismicLadder(dl);
+  const m = marksOf(board, board.grid, dl, ladder);
+  if (m === null) return SOLVE_FAILED;
+  const grades = { [TIERS]: DIFF_EASY };
+  runLadder(m, ladderTechniques(m, ladder.entries, { [TIERS]: maxDiff }, grades), {
+    firings,
+  });
+  for (let c = 0; c < board.pencil.length; c++) board.pencil[c] = m.cands[c] >> 1;
+  return validateGame(board) === STATUS_COMPLETE ? grades[TIERS] : SOLVE_FAILED;
 }
 
 /**
- * **Easy rung, hidden single in a region**: a candidate that appears in exactly
- * one cell of its region belongs there, so every *other* candidate of that cell
- * is ruled out.
- *
- * Both scratch arrays are accumulated from the pre-pass candidates and only then
- * applied, so the whole region is judged against one consistent snapshot.
+ * The recording solver on the numbers `grid` holds (never the player's
+ * notes), up to `maxDiff`: every number it places and rules out, in order,
+ * each with the reason the hint narrates. `grid` is not modified.
  */
-function solverAreas(board: SeismicBoard): number {
-  const { w, h, pencil, dsf } = board;
-  const s = w * h;
-  /** Candidates seen at least once in the region rooted here. */
-  const singles = new Int32Array(s);
-  /** Candidates seen at least twice. */
-  const doubles = new Int32Array(s);
-
-  for (let i = 0; i < s; i++) {
-    const c = dsf.canonify(i);
-    doubles[c] |= pencil[i] & singles[c];
-    singles[c] |= pencil[i];
-  }
-
-  let changes = 0;
-  for (let i = 0; i < s; i++) {
-    const c = dsf.canonify(i);
-    const unique = singles[c] ^ doubles[c];
-    const prev = pencil[i];
-    if (pencil[i] & unique) pencil[i] &= unique;
-    if (prev !== pencil[i]) changes++;
-  }
-
-  return changes;
-}
-
-/**
- * **Normal rung, trial placement**: tentatively place each remaining candidate and
- * check whether that alone starves a region — if some region can then no longer
- * house one of the numbers it owes, the candidate is impossible.
- *
- * The trial is rolled back before the verdict is applied, so the only lasting
- * effect is striking the refuted candidate.
- */
-function solverAttempt(board: SeismicBoard): number {
-  const { w, h, grid, pencil } = board;
-  const s = w * h;
-  const gridBackup = new Uint8Array(s);
-  const marksBackup = new Uint16Array(s);
-  const areas = new Int32Array(s);
-  let changes = 0;
-
-  for (let i = 0; i < s; i++) {
-    if (grid[i] !== 0) continue;
-
-    for (let n = 1; n <= 9; n++) {
-      if (!(pencil[i] & numBit(n))) continue;
-
-      gridBackup.set(grid);
-      marksBackup.set(pencil);
-      placeNumber(board, i % w, (i / w) | 0, n);
-      const valid = regionsViable(board, areas);
-      grid.set(gridBackup);
-      pencil.set(marksBackup);
-
-      if (!valid) changes += unset(board, i % w, (i / w) | 0, n);
-    }
-  }
-
-  return changes;
-}
-
-/**
- * Can every region still house every number it owes? `areas` is `w·h` scratch.
- * Candidate sets only ever shrink from `areaBits(size)`, so anything short of
- * equality means some number has lost every home. The Normal rung's test; the
- * generator's fill prunes by it too.
- */
-export function regionsViable(board: SeismicBoard, areas: Int32Array): boolean {
-  const { w, h, pencil, dsf } = board;
-  const s = w * h;
-  areas.fill(0);
-  for (let j = 0; j < s; j++) areas[dsf.canonify(j)] |= pencil[j];
-  for (let j = 0; j < s; j++) {
-    if (j === dsf.canonify(j) && areas[j] !== areaBits(dsf.size(j))) return false;
-  }
-  return true;
+export function recordSeismicDeductions(
+  board: SeismicBoard,
+  grid: Uint8Array,
+  maxDiff: number = DIFF_NORMAL,
+): DeductionRecord[] {
+  const ops: DeductionRecord[] = [];
+  const dl = dealtOf(board);
+  const ladder = seismicLadder(dl);
+  const m = marksOf(board, grid.slice(), dl, ladder);
+  if (m === null) return ops;
+  m.recorder = (rec) => ops.push(rec);
+  m.budget = stepBudget("seismic hint");
+  runLadder(
+    m,
+    ladderTechniques(m, ladder.entries, { [TIERS]: maxDiff }, { [TIERS]: DIFF_EASY }),
+  );
+  return ops;
 }
 
 /**
@@ -301,39 +248,4 @@ export function validateGame(board: SeismicBoard): number {
   }
 
   return status;
-}
-
-/** The three rungs, easiest first. A factory because every rung closes over the
- * board; the ids are what `runDeductionFixpoint` names when a step budget trips
- * and what `seismic-ladder.test.ts` takes its firing census over. */
-function seismicLadder(board: SeismicBoard): DeductionTechnique[] {
-  return [
-    { id: "marks", tier: DIFF_EASY, run: () => solverMarks(board) },
-    { id: "areas", tier: DIFF_EASY, run: () => solverAreas(board) },
-    { id: "attempt", tier: DIFF_NORMAL, run: () => solverAttempt(board) },
-  ];
-}
-
-/**
- * Run the rungs to a fixpoint, no harder than `maxDiff`. Returns the difficulty
- * actually needed, or {@link SOLVE_FAILED} if the board did not come out
- * complete and valid.
- *
- * Mutates `board` into whatever the solver could establish — callers that need
- * the original back (the generator's clue-stripping loop) snapshot it first.
- */
-export function solveGame(
-  board: SeismicBoard,
-  maxDiff: number,
-  firings?: FiringTally,
-): number {
-  solverInit(board);
-  const { grade } = runDeductionFixpoint({
-    techniques: seismicLadder(board),
-    firings,
-    maxTier: maxDiff,
-    baseGrade: DIFF_EASY,
-    settled: () => validateGame(board) !== STATUS_UNFINISHED,
-  });
-  return validateGame(board) === STATUS_COMPLETE ? grade : SOLVE_FAILED;
 }

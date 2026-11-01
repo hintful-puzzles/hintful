@@ -141,6 +141,7 @@ tiers: [Easy, Normal, Tricky, Hard, Extreme, Unreasonable]
 scales:
   killer: [Single, MinMax, Sums, Region]
 techniques:
+  - { use: latin.placed, tier: Easy, rung: dup }
   # A value with one place left in a box goes there. With no place left, the
   # marks are inconsistent.
   - id: boxSingle

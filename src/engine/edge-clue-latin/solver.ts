@@ -55,7 +55,7 @@ export function solveEdgeClues(
     ctx: null,
     cubeOut,
     recorder,
-    ...kind.ladder(o, flags),
+    ladder: kind.ladder(o, flags),
   });
 }
 

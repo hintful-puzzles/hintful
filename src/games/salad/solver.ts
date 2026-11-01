@@ -32,15 +32,13 @@
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { clueList } from "../../engine/describe-runtime.ts";
 import { type EntryBoard, entryMistake } from "../../engine/entry-mistakes.ts";
+import { compiledRung, type Ladder } from "../../engine/ladder-runtime.ts";
 import {
-  compiledRung,
   DIFF_IMPOSSIBLE,
-  LATIN_RUNGS,
-  type LatinLadder,
   type LatinRepeats,
-  type LatinRung,
   LatinSolver,
   type LatinSolverConfig,
+  latinLadder,
   latinSolver,
 } from "../../engine/latin.ts";
 import * as salad from "./salad.compiled.ts";
@@ -78,15 +76,15 @@ function repeatsFor(b: SaladBoard): LatinRepeats | null {
  * of every candidate is how the cube is told, and the single reports it. */
 function placeCross(solver: LatinSolver, b: SaladBoard, x: number, y: number): void {
   const hole = holeSymbol(b.nums);
-  if (solver.grid[y * b.order + x] !== 0) return;
-  if (solver.cubeGet(x, y, hole)) solver.place(x, y, hole);
-  else
-    for (let n = 1; n <= solver.symbols; n++) solver.cube[solver.cubepos(x, y, n)] = 0;
+  const c = y * b.order + x;
+  if (solver.grid[c] !== 0) return;
+  if (solver.has(c, hole)) solver.place(c, hole);
+  else solver.cands[c] = 0;
 }
 
 /** A ball: the square holds *some* symbol, so it is not the hole. */
 function placeCircle(solver: LatinSolver, b: SaladBoard, x: number, y: number): void {
-  solver.cube[solver.cubepos(x, y, holeSymbol(b.nums))] = 0;
+  solver.strikeAt(y * b.order + x, holeSymbol(b.nums));
 }
 
 /** Read the two markers back off a finished cube into `holes`: a placed hole is
@@ -163,22 +161,10 @@ function borderReason(
   };
 }
 
-const SALAD_LADDER: Record<salad.LadderId, (cl: salad.Dealt) => LatinRung> = {
-  border: (cl) =>
-    compiledRung(salad.border, cl, (binding, cell, n, solver) =>
-      borderReason(binding, cell, n, cl, solver.o),
-    ),
-  "latin.hiddenSingle": () => LATIN_RUNGS["latin.hiddenSingle"],
-  "latin.single": () => LATIN_RUNGS["latin.single"],
-  "latin.set": () => LATIN_RUNGS["latin.set"],
-  "latin.fish": () => LATIN_RUNGS["latin.fish"],
-  "latin.wing": () => LATIN_RUNGS["latin.wing"],
-};
-
 /** The board as its description deals it: the border letters in the order
  * the scan meets them, each line's top, left, bottom and right in turn; the
  * balls, which no technique reads, since a ball is seeded as a strike. */
-function describedLadder(b: SaladBoard): LatinLadder {
+function describedLadder(b: SaladBoard): Ladder<LatinSolver> {
   const o = b.order;
   const at: number[] = [];
   const v: number[] = [];
@@ -201,9 +187,11 @@ function describedLadder(b: SaladBoard): LatinLadder {
     ),
     nums: b.nums,
   };
-  return {
-    ladder: salad.ladder.map(({ id, tier }) => ({ tier, run: SALAD_LADDER[id](cl) })),
-  };
+  return latinLadder(salad, {
+    border: compiledRung(salad.border, cl, (binding, cell, n, m) =>
+      borderReason(binding, cell, n, cl, m.sp.w),
+    ),
+  });
 }
 
 // --- the driver ------------------------------------------------------------
@@ -219,7 +207,7 @@ function seedGridClues(solver: LatinSolver, b: SaladBoard): void {
     const y = (i / o) | 0;
     if (clue === CROSS) placeCross(solver, b, x, y);
     else if (clue === CIRCLE) placeCircle(solver, b, x, y);
-    else if (clue && solver.grid[i] === 0) solver.place(x, y, clue);
+    else if (clue && solver.grid[i] === 0) solver.place(i, clue);
   }
 }
 
@@ -249,7 +237,7 @@ function configFor(
   return {
     repeats: repeatsFor(b),
     maxdiff,
-    ...describedLadder(b),
+    ladder: describedLadder(b),
     // Never search, by forcing chain or recursion: both tiers are pure
     // deduction (the guess-free policy).
     diffRecursive: DIFF_IMPOSSIBLE,

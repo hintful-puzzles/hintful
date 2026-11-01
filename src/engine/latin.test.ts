@@ -40,6 +40,7 @@ import {
   type LatinSolverConfig,
   latinGenerate,
   latinGenerateRect,
+  latinLadder,
   latinSolver,
   matching,
 } from "./latin.ts";
@@ -51,13 +52,19 @@ import { randomNew, randomUpto } from "./random/index.ts";
 function cfg(maxdiff: number): LatinSolverConfig<null> {
   return {
     maxdiff,
-    ladder: [
-      { tier: 0, run: LATIN_RUNGS["latin.hiddenSingle"] },
-      { tier: 0, run: LATIN_RUNGS["latin.single"] },
-      { tier: 1, run: LATIN_RUNGS["latin.set"] },
-      { tier: 2, run: LATIN_RUNGS["latin.fish"] },
-      { tier: 2, run: LATIN_RUNGS["latin.wing"] },
-    ],
+    ladder: latinLadder(
+      {
+        ladder: [
+          { id: "latin.hiddenSingle", tier: 0 },
+          { id: "latin.single", tier: 0 },
+          { id: "latin.set", tier: 1 },
+          { id: "latin.fish", tier: 2 },
+          { id: "latin.wing", tier: 2 },
+        ],
+        placing: ["latin.placed"],
+      },
+      {},
+    ),
     diffRecursive: 4,
     valid: null,
     ctx: null,
@@ -122,7 +129,7 @@ describe("latin deductions", () => {
   /** Restrict `(x, y)` to exactly `digits`. */
   function only(s: LatinSolver, x: number, y: number, digits: number[]): void {
     for (let n = 1; n <= s.o; n++) {
-      if (!digits.includes(n)) s.cube[s.cubepos(x, y, n)] = 0;
+      if (!digits.includes(n)) s.strikeAt(y * s.o + x, n);
     }
   }
 
@@ -131,7 +138,7 @@ describe("latin deductions", () => {
     // Row *and* column: they are two separate loops, so a test that checked
     // only one would let the other be deleted.
     const s = blank(4);
-    s.place(1, 2, 3);
+    s.place(2 * 4 + 1, 3);
 
     expect(s.grid[2 * 4 + 1]).toBe(3);
     for (let n = 1; n <= 4; n++) expect(s.cubeGet(1, 2, n)).toBe(n === 3);
@@ -150,12 +157,12 @@ describe("latin deductions", () => {
     const s = blank(4);
     const hiddenSingle = LATIN_RUNGS["latin.hiddenSingle"];
 
-    s.cube[s.cubepos(2, 0, 1)] = 0;
-    s.cube[s.cubepos(3, 0, 1)] = 0;
+    s.strikeAt(2, 1);
+    s.strikeAt(3, 1);
     expect(hiddenSingle(s)).toBe(0); // two positions left for digit 1 — no progress
     expect(s.grid[0]).toBe(0);
 
-    s.cube[s.cubepos(1, 0, 1)] = 0;
+    s.strikeAt(1, 1);
     expect(hiddenSingle(s)).toBe(1); // one left — placed
     expect(s.grid[0]).toBe(1);
   });
@@ -164,7 +171,7 @@ describe("latin deductions", () => {
     // The negative half of the same sweep, and the one that decides whether an
     // unsolvable board is *reported* unsolvable or silently graded.
     const s = blank(4);
-    for (let x = 0; x < 4; x++) s.cube[s.cubepos(x, 0, 1)] = 0;
+    for (let x = 0; x < 4; x++) s.strikeAt(x, 1);
     expect(LATIN_RUNGS["latin.hiddenSingle"](s)).toBe(-1);
   });
 
@@ -189,7 +196,7 @@ describe("latin deductions", () => {
     for (const a of [0, 1])
       for (const b of [2, 3, 4]) {
         const c = at(a, b);
-        s.cube[s.cubepos(c.x, c.y, 1)] = 0;
+        s.strikeAt(c.y * 5 + c.x, 1);
       }
     const recorded: DeductionRecord[] = [];
     s.recorder = (r) => recorded.push(r);
@@ -244,7 +251,7 @@ describe("latin solver configuration", () => {
     const ret = latinSolver(grid, 2, {
       ...cfg(4),
       seed: (s) => {
-        s.cube[s.cubepos(0, 0, 1)] = 0;
+        s.strikeAt(0, 1);
       },
     });
     expect(ret).not.toBe(DIFF_AMBIGUOUS);
@@ -256,8 +263,7 @@ describe("latin solver configuration", () => {
     (cells: [number, number, number[]][]) =>
     (s: LatinSolver): void => {
       for (const [x, y, digits] of cells)
-        for (let n = 1; n <= 4; n++)
-          if (!digits.includes(n)) s.cube[s.cubepos(x, y, n)] = 0;
+        for (let n = 1; n <= 4; n++) if (!digits.includes(n)) s.strikeAt(y * 4 + x, n);
     };
   const cubeAt = (seed: (s: LatinSolver) => void, maxdiff: number): Uint8Array => {
     const out = new Uint8Array(4 * 4 * 4);

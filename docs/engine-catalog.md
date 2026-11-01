@@ -61,6 +61,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `wires.ts` — the Net/Netslide wire model |
 | – `obfuscate.ts` — solution masking in descs |
 | – `latin.ts` — Latin-square solver *and* generator |
+| – `ladder-runtime.ts` — what a compiled ladder runs on |
 | Solving and deduction |
 | – `deduction-fixpoint.ts` — the shared technique ladder |
 | – `step-budget.ts` — the fixpoint non-termination guard |
@@ -525,16 +526,25 @@ Exemplar: `mines/state.ts`.
 Reach for `latinSolver`, `latinGenerate` and `latinGenerateRect` when the
 board is a Latin square. Its bipartite `matching` is usable outside the
 family: pass `rs` for a random matching in generation and leave it out for a
-deterministic existence check (`tents/`). The cube's index space, a repeated
-symbol, the `seed` hook, `cubeOut` and the family's generator shapes are in
+deterministic existence check (`tents/`). A repeated symbol, the `seed`
+hook, `cubeOut` and the family's generator shapes are in
 [`solver-and-generator.md`](./solver-and-generator.md). Exemplar:
 `keen/solver.ts`. Its singles, sets, fish and wing are
 `latin.compiled.ts`, compiled from `latin.description.yaml` by
-`npm run describe` and never edited by hand; `LATIN_RUNGS` pairs each with
-its reason, and `compiledRung` pairs a described game's own
+`npm run describe` and never edited by hand; `latinLadder` pairs each with
+its reason, and a described game's own through `compiledRung`
 ([`descriptions.md`](./descriptions.md); exemplar `unequal/solver.ts`).
-`describe-runtime.ts` is what compiled code reads: the marks, the numbered
-grid (`latinSpace`) and a game's `ClueList`s.
+`describe-runtime.ts` is what compiled code reads: the marks' interface, the
+numbered grid (`describedSpace`, `latinSpace`) and a game's `ClueList`s.
+
+### `ladder-runtime.ts` — what a compiled ladder runs on
+
+Reach for `CellMarks` and `describedLadder` when a game's techniques are
+stated in a description: the engine's marks, the pairing of each technique
+with its reason, and `ladderTechniques` and `runLadder` to run it capped per
+scale. `ladderWalk` is a hint's walk over the same firings for a game with no
+notes. Exemplars: `unruly/solver.ts`, `seismic/solver.ts`; the guide is
+[`descriptions.md`](./descriptions.md) § "The runtime a ladder runs on".
 
 A Latin square whose clues sit in the gaps between neighboring cells is
 `edge-clue-latin/`: the board and its desc, the moves, the input with its

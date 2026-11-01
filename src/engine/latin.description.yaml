@@ -14,17 +14,15 @@
 # square it reads exactly what it would without it.
 library: latin
 techniques:
-  # A placed value leaves its peers, its column's first and then its row's,
-  # once the line holds every copy of it. The engine runs it as each value is
-  # placed, one firing a placement.
+  # A placed value leaves the rest of every unit holding it, once the unit
+  # holds every copy of it. The engine runs it as each value is placed, one
+  # firing a unit.
   placed:
     on: place
-    for: "c in cells where known(c), d = value(c), k = times(d)"
+    for: "c in cells where known(c), d = value(c), k = times(d), u in units_of(c)"
     conclude: >-
-      ((k = 1 or count(p in cells(col(c)) where value(p) = d) >= k)
-      implies (forall p in cells(col(c)) where p != c and (k = 1 or value(p) != d): strike(p, d)))
-      and ((k = 1 or count(p in cells(row(c)) where value(p) = d) >= k)
-      implies (forall p in cells(row(c)) where p != c and (k = 1 or value(p) != d): strike(p, d)))
+      (k = 1 or count(p in cells(u) where value(p) = d) >= k)
+      implies (forall p in cells(u) where p != c and (k = 1 or value(p) != d): strike(p, d))
 
   # A value with as many places left in a unit as it has copies to place goes
   # in each, the rows before the columns. With fewer, the marks are

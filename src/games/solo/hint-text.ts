@@ -1,10 +1,10 @@
 /**
  * Every sentence Solo's hint speaks, and the words inside them.
  *
- * Solo keeps its own version of the generic Latin arms rather than the
- * engine's (`engine/hint-text.ts`), because it names a different region set
- * per arm ("row, column and block", or the block or diagonal a hidden single
- * sits in), which one vocabulary cannot say. It shares the two setup steps.
+ * Solo speaks the generic Latin arms in the engine's words
+ * (`engine/hint-text.ts`), its reasons naming the units they read ("row,
+ * column and block", or the block or diagonal a hidden single sits in), but
+ * for a set within one unit, which it says as the unit's other cells.
  *
  * A value prints as the board draws it (`render.ts`'s `digitChar`: 1 to 9,
  * then a, b, … past 9), so a 12×12 grid's hint names the "c" the player can
@@ -24,7 +24,6 @@
 import {
   candidateConclusions,
   cleanObviousText,
-  confinedPremise,
   joinOr,
   joinWith,
   type LatinVocab,
@@ -32,7 +31,6 @@ import {
   placedRulesOut,
   populateText,
   thisCell,
-  wingPremise,
 } from "../../engine/hint-text.ts";
 import {
   CELL,
@@ -43,7 +41,6 @@ import {
   so,
   whole,
 } from "../../engine/hint-words.ts";
-import type { ConfinedLines, LatinWingReason } from "../../engine/latin.ts";
 import type { Point } from "../../engine/types.ts";
 import { digitChar } from "./render.ts";
 import type { CageOrigin, SoloRegion } from "./solver.ts";
@@ -83,9 +80,14 @@ const all = (ns: number[]): string => joinWith(ns.map(g));
 /** Values of which any one would do, or none can ("no room for 1 or 2"). */
 const any = (ns: number[]): string => joinOr(ns.map(g));
 
-/** Solo's values are numbers, printed as the board prints them — the one word
- * and the one glyph the shared conclusions need from it. */
-const SOLO_VOCAB: LatinVocab = { noun: "number", value: digitChar };
+/** Solo's values are numbers, printed as the board prints them, and a wing's
+ * ends each share a row, column, diagonal ("a line") or block with the struck
+ * cell: what the solver's wing counts, which a cage is not. */
+export const SOLO_VOCAB: LatinVocab = {
+  noun: "number",
+  value: digitChar,
+  beside: "in a line or block with",
+};
 
 export const say = {
   populate: populateText("number"),
@@ -103,30 +105,6 @@ export const say = {
       regions: joinOr(regions),
     }),
 
-  single: (at: Point, n: number): Sentence =>
-    so({
-      look: phrase`Every other number has been ruled out in ${thisCell(at)}`,
-      move: phrase`it can only be ${g(n)}`,
-    }),
-
-  /** A single in a note-less cell; `regions` as for {@link say.note}. */
-  regionsFull: (at: Point, n: number, regions: string[]): Sentence =>
-    so({
-      look: phrase`${thisCell(at)}'s ${joinWith(regions)} already hold every other number`,
-      move: phrase`it can only be ${g(n)}`,
-    }),
-
-  hiddenSingle: (
-    at: Point,
-    region: SoloRegion,
-    n: number,
-    cells: RegionCells,
-  ): Sentence =>
-    so({
-      look: phrase`Every other cell in ${thisRegion(region, cells)} rules out ${g(n)}`,
-      move: phrase`${thisCell(at)} must be ${g(n)}`,
-    }),
-
   // The strike arms below are premises, which the walk concludes with the move
   // it makes, in these words (`engine/hint-text.ts`'s `Premise`).
   conclude: candidateConclusions(SOLO_VOCAB),
@@ -138,12 +116,6 @@ export const say = {
 
   /** Where the placement's cull strikes from. */
   dupWhere: "from the other cells",
-
-  /** A wing, whose ends each share a row, column, diagonal ("a line") or
-   * block with the struck cell: what the solver's wing counts, which a cage
-   * is not. */
-  wing: (wing: LatinWingReason, at: Point): Narration =>
-    wingPremise(wing, at, g(wing.n), "cell", "in a line or block with"),
 
   /** Every cell of `confined` that can take `n` also lies in one `target`. */
   intersect: (
@@ -167,11 +139,6 @@ export const say = {
     cells: RegionCells,
   ): Narration =>
     phrase`${mark.as("outline", CELL, set, "Other cells")} in ${thisRegion(region, cells)} already account for ${all(ns)}`,
-
-  /** One digit `n` confined across the parallel `lines` to the outlined
-   * `set`, in the engine's words for it. */
-  confined: (lines: ConfinedLines, set: readonly Point[], n: number): Narration =>
-    confinedPremise(lines, set, g(n)),
 
   /** The one open cell `at` of a {@link CageSum} over `open` must make its
    * whole clue `n`. */

@@ -24,3 +24,74 @@ help:
     {{hint-marks}}
 
     Most steps are the plain rules at work: a cell with only one pencil mark left, or a number with only one cell left to go in within its area. On Normal boards one more idea appears. When every cell an area has left for some number is close enough to a cell outside it to clash, that cell cannot hold the number: whichever cell the area uses, the two would break the keep-apart rule.
+name: Seismic
+family: numbers
+sizes:
+  w: { min: 4, max: 30 }
+  h: { min: 4, max: 30 }
+  # Which rule keeps equal numbers apart: 0 Seismic's, 1 Tectonic's.
+  mode: { min: 0, max: 1 }
+space:
+  grid: { w: "w", h: "h" }
+  # The areas are a dealt partition rather than units: the soundness checker
+  # builds a unit partition only from blocks, and an area's rule is its own
+  # anyway, since it holds 1 to its size rather than every value.
+  regions: { area: dealt }
+  units: []
+answer:
+  # An area of N squares holds the numbers 1 to N.
+  value: { sort: cell, domain: "range(1, |cells(area(c))|)" }
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, 9)" }
+define:
+  # Whether an n at a keeps an n from b: Seismic's, along a row or column as
+  # far as the number; Tectonic's, the eight squares around.
+  near(a, b, n): >-
+    a != b and ((mode = 0 and ((y(a) = y(b) and abs(x(a) - x(b)) <= n)
+    or (x(a) = x(b) and abs(y(a) - y(b)) <= n)))
+    or (mode = 1 and abs(x(a) - x(b)) <= 1 and abs(y(a) - y(b)) <= 1))
+shape:
+  - "forall r in area: distinct(value(c) over c in cells(r))"
+  - "forall a in cells, b in cells where near(a, b, value(a)): value(b) != value(a)"
+freedom: { kind: fill }
+deal:
+  areas: the partition, connected areas of at most nine squares
+  givens: which squares show their number, fewer at higher tiers
+  mode: the keep-apart rule
+  tier: one of the tiers
+tiers: [Easy, Normal]
+techniques:
+  # A placed number leaves the rest of its area and every square it is near.
+  - id: cull
+    on: place
+    tier: Easy
+    for: >-
+      c in cells where known(c), n = value(c),
+      p in cells where p != c and (area(p) = area(c) or near(c, p, n))
+    conclude: "strike(p, n)"
+  # A square down to one number holds it. One with none left makes the marks
+  # inconsistent.
+  - id: lone
+    tier: Easy
+    for: "c in cells where not known(c) and |cand(c)| < 2"
+    conclude: "|cand(c)| = 1 and place(c, first(cand(c)))"
+  # A number with one place left in its area goes there. With none left, the
+  # marks are inconsistent.
+  - id: areaSingle
+    tier: Easy
+    for: >-
+      r in area, n in range(1, |cells(r)|) where not (exists c in cells(r): value(c) = n),
+      k = count(c in cells(r) where n in cand(c)) where k < 2
+    conclude: "k = 1 and place(the(c in cells(r) where n in cand(c)), n)"
+  # Every place an area has left for its n is near a square outside it, so
+  # that square cannot hold n: an n there would leave the area none. Every
+  # such square is struck at once, by the one area.
+  - id: starve
+    tier: Normal
+    for: >-
+      r in area, n in range(1, |cells(r)|) where not (exists c in cells(r): value(c) = n),
+      H = {h in cells(r) where not known(h) and n in cand(h)} where |H| > 0
+    conclude: >-
+      forall c in cells where area(c) != r and not known(c) and n in cand(c)
+      and (forall h in H: near(c, h, n)): strike(c, n)

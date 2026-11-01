@@ -37,7 +37,11 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import type { Premise } from "../../engine/hint-text.ts";
+import {
+  latinPremise,
+  narrateLatinReason,
+  type Premise,
+} from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import type { SingleWhy } from "../../engine/latin-hint.ts";
@@ -69,7 +73,7 @@ import { SQUARE_GRID } from "../../engine/sections.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newSoloDesc } from "./generator.ts";
-import { type RegionCells, regionName, say } from "./hint-text.ts";
+import { type RegionCells, regionName, SOLO_VOCAB, say } from "./hint-text.ts";
 import {
   border,
   colors,
@@ -475,11 +479,25 @@ function narrate(reason: SoloReason, at: Mark, state: SoloState): Sentence {
   const cells: RegionCells = (r) => regionCells(r, state);
   switch (reason.kind) {
     case "single":
-      return say.single(at, at.n);
+      return narrateLatinReason(reason, at, state.cr, SOLO_VOCAB);
     case "regionsFull":
-      return say.regionsFull(at, at.n, noRepeatRegionNames(state, at));
+      return narrateLatinReason(
+        { kind: "regionsFull", regions: noRepeatRegionNames(state, at) },
+        at,
+        state.cr,
+        SOLO_VOCAB,
+      );
     case "hiddenSingle":
-      return say.hiddenSingle(at, reason.region, reason.n, cells);
+      return narrateLatinReason(
+        {
+          kind: "hiddenSingle",
+          n: reason.n,
+          unit: { name: regionName(reason.region), cells: cells(reason.region) },
+        },
+        at,
+        state.cr,
+        SOLO_VOCAB,
+      );
     case "cageSingle":
       return say.cageSingle(
         at,
@@ -517,13 +535,15 @@ function premise(
         where: say.intersectWhere(reason.target),
       };
     case "set":
-      return {
-        premise: reason.region
-          ? say.set(reason.region, reason.cells, ns, cells)
-          : say.confined(reason.lines, reason.cells, ns[0]),
-      };
+      return reason.region
+        ? { premise: say.set(reason.region, reason.cells, ns, cells) }
+        : latinPremise(
+            { kind: "set", cells: reason.cells, lines: reason.lines },
+            marks,
+            SOLO_VOCAB,
+          );
     case "wing":
-      return { premise: say.wing(reason, marks[0]) };
+      return latinPremise(reason, marks, SOLO_VOCAB);
     case "cageMinMax":
       return {
         premise: say.cageMinMax(reason.cells, reason.origin, reason.clue, ns, cells),

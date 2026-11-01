@@ -32,9 +32,9 @@ import {
 import type { Binder, Expr } from "../../src/describe/expr.ts";
 import { parse } from "../../src/describe/expr.ts";
 import {
+  describedSpace,
   type GridSpace,
   latinSpace,
-  sudokuSpace,
 } from "../../src/engine/describe-runtime.ts";
 import { blocks } from "../describe/space.ts";
 import { asZ3, type B, type I, Z3 } from "./pzl.ts";
@@ -185,6 +185,8 @@ interface Board {
   /** The description's sizes the board was built at, where they are not its
    * order alone. */
   sizes: ReadonlyMap<string, number>;
+  /** The most cells a dealt partition's region has ({@link regionCells}). */
+  regionCells: number;
 }
 
 /**
@@ -194,6 +196,23 @@ interface Board {
  * region is checked on every shape up to these sizes and no larger.
  */
 const REGION_CELLS: Readonly<Record<number, number>> = { 3: 4, 4: 3 };
+
+/**
+ * The most cells a region of a dealt partition is checked with in `d`'s
+ * world at `order`: {@link REGION_CELLS}, or where no board with regions that
+ * small has an answer, one more. Tectonic's every 2×2 block holds four
+ * numbers, so only an area of four holds a 4, and with areas of three no
+ * board has an answer (2026-11-01: each of Seismic's techniques took about
+ * 30 s and 0.5 GB with areas of four on a 4×4).
+ */
+export async function regionCells(
+  d: Description,
+  order: number,
+  sizes: ReadonlyMap<string, number> = new Map(),
+): Promise<number> {
+  const base = REGION_CELLS[order] ?? 2;
+  return (await hasAnswer(d, order, sizes, base)) ? base : base + 1;
+}
 
 /** Every connected set of up to `most` cells of the grid, each in reading
  * order, smaller first. */
@@ -255,8 +274,10 @@ function spaceOf(
 ): { sp: GridSpace; sizes: ReadonlyMap<string, number> } {
   const space = d?.json.space;
   const unit = unitRegion(d);
-  if (d === undefined || unit === null)
+  if (d === undefined || space === undefined)
     return { sp: latinSpace(order), sizes: new Map() };
+  if (unit === null)
+    return { sp: describedSpace(space.units, order, order), sizes: new Map() };
   const m = BLOCKS.exec(unit[1]);
   if (m === null) throw new Error(`${unit[0]}: only blocks(a, b) is checked`);
   const range = (name: string): number[] => {
@@ -271,7 +292,7 @@ function spaceOf(
   if (fits.length === 0) throw new Error(`no board of order ${order}`);
   const [a, b] = fits[0];
   return {
-    sp: sudokuSpace(blocks(a, b), space?.diagonals === true),
+    sp: describedSpace(space.units, order, order, blocks(a, b)),
     sizes: new Map([
       [m[1], a],
       [m[2], b],
@@ -283,6 +304,7 @@ function makeBoard(
   order: number,
   d?: Description,
   more: ReadonlyMap<string, number> = new Map(),
+  cells: number = REGION_CELLS[order] ?? 2,
 ): Board {
   const space = spaceOf(order, d);
   const { sp } = space;
@@ -306,6 +328,7 @@ function makeBoard(
     cand,
     clues: new Map(),
     regions: new Map(),
+    regionCells: cells,
     clueDomain: [],
     sizes,
   };
@@ -319,7 +342,7 @@ function dealPartitions(d: Description, board: Board): void {
     if (d.json.space.units.includes(name)) continue;
     if (how !== "dealt")
       throw new Error(`partition ${name}: only a dealt one is checked`);
-    const parts = connectedRegions(board.sp, REGION_CELLS[board.order] ?? 2);
+    const parts = connectedRegions(board.sp, board.regionCells);
     const present = parts.map((_, i) => Z3.Bool.const(`${name}_${i}_${boardCount}`));
     board.regions.set(name, { parts, present });
     for (const c of board.sp.cells) {
@@ -610,8 +633,15 @@ function binary(e: Extract<Expr, { k: "bin" }>, env: Env, ctx: Ctx): V {
       return { k: "num", v: arith("*", num(a, op), num(b, op)) };
     case "mod":
       return { k: "num", v: remainder(num(a, op), num(b, op)) };
-    case "/":
-      throw new Error(`${op} is not checked yet`);
+    case "/": {
+      // Truncating, as the compiled code divides; only a number the board
+      // fixes (a line's length) is divided yet.
+      const x = num(a, op);
+      const y = num(b, op);
+      if (typeof x !== "number" || typeof y !== "number")
+        throw new Error("/ of a number the board does not fix is not checked yet");
+      return { k: "num", v: Math.trunc(x / y) };
+    }
   }
 }
 
@@ -953,6 +983,8 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       return cellFn((c) => elem("line", sp.colOf[c]));
     case "peers":
       return cellFn((c) => allOf("cell", sp.peers[c]));
+    case "units_of":
+      return cellFn((c) => allOf("line", sp.unitsOf[c]));
     case "adj4":
       return cellFn((c) => allOf("cell", sp.adj4[c]));
     case "sight":
@@ -1189,10 +1221,13 @@ function dealSymbolically(d: Description, board: Board): void {
 function worldOf(d: Description, board: Board): Bx[] {
   const ctx: Ctx = { board, d, mode: "rule", concluding: false };
   const out: Bx[] = [...board.clueDomain];
-  const dom = evaluate(d.domain, new Map(), ctx);
-  if (dom.k !== "vset")
-    throw new TypeError("the answer's domain is not a set of values");
   board.ans.forEach((a, c) => {
+    // A domain may be the cell's own (Seismic's, its area's numbers), unless
+    // the board is measured in a `c` (Solo's).
+    const at = "c" in d.json.sizes ? new Map() : new Map([["c", elem("cell", c)]]);
+    const dom = evaluate(d.domain, at, ctx);
+    if (dom.k !== "vset")
+      throw new TypeError("the answer's domain is not a set of values");
     out.push(or(...dom.mem.map((g, n) => and(g, a.eq(n)))));
     // A mark is of a value of the domain, which may be fewer than the order.
     board.cand[c].forEach((g, n) => {
@@ -1250,8 +1285,9 @@ export async function impossibleKinds(
   d: Description,
   order: number,
   sizes: ReadonlyMap<string, number> = new Map(),
+  cells?: number,
 ): Promise<string[]> {
-  const board = makeBoard(order, d, sizes);
+  const board = makeBoard(order, d, sizes, cells);
   dealPartitions(d, board);
   dealSymbolically(d, board);
   const solver = new Z3.Solver();
@@ -1273,9 +1309,9 @@ export async function impossibleKinds(
 
 /**
  * Each assignment of the sizes an `order` board does not fix (Salad's
- * `nums`), over their ranges, where a repeated value appears at least once,
- * which is where the rest of the domain fits the board: one map a board,
- * and one empty map where there are none.
+ * `nums`, Seismic's `mode`), over their ranges, where a repeated value
+ * appears at least once, which is where the rest of the domain fits the
+ * board: one map a board, and one empty map where there are none.
  */
 export function sizings(d: Description, order: number): Map<string, number>[] {
   const { grid } = d.json.space;
@@ -1288,10 +1324,6 @@ export function sizings(d: Description, order: number): Map<string, number>[] {
     ...spaceOf(order, d).sizes.keys(),
   ]);
   const free = Object.entries(d.json.sizes).filter(([n]) => !fixed.has(n));
-  if (free.length > 0 && d.repeat === null)
-    throw new Error(
-      `${d.json.game}: a size the board does not fix is checked with a repeat`,
-    );
   let out: Map<string, number>[] = [new Map()];
   for (const [name, { min, max }] of free)
     out = out.flatMap((m) =>
@@ -1316,8 +1348,9 @@ export async function hasAnswer(
   d: Description,
   order: number,
   sizes: ReadonlyMap<string, number> = new Map(),
+  cells?: number,
 ): Promise<boolean> {
-  const board = makeBoard(order, d, sizes);
+  const board = makeBoard(order, d, sizes, cells);
   dealPartitions(d, board);
   dealSymbolically(d, board);
   const solver = new Z3.Solver();
@@ -1332,9 +1365,10 @@ export async function checkTechnique(
   order: number,
   sizes: ReadonlyMap<string, number> = new Map(),
   split = 1,
+  cells?: number,
 ): Promise<Verdict> {
   const t0 = performance.now();
-  const board = makeBoard(order, d, sizes);
+  const board = makeBoard(order, d, sizes, cells);
   dealPartitions(d, board);
   dealSymbolically(d, board);
   const world = worldOf(d, board);

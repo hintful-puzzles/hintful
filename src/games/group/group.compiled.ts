@@ -2,14 +2,25 @@
 
 import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, setOf } from "../../engine/describe-runtime.ts";
 
+/** The units no value repeats in, in the description's order: the
+ * engine builds the space from them. */
+export const units: readonly string[] = ["rows","cols"];
+
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "latin.hiddenSingle" | "latin.single" | "associativity" | "identity" | "notIdentity" | "latin.set" | "latin.fish" | "latin.wing";
 
+/** Every technique run as each value is placed, by id. */
+export type PlacingId = "latin.placed";
+
+/** The techniques run as each value is placed, in the description's order. */
+export const placing: readonly PlacingId[] = ["latin.placed"];
+
 /** The ladder: each technique's tier, on its scale where that is not the
  * description's tiers, the least cap it runs at where that is above its
- * tier, and the cap from which it no longer runs where it has one, in the
- * order the description lists them. */
-export const ladder: readonly { id: LadderId; tier: number; scale?: string; from?: number; until?: number }[] = [
+ * tier, the cap from which it no longer runs where it has one, and the
+ * variation that adds it where one does, in the order the description
+ * lists them, a variation's before the first of a higher tier. */
+export const ladder: readonly { id: LadderId; tier: number; scale?: string; from?: number; until?: number; variation?: string }[] = [
   { id: "latin.hiddenSingle", tier: 0 },
   { id: "latin.single", tier: 0 },
   { id: "associativity", tier: 1 },

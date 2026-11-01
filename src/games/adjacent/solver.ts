@@ -6,13 +6,11 @@
 
 import { clueAt, clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { ADJTHAN, type ClueKind } from "../../engine/edge-clue-latin/state.ts";
+import { compiledRung } from "../../engine/ladder-runtime.ts";
 import {
-  compiledRung,
   type DeductionRecord,
-  LATIN_RUNGS,
-  type LatinLadder,
   type LatinReason,
-  type LatinRung,
+  latinLadder,
 } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
 import * as adjacent from "./adjacent.compiled.ts";
@@ -41,38 +39,9 @@ export interface HintOp extends DeductionRecord {
 /** The cell across a bar, as a reason names it. */
 const across = (c: number, o: number) => ({ ox: c % o, oy: (c / o) | 0 });
 
-const RUNGS: Record<adjacent.LadderId, (cl: adjacent.Dealt) => LatinRung> = {
-  "latin.hiddenSingle": () => LATIN_RUNGS["latin.hiddenSingle"],
-  "latin.single": () => LATIN_RUNGS["latin.single"],
-  adjacent: (cl) =>
-    compiledRung(
-      adjacent.adjacent,
-      cl,
-      ({ a, e }, _c, _n, solver): BarReason => ({
-        kind: "adjacent",
-        ...across(a, solver.o),
-        v: solver.value(a),
-        bar: clueAt(cl.bar, e) === 1,
-      }),
-    ),
-  adjacentSet: (cl) =>
-    compiledRung(
-      adjacent.adjacentSet,
-      cl,
-      ({ a, e }, _c, _n, solver): BarReason => ({
-        kind: "adjacentSet",
-        ...across(a, solver.o),
-        bar: clueAt(cl.bar, e) === 1,
-      }),
-    ),
-  "latin.set": () => LATIN_RUNGS["latin.set"],
-  "latin.fish": () => LATIN_RUNGS["latin.fish"],
-  "latin.wing": () => LATIN_RUNGS["latin.wing"],
-};
-
 /** The board's bars as the description deals them: every edge, a bar or
  * none, read from either end since a bar is flagged at both. */
-export const barLadder: ClueKind["ladder"] = (o, flags): LatinLadder => {
+export const barLadder: ClueKind["ladder"] = (o, flags) => {
   const sp = latinSpace(o);
   const edges = sp.edgeEnds.length / 2;
   const at: number[] = [];
@@ -85,7 +54,25 @@ export const barLadder: ClueKind["ladder"] = (o, flags): LatinLadder => {
     v.push(flags[a] & dir.f ? 1 : 0);
   }
   const cl: adjacent.Dealt = { bar: clueList(at, v, edges) };
-  return {
-    ladder: adjacent.ladder.map(({ id, tier }) => ({ tier, run: RUNGS[id](cl) })),
-  };
+  return latinLadder(adjacent, {
+    adjacent: compiledRung(
+      adjacent.adjacent,
+      cl,
+      ({ a, e }, _c, _n, m): BarReason => ({
+        kind: "adjacent",
+        ...across(a, m.sp.w),
+        v: m.value(a),
+        bar: clueAt(cl.bar, e) === 1,
+      }),
+    ),
+    adjacentSet: compiledRung(
+      adjacent.adjacentSet,
+      cl,
+      ({ a, e }, _c, _n, m): BarReason => ({
+        kind: "adjacentSet",
+        ...across(a, m.sp.w),
+        bar: clueAt(cl.bar, e) === 1,
+      }),
+    ),
+  });
 };

@@ -746,10 +746,9 @@ is one journey").
 - **A step or a journey? The numbers in the narration decide.** Where each
   forced square has a different figure to quote, each is a leg with its own
   sentence; where one sentence is true of all, they are one step.
-- **For legs from a shared helper**, thread the recorder through the helper
-  that fills the line, so its first cell opens a journey and the rest
-  continue it (`fillRow` in
-  [`unruly/solver.ts`](../src/games/unruly/solver.ts)).
+- **For legs of one compiled firing**, the firing's facts share a record
+  group, so its first cell opens a journey and the rest continue it
+  (`deduceHintPlan` in [`unruly/solver.ts`](../src/games/unruly/solver.ts)).
 
 Exemplars: `regionGroups` in
 [`filling/solver.ts`](../src/games/filling/solver.ts), the plan and

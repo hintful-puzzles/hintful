@@ -333,6 +333,11 @@ export function hiddenSingleLine(
  * `dup` reason may carry extra fields (`px`/`py`) — only `n` is read here. */
 export type GenericLatinReason =
   | SingleReason
+  /** A single in a cell whose units, named, hold every other value. */
+  | { kind: "regionsFull"; regions: readonly string[] }
+  /** A value with one home left in a unit the game names, a block or a
+   * diagonal as well as a line. */
+  | { kind: "hiddenSingle"; n: number; unit: { name: string; cells: readonly Point[] } }
   | { kind: "dup"; n: number; px: number; py: number }
   | { kind: "set"; cells: readonly Point[]; lines?: ConfinedLines }
   | LatinWingReason;

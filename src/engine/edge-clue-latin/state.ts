@@ -22,7 +22,8 @@ import {
 import { readDesc } from "../desc-reader.ts";
 import { tierNames } from "../difficulty.ts";
 import type { GameDrawing } from "../game.ts";
-import type { LatinLadder } from "../latin.ts";
+import type { Ladder } from "../ladder-runtime.ts";
+import type { LatinSolver } from "../latin.ts";
 import { endParams, paramsLetter } from "../params.ts";
 import { digitOf, type GridCursor, isEraseKey, newCursor } from "../pointer.ts";
 
@@ -52,7 +53,7 @@ export interface ClueKind {
   bothEnds: boolean;
   /** The techniques the game's description places at each tier, over this
    * board's clues. */
-  ladder(o: number, flags: Int32Array): LatinLadder;
+  ladder(o: number, flags: Int32Array): Ladder<LatinSolver>;
   /** Draw the clues in the gaps the cell at `(ox, oy)` owns, from its composed
    * flag word `f` (clue, error and spent bits). */
   drawClues(dr: GameDrawing, ts: number, ox: number, oy: number, f: number): void;

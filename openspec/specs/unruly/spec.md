@@ -239,12 +239,7 @@ a bare conclusion.
 
 ### Requirement: Hint: Unruly's hint tries the simplest technique first
 
-The hint SHALL try its techniques in this order: three in a row, a line with
-one empty cell, a completed count, on a `unique` board the unique-rows
-conflict, and the near-complete line. It SHALL take every cell the first of
-them that fires forces in one pass over the board, and then start again from
-the first. It SHALL try all of them whatever tier the board was dealt at. A
-line with one empty cell SHALL be told as a completed count.
+The hint SHALL order its techniques: three in a row, a line with one empty cell, a completed count, on a `unique` board the unique-rows conflict, and the near-complete line. Each step SHALL be one firing, the one continuing from the hint's last steps, this order breaking ties, never of a higher tier than the first that fires, whatever tier the board was dealt at. A line with one empty cell SHALL be told as a completed count.
 
 #### Scenario: A pair and a full quota on one board
 
