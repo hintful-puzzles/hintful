@@ -24,7 +24,8 @@ import {
   compiledRung,
   describedLadder,
   type Ladder,
-  ladderWalk,
+  ladderTechniques,
+  runLadder,
   TIERS as SCALE,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
@@ -215,9 +216,14 @@ interface Proved extends GuessFiring {
 }
 
 /**
- * Everything the scored rows prove, a firing at a time in the order the
- * hint says them (`ladderWalk`), from every color possible in every slot:
- * the hint's knowledge, independent of what the player has marked.
+ * Everything the scored rows prove, from every color possible in every
+ * slot: the hint's knowledge, independent of what the player has marked.
+ *
+ * The firings come in the ladder's own order, one a pass, and not by
+ * `ladderWalk`'s rule of continuing from the last one's slots: a plan here
+ * is a few firings over one row, and on every preset, eight seeds each
+ * played to the end, the rule had something to choose between 6 times
+ * (2026-11-01), too few for it to shape a plan or for its guard to read.
  */
 function proved(
   p: GuessParams,
@@ -230,24 +236,22 @@ function proved(
   const m = new CellMarks(spaceOf(p), all, new Uint8Array(p.npegs));
   m.seed(m.grid);
   m.budget = stepBudget("guess hint");
-  const { entries } = guessLadder(p, dealtOf(p, rows));
-  const walk = ladderWalk(
-    m,
-    entries,
-    { [SCALE]: 0 },
-    ({ reasons }) => (reasons[0] as GuessFiring).slots,
-  );
   const firings: Proved[] = [];
-  for (let f = walk.next(); f !== null && f !== "contradiction"; f = walk.next()) {
-    const marks: SlotMark[] = [];
-    for (let i = 0; i < f.facts.length; i += 3)
-      marks.push({ pos: f.facts[i + 1], color: f.facts[i + 2] });
-    firings.push({ ...(f.reasons[0] as GuessFiring), marks });
-  }
+  let group = -1;
+  m.recorder = (rec) => {
+    if (rec.group !== group) {
+      group = rec.group;
+      firings.push({ ...(rec.reason as GuessFiring), marks: [] });
+    }
+    firings[firings.length - 1].marks.push({ pos: rec.x, color: rec.n });
+  };
+  const { entries } = guessLadder(p, dealtOf(p, rows));
+  runLadder(m, ladderTechniques(m, entries, { [SCALE]: 0 }, {}));
   const out = new Int32Array(p.npegs);
   for (let s = 0; s < p.npegs; s++) out[s] = all & ~m.cand(s);
   return { firings, out };
 }
+
 // --- the probe -----------------------------------------------------------
 
 /** Past this many answers still fitting, the probe is not enumerated. */

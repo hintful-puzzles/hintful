@@ -39,8 +39,14 @@ The hand-written `Rules` class stated as seven techniques, one a modifier's
   last, where the hand ladder ran it between the one-row readings and the
   ones leaning on settled slots. Guess has one tier, and inventing a second
   to place it would give a grade nothing reads.
-- **The hint walks the ladder by `ladderWalk`**, as every compiled ladder's
-  hint does, so it takes the firing continuing from the last one's slots.
+- **The hint takes firings in the ladder's own order**, one a pass, which
+  is the hand ladder's order but for `noRepeats`. It does not walk by
+  `ladderWalk`, whose rule takes the firing continuing from the last one's
+  cells: a Guess plan is a few firings over one row, and over every preset,
+  eight seeds each played to the end, the rule had a choice to make 6 times,
+  too few for it to shape a plan or for `ladder-continuity.test.ts` to read
+  (it wants 30). Walked by it, Guess failed that guard with 0 of 30 on its
+  dealt boards, which show no score yet.
 
 The probe stays the game's: choosing a guess is an information question,
 not a deduction. Its enumeration judges each whole answer by the compiled

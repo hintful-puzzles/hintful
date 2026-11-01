@@ -60,13 +60,13 @@ function solveByHints(
 ): number {
   const { desc, aux } = dealt(game, params);
   let state = game.newState(params, desc);
-  // Generous cap, so only a genuine loop or non-convergence trips it: twice
-  // the length the game's own first plan claims, and never below 800 for a
-  // hint that plans one step at a time. A fixed cap would sit below the honest
-  // plan of a large board, such as a 50×50 Mosaic.
+  // A loop shows as a round of hints that leaves the board as it was; the
+  // cap only stops a walk that wanders. It is not the first plan's length: a
+  // game may cut a plan short (Mosaic's 24 steps), and a 50×50 Mosaic takes
+  // more than a thousand moves.
   const first = game.hint?.(state, aux);
   const planned = first?.ok ? first.steps.length : 0;
-  const cap = Math.max(800, 2 * planned);
+  const cap = Math.max(MOVE_CAP, 2 * planned);
   const stride = Math.max(1, Math.ceil(planned / RECOMPUTES));
   for (let moves = 0; moves < cap; ) {
     if (game.status(state) === "solved") return moves;
@@ -106,6 +106,7 @@ function solveByHints(
     // resolved passed over. The first is always played, so a walk that
     // recomputes every move is the stride of one.
     let played = 0;
+    const before = state;
     for (const step of res.steps) {
       if (played > 0 && game.status(state) === "solved") break;
       const live =
@@ -114,9 +115,13 @@ function solveByHints(
       state = game.executeMove(state, live.move);
       if (++played === stride) break;
     }
+    if (sameState(before, state))
+      throw new Error(
+        `${at}:${played} hinted moves after ${moves} changed nothing (loop)`,
+      );
     moves += played;
   }
-  throw new Error(`${at}:did not converge within ${cap} moves (loop?)`);
+  throw new Error(`${at}:did not converge within ${cap} moves (wandering?)`);
 }
 
 /**
@@ -141,6 +146,11 @@ function solveByHints(
  * last move at all shows on the short plans, which are walked move by move.
  */
 const RECOMPUTES = SLOW_TESTS_ENABLED ? Number.POSITIVE_INFINITY : 64;
+
+/** The moves a walk may take before it is called wandering, where its first
+ * plan is shorter: each hint round must change the board, so a walk this
+ * long without solving keeps changing it to no end. */
+const MOVE_CAP = 20_000;
 
 /**
  * The games whose hint **plans by searching ahead a bounded number of moves**,
