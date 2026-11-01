@@ -7,7 +7,9 @@ authorial intent.
 
 **Waits for `describe-the-whole-catalog`** (the owner, 2026-11-01): no new
 game before every game is described, so these are written from their
-descriptions.
+descriptions. Wordle's clues are revealed during play (step 5 of that
+change's plan, `design.md` § "The plan"); Wend's answer is a division into
+connected paths (step 9).
 
 ## Why
 

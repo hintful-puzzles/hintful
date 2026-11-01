@@ -194,10 +194,10 @@ Measured 2026-11-01. A candidate a step takes on is named in its row.
 | **The compiled-ladder runtime over any board** (`compiledRung` generalized off `LatinSolver`, caps per scale) | Solo's wrapper ~250 lines; every non-Latin game needs it | Taken, as step 1 |
 | **The library's rows paired by the engine** | 7 tables each repeat the same 5 `latin.* → LATIN_RUNGS[…]` rows (35 lines) | Taken, in step 1 |
 | **The hint sentence carried by the technique's statement** | Solo and Towers each copy the generic single, set and wing sentences (~60 and ~35 lines) because `narrateLatinReason` hard-codes "row and column"; every other sentence is a game's own words | Declined as stated: the language says nothing about presentation (`language.md` § "What is ready"), and a sentence quotes the board in game words. Taken narrowly in step 1: the Latin sentences name a reason's unit, so the two copies go |
-| **A technique's tier stated in the description** | Done: every compiled ladder entry carries its tier. Rect's `TIER_RUNGS` is a hand list of the same thing | Retires with Rect, in step 8 |
+| **A technique's tier stated in the description** | Done: every compiled ladder entry carries its tier. Rect's `TIER_RUNGS` is a hand list of the same thing | Retires with Rect, in step 9 |
 | **The soundness checker ported to TypeScript** | Done before this change | Nothing to do |
 | **The hint's step kinds derived** | Each described game keeps a `*_RUNGS` list for `Game.hintRungs` beside the compiled `LadderId`; they differ where a technique narrates two ways (Unequal's `sign` is `greater` and `lesser`) | Step 1 measures whether the reason kinds a pairing table builds can give the list; declined if a reason kind is not a technique's |
-| **`Game.rulesOut` from the rules** | Light Up, Star Battle and Tents declare what a placement rules out for the auto-cross aid; their rules imply it | Not measured; step 3 measures it on Star Battle |
+| **`Game.rulesOut` from the rules** | Light Up, Star Battle and Tents declare what a placement rules out for the auto-cross aid; their rules imply it | Not measured; step 4 measures it on Star Battle |
 | **`placed` over every unit** | Solo writes its own because the library's reads rows and columns | Taken, in step 1 |
 
 ## Decisions made here
@@ -226,19 +226,19 @@ owner's.
   step, no propagation) is a Check and is.
 - **An unsound generation step stays a generator hook** (Singles'
   `solveSneaky`), outside the description, saying why.
-- **The hint's order is the open question** (the owner's, with task 3).
-  A compiled ladder fires in rung order, then binding order, so a hint
-  that interleaves today shows its steps in another order once described:
-  Light Up's per-cell scan, Mosaic's worklist, Singles' cascade queue,
-  Range's sweep, Palisade's discovery order, Net's global rank, Spokes'
-  goal-first ladder, Galaxies' demoted `mirrorWall`, Tents' link rungs.
-  `docs/descriptions.md` § "A statement's order is behavior" allows a
-  restatement only with a record-for-record comparison or the owner's
+- **A hint's order may move, accepted once for the plan** (the owner,
+  2026-11-01). A compiled ladder fires in rung order, then binding order, so
+  a hint that interleaves today shows its steps in another order once
+  described: Light Up's per-cell scan, Mosaic's worklist, Singles' cascade
+  queue, Range's sweep, Palisade's discovery order, Net's global rank,
+  Spokes' goal-first ladder, Galaxies' demoted `mirrorWall`, Tents' link
+  rungs. `docs/descriptions.md` § "A statement's order is behavior" allows
+  a restatement with a record-for-record comparison or the owner's
   acceptance, and a comparison cannot pass where the order is the change.
-  The recommendation: the owner accepts, once for the plan, an order
-  change that keeps the game's deductions and the step's words, each step
-  reporting what moved and showing it in the running app; a step that
-  changes what a player is told asks on its own.
+  The owner accepts, for every step, an order change that keeps the game's
+  deductions and the step's words; each step reports what moved and shows
+  it in the running app. A step that changes what a player is told still
+  asks on its own.
 - **A per-game exception becomes a technique where it can**: Undead's pass
   bound, Ascent's mode-guarded `overlap` and Spokes' tier-exact look-ahead
   each go to their step to be stated or recorded as the game's, with the
@@ -273,10 +273,40 @@ uniqueness test". The survey found:
   the searches, and could be checked sound on small boards, but only on the
   same position runtime.
 
-**The recommendation**: these fourteen keep a help-only description, and the
-decline is recorded with this reason. The question goes to the owner (task
-3), since their acceptance names every game. It also decides `add-ball-sort`,
-a planning game, which waits on this change.
+Measured by what the fourteen retire, a help-only description was the
+recommendation.
+
+**The owner's answer (2026-11-01): build the position runtime.** The
+measure is not what a description retires in today's games but what it
+makes cheaper when they are the exemplars for a catalog about 200% larger in
+a year, with the engine's chances to serve these games looked for again as it
+grows. Read that way:
+
+- **A new planning game is written from its description.** Its moves,
+  finish and lose state compile into what `executeMove` and `status` call, so
+  a port writes no rules code; ball sort is the first such game.
+- **Its hint gets a planner from the same statement.** `finish-search`,
+  `slide-planner` and `permutation-planner` search a move relation; fed the
+  compiled one, a new game's planner is configuration rather than a copy of
+  its rules. Sixteen, Twiddle and Netslide prove it on the two planners that
+  already take moves as data; Pegs, Inertia, Same Game and Sokoban on
+  `finish-search` and their own prunes.
+- **Its dead-end claims are checked sound** on small boards before the
+  dead-end banner relies on them, as techniques are; the parity invariants,
+  Pegs' frozen pegs and Same Game's last-of-a-color are the exemplars.
+- **The runtime executes concrete positions**, so a domain that is not finite
+  (Numgame's integers, Untangle's points) runs; only the checker's reach is
+  bounded by it. Fifteen's table and Cube's roll stay data the description
+  reads, as `language.md` § "The second version" said.
+- **The exemplars cover the move shapes** the 200% will bring: permutations
+  (Sixteen, Twiddle, Netslide), slides until stopped (Inertia, Slide),
+  rewrites with gravity (Same Game), jumps (Pegs), pushes (Sokoban), a
+  recolored component (Flood), arithmetic (Numgame), a rolling solid (Cube),
+  toggles (Flip), and points in the plane (Untangle).
+
+The fourteen are described on this runtime (step 3 of the plan), and the
+cost is stated there: a solver keeps its fast packed copy where a generic
+move is too slow, and says so.
 
 ## The plan
 
@@ -292,14 +322,15 @@ proposal re-checks this survey's figures.
 | --- | --- | --- | --- | --- |
 | 1 | `describe-a-board-beyond-the-latin-square` | R; `placed` over every unit; the Latin sentences naming a reason's unit | Unruly, Seismic; Solo's residue | Solo's wrapper and pairing plumbing, the 35 library rows, Solo's and Towers' sentence copies |
 | 2 | `check-the-answer-from-the-rules` | rules compiled to a completion check the engine calls | the eight described, and step 1's | each game's hand-written answer check |
-| 3 | `describe-the-king-move-games` | N8, S, W as a clue kind | Star Battle, Mosaic, Clusters | Mosaic's upstream `solveCheck` |
-| 4 | `describe-revealed-clues` | X | Guess, Mines, Black Box | `minesolve`, if the measured deal cost allows |
-| 5 | `describe-on-a-graph` | G (a dealt graph) | Map | `engine/wing.ts`'s solver half; the candidate walk indexes elements, not grid cells |
-| 6 | `describe-runs-sightlines-and-looks` | Q, L, P, tile marks, a brick-wall space | ABCD, Sticks, Magnets, Light Up, Bricks | Light Up's exception in the fixpoint header |
-| 7 | `describe-connectivity` | C, a direction step, border vertices, relation marks | Singles, Range, Rome, Slant, Boats | `firing-replay.ts`, if Rome was its last reader |
-| 8 | `describe-edges-and-divisions` | E, D | Separate, Palisade, Dominosa, Rect, Galaxies, Filling | Rect's `TIER_RUNGS`, Dominosa's `firstFiring` |
-| 9 | `describe-lines-and-loops` | E on lines, G derived and tiled, M on edges | Path, Pearl, Tracks, Spokes, Bridges, Net, Tents, Loopy | the runner's `prerequisite` and `fallback` |
-| 10 | `describe-the-remaining-number-games` | V, bijections, lists, matchings, walks, bitwise relations | Subsets, Undead, Crossing, Ascent, Signpost, Pattern | Crossing's second hint engine |
+| 3 | `describe-moves-and-finishes` | a position runtime: guarded moves, a finish, a lose state, dead-end claims checked sound, the compiled move relation fed to the planners | the twelve planning games, Flip, Untangle | each game's move legality and finish; the planners' hand-built move lists |
+| 4 | `describe-the-king-move-games` | N8, S, W as a clue kind | Star Battle, Mosaic, Clusters | Mosaic's upstream `solveCheck` |
+| 5 | `describe-revealed-clues` | X | Guess, Mines, Black Box | `minesolve`, if the measured deal cost allows |
+| 6 | `describe-on-a-graph` | G (a dealt graph) | Map | `engine/wing.ts`'s solver half; the candidate walk indexes elements, not grid cells |
+| 7 | `describe-runs-sightlines-and-looks` | Q, L, P, tile marks, a brick-wall space | ABCD, Sticks, Magnets, Light Up, Bricks | Light Up's exception in the fixpoint header |
+| 8 | `describe-connectivity` | C, a direction step, border vertices, relation marks | Singles, Range, Rome, Slant, Boats | `firing-replay.ts`, if Rome was its last reader |
+| 9 | `describe-edges-and-divisions` | E, D | Separate, Palisade, Dominosa, Rect, Galaxies, Filling | Rect's `TIER_RUNGS`, Dominosa's `firstFiring` |
+| 10 | `describe-lines-and-loops` | E on lines, G derived and tiled, M on edges | Path, Pearl, Tracks, Spokes, Bridges, Net, Tents, Loopy | the runner's `prerequisite` and `fallback` |
+| 11 | `describe-the-remaining-number-games` | V, bijections, lists, matchings, walks, bitwise relations | Subsets, Undead, Crossing, Ascent, Signpost, Pattern | Crossing's second hint engine |
 
 Then task 4 here: the engine's old layer, and the guard.
 
@@ -307,13 +338,16 @@ The order is by what each step unlocks for its cost. Step 1 comes first
 because every later step runs on its runtime, and Unruly (R alone) and
 Seismic (partition units) prove it on two answer shapes. Step 2 comes before
 the vocabulary grows, so that each later game's rules are stated once from
-its first day. Steps 3 to 5 are cheap and retire two second engines (Mosaic,
-Mines). Connectivity (7) precedes edges (8, 9), which need it everywhere.
-Step 10 holds the constructs only one game needs each; it splits at its
-start if the session finds it too large.
+its first day. Step 3 compiles rules too, the moves and the finish, so it
+follows step 2's rules compiler, and it is early because it unblocks
+`add-ball-sort`; it may split by move shape at its start. Steps 4 to 6 are
+cheap and retire two second engines (Mosaic, Mines). Connectivity (8)
+precedes edges (9, 10), which need it everywhere. Step 11 holds the
+constructs only one game needs each; it splits at its start if the session
+finds it too large.
 
-**Words for new games.** Wordle, in `add-word-list-puzzles`, needs step 4;
-Wend needs D and C (step 8). Ball sort waits on task 3's answer.
+**Words for new games.** Ball sort needs step 3; Wordle, in
+`add-word-list-puzzles`, needs step 5; Wend needs D and C (step 9).
 
 ## Corrections
 
