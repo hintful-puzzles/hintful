@@ -13,9 +13,11 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
+import * as inertia from "./inertia.compiled.ts";
 
 // --- cells -----------------------------------------------------------
 
@@ -126,19 +128,20 @@ export interface InertiaUi {
  * board: the void stops it like any other wall).
  *
  * Squares are addressed both as `(x, y)` and as a flat index; `x`/`y`/`square`
- * convert. The cells are only ever mutated while a board is being *built* (by
- * the generator, and by a slide clearing the gems it collects); the board on a
- * state is never touched again.
+ * convert. The cells are the description's `kind` layer. They are only ever
+ * mutated while a board is being *built* (by the generator, and by a slide
+ * clearing the gems it collects); the board on a state is never touched
+ * again.
  */
 export class Board {
   constructor(
-    readonly cells: Uint8Array,
+    readonly cells: Int32Array,
     readonly w: number,
     readonly h: number,
   ) {}
 
   static blank(w: number, h: number): Board {
-    return new Board(new Uint8Array(w * h), w, h);
+    return new Board(new Int32Array(w * h), w, h);
   }
 
   get area(): number {
@@ -180,7 +183,7 @@ export class Board {
   }
 
   clone(): Board {
-    return new Board(new Uint8Array(this.cells), this.w, this.h);
+    return new Board(this.cells.slice(), this.w, this.h);
   }
 }
 
@@ -247,33 +250,67 @@ export function slidePath(
   }
 }
 
-/** Play a slide: the gems along its path are collected, and a mine at the end
- * of it kills the ball. */
-export function slide(s: InertiaState, dir: number): InertiaState {
-  const path = slidePath(s.board, s.px, s.py, dir);
-  const board = s.board.clone();
-  for (const square of path.gems) board.cells[square] = BLANK;
+/** The description's rules on a board of this size. */
+export function rulesOf(board: Board) {
+  return inertia.rules(describedSpace(inertia.units, board.w, board.h), {}, []);
+}
 
-  const end = path.squares[path.squares.length - 1];
+/** The description's position: the board's cells, and the ball. */
+export function positionOf(board: Board, px: number, py: number): inertia.Position {
+  const ball = new Int32Array(board.area);
+  ball[board.square(px, py)] = 1;
+  return { kind: board.cells, ball };
+}
+
+/** The slide in `dir` from `(px, py)` as the description's move: the ball's
+ * square and the neighbor it sets off through. Off the board, it is no
+ * neighbor, and the move is illegal. */
+const slideMove = (
+  board: Board,
+  px: number,
+  py: number,
+  dir: number,
+): inertia.Move => ({
+  move: "slide",
+  b: board.square(px, py),
+  n: board.inside(px + DX[dir], py + DY[dir])
+    ? board.square(px + DX[dir], py + DY[dir])
+    : -1,
+});
+
+/** Play a slide, by the description's rules: the gems along its path are
+ * collected, and a mine at the end of it kills the ball. Refused where the
+ * ball cannot go: a wall in the way, or a dead ball. */
+export function slide(s: InertiaState, dir: number): InertiaState {
+  const rules = rulesOf(s.board);
+  const p = positionOf(s.board, s.px, s.py);
+  const m = slideMove(s.board, s.px, s.py, dir);
+  if (!rules.legal(p, m)) throw new Error(`inertia: no slide in direction ${dir}`);
+  const q = rules.play(p, m);
+  const board = new Board(q.kind, s.board.w, s.board.h);
+  const end = q.ball.indexOf(1);
+  const [px, py] = [board.x(end), board.y(end)];
   return {
     ...s,
     board,
-    px: board.x(end),
-    py: board.y(end),
-    gems: s.gems - path.gems.length,
-    distanceMoved: path.squares.length,
-    dead: path.stopper === "mine",
+    px,
+    py,
+    gems: board.gemSquares().length,
+    distanceMoved: Math.max(Math.abs(px - s.px), Math.abs(py - s.py)),
+    dead: rules.lost(q),
   };
 }
 
-/** The directions the ball can set off in from a square: the ones with no wall
- * (or edge of the board) immediately in the way. A fatal direction is still a
- * legal one — the ball may be driven onto a mine. */
+/** The directions the ball can set off in from a square, by the
+ * description's rules: the ones with no wall (or edge of the board)
+ * immediately in the way. A fatal direction is still a legal one — the ball
+ * may be driven onto a mine. */
 export function legalDirections(board: Board, px: number, py: number): number[] {
+  const rules = rulesOf(board);
+  const p = positionOf(board, px, py);
   const dirs: number[] = [];
-  for (let dir = 0; dir < DIRECTIONS; dir++) {
-    if (board.at(px + DX[dir], py + DY[dir]) !== WALL) dirs.push(dir);
-  }
+  for (let dir = 0; dir < DIRECTIONS; dir++)
+    if (rules.legal(p, slideMove(board, px, py, dir))) dirs.push(dir);
   return dirs;
 }
 

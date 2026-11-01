@@ -11,6 +11,7 @@
   "src/games/group/group.description.yaml#associativity": "1cbd65edae24cbf3",
   "src/games/group/group.description.yaml#identity": "66982cf6ea3a5546",
   "src/games/group/group.description.yaml#notIdentity": "256d4cc761cd14b3",
+  "src/games/inertia/inertia.description.yaml#deadEnd:stranded": "46fedbaf0783f317",
   "src/games/keen/keen.description.yaml#cage": "d77f8397b482db1f",
   "src/games/keen/keen.description.yaml#cageEasy": "dae0a870dc08936c",
   "src/games/keen/keen.description.yaml#cageLine": "c521794c25e9c5a4",

@@ -30,6 +30,8 @@ import {
   GEM,
   type InertiaState,
   MINE,
+  positionOf,
+  rulesOf,
   STOP,
   WALL,
 } from "./state.ts";
@@ -401,12 +403,16 @@ export function solveRoute(state: InertiaState): RouteResult {
  *
  * Both the hint's refusal ("a gem can no longer be reached — undo") and its
  * strongest narration ("sweeping that one up now would strand you") rest on it.
+ * It is the description's claim `stranded`, which the dead-end checker finds
+ * sound; none on a dead ball. About 0.8 ms a call on the presets, where the
+ * move graph took 0.1 ms (measured 2026-11-01), and it is called a few times a
+ * hint.
  */
 export function unreachableGems(state: InertiaState): number[] {
-  const graph = new MoveGraph(state.board, state.px, state.py);
-  const reached = new Set<number>();
-  for (let v = 0; v < graph.size; v++) reached.add(graph.squareOf(v));
-  return state.board.gemSquares().filter((square) => !reached.has(square));
+  return rulesOf(state.board).witnesses(
+    "stranded",
+    positionOf(state.board, state.px, state.py),
+  );
 }
 
 /** Which uncollected gem the tour reaches for next. See `solveRoute`. */

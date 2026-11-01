@@ -14,7 +14,7 @@ import {
 import { UI_UPDATE } from "../../engine/game.ts";
 import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
 import { paramsError } from "../../engine/params.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
@@ -41,10 +41,14 @@ import { findGemCandidates, solveRoute, unreachableGems } from "./solver.ts";
 import {
   BLANK,
   type Board,
+  GEM,
   type InertiaState,
   type InertiaUi,
+  legalDirections,
   newState,
   STOP,
+  slide,
+  slidePath,
 } from "./state.ts";
 
 /** The board the generator ran its candidate search on: gems go only on blank
@@ -592,6 +596,45 @@ describe("inertia generator", () => {
     for (const square of candidates) {
       expect(board.cell(square)).toBe(BLANK);
     }
+  });
+});
+
+describe("inertia's slide path", () => {
+  it("ends, collects and kills as the description's slide does", () => {
+    const rng = randomNew("inertia slide path");
+    let compared = 0;
+    let fatal = 0;
+    for (const p of [
+      { w: 8, h: 10 },
+      { w: 12, h: 15 },
+    ]) {
+      for (let deal = 0; deal < 4; deal++) {
+        let s: InertiaState = newState(p, newInertiaDesc(p, rng).desc);
+        for (let k = 0; k < 60 && s.gems > 0; k++) {
+          const safe: number[] = [];
+          for (const dir of legalDirections(s.board, s.px, s.py)) {
+            const path = slidePath(s.board, s.px, s.py, dir);
+            const after = slide(s, dir);
+            const end = path.squares[path.squares.length - 1];
+            expect(after.board.square(after.px, after.py)).toBe(end);
+            expect(after.distanceMoved).toBe(path.squares.length);
+            expect(after.dead).toBe(path.stopper === "mine");
+            const collected = s.board
+              .gemSquares()
+              .filter((g) => after.board.cell(g) !== GEM);
+            expect(collected).toEqual(path.gems.toSorted((a, b) => a - b));
+            compared++;
+            if (after.dead) fatal++;
+            else safe.push(dir);
+          }
+          if (safe.length === 0) break;
+          s = slide(s, safe[randomUpto(rng, safe.length)]);
+        }
+      }
+    }
+    // Enough slides, fatal ones among them, for a disagreement to show.
+    expect(compared).toBeGreaterThan(1000);
+    expect(fatal).toBeGreaterThan(50);
   });
 });
 

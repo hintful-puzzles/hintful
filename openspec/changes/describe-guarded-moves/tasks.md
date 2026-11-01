@@ -9,7 +9,7 @@
 
 - [x] 2.1 Pegs described, `finish-search` fed the compiled jumps where fast enough, the packed copy kept with its measurement where not
 - [x] 2.2 Flip described
-- [ ] 2.3 Inertia described: its slide, mine and stranded gems compiled
+- [x] 2.3 Inertia described: its slide, mine and stranded gems compiled
 
 ## 3. Close
 

@@ -98,13 +98,16 @@ interface Layer {
   name: string;
   values: number[];
   arranged: number | null;
+  /** The value exactly one cell holds, where the layer is a token. */
+  once: number | null;
 }
 
 /** How many positions a world's layers allow, over `cells` cells. */
 function universeSize(layers: readonly Layer[], cells: number): number {
   let n = 1;
   for (const l of layers) {
-    if (l.arranged === null) n *= l.values.length ** cells;
+    if (l.once !== null) n *= cells * (l.values.length - 1) ** (cells - 1);
+    else if (l.arranged === null) n *= l.values.length ** cells;
     else {
       if (l.values.length * l.arranged !== cells) return 0;
       let ways = 1;
@@ -145,6 +148,7 @@ export function worlds(
           name,
           values: (values as number[]).slice().sort((a, b) => a - b),
           arranged: l.arranged === undefined ? null : num(l.arranged, sizes),
+          once: l.once === undefined ? null : num(l.once, sizes),
         };
       });
       const cells = num(d.space.grid.w, sizes) * num(d.space.grid.h, sizes);
@@ -164,6 +168,30 @@ function* positions(
   const fillings = (l: Layer): Int32Array[] => {
     const out: Int32Array[] = [];
     const a = new Int32Array(cells);
+    if (l.once !== null) {
+      // The token on each cell in turn, every other cell any other value.
+      const token = l.once;
+      const others = l.values.filter((v) => v !== token);
+      for (let at = 0; at < cells; at++) {
+        const go = (i: number): void => {
+          if (i === cells) {
+            out.push(a.slice());
+            return;
+          }
+          if (i === at) {
+            a[i] = token;
+            go(i + 1);
+            return;
+          }
+          for (const v of others) {
+            a[i] = v;
+            go(i + 1);
+          }
+        };
+        go(0);
+      }
+      return out;
+    }
     if (l.arranged === null) {
       const go = (i: number): void => {
         if (i === cells) {

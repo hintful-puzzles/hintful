@@ -429,6 +429,21 @@ export function before(x: number, L: readonly number[]): readonly number[] {
   return i < 0 ? [] : L.slice(0, i);
 }
 
+/** `ray(c, n)`: the cells from `n` on, each a step from `c` to `n` further,
+ * up to the grid's edge. */
+export function ray(sp: GridSpace, c: number, n: number): number[] {
+  const dx = (n % sp.w) - (c % sp.w);
+  const dy = ((n / sp.w) | 0) - ((c / sp.w) | 0);
+  const out: number[] = [];
+  for (
+    let x = n % sp.w, y = (n / sp.w) | 0;
+    x >= 0 && x < sp.w && y >= 0 && y < sp.h;
+    x += dx, y += dy
+  )
+    out.push(y * sp.w + x);
+  return out;
+}
+
 /** `range(a, b)` as a set of values. */
 export function rangeMask(a: number, b: number): number {
   if (a > b) return 0;

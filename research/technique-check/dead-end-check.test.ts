@@ -38,6 +38,10 @@ const PLANTED: Record<string, Record<string, string>> = {
     // The gap's distance from its corner moves with the parity.
     parity: `exists g in cells where value(g) = 0: count(a in cells, b in cells where index(a, cells) < index(b, cells) and value(a) > value(b)) mod 2 != (|cells| - 1) mod 2`,
   },
+  inertia: {
+    // A gem is collected in passing, not only where the ball stops.
+    stranded: `not dead and exists g in cells where kind(g) = 1: not rests(g)`,
+  },
   pegs: {
     // The last peg on a finished board stands alone.
     frozen: `exists p in cells where grid(p) = 1: forall q in adj4(p): not arrive(q)`,

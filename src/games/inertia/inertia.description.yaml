@@ -51,3 +51,69 @@ help:
 
     **Check & save** asks the hint the same thing, and won't save a position
     it would ask you to undo from.
+name: Inertia
+family: position
+sizes:
+  # The game deals six squares at the least; 99 stands for no bound.
+  w: { min: 2, max: 99 }
+  h: { min: 2, max: 99 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+position:
+  # What each square is: 0 blank, 1 a gem, 2 a mine, 3 a stop square, 4 a
+  # wall. Only a gem changes, to blank, as the ball passes over it.
+  kind: { domain: "{0, 1, 2, 3, 4}" }
+  # 1 on the square the ball is on.
+  ball: { domain: "{0, 1}", once: "1" }
+freedom: { kind: transition }
+define:
+  # The ball is on a mine.
+  dead: "exists c in cells: ball(c) = 1 and kind(c) = 2"
+  # A slide along the squares R stops on its square c: a mine or a stop
+  # square catches it, or the square beyond is a wall or off the board.
+  halts(R, c): >-
+    kind(c) = 2 or kind(c) = 3 or index(c, R) + 1 = |R|
+    or kind(nth(R, index(c, R) + 1)) = 4
+  # Where the ball setting off from b through its neighbor n stops.
+  end(b, n): "first(set(c over R = ray(b, n), c in R where halts(R, c)))"
+  # The square a step from b toward c, where n is c's neighbor on the far side
+  # from b.
+  toward(b, c, n): "cell(x(b) + x(c) - x(n), y(b) + y(c) - y(n))"
+  # The ball can come to rest on c: it is there, or some slide that ends
+  # there safely sets off from a square it can come to rest on.
+  rests(c): >-
+    ball(c) = 1 or (kind(c) != 2 and exists n in adj8(c), b in ray(c, n)
+    where rests(b) and kind(toward(b, c, n)) != 4: end(b, toward(b, c, n)) = c)
+  # Some slide from a square the ball can come to rest on passes over g,
+  # whether or not it then ends on a mine.
+  swept(g): >-
+    exists n in adj8(g), b in ray(g, n) where rests(b) and kind(toward(b, g, n)) != 4,
+    s = toward(b, g, n), R = ray(b, s): index(g, R) <= index(end(b, s), R)
+moves:
+  # The ball on b sets off through its neighbor n, which is no wall, and
+  # collects every gem on its way to where it stops.
+  slide:
+    for: "b in cells where ball(b) = 1, n in adj8(b) where kind(n) != 4"
+    set:
+      - for: >-
+          t = end(b, n), R = ray(b, n),
+          c in R where index(c, R) <= index(t, R) and kind(c) = 1
+        kind: "0"
+      - for: "c = b"
+        ball: "0"
+      - for: "c = end(b, n)"
+        ball: "1"
+finish:
+  - "forall c in cells: kind(c) != 1"
+lose:
+  - "dead"
+deadEnds:
+  # No slide the ball can ever make passes over the gem, so it is never
+  # collected.
+  stranded: "not dead and exists g in cells where kind(g) = 1: not swept(g)"
+deal:
+  start: >-
+    about a fifth each of walls, stop squares and mines, as many gems as
+    mines, each where the ball can collect it and come back, and the ball on
+    a stop square

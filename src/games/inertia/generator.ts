@@ -65,7 +65,7 @@ export function newInertiaDesc(p: InertiaParams, rng: RandomState): { desc: stri
 
     const startSquare = cells.indexOf(START);
     const board = new Board(
-      Uint8Array.from(cells, (cell) => (cell === START ? STOP : cell)),
+      Int32Array.from(cells, (cell) => (cell === START ? STOP : cell)),
       w,
       h,
     );

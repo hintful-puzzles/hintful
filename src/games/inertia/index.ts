@@ -65,6 +65,8 @@ import {
   newState,
   PRESETS,
   paramConfig,
+  positionOf,
+  rulesOf,
   slide,
   textFormat,
   validateParams,
@@ -75,11 +77,8 @@ import {
 
 /** One slide, refused where the ball cannot go. */
 function play(s: InertiaState, dir: number): InertiaState {
-  if (dir < 0 || dir >= DIRECTIONS) throw new Error(`inertia: bad direction ${dir}`);
-  if (s.dead) throw new Error("inertia: the ball is dead");
-  if (s.board.at(s.px + DX[dir], s.py + DY[dir]) === WALL) {
-    throw new Error("inertia: there's a wall in the way");
-  }
+  if (!Number.isInteger(dir) || dir < 0 || dir >= DIRECTIONS)
+    throw new Error(`inertia: bad direction ${dir}`);
   return slide(s, dir);
 }
 
@@ -250,7 +249,8 @@ export const inertiaGame: Game<
   executeMove,
 
   finishesByDeduction: nothingToDeduce,
-  status: (s: InertiaState): GameStatus => (s.gems === 0 ? "solved" : "ongoing"),
+  status: (s: InertiaState): GameStatus =>
+    rulesOf(s.board).finished(positionOf(s.board, s.px, s.py)) ? "solved" : "ongoing",
   notApplicable: {
     findMistakes:
       "Any route that collects every gem wins, so there is no single answer to check a move against.",
