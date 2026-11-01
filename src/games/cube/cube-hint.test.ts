@@ -18,7 +18,7 @@ import { hint } from "./hint.ts";
 import { SQUARE } from "./hint-text.ts";
 import { cubeGame } from "./index.ts";
 import { COL_HINT_EVIDENCE, redraw } from "./render.ts";
-import { DIR_CHARS, executeMove, findMoveDest } from "./roll.ts";
+import { DIR_CHARS, executeMove, rollDest } from "./roll.ts";
 import { SolidType } from "./solids.ts";
 import { canCollectWithoutDropping } from "./solver.ts";
 import { type CubeMove, type CubeParams, type CubeState, newState } from "./state.ts";
@@ -29,7 +29,7 @@ const solved = (s: CubeState): boolean => s.faceColors.every((c) => c);
 
 /** The rolls legal from `s`. */
 const rollsFrom = (s: CubeState): CubeMove[] =>
-  DIR_CHARS.filter((_, r) => findMoveDest(s, r) !== null).map((dir) => ({ dir }));
+  DIR_CHARS.filter((_, r) => rollDest(s, r) >= 0).map((dir) => ({ dir }));
 
 describeHintPins({
   game: cubeGame,

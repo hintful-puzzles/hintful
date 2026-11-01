@@ -7,6 +7,7 @@
   "src/engine/latin.description.yaml#wing": "e104ec34cad128f8",
   "src/games/adjacent/adjacent.description.yaml#adjacent": "2fb58118aa866778",
   "src/games/adjacent/adjacent.description.yaml#adjacentSet": "14ea8ea02dde0804",
+  "src/games/cube/cube.description.yaml#deadEnd:short": "713de28fb1da0ecf",
   "src/games/fifteen/fifteen.description.yaml#deadEnd:parity": "6813e2114f97ef8d",
   "src/games/group/group.description.yaml#associativity": "1cbd65edae24cbf3",
   "src/games/group/group.description.yaml#identity": "66982cf6ea3a5546",

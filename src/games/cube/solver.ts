@@ -5,8 +5,8 @@
  * **A position is the square the solid stands on, which of its face places
  * carry paint, and which squares do.** The solid sits on a square of a given
  * shape in one pose whatever face is down, and a roll only carries each face's
- * paint to another place on it (`executeMove`), so which physical face is where
- * is not part of the position. Read off the game's own roll once per arena,
+ * paint to another place on it, so which physical face is where is not part of
+ * the position. Packed from the roll table the description reads (`dealtOf`),
  * each roll is a destination and a permutation of the face places
  * ({@link Rolls}).
  *
@@ -28,8 +28,7 @@
 import { hashWords, PositionStore } from "../../engine/position-store.ts";
 import type { SearchOutcome } from "../../engine/search-outcome.ts";
 import type { GridSquare } from "./grid.ts";
-import { DIR_CHARS, executeMove, findMoveDest } from "./roll.ts";
-import { lowestFace, SOLIDS } from "./solids.ts";
+import { dealtOf } from "./roll.ts";
 import type { CubeState } from "./state.ts";
 
 /** A roll, by its `Direction`: one of the four orthogonal ones a move holds. */
@@ -52,33 +51,24 @@ interface Rolls {
 
 const rollsByArena = new WeakMap<readonly GridSquare[], Rolls>();
 
-/** The arena's rolls, read off `executeMove` by rolling a solid whose faces
- * are numbered: every face counts as painted, so no roll swaps any paint. */
-function rollsOf(state: CubeState): Rolls {
+/** The arena's rolls, packed from the roll table the description reads. */
+export function rollsOf(state: CubeState): Rolls {
   const known = rollsByArena.get(state.grid);
   if (known) return known;
-  const nfaces = state.faceColors.length;
+  const table = dealtOf(state);
+  const nfaces = table.nfaces;
   const nsquares = state.grid.length;
-  const labels = Int32Array.from({ length: nfaces }, (_, i) => i + 1);
   const dest = new Int32Array(nsquares * 4).fill(-1);
   const perm = new Int8Array(nsquares * 4 * nfaces);
   for (let sq = 0; sq < nsquares; sq++) {
-    const at: CubeState = { ...state, current: sq, faceColors: labels };
     for (const r of ROLLS) {
-      if (!findMoveDest(at, r)) continue;
-      const after = executeMove(at, { dir: DIR_CHARS[r] });
-      dest[sq * 4 + r] = after.current;
-      for (let i = 0; i < nfaces; i++)
-        perm[(sq * 4 + r) * nfaces + i] = after.faceColors[i] - 1;
+      dest[sq * 4 + r] = table.dest[sq][r];
+      table.source[sq][r].forEach((j, i) => {
+        perm[(sq * 4 + r) * nfaces + i] = j;
+      });
     }
   }
-  const rolls = {
-    nfaces,
-    nsquares,
-    bottom: lowestFace(SOLIDS[state.solidIndex]),
-    dest,
-    perm,
-  };
+  const rolls = { nfaces, nsquares, bottom: table.down, dest, perm };
   rollsByArena.set(state.grid, rolls);
   return rolls;
 }
@@ -90,9 +80,15 @@ function rollsOf(state: CubeState): Rolls {
  * in the first, the painted face places as a mask in the second, and the
  * painted squares as a bit set in the rest.
  */
-class Packer {
+export class Packer {
   readonly words: number;
   readonly buf: Int32Array;
+  /**
+   * The paint beyond a solid's worth, negative where there is too little:
+   * painted squares number this many exactly where every face is painted,
+   * since a roll neither makes nor loses paint. A dealt board has none.
+   */
+  spare = 0;
 
   constructor(readonly rolls: Rolls) {
     this.words = 2 + Math.ceil(rolls.nsquares / 32);
@@ -110,15 +106,25 @@ class Packer {
       buf[2 + (sq >> 5)] |= 1 << (sq & 31);
     });
     buf[0] = state.current | (painted << 16);
+    let faces = 0;
     state.faceColors.forEach((f, i) => {
-      if (f) buf[1] |= 1 << i;
+      if (!f) return;
+      faces++;
+      buf[1] |= 1 << i;
     });
+    this.spare = painted + faces - this.rolls.nfaces;
+  }
+
+  /** The painted squares at which the board is finished, the fewest it can
+   * have. */
+  get floor(): number {
+    return Math.max(0, this.spare);
   }
 
   /**
    * Into `buf`, the position rolling `r` from `from` leads to, or false where
    * the roll leaves the arena. A solid with every face painted swaps no paint,
-   * as `executeMove` has it.
+   * as the description's roll has it.
    */
   roll(from: Int32Array, r: Roll): boolean {
     const { dest, perm, nfaces, bottom } = this.rolls;
@@ -132,7 +138,7 @@ class Packer {
     const base = (sq * 4 + r) * nfaces;
     for (let i = 0; i < nfaces; i++)
       if (from[1] & (1 << perm[base + i])) faces |= 1 << i;
-    if (painted > 0) {
+    if (painted > this.spare) {
       const word = 2 + (to >> 5);
       const bit = 1 << (to & 31);
       const square = (buf[word] & bit) !== 0;
@@ -235,7 +241,11 @@ function potential(
 ): { value: number; line: Roll[] } | "spent" {
   const painted = paintedOf(start);
   let best = { value: ROLLS_PER_SQUARE * painted, line: [] as Roll[] };
-  for (let target = painted - 1; target >= Math.max(0, painted - window); target--) {
+  for (
+    let target = painted - 1;
+    target >= Math.max(packer.floor, painted - window);
+    target--
+  ) {
     const limit = best.value - ROLLS_PER_SQUARE * target;
     const line = reach(packer, start, target, target + window, limit, allowance);
     if (line === "spent") return "spent";
@@ -260,7 +270,7 @@ export function planRolls(
   packer.packState(state);
   const at = packer.buf.slice();
   const line: Roll[] = [];
-  while (paintedOf(at) > 0) {
+  while (paintedOf(at) > packer.floor) {
     const next = potential(packer, at, window, allowance);
     if (next === "spent" || next.line.length === 0) break;
     for (const r of next.line) {
@@ -269,7 +279,8 @@ export function planRolls(
     }
     line.push(...next.line);
   }
-  if (line.length === 0 && paintedOf(at) > 0) return { kind: "out-of-reach" };
+  if (line.length === 0 && paintedOf(at) > packer.floor)
+    return { kind: "out-of-reach" };
   return { kind: "found", line };
 }
 

@@ -36,7 +36,7 @@ import {
   ROLLTIME,
   redraw,
 } from "./render.ts";
-import { allFacesPainted, DIR_CHARS, executeMove, findMoveDest } from "./roll.ts";
+import { DIR_CHARS, executeMove, positionOf, rollDest, rulesOf } from "./roll.ts";
 import {
   type CubeMove,
   type CubeParams,
@@ -103,7 +103,8 @@ function interpretMove(
     direction = found;
   }
 
-  if (!findMoveDest(state, direction)) return null;
+  const roll = { move: "roll", s: state.current, r: direction } as const;
+  if (!rulesOf(state).legal(positionOf(state), roll)) return null;
   return { dir: DIR_CHARS[direction] };
 }
 
@@ -147,16 +148,14 @@ function statusbarText(state: CubeState): string {
   return `Moves: ${state.movecount}`;
 }
 
-/** A roll moves paint between a square and a face and never makes or loses
- * any, so a board is finished only by exactly a solid's worth of paint. */
+/** The description's claim: too little paint to cover the solid. */
 function hasNoSolution(state: CubeState): boolean {
-  const paint = (cells: ArrayLike<number>) =>
-    Array.from(cells).reduce((n, c) => n + (c ? 1 : 0), 0);
-  return paint(state.blue) + paint(state.faceColors) !== state.faceColors.length;
+  return rulesOf(state).deadEnd(positionOf(state)) !== null;
 }
 
+/** Solved by the description's finish: every face painted. */
 function status(state: CubeState): GameStatus {
-  return allFacesPainted(state) ? "solved" : "ongoing";
+  return rulesOf(state).finished(positionOf(state)) ? "solved" : "ongoing";
 }
 
 // --- Game object ------------------------------------------------------
@@ -226,9 +225,9 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
   // A tap on the square the roll lands on, which `directionFromClick` reads
   // as a roll toward it.
   hintGesture(s, _ui, ds, m) {
-    const roll = findMoveDest(s, DIR_CHARS.indexOf(m.dir));
-    if (!roll) return [];
-    const sq = s.grid[roll.dest];
+    const dest = rollDest(s, DIR_CHARS.indexOf(m.dir));
+    if (dest < 0) return [];
+    const sq = s.grid[dest];
     return [
       click({
         x: Math.trunc(sq.x * ds.tileSize) + ds.ox,

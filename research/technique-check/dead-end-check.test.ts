@@ -30,6 +30,11 @@ const ROOT = fileURLToPath(new URL("../../", import.meta.url));
  * finely.
  */
 const PLANTED: Record<string, Record<string, string>> = {
+  cube: {
+    // The game's own test before it was described: anything but exactly a
+    // solid's worth of paint, which a board with paint to spare can finish.
+    short: `count(c in cells where blue(c) = 1) + count(f in faces where paint(f) = 1) != |faces|`,
+  },
   sixteen: {
     // A slide along an even side is an odd permutation.
     parity: `count(a in cells, b in cells where index(a, cells) < index(b, cells) and value(a) > value(b)) mod 2 = 1`,

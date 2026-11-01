@@ -43,3 +43,67 @@ help:
 
     On a custom grid much larger than the ones on the Type menu, the search
     can run out before it finds a line, and the hint says so.
+name: Cube
+family: position
+sizes:
+  # The arena's squares, or triangles, and the solid's faces: 4, 6, 8 or 20.
+  squares: { min: 1, max: 9999 }
+  nfaces: { min: 4, max: 20 }
+space:
+  # Squares for the cube and triangles for the other three solids, in the
+  # order the arena lists them: no rectangle, so where a roll goes is the
+  # table the arena deals.
+  cells: "squares"
+  faces: "nfaces"
+  units: []
+  tables:
+    # The square the solid on s lands on, rolled over its edge toward r: 0
+    # left, 1 right, 2 up, 3 down, a triangle's slanted edges read as one of
+    # these; none off the arena.
+    dest: { of: [cell, num], to: cell }
+    # The face whose paint face f carries after that roll. The solid sits on
+    # every square of a shape in one pose, so a roll moves paint between the
+    # places of its faces, and which face is where is no part of the
+    # position.
+    source: { of: [cell, num, face], to: face }
+    # The face resting on the square.
+    down: { of: [], to: face }
+position:
+  # 1 on a painted square.
+  blue: { domain: "{0, 1}" }
+  # 1 on the square the solid stands on.
+  at: { domain: "{0, 1}", once: "1" }
+  # 1 on a painted face.
+  paint: { domain: "{0, 1}", over: faces }
+freedom: { kind: transition }
+define:
+  # Every face carries paint.
+  painted: "forall f in faces: paint(f) = 1"
+moves:
+  # The solid on s rolls toward r. Each face's paint goes with it, and the
+  # face that comes down swaps paint with the square it lands on, unless
+  # every face is painted already: a finished solid rolls freely.
+  roll:
+    for: "s in cells where at(s) = 1, r in {0, 1, 2, 3} where dest(s, r) != none"
+    set:
+      - for: "c = s"
+        at: "0"
+      - for: "c = dest(s, r)"
+        at: "1"
+      - for: "f in faces where f != down or painted"
+        paint: "paint(source(s, r, f))"
+      - for: "f = down where not painted"
+        paint: "blue(dest(s, r))"
+      - for: "c = dest(s, r) where not painted"
+        blue: "paint(source(s, r, down))"
+finish:
+  - "painted"
+deadEnds:
+  # A roll moves paint between a square and a face and never makes or loses
+  # any, so a board with too little paint to cover the solid never finishes.
+  short: "count(c in cells where blue(c) = 1) + count(f in faces where paint(f) = 1) < |faces|"
+deal:
+  start: >-
+    as many painted squares as the solid has faces, spread evenly over the
+    classes of square its faces can rest on, and the solid on a plain square
+    with no face painted

@@ -444,6 +444,14 @@ export function ray(sp: GridSpace, c: number, n: number): number[] {
   return out;
 }
 
+const faceLists: number[][] = [];
+
+/** `faces`, on a board with `n` of them: each numbered, in order. */
+export function facesOf(n: number): readonly number[] {
+  faceLists[n] ??= Array.from({ length: n }, (_, f) => f);
+  return faceLists[n];
+}
+
 /** `range(a, b)` as a set of values. */
 export function rangeMask(a: number, b: number): number {
   if (a > b) return 0;

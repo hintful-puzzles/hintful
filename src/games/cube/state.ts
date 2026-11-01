@@ -33,7 +33,7 @@ export interface CubeState {
   /** Paint per polyhedron face: 1 = blue, 0 = blank. */
   readonly faceColors: Int32Array;
   /** Paint per grid square: 1 = blue, 0 = blank. */
-  readonly blue: Uint8Array;
+  readonly blue: Int32Array;
   readonly current: number;
   /** Source/destination key points for the in-progress roll animation
    * (s*) and the resting position (d*); g = grid-square corner indices,
@@ -155,10 +155,10 @@ const HEX = "0123456789ABCDEF";
 function parseDesc(
   p: CubeParams,
   desc: string,
-): DescParse<{ blue: Uint8Array; start: number }> {
+): DescParse<{ blue: Int32Array; start: number }> {
   const area = gridArea(p.d1, p.d2, SOLIDS[p.solid].order);
   return readDesc(desc, (r) => {
-    const blue = new Uint8Array(area);
+    const blue = new Int32Array(area);
     for (let i = 0; i < area; i += 4) {
       const used = Math.min(4, area - i);
       const padding = (1 << (4 - used)) - 1;
@@ -202,7 +202,7 @@ export function newState(p: CubeParams, desc: string): CubeState {
 }
 
 /** Encode a blue mask + start square as a game description. */
-export function encodeDesc(blue: Uint8Array, start: number): string {
+export function encodeDesc(blue: ArrayLike<number>, start: number): string {
   let out = "";
   for (let i = 0; i < blue.length; i += 4) {
     let digit = 0;

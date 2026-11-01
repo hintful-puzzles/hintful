@@ -23,8 +23,7 @@ import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.t
 import type { Sentence } from "../../engine/hint-words.ts";
 import { searchRefusal } from "../../engine/search-outcome.ts";
 import { say } from "./hint-text.ts";
-import { DIR_CHARS, executeMove, findMoveDest } from "./roll.ts";
-import { lowestFace, SOLIDS } from "./solids.ts";
+import { DIR_CHARS, dealtOf, executeMove, rollDest } from "./roll.ts";
 import { canCollectWithoutDropping, planRolls, type Roll } from "./solver.ts";
 import type { CubeMove, CubeState } from "./state.ts";
 
@@ -50,7 +49,7 @@ const paintedCount = (s: CubeState): number => s.blue.reduce((n, b) => n + b, 0)
 function landsPainted(s: CubeState, goal: number): boolean {
   let lands = false;
   for (const r of ROLLS) {
-    if (findMoveDest(s, r)?.dest !== goal) continue;
+    if (rollDest(s, r) !== goal) continue;
     if (!executeMove(s, { dir: DIR_CHARS[r] }).blue[goal]) return false;
     lands = true;
   }
@@ -101,19 +100,18 @@ export function hint(state: CubeState): HintResult<CubeMove, unknown, CubeRung> 
   if (planned.kind !== "found") return searchRefusal(planned);
 
   // The board each roll is made from, and the one it leaves; and beside them
-  // the solid with its faces numbered, which tells one face from another (a
-  // numbered face is never plain, so it swaps no paint).
+  // which face is in each place on the solid, carried through each roll by
+  // the roll table, which tells one face from another.
+  const table = dealtOf(state);
   const boards = [state];
-  const faces: CubeState[] = [
-    { ...state, faceColors: state.faceColors.map((_, i) => i + 1) },
-  ];
+  const faces: number[][] = [Array.from({ length: table.nfaces }, (_, i) => i)];
   for (const r of planned.line) {
-    const move = { dir: DIR_CHARS[r] };
-    boards.push(executeMove(boards[boards.length - 1], move));
-    faces.push(executeMove(faces[faces.length - 1], move));
+    const from = boards[boards.length - 1];
+    const placed = faces[faces.length - 1];
+    boards.push(executeMove(from, { dir: DIR_CHARS[r] }));
+    faces.push(table.source[from.current][r].map((j) => placed[j]));
   }
-  const bottom = lowestFace(SOLIDS[state.solidIndex]);
-  const faceDown = (i: number): number => faces[i].faceColors[bottom];
+  const faceDown = (i: number): number => faces[i][table.down];
   const collects = (i: number): boolean =>
     boards[i].blue[boards[i + 1].current] === 1 &&
     boards[i + 1].blue[boards[i + 1].current] === 0;

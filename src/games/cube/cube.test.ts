@@ -15,13 +15,14 @@ import {
   CURSOR_UP,
   LEFT_BUTTON,
 } from "../../engine/pointer.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { newDesc } from "./generator.ts";
 import { Direction, enumGridSquares, gridArea } from "./grid.ts";
 import { type CubeUi, cubeGame } from "./index.ts";
 import type { CubeDrawState } from "./render.ts";
-import { executeMove } from "./roll.ts";
+import { DIR_CHARS, executeMove, rollDest } from "./roll.ts";
 import { SOLIDS, SolidType } from "./solids.ts";
+import { Packer, rollsOf } from "./solver.ts";
 import {
   type CubeParams,
   type CubeState,
@@ -449,5 +450,51 @@ describe("cube rolling on triangular grids", () => {
         expect(() => newState(p, `${"0".repeat(hexlen)},${sq}`)).not.toThrow();
       }
     }
+  });
+});
+
+/**
+ * The planner keeps its own roll over packed positions, since its searches
+ * store hundreds of thousands of them; this holds it to the description's
+ * roll: from random positions on every preset, with too little paint, a
+ * solid's worth and paint to spare, each roll lands on the same square and
+ * leaves the same paint on the arena and the faces.
+ */
+describe("the planner's roll", () => {
+  it("rolls as the description says", () => {
+    let rolls = 0;
+    let swaps = 0;
+    for (const p of PRESETS) {
+      const rng = randomNew(`held ${encodeParams(p, true)}`);
+      const dealt = newState(p, newDesc(p, rng).desc);
+      const packer = new Packer(rollsOf(dealt));
+      for (let k = 0; k < 60; k++) {
+        const odds = [0.2, 0.5, 0.8][k % 3];
+        const s: CubeState = {
+          ...dealt,
+          current: randomUpto(rng, dealt.grid.length),
+          blue: Int32Array.from(dealt.blue, () =>
+            randomUpto(rng, 100) < odds * 100 ? 1 : 0,
+          ),
+          faceColors: Int32Array.from(dealt.faceColors, () => randomUpto(rng, 2)),
+        };
+        packer.packState(s);
+        const from = packer.buf.slice();
+        for (const r of [0, 1, 2, 3] as const) {
+          const legal = rollDest(s, r) >= 0;
+          expect(packer.roll(from, r)).toBe(legal);
+          if (!legal) continue;
+          rolls++;
+          const after = executeMove(s, { dir: DIR_CHARS[r] });
+          packer.packState(after);
+          const want = packer.buf.slice();
+          packer.roll(from, r);
+          expect([...packer.buf]).toEqual([...want]);
+          if (after.blue[after.current] !== s.blue[after.current]) swaps++;
+        }
+      }
+    }
+    expect(rolls).toBeGreaterThan(500);
+    expect(swaps).toBeGreaterThan(100);
   });
 });
