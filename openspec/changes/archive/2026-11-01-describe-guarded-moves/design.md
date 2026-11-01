@@ -80,5 +80,16 @@ position and one that cannot be undone.
 
 ## The games
 
-Written as each is moved; see `report.md` for what each kept and the
-measurements.
+- **Pegs**: one layer, `grid` (hole, peg, no hole), which the state holds as
+  it is. A jump binds the peg, the peg beside it and the hole beyond, so no
+  direction number is needed. Its searches keep their packed board, measured
+  too slow to replace.
+- **Flip**: the pattern is dealt for both rulesets, and no claim is stated,
+  since the GF(2) rank is no formula.
+- **Inertia**: `kind` and a token `ball`; the slide's stop is the first
+  square of a ray where it halts; the reach of the ball is stated backward
+  along rays, from each square to the squares a slide could reach it from.
+  `slidePath` stays for the hint and the animation, held to the compiled
+  slide.
+
+`report.md` has the measurements and what each kept.

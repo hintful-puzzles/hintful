@@ -72,8 +72,9 @@ and techniques, and:
 
 1. **Plays by its compiled rules**: `executeMove` asks `legal` and `play`,
    `status` asks `finished`, and `hasNoSolution` asks `deadEnd`, of the
-   module's `rules` for the board (§ "A planning game's position and
-   moves"). It keeps its own move type, counters, animation and Solve move.
+   module's `rules` for the board, and a banner outlines the claim's
+   `witnesses` (§ "A planning game's position and moves"). It keeps its own
+   move type, counters, animation and Solve move.
 2. **Checks every dead-end claim sound** with
    `npx vitest run -c research/technique-check/vitest.config.ts dead-end-check`
    (§ "Checking a dead-end claim sound").
@@ -174,6 +175,9 @@ description author acts on:
   `units` is the space's boxes, dealt or not (Solo's `box`). A partition and
   a clue kind may not share a name, since both are fields of `Dealt`.
 - **`cell(x, y)` must be on the grid**: the compiled code does not check.
+- **A library name is looked up before a description's definitions**, so a
+  name added to the library is spelled apart from every one a description
+  defines (`on_grid`, since Solo defines `inside`).
 - **`strike(c, d)` and `place(c, d)` belong to a technique's conclusion
   only.**
 - **A size the grid is not measured in** (Salad's `nums`) is read from what
@@ -400,7 +404,10 @@ and the module's `rules(sp, cl, variations)` is the engine's
 `PositionRules`. Exemplars: [`sixteen`](../src/games/sixteen/sixteen.description.yaml)
 (a permutation), [`fifteen`](../src/games/fifteen/fifteen.description.yaml)
 (a guarded move), [`twiddle`](../src/games/twiddle/twiddle.description.yaml)
-(a layer a variation adds).
+(a layer a variation adds), [`pegs`](../src/games/pegs/pegs.description.yaml)
+(a jump, a least fixed point), [`flip`](../src/games/flip/flip.description.yaml)
+(a dealt relation), [`inertia`](../src/games/inertia/inertia.description.yaml)
+(a run until stopped, a token, a lose state).
 
 - **An assignment's last binder is the cell it sets**, and each of its
   terms reads the position before the move: a move's assignments are
@@ -415,8 +422,31 @@ and the module's `rules(sp, cl, variations)` is the engine's
   replaces layers.** What it adds runs only where it is on, and a layer it
   adds is all zeros on a board without it, so a game keeps the layer in its
   state whatever its board.
-- **The domain and `arranged` are read by the checker only**: they say which
-  positions a board can hold. A desc parser keeps its own errors.
+- **The domain, `arranged` and `once` are read by the checker only**: they
+  say which positions a board can hold. `once: v` is a token, one cell
+  holding `v` (Inertia's ball). A desc parser keeps its own errors.
+- **What never changes is a layer too**: Pegs' holes and Inertia's walls are
+  values no move assigns. `play` shares such a layer rather than copying it,
+  and the checker's universe holds every board as well as every position on
+  it.
+- **A relation the board deals** (`space.relations: { flips: dealt }`, Flip's
+  patterns) is a set of cells for each cell, read `flips(c)`, and a field of
+  `Dealt`. The checker deals none, so a game with one states no claim yet.
+- **A definition that reads itself is its least fixed point**: the least set
+  of cells its one parameter makes it true of, computed once at the top of
+  the function that reads it (Pegs' `arrive`, Inertia's `rests`). The
+  compiler refuses a self read under `not`, on either side of `iff` or `=`,
+  on the left of `implies`, in a `forall`'s `where`, inside an aggregate, or
+  through another definition. Only a planning game's rules may state one.
+- **A claim whose last conjunct is `exists x in S: P` names its cells**:
+  `witnesses(id, p)` gives every `x` the rest holds of, which the banner
+  outlines. State a claim that way when a player should see where it holds.
+- **A lost position has no moves**: `moves` is empty and `legal` false on
+  one, so the game is undone, not played on.
+- **A move's geometry**: `on_grid(x, y)` (`cell(x, y)` is unchecked);
+  `ray(c, n)`, the cells from `c`'s neighbor `n` on, in that direction, to
+  the edge, so a run until stopped is the first square of a ray where it
+  halts; `adj8(c)`, clockwise from up.
 - **A layer is an `Int32Array`.** A game whose state keeps a layer in
   another array copies it on each call, so it keeps the layer as the
   description's.
@@ -425,10 +455,14 @@ and the module's `rules(sp, cl, variations)` is the engine's
   `slide-planner`'s in-place slide is 1.6× the compiled slide's speed on a
   4×4 board and 4.4× on a 5×5 (2026-11-01), and its pruning is built on a
   slide's line (`sixteen.test.ts`, "slides in the planner as the description
-  says").
+  says"). Pegs' searches keep a packed jump table: a proof of loss fed the
+  compiled jumps took 2.6× as long (2026-11-01; `pegs.test.ts`, "Pegs'
+  searches"). A copy a hint narrates from, as Inertia's slide path, is held
+  to the compiled move the same way.
 
 Its comparison with the code it replaced is in the `report.md` of
-`openspec/changes/archive/*-describe-moves-and-finishes`.
+`openspec/changes/archive/*-describe-moves-and-finishes` and
+`*-describe-guarded-moves`.
 
 ## Checking a dead-end claim sound
 
@@ -441,8 +475,11 @@ whose positions number at most `CHECKED_POSITIONS`
 (`src/describe/soundness.ts`), with each set of its variations on.
 
 - **The universe is every position the layers allow**: an arranged layer's
-  arrangements, times every filling of the others. A move whose result
-  leaves it fails the check, as does a `permute` claim found false.
+  arrangements, a token's cells, times every filling of the others. A move
+  whose result leaves it fails the check, as does a `permute` claim found
+  false. A layer of five values reaches 2×3 boards and no further under the
+  cap (Inertia's), so a claim over many kinds of square is checked small.
+- **A game that states no claim is passed by.**
 - **It walks the moves backward from the finished positions**, so it
   assumes nothing of the moves, and a claim is sound where it holds of no
   position that can finish. A claim that never holds on a board checked is
