@@ -1,10 +1,12 @@
 # Descriptions Guide
 
 How a game's deduction techniques are stated in a description and compiled
-into the solver. The normative statements are in the specs:
+into the solver, and its rules into its answer check. The normative
+statements are in the specs:
 [`latin-solver`](../openspec/specs/latin-solver/spec.md) ("The Latin ladder
 is compiled from its description", "A compiled firing is recorded with a
-reason built from its binding") and
+reason built from its binding", "A game's answer check is compiled from its
+rules") and
 [`build-pipeline`](../openspec/specs/build-pipeline/spec.md) ("Nothing is
 generated into the source tree"). The parser and the compiler are
 [`src/describe/`](../src/describe/). The runtime the compiled code calls is
@@ -55,6 +57,10 @@ itself is § "The file". A game whose techniques are stated:
    structure it reads stays as it was: Solo's generator merges cages in
    place between solves, so a partition kept for the cage structure's life
    reads stale cages.
+6. **Checks its answers by its rules**: its `status`, and every solver
+   that asks whether a filled grid is right, call the module's `isAnswer`
+   over the board as one `dealtOf` deals it, which the ladder reads too
+   (§ "The answer check"). It writes no completion check of its own.
 
 ## Sections
 
@@ -66,6 +72,7 @@ itself is § "The file". A game whose techniques are stated:
 | The runtime a ladder runs on | you solve or hint a described game, or its board is not a Latin square |
 | A statement's order is behavior | you restate a technique, or a hint changes after a description edit |
 | A conclusion that is false is a contradiction | a technique must refuse a board, or a solver reports a false ambiguity |
+| The answer check | you decide whether a board is solved, or write an error overlay |
 | A firing's reason is built from its binding | a hint's words need a fact about a firing |
 | Checking a technique sound | you state or edit a technique, or the gate reports one unchecked |
 
@@ -280,9 +287,35 @@ let binder says which, for the reason: Towers' `bounds` and its `near`.
 proves the marks inconsistent, and the rung returns `-1`. Nothing else
 checks consistency: a strike that empties a cell is made, and only a
 technique that reads the cell sees it. The library's `single`,
-`hiddenSingle`, `set` and `fish` state the engine's checks. A game whose
-`valid` does not check every clue relies on them: drop `set`'s check, and
-its recursion accepts a broken grid as a second answer.
+`hiddenSingle`, `set` and `fish` state the engine's checks. A filled grid is
+then judged by the answer check, so a technique that misses a contradiction
+costs only the search's time, never a wrong answer.
+
+## The answer check
+
+`npm run describe` compiles the rules too: the module's `isAnswer(g, sp,
+cl)` says whether a whole grid is an answer to the board `cl` deals. Every
+cell holds a value of its domain, and the shape, the rules and each dealt
+clue's meaning hold of it. The compiler's `answerCheck` says how each part
+compiles; what a game acts on:
+
+- **The grid is the game's own**, a value a cell and 0 where none is: the
+  check reads only `value` and `known`, never the marks, so `cand` in a rule
+  is refused. A game that keeps a value outside its grid gives the check the
+  grid its description reads (Salad's empty square, `answerOf`).
+- **A rule a variation adds holds only where the board has it on**: the
+  check then takes `variations`, as `describedLadder` does (Unruly's unique
+  rows). A clue kind or partition a variation adds is dealt empty where it
+  is off, and needs nothing.
+- **A grid measured in other sizes** (Solo's `c * r`) reads that term as the
+  grid's width, so the check needs no size the space already gives.
+- **An error overlay stays the game's own code.** It judges a board still
+  being filled, which no rule of the answer says, and what it marks (a
+  run of three, a row's count) is presentation. It never decides that a
+  board is solved.
+
+Its comparison with the checks it replaced is in the `report.md` of
+`openspec/changes/archive/*-check-the-answer-from-the-rules`.
 
 ## A firing's reason is built from its binding
 

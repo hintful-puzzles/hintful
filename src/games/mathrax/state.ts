@@ -26,10 +26,12 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
+import { type ClueList, clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import { endParams, paramsLetter } from "../../engine/params.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { Point } from "../../engine/types.ts";
+import * as mathrax from "./mathrax.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
 
@@ -269,12 +271,42 @@ export function cloneState(s: MathraxState): MathraxState {
   };
 }
 
-/** Validated on a copy of the flags, which `mathraxValidate` rewrites. */
 export function status(s: MathraxState): "solved" | "ongoing" {
-  const { o } = s.params;
-  return mathraxValidate(o, s.grid, s.clues, s.flags.slice()) === STATUS_COMPLETE
+  return mathrax.isAnswer(s.grid, latinSpace(s.params.o), dealtOf(s.clues))
     ? "solved"
     : "ongoing";
+}
+
+const KIND_OF_TYPE = new Map<number, keyof mathrax.Dealt>([
+  [CLUE_ADD, "sum"],
+  [CLUE_SUB, "difference"],
+  [CLUE_MUL, "product"],
+  [CLUE_DIV, "quotient"],
+  [CLUE_EVN, "parity"],
+  [CLUE_ODD, "parity"],
+]);
+
+/** The clues as the description reads them, each at its corner: a sign's
+ * kind with its number, and E and O a parity of 0 and 1. */
+export function dealtOf(clues: Int32Array): mathrax.Dealt {
+  const ofKind = (kind: keyof mathrax.Dealt): ClueList => {
+    const ks: number[] = [];
+    const vs: number[] = [];
+    clues.forEach((clue, k) => {
+      const type = clueType(clue);
+      if (KIND_OF_TYPE.get(type) !== kind) return;
+      ks.push(k);
+      vs.push(type === CLUE_EVN ? 0 : type === CLUE_ODD ? 1 : clueNum(clue));
+    });
+    return clueList(ks, vs, clues.length);
+  };
+  return {
+    sum: ofKind("sum"),
+    difference: ofKind("difference"),
+    product: ofKind("product"),
+    quotient: ofKind("quotient"),
+    parity: ofKind("parity"),
+  };
 }
 
 // --- desc codec ------------------------------------------------------------
@@ -428,10 +460,6 @@ export function newState(p: MathraxParams, desc: string): MathraxState {
 
 // --- live validity ---------------------------------------------------------
 
-export const STATUS_COMPLETE = 0;
-export const STATUS_UNFINISHED = 1;
-export const STATUS_INVALID = 2;
-
 /** Upstream `BIT(d)`, bit `d − 1`, as {@link mathraxOptions} and
  * {@link mathraxValidate} read it; the player's pencil marks use `1 << n` (see
  * the module note). */
@@ -489,9 +517,9 @@ export function mathraxOptions(clue: number, mark: number): number {
 }
 
 /**
- * Recompute every cell's `FE_*` error bits in place and report whether the board
- * is complete, unfinished, or self-contradictory (upstream
- * `mathrax_validate_game`). A cell is flagged `FE_COUNT` when its digit repeats
+ * Recompute every cell's `FE_*` error bits in place (upstream
+ * `mathrax_validate_game`), the error overlay: whether a board is solved is the
+ * compiled answer check's. A cell is flagged `FE_COUNT` when its digit repeats
  * in its row or column, and `FE_TOPLEFT`/… when the clue at that corner admits
  * no pairing between this cell and the one diagonally opposite it.
  *
@@ -503,10 +531,9 @@ export function mathraxValidate(
   grid: Uint8Array,
   clues: Int32Array,
   flags: Uint8Array,
-): number {
+): void {
   const co = o - 1;
   const maxbits = (1 << o) - 1;
-  let ret = STATUS_COMPLETE;
 
   // Row/column occurrence counts: `counts[(d−1)·o + y]` for rows, offset by o²
   // for columns.
@@ -527,11 +554,8 @@ export function mathraxValidate(
       const d = grid[i];
       const bits = d ? bitOf(d) : maxbits;
 
-      if (!d) {
-        if (ret === STATUS_COMPLETE) ret = STATUS_UNFINISHED;
-      } else if (counts[(d - 1) * o + y] > 1 || counts[(d - 1) * o + o * o + x] > 1) {
+      if (d && (counts[(d - 1) * o + y] > 1 || counts[(d - 1) * o + o * o + x] > 1))
         flags[i] |= FE_COUNT;
-      }
 
       // Flag `bit` when the clue at index `clue` admits no pairing between this
       // cell and the cell `(ox, oy)` diagonally across its intersection.
@@ -544,12 +568,8 @@ export function mathraxValidate(
       if (y > 0 && x < co) corner((y - 1) * co + x, x + 1, y - 1, FE_TOPRIGHT);
       if (y < co && x > 0) corner(y * co + x - 1, x - 1, y + 1, FE_BOTLEFT);
       if (y > 0 && x > 0) corner((y - 1) * co + x - 1, x - 1, y - 1, FE_TOPLEFT);
-
-      if (flags[i] & FE_ERRORMASK) ret = STATUS_INVALID;
     }
   }
-
-  return ret;
 }
 
 // --- moves -----------------------------------------------------------------

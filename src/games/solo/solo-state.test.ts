@@ -16,8 +16,8 @@ import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { soloGame } from "./index.ts";
+import * as solo from "./solo.compiled.ts";
 import {
-  checkValid,
   DIFF_BLOCK,
   DIFF_KINTERSECT,
   DIFF_KMINMAX,
@@ -30,12 +30,14 @@ import {
   encodeGrid,
   encodeParams,
   makeBlocksFromWhichblock,
+  NO_CAGES,
   newState,
   rectangularBlocks,
   type SoloParams,
   SYMM_NONE,
   SYMM_REF4D,
   SYMM_ROT2,
+  soloSpace,
 } from "./state.ts";
 
 function paramsEqual(a: SoloParams, b: SoloParams): boolean {
@@ -400,10 +402,11 @@ describe("solo completion check", () => {
     for (let y = 0; y < cr; y++)
       for (let x = 0; x < cr; x++)
         grid[y * cr + x] = (((y % 3) * 3 + ((y / 3) | 0) + x) % 9) + 1;
-    expect(checkValid(cr, blocks, null, false, grid)).toBe(true);
+    const space = soloSpace(cr, blocks, false);
+    expect(solo.isAnswer(grid, space, NO_CAGES)).toBe(true);
     // swap two cells in a row to break it
     const broken = grid.slice();
     broken[0] = broken[1];
-    expect(checkValid(cr, blocks, null, false, broken)).toBe(false);
+    expect(solo.isAnswer(broken, space, NO_CAGES)).toBe(false);
   });
 });

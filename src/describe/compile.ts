@@ -14,6 +14,7 @@
 
 import {
   type Definition,
+  type Description,
   type DescriptionJson,
   type LibraryJson,
   loadDescription,
@@ -22,7 +23,7 @@ import {
   UNPLACED,
   withEveryVariation,
 } from "./description.ts";
-import type { Binder, Expr } from "./expr.ts";
+import { type Binder, type Expr, parse } from "./expr.ts";
 
 /** A region's sort names its partition, as a clue's names its kind. */
 type ElemSort =
@@ -200,6 +201,11 @@ interface Env {
   scratch: string[] | null;
   /** Whether `strike` and `place` may be called: in a conclusion only. */
   concluding: boolean;
+  /** Where the code is the answer check, which reads a whole grid's values
+   * (`g`) rather than the marks: whether the description has a repeated
+   * value, which the check then reads with its count from the description
+   * (`_repeat`, `_times`) rather than from the marks. `null` elsewhere. */
+  answer: { repeats: boolean } | null;
   /** Whether the function keeps each cell's candidates as it first reads
    * them (`cands`), until a firing it goes on from changes the marks. */
   memo: boolean;
@@ -1487,6 +1493,66 @@ function aggregate(
   return { code: r, sort };
 }
 
+/**
+ * `latin(f, U)`: no value of `f` more often in a unit of `U` than `times`
+ * allows it, which on a whole grid is each value exactly that often. A rule
+ * of the answer, so read only by the answer check.
+ */
+function latin(args: readonly Expr[], scope: Scope, env: Env, out: Out): Val {
+  const [f, units] = args;
+  if (!env.answer) throw new CompileError("latin(f, U) is a rule of the answer");
+  if (args.length !== 2 || f.k !== "name")
+    throw new CompileError("latin(f, U) names an answer function and a set of units");
+  const U = compileExpr(units, scope, env, out);
+  if (U.sort.k !== "set" || U.sort.of.k !== "elem")
+    throw new CompileError(`latin over ${show(U.sort)}`);
+  const r = Out.fresh("_q");
+  const label = Out.fresh("Q");
+  const u = Out.fresh("_u");
+  const c = Out.fresh("_c");
+  const seen = Out.fresh("_n");
+  out.emit(`let ${r} = true;`);
+  // A value is a bit of a 32-bit mask, so fewer than 32.
+  out.emit(`const ${seen} = new Int32Array(32);`);
+  out.open(`${label}: for (const ${u} of ${U.code}) {`);
+  out.emit(`${seen}.fill(0);`);
+  const cells = call(
+    "cells",
+    [{ k: "name", name: "$u" }],
+    new Map([...scope, ["$u", { code: u, sort: U.sort.of }]]),
+    env,
+    out,
+  );
+  out.open(`for (const ${c} of ${cells.code}) {`);
+  const v = once(
+    call(
+      f.name,
+      [{ k: "name", name: "$c" }],
+      new Map([["$c", { code: c, sort: elem("cell") }]]),
+      env,
+      out,
+    ),
+    out,
+  );
+  expect(v, "num", "latin");
+  out.open(`if (++${seen}[${v.code}] > ${timesOf(v.code, env)}) {`);
+  out.emit(`${r} = false;`);
+  out.emit(`break ${label};`);
+  out.close();
+  out.close();
+  out.close();
+  return { code: r, sort: BOOL };
+}
+
+/** `times(d)` in the answer check: the description's count for its repeated
+ * value, 1 for every other. */
+const timesOf = (d: string, env: Env): string =>
+  env.answer === null
+    ? `(${d} === b.repeat ? b.times : 1)`
+    : env.answer.repeats
+      ? `(${d} === _repeat ? _times : 1)`
+      : "1";
+
 function call(
   fn: string,
   args: readonly Expr[],
@@ -1496,6 +1562,7 @@ function call(
 ): Val {
   if (fn === "clues")
     throw new CompileError("clues(kind) is read only as a binder's set");
+  if (fn === "latin") return latin(args, scope, env, out);
   if (fn === "clue") {
     const a = args[0];
     if (args.length !== 2 || a.k !== "name" || !env.clues.has(a.name))
@@ -1646,12 +1713,16 @@ function call(
     }
     case "known":
       arity(1);
+      if (env.answer) return { code: `(g[${cell(0)}] > 0)`, sort: BOOL };
       return { code: `b.known(${cell(0)})`, sort: BOOL };
     case "value":
       arity(1);
+      if (env.answer) return { code: `(g[${cell(0)}] || -1)`, sort: NUM };
       return { code: `b.value(${cell(0)})`, sort: NUM };
     case "cand":
       arity(1);
+      if (env.answer)
+        throw new CompileError("a rule reads the answer, never the marks");
       if (!env.memo) return { code: `b.cand(${cell(0)})`, sort: setOf(NUM) };
       return {
         code: candOf(once({ code: cell(0), sort: vs[0].sort }, out).code),
@@ -1664,7 +1735,7 @@ function call(
     case "times":
       arity(1);
       expect(vs[0], "num", fn);
-      return { code: `(${vs[0].code} === b.repeat ? b.times : 1)`, sort: NUM };
+      return { code: timesOf(vs[0].code, env), sort: NUM };
     case "range":
       arity(2);
       expect(vs[0], "num", fn);
@@ -1953,6 +2024,7 @@ export function compileLibrary(
     sizes: { names: new Set(), read: new Set() },
     used,
     concluding: false,
+    answer: null,
     memo: false,
     scratch: null,
     readsClues: { yes: false },
@@ -2070,6 +2142,7 @@ export function compileGame(
     cellDomain: false,
     used,
     concluding: false,
+    answer: null,
     memo: false,
     scratch: null,
     readsClues: { yes: false },
@@ -2081,6 +2154,7 @@ export function compileGame(
   const domainLines = cellDomain(d.domain, env, d.json.sizes);
   const own = d.techniques.filter((t) => !t.id.includes("."));
   const code = own.map((t) => compileTechnique(t, env).code);
+  const check = answerCheck(json, d, env);
   const scales = Object.entries(d.json.scales ?? {});
   const sizes = [...env.sizes.read].sort();
   const clueLines =
@@ -2088,7 +2162,7 @@ export function compileGame(
       ? []
       : [
           "/** What the board deals: its partitions by name, its clues by kind, and",
-          " * the sizes a technique reads that the grid does not give. */",
+          " * the sizes a technique or the rules read that the grid does not give. */",
           "export interface Dealt {",
           ...[...regions].map((r) => `  ${r}: Partition;`),
           ...[...clues.keys()].map((k) => `  ${k}: ClueList;`),
@@ -2161,8 +2235,158 @@ export function compileGame(
     ...ladder,
     ...domainLines,
     "",
+    ...check,
+    "",
     code.join("\n\n"),
   ].join("\n")}\n`;
+}
+
+/**
+ * The answer check: whether a whole grid, a value a cell and 0 where it has
+ * none, is an answer to the board `cl` deals. Every cell holds a value of its
+ * domain, and the shape, the rules and each dealt clue's meaning hold of it.
+ * A rule a variation adds holds only where the board has the variation on,
+ * as a technique a variation adds runs only there; a clue kind or partition
+ * a variation adds is dealt empty where it is off.
+ */
+function answerCheck(json: DescriptionJson, d: Description, env: Env): string[] {
+  const readsClues = { yes: false };
+  const scratch: string[] = [];
+  const cenv: Env = {
+    ...env,
+    answer: { repeats: d.repeat !== null },
+    readsClues,
+    scratch,
+    memo: false,
+    hoist: null,
+    epoch: null,
+    concluding: false,
+  };
+  const out = new Out(1);
+  const measured = measuredBy(json.space.grid);
+  const scope = new Map<string, Val>();
+  out.open("for (const cell of sp.cells) {");
+  out.emit("const held = g[cell];");
+  if (env.cellDomain) {
+    readsClues.yes = true;
+    out.emit("if (!(held > 0 && (domainOf(sp, cl, cell) >> held) & 1)) return false;");
+    out.close();
+  } else {
+    const at = new Out(1);
+    const dom = compileExpr(measured(d.domain), scope, cenv, at);
+    if (!isMask(dom.sort)) throw new CompileError("the domain is not a set of values");
+    out.emit("if (!(held > 0 && (_domain >> held) & 1)) return false;");
+    out.close();
+    out.entries.unshift(...at.entries, {
+      indent: 1,
+      text: `const _domain = ${dom.code};`,
+    });
+    scope.set("domain", { code: "_domain", sort: setOf(NUM) });
+  }
+  if (d.repeat !== null) {
+    const value = compileExpr(measured(d.repeat.value), scope, cenv, out);
+    const times = compileExpr(measured(d.repeat.times), scope, cenv, out);
+    out.emit(`const _repeat = ${value.code};`);
+    out.emit(`const _times = ${times.code};`);
+  }
+  // A variation's own rules, each after the description's.
+  const rules = [
+    ...(json.shape ?? []).map((src) => ({ src, on: null as string | null })),
+    ...Object.values(json.rules ?? {}).map((src) => ({ src, on: null })),
+    ...Object.entries(json.variations ?? {}).flatMap(([name, v]) => [
+      ...(v.add?.shape ?? []).map((src) => ({ src, on: name })),
+      ...Object.values(v.add?.rules ?? {}).map((src) => ({ src, on: name })),
+    ]),
+  ];
+  for (const { src, on } of rules) {
+    if (on !== null) out.open(`if (variations.includes(${JSON.stringify(on)})) {`);
+    const v = compileExpr(measured(parse(src)), scope, cenv, out);
+    expect(v, "bool", `rule ${src}`);
+    out.emit(`if (!(${v.code})) return false;`);
+    if (on !== null) out.close();
+  }
+  for (const [kind, c] of d.clueKinds) {
+    const sorts = env.clues.get(kind) as ClueKind;
+    const k = Out.fresh("_k");
+    const at = Out.fresh("_at");
+    const v = Out.fresh("_v");
+    readsClues.yes = true;
+    out.open(`for (let ${k} = 0; ${k} < cl.${kind}.at.length; ${k}++) {`);
+    out.emit(`const ${at} = cl.${kind}.at[${k}];`);
+    out.emit(`const ${v} = cl.${kind}.v[${k}];`);
+    const means = compileExpr(
+      measured(c.means),
+      new Map([
+        ...scope,
+        ["at", { code: at, sort: sorts.at }],
+        ["v", { code: v, sort: sorts.v }],
+      ]),
+      cenv,
+      out,
+    );
+    expect(means, "bool", `clue ${kind}`);
+    out.emit(`if (!(${means.code})) return false;`);
+    out.close();
+  }
+  out.emit("return true;");
+  const params = [
+    "g: ArrayLike<number>",
+    "sp: GridSpace",
+    ...(readsClues.yes ? ["cl: Dealt"] : []),
+    ...(rules.some((r) => r.on !== null) ? ["variations: readonly string[]"] : []),
+  ];
+  return [
+    "/** Whether `g`, a value a cell and 0 where it has none, is an answer to the",
+    " * board: every cell a value of its domain, and every rule and dealt clue",
+    " * true of it, a variation's rules where `variations` has it on. */",
+    `export function isAnswer(${params.join(", ")}): boolean {`,
+    ...scratch.map((s) => `  ${s}`),
+    ...out.text(),
+    "}",
+  ];
+}
+
+/**
+ * A formula with the space's own measures read off the grid: where the
+ * description measures its grid in a term of other sizes (Solo's `c * r`),
+ * that term is the grid's width or height.
+ */
+function measuredBy(grid: { w: string; h: string }): (e: Expr) => Expr {
+  const w = JSON.stringify(parse(grid.w));
+  const h = JSON.stringify(parse(grid.h));
+  const go = (e: Expr): Expr => {
+    const s = JSON.stringify(e);
+    if (s === w) return { k: "name", name: "w" };
+    if (s === h) return { k: "name", name: "h" };
+    const opt = (x: Expr | null): Expr | null => (x === null ? null : go(x));
+    const binders = (bs: readonly Binder[]): Binder[] =>
+      bs.map((b) => ({ ...b, of: go(b.of), where: opt(b.where) }));
+    switch (e.k) {
+      case "num":
+      case "name":
+        return e;
+      case "call":
+        return { ...e, args: e.args.map(go) };
+      case "set":
+        return { ...e, elems: e.elems.map(go) };
+      case "size":
+      case "not":
+      case "neg":
+        return { ...e, of: go(e.of) };
+      case "bin":
+        return { ...e, a: go(e.a), b: go(e.b) };
+      case "quant":
+        return { ...e, binders: binders(e.binders), body: go(e.body) };
+      case "agg":
+        return {
+          ...e,
+          binders: binders(e.binders),
+          where: opt(e.where),
+          term: opt(e.term),
+        };
+    }
+  };
+  return go;
 }
 
 /**

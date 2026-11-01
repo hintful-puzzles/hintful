@@ -1,7 +1,7 @@
 /**
  * Keen solver: the ladder `keen.description.yaml` states, compiled, with the
- * reason each technique records for the hint, and the validator
- * (`keen_valid`), on the shared `LatinSolver` (`engine/latin.ts`), whose
+ * reason each technique records for the hint, and the answer check its rules
+ * compile to, on the shared `LatinSolver` (`engine/latin.ts`), whose
  * forcing chains and recursion are the search above the ladder. The tiers:
  *
  *   Easy (`DIFF_EASY`)         → each cage's values amalgamated, only at a cap
@@ -16,7 +16,7 @@
  * cells in reading order; its clue is of the kind its sign names.
  */
 
-import { type ClueList, clueList, partition } from "../../engine/describe-runtime.ts";
+import { latinSpace } from "../../engine/describe-runtime.ts";
 import { compiledRung, type Ladder } from "../../engine/ladder-runtime.ts";
 import {
   type DeductionRecord,
@@ -31,13 +31,12 @@ import type { SingleReason } from "../../engine/latin-hint.ts";
 import type { Point } from "../../engine/types.ts";
 import * as keen from "./keen.compiled.ts";
 import {
-  C_ADD,
-  C_DIV,
-  C_MUL,
-  C_SUB,
+  type Cages,
+  cagesOf,
   clueOp,
   clueVal,
   DIFF_UNREASONABLE,
+  dealtOf,
   type KeenClues,
 } from "./state.ts";
 
@@ -71,63 +70,7 @@ export interface HintOp extends DeductionRecord {
   reason: HintReason;
 }
 
-/** The cages in the order of their least cells, each cage's cells in reading
- * order, and its packed clue: what the techniques read, their reasons quote,
- * and the validator checks. */
-interface Cages {
-  cells: number[][];
-  clues: number[];
-}
-
-function cagesOf(w: number, kclues: KeenClues): Cages {
-  const out: Cages = { cells: [], clues: [] };
-  const index = new Map<number, number>();
-  for (let i = 0; i < w * w; i++) {
-    const m = kclues.minimal[i];
-    let r = index.get(m);
-    if (r === undefined) {
-      r = out.cells.length;
-      index.set(m, r);
-      out.cells.push([]);
-      out.clues.push(kclues.clues[m]);
-    }
-    out.cells[r].push(i);
-  }
-  return out;
-}
-
-// --- validator -------------------------------------------------------------
-
-/** Does the completed grid satisfy every cage clue? (`keen_valid`.) */
-function keenValid(solver: LatinSolver, cages: Cages): boolean {
-  return cages.cells.every((cells, r) => {
-    const value = clueVal(cages.clues[r]);
-    const vs = cells.map((c) => solver.grid[c]);
-    switch (clueOp(cages.clues[r])) {
-      case C_ADD:
-        return vs.reduce((a, b) => a + b, 0) === value;
-      case C_MUL:
-        return vs.reduce((a, b) => a * b, 1) === value;
-      case C_SUB:
-        return Math.max(...vs) - Math.min(...vs) === value;
-      case C_DIV:
-        return Math.max(...vs) === value * Math.min(...vs);
-      default:
-        return false;
-    }
-  });
-}
-
 // --- the described ladder ----------------------------------------------------
-
-type ClueKind = Exclude<keyof keen.Dealt, "cage">;
-
-const KIND_OF_OP = new Map<number, ClueKind>([
-  [C_ADD, "sum"],
-  [C_MUL, "product"],
-  [C_SUB, "difference"],
-  [C_DIV, "quotient"],
-]);
 
 function cageReason(
   cages: Cages,
@@ -142,26 +85,7 @@ function cageReason(
   };
 }
 
-function describedLadder(w: number, cages: Cages): Ladder<LatinSolver> {
-  const n = cages.cells.length;
-  // Each cage's clue is of the kind its sign names, at the cage.
-  const ofKind = (kind: ClueKind): ClueList => {
-    const rs = cages.clues.flatMap((clue, r) =>
-      KIND_OF_OP.get(clueOp(clue)) === kind ? [r] : [],
-    );
-    return clueList(
-      rs,
-      rs.map((r) => clueVal(cages.clues[r])),
-      n,
-    );
-  };
-  const dl: keen.Dealt = {
-    cage: partition(cages.cells, n),
-    sum: ofKind("sum"),
-    product: ofKind("product"),
-    difference: ofKind("difference"),
-    quotient: ofKind("quotient"),
-  };
+function describedLadder(w: number, cages: Cages, dl: keen.Dealt): Ladder<LatinSolver> {
   return latinLadder(keen, {
     cageEasy: compiledRung(
       keen.cageEasy,
@@ -202,13 +126,13 @@ export function solveKeen(
   recorder?: (rec: DeductionRecord) => void,
 ): number {
   const cages = cagesOf(w, kclues);
-  return latinSolver<Cages>(soln, w, {
+  const dl = dealtOf(cages);
+  return latinSolver(soln, w, {
     maxdiff,
     diffRecursive: DIFF_UNREASONABLE,
-    valid: keenValid,
-    ctx: cages,
+    isAnswer: (grid) => keen.isAnswer(grid, latinSpace(w), dl),
     recorder,
-    ladder: describedLadder(w, cages),
+    ladder: describedLadder(w, cages, dl),
   });
 }
 

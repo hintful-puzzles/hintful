@@ -84,8 +84,8 @@ export const MODULES = [
       },
       {
         within: "finish",
-        why: "the game's own validity check on a completed grid is skipped",
-        find: "    !cfg.valid(solver, cfg.ctx)",
+        why: "the game's answer check on a completed grid is skipped",
+        find: "    !cfg.isAnswer(solver.grid)",
         replace: "    !true",
       },
       {

@@ -1,8 +1,9 @@
 /**
  * Group solver: the ladder `group.description.yaml` states, compiled, with the
- * reason each technique records for the hint, and the group validator, on the
- * shared `LatinSolver` (`engine/latin.ts`), whose forcing chains and recursion
- * are the search above the ladder. The tiers, by display name and constant:
+ * reason each technique records for the hint, and the answer check its rules
+ * compile to, on the shared `LatinSolver` (`engine/latin.ts`), whose forcing
+ * chains and recursion are the search above the ladder. The tiers, by display
+ * name and constant:
  *
  *   Easy (`DIFF_TRIVIAL`)   → the library's singles.
  *   Normal (`DIFF_NORMAL`)  → associativity, and the identity's row and column.
@@ -14,11 +15,11 @@
  * Cells are numbered `y·o + x`; row `a`, column `b` holds the product `a·b`.
  */
 
+import { latinSpace } from "../../engine/describe-runtime.ts";
 import { type CellMarks, uncluedRung } from "../../engine/ladder-runtime.ts";
 import {
   type DeductionRecord,
   type LatinReason,
-  type LatinSolver,
   latinLadder,
   latinSolver,
 } from "../../engine/latin.ts";
@@ -87,30 +88,6 @@ export type HintReason = GroupReason | LatinReason;
  * reason). */
 export interface HintOp extends DeductionRecord {
   reason: HintReason;
-}
-
-/**
- * A completed grid is a valid group table iff it is associative
- * (`(ab)c == a(bc)` for all `a,b,c`) — the generic Latin layers already ensure
- * Latin-square-hood, and identity + inverses follow (`group_valid`). Uses the
- * transposed `grid(x,y)` macro; only ever called on a full grid, so no blank
- * cell can index out of range.
- */
-function groupValid(solver: LatinSolver): boolean {
-  const w = solver.o;
-  const gm = (x: number, y: number): number => solver.grid[y * w + x]; // grid(x,y)
-
-  for (let i = 0; i < w; i++)
-    for (let j = 0; j < w; j++)
-      for (let k = 0; k < w; k++) {
-        const ij = gm(i, j) - 1;
-        const jk = gm(j, k) - 1;
-        const ijK = gm(ij, k) - 1;
-        const iJk = gm(i, jk) - 1;
-        if (ijK !== iJk) return false;
-      }
-
-  return true;
 }
 
 // --- the described ladder ----------------------------------------------------
@@ -191,11 +168,10 @@ export function solveGroup(
   maxdiff: number,
   recorder?: (rec: DeductionRecord) => void,
 ): number {
-  return latinSolver<null>(grid, w, {
+  return latinSolver(grid, w, {
     maxdiff,
     diffRecursive: DIFF_UNREASONABLE,
-    valid: groupValid,
-    ctx: null,
+    isAnswer: (g) => group.isAnswer(g, latinSpace(w)),
     recorder,
     ladder: describedLadder,
   });

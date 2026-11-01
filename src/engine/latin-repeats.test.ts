@@ -44,7 +44,7 @@ const SOLUTION = Uint8Array.from(
 
 /** The library's singles at 1, its set at 2, its fish and wing at 3, and the
  * search at 4. */
-function cfg(maxdiff: number, repeats = true): LatinSolverConfig<null> {
+function cfg(maxdiff: number, repeats = true): LatinSolverConfig {
   return {
     repeats: repeats ? { times: TIMES } : undefined,
     maxdiff,
@@ -62,8 +62,7 @@ function cfg(maxdiff: number, repeats = true): LatinSolverConfig<null> {
       {},
     ),
     diffRecursive: 4,
-    valid: null,
-    ctx: null,
+    isAnswer: () => true,
   };
 }
 

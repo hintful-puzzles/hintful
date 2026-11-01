@@ -1,9 +1,9 @@
 // Compiled by `npm run describe` from src/games/salad/salad.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, rangeMask } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its clues by kind, and
- * the sizes a technique reads that the grid does not give. */
+ * the sizes a technique or the rules read that the grid does not give. */
 export interface Dealt {
   border: ClueList;
   ball: ClueList;
@@ -39,6 +39,70 @@ export const ladder: readonly { id: LadderId; tier: number; scale?: string; from
 
 /** The description's tiers, by name. */
 export const tiers: readonly string[] = ["Easy","Normal"];
+
+/** Whether `g`, a value a cell and 0 where it has none, is an answer to the
+ * board: every cell a value of its domain, and every rule and dealt clue
+ * true of it, a variation's rules where `variations` has it on. */
+export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
+  const _domain = rangeMask(1, (cl.nums + 1));
+  for (const cell of sp.cells) {
+    const held = g[cell];
+    if (!(held > 0 && (_domain >> held) & 1)) return false;
+  }
+  const _repeat = (cl.nums + 1);
+  const _times = (sp.w - cl.nums);
+  let _q52 = true;
+  const _n56 = new Int32Array(32);
+  Q53: for (const _u54 of sp.lines) {
+    _n56.fill(0);
+    for (const _c55 of sp.lineCells[_u54]) {
+      const _t57 = (g[_c55] || -1);
+      if (++_n56[_t57] > (_t57 === _repeat ? _times : 1)) {
+        _q52 = false;
+        break Q53;
+      }
+    }
+  }
+  if (!(_q52)) return false;
+  for (let _k58 = 0; _k58 < cl.border.at.length; _k58++) {
+    const _at59 = cl.border.at[_k58];
+    const _v60 = cl.border.v[_k58];
+    let _q61 = false;
+    Q62: {
+      const _a63 = sp.sight[_at59];
+      for (let _i64 = 0; _i64 < _a63.length; _i64++) {
+        const v_c = _a63[_i64];
+        let _c70 = ((g[v_c] || -1) === _v60);
+        if (_c70) {
+          let _q65 = true;
+          Q66: {
+            const _a67 = sp.sight[_at59];
+            const _n68 = _i64;
+            for (let _i69 = 0; _i69 < _n68; _i69++) {
+              const v_c2 = _a67[_i69];
+              if (!(((g[v_c2] || -1) === (cl.nums + 1)))) {
+                _q65 = false;
+                break Q66;
+              }
+            }
+          }
+          _c70 = _q65;
+        }
+        if (_c70) {
+          _q61 = true;
+          break Q62;
+        }
+      }
+    }
+    if (!(_q61)) return false;
+  }
+  for (let _k71 = 0; _k71 < cl.ball.at.length; _k71++) {
+    const _at72 = cl.ball.at[_k71];
+    const _v73 = cl.ball.v[_k71];
+    if (!(((g[_at72] || -1) !== _v73))) return false;
+  }
+  return true;
+}
 
 export interface BorderBinding {
   k: number;

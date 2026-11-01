@@ -65,7 +65,6 @@ import {
   C_DIV,
   C_MUL,
   C_SUB,
-  checkErrors,
   clueOp,
   clueVal,
   ERR_CLUE,
@@ -73,6 +72,7 @@ import {
   type KeenMove,
   type KeenState,
   type KeenUi,
+  markErrors,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 48;
@@ -172,7 +172,7 @@ export interface KeenDrawState {
   w: number;
   /** `w²` last-drawn tile values (-1 = never drawn). */
   tiles: Int32Array;
-  /** `w²` scratch error flags, refilled each redraw by `checkErrors`. */
+  /** `w²` scratch error flags, refilled each redraw by `markErrors`. */
   errors: Int32Array;
   /** `w²` hint-overlay sidecar (fork addition): bit 0 = target cell, bit 1 =
    * evidence, struck candidates at `valueBit(n)` in its `struck` lane. Owns the
@@ -514,7 +514,7 @@ export function redraw(
     ds.started = true;
   }
 
-  checkErrors(state, ds.errors);
+  markErrors(state, ds.errors);
 
   // Pack both overlays per cell.
   const index = (x: number, y: number) => y * w + x;

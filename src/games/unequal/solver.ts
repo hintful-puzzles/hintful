@@ -68,7 +68,7 @@ function signReason(
  * The board's signs as the description deals them: flagged at the greater end,
  * taken column by column and each cell's signs up, right, down, left.
  */
-export const signLadder: ClueKind["ladder"] = (o, flags) => {
+function dealtOf(o: number, flags: Int32Array): unequal.Dealt {
   const sp = latinSpace(o);
   const edges = sp.edgeEnds.length / 2;
   const at: number[] = [];
@@ -81,7 +81,14 @@ export const signLadder: ClueKind["ladder"] = (o, flags) => {
           at.push(sp.edgeOf(big, (y + dir.dy) * o + x + dir.dx));
           v.push(big);
         }
-  const cl: unequal.Dealt = { greater: clueList(at, v, edges) };
+  return { greater: clueList(at, v, edges) };
+}
+
+export const signAnswer: ClueKind["isAnswer"] = (grid, o, flags) =>
+  unequal.isAnswer(grid, latinSpace(o), dealtOf(o, flags));
+
+export const signLadder: ClueKind["ladder"] = (o, flags) => {
+  const cl = dealtOf(o, flags);
   return latinLadder(unequal, {
     sign: compiledRung(unequal.sign, cl, (binding, cell, _n, m) =>
       signReason(binding, cell, m),

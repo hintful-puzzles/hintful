@@ -25,7 +25,6 @@ import {
 } from "../../engine/edge-clue-latin/render.ts";
 import { solveEdgeClues } from "../../engine/edge-clue-latin/solver.ts";
 import {
-  checkComplete,
   cloneState,
   diffToLevel,
   type EdgeClueParams,
@@ -276,7 +275,6 @@ describe("unequal moves", () => {
       if (k < empties.length - 1) expect(unequalGame.status(cur)).toBe("ongoing");
     });
     expect(unequalGame.status(cur)).toBe("solved");
-    expect(checkComplete(cur)).toBe(1);
   });
 });
 

@@ -4,9 +4,9 @@ A development tool, never part of the app: an interpreter that reads a
 game's rules and techniques from its description and runs them, to compare
 what they say with what the game's code does. It was the pilot
 (`openspec/changes/archive/2026-10-29-build-a-game-from-its-description/`);
-the app now runs the techniques compiled ([`docs/descriptions.md`](../../docs/descriptions.md)),
-and this is the reference they are compared against, and the only reader of a
-description's rules.
+the app now runs the techniques and the rules compiled
+([`docs/descriptions.md`](../../docs/descriptions.md)), and this is the
+reference they are compared against.
 
 It is run by hand and not by the gate, which compiles it
 (`tsconfig.node.json`) and runs none of its tests:
@@ -24,7 +24,7 @@ writes a line of progress per board.
 | `ladder` | the stated techniques to a fixpoint at every tier cap, against the game's own solver, cell by cell, and its grade, with three planted defects; writes `results-ladder.txt` |
 | `firings` | every firing of the game's recording solver, which its hint narrates, against the technique stated under the firing's rung on the same marks; writes `results-firings.txt` |
 | `measure` | the stated ladder's time against the game's solver's; writes `results-measure.txt` |
-| `speed-latin` | the generator's time per deal on every Latin game's presets (`SPEED_GAMES` narrows it), each run twice and the second kept: run it on two builds and compare the lines |
+| `speed-latin` | the generator's time per deal on every described game's presets (`SPEED_GAMES` narrows it), each run twice and the second kept: run it on two builds and compare the lines |
 | `trace-latin` | every Latin game's deals and hint walks, step by step, to `TRACE_OUT`: run it on two builds of the compiled modules and diff the files |
 
 A build to compare against is a worktree of it in the session's scratchpad,

@@ -52,12 +52,12 @@ import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../ring.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../types.ts";
 import { type Flash, sweepStep, type WinTone } from "../win-wave.ts";
 import {
-  checkComplete,
   displayChar,
   type EdgeClueMove,
   type EdgeClueState,
   type EdgeClueUi,
   F_ERROR,
+  markErrors,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
@@ -173,7 +173,7 @@ export interface EdgeClueDrawState {
   /** `order²` mistake-overlay sidecar (fork addition) — same dance, so that a
    * Check & Save repaints the red highlight on an already-drawn cell. */
   wrong: OverlaySidecar;
-  /** `order²` scratch error flags, refilled each redraw by `checkComplete`. */
+  /** `order²` scratch error flags, refilled each redraw by `markErrors`. */
   errFlags: Int32Array;
   cursor: GridCursor;
   pencilMode: boolean;
@@ -443,7 +443,7 @@ export function redraw(
     ds.marks.reset(); // the midend's ground just erased every gap
   }
 
-  checkComplete(state, ds.errFlags);
+  markErrors(state, ds.errFlags);
 
   // Pack both overlays per cell.
   const index = (x: number, y: number) => y * o + x;

@@ -21,7 +21,7 @@
  *    recorder is threaded through the ABC End View border scan alone
  *    (`solver.ts`), which is the one Salad deduction that strikes candidates the
  *    player holds notes for.
- * 3. **The walk terminates on {@link latinholesCheck}, not "the grid is full".**
+ * 3. **The walk terminates on {@link isComplete}, not "the grid is full".**
  *    A solved board legitimately leaves `order − nums` squares per line blank,
  *    so a fill-the-grid loop would never end.
  *
@@ -79,9 +79,9 @@ import {
   CIRCLE,
   CROSS,
   clueSide,
+  isComplete,
   KEY_CIRCLE,
   KEY_CROSS,
-  latinholesCheck,
   needsPencilFill,
   type SaladBoard,
   type SaladMark,
@@ -704,7 +704,7 @@ function buildSteps(
     autoClean,
     label: "salad hint plan",
     cap: o * o * (nums + 4) + 8,
-    finished: () => latinholesCheck(board()),
+    finished: () => isComplete(board()),
     // A strike of the hole symbol because its line holds all its empty squares
     // is dropped: a count says the same as a marker step (file header, point
     // 1), and teaching it twice would be noise. Every other strike of it is a

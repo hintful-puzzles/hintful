@@ -28,11 +28,18 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
+import {
+  clueList,
+  describedSpace,
+  type GridSpace,
+  partition,
+} from "../../engine/describe-runtime.ts";
 import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
+import * as solo from "./solo.compiled.ts";
 
 // --- difficulty (standard axis) --------------------------------------------
 // DIFF_AMBIGUOUS and DIFF_IMPOSSIBLE are solver verdicts, not params.
@@ -601,60 +608,46 @@ export function newState(p: SoloParams, desc: string): SoloState {
 
 // --- completion check ------------------------------------------------------
 
-/**
- * `check_valid`: true iff every row, column, block (and diagonal when xtype, and
- * killer cage) contains each digit once and every killer cage sums correctly.
- */
-export function checkValid(
-  cr: number,
-  blocks: BlockStructure,
-  killerData: SoloKiller | null,
-  xtype: boolean,
-  grid: ArrayLike<number>,
-): boolean {
-  const used = new Uint8Array(cr);
-  const holdsEveryDigit = (cells: ArrayLike<number>): boolean => {
-    used.fill(0);
-    for (let k = 0; k < cells.length; k++) {
-      const v = grid[cells[k]];
-      if (v > 0 && v <= cr) used[v - 1] = 1;
-    }
-    return !used.includes(0);
-  };
-  const line = (cell: (k: number) => number): number[] =>
-    Array.from({ length: cr }, (_, k) => cell(k));
-
-  for (let i = 0; i < cr; i++) {
-    if (!holdsEveryDigit(line((k) => i * cr + k))) return false; // row i
-    if (!holdsEveryDigit(line((k) => k * cr + i))) return false; // column i
-  }
-  for (let b = 0; b < blocks.nrBlocks; b++)
-    if (!holdsEveryDigit(blocks.blocks[b])) return false;
-  // Killer cages: at most one of everything, plus correct sum when clued.
-  if (killerData) {
-    for (let b = 0; b < killerData.kblocks.nrBlocks; b++) {
-      used.fill(0);
-      for (const cell of killerData.kblocks.blocks[b]) {
-        const v = grid[cell];
-        if (v > 0 && v <= cr) {
-          if (used[v - 1]) return false;
-          used[v - 1] = 1;
-        }
-      }
-      if (checkKillerCageSum(killerData, grid, b) !== 1) return false;
-    }
-  }
-  return (
-    !xtype ||
-    (holdsEveryDigit(line((k) => diag0(k, cr))) &&
-      holdsEveryDigit(line((k) => diag1(k, cr))))
-  );
+export function status(s: SoloState): "solved" | "ongoing" {
+  const space = soloSpace(s.cr, s.blocks, s.xtype);
+  const dealt = s.killerData
+    ? dealtOf(s.killerData.kblocks, s.killerData.kgrid, s.cr * s.cr)
+    : NO_CAGES;
+  return solo.isAnswer(s.grid, space, dealt) ? "solved" : "ongoing";
 }
 
-export function status(s: SoloState): "solved" | "ongoing" {
-  return checkValid(s.cr, s.blocks, s.killerData, s.xtype, s.grid)
-    ? "solved"
-    : "ongoing";
+/** The space a board's units make: its blocks, rows and columns, and its
+ * diagonals only on an X board. */
+export function soloSpace(
+  cr: number,
+  blocks: BlockStructure,
+  xtype: boolean,
+): GridSpace {
+  const units = solo.units.filter((u) => u !== "diagonals" || xtype);
+  return describedSpace(units, cr, cr, blocks.blocks);
+}
+
+/** What a board without killer cages deals. */
+export const NO_CAGES: solo.Dealt = {
+  cage: partition([], 0),
+  total: clueList([], [], 0),
+};
+
+/** The killer cages as the description deals them, each with its total, read
+ * off whichever of its cells shows it. Built afresh for each solve: the
+ * generator merges cages in place between solves. */
+export function dealtOf(
+  kblocks: BlockStructure,
+  kgrid: ArrayLike<number>,
+  area: number,
+): solo.Dealt {
+  const totals = kblocks.blocks.slice(0, kblocks.nrBlocks).map((cells) => {
+    let total = 0;
+    for (const cell of cells) if (kgrid[cell] !== 0) total = kgrid[cell];
+    return total;
+  });
+  const cage = partition(kblocks.blocks, area);
+  return { cage, total: clueList(cage.parts, totals, kblocks.nrBlocks) };
 }
 
 // --- moves -----------------------------------------------------------------

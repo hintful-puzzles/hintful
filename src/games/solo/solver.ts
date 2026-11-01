@@ -17,12 +17,7 @@ import type {
   DeductionTechnique,
   FiringTally,
 } from "../../engine/deduction-fixpoint.ts";
-import {
-  clueList,
-  describedSpace,
-  partition,
-  valuesOf,
-} from "../../engine/describe-runtime.ts";
+import { valuesOf } from "../../engine/describe-runtime.ts";
 import { auditingPremises, offerReplay } from "../../engine/firing-replay.ts";
 import {
   CellMarks,
@@ -54,10 +49,13 @@ import {
   DIFF_KINTERSECT,
   DIFF_KSINGLE,
   DIFF_RECURSIVE,
+  dealtOf,
   diag0,
   diag1,
+  NO_CAGES,
   onDiag0,
   onDiag1,
+  soloSpace,
 } from "./state.ts";
 
 // --- hint recording (opt-in; off for generate/solve) ------------------------
@@ -199,8 +197,6 @@ function removeFromBlock(cages: Cages, b: number, n: number): void {
 
 // --- solver usage -----------------------------------------------------------
 
-const NO_CAGES: solo.Dealt = { cage: partition([], 0), total: clueList([], [], 0) };
-
 class SolverUsage extends CellMarks {
   readonly cr: number;
   readonly blocks: BlockStructure;
@@ -240,9 +236,7 @@ class SolverUsage extends CellMarks {
     kgrid: ArrayLike<number> | null,
   ) {
     const area = cr * cr;
-    // The diagonals are units only on an X board.
-    const units = solo.units.filter((u) => u !== "diagonals" || xtype);
-    super(describedSpace(units, cr, cr, blocks.blocks), (1 << (cr + 1)) - 2, grid);
+    super(soloSpace(cr, blocks, xtype), (1 << (cr + 1)) - 2, grid);
     this.cr = cr;
     this.blocks = blocks;
     this.cages = kblocks;
@@ -261,12 +255,7 @@ class SolverUsage extends CellMarks {
         }
       }
       this.killer = { kblocks: dupCages(kblocks), kclues: kclues.slice() };
-      // Built each solve: the generator merges cages in place between them.
-      const cage = partition(kblocks.blocks, area);
-      this.dealt = {
-        cage,
-        total: clueList(cage.parts, kclues.slice(0, nclues), nclues),
-      };
+      this.dealt = dealtOf(kblocks, kgrid, area);
     } else {
       this.killer = null;
       this.dealt = NO_CAGES;

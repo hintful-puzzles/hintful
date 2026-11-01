@@ -30,7 +30,7 @@
  */
 
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
-import { clueList } from "../../engine/describe-runtime.ts";
+import { latinSpace } from "../../engine/describe-runtime.ts";
 import { type EntryBoard, entryMistake } from "../../engine/entry-mistakes.ts";
 import { compiledRung, type Ladder } from "../../engine/ladder-runtime.ts";
 import {
@@ -40,6 +40,7 @@ import {
   type LatinSolverConfig,
   latinLadder,
   latinSolver,
+  latinVerdict,
 } from "../../engine/latin.ts";
 import * as salad from "./salad.compiled.ts";
 import {
@@ -47,7 +48,7 @@ import {
   CROSS,
   DIFF_HARD,
   DIFF_HOLESONLY,
-  latinholesCheck,
+  dealtOf,
   type SaladBoard,
   type SaladState,
   saladNotes,
@@ -161,32 +162,9 @@ function borderReason(
   };
 }
 
-/** The board as its description deals it: the border letters in the order
- * the scan meets them, each line's top, left, bottom and right in turn; the
- * balls, which no technique reads, since a ball is seeded as a strike. */
-function describedLadder(b: SaladBoard): Ladder<LatinSolver> {
-  const o = b.order;
-  const at: number[] = [];
-  const v: number[] = [];
-  const slots = [0, 2, 1, 3];
-  for (let i = 0; i < o; i++)
-    for (let side = 0; side < 4; side++) {
-      const clue = b.borderclues[side * o + i];
-      if (!clue) continue;
-      at.push(slots[side] * o + i);
-      v.push(clue);
-    }
-  const balls: number[] = [];
-  for (let c = 0; c < o * o; c++) if (b.gridclues[c] === CIRCLE) balls.push(c);
-  const cl: salad.Dealt = {
-    border: clueList(at, v, 4 * o),
-    ball: clueList(
-      balls,
-      balls.map(() => holeSymbol(b.nums)),
-      o * o,
-    ),
-    nums: b.nums,
-  };
+/** The ladder over the dealt board. No technique reads the balls, since a
+ * ball is seeded as a strike. */
+function describedLadder(cl: salad.Dealt): Ladder<LatinSolver> {
   return latinLadder(salad, {
     border: compiledRung(salad.border, cl, (binding, cell, n, m) =>
       borderReason(binding, cell, n, cl, m.sp.w),
@@ -233,17 +211,18 @@ function configFor(
   maxdiff: number,
   seed: (solver: LatinSolver) => void,
   cubeOut: Uint8Array,
-): LatinSolverConfig<SaladBoard> {
+): LatinSolverConfig {
+  const cl = dealtOf(b);
   return {
     repeats: repeatsFor(b),
     maxdiff,
-    ladder: describedLadder(b),
+    ladder: describedLadder(cl),
     // Never search, by forcing chain or recursion: both tiers are pure
     // deduction (the guess-free policy).
     diffRecursive: DIFF_IMPOSSIBLE,
-    // Salad has no whole-grid post-check beyond `latinholesCheck`.
-    valid: () => true,
-    ctx: b,
+    // The working grid holds the empty square as the hole symbol, as the
+    // description reads it.
+    isAnswer: (grid) => salad.isAnswer(grid, latinSpace(b.order), cl),
     seed,
     cubeOut,
   };
@@ -320,17 +299,17 @@ export function saladSolve(b: SaladBoard, maxdiff: number): boolean {
   }
 
   const cube = new Uint8Array(cubeSize(b));
-  latinSolver(
+  const ret = latinSolver(
     b.grid,
     o,
     configFor(b, maxdiff, (solver) => seedGridClues(solver, b), cube),
   );
   markersFromCube(b, b.grid, cube);
 
-  // Upstream discards the difficulty `latin_solver_main` reports and asks only
-  // whether the board came out complete and legal — which, with recursion
-  // disabled, is exactly "pure deduction finished it", hence unique.
-  return latinholesCheck(b);
+  // Whether the board came out complete and an answer, which the solver's
+  // verdict says once its answer check has run: with recursion disabled, that
+  // is "pure deduction finished it", hence unique.
+  return latinVerdict(ret) === "solved";
 }
 
 /**

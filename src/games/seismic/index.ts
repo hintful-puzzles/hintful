@@ -68,7 +68,7 @@ import {
   redraw,
   type SeismicDrawState,
 } from "./render.ts";
-import { SOLVE_FAILED, STATUS_COMPLETE, solveGame, validateGame } from "./solver.ts";
+import { isComplete, markErrors, SOLVE_FAILED, solveGame } from "./solver.ts";
 import {
   areaBits,
   cloneState,
@@ -186,7 +186,7 @@ function executeMove(state: SeismicState, move: SeismicMove): SeismicState {
       }
       // Refresh the live error flags, which upstream does after a pencil
       // change too.
-      validateGame(next);
+      markErrors(next);
       return next;
     }
     case "pencilAll": {
@@ -218,7 +218,7 @@ function executeMove(state: SeismicState, move: SeismicMove): SeismicState {
       for (let i = 0; i < w * h; i++) {
         if (!(next.flags[i] & FM_FIXED)) next.grid[i] = move.grid[i];
       }
-      validateGame(next);
+      markErrors(next);
       return next;
     }
     default:
@@ -298,12 +298,7 @@ export const seismicGame: Game<
 
   interpretMove,
   executeMove,
-  // `validateGame` writes the error flags of the board it is given, so it
-  // judges a copy of them.
-  status: (state) =>
-    validateGame({ ...state, flags: state.flags.slice() }) === STATUS_COMPLETE
-      ? "solved"
-      : "ongoing",
+  status: (state) => (isComplete(state) ? "solved" : "ongoing"),
 
   solve,
   difficulty,

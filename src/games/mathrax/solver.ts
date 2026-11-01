@@ -23,7 +23,7 @@ import type {
   DeductionRecord,
   DeductionRecorder,
 } from "../../engine/deduction-record.ts";
-import { type ClueList, clueList } from "../../engine/describe-runtime.ts";
+import { latinSpace } from "../../engine/describe-runtime.ts";
 import { compiledRung, type Ladder } from "../../engine/ladder-runtime.ts";
 import {
   DIFF_AMBIGUOUS,
@@ -36,17 +36,7 @@ import {
 } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
 import * as mathrax from "./mathrax.compiled.ts";
-import {
-  CLUE_ADD,
-  CLUE_DIV,
-  CLUE_EVN,
-  CLUE_MUL,
-  CLUE_ODD,
-  CLUE_SUB,
-  clueNum,
-  clueType,
-  DIFF_RECURSIVE,
-} from "./state.ts";
+import { DIFF_RECURSIVE, dealtOf } from "./state.ts";
 
 /** Solver verdicts, upstream `mathrax_solve`'s return codes. */
 export const SOLVE_IMPOSSIBLE = -1;
@@ -84,40 +74,11 @@ export interface HintOp extends DeductionRecord {
   reason: HintReason;
 }
 
-const KIND_OF_TYPE = new Map<number, keyof mathrax.Dealt>([
-  [CLUE_ADD, "sum"],
-  [CLUE_SUB, "difference"],
-  [CLUE_MUL, "product"],
-  [CLUE_DIV, "quotient"],
-  [CLUE_EVN, "parity"],
-  [CLUE_ODD, "parity"],
-]);
-
-/** The clues as the description reads them, each at its corner: a sign's
- * kind with its number, and E and O a parity of 0 and 1. */
-function dealtOf(clues: Int32Array): mathrax.Dealt {
-  const ofKind = (kind: keyof mathrax.Dealt): ClueList => {
-    const ks: number[] = [];
-    const vs: number[] = [];
-    clues.forEach((clue, k) => {
-      const type = clueType(clue);
-      if (KIND_OF_TYPE.get(type) !== kind) return;
-      ks.push(k);
-      vs.push(type === CLUE_EVN ? 0 : type === CLUE_ODD ? 1 : clueNum(clue));
-    });
-    return clueList(ks, vs, clues.length);
-  };
-  return {
-    sum: ofKind("sum"),
-    difference: ofKind("difference"),
-    product: ofKind("product"),
-    quotient: ofKind("quotient"),
-    parity: ofKind("parity"),
-  };
-}
-
-function describedLadder(o: number, clues: Int32Array): Ladder<LatinSolver> {
-  const dl = dealtOf(clues);
+function describedLadder(
+  o: number,
+  clues: Int32Array,
+  dl: mathrax.Dealt,
+): Ladder<LatinSolver> {
   const co = o - 1;
   const reason = ({ k }: { k: number }): MathraxReason => ({
     kind: "clue",
@@ -150,16 +111,14 @@ export function mathraxSolve(
   maxdiff: number,
   recorder?: DeductionRecorder,
 ): number {
-  const diff = latinSolver<null>(grid, o, {
+  const dl = dealtOf(clues);
+  const diff = latinSolver(grid, o, {
     maxdiff,
     diffRecursive: DIFF_RECURSIVE,
-    // Upstream `mathrax_valid` is a constant `true`: the clue readings check
-    // every clue, so the generic post-check is skipped.
-    valid: null,
-    ctx: null,
+    isAnswer: (g) => mathrax.isAnswer(g, latinSpace(o), dl),
     recorder,
     budgetLabel: "mathrax hint",
-    ladder: describedLadder(o, clues),
+    ladder: describedLadder(o, clues, dl),
   });
   if (diff === DIFF_IMPOSSIBLE) return SOLVE_IMPOSSIBLE;
   if (diff === DIFF_UNFINISHED) return SOLVE_STUCK;

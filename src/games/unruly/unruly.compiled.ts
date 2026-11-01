@@ -31,6 +31,93 @@ export const ladder: readonly { id: LadderId; tier: number; scale?: string; from
 /** The description's tiers, by name. */
 export const tiers: readonly string[] = ["Trivial","Easy","Normal"];
 
+/** Whether `g`, a value a cell and 0 where it has none, is an answer to the
+ * board: every cell a value of its domain, and every rule and dealt clue
+ * true of it, a variation's rules where `variations` has it on. */
+export function isAnswer(g: ArrayLike<number>, sp: GridSpace, variations: readonly string[]): boolean {
+  const _domain = rangeMask(1, 2);
+  for (const cell of sp.cells) {
+    const held = g[cell];
+    if (!(held > 0 && (_domain >> held) & 1)) return false;
+  }
+  let _q188 = true;
+  Q189: {
+    const _a190 = sp.lines;
+    for (let _i191 = 0; _i191 < _a190.length; _i191++) {
+      const v_L = _a190[_i191];
+      for (let _m192 = rangeMask(0, (sp.lineCells[v_L].length - 3)); _m192 !== 0; _m192 &= _m192 - 1) {
+        const v_i = 31 - Math.clz32(_m192 & -_m192);
+        const _t193 = (v_i + 1);
+        let _c196 = ((g[(sp.lineCells[v_L][v_i] ?? -1)] || -1) === (g[(sp.lineCells[v_L][_t193] ?? -1)] || -1));
+        if (_c196) {
+          const _t194 = (v_i + 1);
+          const _t195 = (v_i + 2);
+          _c196 = ((g[(sp.lineCells[v_L][_t194] ?? -1)] || -1) === (g[(sp.lineCells[v_L][_t195] ?? -1)] || -1));
+        }
+        if (!(!(_c196))) {
+          _q188 = false;
+          break Q189;
+        }
+      }
+    }
+  }
+  if (!(_q188)) return false;
+  let _q197 = true;
+  Q198: {
+    const _a199 = sp.lines;
+    for (let _i200 = 0; _i200 < _a199.length; _i200++) {
+      const v_L = _a199[_i200];
+      for (let _m201 = _domain; _m201 !== 0; _m201 &= _m201 - 1) {
+        const v_d = 31 - Math.clz32(_m201 & -_m201);
+        let _g202 = 0;
+        G203: {
+          const _a204 = sp.lineCells[v_L];
+          for (let _i205 = 0; _i205 < _a204.length; _i205++) {
+            const v_c = _a204[_i205];
+            if (!(((g[v_c] || -1) === v_d))) continue;
+            _g202++;
+          }
+        }
+        if (!(((2 * _g202) === sp.lineCells[v_L].length))) {
+          _q197 = false;
+          break Q198;
+        }
+      }
+    }
+  }
+  if (!(_q197)) return false;
+  if (variations.includes("unique")) {
+    let _q206 = true;
+    Q207: {
+      const _a208 = sp.lines;
+      for (let _i209 = 0; _i209 < _a208.length; _i209++) {
+        const v_A = _a208[_i209];
+        const _a210 = sp.lines;
+        for (let _i211 = 0; _i211 < _a210.length; _i211++) {
+          const v_B = _a210[_i211];
+          if (!(((v_B !== v_A) && ((sp.rows.includes(v_A)) === (sp.rows.includes(v_B)))))) continue;
+          let _q212 = false;
+          Q213: {
+            for (let _m214 = rangeMask(0, (sp.lineCells[v_A].length - 1)); _m214 !== 0; _m214 &= _m214 - 1) {
+              const v_i = 31 - Math.clz32(_m214 & -_m214);
+              if (((g[(sp.lineCells[v_A][v_i] ?? -1)] || -1) !== (g[(sp.lineCells[v_B][v_i] ?? -1)] || -1))) {
+                _q212 = true;
+                break Q213;
+              }
+            }
+          }
+          if (!(_q212)) {
+            _q206 = false;
+            break Q207;
+          }
+        }
+      }
+    }
+    if (!(_q206)) return false;
+  }
+  return true;
+}
+
 export interface ThreesBinding {
   L: number;
   i: number;

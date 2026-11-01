@@ -3,7 +3,7 @@
 import { type ClueList, type Fire, type GridSpace, type Marks, type Partition, PLACE, STRIKE, clueAt, minus, popcount, rangeMask, union, valuesOf } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its clues by kind, and
- * the sizes a technique reads that the grid does not give. */
+ * the sizes a technique or the rules read that the grid does not give. */
 export interface Dealt {
   cage: Partition;
   total: ClueList;
@@ -48,6 +48,62 @@ export const tiers: readonly string[] = ["Easy","Normal","Tricky","Hard","Extrem
 
 /** Its other scales' tiers, by scale. */
 export const scales: Readonly<Record<string, readonly string[]>> = {"killer":["Single","MinMax","Sums","Region"]};
+
+/** Whether `g`, a value a cell and 0 where it has none, is an answer to the
+ * board: every cell a value of its domain, and every rule and dealt clue
+ * true of it, a variation's rules where `variations` has it on. */
+export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
+  const _domain = rangeMask(1, sp.w);
+  for (const cell of sp.cells) {
+    const held = g[cell];
+    if (!(held > 0 && (_domain >> held) & 1)) return false;
+  }
+  let _q909 = true;
+  const _n913 = new Int32Array(32);
+  Q910: for (const _u911 of sp.units) {
+    _n913.fill(0);
+    for (const _c912 of sp.lineCells[_u911]) {
+      const _t914 = (g[_c912] || -1);
+      if (++_n913[_t914] > 1) {
+        _q909 = false;
+        break Q910;
+      }
+    }
+  }
+  if (!(_q909)) return false;
+  for (let _k915 = 0; _k915 < cl.total.at.length; _k915++) {
+    const _at916 = cl.total.at[_k915];
+    const _v917 = cl.total.v[_k915];
+    let _g918 = 0;
+    G919: {
+      const _a920 = cl.cage.cells[_at916];
+      for (let _i921 = 0; _i921 < _a920.length; _i921++) {
+        const v_c = _a920[_i921];
+        _g918 += (g[v_c] || -1);
+      }
+    }
+    let _c928 = (_g918 === _v917);
+    if (_c928) {
+      let _g922 = true;
+      const _s924: number[] = [];
+      G923: {
+        const _a925 = cl.cage.cells[_at916];
+        for (let _i926 = 0; _i926 < _a925.length; _i926++) {
+          const v_c = _a925[_i926];
+          const _t927 = (g[v_c] || -1);
+          if (_s924.includes(_t927)) {
+            _g922 = false;
+            break G923;
+          }
+          _s924.push(_t927);
+        }
+      }
+      _c928 = _g922;
+    }
+    if (!(_c928)) return false;
+  }
+  return true;
+}
 
 export interface BoxSingleBinding {
   u: number;

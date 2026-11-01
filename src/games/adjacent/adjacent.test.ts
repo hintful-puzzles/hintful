@@ -15,12 +15,12 @@ import {
 } from "../../engine/edge-clue-latin/render.ts";
 import { solveEdgeClues } from "../../engine/edge-clue-latin/solver.ts";
 import {
-  checkComplete,
   diffToLevel,
   type EdgeClueParams,
   type EdgeClueState,
   encodeParams,
   F_ERROR_RIGHT,
+  markErrors,
   newState,
   newUi,
 } from "../../engine/edge-clue-latin/state.ts";
@@ -91,7 +91,8 @@ describe("adjacent generator", () => {
     // With the answer filled in, no gap, barred or not, is in error.
     const solved = { ...st, grid: Int8Array.from(soln) };
     const err = new Int32Array(25);
-    expect(checkComplete(solved, err)).toBe(1);
+    expect(adjacentGame.status(solved)).toBe("solved");
+    markErrors(solved, err);
     expect(err.every((f) => f === 0)).toBe(true);
   });
 
@@ -154,7 +155,7 @@ describe("adjacent errors", () => {
     st.grid[0] = 1;
     st.grid[1] = 2;
     const err = new Int32Array(16);
-    expect(checkComplete(st, err)).toBe(0);
+    markErrors(st, err);
     expect(err[0] & F_ERROR_RIGHT).toBeTruthy();
   });
 });

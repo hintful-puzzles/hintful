@@ -46,10 +46,10 @@ import {
 } from "./latin.ts";
 import { randomNew, randomUpto } from "./random/index.ts";
 
-/** A plain Latin-square config: no game-specific deductions or validator,
- * the library's singles at 0, its set at 1, its fish and wing at 2, the
- * search at 4, and nothing at 3. */
-function cfg(maxdiff: number): LatinSolverConfig<null> {
+/** A plain Latin-square config: no game-specific deductions or rules, the
+ * library's singles at 0, its set at 1, its fish and wing at 2, the search at
+ * 4, and nothing at 3. */
+function cfg(maxdiff: number): LatinSolverConfig {
   return {
     maxdiff,
     ladder: latinLadder(
@@ -66,8 +66,7 @@ function cfg(maxdiff: number): LatinSolverConfig<null> {
       {},
     ),
     diffRecursive: 4,
-    valid: null,
-    ctx: null,
+    isAnswer: () => true,
   };
 }
 
@@ -304,20 +303,20 @@ describe("latin solver configuration", () => {
     expect(chained.cubeGet(0, 2, 1)).toBe(false);
   });
 
-  it("re-runs the game's validator on a completed grid, and reports failure", () => {
-    // A game's extra constraints (Keen's arithmetic, Unequal's inequalities)
-    // are not expressible in the cube, so a grid that is a perfect Latin
-    // square can still be no solution at all.
+  it("runs the game's answer check on a completed grid, and reports failure", () => {
+    // A game's rules (Keen's arithmetic, Unequal's inequalities) go beyond
+    // what its techniques read, so a grid that is a perfect Latin square can
+    // still be no answer at all.
     const full = latinGenerate(4, randomNew("valid"));
     const seeded = () => {
       const g = Uint8Array.from(full, (v) => v);
       g[5] = 0;
       return g;
     };
-    expect(latinSolver(seeded(), 4, { ...cfg(4), valid: () => true })).not.toBe(
+    expect(latinSolver(seeded(), 4, { ...cfg(4), isAnswer: () => true })).not.toBe(
       DIFF_IMPOSSIBLE,
     );
-    expect(latinSolver(seeded(), 4, { ...cfg(4), valid: () => false })).toBe(
+    expect(latinSolver(seeded(), 4, { ...cfg(4), isAnswer: () => false })).toBe(
       DIFF_IMPOSSIBLE,
     );
   });

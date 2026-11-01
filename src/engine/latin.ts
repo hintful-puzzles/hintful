@@ -5,8 +5,8 @@
  * Shared by the games that call `latinSolver`. A game supplies its ladder,
  * compiled from its description, which places the library's techniques
  * (`latin.description.yaml`: singles, set elimination and the wing) among its
- * own, and a `valid` callback (does a completed grid satisfy the game's extra
- * constraints?); `latinSolver` runs them, and at the recursive level forcing
+ * own, and its answer check, compiled from the same description's rules;
+ * `latinSolver` runs them, and at the recursive level forcing
  * chains and guess-and-verify recursion (which doubles as the generators'
  * uniqueness check).
  *
@@ -83,9 +83,6 @@ export function latinVerdict(ret: number): DifficultyVerdict {
   if (ret === DIFF_AMBIGUOUS || ret === DIFF_UNFINISHED) return "unsolved";
   return "solved";
 }
-
-/** Validate a *completed* grid against the game's extra constraints. */
-type Validator<Ctx> = (solver: LatinSolver, ctx: Ctx) => boolean;
 
 /** Why a *generic* Latin deduction forced a candidate change — the premise a
  * hint narrates. A game's user-solvers attach their own (game-specific) reason
@@ -399,24 +396,20 @@ function fishReason(
   return { kind: "set", cells, lines };
 }
 
-/** How `latinSolver` runs: its rungs, the game's validator, and the hint-path
- * hooks. */
-export type LatinSolverConfig<Ctx> = LatinSolverCommon<Ctx> & {
+/** How `latinSolver` runs: its rungs, the game's answer check, and the
+ * hint-path hooks. */
+export interface LatinSolverConfig {
   ladder: Ladder<LatinSolver>;
-};
-
-interface LatinSolverCommon<Ctx> {
   /** Declare the last symbol as repeating `times` per line (a pseudo-Latin
    * puzzle). Leave unset or `null` for a Latin square; see {@link LatinRepeats}. */
   repeats?: LatinRepeats | null;
   maxdiff: number;
   /** The searching level: forcing chains, then guess-and-verify recursion. */
   diffRecursive: number;
-  valid: Validator<Ctx> | null;
-  ctx: Ctx;
-  /** Per-recursion context cloning (upstream `ctxnew`); a game whose ctx is
-   * immutable (Towers) omits it. */
-  ctxNew?: (ctx: Ctx) => Ctx;
+  /** Whether a whole grid is an answer to the board: the game's compiled
+   * `isAnswer` over what it deals. A solve that fills the grid with one that
+   * is not is impossible. */
+  isAnswer: (grid: Uint8Array) => boolean;
   /** Hint path only: record every candidate cleared / cell placed, in solver
    * order. When set, a fixpoint step budget is also installed. Leaving it unset
    * (generator/solve path) keeps that path byte-for-byte unchanged. */
@@ -456,9 +449,9 @@ const FORCING = "forcing-chain";
  * shares the level of the other search, the recursion, and comes after every
  * technique.
  */
-function latinTechniques<Ctx>(
+function latinTechniques(
   solver: LatinSolver,
-  cfg: LatinSolverConfig<Ctx>,
+  cfg: LatinSolverConfig,
   grades: Record<string, number>,
 ): DeductionTechnique[] {
   const techniques = ladderTechniques(
@@ -480,7 +473,7 @@ function latinTechniques<Ctx>(
   return techniques;
 }
 
-function latinSolverTop<Ctx>(solver: LatinSolver, cfg: LatinSolverConfig<Ctx>): number {
+function latinSolverTop(solver: LatinSolver, cfg: LatinSolverConfig): number {
   const { maxdiff, diffRecursive } = cfg;
   const grades = { [TIERS]: 0 };
   const impossible = runLadder(solver, latinTechniques(solver, cfg, grades));
@@ -505,27 +498,19 @@ function latinSolverTop<Ctx>(solver: LatinSolver, cfg: LatinSolverConfig<Ctx>): 
   return finish(solver, cfg, diff);
 }
 
-function finish<Ctx>(
-  solver: LatinSolver,
-  cfg: LatinSolverConfig<Ctx>,
-  diff: number,
-): number {
+function finish(solver: LatinSolver, cfg: LatinSolverConfig, diff: number): number {
   if (
     diff !== DIFF_IMPOSSIBLE &&
     diff !== DIFF_UNFINISHED &&
     diff !== DIFF_AMBIGUOUS &&
-    cfg.valid &&
-    !cfg.valid(solver, cfg.ctx)
+    !cfg.isAnswer(solver.grid)
   ) {
     return DIFF_IMPOSSIBLE;
   }
   return diff;
 }
 
-function latinSolverRecurse<Ctx>(
-  solver: LatinSolver,
-  cfg: LatinSolverConfig<Ctx>,
-): number {
+function latinSolverRecurse(solver: LatinSolver, cfg: LatinSolverConfig): number {
   const o = solver.o;
   let best = -1;
   const s = solver.symbols;
@@ -557,10 +542,9 @@ function latinSolverRecurse<Ctx>(
     const outgrid = ingrid.slice();
     outgrid[y * o + x] = guess;
 
-    const newctx = cfg.ctxNew ? cfg.ctxNew(cfg.ctx) : cfg.ctx;
     const sub = new LatinSolver(o, cfg.repeats, cfg.ladder.placing);
     const ret = sub.alloc(outgrid)
-      ? latinSolverTop(sub, { ...cfg, maxdiff: cfg.diffRecursive, ctx: newctx })
+      ? latinSolverTop(sub, { ...cfg, maxdiff: cfg.diffRecursive })
       : DIFF_IMPOSSIBLE;
 
     if (ret === DIFF_IMPOSSIBLE) continue;
@@ -585,10 +569,10 @@ function latinSolverRecurse<Ctx>(
  * first solution found. Returns the difficulty level reached, or one of
  * `DIFF_IMPOSSIBLE` / `DIFF_AMBIGUOUS` / `DIFF_UNFINISHED`.
  */
-export function latinSolver<Ctx>(
+export function latinSolver(
   grid: Uint8Array,
   o: number,
-  cfg: LatinSolverConfig<Ctx>,
+  cfg: LatinSolverConfig,
 ): number {
   const solver = new LatinSolver(o, cfg.repeats, cfg.ladder.placing);
   if (!solver.alloc(grid)) {
@@ -614,19 +598,12 @@ export function latinSolver<Ctx>(
 /**
  * The premise audit's replay of a recording run (`ladderReplay`), installed on
  * the solver the recording uses before it runs.
- *
- * The replay starts from the context the run started with, because a context
- * may narrow as the run goes (Mathrax mirrors the cube in its own marks, and
- * pulls the cube into them at every call).
  */
-function latinReplay<Ctx>(
+function latinReplay(
   solver: LatinSolver,
-  cfg: LatinSolverConfig<Ctx>,
+  cfg: LatinSolverConfig,
 ): FiringReplay<string> {
   const { o } = solver;
-  const clone = (ctx: Ctx): Ctx =>
-    cfg.ctxNew ? cfg.ctxNew(ctx) : structuredClone(ctx);
-  const ctx = clone(cfg.ctx);
   return ladderReplay(
     solver,
     (values) => {
@@ -635,7 +612,7 @@ function latinReplay<Ctx>(
         throw new Error("latin replay: the edited state is inconsistent");
       return run;
     },
-    (run) => latinTechniques(run, { ...cfg, ctx: clone(ctx) }, { [TIERS]: 0 }),
+    (run) => latinTechniques(run, cfg, { [TIERS]: 0 }),
   );
 }
 

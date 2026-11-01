@@ -1,7 +1,7 @@
 /**
  * Towers solver: the ladder `towers.description.yaml` states, compiled, with
- * the reason each technique records for the hint, and the validator
- * (`towers_valid`), on the shared `LatinSolver` (`engine/latin.ts`), whose
+ * the reason each technique records for the hint, and the answer check its
+ * rules compile to, on the shared `LatinSolver` (`engine/latin.ts`), whose
  * forcing chains and recursion are the search above the ladder. The tiers:
  *
  *   Easy (`DIFF_EASY`)         → the facing pairs, each clue's bounds, and
@@ -15,7 +15,7 @@
  * each, left of each row, right of each, and sees its line nearest it first.
  */
 
-import { clueAt, clueList } from "../../engine/describe-runtime.ts";
+import { clueAt, latinSpace } from "../../engine/describe-runtime.ts";
 import { compiledRung, type Ladder } from "../../engine/ladder-runtime.ts";
 import {
   type DeductionRecord,
@@ -27,7 +27,7 @@ import {
   latinSolver,
 } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
-import { DIFF_UNREASONABLE, lineCells } from "./state.ts";
+import { DIFF_UNREASONABLE, dealtOf } from "./state.ts";
 import * as towers from "./towers.compiled.ts";
 
 export { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE };
@@ -65,35 +65,6 @@ export interface HintOp extends DeductionRecord {
   reason: HintReason;
 }
 
-/** What the validator reads: the grid's width and its edge clues. */
-interface TowersCtx {
-  w: number;
-  clues: Int32Array;
-}
-
-// --- validator -------------------------------------------------------------
-
-function towersValid(solver: LatinSolver, ctx: TowersCtx): boolean {
-  const w = ctx.w;
-  const clues = ctx.clues;
-  for (let c = 0; c < 4 * w; c++) {
-    const clue = clues[c];
-    if (!clue) continue;
-    const cells = lineCells(c, w);
-    let n = 0;
-    let best = 0;
-    for (let i = 0; i < w; i++) {
-      const v = solver.grid[cells[i].y * w + cells[i].x];
-      if (v > best) {
-        best = v;
-        n++;
-      }
-    }
-    if (n !== clue) return false;
-  }
-  return true;
-}
-
 // --- the described ladder ----------------------------------------------------
 
 /** The facing pair whose tower a facing firing placed in `cell`: the first,
@@ -113,18 +84,8 @@ function facingReason(
   };
 }
 
-/** The ladder over the dealt clues: each clue at its slot, which is its index
- * in `clues`, in that order. */
-function describedLadder(w: number, clues: Int32Array): Ladder<LatinSolver> {
-  const at: number[] = [];
-  const v: number[] = [];
-  clues.forEach((n, s) => {
-    if (n) {
-      at.push(s);
-      v.push(n);
-    }
-  });
-  const cl: towers.Dealt = { sees: clueList(at, v, 4 * w) };
+/** The ladder over the dealt clues. */
+function describedLadder(cl: towers.Dealt): Ladder<LatinSolver> {
   return latinLadder(towers, {
     facing: compiledRung(towers.facing, cl, ({ P }, cell, _n, m) =>
       facingReason(P, cell, cl, m.sp),
@@ -161,13 +122,13 @@ export function solveTowers(
   maxdiff: number,
   recorder?: (rec: DeductionRecord) => void,
 ): number {
-  return latinSolver<TowersCtx>(soln, w, {
+  const cl = dealtOf(w, clues);
+  return latinSolver(soln, w, {
     maxdiff,
     diffRecursive: DIFF_UNREASONABLE,
-    valid: towersValid,
-    ctx: { w, clues },
+    isAnswer: (grid) => towers.isAnswer(grid, latinSpace(w), cl),
     recorder,
-    ladder: describedLadder(w, clues),
+    ladder: describedLadder(cl),
   });
 }
 

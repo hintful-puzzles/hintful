@@ -29,6 +29,7 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
+import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { type RowColRegion, rowColRegions } from "../../engine/latin-hint.ts";
@@ -37,6 +38,7 @@ import { choice, letters, num, paramsCodec, size } from "../../engine/params-cod
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
+import * as salad from "./salad.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
 
@@ -533,40 +535,49 @@ export function newState(p: SaladParams, desc: string): SaladState {
 
 // --- completion ------------------------------------------------------------
 
+/** Whether the board is an answer, by the rules its description compiles to. */
+export function isComplete(b: SaladBoard): boolean {
+  return salad.isAnswer(answerOf(b), latinSpace(b.order), dealtOf(b));
+}
+
 /**
- * Upstream `latinholes_check`: every line holds exactly `order − nums` blanks
- * and each symbol exactly once, and no square marked definitely-filled is still
- * blank.
+ * The board as its description reads it: a symbol where one is placed, and
+ * the empty square (`nums + 1`) where none is, as the solver's working grid
+ * already holds it; but no value at all where a square marked to hold a
+ * symbol is blank, which no answer has.
  */
-export function latinholesCheck(b: SaladBoard): boolean {
+function answerOf(b: SaladBoard): Uint8Array {
+  return b.grid.map((d, i) =>
+    d >= 1 && d <= b.nums ? d : d === 0 && b.holes[i] === CIRCLE ? 0 : b.nums + 1,
+  );
+}
+
+/** The board as its description deals it: the border letters in the order
+ * the scan meets them, each line's top, left, bottom and right in turn; the
+ * balls, each saying its square is not the empty one (`nums + 1`). */
+export function dealtOf(b: SaladBoard): salad.Dealt {
   const o = b.order;
-  const nums = b.nums;
-  const rows = new Int32Array(o * nums);
-  const cols = new Int32Array(o * nums);
-  const hrows = new Int32Array(o);
-  const hcols = new Int32Array(o);
-
-  for (let x = 0; x < o; x++) {
-    for (let y = 0; y < o; y++) {
-      const d = b.grid[y * o + x];
-      if (d === 0 && b.holes[y * o + x] === CIRCLE) return false;
-      if (d === 0 || d > nums) {
-        hrows[y]++;
-        hcols[x]++;
-      } else {
-        rows[y * nums + d - 1]++;
-        cols[x * nums + d - 1]++;
-      }
+  const at: number[] = [];
+  const v: number[] = [];
+  const slots = [0, 2, 1, 3];
+  for (let i = 0; i < o; i++)
+    for (let side = 0; side < 4; side++) {
+      const clue = b.borderclues[side * o + i];
+      if (!clue) continue;
+      at.push(slots[side] * o + i);
+      v.push(clue);
     }
-  }
-
-  for (let i = 0; i < o; i++) {
-    if (hrows[i] !== o - nums || hcols[i] !== o - nums) return false;
-  }
-  for (let i = 0; i < o * nums; i++) {
-    if (rows[i] !== 1 || cols[i] !== 1) return false;
-  }
-  return true;
+  const balls: number[] = [];
+  for (let c = 0; c < o * o; c++) if (b.gridclues[c] === CIRCLE) balls.push(c);
+  return {
+    border: clueList(at, v, 4 * o),
+    ball: clueList(
+      balls,
+      balls.map(() => b.nums + 1),
+      o * o,
+    ),
+    nums: b.nums,
+  };
 }
 
 /**
@@ -630,24 +641,6 @@ const CLUE_SIDES = [
  * it looks along. */
 export function clueSide(cd: number, o: number): (typeof CLUE_SIDES)[number] {
   return CLUE_SIDES[(cd / o) | 0];
-}
-
-/** Upstream `salad_checkborders`: every border clue matches the first symbol
- * actually seen along its line. */
-function checkBorders(b: SaladBoard): boolean {
-  const o = b.order;
-  for (let i = 0; i < o; i++) {
-    for (const s of borderScans(i, o)) {
-      const clue = b.borderclues[s.clue];
-      if (!clue) continue;
-      if (scanDir(b.grid, null, s.start, s.step, s.end, false) !== clue) return false;
-    }
-  }
-  return true;
-}
-
-export function isComplete(b: SaladBoard): boolean {
-  return latinholesCheck(b) && checkBorders(b);
 }
 
 // --- text format -----------------------------------------------------------

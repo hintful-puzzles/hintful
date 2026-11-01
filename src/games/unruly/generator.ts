@@ -10,13 +10,7 @@ import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { type Cell, DIFF_TRIVIAL, EMPTY, ONE, ZERO } from "./constants.ts";
-import {
-  type GridView,
-  isComplete,
-  solveCopy,
-  solveGame,
-  validateCounts,
-} from "./solver.ts";
+import { type GridView, isComplete, solveCopy, solveGame } from "./solver.ts";
 import { encodeGrid, type UnrulyParams } from "./state.ts";
 
 /** Fill a blank grid to a valid complete solution, or return false to
@@ -36,10 +30,9 @@ function fillGame(view: GridView, rng: RandomState): boolean {
   return isComplete(view);
 }
 
-/** Does the solver at `diff` reach a complete (counts-balanced) solution
- * from `grid`? */
+/** Does the solver at `diff` reach an answer from `grid`? */
 export function solvableAt(view: GridView, grid: Uint8Array, diff: number): boolean {
-  return validateCounts(solveCopy(view, grid, diff), null) === 0;
+  return isComplete(solveCopy(view, grid, diff));
 }
 
 export function newDesc(p: UnrulyParams, rng: RandomState): { desc: string } {

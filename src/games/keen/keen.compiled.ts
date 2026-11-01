@@ -1,9 +1,9 @@
 // Compiled by `npm run describe` from src/games/keen/keen.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, type Partition, STRIKE, clueAt, union } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, type Partition, STRIKE, clueAt, rangeMask, union } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its clues by kind, and
- * the sizes a technique reads that the grid does not give. */
+ * the sizes a technique or the rules read that the grid does not give. */
 export interface Dealt {
   cage: Partition;
   sum: ClueList;
@@ -43,6 +43,103 @@ export const ladder: readonly { id: LadderId; tier: number; scale?: string; from
 
 /** The description's tiers, by name. */
 export const tiers: readonly string[] = ["Easy","Normal","Hard","Extreme","Unreasonable"];
+
+/** Whether `g`, a value a cell and 0 where it has none, is an answer to the
+ * board: every cell a value of its domain, and every rule and dealt clue
+ * true of it, a variation's rules where `variations` has it on. */
+export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
+  const _domain = rangeMask(1, sp.w);
+  for (const cell of sp.cells) {
+    const held = g[cell];
+    if (!(held > 0 && (_domain >> held) & 1)) return false;
+  }
+  let _q393 = true;
+  const _n397 = new Int32Array(32);
+  Q394: for (const _u395 of sp.lines) {
+    _n397.fill(0);
+    for (const _c396 of sp.lineCells[_u395]) {
+      const _t398 = (g[_c396] || -1);
+      if (++_n397[_t398] > 1) {
+        _q393 = false;
+        break Q394;
+      }
+    }
+  }
+  if (!(_q393)) return false;
+  for (let _k399 = 0; _k399 < cl.sum.at.length; _k399++) {
+    const _at400 = cl.sum.at[_k399];
+    const _v401 = cl.sum.v[_k399];
+    let _g402 = 0;
+    G403: {
+      const _a404 = cl.cage.cells[_at400];
+      for (let _i405 = 0; _i405 < _a404.length; _i405++) {
+        const v_c = _a404[_i405];
+        _g402 += (g[v_c] || -1);
+      }
+    }
+    if (!((_g402 === _v401))) return false;
+  }
+  for (let _k406 = 0; _k406 < cl.product.at.length; _k406++) {
+    const _at407 = cl.product.at[_k406];
+    const _v408 = cl.product.v[_k406];
+    let _g409 = 1;
+    G410: {
+      const _a411 = cl.cage.cells[_at407];
+      for (let _i412 = 0; _i412 < _a411.length; _i412++) {
+        const v_c = _a411[_i412];
+        _g409 *= (g[v_c] || -1);
+      }
+    }
+    if (!((_g409 === _v408))) return false;
+  }
+  for (let _k413 = 0; _k413 < cl.difference.at.length; _k413++) {
+    const _at414 = cl.difference.at[_k413];
+    const _v415 = cl.difference.v[_k413];
+    let _g416 = -1;
+    G417: {
+      const _a418 = cl.cage.cells[_at414];
+      for (let _i419 = 0; _i419 < _a418.length; _i419++) {
+        const v_c = _a418[_i419];
+        const _t420 = (g[v_c] || -1);
+        if (_g416 === -1 || _t420 > _g416) _g416 = _t420;
+      }
+    }
+    let _g421 = -1;
+    G422: {
+      const _a423 = cl.cage.cells[_at414];
+      for (let _i424 = 0; _i424 < _a423.length; _i424++) {
+        const v_c = _a423[_i424];
+        const _t425 = (g[v_c] || -1);
+        if (_g421 === -1 || _t425 < _g421) _g421 = _t425;
+      }
+    }
+    if (!(((_g416 - _g421) === _v415))) return false;
+  }
+  for (let _k426 = 0; _k426 < cl.quotient.at.length; _k426++) {
+    const _at427 = cl.quotient.at[_k426];
+    const _v428 = cl.quotient.v[_k426];
+    let _g429 = -1;
+    G430: {
+      const _a431 = cl.cage.cells[_at427];
+      for (let _i432 = 0; _i432 < _a431.length; _i432++) {
+        const v_c = _a431[_i432];
+        const _t433 = (g[v_c] || -1);
+        if (_g429 === -1 || _t433 > _g429) _g429 = _t433;
+      }
+    }
+    let _g434 = -1;
+    G435: {
+      const _a436 = cl.cage.cells[_at427];
+      for (let _i437 = 0; _i437 < _a436.length; _i437++) {
+        const v_c = _a436[_i437];
+        const _t438 = (g[v_c] || -1);
+        if (_g434 === -1 || _t438 < _g434) _g434 = _t438;
+      }
+    }
+    if (!((_g429 === (_v428 * _g434)))) return false;
+  }
+  return true;
+}
 
 export interface CageEasyBinding {
   r: number;

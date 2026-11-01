@@ -1,4 +1,3 @@
-import { valuesOneTo } from "../../engine/candidate-bits.ts";
 import {
   type CandidateReading,
   DEFAULT_CANDIDATE_READING,
@@ -6,6 +5,7 @@ import {
 import { isDigit } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
@@ -13,6 +13,7 @@ import { choice, paramsCodec, size } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import type { Point } from "../../engine/types.ts";
+import * as towers from "./towers.compiled.ts";
 
 /**
  * Types and pure state helpers for Towers (Skyscrapers) — the state/codec
@@ -301,21 +302,17 @@ export function newState(p: TowersParams, desc: string): TowersState {
 // --- error checking (check_errors) -----------------------------------------
 
 /**
- * Mark every cell/clue that is currently in error. When `errors` (a `(w+2)²`
- * array, the clue ring + play area) is provided it is filled in; either way
- * the function returns whether any error exists. A full, valid grid has no
- * errors — the completion test (`!checkErrors`) relies on that.
+ * Mark every cell and clue that is currently in error into `errors` (a
+ * `(w+2)²` array, the clue ring + play area): the error overlay. Whether a
+ * board is solved is the compiled answer check's.
  */
-export function checkErrors(state: TowersState, errors?: Uint8Array): boolean {
+export function markErrors(state: TowersState, errors: Uint8Array): void {
   const w = state.w;
   const W = w + 2;
   const clues = state.clues;
   const grid = state.grid;
-  let errs = false;
 
-  if (errors) errors.fill(0);
-
-  const full = valuesOneTo(w);
+  errors.fill(0);
 
   // Row duplicates.
   for (let y = 0; y < w; y++) {
@@ -326,14 +323,9 @@ export function checkErrors(state: TowersState, errors?: Uint8Array): boolean {
       errmask |= mask & bit;
       mask |= bit;
     }
-    if (mask !== full) {
-      errs = true;
-      errmask &= ~1;
-      if (errors) {
-        for (let x = 0; x < w; x++) {
-          if (errmask & (1 << grid[y * w + x])) errors[(y + 1) * W + (x + 1)] = 1;
-        }
-      }
+    errmask &= ~1;
+    for (let x = 0; x < w; x++) {
+      if (errmask & (1 << grid[y * w + x])) errors[(y + 1) * W + (x + 1)] = 1;
     }
   }
 
@@ -346,14 +338,9 @@ export function checkErrors(state: TowersState, errors?: Uint8Array): boolean {
       errmask |= mask & bit;
       mask |= bit;
     }
-    if (mask !== full) {
-      errs = true;
-      errmask &= ~1;
-      if (errors) {
-        for (let y = 0; y < w; y++) {
-          if (errmask & (1 << grid[y * w + x])) errors[(y + 1) * W + (x + 1)] = 1;
-        }
-      }
+    errmask &= ~1;
+    for (let y = 0; y < w; y++) {
+      if (errmask & (1 << grid[y * w + x])) errors[(y + 1) * W + (x + 1)] = 1;
     }
   }
 
@@ -372,21 +359,32 @@ export function checkErrors(state: TowersState, errors?: Uint8Array): boolean {
       }
     }
     if (n > clues[i] || (best === w && n < clues[i]) || (best < w && n === clues[i])) {
-      if (errors) {
-        const { x, y } = cluePos(i, w);
-        errors[(y + 1) * W + (x + 1)] = 1;
-      }
-      errs = true;
+      const { x, y } = cluePos(i, w);
+      errors[(y + 1) * W + (x + 1)] = 1;
     }
   }
-
-  return errs;
 }
 
 // --- status / text ---------------------------------------------------------
 
 export function status(s: TowersState): "solved" | "ongoing" {
-  return checkErrors(s) ? "ongoing" : "solved";
+  return towers.isAnswer(s.grid, latinSpace(s.w), dealtOf(s.w, s.clues))
+    ? "solved"
+    : "ongoing";
+}
+
+/** The board as its description deals it: each clue at its slot, which is
+ * its index in `clues`, in that order. */
+export function dealtOf(w: number, clues: Int32Array): towers.Dealt {
+  const at: number[] = [];
+  const v: number[] = [];
+  clues.forEach((n, s) => {
+    if (n) {
+      at.push(s);
+      v.push(n);
+    }
+  });
+  return { sees: clueList(at, v, 4 * w) };
 }
 
 /** ASCII grid with the four clue rims, matching `game_text_format`. */

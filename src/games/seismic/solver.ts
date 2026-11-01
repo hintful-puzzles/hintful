@@ -1,7 +1,8 @@
 /**
  * Seismic's solver: the ladder `seismic.description.yaml` states, compiled, on
  * the engine's marks and runner (`engine/ladder-runtime.ts`), with the reason
- * each technique records for the hint; and the board's validation.
+ * each technique records for the hint; the answer check its rules compile
+ * to; and the error overlay.
  *
  * One ladder serves the generator (which strips a clue only while the board
  * still solves, so the solver's verdict on every intermediate board decides
@@ -45,10 +46,6 @@ import {
 
 /** `solveGame` could not drive the board to a complete, valid solution. */
 export const SOLVE_FAILED = -1;
-
-export const STATUS_COMPLETE = 0;
-export const STATUS_UNFINISHED = 1;
-export const STATUS_INVALID = 2;
 
 /** Why a number is placed or ruled out, as the solver records it. */
 export type SeismicRecordReason =
@@ -146,7 +143,16 @@ export function solveGame(
     firings,
   });
   for (let c = 0; c < board.pencil.length; c++) board.pencil[c] = m.cands[c] >> 1;
-  return validateGame(board) === STATUS_COMPLETE ? grades[TIERS] : SOLVE_FAILED;
+  return isComplete(board) ? grades[TIERS] : SOLVE_FAILED;
+}
+
+/** Whether the board is an answer, by the rules its description compiles to. */
+export function isComplete(board: SeismicBoard): boolean {
+  return seismic.isAnswer(
+    board.grid,
+    describedSpace(seismic.units, board.w, board.h),
+    dealtOf(board),
+  );
 }
 
 /**
@@ -186,13 +192,13 @@ export function recordSeismicDeductions(
 }
 
 /**
- * Classify the board and refresh its live error flags: a number duplicated
- * inside its region gets `FM_ERRORDUP`, one sitting within an equal number's
- * keep-apart range gets `FM_ERRORDIST`. Both are *local* consistency checks —
- * weaker than `findMistakes`, which asks whether the board contradicts the
- * unique solution.
+ * Refresh the board's live error flags: a number duplicated inside its region
+ * gets `FM_ERRORDUP`, one sitting within an equal number's keep-apart range
+ * gets `FM_ERRORDIST`. Both are *local* consistency checks on a board still
+ * being filled, which no rule of the answer says — weaker than `findMistakes`,
+ * which asks whether the board contradicts the unique solution.
  */
-export function validateGame(board: SeismicBoard): number {
+export function markErrors(board: SeismicBoard): void {
   const { w, h, grid, flags, dsf } = board;
   const s = w * h;
   /** Numbers placed at least once in the region rooted here. */
@@ -201,7 +207,6 @@ export function validateGame(board: SeismicBoard): number {
   const doubles = new Int32Array(s);
   /** Numbers whose keep-apart range covers this cell. */
   const ranges = new Int32Array(s);
-  let status = STATUS_COMPLETE;
 
   for (let i = 0; i < s; i++) {
     if (grid[i] === 0) continue;
@@ -237,29 +242,10 @@ export function validateGame(board: SeismicBoard): number {
     if (grid[i] === 0) continue;
     const c = dsf.canonify(i);
 
-    if (doubles[c] & numBit(grid[i])) {
-      status = STATUS_INVALID;
-      flags[i] |= FM_ERRORDUP;
-    } else {
-      flags[i] &= ~FM_ERRORDUP;
-    }
+    if (doubles[c] & numBit(grid[i])) flags[i] |= FM_ERRORDUP;
+    else flags[i] &= ~FM_ERRORDUP;
 
-    if (ranges[i] & numBit(grid[i])) {
-      status = STATUS_INVALID;
-      flags[i] |= FM_ERRORDIST;
-    } else {
-      flags[i] &= ~FM_ERRORDIST;
-    }
+    if (ranges[i] & numBit(grid[i])) flags[i] |= FM_ERRORDIST;
+    else flags[i] &= ~FM_ERRORDIST;
   }
-
-  if (status !== STATUS_INVALID) {
-    for (let i = 0; i < s; i++) {
-      if (grid[i] === 0) {
-        status = STATUS_UNFINISHED;
-        break;
-      }
-    }
-  }
-
-  return status;
 }

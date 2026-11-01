@@ -1,32 +1,13 @@
 /**
  * The edge-clue Latin square's solver: the game's described ladder
- * (`ClueKind.ladder`) and the validator from `unequal.c`, on the shared
- * `LatinSolver` (`engine/latin.ts`), whose forcing chains and recursion are the
- * search above the ladder.
+ * (`ClueKind.ladder`) and the answer check its rules compile to
+ * (`ClueKind.isAnswer`), on the shared `LatinSolver` (`engine/latin.ts`),
+ * whose forcing chains and recursion are the search above the ladder.
  */
 
 import type { DeductionRecord } from "../deduction-record.ts";
-import { type LatinSolver, latinSolver } from "../latin.ts";
-import { ADJTHAN, breaksClue, type ClueKind, DIFF_RECURSIVE } from "./state.ts";
-
-/** Every clue, dealt or (for a complete kind) missing, holds of the filled
- * grid. */
-function clueValid(solver: LatinSolver, kind: ClueKind, flags: Int32Array): boolean {
-  const o = solver.o;
-  for (let y = 0; y < o; y++) {
-    for (let x = 0; x < o; x++) {
-      const v = solver.grid[y * o + x];
-      for (const dir of ADJTHAN) {
-        const nx = x + dir.dx;
-        const ny = y + dir.dy;
-        if (nx < 0 || ny < 0 || nx >= o || ny >= o) continue;
-        const flagged = (flags[y * o + x] & dir.f) !== 0;
-        if (breaksClue(kind, flagged, v, solver.grid[ny * o + nx])) return false;
-      }
-    }
-  }
-  return true;
-}
+import { latinSolver } from "../latin.ts";
+import { type ClueKind, DIFF_RECURSIVE } from "./state.ts";
 
 /**
  * Solve the `o × o` board (with clue `flags`) into `soln` (0 = blank), up to
@@ -45,14 +26,10 @@ export function solveEdgeClues(
   cubeOut?: Uint8Array,
   recorder?: (rec: DeductionRecord) => void,
 ): number {
-  // The clues are fixed for every recursion level, so the validator holds them
-  // and the context is empty: the premise audit clones a context, and a kind
-  // is functions.
-  return latinSolver<null>(soln, o, {
+  return latinSolver(soln, o, {
     maxdiff,
     diffRecursive: DIFF_RECURSIVE,
-    valid: (solver) => clueValid(solver, kind, flags),
-    ctx: null,
+    isAnswer: (grid) => kind.isAnswer(grid, o, flags),
     cubeOut,
     recorder,
     ladder: kind.ladder(o, flags),

@@ -64,8 +64,8 @@ import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts"
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import {
-  checkErrors,
   cluePos,
+  markErrors,
   type TowersMove,
   type TowersState,
   type TowersUi,
@@ -160,7 +160,7 @@ export interface TowersDrawState {
   tiles: Int32Array;
   /** `(w+2)² × 4` last-drawn four-corner cache (-1 = never drawn). */
   drawn: Int32Array;
-  /** `(w+2)²` error flags, refilled each redraw by `checkErrors`. */
+  /** `(w+2)²` error flags, refilled each redraw by `markErrors`. */
   errtmp: Uint8Array;
   /** `(w+2)²` hint-overlay sidecar (fork addition): bit 0 = target cell,
    * bit 1 = evidence area, and the struck candidates at `valueBit(height)` in
@@ -511,7 +511,7 @@ export function redraw(
   const W = w + 2;
   const threeD = ui.threeD;
 
-  checkErrors(state, ds.errtmp);
+  markErrors(state, ds.errtmp);
 
   // Pack both overlays per play cell (border-ring indexing).
   const index = (x: number, y: number) => (y + 1) * W + (x + 1);

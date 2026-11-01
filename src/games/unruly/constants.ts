@@ -2,7 +2,7 @@
  * Unruly's vocabulary: cell values and difficulty levels.
  *
  * These live apart from `state.ts` to break a runtime import cycle: `state.ts`
- * needs the validators in `solver.ts` (`isComplete`), and `solver.ts` needs this
+ * needs the answer check in `solver.ts` (`isComplete`), and `solver.ts` needs this
  * vocabulary. `solver.ts`'s remaining import from `state.ts` is types only,
  * which `verbatimModuleSyntax` erases.
  */

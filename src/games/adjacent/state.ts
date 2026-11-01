@@ -18,7 +18,7 @@ import {
 } from "../../engine/edge-clue-latin/state.ts";
 import type { PresetBoards } from "../../engine/game.ts";
 import { drawBars } from "./render.ts";
-import { barLadder } from "./solver.ts";
+import { barAnswer, barLadder } from "./solver.ts";
 
 /** A bar: its two numbers differ by one. Every bar is dealt, so two
  * neighbors without one never do, and a bar is flagged from both its cells. */
@@ -29,6 +29,7 @@ export const BARS: ClueKind = {
   complete: true,
   bothEnds: true,
   ladder: barLadder,
+  isAnswer: barAnswer,
   drawClues: drawBars,
   glyph: (flags, o, x, y, side) => {
     const i = y * o + x;

@@ -1,8 +1,8 @@
 /**
  * Unruly solver: the ladder `unruly.description.yaml` states, compiled, on
  * the engine's marks and runner (`engine/ladder-runtime.ts`), with the reason
- * each technique records for the hint; and the count/run validators the state
- * and renderer reuse, the validation half of `unruly.c`.
+ * each technique records for the hint; the answer check its rules compile to,
+ * which the state reads; and the error overlay the renderer reads.
  *
  * The solver fills the view's own grid in place: it fills thousands of cells
  * per board during generation, where a clone per fill would be wasteful. The
@@ -72,7 +72,7 @@ export interface HintMove {
 
 const otherColor = (c: number): number => (c === ONE ? ZERO : ONE);
 
-// --- error-overlay flags (set by validateRows, read by render.ts) -------
+// --- error-overlay flags (set by markRows, read by render.ts) -------
 export const FE_HOR_ROW_LEFT = 0x0001;
 const FE_HOR_ROW_MID = 0x0003;
 export const FE_HOR_ROW_RIGHT = 0x0002;
@@ -235,7 +235,11 @@ export function deduceHintPlan(state: UnrulyState): HintMove[] {
   return plan;
 }
 
-// --- validators ----------------------------------------------------------
+// --- the error overlay and the answer check ---------------------------------
+//
+// The overlay marks what is wrong on a board still being filled, which no
+// rule of the answer says, and draws a row's count as its own mark; the
+// answer check is the description's rules, compiled.
 
 /** Per-row and per-column counts of each color. */
 interface Counts {
@@ -268,49 +272,39 @@ function countsOf(view: GridView): Counts {
   return s;
 }
 
-function validateRowsOriented(
+function markRowsOriented(
   view: GridView,
   horizontal: boolean,
   check: number,
-  errors: Int32Array | null,
-): number {
+  errors: Int32Array,
+): void {
   const { w2, h2, grid } = view;
   const dx = horizontal ? 1 : 0;
   const dy = 1 - dx;
   const err1 = horizontal ? FE_HOR_ROW_LEFT : FE_VER_ROW_TOP;
   const err2 = horizontal ? FE_HOR_ROW_MID : FE_VER_ROW_MID;
   const err3 = horizontal ? FE_HOR_ROW_RIGHT : FE_VER_ROW_BOTTOM;
-  let ret = 0;
   for (let y = dy; y < h2 - dy; y++) {
     for (let x = dx; x < w2 - dx; x++) {
       const i1 = (y - dy) * w2 + (x - dx);
       const i2 = y * w2 + x;
       const i3 = (y + dy) * w2 + (x + dx);
       if (grid[i1] === check && grid[i2] === check && grid[i3] === check) {
-        ret++;
-        if (errors) {
-          errors[i1] |= err1;
-          errors[i2] |= err2;
-          errors[i3] |= err3;
-        }
+        errors[i1] |= err1;
+        errors[i2] |= err2;
+        errors[i3] |= err3;
       }
     }
   }
-  return ret;
 }
 
-function validateUnique(
-  view: GridView,
-  horizontal: boolean,
-  errors: Int32Array | null,
-): number {
+function markUnique(view: GridView, horizontal: boolean, errors: Int32Array): void {
   const { w2, h2, grid } = view;
   const rmult = horizontal ? w2 : 1;
   const cmult = horizontal ? 1 : w2;
   const nr = horizontal ? h2 : w2;
   const nc = horizontal ? w2 : h2;
   const err = horizontal ? FE_ROW_MATCH : FE_COL_MATCH;
-  let ret = 0;
   for (let r = 0; r < nr; r++) {
     let nfull = 0;
     for (let c = 0; c < nc; c++) if (grid[r * rmult + c * cmult] !== EMPTY) nfull++;
@@ -324,71 +318,53 @@ function validateUnique(
         }
       }
       if (match) {
-        if (errors) {
-          for (let c = 0; c < nc; c++) {
-            errors[r * rmult + c * cmult] |= err;
-            errors[r2 * rmult + c * cmult] |= err;
-          }
+        for (let c = 0; c < nc; c++) {
+          errors[r * rmult + c * cmult] |= err;
+          errors[r2 * rmult + c * cmult] |= err;
         }
-        ret++;
       }
     }
   }
-  return ret;
 }
 
 /** Mark every three-in-a-row run (and, in unique mode, every identical
- * full row/column pair) into `errors`. Returns `-1` if any error exists,
- * else `0`. */
-export function validateRows(view: GridView, errors: Int32Array | null): number {
-  let n = 0;
-  n += validateRowsOriented(view, true, ONE, errors);
-  n += validateRowsOriented(view, false, ONE, errors);
-  n += validateRowsOriented(view, true, ZERO, errors);
-  n += validateRowsOriented(view, false, ZERO, errors);
+ * full row/column pair) into `errors`. */
+export function markRows(view: GridView, errors: Int32Array): void {
+  markRowsOriented(view, true, ONE, errors);
+  markRowsOriented(view, false, ONE, errors);
+  markRowsOriented(view, true, ZERO, errors);
+  markRowsOriented(view, false, ZERO, errors);
   if (view.unique) {
-    n += validateUnique(view, true, errors);
-    n += validateUnique(view, false, errors);
+    markUnique(view, true, errors);
+    markUnique(view, false, errors);
   }
-  return n ? -1 : 0;
 }
 
-/** Count check: `-1` if any row/column exceeds its target (contradiction),
- * `+1` if any is still short (incomplete), `0` if every count is exact.
- * Optionally records per-row/column over-count flags into `errors`, laid
- * out as upstream: `[0,h2)` rows-ones, `[h2,2h2)` rows-zeros,
+/** Mark each row and column holding more of a piece than its half into
+ * `errors`, laid out as upstream: `[0,h2)` rows-ones, `[h2,2h2)` rows-zeros,
  * `[2h2,2h2+w2)` cols-ones, `[2h2+w2,2h2+2w2)` cols-zeros. */
-export function validateCounts(view: GridView, errors: Uint8Array | null): number {
+export function markCounts(view: GridView, errors: Uint8Array): void {
   const { w2, h2 } = view;
   const w = w2 / 2;
   const h = h2 / 2;
   const s = countsOf(view);
-  let below = false;
-  let above = false;
-
   for (let i = 0; i < w2; i++) {
-    if (s.onesCols[i] < h || s.zerosCols[i] < h) below = true;
-    if (s.onesCols[i] > h || s.zerosCols[i] > h) above = true;
-    if (errors) {
-      errors[2 * h2 + i] = s.onesCols[i] > h ? 1 : 0;
-      errors[2 * h2 + w2 + i] = s.zerosCols[i] > h ? 1 : 0;
-    }
+    errors[2 * h2 + i] = s.onesCols[i] > h ? 1 : 0;
+    errors[2 * h2 + w2 + i] = s.zerosCols[i] > h ? 1 : 0;
   }
   for (let i = 0; i < h2; i++) {
-    if (s.onesRows[i] < w || s.zerosRows[i] < w) below = true;
-    if (s.onesRows[i] > w || s.zerosRows[i] > w) above = true;
-    if (errors) {
-      errors[i] = s.onesRows[i] > w ? 1 : 0;
-      errors[h2 + i] = s.zerosRows[i] > w ? 1 : 0;
-    }
+    errors[i] = s.onesRows[i] > w ? 1 : 0;
+    errors[h2 + i] = s.zerosRows[i] > w ? 1 : 0;
   }
-
-  return above ? -1 : below ? 1 : 0;
 }
 
-/** Is the grid finished: every count balanced and no rule broken? */
+/** Whether the grid is an answer, by the rules its description compiles to. */
 export function isComplete(view: GridView): boolean {
-  return validateCounts(view, null) === 0 && validateRows(view, null) === 0;
+  return unruly.isAnswer(
+    view.grid,
+    describedSpace(unruly.units, view.w2, view.h2),
+    view.unique ? ["unique"] : [],
+  );
 }
 
 /**

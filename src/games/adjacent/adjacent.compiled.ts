@@ -1,9 +1,9 @@
 // Compiled by `npm run describe` from src/games/adjacent/adjacent.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, clueAt } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, clueAt, rangeMask } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its clues by kind, and
- * the sizes a technique reads that the grid does not give. */
+ * the sizes a technique or the rules read that the grid does not give. */
 export interface Dealt {
   bar: ClueList;
 }
@@ -38,6 +38,36 @@ export const ladder: readonly { id: LadderId; tier: number; scale?: string; from
 
 /** The description's tiers, by name. */
 export const tiers: readonly string[] = ["Trivial","Easy","Tricky","Extreme","Recursive"];
+
+/** Whether `g`, a value a cell and 0 where it has none, is an answer to the
+ * board: every cell a value of its domain, and every rule and dealt clue
+ * true of it, a variation's rules where `variations` has it on. */
+export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
+  const _domain = rangeMask(1, sp.w);
+  for (const cell of sp.cells) {
+    const held = g[cell];
+    if (!(held > 0 && (_domain >> held) & 1)) return false;
+  }
+  let _q40 = true;
+  const _n44 = new Int32Array(32);
+  Q41: for (const _u42 of sp.lines) {
+    _n44.fill(0);
+    for (const _c43 of sp.lineCells[_u42]) {
+      const _t45 = (g[_c43] || -1);
+      if (++_n44[_t45] > 1) {
+        _q40 = false;
+        break Q41;
+      }
+    }
+  }
+  if (!(_q40)) return false;
+  for (let _k46 = 0; _k46 < cl.bar.at.length; _k46++) {
+    const _at47 = cl.bar.at[_k46];
+    const _v48 = cl.bar.v[_k46];
+    if (!(((_v48 === 1) === (Math.abs(((g[sp.edgeEnds[2 * _at47]] || -1) - (g[sp.edgeEnds[2 * _at47 + 1]] || -1))) === 1)))) return false;
+  }
+  return true;
+}
 
 export interface AdjacentBinding {
   L: number;

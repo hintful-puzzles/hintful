@@ -5,7 +5,7 @@
  * A board is a `w × w` Cayley table of a group: a Latin square (each element
  * `1..w` once per row and column) that is additionally **associative**
  * (`(ab)c = a(bc)`), from which the group identity and inverses follow (the
- * proof is in {@link checkErrors}). The player fills the table; a few cells are
+ * proof is in {@link markErrors}). The player fills the table; a few cells are
  * given (`immutable`, shared by reference). Each empty cell may instead hold a
  * bitmap of pencil marks.
  *
@@ -20,11 +20,11 @@
  * solution `aux` string, never in the desc.
  */
 
-import { valuesOneTo } from "../../engine/candidate-bits.ts";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { latinSpace } from "../../engine/describe-runtime.ts";
 import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import type { PresetBoards } from "../../engine/game.ts";
@@ -32,6 +32,7 @@ import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
+import * as group from "./group.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
 // Upstream DIFFLIST order: Trivial, Normal, Hard, Extreme, Unreasonable. The
@@ -414,19 +415,18 @@ export const EF_LATIN = 1 << (6 * EF_DIGIT_SHIFT);
 /**
  * Compute the render-time error overlay for the *current* grid: Latin-square
  * duplicates and associativity failures, packed per cell into `errors` (an
- * `w²` Int32Array), and return whether any error fired. This is
- * self-consistency ("is the board a valid group table so far?"), distinct from
- * mistake-checking against the unique solution.
+ * `w²` Int32Array). This is self-consistency ("is the board a valid group
+ * table so far?"), distinct from mistake-checking against the unique solution,
+ * and whether a board is solved is the compiled answer check's.
  *
  * It suffices to check Latin-square-hood and associativity: all other group
  * axioms follow (identity and inverses are derivable — see the C proof).
  */
-export function checkErrors(state: GroupState, errors?: Int32Array): boolean {
+export function markErrors(state: GroupState, errors: Int32Array): void {
   const w = state.w;
   const grid = state.grid;
-  let errs = false;
 
-  if (errors) errors.fill(0);
+  errors.fill(0);
 
   // Latin check, rows then columns: cell k of line l is at l·lineStep + k·cellStep.
   for (const [lineStep, cellStep] of [
@@ -441,15 +441,10 @@ export function checkErrors(state: GroupState, errors?: Int32Array): boolean {
         errmask |= mask & bit;
         mask |= bit;
       }
-      if (mask !== valuesOneTo(w)) {
-        errs = true;
-        errmask &= ~1;
-        if (errors) {
-          for (let k = 0; k < w; k++) {
-            const i = l * lineStep + k * cellStep;
-            if (errmask & (1 << grid[i])) errors[i] |= EF_LATIN;
-          }
-        }
+      errmask &= ~1;
+      for (let k = 0; k < w; k++) {
+        const i = l * lineStep + k * cellStep;
+        if (errmask & (1 << grid[i])) errors[i] |= EF_LATIN;
       }
     }
   }
@@ -464,13 +459,8 @@ export function checkErrors(state: GroupState, errors?: Int32Array): boolean {
         const left = (ab - 1) * w + k; // the (ab)c cell
         const right = i * w + (bc - 1); // the a(bc) cell
         if (!grid[left] || !grid[right] || grid[left] === grid[right]) continue;
-        errs = true;
         // Skip if either slot is already used, so one square shows one error.
-        if (
-          errors &&
-          !(errors[left] & EF_LEFT_MASK) &&
-          !(errors[right] & EF_RIGHT_MASK)
-        ) {
+        if (!(errors[left] & EF_LEFT_MASK) && !(errors[right] & EF_RIGHT_MASK)) {
           let err = i + 1;
           err = (err << EF_DIGIT_SHIFT) | (j + 1);
           err = (err << EF_DIGIT_SHIFT) | (k + 1);
@@ -478,8 +468,6 @@ export function checkErrors(state: GroupState, errors?: Int32Array): boolean {
           errors[right] |= err << EF_RIGHT_SHIFT;
         }
       }
-
-  return errs;
 }
 
 /** Write `seq` into `out` with element `num` moved to display position `pos`:
@@ -502,10 +490,8 @@ export function moveInSequence(
 
 // --- status / text ---------------------------------------------------------
 
-/** Solved when the table is complete and a group: an empty cell fails the
- * Latin check, so `checkErrors` finding nothing means both. */
 export function status(s: GroupState): GameStatus {
-  return checkErrors(s) ? "ongoing" : "solved";
+  return group.isAnswer(s.grid, latinSpace(s.w)) ? "solved" : "ongoing";
 }
 
 /** ASCII grid of display chars (`.` for blank), matching `game_text_format`. */

@@ -54,6 +54,9 @@ export interface ClueKind {
   /** The techniques the game's description places at each tier, over this
    * board's clues. */
   ladder(o: number, flags: Int32Array): Ladder<LatinSolver>;
+  /** Whether a whole grid is an answer to this board, by the rules its
+   * description compiles to. */
+  isAnswer(grid: ArrayLike<number>, o: number, flags: Int32Array): boolean;
   /** Draw the clues in the gaps the cell at `(ox, oy)` owns, from its composed
    * flag word `f` (clue, error and spent bits). */
   drawClues(dr: GameDrawing, ts: number, ox: number, oy: number, f: number): void;
@@ -63,12 +66,7 @@ export interface ClueKind {
 
 /** Whether filled neighbors `a` and `b` break the clue between them, `flagged`
  * saying whether the clue is dealt toward `b` at `a`'s cell. */
-export function breaksClue(
-  kind: ClueKind,
-  flagged: boolean,
-  a: number,
-  b: number,
-): boolean {
+function breaksClue(kind: ClueKind, flagged: boolean, a: number, b: number): boolean {
   if (flagged) return !kind.holds(a, b);
   return kind.complete && kind.holds(a, b);
 }
@@ -361,26 +359,22 @@ export function newState(
 // --- error checking (check_complete / check_num_error / check_num_adj) ------
 
 /**
- * Check the grid for completion and (optionally) mark errors into `errFlags`
- * (an `order²` array of `F_ERROR | F_ERROR_*` bits per cell). Returns:
- *   `-1` wrong · `0` incomplete · `1` complete and correct.
- * Faithful to `check_complete` + `check_num_error` + `check_num_adj`.
+ * Mark the grid's errors into `errFlags` (an `order²` array of
+ * `F_ERROR | F_ERROR_*` bits per cell), the error overlay: whether a board is
+ * solved is the compiled answer check's. From `check_num_error` and
+ * `check_num_adj`.
  */
-export function checkComplete(state: EdgeClueState, errFlags?: Int32Array): number {
+export function markErrors(state: EdgeClueState, errFlags: Int32Array): void {
   const o = state.order;
   const grid = state.grid;
-  let ret = 1;
 
-  if (errFlags) errFlags.fill(0);
+  errFlags.fill(0);
 
   for (let x = 0; x < o; x++) {
     for (let y = 0; y < o; y++) {
       const i = y * o + x;
       const val = grid[i];
-      if (val === 0) {
-        ret = 0;
-        continue;
-      }
+      if (val === 0) continue;
 
       // check_num_error: duplicates in the same row / column.
       let dup = false;
@@ -388,10 +382,7 @@ export function checkComplete(state: EdgeClueState, errFlags?: Int32Array): numb
         if (yy !== y && grid[yy * o + x] === val) dup = true;
       for (let xx = 0; xx < o; xx++)
         if (xx !== x && grid[y * o + xx] === val) dup = true;
-      if (dup) {
-        ret = -1;
-        if (errFlags) errFlags[i] |= F_ERROR;
-      }
+      if (dup) errFlags[i] |= F_ERROR;
 
       // check_num_adj: clue violations toward filled neighbors.
       const f = state.clueFlags[i];
@@ -401,21 +392,17 @@ export function checkComplete(state: EdgeClueState, errFlags?: Int32Array): numb
         if (nx < 0 || nx >= o || ny < 0 || ny >= o) continue;
         const dn = grid[ny * o + nx];
         if (dn === 0) continue;
-        if (breaksClue(state.kind, (f & ADJTHAN[d].f) !== 0, val, dn)) {
-          ret = -1;
-          if (errFlags) errFlags[i] |= ADJTHAN[d].fe;
-        }
+        if (breaksClue(state.kind, (f & ADJTHAN[d].f) !== 0, val, dn))
+          errFlags[i] |= ADJTHAN[d].fe;
       }
     }
   }
-
-  return ret;
 }
 
 // --- status / text ---------------------------------------------------------
 
 export function status(s: EdgeClueState): "solved" | "ongoing" {
-  return checkComplete(s) > 0 ? "solved" : "ongoing";
+  return s.kind.isAnswer(s.grid, s.order, s.clueFlags) ? "solved" : "ongoing";
 }
 
 /** ASCII grid with inter-cell clue glyphs, matching `game_text_format`. */

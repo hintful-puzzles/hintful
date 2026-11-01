@@ -1592,9 +1592,9 @@ pass's flags and adds one for a cell the answer contradicts, and
 **A game on a Latin square builds on
 [`engine/latin.ts`](../src/engine/latin.ts): it states its deductions and
 its ladder in a description, and its `solver.ts` deals the board as the
-compiled ladder reads it, pairs each technique with its reason, and passes a
-`valid` callback over completed grids and the compiled `ladder` to
-`latinSolver`** ([descriptions.md](./descriptions.md)). `latin.ts`'s header
+compiled ladder reads it, pairs each technique with its reason, and passes
+the compiled `ladder` and the compiled `isAnswer` over that board to
+`latinSolver`** ([descriptions.md](./descriptions.md) § "The answer check"). `latin.ts`'s header
 says what the engine gives: the marks (`engine/ladder-runtime.ts`'s
 `CellMarks`), the library's techniques
 ([`latin.description.yaml`](../src/engine/latin.description.yaml)), forcing
@@ -1604,8 +1604,8 @@ doubling as the uniqueness check), and the generator. The population is
 [hints-candidates.md](./hints-candidates.md) § "What every game does".
 
 Exemplars: [`group/solver.ts`](../src/games/group/solver.ts) for a described
-game with no clues, its techniques reading the grid as a table, and a
-`valid`; [`unequal/solver.ts`](../src/games/unequal/solver.ts) for one with
+game with no clues, its techniques reading the grid as a table;
+[`unequal/solver.ts`](../src/games/unequal/solver.ts) for one with
 clues, which shares its driver with Adjacent's
 ([`engine/edge-clue-latin/solver.ts`](../src/engine/edge-clue-latin/solver.ts));
 [`towers/solver.ts`](../src/games/towers/solver.ts) for clues beside the
@@ -1634,12 +1634,6 @@ symbol.
   the library's techniques then read its multiplicity. Read the marker array back off the
   final cube (`cubeOut`). A game with exactly one such symbol per line needs
   no declaration.
-- **The deductions are what refuse a broken grid, not only `valid`.** Where
-  a game's `valid` checks less than its rules, a contradiction a deduction
-  misses lets the recursion accept a broken grid and report the board
-  ambiguous (descriptions.md § "A conclusion that is false is a
-  contradiction"). Prefer a `valid` that reads the same predicate as the
-  game's error check, as the edge-clue games' does (`breaksClue`).
 - **Three generator shapes.** Derive every clue from the full square, then
   remove (Towers). Assemble clues greedily onto a blank board, reading the
   solver's remaining-possibility counts through `latinSolver`'s optional

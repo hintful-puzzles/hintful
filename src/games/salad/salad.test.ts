@@ -259,7 +259,7 @@ describe("salad solver", () => {
       expect(saladSolve(board, DIFF_EASY)).toBe(true);
       // Every line ends up with exactly `nums` symbols; the rest are holes,
       // which the solver leaves as its hole symbol (`nums + 1`) and marks as
-      // crosses — the acceptance test is `latinholesCheck`, as upstream's.
+      // crosses — the acceptance test is the compiled answer check.
       const o = f.p.order;
       for (let y = 0; y < o; y++) {
         let filled = 0;

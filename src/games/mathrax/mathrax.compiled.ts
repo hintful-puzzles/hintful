@@ -1,9 +1,9 @@
 // Compiled by `npm run describe` from src/games/mathrax/mathrax.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, clueAt, popcount } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, clueAt, popcount, rangeMask } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its clues by kind, and
- * the sizes a technique reads that the grid does not give. */
+ * the sizes a technique or the rules read that the grid does not give. */
 export interface Dealt {
   sum: ClueList;
   difference: ClueList;
@@ -43,6 +43,111 @@ export const ladder: readonly { id: LadderId; tier: number; scale?: string; from
 
 /** The description's tiers, by name. */
 export const tiers: readonly string[] = ["Easy","Normal","Tricky","Unreasonable"];
+
+/** Whether `g`, a value a cell and 0 where it has none, is an answer to the
+ * board: every cell a value of its domain, and every rule and dealt clue
+ * true of it, a variation's rules where `variations` has it on. */
+export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
+  const _domain = rangeMask(1, sp.w);
+  for (const cell of sp.cells) {
+    const held = g[cell];
+    if (!(held > 0 && (_domain >> held) & 1)) return false;
+  }
+  let _q323 = true;
+  const _n327 = new Int32Array(32);
+  Q324: for (const _u325 of sp.lines) {
+    _n327.fill(0);
+    for (const _c326 of sp.lineCells[_u325]) {
+      const _t328 = (g[_c326] || -1);
+      if (++_n327[_t328] > 1) {
+        _q323 = false;
+        break Q324;
+      }
+    }
+  }
+  if (!(_q323)) return false;
+  for (let _k329 = 0; _k329 < cl.sum.at.length; _k329++) {
+    const _at330 = cl.sum.at[_k329];
+    const _v331 = cl.sum.v[_k329];
+    let _q332 = true;
+    Q333: {
+      const _a334 = sp.cornerCells[_at330];
+      for (let _i335 = 0; _i335 < _a334.length; _i335++) {
+        const v_c = _a334[_i335];
+        if (!((((g[v_c] || -1) + (g[(sp.cornerCells[_at330][0] + sp.cornerCells[_at330][3] - v_c)] || -1)) === _v331))) {
+          _q332 = false;
+          break Q333;
+        }
+      }
+    }
+    if (!(_q332)) return false;
+  }
+  for (let _k336 = 0; _k336 < cl.difference.at.length; _k336++) {
+    const _at337 = cl.difference.at[_k336];
+    const _v338 = cl.difference.v[_k336];
+    let _q339 = true;
+    Q340: {
+      const _a341 = sp.cornerCells[_at337];
+      for (let _i342 = 0; _i342 < _a341.length; _i342++) {
+        const v_c = _a341[_i342];
+        if (!((Math.abs(((g[v_c] || -1) - (g[(sp.cornerCells[_at337][0] + sp.cornerCells[_at337][3] - v_c)] || -1))) === _v338))) {
+          _q339 = false;
+          break Q340;
+        }
+      }
+    }
+    if (!(_q339)) return false;
+  }
+  for (let _k343 = 0; _k343 < cl.product.at.length; _k343++) {
+    const _at344 = cl.product.at[_k343];
+    const _v345 = cl.product.v[_k343];
+    let _q346 = true;
+    Q347: {
+      const _a348 = sp.cornerCells[_at344];
+      for (let _i349 = 0; _i349 < _a348.length; _i349++) {
+        const v_c = _a348[_i349];
+        if (!((((g[v_c] || -1) * (g[(sp.cornerCells[_at344][0] + sp.cornerCells[_at344][3] - v_c)] || -1)) === _v345))) {
+          _q346 = false;
+          break Q347;
+        }
+      }
+    }
+    if (!(_q346)) return false;
+  }
+  for (let _k350 = 0; _k350 < cl.quotient.at.length; _k350++) {
+    const _at351 = cl.quotient.at[_k350];
+    const _v352 = cl.quotient.v[_k350];
+    let _q353 = true;
+    Q354: {
+      const _a355 = sp.cornerCells[_at351];
+      for (let _i356 = 0; _i356 < _a355.length; _i356++) {
+        const v_c = _a355[_i356];
+        if (!((((g[v_c] || -1) === (_v352 * (g[(sp.cornerCells[_at351][0] + sp.cornerCells[_at351][3] - v_c)] || -1))) || ((g[(sp.cornerCells[_at351][0] + sp.cornerCells[_at351][3] - v_c)] || -1) === (_v352 * (g[v_c] || -1)))))) {
+          _q353 = false;
+          break Q354;
+        }
+      }
+    }
+    if (!(_q353)) return false;
+  }
+  for (let _k357 = 0; _k357 < cl.parity.at.length; _k357++) {
+    const _at358 = cl.parity.at[_k357];
+    const _v359 = cl.parity.v[_k357];
+    let _q360 = true;
+    Q361: {
+      const _a362 = sp.cornerCells[_at358];
+      for (let _i363 = 0; _i363 < _a362.length; _i363++) {
+        const v_c = _a362[_i363];
+        if (!((((g[v_c] || -1) % 2) === _v359))) {
+          _q360 = false;
+          break Q361;
+        }
+      }
+    }
+    if (!(_q360)) return false;
+  }
+  return true;
+}
 
 export interface ClueEasyBinding {
   c: number;

@@ -3,7 +3,7 @@
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, clueAt, popcount, rangeMask } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its clues by kind, and
- * the sizes a technique reads that the grid does not give. */
+ * the sizes a technique or the rules read that the grid does not give. */
 export interface Dealt {
   sees: ClueList;
 }
@@ -39,6 +39,57 @@ export const ladder: readonly { id: LadderId; tier: number; scale?: string; from
 
 /** The description's tiers, by name. */
 export const tiers: readonly string[] = ["Easy","Hard","Extreme","Unreasonable"];
+
+/** Whether `g`, a value a cell and 0 where it has none, is an answer to the
+ * board: every cell a value of its domain, and every rule and dealt clue
+ * true of it, a variation's rules where `variations` has it on. */
+export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
+  const _domain = rangeMask(1, sp.w);
+  for (const cell of sp.cells) {
+    const held = g[cell];
+    if (!(held > 0 && (_domain >> held) & 1)) return false;
+  }
+  let _q237 = true;
+  const _n241 = new Int32Array(32);
+  Q238: for (const _u239 of sp.lines) {
+    _n241.fill(0);
+    for (const _c240 of sp.lineCells[_u239]) {
+      const _t242 = (g[_c240] || -1);
+      if (++_n241[_t242] > 1) {
+        _q237 = false;
+        break Q238;
+      }
+    }
+  }
+  if (!(_q237)) return false;
+  for (let _k243 = 0; _k243 < cl.sees.at.length; _k243++) {
+    const _at244 = cl.sees.at[_k243];
+    const _v245 = cl.sees.v[_k243];
+    let _g246 = 0;
+    G247: {
+      const _a248 = sp.sight[_at244];
+      for (let _i249 = 0; _i249 < _a248.length; _i249++) {
+        const v_c = _a248[_i249];
+        let _q250 = true;
+        Q251: {
+          const _a252 = sp.sight[_at244];
+          const _n253 = _i249;
+          for (let _i254 = 0; _i254 < _n253; _i254++) {
+            const v_c2 = _a252[_i254];
+            if (!(((g[v_c2] || -1) < (g[v_c] || -1)))) {
+              _q250 = false;
+              break Q251;
+            }
+          }
+        }
+        if (!(_q250)) continue;
+        _g246++;
+      }
+    }
+    if (!((_g246 === _v245))) return false;
+  }
+  return true;
+}
 
 export interface FacingBinding {
   P: readonly number[];

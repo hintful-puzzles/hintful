@@ -25,11 +25,18 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
+import {
+  type ClueList,
+  clueList,
+  latinSpace,
+  partition,
+} from "../../engine/describe-runtime.ts";
 import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { endParams, paramsLetter } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
+import * as keen from "./keen.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
 
@@ -78,7 +85,7 @@ export function clueVal(clue: number): number {
 /** Maximum cage area (upstream `MAXBLK`). */
 export const MAXBLK = 6;
 
-// --- error flags (written by checkErrors; mapped to draw flags in render) ---
+// --- error flags (written by markErrors; mapped to draw flags in render) ---
 
 /** A cage whose filled digits violate its clue. */
 export const ERR_CLUE = 1;
@@ -330,21 +337,19 @@ export function newState(p: KeenParams, desc: string): KeenState {
 // --- error checking (check_errors) -----------------------------------------
 
 /**
- * Mark every cell/clue currently in error and report whether any error exists.
- * When `errors` (an `a`-length array) is given it is filled with {@link
- * ERR_CLUE}/{@link ERR_LATIN} bits per cell; either way the boolean return is
- * the completion test (`!checkErrors` ⇒ solved). Faithful to `check_errors`.
+ * Mark every cell currently in error into `errors` (an `a`-length array) with
+ * {@link ERR_CLUE}/{@link ERR_LATIN} bits: the error overlay, from
+ * `check_errors`. Whether a board is solved is the compiled answer check's.
  */
-export function checkErrors(state: KeenState, errors?: Int32Array): boolean {
+export function markErrors(state: KeenState, errors: Int32Array): void {
   const w = state.params.w;
   const a = w * w;
   const { minimal, clues } = state.clues;
   const grid = state.grid;
-  let errs = false;
 
   const cluevals = new Int32Array(a);
   const full = new Uint8Array(a).fill(1); // per-cage "no empty cell" flag
-  if (errors) errors.fill(0);
+  errors.fill(0);
 
   for (let i = 0; i < a; i++) {
     const j = minimal[i];
@@ -374,10 +379,8 @@ export function checkErrors(state: KeenState, errors?: Int32Array): boolean {
   }
 
   for (let i = 0; i < a; i++) {
-    if (minimal[i] === i && clueVal(clues[i]) !== cluevals[i]) {
-      errs = true;
-      if (errors && full[i]) errors[i] |= ERR_CLUE;
-    }
+    if (minimal[i] === i && full[i] && clueVal(clues[i]) !== cluevals[i])
+      errors[i] |= ERR_CLUE;
   }
 
   // Each row, then each column; `cellOf(line, k)` is the line's k-th cell.
@@ -393,22 +396,80 @@ export function checkErrors(state: KeenState, errors?: Int32Array): boolean {
       mask |= bit;
     }
     if (mask === fullMask) continue;
-    errs = true;
     errmask &= ~1;
-    if (!errors) continue;
     for (let k = 0; k < w; k++) {
       const cell = cellOf(line, k);
       if (errmask & (1 << grid[cell])) errors[cell] |= ERR_LATIN;
     }
   }
-
-  return errs;
 }
 
 // --- status ----------------------------------------------------------------
 
 export function status(s: KeenState): "solved" | "ongoing" {
-  return checkErrors(s) ? "ongoing" : "solved";
+  const w = s.params.w;
+  return keen.isAnswer(s.grid, latinSpace(w), dealtOf(cagesOf(w, s.clues)))
+    ? "solved"
+    : "ongoing";
+}
+
+// --- the board as its description deals it ---------------------------------
+
+/** The cages in the order of their least cells, each cage's cells in reading
+ * order, and its packed clue: what the techniques read and their reasons
+ * quote. */
+export interface Cages {
+  cells: number[][];
+  clues: number[];
+}
+
+export function cagesOf(w: number, kclues: KeenClues): Cages {
+  const out: Cages = { cells: [], clues: [] };
+  const index = new Map<number, number>();
+  for (let i = 0; i < w * w; i++) {
+    const m = kclues.minimal[i];
+    let r = index.get(m);
+    if (r === undefined) {
+      r = out.cells.length;
+      index.set(m, r);
+      out.cells.push([]);
+      out.clues.push(kclues.clues[m]);
+    }
+    out.cells[r].push(i);
+  }
+  return out;
+}
+
+type ClueKind = Exclude<keyof keen.Dealt, "cage">;
+
+const KIND_OF_OP = new Map<number, ClueKind>([
+  [C_ADD, "sum"],
+  [C_MUL, "product"],
+  [C_SUB, "difference"],
+  [C_DIV, "quotient"],
+]);
+
+/** The cages as the description deals them: each cage's clue of the kind its
+ * sign names, at the cage. */
+export function dealtOf(cages: Cages): keen.Dealt {
+  const n = cages.cells.length;
+  const ofKind = (kind: ClueKind): ClueList => {
+    const rs = cages.clues.flatMap((clue, r) =>
+      KIND_OF_OP.get(clueOp(clue)) === kind ? [r] : [],
+    );
+    return clueList(
+      rs,
+      rs.map((r) => clueVal(cages.clues[r])),
+      n,
+    );
+  };
+  return {
+    cage: partition(cages.cells, n),
+    sum: ofKind("sum"),
+    product: ofKind("product"),
+    difference: ofKind("difference"),
+    quotient: ofKind("quotient"),
+  };
 }
 
 // --- moves -----------------------------------------------------------------

@@ -47,7 +47,6 @@ import {
   type SoloHint,
 } from "./render.ts";
 import {
-  checkValid,
   encodeParams,
   newState,
   type SoloMove,
@@ -118,7 +117,6 @@ describe("solo solve", () => {
     expect(me.solve()).toBeNull();
     const s = getState(me);
     expect(soloGame.status(s)).toBe("solved");
-    expect(checkValid(s.cr, s.blocks, s.killerData, s.xtype, s.grid)).toBe(true);
   });
 
   // **The case above cannot reach the aux path.** It deals from a `params:desc`
@@ -138,9 +136,9 @@ describe("solo solve", () => {
         `${preset.title}: solved grid holds a value outside 1..${s.cr}`,
       ).toBe(true);
       expect(
-        checkValid(s.cr, s.blocks, s.killerData, s.xtype, s.grid),
+        soloGame.status(s),
         `${preset.title}: solved grid does not satisfy the puzzle`,
-      ).toBe(true);
+      ).toBe("solved");
     }
   });
 });

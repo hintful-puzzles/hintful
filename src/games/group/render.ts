@@ -60,7 +60,6 @@ import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts"
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { GroupMove } from "./state.ts";
 import {
-  checkErrors,
   EF_DIGIT_MASK,
   EF_DIGIT_SHIFT,
   EF_LATIN,
@@ -70,6 +69,7 @@ import {
   EF_RIGHT_SHIFT,
   type GroupState,
   type GroupUi,
+  markErrors,
   moveInSequence,
   toChar,
 } from "./state.ts";
@@ -211,7 +211,7 @@ export interface GroupDrawState {
   marks: HintMarks;
   /** Scratch: the drag-modified display sequence, rebuilt each redraw. */
   sequence: Uint8Array;
-  /** Scratch: grid-indexed error overlay from `checkErrors`. */
+  /** Scratch: grid-indexed error overlay from `markErrors`. */
   errtmp: Int32Array;
   /** Whether the pencil-mode indicator was on last frame. */
   pencilModeShown: boolean | null;
@@ -513,7 +513,7 @@ export function redraw(
     ds.started = true;
   }
 
-  checkErrors(state, ds.errtmp);
+  markErrors(state, ds.errtmp);
 
   // The display sequence, with a header being dragged shown where it is now.
   if (ui.drag) moveInSequence(state.sequence, ui.dragnum, ui.dragpos, ds.sequence);

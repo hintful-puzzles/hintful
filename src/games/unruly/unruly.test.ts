@@ -20,13 +20,7 @@ import {
 } from "./constants.ts";
 import { newDesc } from "./generator.ts";
 import { unrulyGame } from "./index.ts";
-import {
-  findMistakes,
-  solveGame,
-  solveToString,
-  validateCounts,
-  validateRows,
-} from "./solver.ts";
+import { findMistakes, isComplete, solveGame, solveToString } from "./solver.ts";
 import {
   decodeParams,
   encodeGrid,
@@ -153,11 +147,6 @@ describe("desc codec", () => {
   });
 });
 
-/** A completed grid is balanced and rule-clean. */
-function isSolvedGrid(state: UnrulyState): boolean {
-  return validateCounts(state, null) === 0 && validateRows(state, null) === 0;
-}
-
 describe("generator + solver", () => {
   const cases: [string, UnrulyParams][] = [
     ["8x8 trivial", params(8, 8, DIFF_TRIVIAL)],
@@ -177,8 +166,7 @@ describe("generator + solver", () => {
     const grid = Uint8Array.from(state.grid);
     const work = { w2: p.w2, h2: p.h2, unique: p.unique, grid };
     solveGame(work, p.diff);
-    expect(validateCounts(work, null)).toBe(0);
-    expect(validateRows(work, null)).toBe(0);
+    expect(isComplete(work)).toBe(true);
   });
 
   it("solveToString returns a fully solved grid for a generated board", () => {
@@ -201,7 +189,7 @@ describe("generator + solver", () => {
     const work = { w2: p.w2, h2: p.h2, unique: p.unique, grid };
     solveGame(work, DIFF_EASY);
     // EASY solver must NOT complete a NORMAL board (else it was too easy).
-    expect(validateCounts(work, null)).not.toBe(0);
+    expect(isComplete(work)).toBe(false);
   });
 });
 
@@ -270,7 +258,7 @@ describe("moves", () => {
       });
     }
     expect(status(cur)).toBe("solved");
-    expect(isSolvedGrid(cur)).toBe(true);
+    expect(isComplete(cur)).toBe(true);
   });
 
   it("findMistakes flags a mark contradicting the solution, none when correct", () => {

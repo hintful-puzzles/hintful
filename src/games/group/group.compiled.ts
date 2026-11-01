@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/group/group.description.yaml: edit that, not this.
 
-import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, setOf } from "../../engine/describe-runtime.ts";
+import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, rangeMask, setOf } from "../../engine/describe-runtime.ts";
 
 /** The units no value repeats in, in the description's order: the
  * engine builds the space from them. */
@@ -33,6 +33,50 @@ export const ladder: readonly { id: LadderId; tier: number; scale?: string; from
 
 /** The description's tiers, by name. */
 export const tiers: readonly string[] = ["Trivial","Normal","Hard","Extreme","Unreasonable"];
+
+/** Whether `g`, a value a cell and 0 where it has none, is an answer to the
+ * board: every cell a value of its domain, and every rule and dealt clue
+ * true of it, a variation's rules where `variations` has it on. */
+export function isAnswer(g: ArrayLike<number>, sp: GridSpace): boolean {
+  const _domain = rangeMask(1, sp.w);
+  for (const cell of sp.cells) {
+    const held = g[cell];
+    if (!(held > 0 && (_domain >> held) & 1)) return false;
+  }
+  let _q75 = true;
+  const _n79 = new Int32Array(32);
+  Q76: for (const _u77 of sp.lines) {
+    _n79.fill(0);
+    for (const _c78 of sp.lineCells[_u77]) {
+      const _t80 = (g[_c78] || -1);
+      if (++_n79[_t80] > 1) {
+        _q75 = false;
+        break Q76;
+      }
+    }
+  }
+  if (!(_q75)) return false;
+  let _q81 = true;
+  Q82: {
+    for (let _m83 = _domain; _m83 !== 0; _m83 &= _m83 - 1) {
+      const v_a = 31 - Math.clz32(_m83 & -_m83);
+      for (let _m84 = _domain; _m84 !== 0; _m84 &= _m84 - 1) {
+        const v_b = 31 - Math.clz32(_m84 & -_m84);
+        for (let _m85 = _domain; _m85 !== 0; _m85 &= _m85 - 1) {
+          const v_c = 31 - Math.clz32(_m85 & -_m85);
+          const _t86 = (g[((v_a - 1) * sp.w + (v_b - 1))] || -1);
+          const _t87 = (g[((v_b - 1) * sp.w + (v_c - 1))] || -1);
+          if (!(((g[((_t86 - 1) * sp.w + (v_c - 1))] || -1) === (g[((v_a - 1) * sp.w + (_t87 - 1))] || -1)))) {
+            _q81 = false;
+            break Q82;
+          }
+        }
+      }
+    }
+  }
+  if (!(_q81)) return false;
+  return true;
+}
 
 export interface AssociativityBinding {
   a: number;

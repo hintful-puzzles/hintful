@@ -1,5 +1,5 @@
 /**
- * The generator's time per deal on every Latin game's presets, the same
+ * The generator's time per deal on every described game's presets, the same
  * seeds, each run twice and the second pass kept, so neither pays for
  * warming the JIT. Run on two builds and compare the lines:
  * `openspec/changes/archive/*-describe-salad/report.md` § "Speed" quotes it
@@ -14,9 +14,11 @@ import { groupGame } from "../../src/games/group/index.ts";
 import { keenGame } from "../../src/games/keen/index.ts";
 import { mathraxGame } from "../../src/games/mathrax/index.ts";
 import { saladGame } from "../../src/games/salad/index.ts";
+import { seismicGame } from "../../src/games/seismic/index.ts";
 import { soloGame } from "../../src/games/solo/index.ts";
 import { towersGame } from "../../src/games/towers/index.ts";
 import { unequalGame } from "../../src/games/unequal/index.ts";
+import { unrulyGame } from "../../src/games/unruly/index.ts";
 import { progress } from "./pilot.ts";
 
 const SEEDS = Number(process.env["SEEDS"] ?? 4);
@@ -33,6 +35,8 @@ const GAMES: [string, AnyGame][] = [
   ["mathrax", mathraxGame],
   ["salad", saladGame],
   ["solo", soloGame],
+  ["unruly", unrulyGame],
+  ["seismic", seismicGame],
 ];
 
 function presets(game: AnyGame): unknown[] {

@@ -60,14 +60,7 @@ import {
   origin,
   redraw,
 } from "./render.ts";
-import {
-  SOLVE_FAILED,
-  STATUS_COMPLETE,
-  STATUS_INVALID,
-  STATUS_UNFINISHED,
-  solveGame,
-  validateGame,
-} from "./solver.ts";
+import { isComplete, markErrors, SOLVE_FAILED, solveGame } from "./solver.ts";
 import {
   areaBits,
   CLUE_TOO_LARGE,
@@ -304,7 +297,7 @@ describe("seismic solver", () => {
     for (const f of FIXTURES) {
       const atTarget = stateOf(f);
       expect(solveGame(atTarget, f.diff)).not.toBe(SOLVE_FAILED);
-      expect(validateGame(atTarget)).toBe(STATUS_COMPLETE);
+      expect(isComplete(atTarget)).toBe(true);
 
       if (f.diff > DIFF_EASY) {
         // The generator accepts a board only if it is *not* solvable one tier
@@ -315,8 +308,8 @@ describe("seismic solver", () => {
     }
   });
 
-  it("classifies an untouched board as unfinished", () => {
-    expect(validateGame(stateOf(SMALL))).toBe(STATUS_UNFINISHED);
+  it("finds an untouched board no answer", () => {
+    expect(isComplete(stateOf(SMALL))).toBe(false);
   });
 
   it("flags a repeated number inside one region", () => {
@@ -337,7 +330,7 @@ describe("seismic solver", () => {
     expect(b).toBeGreaterThan(-1);
     state.grid[a] = 1;
     state.grid[b] = 1;
-    expect(validateGame(state)).toBe(STATUS_INVALID);
+    markErrors(state);
     expect(state.flags[a] & FM_ERRORDUP).toBeTruthy();
     expect(state.flags[b] & FM_ERRORDUP).toBeTruthy();
   });
@@ -350,12 +343,12 @@ describe("seismic solver", () => {
     // are legal; two apart (one cell between) is not.
     state.grid[0] = 2;
     state.grid[3] = 2;
-    expect(validateGame(state)).toBe(STATUS_UNFINISHED);
+    markErrors(state);
     expect(state.flags[0] & FM_ERRORDIST).toBeFalsy();
 
     state.grid[3] = 0;
     state.grid[2] = 2;
-    expect(validateGame(state)).toBe(STATUS_INVALID);
+    markErrors(state);
     expect(state.flags[0] & FM_ERRORDIST).toBeTruthy();
     expect(state.flags[2] & FM_ERRORDIST).toBeTruthy();
   });
@@ -369,14 +362,14 @@ describe("seismic solver", () => {
     // rule looks only along rows and columns).
     state.grid[0] = 5;
     state.grid[w + 1] = 5;
-    expect(validateGame(state)).toBe(STATUS_INVALID);
+    markErrors(state);
     expect(state.flags[0] & FM_ERRORDIST).toBeTruthy();
 
     // Two cells apart on a row: legal, even for a 5.
     state.flags.fill(0);
     state.grid[w + 1] = 0;
     state.grid[2] = 5;
-    expect(validateGame(state)).toBe(STATUS_UNFINISHED);
+    markErrors(state);
     expect(state.flags[0] & FM_ERRORDIST).toBeFalsy();
   });
 });

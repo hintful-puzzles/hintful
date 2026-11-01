@@ -41,7 +41,7 @@ const across = (c: number, o: number) => ({ ox: c % o, oy: (c / o) | 0 });
 
 /** The board's bars as the description deals them: every edge, a bar or
  * none, read from either end since a bar is flagged at both. */
-export const barLadder: ClueKind["ladder"] = (o, flags) => {
+function dealtOf(o: number, flags: Int32Array): adjacent.Dealt {
   const sp = latinSpace(o);
   const edges = sp.edgeEnds.length / 2;
   const at: number[] = [];
@@ -53,7 +53,14 @@ export const barLadder: ClueKind["ladder"] = (o, flags) => {
     at.push(e);
     v.push(flags[a] & dir.f ? 1 : 0);
   }
-  const cl: adjacent.Dealt = { bar: clueList(at, v, edges) };
+  return { bar: clueList(at, v, edges) };
+}
+
+export const barAnswer: ClueKind["isAnswer"] = (grid, o, flags) =>
+  adjacent.isAnswer(grid, latinSpace(o), dealtOf(o, flags));
+
+export const barLadder: ClueKind["ladder"] = (o, flags) => {
+  const cl = dealtOf(o, flags);
   return latinLadder(adjacent, {
     adjacent: compiledRung(
       adjacent.adjacent,

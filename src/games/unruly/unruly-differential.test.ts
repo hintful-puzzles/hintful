@@ -16,7 +16,7 @@ import { describe, expect, it } from "vitest";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/unruly-c-reference.json" with { type: "json" };
 import { newDesc } from "./generator.ts";
-import { solveGame, validateCounts, validateRows } from "./solver.ts";
+import { isComplete, solveGame } from "./solver.ts";
 import { newState, type UnrulyParams } from "./state.ts";
 
 interface Fixture {
@@ -58,8 +58,7 @@ describe("Unruly C-vs-TS differential — solver agreement (gated)", () => {
       const grid = Uint8Array.from(state.grid);
       const work = { w2: f.w2, h2: f.h2, unique: f.unique, grid };
       const maxdiff = solveGame(work, f.diff);
-      expect(validateCounts(work, null)).toBe(0);
-      expect(validateRows(work, null)).toBe(0);
+      expect(isComplete(work)).toBe(true);
       // The solver should need no technique harder than the recorded one.
       expect(maxdiff).toBeLessThanOrEqual(f.solverDiff);
     });

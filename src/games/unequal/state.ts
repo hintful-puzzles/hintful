@@ -21,7 +21,7 @@ import {
 } from "../../engine/edge-clue-latin/state.ts";
 import type { PresetBoards } from "../../engine/game.ts";
 import { drawSigns } from "./render.ts";
-import { signLadder } from "./solver.ts";
+import { signAnswer, signLadder } from "./solver.ts";
 
 /** A sign: the cell it is flagged at holds the greater number. */
 export const SIGNS: ClueKind = {
@@ -31,6 +31,7 @@ export const SIGNS: ClueKind = {
   complete: false,
   bothEnds: false,
   ladder: signLadder,
+  isAnswer: signAnswer,
   drawClues: drawSigns,
   glyph: (flags, o, x, y, side) => {
     const i = y * o + x;

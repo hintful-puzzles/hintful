@@ -1,9 +1,9 @@
 // Compiled by `npm run describe` from src/games/unequal/unequal.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, rangeMask } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its clues by kind, and
- * the sizes a technique reads that the grid does not give. */
+ * the sizes a technique or the rules read that the grid does not give. */
 export interface Dealt {
   greater: ClueList;
 }
@@ -37,6 +37,36 @@ export const ladder: readonly { id: LadderId; tier: number; scale?: string; from
 
 /** The description's tiers, by name. */
 export const tiers: readonly string[] = ["Trivial","Easy","Tricky","Extreme","Recursive"];
+
+/** Whether `g`, a value a cell and 0 where it has none, is an answer to the
+ * board: every cell a value of its domain, and every rule and dealt clue
+ * true of it, a variation's rules where `variations` has it on. */
+export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
+  const _domain = rangeMask(1, sp.w);
+  for (const cell of sp.cells) {
+    const held = g[cell];
+    if (!(held > 0 && (_domain >> held) & 1)) return false;
+  }
+  let _q17 = true;
+  const _n21 = new Int32Array(32);
+  Q18: for (const _u19 of sp.lines) {
+    _n21.fill(0);
+    for (const _c20 of sp.lineCells[_u19]) {
+      const _t22 = (g[_c20] || -1);
+      if (++_n21[_t22] > 1) {
+        _q17 = false;
+        break Q18;
+      }
+    }
+  }
+  if (!(_q17)) return false;
+  for (let _k23 = 0; _k23 < cl.greater.at.length; _k23++) {
+    const _at24 = cl.greater.at[_k23];
+    const _v25 = cl.greater.v[_k23];
+    if (!(((g[_v25] || -1) > (g[(sp.edgeEnds[2 * _at24] === _v25 ? sp.edgeEnds[2 * _at24 + 1] : sp.edgeEnds[2 * _at24])] || -1)))) return false;
+  }
+  return true;
+}
 
 export interface SignBinding {
   k: number;

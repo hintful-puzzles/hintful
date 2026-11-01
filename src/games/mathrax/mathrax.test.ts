@@ -86,9 +86,6 @@ import {
   OPTION_ODD,
   OPTION_SUB,
   OPTIONSMASK,
-  STATUS_COMPLETE,
-  STATUS_INVALID,
-  STATUS_UNFINISHED,
   setClueNum,
   validateParams,
 } from "./state.ts";
@@ -357,9 +354,8 @@ describe("mathrax solver", () => {
       const st = newState(p, f.desc);
       const grid = Uint8Array.from(st.grid);
       expect(mathraxSolve(p.o, grid, st.clues, DIFF_RECURSIVE)).toBe(SOLVE_UNIQUE);
-      // The filled grid really is a legal board.
-      const flags = new Uint8Array(p.o * p.o);
-      expect(mathraxValidate(p.o, grid, st.clues, flags)).toBe(STATUS_COMPLETE);
+      // The filled grid really is an answer.
+      expect(mathraxGame.status({ ...st, grid })).toBe("solved");
       // And the board's own tier suffices (the generator gated on exactly
       // this), except at Tricky: upstream's Tricky has forcing chains, which
       // here are a search, so a Tricky board that needs one falls to the
@@ -480,7 +476,7 @@ describe("mathrax live error flags", () => {
     const o = 3;
     const grid = new Uint8Array([1, 1, 0, 0, 0, 0, 0, 0, 0]);
     const flags = new Uint8Array(9);
-    expect(mathraxValidate(o, grid, new Int32Array(4), flags)).toBe(STATUS_INVALID);
+    mathraxValidate(o, grid, new Int32Array(4), flags);
     expect(flags[0] & FE_COUNT).toBeTruthy();
     expect(flags[1] & FE_COUNT).toBeTruthy();
     expect(flags[2] & FE_COUNT).toBeFalsy();
@@ -494,17 +490,16 @@ describe("mathrax live error flags", () => {
     clues[0] = CLUE_ADD | setClueNum(5);
     const grid = new Uint8Array([1, 0, 0, 0, 1, 0, 0, 0, 0]);
     const flags = new Uint8Array(9);
-    expect(mathraxValidate(o, grid, clues, flags)).toBe(STATUS_INVALID);
+    mathraxValidate(o, grid, clues, flags);
     expect(flags[0] & FE_ERRORMASK).toBeTruthy();
     expect(flags[4] & FE_ERRORMASK).toBeTruthy();
   });
 
-  it("reports an untouched board as unfinished, not invalid", () => {
+  it("flags nothing on an untouched board", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
     const flags = Uint8Array.from(st.flags);
-    expect(mathraxValidate(FIX_PARAMS.o, st.grid, st.clues, flags)).toBe(
-      STATUS_UNFINISHED,
-    );
+    mathraxValidate(FIX_PARAMS.o, st.grid, st.clues, flags);
+    expect(flags.every((f) => (f & FE_ERRORMASK) === 0)).toBe(true);
   });
 });
 

@@ -38,8 +38,8 @@ import {
   FE_ROW_MATCH,
   FE_VER_ROW_BOTTOM,
   FE_VER_ROW_TOP,
-  validateCounts,
-  validateRows,
+  markCounts,
+  markRows,
 } from "./solver.ts";
 import type {
   UnrulyMistake,
@@ -366,9 +366,9 @@ export function redraw(
 
   // Recompute error overlays each frame (live error display, like upstream).
   const gridfs = new Int32Array(s);
-  validateRows(state, gridfs);
+  markRows(state, gridfs);
   const rowfs = new Uint8Array(2 * (w2 + h2));
-  validateCounts(state, rowfs);
+  markCounts(state, rowfs);
 
   for (let y = 0; y < h2; y++) {
     for (let x = 0; x < w2; x++) {
