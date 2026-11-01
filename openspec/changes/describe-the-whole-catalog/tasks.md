@@ -1,6 +1,6 @@
 # Tasks
 
-- [ ] 1. The survey, in `design.md`: each game's ladder as written, its family, the vocabulary it needs, and the code only the hand-written way needs; the further refactoring candidates, each measured
-- [ ] 2. The plan from it: the family changes in order, each naming its games, its vocabulary and what it retires; filed as changes, the first ready to start
-- [ ] 3. The owner brought what a game with no deduction ladder describes, with what the survey found for each such game; the answer recorded
-- [ ] 4. The engine's old layer retired once no game uses it, and the guard that refuses a hand-written ladder, seen to fail on a planted one
+- [x] 1. The survey, in `design.md`: each game's ladder as written, its family, the vocabulary it needs, and the code only the hand-written way needs; the further refactoring candidates, each measured
+- [x] 2. The plan from it (`design.md` § "The plan"): the steps in order, each naming its games, its vocabulary and what it retires; the first filed ready to start (`describe-a-board-beyond-the-latin-square`), each later one filed by the step before it
+- [ ] 3. The owner brought what a game with no deduction ladder describes (`design.md` § "Games with no deduction ladder") and the hint-order question (§ "Decisions made here"); the answers recorded here and in the steps they bind
+- [ ] 4. The engine's old layer retired once no game uses it (`design.md` § "The engine's code for the hand-written way"), and the guard that refuses a hand-written ladder, seen to fail on a planted one

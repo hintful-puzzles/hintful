@@ -1,6 +1,2 @@
-# Scaffolded without a delta: the requirement (every ladder compiled from a
-# description, and the guard that holds it) is written once the survey sets
-# the plan. The session writes it and removes skip_specs.
 schema: spec-driven
 created: 2026-11-01
-skip_specs: true

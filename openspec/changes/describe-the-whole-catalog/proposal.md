@@ -47,12 +47,12 @@ walks its solution. The survey counts each game once.
     `uncluedRung`), the same shape eight times;
   - a technique's tier stated in the description, where a game keeps a list
     of its own (Rectangles' `TIER_RUNGS`);
-  - the soundness checker, still Python under `research/`, ported to
-    TypeScript as the owner's 2026-10-29 decision set out if building from
-    descriptions went ahead.
-- **One change per family, or per vocabulary step**, filed by this change in
-  the order the survey sets. Each describes its games and retires what they
-  no longer need.
+  - the soundness checker ported to TypeScript (found done:
+    `design.md` § "What the compiler says today").
+- **One change per family, or per vocabulary step**, in the order the survey
+  sets (`design.md` § "The plan"). This change files the first; each files
+  the next when it is archived. Each describes its games and retires what
+  they no longer need.
 - **The engine's old layer goes last**, once no game uses it, with a guard
   that refuses a ladder not compiled from a description.
 
