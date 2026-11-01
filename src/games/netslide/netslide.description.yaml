@@ -48,3 +48,63 @@ help:
     The search looks only so far ahead. When it cannot find a way to finish
     from your position, the hint says so rather than guessing: play a few
     slides of your own and ask again, or use *Show solution…*.
+
+name: Netslide
+family: position
+sizes:
+  # A board of any size its desc gives; 99 stands for no bound.
+  w: { min: 1, max: 99 }
+  h: { min: 1, max: 99 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+  tables:
+    # The square across side k of c, k a side's bit (1 right, 2 up, 4 left,
+    # 8 down): round the edge, and none where a barrier stands. A board that
+    # does not wrap has a barrier all round it, so the rules are the same.
+    beyond: { of: [cell, num], to: cell }
+position:
+  # Each tile's wires: the bits of the sides it has an arm on.
+  tile: { domain: "range(0, 15)" }
+freedom: { kind: permute }
+define:
+  # The tile power flows from, whose row and column never slide.
+  source: "cell(w / 2, h / 2)"
+  # Tile c has an arm on side k.
+  arm(c, k): "(tile(c) / k) mod 2 = 1"
+  # The side facing side k across an edge: right and left, up and down.
+  facing(k): "(4 * k) mod 15"
+  # Tile c is powered: it is the source, or meets a powered tile arm to arm
+  # with no barrier between them.
+  powered(c): >-
+    c = source or exists k in {1, 2, 4, 8}, n = beyond(c, k)
+    where n != none and arm(c, k) and arm(n, facing(k)): powered(n)
+  # How many arms tile c has.
+  arms(c): "count(k in {1, 2, 4, 8} where arm(c, k))"
+views:
+  # The tiles the status line counts as active.
+  - powered
+moves:
+  # Slide a line other than the source's one square either way, as far as its
+  # square t is from its first: 1 on, or one less than its length, which is
+  # one back. The tile pushed off one end comes back on at the other.
+  slide:
+    for: >-
+      L in lines where source not in cells(L),
+      t in cells(L) where index(t, cells(L)) = 1 or index(t, cells(L)) = |cells(L)| - 1,
+      k = index(t, cells(L))
+    set:
+      - for: "c in cells(L)"
+        tile: "tile(nth(cells(L), (index(c, cells(L)) - k + |cells(L)|) mod |cells(L)|))"
+finish:
+  - "forall c in cells: powered(c)"
+deadEnds:
+  # A tile with no arm joins nothing, and a slide never changes a tile.
+  bare: "|cells| > 1 and exists c in cells: tile(c) = 0"
+  # Joining every tile into one network takes one join fewer than the tiles,
+  # each using up an arm on both its tiles, and a slide changes no arm.
+  short: "sum(c in cells of arms(c)) < 2 * (|cells| - 1)"
+deal:
+  start: >-
+    a spanning tree grown from the source, barriers drawn on the walls it
+    leaves as the barrier probability says, then shuffled by slides

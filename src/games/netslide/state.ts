@@ -10,6 +10,7 @@
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { descValue } from "../../engine/desc-error.ts";
+import { describedSpace } from "../../engine/describe-runtime.ts";
 import {
   AREA_TOO_LARGE,
   endParams,
@@ -27,8 +28,10 @@ import {
 import {
   addBorderBarriers,
   computeActive as computeActiveWires,
+  offset,
   parseWireDesc,
 } from "../../engine/wires.ts";
+import * as netslide from "./netslide.compiled.ts";
 
 /* ----------------------------------------------------------------------
  * Bit vocabulary.
@@ -43,7 +46,6 @@ import {
   anticlockwise,
   clockwise,
   DIRECTIONS,
-  dirCount,
   dirX,
   dirY,
   opposite,
@@ -320,27 +322,99 @@ export function computeActive(
   );
 }
 
-/**
- * Whether no slides power every tile, by what the tiles are, which a slide
- * never changes: a tile with no arm joins nothing, and joining `n` tiles into
- * one network takes `n - 1` joins, each using up an arm on both of its tiles.
- * It says nothing of where the arms point, so most boards that cannot be
- * finished pass it.
+/* ----------------------------------------------------------------------
+ * The description's rules.
  */
-export function hasNoSolution(s: NetslideState): boolean {
-  const n = s.tiles.length;
-  let arms = 0;
-  for (const tile of s.tiles) {
-    const count = dirCount(tile);
-    if (count === 0 && n > 1) return true;
-    arms += count;
+
+/** Each game's board as the description reads it, and its rules and views,
+ * by its barriers, which every state of the game shares. */
+const boards = new WeakMap<
+  Uint8Array,
+  {
+    rules: ReturnType<typeof netslide.rules>;
+    views: ReturnType<typeof netslide.views>;
   }
-  return arms < 2 * (n - 1);
+>();
+
+function boardOf(s: Pick<NetslideState, "w" | "h" | "barriers">) {
+  let board = boards.get(s.barriers);
+  if (board === undefined) {
+    const sp = describedSpace(netslide.units, s.w, s.h);
+    const dealt = dealtOf(s);
+    board = {
+      rules: netslide.rules(sp, dealt, []),
+      views: netslide.views(sp, dealt, []),
+    };
+    boards.set(s.barriers, board);
+  }
+  return board;
 }
 
-/** Is every tile powered? `tiles` as for {@link computeActive}. */
-export function isComplete(s: NetslideState, tiles: Uint8Array = s.tiles): boolean {
-  return computeActive(s, -1, -1, tiles).every((a) => a !== 0);
+/** What the description reads of the board: the square across each side of
+ * each tile, round the edge, and none (`-1`) where a barrier stands, the
+ * border of a board that does not wrap included. */
+export function dealtOf(
+  s: Pick<NetslideState, "w" | "h" | "barriers">,
+): netslide.Dealt {
+  const { w, h, barriers } = s;
+  const beyond = Array.from({ length: w * h }, (_, c) => {
+    const across = new Array<number>(9).fill(-1);
+    for (const d of DIRECTIONS) {
+      if (barriers[c] & d) continue;
+      const n = offset(c % w, Math.floor(c / w), d, w, h);
+      across[d] = n.y * w + n.x;
+    }
+    return across;
+  });
+  return { beyond };
+}
+
+/** The description's rules on this board. */
+export function rulesOf(s: Pick<NetslideState, "w" | "h" | "barriers">) {
+  return boardOf(s).rules;
+}
+
+/** The description's slide for the game's: the line, the square as far from
+ * its first as each tile travels, against the arrow's `dir`, and that far. */
+export function describedSlide(
+  s: Pick<NetslideState, "w" | "h">,
+  m: Pick<Extract<NetslideMove, { type: "slide" }>, "axis" | "index" | "dir">,
+): netslide.SlideMove {
+  const len = m.axis === "col" ? s.h : s.w;
+  const k = ((-m.dir % len) + len) % len;
+  return m.axis === "col"
+    ? { move: "slide", L: s.h + m.index, t: k * s.w + m.index, k }
+    : { move: "slide", L: m.index, t: m.index * s.w + k, k };
+}
+
+/** Wires as the description's layer, which `engine/wires.ts`'s `Uint8Array`
+ * (Net's too) is copied into. */
+export const positionOf = (tiles: ArrayLike<number>): netslide.Position => ({
+  tile: Int32Array.from(tiles),
+});
+
+/**
+ * Whether no slides power every tile, by the description's claims, which
+ * read what the tiles are and a slide never changes: a tile with no arm, or
+ * too few arms to join every tile. They say nothing of where the arms point,
+ * so most boards that cannot be finished pass them.
+ */
+export function hasNoSolution(s: NetslideState): boolean {
+  return rulesOf(s).deadEnd(positionOf(s.tiles)) !== null;
+}
+
+/** The tiles powered from the source, the description's. */
+export function poweredTiles(s: NetslideState): number[] {
+  return boardOf(s).views.powered(positionOf(s.tiles));
+}
+
+/** Is every tile powered: the description's finish. `tiles` as for
+ * {@link computeActive}. */
+export function isComplete(
+  s: NetslideState,
+  tiles: ArrayLike<number> = s.tiles,
+): boolean {
+  return rulesOf(s).finished(positionOf(tiles));
 }
 
 /* ----------------------------------------------------------------------

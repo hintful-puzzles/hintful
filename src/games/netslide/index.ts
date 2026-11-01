@@ -11,7 +11,7 @@
  * finished grid from the tiles (`reconstruct.ts`).
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
+import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import type { Game, SolveResult } from "../../engine/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
@@ -60,9 +60,9 @@ import {
 import {
   c2diff,
   c2pos,
-  computeActive,
   decodeParams,
   defaultParams,
+  describedSlide,
   encodeParams,
   hasNoSolution,
   isComplete,
@@ -73,8 +73,9 @@ import {
   newState,
   newUi,
   pos2c,
-  slideCol,
-  slideRow,
+  positionOf,
+  poweredTiles,
+  rulesOf,
   validateParams,
 } from "./state.ts";
 
@@ -126,14 +127,14 @@ function executeMove(s: NetslideState, m: NetslideMove): NetslideState {
 
   const limit = m.axis === "col" ? s.w : s.h;
   if (m.index < 0 || m.index >= limit) throw new Error(`no such ${m.axis} ${m.index}`);
-
-  const tiles = new Uint8Array(s.tiles);
-  if (m.axis === "col") slideCol(s.w, s.h, tiles, m.dir, m.index);
-  else slideRow(s.w, tiles, m.dir, m.index);
+  const rules = rulesOf(s);
+  const p = positionOf(s.tiles);
+  const slide = describedSlide(s, m);
+  if (!rules.legal(p, slide)) rejectMove(m, "netslide: executeMove");
 
   return {
     ...s,
-    tiles,
+    tiles: Uint8Array.from(rules.play(p, slide).tile),
     moveCount: s.moveCount + 1,
     lastMoveRow: m.axis === "col" ? -1 : m.index,
     lastMoveCol: m.axis === "col" ? m.index : -1,
@@ -329,7 +330,7 @@ export const netslideGame: Game<
   },
 
   statusbarText: (s) => {
-    const active = computeActive(s, -1, -1).filter((a) => a !== 0).length;
+    const active = poweredTiles(s).length;
     let text = `Moves: ${s.moveCount}`;
     if (s.movetarget) text += ` (target ${s.movetarget})`;
     return `${text} Active: ${active}/${s.w * s.h}`;

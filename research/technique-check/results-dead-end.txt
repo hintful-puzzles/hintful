@@ -340,6 +340,377 @@ inertia w=3 h=2: 93750 positions, 77108 can finish, 12930 that cannot are claime
   stranded in w=3 h=2: holds of 3712, 0 of them can finish
 inertia stranded: sound (0.5s for the game)
 inertia stranded planted: unsound, as it must be
+netslide: no move on any position, so not checked: w=1 h=1 wrapping=0 barriers=0; w=1 h=1 wrapping=1 barriers=0; w=1 h=1 wrapping=1 barriers=1; w=1 h=1 wrapping=1 barriers=1; w=1 h=1 wrapping=1 barriers=2
+netslide w=1 h=2 wrapping=0 barriers=0: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=1 h=2 wrapping=0 barriers=1: 256 positions, 0 can finish, 225 that cannot are claimed by none
+netslide w=1 h=2 wrapping=1 barriers=0: 256 positions, 112 can finish, 113 that cannot are claimed by none
+netslide w=1 h=2 wrapping=1 barriers=1: 256 positions, 112 can finish, 113 that cannot are claimed by none
+netslide w=1 h=2 wrapping=1 barriers=1: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=1 h=2 wrapping=1 barriers=2: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=1 h=2 wrapping=1 barriers=1: 256 positions, 112 can finish, 113 that cannot are claimed by none
+netslide w=1 h=2 wrapping=1 barriers=2: 256 positions, 112 can finish, 113 that cannot are claimed by none
+netslide w=1 h=2 wrapping=1 barriers=2: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=1 h=2 wrapping=1 barriers=3: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=1 h=2 wrapping=1 barriers=1: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=1 h=2 wrapping=1 barriers=2: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=1 h=2 wrapping=1 barriers=2: 256 positions, 0 can finish, 225 that cannot are claimed by none
+netslide w=1 h=2 wrapping=1 barriers=3: 256 positions, 0 can finish, 225 that cannot are claimed by none
+netslide w=1 h=2 wrapping=1 barriers=2: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=1 h=2 wrapping=1 barriers=3: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=1 h=2 wrapping=1 barriers=3: 256 positions, 0 can finish, 225 that cannot are claimed by none
+netslide w=1 h=2 wrapping=1 barriers=4: 256 positions, 0 can finish, 225 that cannot are claimed by none
+netslide w=1 h=3 wrapping=0 barriers=0: 4096 positions, 256 can finish, 3055 that cannot are claimed by none
+netslide w=1 h=3 wrapping=0 barriers=1: 4096 positions, 0 can finish, 3311 that cannot are claimed by none
+netslide w=1 h=3 wrapping=0 barriers=1: 4096 positions, 0 can finish, 3311 that cannot are claimed by none
+netslide w=1 h=3 wrapping=0 barriers=2: 4096 positions, 0 can finish, 3311 that cannot are claimed by none
+netslide w=1 h=3 wrapping=1 barriers=0: 4096 positions, 640 can finish, 2671 that cannot are claimed by none
+netslide w=1 h=3 wrapping=1 barriers=1: 4096 positions, 640 can finish, 2671 that cannot are claimed by none
+netslide w=1 h=3 wrapping=1 barriers=1: 4096 positions, 256 can finish, 3055 that cannot are claimed by none
+netslide w=1 h=3 wrapping=1 barriers=1: 4096 positions, 640 can finish, 2671 that cannot are claimed by none
+netslide w=1 h=3 wrapping=1 barriers=1: 4096 positions, 256 can finish, 3055 that cannot are claimed by none
+netslide w=1 h=3 wrapping=1 barriers=1: 4096 positions, 640 can finish, 2671 that cannot are claimed by none
+netslide w=1 h=3 wrapping=1 barriers=1: 4096 positions, 256 can finish, 3055 that cannot are claimed by none
+netslide w=1 h=3 wrapping=1 barriers=6: 4096 positions, 0 can finish, 3311 that cannot are claimed by none
+netslide w=1 h=4 wrapping=0 barriers=0: 65536 positions, 1024 can finish, 47809 that cannot are claimed by none
+netslide w=1 h=4 wrapping=0 barriers=1: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=1 h=4 wrapping=0 barriers=1: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=1 h=4 wrapping=0 barriers=2: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=1 h=4 wrapping=0 barriers=1: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=1 h=4 wrapping=0 barriers=2: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=1 h=4 wrapping=0 barriers=2: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=1 h=4 wrapping=0 barriers=3: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=1 h=4 wrapping=1 barriers=0: 65536 positions, 3328 can finish, 45505 that cannot are claimed by none
+netslide w=1 h=4 wrapping=1 barriers=1: 65536 positions, 3328 can finish, 45505 that cannot are claimed by none
+netslide w=1 h=4 wrapping=1 barriers=1: 65536 positions, 1024 can finish, 47809 that cannot are claimed by none
+netslide w=1 h=4 wrapping=1 barriers=1: 65536 positions, 3328 can finish, 45505 that cannot are claimed by none
+netslide w=1 h=4 wrapping=1 barriers=1: 65536 positions, 1024 can finish, 47809 that cannot are claimed by none
+netslide w=1 h=4 wrapping=1 barriers=1: 65536 positions, 3328 can finish, 45505 that cannot are claimed by none
+netslide w=1 h=4 wrapping=1 barriers=1: 65536 positions, 1024 can finish, 47809 that cannot are claimed by none
+netslide w=1 h=4 wrapping=1 barriers=1: 65536 positions, 3328 can finish, 45505 that cannot are claimed by none
+netslide w=1 h=4 wrapping=1 barriers=1: 65536 positions, 1024 can finish, 47809 that cannot are claimed by none
+netslide w=1 h=4 wrapping=1 barriers=8: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=2 h=1 wrapping=0 barriers=0: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=2 h=1 wrapping=0 barriers=1: 256 positions, 0 can finish, 225 that cannot are claimed by none
+netslide w=2 h=1 wrapping=1 barriers=0: 256 positions, 112 can finish, 113 that cannot are claimed by none
+netslide w=2 h=1 wrapping=1 barriers=1: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=2 h=1 wrapping=1 barriers=1: 256 positions, 112 can finish, 113 that cannot are claimed by none
+netslide w=2 h=1 wrapping=1 barriers=2: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=2 h=1 wrapping=1 barriers=1: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=2 h=1 wrapping=1 barriers=2: 256 positions, 0 can finish, 225 that cannot are claimed by none
+netslide w=2 h=1 wrapping=1 barriers=2: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=2 h=1 wrapping=1 barriers=3: 256 positions, 0 can finish, 225 that cannot are claimed by none
+netslide w=2 h=1 wrapping=1 barriers=1: 256 positions, 112 can finish, 113 that cannot are claimed by none
+netslide w=2 h=1 wrapping=1 barriers=2: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=2 h=1 wrapping=1 barriers=2: 256 positions, 112 can finish, 113 that cannot are claimed by none
+netslide w=2 h=1 wrapping=1 barriers=3: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=2 h=1 wrapping=1 barriers=2: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=2 h=1 wrapping=1 barriers=3: 256 positions, 0 can finish, 225 that cannot are claimed by none
+netslide w=2 h=1 wrapping=1 barriers=3: 256 positions, 64 can finish, 161 that cannot are claimed by none
+netslide w=2 h=1 wrapping=1 barriers=4: 256 positions, 0 can finish, 225 that cannot are claimed by none
+netslide w=2 h=2 wrapping=0 barriers=0: 65536 positions, 10592 can finish, 38241 that cannot are claimed by none
+netslide w=2 h=2 wrapping=0 barriers=1: 65536 positions, 2720 can finish, 46113 that cannot are claimed by none
+netslide w=2 h=2 wrapping=0 barriers=1: 65536 positions, 2720 can finish, 46113 that cannot are claimed by none
+netslide w=2 h=2 wrapping=0 barriers=2: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=2 h=2 wrapping=0 barriers=1: 65536 positions, 4664 can finish, 44169 that cannot are claimed by none
+netslide w=2 h=2 wrapping=0 barriers=2: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=2 h=2 wrapping=0 barriers=2: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=2 h=2 wrapping=0 barriers=3: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=2 h=2 wrapping=0 barriers=1: 65536 positions, 4664 can finish, 44169 that cannot are claimed by none
+netslide w=2 h=2 wrapping=0 barriers=2: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=2 h=2 wrapping=0 barriers=2: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=2 h=2 wrapping=0 barriers=3: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=2 h=2 wrapping=0 barriers=2: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=2 h=2 wrapping=0 barriers=3: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=2 h=2 wrapping=0 barriers=3: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=2 h=2 wrapping=0 barriers=4: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=2 h=2 wrapping=1 barriers=0: 65536 positions, 23877 can finish, 24956 that cannot are claimed by none
+netslide w=2 h=2 wrapping=1 barriers=1: 65536 positions, 22155 can finish, 26678 that cannot are claimed by none
+netslide w=2 h=2 wrapping=1 barriers=1: 65536 positions, 22155 can finish, 26678 that cannot are claimed by none
+netslide w=2 h=2 wrapping=1 barriers=1: 65536 positions, 22155 can finish, 26678 that cannot are claimed by none
+netslide w=2 h=2 wrapping=1 barriers=1: 65536 positions, 18856 can finish, 29977 that cannot are claimed by none
+netslide w=2 h=2 wrapping=1 barriers=1: 65536 positions, 18856 can finish, 29977 that cannot are claimed by none
+netslide w=2 h=2 wrapping=1 barriers=1: 65536 positions, 22155 can finish, 26678 that cannot are claimed by none
+netslide w=2 h=2 wrapping=1 barriers=1: 65536 positions, 18856 can finish, 29977 that cannot are claimed by none
+netslide w=2 h=2 wrapping=1 barriers=1: 65536 positions, 18856 can finish, 29977 that cannot are claimed by none
+netslide w=2 h=2 wrapping=1 barriers=8: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=3 h=1 wrapping=0 barriers=0: 4096 positions, 256 can finish, 3055 that cannot are claimed by none
+netslide w=3 h=1 wrapping=0 barriers=1: 4096 positions, 0 can finish, 3311 that cannot are claimed by none
+netslide w=3 h=1 wrapping=0 barriers=1: 4096 positions, 0 can finish, 3311 that cannot are claimed by none
+netslide w=3 h=1 wrapping=0 barriers=2: 4096 positions, 0 can finish, 3311 that cannot are claimed by none
+netslide w=3 h=1 wrapping=1 barriers=0: 4096 positions, 640 can finish, 2671 that cannot are claimed by none
+netslide w=3 h=1 wrapping=1 barriers=1: 4096 positions, 256 can finish, 3055 that cannot are claimed by none
+netslide w=3 h=1 wrapping=1 barriers=1: 4096 positions, 640 can finish, 2671 that cannot are claimed by none
+netslide w=3 h=1 wrapping=1 barriers=1: 4096 positions, 256 can finish, 3055 that cannot are claimed by none
+netslide w=3 h=1 wrapping=1 barriers=1: 4096 positions, 640 can finish, 2671 that cannot are claimed by none
+netslide w=3 h=1 wrapping=1 barriers=1: 4096 positions, 256 can finish, 3055 that cannot are claimed by none
+netslide w=3 h=1 wrapping=1 barriers=1: 4096 positions, 640 can finish, 2671 that cannot are claimed by none
+netslide w=3 h=1 wrapping=1 barriers=6: 4096 positions, 0 can finish, 3311 that cannot are claimed by none
+netslide w=4 h=1 wrapping=0 barriers=0: 65536 positions, 1024 can finish, 47809 that cannot are claimed by none
+netslide w=4 h=1 wrapping=0 barriers=1: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=4 h=1 wrapping=0 barriers=1: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=4 h=1 wrapping=0 barriers=2: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=4 h=1 wrapping=0 barriers=1: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=4 h=1 wrapping=0 barriers=2: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=4 h=1 wrapping=0 barriers=2: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=4 h=1 wrapping=0 barriers=3: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+netslide w=4 h=1 wrapping=1 barriers=0: 65536 positions, 3328 can finish, 45505 that cannot are claimed by none
+netslide w=4 h=1 wrapping=1 barriers=1: 65536 positions, 1024 can finish, 47809 that cannot are claimed by none
+netslide w=4 h=1 wrapping=1 barriers=1: 65536 positions, 3328 can finish, 45505 that cannot are claimed by none
+netslide w=4 h=1 wrapping=1 barriers=1: 65536 positions, 1024 can finish, 47809 that cannot are claimed by none
+netslide w=4 h=1 wrapping=1 barriers=1: 65536 positions, 3328 can finish, 45505 that cannot are claimed by none
+netslide w=4 h=1 wrapping=1 barriers=1: 65536 positions, 1024 can finish, 47809 that cannot are claimed by none
+netslide w=4 h=1 wrapping=1 barriers=1: 65536 positions, 3328 can finish, 45505 that cannot are claimed by none
+netslide w=4 h=1 wrapping=1 barriers=1: 65536 positions, 1024 can finish, 47809 that cannot are claimed by none
+netslide w=4 h=1 wrapping=1 barriers=1: 65536 positions, 3328 can finish, 45505 that cannot are claimed by none
+netslide w=4 h=1 wrapping=1 barriers=8: 65536 positions, 0 can finish, 48833 that cannot are claimed by none
+  bare in w=1 h=2 wrapping=0 barriers=0: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=0 barriers=1: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=1 barriers=0: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=1 barriers=1: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=1 barriers=1: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=1 barriers=2: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=1 barriers=1: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=1 barriers=2: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=1 barriers=2: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=1 barriers=3: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=1 barriers=1: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=1 barriers=2: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=1 barriers=2: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=1 barriers=3: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=1 barriers=2: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=1 barriers=3: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=1 barriers=3: holds of 31, 0 of them can finish
+  bare in w=1 h=2 wrapping=1 barriers=4: holds of 31, 0 of them can finish
+  bare in w=1 h=3 wrapping=0 barriers=0: holds of 721, 0 of them can finish
+  bare in w=1 h=3 wrapping=0 barriers=1: holds of 721, 0 of them can finish
+  bare in w=1 h=3 wrapping=0 barriers=1: holds of 721, 0 of them can finish
+  bare in w=1 h=3 wrapping=0 barriers=2: holds of 721, 0 of them can finish
+  bare in w=1 h=3 wrapping=1 barriers=0: holds of 721, 0 of them can finish
+  bare in w=1 h=3 wrapping=1 barriers=1: holds of 721, 0 of them can finish
+  bare in w=1 h=3 wrapping=1 barriers=1: holds of 721, 0 of them can finish
+  bare in w=1 h=3 wrapping=1 barriers=1: holds of 721, 0 of them can finish
+  bare in w=1 h=3 wrapping=1 barriers=1: holds of 721, 0 of them can finish
+  bare in w=1 h=3 wrapping=1 barriers=1: holds of 721, 0 of them can finish
+  bare in w=1 h=3 wrapping=1 barriers=1: holds of 721, 0 of them can finish
+  bare in w=1 h=3 wrapping=1 barriers=6: holds of 721, 0 of them can finish
+  bare in w=1 h=4 wrapping=0 barriers=0: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=0 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=0 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=0 barriers=2: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=0 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=0 barriers=2: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=0 barriers=2: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=0 barriers=3: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=1 barriers=0: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=1 h=4 wrapping=1 barriers=8: holds of 14911, 0 of them can finish
+  bare in w=2 h=1 wrapping=0 barriers=0: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=0 barriers=1: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=1 barriers=0: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=1 barriers=1: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=1 barriers=1: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=1 barriers=2: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=1 barriers=1: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=1 barriers=2: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=1 barriers=2: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=1 barriers=3: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=1 barriers=1: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=1 barriers=2: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=1 barriers=2: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=1 barriers=3: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=1 barriers=2: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=1 barriers=3: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=1 barriers=3: holds of 31, 0 of them can finish
+  bare in w=2 h=1 wrapping=1 barriers=4: holds of 31, 0 of them can finish
+  bare in w=2 h=2 wrapping=0 barriers=0: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=0 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=0 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=0 barriers=2: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=0 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=0 barriers=2: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=0 barriers=2: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=0 barriers=3: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=0 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=0 barriers=2: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=0 barriers=2: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=0 barriers=3: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=0 barriers=2: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=0 barriers=3: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=0 barriers=3: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=0 barriers=4: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=1 barriers=0: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=2 h=2 wrapping=1 barriers=8: holds of 14911, 0 of them can finish
+  bare in w=3 h=1 wrapping=0 barriers=0: holds of 721, 0 of them can finish
+  bare in w=3 h=1 wrapping=0 barriers=1: holds of 721, 0 of them can finish
+  bare in w=3 h=1 wrapping=0 barriers=1: holds of 721, 0 of them can finish
+  bare in w=3 h=1 wrapping=0 barriers=2: holds of 721, 0 of them can finish
+  bare in w=3 h=1 wrapping=1 barriers=0: holds of 721, 0 of them can finish
+  bare in w=3 h=1 wrapping=1 barriers=1: holds of 721, 0 of them can finish
+  bare in w=3 h=1 wrapping=1 barriers=1: holds of 721, 0 of them can finish
+  bare in w=3 h=1 wrapping=1 barriers=1: holds of 721, 0 of them can finish
+  bare in w=3 h=1 wrapping=1 barriers=1: holds of 721, 0 of them can finish
+  bare in w=3 h=1 wrapping=1 barriers=1: holds of 721, 0 of them can finish
+  bare in w=3 h=1 wrapping=1 barriers=1: holds of 721, 0 of them can finish
+  bare in w=3 h=1 wrapping=1 barriers=6: holds of 721, 0 of them can finish
+  bare in w=4 h=1 wrapping=0 barriers=0: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=0 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=0 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=0 barriers=2: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=0 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=0 barriers=2: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=0 barriers=2: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=0 barriers=3: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=1 barriers=0: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
+  bare in w=4 h=1 wrapping=1 barriers=8: holds of 14911, 0 of them can finish
+netslide bare: sound (5.8s for the game)
+netslide bare planted: unsound, as it must be
+  short in w=1 h=2 wrapping=0 barriers=0: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=0 barriers=1: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=1 barriers=0: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=1 barriers=1: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=1 barriers=1: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=1 barriers=2: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=1 barriers=1: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=1 barriers=2: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=1 barriers=2: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=1 barriers=3: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=1 barriers=1: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=1 barriers=2: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=1 barriers=2: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=1 barriers=3: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=1 barriers=2: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=1 barriers=3: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=1 barriers=3: holds of 9, 0 of them can finish
+  short in w=1 h=2 wrapping=1 barriers=4: holds of 9, 0 of them can finish
+  short in w=1 h=3 wrapping=0 barriers=0: holds of 299, 0 of them can finish
+  short in w=1 h=3 wrapping=0 barriers=1: holds of 299, 0 of them can finish
+  short in w=1 h=3 wrapping=0 barriers=1: holds of 299, 0 of them can finish
+  short in w=1 h=3 wrapping=0 barriers=2: holds of 299, 0 of them can finish
+  short in w=1 h=3 wrapping=1 barriers=0: holds of 299, 0 of them can finish
+  short in w=1 h=3 wrapping=1 barriers=1: holds of 299, 0 of them can finish
+  short in w=1 h=3 wrapping=1 barriers=1: holds of 299, 0 of them can finish
+  short in w=1 h=3 wrapping=1 barriers=1: holds of 299, 0 of them can finish
+  short in w=1 h=3 wrapping=1 barriers=1: holds of 299, 0 of them can finish
+  short in w=1 h=3 wrapping=1 barriers=1: holds of 299, 0 of them can finish
+  short in w=1 h=3 wrapping=1 barriers=1: holds of 299, 0 of them can finish
+  short in w=1 h=3 wrapping=1 barriers=6: holds of 299, 0 of them can finish
+  short in w=1 h=4 wrapping=0 barriers=0: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=0 barriers=1: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=0 barriers=1: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=0 barriers=2: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=0 barriers=1: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=0 barriers=2: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=0 barriers=2: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=0 barriers=3: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=1 barriers=0: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=1 h=4 wrapping=1 barriers=8: holds of 6885, 0 of them can finish
+  short in w=2 h=1 wrapping=0 barriers=0: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=0 barriers=1: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=1 barriers=0: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=1 barriers=1: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=1 barriers=1: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=1 barriers=2: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=1 barriers=1: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=1 barriers=2: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=1 barriers=2: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=1 barriers=3: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=1 barriers=1: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=1 barriers=2: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=1 barriers=2: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=1 barriers=3: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=1 barriers=2: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=1 barriers=3: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=1 barriers=3: holds of 9, 0 of them can finish
+  short in w=2 h=1 wrapping=1 barriers=4: holds of 9, 0 of them can finish
+  short in w=2 h=2 wrapping=0 barriers=0: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=0 barriers=1: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=0 barriers=1: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=0 barriers=2: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=0 barriers=1: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=0 barriers=2: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=0 barriers=2: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=0 barriers=3: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=0 barriers=1: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=0 barriers=2: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=0 barriers=2: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=0 barriers=3: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=0 barriers=2: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=0 barriers=3: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=0 barriers=3: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=0 barriers=4: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=1 barriers=0: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=2 h=2 wrapping=1 barriers=8: holds of 6885, 0 of them can finish
+  short in w=3 h=1 wrapping=0 barriers=0: holds of 299, 0 of them can finish
+  short in w=3 h=1 wrapping=0 barriers=1: holds of 299, 0 of them can finish
+  short in w=3 h=1 wrapping=0 barriers=1: holds of 299, 0 of them can finish
+  short in w=3 h=1 wrapping=0 barriers=2: holds of 299, 0 of them can finish
+  short in w=3 h=1 wrapping=1 barriers=0: holds of 299, 0 of them can finish
+  short in w=3 h=1 wrapping=1 barriers=1: holds of 299, 0 of them can finish
+  short in w=3 h=1 wrapping=1 barriers=1: holds of 299, 0 of them can finish
+  short in w=3 h=1 wrapping=1 barriers=1: holds of 299, 0 of them can finish
+  short in w=3 h=1 wrapping=1 barriers=1: holds of 299, 0 of them can finish
+  short in w=3 h=1 wrapping=1 barriers=1: holds of 299, 0 of them can finish
+  short in w=3 h=1 wrapping=1 barriers=1: holds of 299, 0 of them can finish
+  short in w=3 h=1 wrapping=1 barriers=6: holds of 299, 0 of them can finish
+  short in w=4 h=1 wrapping=0 barriers=0: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=0 barriers=1: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=0 barriers=1: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=0 barriers=2: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=0 barriers=1: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=0 barriers=2: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=0 barriers=2: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=0 barriers=3: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=1 barriers=0: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
+  short in w=4 h=1 wrapping=1 barriers=8: holds of 6885, 0 of them can finish
+netslide short: sound (5.8s for the game)
+netslide short planted: unsound, as it must be
 pegs: no move on any position, so not checked: w=2 h=2
 pegs w=2 h=3: 729 positions, 224 can finish, 305 that cannot are claimed by none
 pegs w=2 h=4: 6561 positions, 1312 can finish, 2561 that cannot are claimed by none

@@ -39,6 +39,12 @@ const PLANTED: Record<string, Record<string, string>> = {
     // A board that can be one color in exactly the fills left finishes.
     short: `moves + count(k in range(0, colors - 1) where exists c in cells where not flooded(c): color(c) = k) >= limit`,
   },
+  netslide: {
+    // A tile with one arm, a leaf of the network, is no dead end.
+    bare: `|cells| > 1 and exists c in cells: arms(c) <= 1`,
+    // A tree of n tiles has exactly 2(n - 1) arm ends.
+    short: `sum(c in cells of arms(c)) <= 2 * (|cells| - 1)`,
+  },
   samegame: {
     // An empty board has no two squares side by side either.
     stuck: `forall c in cells where tile(c) != 0: forall n in adj4(c): tile(n) != tile(c)`,

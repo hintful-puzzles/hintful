@@ -7,7 +7,7 @@
 
 ## 2. The games
 
-- [ ] 2.1 Netslide described, `slide-planner` fed its compiled slides
+- [x] 2.1 Netslide described, `slide-planner` fed its compiled slides
 - [x] 2.2 Flood and Same Game described, Same Game's three copies of its finish one
 - [ ] 2.3 Numgame and Untangle described
 

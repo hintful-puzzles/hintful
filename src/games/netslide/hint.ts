@@ -34,7 +34,7 @@ import {
 import { SOLUTION_UNKNOWN } from "../../engine/solve-failure.ts";
 import { type Marked, say } from "./hint-text.ts";
 import { reconstructSolution } from "./reconstruct.ts";
-import { isComplete, type NetslideMove, type NetslideState } from "./state.ts";
+import { type NetslideMove, type NetslideState, positionOf, rulesOf } from "./state.ts";
 
 /** What the renderer marks for the displayed step. Netslide's tiles have no
  * names — there is no "tile 8" to say — so the board carries the reference: the
@@ -286,21 +286,16 @@ function distanceTable(w: number, h: number): Int32Array {
  * Moves.
  */
 
-/** Every slide the player is allowed to make: one step, either way, along any
- * line but the two through the source. */
+/** Every slide the player is allowed to make, the description's: one step,
+ * either way, along any line but the two through the source. */
 function legalMoves(s: NetslideState): SlideMove[] {
-  const moves: SlideMove[] = [];
-  for (let y = 0; y < s.h; y++) {
-    if (y === s.cy) continue;
-    moves.push({ axis: "row", index: y, delta: +1 });
-    moves.push({ axis: "row", index: y, delta: -1 });
-  }
-  for (let x = 0; x < s.w; x++) {
-    if (x === s.cx) continue;
-    moves.push({ axis: "col", index: x, delta: +1 });
-    moves.push({ axis: "col", index: x, delta: -1 });
-  }
-  return moves;
+  return rulesOf(s)
+    .moves(positionOf(s.tiles))
+    .map((m) =>
+      m.L < s.h
+        ? { axis: "row", index: m.L, delta: m.k === 1 ? 1 : -1 }
+        : { axis: "col", index: m.L - s.h, delta: m.k === 1 ? 1 : -1 },
+    );
 }
 
 /**
@@ -362,11 +357,9 @@ export function hint(
   // "the board shows `aux`": the player may finish on an arrangement the plan
   // never aimed at. Test what actually wins, or the plan keeps issuing moves
   // after the game is over.
-  const masks = new Uint8Array(n);
-  const powersEverything = (board: Int32Array): boolean => {
-    for (let cell = 0; cell < n; cell++) masks[cell] = board[cell];
-    return isComplete(s, masks);
-  };
+  const rules = rulesOf(s);
+  const powersEverything = (board: Int32Array): boolean =>
+    rules.finished({ tile: board });
 
   const plan = planSlides({
     w,

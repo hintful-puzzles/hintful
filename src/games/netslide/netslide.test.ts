@@ -28,6 +28,7 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { slidePieces } from "../../engine/slide-planner.ts";
 import {
   D,
   DIRECTIONS,
@@ -70,6 +71,9 @@ import {
   newState,
   newUi,
   pos2c,
+  positionOf,
+  poweredTiles,
+  rulesOf,
   slideCol,
   slideRow,
 } from "./state.ts";
@@ -239,6 +243,49 @@ describe("netslide slides", () => {
     expect([...tiles]).toEqual([3, 2, 5, 4, 1, 6]);
     slideCol(2, 3, tiles, -1, 0);
     expect([...tiles]).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+
+  // The generator's shuffle, the planner's slide and the board's powered
+  // highlight are each the game's own, held to the description's.
+  it("slides and powers as the description says", () => {
+    const rng = randomNew("netslide described");
+    let boards = 0;
+    for (const { params: p } of leafPresets(netslideGame)) {
+      for (let deal = 0; deal < 3; deal++) {
+        let s = newState(p, newDesc(p, rng).desc);
+        const rules = rulesOf(s);
+        for (let step = 0; step < 12; step++) {
+          boards++;
+          const at = positionOf(s.tiles);
+          const lit = [...computeActive(s, -1, -1)].flatMap((a, c) =>
+            a !== 0 ? [c] : [],
+          );
+          expect(poweredTiles(s)).toEqual(lit);
+          expect(isComplete(s)).toBe(lit.length === s.w * s.h);
+          const moves = rules.moves(at);
+          for (const m of moves) {
+            const axis = m.L < s.h ? "row" : "col";
+            const index = axis === "row" ? m.L : m.L - s.h;
+            const delta = m.k === 1 ? 1 : -1;
+            const planned = new Int32Array(s.w * s.h);
+            slidePieces(at.tile, planned, s.w, s.h, { axis, index, delta });
+            expect([...planned]).toEqual([...rules.play(at, m).tile]);
+            const shuffled = Uint8Array.from(s.tiles);
+            if (axis === "row") slideRow(s.w, shuffled, -delta, index);
+            else slideCol(s.w, s.h, shuffled, -delta, index);
+            expect([...shuffled]).toEqual([...planned]);
+          }
+          const m = moves[step % moves.length];
+          s = netslideGame.executeMove(s, {
+            type: "slide",
+            axis: m.L < s.h ? "row" : "col",
+            index: m.L < s.h ? m.L : m.L - s.h,
+            dir: m.k === 1 ? -1 : 1,
+          });
+        }
+      }
+    }
+    expect(boards).toBeGreaterThan(300);
   });
 });
 

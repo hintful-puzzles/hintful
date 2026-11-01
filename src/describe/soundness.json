@@ -20,6 +20,8 @@
   "src/games/mathrax/mathrax.description.yaml#clue": "60edbd1405d98708",
   "src/games/mathrax/mathrax.description.yaml#clueEasy": "356b96bffe0a1985",
   "src/games/mathrax/mathrax.description.yaml#clueTricky": "0228a20000ae028a",
+  "src/games/netslide/netslide.description.yaml#deadEnd:bare": "75436983f711fff9",
+  "src/games/netslide/netslide.description.yaml#deadEnd:short": "919a1bcd4ce5d01d",
   "src/games/pegs/pegs.description.yaml#deadEnd:frozen": "532c2d762a55d508",
   "src/games/salad/salad.description.yaml#border": "6690332696d689ec",
   "src/games/samegame/samegame.description.yaml#deadEnd:last": "40c5a76337e58aff",

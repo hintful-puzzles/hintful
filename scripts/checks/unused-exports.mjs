@@ -111,6 +111,8 @@ const KEPT_UNUSED = {
     "read by the two soundness checkers under research/, each keeping the other's verdicts",
   "src/describe/description.ts::withVariations":
     "read by the interpreter and the soundness checker under research/",
+  "src/games/netslide/state.ts::dealtOf":
+    "read by research/technique-check/boards/netslide.ts, which deals the dead-end checker its boards as the game does",
 };
 
 /** Files whose exports are reached from outside the TypeScript graph. */
