@@ -5,6 +5,10 @@ word-list puzzles, "and particularly Wordle and LinkedIn's Wend". Not
 crosswords or other definition-based games, which work well only with
 authorial intent.
 
+**Waits for `describe-the-whole-catalog`** (the owner, 2026-11-01): no new
+game before every game is described, so these are written from their
+descriptions.
+
 ## Why
 
 Two games, and the engine piece they share.

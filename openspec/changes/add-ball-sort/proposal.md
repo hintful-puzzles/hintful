@@ -4,6 +4,10 @@
 adding a test tube color sort game", without the ad and micropayment
 mechanics most implementations sell.
 
+**Waits for `describe-the-whole-catalog`** (the owner, 2026-11-01): no new
+game before every game is described, so this one is written from its
+description.
+
 ## Why
 
 Tubes of equal capacity hold colored balls, with some tubes empty. A move
