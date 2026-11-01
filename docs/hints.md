@@ -64,6 +64,7 @@ Each step names the file of `src/skeleton/grid/` that already does it.
 | – Two marks of one kind: tie them, and never by color | a step marks two elements of one kind and says "this cell" |
 | – Name a square by its value | a step's squares hold numbers, or two of them hold the same one |
 | – The premise must single out the conclusion | another move would satisfy the premise a sentence states |
+| – Say the fact the board does not show, and declare it | a sentence claims something of every placement of an element, or a step's depth reads out of order with its tier |
 | – Keep the narration terse | a sentence runs past 120 characters, the length ledger fails, or a reference fails `hint-reference.ts` |
 | – The sentences live in one file per game | you add, move or reword a sentence |
 | – No em-dashes | a sentence wants a dash |
@@ -507,6 +508,26 @@ sentence for all of them cites, on a fresh board, entries that do not exist.
 Exemplar: the `because` field of Crossing's firing, and
 `crossing-hint.test.ts`, which asserts each cause's phrasing and that a run
 with nothing entered never cites what is "already in this run".
+
+### Say the fact the board does not show, and declare it
+
+Some facts a step rests on are on the board: a clue's value, a wall, a note
+the player wrote. Others are claims about every placement of some element,
+which the player has to work out: "the striped squares the 6 always covers",
+"the outlined square only it reaches". **Say such a fact in the words, and
+wrap the reference it is about in `derived`** (`engine/hint-words.ts`). Use
+`"each"` where every unit the reference names is a fact of its own. A
+`follows` part is that fact's consequence and is not declared.
+
+A step's **depth** is how many such facts its words name
+(`Narration.depth`). On Rectangles it orders the rungs by how hard they are,
+where the sentence's length and the placements its claim ranges over do not
+(`review-rect-hints-and-tiers`). `scripts/checks/hint-depth.test.ts`
+(`npm run diff`, writes `metrics/hint-depth.md`) gives each rung's depths and
+lists a step out of order with its tier. A step reading as shallow as an
+easier tier's is either in the wrong tier, or rests on a fact its words never
+name. That is the case the report was planted with: Rectangles' old "leaving
+the outlined square uncovered". It is a report, not a gate.
 
 ### Keep the narration terse
 

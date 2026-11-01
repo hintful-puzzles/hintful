@@ -25,6 +25,7 @@ import {
 } from "../../engine/hint-text.ts";
 import {
   CELL,
+  derived,
   mark,
   type Narration,
   phrase,
@@ -49,6 +50,9 @@ const clue = (c: ClueSight, words = `Clue ${c.value}`): Narration =>
   mark.as("outline", CELL, [c.at], words);
 const line = (c: ClueSight, words: string): Narration =>
   mark.as("stripes", whole(CELL), c.line, words);
+/** The clue's line, where the sentence claims something of every arrangement
+ * of it that the clue's value does not say outright. */
+const arranged = (c: ClueSight, words: string): Narration => derived(line(c, words));
 /** The ringed cell a placement decides, and the height it takes. */
 const sits = (n: number, at: Point): Narration => phrase`${thisCell(at)} must be ${n}`;
 
@@ -87,7 +91,7 @@ export const say = {
   ): Sentence =>
     so({
       look: phrase`${mark.as("outline", CELL, clues, "These facing clues")} sum to one more than the grid size`,
-      follows: phrase`${mark.as("stripes", whole(CELL), sight, "their line")}'s tallest is pinned`,
+      follows: phrase`${derived(mark.as("stripes", whole(CELL), sight, "their line"))}'s tallest is pinned`,
       move: sits(n, at),
     }),
 
@@ -100,15 +104,15 @@ export const say = {
   // tower between them. The strike after it says what goes, so the sentence
   // cannot read as placing anything.
   lineFull: (c: ClueSight, n: number): Narration =>
-    phrase`${clue(c)} already sees ${c.value - 1} ${c.value === 2 ? "tower" : "towers"} in ${line(c, "the line")}, so the cell nearest it must top all between; height ${n} can't`,
+    phrase`${clue(c)} already sees ${c.value - 1} ${c.value === 2 ? "tower" : "towers"} in ${arranged(c, "the line")}, so the cell nearest it must top all between; height ${n} can't`,
 
   // "height N", never "a N": the article trap (docs/hints.md § "Name a
   // square by its value").
   lowerBound: (c: ClueSight, n: number): Narration =>
-    phrase`${clue(c)} sees exactly ${c.value} towers along ${line(c, "its line")}; height ${n} so near it would hide too many`,
+    phrase`${clue(c)} sees exactly ${c.value} towers along ${arranged(c, "its line")}; height ${n} so near it would hide too many`,
 
   arrangement: (c: ClueSight, n: number, at: Point): Narration =>
-    phrase`No way for ${clue(c, `clue ${c.value}`)} to show exactly ${c.value} towers along ${line(c, "its line")} puts height ${n} in ${thisCell(at)}`,
+    phrase`No way for ${clue(c, `clue ${c.value}`)} to show exactly ${c.value} towers along ${arranged(c, "its line")} puts height ${n} in ${thisCell(at)}`,
 
   /** The cull after a placement: the tower just placed, outlined. */
   dup: (placed: Point, n: number): Narration =>

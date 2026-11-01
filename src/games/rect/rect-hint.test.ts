@@ -149,6 +149,26 @@ describe("rect hint rungs", () => {
     );
   });
 
+  it("a step's depth counts the facts it leans on that the board does not show", () => {
+    const depth = (kind: Parameters<typeof pinned>[0]): number => {
+      const words = pinned(kind).step.words;
+      if (!words) throw new Error(`a ${kind} step has no words`);
+      return words.depth;
+    };
+    expect(depth("fit")).toBe(0);
+    expect(depth("reach")).toBe(1);
+    expect(depth("overlap")).toBe(1);
+    // One for each clue it would starve and each square it would strand.
+    const starve = pinned("starve").step;
+    const named = (starve.words?.refs ?? []).filter((r) => r.role === "outline");
+    expect(named.length).toBeGreaterThan(0);
+    expect(starve.words?.depth).toBe(
+      named.reduce((n, r) => n + new Set(r.elements.map((e) => r.kind.key(e))).size, 0),
+    );
+    expect(depth("lineTakes")).toBe(2);
+    expect(depth("lineMisses")).toBe(2);
+  });
+
   it("several clues across one edge share a clause", () => {
     const p = params(15, 15, 1);
     let s = newState(p, "h12e8d15zc6a12k40d24e10zk24ze24k20zl10t20h");

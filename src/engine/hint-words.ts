@@ -164,11 +164,19 @@ export function whole<E>(kind: MarkKind<E>): MarkKind<E> {
  * leave the move to the board ({@link mark.move}). */
 export const MOVE: MarkKind<"move"> = { name: "move", key: () => "move" };
 
+/** How many facts a reference carries that the board does not show, each a
+ * claim about every placement of some element ({@link derived}): one for its
+ * elements together, or one for each unit it names. */
+export type Derived = "fact" | "each";
+
 /** One mark a step draws: a role, over some elements of one kind. */
 export interface MarkRef<E = unknown> {
   readonly role: MarkRole;
   readonly kind: MarkKind<E>;
   readonly elements: readonly E[];
+  /** Set when the words claim of these elements something the board does not
+   * show ({@link derived}). */
+  readonly derived?: Derived;
 }
 
 /** A reference in a sentence: a mark, and the words that name it, which may
@@ -244,6 +252,14 @@ export class Narration {
     return new Narration([ref as Reference<unknown>]);
   }
 
+  /** @internal {@link derived}'s body: `n` must be one reference. */
+  static derived(n: Narration, facts: Derived): Narration {
+    const [only, ...rest] = n.parts;
+    if (only === undefined || rest.length > 0 || !isReference(only))
+      throw new Error("hint words: derived() takes one reference from mark.*");
+    return new Narration([{ ...only, derived: facts }]);
+  }
+
   /** @internal {@link phrase}'s join: parts already linted. */
   static join(pieces: readonly (string | ColorWord | Narration)[]): Narration {
     const out: Part[] = [];
@@ -284,6 +300,17 @@ export class Narration {
     return this.parts.filter(
       (p): p is Reference<unknown> => isReference(p) && p.elements.length > 0,
     );
+  }
+
+  /** How many facts the words lean on that the board does not show: one per
+   * {@link derived} reference still naming something, or one per unit it
+   * names where each unit is its own fact. */
+  get depth(): number {
+    let n = 0;
+    for (const r of this.refs)
+      if (r.derived === "fact") n++;
+      else if (r.derived === "each") n += unitCount(r.kind, r.elements);
+    return n;
   }
 
   /** The words in `scheme` as runs of text, each reference its own run with
@@ -704,6 +731,21 @@ export const mark = {
     });
   },
 };
+
+/**
+ * A reference whose words claim something the board does not show: "the
+ * striped squares the 6 always covers", "the outlined square only it reaches".
+ * That claim ranges over every placement of some element, so a player has to
+ * work it out, and a step's {@link Narration.depth} counts it. A claim the
+ * board shows, such as a clue's value or a note the player wrote, is not
+ * derived.
+ *
+ * `ref` is a single reference from `mark.*`. With `"each"`, each unit it names
+ * is a fact of its own ("the outlined clues" that would each have no room).
+ */
+export function derived(ref: Narration, facts: Derived = "fact"): Narration {
+  return Narration.derived(ref, facts);
+}
 
 /** "it" or "them", agreeing with how many units `elements` are. */
 export function pronoun<E>(kind: MarkKind<E>, elements: readonly E[]): string {

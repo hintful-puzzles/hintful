@@ -16,6 +16,7 @@
 import { EDGE, type ForcedBorderEdge } from "../../engine/border-grid-hint.ts";
 import {
   CELL,
+  derived,
   mark,
   type Narration,
   type Noun,
@@ -58,7 +59,7 @@ export const say = {
     // never exceeds `k`, so the general arm below cannot reach this.
     if (c === 3 && d === 3) {
       return so({
-        look: phrase`Open as each 3's only gap, ${theseEdges(edges, "the edge")} between ${mark.as("outline", CELL, clues, "these 3s")} would seal 2 cells where regions hold ${k}`,
+        look: phrase`Open as each 3's only gap, ${theseEdges(edges, "the edge")} between ${derived(mark.as("outline", CELL, clues, "these 3s"))} would seal 2 cells where regions hold ${k}`,
         move: phrase`it must be a wall`,
       });
     }
@@ -67,7 +68,7 @@ export const say = {
     // the owner's choice. The two-3s arm keeps its count, because there the
     // bound is exact and the count is the whole argument.
     return so({
-      look: phrase`${mark.this("outline", CELL, clues, "clue")} would need a shared region of at least ${8 - c - d} cells, but every region holds ${k}`,
+      look: phrase`${derived(mark.this("outline", CELL, clues, "clue"))} would need a shared region of at least ${8 - c - d} cells, but every region holds ${k}`,
       move,
     });
   },
@@ -175,7 +176,8 @@ export const say = {
     // reads as a non-sequitur.
     if (multi) {
       const both = theseEdges(edges, "Both ringed edges");
-      const same = mark.as("stripes", whole(CELL), region, "the same region");
+      // Sharing a fate is a claim about every way the board can be completed.
+      const same = derived(mark.as("stripes", whole(CELL), region, "the same region"));
       const fate = phrase`${both} border ${same} and share a fate;`;
       return kind === "wall"
         ? so({
@@ -188,7 +190,7 @@ export const say = {
           });
     }
     // Rare post-dedup singleton (the partner edge was already shown).
-    const a = mark.as("stripes", whole(CELL), region, "a region");
+    const a = derived(mark.as("stripes", whole(CELL), region, "a region"));
     const edge = thisEdge(edges);
     return kind === "wall"
       ? so({

@@ -26,6 +26,7 @@ export default defineConfig({
       "scripts/checks/contact-sheet.test.ts",
       "scripts/checks/hint-deixis.test.ts",
       "scripts/checks/hint-area-names.test.ts",
+      "scripts/checks/hint-depth.test.ts",
       "scripts/checks/tier-walk.test.ts",
       "scripts/checks/deal-walk.test.ts",
     ],

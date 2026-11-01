@@ -6,6 +6,7 @@
 
 import {
   CELL,
+  derived,
   mark,
   Narration,
   phrase,
@@ -57,12 +58,15 @@ function joinAnd(parts: readonly string[]): string {
  */
 function crossings(s: RectState, f: Extract<RectFiring, { kind: "line" }>): Narration {
   const at = (i: number): Point => ({ x: i % s.w, y: Math.floor(i / s.w) });
+  // "Only these can cross" is a claim about every other clue's fits.
   const named = (clues: readonly number[]): Narration =>
-    mark.as(
-      "outline",
-      CELL,
-      clues.map(at),
-      `the outlined ${joinAnd(clues.map((c) => clueName(s, c)))}`,
+    derived(
+      mark.as(
+        "outline",
+        CELL,
+        clues.map(at),
+        `the outlined ${joinAnd(clues.map((c) => clueName(s, c)))}`,
+      ),
     );
   const union = (pick: (c: Crossing) => readonly number[]): number[] => [
     ...new Set(f.across.flatMap(pick)),
@@ -73,9 +77,11 @@ function crossings(s: RectState, f: Extract<RectFiring, { kind: "line" }>): Narr
   const several = f.across.length > 1;
   const why: Narration[] = [];
   if (takes.length > 0) {
-    const striped = several
-      ? mark.as("stripes", CELL, takes.map(at), "striped square")
-      : mark.the("stripes", CELL, takes.map(at), "square");
+    const striped = derived(
+      several
+        ? mark.as("stripes", CELL, takes.map(at), "striped square")
+        : mark.the("stripes", CELL, takes.map(at), "square"),
+    );
     // The clue that covers it is outlined beside the one crossing, so its
     // value names it, and "other" where the two read alike.
     const crosser = clueName(s, f.across[0].clue);
@@ -94,9 +100,12 @@ function crossings(s: RectState, f: Extract<RectFiring, { kind: "line" }>): Narr
     );
   }
   if (misses.length > 0) {
-    const missed = several
-      ? mark.as("outline", CELL, misses.map(at), "an outlined square")
-      : mark.the("outline", CELL, misses.map(at), "square");
+    const missed = derived(
+      several
+        ? mark.as("outline", CELL, misses.map(at), "an outlined square")
+        : mark.the("outline", CELL, misses.map(at), "square"),
+      "each",
+    );
     // Missing a square is a reason only because no other clue can cover it,
     // so the words say so.
     why.push(phrase`miss ${missed} only it reaches`);
@@ -140,14 +149,14 @@ export const say = {
       }
       case "reach":
         return so({
-          look: phrase`No other clue can reach ${mark.the("outline", CELL, [at(f.square)], "square")}`,
+          look: phrase`No other clue can reach ${derived(mark.the("outline", CELL, [at(f.square)], "square"))}`,
           follows: phrase`the ${n} must cover it`,
           move: phrase`${rect} is the only way it can`,
         });
       case "overlap": {
         const core = f.core.map(at);
         return so({
-          look: phrase`Wherever ${mark.the("outline", CELL, [at(f.other)], clueName(s, f.other))} goes, it covers ${mark.the("stripes", CELL, core, "square")}`,
+          look: phrase`Wherever ${mark.the("outline", CELL, [at(f.other)], clueName(s, f.other))} goes, it covers ${derived(mark.the("stripes", CELL, core, "square"))}`,
           // Two clues that read alike are this one and the outlined other.
           follows: phrase`the ${n === clueName(s, f.other) ? "other " : ""}${n} can't use ${pronoun(CELL, core)}`,
           move: phrase`${rect} is all it has left`,
@@ -157,11 +166,11 @@ export const say = {
         const why: Narration[] = [];
         if (f.starved.length > 0)
           why.push(
-            phrase`${mark.the("outline", CELL, f.starved.map(at), "clue")} no room`,
+            phrase`${derived(mark.the("outline", CELL, f.starved.map(at), "clue"), "each")} no room`,
           );
         if (f.stranded.length > 0)
           why.push(
-            phrase`${mark.the("outline", CELL, f.stranded.map(at), "square")} uncovered`,
+            phrase`${derived(mark.the("outline", CELL, f.stranded.map(at), "square"), "each")} uncovered`,
           );
         // Both reasons in one sentence have to fit the length a step is held
         // to (`hint-quality.test.ts`), so each is a few words.
