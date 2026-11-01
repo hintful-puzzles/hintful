@@ -407,7 +407,11 @@ and the module's `rules(sp, cl, variations)` is the engine's
 (a layer a variation adds), [`pegs`](../src/games/pegs/pegs.description.yaml)
 (a jump, a least fixed point), [`flip`](../src/games/flip/flip.description.yaml)
 (a dealt relation), [`inertia`](../src/games/inertia/inertia.description.yaml)
-(a run until stopped, a token, a lose state).
+(a run until stopped, a token, a lose state),
+[`sokoban`](../src/games/sokoban/sokoban.description.yaml) (a walk as a
+reach, `on`, a carried layer), [`slide`](../src/games/slide/slide.description.yaml)
+(a block shifted whole), [`cube`](../src/games/cube/cube.description.yaml)
+(a board of cells alone, faces, dealt tables).
 
 - **An assignment's last binder is the cell it sets**, and each of its
   terms reads the position before the move: a move's assignments are
@@ -424,14 +428,27 @@ and the module's `rules(sp, cl, variations)` is the engine's
   state whatever its board.
 - **The domain, `arranged` and `once` are read by the checker only**: they
   say which positions a board can hold. `once: v` is a token, one cell
-  holding `v` (Inertia's ball). A desc parser keeps its own errors.
+  holding `v` (Inertia's ball). `on: P` says where a layer's value may be
+  other than 0 (Sokoban's barrel stands on floor). A desc parser keeps its
+  own errors.
+- **A `carried` layer is one no rule reads** but its own assignment, which
+  moves it with what it labels (Sokoban's barrel letters). The compiler
+  refuses any other read, so the checker holds it at 0 and a claim cannot
+  rest on it.
 - **What never changes is a layer too**: Pegs' holes and Inertia's walls are
   values no move assigns. `play` shares such a layer rather than copying it,
   and the checker's universe holds every board as well as every position on
   it.
 - **A relation the board deals** (`space.relations: { flips: dealt }`, Flip's
   patterns) is a set of cells for each cell, read `flips(c)`, and a field of
-  `Dealt`. The checker deals none, so a game with one states no claim yet.
+  `Dealt`.
+- **A board that is not a rectangle is its cells** (`space.cells: <size>`),
+  and the compiler refuses the grid's geometry on it. What a cell neighbors
+  is a table the board deals (`space.tables`, a function of cells, faces and
+  numbers to a cell or a face, read `dest(s, r)`; `-1` where there is none),
+  built by the game's own code once a board. `space.faces: <size>` is a
+  second sort, which a layer `over: faces` is a value of (Cube's paint); an
+  element of one sort where the other is read is refused.
 - **A definition that reads itself is its least fixed point**: the least set
   of cells its one parameter makes it true of, computed once at the top of
   the function that reads it (Pegs' `arrive`, Inertia's `rests`). The
@@ -457,12 +474,16 @@ and the module's `rules(sp, cl, variations)` is the engine's
   slide's line (`sixteen.test.ts`, "slides in the planner as the description
   says"). Pegs' searches keep a packed jump table: a proof of loss fed the
   compiled jumps took 2.6× as long (2026-11-01; `pegs.test.ts`, "Pegs'
-  searches"). A copy a hint narrates from, as Inertia's slide path, is held
-  to the compiled move the same way.
+  searches"). Sokoban's, Slide's and Cube's solvers keep theirs, at 5× to
+  58×, 20× and 15× to 40× the compiled move's speed (2026-11-01; held by
+  `sokoban-solver.test.ts` "the search's board", `slide.test.ts` "moves as
+  the description's shifts do", `cube.test.ts` "the planner's roll"). A copy
+  a hint narrates from, as Inertia's slide path, is held to the compiled
+  move the same way.
 
 Its comparison with the code it replaced is in the `report.md` of
-`openspec/changes/archive/*-describe-moves-and-finishes` and
-`*-describe-guarded-moves`.
+`openspec/changes/archive/*-describe-moves-and-finishes`,
+`*-describe-guarded-moves` and `*-describe-pushes-blocks-and-solids`.
 
 ## Checking a dead-end claim sound
 
@@ -475,10 +496,16 @@ whose positions number at most `CHECKED_POSITIONS`
 (`src/describe/soundness.ts`), with each set of its variations on.
 
 - **The universe is every position the layers allow**: an arranged layer's
-  arrangements, a token's cells, times every filling of the others. A move
-  whose result leaves it fails the check, as does a `permute` claim found
-  false. A layer of five values reaches 2×3 boards and no further under the
-  cap (Inertia's), so a claim over many kinds of square is checked small.
+  arrangements, a token's cells, times every filling of the others, less
+  each cell whose values break a layer's `on`; a carried layer is held at 0.
+  A move whose result leaves it fails the check, as does a `permute` claim
+  found false. A layer of five values reaches 2×3 boards and no further
+  under the cap (Inertia's), so a claim over many kinds of square is checked
+  small.
+- **A description that reads what the board deals is checked on boards the
+  game deals**: `research/technique-check/boards/<game>.ts` lists them, each
+  with its `Dealt`, built by the game's own code (Cube's small arenas). The
+  checker refuses such a description without the file.
 - **A game that states no claim is passed by.**
 - **It walks the moves backward from the finished positions**, so it
   assumes nothing of the moves, and a claim is sound where it holds of no

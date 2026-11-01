@@ -12,4 +12,4 @@
 
 ## 3. Close
 
-- [ ] 3.1 Every fixture, deal and hint walk compared; the guides updated; the running app checked; archive
+- [x] 3.1 Every fixture, deal and hint walk compared; the guides updated; the running app checked; archive

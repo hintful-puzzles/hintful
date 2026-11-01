@@ -87,7 +87,18 @@ function planting(d: PlanningJson, id: string, src: string): PlanningJson {
 it("checks every dead-end claim sound, and finds every planted one unsound", async () => {
   const only = process.env["GAMES"]?.split(/[ ,]+/).filter(Boolean) ?? null;
   const sources = globSync("src/games/*/*.description.yaml", { cwd: ROOT }).sort();
-  const lines: string[] = [];
+  const resultsPath = fileURLToPath(new URL("results-dead-end.txt", import.meta.url));
+  // A narrowed run keeps the other games' lines, as it keeps their verdicts.
+  const blocks = new Map<string, string[]>();
+  if (only !== null) {
+    let game = "";
+    for (const line of readFileSync(resultsPath, "utf8").split("\n")) {
+      if (line === "") continue;
+      if (!line.startsWith(" ")) game = line.split(/[ :]/)[0];
+      if (!only.includes(game)) blocks.set(game, [...(blocks.get(game) ?? []), line]);
+    }
+  }
+  let lines: string[] = [];
   const verdicts: Record<string, string> = {};
   const bad: string[] = [];
   const checked: string[] = [];
@@ -95,6 +106,8 @@ it("checks every dead-end claim sound, and finds every planted one unsound", asy
     const d = loadDescriptionFile(readFileSync(`${ROOT}${source}`, "utf8"), source);
     if (!isPlanning(d) || (only !== null && !only.includes(d.game))) continue;
     checked.push(`${source}#`);
+    lines = [];
+    blocks.set(d.game, lines);
     const claims = planningWith(d, Object.keys(d.variations ?? {})).deadEnds;
     // Nothing to find sound.
     if (claims.length === 0) {
@@ -159,9 +172,10 @@ it("checks every dead-end claim sound, and finds every planted one unsound", asy
       if (!caught) bad.push(`${d.game} ${id}: the planted defect is not caught`);
     }
   }
+  const games = [...blocks.keys()].sort();
   writeFileSync(
-    fileURLToPath(new URL("results-dead-end.txt", import.meta.url)),
-    `${lines.join("\n")}\n`,
+    resultsPath,
+    `${games.flatMap((g) => blocks.get(g) ?? []).join("\n")}\n`,
   );
   const path = `${ROOT}src/describe/soundness.json`;
   const kept = Object.fromEntries(
