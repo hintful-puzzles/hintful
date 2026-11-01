@@ -6,7 +6,7 @@
 
 ## 2. The games
 
-- [ ] 2.1 Sokoban described, its deadlocks checked sound
+- [x] 2.1 Sokoban described, its deadlocks checked sound
 - [ ] 2.2 Slide described
 - [ ] 2.3 Cube described
 

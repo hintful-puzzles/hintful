@@ -46,6 +46,12 @@ const PLANTED: Record<string, Record<string, string>> = {
     // The last peg on a finished board stands alone.
     frozen: `exists p in cells where grid(p) = 1: forall q in adj4(p): not arrive(q)`,
   },
+  sokoban: {
+    // A barrel spare to the targets may be left where it can go nowhere.
+    dead: `exists c in cells where barrel(c) = 1 and target(c) = 0: not homeward(c)`,
+    // A barrel that can never move again may already be on a target.
+    jammed: `tight and exists c in cells where barrel(c) = 1: not loose(c)`,
+  },
   twiddle: {
     // A block of even side moves a tile between colors.
     colorOdd: `exists c in cells, v = value(c), lo = below(v), hi = upTo(v), k in {0, 1}: count(d in cells where value(d) = v and shade(d) = k) != homes(lo, hi, k)`,
@@ -85,13 +91,12 @@ it("checks every dead-end claim sound, and finds every planted one unsound", asy
     if (!isPlanning(d) || (only !== null && !only.includes(d.game))) continue;
     checked.push(`${source}#`);
     const claims = planningWith(d, Object.keys(d.variations ?? {})).deadEnds;
-    // Nothing to find sound. Flip states none, and its dealt relation is one
-    // no world deals (`checkWorld`).
+    // Nothing to find sound.
     if (claims.length === 0) {
       lines.push(`${d.game}: states no dead-end claim`);
       continue;
     }
-    const ws = worlds(d);
+    const ws = await worlds(d);
     const run = async (desc: PlanningJson, label: string) => {
       const mod = await compiled(desc, label);
       return ws.map(({ world, layers }) => checkWorld(desc, mod, world, layers));

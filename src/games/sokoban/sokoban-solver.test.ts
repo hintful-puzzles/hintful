@@ -7,8 +7,10 @@ import { describe, expect, it } from "vitest";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { DEAL_BUDGET, dealTries, dealtLevel, sokobanLevel } from "./generator.ts";
+import { pushMove } from "./hint.ts";
 import { sokobanGame } from "./index.ts";
 import {
+  DIRS,
   PLAN_BUDGET,
   type Position,
   type Push,
@@ -19,7 +21,11 @@ import {
 import {
   BARREL,
   BARRELTARGET,
+  DEEP_PIT,
   encodeBoard,
+  PIT,
+  positionOf,
+  rulesOf,
   type SokobanState,
   SPACE,
   TARGET,
@@ -27,10 +33,12 @@ import {
 } from "./state.ts";
 
 /** A board from a drawing: `#` wall, `$` barrel, `.` target, `*` a barrel on
- * one, `@` the player. */
+ * one, `@` the player, `^` a pit and `v` a deep pit. */
 function drawn(...rows: string[]): SokobanState {
   const w = rows[0].length;
   const codes: Record<string, number> = {
+    "^": PIT,
+    v: DEEP_PIT,
     "#": WALL,
     " ": SPACE,
     "@": SPACE,
@@ -217,5 +225,83 @@ describe("the search's reach", () => {
     );
     expect(search(s, DEAL_BUDGET).kind).toBe("out-of-reach");
     expect(search(s, PLAN_BUDGET).kind).toBe("found");
+  });
+});
+
+/**
+ * The search keeps its own packed board, since a search over the
+ * description's moves would build a position a push; this holds it to the
+ * description's rules: the same pushes, the same position after each, the
+ * same finish and the same stuck barrels, on positions along random lines
+ * of pushes from dealt levels and from boards with pits and spare barrels.
+ */
+describe("the search's board", () => {
+  const starts = (): SokobanState[] => [
+    ...[0, 1, 2].map((i) => sokobanLevel({ w: 10, h: 12 }, randomNew(`held-${i}`))),
+    sokobanLevel({ w: 12, h: 16 }, randomNew("held-big")),
+    // A pit, a deep pit and a spare barrel: boards that are not tight.
+    drawn("#######", "# $ ^ #", "#@$$ v#", "#. $. #", "#######"),
+    drawn("#######", "# $ $.#", "#@$  .#", "#.  * #", "#######"),
+    // One push from finished, and one from every target full with a deep
+    // pit still to fill, which is not finished.
+    drawn("######", "#@$. #", "######"),
+    drawn("########", "#@$. v #", "#$     #", "########"),
+  ];
+
+  it("pushes, finishes and sticks as the description says", () => {
+    let positions = 0;
+    let stuck = 0;
+    let finished = 0;
+    for (const start of starts()) {
+      const rng = randomNew(`walk ${encodeBoard(start)}`);
+      let s = start;
+      for (let step = 0; step < 60; step++) {
+        const board = new SokobanBoard(s);
+        const here = board.positionOf(s);
+        const rules = rulesOf(s);
+        const p = positionOf(s);
+        positions++;
+        // The same pushes, as a barrel and a direction.
+        const compiled = rules
+          .moves(p)
+          .flatMap((m) =>
+            m.move === "push"
+              ? [
+                  `${m.o}>${DIRS.findIndex(({ dx, dy }) => m.t - m.o === dy * s.w + dx)}`,
+                ]
+              : [],
+          )
+          .sort();
+        const own = board
+          .pushes(here)
+          .map((q) => `${q.barrel}>${q.dir}`)
+          .sort();
+        expect(own).toEqual(compiled);
+        expect(board.solved(here)).toBe(rules.finished(p));
+        if (rules.finished(p)) finished++;
+        const dead = rules.witnesses("dead", p);
+        const jammed = rules.witnesses("jammed", p);
+        for (let c = 0; c < s.w * s.h; c++) {
+          const kind = board.stuckKind(here, c);
+          expect(kind === "dead").toBe(dead.includes(c));
+          expect(kind === "frozen").toBe(jammed.includes(c) && !dead.includes(c));
+        }
+        expect(board.stuck(here) >= 0).toBe(rules.deadEnd(p) !== null);
+        if (rules.deadEnd(p) !== null) stuck++;
+        const pushes = board.pushes(here);
+        if (pushes.length === 0) break;
+        const push = pushes[randomUpto(rng, pushes.length)];
+        const next = sokobanGame.executeMove(s, pushMove(s.w, push));
+        const packed = board.apply(here, push);
+        const after = board.positionOf(next);
+        expect([...packed.barrels]).toEqual([...after.barrels]);
+        expect([...packed.terrain]).toEqual([...after.terrain]);
+        s = next;
+      }
+    }
+    // The comparison saw finished and stuck positions as well as open ones.
+    expect(positions).toBeGreaterThan(200);
+    expect(stuck).toBeGreaterThan(20);
+    expect(finished).toBeGreaterThan(0);
   });
 });

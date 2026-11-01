@@ -14,8 +14,9 @@ export type Position = {
   readonly grid: Int32Array;
 };
 
-/** What the rules read that the grid does not give: sizes, and
- * relations, a set of cells for each cell. */
+/** What the rules read that the grid does not give: sizes,
+ * relations, a set of cells for each cell, and tables, an element
+ * (`-1` for none) for each of their arguments, outermost first. */
 export interface Dealt {
   readonly flips: readonly (readonly number[])[];
 }

@@ -113,7 +113,15 @@ interface CompiledMove {
  * number or an element: a move's binding is plain data. */
 function bindingSorts(bs: readonly Binder[], env: Env): Map<string, Sort> {
   const sorts = new Map<string, Sort>();
-  const probe: Env = { ...env, used: new Set(), scratch: null, hoist: null };
+  // A prelude of its own, so a binder reading a least fixed point compiles
+  // here for its sort alone.
+  const probe: Env = {
+    ...env,
+    used: new Set(),
+    scratch: null,
+    hoist: null,
+    prelude: { out: new Out(0), fixed: new Map(), fixing: null },
+  };
   bindingLoops(bs, new Map(), probe, new Out(0), (sc) => {
     for (const b of bs) {
       const v = sc.get(b.name);
@@ -211,15 +219,18 @@ function compileMove(
       under(on, pl, () => {
         bindingLoops(ebs, scope, env, pl, (sc) => {
           const c = sc.get(last.name) as Val;
-          if (!(c.sort.k === "elem" && c.sort.e === "cell"))
-            throw new CompileError(
-              `${where}: ${last.name} is a ${show(c.sort)}, not a cell`,
-            );
           for (const [layer, src] of Object.entries(assign as AssignJson)) {
             if (layer === "for") continue;
-            if (!layers.includes(layer))
+            const sort = env.position?.get(layer);
+            if (sort === undefined)
               throw new CompileError(`${where}: no layer ${layer}`);
+            if (!(c.sort.k === "elem" && c.sort.e === sort.over))
+              throw new CompileError(
+                `${where}: ${last.name} is a ${show(c.sort)}, not a ${sort.over}`,
+              );
+            env.carrying = sort.carried ? layer : null;
             const t = compileExpr(parsed(game, `${where} ${layer}`, src), sc, env, pl);
+            env.carrying = null;
             expect(t, "num", `${where} ${layer}`);
             pl.emit(`q.${layer}[${c.code}] = ${t.code};`);
           }
@@ -342,6 +353,10 @@ function claimWitnesses(
   });
 }
 
+/** The type of a dealt table of `n` arguments: arrays `n` deep. */
+const tableType = (n: number): string =>
+  n === 0 ? "number" : `readonly ${n === 1 ? "number" : `(${tableType(n - 1)})`}[]`;
+
 /** A planning game's rules, as a module. */
 export function compilePlanning(
   json: PlanningJson,
@@ -357,6 +372,15 @@ export function compilePlanning(
     throw new CompileError(`${json.game}: a position has a layer`);
   const used = new Set<string>();
   const relations = Object.keys(d.space.relations ?? {});
+  const tables = Object.entries(d.space.tables ?? {});
+  const grid = d.space.grid ?? null;
+  if ((grid === null) === (d.space.cells === undefined))
+    throw new CompileError(`${json.game}: a space is a grid or cells, one of them`);
+  const elemOf = (s: "cell" | "face" | "num"): Sort =>
+    s === "num" ? { k: "num" } : { k: "elem", e: s };
+  for (const [l, layer] of Object.entries(d.position))
+    if (layer.over === "faces" && d.space.faces === undefined)
+      throw new CompileError(`${json.game}: ${l} is over faces, which the space lacks`);
   const env: Env = {
     defs: parseDefinitions(json.game, d.define ?? {}),
     clues: new Map(),
@@ -367,7 +391,8 @@ export function compilePlanning(
     sizes: {
       names: new Set(
         Object.keys(d.sizes).filter(
-          (n) => n !== "w" && n !== "h" && n !== d.space.grid.w && n !== d.space.grid.h,
+          (n) =>
+            grid === null || (n !== "w" && n !== "h" && n !== grid.w && n !== grid.h),
         ),
       ),
       read: new Set(),
@@ -375,7 +400,21 @@ export function compilePlanning(
     used,
     concluding: false,
     answer: null,
-    position: new Set(layers),
+    position: new Map(
+      Object.entries(d.position).map(([l, layer]) => [
+        l,
+        {
+          over: layer.over === "faces" ? "face" : "cell",
+          carried: layer.carried === true,
+        },
+      ]),
+    ),
+    carrying: null,
+    tables: new Map(
+      tables.map(([t, { of, to }]) => [t, { of: of.map(elemOf), to: elemOf(to) }]),
+    ),
+    geometry: grid !== null,
+    faces: d.space.faces ?? null,
     memo: false,
     scratch: null,
     readsClues: { yes: false },
@@ -472,17 +511,19 @@ export function compilePlanning(
     ...layers.map((l) => `  readonly ${l}: Int32Array;`),
     "};",
     "",
-    ...(sizes.length + relations.length === 0
+    ...(sizes.length + relations.length + tables.length === 0
       ? [
           "/** The board deals nothing the rules read beyond its grid. */",
           "export type Dealt = Readonly<Record<string, never>>;",
         ]
       : [
-          "/** What the rules read that the grid does not give: sizes, and",
-          " * relations, a set of cells for each cell. */",
+          "/** What the rules read that the grid does not give: sizes,",
+          " * relations, a set of cells for each cell, and tables, an element",
+          " * (`-1` for none) for each of their arguments, outermost first. */",
           "export interface Dealt {",
           ...sizes.map((n) => `  readonly ${n}: number;`),
           ...relations.map((r) => `  readonly ${r}: readonly (readonly number[])[];`),
+          ...tables.map(([t, { of }]) => `  readonly ${t}: ${tableType(of.length)};`),
           "}",
         ]),
     "",

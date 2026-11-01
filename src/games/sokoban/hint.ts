@@ -65,6 +65,8 @@ import {
 } from "./solver.ts";
 import {
   moveType,
+  positionOf,
+  rulesOf,
   type SokobanMove,
   type SokobanPush,
   type SokobanState,
@@ -155,11 +157,20 @@ function planAt(
  * proof that the board cannot be finished.
  */
 export function hasNoSolution(state: SokobanState): false | MarkedDeadEnd {
+  // The description's claims: the first barrel in reading order either
+  // holds of, `dead` naming it where both do.
+  const rules = rulesOf(state);
+  const p = positionOf(state);
+  const dead = rules.witnesses("dead", p);
+  const jammed = rules.witnesses("jammed", p);
+  const c = Math.min(dead[0] ?? Infinity, jammed[0] ?? Infinity);
+  if (c === Infinity) return false;
   const board = new SokobanBoard(state);
-  const here = board.positionOf(state);
-  const c = board.stuck(here);
-  if (c < 0) return false;
-  const why = stuckWhy(board, here, c);
+  const why: Stuck = !dead.includes(c)
+    ? "frozen"
+    : board.cornered(c)
+      ? "corner"
+      : "dead";
   const it = stuckBarrel(c);
   if (why === "corner")
     return markedDeadEnd(

@@ -175,6 +175,19 @@ export interface LayerJson {
   arranged?: string;
   /** Exactly one cell holds this value, every other another of the domain. */
   once?: string;
+  /** Where this formula of the cell `c` is false, the layer holds 0. */
+  on?: string;
+  /** A value a move copies and no rule reads. */
+  carried?: true;
+  /** The layer holds a value a face, not a cell. */
+  over?: "faces";
+}
+
+/** A table the board deals: a function of its arguments' sorts to an
+ * element. */
+export interface TableJson {
+  of: ("cell" | "face" | "num")[];
+  to: "cell" | "face";
 }
 
 /** Cells a move assigns: its binders, the last of them the cell, and a term
@@ -215,10 +228,16 @@ export interface PlanningJson {
   family: string;
   sizes: Record<string, { min: number; max: number }>;
   space: {
-    grid: { w: string; h: string };
+    /** The board as a rectangle, or, in its place, a count of cells with no
+     * geometry. */
+    grid?: { w: string; h: string };
+    cells?: string;
     units: string[];
     /** Relations the board deals, each a set of cells for each cell. */
     relations?: Record<string, "dealt">;
+    /** A size the board deals: how many faces, a second sort of element. */
+    faces?: string;
+    tables?: Record<string, TableJson>;
   };
   position: Record<string, LayerJson>;
   given?: string[];

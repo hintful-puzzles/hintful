@@ -18,10 +18,12 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GameStatus } from "../../engine/types.ts";
+import * as sokoban from "./sokoban.compiled.ts";
 
 // --- the cell alphabet (char codes) -----------------------------------
 // Upstream's #defines: each value is the character a game ID uses for it.
@@ -60,10 +62,6 @@ export function isOnTarget(v: number): boolean {
   return (
     v === TARGET || v === BARRELTARGET || v === PLAYERTARGET || (v >= 1 && v <= 26)
   );
-}
-/** Put a barrel onto a target: BARREL → BARRELTARGET, a capital → its ^ form. */
-export function targetize(b: number): number {
-  return b === BARREL ? BARRELTARGET : b - (A - 1);
 }
 /** Take a barrel off a target: BARRELTARGET → BARREL, a ^ form → its capital. */
 export function detargetize(b: number): number {
@@ -179,9 +177,92 @@ export type SokobanSolve = { type: "solve"; board: string };
 
 export type SokobanMove = SokobanStep | SokobanWalk | SokobanPush | SokobanSolve;
 
+// --- the description's rules ---------------------------------------------
+
+/** The description's rules on a board of this size. */
+export function rulesOf(s: { w: number; h: number }) {
+  return sokoban.rules(describedSpace(sokoban.units, s.w, s.h), {}, []);
+}
+
+/** The board as the description's layers. */
+export function positionOf(s: SokobanState): sokoban.Position {
+  const n = s.w * s.h;
+  const ground = new Int32Array(n);
+  const target = new Int32Array(n);
+  const barrel = new Int32Array(n);
+  const label = new Int32Array(n);
+  const man = new Int32Array(n);
+  s.grid.forEach((v, c) => {
+    ground[c] = v === WALL ? 1 : v === PIT ? 2 : v === DEEP_PIT ? 3 : 0;
+    target[c] = isOnTarget(v) ? 1 : 0;
+    barrel[c] = isBarrel(v) ? 1 : 0;
+    const letter = barrelLabel(v);
+    label[c] = letter === 0 ? 0 : letter - A + 1;
+  });
+  man[s.py * s.w + s.px] = 1;
+  return { ground, target, barrel, label, man };
+}
+
+/** The board the layers of `q` show, on `s`'s grid. */
+function stateOf(s: SokobanState, q: sokoban.Position): SokobanState {
+  const grid = Uint8Array.from(q.ground, (g, c) => {
+    if (g !== 0) return g === 1 ? WALL : g === 2 ? PIT : DEEP_PIT;
+    const on = q.target[c] === 1;
+    if (q.barrel[c] === 0) return on ? TARGET : SPACE;
+    const letter = q.label[c];
+    if (letter === 0) return on ? BARRELTARGET : BARREL;
+    return on ? letter : A + letter - 1;
+  });
+  const at = q.man.indexOf(1);
+  return { w: s.w, h: s.h, grid, px: at % s.w, py: Math.floor(at / s.w) };
+}
+
+const inside = (s: SokobanState, x: number, y: number): boolean =>
+  x >= 0 && x < s.w && y >= 0 && y < s.h;
+
+/** The description's push of the barrel at `(bx, by)` along `(dx, dy)`, the
+ * player starting on the square behind it; null where that is off the
+ * board. */
+function pushAt(
+  s: SokobanState,
+  bx: number,
+  by: number,
+  dx: number,
+  dy: number,
+): sokoban.Move | null {
+  const [sx, sy, tx, ty] = [bx - dx, by - dy, bx + dx, by + dy];
+  if (!inside(s, sx, sy) || !inside(s, bx, by) || !inside(s, tx, ty)) return null;
+  return { move: "push", s: sy * s.w + sx, o: by * s.w + bx, t: ty * s.w + tx };
+}
+
+/**
+ * The barrel at `(x, y)` pushed `n` squares along `(dx, dy)`, by the
+ * description's pushes: the first from the square behind it, which the
+ * player walks to, and each after from where the last left the player.
+ * Null where any of them is not legal: the player cannot get behind it, or
+ * something stops it sooner, a pit or a deep pit included.
+ */
+export function pushed(
+  s: SokobanState,
+  x: number,
+  y: number,
+  dx: number,
+  dy: number,
+  n: number,
+): SokobanState | null {
+  const rules = rulesOf(s);
+  let p = positionOf(s);
+  for (let i = 0; i < n; i++) {
+    const m = pushAt(s, x + i * dx, y + i * dy, dx, dy);
+    if (m === null || !rules.legal(p, m)) return null;
+    p = rules.play(p, m);
+  }
+  return stateOf(s, p);
+}
+
 /** How many squares the barrel at `(bx, by)` can be pushed along `(dx, dy)`
- * in a row: up to the first wall or barrel in its way, and no further than
- * a pit, which takes it. */
+ * in a row, from behind it, by the description's pushes: up to the first
+ * wall or barrel in its way, and no further than a pit, which takes it. */
 export function pushReach(
   s: SokobanState,
   bx: number,
@@ -189,51 +270,33 @@ export function pushReach(
   dx: number,
   dy: number,
 ): number {
-  const { w, h, grid } = s;
+  const rules = rulesOf(s);
+  // The player behind the barrel, where the pushes start.
+  let p: sokoban.Position = { ...positionOf(s), man: new Int32Array(s.w * s.h) };
+  if (inside(s, bx - dx, by - dy)) p.man[(by - dy) * s.w + bx - dx] = 1;
   let n = 0;
-  for (
-    let x = bx + dx, y = by + dy;
-    x >= 0 && x < w && y >= 0 && y < h;
-    x += dx, y += dy
-  ) {
-    const v = grid[y * w + x];
-    if (v === SPACE || v === TARGET) n++;
-    else {
-      if (v === PIT || v === DEEP_PIT) n++;
-      break;
-    }
+  for (;;) {
+    const m = pushAt(s, bx + n * dx, by + n * dy, dx, dy);
+    if (m === null || !rules.legal(p, m)) return n;
+    p = rules.play(p, m);
+    n++;
   }
-  return n;
 }
 
-/** Whether the player in `s` can walk to square `(x, y)`: through floor and
- * targets, never through a barrel, a wall or a pit. Orthogonal steps reach
- * every square a diagonal one does, since a diagonal needs a free square
- * beside it to pass through. */
+/** Whether the player in `s` can walk to square `(x, y)`, where they stand
+ * or by the description's walk: through floor and targets, never through a
+ * barrel, a wall or a pit. */
 export function canWalkTo(s: SokobanState, x: number, y: number): boolean {
-  const { w, h, grid } = s;
-  const goal = y * w + x;
-  const seen = new Uint8Array(w * h);
-  const queue = [s.py * w + s.px];
-  seen[queue[0]] = 1;
-  for (let q = 0; q < queue.length; q++) {
-    const c = queue[q];
-    if (c === goal) return true;
-    const cx = c % w;
-    for (const [nx, ny] of [
-      [cx - 1, (c - cx) / w],
-      [cx + 1, (c - cx) / w],
-      [cx, (c - cx) / w - 1],
-      [cx, (c - cx) / w + 1],
-    ]) {
-      if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-      const n = ny * w + nx;
-      if (seen[n] || (grid[n] !== SPACE && grid[n] !== TARGET)) continue;
-      seen[n] = 1;
-      queue.push(n);
-    }
-  }
-  return false;
+  if (!inside(s, x, y)) return false;
+  if (x === s.px && y === s.py) return true;
+  return rulesOf(s).legal(positionOf(s), { move: "walk", t: y * s.w + x });
+}
+
+/** The player walked to `(x, y)` by the description's walk, or null where
+ * they cannot get there. */
+export function walked(s: SokobanState, x: number, y: number): SokobanState | null {
+  if (!canWalkTo(s, x, y)) return null;
+  return { ...s, px: x, py: y };
 }
 
 /** The board as a game ID writes it: each cell's letter, the player's
@@ -320,59 +383,46 @@ export function decodeBoard(p: SokobanParams, board: string): SokobanState {
 export type MoveKind = "illegal" | "walk" | "push";
 
 /**
- * Classify moving the player by (dx, dy) on this board (upstream `move_type`).
- * A push must be orthogonal, have a barrel ahead and a square that can accept
- * a barrel beyond it; a diagonal *walk* needs one of the two shared-adjacent
- * squares free to notionally pass through (the NetHack rule) and can never
- * push.
+ * The description's move that steps the player by (dx, dy), and which kind it
+ * is, as upstream's `move_type` asks: a `step` to a square the player can
+ * stand on (a diagonal one only past a corner with room to go round, the
+ * NetHack rule), else a `push` of the barrel there (never diagonal), else
+ * none.
  */
+export function stepMove(
+  state: SokobanState,
+  dx: number,
+  dy: number,
+): { kind: MoveKind; move: sokoban.Move | null } {
+  const { w, px, py } = state;
+  if (!inside(state, px + dx, py + dy) || (dx === 0 && dy === 0))
+    return { kind: "illegal", move: null };
+  const rules = rulesOf(state);
+  const p = positionOf(state);
+  const b = py * w + px;
+  const step: sokoban.Move = { move: "step", b, t: (py + dy) * w + px + dx };
+  if (rules.legal(p, step)) return { kind: "walk", move: step };
+  const push = pushAt(state, px + dx, py + dy, dx, dy);
+  if (push !== null && rules.legal(p, push)) return { kind: "push", move: push };
+  return { kind: "illegal", move: null };
+}
+
+/** Classify moving the player by (dx, dy) on this board (upstream
+ * `move_type`), by the description's rules. */
 export function moveType(state: SokobanState, dx: number, dy: number): MoveKind {
-  const { w, h, grid, px, py } = state;
-  const nx = px + dx;
-  const ny = py + dy;
+  return stepMove(state, dx, dy).kind;
+}
 
-  if (nx < 0 || nx >= w || ny < 0 || ny >= h) return "illegal";
-
-  const ahead = grid[ny * w + nx];
-  if (ahead === WALL || ahead === PIT || ahead === DEEP_PIT) return "illegal";
-
-  if (isBarrel(ahead)) {
-    // A push: never diagonal, and the square beyond must accept a barrel.
-    if (dx && dy) return "illegal";
-    const nbx = nx + dx;
-    const nby = ny + dy;
-    if (nbx < 0 || nbx >= w || nby < 0 || nby >= h) return "illegal";
-    const beyond = grid[nby * w + nbx];
-    if (beyond === SPACE || beyond === TARGET || beyond === PIT || beyond === DEEP_PIT)
-      return "push";
-    return "illegal";
-  }
-
-  // An ordinary walk. A diagonal one needs one orthogonally-shared square to
-  // be free to move through.
-  if (dx && dy) {
-    const vert = grid[(py + dy) * w + px];
-    const horiz = grid[py * w + (px + dx)];
-    if (vert !== SPACE && vert !== TARGET && horiz !== SPACE && horiz !== TARGET)
-      return "illegal";
-  }
-  return "walk";
+/** The board after the description's `move`, which must be legal. */
+export function played(state: SokobanState, move: sokoban.Move): SokobanState {
+  return stateOf(state, rulesOf(state).play(positionOf(state), move));
 }
 
 // --- status -----------------------------------------------------------
 
-/**
- * Solved when the board cannot become any *more* complete: either no barrel is
- * off a target, or there is nowhere left to put one (no free target, no pit,
- * no deep pit). This handles spare barrels and levels with pits correctly.
- */
+/** Solved by the description's finish: no barrel off a target, or nowhere
+ * left to put one (no free target, no pit, no deep pit), so spare barrels
+ * and levels with pits finish too. */
 export function status(s: SokobanState): GameStatus {
-  let freeBarrels = false;
-  let freeTargets = false;
-  for (const v of s.grid) {
-    if (isBarrel(v) && !isOnTarget(v)) freeBarrels = true;
-    if (v === DEEP_PIT || v === PIT || (!isBarrel(v) && isOnTarget(v)))
-      freeTargets = true;
-  }
-  return !freeBarrels || !freeTargets ? "solved" : "ongoing";
+  return rulesOf(s).finished(positionOf(s)) ? "solved" : "ongoing";
 }

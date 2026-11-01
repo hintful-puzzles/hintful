@@ -8,7 +8,7 @@
  * or a barrel a pit took) have no motion and change at once.
  */
 
-import { isBarrel, moveType, type SokobanState } from "./state.ts";
+import { isBarrel, positionOf, rulesOf, type SokobanState } from "./state.ts";
 
 /** The player's squares from start to end, one per step, and the barrel it
  * pushes: the square it starts on, the way it goes, how far, and the step of
@@ -30,10 +30,15 @@ const STEP_S = 0.06;
 const MIN_S = 0.1;
 const MAX_S = 0.45;
 
-/** The squares the player walks from `from` to `to` on `s`, fewest steps,
- * diagonals where a corner allows them; null if it cannot get there. */
+/** The squares the player walks from `from` to `to` on `s`, fewest steps by
+ * the description's `step`, diagonals where a corner allows them; null if it
+ * cannot get there. */
 function route(s: SokobanState, from: number, to: number): number[] | null {
   const { w, h } = s;
+  const rules = rulesOf(s);
+  // One position, the player moved onto each square in turn.
+  const p = positionOf(s);
+  const man = p.man;
   const prev = new Int32Array(w * h).fill(-1);
   prev[from] = from;
   const queue = [from];
@@ -47,16 +52,20 @@ function route(s: SokobanState, from: number, to: number): number[] | null {
     [-1, 1],
     [1, 1],
   ];
+  man.fill(0);
   for (let q = 0; q < queue.length && prev[to] < 0; q++) {
     const c = queue[q];
-    const at = { ...s, px: c % w, py: Math.floor(c / w) };
+    const x = c % w;
+    const y = Math.floor(c / w);
+    man[c] = 1;
     for (const [dx, dy] of steps) {
-      if (moveType(at, dx, dy) !== "walk") continue;
-      const n = (at.py + dy) * w + at.px + dx;
-      if (prev[n] >= 0) continue;
+      if (x + dx < 0 || x + dx >= w || y + dy < 0 || y + dy >= h) continue;
+      const n = (y + dy) * w + x + dx;
+      if (prev[n] >= 0 || !rules.legal(p, { move: "step", b: c, t: n })) continue;
       prev[n] = c;
       queue.push(n);
     }
+    man[c] = 0;
   }
   if (prev[to] < 0) return null;
   const path: number[] = [];

@@ -68,6 +68,54 @@ describe("the position compiler refuses an ill-formed move", () => {
     ).toThrow(/r reads itself/);
   });
 
+  it("and a carried layer read by a rule", () => {
+    const d = game({
+      for: "c in cells where tag(c) = 0",
+      set: [{ for: "d = c", tag: "tag(c)" }],
+    });
+    const carried = {
+      ...d,
+      position: {
+        ...d.position,
+        tag: { domain: "range(0, 3)", carried: true as const },
+      },
+    };
+    expect(() => compile(carried)).toThrow(/tag is carried/);
+    // Read only in its own assignment, it compiles.
+    expect(
+      compile({
+        ...carried,
+        moves: { flip: { for: "c in cells", set: [{ for: "d = c", tag: "tag(c)" }] } },
+      }),
+    ).toContain("q.tag[v_d] = p.tag[v_c];");
+  });
+
+  it("and the geometry on a board of cells alone", () => {
+    const d = game({ for: "c in cells", set: [{ for: "d in adj4(c)", value: "1" }] });
+    expect(() => compile({ ...d, space: { cells: "w", units: [] } })).toThrow(
+      /adj4: the board is cells alone/,
+    );
+  });
+
+  it("and a face layer assigned at a cell, or read at one", () => {
+    const d = game({ for: "c in cells", set: [{ for: "d = c", paint: "1" }] });
+    const faced: PlanningJson = {
+      ...d,
+      sizes: { ...d.sizes, n: { min: 4, max: 4 } },
+      space: { ...d.space, faces: "n" },
+      position: { ...d.position, paint: { domain: "{0, 1}", over: "faces" } },
+    };
+    expect(() => compile(faced)).toThrow(/not a face/);
+    const fine: PlanningJson = {
+      ...faced,
+      moves: { flip: { for: "f in faces", set: [{ for: "g = f", paint: "1" }] } },
+    };
+    expect(() =>
+      compile({ ...fine, finish: ["forall c in cells: paint(c) = 0"] }),
+    ).toThrow(/expected a face/);
+    expect(compile(fine)).toContain("facesOf(cl.n)");
+  });
+
   it("compiles a well-formed one", () => {
     expect(
       compile(

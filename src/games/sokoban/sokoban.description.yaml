@@ -83,3 +83,117 @@ help:
     **Check & save** asks the same question, since Sokoban has no single
     answer to check your pushes against: it won't save a position the hint
     would ask you to undo from, and outlines the stuck barrel.
+name: Sokoban
+family: position
+sizes:
+  # The game deals sides of four at the least, and loads a board of any size
+  # with its desc; 99 stands for no bound.
+  w: { min: 1, max: 99 }
+  h: { min: 1, max: 99 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+position:
+  # What the square is: 0 floor, 1 a wall, 2 a pit, 3 a deep pit. A pit a
+  # barrel is pushed into is filled, and floor after; a deep pit takes every
+  # barrel pushed into it and stays.
+  ground: { domain: "{0, 1, 2, 3}" }
+  # 1 on a target, which is floor.
+  target: { domain: "{0, 1}", on: "ground(c) = 0" }
+  # 1 where a barrel stands, on floor.
+  barrel: { domain: "{0, 1}", on: "ground(c) = 0" }
+  # A hand-made level's letter on a barrel, 1 for A to 26 for Z, which the
+  # barrel takes with it and no rule reads.
+  label: { domain: "range(0, 26)", carried: true }
+  # 1 on the player's square, floor with no barrel.
+  man: { domain: "{0, 1}", once: "1", on: "ground(c) = 0 and barrel(c) = 0" }
+freedom: { kind: transition }
+define:
+  # The player can stand on c.
+  free(c): "ground(c) = 0 and barrel(c) = 0"
+  # A barrel can be pushed onto c: floor with no barrel, or a pit of either
+  # kind.
+  takes(c): "barrel(c) = 0 and ground(c) != 1"
+  # The player can walk to c without pushing anything.
+  reach(c): "man(c) = 1 or (free(c) and exists n in adj4(c): reach(n))"
+  # Square (x, y) is on the board and no wall.
+  open(x, y): "on_grid(x, y) and ground(cell(x, y)) != 1"
+  # Every barrel is needed on a target: no pit to fill, and no more barrels
+  # than targets.
+  tight: >-
+    (forall c in cells: ground(c) < 2) and
+    count(c in cells where barrel(c) = 1) <= count(c in cells where target(c) = 1)
+  # A barrel on c, with the board to itself, could be pushed to a target:
+  # it is on one, or it could be pushed to a neighbor from which it could,
+  # the player standing on the far side of it.
+  homeward(c): >-
+    ground(c) != 1 and (target(c) = 1 or exists n in adj4(c)
+    where ground(n) != 1 and open(2 * x(c) - x(n), 2 * y(c) - y(n)): homeward(n))
+  # A barrel on c could move again some time: along one axis both squares
+  # beside it are open, not both of them squares from which no barrel reaches
+  # a target, and each holds no barrel or one that could move again itself.
+  loose(c): >-
+    exists n in adj4(c) where ground(n) != 1 and open(2 * x(c) - x(n), 2 * y(c) - y(n)),
+    a = cell(2 * x(c) - x(n), 2 * y(c) - y(n)):
+    (homeward(n) or homeward(a)) and (barrel(n) = 0 or loose(n))
+    and (barrel(a) = 0 or loose(a))
+moves:
+  # One step to a neighboring square the player can stand on, the keyboard's:
+  # a diagonal one only past a corner with a square beside both it can stand
+  # on.
+  step:
+    for: >-
+      b in cells where man(b) = 1,
+      t in adj8(b) where free(t) and (x(t) = x(b) or y(t) = y(b)
+      or free(cell(x(t), y(b))) or free(cell(x(b), y(t))))
+    set:
+      - for: "c = b"
+        man: "0"
+      - for: "c = t"
+        man: "1"
+  # A walk to any square the player can reach, a tap's.
+  walk:
+    for: "t in cells where man(t) = 0 and reach(t)"
+    set:
+      - for: "c in cells where man(c) = 1"
+        man: "0"
+      - for: "c = t"
+        man: "1"
+  # From square s the player can reach, the barrel beside it on o pushed one
+  # square on, onto t: floor, or a pit, which it fills, or a deep pit, which
+  # takes it. The player ends on o.
+  push:
+    for: >-
+      s in cells where reach(s),
+      o in adj4(s) where barrel(o) = 1 and on_grid(2 * x(o) - x(s), 2 * y(o) - y(s)),
+      t = cell(2 * x(o) - x(s), 2 * y(o) - y(s)) where takes(t)
+    set:
+      - for: "c in cells where man(c) = 1"
+        man: "0"
+      - for: "c = o"
+        man: "1"
+        barrel: "0"
+        label: "0"
+      - for: "c = t where ground(t) = 0"
+        barrel: "1"
+        label: "label(o)"
+      - for: "c = t where ground(t) = 2"
+        ground: "0"
+finish:
+  # No barrel is off a target, or there is nowhere left to put one: no empty
+  # target and no pit of either kind.
+  - >-
+    (forall c in cells: barrel(c) = 0 or target(c) = 1) or
+    (forall c in cells: ground(c) < 2 and (target(c) = 0 or barrel(c) = 1))
+deadEnds:
+  # Where every barrel is needed, a barrel off a target that no push could
+  # bring to one, even with the board to itself.
+  dead: "tight and exists c in cells where barrel(c) = 1 and target(c) = 0: not homeward(c)"
+  # Where every barrel is needed, a barrel off a target that can never move
+  # again.
+  jammed: "tight and exists c in cells where barrel(c) = 1 and target(c) = 0: not loose(c)"
+deal:
+  start: >-
+    the game played backward from a finished board, the player pulling
+    barrels out of targets and carving corridors through the rock, dealt
+    again until the hint's search finishes the level

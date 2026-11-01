@@ -50,32 +50,29 @@ import {
 import { PLAN_BUDGET, search } from "./solver.ts";
 import {
   canWalkTo,
-  DEEP_PIT,
   decodeBoard,
   decodeParams,
   defaultParams,
-  detargetize,
   encodeBoard,
   encodeParams,
   isBarrel,
-  isOnTarget,
   menu,
   moveType,
   newState,
-  PIT,
   paramConfig,
+  played,
+  pushed,
   pushReach,
   type SokobanMove,
   type SokobanParams,
   type SokobanPush,
   type SokobanState,
   type SokobanUi,
-  SPACE,
   status,
-  TARGET,
-  targetize,
+  stepMove,
   validateParams,
   WALL,
+  walked,
 } from "./state.ts";
 
 // --- input ------------------------------------------------------------
@@ -209,16 +206,18 @@ function changedState(
 
 // --- move execution ---------------------------------------------------
 
+/** Each move by the description's rules: a walk is its `walk`, a push of `n`
+ * squares `n` of its pushes, and a key's step its `step` or its `push`. */
 export function executeMove(state: SokobanState, move: SokobanMove): SokobanState {
   if (move.type === "solve") return solvedBoard(state, move.board);
   if (move.type === "walk") {
     const { x, y } = move;
     if (!Number.isInteger(x) || !Number.isInteger(y))
       rejectMove(move, "sokoban: executeMove");
-    const inside = x >= 0 && x < state.w && y >= 0 && y < state.h;
-    if (!inside || !canWalkTo(state, x, y))
+    const next = walked(state, x, y);
+    if (next === null)
       throw new Error("sokoban: a walk to a square the player cannot reach");
-    return { ...state, px: x, py: y };
+    return next;
   }
   if (move.type === "push") {
     const { x, y, dx, dy, n } = move;
@@ -228,22 +227,13 @@ export function executeMove(state: SokobanState, move: SokobanMove): SokobanStat
       n < 1
     )
       rejectMove(move, "sokoban: executeMove");
-    const sx = x - dx;
-    const sy = y - dy;
-    const at = { ...state, px: sx, py: sy };
-    if (
-      !canWalkTo(state, sx, sy) ||
-      moveType(at, dx, dy) !== "push" ||
-      n > pushReach(state, x, y, dx, dy)
-    )
+    const next = pushed(state, x, y, dx, dy, n);
+    if (next === null)
       throw new Error("sokoban: a push the player cannot walk to and make");
-    let next: SokobanState = at;
-    for (let i = 0; i < n; i++) next = executeMove(next, { type: "move", dx, dy });
     return next;
   }
-  // Check the fields the dispatch reads. A move with no step would reach
-  // `moveType` as (NaN, NaN), read the grid out of bounds and come back a
-  // *legal* walk, gaining the board a move it never made.
+  // Check the fields the dispatch reads: a move with no step would name no
+  // square.
   if (
     move.type !== "move" ||
     !Number.isInteger(move.dx) ||
@@ -251,35 +241,9 @@ export function executeMove(state: SokobanState, move: SokobanMove): SokobanStat
   ) {
     rejectMove(move, "sokoban: executeMove");
   }
-
-  const { dx, dy } = move;
-  const kind = moveType(state, dx, dy);
-  if (kind === "illegal") throw new Error("sokoban: illegal move");
-
-  const { w, h } = state;
-  const grid = state.grid.slice();
-  const nx = state.px + dx;
-  const ny = state.py + dy;
-
-  if (kind === "push") {
-    const from = ny * w + nx;
-    const to = (ny + dy) * w + nx + dx;
-    // Lift the barrel, leaving the SPACE or TARGET beneath it.
-    let b = grid[from];
-    if (isOnTarget(b)) {
-      grid[from] = TARGET;
-      b = detargetize(b);
-    } else {
-      grid[from] = SPACE;
-    }
-    // Set it down beyond: it fills a pit, and a deep pit eats it and remains.
-    const beyond = grid[to];
-    if (beyond === PIT) grid[to] = SPACE;
-    else if (beyond === TARGET) grid[to] = targetize(b);
-    else if (beyond !== DEEP_PIT) grid[to] = b;
-  }
-
-  return { w, h, grid, px: nx, py: ny };
+  const { move: step } = stepMove(state, move.dx, move.dy);
+  if (step === null) throw new Error("sokoban: illegal move");
+  return played(state, step);
 }
 
 /** The finished board Solve's move names: its walls must be this board's, as

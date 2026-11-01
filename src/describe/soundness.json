@@ -25,6 +25,8 @@
   "src/games/seismic/seismic.description.yaml#lone": "60fa9bfbc2213c43",
   "src/games/seismic/seismic.description.yaml#starve": "532d97bd98819607",
   "src/games/sixteen/sixteen.description.yaml#deadEnd:parity": "3fea1b55ebf97fbf",
+  "src/games/sokoban/sokoban.description.yaml#deadEnd:dead": "3a8d65ed9d206b73",
+  "src/games/sokoban/sokoban.description.yaml#deadEnd:jammed": "b0411360d4461c5e",
   "src/games/solo/solo.description.yaml#boxSingle": "d3b16c0dfb4c6a33",
   "src/games/solo/solo.description.yaml#cageMinMax": "634c7528dcc126fc",
   "src/games/solo/solo.description.yaml#cageSingle": "057daa6f045f5ee7",

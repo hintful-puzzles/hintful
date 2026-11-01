@@ -141,6 +141,27 @@
           "description": "A planning game's relations the board deals, each a set of cells for each cell, read `name(c)`.",
           "additionalProperties": { "const": "dealt" }
         },
+        "cells": {
+          "$ref": "#/$defs/formula",
+          "description": "A planning game's board that is not a rectangle: this many cells and no geometry, so `x`, `y`, `cell`, the neighbors, rays and lines are refused on it. In place of `grid`."
+        },
+        "faces": {
+          "$ref": "#/$defs/formula",
+          "description": "A planning game's second sort of element: a size the board deals, how many faces. `faces` names them, and a layer `over: faces` holds a value a face."
+        },
+        "tables": {
+          "type": "object",
+          "description": "A planning game's tables the board deals, each a function of elements and numbers to an element, `none` where it has no value: read `name(a, ...)`, or `name` where it takes nothing.",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["of", "to"],
+            "additionalProperties": false,
+            "properties": {
+              "of": { "type": "array", "items": { "enum": ["cell", "face", "num"] } },
+              "to": { "enum": ["cell", "face"] }
+            }
+          }
+        },
         "units": {
           "type": "array",
           "items": { "type": "string" },
@@ -199,6 +220,18 @@
         "once": {
           "$ref": "#/$defs/formula",
           "description": "Exactly one cell holds this value, and every other another of the domain: a token, such as a ball. Read by the dead-end checker."
+        },
+        "on": {
+          "$ref": "#/$defs/formula",
+          "description": "Where this formula of the cell `c`, which reads only layers at `c`, is false, the layer holds 0: a value stands only there. Read by the dead-end checker."
+        },
+        "carried": {
+          "const": true,
+          "description": "A value a move copies and no rule reads, such as a barrel's letter: the compiler refuses a read of it but in an assignment to itself, and the dead-end checker holds it at 0."
+        },
+        "over": {
+          "const": "faces",
+          "description": "The layer holds a value a face of `space.faces`, not a cell."
         }
       }
     },
@@ -301,7 +334,11 @@
         "space": {
           "allOf": [
             { "$ref": "#/$defs/space" },
-            { "type": "object", "required": ["grid", "units"] }
+            {
+              "type": "object",
+              "required": ["units"],
+              "oneOf": [{ "required": ["grid"] }, { "required": ["cells"] }]
+            }
           ]
         },
         "answer": {

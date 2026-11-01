@@ -28,6 +28,7 @@ import { type Binder, type Expr, parse } from "./expr.ts";
 /** A region's sort names its partition, as a clue's names its kind. */
 type ElemSort =
   | "cell"
+  | "face"
   | "line"
   | "edge"
   | "slot"
@@ -207,8 +208,19 @@ interface Env {
    * (`_repeat`, `_times`) rather than from the marks. `null` elsewhere. */
   answer: { repeats: boolean } | null;
   /** Where the code reads a planning game's position (`p`): its layers, each
-   * read as a function of a cell. `null` elsewhere. */
-  position: ReadonlySet<string> | null;
+   * read as a function of a cell, or of a face. `null` elsewhere. */
+  position: ReadonlyMap<string, LayerSort> | null;
+  /** The carried layer whose assignment is being compiled, the one place a
+   * read of it is allowed; `null` elsewhere. */
+  carrying: string | null;
+  /** The tables the board deals, by name: a planning game's. */
+  tables: ReadonlyMap<string, { of: Sort[]; to: Sort }>;
+  /** Whether the space is a rectangle, with the geometry that reads one;
+   * false on a board of cells alone. */
+  geometry: boolean;
+  /** The size counting the faces, a second sort of element, or `null` where
+   * the space has none. */
+  faces: string | null;
   /** Whether the function keeps each cell's candidates as it first reads
    * them (`cands`), until a firing it goes on from changes the marks. */
   memo: boolean;
@@ -229,6 +241,12 @@ interface Env {
   /** The relations the board deals, each a set of cells for each cell, read
    * `name(c)`: a planning game's. */
   relations: ReadonlySet<string>;
+}
+
+/** What a position's layer holds a value of, and whether no rule reads it. */
+interface LayerSort {
+  readonly over: ElemSort;
+  readonly carried: boolean;
 }
 
 interface Prelude {
@@ -264,6 +282,32 @@ const NAMES: Record<string, Val> = {
   false: { code: "false", sort: BOOL },
   none: { code: "-1", sort: { k: "none" } },
 };
+
+/** What a board of cells alone has none of: the names and functions that
+ * read a rectangle. */
+const GEOMETRY = new Set([
+  "rows",
+  "cols",
+  "lines",
+  "units",
+  "slots",
+  "corners",
+  "w",
+  "h",
+  "order",
+  "row",
+  "col",
+  "peers",
+  "adj4",
+  "adj8",
+  "ray",
+  "on_grid",
+  "units_of",
+  "x",
+  "y",
+  "cell",
+  "edge",
+]);
 
 function expect(v: Val, k: Sort["k"], what: string): void {
   if (v.sort.k !== k)
@@ -502,8 +546,21 @@ function name(n: string, scope: Scope, env: Env, out: Out): Val {
     throw new CompileError("the domain is each cell's here: read a cell's candidates");
   if (n === "domain" && env.position !== null)
     throw new CompileError("a position has a domain a layer, read by the checker only");
+  if (!env.geometry && GEOMETRY.has(n))
+    throw new CompileError(`${n}: the board is cells alone, with no geometry`);
   const known = NAMES[n];
   if (known !== undefined) return known;
+  if (n === "faces" && env.faces !== null) {
+    env.sizes.read.add(env.faces);
+    env.readsClues.yes = true;
+    env.used.add("facesOf");
+    return { code: `facesOf(cl.${env.faces})`, sort: setOf(elem("face")) };
+  }
+  const table = env.tables.get(n);
+  if (table !== undefined && table.of.length === 0) {
+    env.readsClues.yes = true;
+    return { code: `cl.${n}`, sort: table.to };
+  }
   if (env.regions.has(n)) {
     env.readsClues.yes = true;
     return { code: `cl.${n}.parts`, sort: setOf(elem(`region ${n}`)) };
@@ -1583,14 +1640,36 @@ function call(
   if (fn === "clues")
     throw new CompileError("clues(kind) is read only as a binder's set");
   if (fn === "latin") return latin(args, scope, env, out);
-  if (env.position?.has(fn)) {
-    // A layer of the position, read at a cell.
+  const layer = env.position?.get(fn);
+  if (layer !== undefined) {
+    // A layer of the position, read at a cell, or at a face.
     if (args.length !== 1)
       throw new CompileError(`${fn} takes 1, given ${args.length}`);
+    if (layer.carried && env.carrying !== fn)
+      throw new CompileError(
+        `${fn} is carried: no rule reads it, but its own assignment`,
+      );
     const c = compileExpr(args[0], scope, env, out);
-    expectElem(c, "cell", fn);
+    expectElem(c, layer.over, fn);
     return { code: `p.${fn}[${c.code}]`, sort: NUM };
   }
+  const table = env.tables.get(fn);
+  if (table !== undefined) {
+    if (args.length !== table.of.length)
+      throw new CompileError(`${fn} takes ${table.of.length}, given ${args.length}`);
+    env.readsClues.yes = true;
+    let code = `cl.${fn}`;
+    args.forEach((a, i) => {
+      const v = compileExpr(a, scope, env, out);
+      const want = table.of[i];
+      if (want.k === "num") expect(v, "num", fn);
+      else if (want.k === "elem") expectElem(v, want.e, fn);
+      code += `[${v.code}]`;
+    });
+    return { code, sort: table.to };
+  }
+  if (!env.geometry && GEOMETRY.has(fn))
+    throw new CompileError(`${fn}: the board is cells alone, with no geometry`);
   if (env.position !== null && (fn === "value" || fn === "known" || fn === "cand"))
     throw new CompileError(`${fn}: a position is read by its layers`);
   if (fn === "clue") {
@@ -1725,7 +1804,8 @@ function call(
         L.code === "sp.cells" ||
         L.code === "sp.slots" ||
         L.code === "sp.lines" ||
-        L.code === "sp.corners"
+        L.code === "sp.corners" ||
+        L.code.startsWith("facesOf(")
       )
         return { code: x.code, sort: NUM };
       return { code: `${L.code}.indexOf(${x.code})`, sort: NUM };
@@ -2241,6 +2321,10 @@ export function compileLibrary(
     concluding: false,
     answer: null,
     position: null,
+    carrying: null,
+    tables: new Map(),
+    geometry: true,
+    faces: null,
     memo: false,
     scratch: null,
     readsClues: { yes: false },
@@ -2362,6 +2446,10 @@ export function compileGame(
     concluding: false,
     answer: null,
     position: null,
+    carrying: null,
+    tables: new Map(),
+    geometry: true,
+    faces: null,
     memo: false,
     scratch: null,
     readsClues: { yes: false },

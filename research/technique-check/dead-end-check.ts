@@ -10,13 +10,13 @@
  * app runs.
  */
 
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compilePlanning } from "../../src/describe/compile-position.ts";
 import { type PlanningJson, planningWith } from "../../src/describe/description.ts";
-import { parse } from "../../src/describe/expr.ts";
+import { type Expr, parse } from "../../src/describe/expr.ts";
 import { CHECKED_POSITIONS } from "../../src/describe/soundness.ts";
 import { describedSpace, type GridSpace } from "../../src/engine/describe-runtime.ts";
 import type { Layers, PositionRules } from "../../src/engine/position-runtime.ts";
@@ -59,10 +59,26 @@ export async function compiled(d: PlanningJson, label: string): Promise<Module> 
   return (await import(path)) as Module;
 }
 
-/** One board: its sizes and the variations it has on. */
+/**
+ * A board a game deals, for a description that reads what no size gives (a
+ * relation, a table): its grid, what it deals, and its sizes by name. A game
+ * whose description deals one lists the small boards it makes in
+ * `research/technique-check/boards/<game>.ts`, as `boards()`, built by the
+ * game's own dealing code, so a claim is checked on boards the game makes.
+ */
+export interface DealtBoard {
+  w: number;
+  h: number;
+  dealt: Record<string, unknown>;
+  sizes: Record<string, number>;
+}
+
+/** One board: its sizes, the variations it has on, and what it deals where
+ * the game deals it. */
 export interface World {
   sizes: Record<string, number>;
   variations: string[];
+  board: DealtBoard | null;
 }
 
 export const worldName = (w: World): string =>
@@ -92,23 +108,139 @@ function num(src: string, sizes: Record<string, number>): number {
   return v;
 }
 
-/** A layer as a world reads it: its values in order, and how many cells
- * each is on where it is an arrangement. */
+/** A layer as a world reads it: its values in order, how many cells each is
+ * on where it is an arrangement, and where a value may stand. */
 interface Layer {
   name: string;
   values: number[];
   arranged: number | null;
   /** The value exactly one cell holds, where the layer is a token. */
   once: number | null;
+  /** Where a value other than 0 may stand, a formula of the cell `c`. */
+  on: Expr | null;
+  /** How many places the layer holds a value at: the cells, or the faces. */
+  length: number;
+  /** Whether it holds a value a cell, and so is read at a cell by `on`. */
+  byCell: boolean;
 }
 
-/** How many positions a world's layers allow, over `cells` cells. */
+/**
+ * A formula of one cell's values, layer by layer: what `on` may say. Anything
+ * else is refused, so that whether a value may stand on a cell depends on
+ * that cell alone and the universe is a product of each cell's states.
+ */
+function atCell(e: Expr, at: (layer: string) => number): number | boolean {
+  const n = (x: Expr): number => {
+    const v = atCell(x, at);
+    if (typeof v !== "number") throw new TypeError("on: a number expected");
+    return v;
+  };
+  const b = (x: Expr): boolean => {
+    const v = atCell(x, at);
+    if (typeof v !== "boolean") throw new TypeError("on: a truth expected");
+    return v;
+  };
+  switch (e.k) {
+    case "num":
+      return e.v;
+    case "not":
+      return !b(e.of);
+    case "neg":
+      return -n(e.of);
+    case "call":
+      if (e.args.length !== 1 || e.args[0].k !== "name" || e.args[0].name !== "c")
+        throw new TypeError(`on: ${e.fn} is read at c alone`);
+      return at(e.fn);
+    case "bin":
+      switch (e.op) {
+        case "and":
+          return b(e.a) && b(e.b);
+        case "or":
+          return b(e.a) || b(e.b);
+        case "=":
+          return n(e.a) === n(e.b);
+        case "!=":
+          return n(e.a) !== n(e.b);
+        case "<":
+          return n(e.a) < n(e.b);
+        case "<=":
+          return n(e.a) <= n(e.b);
+        case ">":
+          return n(e.a) > n(e.b);
+        case ">=":
+          return n(e.a) >= n(e.b);
+        case "+":
+          return n(e.a) + n(e.b);
+        case "-":
+          return n(e.a) - n(e.b);
+      }
+  }
+  throw new TypeError(`on: ${e.k} reads more than a cell's values`);
+}
+
+/**
+ * Each cell's states over the layers that hold a value a cell, not a token
+ * and not an arrangement, as one value of each: those every `on` admits. The
+ * other layers are left at 0 while an `on` is read, and an `on` that reads
+ * one of them is refused.
+ */
+function cellStates(layers: readonly Layer[]): number[][] {
+  const free = layers.filter((l) => l.byCell && l.once === null && l.arranged === null);
+  const out: number[][] = [];
+  const pick = new Array<number>(free.length).fill(0);
+  const go = (i: number): void => {
+    if (i === free.length) {
+      const at = (name: string): number => {
+        const k = free.findIndex((l) => l.name === name);
+        if (k < 0) throw new TypeError(`on: ${name} is not a layer an on may read`);
+        return pick[k];
+      };
+      if (
+        free.every(
+          (l, k) => l.on === null || pick[k] === 0 || atCell(l.on, at) === true,
+        )
+      )
+        out.push(pick.slice());
+      return;
+    }
+    for (const v of free[i].values) {
+      pick[i] = v;
+      go(i + 1);
+    }
+  };
+  go(0);
+  return out;
+}
+
+/** Whether token `l` may stand on a cell in state `state` of the free
+ * layers. */
+function tokenAdmits(
+  l: Layer,
+  free: readonly Layer[],
+  state: readonly number[],
+): boolean {
+  if (l.on === null) return true;
+  return (
+    atCell(l.on, (name) => {
+      const k = free.findIndex((f) => f.name === name);
+      if (k < 0) throw new TypeError(`on: ${name} is not a layer an on may read`);
+      return state[k];
+    }) === true
+  );
+}
+
+/** How many positions a world's layers allow, over `cells` cells: exact but
+ * for two tokens with an `on` each, where it is a bound above. */
 function universeSize(layers: readonly Layer[], cells: number): number {
-  let n = 1;
+  const free = layers.filter((l) => l.byCell && l.once === null && l.arranged === null);
+  const states = cellStates(layers);
+  let n = states.length ** cells;
   for (const l of layers) {
-    if (l.once !== null) n *= cells * (l.values.length - 1) ** (cells - 1);
-    else if (l.arranged === null) n *= l.values.length ** cells;
-    else {
+    if (l.once !== null) {
+      const admits = states.filter((s) => tokenAdmits(l, free, s)).length;
+      n *= (cells * admits * (l.values.length - 1) ** (cells - 1)) / states.length;
+    } else if (!l.byCell) n *= l.values.length ** l.length;
+    else if (l.arranged !== null) {
       if (l.values.length * l.arranged !== cells) return 0;
       let ways = 1;
       for (let i = 2; i <= cells; i++) ways *= i;
@@ -117,125 +249,196 @@ function universeSize(layers: readonly Layer[], cells: number): number {
     }
     if (n > CHECKED_POSITIONS) return n;
   }
-  return n;
+  return Math.round(n);
+}
+
+/** The small boards a game deals, for a description that reads what it
+ * deals. */
+async function dealtBoards(d: PlanningJson): Promise<DealtBoard[]> {
+  const path = fileURLToPath(new URL(`boards/${d.game}.ts`, import.meta.url));
+  if (!existsSync(path))
+    throw new Error(
+      `${d.game}: its description reads what the board deals, so boards/${d.game}.ts lists the boards to check`,
+    );
+  const mod = (await import(path)) as { boards(): DealtBoard[] };
+  return mod.boards();
 }
 
 /** Each world of small sizes whose positions are few enough to search
  * whole, under each set of the description's variations. */
-export function worlds(
+export async function worlds(
   d: PlanningJson,
-): { world: World; layers: Layer[]; size: number }[] {
-  const names = Object.keys(d.sizes);
-  const combos: Record<string, number>[] = [{}];
-  for (const n of names) {
-    const { min, max } = d.sizes[n];
-    const next: Record<string, number>[] = [];
-    for (const c of combos)
-      for (let v = min; v <= Math.min(max, min + 3); v++) next.push({ ...c, [n]: v });
-    combos.splice(0, combos.length, ...next);
+): Promise<{ world: World; layers: Layer[]; size: number }[]> {
+  const deals =
+    Object.keys(d.space.relations ?? {}).length +
+      Object.keys(d.space.tables ?? {}).length >
+    0;
+  const boards: { sizes: Record<string, number>; board: DealtBoard | null }[] = deals
+    ? (await dealtBoards(d)).map((b) => ({ sizes: b.sizes, board: b }))
+    : [];
+  if (!deals) {
+    const combos: Record<string, number>[] = [{}];
+    for (const n of Object.keys(d.sizes)) {
+      const { min, max } = d.sizes[n];
+      const next: Record<string, number>[] = [];
+      for (const c of combos)
+        for (let v = min; v <= Math.min(max, min + 3); v++) next.push({ ...c, [n]: v });
+      combos.splice(0, combos.length, ...next);
+    }
+    boards.push(...combos.map((sizes) => ({ sizes, board: null })));
   }
   const varNames = Object.keys(d.variations ?? {});
   const subsets: string[][] = [[]];
   for (const v of varNames) for (const s of [...subsets]) subsets.push([...s, v]);
   const out: { world: World; layers: Layer[]; size: number }[] = [];
-  for (const sizes of combos)
+  for (const { sizes, board } of boards)
     for (const variations of subsets) {
+      const cells =
+        board === null ? gridOf(d, sizes).w * gridOf(d, sizes).h : board.w * board.h;
+      const faces = d.space.faces === undefined ? 0 : num(d.space.faces, sizes);
       const position = planningWith(d, variations).json.position;
-      const layers = Object.entries(position).map(([name, l]) => {
-        const values = term(l.domain, sizes);
-        if (!Array.isArray(values)) throw new TypeError(`${name}: no domain`);
-        return {
-          name,
-          values: (values as number[]).slice().sort((a, b) => a - b),
-          arranged: l.arranged === undefined ? null : num(l.arranged, sizes),
-          once: l.once === undefined ? null : num(l.once, sizes),
-        };
-      });
-      const cells = num(d.space.grid.w, sizes) * num(d.space.grid.h, sizes);
+      const layers = Object.entries(position)
+        .filter(([, l]) => l.carried !== true)
+        .map(([name, l]) => {
+          const values = term(l.domain, sizes);
+          if (!Array.isArray(values)) throw new TypeError(`${name}: no domain`);
+          const byCell = l.over !== "faces";
+          return {
+            name,
+            values: (values as number[]).slice().sort((a, b) => a - b),
+            arranged: l.arranged === undefined ? null : num(l.arranged, sizes),
+            once: l.once === undefined ? null : num(l.once, sizes),
+            on: l.on === undefined ? null : parse(l.on),
+            length: byCell ? cells : faces,
+            byCell,
+          };
+        });
+      for (const l of layers)
+        if (l.on !== null && (!l.byCell || l.arranged !== null))
+          throw new Error(`${d.game}: ${l.name}'s on is read of a cell layer alone`);
       const size = universeSize(layers, cells);
       if (size > 0 && size <= CHECKED_POSITIONS)
-        out.push({ world: { sizes, variations }, layers, size });
+        out.push({ world: { sizes, variations, board }, layers, size });
     }
   return out;
 }
 
-/** Every position the layers allow, each layer's values over the cells. */
-function* positions(
-  layers: readonly Layer[],
-  all: readonly string[],
-  cells: number,
-): Generator<Record<string, Int32Array>> {
-  const fillings = (l: Layer): Int32Array[] => {
-    const out: Int32Array[] = [];
-    const a = new Int32Array(cells);
-    if (l.once !== null) {
-      // The token on each cell in turn, every other cell any other value.
-      const token = l.once;
-      const others = l.values.filter((v) => v !== token);
-      for (let at = 0; at < cells; at++) {
-        const go = (i: number): void => {
-          if (i === cells) {
-            out.push(a.slice());
-            return;
-          }
-          if (i === at) {
-            a[i] = token;
-            go(i + 1);
-            return;
-          }
-          for (const v of others) {
-            a[i] = v;
-            go(i + 1);
-          }
-        };
-        go(0);
-      }
-      return out;
-    }
-    if (l.arranged === null) {
+/** A board's width and height, from its sizes. */
+function gridOf(
+  d: PlanningJson,
+  sizes: Record<string, number>,
+): { w: number; h: number } {
+  if (d.space.grid === undefined)
+    throw new Error(`${d.game}: a board of cells alone is dealt (boards/${d.game}.ts)`);
+  return { w: num(d.space.grid.w, sizes), h: num(d.space.grid.h, sizes) };
+}
+
+/** Every filling of one layer that is not a free cell layer: a token's (on
+ * the cells `may` admits), an arrangement's, or a face layer's. */
+function fillings(l: Layer, may: (c: number) => boolean): Int32Array[] {
+  const cells = l.length;
+  const out: Int32Array[] = [];
+  const a = new Int32Array(cells);
+  if (l.once !== null) {
+    // The token on each cell in turn, every other cell any other value.
+    const token = l.once;
+    const others = l.values.filter((v) => v !== token);
+    for (let at = 0; at < cells; at++) {
+      if (!may(at)) continue;
       const go = (i: number): void => {
         if (i === cells) {
           out.push(a.slice());
           return;
         }
-        for (const v of l.values) {
+        if (i === at) {
+          a[i] = token;
+          go(i + 1);
+          return;
+        }
+        for (const v of others) {
           a[i] = v;
           go(i + 1);
         }
       };
       go(0);
-      return out;
     }
-    const left = l.values.map(() => l.arranged as number);
+    return out;
+  }
+  if (l.arranged === null) {
     const go = (i: number): void => {
       if (i === cells) {
         out.push(a.slice());
         return;
       }
-      for (let k = 0; k < l.values.length; k++)
-        if (left[k] > 0) {
-          left[k]--;
-          a[i] = l.values[k];
-          go(i + 1);
-          left[k]++;
-        }
+      for (const v of l.values) {
+        a[i] = v;
+        go(i + 1);
+      }
     };
     go(0);
     return out;
+  }
+  const left = l.values.map(() => l.arranged as number);
+  const go = (i: number): void => {
+    if (i === cells) {
+      out.push(a.slice());
+      return;
+    }
+    for (let k = 0; k < l.values.length; k++)
+      if (left[k] > 0) {
+        left[k]--;
+        a[i] = l.values[k];
+        go(i + 1);
+        left[k]++;
+      }
   };
-  const each = layers.map(fillings);
-  const pick = new Array<number>(layers.length).fill(0);
-  if (each.some((f) => f.length === 0)) return;
+  go(0);
+  return out;
+}
+
+/**
+ * Every position the layers allow: each cell in each of its states over the
+ * free cell layers, then each token on each cell its `on` admits there, and
+ * every filling of the arrangements and the face layers.
+ */
+function* positions(
+  layers: readonly Layer[],
+  all: readonly string[],
+  cells: number,
+  sizes: ReadonlyMap<string, number>,
+): Generator<Record<string, Int32Array>> {
+  const free = layers.filter((l) => l.byCell && l.once === null && l.arranged === null);
+  const rest = layers.filter((l) => !free.includes(l));
+  const states = cellStates(layers);
+  const pick = new Int32Array(cells);
   while (true) {
-    const p: Record<string, Int32Array> = {};
-    for (const name of all) p[name] = new Int32Array(cells);
-    layers.forEach((l, i) => {
-      p[l.name] = each[i][pick[i]];
-    });
-    yield p;
-    let i = layers.length - 1;
-    while (i >= 0 && ++pick[i] === each[i].length) pick[i--] = 0;
-    if (i < 0) return;
+    const freeLayers = free.map((_, k) => Int32Array.from(pick, (s) => states[s][k]));
+    // The tokens' and the others' fillings, given the free layers.
+    const each = rest.map((l) =>
+      l.once !== null
+        ? fillings(l, (c) => tokenAdmits(l, free, states[pick[c]]))
+        : fillings(l, () => true),
+    );
+    if (each.every((f) => f.length > 0)) {
+      const at = new Array<number>(rest.length).fill(0);
+      while (true) {
+        const p: Record<string, Int32Array> = {};
+        for (const name of all) p[name] = new Int32Array(sizes.get(name) ?? cells);
+        free.forEach((l, k) => {
+          p[l.name] = freeLayers[k];
+        });
+        rest.forEach((l, i) => {
+          p[l.name] = each[i][at[i]];
+        });
+        yield p;
+        let i = rest.length - 1;
+        while (i >= 0 && ++at[i] === each[i].length) at[i--] = 0;
+        if (i < 0) break;
+      }
+    }
+    let c = cells - 1;
+    while (c >= 0 && ++pick[c] === states.length) pick[c--] = 0;
+    if (c < 0) return;
   }
 }
 
@@ -273,31 +476,37 @@ export function checkWorld(
   world: World,
   layers: readonly Layer[],
 ): WorldResult {
-  // A world deals sizes only: a claim over a dealt relation would need every
-  // relation enumerated too, which no description has asked for yet.
-  if (Object.keys(d.space.relations ?? {}).length > 0)
-    throw new Error(`${d.game}: the checker deals no relation`);
-  const w = num(d.space.grid.w, world.sizes);
-  const h = num(d.space.grid.h, world.sizes);
+  const board = world.board;
+  const { w, h } = board ?? gridOf(d, world.sizes);
   const cells = w * h;
   const sp = describedSpace([], w, h);
-  const dealt: Record<string, number> = {};
-  for (const [k, v] of Object.entries(world.sizes))
-    if (k !== d.space.grid.w && k !== d.space.grid.h) dealt[k] = v;
+  const dealt: Record<string, unknown> = { ...board?.dealt };
+  if (board === null) {
+    const grid = d.space.grid as { w: string; h: string };
+    for (const [k, v] of Object.entries(world.sizes))
+      if (k !== grid.w && k !== grid.h) dealt[k] = v;
+  }
   const rules = mod.rules(sp, dealt, world.variations);
   const claims = mod.claims(sp, dealt, world.variations);
   const active = new Set(layers.map((l) => l.name));
+  // The length of each layer, by name: a face layer's is the faces', and a
+  // layer the checker holds at 0 has its own.
+  const position = planningWith(d, world.variations).json.position;
+  const faces = d.space.faces === undefined ? 0 : num(d.space.faces, world.sizes);
+  const lengths = new Map(
+    mod.layers.map((n) => [n, position[n]?.over === "faces" ? faces : cells]),
+  );
   // A position's key: each layer's value's place in its domain, in mixed
-  // radix over the cells, or -1 for a value outside it.
+  // radix over its places, or -1 for a value outside it.
   let space = 1;
-  for (const l of layers) space *= l.values.length ** cells;
+  for (const l of layers) space *= l.values.length ** l.length;
   if (space > Number.MAX_SAFE_INTEGER)
     throw new Error(`${worldName(world)}: keys overflow`);
   const key = (p: Layers): number => {
     let k = 0;
     for (const l of layers) {
       const a = p[l.name];
-      for (let c = 0; c < cells; c++) {
+      for (let c = 0; c < l.length; c++) {
         const i = l.values.indexOf(a[c]);
         if (i < 0) return -1;
         k = k * l.values.length + i;
@@ -309,7 +518,7 @@ export function checkWorld(
     mod.layers.every((n) => active.has(n) || p[n].every((v) => v === 0));
   const all: Layers[] = [];
   const ids = new Map<number, number>();
-  for (const p of positions(layers, mod.layers, cells)) {
+  for (const p of positions(layers, mod.layers, cells, lengths)) {
     ids.set(key(p), all.length);
     all.push(p);
   }
