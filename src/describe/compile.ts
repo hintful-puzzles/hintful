@@ -222,6 +222,18 @@ interface Env {
    * the kept candidates are: then it counts their generations in `_epoch`.
    * `null` outside a technique. */
   epoch: { used: boolean } | null;
+  /** Where a planning game's function computes each definition that reads
+   * itself once, ahead of its body: the statements, and the array of each
+   * such definition's set, by name. `null` elsewhere. */
+  prelude: Prelude | null;
+}
+
+interface Prelude {
+  readonly out: Out;
+  readonly fixed: Map<string, string>;
+  /** The definition whose least fixed point is being compiled, and its
+   * array, while its body is: a read of it inside is a read of the array. */
+  fixing: { name: string; arr: string } | null;
 }
 
 interface Hoist {
@@ -1638,8 +1650,24 @@ function call(
       return { code: `sp.${fn}Of[${cell(0)}]`, sort: elem("line") };
     case "peers":
     case "adj4":
+    case "adj8":
       arity(1);
       return { code: `sp.${fn}[${cell(0)}]`, sort: setOf(elem("cell")) };
+    case "ray":
+      arity(2);
+      env.used.add("ray");
+      return { code: `ray(sp, ${cell(0)}, ${cell(1)})`, sort: setOf(elem("cell")) };
+    case "on_grid": {
+      arity(2);
+      expect(vs[0], "num", fn);
+      expect(vs[1], "num", fn);
+      const x = once(vs[0], out);
+      const y = once(vs[1], out);
+      return {
+        code: `(${x.code} >= 0 && ${x.code} < sp.w && ${y.code} >= 0 && ${y.code} < sp.h)`,
+        sort: BOOL,
+      };
+    }
     case "units_of":
       arity(1);
       return { code: `sp.unitsOf[${cell(0)}]`, sort: setOf(elem("line")) };
@@ -1809,6 +1837,15 @@ function call(
   if (def !== undefined) {
     if (def.params.length !== vs.length)
       throw new CompileError(`${fn} takes ${def.params.length}, given ${vs.length}`);
+    const fixing = env.prelude?.fixing ?? null;
+    if (fixing?.name === fn) {
+      expectElem(vs[0], "cell", fn);
+      return { code: `(${fixing.arr}[${vs[0].code}] === 1)`, sort: BOOL };
+    }
+    if (mentions(def.body, fn, env.defs, new Set())) {
+      expectElem(vs[0], "cell", fn);
+      return { code: `(${fixedPoint(fn, def, env)}[${vs[0].code}] === 1)`, sort: BOOL };
+    }
     const inner = new Map<string, Val>();
     const h = env.hoist;
     def.params.forEach((p, i) => {
@@ -1826,6 +1863,159 @@ function call(
     return compileExpr(def.body, inner, env, out);
   }
   throw new CompileError(`unknown function "${fn}"`);
+}
+
+// --- a definition that reads itself -----------------------------------------
+
+/** The terms directly under `e`. */
+function children(e: Expr): Expr[] {
+  switch (e.k) {
+    case "num":
+    case "name":
+      return [];
+    case "call":
+      return e.args;
+    case "set":
+      return e.elems;
+    case "size":
+    case "not":
+    case "neg":
+      return [e.of];
+    case "bin":
+      return [e.a, e.b];
+    case "quant":
+      return [
+        ...e.binders.flatMap((b) => [b.of, ...(b.where ? [b.where] : [])]),
+        e.body,
+      ];
+    case "agg":
+      return [
+        ...e.binders.flatMap((b) => [b.of, ...(b.where ? [b.where] : [])]),
+        ...(e.where ? [e.where] : []),
+        ...(e.term ? [e.term] : []),
+      ];
+  }
+}
+
+/** Whether `e` reads definition `fn`, itself or through the definitions it
+ * calls. */
+function mentions(
+  e: Expr,
+  fn: string,
+  defs: ReadonlyMap<string, Definition>,
+  seen: Set<string>,
+): boolean {
+  if (e.k === "call") {
+    if (e.fn === fn) return true;
+    const d = defs.get(e.fn);
+    if (d !== undefined && !seen.has(e.fn)) {
+      seen.add(e.fn);
+      if (mentions(d.body, fn, defs, seen)) return true;
+    }
+  }
+  return children(e).some((c) => mentions(c, fn, defs, seen));
+}
+
+/**
+ * Refuse a read of `fn` in `e` that could make the set `fn` defines lose a
+ * member as it gains one, so that its least fixed point is the set the
+ * description means: a read is allowed where it stands positively, under
+ * `and`, `or`, `exists`, a `forall`'s body, and the right of `implies`.
+ */
+function monotone(
+  e: Expr,
+  fn: string,
+  positive: boolean,
+  defs: ReadonlyMap<string, Definition>,
+): void {
+  const none = (...es: (Expr | null)[]): void => {
+    for (const x of es)
+      if (x !== null && mentions(x, fn, defs, new Set()))
+        throw new CompileError(
+          `${fn} reads itself where a larger set could make it smaller, or through another definition`,
+        );
+  };
+  switch (e.k) {
+    case "call":
+      if (e.fn !== fn) {
+        none(e);
+        return;
+      }
+      if (!positive) throw new CompileError(`${fn} reads itself under a negation`);
+      none(...e.args);
+      return;
+    case "not":
+      monotone(e.of, fn, !positive, defs);
+      return;
+    case "bin":
+      if (e.op === "and" || e.op === "or") {
+        monotone(e.a, fn, positive, defs);
+        monotone(e.b, fn, positive, defs);
+      } else if (e.op === "implies") {
+        monotone(e.a, fn, !positive, defs);
+        monotone(e.b, fn, positive, defs);
+      } else none(e.a, e.b);
+      return;
+    case "quant":
+      for (const b of e.binders) {
+        none(b.of);
+        if (b.where !== null)
+          monotone(b.where, fn, e.q === "exists" ? positive : !positive, defs);
+      }
+      monotone(e.body, fn, positive, defs);
+      return;
+    default:
+      none(e);
+  }
+}
+
+/**
+ * The array holding definition `fn`'s least fixed point, computed once at
+ * the top of the function being compiled: the least set of cells for which
+ * its body holds, its reads of itself read as membership. It reads only the
+ * position, so it is the same wherever the function reads it.
+ */
+function fixedPoint(fn: string, def: Definition, env: Env): string {
+  const pre = env.prelude;
+  if (pre === null)
+    throw new CompileError(
+      `${fn} reads itself, which only a planning game's rules may`,
+    );
+  if (def.params.length !== 1)
+    throw new CompileError(`${fn} reads itself, so it takes one cell`);
+  const kept = pre.fixed.get(fn);
+  if (kept !== undefined) return kept;
+  monotone(def.body, fn, true, env.defs);
+  const arr = Out.fresh("_fix");
+  const c = Out.fresh("_c");
+  const grew = Out.fresh("_grew");
+  // The body first, so a fixed point it reads is computed ahead of this one.
+  const body = new Out(0);
+  const outer = pre.fixing;
+  pre.fixing = { name: fn, arr };
+  const v = compileExpr(
+    def.body,
+    new Map([[def.params[0], { code: c, sort: elem("cell") }]]),
+    env,
+    body,
+  );
+  pre.fixing = outer;
+  expect(v, "bool", fn);
+  const out = pre.out;
+  out.emit(`const ${arr} = new Uint8Array(sp.cells.length);`);
+  out.open(`for (let ${grew} = true; ${grew}; ) {`);
+  out.emit(`${grew} = false;`);
+  out.open(`for (let ${c} = 0; ${c} < sp.cells.length; ${c}++) {`);
+  out.emit(`if (${arr}[${c}] === 1) continue;`);
+  out.append(body);
+  out.open(`if (${v.code}) {`);
+  out.emit(`${arr}[${c}] = 1;`);
+  out.emit(`${grew} = true;`);
+  out.close();
+  out.close();
+  out.close();
+  pre.fixed.set(fn, arr);
+  return arr;
 }
 
 // --- a technique ------------------------------------------------------------
@@ -2046,6 +2236,7 @@ export function compileLibrary(
     readsClues: { yes: false },
     hoist: null,
     epoch: null,
+    prelude: null,
   };
   const parts = Object.entries(lib.techniques).map(([id, stated]) => {
     const t: Technique = { ...parseTechnique(lib.library, id, stated), ...UNPLACED };
@@ -2165,6 +2356,7 @@ export function compileGame(
     readsClues: { yes: false },
     hoist: null,
     epoch: null,
+    prelude: null,
   };
   for (const [kind, c] of d.clueKinds)
     clues.set(kind, clueSorts(kind, c.at, c.value, env));

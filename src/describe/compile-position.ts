@@ -81,6 +81,25 @@ function under(on: string | null, out: Out, body: () => void): void {
   out.close();
 }
 
+/** A function's body, `depth` deep: what `write` emits, after the least
+ * fixed points it reads, each computed once at its top. */
+function body(env: Env, depth: number, write: (out: Out) => void): string[] {
+  const prelude = {
+    out: new Out(depth),
+    fixed: new Map<string, string>(),
+    fixing: null,
+  };
+  const outer = env.prelude;
+  env.prelude = prelude;
+  const out = new Out(depth);
+  try {
+    write(out);
+  } finally {
+    env.prelude = outer;
+  }
+  return [...prelude.out.text(), ...out.text()];
+}
+
 interface CompiledMove {
   type: string;
   name: string;
@@ -127,86 +146,90 @@ function compileMove(
   const tag = JSON.stringify(m.name);
 
   // Every legal binding, pushed in binding order.
-  const en = new Out(2);
-  bindingLoops(bs, new Map(), env, en, (sc) => {
-    const fieldsOf = fields.map((f) => `${f}: ${(sc.get(f) as Val).code}`);
-    const push = `into.push({ move: ${tag}, ${fieldsOf.join(", ")} });`;
-    if (when === null) {
-      en.emit(push);
-      return;
-    }
-    const w = compileExpr(when, sc, env, en);
-    expect(w, "bool", `${m.name} when`);
-    en.emit(`if (${w.code}) ${push}`);
-  });
+  const enBody = body(env, 2, (en) =>
+    bindingLoops(bs, new Map(), env, en, (sc) => {
+      const fieldsOf = fields.map((f) => `${f}: ${(sc.get(f) as Val).code}`);
+      const push = `into.push({ move: ${tag}, ${fieldsOf.join(", ")} });`;
+      if (when === null) {
+        en.emit(push);
+        return;
+      }
+      const w = compileExpr(when, sc, env, en);
+      expect(w, "bool", `${m.name} when`);
+      en.emit(`if (${w.code}) ${push}`);
+    }),
+  );
 
   // A binding is legal where each binder holds it, in turn, and the guard.
-  const lg = new Out(2);
   const scope = new Map<string, Val>();
-  for (const b of bs) {
-    const v = `v_${b.name}`;
-    const sort = sorts.get(b.name) as Sort;
-    if (b.kind === "let") {
-      const t = compileExpr(b.of, scope, env, lg);
-      lg.emit(`if (${v} !== ${t.code}) return false;`);
-    } else {
-      const s = compileExpr(b.of, scope, env, lg);
-      if (s.code === "sp.cells" || s.code === "sp.lines")
-        lg.emit(`if (!(${v} >= 0 && ${v} < ${s.code}.length)) return false;`);
-      else if (s.sort.k === "set" && s.sort.of.k === "num")
-        lg.emit(
-          `if (!(${v} >= 0 && ${v} < 31 && ((${s.code} >> ${v}) & 1) !== 0)) return false;`,
-        );
-      else lg.emit(`if (!${s.code}.includes(${v})) return false;`);
-    }
-    scope.set(b.name, { code: v, sort });
-    if (b.where !== null) {
-      const w = compileExpr(b.where, scope, env, lg);
-      expect(w, "bool", `where of ${b.name}`);
-      lg.emit(`if (!(${w.code})) return false;`);
-    }
-  }
-  if (when === null) lg.emit("return true;");
-  else {
-    const w = compileExpr(when, scope, env, lg);
-    expect(w, "bool", `${m.name} when`);
-    lg.emit(`return ${w.code};`);
-  }
-
-  // The position after it: each assignment reads `p` and writes `q`.
-  const pl = new Out(2);
-  pl.emit(
-    `const q: Position = { ${layers.map((l) => `${l}: p.${l}.slice()`).join(", ")} };`,
-  );
-  m.set.forEach(({ assign, on }, i) => {
-    const where = `move ${m.name} set ${i}`;
-    const ebs = binders(game, `${where} for`, assign.for);
-    const last = ebs[ebs.length - 1];
-    if (last === undefined) throw new CompileError(`${where}: no cell assigned`);
-    under(on, pl, () => {
-      bindingLoops(ebs, scope, env, pl, (sc) => {
-        const c = sc.get(last.name) as Val;
-        if (!(c.sort.k === "elem" && c.sort.e === "cell"))
-          throw new CompileError(
-            `${where}: ${last.name} is a ${show(c.sort)}, not a cell`,
+  const lgBody = body(env, 2, (lg) => {
+    for (const b of bs) {
+      const v = `v_${b.name}`;
+      const sort = sorts.get(b.name) as Sort;
+      if (b.kind === "let") {
+        const t = compileExpr(b.of, scope, env, lg);
+        lg.emit(`if (${v} !== ${t.code}) return false;`);
+      } else {
+        const s = compileExpr(b.of, scope, env, lg);
+        if (s.code === "sp.cells" || s.code === "sp.lines")
+          lg.emit(`if (!(${v} >= 0 && ${v} < ${s.code}.length)) return false;`);
+        else if (s.sort.k === "set" && s.sort.of.k === "num")
+          lg.emit(
+            `if (!(${v} >= 0 && ${v} < 31 && ((${s.code} >> ${v}) & 1) !== 0)) return false;`,
           );
-        for (const [layer, src] of Object.entries(assign as AssignJson)) {
-          if (layer === "for") continue;
-          if (!layers.includes(layer))
-            throw new CompileError(`${where}: no layer ${layer}`);
-          const t = compileExpr(parsed(game, `${where} ${layer}`, src), sc, env, pl);
-          expect(t, "num", `${where} ${layer}`);
-          pl.emit(`q.${layer}[${c.code}] = ${t.code};`);
-        }
+        else lg.emit(`if (!${s.code}.includes(${v})) return false;`);
+      }
+      scope.set(b.name, { code: v, sort });
+      if (b.where !== null) {
+        const w = compileExpr(b.where, scope, env, lg);
+        expect(w, "bool", `where of ${b.name}`);
+        lg.emit(`if (!(${w.code})) return false;`);
+      }
+    }
+    if (when === null) lg.emit("return true;");
+    else {
+      const w = compileExpr(when, scope, env, lg);
+      expect(w, "bool", `${m.name} when`);
+      lg.emit(`return ${w.code};`);
+    }
+  });
+
+  // The position after it: each assignment reads `p` and writes `q`, which
+  // shares every layer the move does not assign.
+  const assigned = layers.filter((l) =>
+    m.set.some(({ assign }) => Object.hasOwn(assign, l)),
+  );
+  const plBody = body(env, 2, (pl) => {
+    pl.emit(
+      `const q: Position = { ...p${assigned.map((l) => `, ${l}: p.${l}.slice()`).join("")} };`,
+    );
+    m.set.forEach(({ assign, on }, i) => {
+      const where = `move ${m.name} set ${i}`;
+      const ebs = binders(game, `${where} for`, assign.for);
+      const last = ebs[ebs.length - 1];
+      if (last === undefined) throw new CompileError(`${where}: no cell assigned`);
+      under(on, pl, () => {
+        bindingLoops(ebs, scope, env, pl, (sc) => {
+          const c = sc.get(last.name) as Val;
+          if (!(c.sort.k === "elem" && c.sort.e === "cell"))
+            throw new CompileError(
+              `${where}: ${last.name} is a ${show(c.sort)}, not a cell`,
+            );
+          for (const [layer, src] of Object.entries(assign as AssignJson)) {
+            if (layer === "for") continue;
+            if (!layers.includes(layer))
+              throw new CompileError(`${where}: no layer ${layer}`);
+            const t = compileExpr(parsed(game, `${where} ${layer}`, src), sc, env, pl);
+            expect(t, "num", `${where} ${layer}`);
+            pl.emit(`q.${layer}[${c.code}] = ${t.code};`);
+          }
+        });
       });
     });
+    pl.emit("return q;");
   });
-  pl.emit("return q;");
 
-  const sig = (body: string[]) => param("p", body.join("\n"));
-  const enBody = en.text();
-  const lgBody = bound(fields, lg.text(), "    ");
-  const plBody = bound(fields, pl.text(), "    ");
+  const sig = (lines: string[]) => param("p", lines.join("\n"));
   return {
     type: [
       `export interface ${type} {`,
@@ -222,12 +245,12 @@ function compileMove(
     ],
     legal: [
       `  function ${m.name}Legal(${sig(lgBody)}: Position, m: ${type}): boolean {`,
-      ...lgBody,
+      ...bound(fields, lgBody, "    "),
       "  }",
     ],
     play: [
       `  function ${m.name}Play(p: Position, m: ${type}): Position {`,
-      ...plBody,
+      ...bound(fields, plBody, "    "),
       "  }",
     ],
   };
@@ -242,19 +265,19 @@ function formulas(
   game: string,
   env: Env,
 ): string[] {
-  const out = new Out(2);
-  for (const { src, on } of items)
-    under(on, out, () => {
-      const v = compileExpr(parsed(game, `${fn} ${src}`, src), new Map(), env, out);
-      expect(v, "bool", `${fn} ${src}`);
-      if (how === "all") out.emit(`if (!(${v.code})) return false;`);
-      else out.emit(`if (${v.code}) return true;`);
-    });
-  out.emit(how === "all" ? "return true;" : "return false;");
-  const body = out.text();
+  const lines = body(env, 2, (out) => {
+    for (const { src, on } of items)
+      under(on, out, () => {
+        const v = compileExpr(parsed(game, `${fn} ${src}`, src), new Map(), env, out);
+        expect(v, "bool", `${fn} ${src}`);
+        if (how === "all") out.emit(`if (!(${v.code})) return false;`);
+        else out.emit(`if (${v.code}) return true;`);
+      });
+    out.emit(how === "all" ? "return true;" : "return false;");
+  });
   return [
-    `  function ${fn}(${param("p", body.join("\n"))}: Position): boolean {`,
-    ...body,
+    `  function ${fn}(${param("p", lines.join("\n"))}: Position): boolean {`,
+    ...lines,
     "  }",
   ];
 }
@@ -266,14 +289,56 @@ function claimPredicates(
   env: Env,
 ): string[] {
   return items.flatMap(({ id, src, on }) => {
-    const out = new Out(3);
-    if (on !== null)
-      out.emit(`if (!variations.includes(${JSON.stringify(on)})) return false;`);
-    const v = compileExpr(parsed(game, `deadEnds ${id}`, src), new Map(), env, out);
-    expect(v, "bool", `deadEnds ${id}`);
-    out.emit(`return ${v.code};`);
-    const body = out.text();
-    return [`    ${id}: (${param("p", body.join("\n"))}) => {`, ...body, "    },"];
+    const lines = body(env, 3, (out) => {
+      if (on !== null)
+        out.emit(`if (!variations.includes(${JSON.stringify(on)})) return false;`);
+      const v = compileExpr(parsed(game, `deadEnds ${id}`, src), new Map(), env, out);
+      expect(v, "bool", `deadEnds ${id}`);
+      out.emit(`return ${v.code};`);
+    });
+    return [`    ${id}: (${param("p", lines.join("\n"))}) => {`, ...lines, "    },"];
+  });
+}
+
+/** A formula's conjuncts, in order. */
+function conjuncts(e: Expr): Expr[] {
+  return e.k === "bin" && e.op === "and" ? [...conjuncts(e.a), ...conjuncts(e.b)] : [e];
+}
+
+/**
+ * The cells each claim holds of: where its last conjunct is `exists x in S:
+ * P` with one binder, every `x` for which the conjuncts before it, the
+ * binder's `where` and `P` hold. A claim of any other shape names none.
+ */
+function claimWitnesses(
+  items: PlanningApplied["deadEnds"],
+  game: string,
+  env: Env,
+): string[] {
+  return items.flatMap(({ id, src, on }) => {
+    const parts = conjuncts(parsed(game, `deadEnds ${id}`, src));
+    const last = parts[parts.length - 1];
+    const lines = body(env, 3, (out) => {
+      out.emit("const at: number[] = [];");
+      if (on !== null)
+        out.emit(`if (!variations.includes(${JSON.stringify(on)})) return at;`);
+      if (last.k === "quant" && last.q === "exists" && last.binders.length === 1) {
+        for (const e of parts.slice(0, -1)) {
+          const v = compileExpr(e, new Map(), env, out);
+          expect(v, "bool", `deadEnds ${id}`);
+          out.emit(`if (!(${v.code})) return at;`);
+        }
+        bindingLoops(last.binders, new Map(), env, out, (sc) => {
+          const x = sc.get(last.binders[0].name) as Val;
+          if (!(x.sort.k === "elem" && x.sort.e === "cell")) return;
+          const v = compileExpr(last.body, sc, env, out);
+          expect(v, "bool", `deadEnds ${id}`);
+          out.emit(`if (${v.code}) at.push(${x.code});`);
+        });
+      }
+      out.emit("return at;");
+    });
+    return [`    ${id}: (${param("p", lines.join("\n"))}) => {`, ...lines, "    },"];
   });
 }
 
@@ -315,6 +380,7 @@ export function compilePlanning(
     readsClues: { yes: false },
     hoist: null,
     epoch: null,
+    prelude: null,
   };
   const moves = applied.moves.map((m) => compileMove(m, layers, json.game, env));
   const finished = formulas("finished", applied.finish, "all", json.game, env);
@@ -330,6 +396,10 @@ export function compilePlanning(
       throw new CompileError(`${json.game}: claim id ${id} is not a plain name`);
   const claims = claimPredicates(applied.deadEnds, json.game, env);
   const claimText = claims.join("\n");
+  const witnesses = claimWitnesses(applied.deadEnds, json.game, env);
+  const witnessText = witnesses.join("\n");
+  // A lost position has no moves: it can only be undone.
+  const loses = (d.lose ?? []).length > 0;
   const ids = applied.deadEnds.map((c) => JSON.stringify(c.id));
   const sizes = [...env.sizes.read].sort();
   const dispatch = (fn: "Legal" | "Play", args: string): string[] =>
@@ -347,14 +417,17 @@ export function compilePlanning(
     "    for (const id of deadEnds) if (holds[id](p)) return id;",
     "    return null;",
     "  }",
+    "  const at = claimWitnesses(sp, cl, variations);",
     "",
     "  return {",
     "    moves: (p) => {",
     "      const into: Move[] = [];",
+    ...(loses ? ["      if (lost(p)) return into;"] : []),
     ...moves.map((m) => `      ${m.name}Moves(p, into);`),
     "      return into;",
     "    },",
     "    legal: (p, m) => {",
+    ...(loses ? ["      if (lost(p)) return false;"] : []),
     "      switch (m.move) {",
     ...dispatch("Legal", "p, m"),
     "      }",
@@ -367,6 +440,7 @@ export function compilePlanning(
     "    finished,",
     "    lost,",
     "    deadEnd,",
+    "    witnesses: (id, p) => at[id](p),",
     "  };",
   ];
   const runtimeNames = ["type GridSpace", ...[...used].sort()];
@@ -414,6 +488,14 @@ export function compilePlanning(
     `export function claims(${param("sp", claimText)}: GridSpace, ${param("cl", claimText)}: Dealt, ${param("variations", claimText)}: readonly string[]): Readonly<Record<DeadEndId, (p: Position) => boolean>> {`,
     "  return {",
     ...claims,
+    "  };",
+    "}",
+    "",
+    "/** The cells each claim holds of, as a banner outlines them: none where the",
+    " * claim does not hold, or names no cell. */",
+    `export function claimWitnesses(${param("sp", witnessText)}: GridSpace, ${param("cl", witnessText)}: Dealt, ${param("variations", witnessText)}: readonly string[]): Readonly<Record<DeadEndId, (p: Position) => number[]>> {`,
+    "  return {",
+    ...witnesses,
     "  };",
     "}",
     "",

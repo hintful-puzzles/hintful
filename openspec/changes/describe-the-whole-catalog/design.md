@@ -325,7 +325,7 @@ proposal re-checks this survey's figures.
 | --- | --- | --- | --- | --- |
 | 1 | `describe-a-board-beyond-the-latin-square` | R; `placed` over every unit; the Latin sentences naming a reason's unit | Unruly, Seismic; Solo's residue | Solo's wrapper and pairing plumbing, the 35 library rows, Solo's and Towers' sentence copies |
 | 2 | `check-the-answer-from-the-rules` | rules compiled to a completion check the engine calls | the eight described, and step 1's | each game's hand-written answer check |
-| 3 | `describe-moves-and-finishes`, split by move shape into it, `describe-guarded-moves` and `describe-components-and-open-domains` | a position runtime: guarded moves, a finish, a lose state, dead-end claims checked sound, the compiled move relation fed to the planners | the twelve planning games, Flip, Untangle | each game's move legality and finish; the planners' hand-built move lists |
+| 3 | `describe-moves-and-finishes`, split by move shape into it, `describe-guarded-moves`, `describe-pushes-blocks-and-solids` and `describe-components-and-open-domains` | a position runtime: guarded moves, a finish, a lose state, dead-end claims checked sound, the compiled move relation fed to the planners | the twelve planning games, Flip, Untangle | each game's move legality and finish; the planners' hand-built move lists |
 | 4 | `describe-the-king-move-games` | N8, S, W as a clue kind | Star Battle, Mosaic, Clusters | Mosaic's upstream `solveCheck` |
 | 5 | `describe-revealed-clues` | X | Guess, Mines, Black Box | `minesolve`, if the measured deal cost allows |
 | 6 | `describe-on-a-graph` | G (a dealt graph) | Map | `engine/wing.ts`'s solver half; the candidate walk indexes elements, not grid cells |

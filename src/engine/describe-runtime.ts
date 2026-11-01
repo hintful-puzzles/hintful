@@ -141,6 +141,8 @@ export interface GridSpace {
   readonly peers: readonly (readonly number[])[];
   /** Up, right, down, left, those on the grid. */
   readonly adj4: readonly (readonly number[])[];
+  /** The eight around, clockwise from up, those on the grid. */
+  readonly adj8: readonly (readonly number[])[];
   /** Two cells an edge, in reading order of the first, its right edge before
    * its lower. */
   readonly edgeEnds: Int32Array;
@@ -161,6 +163,18 @@ export interface GridSpace {
    * below left, above left, the order Mathrax has always read its clues in. */
   readonly cellCorners: readonly (readonly number[])[];
 }
+
+/** The eight steps to a neighbor, clockwise from up, as `adj8` lists them. */
+const COMPASS = [
+  [0, -1],
+  [1, -1],
+  [1, 0],
+  [1, 1],
+  [0, 1],
+  [-1, 1],
+  [-1, 0],
+  [-1, -1],
+] as const;
 
 const plain = new Map<string, GridSpace>();
 const parted = new WeakMap<readonly (readonly number[])[], Map<string, GridSpace>>();
@@ -249,6 +263,7 @@ function gridSpace(
   for (const L of boxes) for (const c of lineCells[L]) boxOf[c] = L;
   const peers: number[][] = [];
   const adj4: number[][] = [];
+  const adj8: number[][] = [];
   const right = new Int32Array(n).fill(-1);
   const down = new Int32Array(n).fill(-1);
   const ends: number[] = [];
@@ -269,6 +284,13 @@ function gridSpace(
     if (y + 1 < h) around.push(c + w);
     if (x > 0) around.push(c - 1);
     adj4.push(around);
+    const ring: number[] = [];
+    for (const [dx, dy] of COMPASS) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx >= 0 && nx < w && ny >= 0 && ny < h) ring.push(ny * w + nx);
+    }
+    adj8.push(ring);
     if (x + 1 < w) {
       right[c] = ends.length / 2;
       ends.push(c, c + 1);
@@ -327,6 +349,7 @@ function gridSpace(
     boxOf,
     peers,
     adj4,
+    adj8,
     edgeEnds: Int32Array.from(ends),
     edgeOf(a, b) {
       if (a > b) return this.edgeOf(b, a);

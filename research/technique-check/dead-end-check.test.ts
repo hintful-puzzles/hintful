@@ -38,6 +38,10 @@ const PLANTED: Record<string, Record<string, string>> = {
     // The gap's distance from its corner moves with the parity.
     parity: `exists g in cells where value(g) = 0: count(a in cells, b in cells where index(a, cells) < index(b, cells) and value(a) > value(b)) mod 2 != (|cells| - 1) mod 2`,
   },
+  pegs: {
+    // The last peg on a finished board stands alone.
+    frozen: `exists p in cells where grid(p) = 1: forall q in adj4(p): not arrive(q)`,
+  },
   twiddle: {
     // A block of even side moves a tile between colors.
     colorOdd: `exists c in cells, v = value(c), lo = below(v), hi = upTo(v), k in {0, 1}: count(d in cells where value(d) = v and shade(d) = k) != homes(lo, hi, k)`,

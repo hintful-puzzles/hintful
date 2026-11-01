@@ -67,6 +67,36 @@ export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]
   };
 }
 
+/** The cells each claim holds of, as a banner outlines them: none where the
+ * claim does not hold, or names no cell. */
+export function claimWitnesses(sp: GridSpace, _cl: Dealt, _variations: readonly string[]): Readonly<Record<DeadEndId, (p: Position) => number[]>> {
+  return {
+    parity: (p) => {
+      const at: number[] = [];
+      const _a30 = sp.cells;
+      for (let _i31 = 0; _i31 < _a30.length; _i31++) {
+        const v_g = _a30[_i31];
+        if (!((p.value[v_g] === 0))) continue;
+        let _g32 = 0;
+        G33: {
+          const _a34 = sp.cells;
+          for (let _i35 = 0; _i35 < _a34.length; _i35++) {
+            const v_a = _a34[_i35];
+            const _a36 = sp.cells;
+            for (let _i37 = 0; _i37 < _a36.length; _i37++) {
+              const v_b = _a36[_i37];
+              if (!(((_i35 < _i37) && (p.value[v_a] > p.value[v_b])))) continue;
+              _g32++;
+            }
+          }
+        }
+        if (((((_g32 + ((sp.w - 1) - (v_g % sp.w))) + ((sp.h - 1) - ((v_g / sp.w) | 0))) % 2) !== ((sp.cells.length - 1) % 2))) at.push(v_g);
+      }
+      return at;
+    },
+  };
+}
+
 /** The rules on one board: its grid, what it deals, and the variations it
  * has on. */
 export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): PositionRules<Position, Move, DeadEndId> {
@@ -97,7 +127,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
   function slidePlay(p: Position, m: SlideMove): Position {
     const v_g = m.g;
     const v_t = m.t;
-    const q: Position = { value: p.value.slice() };
+    const q: Position = { ...p, value: p.value.slice() };
     {
       const v_c = v_t;
       q.value[v_c] = 0;
@@ -154,6 +184,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
     for (const id of deadEnds) if (holds[id](p)) return id;
     return null;
   }
+  const at = claimWitnesses(sp, cl, variations);
 
   return {
     moves: (p) => {
@@ -174,5 +205,6 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
     finished,
     lost,
     deadEnd,
+    witnesses: (id, p) => at[id](p),
   };
 }

@@ -27,13 +27,20 @@ import { mark, phrase, type Sentence } from "../../engine/hint-words.ts";
 import { judgeRivals } from "../../engine/rival-judging.ts";
 import { searchRefusal } from "../../engine/search-outcome.ts";
 import { type Marked, type Package, PEG, say } from "./hint-text.ts";
-import { findFinish, frozenPegs, type Jump, judge, legalJumps } from "./solver.ts";
 import {
-  GRID_HOLE,
+  asMove,
+  findFinish,
+  frozenPegs,
+  type Jump,
+  judge,
+  legalJumps,
+} from "./solver.ts";
+import {
   GRID_PEG,
   type PegsJump,
   type PegsMove,
   type PegsState,
+  rulesOf,
 } from "./state.ts";
 
 /** What a step rests on, by the branch of {@link hint} that chose its jump. A
@@ -65,11 +72,7 @@ const RIVAL_PROOF = 10_000;
 
 /** The board after `j`. */
 function jumped(s: PegsState, j: Jump): PegsState {
-  const grid = new Uint8Array(s.grid);
-  grid[j.from] = GRID_HOLE;
-  grid[j.over] = GRID_HOLE;
-  grid[j.to] = GRID_PEG;
-  return { ...s, grid };
+  return { ...s, grid: rulesOf(s).play(s, asMove(j)).grid };
 }
 
 function toMove(s: PegsState, j: Jump): PegsJump {

@@ -16,7 +16,8 @@ import {
 } from "../../engine/finish-search.ts";
 import type { Allowance, Verdict } from "../../engine/rival-judging.ts";
 import { type SearchOutcome, searchVerdict } from "../../engine/search-outcome.ts";
-import { GRID_OBST, GRID_PEG, type PegsState } from "./state.ts";
+import type * as pegs from "./pegs.compiled.ts";
+import { GRID_OBST, GRID_PEG, type PegsState, rulesOf } from "./state.ts";
 
 /** A jump as three grid indices: the peg that jumps, the peg it takes, and the
  * hole it lands in. */
@@ -33,9 +34,16 @@ const DIRECTIONS = [
   [0, -1],
 ] as const;
 
-/** The board's geometry, fixed for a game: its holes, in search order, and
- * every jump a peg could ever make between them. */
-class PegsBoard {
+/**
+ * The board's geometry, fixed for a game: its holes, in search order, and
+ * every jump a peg could ever make between them.
+ *
+ * The searches' own copy of the description's jump and frozen claim, packed
+ * and played in place: a proof of loss fed the compiled moves took 2.6 times
+ * as long (229 ms against 87 ms over 272,603 jumps on a 6×6 Random board,
+ * measured 2026-11-01). `pegs.test.ts` holds the two to agreement.
+ */
+export class PegsBoard {
   /** The grid index of each hole, by its search index. */
   readonly holes: readonly number[];
   /** Every jump between holes, as search indices: from, over, to. */
@@ -277,8 +285,7 @@ export function findFinish(s: PegsState, proofBudget = PROOF_BUDGET): Finish {
     line: path.map((k) => board.jumpAt(k)),
   });
   // The one loss that needs no search, asked before the beams spend theirs.
-  if (pegs.reduce((a, b) => a + b, 0) > 1 && board.frozen(pegs).length > 0)
-    return { kind: "lost" };
+  if (rulesOf(s).deadEnd(s) !== null) return { kind: "lost" };
   for (const width of [300, 3000]) {
     const path = beam(board, pegs, width);
     if (path) return found(path);
@@ -311,17 +318,24 @@ export function judge(s: PegsState, allowance: Allowance, proof: number): Verdic
   return searchVerdict(exhaust(board, pegs, proof, allowance));
 }
 
-/** The pegs of `s` no jump can ever involve again, as grid indices; empty on a
- * finished board, whose last peg is alone by right. */
+/** The pegs of `s` no jump can ever involve again, as grid indices, by the
+ * description's claim; empty on a finished board, whose last peg is alone by
+ * right. */
 export function frozenPegs(s: PegsState): number[] {
-  const board = new PegsBoard(s);
-  const pegs = board.pegsOf(s);
-  if (pegs.reduce((a, b) => a + b, 0) < 2) return [];
-  return board.frozen(pegs).map((p) => board.holes[p]);
+  return rulesOf(s).witnesses("frozen", s);
 }
 
-/** Every jump `s` can make now. */
+/** Every jump `s` can make now, by the description's rules. */
 export function legalJumps(s: PegsState): Jump[] {
-  const board = new PegsBoard(s);
-  return board.legal(board.pegsOf(s)).map((k) => board.jumpAt(k));
+  return rulesOf(s)
+    .moves(s)
+    .map((m) => ({ from: m.f, over: m.o, to: m.t }));
 }
+
+/** `j` as the description's move. */
+export const asMove = (j: Jump): pegs.Move => ({
+  move: "jump",
+  f: j.from,
+  o: j.over,
+  t: j.to,
+});

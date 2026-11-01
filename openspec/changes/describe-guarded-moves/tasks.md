@@ -2,13 +2,14 @@
 
 ## 1. The runtime
 
-- [ ] 1.1 Moves run until stopped, jumps, pushes, a dealt roll table and toggles stated and compiled; a lose state called
+- [ ] 1.1 Shared unassigned layers, `on_grid`, `adj8`, `ray`, a self-reading definition as a least fixed point, a dealt relation, a token layer, a claim's witnesses, and no move from a lost position
 - [ ] 1.2 The checker's universe of every filling, for moves that change what is on the board
 
 ## 2. The games
 
-- [ ] 2.1 Flip, Cube and Slide described
-- [ ] 2.2 Pegs, Inertia and Sokoban described, `finish-search` fed the compiled moves where it is fast enough, the packed copy kept with its measurement where not
+- [x] 2.1 Pegs described, `finish-search` fed the compiled jumps where fast enough, the packed copy kept with its measurement where not
+- [ ] 2.2 Flip described
+- [ ] 2.3 Inertia described: its slide, mine and stranded gems compiled
 
 ## 3. Close
 

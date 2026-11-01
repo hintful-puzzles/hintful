@@ -42,6 +42,7 @@ import {
   type PegsRung,
 } from "./hint.ts";
 import { HINT_MARKS } from "./hint-text.ts";
+import type * as pegs from "./pegs.compiled.ts";
 import {
   colors,
   computeSize,
@@ -70,6 +71,7 @@ import {
   type PegsParams,
   type PegsState,
   type PegsUi,
+  rulesOf,
   serializeMove,
   status,
   textFormat,
@@ -81,28 +83,25 @@ export type { PegsMove, PegsParams, PegsState, PegsUi };
 // --- jump legality ---------------------------------------------------
 
 function inGrid(s: PegsState, x: number, y: number): boolean {
-  return x >= 0 && x < s.w && y >= 0 && y < s.h;
+  return (
+    Number.isInteger(x) && Number.isInteger(y) && x >= 0 && x < s.w && y >= 0 && y < s.h
+  );
 }
 
-/** Why `m` is not a legal jump on `s`, or null if it is. */
-function illegalJump(s: PegsState, m: PegsJump): string | null {
+/** `m` as the description's jump where the description's rules allow it on
+ * `s`, or null. */
+function legalJump(s: PegsState, m: PegsJump): pegs.Move | null {
   const { sx, sy, tx, ty } = m;
-  if (!inGrid(s, sx, sy)) return "Source out of range";
-  if (!inGrid(s, tx, ty)) return "Target out of range";
-  const dx = Math.abs(tx - sx);
-  const dy = Math.abs(ty - sy);
-  if (Math.max(dx, dy) !== 2 || Math.min(dx, dy) !== 0) {
-    return "Move length was wrong";
-  }
+  if (!inGrid(s, sx, sy) || !inGrid(s, tx, ty)) return null;
+  if ((sx + tx) % 2 !== 0 || (sy + ty) % 2 !== 0) return null;
   const { w } = s;
-  if (
-    s.grid[sy * w + sx] !== GRID_PEG ||
-    s.grid[((sy + ty) / 2) * w + (sx + tx) / 2] !== GRID_PEG ||
-    s.grid[ty * w + tx] !== GRID_HOLE
-  ) {
-    return "Grid contents were invalid for this move";
-  }
-  return null;
+  const j: pegs.Move = {
+    move: "jump",
+    f: sy * w + sx,
+    o: ((sy + ty) / 2) * w + (sx + tx) / 2,
+    t: ty * w + tx,
+  };
+  return rulesOf(s).legal(s, j) ? j : null;
 }
 
 // --- interpretMove ---------------------------------------------------
@@ -149,7 +148,7 @@ function interpretMove(
     const tx = fromCoordWithTileSize(p.x, ts);
     const ty = fromCoordWithTileSize(p.y, ts);
     const move: PegsMove = { type: "jump", sx: ui.sx, sy: ui.sy, tx, ty };
-    return illegalJump(s, move) ? UI_UPDATE : move;
+    return legalJump(s, move) === null ? UI_UPDATE : move;
   }
 
   const cursorMove = cursorDelta(button);
@@ -169,19 +168,18 @@ function interpretMove(
     }
 
     // Jumping mode: the arrow names the direction to jump in.
-    const tx = x + 2 * dx;
-    const ty = y + 2 * dy;
+    const jump: PegsJump = {
+      type: "jump",
+      sx: x,
+      sy: y,
+      tx: x + 2 * dx,
+      ty: y + 2 * dy,
+    };
     ui.curJumping = false;
-    if (
-      !inGrid(s, tx, ty) ||
-      s.grid[(y + dy) * w + (x + dx)] !== GRID_PEG ||
-      s.grid[ty * w + tx] !== GRID_HOLE
-    ) {
-      return UI_UPDATE;
-    }
-    ui.cursor.x = tx;
-    ui.cursor.y = ty;
-    return { type: "jump", sx: x, sy: y, tx, ty };
+    if (legalJump(s, jump) === null) return UI_UPDATE;
+    ui.cursor.x = jump.tx;
+    ui.cursor.y = jump.ty;
+    return jump;
   }
 
   if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
@@ -216,16 +214,9 @@ function executeMove(s: PegsState, m: PegsMove): PegsState {
     return { w, h, grid };
   }
   if (m.type !== "jump") return assertNever(m, "pegs: executeMove");
-  const error = illegalJump(s, m);
-  if (error) throw new Error(error);
-
-  const { w, h } = s;
-  const { sx, sy, tx, ty } = m;
-  const grid = new Uint8Array(s.grid);
-  grid[sy * w + sx] = GRID_HOLE;
-  grid[((sy + ty) / 2) * w + (sx + tx) / 2] = GRID_HOLE;
-  grid[ty * w + tx] = GRID_PEG;
-  return { w, h, grid };
+  const j = legalJump(s, m);
+  if (j === null) throw new Error("pegs: an illegal jump");
+  return { ...s, grid: rulesOf(s).play(s, j).grid };
 }
 // --- changedState ----------------------------------------------------
 

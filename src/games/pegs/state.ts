@@ -6,10 +6,12 @@
 import { rejectMove } from "../../engine/assert-never.ts";
 import { type DescParse, descValue, puzzleDescError } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, parseDimensions, unreadParams } from "../../engine/params.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
+import * as pegs from "./pegs.compiled.ts";
 
 // --- grid cell values ------------------------------------------------
 
@@ -36,11 +38,12 @@ export interface PegsParams {
   type: number; // TYPE_CROSS | TYPE_OCTAGON | TYPE_RANDOM
 }
 
+/** The board, which is the description's position: its one layer `grid`
+ * holds GRID_HOLE, GRID_PEG or GRID_OBST a square, in reading order. */
 export interface PegsState {
   w: number;
   h: number;
-  /** Flat Uint8Array grid: GRID_HOLE | GRID_PEG | GRID_OBST. */
-  grid: Uint8Array;
+  grid: Int32Array;
 }
 
 export type PegsJump = { type: "jump"; sx: number; sy: number; tx: number; ty: number };
@@ -128,10 +131,10 @@ const CELL_LETTERS: Record<string, number> = {
 };
 
 /** One letter per cell in reading order: `P` a peg, `H` a hole, `O` off the board. */
-function parseDesc(p: PegsParams, desc: string): DescParse<Uint8Array> {
+function parseDesc(p: PegsParams, desc: string): DescParse<Int32Array> {
   const len = p.w * p.h;
   return readDesc(desc, (r) => {
-    const grid = new Uint8Array(len);
+    const grid = new Int32Array(len);
     for (let i = 0; i < len; i++) {
       grid[i] = CELL_LETTERS[r.char((c) => Object.hasOwn(CELL_LETTERS, c))];
     }
@@ -173,13 +176,13 @@ export function newUi(state: PegsState): PegsUi {
 }
 // --- status ----------------------------------------------------------
 
-/** Won when exactly one peg remains. */
+/** The description's rules on a board of this size. */
+export function rulesOf(s: { readonly w: number; readonly h: number }) {
+  return pegs.rules(describedSpace(pegs.units, s.w, s.h), {}, []);
+}
+
 export function status(s: PegsState): GameStatus {
-  let pegs = 0;
-  for (const v of s.grid) {
-    if (v === GRID_PEG) pegs++;
-  }
-  return pegs === 1 ? "solved" : "ongoing";
+  return rulesOf(s).finished(s) ? "solved" : "ongoing";
 }
 
 // --- text format -----------------------------------------------------

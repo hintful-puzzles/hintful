@@ -52,6 +52,22 @@ describe("the position compiler refuses an ill-formed move", () => {
     ).toThrow(CompileError);
   });
 
+  it.each([
+    ["under a negation", "value(c) = 1 or not r(c)"],
+    ["on the left of implies", "r(c) implies value(c) = 1"],
+    ["inside an aggregate", "value(c) = 1 or count(d in adj4(c) where r(d)) > 1"],
+    [
+      "in a forall's where",
+      "value(c) = 1 or forall d in adj4(c) where r(d): value(d) = 1",
+    ],
+    ["compared with =", "value(c) = 1 or r(c) = false"],
+  ])("and a definition that reads itself %s", (_, body) => {
+    const d = game({ for: "c in cells", set: [{ for: "d = c", value: "1" }] });
+    expect(() =>
+      compile({ ...d, define: { "r(c)": body }, finish: ["forall c in cells: r(c)"] }),
+    ).toThrow(/r reads itself/);
+  });
+
   it("compiles a well-formed one", () => {
     expect(
       compile(

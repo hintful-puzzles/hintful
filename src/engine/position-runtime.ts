@@ -24,6 +24,9 @@ export interface PositionRules<P extends Layers, M, D extends string = string> {
   /** The first of the description's dead-end claims that holds of `p`, or
    * null: a claim holds only where no line of moves finishes. */
   deadEnd(p: P): D | null;
+  /** The cells claim `id` holds of in `p`, which a banner outlines: empty
+   * where it does not hold, or its statement names no cell. */
+  witnesses(id: D, p: P): number[];
 }
 
 /**

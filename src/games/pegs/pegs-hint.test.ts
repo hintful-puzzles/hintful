@@ -49,7 +49,7 @@ function load(id: string): PegsState {
 const pegCount = (s: PegsState) => s.grid.filter((v) => v === GRID_PEG).length;
 
 function played(s: PegsState, j: Marked): PegsState {
-  const grid = new Uint8Array(s.grid);
+  const grid = s.grid.slice();
   grid[j.from] = GRID_HOLE;
   grid[(j.from + j.to) / 2] = GRID_HOLE;
   grid[j.to] = GRID_PEG;
@@ -258,7 +258,7 @@ describe("pegs solver", () => {
 
   it("does not call a finished board's last peg frozen", () => {
     // A desc must have two pegs, so the finished board is built directly.
-    const grid = Uint8Array.from([0, 0, GRID_PEG]);
+    const grid = Int32Array.from([0, 0, GRID_PEG]);
     expect(frozenPegs({ w: 3, h: 1, grid })).toEqual([]);
   });
 });

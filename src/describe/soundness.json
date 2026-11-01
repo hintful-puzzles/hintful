@@ -17,6 +17,7 @@
   "src/games/mathrax/mathrax.description.yaml#clue": "60edbd1405d98708",
   "src/games/mathrax/mathrax.description.yaml#clueEasy": "356b96bffe0a1985",
   "src/games/mathrax/mathrax.description.yaml#clueTricky": "0228a20000ae028a",
+  "src/games/pegs/pegs.description.yaml#deadEnd:frozen": "532c2d762a55d508",
   "src/games/salad/salad.description.yaml#border": "6690332696d689ec",
   "src/games/seismic/seismic.description.yaml#areaSingle": "37b6727ed4a4457c",
   "src/games/seismic/seismic.description.yaml#cull": "f00bb7de25e2b356",

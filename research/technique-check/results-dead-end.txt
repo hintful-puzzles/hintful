@@ -12,6 +12,23 @@ fifteen w=4 h=2: 40320 positions, 20160 can finish, 0 that cannot are claimed by
   parity in w=4 h=2: holds of 20160, 0 of them can finish
 fifteen parity: sound (0.8s for the game)
 fifteen parity planted: unsound, as it must be
+pegs: no move on any position, so not checked: w=2 h=2
+pegs w=2 h=3: 729 positions, 224 can finish, 305 that cannot are claimed by none
+pegs w=2 h=4: 6561 positions, 1312 can finish, 2561 that cannot are claimed by none
+pegs w=2 h=5: 59049 positions, 6912 can finish, 22059 that cannot are claimed by none
+pegs w=3 h=2: 729 positions, 224 can finish, 305 that cannot are claimed by none
+pegs w=3 h=3: 19683 positions, 3600 can finish, 7023 that cannot are claimed by none
+pegs w=4 h=2: 6561 positions, 1312 can finish, 2561 that cannot are claimed by none
+pegs w=5 h=2: 59049 positions, 6912 can finish, 22059 that cannot are claimed by none
+  frozen in w=2 h=3: holds of 200, 0 of them can finish
+  frozen in w=2 h=4: holds of 2688, 0 of them can finish
+  frozen in w=2 h=5: holds of 30078, 0 of them can finish
+  frozen in w=3 h=2: holds of 200, 0 of them can finish
+  frozen in w=3 h=3: holds of 9060, 0 of them can finish
+  frozen in w=4 h=2: holds of 2688, 0 of them can finish
+  frozen in w=5 h=2: holds of 30078, 0 of them can finish
+pegs frozen: sound (0.1s for the game)
+pegs frozen planted: unsound, as it must be
 sixteen w=2 h=2: 24 positions, 24 can finish, 0 that cannot are claimed by none
 sixteen w=2 h=3: 720 positions, 720 can finish, 0 that cannot are claimed by none
 sixteen w=2 h=4: 40320 positions, 40320 can finish, 0 that cannot are claimed by none
@@ -75,7 +92,7 @@ twiddle w=5 h=2 n=2, Rows only: 252 positions, 252 can finish, 0 that cannot are
   colorOdd in w=4 h=3 n=2, Rows only: holds of 0, 0 of them can finish
   colorOdd in w=4 h=3 n=3, Rows only: holds of 26550, 0 of them can finish
   colorOdd in w=5 h=2 n=2, Rows only: holds of 0, 0 of them can finish
-twiddle colorOdd: sound (10.9s for the game)
+twiddle colorOdd: sound (11.1s for the game)
 twiddle colorOdd planted: unsound, as it must be
   parity in w=2 h=2 n=2: holds of 0, 0 of them can finish
   parity in w=2 h=2 n=2, Rows only: holds of 0, 0 of them can finish
@@ -101,7 +118,7 @@ twiddle colorOdd planted: unsound, as it must be
   parity in w=4 h=3 n=2, Rows only: holds of 0, 0 of them can finish
   parity in w=4 h=3 n=3, Rows only: holds of 0, 0 of them can finish
   parity in w=5 h=2 n=2, Rows only: holds of 0, 0 of them can finish
-twiddle parity: sound (10.9s for the game)
+twiddle parity: sound (11.1s for the game)
 twiddle parity planted: unsound, as it must be
   colorTurned in w=2 h=2 n=2: holds of 0, 0 of them can finish
   colorTurned in w=2 h=2 n=2, Rows only: holds of 0, 0 of them can finish
@@ -127,7 +144,7 @@ twiddle parity planted: unsound, as it must be
   colorTurned in w=4 h=3 n=2, Rows only: holds of 0, 0 of them can finish
   colorTurned in w=4 h=3 n=3, Rows only: holds of 0, 0 of them can finish
   colorTurned in w=5 h=2 n=2, Rows only: holds of 0, 0 of them can finish
-twiddle colorTurned: sound (10.9s for the game)
+twiddle colorTurned: sound (11.1s for the game)
 twiddle colorTurned planted: unsound, as it must be
   turnSum in w=2 h=2 n=2: holds of 0, 0 of them can finish
   turnSum in w=2 h=2 n=2, Rows only: holds of 0, 0 of them can finish
@@ -153,5 +170,5 @@ twiddle colorTurned planted: unsound, as it must be
   turnSum in w=4 h=3 n=2, Rows only: holds of 0, 0 of them can finish
   turnSum in w=4 h=3 n=3, Rows only: holds of 0, 0 of them can finish
   turnSum in w=5 h=2 n=2, Rows only: holds of 0, 0 of them can finish
-twiddle turnSum: sound (10.9s for the game)
+twiddle turnSum: sound (11.1s for the game)
 twiddle turnSum planted: unsound, as it must be

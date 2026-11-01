@@ -60,6 +60,17 @@ export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]
   };
 }
 
+/** The cells each claim holds of, as a banner outlines them: none where the
+ * claim does not hold, or names no cell. */
+export function claimWitnesses(_sp: GridSpace, _cl: Dealt, _variations: readonly string[]): Readonly<Record<DeadEndId, (p: Position) => number[]>> {
+  return {
+    parity: (_p) => {
+      const at: number[] = [];
+      return at;
+    },
+  };
+}
+
 /** The rules on one board: its grid, what it deals, and the variations it
  * has on. */
 export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): PositionRules<Position, Move, DeadEndId> {
@@ -91,7 +102,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
   function slidePlay(p: Position, m: SlideMove): Position {
     const v_L = m.L;
     const v_k = m.k;
-    const q: Position = { value: p.value.slice() };
+    const q: Position = { ...p, value: p.value.slice() };
     {
       const _a9 = sp.lineCells[v_L];
       for (let _i10 = 0; _i10 < _a9.length; _i10++) {
@@ -129,6 +140,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
     for (const id of deadEnds) if (holds[id](p)) return id;
     return null;
   }
+  const at = claimWitnesses(sp, cl, variations);
 
   return {
     moves: (p) => {
@@ -149,5 +161,6 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
     finished,
     lost,
     deadEnd,
+    witnesses: (id, p) => at[id](p),
   };
 }

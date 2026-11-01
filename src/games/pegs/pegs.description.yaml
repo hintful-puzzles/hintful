@@ -67,3 +67,54 @@ help:
     ask you to undo from, and outlines any cut-off pegs. A position too far
     from a finish for the search to settle is saved, and the check says it
     couldn't tell.
+name: Pegs
+family: position
+sizes:
+  # The game deals sides above three, and loads a board of any size; 99
+  # stands for no bound.
+  w: { min: 2, max: 99 }
+  h: { min: 2, max: 99 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+position:
+  # What is on each square: 0 an empty hole, 1 a peg, 2 no hole at all. The
+  # board's shape is the squares that hold 2, which no jump changes.
+  grid: { domain: "{0, 1, 2}" }
+freedom: { kind: transition }
+define:
+  # A peg can come to stand on hole c: one stands there, or one could jump
+  # in from two holes away over a third, each of which a peg can come to
+  # stand on. More than a game can reach, since every peg stays where it is
+  # while new ones arrive.
+  arrive(c): >-
+    grid(c) = 1 or (grid(c) = 0 and exists b in adj4(c)
+    where on_grid(2 * x(b) - x(c), 2 * y(b) - y(c)),
+    a = cell(2 * x(b) - x(c), 2 * y(b) - y(c)): arrive(a) and arrive(b))
+moves:
+  # The peg on f jumps the peg beside it on o into the empty hole t beyond.
+  jump:
+    for: >-
+      f in cells where grid(f) = 1,
+      o in adj4(f) where grid(o) = 1 and on_grid(2 * x(o) - x(f), 2 * y(o) - y(f)),
+      t = cell(2 * x(o) - x(f), 2 * y(o) - y(f)) where grid(t) = 0
+    set:
+      - for: "c = f"
+        grid: "0"
+      - for: "c = o"
+        grid: "0"
+      - for: "c = t"
+        grid: "1"
+finish:
+  - "count(c in cells where grid(c) = 1) = 1"
+deadEnds:
+  # A peg beside which no peg can ever come to stand is never jumped and
+  # never jumps, and a jump always leaves the peg that made it, so the other
+  # pegs never go below one: two are left at the least.
+  frozen: >-
+    count(c in cells where grid(c) = 1) > 1 and
+    exists p in cells where grid(p) = 1: forall q in adj4(p): not arrive(q)
+deal:
+  start: >-
+    Cross and Octagon: every hole a peg but one; Random: jumps played
+    backward from one peg until the board reaches all four edges

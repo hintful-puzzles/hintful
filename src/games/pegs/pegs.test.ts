@@ -7,13 +7,16 @@ import {
 } from "../../engine/desc-error.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { newDesc } from "./generator.ts";
 import { type PegsMove, type PegsParams, pegsGame } from "./index.ts";
 import { COL_FLASH, COL_FLASH_LEAD } from "./render.ts";
+import { type Jump, PegsBoard } from "./solver.ts";
+import { rulesOf } from "./state.ts";
 
 const G = pegsGame;
 
@@ -210,7 +213,7 @@ describe("Pegs moves", () => {
   it("state is immutable — original unchanged after executeMove", () => {
     const p = { w: 3, h: 1, type: 0 };
     const state = G.newState(p, "PPH");
-    const origGrid = new Uint8Array(state.grid);
+    const origGrid = state.grid.slice();
     const move: PegsMove = { type: "jump", sx: 0, sy: 0, tx: 2, ty: 0 };
     G.executeMove(state, move);
     expect(state.grid).toEqual(origGrid);
@@ -336,5 +339,51 @@ describe("Pegs presets", () => {
     expect(titles).toContain("5x7 Cross");
     expect(titles).toContain("7x7 Octagon");
     expect(titles).toContain("9x9 Random");
+  });
+});
+
+describe("Pegs' searches", () => {
+  it("jump and find pegs frozen as the description says", () => {
+    const rng = randomNew("pegs packed board");
+    let compared = 0;
+    let frozenSeen = 0;
+    for (const p of [
+      { w: 7, h: 7, type: 0 },
+      { w: 7, h: 7, type: 1 },
+      { w: 6, h: 6, type: 2 },
+      { w: 9, h: 5, type: 0 },
+    ]) {
+      for (let deal = 0; deal < 4; deal++) {
+        let s = G.newState(p, newDesc(p, rng).desc);
+        const rules = rulesOf(s);
+        for (;;) {
+          const board = new PegsBoard(s);
+          const pegs = board.pegsOf(s);
+          const packed = board.legal(pegs).map((k) => board.jumpAt(k));
+          const compiled = rules
+            .moves(s)
+            .map((m) => ({ from: m.f, over: m.o, to: m.t }));
+          const byFrom = (a: Jump, b: Jump) => a.from - b.from || a.to - b.to;
+          expect(packed.toSorted(byFrom)).toEqual(compiled.toSorted(byFrom));
+          const frozen = board.frozen(pegs).map((i) => board.holes[i]);
+          const many = pegs.reduce((a, b) => a + b, 0) > 1;
+          expect(many ? frozen : []).toEqual(rules.witnesses("frozen", s));
+          if (frozen.length > 0) frozenSeen++;
+          compared++;
+          if (compiled.length === 0) break;
+          const j = compiled[randomUpto(rng, compiled.length)];
+          s = G.executeMove(s, {
+            type: "jump",
+            sx: j.from % s.w,
+            sy: Math.floor(j.from / s.w),
+            tx: j.to % s.w,
+            ty: Math.floor(j.to / s.w),
+          });
+        }
+      }
+    }
+    // Enough positions, frozen pegs among them, for a disagreement to show.
+    expect(compared).toBeGreaterThan(300);
+    expect(frozenSeen).toBeGreaterThan(20);
   });
 });
