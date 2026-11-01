@@ -313,4 +313,16 @@ describe("Same Game selection + execution", () => {
     const s = state3x3("1,1,2,3,3,3,1,2,2");
     expect(() => executeMove(s, { type: "remove", tiles: [99] })).toThrow();
   });
+
+  it("executeMove removes only one whole group", () => {
+    // 1 1 2
+    // 3 3 3
+    // 1 2 2
+    const s = state3x3("1,1,2,3,3,3,1,2,2");
+    const after = executeMove(s, { type: "remove", tiles: [5, 3, 4] });
+    expect(after.tiles.filter((t) => t === 0)).toHaveLength(3);
+    for (const tiles of [[3, 4], [2], [0, 1, 3], [0, 6], [3, 4, 4], []]) {
+      expect(() => executeMove(s, { type: "remove", tiles })).toThrow();
+    }
+  });
 });

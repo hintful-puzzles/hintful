@@ -87,26 +87,25 @@ function changedState(
   selClear(ui);
 }
 
-/** Upstream `sel_expand`: flood the connected same-color region from
- * (tx,ty) into the selection. A lone tile (region size 1) cannot be
- * removed, so the selection collapses. */
-function selExpand(ui: SamegameUi, state: SamegameState, tx: number, ty: number): void {
-  const { w, h, tiles } = state;
-  const start = ty * w + tx;
+/** The connected same-color region holding tile `start`, in flood order. */
+function groupAt(
+  tiles: readonly number[],
+  w: number,
+  h: number,
+  start: number,
+): number[] {
   const c = tiles[start];
-  ui.selected[start] = true;
+  const seen = new Uint8Array(w * h);
+  seen[start] = 1;
   const queue = [start];
-  let qi = 0;
-  let ns = 1;
-  while (qi < queue.length) {
-    const k = queue[qi++];
+  for (let qi = 0; qi < queue.length; qi++) {
+    const k = queue[qi];
     const x = k % w;
     const y = Math.floor(k / w);
     const tryCell = (nx: number, ny: number) => {
       const ni = ny * w + nx;
-      if (!ui.selected[ni] && tiles[ni] === c) {
-        ui.selected[ni] = true;
-        ns++;
+      if (!seen[ni] && tiles[ni] === c) {
+        seen[ni] = 1;
         queue.push(ni);
       }
     };
@@ -115,7 +114,16 @@ function selExpand(ui: SamegameUi, state: SamegameState, tx: number, ty: number)
     if (y > 0) tryCell(x, y - 1);
     if (y + 1 < h) tryCell(x, y + 1);
   }
-  if (ns > 1) ui.nselected = ns;
+  return queue;
+}
+
+/** Upstream `sel_expand`: flood the connected same-color region from
+ * (tx,ty) into the selection. A lone tile (region size 1) cannot be
+ * removed, so the selection collapses. */
+function selExpand(ui: SamegameUi, state: SamegameState, tx: number, ty: number): void {
+  const group = groupAt(state.tiles, state.w, state.h, ty * state.w + tx);
+  for (const k of group) ui.selected[k] = true;
+  if (group.length > 1) ui.nselected = group.length;
   else selClear(ui);
 }
 
@@ -186,11 +194,22 @@ export function executeMove(state: SamegameState, move: SamegameMove): SamegameS
   // A move read back from a save is checked for the field the removal reads.
   if (!Array.isArray(move.tiles)) rejectMove(move, "samegame: executeMove");
 
-  const tiles = state.tiles.slice();
   for (const idx of move.tiles) {
-    if (idx < 0 || idx >= w * h) throw new Error(`Move index ${idx} out of range`);
-    tiles[idx] = 0;
+    if (!Number.isInteger(idx) || idx < 0 || idx >= w * h)
+      throw new Error(`Move index ${idx} out of range`);
   }
+  // A removal takes one whole group of two or more, as the rules allow.
+  const group = move.tiles.length > 0 ? groupAt(state.tiles, w, h, move.tiles[0]) : [];
+  const named = new Set(move.tiles);
+  if (
+    group.length < 2 ||
+    state.tiles[group[0]] === 0 ||
+    move.tiles.length !== group.length ||
+    group.some((k) => !named.has(k))
+  )
+    rejectMove(move, "samegame: executeMove");
+  const tiles = state.tiles.slice();
+  for (const idx of move.tiles) tiles[idx] = 0;
   const score = state.score + npoints(state.scoresub, move.tiles.length);
   snuggle(tiles, w, h); // shift blanks down and to the left
   return { ...state, tiles, score, impossible: check(tiles, w, h).impossible };
