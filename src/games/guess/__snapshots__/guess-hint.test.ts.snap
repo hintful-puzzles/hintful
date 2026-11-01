@@ -6,7 +6,7 @@ exports[`guess: pinned hint positions > says, at each pin 1`] = `
   "blacksForced": "The striped row's 2 blacks can only be in the outlined slots, so those pegs are right: the framed colors are out.",
   "everyPegScored": "Every peg of the striped row scored, so the answer can only use its colors: the framed colors are out.",
   "noBlack": "The striped row scored no black pegs, so none of its colors can be where it was guessed: the framed colors are out.",
-  "noRepeats": "The outlined slot can only be one color, and no color repeats, so no other slot can hold it: the framed colors are out.",
+  "noRepeats": "The outlined slot can only be one color, and no color repeats, so no other slot can hold it: the framed color is out.",
   "onlyAnswer": "Only one answer fits every score so far, so guess the framed colors.",
   "opening": "Nothing is scored yet. Guess the framed colors: whatever they score, at most 56 of the 256 answers will be left.",
   "probe": "16 answers fit every score so far, and the framed colors are one. Guess them: at most 3 will be left.",

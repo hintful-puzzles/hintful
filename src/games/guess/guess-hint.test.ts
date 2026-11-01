@@ -2,9 +2,9 @@
  * Guess's answer-row notation and its hint.
  *
  * The hint's two halves are held to different standards, so they are tested
- * differently. Every **mark** it places is a claim that no answer the rows
- * allow has that color in that slot, so the rules are brute-forced against the
- * whole answer space. Every **probe** sentence quotes two counts, so those are
+ * differently. Every **mark** it places is a firing of a technique the
+ * description states, each checked sound against its rules by the soundness
+ * checker, so here each is only pinned on a position. Every **probe** sentence quotes two counts, so those are
  * recounted from scratch. And a player who does nothing but follow the hint
  * must win inside the row limit on the presets, which is measured over every
  * Standard answer rather than a handful.
@@ -31,9 +31,7 @@ import {
   guessHint,
   guessHintKeepTrack,
   guessRefreshHintStep,
-  provenRuleOuts,
 } from "./hint.ts";
-import type { Reason } from "./hint-text.ts";
 import { guessGame } from "./index.ts";
 import { answerSlotAt, COL_HINT_CELL } from "./render.ts";
 import {
@@ -105,20 +103,6 @@ function randomGuess(p: GuessParams, rs: RandomState): number[] {
     return c;
   });
 }
-
-/** Every deduction kind, so the census fails to compile when one is added. */
-const DEDUCTIONS: Record<
-  Exclude<Reason["kind"], "onlyAnswer" | "opening" | "probe" | "probeFits">,
-  true
-> = {
-  scoredNothing: true,
-  noBlack: true,
-  everyPegScored: true,
-  noRepeats: true,
-  blacksForced: true,
-  blacksAccounted: true,
-  totalAccounted: true,
-};
 
 /**
  * Each rung pinned on a position that speaks it. The hint's own guesses are
@@ -208,60 +192,6 @@ describeHintPins({
     /** Held on 36 of 590 positions walked. */
     probeFits: "c10p5g12Bm:d37db7fbb2",
   },
-});
-
-describe("every mark the rules prove holds for every answer the rows allow", () => {
-  const CONFIGS = [
-    "c4p3g8Bm",
-    "c4p4g8Bm",
-    "c3p4g8Bm",
-    "c5p3g8BM",
-    "c5p4g8BM",
-    "c6p4g10Bm",
-  ];
-  const fired = new Map<string, number>();
-  let marksChecked = 0;
-
-  for (const code of CONFIGS) {
-    it(code, () => {
-      const p = decodeParams(code);
-      const space = allAnswers(p);
-      const rs = randomNew(`sound-${code}`);
-      for (let game = 0; game < 300; game++) {
-        const answer = space[randomUpto(rs, space.length)];
-        let state = withAnswer(p, answer);
-        const rows = 1 + randomUpto(rs, 4);
-        for (let r = 0; r < rows && outcome(state) === 0; r++) {
-          state = play(state, randomGuess(p, rs));
-        }
-        if (outcome(state) !== 0) continue;
-        const { out, fired: reasons } = provenRuleOuts(state);
-        for (const r of reasons) fired.set(r.kind, (fired.get(r.kind) ?? 0) + 1);
-        const allowed = space.filter((a) => fits(state, a));
-        expect(allowed.some((a) => a.join() === answer.join())).toBe(true);
-        for (let pos = 0; pos < p.npegs; pos++) {
-          for (let c = 1; c <= p.ncolors; c++) {
-            if (!(out[pos] & (1 << c))) continue;
-            marksChecked++;
-            const counter = allowed.find((a) => a[pos] === c);
-            expect(
-              counter,
-              `${code}: ${c} ruled out of slot ${pos}, but ${counter?.join("")} fits`,
-            ).toBeUndefined();
-          }
-        }
-      }
-    });
-  }
-
-  it("checked marks from every rule, so none of them is dead", () => {
-    // Runs after the configs above, over what they recorded. A rule that no
-    // game reached would have been "proved sound" over nothing.
-    expect(marksChecked).toBeGreaterThan(5000);
-    for (const kind of Object.keys(DEDUCTIONS)) {
-      expect(fired.get(kind) ?? 0, `${kind} never fired`).toBeGreaterThan(0);
-    }
-  });
 });
 
 describe("the probe's sentence quotes counts that are true", () => {

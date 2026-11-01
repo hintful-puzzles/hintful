@@ -190,11 +190,29 @@
       "description": "Clue kinds: where one sits, its values, and what it means, reading `at` and `v`.",
       "additionalProperties": {
         "type": "object",
-        "required": ["at", "value", "means"],
+        "required": ["at", "means"],
+        "oneOf": [{ "required": ["value"] }, { "required": ["fields"] }],
         "additionalProperties": false,
         "properties": {
-          "at": { "type": "string" },
+          "at": {
+            "type": "string",
+            "description": "The element sort a clue sits at, or `board` for a whole-board clue, which has `fields` in place of a `value`."
+          },
           "value": { "$ref": "#/$defs/formula" },
+          "fields": {
+            "type": "object",
+            "description": "A whole-board clue's parts, each read as a function of the clue, and of an element where it has an `at`: one a cell is `peg(k, s)`.",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "object",
+              "required": ["value"],
+              "additionalProperties": false,
+              "properties": {
+                "at": { "type": "string" },
+                "value": { "$ref": "#/$defs/formula" }
+              }
+            }
+          },
           "means": { "$ref": "#/$defs/formula" },
           "complete": {
             "type": "boolean",

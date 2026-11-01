@@ -97,3 +97,100 @@ help:
     and the most that could be left after it. That part is a suggestion
     rather than a deduction, and the hint says so by counting rather than
     arguing.
+name: Guess
+family: code
+sizes:
+  npegs: { min: 2, max: 30 }
+  ncolors: { min: 2, max: 10 }
+space:
+  # The answer row: a slot a cell.
+  grid: { w: "npegs", h: "1" }
+  units: []
+answer:
+  # A color a slot.
+  value: { sort: cell, domain: "range(1, ncolors)" }
+define:
+  # How many pegs of color d guess k holds.
+  pegs(k, d): "count(s in cells where peg(k, s) = d)"
+  # The colors guess k holds, blanks aside.
+  colors(k): "set(peg(k, s) over s in cells where peg(k, s) > 0)"
+  # Whether guess k's peg in slot s may still be right there.
+  open(k, s): "peg(k, s) > 0 and peg(k, s) in cand(s)"
+  # The slots settled to color d: d is all they can still hold.
+  settled(d): "{s in cells where cand(s) = {d}}"
+  # The slots where guess k put the color they are settled to.
+  pinned(k): "{s in cells where peg(k, s) > 0 and cand(s) = {peg(k, s)}}"
+clues:
+  # A scored guess: the color it put in each slot, 0 where it left one
+  # blank, how many of them are right (black pegs), and how many are of a
+  # color the answer holds, as many of each as both hold (black and white
+  # pegs together).
+  score:
+    at: board
+    fields:
+      peg: { at: cell, value: "range(0, ncolors)" }
+      black: { value: "range(0, w)" }
+      total: { value: "range(0, w)" }
+    means: >-
+      black(k) = count(s in cells where value(s) = peg(k, s))
+      and total(k) = sum(d in domain of
+        min(n in {pegs(k, d), count(s in cells where value(s) = d)} of n))
+freedom: { kind: query }
+deal:
+  answer: a color a slot, at random
+variations:
+  no duplicates:
+    add:
+      rules:
+        distinct: "distinct(value(s) over s in cells)"
+      techniques:
+        # A slot settled to a color: no other slot holds it.
+        - id: noRepeats
+          tier: Normal
+          for: "s in cells where |cand(s)| = 1, d in cand(s)"
+          conclude: "forall t in cells where t != s: strike(t, d)"
+tiers: [Normal]
+techniques:
+  # A guess that scored nothing at all: none of its colors is in the answer.
+  - id: scoredNothing
+    tier: Normal
+    for: "k in clues(score) where total(k) = 0"
+    conclude: "forall d in colors(k), s in cells: strike(s, d)"
+  # A guess with no black pegs: none of its colors is where it put it.
+  - id: noBlack
+    tier: Normal
+    for: "k in clues(score) where black(k) = 0"
+    conclude: "forall s in cells where peg(k, s) > 0: strike(s, peg(k, s))"
+  # A guess whose every peg scored: the answer holds only its colors.
+  - id: everyPegScored
+    tier: Normal
+    for: "k in clues(score) where total(k) = |cells|"
+    conclude: "forall d in domain - colors(k), s in cells: strike(s, d)"
+  # A guess with only as many pegs that may still be right as it scored
+  # black: each of them is right.
+  - id: blacksForced
+    tier: Normal
+    for: >-
+      k in clues(score)
+      where black(k) > 0 and count(s in cells where open(k, s)) = black(k)
+    conclude: >-
+      forall s in cells where open(k, s), d in domain where d != peg(k, s):
+      strike(s, d)
+  # The slots settled to the color a guess put there account for all its
+  # black pegs: its other pegs are all out of place.
+  - id: blacksAccounted
+    tier: Normal
+    for: "k in clues(score), P = pinned(k) where |P| > 0 and |P| = black(k)"
+    conclude: "forall s in cells where s not in P and open(k, s): strike(s, peg(k, s))"
+  # The settled slots account for a guess's whole score, e of it: each of its
+  # colors it holds more of than are settled is in the answer only where it
+  # is settled.
+  - id: totalAccounted
+    tier: Normal
+    for: >-
+      k in clues(score),
+      e = sum(d in colors(k) of min(n in {pegs(k, d), |settled(d)|} of n))
+      where e > 0 and e = total(k)
+    conclude: >-
+      forall d in colors(k) where pegs(k, d) > |settled(d)|,
+      s in cells where s not in settled(d): strike(s, d)

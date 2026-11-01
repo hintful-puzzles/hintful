@@ -314,6 +314,26 @@ const PLANTS: Record<string, Plant> = {
   unique: {
     for: "A in lines, n = |cells(A)| / 2, d in domain where count(c in cells(A) where value(c) = d) = n, B in lines where B != A and (A in rows) = (B in rows) and count(c in cells(B) where value(c) = d) = n - 1, j in range(0, |cells(A)| - 1) where value(sq(A, j)) = d and not known(sq(B, j))",
   },
+  // Guess: a guess that scored one peg read as scoring nothing.
+  scoredNothing: { for: "k in clues(score) where total(k) <= 1" },
+  // A guess with one black peg read as having none.
+  noBlack: { for: "k in clues(score) where black(k) <= 1" },
+  // A guess with all but one peg scored read as all of them.
+  everyPegScored: { for: "k in clues(score) where total(k) >= |cells| - 1" },
+  // One more open peg than its black pegs, each read as right.
+  blacksForced: {
+    for: "k in clues(score) where black(k) > 0 and count(s in cells where open(k, s)) <= black(k) + 1",
+  },
+  // The pinned slots one short of the black pegs read as all of them.
+  blacksAccounted: {
+    for: "k in clues(score), P = pinned(k) where |P| > 0 and |P| + 1 >= black(k)",
+  },
+  // The settled slots one short of the score read as all of it.
+  totalAccounted: {
+    for: "k in clues(score), e = sum(d in colors(k) of min(n in {pegs(k, d), |settled(d)|} of n)) where e > 0 and e + 1 >= total(k)",
+  },
+  // A slot with two colors left read as settled to each.
+  noRepeats: { for: "s in cells where |cand(s)| <= 2, d in cand(s)" },
 };
 
 const lines: string[] = [];

@@ -4,8 +4,9 @@
  * **What the scored rows prove** is deduction, and every conclusion is an
  * answer-row mark ("not this color, in this slot"), placed as a move so the
  * player can keep it (`docs/hints-marks.md` § "Give the facts a notation"). The
- * rules read one row at a time, plus the marks earlier rules placed, and
- * `guess-hint.test.ts` brute-forces each against every answer the rows allow.
+ * techniques are `guess.description.yaml`'s, compiled: each reads one scored
+ * row, a clue the state reveals and rebuilt here on each hint, plus the marks
+ * earlier firings made, and each is checked sound against the rules.
  *
  * **What to guess next** is not deduction: a guess is a probe, and choosing one
  * is an information question. So the last step of every plan is a probe, and
@@ -15,9 +16,21 @@
  * Nothing here reads `state.solution`. The hint knows what the player knows.
  */
 
+import { describedSpace, type GridSpace } from "../../engine/describe-runtime.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { GAME_OVER, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderWalk,
+  TIERS as SCALE,
+  uncluedRung,
+} from "../../engine/ladder-runtime.ts";
 import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
+import { stepBudget } from "../../engine/step-budget.ts";
+import * as guess from "./guess.compiled.ts";
 import { COLOR, type Reason, say } from "./hint-text.ts";
 import {
   FEEDBACK_CORRECTPLACE,
@@ -65,31 +78,18 @@ interface Scored {
   total: number;
 }
 
-interface Firing {
+/** What a firing reads, and why it rules its colors out. */
+interface GuessFiring {
   reason: Reason;
-  marks: SlotMark[];
+  /** The scored rows it reads, by index. */
   rows: number[];
+  /** The answer slots whose marks it leans on. */
   slots: number[];
 }
 
-// --- the facts, as bitmasks ---------------------------------------------
+// --- the described ladder ------------------------------------------------
 
 const bit = (color: number): number => 1 << color;
-
-/** Bits `1..ncolors`: every color the answer could hold. */
-const everyColor = (p: GuessParams): number => ((1 << (p.ncolors + 1)) - 1) & ~1;
-
-function popcount(mask: number): number {
-  let n = 0;
-  for (let m = mask; m; m &= m - 1) n++;
-  return n;
-}
-
-/** The one color a slot can still hold, or `0` if it can hold several. */
-function fixedColor(mask: number): number {
-  if (popcount(mask) !== 1) return 0;
-  return 31 - Math.clz32(mask);
-}
 
 function scoredRows(state: GuessState): Scored[] {
   const rows: Scored[] = [];
@@ -112,241 +112,142 @@ function colorCounts(pegs: readonly number[]): Map<number, number> {
   return counts;
 }
 
-/**
- * The deduction rules. Each reads one scored row against what `out` already
- * rules out, and returns the marks it forces that `out` does not have yet —
- * `null` when there are none.
- *
- * `cands(i)` is what slot `i` can still hold. A slot is **fixed** when that is
- * one color, and a row's peg is **open** when its slot can still hold it.
- */
-class Rules {
-  private readonly all: number;
+/** The scored rows as the description reads them: a clue at the board a
+ * row, rebuilt from the state on each hint. */
+function dealtOf(p: GuessParams, rows: readonly Scored[]): guess.Dealt {
+  return {
+    score: {
+      n: rows.length,
+      peg: rows.map((r) => r.pegs),
+      black: rows.map((r) => r.black),
+      total: rows.map((r) => r.total),
+    },
+    ncolors: p.ncolors,
+  };
+}
 
-  constructor(
-    private readonly p: GuessParams,
-    private readonly out: Int32Array,
-  ) {
-    this.all = everyColor(p);
-  }
+/** The answer row as the description's space: a slot a cell. */
+const spaceOf = (p: GuessParams): GridSpace => describedSpace(guess.units, p.npegs, 1);
 
-  private cands(i: number): number {
-    return this.all & ~this.out[i];
-  }
+/** The variations a board has on, by the description's names. */
+const variationsOf = (p: GuessParams): string[] =>
+  p.allowMultiple ? [] : ["no duplicates"];
 
-  private isOut(pos: number, color: number): boolean {
-    return (this.out[pos] & bit(color)) !== 0;
-  }
+/** Whether `answer` fits every row of `dealt`, by the rules the description
+ * compiles to. */
+function fitsEvery(
+  p: GuessParams,
+  dealt: guess.Dealt,
+  answer: readonly number[],
+): boolean {
+  return guess.isAnswer(answer, spaceOf(p), dealt, variationsOf(p));
+}
 
-  /** `marks`, less those already known. */
-  private fresh(marks: SlotMark[]): SlotMark[] {
-    return marks.filter((m) => !this.isOut(m.pos, m.color));
-  }
+/** The one color `m` leaves slot `s`, or 0 where it leaves several. */
+function settledTo(m: CellMarks, s: number): number {
+  const c = m.cand(s);
+  return c !== 0 && (c & (c - 1)) === 0 ? 31 - Math.clz32(c) : 0;
+}
 
-  /** Every color but `keep`, out of slot `pos`. */
-  private fixTo(pos: number, keep: number): SlotMark[] {
-    const marks: SlotMark[] = [];
-    for (let c = 1; c <= this.p.ncolors; c++) {
-      if (c !== keep) marks.push({ pos, color: c });
-    }
-    return marks;
-  }
+/** The slots `m` settles to a color row `k` holds, which its score is
+ * measured against. */
+function settledOf(m: CellMarks, pegs: readonly number[]): number[] {
+  const colors = colorCounts(pegs);
+  const out: number[] = [];
+  for (let s = 0; s < pegs.length; s++) if (colors.has(settledTo(m, s))) out.push(s);
+  return out;
+}
 
-  private open(row: Scored): number[] {
-    const open: number[] = [];
-    row.pegs.forEach((c, i) => {
-      if (c > 0 && !this.isOut(i, c)) open.push(i);
-    });
-    return open;
-  }
+/** The ladder over the rows `dealt` deals, each firing with what it reads. */
+function guessLadder(p: GuessParams, dealt: guess.Dealt): Ladder {
+  const { score } = dealt;
+  const row = (k: number, reason: Reason, slots: number[] = []): GuessFiring => ({
+    reason,
+    rows: [k],
+    slots,
+  });
+  return describedLadder(
+    guess,
+    {
+      scoredNothing: compiledRung(guess.scoredNothing, dealt, ({ k }) =>
+        row(k, { kind: "scoredNothing" }),
+      ),
+      noBlack: compiledRung(guess.noBlack, dealt, ({ k }) =>
+        row(k, { kind: "noBlack" }),
+      ),
+      everyPegScored: compiledRung(guess.everyPegScored, dealt, ({ k }) =>
+        row(k, { kind: "everyPegScored" }),
+      ),
+      blacksForced: compiledRung(guess.blacksForced, dealt, ({ k }, _c, _n, m) =>
+        row(
+          k,
+          { kind: "blacksForced", black: score.black[k] },
+          score.peg[k].flatMap((c, s) => (c > 0 && m.has(s, c) ? [s] : [])),
+        ),
+      ),
+      blacksAccounted: compiledRung(guess.blacksAccounted, dealt, ({ k, P }) =>
+        row(k, { kind: "blacksAccounted", black: score.black[k] }, [...P]),
+      ),
+      totalAccounted: compiledRung(guess.totalAccounted, dealt, ({ k }, _c, _n, m) =>
+        row(
+          k,
+          { kind: "totalAccounted", total: score.total[k] },
+          settledOf(m, score.peg[k]),
+        ),
+      ),
+      noRepeats: uncluedRung(
+        guess.noRepeats,
+        ({ s }): GuessFiring => ({
+          reason: { kind: "noRepeats" },
+          rows: [],
+          slots: [s],
+        }),
+      ),
+    },
+    undefined,
+    variationsOf(p),
+  );
+}
 
-  private fixedMatches(row: Scored): number[] {
-    return this.open(row).filter((i) => fixedColor(this.cands(i)) === row.pegs[i]);
-  }
-
-  /**
-   * The row's black pegs are all accounted for by the slots already fixed to
-   * the color it put there, so its other open pegs are all out of place.
-   * `b = 0` with nothing fixed is the plain "no black pegs" reading.
-   */
-  blacksAccounted(row: Scored, withFixed: boolean): Firing | null {
-    const fixed = this.fixedMatches(row);
-    if (row.black !== fixed.length || fixed.length > 0 !== withFixed) return null;
-    const marks = this.fresh(
-      this.open(row)
-        .filter((i) => !fixed.includes(i))
-        .map((pos) => ({ pos, color: row.pegs[pos] })),
-    );
-    if (marks.length === 0) return null;
-    const reason: Reason = withFixed
-      ? { kind: "blacksAccounted", black: row.black }
-      : { kind: "noBlack" };
-    return { reason, marks, rows: [row.index], slots: fixed };
-  }
-
-  /**
-   * Exactly as many of the row's pegs are open as it scored black, so every
-   * open one is right.
-   *
-   * This is also the whole of what a row of one color proves about where that
-   * color goes: such a row's blacks *are* its color's count in the answer, so
-   * "only that many slots can still hold it" is this rule, not a second one.
-   * A separate reading was written and the census found it never fired.
-   */
-  blacksForced(row: Scored): Firing | null {
-    const open = this.open(row);
-    if (row.black === 0 || open.length !== row.black) return null;
-    const marks = this.fresh(open.flatMap((pos) => this.fixTo(pos, row.pegs[pos])));
-    if (marks.length === 0) return null;
-    return {
-      reason: { kind: "blacksForced", black: row.black },
-      marks,
-      rows: [row.index],
-      slots: open,
-    };
-  }
-
-  /**
-   * The slots already fixed account for the row's whole score, so none of its
-   * colors appears anywhere but where it is fixed. With nothing fixed this is
-   * "the row scored nothing at all".
-   *
-   * The score is `Σ_c min(#row_c, #answer_c)` and each answer count is at least
-   * the fixed count, so equality with `Σ_c min(#row_c, #fixed_c)` forces every
-   * term: a color the row holds more of than is fixed occurs in the answer
-   * exactly where it is fixed.
-   */
-  totalAccounted(row: Scored, withFixed: boolean): Firing | null {
-    const fixedOf = new Map<number, number[]>();
-    for (let i = 0; i < this.p.npegs; i++) {
-      const c = fixedColor(this.cands(i));
-      if (c) fixedOf.set(c, [...(fixedOf.get(c) ?? []), i]);
-    }
-    const counts = colorCounts(row.pegs);
-    let explained = 0;
-    const cited: number[] = [];
-    for (const [c, n] of counts) {
-      const at = fixedOf.get(c) ?? [];
-      explained += Math.min(n, at.length);
-      if (at.length > 0) cited.push(...at);
-    }
-    if (explained !== row.total || explained > 0 !== withFixed) return null;
-    const marks: SlotMark[] = [];
-    for (const [c, n] of counts) {
-      const at = fixedOf.get(c) ?? [];
-      if (n <= at.length) continue;
-      for (let pos = 0; pos < this.p.npegs; pos++) {
-        if (!at.includes(pos)) marks.push({ pos, color: c });
-      }
-    }
-    const fresh = this.fresh(marks);
-    if (fresh.length === 0) return null;
-    const reason: Reason = withFixed
-      ? { kind: "totalAccounted", total: row.total }
-      : { kind: "scoredNothing" };
-    return {
-      reason,
-      marks: fresh,
-      rows: [row.index],
-      slots: cited.sort((a, b) => a - b),
-    };
-  }
-
-  /** Every peg of the row scored, so the answer is made of the row's colors. */
-  everyPegScored(row: Scored): Firing | null {
-    if (row.total !== this.p.npegs) return null;
-    const used = colorCounts(row.pegs);
-    const marks: SlotMark[] = [];
-    for (let c = 1; c <= this.p.ncolors; c++) {
-      if (used.has(c)) continue;
-      for (let pos = 0; pos < this.p.npegs; pos++) marks.push({ pos, color: c });
-    }
-    const fresh = this.fresh(marks);
-    if (fresh.length === 0) return null;
-    return {
-      reason: { kind: "everyPegScored" },
-      marks: fresh,
-      rows: [row.index],
-      slots: [],
-    };
-  }
-
-  /** Without repeats, a color fixed in one slot is out of every other. */
-  noRepeats(): Firing | null {
-    if (this.p.allowMultiple) return null;
-    for (let pos = 0; pos < this.p.npegs; pos++) {
-      const c = fixedColor(this.cands(pos));
-      if (!c) continue;
-      const marks: SlotMark[] = [];
-      for (let other = 0; other < this.p.npegs; other++) {
-        if (other !== pos) marks.push({ pos: other, color: c });
-      }
-      const fresh = this.fresh(marks);
-      if (fresh.length > 0) {
-        return { reason: { kind: "noRepeats" }, marks: fresh, rows: [], slots: [pos] };
-      }
-    }
-    return null;
-  }
+/** One firing of the ladder: why, and the colors it rules out. */
+interface Proved extends GuessFiring {
+  marks: SlotMark[];
 }
 
 /**
- * The first rule that fires, easiest first: the readings a single row gives on
- * its own, then those that also lean on marks already made. Rows are read
- * oldest first within a rule.
+ * Everything the scored rows prove, a firing at a time in the order the
+ * hint says them (`ladderWalk`), from every color possible in every slot:
+ * the hint's knowledge, independent of what the player has marked.
  */
-function nextFiring(p: GuessParams, rows: Scored[], out: Int32Array): Firing | null {
-  const r = new Rules(p, out);
-  const perRow: ((row: Scored) => Firing | null)[] = [
-    (row) => r.totalAccounted(row, false),
-    (row) => r.blacksAccounted(row, false),
-    (row) => r.everyPegScored(row),
-  ];
-  const leaning: ((row: Scored) => Firing | null)[] = [
-    (row) => r.blacksForced(row),
-    (row) => r.blacksAccounted(row, true),
-    (row) => r.totalAccounted(row, true),
-  ];
-  for (const rule of perRow) {
-    for (const row of rows) {
-      const f = rule(row);
-      if (f) return f;
-    }
-  }
-  const repeats = r.noRepeats();
-  if (repeats) return repeats;
-  for (const rule of leaning) {
-    for (const row of rows) {
-      const f = rule(row);
-      if (f) return f;
-    }
-  }
-  return null;
-}
-
-/**
- * Everything the rules prove from `state`'s scored rows, run to a fixpoint —
- * the hint's knowledge, independent of what the player has marked — and which
- * rules fired to prove it. Exposed for the soundness test and its census.
- */
-export function provenRuleOuts(state: GuessState): {
+function proved(
+  p: GuessParams,
+  rows: readonly Scored[],
+): {
+  firings: Proved[];
   out: Int32Array;
-  fired: Reason[];
 } {
-  const out = new Int32Array(state.params.npegs);
-  const rows = scoredRows(state);
-  const fired: Reason[] = [];
-  for (
-    let f = nextFiring(state.params, rows, out);
-    f;
-    f = nextFiring(state.params, rows, out)
-  ) {
-    for (const m of f.marks) out[m.pos] |= bit(m.color);
-    fired.push(f.reason);
+  const all = ((1 << (p.ncolors + 1)) - 1) & ~1;
+  const m = new CellMarks(spaceOf(p), all, new Uint8Array(p.npegs));
+  m.seed(m.grid);
+  m.budget = stepBudget("guess hint");
+  const { entries } = guessLadder(p, dealtOf(p, rows));
+  const walk = ladderWalk(
+    m,
+    entries,
+    { [SCALE]: 0 },
+    ({ reasons }) => (reasons[0] as GuessFiring).slots,
+  );
+  const firings: Proved[] = [];
+  for (let f = walk.next(); f !== null && f !== "contradiction"; f = walk.next()) {
+    const marks: SlotMark[] = [];
+    for (let i = 0; i < f.facts.length; i += 3)
+      marks.push({ pos: f.facts[i + 1], color: f.facts[i + 2] });
+    firings.push({ ...(f.reasons[0] as GuessFiring), marks });
   }
-  return { out, fired };
+  const out = new Int32Array(p.npegs);
+  for (let s = 0; s < p.npegs; s++) out[s] = all & ~m.cand(s);
+  return { firings, out };
 }
-
 // --- the probe -----------------------------------------------------------
 
 /** Past this many answers still fitting, the probe is not enumerated. */
@@ -371,10 +272,12 @@ interface Enumerated {
 /**
  * Every answer that fits every scored row, in lexicographic order, with each
  * slot drawn only from colors `out` has not ruled out (which is sound: `out`
- * is what the rows prove).
+ * is what the rows prove). A partial answer that no longer could is pruned;
+ * a whole one is judged by the rules.
  */
 function enumerate(p: GuessParams, rows: Scored[], out: Int32Array): Enumerated {
   const { npegs, ncolors, allowMultiple } = p;
+  const dealt = dealtOf(p, rows);
   const answers: number[][] = [];
   const cur = new Array<number>(npegs).fill(0);
   const blacks = new Array<number>(rows.length).fill(0);
@@ -399,6 +302,7 @@ function enumerate(p: GuessParams, rows: Scored[], out: Int32Array): Enumerated 
   const visit = (pos: number): void => {
     if (!complete) return;
     if (pos === npegs) {
+      if (!fitsEvery(p, dealt, cur)) return;
       if (answers.length >= ENUMERATION_CAP) {
         complete = false;
         return;
@@ -528,13 +432,11 @@ export function guessHint(
   // Out of guesses, or the answer shown by Solve: the status is lost.
   if (outcome(state) < 0) return { ok: false, error: GAME_OVER };
   const p = state.params;
-  const rows = scoredRows(state);
-  const out = new Int32Array(p.npegs);
+  const { firings, out } = proved(p, scoredRows(state));
   const board = state.ruledOut.slice();
   const steps: HintStep<GuessMove, GuessHighlights, GuessRung>[] = [];
 
-  for (let f = nextFiring(p, rows, out); f; f = nextFiring(p, rows, out)) {
-    for (const m of f.marks) out[m.pos] |= bit(m.color);
+  for (const f of firings) {
     // A mark the player has already made is not taught again
     // (`docs/hints.md` § "Show only what the board does not already say").
     const place = f.marks.filter((m) => !(board[m.pos] & bit(m.color)));

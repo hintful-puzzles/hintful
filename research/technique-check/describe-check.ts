@@ -21,6 +21,7 @@
  */
 
 import {
+  type ClueKind,
   type Description,
   type DescriptionJson,
   type LibraryJson,
@@ -161,7 +162,14 @@ interface ClueSym {
   at: number;
   present: Bx;
   v: V;
+  /** A clue at the board's fields, by name: a number, or one an element by
+   * element. */
+  fields?: ReadonlyMap<string, Nx | readonly Nx[]>;
 }
+
+/** The clues at the board each kind of them is checked with, each present
+ * or not: two, so a technique comparing two is checked as one reading one. */
+const BOARD_CLUES = 2;
 
 /** A partition the board may be dealt: every connected region it could have
  * up to {@link REGION_CELLS} cells, each a part or not. */
@@ -277,8 +285,14 @@ function spaceOf(
   const unit = unitRegion(d);
   if (d === undefined || space === undefined)
     return { sp: latinSpace(order), sizes: new Map() };
+  // A side the description fixes (Guess's one row) is its own; any other is
+  // the order.
+  const side = (s: string): number => (/^\d+$/.test(s) ? Number(s) : order);
   if (unit === null)
-    return { sp: describedSpace(space.units, order, order), sizes: new Map() };
+    return {
+      sp: describedSpace(space.units, side(space.grid.w), side(space.grid.h)),
+      sizes: new Map(),
+    };
   const m = BLOCKS.exec(unit[1]);
   if (m === null) throw new Error(`${unit[0]}: only blocks(a, b) is checked`);
   const range = (name: string): number[] => {
@@ -301,6 +315,22 @@ function spaceOf(
   };
 }
 
+/** The size the answer's domain ends at, where it is `range(a, s)` of a
+ * size the grid does not give (Guess's colors), or `null`: a board's
+ * values then reach it, past the order. */
+function domainBound(d: Description): string | null {
+  const e = d.domain;
+  if (e.k !== "call" || e.fn !== "range") return null;
+  const hi = e.args[1];
+  const { grid } = d.json.space;
+  return hi.k === "name" &&
+    hi.name in d.json.sizes &&
+    hi.name !== grid.w &&
+    hi.name !== grid.h
+    ? hi.name
+    : null;
+}
+
 function makeBoard(
   order: number,
   d?: Description,
@@ -311,19 +341,21 @@ function makeBoard(
   const { sp } = space;
   const sizes = new Map([...space.sizes, ...more]);
   const tag = `b${boardCount++}`;
-  const n = order * order;
+  const n = sp.cells.length;
+  const bound = d === undefined ? null : domainBound(d);
+  const top = Math.max(order, (bound === null ? null : sizes.get(bound)) ?? 0);
   const ans = Array.from({ length: n }, (_, c) => Z3.Int.const(`${tag}_ans_${c}`));
   const known = Array.from({ length: n }, (_, c) => Z3.Bool.const(`${tag}_known_${c}`));
   const cand = Array.from({ length: n }, (_, c) =>
     Array.from(
-      { length: order + 1 },
+      { length: top + 1 },
       (_, d): Bx => (d === 0 ? false : Z3.Bool.const(`${tag}_cand_${c}_${d}`)),
     ),
   );
   return {
     sp,
     order,
-    top: order,
+    top,
     ans,
     known,
     cand,
@@ -508,9 +540,11 @@ function evaluate(e: Expr, env: Env, ctx: Ctx): V {
         case "domain":
           return evaluate(ctx.d.domain, new Map(), ctx);
         case "order":
-        case "w":
-        case "h":
           return { k: "num", v: board.order };
+        case "w":
+          return { k: "num", v: sp.w };
+        case "h":
+          return { k: "num", v: sp.h };
       }
       const size = board.sizes.get(e.name);
       if (size !== undefined) return { k: "num", v: size };
@@ -652,6 +686,9 @@ function inEset(id: number, s: V): Bx {
 }
 
 function member(x: V, s: V): Bx {
+  // A comprehension that binds nothing is an empty set of values, whatever
+  // it would have held: an element is in it nowhere.
+  if (s.k === "vset" && x.k === "elem" && s.mem.every((g) => g === false)) return false;
   if (s.k === "vset") {
     const n = num(x, "in");
     return or(...s.mem.map((g, d) => and(cmp("=", n, d), g)));
@@ -733,7 +770,7 @@ function bindings(
         return;
       }
       const c = cells[j];
-      for (let d = 1; d <= ctx.board.order; d++) {
+      for (let d = 1; d <= ctx.board.top; d++) {
         vals.set(c, d);
         if (b.from !== undefined && b.from !== "cand")
           throw new Error(`fill ${b.name} from ${b.from}`);
@@ -891,6 +928,25 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
     const a = args[0];
     if (a.k !== "name") throw new TypeError("clues(kind)");
     return { k: "clues", kind: a.name };
+  }
+  const field = [...ctx.d.clueKinds.values()].find((c) => c.fields.has(fn));
+  if (field !== undefined) {
+    // A clue at the board's field, of the clue, and of a cell where it is
+    // one a cell.
+    const k = evaluate(args[0], env, ctx);
+    const x = field.fields.get(fn)?.at === null ? null : evaluate(args[1], env, ctx);
+    return join(
+      clueOf(ctx, k).map(({ clue, g }) => {
+        const f = clue.fields?.get(fn);
+        if (f === undefined) throw new Error(`no field ${fn}`);
+        if (!Array.isArray(f)) return [g, { k: "num", v: f as Nx }] as const;
+        const at = x as V;
+        return [
+          g,
+          lift(at, fn, (c) => ({ k: "num", v: (f as readonly Nx[])[c] })),
+        ] as const;
+      }),
+    );
   }
   if (fn === "clue") {
     const a = args[0];
@@ -1160,6 +1216,45 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
 
 // --- a description's board, rules and marks -----------------------------------
 
+/** {@link BOARD_CLUES} clues at the board of a kind, each present or not,
+ * and each field's value unknown within its range: one a clue, or one an
+ * element of the field's sort. */
+function boardClues(kind: string, fields: ClueKind["fields"], ctx: Ctx): ClueSym[] {
+  const { board } = ctx;
+  return Array.from({ length: BOARD_CLUES }, (_, k): ClueSym => {
+    const values = new Map<string, Nx | readonly Nx[]>();
+    for (const [name, f] of fields) {
+      if (f.value.k !== "call" || f.value.fn !== "range")
+        throw new Error(
+          `clue ${kind} ${name}: a field is checked with a range of values`,
+        );
+      const [lo, hi] = f.value.args.map((a) =>
+        num(evaluate(a, new Map(), ctx), "range"),
+      );
+      const one = (id: string): I => {
+        const v = Z3.Int.const(`clue_${kind}_${k}_${name}${id}_${boardCount}`);
+        board.clueDomain.push(and(cmp(">=", v, lo), cmp("<=", v, hi)));
+        return v;
+      };
+      if (f.at === null) values.set(name, one(""));
+      else {
+        if (f.at !== "cell")
+          throw new Error(`clue ${kind} ${name}: only a field a cell is checked yet`);
+        values.set(
+          name,
+          board.sp.cells.map((c) => one(`_${c}`)),
+        );
+      }
+    }
+    return {
+      at: -1,
+      present: Z3.Bool.const(`clue_${kind}_${k}_${boardCount}`),
+      v: { k: "num", v: -1 },
+      fields: values,
+    };
+  });
+}
+
 /** Every clue of each kind the board could be dealt (`describe-check.ts`'s
  * header): an element per member of a kind whose value is an element set,
  * each present or not; one clue a place, its value unknown, for a kind whose
@@ -1167,6 +1262,10 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
 function dealSymbolically(d: Description, board: Board): void {
   const ctx: Ctx = { board, d, mode: "rule", concluding: false };
   for (const [kind, c] of d.clueKinds) {
+    if (c.value === null) {
+      board.clues.set(kind, boardClues(kind, c.fields, ctx));
+      continue;
+    }
     const part = board.regions.get(c.at);
     const places =
       c.at === "edge"
@@ -1263,23 +1362,18 @@ function worldOf(d: Description, board: Board): Bx[] {
   });
   for (const r of d.rules) out.push(bool(evaluate(r.expr, new Map(), ctx), r.name));
   for (const [kind, c] of d.clueKinds)
-    for (const k of board.clues.get(kind) ?? [])
-      out.push(
-        implies(
-          k.present,
-          bool(
-            evaluate(
-              c.means,
-              new Map([
-                ["at", elem(placeSort(board, c.at), k.at)],
-                ["v", k.v],
-              ]),
-              ctx,
-            ),
-            `clue ${kind}`,
-          ),
-        ),
+    (board.clues.get(kind) ?? []).forEach((k, i) => {
+      // A clue at the board is `k` in its meaning.
+      const own = new Map(
+        c.value === null
+          ? [["k", elem(`clue ${kind}`, i)]]
+          : [
+              ["at", elem(placeSort(board, c.at), k.at)],
+              ["v", k.v],
+            ],
       );
+      out.push(implies(k.present, bool(evaluate(c.means, own, ctx), `clue ${kind}`)));
+    });
   return out;
 }
 
@@ -1342,11 +1436,16 @@ export function sizings(d: Description, order: number): Map<string, number>[] {
     ...spaceOf(order, d).sizes.keys(),
   ]);
   const free = Object.entries(d.json.sizes).filter(([n]) => !fixed.has(n));
+  const bound = domainBound(d);
   let out: Map<string, number>[] = [new Map()];
-  for (const [name, { min, max }] of free)
+  for (const [name, { min, max: most }] of free) {
+    // A domain past the order reaches one value further than the cells
+    // (Guess at one more color than slots): further adds nothing new.
+    const max = name === bound ? Math.min(most, order + 1) : most;
     out = out.flatMap((m) =>
       Array.from({ length: max - min + 1 }, (_, i) => new Map([...m, [name, min + i]])),
     );
+  }
   return out.filter((sizes) => {
     const ctx: Ctx = {
       board: makeBoard(order, d, sizes),

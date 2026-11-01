@@ -14,6 +14,7 @@
 
 import {
   type Definition,
+  type ClueKind as DescribedClueKind,
   type Description,
   type DescriptionJson,
   type LibraryJson,
@@ -179,9 +180,14 @@ class Out {
   }
 }
 
+/** A clue kind's sorts. A clue at the board has no place or value of its
+ * own (`none`), and its fields are read as functions of it. */
 interface ClueKind {
   at: Sort;
   v: Sort;
+  /** A clue at the board's fields, by name: the element sort a field is one
+   * of where it is one an element, and its values' sort. */
+  fields: ReadonlyMap<string, { at: ElemSort | null; v: Sort }> | null;
 }
 
 interface Env {
@@ -834,7 +840,8 @@ function bindingLoops(
       const kind = clueKindArg(bnd.of.args, env);
       env.readsClues.yes = true;
       sort = elem(`clue ${kind}`);
-      out.open(`for (let ${v} = 0; ${v} < cl.${kind}.at.length; ${v}++) {`);
+      const n = env.clues.get(kind)?.fields ? "n" : "at.length";
+      out.open(`for (let ${v} = 0; ${v} < cl.${kind}.${n}; ${v}++) {`);
     } else if (bnd.of.k === "call" && bnd.of.fn === "before") {
       // The members ahead of x, read in place up to x's index.
       const [xe, le] = bnd.of.args;
@@ -1312,6 +1319,18 @@ function clueKindArg(args: readonly Expr[], env: Env): string {
   return a.name;
 }
 
+/** The clue at the board's field named `fn`, with its kind, or `null`. */
+function fieldOf(
+  fn: string,
+  env: Env,
+): { kind: string; at: ElemSort | null; v: Sort } | null {
+  for (const [kind, c] of env.clues) {
+    const f = c.fields?.get(fn);
+    if (f !== undefined) return { kind, ...f };
+  }
+  return null;
+}
+
 /** Whether `name` is read anywhere in `e`. */
 function reads(e: Expr, name: string): boolean {
   switch (e.k) {
@@ -1769,12 +1788,32 @@ function call(
     if (args.length !== 2 || a.k !== "name" || !env.clues.has(a.name))
       throw new CompileError("clue(kind, x) names a clue kind of the description");
     const kind = env.clues.get(a.name) as ClueKind;
+    if (kind.fields)
+      throw new CompileError(`clue(${a.name}, x): a clue at the board sits at nothing`);
     const x = compileExpr(args[1], scope, env, out);
     if (!sameSort(x.sort, kind.at))
       throw new CompileError(`clue(${a.name}, ${show(x.sort)})`);
     env.readsClues.yes = true;
     env.used.add("clueAt");
     return { code: `clueAt(cl.${a.name}, ${x.code})`, sort: kind.v };
+  }
+  const field = fieldOf(fn, env);
+  if (field !== null) {
+    // A clue at the board's field, read of the clue, and of an element
+    // where it is one an element.
+    const want = field.at === null ? 1 : 2;
+    if (args.length !== want)
+      throw new CompileError(`${fn} takes ${want}, given ${args.length}`);
+    const k = compileExpr(args[0], scope, env, out);
+    expectElem(k, `clue ${field.kind}`, fn);
+    env.readsClues.yes = true;
+    let code = `cl.${field.kind}.${fn}[${k.code}]`;
+    if (field.at !== null) {
+      const x = compileExpr(args[1], scope, env, out);
+      expectElem(x, field.at, fn);
+      code += `[${x.code}]`;
+    }
+    return { code, sort: field.v };
   }
   if (partOf(fn, env)) {
     // A partition named as a function: the part holding a cell.
@@ -1999,6 +2038,8 @@ function call(
         throw new CompileError(`${fn} of ${show(k)}: not a clue`);
       const kind = k.e.slice("clue ".length);
       const decl = env.clues.get(kind) as ClueKind;
+      if (decl.fields)
+        throw new CompileError(`${fn} of a clue at the board: read its fields`);
       env.readsClues.yes = true;
       return {
         code: `cl.${kind}.${fn}[${vs[0].code}]`,
@@ -2507,20 +2548,26 @@ export function compileLibrary(
   return `${[HEADER(source), "", runtimeImport(used, false, false, runtime), "", parts.join("\n\n")].join("\n")}\n`;
 }
 
-/** The sort of a clue kind's place and value, from its declaration. */
-function clueSorts(kind: string, at: string, value: Expr, env: Env): ClueKind {
-  const atSort: Sort =
-    at === "edge" || at === "cell" || at === "line" || at === "slot" || at === "corner"
-      ? elem(at)
-      : env.regions.has(at)
-        ? elem(`region ${at}`)
-        : NUM;
-  if (atSort.k === "num")
-    throw new CompileError(`clue ${kind}: no element sort "${at}"`);
+/** The element sort a clue, or a clue at the board's field, sits at. */
+function placeSort(what: string, at: string, env: Env): ElemSort {
+  if (
+    at === "edge" ||
+    at === "cell" ||
+    at === "line" ||
+    at === "slot" ||
+    at === "corner"
+  )
+    return at;
+  if (env.regions.has(at)) return `region ${at}`;
+  throw new CompileError(`${what}: no element sort "${at}"`);
+}
+
+/** The sort of the members of `value`, a set, which may read `at`. */
+function valuesSort(what: string, value: Expr, at: Sort | null, env: Env): Sort {
   // Compiled only for its sort, so what it would call is not imported.
   const v = compileExpr(
     value,
-    new Map([["at", { code: "at", sort: atSort }]]),
+    new Map(at === null ? [] : [["at", { code: "at", sort: at }]]),
     {
       ...env,
       used: new Set(),
@@ -2529,9 +2576,38 @@ function clueSorts(kind: string, at: string, value: Expr, env: Env): ClueKind {
     },
     new Out(0),
   );
-  if (v.sort.k !== "set")
-    throw new CompileError(`clue ${kind}: its values are not a set`);
-  return { at: atSort, v: v.sort.of };
+  if (v.sort.k !== "set") throw new CompileError(`${what}: its values are not a set`);
+  return v.sort.of;
+}
+
+/** The type a clue at the board is dealt as: how many there are, and each
+ * field's values by clue, and by element where it is one an element. */
+function recordsType(fields: NonNullable<ClueKind["fields"]>): string {
+  const parts = [...fields].map(
+    ([name, f]) =>
+      `readonly ${name}: readonly ${f.at === null ? "number" : "(readonly number[])"}[]`,
+  );
+  return `{ readonly n: number; ${parts.join("; ")} }`;
+}
+
+/** The sorts of a clue kind's place and value, or of a clue at the board's
+ * fields, from its declaration. */
+function clueSorts(kind: string, c: DescribedClueKind, env: Env): ClueKind {
+  if (c.value === null) {
+    const fields = new Map<string, { at: ElemSort | null; v: Sort }>();
+    for (const [name, f] of c.fields) {
+      if (env.defs.has(name) || env.clues.has(name) || env.regions.has(name))
+        throw new CompileError(`clue ${kind}: its field ${name} is named twice`);
+      const at = f.at === null ? null : placeSort(`clue ${kind} ${name}`, f.at, env);
+      const v = valuesSort(`clue ${kind} ${name}`, f.value, null, env);
+      if (v.k !== "num")
+        throw new CompileError(`clue ${kind} ${name}: its values are not numbers`);
+      fields.set(name, { at, v });
+    }
+    return { at: { k: "none" }, v: { k: "none" }, fields };
+  }
+  const at = elem(placeSort(`clue ${kind}`, c.at, env));
+  return { at, v: valuesSort(`clue ${kind}`, c.value, at, env), fields: null };
 }
 
 /**
@@ -2620,8 +2696,7 @@ export function compileGame(
     prelude: null,
     relations: new Set(),
   };
-  for (const [kind, c] of d.clueKinds)
-    clues.set(kind, clueSorts(kind, c.at, c.value, env));
+  for (const [kind, c] of d.clueKinds) clues.set(kind, clueSorts(kind, c, env));
   const domainLines = cellDomain(d.domain, env, d.json.sizes);
   const own = d.techniques.filter((t) => !t.id.includes("."));
   const code = own.map((t) => compileTechnique(t, env).code);
@@ -2636,7 +2711,9 @@ export function compileGame(
           " * the sizes a technique or the rules read that the grid does not give. */",
           "export interface Dealt {",
           ...[...regions].map((r) => `  ${r}: Partition;`),
-          ...[...clues.keys()].map((k) => `  ${k}: ClueList;`),
+          ...[...clues].map(
+            ([k, c]) => `  ${k}: ${c.fields ? recordsType(c.fields) : "ClueList"};`,
+          ),
           ...sizes.map((n) => `  ${n}: number;`),
           "}",
           "",
@@ -2700,7 +2777,12 @@ export function compileGame(
   return `${[
     HEADER(source),
     "",
-    runtimeImport(used, clues.size > 0, regions.size > 0, runtime),
+    runtimeImport(
+      used,
+      [...clues.values()].some((c) => c.fields === null),
+      regions.size > 0,
+      runtime,
+    ),
     "",
     ...clueLines,
     ...ladder,
@@ -2782,16 +2864,23 @@ function answerCheck(json: DescriptionJson, d: Description, env: Env): string[] 
     const at = Out.fresh("_at");
     const v = Out.fresh("_v");
     readsClues.yes = true;
-    out.open(`for (let ${k} = 0; ${k} < cl.${kind}.at.length; ${k}++) {`);
-    out.emit(`const ${at} = cl.${kind}.at[${k}];`);
-    out.emit(`const ${v} = cl.${kind}.v[${k}];`);
+    // A clue at the board is `k` in its meaning, its fields read of it.
+    const own: [string, Val][] = sorts.fields
+      ? [["k", { code: k, sort: elem(`clue ${kind}`) }]]
+      : [
+          ["at", { code: at, sort: sorts.at }],
+          ["v", { code: v, sort: sorts.v }],
+        ];
+    out.open(
+      `for (let ${k} = 0; ${k} < cl.${kind}.${sorts.fields ? "n" : "at.length"}; ${k}++) {`,
+    );
+    if (!sorts.fields) {
+      out.emit(`const ${at} = cl.${kind}.at[${k}];`);
+      out.emit(`const ${v} = cl.${kind}.v[${k}];`);
+    }
     const means = compileExpr(
       measured(c.means),
-      new Map([
-        ...scope,
-        ["at", { code: at, sort: sorts.at }],
-        ["v", { code: v, sort: sorts.v }],
-      ]),
+      new Map([...scope, ...own]),
       cenv,
       out,
     );
@@ -2826,6 +2915,8 @@ function measuredBy(grid: { w: string; h: string }): (e: Expr) => Expr {
   const w = JSON.stringify(parse(grid.w));
   const h = JSON.stringify(parse(grid.h));
   const go = (e: Expr): Expr => {
+    // A grid one cell high is measured in no term: a 1 is a 1.
+    if (e.k === "num") return e;
     const s = JSON.stringify(e);
     if (s === w) return { k: "name", name: "w" };
     if (s === h) return { k: "name", name: "h" };
@@ -2833,7 +2924,6 @@ function measuredBy(grid: { w: string; h: string }): (e: Expr) => Expr {
     const binders = (bs: readonly Binder[]): Binder[] =>
       bs.map((b) => ({ ...b, of: go(b.of), where: opt(b.where) }));
     switch (e.k) {
-      case "num":
       case "name":
         return e;
       case "call":

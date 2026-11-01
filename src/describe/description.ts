@@ -54,7 +54,13 @@ export interface DescriptionJson {
   rules?: Record<string, string>;
   clues?: Record<
     string,
-    { at: string; value: string; means: string; complete?: boolean }
+    {
+      at: string;
+      value?: string;
+      fields?: Record<string, { at?: string; value: string }>;
+      means: string;
+      complete?: boolean;
+    }
   >;
   freedom: { kind: string };
   deal?: Record<string, string>;
@@ -379,12 +385,29 @@ export interface Definition {
   body: Expr;
 }
 
+/** A clue kind, parsed. A clue at the board sits at no element and has
+ * fields in place of one value, each read as a function of the clue
+ * (`black(k)`), and of a cell where the field is one a cell (`peg(k, s)`). */
+export interface ClueKind {
+  at: string;
+  /** Its values; `null` for a clue at the board, whose fields say theirs. */
+  value: Expr | null;
+  /** A clue at the board's fields, by name: the element sort each is one
+   * of, `null` for one a clue, and its values. Empty for any other. */
+  fields: ReadonlyMap<string, { at: string | null; value: Expr }>;
+  means: Expr;
+}
+
+/** Where a clue that sits at no element is: a whole-board clue, as a
+ * guess's score is. */
+const BOARD = "board";
+
 export interface Description {
   json: DescriptionJson;
   defs: Map<string, Definition>;
   /** The shape and the rules, each by name. */
   rules: { name: string; expr: Expr }[];
-  clueKinds: Map<string, { at: string; value: Expr; means: Expr }>;
+  clueKinds: Map<string, ClueKind>;
   domain: Expr;
   /** The value of the domain that may appear more than once in a unit, and
    * how many times; `null` where each appears once. */
@@ -482,12 +505,27 @@ export function loadDescription(
   for (const [name, s] of Object.entries(json.rules ?? {}))
     rules.push({ name, expr: at(`rule ${name}`, s) });
   const clueKinds: Description["clueKinds"] = new Map();
-  for (const [kind, c] of Object.entries(json.clues ?? {}))
+  for (const [kind, c] of Object.entries(json.clues ?? {})) {
+    const fields = Object.entries(c.fields ?? {});
+    if (
+      (c.at === BOARD) !== fields.length > 0 ||
+      (c.at === BOARD) !== (c.value === undefined)
+    )
+      throw new SyntaxError(
+        `${json.game} clue ${kind}: a clue at the board has fields, and any other a value`,
+      );
     clueKinds.set(kind, {
       at: c.at,
-      value: at(`clue ${kind} value`, c.value),
+      value: c.value === undefined ? null : at(`clue ${kind} value`, c.value),
+      fields: new Map(
+        fields.map(([name, f]) => [
+          name,
+          { at: f.at ?? null, value: at(`clue ${kind} ${name}`, f.value) },
+        ]),
+      ),
       means: at(`clue ${kind}`, c.means),
     });
+  }
   const tiers = json.tiers ?? [];
   const scales = Object.entries(json.scales ?? {});
   const techniques = (json.techniques ?? []).map((t): Technique => {
