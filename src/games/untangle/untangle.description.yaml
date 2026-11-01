@@ -27,3 +27,83 @@ help:
     The hint picks only spots where its counts hold however your drop lands
     on the marked spot, and with **Snap points to a grid** on, only grid
     points.
+
+name: Untangle
+family: position
+sizes:
+  # The points on the board.
+  n: { min: 4, max: 2000 }
+space:
+  # The points, which no rule reads as a rectangle.
+  cells: "n"
+  units: []
+  relations:
+    # The points each point has a line to, as the desc lists the lines.
+    joined: dealt
+position:
+  # Where each point stands, as the fraction (xnum/denom, ynum/denom) of
+  # the board's coordinates: exact, so a crossing is decided in whole
+  # numbers. A drag takes any denominator, so none of the three is bounded.
+  xnum: { domain: "integers" }
+  ynum: { domain: "integers" }
+  denom: { domain: "integers" }
+freedom: { kind: transition }
+define:
+  # The numerators of p less o, along each axis, over the denominator
+  # denom(o) denom(p) they share.
+  run(o, p): "xnum(p) * denom(o) - xnum(o) * denom(p)"
+  rise(o, p): "ynum(p) * denom(o) - ynum(o) * denom(p)"
+  # Which side of the line from o through p the point q lies on, by sign;
+  # 0 on the line.
+  side(o, p, q): "rise(o, q) * run(o, p) - run(o, q) * rise(o, p)"
+  # How far along the line from o through p the point q lies, by sign and
+  # against along(o, p, p): 0 at o, along(o, p, p) at p.
+  along(o, p, q): "run(o, q) * run(o, p) + rise(o, q) * rise(o, p)"
+  # Two signs, both other than 0 and the same.
+  apart(s, t): "(s > 0 and t > 0) or (s < 0 and t < 0)"
+  # Whether the line from a to b meets the line from p to q, an end on the
+  # other line included: neither lies wholly on one side of the other, and
+  # where the two lie on one straight line they overlap. The test is
+  # upstream's, which reads the second line's two ends against the first's
+  # line before the first's against the second's.
+  meets(a, b, p, q): >-
+    not apart(side(a, b, p), side(a, b, q)) and
+    not (side(a, b, p) = 0 and side(a, b, q) = 0 and
+      ((along(a, b, p) < 0 and along(a, b, q) < 0) or
+       (along(a, b, p) > along(a, b, b) and along(a, b, q) > along(a, b, b)))) and
+    not apart(side(p, q, a), side(p, q, b))
+  # Whether the line from a to b crosses the line from p to q, which share
+  # no end: each pair is read with the later line first, as upstream
+  # orders lines by their first point.
+  crosses(a, b, p, q): >-
+    (index(a, cells) < index(p, cells) and meets(p, q, a, b)) or
+    (index(p, cells) < index(a, cells) and meets(a, b, p, q))
+  # Whether the line from a to b crosses any other: the line the board
+  # draws in red.
+  crossed(a, b): >-
+    b in joined(a) and
+    exists p in cells, q in joined(p) where
+      index(p, cells) < index(q, cells) and p != a and p != b and q != a and q != b:
+      crosses(a, b, p, q)
+views: [crossed]
+moves:
+  # Put point p at (px/pd, py/pd). A drag moves one point; Solve moves
+  # every point, one after another.
+  place:
+    for: "p in cells, px in integers, py in integers, pd in integers where pd > 0"
+    set:
+      - for: "c = p"
+        xnum: "px"
+        ynum: "py"
+        denom: "pd"
+finish:
+  # No two lines cross: each pair read once, the later line first.
+  - >-
+    forall a in cells, b in joined(a) where index(a, cells) < index(b, cells):
+      forall p in cells, q in joined(p) where
+        index(a, cells) < index(p, cells) and index(p, cells) < index(q, cells) and
+        q != b and p != b:
+        not meets(p, q, a, b)
+deal:
+  start: >-
+    a planar graph, its points set out round a circle

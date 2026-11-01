@@ -23,7 +23,9 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { WinTone } from "../../engine/win-wave.ts";
+import * as untangle from "./untangle.compiled.ts";
 
 /**
  * A point as the rational `(x/d, y/d)`. **Invariant: `x`, `y`, `d` are
@@ -236,11 +238,71 @@ export function cross(
   return true;
 }
 
+// --- the description's rules ------------------------------------------------
+
+type Board = Pick<UntangleState, "n" | "edges">;
+
+/** A board's rules and views, kept for the life of its edges. */
+const byEdges = new WeakMap<
+  readonly Edge[],
+  {
+    readonly rules: ReturnType<typeof untangle.rules>;
+    readonly views: ReturnType<typeof untangle.views>;
+  }
+>();
+
+function described({ n, edges }: Board) {
+  let d = byEdges.get(edges);
+  if (d === undefined) {
+    const joined = Array.from({ length: n }, () => [] as number[]);
+    for (const { a, b } of edges) {
+      joined[a].push(b);
+      joined[b].push(a);
+    }
+    const sp = describedSpace(untangle.units, n, 1);
+    d = {
+      rules: untangle.rules(sp, { joined }, []),
+      views: untangle.views(sp, { joined }, []),
+    };
+    byEdges.set(edges, d);
+  }
+  return d;
+}
+
+/** The description's rules on this board. */
+export const rulesOf = (s: Board) => described(s).rules;
+
+/** The description's `crossed`: the lines from `a` that cross another. */
+export const crossedFrom = (s: Board, pts: readonly RationalPoint[], a: number) =>
+  described(s).views.crossed(positionOf(pts), a);
+
+/** The points as the description's layers. */
+export const positionOf = (pts: readonly RationalPoint[]): untangle.Position => ({
+  xnum: Float64Array.from(pts, (p) => p.x),
+  ynum: Float64Array.from(pts, (p) => p.y),
+  denom: Float64Array.from(pts, (p) => p.d),
+});
+
+/** The points the description's layers hold. */
+export const pointsOf = (p: untangle.Position): RationalPoint[] =>
+  Array.from(p.xnum, (x, i) => ({ x, y: p.ynum[i], d: p.denom[i] }));
+
+/** No two lines cross: the description's finish. */
+export const isUntangled = (s: Board, pts: readonly RationalPoint[]): boolean =>
+  rulesOf(s).finished(positionOf(pts));
+
 /**
  * Recompute the per-edge crossing flags and the completed status for a
  * set of positions (upstream `mark_crossings`). Only **non-adjacent**
  * edge pairs are tested — edges sharing a vertex never "cross" in the
  * puzzle's sense.
+ *
+ * The description's `crossed` says the same of each line, and its finish
+ * the same of the board (`untangle.test.ts`, "crosses as the description
+ * says"), but at 10 to 13 times the time on a board with no crossing: it
+ * reads every pair once for each of its lines, where this marks both lines
+ * of a pair at once (2026-11-01, 10 to 200 points). The flags and counts
+ * the render and the hint read are this.
  */
 export function findCrossings(
   pts: readonly RationalPoint[],

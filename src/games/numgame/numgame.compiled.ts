@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/numgame/numgame.description.yaml: edit that, not this.
 
-import { type GridSpace, held } from "../../engine/describe-runtime.ts";
+import { type GridSpace, held, iadd, idiv, imod, imul, isub } from "../../engine/describe-runtime.ts";
 import type { PositionRules } from "../../engine/position-runtime.ts";
 
 /** The space's units, for `describedSpace`: the description's. */
@@ -78,7 +78,7 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
       const _a7 = sp.cells;
       for (let _i8 = 0; _i8 < _a7.length; _i8++) {
         const v_b = _a7[_i8];
-        if (!(((((v_a !== v_b) && (BigInt(p.value[v_a]) > 0n)) && (BigInt(p.value[v_b]) > 0n)) && ((BigInt(p.value[v_a]) > BigInt(p.value[v_b])) || ((BigInt(p.value[v_a]) === BigInt(p.value[v_b])) && (_i6 < _i8)))))) continue;
+        if (!(((((v_a !== v_b) && (p.value[v_a] > 0)) && (p.value[v_b] > 0)) && ((p.value[v_a] > p.value[v_b]) || ((p.value[v_a] === p.value[v_b]) && (_i6 < _i8)))))) continue;
         into.push({ move: "add", a: v_a, b: v_b });
       }
     }
@@ -87,9 +87,9 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
   function addLegal(p: Position, m: AddMove): boolean {
     const v_a = m.a;
     const v_b = m.b;
-    if (!(v_a >= 0 && v_a < sp.cells.length)) return false;
-    if (!(v_b >= 0 && v_b < sp.cells.length)) return false;
-    if (!(((((v_a !== v_b) && (BigInt(p.value[v_a]) > 0n)) && (BigInt(p.value[v_b]) > 0n)) && ((BigInt(p.value[v_a]) > BigInt(p.value[v_b])) || ((BigInt(p.value[v_a]) === BigInt(p.value[v_b])) && (v_a < v_b)))))) return false;
+    if (!(Number.isInteger(v_a) && v_a >= 0 && v_a < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_b) && v_b >= 0 && v_b < sp.cells.length)) return false;
+    if (!(((((v_a !== v_b) && (p.value[v_a] > 0)) && (p.value[v_b] > 0)) && ((p.value[v_a] > p.value[v_b]) || ((p.value[v_a] === p.value[v_b]) && (v_a < v_b)))))) return false;
     return true;
   }
 
@@ -99,7 +99,7 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
     const q: Position = { ...p, value: p.value.slice() };
     {
       const v_c = v_a;
-      q.value[v_c] = held((BigInt(p.value[v_a]) + BigInt(p.value[v_b])));
+      q.value[v_c] = held(iadd(p.value[v_a], p.value[v_b]));
     }
     {
       const v_c = v_b;
@@ -115,7 +115,7 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
       const _a15 = sp.cells;
       for (let _i16 = 0; _i16 < _a15.length; _i16++) {
         const v_b = _a15[_i16];
-        if (!((((((v_a !== v_b) && (BigInt(p.value[v_a]) > 0n)) && (BigInt(p.value[v_b]) > 0n)) && ((BigInt(p.value[v_a]) > BigInt(p.value[v_b])) || ((BigInt(p.value[v_a]) === BigInt(p.value[v_b])) && (_i14 < _i16)))) && (BigInt(p.value[v_a]) > BigInt(p.value[v_b]))))) continue;
+        if (!((((((v_a !== v_b) && (p.value[v_a] > 0)) && (p.value[v_b] > 0)) && ((p.value[v_a] > p.value[v_b]) || ((p.value[v_a] === p.value[v_b]) && (_i14 < _i16)))) && (p.value[v_a] > p.value[v_b])))) continue;
         into.push({ move: "subtract", a: v_a, b: v_b });
       }
     }
@@ -124,9 +124,9 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
   function subtractLegal(p: Position, m: SubtractMove): boolean {
     const v_a = m.a;
     const v_b = m.b;
-    if (!(v_a >= 0 && v_a < sp.cells.length)) return false;
-    if (!(v_b >= 0 && v_b < sp.cells.length)) return false;
-    if (!((((((v_a !== v_b) && (BigInt(p.value[v_a]) > 0n)) && (BigInt(p.value[v_b]) > 0n)) && ((BigInt(p.value[v_a]) > BigInt(p.value[v_b])) || ((BigInt(p.value[v_a]) === BigInt(p.value[v_b])) && (v_a < v_b)))) && (BigInt(p.value[v_a]) > BigInt(p.value[v_b]))))) return false;
+    if (!(Number.isInteger(v_a) && v_a >= 0 && v_a < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_b) && v_b >= 0 && v_b < sp.cells.length)) return false;
+    if (!((((((v_a !== v_b) && (p.value[v_a] > 0)) && (p.value[v_b] > 0)) && ((p.value[v_a] > p.value[v_b]) || ((p.value[v_a] === p.value[v_b]) && (v_a < v_b)))) && (p.value[v_a] > p.value[v_b])))) return false;
     return true;
   }
 
@@ -136,7 +136,7 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
     const q: Position = { ...p, value: p.value.slice() };
     {
       const v_c = v_a;
-      q.value[v_c] = held((BigInt(p.value[v_a]) - BigInt(p.value[v_b])));
+      q.value[v_c] = held(isub(p.value[v_a], p.value[v_b]));
     }
     {
       const v_c = v_b;
@@ -152,7 +152,7 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
       const _a23 = sp.cells;
       for (let _i24 = 0; _i24 < _a23.length; _i24++) {
         const v_b = _a23[_i24];
-        if (!(((((v_a !== v_b) && (BigInt(p.value[v_a]) > 0n)) && (BigInt(p.value[v_b]) > 0n)) && ((BigInt(p.value[v_a]) > BigInt(p.value[v_b])) || ((BigInt(p.value[v_a]) === BigInt(p.value[v_b])) && (_i22 < _i24)))))) continue;
+        if (!(((((v_a !== v_b) && (p.value[v_a] > 0)) && (p.value[v_b] > 0)) && ((p.value[v_a] > p.value[v_b]) || ((p.value[v_a] === p.value[v_b]) && (_i22 < _i24)))))) continue;
         into.push({ move: "multiply", a: v_a, b: v_b });
       }
     }
@@ -161,9 +161,9 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
   function multiplyLegal(p: Position, m: MultiplyMove): boolean {
     const v_a = m.a;
     const v_b = m.b;
-    if (!(v_a >= 0 && v_a < sp.cells.length)) return false;
-    if (!(v_b >= 0 && v_b < sp.cells.length)) return false;
-    if (!(((((v_a !== v_b) && (BigInt(p.value[v_a]) > 0n)) && (BigInt(p.value[v_b]) > 0n)) && ((BigInt(p.value[v_a]) > BigInt(p.value[v_b])) || ((BigInt(p.value[v_a]) === BigInt(p.value[v_b])) && (v_a < v_b)))))) return false;
+    if (!(Number.isInteger(v_a) && v_a >= 0 && v_a < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_b) && v_b >= 0 && v_b < sp.cells.length)) return false;
+    if (!(((((v_a !== v_b) && (p.value[v_a] > 0)) && (p.value[v_b] > 0)) && ((p.value[v_a] > p.value[v_b]) || ((p.value[v_a] === p.value[v_b]) && (v_a < v_b)))))) return false;
     return true;
   }
 
@@ -173,7 +173,7 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
     const q: Position = { ...p, value: p.value.slice() };
     {
       const v_c = v_a;
-      q.value[v_c] = held((BigInt(p.value[v_a]) * BigInt(p.value[v_b])));
+      q.value[v_c] = held(imul(p.value[v_a], p.value[v_b]));
     }
     {
       const v_c = v_b;
@@ -189,7 +189,7 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
       const _a31 = sp.cells;
       for (let _i32 = 0; _i32 < _a31.length; _i32++) {
         const v_b = _a31[_i32];
-        if (!((((((v_a !== v_b) && (BigInt(p.value[v_a]) > 0n)) && (BigInt(p.value[v_b]) > 0n)) && ((BigInt(p.value[v_a]) > BigInt(p.value[v_b])) || ((BigInt(p.value[v_a]) === BigInt(p.value[v_b])) && (_i30 < _i32)))) && ((BigInt(p.value[v_a]) % BigInt(p.value[v_b])) === 0n)))) continue;
+        if (!((((((v_a !== v_b) && (p.value[v_a] > 0)) && (p.value[v_b] > 0)) && ((p.value[v_a] > p.value[v_b]) || ((p.value[v_a] === p.value[v_b]) && (_i30 < _i32)))) && (imod(p.value[v_a], p.value[v_b]) === 0)))) continue;
         into.push({ move: "divide", a: v_a, b: v_b });
       }
     }
@@ -198,9 +198,9 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
   function divideLegal(p: Position, m: DivideMove): boolean {
     const v_a = m.a;
     const v_b = m.b;
-    if (!(v_a >= 0 && v_a < sp.cells.length)) return false;
-    if (!(v_b >= 0 && v_b < sp.cells.length)) return false;
-    if (!((((((v_a !== v_b) && (BigInt(p.value[v_a]) > 0n)) && (BigInt(p.value[v_b]) > 0n)) && ((BigInt(p.value[v_a]) > BigInt(p.value[v_b])) || ((BigInt(p.value[v_a]) === BigInt(p.value[v_b])) && (v_a < v_b)))) && ((BigInt(p.value[v_a]) % BigInt(p.value[v_b])) === 0n)))) return false;
+    if (!(Number.isInteger(v_a) && v_a >= 0 && v_a < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_b) && v_b >= 0 && v_b < sp.cells.length)) return false;
+    if (!((((((v_a !== v_b) && (p.value[v_a] > 0)) && (p.value[v_b] > 0)) && ((p.value[v_a] > p.value[v_b]) || ((p.value[v_a] === p.value[v_b]) && (v_a < v_b)))) && (imod(p.value[v_a], p.value[v_b]) === 0)))) return false;
     return true;
   }
 
@@ -210,7 +210,7 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
     const q: Position = { ...p, value: p.value.slice() };
     {
       const v_c = v_a;
-      q.value[v_c] = held((BigInt(p.value[v_a]) / BigInt(p.value[v_b])));
+      q.value[v_c] = held(idiv(p.value[v_a], p.value[v_b]));
     }
     {
       const v_c = v_b;
@@ -226,7 +226,7 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
         const _a35 = sp.cells;
         for (let _i36 = 0; _i36 < _a35.length; _i36++) {
           const v_c = _a35[_i36];
-          if ((BigInt(p.value[v_c]) === BigInt(cl.target))) {
+          if ((p.value[v_c] === cl.target)) {
             _q33 = true;
             break Q34;
           }

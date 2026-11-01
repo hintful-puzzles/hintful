@@ -267,7 +267,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
   function slideLegal(p: Position, m: SlideMove): boolean {
     const v_b = m.b;
     const v_n = m.n;
-    if (!(v_b >= 0 && v_b < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_b) && v_b >= 0 && v_b < sp.cells.length)) return false;
     if (!((p.ball[v_b] === 1))) return false;
     if (!sp.adj8[v_b].includes(v_n)) return false;
     if (!((p.kind[v_n] !== 4))) return false;

@@ -376,12 +376,69 @@ export function popcount(m: number): number {
   return (Math.imul((v + (v >>> 4)) & 0x0f0f0f0f, 0x01010101) >>> 24) & 0xff;
 }
 
-/** An exact integer as a layer whose domain is not finite holds it: a double,
- * which must hold it exactly. */
-export function held(v: bigint): number {
+/**
+ * An integer of a domain that is not finite, computed exactly: a double
+ * exactly where it is a safe integer, and a `bigint` past that. Kept so, two
+ * of them are equal exactly where `===` says, and `<` orders them, or one and
+ * a number, as they are; a double's arithmetic is many times a `bigint`'s
+ * speed, and few values leave it.
+ */
+type Exact = number | bigint;
+
+/** `v` as an `Exact`: a double where it is a safe integer. */
+function exactOf(v: bigint): Exact {
   const n = Number(v);
-  if (BigInt(n) !== v) throw new RangeError(`${v} is past what a layer holds exactly`);
-  return n;
+  return Number.isSafeInteger(n) ? n : v;
+}
+
+// A double's result of two safe integers is exact where it is a safe
+// integer: a true result past one rounds to a double past one too. A
+// quotient's double is never rounded across a whole number, since the
+// numbers are below 2^53. Division by zero leaves the doubles, and BigInt
+// throws.
+
+export function iadd(a: Exact, b: Exact): Exact {
+  if (typeof a === "number" && typeof b === "number" && Number.isSafeInteger(a + b))
+    return a + b;
+  return exactOf(BigInt(a) + BigInt(b));
+}
+
+export function isub(a: Exact, b: Exact): Exact {
+  if (typeof a === "number" && typeof b === "number" && Number.isSafeInteger(a - b))
+    return a - b;
+  return exactOf(BigInt(a) - BigInt(b));
+}
+
+export function imul(a: Exact, b: Exact): Exact {
+  if (typeof a === "number" && typeof b === "number" && Number.isSafeInteger(a * b))
+    return a * b + 0;
+  return exactOf(BigInt(a) * BigInt(b));
+}
+
+/** The quotient, truncated. */
+export function idiv(a: Exact, b: Exact): Exact {
+  if (typeof a === "number" && typeof b === "number") {
+    const q = Math.trunc(a / b);
+    if (Number.isSafeInteger(q)) return q + 0;
+  }
+  return exactOf(BigInt(a) / BigInt(b));
+}
+
+/** The remainder, with the dividend's sign. */
+export function imod(a: Exact, b: Exact): Exact {
+  if (typeof a === "number" && typeof b === "number") {
+    const r = a % b;
+    if (Number.isSafeInteger(r)) return r + 0;
+  }
+  return exactOf(BigInt(a) % BigInt(b));
+}
+
+/** An exact integer as a layer whose domain is not finite holds it: a double,
+ * a safe integer, so that a read of the layer is exact as it is. */
+export function held(v: Exact): number {
+  if (typeof v === "bigint")
+    throw new RangeError(`${v} is past what a layer holds exactly`);
+  return v;
 }
 
 /** The least value of a set of values, or `-1`. */

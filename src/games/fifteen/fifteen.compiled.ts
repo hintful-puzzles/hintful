@@ -117,9 +117,9 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
   function slideLegal(p: Position, m: SlideMove): boolean {
     const v_g = m.g;
     const v_t = m.t;
-    if (!(v_g >= 0 && v_g < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_g) && v_g >= 0 && v_g < sp.cells.length)) return false;
     if (!((p.value[v_g] === 0))) return false;
-    if (!(v_t >= 0 && v_t < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_t) && v_t >= 0 && v_t < sp.cells.length)) return false;
     if (!(((v_t !== v_g) && (((v_t % sp.w) === (v_g % sp.w)) || (((v_t / sp.w) | 0) === ((v_g / sp.w) | 0)))))) return false;
     return true;
   }

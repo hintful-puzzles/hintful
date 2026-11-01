@@ -262,7 +262,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
 
   function anticlockwiseLegal(_p: Position, m: AnticlockwiseMove): boolean {
     const v_b = m.b;
-    if (!(v_b >= 0 && v_b < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_b) && v_b >= 0 && v_b < sp.cells.length)) return false;
     if (!((((v_b % sp.w) <= (sp.w - cl.n)) && (((v_b / sp.w) | 0) <= (sp.h - cl.n))))) return false;
     return true;
   }
@@ -300,7 +300,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
 
   function clockwiseLegal(_p: Position, m: ClockwiseMove): boolean {
     const v_b = m.b;
-    if (!(v_b >= 0 && v_b < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_b) && v_b >= 0 && v_b < sp.cells.length)) return false;
     if (!((((v_b % sp.w) <= (sp.w - cl.n)) && (((v_b / sp.w) | 0) <= (sp.h - cl.n))))) return false;
     return true;
   }

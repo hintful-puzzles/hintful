@@ -330,7 +330,7 @@ flood w=4 h=4 colors=2 limit=3: 327680 positions, 115400 can finish, 26260 that 
   short in w=4 h=4 colors=2 limit=1: holds of 186020, 0 of them can finish
   short in w=4 h=4 colors=2 limit=2: holds of 186020, 0 of them can finish
   short in w=4 h=4 colors=2 limit=3: holds of 186020, 0 of them can finish
-flood short: sound (5.8s for the game)
+flood short: sound (5.9s for the game)
 flood short planted: unsound, as it must be
 inertia w=2 h=2: 2500 positions, 2224 can finish, 244 that cannot are claimed by none
 inertia w=2 h=3: 93750 positions, 77108 can finish, 12930 that cannot are claimed by none
@@ -585,7 +585,7 @@ netslide w=4 h=1 wrapping=1 barriers=8: 65536 positions, 0 can finish, 48833 tha
   bare in w=4 h=1 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
   bare in w=4 h=1 wrapping=1 barriers=1: holds of 14911, 0 of them can finish
   bare in w=4 h=1 wrapping=1 barriers=8: holds of 14911, 0 of them can finish
-netslide bare: sound (5.8s for the game)
+netslide bare: sound (5.9s for the game)
 netslide bare planted: unsound, as it must be
   short in w=1 h=2 wrapping=0 barriers=0: holds of 9, 0 of them can finish
   short in w=1 h=2 wrapping=0 barriers=1: holds of 9, 0 of them can finish
@@ -709,8 +709,9 @@ netslide bare planted: unsound, as it must be
   short in w=4 h=1 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
   short in w=4 h=1 wrapping=1 barriers=1: holds of 6885, 0 of them can finish
   short in w=4 h=1 wrapping=1 barriers=8: holds of 6885, 0 of them can finish
-netslide short: sound (5.8s for the game)
+netslide short: sound (5.9s for the game)
 netslide short planted: unsound, as it must be
+numgame: states no dead-end claim
 pegs: no move on any position, so not checked: w=2 h=2
 pegs w=2 h=3: 729 positions, 224 can finish, 305 that cannot are claimed by none
 pegs w=2 h=4: 6561 positions, 1312 can finish, 2561 that cannot are claimed by none
@@ -829,7 +830,7 @@ samegame w=4 h=4 colors=1: 65536 positions, 52419 can finish, 11884 that cannot 
   stuck in w=4 h=2 colors=4: holds of 80128, 0 of them can finish
   stuck in w=4 h=3 colors=1: holds of 226, 0 of them can finish
   stuck in w=4 h=4 colors=1: holds of 1233, 0 of them can finish
-samegame stuck: sound (2.7s for the game)
+samegame stuck: sound (2.6s for the game)
 samegame stuck planted: unsound, as it must be
   last in w=1 h=2 colors=1: holds of 2, 0 of them can finish
   last in w=1 h=2 colors=2: holds of 6, 0 of them can finish
@@ -881,7 +882,7 @@ samegame stuck planted: unsound, as it must be
   last in w=4 h=2 colors=4: holds of 320672, 0 of them can finish
   last in w=4 h=3 colors=1: holds of 12, 0 of them can finish
   last in w=4 h=4 colors=1: holds of 16, 0 of them can finish
-samegame last: sound (2.7s for the game)
+samegame last: sound (2.6s for the game)
 samegame last planted: unsound, as it must be
 sixteen w=2 h=2: 24 positions, 24 can finish, 0 that cannot are claimed by none
 sixteen w=2 h=3: 720 positions, 720 can finish, 0 that cannot are claimed by none
@@ -1059,3 +1060,4 @@ twiddle colorTurned planted: unsound, as it must be
   turnSum in w=5 h=2 n=2, Rows only: holds of 0, 0 of them can finish
 twiddle turnSum: sound (11.4s for the game)
 twiddle turnSum planted: unsound, as it must be
+untangle: states no dead-end claim

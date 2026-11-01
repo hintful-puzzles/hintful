@@ -216,7 +216,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
     const v_f = m.f;
     const v_o = m.o;
     const v_t = m.t;
-    if (!(v_f >= 0 && v_f < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_f) && v_f >= 0 && v_f < sp.cells.length)) return false;
     if (!((p.grid[v_f] === 1))) return false;
     if (!sp.adj4[v_f].includes(v_o)) return false;
     let _c19 = (p.grid[v_o] === 1);

@@ -63,7 +63,7 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
 
   function pressLegal(_p: Position, m: PressMove): boolean {
     const v_c = m.c;
-    if (!(v_c >= 0 && v_c < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_c) && v_c >= 0 && v_c < sp.cells.length)) return false;
     if (!((cl.flips[v_c].length > 0))) return false;
     return true;
   }

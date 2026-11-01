@@ -174,7 +174,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
     const v_L = m.L;
     const v_t = m.t;
     const v_k = m.k;
-    if (!(v_L >= 0 && v_L < sp.lines.length)) return false;
+    if (!(Number.isInteger(v_L) && v_L >= 0 && v_L < sp.lines.length)) return false;
     if (!(!(sp.lineCells[v_L].includes((Math.trunc(sp.h / 2) * sp.w + Math.trunc(sp.w / 2)))))) return false;
     if (!sp.lineCells[v_L].includes(v_t)) return false;
     if (!(((sp.lineCells[v_L].indexOf(v_t) === 1) || (sp.lineCells[v_L].indexOf(v_t) === (sp.lineCells[v_L].length - 1))))) return false;

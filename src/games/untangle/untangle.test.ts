@@ -24,14 +24,17 @@ import {
   LEFT_DRAG,
   LEFT_RELEASE,
 } from "../../engine/pointer.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { decodeSave } from "../../engine/save.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { untangleGame } from "./index.ts";
 import {
   cross,
+  crossedFrom,
+  type Edge,
   findCrossings,
+  isUntangled,
   parseAux,
   parseDesc,
   type RationalPoint,
@@ -92,6 +95,36 @@ describe("findCrossings", () => {
     ];
     const pts = [pt(0, 0), pt(1, 0), pt(2, 0)];
     expect(findCrossings(pts, adj).completed).toBe(true);
+  });
+
+  // The render's flags and the hint's counts are this, for speed; the board's
+  // finish is the description's. Points on a 3×3 grid of mixed denominators
+  // put ends on lines, lines on one line and points on one another, where
+  // `cross` reads the two lines unequally.
+  it("crosses as the description says", () => {
+    const rng = randomNew("untangle crosses");
+    const upto = (k: number) => randomUpto(rng, k);
+    const n = 6;
+    const all: Edge[] = [];
+    for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) all.push({ a, b });
+    let finished = 0;
+    for (let k = 0; k < 3000; k++) {
+      const edges = all.filter(() => upto(3) === 0);
+      const board = { n, edges };
+      const pts = Array.from({ length: n }, () => {
+        const d = 1 + upto(2);
+        return pt(upto(3) * d, upto(3) * d, d);
+      });
+      const { crosses, completed } = findCrossings(pts, edges);
+      expect(isUntangled(board, pts)).toBe(completed);
+      if (completed) finished++;
+      edges.forEach((e, i) => {
+        expect(crossedFrom(board, pts, e.a).includes(e.b)).toBe(crosses[i]);
+      });
+    }
+    // Both answers met, often.
+    expect(finished).toBeGreaterThan(300);
+    expect(finished).toBeLessThan(2700);
   });
 });
 

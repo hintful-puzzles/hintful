@@ -38,8 +38,8 @@ type ElemSort =
 
 type Sort =
   | { k: "num" }
-  /** An integer of a domain that is not finite, computed exactly, as a
-   * `bigint`. */
+  /** An integer of a domain that is not finite, computed exactly: the
+   * runtime's `Exact`, a double while it is a safe integer. */
   | { k: "int" }
   | { k: "bool" }
   | { k: "none" }
@@ -115,7 +115,7 @@ const scalar = (s: Sort): boolean => s.k === "num" || s.k === "elem" || s.k === 
 
 function tsType(s: Sort): string {
   if (s.k === "bool") return "boolean";
-  if (s.k === "int") return "bigint";
+  if (s.k === "int") return "number | bigint";
   if (isArray(s)) return "readonly number[]";
   return "number";
 }
@@ -529,7 +529,10 @@ function compileNode(e: Expr, scope: Scope, env: Env, out: Out): Val {
     }
     case "neg": {
       const v = compileExpr(e.of, scope, env, out);
-      if (v.sort.k === "int") return { code: `-(${v.code})`, sort: INT };
+      if (v.sort.k === "int") {
+        env.used.add("isub");
+        return { code: `isub(0, ${v.code})`, sort: INT };
+      }
       expect(v, "num", "-");
       return { code: `-(${v.code})`, sort: NUM };
     }
@@ -658,7 +661,7 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
   }
   const a = compileExpr(e.a, scope, env, out);
   const b = compileExpr(e.b, scope, env, out);
-  if (a.sort.k === "int" || b.sort.k === "int") return exact(op, a, b);
+  if (a.sort.k === "int" || b.sort.k === "int") return exact(op, a, b, env);
   switch (op) {
     case "iff":
       expect(a, "bool", op);
@@ -730,36 +733,51 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
   }
 }
 
-/** A number as a `bigint`: a literal written as one. */
-function big(v: Val, op: string): string {
-  if (v.sort.k === "int") return v.code;
-  expect(v, "num", op);
-  return /^-?\d+$/.test(v.code) ? `${v.code}n` : `BigInt(${v.code})`;
+/** A side of an exact operation: a number of a finite domain is a safe
+ * integer, so an exact one as it is. */
+function exactSide(v: Val, op: string): string {
+  if (v.sort.k !== "int") expect(v, "num", op);
+  return v.code;
 }
 
-/** An operation one side of which is an exact integer: the other side is
- * made one, and so is the result of arithmetic. `/` truncates and `mod`
- * takes the dividend's sign, as on numbers. */
-function exact(op: Extract<Expr, { k: "bin" }>["op"], a: Val, b: Val): Val {
+/** The runtime's exact arithmetic, by operator. */
+const EXACT_OP = {
+  "+": "iadd",
+  "-": "isub",
+  "*": "imul",
+  "/": "idiv",
+  mod: "imod",
+} as const;
+
+/**
+ * An operation one side of which is an exact integer: the result of
+ * arithmetic is one too. An exact value is a double exactly where it is a
+ * safe integer, so `===` and `<` compare two of them, or one and a number,
+ * as they are. `/` truncates and `mod` takes the dividend's sign, as on
+ * numbers.
+ */
+function exact(op: Extract<Expr, { k: "bin" }>["op"], a: Val, b: Val, env: Env): Val {
   switch (op) {
     case "=":
     case "!=":
       return {
-        code: `(${big(a, op)} ${op === "=" ? "===" : "!=="} ${big(b, op)})`,
+        code: `(${exactSide(a, op)} ${op === "=" ? "===" : "!=="} ${exactSide(b, op)})`,
         sort: BOOL,
       };
     case "<":
     case "<=":
     case ">":
     case ">=":
-      return { code: `(${big(a, op)} ${op} ${big(b, op)})`, sort: BOOL };
+      return { code: `(${exactSide(a, op)} ${op} ${exactSide(b, op)})`, sort: BOOL };
     case "+":
     case "-":
     case "*":
     case "/":
-      return { code: `(${big(a, op)} ${op} ${big(b, op)})`, sort: INT };
-    case "mod":
-      return { code: `(${big(a, op)} % ${big(b, op)})`, sort: INT };
+    case "mod": {
+      const fn = EXACT_OP[op];
+      env.used.add(fn);
+      return { code: `${fn}(${exactSide(a, op)}, ${exactSide(b, op)})`, sort: INT };
+    }
     default:
       throw new CompileError(`${show(a.sort)} ${op} ${show(b.sort)}`);
   }
@@ -1681,15 +1699,15 @@ const timesOf = (d: string, env: Env): string =>
       ? `(${d} === _repeat ? _times : 1)`
       : "1";
 
-/** Layer `fn`'s value at place `at`: exact, as a `bigint`, where its domain
- * is not finite. */
+/** Layer `fn`'s value at place `at`: exact where its domain is not finite,
+ * which a layer holds as a safe integer (`held`). */
 function layerRead(fn: string, layer: LayerSort, at: string, env: Env): Val {
   if (layer.carried && env.carrying !== fn)
     throw new CompileError(
       `${fn} is carried: no rule reads it, but its own assignment`,
     );
   const code = `p.${fn}[${at}]`;
-  return layer.open ? { code: `BigInt(${code})`, sort: INT } : { code, sort: NUM };
+  return { code, sort: layer.open ? INT : NUM };
 }
 
 function call(

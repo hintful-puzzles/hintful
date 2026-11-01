@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/flood/flood.description.yaml: edit that, not this.
 
-import { type GridSpace, held, rangeMask } from "../../engine/describe-runtime.ts";
+import { type GridSpace, held, iadd, rangeMask } from "../../engine/describe-runtime.ts";
 import type { PositionRules } from "../../engine/position-runtime.ts";
 
 /** The space's units, for `describedSpace`: the description's. */
@@ -92,7 +92,7 @@ export function claims(sp: GridSpace, cl: Dealt, _variations: readonly string[])
           _g26++;
         }
       }
-      return ((BigInt(p.moves[0]) + BigInt(_g26)) > BigInt(cl.limit));
+      return (iadd(p.moves[0], _g26) > cl.limit);
     },
   };
 }
@@ -132,7 +132,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
 
   function fillLegal(p: Position, m: FillMove): boolean {
     const v_k = m.k;
-    if (!(v_k >= 0 && v_k < 31 && ((rangeMask(0, (cl.colors - 1)) >> v_k) & 1) !== 0)) return false;
+    if (!(Number.isInteger(v_k) && v_k >= 0 && v_k < 31 && ((rangeMask(0, (cl.colors - 1)) >> v_k) & 1) !== 0)) return false;
     if (!((v_k !== p.color[(0 * sp.w + 0)]))) return false;
     let _q7 = true;
     Q8: {
@@ -190,7 +190,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       }
     }
     {
-      q.moves[0] = held((BigInt(p.moves[0]) + 1n));
+      q.moves[0] = held(iadd(p.moves[0], 1));
     }
     return q;
   }
@@ -211,7 +211,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       if (!(_q22)) return false;
     }
     {
-      if (!((BigInt(p.moves[0]) <= BigInt(cl.limit)))) return false;
+      if (!((p.moves[0] <= cl.limit))) return false;
     }
     return true;
   }

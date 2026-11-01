@@ -73,11 +73,15 @@ import {
   coordLimit,
   DRAG_THRESHOLD,
   findCrossings,
+  isUntangled,
   makeCircle,
   PREFERRED_TILE_SIZE,
   parseDesc,
   placeMove,
   pointerDrop,
+  pointsOf,
+  positionOf,
+  rulesOf,
   type UntangleDrawState,
   type UntangleMove,
   type UntangleParams,
@@ -362,37 +366,37 @@ export const untangleGame: Game<
       rejectMove(m, "untangle: executeMove");
     }
 
-    // The topology is shared; only the positions are copied.
-    const ns: UntangleState = { ...s, pts: s.pts.slice(), justSolved: m.solving };
-    for (const p of m.points) {
-      // `RationalPoint`'s integer invariant is enforced here, where every
-      // move (drag, solve, replay, load) becomes state: a fraction slipping
-      // through any input path would otherwise surface as a cryptic `BigInt`
-      // RangeError deep inside `findCrossings`.
-      if (
-        !Number.isInteger(p.i) ||
-        !Number.isInteger(p.x) ||
-        !Number.isInteger(p.y) ||
-        !Number.isInteger(p.d) ||
-        p.d <= 0 ||
-        p.i < 0 ||
-        p.i >= s.n
-      ) {
+    // Each point is the description's place, played in turn. Its legality
+    // holds `RationalPoint`'s integer invariant where every move (drag,
+    // solve, replay, load) becomes state: a fraction slipping through any
+    // input path would otherwise surface as a cryptic `BigInt` RangeError
+    // deep inside `findCrossings`.
+    const rules = rulesOf(s);
+    let at = positionOf(s.pts);
+    for (const { i, x, y, d } of m.points) {
+      const place = { move: "place", p: i, px: x, py: y, pd: d } as const;
+      if (!rules.legal(at, place)) {
         throw new Error(
-          `untangle executeMove: bad point ${JSON.stringify(p)} (i in [0,${s.n}), d>0, all integral)`,
+          `untangle executeMove: bad point ${JSON.stringify({ i, x, y, d })} (i in [0,${s.n}), d>0, all integral)`,
         );
       }
-      ns.pts[p.i] = { x: p.x, y: p.y, d: p.d };
+      at = rules.play(at, place);
     }
-    ns.crosses = findCrossings(ns.pts, ns.edges).crosses;
-    return ns;
+    // The topology is shared; only the positions are copied.
+    const pts = pointsOf(at);
+    return {
+      ...s,
+      pts,
+      crosses: findCrossings(pts, s.edges).crosses,
+      justSolved: m.solving,
+    };
   },
 
   finishesByDeduction: nothingToDeduce,
   // The layout comes from a planarity test and is kept for the hint and
   // Solve, which need it next.
   hasNoSolution: (s) => solvedLayout(s.n, s.w, s.edges) === null,
-  status: (s) => (s.crosses.includes(true) ? "ongoing" : "solved"),
+  status: (s) => (isUntangled(s, s.pts) ? "solved" : "ongoing"),
   notApplicable: {
     findMistakes:
       "Any arrangement of the points with no lines crossing wins, so there is no single answer to check a move against.",

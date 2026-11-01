@@ -195,8 +195,9 @@ function compileMove(
       const v = `v_${b.name}`;
       const sort = sorts.get(b.name) as Sort;
       if (unlisted(b)) {
-        lg.emit(`if (!Number.isInteger(${v})) return false;`);
-        scope.set(b.name, { code: `BigInt(${v})`, sort });
+        // A safe integer, so the binding is an exact value as it is.
+        lg.emit(`if (!Number.isSafeInteger(${v})) return false;`);
+        scope.set(b.name, { code: v, sort });
         if (b.where !== null) {
           const w = compileExpr(b.where, scope, env, lg);
           expect(w, "bool", `where of ${b.name}`);
@@ -209,11 +210,15 @@ function compileMove(
         lg.emit(`if (${v} !== ${t.code}) return false;`);
       } else {
         const s = compileExpr(b.of, scope, env, lg);
+        // A move read from a save may hold anything, and a fraction passes a
+        // range or a shift.
         if (s.code === "sp.cells" || s.code === "sp.lines")
-          lg.emit(`if (!(${v} >= 0 && ${v} < ${s.code}.length)) return false;`);
+          lg.emit(
+            `if (!(Number.isInteger(${v}) && ${v} >= 0 && ${v} < ${s.code}.length)) return false;`,
+          );
         else if (s.sort.k === "set" && s.sort.of.k === "num")
           lg.emit(
-            `if (!(${v} >= 0 && ${v} < 31 && ((${s.code} >> ${v}) & 1) !== 0)) return false;`,
+            `if (!(Number.isInteger(${v}) && ${v} >= 0 && ${v} < 31 && ((${s.code} >> ${v}) & 1) !== 0)) return false;`,
           );
         else lg.emit(`if (!${s.code}.includes(${v})) return false;`);
       }

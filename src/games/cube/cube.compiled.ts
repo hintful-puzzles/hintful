@@ -99,9 +99,9 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
   function rollLegal(p: Position, m: RollMove): boolean {
     const v_s = m.s;
     const v_r = m.r;
-    if (!(v_s >= 0 && v_s < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_s) && v_s >= 0 && v_s < sp.cells.length)) return false;
     if (!((p.at[v_s] === 1))) return false;
-    if (!(v_r >= 0 && v_r < 31 && ((((1 << 0) | (1 << 1) | (1 << 2) | (1 << 3)) >> v_r) & 1) !== 0)) return false;
+    if (!(Number.isInteger(v_r) && v_r >= 0 && v_r < 31 && ((((1 << 0) | (1 << 1) | (1 << 2) | (1 << 3)) >> v_r) & 1) !== 0)) return false;
     if (!((cl.dest[v_s][v_r] !== -1))) return false;
     return true;
   }

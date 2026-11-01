@@ -311,7 +311,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       _sets66.set(_a59, _fix56);
       return _fix56;
     };
-    if (!(v_s >= 0 && v_s < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_s) && v_s >= 0 && v_s < sp.cells.length)) return false;
     let _c51 = (p.tile[v_s] !== 0);
     if (_c51) {
       let _q47 = false;

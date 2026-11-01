@@ -496,7 +496,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
   function stepLegal(p: Position, m: StepMove): boolean {
     const v_b = m.b;
     const v_t = m.t;
-    if (!(v_b >= 0 && v_b < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_b) && v_b >= 0 && v_b < sp.cells.length)) return false;
     if (!((p.man[v_b] === 1))) return false;
     if (!sp.adj8[v_b].includes(v_t)) return false;
     let _c23 = ((p.ground[v_t] === 0) && (p.barrel[v_t] === 0));
@@ -603,7 +603,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
         }
       }
     }
-    if (!(v_t >= 0 && v_t < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_t) && v_t >= 0 && v_t < sp.cells.length)) return false;
     if (!(((p.man[v_t] === 0) && (_fix46[v_t] === 1)))) return false;
     return true;
   }
@@ -714,7 +714,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
         }
       }
     }
-    if (!(v_s >= 0 && v_s < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_s) && v_s >= 0 && v_s < sp.cells.length)) return false;
     if (!((_fix91[v_s] === 1))) return false;
     if (!sp.adj4[v_s].includes(v_o)) return false;
     let _c102 = (p.barrel[v_o] === 1);

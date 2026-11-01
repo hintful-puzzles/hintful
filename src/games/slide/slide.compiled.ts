@@ -96,7 +96,7 @@ export function rules(sp: GridSpace, _cl: Dealt, _variations: readonly string[])
   function shiftLegal(p: Position, m: ShiftMove): boolean {
     const v_a = m.a;
     const v_n = m.n;
-    if (!(v_a >= 0 && v_a < sp.cells.length)) return false;
+    if (!(Number.isInteger(v_a) && v_a >= 0 && v_a < sp.cells.length)) return false;
     let _c36 = (p.block[v_a] !== 0);
     if (_c36) {
       const _g30: number[] = [];
