@@ -48,3 +48,59 @@ help:
     The search has a limit, which no board as dealt comes near; if a position
     were ever past it, the hint would say so, and *Show solution…* would finish
     from the board as it was dealt.
+name: Slide
+family: position
+sizes:
+  # The game deals boards of 48 squares at most, and loads one of any size
+  # with its desc up to 251 wide; 99 stands for no bound on the height.
+  w: { min: 1, max: 251 }
+  h: { min: 1, max: 99 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+position:
+  # 1 on a wall.
+  ground: { domain: "{0, 1}" }
+  # 1 on a forcefield, which only the main block may cross.
+  field: { domain: "{0, 1}" }
+  # 1 on the square the main block's first square is to reach.
+  goal: { domain: "{0, 1}", once: "1" }
+  # The number of the block on each of its squares, the main block's 1; 0
+  # where no block stands. Two blocks of one shape are told apart only by
+  # their numbers, which the game gives in reading order each time it reads
+  # the board.
+  block: { domain: "range(0, w * h)" }
+freedom: { kind: transition }
+define:
+  # Square a is the first of its block, in reading order.
+  lead(a): "block(a) != 0 and first(set(c over c in cells where block(c) = block(a))) = a"
+  # Block k could stand on square (x, y): on the board, no wall, no other
+  # block there, and no forcefield unless k is the main block.
+  fits(k, x, y): >-
+    on_grid(x, y) and ground(cell(x, y)) = 0
+    and (block(cell(x, y)) = 0 or block(cell(x, y)) = k)
+    and (field(cell(x, y)) = 0 or k = 1)
+moves:
+  # The block whose first square is a shifts one square, toward a's neighbor
+  # n, where every square it would then cover is one it could stand on: the
+  # squares it leaves among them.
+  shift:
+    for: "a in cells where lead(a), n in adj4(a)"
+    when: >-
+      forall c in cells where block(c) = block(a):
+      fits(block(a), x(c) + x(n) - x(a), y(c) + y(n) - y(a))
+    set:
+      - for: "c in cells where block(c) = block(a)"
+        block: "0"
+      - for: >-
+          b in cells where block(b) = block(a),
+          c = cell(x(b) + x(n) - x(a), y(b) + y(n) - y(a))
+        block: "block(a)"
+finish:
+  - "exists g in cells where goal(g) = 1: block(g) = 1 and lead(g)"
+deal:
+  start: >-
+    a wall round a board of single squares, the main block at the top left
+    and the exit in the right-hand wall behind forcefields; squares taken
+    away and neighbors merged in a shuffled order, each kept only while the
+    solver still finishes the board within the move limit

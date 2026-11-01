@@ -20,7 +20,7 @@ import type { Point } from "../../engine/types.ts";
 import { newSlideDesc } from "./generator.ts";
 import { blockCells, hint, hintKeepTrack } from "./hint.ts";
 import { slideGame } from "./index.ts";
-import { computeReachable, executeMove } from "./moves.ts";
+import { computeReachable, executeMove, status } from "./moves.ts";
 import { COL_HINT_EVIDENCE } from "./render.ts";
 import { findExit, solveBoard } from "./solver.ts";
 import {
@@ -29,7 +29,6 @@ import {
   newState,
   type SlideMove,
   type SlideState,
-  status,
 } from "./state.ts";
 
 const G = slideGame;

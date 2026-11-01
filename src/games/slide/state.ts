@@ -42,7 +42,6 @@ import type { PresetBoards } from "../../engine/game.ts";
 import { endParams, parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
-import type { GameStatus } from "../../engine/types.ts";
 
 // --- the board alphabet -----------------------------------------------
 
@@ -200,11 +199,6 @@ export interface SlideState {
    * `solution` move with `restart`). Shared by every state, as `forcefield`
    * is. */
   readonly dealt: Uint8Array;
-}
-
-/** The main block's anchor sits on the target. */
-export function status(s: SlideState): GameStatus {
-  return s.board[s.ty * s.w + s.tx] === MAINANCHOR ? "solved" : "ongoing";
 }
 
 // --- UI (ephemeral; never serialized) ---------------------------------

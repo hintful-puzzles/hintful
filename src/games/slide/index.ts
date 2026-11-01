@@ -52,7 +52,7 @@ import type { Point } from "../../engine/types.ts";
 import { newSlideDesc } from "./generator.ts";
 import { hint, hintKeepTrack, SLIDE_RUNGS } from "./hint.ts";
 import { HINT_MARKS } from "./hint-text.ts";
-import { computeReachable, executeMove, nearestReachable } from "./moves.ts";
+import { computeReachable, executeMove, nearestReachable, status } from "./moves.ts";
 import {
   BORDER,
   colors,
@@ -79,7 +79,6 @@ import {
   type SlideParams,
   type SlideState,
   type SlideUi,
-  status,
   statusbarText,
   textFormat,
   validateParams,

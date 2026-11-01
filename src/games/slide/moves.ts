@@ -1,128 +1,123 @@
 /**
- * Slide's move application and drag reachability, in their own module because
- * `render.ts` needs them too: upstream's `game_redraw` shows an in-progress
- * drag by *simulating the release move*, so the renderer calls `movePiece`, and
- * from `index.ts` that would be an import cycle
+ * Slide's move application and drag reachability, by the description's rules,
+ * in their own module because `render.ts` needs them too: upstream's
+ * `game_redraw` shows an in-progress drag by *simulating the release move*, so
+ * the renderer calls `slid`, and from `index.ts` that would be an import cycle
  * (docs/rendering.md § "A simulated-release preview lives in `moves.ts`").
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { describedSpace } from "../../engine/describe-runtime.ts";
+import type { GameStatus } from "../../engine/types.ts";
+import * as slide from "./slide.compiled.ts";
 import {
+  ANCHOR,
   EMPTY,
   isAnchor,
   isDist,
   MAINANCHOR,
   type SlideMove,
   type SlideState,
+  WALL,
 } from "./state.ts";
 
+// --- the description's rules ---------------------------------------------
+
+/** The description's rules on a board of this size. */
+function rulesOf(s: { w: number; h: number }) {
+  return slide.rules(describedSpace(slide.units, s.w, s.h), {}, []);
+}
+
+/** The board as the description's layers: each block numbered in the order
+ * its first square comes, the main block 1. */
+function positionOf(s: SlideState): slide.Position {
+  const n = s.w * s.h;
+  const goal = new Int32Array(n);
+  goal[s.ty * s.w + s.tx] = 1;
+  const block = new Int32Array(n);
+  let next = 2;
+  s.board.forEach((v, i) => {
+    if (v === MAINANCHOR) block[i] = 1;
+    else if (v === ANCHOR) block[i] = next++;
+    else if (isDist(v)) block[i] = block[i - v];
+  });
+  return {
+    ground: Int32Array.from(s.board, (v) => (v === WALL ? 1 : 0)),
+    field: Int32Array.from(s.forcefield),
+    goal,
+    block,
+  };
+}
+
+/** The canonical board the layers' blocks make: each block's first square
+ * its anchor, and each later one the distance back to the one before. */
+function boardOf(p: slide.Position): Uint8Array {
+  const last = new Map<number, number>();
+  return Uint8Array.from(p.block, (k, i) => {
+    if (k === 0) return p.ground[i] === 1 ? WALL : EMPTY;
+    const prev = last.get(k);
+    last.set(k, i);
+    if (prev !== undefined) return i - prev;
+    return k === 1 ? MAINANCHOR : ANCHOR;
+  });
+}
+
 /**
- * Slide the block anchored at `from` so its anchor lands on `to`, writing into
- * `dst` (a copy of `src`). Returns false — leaving `dst` half-written, which
- * the caller must discard — when the move is illegal (upstream `move_piece`).
- *
- * Note what is *not* checked: that the block keeps its shape. `move_piece`
- * only bounds-checks each square's flat index, so a `to` that wraps the block
- * around a row edge is accepted. Legal moves only ever come from
- * {@link computeReachable} (which does check) or from the solver's own path,
- * so this is upstream's contract preserved, not a hole being opened.
+ * Every square the block anchored at `anchor` can have its anchor slid to,
+ * each with the board there: the description's shifts of that block alone,
+ * searched breadth first, so the block's own squares are free space as it
+ * slides out of them and only the main block crosses a forcefield. Empty
+ * where no block is anchored there.
  */
-export function movePiece(
-  w: number,
-  h: number,
-  src: Uint8Array,
-  dst: Uint8Array,
-  ff: Uint8Array,
-  from: number,
-  to: number,
-): boolean {
-  const wh = w * h;
-
-  if (!isAnchor(dst[from])) return false;
-
-  // Walk to the far end of the block's back-link list.
-  let tail = from;
-  for (let j = from; j < wh; j++) if (src[j] === j - tail) tail = j;
-
-  // Lift the block out of its old position...
-  for (let j = tail; j >= 0; j = isDist(src[j]) ? j - src[j] : -1) dst[j] = EMPTY;
-
-  // ...and put it down at the new one.
-  for (let j = tail; j >= 0; j = isDist(src[j]) ? j - src[j] : -1) {
-    const jn = j + to - from;
-    if (jn < 0 || jn >= wh) return false;
-    if (dst[jn] === EMPTY && (!ff[jn] || src[from] === MAINANCHOR)) dst[jn] = src[j];
-    else return false;
+function slides(state: SlideState, anchor: number): Map<number, slide.Position> {
+  const reached = new Map<number, slide.Position>();
+  if (!isAnchor(state.board[anchor])) return reached;
+  const rules = rulesOf(state);
+  const sp = describedSpace(slide.units, state.w, state.h);
+  reached.set(anchor, positionOf(state));
+  const queue = [anchor];
+  for (let q = 0; q < queue.length; q++) {
+    const a = queue[q];
+    const p = reached.get(a) as slide.Position;
+    for (const n of sp.adj4[a]) {
+      const m: slide.Move = { move: "shift", a, n };
+      // The block's first square moves with it, onto n.
+      if (reached.has(n) || !rules.legal(p, m)) continue;
+      reached.set(n, rules.play(p, m));
+      queue.push(n);
+    }
   }
+  return reached;
+}
 
-  return true;
+/** Solved by the description's finish: the main block's anchor sits on the
+ * target. */
+export function status(s: SlideState): GameStatus {
+  return rulesOf(s).finished(positionOf(s)) ? "solved" : "ongoing";
+}
+
+/**
+ * The board after sliding the block anchored at `from` so its anchor lands
+ * on `to` (upstream `move_piece`), by a line of the description's shifts;
+ * null where the block cannot get there.
+ */
+export function slid(state: SlideState, from: number, to: number): Uint8Array | null {
+  const p = slides(state, from).get(to);
+  return p === undefined ? null : boardOf(p);
 }
 
 /**
  * Mark, in `reachable`, every square the block anchored at `anchor` can have
- * its anchor slid to — upstream's BFS in `interpret_move`'s press arm. Unlike
- * the solver's equivalent, the block's *own* squares count as free space (it
- * is sliding out of them as it goes), and only the main block may cross a
- * forcefield.
+ * its anchor slid to — upstream's BFS in `interpret_move`'s press arm, by the
+ * description's shifts.
  */
 export function computeReachable(
   state: SlideState,
   anchor: number,
   reachable: Uint8Array,
 ): void {
-  const { w, h, board, forcefield } = state;
-  const wh = w * h;
-
   reachable.fill(0);
-  const queue = new Int32Array(wh);
-  let qhead = 0;
-  let qtail = 0;
-  reachable[anchor] = 1;
-  queue[qtail++] = anchor;
-
-  // The last square of the block: the fit test walks the back-link list, which
-  // runs from the tail towards the anchor.
-  let tail = anchor;
-  for (let j = anchor; j < wh; j++) if (board[j] === j - tail) tail = j;
-
-  while (qhead < qtail) {
-    const pos = queue[qhead++];
-    const x = pos % w;
-    const y = Math.floor(pos / w);
-
-    for (let dir = 0; dir < 4; dir++) {
-      const dx = dir === 0 ? -1 : dir === 1 ? 1 : 0;
-      const dy = dir === 2 ? -1 : dir === 3 ? 1 : 0;
-
-      if (x + dx < 0 || x + dx >= w || y + dy < 0 || y + dy >= h) continue;
-
-      const newpos = pos + dy * w + dx;
-      if (reachable[newpos]) continue; // already done this one
-
-      // Would the block fit if it took one more step this way?
-      let j = tail;
-      for (; j >= 0; j = isDist(board[j]) ? j - board[j] : -1) {
-        const rel = j + pos - anchor;
-        const jx = rel % w;
-        const jy = Math.floor(rel / w);
-
-        if (jx + dx < 0 || jx + dx >= w || jy + dy < 0 || jy + dy >= h) break;
-
-        let j2 = rel + dy * w + dx;
-
-        if (board[j2] === EMPTY && (!forcefield[j2] || board[anchor] === MAINANCHOR))
-          continue;
-        while (isDist(board[j2])) j2 -= board[j2];
-        if (j2 === anchor) continue; // our own square; we're vacating it
-        break;
-      }
-
-      if (j < 0) {
-        reachable[newpos] = 1;
-        queue[qtail++] = newpos;
-      }
-    }
-  }
+  for (const at of slides(state, anchor).keys()) reachable[at] = 1;
 }
 
 /**
@@ -176,11 +171,9 @@ export function executeMove(state: SlideState, move: SlideMove): SlideState {
   }
   if (move.kind !== "move") return assertNever(move, "slide: executeMove");
 
-  const { w } = state;
   const { from, to } = move;
-  const board = state.board.slice();
-  if (!movePiece(w, state.h, state.board, board, state.forcefield, from, to))
-    throw new Error("slide: illegal move");
+  const board = slid(state, from, to);
+  if (board === null) throw new Error("slide: illegal move");
 
   let { lastmoved, lastmovedPos, movecount } = state;
 

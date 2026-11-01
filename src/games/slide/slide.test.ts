@@ -39,7 +39,7 @@ import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts
 import type { GameStatus } from "../../engine/types.ts";
 import { newSlideDesc } from "./generator.ts";
 import { slideGame } from "./index.ts";
-import { computeReachable, executeMove, movePiece } from "./moves.ts";
+import { computeReachable, executeMove, slid, status } from "./moves.ts";
 import { PREFERRED_TILE_SIZE } from "./render.ts";
 import { solveBoard } from "./solver.ts";
 import {
@@ -367,14 +367,15 @@ describe("slide solver", () => {
     expect(moves).toBe(2);
     expect(path).toHaveLength(2);
 
-    // Replaying the reported path must actually reach the target.
-    let cur = board;
+    // Replaying the reported path, by the description's shifts, must
+    // actually reach the target.
+    let cur = fixtureState();
     for (const step of path ?? []) {
-      const next = cur.slice();
-      expect(movePiece(FW, FH, cur, next, forcefield, step.from, step.to)).toBe(true);
-      cur = next;
+      const next = slid(cur, step.from, step.to);
+      expect(next).not.toBeNull();
+      cur = { ...cur, board: next ?? cur.board };
     }
-    expect(cur[idx(2, 1)]).toBe(MAINANCHOR);
+    expect(cur.board[idx(2, 1)]).toBe(MAINANCHOR);
   });
 
   it("returns -1 when nothing can move", () => {
@@ -409,6 +410,67 @@ describe("slide solver", () => {
     forcefield[idx(3, 1)] = 1;
     forcefield[idx(3, 2)] = 1;
     expect(solveBoard(FW, FH, board, forcefield, 2, 1, -1).moves).toBe(1);
+  });
+
+  /**
+   * The solver keeps its own slides over packed boards, which the generator
+   * runs on every candidate; this holds them to the description's shifts: on
+   * each board, a breadth-first search whose moves are every block slid to
+   * every square the shifts reach finds the solver's shortest count, and the
+   * solver's path plays by those shifts.
+   */
+  it("moves as the description's shifts do", () => {
+    const boards: SlideState[] = [
+      fixtureState(),
+      fixtureState(2, 1, 2, (_, ff) => {
+        ff[idx(4, 1)] = 1;
+        ff[idx(3, 2)] = 1;
+      }),
+      ...[0, 1, 2, 3].map((k) => {
+        const p = P(5, 5, -1);
+        return newState(p, newSlideDesc(p, randomNew(`held ${k}`)).desc);
+      }),
+    ];
+    for (const s of boards) {
+      const { moves, path } = solveBoard(
+        s.w,
+        s.h,
+        s.board,
+        s.forcefield,
+        s.tx,
+        s.ty,
+        -1,
+        true,
+      );
+      // Shortest by the description's moves.
+      const seen = new Map<string, number>([[s.board.join(), 0]]);
+      const queue = [s.board];
+      let found = -1;
+      for (let q = 0; q < queue.length && found < 0; q++) {
+        const board = queue[q];
+        const at: SlideState = { ...s, board };
+        const depth = seen.get(board.join()) as number;
+        for (let from = 0; from < board.length && found < 0; from++) {
+          const reach = new Uint8Array(board.length);
+          computeReachable(at, from, reach);
+          for (let to = 0; to < board.length; to++) {
+            if (!reach[to] || to === from) continue;
+            const next = slid(at, from, to) as Uint8Array;
+            if (seen.has(next.join())) continue;
+            seen.set(next.join(), depth + 1);
+            if (status({ ...s, board: next }) === "solved") {
+              found = depth + 1;
+              break;
+            }
+            queue.push(next);
+          }
+        }
+      }
+      expect(moves).toBe(found);
+      let cur = s;
+      for (const step of path ?? []) cur = executeMove(cur, { kind: "move", ...step });
+      expect(status(cur)).toBe(moves < 0 ? "ongoing" : "solved");
+    }
   });
 });
 

@@ -67,7 +67,7 @@ import {
   WIN_LEAD,
   type WinTone,
 } from "../../engine/win-wave.ts";
-import { movePiece } from "./moves.ts";
+import { slid } from "./moves.ts";
 import {
   cursorPos,
   EMPTY,
@@ -737,20 +737,9 @@ export function redraw(
   // Upstream asserts if the held block no longer fits. Only a state change under
   // a live grab could cause that, and `changedState` cancels the grab — but draw
   // the plain board rather than throw if it ever happens anyway.
-  const board = state.board.slice();
-  if (
-    ui.grabbed &&
-    !movePiece(
-      w,
-      h,
-      state.board,
-      board,
-      state.forcefield,
-      ui.grabAnchor,
-      ui.grabCurrpos,
-    )
-  )
-    board.set(state.board);
+  const board =
+    (ui.grabbed ? slid(state, ui.grabAnchor, ui.grabCurrpos) : null) ??
+    state.board.slice();
 
   // A dsf over the displayed board, so we can tell which edges are internal to
   // a block and which are boundaries. Walls join up with each other.
