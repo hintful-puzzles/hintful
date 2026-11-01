@@ -22,6 +22,7 @@ import { loadDescriptionFile } from "../../src/describe/load.ts";
 import {
   CHECKED_ORDERS,
   gameFingerprint,
+  isDeadEndKey,
   libraryFingerprint,
   soundnessKey,
 } from "../../src/describe/soundness.ts";
@@ -431,21 +432,22 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
   );
   // Only the planted defects may fail; a verdict is recorded only for a
   // technique found sound. A narrowed run keeps the others' verdicts, less
-  // those of the descriptions it checked.
+  // those of the descriptions it checked, and every run keeps the dead-end
+  // checker's.
   const path = `${ROOT}src/describe/soundness.json`;
   const checked = [...files]
     .filter(
       ([, f]) => only === null || only.includes(isLibrary(f) ? f.library : f.game),
     )
     .map(([s]) => `${s}#`);
-  const kept: Record<string, string> =
-    only === null
-      ? {}
-      : Object.fromEntries(
-          Object.entries(
-            JSON.parse(readFileSync(path, "utf8")) as Record<string, string>,
-          ).filter(([k]) => !checked.some((s) => k.startsWith(s))),
-        );
+  const kept: Record<string, string> = Object.fromEntries(
+    Object.entries(
+      JSON.parse(readFileSync(path, "utf8")) as Record<string, string>,
+    ).filter(
+      ([k]) =>
+        isDeadEndKey(k) || (only !== null && !checked.some((s) => k.startsWith(s))),
+    ),
+  );
   writeFileSync(
     path,
     `${JSON.stringify(Object.fromEntries(Object.entries({ ...kept, ...verdicts }).sort()), null, 2)}\n`,

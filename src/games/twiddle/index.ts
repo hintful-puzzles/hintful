@@ -45,18 +45,20 @@ import {
 import {
   decodeParams,
   defaultParams,
-  doRotate,
   encodeParams,
   hasNoSolution,
   menu,
   newDesc,
   newState,
+  positionOf,
+  rulesOf,
   status,
   type TwiddleMove,
   type TwiddleParams,
   type TwiddleState,
   type TwiddleUi,
   textFormat,
+  turnOf,
   validateParams,
 } from "./state.ts";
 
@@ -204,25 +206,27 @@ export function executeMove(from: TwiddleState, move: TwiddleMove): TwiddleState
     return {
       ...from,
       numbers: Int32Array.from(from.numbers).sort(),
-      orient: new Uint8Array(from.numbers.length),
+      orient: new Int32Array(from.numbers.length),
       moveCount: from.moveCount + 1,
     };
   }
   if (move.type !== "rotate") return assertNever(move, "twiddle: executeMove");
 
-  const { w, h, n } = from;
-  if (move.x < 0 || move.y < 0 || move.x > w - n || move.y > h - n) {
+  // The move names its block by a square, which must be on the board for the
+  // description's turn to name the same block.
+  const { w, h } = from;
+  const rules = rulesOf(from);
+  const turn = turnOf(w, move.x, move.y, move.dir);
+  const onBoard = move.x >= 0 && move.x < w && move.y >= 0 && move.y < h;
+  if (!onBoard || !rules.legal(positionOf(from), turn)) {
     throw new Error(`Illegal twiddle rotation at (${move.x}, ${move.y})`);
   }
-
-  const numbers = Int32Array.from(from.numbers);
-  const orient = Uint8Array.from(from.orient);
-  doRotate(numbers, orient, w, n, from.orientable, move.x, move.y, move.dir);
+  const after = rules.play(positionOf(from), turn);
 
   return {
     ...from,
-    numbers,
-    orient,
+    numbers: after.value,
+    orient: after.turn,
     moveCount: from.moveCount + 1,
     lastX: move.x,
     lastY: move.y,

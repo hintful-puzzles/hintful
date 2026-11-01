@@ -1,11 +1,12 @@
 import { DESC_REPEATED, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { permParity } from "../../engine/shuffle.ts";
+import * as fifteen from "./fifteen.compiled.ts";
 
 // --- types -----------------------------------------------------------
 
@@ -72,29 +73,24 @@ export const menu: PresetBoards<FifteenParams> = {
 
 // --- completion / parity ----------------------------------------------
 
-/** Solved iff each cell `p` holds `p+1`, except the last holds `0`. */
-export function isCompletedTiles(tiles: Int32Array, n: number): boolean {
-  for (let p = 0; p < n; p++) {
-    if (tiles[p] !== (p < n - 1 ? p + 1 : 0)) return false;
-  }
-  return true;
+/** The description's rules on a board of this size. */
+export function rulesOf(s: { readonly w: number; readonly h: number }) {
+  return fifteen.rules(describedSpace(fifteen.units, s.w, s.h), {}, []);
 }
 
-/** Required permutation parity for a board whose gap sits at flat index
- * `gap`: chessboard parity of the gap cell XOR parity of `n` (the solved
- * target `1..n-1,0` is a cyclic rotation of `0..n-1`, odd iff `n` is
- * even). Upstream `PARITY_P`. */
-export function parityP(w: number, h: number, gap: number): number {
-  const gx = gap % w;
-  const gy = Math.floor(gap / w);
-  return ((gx - (w - 1)) ^ (gy - (h - 1)) ^ (w * h + 1)) & 1;
+export const positionOf = (s: { readonly tiles: Int32Array }): fifteen.Position => ({
+  value: s.tiles,
+});
+
+export function isCompleted(s: FifteenState): boolean {
+  return rulesOf(s).finished(positionOf(s));
 }
 
-/** Whether no slides can put this board in order. A slide changes the
- * permutation's parity and the gap's chessboard color together, so half of
- * all arrangements are out of reach, and which half never changes in play. */
+/** Whether no slides can put this board in order, by the description's
+ * claim: half of all arrangements are out of reach, and which half never
+ * changes in play. */
 export function hasNoSolution(s: FifteenState): boolean {
-  return permParity(s.tiles, s.n) !== parityP(s.w, s.h, s.gapPos);
+  return rulesOf(s).deadEnd(positionOf(s)) !== null;
 }
 
 // --- desc / state -----------------------------------------------------
@@ -130,7 +126,7 @@ export function newState(p: FifteenParams, desc: string): FifteenState {
 }
 
 export function status(state: FifteenState): "solved" | "ongoing" {
-  return isCompletedTiles(state.tiles, state.n) ? "solved" : "ongoing";
+  return isCompleted(state) ? "solved" : "ongoing";
 }
 
 // --- text format ------------------------------------------------------
@@ -152,9 +148,13 @@ export function textFormat(state: FifteenState): string {
 // --- generator --------------------------------------------------------
 
 /** Upstream's `new_game_desc`: place all tiles except the last two at
- * random, then order the final two so the permutation's parity matches
- * `parityP`, rejecting an already-solved layout. */
+ * random, then order the final two so that the board is no dead end,
+ * rejecting an already-solved layout. Swapping two tiles changes the
+ * parity the description's claim reads, and the parity is the whole of what
+ * keeps a board from finishing (the classic argument; the dead-end checker
+ * finds it misses no board up to 3×3), so the order kept always finishes. */
 export function newDesc(p: FifteenParams, rng: RandomState): { desc: string } {
+  const rules = rulesOf(p);
   const n = p.w * p.h;
   const tiles = new Int32Array(n);
   const used = new Uint8Array(n);
@@ -190,14 +190,14 @@ export function newDesc(p: FifteenParams, rng: RandomState): { desc: string } {
     const p1 = used.indexOf(0);
     const p2 = used.indexOf(0, p1 + 1);
 
-    // Try one way round; if parity is wrong, swap the last two.
+    // Try one way round; where that cannot finish, swap the last two.
     tiles[x1] = p1;
     tiles[x2] = p2;
-    if (permParity(tiles, n) !== parityP(p.w, p.h, gap)) {
+    if (rules.deadEnd({ value: tiles }) !== null) {
       tiles[x1] = p2;
       tiles[x2] = p1;
     }
-  } while (isCompletedTiles(tiles, n));
+  } while (rules.finished({ value: tiles }));
 
   return { desc: tiles.join(",") };
 }

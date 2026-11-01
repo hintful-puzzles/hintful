@@ -133,8 +133,9 @@ export interface VariationJson {
  * technique sound without it stays sound with it. One that replaces is a
  * ruleset, whose techniques are checked on its boards and the plain game's.
  */
-export const variationWord = (v: VariationJson): "modifier" | "ruleset" =>
-  v.replace === undefined ? "modifier" : "ruleset";
+export const variationWord = (v: {
+  readonly replace?: unknown;
+}): "modifier" | "ruleset" => (v.replace === undefined ? "modifier" : "ruleset");
 
 /** A technique stated in the description, or one of a library's placed at a
  * tier of the game's (`use`: `"<library>.<id>"`). */
@@ -166,16 +167,153 @@ export interface LibraryJson {
   techniques: Record<string, StatedTechnique>;
 }
 
+/** One layer of a planning game's position: a value a cell. */
+export interface LayerJson {
+  domain: string;
+  /** The layer is an arrangement: each value of its domain on this many
+   * cells. */
+  arranged?: string;
+}
+
+/** Cells a move assigns: its binders, the last of them the cell, and a term
+ * for each layer it assigns, read on the position before the move. */
+export type AssignJson = { for: string } & Record<string, string>;
+
+/** A move of a planning game: its arguments, its guard, and what it sets. */
+export interface MoveJson {
+  for: string;
+  when?: string;
+  set: AssignJson[];
+}
+
+/** A planning game's variation: what it adds, and the layers it replaces. */
+export interface PlanningVariationJson {
+  add?: {
+    /** Layers of new names, each all zeros on a board without the
+     * variation. */
+    position?: Record<string, LayerJson>;
+    define?: Record<string, string>;
+    finish?: string[];
+    deadEnds?: Record<string, string>;
+    /** Assignments added to a move of the description's, by its name. */
+    moves?: Record<string, { set: AssignJson[] }>;
+  };
+  replace?: { position?: Record<string, LayerJson> };
+}
+
+/**
+ * A planning game's description: a position, the moves that change it, the
+ * finish, a lost position, and what proves a position can no longer finish,
+ * as `description.schema.json` states it.
+ */
+export interface PlanningJson {
+  game: string;
+  help?: HelpJson;
+  name: string;
+  family: string;
+  sizes: Record<string, { min: number; max: number }>;
+  space: { grid: { w: string; h: string }; units: string[] };
+  position: Record<string, LayerJson>;
+  given?: string[];
+  define?: Record<string, string>;
+  freedom: { kind: "permute" | "transition" };
+  moves: Record<string, MoveJson>;
+  finish: string[];
+  lose?: string[];
+  /** Each claim by id: a formula true only of a position from which no line
+   * of moves finishes. */
+  deadEnds?: Record<string, string>;
+  deal?: Record<string, string>;
+  variations?: Record<string, PlanningVariationJson>;
+}
+
+/** A planning description with the named variations applied, in order: an
+ * added finish, claim or assignment marked with the variation it needs. */
+export interface PlanningApplied {
+  json: PlanningJson;
+  finish: { src: string; on: string | null }[];
+  deadEnds: { id: string; src: string; on: string | null }[];
+  moves: {
+    name: string;
+    for: string;
+    when: string | null;
+    set: { assign: AssignJson; on: string | null }[];
+  }[];
+}
+
+/** The planning description with `names` applied, each variation's
+ * additions kept apart, so the compiled rules run them only where it is on. */
+export function planningWith(
+  json: PlanningJson,
+  names: readonly string[],
+): PlanningApplied {
+  const out: PlanningApplied = {
+    json,
+    finish: json.finish.map((src) => ({ src, on: null })),
+    deadEnds: Object.entries(json.deadEnds ?? {}).map(([id, src]) => ({
+      id,
+      src,
+      on: null,
+    })),
+    moves: Object.entries(json.moves).map(([name, m]) => ({
+      name,
+      for: m.for,
+      when: m.when ?? null,
+      set: m.set.map((assign) => ({ assign, on: null })),
+    })),
+  };
+  let position = json.position;
+  let define = json.define ?? {};
+  for (const name of names) {
+    const v = json.variations?.[name];
+    if (v === undefined) throw new Error(`${json.game}: no variation ${name}`);
+    for (const layer of Object.keys(v.replace?.position ?? {}))
+      if (json.position[layer] === undefined)
+        throw new Error(
+          `${json.game}: ${name} replaces layer ${layer}, which it lacks`,
+        );
+    for (const layer of Object.keys(v.add?.position ?? {}))
+      if (position[layer] !== undefined)
+        throw new Error(`${json.game}: ${name} adds layer ${layer}, which it has`);
+    position = { ...position, ...v.replace?.position, ...v.add?.position };
+    define = { ...define, ...v.add?.define };
+    out.finish.push(...(v.add?.finish ?? []).map((src) => ({ src, on: name })));
+    for (const [id, src] of Object.entries(v.add?.deadEnds ?? {})) {
+      if (out.deadEnds.some((c) => c.id === id))
+        throw new Error(`${json.game}: ${name} adds claim ${id}, which it has`);
+      out.deadEnds.push({ id, src, on: name });
+    }
+    for (const [move, added] of Object.entries(v.add?.moves ?? {})) {
+      const m = out.moves.find((x) => x.name === move);
+      if (m === undefined)
+        throw new Error(`${json.game}: ${name} adds to no move ${move}`);
+      m.set.push(...added.set.map((assign) => ({ assign, on: name })));
+    }
+  }
+  out.json = { ...json, position, define };
+  return out;
+}
+
 /** Whatever a `*.description.yaml` holds, once it has loaded. */
-export type DescriptionFile = LibraryJson | DescriptionJson | HelpOnlyJson;
+export type DescriptionFile =
+  | LibraryJson
+  | DescriptionJson
+  | PlanningJson
+  | HelpOnlyJson;
 
 export function isLibrary(file: DescriptionFile): file is LibraryJson {
   return "library" in file;
 }
 
-/** A game's description that states its rules, not only its help page. */
+/** A game's description that states its rules as an answer, not only its
+ * help page. */
 export function isFormal(file: DescriptionFile): file is DescriptionJson {
-  return "space" in file;
+  return "space" in file && !("position" in file);
+}
+
+/** A planning game's description: a position and its moves. */
+export function isPlanning(file: DescriptionFile): file is PlanningJson {
+  return "position" in file;
 }
 
 export interface Technique {
@@ -218,10 +356,34 @@ export interface Description {
   tiers: string[];
 }
 
-function parseBinders(src: string): Binder[] {
+export function parseBinders(src: string): Binder[] {
   const e = parse(`exists ${src}: true`);
   if (e.k !== "quant") throw new SyntaxError(`not binders: ${src}`);
   return e.binders;
+}
+
+/** A description's `define` block, each definition by its name. */
+export function parseDefinitions(
+  game: string,
+  define: Readonly<Record<string, string>>,
+): Map<string, Definition> {
+  const defs = new Map<string, Definition>();
+  for (const [head, body] of Object.entries(define)) {
+    const m = /^([A-Za-z_][A-Za-z0-9_]*)(?:\(([^)]*)\))?$/.exec(head);
+    if (m === null) throw new SyntaxError(`${game}: bad definition head "${head}"`);
+    const params = (m[2] ?? "")
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
+    let parsed: Expr;
+    try {
+      parsed = parse(body);
+    } catch (e) {
+      throw new SyntaxError(`${game} define ${head}: ${(e as Error).message}`);
+    }
+    defs.set(m[1], { params, body: parsed });
+  }
+  return defs;
 }
 
 /** What a technique's place on a game's ladder gives it. */
@@ -275,17 +437,7 @@ export function loadDescription(
       throw new SyntaxError(`${json.game} ${where}: ${(e as Error).message}`);
     }
   };
-  const defs = new Map<string, Definition>();
-  for (const [head, body] of Object.entries(json.define ?? {})) {
-    const m = /^([A-Za-z_][A-Za-z0-9_]*)(?:\(([^)]*)\))?$/.exec(head);
-    if (m === null)
-      throw new SyntaxError(`${json.game}: bad definition head "${head}"`);
-    const params = (m[2] ?? "")
-      .split(",")
-      .map((p) => p.trim())
-      .filter(Boolean);
-    defs.set(m[1], { params, body: at(`define ${head}`, body) });
-  }
+  const defs = parseDefinitions(json.game, json.define ?? {});
   const rules: Description["rules"] = [];
   (json.shape ?? []).forEach((s, i) => {
     rules.push({ name: `shape ${i}`, expr: at(`shape ${i}`, s) });

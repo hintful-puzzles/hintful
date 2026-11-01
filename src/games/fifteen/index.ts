@@ -50,6 +50,8 @@ import {
   newDesc,
   newState,
   paramConfig,
+  positionOf,
+  rulesOf,
   status,
   textFormat,
 } from "./state.ts";
@@ -68,27 +70,23 @@ export function executeMove(state: FifteenState, move: FifteenMove): FifteenStat
   }
   if (move.type !== "move") return assertNever(move, "fifteen: executeMove");
 
+  // The move names the gap's destination by its square, which must be on
+  // the board for the description's slide to name it.
   const { x, y } = move;
-  const gx = state.gapPos % w;
-  const gy = Math.floor(state.gapPos / w);
-  // The destination must share exactly one coordinate with the gap.
-  if (x < 0 || x >= w || y < 0 || y >= h || (x === gx) === (y === gy)) {
+  const rules = rulesOf(state);
+  const slide = { move: "slide", g: state.gapPos, t: y * w + x } as const;
+  if (x < 0 || x >= w || y < 0 || y >= h || !rules.legal(positionOf(state), slide)) {
     throw new Error(`Illegal fifteen move to (${x}, ${y})`);
   }
-
-  // The flat stride of one step from the old gap toward the destination.
-  const step = Math.sign(y - gy) * w + Math.sign(x - gx);
-  const tiles = new Int32Array(state.tiles);
-  const newGap = y * w + x;
-  tiles[newGap] = 0;
-
-  let moveCount = state.moveCount;
-  for (let p = state.gapPos; p !== newGap; p += step) {
-    tiles[p] = state.tiles[p + step];
-    moveCount++;
-  }
-
-  return { ...state, tiles, gapPos: newGap, moveCount };
+  // The count goes up by each tile the slide moves.
+  const moved =
+    Math.abs(x - (state.gapPos % w)) + Math.abs(y - Math.floor(state.gapPos / w));
+  return {
+    ...state,
+    tiles: rules.play(positionOf(state), slide).value,
+    gapPos: slide.t,
+    moveCount: state.moveCount + moved,
+  };
 }
 
 // --- UI / input -------------------------------------------------------

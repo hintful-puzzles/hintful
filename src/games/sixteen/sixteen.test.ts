@@ -13,6 +13,7 @@ import type { HintStep } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type SlideMove, slidePieces } from "../../engine/slide-planner.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -38,6 +39,8 @@ import {
   isCompleted,
   newDesc,
   newState,
+  positionOf,
+  rulesOf,
   type SixteenMove,
   type SixteenParams,
   type SixteenState,
@@ -353,6 +356,33 @@ describe("Sixteen move execution", () => {
     const move: SixteenMove = { type: "slide", axis: "row", index: 0, delta: 1 };
     executeMove(s, move);
     expect(s.tiles).toEqual(originalTiles);
+  });
+
+  // The planner slides a line in place, which its pruning is built on and
+  // which runs a few times faster than the description's slide, a copy; so it
+  // keeps its own, and this holds the two to one rule.
+  it("slides in the planner as the description says", () => {
+    const rng = randomNew("sixteen planner slide");
+    for (const [w, h] of [
+      [2, 3],
+      [4, 4],
+      [5, 3],
+    ]) {
+      const s = newState(
+        { w, h, movetarget: 0 },
+        newDesc({ w, h, movetarget: 0 }, rng).desc,
+      );
+      const rules = rulesOf(s);
+      for (const m of rules.moves(positionOf(s))) {
+        const move: SlideMove =
+          m.L < h
+            ? { axis: "row", index: m.L, delta: m.k }
+            : { axis: "col", index: m.L - h, delta: m.k };
+        const dest = new Int32Array(w * h);
+        slidePieces(s.tiles, dest, w, h, move);
+        expect([...dest]).toEqual([...rules.play(positionOf(s), m).value]);
+      }
+    }
   });
 });
 

@@ -5,19 +5,30 @@
  */
 
 import { compileGame, compileLibrary } from "./compile.ts";
-import { type DescriptionFile, isFormal, isLibrary } from "./description.ts";
+import { compilePlanning } from "./compile-position.ts";
+import {
+  type DescriptionFile,
+  isFormal,
+  isLibrary,
+  isPlanning,
+} from "./description.ts";
 
 const RUNTIME = "src/engine/describe-runtime.ts";
+const POSITION_RUNTIME = "src/engine/position-runtime.ts";
 
 /** `x.description.yaml` compiles to `x.compiled.ts` beside it. */
 export function compiledPath(source: string): string {
   return source.replace(/\.description\.yaml$/, ".compiled.ts");
 }
 
-/** A library compiles, and a description that states techniques; one that
- * is a help page, or rules nothing runs yet, does not. */
+/** A library compiles, a description that states techniques, and a planning
+ * game's; one that is a help page, or rules nothing runs yet, does not. */
 export function compiles(file: DescriptionFile): boolean {
-  return isLibrary(file) || ("techniques" in file && file.techniques !== undefined);
+  return (
+    isLibrary(file) ||
+    isPlanning(file) ||
+    ("techniques" in file && file.techniques !== undefined)
+  );
 }
 
 /** The import path from `from`'s directory to `to`, both from the root. */
@@ -41,6 +52,13 @@ export function compileSource(
     throw new Error(`${source} does not compile`);
   const runtime = importPath(compiledPath(source), RUNTIME);
   if (isLibrary(file)) return compileLibrary(file, source, runtime);
+  if (isPlanning(file))
+    return compilePlanning(
+      file,
+      source,
+      runtime,
+      importPath(compiledPath(source), POSITION_RUNTIME),
+    );
   const libraries = [...all.values()].filter(isLibrary);
   if (!isFormal(file)) throw new Error(`${source} states no rules`);
   return compileGame(file, libraries, source, runtime);

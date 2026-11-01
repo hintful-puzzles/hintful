@@ -1,0 +1,157 @@
+fifteen w=2 h=2: 24 positions, 12 can finish, 0 that cannot are claimed by none
+fifteen w=2 h=3: 720 positions, 360 can finish, 0 that cannot are claimed by none
+fifteen w=2 h=4: 40320 positions, 20160 can finish, 0 that cannot are claimed by none
+fifteen w=3 h=2: 720 positions, 360 can finish, 0 that cannot are claimed by none
+fifteen w=3 h=3: 362880 positions, 181440 can finish, 0 that cannot are claimed by none
+fifteen w=4 h=2: 40320 positions, 20160 can finish, 0 that cannot are claimed by none
+  parity in w=2 h=2: holds of 12, 0 of them can finish
+  parity in w=2 h=3: holds of 360, 0 of them can finish
+  parity in w=2 h=4: holds of 20160, 0 of them can finish
+  parity in w=3 h=2: holds of 360, 0 of them can finish
+  parity in w=3 h=3: holds of 181440, 0 of them can finish
+  parity in w=4 h=2: holds of 20160, 0 of them can finish
+fifteen parity: sound (0.8s for the game)
+fifteen parity planted: unsound, as it must be
+sixteen w=2 h=2: 24 positions, 24 can finish, 0 that cannot are claimed by none
+sixteen w=2 h=3: 720 positions, 720 can finish, 0 that cannot are claimed by none
+sixteen w=2 h=4: 40320 positions, 40320 can finish, 0 that cannot are claimed by none
+sixteen w=3 h=2: 720 positions, 720 can finish, 0 that cannot are claimed by none
+sixteen w=3 h=3: 362880 positions, 181440 can finish, 0 that cannot are claimed by none
+sixteen w=4 h=2: 40320 positions, 40320 can finish, 0 that cannot are claimed by none
+  parity in w=2 h=2: holds of 0, 0 of them can finish
+  parity in w=2 h=3: holds of 0, 0 of them can finish
+  parity in w=2 h=4: holds of 0, 0 of them can finish
+  parity in w=3 h=2: holds of 0, 0 of them can finish
+  parity in w=3 h=3: holds of 181440, 0 of them can finish
+  parity in w=4 h=2: holds of 0, 0 of them can finish
+sixteen parity: sound (2.3s for the game)
+sixteen parity planted: unsound, as it must be
+twiddle: no move on any position, so not checked: w=2 h=2 n=3; w=2 h=2 n=3, Rows only; w=2 h=2 n=3, orientable; w=2 h=2 n=3, Rows only, orientable; w=2 h=2 n=4; w=2 h=2 n=4, Rows only; w=2 h=2 n=4, orientable; w=2 h=2 n=4, Rows only, orientable; w=2 h=2 n=5; w=2 h=2 n=5, Rows only; w=2 h=2 n=5, orientable; w=2 h=2 n=5, Rows only, orientable; w=2 h=3 n=3; w=2 h=3 n=3, Rows only; w=2 h=3 n=3, Rows only, orientable; w=2 h=3 n=4; w=2 h=3 n=4, Rows only; w=2 h=3 n=4, Rows only, orientable; w=2 h=3 n=5; w=2 h=3 n=5, Rows only; w=2 h=3 n=5, Rows only, orientable; w=2 h=4 n=3; w=2 h=4 n=3, Rows only; w=2 h=4 n=4; w=2 h=4 n=4, Rows only; w=2 h=4 n=5; w=2 h=4 n=5, Rows only; w=2 h=5 n=3, Rows only; w=2 h=5 n=4, Rows only; w=2 h=5 n=5, Rows only; w=3 h=2 n=3; w=3 h=2 n=3, Rows only; w=3 h=2 n=3, Rows only, orientable; w=3 h=2 n=4; w=3 h=2 n=4, Rows only; w=3 h=2 n=4, Rows only, orientable; w=3 h=2 n=5; w=3 h=2 n=5, Rows only; w=3 h=2 n=5, Rows only, orientable; w=3 h=3 n=4; w=3 h=3 n=4, Rows only; w=3 h=3 n=5; w=3 h=3 n=5, Rows only; w=3 h=4 n=4, Rows only; w=3 h=4 n=5, Rows only; w=4 h=2 n=3; w=4 h=2 n=3, Rows only; w=4 h=2 n=4; w=4 h=2 n=4, Rows only; w=4 h=2 n=5; w=4 h=2 n=5, Rows only; w=4 h=3 n=4, Rows only; w=4 h=3 n=5, Rows only; w=5 h=2 n=3, Rows only; w=5 h=2 n=4, Rows only; w=5 h=2 n=5, Rows only
+twiddle w=2 h=2 n=2: 24 positions, 4 can finish, 20 that cannot are claimed by none
+twiddle w=2 h=2 n=2, Rows only: 6 positions, 4 can finish, 2 that cannot are claimed by none
+twiddle w=2 h=2 n=2, orientable: 6144 positions, 4 can finish, 188 that cannot are claimed by none
+twiddle w=2 h=2 n=2, Rows only, orientable: 1536 positions, 4 can finish, 188 that cannot are claimed by none
+twiddle w=2 h=3 n=2: 720 positions, 120 can finish, 600 that cannot are claimed by none
+twiddle w=2 h=3 n=2, Rows only: 90 positions, 60 can finish, 30 that cannot are claimed by none
+twiddle w=2 h=3 n=2, Rows only, orientable: 368640 positions, 3840 can finish, 19200 that cannot are claimed by none
+twiddle w=2 h=4 n=2: 40320 positions, 40320 can finish, 0 that cannot are claimed by none
+twiddle w=2 h=4 n=2, Rows only: 2520 positions, 2520 can finish, 0 that cannot are claimed by none
+twiddle w=2 h=5 n=2, Rows only: 113400 positions, 113400 can finish, 0 that cannot are claimed by none
+twiddle w=3 h=2 n=2: 720 positions, 120 can finish, 600 that cannot are claimed by none
+twiddle w=3 h=2 n=2, Rows only: 20 positions, 20 can finish, 0 that cannot are claimed by none
+twiddle w=3 h=2 n=2, Rows only, orientable: 81920 positions, 1920 can finish, 3840 that cannot are claimed by none
+twiddle w=3 h=3 n=2: 362880 positions, 362880 can finish, 0 that cannot are claimed by none
+twiddle w=3 h=3 n=2, Rows only: 1680 positions, 1680 can finish, 0 that cannot are claimed by none
+twiddle w=3 h=3 n=3: 362880 positions, 4 can finish, 1436 that cannot are claimed by none
+twiddle w=3 h=3 n=3, Rows only: 1680 positions, 4 can finish, 356 that cannot are claimed by none
+twiddle w=3 h=4 n=2, Rows only: 369600 positions, 369600 can finish, 0 that cannot are claimed by none
+twiddle w=3 h=4 n=3, Rows only: 369600 positions, 360 can finish, 32040 that cannot are claimed by none
+twiddle w=4 h=2 n=2: 40320 positions, 40320 can finish, 0 that cannot are claimed by none
+twiddle w=4 h=2 n=2, Rows only: 70 positions, 70 can finish, 0 that cannot are claimed by none
+twiddle w=4 h=3 n=2, Rows only: 34650 positions, 34650 can finish, 0 that cannot are claimed by none
+twiddle w=4 h=3 n=3, Rows only: 34650 positions, 720 can finish, 7380 that cannot are claimed by none
+twiddle w=5 h=2 n=2, Rows only: 252 positions, 252 can finish, 0 that cannot are claimed by none
+  colorOdd in w=2 h=2 n=2: holds of 0, 0 of them can finish
+  colorOdd in w=2 h=2 n=2, Rows only: holds of 0, 0 of them can finish
+  colorOdd in w=2 h=2 n=2, orientable: holds of 0, 0 of them can finish
+  colorOdd in w=2 h=2 n=2, Rows only, orientable: holds of 0, 0 of them can finish
+  colorOdd in w=2 h=3 n=2: holds of 0, 0 of them can finish
+  colorOdd in w=2 h=3 n=2, Rows only: holds of 0, 0 of them can finish
+  colorOdd in w=2 h=3 n=2, Rows only, orientable: holds of 0, 0 of them can finish
+  colorOdd in w=2 h=4 n=2: holds of 0, 0 of them can finish
+  colorOdd in w=2 h=4 n=2, Rows only: holds of 0, 0 of them can finish
+  colorOdd in w=2 h=5 n=2, Rows only: holds of 0, 0 of them can finish
+  colorOdd in w=3 h=2 n=2: holds of 0, 0 of them can finish
+  colorOdd in w=3 h=2 n=2, Rows only: holds of 0, 0 of them can finish
+  colorOdd in w=3 h=2 n=2, Rows only, orientable: holds of 0, 0 of them can finish
+  colorOdd in w=3 h=3 n=2: holds of 0, 0 of them can finish
+  colorOdd in w=3 h=3 n=2, Rows only: holds of 0, 0 of them can finish
+  colorOdd in w=3 h=3 n=3: holds of 360000, 0 of them can finish
+  colorOdd in w=3 h=3 n=3, Rows only: holds of 1320, 0 of them can finish
+  colorOdd in w=3 h=4 n=2, Rows only: holds of 0, 0 of them can finish
+  colorOdd in w=3 h=4 n=3, Rows only: holds of 337200, 0 of them can finish
+  colorOdd in w=4 h=2 n=2: holds of 0, 0 of them can finish
+  colorOdd in w=4 h=2 n=2, Rows only: holds of 0, 0 of them can finish
+  colorOdd in w=4 h=3 n=2, Rows only: holds of 0, 0 of them can finish
+  colorOdd in w=4 h=3 n=3, Rows only: holds of 26550, 0 of them can finish
+  colorOdd in w=5 h=2 n=2, Rows only: holds of 0, 0 of them can finish
+twiddle colorOdd: sound (10.9s for the game)
+twiddle colorOdd planted: unsound, as it must be
+  parity in w=2 h=2 n=2: holds of 0, 0 of them can finish
+  parity in w=2 h=2 n=2, Rows only: holds of 0, 0 of them can finish
+  parity in w=2 h=2 n=2, orientable: holds of 0, 0 of them can finish
+  parity in w=2 h=2 n=2, Rows only, orientable: holds of 0, 0 of them can finish
+  parity in w=2 h=3 n=2: holds of 0, 0 of them can finish
+  parity in w=2 h=3 n=2, Rows only: holds of 0, 0 of them can finish
+  parity in w=2 h=3 n=2, Rows only, orientable: holds of 0, 0 of them can finish
+  parity in w=2 h=4 n=2: holds of 0, 0 of them can finish
+  parity in w=2 h=4 n=2, Rows only: holds of 0, 0 of them can finish
+  parity in w=2 h=5 n=2, Rows only: holds of 0, 0 of them can finish
+  parity in w=3 h=2 n=2: holds of 0, 0 of them can finish
+  parity in w=3 h=2 n=2, Rows only: holds of 0, 0 of them can finish
+  parity in w=3 h=2 n=2, Rows only, orientable: holds of 0, 0 of them can finish
+  parity in w=3 h=3 n=2: holds of 0, 0 of them can finish
+  parity in w=3 h=3 n=2, Rows only: holds of 0, 0 of them can finish
+  parity in w=3 h=3 n=3: holds of 181440, 0 of them can finish
+  parity in w=3 h=3 n=3, Rows only: holds of 0, 0 of them can finish
+  parity in w=3 h=4 n=2, Rows only: holds of 0, 0 of them can finish
+  parity in w=3 h=4 n=3, Rows only: holds of 0, 0 of them can finish
+  parity in w=4 h=2 n=2: holds of 0, 0 of them can finish
+  parity in w=4 h=2 n=2, Rows only: holds of 0, 0 of them can finish
+  parity in w=4 h=3 n=2, Rows only: holds of 0, 0 of them can finish
+  parity in w=4 h=3 n=3, Rows only: holds of 0, 0 of them can finish
+  parity in w=5 h=2 n=2, Rows only: holds of 0, 0 of them can finish
+twiddle parity: sound (10.9s for the game)
+twiddle parity planted: unsound, as it must be
+  colorTurned in w=2 h=2 n=2: holds of 0, 0 of them can finish
+  colorTurned in w=2 h=2 n=2, Rows only: holds of 0, 0 of them can finish
+  colorTurned in w=2 h=2 n=2, orientable: holds of 5760, 0 of them can finish
+  colorTurned in w=2 h=2 n=2, Rows only, orientable: holds of 1152, 0 of them can finish
+  colorTurned in w=2 h=3 n=2: holds of 0, 0 of them can finish
+  colorTurned in w=2 h=3 n=2, Rows only: holds of 0, 0 of them can finish
+  colorTurned in w=2 h=3 n=2, Rows only, orientable: holds of 322560, 0 of them can finish
+  colorTurned in w=2 h=4 n=2: holds of 0, 0 of them can finish
+  colorTurned in w=2 h=4 n=2, Rows only: holds of 0, 0 of them can finish
+  colorTurned in w=2 h=5 n=2, Rows only: holds of 0, 0 of them can finish
+  colorTurned in w=3 h=2 n=2: holds of 0, 0 of them can finish
+  colorTurned in w=3 h=2 n=2, Rows only: holds of 0, 0 of them can finish
+  colorTurned in w=3 h=2 n=2, Rows only, orientable: holds of 70400, 0 of them can finish
+  colorTurned in w=3 h=3 n=2: holds of 0, 0 of them can finish
+  colorTurned in w=3 h=3 n=2, Rows only: holds of 0, 0 of them can finish
+  colorTurned in w=3 h=3 n=3: holds of 0, 0 of them can finish
+  colorTurned in w=3 h=3 n=3, Rows only: holds of 0, 0 of them can finish
+  colorTurned in w=3 h=4 n=2, Rows only: holds of 0, 0 of them can finish
+  colorTurned in w=3 h=4 n=3, Rows only: holds of 0, 0 of them can finish
+  colorTurned in w=4 h=2 n=2: holds of 0, 0 of them can finish
+  colorTurned in w=4 h=2 n=2, Rows only: holds of 0, 0 of them can finish
+  colorTurned in w=4 h=3 n=2, Rows only: holds of 0, 0 of them can finish
+  colorTurned in w=4 h=3 n=3, Rows only: holds of 0, 0 of them can finish
+  colorTurned in w=5 h=2 n=2, Rows only: holds of 0, 0 of them can finish
+twiddle colorTurned: sound (10.9s for the game)
+twiddle colorTurned planted: unsound, as it must be
+  turnSum in w=2 h=2 n=2: holds of 0, 0 of them can finish
+  turnSum in w=2 h=2 n=2, Rows only: holds of 0, 0 of them can finish
+  turnSum in w=2 h=2 n=2, orientable: holds of 4608, 0 of them can finish
+  turnSum in w=2 h=2 n=2, Rows only, orientable: holds of 1152, 0 of them can finish
+  turnSum in w=2 h=3 n=2: holds of 0, 0 of them can finish
+  turnSum in w=2 h=3 n=2, Rows only: holds of 0, 0 of them can finish
+  turnSum in w=2 h=3 n=2, Rows only, orientable: holds of 276480, 0 of them can finish
+  turnSum in w=2 h=4 n=2: holds of 0, 0 of them can finish
+  turnSum in w=2 h=4 n=2, Rows only: holds of 0, 0 of them can finish
+  turnSum in w=2 h=5 n=2, Rows only: holds of 0, 0 of them can finish
+  turnSum in w=3 h=2 n=2: holds of 0, 0 of them can finish
+  turnSum in w=3 h=2 n=2, Rows only: holds of 0, 0 of them can finish
+  turnSum in w=3 h=2 n=2, Rows only, orientable: holds of 61440, 0 of them can finish
+  turnSum in w=3 h=3 n=2: holds of 0, 0 of them can finish
+  turnSum in w=3 h=3 n=2, Rows only: holds of 0, 0 of them can finish
+  turnSum in w=3 h=3 n=3: holds of 0, 0 of them can finish
+  turnSum in w=3 h=3 n=3, Rows only: holds of 0, 0 of them can finish
+  turnSum in w=3 h=4 n=2, Rows only: holds of 0, 0 of them can finish
+  turnSum in w=3 h=4 n=3, Rows only: holds of 0, 0 of them can finish
+  turnSum in w=4 h=2 n=2: holds of 0, 0 of them can finish
+  turnSum in w=4 h=2 n=2, Rows only: holds of 0, 0 of them can finish
+  turnSum in w=4 h=3 n=2, Rows only: holds of 0, 0 of them can finish
+  turnSum in w=4 h=3 n=3, Rows only: holds of 0, 0 of them can finish
+  turnSum in w=5 h=2 n=2, Rows only: holds of 0, 0 of them can finish
+twiddle turnSum: sound (10.9s for the game)
+twiddle turnSum planted: unsound, as it must be

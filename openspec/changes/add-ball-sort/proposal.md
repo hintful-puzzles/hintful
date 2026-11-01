@@ -7,7 +7,8 @@ mechanics most implementations sell.
 **Waits for `describe-the-whole-catalog`** (the owner, 2026-11-01): no new
 game before every game is described, so this one is written from its
 description. Its moves and finish compile on the position runtime, step 3
-of that change's plan (`design.md` § "The plan").
+of that change's plan (`design.md` § "The plan"); its pours are guarded and
+cannot always be undone, which `describe-guarded-moves` states.
 
 ## Why
 

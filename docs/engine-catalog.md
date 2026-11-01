@@ -62,6 +62,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `obfuscate.ts` — solution masking in descs |
 | – `latin.ts` — Latin-square solver *and* generator |
 | – `ladder-runtime.ts` — what a compiled ladder runs on |
+| – `position-runtime.ts` — what a planning game's compiled rules give |
 | Solving and deduction |
 | – `deduction-fixpoint.ts` — the shared technique ladder |
 | – `step-budget.ts` — the fixpoint non-termination guard |
@@ -547,6 +548,17 @@ notes, and `ladderReplay` the premise audit's replay of a recording run.
 Exemplars: `unruly/solver.ts`, `seismic/solver.ts`; the guide is
 [`descriptions.md`](./descriptions.md) § "The runtime a ladder runs on".
 
+### `position-runtime.ts` — what a planning game's compiled rules give
+
+Reach for `PositionRules` when a game's moves and finish are stated in a
+description: the module `npm run describe` writes builds one for a board,
+and the game asks it which moves are legal, what one does, and whether a
+position is finished, lost or a dead end. `moveEffect` reads a move that
+moves pieces the same way on every board as the `Effect`
+`permutation-planner.ts` takes. Exemplars: `fifteen/state.ts`,
+`twiddle/solver.ts`; the guide is [`descriptions.md`](./descriptions.md)
+§ "A planning game's position and moves".
+
 A Latin square whose clues sit in the gaps between neighboring cells is
 `edge-clue-latin/`: the board and its desc, the moves, the input with its
 spent-clue drag, the cell drawing, the solver's driver and the generator
@@ -980,8 +992,9 @@ ungated search, which is what makes gating it safe. Exemplars:
 Reach for it when every move permutes the cells the same way whatever the
 board holds (and may turn the pieces it moves), and the hint should place
 pieces in reading order, keeping the finished ones. The game supplies its
-generator moves as `Effect`s (`effectOf` runs the game's own move function on
-an identity board), the board and the finished board; `planByStage` returns
+generator moves as `Effect`s (a described game's are its compiled moves', by
+`moveEffect`; `effectOf` runs a move function on an identity board), the
+board and the finished board; `planByStage` returns
 segments whose `roles` name each move's part in a technique for the
 narration. Move `2i` is generator `i` and `2i + 1` undoes it. Pieces that
 share a value are interchangeable. A move that depends on the board, such as

@@ -1,11 +1,12 @@
 import { DESC_REPEATED, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { permParity } from "../../engine/shuffle.ts";
+import * as sixteen from "./sixteen.compiled.ts";
 
 // --- types -----------------------------------------------------------
 
@@ -143,19 +144,21 @@ export function newState(p: SixteenParams, desc: string): SixteenState {
 
 // --- completion -------------------------------------------------------
 
-export function isCompleted(state: SixteenState): boolean {
-  for (let i = 0; i < state.n; i++) {
-    if (state.tiles[i] !== i + 1) return false;
-  }
-  return true;
+/** The description's rules on a board of this size. */
+export function rulesOf(s: { readonly w: number; readonly h: number }) {
+  return sixteen.rules(describedSpace(sixteen.units, s.w, s.h), {}, []);
 }
 
-/** Whether no slides can put this board in order: proved only where both
- * sides are odd. A slide cycles an odd number of tiles there, which is an even
- * permutation, so an odd arrangement stays odd. With an even side some slide
- * is odd, and nothing is claimed. */
+export const positionOf = (s: SixteenState): sixteen.Position => ({ value: s.tiles });
+
+export function isCompleted(state: SixteenState): boolean {
+  return rulesOf(state).finished(positionOf(state));
+}
+
+/** Whether no slides can put this board in order, by the description's
+ * claims. */
 export function hasNoSolution(state: SixteenState): boolean {
-  return (state.w & state.h & 1) === 1 && permParity(state.tiles, state.n) !== 0;
+  return rulesOf(state).deadEnd(positionOf(state)) !== null;
 }
 
 export function status(state: SixteenState): "solved" | "ongoing" {
@@ -274,10 +277,11 @@ export function newDesc(p: SixteenParams, rng: RandomState): { desc: string } {
         }
       }
 
-      // Try one way; if parity is wrong, swap.
+      // Try one way; where that cannot finish, swap: a swap changes the
+      // parity, the whole of what keeps such a board from finishing.
       tiles[x1] = p1 + 1;
       tiles[x2] = p2 + 1;
-      if (permParity(tiles, n) !== 0) {
+      if (rulesOf(p).deadEnd({ value: tiles }) !== null) {
         tiles[x1] = p2 + 1;
         tiles[x2] = p1 + 1;
       }

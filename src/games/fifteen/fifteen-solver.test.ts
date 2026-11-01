@@ -8,13 +8,13 @@ import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
 import { executeMove } from "./index.ts";
 import { computeHint } from "./solver.ts";
-import { type FifteenParams, isCompletedTiles, newDesc, newState } from "./state.ts";
+import { type FifteenParams, isCompleted, newDesc, newState } from "./state.ts";
 
 function solveByHints(p: FifteenParams, desc: string): number {
   let state = newState(p, desc);
   const limit = 5 * state.n * state.n * state.n;
   let steps = 0;
-  while (!isCompletedTiles(state.tiles, state.n)) {
+  while (!isCompleted(state)) {
     const dest = computeHint(state);
     if (!dest) throw new Error("computeHint returned null on an unsolved board");
     state = executeMove(state, { type: "move", x: dest.x, y: dest.y });

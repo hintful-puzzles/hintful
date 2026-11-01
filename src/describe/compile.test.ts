@@ -1,9 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { CompileError, compileLibrary } from "./compile.ts";
-import { isFormal, isLibrary, withEveryVariation } from "./description.ts";
+import {
+  isFormal,
+  isLibrary,
+  isPlanning,
+  planningWith,
+  withEveryVariation,
+} from "./description.ts";
 import { loadDescriptionFile } from "./load.ts";
 import soundnessJson from "./soundness.json" with { type: "json" };
-import { gameFingerprint, libraryFingerprint, soundnessKey } from "./soundness.ts";
+import {
+  deadEndFingerprint,
+  deadEndKey,
+  gameFingerprint,
+  libraryFingerprint,
+  soundnessKey,
+} from "./soundness.ts";
 import { compiledPath, compileSource, compiles } from "./sources.ts";
 
 const soundness: Record<string, string> = soundnessJson;
@@ -60,6 +72,20 @@ describe("compiled descriptions", () => {
     }
     // Run `npx vitest run -c research/technique-check/vitest.config.ts
     // describe-check`, which records each technique it finds sound.
+    expect(unchecked).toEqual([]);
+  });
+
+  it("compiles only dead-end claims checked sound as they read now", () => {
+    const unchecked: string[] = [];
+    for (const [source, d] of sources) {
+      if (!isPlanning(d)) continue;
+      for (const { id, src } of planningWith(d, Object.keys(d.variations ?? {}))
+        .deadEnds)
+        if (soundness[deadEndKey(source, id)] !== deadEndFingerprint(d, src))
+          unchecked.push(deadEndKey(source, id));
+    }
+    // Run `npx vitest run -c research/technique-check/vitest.config.ts
+    // dead-end-check`, which records each claim it finds sound.
     expect(unchecked).toEqual([]);
   });
 

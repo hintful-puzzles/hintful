@@ -30,14 +30,15 @@ import type { Point } from "../../engine/types.ts";
 import { twiddleGame } from "./index.ts";
 import {
   decodeParams,
-  doRotate,
   encodeParams,
-  isComplete,
   newDesc,
   newState,
+  positionOf,
+  rulesOf,
   type TwiddleMove,
   type TwiddleParams,
   type TwiddleState,
+  turnOf,
 } from "./state.ts";
 
 function params(over: Partial<TwiddleParams> = {}): TwiddleParams {
@@ -146,9 +147,7 @@ describe("Twiddle generation", () => {
       const { desc } = newDesc(p, randomNew(`twiddle-gen-${encodeParams(p, false)}`));
       const state = newState(p, desc);
       expect(state.numbers).toHaveLength(p.w * p.h);
-      expect(isComplete(state.numbers, state.orient, p.w * p.h, p.orientable)).toBe(
-        false,
-      );
+      expect(twiddleGame.status(state)).toBe("ongoing");
     }
   });
 
@@ -197,31 +196,38 @@ describe("Twiddle generation", () => {
   });
 });
 
-describe("Twiddle doRotate", () => {
-  it("rotates a 2×2 block and inverts cleanly", () => {
-    const nums = Int32Array.from([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    const orient = new Uint8Array(9);
-    doRotate(nums, orient, 3, 2, false, 0, 0, 1);
-    // Block (0,0): 1,2 / 4,5 → after one clockwise quarter-turn.
-    expect(Array.from(nums)).toEqual([2, 5, 3, 1, 4, 6, 7, 8, 9]);
-    doRotate(nums, orient, 3, 2, false, 0, 0, -1);
-    expect(Array.from(nums)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+describe("Twiddle's turn, as the description states it", () => {
+  const solved = (orientable: boolean, n = 2) =>
+    stateFromNumbers(params({ n, orientable }), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+
+  it("turns a 2×2 block anticlockwise and back", () => {
+    const s = solved(false);
+    const rules = rulesOf(s);
+    const once = rules.play(positionOf(s), turnOf(3, 0, 0, 1));
+    // Block (0,0): 1,2 / 4,5 → 2,5 / 1,4, the top-right tile now top-left.
+    expect(Array.from(once.value)).toEqual([2, 5, 3, 1, 4, 6, 7, 8, 9]);
+    const back = rules.play(once, turnOf(3, 0, 0, -1));
+    expect(Array.from(back.value)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
   });
 
-  it("advances orientation in orientable mode", () => {
-    const nums = Int32Array.from([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    const orient = new Uint8Array(9);
-    doRotate(nums, orient, 3, 2, true, 0, 0, 1);
-    // Every moved tile's orientation advances by +1.
-    for (const i of [0, 1, 3, 4]) expect(orient[i]).toBe(1);
-    for (const i of [2, 5, 6, 7, 8]) expect(orient[i]).toBe(0);
+  it("turns each moved tile a quarter where orientation matters, and none where not", () => {
+    const turned = rulesOf(solved(true)).play(
+      positionOf(solved(true)),
+      turnOf(3, 0, 0, 1),
+    );
+    for (const i of [0, 1, 3, 4]) expect(turned.turn[i]).toBe(1);
+    for (const i of [2, 5, 6, 7, 8]) expect(turned.turn[i]).toBe(0);
+    const plain = rulesOf(solved(false)).play(
+      positionOf(solved(false)),
+      turnOf(3, 0, 0, 1),
+    );
+    expect(Array.from(plain.turn)).toEqual(new Array(9).fill(0));
   });
 
-  it("advances the center tile's orientation for odd n", () => {
-    const nums = Int32Array.from(Array.from({ length: 9 }, (_, i) => i + 1));
-    const orient = new Uint8Array(9);
-    doRotate(nums, orient, 3, 3, true, 0, 0, 1);
-    expect(orient[4]).toBe(1); // center of the 3×3 block at (0,0)
+  it("turns the center tile for odd n", () => {
+    const s = solved(true, 3);
+    const turned = rulesOf(s).play(positionOf(s), turnOf(3, 0, 0, 1));
+    expect(turned.turn[4]).toBe(1); // center of the 3×3 block at (0,0)
   });
 });
 
@@ -247,16 +253,16 @@ describe("Twiddle moves", () => {
       [1, 2, 3, 4, 5, 6, 7, 8, 9],
       [0, 0, 0, 0, 1, 0, 0, 0, 0],
     );
-    expect(isComplete(s.numbers, s.orient, 9, true)).toBe(false);
+    expect(twiddleGame.status(s)).toBe("ongoing");
     const upright = stateFromNumbers(p, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    expect(isComplete(upright.numbers, upright.orient, 9, true)).toBe(true);
+    expect(twiddleGame.status(upright)).toBe("solved");
   });
 
   it("rowsonly treats equal numbers as ordered", () => {
     const p = params({ rowsonly: true });
     // Solved rowsonly 3×3: row numbers 1,1,1 / 2,2,2 / 3,3,3.
     const s = stateFromNumbers(p, [1, 1, 1, 2, 2, 2, 3, 3, 3]);
-    expect(isComplete(s.numbers, s.orient, 9, false)).toBe(true);
+    expect(twiddleGame.status(s)).toBe("solved");
   });
 
   it("solve snaps to ascending, clears orientation, and counts as a move", () => {

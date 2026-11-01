@@ -178,6 +178,38 @@
       }
     },
     "techniques": { "type": "array", "items": { "$ref": "#/$defs/technique" } },
+    "layer": {
+      "type": "object",
+      "required": ["domain"],
+      "additionalProperties": false,
+      "properties": {
+        "domain": {
+          "$ref": "#/$defs/formula",
+          "description": "The values the layer may hold, read by the dead-end checker."
+        },
+        "arranged": {
+          "$ref": "#/$defs/formula",
+          "description": "The layer is an arrangement: each value of its domain on this many cells. Read by the dead-end checker."
+        }
+      }
+    },
+    "assignments": {
+      "type": "array",
+      "minItems": 1,
+      "description": "What a move sets: each entry's binders, the last of them the cell assigned, and a term for each layer it assigns, read on the position before the move.",
+      "items": {
+        "type": "object",
+        "required": ["for"],
+        "minProperties": 2,
+        "properties": { "for": { "$ref": "#/$defs/formula" } },
+        "additionalProperties": { "$ref": "#/$defs/formula" }
+      }
+    },
+    "deadEnds": {
+      "type": "object",
+      "description": "Claims by id, each a formula over the position true only where no line of moves finishes: `Game.hasNoSolution`. Each is checked sound on small boards.",
+      "additionalProperties": { "$ref": "#/$defs/formula" }
+    },
     "help": {
       "type": "object",
       "description": "The game's help page, which `src/describe/help-page.ts` renders in this order: the title is the catalog's name, and every `#` and `##` heading and `{{parameters}}` are the renderer's.",
@@ -223,9 +255,16 @@
       "description": "A game's description: its help page, its formal rules, or both. The formal rules come whole.",
       "required": ["game"],
       "anyOf": [{ "required": ["help"] }, { "required": ["space"] }],
+      "if": { "required": ["space"] },
+      "then": {
+        "description": "A game's rules state an answer, or a planning game's position and its moves.",
+        "oneOf": [{ "required": ["answer"] }, { "required": ["position"] }]
+      },
       "dependentRequired": {
-        "space": ["name", "family", "sizes", "answer", "freedom"],
-        "techniques": ["space", "tiers"]
+        "space": ["name", "family", "sizes", "freedom"],
+        "position": ["space", "moves", "finish"],
+        "moves": ["position"],
+        "techniques": ["space", "tiers", "answer"]
       },
       "additionalProperties": false,
       "properties": {
@@ -309,9 +348,51 @@
           "required": ["kind"],
           "additionalProperties": false,
           "properties": {
-            "kind": { "enum": ["fill", "act", "permute", "transition", "query"] }
+            "kind": {
+              "enum": ["fill", "act", "permute", "transition", "query"],
+              "description": "For a planning game, `permute` claims every move is legal everywhere and moves the pieces the same way on every position, which the dead-end checker checks; `transition` claims nothing."
+            }
           }
         },
+        "position": {
+          "type": "object",
+          "description": "A planning game's position: its layers, each a value a cell, by name, read in a formula as a function of a cell.",
+          "minProperties": 1,
+          "additionalProperties": { "$ref": "#/$defs/layer" }
+        },
+        "moves": {
+          "type": "object",
+          "description": "A planning game's moves, by name, in the order a position's moves are listed.",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "required": ["for", "set"],
+            "additionalProperties": false,
+            "properties": {
+              "for": {
+                "$ref": "#/$defs/formula",
+                "description": "Its arguments, as a technique's binders: plain numbers and elements."
+              },
+              "when": {
+                "$ref": "#/$defs/formula",
+                "description": "Its guard, over the position; absent is true."
+              },
+              "set": { "$ref": "#/$defs/assignments" }
+            }
+          }
+        },
+        "finish": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/formula" },
+          "minItems": 1,
+          "description": "Formulas over the position, all true of a finished one."
+        },
+        "lose": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/formula" },
+          "description": "Formulas over the position, any true of a lost one."
+        },
+        "deadEnds": { "$ref": "#/$defs/deadEnds" },
         "deal": {
           "type": "object",
           "additionalProperties": { "type": "string" },
@@ -357,13 +438,41 @@
                   "rules": { "$ref": "#/$defs/rules" },
                   "clues": { "$ref": "#/$defs/clues" },
                   "shape": { "$ref": "#/$defs/shape" },
-                  "techniques": { "$ref": "#/$defs/techniques" }
+                  "techniques": { "$ref": "#/$defs/techniques" },
+                  "position": {
+                    "type": "object",
+                    "description": "A planning game's layers of new names, each all zeros on a board without the variation.",
+                    "additionalProperties": { "$ref": "#/$defs/layer" }
+                  },
+                  "finish": {
+                    "type": "array",
+                    "items": { "$ref": "#/$defs/formula" },
+                    "description": "A planning game's finish formulas, true of a finished position where the variation is on."
+                  },
+                  "deadEnds": { "$ref": "#/$defs/deadEnds" },
+                  "moves": {
+                    "type": "object",
+                    "description": "Assignments added to a planning game's moves, by the move's name, made where the variation is on.",
+                    "additionalProperties": {
+                      "type": "object",
+                      "required": ["set"],
+                      "additionalProperties": false,
+                      "properties": { "set": { "$ref": "#/$defs/assignments" } }
+                    }
+                  }
                 }
               },
               "replace": {
                 "type": "object",
                 "additionalProperties": false,
-                "properties": { "space": { "$ref": "#/$defs/space" } }
+                "properties": {
+                  "space": { "$ref": "#/$defs/space" },
+                  "position": {
+                    "type": "object",
+                    "description": "A planning game's layers of the same names, replaced.",
+                    "additionalProperties": { "$ref": "#/$defs/layer" }
+                  }
+                }
               }
             }
           }

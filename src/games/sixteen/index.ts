@@ -1,4 +1,5 @@
 import { assertNever } from "../../engine/assert-never.ts";
+import { describedSpace } from "../../engine/describe-runtime.ts";
 import type {
   Game,
   HintResult,
@@ -51,6 +52,7 @@ import {
   type SixteenDrawState,
   type SixteenHintHighlights,
 } from "./render.ts";
+import * as sixteen from "./sixteen.compiled.ts";
 import {
   CursorMode,
   decodeParams,
@@ -61,6 +63,8 @@ import {
   newDesc,
   newState,
   paramConfig,
+  positionOf,
+  rulesOf,
   type SixteenMove,
   type SixteenParams,
   type SixteenState,
@@ -79,20 +83,20 @@ export function executeMove(state: SixteenState, move: SixteenMove): SixteenStat
   }
   if (move.type !== "slide") return assertNever(move, "sixteen: executeMove");
 
+  // The description's slide moves a line on by 1 to one less than its
+  // length; a delta that comes round to where it started moves no tile.
   const { axis, index, delta } = move;
-  const tiles = new Int32Array(state.tiles);
-
-  if (axis === "row") {
-    for (let x = 0; x < state.w; x++) {
-      const srcX = (((x - delta) % state.w) + state.w) % state.w;
-      tiles[index * state.w + x] = state.tiles[index * state.w + srcX];
-    }
-  } else {
-    for (let y = 0; y < state.h; y++) {
-      const srcY = (((y - delta) % state.h) + state.h) % state.h;
-      tiles[y * state.w + index] = state.tiles[srcY * state.w + index];
-    }
+  const line = axis === "row" ? index : state.h + index;
+  const len = axis === "row" ? state.w : state.h;
+  const k = ((delta % len) + len) % len;
+  const t = describedSpace(sixteen.units, state.w, state.h).lineCells[line]?.[k] ?? -1;
+  const slide = { move: "slide", L: line, t, k } as const;
+  const rules = rulesOf(state);
+  if (k !== 0 && !rules.legal(positionOf(state), slide)) {
+    throw new Error(`Illegal sixteen slide of ${axis} ${index}`);
   }
+  const tiles =
+    k === 0 ? new Int32Array(state.tiles) : rules.play(positionOf(state), slide).value;
 
   return {
     ...state,
@@ -408,22 +412,18 @@ function hint(
 ): HintResult<SixteenMove, SixteenHintHighlights, SixteenRung> {
   const { w, h, n, tiles } = state;
 
-  // Every legal move: a slide of any line by any distance. A slide by any
-  // distance is a *single* move — the same granularity as a player's drag and
-  // as the move counter — so the plan's first move is directly executable;
-  // planning in smaller steps than a hint executes leaves the plan on every
-  // executed hint, and auto-hint cycles.
-  const moves: SlideMove[] = [];
-  for (let r = 0; r < h; r++) {
-    for (let delta = 1; delta < w; delta++) {
-      moves.push({ axis: "row", index: r, delta });
-    }
-  }
-  for (let c = 0; c < w; c++) {
-    for (let delta = 1; delta < h; delta++) {
-      moves.push({ axis: "col", index: c, delta });
-    }
-  }
+  // Every legal move, the description's: a slide of any line by any
+  // distance. A slide by any distance is a *single* move — the same
+  // granularity as a player's drag and as the move counter — so the plan's
+  // first move is directly executable; planning in smaller steps than a hint
+  // executes leaves the plan on every executed hint, and auto-hint cycles.
+  const moves: SlideMove[] = rulesOf(state)
+    .moves(positionOf(state))
+    .map((m) =>
+      m.L < h
+        ? { axis: "row", index: m.L, delta: m.k }
+        : { axis: "col", index: m.L - h, delta: m.k },
+    );
 
   // Every tile is distinct and belongs in the cell one below its own number, so
   // "how far from finished" is just the total distance the tiles must travel.

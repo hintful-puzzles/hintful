@@ -1,12 +1,13 @@
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_REPEATED, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, parseDimensions, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { permParity } from "../../engine/shuffle.ts";
+import * as twiddle from "./twiddle.compiled.ts";
 
 // --- types -----------------------------------------------------------
 
@@ -31,9 +32,9 @@ export interface TwiddleState {
   /** Displayed tile numbers in row-major order (1-indexed). The solved
    * board reads in non-decreasing order. */
   readonly numbers: Int32Array;
-  /** Tile orientations 0..3 (only meaningful when `orientable`); 0 is
-   * upright. Advanced by `(orient + dir) & 3` on each rotation. */
-  readonly orient: Uint8Array;
+  /** Tile orientations 0..3, each tile's quarter turns anticlockwise from
+   * upright; all 0 unless `orientable`. The description's `turn` layer. */
+  readonly orient: Int32Array;
   readonly moveCount: number;
   readonly movetarget: number;
   /** Top-left corner + direction of the last rotation, for animation
@@ -138,77 +139,34 @@ export const menu: PresetBoards<TwiddleParams> = {
 
 // --- rotation ---------------------------------------------------------
 
-/**
- * Rotate the `n×n` block whose top-left corner is `(x, y)` by `dir`
- * quarter-turns, in place (so `executeMove` rotates copies). Upstream
- * `do_rotate`: loop the representative quarter `(n+1)/2 × n/2` and cycle
- * each element with its 4-rotational coset `p[0..3]`. When orientable, each
- * moved tile's orientation advances by `dir` (upstream's packed-bit
- * `v ^= ((v+dir) ^ v) & 3`), and so does the lone center tile when `n` is odd.
- */
-export function doRotate(
-  numbers: Int32Array,
-  orient: Uint8Array,
-  w: number,
-  n: number,
-  orientable: boolean,
-  x: number,
-  y: number,
-  dir: number,
-): void {
-  const d = dir & 3;
-  if (d === 0) return;
+// --- the rules ----------------------------------------------------------
 
-  const base = y * w + x;
-  for (let i = 0; i < Math.floor((n + 1) / 2); i++) {
-    for (let j = 0; j < Math.floor(n / 2); j++) {
-      const p = [
-        j * w + i,
-        i * w + (n - j - 1),
-        (n - j - 1) * w + (n - i - 1),
-        (n - i - 1) * w + j,
-      ];
-      const gn = [0, 0, 0, 0];
-      const go = [0, 0, 0, 0];
-      for (let k = 0; k < 4; k++) {
-        gn[k] = numbers[base + p[k]];
-        go[k] = orient[base + p[k]];
-      }
-      for (let k = 0; k < 4; k++) {
-        const src = (k + d) & 3;
-        numbers[base + p[k]] = gn[src];
-        orient[base + p[k]] = orientable ? (go[src] + d) & 3 : go[src];
-      }
-    }
-  }
-
-  if (orientable && n & 1) {
-    const c = base + (n >> 1) * w + (n >> 1);
-    orient[c] = (orient[c] + d) & 3;
-  }
+/** The description's rules on a board of this size and kind. Rows only
+ * changes only which numbers are dealt, which the rules do not read. */
+export function rulesOf(s: {
+  readonly w: number;
+  readonly h: number;
+  readonly n: number;
+  readonly orientable: boolean;
+}) {
+  return twiddle.rules(
+    describedSpace(twiddle.units, s.w, s.h),
+    { n: s.n },
+    s.orientable ? ["orientable"] : [],
+  );
 }
 
-// --- completion -------------------------------------------------------
+export const positionOf = (s: TwiddleState): twiddle.Position => ({
+  value: s.numbers,
+  turn: s.orient,
+});
 
-/** Solved iff the numbers read in non-decreasing row-major order
- * (non-strict, so `rowsonly`'s repeated numbers pass) and — when
- * orientable — every tile is upright. */
-export function isComplete(
-  numbers: Int32Array,
-  orient: Uint8Array,
-  wh: number,
-  orientable: boolean,
-): boolean {
-  for (let i = 1; i < wh; i++) {
-    if (numbers[i] < numbers[i - 1]) return false;
-  }
-  if (orientable) {
-    for (let i = 0; i < wh; i++) {
-      if (orient[i] !== 0) return false;
-    }
-  }
-  return true;
-}
+/** The description's turn of the block whose top-left square is `(x, y)`:
+ * anticlockwise where `dir` is +1. */
+export const turnOf = (w: number, x: number, y: number, dir: 1 | -1): twiddle.Move => ({
+  move: dir === 1 ? "anticlockwise" : "clockwise",
+  b: y * w + x,
+});
 
 // --- desc / state -----------------------------------------------------
 
@@ -217,7 +175,7 @@ const ORIENT_LETTERS = "uldr";
 
 export function encodeDesc(
   numbers: Int32Array,
-  orient: Uint8Array,
+  orient: Int32Array,
   wh: number,
   orientable: boolean,
 ): string {
@@ -239,13 +197,13 @@ export function encodeDesc(
 function parseDesc(
   p: TwiddleParams,
   desc: string,
-): DescParse<{ numbers: Int32Array; orient: Uint8Array }> {
+): DescParse<{ numbers: Int32Array; orient: Int32Array }> {
   const wh = p.w * p.h;
   const top = p.rowsonly ? p.h : wh;
   const copies = p.rowsonly ? p.w : 1;
   return readDesc(desc, (r) => {
     const numbers = new Int32Array(wh);
-    const orient = new Uint8Array(wh);
+    const orient = new Int32Array(wh);
     const seen = new Int32Array(top + 1);
     for (let i = 0; i < wh; i++) {
       if (i > 0 && !p.orientable) r.expect(",");
@@ -278,55 +236,16 @@ export function newState(p: TwiddleParams, desc: string): TwiddleState {
 }
 
 /**
- * Whether no turns put this board in order, by what every turn keeps:
- *
- * - **A tile's color on the checkerboard.** A block of odd side turns about a
- *   square, so each tile stays on its color. One of even side turns about a
- *   corner, so a tile changes color with every quarter turn it makes, and
- *   where tiles show their turns the two together keep their parity.
- * - **The arrangement's parity**, where no two tiles share a number: a quarter
- *   turn is ⌊n²/4⌋ cycles of four tiles, an even permutation unless `n` is two
- *   more than a multiple of four.
- * - **The turns the tiles show, added up modulo four**, with a block of even
- *   side: it turns a multiple of four tiles at once.
- *
- * Each is proved and nothing says they are all there is, so a board that
- * passes them may still be out of reach.
+ * Whether no turns put this board in order, by the description's claims:
+ * what every turn keeps. Each is proved, and nothing says they are all there
+ * is, so a board that passes them may still be out of reach.
  */
 export function hasNoSolution(state: TwiddleState): boolean {
-  const { w, n, orientable, numbers, orient } = state;
-  const wh = numbers.length;
-  const home = Int32Array.from(numbers).sort();
-  const odd = (n & 1) === 1;
-
-  if (odd || orientable) {
-    // How many tiles of each number stand on each color, less how many of the
-    // solved board's do.
-    const tally = new Map<number, number>();
-    const count = (key: number, by: number) =>
-      tally.set(key, (tally.get(key) ?? 0) + by);
-    for (let i = 0; i < wh; i++) {
-      const color = ((i % w) + Math.floor(i / w)) & 1;
-      count(numbers[i] * 2 + ((color + (odd ? 0 : orient[i])) & 1), 1);
-      count(home[i] * 2 + color, -1);
-    }
-    for (const excess of tally.values()) if (excess !== 0) return true;
-  }
-
-  const distinct = home.every((v, i) => v === i + 1);
-  if (distinct && n % 4 !== 2 && permParity(numbers, wh) !== 0) return true;
-
-  if (orientable && !odd) {
-    let turns = 0;
-    for (let i = 0; i < wh; i++) turns += orient[i];
-    if (turns % 4 !== 0) return true;
-  }
-  return false;
+  return rulesOf(state).deadEnd(positionOf(state)) !== null;
 }
 
 export function status(state: TwiddleState): "solved" | "ongoing" {
-  const { numbers, orient, w, h, orientable } = state;
-  return isComplete(numbers, orient, w * h, orientable) ? "solved" : "ongoing";
+  return rulesOf(state).finished(positionOf(state)) ? "solved" : "ongoing";
 }
 
 // --- text format ------------------------------------------------------
@@ -360,9 +279,10 @@ export function textFormat(state: TwiddleState): string {
 export function newDesc(p: TwiddleParams, rng: RandomState): { desc: string } {
   const { w, h, n } = p;
   const wh = w * h;
-  const numbers = new Int32Array(wh);
-  const orient = new Uint8Array(wh);
-  for (let i = 0; i < wh; i++) numbers[i] = (p.rowsonly ? Math.floor(i / w) : i) + 1;
+  const rules = rulesOf(p);
+  const finished = new Int32Array(wh);
+  for (let i = 0; i < wh; i++) finished[i] = (p.rowsonly ? Math.floor(i / w) : i) + 1;
+  let position: twiddle.Position = { value: finished, turn: new Int32Array(wh) };
 
   // Zero means auto; upstream adds a random move to avoid parity issues.
   const totalMoves = p.movetarget || w * h * n * n * 2 + randomUpto(rng, 2);
@@ -378,13 +298,13 @@ export function newDesc(p: TwiddleParams, rng: RandomState): { desc: string } {
     for (let i = 0; i < totalMoves; i++) {
       let x: number;
       let y: number;
-      let r: number;
+      let r: 1 | -1;
       let oldtotal: number;
       let newtotal: number;
       do {
         x = randomUpto(rng, rw);
         y = randomUpto(rng, rh);
-        r = 2 * randomUpto(rng, 2) - 1; // ±1
+        r = randomUpto(rng, 2) ? 1 : -1;
         oldtotal = prevmoves[y * rw + x];
         newtotal = oldtotal + r;
         // When w == h == n every move repeats or undoes a previous one, so
@@ -394,7 +314,7 @@ export function newDesc(p: TwiddleParams, rng: RandomState): { desc: string } {
         (Math.abs(newtotal) < Math.abs(oldtotal) || Math.abs(newtotal) > 2)
       );
 
-      doRotate(numbers, orient, w, n, p.orientable, x, y, r);
+      position = rules.play(position, turnOf(w, x, y, r));
 
       // Log the rotation for inversion detection, and zero every region
       // that overlaps this one (now safe to move in again).
@@ -408,7 +328,7 @@ export function newDesc(p: TwiddleParams, rng: RandomState): { desc: string } {
         }
       }
     }
-  } while (isComplete(numbers, orient, wh, p.orientable));
+  } while (rules.finished(position));
 
-  return { desc: encodeDesc(numbers, orient, wh, p.orientable) };
+  return { desc: encodeDesc(position.value, position.turn, wh, p.orientable) };
 }

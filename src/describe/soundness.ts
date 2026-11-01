@@ -8,13 +8,28 @@
  * last checked.
  */
 
-import type { DescriptionJson, LibraryJson, StatedTechnique } from "./description.ts";
+import type {
+  DescriptionJson,
+  LibraryJson,
+  PlanningJson,
+  StatedTechnique,
+} from "./description.ts";
 
 /** The board orders every technique is checked at. */
 export const CHECKED_ORDERS: readonly number[] = [3, 4];
 
+/** The most positions a world of a planning game may have for the dead-end
+ * checker to search it whole: a world with more is not checked. */
+export const CHECKED_POSITIONS = 400_000;
+
 /** Where a technique's verdict is kept: its description's path and its id. */
 export const soundnessKey = (source: string, id: string): string => `${source}#${id}`;
+
+/** Where a dead-end claim's verdict is kept. */
+export const deadEndKey = (source: string, id: string): string =>
+  `${source}#deadEnd:${id}`;
+
+export const isDeadEndKey = (key: string): boolean => key.includes("#deadEnd:");
 
 /** FNV-1a over a canonical rendering, as sixteen hex digits from two lanes. */
 function fingerprint(text: string): string {
@@ -57,6 +72,28 @@ export function libraryFingerprint(lib: LibraryJson, id: string): string {
       technique: statement(lib.techniques[id]),
       rules: ["latin", "latin with a value twice a line"],
       orders: CHECKED_ORDERS,
+    }),
+  );
+}
+
+/** A dead-end claim's fingerprint: the claim, and every part of the rules a
+ * search of the positions reads, under the cap it searched to. */
+export function deadEndFingerprint(d: PlanningJson, src: string): string {
+  return fingerprint(
+    canonical({
+      claim: src,
+      rules: {
+        space: d.space,
+        sizes: d.sizes,
+        position: d.position,
+        freedom: d.freedom,
+        define: d.define ?? {},
+        moves: d.moves,
+        finish: d.finish,
+        lose: d.lose ?? [],
+        ...(d.variations === undefined ? {} : { variations: d.variations }),
+      },
+      positions: CHECKED_POSITIONS,
     }),
   );
 }

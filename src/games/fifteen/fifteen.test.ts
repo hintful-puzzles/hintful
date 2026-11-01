@@ -28,15 +28,23 @@ import {
   type FifteenMove,
   type FifteenParams,
   type FifteenState,
-  isCompletedTiles,
+  isCompleted,
   newDesc,
   newState,
-  parityP,
   status,
   textFormat,
 } from "./state.ts";
 
 // --- helpers ----------------------------------------------------------
+
+/** Whether the board can finish, by the parity argument stated apart from
+ * the description's: each square the gap moves swaps two tiles' order and
+ * moves the gap one square from its corner. */
+function finishable(s: FifteenState): boolean {
+  const gx = s.gapPos % s.w;
+  const gy = Math.floor(s.gapPos / s.w);
+  return permParity(s.tiles, s.n) === (s.w - 1 - gx + (s.h - 1 - gy) + s.n - 1) % 2;
+}
 
 function solvedState(w: number, h: number): FifteenState {
   return newState({ w, h }, solvedDesc(w, h));
@@ -114,10 +122,9 @@ describe("Fifteen generation", () => {
       const { desc } = newDesc(p, rng);
       expect(validateDesc(fifteenGame, p, desc)).toBeNull();
       const state = newState(p, desc);
-      // Reachable from solved iff permutation parity matches gap parity.
-      expect(permParity(state.tiles, state.n)).toBe(parityP(p.w, p.h, state.gapPos));
+      expect(finishable(state)).toBe(true);
       // Never starts solved.
-      expect(isCompletedTiles(state.tiles, state.n)).toBe(false);
+      expect(isCompleted(state)).toBe(false);
     }
   });
 
@@ -130,8 +137,8 @@ describe("Fifteen generation", () => {
       const rng = randomNew(`fifteen-shape-${p.w}x${p.h}`);
       const { desc } = newDesc(p, rng);
       const state = newState(p, desc);
-      expect(permParity(state.tiles, state.n)).toBe(parityP(p.w, p.h, state.gapPos));
-      expect(isCompletedTiles(state.tiles, state.n)).toBe(false);
+      expect(finishable(state)).toBe(true);
+      expect(isCompleted(state)).toBe(false);
     }
   });
 
@@ -223,7 +230,7 @@ describe("Fifteen solve", () => {
     expect(result?.ok).toBe(true);
     if (!result?.ok) throw new Error("expected solve");
     const solved = executeMove(state, result.move);
-    expect(isCompletedTiles(solved.tiles, solved.n)).toBe(true);
+    expect(isCompleted(solved)).toBe(true);
     expect(solved.gapPos).toBe(solved.n - 1);
     expect(solved.moveCount).toBe(state.moveCount + 1);
     expect(fifteenGame.statusbarText?.(solved, { invertCursor: false })).toBe(
@@ -328,7 +335,7 @@ describe("Fifteen hint", () => {
     );
     // Following every step reaches the solved board.
     for (const step of result.steps) state = executeMove(state, step.move);
-    expect(isCompletedTiles(state.tiles, state.n)).toBe(true);
+    expect(isCompleted(state)).toBe(true);
   });
 
   it("narrates a final-placement step as 'home' and a maneuvering step otherwise", () => {

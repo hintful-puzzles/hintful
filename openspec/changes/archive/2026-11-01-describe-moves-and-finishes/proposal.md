@@ -1,9 +1,12 @@
 # describe-moves-and-finishes
 
 **Status: filed by `check-the-answer-from-the-rules` (2026-11-01)**, step 3
-of `describe-the-whole-catalog`'s plan (`design.md` § "The plan"). It files
-step 4, `describe-the-king-move-games`, when it is archived. It may split by
-move shape at its start (the plan allows it); a split files its parts here.
+of `describe-the-whole-catalog`'s plan (`design.md` § "The plan"). **Split by
+move shape at its start (2026-11-01, `design.md` § "The split")**: this change
+builds the runtime and describes Sixteen, Twiddle and Fifteen, and files
+`describe-guarded-moves` and `describe-components-and-open-domains` for the
+other eleven; the second of those files step 4,
+`describe-the-king-move-games`.
 
 ## Why
 
@@ -24,17 +27,14 @@ checked sound. Ball sort (`add-ball-sort`) waits on it.
   `executeMove`'s legality and `status` call, as step 2 compiled the rules
   to `isAnswer`.
 - **The planners fed the compiled move relation**: `slide-planner` and
-  `permutation-planner` for Sixteen, Twiddle and Netslide, which already take
-  moves as data; `finish-search` for Pegs, Inertia, Same Game and Sokoban. A
-  solver keeps its fast packed copy where the generic move is too slow, and
-  says so with the measurement.
-- **Dead-end claims checked sound** on small boards (`hasNoSolution`: the
-  parity invariants, Pegs' frozen pegs, Same Game's last of a color, Sokoban's
-  deadlocks), as techniques are.
-- **The fourteen described**, each game's move legality and finish retired
-  where the compiled one says the same. Fifteen's table and Cube's roll stay
-  data the description reads; Numgame's integers and Untangle's points run on
-  concrete positions, beyond the checker's reach.
+  `permutation-planner` for Sixteen and Twiddle, which already take moves as
+  data (`finish-search` goes with `describe-guarded-moves`). A solver keeps
+  its fast packed copy where the generic move is too slow, and says so with
+  the measurement.
+- **Dead-end claims checked sound** on small boards (`hasNoSolution`: here
+  the parity invariants), as techniques are.
+- **Sixteen, Twiddle and Fifteen described**, each game's move legality and
+  finish retired where the compiled one says the same.
 
 ## Facts for the session (2026-11-01; re-check)
 
@@ -57,9 +57,10 @@ checked sound. Ball sort (`add-ball-sort`) waits on it.
 
 ## Acceptance
 
-Each of the fourteen has a description its runtime executes: its moves'
-legality and its finish compiled and called, its hand-written copies removed
-or kept with the reason and the measurement; the planners named above fed
-the compiled move relation; every dead-end claim checked sound on small
-boards; every fixture, deal and hint walk unchanged, or each difference
-reported; the guides updated (`docs/descriptions.md`).
+Sixteen, Twiddle and Fifteen each have a description its runtime executes:
+its moves' legality and its finish compiled and called, its hand-written
+copies removed or kept with the reason and the measurement; `slide-planner`
+and `permutation-planner` fed the compiled move relation; every dead-end
+claim checked sound on small boards; every fixture, deal and hint walk
+unchanged, or each difference reported; the guides updated
+(`docs/descriptions.md`); the split's two changes filed.

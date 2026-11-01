@@ -27,6 +27,7 @@ npx vitest run -c research/technique-check/vitest.config.ts [run]
 | `run_c` | the test's group C pairs that need stated ladders; writes `results-c.txt` |
 | `planted` | a planted defect in each of group C's ladders, each of which must come out unsound |
 | `describe-check` | every technique the app compiles, read from its description and checked against the description's own rules, with a planted defect in each; records each verdict in `src/describe/soundness.json` (`docs/descriptions.md` § "Checking a technique sound") and writes `results-describe.txt` |
+| `dead-end-check` | every planning game's dead-end claims, checked by searching every position of small boards, with a planted defect in each; records each verdict in `src/describe/soundness.json` (`docs/descriptions.md` § "Checking a dead-end claim sound") and writes `results-dead-end.txt`. `GAMES="sixteen twiddle"` narrows it. It uses no z3 |
 
 The times in the results tables are those of the tool's first version, in
 Python with z3 4.16.

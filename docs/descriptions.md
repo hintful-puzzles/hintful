@@ -1,19 +1,23 @@
 # Descriptions Guide
 
 How a game's deduction techniques are stated in a description and compiled
-into the solver, and its rules into its answer check. The normative
+into the solver, its rules into its answer check, and a planning game's
+moves, finish and dead-end claims into the rules it plays by. The normative
 statements are in the specs:
 [`latin-solver`](../openspec/specs/latin-solver/spec.md) ("The Latin ladder
 is compiled from its description", "A compiled firing is recorded with a
 reason built from its binding", "A game's answer check is compiled from its
-rules") and
+rules"),
+[`described-position`](../openspec/specs/described-position/spec.md) and
 [`build-pipeline`](../openspec/specs/build-pipeline/spec.md) ("Nothing is
-generated into the source tree"). The parser and the compiler are
+generated into the source tree"). The parser and the compilers are
 [`src/describe/`](../src/describe/). The runtime the compiled code calls is
-[`engine/describe-runtime.ts`](../src/engine/describe-runtime.ts), the
+[`engine/describe-runtime.ts`](../src/engine/describe-runtime.ts), and a
+planning game's rules are the engine's
+[`engine/position-runtime.ts`](../src/engine/position-runtime.ts), the
 engine's because the engine and games import nothing above them. The
 development tools that also read a description's rules, the interpreter and
-the soundness checker, are under [`research/`](../research/).
+the soundness checkers, are under [`research/`](../research/).
 
 ## What every game does
 
@@ -62,6 +66,20 @@ itself is § "The file". A game whose techniques are stated:
    over the board as one `dealtOf` deals it, which the ladder reads too
    (§ "The answer check"). It writes no completion check of its own.
 
+A planning game, one whose player moves pieces toward a finish rather than
+filling in an answer, states a position and its moves in place of an answer
+and techniques, and:
+
+1. **Plays by its compiled rules**: `executeMove` asks `legal` and `play`,
+   `status` asks `finished`, and `hasNoSolution` asks `deadEnd`, of the
+   module's `rules` for the board (§ "A planning game's position and
+   moves"). It keeps its own move type, counters, animation and Solve move.
+2. **Checks every dead-end claim sound** with
+   `npx vitest run -c research/technique-check/vitest.config.ts dead-end-check`
+   (§ "Checking a dead-end claim sound").
+3. **Feeds its planner the compiled moves**: the move list, or each move's
+   effect by `moveEffect`.
+
 ## Sections
 
 | Section | Read it when |
@@ -75,6 +93,8 @@ itself is § "The file". A game whose techniques are stated:
 | The answer check | you decide whether a board is solved, or write an error overlay |
 | A firing's reason is built from its binding | a hint's words need a fact about a firing |
 | Checking a technique sound | you state or edit a technique, or the gate reports one unchecked |
+| A planning game's position and moves | you describe a planning game, or its moves or finish change |
+| Checking a dead-end claim sound | you state or edit a dead-end claim, a move or a finish, or the gate reports a claim unchecked |
 
 ## The file
 
@@ -94,7 +114,8 @@ research tools all read through it; the app never does.
 - **A game's description states its help first and its rules after**, so a
   reader meets the prose rules beside the formal ones. A rules section is
   whole or absent; the schema says what each part requires.
-- **Only a library or a description with techniques compiles.**
+- **Only a library, a description with techniques and a planning game's
+  description compile.**
 - **The compiler reads a description with every variation applied.** One
   ladder runs on every board the game deals, and a name a board's variations
   leave out is empty there, so a technique over it binds nothing (Solo's
@@ -365,3 +386,77 @@ give, is not a defect, and the checker rightly calls it sound.
 The verdict is recorded under a fingerprint of the statement, the rules it
 was checked against and the orders (`src/describe/soundness.ts`), so editing
 either makes it unchecked until the check runs again.
+
+## A planning game's position and moves
+
+A planning game's description has `position` in place of `answer`: its
+layers, each a value a cell, read in a formula as a function of a cell
+(`value(c)`, Twiddle's `turn(c)`). `moves` states each move by its binders
+(`for`, plain numbers and elements, which are the compiled move's fields),
+an optional guard (`when`) and what it sets; `finish`, `lose` and
+`deadEnds` are formulas over the position.
+[`compile-position.ts`](../src/describe/compile-position.ts) compiles them,
+and the module's `rules(sp, cl, variations)` is the engine's
+`PositionRules`. Exemplars: [`sixteen`](../src/games/sixteen/sixteen.description.yaml)
+(a permutation), [`fifteen`](../src/games/fifteen/fifteen.description.yaml)
+(a guarded move), [`twiddle`](../src/games/twiddle/twiddle.description.yaml)
+(a layer a variation adds).
+
+- **An assignment's last binder is the cell it sets**, and each of its
+  terms reads the position before the move: a move's assignments are
+  simultaneous, so a slide reads the line as it was.
+- **A binder that reads the position is a guard too.** Fifteen binds its gap
+  as `g in cells where value(g) = 0`; a move is legal where every binder
+  holds of its binding and the guard holds.
+- **`freedom.kind: permute` is a claim the dead-end checker checks**: every
+  move legal on every position, and moving the pieces the same way on each.
+  Only such a move has an `Effect` (`moveEffect`) for a planner.
+- **A variation adds layers, assignments, finish formulas and claims, or
+  replaces layers.** What it adds runs only where it is on, and a layer it
+  adds is all zeros on a board without it, so a game keeps the layer in its
+  state whatever its board.
+- **The domain and `arranged` are read by the checker only**: they say which
+  positions a board can hold. A desc parser keeps its own errors.
+- **A layer is an `Int32Array`.** A game whose state keeps a layer in
+  another array copies it on each call, so it keeps the layer as the
+  description's.
+- **A planner may keep its own fast move** where the compiled one is too
+  slow, with the measurement and a test holding it to the compiled one:
+  `slide-planner`'s in-place slide is 1.6× the compiled slide's speed on a
+  4×4 board and 4.4× on a 5×5 (2026-11-01), and its pruning is built on a
+  slide's line (`sixteen.test.ts`, "slides in the planner as the description
+  says").
+
+Its comparison with the code it replaced is in the `report.md` of
+`openspec/changes/archive/*-describe-moves-and-finishes`.
+
+## Checking a dead-end claim sound
+
+A dead-end claim is consumed as `Game.hasNoSolution`: the dead-end banner
+and the hint's refusal rest on it, and a generator that deals only boards
+that can finish rests on it being complete as well. So each is checked by
+[`research/technique-check/dead-end-check.ts`](../research/technique-check/dead-end-check.ts),
+by search, on every small board: every size in the description's ranges
+whose positions number at most `CHECKED_POSITIONS`
+(`src/describe/soundness.ts`), with each set of its variations on.
+
+- **The universe is every position the layers allow**: an arranged layer's
+  arrangements, times every filling of the others. A move whose result
+  leaves it fails the check, as does a `permute` claim found false.
+- **It walks the moves backward from the finished positions**, so it
+  assumes nothing of the moves, and a claim is sound where it holds of no
+  position that can finish. A claim that never holds on a board checked is
+  not recorded.
+- **It runs the compiled module**, compiled afresh so a planted claim runs
+  the same way, which is what the app runs.
+- **The results say what each claim misses**: how many positions that
+  cannot finish no claim holds of. Twiddle's invariants miss many; Sixteen's
+  and Fifteen's parity miss none, which their generators rely on.
+- **A board where nothing moves checks nothing** (a block wider than the
+  board) and is listed apart.
+- **Each claim has a planted defect beside it** in `dead-end-check.test.ts`
+  that must come out unsound.
+
+The verdict is recorded in `src/describe/soundness.json` under a fingerprint
+of the claim and every part of the rules the search reads, and the gate
+fails on a compiled claim with none.

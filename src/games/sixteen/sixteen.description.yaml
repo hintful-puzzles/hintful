@@ -38,3 +38,38 @@ help:
     The search looks only so far ahead. When it cannot find a way to finish
     from your position, the hint says so rather than guessing: play a few
     moves of your own and ask again, or use *Show solution…*.
+name: Sixteen
+family: tiles in order
+sizes:
+  # The game bounds neither side above; 99 stands for no bound.
+  w: { min: 2, max: 99 }
+  h: { min: 2, max: 99 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+position:
+  # The tile on each square, numbered from 1 in the order they finish.
+  value: { domain: "range(1, w * h)", arranged: "1" }
+freedom: { kind: permute }
+moves:
+  # Slide a line on by k squares, as far as its square t is from its first:
+  # the tiles pushed off one end come back on at the other.
+  slide:
+    for: "L in lines, t in cells(L) where index(t, cells(L)) > 0, k = index(t, cells(L))"
+    set:
+      - for: "c in cells(L)"
+        value: "value(nth(cells(L), (index(c, cells(L)) - k + |cells(L)|) mod |cells(L)|))"
+finish:
+  - "forall c in cells: value(c) = index(c, cells) + 1"
+deadEnds:
+  # With both sides odd, a slide moves an odd number of tiles round, which
+  # is an even permutation, so a board an odd permutation away from finished
+  # stays one. With an even side some slide is odd, and nothing is claimed.
+  parity: >-
+    w mod 2 = 1 and h mod 2 = 1
+    and count(a in cells, b in cells where index(a, cells) < index(b, cells)
+    and value(a) > value(b)) mod 2 = 1
+deal:
+  start: >-
+    at m = 0, a random arrangement the slides can finish; otherwise m random
+    slides from the finished board

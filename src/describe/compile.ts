@@ -206,6 +206,9 @@ interface Env {
    * value, which the check then reads with its count from the description
    * (`_repeat`, `_times`) rather than from the marks. `null` elsewhere. */
   answer: { repeats: boolean } | null;
+  /** Where the code reads a planning game's position (`p`): its layers, each
+   * read as a function of a cell. `null` elsewhere. */
+  position: ReadonlySet<string> | null;
   /** Whether the function keeps each cell's candidates as it first reads
    * them (`cands`), until a firing it goes on from changes the marks. */
   memo: boolean;
@@ -482,6 +485,8 @@ function name(n: string, scope: Scope, env: Env, out: Out): Val {
   if (bound !== undefined) return bound;
   if (n === "domain" && env.cellDomain)
     throw new CompileError("the domain is each cell's here: read a cell's candidates");
+  if (n === "domain" && env.position !== null)
+    throw new CompileError("a position has a domain a layer, read by the checker only");
   const known = NAMES[n];
   if (known !== undefined) return known;
   if (env.regions.has(n)) {
@@ -1563,6 +1568,16 @@ function call(
   if (fn === "clues")
     throw new CompileError("clues(kind) is read only as a binder's set");
   if (fn === "latin") return latin(args, scope, env, out);
+  if (env.position?.has(fn)) {
+    // A layer of the position, read at a cell.
+    if (args.length !== 1)
+      throw new CompileError(`${fn} takes 1, given ${args.length}`);
+    const c = compileExpr(args[0], scope, env, out);
+    expectElem(c, "cell", fn);
+    return { code: `p.${fn}[${c.code}]`, sort: NUM };
+  }
+  if (env.position !== null && (fn === "value" || fn === "known" || fn === "cand"))
+    throw new CompileError(`${fn}: a position is read by its layers`);
   if (fn === "clue") {
     const a = args[0];
     if (args.length !== 2 || a.k !== "name" || !env.clues.has(a.name))
@@ -2025,6 +2040,7 @@ export function compileLibrary(
     used,
     concluding: false,
     answer: null,
+    position: null,
     memo: false,
     scratch: null,
     readsClues: { yes: false },
@@ -2143,6 +2159,7 @@ export function compileGame(
     used,
     concluding: false,
     answer: null,
+    position: null,
     memo: false,
     scratch: null,
     readsClues: { yes: false },
@@ -2422,4 +2439,18 @@ function cellDomain(
   ];
 }
 
-export { CompileError };
+/** The expression compiler, for the position rules' compiler
+ * (`compile-position.ts`), which writes other functions from the same
+ * terms. */
+export {
+  bindingLoops,
+  CompileError,
+  compileExpr,
+  type Env,
+  expect,
+  HEADER,
+  Out,
+  type Sort,
+  show,
+  type Val,
+};

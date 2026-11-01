@@ -6,7 +6,12 @@
  */
 
 import { beforeAll, describe, expect, it } from "vitest";
-import { isFormal, isLibrary, variationWord } from "./describe/description.ts";
+import {
+  isFormal,
+  isLibrary,
+  isPlanning,
+  variationWord,
+} from "./describe/description.ts";
 import { loadDescriptionFile } from "./describe/load.ts";
 import { getTsGame } from "./engine/registry.ts";
 import { rulesetField } from "./engine/ruleset.ts";
@@ -20,7 +25,7 @@ const texts = import.meta.glob<string>("./**/*.description.yaml", {
 
 const varied = Object.entries(texts).flatMap(([path, text]) => {
   const d = loadDescriptionFile(text, path);
-  return !isLibrary(d) && isFormal(d) && d.variations !== undefined
+  return !isLibrary(d) && (isFormal(d) || isPlanning(d)) && d.variations !== undefined
     ? [{ path, game: d.game, variations: d.variations }]
     : [];
 });

@@ -15,8 +15,8 @@ import { SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import type { Role, Segment } from "../../engine/permutation-planner.ts";
 import { type Goal, type Inner, type Part, say, type Turned } from "./hint-text.ts";
-import { planTwiddle, type Turn, turnMove } from "./solver.ts";
-import { doRotate, type TwiddleMove, type TwiddleState } from "./state.ts";
+import { planTwiddle, playTurn, type Turn, turnMove } from "./solver.ts";
+import { positionOf, type TwiddleMove, type TwiddleState } from "./state.ts";
 
 /** What a step's turn does for the tile it serves. */
 export const TWIDDLE_RUNGS = [
@@ -44,10 +44,10 @@ export function hint(
   const size = state.numbers.length;
   const goal = Int32Array.from(state.numbers).sort();
   const rowsOnly = goal.some((v, i) => i > 0 && v === goal[i - 1]);
-  const numbers = Int32Array.from(state.numbers);
-  const orient = Uint8Array.from(state.orient);
+  // The board as the steps leave it.
+  let board = positionOf(state);
   const right = (c: number) =>
-    numbers[c] === goal[c] && (!orientable || orient[c] === 0);
+    board.value[c] === goal[c] && (!orientable || board.turn[c] === 0);
   /** The first cell before `stage` that is wrong now, or -1. */
   const firstWrong = (stage: number) => {
     for (let c = 0; c < stage; c++) if (!right(c)) return c;
@@ -59,9 +59,10 @@ export function hint(
     const row = Math.floor(stage / w);
     return m.y > row || (m.y === row && m.x >= stage % w);
   };
+  /** Each cell's label carried by the turn, in place. */
+  const unturned = new Int32Array(size);
   const play = (cells: Int32Array, t: Turn) => {
-    const m = turnMove(w, n, t);
-    doRotate(cells, new Uint8Array(size), w, n, false, m.x, m.y, m.dir);
+    cells.set(playTurn(state, { value: cells, turn: unturned }, t).value);
   };
 
   const steps: Step[] = [];
@@ -94,14 +95,12 @@ export function hint(
     // good. What happens to them in between is the run's working, unsaid.
     const settled: boolean[][] = [];
     {
-      const nums = Int32Array.from(numbers);
-      const ors = Uint8Array.from(orient);
+      let run = board;
       const rightIn = (c: number) =>
-        nums[c] === goal[c] && (!orientable || ors[c] === 0);
+        run.value[c] === goal[c] && (!orientable || run.turn[c] === 0);
       settled.push(Array.from({ length: stage + 1 }, (_, c) => rightIn(c)));
       for (const t of turns) {
-        const m = turnMove(w, n, t);
-        doRotate(nums, ors, w, n, orientable, m.x, m.y, m.dir);
+        run = playTurn(state, run, t);
         settled.push(Array.from({ length: stage + 1 }, (_, c) => rightIn(c)));
       }
     }
@@ -126,7 +125,7 @@ export function hint(
     turns.forEach((t, k) => {
       const g: Goal = { at, number: goal[stage], rowsOnly };
       const m = turnMove(w, n, t);
-      doRotate(numbers, orient, w, n, orientable, m.x, m.y, m.dir);
+      board = playTurn(state, board, t);
       const where = Int32Array.from({ length: size }, (_, c) => c);
       play(where, t);
       const from = at;

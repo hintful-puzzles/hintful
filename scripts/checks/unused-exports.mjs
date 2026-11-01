@@ -105,6 +105,10 @@ const KEPT_UNUSED = {
   // read, so that it checks at the orders the fingerprint names.
   "src/describe/soundness.ts::CHECKED_ORDERS":
     "read by research/technique-check/describe-check.test.ts",
+  "src/describe/soundness.ts::CHECKED_POSITIONS":
+    "read by research/technique-check/dead-end-check.ts",
+  "src/describe/soundness.ts::isDeadEndKey":
+    "read by the two soundness checkers under research/, each keeping the other's verdicts",
   "src/describe/description.ts::withVariations":
     "read by the interpreter and the soundness checker under research/",
 };

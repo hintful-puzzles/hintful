@@ -79,3 +79,102 @@ help:
     plans again from there. If you stop partway through a run, the next hint
     reads the turns left as a technique of their own and puts the moved tiles
     back as it goes on.
+name: Twiddle
+family: tiles in order
+sizes:
+  # The game bounds neither side above; 99 stands for no bound.
+  w: { min: 2, max: 99 }
+  h: { min: 2, max: 99 }
+  # The side of the block a move turns.
+  n: { min: 2, max: 99 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+position:
+  # The number each square's tile shows: 1 to w * h, once each.
+  value: { domain: "range(1, w * h)", arranged: "1" }
+freedom: { kind: permute }
+define:
+  # Whether square c is in the block whose top-left square is b.
+  inBlock(c, b): "x(c) >= x(b) and x(c) < x(b) + n and y(c) >= y(b) and y(c) < y(b) + n"
+  # The square whose tile a quarter turn of the block at b brings to c,
+  # anticlockwise and clockwise.
+  acw(c, b): "cell(x(b) + n - 1 - (y(c) - y(b)), y(b) + x(c) - x(b))"
+  cw(c, b): "cell(x(b) + y(c) - y(b), y(b) + n - 1 - (x(c) - x(b)))"
+  # A square's color on the checkerboard.
+  shade(c): "(x(c) + y(c)) mod 2"
+  # The finished board holds the numbers in reading order, so the tiles of
+  # one number cover a run of its squares, from the lo-th to before the hi-th:
+  # how many squares of shade k the run covers.
+  homes(lo, hi, k): >-
+    count(i in cells where index(i, cells) >= lo and index(i, cells) < hi
+    and shade(i) = k)
+  # Where the run of number v starts, and where it ends.
+  below(v): "count(d in cells where value(d) < v)"
+  upTo(v): "count(d in cells where value(d) <= v)"
+moves:
+  # Turn the block whose top-left square is b a quarter turn anticlockwise.
+  anticlockwise:
+    for: "b in cells where x(b) <= w - n and y(b) <= h - n"
+    set:
+      - for: "c in cells where inBlock(c, b)"
+        value: "value(acw(c, b))"
+  # And clockwise.
+  clockwise:
+    for: "b in cells where x(b) <= w - n and y(b) <= h - n"
+    set:
+      - for: "c in cells where inBlock(c, b)"
+        value: "value(cw(c, b))"
+finish:
+  - "forall c in cells where index(c, cells) > 0: value(nth(cells, index(c, cells) - 1)) <= value(c)"
+deadEnds:
+  # A block of odd side turns about a square, so each tile stays on its
+  # color: the tiles of each number must cover as many squares of each color
+  # as they do on the finished board.
+  colorOdd: >-
+    n mod 2 = 1 and exists c in cells, v = value(c), lo = below(v), hi = upTo(v),
+    k in {0, 1}:
+    count(d in cells where value(d) = v and shade(d) = k) != homes(lo, hi, k)
+  # Where no two tiles share a number, a quarter turn is the block's cycles
+  # of four tiles, an even permutation unless n is two more than a multiple
+  # of four.
+  parity: >-
+    n mod 4 != 2 and distinct(value(c) over c in cells)
+    and count(a in cells, b in cells where index(a, cells) < index(b, cells)
+    and value(a) > value(b)) mod 2 = 1
+variations:
+  Rows only:
+    replace:
+      position:
+        # The squares of a row all carry the row's number.
+        value: { domain: "range(1, h)", arranged: "w" }
+  orientable:
+    add:
+      position:
+        # How far each tile is turned anticlockwise from upright, in quarter
+        # turns.
+        turn: { domain: "range(0, 3)" }
+      moves:
+        anticlockwise:
+          set:
+            - for: "c in cells where inBlock(c, b)"
+              turn: "(turn(acw(c, b)) + 1) mod 4"
+        clockwise:
+          set:
+            - for: "c in cells where inBlock(c, b)"
+              turn: "(turn(cw(c, b)) + 3) mod 4"
+      finish:
+        - "forall c in cells: turn(c) = 0"
+      deadEnds:
+        # A block of even side turns about a corner, so a tile changes color
+        # with every quarter turn it makes, and its color and its turns
+        # together keep their parity.
+        colorTurned: >-
+          n mod 2 = 0 and exists c in cells, v = value(c), lo = below(v), hi = upTo(v),
+          k in {0, 1}:
+          count(d in cells where value(d) = v and (shade(d) + turn(d)) mod 2 = k)
+          != homes(lo, hi, k)
+        # A block of even side turns a multiple of four tiles at once.
+        turnSum: "n mod 2 = 0 and sum(c in cells of turn(c)) mod 4 != 0"
+deal:
+  start: m random turns from the finished board, or a long shuffle at m = 0

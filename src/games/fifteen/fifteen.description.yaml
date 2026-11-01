@@ -31,3 +31,43 @@ help:
 
     Follow it or go your own way: when you make a different slide, the next
     hint plans again from there.
+name: Fifteen
+family: tiles in order
+sizes:
+  # The game bounds neither side above; 99 stands for no bound.
+  w: { min: 2, max: 99 }
+  h: { min: 2, max: 99 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+position:
+  # The tile on each square, numbered from 1 in the order they finish, and 0
+  # where the gap is.
+  value: { domain: "range(0, w * h - 1)", arranged: "1" }
+freedom: { kind: transition }
+define:
+  # How many squares apart two squares are, along rows and columns.
+  dist(a, b): "abs(x(a) - x(b)) + abs(y(a) - y(b))"
+moves:
+  # Move the gap g to a square t of its row or column: every tile between
+  # slides one square toward where the gap was.
+  slide:
+    for: "g in cells where value(g) = 0, t in cells where t != g and (x(t) = x(g) or y(t) = y(g))"
+    set:
+      - for: "c = t"
+        value: "0"
+      - for: "c in cells where c != t and dist(g, c) + dist(c, t) = dist(g, t)"
+        value: "value(the(d in adj4(c) where dist(d, t) < dist(c, t)))"
+finish:
+  - "forall c in cells: value(c) = (index(c, cells) + 1) mod |cells|"
+deadEnds:
+  # Each square the gap moves swaps it with one tile, which changes both the
+  # tiles' order and how far the gap is from its corner by one, so the two
+  # together keep their parity, which on the finished board is |cells| - 1's.
+  parity: >-
+    exists g in cells where value(g) = 0:
+    (count(a in cells, b in cells where index(a, cells) < index(b, cells)
+    and value(a) > value(b)) + (w - 1 - x(g)) + (h - 1 - y(g))) mod 2
+    != (|cells| - 1) mod 2
+deal:
+  start: a random arrangement the slides can finish
