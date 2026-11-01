@@ -526,8 +526,10 @@ where the sentence's length and the placements its claim ranges over do not
 (`npm run diff`, writes `metrics/hint-depth.md`) gives each rung's depths and
 lists a step out of order with its tier. A step reading as shallow as an
 easier tier's is either in the wrong tier, or rests on a fact its words never
-name. That is the case the report was planted with: Rectangles' old "leaving
-the outlined square uncovered". It is a report, not a gate.
+name: a square called "uncovered" with no word for why nothing can cover it.
+It is a report, not a gate. A game declares only where a step claims
+something of every placement of an element; in a candidate game a step is
+hard for how widely its pattern spans the notes, which depth does not count.
 
 ### Keep the narration terse
 

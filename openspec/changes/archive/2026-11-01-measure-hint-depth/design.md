@@ -109,3 +109,26 @@ for the owner (task 4):
 - **Palisade** has one tier below its search tier, so nothing can be out of
   order; `cluesVersusRegionSize` and `equivalentEdges` read 1, the rest 0.
 - **58 games declare nothing**, so the depths say nothing about them yet.
+
+## The owner's answer (2026-11-01)
+
+"Ok, yes, accepted. I would try to apply the measure to all games, but only
+if there is a straightforward approach here. If not, I'm ok with you to
+abort it."
+
+**Starve now names its fact.** A stranded square reads "the outlined square
+no cover", parallel to "the outlined clue no room": nothing is left to cover
+it. "With no clue left to cover it" said it at greater length, and with both
+reasons the sentence ran to 142 characters, over the 120 a step is held to.
+
+**Declaring every game is declined: there is no straightforward approach.**
+The games' sentence files make 445 references, measured 2026-11-01 by
+counting `mark.the`, `mark.this`, `mark.as` and `mark.paren` in each
+`hint-text.ts`. No rule decides one of them; each is a reading of the
+solver's firing. Rectangles' stranded square was seen or derived only by how
+`stranded` is computed. The report would also say nothing useful about many
+of them. Candidate games are hard by pattern breadth, as Towers shows, and
+searching games have no rung to order. The three declaring games stay, as
+the report's known positive. A game declares where a tier question about its
+rungs comes up (`docs/hints.md` § "Say the fact the board does not show, and
+declare it").

@@ -168,9 +168,12 @@ export const say = {
           why.push(
             phrase`${derived(mark.the("outline", CELL, f.starved.map(at), "clue"), "each")} no room`,
           );
+        // A square is stranded because no clue keeps a fit over it once this
+        // one goes elsewhere: "no cover" says nothing is left to cover it,
+        // where "uncovered" said only how it would end.
         if (f.stranded.length > 0)
           why.push(
-            phrase`${derived(mark.the("outline", CELL, f.stranded.map(at), "square"), "each")} uncovered`,
+            phrase`${derived(mark.the("outline", CELL, f.stranded.map(at), "square"), "each")} no cover`,
           );
         // Both reasons in one sentence have to fit the length a step is held
         // to (`hint-quality.test.ts`), so each is a few words.

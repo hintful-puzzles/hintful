@@ -43,7 +43,7 @@ A rung's tier is the lowest whose boards speak it. Depths are `depth×steps`.
 
 | game | rung | tier | depth | steps | why | said |
 | --- | --- | --- | --- | --- | --- | --- |
-| rect | starve | Normal | 1 | 9 | no deeper than a lower tier's typical 1 | Elsewhere the # would leave the outlined square uncovered, so it must take this rectangle. |
+| rect | starve | Normal | 1 | 9 | no deeper than a lower tier's typical 1 | Elsewhere the # would leave the outlined square no cover, so it must take this rectangle. |
 | towers | lineFull | Easy | 1 | 70 | deeper than a higher tier's typical 0 | Clue # already sees # tower in the line, so the cell nearest it must top all between; height # can't, so the # must go. |
 | towers | arrangement | Normal | 1 | 226 | no deeper than a lower tier's typical 1 | No way for clue # to show exactly # towers along its line puts height # in this cell, so the # must go. |
 | towers | facing | Easy | 1 | 4 | deeper than a higher tier's typical 0 | These facing clues sum to one more than the grid size, so their line's tallest is pinned: this cell must be #. |
