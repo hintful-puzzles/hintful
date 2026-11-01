@@ -411,7 +411,14 @@ and the module's `rules(sp, cl, variations)` is the engine's
 [`sokoban`](../src/games/sokoban/sokoban.description.yaml) (a walk as a
 reach, `on`, a carried layer), [`slide`](../src/games/slide/slide.description.yaml)
 (a block shifted whole), [`cube`](../src/games/cube/cube.description.yaml)
-(a board of cells alone, faces, dealt tables).
+(a board of cells alone, faces, dealt tables),
+[`samegame`](../src/games/samegame/samegame.description.yaml) (a component,
+a view), [`flood`](../src/games/flood/flood.description.yaml) (a board layer,
+an open domain the checker windows),
+[`netslide`](../src/games/netslide/netslide.description.yaml) (barriers as a
+dealt table), [`numgame`](../src/games/numgame/numgame.description.yaml) and
+[`untangle`](../src/games/untangle/untangle.description.yaml) (open domains,
+moves never listed).
 
 - **An assignment's last binder is the cell it sets**, and each of its
   terms reads the position before the move: a move's assignments are
@@ -450,11 +457,25 @@ reach, `on`, a carried layer), [`slide`](../src/games/slide/slide.description.ya
   second sort, which a layer `over: faces` is a value of (Cube's paint); an
   element of one sort where the other is read is refused.
 - **A definition that reads itself is its least fixed point**: the least set
-  of cells its one parameter makes it true of, computed once at the top of
-  the function that reads it (Pegs' `arrive`, Inertia's `rests`). The
-  compiler refuses a self read under `not`, on either side of `iff` or `=`,
-  on the left of `implies`, in a `forall`'s `where`, inside an aggregate, or
-  through another definition. Only a planning game's rules may state one.
+  of cells its last parameter makes it true of, computed once at the top of
+  the function that reads it (Pegs' `arrive`, Inertia's `rests`), or, with
+  earlier parameters, once for each value of them as it is first read (Same
+  Game's group, `joined(s, c)`). Every self read passes the earlier
+  parameters through unchanged. The compiler refuses a self read under
+  `not`, on either side of `iff` or `=`, on the left of `implies`, in a
+  `forall`'s `where`, inside an aggregate, or through another definition.
+  Only a planning game's rules may state one.
+- **A layer `over: board` is one value** (Flood's count of fills), read by
+  its name alone and set by an assignment with no `for`.
+- **A layer of `domain: integers` holds any safe integer** (Numgame's
+  numbers, Untangle's points), in a `Float64Array`. A term that reads one is
+  exact: a double while it is a safe integer and a `bigint` past that, so
+  `===` and `<` compare as they are; a value past a safe integer assigned to
+  the layer throws. A move binder `x in integers`, last of its binders, is
+  checked and played but never listed by `moves`.
+- **`views: [name]`** compiles definitions the game reads beside the rules
+  into the module's `views()`, each giving the cells it holds of for values
+  of its other parameters (Same Game's group, Netslide's powered tiles).
 - **A claim whose last conjunct is `exists x in S: P` names its cells**:
   `witnesses(id, p)` gives every `x` the rest holds of, which the banner
   outlines. State a claim that way when a player should see where it holds.
@@ -479,11 +500,19 @@ reach, `on`, a carried layer), [`slide`](../src/games/slide/slide.description.ya
   `sokoban-solver.test.ts` "the search's board", `slide.test.ts` "moves as
   the description's shifts do", `cube.test.ts` "the planner's roll"). A copy
   a hint narrates from, as Inertia's slide path, is held to the compiled
-  move the same way.
+  move the same way. Flood's solver fill (5× to 8×), Same Game's groups and
+  removal (18× to 42×) and Untangle's `findCrossings` (10× to 13× its
+  `crossed` view) are kept so (2026-11-01; `flood-solver.test.ts`,
+  `samegame.test.ts` "Same Game's search reads its board as the
+  description's rules do", `untangle.test.ts` "crosses as the description
+  says"). Numgame's search combines subsets of values, which no move list
+  feeds, and its arithmetic is held to the moves (`numgame.test.ts`,
+  "combines as the solver's search does").
 
 Its comparison with the code it replaced is in the `report.md` of
 `openspec/changes/archive/*-describe-moves-and-finishes`,
-`*-describe-guarded-moves` and `*-describe-pushes-blocks-and-solids`.
+`*-describe-guarded-moves`, `*-describe-pushes-blocks-and-solids` and
+`*-describe-components-and-open-domains`.
 
 ## Checking a dead-end claim sound
 
@@ -506,7 +535,13 @@ whose positions number at most `CHECKED_POSITIONS`
   game deals**: `research/technique-check/boards/<game>.ts` lists them, each
   with its `Dealt`, built by the game's own code (Cube's small arenas). The
   checker refuses such a description without the file.
-- **A game that states no claim is passed by.**
+- **An open layer is searched over its window** (`checked`, a set of
+  values; Flood's count, to one fill past the limit). A move out of the
+  window ends that line, and the results count the positions with one, so
+  a claim is refuted only by a line inside the window. The checker refuses
+  a claim over an open layer with no window as beyond it.
+- **A game that states no claim is passed by**, Numgame and Untangle among
+  them: what proves their boards lost is a search no formula states.
 - **It walks the moves backward from the finished positions**, so it
   assumes nothing of the moves, and a claim is sound where it holds of no
   position that can finish. A claim that never holds on a board checked is

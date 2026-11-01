@@ -31,12 +31,25 @@ designing against it.
   count of fills is one: its finish is "one color within the limit", and
   its claim adds the fills made to the colors left.
 - **A layer whose domain is not finite** (`domain: integers`) holds any
-  integer a double holds exactly. It is a `Float64Array`, and every term that
-  reads it is computed in `BigInt`, so a product past 2^53 (Untangle's
-  crossing test on a large snapped board) is exact; a value assigned to it
-  that a double cannot hold exactly throws. A move may bind a number `in
-  integers` (Untangle's point): such a move is checked by `legal` and played
-  by `play`, and `moves` never lists it, there being no end to the list.
+  safe integer, in a `Float64Array`. Every term that reads it is exact: a
+  double while it is a safe integer and a `bigint` past that (the runtime's
+  `iadd`, `imul` and the rest), so a product past 2^53 (Untangle's crossing
+  test on a large snapped board) is exact, and `===` and `<` compare two
+  values as they are. A value past a safe integer assigned to the layer
+  throws. All-`bigint` arithmetic was tried first, and Untangle's finish
+  took 6.6 times `findCrossings`' time against 5.4 with doubles. A move may
+  bind a number `in integers` (Untangle's point): such a move is checked by
+  `legal` and played by `play`, and `moves` never lists it, there being no
+  end to the list.
+- **A view** (`views: [name]`) is a definition the game reads beside the
+  rules: the module's `views()` gives the cells it holds of for values of
+  its other parameters. Same Game's group is one (the selection, the
+  removal), Netslide's powered tiles another (the status bar), so the game
+  reads the description rather than a copy.
+- **A compiled move refuses a fraction** for a cell or a value binder: a
+  save may hold anything, and the range and the shift `legal` tested let
+  1.5 through. Untangle's hand-written check refused it; every planning
+  game's `legal` now does.
 - **The checker searches an open layer over a window** (`checked`, a set of
   values): where every position keeps the layer inside it, the search is
   whole; a move that takes a position out of it ends that line, so a claim
@@ -97,11 +110,17 @@ deals.
 ## Untangle
 
 The vertices are cells with no geometry, the edges a dealt relation
-`joined(v)`, and each vertex's point three open layers `x`, `y`, `d` (the
-point `(x/d, y/d)`). The move places one vertex on any point with `d > 0`.
-The finish is no two edges that share no vertex crossing, by upstream's
-exact test stated over the layers: `side(o, p, q)` is the cross product of
-`q` and `p` seen from `o`, and `along` its dot product.
+`joined(v)`, and each vertex's point three open layers `xnum`, `ynum`,
+`denom` (the point `(xnum/denom, ynum/denom)`; `x` and `y` are the grid's
+builtins). The move places one vertex on any point with a positive
+denominator. The finish is no two edges that share no vertex crossing, by
+upstream's exact test stated over the layers: `side(o, p, q)` is the cross
+product of `q` and `p` seen from `o`, and `along` its dot product.
+Upstream's test is not symmetric where an end lies on the other line, so
+each pair is read with the later edge first, as `findCrossings` reads it,
+and once: the finish read every pair twice at first, 6.6 times
+`findCrossings`' time, and reads it once at 2.2 to 2.7. The view
+`crossed(a, b)`, the edge's red flag, is stated for each edge.
 
 ## What each keeps
 
