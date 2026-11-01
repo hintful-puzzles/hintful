@@ -424,7 +424,7 @@ export function redraw(
     ui.selected === null ||
     ui.op === null ||
     place === ui.selected ||
-    combined(board.slots, { from: ui.selected, into: place, op: ui.op }) !== null;
+    combined(board, { from: ui.selected, into: place, op: ui.op }) !== null;
   const cursorAt = ui.cursor.visible
     ? ui.cursor.y < 2
       ? ui.cursor.y * ROW + ui.cursor.x

@@ -117,8 +117,8 @@ const tap: TargetVerb<NumgameState, NumgameUi, Target, NumgameMove> = {
       ui.selected = t;
       return UI_UPDATE;
     }
-    const step = normalized(s.slots, { from: ui.selected, into: t, op: ui.op });
-    return combined(s.slots, step) === null ? null : { kind: "combine", ...step };
+    const step = normalized(s, { from: ui.selected, into: t, op: ui.op });
+    return combined(s, step) === null ? null : { kind: "combine", ...step };
   },
 };
 

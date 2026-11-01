@@ -10,12 +10,14 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { describedSpace } from "../../engine/describe-runtime.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { numberItem } from "../../engine/params.ts";
 import { choice, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import { combine, OPS, type Op, type Step } from "./solver.ts";
+import * as numgame from "./numgame.compiled.ts";
+import { OPS, type Op, type Step } from "./solver.ts";
 
 // --- the board --------------------------------------------------------------
 
@@ -151,38 +153,69 @@ export function newState(_p: NumgameParams, desc: string): NumgameState {
 
 // --- moves ------------------------------------------------------------------
 
-/** The tile combining the tiles in `from` and `into` with `op` makes, or
- * `null` where that is not a move. */
-export function combined(
-  slots: readonly (Tile | null)[],
-  { from, into, op }: Step,
-): Tile | null {
-  // A place off the board reads as `undefined`, which is no tile either.
-  const x = slots[from] ?? null;
-  const y = slots[into] ?? null;
-  if (from === into || x === null || y === null) return null;
-  const value = combine(x.value, op, y.value);
-  if (value === null) return null;
-  const a = Math.max(x.value, y.value);
-  const b = Math.min(x.value, y.value);
-  return { value, made: { a, op, b } };
+// --- the description's rules ------------------------------------------------
+
+/** The description's move for each operator. */
+const MOVE_OF: Readonly<Record<Op, numgame.Move["move"]>> = {
+  "+": "add",
+  "-": "subtract",
+  "*": "multiply",
+  "/": "divide",
+};
+
+/** The rules of each target's boards: one space serves every board. */
+const byTarget = new Map<number, ReturnType<typeof numgame.rules>>();
+
+/** The description's rules on a board with this target. */
+function rulesOf({ target }: { readonly target: number }) {
+  let rules = byTarget.get(target);
+  if (rules === undefined) {
+    rules = numgame.rules(describedSpace(numgame.units, PLACES, 1), { target }, []);
+    byTarget.set(target, rules);
+  }
+  return rules;
 }
+
+/** The board as the description's layer: each place's number, 0 where it is
+ * empty. */
+const positionOf = (slots: readonly (Tile | null)[]): numgame.Position => ({
+  value: Float64Array.from(slots, (t) => t?.value ?? 0),
+});
+
+/** A board as `combined` and `normalized` read it. */
+type Board = Pick<NumgameState, "slots" | "target">;
 
 /**
  * The step with its places in the order the board plays them: the result
- * lands in the larger number's place (the lower place between equals), so
- * which number the player picked first changes nothing, and a hint's step is
- * followed whichever way round it is tapped.
+ * lands in the larger number's place (the lower place between equals), as the
+ * description's `lands` says and its every move binds, so which number the
+ * player picked first changes nothing, and a hint's step is followed
+ * whichever way round it is tapped.
  */
-export function normalized(slots: readonly (Tile | null)[], step: Step): Step {
+export function normalized(s: Board, step: Step): Step {
   const { from, into, op } = step;
-  const x = slots[from]?.value ?? 0;
-  const y = slots[into]?.value ?? 0;
-  const lands = x > y || (x === y && from < into) ? from : into;
-  return lands === into ? step : { from: into, into: from, op };
+  // An addition is a move wherever the result can land on its first place.
+  const intoFrom = { move: "add", a: from, b: into } as const;
+  return rulesOf(s).legal(positionOf(s.slots), intoFrom)
+    ? { from: into, into: from, op }
+    : step;
 }
 
-function played(slots: readonly (Tile | null)[], given: Step): (Tile | null)[] {
+/** The tile combining the tiles in `from` and `into` with `op` makes, by the
+ * description's move, or `null` where that is not a move. */
+export function combined(s: Board, given: Step): Tile | null {
+  const { from, into, op } = normalized(s, given);
+  const rules = rulesOf(s);
+  const p = positionOf(s.slots);
+  const m = { move: MOVE_OF[op], a: into, b: from };
+  if (!rules.legal(p, m)) return null;
+  const x = s.slots[from]?.value ?? 0;
+  const y = s.slots[into]?.value ?? 0;
+  const made = { a: Math.max(x, y), op, b: Math.min(x, y) };
+  return { value: rules.play(p, m).value[into], made };
+}
+
+function played(s: NumgameState, given: Step): NumgameState {
   // Read from the save, so checked for shape before it is trusted.
   if (
     !Number.isInteger(given.from) ||
@@ -190,34 +223,33 @@ function played(slots: readonly (Tile | null)[], given: Step): (Tile | null)[] {
     !OPS.includes(given.op)
   )
     throw new Error(`numgame: not a combination: ${JSON.stringify(given)}`);
-  const step = normalized(slots, given);
-  const { from, into, op } = step;
-  const tile = combined(slots, step);
+  const { from, into, op } = normalized(s, given);
+  const tile = combined(s, given);
   if (tile === null)
     throw new Error(`numgame: ${from} ${op} ${into} is not a combination here`);
-  const next = slots.slice();
-  next[from] = null;
-  next[into] = tile;
-  return next;
+  const slots = s.slots.slice();
+  slots[from] = null;
+  slots[into] = tile;
+  return { ...s, slots };
 }
 
 /** A move's board. Pure: `s` is left as it was. */
 export function executeMove(s: NumgameState, move: NumgameMove): NumgameState {
   if (move.kind === "combine") {
-    return { ...s, slots: played(s.slots, move) };
+    return played(s, move);
   } else if (move.kind === "solve") {
     const start = move.restart
-      ? s.dealt.map((value) => ({ value, made: null }))
-      : s.slots;
-    return { ...s, slots: move.steps.reduce(played, start) };
+      ? { ...s, slots: s.dealt.map((value) => ({ value, made: null })) }
+      : s;
+    return move.steps.reduce(played, start);
   } else {
     return assertNever(move, "numgame: executeMove");
   }
 }
 
-/** Whether a number on the board is the target. */
+/** Whether a number on the board is the target: the description's finish. */
 export function reachesTarget(s: NumgameState): boolean {
-  return s.slots.some((t) => t?.value === s.target);
+  return rulesOf(s).finished(positionOf(s.slots));
 }
 
 // --- text format ------------------------------------------------------------

@@ -22,3 +22,65 @@ help:
     {{hint-marks}}
 
     If the numbers you have left can no longer make the target, the hint says so, and Undo takes you back to where they could.
+
+name: Numgame
+family: position
+sizes:
+  # The places the board deals a number on.
+  places: { min: 6, max: 6 }
+  # The number to make.
+  target: { min: 1, max: 9999 }
+space:
+  # Six places in reading order, which no rule reads as a rectangle.
+  cells: "places"
+  units: []
+position:
+  # The number on each place, 0 where a combination has emptied it. A
+  # product has no bound but the numbers dealt.
+  value: { domain: "integers" }
+freedom: { kind: transition }
+define:
+  # Of two places holding numbers, a is the one a result lands on: the
+  # larger number, the lower place between equals, so the order a player
+  # picks them in changes nothing.
+  lands(a, b): >-
+    a != b and value(a) > 0 and value(b) > 0 and
+    (value(a) > value(b) or (value(a) = value(b) and index(a, cells) < index(b, cells)))
+moves:
+  # Each combination puts its result on place a and empties place b. Every
+  # result is a positive whole number, so a difference must be more than
+  # nothing and a quotient whole.
+  add:
+    for: "a in cells, b in cells where lands(a, b)"
+    set:
+      - for: "c = a"
+        value: "value(a) + value(b)"
+      - for: "c = b"
+        value: "0"
+  subtract:
+    for: "a in cells, b in cells where lands(a, b) and value(a) > value(b)"
+    set:
+      - for: "c = a"
+        value: "value(a) - value(b)"
+      - for: "c = b"
+        value: "0"
+  multiply:
+    for: "a in cells, b in cells where lands(a, b)"
+    set:
+      - for: "c = a"
+        value: "value(a) * value(b)"
+      - for: "c = b"
+        value: "0"
+  divide:
+    for: "a in cells, b in cells where lands(a, b) and value(a) mod value(b) = 0"
+    set:
+      - for: "c = a"
+        value: "value(a) / value(b)"
+      - for: "c = b"
+        value: "0"
+finish:
+  - "exists c in cells: value(c) = target"
+deal:
+  start: >-
+    two small cards of each of 1 to 10 and the large ones, as Countdown
+    deals them, and a target made in exactly the operations the tier asks

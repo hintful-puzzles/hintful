@@ -116,8 +116,8 @@ function startsFrom(s: NumgameState): Map<string, NumgameState> {
     s.slots.forEach((y, into) => {
       if (!x || !y || from >= into) return;
       for (const op of OPS) {
-        const step = normalized(s.slots, { from, into, op });
-        if (combined(s.slots, step) === null) continue;
+        const step = normalized(s, { from, into, op });
+        if (combined(s, step) === null) continue;
         const after = executeMove(s, { kind: "combine", ...step });
         const key = boardKey(after);
         if (!out.has(key)) out.set(key, after);
@@ -151,7 +151,7 @@ export function numgameKeepTrack(
 ): HintTrackVerdict {
   const want = step.move;
   if (m.kind !== "combine" || want.kind !== "combine") return "off";
-  const made = normalized(s.slots, m);
+  const made = normalized(s, m);
   return made.from === want.from && made.into === want.into && made.op === want.op
     ? "completed"
     : "off";

@@ -24,6 +24,7 @@ import { numgameGame } from "./index.ts";
 import { elementCenter, layout, opElement } from "./render.ts";
 import { combine, OPS, type Op, Reach, stepsOf } from "./solver.ts";
 import {
+  combined,
   decodeParams,
   encodeParams,
   executeMove,
@@ -101,6 +102,37 @@ describe("numgame moves", () => {
   it("takes the smaller from or into the larger, whichever was tapped first", () => {
     expect(executeMove(start, combo(5, "-", 1)).slots[1]?.value).toBe(72);
     expect(executeMove(start, combo(5, "/", 1)).slots[1]?.value).toBe(25);
+  });
+
+  // The search combines by its own `combine`, for speed; the board plays the
+  // description's moves. The two must agree on every pair the search meets.
+  it("combines as the solver's search does", () => {
+    const values = [
+      ...Array.from({ length: 40 }, (_, i) => i + 1),
+      50,
+      75,
+      100,
+      952,
+      7500,
+    ];
+    for (const x of values)
+      for (const y of values) {
+        const board = {
+          target: 1,
+          slots: [x, y].map((value) => ({ value, made: null })),
+        };
+        for (const op of OPS)
+          expect(
+            combined(board, { from: 0, into: 1, op })?.value ?? null,
+            `${x} ${op} ${y}`,
+          ).toBe(combine(x, op, y));
+      }
+  });
+
+  it("holds a product past a 32-bit integer exactly", () => {
+    let s = newState(P, "100,100,100,100,100,100=1");
+    for (let i = 1; i < 6; i++) s = executeMove(s, combo(0, "*", i));
+    expect(s.slots[0]?.value).toBe(1e12);
   });
 
   it.each([
