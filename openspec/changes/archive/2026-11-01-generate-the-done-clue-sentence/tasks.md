@@ -3,7 +3,7 @@
 - [x] 1. The placeholder, expanded from `dragMarkVerbs`, refused where owed and missing or written where not owed
 - [x] 2. The five pages use it, keeping only their own words after it
 - [x] 3. The five pages read in the app
-- [ ] 4. The owner accepts the five pages as they read in the app
+- [x] 4. The owner accepts the five pages as they read in the app
 
 ## Decisions made in the work (2026-10-31)
 
