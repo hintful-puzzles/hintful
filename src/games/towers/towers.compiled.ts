@@ -96,7 +96,6 @@ export interface FacingBinding {
 }
 
 const facingFacts: number[] = [];
-let facingCands = new Int32Array(0);
 
 export function facing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FacingBinding> | null): number {
   const _g8: number[] = [];
@@ -104,9 +103,6 @@ export function facing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FacingBind
   let fired = 0;
   let changed = false;
   const _h16 = (sp.w + 1);
-  if (facingCands.length < sp.cells.length) facingCands = new Int32Array(sp.cells.length);
-  const cands = facingCands;
-  cands.fill(-1);
   _g8.length = 0;
   G9: {
     const _a12 = sp.slots;
@@ -147,7 +143,6 @@ export function facing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FacingBind
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null && !fire({ P: v_P }, facts)) return 1;
-      cands.fill(-1);
     }
   }
   return fired;

@@ -1,36 +1,42 @@
 /**
- * Star Battle's deductions: one ladder, run two ways.
+ * Star Battle's deductions: the ladder `starbattle.description.yaml` states,
+ * compiled, on the engine's marks and runner (`engine/ladder-runtime.ts`),
+ * with the reason each technique records for the hint, and the answer check
+ * its rules compile to.
  *
- * {@link solveStarbattle} runs it to a fixpoint, which is how the generator
- * grades a board and how Solve and the mistake check find the answer.
- * {@link starbattleRecordingPass} runs the same rungs one firing at a time, and
- * the hint narrates each (docs/solver-and-generator.md § "One engine,
- * two projections").
+ * {@link solveStarbattle} runs the ladder to a fixpoint, which is how the
+ * generator grades a board and how Solve and the mistake check find the
+ * answer. {@link starbattleWalk} walks the same firings one at a time, and the
+ * hint narrates each (docs/descriptions.md § "The runtime a ladder runs on").
  *
- * Every rung only ever decides a cell the rules force, so a board the ladder
- * finishes has exactly one answer, and the order the rungs fire in cannot
- * change it.
+ * Every technique only ever decides a cell the rules force, so a board the
+ * ladder finishes has exactly one answer, and the order the techniques fire
+ * in cannot change it.
  */
 
-import {
-  type DeductionTechnique,
-  type FiringTally,
-  type LadderCandidate,
-  runDeductionFixpoint,
-  type SingleFirings,
-  singleFirings,
-} from "../../engine/deduction-fixpoint.ts";
+import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+import { describedSpace, partition } from "../../engine/describe-runtime.ts";
 import type { DifficultyVerdict } from "../../engine/difficulty.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  ladderWalk,
+  runLadder,
+  TIERS as SCALE,
+  type Taken,
+  uncluedRung,
+} from "../../engine/ladder-runtime.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
+import * as starbattle from "./starbattle.compiled.ts";
 import {
   BLANK,
   CROSSED,
-  DIFF_EASY,
-  DIFF_NORMAL,
   DIFF_TRICKY,
   STAR,
   type StarbattleMark,
-  touches,
   touching,
 } from "./state.ts";
 
@@ -107,7 +113,7 @@ export interface StarbattleFiring {
   mark: typeof STAR | typeof CROSSED;
 }
 
-/** The rungs, easiest first, by the `kind` of the reason a firing carries. */
+/** The rungs a hint step can be, easiest first: the reasons' kinds. */
 export const STARBATTLE_RUNGS = [
   "around",
   "full",
@@ -130,21 +136,27 @@ function unitsOf(size: number, regions: Int32Array): Unit[] {
         kind === "row" ? index * size + j : j * size + index,
       ),
     }));
+  return [
+    ...lines("row"),
+    ...lines("column"),
+    ...areasOf(size, regions).map(
+      (cells, index): Unit => ({ kind: "region", index, cells }),
+    ),
+  ];
+}
+
+/** Each region's cells, in reading order. */
+function areasOf(size: number, regions: Int32Array): number[][] {
   const areas: number[][] = Array.from({ length: size }, () => []);
   regions.forEach((r, i) => {
     areas[r].push(i);
   });
-  return [
-    ...lines("row"),
-    ...lines("column"),
-    ...areas.map((cells, index): Unit => ({ kind: "region", index, cells })),
-  ];
+  return areas;
 }
 
 const TOUCHING = new Map<number, readonly (readonly number[])[]>();
 
-/** For each cell of a grid `size` wide, the cells touching it. A solve asks
- * this of every cell many times over, and it depends on nothing else. */
+/** For each cell of a grid `size` wide, the cells touching it. */
 function touchingCells(size: number): readonly (readonly number[])[] {
   let cells = TOUCHING.get(size);
   if (!cells) {
@@ -152,27 +164,6 @@ function touchingCells(size: number): readonly (readonly number[])[] {
     TOUCHING.set(size, cells);
   }
   return cells;
-}
-
-/**
- * The most stars, up to `want`, that `cells` can hold with no two touching.
- * `cells` are open, and none touches a star already placed.
- */
-function roomFor(size: number, cells: readonly number[], want: number): number {
-  const placed: number[] = [];
-  const fits = (from: number, more: number): boolean => {
-    if (more === 0) return true;
-    for (let i = from; i <= cells.length - more; i++) {
-      if (placed.some((c) => touches(size, c, cells[i]))) continue;
-      placed.push(cells[i]);
-      const ok = fits(i + 1, more - 1);
-      placed.pop();
-      if (ok) return true;
-    }
-    return false;
-  };
-  for (let n = want; n > 0; n--) if (fits(0, n)) return n;
-  return 0;
 }
 
 /** The board the ladder works on: the regions, and a grid it writes as it
@@ -236,398 +227,173 @@ export function touchingStars(size: number, grid: Uint8Array): [number, number][
   return out;
 }
 
-/** Whether every row, column and region holds its stars and no two stars
- * touch. A blank cell counts as empty, so a player need cross nothing out to
- * finish. */
-export function isComplete(board: StarbattleBoard): boolean {
-  return (
-    board.units.every((_, u) => board.need(u) === 0) &&
-    touchingStars(board.size, board.grid).length === 0
-  );
-}
-
-/** A rung's firings from the board as it stands, in scan order; a
- * contradiction ends them. The solver takes the first, and a hint plan
- * chooses among them all. */
-type Finds<F = StarbattleFiring> = Generator<F | "contradiction", void, undefined>;
-
-/** Every star with an open cell touching it. */
-function* findAround(b: StarbattleBoard): Finds {
-  for (let star = 0; star < b.grid.length; star++) {
-    if (b.grid[star] !== STAR) continue;
-    const cells = touching(b.size, star).filter((i) => b.grid[i] === BLANK);
-    if (cells.length > 0)
-      yield { reason: { kind: "around", star }, cells, mark: CROSSED };
-  }
-}
-
-/** Every unit that has its stars and still has open cells. */
-function* findFull(b: StarbattleBoard): Finds {
-  for (let unit = 0; unit < b.units.length; unit++) {
-    if (b.need(unit) !== 0) continue;
-    const cells = b.open(unit);
-    if (cells.length > 0)
-      yield { reason: { kind: "full", unit }, cells, mark: CROSSED };
-  }
-}
-
-/** Every unit that needs every open cell it has, or `"contradiction"` when a
- * unit has too many stars or too few open cells. */
-function* findExact(b: StarbattleBoard): Finds {
-  for (let unit = 0; unit < b.units.length; unit++) {
-    const need = b.need(unit);
-    const cells = b.open(unit);
-    if (need < 0 || need > cells.length) {
-      yield "contradiction";
-      return;
-    }
-    if (need > 0 && need === cells.length)
-      yield { reason: { kind: "exact", unit, need }, cells, mark: STAR };
-  }
-}
-
-/**
- * Every run of neighboring rows, or columns, `count` long for each of
- * `counts` in turn, whose need for stars equals that of the regions lying
- * wholly inside the run, or of the regions reaching into it, and which leaves
- * cells to cross out.
- */
-function* findConfinement(
-  b: StarbattleBoard,
-  counts: readonly number[],
-): Finds<Confinement & { cells: number[] }> {
-  const { size } = b;
-  const rowOf = (i: number): number => (i / size) | 0;
-  const columnOf = (i: number): number => i % size;
-  // Each region that still wants stars, with the first and last row and
-  // column its open cells reach: a run holds the region when it holds both
-  // ends, and meets it when it meets the span between them.
-  const wanting = Array.from({ length: size }, (_, r) => 2 * size + r).flatMap(
-    (unit) => {
-      const need = b.need(unit);
-      if (need <= 0) return [];
-      const open = b.open(unit);
-      const span = (at: (i: number) => number): [number, number] => [
-        Math.min(...open.map(at)),
-        Math.max(...open.map(at)),
-      ];
-      return [{ unit, need, open, spans: [span(rowOf), span(columnOf)] }];
-    },
-  );
-  const lineNeed = Array.from({ length: 2 * size }, (_, line) => b.need(line));
-
-  for (const count of counts) {
-    for (const base of [0, size]) {
-      const axis = base === 0 ? 0 : 1;
-      for (let first = 0; first + count <= size; first++) {
-        const last = first + count - 1;
-        let need = 0;
-        for (let line = base + first; line <= base + last; line++)
-          need += lineNeed[line];
-        if (need === 0) continue;
-        const lines = (): number[] =>
-          Array.from({ length: count }, (_, j) => base + first + j);
-        const within = (i: number): boolean => {
-          const at = axis === 0 ? rowOf(i) : columnOf(i);
-          return at >= first && at <= last;
-        };
-
-        const inside = wanting.filter((r) => {
-          const [lo, hi] = r.spans[axis];
-          return lo >= first && hi <= last;
-        });
-        const insideNeed = inside.reduce((sum, r) => sum + r.need, 0);
-        if (insideNeed > need) {
-          yield "contradiction";
-          return;
-        }
-        if (insideNeed === need) {
-          const held = new Set(inside.flatMap((r) => r.open));
-          const cells = lines()
-            .flatMap((line) => b.open(line))
-            .filter((i) => !held.has(i));
-          if (cells.length > 0)
-            yield {
-              lines: lines(),
-              regions: inside.map((r) => r.unit),
-              need,
-              rest: "lines",
-              cells,
-            };
-        }
-
-        const reaching = wanting.filter((r) => {
-          const [lo, hi] = r.spans[axis];
-          return hi >= first && lo <= last && r.open.some(within);
-        });
-        const reachingNeed = reaching.reduce((sum, r) => sum + r.need, 0);
-        if (reachingNeed < need) {
-          yield "contradiction";
-          return;
-        }
-        if (reachingNeed === need) {
-          const cells = reaching.flatMap((r) => r.open.filter((i) => !within(i)));
-          if (cells.length > 0)
-            yield {
-              lines: lines(),
-              regions: reaching.map((r) => r.unit),
-              need,
-              rest: "regions",
-              cells: cells.sort((a, c) => a - c),
-            };
-        }
-      }
-    }
-  }
-}
-
-/** Every cell a unit cannot do without: leaving it empty leaves the unit
- * room for fewer stars than it needs. */
-function* findNeeded(b: StarbattleBoard): Finds {
-  for (let unit = 0; unit < b.units.length; unit++) {
-    const need = b.need(unit);
-    if (need === 0) continue;
-    const open = b.open(unit);
-    // One star has room wherever another open cell is left.
-    if (need === 1 && open.length > 1) continue;
-    for (const cell of open) {
-      const room = roomFor(
-        b.size,
-        open.filter((i) => i !== cell),
-        need,
-      );
-      if (room < need)
-        yield {
-          reason: { kind: "needed", unit, need, room },
-          cells: [cell],
-          mark: STAR,
-        };
-    }
-  }
-}
-
-/** Every cell, from `from` on, where a star would leave some unit too little
- * room: the star rules out every open cell touching it, and the rest of any
- * unit of its own that it completes. */
-function* findStarved(
-  b: StarbattleBoard,
-  kind: "crowded" | "starved",
-  from = 0,
-): Finds {
-  const { size, grid } = b;
-  const open = b.units.map((_, unit) => b.open(unit));
-  const needs = b.units.map((_, unit) => b.need(unit));
-  // The cells a star would rule out, as the cell it was last tried for, and
-  // how many of them each unit holds.
-  const ruledFor = new Int32Array(grid.length).fill(-1);
-  const ruledIn = new Int32Array(b.units.length);
-  // The units a trial touches: its own and those holding a cell it rules out.
-  const hit: number[] = [];
-  for (let cell = from; cell < grid.length; cell++) {
-    if (grid[cell] !== BLANK) continue;
-    const own = b.unitsAt(cell);
-    for (const unit of hit) ruledIn[unit] = 0;
-    hit.length = 0;
-    hit.push(...own);
-    const rule = (i: number): void => {
-      if (i === cell || ruledFor[i] === cell) return;
-      ruledFor[i] = cell;
-      for (const unit of b.unitsAt(i)) if (ruledIn[unit]++ === 0) hit.push(unit);
-    };
-    for (const i of b.touching(cell)) if (grid[i] === BLANK) rule(i);
-    if (kind === "starved")
-      for (const unit of own) if (needs[unit] === 1) open[unit].forEach(rule);
-
-    // In order of unit, so the unit a firing names is the first that
-    // starves.
-    for (const unit of new Set(hit.sort((a, c) => a - c))) {
-      const mine = own.includes(unit);
-      const need = needs[unit] - (mine ? 1 : 0);
-      if (need <= 0) continue;
-      // One star fits wherever a cell is left, so only a unit that needs
-      // more has its cells looked at.
-      const count = open[unit].length - ruledIn[unit] - (mine ? 1 : 0);
-      if (count >= need && need === 1) continue;
-      const left = open[unit].filter((i) => i !== cell && ruledFor[i] !== cell);
-      const room = roomFor(size, left, need);
-      if (room >= need) continue;
-      yield {
-        reason: {
-          kind,
-          unit,
-          need,
-          room,
-          ruled: open[unit].filter((i) => ruledFor[i] === cell),
-          left: left.length,
-          completes:
-            kind === "starved"
-              ? own.filter(
-                  (mine) =>
-                    needs[mine] === 1 &&
-                    open[unit].some(
-                      (i) => ruledFor[i] === cell && b.unitsAt(i).includes(mine),
-                    ),
-                )
-              : [],
-        },
-        cells: [cell],
-        mark: CROSSED,
-      };
-      break;
-    }
-  }
-}
-
-/** The first of a rung's firings, or `null` where it has none. */
-function firstOf(found: Finds): StarbattleFiring | null | "contradiction" {
-  for (const f of found) return f;
-  return null;
-}
-
-/**
- * The cells a firing's premise reads, which a hint plan continues from: the
- * star it crosses round, or the rows, columns and regions it counts, and the
- * cells a trial star would rule out.
- */
-function readsOf(b: StarbattleBoard, { reason }: StarbattleFiring): number[] {
-  const cellsOf = (units: readonly number[]): number[] =>
-    units.flatMap((u) => b.units[u].cells);
-  switch (reason.kind) {
-    case "around":
-      return [reason.star, ...b.touching(reason.star)];
-    case "full":
-    case "exact":
-    case "needed":
-      return cellsOf([reason.unit]);
-    case "confined":
-    case "banded":
-      return cellsOf([...reason.lines, ...reason.regions]);
-    case "crowded":
-    case "starved":
-      return [...reason.ruled, ...cellsOf([reason.unit, ...reason.completes])];
-  }
-}
-
-/** The ladder over `board`. A rung that fires writes its cells, and hands
- * the firing to `record` where there is one. */
-function ladder(
-  board: StarbattleBoard,
-  record?: (firing: StarbattleFiring) => void,
-): DeductionTechnique[] {
-  const apply = (firing: StarbattleFiring): number => {
-    for (const i of firing.cells) board.grid[i] = firing.mark;
-    record?.(firing);
-    return 1;
+/** The board's regions and stars as the description reads them. */
+function dealtOf(board: StarbattleBoard): starbattle.Dealt {
+  return {
+    region: partition(areasOf(board.size, board.regions), board.grid.length),
+    stars: board.stars,
   };
-  // What a hint plan chooses among: each firing with what it reads and the
-  // cells it writes.
-  const available =
-    (find: () => Finds): (() => LadderCandidate[] | "contradiction") =>
-    () => {
-      const out: LadderCandidate[] = [];
-      for (const found of find()) {
-        if (found === "contradiction") return found;
-        out.push({
-          reads: () => readsOf(board, found),
-          writes: () => found.cells,
-          take: () => {
-            apply(found);
-          },
-        });
-      }
-      return out;
-    };
-  // A solve with no one listening runs a rung until it finds nothing more
-  // before going back to the easier ones, where the hint takes one firing.
-  const rung = (
-    id: StarbattleRung,
-    tier: number,
-    find: () => Finds,
-  ): DeductionTechnique => ({
-    id,
-    tier,
-    run: () => {
-      for (let fired = 0; ; ) {
-        const found = firstOf(find());
-        if (found === "contradiction") return -1;
-        if (!found) return fired;
-        fired += apply(found);
-        if (record) return fired;
-      }
-    },
-    available: available(find),
-  });
-  function* confinement(kind: "confined" | "banded", counts: readonly number[]): Finds {
-    for (const found of findConfinement(board, counts)) {
-      if (found === "contradiction") {
-        yield found;
-        return;
-      }
-      const { cells, ...confinement } = found;
-      yield { reason: { kind, ...confinement }, cells, mark: CROSSED };
-    }
-  }
-  // Every run of more than one line and fewer than all of them, shortest
-  // first.
-  const bands = Array.from({ length: Math.max(0, board.size - 2) }, (_, j) => j + 2);
-  // The same, going on from the cell it last crossed out: a trial star is
-  // the costly rung, and what it found before a cell still holds.
-  const starving = (kind: "crowded" | "starved"): DeductionTechnique => ({
-    id: kind,
-    tier: TIERS[kind],
-    run: () => {
-      let fired = 0;
-      for (let found = firstOf(findStarved(board, kind)); found; ) {
-        if (found === "contradiction") return -1;
-        fired += apply(found);
-        if (record) break;
-        found = firstOf(findStarved(board, kind, found.cells[0] + 1));
-      }
-      return fired;
-    },
-    available: available(() => findStarved(board, kind)),
-  });
-  return [
-    rung("around", TIERS.around, () => findAround(board)),
-    rung("full", TIERS.full, () => findFull(board)),
-    rung("exact", TIERS.exact, () => findExact(board)),
-    rung("confined", TIERS.confined, () => confinement("confined", [1])),
-    rung("needed", TIERS.needed, () => findNeeded(board)),
-    starving("crowded"),
-    rung("banded", TIERS.banded, () => confinement("banded", bands)),
-    starving("starved"),
-  ];
 }
 
-/** The tier each rung belongs to: the easiest a board that needs it is. */
-const TIERS: Record<StarbattleRung, number> = {
-  around: DIFF_EASY,
-  full: DIFF_EASY,
-  exact: DIFF_EASY,
-  confined: DIFF_EASY,
-  needed: DIFF_EASY,
-  crowded: DIFF_EASY,
-  banded: DIFF_NORMAL,
-  starved: DIFF_TRICKY,
-};
+/** Whether every row, column and region holds its stars and no two stars
+ * touch, by the rules the description compiles to. A blank cell counts as
+ * empty, so a player need cross nothing out to finish. */
+export function isComplete(board: StarbattleBoard): boolean {
+  return starbattle.isAnswer(
+    board.grid.map((m) => (m === STAR ? STAR : CROSSED)),
+    describedSpace(starbattle.units, board.size, board.size),
+    dealtOf(board),
+  );
+}
+
+/** The ladder over `board`, whose grid the marks are kept on. */
+function starbattleLadder(board: StarbattleBoard): Ladder {
+  const dealt = dealtOf(board);
+  const { size } = board;
+  const region = (r: number): number => 2 * size + r;
+  const band = (k: number, dir: number, a: number): number[] =>
+    Array.from({ length: k }, (_, j) => dir * size + a + j);
+  const confined =
+    (kind: "confined" | "banded") =>
+    ({
+      k,
+      dir,
+      a,
+      n,
+      I,
+      R,
+      lines,
+    }: {
+      k?: number;
+      dir: number;
+      a: number;
+      n: number;
+      I: readonly number[];
+      R: readonly number[];
+      lines: boolean;
+    }): StarbattleReason => ({
+      kind,
+      lines: band(k ?? 1, dir, a),
+      regions: (lines ? I : R).map(region),
+      need: n,
+      rest: lines ? "lines" : "regions",
+    });
+  const trial =
+    (kind: "crowded" | "starved") =>
+    (
+      x: number,
+      unit: number,
+      n: number,
+      room: number,
+      Q: readonly number[],
+      E: readonly number[],
+    ): StarbattleReason => ({
+      kind,
+      unit,
+      need: n,
+      room,
+      ruled: [...Q],
+      left: E.length,
+      completes:
+        kind === "starved"
+          ? board
+              .unitsAt(x)
+              .filter(
+                (mine) =>
+                  board.need(mine) === 1 &&
+                  Q.some((i) => board.unitsAt(i).includes(mine)),
+              )
+          : [],
+    });
+  const crowded = trial("crowded");
+  const starved = trial("starved");
+  return describedLadder(starbattle, {
+    around: uncluedRung(starbattle.around, ({ c }) => ({ kind: "around", star: c })),
+    fullLine: compiledRung(starbattle.fullLine, dealt, ({ L }) => ({
+      kind: "full",
+      unit: L,
+    })),
+    fullRegion: compiledRung(starbattle.fullRegion, dealt, ({ r }) => ({
+      kind: "full",
+      unit: region(r),
+    })),
+    exactLine: compiledRung(starbattle.exactLine, dealt, ({ L, n }) => ({
+      kind: "exact",
+      unit: L,
+      need: n,
+    })),
+    exactRegion: compiledRung(starbattle.exactRegion, dealt, ({ r, n }) => ({
+      kind: "exact",
+      unit: region(r),
+      need: n,
+    })),
+    confined: compiledRung(starbattle.confined, dealt, confined("confined")),
+    neededLine: compiledRung(starbattle.neededLine, dealt, ({ L, n, room }) => ({
+      kind: "needed",
+      unit: L,
+      need: n,
+      room,
+    })),
+    neededRegion: compiledRung(starbattle.neededRegion, dealt, ({ r, n, room }) => ({
+      kind: "needed",
+      unit: region(r),
+      need: n,
+      room,
+    })),
+    crowdedLine: compiledRung(
+      starbattle.crowdedLine,
+      dealt,
+      ({ x, L, n, room, Q, E }) => crowded(x, L, n, room, Q, E),
+    ),
+    crowdedRegion: compiledRung(
+      starbattle.crowdedRegion,
+      dealt,
+      ({ x, g, n, room, Q, E }) => crowded(x, region(g), n, room, Q, E),
+    ),
+    banded: compiledRung(starbattle.banded, dealt, confined("banded")),
+    starvedLine: compiledRung(
+      starbattle.starvedLine,
+      dealt,
+      ({ x, L, n, room, Q, E }) => starved(x, L, n, room, Q, E),
+    ),
+    starvedRegion: compiledRung(
+      starbattle.starvedRegion,
+      dealt,
+      ({ x, g, n, room, Q, E }) => starved(x, region(g), n, room, Q, E),
+    ),
+  });
+}
+
+/** The values a square may hold: a star, or none. */
+const DOMAIN = (1 << STAR) | (1 << CROSSED);
+
+/** The marks the ladder reads, on the board's own grid. */
+function marksOf(board: StarbattleBoard): CellMarks {
+  const m = new CellMarks(
+    describedSpace(starbattle.units, board.size, board.size),
+    DOMAIN,
+    board.grid,
+  );
+  m.seed(board.grid);
+  return m;
+}
 
 /** The hardest tier there is. */
 const TOP_TIER = DIFF_TRICKY;
 
 /**
  * Solve in place with the ladder capped at tier `cap`, and say how it ended.
- * `firings` takes a count of each rung's firings, for a census.
+ * `firings` takes a count of each technique's firings, for a census.
  */
 export function solveStarbattle(
   board: StarbattleBoard,
   cap: number,
   firings?: FiringTally,
 ): DifficultyVerdict {
-  const { impossible } = runDeductionFixpoint({
-    techniques: ladder(board),
-    maxTier: cap,
+  const m = marksOf(board);
+  const { entries } = starbattleLadder(board);
+  const impossible = runLadder(m, ladderTechniques(m, entries, { [SCALE]: cap }, {}), {
     firings,
-    settled: () => !board.unfinished(),
   });
   if (impossible) return "impossible";
   if (board.unfinished()) return "unsolved";
@@ -646,24 +412,57 @@ export function answerOf(
   return Array.from(board.grid, (m) => m as StarbattleMark);
 }
 
-/** The ladder one firing at a time, writing `board` as it goes: `next` gives
- * the firing just made, or `null` when no rung fires. */
-export function starbattleRecordingPass(
+/**
+ * The cells a firing's premise reads, which a hint plan continues from: the
+ * star it crosses round, or the rows, columns and regions it counts, and the
+ * cells a trial star would rule out.
+ */
+function readsOf(b: StarbattleBoard, reason: StarbattleReason): number[] {
+  const cellsOf = (units: readonly number[]): number[] =>
+    units.flatMap((u) => b.units[u].cells);
+  switch (reason.kind) {
+    case "around":
+      return [reason.star, ...b.touching(reason.star)];
+    case "full":
+    case "exact":
+    case "needed":
+      return cellsOf([reason.unit]);
+    case "confined":
+    case "banded":
+      return cellsOf([...reason.lines, ...reason.regions]);
+    case "crowded":
+    case "starved":
+      return [...reason.ruled, ...cellsOf([reason.unit, ...reason.completes])];
+  }
+}
+
+/** The ladder one firing at a time, writing `board` as it goes, each the one
+ * that carries on from the cells the last decided (`ladderWalk`): `next`
+ * gives the firing just made, or `null` when none is left. */
+export function starbattleWalk(
   board: StarbattleBoard,
   budget: StepBudget,
 ): { next(): StarbattleFiring | null; impossible(): boolean } {
-  let last: StarbattleFiring | null = null;
-  const pass: SingleFirings = singleFirings({
-    techniques: ladder(board, (firing) => {
-      last = firing;
-    }),
-    budget,
-    settled: () => !board.unfinished(),
-    // A plan works on the cells it has just decided before it moves on.
-    continuing: true,
-  });
+  const m = marksOf(board);
+  m.budget = budget;
+  const { entries } = starbattleLadder(board);
+  const walk = ladderWalk(m, entries, { [SCALE]: TOP_TIER }, ({ reasons }: Taken) =>
+    readsOf(board, reasons[0] as StarbattleReason),
+  );
+  let impossible = false;
   return {
-    next: () => (pass.next() ? last : null),
-    impossible: () => pass.impossible(),
+    next() {
+      const f = walk.next();
+      if (f === "contradiction") impossible = true;
+      if (f === null || f === "contradiction") return null;
+      const cells: number[] = [];
+      for (let i = 0; i < f.facts.length; i += 3) cells.push(f.facts[i + 1] as number);
+      return {
+        reason: f.reasons[0] as StarbattleReason,
+        cells,
+        mark: f.facts[2] as typeof STAR | typeof CROSSED,
+      };
+    },
+    impossible: () => impossible,
   };
 }

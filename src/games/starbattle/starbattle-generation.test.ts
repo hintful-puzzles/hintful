@@ -10,7 +10,8 @@ import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { newStarbattleDesc } from "./generator.ts";
 import { starbattleGame } from "./index.ts";
-import { STARBATTLE_RUNGS, StarbattleBoard, solveStarbattle } from "./solver.ts";
+import { StarbattleBoard, solveStarbattle } from "./solver.ts";
+import { ladder } from "./starbattle.compiled.ts";
 import {
   DIFF_EASY,
   DIFF_NORMAL,
@@ -49,7 +50,7 @@ const SEEDS = ["a", "b", "c"];
 
 describeLadderCensus<StarbattleParams & { desc: string }>({
   game: "starbattle",
-  rungs: STARBATTLE_RUNGS,
+  rungs: ladder.map((e) => e.id),
   unreached: {},
   caps: [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY],
   cases: SMALL.flatMap((p) =>

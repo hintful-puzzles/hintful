@@ -89,15 +89,11 @@ export interface AssociativityBinding {
 }
 
 const associativityFacts: number[] = [];
-let associativityCands = new Int32Array(0);
 
 export function associativity(b: Marks, sp: GridSpace, fire: Fire<AssociativityBinding> | null): number {
   const facts = associativityFacts;
   let fired = 0;
   let changed = false;
-  if (associativityCands.length < sp.cells.length) associativityCands = new Int32Array(sp.cells.length);
-  const cands = associativityCands;
-  cands.fill(-1);
   for (let _m9 = b.domain; _m9 !== 0; _m9 &= _m9 - 1) {
     const v_a = 31 - Math.clz32(_m9 & -_m9);
     const _h11 = (v_a - 1);
@@ -140,7 +136,6 @@ export function associativity(b: Marks, sp: GridSpace, fire: Fire<AssociativityB
               if (changed || facts.length > 0) {
                 fired = 1;
                 if (fire !== null && !fire({ a: v_a, b: v_b, p: v_p, c: v_c, q: v_q, l: v_l, r: v_r }, facts)) return 1;
-                cands.fill(-1);
               }
             }
           }
@@ -157,16 +152,12 @@ export interface IdentityBinding {
 }
 
 const identityFacts: number[] = [];
-let identityCands = new Int32Array(0);
 
 export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding> | null): number {
   const _g32: number[] = [];
   const facts = identityFacts;
   let fired = 0;
   let changed = false;
-  if (identityCands.length < sp.cells.length) identityCands = new Int32Array(sp.cells.length);
-  const cands = identityCands;
-  cands.fill(-1);
   _g32.length = 0;
   G33: {
     const _a36 = sp.cells;
@@ -215,7 +206,6 @@ export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding> | 
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ w0: v_w0, e: v_e }, facts)) return 1;
-        cands.fill(-1);
       }
     }
   }
@@ -228,15 +218,11 @@ export interface NotIdentityBinding {
 }
 
 const notIdentityFacts: number[] = [];
-let notIdentityCands = new Int32Array(0);
 
 export function notIdentity(b: Marks, sp: GridSpace, fire: Fire<NotIdentityBinding> | null): number {
   const facts = notIdentityFacts;
   let fired = 0;
   let changed = false;
-  if (notIdentityCands.length < sp.cells.length) notIdentityCands = new Int32Array(sp.cells.length);
-  const cands = notIdentityCands;
-  cands.fill(-1);
   for (let _m58 = b.domain; _m58 !== 0; _m58 &= _m58 - 1) {
     const v_a = 31 - Math.clz32(_m58 & -_m58);
     const _h62 = (v_a - 1);
@@ -283,7 +269,6 @@ export function notIdentity(b: Marks, sp: GridSpace, fire: Fire<NotIdentityBindi
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ a: v_a, o: v_o }, facts)) return 1;
-        cands.fill(-1);
       }
     }
   }

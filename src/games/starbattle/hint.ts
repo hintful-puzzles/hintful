@@ -27,7 +27,7 @@ import {
   StarbattleBoard,
   type StarbattleFiring,
   type StarbattleRung,
-  starbattleRecordingPass,
+  starbattleWalk,
 } from "./solver.ts";
 import {
   BLANK,
@@ -128,7 +128,7 @@ export function starbattleHint(
 ): HintResult<StarbattleMove, unknown, StarbattleRung> {
   const { size, stars, regions } = state;
   const board = new StarbattleBoard(size, stars, regions, state.grid.slice());
-  const pass = starbattleRecordingPass(board, stepBudget("starbattle hint"));
+  const pass = starbattleWalk(board, stepBudget("starbattle hint"));
   const { plan } = deduceHintPlan<StarbattleBoard, StarbattleFiring, "open" | "done">({
     board,
     status: (b) => (isComplete(b) ? "done" : "open"),

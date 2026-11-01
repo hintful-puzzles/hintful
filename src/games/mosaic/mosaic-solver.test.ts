@@ -1,168 +1,94 @@
-// Tier-1 solver + generator: populateCell clue/full/empty rules,
-// solveCell deductions and contradiction, solveGameActual, generator
-// validity + deduction-solvability across sizes/seeds, hideClues
-// minimization, the solve-command bitmap, and findMistakes.
+// Tier-1 solver + generator: the compiled ladder's techniques and
+// contradictions, solveGameActual, generator validity and minimization, the
+// solve-command bitmap, and findMistakes.
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { deduce, type Firing } from "./deduce.ts";
 import { mosaicGame } from "./index.ts";
 import {
+  deductionTier,
   encodeSolution,
   findMistakes,
-  type GenCells,
-  hideClues,
+  type MosaicReason,
+  mosaicWalk,
   newDesc,
-  populateCell,
-  solveCell,
-  solveCheck,
   solveGameActual,
-  startPointCheck,
 } from "./solver.ts";
 import {
   cluesLeft,
+  DIFF_NORMAL,
   executeMove,
   newState,
   STATE_BLANK,
   STATE_MARKED,
+  STATE_UNMARKED,
 } from "./state.ts";
 
-function genCellsFromImage(width: number, height: number, image: Uint8Array): GenCells {
-  const size = width * height;
-  const cells: GenCells = {
-    clue: new Int8Array(size),
-    shown: new Uint8Array(size).fill(1),
-    full: new Uint8Array(size),
-    empty: new Uint8Array(size),
-  };
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const { clue, full, empty } = populateCell(width, height, image, x, y);
-      const pos = y * width + x;
-      cells.clue[pos] = clue;
-      cells.full[pos] = full ? 1 : 0;
-      cells.empty[pos] = empty ? 1 : 0;
-    }
+const boardOf = (side: number, desc: string) =>
+  newState({ width: side, height: side, aggressive: true, diff: DIFF_EASY }, desc)
+    .board;
+
+/** Every firing the hint's walk makes from `grid` (all empty where none is
+ * given), each its reason and the squares it decides, and how the walk ended. */
+function walked(side: number, desc: string, grid = new Uint8Array(side * side)) {
+  const next = mosaicWalk(boardOf(side, desc), grid);
+  const fired: (MosaicReason & { cells: number[] })[] = [];
+  let f = next();
+  for (; f !== null && f !== "contradiction"; f = next()) {
+    const cells: number[] = [];
+    for (let i = 0; i < f.facts.length; i += 3) cells.push(f.facts[i + 1] as number);
+    fired.push({ ...(f.reasons[0] as MosaicReason), cells });
   }
-  return cells;
+  const verdict =
+    f === "contradiction" ? f : grid.includes(STATE_UNMARKED) ? "stuck" : "solved";
+  return { verdict, fired };
 }
 
-describe("populateCell", () => {
-  // 3×3 image: top row black, rest white.
-  const image = Uint8Array.from([1, 1, 1, 0, 0, 0, 0, 0, 0]);
-
-  it("counts the clipped 3×3 neighborhood including the cell", () => {
-    expect(populateCell(3, 3, image, 0, 0).clue).toBe(2); // (0,0),(1,0) black
-    expect(populateCell(3, 3, image, 1, 0).clue).toBe(3); // whole top row
-    expect(populateCell(3, 3, image, 1, 1).clue).toBe(3);
-    expect(populateCell(3, 3, image, 1, 2).clue).toBe(0);
+describe("one number alone", () => {
+  it("a number that fills its block shades all of it", () => {
+    expect(walked(3, "d9d")).toEqual({
+      verdict: "solved",
+      fired: [{ rung: "needsAll", clue: 4, cells: [0, 1, 2, 3, 4, 5, 6, 7, 8] }],
+    });
   });
 
-  it("detects full at the saturation count of each position", () => {
-    const allBlack = new Uint8Array(9).fill(1);
-    expect(populateCell(3, 3, allBlack, 0, 0)).toMatchObject({ clue: 4, full: true }); // corner
-    expect(populateCell(3, 3, allBlack, 1, 0)).toMatchObject({ clue: 6, full: true }); // edge
-    expect(populateCell(3, 3, allBlack, 1, 1)).toMatchObject({ clue: 9, full: true }); // interior
+  it("a number with all its shaded squares clears the rest of its block", () => {
+    const grid = new Uint8Array(9);
+    grid[0] = STATE_MARKED;
+    expect(walked(3, "d1d", grid)).toEqual({
+      verdict: "solved",
+      fired: [{ rung: "met", clue: 4, cells: [1, 2, 3, 4, 5, 6, 7, 8] }],
+    });
   });
 
-  it("detects empty at zero", () => {
-    expect(populateCell(3, 3, image, 1, 2)).toMatchObject({ empty: true, full: false });
-  });
-
-  it("does not call a partial edge count full", () => {
-    // Corner with 3 of 4 black: clue 3, not full.
-    const img = Uint8Array.from([1, 1, 0, 1, 0, 0, 0, 0, 0]);
-    expect(populateCell(3, 3, img, 0, 0)).toMatchObject({ clue: 3, full: false });
-  });
-});
-
-describe("solveCell / solveCheck / solveGameActual", () => {
-  it("a full clue marks its whole neighborhood", () => {
-    const sol = {
-      cell: new Uint8Array(9),
-      solved: new Uint8Array(9),
-      needed: new Uint8Array(9),
-    };
-    expect(solveCell(3, 3, 9, true, false, sol, 1, 1)).toBe("progress");
-    expect(Array.from(sol.cell)).toEqual(new Array(9).fill(STATE_MARKED));
-    expect(sol.needed[4]).toBe(1);
-  });
-
-  it("a satisfied clue blanks the remaining unknowns", () => {
-    const sol = {
-      cell: new Uint8Array(9),
-      solved: new Uint8Array(9),
-      needed: new Uint8Array(9),
-    };
-    sol.cell[0] = STATE_MARKED;
-    // Clue 1 at the center: one black already known → rest blank.
-    expect(solveCell(3, 3, 1, false, false, sol, 1, 1)).toBe("progress");
-    expect(sol.cell[0]).toBe(STATE_MARKED);
-    for (let i = 1; i < 9; i++) expect(sol.cell[i]).toBe(STATE_BLANK);
-  });
-
-  it("reports a contradiction on an unmet, fully-determined clue", () => {
-    const sol = {
-      cell: new Uint8Array(9),
-      solved: new Uint8Array(9),
-      needed: new Uint8Array(9),
-    };
-    sol.cell.fill(STATE_BLANK);
-    // Everything blank but the clue says 2 blacks → impossible.
-    expect(solveCell(3, 3, 2, false, false, sol, 1, 1)).toBe("contradiction");
-  });
-
-  it("solveCheck solves an all-clues-shown board", () => {
-    const image = Uint8Array.from([1, 1, 1, 0, 0, 0, 0, 0, 0]);
-    const cells = genCellsFromImage(3, 3, image);
-    const { solved, sol } = solveCheck(3, 3, cells, null);
-    expect(solved).toBe(true);
-    expect(Array.from(sol.cell.slice(0, 3))).toEqual([
-      STATE_MARKED,
-      STATE_MARKED,
-      STATE_MARKED,
-    ]);
-    expect(Array.from(sol.cell.slice(3))).toEqual(new Array(6).fill(STATE_BLANK));
+  it("finds the marks inconsistent where a number cannot be met", () => {
+    expect(walked(3, "d2d", new Uint8Array(9).fill(STATE_BLANK)).verdict).toBe(
+      "contradiction",
+    );
+    expect(walked(3, "d0d", new Uint8Array(9).fill(STATE_MARKED)).verdict).toBe(
+      "contradiction",
+    );
   });
 
   it("solveGameActual recovers the image from a parsed desc", () => {
     // The all-black 3×3 board.
-    const state = newState(
-      { width: 3, height: 3, aggressive: true, diff: DIFF_EASY },
-      "464696464",
-    );
-    const sol = solveGameActual(state.board);
+    const sol = solveGameActual(boardOf(3, "464696464"));
     expect(sol).not.toBeNull();
     expect(Array.from(sol as Uint8Array)).toEqual(new Array(9).fill(STATE_MARKED));
   });
 
   it("solveGameActual returns null when deduction stalls", () => {
     // A lone central clue 5 on 3×3 determines nothing.
-    const state = newState(
-      { width: 3, height: 3, aggressive: true, diff: DIFF_EASY },
-      "d5d",
-    );
-    expect(solveGameActual(state.board)).toBeNull();
+    expect(solveGameActual(boardOf(3, "d5d"))).toBeNull();
   });
 });
 
 describe("the comparison of two numbers", () => {
-  const boardOf = (side: number, desc: string) =>
-    newState({ width: side, height: side, aggressive: true, diff: DIFF_EASY }, desc)
-      .board;
-  const deduced = (side: number, desc: string) => {
-    const fired: Firing[] = [];
-    const verdict = deduce(boardOf(side, desc), new Uint8Array(side * side), (f) =>
-      fired.push(f),
-    );
-    return { verdict, fired };
-  };
-
   it("shades the squares a number has outside another's block when it needs that many more", () => {
     // A corner 1 and the 3 beside it. Neither decides anything alone: the 3
     // has six squares and the 1 four.
-    expect(deduced(3, "13g")).toEqual({
+    expect(walked(3, "13g")).toEqual({
       verdict: "stuck",
       fired: [{ rung: "needsMore", clue: 1, other: 0, need: 3, by: 2, cells: [2, 5] }],
     });
@@ -170,44 +96,25 @@ describe("the comparison of two numbers", () => {
 
   it("clears a number's other squares when one inside its block needs as many", () => {
     // A corner 2 and the 2 beside it, whose block holds the corner's.
-    expect(deduced(3, "22g")).toEqual({
+    expect(walked(3, "22g")).toEqual({
       verdict: "stuck",
       fired: [{ rung: "sameNeed", clue: 0, other: 1, need: 2, by: 0, cells: [2, 5] }],
     });
   });
 
-  it("finishes a board that upstream's rule, one number at a time, does not", () => {
-    const board = boardOf(5, "0b4c4b4a6a3d3a2c");
-    const size = board.clues.length;
-    const alone: GenCells = {
-      clue: board.clues,
-      shown: Uint8Array.from(board.clues, (c) => (c >= 0 ? 1 : 0)),
-      full: new Uint8Array(size),
-      empty: new Uint8Array(size),
-    };
-    expect(solveCheck(5, 5, alone, null).solved).toBe(false);
-    expect(solveGameActual(board)).not.toBeNull();
-    const rungs = deduced(5, "0b4c4b4a6a3d3a2c").fired.map((f) => f.rung);
+  it("finishes a board that one number at a time does not", () => {
+    const desc = "0b4c4b4a6a3d3a2c";
+    expect(deductionTier(boardOf(5, desc))).toBe(DIFF_NORMAL);
+    const rungs = walked(5, desc).fired.map((f) => f.rung);
     expect(rungs).toContain("needsMore");
     expect(rungs).toContain("sameNeed");
   });
 
   it("is asked only where no number decides anything alone", () => {
     // Every square shaded: each number needs all it has.
-    const rungs = deduced(3, "464696464").fired.map((f) => f.rung);
+    expect(deductionTier(boardOf(3, "464696464"))).toBe(DIFF_EASY);
+    const rungs = walked(3, "464696464").fired.map((f) => f.rung);
     expect(new Set(rungs)).toEqual(new Set(["needsAll"]));
-  });
-});
-
-describe("startPointCheck", () => {
-  it("honors the upstream scan-size quirk", () => {
-    const image = new Uint8Array(9); // all white → every cell empty
-    const cells = genCellsFromImage(3, 3, image);
-    expect(startPointCheck(cells, 4)).toBe(true);
-    // No full/empty inside the scanned prefix → not a valid start.
-    cells.empty.fill(0, 0, 4);
-    cells.full.fill(0, 0, 4);
-    expect(startPointCheck(cells, 4)).toBe(false);
   });
 });
 
@@ -220,24 +127,25 @@ describe("generator", () => {
       [7, false, "delta"],
     ] as const) {
       const p = { width: n, height: n, aggressive, diff: DIFF_EASY };
-      const rng = randomNew(seed);
-      const { desc } = newDesc(p, rng);
+      const { desc } = newDesc(p, randomNew(seed));
       expect(validateDesc(mosaicGame, p, desc), `desc for ${n}/${seed}`).toBeNull();
       const state = newState(p, desc);
-      expect(solveGameActual(state.board), `solvable for ${n}/${seed}`).not.toBeNull();
+      expect(deductionTier(state.board), `Easy for ${n}/${seed}`).toBe(DIFF_EASY);
       // Some clue must survive minimization.
       expect(cluesLeft(state)).toBeGreaterThan(0);
     }
   });
 
-  it("hideClues keeps the board solvable while hiding clues", () => {
-    const image = Uint8Array.from([1, 1, 1, 0, 0, 0, 0, 0, 0]);
-    const cells = genCellsFromImage(3, 3, image);
-    const shownBefore = cells.shown.reduce((a, b) => a + b, 0);
-    hideClues(3, 3, cells, randomNew("echo"), true);
-    const shownAfter = cells.shown.reduce((a, b) => a + b, 0);
-    expect(shownAfter).toBeLessThan(shownBefore);
-    expect(solveCheck(3, 3, cells, null).solved).toBe(true);
+  it("deals an aggressive Easy board no number of which one number at a time can spare", () => {
+    const p = { width: 6, height: 6, aggressive: true, diff: DIFF_EASY };
+    const { board } = newState(p, newDesc(p, randomNew("echo")).desc);
+    const shown = [...board.clues.keys()].filter((pos) => board.clues[pos] >= 0);
+    expect(shown.length).toBeGreaterThan(0);
+    for (const pos of shown) {
+      const clues = Int8Array.from(board.clues);
+      clues[pos] = -1;
+      expect(deductionTier({ ...board, clues }), `without ${pos}`).not.toBe(DIFF_EASY);
+    }
   });
 });
 

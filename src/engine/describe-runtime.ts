@@ -509,6 +509,43 @@ export function ray(sp: GridSpace, c: number, n: number): number[] {
   return out;
 }
 
+const balls = new WeakMap<GridSpace, (readonly (readonly number[])[])[]>();
+/** The space asked last and its balls by distance: a technique asks of one
+ * space many times a pass, so this saves the two lookups a call. */
+let lastSpace: GridSpace | null = null;
+let lastBalls: (readonly (readonly number[])[])[] = [];
+
+/** `within(c, r)`: the cells at most `r` king's moves from `c`, `c` among
+ * them, in reading order. Built once a space and distance, since a technique
+ * asks it of every cell it binds. */
+export function within(sp: GridSpace, c: number, r: number): readonly number[] {
+  if (sp !== lastSpace) {
+    let bySpace = balls.get(sp);
+    if (bySpace === undefined) {
+      bySpace = [];
+      balls.set(sp, bySpace);
+    }
+    lastSpace = sp;
+    lastBalls = bySpace;
+  }
+  const bySpace = lastBalls;
+  let ball = bySpace[r];
+  if (ball === undefined) {
+    const { w, h } = sp;
+    ball = sp.cells.map((a) => {
+      const ax = a % w;
+      const ay = (a / w) | 0;
+      const out: number[] = [];
+      for (let y = Math.max(0, ay - r); y <= Math.min(h - 1, ay + r); y++)
+        for (let x = Math.max(0, ax - r); x <= Math.min(w - 1, ax + r); x++)
+          out.push(y * w + x);
+      return out;
+    });
+    bySpace[r] = ball;
+  }
+  return ball[c] ?? [];
+}
+
 const faceLists: number[][] = [];
 
 /** `faces`, on a board with `n` of them: each numbered, in order. */

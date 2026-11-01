@@ -5,6 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
+import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -19,6 +20,9 @@ import { answerOf, newDesc, solveGameActual } from "./solver.ts";
 import {
   DIFF_NORMAL,
   DIFF_UNREASONABLE,
+  executeMove,
+  type MosaicMove,
+  type MosaicState,
   newState,
   STATE_BLANK,
   STATE_MARKED,
@@ -35,15 +39,15 @@ const pinned = describeHintPins({
   game: mosaicGame,
   params: [P, U],
   pins: {
-    /** Held on 668 of 706 positions walked. */
+    /** Held on 699 of 738 positions walked. */
     met: "10x10:0c4a5c2a3456b5a25a655b3b55a5a20a22a44b11c4a232c14a3c5f5c8d44d4b3d5c",
-    /** Held on 673 of 706 positions walked. */
+    /** Held on 698 of 738 positions walked. */
     needsAll:
       "10x10:c3c4442a4a5a44b3a4a4d53b3a133b23a3b4a7a1a2a5b3c323g212a5b5a0b32a2e02e2",
-    /** Held on 178 of 706 positions walked. */
+    /** Held on 193 of 738 positions walked. */
     needsMore:
       "10x10du:3a21j44b5b8a4a6a5c87c45a3477a4a45d86412b4a36a4f4c554a43a5k23a44a",
-    /** Held on 202 of 706 positions walked. */
+    /** Held on 193 of 738 positions walked. */
     sameNeed: {
       id: "10x10du:3a21j44b5b8a4a6a5c87c45a3477a4a45d86412b4a36a4f4c554a43a5k23a44a",
       moves:
@@ -51,6 +55,18 @@ const pinned = describeHintPins({
     },
   },
 });
+
+/** Every step the hint gives from `state` on, each plan's steps played and
+ * the hint asked again, until it gives none. */
+function followed(state: MosaicState): HintStep<MosaicMove, unknown, string>[] {
+  const steps: HintStep<MosaicMove, unknown, string>[] = [];
+  for (let res = mosaicHint(state); res.ok; res = mosaicHint(state))
+    for (const step of res.steps) {
+      steps.push(step);
+      state = executeMove(state, step.move);
+    }
+  return steps;
+}
 
 /** The values of the numbers a frame circles, one per circle: a circle is
  * round a number when the number's text is drawn at its center. */
@@ -65,13 +81,12 @@ function circledNumbers(ops: readonly DrawOp[]): string[] {
 }
 
 describe("Mosaic's hint", () => {
-  it("plans the whole board, every step agreeing with the solution", () => {
+  it("walks the whole board, every step agreeing with the solution", () => {
     const state = newState(P, desc);
     const solution = solveGameActual(state.board);
-    const res = mosaicHint(state);
-    if (!res.ok || !solution) throw new Error("no plan");
+    if (!solution) throw new Error("no solution");
     const decided = new Set<number>();
-    for (const step of res.steps) {
+    for (const step of followed(state)) {
       const { cells, mark } = step.highlights as MosaicHint;
       for (const c of cells) {
         expect(solution[c], `square ${c}`).toBe(mark);
@@ -220,16 +235,15 @@ describe("Mosaic's hint", () => {
     expect(seen.size).toBeGreaterThan(1);
   });
 
-  it("on a Normal board plans the whole board, comparing numbers on the way", () => {
+  it("on a Normal board walks the whole board, comparing numbers on the way", () => {
     const N = { ...P, diff: DIFF_NORMAL };
     for (let seed = 0; seed < 6; seed++) {
       const state = newState(N, newDesc(N, randomNew(`mosaic-hint-${seed}`)).desc);
       const solution = solveGameActual(state.board);
-      const res = mosaicHint(state);
-      if (!res.ok || !solution) throw new Error("no plan");
+      if (!solution) throw new Error("no solution");
       const decided = new Set<number>();
       let comparing = 0;
-      for (const step of res.steps) {
+      for (const step of followed(state)) {
         const { cells, mark } = step.highlights as MosaicHint;
         if (step.rung === "needsMore" || step.rung === "sameNeed") comparing++;
         for (const c of cells) {
@@ -242,15 +256,14 @@ describe("Mosaic's hint", () => {
     }
   });
 
-  it("on an Unreasonable board plans only what the answer has, and stops short", () => {
+  it("on an Unreasonable board walks only what the answer has, and stops short", () => {
     let comparing = 0;
     for (let seed = 0; seed < 6; seed++) {
       const state = newState(U, newDesc(U, randomNew(`mosaic-hint-${seed}`)).desc);
       const answer = answerOf(state);
-      const res = mosaicHint(state);
-      if (!res.ok || answer.kind !== "one") throw new Error("no plan");
+      if (answer.kind !== "one") throw new Error("no answer");
       const decided = new Set<number>();
-      for (const step of res.steps) {
+      for (const step of followed(state)) {
         const { cells, mark } = step.highlights as MosaicHint;
         if (step.rung === "needsMore" || step.rung === "sameNeed") comparing++;
         for (const c of cells) {

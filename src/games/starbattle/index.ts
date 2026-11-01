@@ -98,6 +98,10 @@ const markWith =
  * The blank squares each new star rules out at a glance: the ones touching
  * it, and the rest of its row, column or region where the star is the last
  * that one holds.
+ *
+ * The description's `around`, `fullLine` and `fullRegion` conclude the same
+ * squares on every board whose marks are consistent, but stop at one that is
+ * not, where a star placed beside another still has its squares crossed here.
  */
 function ruledOut(
   before: StarbattleState,

@@ -75,15 +75,11 @@ export interface HiddenSingleBinding {
 }
 
 const hiddenSingleFacts: number[] = [];
-let hiddenSingleCands = new Int32Array(0);
 
 export function hiddenSingle(b: Marks, sp: GridSpace, fire: Fire<HiddenSingleBinding> | null): number {
   const facts = hiddenSingleFacts;
   let fired = 0;
   let changed = false;
-  if (hiddenSingleCands.length < sp.cells.length) hiddenSingleCands = new Int32Array(sp.cells.length);
-  const cands = hiddenSingleCands;
-  cands.fill(-1);
   const _a37 = sp.units;
   for (let _i38 = 0; _i38 < _a37.length; _i38++) {
     const v_u = _a37[_i38];
@@ -135,7 +131,6 @@ export function hiddenSingle(b: Marks, sp: GridSpace, fire: Fire<HiddenSingleBin
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ u: v_u, placed: v_placed, d: v_d, n: v_n }, facts)) return 1;
-          cands.fill(-1);
         }
       }
     }
@@ -326,7 +321,6 @@ export interface FishBinding {
 }
 
 const fishFacts: number[] = [];
-let fishCands = new Int32Array(0);
 
 export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): number {
   const _g227: number[] = [];
@@ -336,9 +330,6 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
   let changed = false;
   const _h256 = (sp.h - 1);
   const _h257 = rangeMask(0, _h256);
-  if (fishCands.length < sp.cells.length) fishCands = new Int32Array(sp.cells.length);
-  const cands = fishCands;
-  cands.fill(-1);
   for (let _m226 = b.domain; _m226 !== 0; _m226 &= _m226 - 1) {
     const v_d = 31 - Math.clz32(_m226 & -_m226);
     const v_k = (v_d === b.repeat ? b.times : 1);
@@ -592,7 +583,6 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ d: v_d, k: v_k, X0: v_X0, Y0: v_Y0, T: v_T, X: v_X }, facts)) return 1;
-          cands.fill(-1);
         }
       }
     }

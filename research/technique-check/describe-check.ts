@@ -35,6 +35,7 @@ import {
   describedSpace,
   type GridSpace,
   latinSpace,
+  within,
 } from "../../src/engine/describe-runtime.ts";
 import { blocks } from "../describe/space.ts";
 import { asZ3, type B, type I, Z3 } from "./pzl.ts";
@@ -714,8 +715,16 @@ function bindings(
   }
   if (b.kind === "fill") {
     // Every assignment of a value to each member, each under its values
-    // being candidates where it is drawn from the marks.
-    const cells = known(evaluate(b.of, env, ctx), `fill ${b.name}`);
+    // being candidates where it is drawn from the marks. A set the marks
+    // decide, as the open squares of a line are, is filled over every square
+    // that may be in it: a value given one that is not is never read, since
+    // whatever ranges over the set reads it under its membership.
+    // A set built from nothing has no sort, and is a set of values.
+    const of = evaluate(b.of, env, ctx);
+    const empty = of.k === "vset" && of.mem.every((g) => g === false);
+    if (of.k !== "eset" && !empty) throw new TypeError(`fill ${b.name}: not a set`);
+    const cells =
+      of.k === "eset" ? of.mem.flatMap(([id, g]) => (g === false ? [] : [id])) : [];
     const vals = new Map<number, number>();
     const assign = (j: number, g: Bx): void => {
       if (g === false) return;
@@ -987,6 +996,13 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       return cellFn((c) => allOf("line", sp.unitsOf[c]));
     case "adj4":
       return cellFn((c) => allOf("cell", sp.adj4[c]));
+    case "adj8":
+      return cellFn((c) => allOf("cell", sp.adj8[c]));
+    case "within": {
+      const r = num(vs[1], fn);
+      if (typeof r !== "number") throw new Error("within: a distance the board fixes");
+      return cellFn((c) => allOf("cell", within(sp, c, r)));
+    }
     case "sight":
       return lift(vs[0], fn, (s) => allOf("cell", sp.sight[s]));
     case "opposite":
@@ -1018,11 +1034,13 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       return lift(vs[0], fn, (id) => ({ k: "num", v: L.indexOf(id) }));
     }
     case "before": {
-      const L = known(vs[1], fn);
-      const sort = vs[1].k === "eset" ? vs[1].sort : "?";
+      // A set the marks decide keeps its order, so the members before one
+      // are the earlier squares that may be in it, each under its guard.
+      const L = vs[1];
+      if (L.k !== "eset") throw new TypeError(`${fn}: not a set`);
       return lift(vs[0], fn, (id) => {
-        const i = L.indexOf(id);
-        return allOf(sort, i < 0 ? [] : L.slice(0, i));
+        const i = L.mem.findIndex(([m]) => m === id);
+        return { k: "eset", sort: L.sort, mem: i < 0 ? [] : L.mem.slice(0, i) };
       });
     }
     case "x":
@@ -1376,25 +1394,28 @@ export async function checkTechnique(
   const solver = new Z3.Solver();
   for (const w of world) solver.add(asZ3(w));
   // The first `split` binders concrete, one query each; the rest one
-  // disjunction of every binding's premise without its conclusion.
-  const groups = new Map<string, Bx[]>();
-  bindings(t.binders, 0, new Map(), true, ctx, (env, g) => {
-    const premise =
-      t.premise === null ? true : bool(evaluate(t.premise, env, ctx), "premise");
-    const concl = bool(
-      evaluate(t.conclude, env, { ...ctx, concluding: true }),
-      "conclusion",
-    );
-    const key = t.binders
-      .slice(0, split)
-      .map((b) => show(env.get(b.name) ?? null))
-      .join(" ");
-    const list = groups.get(key) ?? [];
-    list.push(and(g, premise, not(concl)));
-    groups.set(key, list);
+  // disjunction of every binding's premise without its conclusion, built as
+  // its query runs, so that one group is held at a time.
+  const heads: { env: Env; g: Bx }[] = [];
+  bindings(t.binders.slice(0, split), 0, new Map(), true, ctx, (env, g) => {
+    heads.push({ env, g });
   });
   let queries = 0;
-  for (const [key, parts] of groups) {
+  for (const head of heads) {
+    const key = t.binders
+      .slice(0, split)
+      .map((b) => show(head.env.get(b.name) ?? null))
+      .join(" ");
+    const parts: Bx[] = [];
+    bindings(t.binders, split, head.env, head.g, ctx, (env, g) => {
+      const premise =
+        t.premise === null ? true : bool(evaluate(t.premise, env, ctx), "premise");
+      const concl = bool(
+        evaluate(t.conclude, env, { ...ctx, concluding: true }),
+        "conclusion",
+      );
+      parts.push(and(g, premise, not(concl)));
+    });
     const bad = or(...parts);
     if (bad === false) continue;
     queries++;

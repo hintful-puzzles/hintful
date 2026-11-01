@@ -18,9 +18,14 @@ import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
-import { deduce } from "./deduce.ts";
 import { mosaicGame } from "./index.ts";
-import { answerOf, deductionTier, searchAnswers, solveGameActual } from "./solver.ts";
+import {
+  answerOf,
+  deductionTier,
+  searchAnswers,
+  solveGameActual,
+  status,
+} from "./solver.ts";
 import {
   DIFF_NORMAL,
   DIFF_UNREASONABLE,
@@ -30,7 +35,6 @@ import {
   newState,
   STATE_MARK_MASK,
   STATE_MARKED,
-  status,
 } from "./state.ts";
 
 /** How many ways every square of `board` can be shaded or left clear so that
@@ -200,15 +204,6 @@ describe("mosaic's search for a board's answers", () => {
 });
 
 describe("a Normal Mosaic board", () => {
-  /** How many of the deduction's steps on `board` compare two numbers. */
-  const comparisons = (board: MosaicBoard): number => {
-    let count = 0;
-    deduce(board, new Uint8Array(board.width * board.height), (firing) => {
-      if ("other" in firing) count++;
-    });
-    return count;
-  };
-
   it.each([
     sized(3, 3, DIFF_NORMAL),
     sized(5, 5, DIFF_NORMAL),
@@ -221,7 +216,6 @@ describe("a Normal Mosaic board", () => {
       const { board } = newState(p, desc);
       // The whole deduction finishes it, and compared numbers on the way.
       expect(solveGameActual(board), desc).not.toBeNull();
-      expect(comparisons(board), desc).toBeGreaterThan(0);
       expect(deductionTier(board), desc).toBe(DIFF_NORMAL);
       expect(countAnswers(board), desc).toBe(1);
     }
@@ -274,11 +268,16 @@ describe("an Unreasonable Mosaic board", () => {
   });
 
   it("keeps most of its numbers where generation is not aggressive", () => {
-    // Hiding stops at the first clue whose loss stops the deduction.
+    // Hiding stops at the first clue whose loss stops the deduction. Over
+    // several boards, since one board's numbers vary by more than the margin.
     const shown = (aggressive: boolean): number => {
       const p = sized(10, 10, DIFF_UNREASONABLE, aggressive);
-      const { desc } = mosaicGame.newDesc(p, randomNew("kept"));
-      return newState(p, desc).board.clues.filter((c) => c >= 0).length;
+      let total = 0;
+      for (let seed = 0; seed < 10; seed++) {
+        const { desc } = mosaicGame.newDesc(p, randomNew(`kept ${seed}`));
+        total += newState(p, desc).board.clues.filter((c) => c >= 0).length;
+      }
+      return total / 10;
     };
     expect(shown(false)).toBeGreaterThan(shown(true) + 5);
   });

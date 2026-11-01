@@ -176,15 +176,11 @@ export interface AreaSingleBinding {
 }
 
 const areaSingleFacts: number[] = [];
-let areaSingleCands = new Int32Array(0);
 
-export function areaSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AreaSingleBinding> | null): number {
+export function areaSingle(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<AreaSingleBinding> | null): number {
   const facts = areaSingleFacts;
   let fired = 0;
   let changed = false;
-  if (areaSingleCands.length < sp.cells.length) areaSingleCands = new Int32Array(sp.cells.length);
-  const cands = areaSingleCands;
-  cands.fill(-1);
   const _a32 = cl.area.parts;
   for (let _i33 = 0; _i33 < _a32.length; _i33++) {
     const v_r = _a32[_i33];
@@ -239,7 +235,6 @@ export function areaSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AreaSi
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ r: v_r, n: v_n, k: v_k }, facts)) return 1;
-          cands.fill(-1);
         }
       }
     }
@@ -254,7 +249,6 @@ export interface StarveBinding {
 }
 
 const starveFacts: number[] = [];
-let starveCands = new Int32Array(0);
 
 export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBinding> | null): number {
   const _g72: number[] = [];
@@ -263,9 +257,6 @@ export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBind
   let changed = false;
   const _h90 = (cl.mode === 0);
   const _h93 = (cl.mode === 1);
-  if (starveCands.length < sp.cells.length) starveCands = new Int32Array(sp.cells.length);
-  const cands = starveCands;
-  cands.fill(-1);
   const _a64 = cl.area.parts;
   for (let _i65 = 0; _i65 < _a64.length; _i65++) {
     const v_r = _a64[_i65];
@@ -335,7 +326,6 @@ export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBind
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ r: v_r, n: v_n, H: v_H }, facts)) return 1;
-          cands.fill(-1);
         }
       }
     }

@@ -229,6 +229,9 @@ interface Env {
   /** Whether the function keeps each cell's candidates as it first reads
    * them (`cands`), until a firing it goes on from changes the marks. */
   memo: boolean;
+  /** Set where a technique's body reads a cell's candidates through
+   * `cands`, which it then keeps; absent outside a technique. */
+  readsCands?: { yes: boolean };
   /** Whether the code reads what the board deals, its clues or partitions,
    * so the function takes them. */
   readsClues: { yes: boolean };
@@ -309,6 +312,7 @@ const GEOMETRY = new Set([
   "adj4",
   "adj8",
   "ray",
+  "within",
   "on_grid",
   "units_of",
   "x",
@@ -344,8 +348,10 @@ function sameSort(a: Sort, b: Sort): boolean {
 }
 
 /** A cell's candidates through the function's `cands`, read once a cell. */
-const candOf = (c: string): string =>
-  `(cands[${c}] >= 0 ? cands[${c}] : (cands[${c}] = b.cand(${c})))`;
+function candOf(c: string, env: Env): string {
+  if (env.readsCands) env.readsCands.yes = true;
+  return `(cands[${c}] >= 0 ? cands[${c}] : (cands[${c}] = b.cand(${c})))`;
+}
 
 function compileExpr(e: Expr, scope: Scope, env: Env, out: Out): Val {
   if (env.hoist !== null && e.k !== "num" && e.k !== "name") {
@@ -1196,9 +1202,11 @@ function fillLoop(
         o.close();
       });
     } else if (total !== null) {
-      // No value is negative, so a sum past `t` stays past it; a product
-      // that does not divide `t` never comes to it, while it is positive. The
-      // whole condition is read again once the filling is.
+      // Each element still to be given a value adds at least the domain's
+      // least and at most its greatest, so a sum that cannot come to `t`
+      // either way is passed over; a product that does not divide `t` never
+      // comes to it, while it is positive. The whole condition is read again
+      // once the filling is.
       rest.push(c);
       const unless =
         total.unless === null
@@ -1207,6 +1215,12 @@ function fillLoop(
       if (unless !== null) expect(unless, "bool", "or");
       const t = once(compileExpr(total.t, scope, env, out), out);
       expect(t, "num", total.fn);
+      const lo = Out.fresh("_lo");
+      const hi = Out.fresh("_hi");
+      if (total.fn === "sum") {
+        out.emit(`const ${lo} = 31 - Math.clz32(b.domain & -b.domain);`);
+        out.emit(`const ${hi} = 31 - Math.clz32(b.domain);`);
+      }
       checks.push((o) => {
         const p = Out.fresh("_t");
         o.open(unless === null ? "{" : `if (!${unless.code}) {`);
@@ -1214,11 +1228,11 @@ function fillLoop(
         o.emit(
           `for (let ${j} = 0; ${j} < ${i}; ${j}++) ${p} ${total.fn === "sum" ? "+=" : "*="} ${fv}[${a}[${j}]];`,
         );
-        o.emit(
-          total.fn === "sum"
-            ? `if (${p} > ${t.code}) continue;`
-            : `if (${p} > 0 && ${t.code} % ${p} !== 0) continue;`,
-        );
+        if (total.fn === "sum") {
+          const left = `(${a}.length - ${i} - 1)`;
+          o.emit(`if (${p} + ${left} * ${lo} > ${t.code}) continue;`);
+          o.emit(`if (${p} + ${left} * ${hi} < ${t.code}) continue;`);
+        } else o.emit(`if (${p} > 0 && ${t.code} % ${p} !== 0) continue;`);
         o.close();
       });
     } else if (
@@ -1243,7 +1257,7 @@ function fillLoop(
     } else rest.push(c);
   }
   const mask =
-    bnd.from === undefined ? "b.domain" : env.memo ? candOf(e) : `b.cand(${e})`;
+    bnd.from === undefined ? "b.domain" : env.memo ? candOf(e, env) : `b.cand(${e})`;
   const r = Out.fresh("_r");
   const once0 = Out.fresh("_o");
   out.emit(`for (const ${e} of ${last}) ${fv}[${e}] = -1;`);
@@ -1824,6 +1838,14 @@ function call(
       arity(2);
       env.used.add("ray");
       return { code: `ray(sp, ${cell(0)}, ${cell(1)})`, sort: setOf(elem("cell")) };
+    case "within":
+      arity(2);
+      expect(vs[1], "num", fn);
+      env.used.add("within");
+      return {
+        code: `within(sp, ${cell(0)}, ${vs[1].code})`,
+        sort: setOf(elem("cell")),
+      };
     case "on_grid": {
       arity(2);
       expect(vs[0], "num", fn);
@@ -1936,7 +1958,7 @@ function call(
         throw new CompileError("a rule reads the answer, never the marks");
       if (!env.memo) return { code: `b.cand(${cell(0)})`, sort: setOf(NUM) };
       return {
-        code: candOf(once({ code: cell(0), sort: vs[0].sort }, out).code),
+        code: candOf(once({ code: cell(0), sort: vs[0].sort }, out).code, env),
         sort: setOf(NUM),
       };
     case "abs":
@@ -2268,9 +2290,11 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   // a technique run on placing reads few, on every placement, and does not.
   const scratch: string[] = [];
   const epoch = { used: false };
+  const readsCands = { yes: false };
   const tenv: Env = {
     ...env,
     readsClues,
+    readsCands,
     memo: !onPlace,
     scratch,
     hoist: null,
@@ -2290,15 +2314,11 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   // The facts and the kept candidates live in one buffer each a function,
   // emptied each call: a technique never runs inside its own call (a firing
   // that places runs only the technique run on placing), and `fire` reads the
-  // facts before it returns.
+  // facts before it returns. The candidates are kept only by a technique that
+  // reads them, which is known once its body is compiled.
   const buffer = `${fnName}Cands`;
-  if (!onPlace) {
-    body.emit(
-      `if (${buffer}.length < sp.cells.length) ${buffer} = new Int32Array(sp.cells.length);`,
-    );
-    body.emit(`const cands = ${buffer};`);
-    body.emit("cands.fill(-1);");
-  }
+  const keep = body.slot(0);
+  const refills: Slot[] = [];
   const fire = (sc: Scope): void => {
     if (t.premise !== null) {
       const p = compileExpr(t.premise, sc, tenv, body);
@@ -2320,7 +2340,7 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
     else {
       body.emit(`if (fire !== null && !fire(${binding}, facts)) return 1;`);
       // The firing changed the marks the kept candidates were read from.
-      body.emit("cands.fill(-1);");
+      refills.push(body.slot(0));
       if (epoch.used) body.emit("_epoch++;");
     }
     body.close();
@@ -2353,18 +2373,32 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
     params = "";
   }
   body.emit("return fired;");
+  if (readsCands.yes) {
+    keep.lines.push(
+      {
+        indent: 0,
+        text: `if (${buffer}.length < sp.cells.length) ${buffer} = new Int32Array(sp.cells.length);`,
+      },
+      { indent: 0, text: `const cands = ${buffer};` },
+      { indent: 0, text: "cands.fill(-1);" },
+    );
+    for (const s of refills) s.lines.push({ indent: 0, text: "cands.fill(-1);" });
+  }
   const clueParam = readsClues.yes ? "cl: Dealt, " : "";
+  const text = [...scratch.map((d) => `  ${d}`), ...body.text()];
+  // The generated code names nothing else `sp`, so a body that never says it
+  // reads no geometry, and the parameter is marked unread.
+  const spParam = text.some((l) => /\bsp\b/.test(l)) ? "sp" : "_sp";
   const lines = [
     `export interface ${bindingType} {`,
     ...fields,
     "}",
     "",
     `const ${fnName}Facts: number[] = [];`,
-    ...(onPlace ? [] : [`let ${buffer} = new Int32Array(0);`]),
+    ...(readsCands.yes ? [`let ${buffer} = new Int32Array(0);`] : []),
     "",
-    `export function ${fnName}(b: Marks, sp: GridSpace, ${clueParam}${params}fire: Fire<${bindingType}> | null): number {`,
-    ...scratch.map((d) => `  ${d}`),
-    ...body.text(),
+    `export function ${fnName}(b: Marks, ${spParam}: GridSpace, ${clueParam}${params}fire: Fire<${bindingType}> | null): number {`,
+    ...text,
     "}",
   ];
   return { code: lines.join("\n"), clues: readsClues.yes };

@@ -1,27 +1,41 @@
 /**
- * Mosaic solver and generator (the solver half of upstream's `mosaic.c`:
- * `solve_cell`, `solve_check`, `solve_game_actual`, `hide_clues`,
- * `new_game_desc`).
+ * Mosaic's solver and generator: the ladder `mosaic.description.yaml` states,
+ * compiled, on the engine's marks and runner (`engine/ladder-runtime.ts`), with
+ * the reason each technique records for the hint; the answer check its rules
+ * compile to; the search for a board's answers over the ladder; and the
+ * generator, which grades every board it deals on the same ladder.
  *
- * Upstream's one rule (`solveCell`) deals an Easy board as upstream does:
- * generation feasibility (`solveCheck`, desc-side, knows full/empty) and clue
- * minimization (`hideClues`). A board in play is read by the whole deduction
- * (`deduce.ts`), which also compares two numbers: the board-side solve, the
- * search for a board's answers, and so Solve, the mistake check and the
- * Unreasonable deal.
+ * Upstream's generator ran its own copy of the first two techniques, with
+ * shortcuts for a number that is 0 or fills its block; the ladder fires on
+ * those numbers first anyway, so Easy boards are dealt by it too.
  */
 
 import {
   type Answer,
   answerCache,
+  type Deduced,
   DIFF_EASY,
   dealUnreasonable,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
+import { clueList, describedSpace } from "../../engine/describe-runtime.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  ladderWalk,
+  runLadder,
+  TIERS as SCALE,
+  type Taken,
+} from "../../engine/ladder-runtime.ts";
 import { type RandomState, randomBits } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { deduce } from "./deduce.ts";
+import { stepBudget } from "../../engine/step-budget.ts";
+import type { GameStatus } from "../../engine/types.ts";
+import * as mosaic from "./mosaic.compiled.ts";
 import {
   countAround,
   DIFF_NORMAL,
@@ -36,220 +50,204 @@ import {
   STATE_UNMARKED,
 } from "./state.ts";
 
-// --- solver scratch -----------------------------------------------------
+// --- the described ladder ---------------------------------------------------
 
-/** Upstream's `struct solution_cell[]` as parallel typed arrays:
- * `hideClues` runs `solveCheck` once per candidate clue, so this is the
- * hot allocation. */
-export interface Solution {
-  /** STATE_UNMARKED / STATE_MARKED / STATE_BLANK per cell. */
-  cell: Uint8Array;
-  solved: Uint8Array;
-  /** Set when this clue's deduction actually narrowed something —
-   * a not-needed clue is hidden for free by `hideClues`. */
-  needed: Uint8Array;
-}
-
-function newSolution(size: number): Solution {
-  return {
-    cell: new Uint8Array(size),
-    solved: new Uint8Array(size),
-    needed: new Uint8Array(size),
-  };
-}
-
-type CellResult = "progress" | "none" | "contradiction";
-
-/** Set every still-unmarked neighbor (3×3, clipped) to `mark`. */
-function markAround(
-  width: number,
-  height: number,
-  sol: Solution,
-  x: number,
-  y: number,
-  mark: number,
-): void {
-  for (let j = Math.max(0, y - 1); j <= Math.min(height - 1, y + 1); j++) {
-    for (let i = Math.max(0, x - 1); i <= Math.min(width - 1, x + 1); i++) {
-      const pos = j * width + i;
-      if (sol.cell[pos] === STATE_UNMARKED) sol.cell[pos] = mark;
-    }
-  }
-}
+/** The steps a hint can be, simplest first: two readings of one number,
+ * then two of a pair. */
+export const MOSAIC_RUNGS = ["met", "needsAll", "needsMore", "sameNeed"] as const;
+export type MosaicRung = (typeof MOSAIC_RUNGS)[number];
 
 /**
- * The whole deduction rule (upstream `solve_cell`). `clue < 0` means
- * the cell shows no clue; `full`/`empty` are the generation-side
- * shortcuts (the clue saturates its neighborhood / is zero) and are
- * always false on the board-side drivers.
+ * Why a firing decides its squares. Squares and numbers are indices into the
+ * board.
+ *
+ * - `met`: `clue` has its shaded squares, so the rest of its block is clear.
+ * - `needsAll`: `clue` needs every square it has left, so they are shaded.
+ * - `needsMore`: `clue` needs `by` more shaded squares than `other` does, and
+ *   has `by` empty squares outside `other`'s block, which are shaded.
+ * - `sameNeed`: `clue` and `other` need the same number more, and `clue` has
+ *   no empty square outside `other`'s block, so `other`'s outside `clue`'s
+ *   are clear.
  */
-export function solveCell(
-  width: number,
-  height: number,
-  clue: number,
-  full: boolean,
-  empty: boolean,
-  sol: Solution,
-  x: number,
-  y: number,
-): CellResult {
-  const pos = y * width + x;
-  if (sol.solved[pos]) return "none";
-  const { marked, blank, total } = countAround(width, height, sol.cell, x, y);
-  const determined = marked + blank === total;
+export type MosaicReason =
+  | { readonly rung: "met" | "needsAll"; readonly clue: number }
+  | {
+      readonly rung: "needsMore" | "sameNeed";
+      readonly clue: number;
+      readonly other: number;
+      /** The shaded squares `clue` still needs. */
+      readonly need: number;
+      /** How many more that is than `other` needs: none for `sameNeed`. */
+      readonly by: number;
+    };
 
-  if (clue < 0) {
-    // No clue here; solved once its neighborhood is determined.
-    if (!determined) return "none";
-    sol.solved[pos] = 1;
-    return "progress";
-  }
-  // The unknowns are forced blank once the clue is met, and marked once it
-  // needs all of them. A neighborhood with more marked than the clue, or too
-  // few left to reach it, is a contradiction whether or not it is determined:
-  // upstream says so only of a determined one, which is all a board with an
-  // answer asks, and a search has to be told of the other as it happens.
-  let mark: number;
-  if (full) mark = STATE_MARKED;
-  else if (empty || marked === clue) mark = STATE_BLANK;
-  else if (clue === total - blank) mark = STATE_MARKED;
-  else if (marked > clue || clue > total - blank) return "contradiction";
-  else return "none";
-  sol.solved[pos] = 1;
-  if (!determined) sol.needed[pos] = 1;
-  markAround(width, height, sol, x, y, mark);
-  return "progress";
+/** The board's numbers as the description reads them. */
+function dealtOf(board: MosaicBoard): mosaic.Dealt {
+  const at: number[] = [];
+  const v: number[] = [];
+  board.clues.forEach((n, pos) => {
+    if (n < 0) return;
+    at.push(pos);
+    v.push(n);
+  });
+  return { count: clueList(at, v, board.clues.length) };
 }
 
-// --- generation-side cells ------------------------------------------------
-
-/** The generator's per-cell knowledge (upstream `struct desc_cell`),
- * as parallel typed arrays. */
-export interface GenCells {
-  clue: Int8Array;
-  shown: Uint8Array;
-  full: Uint8Array;
-  empty: Uint8Array;
+/** The ladder over the numbers `dealt` deals. */
+function mosaicLadder(dealt: mosaic.Dealt): Ladder {
+  return describedLadder(mosaic, {
+    alone: compiledRung(
+      mosaic.alone,
+      dealt,
+      ({ c, n }): MosaicReason => ({
+        rung: n === 0 ? "met" : "needsAll",
+        clue: c,
+      }),
+    ),
+    compared: compiledRung(
+      mosaic.compared,
+      dealt,
+      ({ c, b, n, by }): MosaicReason => ({
+        rung: by > 0 ? "needsMore" : "sameNeed",
+        clue: c,
+        other: b,
+        need: n,
+        by,
+      }),
+    ),
+  });
 }
 
-/** Compute one cell's clue from the image (upstream `populate_cell`): the
- * marked cells of its clipped 3×3 neighborhood, itself included. "Full"
- * means the clue saturates the neighborhood (9 interior, 6 edge, 4
- * corner), "empty" that it is 0. */
-export function populateCell(
-  width: number,
-  height: number,
-  image: Uint8Array,
-  x: number,
-  y: number,
-): { clue: number; full: boolean; empty: boolean } {
-  let clue = 0;
-  let total = 0;
-  for (let j = Math.max(0, y - 1); j <= Math.min(height - 1, y + 1); j++) {
-    for (let i = Math.max(0, x - 1); i <= Math.min(width - 1, x + 1); i++) {
-      clue += image[j * width + i];
-      total++;
-    }
-  }
-  return { clue, full: clue === total, empty: clue === 0 };
+/** The values a square may hold: shaded or clear. */
+const DOMAIN = (1 << STATE_MARKED) | (1 << STATE_BLANK);
+
+/** The marks the ladder reads, on `grid` itself, each square
+ * {@link STATE_UNMARKED}, {@link STATE_MARKED} or {@link STATE_BLANK}. */
+function marksOf(board: MosaicBoard, grid: Uint8Array): CellMarks {
+  const m = new CellMarks(
+    describedSpace(mosaic.units, board.width, board.height),
+    DOMAIN,
+    grid,
+  );
+  m.seed(grid);
+  return m;
 }
 
-/** Upstream `start_point_check`, quirk included: `newDesc` scans only the
- * first `(width-1)*(height-1)` cells, not the whole board. Scanning them
- * all would change every generated board. */
-export function startPointCheck(cells: GenCells, scanSize: number): boolean {
-  for (let i = 0; i < scanSize; i++) {
-    if (cells.empty[i] || cells.full[i]) return true;
-  }
-  return false;
+/** Whether `grid`, every square shaded or clear, is the board's answer. */
+function isAnswer(board: MosaicBoard, grid: Uint8Array): boolean {
+  return mosaic.isAnswer(
+    grid,
+    describedSpace(mosaic.units, board.width, board.height),
+    dealtOf(board),
+  );
+}
+
+/** Solved where every square is shaded or clear and the numbers say so, by
+ * the rules the description compiles to. */
+export function status(state: MosaicState): GameStatus {
+  return isAnswer(
+    state.board,
+    state.cells.map((v) => v & STATE_MARK_MASK),
+  )
+    ? "solved"
+    : "ongoing";
+}
+
+/** What deducing on a grid established, and the highest tier that fired. */
+interface Deduction {
+  verdict: Deduced;
+  grade: number;
 }
 
 /**
- * Desc-side feasibility check (upstream `solve_check`): run the
- * deduction over the shown clues — in rng-shuffled order when `rng` is
- * given (generation), stable scan order otherwise (the re-checks
- * inside `hideClues`) — until no progress. Returns whether every cell
- * of the board was determined, plus the solution (for `needed`).
+ * Deduce on `grid` in place with the ladder capped at tier `cap`. `fired`,
+ * where given, is told each number a firing reads first, as it fires.
  */
-export function solveCheck(
-  width: number,
-  height: number,
-  cells: GenCells,
-  rng: RandomState | null,
-): { solved: boolean; sol: Solution } {
-  const size = width * height;
-  const sol = newSolution(size);
-  const shownPos: number[] = [];
-  for (let pos = 0; pos < size; pos++) {
-    if (cells.shown[pos]) shownPos.push(pos);
+function deduceAt(
+  board: MosaicBoard,
+  grid: Uint8Array,
+  cap: number,
+  fired: ((clue: number) => void) | null = null,
+): Deduction {
+  const m = marksOf(board, grid);
+  if (fired) {
+    m.recorder = (rec) => {
+      fired((rec.reason as MosaicReason).clue);
+    };
+    m.budget = stepBudget("mosaic deduction");
+    m.wholePasses = true;
   }
-  if (rng) shuffle(shownPos, rng);
-
-  let solvedCount = 0;
-  let madeProgress = true;
-  let error = false;
-  while (solvedCount < shownPos.length && madeProgress && !error) {
-    madeProgress = false;
-    for (const pos of shownPos) {
-      const res = solveCell(
-        width,
-        height,
-        cells.clue[pos],
-        cells.full[pos] !== 0,
-        cells.empty[pos] !== 0,
-        sol,
-        pos % width,
-        Math.floor(pos / width),
-      );
-      if (res === "contradiction") {
-        error = true;
-        break;
-      }
-      if (res === "progress") {
-        solvedCount++;
-        madeProgress = true;
-      }
-    }
-  }
-
-  // Like upstream, count the determined cells only after a round that
-  // made progress.
-  let determined = 0;
-  if (madeProgress) {
-    for (let pos = 0; pos < size; pos++) {
-      if (sol.cell[pos] & STATE_MARK_MASK) determined++;
-    }
-  }
-  return { solved: determined === size, sol };
+  const grades = { [SCALE]: -1 };
+  const { entries } = mosaicLadder(dealtOf(board));
+  const impossible = runLadder(
+    m,
+    ladderTechniques(m, entries, { [SCALE]: cap }, grades),
+  );
+  const verdict: Deduced = impossible
+    ? "contradiction"
+    : grid.includes(STATE_UNMARKED)
+      ? "stuck"
+      : isAnswer(board, grid)
+        ? "solved"
+        : "contradiction";
+  return { verdict, grade: grades[SCALE] };
 }
 
 /**
- * Board-side solve (upstream `solve_game_actual`, with the comparison of two
- * numbers upstream lacks): only the clue numbers are known. Returns the
- * solution cells, or `null` when deduction stalls or contradicts.
+ * Board-side solve: only the clue numbers are known. Returns the solution
+ * cells, or `null` when deduction stalls or contradicts.
  */
 export function solveGameActual(board: MosaicBoard): Uint8Array | null {
   const cells = new Uint8Array(board.width * board.height);
-  return deduce(board, cells) === "solved" ? cells : null;
+  return deduceAt(board, cells, DIFF_NORMAL).verdict === "solved" ? cells : null;
 }
 
 /**
  * The lowest tier whose deduction finishes `board`: {@link DIFF_EASY} where
  * one number at a time does, {@link DIFF_NORMAL} where two had to be compared,
- * and `null` where the deduction stops short. The deduction compares only
- * where no number decides anything alone, so a comparison made is one needed.
+ * and `null` where the deduction stops short. The ladder compares only where
+ * no number decides anything alone, so a comparison made is one needed.
  */
 export function deductionTier(board: MosaicBoard): number | null {
-  let compared = false;
-  const finished = deduce(
+  const { verdict, grade } = deduceAt(
     board,
     new Uint8Array(board.width * board.height),
-    (firing) => {
-      if ("other" in firing) compared = true;
-    },
+    DIFF_NORMAL,
   );
-  if (finished !== "solved") return null;
-  return compared ? DIFF_NORMAL : DIFF_EASY;
+  return verdict === "solved" ? Math.max(grade, DIFF_EASY) : null;
+}
+
+/**
+ * The hint's walk over the ladder from `grid`, a copy of the player's marks,
+ * one firing a call: the one that carries on from the squares the last
+ * decided (`ladderWalk`).
+ */
+export function mosaicWalk(
+  board: MosaicBoard,
+  grid: Uint8Array,
+): () => Taken | null | "contradiction" {
+  const m = marksOf(board, grid);
+  m.budget = stepBudget("mosaic hint");
+  const { width: w, height: h } = board;
+  const block = (c: number): number[] => {
+    const out: number[] = [];
+    const x = c % w;
+    const y = (c / w) | 0;
+    for (let j = Math.max(0, y - 1); j <= Math.min(h - 1, y + 1); j++)
+      for (let i = Math.max(0, x - 1); i <= Math.min(w - 1, x + 1); i++)
+        out.push(j * w + i);
+    return out;
+  };
+  // The blocks of the numbers a firing counts.
+  const reads = ({ reasons }: Taken): number[] => {
+    const reason = reasons[0] as MosaicReason;
+    return "other" in reason
+      ? [...block(reason.clue), ...block(reason.other)]
+      : block(reason.clue);
+  };
+  const { entries } = mosaicLadder(dealtOf(board));
+  const walk = ladderWalk(m, entries, { [SCALE]: DIFF_NORMAL }, reads);
+  return () => walk.next();
 }
 
 // --- the search for a board's answers ---------------------------------------
@@ -271,13 +269,6 @@ export type MosaicAnswer = Answer<Uint8Array>;
  */
 const SEARCH_BUDGET = 2_000;
 
-/** A position of the search: each square's mark, and the square assumed since
- * the deduction last stopped on them, which is all it has to start from. */
-interface Position {
-  cells: Uint8Array;
-  tried: number | null;
-}
-
 /**
  * Count a board's answers up to two, by trial and error over the deduction:
  * where it stops, take an empty square of the number with the fewest left to
@@ -287,11 +278,11 @@ export function searchAnswers(
   board: MosaicBoard,
   budget: number = SEARCH_BUDGET,
 ): MosaicAnswer {
-  return searchBoard<Position, Uint8Array>({
-    start: { cells: new Uint8Array(board.width * board.height), tried: null },
-    deduce: ({ cells, tried }) => deduce(board, cells, null, tried),
-    assume: ({ cells }) => assumeSquare(board, cells),
-    solution: ({ cells }) => cells,
+  return searchBoard<Uint8Array, Uint8Array>({
+    start: new Uint8Array(board.width * board.height),
+    deduce: (cells) => deduceAt(board, cells, DIFF_NORMAL).verdict,
+    assume: (cells) => assumeSquare(board, cells),
+    solution: (cells) => cells,
     budget,
   });
 }
@@ -303,7 +294,7 @@ export function searchAnswers(
  * rest of the block. With no such number it is the first empty square: one no
  * number counts, which is free and so gives the board two answers.
  */
-function assumeSquare(board: MosaicBoard, cells: Uint8Array): Position[] {
+function assumeSquare(board: MosaicBoard, cells: Uint8Array): Uint8Array[] {
   const { width, height, clues } = board;
   let at = cells.indexOf(STATE_UNMARKED);
   let fewest = Number.POSITIVE_INFINITY;
@@ -321,7 +312,7 @@ function assumeSquare(board: MosaicBoard, cells: Uint8Array): Position[] {
   return [STATE_MARKED, STATE_BLANK].map((mark) => {
     const next = cells.slice();
     next[at] = mark;
-    return { cells: next, tried: at };
+    return next;
   });
 }
 
@@ -350,73 +341,59 @@ export function answerOf(state: { board: MosaicBoard }): MosaicAnswer {
 
 // --- generator --------------------------------------------------------------
 
-/** Hide clues the deduction never needed; in aggressive mode also try
- * hiding each needed clue in random order, reverting hides that break
- * solvability (upstream `hide_clues`). */
-export function hideClues(
-  width: number,
-  height: number,
-  cells: GenCells,
-  rng: RandomState,
-  aggressive: boolean,
-): void {
-  const { sol } = solveCheck(width, height, cells, rng);
-  const size = width * height;
-  const needed: number[] = [];
-  for (let pos = 0; pos < size; pos++) {
-    if (!sol.needed[pos]) cells.shown[pos] = 0;
-    else if (aggressive) needed.push(pos);
-  }
-  if (aggressive) {
-    shuffle(needed, rng);
-    for (const pos of needed) {
-      cells.shown[pos] = 0;
-      if (!solveCheck(width, height, cells, null).solved) {
-        cells.shown[pos] = 1;
-      }
-    }
-  }
-}
-
-/** An Easy board's clues, `-1` where hidden (upstream `new_game_desc`):
- * random image → clues → regenerate until a usable starting deduction exists
- * and the deduction completes → hide clues. */
-function easyClues(p: MosaicParams, rng: RandomState): Int8Array {
-  const { width, height, aggressive } = p;
+/** A random picture's clues, every one showing: each the shaded squares of
+ * its block, its own included. */
+function everyClue(p: MosaicParams, rng: RandomState): Int8Array {
+  const { width, height } = p;
   const size = width * height;
   const image = new Uint8Array(size);
-  const cells: GenCells = {
-    clue: new Int8Array(size),
-    shown: new Uint8Array(size),
-    full: new Uint8Array(size),
-    empty: new Uint8Array(size),
-  };
+  for (let i = 0; i < size; i++)
+    image[i] = randomBits(rng, 1) ? STATE_MARKED : STATE_BLANK;
+  return Int8Array.from({ length: size }, (_, pos) => {
+    const { marked } = countAround(
+      width,
+      height,
+      image,
+      pos % width,
+      Math.floor(pos / width),
+    );
+    return marked;
+  });
+}
 
+/**
+ * An Easy board's clues, `-1` where hidden: a random picture's, dealt where
+ * one number at a time finishes it, with the numbers that deduction never read
+ * hidden. With aggressive generation each number it read is then tried hidden
+ * too, in random order, and kept hidden where one number at a time still
+ * finishes.
+ */
+function easyClues(p: MosaicParams, rng: RandomState): Int8Array {
+  const { width, height, aggressive } = p;
   const attempt = retryLimit(`mosaic: generation (${width}x${height})`);
-  do {
+  for (;;) {
     attempt();
-    for (let i = 0; i < size; i++) image[i] = randomBits(rng, 1);
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const pos = y * width + x;
-        const { clue, full, empty } = populateCell(width, height, image, x, y);
-        cells.clue[pos] = clue;
-        cells.shown[pos] = 1;
-        cells.full[pos] = full ? 1 : 0;
-        cells.empty[pos] = empty ? 1 : 0;
+    const board: MosaicBoard = { width, height, clues: everyClue(p, rng) };
+    const { clues } = board;
+    const read = new Set<number>();
+    const finishes = (into: ((clue: number) => void) | null = null): boolean =>
+      deduceAt(board, new Uint8Array(width * height), DIFF_EASY, into).verdict ===
+      "solved";
+    if (!finishes((clue) => read.add(clue))) continue;
+    // Each firing reads only its own number, so the deduction that finished
+    // the board finishes it without the numbers it never read.
+    for (let pos = 0; pos < clues.length; pos++) if (!read.has(pos)) clues[pos] = -1;
+    if (aggressive) {
+      const order = [...read];
+      shuffle(order, rng);
+      for (const pos of order) {
+        const clue = clues[pos] as number;
+        clues[pos] = -1;
+        if (!finishes()) clues[pos] = clue;
       }
     }
-  } while (
-    !startPointCheck(cells, (width - 1) * (height - 1)) ||
-    !solveCheck(width, height, cells, rng).solved
-  );
-  hideClues(width, height, cells, rng, aggressive);
-
-  const clues = new Int8Array(size);
-  for (let pos = 0; pos < size; pos++) {
-    clues[pos] = cells.shown[pos] ? cells.clue[pos] : -1;
+    return clues;
   }
-  return clues;
 }
 
 /**
@@ -427,23 +404,9 @@ function easyClues(p: MosaicParams, rng: RandomState): Int8Array {
  * 16 and 1 to 3 s in runs of 6, and 0.7 s at 50×50.
  */
 const HIDING_RUN = 6;
-
 /** Which try of an Unreasonable deal starts from every clue and not from an
  * Easy board: see {@link unreasonableClues}. */
 const EVERY_CLUE_DRAW = 8;
-
-/** A random picture's clues, every one showing. */
-function everyClue(p: MosaicParams, rng: RandomState): Int8Array {
-  const { width, height } = p;
-  const size = width * height;
-  const image = new Uint8Array(size);
-  for (let i = 0; i < size; i++) image[i] = randomBits(rng, 1);
-  return Int8Array.from(
-    { length: size },
-    (_, pos) =>
-      populateCell(width, height, image, pos % width, Math.floor(pos / width)).clue,
-  );
-}
 
 /**
  * An Unreasonable board's clues: an Easy board's with more hidden by the
@@ -521,10 +484,10 @@ function unreasonableClues(p: MosaicParams, rng: RandomState): Int8Array {
 /**
  * A Normal board's clues: an Easy board's with more hidden while the whole
  * deduction still finishes, kept where one number at a time no longer does.
- * With aggressive generation every clue is tried, as an Easy board's are by
- * upstream's rule. Without it only as many are tried as the board's shorter
- * side, so the board keeps most of its numbers and a large one is dealt in
- * the time a few deductions take.
+ * With aggressive generation every clue is tried, as an Easy board's are.
+ * Without it only as many are tried as the board's shorter side, so the board
+ * keeps most of its numbers and a large one is dealt in the time a few
+ * deductions take.
  *
  * Hiding a clue never makes a board easier, so a comparison needed once is
  * needed on the board that is kept.

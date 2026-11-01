@@ -20,7 +20,6 @@ import {
   verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
-import { MOSAIC_RUNGS, type MosaicRung } from "./deduce.ts";
 import { type MosaicHint, mosaicHint, mosaicKeepTrack } from "./hint.ts";
 import {
   colors,
@@ -35,7 +34,10 @@ import {
   deductionTier,
   encodeSolution,
   findMistakes,
+  MOSAIC_RUNGS,
+  type MosaicRung,
   newDesc,
+  status,
 } from "./solver.ts";
 import {
   decodeParams,
@@ -51,7 +53,6 @@ import {
   newState,
   paramConfig,
   STATE_MARK_MASK,
-  status,
   statusbarText,
   TIERS,
   textFormat,
@@ -149,8 +150,8 @@ export const mosaicGame: Game<
       solution: encodeSolution(cells),
     })),
   // A tier below Unreasonable is what its part of the deduction finishes.
-  // The hint is the same deduction read off the player's marks (`deduce.ts`),
-  // so it is not asked as well.
+  // The hint walks the same compiled ladder from the player's marks, so it is
+  // not asked as well.
   difficulty: TIERS.contract<MosaicParams, MosaicState>({
     newState,
     deductionFinishes(state, cap) {

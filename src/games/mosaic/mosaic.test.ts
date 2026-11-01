@@ -24,6 +24,7 @@ import {
   RIGHT_DRAG,
 } from "../../engine/pointer.ts";
 import { mosaicGame } from "./index.ts";
+import { status } from "./solver.ts";
 import {
   cluesLeft,
   DIFF_NORMAL,
@@ -40,7 +41,6 @@ import {
   STATE_MARKED,
   STATE_SOLVED,
   STATE_UNMARKED,
-  status,
   statusbarText,
   textFormat,
 } from "./state.ts";

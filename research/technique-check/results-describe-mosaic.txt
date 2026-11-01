@@ -1,0 +1,8 @@
+ok  mosaic     alone                          3  sound    (want sound   )     9 queries    0.5s
+ok  mosaic     alone (planted)                3  unsound  (want unsound )     1 queries    0.0s   at clue count 0
+ok  mosaic     alone                          4  sound    (want sound   )    16 queries    1.4s
+ok  mosaic     alone (planted)                4  unsound  (want unsound )     1 queries    0.0s   at clue count 0
+ok  mosaic     compared                       3  sound    (want sound   )     9 queries    1.7s
+ok  mosaic     compared (planted)             3  unsound  (want unsound )     1 queries    0.0s   at clue count 0
+ok  mosaic     compared                       4  sound    (want sound   )    16 queries  497.6s
+ok  mosaic     compared (planted)             4  unsound  (want unsound )     1 queries    0.0s   at clue count 0

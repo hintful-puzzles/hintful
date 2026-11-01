@@ -1,51 +1,40 @@
 /**
- * Clusters solver — port of `clusters_validate` / `clusters_solver_try` /
- * `clusters_solve_game` in `puzzles/unreleased/clusters.c`.
+ * Clusters' solver: the ladder `clusters.description.yaml` states, compiled,
+ * on the engine's marks and runner (`engine/ladder-runtime.ts`), with the
+ * reason each technique records for the hint; the answer check its rules
+ * compile to; the search for a board's answers over the ladder; and the
+ * error overlay the renderer and the mistake check read.
  *
- * It is deduction, not guess-and-backtrack search:
- *   - `clustersValidate` classifies a grid COMPLETE / UNFINISHED / INVALID
- *     from local neighbor counts;
- *   - `solverTry` (difficulty 0, Easy) forces an empty cell's color whenever
- *     the opposite color would make the board INVALID — a single-cell proof by
- *     contradiction;
- *   - `solverCount` (difficulty 1, Normal) reads two tiles' counts over the
- *     squares both touch. Upstream's Normal ran the Easy fixpoint from a
- *     supposed color, a Search, which the count replaced on 2026-10-28; a board
- *     that needs it is Unreasonable, and the search for its answer is
- *     {@link answerSearch}.
- * Because the generator is solver-gated, this solver's exact verdict on every
- * intermediate board decides which puzzles exist.
- *
- * ## The `F_ERROR` contamination quirk (it decides which boards exist)
- *
- * Upstream `clusters_validate` **mutates an `F_ERROR` bit into the grid** on
- * every filled cell (set on a rule violation, cleared otherwise), and the
- * generator never masks it out: it survives the two-color fill (which only
- * rewrites cleared cells), the isolated-cell flip (`^= COLMASK` leaves bit 3
- * untouched), and the reduce-to-dots (`|= F_SINGLE`), so it reaches the
- * prune's *full-byte* `grid[i] == grid[i-1]` comparison. Two adjacent dots
- * that would prune away survive if their `F_ERROR` bits differ. So the
- * mutating validate the solver/generator use ({@link clustersValidate}) writes
- * it exactly as C does, while the play-side checks ({@link clustersStatus},
- * {@link findErrors}) do not mutate, so persisted state and the renderer stay
- * `F_ERROR`-free.
+ * Easy's techniques each refute one color of one square by the rule it would
+ * break at once, at the square or at a tile beside it. Normal's read two
+ * tiles' counts over the squares both touch. Upstream's Normal ran the Easy
+ * fixpoint from a supposed color, a Search, which the count replaced on
+ * 2026-10-28; a board that needs it is Unreasonable, and the search for its
+ * answer is {@link answerSearch}. The generator is solver-gated, so this
+ * ladder's verdict on every board it tries decides which puzzles exist.
  */
 
 import { type Answer, searchAnswers } from "../../engine/answer-search.ts";
+import { clueList, describedSpace } from "../../engine/describe-runtime.ts";
 import {
-  findingTechniques,
-  runDeductionFixpoint,
-  singleFirings,
-} from "../../engine/deduction-fixpoint.ts";
-import { deduceHintPlan as accumulateHintPlan } from "../../engine/hint-plan.ts";
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  ladderWalk,
+  runLadder,
+  TIERS as SCALE,
+  type Taken,
+} from "../../engine/ladder-runtime.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
+import * as clusters from "./clusters.compiled.ts";
 import {
   type ClustersFill,
   COLMASK,
   DIFF_TRICKY,
   F_COLOR_0,
   F_COLOR_1,
-  F_ERROR,
   F_SINGLE,
   opposite,
 } from "./state.ts";
@@ -57,6 +46,12 @@ export type ClustersStatus = typeof COMPLETE | typeof UNFINISHED | typeof INVALI
 
 const DX = [-1, 1, 0, 0];
 const DY = [0, 0, -1, 1];
+
+// --- the error overlay -------------------------------------------------------
+//
+// The overlay marks a tile whose rule is already broken on a board still
+// being filled, which no rule of the answer says; the answer check is the
+// description's rules, compiled.
 
 /** Same- and other-color orthogonal-neighbor counts of cell `(x,y)` relative
  * to color `col` (a `COLMASK` value), plus how many neighbors exist at all
@@ -109,21 +104,18 @@ function errorKind(
   return null;
 }
 
-/** Core classifier. `markGrid` writes the `F_ERROR` bit into `grid` exactly as
- * upstream does (the quirk above); `errors`, if given, collects the
- * offending cell indices (for the pure play-side checks). An empty cell (byte
- * 0) downgrades COMPLETE to UNFINISHED. */
+/** Classify `grid`: INVALID where a tile breaks a rule, else UNFINISHED where
+ * a square is empty, else COMPLETE. `errors`, if given, collects the
+ * offending cells. */
 function classify(
   grid: Uint8Array,
   w: number,
   h: number,
-  markGrid: boolean,
   errors?: number[],
 ): ClustersStatus {
-  const s = w * h;
   let anyEmpty = false;
   let anyError = false;
-  for (let i = 0; i < s; i++) {
+  for (let i = 0; i < w * h; i++) {
     if (grid[i] === 0) {
       anyEmpty = true;
       continue;
@@ -131,167 +123,161 @@ function classify(
     if (errorKind(grid, w, h, i) !== null) {
       anyError = true;
       errors?.push(i);
-      if (markGrid) grid[i] |= F_ERROR;
-    } else if (markGrid) {
-      grid[i] &= ~F_ERROR;
     }
   }
   if (anyError) return INVALID;
   return anyEmpty ? UNFINISHED : COMPLETE;
 }
 
-/** The generator/solver validate: classifies AND mutates the `F_ERROR` bit
- * into `grid` (upstream fidelity — see the module note). */
-function clustersValidate(grid: Uint8Array, w: number, h: number): ClustersStatus {
-  return classify(grid, w, h, true);
-}
-
-/** Pure classifier for the play side (executeMove / solve) — no mutation. */
+/** Whether `grid` breaks a rule, is unfinished, or is complete, read off its
+ * tiles. */
 export function clustersStatus(grid: Uint8Array, w: number, h: number): ClustersStatus {
-  return classify(grid, w, h, false);
+  return classify(grid, w, h);
 }
 
-/** The indices of every cell that breaks a rule — pure, for `findMistakes`
- * and the live-error renderer. */
+/** The indices of every cell that breaks a rule, for `findMistakes` and the
+ * live-error renderer. */
 export function findErrors(grid: Uint8Array, w: number, h: number): number[] {
   const errors: number[] = [];
-  classify(grid, w, h, false, errors);
+  classify(grid, w, h, errors);
   return errors;
 }
 
-/** Difficulty-0 deduction: for each empty cell, if coloring it one way makes
- * the board INVALID, force the other color. Returns how many cells it fixed
- * (0 = no progress). Mutates `grid` in place (including its `F_ERROR` bits). */
-function solverTry(grid: Uint8Array, w: number, h: number): number {
-  const s = w * h;
-  let ret = 0;
-  for (let i = 0; i < s; i++) {
-    if (grid[i] !== 0) continue;
-    for (let d = 0; d <= 1; d++) {
-      grid[i] = d ? F_COLOR_1 : F_COLOR_0;
-      if (clustersValidate(grid, w, h) === INVALID) {
-        grid[i] = d ? F_COLOR_0 : F_COLOR_1; // forced to the opposite color
-        ret++;
-        break;
-      }
-      grid[i] = 0; // no contradiction — undo and try the other color
-    }
-  }
-  return ret;
+// --- the described ladder ------------------------------------------------------
+
+/** Which rule a refuted coloring breaks. */
+export type ClustersRuleKind = "surrounded" | "dotOvercount" | "reachTwo";
+
+/** The rule violation a refuted coloring runs into: `cell` is where the
+ * board breaks (the tentatively-colored cell itself, or a neighbor). */
+export interface ClustersContradiction {
+  kind: ClustersRuleKind;
+  cell: number;
 }
 
-/** The empty orthogonal neighbors of cell `i`. */
-function emptyAround(grid: Uint8Array, w: number, h: number, i: number): number[] {
-  const x = i % w;
-  const y = (i - x) / w;
-  const out: number[] = [];
-  for (let d = 0; d < 4; d++) {
-    const nx = x + DX[d];
-    const ny = y + DY[d];
-    if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-    if (grid[ny * w + nx] === 0) out.push(ny * w + nx);
-  }
-  return out;
+export type ClustersReason =
+  | { kind: "direct"; at: ClustersContradiction }
+  /** Tile `b`'s count over the squares it shares with tile `a` settles
+   * `a`'s other empty neighbors: `full` where `a`'s last tile of its color
+   * must be among the shared squares, `short` where at most `most` of them
+   * can take `a`'s color and `a` needs every other. */
+  | { kind: "count"; a: number; b: number; shared: number[]; form: "full" }
+  | {
+      kind: "count";
+      a: number;
+      b: number;
+      shared: number[];
+      form: "short";
+      most: number;
+    };
+
+/** The rungs a hint step can be: the reasons' kinds. */
+export const CLUSTERS_RUNGS = ["direct", "count"] as const;
+export type ClustersRung = (typeof CLUSTERS_RUNGS)[number];
+
+/** One forced move: coloring `index` with `refuted` breaks `reason`, so it
+ * must be `fill`. */
+export interface ClustersDeduction {
+  index: number;
+  fill: ClustersFill;
+  refuted: ClustersFill;
+  reason: ClustersReason;
 }
 
-/** How many of tile `i`'s empty neighbors can still take its color: at least
- * `lo` and at most `hi`. A dot takes exactly one tile of its color, and any
- * other tile at least two. */
-function colorRange(
+/** The rule a tile breaks with `room` squares beside it that hold or may hold
+ * its color: none is surrounded, one is too few for a tile without a dot. */
+const starved = (room: number): ClustersRuleKind =>
+  room < 1 ? "surrounded" : "reachTwo";
+
+/** The board's dots as the description reads them: where each is and its
+ * color. */
+function dealtOf(grid: Uint8Array): clusters.Dealt {
+  const at: number[] = [];
+  const v: number[] = [];
+  grid.forEach((tile, i) => {
+    if (!(tile & F_SINGLE)) return;
+    at.push(i);
+    v.push(tile & COLMASK);
+  });
+  return { dot: clueList(at, v, grid.length) };
+}
+
+/** The ladder over the dots `dealt` deals. */
+function clustersLadder(dealt: clusters.Dealt): Ladder {
+  const direct = (kind: ClustersRuleKind, cell: number): ClustersReason => ({
+    kind: "direct",
+    at: { kind, cell },
+  });
+  return describedLadder(clusters, {
+    broken: compiledRung(clusters.broken, dealt, () => {
+      throw new Error("a broken tile makes no fact, only a contradiction");
+    }),
+    refute: compiledRung(clusters.refute, dealt, ({ x, d, n, e, r }) =>
+      direct(n === x || e !== d ? starved(r) : "dotOvercount", n),
+    ),
+    countFull: compiledRung(
+      clusters.countFull,
+      dealt,
+      ({ a, b, S }): ClustersReason => ({
+        kind: "count",
+        a,
+        b,
+        shared: [...S],
+        form: "full",
+      }),
+    ),
+    countShort: compiledRung(
+      clusters.countShort,
+      dealt,
+      ({ a, b, S, most }): ClustersReason => ({
+        kind: "count",
+        a,
+        b,
+        shared: [...S],
+        form: "short",
+        most,
+      }),
+    ),
+  });
+}
+
+/** The values a square may hold: either color. */
+const DOMAIN = (1 << F_COLOR_0) | (1 << F_COLOR_1);
+
+/** The marks the ladder reads, on `colors`, each square's color or 0. */
+function marksOf(colors: Uint8Array, w: number, h: number): CellMarks {
+  const m = new CellMarks(describedSpace(clusters.units, w, h), DOMAIN, colors);
+  m.seed(colors);
+  return m;
+}
+
+/** Whether every square of `grid` holds a color and the rules hold of them,
+ * by the rules the description compiles to. */
+export function isAnswer(grid: Uint8Array, w: number, h: number): boolean {
+  return clusters.isAnswer(
+    grid.map((tile) => tile & COLMASK),
+    describedSpace(clusters.units, w, h),
+    dealtOf(grid),
+  );
+}
+
+/** How a run of the ladder over `colors` ended. */
+function verdictOf(
+  impossible: boolean,
+  colors: Uint8Array,
   grid: Uint8Array,
   w: number,
   h: number,
-  i: number,
-): { open: number[]; lo: number; hi: number } {
-  const col = grid[i] & COLMASK;
-  const x = i % w;
-  const { same } = neighborCounts(grid, w, h, x, (i - x) / w, col);
-  const open = emptyAround(grid, w, h, i);
-  if (grid[i] & F_SINGLE) return { open, lo: 1 - same, hi: 1 - same };
-  return { open, lo: Math.max(0, 2 - same), hi: open.length };
+): ClustersStatus {
+  if (impossible) return INVALID;
+  if (colors.includes(0)) return UNFINISHED;
+  return isAnswer(grid, w, h) ? COMPLETE : INVALID;
 }
 
 /**
- * Normal's rung: two tiles' counts over the squares both touch. Tile `b`
- * bounds how many of those shared squares can take tile `a`'s color, and that
- * settles `a`'s other empty neighbors: where every one `a` may still take is
- * bound to be among the shared squares (`a` a dot whose one is there), the
- * others take the other color; where too few can be there for what `a` needs,
- * the others take `a`'s color. Every premise is a count of colors on the
- * board, and nothing is supposed. Yields one deduction for each square
- * settled, in scan order of `a`, then `b`. Leaves `grid` unchanged.
- */
-function* countDeductions(
-  grid: Uint8Array,
-  w: number,
-  h: number,
-): Generator<ClustersDeduction> {
-  const s = w * h;
-  const tiles: number[] = [];
-  for (let i = 0; i < s; i++)
-    if (grid[i] & COLMASK && emptyAround(grid, w, h, i).length) tiles.push(i);
-  for (const a of tiles) {
-    const ca = (grid[a] & COLMASK) as ClustersFill;
-    const A = colorRange(grid, w, h, a);
-    for (const b of tiles) {
-      if (b === a) continue;
-      const shared = A.open.filter((u) => emptyAround(grid, w, h, b).includes(u));
-      if (shared.length === 0) continue;
-      const rest = A.open.filter((u) => !shared.includes(u));
-      if (rest.length === 0) continue;
-      // How many shared squares can take `a`'s color, by `b`'s count alone.
-      const B = colorRange(grid, w, h, b);
-      const bOther = B.open.filter((u) => !shared.includes(u)).length;
-      const sameColor = (grid[b] & COLMASK) === ca;
-      const least = sameColor
-        ? Math.max(0, B.lo - bOther)
-        : Math.max(0, shared.length - B.hi);
-      const most = sameColor
-        ? Math.min(shared.length, B.hi)
-        : shared.length - Math.max(0, B.lo - bOther);
-      let fill: ClustersFill | null = null;
-      let form: "full" | "short" | null = null;
-      // `b` must add something: `a`'s count alone is the Easy rung's.
-      if (A.hi > 0 && least >= A.hi) {
-        fill = opposite(ca);
-        form = "full";
-      } else if (A.lo - most >= rest.length && most < shared.length) {
-        fill = ca;
-        form = "short";
-      }
-      if (fill === null || form === null) continue;
-      for (const index of rest)
-        yield {
-          index,
-          fill,
-          refuted: opposite(fill),
-          reason: { kind: "count", a, b, shared, form, most },
-        };
-    }
-  }
-}
-
-/** Normal's rung for the solver: colors every square
- * {@link countDeductions} settles. Mutates `grid` in place. */
-function solverCount(grid: Uint8Array, w: number, h: number): number {
-  let ret = 0;
-  for (const d of countDeductions(grid, w, h)) {
-    if (grid[d.index] !== 0) continue;
-    grid[d.index] = d.fill;
-    ret++;
-  }
-  return ret;
-}
-
-/**
- * Run the solver to a fixpoint on the shared ordered technique ladder
- * (`engine/deduction-fixpoint.ts`). `maxdiff` 0 uses `solverTry` only; ≥ 1 adds
- * `solverCount`. Returns the final verdict — COMPLETE if fully solved,
- * INVALID on a contradiction, UNFINISHED if it gets stuck. Mutates `grid`.
- *
- * `clustersValidate` both stops the loop *and* supplies the verdict, while the
- * runner's `settled` hook is a boolean, so the verdict rides out in a local:
- * `settled` runs exactly where upstream's validate call ran, once per iteration.
+ * Run the ladder to a fixpoint capped at tier `maxdiff`, coloring `grid`'s
+ * empty squares in place, and say how it ended: COMPLETE where it solved the
+ * board, INVALID on a contradiction, UNFINISHED where it stopped short.
  */
 export function solveGame(
   grid: Uint8Array,
@@ -299,21 +285,15 @@ export function solveGame(
   h: number,
   maxdiff: number,
 ): ClustersStatus {
-  // The last verdict `settled` saw — UNFINISHED when the ladder stops because
-  // nothing fired rather than because the board settled.
-  let status: ClustersStatus = UNFINISHED;
-  runDeductionFixpoint({
-    techniques: [
-      { id: "single-cell-refutation", tier: 0, run: () => solverTry(grid, w, h) },
-      { id: "count", tier: 1, run: () => solverCount(grid, w, h) },
-    ],
-    maxTier: maxdiff,
-    settled: () => {
-      status = clustersValidate(grid, w, h);
-      return status !== UNFINISHED;
-    },
-  });
-  return status;
+  const colors = grid.map((tile) => tile & COLMASK);
+  const m = marksOf(colors, w, h);
+  const { entries } = clustersLadder(dealtOf(grid));
+  const impossible = runLadder(
+    m,
+    ladderTechniques(m, entries, { [SCALE]: maxdiff }, {}),
+  );
+  for (let i = 0; i < grid.length; i++) if (grid[i] === 0) grid[i] = colors[i];
+  return verdictOf(impossible, colors, grid, w, h);
 }
 
 /** How many positions {@link answerSearch} may try. Lowering it refuses
@@ -326,7 +306,7 @@ const ANSWER_BUDGET = 5000;
 /**
  * The answers of the board `givens` holds, counted to two by trial and error
  * over the whole ladder: where it stops, an empty square is tried in each
- * color and the ladder run again. The answer is the board's colors.
+ * color and the ladder run again. The answer is the board's tiles.
  */
 export function answerSearch(
   givens: Uint8Array,
@@ -349,141 +329,48 @@ export function answerSearch(
         return copy;
       });
     },
-    solution: (grid) => grid.map((tile) => tile & ~F_ERROR),
+    solution: (grid) => grid.slice(),
     budget,
   });
 }
 
 // --- hint plan --------------------------------------------------------------
-//
-// A *parallel recorder* over the same contradiction deduction
-// (docs/hints-candidates.md § "A candidate game off the shared walk"): separate code
-// reusing this module's primitives, so the generator's `solveGame` path above
-// stays byte-identical by construction — no recorder flag threads through it.
-// Where the generator only needs *that* a coloring is refuted, the hint also
-// needs *why* (which rule trips, at which cell), so each firing re-derives its
-// contradiction in detail.
-//
-// The plan discipline deliberately differs from `solveGame`'s pass-sweeps:
-// firings restart the row-major scan after each firing (one deduction = one
-// plan step, cheapest first). Both rungs are deterministic, so a recomputed
-// plan continues exactly where the previous one left off. Confluence makes
-// the different order safe: a refuted coloring stays refuted as more cells
-// fill in (the three error conditions are monotone — filling cells can only
-// create errors, never cure them), and a count's bounds only narrow, so any
-// scan order reaches the same verdict.
-
-/** Which of `errorKind`'s three rules a refuted coloring breaks. */
-export type ClustersRuleKind = "surrounded" | "dotOvercount" | "reachTwo";
-
-/** The rule violation a refuted coloring runs into: `cell` is where the
- * board breaks (the tentatively-colored cell itself, or a neighbor). */
-export interface ClustersContradiction {
-  kind: ClustersRuleKind;
-  cell: number;
-}
-
-export type ClustersReason =
-  | { kind: "direct"; at: ClustersContradiction }
-  /** Tile `b`'s count over the squares it shares with tile `a` settles
-   * `a`'s other empty neighbors: `full` where `a`'s last tile of its color
-   * must be among them, `short` where at most `most` of them can take `a`'s
-   * color and `a` needs every other. */
-  | {
-      kind: "count";
-      a: number;
-      b: number;
-      shared: number[];
-      form: "full" | "short";
-      most: number;
-    };
-
-/** The rungs a hint step can be: the reasons' kinds. */
-export const CLUSTERS_RUNGS = ["direct", "count"] as const;
-export type ClustersRung = (typeof CLUSTERS_RUNGS)[number];
-
-/** One forced move: coloring `index` with `refuted` breaks `reason`, so it
- * must be `fill`. */
-export interface ClustersDeduction {
-  index: number;
-  fill: ClustersFill;
-  refuted: ClustersFill;
-  reason: ClustersReason;
-}
 
 /** The whole remaining plan. `verdict` COMPLETE means the deductions solve
- * the board — which also *certifies the position*: the error conditions are
- * monotone, so a complete zero-error grid is the unique solution, and a
- * position containing a wrong tile cannot end COMPLETE.
+ * the board — which also *certifies the position*: the rules only break more
+ * as squares fill, so a complete grid the rules hold of is the unique
+ * solution, and a position containing a wrong tile cannot end COMPLETE.
  *
  * On a board this deduction solves from its givens, which every dealt board
  * is, such a position ends INVALID and never UNFINISHED. Each refutation the
  * solve from the givens used still holds with more cells filled, so the plan
  * goes on placing solution colors until it meets the wrong tile, and that
- * tile's own refutation is then on the board: an error at once, or one the
- * single-cell forcings run into. UNFINISHED is left for a board the deduction
- * cannot finish from its givens, which only a typed-in description can be. */
+ * tile's own refutation is then on the board: a broken tile at once, or one
+ * the single-cell refutations run into. UNFINISHED is left for a board the
+ * deduction cannot finish from its givens, which only a typed-in description
+ * can be. */
 export interface ClustersHintPlan {
   verdict: ClustersStatus;
   deductions: ClustersDeduction[];
 }
 
-/** After filling cell `i` on an otherwise error-free board, a new violation
- * can only sit at `i` or an orthogonal neighbor (the three error conditions
- * read one cell's neighborhood). Returns the first, preferring `i` itself. */
-function contradictionAround(
-  grid: Uint8Array,
+/**
+ * Walk the ladder from the player's current grid, one firing at a time, the
+ * one that carries on from the squares the last colored (`ladderWalk`), and
+ * record each square it colors with the rule its other color would break, or
+ * the counts that settle it: the data a hint narrates. A count firing colors
+ * several squares, each a deduction of its own with the firing's reason.
+ * Operates on a copy.
+ */
+export function deduceHintPlan(
+  grid0: Uint8Array,
   w: number,
   h: number,
-  i: number,
-): ClustersContradiction | null {
-  const kind = errorKind(grid, w, h, i);
-  if (kind) return { kind, cell: i };
-  const x = i % w;
-  const y = (i - x) / w;
-  for (let d = 0; d < 4; d++) {
-    const nx = x + DX[d];
-    const ny = y + DY[d];
-    if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-    const n = ny * w + nx;
-    const nKind = errorKind(grid, w, h, n);
-    if (nKind) return { kind: nKind, cell: n };
-  }
-  return null;
-}
-
-/** Every single-cell contradiction firing in row-major order (red tried
- * first, as `solverTry` does). Leaves `grid` unchanged. */
-function* directDeductions(
-  grid: Uint8Array,
-  w: number,
-  h: number,
-): Generator<ClustersDeduction> {
-  const s = w * h;
-  for (let i = 0; i < s; i++) {
-    if (grid[i] !== 0) continue;
-    for (let d = 0; d <= 1; d++) {
-      const refuted: ClustersFill = d ? F_COLOR_1 : F_COLOR_0;
-      grid[i] = refuted;
-      const at = contradictionAround(grid, w, h, i);
-      grid[i] = 0;
-      if (at) {
-        yield {
-          index: i,
-          fill: opposite(refuted),
-          refuted,
-          reason: { kind: "direct", at },
-        };
-        break;
-      }
-    }
-  }
-}
-
-/** The cells a deduction's premise reads, which a hint plan continues from:
- * the cell, and the cell whose rule its trial broke or the two tiles whose
- * counts it reads, each with the cells beside it. */
-function readsOf(d: ClustersDeduction, w: number, h: number): number[] {
+): ClustersHintPlan {
+  const grid = grid0.slice();
+  const colors = grid.map((tile) => tile & COLMASK);
+  const m = marksOf(colors, w, h);
+  m.budget = stepBudget("clusters hint");
   const around = (c: number): number[] => {
     const x = c % w;
     const y = (c - x) / w;
@@ -495,50 +382,31 @@ function readsOf(d: ClustersDeduction, w: number, h: number): number[] {
       ...(y < h - 1 ? [c + w] : []),
     ];
   };
-  const { reason } = d;
-  const read = reason.kind === "direct" ? [reason.at.cell] : [reason.a, reason.b];
-  return [...around(d.index), ...read.flatMap(around)];
-}
-
-/** Run the deduction from the player's current grid, recording every forced
- * move in order with the rule its refuted coloring would break, or the counts
- * that settle it — the data a hint narrates. Single-cell firings lead; a
- * stall falls back to the two-tile count. Operates on a clone. */
-export function deduceHintPlan(
-  grid0: Uint8Array,
-  w: number,
-  h: number,
-): ClustersHintPlan {
-  // Hint-only path, so the budget is unconditional.
-  const budget = stepBudget("clusters hint");
-  const board = grid0.slice();
-  let last: ClustersDeduction | null = null;
-  const pass = singleFirings({
-    techniques: findingTechniques<ClustersDeduction>(
-      [
-        { id: "direct", tier: 0, find: () => directDeductions(board, w, h) },
-        { id: "count", tier: 1, find: () => countDeductions(board, w, h) },
-      ],
-      (d) => {
-        board[d.index] = d.fill;
-        last = d;
-      },
-      { reads: (d) => readsOf(d, w, h), writes: (d) => [d.index] },
-    ),
-    budget,
-    // A plan works on the clusters beside its last fill before it moves on.
-    continuing: true,
-  });
-  const { status, plan } = accumulateHintPlan<
-    Uint8Array,
-    ClustersDeduction,
-    ClustersStatus
-  >({
-    board,
-    status: (grid) => clustersStatus(grid, w, h),
-    incomplete: UNFINISHED,
-    next: () => (pass.next() ? last : null),
-    budget,
-  });
-  return { verdict: status, deductions: plan };
+  // The squares a firing colors, and the tile whose rule its other color
+  // breaks or the two tiles whose counts it reads, each with the squares
+  // beside it.
+  const reads = ({ facts, reasons }: Taken): number[] => {
+    const reason = reasons[0] as ClustersReason;
+    const read = reason.kind === "direct" ? [reason.at.cell] : [reason.a, reason.b];
+    const own: number[] = [];
+    for (let i = 0; i < facts.length; i += 3) own.push(facts[i + 1] as number);
+    return [...own, ...read].flatMap(around);
+  };
+  const { entries } = clustersLadder(dealtOf(grid));
+  const walk = ladderWalk(m, entries, { [SCALE]: DIFF_TRICKY }, reads);
+  const deductions: ClustersDeduction[] = [];
+  let f = walk.next();
+  for (; f !== null && f !== "contradiction"; f = walk.next())
+    for (let i = 0; i < f.facts.length; i += 3) {
+      const index = f.facts[i + 1] as number;
+      const fill = f.facts[i + 2] as ClustersFill;
+      grid[index] = fill;
+      deductions.push({
+        index,
+        fill,
+        refuted: opposite(fill),
+        reason: f.reasons[i / 3] as ClustersReason,
+      });
+    }
+  return { verdict: verdictOf(f === "contradiction", colors, grid, w, h), deductions };
 }

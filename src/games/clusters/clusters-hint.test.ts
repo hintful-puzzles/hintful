@@ -103,26 +103,26 @@ const pinned = describeHintPins({
     countShort: counts("short"),
   },
   pins: {
-    /** Held on 6 of 449 positions walked. */
+    /** Held on 12 of 431 positions walked. */
     surroundedAtTarget: "7x7dt:bcAbeICacDCIaca",
-    /** Held on 151 of 449 positions walked. */
+    /** Held on 128 of 431 positions walked. */
     reachTwoAtTarget: "7x7dt:cGadAadGgKbb",
-    /** Held on 135 of 449 positions walked. */
+    /** Held on 131 of 431 positions walked. */
     dotOvercount: {
       id: "7x7dt:cGadAadGgKbb",
       moves: [{ kind: "paint", cells: [{ index: 3, fill: 1 }] }],
     },
-    /** Held on 16 of 449 positions walked. */
+    /** Held on 14 of 431 positions walked. */
     countFull: "7x7dt:DgfcfBEdHe",
-    /** Held on 3 of 449 positions walked. */
+    /** Held on 2 of 431 positions walked. */
     countShort: {
-      id: "7x7dt:CCaHCaejAaiAd",
+      id: "7x7dt:BaAaAckAbDafDaDaea",
       moves:
-        '[{"kind":"paint","cells":[{"index":13,"fill":1}]},{"kind":"paint","cells":[{"index":42,"fill":1}]},{"kind":"paint","cells":[{"index":28,"fill":2}]},{"kind":"paint","cells":[{"index":21,"fill":2}]},{"kind":"paint","cells":[{"index":7,"fill":1}]},{"kind":"paint","cells":[{"index":0,"fill":1}]},{"kind":"paint","cells":[{"index":1,"fill":1}]},{"kind":"paint","cells":[{"index":8,"fill":1}]},{"kind":"paint","cells":[{"index":15,"fill":1}]},{"kind":"paint","cells":[{"index":29,"fill":2}]},{"kind":"paint","cells":[{"index":36,"fill":2}]},{"kind":"paint","cells":[{"index":43,"fill":1}]},{"kind":"paint","cells":[{"index":37,"fill":2}]},{"kind":"paint","cells":[{"index":10,"fill":1}]}]',
+        '[{"kind":"paint","cells":[{"index":0,"fill":2}]},{"kind":"paint","cells":[{"index":6,"fill":2}]},{"kind":"paint","cells":[{"index":7,"fill":2}]},{"kind":"paint","cells":[{"index":9,"fill":1}]},{"kind":"paint","cells":[{"index":10,"fill":2}]},{"kind":"paint","cells":[{"index":11,"fill":1}]},{"kind":"paint","cells":[{"index":12,"fill":1}]},{"kind":"paint","cells":[{"index":13,"fill":2}]},{"kind":"paint","cells":[{"index":14,"fill":2}]},{"kind":"paint","cells":[{"index":15,"fill":2}]},{"kind":"paint","cells":[{"index":16,"fill":2}]},{"kind":"paint","cells":[{"index":17,"fill":2}]},{"kind":"paint","cells":[{"index":18,"fill":2}]},{"kind":"paint","cells":[{"index":25,"fill":2}]},{"kind":"paint","cells":[{"index":34,"fill":1}]},{"kind":"paint","cells":[{"index":32,"fill":2}]},{"kind":"paint","cells":[{"index":35,"fill":2}]},{"kind":"paint","cells":[{"index":40,"fill":2}]},{"kind":"paint","cells":[{"index":41,"fill":1}]},{"kind":"paint","cells":[{"index":39,"fill":2}]},{"kind":"paint","cells":[{"index":47,"fill":2}]},{"kind":"paint","cells":[{"index":46,"fill":2}]},{"kind":"paint","cells":[{"index":30,"fill":1}]},{"kind":"paint","cells":[{"index":21,"fill":2}]},{"kind":"paint","cells":[{"index":28,"fill":2}]}]',
     },
-    /** Held on 449 of 449 positions walked. */
+    /** Held on 431 of 431 positions walked. */
     direct: "7x7dt:cGadAadGgKbb",
-    /** Held on 293 of 449 positions walked. */
+    /** Held on 251 of 431 positions walked. */
     count: "7x7dt:DgfcfBEdHe",
   },
 });

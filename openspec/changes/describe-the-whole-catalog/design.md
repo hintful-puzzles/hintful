@@ -197,7 +197,7 @@ Measured 2026-11-01. A candidate a step takes on is named in its row.
 | **A technique's tier stated in the description** | Done: every compiled ladder entry carries its tier. Rect's `TIER_RUNGS` is a hand list of the same thing | Retires with Rect, in step 9 |
 | **The soundness checker ported to TypeScript** | Done before this change | Nothing to do |
 | **The hint's step kinds derived** | Each described game keeps a `*_RUNGS` list for `Game.hintRungs` beside the compiled `LadderId`; they differ where a technique narrates two ways (Unequal's `sign` is `greater` and `lesser`) | Step 1 measures whether the reason kinds a pairing table builds can give the list; declined if a reason kind is not a technique's |
-| **`Game.rulesOut` from the rules** | Light Up, Star Battle and Tents declare what a placement rules out for the auto-cross aid; their rules imply it | Not measured; step 4 measures it on Star Battle |
+| **`Game.rulesOut` from the rules** | Light Up, Star Battle and Tents declare what a placement rules out for the auto-cross aid; their rules imply it | Declined in step 4: on Star Battle the compiled `around`, `fullLine` and `fullRegion` give what the hand rule crosses on every consistent board, but stop at an inconsistent one, where the hand rule still crosses round a star placed beside another (`describe-the-king-move-games/design.md`) |
 | **`placed` over every unit** | Solo writes its own because the library's reads rows and columns | Taken, in step 1 |
 
 ## Decisions made here
@@ -326,10 +326,10 @@ proposal re-checks this survey's figures.
 | 1 | `describe-a-board-beyond-the-latin-square` | R; `placed` over every unit; the Latin sentences naming a reason's unit | Unruly, Seismic; Solo's residue | Solo's wrapper and pairing plumbing, the 35 library rows, Solo's and Towers' sentence copies |
 | 2 | `check-the-answer-from-the-rules` | rules compiled to a completion check the engine calls | the eight described, and step 1's | each game's hand-written answer check |
 | 3 | `describe-moves-and-finishes`, split by move shape into it, `describe-guarded-moves`, `describe-pushes-blocks-and-solids` and `describe-components-and-open-domains` | a position runtime: guarded moves, a finish, a lose state, dead-end claims checked sound, the compiled move relation fed to the planners | the twelve planning games, Flip, Untangle | each game's move legality and finish; the planners' hand-built move lists |
-| 4 | `describe-the-king-move-games` | N8, S, W as a clue kind | Star Battle, Mosaic, Clusters | Mosaic's upstream `solveCheck` |
+| 4 | `describe-the-king-move-games` | N8, S | Star Battle, Mosaic, Clusters | Mosaic's upstream `solveCheck` |
 | 5 | `describe-revealed-clues` | X | Guess, Mines, Black Box | `minesolve`, if the measured deal cost allows |
 | 6 | `describe-on-a-graph` | G (a dealt graph) | Map | `engine/wing.ts`'s solver half; the candidate walk indexes elements, not grid cells |
-| 7 | `describe-runs-sightlines-and-looks` | Q, L, P, tile marks, a brick-wall space | ABCD, Sticks, Magnets, Light Up, Bricks | Light Up's exception in the fixpoint header |
+| 7 | `describe-runs-sightlines-and-looks` | Q, L, P, W as a clue kind, tile marks, a brick-wall space | ABCD, Sticks, Magnets, Light Up, Bricks | Light Up's exception in the fixpoint header |
 | 8 | `describe-connectivity` | C, a direction step, border vertices, relation marks | Singles, Range, Rome, Slant, Boats | `firing-replay.ts`, if Rome was its last reader |
 | 9 | `describe-edges-and-divisions` | E, D | Separate, Palisade, Dominosa, Rect, Galaxies, Filling | Rect's `TIER_RUNGS`, Dominosa's `firstFiring` |
 | 10 | `describe-lines-and-loops` | E on lines, G derived and tiled, M on edges | Path, Pearl, Tracks, Spokes, Bridges, Net, Tents, Loopy | the runner's `prerequisite` and `fallback` |

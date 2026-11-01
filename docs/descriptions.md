@@ -227,6 +227,16 @@ makes each fact as it concludes it, through every binding. That reaches the
 same fixpoint, because a fact concluded on marks a firing has narrowed still
 holds.
 
+**So a name bound before a loop holds the marks of that moment.** On the
+solve path the bindings inside the loop make facts as they go, so a name
+bound outside it, read beside a fresh read of the marks inside it, reads two
+moments, and the conclusion can be false of both. Bind a name that reads the
+marks after the binder it is compared across: Mosaic's `compared` binds the
+first number's need after the loop over its partners, and bound before it,
+the checker found boards it gave two answers. A name that reads only what
+the board deals, or that nothing later compares with a fresh read, may be
+bound outside (Star Battle's `neededLine`).
+
 **What a statement costs** turns on the shapes the compiler recognizes. An
 author writing for speed uses these:
 
@@ -240,7 +250,10 @@ author writing for speed uses these:
   before(x, S)` over the filling's own set, and a `sum` or `prod` bound,
   each directly or through a definition or `=` name (Towers' `arrangement`,
   Keen's `makes`). The rest of the `where` is read only once a filling is
-  whole.
+  whole. A `sum` bound prunes from both sides, so state a count over a
+  filling as a sum of its values: Star Battle's `fits` asks for `n` stars as
+  `sum(x in S of f(x)) = 2 * |S| - n`, a star being 1 and an empty square 2,
+  where a `count` of the stars would be read only once the filling was whole.
 - **Ask a per-cell question as an `exists fill` whose only read of the loops
   around it is its pin** `f(x) = t`: it is then enumerated once, not once per
   cell and value.
@@ -281,6 +294,11 @@ uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
   steps and never one harder than the ladder's own next firing. It is
   `singleFirings`' continuing driver, so the continuity guard measures it as
   it does every other ladder's.
+- **A recorded run takes one firing a pass**, the order a hint says them
+  in. A caller that asks only which firings a solve made, as Mosaic's Easy
+  deal asks which numbers it read, sets `wholePasses` and takes every firing
+  of a pass, as the solve path does: one a pass reads the board again for
+  each.
 - **A recording run offers the premise audit its replay** through
   `ladderReplay`: the game says how to build fresh marks from the values
   placed and its techniques on them, and `runLadder` marks each firing. A
@@ -370,8 +388,13 @@ the rules. What a small board cannot cover:
   the results as unchecked.
 - **A world or a kind a small board cannot hold is checked on nothing**,
   whatever the verdict, and the results say so (`--` lines). Such a reading
-  (Mathrax's quotient) rests on the answer check and the comparison with the
-  code it replaced.
+  (Mathrax's quotient, Star Battle at two and three stars) rests on the
+  answer check and the comparison with the code it replaced.
+- **A filling of a set the marks decide is enumerated over every cell that
+  may be in it**, so its cost doubles with each: Star Battle's `fill` of a
+  region's open squares takes minutes. Each value of a technique's first
+  binder is one query, built as it runs. `CHECK_TECHNIQUES` narrows a run to
+  some techniques, by id.
 
 A description with variations is checked in each world it deals, on the
 plain board and each ruleset's, and a technique must be sound in every one

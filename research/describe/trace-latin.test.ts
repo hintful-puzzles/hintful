@@ -12,13 +12,16 @@ import type { PresetMenu } from "../../src/engine/game.ts";
 import { presetMenu } from "../../src/engine/param-label.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import { adjacentGame } from "../../src/games/adjacent/index.ts";
+import { clustersGame } from "../../src/games/clusters/index.ts";
 import { groupGame } from "../../src/games/group/index.ts";
 import { keenGame } from "../../src/games/keen/index.ts";
 import { mathraxGame } from "../../src/games/mathrax/index.ts";
+import { mosaicGame } from "../../src/games/mosaic/index.ts";
 import { saladGame } from "../../src/games/salad/index.ts";
 import { seismicGame } from "../../src/games/seismic/index.ts";
 import { soloGame } from "../../src/games/solo/index.ts";
 import { DIFF_INTERSECT, DIFF_SET, SYMM_NONE } from "../../src/games/solo/state.ts";
+import { starbattleGame } from "../../src/games/starbattle/index.ts";
 import { towersGame } from "../../src/games/towers/index.ts";
 import { unequalGame } from "../../src/games/unequal/index.ts";
 import { unrulyGame } from "../../src/games/unruly/index.ts";
@@ -37,6 +40,9 @@ const GAMES: [string, AnyGame][] = [
   ["solo", soloGame],
   ["unruly", unrulyGame],
   ["seismic", seismicGame],
+  ["starbattle", starbattleGame],
+  ["mosaic", mosaicGame],
+  ["clusters", clustersGame],
 ];
 
 /** Boards beyond the presets: Killer at other sizes and tiers, and with X. */

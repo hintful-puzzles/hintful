@@ -113,15 +113,11 @@ export interface BoxSingleBinding {
 }
 
 const boxSingleFacts: number[] = [];
-let boxSingleCands = new Int32Array(0);
 
 export function boxSingle(b: Marks, sp: GridSpace, fire: Fire<BoxSingleBinding> | null): number {
   const facts = boxSingleFacts;
   let fired = 0;
   let changed = false;
-  if (boxSingleCands.length < sp.cells.length) boxSingleCands = new Int32Array(sp.cells.length);
-  const cands = boxSingleCands;
-  cands.fill(-1);
   const _a16 = sp.boxes;
   for (let _i17 = 0; _i17 < _a16.length; _i17++) {
     const v_u = _a16[_i17];
@@ -175,7 +171,6 @@ export function boxSingle(b: Marks, sp: GridSpace, fire: Fire<BoxSingleBinding> 
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ u: v_u, placed: v_placed, d: v_d, n: v_n }, facts)) return 1;
-          cands.fill(-1);
         }
       }
     }
@@ -191,16 +186,12 @@ export interface CageSingleBinding {
 }
 
 const cageSingleFacts: number[] = [];
-let cageSingleCands = new Int32Array(0);
 
 export function cageSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSingleBinding> | null): number {
   const _g52: number[] = [];
   const facts = cageSingleFacts;
   let fired = 0;
   let changed = false;
-  if (cageSingleCands.length < sp.cells.length) cageSingleCands = new Int32Array(sp.cells.length);
-  const cands = cageSingleCands;
-  cands.fill(-1);
   const _a50 = cl.cage.parts;
   for (let _i51 = 0; _i51 < _a50.length; _i51++) {
     const v_r = _a50[_i51];
@@ -240,7 +231,6 @@ export function cageSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSi
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ r: v_r, K: v_K, c: v_c, t: v_t }, facts)) return 1;
-        cands.fill(-1);
       }
     }
   }
@@ -257,7 +247,6 @@ export interface RegionRuleBinding {
 }
 
 const regionRuleFacts: number[] = [];
-let regionRuleCands = new Int32Array(0);
 
 export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionRuleBinding> | null): number {
   const _g131: number[] = [];
@@ -266,9 +255,6 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
   const facts = regionRuleFacts;
   let fired = 0;
   let changed = false;
-  if (regionRuleCands.length < sp.cells.length) regionRuleCands = new Int32Array(sp.cells.length);
-  const cands = regionRuleCands;
-  cands.fill(-1);
   const _a129 = union(union(sp.rows, sp.cols), sp.boxes);
   for (let _i130 = 0; _i130 < _a129.length; _i130++) {
     const v_u = _a129[_i130];
@@ -434,7 +420,6 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ u: v_u, W: v_W, L: v_L, s: v_s, R: v_R, t: v_t }, facts)) return 1;
-        cands.fill(-1);
       }
     }
   }
@@ -1230,15 +1215,11 @@ export interface IntersectBinding {
 }
 
 const intersectFacts: number[] = [];
-let intersectCands = new Int32Array(0);
 
 export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> | null): number {
   const facts = intersectFacts;
   let fired = 0;
   let changed = false;
-  if (intersectCands.length < sp.cells.length) intersectCands = new Int32Array(sp.cells.length);
-  const cands = intersectCands;
-  cands.fill(-1);
   const _a759 = union(union(sp.rows, sp.cols), sp.diagonals);
   for (let _i760 = 0; _i760 < _a759.length; _i760++) {
     const v_L = _a759[_i760];
@@ -1377,7 +1358,6 @@ export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> 
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ L: v_L, b: v_b, d: v_d, first: v_first }, facts)) return 1;
-          cands.fill(-1);
         }
       }
     }
@@ -1394,7 +1374,6 @@ export interface DigitSetBinding {
 }
 
 const digitSetFacts: number[] = [];
-let digitSetCands = new Int32Array(0);
 
 export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | null): number {
   const _g845: number[] = [];
@@ -1404,9 +1383,6 @@ export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | 
   let changed = false;
   const _h860 = (sp.w - 1);
   const _h861 = rangeMask(0, _h860);
-  if (digitSetCands.length < sp.cells.length) digitSetCands = new Int32Array(sp.cells.length);
-  const cands = digitSetCands;
-  cands.fill(-1);
   for (let _m844 = b.domain; _m844 !== 0; _m844 &= _m844 - 1) {
     const v_d = 31 - Math.clz32(_m844 & -_m844);
     _g845.length = 0;
@@ -1529,7 +1505,6 @@ export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | 
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ d: v_d, Y0: v_Y0, X0: v_X0, T: v_T, Y: v_Y }, facts)) return 1;
-          cands.fill(-1);
         }
       }
     }

@@ -242,13 +242,6 @@ export function touching(size: number, i: number): number[] {
   return out;
 }
 
-/** Whether cells `a` and `b` share a side or a corner. */
-export function touches(size: number, a: number, b: number): boolean {
-  const dx = (a % size) - (b % size);
-  const dy = Math.floor(a / size) - Math.floor(b / size);
-  return a !== b && dx >= -1 && dx <= 1 && dy >= -1 && dy <= 1;
-}
-
 // --- text format ------------------------------------------------------------
 
 /** Each cell as its region's letter and its mark: `*` a star, `x` a cross. */

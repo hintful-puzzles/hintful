@@ -114,7 +114,6 @@ export interface BorderBinding {
 }
 
 const borderFacts: number[] = [];
-let borderCands = new Int32Array(0);
 
 export function border(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BorderBinding> | null): number {
   const _g18: number[] = [];
@@ -124,9 +123,6 @@ export function border(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BorderBind
   let changed = false;
   const _h17 = (sp.w - cl.nums);
   const _h26 = (cl.nums + 1);
-  if (borderCands.length < sp.cells.length) borderCands = new Int32Array(sp.cells.length);
-  const cands = borderCands;
-  cands.fill(-1);
   for (let v_k = 0; v_k < cl.border.at.length; v_k++) {
     const _h47 = cl.border.v[v_k];
     const v_L = sp.sight[cl.border.at[v_k]];
@@ -210,7 +206,6 @@ export function border(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BorderBind
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null && !fire({ k: v_k, L: v_L, H: v_H, f: v_f, reach: v_reach, stop: v_stop }, facts)) return 1;
-      cands.fill(-1);
     }
   }
   return fired;

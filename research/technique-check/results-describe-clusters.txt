@@ -1,0 +1,16 @@
+ok  clusters   broken                         3  sound    (want sound   )     9 queries    0.1s
+ok  clusters   broken (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  clusters   broken                         4  sound    (want sound   )    16 queries    0.3s
+ok  clusters   broken (planted)               4  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  clusters   refute                         3  sound    (want sound   )     9 queries    0.3s
+ok  clusters   refute (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  clusters   refute                         4  sound    (want sound   )    16 queries    0.8s
+ok  clusters   refute (planted)               4  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  clusters   countFull                      3  sound    (want sound   )     9 queries    0.7s
+ok  clusters   countFull (planted)            3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  clusters   countFull                      4  sound    (want sound   )    16 queries    4.6s
+ok  clusters   countFull (planted)            4  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  clusters   countShort                     3  sound    (want sound   )     9 queries    0.7s
+ok  clusters   countShort (planted)           3  unsound  (want unsound )     2 queries    0.1s   at cell 1
+ok  clusters   countShort                     4  sound    (want sound   )    16 queries    5.7s
+ok  clusters   countShort (planted)           4  unsound  (want unsound )     2 queries    0.2s   at cell 1

@@ -74,10 +74,10 @@ import {
   type ClustersDeduction,
   type ClustersRung,
   COMPLETE,
-  clustersStatus,
   deduceHintPlan,
   findErrors,
   INVALID,
+  isAnswer,
   solveGame,
 } from "./solver.ts";
 import {
@@ -291,7 +291,7 @@ function executeMove(state: ClustersState, move: ClustersMove): ClustersState {
 }
 
 function status(s: ClustersState): GameStatus {
-  return clustersStatus(s.grid, s.w, s.h) === COMPLETE ? "solved" : "ongoing";
+  return isAnswer(s.grid, s.w, s.h) ? "solved" : "ongoing";
 }
 
 /** The last board's answer, by its givens. A state keeps no part every state
@@ -448,8 +448,8 @@ function hintGesture(
 }
 
 /** Clusters' difficulty contract (`engine/difficulty.ts`). Below Unreasonable
- * the tiers are nested rungs of one fixpoint (`maxdiff` 0 is `solverTry`
- * alone, 1 adds `solverCount`); Unreasonable is the search's one answer. */
+ * the tiers are the compiled ladder's (Easy refutes one color of one square,
+ * Normal adds the two-tile counts); Unreasonable is the search's one answer. */
 const difficulty = TIERS.contract<ClustersParams, ClustersState>({
   newState,
   deductionFinishes: (s, cap) => solveGame(s.grid.slice(), s.w, s.h, cap) === COMPLETE,

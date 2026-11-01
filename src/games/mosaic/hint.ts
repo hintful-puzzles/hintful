@@ -1,8 +1,8 @@
 /**
- * Mosaic's hint: the game's deduction (`deduce.ts`), read off the player's own
- * marks and said a step at a time. An Easy board as dealt always has a next
- * step from one number alone; on any other board the hint goes on to compare
- * two numbers, and stops where that decides nothing either.
+ * Mosaic's hint: the game's compiled ladder (`solver.ts`), walked from the
+ * player's own marks and said a firing at a time. An Easy board as dealt
+ * always has a next step from one number alone; on any other board the hint
+ * goes on to compare two numbers, and stops where that decides nothing either.
  */
 
 import {
@@ -15,9 +15,9 @@ import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import { deduce, type Firing, type MosaicRung, markOf } from "./deduce.ts";
 import { blockOf } from "./hint-marks.ts";
 import { say } from "./hint-text.ts";
+import { type MosaicReason, type MosaicRung, mosaicWalk } from "./solver.ts";
 import {
   executeMove,
   type MosaicMove,
@@ -34,12 +34,18 @@ export interface MosaicHint {
 
 type Step = HintStep<MosaicMove, MosaicHint, MosaicRung>;
 
-/** A firing's sentence. */
-function wordsOf(state: MosaicState, f: Firing): Sentence {
+/** How far ahead the plan is computed. A player rarely follows more than a
+ * few steps before going their own way, and the plan is asked for again
+ * then; each step reads every number on the board, which on a large one is
+ * the cost of a hint. */
+const PLAN_CAP = 24;
+
+/** A firing's sentence: `f` decides `squares`. */
+function wordsOf(state: MosaicState, f: MosaicReason, squares: number[]): Sentence {
   const { width: w, height: h, board } = state;
   const at = (i: number): Point => ({ x: i % w, y: Math.floor(i / w) });
   const numbered = (i: number) => ({ clue: at(i), n: board.clues[i] as number });
-  const cells = f.cells.map(at);
+  const cells = squares.map(at);
   if (!("other" in f)) {
     const alone = { ...numbered(f.clue), cells };
     return f.rung === "met"
@@ -59,20 +65,27 @@ function wordsOf(state: MosaicState, f: Firing): Sentence {
 export function mosaicHint(
   state: MosaicState,
 ): HintResult<MosaicMove, MosaicHint, MosaicRung> {
-  // The whole plan, on a copy of the board's colors.
+  // The plan, on a copy of the board's colors.
   const grid = state.cells.map((v) => v & STATE_MARK_MASK);
   const steps: Step[] = [];
-  deduce(state.board, grid, (f) => {
-    const mark = markOf(f.rung);
+  const next = mosaicWalk(state.board, grid);
+  while (steps.length < PLAN_CAP) {
+    const f = next();
+    if (f === null || f === "contradiction") break;
+    const cells: number[] = [];
+    for (let i = 0; i < f.facts.length; i += 3) cells.push(f.facts[i + 1] as number);
+    // Every fact of a firing places the one mark its technique concludes.
+    const mark = f.facts[2] as number;
+    const reason = f.reasons[0] as MosaicReason;
     steps.push(
       narratedStep({
-        move: { type: "fill", cells: f.cells, mark },
-        rung: f.rung,
-        words: wordsOf(state, f),
-        highlights: { cells: f.cells, mark, w: state.width },
+        move: { type: "fill", cells, mark },
+        rung: reason.rung,
+        words: wordsOf(state, reason, cells),
+        highlights: { cells, mark, w: state.width },
       }),
     );
-  });
+  }
   if (steps.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   return { ok: true, steps };
 }

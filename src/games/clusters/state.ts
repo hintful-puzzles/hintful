@@ -48,10 +48,6 @@ export const F_COLOR_1 = 0x02; // upstream's blue
  * primary button gives. */
 export const pairIndex = (cell: number): 0 | 1 => (cell & F_COLOR_1 ? 0 : 1);
 export const F_SINGLE = 0x04; // a "dot": touches exactly one same-color cell
-/** Transient rule-violation bit. Upstream `clusters_validate` mutates this
- * into the grid; the solver/generator reproduce that (it decides which boards a
- * seed produces — see solver.ts), but persisted play state stays free of it. */
-export const F_ERROR = 0x08;
 export const COLMASK = F_COLOR_0 | F_COLOR_1;
 
 /** The color part of a move edit / solve cell: 0 empty, `F_COLOR_0` or

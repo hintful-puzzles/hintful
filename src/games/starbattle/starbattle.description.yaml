@@ -30,3 +30,177 @@ help:
     - On Tricky boards, a star is tried in a square where it would complete its own row, column or region. If the squares that rules out leave another row, column or region without room for its stars, the square is empty.
 
     If a square you marked is wrong, the hint asks you to fix the highlighted mistakes first.
+name: Star Battle
+family: shading
+sizes:
+  w: { min: 4, max: 26 }
+  # The stars every row, column and region holds.
+  stars: { min: 1, max: 3 }
+space:
+  grid: { w: "w", h: "w" }
+  # The regions are a dealt partition rather than units: the soundness
+  # checker builds a unit partition only from blocks, and a region holds
+  # stars, not every value once.
+  regions: { region: dealt }
+  units: []
+answer:
+  # 1 is a star, 2 a square without one.
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  # The stars squares S still need, as a row, column or region of them.
+  need(S): "stars - count(c in S where value(c) = 1)"
+  # The squares of S that hold nothing yet.
+  open(S): "{c in S where not known(c)}"
+  # 1 where x is one of the squares S, 0 where it is not.
+  own(x, S): "count(c in {x} where c in S)"
+  # Whether n stars fit in the squares S with no two touching: a star is 1
+  # and an empty square 2, so n stars sum to 2|S| - n.
+  fits(S, n): >-
+    exists fill f of S where sum(x in S of f(x)) = 2 * |S| - n
+    and (forall x in S, y in before(x, S): not (f(x) = 1 and f(y) = 1 and y in adj8(x))): true
+  # The most stars, up to n, that fit in the squares S with no two touching.
+  most(S, n): "max(j in range(0, n) where fits(S, j))"
+  # Which of the lines of one way a square is on: its row for 0, its column
+  # for 1.
+  along(c, dir): "(1 - dir) * y(c) + dir * x(c)"
+  # The k neighboring rows (dir 0) or columns (dir 1) from the a-th.
+  band(k, dir, a): "{c in cells where a <= along(c, dir) and along(c, dir) < a + k}"
+  # The regions that still want stars with every open square in B.
+  inside(B): "{r in region where need(cells(r)) > 0 and (forall c in open(cells(r)): c in B)}"
+  # The regions that still want stars with an open square in B.
+  reaching(B): "{r in region where need(cells(r)) > 0 and (exists c in open(cells(r)): c in B)}"
+  # The open squares a star tried in x would touch.
+  touched(x): "{p in adj8(x) where not known(p)}"
+  # The open squares a star tried in x would rule out: those touching it, and
+  # the rest of each row, column or region of x's that the star would
+  # complete.
+  ruled(x): >-
+    {p in cells where not known(p) and p != x and (p in adj8(x)
+    or (row(p) = row(x) and need(cells(row(x))) = 1)
+    or (col(p) = col(x) and need(cells(col(x))) = 1)
+    or (region(p) = region(x) and need(cells(region(x))) = 1))}
+shape:
+  - "forall L in lines: count(c in cells(L) where value(c) = 1) = stars"
+  - "forall r in region: count(c in cells(r) where value(c) = 1) = stars"
+  - "forall a in cells where value(a) = 1: forall b in adj8(a): value(b) != 1"
+freedom: { kind: fill }
+deal:
+  region: the partition, one region a column, round stars placed at random
+  stars: the stars to a row
+  tier: one of the tiers
+tiers: [Easy, Normal, Tricky]
+techniques:
+  # Nothing touching a star holds another. A star touching one makes the
+  # marks inconsistent.
+  - id: around
+    tier: Easy
+    for: "c in cells where value(c) = 1"
+    conclude: >-
+      (forall p in adj8(c): value(p) != 1)
+      and (forall p in adj8(c) where not known(p): place(p, 2))
+  # A row or column that has its stars holds no more. One with more makes
+  # the marks inconsistent.
+  - id: fullLine
+    tier: Easy
+    for: "L in lines, n = need(cells(L)) where n <= 0"
+    conclude: "n = 0 and forall c in open(cells(L)): place(c, 2)"
+  - id: fullRegion
+    tier: Easy
+    for: "r in region, n = need(cells(r)) where n <= 0"
+    conclude: "n = 0 and forall c in open(cells(r)): place(c, 2)"
+  # A row or column with exactly as many open squares as it still needs
+  # stars has a star in each. One with fewer makes the marks inconsistent.
+  - id: exactLine
+    tier: Easy
+    for: "L in lines, n = need(cells(L)), O = open(cells(L)) where n > 0 and n >= |O|"
+    conclude: "n = |O| and forall c in O: place(c, 1)"
+  - id: exactRegion
+    tier: Easy
+    for: "r in region, n = need(cells(r)), O = open(cells(r)) where n > 0 and n >= |O|"
+    conclude: "n = |O| and forall c in O: place(c, 1)"
+  # A row or column counted against its regions, two ways, the first where
+  # it decides a square (`lines`): where the regions lying wholly inside it
+  # need as many stars as it does, its other open squares are empty; where
+  # the regions reaching into it need no more than it does, their open
+  # squares outside it are empty. Regions inside needing more, or reaching
+  # in needing fewer, make the marks inconsistent.
+  - id: confined
+    tier: Easy
+    for: >-
+      dir in range(0, 1), a in range(0, w - 1), B = band(1, dir, a),
+      n = need(B) where n > 0,
+      I = inside(B), mi = sum(r in I of need(cells(r))),
+      R = reaching(B), mr = sum(r in R of need(cells(r))),
+      lines = (mi = n and (exists c in open(B): region(c) not in I))
+      where mi >= n or mr <= n
+    conclude: >-
+      mi <= n and mr >= n
+      and (lines implies (forall c in open(B) where region(c) not in I: place(c, 2)))
+      and (lines or mr > n or (forall r in R, c in open(cells(r)) where c not in B: place(c, 2)))
+  # A row or column that would have room for too few stars without an open
+  # square of its: a star is there.
+  - id: neededLine
+    tier: Easy
+    for: >-
+      L in lines, n = need(cells(L)), O = open(cells(L)) where n > 0,
+      x in O, E = O - {x} where not fits(E, n), room = most(E, n)
+    conclude: "place(x, 1)"
+  - id: neededRegion
+    tier: Easy
+    for: >-
+      r in region, n = need(cells(r)), O = open(cells(r)) where n > 0,
+      x in O, E = O - {x} where not fits(E, n), room = most(E, n)
+    conclude: "place(x, 1)"
+  # A star tried in a square would rule out the open squares touching it,
+  # leaving a row or column it touches room for too few stars: the square is
+  # empty.
+  - id: crowdedLine
+    tier: Easy
+    for: >-
+      x in cells where not known(x), R = touched(x),
+      L in lines where L = row(x) or L = col(x) or (exists p in R: L = row(p) or L = col(p)),
+      S = cells(L), n = need(S) - own(x, S), E = {c in open(S) where c != x and c not in R}
+      where n > 0 and not fits(E, n), room = most(E, n), Q = {c in open(S) where c in R}
+    conclude: "place(x, 2)"
+  - id: crowdedRegion
+    tier: Easy
+    for: >-
+      x in cells where not known(x), R = touched(x),
+      g in region where g = region(x) or (exists p in R: region(p) = g),
+      S = cells(g), n = need(S) - own(x, S), E = {c in open(S) where c != x and c not in R}
+      where n > 0 and not fits(E, n), room = most(E, n), Q = {c in open(S) where c in R}
+    conclude: "place(x, 2)"
+  # Several neighboring rows or columns, fewer than all but one, counted
+  # against their regions as one row or column is, the fewest first.
+  - id: banded
+    tier: Normal
+    for: >-
+      k in range(2, w - 2), dir in range(0, 1), a in range(0, w - k), B = band(k, dir, a),
+      n = need(B) + (k - 1) * stars where n > 0,
+      I = inside(B), mi = sum(r in I of need(cells(r))),
+      R = reaching(B), mr = sum(r in R of need(cells(r))),
+      lines = (mi = n and (exists c in open(B): region(c) not in I))
+      where mi >= n or mr <= n
+    conclude: >-
+      mi <= n and mr >= n
+      and (lines implies (forall c in open(B) where region(c) not in I: place(c, 2)))
+      and (lines or mr > n or (forall r in R, c in open(cells(r)) where c not in B: place(c, 2)))
+  # A star tried in a square would also complete a row, column or region of
+  # its own and rule out the rest of it, leaving another room for too few
+  # stars: the square is empty.
+  - id: starvedLine
+    tier: Tricky
+    for: >-
+      x in cells where not known(x), R = ruled(x),
+      L in lines where L = row(x) or L = col(x) or (exists p in R: L = row(p) or L = col(p)),
+      S = cells(L), n = need(S) - own(x, S), E = {c in open(S) where c != x and c not in R}
+      where n > 0 and not fits(E, n), room = most(E, n), Q = {c in open(S) where c in R}
+    conclude: "place(x, 2)"
+  - id: starvedRegion
+    tier: Tricky
+    for: >-
+      x in cells where not known(x), R = ruled(x),
+      g in region where g = region(x) or (exists p in R: region(p) = g),
+      S = cells(g), n = need(S) - own(x, S), E = {c in open(S) where c != x and c not in R}
+      where n > 0 and not fits(E, n), room = most(E, n), Q = {c in open(S) where c in R}
+    conclude: "place(x, 2)"

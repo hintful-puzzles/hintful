@@ -271,13 +271,11 @@ describe("solver classification", () => {
     expect(clustersStatus(Uint8Array.from([F_COLOR_0, F_COLOR_1]), 2, 1)).toBe(INVALID);
   });
 
-  it("findErrors lists the offending cells (pure — no F_ERROR left behind)", () => {
+  it("findErrors lists the offending cells and leaves the grid as it was", () => {
     const grid = Uint8Array.from([F_COLOR_0, F_COLOR_1]);
     const errs = findErrors(grid, 2, 1);
     expect(errs.sort()).toEqual([0, 1]);
-    // The pure check must not have written F_ERROR (0x08) into the grid.
-    expect(grid[0] & 0x08).toBe(0);
-    expect(grid[1] & 0x08).toBe(0);
+    expect(Array.from(grid)).toEqual([F_COLOR_0, F_COLOR_1]);
   });
 
   it("solves every preset's generated board to a unique completion", () => {

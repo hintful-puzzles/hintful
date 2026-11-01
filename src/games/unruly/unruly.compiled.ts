@@ -127,15 +127,11 @@ export interface ThreesBinding {
 }
 
 const threesFacts: number[] = [];
-let threesCands = new Int32Array(0);
 
 export function threes(b: Marks, sp: GridSpace, fire: Fire<ThreesBinding> | null): number {
   const facts = threesFacts;
   let fired = 0;
   let changed = false;
-  if (threesCands.length < sp.cells.length) threesCands = new Int32Array(sp.cells.length);
-  const cands = threesCands;
-  cands.fill(-1);
   const _a13 = sp.lines;
   for (let _i14 = 0; _i14 < _a13.length; _i14++) {
     const v_L = _a13[_i14];
@@ -171,7 +167,6 @@ export function threes(b: Marks, sp: GridSpace, fire: Fire<ThreesBinding> | null
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null && !fire({ L: v_L, i: v_i, W: v_W, x: v_x, d: v_d }, facts)) return 1;
-            cands.fill(-1);
           }
         }
       }
@@ -187,15 +182,11 @@ export interface LastGapBinding {
 }
 
 const lastGapFacts: number[] = [];
-let lastGapCands = new Int32Array(0);
 
 export function lastGap(b: Marks, sp: GridSpace, fire: Fire<LastGapBinding> | null): number {
   const facts = lastGapFacts;
   let fired = 0;
   let changed = false;
-  if (lastGapCands.length < sp.cells.length) lastGapCands = new Int32Array(sp.cells.length);
-  const cands = lastGapCands;
-  cands.fill(-1);
   const _a38 = sp.lines;
   for (let _i39 = 0; _i39 < _a38.length; _i39++) {
     const v_L = _a38[_i39];
@@ -247,7 +238,6 @@ export function lastGap(b: Marks, sp: GridSpace, fire: Fire<LastGapBinding> | nu
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ L: v_L, n: v_n, d: v_d }, facts)) return 1;
-        cands.fill(-1);
       }
     }
   }
@@ -261,15 +251,11 @@ export interface QuotaBinding {
 }
 
 const quotaFacts: number[] = [];
-let quotaCands = new Int32Array(0);
 
 export function quota(b: Marks, sp: GridSpace, fire: Fire<QuotaBinding> | null): number {
   const facts = quotaFacts;
   let fired = 0;
   let changed = false;
-  if (quotaCands.length < sp.cells.length) quotaCands = new Int32Array(sp.cells.length);
-  const cands = quotaCands;
-  cands.fill(-1);
   const _a69 = sp.lines;
   for (let _i70 = 0; _i70 < _a69.length; _i70++) {
     const v_L = _a69[_i70];
@@ -320,7 +306,6 @@ export function quota(b: Marks, sp: GridSpace, fire: Fire<QuotaBinding> | null):
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ L: v_L, n: v_n, d: v_d }, facts)) return 1;
-        cands.fill(-1);
       }
     }
   }
@@ -336,15 +321,11 @@ export interface LastOneBinding {
 }
 
 const lastOneFacts: number[] = [];
-let lastOneCands = new Int32Array(0);
 
 export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding> | null): number {
   const facts = lastOneFacts;
   let fired = 0;
   let changed = false;
-  if (lastOneCands.length < sp.cells.length) lastOneCands = new Int32Array(sp.cells.length);
-  const cands = lastOneCands;
-  cands.fill(-1);
   const _a112 = sp.lines;
   for (let _i113 = 0; _i113 < _a112.length; _i113++) {
     const v_L = _a112[_i113];
@@ -428,7 +409,6 @@ export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding> | nu
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null && !fire({ L: v_L, n: v_n, d: v_d, i: v_i, W: v_W }, facts)) return 1;
-            cands.fill(-1);
           }
         }
       }
@@ -446,15 +426,11 @@ export interface UniqueBinding {
 }
 
 const uniqueFacts: number[] = [];
-let uniqueCands = new Int32Array(0);
 
 export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding> | null): number {
   const facts = uniqueFacts;
   let fired = 0;
   let changed = false;
-  if (uniqueCands.length < sp.cells.length) uniqueCands = new Int32Array(sp.cells.length);
-  const cands = uniqueCands;
-  cands.fill(-1);
   const _a164 = sp.lines;
   for (let _i165 = 0; _i165 < _a164.length; _i165++) {
     const v_A = _a164[_i165];
@@ -518,7 +494,6 @@ export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding> | null
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null && !fire({ A: v_A, n: v_n, d: v_d, B: v_B, j: v_j }, facts)) return 1;
-            cands.fill(-1);
           }
         }
       }

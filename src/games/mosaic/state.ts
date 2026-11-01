@@ -24,7 +24,7 @@ import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
+import type { Point } from "../../engine/types.ts";
 
 // --- cell-state flags (upstream `enum cell_state`) ----------------------
 
@@ -404,10 +404,6 @@ export function executeMove(state: MosaicState, move: MosaicMove): MosaicState {
 }
 
 // --- status / text ----------------------------------------------------------
-
-export function status(state: MosaicState): GameStatus {
-  return cluesLeft(state) === 0 ? "solved" : "ongoing";
-}
 
 export function statusbarText(state: MosaicState, _ui: MosaicUi): string {
   const left = cluesLeft(state);

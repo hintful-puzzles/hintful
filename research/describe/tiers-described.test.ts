@@ -10,7 +10,10 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { it } from "vitest";
 import { difficultyTiers, withTier } from "../../src/engine/difficulty.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
+import { clustersGame } from "../../src/games/clusters/index.ts";
+import { mosaicGame } from "../../src/games/mosaic/index.ts";
 import { seismicGame } from "../../src/games/seismic/index.ts";
+import { starbattleGame } from "../../src/games/starbattle/index.ts";
 import { unrulyGame } from "../../src/games/unruly/index.ts";
 
 // biome-ignore lint/suspicious/noExplicitAny: a walk over any tiered game.
@@ -19,6 +22,9 @@ type AnyGame = any;
 const GAMES: [string, AnyGame][] = [
   ["unruly", unrulyGame],
   ["seismic", seismicGame],
+  ["starbattle", starbattleGame],
+  ["mosaic", mosaicGame],
+  ["clusters", clustersGame],
 ];
 const SEEDS = 40;
 
@@ -26,6 +32,8 @@ it("tiers", () => {
   const out = process.env["CORPUS_OUT"];
   if (out === undefined) throw new Error("CORPUS_OUT names the file to write");
   const input = process.env["CORPUS_IN"];
+  // CORPUS_GAMES narrows the corpus to some games, by name, comma-separated.
+  const only = process.env["CORPUS_GAMES"]?.split(",") ?? null;
   const lines: string[] = [];
   const verdicts = (g: AnyGame, p: unknown, desc: string): string =>
     (difficultyTiers(g) ?? [])
@@ -41,7 +49,7 @@ it("tiers", () => {
       lines.push([name, params, desc, verdicts(g, p, desc)].join("\t"));
     }
   } else
-    for (const [name, g] of GAMES)
+    for (const [name, g] of GAMES.filter(([n]) => only === null || only.includes(n)))
       for (const [tier] of (difficultyTiers(g) ?? []).entries())
         for (const base of [
           g.defaultParams(),

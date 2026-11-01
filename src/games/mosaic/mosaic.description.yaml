@@ -61,3 +61,67 @@ help:
     numbers settles no square either, and the hint says that nothing further
     follows by deduction instead of choosing for you. Save your position and try a square beside a number with few
     squares left. The hint carries on from whatever you mark.
+name: Mosaic
+family: shading
+sizes:
+  # At most 10,000 squares.
+  w: { min: 3, max: 3333 }
+  h: { min: 3, max: 3333 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is a shaded square, 2 a clear one.
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  # A number's block: its own square and the eight around it, fewer at the
+  # edge of the grid.
+  block(c): "within(c, 1)"
+  # The shaded squares the number at c still needs.
+  need(c): "clue(count, c) - count(d in block(c) where value(d) = 1)"
+  # Whether square d is in the block of b.
+  near(d, b): "abs(x(d) - x(b)) <= 1 and abs(y(d) - y(b)) <= 1"
+  # The empty squares of c's block outside b's.
+  only(c, b): "{d in block(c) where not known(d) and not near(d, b)}"
+  # Whether the block of c has an empty square.
+  open(c): "exists d in block(c): not known(d)"
+clues:
+  count: { at: cell, value: "range(0, 9)", means: "count(d in block(at) where value(d) = 1) = v" }
+freedom: { kind: fill }
+deal:
+  clues: which squares show their number, fewer at higher tiers
+  tier: one of the tiers
+tiers: [Easy, Normal]
+techniques:
+  # One number alone, n the shaded squares it still needs: with none, the
+  # rest of its block is clear; with only as many squares left that are not
+  # clear, r, as it needs, they are all shaded. One with more shaded than
+  # it says, or fewer squares left, makes the marks inconsistent. One with
+  # none to need and none to spare has no empty square, and decides nothing.
+  - id: alone
+    tier: Easy
+    for: >-
+      k in clues(count), c = at(k), n = need(c),
+      r = count(d in block(c) where value(d) != 2)
+      where (n <= 0 or r <= v(k)) and (n != 0 or r != v(k))
+    conclude: >-
+      n >= 0 and r >= v(k)
+      and (n = 0 implies (forall d in block(c) where not known(d): place(d, 2)))
+      and (n = 0 or (forall d in block(c) where not known(d): place(d, 1)))
+  # Two numbers whose blocks overlap both count the squares they share, so
+  # they differ by the squares only one counts. One that needs more than the
+  # other, by as many as it has empty squares outside the other's block, O,
+  # needs them all; by more, the marks are inconsistent. Two that need the
+  # same, the first with none outside the second's block: the second gets
+  # all it needs from the squares they share, so its own are clear. A pair
+  # with a block that has no empty square decides nothing `alone` has not.
+  - id: compared
+    tier: Normal
+    for: >-
+      k in clues(count), c = at(k) where open(c),
+      b in within(c, 2) where b != c and clue(count, b) != none and open(b),
+      n = need(c), by = n - need(b), O = only(c, b)
+      where by >= |O| and (by > 0 or |only(b, c)| > 0)
+    conclude: >-
+      by = |O| and (forall d in O: place(d, 1))
+      and (by > 0 or (forall d in only(b, c): place(d, 2)))

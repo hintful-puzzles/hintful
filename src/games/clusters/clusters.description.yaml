@@ -28,3 +28,93 @@ help:
   parameters:
     after: |-
       Normal needs a board with room for the deeper reasoning, so it is not offered on very small grids.
+name: Clusters
+family: shading
+sizes:
+  # Fewer than 10,000 squares, and at least two.
+  w: { min: 1, max: 9999 }
+  h: { min: 1, max: 9999 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is the first of the pair, 2 the second.
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  # The other color.
+  flip(d): "3 - d"
+  # 1 where c holds a dot, 0 where it does not.
+  dot(c): "count(k in {c} where clue(dot, k) != none)"
+  # The squares beside c that hold d or may yet, x left out.
+  room(c, d, x): "count(m in adj4(c) where m != x and (not known(m) or value(m) = d))"
+  # The squares beside tile c of its own color.
+  same(c): "count(m in adj4(c) where value(m) = value(c))"
+  # The empty squares beside c.
+  open(c): "{m in adj4(c) where not known(m)}"
+  # The squares of its color tile c still needs beside it: one for a dot,
+  # two for any other tile, less those it has. Below none where it has more.
+  lo(c): "2 - dot(c) - same(c)"
+  # The most of its empty neighbors tile c may color its own: a dot no more
+  # than it needs, any other tile all of them.
+  hi(c): "dot(c) * lo(c) + (1 - dot(c)) * |open(c)|"
+clues:
+  # A dot: its color, and exactly one square beside it of the same.
+  dot: { at: cell, value: "range(1, 2)", means: "value(at) = v and count(m in adj4(at) where value(m) = v) = 1" }
+shape:
+  # Every tile without a dot touches at least two of its own color.
+  - "forall c in cells where clue(dot, c) = none: count(m in adj4(c) where value(m) = value(c)) >= 2"
+freedom: { kind: fill }
+deal:
+  dot: which squares carry a dot, and their colors
+  tier: one of the tiers
+tiers: [Easy, Normal]
+techniques:
+  # A tile that can no longer have its own color beside it as its rule says
+  # makes the marks inconsistent: one with no room left for it, one without a
+  # dot with room for only one, a dot with two already.
+  - id: broken
+    tier: Easy
+    for: "c in cells where known(c), r = room(c, value(c), c)"
+    conclude: "r >= 1 and (dot(c) = 1 or r >= 2) and (dot(c) = 0 or same(c) <= 1)"
+  # A square where color d would break a rule at once, at n, the square
+  # itself or a tile beside it of color e: n left too little room beside it
+  # for its own color, or a dot of color d that already has its one. The
+  # square takes the other color.
+  - id: refute
+    tier: Easy
+    for: >-
+      x in cells where not known(x), d in domain,
+      n in {x} + adj4(x) where n = x or known(n),
+      e in domain where (n = x and e = d) or (n != x and e = value(n)),
+      r = room(n, e, x)
+      where ((n = x or e != d) and (r < 1 or (dot(n) = 0 and r < 2)))
+      or (n != x and e = d and dot(n) = 1 and same(n) >= 1)
+    conclude: "place(x, flip(d))"
+  # Two tiles over the empty squares both touch, S: b's count says at least
+  # so many of them take a's color, and that is all a may take, so a's other
+  # empty neighbors take the other color.
+  - id: countFull
+    tier: Normal
+    for: >-
+      a in cells where known(a) and hi(a) > 0,
+      b in within(a, 2) where b != a and known(b),
+      S = {u in open(a) where u in adj4(b)}, R = {u in open(a) where u not in adj4(b)},
+      bo = count(u in open(b) where u not in adj4(a))
+      where |S| > 0 and |R| > 0
+      and ((value(b) = value(a) and lo(b) - bo >= hi(a))
+      or (value(b) != value(a) and |S| - hi(b) >= hi(a)))
+    conclude: "forall u in R: place(u, flip(value(a)))"
+  # Two tiles over the empty squares both touch, S: b's count says at most
+  # `most` of them take a's color, fewer than all, and a needs every other
+  # empty neighbor of its color too.
+  - id: countShort
+    tier: Normal
+    for: >-
+      a in cells where known(a) and lo(a) > 0,
+      b in within(a, 2) where b != a and known(b),
+      S = {u in open(a) where u in adj4(b)}, R = {u in open(a) where u not in adj4(b)},
+      bo = count(u in open(b) where u not in adj4(a)),
+      alike = count(k in {b} where value(k) = value(a)),
+      most = alike * hi(b) + (1 - alike) * (|S| - lo(b) + bo)
+      where |S| > 0 and |R| > 0 and most < |S| and lo(a) - most >= |R|
+    conclude: "forall u in R: place(u, value(a))"

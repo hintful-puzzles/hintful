@@ -73,6 +73,11 @@ export class CellMarks implements Marks {
   recorder?: DeductionRecorder;
   /** The hint path's fixpoint budget, set with {@link recorder}. */
   budget?: StepBudget;
+  /** Whether a recorded run takes every firing of a technique's pass, as the
+   * solve path does, rather than one a pass. For a caller that asks which
+   * firings a solve made and not the order a hint would make them in: one
+   * firing a pass reads the whole board again for each. */
+  wholePasses = false;
   /** The firing being made: bumped before each technique is tried, so every
    * record of one firing shares it. */
   group = 0;
@@ -251,7 +256,7 @@ export function compiledRung<B, C, S extends CellMarks = CellMarks>(
       m.recorder
         ? (binding, facts) => {
             m.applyFacts(facts, (i) => reason(binding, facts[i + 1], facts[i + 2], m));
-            return false;
+            return m.wholePasses;
           }
         : null,
     );

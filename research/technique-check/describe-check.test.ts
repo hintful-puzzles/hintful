@@ -234,6 +234,82 @@ const PLANTS: Record<string, Plant> = {
     conclude:
       "forall c in cells where area(c) != r and not known(c) and n in cand(c) and (exists h in H: near(c, h, n)): strike(c, n)",
   },
+  // Mosaic: a number one short of its shaded squares read as met.
+  alone: {
+    for: "k in clues(count), c = at(k), n = need(c), r = count(d in block(c) where value(d) != 2) where n <= 1 or r <= v(k)",
+    conclude:
+      "n >= 0 and r >= v(k) and (n <= 1 implies (forall d in block(c) where not known(d): place(d, 2))) and (n <= 1 or (forall d in block(c) where not known(d): place(d, 1)))",
+  },
+  // One square more outside the other's block than the difference.
+  compared: {
+    for: "k in clues(count), c = at(k), b in within(c, 2) where b != c and clue(count, b) != none, n = need(c), by = n - need(b), O = only(c, b) where by >= |O| - 1 and (by > 0 or |only(b, c)| > 0)",
+    conclude:
+      "(forall d in O: place(d, 1)) and (by > 0 or (forall d in only(b, c): place(d, 2)))",
+  },
+  // Star Battle: a star's neighbors two squares away emptied too.
+  around: {
+    conclude: "forall p in within(c, 2) where p != c and not known(p): place(p, 2)",
+  },
+  // A row or column one star short read as full.
+  fullLine: {
+    for: "L in lines, n = need(cells(L)) where n <= 1",
+    conclude: "forall c in open(cells(L)): place(c, 2)",
+  },
+  fullRegion: {
+    for: "r in region, n = need(cells(r)) where n <= 1",
+    conclude: "forall c in open(cells(r)): place(c, 2)",
+  },
+  // One open square more than the stars needed, all starred.
+  exactLine: {
+    for: "L in lines, n = need(cells(L)), O = open(cells(L)) where n > 0 and n >= |O| - 1",
+    conclude: "forall c in O: place(c, 1)",
+  },
+  exactRegion: {
+    for: "r in region, n = need(cells(r)), O = open(cells(r)) where n > 0 and n >= |O| - 1",
+    conclude: "forall c in O: place(c, 1)",
+  },
+  // Regions inside one star short of the line's need read as enough.
+  confined: {
+    for: "dir in range(0, 1), a in range(0, w - 1), B = band(1, dir, a), n = need(B) where n > 0, I = inside(B), mi = sum(r in I of need(cells(r))), R = reaching(B), mr = sum(r in R of need(cells(r))), lines = (mi + 1 >= n and (exists c in open(B): region(c) not in I)) where mi + 1 >= n or mr <= n",
+  },
+  banded: {
+    for: "k in range(2, w - 2), dir in range(0, 1), a in range(0, w - k), B = band(k, dir, a), n = need(B) + (k - 1) * stars where n > 0, I = inside(B), mi = sum(r in I of need(cells(r))), R = reaching(B), mr = sum(r in R of need(cells(r))), lines = (mi + 1 >= n and (exists c in open(B): region(c) not in I)) where mi + 1 >= n or mr <= n",
+  },
+  // Room for one star fewer than needed plus one read as too little.
+  neededLine: {
+    for: "L in lines, n = need(cells(L)), O = open(cells(L)) where n > 0, x in O, E = O - {x} where not fits(E, n + 1), room = most(E, n)",
+  },
+  neededRegion: {
+    for: "r in region, n = need(cells(r)), O = open(cells(r)) where n > 0, x in O, E = O - {x} where not fits(E, n + 1), room = most(E, n)",
+  },
+  crowdedLine: {
+    for: "x in cells where not known(x), R = touched(x), L in lines where L = row(x) or L = col(x) or (exists p in R: L = row(p) or L = col(p)), S = cells(L), n = need(S) - own(x, S), E = {c in open(S) where c != x and c not in R} where n > 0 and not fits(E, n + 1), room = most(E, n), Q = {c in open(S) where c in R}",
+  },
+  crowdedRegion: {
+    for: "x in cells where not known(x), R = touched(x), g in region where g = region(x) or (exists p in R: region(p) = g), S = cells(g), n = need(S) - own(x, S), E = {c in open(S) where c != x and c not in R} where n > 0 and not fits(E, n + 1), room = most(E, n), Q = {c in open(S) where c in R}",
+  },
+  starvedLine: {
+    for: "x in cells where not known(x), R = ruled(x), L in lines where L = row(x) or L = col(x) or (exists p in R: L = row(p) or L = col(p)), S = cells(L), n = need(S) - own(x, S), E = {c in open(S) where c != x and c not in R} where n > 0 and not fits(E, n + 1), room = most(E, n), Q = {c in open(S) where c in R}",
+  },
+  starvedRegion: {
+    for: "x in cells where not known(x), R = ruled(x), g in region where g = region(x) or (exists p in R: region(p) = g), S = cells(g), n = need(S) - own(x, S), E = {c in open(S) where c != x and c not in R} where n > 0 and not fits(E, n + 1), room = most(E, n), Q = {c in open(S) where c in R}",
+  },
+  // Clusters: a dot asked for the room a tile without one needs.
+  broken: {
+    conclude: "r >= 2 and (dot(c) = 0 or same(c) <= 1)",
+  },
+  // A tile without a dot refuted with room for two of its color.
+  refute: {
+    for: "x in cells where not known(x), d in domain, n in {x} + adj4(x) where n = x or known(n), e in domain where (n = x and e = d) or (n != x and e = value(n)), r = room(n, e, x) where ((n = x or e != d) and (r < 1 or (dot(n) = 0 and r < 3))) or (n != x and e = d and dot(n) = 1 and same(n) >= 1)",
+  },
+  // b's least one short of all a may take.
+  countFull: {
+    for: "a in cells where known(a) and hi(a) > 0, b in within(a, 2) where b != a and known(b), S = {u in open(a) where u in adj4(b)}, R = {u in open(a) where u not in adj4(b)}, bo = count(u in open(b) where u not in adj4(a)) where |S| > 0 and |R| > 0 and ((value(b) = value(a) and lo(b) - bo >= hi(a) - 1) or (value(b) != value(a) and |S| - hi(b) >= hi(a)))",
+  },
+  // a's need one short of every other empty neighbor.
+  countShort: {
+    for: "a in cells where known(a) and lo(a) > 0, b in within(a, 2) where b != a and known(b), S = {u in open(a) where u in adj4(b)}, R = {u in open(a) where u not in adj4(b)}, bo = count(u in open(b) where u not in adj4(a)), alike = count(k in {b} where value(k) = value(a)), most = alike * hi(b) + (1 - alike) * (|S| - lo(b) + bo) where |S| > 0 and |R| > 0 and most < |S| and lo(a) - most >= |R| - 1",
+  },
   // The second line's d not asked to sit where the first's do.
   unique: {
     for: "A in lines, n = |cells(A)| / 2, d in domain where count(c in cells(A) where value(c) = d) = n, B in lines where B != A and (A in rows) = (B in rows) and count(c in cells(B) where value(c) = d) = n - 1, j in range(0, |cells(A)| - 1) where value(sq(A, j)) = d and not known(sq(B, j))",
@@ -365,6 +441,8 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
   // CHECK_GAMES narrows the run to some descriptions, by game or library
   // name, comma-separated; their verdicts then join the others recorded.
   const only = process.env["CHECK_GAMES"]?.split(",") ?? null;
+  // CHECK_TECHNIQUES narrows a game's run further, by technique id.
+  const techniques = process.env["CHECK_TECHNIQUES"]?.split(",") ?? null;
   for (const [source, file] of files) {
     const name = isLibrary(file) ? file.library : file.game;
     if (only !== null && !only.includes(name)) continue;
@@ -410,13 +488,19 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
         }
     const own = new Set(
       worlds.flatMap(({ d }) =>
-        d.techniques.filter((t) => !t.id.includes(".")).map((t) => t.id),
+        d.techniques
+          .filter((t) => !t.id.includes(".") && (techniques?.includes(t.id) ?? true))
+          .map((t) => t.id),
       ),
     );
     const failed = await checkAll(worlds, [...own]);
     bad.push(...failed);
     for (const stated of withEveryVariation(file).techniques ?? [])
-      if (!("use" in stated) && !failed.some((f) => f.startsWith(`${stated.id} `)))
+      if (
+        !("use" in stated) &&
+        own.has(stated.id) &&
+        !failed.some((f) => f.startsWith(`${stated.id} `))
+      )
         verdicts[soundnessKey(source, stated.id)] = gameFingerprint(file, stated);
   }
   writeFileSync(
