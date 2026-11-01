@@ -22,7 +22,13 @@ import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
-import type { SamegameMove, SamegameState, SamegameUi } from "./state.ts";
+import {
+  isCleared,
+  isStuck,
+  type SamegameMove,
+  type SamegameState,
+  type SamegameUi,
+} from "./state.ts";
 
 // --- tile-size metrics ------------------------------------------------
 
@@ -268,6 +274,8 @@ export function redraw(
 ): void {
   const ts = ds.tileSize;
   const { w, h } = state;
+  // No removal is left: the board is cleared, or stuck.
+  const over = isCleared(state) || isStuck(state);
 
   // A stuck board's flash lifts the whole field on its even beats and rests it
   // on its odd ones. A win's flash fills the cells it is on and leaves the
@@ -309,7 +317,7 @@ export function redraw(
       const dbelow = y + 1 < h;
 
       if (ui.selected[i]) tile |= TILE_SELECTED;
-      if (state.impossible) tile |= TILE_IMPOSSIBLE;
+      if (over) tile |= TILE_IMPOSSIBLE;
       if (dright && state.tiles[i + 1] === col) tile |= TILE_JOINRIGHT;
       if (dbelow && state.tiles[i + w] === col) tile |= TILE_JOINDOWN;
       if (
@@ -318,14 +326,8 @@ export function redraw(
         state.tiles[i + w + 1] === col
       )
         tile |= TILE_JOINDIAG;
-      // Hide the keyboard cursor on a finished board: cleared or stuck, which
-      // `impossible` both says.
-      if (
-        ui.cursor.visible &&
-        ui.cursor.x === x &&
-        ui.cursor.y === y &&
-        !state.impossible
-      )
+      // Hide the keyboard cursor on a finished board: cleared or stuck.
+      if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y && !over)
         tile |= TILE_HASSEL;
       const tone = flash.win(sweepStep(x, y));
       tile |= tone << TILE_TONE_SHIFT;

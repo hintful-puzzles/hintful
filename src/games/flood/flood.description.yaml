@@ -19,3 +19,57 @@ help:
     does not promise the shortest way to finish. The move limit is set by
     the same planner playing from the start, plus the extra moves the game
     allows, so following the hint from the first move finishes in time.
+
+name: Flood
+family: position
+sizes:
+  # A board of any size its desc gives; 99 stands for no bound.
+  w: { min: 1, max: 99 }
+  h: { min: 1, max: 99 }
+  # The colors in play: one more than the greatest a square holds.
+  colors: { min: 1, max: 10 }
+  # The fills the board allows.
+  limit: { min: 0, max: 9999 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+position:
+  # Each square's color.
+  color: { domain: "range(0, colors - 1)" }
+  # The fills made. They go on past the limit, as upstream lets them, so the
+  # checker counts them to one past it, beyond which a count never finishes.
+  moves: { domain: "integers", over: board, checked: "range(0, limit + 1)" }
+freedom: { kind: transition }
+define:
+  # The square every fill floods from.
+  corner: "cell(0, 0)"
+  # The squares joined to the corner through squares of its color: its
+  # region, which a fill repaints.
+  flooded(c): "c = corner or (color(c) = color(corner) and exists n in adj4(c): flooded(n))"
+  # The whole board is one color.
+  flat: "forall c in cells: color(c) = color(corner)"
+moves:
+  # Flood the corner's region with color k, any but its own, while the board
+  # is not yet one color.
+  fill:
+    for: "k in range(0, colors - 1) where k != color(corner)"
+    when: "not flat"
+    set:
+      - for: "c in cells where flooded(c)"
+        color: "k"
+      - moves: "moves + 1"
+finish:
+  - "flat"
+  - "moves <= limit"
+deadEnds:
+  # A square outside the corner's region joins it only on a fill of its own
+  # color, so each color with a square out there costs a fill, the corner's
+  # own included: with the fills made, more than the limit.
+  short: >-
+    moves + count(k in range(0, colors - 1)
+    where exists c in cells where not flooded(c): color(c) = k) > limit
+deal:
+  start: >-
+    each square a color at random, dealt again where all are one, the limit
+    the fills the game's planner takes from the start and the extra moves
+    the board allows

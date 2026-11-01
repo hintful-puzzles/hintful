@@ -40,3 +40,60 @@ help:
 
     If no way to clear the board is left, the hint says so, and the thing to do
     is undo. **Show solution** clears the board for you.
+
+name: Same Game
+family: position
+sizes:
+  # A board of any size its desc gives; 99 stands for no bound.
+  w: { min: 1, max: 99 }
+  h: { min: 1, max: 99 }
+  # The colors a square may be. The game deals three at the least, and a
+  # desc loads any count.
+  colors: { min: 1, max: 9 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+position:
+  # Each square's color, 0 where it is empty.
+  tile: { domain: "range(0, colors)" }
+freedom: { kind: transition }
+define:
+  # The squares joined to s through squares of its color: its group.
+  joined(s, c): "c = s or (tile(c) = tile(s) and exists n in adj4(c): joined(s, n))"
+  # Square c keeps a tile once s's group is removed.
+  stays(s, c): "tile(c) != 0 and not joined(s, c)"
+  # The columns before c's that keep a tile, which c's closes up to.
+  left(s, c): "count(L in before(col(c), cols) where exists d in cells(L): stays(s, d))"
+  # The tiles below c that stay, which it falls onto.
+  below(s, c): "count(d in cells(col(c)) where y(d) > y(c) and stays(s, d))"
+views:
+  # The group a press selects.
+  - joined
+moves:
+  # Remove the group whose first square, in reading order, is s: two or more
+  # squares of one color. The tiles above fall, and the columns emptied close
+  # up to the left.
+  remove:
+    for: >-
+      s in cells where tile(s) != 0 and (exists n in adj4(s): tile(n) = tile(s))
+      and forall c in cells where joined(s, c): index(c, cells) >= index(s, cells)
+    set:
+      - for: "c in cells"
+        tile: "0"
+      - for: "c in cells where stays(s, c), t = cell(left(s, c), h - 1 - below(s, c))"
+        tile: "tile(c)"
+finish:
+  - "forall c in cells: tile(c) = 0"
+deadEnds:
+  # Squares are left and no two of one color are side by side, so nothing
+  # can be removed.
+  stuck: >-
+    (exists c in cells: tile(c) != 0) and
+    forall c in cells where tile(c) != 0: forall n in adj4(c): tile(n) != tile(c)
+  # A removal takes two or more squares of one color, and no square changes
+  # color, so a square the last of its color can never go.
+  last: "exists c in cells where tile(c) != 0: forall d in cells where d != c: tile(d) != tile(c)"
+deal:
+  start: >-
+    a board built backward from empty, groups dropped in so that it can be
+    cleared

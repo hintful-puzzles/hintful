@@ -38,6 +38,9 @@ type ElemSort =
 
 type Sort =
   | { k: "num" }
+  /** An integer of a domain that is not finite, computed exactly, as a
+   * `bigint`. */
+  | { k: "int" }
   | { k: "bool" }
   | { k: "none" }
   | { k: "elem"; e: ElemSort }
@@ -48,6 +51,7 @@ type Sort =
   | { k: "fill" };
 
 const NUM: Sort = { k: "num" };
+const INT: Sort = { k: "int" };
 const BOOL: Sort = { k: "bool" };
 const elem = (e: ElemSort): Sort => ({ k: "elem", e });
 const setOf = (of: Sort): Sort => ({ k: "set", of });
@@ -111,6 +115,7 @@ const scalar = (s: Sort): boolean => s.k === "num" || s.k === "elem" || s.k === 
 
 function tsType(s: Sort): string {
   if (s.k === "bool") return "boolean";
+  if (s.k === "int") return "bigint";
   if (isArray(s)) return "readonly number[]";
   return "number";
 }
@@ -243,10 +248,13 @@ interface Env {
   relations: ReadonlySet<string>;
 }
 
-/** What a position's layer holds a value of, and whether no rule reads it. */
+/** What a position's layer holds a value of (an element's, or the board's
+ * one value), whether no rule reads it, and whether its domain is not
+ * finite. */
 interface LayerSort {
-  readonly over: ElemSort;
+  readonly over: ElemSort | "board";
   readonly carried: boolean;
+  readonly open: boolean;
 }
 
 interface Prelude {
@@ -521,6 +529,7 @@ function compileNode(e: Expr, scope: Scope, env: Env, out: Out): Val {
     }
     case "neg": {
       const v = compileExpr(e.of, scope, env, out);
+      if (v.sort.k === "int") return { code: `-(${v.code})`, sort: INT };
       expect(v, "num", "-");
       return { code: `-(${v.code})`, sort: NUM };
     }
@@ -548,6 +557,12 @@ function name(n: string, scope: Scope, env: Env, out: Out): Val {
     throw new CompileError("a position has a domain a layer, read by the checker only");
   if (!env.geometry && GEOMETRY.has(n))
     throw new CompileError(`${n}: the board is cells alone, with no geometry`);
+  const layer = env.position?.get(n);
+  if (layer?.over === "board") return layerRead(n, layer, "0", env);
+  if (n === "integers")
+    throw new CompileError(
+      "integers is a move's binder's set alone: it has no end to list",
+    );
   const known = NAMES[n];
   if (known !== undefined) return known;
   if (n === "faces" && env.faces !== null) {
@@ -643,6 +658,7 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
   }
   const a = compileExpr(e.a, scope, env, out);
   const b = compileExpr(e.b, scope, env, out);
+  if (a.sort.k === "int" || b.sort.k === "int") return exact(op, a, b);
   switch (op) {
     case "iff":
       expect(a, "bool", op);
@@ -711,6 +727,41 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
       if (op === "*") return { code: `(${a.code} * ${b.code})`, sort: NUM };
       if (op === "/") return { code: `Math.trunc(${a.code} / ${b.code})`, sort: NUM };
       return { code: `(${a.code} % ${b.code})`, sort: NUM };
+  }
+}
+
+/** A number as a `bigint`: a literal written as one. */
+function big(v: Val, op: string): string {
+  if (v.sort.k === "int") return v.code;
+  expect(v, "num", op);
+  return /^-?\d+$/.test(v.code) ? `${v.code}n` : `BigInt(${v.code})`;
+}
+
+/** An operation one side of which is an exact integer: the other side is
+ * made one, and so is the result of arithmetic. `/` truncates and `mod`
+ * takes the dividend's sign, as on numbers. */
+function exact(op: Extract<Expr, { k: "bin" }>["op"], a: Val, b: Val): Val {
+  switch (op) {
+    case "=":
+    case "!=":
+      return {
+        code: `(${big(a, op)} ${op === "=" ? "===" : "!=="} ${big(b, op)})`,
+        sort: BOOL,
+      };
+    case "<":
+    case "<=":
+    case ">":
+    case ">=":
+      return { code: `(${big(a, op)} ${op} ${big(b, op)})`, sort: BOOL };
+    case "+":
+    case "-":
+    case "*":
+    case "/":
+      return { code: `(${big(a, op)} ${op} ${big(b, op)})`, sort: INT };
+    case "mod":
+      return { code: `(${big(a, op)} % ${big(b, op)})`, sort: INT };
+    default:
+      throw new CompileError(`${show(a.sort)} ${op} ${show(b.sort)}`);
   }
 }
 
@@ -1630,6 +1681,17 @@ const timesOf = (d: string, env: Env): string =>
       ? `(${d} === _repeat ? _times : 1)`
       : "1";
 
+/** Layer `fn`'s value at place `at`: exact, as a `bigint`, where its domain
+ * is not finite. */
+function layerRead(fn: string, layer: LayerSort, at: string, env: Env): Val {
+  if (layer.carried && env.carrying !== fn)
+    throw new CompileError(
+      `${fn} is carried: no rule reads it, but its own assignment`,
+    );
+  const code = `p.${fn}[${at}]`;
+  return layer.open ? { code: `BigInt(${code})`, sort: INT } : { code, sort: NUM };
+}
+
 function call(
   fn: string,
   args: readonly Expr[],
@@ -1643,15 +1705,13 @@ function call(
   const layer = env.position?.get(fn);
   if (layer !== undefined) {
     // A layer of the position, read at a cell, or at a face.
+    if (layer.over === "board")
+      throw new CompileError(`${fn} is the board's one value, read by its name`);
     if (args.length !== 1)
       throw new CompileError(`${fn} takes 1, given ${args.length}`);
-    if (layer.carried && env.carrying !== fn)
-      throw new CompileError(
-        `${fn} is carried: no rule reads it, but its own assignment`,
-      );
     const c = compileExpr(args[0], scope, env, out);
     expectElem(c, layer.over, fn);
-    return { code: `p.${fn}[${c.code}]`, sort: NUM };
+    return layerRead(fn, layer, c.code, env);
   }
   const table = env.tables.get(fn);
   if (table !== undefined) {
@@ -1928,13 +1988,30 @@ function call(
     if (def.params.length !== vs.length)
       throw new CompileError(`${fn} takes ${def.params.length}, given ${vs.length}`);
     const fixing = env.prelude?.fixing ?? null;
+    const last = vs.length - 1;
     if (fixing?.name === fn) {
-      expectElem(vs[0], "cell", fn);
-      return { code: `(${fixing.arr}[${vs[0].code}] === 1)`, sort: BOOL };
+      // A self read passes the parameters before the last through as they
+      // are, so it reads the set being computed.
+      args.slice(0, last).forEach((a, i) => {
+        if (!(a.k === "name" && a.name === def.params[i]))
+          throw new CompileError(
+            `${fn} reads itself with ${def.params[i]} changed: its fixed point is in ${def.params[last]} alone`,
+          );
+      });
+      expectElem(vs[last], "cell", fn);
+      return { code: `(${fixing.arr}[${vs[last].code}] === 1)`, sort: BOOL };
     }
     if (mentions(def.body, fn, env.defs, new Set())) {
-      expectElem(vs[0], "cell", fn);
-      return { code: `(${fixedPoint(fn, def, env)}[${vs[0].code}] === 1)`, sort: BOOL };
+      expectElem(vs[last], "cell", fn);
+      const fixed = fixedPoint(fn, def, vs.slice(0, last), env);
+      const at =
+        last === 0
+          ? fixed
+          : `${fixed}(${vs
+              .slice(0, last)
+              .map((v) => v.code)
+              .join(", ")})`;
+      return { code: `(${at}[${vs[last].code}] === 1)`, sort: BOOL };
     }
     const inner = new Map<string, Val>();
     const h = env.hoist;
@@ -2063,35 +2140,62 @@ function monotone(
  * The array holding definition `fn`'s least fixed point, computed once at
  * the top of the function being compiled: the least set of cells for which
  * its body holds, its reads of itself read as membership. It reads only the
- * position, so it is the same wherever the function reads it.
+ * position and its parameters, so it is the same wherever the function reads
+ * it with the same values of the parameters before its last: one set, or,
+ * with such parameters, a function giving the set for their values.
  */
-function fixedPoint(fn: string, def: Definition, env: Env): string {
+function fixedPoint(
+  fn: string,
+  def: Definition,
+  earlier: readonly Val[],
+  env: Env,
+): string {
   const pre = env.prelude;
   if (pre === null)
     throw new CompileError(
       `${fn} reads itself, which only a planning game's rules may`,
     );
-  if (def.params.length !== 1)
-    throw new CompileError(`${fn} reads itself, so it takes one cell`);
   const kept = pre.fixed.get(fn);
   if (kept !== undefined) return kept;
   monotone(def.body, fn, true, env.defs);
+  for (const v of earlier)
+    if (v.sort.k !== "num" && v.sort.k !== "elem")
+      throw new CompileError(
+        `${fn}: a fixed point's parameters are numbers and elements`,
+      );
   const arr = Out.fresh("_fix");
   const c = Out.fresh("_c");
   const grew = Out.fresh("_grew");
+  // The parameters before the last, as the function computing the set for
+  // each of their values names them.
+  const names = earlier.map(() => Out.fresh("_a"));
+  const scope = new Map<string, Val>(
+    earlier.map((v, i) => [def.params[i], { code: names[i], sort: v.sort }]),
+  );
+  scope.set(def.params[earlier.length], { code: c, sort: elem("cell") });
   // The body first, so a fixed point it reads is computed ahead of this one.
   const body = new Out(0);
   const outer = pre.fixing;
   pre.fixing = { name: fn, arr };
-  const v = compileExpr(
-    def.body,
-    new Map([[def.params[0], { code: c, sort: elem("cell") }]]),
-    env,
-    body,
-  );
+  const v = compileExpr(def.body, scope, env, body);
   pre.fixing = outer;
   expect(v, "bool", fn);
   const out = pre.out;
+  // With parameters before the last, a set for each of their values, made
+  // when it is first read and kept for the call.
+  const sets = names.length > 0 ? Out.fresh("_sets") : "";
+  const key = names.length === 1 ? names[0] : `[${names.join(", ")}].join()`;
+  const of = `${arr}Of`;
+  if (names.length > 0) {
+    out.emit(
+      `const ${sets} = new Map<${names.length === 1 ? "number" : "string"}, Uint8Array>();`,
+    );
+    out.open(
+      `const ${of} = (${names.map((n) => `${n}: number`).join(", ")}): Uint8Array => {`,
+    );
+    out.emit(`const kept = ${sets}.get(${key});`);
+    out.emit("if (kept !== undefined) return kept;");
+  }
   out.emit(`const ${arr} = new Uint8Array(sp.cells.length);`);
   out.open(`for (let ${grew} = true; ${grew}; ) {`);
   out.emit(`${grew} = false;`);
@@ -2104,8 +2208,14 @@ function fixedPoint(fn: string, def: Definition, env: Env): string {
   out.close();
   out.close();
   out.close();
-  pre.fixed.set(fn, arr);
-  return arr;
+  const made = names.length > 0 ? of : arr;
+  if (names.length > 0) {
+    out.emit(`${sets}.set(${key}, ${arr});`);
+    out.emit(`return ${arr};`);
+    out.close("};");
+  }
+  pre.fixed.set(fn, made);
+  return made;
 }
 
 // --- a technique ------------------------------------------------------------
@@ -2741,6 +2851,7 @@ export {
   type Env,
   expect,
   HEADER,
+  type LayerSort,
   Out,
   type Sort,
   show,

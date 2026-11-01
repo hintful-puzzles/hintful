@@ -35,6 +35,16 @@ const PLANTED: Record<string, Record<string, string>> = {
     // solid's worth of paint, which a board with paint to spare can finish.
     short: `count(c in cells where blue(c) = 1) + count(f in faces where paint(f) = 1) != |faces|`,
   },
+  flood: {
+    // A board that can be one color in exactly the fills left finishes.
+    short: `moves + count(k in range(0, colors - 1) where exists c in cells where not flooded(c): color(c) = k) >= limit`,
+  },
+  samegame: {
+    // An empty board has no two squares side by side either.
+    stuck: `forall c in cells where tile(c) != 0: forall n in adj4(c): tile(n) != tile(c)`,
+    // An empty square is no color, and many may be left.
+    last: `exists c in cells: forall d in cells where d != c: tile(d) != tile(c)`,
+  },
   sixteen: {
     // A slide along an even side is an odd permutation.
     parity: `count(a in cells, b in cells where index(a, cells) < index(b, cells) and value(a) > value(b)) mod 2 = 1`,
@@ -131,6 +141,7 @@ it("checks every dead-end claim sound, and finds every planted one unsound", asy
     for (const r of results) {
       lines.push(
         `${d.game} ${worldName(r.world)}: ${r.positions} positions, ${r.finishable} can finish, ${r.missed} that cannot are claimed by none` +
+          (r.beyond === 0 ? "" : `, ${r.beyond} with a move out of the window`) +
           (r.broken === null ? "" : `; BROKEN: ${r.broken}`),
       );
       if (r.broken !== null) bad.push(`${d.game} ${worldName(r.world)}: ${r.broken}`);

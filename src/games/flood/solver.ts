@@ -9,6 +9,9 @@
 
 import { stepBudget } from "../../engine/step-budget.ts";
 
+/** A grid of colors: the state's layer, or the solver's own working copy. */
+export type Colors = Uint8Array | Int32Array;
+
 /** Upstream's `RECURSION_DEPTH`: depth-3 was empirically a clear win
  * over 2, with 4 only negligibly better than 3. */
 const RECURSION_DEPTH = 3;
@@ -45,7 +48,7 @@ export class SolverScratch {
 export function fill(
   w: number,
   h: number,
-  grid: Uint8Array,
+  grid: Colors,
   x0: number,
   y0: number,
   newcolor: number,
@@ -77,7 +80,7 @@ export function fill(
 }
 
 /** True iff every cell of `grid` is the same color. */
-export function completed(grid: Uint8Array): boolean {
+export function completed(grid: Colors): boolean {
   for (let i = 1; i < grid.length; i++) if (grid[i] !== grid[0]) return false;
   return true;
 }
@@ -105,7 +108,7 @@ interface SearchResult {
 function search(
   w: number,
   h: number,
-  grid: Uint8Array,
+  grid: Colors,
   x0: number,
   y0: number,
   scratch: SolverScratch,
@@ -175,7 +178,7 @@ function search(
 function choosemoveRecurse(
   w: number,
   h: number,
-  grid: Uint8Array,
+  grid: Colors,
   x0: number,
   y0: number,
   maxmove: number,
@@ -233,7 +236,7 @@ function choosemoveRecurse(
 export function choosemove(
   w: number,
   h: number,
-  grid: Uint8Array,
+  grid: Colors,
   x0: number,
   y0: number,
   maxmove: number,
@@ -248,7 +251,7 @@ export function choosemove(
 export function solveMoves(
   w: number,
   h: number,
-  grid: Uint8Array,
+  grid: Colors,
   colors: number,
 ): number[] {
   const scratch = new SolverScratch(w, h);

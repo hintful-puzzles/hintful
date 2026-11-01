@@ -16,22 +16,25 @@ import {
   LEFT_BUTTON,
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { executeMove, samegameGame } from "./index.ts";
+import { groupsOf, hasLastOfColor, isEmpty, removed } from "./solver.ts";
 import {
-  check,
   decodeParams,
   encodeParams,
-  hasNoSolution,
+  groupOf,
+  isCleared,
+  isStuck,
   newDesc,
   newState,
   npoints,
+  positionOf,
+  rulesOf,
   type SamegameMove,
   type SamegameParams,
   type SamegameState,
   type SamegameUi,
-  snuggle,
   status,
 } from "./state.ts";
 
@@ -137,7 +140,7 @@ describe("Same Game desc", () => {
   it("round-trips through validate/newState", () => {
     const p: SamegameParams = { w: 3, h: 1, ncols: 3, scoresub: 2 };
     expect(validateDesc(samegameGame, p, "1,2,3")).toBeNull();
-    expect(newState(p, "1,2,3").tiles).toEqual([1, 2, 3]);
+    expect([...newState(p, "1,2,3").tiles]).toEqual([1, 2, 3]);
     // Wrong count / out-of-range color are rejected.
     expect(validateDesc(samegameGame, p, "1,2")).not.toBeNull();
     expect(validateDesc(samegameGame, p, "1,2,9")).not.toBeNull();
@@ -156,32 +159,70 @@ describe("Same Game desc", () => {
   });
 });
 
+describe("Same Game's search", () => {
+  // The search keeps its own packed board: its groups, its removal, its
+  // finish and its last-of-a-color cut, each held to the description's.
+  it("reads its board as the description's rules do", () => {
+    const rng = randomNew("samegame search board");
+    let positions = 0;
+    for (const id of ["5x5c3s2", "6x5c4s2", "10x5c3s2"]) {
+      const params = decodeParams(id);
+      for (let deal = 0; deal < 4; deal++) {
+        let s = newState(params, newDesc(params, rng).desc);
+        const rules = rulesOf(s);
+        for (;;) {
+          positions++;
+          const p = positionOf(s.tiles);
+          const packed = Uint8Array.from(s.tiles);
+          expect(isEmpty(packed, s.w, s.h)).toBe(rules.finished(p));
+          expect(hasLastOfColor(packed, s.ncols)).toBe(
+            rules.witnesses("last", p).length > 0,
+          );
+          const groups = groupsOf(s.tiles, s.w, s.h);
+          const moves = rules.moves(p);
+          expect(moves.map((m) => m.s)).toEqual(groups.map((g) => g[0]));
+          for (const g of groups) {
+            expect(groupOf(s, g[0])).toEqual([...g]);
+            const after = rules.play(p, { move: "remove", s: g[0] }).tile;
+            expect([...removed(s.tiles, s.w, s.h, g)]).toEqual([...after]);
+          }
+          if (groups.length === 0) break;
+          const g = groups[randomUpto(rng, groups.length)];
+          s = executeMove(s, { type: "remove", tiles: [...g] });
+        }
+      }
+    }
+    expect(positions).toBeGreaterThan(100);
+  });
+});
+
 describe("Same Game gravity + completion", () => {
   it("falls tiles down and shuffles columns left", () => {
-    // col1 occupied, col0 and col2 empty.
-    const tiles = [0, 1, 0, 0, 1, 0, 0, 1, 0];
-    snuggle(tiles, 3, 3);
-    expect(tiles).toEqual([1, 0, 0, 1, 0, 0, 1, 0, 0]);
+    // The 2s go: column 0 whole, so the others close up to it, and in
+    // column 1 the 3 above the removed square falls onto the 1.
+    const s = state3x3("2,3,1,2,2,3,2,1,3");
+    const next = executeMove(s, { type: "remove", tiles: [0, 3, 4, 6] });
+    expect([...next.tiles]).toEqual([0, 1, 0, 3, 3, 0, 1, 3, 0]);
   });
 
-  it("detects complete and impossible positions", () => {
-    expect(check([0, 0, 0, 0], 2, 2)).toEqual({ complete: true, impossible: true });
-    // Checkerboard: no two adjacent share a color ⇒ impossible (stuck).
-    expect(check([1, 2, 1, 2, 1, 2, 1, 2, 1], 3, 3)).toEqual({
-      complete: false,
-      impossible: true,
-    });
-    // A same-color pair ⇒ a move remains.
-    expect(check([1, 1, 2, 3], 2, 2).impossible).toBe(false);
+  it("detects cleared and stuck positions", () => {
+    const blank = { ...state3x3("1,1,1,2,2,2,2,3,3"), tiles: new Int32Array(9) };
+    expect(isCleared(blank)).toBe(true);
+    expect(isStuck(blank)).toBe(false);
+    // Checkerboard: no two adjacent share a color, so the board is stuck.
+    const checker = state3x3("1,2,1,2,1,2,1,2,1");
+    expect(isCleared(checker)).toBe(false);
+    expect(isStuck(checker)).toBe(true);
+    // A same-color pair: a move remains.
+    expect(isStuck(state3x3("1,1,2,3,3,1,2,1,2"))).toBe(false);
   });
 
   it("proves a board with a lone tile of a color can never be cleared", () => {
-    expect(hasNoSolution(state3x3("1,1,1,2,2,2,2,2,3"))).toBe(true);
-    expect(hasNoSolution(state3x3("1,1,1,2,2,2,2,3,3"))).toBe(false);
+    expect(samegameGame.hasNoSolution?.(state3x3("1,1,1,2,2,2,2,2,3"))).not.toBe(false);
+    expect(samegameGame.hasNoSolution?.(state3x3("1,1,1,2,2,2,2,3,3"))).toBe(false);
     // And a cleared board has no tile left to be alone.
-    expect(hasNoSolution({ ...state3x3("1,1,1,2,2,2,2,3,3"), tiles: [0, 0, 0] })).toBe(
-      false,
-    );
+    const blank = { ...state3x3("1,1,1,2,2,2,2,3,3"), tiles: new Int32Array(9) };
+    expect(samegameGame.hasNoSolution?.(blank)).toBe(false);
   });
 
   it("refuses a board with no move, and opens one with a single move", () => {
@@ -247,9 +288,9 @@ describe("Same Game selection + execution", () => {
 
     const next = executeMove(s, move as SamegameMove);
     expect(next.score).toBe(s.score + npoints(1, 3)); // (3-1)² = 4
-    expect(s.tiles).toEqual([1, 1, 2, 3, 3, 3, 1, 2, 2]); // source unmutated
+    expect([...s.tiles]).toEqual([1, 1, 2, 3, 3, 3, 1, 2, 2]); // source unmutated
     // The cleared row's neighbors fell down.
-    expect(next.tiles).toEqual([0, 0, 0, 1, 1, 2, 1, 2, 2]);
+    expect([...next.tiles]).toEqual([0, 0, 0, 1, 1, 2, 1, 2, 2]);
   });
 
   it("a lone tile cannot be selected or removed", () => {
@@ -287,8 +328,9 @@ describe("Same Game selection + execution", () => {
     const next = executeMove(s, click(s, ui, 0, 0) as SamegameMove);
     expect(status(next)).toBe("solved");
     // A stuck board is "ongoing", never "lost", and holds the timer.
-    expect(status({ ...s, impossible: true })).toBe("ongoing");
-    expect(samegameGame.timerHolds?.({ ...s, impossible: true })).toBe(true);
+    const stuck = newState(p, "1,2");
+    expect(status(stuck)).toBe("ongoing");
+    expect(samegameGame.timerHolds?.(stuck)).toBe(true);
     expect(samegameGame.timerHolds?.(s)).toBe(false);
   });
 
@@ -300,13 +342,14 @@ describe("Same Game selection + execution", () => {
     expect(samegameGame.statusbarText?.(s, ui)).toBe("Score: 0  Selected: 3 (1)");
     expect(
       samegameGame.statusbarText?.(
-        { ...s, tiles: s.tiles.map(() => 0), impossible: true, score: 7 },
+        { ...s, tiles: s.tiles.map(() => 0), score: 7 },
         freshUi(s),
       ),
     ).toBe("Score: 7");
-    expect(
-      samegameGame.statusbarText?.({ ...s, impossible: true, score: 4 }, freshUi(s)),
-    ).toBe("Cannot move! Score: 4");
+    const stuck = state3x3("1,2,1,2,1,2,1,2,1");
+    expect(samegameGame.statusbarText?.({ ...stuck, score: 4 }, freshUi(s))).toBe(
+      "Cannot move! Score: 4",
+    );
   });
 
   it("executeMove range-checks indices", () => {

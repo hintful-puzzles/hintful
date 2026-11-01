@@ -102,7 +102,7 @@ describe("Same Game redraw", () => {
   });
 
   it("recolors tile innards to COL_INK on a stuck board", () => {
-    const state: SamegameState = { ...mkState("1,2"), impossible: true };
+    const state: SamegameState = mkState("1,2");
     const { dr, ops } = recordingDrawing();
     redraw(dr, freshDs(state), null, state, 1, emptyUi(state), 0, NO_FLASH);
     // COL_INK = palette index 10 (drawn as the inner square).
@@ -148,7 +148,7 @@ describe("Same Game: the win flash on a cleared board", () => {
 });
 
 describe("Same Game: the flash of a board with no move left", () => {
-  const state: SamegameState = { ...mkState("1,2"), impossible: true };
+  const state: SamegameState = mkState("1,2");
   /** Whether the field's margin, the one rect wider than a tile, is lit. */
   const marginLit = (time: number): boolean => {
     const { dr, ops } = recordingDrawing();

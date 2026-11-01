@@ -33,11 +33,10 @@ import {
   type Group,
   groupsOf,
   judge,
-  lastOfColor,
   loneSquares,
   removed,
 } from "./solver.ts";
-import { isStuck, type SamegameMove, type SamegameState } from "./state.ts";
+import { positionOf, rulesOf, type SamegameMove, type SamegameState } from "./state.ts";
 
 /** What a step rests on, by the branch of {@link hint} that chose it. */
 export const SAMEGAME_RUNGS = [
@@ -102,17 +101,14 @@ function trapOf(
   s: SamegameState,
   r: Group,
 ): { kind: "lastOfColor"; victim: number } | { kind: "stuck" } | null {
-  const after = removed(s.tiles, s.w, s.h, r);
-  const [victim] = lastOfColor(after, s.ncols);
-  if (victim !== undefined) {
-    // Named where it stands now, before the rival's removal moves it.
-    const moved = new Int32Array(s.w * s.h);
-    removed(s.tiles, s.w, s.h, r, moved);
-    const before = moved.indexOf(victim);
-    return { kind: "lastOfColor", victim: before };
-  }
-  if (after[(s.h - 1) * s.w] !== 0 && groupsOf(after, s.w, s.h).length === 0)
-    return { kind: "stuck" };
+  const moved = new Int32Array(s.w * s.h);
+  const after = positionOf(Int32Array.from(removed(s.tiles, s.w, s.h, r, moved)));
+  const rules = rulesOf(s);
+  const [victim] = rules.witnesses("last", after);
+  // Named where it stands now, before the rival's removal moves it.
+  if (victim !== undefined)
+    return { kind: "lastOfColor", victim: moved.indexOf(victim) };
+  if (rules.deadEnd(after) === "stuck") return { kind: "stuck" };
   return null;
 }
 
@@ -131,14 +127,21 @@ function joinedBy(s: SamegameState, g: Group): number | null {
 }
 
 /**
- * Same Game's verdict a player can see at a glance: a square that is the last
- * of its color, outlined so they can see which. A stuck board is the status
- * line's already, so it is a bare verdict.
+ * Same Game's verdict a player can see at a glance, the description's claims:
+ * a square that is the last of its color, outlined so they can see which. A
+ * stuck board is the status line's already, so it is a bare verdict.
+ * Upstream's soluble generator deals neither. Its scattered-colors one, which
+ * the params here cannot ask for, deals two of every color and so can deal a
+ * board with no move; refusing that one is a compatibility break the owner
+ * accepted (2026-10-11), no input being a move on it.
  */
 export function hasNoSolution(state: SamegameState): boolean | MarkedDeadEnd {
-  if (isStuck(state)) return true;
-  const last = lastOfColor(state.tiles, state.ncols);
-  if (last.length === 0) return false;
+  const p = positionOf(state.tiles);
+  const rules = rulesOf(state);
+  const claim = rules.deadEnd(p);
+  if (claim === null) return false;
+  if (claim === "stuck") return true;
+  const last = rules.witnesses("last", p);
   const many = last.length > 1;
   const squares = mark.the(
     "outline",

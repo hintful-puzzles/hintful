@@ -34,7 +34,7 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import { completed, fill, solveMoves } from "./solver.ts";
+import { solveMoves } from "./solver.ts";
 import {
   decodeParams,
   defaultParams,
@@ -50,6 +50,8 @@ import {
   menu,
   newDesc,
   newState,
+  positionOf,
+  rulesOf,
   status,
   textFormat,
   validateParams,
@@ -57,33 +59,26 @@ import {
 
 // --- move logic -------------------------------------------------------
 
-/** Apply `fills` in turn to a copy of the grid, advancing the move count. */
+/** Play `fills` in turn by the description's fill, advancing the move
+ * count. */
 function applyFills(state: FloodState, fills: readonly number[]): FloodState {
-  const grid = Uint8Array.from(state.grid);
-  const queue = new Int32Array(state.w * state.h);
-  for (const c of fills) fill(state.w, state.h, grid, FILLX, FILLY, c, queue);
-  const moves = state.moves + fills.length;
-  return { ...state, grid, moves };
+  const rules = rulesOf(state);
+  let p = positionOf(state);
+  for (const k of fills) p = rules.play(p, { move: "fill", k });
+  return { ...state, grid: p.color, moves: p.moves[0] };
 }
 
 export function executeMove(state: FloodState, move: FloodMove): FloodState {
   if (move.type === "solve") {
     // Snap to solved: the hint plan is the step-by-step experience, so Solve
     // just completes the board.
-    if (completed(state.grid)) throw new Error("Puzzle is already solved");
+    if (rulesOf(state).moves(positionOf(state)).length === 0)
+      throw new Error("Puzzle is already solved");
     return applyFills(state, solveMoves(state.w, state.h, state.grid, state.colors));
   }
   if (move.type !== "fill") return assertNever(move, "flood: executeMove");
-
-  const corner = state.grid[FILLY * state.w + FILLX];
-  if (
-    move.color < 0 ||
-    move.color >= state.colors ||
-    move.color === corner ||
-    completed(state.grid)
-  ) {
+  if (!rulesOf(state).legal(positionOf(state), { move: "fill", k: move.color }))
     throw new Error(`Illegal flood fill with color ${move.color}`);
-  }
   return applyFills(state, [move.color]);
 }
 
@@ -138,7 +133,8 @@ export type FloodRung = (typeof FLOOD_RUNGS)[number];
 
 function hint(state: FloodState): HintResult<FloodMove, unknown, FloodRung> {
   // Flooded past the move limit: the status is lost, and no fill is legal.
-  if (completed(state.grid)) return { ok: false, error: GAME_OVER };
+  if (rulesOf(state).moves(positionOf(state)).length === 0)
+    return { ok: false, error: GAME_OVER };
   const moves = solveMoves(state.w, state.h, state.grid, state.colors);
   if (moves.length === 0) return { ok: false, error: NO_MOVE_WORTH_MAKING };
   // Each step's rings are read off the board it is shown on: the one the

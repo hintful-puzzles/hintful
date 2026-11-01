@@ -114,32 +114,18 @@ function loneCount(tiles: Tiles, w: number, h: number): number {
   return n;
 }
 
-/**
- * The squares that are the last of their color, by grid index. A removal takes
- * two or more of one color and no square changes color, so such a square can
- * never go, and the board can never be cleared.
- */
-export function lastOfColor(tiles: ArrayLike<number>, ncols: number): number[] {
-  const count = new Array<number>(ncols + 1).fill(0);
-  const at = new Array<number>(ncols + 1).fill(-1);
-  for (let i = 0; i < tiles.length; i++) {
-    count[tiles[i]]++;
-    at[tiles[i]] = i;
-  }
-  const out: number[] = [];
-  for (let c = 1; c <= ncols; c++) if (count[c] === 1) out.push(at[c]);
-  return out.sort((a, b) => a - b);
-}
-
-function hasLastOfColor(tiles: Tiles, ncols: number): boolean {
+/** Whether a square is the last of its color: the description's `last`, as
+ * the search reads it on its packed board. */
+export function hasLastOfColor(tiles: Tiles, ncols: number): boolean {
   const count = new Uint16Array(ncols + 1);
   for (const c of tiles) count[c]++;
   for (let c = 1; c <= ncols; c++) if (count[c] === 1) return true;
   return false;
 }
 
-/** Whether the board is empty: compaction fills the bottom-left cell first. */
-const isEmpty = (tiles: Tiles, w: number, h: number): boolean =>
+/** Whether the board is empty, the description's finish, as the search reads
+ * it: compaction fills the bottom-left cell first. */
+export const isEmpty = (tiles: Tiles, w: number, h: number): boolean =>
   tiles[(h - 1) * w] === 0;
 
 /** A board's exact key: a color fits in a character. */

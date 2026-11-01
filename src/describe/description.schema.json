@@ -211,7 +211,11 @@
       "properties": {
         "domain": {
           "$ref": "#/$defs/formula",
-          "description": "The values the layer may hold, read by the dead-end checker."
+          "description": "The values the layer may hold, read by the dead-end checker; `integers` for a domain that is not finite, which holds any integer a double holds exactly and is computed exactly."
+        },
+        "checked": {
+          "$ref": "#/$defs/formula",
+          "description": "Of a layer whose domain is `integers`, the values the dead-end checker searches it over: a line of moves that leaves them ends there."
         },
         "arranged": {
           "$ref": "#/$defs/formula",
@@ -230,19 +234,18 @@
           "description": "A value a move copies and no rule reads, such as a barrel's letter: the compiler refuses a read of it but in an assignment to itself, and the dead-end checker holds it at 0."
         },
         "over": {
-          "const": "faces",
-          "description": "The layer holds a value a face of `space.faces`, not a cell."
+          "enum": ["faces", "board"],
+          "description": "The layer holds a value a face of `space.faces`, or one value for the whole board, read by its name alone, in place of a value a cell."
         }
       }
     },
     "assignments": {
       "type": "array",
       "minItems": 1,
-      "description": "What a move sets: each entry's binders, the last of them the cell assigned, and a term for each layer it assigns, read on the position before the move.",
+      "description": "What a move sets: each entry's binders, the last of them the cell assigned, and a term for each layer it assigns, read on the position before the move. An entry with no binders assigns layers over the board.",
       "items": {
         "type": "object",
-        "required": ["for"],
-        "minProperties": 2,
+        "minProperties": 1,
         "properties": { "for": { "$ref": "#/$defs/formula" } },
         "additionalProperties": { "$ref": "#/$defs/formula" }
       }
@@ -386,6 +389,11 @@
           }
         },
         "define": { "$ref": "#/$defs/define" },
+        "views": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+          "description": "A planning game's definitions the game reads beside its rules, each of cells, its last parameter the cell: the compiled module's `views` gives the cells each holds of, for values of the others."
+        },
         "shape": { "$ref": "#/$defs/shape" },
         "rules": { "$ref": "#/$defs/rules" },
         "clues": { "$ref": "#/$defs/clues" },

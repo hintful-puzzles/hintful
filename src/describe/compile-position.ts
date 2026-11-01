@@ -19,6 +19,7 @@ import {
   type Env,
   expect,
   HEADER,
+  type LayerSort,
   Out,
   type Sort,
   show,
@@ -26,6 +27,8 @@ import {
 } from "./compile.ts";
 import {
   type AssignJson,
+  type LayerJson,
+  OPEN_DOMAIN,
   type PlanningApplied,
   type PlanningJson,
   parseBinders,
@@ -35,6 +38,13 @@ import {
 import { type Binder, type Expr, parse } from "./expr.ts";
 
 const capitalized = (id: string): string => id[0].toUpperCase() + id.slice(1);
+
+/** Whether a layer's domain is not finite: a `Float64Array`, read exactly. */
+const isOpen = (layer: LayerJson): boolean => layer.domain.trim() === OPEN_DOMAIN;
+
+/** Whether a binder ranges over every integer, which no loop lists. */
+const unlisted = (b: Binder): boolean =>
+  b.kind === "in" && b.of.k === "name" && b.of.name === OPEN_DOMAIN;
 
 function parsed(game: string, where: string, src: string): Expr {
   try {
@@ -147,26 +157,36 @@ function compileMove(
   const bs = binders(game, `move ${m.name} for`, m.for);
   if (bs.some((b) => b.kind === "fill"))
     throw new CompileError(`${m.name}: a filling binds in a quantifier, not a move`);
+  // Binders over every integer come last: the move's binding is then given,
+  // checked by `legal`, and never listed.
+  const opens = bs.findIndex(unlisted);
+  const listed = opens < 0 ? bs : bs.slice(0, opens);
+  if (!bs.slice(listed.length).every(unlisted))
+    throw new CompileError(`${m.name}: a binder over integers comes after every other`);
   const when = m.when === null ? null : parsed(game, `move ${m.name} when`, m.when);
-  const sorts = bindingSorts(bs, env);
+  const sorts = bindingSorts(listed, env);
+  for (const b of bs.slice(listed.length)) sorts.set(b.name, { k: "int" });
   const fields = [...sorts.keys()];
   const type = `${capitalized(m.name)}Move`;
   const tag = JSON.stringify(m.name);
 
   // Every legal binding, pushed in binding order.
-  const enBody = body(env, 2, (en) =>
-    bindingLoops(bs, new Map(), env, en, (sc) => {
-      const fieldsOf = fields.map((f) => `${f}: ${(sc.get(f) as Val).code}`);
-      const push = `into.push({ move: ${tag}, ${fieldsOf.join(", ")} });`;
-      if (when === null) {
-        en.emit(push);
-        return;
-      }
-      const w = compileExpr(when, sc, env, en);
-      expect(w, "bool", `${m.name} when`);
-      en.emit(`if (${w.code}) ${push}`);
-    }),
-  );
+  const enBody =
+    listed.length < bs.length
+      ? ["    // Bound over every integer: checked and played, never listed."]
+      : body(env, 2, (en) =>
+          bindingLoops(bs, new Map(), env, en, (sc) => {
+            const fieldsOf = fields.map((f) => `${f}: ${(sc.get(f) as Val).code}`);
+            const push = `into.push({ move: ${tag}, ${fieldsOf.join(", ")} });`;
+            if (when === null) {
+              en.emit(push);
+              return;
+            }
+            const w = compileExpr(when, sc, env, en);
+            expect(w, "bool", `${m.name} when`);
+            en.emit(`if (${w.code}) ${push}`);
+          }),
+        );
 
   // A binding is legal where each binder holds it, in turn, and the guard.
   const scope = new Map<string, Val>();
@@ -174,6 +194,16 @@ function compileMove(
     for (const b of bs) {
       const v = `v_${b.name}`;
       const sort = sorts.get(b.name) as Sort;
+      if (unlisted(b)) {
+        lg.emit(`if (!Number.isInteger(${v})) return false;`);
+        scope.set(b.name, { code: `BigInt(${v})`, sort });
+        if (b.where !== null) {
+          const w = compileExpr(b.where, scope, env, lg);
+          expect(w, "bool", `where of ${b.name}`);
+          lg.emit(`if (!(${w.code})) return false;`);
+        }
+        continue;
+      }
       if (b.kind === "let") {
         const t = compileExpr(b.of, scope, env, lg);
         lg.emit(`if (${v} !== ${t.code}) return false;`);
@@ -213,27 +243,51 @@ function compileMove(
     );
     m.set.forEach(({ assign, on }, i) => {
       const where = `move ${m.name} set ${i}`;
+      // Each layer's term, written at place `at` of it.
+      const write = (sc: Map<string, Val> | ReadonlyMap<string, Val>, at: string) => {
+        for (const [layer, src] of Object.entries(assign as AssignJson)) {
+          if (layer === "for") continue;
+          const sort = env.position?.get(layer) as LayerSort;
+          env.carrying = sort.carried ? layer : null;
+          const t = compileExpr(parsed(game, `${where} ${layer}`, src), sc, env, pl);
+          env.carrying = null;
+          let code = t.code;
+          if (sort.open && t.sort.k === "int") {
+            env.used.add("held");
+            code = `held(${t.code})`;
+          } else expect(t, "num", `${where} ${layer}`);
+          pl.emit(`q.${layer}[${at}] = ${code};`);
+        }
+      };
+      const named = Object.keys(assign).filter((l) => l !== "for");
+      for (const layer of named)
+        if (env.position?.get(layer) === undefined)
+          throw new CompileError(`${where}: no layer ${layer}`);
+      const board = named.filter((l) => env.position?.get(l)?.over === "board");
+      if (assign.for === undefined) {
+        if (board.length < named.length)
+          throw new CompileError(`${where}: no cell assigned`);
+        under(on, pl, () => write(scope, "0"));
+        return;
+      }
+      if (board.length > 0)
+        throw new CompileError(
+          `${where}: ${board[0]} is the board's, assigned with no for`,
+        );
       const ebs = binders(game, `${where} for`, assign.for);
       const last = ebs[ebs.length - 1];
       if (last === undefined) throw new CompileError(`${where}: no cell assigned`);
       under(on, pl, () => {
         bindingLoops(ebs, scope, env, pl, (sc) => {
           const c = sc.get(last.name) as Val;
-          for (const [layer, src] of Object.entries(assign as AssignJson)) {
-            if (layer === "for") continue;
-            const sort = env.position?.get(layer);
-            if (sort === undefined)
-              throw new CompileError(`${where}: no layer ${layer}`);
-            if (!(c.sort.k === "elem" && c.sort.e === sort.over))
+          for (const layer of named) {
+            const over = (env.position?.get(layer) as LayerSort).over;
+            if (!(c.sort.k === "elem" && c.sort.e === over))
               throw new CompileError(
-                `${where}: ${last.name} is a ${show(c.sort)}, not a ${sort.over}`,
+                `${where}: ${last.name} is a ${show(c.sort)}, not a ${over}`,
               );
-            env.carrying = sort.carried ? layer : null;
-            const t = compileExpr(parsed(game, `${where} ${layer}`, src), sc, env, pl);
-            env.carrying = null;
-            expect(t, "num", `${where} ${layer}`);
-            pl.emit(`q.${layer}[${c.code}] = ${t.code};`);
           }
+          write(sc, c.code);
         });
       });
     });
@@ -250,7 +304,7 @@ function compileMove(
     ].join("\n"),
     name: m.name,
     enumerate: [
-      `  function ${m.name}Moves(${sig(enBody)}: Position, into: Move[]): void {`,
+      `  function ${m.name}Moves(${sig(enBody)}: Position, ${param("into", enBody.join("\n"))}: Move[]): void {`,
       ...enBody,
       "  }",
     ],
@@ -353,6 +407,39 @@ function claimWitnesses(
   });
 }
 
+/** Each view as a function of the position and the definition's parameters
+ * but its last, a cell, giving the cells it holds of, in order. */
+function viewFunctions(names: readonly string[], game: string, env: Env): string[] {
+  return names.flatMap((name) => {
+    const def = env.defs.get(name);
+    if (def === undefined || def.params.length === 0)
+      throw new CompileError(`${game}: view ${name} is no definition of a cell`);
+    const earlier = def.params.slice(0, -1).map((_, i) => `a${i}`);
+    const lines = body(env, 3, (out) => {
+      const c = Out.fresh("_c");
+      const scope = new Map<string, Val>(
+        [...earlier, c].map((code, i) => [
+          `$${i}`,
+          { code, sort: { k: "elem", e: "cell" } },
+        ]),
+      );
+      const call: Expr = {
+        k: "call",
+        fn: name,
+        args: def.params.map((_, i) => ({ k: "name", name: `$${i}` })),
+      };
+      out.emit("const at: number[] = [];");
+      out.open(`for (let ${c} = 0; ${c} < sp.cells.length; ${c}++) {`);
+      const v = compileExpr(call, scope, env, out);
+      expect(v, "bool", `view ${name}`);
+      out.emit(`if (${v.code}) at.push(${c});`);
+      out.close();
+      out.emit("return at;");
+    });
+    return [`    ${name}: (${["p", ...earlier].join(", ")}) => {`, ...lines, "    },"];
+  });
+}
+
 /** The type of a dealt table of `n` arguments: arrays `n` deep. */
 const tableType = (n: number): string =>
   n === 0 ? "number" : `readonly ${n === 1 ? "number" : `(${tableType(n - 1)})`}[]`;
@@ -404,8 +491,10 @@ export function compilePlanning(
       Object.entries(d.position).map(([l, layer]) => [
         l,
         {
-          over: layer.over === "faces" ? "face" : "cell",
+          over:
+            layer.over === "faces" ? "face" : layer.over === "board" ? "board" : "cell",
           carried: layer.carried === true,
+          open: isOpen(layer),
         },
       ]),
     ),
@@ -439,6 +528,14 @@ export function compilePlanning(
   const claimText = claims.join("\n");
   const witnesses = claimWitnesses(applied.deadEnds, json.game, env);
   const witnessText = witnesses.join("\n");
+  const viewNames = d.views ?? [];
+  const views = viewFunctions(viewNames, json.game, env);
+  const viewText = views.join("\n");
+  const viewTypes = viewNames.map((name) => {
+    const n = (env.defs.get(name)?.params.length ?? 1) - 1;
+    const args = Array.from({ length: n }, (_, i) => `, a${i}: number`).join("");
+    return `  readonly ${name}: (p: Position${args}) => number[];`;
+  });
   // A lost position has no moves: it can only be undone.
   const loses = (d.lose ?? []).length > 0;
   const ids = applied.deadEnds.map((c) => JSON.stringify(c.id));
@@ -508,7 +605,10 @@ export function compilePlanning(
     "",
     "/** A position: a value a cell in each layer. */",
     "export type Position = {",
-    ...layers.map((l) => `  readonly ${l}: Int32Array;`),
+    ...layers.map(
+      (l) =>
+        `  readonly ${l}: ${isOpen(d.position[l]) ? "Float64Array" : "Int32Array"};`,
+    ),
     "};",
     "",
     ...(sizes.length + relations.length + tables.length === 0
@@ -553,6 +653,20 @@ export function compilePlanning(
     "  };",
     "}",
     "",
+    ...(viewNames.length === 0
+      ? []
+      : [
+          "/** The definitions the game reads beside the rules, each giving the",
+          " * cells it holds of for values of its other parameters. */",
+          `export function views(${param("sp", viewText)}: GridSpace, ${param("cl", viewText)}: Dealt, ${param("variations", viewText)}: readonly string[]): {`,
+          ...viewTypes,
+          "} {",
+          "  return {",
+          ...views,
+          "  };",
+          "}",
+          "",
+        ]),
     "/** The rules on one board: its grid, what it deals, and the variations it",
     " * has on. */",
     `export function rules(${param("sp", inner.join("\n"))}: GridSpace, ${param("cl", inner.join("\n"))}: Dealt, ${param("variations", inner.join("\n"))}: readonly string[]): PositionRules<Position, Move, DeadEndId> {`,

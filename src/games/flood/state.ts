@@ -5,12 +5,14 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { PresetBoards } from "../../engine/game.ts";
 import { parseDimensions, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import type { GameStatus } from "../../engine/types.ts";
+import * as flood from "./flood.compiled.ts";
 import { choosemove, completed, fill, SolverScratch } from "./solver.ts";
 
 // --- constants --------------------------------------------------------
@@ -38,9 +40,10 @@ export interface FloodState {
   readonly h: number;
   /** Number of distinct colors in play (cells hold `0..colors-1`). */
   readonly colors: number;
-  /** Color per cell in row-major order. Below `MAXCOLORS`, so each is one
-   * digit in the desc and the text format. */
-  readonly grid: Uint8Array;
+  /** Color per cell in row-major order, the description's `color` layer.
+   * Below `MAXCOLORS`, so each is one digit in the desc and the text
+   * format. */
+  readonly grid: Int32Array;
   readonly moves: number;
   readonly movelimit: number;
 }
@@ -129,10 +132,10 @@ export const menu: PresetBoards<FloodParams> = {
 function parseDesc(
   p: FloodParams,
   desc: string,
-): DescParse<{ grid: Uint8Array; movelimit: number }> {
+): DescParse<{ grid: Int32Array; movelimit: number }> {
   const wh = p.w * p.h;
   return readDesc(desc, (r) => {
-    const grid = new Uint8Array(wh);
+    const grid = new Int32Array(wh);
     for (let i = 0; i < wh; i++) {
       const c = digitValue(r.char(isDigit)) as number;
       if (c >= p.colors) r.fail(DESC_OUT_OF_RANGE);
@@ -161,29 +164,41 @@ export function newState(p: FloodParams, desc: string): FloodState {
   };
 }
 
+// --- the description's rules -----------------------------------------
+
+/** The description's rules on this board. */
+export function rulesOf(s: FloodState) {
+  return flood.rules(
+    describedSpace(flood.units, s.w, s.h),
+    { colors: s.colors, limit: s.movelimit },
+    [],
+  );
+}
+
+/** The board as the description's layers. */
+export const positionOf = (s: FloodState): flood.Position => ({
+  color: s.grid,
+  moves: Float64Array.of(s.moves),
+});
+
 /**
- * Whether the limit can no longer be met. A square outside the corner's
- * region joins it only on a fill of its own color, so every color with a
- * square out there costs a fill, the corner's own color included. That count
- * is a floor and seldom the true one, so most boards that cannot be finished
- * pass it.
+ * Whether the limit can no longer be met: the description's claim, which
+ * counts the fills made and one for each color with a square outside the
+ * corner's region. That count is a floor and seldom the true one, so most
+ * boards that cannot be finished pass it.
  */
 export function hasNoSolution(state: FloodState): boolean {
-  const { w, h, colors } = state;
-  // The corner's region, repainted in a color no square has.
-  const grid = Uint8Array.from(state.grid);
-  fill(w, h, grid, FILLX, FILLY, colors, new Int32Array(w * h));
-  const outside = new Set(grid);
-  outside.delete(colors);
-  return state.moves + outside.size > state.movelimit;
+  return rulesOf(state).deadEnd(positionOf(state)) !== null;
 }
 
 // --- status -----------------------------------------------------------
 
-/** Upstream's `game_status`: completing within the limit wins; reaching the
- * limit otherwise loses, even if a later fill completes the grid. */
+/** Upstream's `game_status`: the description's finish, one color within the
+ * limit, wins; reaching the limit otherwise loses, even if a later fill
+ * completes the grid. The loss is the game's own: upstream lets the player
+ * go on filling, which a lost position in the description would not. */
 export function status(state: FloodState): GameStatus {
-  if (completed(state.grid) && state.moves <= state.movelimit) return "solved";
+  if (rulesOf(state).finished(positionOf(state))) return "solved";
   if (state.moves >= state.movelimit) return "lost";
   return "ongoing";
 }

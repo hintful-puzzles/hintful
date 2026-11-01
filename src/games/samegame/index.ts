@@ -40,10 +40,10 @@ import {
 } from "./render.ts";
 import { findClearing } from "./solver.ts";
 import {
-  check,
   decodeParams,
   defaultParams,
   encodeParams,
+  groupOf,
   isCleared,
   isStuck,
   menu,
@@ -51,11 +51,12 @@ import {
   newState,
   npoints,
   paramConfig,
+  positionOf,
+  rulesOf,
   type SamegameMove,
   type SamegameParams,
   type SamegameState,
   type SamegameUi,
-  snuggle,
   status,
   textFormat,
   validateParams,
@@ -87,41 +88,11 @@ function changedState(
   selClear(ui);
 }
 
-/** The connected same-color region holding tile `start`, in flood order. */
-function groupAt(
-  tiles: readonly number[],
-  w: number,
-  h: number,
-  start: number,
-): number[] {
-  const c = tiles[start];
-  const seen = new Uint8Array(w * h);
-  seen[start] = 1;
-  const queue = [start];
-  for (let qi = 0; qi < queue.length; qi++) {
-    const k = queue[qi];
-    const x = k % w;
-    const y = Math.floor(k / w);
-    const tryCell = (nx: number, ny: number) => {
-      const ni = ny * w + nx;
-      if (!seen[ni] && tiles[ni] === c) {
-        seen[ni] = 1;
-        queue.push(ni);
-      }
-    };
-    if (x > 0) tryCell(x - 1, y);
-    if (x + 1 < w) tryCell(x + 1, y);
-    if (y > 0) tryCell(x, y - 1);
-    if (y + 1 < h) tryCell(x, y + 1);
-  }
-  return queue;
-}
-
-/** Upstream `sel_expand`: flood the connected same-color region from
- * (tx,ty) into the selection. A lone tile (region size 1) cannot be
- * removed, so the selection collapses. */
+/** Upstream `sel_expand`: the connected same-color region at (tx,ty) into
+ * the selection. A lone tile (region size 1) cannot be removed, so the
+ * selection collapses. */
 function selExpand(ui: SamegameUi, state: SamegameState, tx: number, ty: number): void {
-  const group = groupAt(state.tiles, state.w, state.h, ty * state.w + tx);
+  const group = groupOf(state, ty * state.w + tx);
   for (const k of group) ui.selected[k] = true;
   if (group.length > 1) ui.nselected = group.length;
   else selClear(ui);
@@ -186,10 +157,7 @@ function interpretMove(
 
 export function executeMove(state: SamegameState, move: SamegameMove): SamegameState {
   const { w, h } = state;
-  if (move.type === "solve") {
-    const tiles = new Array<number>(w * h).fill(0);
-    return { ...state, tiles, impossible: check(tiles, w, h).impossible };
-  }
+  if (move.type === "solve") return { ...state, tiles: new Int32Array(w * h) };
   if (move.type !== "remove") return assertNever(move, "samegame: executeMove");
   // A move read back from a save is checked for the field the removal reads.
   if (!Array.isArray(move.tiles)) rejectMove(move, "samegame: executeMove");
@@ -198,21 +166,19 @@ export function executeMove(state: SamegameState, move: SamegameMove): SamegameS
     if (!Number.isInteger(idx) || idx < 0 || idx >= w * h)
       throw new Error(`Move index ${idx} out of range`);
   }
-  // A removal takes one whole group of two or more, as the rules allow.
-  const group = move.tiles.length > 0 ? groupAt(state.tiles, w, h, move.tiles[0]) : [];
-  const named = new Set(move.tiles);
-  if (
-    group.length < 2 ||
-    state.tiles[group[0]] === 0 ||
-    move.tiles.length !== group.length ||
-    group.some((k) => !named.has(k))
-  )
+  // The description's removal is bound by the group's first square, and the
+  // move names every square of that group.
+  const p = positionOf(state.tiles);
+  const rules = rulesOf(state);
+  const removal = { move: "remove", s: Math.min(...move.tiles) } as const;
+  if (move.tiles.length === 0 || !rules.legal(p, removal))
     rejectMove(move, "samegame: executeMove");
-  const tiles = state.tiles.slice();
-  for (const idx of move.tiles) tiles[idx] = 0;
+  const group = groupOf(state, removal.s);
+  const named = new Set(move.tiles);
+  if (move.tiles.length !== group.length || group.some((k) => !named.has(k)))
+    rejectMove(move, "samegame: executeMove");
   const score = state.score + npoints(state.scoresub, move.tiles.length);
-  snuggle(tiles, w, h); // shift blanks down and to the left
-  return { ...state, tiles, score, impossible: check(tiles, w, h).impossible };
+  return { ...state, tiles: rules.play(p, removal).tile, score };
 }
 
 // --- solve -----------------------------------------------------------
@@ -229,7 +195,7 @@ function solve(orig: SamegameState, curr: SamegameState): SolveResult<SamegameMo
 function statusbarText(state: SamegameState, ui: SamegameUi): string {
   const score = `Score: ${state.score}`;
   if (isCleared(state)) return score;
-  if (state.impossible) return `Cannot move! ${score}`;
+  if (isStuck(state)) return `Cannot move! ${score}`;
   if (ui.nselected)
     return `${score}  Selected: ${ui.nselected} (${npoints(state.scoresub, ui.nselected)})`;
   return score;

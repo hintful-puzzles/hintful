@@ -1,5 +1,6 @@
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import {
   AREA_TOO_LARGE,
@@ -11,6 +12,7 @@ import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import type { GameStatus } from "../../engine/types.ts";
+import * as samegame from "./samegame.compiled.ts";
 
 // --- types ------------------------------------------------------------
 
@@ -27,13 +29,10 @@ export interface SamegameState {
   readonly h: number;
   readonly ncols: number;
   readonly scoresub: number;
-  /** Color per cell in row-major order; `0` is empty, `1..ncols` a color. */
-  readonly tiles: readonly number[];
+  /** Color per cell in row-major order, the description's `tile` layer; `0`
+   * is empty, `1..ncols` a color. */
+  readonly tiles: Int32Array;
   readonly score: number;
-  /** No two orthogonally-adjacent tiles share a color (no move remains),
-   * which an empty grid also is. Read off the tiles by `executeMove`. NOT a
-   * loss: upstream leaves it rescuable by Undo. */
-  readonly impossible: boolean;
 }
 
 /** Remove the listed grid indices (upstream's `M12,13,...` string). The
@@ -395,106 +394,44 @@ function parseDesc(p: SamegameParams, desc: string): DescParse<number[]> {
 }
 
 export function newState(p: SamegameParams, desc: string): SamegameState {
-  const tiles = descValue(parseDesc(p, desc));
   return {
     w: p.w,
     h: p.h,
     ncols: p.ncols,
     scoresub: p.scoresub,
-    tiles,
+    tiles: Int32Array.from(descValue(parseDesc(p, desc))),
     score: 0,
-    impossible: check(tiles, p.w, p.h).impossible,
   };
 }
 
-// --- gravity + completion ---------------------------------------------
+// --- the description's rules -----------------------------------------
 
-/** Upstream `sg_snuggle`: let unsupported tiles fall to the bottom of
- * their columns, then shuffle non-empty columns as far left as they go.
- * Mutates `tiles` in place (the caller owns the copy). */
-export function snuggle(tiles: number[], w: number, h: number): void {
-  // Make all unsupported tiles fall down.
-  let moved: boolean;
-  do {
-    moved = false;
-    for (let x = 0; x < w; x++) {
-      for (let y = h - 1; y > 0; y--) {
-        if (tiles[y * w + x] !== 0) continue;
-        if (tiles[(y - 1) * w + x] !== 0) {
-          tiles[y * w + x] = tiles[(y - 1) * w + x];
-          tiles[(y - 1) * w + x] = 0;
-          moved = true;
-        }
-      }
-    }
-  } while (moved);
-
-  // Shuffle all columns as far left as they can go.
-  const emptyCol = (x: number): boolean => {
-    for (let y = 0; y < h; y++) if (tiles[y * w + x] !== 0) return false;
-    return true;
-  };
-  do {
-    moved = false;
-    for (let x = 0; x < w - 1; x++) {
-      if (emptyCol(x) && !emptyCol(x + 1)) {
-        moved = true;
-        for (let y = 0; y < h; y++) {
-          tiles[y * w + x] = tiles[y * w + (x + 1)];
-          tiles[y * w + (x + 1)] = 0;
-        }
-      }
-    }
-  } while (moved);
+/** The description's rules on a board of this size. */
+export function rulesOf(s: { readonly w: number; readonly h: number }) {
+  return samegame.rules(describedSpace(samegame.units, s.w, s.h), {}, []);
 }
 
-/** Upstream `sg_check`: `complete` iff the grid is empty; `impossible`
- * iff no two orthogonally-adjacent tiles share a color. */
-export function check(
-  tiles: readonly number[],
-  w: number,
-  h: number,
-): { complete: boolean; impossible: boolean } {
-  let complete = true;
-  let impossible = true;
-  for (let x = 0; x < w; x++) {
-    for (let y = 0; y < h; y++) {
-      const c = tiles[y * w + x];
-      if (c === 0) continue;
-      complete = false;
-      if (x + 1 < w && tiles[y * w + (x + 1)] === c) impossible = false;
-      if (y + 1 < h && tiles[(y + 1) * w + x] === c) impossible = false;
-    }
-  }
-  return { complete, impossible };
+/** A board's tiles as the description's layer. */
+export const positionOf = (tiles: Int32Array): samegame.Position => ({ tile: tiles });
+
+/** The group holding square `c`, ascending: the squares a press there
+ * selects, and an empty square's empty region. */
+export function groupOf(s: SamegameState, c: number): number[] {
+  const sp = describedSpace(samegame.units, s.w, s.h);
+  return samegame.views(sp, {}, []).joined(positionOf(s.tiles), c);
 }
 
-// --- status / text ----------------------------------------------------
-
-/** Whether every tile has been cleared. */
+/** Whether every tile has been cleared: the description's finish. */
 export function isCleared(state: SamegameState): boolean {
-  return state.tiles.every((c) => c === 0);
+  return rulesOf(state).finished(positionOf(state.tiles));
 }
 
-/** Whether the board has tiles left and no move to clear them: stuck. */
+/** Whether the board has tiles left and no two of one color side by side,
+ * the description's `stuck`. NOT a loss: upstream leaves it rescuable by
+ * Undo. */
 export function isStuck(state: SamegameState): boolean {
-  return state.impossible && !isCleared(state);
-}
-
-/**
- * Whether the board can never be cleared: it is stuck, or a tile is the only
- * one of its color, since a removal takes two or more of one color and no
- * tile changes color. Upstream's soluble generator deals neither. Its
- * scattered-colors one, which the params here cannot ask for, deals two of
- * every color and so can deal a board with no move; refusing that one is a
- * compatibility break the owner accepted (2026-10-11), no input being a move
- * on it.
- */
-export function hasNoSolution(state: SamegameState): boolean {
-  if (isStuck(state)) return true;
-  const count = new Array<number>(state.ncols + 1).fill(0);
-  for (const c of state.tiles) count[c]++;
-  return count.some((n, c) => c > 0 && n === 1);
+  const sp = describedSpace(samegame.units, state.w, state.h);
+  return samegame.claims(sp, {}, []).stuck(positionOf(state.tiles));
 }
 
 /** Upstream `game_status`: solved when cleared; otherwise ongoing. A stuck

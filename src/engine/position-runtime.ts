@@ -9,8 +9,9 @@
 
 import type { Effect } from "./permutation-planner.ts";
 
-/** A position: one value a cell in each of its layers, by name. */
-export type Layers = Readonly<Record<string, Int32Array>>;
+/** A position: one value a cell in each of its layers, by name, a
+ * `Float64Array` where the layer's domain is not finite. */
+export type Layers = Readonly<Record<string, Int32Array | Float64Array>>;
 
 export interface PositionRules<P extends Layers, M, D extends string = string> {
   /** Every legal move from `p`, in the order the description binds them. */

@@ -25,6 +25,313 @@ fifteen w=4 h=2: 40320 positions, 20160 can finish, 0 that cannot are claimed by
 fifteen parity: sound (0.8s for the game)
 fifteen parity planted: unsound, as it must be
 flip: states no dead-end claim
+flood: no move on any position, so not checked: w=1 h=1 colors=1 limit=0; w=1 h=1 colors=1 limit=1; w=1 h=1 colors=1 limit=2; w=1 h=1 colors=1 limit=3; w=1 h=1 colors=2 limit=0; w=1 h=1 colors=2 limit=1; w=1 h=1 colors=2 limit=2; w=1 h=1 colors=2 limit=3; w=1 h=1 colors=3 limit=0; w=1 h=1 colors=3 limit=1; w=1 h=1 colors=3 limit=2; w=1 h=1 colors=3 limit=3; w=1 h=1 colors=4 limit=0; w=1 h=1 colors=4 limit=1; w=1 h=1 colors=4 limit=2; w=1 h=1 colors=4 limit=3; w=1 h=2 colors=1 limit=0; w=1 h=2 colors=1 limit=1; w=1 h=2 colors=1 limit=2; w=1 h=2 colors=1 limit=3; w=1 h=3 colors=1 limit=0; w=1 h=3 colors=1 limit=1; w=1 h=3 colors=1 limit=2; w=1 h=3 colors=1 limit=3; w=1 h=4 colors=1 limit=0; w=1 h=4 colors=1 limit=1; w=1 h=4 colors=1 limit=2; w=1 h=4 colors=1 limit=3; w=2 h=1 colors=1 limit=0; w=2 h=1 colors=1 limit=1; w=2 h=1 colors=1 limit=2; w=2 h=1 colors=1 limit=3; w=2 h=2 colors=1 limit=0; w=2 h=2 colors=1 limit=1; w=2 h=2 colors=1 limit=2; w=2 h=2 colors=1 limit=3; w=2 h=3 colors=1 limit=0; w=2 h=3 colors=1 limit=1; w=2 h=3 colors=1 limit=2; w=2 h=3 colors=1 limit=3; w=2 h=4 colors=1 limit=0; w=2 h=4 colors=1 limit=1; w=2 h=4 colors=1 limit=2; w=2 h=4 colors=1 limit=3; w=3 h=1 colors=1 limit=0; w=3 h=1 colors=1 limit=1; w=3 h=1 colors=1 limit=2; w=3 h=1 colors=1 limit=3; w=3 h=2 colors=1 limit=0; w=3 h=2 colors=1 limit=1; w=3 h=2 colors=1 limit=2; w=3 h=2 colors=1 limit=3; w=3 h=3 colors=1 limit=0; w=3 h=3 colors=1 limit=1; w=3 h=3 colors=1 limit=2; w=3 h=3 colors=1 limit=3; w=3 h=4 colors=1 limit=0; w=3 h=4 colors=1 limit=1; w=3 h=4 colors=1 limit=2; w=3 h=4 colors=1 limit=3; w=4 h=1 colors=1 limit=0; w=4 h=1 colors=1 limit=1; w=4 h=1 colors=1 limit=2; w=4 h=1 colors=1 limit=3; w=4 h=2 colors=1 limit=0; w=4 h=2 colors=1 limit=1; w=4 h=2 colors=1 limit=2; w=4 h=2 colors=1 limit=3; w=4 h=3 colors=1 limit=0; w=4 h=3 colors=1 limit=1; w=4 h=3 colors=1 limit=2; w=4 h=3 colors=1 limit=3; w=4 h=4 colors=1 limit=0; w=4 h=4 colors=1 limit=1; w=4 h=4 colors=1 limit=2; w=4 h=4 colors=1 limit=3
+flood w=1 h=2 colors=2 limit=0: 8 positions, 2 can finish, 0 that cannot are claimed by none, 2 with a move out of the window
+flood w=1 h=2 colors=2 limit=1: 12 positions, 6 can finish, 0 that cannot are claimed by none, 2 with a move out of the window
+flood w=1 h=2 colors=2 limit=2: 16 positions, 10 can finish, 0 that cannot are claimed by none, 2 with a move out of the window
+flood w=1 h=2 colors=2 limit=3: 20 positions, 14 can finish, 0 that cannot are claimed by none, 2 with a move out of the window
+flood w=1 h=2 colors=3 limit=0: 18 positions, 3 can finish, 0 that cannot are claimed by none, 6 with a move out of the window
+flood w=1 h=2 colors=3 limit=1: 27 positions, 12 can finish, 0 that cannot are claimed by none, 6 with a move out of the window
+flood w=1 h=2 colors=3 limit=2: 36 positions, 21 can finish, 0 that cannot are claimed by none, 6 with a move out of the window
+flood w=1 h=2 colors=3 limit=3: 45 positions, 30 can finish, 0 that cannot are claimed by none, 6 with a move out of the window
+flood w=1 h=2 colors=4 limit=0: 32 positions, 4 can finish, 0 that cannot are claimed by none, 12 with a move out of the window
+flood w=1 h=2 colors=4 limit=1: 48 positions, 20 can finish, 0 that cannot are claimed by none, 12 with a move out of the window
+flood w=1 h=2 colors=4 limit=2: 64 positions, 36 can finish, 0 that cannot are claimed by none, 12 with a move out of the window
+flood w=1 h=2 colors=4 limit=3: 80 positions, 52 can finish, 0 that cannot are claimed by none, 12 with a move out of the window
+flood w=1 h=3 colors=2 limit=0: 16 positions, 2 can finish, 0 that cannot are claimed by none, 6 with a move out of the window
+flood w=1 h=3 colors=2 limit=1: 24 positions, 8 can finish, 0 that cannot are claimed by none, 6 with a move out of the window
+flood w=1 h=3 colors=2 limit=2: 32 positions, 16 can finish, 0 that cannot are claimed by none, 6 with a move out of the window
+flood w=1 h=3 colors=2 limit=3: 40 positions, 24 can finish, 0 that cannot are claimed by none, 6 with a move out of the window
+flood w=1 h=3 colors=3 limit=0: 54 positions, 3 can finish, 0 that cannot are claimed by none, 24 with a move out of the window
+flood w=1 h=3 colors=3 limit=1: 81 positions, 18 can finish, 0 that cannot are claimed by none, 24 with a move out of the window
+flood w=1 h=3 colors=3 limit=2: 108 positions, 45 can finish, 0 that cannot are claimed by none, 24 with a move out of the window
+flood w=1 h=3 colors=3 limit=3: 135 positions, 72 can finish, 0 that cannot are claimed by none, 24 with a move out of the window
+flood w=1 h=3 colors=4 limit=0: 128 positions, 4 can finish, 0 that cannot are claimed by none, 60 with a move out of the window
+flood w=1 h=3 colors=4 limit=1: 192 positions, 32 can finish, 0 that cannot are claimed by none, 60 with a move out of the window
+flood w=1 h=3 colors=4 limit=2: 256 positions, 96 can finish, 0 that cannot are claimed by none, 60 with a move out of the window
+flood w=1 h=3 colors=4 limit=3: 320 positions, 160 can finish, 0 that cannot are claimed by none, 60 with a move out of the window
+flood w=1 h=4 colors=2 limit=0: 32 positions, 2 can finish, 0 that cannot are claimed by none, 14 with a move out of the window
+flood w=1 h=4 colors=2 limit=1: 48 positions, 10 can finish, 0 that cannot are claimed by none, 14 with a move out of the window
+flood w=1 h=4 colors=2 limit=2: 64 positions, 24 can finish, 2 that cannot are claimed by none, 14 with a move out of the window
+flood w=1 h=4 colors=2 limit=3: 80 positions, 40 can finish, 2 that cannot are claimed by none, 14 with a move out of the window
+flood w=1 h=4 colors=3 limit=0: 162 positions, 3 can finish, 0 that cannot are claimed by none, 78 with a move out of the window
+flood w=1 h=4 colors=3 limit=1: 243 positions, 24 can finish, 0 that cannot are claimed by none, 78 with a move out of the window
+flood w=1 h=4 colors=3 limit=2: 324 positions, 81 can finish, 12 that cannot are claimed by none, 78 with a move out of the window
+flood w=1 h=4 colors=3 limit=3: 405 positions, 162 can finish, 12 that cannot are claimed by none, 78 with a move out of the window
+flood w=1 h=4 colors=4 limit=0: 512 positions, 4 can finish, 0 that cannot are claimed by none, 252 with a move out of the window
+flood w=1 h=4 colors=4 limit=1: 768 positions, 44 can finish, 0 that cannot are claimed by none, 252 with a move out of the window
+flood w=1 h=4 colors=4 limit=2: 1024 positions, 192 can finish, 36 that cannot are claimed by none, 252 with a move out of the window
+flood w=1 h=4 colors=4 limit=3: 1280 positions, 448 can finish, 36 that cannot are claimed by none, 252 with a move out of the window
+flood w=2 h=1 colors=2 limit=0: 8 positions, 2 can finish, 0 that cannot are claimed by none, 2 with a move out of the window
+flood w=2 h=1 colors=2 limit=1: 12 positions, 6 can finish, 0 that cannot are claimed by none, 2 with a move out of the window
+flood w=2 h=1 colors=2 limit=2: 16 positions, 10 can finish, 0 that cannot are claimed by none, 2 with a move out of the window
+flood w=2 h=1 colors=2 limit=3: 20 positions, 14 can finish, 0 that cannot are claimed by none, 2 with a move out of the window
+flood w=2 h=1 colors=3 limit=0: 18 positions, 3 can finish, 0 that cannot are claimed by none, 6 with a move out of the window
+flood w=2 h=1 colors=3 limit=1: 27 positions, 12 can finish, 0 that cannot are claimed by none, 6 with a move out of the window
+flood w=2 h=1 colors=3 limit=2: 36 positions, 21 can finish, 0 that cannot are claimed by none, 6 with a move out of the window
+flood w=2 h=1 colors=3 limit=3: 45 positions, 30 can finish, 0 that cannot are claimed by none, 6 with a move out of the window
+flood w=2 h=1 colors=4 limit=0: 32 positions, 4 can finish, 0 that cannot are claimed by none, 12 with a move out of the window
+flood w=2 h=1 colors=4 limit=1: 48 positions, 20 can finish, 0 that cannot are claimed by none, 12 with a move out of the window
+flood w=2 h=1 colors=4 limit=2: 64 positions, 36 can finish, 0 that cannot are claimed by none, 12 with a move out of the window
+flood w=2 h=1 colors=4 limit=3: 80 positions, 52 can finish, 0 that cannot are claimed by none, 12 with a move out of the window
+flood w=2 h=2 colors=2 limit=0: 32 positions, 2 can finish, 0 that cannot are claimed by none, 14 with a move out of the window
+flood w=2 h=2 colors=2 limit=1: 48 positions, 16 can finish, 0 that cannot are claimed by none, 14 with a move out of the window
+flood w=2 h=2 colors=2 limit=2: 64 positions, 32 can finish, 0 that cannot are claimed by none, 14 with a move out of the window
+flood w=2 h=2 colors=2 limit=3: 80 positions, 48 can finish, 0 that cannot are claimed by none, 14 with a move out of the window
+flood w=2 h=2 colors=3 limit=0: 162 positions, 3 can finish, 0 that cannot are claimed by none, 78 with a move out of the window
+flood w=2 h=2 colors=3 limit=1: 243 positions, 42 can finish, 0 that cannot are claimed by none, 78 with a move out of the window
+flood w=2 h=2 colors=3 limit=2: 324 positions, 117 can finish, 0 that cannot are claimed by none, 78 with a move out of the window
+flood w=2 h=2 colors=3 limit=3: 405 positions, 198 can finish, 0 that cannot are claimed by none, 78 with a move out of the window
+flood w=2 h=2 colors=4 limit=0: 512 positions, 4 can finish, 0 that cannot are claimed by none, 252 with a move out of the window
+flood w=2 h=2 colors=4 limit=1: 768 positions, 80 can finish, 0 that cannot are claimed by none, 252 with a move out of the window
+flood w=2 h=2 colors=4 limit=2: 1024 positions, 288 can finish, 0 that cannot are claimed by none, 252 with a move out of the window
+flood w=2 h=2 colors=4 limit=3: 1280 positions, 544 can finish, 0 that cannot are claimed by none, 252 with a move out of the window
+flood w=2 h=3 colors=2 limit=0: 128 positions, 2 can finish, 0 that cannot are claimed by none, 62 with a move out of the window
+flood w=2 h=3 colors=2 limit=1: 192 positions, 40 can finish, 0 that cannot are claimed by none, 62 with a move out of the window
+flood w=2 h=3 colors=2 limit=2: 256 positions, 102 can finish, 2 that cannot are claimed by none, 62 with a move out of the window
+flood w=2 h=3 colors=2 limit=3: 320 positions, 166 can finish, 2 that cannot are claimed by none, 62 with a move out of the window
+flood w=2 h=3 colors=3 limit=0: 1458 positions, 3 can finish, 0 that cannot are claimed by none, 726 with a move out of the window
+flood w=2 h=3 colors=3 limit=1: 2187 positions, 114 can finish, 0 that cannot are claimed by none, 726 with a move out of the window
+flood w=2 h=3 colors=3 limit=2: 2916 positions, 561 can finish, 24 that cannot are claimed by none, 726 with a move out of the window
+flood w=2 h=3 colors=3 limit=3: 3645 positions, 1266 can finish, 48 that cannot are claimed by none, 726 with a move out of the window
+flood w=2 h=3 colors=4 limit=0: 8192 positions, 4 can finish, 0 that cannot are claimed by none, 4092 with a move out of the window
+flood w=2 h=3 colors=4 limit=1: 12288 positions, 224 can finish, 0 that cannot are claimed by none, 4092 with a move out of the window
+flood w=2 h=3 colors=4 limit=2: 16384 positions, 1644 can finish, 84 that cannot are claimed by none, 4092 with a move out of the window
+flood w=2 h=3 colors=4 limit=3: 20480 positions, 4996 can finish, 252 that cannot are claimed by none, 4092 with a move out of the window
+flood w=2 h=4 colors=2 limit=0: 512 positions, 2 can finish, 0 that cannot are claimed by none, 254 with a move out of the window
+flood w=2 h=4 colors=2 limit=1: 768 positions, 98 can finish, 0 that cannot are claimed by none, 254 with a move out of the window
+flood w=2 h=4 colors=2 limit=2: 1024 positions, 312 can finish, 42 that cannot are claimed by none, 254 with a move out of the window
+flood w=2 h=4 colors=2 limit=3: 1280 positions, 566 can finish, 44 that cannot are claimed by none, 254 with a move out of the window
+flood w=2 h=4 colors=3 limit=0: 13122 positions, 3 can finish, 0 that cannot are claimed by none, 6558 with a move out of the window
+flood w=2 h=4 colors=3 limit=1: 19683 positions, 288 can finish, 0 that cannot are claimed by none, 6558 with a move out of the window
+flood w=2 h=4 colors=3 limit=2: 26244 positions, 2367 can finish, 390 that cannot are claimed by none, 6558 with a move out of the window
+flood w=2 h=4 colors=3 limit=3: 32805 positions, 7458 can finish, 1860 that cannot are claimed by none, 6558 with a move out of the window
+flood w=2 h=4 colors=4 limit=0: 131072 positions, 4 can finish, 0 that cannot are claimed by none, 65532 with a move out of the window
+flood w=2 h=4 colors=4 limit=1: 196608 positions, 572 can finish, 0 that cannot are claimed by none, 65532 with a move out of the window
+flood w=2 h=4 colors=4 limit=2: 262144 positions, 7608 can finish, 1308 that cannot are claimed by none, 65532 with a move out of the window
+flood w=2 h=4 colors=4 limit=3: 327680 positions, 37228 can finish, 11640 that cannot are claimed by none, 65532 with a move out of the window
+flood w=3 h=1 colors=2 limit=0: 16 positions, 2 can finish, 0 that cannot are claimed by none, 6 with a move out of the window
+flood w=3 h=1 colors=2 limit=1: 24 positions, 8 can finish, 0 that cannot are claimed by none, 6 with a move out of the window
+flood w=3 h=1 colors=2 limit=2: 32 positions, 16 can finish, 0 that cannot are claimed by none, 6 with a move out of the window
+flood w=3 h=1 colors=2 limit=3: 40 positions, 24 can finish, 0 that cannot are claimed by none, 6 with a move out of the window
+flood w=3 h=1 colors=3 limit=0: 54 positions, 3 can finish, 0 that cannot are claimed by none, 24 with a move out of the window
+flood w=3 h=1 colors=3 limit=1: 81 positions, 18 can finish, 0 that cannot are claimed by none, 24 with a move out of the window
+flood w=3 h=1 colors=3 limit=2: 108 positions, 45 can finish, 0 that cannot are claimed by none, 24 with a move out of the window
+flood w=3 h=1 colors=3 limit=3: 135 positions, 72 can finish, 0 that cannot are claimed by none, 24 with a move out of the window
+flood w=3 h=1 colors=4 limit=0: 128 positions, 4 can finish, 0 that cannot are claimed by none, 60 with a move out of the window
+flood w=3 h=1 colors=4 limit=1: 192 positions, 32 can finish, 0 that cannot are claimed by none, 60 with a move out of the window
+flood w=3 h=1 colors=4 limit=2: 256 positions, 96 can finish, 0 that cannot are claimed by none, 60 with a move out of the window
+flood w=3 h=1 colors=4 limit=3: 320 positions, 160 can finish, 0 that cannot are claimed by none, 60 with a move out of the window
+flood w=3 h=2 colors=2 limit=0: 128 positions, 2 can finish, 0 that cannot are claimed by none, 62 with a move out of the window
+flood w=3 h=2 colors=2 limit=1: 192 positions, 40 can finish, 0 that cannot are claimed by none, 62 with a move out of the window
+flood w=3 h=2 colors=2 limit=2: 256 positions, 102 can finish, 2 that cannot are claimed by none, 62 with a move out of the window
+flood w=3 h=2 colors=2 limit=3: 320 positions, 166 can finish, 2 that cannot are claimed by none, 62 with a move out of the window
+flood w=3 h=2 colors=3 limit=0: 1458 positions, 3 can finish, 0 that cannot are claimed by none, 726 with a move out of the window
+flood w=3 h=2 colors=3 limit=1: 2187 positions, 114 can finish, 0 that cannot are claimed by none, 726 with a move out of the window
+flood w=3 h=2 colors=3 limit=2: 2916 positions, 561 can finish, 24 that cannot are claimed by none, 726 with a move out of the window
+flood w=3 h=2 colors=3 limit=3: 3645 positions, 1266 can finish, 48 that cannot are claimed by none, 726 with a move out of the window
+flood w=3 h=2 colors=4 limit=0: 8192 positions, 4 can finish, 0 that cannot are claimed by none, 4092 with a move out of the window
+flood w=3 h=2 colors=4 limit=1: 12288 positions, 224 can finish, 0 that cannot are claimed by none, 4092 with a move out of the window
+flood w=3 h=2 colors=4 limit=2: 16384 positions, 1644 can finish, 84 that cannot are claimed by none, 4092 with a move out of the window
+flood w=3 h=2 colors=4 limit=3: 20480 positions, 4996 can finish, 252 that cannot are claimed by none, 4092 with a move out of the window
+flood w=3 h=3 colors=2 limit=0: 1024 positions, 2 can finish, 0 that cannot are claimed by none, 510 with a move out of the window
+flood w=3 h=3 colors=2 limit=1: 1536 positions, 204 can finish, 0 that cannot are claimed by none, 510 with a move out of the window
+flood w=3 h=3 colors=2 limit=2: 2048 positions, 666 can finish, 50 that cannot are claimed by none, 510 with a move out of the window
+flood w=3 h=3 colors=2 limit=3: 2560 positions, 1176 can finish, 52 that cannot are claimed by none, 510 with a move out of the window
+flood w=3 h=3 colors=3 limit=0: 39366 positions, 3 can finish, 0 that cannot are claimed by none, 19680 with a move out of the window
+flood w=3 h=3 colors=3 limit=1: 59049 positions, 606 can finish, 0 that cannot are claimed by none, 19680 with a move out of the window
+flood w=3 h=3 colors=3 limit=2: 78732 positions, 6471 can finish, 636 that cannot are claimed by none, 19680 with a move out of the window
+flood w=3 h=3 colors=3 limit=3: 98415 positions, 22254 can finish, 4536 that cannot are claimed by none, 19680 with a move out of the window
+flood w=3 h=4 colors=2 limit=0: 8192 positions, 2 can finish, 0 that cannot are claimed by none, 4094 with a move out of the window
+flood w=3 h=4 colors=2 limit=1: 12288 positions, 1036 can finish, 0 that cannot are claimed by none, 4094 with a move out of the window
+flood w=3 h=4 colors=2 limit=2: 16384 positions, 4178 can finish, 954 that cannot are claimed by none, 4094 with a move out of the window
+flood w=3 h=4 colors=2 limit=3: 20480 positions, 8188 can finish, 1040 that cannot are claimed by none, 4094 with a move out of the window
+flood w=4 h=1 colors=2 limit=0: 32 positions, 2 can finish, 0 that cannot are claimed by none, 14 with a move out of the window
+flood w=4 h=1 colors=2 limit=1: 48 positions, 10 can finish, 0 that cannot are claimed by none, 14 with a move out of the window
+flood w=4 h=1 colors=2 limit=2: 64 positions, 24 can finish, 2 that cannot are claimed by none, 14 with a move out of the window
+flood w=4 h=1 colors=2 limit=3: 80 positions, 40 can finish, 2 that cannot are claimed by none, 14 with a move out of the window
+flood w=4 h=1 colors=3 limit=0: 162 positions, 3 can finish, 0 that cannot are claimed by none, 78 with a move out of the window
+flood w=4 h=1 colors=3 limit=1: 243 positions, 24 can finish, 0 that cannot are claimed by none, 78 with a move out of the window
+flood w=4 h=1 colors=3 limit=2: 324 positions, 81 can finish, 12 that cannot are claimed by none, 78 with a move out of the window
+flood w=4 h=1 colors=3 limit=3: 405 positions, 162 can finish, 12 that cannot are claimed by none, 78 with a move out of the window
+flood w=4 h=1 colors=4 limit=0: 512 positions, 4 can finish, 0 that cannot are claimed by none, 252 with a move out of the window
+flood w=4 h=1 colors=4 limit=1: 768 positions, 44 can finish, 0 that cannot are claimed by none, 252 with a move out of the window
+flood w=4 h=1 colors=4 limit=2: 1024 positions, 192 can finish, 36 that cannot are claimed by none, 252 with a move out of the window
+flood w=4 h=1 colors=4 limit=3: 1280 positions, 448 can finish, 36 that cannot are claimed by none, 252 with a move out of the window
+flood w=4 h=2 colors=2 limit=0: 512 positions, 2 can finish, 0 that cannot are claimed by none, 254 with a move out of the window
+flood w=4 h=2 colors=2 limit=1: 768 positions, 98 can finish, 0 that cannot are claimed by none, 254 with a move out of the window
+flood w=4 h=2 colors=2 limit=2: 1024 positions, 312 can finish, 42 that cannot are claimed by none, 254 with a move out of the window
+flood w=4 h=2 colors=2 limit=3: 1280 positions, 566 can finish, 44 that cannot are claimed by none, 254 with a move out of the window
+flood w=4 h=2 colors=3 limit=0: 13122 positions, 3 can finish, 0 that cannot are claimed by none, 6558 with a move out of the window
+flood w=4 h=2 colors=3 limit=1: 19683 positions, 288 can finish, 0 that cannot are claimed by none, 6558 with a move out of the window
+flood w=4 h=2 colors=3 limit=2: 26244 positions, 2367 can finish, 390 that cannot are claimed by none, 6558 with a move out of the window
+flood w=4 h=2 colors=3 limit=3: 32805 positions, 7458 can finish, 1860 that cannot are claimed by none, 6558 with a move out of the window
+flood w=4 h=2 colors=4 limit=0: 131072 positions, 4 can finish, 0 that cannot are claimed by none, 65532 with a move out of the window
+flood w=4 h=2 colors=4 limit=1: 196608 positions, 572 can finish, 0 that cannot are claimed by none, 65532 with a move out of the window
+flood w=4 h=2 colors=4 limit=2: 262144 positions, 7608 can finish, 1308 that cannot are claimed by none, 65532 with a move out of the window
+flood w=4 h=2 colors=4 limit=3: 327680 positions, 37228 can finish, 11640 that cannot are claimed by none, 65532 with a move out of the window
+flood w=4 h=3 colors=2 limit=0: 8192 positions, 2 can finish, 0 that cannot are claimed by none, 4094 with a move out of the window
+flood w=4 h=3 colors=2 limit=1: 12288 positions, 1036 can finish, 0 that cannot are claimed by none, 4094 with a move out of the window
+flood w=4 h=3 colors=2 limit=2: 16384 positions, 4178 can finish, 954 that cannot are claimed by none, 4094 with a move out of the window
+flood w=4 h=3 colors=2 limit=3: 20480 positions, 8188 can finish, 1040 that cannot are claimed by none, 4094 with a move out of the window
+flood w=4 h=4 colors=2 limit=0: 131072 positions, 2 can finish, 0 that cannot are claimed by none, 65534 with a move out of the window
+flood w=4 h=4 colors=2 limit=1: 196608 positions, 10588 can finish, 0 that cannot are claimed by none, 65534 with a move out of the window
+flood w=4 h=4 colors=2 limit=2: 262144 positions, 53022 can finish, 23102 that cannot are claimed by none, 65534 with a move out of the window
+flood w=4 h=4 colors=2 limit=3: 327680 positions, 115400 can finish, 26260 that cannot are claimed by none, 65534 with a move out of the window
+  short in w=1 h=2 colors=2 limit=0: holds of 6, 0 of them can finish
+  short in w=1 h=2 colors=2 limit=1: holds of 6, 0 of them can finish
+  short in w=1 h=2 colors=2 limit=2: holds of 6, 0 of them can finish
+  short in w=1 h=2 colors=2 limit=3: holds of 6, 0 of them can finish
+  short in w=1 h=2 colors=3 limit=0: holds of 15, 0 of them can finish
+  short in w=1 h=2 colors=3 limit=1: holds of 15, 0 of them can finish
+  short in w=1 h=2 colors=3 limit=2: holds of 15, 0 of them can finish
+  short in w=1 h=2 colors=3 limit=3: holds of 15, 0 of them can finish
+  short in w=1 h=2 colors=4 limit=0: holds of 28, 0 of them can finish
+  short in w=1 h=2 colors=4 limit=1: holds of 28, 0 of them can finish
+  short in w=1 h=2 colors=4 limit=2: holds of 28, 0 of them can finish
+  short in w=1 h=2 colors=4 limit=3: holds of 28, 0 of them can finish
+  short in w=1 h=3 colors=2 limit=0: holds of 14, 0 of them can finish
+  short in w=1 h=3 colors=2 limit=1: holds of 16, 0 of them can finish
+  short in w=1 h=3 colors=2 limit=2: holds of 16, 0 of them can finish
+  short in w=1 h=3 colors=2 limit=3: holds of 16, 0 of them can finish
+  short in w=1 h=3 colors=3 limit=0: holds of 51, 0 of them can finish
+  short in w=1 h=3 colors=3 limit=1: holds of 63, 0 of them can finish
+  short in w=1 h=3 colors=3 limit=2: holds of 63, 0 of them can finish
+  short in w=1 h=3 colors=3 limit=3: holds of 63, 0 of them can finish
+  short in w=1 h=3 colors=4 limit=0: holds of 124, 0 of them can finish
+  short in w=1 h=3 colors=4 limit=1: holds of 160, 0 of them can finish
+  short in w=1 h=3 colors=4 limit=2: holds of 160, 0 of them can finish
+  short in w=1 h=3 colors=4 limit=3: holds of 160, 0 of them can finish
+  short in w=1 h=4 colors=2 limit=0: holds of 30, 0 of them can finish
+  short in w=1 h=4 colors=2 limit=1: holds of 38, 0 of them can finish
+  short in w=1 h=4 colors=2 limit=2: holds of 38, 0 of them can finish
+  short in w=1 h=4 colors=2 limit=3: holds of 38, 0 of them can finish
+  short in w=1 h=4 colors=3 limit=0: holds of 159, 0 of them can finish
+  short in w=1 h=4 colors=3 limit=1: holds of 219, 0 of them can finish
+  short in w=1 h=4 colors=3 limit=2: holds of 231, 0 of them can finish
+  short in w=1 h=4 colors=3 limit=3: holds of 231, 0 of them can finish
+  short in w=1 h=4 colors=4 limit=0: holds of 508, 0 of them can finish
+  short in w=1 h=4 colors=4 limit=1: holds of 724, 0 of them can finish
+  short in w=1 h=4 colors=4 limit=2: holds of 796, 0 of them can finish
+  short in w=1 h=4 colors=4 limit=3: holds of 796, 0 of them can finish
+  short in w=2 h=1 colors=2 limit=0: holds of 6, 0 of them can finish
+  short in w=2 h=1 colors=2 limit=1: holds of 6, 0 of them can finish
+  short in w=2 h=1 colors=2 limit=2: holds of 6, 0 of them can finish
+  short in w=2 h=1 colors=2 limit=3: holds of 6, 0 of them can finish
+  short in w=2 h=1 colors=3 limit=0: holds of 15, 0 of them can finish
+  short in w=2 h=1 colors=3 limit=1: holds of 15, 0 of them can finish
+  short in w=2 h=1 colors=3 limit=2: holds of 15, 0 of them can finish
+  short in w=2 h=1 colors=3 limit=3: holds of 15, 0 of them can finish
+  short in w=2 h=1 colors=4 limit=0: holds of 28, 0 of them can finish
+  short in w=2 h=1 colors=4 limit=1: holds of 28, 0 of them can finish
+  short in w=2 h=1 colors=4 limit=2: holds of 28, 0 of them can finish
+  short in w=2 h=1 colors=4 limit=3: holds of 28, 0 of them can finish
+  short in w=2 h=2 colors=2 limit=0: holds of 30, 0 of them can finish
+  short in w=2 h=2 colors=2 limit=1: holds of 32, 0 of them can finish
+  short in w=2 h=2 colors=2 limit=2: holds of 32, 0 of them can finish
+  short in w=2 h=2 colors=2 limit=3: holds of 32, 0 of them can finish
+  short in w=2 h=2 colors=3 limit=0: holds of 159, 0 of them can finish
+  short in w=2 h=2 colors=3 limit=1: holds of 201, 0 of them can finish
+  short in w=2 h=2 colors=3 limit=2: holds of 207, 0 of them can finish
+  short in w=2 h=2 colors=3 limit=3: holds of 207, 0 of them can finish
+  short in w=2 h=2 colors=4 limit=0: holds of 508, 0 of them can finish
+  short in w=2 h=2 colors=4 limit=1: holds of 688, 0 of them can finish
+  short in w=2 h=2 colors=4 limit=2: holds of 736, 0 of them can finish
+  short in w=2 h=2 colors=4 limit=3: holds of 736, 0 of them can finish
+  short in w=2 h=3 colors=2 limit=0: holds of 126, 0 of them can finish
+  short in w=2 h=3 colors=2 limit=1: holds of 152, 0 of them can finish
+  short in w=2 h=3 colors=2 limit=2: holds of 152, 0 of them can finish
+  short in w=2 h=3 colors=2 limit=3: holds of 152, 0 of them can finish
+  short in w=2 h=3 colors=3 limit=0: holds of 1455, 0 of them can finish
+  short in w=2 h=3 colors=3 limit=1: holds of 2073, 0 of them can finish
+  short in w=2 h=3 colors=3 limit=2: holds of 2331, 0 of them can finish
+  short in w=2 h=3 colors=3 limit=3: holds of 2331, 0 of them can finish
+  short in w=2 h=3 colors=4 limit=0: holds of 8188, 0 of them can finish
+  short in w=2 h=3 colors=4 limit=1: holds of 12064, 0 of them can finish
+  short in w=2 h=3 colors=4 limit=2: holds of 14656, 0 of them can finish
+  short in w=2 h=3 colors=4 limit=3: holds of 15232, 0 of them can finish
+  short in w=2 h=4 colors=2 limit=0: holds of 510, 0 of them can finish
+  short in w=2 h=4 colors=2 limit=1: holds of 670, 0 of them can finish
+  short in w=2 h=4 colors=2 limit=2: holds of 670, 0 of them can finish
+  short in w=2 h=4 colors=2 limit=3: holds of 670, 0 of them can finish
+  short in w=2 h=4 colors=3 limit=0: holds of 13119, 0 of them can finish
+  short in w=2 h=4 colors=3 limit=1: holds of 19395, 0 of them can finish
+  short in w=2 h=4 colors=3 limit=2: holds of 23487, 0 of them can finish
+  short in w=2 h=4 colors=3 limit=3: holds of 23487, 0 of them can finish
+  short in w=2 h=4 colors=4 limit=0: holds of 131068, 0 of them can finish
+  short in w=2 h=4 colors=4 limit=1: holds of 196036, 0 of them can finish
+  short in w=2 h=4 colors=4 limit=2: holds of 253228, 0 of them can finish
+  short in w=2 h=4 colors=4 limit=3: holds of 278812, 0 of them can finish
+  short in w=3 h=1 colors=2 limit=0: holds of 14, 0 of them can finish
+  short in w=3 h=1 colors=2 limit=1: holds of 16, 0 of them can finish
+  short in w=3 h=1 colors=2 limit=2: holds of 16, 0 of them can finish
+  short in w=3 h=1 colors=2 limit=3: holds of 16, 0 of them can finish
+  short in w=3 h=1 colors=3 limit=0: holds of 51, 0 of them can finish
+  short in w=3 h=1 colors=3 limit=1: holds of 63, 0 of them can finish
+  short in w=3 h=1 colors=3 limit=2: holds of 63, 0 of them can finish
+  short in w=3 h=1 colors=3 limit=3: holds of 63, 0 of them can finish
+  short in w=3 h=1 colors=4 limit=0: holds of 124, 0 of them can finish
+  short in w=3 h=1 colors=4 limit=1: holds of 160, 0 of them can finish
+  short in w=3 h=1 colors=4 limit=2: holds of 160, 0 of them can finish
+  short in w=3 h=1 colors=4 limit=3: holds of 160, 0 of them can finish
+  short in w=3 h=2 colors=2 limit=0: holds of 126, 0 of them can finish
+  short in w=3 h=2 colors=2 limit=1: holds of 152, 0 of them can finish
+  short in w=3 h=2 colors=2 limit=2: holds of 152, 0 of them can finish
+  short in w=3 h=2 colors=2 limit=3: holds of 152, 0 of them can finish
+  short in w=3 h=2 colors=3 limit=0: holds of 1455, 0 of them can finish
+  short in w=3 h=2 colors=3 limit=1: holds of 2073, 0 of them can finish
+  short in w=3 h=2 colors=3 limit=2: holds of 2331, 0 of them can finish
+  short in w=3 h=2 colors=3 limit=3: holds of 2331, 0 of them can finish
+  short in w=3 h=2 colors=4 limit=0: holds of 8188, 0 of them can finish
+  short in w=3 h=2 colors=4 limit=1: holds of 12064, 0 of them can finish
+  short in w=3 h=2 colors=4 limit=2: holds of 14656, 0 of them can finish
+  short in w=3 h=2 colors=4 limit=3: holds of 15232, 0 of them can finish
+  short in w=3 h=3 colors=2 limit=0: holds of 1022, 0 of them can finish
+  short in w=3 h=3 colors=2 limit=1: holds of 1332, 0 of them can finish
+  short in w=3 h=3 colors=2 limit=2: holds of 1332, 0 of them can finish
+  short in w=3 h=3 colors=2 limit=3: holds of 1332, 0 of them can finish
+  short in w=3 h=3 colors=3 limit=0: holds of 39363, 0 of them can finish
+  short in w=3 h=3 colors=3 limit=1: holds of 58443, 0 of them can finish
+  short in w=3 h=3 colors=3 limit=2: holds of 71625, 0 of them can finish
+  short in w=3 h=3 colors=3 limit=3: holds of 71625, 0 of them can finish
+  short in w=3 h=4 colors=2 limit=0: holds of 8190, 0 of them can finish
+  short in w=3 h=4 colors=2 limit=1: holds of 11252, 0 of them can finish
+  short in w=3 h=4 colors=2 limit=2: holds of 11252, 0 of them can finish
+  short in w=3 h=4 colors=2 limit=3: holds of 11252, 0 of them can finish
+  short in w=4 h=1 colors=2 limit=0: holds of 30, 0 of them can finish
+  short in w=4 h=1 colors=2 limit=1: holds of 38, 0 of them can finish
+  short in w=4 h=1 colors=2 limit=2: holds of 38, 0 of them can finish
+  short in w=4 h=1 colors=2 limit=3: holds of 38, 0 of them can finish
+  short in w=4 h=1 colors=3 limit=0: holds of 159, 0 of them can finish
+  short in w=4 h=1 colors=3 limit=1: holds of 219, 0 of them can finish
+  short in w=4 h=1 colors=3 limit=2: holds of 231, 0 of them can finish
+  short in w=4 h=1 colors=3 limit=3: holds of 231, 0 of them can finish
+  short in w=4 h=1 colors=4 limit=0: holds of 508, 0 of them can finish
+  short in w=4 h=1 colors=4 limit=1: holds of 724, 0 of them can finish
+  short in w=4 h=1 colors=4 limit=2: holds of 796, 0 of them can finish
+  short in w=4 h=1 colors=4 limit=3: holds of 796, 0 of them can finish
+  short in w=4 h=2 colors=2 limit=0: holds of 510, 0 of them can finish
+  short in w=4 h=2 colors=2 limit=1: holds of 670, 0 of them can finish
+  short in w=4 h=2 colors=2 limit=2: holds of 670, 0 of them can finish
+  short in w=4 h=2 colors=2 limit=3: holds of 670, 0 of them can finish
+  short in w=4 h=2 colors=3 limit=0: holds of 13119, 0 of them can finish
+  short in w=4 h=2 colors=3 limit=1: holds of 19395, 0 of them can finish
+  short in w=4 h=2 colors=3 limit=2: holds of 23487, 0 of them can finish
+  short in w=4 h=2 colors=3 limit=3: holds of 23487, 0 of them can finish
+  short in w=4 h=2 colors=4 limit=0: holds of 131068, 0 of them can finish
+  short in w=4 h=2 colors=4 limit=1: holds of 196036, 0 of them can finish
+  short in w=4 h=2 colors=4 limit=2: holds of 253228, 0 of them can finish
+  short in w=4 h=2 colors=4 limit=3: holds of 278812, 0 of them can finish
+  short in w=4 h=3 colors=2 limit=0: holds of 8190, 0 of them can finish
+  short in w=4 h=3 colors=2 limit=1: holds of 11252, 0 of them can finish
+  short in w=4 h=3 colors=2 limit=2: holds of 11252, 0 of them can finish
+  short in w=4 h=3 colors=2 limit=3: holds of 11252, 0 of them can finish
+  short in w=4 h=4 colors=2 limit=0: holds of 131070, 0 of them can finish
+  short in w=4 h=4 colors=2 limit=1: holds of 186020, 0 of them can finish
+  short in w=4 h=4 colors=2 limit=2: holds of 186020, 0 of them can finish
+  short in w=4 h=4 colors=2 limit=3: holds of 186020, 0 of them can finish
+flood short: sound (5.8s for the game)
+flood short planted: unsound, as it must be
 inertia w=2 h=2: 2500 positions, 2224 can finish, 244 that cannot are claimed by none
 inertia w=2 h=3: 93750 positions, 77108 can finish, 12930 that cannot are claimed by none
 inertia w=3 h=2: 93750 positions, 77108 can finish, 12930 that cannot are claimed by none
@@ -50,6 +357,161 @@ pegs w=5 h=2: 59049 positions, 6912 can finish, 22059 that cannot are claimed by
   frozen in w=5 h=2: holds of 30078, 0 of them can finish
 pegs frozen: sound (0.2s for the game)
 pegs frozen planted: unsound, as it must be
+samegame: no move on any position, so not checked: w=1 h=1 colors=1; w=1 h=1 colors=2; w=1 h=1 colors=3; w=1 h=1 colors=4
+samegame w=1 h=2 colors=1: 4 positions, 2 can finish, 0 that cannot are claimed by none
+samegame w=1 h=2 colors=2: 9 positions, 3 can finish, 0 that cannot are claimed by none
+samegame w=1 h=2 colors=3: 16 positions, 4 can finish, 0 that cannot are claimed by none
+samegame w=1 h=2 colors=4: 25 positions, 5 can finish, 0 that cannot are claimed by none
+samegame w=1 h=3 colors=1: 8 positions, 4 can finish, 0 that cannot are claimed by none
+samegame w=1 h=3 colors=2: 27 positions, 7 can finish, 0 that cannot are claimed by none
+samegame w=1 h=3 colors=3: 64 positions, 10 can finish, 0 that cannot are claimed by none
+samegame w=1 h=3 colors=4: 125 positions, 13 can finish, 0 that cannot are claimed by none
+samegame w=1 h=4 colors=1: 16 positions, 7 can finish, 2 that cannot are claimed by none
+samegame w=1 h=4 colors=2: 81 positions, 17 can finish, 4 that cannot are claimed by none
+samegame w=1 h=4 colors=3: 256 positions, 31 can finish, 6 that cannot are claimed by none
+samegame w=1 h=4 colors=4: 625 positions, 49 can finish, 8 that cannot are claimed by none
+samegame w=2 h=1 colors=1: 4 positions, 2 can finish, 0 that cannot are claimed by none
+samegame w=2 h=1 colors=2: 9 positions, 3 can finish, 0 that cannot are claimed by none
+samegame w=2 h=1 colors=3: 16 positions, 4 can finish, 0 that cannot are claimed by none
+samegame w=2 h=1 colors=4: 25 positions, 5 can finish, 0 that cannot are claimed by none
+samegame w=2 h=2 colors=1: 16 positions, 10 can finish, 0 that cannot are claimed by none
+samegame w=2 h=2 colors=2: 81 positions, 23 can finish, 0 that cannot are claimed by none
+samegame w=2 h=2 colors=3: 256 positions, 40 can finish, 0 that cannot are claimed by none
+samegame w=2 h=2 colors=4: 625 positions, 61 can finish, 0 that cannot are claimed by none
+samegame w=2 h=3 colors=1: 64 positions, 36 can finish, 12 that cannot are claimed by none
+samegame w=2 h=3 colors=2: 729 positions, 253 can finish, 60 that cannot are claimed by none
+samegame w=2 h=3 colors=3: 4096 positions, 688 can finish, 186 that cannot are claimed by none
+samegame w=2 h=3 colors=4: 15625 positions, 1377 can finish, 432 that cannot are claimed by none
+samegame w=2 h=4 colors=1: 256 positions, 140 can finish, 76 that cannot are claimed by none
+samegame w=2 h=4 colors=2: 6561 positions, 2689 can finish, 1372 that cannot are claimed by none
+samegame w=2 h=4 colors=3: 65536 positions, 12220 can finish, 8472 that cannot are claimed by none
+samegame w=2 h=4 colors=4: 390625 positions, 33905 can finish, 27376 that cannot are claimed by none
+samegame w=3 h=1 colors=1: 8 positions, 4 can finish, 0 that cannot are claimed by none
+samegame w=3 h=1 colors=2: 27 positions, 7 can finish, 0 that cannot are claimed by none
+samegame w=3 h=1 colors=3: 64 positions, 10 can finish, 0 that cannot are claimed by none
+samegame w=3 h=1 colors=4: 125 positions, 13 can finish, 0 that cannot are claimed by none
+samegame w=3 h=2 colors=1: 64 positions, 36 can finish, 12 that cannot are claimed by none
+samegame w=3 h=2 colors=2: 729 positions, 253 can finish, 60 that cannot are claimed by none
+samegame w=3 h=2 colors=3: 4096 positions, 700 can finish, 174 that cannot are claimed by none
+samegame w=3 h=2 colors=4: 15625 positions, 1425 can finish, 384 that cannot are claimed by none
+samegame w=3 h=3 colors=1: 512 positions, 306 can finish, 144 that cannot are claimed by none
+samegame w=3 h=3 colors=2: 19683 positions, 9353 can finish, 4532 that cannot are claimed by none
+samegame w=3 h=3 colors=3: 262144 positions, 56938 can finish, 44910 that cannot are claimed by none
+samegame w=3 h=4 colors=1: 4096 positions, 2852 can finish, 1018 that cannot are claimed by none
+samegame w=4 h=1 colors=1: 16 positions, 7 can finish, 2 that cannot are claimed by none
+samegame w=4 h=1 colors=2: 81 positions, 17 can finish, 4 that cannot are claimed by none
+samegame w=4 h=1 colors=3: 256 positions, 31 can finish, 6 that cannot are claimed by none
+samegame w=4 h=1 colors=4: 625 positions, 49 can finish, 8 that cannot are claimed by none
+samegame w=4 h=2 colors=1: 256 positions, 140 can finish, 76 that cannot are claimed by none
+samegame w=4 h=2 colors=2: 6561 positions, 2701 can finish, 1360 that cannot are claimed by none
+samegame w=4 h=2 colors=3: 65536 positions, 12160 can finish, 8532 that cannot are claimed by none
+samegame w=4 h=2 colors=4: 390625 positions, 33809 can finish, 27472 that cannot are claimed by none
+samegame w=4 h=3 colors=1: 4096 positions, 2852 can finish, 1018 that cannot are claimed by none
+samegame w=4 h=4 colors=1: 65536 positions, 52419 can finish, 11884 that cannot are claimed by none
+  stuck in w=1 h=2 colors=1: holds of 2, 0 of them can finish
+  stuck in w=1 h=2 colors=2: holds of 6, 0 of them can finish
+  stuck in w=1 h=2 colors=3: holds of 12, 0 of them can finish
+  stuck in w=1 h=2 colors=4: holds of 20, 0 of them can finish
+  stuck in w=1 h=3 colors=1: holds of 4, 0 of them can finish
+  stuck in w=1 h=3 colors=2: holds of 16, 0 of them can finish
+  stuck in w=1 h=3 colors=3: holds of 42, 0 of them can finish
+  stuck in w=1 h=3 colors=4: holds of 88, 0 of them can finish
+  stuck in w=1 h=4 colors=1: holds of 7, 0 of them can finish
+  stuck in w=1 h=4 colors=2: holds of 40, 0 of them can finish
+  stuck in w=1 h=4 colors=3: holds of 141, 0 of them can finish
+  stuck in w=1 h=4 colors=4: holds of 376, 0 of them can finish
+  stuck in w=2 h=1 colors=1: holds of 2, 0 of them can finish
+  stuck in w=2 h=1 colors=2: holds of 6, 0 of them can finish
+  stuck in w=2 h=1 colors=3: holds of 12, 0 of them can finish
+  stuck in w=2 h=1 colors=4: holds of 20, 0 of them can finish
+  stuck in w=2 h=2 colors=1: holds of 6, 0 of them can finish
+  stuck in w=2 h=2 colors=2: holds of 34, 0 of them can finish
+  stuck in w=2 h=2 colors=3: holds of 120, 0 of them can finish
+  stuck in w=2 h=2 colors=4: holds of 324, 0 of them can finish
+  stuck in w=2 h=3 colors=1: holds of 16, 0 of them can finish
+  stuck in w=2 h=3 colors=2: holds of 180, 0 of them can finish
+  stuck in w=2 h=3 colors=3: holds of 1152, 0 of them can finish
+  stuck in w=2 h=3 colors=4: holds of 5104, 0 of them can finish
+  stuck in w=2 h=4 colors=1: holds of 40, 0 of them can finish
+  stuck in w=2 h=4 colors=2: holds of 932, 0 of them can finish
+  stuck in w=2 h=4 colors=3: holds of 10968, 0 of them can finish
+  stuck in w=2 h=4 colors=4: holds of 80128, 0 of them can finish
+  stuck in w=3 h=1 colors=1: holds of 4, 0 of them can finish
+  stuck in w=3 h=1 colors=2: holds of 16, 0 of them can finish
+  stuck in w=3 h=1 colors=3: holds of 42, 0 of them can finish
+  stuck in w=3 h=1 colors=4: holds of 88, 0 of them can finish
+  stuck in w=3 h=2 colors=1: holds of 16, 0 of them can finish
+  stuck in w=3 h=2 colors=2: holds of 180, 0 of them can finish
+  stuck in w=3 h=2 colors=3: holds of 1152, 0 of them can finish
+  stuck in w=3 h=2 colors=4: holds of 5104, 0 of them can finish
+  stuck in w=3 h=3 colors=1: holds of 62, 0 of them can finish
+  stuck in w=3 h=3 colors=2: holds of 2020, 0 of them can finish
+  stuck in w=3 h=3 colors=3: holds of 31926, 0 of them can finish
+  stuck in w=3 h=4 colors=1: holds of 226, 0 of them can finish
+  stuck in w=4 h=1 colors=1: holds of 7, 0 of them can finish
+  stuck in w=4 h=1 colors=2: holds of 40, 0 of them can finish
+  stuck in w=4 h=1 colors=3: holds of 141, 0 of them can finish
+  stuck in w=4 h=1 colors=4: holds of 376, 0 of them can finish
+  stuck in w=4 h=2 colors=1: holds of 40, 0 of them can finish
+  stuck in w=4 h=2 colors=2: holds of 932, 0 of them can finish
+  stuck in w=4 h=2 colors=3: holds of 10968, 0 of them can finish
+  stuck in w=4 h=2 colors=4: holds of 80128, 0 of them can finish
+  stuck in w=4 h=3 colors=1: holds of 226, 0 of them can finish
+  stuck in w=4 h=4 colors=1: holds of 1233, 0 of them can finish
+samegame stuck: sound (2.7s for the game)
+samegame stuck planted: unsound, as it must be
+  last in w=1 h=2 colors=1: holds of 2, 0 of them can finish
+  last in w=1 h=2 colors=2: holds of 6, 0 of them can finish
+  last in w=1 h=2 colors=3: holds of 12, 0 of them can finish
+  last in w=1 h=2 colors=4: holds of 20, 0 of them can finish
+  last in w=1 h=3 colors=1: holds of 3, 0 of them can finish
+  last in w=1 h=3 colors=2: holds of 18, 0 of them can finish
+  last in w=1 h=3 colors=3: holds of 51, 0 of them can finish
+  last in w=1 h=3 colors=4: holds of 108, 0 of them can finish
+  last in w=1 h=4 colors=1: holds of 4, 0 of them can finish
+  last in w=1 h=4 colors=2: holds of 52, 0 of them can finish
+  last in w=1 h=4 colors=3: holds of 204, 0 of them can finish
+  last in w=1 h=4 colors=4: holds of 544, 0 of them can finish
+  last in w=2 h=1 colors=1: holds of 2, 0 of them can finish
+  last in w=2 h=1 colors=2: holds of 6, 0 of them can finish
+  last in w=2 h=1 colors=3: holds of 12, 0 of them can finish
+  last in w=2 h=1 colors=4: holds of 20, 0 of them can finish
+  last in w=2 h=2 colors=1: holds of 4, 0 of them can finish
+  last in w=2 h=2 colors=2: holds of 52, 0 of them can finish
+  last in w=2 h=2 colors=3: holds of 204, 0 of them can finish
+  last in w=2 h=2 colors=4: holds of 544, 0 of them can finish
+  last in w=2 h=3 colors=1: holds of 6, 0 of them can finish
+  last in w=2 h=3 colors=2: holds of 354, 0 of them can finish
+  last in w=2 h=3 colors=3: holds of 3054, 0 of them can finish
+  last in w=2 h=3 colors=4: holds of 13476, 0 of them can finish
+  last in w=2 h=4 colors=1: holds of 8, 0 of them can finish
+  last in w=2 h=4 colors=2: holds of 1992, 0 of them can finish
+  last in w=2 h=4 colors=3: holds of 42072, 0 of them can finish
+  last in w=2 h=4 colors=4: holds of 320672, 0 of them can finish
+  last in w=3 h=1 colors=1: holds of 3, 0 of them can finish
+  last in w=3 h=1 colors=2: holds of 18, 0 of them can finish
+  last in w=3 h=1 colors=3: holds of 51, 0 of them can finish
+  last in w=3 h=1 colors=4: holds of 108, 0 of them can finish
+  last in w=3 h=2 colors=1: holds of 6, 0 of them can finish
+  last in w=3 h=2 colors=2: holds of 354, 0 of them can finish
+  last in w=3 h=2 colors=3: holds of 3054, 0 of them can finish
+  last in w=3 h=2 colors=4: holds of 13476, 0 of them can finish
+  last in w=3 h=3 colors=1: holds of 9, 0 of them can finish
+  last in w=3 h=3 colors=2: holds of 4536, 0 of them can finish
+  last in w=3 h=3 colors=3: holds of 150003, 0 of them can finish
+  last in w=3 h=4 colors=1: holds of 12, 0 of them can finish
+  last in w=4 h=1 colors=1: holds of 4, 0 of them can finish
+  last in w=4 h=1 colors=2: holds of 52, 0 of them can finish
+  last in w=4 h=1 colors=3: holds of 204, 0 of them can finish
+  last in w=4 h=1 colors=4: holds of 544, 0 of them can finish
+  last in w=4 h=2 colors=1: holds of 8, 0 of them can finish
+  last in w=4 h=2 colors=2: holds of 1992, 0 of them can finish
+  last in w=4 h=2 colors=3: holds of 42072, 0 of them can finish
+  last in w=4 h=2 colors=4: holds of 320672, 0 of them can finish
+  last in w=4 h=3 colors=1: holds of 12, 0 of them can finish
+  last in w=4 h=4 colors=1: holds of 16, 0 of them can finish
+samegame last: sound (2.7s for the game)
+samegame last planted: unsound, as it must be
 sixteen w=2 h=2: 24 positions, 24 can finish, 0 that cannot are claimed by none
 sixteen w=2 h=3: 720 positions, 720 can finish, 0 that cannot are claimed by none
 sixteen w=2 h=4: 40320 positions, 40320 can finish, 0 that cannot are claimed by none

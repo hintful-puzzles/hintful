@@ -32,17 +32,21 @@ import {
 } from "./hint.ts";
 import { executeMove, samegameGame } from "./index.ts";
 import { COL_HINT_EVIDENCE } from "./render.ts";
+import { findClearing, type Group, groupsOf, loneSquares, removed } from "./solver.ts";
 import {
-  findClearing,
-  type Group,
-  groupsOf,
-  lastOfColor,
-  loneSquares,
-  removed,
-} from "./solver.ts";
-import { isCleared, type SamegameMove, type SamegameState, status } from "./state.ts";
+  isCleared,
+  positionOf,
+  rulesOf,
+  type SamegameMove,
+  type SamegameState,
+  status,
+} from "./state.ts";
 
 const G = samegameGame;
+
+/** The squares the last of their color: the description's `last`. */
+const lastOf = (s: SamegameState): number[] =>
+  rulesOf(s).witnesses("last", positionOf(s.tiles));
 
 function load(id: string): SamegameState {
   const [params, desc] = id.split(":");
@@ -159,7 +163,7 @@ describe("samegame solver", () => {
     const g = groupsOf(s.tiles, s.w, s.h).find((x) => s.tiles[x[0]] === 3);
     if (!g) throw new Error("expected a group of 3s");
     const moved = new Int32Array(9);
-    expect([...removed(s.tiles, 3, 3, g, moved)]).toEqual(played(s, g).tiles);
+    expect([...removed(s.tiles, 3, 3, g, moved)]).toEqual([...played(s, g).tiles]);
     for (let i = 0; i < 9; i++) {
       if (g.includes(i)) expect(moved[i]).toBe(-1);
       else expect(played(s, g).tiles[moved[i]]).toBe(s.tiles[i]);
@@ -169,8 +173,8 @@ describe("samegame solver", () => {
   it("agrees with brute force on every position random play reaches on small boards", () => {
     // An enumeration with no ordering, memo or pruning: the verdict the
     // search's restarts and its last-of-color cut must reproduce.
-    const brute = (t: readonly number[], w: number, h: number): boolean => {
-      if (t.every((c) => c === 0)) return true;
+    const brute = (t: ArrayLike<number>, w: number, h: number): boolean => {
+      if (Array.from(t).every((c) => c === 0)) return true;
       return groupsOf(t, w, h).some((g) => brute([...removed(t, w, h, g)], w, h));
     };
     let lost = 0;
@@ -201,7 +205,7 @@ describe("samegame solver", () => {
 
   it("proves the pinned lost position lost, with no square the last of its color", () => {
     const s = load(LOST);
-    expect(lastOfColor(s.tiles, s.ncols)).toEqual([]);
+    expect(lastOf(s)).toEqual([]);
     expect(groupsOf(s.tiles, s.w, s.h).length).toBeGreaterThan(0);
     expect(findClearing(s).kind).toBe("lost");
   });
@@ -251,7 +255,7 @@ describe("samegame hint", () => {
     const c = s.tiles[indexOf(s, victim)];
     expect(s.tiles[rival[0]]).toBe(c);
     expect(s.tiles.filter((t) => t === c).length).toBe(rival.length + 1);
-    expect(lastOfColor(played(s, moveGroup(steps[0])).tiles, s.ncols)).toEqual([]);
+    expect(lastOf(played(s, moveGroup(steps[0])))).toEqual([]);
   });
 
   it("stripes a rival that leaves no group at all", () => {

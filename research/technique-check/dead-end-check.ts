@@ -15,7 +15,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compilePlanning } from "../../src/describe/compile-position.ts";
-import { type PlanningJson, planningWith } from "../../src/describe/description.ts";
+import {
+  OPEN_DOMAIN,
+  type PlanningJson,
+  planningWith,
+} from "../../src/describe/description.ts";
 import { type Expr, parse } from "../../src/describe/expr.ts";
 import { CHECKED_POSITIONS } from "../../src/describe/soundness.ts";
 import { describedSpace, type GridSpace } from "../../src/engine/describe-runtime.ts";
@@ -118,10 +122,13 @@ interface Layer {
   once: number | null;
   /** Where a value other than 0 may stand, a formula of the cell `c`. */
   on: Expr | null;
-  /** How many places the layer holds a value at: the cells, or the faces. */
+  /** How many places the layer holds a value at: the cells, the faces, or
+   * the board's one. */
   length: number;
   /** Whether it holds a value a cell, and so is read at a cell by `on`. */
   byCell: boolean;
+  /** Whether its domain is not finite, and `values` the window searched. */
+  open: boolean;
 }
 
 /**
@@ -300,17 +307,23 @@ export async function worlds(
       const layers = Object.entries(position)
         .filter(([, l]) => l.carried !== true)
         .map(([name, l]) => {
-          const values = term(l.domain, sizes);
+          const open = l.domain.trim() === OPEN_DOMAIN;
+          if (open && l.checked === undefined)
+            throw new Error(
+              `${d.game}: ${name}'s domain is not finite and names no window, so its claims are beyond the checker`,
+            );
+          const values = term(open ? (l.checked as string) : l.domain, sizes);
           if (!Array.isArray(values)) throw new TypeError(`${name}: no domain`);
-          const byCell = l.over !== "faces";
+          const byCell = l.over === undefined;
           return {
             name,
             values: (values as number[]).slice().sort((a, b) => a - b),
             arranged: l.arranged === undefined ? null : num(l.arranged, sizes),
             once: l.once === undefined ? null : num(l.once, sizes),
             on: l.on === undefined ? null : parse(l.on),
-            length: byCell ? cells : faces,
+            length: l.over === "board" ? 1 : byCell ? cells : faces,
             byCell,
+            open,
           };
         });
       for (const l of layers)
@@ -464,6 +477,9 @@ export interface WorldResult {
   claims: Map<string, ClaimResult>;
   /** Positions that cannot finish and that no claim holds of. */
   missed: number;
+  /** Positions with a move out of an open layer's window, a line the search
+   * does not follow: a claim is refuted only by a line inside it. */
+  beyond: number;
 }
 
 const show = (p: Layers, names: readonly string[]): string =>
@@ -489,13 +505,28 @@ export function checkWorld(
   const rules = mod.rules(sp, dealt, world.variations);
   const claims = mod.claims(sp, dealt, world.variations);
   const active = new Set(layers.map((l) => l.name));
-  // The length of each layer, by name: a face layer's is the faces', and a
-  // layer the checker holds at 0 has its own.
+  // The length of each layer, by name: a face layer's is the faces', a
+  // board layer's one, and a layer the checker holds at 0 has its own.
   const position = planningWith(d, world.variations).json.position;
   const faces = d.space.faces === undefined ? 0 : num(d.space.faces, world.sizes);
   const lengths = new Map(
-    mod.layers.map((n) => [n, position[n]?.over === "faces" ? faces : cells]),
+    mod.layers.map((n) => {
+      const over = position[n]?.over;
+      return [n, over === "faces" ? faces : over === "board" ? 1 : cells];
+    }),
   );
+  // A position whose finite layers hold values of their domains, and some
+  // open layer one outside its window.
+  const outside = (p: Layers): boolean => {
+    let out = false;
+    for (const l of layers)
+      for (let c = 0; c < l.length; c++)
+        if (!l.values.includes(p[l.name][c])) {
+          if (!l.open) return false;
+          out = true;
+        }
+    return out;
+  };
   // A position's key: each layer's value's place in its domain, in mixed
   // radix over its places, or -1 for a value outside it.
   let space = 1;
@@ -532,26 +563,35 @@ export function checkWorld(
       mod.deadEnds.map((id) => [id, { fires: 0, unsound: 0, witness: null }]),
     ),
     missed: 0,
+    beyond: 0,
   };
   // Forward edges, by position, in one array.
   const start = new Int32Array(all.length + 1);
   const to: number[] = [];
   const permute = d.freedom.kind === "permute";
+  if (permute && layers.some((l) => l.open))
+    result.broken = "permute: a layer whose domain is not finite moves no piece";
   const firstMoves = permute ? JSON.stringify(rules.moves(all[0])) : "";
   for (let i = 0; i < all.length && result.broken === null; i++) {
     const p = all[i];
     const ms = rules.moves(p);
     if (permute && JSON.stringify(ms) !== firstMoves)
       result.broken = `permute: the moves differ at ${show(p, mod.layers)}`;
+    let leaves = false;
     for (const m of ms) {
       const q = rules.play(p, m);
       const j = inactiveClear(q) ? (ids.get(key(q)) ?? -1) : -1;
+      if (j < 0 && inactiveClear(q) && outside(q)) {
+        leaves = true;
+        continue;
+      }
       if (j < 0) {
         result.broken = `${JSON.stringify(m)} leaves the layers' values from ${show(p, mod.layers)}`;
         break;
       }
       to.push(j);
     }
+    if (leaves) result.beyond++;
     start[i + 1] = to.length;
   }
   if (result.broken !== null) return result;

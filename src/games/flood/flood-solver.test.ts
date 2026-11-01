@@ -2,8 +2,10 @@
 // board, picks a playable color, and stays within the grid-area bound.
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
+import { executeMove } from "./index.ts";
+import { joinedBy } from "./render.ts";
 import { choosemove, completed, fill, SolverScratch, solveMoves } from "./solver.ts";
-import { type FloodParams, newDesc, newState } from "./state.ts";
+import { type FloodParams, newDesc, newState, positionOf, rulesOf } from "./state.ts";
 
 describe("Flood solver completeness", () => {
   for (const p of [
@@ -32,6 +34,44 @@ describe("Flood solver completeness", () => {
       }
     });
   }
+});
+
+describe("Flood's planner", () => {
+  // The planner fills in place, as upstream's par is set, and the hint rings
+  // what a fill joins: each held to the description's fill.
+  it("fills, and rings what joins, as the description's fill does", () => {
+    const rng = randomNew("flood planner fill");
+    for (const p of [
+      { w: 2, h: 3, colors: 3, leniency: 0 },
+      { w: 6, h: 5, colors: 4, leniency: 2 },
+      { w: 12, h: 12, colors: 6, leniency: 5 },
+    ] as FloodParams[]) {
+      let state = newState(p, newDesc(p, rng).desc);
+      const rules = rulesOf(state);
+      for (let step = 0; !completed(state.grid); step++) {
+        for (const m of rules.moves(positionOf(state))) {
+          const after = rules.play(positionOf(state), m);
+          const grid = Uint8Array.from(state.grid);
+          fill(p.w, p.h, grid, 0, 0, m.k, new Int32Array(p.w * p.h));
+          expect([...grid]).toEqual([...after.color]);
+          // What joins is what was outside the region and is inside it after.
+          const region = (g: ArrayLike<number>) => {
+            const q = Uint8Array.from(g);
+            fill(p.w, p.h, q, 0, 0, state.colors, new Int32Array(p.w * p.h));
+            return q;
+          };
+          const before = region(state.grid);
+          const joined = [...region(after.color)].flatMap((v, i) =>
+            v === state.colors && before[i] !== state.colors ? [i] : [],
+          );
+          expect(joinedBy(state, m.k)).toEqual(joined);
+        }
+        const k = solveMoves(p.w, p.h, state.grid, state.colors)[0];
+        state = executeMove(state, { type: "fill", color: k });
+        expect(step).toBeLessThan(p.w * p.h);
+      }
+    }
+  });
 });
 
 describe("Flood look-ahead", () => {

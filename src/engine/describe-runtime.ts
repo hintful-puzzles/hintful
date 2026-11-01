@@ -376,6 +376,14 @@ export function popcount(m: number): number {
   return (Math.imul((v + (v >>> 4)) & 0x0f0f0f0f, 0x01010101) >>> 24) & 0xff;
 }
 
+/** An exact integer as a layer whose domain is not finite holds it: a double,
+ * which must hold it exactly. */
+export function held(v: bigint): number {
+  const n = Number(v);
+  if (BigInt(n) !== v) throw new RangeError(`${v} is past what a layer holds exactly`);
+  return n;
+}
+
 /** The least value of a set of values, or `-1`. */
 export function least(m: number): number {
   return m === 0 ? -1 : 31 - Math.clz32(m & -m);

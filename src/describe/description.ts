@@ -169,7 +169,10 @@ export interface LibraryJson {
 
 /** One layer of a planning game's position: a value a cell. */
 export interface LayerJson {
+  /** `integers` where it is not finite. */
   domain: string;
+  /** Where the domain is `integers`, the values the checker searches. */
+  checked?: string;
   /** The layer is an arrangement: each value of its domain on this many
    * cells. */
   arranged?: string;
@@ -179,9 +182,13 @@ export interface LayerJson {
   on?: string;
   /** A value a move copies and no rule reads. */
   carried?: true;
-  /** The layer holds a value a face, not a cell. */
-  over?: "faces";
+  /** The layer holds a value a face, or one for the whole board, not a value
+   * a cell. */
+  over?: "faces" | "board";
 }
+
+/** A layer's domain where it is not finite. */
+export const OPEN_DOMAIN = "integers";
 
 /** A table the board deals: a function of its arguments' sorts to an
  * element. */
@@ -191,8 +198,9 @@ export interface TableJson {
 }
 
 /** Cells a move assigns: its binders, the last of them the cell, and a term
- * for each layer it assigns, read on the position before the move. */
-export type AssignJson = { for: string } & Record<string, string>;
+ * for each layer it assigns, read on the position before the move. With no
+ * binders, it assigns layers over the board. */
+export type AssignJson = { for?: string } & Record<string, string>;
 
 /** A move of a planning game: its arguments, its guard, and what it sets. */
 export interface MoveJson {
@@ -242,6 +250,9 @@ export interface PlanningJson {
   position: Record<string, LayerJson>;
   given?: string[];
   define?: Record<string, string>;
+  /** Definitions the game reads beside the rules, each of cells, its last
+   * parameter the cell: compiled to the cells it holds of. */
+  views?: string[];
   freedom: { kind: "permute" | "transition" };
   moves: Record<string, MoveJson>;
   finish: string[];
