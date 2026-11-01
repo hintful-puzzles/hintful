@@ -80,8 +80,14 @@ it("checks every dead-end claim sound, and finds every planted one unsound", asy
     const d = loadDescriptionFile(readFileSync(`${ROOT}${source}`, "utf8"), source);
     if (!isPlanning(d) || (only !== null && !only.includes(d.game))) continue;
     checked.push(`${source}#`);
-    const ws = worlds(d);
     const claims = planningWith(d, Object.keys(d.variations ?? {})).deadEnds;
+    // Nothing to find sound. Flip states none, and its dealt relation is one
+    // no world deals (`checkWorld`).
+    if (claims.length === 0) {
+      lines.push(`${d.game}: states no dead-end claim`);
+      continue;
+    }
+    const ws = worlds(d);
     const run = async (desc: PlanningJson, label: string) => {
       const mod = await compiled(desc, label);
       return ws.map(({ world, layers }) => checkWorld(desc, mod, world, layers));

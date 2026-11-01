@@ -245,6 +245,10 @@ export function checkWorld(
   world: World,
   layers: readonly Layer[],
 ): WorldResult {
+  // A world deals sizes only: a claim over a dealt relation would need every
+  // relation enumerated too, which no description has asked for yet.
+  if (Object.keys(d.space.relations ?? {}).length > 0)
+    throw new Error(`${d.game}: the checker deals no relation`);
   const w = num(d.space.grid.w, world.sizes);
   const h = num(d.space.grid.h, world.sizes);
   const cells = w * h;

@@ -15,7 +15,8 @@ export type Position = {
   readonly turn: Int32Array;
 };
 
-/** The sizes the rules read that the grid does not give. */
+/** What the rules read that the grid does not give: sizes, and
+ * relations, a set of cells for each cell. */
 export interface Dealt {
   readonly n: number;
 }

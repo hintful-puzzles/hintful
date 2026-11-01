@@ -356,6 +356,7 @@ export function compilePlanning(
   if (layers.length === 0)
     throw new CompileError(`${json.game}: a position has a layer`);
   const used = new Set<string>();
+  const relations = Object.keys(d.space.relations ?? {});
   const env: Env = {
     defs: parseDefinitions(json.game, d.define ?? {}),
     clues: new Map(),
@@ -381,6 +382,7 @@ export function compilePlanning(
     hoist: null,
     epoch: null,
     prelude: null,
+    relations: new Set(relations),
   };
   const moves = applied.moves.map((m) => compileMove(m, layers, json.game, env));
   const finished = formulas("finished", applied.finish, "all", json.game, env);
@@ -412,12 +414,19 @@ export function compilePlanning(
     "",
     ...lost,
     "",
-    "  const holds = claims(sp, cl, variations);",
-    "  function deadEnd(p: Position): DeadEndId | null {",
-    "    for (const id of deadEnds) if (holds[id](p)) return id;",
-    "    return null;",
-    "  }",
-    "  const at = claimWitnesses(sp, cl, variations);",
+    ...(ids.length === 0
+      ? [
+          "  // The description states no claim: nothing is a proved dead end.",
+          "  const deadEnd = (_p: Position): DeadEndId | null => null;",
+        ]
+      : [
+          "  const holds = claims(sp, cl, variations);",
+          "  function deadEnd(p: Position): DeadEndId | null {",
+          "    for (const id of deadEnds) if (holds[id](p)) return id;",
+          "    return null;",
+          "  }",
+          "  const at = claimWitnesses(sp, cl, variations);",
+        ]),
     "",
     "  return {",
     "    moves: (p) => {",
@@ -440,7 +449,9 @@ export function compilePlanning(
     "    finished,",
     "    lost,",
     "    deadEnd,",
-    "    witnesses: (id, p) => at[id](p),",
+    ids.length === 0
+      ? "    witnesses: () => [],"
+      : "    witnesses: (id, p) => at[id](p),",
     "  };",
   ];
   const runtimeNames = ["type GridSpace", ...[...used].sort()];
@@ -461,15 +472,17 @@ export function compilePlanning(
     ...layers.map((l) => `  readonly ${l}: Int32Array;`),
     "};",
     "",
-    ...(sizes.length === 0
+    ...(sizes.length + relations.length === 0
       ? [
           "/** The board deals nothing the rules read beyond its grid. */",
           "export type Dealt = Readonly<Record<string, never>>;",
         ]
       : [
-          "/** The sizes the rules read that the grid does not give. */",
+          "/** What the rules read that the grid does not give: sizes, and",
+          " * relations, a set of cells for each cell. */",
           "export interface Dealt {",
           ...sizes.map((n) => `  readonly ${n}: number;`),
+          ...relations.map((r) => `  readonly ${r}: readonly (readonly number[])[];`),
           "}",
         ]),
     "",
@@ -501,7 +514,7 @@ export function compilePlanning(
     "",
     "/** The rules on one board: its grid, what it deals, and the variations it",
     " * has on. */",
-    `export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): PositionRules<Position, Move, DeadEndId> {`,
+    `export function rules(${param("sp", inner.join("\n"))}: GridSpace, ${param("cl", inner.join("\n"))}: Dealt, ${param("variations", inner.join("\n"))}: readonly string[]): PositionRules<Position, Move, DeadEndId> {`,
     ...inner,
     "}",
   ].join("\n")}\n`;

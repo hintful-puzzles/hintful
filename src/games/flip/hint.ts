@@ -17,7 +17,7 @@ import {
 import type { Point } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
 import { shortestAnswer } from "./solver.ts";
-import type { FlipMove, FlipState } from "./state.ts";
+import { type FlipMove, type FlipState, rulesOf } from "./state.ts";
 
 /** What a step rests on, by the branch of {@link hint} that chose its words. */
 export const FLIP_RUNGS = ["lastPress", "lastChance", "fromTheAnswer"] as const;
@@ -48,7 +48,8 @@ export function hint(state: FlipState): HintResult<FlipMove, unknown, FlipRung> 
   const last = lastFlippers(state);
   // Each step's unlit squares are read off the board it is shown on: the one
   // the presses before it leave.
-  const grid = state.grid.slice();
+  const rules = rulesOf(state);
+  let grid = state.grid;
   const steps: Step[] = [];
   // The presses the board a step is shown on still takes: the answer is the
   // shortest, and what is left of it is the shortest for the board it leaves.
@@ -80,7 +81,7 @@ export function hint(state: FlipState): HintResult<FlipMove, unknown, FlipRung> 
       explanation: words.text,
       words,
     });
-    for (let j = 0; j < wh; j++) grid[j] ^= matrix[i * wh + j];
+    grid = rules.play({ grid }, { move: "press", c: i }).grid;
   }
   // A solved board, which the midend answers before asking.
   if (steps.length === 0) return { ok: false, error: NO_MOVE_WORTH_MAKING };

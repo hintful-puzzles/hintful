@@ -133,7 +133,7 @@ describe("Flip solver", () => {
       w: 2,
       h: 2,
       matrix: new Uint8Array(wh * wh),
-      grid: Uint8Array.from([1, 0, 0, 0]),
+      grid: Int32Array.from([1, 0, 0, 0]),
       moves: 0,
     };
     const result = solveFlip(state, state);
@@ -234,7 +234,7 @@ describe("Flip interpretMove", () => {
       w: 2,
       h: 2,
       matrix: new Uint8Array(wh * wh), // all zero ⇒ nothing toggles
-      grid: new Uint8Array(wh),
+      grid: new Int32Array(wh),
       moves: 0,
     };
     expect(

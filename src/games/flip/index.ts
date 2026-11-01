@@ -30,6 +30,7 @@ import {
   verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
+import type * as flip from "./flip.compiled.ts";
 import { genCrossesMatrix, genRandomMatrix } from "./generator.ts";
 import { FLIP_RUNGS, type FlipRung, hint, hintKeepTrack } from "./hint.ts";
 import {
@@ -50,6 +51,7 @@ import {
   type FlipState,
   type FlipUi,
   readBitmap,
+  rulesOf,
 } from "./state.ts";
 
 export type { FlipMove, FlipParams, FlipState, FlipUi };
@@ -97,12 +99,11 @@ const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 // --- input ----------------------------------------------------------
 
-/** Flip square `{ x, y }`. A square with an empty matrix row flips nothing
- * (upstream's MOVE_NO_EFFECT), so it makes no move. */
+/** Flip square `{ x, y }`, where the description allows it: a square whose
+ * pattern is empty flips nothing (upstream's MOVE_NO_EFFECT), so it makes no
+ * move. */
 function flipAt(s: FlipState, { x, y }: Point): FlipMove | null {
-  const wh = s.w * s.h;
-  const i = y * s.w + x;
-  return s.matrix.subarray(i * wh, (i + 1) * wh).includes(1)
+  return rulesOf(s).legal(s, { move: "press", c: y * s.w + x })
     ? { kind: "flip", x, y }
     : null;
 }
@@ -131,27 +132,31 @@ function parseDesc(
 
 function executeMove(from: FlipState, move: FlipMove): FlipState {
   const { w, h } = from;
-  const wh = w * h;
+  const rules = rulesOf(from);
+  const press = (s: FlipState, c: number): FlipState => {
+    const m: flip.Move = { move: "press", c };
+    if (!rules.legal(s, m)) throw new Error(`Flip: no press at square ${c}`);
+    return { ...s, grid: rules.play(s, m).grid, moves: s.moves + 1 };
+  };
   if (move.kind === "solution") {
-    const grid = from.grid.slice();
-    let moves = from.moves;
-    for (let i = 0; i < wh; i++) {
-      if (!move.mask[i]) continue;
-      for (let j = 0; j < wh; j++) grid[j] ^= from.matrix[i * wh + j];
-      moves++;
-    }
-    return { ...from, grid, moves };
+    let s = from;
+    for (let c = 0; c < w * h; c++) if (move.mask[c]) s = press(s, c);
+    return s;
   }
   if (move.kind !== "flip") return assertNever(move, "flip: executeMove");
 
   const { x, y } = move;
-  if (x < 0 || x >= w || y < 0 || y >= h) {
+  if (
+    !Number.isInteger(x) ||
+    !Number.isInteger(y) ||
+    x < 0 ||
+    x >= w ||
+    y < 0 ||
+    y >= h
+  ) {
     throw new Error(`Flip: move out of range (${x},${y})`);
   }
-  const grid = from.grid.slice();
-  const i = y * w + x;
-  for (let j = 0; j < wh; j++) grid[j] ^= from.matrix[i * wh + j];
-  return { ...from, grid, moves: from.moves + 1 };
+  return press(from, y * w + x);
 }
 
 // --- the Game -------------------------------------------------------
@@ -233,7 +238,7 @@ export const flipGame: Game<
       w: p.w,
       h: p.h,
       matrix,
-      grid,
+      grid: Int32Array.from(grid),
       moves: 0,
     };
   },
@@ -257,9 +262,8 @@ export const flipGame: Game<
 
   finishesByDeduction: nothingToDeduce,
   hasNoSolution: (s) => !hasAnswer(s),
-  /** Every square is lit. */
   status(s) {
-    return s.grid.every((v) => v === 0) ? "solved" : "ongoing";
+    return rulesOf(s).finished(s) ? "solved" : "ongoing";
   },
 
   notApplicable: {

@@ -173,6 +173,8 @@ export interface LayerJson {
   /** The layer is an arrangement: each value of its domain on this many
    * cells. */
   arranged?: string;
+  /** Exactly one cell holds this value, every other another of the domain. */
+  once?: string;
 }
 
 /** Cells a move assigns: its binders, the last of them the cell, and a term
@@ -212,7 +214,12 @@ export interface PlanningJson {
   name: string;
   family: string;
   sizes: Record<string, { min: number; max: number }>;
-  space: { grid: { w: string; h: string }; units: string[] };
+  space: {
+    grid: { w: string; h: string };
+    units: string[];
+    /** Relations the board deals, each a set of cells for each cell. */
+    relations?: Record<string, "dealt">;
+  };
   position: Record<string, LayerJson>;
   given?: string[];
   define?: Record<string, string>;

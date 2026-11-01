@@ -4,7 +4,9 @@
  */
 
 import type { DescReader } from "../../engine/desc-reader.ts";
+import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import * as flip from "./flip.compiled.ts";
 
 // --- types ----------------------------------------------------------
 
@@ -23,9 +25,26 @@ export interface FlipState {
    * fixed for the game and shared by reference across its states (upstream
    * reference-counts it), so a move clones only the grid. */
   readonly matrix: Uint8Array;
-  /** wh cells; 1 = unlit, still to be lit. */
-  readonly grid: Uint8Array;
+  /** wh cells; 1 = unlit, still to be lit: the description's position. */
+  readonly grid: Int32Array;
   readonly moves: number;
+}
+
+const dealtOfMatrix = new WeakMap<Uint8Array, flip.Dealt>();
+
+/** The description's rules on `s`'s board: its matrix's rows as the squares
+ * each press flips, kept for the matrix's life. */
+export function rulesOf(s: FlipState) {
+  let cl = dealtOfMatrix.get(s.matrix);
+  if (cl === undefined) {
+    const wh = s.w * s.h;
+    const flips = Array.from({ length: wh }, (_, i) =>
+      Array.from({ length: wh }, (_, j) => j).filter((j) => s.matrix[i * wh + j] === 1),
+    );
+    cl = { flips };
+    dealtOfMatrix.set(s.matrix, cl);
+  }
+  return flip.rules(describedSpace(flip.units, s.w, s.h), cl, []);
 }
 
 export type FlipMove =
@@ -41,7 +60,7 @@ export interface FlipUi {
 
 const HEX = "0123456789abcdef";
 
-export function encodeBitmap(bmp: Uint8Array, len: number): string {
+export function encodeBitmap(bmp: ArrayLike<number>, len: number): string {
   const slen = (len + 3) >> 2;
   let out = "";
   for (let i = 0; i < slen; i++) {

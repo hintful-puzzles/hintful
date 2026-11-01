@@ -136,6 +136,11 @@
           "description": "Named partitions of the cells: `dealt`, from the board, or a library partition such as `blocks(rw, rh)`.",
           "additionalProperties": { "type": "string" }
         },
+        "relations": {
+          "type": "object",
+          "description": "A planning game's relations the board deals, each a set of cells for each cell, read `name(c)`.",
+          "additionalProperties": { "const": "dealt" }
+        },
         "units": {
           "type": "array",
           "items": { "type": "string" },
@@ -190,6 +195,10 @@
         "arranged": {
           "$ref": "#/$defs/formula",
           "description": "The layer is an arrangement: each value of its domain on this many cells. Read by the dead-end checker."
+        },
+        "once": {
+          "$ref": "#/$defs/formula",
+          "description": "Exactly one cell holds this value, and every other another of the domain: a token, such as a ball. Read by the dead-end checker."
         }
       }
     },

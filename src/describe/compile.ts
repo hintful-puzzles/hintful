@@ -226,6 +226,9 @@ interface Env {
    * itself once, ahead of its body: the statements, and the array of each
    * such definition's set, by name. `null` elsewhere. */
   prelude: Prelude | null;
+  /** The relations the board deals, each a set of cells for each cell, read
+   * `name(c)`: a planning game's. */
+  relations: ReadonlySet<string>;
 }
 
 interface Prelude {
@@ -1612,6 +1615,13 @@ function call(
     env.readsClues.yes = true;
     return { code: `cl.${fn}.of[${c.code}]`, sort: elem(`region ${fn}`) };
   }
+  if (env.relations.has(fn)) {
+    if (args.length !== 1)
+      throw new CompileError(`${fn} takes 1, given ${args.length}`);
+    const c = compileExpr(args[0], scope, env, out);
+    expectElem(c, "cell", fn);
+    return { code: `cl.${fn}[${c.code}]`, sort: setOf(elem("cell")) };
+  }
   const filling = scope.get(fn);
   if (filling?.sort.k === "fill") {
     if (args.length !== 1)
@@ -2237,6 +2247,7 @@ export function compileLibrary(
     hoist: null,
     epoch: null,
     prelude: null,
+    relations: new Set(),
   };
   const parts = Object.entries(lib.techniques).map(([id, stated]) => {
     const t: Technique = { ...parseTechnique(lib.library, id, stated), ...UNPLACED };
@@ -2357,6 +2368,7 @@ export function compileGame(
     hoist: null,
     epoch: null,
     prelude: null,
+    relations: new Set(),
   };
   for (const [kind, c] of d.clueKinds)
     clues.set(kind, clueSorts(kind, c.at, c.value, env));

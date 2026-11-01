@@ -42,3 +42,36 @@ help:
     presses lights the board at all, it says so instead. And the last press
     says that it is the last: *"Press this square: that lights the outlined
     squares and finishes the board."*
+name: Flip
+family: position
+sizes:
+  # The game bounds neither side above; 99 stands for no bound.
+  w: { min: 1, max: 99 }
+  h: { min: 1, max: 99 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+  relations:
+    # The squares a press of each square flips, its own among them on every
+    # board the generator deals: the cross around it with Crosses, and a
+    # random pattern of the eight around it with Random. The desc carries
+    # them for both, so both are dealt.
+    flips: dealt
+position:
+  # 1 where a square is still unlit, 0 where it is lit.
+  grid: { domain: "{0, 1}" }
+freedom: { kind: transition }
+moves:
+  # Press square c: every square of its pattern flips. A square whose
+  # pattern is empty flips nothing, so it is no move.
+  press:
+    for: "c in cells where |flips(c)| > 0"
+    set:
+      - for: "d in flips(c)"
+        grid: "1 - grid(d)"
+finish:
+  - "forall c in cells: grid(c) = 0"
+deal:
+  start: >-
+    a random set of presses applied to the lit board, dealt again until some
+    square is unlit

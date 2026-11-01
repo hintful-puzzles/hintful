@@ -227,7 +227,7 @@ describe("Flip hint plan", () => {
       w: 2,
       h: 2,
       matrix: new Uint8Array(16),
-      grid: Uint8Array.from([1, 0, 0, 0]),
+      grid: Int32Array.from([1, 0, 0, 0]),
       moves: 0,
     };
     expect(hint(state)).toEqual({ ok: false, error: PUZZLE_NOT_REASONABLE });
