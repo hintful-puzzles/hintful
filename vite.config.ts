@@ -641,6 +641,10 @@ export default defineConfig(async ({ command, mode }) => {
           // `ico` is the tab icon, which the guard found was also outside the
           // cache — a second, older gap of the same kind.
           globPatterns: ["**/*.{css,html,ico,js,json,png,svg,woff2}"],
+          // The game worker holds every game and passed Workbox's 2 MiB
+          // default (2026-11-02); past the cap it would build without it and
+          // fail offline. Splitting it is `shrink-the-download`'s.
+          maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         },
       }),
       // After VitePWA, because it reads the sw.js that plugin writes. It is

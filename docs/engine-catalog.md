@@ -213,7 +213,7 @@ for `FlipDsf`.
   `minimal(i)`. Neither changes the canonical root.
 - **Do not "fix" an upstream loop that uses the canonical root as an index
   bound** and not as an identity to compare. Which members the scan skips
-  decides which boards a solver-gated generator emits (Rome's naked pairs).
+  decides which boards a solver-gated generator emits.
   Byte-match critical: `Dsf` keeps `dsf.c`'s tie-break.
 
 ### `square-edges.ts` — square-grid edges

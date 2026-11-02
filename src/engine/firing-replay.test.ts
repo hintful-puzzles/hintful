@@ -208,8 +208,8 @@ const GATED: Record<string, string> = {
   "mathrax: clue @ clueEasy":
     "Easy strikes a cell's candidates only once every clue at its corners leaves it one digit; the strike rests on the one clue and its partner the step names",
   "mathrax: clue @ clue": "Normal keeps Easy's gate",
-  "rome: reach @ expand":
-    "the rung fires only while exactly one mark on the whole board points into any goal's group; the strike rests on this group and its border",
+  "rome: reach @ reach":
+    "the technique fires only while exactly one mark on the whole board points into any goal's group; the strike rests on this group and its border",
 };
 
 /**
@@ -248,10 +248,10 @@ const PINNED: { key: string; id: string; board: string }[] = [
     board: "5dt:n3j,cA7bS1S0aA6aS1d",
   },
   {
-    key: "rome: reach @ expand",
+    key: "rome: reach @ reach",
     id: "rome",
     board:
-      "8x8dn:ba4a7a1a5a4b1a9bab4ea1b1aa4d11bd6,bRaRaLcLfLRDRaRaRdRXURaURaLUaUaLURULUaXULRfRaLb",
+      "8x8dn:2aaaa8b1ab3aa10aaaa2d1a1a2aa1b11dbba5a2a2,aRaLDbLRaDRbXdDUbLaLUaDUaDURcRbRDXRaLDcRDLaLUeRb",
   },
 ];
 

@@ -11,8 +11,9 @@ rule but contradicts the unique solution.
 ### Requirement: Rules: Rome is complete when every arrow leads to a goal
 
 Completing the board SHALL report the game solved, and a board is complete
-when every square is filled with arrows leading to a goal, with no loop, no
-off-grid arrow and no duplicate arrow within a region.
+when every square is filled and the rules its description states hold of it:
+following the arrows from any square leads to a goal, and no outlined area
+holds an arrow twice.
 
 #### Scenario: Completing the grid wins
 
@@ -144,12 +145,13 @@ point back, at Tricky.
   to their squares, names a pair, keeps the one mark that leads to a goal, or
   rules out an arrow into a square that could only point back
 
-### Requirement: Solver: Rome's solver deduces and never guesses
+### Requirement: Solver: Rome's solver is the ladder its description states, and never guesses
 
-Rome SHALL provide a solver that fills the grid by pure deduction, or reports
-that the board is invalid or incomplete. The solver SHALL apply its deduction
-rules gated by difficulty: the Easy rules, then the additional Normal rules,
-then the additional Tricky rule. It SHALL NOT backtrack or guess at any
+Rome SHALL provide a solver that runs the ladder `rome.description.yaml`
+states, compiled, in its order, to a fixpoint, and fills the grid by it, or
+reports that the board is invalid or incomplete. The ladder SHALL be gated by
+difficulty: the Easy techniques, then the additional Normal ones, then the
+additional Tricky one. No technique SHALL suppose anything, at any
 difficulty.
 
 #### Scenario: The solver completes a soluble board without guessing
@@ -347,20 +349,6 @@ outlined"), with the arrows themselves giving its order.
   neighboring square leads back to this one, and the arrow chain is outlined
   with no number on any of its squares
 
-### Requirement: Hint: The hint's recorder changes nothing the solver decides
-
-The hint SHALL derive its script from a recording projection of Rome's own
-solver. That projection SHALL NOT change any deduction the solver makes,
-because the generator keeps a blanked clue only while the solver still
-finishes the board, and so every published description depends on the solver's
-verdict on every intermediate clue set.
-
-#### Scenario: The recorder changes nothing the solver decides
-
-- **WHEN** a board is solved with the recorder attached and again without it
-- **THEN** both runs finish with the same grid and the same candidate set,
-  square for square
-
 ### Requirement: Hint: Rome's hint places an arrow for one of three reasons
 
 A step that places an arrow SHALL say one of: every other arrow has been ruled
@@ -432,6 +420,16 @@ from that neighbor's square, and the two SHALL be one journey.
 - **THEN** the step strikes that down mark, outlines the two-way square as the
   struck square's lower neighbor, and says an arrow into it would close a loop
   or be the area's second down
+
+### Requirement: Hint: Rome's hint teaches the solve the generator graded
+
+The hint SHALL record the ladder the solve runs, one firing at a time, and
+the arrows it places SHALL be the arrows the solve places.
+
+#### Scenario: The recording places what the solve places
+
+- **WHEN** a board is solved, and its deductions are recorded from its clues
+- **THEN** the arrows the recording places, with the clues, are the solved grid
 
 ### Requirement: Look: What Rome draws
 

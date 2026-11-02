@@ -10,18 +10,18 @@
  * things that were expected to chafe did not:
  *
  * - **The region adapter is six lines** (`romeRegions`), and
- *   `CellRegion.holdsEvery` turned out to be `size === 4` — which is
- *   `find4Position`'s own guard, written years earlier and independently. A
- *   region of four squares must hold all four arrows; a smaller one only
- *   forbids repeats. That is exactly the distinction the engine's flag draws,
- *   so the dsf needed translating, not reasoning about.
+ *   `CellRegion.holdsEvery` turned out to be `size === 4` — which is the
+ *   description's `onlyHome` guard. A region of four squares must hold all
+ *   four arrows; a smaller one only forbids repeats. That is exactly the
+ *   distinction the engine's flag draws, so the dsf needed translating, not
+ *   reasoning about.
  * - **`NoteEncoding` fit a game whose values are bits**, near-identically:
  *   `bit` is a lookup and `values` is 4. What it was *missing* was a way to say
  *   what a blank square's full note set is, because Rome's is bounded by the
  *   grid edge and so differs square to square; that is now `NoteEncoding.all`.
- * - **The dsf-reachability rungs needed no rung slot of their own.** `loops`,
- *   `expand` and `find-4-position` all write to `pencil`, so all three are
- *   ordinary candidate eliminations whose *reason* happens to be a fact about a
+ * - **The reachability techniques needed no rung slot of their own.** `loop`,
+ *   `reach` and `onlyHome` all strike candidates, so all three are ordinary
+ *   candidate eliminations whose *reason* happens to be a fact about a
  *   graph. Reachability is a premise, not a plan shape, and `plan.rungs` is
  *   unused here.
  *
@@ -49,13 +49,14 @@ import {
   type PlanRung,
   runCandidatePlan,
 } from "../../engine/candidate-plan.ts";
+import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { Premise } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { Point } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
-import { type RomeHintOp, type RomeReason, recordRomeDeductions } from "./solver.ts";
+import { type RomeReason, recordRomeDeductions } from "./solver.ts";
 import {
   DIFFCOUNT,
   DIR_COUNT,
@@ -245,7 +246,7 @@ export function buildSteps(
     Array.from(regionsOf(x, y)[0].cells);
   const enc = romeNotes(w, h);
 
-  runCandidatePlan<RomeMove, RomeHint, RomeHintOp, RomeHintReason, CellRegion>({
+  runCandidatePlan<RomeMove, RomeHint, DeductionRecord, RomeHintReason, CellRegion>({
     w,
     steps,
     grid,
@@ -278,7 +279,8 @@ export function buildSteps(
     // Every deduction here is about one square, so a firing's strikes stay
     // together; only the `pair` rung reaches several, and its sentence speaks
     // for the whole area at once.
-    strikeAxis: (op) => (op.reason.kind === "pair" ? null : op.y * w + op.x),
+    strikeAxis: (op) =>
+      (op.reason as RomeHintReason).kind === "pair" ? null : op.y * w + op.x,
     notes: {
       populate: say.populate,
       cleanObvious: say.cleanObvious,

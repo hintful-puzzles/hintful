@@ -175,8 +175,8 @@ What task 4 retires once no game uses it (2026-11-01):
   a census certifies the rungs a corpus fires, which a soundness check and a
   description's technique list replace.
 - `engine/wing.ts`'s solver half (~90), whose last solver caller is Map.
-- `engine/firing-replay.ts` (380), used by Rome and Solo: kept if the
-  compiled runtime's premise audit uses it, retired otherwise.
+- `engine/firing-replay.ts` (380), used by Rome and Solo: kept, since the
+  compiled runtime's premise audit uses it (`ladderReplay`, 2026-11-02).
 
 `runDeductionFixpoint` and `DeductionTechnique` stay: compiled ladders run on
 them (`latinSolverTop`). The guard of task 4 is structural: the runner takes
@@ -330,7 +330,7 @@ proposal re-checks this survey's figures.
 | 5 | `describe-revealed-clues` | X | Guess, Mines, Black Box | `minesolve`, if the measured deal cost allows |
 | 6 | `describe-on-a-graph` | G (a dealt graph) | Map | `engine/wing.ts`'s solver half; the candidate walk indexes elements, not grid cells |
 | 7 | `describe-runs-sightlines-and-looks`, split by game into it (ABCD), `describe-sightlines-and-looks` (Sticks, L), `describe-beams-tiles-and-bricks` (Bricks), `describe-beams-and-tiles` (Light Up) and `describe-tiles` (Magnets) | Q, L, P, W as a clue kind, tile marks, a brick-wall space | ABCD, Sticks, Magnets, Light Up, Bricks | Light Up's exception in the fixpoint header |
-| 8 | `describe-connectivity`, split by game into it (Singles), `describe-cuts-chains-loops-and-fleets` (Range) and `describe-chains-loops-and-fleets` | C, a direction step, border vertices, relation marks | Singles, Range, Rome, Slant, Boats | `firing-replay.ts`, if Rome was its last reader |
+| 8 | `describe-connectivity`, split by game into it (Singles), `describe-cuts-chains-loops-and-fleets` (Range), `describe-chains-loops-and-fleets` (Rome) and `describe-loops-and-fleets` | C, a direction step, border vertices, relation marks | Singles, Range, Rome, Slant, Boats | nothing: `firing-replay.ts` stays, the compiled runtime's premise audit (`ladderReplay`) |
 | 9 | `describe-edges-and-divisions` | E, D | Separate, Palisade, Dominosa, Rect, Galaxies, Filling | Rect's `TIER_RUNGS`, Dominosa's `firstFiring` |
 | 10 | `describe-lines-and-loops` | E on lines, G derived and tiled, M on edges | Path, Pearl, Tracks, Spokes, Bridges, Net, Tents, Loopy | the runner's `prerequisite` and `fallback` |
 | 11 | `describe-the-remaining-number-games` | V, bijections, lists, matchings, walks, bitwise relations | Subsets, Undead, Crossing, Ascent, Signpost, Pattern | Crossing's second hint engine |

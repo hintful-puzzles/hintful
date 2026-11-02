@@ -204,6 +204,16 @@ description author acts on:
 - **`ray(c, n)` is the cells from `c`'s neighbor `n` on, to the edge**, so
   a number's four arms are `ray(k, a)` over `a in adj4(k)`, and a position
   along one is a number bound by `range` (Range's `seen` and `far`).
+- **`step(c, d)` is the cell beside `c` in direction `d`**, numbered as the
+  slots are, 1 up, 2 down, 3 left, 4 right, and none off the grid or for
+  any other `d`. A value that names a direction is numbered the same, so a
+  goal or a square of no direction is a value past 4 (Rome's 5).
+- **`chain(c)` is `c` and the cells its value steps to**, each from the one
+  before, ending at a cell whose value names no cell or one already
+  reached: Rome's arrows followed from a square. It is a set in reading
+  order, not the walk's, since that is the order the checker gives it, so
+  a sentence that names the walk computes it in the game's reason (Rome's
+  `arrowPath`).
 - **A set of numbers is a mask of 32 bits**, so it holds none past 31 and
   none below 0: a domain, or a `range` read as a set. A binder over
   `range(a, b)` counts instead, so it binds a position along a line of any
@@ -527,7 +537,12 @@ the rules. What a small board cannot cover:
 - **`connected(S)` is read as reach**: the first member reaches a member
   beside one it reaches, as many steps as the board has cells, and every
   member must be reached; `cuts(S)` holds each member under the guard that
-  the rest are not connected. It needs no unknown of its own.
+  the rest are not connected. It needs no unknown of its own. `chain(c)` is
+  read the same way, a cell reached where a member beside it holds the
+  value stepping to it.
+- **A domain stated as the values of a range that pass a test** (`{d in
+  range(1, 5) where ...}`, Rome's) is checked up to the range's end, as
+  `range(1, 5)` is, past the order.
 - **A `with` is read as its supposition**: each read of the marks in it
   sees the supposed cell holding the value, under the guard that it is that
   cell. Ignoring it would make every `with` premise false and every

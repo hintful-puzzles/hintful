@@ -542,8 +542,9 @@ every cell outside a step's premise to where the recording started and runs
 the firing's technique again ("The engine audits a premise by replaying its
 firing"). What a game owes it:
 
-- **A solver on `latinSolver` takes part with no code.** A bespoke one writes
-  a `ReplayAdapter` (Rome's, Solo's).
+- **A solver on `latinSolver` takes part with no code.** A compiled ladder
+  offers its replay through `ladderReplay` (Seismic's, Solo's, Rome's), and
+  a recording solver of a game's own writes a `ReplayAdapter`.
 - **The replay runs one technique, not the ladder**, so a rung reads nothing
   a rung before it left behind in the same pass: work such state out from
   the board inside the rung.

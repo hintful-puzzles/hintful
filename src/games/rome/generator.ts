@@ -48,6 +48,7 @@ import {
   type RomeParams,
   type RomeState,
   STATUS_COMPLETE,
+  STATUS_INVALID,
 } from "./state.ts";
 
 /**
@@ -116,12 +117,6 @@ function generateArrows(board: RomeState, rng: RandomState): boolean {
   for (const i of spaces) {
     if (grid[i] !== EMPTY) continue;
 
-    // No arrow can legally go here, so this square becomes a goal.
-    if (pencil[i] === EMPTY) {
-      grid[i] = FM_GOAL;
-      continue;
-    }
-
     joinArrows(board, arrdsf, suggest);
 
     // Avoid growing a cluster, but only while some other option remains.
@@ -131,7 +126,13 @@ function generateArrows(board: RomeState, rng: RandomState): boolean {
     grid[i] = arrows.find((arrow) => pencil[i] & arrow) ?? EMPTY;
 
     // Propagate: this also refreshes `pencil` for the squares still to come.
-    romeSolve(board, DIFF_EASY);
+    // A square no arrow can go in becomes a goal, which the ladder reads as
+    // the marks breaking until it is one.
+    while (romeSolve(board, DIFF_EASY) === STATUS_INVALID) {
+      const stuck = spaces.filter((j) => grid[j] === EMPTY && pencil[j] === EMPTY);
+      if (stuck.length === 0) break;
+      for (const j of stuck) grid[j] = FM_GOAL;
+    }
   }
 
   // Keep the number of goal squares to a minimum.

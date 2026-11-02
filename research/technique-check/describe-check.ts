@@ -40,6 +40,7 @@ import {
   perPlace,
   perValue,
   ray,
+  step,
   traceBeam,
   within,
 } from "../../src/engine/describe-runtime.ts";
@@ -353,7 +354,12 @@ function domainBound(d: Description): string | null {
  * number (Map's four colors), which a board's values reach whatever its
  * order; `0` elsewhere. */
 function domainEnd(d: Description): number {
-  const e = d.domain;
+  // A domain stated as the values of a range that pass a test (Rome's goal,
+  // a value no arrow is) ends where the range does.
+  const e =
+    d.domain.k === "agg" && d.domain.fn === "set" && d.domain.binders[0]?.kind === "in"
+      ? d.domain.binders[0].of
+      : d.domain;
   if (e.k !== "call" || e.fn !== "range") return 0;
   const hi = e.args[1];
   return hi.k === "num" ? hi.v : 0;
@@ -503,6 +509,8 @@ const alts = (v: V, what: string): readonly Alt[] => {
   return v.alts;
 };
 const elem = (sort: string, id: number): V => ({ k: "elem", sort, alts: [[id, true]] });
+/** The values `step` reads as a direction. */
+const DIRECTIONS = [1, 2, 3, 4] as const;
 const allOf = (sort: string, ids: readonly number[]): V => ({
   k: "eset",
   sort,
@@ -1310,6 +1318,55 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
           allOf("cell", c < 0 || n < 0 || c === n ? [] : ray(sp, c, n)),
         ),
       );
+    case "step": {
+      // Each direction under the value naming it, and none under every
+      // other value.
+      const d = num(vs[1], fn);
+      return lift(vs[0], fn, (c) => {
+        if (c < 0) return none;
+        const named = DIRECTIONS.map((k) => cmp("=", d, k));
+        return {
+          k: "elem",
+          sort: "cell",
+          alts: merged([
+            ...DIRECTIONS.map((k, i) => [step(sp, c, k), named[i]] as const),
+            [-1, not(or(...named))],
+          ]),
+        };
+      });
+    }
+    case "chain":
+      // Read as reach: a cell is in it where a member beside it holds the
+      // value stepping to it, as many steps as the board has cells.
+      return lift(vs[0], fn, (c) => {
+        if (c < 0) return allOf("cell", []);
+        let reach: Bx[] = sp.cells.map((x) => x === c);
+        for (let k = 1; k < sp.cells.length; k++) {
+          const was = reach;
+          reach = sp.cells.map((x) =>
+            or(
+              was[x],
+              ...sp.adj4[x].map((p) =>
+                and(
+                  was[p],
+                  cmp(
+                    "=",
+                    cellValue(ctx, p),
+                    DIRECTIONS.find((d) => step(sp, p, d) === x) ?? -1,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+        return {
+          k: "eset",
+          sort: "cell",
+          mem: sp.cells
+            .map((x) => [x, reach[x]] as const)
+            .filter(([, g]) => g !== false),
+        };
+      });
     case "sight":
       return lift(vs[0], fn, (s) => allOf("cell", sp.sight[s]));
     case "opposite":

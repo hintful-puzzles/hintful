@@ -302,9 +302,12 @@ describe("solver", () => {
   // Cap-monotonicity is asserted for every tiered game, Rome included, by
   // `engine/difficulty-contract.test.ts` through `Game.difficulty`.
 
-  it("reports an over-constrained board invalid rather than looping", () => {
+  // A board with no goal leaves no technique a firing, so the ladder stops
+  // short of an answer: no technique reads a missing way in as a
+  // contradiction.
+  it("stops on a board no arrow can finish rather than looping", () => {
     const st = board(3, 3, `${ALL_WALLS_3},RDaULd`);
-    expect(romeSolve(st, DIFFCOUNT)).toBe(STATUS_INVALID);
+    expect(romeSolve(st, DIFFCOUNT)).toBe(STATUS_INCOMPLETE);
   });
 
   it("fills a square whose candidates have been narrowed to one", () => {

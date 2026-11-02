@@ -31,3 +31,110 @@ help:
     * **One of each.** Once an area has an arrow, no other square in it can point that way. An area of four squares must hold all four arrows, so an arrow with only one square left to go in goes there.
     * **No loops.** An arrow pointing at a square whose arrows lead back here would go round in a circle and never reach a goal, so it is ruled out. The shortest loop is two neighbors pointing at each other. If the square to the left, in the same area, can only point left or right, this square can't point left into it: the area can't hold two left arrows, so that square would have to point right, straight back.
     * **A pair.** Two squares of an area that must take the same two arrows between them leave those arrows to no other square of the area.
+name: Rome
+family: lines
+sizes:
+  # Nothing in the game bounds a side but the time a deal takes.
+  w: { min: 3, max: 100 }
+  h: { min: 3, max: 100 }
+space:
+  grid: { w: "w", h: "h" }
+  # The areas are a dealt partition rather than units: an area of fewer than
+  # four squares holds only some of the arrows.
+  regions: { area: dealt }
+  units: []
+answer:
+  # An arrow, 1 up, 2 down, 3 left or 4 right, as `step` reads it, or 5 a
+  # goal, which only a goal's square holds. No arrow points off the board.
+  value:
+    sort: cell
+    domain: >-
+      {d in range(1, 5) where (d = 5) = (clue(goal, c) >= 0)
+      and (d = 5 or step(c, d) != none)}
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, 4)" }
+define:
+  # The squares whose arrows already lead to a goal, the goals among them.
+  home: "{p in cells where exists g in chain(p): clue(goal, g) >= 0}"
+shape:
+  # Every outlined area holds different arrows.
+  - "forall r in area: distinct(value(c) over c in cells(r))"
+  # Following the arrows from any square leads to a goal.
+  - "forall c in cells: exists g in chain(c): value(g) = 5"
+clues:
+  # A goal, alone in its area.
+  goal:
+    at: cell
+    value: "range(0, 0)"
+    means: "value(at) = 5 and |cells(area(at))| = 1"
+freedom: { kind: fill }
+deal:
+  answer: an arrow a square in a random order, each one that points on the board and closes no loop, and a goal where none does
+  area: neighboring squares joined at random while they hold no arrow twice and no goal
+  value: every arrow, then as many hidden as the board stays at its tier
+  tier: one of the tiers
+tiers: [Easy, Normal, Tricky]
+techniques:
+  # A placed arrow leaves the rest of its area.
+  - id: cull
+    on: place
+    tier: Easy
+    for: >-
+      c in cells where known(c), d = value(c),
+      p in cells(area(c)) where p != c
+    conclude: "strike(p, d)"
+  # A square down to one arrow holds it. One with none left makes the marks
+  # inconsistent.
+  - id: lone
+    tier: Easy
+    for: "c in cells where not known(c) and |cand(c)| < 2"
+    conclude: "|cand(c)| = 1 and place(c, first(cand(c)))"
+  # An arrow pointing at a square whose arrows lead back here would go round
+  # in a loop and never reach a goal.
+  - id: loop
+    tier: Easy
+    for: >-
+      c in cells where not known(c), d in cand(c), q = step(c, d)
+      where q != none and c in chain(q)
+    conclude: "strike(c, d)"
+  # An area of four squares holds all four arrows, so an arrow only one of
+  # its squares can still take is that square's. One no square can take
+  # makes the marks inconsistent.
+  - id: onlyHome
+    tier: Normal
+    for: >-
+      r in area where |cells(r)| = 4,
+      d in range(1, 4) where not (exists c in cells(r): value(c) = d),
+      k = count(c in cells(r) where d in cand(c)) where k < 2
+    conclude: >-
+      k = 1 and (forall c in cells(r) where d in cand(c), e in cand(c) where e != d:
+      strike(c, e))
+  # Two squares of an area left the same two arrows take both between them,
+  # so no other square of the area can.
+  - id: pair
+    tier: Normal
+    for: >-
+      r in area, a in cells(r) where not known(a) and |cand(a)| = 2,
+      b in before(a, cells(r)) where not known(b) and cand(b) = cand(a)
+    conclude: "forall p in cells(r) where p != a and p != b, d in cand(a): strike(p, d)"
+  # Some square not yet leading to a goal points straight into the squares
+  # that do, since every square leads to one. Where only one arrow anywhere
+  # still can, it is that one.
+  - id: reach
+    tier: Normal
+    for: >-
+      H = home, p in cells where not known(p), d in cand(p)
+      where step(p, d) in H and not (exists q in cells where not known(q),
+      e in cand(q) where q != p or e != d: step(q, e) in H)
+    conclude: "forall e in cand(p) where e != d: strike(p, e)"
+  # A square left only the two arrows along one line cannot be pointed at
+  # along that line from its own area: the neighbor's arrow would leave it
+  # only the other, which points straight back.
+  - id: opposite
+    tier: Tricky
+    for: "c in cells where not known(c) and |cand(c)| = 2"
+    conclude: >-
+      forall a in adj4(c) where area(a) = area(c), d in cand(a)
+      where step(a, d) = c and d in cand(c)
+      and (exists e in cand(c): e != d and step(c, e) = a): strike(a, d)

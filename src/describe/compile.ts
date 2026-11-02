@@ -323,6 +323,8 @@ const GEOMETRY = new Set([
   "adj4",
   "adj8",
   "ray",
+  "step",
+  "chain",
   "stretch",
   "connected",
   "cuts",
@@ -390,6 +392,8 @@ const EARLY = new Set([
   "stretch",
   "connected",
   "cuts",
+  "step",
+  "chain",
   "x",
   "y",
   "cell",
@@ -453,7 +457,7 @@ function early(
     case "with":
       return false;
     case "call": {
-      if (e.fn === "value" || e.fn === "known") marks.read = true;
+      if (e.fn === "value" || e.fn === "known" || e.fn === "chain") marks.read = true;
       if (e.fn === "clue") return all(e.args.slice(1));
       if (EARLY.has(e.fn) || partOf(e.fn, env)) return all(e.args);
       const def = env.defs.get(e.fn);
@@ -2100,6 +2104,22 @@ function call(
       arity(2);
       env.used.add("ray");
       return { code: `ray(sp, ${cell(0)}, ${cell(1)})`, sort: setOf(elem("cell")) };
+    case "step":
+      arity(2);
+      expect(vs[1], "num", fn);
+      env.used.add("step");
+      return { code: `step(sp, ${cell(0)}, ${vs[1].code})`, sort: elem("cell") };
+    case "chain": {
+      // A cell's value read as the technique reads it, under any `with`.
+      arity(1);
+      const x = Out.fresh("_x");
+      const read = markRead("value", { code: x, sort: elem("cell") }, env, new Out(0));
+      env.used.add("chain");
+      return {
+        code: `chain(sp, (${x}: number) => ${read.code}, ${cell(0)})`,
+        sort: setOf(elem("cell")),
+      };
+    }
     case "beam": {
       if (vs.length !== 1 && vs.length !== 3)
         throw new CompileError(`beam takes 1 or 3, given ${vs.length}`);
@@ -3285,7 +3305,7 @@ function cellDomain(
   const cl = env.readsClues.yes ? "cl: Dealt, " : "_cl: Dealt, ";
   env.readsClues.yes = false;
   const body = [...out.text(), `  return ${v.code};`];
-  const sp = body.some((l) => /\bsp\./.test(l)) ? "sp" : "_sp";
+  const sp = body.some((l) => /\bsp\b/.test(l)) ? "sp" : "_sp";
   return [
     "",
     "/** The values each cell may hold, by cell: its domain. */",

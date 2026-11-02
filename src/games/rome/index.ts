@@ -93,7 +93,7 @@ import {
   type RomeDrawState,
   redraw,
 } from "./render.ts";
-import { parseDesc, romeSolve, validateGame } from "./solver.ts";
+import { isSolved, parseDesc, romeSolve, validateGame } from "./solver.ts";
 import {
   boardFromClues,
   cloneState,
@@ -266,7 +266,7 @@ function typedEntry(
 /**
  * Fill every blank square's marks, then — on an already-filled board — strike
  * the arrows each square's own outlined region already holds. That second
- * press is `solverDoubles` by hand, which is why the hint's opening clean and
+ * press is the description's `cull` by hand, which is why the hint's opening clean and
  * this press agree without either citing the other: both read `romeRegions`.
  */
 function markAll(state: RomeState): RomeMove | null {
@@ -574,8 +574,7 @@ function executeMove(state: RomeState, move: RomeMove): RomeState {
 }
 
 function status(s: RomeState): GameStatus {
-  // On a copy: the check rewrites the grid's error bits as it goes.
-  return validateGame(cloneState(s), true) === STATUS_COMPLETE ? "solved" : "ongoing";
+  return isSolved(s) ? "solved" : "ongoing";
 }
 
 /**

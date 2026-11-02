@@ -19,13 +19,13 @@ const SHAPES: RomeParams[] = [
   { w: 10, h: 10, diff: DIFF_TRICKY },
 ];
 
-// Five rather than three: `naked-pairs` fired on none of the first twelve
+// Five rather than three: `pair` fired on none of the first twelve
 // boards, and widening is what the census is for — a rung goes in `unreached`
 // only after the corpus has genuinely been given a chance to reach it.
 const SEEDS = ["lad-a", "lad-b", "lad-c", "lad-d", "lad-e"];
 
 /**
- * Two boards that fire `naked-pairs`, which thirty randomly seeded ones did
+ * Two boards that fire `pair`, which thirty randomly seeded ones did
  * not, so the census has an entry for every rung rather than a shortfall.
  *
  * **They are pinned as descs, not as seeds**, because a seed reaches a rung
@@ -37,12 +37,12 @@ const SEEDS = ["lad-a", "lad-b", "lad-c", "lad-d", "lad-e"];
  */
 const PAIR_BOARDS: { label: string; params: RomeParams; desc: string }[] = [
   {
-    label: "6x6 diff=2 naked-pairs",
+    label: "6x6 diff=2 pair",
     params: { w: 6, h: 6, diff: DIFF_TRICKY },
     desc: "1a1aa2a4b1a1ab2a1a4c3aaa1a2aa,aLDRDgRaXUDcLcRUaURg",
   },
   {
-    label: "8x8 diff=2 naked-pairs",
+    label: "8x8 diff=2 pair",
     params: { w: 8, h: 8, diff: DIFF_TRICKY },
     desc:
       "2bac3a1a4b2b7a1a2aaa1ba6a3da3a4ba2a1ac5b3a," +
@@ -66,16 +66,8 @@ const cases = [
 
 describeLadderCensus({
   game: "rome",
-  rungs: [
-    "single",
-    "doubles",
-    "loops",
-    "find-4-position",
-    "naked-pairs",
-    "expand",
-    "opposites",
-  ],
-  // Empty, which is the goal. `naked-pairs` stood here until `add-rome-hint`
+  rungs: ["lone", "loop", "onlyHome", "pair", "reach", "opposite"],
+  // Empty, which is the goal. `pair` stood here until `add-rome-hint`
   // (2026-09-20) found the two boards in `PAIR_BOARDS` above; the entry's own
   // instruction was to retire it by building a board that fires it.
   unreached: {},

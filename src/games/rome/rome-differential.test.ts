@@ -6,9 +6,12 @@
  * the tier below, so the strongest meaningful bar is that the TS `newDesc`
  * reproduces the C engine's description byte-for-byte for the same seed. That
  * one assertion validates, together: the three generation stages and their
- * RNG draw order, all seven deduction rules and their firing order, both disjoint-set forests (including
- * the union-by-size root identity that naked-pairs reads as an element), and
- * the two-part run-length codec (docs/testing.md § "Byte-match: fidelity where there is a right answer").
+ * RNG draw order, the ladder the description states, which decides every
+ * board the generator keeps, the region forest, and the two-part run-length
+ * codec (docs/testing.md § "Byte-match: fidelity where there is a right answer").
+ * The ladder is not upstream's rule for rule: its pair reads every square of
+ * an area where upstream's skipped those below the region forest's root, and
+ * these boards came out the same.
  *
  * The follow-on assertions add what the desc alone cannot say: that the
  * description validates, and that the TS solver grades the board at exactly

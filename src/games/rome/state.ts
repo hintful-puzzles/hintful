@@ -88,7 +88,7 @@ export type RomeDir = typeof FM_UP | typeof FM_DOWN | typeof FM_LEFT | typeof FM
  * than a mask. So a direction crosses the framework boundary as its index here
  * and comes back through {@link dirBit}.
  */
-export const DIR_BITS: readonly RomeDir[] = [FM_UP, FM_DOWN, FM_LEFT, FM_RIGHT];
+const DIR_BITS: readonly RomeDir[] = [FM_UP, FM_DOWN, FM_LEFT, FM_RIGHT];
 
 /** How many arrow candidates a square may hold — the framework's `values`. */
 export const DIR_COUNT = DIR_BITS.length;
@@ -159,12 +159,10 @@ export function placedValues(board: RomeBoard): Uint8Array {
  * A square's one uniqueness region, as the shared candidate machinery reads it:
  * the outlined area it belongs to.
  *
- * `holdsEvery` is `size === 4`, and that is not a coincidence to be argued —
- * it is `find4Position`'s own guard (`if (regions.size(i) !== 4) continue`),
- * arrived at independently. A region of four squares must hold all four arrows,
- * so an arrow with one home left in it is forced there; a smaller region only
- * forbids repeats, which is exactly the distinction `CellRegion.holdsEvery`
- * exists to draw.
+ * `holdsEvery` is `size === 4`, the description's `onlyHome` guard: a region
+ * of four squares must hold all four arrows, so an arrow with one home left in
+ * it is forced there; a smaller region only forbids repeats, which is exactly
+ * the distinction `CellRegion.holdsEvery` exists to draw.
  *
  * Cached per board, because a plan asks for a square's region on every note
  * cull and the partition never moves while a board is being solved.

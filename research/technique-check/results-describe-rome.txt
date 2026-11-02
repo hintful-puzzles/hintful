@@ -1,0 +1,13 @@
+ok  rome       cull                           current: recorded src/games/rome/rome.description.yaml#cull c015470e32d514c6
+ok  rome       lone                           current: recorded src/games/rome/rome.description.yaml#lone 5914ef3a6a149482
+ok  rome       loop                           current: recorded src/games/rome/rome.description.yaml#loop 45057b0fd6ec15cd
+ok  rome       onlyHome                       current: recorded src/games/rome/rome.description.yaml#onlyHome 102c46b5127a0955
+ok  rome       pair                           current: recorded src/games/rome/rome.description.yaml#pair a91238cac820593a
+ok  rome       reach                          3  sound    (want sound   )     1 queries    1.2s
+ok  rome       reach (planted)                3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  rome       reach                          4  sound    (want sound   )     1 queries 2014.3s
+ok  rome       reach (planted)                4  unsound  (want unsound )     1 queries    0.6s   at eset
+ok  rome       opposite                       3  sound    (want sound   )     9 queries    0.3s
+ok  rome       opposite (planted)             3  unsound  (want unsound )     2 queries    0.1s   at cell 1
+ok  rome       opposite                       4  sound    (want sound   )    16 queries    0.8s
+ok  rome       opposite (planted)             4  unsound  (want unsound )     2 queries    0.3s   at cell 1

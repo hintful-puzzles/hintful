@@ -36,6 +36,12 @@ each file gzipped on its own (an approximation of what the host serves):
   fraction of that; the offline install would still fetch every game. This
   is an engine change: the registry, the worker's startup, and every guard
   that reaches all games through the registry.
+  **It crossed Workbox's 2 MiB precache cap on 2026-11-02** (2,093,819
+  bytes before `describe-chains-loops-and-fleets`, 2,097,178 after), which
+  fails the build, so that change raised the cap to 3 MiB in
+  `vite.config.ts` (`maximumFileSizeToCacheInBytes`). Splitting the worker
+  is what brings it back under; the session that does it lowers the cap
+  again, or makes it the size budget below.
 - **Icons: two sizes, both precached.** Each game has `<id>-64d8.png` and
   `<id>-128d8.png` (`src/components/catalog-card.ts` uses them as 1x and 2x),
   122 files and about 449 KiB that gzip cannot shrink. A browser fetches only

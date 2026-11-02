@@ -624,6 +624,55 @@ export function ray(sp: GridSpace, c: number, n: number): readonly number[] {
   return out;
 }
 
+/** `step(c, d)`: the cell beside `c` in direction `d`, numbered as the
+ * slots are, 1 up, 2 down, 3 left, 4 right; none off the grid, and for any
+ * other `d`. */
+export function step(sp: GridSpace, c: number, d: number): number {
+  const x = c % sp.w;
+  const y = (c / sp.w) | 0;
+  switch (d) {
+    case 1:
+      return y > 0 ? c - sp.w : -1;
+    case 2:
+      return y + 1 < sp.h ? c + sp.w : -1;
+    case 3:
+      return x > 0 ? c - 1 : -1;
+    case 4:
+      return x + 1 < sp.w ? c + 1 : -1;
+    default:
+      return -1;
+  }
+}
+
+/** The cells a chain has reached, by the walk that reached them. */
+let reached = new Int32Array(0);
+let walk = 0;
+
+/**
+ * `chain(c)`: `c` and the cells its value steps to ({@link step}), each from
+ * the one before, ending at a cell whose value names no cell or one already
+ * reached; in reading order, the order the soundness checker can give a set
+ * the marks decide. `value` reads a cell's value, `-1` where it has none.
+ */
+export function chain(
+  sp: GridSpace,
+  value: (c: number) => number,
+  c: number,
+): readonly number[] {
+  if (c < 0) return [];
+  if (reached.length < sp.cells.length) reached = new Int32Array(sp.cells.length);
+  if (++walk === 0x7fffffff) {
+    reached.fill(0);
+    walk = 1;
+  }
+  const out: number[] = [];
+  for (let at = c; at >= 0 && reached[at] !== walk; at = step(sp, at, value(at))) {
+    reached[at] = walk;
+    out.push(at);
+  }
+  return out.length > 1 ? out.sort((a, b) => a - b) : out;
+}
+
 /** The next mask above `k` with as many bits set (Gosper's hack), so a
  * `subsets` binder of one size counts only those. */
 export function nextOfSize(k: number): number {

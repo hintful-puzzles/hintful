@@ -551,6 +551,30 @@ const PLANTS: Record<string, Plant> = {
   },
   // Every square not shaded read as one the rest need.
   cut: { for: "U = unshaded, K = U, c in K where not known(c)" },
+  // Rome: a placed arrow struck from its neighbors rather than its area.
+  "rome.cull": { for: "c in cells where known(c), d = value(c), p in adj4(c)" },
+  "rome.lone": {
+    for: "c in cells where not known(c) and |cand(c)| < 3",
+    conclude: "|cand(c)| >= 1 and place(c, first(cand(c)))",
+  },
+  // An arrow struck for pointing at any placed square.
+  loop: {
+    for: "c in cells where not known(c), d in cand(c), q = step(c, d) where q != none and known(q)",
+  },
+  // An area of three read as holding every arrow.
+  onlyHome: {
+    for: "r in area where |cells(r)| = 3, d in range(1, 4) where not (exists c in cells(r): value(c) = d), k = count(c in cells(r) where d in cand(c)) where k < 2",
+  },
+  // Two squares of two arrows each read as a pair whatever the arrows.
+  "rome.pair": {
+    for: "r in area, a in cells(r) where not known(a) and |cand(a)| = 2, b in before(a, cells(r)) where not known(b) and |cand(b)| = 2",
+  },
+  // The one way into the group read as one way in, whatever else leads there.
+  "rome.reach": {
+    for: "H = home, p in cells where not known(p), d in cand(p) where step(p, d) in H",
+  },
+  // A square left three arrows read as left two.
+  opposite: { for: "c in cells where not known(c) and |cand(c)| = 3" },
 };
 
 /** How many of a technique's first binders each query fixes, one query a

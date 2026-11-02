@@ -1,9 +1,7 @@
 /**
  * Rome explained-hint tests.
  *
- * Tier 1 — the recording projection leaves the committing solver's verdict and
- * board untouched (the generator is solver-gated at every step, so a recorder
- * that changed a deduction would change every published desc); each rung's
+ * Tier 1 — the recording places every arrow the solve does; each technique's
  * firing is recorded as one group with the premise a sentence can state; the
  * plan places, strikes and refuses at the quality bar; the marks the hint
  * teaches are marks a player can make. Tier 2.5 — render scenarios for the two
@@ -12,8 +10,8 @@
  *
  * What these catch that no cheaper test would: the cross-game guards walk a
  * plan and check its *form*, and `rome-ladder.test.ts` checks that every rung
- * of the solver fires — but nothing else checks that the recorder is a
- * pure observer of that solver, and nothing else reads a premise back to see
+ * of the solver fires — but nothing else checks that the recording teaches
+ * the solve the generator graded, and nothing else reads a premise back to see
  * that it is true of the board rather than merely present.
  */
 import { describe, expect, it } from "vitest";
@@ -57,7 +55,7 @@ import {
 const NORMAL: RomeParams = { w: 6, h: 6, diff: DIFF_NORMAL };
 const TRICKY: RomeParams = { w: 8, h: 8, diff: DIFF_TRICKY };
 
-/** A 6x6 Tricky board on which the `naked-pairs` rung fires. */
+/** A 6x6 Tricky board on which the `pair` technique fires. */
 const PAIR_DESC = "1a1aa2a4b1a1ab2a1a4c3aaa1a2aa,aLDRDgRaXUDcLcRUaURg";
 
 /** The plan these cases read: every mark penciled in first. */
@@ -74,30 +72,23 @@ const kindOf = (reason: unknown): string => (reason as RomeReason).kind;
 
 describe("rome recording projection", () => {
   /**
-   * The assertion the whole change rests on. Rome's generator keeps a blanked
-   * clue only while this solver still finishes the board, so the published desc
-   * depends on the solver's verdict on every intermediate clue set: a rung that
-   * deduced differently under a recorder would change every board in the
-   * collection. Rome's rungs record as a pure side effect and none of them
-   * takes an early return on the recording path, which is what makes this pass
-   * — it is not a property the shape guarantees, which is why it is checked.
+   * The hint takes one firing a pass where a solve takes every firing of a
+   * pass, so the two must still come to one board: what the hint teaches is
+   * the solve the generator graded.
    */
-  it("records without changing a single deduction the solver makes", () => {
+  it("records every arrow the solve places", () => {
     for (const p of [NORMAL, TRICKY]) {
       for (let s = 0; s < 6; s++) {
         const { st } = gen(p, `pure-${p.w}-${s}`);
         const plain = boardFromClues(st);
-        const recorded = boardFromClues(st);
         romeSolve(plain, DIFFCOUNT);
+        const recorded = boardFromClues(st);
         const ops = recordRomeDeductions(recorded, DIFFCOUNT);
-
-        // The whole board, not just the answer: two ladders reaching the same
-        // grid by different deductions differ here and nowhere else. The
-        // verdict rides along, being a function of the grid. Each board is
-        // solved **once** — re-solving a solved one reseeds its candidates and
-        // compares two different questions.
-        expect(Array.from(recorded.grid)).toEqual(Array.from(plain.grid));
-        expect(Array.from(recorded.pencil)).toEqual(Array.from(plain.pencil));
+        for (const op of ops)
+          if (op.kind === "place") recorded.grid[op.y * p.w + op.x] = dirBit(op.n);
+        expect(Array.from(recorded.grid, (c) => c & FM_ARROWMASK)).toEqual(
+          Array.from(plain.grid, (c) => c & FM_ARROWMASK),
+        );
         expect(ops.length).toBeGreaterThan(0);
       }
     }
@@ -111,13 +102,16 @@ describe("rome recording projection", () => {
       expect(op.n, `${op.kind} at ${op.x},${op.y} records no arrow`).toBeGreaterThan(0);
       expect(op.n).toBeLessThanOrEqual(4);
       expect(op.group).toBeGreaterThan(0);
-      // A placement is always a naked single here: `solverSingle` is the only
-      // rung that writes to the grid, and it fires on a one-bit note set.
+      // A placement is always a naked single here: `lone` is the only
+      // technique that places, and it fires on one arrow left.
       if (op.kind === "place") expect(kindOf(op.reason)).toBe("single");
     }
-    // Every op of one group shares its reason object, so a firing narrates once.
+    // Every op of one group shares its reason, so a firing narrates once. A
+    // placement's cull is recorded in its group, as the cull the plan makes
+    // around every placement.
     const byGroup = new Map<number, unknown[]>();
     for (const op of ops) {
+      if (kindOf(op.reason) === "dup") continue;
       const list = byGroup.get(op.group) ?? [];
       list.push(op.reason);
       byGroup.set(op.group, list);
@@ -249,7 +243,7 @@ describe("rome hint plan", () => {
   });
 
   /**
-   * The `naked-pairs` rung fires on about one board in sixty, so this is the
+   * The `pair` technique fires on about one board in sixty, so this is the
    * pinned desc from `rome-ladder.test.ts` rather than a seed — and it is here
    * because that sentence names **two** arrows, which the struck marks alone
    * cannot always supply: where the region's other squares had already lost one
@@ -261,7 +255,7 @@ describe("rome hint plan", () => {
     const board = descValue(parseDesc(params, PAIR_DESC));
     const ops = recordRomeDeductions(boardFromClues(board), DIFFCOUNT);
     const pair = ops.find((o) => kindOf(o.reason) === "pair");
-    expect(pair, "the pinned board no longer fires naked-pairs").toBeDefined();
+    expect(pair, "the pinned board no longer fires pair").toBeDefined();
     const reason = pair?.reason as Extract<RomeReason, { kind: "pair" }>;
     // A pair is two squares holding two arrows between them. Both counts are
     // what the sentence claims, so both are asserted.
