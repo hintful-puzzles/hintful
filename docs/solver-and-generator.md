@@ -142,7 +142,6 @@ for a ladder that is not the plain shape:
 | a described game's ladder: one technique an entry, capped and graded per scale | [`engine/ladder-runtime.ts`](../src/engine/ladder-runtime.ts) `ladderTechniques` |
 | an untiered ladder: every technique on tier 0, the grade unused | [`filling/solver.ts`](../src/games/filling/solver.ts) `FillingSolver.run` |
 | a verdict richer than a boolean, carried out through `settled` | [`clusters/solver.ts`](../src/games/clusters/solver.ts) `solveGame` |
-| a pre-pass at the top of each iteration, as a non-firing technique in position 0, and a flag mapped onto the `-1` arm | [`singles/solver.ts`](../src/games/singles/solver.ts) `solveSpecific` |
 | a ladder that is not a tier prefix, a clamped cap, and a cost accumulated across firings through `settled` | [`spokes/solver.ts`](../src/games/spokes/solver.ts) `spokesSolve` |
 | a rung that runs at one tier and not at the tier above, so it guards itself | [`ascent/solver.ts`](../src/games/ascent/solver.ts) `ascentLadder` |
 | a rung that sweeps a whole population before reporting, which is legal: the restart after a firing is the ladder's, not the rung's | [`bridges/solver.ts`](../src/games/bridges/solver.ts) `Solver.ladder` |

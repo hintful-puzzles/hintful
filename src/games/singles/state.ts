@@ -15,10 +15,8 @@ import type { GridCursor } from "../../engine/pointer.ts";
  * parts of `singles.c`.
  *
  * Each cell carries an immutable number (`nums`, 1..max(w,h)) and a
- * mutable `flags` bitmask (black / circle / error / solver-scratch). A
- * correctly completed board: no number repeats among the white (non-black)
- * cells of any row or column, no two black cells are orthogonally
- * adjacent, and the white cells form one connected region.
+ * mutable `flags` bitmask (black / circle / error). What a correctly
+ * completed board is, `singles.description.yaml` states.
  */
 
 /** Difficulty: upstream DIFF_EASY / DIFF_TRICKY. */
@@ -44,7 +42,6 @@ export function diffFromLevel(level: number): Difficulty {
 export const F_BLACK = 0x1;
 export const F_CIRCLE = 0x2;
 export const F_ERROR = 0x4;
-export const F_SCRATCH = 0x8;
 
 export interface SinglesParams {
   w: number;
@@ -59,7 +56,6 @@ export interface SinglesState {
   n: number;
   /** max(w, h) — the number alphabet size. */
   o: number;
-  impossible: boolean;
   /** Immutable per-cell numbers, shared by reference across states. */
   nums: Int8Array;
   /** Mutable per-cell flags, cloned per move. */
@@ -136,7 +132,6 @@ export function makeState(w: number, h: number, nums: Int8Array): SinglesState {
     h,
     n: w * h,
     o: Math.max(w, h),
-    impossible: false,
     nums,
     flags: new Uint8Array(w * h),
   };

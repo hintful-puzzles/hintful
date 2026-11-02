@@ -123,11 +123,11 @@ describe("singles generator + solver", () => {
       const s = newState(p, desc);
       // Solvable at its difficulty.
       const solved = cloneState(s);
-      expect(solveSpecific(solved, diffToLevel(p.diff), false)).toBe(1);
+      expect(solveSpecific(solved, diffToLevel(p.diff))).toBe(1);
       // Every rule is a forced deduction, so a completed solve is the unique
       // solution: the all-rules solve must reach the same partition.
       const solved2 = makeState(p.w, p.h, s.nums);
-      expect(solveSpecific(solved2, DIFF_ANY, false)).toBe(1);
+      expect(solveSpecific(solved2, DIFF_ANY)).toBe(1);
       for (let i = 0; i < s.n; i++) {
         expect(solved.flags[i] & (F_BLACK | F_CIRCLE)).toBe(
           solved2.flags[i] & (F_BLACK | F_CIRCLE),
@@ -156,7 +156,7 @@ describe("singles findMistakes", () => {
     const { desc } = newSinglesDesc(p, randomNew("mistake-test"));
     const s0 = newState(p, desc);
     const sol = makeState(p.w, p.h, s0.nums);
-    expect(solveSpecific(sol, DIFF_ANY, false)).toBe(1);
+    expect(solveSpecific(sol, DIFF_ANY)).toBe(1);
 
     const blackIdx = sol.flags.findIndex((f) => (f & F_BLACK) !== 0);
     expect(blackIdx).toBeGreaterThanOrEqual(0);
@@ -203,7 +203,7 @@ describe("singles render", () => {
     const p: SinglesParams = { w: 5, h: 5, diff: "easy" };
     const { desc } = newSinglesDesc(p, randomNew("render-mistake"));
     const sol = makeState(p.w, p.h, newState(p, desc).nums);
-    solveSpecific(sol, DIFF_ANY, false);
+    solveSpecific(sol, DIFF_ANY);
     const blackIdx = sol.flags.findIndex((f) => (f & F_BLACK) !== 0);
     const x = blackIdx % p.w;
     const y = (blackIdx / p.w) | 0;

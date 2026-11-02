@@ -147,7 +147,7 @@ describe("deduceHintPlan records the deduction reason", () => {
     const plan = deduceHintPlan(s);
     const r = plan.find((m) => m.reason.kind === "sandwich");
     expect(r).toBeDefined();
-    expect(r?.op).toBe(1); // OP_CIRCLE (white)
+    expect(r?.value).toBe("circle");
     expect(r).toMatchObject({ x: 1, y: 0 });
     if (r?.reason.kind === "sandwich") {
       expect(r.reason.ends).toEqual([
@@ -164,7 +164,7 @@ describe("deduceHintPlan records the deduction reason", () => {
     const s = craft(5, 2, [1, 1, 2, 2, 1, 3, 4, 5, 6, 7]);
     const [r] = deduceHintPlan(s);
     expect(r?.reason.kind).toBe("pair");
-    expect(r?.op).toBe(0); // OP_BLACK
+    expect(r?.value).toBe("black");
     expect(r).toMatchObject({ x: 4, y: 0 });
   });
 
@@ -323,7 +323,7 @@ describe("hint", () => {
     const p: SinglesParams = { w: 6, h: 6, diff: "tricky" };
     const s = fromSeed(p, "hint-mistake");
     const sol = makeState(p.w, p.h, s.nums);
-    expect(solveSpecific(sol, DIFF_ANY, false)).toBe(1);
+    expect(solveSpecific(sol, DIFF_ANY)).toBe(1);
     // Mark a solution-black cell white → a mistake.
     const blackIdx = sol.flags.findIndex((f) => (f & F_BLACK) !== 0);
     const wrong = singlesGame.executeMove(s, {

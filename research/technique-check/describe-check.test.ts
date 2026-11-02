@@ -513,6 +513,31 @@ const PLANTS: Record<string, Plant> = {
   clueSet: {
     for: "X in cols, k in cells(X), n = clue(number, k) where n > bulbs(k), F = {p in adj4(k) where not known(p)}, m = n - bulbs(k) where m <= |F|, T in subsets(F) where |T| = |F| - m",
   },
+  // A covered square's diagonal neighbors read as beside it.
+  besideCovered: { conclude: "forall p in adj8(c): place(p, 2)" },
+  // A square not yet decided read as clear.
+  sameLine: { for: "c in cells where value(c) != 1, n = clue(number, c)" },
+  // The square between read as covered.
+  sandwich: { conclude: "place(nth(cells(L), index(c, cells(L)) + 1), 1)" },
+  // Equal numbers one square apart read as a pair side by side.
+  "singles.pair": {
+    for: "L in lines, c in cells(L), q = nth(cells(L), index(c, cells(L)) + 2) where q != none and clue(number, q) = clue(number, c)",
+  },
+  // The corner covered where it matches one square beside it.
+  corner: {
+    conclude:
+      "(ns != n or place(c, 1)) and (ns != nt or ni != nt or place(i, 1)) and ((ns = n and nt = n) or (ns = nt and ni = nt) or ((ns != n and ns != ni) or place(t, 2)) and (ns = n or ns = ni or (nt != n and nt != ni) or place(s, 2)))",
+  },
+  // A square with two neighbors not covered read as having one.
+  boxedIn: { conclude: "|F| > 0 and (|F| > 2 or place(first(F), 2))" },
+  // The second pair's numbers not compared.
+  offset: {
+    for: "a in cells, n = clue(number, a), b in adj8(a) where b not in adj4(a), m = clue(number, b), L in {col(a), row(a)}, a1 in cells(L) where a1 != a and a1 not in adj4(b) and clue(number, a1) = n, b1 = the(p in adj4(a1) where p not in cells(L) and (x(p) = x(b) or y(p) = y(b)))",
+  },
+  // The squares the uncovered ones stay joined without read as needed.
+  split: {
+    for: "K = cuts(uncovered), c in uncovered where not known(c) and c not in K",
+  },
 };
 
 /** How many of a technique's first binders each query fixes, one query a

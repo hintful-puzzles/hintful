@@ -52,12 +52,10 @@ import {
   type SinglesDrawState,
 } from "./render.ts";
 import {
-  CC_MARK_ERRORS,
-  checkComplete,
   deduceHintPlan,
   type HintRecord,
   inGrid,
-  OP_BLACK,
+  markErrors,
   type SinglesReason,
   solveSpecific,
   status,
@@ -177,7 +175,7 @@ function executeMove(state: SinglesState, move: SinglesMove): SinglesState {
     else if (value === "circle") next.flags[i] |= F_CIRCLE;
     else if (value !== "empty") assertNever(value, `singles: executeMove (${x},${y})`);
   }
-  checkComplete(next, CC_MARK_ERRORS);
+  markErrors(next);
   return next;
 }
 
@@ -201,11 +199,11 @@ function diffMove(src: SinglesState, dst: SinglesState): SinglesMove {
 
 function solve(orig: SinglesState, curr: SinglesState): SolveResult<SinglesMove> {
   let solved = cloneState(curr);
-  if (solveSpecific(solved, DIFF_ANY, false) > 0) {
+  if (solveSpecific(solved, DIFF_ANY) > 0) {
     return { ok: true, move: diffMove(curr, solved) };
   }
   solved = cloneState(orig);
-  if (solveSpecific(solved, DIFF_ANY, false) > 0) {
+  if (solveSpecific(solved, DIFF_ANY) > 0) {
     return { ok: true, move: diffMove(curr, solved) };
   }
   return { ok: false, error: PUZZLE_NOT_REASONABLE };
@@ -213,7 +211,7 @@ function solve(orig: SinglesState, curr: SinglesState): SolveResult<SinglesMove>
 
 function findMistakes(state: SinglesState): readonly SinglesMistake[] {
   const solved = makeState(state.w, state.h, state.nums);
-  if (solveSpecific(solved, DIFF_ANY, false) <= 0) return [];
+  if (solveSpecific(solved, DIFF_ANY) <= 0) return [];
   const out: SinglesMistake[] = [];
   for (let i = 0; i < state.n; i++) {
     const pv = state.flags[i] & (F_BLACK | F_CIRCLE);
@@ -276,9 +274,6 @@ function namedLine(
   }
   return [];
 }
-
-const opValue = (op: number): "black" | "circle" =>
-  op === OP_BLACK ? "black" : "circle";
 
 const sameCell = (a: Point, b: Point): boolean => a.x === b.x && a.y === b.y;
 
@@ -408,7 +403,7 @@ function hint(state: SinglesState): HintResult<SinglesMove, SinglesHint, Singles
     records,
   ).map((group) => {
     const reason = group[0].reason;
-    const targets = group.map((r) => ({ x: r.x, y: r.y, value: opValue(r.op) }));
+    const targets = group.map((r) => ({ x: r.x, y: r.y, value: r.value }));
     const targetKey = new Set(targets.map(key));
     // The protected corner is drawn in its own color; keep it out of
     // both the targets and the matching-number evidence.
@@ -469,11 +464,10 @@ function hintKeepTrack(
 
 /** Singles' difficulty contract (`engine/difficulty.ts`). `solveSpecific`
  * returns > 0 when it solves; `newState` builds the board from the desc
- * alone, so no player mark reaches the verdict. `sneaky` is off — that is a
- * generator-side pre-pass, not a tier. */
+ * alone, so no player mark reaches the verdict. */
 const difficulty: DifficultyContract<SinglesParams> = {
   solveAtCap: (p, desc, cap) =>
-    solveSpecific(newState(p, desc), cap, false) > 0 ? "solved" : "unsolved",
+    solveSpecific(newState(p, desc), cap) > 0 ? "solved" : "unsolved",
 };
 
 export const singlesGame: Game<

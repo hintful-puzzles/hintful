@@ -892,6 +892,18 @@ function binary(e: Extract<Expr, { k: "bin" }>, env: Env, ctx: Ctx): V {
   }
 }
 
+/** Whether the cells, each a member under its guard in `mem`, are one group
+ * side by side: each reached from the first member through members, in as
+ * many steps as a path can take. */
+function connectedOf(sp: GridSpace, mem: readonly Bx[]): Bx {
+  let reach: Bx[] = mem.map((g, c) => and(g, ...mem.slice(0, c).map(not)));
+  for (let k = 1; k < mem.length; k++) {
+    const was = reach;
+    reach = mem.map((g, c) => and(g, or(was[c], ...sp.adj4[c].map((p) => was[p]))));
+  }
+  return and(...mem.map((g, c) => implies(g, reach[c])));
+}
+
 function inEset(id: number, s: V): Bx {
   if (s.k !== "eset") throw new TypeError("not an element set");
   return or(...s.mem.filter(([x]) => x === id).map(([, g]) => g));
@@ -1376,6 +1388,32 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
           return { k: "eset", sort: "cell", mem: mem.filter(([, g]) => g !== false) };
         }),
       );
+    }
+    case "connected":
+    case "cuts": {
+      const S =
+        vs[0].k === "vset" && vs[0].mem.every((g) => g === false)
+          ? allOf("cell", [])
+          : vs[0];
+      if (S.k !== "eset") throw new TypeError(`${fn}: not a set`);
+      const mem = sp.cells.map((c) => inEset(c, S));
+      if (fn === "connected") return { k: "bool", v: connectedOf(sp, mem) };
+      const cut: Alt[] = sp.cells.map(
+        (c) =>
+          [
+            c,
+            and(
+              mem[c],
+              not(
+                connectedOf(
+                  sp,
+                  mem.map((g, i) => (i === c ? false : g)),
+                ),
+              ),
+            ),
+          ] as const,
+      );
+      return { k: "eset", sort: "cell", mem: cut.filter(([, g]) => g !== false) };
     }
     case "before": {
       // A set the marks decide keeps its order, so the members before one

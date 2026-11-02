@@ -201,6 +201,10 @@ description author acts on:
   line's segments are read by binding a cell of each, since no sort is a set
   of sets: ABCD counts a stretch's most letters as its cells at an even
   place (`index(c, stretch(L, c, O)) mod 2 = 0`).
+- **`connected(S)` says whether the cells `S` are one group**, each reaching
+  every other through members side by side, and `cuts(S)` is the members
+  without which the rest are not, in `S`'s order. Bind `cuts` once by `=`:
+  it is one search of the whole set (Singles' `split`).
 - **`beam(s)` is Black Box's laser fired in from slot `s`**: the slot it
   comes out at, `s` itself where it is reflected, `|slots|` where it is
   absorbed, and none where a cell no value is placed in decides it. A 1 is
@@ -513,6 +517,10 @@ the rules. What a small board cannot cover:
   `index(x, S)` counts the members before `x` under theirs.
 - **A clue per value** is dealt at every element for every value some
   cell's domain holds, each present or not.
+- **`connected(S)` is read as reach**: the first member reaches a member
+  beside one it reaches, as many steps as the board has cells, and every
+  member must be reached; `cuts(S)` holds each member under the guard that
+  the rest are not connected. It needs no unknown of its own.
 - **A `with` is read as its supposition**: each read of the marks in it
   sees the supposed cell holding the value, under the guard that it is that
   cell. Ignoring it would make every `with` premise false and every

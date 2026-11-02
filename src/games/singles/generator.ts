@@ -1,25 +1,15 @@
 /**
- * Singles (Hitori) generator, a port of `new_game_desc` from `singles.c`. The
- * Latin-square machinery lives in the shared `engine/latin.ts` and stays
- * RNG-faithful, so over the bit-identical `random.ts` the whole chain
- * reproduces the C desc byte-for-byte for the same seed (see
- * `singles-differential.test.ts`), except at Normal on a grid under 4 squares
- * one way: upstream deals Easy there, and this deals the tier asked for.
+ * Singles (Hitori) generator, after `new_game_desc` in `singles.c`: a Latin
+ * square's numbers, squares covered at random on the compiled ladder, a
+ * repeated number laid under each, and the board kept where the ladder
+ * grades it at the tier asked for.
  */
 
 import { latinGenerateRect } from "../../engine/latin.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import {
-  newSolverState,
-  OP_BLACK,
-  solveAllblackbutone,
-  solveRemovesplits,
-  solverOpAdd,
-  solverOpsDo,
-  solveSpecific,
-} from "./solver.ts";
+import { layCovered, solveSpecific } from "./solver.ts";
 import {
   DIFF_EASY,
   diffToLevel,
@@ -73,20 +63,44 @@ function bestBlackCol(
 
 const MAXTRIES = 20;
 
+/**
+ * Circle every number that appears once in its row and once in its column:
+ * upstream's "sneaky" step. It is the generator's own, outside the
+ * description, because it is unsound: the rules do not force such a square
+ * clear, so the checker would rightly refuse it as a technique. It only
+ * makes the test of a board too easy for its tier a little stronger.
+ */
+function circleUnrepeated(s: SinglesState): void {
+  const { w, h } = s;
+  for (let i = 0; i < s.n; i++) {
+    const x = i % w;
+    const y = (i / w) | 0;
+    let repeated = false;
+    for (let xx = 0; xx < w && !repeated; xx++)
+      repeated = xx !== x && s.nums[y * w + xx] === s.nums[i];
+    for (let yy = 0; yy < h && !repeated; yy++)
+      repeated = yy !== y && s.nums[yy * w + x] === s.nums[i];
+    if (!repeated) s.flags[i] |= F_CIRCLE;
+  }
+}
+
 /** True iff the board is solvable at `diffLevel` and (above Easy) NOT
- * solvable at the level below with the sneaky generation-artifact step. */
+ * solvable at the level below with the sneaky circles given. */
 function newGameIsGood(diffLevel: number, state: SinglesState): boolean {
   const blank = () => makeState(state.w, state.h, state.nums);
-  if (solveSpecific(blank(), diffLevel, false) <= 0) return false;
-  return diffLevel === DIFF_EASY || solveSpecific(blank(), diffLevel - 1, true) <= 0;
+  if (solveSpecific(blank(), diffLevel) <= 0) return false;
+  if (diffLevel === DIFF_EASY) return true;
+  const sneaky = blank();
+  circleUnrepeated(sneaky);
+  return solveSpecific(sneaky, diffLevel - 1) <= 0;
 }
 
 // --- new_game_desc ---------------------------------------------------------
 
-/** Upstream has no cap here: it relies on `solveAllblackbutone` locking a
- * white's last escape before it can be boxed in, so generation never makes the
- * board impossible. The guard below only fires if a porting discrepancy breaks
- * that invariant (see engine/retry-limit.ts). */
+/** Upstream has no cap here: the ladder run after each covering keeps a
+ * square's last way out clear before it can be boxed in, so laying never
+ * makes the board impossible. The guard below only fires if that breaks (see
+ * engine/retry-limit.ts). */
 export function newSinglesDesc(p: SinglesParams, rs: RandomState): { desc: string } {
   const { w, h } = p;
   const o = Math.max(w, h);
@@ -95,7 +109,6 @@ export function newSinglesDesc(p: SinglesParams, rs: RandomState): { desc: strin
   const diffLevel = diffToLevel(p.diff);
 
   const state = makeState(w, h, new Int8Array(n));
-  const ss = newSolverState(state);
 
   const cells: number[] = [];
   const rownums = new Int32Array(h * o);
@@ -105,27 +118,13 @@ export function newSinglesDesc(p: SinglesParams, rs: RandomState): { desc: strin
   generate: while (true) {
     attempt();
 
-    ss.ops = [];
     state.flags.fill(0);
     state.nums.set(latinGenerateRect(w, h, rs));
 
-    /* Add black squares at random, laying forced whites between placements. */
+    /* Cover squares at random, laying forced clear squares between them. */
     for (let i = 0; i < n; i++) cells[i] = i;
     shuffle(cells, rs);
-    for (const i of cells) {
-      if (state.flags[i] & (F_CIRCLE | F_BLACK)) continue;
-
-      solverOpAdd(ss, i % w, (i / w) | 0, OP_BLACK);
-      solverOpsDo(state, ss);
-
-      solveAllblackbutone(state, ss);
-      solverOpsDo(state, ss);
-
-      solveRemovesplits(state, ss);
-      solverOpsDo(state, ss);
-
-      if (state.impossible) continue generate;
-    }
+    if (!layCovered(state, cells)) continue;
 
     /* Count white numbers per row/column. */
     rownums.fill(0);

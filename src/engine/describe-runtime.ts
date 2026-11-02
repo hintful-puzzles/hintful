@@ -524,6 +524,71 @@ export function stretch(
   return L.slice(a, b);
 }
 
+/** `connected(S)`: whether the cells `S` are one group, each reaching every
+ * other through members side by side. None and one are. */
+export function connected(sp: GridSpace, S: readonly number[]): boolean {
+  if (S.length < 2) return true;
+  const inS = new Uint8Array(sp.w * sp.h);
+  for (const c of S) inS[c] = 1;
+  const queue = [S[0]];
+  inS[S[0]] = 2;
+  for (let i = 0; i < queue.length; i++)
+    for (const p of sp.adj4[queue[i]])
+      if (inS[p] === 1) {
+        inS[p] = 2;
+        queue.push(p);
+      }
+  return queue.length === S.length;
+}
+
+/**
+ * `cuts(S)`: the members of `S` without which the rest are not one group, in
+ * `S`'s order. A depth-first search counts, for each member, the pieces its
+ * own group falls into without it (Hopcroft and Tarjan's articulation
+ * points, a group of one falling into none), and the rest are one group
+ * where that leaves one piece in all.
+ */
+export function cuts(sp: GridSpace, S: readonly number[]): readonly number[] {
+  const n = sp.w * sp.h;
+  const inS = new Uint8Array(n);
+  for (const c of S) inS[c] = 1;
+  const disc = new Int32Array(n).fill(-1);
+  const low = new Int32Array(n);
+  const pieces = new Int32Array(n);
+  const parent = new Int32Array(n).fill(-1);
+  const next = new Int32Array(n);
+  let time = 0;
+  let groups = 0;
+  for (const root of S) {
+    if (disc[root] >= 0) continue;
+    groups++;
+    disc[root] = low[root] = time++;
+    const stack = [root];
+    while (stack.length > 0) {
+      const v = stack[stack.length - 1];
+      const around = sp.adj4[v];
+      if (next[v] < around.length) {
+        const u = around[next[v]++];
+        if (!inS[u]) continue;
+        if (disc[u] < 0) {
+          parent[u] = v;
+          disc[u] = low[u] = time++;
+          stack.push(u);
+        } else if (u !== parent[v]) low[v] = Math.min(low[v], disc[u]);
+        continue;
+      }
+      stack.pop();
+      const p = parent[v];
+      if (p < 0) continue;
+      low[p] = Math.min(low[p], low[v]);
+      if (low[v] >= disc[p]) pieces[p]++;
+    }
+  }
+  // Without c, its own group's pieces stand beside the other groups, and a
+  // member other than a root keeps the piece holding its parent.
+  return S.filter((c) => groups - 1 + pieces[c] + (parent[c] >= 0 ? 1 : 0) >= 2);
+}
+
 /** `ray(c, n)`: the cells from `n` on, each a step from `c` to `n` further,
  * up to the grid's edge. */
 export function ray(sp: GridSpace, c: number, n: number): number[] {

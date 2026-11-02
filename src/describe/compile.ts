@@ -324,6 +324,8 @@ const GEOMETRY = new Set([
   "adj8",
   "ray",
   "stretch",
+  "connected",
+  "cuts",
   "beam",
   "ahead",
   "within",
@@ -386,6 +388,8 @@ const EARLY = new Set([
   "per",
   "v",
   "stretch",
+  "connected",
+  "cuts",
   "x",
   "y",
   "cell",
@@ -2136,6 +2140,20 @@ function call(
       return {
         code: `stretch(sp.lineCells[${vs[0].code}], ${cell(1)}, ${S.code})`,
         sort: setOf(elem("cell")),
+      };
+    }
+    case "connected":
+    case "cuts": {
+      // Whether the cells S are one group side by side, and the members
+      // without which the rest are not.
+      arity(1);
+      const S = vs[0];
+      if (!(S.sort.k === "set" && S.sort.of.k === "elem" && S.sort.of.e === "cell"))
+        throw new CompileError(`${fn}(${show(S.sort)}): S is a set of cells`);
+      env.used.add(fn);
+      return {
+        code: `${fn}(sp, ${S.code})`,
+        sort: fn === "connected" ? BOOL : setOf(elem("cell")),
       };
     }
     case "index":

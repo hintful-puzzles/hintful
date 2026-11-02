@@ -53,3 +53,115 @@ help:
     * **Keeping the clear squares joined.** A square that would cut the
       clear squares in two if {{pair:0}}, or seal a clear square off, must
       be clear.
+name: Singles
+family: shading
+sizes:
+  # A number is one character of the desc alphabet.
+  w: { min: 2, max: 61 }
+  h: { min: 2, max: 61 }
+space:
+  grid: { w: "w", h: "h" }
+  # Rows and columns are lines, but a number repeats in them.
+  units: []
+answer:
+  # 1 is a covered square, 2 a clear one.
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  # The squares not covered, among which the clear squares are joined.
+  uncovered: "{c in cells where value(c) != 1}"
+shape:
+  # No two covered squares touch.
+  - "forall c in cells where value(c) = 1: forall p in adj4(c): value(p) = 2"
+  # The clear squares are one group.
+  - "connected({c in cells where value(c) = 2})"
+clues:
+  # The number on each square, which no other clear square of its row or
+  # column shows where it is clear.
+  number:
+    at: cell
+    value: "range(1, max(L in {row(at), col(at)} of |cells(L)|))"
+    complete: true
+    means: >-
+      value(at) = 1
+      or (forall L in {row(at), col(at)}, p in cells(L) where p != at and clue(number, p) = v:
+      value(p) = 1)
+freedom: { kind: fill }
+deal:
+  answer: a Latin square's numbers, and squares covered at random while the clear squares stay joined
+  number: a repeated number on each covered square
+  tier: one of the tiers
+tiers: [Easy, Normal]
+techniques:
+  # A covered square's neighbors are clear.
+  - id: besideCovered
+    tier: Easy
+    for: "c in cells where value(c) = 1"
+    conclude: "forall p in adj4(c): place(p, 2)"
+  # A clear square's number is covered everywhere else in its row and column.
+  - id: sameLine
+    tier: Easy
+    for: "c in cells where value(c) = 2, n = clue(number, c)"
+    conclude: >-
+      forall L in {row(c), col(c)}, p in cells(L) where p != c and clue(number, p) = n:
+      place(p, 1)
+  # Two equal numbers with one square between them: covering that square
+  # would leave both clear, so it is clear.
+  - id: sandwich
+    tier: Easy
+    for: >-
+      L in lines, c in cells(L), e = nth(cells(L), index(c, cells(L)) + 2)
+      where e != none and clue(number, e) = clue(number, c)
+    conclude: "place(nth(cells(L), index(c, cells(L)) + 1), 2)"
+  # Two equal numbers side by side cannot both be covered, so every other
+  # copy of their number in the line is.
+  - id: pair
+    tier: Easy
+    for: >-
+      L in lines, c in cells(L), q = nth(cells(L), index(c, cells(L)) + 1)
+      where q != none and clue(number, q) = clue(number, c)
+    conclude: >-
+      forall p in cells(L) where p != c and p != q and clue(number, p) = clue(number, c):
+      place(p, 1)
+  # Matching numbers in a corner's two by two, upstream's chain: where the
+  # corner square or the one across from it matches both squares beside the
+  # corner, it is covered, since clear it would leave both beside it
+  # covered and the corner sealed off; failing that, a matching pair beside
+  # one of the squares beside the corner leaves the other clear.
+  - id: corner
+    tier: Easy
+    for: >-
+      c in cells where |adj4(c)| = 2, s = first(adj4(c)), t = nth(adj4(c), 1),
+      i = the(p in adj4(s) where p != c and p in adj4(t)),
+      n = clue(number, c), ns = clue(number, s), nt = clue(number, t), ni = clue(number, i)
+    conclude: >-
+      (ns != n or nt != n or place(c, 1))
+      and (ns != nt or ni != nt or place(i, 1))
+      and ((ns = n and nt = n) or (ns = nt and ni = nt)
+      or ((ns != n and ns != ni) or place(t, 2))
+      and (ns = n or ns = ni or (nt != n and nt != ni) or place(s, 2)))
+  # A square with one neighbor not covered has that neighbor clear: covered
+  # or clear, it needs one.
+  - id: boxedIn
+    tier: Easy
+    for: "c in cells where value(c) != 1, F = {p in adj4(c) where value(p) != 1}"
+    conclude: "|F| > 0 and (|F| > 1 or place(first(F), 2))"
+  # Two pairs of equal numbers in neighboring lines, one pair level with the
+  # other at one end and a square off it at the other: covering either
+  # square of the two by two they make there sets off a chain of covered
+  # and clear squares that ends in two covered squares side by side.
+  - id: offset
+    tier: Normal
+    for: >-
+      a in cells, n = clue(number, a), b in adj8(a) where b not in adj4(a),
+      m = clue(number, b), L in {col(a), row(a)},
+      a1 in cells(L) where a1 != a and a1 not in adj4(b) and clue(number, a1) = n,
+      b1 = the(p in adj4(a1) where p not in cells(L) and (x(p) = x(b) or y(p) = y(b)))
+      where clue(number, b1) = m
+    conclude: "forall p in adj4(a) where p in adj4(b): place(p, 2)"
+  # A square without which the squares not covered would not be one group
+  # is clear: covered, it would leave a group of them with no clear square
+  # to join the rest by.
+  - id: split
+    tier: Normal
+    for: "K = cuts(uncovered), c in K where not known(c)"
+    conclude: "place(c, 2)"

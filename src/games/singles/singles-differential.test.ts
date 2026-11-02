@@ -6,7 +6,7 @@
  *     byte-for-byte — the whole generation chain (matching → Latin →
  *     blacks → numbers → difficulty gate) is a faithful port and the RNG
  *     is bit-identical, so the streams must agree exactly.
- *  2. The TS solver solves the C-generated board at the C-recorded
+ *  2. The compiled ladder solves the C-generated board at the C-recorded
  *     difficulty (and, for Normal, fails one level below).
  *
  * The fixture is **frozen and cannot be regenerated**: the C harness that
@@ -52,11 +52,11 @@ describe("Singles C-vs-TS differential — solver agreement (gated)", () => {
     const p = params(f);
     it(`${label(f)}: TS solver solves the C board at the recorded difficulty`, () => {
       const s = newState(p, f.desc);
-      expect(solveSpecific(s, f.solverDiff, false)).toBe(1);
+      expect(solveSpecific(s, f.solverDiff)).toBe(1);
       if (f.solverDiff >= DIFF_TRICKY) {
         const s2 = newState(p, f.desc);
-        // One level below (Easy), with the sneaky step, it should NOT solve.
-        expect(solveSpecific(s2, f.solverDiff - 1, true)).not.toBe(1);
+        // One level below (Easy), it should NOT solve.
+        expect(solveSpecific(s2, f.solverDiff - 1)).not.toBe(1);
       }
     });
   }

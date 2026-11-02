@@ -1007,8 +1007,7 @@ Rules for any recorder:
   step's narrated area (`towers-hint.test.ts`).
 - **A solver that queues ops and cascades** attaches the reason to the queued
   op and records each op where it changes a flag, the cascade building its
-  own reason at the apply site. Exemplar:
-  [`singles/solver.ts`](../src/games/singles/solver.ts).
+  own reason at the apply site.
 - **A solver that wipes the board cannot be replayed as it is.** Whatever the
   wipe derived from the givens becomes an ordinary narrated firing, and so
   does a placement's side effect, or a later sentence describes a board that
@@ -1182,8 +1181,7 @@ mistakes on it. A move of the player's own drops the stored plan, so the next
 hint is computed from the current state.
 
 - **A recording solver written to run from empty is not resumable as it is.**
-  Seed it from the cells already decided. Exemplar: `primeCascadeFromMarks`
-  in `singles/solver.ts`.
+  Seed it from the cells already decided.
 - **A target recomputed on each call must converge.** Never emit a move that
   does not change the board.
 - **A heuristic plan must not undo itself across recomputes**
