@@ -374,6 +374,27 @@ const PLANTS: Record<string, Plant> = {
   count: {
     for: "C = {k in clues(count) where exists d in adj8(at(k)): not known(d)} where |C| <= 10, L = left, u = count(c in cells where not known(c)), size in range(0, 5), T in subsets(C) where |T| = size, n = sum(x in T of need(at(x))), X = set(d over x in T, d in open(at(x))) where u > |X| and (n = L or L - n = u - |X|)",
   },
+  // ABCD: a placed letter struck from the squares diagonally beside it too.
+  "abcd.placed": {
+    for: "c in cells where known(c), p in adj8(c) where not known(p)",
+  },
+  // A placed letter struck from the squares two steps from it.
+  "abcd.placedDiagonal": {
+    for: "c in cells where known(c), q in adj4(c), p in adj4(q) where p != c and not known(p)",
+  },
+  // A line one letter short of its number read as holding them all.
+  "abcd.satisfied": {
+    for: "L in lines, d in domain, v = clue(count, L, d) where v >= 0 and holds(L, d) + 1 >= v",
+    conclude: "forall c in cells(L) where not known(c): strike(c, d)",
+  },
+  "abcd.single": {
+    for: "c in cells where not known(c) and |cand(c)| < 3",
+    conclude: "|cand(c)| >= 1 and place(c, first(cand(c)))",
+  },
+  // A stretch of even length read as having one shape too.
+  "abcd.runs": {
+    conclude: "forall c in O where index(c, stretch(L, c, O)) mod 2 = 0: place(c, d)",
+  },
   // Black Box: a laser another square still decides read as going astray.
   ray: {
     for: "k in clues(laser), s = at(k), u = ahead(s) where u != none, d in {1, 2}, r = beam(s, u, d) where r != clue(laser, s)",

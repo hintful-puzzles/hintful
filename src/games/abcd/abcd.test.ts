@@ -40,7 +40,7 @@ import {
   newDrawState,
   redraw,
 } from "./render.ts";
-import { solveAbcd } from "./solver.ts";
+import { abcdLadder, abcdMarks, dealtOf, solveAbcd } from "./solver.ts";
 import {
   type AbcdMove,
   type AbcdParams,
@@ -243,6 +243,19 @@ describe("abcd solver", () => {
     const numbers = new Int32Array((p.w + p.h) * p.n).fill(NO_NUMBER);
     for (let c = 0; c < p.n; c++) numbers[horClue(0, c, p.n)] = 0;
     expect(solveAbcd(p, numbers).status).toBe("contradiction");
+  });
+
+  it("strikes a placed letter diagonally only where diagonal touching is off", () => {
+    // The diagonal strike is a technique the variation adds, run on placing.
+    const corner = (diag: boolean): boolean => {
+      const p = { ...P(3, 3, 5), diag };
+      const numbers = new Int32Array((p.w + p.h) * p.n).fill(NO_NUMBER);
+      const m = abcdMarks(p, new Int8Array(9), abcdLadder(p, dealtOf(p, numbers)));
+      m?.place(4, 1);
+      return m?.has(0, 1) ?? false;
+    };
+    expect(corner(false)).toBe(true);
+    expect(corner(true)).toBe(false);
   });
 });
 

@@ -185,6 +185,8 @@ class Out {
 interface ClueKind {
   at: Sort;
   v: Sort;
+  /** A clue at its element for each value, dealt at `perPlace(x, d)`. */
+  per: boolean;
   /** A clue at the board's fields, by name: the element sort a field is one
    * of where it is one an element, and its values' sort. */
   fields: ReadonlyMap<string, { at: ElemSort | null; v: Sort }> | null;
@@ -318,6 +320,7 @@ const GEOMETRY = new Set([
   "adj4",
   "adj8",
   "ray",
+  "stretch",
   "beam",
   "ahead",
   "within",
@@ -377,7 +380,9 @@ const EARLY = new Set([
   "known",
   "clue",
   "at",
+  "per",
   "v",
+  "stretch",
   "x",
   "y",
   "cell",
@@ -1779,6 +1784,26 @@ function layerRead(fn: string, layer: LayerSort, at: string, env: Env): Val {
   return { code, sort: layer.open ? INT : NUM };
 }
 
+/** `at(k)`, `v(k)` or `per(k)` of a clue `k`: a clue per value sits at its
+ * element and the value both. */
+function clueField(fn: string, k: Val, env: Env): Val {
+  if (k.sort.k !== "elem" || !k.sort.e.startsWith("clue "))
+    throw new CompileError(`${fn} of ${show(k.sort)}: not a clue`);
+  const kind = k.sort.e.slice("clue ".length);
+  const decl = env.clues.get(kind) as ClueKind;
+  if (decl.fields)
+    throw new CompileError(`${fn} of a clue at the board: read its fields`);
+  env.readsClues.yes = true;
+  const code = `cl.${kind}.${fn === "v" ? "v" : "at"}[${k.code}]`;
+  if (fn === "v") return { code, sort: decl.v };
+  if (fn === "per" && !decl.per)
+    throw new CompileError(`per of a ${kind} clue: it is one an element`);
+  if (!decl.per) return { code, sort: decl.at };
+  const read = fn === "at" ? "perElement" : "perValue";
+  env.used.add(read);
+  return { code: `${read}(${code})`, sort: fn === "at" ? decl.at : NUM };
+}
+
 function call(
   fn: string,
   args: readonly Expr[],
@@ -1821,17 +1846,26 @@ function call(
     throw new CompileError(`${fn}: a position is read by its layers`);
   if (fn === "clue") {
     const a = args[0];
-    if (args.length !== 2 || a.k !== "name" || !env.clues.has(a.name))
+    if (a.k !== "name" || !env.clues.has(a.name))
       throw new CompileError("clue(kind, x) names a clue kind of the description");
     const kind = env.clues.get(a.name) as ClueKind;
     if (kind.fields)
       throw new CompileError(`clue(${a.name}, x): a clue at the board sits at nothing`);
+    if (args.length !== (kind.per ? 3 : 2))
+      throw new CompileError(
+        kind.per ? `clue(${a.name}, x, d): one a value` : `clue(${a.name}, x)`,
+      );
     const x = compileExpr(args[1], scope, env, out);
     if (!sameSort(x.sort, kind.at))
       throw new CompileError(`clue(${a.name}, ${show(x.sort)})`);
     env.readsClues.yes = true;
     env.used.add("clueAt");
-    return { code: `clueAt(cl.${a.name}, ${x.code})`, sort: kind.v };
+    if (!kind.per) return { code: `clueAt(cl.${a.name}, ${x.code})`, sort: kind.v };
+    const d = compileExpr(args[2], scope, env, out);
+    expect(d, "num", "clue");
+    env.used.add("perPlace");
+    const place = `(${x.code} < 0 ? -1 : perPlace(${x.code}, ${d.code}))`;
+    return { code: `clueAt(cl.${a.name}, ${place})`, sort: kind.v };
   }
   const field = fieldOf(fn, env);
   if (field !== null) {
@@ -1987,6 +2021,19 @@ function call(
       expect(vs[1], "num", fn);
       return { code: `(${L.code}[${vs[1].code}] ?? -1)`, sort: L.sort.of };
     }
+    case "stretch": {
+      // The maximal run of S along L that holds c.
+      arity(3);
+      expectElem(vs[0], "line", fn);
+      const S = vs[2];
+      if (!(S.sort.k === "set" && S.sort.of.k === "elem" && S.sort.of.e === "cell"))
+        throw new CompileError(`stretch(L, c, ${show(S.sort)}): S is a set of cells`);
+      env.used.add("stretch");
+      return {
+        code: `stretch(sp.lineCells[${vs[0].code}], ${cell(1)}, ${S.code})`,
+        sort: setOf(elem("cell")),
+      };
+    }
     case "index":
     case "before": {
       arity(2);
@@ -2092,21 +2139,10 @@ function call(
       return { code: `(${a.code}.length > 0 ? ${a.code}[0] : -1)`, sort: s.sort.of };
     }
     case "at":
-    case "v": {
+    case "per":
+    case "v":
       arity(1);
-      const k = vs[0].sort;
-      if (k.k !== "elem" || !k.e.startsWith("clue "))
-        throw new CompileError(`${fn} of ${show(k)}: not a clue`);
-      const kind = k.e.slice("clue ".length);
-      const decl = env.clues.get(kind) as ClueKind;
-      if (decl.fields)
-        throw new CompileError(`${fn} of a clue at the board: read its fields`);
-      env.readsClues.yes = true;
-      return {
-        code: `cl.${kind}.${fn}[${vs[0].code}]`,
-        sort: fn === "at" ? decl.at : decl.v,
-      };
-    }
+      return clueField(fn, vs[0], env);
     case "strike":
     case "place": {
       if (!env.concluding) throw new CompileError(`${fn} outside a conclusion`);
@@ -2665,10 +2701,15 @@ function clueSorts(kind: string, c: DescribedClueKind, env: Env): ClueKind {
         throw new CompileError(`clue ${kind} ${name}: its values are not numbers`);
       fields.set(name, { at, v });
     }
-    return { at: { k: "none" }, v: { k: "none" }, fields };
+    return { at: { k: "none" }, v: { k: "none" }, per: false, fields };
   }
   const at = elem(placeSort(`clue ${kind}`, c.at, env));
-  return { at, v: valuesSort(`clue ${kind}`, c.value, at, env), fields: null };
+  return {
+    at,
+    v: valuesSort(`clue ${kind}`, c.value, at, env),
+    per: c.per,
+    fields: null,
+  };
 }
 
 /**
@@ -2802,8 +2843,18 @@ export function compileGame(
     "/** Every technique run as each value is placed, by id. */",
     `export type PlacingId = ${quoted(placing)};`,
     "",
-    "/** The techniques run as each value is placed, in the description's order. */",
-    `export const placing: readonly PlacingId[] = ${JSON.stringify(placing)};`,
+    "/** The techniques run as each value is placed, in the description's order,",
+    " * each with the variation that adds it where one does. */",
+    "export const placing: readonly { id: PlacingId; variation?: string }[] = [",
+    ...placing.map((id) => {
+      const by = addedBy.get(id);
+      const fields = [
+        `id: ${JSON.stringify(id)}`,
+        ...(by === undefined ? [] : [`variation: ${JSON.stringify(by)}`]),
+      ];
+      return `  { ${fields.join(", ")} },`;
+    }),
+    "];",
     "",
     "/** The ladder: each technique's tier, on its scale where that is not the",
     " * description's tiers, the least cap it runs at where that is above its",
@@ -2929,6 +2980,7 @@ function answerCheck(json: DescriptionJson, d: Description, env: Env): string[] 
     const k = Out.fresh("_k");
     const at = Out.fresh("_at");
     const v = Out.fresh("_v");
+    const per = sorts.per ? Out.fresh("_per") : "";
     readsClues.yes = true;
     // A clue at the board is `k` in its meaning, its fields read of it.
     const own: [string, Val][] = sorts.fields
@@ -2936,11 +2988,18 @@ function answerCheck(json: DescriptionJson, d: Description, env: Env): string[] 
       : [
           ["at", { code: at, sort: sorts.at }],
           ["v", { code: v, sort: sorts.v }],
+          ...(sorts.per ? [["per", { code: per, sort: NUM }] as [string, Val]] : []),
         ];
     out.open(
       `for (let ${k} = 0; ${k} < cl.${kind}.${sorts.fields ? "n" : "at.length"}; ${k}++) {`,
     );
-    if (!sorts.fields) {
+    if (sorts.per) {
+      cenv.used.add("perElement");
+      cenv.used.add("perValue");
+      out.emit(`const ${at} = perElement(cl.${kind}.at[${k}]);`);
+      out.emit(`const ${per} = perValue(cl.${kind}.at[${k}]);`);
+      out.emit(`const ${v} = cl.${kind}.v[${k}];`);
+    } else if (!sorts.fields) {
       out.emit(`const ${at} = cl.${kind}.at[${k}];`);
       out.emit(`const ${v} = cl.${kind}.v[${k}];`);
     }

@@ -34,3 +34,86 @@ help:
     another cell, and the hint says that nothing further follows by deduction
     instead of choosing for you. On some boards that is the very first step.
     Save your position, try a letter, and it carries on from whatever you enter.
+name: ABCD
+family: numbers
+sizes:
+  # Unbounded but by the time a board takes to deal.
+  w: { min: 2, max: 99999 }
+  h: { min: 2, max: 99999 }
+  # The letters, A to the n-th.
+  n: { min: 3, max: 9 }
+space:
+  grid: { w: "w", h: "h" }
+  # A letter repeats in a row or column, as often as its number says.
+  units: []
+answer:
+  # Letter A is 1.
+  value: { sort: cell, domain: "range(1, n)" }
+marks:
+  cand: { sort: cell, notation: "set of range(1, n)" }
+define:
+  # How many of letter d line L holds.
+  holds(L, d): "count(c in cells(L) where value(c) = d)"
+  # The squares of the set O at an even place in their stretch along line
+  # L: as many of a letter as O holds with no two touching.
+  most(L, O): "count(c in O where index(c, stretch(L, c, O)) mod 2 = 0)"
+shape:
+  - "forall c in cells, p in adj4(c): value(p) != value(c)"
+clues:
+  # A number on the edge: how many of one letter a row or column holds.
+  count:
+    at: line
+    per: value
+    value: "range(0, |cells(at)|)"
+    means: "holds(at, per) = v"
+freedom: { kind: fill }
+deal:
+  answer: a letter a square, at random, none beside its twin
+  count: every number, or as many hidden as the answer stays unique without
+  tier: one of the tiers
+variations:
+  no diagonal:
+    add:
+      shape:
+        - "forall c in cells, p in adj8(c): value(p) != value(c)"
+      techniques:
+        # A placed letter leaves the squares diagonally beside it.
+        - id: placedDiagonal
+          on: place
+          tier: Easy
+          for: "c in cells where known(c), p in adj8(c) where p not in adj4(c) and not known(p)"
+          conclude: "strike(p, value(c))"
+tiers: [Easy, Unreasonable]
+techniques:
+  # A placed letter leaves the squares beside it.
+  - id: placed
+    on: place
+    tier: Easy
+    for: "c in cells where known(c), p in adj4(c) where not known(p)"
+    conclude: "strike(p, value(c))"
+  # A line holding as many of a letter as its number says has no room for
+  # another. One holding more makes the marks inconsistent.
+  - id: satisfied
+    tier: Easy
+    for: "L in lines, d in domain, v = clue(count, L, d) where v >= 0 and holds(L, d) >= v"
+    conclude: "holds(L, d) = v and (forall c in cells(L) where not known(c): strike(c, d))"
+  # A square down to one letter holds it. One with none left makes the marks
+  # inconsistent.
+  - id: single
+    tier: Easy
+    for: "c in cells where not known(c) and |cand(c)| < 2"
+    conclude: "|cand(c)| = 1 and place(c, first(cand(c)))"
+  # The open squares of a line that can take a letter fall into stretches,
+  # and a stretch of k holds at most every other square's worth, (k + 1) / 2:
+  # its squares at an even place. Where the stretches hold just as many as
+  # the line still needs, every stretch is full, and one of odd length has
+  # only one shape, the letter in its even places.
+  - id: runs
+    tier: Easy
+    for: >-
+      L in lines, d in domain, v = clue(count, L, d) where v > holds(L, d),
+      O = {c in cells(L) where not known(c) and d in cand(c)}
+      where most(L, O) = v - holds(L, d)
+    conclude: >-
+      forall c in O where |stretch(L, c, O)| mod 2 = 1 and index(c, stretch(L, c, O)) mod 2 = 0:
+      place(c, d)

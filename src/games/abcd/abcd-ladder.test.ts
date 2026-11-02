@@ -19,7 +19,7 @@ import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newAbcdDesc } from "./generator.ts";
-import { newSolverBoard, type SolverBoard, solveBoard } from "./solver.ts";
+import { solveAbcd } from "./solver.ts";
 import { type AbcdParams, EASY_PRESETS, newState } from "./state.ts";
 
 /** Every shape on the menu, plus the diagonal board with its clues hidden and
@@ -35,7 +35,7 @@ const SHAPES: AbcdParams[] = [
 const SEEDS = ["lad-a", "lad-b", "lad-c"];
 
 interface Board {
-  b: SolverBoard;
+  params: AbcdParams;
   numbers: Int32Array;
 }
 
@@ -46,16 +46,16 @@ const cases = SHAPES.flatMap((params) =>
     const { numbers } = newState(params, desc);
     return {
       label,
-      board: (): Board => ({ b: newSolverBoard(params, numbers), numbers }),
+      board: (): Board => ({ params, numbers }),
     };
   }),
 );
 
 describeLadderCensus<Board>({
   game: "abcd",
-  rungs: ["satisfied", "singles", "runs"],
+  rungs: ["satisfied", "single", "runs"],
   unreached: {},
   caps: [0],
   cases,
-  solve: ({ b, numbers }, _cap, firings) => solveBoard(b, numbers, firings),
+  solve: ({ params, numbers }, _cap, firings) => solveAbcd(params, numbers, firings),
 });

@@ -198,6 +198,10 @@
             "type": "string",
             "description": "The element sort a clue sits at, or `board` for a whole-board clue, which has `fields` in place of a `value`."
           },
+          "per": {
+            "enum": ["value"],
+            "description": "A clue at the element for each value of the answer's domain, read `clue(kind, x, d)`; its meaning reads the value as `per`."
+          },
           "value": { "$ref": "#/$defs/formula" },
           "fields": {
             "type": "object",

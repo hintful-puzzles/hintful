@@ -36,6 +36,9 @@ import {
   describedSpace,
   type GridSpace,
   latinSpace,
+  perElement,
+  perPlace,
+  perValue,
   traceBeam,
   within,
 } from "../../src/engine/describe-runtime.ts";
@@ -1110,7 +1113,12 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
     if (a.k !== "name") throw new TypeError("clue(kind, x)");
     const x = evaluate(args[1], env, ctx);
     const list = board.clues.get(a.name) ?? [];
-    return lift(x, "clue", (id) => {
+    // A clue per value sits at its element for the value read third.
+    const per = args.length === 3 ? num(evaluate(args[2], env, ctx), "clue") : null;
+    if (per !== null && typeof per !== "number")
+      throw new TypeError("clue(kind, x, d): d is a value the binding gives");
+    return lift(x, "clue", (e) => {
+      const id = per === null ? e : perPlace(e, per);
       const here = list.filter((k) => k.at === id);
       if (here.length === 0) return { k: "num", v: -1 };
       return join([
@@ -1283,8 +1291,33 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       };
     }
     case "index": {
-      const L = known(vs[1], fn);
-      return lift(vs[0], fn, (id) => ({ k: "num", v: L.indexOf(id) }));
+      // In a set the marks decide, the members before one each count under
+      // their guard, and an element not in it is at -1.
+      const L = vs[1];
+      if (L.k !== "eset") throw new TypeError(`${fn}: not a set`);
+      return lift(vs[0], fn, (id) => {
+        const i = L.mem.findIndex(([m]) => m === id);
+        if (i < 0) return { k: "num", v: -1 };
+        const before = sumOf(L.mem.slice(0, i).map(([, g]) => ite(g, 1, 0)));
+        return { k: "num", v: ite(L.mem[i][1], before, -1) };
+      });
+    }
+    case "stretch": {
+      // A cell of L is in the stretch round c where every cell from c to it
+      // is in S.
+      const S = vs[2];
+      if (S.k !== "eset") throw new TypeError(`${fn}: not a set`);
+      return lift(vs[0], fn, (L) =>
+        lift(vs[1], fn, (c): V => {
+          const cells = sp.lineCells[L];
+          const i = cells.indexOf(c);
+          const mem: Alt[] = cells.map((y, j) => {
+            const span = j < i ? cells.slice(j, i + 1) : cells.slice(i, j + 1);
+            return [y, i < 0 ? false : and(...span.map((x) => inEset(x, S)))] as const;
+          });
+          return { k: "eset", sort: "cell", mem: mem.filter(([, g]) => g !== false) };
+        }),
+      );
     }
     case "before": {
       // A set the marks decide keeps its order, so the members before one
@@ -1377,17 +1410,20 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       return { k: "elem", sort: s.sort, alts: out };
     }
     case "at":
+    case "per":
     case "v": {
       const k = vs[0];
-      const at =
-        k.k === "elem"
-          ? ctx.d.clueKinds.get(k.sort.slice("clue ".length))?.at
-          : undefined;
-      const sort = at === undefined ? "?" : placeSort(board, at);
+      const decl =
+        k.k === "elem" ? ctx.d.clueKinds.get(k.sort.slice("clue ".length)) : undefined;
+      const sort = decl === undefined ? "?" : placeSort(board, decl.at);
+      // A clue per value sits at its element and the value both.
+      const place = (at: number): number => (decl?.per ? perElement(at) : at);
       return join(
-        clueOf(ctx, k).map(
-          ({ clue, g }) => [g, fn === "at" ? elem(sort, clue.at) : clue.v] as const,
-        ),
+        clueOf(ctx, k).map(({ clue, g }) => {
+          if (fn === "v") return [g, clue.v] as const;
+          if (fn === "at") return [g, elem(sort, place(clue.at))] as const;
+          return [g, { k: "num", v: perValue(clue.at) } as V] as const;
+        }),
       );
     }
     case "strike":
@@ -1473,15 +1509,42 @@ function dealSymbolically(d: Description, board: Board): void {
             ? board.sp.corners.length
             : c.at === "cell"
               ? board.sp.cells.length
-              : part !== undefined
-                ? part.parts.length
-                : null;
+              : c.at === "line"
+                ? board.sp.lines.length
+                : part !== undefined
+                  ? part.parts.length
+                  : null;
     if (places === null)
       throw new Error(
-        `clue ${kind}: only edge, slot, corner, cell and region clues are checked yet`,
+        `clue ${kind}: only edge, slot, corner, cell, line and region clues are checked yet`,
       );
     const complete = d.json.clues?.[kind]?.complete === true;
     const list: ClueSym[] = [];
+    if (c.per) {
+      // One clue at each place for each value the domain may hold, each
+      // present or not, its value within its range.
+      if (c.value.k !== "call" || c.value.fn !== "range")
+        throw new Error(`clue ${kind}: a clue per value is checked with a range`);
+      const dom = evaluate(d.domain, new Map(), ctx);
+      if (dom.k !== "vset")
+        throw new TypeError("the answer's domain is not a set of values");
+      for (let e = 0; e < places; e++) {
+        const here = new Map([["at", elem(placeSort(board, c.at), e)]]);
+        const [lo, hi] = c.value.args.map((a) => num(evaluate(a, here, ctx), "range"));
+        dom.mem.forEach((g, n) => {
+          if (g === false) return;
+          const v = Z3.Int.const(`clue_${kind}_${e}_${n}_v_${boardCount}`);
+          const present = Z3.Bool.const(`clue_${kind}_${e}_${n}_${boardCount}`);
+          board.clueDomain.push(
+            and(cmp(">=", v, lo), cmp("<=", v, hi)),
+            implies(present, g),
+          );
+          list.push({ at: perPlace(e, n), present, v: { k: "num", v } });
+        });
+      }
+      board.clues.set(kind, list);
+      continue;
+    }
     for (let e = 0; e < places; e++) {
       const here = new Map([["at", elem(placeSort(board, c.at), e)]]);
       // A range of numbers is read as its bounds, which a value set of the
@@ -1564,10 +1627,16 @@ function worldOf(d: Description, board: Board): Bx[] {
       const own = new Map(
         c.value === null
           ? [["k", elem(`clue ${kind}`, i)]]
-          : [
-              ["at", elem(placeSort(board, c.at), k.at)],
-              ["v", k.v],
-            ],
+          : c.per
+            ? [
+                ["at", elem(placeSort(board, c.at), perElement(k.at))],
+                ["per", { k: "num", v: perValue(k.at) } as V],
+                ["v", k.v],
+              ]
+            : [
+                ["at", elem(placeSort(board, c.at), k.at)],
+                ["v", k.v],
+              ],
       );
       out.push(implies(k.present, bool(evaluate(c.means, own, ctx), `clue ${kind}`)));
     });

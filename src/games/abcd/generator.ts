@@ -22,30 +22,15 @@ import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { placeLetter, searchAnswers, solveAbcd } from "./solver.ts";
-import {
-  type AbcdParams,
-  cuboid,
-  EMPTY,
-  horClue,
-  NO_NUMBER,
-  verClue,
-} from "./state.ts";
+import { drawAnswer, searchAnswers, solveAbcd } from "./solver.ts";
+import { type AbcdParams, horClue, NO_NUMBER, verClue } from "./state.ts";
 
-/** The clue counts of one random fill, in reading order. `placeLetter` (no
- * `remaining`) keeps the partial grid no-touch-legal, so every cell always has
- * a candidate and the fill never dead-ends. */
+/** The clue counts of one random fill, in reading order. The fill keeps its
+ * letters apart as it goes, so every cell always has a candidate and the fill
+ * never dead-ends. */
 function drawClues(p: AbcdParams, rng: RandomState): Int32Array {
   const { w, h, n } = p;
-  const grid = new Int8Array(w * h).fill(EMPTY);
-  const cube = new Uint8Array(w * h * n).fill(1); // all candidates open
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const letters: number[] = [];
-      for (let i = 0; i < n; i++) if (cube[cuboid(x, y, i, n, w)]) letters.push(i);
-      placeLetter(p, grid, cube, x, y, letters[randomUpto(rng, letters.length)]);
-    }
-  }
+  const grid = drawAnswer(p, (letters) => randomUpto(rng, letters));
 
   const numbers = new Int32Array((w + h) * n);
   for (let y = 0; y < h; y++) {

@@ -66,7 +66,14 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import { type AbcdMark, abcdObviousMarks, answerOf, solveAbcd } from "./solver.ts";
+import {
+  type AbcdMark,
+  abcdObviousMarks,
+  answerOf,
+  isCompleted,
+  solveAbcd,
+  status,
+} from "./solver.ts";
 import {
   type AbcdMove,
   type AbcdParams,
@@ -77,13 +84,11 @@ import {
   defaultParams,
   EMPTY,
   encodeParams,
-  isCompleted,
   letterBit,
   menu,
   newState,
   newUi,
   paramConfig,
-  status,
   textFormat,
   validateParams,
 } from "./state.ts";

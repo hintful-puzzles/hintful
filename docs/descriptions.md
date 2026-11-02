@@ -128,6 +128,10 @@ research tools all read through it; the app never does.
   the field is one a cell, of the cell (`peg(k, s)`); `means` reads the clue
   as `k`. It compiles to plain arrays in `Dealt`, and the checker deals two,
   each present or not.
+- **A clue per value** (`per: value`, ABCD's number for each letter of a
+  line) sits at its element once for each value of the domain, read
+  `clue(count, L, d)`, and `per` in its meaning names the value. `Dealt`
+  keeps it as one `ClueList`, each clue at `perPlace(x, d)`.
 - **The compiler reads a description with every variation applied.** One
   ladder runs on every board the game deals, and a name a board's variations
   leave out is empty there, so a technique over it binds nothing (Solo's
@@ -186,6 +190,11 @@ description author acts on:
   `units` is the space's boxes, dealt or not (Solo's `box`). A partition and
   a clue kind may not share a name, since both are fields of `Dealt`.
 - **`cell(x, y)` must be on the grid**: the compiled code does not check.
+- **`stretch(L, c, S)` is the run of the cells `S` along the line `L` that
+  holds `c`**, in the line's order, none where `S` does not hold `c`. A
+  line's segments are read by binding a cell of each, since no sort is a set
+  of sets: ABCD counts a stretch's most letters as its cells at an even
+  place (`index(c, stretch(L, c, O)) mod 2 = 0`).
 - **`beam(s)` is Black Box's laser fired in from slot `s`**: the slot it
   comes out at, `s` itself where it is reflected, `|slots|` where it is
   absorbed, and none where a cell no value is placed in decides it. A 1 is
@@ -316,9 +325,10 @@ uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
   (Seismic's `range(1, |cells(area(c))|)`), the module exports `domainOf`,
   `CellMarks.seed` starts each cell from it, and `domain` alone is refused
   in a technique.
-- **A variation's techniques** run only where the board has it on
-  (`describedLadder`'s `variations`), and the ladder places each before the
-  first technique of a higher tier on its scale.
+- **A variation's techniques**, rungs and those run on placing alike, run
+  only where the board has it on (`describedLadder`'s `variations`), and the
+  ladder places each rung before the first technique of a higher tier on its
+  scale (ABCD's diagonal strikes, `placedDiagonal`).
 - **A hint walks the same firings.** A candidate game records them into the
   candidate walk (`record`); one without notes walks them with
   `ladderWalk`, which takes the firing that continues from the walk's last
@@ -454,6 +464,11 @@ the rules. What a small board cannot cover:
   query dumped with `solver.toString()` is the quick way to try a tactic.
 - **A size larger than the board's cells is one unknown**, from its least
   to the cell count (Mines' `mines`, `openSizes`), not a world a value.
+- **A set the marks decide keeps its order**: `stretch` holds each cell of
+  its line under the guard that every cell between it and `c` is in `S`, and
+  `index(x, S)` counts the members before `x` under theirs.
+- **A clue per value** is dealt at every element for every value of the
+  world's domain, each present or not.
 - **`beam` is read by walking `traceBeam` itself**, asked again with each
   cell it stops at settled each way, so the check reads the game's physics,
   under the guard of what each cell on the path holds.

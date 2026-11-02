@@ -21,19 +21,16 @@ import {
   type AbcdHint,
   type AbcdRung,
   hintKeepTrack,
-  packedLines,
   refreshHintStep,
 } from "./hint.ts";
 import { CLUE, type LineMarks, say } from "./hint-text.ts";
 import { abcdGame } from "./index.ts";
 import { COL_HINT_CELL } from "./render.ts";
-import { newSolverBoard, runsForce, solveBoard } from "./solver.ts";
 import {
   type AbcdMove,
   type AbcdParams,
   type AbcdState,
   EASY_PRESETS,
-  letterBit,
 } from "./state.ts";
 
 type Step = HintStep<AbcdMove, AbcdHint, AbcdRung>;
@@ -174,49 +171,6 @@ const pinned = describeHintPins({
   },
 });
 
-// --- the counting argument --------------------------------------------------
-
-/** Every way to put `req` letters in the `open` positions of a line with no two
- * adjacent, by brute force: the oracle `runsForce`'s claim is checked against. */
-function arrangements(open: readonly boolean[], req: number): number[][] {
-  const out: number[][] = [];
-  const walk = (from: number, chosen: number[]): void => {
-    if (chosen.length === req) {
-      out.push([...chosen]);
-      return;
-    }
-    for (let b = from; b < open.length; b++) if (open[b]) walk(b + 2, [...chosen, b]);
-  };
-  walk(0, []);
-  return out;
-}
-
-describe("the runs technique's arithmetic", () => {
-  it("forces exactly the positions every arrangement shares, whenever it speaks", () => {
-    // Every open pattern up to length 9 and every count: the sentence "the
-    // outlined cells fit only k apart, so each stretch is full" is a claim,
-    // and this checks it against every arrangement rather than against itself.
-    let spoke = 0;
-    for (let len = 1; len <= 9; len++)
-      for (let mask = 0; mask < 1 << len; mask++) {
-        const open = Array.from({ length: len }, (_, b) => ((mask >> b) & 1) === 1);
-        for (let req = 1; req <= 5; req++) {
-          const { most, forced } = runsForce(open, req);
-          const all = arrangements(open, req);
-          // `most` really is the most that fit.
-          expect(arrangements(open, most + 1)).toEqual([]);
-          if (most > 0) expect(arrangements(open, most).length).toBeGreaterThan(0);
-          if (forced.length === 0) continue;
-          spoke++;
-          expect(most).toBe(req);
-          // Every forced position is in every arrangement.
-          for (const a of all) for (const b of forced) expect(a).toContain(b);
-        }
-      }
-    expect(spoke).toBeGreaterThan(500);
-  });
-});
-
 // --- the corpus -------------------------------------------------------------
 
 /** Every premise the plan can speak. Adding one fails the census below until it
@@ -297,46 +251,6 @@ describe.each(READINGS)("the corpus, under the %s reading", (reading) => {
     }
     expect(steps, "the census walked almost nothing").toBeGreaterThan(1000);
     expect([...seen].sort()).toEqual([...REACHES[reading]].sort());
-  });
-});
-
-// --- the finders, held to the solver ----------------------------------------
-
-describe("the runs finder", () => {
-  it("is the solver's technique: every line it finds, the solver's runs rung places", () => {
-    // On a board where the singles and satisfied lines are spent, the hint's
-    // finder, reading the populated notes, forces exactly what one sweep of the
-    // solver's runs rung would, line for line.
-    let points = 0;
-    for (const { label, params, state: start } of boards()) {
-      let state = start;
-      for (let move = 0; move < 400 && abcdGame.status(state) !== "solved"; move++) {
-        const plan = planOf(label, state, "populate");
-        const head = plan[0];
-        if (head.move.type === "enter" && kindOf(head) === "packed") {
-          points++;
-          const found = [
-            ...packedLines(params, state.grid, state.pencil, state.numbers),
-          ];
-          expect(found.length, `${label} move ${move}`).toBeGreaterThan(0);
-          for (const f of found)
-            for (const i of f.forced)
-              expect(state.pencil[i] & letterBit(f.n - 1)).not.toBe(0);
-          expect(
-            found.some((f) =>
-              f.forced.includes(
-                head.move.type === "enter" ? head.move.y * params.w + head.move.x : -1,
-              ),
-            ),
-          ).toBe(true);
-        }
-        state = abcdGame.executeMove(state, head.move);
-      }
-      // The whole plan's answer is the solver's.
-      const solved = solveBoard(newSolverBoard(params, state.numbers), state.numbers);
-      expect(Array.from(state.grid), label).toEqual(Array.from(solved.grid));
-    }
-    expect(points, "the walk met almost no runs step").toBeGreaterThan(20);
   });
 });
 

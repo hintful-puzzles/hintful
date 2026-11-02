@@ -19,7 +19,7 @@ import {
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
 import { abcdGame } from "./index.ts";
-import { answerOf, searchAnswers, solveAbcd } from "./solver.ts";
+import { answerOf, searchAnswers, solveAbcd, status } from "./solver.ts";
 import {
   type AbcdParams,
   type AbcdState,
@@ -28,7 +28,6 @@ import {
   NO_NUMBER,
   newState,
   newUi,
-  status,
   verClue,
 } from "./state.ts";
 

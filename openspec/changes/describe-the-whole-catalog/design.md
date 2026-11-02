@@ -329,7 +329,7 @@ proposal re-checks this survey's figures.
 | 4 | `describe-the-king-move-games` | N8, S | Star Battle, Mosaic, Clusters | Mosaic's upstream `solveCheck` |
 | 5 | `describe-revealed-clues` | X | Guess, Mines, Black Box | `minesolve`, if the measured deal cost allows |
 | 6 | `describe-on-a-graph` | G (a dealt graph) | Map | `engine/wing.ts`'s solver half; the candidate walk indexes elements, not grid cells |
-| 7 | `describe-runs-sightlines-and-looks` | Q, L, P, W as a clue kind, tile marks, a brick-wall space | ABCD, Sticks, Magnets, Light Up, Bricks | Light Up's exception in the fixpoint header |
+| 7 | `describe-runs-sightlines-and-looks`, split by game into it (ABCD) and `describe-sightlines-and-looks` | Q, L, P, W as a clue kind, tile marks, a brick-wall space | ABCD, Sticks, Magnets, Light Up, Bricks | Light Up's exception in the fixpoint header |
 | 8 | `describe-connectivity` | C, a direction step, border vertices, relation marks | Singles, Range, Rome, Slant, Boats | `firing-replay.ts`, if Rome was its last reader |
 | 9 | `describe-edges-and-divisions` | E, D | Separate, Palisade, Dominosa, Rect, Galaxies, Filling | Rect's `TIER_RUNGS`, Dominosa's `firstFiring` |
 | 10 | `describe-lines-and-loops` | E on lines, G derived and tiled, M on edges | Path, Pearl, Tracks, Spokes, Bridges, Net, Tents, Loopy | the runner's `prerequisite` and `fallback` |

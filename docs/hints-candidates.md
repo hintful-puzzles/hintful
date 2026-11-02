@@ -490,16 +490,11 @@ of `findMistakes` in the same change.
 - **`record` returns nothing, and the game's rungs read
   `RungContext.shown`**: the notes, or under the implicit reading what a
   note-less cell's reach leaves it, which always holds the answer too.
-- **Hold each finder to the solver's rung by a test.** A finder is the
-  one-firing form of a solver rung that sweeps; the test compares what it
-  strikes with what the solver's rung rejects at every point it is the next
-  step, and every note the plan writes with what the solver leaves there.
-  That is what makes the hint a projection and not a second solver.
-- **Share the arithmetic, not only the rule.** Where a technique counts,
-  put the counting in one function that the solver's rung and the hint's
-  finder both call, and test its claim against a brute-force enumeration,
-  not against itself. Exemplar: `runsForce` in
-  [`abcd/solver.ts`](../src/games/abcd/solver.ts), `abcd-hint.test.ts`.
+- **A rung's firings are the compiled technique's, run on the notes**: marks
+  built from the values placed and the notes shown, and the compiled rung's
+  `firings` asked of them (`lineFirings`). So what a step finds is the
+  solver's technique by construction, and the soundness check is what holds
+  it, not a test comparing two copies.
 
 Exemplar: [`abcd/hint.ts`](../src/games/abcd/hint.ts).
 

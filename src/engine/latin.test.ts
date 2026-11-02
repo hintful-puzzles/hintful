@@ -61,7 +61,7 @@ function cfg(maxdiff: number): LatinSolverConfig {
           { id: "latin.fish", tier: 2 },
           { id: "latin.wing", tier: 2 },
         ],
-        placing: ["latin.placed"],
+        placing: [{ id: "latin.placed" }],
       },
       {},
     ),

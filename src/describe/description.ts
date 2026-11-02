@@ -61,6 +61,7 @@ export interface DescriptionJson {
     string,
     {
       at: string;
+      per?: "value";
       value?: string;
       fields?: Record<string, { at?: string; value: string }>;
       means: string;
@@ -395,6 +396,10 @@ export interface Definition {
  * (`black(k)`), and of a cell where the field is one a cell (`peg(k, s)`). */
 export interface ClueKind {
   at: string;
+  /** Whether a clue sits at its element once for each value of the answer's
+   * domain (ABCD's count of each letter a line holds), read
+   * `clue(kind, x, d)`, its meaning reading the value as `per`. */
+  per: boolean;
   /** Its values; `null` for a clue at the board, whose fields say theirs. */
   value: Expr | null;
   /** A clue at the board's fields, by name: the element sort each is one
@@ -519,8 +524,13 @@ export function loadDescription(
       throw new SyntaxError(
         `${json.game} clue ${kind}: a clue at the board has fields, and any other a value`,
       );
+    if (c.per !== undefined && c.at === BOARD)
+      throw new SyntaxError(
+        `${json.game} clue ${kind}: a clue at the board is per nothing`,
+      );
     clueKinds.set(kind, {
       at: c.at,
+      per: c.per === "value",
       value: c.value === undefined ? null : at(`clue ${kind} value`, c.value),
       fields: new Map(
         fields.map(([name, f]) => [

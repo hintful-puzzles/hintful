@@ -355,7 +355,7 @@ export type OwnId<Id extends string> = Exclude<Id, `${string}.${string}`>;
 /** What a compiled module says about its ladder. */
 export interface CompiledLadder<Id extends string, P extends string> {
   ladder: readonly CompiledEntry<Id>[];
-  placing: readonly P[];
+  placing: readonly { id: P; variation?: string }[];
 }
 
 /** A game's pairing of its own techniques: each rung, and each technique
@@ -402,7 +402,9 @@ export function describedLadder<
     entries: module.ladder
       .filter((e) => e.variation === undefined || variations.includes(e.variation))
       .map((e) => ({ ...e, run: pick<Rung<S>>(e.id, library.rungs) })),
-    placing: module.placing.map((id) => pick<PlaceRung>(id, library.placing)),
+    placing: module.placing
+      .filter((e) => e.variation === undefined || variations.includes(e.variation))
+      .map((e) => pick<PlaceRung>(e.id, library.placing)),
   };
 }
 

@@ -45,10 +45,6 @@ export const NO_NUMBER = -1;
 
 // --- clue / cube indexing (upstream CUBOID / HOR_CLUE / VER_CLUE macros) ----
 
-/** Candidate-cube / pencil-mark index for letter `i` at cell `(x, y)`. */
-export function cuboid(x: number, y: number, i: number, n: number, w: number): number {
-  return i + x * n + y * n * w;
-}
 /** The pencil-mask bit for letter `i` (`0..n-1`). */
 export function letterBit(i: number): number {
   return 1 << i;
@@ -260,95 +256,6 @@ export function cloneState(s: AbcdState): AbcdState {
   };
 }
 
-// --- win condition (abcd_validate_puzzle == 0) -----------------------------
-
-/** Is the board solved: every clue met exactly, no two identical letters
- * touching, and every cell filled? */
-export function isCompleted(state: AbcdState): boolean {
-  return validatePuzzle(state.params, state.grid, state.numbers) === 0;
-}
-
-/**
- * The three-valued board validator (upstream `abcd_validate_puzzle`):
- * `-1` a definite contradiction (a clue overcrowded, or an adjacency
- * violation), `1` no contradiction but not yet complete, `0` solved.
- * Shared by the win check and the solver's final classification.
- */
-export function validatePuzzle(
-  p: AbcdParams,
-  grid: Int8Array,
-  numbers: Int32Array,
-): -1 | 0 | 1 {
-  const { w, h, diag } = p;
-
-  // Clue violations: an overcrowded clue in either direction is a contradiction.
-  const rows = validateClues(p, grid, numbers, true);
-  if (rows === -1) return -1;
-  const cols = validateClues(p, grid, numbers, false);
-  if (cols === -1) return -1;
-
-  // Adjacency violations.
-  if (!validateAdjacency(grid, w, 0, 0, w - 1, h, 1, 0)) return -1;
-  if (!validateAdjacency(grid, w, 0, 0, w, h - 1, 0, 1)) return -1;
-  if (diag && !validateAdjacency(grid, w, 0, 0, w - 1, h - 1, 1, 1)) return -1;
-  if (diag && !validateAdjacency(grid, w, 0, 1, w - 1, h, 1, -1)) return -1;
-
-  // No contradiction, but a clue is still unsatisfied.
-  if (rows === 1 || cols === 1) return 1;
-
-  // Finally, every square must be entered.
-  for (let i = 0; i < w * h; i++) if (grid[i] === EMPTY) return 1;
-  return 0;
-}
-
-/** Upstream `abcd_validate_adjacency`: false if any cell in the rectangle
- * `[sx,ex)×[sy,ey)` shares its letter with cell `(x+dx, y+dy)`. */
-function validateAdjacency(
-  grid: Int8Array,
-  w: number,
-  sx: number,
-  sy: number,
-  ex: number,
-  ey: number,
-  dx: number,
-  dy: number,
-): boolean {
-  for (let x = sx; x < ex; x++) {
-    for (let y = sy; y < ey; y++) {
-      const g = grid[y * w + x];
-      if (g !== EMPTY && g === grid[(y + dy) * w + (x + dx)]) return false;
-    }
-  }
-  return true;
-}
-
-/** Upstream `abcd_validate_clues`: 1 if a clue is unsatisfied, -1 if a clue is
- * overcrowded, 0 if all satisfied — across every row (`horizontal`) or column. */
-function validateClues(
-  p: AbcdParams,
-  grid: Int8Array,
-  numbers: Int32Array,
-  horizontal: boolean,
-): -1 | 0 | 1 {
-  const { w, h, n } = p;
-  const amx = horizontal ? h : w;
-  const bmx = horizontal ? w : h;
-  let unsatisfied = false;
-  for (let a = 0; a < amx; a++) {
-    for (let i = 0; i < n; i++) {
-      const clue = numbers[horizontal ? horClue(a, i, n) : verClue(a, i, n, h)];
-      if (clue === NO_NUMBER) continue;
-      let found = 0;
-      for (let b = 0; b < bmx; b++) {
-        if (grid[horizontal ? a * w + b : b * w + a] === i + 1) found++;
-      }
-      if (found > clue) return -1;
-      if (found < clue) unsatisfied = true;
-    }
-  }
-  return unsatisfied ? 1 : 0;
-}
-
 // --- moves -----------------------------------------------------------------
 
 /** A move names letters by index (`0..n-1`), never by their grid encoding: the
@@ -398,10 +305,6 @@ export function newUi(_state: AbcdState): AbcdUi {
     pencilKeepHighlight: true,
     candidateReading: DEFAULT_CANDIDATE_READING,
   };
-}
-
-export function status(s: AbcdState): "solved" | "ongoing" {
-  return isCompleted(s) ? "solved" : "ongoing";
 }
 
 /**

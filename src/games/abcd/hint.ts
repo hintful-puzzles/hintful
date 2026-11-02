@@ -9,13 +9,12 @@
  * records nothing: its rungs read the candidates the walk shows
  * (`RungContext.shown`), which is also what the player can check on screen.
  *
- * **Each rung is one line's firing of a solver technique.** The solver's
- * techniques sweep every line and letter per call and apply all they find; a
- * hint step is one line. Technique 2 is the walk's naked singles and the
- * placement cull is `placeLetter`'s neighbor rule-out, so what is left is
- * {@link satisfiedLines} (technique 1) and {@link packedLines} (technique 3),
- * whose arithmetic is the solver's own `runsForce`. The frontier chooses which
- * line goes next, so the order the solver sweeps in never reaches the player.
+ * **Each rung is one firing of a compiled line technique** ({@link lineFirings}):
+ * `satisfied` and `runs`, run on the letters placed and the notes shown. The
+ * description's `single` is the walk's naked single and its placement strikes
+ * the walk's `reach`, so those two are the walk's own. The frontier chooses
+ * which line goes next, so the order the ladder fires in never reaches the
+ * player.
  */
 
 import {
@@ -36,21 +35,28 @@ import {
   runCandidatePlan,
 } from "../../engine/candidate-plan.ts";
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
+import { rangeMask } from "../../engine/describe-runtime.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { candidateConclusions } from "../../engine/hint-text.ts";
+import { CellMarks, type Ladder } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";
 import type { Point } from "../../engine/types.ts";
 import { LETTERS, type LineMarks, type LineWord, say } from "./hint-text.ts";
-import { neighbors, runsForce } from "./solver.ts";
+import {
+  abcdLadder,
+  abcdSpace,
+  dealtOf,
+  type LineReason,
+  neighbors,
+} from "./solver.ts";
 import {
   type AbcdMove,
   type AbcdParams,
   type AbcdState,
   horClue,
   letterBit,
-  NO_NUMBER,
   verClue,
 } from "./state.ts";
 
@@ -149,74 +155,29 @@ function linesOf(p: AbcdParams): Line[] {
 }
 
 /**
- * Technique 1, one line at a time: a line already holding its count of a
- * letter, or whose count is 0, while some empty cell in it still shows that
- * letter. The struck cells, the placed letters they rest on, and the count.
+ * The firings of the line technique `id` on the board the walk shows: the
+ * letters placed, and each empty cell's notes as its candidates. Each is the
+ * line, the letter, the line's number for it, and the cells it strikes or
+ * places.
  */
-function* satisfiedLines(
+function lineFirings(
   p: AbcdParams,
-  grid: ArrayLike<number>,
+  ladder: Ladder,
+  grid: Int8Array,
   shown: ArrayLike<number>,
-  numbers: Int32Array,
-): Generator<{
-  line: Line;
-  n: number;
-  clue: number;
-  struck: number[];
-  placed: number[];
-}> {
-  for (const line of linesOf(p))
-    for (let n = 1; n <= p.n; n++) {
-      const clue = numbers[line.clueBase + n - 1];
-      if (clue === NO_NUMBER) continue;
-      const placed = line.cells.filter((i) => grid[i] === n);
-      if (placed.length !== clue) continue;
-      const struck = line.cells.filter(
-        (i) => grid[i] === 0 && (shown[i] & letterBit(n - 1)) !== 0,
-      );
-      if (struck.length > 0) yield { line, n, clue, struck, placed };
-    }
-}
-
-/**
- * Technique 3, one line at a time: a line whose open cells for a letter fit
- * only as many as it still needs, and the cells that forces. `open` is every
- * empty cell still showing the letter.
- */
-export function* packedLines(
-  p: AbcdParams,
-  grid: ArrayLike<number>,
-  shown: ArrayLike<number>,
-  numbers: Int32Array,
-): Generator<{
-  line: Line;
-  n: number;
-  need: number;
-  more: boolean;
-  open: number[];
-  forced: number[];
-}> {
-  for (const line of linesOf(p))
-    for (let n = 1; n <= p.n; n++) {
-      const clue = numbers[line.clueBase + n - 1];
-      if (clue === NO_NUMBER) continue;
-      const placed = line.cells.filter((i) => grid[i] === n).length;
-      const need = clue - placed;
-      if (need <= 0) continue;
-      const isOpen = line.cells.map(
-        (i) => grid[i] === 0 && (shown[i] & letterBit(n - 1)) !== 0,
-      );
-      const { forced } = runsForce(isOpen, need);
-      if (forced.length === 0) continue;
-      yield {
-        line,
-        n,
-        need,
-        more: placed > 0,
-        open: line.cells.filter((_, k) => isOpen[k]),
-        forced: forced.map((k) => line.cells[k]),
-      };
-    }
+  id: "satisfied" | "runs",
+): { line: number; n: number; clue: number; cells: number[] }[] {
+  const m = new CellMarks(abcdSpace(p), rangeMask(1, p.n), grid);
+  for (let i = 0; i < grid.length; i++)
+    m.cands[i] = grid[i] ? 1 << grid[i] : shown[i] << 1;
+  const got = ladder.entries.find((e) => e.id === id)?.run.firings?.(m);
+  if (got === undefined || got === "contradiction") return [];
+  return got.map(({ facts, reasons }) => {
+    const { line, d, clue } = reasons[0] as LineReason;
+    const cells: number[] = [];
+    for (let i = 0; i < facts.length; i += 3) cells.push(facts[i + 1]);
+    return { line, n: d, clue, cells };
+  });
 }
 
 type Rung = CandidateRung<AbcdMove, AbcdHint, DeductionRecord, AbcdReason>;
@@ -250,31 +211,38 @@ export function buildSteps(
 
   // Both line rungs strike or place notes, so they wait for the setup; the
   // runs technique is the solver's last resort, so it waits for the others.
+  const lines = linesOf(p);
+  const ladder = abcdLadder(p, dealtOf(p, state.numbers));
   const satisfied: Rung = ({ populated, shown }) =>
     populated
-      ? [...satisfiedLines(p, grid, shown, state.numbers)].map(
-          ({ line, n, clue, struck }): AbcdFiring => [
+      ? lineFirings(p, ladder, grid, shown, "satisfied").map(
+          ({ line, n, clue, cells }): AbcdFiring => [
             {
-              strike: struck.map((i) => ({ ...cellOf(i), n })),
-              reason: { kind: "satisfied", line, n, clue },
+              strike: cells.map((i) => ({ ...cellOf(i), n })),
+              reason: { kind: "satisfied", line: lines[line], n, clue },
             },
           ],
         )
       : [];
   const packed: Rung = ({ populated, nothingEarlier, shown }) =>
     populated && nothingEarlier
-      ? [...packedLines(p, grid, shown, state.numbers)].map(
-          ({ line, n, need, more, open, forced }): AbcdFiring => {
+      ? lineFirings(p, ladder, grid, shown, "runs").map(
+          ({ line: L, n, clue, cells }): AbcdFiring => {
+            const line = lines[L];
+            const placed = line.cells.filter((i) => grid[i] === n).length;
+            const open = line.cells.filter(
+              (i) => grid[i] === 0 && (shown[i] & letterBit(n - 1)) !== 0,
+            );
             const reason: AbcdReason = {
               kind: "packed",
               line,
               n,
-              need,
-              more,
-              only: forced.length === open.length,
+              need: clue - placed,
+              more: placed > 0,
+              only: cells.length === open.length,
               open: open.map(cellOf),
             };
-            return forced.map((i) => ({ place: { ...cellOf(i), n }, reason }));
+            return cells.map((i) => ({ place: { ...cellOf(i), n }, reason }));
           },
         )
       : [];

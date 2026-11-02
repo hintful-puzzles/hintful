@@ -1,33 +1,14 @@
 /**
- * The ABCD deductive solver — idiomatic port of `abcd_solve_game` (`abcd.c`).
+ * ABCD's solver: the ladder `abcd.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/ladder-runtime.ts`), the answer check
+ * its rules compile to, and the search beneath the ladder.
  *
- * A fixpoint of three deduction techniques over a working grid, a per-cell
- * candidate cube and a `remaining[]` count per (row/column, letter):
- *
- *  1. **Satisfied clue** — when a line already holds its full count of a letter
- *     (`remaining === 0`), rule that letter out of every cell in that line.
- *  2. **Single possibility** — a cell with exactly one surviving candidate is
- *     that letter; place it.
- *  3. **Runs** ({@link runsForce}) — within a line, partition the still-open
- *     cells where a letter is a candidate into maximal runs; a run of length L
- *     can hold at most `⌈L/2⌉` copies without two touching. When the summed
- *     maximum over a line equals the required count, every odd-length run is
- *     forced onto its even offsets.
- *
- * The three are a `runDeductionFixpoint` ladder. Upstream's loop reruns 1+2 in
- * one pass and tries 3 only when neither fired (`if (busy) continue;`), which
- * is the runner's restart-at-first-firing walk under another name: 1 retires
- * the lines it finds and places nothing, so running it again straight after
- * itself finds nothing.
- *
- * This is arithmetic over the candidate cube, not a Latin square: the
- * constraint is a per-line count plus a no-touch rule, so `engine/latin.ts`
- * does not apply.
- *
- * Upstream has no diagonal-specific techniques (the runs technique ignores
- * diagonal adjacency). That weaker solver is the difficulty curve it shipped,
- * not a defect to fix, and it still generates valid diag puzzles because
- * {@link placeLetter} rules out diagonal neighbors.
+ * The ladder is upstream's three techniques (`abcd_solve_game`): a line
+ * holding its count of a letter, a square down to one letter, and the runs
+ * a line's open squares for a letter fall into. A placed letter leaves the
+ * squares beside it, and diagonally beside it on a board with no diagonal
+ * touching. Upstream has no technique of its own for the diagonals: that
+ * weaker solver is the difficulty curve it shipped.
  *
  * Beneath the ladder, a search by trial and error over it
  * ({@link searchAnswers}) counts a clue set's answers. It is what an
@@ -38,21 +19,37 @@
 import {
   type Answer,
   answerCache,
+  type Deduced,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
+import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
-  type DeductionTechnique,
-  type FiringTally,
-  runDeductionFixpoint,
-} from "../../engine/deduction-fixpoint.ts";
+  clueList,
+  describedSpace,
+  type GridSpace,
+  perPlace,
+  popcount,
+  rangeMask,
+} from "../../engine/describe-runtime.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  runLadder,
+  TIERS,
+  uncluedPlacingRung,
+  uncluedRung,
+} from "../../engine/ladder-runtime.ts";
+import * as abcd from "./abcd.compiled.ts";
 import {
   type AbcdParams,
-  cuboid,
+  type AbcdState,
   EMPTY,
   horClue,
   letterBit,
   NO_NUMBER,
-  validatePuzzle,
   verClue,
 } from "./state.ts";
 
@@ -70,10 +67,10 @@ export interface AbcdMark {
  * A penciled candidate `c` in an empty cell is struck when either:
  *   - an orthogonal (or, under `diag`, diagonal) neighbor already holds `c`; or
  *   - `c`'s row or column already holds its full clue count of `c`.
- * Both are the solver's cheapest deductions (technique 1 and
- * {@link placeLetter}'s neighbor rule-outs), so a struck mark is never one a
- * legal solution could keep. Like `obviousCandidateMarks`, it never strikes a
- * cell's last remaining candidate.
+ * Both are the ladder's cheapest deductions (the placement's strikes and
+ * `satisfied`), so a struck mark is never one a legal solution could keep.
+ * Like `obviousCandidateMarks`, it never strikes a cell's last remaining
+ * candidate.
  */
 export function abcdObviousMarks(
   p: AbcdParams,
@@ -150,245 +147,150 @@ export interface AbcdSolveResult {
   grid: Int8Array;
 }
 
-/**
- * Place `letter` at `(x, y)`: set the grid cell, rule the other letters out of
- * the cell and `letter` out of its orthogonal (and, under `diag`, diagonal)
- * neighbors, and, when `remaining` is supplied, decrement the letter's row and
- * column counts. The generator passes no `remaining`, using it only to keep a
- * partial fill no-touch-legal. Upstream's `abcd_place_letter`.
- */
-export function placeLetter(
+/** The variations a board has on, by the description's names. */
+function variationsOf(p: AbcdParams): string[] {
+  return p.diag ? ["no diagonal"] : [];
+}
+
+/** The board's numbers as the description deals them: each shown number at
+ * its line, for its letter, a letter one more than its index. */
+export function dealtOf(p: AbcdParams, numbers: Int32Array): abcd.Dealt {
+  const at: number[] = [];
+  const v: number[] = [];
+  numbers.forEach((clue, i) => {
+    if (clue === NO_NUMBER) return;
+    at.push(perPlace((i / p.n) | 0, (i % p.n) + 1));
+    v.push(clue);
+  });
+  return { count: clueList(at, v, perPlace(p.w + p.h, 0)), n: p.n };
+}
+
+/** Why a line's technique fired, for the hint: the line, the letter (one
+ * more than its index), and the line's number for it. */
+export interface LineReason {
+  kind: "satisfied" | "runs";
+  line: number;
+  d: number;
+  clue: number;
+}
+
+/** The ladder over the dealt numbers, each technique with its reason. */
+export function abcdLadder(p: AbcdParams, dl: abcd.Dealt): Ladder {
+  return describedLadder(
+    abcd,
+    {
+      placed: uncluedPlacingRung(abcd.placed),
+      placedDiagonal: uncluedPlacingRung(abcd.placedDiagonal),
+      satisfied: compiledRung(
+        abcd.satisfied,
+        dl,
+        ({ L, d, v }): LineReason => ({ kind: "satisfied", line: L, d, clue: v }),
+      ),
+      single: uncluedRung(abcd.single, () => ({ kind: "single" })),
+      runs: compiledRung(
+        abcd.runs,
+        dl,
+        ({ L, d, v }): LineReason => ({ kind: "runs", line: L, d, clue: v }),
+      ),
+    },
+    undefined,
+    variationsOf(p),
+  );
+}
+
+/** The space a board's ladder runs on. */
+export function abcdSpace(p: AbcdParams): GridSpace {
+  return describedSpace(abcd.units, p.w, p.h);
+}
+
+/** The marks over `grid`, every letter open in every empty cell and each
+ * letter on it placed; `null` where two of them clash. */
+export function abcdMarks(
   p: AbcdParams,
   grid: Int8Array,
-  cube: Uint8Array,
-  x: number,
-  y: number,
-  letter: number,
-  remaining?: Int32Array,
-): void {
-  const { w, h, n, diag } = p;
-  grid[y * w + x] = letter + 1;
-
-  // Rule out all other letters in this square.
-  for (let i = 0; i < n; i++) {
-    if (i !== letter) cube[cuboid(x, y, i, n, w)] = 0;
-  }
-
-  // Rule out this letter for adjacent squares.
-  if (diag && x > 0 && y > 0) cube[cuboid(x - 1, y - 1, letter, n, w)] = 0;
-  if (diag && x < w - 1 && y > 0) cube[cuboid(x + 1, y - 1, letter, n, w)] = 0;
-  if (diag && x > 0 && y < h - 1) cube[cuboid(x - 1, y + 1, letter, n, w)] = 0;
-  if (diag && x < w - 1 && y < h - 1) cube[cuboid(x + 1, y + 1, letter, n, w)] = 0;
-  if (x > 0) cube[cuboid(x - 1, y, letter, n, w)] = 0;
-  if (x < w - 1) cube[cuboid(x + 1, y, letter, n, w)] = 0;
-  if (y > 0) cube[cuboid(x, y - 1, letter, n, w)] = 0;
-  if (y < h - 1) cube[cuboid(x, y + 1, letter, n, w)] = 0;
-
-  if (remaining) {
-    const row = horClue(y, letter, n);
-    const col = verClue(x, letter, n, h);
-    if (remaining[row] !== NO_NUMBER) remaining[row]--;
-    if (remaining[col] !== NO_NUMBER) remaining[col]--;
-  }
+  ladder: Ladder,
+): CellMarks | null {
+  const m = new CellMarks(abcdSpace(p), rangeMask(1, p.n), grid);
+  m.placing = ladder.placing;
+  return m.seed(grid) ? m : null;
 }
 
-/** A maximal stretch of a line's open positions: where it starts, and how
- * many positions long it is. */
-export interface Run {
-  start: number;
-  length: number;
-}
-
-/**
- * The runs technique's arithmetic, for one line and one letter: the maximal
- * runs of `open` positions (where the letter may still go), and the positions
- * they force when the line needs `req` more copies. A run of length L holds at
- * most `⌈L/2⌉` copies without two touching, so when those maxima sum to `req`
- * every run must be full, and a full run of odd length has only one shape:
- * every other position, from its first. An even run can be full two ways, so it
- * forces nothing. `forced` is empty when the maxima exceed `req`.
- *
- * The solver and the hint both take the technique from here, so the sentence a
- * hint speaks about a line is the one the solver acted on.
- */
-export function runsForce(
-  open: readonly boolean[],
-  req: number,
-): { runs: Run[]; most: number; forced: number[] } {
-  const runs: Run[] = [];
-  for (let b = 0; b < open.length; b++) {
-    if (!open[b]) continue;
-    const last = runs[runs.length - 1];
-    if (last && last.start + last.length === b) last.length++;
-    else runs.push({ start: b, length: 1 });
-  }
-  let most = 0;
-  for (const r of runs) most += (r.length + 1) >> 1;
-  const forced: number[] = [];
-  if (most === req)
-    for (const r of runs)
-      if (r.length & 1)
-        for (let b = r.start; b < r.start + r.length; b += 2) forced.push(b);
-  return { runs, most, forced };
-}
-
-/** The solver's working board: the grid, the candidate cube, and how many more
- * of each letter each line still needs (`NO_NUMBER` once retired). */
-export interface SolverBoard {
-  p: AbcdParams;
+/** Whether the board is solved: every square a letter, by the rules the
+ * description compiles to. */
+export function isCompleted(state: {
+  params: AbcdParams;
   grid: Int8Array;
-  cube: Uint8Array;
-  remaining: Int32Array;
-  /** A cell was found with no candidate left. */
-  contradiction: boolean;
+  numbers: Int32Array;
+}): boolean {
+  const p = state.params;
+  return abcd.isAnswer(
+    state.grid,
+    abcdSpace(p),
+    dealtOf(p, state.numbers),
+    variationsOf(p),
+  );
 }
 
-/** A blank board over `numbers`, every candidate open. */
-export function newSolverBoard(p: AbcdParams, numbers: Int32Array): SolverBoard {
-  const a = p.w * p.h;
-  return {
-    p,
-    grid: new Int8Array(a),
-    cube: new Uint8Array(a * p.n).fill(1),
-    remaining: Int32Array.from(numbers),
-    contradiction: false,
-  };
+export function status(state: AbcdState): "solved" | "ongoing" {
+  return isCompleted(state) ? "solved" : "ongoing";
 }
 
-/** Technique 1: retire every line already holding its full count of a letter,
- * ruling the letter out of the whole line. Returns the lines retired. */
-function solverSatisfied(b: SolverBoard): number {
-  const { p, cube, remaining } = b;
-  const { w, h, n } = p;
-  let fired = 0;
-  for (let c = 0; c < n; c++) {
-    for (let y = 0; y < h; y++) {
-      if (remaining[horClue(y, c, n)] === 0) {
-        fired++;
-        remaining[horClue(y, c, n)] = NO_NUMBER;
-        for (let x = 0; x < w; x++) cube[cuboid(x, y, c, n, w)] = 0;
-      }
-    }
-    for (let x = 0; x < w; x++) {
-      if (remaining[verClue(x, c, n, h)] === 0) {
-        fired++;
-        remaining[verClue(x, c, n, h)] = NO_NUMBER;
-        for (let y = 0; y < h; y++) cube[cuboid(x, y, c, n, w)] = 0;
-      }
-    }
-  }
-  return fired;
-}
-
-/** Technique 2: place every cell down to one candidate, returning how many. A
- * cell with none sets `contradiction` and the sweep carries on, as upstream's
- * does. */
-function solverSingles(b: SolverBoard): number {
-  const { p, grid, cube, remaining } = b;
-  const { w, h, n } = p;
-  let placed = 0;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      if (grid[y * w + x] !== EMPTY) continue;
-      let only = -1;
-      let multiple = false;
-      for (let c = 0; c < n; c++) {
-        if (cube[cuboid(x, y, c, n, w)]) {
-          if (only === -1) only = c;
-          else multiple = true;
-        }
-      }
-      if (only === -1) {
-        b.contradiction = true; // a cell with no candidate
-      } else if (!multiple) {
-        placed++;
-        placeLetter(p, grid, cube, x, y, only, remaining);
-      }
-    }
-  }
-  return placed;
-}
-
-/** Technique 3 (`abcd_solver_runs`), one letter `c` across every row
- * (`horizontal`) or column. Returns the lines it placed letters in. */
-function solverRunsLines(b: SolverBoard, horizontal: boolean, c: number): number {
-  const { p, grid, cube, remaining } = b;
-  const { w, h, n } = p;
-  const amx = horizontal ? h : w;
-  const bmx = horizontal ? w : h;
-  let fired = 0;
-
-  for (let a = 0; a < amx; a++) {
-    const req = horizontal
-      ? remaining[horClue(a, c, n)]
-      : remaining[verClue(a, c, n, h)];
-    if (req === NO_NUMBER || req === 0) continue;
-
-    const at = (k: number): [number, number] => (horizontal ? [k, a] : [a, k]);
-    const open = Array.from({ length: bmx }, (_, k) => {
-      const [x, y] = at(k);
-      return cube[cuboid(x, y, c, n, w)] === 1 && grid[y * w + x] === EMPTY;
-    });
-    const { forced } = runsForce(open, req);
-    if (forced.length === 0) continue;
-    fired++;
-    for (const k of forced) {
-      const [x, y] = at(k);
-      placeLetter(p, grid, cube, x, y, c, remaining);
-    }
-  }
-  return fired;
-}
-
-/** Technique 3 over every letter, both directions. */
-function solverRuns(b: SolverBoard): number {
-  let fired = 0;
-  for (let c = 0; c < b.p.n; c++) {
-    fired += solverRunsLines(b, true, c);
-    fired += solverRunsLines(b, false, c);
-  }
-  return fired;
-}
-
-/** The three rungs, easiest first. Untiered: ABCD grades nothing, so every
- * rung is tier 0. The ids are what `abcd-ladder.test.ts` takes its census over. */
-function abcdLadder(b: SolverBoard): DeductionTechnique[] {
-  return [
-    { id: "satisfied", tier: 0, run: () => solverSatisfied(b) },
-    {
-      id: "singles",
-      tier: 0,
-      run: () => {
-        const placed = solverSingles(b);
-        return b.contradiction ? -1 : placed;
-      },
-    },
-    { id: "runs", tier: 0, run: () => solverRuns(b) },
-  ];
-}
-
-/** Classify the settled board. */
-function verdict(b: SolverBoard, numbers: Int32Array): AbcdSolveResult {
-  if (b.contradiction) return { status: "contradiction", grid: b.grid };
-  const v = validatePuzzle(b.p, b.grid, numbers);
-  const status: SolveStatus =
-    v === 0 ? "solved" : v === -1 ? "contradiction" : "ambiguous";
-  return { status, grid: b.grid };
-}
-
-/** Run the ladder on `b` to a fixpoint and classify the result. */
-export function solveBoard(
-  b: SolverBoard,
-  numbers: Int32Array,
+/** Run the ladder on `m` to a fixpoint and say what it reached. */
+function deduce(
+  m: CellMarks,
+  ladder: Ladder,
+  p: AbcdParams,
+  dl: abcd.Dealt,
   firings?: FiringTally,
-): AbcdSolveResult {
-  runDeductionFixpoint({ techniques: abcdLadder(b), firings });
-  return verdict(b, numbers);
+): Deduced {
+  const techniques = ladderTechniques(m, ladder.entries, { [TIERS]: 0 }, {});
+  if (runLadder(m, techniques, { firings })) return "contradiction";
+  if (m.grid.includes(EMPTY)) return "stuck";
+  return abcd.isAnswer(m.grid, m.sp, dl, variationsOf(p)) ? "solved" : "contradiction";
 }
 
 /** Run the deductive solver on `numbers` from a blank board. */
-export function solveAbcd(p: AbcdParams, numbers: Int32Array): AbcdSolveResult {
-  return solveBoard(newSolverBoard(p, numbers), numbers);
+export function solveAbcd(
+  p: AbcdParams,
+  numbers: Int32Array,
+  firings?: FiringTally,
+): AbcdSolveResult {
+  const dl = dealtOf(p, numbers);
+  const ladder = abcdLadder(p, dl);
+  const grid = new Int8Array(p.w * p.h);
+  const m = abcdMarks(p, grid, ladder) as CellMarks;
+  const got = deduce(m, ladder, p, dl, firings);
+  const status: SolveStatus =
+    got === "solved" ? "solved" : got === "stuck" ? "ambiguous" : "contradiction";
+  return { status, grid };
+}
+
+/**
+ * A grid of letters with none beside its twin (nor diagonally, under `diag`),
+ * each square's letter drawn from those its neighbors so far leave it, in
+ * reading order: what a board's numbers are counted from.
+ */
+export function drawAnswer(
+  p: AbcdParams,
+  pick: (letters: number) => number,
+): Int8Array {
+  const grid = new Int8Array(p.w * p.h);
+  const hidden = new Int32Array((p.w + p.h) * p.n).fill(NO_NUMBER);
+  const ladder = abcdLadder(p, dealtOf(p, hidden));
+  const m = abcdMarks(p, grid, ladder) as CellMarks;
+  for (const c of m.sp.cells) {
+    const cands = m.cand(c);
+    let k = pick(popcount(cands));
+    let d = 0;
+    for (let bits = cands; bits !== 0; bits &= bits - 1) {
+      if (k-- === 0) {
+        d = 31 - Math.clz32(bits & -bits);
+        break;
+      }
+    }
+    m.place(c, d);
+  }
+  return grid;
 }
 
 /** What a search established about a clue set's answers; the one answer is
@@ -411,60 +313,44 @@ const SEARCH_BUDGET = 2_000;
 
 /**
  * Count a clue set's answers up to two, by trial and error over the ladder:
- * where it stops, take the empty cell with the fewest letters left and assume
- * each in turn.
+ * where it stops, take the empty cell with the fewest letters left, the first
+ * such in reading order, and assume each in turn.
  */
 export function searchAnswers(
   p: AbcdParams,
   numbers: Int32Array,
   budget: number = SEARCH_BUDGET,
 ): AbcdAnswer {
-  return searchBoard<SolverBoard, Int8Array>({
-    start: newSolverBoard(p, numbers),
-    deduce(b) {
-      const { status } = solveBoard(b, numbers);
-      if (status !== "ambiguous") return status;
-      // The ladder calls a full grid that leaves a count short ambiguous:
-      // nothing breaks a rule yet. With no cell left, nothing will mend it.
-      return b.grid.includes(EMPTY) ? "stuck" : "contradiction";
-    },
-    assume: assumeLetters,
-    solution: (b) => b.grid,
+  const dl = dealtOf(p, numbers);
+  const ladder = abcdLadder(p, dl);
+  return searchBoard<CellMarks, Int8Array>({
+    start: abcdMarks(p, new Int8Array(p.w * p.h), ladder) as CellMarks,
+    deduce: (m) => deduce(m, ladder, p, dl),
+    assume: (m) => assumeLetters(m, ladder),
+    solution: (m) => m.grid as Int8Array,
     budget,
   });
 }
 
-/** The boards a stuck one divides into: its empty cell with the fewest
+/** The positions a stuck one divides into: its empty cell with the fewest
  * candidates, the first such in reading order, holding each of them. */
-function assumeLetters(b: SolverBoard): SolverBoard[] {
-  const { p, grid, cube } = b;
-  const { w, n } = p;
-  const candidates = (i: number): number[] => {
-    const letters: number[] = [];
-    for (let c = 0; c < n; c++) if (cube[i * n + c]) letters.push(c);
-    return letters;
-  };
-  let fewest: number[] | null = null;
+function assumeLetters(m: CellMarks, ladder: Ladder): CellMarks[] {
   let at = -1;
-  for (let i = 0; i < grid.length; i++) {
-    if (grid[i] !== EMPTY) continue;
-    const letters = candidates(i);
-    if (fewest === null || letters.length < fewest.length) {
-      fewest = letters;
-      at = i;
+  let fewest = 33;
+  for (let c = 0; c < m.grid.length; c++)
+    if (m.grid[c] === EMPTY && popcount(m.cands[c]) < fewest) {
+      at = c;
+      fewest = popcount(m.cands[c]);
     }
+  const out: CellMarks[] = [];
+  for (let bits = at < 0 ? 0 : m.cands[at]; bits !== 0; bits &= bits - 1) {
+    const sub = new CellMarks(m.sp, m.domain, m.grid.slice());
+    sub.placing = ladder.placing;
+    sub.cands.set(m.cands);
+    sub.place(at, 31 - Math.clz32(bits & -bits));
+    out.push(sub);
   }
-  return (fewest ?? []).map((letter) => {
-    const next: SolverBoard = {
-      p,
-      grid: grid.slice(),
-      cube: cube.slice(),
-      remaining: b.remaining.slice(),
-      contradiction: false,
-    };
-    placeLetter(p, next.grid, next.cube, at % w, (at / w) | 0, letter, next.remaining);
-    return next;
-  });
+  return out;
 }
 
 /** Keyed on a state's clues, which every state of a game shares. */

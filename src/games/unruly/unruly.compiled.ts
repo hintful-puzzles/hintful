@@ -12,8 +12,10 @@ export type LadderId = "threes" | "lastGap" | "quota" | "lastOne" | "unique";
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
-/** The techniques run as each value is placed, in the description's order. */
-export const placing: readonly PlacingId[] = [];
+/** The techniques run as each value is placed, in the description's order,
+ * each with the variation that adds it where one does. */
+export const placing: readonly { id: PlacingId; variation?: string }[] = [
+];
 
 /** The ladder: each technique's tier, on its scale where that is not the
  * description's tiers, the least cap it runs at where that is above its

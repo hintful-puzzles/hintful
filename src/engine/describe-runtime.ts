@@ -76,6 +76,19 @@ export function clueList(
   return { at: Int32Array.from(at), v: Int32Array.from(v), byAt };
 }
 
+/** Where a clue of a kind dealt once for each value (`per: value`) sits: at
+ * its element `x` for the value `d`, both read back by {@link perElement}
+ * and {@link perValue}. A value fits the candidate bitmask's 31 bits. */
+export function perPlace(x: number, d: number): number {
+  return x * 32 + d;
+}
+export function perElement(place: number): number {
+  return place >> 5;
+}
+export function perValue(place: number): number {
+  return place & 31;
+}
+
 /** `clue(kind, x)`: the value of the clue at `x`, or `-1`. */
 export function clueAt(list: ClueList, x: number): number {
   const k = x < 0 ? -1 : list.byAt[x];
@@ -492,6 +505,23 @@ export function sameSet(a: readonly number[], b: readonly number[]): boolean {
 export function before(x: number, L: readonly number[]): readonly number[] {
   const i = L.indexOf(x);
   return i < 0 ? [] : L.slice(0, i);
+}
+
+/** `stretch(L, c, S)`: the cells of the line `L` round `c`, in `L`'s order,
+ * each in `S` with none outside it between: the maximal run of `S` along `L`
+ * holding `c`, none where `S` or `L` does not hold `c`. */
+export function stretch(
+  L: readonly number[],
+  c: number,
+  S: readonly number[],
+): readonly number[] {
+  const i = L.indexOf(c);
+  if (i < 0 || !S.includes(c)) return [];
+  let a = i;
+  while (a > 0 && S.includes(L[a - 1])) a--;
+  let b = i + 1;
+  while (b < L.length && S.includes(L[b])) b++;
+  return L.slice(a, b);
 }
 
 /** `ray(c, n)`: the cells from `n` on, each a step from `c` to `n` further,

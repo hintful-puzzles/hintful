@@ -231,11 +231,9 @@ what it buys beyond it.
 that the game must break.** A reason that describes a loop's syntax ("drains
 a queue", "three-valued early-out", "grades by a constant") is not one. A
 cost accumulated across firings, a flag standing in for a `-1` return, a
-pre-pass at the top of each iteration, a verdict richer than a boolean, and
-a sweep of the whole ladder before restarting have each adopted, because a
-technique can hold state and guard itself; the table under § "The deduction
-fixpoint" names where for the first four, and the last is
-[`abcd/solver.ts`](../src/games/abcd/solver.ts). The solvers that break a
+pre-pass at the top of each iteration and a verdict richer than a boolean
+have each adopted, because a technique can hold state and guard itself; the
+table under § "The deduction fixpoint" names where. The solvers that break a
 promise, and the promise each breaks, are listed in
 [`engine/deduction-fixpoint.ts`](../src/engine/deduction-fixpoint.ts)'s
 header.
