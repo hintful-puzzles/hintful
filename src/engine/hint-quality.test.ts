@@ -205,7 +205,7 @@ const LONG_NARRATIONS: {
       "line needing several poles (name-every-reference-by-its-mark).",
     spokenOn: {
       magnets:
-        "7x8deS:.43....,...434..,2..4344,2....33.,LRTLRLRTTBLRTTBBTLRBBLRBLRTTTLRLRBBBTLRLRTTBLRLRBBLRLRLR",
+        "7x8dtS:.24.32.,312....2,...2.3.,.1.21.24,LRTTLRTLRBBLRBLRTTTLRLRBBBLRLRTLRTTLRBLRBBLRTLRTTLRBLRBB",
     },
   },
   {
