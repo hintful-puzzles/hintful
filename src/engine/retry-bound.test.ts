@@ -132,7 +132,7 @@ const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
     "rejection sampling over colors, and validateParams keeps the pegs no more than the colors",
   ],
   "games/mines/generator.ts › minegen": ["counts down the mines to lay"],
-  "games/mines/solver.ts › minesolve": [
+  "games/mines/solver.ts › ladderSolve": [
     "each pass deduces a square or perturbs, and a perturbation settles the set it was asked about or gives up",
   ],
   "games/net/generator.ts › network": [
