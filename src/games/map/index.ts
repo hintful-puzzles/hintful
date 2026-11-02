@@ -89,7 +89,7 @@ import {
   regionFromCoords,
   regionFromUiCursor,
 } from "./render.ts";
-import { mapSolver, SOLVER_IMPOSSIBLE, SOLVER_UNIQUE } from "./solver.ts";
+import { isColored, mapSolver, SOLVER_IMPOSSIBLE, SOLVER_UNIQUE } from "./solver.ts";
 import {
   cloneState,
   DIFF_NAMES,
@@ -358,18 +358,6 @@ function interpretMove(
   return null;
 }
 
-function isComplete(s: MapState): boolean {
-  const n = s.params.n;
-  for (let i = 0; i < n; i++) if (s.coloring[i] < 0) return false;
-  const { graph, ngraph } = s.map;
-  for (let i = 0; i < ngraph; i++) {
-    const j = Math.floor(graph[i] / n);
-    const k = graph[i] % n;
-    if (s.coloring[j] === s.coloring[k]) return false;
-  }
-  return true;
-}
-
 function executeMove(s: MapState, m: MapMove): MapState {
   // A move is an op list, not a union, so there is no discriminant to narrow to
   // `never`: check the one field the dispatch reads (see `rejectMove`).
@@ -393,7 +381,7 @@ function executeMove(s: MapState, m: MapMove): MapState {
 }
 
 function status(s: MapState): GameStatus {
-  return isComplete(s) ? "solved" : "ongoing";
+  return isColored(s.map.graph, s.params.n, s.coloring) ? "solved" : "ongoing";
 }
 
 // --- solve / mistakes ------------------------------------------------
@@ -431,7 +419,7 @@ function solve(orig: MapState, curr: MapState, aux?: string): SolveResult<MapMov
   if (aux) return solveToMove(curr, solutionFromAux(aux, n));
 
   const coloring = clueColoring(orig);
-  const ret = mapSolver(orig.map.graph, n, orig.map.ngraph, coloring, DIFFCOUNT - 1);
+  const ret = mapSolver(orig.map.graph, n, coloring, DIFFCOUNT - 1);
   if (ret !== SOLVER_UNIQUE) {
     return {
       ok: false,
@@ -454,10 +442,7 @@ function solve(orig: MapState, curr: MapState, aux?: string): SolveResult<MapMov
 function findMistakes(state: MapState): readonly MapMistake[] {
   const n = state.params.n;
   const coloring = clueColoring(state);
-  if (
-    mapSolver(state.map.graph, n, state.map.ngraph, coloring, DIFFCOUNT - 1) !==
-    SOLVER_UNIQUE
-  )
+  if (mapSolver(state.map.graph, n, coloring, DIFFCOUNT - 1) !== SOLVER_UNIQUE)
     return [];
 
   return entryMistakes(
@@ -487,7 +472,7 @@ function hint(
 const difficulty: DifficultyContract<MapParams> = {
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
-    const ret = mapSolver(s.map.graph, p.n, s.map.ngraph, clueColoring(s), cap);
+    const ret = mapSolver(s.map.graph, p.n, clueColoring(s), cap);
     if (ret === SOLVER_UNIQUE) return "solved";
     return ret === SOLVER_IMPOSSIBLE ? "impossible" : "unsolved";
   },

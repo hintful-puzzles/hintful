@@ -23,7 +23,7 @@ import type { MapData } from "./map-data.ts";
 
 // --- difficulty ------------------------------------------------------
 
-export const DIFF_EASY = 0;
+const DIFF_EASY = 0;
 export const DIFF_NORMAL = 1;
 export const DIFF_HARD = 2;
 export const DIFF_RECURSE = 3;

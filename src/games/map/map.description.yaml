@@ -89,3 +89,72 @@ help:
     A hint is refused while a color or a set of dots on the board
     contradicts the solution; those regions light up instead, exactly as
     they do for **Check & save**.
+name: Map
+family: coloring
+sizes:
+  # The regions, which are the board's cells: the squares the map is drawn
+  # on only deal which region borders which.
+  n: { min: 5, max: 99999 }
+space:
+  # A region's neighbors are the regions it shares a border with, which the
+  # map deals: no rectangle says them.
+  cells: "n"
+  units: []
+  relations:
+    borders: dealt
+answer:
+  # The four colors.
+  value: { sort: cell, domain: "range(1, 4)" }
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, 4)" }
+shape:
+  - "forall a in cells, b in borders(a): value(b) != value(a)"
+freedom: { kind: fill }
+deal:
+  borders: the map, regions grown from scattered squares, and which border which
+  givens: which regions show their color, fewer at higher tiers
+  tier: one of the tiers
+tiers: [Easy, Normal, Tricky, Unreasonable]
+techniques:
+  # A colored region's color leaves every region it borders.
+  - id: placed
+    on: place
+    tier: Easy
+    for: "c in cells where known(c), k in borders(c) where not known(k)"
+    conclude: "strike(k, value(c))"
+  # A region down to one color is that color. One with none left makes the
+  # marks inconsistent.
+  - id: lone
+    tier: Easy
+    for: "c in cells where not known(c) and |cand(c)| < 2"
+    conclude: "|cand(c)| = 1 and place(c, first(cand(c)))"
+  # Two bordering regions down to the same two colors use both, so a region
+  # bordering both is neither. One pair a firing.
+  - id: pair
+    tier: Normal
+    for: >-
+      a in cells where not known(a) and |cand(a)| = 2,
+      b in borders(a) where index(b, cells) > index(a, cells) and not known(b)
+      and cand(b) = cand(a)
+    conclude: >-
+      forall k in borders(a) where k in borders(b) and not known(k),
+      d in cand(a): strike(k, d)
+  # Every color but x the middle region m can be leaves x alone in a region
+  # it borders that is down to that color and x, so a region t bordering one
+  # such end for each cannot be x; where m could be x itself, t borders m
+  # too. E is the ends, the first of each kind that borders t.
+  - id: weigh
+    tier: Tricky
+    for: >-
+      m in cells where not known(m),
+      x in domain,
+      R = cand(m) - {x} where |R| >= 1
+      and (forall a in R: exists k in borders(m): not known(k) and cand(k) = {a, x}),
+      t in cells where t != m and not known(t) and x in cand(t)
+      and (x not in cand(m) or t in borders(m))
+      and (forall a in R: exists k in borders(m): not known(k) and cand(k) = {a, x}
+      and k != t and k in borders(t)),
+      E = set(first({k in borders(m) where not known(k) and cand(k) = {a, x}
+      and k != t and k in borders(t)}) over a in R)
+    conclude: "strike(t, x)"

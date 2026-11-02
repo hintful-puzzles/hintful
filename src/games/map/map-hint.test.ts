@@ -10,12 +10,12 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
+import { graphNeighbors } from "./graph.ts";
 import type { MapHint, MapHintStep } from "./hint.ts";
 import { hintKeepTrack, refreshHintStep } from "./hint.ts";
 import { colorName, colorsOf, REGION } from "./hint-text.ts";
 import { mapGame } from "./index.ts";
 import { COL_HINT_CELL } from "./render.ts";
-import { neighbors } from "./solver.ts";
 import type { MapMove, MapParams, MapState } from "./state.ts";
 
 /** Every arm the hint speaks: the cases of a rung that read differently. A
@@ -49,13 +49,15 @@ type Arm = (typeof ARMS)[number];
 /** The regions a step's words outline: a weighing's middle region first. */
 const evidenceOf = (step: MapHintStep) => stepMarks(step).of("outline", REGION);
 
+/** The regions `r` borders, read off the map's edge list. */
+const neighbors = (s: MapState, r: number): readonly number[] =>
+  graphNeighbors(s.map.graph, s.map.n)[r];
+
 /** What a region can still be, recomputed here rather than imported: its dots,
  * or all four without any, less its neighbors' colors. */
 function left(s: MapState, r: number): number {
-  const { graph, n, ngraph } = s.map;
   let p = s.pencil[r] || 0xf;
-  for (const k of neighbors(graph, n, ngraph, r))
-    if (s.coloring[k] >= 0) p &= ~(1 << s.coloring[k]);
+  for (const k of neighbors(s, r)) if (s.coloring[k] >= 0) p &= ~(1 << s.coloring[k]);
   return p;
 }
 
@@ -74,22 +76,21 @@ function armsOf(step: MapHintStep, s: MapState): Arm[] {
   const [t] = hl.targets;
   const dotted = s.pencil[t] !== 0;
   const ev = evidenceOf(step).map((e) => e.region);
-  const { graph, n, ngraph } = s.map;
   switch (step.rung) {
     case "fill":
     case "clean":
       return [];
-    case "onlyColorLeft": {
+    case "lone": {
       if (!dotted) return ["touches"];
-      const dead = [...neighbors(graph, n, ngraph, t)].some(
+      const dead = neighbors(s, t).some(
         (k) => s.coloring[k] >= 0 && s.pencil[t] & (1 << s.coloring[k]),
       );
       return [dead ? "deadDots" : "lastDot"];
     }
-    case "sharedPair":
+    case "pair":
       if (ev.length === 0) return [dotted ? "pairTrim" : "pairDot"];
       return ["color" in want ? "pairPlace" : dotted ? "pairStrike" : "pairMark"];
-    case "weighRegion": {
+    case "weigh": {
       if (ev.length === 0) return [dotted ? "weighTrim" : "weighDot"];
       const struck = left(s, t) & ~("color" in want ? 1 << want.color : want.dots);
       return [
@@ -212,13 +213,11 @@ const pinned = describeHintPins({
         '[{"ops":[{"op":"pencil","region":0,"bit":0},{"op":"pencil","region":0,"bit":1},{"op":"pencil","region":0,"bit":2},{"op":"pencil","region":0,"bit":3},{"op":"pencil","region":4,"bit":0},{"op":"pencil","region":4,"bit":1},{"op":"pencil","region":4,"bit":2},{"op":"pencil","region":4,"bit":3},{"op":"pencil","region":7,"bit":0},{"op":"pencil","region":7,"bit":1},{"op":"pencil","region":7,"bit":2},{"op":"pencil","region":7,"bit":3},{"op":"pencil","region":8,"bit":0},{"op":"pencil","region":8,"bit":1},{"op":"pencil","region":8,"bit":2},{"op":"pencil","region":8,"bit":3},{"op":"pencil","region":10,"bit":0},{"op":"pencil","region":10,"bit":1},{"op":"pencil","region":10,"bit":2},{"op":"pencil","region":10,"bit":3}]}]',
     },
     /** Held on 2877 of 2877 positions walked. */
-    onlyColorLeft:
-      "15x20n30de:gaabgbaadaeabadccafbccecgacagbhaacgcamaacadacbacaaaagadamaaacbaaibbaabbdibdaccdbaicaabiclaaaddbdlagdvaedbhfabcaacagagaccdacabaabcjaeadcadacakaaaldaabafabbbaaadababaaabcmbbcgbdbbabc,23a2e03d2b3b2a01b3a0",
+    lone: "15x20n30de:gaabgbaadaeabadccafbccecgacagbhaacgcamaacadacbacaaaagadamaaacbaaibbaabbdibdaccdbaicaabiclaaaddbdlagdvaedbhfabcaacagagaccdacabaabcjaeadcadacakaaaldaabafabbbaaadababaaabcmbbcgbdbbabc,23a2e03d2b3b2a01b3a0",
     /** Held on 1057 of 2877 positions walked. */
-    sharedPair:
-      "15x20n30dn:kadeeacalbaadbaddacaaaacedabcdaacadbaaaababbdabaabdbddaaadiaaaaabaabaacaaabaaaabadaaabfcacbacafbbacaccbaebbaeaccbadaacebcahabaaababaaagbaaccaaiccbcefblcabaaabcaabeaaebbabeaadaaaaeadbdbaaaahaabaaabgaabgbadaaaaecbacaaadaaaeaaaaciacdgadacah,0a1f302c3c01d21a3a",
+    pair: "15x20n30dn:kadeeacalbaadbaddacaaaacedabcdaacadbaaaababbdabaabdbddaaadiaaaaabaabaacaaabaaaabadaaabfcacbacafbbacaccbaebbaeaccbadaacebcahabaaababaaagbaaccaaiccbcefblcabaaabcaabeaaebbabeaadaaaaeadbdbaaaahaabaaabgaabgbadaaaaecbacaaadaaaeaaaaciacdgadacah,0a1f302c3c01d21a3a",
     /** Held on 530 of 2877 positions walked. */
-    weighRegion: {
+    weigh: {
       id: "15x20n30dh:faiaaaaaafdabamaacabacabdaabdabbacdbaafaaafeaaababbadbbdkaaalacaadcdgadabaaacaccahdabcbagbbbdaaaccbadaccdaafadbabbebcadadaacdcccacfacabbjadcacgaabdadbdadbfabahabbbabafcbabbagbaladabdecbaaaaabaaaaddaaaabaabbfbaabadalccac,02033322d31a303f11a022",
       moves:
         '[{"ops":[{"op":"color","region":9,"color":0}]},{"ops":[{"op":"color","region":11,"color":2}]}]',
@@ -256,8 +255,7 @@ function plan(state: MapState): MapHintStep[] {
 }
 
 function adjacent(s: MapState, a: number, b: number): boolean {
-  const { graph, n, ngraph } = s.map;
-  return [...neighbors(graph, n, ngraph, a)].includes(b);
+  return neighbors(s, a).includes(b);
 }
 
 const bits = (m: number): number => [0, 1, 2, 3].filter((c) => m & (1 << c)).length;
@@ -549,9 +547,8 @@ describe("map hint continuity", () => {
         const from = lastStart;
         const placed = last.filter((h) => "color" in h.want).map((h) => h.targets[0]);
         if (!from || placed.length === 0) return;
-        const { graph, n, ngraph } = s.map;
         const waiting = placed.some((p) =>
-          [...neighbors(graph, n, ngraph, p)].some(
+          neighbors(s, p).some(
             (k) =>
               s.coloring[k] < 0 && bits(left(s, k)) === 1 && bits(left(from, k)) > 1,
           ),
@@ -563,9 +560,7 @@ describe("map hint continuity", () => {
         const reads = [
           ...hl.targets,
           ...evidenceOf(step).map((e) => e.region),
-          ...[...neighbors(graph, n, ngraph, hl.targets[0])].filter(
-            (k) => s.coloring[k] >= 0,
-          ),
+          ...neighbors(s, hl.targets[0]).filter((k) => s.coloring[k] >= 0),
         ];
         expect(
           reads.some((r) => wrote.includes(r)),

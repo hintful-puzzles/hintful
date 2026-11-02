@@ -98,8 +98,11 @@ export function instantiate(d: Description, dealt: Dealt): Instance {
     if (m === null) throw new SyntaxError(`${d.json.game}: unknown partition ${how}`);
     regions[name] = blocks(num(m[1]), num(m[2]));
   }
+  const { grid } = d.json.space;
+  if (grid === undefined)
+    throw new Error(`${d.json.game}: the interpreter builds a grid, not cells alone`);
   const spec: SpaceSpec = {
-    grid: { w: num(d.json.space.grid.w), h: num(d.json.space.grid.h) },
+    grid: { w: num(grid.w), h: num(grid.h) },
     slots: d.json.space.slots,
     edges: d.json.space.edges,
     corners: d.json.space.corners,

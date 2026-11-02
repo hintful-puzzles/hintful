@@ -1021,6 +1021,12 @@ relation, stays off `runCandidatePlan`, which indexes cells by `(x, y)` on a
 stride `w`. It writes its own plan and takes the rest of the machinery as
 follows. Exemplar: [`map/hint.ts`](../src/games/map/hint.ts).
 
+- **The firings are the compiled rungs'.** The plan builds the marks from
+  the board's colors and dots, asks each technique for every firing it
+  could make (`Rung.firings`), and groups and narrates them itself; it
+  states no deduction of its own (`descriptions.md` § "The runtime a ladder
+  runs on").
+
 - **Both readings, with the preference.** A region's candidates are its
   dots, or with none every value less those a neighbor shows; under
   `populate` the plan opens with the Mark-all press as one fill-and-clean

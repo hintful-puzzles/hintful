@@ -683,11 +683,11 @@ asks whether its tier is named `Unreasonable`, and for a game with no
   the board, is the same look. Weighing every value of one element, each read
   by a look, and keeping what they all share, is a Check too. Exemplars:
   `findBreaks` and `findWeighed` in
-  [`path/solver.ts`](../src/games/path/solver.ts), and `weighWing` in
-  [`engine/wing.ts`](../src/engine/wing.ts), the XY- and XYZ-wing, where each
-  value of one element is read off the notes of an element it sees (Map's
-  regions by their dots, where a three-region forcing chain turned out to be
-  exactly that, and every candidate game's cells).
+  [`path/solver.ts`](../src/games/path/solver.ts), and the wing, the XY- and
+  XYZ-wing, where each value of one element is read off the notes of an
+  element it sees: the Latin library's `wing` over every candidate game's
+  cells, and Map's `weigh` over its regions by their dots, where a
+  three-region forcing chain turned out to be exactly that.
 - **A Tactic is legitimate at a middle tier**: a chain of local rules that
   assumes nothing, where every link is glanceable and the player has a
   notation for the links (`hints-marks.md` § "Give the facts a notation").

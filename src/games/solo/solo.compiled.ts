@@ -2,8 +2,9 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, type Partition, PLACE, STRIKE, clueAt, minus, nextOfSize, popcount, rangeMask, union, valuesOf } from "../../engine/describe-runtime.ts";
 
-/** What the board deals: its partitions by name, its clues by kind, and
- * the sizes a technique or the rules read that the grid does not give. */
+/** What the board deals: its partitions by name, its relations, a set of
+ * cells for each cell, its clues by kind, and the sizes a technique or the
+ * rules read that the grid does not give. */
 export interface Dealt {
   cage: Partition;
   total: ClueList;

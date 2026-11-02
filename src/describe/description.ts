@@ -32,7 +32,12 @@ export interface DescriptionJson {
   family: string;
   sizes: Record<string, { min: number; max: number }>;
   space: {
-    grid: { w: string; h: string };
+    /** The board as a rectangle, or, in its place, a count of cells with no
+     * geometry, whose neighbors are a relation the board deals. */
+    grid?: { w: string; h: string };
+    cells?: string;
+    /** Relations the board deals, each a set of cells for each cell. */
+    relations?: Record<string, "dealt">;
     slots?: boolean;
     edges?: boolean;
     corners?: boolean;

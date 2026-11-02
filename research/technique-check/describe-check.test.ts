@@ -335,6 +335,22 @@ const PLANTS: Record<string, Plant> = {
   },
   // A slot with two colors left read as settled to each.
   noRepeats: { for: "s in cells where |cand(s)| <= 2, d in cand(s)" },
+  // Map: a color struck from a neighbor's neighbor.
+  "map.placed": {
+    for: "c in cells where known(c), j in borders(c), k in borders(j) where k != c and not known(k)",
+  },
+  "map.lone": {
+    for: "c in cells where not known(c) and |cand(c)| < 3",
+    conclude: "|cand(c)| >= 1 and place(c, first(cand(c)))",
+  },
+  // Two regions down to one pair read as a pair where they do not border.
+  "map.pair": {
+    for: "a in cells where not known(a) and |cand(a)| = 2, b in cells where index(b, cells) > index(a, cells) and not known(b) and cand(b) = cand(a)",
+  },
+  // A middle region that could be x struck from where it does not reach.
+  "map.weigh": {
+    for: "m in cells where not known(m), x in domain, R = cand(m) - {x} where |R| >= 1 and (forall a in R: exists k in borders(m): not known(k) and cand(k) = {a, x}), t in cells where t != m and not known(t) and x in cand(t) and (forall a in R: exists k in borders(m): not known(k) and cand(k) = {a, x} and k != t and k in borders(t)), E = set(first({k in borders(m) where not known(k) and cand(k) = {a, x} and k != t and k in borders(t)}) over a in R)",
+  },
   // Mines: a number one mine short read as having all its mines.
   "mines.alone": {
     for: "k in clues(count), c = at(k), U = open(c), n = need(c) where |U| > 0 and (n <= 1 or n >= |U|)",

@@ -1,0 +1,16 @@
+ok  map        placed                         3  sound    (want sound   )     9 queries    0.0s
+ok  map        placed (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  map        placed                         4  sound    (want sound   )    16 queries    0.1s
+ok  map        placed (planted)               4  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  map        lone                           3  sound    (want sound   )     9 queries    0.0s
+ok  map        lone (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  map        lone                           4  sound    (want sound   )    16 queries    0.1s
+ok  map        lone (planted)                 4  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  map        pair                           3  sound    (want sound   )     8 queries    0.2s
+ok  map        pair (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  map        pair                           4  sound    (want sound   )    15 queries    2.4s
+ok  map        pair (planted)                 4  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  map        weigh                          3  sound    (want sound   )     9 queries    2.1s
+ok  map        weigh (planted)                3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  map        weigh                          4  sound    (want sound   )    16 queries   14.9s
+ok  map        weigh (planted)                4  unsound  (want unsound )     1 queries    0.2s   at cell 0

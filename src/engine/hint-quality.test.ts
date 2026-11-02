@@ -131,7 +131,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["map"],
-    rungs: ["weighRegion"],
+    rungs: ["weigh"],
     why: WING_NAMES_ITS_CELLS,
     spokenOn: {
       map: "15x20n30dh:faiaaaaaafdabamaacabacabdaabdabbacdbaafaaafeaaababbadbbdkaaalacaadcdgadabaaacaccahdabcbagbbbdaaaccbadaccdaafadbabbebcadadaacdcccacfacabbjadcacgaabdadbdadbfabahabbbabafcbabbagbaladabdecbaaaaabaaaaddaaaabaabbfbaabadalccac,02033322d31a303f11a022",

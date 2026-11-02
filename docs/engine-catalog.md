@@ -700,17 +700,11 @@ outline, and the candidate walk makes them premise. Exemplar:
 
 ### `wing.ts` — the XY- and XYZ-wing
 
-Reach for it when your notes are candidate sets. `weighWing` finds
-Sudoku's XY- and XYZ-wing over any elements that "see"
-each other: a middle element, an end per value it can take, each down to
-that value and `x`, and a target that sees every end, and the middle too
-where the middle could be `x`. The game supplies the elements, their
-candidate masks and the relation. It is a Check: each value is placed and
-the notes it touches read, nothing propagated. `latin.ts` runs it at the
-top deductive level and records a `LatinWingReason`, worded by
-`wingPremise` (`hint-text.ts`); Solo and Map call it with their own
-relations. A game whose hint can be a wing writes `{{wing}}` on its help
-page. Exemplar: `map/solver.ts`.
+Reach for it when your hint can be a wing: it holds what a help page says
+of one, and a game whose hint can be a wing writes `{{wing}}` on its help
+page. The technique is stated in a description, over whatever "sees" is
+there: the Latin library's `wing` over `peers`, worded by `wingPremise`
+(`hint-text.ts`), and Map's `weigh` over `borders`.
 
 ### `firing-replay.ts` — the premise audit
 

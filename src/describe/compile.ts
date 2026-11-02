@@ -1866,6 +1866,7 @@ function call(
       throw new CompileError(`${fn} takes 1, given ${args.length}`);
     const c = compileExpr(args[0], scope, env, out);
     expectElem(c, "cell", fn);
+    env.readsClues.yes = true;
     return { code: `cl.${fn}[${c.code}]`, sort: setOf(elem("cell")) };
   }
   const filling = scope.get(fn);
@@ -2704,6 +2705,10 @@ export function compileGame(
   const used = new Set<string>();
   const clues = new Map<string, ClueKind>();
   const { space } = d.json;
+  const grid = space.grid ?? null;
+  if ((grid === null) === (space.cells === undefined))
+    throw new CompileError(`${json.game}: a space is a grid or cells, one of them`);
+  const relations = Object.keys(space.relations ?? {});
   const parts = Object.keys(space.regions ?? {});
   const unitParts = parts.filter((name) => space.units.includes(name));
   if (unitParts.length > 1)
@@ -2730,11 +2735,8 @@ export function compileGame(
       names: new Set(
         Object.keys(d.json.sizes).filter(
           (n) =>
-            n !== "order" &&
-            n !== "w" &&
-            n !== "h" &&
-            n !== space.grid.w &&
-            n !== space.grid.h,
+            grid === null ||
+            (n !== "order" && n !== "w" && n !== "h" && n !== grid.w && n !== grid.h),
         ),
       ),
       read: new Set(),
@@ -2746,7 +2748,7 @@ export function compileGame(
     position: null,
     carrying: null,
     tables: new Map(),
-    geometry: true,
+    geometry: grid !== null,
     faces: null,
     memo: false,
     scratch: null,
@@ -2754,7 +2756,7 @@ export function compileGame(
     hoist: null,
     epoch: null,
     prelude: null,
-    relations: new Set(),
+    relations: new Set(relations),
   };
   for (const [kind, c] of d.clueKinds) clues.set(kind, clueSorts(kind, c, env));
   const domainLines = cellDomain(d.domain, env, d.json.sizes);
@@ -2764,13 +2766,15 @@ export function compileGame(
   const scales = Object.entries(d.json.scales ?? {});
   const sizes = [...env.sizes.read].sort();
   const clueLines =
-    clues.size + regions.size + sizes.length === 0
+    clues.size + regions.size + relations.length + sizes.length === 0
       ? []
       : [
-          "/** What the board deals: its partitions by name, its clues by kind, and",
-          " * the sizes a technique or the rules read that the grid does not give. */",
+          "/** What the board deals: its partitions by name, its relations, a set of",
+          " * cells for each cell, its clues by kind, and the sizes a technique or the",
+          " * rules read that the grid does not give. */",
           "export interface Dealt {",
           ...[...regions].map((r) => `  ${r}: Partition;`),
+          ...relations.map((r) => `  readonly ${r}: readonly (readonly number[])[];`),
           ...[...clues].map(
             ([k, c]) => `  ${k}: ${c.fields ? recordsType(c.fields) : "ClueList"};`,
           ),
@@ -2876,7 +2880,9 @@ function answerCheck(json: DescriptionJson, d: Description, env: Env): string[] 
     concluding: false,
   };
   const out = new Out(1);
-  const measured = measuredBy(json.space.grid);
+  // A board of cells alone is measured in nothing.
+  const { grid } = json.space;
+  const measured = grid === undefined ? (e: Expr) => e : measuredBy(grid);
   const scope = new Map<string, Val>();
   out.open("for (const cell of sp.cells) {");
   out.emit("const held = g[cell];");

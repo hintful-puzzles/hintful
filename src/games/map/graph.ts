@@ -3,8 +3,8 @@
  *
  * The graph is a sorted edge list: each adjacency `(i, j)` is stored **twice**,
  * once as the value `i*n + j` and once as `j*n + i`, in ascending order. This
- * lets `graphVertexStart` binary-search the first edge leaving a vertex and
- * `graphEdgeIndex` binary-search a specific edge.
+ * lets `graphEdgeIndex` binary-search a specific edge, and lists each region's
+ * neighbors lowest first.
  */
 
 /**
@@ -73,33 +73,4 @@ export function graphEdgeIndex(
     else top = mid;
   }
   return -1;
-}
-
-/** True iff regions `i` and `j` are adjacent. */
-export function graphAdjacent(
-  graph: Int32Array,
-  n: number,
-  ngraph: number,
-  i: number,
-  j: number,
-): boolean {
-  return graphEdgeIndex(graph, n, ngraph, i, j) >= 0;
-}
-
-/** Index of the first edge leaving vertex `i` (the run `[i*n, (i+1)*n)`). */
-export function graphVertexStart(
-  graph: Int32Array,
-  n: number,
-  ngraph: number,
-  i: number,
-): number {
-  const v = i * n;
-  let bot = -1;
-  let top = ngraph;
-  while (top - bot > 1) {
-    const mid = (top + bot) >> 1;
-    if (graph[mid] < v) bot = mid;
-    else top = mid;
-  }
-  return top;
 }

@@ -1,6 +1,6 @@
 /**
- * Map's explained hint: its solver's three rungs, read off the player's own
- * board.
+ * Map's explained hint: the firings of the three techniques its description
+ * states, compiled, read off the player's own board.
  *
  * ## What a region can still be
  *
@@ -39,18 +39,23 @@
  */
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
+import { popcount } from "../../engine/describe-runtime.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { HintFrontier } from "../../engine/hint-frontier.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import type {
+  CellMarks,
+  Firing as Fired,
+  Ladder,
+} from "../../engine/ladder-runtime.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { type Conclusion, colorsOf, say } from "./hint-text.ts";
 import {
-  bitcount,
-  type MapBoard,
-  neighbors,
-  onlyColorLeft,
-  sharedPair,
-  weighRegion,
+  dealtOf,
+  gridOf,
+  type MapRecordReason,
+  mapLadder,
+  mapMarks,
 } from "./solver.ts";
 import type { MapMove, MapOp, MapState } from "./state.ts";
 
@@ -76,43 +81,45 @@ export interface MapHint {
 type SingleWant = { color: number } | { dots: number };
 
 /** Every rung a Map step can be: the two halves of the Mark-all press, by
- * `markAll`'s own names, and the solver's three rungs, by theirs. The legs
- * that dot a pair's or a weighing's premise share that firing's rung. */
-export const MAP_RUNGS = [
-  "fill",
-  "clean",
-  "onlyColorLeft",
-  "sharedPair",
-  "weighRegion",
-] as const;
+ * `markAll`'s own names, and the description's three techniques, by their
+ * ids. The legs that dot a pair's or a weighing's premise share that
+ * firing's rung. */
+export const MAP_RUNGS = ["fill", "clean", "lone", "pair", "weigh"] as const;
 export type MapRung = (typeof MAP_RUNGS)[number];
 
 export type MapHintStep = HintStep<MapMove, MapHint, MapRung>;
 
 /** The working board: the player's colors and dots, advanced as the plan is
- * built. */
+ * built, and which region borders which. */
 interface Work {
   readonly state: MapState;
   readonly coloring: Int32Array;
   readonly pencil: Int32Array;
+  readonly borders: readonly (readonly number[])[];
 }
 
 /** The colors region `r` of `w` can still take (see the file comment). */
 function colorsLeft(w: Work, r: number): number {
-  const { graph, n, ngraph } = w.state.map;
   let p = w.pencil[r] || ALL;
-  for (const k of neighbors(graph, n, ngraph, r))
-    if (w.coloring[k] >= 0) p &= ~(1 << w.coloring[k]);
+  for (const k of w.borders[r]) if (w.coloring[k] >= 0) p &= ~(1 << w.coloring[k]);
   return p;
 }
 
-/** The board as the solver's rungs read it. */
-function boardOf(w: Work): MapBoard {
-  const { graph, n, ngraph } = w.state.map;
-  const possible = new Uint8Array(n);
-  for (let r = 0; r < n; r++)
-    possible[r] = w.coloring[r] >= 0 ? 1 << w.coloring[r] : colorsLeft(w, r);
-  return { graph, n, ngraph, coloring: w.coloring, possible };
+/** The board as the compiled techniques read it, a color one more than its
+ * index there. */
+function marksOf(w: Work): CellMarks {
+  const m = mapMarks(w.coloring.length, gridOf(w.coloring));
+  for (let r = 0; r < w.coloring.length; r++)
+    m.cands[r] = (w.coloring[r] >= 0 ? 1 << w.coloring[r] : colorsLeft(w, r)) << 1;
+  return m;
+}
+
+/** Every firing the technique `id` could make on `m`, none where it finds the
+ * marks inconsistent, which the mistake check rules out wherever a hint runs. */
+function firingsOf(ladder: Ladder, id: string, m: CellMarks): readonly Fired[] {
+  const got = ladder.entries.find((e) => e.id === id)?.run.firings?.(m);
+  if (got === undefined) throw new Error(`map hint: no technique ${id}`);
+  return got === "contradiction" ? [] : got;
 }
 
 /** The ops taking region `r` from dots `from` to dots `to`, one toggle each. */
@@ -141,7 +148,8 @@ export function markAll(
   state: Pick<MapState, "map" | "coloring" | "pencil">,
 ): { kind: "fill" | "clean"; regions: RegionDots[] } | null {
   const { coloring, pencil } = state;
-  const { graph, n, ngraph } = state.map;
+  const { graph, n } = state.map;
+  const { borders } = dealtOf(graph, n);
   const fill: RegionDots[] = [];
   for (let r = 0; r < n; r++)
     if (coloring[r] < 0 && pencil[r] === 0) fill.push({ region: r, dots: ALL });
@@ -150,8 +158,7 @@ export function markAll(
   for (let r = 0; r < n; r++) {
     if (coloring[r] >= 0) continue;
     let shown = 0;
-    for (const k of neighbors(graph, n, ngraph, r))
-      if (coloring[k] >= 0) shown |= 1 << coloring[k];
+    for (const k of borders[r]) if (coloring[k] >= 0) shown |= 1 << coloring[k];
     let struck = pencil[r] & shown;
     if (struck === pencil[r]) struck &= struck - 1;
     if (struck) clean.push({ region: r, dots: pencil[r] & ~struck });
@@ -180,7 +187,7 @@ function moveFor(r: number, dots: number, want: SingleWant): MapMove {
 /** Rule `struck` out of region `r`, as whichever move the board calls for. */
 function narrowing(w: Work, r: number, struck: number): Conclusion {
   const left = colorsLeft(w, r) & ~struck;
-  if (bitcount(left) === 1) return { kind: "place", color: colorsOf(left)[0] };
+  if (popcount(left) === 1) return { kind: "place", color: colorsOf(left)[0] };
   if (w.pencil[r]) return { kind: "strike", struck: w.pencil[r] & struck };
   return { kind: "mark", left };
 }
@@ -252,10 +259,10 @@ function narrowLegs(
 
 // --- the rungs --------------------------------------------------------------
 
-function singles(w: Work, b: MapBoard): Firing[] {
-  const { graph, n, ngraph } = w.state.map;
-  const out: Firing[] = [];
-  onlyColorLeft(b, (r, color) => {
+function singles(w: Work, fired: readonly Fired[]): Firing[] {
+  return fired.map(({ facts }) => {
+    const r = facts[1];
+    const color = facts[2] - 1;
     const dots = w.pencil[r];
     const base = dots || ALL;
     // The neighbors whose colors took something from what the region started
@@ -266,7 +273,7 @@ function singles(w: Work, b: MapBoard): Firing[] {
     // (owner playtest, 2026-09-25).
     const cited: number[] = [];
     let others = 0;
-    for (const k of neighbors(graph, n, ngraph, r)) {
+    for (const k of w.borders[r]) {
       const c = w.coloring[k];
       if (c >= 0 && base & (1 << c)) {
         cited.push(k);
@@ -279,65 +286,70 @@ function singles(w: Work, b: MapBoard): Firing[] {
         : others === 0
           ? say.lastDot(r, color)
           : say.deadDots(r, color);
-    out.push({
+    return {
       reads: [r, ...cited],
-      legs: (w) => [step(w, "onlyColorLeft", r, { color }, words)],
-    });
+      legs: (w: Work) => [step(w, "lone", r, { color }, words)],
+    };
   });
+}
+
+/** The regions a firing strikes from, each once, in the order it strikes. */
+function struckRegions(facts: readonly number[]): number[] {
+  const out: number[] = [];
+  for (let i = 0; i < facts.length; i += 3)
+    if (!out.includes(facts[i + 1])) out.push(facts[i + 1]);
   return out;
 }
 
-function pairs(b: MapBoard): Firing[] {
-  const found = new Map<string, { a: number; b: number; v: number; ks: number[] }>();
-  sharedPair(b, (a, b2, v, k) => {
-    const key = `${a},${b2}`;
-    const f = found.get(key);
-    if (f) f.ks.push(k);
-    else found.set(key, { a, b: b2, v, ks: [k] });
-  });
-  return [...found.values()].map(({ a, b: b2, v, ks }) => ({
-    reads: [a, b2, ...ks],
-    legs: (w) => {
-      const pair = [{ region: a }, { region: b2 }];
-      return journey([
-        ...premiseDots(w, "sharedPair", [a, b2]),
-        ...narrowLegs(w, "sharedPair", ks, v, (k, c) => say.pair(k, pair, v, c)),
-      ]);
-    },
-  }));
-}
-
-function weighs(b: MapBoard): Firing[] {
-  const found = new Map<
-    string,
-    { middle: number; x: number; ends: readonly number[]; ks: number[] }
-  >();
-  weighRegion(b, (middle, x, ends, k) => {
-    const key = `${middle},${x},${ends}`;
-    const f = found.get(key);
-    if (f) f.ks.push(k);
-    else found.set(key, { middle, x, ends, ks: [k] });
-  });
-  return [...found.values()].map(({ middle, x, ends, ks }) => {
-    const self = (b.possible[middle] & (1 << x)) !== 0;
+function pairs(fired: readonly Fired[]): Firing[] {
+  return fired.map(({ facts, reasons }) => {
+    const r = reasons[0] as Extract<MapRecordReason, { kind: "pair" }>;
+    const v = r.colors >> 1;
+    const ks = struckRegions(facts);
     return {
-      reads: [middle, ...ends, ...ks],
-      legs: (w) =>
-        journey([
-          ...premiseDots(w, "weighRegion", [middle, ...ends]),
-          ...narrowLegs(w, "weighRegion", ks, 1 << x, (k, c) =>
-            say.weigh(
-              k,
-              { region: middle },
-              ends.map((region) => ({ region })),
-              x,
-              self,
-              c,
-            ),
-          ),
-        ]),
+      reads: [r.a, r.b, ...ks],
+      legs: (w) => {
+        const pair = [{ region: r.a }, { region: r.b }];
+        return journey([
+          ...premiseDots(w, "pair", [r.a, r.b]),
+          ...narrowLegs(w, "pair", ks, v, (k, c) => say.pair(k, pair, v, c)),
+        ]);
+      },
     };
   });
+}
+
+/** A weighing strikes one region a firing, and the firings that share a
+ * middle region, a color and their ends are one step's targets. */
+function weighs(fired: readonly Fired[]): Firing[] {
+  const found = new Map<
+    string,
+    { r: Extract<MapRecordReason, { kind: "weigh" }>; ks: number[] }
+  >();
+  for (const { facts, reasons } of fired) {
+    const r = reasons[0] as Extract<MapRecordReason, { kind: "weigh" }>;
+    const key = `${r.middle},${r.x},${r.ends}`;
+    const f = found.get(key);
+    if (f) f.ks.push(facts[1]);
+    else found.set(key, { r, ks: [facts[1]] });
+  }
+  return [...found.values()].map(({ r: { middle, x, ends, self }, ks }) => ({
+    reads: [middle, ...ends, ...ks],
+    legs: (w) =>
+      journey([
+        ...premiseDots(w, "weigh", [middle, ...ends]),
+        ...narrowLegs(w, "weigh", ks, 1 << (x - 1), (k, c) =>
+          say.weigh(
+            k,
+            { region: middle },
+            ends.map((region) => ({ region })),
+            x - 1,
+            self,
+            c,
+          ),
+        ),
+      ]),
+  }));
 }
 
 /**
@@ -354,14 +366,12 @@ function premiseDots(
   rung: MapRung,
   regions: readonly number[],
 ): MapHintStep[] {
-  const { graph, n, ngraph } = w.state.map;
   const out: MapHintStep[] = [];
   for (const r of regions) {
     const two = colorsLeft(w, r);
     if (w.pencil[r] === two) continue;
     let touched = 0;
-    for (const k of neighbors(graph, n, ngraph, r))
-      if (w.coloring[k] >= 0) touched |= 1 << w.coloring[k];
+    for (const k of w.borders[r]) if (w.coloring[k] >= 0) touched |= 1 << w.coloring[k];
     const said =
       w.pencil[r] === 0 ? say.premiseDot(r, touched, two) : say.premiseTrim(r, two);
     out.push(step(w, rung, r, { dots: two }, said));
@@ -408,10 +418,14 @@ function setUp(w: Work, steps: MapHintStep[]): void {
 /** The whole remaining plan from `state`'s board: empty when deduction has run
  * out, which the caller refuses. */
 export function buildSteps(state: MapState, reading: CandidateReading): MapHintStep[] {
+  const { graph, n } = state.map;
+  const dl = dealtOf(graph, n);
+  const ladder = mapLadder(dl);
   const w: Work = {
     state,
     coloring: Int32Array.from(state.coloring),
     pencil: Int32Array.from(state.pencil),
+    borders: dl.borders,
   };
   const steps: MapHintStep[] = [];
   if (reading === "populate") setUp(w, steps);
@@ -420,10 +434,10 @@ export function buildSteps(state: MapState, reading: CandidateReading): MapHintS
   for (;;) {
     budget.tick();
     if (!w.coloring.includes(-1)) return steps;
-    const b = boardOf(w);
-    let rung = singles(w, b);
-    if (rung.length === 0) rung = pairs(b);
-    if (rung.length === 0) rung = weighs(b);
+    const m = marksOf(w);
+    let rung = singles(w, firingsOf(ladder, "lone", m));
+    if (rung.length === 0) rung = pairs(firingsOf(ladder, "pair", m));
+    if (rung.length === 0) rung = weighs(firingsOf(ladder, "weigh", m));
     const offered = rung.map((f) => ({
       reads: () => f.reads,
       take: () => {

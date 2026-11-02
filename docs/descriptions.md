@@ -304,6 +304,14 @@ uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
   columns are lines whether or not they are units, and the one partition
   among the units gives the space its boxes. Seismic keeps its areas a
   dealt partition outside the units, which the checker can build.
+- **A board may be cells alone, its neighbors a relation it deals**
+  (`space.cells: <size>` in place of `grid`, and `space.relations:
+  { borders: dealt }`, read `borders(c)`): Map's regions. The relation is a
+  field of `Dealt`, the grid's geometry is refused, and the game builds the
+  space as `describedSpace(units, n, 1)`. A hint that walks such a board
+  takes its firings from the rungs' `firings` and keeps its own plan
+  ([`hints-candidates.md`](./hints-candidates.md) § "A graph, not a grid
+  (Map)").
 - **A domain may be a cell's.** Where the answer's domain reads `c`
   (Seismic's `range(1, |cells(area(c))|)`), the module exports `domainOf`,
   `CellMarks.seed` starts each cell from it, and `domain` alone is refused
@@ -407,6 +415,10 @@ the rules. What a small board cannot cover:
   gives each order**, or one more in a world no board of those regions has
   an answer in (Tectonic's, `regionCells`), so a technique that reads a
   larger region is not checked on it.
+- **A board of cells alone has the square of the order in cells**, and a
+  relation it deals is every relation on them, each pair in it or not, a
+  cell with itself too: the description states no symmetry, so none is
+  assumed, and a technique sound on every relation is sound on a map's.
 - **Boxes a board deals are not built**, so Solo's Jigsaw world is named in
   the results as unchecked.
 - **A world or a kind a small board cannot hold is checked on nothing**,
@@ -431,8 +443,8 @@ the rules. What a small board cannot cover:
   outgrows it: `CHECK_SHARD=i/n` takes every nth query from the ith, n
   processes side by side (Mines' `count` at 4), each recorded under a key
   of its own as it passes and the n folded into the verdict; a shard
-  already recorded is not run again. A run with `CHECK_LOG` logs its
-  progress every 50 queries, naming the query it starts, so a stuck one
+  already recorded is not run again. A run with `CHECK_LOG=<file>` logs its
+  progress to that file every 50 queries, naming the query it starts, so a stuck one
   can be found. **A count of squares is bit-blasted**: a sum of terms each
   0 or 1 sends z3's default search splitting square by square (Mines'
   mine total read alone ran past an hour on a 4×4 board), so a query the

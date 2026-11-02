@@ -1,264 +1,157 @@
 /**
- * Map's graph-coloring solver (upstream `map_solver`), graded by tier:
- *   - DIFF_EASY    — {@link onlyColorLeft}: a region with one possible color;
- *   - DIFF_NORMAL  — {@link sharedPair}: two adjacent regions down to the same
- *                    two colors use both, so a region touching both is neither;
- *   - DIFF_HARD    — {@link weighRegion}: every color one region can take,
- *                    each read off its neighbors' dots;
- *   - DIFF_RECURSE — guess and verify (also proves uniqueness at every level).
+ * Map's solver: the ladder `map.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/ladder-runtime.ts`), with the reason
+ * each technique records for the hint, and the engine's search above it
+ * (`engine/answer-search.ts`).
+ * The tiers are upstream's (`map_solver`):
+ *   - Easy — `lone`: a region down to one color;
+ *   - Normal — `pair`: two bordering regions down to the same two colors use
+ *     both, so a region bordering both is neither;
+ *   - Tricky — `weigh`: every color one region can take, each read off a
+ *     neighbor down to that color and one other;
+ *   - Unreasonable — a search on a most-constrained region, counting the
+ *     answers to two, as upstream's recursion did.
  *
- * Each rung is a function that *reports* its firings through a callback, and
- * the two callers differ only in what they do with one. The solver applies it
- * on the spot, which is the order upstream's single loop mutated in, so a later
- * firing of the same pass sees an earlier one exactly as it did there. The hint
- * (`hint.ts`) collects the firings without applying any, because it wants every
- * one available and the witness each rests on.
+ * The board is its regions, the space's cells, and which border which, the
+ * relation `borders` the map deals. A color is one more than its index
+ * (`0..3`), since the marks hold no value 0.
  */
 
-import { weighWing } from "../../engine/wing.ts";
-import { graphAdjacent, graphVertexStart } from "./graph.ts";
-import { DIFF_EASY, DIFF_HARD, DIFF_NORMAL, DIFF_RECURSE, DIFFCOUNT } from "./state.ts";
-
-const FOUR = 4;
+import { type Deduced, searchAnswers } from "../../engine/answer-search.ts";
+import { describedSpace, popcount, rangeMask } from "../../engine/describe-runtime.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  placingRung,
+  runLadder,
+  TIERS,
+  uncluedRung,
+} from "../../engine/ladder-runtime.ts";
+import { graphNeighbors } from "./graph.ts";
+import * as map from "./map.compiled.ts";
+import { DIFF_RECURSE, DIFFCOUNT } from "./state.ts";
 
 export const SOLVER_IMPOSSIBLE = 0;
 export const SOLVER_UNIQUE = 1;
 /** Ambiguous, or too hard for the given difficulty. */
 const SOLVER_STUCK = 2;
 
-/** What the rungs read: the adjacency graph, each region's color (-1 blank)
- * and the colors each region may still take, as a four-bit mask. */
-export interface MapBoard {
-  readonly graph: Int32Array;
-  readonly n: number;
-  readonly ngraph: number;
-  readonly coloring: Int32Array;
-  readonly possible: Uint8Array;
-}
+/** The four colors, as the marks hold them: color `i` is value `i + 1`. */
+const COLORS = rangeMask(1, 4);
 
-interface Scratch extends MapBoard {
-  depth: number;
-}
+/** Why a technique fired, as the hint narrates it. Colors are the marks'
+ * values, one more than a color's index. */
+export type MapRecordReason =
+  /** The region is down to one color. */
+  | { kind: "lone" }
+  /** `a` and `b` border each other and are down to the colors `colors`. */
+  | { kind: "pair"; a: number; b: number; colors: number }
+  /** Every color `middle` can take but `x` leaves `x` alone in one of `ends`,
+   * each bordering the struck region; `self` where `middle` could be `x`. */
+  | {
+      kind: "weigh";
+      middle: number;
+      x: number;
+      ends: readonly number[];
+      self: boolean;
+    };
 
-function newScratch(
-  graph: Int32Array,
-  n: number,
-  ngraph: number,
-  coloring: Int32Array,
-): Scratch {
-  return {
-    graph,
-    n,
-    ngraph,
-    coloring,
-    possible: new Uint8Array(n),
-    depth: 0,
-  };
-}
+const dealt = new WeakMap<Int32Array, map.Dealt>();
 
-/** Count the (up to four) set bits of a color bitmask. */
-export function bitcount(word: number): number {
-  let w = ((word & 0xa) >> 1) + (word & 0x5);
-  w = ((w & 0xc) >> 2) + (w & 0x3);
-  return w;
-}
-
-/** The regions adjacent to `i`, each once. */
-export function* neighbors(
-  graph: Int32Array,
-  n: number,
-  ngraph: number,
-  i: number,
-): Generator<number> {
-  for (
-    let j = graphVertexStart(graph, n, ngraph, i);
-    j < ngraph && graph[j] < n * (i + 1);
-    j++
-  )
-    yield graph[j] - i * n;
-}
-
-/**
- * Fix `index` to `color`, ruling that color out of every neighbor. Returns
- * false iff `color` was not a possibility for `index`.
- */
-function placeColor(b: MapBoard, index: number, color: number): boolean {
-  const { graph, n, ngraph, possible, coloring } = b;
-  if (!(possible[index] & (1 << color))) return false;
-
-  possible[index] = 1 << color;
-  coloring[index] = color;
-
-  for (
-    let j = graphVertexStart(graph, n, ngraph, index);
-    j < ngraph && graph[j] < n * (index + 1);
-    j++
-  ) {
-    const k = graph[j] - index * n;
-    possible[k] &= ~(1 << color);
+/** The board as the description deals it: which region borders which, from
+ * the map's edge list, kept for the life of the graph. */
+export function dealtOf(graph: Int32Array, n: number): map.Dealt {
+  let dl = dealt.get(graph);
+  if (dl === undefined) {
+    dl = { borders: graphNeighbors(graph, n) };
+    dealt.set(graph, dl);
   }
-  return true;
+  return dl;
+}
+
+/** The ladder over the dealt borders, each technique with its reason. */
+export function mapLadder(dl: map.Dealt): Ladder {
+  return describedLadder(map, {
+    placed: placingRung(map.placed, dl),
+    lone: uncluedRung(map.lone, (): MapRecordReason => ({ kind: "lone" })),
+    pair: compiledRung(
+      map.pair,
+      dl,
+      ({ a, b }, _c, _n, m): MapRecordReason => ({
+        kind: "pair",
+        a,
+        b,
+        colors: m.cand(a),
+      }),
+    ),
+    weigh: compiledRung(
+      map.weigh,
+      dl,
+      ({ m: middle, x, E }, _c, _n, m): MapRecordReason => ({
+        kind: "weigh",
+        middle,
+        x,
+        ends: E.slice(),
+        self: m.has(middle, x),
+      }),
+    ),
+  });
+}
+
+/** The marks over `n` regions, each able to be any color. */
+export function mapMarks(n: number, grid: Uint8Array): CellMarks {
+  return new CellMarks(describedSpace(map.units, n, 1), COLORS, grid);
+}
+
+/** The marks' values of a coloring: `-1` (blank) to 0, a color to one more. */
+export function gridOf(coloring: ArrayLike<number>): Uint8Array {
+  return Uint8Array.from(coloring, (c) => c + 1);
 }
 
 /**
- * EASY: every blank region with exactly one possible color, reported as
- * `fire(region, color)`. Returns false iff some blank region has none, which
- * proves the board inconsistent.
+ * The positions Unreasonable's search may try. Upstream's recursion had no
+ * bound; dealing 20 boards a tier at 15×20 with 30 regions, 25×30 with 75 and
+ * 10×10 with 15, the most any solve tried was 45 (2026-11-02), so a board
+ * this refuses is far past any a deal has come near.
  */
-export function onlyColorLeft(
-  b: MapBoard,
-  fire: (region: number, color: number) => void,
-): boolean {
-  const { n, coloring, possible } = b;
-  for (let i = 0; i < n; i++)
-    if (coloring[i] < 0) {
-      const p = possible[i];
-      if (p === 0) return false;
-      if ((p & (p - 1)) === 0) fire(i, 31 - Math.clz32(p));
-    }
-  return true;
-}
+const SEARCH_BUDGET = 100_000;
 
-/**
- * NORMAL: two adjacent blank regions whose possibilities are the same two
- * colors use both of them between them, so any region adjacent to both can be
- * neither. Reported once per such region still holding one of the two, as
- * `fire(a, b, colors, target)` with `colors` the pair's mask.
- */
-export function sharedPair(
-  b: MapBoard,
-  fire: (a: number, b: number, colors: number, target: number) => void,
-): void {
-  const { graph, n, ngraph, coloring, possible } = b;
-  for (let i = 0; i < ngraph; i++) {
-    const j1 = Math.floor(graph[i] / n);
-    const j2 = graph[i] % n;
-    if (j1 > j2) continue;
-    if (coloring[j1] >= 0 || coloring[j2] >= 0) continue;
-    if (possible[j1] !== possible[j2]) continue;
-
-    const v = possible[j1];
-    if (bitcount(v) !== 2) continue;
-
-    for (
-      let j = graphVertexStart(graph, n, ngraph, j1);
-      j < ngraph && graph[j] < n * (j1 + 1);
-      j++
-    ) {
-      const k = graph[j] - j1 * n;
-      if (graphAdjacent(graph, n, ngraph, k, j2) && possible[k] & v) fire(j1, j2, v, k);
-    }
-  }
-}
-
-/**
- * HARD: weigh every color a blank region `middle` can take, each read off a
- * neighbor dotted with that color and `x`: the engine's wing, with "touches"
- * for "sees". Reported as `fire(middle, x, ends, target)`.
- *
- * A three-region forcing chain is exactly the case of a two-color `middle`,
- * and a longer one is a supposition, which Unreasonable's search covers.
- */
-export function weighRegion(
-  b: MapBoard,
-  fire: (middle: number, x: number, ends: readonly number[], target: number) => void,
-): void {
-  const { graph, n, ngraph, coloring, possible } = b;
-  weighWing(
-    {
-      size: n,
-      values: FOUR,
-      open: (i) => coloring[i] < 0,
-      mask: (i) => possible[i],
-      seers: (i) => neighbors(graph, n, ngraph, i),
-      sees: (a, c) => graphAdjacent(graph, n, ngraph, a, c),
-    },
-    fire,
+/** Run the ladder on `m` no harder than `cap`, below Unreasonable. */
+function deduce(m: CellMarks, ladder: Ladder, cap: number, dl: map.Dealt): Deduced {
+  const techniques = ladderTechniques(
+    m,
+    ladder.entries,
+    { [TIERS]: Math.min(cap, DIFF_RECURSE - 1) },
+    {},
   );
+  if (runLadder(m, techniques)) return "contradiction";
+  if (m.grid.includes(0)) return "stuck";
+  return map.isAnswer(m.grid, m.sp, dl) ? "solved" : "contradiction";
 }
 
-// The difficulty tiers are caps on how far down this ladder the solver may go,
-// so each rung runs against the same board and the cap stays one number. Every
-// rung restarts the loop when it fires, which is what makes a lower rung always
-// run to exhaustion before a higher one is tried.
-function solve(sc: Scratch, difficulty: number): number {
-  const { n, coloring, possible } = sc;
-  if (sc.depth === 0) {
-    for (let i = 0; i < n; i++) possible[i] = (1 << FOUR) - 1;
-    for (let i = 0; i < n; i++)
-      if (coloring[i] >= 0 && !placeColor(sc, i, coloring[i])) return SOLVER_IMPOSSIBLE; // clues aren't even consistent
-  }
-
-  for (;;) {
-    let doneSomething = false;
-
-    if (difficulty < DIFF_EASY) break;
-    const consistent = onlyColorLeft(sc, (i, c) => {
-      placeColor(sc, i, c);
-      doneSomething = true;
-    });
-    if (!consistent) return SOLVER_IMPOSSIBLE;
-    if (doneSomething) continue;
-
-    if (difficulty < DIFF_NORMAL) break;
-    sharedPair(sc, (_a, _b, v, k) => {
-      possible[k] &= ~v;
-      doneSomething = true;
-    });
-    if (doneSomething) continue;
-
-    if (difficulty < DIFF_HARD) break;
-    weighRegion(sc, (_m, x, _ends, t) => {
-      possible[t] &= ~(1 << x);
-      doneSomething = true;
-    });
-    if (!doneSomething) break;
-  }
-
-  if (!coloring.includes(-1)) return SOLVER_UNIQUE; // every region colored
-
-  if (difficulty < DIFF_RECURSE) return SOLVER_STUCK;
-
-  // Recurse on a most-constrained region.
+/** `m` divided on a most-constrained region, a copy for each color it may
+ * still take. */
+function assume(m: CellMarks, ladder: Ladder): CellMarks[] {
   let best = -1;
-  let bestc = FOUR + 1;
-  for (let i = 0; i < n; i++)
-    if (coloring[i] < 0) {
-      const c = bitcount(possible[i]);
-      if (c < bestc) {
-        best = i;
-        bestc = c;
-      }
+  let fewest = 5;
+  for (let r = 0; r < m.grid.length; r++)
+    if (m.grid[r] === 0 && popcount(m.cands[r]) < fewest) {
+      best = r;
+      fewest = popcount(m.cands[r]);
     }
-
-  const origcoloring = coloring.slice();
-  const subcoloring = new Int32Array(n);
-  const rsc = newScratch(sc.graph, n, sc.ngraph, subcoloring);
-  rsc.depth = sc.depth + 1;
-  let weAlreadyGotOne = false;
-  let ret = SOLVER_IMPOSSIBLE;
-
-  for (let i = 0; i < FOUR; i++) {
-    if (!(possible[best] & (1 << i))) continue;
-
-    rsc.possible.set(possible);
-    subcoloring.set(origcoloring);
-    placeColor(rsc, best, i);
-
-    const subret = solve(rsc, difficulty);
-
-    if (subret === SOLVER_STUCK || (subret === SOLVER_UNIQUE && weAlreadyGotOne)) {
-      ret = SOLVER_STUCK;
-      break;
-    }
-    if (subret === SOLVER_UNIQUE) {
-      coloring.set(subcoloring);
-      weAlreadyGotOne = true;
-      ret = SOLVER_UNIQUE;
-    }
+  const out: CellMarks[] = [];
+  for (let d = 1; d <= 4; d++) {
+    if (!m.has(best, d)) continue;
+    const sub = new CellMarks(m.sp, COLORS, m.grid.slice());
+    sub.placing = ladder.placing;
+    sub.cands.set(m.cands);
+    sub.place(best, d);
+    out.push(sub);
   }
-
-  return ret;
+  return out;
 }
 
 /**
@@ -268,11 +161,44 @@ function solve(sc: Scratch, difficulty: number): number {
 export function mapSolver(
   graph: Int32Array,
   n: number,
-  ngraph: number,
   coloring: Int32Array,
   difficulty: number,
 ): number {
-  return solve(newScratch(graph, n, ngraph, coloring), difficulty);
+  const dl = dealtOf(graph, n);
+  const ladder = mapLadder(dl);
+  const m = mapMarks(n, new Uint8Array(n));
+  m.placing = ladder.placing;
+  if (!m.seed(gridOf(coloring))) return SOLVER_IMPOSSIBLE;
+  let solved: CellMarks;
+  if (difficulty < DIFF_RECURSE) {
+    const got = deduce(m, ladder, difficulty, dl);
+    if (got !== "solved")
+      return got === "contradiction" ? SOLVER_IMPOSSIBLE : SOLVER_STUCK;
+    solved = m;
+  } else {
+    const answer = searchAnswers({
+      start: m,
+      deduce: (p) => deduce(p, ladder, difficulty, dl),
+      assume: (p) => assume(p, ladder),
+      solution: (p) => p,
+      budget: SEARCH_BUDGET,
+    });
+    if (answer.kind === "none") return SOLVER_IMPOSSIBLE;
+    if (answer.kind !== "one") return SOLVER_STUCK;
+    solved = answer.solution;
+  }
+  for (let r = 0; r < n; r++) coloring[r] = solved.grid[r] - 1;
+  return SOLVER_UNIQUE;
+}
+
+/** Whether `coloring`, every region colored, is an answer: no two bordering
+ * regions alike, by the rules the description compiles to. */
+export function isColored(graph: Int32Array, n: number, coloring: Int32Array): boolean {
+  return map.isAnswer(
+    gridOf(coloring),
+    describedSpace(map.units, n, 1),
+    dealtOf(graph, n),
+  );
 }
 
 /**
@@ -283,14 +209,10 @@ export function mapSolver(
 export function gradeMap(
   graph: Int32Array,
   n: number,
-  ngraph: number,
   clues: Int32Array,
 ): number | null {
   for (let diff = 0; diff < DIFFCOUNT; diff++) {
-    const coloring = clues.slice();
-    if (mapSolver(graph, n, ngraph, coloring, diff) === SOLVER_UNIQUE) {
-      return diff;
-    }
+    if (mapSolver(graph, n, clues.slice(), diff) === SOLVER_UNIQUE) return diff;
   }
   return null;
 }

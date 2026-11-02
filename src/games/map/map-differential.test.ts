@@ -64,7 +64,7 @@ describe("map differential (frozen C reference)", () => {
       const { map, coloring } = newMapData(p, f.desc);
       const clues = new Int32Array(f.n).fill(-1);
       for (let i = 0; i < f.n; i++) if (map.immutable[i]) clues[i] = coloring[i];
-      const grade = gradeMap(map.graph, f.n, map.ngraph, clues);
+      const grade = gradeMap(map.graph, f.n, clues);
       if (f.solverDiff < DIFF_HARD) expect(grade).toBe(f.solverDiff);
       else expect(grade).toBeGreaterThanOrEqual(DIFF_HARD);
     });

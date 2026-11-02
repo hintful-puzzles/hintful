@@ -189,6 +189,9 @@ interface Board {
   cand: Bx[][];
   clues: Map<string, ClueSym[]>;
   regions: Map<string, PartitionSym>;
+  /** Each relation the board deals, by name: whether `b` is in `name(a)`, by
+   * `a` and `b`. */
+  relations: ReadonlyMap<string, readonly (readonly Bx[])[]>;
   /** Constraints on the clue variables themselves (a value's range), and on
    * which regions a partition has. */
   clueDomain: Bx[];
@@ -286,6 +289,16 @@ function spaceOf(
   const unit = unitRegion(d);
   if (d === undefined || space === undefined)
     return { sp: latinSpace(order), sizes: new Map() };
+  // A board of cells alone (Map's regions) has as many as the square of the
+  // order; its neighbors are a relation dealt on them.
+  if (space.grid === undefined) {
+    const count = order * order;
+    const name = space.cells ?? "";
+    return {
+      sp: describedSpace(space.units, count, 1),
+      sizes: /^\d+$/.test(name) ? new Map() : new Map([[name, count]]),
+    };
+  }
   // A side the description fixes (Guess's one row) is its own; any other is
   // the order.
   const side = (s: string): number => (/^\d+$/.test(s) ? Number(s) : order);
@@ -326,10 +339,20 @@ function domainBound(d: Description): string | null {
   const { grid } = d.json.space;
   return hi.k === "name" &&
     hi.name in d.json.sizes &&
-    hi.name !== grid.w &&
-    hi.name !== grid.h
+    hi.name !== grid?.w &&
+    hi.name !== grid?.h
     ? hi.name
     : null;
+}
+
+/** The number the answer's domain ends at where it is `range(a, k)` of a
+ * number (Map's four colors), which a board's values reach whatever its
+ * order; `0` elsewhere. */
+function domainEnd(d: Description): number {
+  const e = d.domain;
+  if (e.k !== "call" || e.fn !== "range") return 0;
+  const hi = e.args[1];
+  return hi.k === "num" ? hi.v : 0;
 }
 
 function makeBoard(
@@ -344,7 +367,11 @@ function makeBoard(
   const tag = `b${boardCount++}`;
   const n = sp.cells.length;
   const bound = d === undefined ? null : domainBound(d);
-  const top = Math.max(order, (bound === null ? null : fixed.get(bound)) ?? 0);
+  const top = Math.max(
+    order,
+    d === undefined ? 0 : domainEnd(d),
+    (bound === null ? null : fixed.get(bound)) ?? 0,
+  );
   // A count wider than the board (Mines' mines) is one unknown, which is
   // every value it can take at once: its worlds' union.
   const sizes = new Map<string, Nx>(fixed);
@@ -364,6 +391,16 @@ function makeBoard(
       (_, d): Bx => (d === 0 ? false : Z3.Bool.const(`${tag}_cand_${c}_${d}`)),
     ),
   );
+  // Every relation on the cells, each pair in it or not, a cell with itself
+  // too: nothing the description says makes one symmetric.
+  const relations = new Map(
+    Object.keys(d?.json.space.relations ?? {}).map((name) => [
+      name,
+      sp.cells.map((a) =>
+        sp.cells.map((b): Bx => Z3.Bool.const(`${tag}_${name}_${a}_${b}`)),
+      ),
+    ]),
+  );
   return {
     sp,
     order,
@@ -373,6 +410,7 @@ function makeBoard(
     cand,
     clues: new Map(),
     regions: new Map(),
+    relations,
     regionCells: cells,
     clueDomain,
     sizes,
@@ -392,8 +430,8 @@ function openSizes(d: Description, order: number): string[] {
         name !== "order" &&
         name !== "w" &&
         name !== "h" &&
-        name !== grid.w &&
-        name !== grid.h &&
+        name !== grid?.w &&
+        name !== grid?.h &&
         name !== bound &&
         !sizes.has(name) &&
         max > sp.cells.length,
@@ -1139,6 +1177,19 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
   const none: V = { k: "elem", sort: "none", alts: [[-1, true]] };
   if (ctx.d.json.space.units.includes(fn) && board.regions.get(fn) === undefined)
     return lift(vs[0], fn, (c) => (c < 0 ? none : elem("line", sp.boxOf[c])));
+  // A relation the board deals: each cell in it where that pair is, and of
+  // none, nothing.
+  const related = board.relations.get(fn);
+  if (related !== undefined)
+    return lift(vs[0], fn, (a) =>
+      a < 0
+        ? allOf("cell", [])
+        : {
+            k: "eset",
+            sort: "cell",
+            mem: sp.cells.map((b) => [b, related[a][b]] as const),
+          },
+    );
   const holding = board.regions.get(fn);
   if (holding !== undefined)
     return lift(vs[0], fn, (c) => {
@@ -1577,8 +1628,7 @@ export function sizings(d: Description, order: number): Map<string, number>[] {
     "order",
     "w",
     "h",
-    grid.w,
-    grid.h,
+    ...(grid === undefined ? [] : [grid.w, grid.h]),
     ...spaceOf(order, d).sizes.keys(),
   ]);
   // A size wider than the board is one unknown on it, not a world a value.

@@ -1,5 +1,5 @@
 # Scaffolded without a delta: the session writes the requirements its
 # constructs add, then removes skip_specs.
 schema: spec-driven
-created: 2026-11-01
+created: 2026-11-02
 skip_specs: true

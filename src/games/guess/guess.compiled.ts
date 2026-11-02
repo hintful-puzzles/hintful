@@ -2,8 +2,9 @@
 
 import { type Fire, type GridSpace, type Marks, STRIKE, popcount, rangeMask } from "../../engine/describe-runtime.ts";
 
-/** What the board deals: its partitions by name, its clues by kind, and
- * the sizes a technique or the rules read that the grid does not give. */
+/** What the board deals: its partitions by name, its relations, a set of
+ * cells for each cell, its clues by kind, and the sizes a technique or the
+ * rules read that the grid does not give. */
 export interface Dealt {
   score: { readonly n: number; readonly peg: readonly (readonly number[])[]; readonly black: readonly number[]; readonly total: readonly number[] };
   ncolors: number;

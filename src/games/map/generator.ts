@@ -65,7 +65,7 @@ export function newMapDesc(
     // Numbered in reading order, so that maps no player could tell apart are
     // the same description.
     const map = regionNumbers(growFromSeeds(p, scatterSeeds(p, n, rs), rs), wh);
-    const { graph, ngraph } = gengraph(w, h, n, map);
+    const { graph } = gengraph(w, h, n, map);
     const answer = colorRegions(graphNeighbors(graph, n), FOUR, drawn(rs));
     if (!answer) throw new Error("map: a map of a grid has no four-coloring");
     coloring.set(answer);
@@ -92,7 +92,7 @@ export function newMapDesc(
       if (cfreq[coloring[j]] === 1) continue; // keep last of its color
       coloring2.set(coloring);
       coloring2[j] = -1;
-      if (mapSolver(graph, n, ngraph, coloring2, p.diff) === SOLVER_UNIQUE) {
+      if (mapSolver(graph, n, coloring2, p.diff) === SOLVER_UNIQUE) {
         cfreq[coloring[j]]--;
         coloring[j] = -1;
       }
@@ -101,7 +101,7 @@ export function newMapDesc(
     // Must be at least as hard as required (and not already solved by a solver
     // that does nothing).
     coloring2.set(coloring);
-    if (mapSolver(graph, n, ngraph, coloring2, p.diff - 1) === SOLVER_UNIQUE) continue;
+    if (mapSolver(graph, n, coloring2, p.diff - 1) === SOLVER_UNIQUE) continue;
 
     return { desc: encodeMapDesc(w, h, n, map, coloring), aux };
   }
