@@ -17,6 +17,9 @@ export type Expr =
   | { k: "neg"; of: Expr }
   | { k: "bin"; op: BinOp; a: Expr; b: Expr }
   | { k: "quant"; q: "forall" | "exists"; binders: Binder[]; body: Expr }
+  /** `with place(c, d): P`: `P` read on the marks with `c` holding `d`,
+   * nothing else changed and nothing propagated. */
+  | { k: "with"; cell: Expr; value: Expr; body: Expr }
   | {
       k: "agg";
       fn: AggFn;
@@ -96,6 +99,7 @@ const KEYWORDS: ReadonlySet<string> = new Set([
   "mod",
   "fill",
   "from",
+  "with",
 ]);
 
 interface Token {
@@ -230,6 +234,18 @@ export function parse(src: string): Expr {
       eat(":");
       return { k: "quant", q, binders: bs, body: expr() };
     }
+    if (isKw("with")) {
+      p++;
+      if (!(peek().t === "id" && peek().s === "place")) fail('expected "place"');
+      p++;
+      eat("(");
+      const cell = additive();
+      eat(",");
+      const value = additive();
+      eat(")");
+      eat(":");
+      return { k: "with", cell, value, body: expr() };
+    }
     return iff();
   }
   function iff(): Expr {
@@ -248,7 +264,7 @@ export function parse(src: string): Expr {
         k: "bin",
         op: "implies",
         a,
-        b: isKw("forall") || isKw("exists") ? expr() : implication(),
+        b: isKw("forall") || isKw("exists") || isKw("with") ? expr() : implication(),
       };
     }
     return a;
@@ -274,7 +290,7 @@ export function parse(src: string): Expr {
       p++;
       return { k: "not", of: negation() };
     }
-    if (isKw("forall") || isKw("exists")) return expr();
+    if (isKw("forall") || isKw("exists") || isKw("with")) return expr();
     return comparison();
   }
   function comparison(): Expr {

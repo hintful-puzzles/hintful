@@ -53,12 +53,10 @@ import {
   redraw,
 } from "./render.ts";
 import {
+  deductionFinishes,
   findLiveErrors,
   findMistakes,
-  newScratch,
-  sticksSolveGame,
-  sticksTry,
-  sticksValidate,
+  searchAnswers,
 } from "./solver.ts";
 import {
   decodeParams,
@@ -90,10 +88,9 @@ const FIX_ID = `${FIX.w}x${FIX.h}b${FIX.blackpc}s${FIX.symm}:${FIX.desc}`;
 
 /** The fixture board's unique solution grid. */
 function fixtureSolution(): Uint8Array {
-  const s = newState(FIX_PARAMS, FIX.desc);
-  const grid = s.grid.slice();
-  expect(sticksSolveGame(grid, s.numbers, s.w, s.h)).toBe("complete");
-  return grid;
+  const answer = searchAnswers(newState(FIX_PARAMS, FIX.desc));
+  if (answer.kind !== "one") throw new Error("the fixture board has no one answer");
+  return answer.solution;
 }
 
 /** First white cell index of the fixture whose solution is the given line. */
@@ -234,65 +231,6 @@ describe("sticks params", () => {
   });
 });
 
-/**
- * An independent uniqueness oracle: propagate with the shipped deduction, then
- * branch on the first undecided cell. Counts solutions, stopping at `cap`.
- *
- * Test-only, and deliberately *not* built out of the shipped solver's verdict:
- * "the solver reached a complete board" says the solver found *a* solution by
- * forced steps, which is a different claim from "the board has only one". Most
- * boards the solver declines are ambiguous rather than hard, so counting
- * declines as "too hard" measures ambiguity, not deductive power.
- */
-function countSolutions(
-  grid0: Uint8Array,
-  numbers: Int16Array,
-  w: number,
-  h: number,
-  cap = 2,
-): number {
-  let found = 0;
-  const rec = (g: Uint8Array): void => {
-    if (found >= cap) return;
-    const work = g.slice();
-    const ret = sticksSolveGameFrom(work, numbers, w, h);
-    if (ret === "invalid") return;
-    if (ret === "complete") {
-      found++;
-      return;
-    }
-    const i = work.indexOf(0);
-    if (i < 0) return;
-    for (const o of [F_HOR, F_VER]) {
-      const next = work.slice();
-      next[i] = o;
-      rec(next);
-      if (found >= cap) return;
-    }
-  };
-  const start = grid0.slice();
-  for (let i = 0; i < w * h; i++) if (!(start[i] & F_BLOCK)) start[i] = 0;
-  rec(start);
-  return found;
-}
-
-/** `sticksSolveGame` without its opening wipe of the white cells — the branch
- * search must keep the orientations it has assumed. */
-function sticksSolveGameFrom(
-  grid: Uint8Array,
-  numbers: Int16Array,
-  w: number,
-  h: number,
-): "complete" | "unfinished" | "invalid" {
-  const scratch = newScratch(w * h);
-  let ret = sticksValidate(grid, numbers, w, h, scratch);
-  while (ret === "unfinished") {
-    if (!sticksTry(grid, numbers, w, h, scratch)) break;
-    ret = sticksValidate(grid, numbers, w, h, scratch);
-  }
-  return ret;
-}
-
 describe("sticks solver", () => {
   it("deduces the fixture board to its unique complete solution", () => {
     const solution = fixtureSolution();
@@ -307,36 +245,36 @@ describe("sticks solver", () => {
     expect(lines).toBeGreaterThan(0);
   });
 
-  it("reports an over-long segment as invalid, flagging the clue cell", () => {
+  it("flags an over-long segment's clue cell live", () => {
     // 3x1: clue 1 at cell 0, but a 2-cell horizontal segment through it.
     const grid = new Uint8Array([F_HOR, F_HOR, 0]);
     const numbers = new Int16Array([1, -1, -1]);
-    expect(sticksValidate(grid, numbers, 3, 1)).toBe("invalid");
-    const errors: number[] = [];
-    sticksValidate(grid, numbers, 3, 1, undefined, errors);
-    expect(errors).toEqual([0]);
+    expect(findLiveErrors({ w: 3, h: 1, grid, numbers })).toEqual([0]);
   });
 
-  it("reports a clueless board as unfinished (no deduction possible)", () => {
-    const grid = new Uint8Array(4);
-    const numbers = new Int16Array(4).fill(-1);
-    expect(sticksSolveGame(grid, numbers, 2, 2)).toBe("unfinished");
+  it("deduces nothing on a clueless board", () => {
+    const board = {
+      w: 2,
+      h: 2,
+      grid: new Uint8Array(4),
+      numbers: new Int16Array(4).fill(-1),
+    };
+    expect(deductionFinishes(board)).toBe(false);
   });
 
-  it("every generated board has exactly one solution, and deduction finds it", () => {
-    // Sticks has one implicit difficulty tier, so "graded honestly" reduces to
-    // this: the board is uniquely solvable, and the shipped deduction — with no
-    // guessing anywhere — reaches that solution. `sticksSolveGame` answering
-    // "complete" gives the second half but NOT the first, because a solver can
-    // only report on the line of play it followed. `countSolutions` is the
-    // independent witness.
-    //
-    // It is also why Sticks has no second tier: the shipped solver already
-    // decides every uniquely-solvable board this generator makes, so a harder
-    // rung has no headroom to work in.
-    // The oracle must be able to say "more than one", or asserting 1 proves
-    // nothing. A 2x2 board with no clues at all has many solutions.
-    expect(countSolutions(new Uint8Array(4), new Int16Array(4).fill(-1), 2, 2)).toBe(2);
+  it("every generated Easy board has exactly one answer, and the ladder finds it", () => {
+    // "The ladder finished" says it found *an* answer by forced steps, which
+    // is a different claim from "the board has only one": the search counts
+    // the answers, each checked by the rules.
+    // The count must be able to say "more than one", or asserting one proves
+    // nothing. A 2x2 board with no clues at all has many answers.
+    const blank = {
+      w: 2,
+      h: 2,
+      grid: new Uint8Array(4),
+      numbers: new Int16Array(4).fill(-1),
+    };
+    expect(searchAnswers(blank).kind).toBe("several");
 
     for (const p of [
       { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT2, diff: DIFF_EASY },
@@ -346,10 +284,8 @@ describe("sticks solver", () => {
       for (let s = 0; s < boards; s++) {
         const { desc } = newSticksDesc(p, randomNew(`unique-${p.w}-${s}`));
         const state = newState(p, desc);
-        expect(sticksSolveGame(state.grid.slice(), state.numbers, p.w, p.h)).toBe(
-          "complete",
-        );
-        expect(countSolutions(state.grid, state.numbers, p.w, p.h)).toBe(1);
+        expect(deductionFinishes(state)).toBe(true);
+        expect(searchAnswers(state).kind).toBe("one");
       }
     }
   });

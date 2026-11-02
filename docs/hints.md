@@ -183,7 +183,8 @@ whether a trial was involved:
 
 - **A Check** is one placement and one validator call with no fixpoint. It is
   ordinary deduction and narrates directly at any tier. Exemplar: Sticks'
-  `sticksTry`.
+  techniques, each a `with` premise in
+  [`sticks.description.yaml`](../src/games/sticks/sticks.description.yaml).
 - **A Tactic** is a chain whose every link is a fact the game's marks record.
   It is taught as ordinary steps, each writing its mark, and needs no chain
   picture.

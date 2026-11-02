@@ -673,7 +673,8 @@ asks whether its tier is named `Unreasonable`, and for a game with no
   call is a Check, a fixpoint or a sub-solve is a Search. A trial whose every
   rejection the player can see without trying anything is a Check
   (`hints-candidates.md` § "Deduce from the notes when the mistake check
-  vouches for them"). Exemplar: `sticksTry` in Sticks' solver.
+  vouches for them"). A description states one as a `with` premise
+  (`descriptions.md` § "The formula syntax"): Sticks' techniques.
 - **A value is whatever one element holds, and may be a shape.** In a game
   of lines a square's value is which of its edges take its lines, so two
   lines placed on one square and looked at once is a Check (owner,

@@ -3,10 +3,10 @@
  * upstream's `sticks.c`, `newSticksDesc` over the bit-identical RNG must
  * reproduce the C desc byte-for-byte.
  *
- * Because generation gates every fill attempt and every clue removal on
- * `sticksSolveGame`, one byte-match validates the generator (the symmetric
+ * Because generation gates every fill attempt and every clue removal on the
+ * ladder finishing, one byte-match validates the generator (the symmetric
  * black placement, the fill/clue draws, the minimization shuffle), the
- * contradiction solver's exact deductive power, and the run-length codec
+ * ladder's deductive power on upstream's boards, and the run-length codec
  * together. The `extra` check also round-trips each C desc through
  * `validateDesc` + `newState` + `encodeDesc` (codec inverse property).
  */

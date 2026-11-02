@@ -1,0 +1,20 @@
+ok  sticks     overConnected                  3  sound    (want sound   )     9 queries    0.1s
+ok  sticks     overConnected (planted)        3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  sticks     overConnected                  4  sound    (want sound   )    16 queries    0.3s
+ok  sticks     overConnected (planted)        4  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  sticks     tooLong                        3  sound    (want sound   )     9 queries    0.2s
+ok  sticks     tooLong (planted)              3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  sticks     tooLong                        4  sound    (want sound   )    16 queries    0.7s
+ok  sticks     tooLong (planted)              4  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  sticks     twoClues                       3  sound    (want sound   )     9 queries    0.2s
+ok  sticks     twoClues (planted)             3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  sticks     twoClues                       4  sound    (want sound   )    16 queries    0.8s
+ok  sticks     twoClues (planted)             4  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  sticks     starved                        3  sound    (want sound   )     9 queries    0.1s
+ok  sticks     starved (planted)              3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  sticks     starved                        4  sound    (want sound   )    16 queries    0.4s
+ok  sticks     starved (planted)              4  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  sticks     unreachable                    3  sound    (want sound   )     9 queries    0.3s
+ok  sticks     unreachable (planted)          3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  sticks     unreachable                    4  sound    (want sound   )    16 queries    1.6s
+ok  sticks     unreachable (planted)          4  unsound  (want unsound )     1 queries    0.1s   at cell 0

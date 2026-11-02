@@ -234,19 +234,6 @@ unfinished, or invalid.
 - **WHEN** a board of blank cells carrying no clues at all is solved
 - **THEN** no cell is forced and the board is classified unfinished
 
-### Requirement: Solver: The segment-reachability look-behind bounds are kept
-
-The two look-behind bounds in the segment-reachability computation
-(`x > 1` / `y > 1`, where the geometry admits `x > 0` / `y > 0`) SHALL be kept,
-although they make the checker weaker than intended.
-
-#### Scenario: The look-behind is not made one cell in from the edge
-
-- **WHEN** the room of a numbered line is walked toward the left or the top and
-  reaches a free cell one in from that edge
-- **THEN** that cell is counted as room without looking at whether the edge
-  cell beyond it holds a line of another number
-
 ### Requirement: Solver: Sticks' search assumes the first blank square's line across, then up and down
 
 Where the solver stops, the search that counts a board's fills SHALL take the
@@ -267,6 +254,15 @@ first blank square and assume its line runs across, and then up and down.
   square each way and reading the finished board against its numbers
 - **THEN** the search reports one answer exactly where one fill fits, several
   where more do and none where none does
+
+### Requirement: Solver: Sticks' ladder reads a number's room as the cells its line could still take
+
+A number's room SHALL be the run through it, along its line's way, of the cells that are no block, hold no line the other way, and with a line that way would carry no number but its own; the live error overlay SHALL read room the same way on the board as it stands.
+
+#### Scenario: A line beside another number's line is no room
+
+- **WHEN** a 3 has a horizontal line, and the blank square beside it has, beyond it, a horizontal line carrying a 1
+- **THEN** that blank square is not counted as the 3's room
 
 ### Requirement: Controls: Sticks is played by drag, click and keyboard cursor
 
@@ -393,31 +389,24 @@ the squares in which a line one way would break a clue at once.
 - **THEN** with a line placed as the solution has it wherever the hint stops,
   the hint finishes the board
 
-### Requirement: Hint: The Sticks hint takes the first forced square in reading order
+### Requirement: Hint: The Sticks hint carries on from its last step, by the rules in order
 
-`hint` SHALL decide the first blank square in reading order in which a line
-one way would break a clue, trying a horizontal line before a vertical one,
-and SHALL carry on in the same journey with every later square the same clue
-and rule force on that board. Where the tentative line breaks several clues, the step SHALL
-give the first of: a block with more lines than its number, a line longer than
-its number, a line over two numbers, a block left too few open sides, a line
-with too little room.
+`hint` SHALL take, of the numbers that a line one way in a blank square would break, the one whose firing carries on from the squares its last step decided, and otherwise the first by its rule and then by the number's place in reading order. One firing SHALL be one journey, every square that number and rule force on that board.
 
 #### Scenario: A dealt board's first steps
 
-- **WHEN** a hint is asked for on the 5×5 board `3bB1b5c2aB3c2a2_2aB2b1` with
-  no line placed
-- **THEN** the first step makes the top-left square, the 3, horizontal, since a
-  vertical line there would leave it only 2 squares
-- **AND** the next journey makes the second and third squares of the top row
-  horizontal, both by that 3, which rules out neither until its own line is
-  placed, and the journey after it reasons from the 1 block
+- **WHEN** a hint is asked for on the 5×5 board `3bB1b5c2aB3c2a2_2aB2b1` with no line placed
+- **THEN** the first step makes the top-left square, the 3, horizontal, since a vertical line there would leave it only 2 squares
+- **AND** the next journey makes the second and third squares of the top row horizontal, both by that 3, and the journey after it reasons from the 1 block
 
-#### Scenario: A line that would break a block's number and a line's length
+### Requirement: Hint: Sticks' rules are taken in order
 
-- **WHEN** a horizontal line in a square would give a 1 block its second line
-  and also run a 2's line to 3 squares
-- **THEN** the step speaks of the block
+The rules a supposed line breaks SHALL be taken in this order: a block with more lines than its number, a line over two numbers, a line longer than its number, a block left too few open sides, a line with too little room.
+
+#### Scenario: A line that would join two numbers
+
+- **WHEN** a line in a square would join a 2's line to a 1's, which is also too long for each
+- **THEN** the step speaks of the two numbers joined
 
 ### Requirement: Look: No two roles on the Sticks board share a color
 

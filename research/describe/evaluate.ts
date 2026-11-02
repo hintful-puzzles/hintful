@@ -138,6 +138,10 @@ export function evaluate(e: Expr, env: Env, ctx: Ctx): Value {
       return aggregate(e, env, ctx);
     case "call":
       return call(e.fn, e.args, env, ctx);
+    case "with":
+      throw new TypeError(
+        "with supposes a value on the marks, which only a technique reads",
+      );
   }
 }
 

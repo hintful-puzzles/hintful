@@ -48,7 +48,7 @@ export interface SticksParams {
   blackpc: number;
   /** One of the shared `SYMM_*` constants (engine/symmetric-blacks.ts). */
   symm: number;
-  /** `DIFF_EASY`, a board the solver's one deduction finishes, or
+  /** `DIFF_EASY`, a board the described ladder finishes, or
    * `DIFF_UNREASONABLE`, one with a single answer that it does not reach.
    * Generation-time only. */
   diff: number;

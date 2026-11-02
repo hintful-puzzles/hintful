@@ -50,3 +50,122 @@ help:
     position and try a line in a square beside a number: if it is wrong, a
     few forced squares later some number has no way left to be met. The hint
     carries on from whatever you decide.
+name: Sticks
+family: links
+sizes:
+  # Unbounded but by the time a board takes to deal.
+  w: { min: 2, max: 99999 }
+  h: { min: 2, max: 99999 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is a line across, 2 a line up and down, and 3 a block, which holds no
+  # line.
+  value: { sort: cell, domain: "{d in range(1, 3) where (d = 3) = (clue(block, c) >= 0)}" }
+define:
+  # The line through c across, or up and down: the squares of its row or
+  # column round c holding a line the same way, none where c's line runs the
+  # other way.
+  horiz(c): "stretch(row(c), c, {x in cells(row(c)) where value(x) = 1})"
+  vert(c): "stretch(col(c), c, {x in cells(col(c)) where value(x) = 2})"
+  # The line through c.
+  stick(c): "horiz(c) + vert(c)"
+  numbered(x): "clue(length, x) >= 0"
+  # Whether the line in square p, beside block b, runs into it.
+  meets(p, b): "(value(p) = 1 and y(p) = y(b)) or (value(p) = 2 and x(p) = x(b))"
+  # A square of no block whose line is still open.
+  blank(c): "not known(c) and clue(block, c) < 0"
+  # Whether square x of line L could still hold numbered square k's line
+  # running along L, the way d: it is no block, holds no line the other way,
+  # and with that line its line would carry no number but k's.
+  free(x, k, L, d): >-
+    clue(block, x) < 0 and (not known(x) or value(x) = d)
+    and (forall y in stretch(L, x, {z in cells(L) where value(z) = d or z = x}):
+    y = k or not numbered(y))
+  # The most squares numbered square k's line can still reach, the way its
+  # line runs.
+  reach(k): >-
+    |stretch(row(k), k, {x in cells(row(k)) where free(x, k, row(k), 1)})|
+    + |stretch(col(k), k, {x in cells(col(k)) where free(x, k, col(k), 2)})|
+  # How many of block b's sides a line could still run into it from.
+  sides(b): "count(p in adj4(b) where clue(block, p) < 0 and (not known(p) or meets(p, b)))"
+shape:
+  # A line overlaps one number at most.
+  - "forall c in cells: count(k in stick(c) where numbered(k)) <= 1"
+clues:
+  # A block, which holds no line.
+  block:
+    at: cell
+    value: "range(0, 0)"
+    means: "value(at) = 3"
+  # A number on a line: its length.
+  length:
+    at: cell
+    value: "range(1, max(L in {row(at), col(at)} of |cells(L)|))"
+    means: "|stick(at)| = v"
+  # A number on a block: how many lines run into it.
+  joins:
+    at: cell
+    value: "range(0, 4)"
+    means: "count(p in adj4(at) where meets(p, at)) = v"
+freedom: { kind: fill }
+deal:
+  block: a share of the squares, at random, symmetric as asked
+  answer: a line a square, at random
+  length: a number on each line, or as many hidden as the board stays at its tier
+  joins: a number on each block, or as many hidden as the board stays at its tier
+  tier: one of the tiers
+tiers: [Easy, Unreasonable]
+techniques:
+  # Each technique supposes a line in a square and finds a number it would
+  # break at once, so the square's line runs the other way.
+  #
+  # A block's number of lines already run into it leaves no room for one
+  # more. One with more makes the marks inconsistent.
+  - id: overConnected
+    tier: Easy
+    for: "b in cells, n = clue(joins, b) where n >= 0"
+    conclude: >-
+      count(p in adj4(b) where meets(p, b)) <= n
+      and (forall c in adj4(b) where blank(c), a in cand(c)
+      where (with place(c, a): count(p in adj4(b) where meets(p, b)) > n):
+      place(c, 3 - a))
+  # A line would carry two numbers. Before a line too long, which such a
+  # line usually is too, since joining the numbers is the rule it breaks.
+  - id: twoClues
+    tier: Easy
+    for: "k in cells where numbered(k)"
+    conclude: >-
+      count(j in stick(k) where numbered(j)) <= 1
+      and (forall c in cells(row(k)) + cells(col(k)) where blank(c), a in cand(c)
+      where (with place(c, a): count(j in stick(k) where numbered(j)) > 1):
+      place(c, 3 - a))
+  # A number's line would run longer than it.
+  - id: tooLong
+    tier: Easy
+    for: "k in cells, v = clue(length, k) where v >= 0"
+    conclude: >-
+      |stick(k)| <= v
+      and (forall c in cells(row(k)) + cells(col(k)) where blank(c), a in cand(c)
+      where (with place(c, a): |stick(k)| > v):
+      place(c, 3 - a))
+  # A block would be left fewer sides a line could run into it from than its
+  # number.
+  - id: starved
+    tier: Easy
+    for: "b in cells, n = clue(joins, b) where n >= 0"
+    conclude: >-
+      sides(b) >= n
+      and (forall c in adj4(b) where blank(c), a in cand(c)
+      where (with place(c, a): sides(b) < n):
+      place(c, 3 - a))
+  # A number's line would be left no room to reach its length.
+  - id: unreachable
+    tier: Easy
+    for: "k in cells, v = clue(length, k) where v >= 0"
+    conclude: >-
+      (not known(k) or reach(k) >= v)
+      and (forall c in cells(row(k)) + cells(col(k)) where blank(c), a in cand(c)
+      where (with place(c, a): known(k) and reach(k) < v):
+      place(c, 3 - a))

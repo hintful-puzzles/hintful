@@ -2,38 +2,36 @@
 
 **Status: filed by `describe-runs-sightlines-and-looks` (2026-11-02)**, the
 rest of step 7 of `describe-the-whole-catalog`'s plan (`design.md` § "The
-plan"), which split at its start and took ABCD. It files step 8,
-`describe-connectivity`, when it is archived. It may split again by game at
-its start, each part filing the next.
+plan"), which split at its start and took ABCD. Split again at its start
+(`design.md` § "The split"): it takes Sticks and L, and files Magnets, Light
+Up and Bricks as `describe-beams-tiles-and-bricks`, which files step 8,
+`describe-connectivity`, when it is archived.
 
 ## Why
 
-Sticks, Magnets, Light Up and Bricks each run a hand-written ladder beside
-a description that states only its help. What they read that the language
-lacks: L, a `look` premise, the rules checked once on the marks with a fact
-or two added and nothing propagated; P, propagation when a candidate is
-struck, not only when a value is placed; W, cells outside the answer (Light
-Up's walls, Bricks' holes); tile marks (Magnets); and a brick-wall space
-(Bricks). Q is there: `stretch(L, c, S)` is Sticks' segment through a cell
-and Light Up's beam along a line until a wall. Light Up's solver is the
-fixpoint header's named exception, a scan that is not a ladder.
+Sticks runs a hand-written ladder, and its hint a parallel copy of it,
+beside a description that states only its help. What it reads that the
+language lacks: L, a look at one supposed line with nothing propagated, and
+a square outside the answer (its blocks). Q is there: `stretch(L, c, S)` is
+its line through a square.
 
 ## What Changes
 
-- **L, P, W, tile marks and a brick-wall space** in the description
-  language, the ladder runtime and the checker, each only as far as a game
-  of the four reads it.
-- **Each game's ladder stated**, its tiers as the game grades them, and the
-  hand-written rungs retired; Light Up's exception in the fixpoint header
-  retired with its scan. A search tier stays the engine's search.
+- **L as `with place(c, d): P`** in the description language, the compiler
+  and the checker, and **a square outside the answer** as a clue whose
+  meaning places a value of its own.
+- **Sticks described**: its five ways a number breaks stated, compiled and
+  checked sound; `sticksTry`, `sticksSolveGame`, the validator as oracle and
+  the hint's parallel firings retired; the hint walks the compiled firings;
+  Unreasonable stays the engine's search, over the compiled marks.
 
 ## Acceptance
 
-Each game runs its compiled ladder for its hint and its generator's
-grading; the hand-written rungs removed; every technique checked sound;
-the boards dealt, their tiers and the hint walks compared with HEAD and
-each difference reported, with which saves or links no longer load; the
-guides updated; step 8 filed.
+Sticks runs its compiled ladder for its hint and its generator; the
+hand-written rungs removed; every technique checked sound; the boards dealt
+and the hint walks compared with HEAD and each difference reported, with
+which saves or links no longer load; the guides updated;
+`describe-beams-tiles-and-bricks` filed.
 
 ## What step 7's ABCD part learned that binds here
 

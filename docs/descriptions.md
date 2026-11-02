@@ -155,6 +155,7 @@ precedence first:
 | Form | Meaning |
 | --- | --- |
 | `forall B: P`, `exists B: P` | over every binding of the binders `B` |
+| `with place(c, d): P` | `P` read on the marks with `c` holding `d`, nothing propagated |
 | `P iff Q`, `P implies Q` | `implies` is right-associative |
 | `P or Q`, `P and Q`, `not P` | short-circuiting, so a premise can guard what it reads |
 | `a = b`, `!=`, `<`, `<=`, `>`, `>=` | `=` compares numbers, elements, truths and sets |
@@ -206,6 +207,13 @@ description author acts on:
   defines (`on_grid`, since Solo defines `inside`).
 - **`strike(c, d)` and `place(c, d)` belong to a technique's conclusion
   only.**
+- **A `with` is a Check, a look at one supposed value**
+  ([`solver-and-generator.md`](./solver-and-generator.md) § "Check, Tactic,
+  Search"): its body's every read of the marks sees `c` holding `d`, and it
+  concludes nothing itself, so the rules' own definitions are read under the
+  supposition (Sticks' `stick` and `reach`). A technique states what the
+  supposed value would break, and concludes the other value. A `with` reads
+  no beam, and no rule may hold one.
 - **A size the grid is not measured in** (Salad's `nums`) is read from what
   the board deals.
 
@@ -325,6 +333,11 @@ uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
   (Seismic's `range(1, |cells(area(c))|)`), the module exports `domainOf`,
   `CellMarks.seed` starts each cell from it, and `domain` alone is refused
   in a technique.
+- **A square that holds no line or piece is a value of its own, given by a
+  clue** (Sticks' blocks): the clue's meaning places the value, and the
+  domain, read off the clue, keeps it out of every other square. A technique
+  that concludes the other of two values guards its square with the clue,
+  since the checker's marks may leave a block open.
 - **A variation's techniques**, rungs and those run on placing alike, run
   only where the board has it on (`describedLadder`'s `variations`), and the
   ladder places each rung before the first technique of a higher tier on its
@@ -469,6 +482,11 @@ the rules. What a small board cannot cover:
   `index(x, S)` counts the members before `x` under theirs.
 - **A clue per value** is dealt at every element for every value of the
   world's domain, each present or not.
+- **A `with` is read as its supposition**: each read of the marks in it
+  sees the supposed cell holding the value, under the guard that it is that
+  cell. Ignoring it would make every `with` premise false and every
+  technique vacuously sound, so Sticks' `overConnected` plant supposes the
+  wrong value, which comes out unsound only where the supposition is read.
 - **`beam` is read by walking `traceBeam` itself**, asked again with each
   cell it stops at settled each way, so the check reads the game's physics,
   under the guard of what each cell on the path holds.

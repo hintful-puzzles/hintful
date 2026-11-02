@@ -1,32 +1,48 @@
 /**
- * Sticks contradiction solver — port of `sticks_make_dsf` /
- * `sticks_max_size_horizontal` / `sticks_max_size_vertical` /
- * `sticks_validate` / `sticks_try` / `sticks_solve_game` in
- * `puzzles/unreleased/sticks.c`.
+ * Sticks' solver: the ladder `sticks.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/ladder-runtime.ts`), the answer check
+ * its rules compile to, and the search beneath the ladder.
  *
- * The one technique: for each blank cell, tentatively place a horizontal
- * line; if the board becomes provably invalid, the cell must be vertical
- * (and vice versa). `sticksValidate` is both the constraint checker and
- * the deduction oracle — it merges adjacent same-orientation line cells
- * into segments with a dsf, then checks each clued segment's length (too
- * long, or provably unable to reach its clue) and each clued black cell's
- * connected-line / free-neighbor counts. Easy generation gates on this
- * solver, so its exact deductive power is byte-match surface: the two
- * `x > 1` / `y > 1` reachability quirks below are ported verbatim. The
- * Unreasonable tier is a search over it, further down.
+ * Every technique is upstream's one (`sticks_try`): suppose a line in a blank
+ * square and see a number broken at once, so the square's line runs the other
+ * way. The description states each way a number breaks as its own technique,
+ * a `with` premise read on the marks with nothing propagated: a block with
+ * too many lines or too few open sides, a line too long, a line carrying two
+ * numbers, and a line left no room to reach its number.
  *
- * The solver works on bare `(grid, numbers, w, h)` arrays (the caller owns
- * cloning); play-facing wrappers over immutable {@link SticksState} sit at
- * the bottom.
+ * Beneath the ladder, a search by trial and error over it
+ * ({@link searchAnswers}) counts a board's answers. It is what an
+ * Unreasonable board is dealt by, and what Solve and the mistake check know
+ * the answer from at either tier. The hint never runs it.
+ *
+ * The live error overlay ({@link findLiveErrors}) stays the game's own: it
+ * judges a board still being filled, which no rule of the answer says.
  */
 import {
   type Answer,
   answerCache,
+  type Deduced,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
-import { findingTechniques, singleFirings } from "../../engine/deduction-fixpoint.ts";
+import {
+  clueAt,
+  clueList,
+  describedSpace,
+  type GridSpace,
+  stretch,
+} from "../../engine/describe-runtime.ts";
 import { Dsf } from "../../engine/dsf.ts";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  ladderWalk,
+  runLadder,
+  type Taken,
+  TIERS,
+} from "../../engine/ladder-runtime.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import {
   F_BLOCK,
@@ -36,47 +52,367 @@ import {
   type SticksMistake,
   type SticksState,
 } from "./state.ts";
+import * as sticks from "./sticks.compiled.ts";
 
-export type SticksStatus = "complete" | "unfinished" | "invalid";
+/** What the description reads a square as holding: a line across, a line up
+ * and down, or a block. */
+const ACROSS = 1;
+const DOWN = 2;
+const BLOCK = 3;
+
+/** A board as its blocks, lines and numbers: a state, or a board being dealt. */
+interface Board {
+  w: number;
+  h: number;
+  grid: Uint8Array;
+  numbers: Int16Array;
+}
 
 /**
- * *Why* a board is invalid, recorded at the point {@link sticksValidate}
- * detects it — one variant per branch the validator can fail on, which is the
- * whole of its vocabulary. The classifier must be total, and it is total here
- * because it is written *inside* the oracle rather than re-derived from its
- * verdict (docs/hints-marks.md § "Read the reason off the validator").
- *
- * Each variant carries the clue that broke, its value, and the cells the
- * argument reasons over — the hint's evidence area, so the picture cannot
- * disagree with the words.
+ * *Why* a square's line cannot run one way: the number the supposed line
+ * would break, its value, and the cells the argument reasons over, which are
+ * the hint's evidence area, so the picture cannot disagree with the words.
+ * One variant a technique.
  */
 export type SticksReason =
-  /** The clue's line would run longer than its number. */
+  /** The number's line would run longer than it. */
   | { kind: "tooLong"; clue: number; value: number; size: number; segment: number[] }
-  /** The clue's line could no longer stretch far enough to reach its number. */
+  /** The number's line could no longer stretch far enough to reach it. */
   | { kind: "unreachable"; clue: number; value: number; max: number; span: number[] }
   /** One line would carry two numbers. */
   | { kind: "twoClues"; clues: number[]; segment: number[] }
-  /** A black clue would gain more lines than it counts. */
+  /** A block would gain more lines than it counts. */
   | { kind: "overConnected"; clue: number; value: number; lines: number[] }
   /**
-   * A black clue would lose a side it still needed a line from. `open` is
-   * every side a line can *still* reach it from — one already carrying a line
-   * counts, an off-board or walled side does not — so on the trial board it
-   * holds `value - 1` cells, the trial's own cell being the one just closed.
+   * A block would lose a side it still needed a line from. `open` is every
+   * side a line could still reach it from once the square is closed: one
+   * already carrying a line counts, an off-board or block side does not.
    */
   | { kind: "starved"; clue: number; value: number; open: number[] };
 
-/** Reusable scratch for the hot validate path (upstream passes dsf+lengths). */
-export interface SticksScratch {
-  dsf: Dsf;
-  /** Per segment root: -1 no clue, -2 two or more clues, else the clue cell. */
-  lengths: Int32Array;
+/** One forced square with the reason that forces it. */
+export interface SticksFiring {
+  index: number;
+  to: Exclude<SticksLine, "none">;
+  reason: SticksReason;
 }
 
-export function newScratch(s: number): SticksScratch {
-  return { dsf: new Dsf(s), lengths: new Int32Array(s) };
+/** The values the description reads off a grid of flag bytes. */
+function valuesOf(grid: Uint8Array): Uint8Array {
+  return grid.map((cell) =>
+    cell & F_BLOCK ? BLOCK : cell & F_HOR ? ACROSS : cell & F_VER ? DOWN : 0,
+  );
 }
+
+/** The board as the description deals it: its blocks, the numbers on its
+ * lines and the numbers on its blocks. */
+function dealtOf({ w, h, grid, numbers }: Board): sticks.Dealt {
+  const blocks: number[] = [];
+  const lengths: number[] = [];
+  const lengthValues: number[] = [];
+  const joins: number[] = [];
+  const joinValues: number[] = [];
+  for (let c = 0; c < w * h; c++) {
+    const block = (grid[c] & F_BLOCK) !== 0;
+    if (block) blocks.push(c);
+    if (numbers[c] === -1) continue;
+    (block ? joins : lengths).push(c);
+    (block ? joinValues : lengthValues).push(numbers[c]);
+  }
+  return {
+    block: clueList(blocks, new Array<number>(blocks.length).fill(0), w * h),
+    length: clueList(lengths, lengthValues, w * h),
+    joins: clueList(joins, joinValues, w * h),
+  };
+}
+
+/** The space a board's ladder runs on. */
+function sticksSpace(w: number, h: number): GridSpace {
+  return describedSpace(sticks.units, w, h);
+}
+
+/** The marks over `values`, every blank square open both ways. */
+function sticksMarks(sp: GridSpace, dl: sticks.Dealt, values: Uint8Array): CellMarks {
+  const m = new CellMarks(sp, ~0, values);
+  // A square holds a line or a block, never both, so the seed cannot clash.
+  m.seed(values, (c) => sticks.domainOf(sp, dl, c));
+  return m;
+}
+
+/** The value square `x` holds with `c` supposed to hold `a`. */
+const held = (m: CellMarks, c: number, a: number, x: number): number =>
+  x === c ? a : m.value(x);
+
+/** The squares of the line square `k` holds a line along, the way it runs:
+ * its row for a line across, its column for one up and down. */
+function lineOf(sp: GridSpace, k: number, d: number): readonly number[] {
+  return sp.lineCells[d === ACROSS ? sp.rowOf[k] : sp.colOf[k]];
+}
+
+/** The line through square `k`, with `c` supposed to hold `a`: the
+ * description's `stick(k)`. */
+function stickUnder(m: CellMarks, k: number, c: number, a: number): number[] {
+  const d = held(m, c, a, k);
+  if (d !== ACROSS && d !== DOWN) return [];
+  const L = lineOf(m.sp, k, d);
+  return [
+    ...stretch(
+      L,
+      k,
+      L.filter((x) => held(m, c, a, x) === d),
+    ),
+  ];
+}
+
+/** The squares numbered square `k`'s line can still reach, with `c`
+ * supposed to hold `a`: the description's `reach(k)`, as squares. */
+function reachUnder(
+  m: CellMarks,
+  dl: sticks.Dealt,
+  k: number,
+  c: number,
+  a: number,
+): number[] {
+  const d = held(m, c, a, k);
+  if (d !== ACROSS && d !== DOWN) return [];
+  const L = lineOf(m.sp, k, d);
+  const free = (x: number): boolean =>
+    clueAt(dl.block, x) < 0 &&
+    (!(x === c || m.known(x)) || held(m, c, a, x) === d) &&
+    stretch(
+      L,
+      x,
+      L.filter((z) => held(m, c, a, z) === d || z === x),
+    ).every((y) => y === k || clueAt(dl.length, y) < 0);
+  return [...stretch(L, k, L.filter(free))];
+}
+
+/** Whether square `p`'s line runs into block `b` beside it, with `c`
+ * supposed to hold `a` where they are given. */
+function meets(m: CellMarks, p: number, b: number, c = -1, a = 0): boolean {
+  const { sp } = m;
+  const v = held(m, c, a, p);
+  return (
+    (v === ACROSS && sp.rowOf[p] === sp.rowOf[b]) ||
+    (v === DOWN && sp.colOf[p] === sp.colOf[b])
+  );
+}
+
+/** The ladder over the dealt board, each technique with its reason: built
+ * from the binding and the square placed, on the marks before the firing.
+ * The square's line was supposed the other way. */
+function sticksLadder(dl: sticks.Dealt): Ladder {
+  return describedLadder(sticks, {
+    overConnected: compiledRung(
+      sticks.overConnected,
+      dl,
+      ({ b, n }, c, to, m): SticksReason => ({
+        kind: "overConnected",
+        clue: b,
+        value: n,
+        // On the supposed board, so the square's own line is among them.
+        lines: m.sp.adj4[b].filter((p) => meets(m, p, b, c, 3 - to)),
+      }),
+    ),
+    tooLong: compiledRung(sticks.tooLong, dl, ({ k, v }, c, to, m): SticksReason => {
+      const segment = stickUnder(m, k, c, 3 - to);
+      return { kind: "tooLong", clue: k, value: v, size: segment.length, segment };
+    }),
+    twoClues: compiledRung(sticks.twoClues, dl, ({ k }, c, to, m): SticksReason => {
+      const segment = stickUnder(m, k, c, 3 - to);
+      const clues = segment.filter((x) => clueAt(dl.length, x) >= 0);
+      return { kind: "twoClues", clues, segment };
+    }),
+    starved: compiledRung(
+      sticks.starved,
+      dl,
+      ({ b, n }, c, _to, m): SticksReason => ({
+        kind: "starved",
+        clue: b,
+        value: n,
+        open: m.sp.adj4[b].filter(
+          (p) => p !== c && clueAt(dl.block, p) < 0 && (!m.known(p) || meets(m, p, b)),
+        ),
+      }),
+    ),
+    unreachable: compiledRung(
+      sticks.unreachable,
+      dl,
+      ({ k, v }, c, to, m): SticksReason => {
+        const span = reachUnder(m, dl, k, c, 3 - to);
+        return { kind: "unreachable", clue: k, value: v, max: span.length, span };
+      },
+    ),
+  });
+}
+
+/** Run the ladder on `m` to a fixpoint and say what it reached. */
+function deduce(m: CellMarks, ladder: Ladder, dl: sticks.Dealt): Deduced {
+  const techniques = ladderTechniques(m, ladder.entries, { [TIERS]: 0 }, {});
+  if (runLadder(m, techniques)) return "contradiction";
+  if (m.grid.includes(0)) return "stuck";
+  return sticks.isAnswer(m.grid, m.sp, dl) ? "solved" : "contradiction";
+}
+
+/** Whether the ladder alone finishes the board from its blocks and numbers.
+ * The lines `grid` holds are not read. */
+export function deductionFinishes(board: Board): boolean {
+  const dl = dealtOf(board);
+  const blocks = valuesOf(board.grid.map((cell) => cell & F_BLOCK));
+  const m = sticksMarks(sticksSpace(board.w, board.h), dl, blocks);
+  return deduce(m, sticksLadder(dl), dl) === "solved";
+}
+
+/** Whether a state's lines are an answer to its board, by the rules the
+ * description compiles to. */
+export function isSolved(state: SticksState): boolean {
+  return sticks.isAnswer(
+    valuesOf(state.grid),
+    sticksSpace(state.w, state.h),
+    dealtOf(state),
+  );
+}
+
+// --- the search for a board's answers ---------------------------------------
+
+/** What a search established about a board's answers; the one answer is the
+ * grid with every white square's line. */
+export type SticksAnswer = Answer<Uint8Array>;
+
+/**
+ * The positions a search may try before it gives up, each one a blank square
+ * assumed to hold a line one way and the deduction run from it.
+ *
+ * It decides which Unreasonable boards exist: a board that needs more is
+ * thrown away when dealing and refused when pasted. Lowering it refuses boards
+ * already dealt, which are in saved games.
+ */
+const SEARCH_BUDGET = 2_000;
+
+/**
+ * Count a board's answers up to two, by trial and error over the ladder:
+ * where it stops, take the first blank square and assume its line runs
+ * across, and then up and down. `grid` is read for its blocks only.
+ */
+export function searchAnswers(
+  board: Board,
+  budget: number = SEARCH_BUDGET,
+): SticksAnswer {
+  const dl = dealtOf(board);
+  const ladder = sticksLadder(dl);
+  const sp = sticksSpace(board.w, board.h);
+  return searchBoard<CellMarks, Uint8Array>({
+    start: sticksMarks(sp, dl, valuesOf(board.grid.map((cell) => cell & F_BLOCK))),
+    deduce: (m) => deduce(m, ladder, dl),
+    assume(m) {
+      const at = m.grid.indexOf(0);
+      if (at < 0) return [];
+      return [ACROSS, DOWN].map((d) => {
+        const sub = new CellMarks(sp, m.domain, m.grid.slice());
+        sub.cands.set(m.cands);
+        sub.place(at, d);
+        return sub;
+      });
+    },
+    solution: (m) =>
+      Uint8Array.from(m.grid, (d) =>
+        d === BLOCK ? F_BLOCK : d === ACROSS ? F_HOR : F_VER,
+      ),
+    budget,
+  });
+}
+
+/** Keyed on a state's clues, which every state of a game shares. */
+const answers = answerCache<Int16Array, Uint8Array>();
+
+/** What a search of a state's blocks and clues established about their
+ * answers. The player's lines are not read. */
+export function answerOf(state: SticksState): SticksAnswer {
+  return answers(state.numbers, () => searchAnswers(state));
+}
+
+// --- the hint's walk ---------------------------------------------------------
+
+/** The cells a reason's premise reads: its clues and the line or lines its
+ * supposition broke. */
+function readsOf(reason: SticksReason): number[] {
+  switch (reason.kind) {
+    case "tooLong":
+      return [reason.clue, ...reason.segment];
+    case "unreachable":
+      return [reason.clue, ...reason.span];
+    case "twoClues":
+      return [...reason.clues, ...reason.segment];
+    case "overConnected":
+      return [reason.clue, ...reason.lines];
+    case "starved":
+      return [reason.clue, ...reason.open];
+  }
+}
+
+/** The squares a firing decides, each with its reason, in the order the
+ * technique found them. */
+function firingOf({ facts, reasons }: Taken): SticksFiring[] {
+  const out: SticksFiring[] = [];
+  for (let i = 0; i < facts.length; i += 3)
+    out.push({
+      index: facts[i + 1],
+      to: facts[i + 2] === ACROSS ? "hor" : "ver",
+      reason: reasons[i / 3] as SticksReason,
+    });
+  return out;
+}
+
+/** Runaway/UX cap on plan length — the player rarely follows more than a few
+ * steps before diverging, and a recompute yields the next batch. */
+const HINT_PLAN_MAX = 40;
+
+/**
+ * The ordered plan from the player's own board: one entry a firing, each
+ * holding the squares one number decides by one rule, the firing that carries
+ * on from the squares the last decided first (`ladderWalk`). The caller
+ * guarantees the board agrees with the unique answer, so every move is
+ * correct.
+ */
+export function deduceSticksPlan(state: SticksState): SticksFiring[][] {
+  const dl = dealtOf(state);
+  const m = sticksMarks(sticksSpace(state.w, state.h), dl, valuesOf(state.grid));
+  m.budget = stepBudget("sticks hint");
+  const walk = ladderWalk(m, sticksLadder(dl).entries, { [TIERS]: 0 }, (f) => [
+    ...(f.reasons as SticksReason[]).flatMap(readsOf),
+    ...firingOf(f).map((g) => g.index),
+  ]);
+  const plan: SticksFiring[][] = [];
+  while (plan.length < HINT_PLAN_MAX) {
+    const taken = walk.next();
+    if (taken === null || taken === "contradiction") break;
+    plan.push(firingOf(taken));
+  }
+  return plan;
+}
+
+/**
+ * Flag every white cell whose placed line contradicts the board's one
+ * answer, which the search found at either tier
+ * (docs/solver-and-generator.md § "The solvable-game contract"). A
+ * *missing* line is merely incomplete, never a mistake. Returns `[]` where
+ * the search did not prove there is exactly one.
+ */
+export function findMistakes(state: SticksState): SticksMistake[] {
+  const { w, h } = state;
+  const answer = answerOf(state);
+  if (answer.kind !== "one") return [];
+  const solved = answer.solution;
+  const mistakes: SticksMistake[] = [];
+  for (let i = 0; i < w * h; i++) {
+    const placed = state.grid[i] & (F_HOR | F_VER);
+    if (!placed || state.grid[i] & F_BLOCK) continue;
+    if (placed !== (solved[i] & (F_HOR | F_VER))) mistakes.push({ index: i });
+  }
+  return mistakes;
+}
+
+// --- the live error overlay --------------------------------------------------
 
 /**
  * Merge adjacent same-orientation line cells into segments; when `lengths`
@@ -111,178 +447,66 @@ export function sticksMakeDsf(
 }
 
 /**
- * The most cells the horizontal segment through clue cell `idx` could ever
- * span: walk left then right past blanks/horizontals until a wall, a
- * vertical, or territory owned by a different clue. The `x > 1` bound on
- * the adjacent-segment look-behind is upstream's (not `x > 0`) — ported
- * verbatim, since the solver's exact power decides which boards generate.
- *
- * `span`, when given, collects the cells walked (`idx` first) — the hint's
- * `unreachable` evidence, which must be *this* walk's bounds and not an
- * approximation of them, or the narrated count is a lie.
+ * The most cells the segment through clue cell `idx` could ever span, across
+ * or down: walk both ways past blanks and lines that way until a block, a
+ * line the other way, a cell owned by a different clue, or a cell beside a
+ * line owned by one. It is the ladder's `reach`, read on the board as it is.
  */
-function maxSizeHorizontal(
-  grid: Uint8Array,
-  w: number,
-  dsf: Dsf,
-  lengths: Int32Array,
-  idx: number,
-  span?: number[],
-): number {
-  const y = Math.floor(idx / w);
-  let ret = 1;
-  span?.push(idx);
-  for (let action = -1; action < 2; action += 2) {
-    let x = (idx % w) + action;
-    while (x >= 0 && x < w) {
-      if (grid[y * w + x] & (F_BLOCK | F_VER)) break;
-      const c = dsf.canonify(y * w + x);
-      if (lengths[c] !== -1 && lengths[c] !== idx) break;
-      if (action === -1 && x > 1 && grid[y * w + x - 1] & F_HOR) {
-        const other = lengths[dsf.canonify(y * w + x - 1)];
-        if (other !== -1 && other !== idx) break;
-      }
-      if (action === 1 && x < w - 1 && grid[y * w + x + 1] & F_HOR) {
-        const other = lengths[dsf.canonify(y * w + x + 1)];
-        if (other !== -1 && other !== idx) break;
-      }
-      ret++;
-      span?.push(y * w + x);
-      x += action;
-    }
-  }
-  return ret;
-}
-
-/** Vertical twin of {@link maxSizeHorizontal} (upstream `y > 1` quirk kept). */
-function maxSizeVertical(
+function maxSize(
   grid: Uint8Array,
   w: number,
   h: number,
   dsf: Dsf,
   lengths: Int32Array,
   idx: number,
-  span?: number[],
+  across: boolean,
 ): number {
-  const x = idx % w;
+  const along = across ? F_HOR : F_VER;
+  const other = across ? F_VER : F_HOR;
+  const pos = across ? idx % w : Math.floor(idx / w);
+  const size = across ? w : h;
+  const at = (p: number): number => (across ? idx - (idx % w) + p : (idx % w) + p * w);
+  const owner = (p: number): number => lengths[dsf.canonify(at(p))];
   let ret = 1;
-  span?.push(idx);
   for (let action = -1; action < 2; action += 2) {
-    let y = Math.floor(idx / w) + action;
-    while (y >= 0 && y < h) {
-      if (grid[y * w + x] & (F_BLOCK | F_HOR)) break;
-      const c = dsf.canonify(y * w + x);
-      if (lengths[c] !== -1 && lengths[c] !== idx) break;
-      if (action === -1 && y > 1 && grid[(y - 1) * w + x] & F_VER) {
-        const other = lengths[dsf.canonify((y - 1) * w + x)];
-        if (other !== -1 && other !== idx) break;
-      }
-      if (action === 1 && y < h - 1 && grid[(y + 1) * w + x] & F_VER) {
-        const other = lengths[dsf.canonify((y + 1) * w + x)];
-        if (other !== -1 && other !== idx) break;
-      }
+    for (let p = pos + action; p >= 0 && p < size; p += action) {
+      if (grid[at(p)] & (F_BLOCK | other)) break;
+      if (owner(p) !== -1 && owner(p) !== idx) break;
+      const next = p + action;
+      if (
+        next >= 0 &&
+        next < size &&
+        grid[at(next)] & along &&
+        owner(next) !== -1 &&
+        owner(next) !== idx
+      )
+        break;
       ret++;
-      span?.push(y * w + x);
-      y += action;
     }
   }
   return ret;
 }
 
-// --- evidence collection (recording path only) ------------------------------
-
-/** Every line cell merged into segment root `c` — the run a length argument is
- * about. Allocated only when a reason is being recorded. */
-function segmentCells(grid: Uint8Array, dsf: Dsf, c: number, s: number): number[] {
-  const out: number[] = [];
-  for (let j = 0; j < s; j++) {
-    if (grid[j] & (F_HOR | F_VER) && dsf.canonify(j) === c) out.push(j);
-  }
-  return out;
-}
-
-/** The clue cells sharing segment root `c` — the two (or more) numbers a
- * `twoClues` contradiction would put on one line. */
-function segmentClues(numbers: Int16Array, dsf: Dsf, c: number, s: number): number[] {
-  const out: number[] = [];
-  for (let j = 0; j < s; j++) {
-    if (numbers[j] !== -1 && dsf.canonify(j) === c) out.push(j);
-  }
-  return out;
-}
-
 /**
- * A black clue's four sides, split the way {@link sticksValidate} counts them:
- * `lines` are the neighbors whose line runs into the clue (its `conn`), `open`
- * are the neighbors a line could still reach it from (the complement of
- * `other` — off-board sides and walls are in neither list, having no cell).
+ * The clue cells currently violating a constraint, the live red-number
+ * highlight (upstream's `F_ERROR` bit, from `sticks_validate`, recomputed
+ * pure per frame): a block with more lines than its number or fewer sides
+ * left to take them, a line with two numbers, a line longer than its number,
+ * or one too short that can no longer reach it.
  */
-function blackSides(
-  grid: Uint8Array,
-  w: number,
-  h: number,
-  i: number,
-): { lines: number[]; open: number[] } {
-  const x = i % w;
-  const y = Math.floor(i / w);
-  const lines: number[] = [];
-  const open: number[] = [];
-  // Each side's cell, and the bit that means "a line here runs into the clue".
-  const sides: [boolean, number, number][] = [
-    [x !== 0, i - 1, F_HOR],
-    [x !== w - 1, i + 1, F_HOR],
-    [y !== 0, i - w, F_VER],
-    [y !== h - 1, i + w, F_VER],
-  ];
-  for (const [onBoard, j, towards] of sides) {
-    if (!onBoard) continue;
-    if (grid[j] & towards) lines.push(j);
-    else if (!(grid[j] & (F_BLOCK | F_HOR | F_VER))) open.push(j);
-  }
-  return { lines, open };
-}
-
-/**
- * The constraint checker (upstream `sticks_validate`): complete when every
- * cell is filled and no clue is violated; invalid when some clue provably
- * cannot be met. When `errors` is given, the violating clue cells' indices
- * are collected (upstream's `F_ERROR` marking, kept out of the grid here —
- * the renderer reds those clue numbers).
- *
- * When `violations` is given, each failure additionally records **which**
- * clause broke and the cells it reasons over ({@link SticksReason}) — the
- * hint's reason source. Every costly allocation is behind that check, so the
- * generator's calls, which pass neither out-param, allocate nothing for it.
- */
-export function sticksValidate(
-  grid: Uint8Array,
-  numbers: Int16Array,
-  w: number,
-  h: number,
-  scratch?: SticksScratch,
-  errors?: number[],
-  violations?: SticksReason[],
-): SticksStatus {
-  const { dsf, lengths } = scratch ?? newScratch(w * h);
-  let ret: SticksStatus = "complete";
-  const s = w * h;
-
+export function findLiveErrors(state: SticksState): number[] {
+  const { grid, numbers, w, h } = state;
+  const dsf = new Dsf(w * h);
+  const lengths = new Int32Array(w * h);
   sticksMakeDsf(grid, numbers, w, h, dsf, lengths);
-
+  const errors: number[] = [];
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-
-      if (!grid[i]) {
-        if (ret === "complete") ret = "unfinished";
-        continue;
-      }
-      if (numbers[i] === -1) continue;
-
-      let error = false;
+      if (!grid[i] || numbers[i] === -1) continue;
       if (grid[i] & F_BLOCK) {
-        // A black clue: `conn` lines connected, `other` neighbors that can
-        // never connect (walls and edges count as unconnectable).
+        // `conn` lines run into the block; `other` sides never can (an edge,
+        // a block, or a line the other way).
         let conn = 0;
         let other = 0;
         if (x === 0 || grid[i - 1] & (F_VER | F_BLOCK)) other++;
@@ -293,441 +517,25 @@ export function sticksValidate(
         if (x !== w - 1 && grid[i + 1] & F_HOR) conn++;
         if (y !== 0 && grid[i - w] & F_VER) conn++;
         if (y !== h - 1 && grid[i + w] & F_VER) conn++;
-        // Split for the recorder; `error` is set by exactly the same disjunction.
-        if (conn > numbers[i]) {
-          error = true;
-          if (violations) {
-            violations.push({
-              kind: "overConnected",
-              clue: i,
-              value: numbers[i],
-              lines: blackSides(grid, w, h, i).lines,
-            });
-          }
-        } else if (other > 4 - numbers[i]) {
-          error = true;
-          if (violations) {
-            const { lines, open } = blackSides(grid, w, h, i);
-            violations.push({
-              kind: "starved",
-              clue: i,
-              value: numbers[i],
-              open: [...lines, ...open],
-            });
-          }
-        }
-      } else {
-        const c = dsf.canonify(i);
-        if (lengths[c] < 0) {
-          // -2: two clues on one segment ("a line can't overlap more than
-          // one number"). A clued cell's own segment always has a clue, so
-          // -1 is unreachable here.
-          error = true;
-          if (violations) {
-            violations.push({
-              kind: "twoClues",
-              clues: segmentClues(numbers, dsf, c, s),
-              segment: segmentCells(grid, dsf, c, s),
-            });
-          }
-        } else {
-          const size = dsf.size(c);
-          // `i` is clued and in segment `c`, so `lengths[c] === i` here.
-          const target = numbers[lengths[c]];
-          if (size > target) {
-            error = true;
-            if (violations) {
-              violations.push({
-                kind: "tooLong",
-                clue: i,
-                value: target,
-                size,
-                segment: segmentCells(grid, dsf, c, s),
-              });
-            }
-          } else if (size < target) {
-            const span = violations ? [] : undefined;
-            const max =
-              grid[i] & F_HOR
-                ? maxSizeHorizontal(grid, w, dsf, lengths, i, span)
-                : maxSizeVertical(grid, w, h, dsf, lengths, i, span);
-            if (max < target) {
-              error = true;
-              if (span) {
-                violations?.push({
-                  kind: "unreachable",
-                  clue: i,
-                  value: target,
-                  max: span.length,
-                  span,
-                });
-              }
-            }
-          }
-        }
+        if (conn > numbers[i] || other > 4 - numbers[i]) errors.push(i);
+        continue;
       }
-
-      if (error) {
-        errors?.push(i);
-        ret = "invalid";
+      const c = dsf.canonify(i);
+      // -2: two clues on one segment. A clued cell's own segment always has
+      // a clue, so -1 is unreachable here.
+      if (lengths[c] < 0) {
+        errors.push(i);
+        continue;
       }
+      const size = dsf.size(c);
+      const target = numbers[lengths[c]];
+      if (
+        size > target ||
+        (size < target &&
+          maxSize(grid, w, h, dsf, lengths, i, (grid[i] & F_HOR) !== 0) < target)
+      )
+        errors.push(i);
     }
   }
-  return ret;
-}
-
-/**
- * One deduction (upstream `sticks_try`): find the first blank cell where one
- * orientation is provably invalid, commit the other, and report progress.
- */
-export function sticksTry(
-  grid: Uint8Array,
-  numbers: Int16Array,
-  w: number,
-  h: number,
-  scratch: SticksScratch,
-): boolean {
-  const s = w * h;
-  for (let i = 0; i < s; i++) {
-    if (grid[i]) continue;
-
-    grid[i] = F_HOR;
-    if (sticksValidate(grid, numbers, w, h, scratch) === "invalid") {
-      grid[i] = F_VER;
-      return true;
-    }
-    grid[i] = F_VER;
-    if (sticksValidate(grid, numbers, w, h, scratch) === "invalid") {
-      grid[i] = F_HOR;
-      return true;
-    }
-    grid[i] = 0;
-  }
-  return false;
-}
-
-/**
- * Clear every white cell, then iterate {@link sticksTry} to a fixpoint
- * (upstream `sticks_solve_game`). Mutates `grid`; returns the final verdict —
- * `"complete"` exactly when the deduction alone solves the board.
- */
-export function sticksSolveGame(
-  grid: Uint8Array,
-  numbers: Int16Array,
-  w: number,
-  h: number,
-): SticksStatus {
-  const s = w * h;
-  for (let i = 0; i < s; i++) {
-    if (!(grid[i] & F_BLOCK)) grid[i] = 0;
-  }
-  return deduceFrom(grid, numbers, w, h, newScratch(s));
-}
-
-/** Iterate {@link sticksTry} to a fixpoint from the lines `grid` holds, and
- * say where that leaves it. */
-function deduceFrom(
-  grid: Uint8Array,
-  numbers: Int16Array,
-  w: number,
-  h: number,
-  scratch: SticksScratch,
-): SticksStatus {
-  let ret = sticksValidate(grid, numbers, w, h, scratch);
-  while (ret === "unfinished") {
-    if (!sticksTry(grid, numbers, w, h, scratch)) break;
-    ret = sticksValidate(grid, numbers, w, h, scratch);
-  }
-  return ret;
-}
-
-// --- the search for a board's answers ---------------------------------------
-
-/** What a search established about a board's answers; the one answer is the
- * grid with every white square's line. */
-export type SticksAnswer = Answer<Uint8Array>;
-
-/**
- * The positions a search may try before it gives up, each one a blank square
- * assumed to hold a line one way and the deduction run from it.
- *
- * It decides which Unreasonable boards exist: a board that needs more is
- * thrown away when dealing and refused when pasted. Lowering it refuses boards
- * already dealt, which are in saved games.
- */
-const SEARCH_BUDGET = 2_000;
-
-/**
- * Count a board's answers up to two, by trial and error over the solver:
- * where it stops, take the first blank square and assume its line runs
- * across, and then up and down. `grid` is read for its blocks only.
- */
-export function searchAnswers(
-  grid: Uint8Array,
-  numbers: Int16Array,
-  w: number,
-  h: number,
-  budget: number = SEARCH_BUDGET,
-): SticksAnswer {
-  const scratch = newScratch(w * h);
-  return searchBoard<Uint8Array, Uint8Array>({
-    start: grid.map((cell) => cell & F_BLOCK),
-    deduce(position) {
-      const status = deduceFrom(position, numbers, w, h, scratch);
-      if (status === "complete") return "solved";
-      return status === "invalid" ? "contradiction" : "stuck";
-    },
-    assume(position) {
-      const at = position.indexOf(0);
-      if (at < 0) return [];
-      return [F_HOR, F_VER].map((line) => {
-        const assumed = position.slice();
-        assumed[at] = line;
-        return assumed;
-      });
-    },
-    solution: (position) => position,
-    budget,
-  });
-}
-
-/** Keyed on a state's clues, which every state of a game shares. */
-const answers = answerCache<Int16Array, Uint8Array>();
-
-/** What a search of a state's blocks and clues established about their
- * answers. The player's lines are not read. */
-export function answerOf(state: SticksState): SticksAnswer {
-  return answers(state.numbers, () =>
-    searchAnswers(state.grid, state.numbers, state.w, state.h),
-  );
-}
-
-/** Whether the deduction alone finishes the board from its blocks and
- * clues. The player's lines are not read. */
-export function solverFinishes(state: SticksState): boolean {
-  const { w, h, numbers } = state;
-  return sticksSolveGame(state.grid.slice(), numbers, w, h) === "complete";
-}
-
-// --- hint deduction (a recording twin of the same one technique) ------------
-
-/** One forced cell with the contradiction that forces it. */
-export interface SticksFiring {
-  index: number;
-  to: Exclude<SticksLine, "none">;
-  reason: SticksReason;
-}
-
-/**
- * Which contradiction to narrate when a trial breaks more than one clue.
- *
- * Most-immediately-checkable first: a black clue's lines and a run's length are
- * things the player can count off the board in a glance, while the two "not yet
- * wrong, but can no longer come right" arguments (`starved`, `unreachable`)
- * take a moment's thought. Fixed, so the plan is recompute-stable.
- */
-const REASON_PRIORITY: SticksReason["kind"][] = [
-  "overConnected",
-  "tooLong",
-  "twoClues",
-  "starved",
-  "unreachable",
-];
-
-/** Re-run the (already rejected) trial board collecting reasons, and pick the
- * clearest. Called once per firing, not once per trial, so the scan above stays
- * allocation-free. */
-function classifyTrial(
-  grid: Uint8Array,
-  numbers: Int16Array,
-  w: number,
-  h: number,
-  scratch: SticksScratch,
-): SticksReason {
-  const violations: SticksReason[] = [];
-  sticksValidate(grid, numbers, w, h, scratch, undefined, violations);
-  for (const kind of REASON_PRIORITY) {
-    const hit = violations.find((v) => v.kind === kind);
-    if (hit) return hit;
-  }
-  // Unreachable: the caller only classifies a board `sticksValidate` has
-  // already called invalid, and every one of its `error = true` branches
-  // records a reason.
-  throw new Error("sticks hint: invalid board produced no reason");
-}
-
-/**
- * The recording twin of {@link sticksTry} for one cell: which orientation is
- * provably invalid there, and why. Restores the cell before returning.
- */
-function forcedAt(
-  grid: Uint8Array,
-  numbers: Int16Array,
-  w: number,
-  h: number,
-  scratch: SticksScratch,
-  i: number,
-): SticksFiring | null {
-  grid[i] = F_HOR;
-  if (sticksValidate(grid, numbers, w, h, scratch) === "invalid") {
-    const reason = classifyTrial(grid, numbers, w, h, scratch);
-    grid[i] = 0;
-    return { index: i, to: "ver", reason };
-  }
-  grid[i] = F_VER;
-  if (sticksValidate(grid, numbers, w, h, scratch) === "invalid") {
-    const reason = classifyTrial(grid, numbers, w, h, scratch);
-    grid[i] = 0;
-    return { index: i, to: "hor", reason };
-  }
-  grid[i] = 0;
-  return null;
-}
-
-/** Identity of an *argument*: the rule that fired and the clue it fired on.
- * Two cells sharing one are forced by the same insight, not merely by the same
- * rule — which is what quality-bar rule 2 groups on. */
-function reasonKey(r: SticksReason): string {
-  return r.kind === "twoClues"
-    ? `twoClues:${[...r.clues].sort((a, b) => a - b).join(",")}`
-    : `${r.kind}:${r.clue}`;
-}
-
-/**
- * Every deduction *firing* on **this** board — each the cells one
- * clue-and-rule forces, in cell order — in the order the scan met them.
- *
- * Deliberately a **parallel** function rather than a recorder threaded through
- * `sticksTry`: the generator's deduction is then untouched by construction, so
- * the frozen differential cannot drift. It runs from whatever board it is
- * handed — unlike {@link sticksSolveGame}, which wipes every white cell first
- * and so can never be a hint's engine — and rescans every blank cell on every
- * call, which is why a mid-game board needs no cascade priming
- * (docs/hints.md § "A hint must resume from any position").
- *
- * Where `sticksTry` returns at its first success, this keeps scanning: a black
- * clue that has run out of lines to give rules out *all* its open neighbors at
- * once, and telling the player that four times over is four hints for one
- * insight. Measured over 20 boards at the 7×7 preset, 21% of firings decide
- * more than one cell (mean 1.2, max 5), and the black-clue rules cluster hardest
- * (mean 1.5). Every cell in the returned group is forced on the board *as
- * handed in*, so the group is simultaneous, not a chain — a chain would stay
- * separate steps.
- */
-function sticksFirings(
-  grid: Uint8Array,
-  numbers: Int16Array,
-  w: number,
-  h: number,
-  scratch: SticksScratch,
-): SticksFiring[][] {
-  const s = w * h;
-  const groups = new Map<string, SticksFiring[]>();
-  for (let i = 0; i < s; i++) {
-    if (grid[i]) continue;
-    const firing = forcedAt(grid, numbers, w, h, scratch, i);
-    if (!firing) continue;
-    const key = reasonKey(firing.reason);
-    const group = groups.get(key);
-    if (group) group.push(firing);
-    else groups.set(key, [firing]);
-  }
-  // In the order each group's first cell was met, so the first is the one the
-  // scan alone would give.
-  return [...groups.values()];
-}
-
-/** The cells a firing's premise reads, which a hint plan continues from: its
- * clues and the line or lines its trial broke, and the cells it decides. */
-function readsOf(group: SticksFiring[]): number[] {
-  const { reason } = group[0];
-  const own = group.map((f) => f.index);
-  switch (reason.kind) {
-    case "tooLong":
-      return [reason.clue, ...reason.segment, ...own];
-    case "unreachable":
-      return [reason.clue, ...reason.span, ...own];
-    case "twoClues":
-      return [...reason.clues, ...reason.segment, ...own];
-    case "overConnected":
-      return [reason.clue, ...reason.lines, ...own];
-    case "starved":
-      return [reason.clue, ...reason.open, ...own];
-  }
-}
-
-/** Runaway/UX cap on plan length — the player rarely follows more than a few
- * steps before diverging, and a recompute yields the next batch. */
-const HINT_PLAN_MAX = 40;
-
-/**
- * The ordered plan from the player's own board: one entry per deduction
- * firing, each holding the cells that firing decides. Deterministic (cell-order
- * scan, fixed reason priority), so it is recompute-stable. The caller
- * guarantees the board agrees with the unique solution, so every move is
- * correct.
- */
-export function deduceSticksPlan(state: SticksState): SticksFiring[][] {
-  const { w, h, numbers } = state;
-  const scratch = newScratch(w * h);
-  const board = state.grid.slice();
-  let last: SticksFiring[] | null = null;
-  const pass = singleFirings({
-    techniques: findingTechniques(
-      [
-        {
-          id: "refute",
-          tier: 0,
-          find: () => sticksFirings(board, numbers, w, h, scratch),
-        },
-      ],
-      (group) => {
-        for (const f of group) board[f.index] = f.to === "hor" ? F_HOR : F_VER;
-        last = group;
-      },
-      { reads: readsOf, writes: (group) => group.map((f) => f.index) },
-    ),
-    budget: stepBudget("sticks hint"),
-    // A plan works on the lines beside its last step before it moves on.
-    continuing: true,
-  });
-  return deduceHintPlan<Uint8Array, SticksFiring[], SticksStatus>({
-    board,
-    status: (grid) => sticksValidate(grid, numbers, w, h, scratch),
-    incomplete: "unfinished",
-    next: () => (pass.next() ? last : null),
-    planCap: HINT_PLAN_MAX,
-    budget: stepBudget("sticks hint"),
-  }).plan;
-}
-
-// --- play-facing wrappers over immutable state ------------------------------
-
-/** Clue cells currently violating a constraint — the live red-number
- * highlight (upstream's `F_ERROR` bit, recomputed pure per frame). */
-export function findLiveErrors(state: SticksState): number[] {
-  const errors: number[] = [];
-  sticksValidate(state.grid, state.numbers, state.w, state.h, undefined, errors);
   return errors;
-}
-
-/**
- * Flag every white cell whose placed line contradicts the board's one
- * answer, which the search found at either tier
- * (docs/solver-and-generator.md § "The solvable-game contract"). A
- * *missing* line is merely incomplete, never a mistake. Returns `[]` where
- * the search did not prove there is exactly one.
- */
-export function findMistakes(state: SticksState): SticksMistake[] {
-  const { w, h } = state;
-  const answer = answerOf(state);
-  if (answer.kind !== "one") return [];
-  const solved = answer.solution;
-  const mistakes: SticksMistake[] = [];
-  for (let i = 0; i < w * h; i++) {
-    const placed = state.grid[i] & (F_HOR | F_VER);
-    if (!placed || state.grid[i] & F_BLOCK) continue;
-    if (placed !== (solved[i] & (F_HOR | F_VER))) mistakes.push({ index: i });
-  }
-  return mistakes;
 }

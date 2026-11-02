@@ -73,10 +73,10 @@ import {
 import {
   answerOf,
   deduceSticksPlan,
+  deductionFinishes,
   findMistakes,
+  isSolved,
   type SticksFiring,
-  solverFinishes,
-  sticksValidate,
 } from "./solver.ts";
 import {
   cloneState,
@@ -349,9 +349,7 @@ function executeMove(state: SticksState, move: SticksMove): SticksState {
 }
 
 function status(s: SticksState): GameStatus {
-  return sticksValidate(s.grid, s.numbers, s.w, s.h) === "complete"
-    ? "solved"
-    : "ongoing";
+  return isSolved(s) ? "solved" : "ongoing";
 }
 
 function solve(orig: SticksState): SolveResult<SticksMove> {
@@ -361,7 +359,7 @@ function solve(orig: SticksState): SolveResult<SticksMove> {
   }));
 }
 
-// --- hint (a second projection of the one contradiction technique) ----------
+// --- hint (the ladder's firings, narrated) ----------------------------------
 
 /**
  * Narrate *why* the square can only take one orientation, reading the clue
@@ -537,12 +535,12 @@ export const sticksGame: Game<
   interpretMove,
   executeMove,
   status,
-  // Easy is what the solver's one deduction finishes and the hint, which
-  // makes the same deduction from the player's lines, finishes too.
+  // Easy is what the ladder finishes, and the hint, which walks the same
+  // ladder from the player's lines, finishes too.
   difficulty: searchTierContract<SticksParams, SticksState>({
     newState,
     deductionFinishes: (state) =>
-      solverFinishes(state) && hintFinishes(sticksGame, state),
+      deductionFinishes(state) && hintFinishes(sticksGame, state),
     answerOf,
   }),
 

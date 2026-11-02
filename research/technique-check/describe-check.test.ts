@@ -399,6 +399,33 @@ const PLANTS: Record<string, Plant> = {
   ray: {
     for: "k in clues(laser), s = at(k), u = ahead(s) where u != none, d in {1, 2}, r = beam(s, u, d) where r != clue(laser, s)",
   },
+  // Sticks: the line a square is left with read as the one that breaks the
+  // block. Unsound only where the checker reads the supposition: ignoring it,
+  // no consistent marks hold more lines into a block than its number.
+  overConnected: {
+    conclude:
+      "forall c in adj4(b) where blank(c), a in cand(c) where (with place(c, 3 - a): count(p in adj4(b) where meets(p, b)) > n): place(c, 3 - a)",
+  },
+  // A line reaching its number's length read as too long.
+  tooLong: {
+    conclude:
+      "forall c in cells(row(k)) + cells(col(k)) where blank(c), a in cand(c) where (with place(c, a): |stick(k)| >= v): place(c, 3 - a)",
+  },
+  // A line's own number read as a second.
+  twoClues: {
+    conclude:
+      "forall c in cells(row(k)) + cells(col(k)) where blank(c), a in cand(c) where (with place(c, a): count(j in stick(k) where numbered(j)) >= 1): place(c, 3 - a)",
+  },
+  // A block left just as many open sides as its number read as starved.
+  starved: {
+    conclude:
+      "forall c in adj4(b) where blank(c), a in cand(c) where (with place(c, a): sides(b) <= n): place(c, 3 - a)",
+  },
+  // A line left just room enough read as left too little.
+  unreachable: {
+    conclude:
+      "forall c in cells(row(k)) + cells(col(k)) where blank(c), a in cand(c) where (with place(c, a): known(k) and reach(k) <= v): place(c, 3 - a)",
+  },
 };
 
 /** How many of a technique's first binders each query fixes, one query a
@@ -671,9 +698,9 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
   writeFileSync(
     fileURLToPath(
       new URL(
-        only === null
+        only === null && techniques === null
           ? "results-describe.txt"
-          : `results-describe-${[...only, ...(techniques ?? [])].join("-")}.txt`,
+          : `results-describe-${[...(only ?? []), ...(techniques ?? [])].join("-")}.txt`,
         import.meta.url,
       ),
     ),
@@ -699,7 +726,10 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
   const kept: Record<string, string> = Object.fromEntries(
     Object.entries(
       JSON.parse(readFileSync(path, "utf8")) as Record<string, string>,
-    ).filter(([k]) => isDeadEndKey(k) || (only !== null && !isChecked(k))),
+    ).filter(
+      ([k]) =>
+        isDeadEndKey(k) || ((only !== null || techniques !== null) && !isChecked(k)),
+    ),
   );
   writeFileSync(
     path,

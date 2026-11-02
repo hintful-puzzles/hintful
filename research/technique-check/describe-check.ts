@@ -476,6 +476,15 @@ interface Ctx {
   /** A technique reads the marks; a rule reads the answer. */
   mode: "technique" | "rule";
   concluding: boolean;
+  /** The `with`s the formula is inside, innermost first. */
+  supposed: readonly Supposition[];
+}
+
+/** `with place(c, v)`: the cell, its alternatives under their guards, and
+ * the value it is supposed to hold. */
+interface Supposition {
+  at: readonly Alt[];
+  v: Nx;
 }
 
 type Env = ReadonlyMap<string, V>;
@@ -568,8 +577,34 @@ function vsetOf(board: Board, members: (d: number) => Bx): V {
  * technique. */
 function cellValue(ctx: Ctx, c: number): Nx {
   const a = ctx.board.ans[c];
-  return ctx.mode === "rule" ? a : ite(ctx.board.known[c], a, -1);
+  if (ctx.mode === "rule") return a;
+  let v: Nx = ite(ctx.board.known[c], a, -1);
+  // The `with`s in force, the innermost read last so that it decides.
+  for (let i = ctx.supposed.length - 1; i >= 0; i--)
+    v = ite(supposedAt(ctx.supposed[i], c), ctx.supposed[i].v, v);
+  return v;
 }
+
+/** Whether cell `c` is placed, under the suppositions in force. */
+function knownAt(ctx: Ctx, c: number): Bx {
+  return or(ctx.board.known[c], ...ctx.supposed.map((s) => supposedAt(s, c)));
+}
+
+/** Whether value `d` is among cell `c`'s candidates, under the suppositions
+ * in force: just the supposed value where `c` is a supposed cell. */
+function candAt(ctx: Ctx, c: number, d: number): Bx {
+  let g: Bx = ctx.board.cand[c][d] ?? false;
+  for (let i = ctx.supposed.length - 1; i >= 0; i--) {
+    const s = ctx.supposed[i];
+    const at = supposedAt(s, c);
+    g = or(and(at, cmp("=", s.v, d)), and(not(at), g));
+  }
+  return g;
+}
+
+/** Whether `s` supposes a value in cell `c`. */
+const supposedAt = (s: Supposition, c: number): Bx =>
+  s.at.find(([id]) => id === c)?.[1] ?? false;
 
 /** A number under exclusive guards that cover every case. */
 function joinNum(parts: readonly (readonly [Bx, number])[]): Nx {
@@ -603,6 +638,7 @@ const beamCache = new WeakMap<Board, Map<string, (readonly [Bx, number])[]>>();
  */
 function beamPaths(ctx: Ctx, s: number, u: number, d: Nx): (readonly [Bx, number])[] {
   const { board } = ctx;
+  if (ctx.supposed.length > 0) throw new TypeError("a beam is not read under with");
   const key = `${ctx.mode} ${s} ${u} ${d}`;
   const memo = typeof d === "number" ? beamCache.get(board)?.get(key) : undefined;
   if (memo !== undefined) return memo;
@@ -756,6 +792,16 @@ function evaluate(e: Expr, env: Env, ctx: Ctx): V {
       return aggregate(e, env, ctx);
     case "call":
       return call(e.fn, e.args, env, ctx);
+    case "with": {
+      if (ctx.mode !== "technique") throw new TypeError("with in a rule");
+      const at = alts(evaluate(e.cell, env, ctx), "with");
+      const v = num(evaluate(e.value, env, ctx), "with");
+      return evaluate(e.body, env, {
+        ...ctx,
+        concluding: false,
+        supposed: [{ at, v }, ...ctx.supposed],
+      });
+    }
   }
 }
 
@@ -934,10 +980,7 @@ function bindings(
         vals.set(c, d);
         if (b.from !== undefined && b.from !== "cand")
           throw new Error(`fill ${b.name} from ${b.from}`);
-        assign(
-          j + 1,
-          and(g, b.from === "cand" ? (ctx.board.cand[c][d] ?? false) : true),
-        );
+        assign(j + 1, and(g, b.from === "cand" ? candAt(ctx, c, d) : true));
       }
       vals.delete(c);
     };
@@ -1366,11 +1409,11 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
         ),
       );
     case "known":
-      return cellFn((c) => ({ k: "bool", v: board.known[c] }));
+      return cellFn((c) => ({ k: "bool", v: knownAt(ctx, c) }));
     case "value":
       return cellFn((c) => ({ k: "num", v: cellValue(ctx, c) }));
     case "cand":
-      return cellFn((c) => vsetOf(board, (d) => board.cand[c][d] ?? false));
+      return cellFn((c) => vsetOf(board, (d) => candAt(ctx, c, d)));
     case "abs": {
       const a = num(vs[0], fn);
       return {
@@ -1493,7 +1536,7 @@ function boardClues(kind: string, fields: ClueKind["fields"], ctx: Ctx): ClueSym
  * each present or not; one clue a place, its value unknown, for a kind whose
  * values are numbers. */
 function dealSymbolically(d: Description, board: Board): void {
-  const ctx: Ctx = { board, d, mode: "rule", concluding: false };
+  const ctx: Ctx = { board, d, mode: "rule", concluding: false, supposed: [] };
   for (const [kind, c] of d.clueKinds) {
     if (c.value === null) {
       board.clues.set(kind, boardClues(kind, c.fields, ctx));
@@ -1596,7 +1639,7 @@ function dealSymbolically(d: Description, board: Board): void {
 
 /** The rules, the answer's domain, and marks consistent with the answer. */
 function worldOf(d: Description, board: Board): Bx[] {
-  const ctx: Ctx = { board, d, mode: "rule", concluding: false };
+  const ctx: Ctx = { board, d, mode: "rule", concluding: false, supposed: [] };
   const out: Bx[] = [...board.clueDomain];
   board.ans.forEach((a, c) => {
     // A domain may be the cell's own (Seismic's, its area's numbers), unless
@@ -1721,6 +1764,7 @@ export function sizings(d: Description, order: number): Map<string, number>[] {
       d,
       mode: "rule",
       concluding: false,
+      supposed: [],
     };
     if (d.repeat === null) return true;
     const times = num(evaluate(d.repeat.times, new Map(), ctx), "repeat times");
@@ -1770,7 +1814,7 @@ export async function checkTechnique(
   dealPartitions(d, board);
   dealSymbolically(d, board);
   const world = worldOf(d, board);
-  const ctx: Ctx = { board, d, mode: "technique", concluding: false };
+  const ctx: Ctx = { board, d, mode: "technique", concluding: false, supposed: [] };
   const solver = new Z3.Solver();
   const rules = world.map((w) => asZ3(w));
   for (const w of rules) solver.add(w);

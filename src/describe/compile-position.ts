@@ -516,6 +516,7 @@ export function compilePlanning(
     epoch: null,
     prelude: null,
     relations: new Set(relations),
+    supposed: [],
   };
   const moves = applied.moves.map((m) => compileMove(m, layers, json.game, env));
   const finished = formulas("finished", applied.finish, "all", json.game, env);

@@ -257,6 +257,9 @@ interface Env {
   /** The relations the board deals, each a set of cells for each cell, read
    * `name(c)`: a planning game's. */
   relations: ReadonlySet<string>;
+  /** The suppositions of the `with`s the code is inside, innermost first:
+   * the names of the cell and of the value it is supposed to hold. */
+  supposed: readonly { cell: string; value: string }[];
 }
 
 /** What a position's layer holds a value of (an element's, or the board's
@@ -443,6 +446,7 @@ function early(
       return all([e.a, e.b]);
     case "quant":
     case "agg":
+    case "with":
       return false;
     case "call": {
       if (e.fn === "value" || e.fn === "known") marks.read = true;
@@ -561,9 +565,85 @@ function compileNode(e: Expr, scope: Scope, env: Env, out: Out): Val {
       return quantifier(e, scope, env, out);
     case "agg":
       return aggregate(e, scope, env, out);
+    case "with":
+      return supposing(e, scope, env, out);
     case "call":
       return call(e.fn, e.args, scope, env, out);
   }
+}
+
+/**
+ * `with place(c, d): P`: `P` read on the marks with `c` holding `d`. Its
+ * reads of the marks see the supposition (`env.supposed`), so none of them
+ * is computed outside it, and nothing in it concludes.
+ */
+function supposing(
+  e: Extract<Expr, { k: "with" }>,
+  scope: Scope,
+  env: Env,
+  out: Out,
+): Val {
+  if (env.answer !== null || env.position !== null)
+    throw new CompileError(
+      "with supposes a value on the marks, which only a technique reads",
+    );
+  const c = compileExpr(e.cell, scope, env, out);
+  expectElem(c, "cell", "with");
+  const d = compileExpr(e.value, scope, env, out);
+  expect(d, "num", "with");
+  const cell = Out.fresh("_wc");
+  const value = Out.fresh("_wd");
+  out.emit(`const ${cell} = ${c.code};`);
+  out.emit(`const ${value} = ${d.code};`);
+  const inner: Env = {
+    ...env,
+    concluding: false,
+    supposed: [{ cell, value }, ...env.supposed],
+    hoist: env.hoist === null ? null : { ...env.hoist, marks: false },
+  };
+  const body = compileExpr(e.body, scope, inner, out);
+  expect(body, "bool", "with");
+  return body;
+}
+
+/** `known(c)`, `value(c)` or `cand(c)` of cell `c`: the grid's in the answer
+ * check, the marks' in a technique, under the suppositions in force. */
+function markRead(fn: "known" | "value" | "cand", c: Val, env: Env, out: Out): Val {
+  if (env.answer) {
+    if (fn === "cand")
+      throw new CompileError("a rule reads the answer, never the marks");
+    return fn === "known"
+      ? { code: `(g[${c.code}] > 0)`, sort: BOOL }
+      : { code: `(g[${c.code}] || -1)`, sort: NUM };
+  }
+  if (env.supposed.length === 0 && !(fn === "cand" && env.memo)) {
+    const sort = fn === "known" ? BOOL : fn === "value" ? NUM : setOf(NUM);
+    return { code: `b.${fn}(${c.code})`, sort };
+  }
+  const x = once(c, out).code;
+  if (fn === "known")
+    return { code: supposedRead(x, env, () => "true", `b.known(${x})`), sort: BOOL };
+  if (fn === "value")
+    return { code: supposedRead(x, env, (s) => s.value, `b.value(${x})`), sort: NUM };
+  const plain = env.memo ? candOf(x, env) : `b.cand(${x})`;
+  return {
+    code: supposedRead(x, env, (s) => `(1 << ${s.value})`, plain),
+    sort: setOf(NUM),
+  };
+}
+
+/** A read of cell `x`'s marks under the suppositions in force, innermost
+ * first: `held(s)` is the read where `x` is the supposed cell `s`. */
+function supposedRead(
+  x: string,
+  env: Env,
+  held: (s: { cell: string; value: string }) => string,
+  plain: string,
+): string {
+  return env.supposed.reduceRight(
+    (acc, s) => `(${x} === ${s.cell} ? ${held(s)} : ${acc})`,
+    plain,
+  );
 }
 
 /** Whether `fn` names a partition, which as a function gives a cell's part. */
@@ -675,7 +755,14 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
     expect(d, "num", op);
     const c = compileExpr(e.b.args[0], scope, env, out);
     expectElem(c, "cell", "cand");
-    const has = `b.has(${c.code}, ${d.code})`;
+    const x = env.supposed.length === 0 ? c.code : once(c, out).code;
+    const at = env.supposed.length === 0 ? d.code : once(d, out).code;
+    const has = supposedRead(
+      x,
+      env,
+      (s) => `${at} === ${s.value}`,
+      `b.has(${x}, ${at})`,
+    );
     return { code: op === "in" ? has : `!${has}`, sort: BOOL };
   }
   const a = compileExpr(e.a, scope, env, out);
@@ -1029,6 +1116,8 @@ function substitute(
         ? { ...e, binders, body: rest(e.body) as Expr }
         : { ...e, binders, where: rest(e.where), term: rest(e.term) };
     }
+    case "with":
+      return { ...e, cell: go(e.cell), value: go(e.value), body: go(e.body) };
   }
 }
 
@@ -1059,6 +1148,8 @@ function readsOnlyAt(e: Expr, f: string, at: ReadonlySet<string>): boolean {
         e.binders.every((b) => go(b.of) && go(b.where)) &&
         (e.k === "quant" ? go(e.body) : go(e.where) && go(e.term))
       );
+    case "with":
+      return go(e.cell) && go(e.value) && go(e.body);
   }
 }
 
@@ -1291,7 +1382,14 @@ function fillLoop(
     } else rest.push(c);
   }
   const mask =
-    bnd.from === undefined ? "b.domain" : env.memo ? candOf(e, env) : `b.cand(${e})`;
+    bnd.from === undefined
+      ? "b.domain"
+      : supposedRead(
+          e,
+          env,
+          (s) => `(1 << ${s.value})`,
+          env.memo ? candOf(e, env) : `b.cand(${e})`,
+        );
   const r = Out.fresh("_r");
   const once0 = Out.fresh("_o");
   out.emit(`for (const ${e} of ${last}) ${fv}[${e}] = -1;`);
@@ -1389,6 +1487,8 @@ function reads(e: Expr, name: string): boolean {
       return reads(e.a, name) || reads(e.b, name);
     case "call":
       return e.fn === name || e.args.some((x) => reads(x, name));
+    case "with":
+      return reads(e.cell, name) || reads(e.value, name) || reads(e.body, name);
     case "quant":
     case "agg":
       return (
@@ -1952,6 +2052,8 @@ function call(
       if (vs.length !== 1 && vs.length !== 3)
         throw new CompileError(`beam takes 1 or 3, given ${vs.length}`);
       expectElem(vs[0], "slot", fn);
+      if (env.supposed.length > 0)
+        throw new CompileError("a beam is not read under with");
       if (env.answer) {
         if (vs.length === 3) throw new CompileError("a rule reads beam(s) alone");
         env.used.add("beamOf");
@@ -1970,6 +2072,8 @@ function call(
       expectElem(vs[0], "slot", fn);
       if (env.answer)
         throw new CompileError("a rule reads the answer, never the marks");
+      if (env.supposed.length > 0)
+        throw new CompileError("a beam is not read under with");
       env.used.add("ahead");
       return { code: `ahead(sp, b, ${vs[0].code})`, sort: elem("cell") };
     case "within":
@@ -2092,22 +2196,10 @@ function call(
       return { code: `(${p} === ${c.code} ? ${q} : ${p})`, sort: elem("cell") };
     }
     case "known":
-      arity(1);
-      if (env.answer) return { code: `(g[${cell(0)}] > 0)`, sort: BOOL };
-      return { code: `b.known(${cell(0)})`, sort: BOOL };
     case "value":
-      arity(1);
-      if (env.answer) return { code: `(g[${cell(0)}] || -1)`, sort: NUM };
-      return { code: `b.value(${cell(0)})`, sort: NUM };
     case "cand":
       arity(1);
-      if (env.answer)
-        throw new CompileError("a rule reads the answer, never the marks");
-      if (!env.memo) return { code: `b.cand(${cell(0)})`, sort: setOf(NUM) };
-      return {
-        code: candOf(once({ code: cell(0), sort: vs[0].sort }, out).code, env),
-        sort: setOf(NUM),
-      };
+      return markRead(fn, { code: cell(0), sort: vs[0].sort }, env, out);
     case "abs":
       arity(1);
       expect(vs[0], "num", fn);
@@ -2228,6 +2320,8 @@ function children(e: Expr): Expr[] {
       return [e.of];
     case "bin":
       return [e.a, e.b];
+    case "with":
+      return [e.cell, e.value, e.body];
     case "quant":
       return [
         ...e.binders.flatMap((b) => [b.of, ...(b.where ? [b.where] : [])]),
@@ -2556,6 +2650,8 @@ function places(e: Expr, env: Env): boolean {
       return places(e.of, env);
     case "bin":
       return places(e.a, env) || places(e.b, env);
+    case "with":
+      return places(e.body, env);
     case "quant":
       return (
         e.binders.some(
@@ -2632,6 +2728,7 @@ export function compileLibrary(
     epoch: null,
     prelude: null,
     relations: new Set(),
+    supposed: [],
   };
   const parts = Object.entries(lib.techniques).map(([id, stated]) => {
     const t: Technique = { ...parseTechnique(lib.library, id, stated), ...UNPLACED };
@@ -2798,6 +2895,7 @@ export function compileGame(
     epoch: null,
     prelude: null,
     relations: new Set(relations),
+    supposed: [],
   };
   for (const [kind, c] of d.clueKinds) clues.set(kind, clueSorts(kind, c, env));
   const domainLines = cellDomain(d.domain, env, d.json.sizes);
@@ -3001,7 +3099,9 @@ function answerCheck(json: DescriptionJson, d: Description, env: Env): string[] 
       out.emit(`const ${v} = cl.${kind}.v[${k}];`);
     } else if (!sorts.fields) {
       out.emit(`const ${at} = cl.${kind}.at[${k}];`);
-      out.emit(`const ${v} = cl.${kind}.v[${k}];`);
+      // A clue whose place is the whole of what it says (a block) has a value
+      // its meaning never reads.
+      if (reads(c.means, "v")) out.emit(`const ${v} = cl.${kind}.v[${k}];`);
     }
     const means = compileExpr(
       measured(c.means),
@@ -3061,6 +3161,8 @@ function measuredBy(grid: { w: string; h: string }): (e: Expr) => Expr {
         return { ...e, of: go(e.of) };
       case "bin":
         return { ...e, a: go(e.a), b: go(e.b) };
+      case "with":
+        return { ...e, cell: go(e.cell), value: go(e.value), body: go(e.body) };
       case "quant":
         return { ...e, binders: binders(e.binders), body: go(e.body) };
       case "agg":

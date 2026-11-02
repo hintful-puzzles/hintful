@@ -6,10 +6,10 @@
  * `placeSymmetricBlacks` — one `randomUpto` pair per rejection-sampling
  * attempt plus the `SYMM_ROT4` center draw), then per fill attempt one
  * `randomUpto(rs, 2)` per white cell and one `randomUpto(rs, n)` per
- * multi-cell segment's clue position, retried until the contradiction solver
- * deduces the fill back to completion (a unique, guess-free solution), then
- * one `shuffle` of the cell indices for the greedy clue minimization. The
- * solver is deterministic, so the desc is a pure function of the seed.
+ * multi-cell segment's clue position, retried until the ladder deduces the
+ * fill back to completion (a unique, guess-free solution), then one `shuffle`
+ * of the cell indices for the greedy clue minimization. The ladder is
+ * deterministic, so the desc is a pure function of the seed.
  */
 
 import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
@@ -18,7 +18,7 @@ import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { placeSymmetricBlacks } from "../../engine/symmetric-blacks.ts";
-import { searchAnswers, sticksMakeDsf, sticksSolveGame } from "./solver.ts";
+import { deductionFinishes, searchAnswers, sticksMakeDsf } from "./solver.ts";
 import { encodeDesc, F_BLOCK, F_HOR, F_VER, type SticksParams } from "./state.ts";
 
 /** A dealt board: its blocks, in a grid whose white squares may hold lines,
@@ -28,8 +28,8 @@ interface Dealt {
   numbers: Int16Array;
 }
 
-/** Blocks, and a fill of lines with every clue it gives, that the solver's
- * deduction finishes. Both tiers strip clues from one of these. */
+/** Blocks, and a fill of lines with every clue it gives, that the ladder
+ * finishes. Both tiers strip clues from one of these. */
 function clueFill(p: SticksParams, rng: RandomState): Dealt {
   const { w, h } = p;
   const s = w * h;
@@ -93,7 +93,7 @@ function clueFill(p: SticksParams, rng: RandomState): Dealt {
         else if (grid[i] & F_VER) numbers[i + w * randomUpto(rng, n)] = n;
       }
     }
-  } while (sticksSolveGame(grid, numbers, w, h) !== "complete");
+  } while (!deductionFinishes({ w, h, grid, numbers }));
 
   return { grid, numbers };
 }
@@ -133,8 +133,9 @@ function unreasonableBoard(p: SticksParams, rng: RandomState): Dealt {
     label: `sticks: Unreasonable generation (${w}x${h})`,
     draw: () => clueFill(p, rng),
     strip: (dealt, one) => stripClues(dealt, rng, one),
-    deduced: ({ grid, numbers }) => sticksSolveGame(grid, numbers, w, h) === "complete",
-    answer: ({ grid, numbers }, budget) => searchAnswers(grid, numbers, w, h, budget),
+    deduced: ({ grid, numbers }) => deductionFinishes({ w, h, grid, numbers }),
+    answer: ({ grid, numbers }, budget) =>
+      searchAnswers({ w, h, grid, numbers }, budget),
   });
 }
 
@@ -143,7 +144,7 @@ function unreasonableBoard(p: SticksParams, rng: RandomState): Dealt {
 function easyBoard(p: SticksParams, rng: RandomState): Dealt {
   const dealt = clueFill(p, rng);
   const { grid, numbers } = dealt;
-  stripClues(dealt, rng, () => sticksSolveGame(grid, numbers, p.w, p.h) === "complete");
+  stripClues(dealt, rng, () => deductionFinishes({ w: p.w, h: p.h, grid, numbers }));
   return dealt;
 }
 

@@ -25,12 +25,7 @@ import {
 import { newSticksDesc } from "./generator.ts";
 import { STICKS_RUNGS, sticksGame } from "./index.ts";
 import { COL_HINT_CELL, COL_LINE } from "./render.ts";
-import {
-  deduceSticksPlan,
-  newScratch,
-  type SticksReason,
-  sticksValidate,
-} from "./solver.ts";
+import { deduceSticksPlan, type SticksReason } from "./solver.ts";
 import {
   defaultParams,
   F_BLOCK,
@@ -61,35 +56,33 @@ const pinned = describeHintPins({
     journey: (_step, state) => deduceSticksPlan(state)[0].length > 1,
   },
   pins: {
-    /** Held on 102 of 485 positions walked. */
-    journey: "7x7b20s2:a2b2B_3aB0B1b2d3cBBa2_3BB2a2_2hB1B2a1B0a1_3b",
-    /** Held on 453 of 485 positions walked. */
+    /** Held on 100 of 485 positions walked. */
+    journey: "7x7b20s2de:a2b2B_3aB0B1b2d3cBBa2_3BB2a2_2hB1B2a1B0a1_3b",
+    /** Held on 430 of 485 positions walked. */
     tooLong: {
-      id: "7x7b20s2:1b2a1_1B_1aB3a2aBB1bB1b1d5_1bBa2B1Ba1aB3bB0_1_2b1b",
-      moves:
-        '[{"kind":"set","changes":[{"index":3,"line":"hor"}]},{"kind":"set","changes":[{"index":9,"line":"hor"}]}]',
+      id: "7x7b20s2de:4b1B2aB1bB2a1_2_1a2Bb4b1B1aB1_1a3cB1_1b3bB3_1aBaB2b2a",
+      moves: [{ kind: "set", changes: [{ index: 40, line: "hor" }] }],
     },
-    /** Held on 453 of 485 positions walked. */
-    unreachable: "7x7b20s2:a4cB3a2c3b1c2aB2aB1_1bB2aB3b4a2_1b2b1bB2a1_2a2",
-    /** Held on 326 of 485 positions walked. */
+    /** Held on 482 of 485 positions walked. */
+    unreachable: "7x7b20s2de:a1aB2a1aB1d1aB1a1_4_3a1d1g2B_2eB_1_3_3B_3_2a",
+    /** Held on 329 of 485 positions walked. */
     twoClues: {
-      id: "7x7b20s2:B1a1_1_2aB_1a2_1a2Bb6f1B2a3a1_1_3_1a1aB1c1bB1c3aB2",
+      id: "7x7b20s2de:aBb2Ba1a3aB3a1a1_2_1b2_1B1a3_2Bf1_2a2B1b3bB1b1B1a",
       moves:
-        '[{"kind":"set","changes":[{"index":9,"line":"hor"}]},{"kind":"set","changes":[{"index":8,"line":"hor"}]}]',
+        '[{"kind":"set","changes":[{"index":4,"line":"hor"}]},{"kind":"set","changes":[{"index":12,"line":"hor"}]},{"kind":"set","changes":[{"index":13,"line":"ver"}]}]',
     },
-    /** Held on 371 of 485 positions walked. */
-    overConnected: "7x7b20s2:a2b2B_3aB0B1b2d3cBBa2_3BB2a2_2hB1B2a1B0a1_3b",
-    /** Held on 408 of 485 positions walked. */
-    starved: "7x7b20s2:aB2aB1B_1a1_2_1B2b1e3B1_1a2c1B2a1_1_3a2a3aB3c2aBB1aB1_1",
+    /** Held on 327 of 485 positions walked. */
+    overConnected: "7x7b20s2de:a2b2B_3aB0B1b2d3cBBa2_3BB2a2_2hB1B2a1B0a1_3b",
+    /** Held on 353 of 485 positions walked. */
+    starved: "7x7b20s2de:aB2aB1B_1a1_2_1B2b1e3B1_1a2c1B2a1_1_3a2a3aB3c2aBB1aB1_1",
   },
 });
 
 describe("sticks hint — technique coverage", () => {
   it("every one of the five contradiction kinds fires on generated boards", () => {
-    // A rung that never fires is a rung nothing tests. Sticks' five
-    // are the whole of `sticksValidate`'s vocabulary, so this is also the
-    // check that the classifier is total: the sentence a pin opens with is
-    // the one for the reason the solver recorded there.
+    // A rung that never fires is a rung nothing tests. Sticks' five are the
+    // whole of its description's techniques, and the sentence a pin opens
+    // with is the one for the reason its technique recorded there.
     for (const kind of KINDS)
       expect(deduceSticksPlan(pinned(kind).state)[0][0].reason.kind).toBe(kind);
   });
@@ -202,7 +195,8 @@ describe("sticks hint — evidence counts out against the words", () => {
 
   it("a reachability argument shades exactly the span the walk covered", () => {
     // The span is the premise, so an approximated one would make the sentence
-    // false. It is also the *quirked* walk's span, deliberately.
+    // false. The reason computes it again from the description's `reach`, and
+    // one that came out as long as the number would say so here.
     let seen = 0;
     for (let seed = 0; seed < 12; seed++) {
       for (const r of reasons(seed)) {
@@ -250,6 +244,20 @@ describe("sticks hint — evidence counts out against the words", () => {
       }
     }
     expect(seen, "no `twoClues` reason fired across twelve seeds").toBeGreaterThan(0);
+  });
+
+  it("a line joining two numbers is said as the join, though too long for each", () => {
+    // A 2 and a 1 across the top row with one blank square between: a
+    // horizontal line there would make one line of three squares.
+    const state: SticksState = {
+      w: 3,
+      h: 2,
+      grid: new Uint8Array([F_HOR, 0, F_HOR, 0, 0, 0]),
+      numbers: new Int16Array([2, -1, 1, -1, -1, -1]),
+    };
+    const [first] = deduceSticksPlan(state);
+    expect(first[0]).toMatchObject({ index: 1, to: "ver" });
+    expect(first[0].reason.kind).toBe("twoClues");
   });
 });
 
@@ -351,34 +359,6 @@ describe("sticks hint — lifecycle", () => {
         state,
       ),
     ).toBe("off");
-  });
-});
-
-describe("sticks hint — recording stays off the solve path", () => {
-  it("collecting reasons does not change a single verdict", () => {
-    // The generator's byte-identity rests on this, and the differential is the
-    // other half of the check: `sticksFirings` is a parallel function, so
-    // the only shared surface is `sticksValidate`'s extra out-param.
-    let compared = 0;
-    for (let seed = 0; seed < 6; seed++) {
-      const { state } = board(seed);
-      const { w, h, numbers } = state;
-      const grid = state.grid.slice();
-      const scratch = newScratch(w * h);
-      for (let i = 0; i < w * h; i++) {
-        if (grid[i] & F_BLOCK) continue;
-        for (const bit of [F_HOR, F_VER]) {
-          grid[i] = bit;
-          const plain = sticksValidate(grid, numbers, w, h, scratch);
-          const recorded = sticksValidate(grid, numbers, w, h, scratch, undefined, []);
-          expect(recorded).toBe(plain);
-          compared++;
-        }
-        grid[i] = 0;
-      }
-    }
-    // Six all-block fixtures would compare nothing and pass.
-    expect(compared).toBeGreaterThan(100);
   });
 });
 

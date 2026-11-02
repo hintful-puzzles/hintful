@@ -22,7 +22,7 @@ import {
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
 import { sticksGame } from "./index.ts";
-import { answerOf, searchAnswers, solverFinishes } from "./solver.ts";
+import { answerOf, deductionFinishes, searchAnswers } from "./solver.ts";
 import {
   F_BLOCK,
   F_HOR,
@@ -134,7 +134,7 @@ describe("the fill counter these tests judge by", () => {
 describe("sticks' search for a board's answers", () => {
   const answers = (desc: string, budget?: number) => {
     const board = newState(FOUR, desc);
-    return searchAnswers(board.grid, board.numbers, 4, 4, budget).kind;
+    return searchAnswers(board, budget).kind;
   };
 
   it("says one, several or none", () => {
@@ -163,9 +163,7 @@ describe("sticks' search for a board's answers", () => {
       for (let seed = 0; seed < 8; seed++) {
         const { desc } = sticksGame.newDesc(p, randomNew(`one-position-${seed}`));
         const board = newState(p, desc);
-        expect(searchAnswers(board.grid, board.numbers, side, side, 1).kind, desc).toBe(
-          "one",
-        );
+        expect(searchAnswers(board, 1).kind, desc).toBe("one");
       }
     }
   });
@@ -176,7 +174,7 @@ describe("sticks' search for a board's answers", () => {
     // have none.
     const tally = { one: 0, several: 0, none: 0, "out-of-reach": 0 };
     const judge = (board: SticksState, label: string): void => {
-      const answer = searchAnswers(board.grid, board.numbers, board.w, board.h);
+      const answer = searchAnswers(board);
       tally[answer.kind]++;
       const count = countFills(board);
       expect(answer.kind, label).toBe(
@@ -233,7 +231,7 @@ describe("an Unreasonable Sticks board", () => {
     for (let seed = 0; seed < 3; seed++) {
       const { desc } = sticksGame.newDesc(p, randomNew(`unreasonable-${seed}`));
       const state = newState(p, desc);
-      expect(solverFinishes(state), desc).toBe(false);
+      expect(deductionFinishes(state), desc).toBe(false);
       expect(countFills(state), desc).toBe(1);
       // And the answer Solve and the mistake check go by is that fill.
       const solved = sticksGame.solve?.(state, state);
@@ -324,7 +322,7 @@ describe("an Unreasonable Sticks board", () => {
     let found = 0;
     let finished = 0;
     eachBoard(w, h, (board) => {
-      if (solverFinishes(board)) finished++;
+      if (deductionFinishes(board)) finished++;
       else if (countFills(board) === 1) found++;
     });
     expect(finished).toBeGreaterThan(0);
