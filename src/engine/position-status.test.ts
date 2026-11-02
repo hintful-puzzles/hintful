@@ -160,25 +160,37 @@ describe("a game's status is judged from the board alone", () => {
       // Only for a game no one click of which moves the board, which the walks
       // above have already tried. Each try starts from the solved board: a move
       // it made is undone, then Solve is undone and redone, so the game drops
-      // whatever the clicks selected.
+      // whatever the clicks selected. A click the game does not answer leaves
+      // the board and the Ui as they were, so a try goes on only from a click
+      // it answered: what would follow any other is tried without it.
       const at = targetPoints(game, pb);
       const clicks = (points: readonly { x: number; y: number }[]) => {
         const before = pb.moves();
+        let answered = false;
         for (const { x, y } of points) {
+          const answers = pb.answers();
           pb.m.processInput(x, y, LEFT_BUTTON);
           pb.m.processInput(x, y, LEFT_RELEASE);
+          answered = pb.answers() !== answers;
         }
         const moved = pb.moves() !== before;
         const broke = moved && game.status(pb.live().state) !== "solved";
         if (moved) pb.m.undo();
         pb.m.undo();
         pb.m.redo();
-        return { moved, broke };
+        return { moved, broke, answered };
       };
       const oneMoves = at.some((p) => clicks([p]).moved);
-      const inThree = () =>
-        at.some((p) => at.some((q) => at.some((r) => clicks([p, q, r]).broke)));
-      if (oneMoves || !inThree()) unbroken.push(id);
+      const breaksWithin = (
+        prefix: readonly { x: number; y: number }[],
+        more: number,
+      ): boolean =>
+        at.some((p) => {
+          const tried = clicks([...prefix, p]);
+          if (tried.broke) return true;
+          return tried.answered && more > 1 && breaksWithin([...prefix, p], more - 1);
+        });
+      if (oneMoves || !breaksWithin([], 3)) unbroken.push(id);
     }
     expect(unbroken.sort()).toEqual(Object.keys(UNBREAKABLE).sort());
     expect(walked).toBeGreaterThanOrEqual(40);
