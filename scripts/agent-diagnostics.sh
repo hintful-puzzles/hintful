@@ -6,19 +6,18 @@
 # stops, and it once stopped for three weeks: the session keeps working, and
 # simply never hears about the error it just wrote. This plants one type error
 # in a fresh headless session, has the session say what it was shown, and
-# fails unless all four expected errors are in the answer.
+# fails unless all three expected errors are in the answer.
 #
 # Not a gate step. It starts a real agent session, so it costs tokens and
 # needs the `claude` CLI and a login. Run it by hand (`npm run
 # agent-diagnostics`) after anything that could move the language server: a
 # `typescript` upgrade, a Claude Code upgrade, a change to the LSP plugins.
 #
-# The expected answer, for `let result: string = 1;` on PLANT_LINE below:
-#   63:7   TS2322  Type 'number' is not assignable to type 'string'.
-#   65:5   TS2322  Type 'number' is not assignable to type 'string'.
-#   65:15  TS2362  The left-hand side of an arithmetic operation must be …
-#   67:3   TS2322  Type 'string' is not assignable to type 'number'.
-# `npm run typecheck` reports the same four for the same plant, which is what
+# The expected answer, for `let n: string = 0;` on PLANT_LINE below:
+#   214:7   TS2322  Type 'number' is not assignable to type 'string'.
+#   217:38  TS2356  An arithmetic operand must be of type 'any', 'number', …
+#   219:3   TS2322  Type 'string' is not assignable to type 'number'.
+# `npm run typecheck` reports the same three for the same plant, which is what
 # makes this an answer and not just a count.
 #
 # The wait is the instrument. Diagnostics are pushed, so they never ride on the
@@ -35,9 +34,9 @@
 # compiler; `npm run typecheck` is the gate's verdict.
 set -u
 
-FILE=src/engine/combi/index.ts
-PLANT_LINE='  let result = 1;'
-EXPECTED='63:7 65:5 65:15 67:3'
+FILE=src/engine/line-drawing.ts
+PLANT_LINE='  let n = 0;'
+EXPECTED='214:7 217:38 219:3'
 
 cd "$(dirname -- "$0")/.." || exit 2
 
@@ -61,9 +60,9 @@ servers() {
 }
 
 PROMPT='You are running a check of whether language-server diagnostics reach an agent after an edit. Do exactly this and nothing more.
-1. With the Edit tool, in '"$FILE"', change the line `  let result = 1;` to `  let result: string = 1;`.
-2. With the Bash tool run exactly `sleep 15`. Then read lines 60 to 68 of that file. Then run exactly `sleep 15` again and read those lines once more.
-3. With the Edit tool, change `  let result: string = 1;` back to `  let result = 1;`, restoring the line exactly.
+1. With the Edit tool, in '"$FILE"', change the line `  let n = 0;` that follows `const g = squareEdges(state.w, state.h);` to `  let n: string = 0;`.
+2. With the Bash tool run exactly `sleep 15`. Then read lines 211 to 220 of that file. Then run exactly `sleep 15` again and read those lines once more.
+3. With the Edit tool, change `  let n: string = 0;` back to `  let n = 0;`, restoring the line exactly.
 4. Report, verbatim and in full, every diagnostic you were shown at any point after step 1: in a tool result, in a system reminder, or in any attachment. Give each as line:character, severity, code and message, and say after which step it appeared. If you were shown none at all, say exactly "No diagnostics were shown." Do not run a typechecker, do not use the LSP tool, and do not infer what the errors would be: report only what was put in front of you.'
 
 servers | sort -u >"$WORK/before"
@@ -109,6 +108,6 @@ if ! git diff --quiet HEAD -- "$FILE"; then
 fi
 
 if [ "$FAILED" -eq 0 ]; then
-  echo "agent-diagnostics: all four expected errors reached the session, and $FILE is restored."
+  echo "agent-diagnostics: all three expected errors reached the session, and $FILE is restored."
 fi
 exit "$FAILED"

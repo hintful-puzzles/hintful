@@ -2,9 +2,10 @@
 
 **Status: filed by `describe-beams-tiles-and-bricks` (2026-11-02)**, the
 rest of step 7 of `describe-the-whole-catalog`'s plan (`design.md` § "The
-plan"), which split again at its start and took Bricks. It files step 8,
-`describe-connectivity`, when it is archived. It may split again by game at
-its start, the first part filing the second.
+plan"), which split again at its start and took Bricks. **Split again at its
+start (2026-11-02): it takes Light Up** and files Magnets as
+`describe-tiles`, which files step 8, `describe-connectivity` (`design.md`
+§ "The split").
 
 ## Why
 

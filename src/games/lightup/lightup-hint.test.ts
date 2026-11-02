@@ -14,10 +14,9 @@ import { randomNew } from "../../engine/random/index.ts";
 import { SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { type LightupHint, lightupGame } from "./index.ts";
-import { deduceHintPlan, solveUnique } from "./solver.ts";
+import { answerOf, deduceHintPlan, holdsBulb } from "./solver.ts";
 import {
   F_BLACK,
-  F_LIGHT,
   getSurrounds,
   idx,
   type LightupMove,
@@ -57,6 +56,17 @@ describe("plan completeness", () => {
       }
     });
   }
+});
+
+describe("the walk carries on from its last step", () => {
+  it("takes the walled-in square's bulb, then the 1 beside it", () => {
+    // Fourth row: 2, open, 1, open, 4, open, wall.
+    const steps = planSteps(lightupGame.newState(EASY, "c2mBc2a1a4aBc2m1c"));
+    expect(steps[0].rung).toBe("forcedLight");
+    expect(steps[0].move.ops).toEqual([{ kind: "light", x: 3, y: 3 }]);
+    expect(steps[1].rung).toBe("clueSatisfied");
+    expect(steps[1].highlights?.clue).toEqual({ x: 2, y: 3 });
+  });
 });
 
 describe("bleed rule: a step's marks stay inside its narrated evidence", () => {
@@ -229,15 +239,15 @@ describe("refusals", () => {
 
   it("flags a wrongly placed bulb, so the midend refuses it", () => {
     const state = freshState(EASY, "lh-wrong");
-    const solution = solveUnique(state);
-    if (!solution) throw new Error("board not uniquely solvable?");
+    const answer = answerOf(state);
+    if (answer.kind !== "one") throw new Error("board not uniquely solvable?");
     // Place a bulb on a square the solution keeps empty.
     let placed: LightupState | null = null;
     outer: for (let y = 0; y < state.h; y++) {
       for (let x = 0; x < state.w; x++) {
         const i = idx(x, y, state.w);
         if (state.flags[i] & F_BLACK) continue;
-        if (solution.flags[i] & F_LIGHT) continue;
+        if (holdsBulb(answer.solution, i)) continue;
         placed = lightupGame.executeMove(state, {
           ops: [{ kind: "light", x, y }],
         });

@@ -16,7 +16,7 @@
  * A continuing driver takes every firing through the offers and never runs a
  * rung outright, so `keep()` answers yes only to `run`: a recording rung that
  * only a continuing plan drives may call it and scan on, with no early return
- * of its own (Range, Unruly, Light Up).
+ * of its own (Range, Unruly).
  *
  * Collecting runs every site's firing on the board and undoes it, so `save`
  * must copy everything a firing writes, and the rung must be one whose sites

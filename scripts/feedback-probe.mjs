@@ -116,9 +116,8 @@ const TEST_FILE_FLOOR = 50;
 /**
  * Every `.ts` file under `src/engine/`, **recursively**.
  *
- * Recursive because the engine is no longer flat: `group-crowded-source-
- * directories` moved the grid and color families into subdirectories, and
- * `random/`, `combi/`, `tilings/` and `testing/` were already nested. A
+ * Recursive because the engine is not flat: `grid/`, `color/`, `random/` and
+ * `testing/` are subdirectories of it. A
  * one-level walk would still run — it would simply stop finding the tests that
  * live down there, and both things derived from this list (barrels, own tests)
  * would quietly shrink. See `checkTestFileFloor` for why that is the dangerous

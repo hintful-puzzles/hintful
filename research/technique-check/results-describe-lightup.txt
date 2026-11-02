@@ -1,0 +1,16 @@
+ok  lightup    shine                          3  sound    (want sound   )     9 queries    0.0s
+ok  lightup    shine (planted)                3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  lightup    shine                          4  sound    (want sound   )    16 queries    0.1s
+ok  lightup    shine (planted)                4  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  lightup    square                         3  sound    (want sound   )     3 queries    0.1s
+ok  lightup    square (planted)               3  unsound  (want unsound )     1 queries    0.0s   at line 3
+ok  lightup    square                         4  sound    (want sound   )     4 queries    0.5s
+ok  lightup    square (planted)               4  unsound  (want unsound )     1 queries    0.0s   at line 4
+ok  lightup    darkSet                        3  sound    (want sound   )     3 queries    0.2s
+ok  lightup    darkSet (planted)              3  unsound  (want unsound )     1 queries    0.0s   at line 3
+ok  lightup    darkSet                        4  sound    (want sound   )     4 queries    1.1s
+ok  lightup    darkSet (planted)              4  unsound  (want unsound )     1 queries    0.1s   at line 4
+ok  lightup    clueSet                        3  sound    (want sound   )     3 queries    0.3s
+ok  lightup    clueSet (planted)              3  unsound  (want unsound )     1 queries    0.0s   at line 3
+ok  lightup    clueSet                        4  sound    (want sound   )     4 queries    1.0s
+ok  lightup    clueSet (planted)              4  unsound  (want unsound )     1 queries    0.1s   at line 4

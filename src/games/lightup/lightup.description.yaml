@@ -26,3 +26,114 @@ help:
     * On harder boards: **a bulb that would spoil every option**. When some square has to be lit, or some clue has to get a bulb, from one of a few outlined squares, a square whose bulb would leave each of them lit or beside a full clue can't hold a bulb.
 
     On an Unreasonable board the hint may stop and say that nothing further follows by deduction.
+name: Light Up
+family: shading
+sizes:
+  # Unbounded but by the time a board takes to deal.
+  w: { min: 2, max: 99999 }
+  h: { min: 2, max: 99999 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is a bulb, 2 a square without one, which a wall is.
+  value:
+    sort: cell
+    domain: "{d in range(1, 2) where d = 2 or floor(c)}"
+define:
+  # Whether c is a square, not a wall.
+  floor(c): "clue(wall, c) < 0 and clue(number, c) < 0"
+  # The squares of line L that are not walls.
+  floors(L): "{x in cells(L) where floor(x)}"
+  # The squares a bulb in c lights: its own, and along its row and its
+  # column up to a wall.
+  lights(c): "stretch(row(c), c, floors(row(c))) + stretch(col(c), c, floors(col(c)))"
+  # Whether a bulb lights c.
+  lit(c): "exists p in lights(c): value(p) = 1"
+  # The bulbs beside k, and the squares beside it still free.
+  bulbs(k): "count(p in adj4(k) where value(p) = 1)"
+  free(k): "count(p in adj4(k) where not known(p))"
+  # Whether a bulb in d, lighting D, would leave s unable to hold one: d
+  # lights s, or d gives a number beside s its last bulb.
+  spoils(d, D, s): >-
+    s != d and (s in D
+    or (exists k in adj4(d) where clue(number, k) >= 0 and s in adj4(k):
+    bulbs(k) + 1 = clue(number, k)))
+  # The squares that could spoil s: those in its lines, and those beside a
+  # number beside it.
+  rivals(s): "lights(s) + set(p over k in adj4(s), p in adj4(k))"
+shape:
+  # Every square is lit.
+  - "forall c in cells where floor(c): lit(c)"
+  # No bulb lights another.
+  - "forall c in cells where value(c) = 1: forall p in lights(c) where p != c: value(p) = 2"
+clues:
+  # A wall that shows no number.
+  wall:
+    at: cell
+    value: "range(0, 0)"
+    means: "value(at) = 2"
+  # A numbered wall, with as many bulbs beside it.
+  number:
+    at: cell
+    value: "range(0, 4)"
+    means: "value(at) = 2 and bulbs(at) = v"
+freedom: { kind: fill }
+deal:
+  answer: walls at random, as symmetric as asked, and bulbs laid until every square is lit
+  number: on each wall, then as many hidden as the board stays at its tier
+  tier: one of the tiers
+tiers: [Easy, Normal, Unreasonable]
+techniques:
+  # A bulb lights its row and its column up to a wall, so no other bulb
+  # stands there.
+  - id: shine
+    on: place
+    tier: Easy
+    for: "c in cells where value(c) = 1, p in lights(c) where p != c and not known(p)"
+    conclude: "place(p, 2)"
+  # Upstream's scan, a column at a time: a dark square with one free square
+  # left that could light it takes a bulb there, and a number takes a bulb
+  # in every free square beside it, or none, where its count leaves no
+  # choice. Each also holds its rule on the marks as they stand, so a broken
+  # position is a contradiction.
+  - id: square
+    tier: Easy
+    for: "X in cols, c in cells(X), n = clue(number, c), L = lights(c)"
+    conclude: >-
+      (not floor(c)
+      or ((value(c) != 1 or (forall p in L where p != c: value(p) != 1))
+      and ((exists p in L: value(p) = 1)
+      or (count(p in L where not known(p)) >= 1
+      and (count(p in L where not known(p)) > 1
+      or (forall p in L where not known(p): place(p, 1)))))))
+      and (n < 0
+      or (bulbs(c) <= n and bulbs(c) + free(c) >= n
+      and (bulbs(c) < n or (forall p in adj4(c) where not known(p): place(p, 2)))
+      and (bulbs(c) + free(c) > n or (forall p in adj4(c) where not known(p): place(p, 1)))))
+  # A dark square is lit from one of the free squares that see it, so a
+  # square whose bulb would spoil every one of them holds none.
+  - id: darkSet
+    tier: Normal
+    for: >-
+      X in cols, u in cells(X) where floor(u), L = lights(u)
+      where not (exists p in L: value(p) = 1),
+      S = {s in L where not known(s)}
+    conclude: >-
+      |S| > 0
+      and (forall d in rivals(first(S)) where not known(d), D = lights(d)
+      where (forall s in S: spoils(d, D, s)):
+      place(d, 2))
+  # A number short of m bulbs among f free squares has one in every f - m + 1
+  # of them, so a square whose bulb would spoil all of some such set holds
+  # none.
+  - id: clueSet
+    tier: Normal
+    for: >-
+      X in cols, k in cells(X), n = clue(number, k) where n > bulbs(k),
+      F = {p in adj4(k) where not known(p)}, m = n - bulbs(k) where m <= |F|,
+      T in subsets(F) where |T| = |F| - m + 1
+    conclude: >-
+      forall d in rivals(first(T)) where not known(d), D = lights(d)
+      where (forall s in T: spoils(d, D, s)):
+      place(d, 2)

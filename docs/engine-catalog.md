@@ -48,7 +48,6 @@ the `engine-helpers` spec and the engine specs an entry names.
 | Ordered collections and small leaves |
 | – `sorted-multiset.ts` — `tree234`, idiomatically |
 | – `shuffle.ts` — Fisher–Yates + permutation parity |
-| – `combi/` — r-of-n combination iterator |
 | Generation |
 | – `retry-limit.ts` — a bound on generate-until-it-works |
 | – `divvy.ts` — random equal-omino partition |
@@ -392,7 +391,9 @@ disagreement of one unit splits a shared corner into two dots.
 
 ## Ordered collections and small leaves
 
-Read this part when you port a `tree234`, a shuffle or a combination loop.
+Read this part when you port a `tree234` or a shuffle. A loop over every
+r-subset of n is a technique's `T in subsets(S) where |T| = r`
+([`descriptions.md`](./descriptions.md) § "What a technique compiles to").
 
 ### `sorted-multiset.ts` — `tree234`, idiomatically
 
@@ -418,11 +419,6 @@ the methods' comments name the upstream calls they replace. Exemplar:
 sliding-tile generator's reachability check; correcting the parity stays
 the game's. Byte-match critical wherever the shuffled order feeds a desc.
 Exemplar: `fifteen/state.ts`.
-
-### `combi/` — r-of-n combination iterator
-
-Reach for it to enumerate every r-subset of n, in lexicographic order.
-Exemplar: `lightup/solver.ts`.
 
 ## Generation
 

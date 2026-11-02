@@ -4,11 +4,12 @@
  *
  * The board is two parallel typed arrays, as upstream: `flags` carries the
  * per-cell flag byte (black / numbered / bulb / impossible-mark, plus the
- * NUMBERUSED and MARK scratch bits that never appear in play states), and
+ * generator's MARK scratch bit, which never appears in play states), and
  * `lights` carries a numbered black square's clue value, or the number of
  * bulbs lighting an open square.
  */
 
+import { searchTiers } from "../../engine/answer-search.ts";
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
@@ -19,7 +20,7 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import type { PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, endParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -30,15 +31,13 @@ import {
   SYMM_ROT2,
   SYMM_ROT4,
 } from "../../engine/symmetric-blacks.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
+import type { Point } from "../../engine/types.ts";
 
 // --- cell flags (upstream values) -------------------------------------------
 
 export const F_BLACK = 1;
 /** Black square: it has a clue number attached. */
 export const F_NUMBERED = 2;
-/** Solver scratch: this clue was useful for solving (generator stripping). */
-export const F_NUMBERUSED = 4;
 /** Open square: player's "no bulb here" mark. */
 export const F_IMPOSSIBLE = 8;
 /** Open square: player's bulb. */
@@ -67,6 +66,9 @@ export interface LightupState {
   /** Clue value for numbered blacks; times-lit count for open squares. */
   lights: Int16Array;
   flags: Uint8Array;
+  /** The walls and numbers as dealt: shared by reference across every state
+   * of one game, which the answer search keys on. */
+  readonly board: Uint8Array;
 }
 
 /** One toggle, exactly upstream's `L`/`I` move atoms (both are toggles;
@@ -99,9 +101,10 @@ const BOARDS: LightupParams[] = [
   { w: 12, h: 16, blackpc: 20, symm: SYMM_ROT2, difficulty: 0 },
 ];
 
-// Difficulty 2 requires guess-and-backtrack by construction (the generator
-// rejects boards solvable at the tier below), so it is named Unreasonable.
-export const DIFF_NAMES: readonly string[] = tierNames(3, { search: true });
+/** Easy and Normal, the ladder's tiers, and Unreasonable, the engine's
+ * search. */
+export const TIERS = searchTiers(2);
+export const DIFF_NAMES: readonly string[] = TIERS.names;
 
 export function defaultParams(): LightupParams {
   return { ...BOARDS[0] };
@@ -169,9 +172,9 @@ function absentTier(p: LightupParams): string | null {
   if (squares < 9) return noSuchTier("puzzle of fewer than 9 squares", tier);
   if (is3x3 && p.symm !== SYMM_NONE)
     return noSuchTier("3x3 puzzle with symmetry", tier);
-  // Mirrored: none in 170,000 boards built. Turned, 8 in 170,000, and dealt:
-  // measured 2026-10-21 under the deal's deadline, twelve deals each from 5%,
-  // 10%, 20% and 30% black, three to five gave up and the rest took 30 to 50 s.
+  // Mirrored: none in 170,000 boards built under upstream's recursion, and
+  // none in 400,000 under the search (2026-11-02). Turned, the search deals
+  // one in 0.1 s (four seeds, 2026-11-02).
   if (p.w === 4 && p.h === 4 && p.symm === SYMM_REF4)
     return noSuchTier("4x4 puzzle with 4-way mirror symmetry", tier);
   return null;
@@ -271,29 +274,12 @@ export function setLight(
 
 // --- completion ----------------------------------------------------------------------
 
-/** True when every open square is lit. */
-function gridLit({ flags, lights }: LightupState): boolean {
-  for (let i = 0; i < flags.length; i++) {
-    if (!(flags[i] & F_BLACK) && lights[i] === 0) return false;
-  }
-  return true;
-}
-
 /** True when any bulb is lit by another bulb. */
 export function gridOverlap({ flags, lights }: LightupState): boolean {
   for (let i = 0; i < flags.length; i++) {
     if (flags[i] & F_LIGHT && lights[i] > 1) return true;
   }
   return false;
-}
-
-/** Exactly `clue` bulbs around the numbered square at (x, y). */
-function numberCorrect(state: LightupState, x: number, y: number): boolean {
-  let n = 0;
-  for (const pt of getSurrounds(state.w, state.h, x, y)) {
-    if (state.flags[idx(pt.x, pt.y, state.w)] & F_LIGHT) n++;
-  }
-  return n === state.lights[idx(x, y, state.w)];
 }
 
 /** The display-error test for a clue: definitely too many bulbs, or too
@@ -316,22 +302,6 @@ export function numberWrong(state: LightupState, x: number, y: number): boolean 
   return n > clue || n + empty < clue;
 }
 
-/** True when all clue counts are exactly satisfied. */
-function gridAddsup(state: LightupState): boolean {
-  for (let x = 0; x < state.w; x++) {
-    for (let y = 0; y < state.h; y++) {
-      const i = idx(x, y, state.w);
-      if (!(state.flags[i] & F_NUMBERED)) continue;
-      if (!numberCorrect(state, x, y)) return false;
-    }
-  }
-  return true;
-}
-
-export function gridCorrect(state: LightupState): boolean {
-  return gridLit(state) && !gridOverlap(state) && gridAddsup(state);
-}
-
 // --- state construction ----------------------------------------------------------------
 
 export function emptyState(p: LightupParams): LightupState {
@@ -341,15 +311,12 @@ export function emptyState(p: LightupParams): LightupState {
     nlights: 0,
     lights: new Int16Array(p.w * p.h),
     flags: new Uint8Array(p.w * p.h),
+    board: new Uint8Array(p.w * p.h),
   };
 }
 
 export function cloneState(s: LightupState): LightupState {
   return { ...s, lights: s.lights.slice(), flags: s.flags.slice() };
-}
-
-export function status(s: LightupState): GameStatus {
-  return gridCorrect(s) ? "solved" : "ongoing";
 }
 
 // --- desc codec ---------------------------------------------------------------------------
@@ -402,7 +369,8 @@ function parseDesc(p: LightupParams, desc: string): DescParse<LightupState> {
 }
 
 export function newState(p: LightupParams, desc: string): LightupState {
-  return descValue(parseDesc(p, desc));
+  const state = descValue(parseDesc(p, desc));
+  return { ...state, board: state.flags.slice() };
 }
 
 // --- text format -----------------------------------------------------------------------------

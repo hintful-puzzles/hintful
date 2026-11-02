@@ -11,6 +11,7 @@
  * unique solution.
  */
 
+import { solveFromAnswer } from "../../engine/answer-search.ts";
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import type {
@@ -21,10 +22,7 @@ import type {
   SolveResult,
   UiUpdate,
 } from "../../engine/game.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import {
@@ -49,7 +47,7 @@ import {
   verbGesture,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
-import { newLightupDesc, puzzleIsGood } from "./generator.ts";
+import { newLightupDesc } from "./generator.ts";
 import { type Marked, say } from "./hint-text.ts";
 import {
   border,
@@ -61,12 +59,12 @@ import {
   redraw,
 } from "./render.ts";
 import {
+  answerOf,
   deduceHintPlan,
-  dosolve,
-  F_SOLVE_ALLOWRECURSE,
-  F_SOLVE_DISCOUNTSETS,
+  deductionFinishes,
+  holdsBulb,
+  isSolved,
   type LightupFiring,
-  solveUnique,
 } from "./solver.ts";
 import {
   cloneState,
@@ -78,7 +76,6 @@ import {
   F_IMPOSSIBLE,
   F_LIGHT,
   F_NUMBERED,
-  gridCorrect,
   idx,
   type LightupMove,
   type LightupOp,
@@ -88,7 +85,7 @@ import {
   menu,
   newState,
   setLight,
-  status,
+  TIERS,
   textFormat,
   validateParams,
 } from "./state.ts";
@@ -111,7 +108,7 @@ function changedState(
   _old: LightupState | null,
   next: LightupState,
 ): void {
-  if (gridCorrect(next)) ui.cursor.visible = false;
+  if (isSolved(next)) ui.cursor.visible = false;
 }
 
 /** A bulb or a cross on square `{ x, y }`: toggled, except that each refuses a
@@ -224,47 +221,37 @@ function ruledOut(before: LightupState, after: LightupState): LightupMove | null
   return ops.length === 0 ? null : { ops };
 }
 
-function solve(orig: LightupState, curr: LightupState): SolveResult<LightupMove> {
-  // We don't care about uniqueness here; if the player typed an ambiguous
-  // desc, any solution will do.
-  const sflags = F_SOLVE_ALLOWRECURSE | F_SOLVE_DISCOUNTSETS;
-
-  // Try solving from where we are now (for a non-unique puzzle this may
-  // produce a different answer than from scratch)...
-  let solved = cloneState(curr);
-  if (dosolve(solved, sflags) <= 0) {
-    // ... then from the clean puzzle.
-    solved = cloneState(orig);
-    if (dosolve(solved, sflags) <= 0) {
-      return { ok: false, error: PUZZLE_NOT_REASONABLE };
-    }
-  }
-
+/** The answer's bulbs: one toggled wherever the answer differs, which takes
+ * a cross off the square it lands on. Every other cross stays. */
+function solveMove(curr: LightupState, solution: Uint8Array): LightupMove {
   const ops: LightupOp[] = [];
   for (let x = 0; x < curr.w; x++) {
     for (let y = 0; y < curr.h; y++) {
       const i = idx(x, y, curr.w);
-      if ((curr.flags[i] & F_LIGHT) !== (solved.flags[i] & F_LIGHT)) {
+      if (curr.flags[i] & F_BLACK) continue;
+      if (((curr.flags[i] & F_LIGHT) !== 0) !== holdsBulb(solution, i))
         ops.push({ kind: "light", x, y });
-      } else if ((curr.flags[i] & F_IMPOSSIBLE) !== (solved.flags[i] & F_IMPOSSIBLE)) {
-        ops.push({ kind: "impossible", x, y });
-      }
     }
   }
-  return { ok: true, move: { solve: true, ops } };
+  return { solve: true, ops };
+}
+
+function solve(orig: LightupState, curr: LightupState): SolveResult<LightupMove> {
+  return solveFromAnswer(answerOf(orig), (solution) => solveMove(curr, solution));
 }
 
 function findMistakes(state: LightupState): readonly LightupMistake[] {
-  const solution = solveUnique(state);
-  if (!solution) return [];
+  const answer = answerOf(state);
+  if (answer.kind !== "one") return [];
+  const { solution } = answer;
   const out: LightupMistake[] = [];
   for (let y = 0; y < state.h; y++) {
     for (let x = 0; x < state.w; x++) {
       const i = idx(x, y, state.w);
       if (state.flags[i] & F_BLACK) continue;
-      if (state.flags[i] & F_LIGHT && !(solution.flags[i] & F_LIGHT)) {
+      if (state.flags[i] & F_LIGHT && !holdsBulb(solution, i)) {
         out.push({ x, y, kind: "light" });
-      } else if (state.flags[i] & F_IMPOSSIBLE && solution.flags[i] & F_LIGHT) {
+      } else if (state.flags[i] & F_IMPOSSIBLE && holdsBulb(solution, i)) {
         // A mark asserts "no bulb here"; it is provably wrong only when
         // the solution puts a bulb on that very square.
         out.push({ x, y, kind: "mark" });
@@ -489,13 +476,14 @@ function refreshHintStep(
   };
 }
 
-/** Light Up's difficulty contract (`engine/difficulty.ts`). `puzzleIsGood` is
- * already this predicate, spelled for the generator; it hands the cap to the
- * solver as a flag set (`flagsFromDifficulty`), not as a number. */
-const difficulty: DifficultyContract<LightupParams> = {
-  solveAtCap: (p, desc, cap) =>
-    puzzleIsGood(newState(p, desc), cap) ? "solved" : "unsolved",
-};
+/** Light Up's difficulty contract: the ladder at Easy and Normal, the
+ * search at Unreasonable. */
+const difficulty: DifficultyContract<LightupParams> = TIERS.contract({
+  newState,
+  deductionFinishes: (state: LightupState, cap: number) =>
+    deductionFinishes(state, cap),
+  answerOf,
+});
 
 export const lightupGame: Game<
   LightupParams,
@@ -518,7 +506,7 @@ export const lightupGame: Game<
   transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<LightupParams>({
-      doc: "Size of the grid in squares. A 2x2 has only Easy puzzles, and a board needs nine squares to have an Unreasonable one. A 3x3 has none with symmetry, and no Normal one with 4-way symmetry; a 4x4 has none with 4-way mirror symmetry, and with 4-way rotational symmetry the first can take a minute or two to appear.",
+      doc: "Size of the grid in squares. A 2x2 has only Easy puzzles, and a board needs nine squares to have an Unreasonable one. A 3x3 has none with symmetry, and no Normal one with 4-way symmetry; a 4x4 has none with 4-way mirror symmetry.",
       bounds: { min: 2 },
     }),
     numberItem<LightupParams>(
@@ -567,7 +555,7 @@ export const lightupGame: Game<
   interpretMove,
   targetVerbs,
   executeMove,
-  status,
+  status: (s) => (isSolved(s) ? "solved" : "ongoing"),
 
   solve,
   findMistakes,

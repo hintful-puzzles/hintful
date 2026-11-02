@@ -212,18 +212,13 @@ descs and over-long descs.
 
 ### Requirement: Generation: Light Up grades boards with a tiered deductive solver
 
-Light Up's solver SHALL apply at Easy: forced-light (an unlit square with
-exactly one remaining way to be lit takes that bulb) and the two clue
-deductions (a satisfied clue marks its remaining neighbors impossible, and a
-clue whose remaining lights equal its remaining spaces fills them). Normal
-SHALL add the overlapping-set discount, and Unreasonable SHALL add recursion
-to that.
+Light Up's ladder SHALL be compiled from its description and SHALL apply at Easy: forced-light (an unlit square with exactly one remaining way to be lit takes that bulb) and the two clue deductions (a satisfied clue marks its remaining neighbors impossible, and a clue whose remaining lights equal its remaining spaces fills them). Normal SHALL add the overlapping-set discount. Unreasonable SHALL be the engine's search beneath the ladder. Every technique SHALL be checked sound.
 
 #### Scenario: Generated boards solve at exactly their difficulty
 
 - **WHEN** a board generated at difficulty `d > 0` is solved
 - **THEN** the solver succeeds with the difficulty-`d` technique set and fails
-  (or needs recursion it is denied) with the difficulty-`d−1` set
+  with the difficulty-`d−1` set
 
 ### Requirement: Generation: Normal adds the overlapping-set discount
 
@@ -231,26 +226,14 @@ At Normal and above the solver SHALL test every set of which one square must
 hold a bulb against candidate squares that would rule the whole set out,
 marking such a candidate impossible. A set SHALL come from an unlit square, or
 from each combination of `n−m+1` of a clue's `n` free neighbors where `m`
-bulbs are still owed. The cheap deductions SHALL restart after the first
-successful discount.
+bulbs are still owed. The cheap deductions SHALL restart after a pass of
+discounts that ruled a square out.
 
 #### Scenario: A clue owing one bulb among three neighbors
 
 - **WHEN** a clue has three free neighbors and one bulb still to place
 - **THEN** its one set is all three neighbors, and a candidate square is
   marked impossible only when a bulb there would rule out all three
-
-### Requirement: Generation: Unreasonable adds depth-capped recursion
-
-At Unreasonable the solver SHALL additionally recurse, to a depth of at most
-5. Where a unique solution is required, a branch that hits the depth limit
-SHALL make the result "unknown".
-
-#### Scenario: A board with two solutions
-
-- **WHEN** a unique solution is required of a board that needs one guess and
-  has a solution on each branch of it
-- **THEN** the solver reports two solutions, so the board is not unique
 
 ### Requirement: Generation: Light Up generates solver-gated boards
 
@@ -277,11 +260,18 @@ After 20 failed grids the generator SHALL add 5 to `blackpc` while it is below
   90%
 - **THEN** the next round of grids is built at 20% again
 
-### Requirement: Solver: Solve works from the player's position, then from the clues
+### Requirement: Generation: An Unreasonable Light Up board is one only the search beneath the ladder finishes
 
-`solve()` SHALL solve from the player's current position where that reaches a
-solution, and from the clean clues where it does not. It SHALL NOT require
-the solution to be unique.
+An Unreasonable board SHALL have exactly one answer, which the engine's search by trial and error over the Normal ladder finds within its budget, and SHALL NOT be finished by the ladder at Normal. The search SHALL assume, where the ladder stops, the free square that would light the most dark squares holds no bulb, and then that it holds one. The hint SHALL NOT narrate the search: where only the search could progress, the hint refuses.
+
+#### Scenario: A board upstream's recursion solved
+
+- **WHEN** one of upstream's frozen Unreasonable boards is graded
+- **THEN** it is solved at Unreasonable and not at Normal
+
+### Requirement: Solver: Light Up knows a board's answer from the search beneath its ladder
+
+Solve, the hint's refusal and the mistake check SHALL know a board's answer from the engine's search over the ladder, from its walls and numbers alone, whatever tier the board was dealt at. A board the search finds more than one answer for, or none, SHALL be one Solve refuses, saying which.
 
 #### Scenario: Solve recovers a solution from a dirty board
 
@@ -439,15 +429,9 @@ inside the ring.
 - **WHEN** any grouped clue step is displayed
 - **THEN** every target square lies within the narrated clue's neighbor set
 
-### Requirement: Hint: Light Up's hint steps come in the solver's scan order
+### Requirement: Hint: The Light Up hint carries on from its last step, by the rules in order
 
-The steps of `hint()` SHALL come in the order the solver makes them. A pass
-SHALL visit the squares column by column from the left, each column from the
-top, trying the forced light at an unlit open square, and at a numbered wall
-the full clue and then the clue with just enough room. A discount SHALL be
-tried only after a pass that changed nothing, in the same scan, and the passes
-SHALL begin again after the first square or clue whose discount rules a square
-out.
+`hint` SHALL take, of the firings the ladder could make, the one that carries on from the squares its last step read and decided, and otherwise the first in the ladder's order: the squares column by column from the left, each column from the top, a forced light at an unlit square and a clue's count at a numbered wall, and only where none fires, the discounts. A discount that rules out several squares SHALL be taken as consecutive steps of one square each.
 
 #### Scenario: A walled-in square comes before the clue beside it
 
@@ -456,8 +440,8 @@ out.
 - **THEN** the first step puts a bulb on the open square between the 1 and the
   4, which has a wall above it and a clue below, as the only square that can
   light it
-- **AND** the second step is the 4 to its right, which now has exactly three
-  free neighbors left for its three bulbs
+- **AND** the second step is the 1 to its left, which now has its bulb and
+  crosses out its other free neighbors
 
 ### Requirement: Look: Light Up draws walls, bulbs and light on the collection's quiet surface
 

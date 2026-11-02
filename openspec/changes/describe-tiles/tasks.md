@@ -2,12 +2,11 @@
 
 ## 1. The vocabulary
 
-- [ ] 1.1 P, tile marks and walls stated, compiled, run and encoded in the checker, as far as the two games read them
+- [ ] 1.1 P and tile marks stated, compiled, run and encoded in the checker, as far as Magnets reads them
 
-## 2. The games
+## 2. Magnets
 
 - [ ] 2.1 Magnets described, its rungs retired
-- [ ] 2.2 Light Up described, its scan and the fixpoint header's exception retired
 
 ## 3. Close
 

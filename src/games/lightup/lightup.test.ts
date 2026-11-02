@@ -40,7 +40,7 @@ import {
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/lightup-c-reference.json" with { type: "json" };
-import { newLightupDesc, puzzleIsGood } from "./generator.ts";
+import { newLightupDesc } from "./generator.ts";
 import { type LightupMistake, lightupGame } from "./index.ts";
 import {
   COL_BULB_RIM,
@@ -53,7 +53,7 @@ import {
   COL_RULED_OUT,
   COL_WALL,
 } from "./render.ts";
-import { solveUnique } from "./solver.ts";
+import { answerOf, holdsBulb } from "./solver.ts";
 import {
   decodeParams,
   encodeDesc,
@@ -85,6 +85,14 @@ const FIXTURES = (
 
 /** The 7x7 easy C-reference board (differential-verified). */
 const EASY = FIXTURES[0];
+
+/** Whether each square of the board's one answer holds a bulb, or `null`
+ * where it has not exactly one. */
+function solveUnique(state: LightupState): boolean[] | null {
+  const answer = answerOf(state);
+  if (answer.kind !== "one") return null;
+  return Array.from(answer.solution, (_, i) => holdsBulb(answer.solution, i));
+}
 const EASY_PARAMS = {
   w: EASY.w,
   h: EASY.h,
@@ -424,28 +432,6 @@ describe("lightup input", () => {
   });
 });
 
-describe("lightup solver difficulty coupling", () => {
-  // The generator guarantees a board is solvable at exactly its stated
-  // difficulty; assert the solver agrees on the C-reference boards.
-  for (const f of FIXTURES.filter((f) => f.w === 7)) {
-    it(`${f.w}x${f.h} d${f.difficulty} solves at d${f.difficulty}${
-      f.difficulty > 0 ? ` but not d${f.difficulty - 1}` : ""
-    }`, () => {
-      const p = {
-        w: f.w,
-        h: f.h,
-        blackpc: f.blackpc,
-        symm: f.symm,
-        difficulty: f.difficulty,
-      };
-      expect(puzzleIsGood(newState(p, f.desc), f.difficulty)).toBe(true);
-      if (f.difficulty > 0) {
-        expect(puzzleIsGood(newState(p, f.desc), f.difficulty - 1)).toBe(false);
-      }
-    });
-  }
-});
-
 describe("lightup solve", () => {
   it("Solve through a real Midend completes the board", () => {
     const me = new Midend(lightupGame);
@@ -461,8 +447,8 @@ describe("lightup solve", () => {
     if (!solution) throw new Error("fixture board must be uniquely solvable");
     // Place a bulb the solution doesn't have.
     let wrongCell = -1;
-    for (let i = 0; i < solution.flags.length; i++) {
-      if (!(orig.flags[i] & 1) && !(solution.flags[i] & F_LIGHT)) {
+    for (let i = 0; i < solution.length; i++) {
+      if (!(orig.flags[i] & 1) && !solution[i]) {
         wrongCell = i;
         break;
       }
@@ -485,9 +471,9 @@ describe("lightup findMistakes", () => {
     if (!solution) throw new Error("fixture board must be uniquely solvable");
     let bulbCell = -1;
     let emptyCell = -1;
-    for (let i = 0; i < solution.flags.length; i++) {
+    for (let i = 0; i < solution.length; i++) {
       if (orig.flags[i] & 1) continue; // black
-      if (solution.flags[i] & F_LIGHT) {
+      if (solution[i]) {
         if (bulbCell < 0) bulbCell = i;
       } else if (emptyCell < 0) {
         emptyCell = i;
@@ -632,8 +618,8 @@ describe("lightup rendering", () => {
     const solution = solveUnique(st);
     if (!solution) throw new Error("fixture board must be uniquely solvable");
     let emptyCell = -1;
-    for (let i = 0; i < solution.flags.length; i++) {
-      if (!(st.flags[i] & 1) && !(solution.flags[i] & F_LIGHT)) {
+    for (let i = 0; i < solution.length; i++) {
+      if (!(st.flags[i] & 1) && !solution[i]) {
         emptyCell = i;
         break;
       }

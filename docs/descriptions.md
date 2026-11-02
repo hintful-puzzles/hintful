@@ -233,7 +233,11 @@ A technique is `for` (its binders), an optional `premise`, and `conclude`.
 A technique may say `"on": "place"`: the engine runs it as each value is
 placed, with its first binder bound to the placed cell, and not as a rung
 (the library's `placed`, over `units_of(c)`; Seismic's `cull`, which reads
-its keep-apart rule). A game's may say `until: <tier>`, a tier above its own: the ladder
+its keep-apart rule). It may place as well as strike: Light Up's `shine`
+places no bulb in every square a bulb lights, so a lit square and a crossed
+one read alike, and a board whose every square is placed is one the answer
+check can judge. Its false conclusion is not a contradiction, so a rung
+holds the rule it relies on (Light Up's `square`, a bulb lit by another). A game's may say `until: <tier>`, a tier above its own: the ladder
 runs it only at a cap below that tier, for a weaker reading a higher
 technique strikes all of, which a grade at a higher cap should not rest on
 (Keen's `cageEasy`, as upstream omits it above Easy). `from: <tier>` is the
@@ -304,6 +308,12 @@ author writing for speed uses these:
 - **Bind a set a loop reads whole once, outside the loop**, by the statement
   itself: a comprehension or quantifier is never moved out of a loop
   (`set`'s `open`, `hiddenSingle`'s `placed`).
+- **A definition is computed at each read**, even one that reads only what
+  the board deals, so bind it once where it is read more than once: Light
+  Up's `square` binds `L = lights(c)`, and its discounts bind `D =
+  lights(d)` after the cheap `not known(d)`, which on 12×16 boards cut a deal
+  by a quarter to a third (2026-11-02, `describe-beams-and-tiles`'
+  `design.md`).
 
 The measurements behind these are in the `report.md` of
 `openspec/changes/archive/*-compile-the-latin-ladder` (its section on
@@ -341,7 +351,9 @@ uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
   clue** (Sticks' blocks): the clue's meaning places the value, and the
   domain, read off the clue, keeps it out of every other square. A technique
   that concludes the other of two values guards its square with the clue,
-  since the checker's marks may leave a block open.
+  since the checker's marks may leave a block open. Where no rule tells it
+  from an empty square, it holds the empty square's value (Bricks' holes,
+  Light Up's walls).
 - **A variation's techniques**, rungs and those run on placing alike, run
   only where the board has it on (`describedLadder`'s `variations`), and the
   ladder places each rung before the first technique of a higher tier on its

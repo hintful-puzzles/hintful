@@ -853,6 +853,12 @@ function binary(e: Extract<Expr, { k: "bin" }>, env: Env, ctx: Ctx): V {
     case "+":
     case "-": {
       if (a.k === "num") return { k: "num", v: arith(op, a.v, num(b, op)) };
+      // A comprehension that binds nothing is an empty set of values, of
+      // whatever the other side holds.
+      const empty = (v: V): boolean =>
+        v.k === "vset" && v.mem.every((g) => g === false);
+      if (a.k === "eset" && empty(b)) return a;
+      if (b.k === "eset" && empty(a)) return op === "+" ? b : { ...b, mem: [] };
       if (a.k === "vset" && b.k === "vset")
         return {
           k: "vset",
@@ -1215,6 +1221,10 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
     x: { k: "num", v: -1 },
     y: { k: "num", v: -1 },
     corners: allOf("corner", []),
+    row: { k: "elem", sort: "none", alts: [[-1, true]] },
+    col: { k: "elem", sort: "none", alts: [[-1, true]] },
+    adj4: allOf("cell", []),
+    adj8: allOf("cell", []),
   };
   const cellFn = (f: (c: number) => V): V =>
     lift(vs[0], fn, (c) => {
@@ -1261,7 +1271,7 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
         return lift(s, fn, (r) => allOf("cell", r < 0 ? [] : part.parts[r]));
       if (s.k === "elem" && s.sort === "corner")
         return lift(s, fn, (k) => allOf("cell", sp.cornerCells[k]));
-      return lift(vs[0], fn, (L) => allOf("cell", sp.lineCells[L]));
+      return lift(vs[0], fn, (L) => allOf("cell", L < 0 ? [] : sp.lineCells[L]));
     }
     case "row":
       return cellFn((c) => elem("line", sp.rowOf[c]));
@@ -1348,11 +1358,16 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
     case "stretch": {
       // A cell of L is in the stretch round c where every cell from c to it
       // is in S.
-      const S = vs[2];
+      // A comprehension that binds nothing is an empty set of values.
+      const S =
+        vs[2].k === "vset" && vs[2].mem.every((g) => g === false)
+          ? allOf("cell", [])
+          : vs[2];
       if (S.k !== "eset") throw new TypeError(`${fn}: not a set`);
       return lift(vs[0], fn, (L) =>
         lift(vs[1], fn, (c): V => {
-          const cells = sp.lineCells[L];
+          // A line that is none holds nothing.
+          const cells = L < 0 ? [] : sp.lineCells[L];
           const i = cells.indexOf(c);
           const mem: Alt[] = cells.map((y, j) => {
             const span = j < i ? cells.slice(j, i + 1) : cells.slice(i, j + 1);

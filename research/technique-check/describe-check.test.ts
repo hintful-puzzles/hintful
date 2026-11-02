@@ -452,6 +452,26 @@ const PLANTS: Record<string, Plant> = {
     conclude:
       "shaded(k) < n - 1 or (forall c in around(k) where not known(c): place(c, 2))",
   },
+  // Light Up: a bulb read as lighting through walls.
+  shine: {
+    for: "c in cells where value(c) = 1, p in cells(row(c)) + cells(col(c)) where p != c and not known(p)",
+  },
+  // A dark square with two free squares to light it read as having one.
+  square: {
+    conclude:
+      "(not floor(c) or lit(c) or count(p in L where not known(p)) > 2 or (forall p in L where not known(p): place(p, 1))) and (n < 0 or bulbs(c) + free(c) > n or (forall p in adj4(c) where not known(p): place(p, 1)))",
+  },
+  // A square read as spoiling itself, so the one square that could light a
+  // dark square may be ruled out.
+  darkSet: {
+    conclude:
+      "|S| > 0 and (forall d in rivals(first(S)) where not known(d), D = lights(d) where (forall s in S: s in D): place(d, 2))",
+  },
+  // A number short of m bulbs read as having one in every f - m of its free
+  // squares.
+  clueSet: {
+    for: "X in cols, k in cells(X), n = clue(number, k) where n > bulbs(k), F = {p in adj4(k) where not known(p)}, m = n - bulbs(k) where m <= |F|, T in subsets(F) where |T| = |F| - m",
+  },
 };
 
 /** How many of a technique's first binders each query fixes, one query a

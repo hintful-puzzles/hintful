@@ -254,8 +254,8 @@ A bespoke loop meets three obligations, stated for the game and not assumed
 accepted board is walkable to completion by a hint that runs the solver's own
 rungs with a recorder; tiers bind to real technique differences and
 generation is capped at the requested tier; and the recording path ticks a
-`stepBudget`, so non-termination fails loud. Exemplars: `hintFirings` in
-Loopy's solver, and `solveSub` and `deduceHintPlan` in Lightup's.
+`stepBudget`, so non-termination fails loud. Exemplar: `hintFirings` in
+Loopy's solver.
 
 ## Guess-free generation
 

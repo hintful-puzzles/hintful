@@ -3,17 +3,18 @@
  * (`set_blacks` / `place_lights` / `place_numbers` / `puzzle_is_good` /
  * `strip_unused_nums` / `new_game_desc`).
  *
- * Every RNG draw is reproduced in upstream order, so for the same seed
- * the published desc byte-matches the C reference (asserted by
- * `lightup-differential.test.ts`).
+ * The RNG draws are upstream's, in its order. The solver draws none, but every
+ * removal is gated on the ladder or the search, so a change to their power
+ * changes which boards exist.
  */
 
+import { dealUnreasonable } from "../../engine/answer-search.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { placeSymmetricBlacks } from "../../engine/symmetric-blacks.ts";
 import type { Point } from "../../engine/types.ts";
-import { dosolve, flagsFromDifficulty, unplaceLights } from "./solver.ts";
+import { deductionFinishes, searchAnswers } from "./solver.ts";
 import {
   cloneState,
   emptyState,
@@ -22,7 +23,6 @@ import {
   F_LIGHT,
   F_MARK,
   F_NUMBERED,
-  F_NUMBERUSED,
   getSurrounds,
   gridOverlap,
   idx,
@@ -30,6 +30,7 @@ import {
   type LightupState,
   litCells,
   setLight,
+  TIERS,
 } from "./state.ts";
 
 /** Clear the board, then randomize the black squares over the
@@ -118,24 +119,31 @@ function placeNumbers(state: LightupState): void {
   }
 }
 
-/** Strip the bulbs and re-solve: is this layout uniquely solvable at the
- * given difficulty (with no recursion unless the difficulty allows it)?
- * Leaves `state` solved (with `F_NUMBERUSED` set on the clues the solver
- * used) on success. */
-export function puzzleIsGood(state: LightupState, difficulty: number): boolean {
-  unplaceLights(state);
-  // Below Unreasonable the flags forbid a guess, so a board that needs one
-  // solves to -1 ("don't know"), never 1. (Upstream also checks the depth
-  // reached, which without recursion is always 0.)
-  return dosolve(state, flagsFromDifficulty(difficulty)) === 1;
-}
-
-/** Remove clue numbers the last solve never used. */
-function stripUnusedNums(state: LightupState): void {
+/** Remove the clue numbers no reading of a count acted on. */
+function stripUnusedNums(state: LightupState, used: ReadonlySet<number>): void {
   for (let i = 0; i < state.flags.length; i++) {
-    if (state.flags[i] & F_NUMBERED && !(state.flags[i] & F_NUMBERUSED)) {
+    if (state.flags[i] & F_NUMBERED && !used.has(i)) {
       state.flags[i] &= ~F_NUMBERED;
       state.lights[i] = 0;
+    }
+  }
+}
+
+/** Remove numbers one by one in the shuffled order, putting back each one
+ * whose removal `keeps` refuses. */
+function removeNumbers(
+  state: LightupState,
+  numindices: readonly number[],
+  keeps: () => boolean,
+): void {
+  for (const i of numindices) {
+    if (!(state.flags[i] & F_NUMBERED)) continue;
+    const num = state.lights[i];
+    state.lights[i] = 0;
+    state.flags[i] &= ~F_NUMBERED;
+    if (!keeps()) {
+      state.lights[i] = num;
+      state.flags[i] |= F_NUMBERED;
     }
   }
 }
@@ -143,62 +151,73 @@ function stripUnusedNums(state: LightupState): void {
 const MAX_GRIDGEN_TRIES = 20;
 
 /**
- * Generate a puzzle: the most complex grid honoring a unique solution
- * and the difficulty floor/ceiling, ramping the black-square percentage
- * when a layout keeps failing (upstream `new_game_desc`). The rarest board
- * measured, a 3x3 turned half round at Normal, is found once in 600 rounds
- * of the ramp or so.
+ * Walls, bulbs and every number, drawn again and again: after each
+ * `MAX_GRIDGEN_TRIES` layouts the share of walls goes up 5%, and at the top
+ * starts over from what was asked, since a small board nine-tenths walls has
+ * too few squares to need a tier above Easy (upstream `new_game_desc`'s ramp).
  */
+function layouts(paramsIn: LightupParams, rs: RandomState): () => LightupState {
+  const params = { ...paramsIn };
+  let tries = 0;
+  return () => {
+    if (tries++ === MAX_GRIDGEN_TRIES) {
+      tries = 1;
+      params.blackpc = params.blackpc < 90 ? params.blackpc + 5 : paramsIn.blackpc;
+    }
+    const news = emptyState(params);
+    setBlacks(news, params, rs);
+    placeLights(news, rs);
+    placeNumbers(news);
+    return news;
+  };
+}
+
+/**
+ * A board the ladder finishes at `difficulty` and not below: the layout's
+ * numbers, less those no count acted on, then less each the ladder can do
+ * without. The rarest board measured, a 3x3 turned half round at Normal, is
+ * found once in 600 rounds of the ramp or so.
+ */
+function deducedBoard(
+  difficulty: number,
+  draw: () => LightupState,
+  numindices: readonly number[],
+): LightupState {
+  const attempt = retryLimit("lightup: generation");
+  for (;;) {
+    attempt();
+    let news = draw();
+    const used = new Set<number>();
+    if (!deductionFinishes(news, difficulty, (c) => used.add(c))) continue;
+    const copys = cloneState(news);
+    stripUnusedNums(copys, used);
+    if (deductionFinishes(copys, difficulty)) news = copys;
+    removeNumbers(news, numindices, () => deductionFinishes(news, difficulty));
+    // The stripped board must not fall to the tier below.
+    if (difficulty > 0 && deductionFinishes(news, difficulty - 1)) continue;
+    return news;
+  }
+}
+
+/** Generate a puzzle at the params' tier (upstream `new_game_desc`, its
+ * Unreasonable the engine's search). */
 export function newLightupDesc(
-  paramsIn: LightupParams,
+  params: LightupParams,
   rs: RandomState,
 ): { desc: string } {
-  const params = { ...paramsIn }; // blackpc is ramped locally on failure
-  let news = emptyState(params);
-
-  // The number-removal order is shuffled once, as upstream: a per-grid
-  // reshuffle would draw different RNG.
+  // The number-removal order is shuffled once, as upstream.
   const numindices = Array.from({ length: params.w * params.h }, (_, i) => i);
   shuffle(numindices, rs);
-
-  const round = retryLimit("lightup: generation (blackpc ramp)");
-  for (;;) {
-    round();
-
-    for (let tries = 0; tries < MAX_GRIDGEN_TRIES; tries++) {
-      setBlacks(news, params, rs);
-      placeLights(news, rs);
-      placeNumbers(news);
-      if (!puzzleIsGood(news, params.difficulty)) continue;
-
-      // Remove the numbers the solver didn't use, if the puzzle stays good.
-      const copys = cloneState(news);
-      stripUnusedNums(copys);
-      if (puzzleIsGood(copys, params.difficulty)) news = copys;
-
-      // Remove numbers one-by-one in the shuffled order, reverting any
-      // removal that breaks the puzzle.
-      for (const i of numindices) {
-        if (!(news.flags[i] & F_NUMBERED)) continue;
-        const num = news.lights[i];
-        news.lights[i] = 0;
-        news.flags[i] &= ~F_NUMBERED;
-        if (!puzzleIsGood(news, params.difficulty)) {
-          news.lights[i] = num;
-          news.flags[i] |= F_NUMBERED;
-        }
-      }
-
-      // The maximally-stripped puzzle must not fall to the next-simpler solver.
-      if (params.difficulty > 0 && puzzleIsGood(news, params.difficulty - 1)) continue;
-
-      return { desc: encodeDesc(news) };
-    }
-    // Couldn't generate a good puzzle in that many goes; ramp up the
-    // percentage of black squares and try again. At the top the ramp starts
-    // over from what was asked: a small board nine-tenths black has too few
-    // open squares to need a tier above Easy, so a round spent there finds
-    // nothing, and the rounds that find a 4x4 Unreasonable are the first few.
-    params.blackpc = params.blackpc < 90 ? params.blackpc + 5 : paramsIn.blackpc;
-  }
+  const draw = layouts(params, rs);
+  const board =
+    params.difficulty < TIERS.unreasonable
+      ? deducedBoard(params.difficulty, draw, numindices)
+      : dealUnreasonable<LightupState>({
+          label: `lightup: Unreasonable generation (${params.w}x${params.h})`,
+          draw,
+          strip: (s, one) => removeNumbers(s, numindices, one),
+          deduced: (s) => deductionFinishes(s, TIERS.unreasonable - 1),
+          answer: (s, budget) => searchAnswers(s, budget),
+        });
+  return { desc: encodeDesc(board) };
 }
