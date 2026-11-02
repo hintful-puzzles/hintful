@@ -44,3 +44,133 @@ help:
     * **Counting the mines left.** Near the end, numbers whose squares do not overlap may account for every mine still to find, so every other unopened square is safe.
 
     The first step of a new board opens a square in the middle: no mine is ever laid in the first square you open or beside it.
+name: Mines
+family: shading
+sizes:
+  w: { min: 3, max: 9999 }
+  h: { min: 3, max: 9999 }
+  # The mines the board holds.
+  mines: { min: 0, max: 99999 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is a mine, 2 a safe square.
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  # A number's squares nothing has decided yet.
+  open(c): "{d in adj8(c) where not known(d)}"
+  # The mines the number at c still needs among them.
+  need(c): "clue(count, c) - count(d in adj8(c) where value(d) = 1)"
+  # Whether two numbers' undecided squares meet, which takes them within two
+  # squares of each other.
+  meet(a, b): >-
+    abs(x(a) - x(b)) <= 2 and abs(y(a) - y(b)) <= 2
+    and (exists d in open(a): d in open(b))
+  # The mines still to find.
+  left: "mines - count(c in cells where value(c) = 1)"
+  # The undecided squares outside X.
+  outside(X): "{c in cells where not known(c) and c not in X}"
+rules:
+  total: "count(c in cells where value(c) = 1) = mines"
+clues:
+  # An opened square's number: it is safe, and it touches that many mines.
+  count:
+    at: cell
+    value: "range(0, 8)"
+    means: "value(at) = 2 and count(d in adj8(at) where value(d) = 1) = v"
+freedom: { kind: query }
+deal:
+  answer: >-
+    the mines, laid out at the first square opened, none on it or beside it,
+    so that the techniques finish the board from there
+tiers: [Normal]
+techniques:
+  # One number, n the mines it still needs among its U undecided squares:
+  # with none, they are safe; with as many as there are, they are mines.
+  # One that needs fewer than none, or more than it has, makes the marks
+  # inconsistent.
+  - id: alone
+    tier: Normal
+    for: >-
+      k in clues(count), c = at(k), U = open(c), n = need(c)
+      where |U| > 0 and (n <= 0 or n >= |U|)
+    conclude: >-
+      n >= 0 and n <= |U|
+      and (n = 0 implies (forall d in U: place(d, 2)))
+      and (n = 0 or (forall d in U: place(d, 1)))
+  # Two numbers whose undecided squares meet: the squares they share hold at
+  # most what the second needs, so the first's own squares, O, hold at least
+  # the difference, by. With by as many as O, O are mines, the shared squares
+  # hold all the second needs, and its own squares, S, are safe.
+  - id: pair
+    tier: Normal
+    for: >-
+      k in clues(count), a = at(k) where |open(a)| > 0,
+      b in within(a, 2) where b != a and clue(count, b) != none and meet(a, b),
+      by = need(a) - need(b), O = open(a) - open(b), S = open(b) - open(a)
+      where by >= |O| and |O| + |S| > 0
+    conclude: "by = |O| and (forall d in O: place(d, 1)) and (forall d in S: place(d, 2))"
+  # A number, i, whose undecided squares all touch another, o: o's squares
+  # beyond i's, R, hold exactly the difference, r, and read as a number of
+  # their own beside a third, b, as two numbers are paired. Either may need
+  # more; heavy says R does.
+  - id: region
+    tier: Normal
+    for: >-
+      k in clues(count), o = at(k) where |open(o)| > 0,
+      i in within(o, 2) where i != o and clue(count, i) != none and |open(i)| > 0
+      and open(i) subset open(o) and |open(i)| < |open(o)|,
+      b in within(o, 3) where b != o and b != i and clue(count, b) != none,
+      R = open(o) - open(i), B = open(b) where (exists d in R: d in B),
+      r = need(o) - need(i), nb = need(b), heavy = (r - nb >= |R - B|)
+      where (heavy or nb - r >= |B - R|) and |R - B| + |B - R| > 0
+    conclude: >-
+      (heavy implies (r - nb = |R - B| and (forall d in R - B: place(d, 1))
+        and (forall d in B - R: place(d, 2))))
+      and (heavy or (nb - r = |B - R| and (forall d in B - R: place(d, 1))
+        and (forall d in R - B: place(d, 2))))
+  # Two such regions read against each other as two numbers are: R, o's
+  # squares beyond i's, holding r, and S, p's beyond q's, holding s. Where R
+  # needs at least as many more as it has squares beyond S, those are mines
+  # and S's beyond R are safe. Their squares meet only where o and p are
+  # within two squares.
+  - id: regions
+    tier: Normal
+    for: >-
+      k in clues(count), o = at(k) where |open(o)| > 0,
+      i in within(o, 2) where i != o and clue(count, i) != none and |open(i)| > 0
+      and open(i) subset open(o) and |open(i)| < |open(o)|,
+      R = open(o) - open(i), r = need(o) - need(i),
+      p in within(o, 2) where p != o and clue(count, p) != none and |open(p)| > 0,
+      q in within(p, 2) where q != p and clue(count, q) != none and |open(q)| > 0
+      and open(q) subset open(p) and |open(q)| < |open(p)|,
+      S = open(p) - open(q) where (exists d in R: d in S),
+      by = r - (need(p) - need(q)) where by >= |R - S| and |R - S| + |S - R| > 0
+    conclude: >-
+      by = |R - S| and (forall d in R - S: place(d, 1))
+      and (forall d in S - R: place(d, 2))
+  # Counting the mines left: numbers whose undecided squares, X, do not
+  # meet hold n mines between them, of the L the board still hides. Where n
+  # is all of them, the undecided squares outside X are safe; where those
+  # are as many as the rest, they are mines. The fewest numbers first, and
+  # none at all first of every. Read only once ten numbers or fewer have an
+  # undecided square, as upstream's search over sets was.
+  #
+  # L, and u, the undecided squares, are read once, before the numbers are
+  # chosen, to choose them by; the conclusion reads both again, since a
+  # solve makes each firing's facts before the next binding.
+  - id: count
+    tier: Normal
+    for: >-
+      C = {k in clues(count) where exists d in adj8(at(k)): not known(d)}
+      where |C| <= 10,
+      L = left, u = count(c in cells where not known(c)),
+      size in range(0, 5), T in subsets(C) where |T| = size
+      and (forall x in T, y in T where x != y: not meet(at(x), at(y))),
+      n = sum(x in T of need(at(x))), X = set(d over x in T, d in open(at(x)))
+      where u > |X| and (n = L or L - n = u - |X|)
+    conclude: >-
+      (n = left implies (forall d in outside(X): place(d, 2)))
+      and ((n != left and left - n = |outside(X)|)
+        implies (forall d in outside(X): place(d, 1)))

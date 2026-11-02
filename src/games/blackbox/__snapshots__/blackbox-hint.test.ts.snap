@@ -5801,7 +5801,7 @@ exports[`blackbox: pinned hint positions > says, at each pin 1`] = `
   "fireAnother": "The lasers fired so far settle no other square. Fire this laser: nothing settled yet decides where it goes.",
   "hidden": "Every laser's way is settled, and 1 more ball hides on squares no laser reaches. One of them: put a ball on this square.",
   "hitBall": "The ray marked H hit a ball, but with this square empty it would leave the box, so it must hold a ball.",
-  "hitEmpty": "The ray marked H hit a ball, but with a ball on this square it would leave the box, so it must be empty.",
+  "hitEmpty": "The ray marked H hit a ball, but with a ball on this square it would come straight back, so it must be empty.",
   "layout": "Every laser is fired, and the ringed squares can be set so each goes where it went. First, put a ball on this square.",
   "ray": "The two 1s are one ray's ends, but with a ball on this square no ray could join them, so it must be empty.",
   "raysEndsBall": "The two 2s are one ray's ends, but with this square empty no ray could join them, so it must hold a ball.",

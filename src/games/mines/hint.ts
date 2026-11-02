@@ -1,6 +1,6 @@
 /**
- * Mines' hint: the deductions of `deduce.ts`, played from the player's board
- * and narrated by `hint-text.ts`.
+ * Mines' hint: the compiled ladder's firings (`solver.ts`), played from the
+ * player's board and narrated by `hint-text.ts`.
  *
  * **The plan is the board's own proof, step by step.** Each firing proves some
  * squares mines and some safe; a step flags the mines not yet flagged and opens
@@ -13,7 +13,7 @@
  * **A flag is not a premise until a deduction proves it.** The midend asks only
  * about a board whose flags all sit on mines (`findMistakes`), but a flag
  * placed by a lucky guess is not something the numbers show, so it counts as a
- * mine only once a deduction proves one under it (`deduce.ts`). Every mine a
+ * mine only once a deduction proves one under it (`solver.ts`). Every mine a
  * sentence cites was proved, and flagged by an earlier step of the same plan if
  * the player had not flagged it already.
  */
@@ -22,7 +22,6 @@ import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.t
 import { DEDUCTION_EXHAUSTED, puzzleDeadEnd } from "../../engine/hint-refusal.ts";
 import { CELL, mark, Narration, type Sentence } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import { type Firing, learn, nextFiring, type Side } from "./deduce.ts";
 import { firstOpen } from "./generator.ts";
 import {
   after,
@@ -38,6 +37,7 @@ import {
   sayRegion,
   Words,
 } from "./hint-text.ts";
+import { type Firing, minesWalk, type Shown, type Side } from "./solver.ts";
 import {
   COVERED,
   cloneState,
@@ -76,6 +76,14 @@ export const DEAD_BOARD = puzzleDeadEnd(
 );
 
 const isOpened = (v: number): boolean => v >= 0 && v <= 8;
+
+/** What `s` shows the ladder: each opened square's number. */
+const shownOf = (s: MinesState): Shown => ({
+  w: s.w,
+  h: s.h,
+  n: s.n,
+  numbers: Array.from(s.grid, (v) => (isOpened(v) ? v : -1)),
+});
 const opOf = (kind: MinesHint["kind"]): MineOp["op"] => (kind === "open" ? "O" : "F");
 
 function stepFor(
@@ -297,13 +305,12 @@ export function minesHint(
     return { ok: true, steps: [{ ...step, move: firstOpen(state, at) }] };
   }
 
-  const known = new Int8Array(w * h);
   const steps: Step[] = [];
   let board = cloneState(state);
+  const walk = minesWalk(shownOf(board));
   for (let guard = 0; guard < 2 * w * h && !isWon(board); guard++) {
-    const f = nextFiring(board, known);
+    const f = walk.next();
     if (f === null) break;
-    learn(known, f);
     const legs = legsOf(board, f, execute);
     if (legs.length === 0) continue;
     const sentences = narrate(board, f, legs);
@@ -312,9 +319,12 @@ export function minesHint(
       steps.push(step);
       board = execute(board, step.move);
     });
+    // The squares it opened show their numbers, which the next firing reads.
+    walk.reveal(shownOf(board));
   }
-  // Reached only on a board these rungs cannot finish, which loading turns
-  // away (`finishesByDeduction`) and no measured deal has been (deduce.ts).
+  // Reached only on a board the ladder cannot finish, which loading turns
+  // away (`finishesByDeduction`) and the generator never deals: it certifies
+  // each board on this ladder (`solver.ts`).
   if (steps.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   return { ok: true, steps };
 }

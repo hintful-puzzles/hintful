@@ -1,0 +1,21 @@
+shard 0/4:
+ok  mines      count                          3  sound    (want sound   )    33 queries    3.0s
+ok  mines      count (planted)                3  unsound  (want unsound )     1 queries    0.2s   at eset
+ok  mines      count                          4  sound    (want sound   )   630 queries  264.3s
+ok  mines      count (planted)                4  unsound  (want unsound )     1 queries    8.7s   at eset
+shard 1/4:
+ok  mines      count                          3  sound    (want sound   )    33 queries    0.4s
+ok  mines      count (planted)                3  unsound  (want unsound )     1 queries    0.2s   at eset
+ok  mines      count                          4  sound    (want sound   )   629 queries  978.7s
+ok  mines      count (planted)                4  unsound  (want unsound )     1 queries    8.5s   at eset
+shard 2/4:
+ok  mines      count                          3  sound    (want sound   )    32 queries    0.5s
+ok  mines      count (planted)                3  unsound  (want unsound )     1 queries    0.3s   at eset
+ok  mines      count                          4  sound    (want sound   )   629 queries   82.5s
+ok  mines      count (planted)                4  unsound  (want unsound )     1 queries   11.9s   at eset
+shard 3/4:
+ok  mines      count                          3  sound    (want sound   )    32 queries    0.6s
+ok  mines      count (planted)                3  unsound  (want unsound )     1 queries    0.4s   at eset
+ok  mines      count                          4  sound    (want sound   )   629 queries  117.2s
+ok  mines      count (planted)                4  unsound  (want unsound )     1 queries    9.3s   at eset
+ok  src/games/mines/mines.description.yaml#count: all 4 shards sound, recorded

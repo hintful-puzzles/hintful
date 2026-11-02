@@ -60,3 +60,49 @@ help:
     one run of moves. A square no laser ever reaches is settled by the count
     alone: when the box must hold more balls than the lasers account for,
     every such square holds one, and the hint asks you to put them on.
+name: Black Box
+family: shading
+sizes:
+  w: { min: 2, max: 255 }
+  h: { min: 2, max: 255 }
+  # The fewest and most balls the box may hold.
+  minballs: { min: 1, max: 65024 }
+  maxballs: { min: 1, max: 65024 }
+space:
+  # A laser is fired in from a slot: one beyond each end of every row and
+  # column.
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is a ball, 2 an empty square: `beam` reads a 1 as what turns a laser.
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  # A laser's result where a ball absorbs it; one reflected comes out at its
+  # own slot.
+  hit: "|slots|"
+  balls: "count(c in cells where value(c) = 1)"
+rules:
+  count: "balls >= minballs and balls <= maxballs"
+clues:
+  # A fired laser: the slot it came out at, or hit. One that came out at
+  # another slot is a clue at both, since a path runs the same either way.
+  laser:
+    at: slot
+    value: "range(0, hit)"
+    means: "beam(at) = v"
+freedom: { kind: query }
+deal:
+  answer: >-
+    balls a square at random, each on a square that keeps the board one
+    answer once every laser is fired
+tiers: [Normal]
+techniques:
+  # Follow a laser through the squares settled to the first, u, that would
+  # change where it goes: where d in u would send it elsewhere, u holds the
+  # other, 3 - d.
+  - id: ray
+    tier: Normal
+    for: >-
+      k in clues(laser), s = at(k), u = ahead(s) where u != none,
+      d in {1, 2}, r = beam(s, u, d) where r != none and r != clue(laser, s)
+    conclude: "place(u, 3 - d)"

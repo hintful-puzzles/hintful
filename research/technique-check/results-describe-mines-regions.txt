@@ -1,0 +1,4 @@
+ok  mines      regions                        3  sound    (want sound   )    72 queries   12.4s
+ok  mines      regions (planted)              3  unsound  (want unsound )     1 queries    0.3s   at clue count 0
+ok  mines      regions                        4  sound    (want sound   )   180 queries 16516.4s
+ok  mines      regions (planted)              4  unsound  (want unsound )     1 queries    1.0s   at clue count 0

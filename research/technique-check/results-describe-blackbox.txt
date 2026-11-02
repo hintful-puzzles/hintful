@@ -1,0 +1,4 @@
+ok  blackbox   ray                            3  sound    (want sound   )    12 queries    0.7s
+ok  blackbox   ray (planted)                  3  unsound  (want unsound )     1 queries    0.0s   at clue laser 0
+ok  blackbox   ray                            4  sound    (want sound   )    16 queries    9.4s
+ok  blackbox   ray (planted)                  4  unsound  (want unsound )     1 queries    0.1s   at clue laser 0

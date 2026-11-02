@@ -1,0 +1,8 @@
+ok  mines      alone                          3  sound    (want sound   )     9 queries    1.7s
+ok  mines      alone (planted)                3  unsound  (want unsound )     1 queries    0.0s   at clue count 0
+ok  mines      alone                          4  sound    (want sound   )    16 queries    5.7s
+ok  mines      alone (planted)                4  unsound  (want unsound )     1 queries    0.0s   at clue count 0
+ok  mines      pair                           3  sound    (want sound   )     9 queries    1.3s
+ok  mines      pair (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at clue count 0
+ok  mines      pair                           4  sound    (want sound   )    16 queries  142.4s
+ok  mines      pair (planted)                 4  unsound  (want unsound )     1 queries    0.0s   at clue count 0

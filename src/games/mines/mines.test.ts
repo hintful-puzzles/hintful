@@ -37,7 +37,7 @@ import {
   COL_OPEN,
   FLASH_FRAME,
 } from "./render.ts";
-import { minesolve } from "./solver.ts";
+import { ladderSolve } from "./solver.ts";
 import {
   COVERED,
   decodeDesc,
@@ -288,7 +288,7 @@ describe("mines solver", () => {
     };
     const grid = new Int8Array(w * h).fill(-2);
     grid[y * w + x] = open(x, y);
-    expect(minesolve(w, h, n, grid, open, null, null)).toBe(0);
+    expect(ladderSolve(w, h, n, grid, open, null, null)).toBe(0);
     // no covered squares left
     expect(Array.from(grid).some((v) => v === -2)).toBe(false);
   });
@@ -297,7 +297,7 @@ describe("mines solver", () => {
     // A single open '1' between two covered squares: either could be the mine,
     // and with n = -1 the global mine-count deduction is disabled.
     const grid = new Int8Array([-2, 1, -2]);
-    expect(minesolve(3, 1, -1, grid, () => 0, null, null)).toBe(-1);
+    expect(ladderSolve(3, 1, -1, grid, () => 0, null, null)).toBe(-1);
   });
 });
 

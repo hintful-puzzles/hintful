@@ -509,6 +509,115 @@ export function ray(sp: GridSpace, c: number, n: number): number[] {
   return out;
 }
 
+/** The next mask above `k` with as many bits set (Gosper's hack), so a
+ * `subsets` binder of one size counts only those. */
+export function nextOfSize(k: number): number {
+  const c = k & -k;
+  const r = k + c;
+  return (((r ^ k) >>> 2) / c) | r;
+}
+
+/** A cell's content as a beam reads it: `true` where it holds what deflects
+ * one, `false` where it is empty, `null` where nothing says. */
+export type Deflects = (c: number) => boolean | null;
+
+/** The steps a beam takes, clockwise from up, as `(dx, dy)`. */
+const STEPS = [0, -1, 1, 0, 0, 1, -1, 0];
+
+/**
+ * Where a beam fired in from slot `s` goes, Black Box's physics, as one
+ * number: the slot it comes out at, `s` itself where it is reflected, and
+ * `sp.slots.length` where a deflecting cell absorbs it, or, where it first
+ * looks at a cell `holds` says nothing of and that cell decides what it does,
+ * `~c` for that cell. A beam meeting a deflecting cell head-on is absorbed;
+ * one diagonally ahead turns it away; one beside the square it enters by
+ * reflects it before it enters, and a head-on one there absorbs it first.
+ * One tracer for an answer and for partial marks, so they cannot disagree.
+ */
+export function traceBeam(sp: GridSpace, s: number, holds: Deflects): number {
+  const { w, h } = sp;
+  let x: number;
+  let y: number;
+  let dir: number;
+  if (s < w) [x, y, dir] = [s, -1, 2];
+  else if (s < 2 * w) [x, y, dir] = [s - w, h, 0];
+  else if (s < 2 * w + h) [x, y, dir] = [-1, s - 2 * w, 1];
+  else [x, y, dir] = [w, s - 2 * w - h, 3];
+  /** What lies ahead of `(x, y)`, turned `side` steps from the beam's way
+   * first (-1 left, 1 right): off the grid, never a deflecting cell. */
+  const look = (side: number): { at: number; v: boolean | null } => {
+    const d = 2 * dir;
+    let ax = x + STEPS[d];
+    let ay = y + STEPS[d + 1];
+    if (side !== 0) {
+      const e = 2 * ((dir + side + 4) % 4);
+      ax += STEPS[e];
+      ay += STEPS[e + 1];
+    }
+    if (ax < 0 || ay < 0 || ax >= w || ay >= h) return { at: -1, v: false };
+    const at = ay * w + ax;
+    return { at, v: holds(at) };
+  };
+  const front = look(0);
+  if (front.v === null) return ~front.at;
+  if (front.v) return sp.slots.length;
+  const left = look(-1);
+  const right = look(1);
+  if (left.v || right.v) return s;
+  if (left.v === null) return ~left.at;
+  if (right.v === null) return ~right.at;
+  x += STEPS[2 * dir];
+  y += STEPS[2 * dir + 1];
+  for (;;) {
+    if (y < 0) return x;
+    if (y >= h) return w + x;
+    if (x < 0) return 2 * w + y;
+    if (x >= w) return 2 * w + h + y;
+    const ahead = look(0);
+    if (ahead.v === null) return ~ahead.at;
+    if (ahead.v) return sp.slots.length;
+    const l = look(-1);
+    if (l.v === null) return ~l.at;
+    if (l.v) {
+      dir = (dir + 1) % 4;
+      continue;
+    }
+    const r = look(1);
+    if (r.v === null) return ~r.at;
+    if (r.v) {
+      dir = (dir + 3) % 4;
+      continue;
+    }
+    x += STEPS[2 * dir];
+    y += STEPS[2 * dir + 1];
+  }
+}
+
+/** The value a cell holds where it deflects a beam. */
+const DEFLECTS = 1;
+
+/** `beam(s)` on the marks: where the beam from slot `s` goes, `-1` where a
+ * cell no value is placed in decides it; with `c` and `v`, as if `c` held
+ * `v`. */
+export function beam(sp: GridSpace, b: Marks, s: number, c = -1, v = 0): number {
+  const r = traceBeam(sp, s, (d) =>
+    d === c ? v === DEFLECTS : b.known(d) ? b.value(d) === DEFLECTS : null,
+  );
+  return r < 0 ? -1 : r;
+}
+
+/** `ahead(s)`: the first cell the beam from slot `s` looks at that decides
+ * where it goes and holds no value, or `-1`. */
+export function ahead(sp: GridSpace, b: Marks, s: number): number {
+  const r = traceBeam(sp, s, (d) => (b.known(d) ? b.value(d) === DEFLECTS : null));
+  return r < 0 ? ~r : -1;
+}
+
+/** `beam(s)` in an answer `g`. */
+export function beamOf(sp: GridSpace, g: ArrayLike<number>, s: number): number {
+  return traceBeam(sp, s, (d) => g[d] === DEFLECTS);
+}
+
 const balls = new WeakMap<GridSpace, (readonly (readonly number[])[])[]>();
 /** The space asked last and its balls by distance: a technique asks of one
  * space many times a pass, so this saves the two lookups a call. */

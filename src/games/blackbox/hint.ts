@@ -8,14 +8,13 @@
  * passes, and every board has one answer (`answer.ts`), so no mark it meets is
  * wrong and its steps only ever add marks.
  *
- * 1. **Settle squares.** Follow a fired laser through the squares already
- *    settled to the first one nothing has settled. If one of the two things
- *    that square could hold would send the laser somewhere it did not go, the
- *    square holds the other. A laser that came out at a numbered square is
- *    followed from both ends, since a path runs the same either way. Repeat
- *    until nothing more settles. An empty square is shown by marking it known
- *    and a ball by guessing it, so each later deduction's premises are on the
- *    board.
+ * 1. **Settle squares**, by the ladder `blackbox.description.yaml` states,
+ *    compiled: its `ray` follows a fired laser through the squares already
+ *    settled to the first one nothing has settled, which holds whatever does
+ *    not send the laser somewhere it did not go. Each fired laser is a clue
+ *    of its `laser` kind, rebuilt from the board on each hint. An empty
+ *    square is shown by marking it known and a ball by guessing it, so each
+ *    later deduction's premises are on the board.
  * 2. **Fire a laser** whose way through the box still depends on squares
  *    nothing has settled.
  * 3. **Offer a layout.** When every laser is fired and none settles a square on
@@ -27,6 +26,7 @@
  *    no laser reaches.
  */
 
+import { clueList, traceBeam } from "../../engine/describe-runtime.ts";
 import {
   type HintResult,
   type HintStep,
@@ -34,8 +34,18 @@ import {
   narratedStep,
 } from "../../engine/game.ts";
 import { SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  ladderTechniques,
+  runLadder,
+  TIERS as SCALE,
+} from "../../engine/ladder-runtime.ts";
 import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
+import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
+import * as blackbox from "./blackbox.compiled.ts";
 import { type Seen, type Settled, say, type Would } from "./hint-text.ts";
 import {
   BALL_GUESS,
@@ -49,9 +59,15 @@ import {
   LASER_HIT,
   LASER_REFLECT,
   range2grid,
-  type Traced,
-  traceLaser,
+  rangeOf,
+  slotOf,
+  spaceOf,
 } from "./state.ts";
+
+/** What the marks hold: a ball, or an empty square. */
+const BALL = 1;
+const EMPTY = 2;
+const DOMAIN = (1 << BALL) | (1 << EMPTY);
 
 /** A fired laser's result, with the flags the check adds taken off. */
 function resultOf(state: BlackboxState, i: number): number {
@@ -62,40 +78,44 @@ function resultOf(state: BlackboxState, i: number): number {
   return e & ~LASER_FLAGMASK;
 }
 
-/** What is known about each square of the box: `null` where nothing settles
- * it. Indexed `(y - 1) * w + (x - 1)` on the 1-based grid. */
-export class Knowledge {
-  readonly cells: Holds[];
-
-  constructor(
-    readonly w: number,
-    readonly h: number,
-  ) {
-    this.cells = new Array<Holds>(w * h).fill(null);
+/** The fired lasers as the description reads them: a clue at each end of
+ * each, the slot it came out at, its own where it was reflected, and the
+ * slot count where a ball absorbed it. In range order, each laser's far end
+ * just after its entry. */
+function dealtOf(state: BlackboxState): blackbox.Dealt {
+  const { w, h } = state;
+  const at: number[] = [];
+  const v: number[] = [];
+  const hit = 2 * (w + h);
+  for (let i = 0; i < state.nlasers; i++) {
+    const r = resultOf(state, i);
+    if (r === LASER_EMPTY) continue;
+    const s = slotOf(w, h, i);
+    if (r === LASER_HIT || r === LASER_REFLECT) {
+      at.push(s);
+      v.push(r === LASER_HIT ? hit : s);
+    } else if (i < r) {
+      const e = slotOf(w, h, r);
+      at.push(s, e);
+      v.push(e, s);
+    }
   }
+  return {
+    laser: clueList(at, v, hit),
+    minballs: state.minballs,
+    maxballs: state.maxballs,
+  };
+}
 
-  readonly at = (x: number, y: number): Holds => this.cells[(y - 1) * this.w + (x - 1)];
-
-  set(p: Point, v: Holds): void {
-    this.cells[(p.y - 1) * this.w + (p.x - 1)] = v;
-  }
-
-  trace(entry: number): Traced {
-    return traceLaser(this.w, this.h, entry, this.at);
-  }
-
-  balls(): number {
-    return this.cells.filter((c) => c === true).length;
-  }
-
-  /** Every square, with its place on the 1-based grid. */
-  *squares(): Generator<{ at: Point; holds: Holds }> {
-    for (let i = 0; i < this.cells.length; i++)
-      yield {
-        at: { x: (i % this.w) + 1, y: Math.floor(i / this.w) + 1 },
-        holds: this.cells[i],
-      };
-  }
+/** What a fired laser was seen to do, from the end at range index `i`. */
+function seenOf(state: BlackboxState, i: number): Seen {
+  const r = resultOf(state, i);
+  if (r === LASER_HIT) return { kind: "hit", entry: i };
+  if (r === LASER_REFLECT) return { kind: "reflect", entry: i };
+  const lo = Math.min(i, r);
+  const end = range2grid(state.w, state.h, lo) as Point;
+  const n = gridGet(state, end.x, end.y) & ~LASER_FLAGMASK;
+  return { kind: "exit", ends: [lo, Math.max(i, r)], n };
 }
 
 /** One square a fired laser settles, and the laser it was followed along. */
@@ -105,66 +125,111 @@ export interface Firing {
   readonly would: Would;
 }
 
-/** A fired laser's end to follow it from, and the result it must reach. */
-interface Start {
-  readonly from: number;
-  readonly arrives: number;
-  readonly seen: Seen;
+/** The ladder over the lasers `dealt` holds, each firing with its reason. */
+function ladderOf(state: BlackboxState, dealt: blackbox.Dealt) {
+  const hit = 2 * (state.w + state.h);
+  return describedLadder(blackbox, {
+    ray: compiledRung(
+      blackbox.ray,
+      dealt,
+      ({ s, u, d, r }): Firing => ({
+        settled: { at: pointOf(state, u), ball: d !== BALL },
+        seen: seenOf(state, rangeOf(state.w, state.h, s)),
+        would: r === hit ? "hit" : r === s ? "reflect" : "exit",
+      }),
+    ),
+  });
 }
 
-/** Every end a fired laser can be followed from: its entry, and the far end of
- * one that came out at a numbered square. */
-function startsOf(state: BlackboxState): Start[] {
-  const out: Start[] = [];
-  for (let i = 0; i < state.nlasers; i++) {
-    const r = resultOf(state, i);
-    if (r === LASER_EMPTY) continue;
-    if (r === LASER_HIT)
-      out.push({ from: i, arrives: r, seen: { kind: "hit", entry: i } });
-    else if (r === LASER_REFLECT)
-      out.push({ from: i, arrives: r, seen: { kind: "reflect", entry: i } });
-    else if (i < r) {
-      const end = range2grid(state.w, state.h, i) as Point;
-      const n = gridGet(state, end.x, end.y) & ~LASER_FLAGMASK;
-      const seen: Seen = { kind: "exit", ends: [i, r], n };
-      out.push({ from: i, arrives: r, seen }, { from: r, arrives: i, seen });
-    }
+/** A square of the description's space on the 1-based grid. */
+const pointOf = (state: BlackboxState, c: number): Point => ({
+  x: (c % state.w) + 1,
+  y: ((c / state.w) | 0) + 1,
+});
+
+/** What is known about each square of the box, as the ladder's marks hold
+ * it: `null` where nothing settles it. */
+export class Knowledge {
+  readonly m: CellMarks;
+
+  constructor(
+    readonly state: BlackboxState,
+    readonly dealt: blackbox.Dealt,
+  ) {
+    this.m = new CellMarks(
+      spaceOf(state.w, state.h),
+      DOMAIN,
+      new Uint8Array(state.w * state.h),
+    );
+    this.m.seed(this.m.grid);
   }
-  return out;
+
+  /** What the square at `p` holds, on the 1-based grid. */
+  readonly at = (p: Point): Holds => this.holds((p.y - 1) * this.state.w + (p.x - 1));
+
+  holds(c: number): Holds {
+    return this.m.known(c) ? this.m.value(c) === BALL : null;
+  }
+
+  set(p: Point, ball: boolean): void {
+    this.m.placeAt((p.y - 1) * this.state.w + (p.x - 1), ball ? BALL : EMPTY);
+  }
+
+  /** Where the laser fired from range index `i` goes, or `null` where a
+   * square nothing settles decides it. */
+  goes(i: number): number | null {
+    const r = traceBeam(this.m.sp, slotOf(this.state.w, this.state.h, i), (c) =>
+      this.holds(c),
+    );
+    return r < 0 ? null : r;
+  }
+
+  balls(): number {
+    let n = 0;
+    for (let c = 0; c < this.m.grid.length; c++) if (this.m.grid[c] === BALL) n++;
+    return n;
+  }
+
+  /** Every square, with its place on the 1-based grid. */
+  *squares(): Generator<{ at: Point; holds: Holds }> {
+    for (let c = 0; c < this.m.grid.length; c++)
+      yield { at: pointOf(this.state, c), holds: this.holds(c) };
+  }
 }
 
-/** Every square the fired lasers settle one at a time, in the order they
- * settle, and what that leaves known. */
+/** The ladder's techniques on `known`'s marks. */
+const techniquesOn = (known: Knowledge) =>
+  ladderTechniques(
+    known.m,
+    ladderOf(known.state, known.dealt).entries,
+    { [SCALE]: 0 },
+    {},
+  );
+
+/** Every square the fired lasers settle one at a time, in the order the
+ * ladder settles them, and what that leaves known. */
 export function deduce(state: BlackboxState): { known: Knowledge; firings: Firing[] } {
-  const known = new Knowledge(state.w, state.h);
+  const known = new Knowledge(state, dealtOf(state));
+  const { m } = known;
+  m.budget = stepBudget("blackbox hint");
   const firings: Firing[] = [];
-  settle(startsOf(state), known, firings);
+  let group = -1;
+  m.recorder = (rec) => {
+    if (rec.group === group) return;
+    group = rec.group;
+    firings.push(rec.reason as Firing);
+  };
+  runLadder(m, techniquesOn(known));
+  m.recorder = undefined;
+  m.budget = undefined;
   return { known, firings };
 }
 
-/** Settle in `known` every square the lasers `starts` settle one at a time,
- * recording each in `firings`. */
-function settle(starts: readonly Start[], known: Knowledge, firings: Firing[]): void {
-  for (let changed = true; changed; ) {
-    changed = false;
-    for (const s of starts) {
-      const t = known.trace(s.from);
-      if (typeof t === "number") continue;
-      const u = t.unknown;
-      for (const ball of [true, false]) {
-        known.set(u, ball);
-        const r = known.trace(s.from);
-        known.set(u, null);
-        if (typeof r !== "number" || r === s.arrives) continue;
-        known.set(u, !ball);
-        const would: Would =
-          r === LASER_HIT ? "hit" : r === LASER_REFLECT ? "reflect" : "exit";
-        firings.push({ settled: { at: u, ball: !ball }, seen: s.seen, would });
-        changed = true;
-        break;
-      }
-    }
-  }
+/** What the fired lasers settle, without the reasons. */
+function settled(state: BlackboxState): Knowledge {
+  const known = new Knowledge(state, dealtOf(state));
+  runLadder(known.m, techniquesOn(known));
+  return known;
 }
 
 /** What a step rests on, by the branch of {@link hint} that built it: a
@@ -199,11 +264,11 @@ export class OutOfReach extends Error {}
 /**
  * Walk the ways of filling the squares `known` leaves open so that every fired
  * laser goes where it went, within the box's ball count, trying each square
- * empty first and settling what each try forces before the next. A way leaves
- * open the squares no laser looks at, and `found` is told how many balls it has
- * and how many such squares; it stops the walk by returning `true`, and the
- * walk then leaves that way in `known`. Throws {@link OutOfReach} after
- * `budget` steps.
+ * empty first and settling what each try forces by the ladder before the
+ * next. A way leaves open the squares no laser looks at, and `found` is told
+ * how many balls it has and how many such squares; it stops the walk by
+ * returning `true`, and the walk then leaves that way in `known`. Throws
+ * {@link OutOfReach} after `budget` steps.
  */
 function walkLayouts(
   state: BlackboxState,
@@ -211,30 +276,33 @@ function walkLayouts(
   found: (balls: number, open: number) => boolean,
   budget: number,
 ): boolean {
-  const starts = startsOf(state);
-  const scratch: Firing[] = [];
+  const { m, dealt } = known;
+  const techniques = techniquesOn(known);
+  const holds = (c: number): Holds => known.holds(c);
   let tried = 0;
   const rec = (): boolean => {
     if (++tried > budget) throw new OutOfReach();
     const balls = known.balls();
     if (balls > state.maxballs) return false;
-    let pick: Point | null = null;
-    for (const s of starts) {
-      const t = known.trace(s.from);
-      if (typeof t !== "number") pick ??= t.unknown;
-      else if (t !== s.arrives) return false;
+    let pick = -1;
+    for (let k = 0; k < dealt.laser.at.length; k++) {
+      const r = traceBeam(m.sp, dealt.laser.at[k], holds);
+      if (r < 0) {
+        if (pick < 0) pick = ~r;
+      } else if (r !== dealt.laser.v[k]) return false;
     }
-    if (pick === null) {
-      const open = known.cells.filter((c) => c === null).length;
+    if (pick < 0) {
+      let open = 0;
+      for (let c = 0; c < m.grid.length; c++) if (!m.known(c)) open++;
       return balls + open >= state.minballs && found(balls, open);
     }
-    const before = known.cells.slice();
-    for (const ball of [false, true]) {
-      known.set(pick, ball);
-      settle(starts, known, scratch);
-      scratch.length = 0;
-      if (rec()) return true;
-      known.cells.splice(0, before.length, ...before);
+    const grid = m.grid.slice();
+    const cands = m.cands.slice();
+    for (const v of [EMPTY, BALL]) {
+      m.placeAt(pick, v);
+      if (!runLadder(m, techniques) && rec()) return true;
+      m.grid.set(grid);
+      m.cands.set(cands);
     }
     return false;
   };
@@ -259,7 +327,7 @@ function waysUpTo2(n: number, k: number): number {
  * on every laser, this is how many answers the board has.
  */
 export function layoutsUpTo2(state: BlackboxState, budget: number): number {
-  const { known } = deduce(state);
+  const known = settled(state);
   let count = 0;
   walkLayouts(
     state,
@@ -298,8 +366,7 @@ export function hint(
   if (settled.length > 0) return { ok: true, steps: settled };
 
   const open: number[] = [];
-  for (let i = 0; i < state.nlasers; i++)
-    if (typeof known.trace(i) !== "number") open.push(i);
+  for (let i = 0; i < state.nlasers; i++) if (known.goes(i) === null) open.push(i);
   const unfired = open.filter((i) => resultOf(state, i) === LASER_EMPTY);
   if (unfired.length > 0) {
     const firedAny = state.exits.some((e) => e !== LASER_EMPTY);

@@ -36,6 +36,7 @@ import {
   describedSpace,
   type GridSpace,
   latinSpace,
+  traceBeam,
   within,
 } from "../../src/engine/describe-runtime.ts";
 import { blocks } from "../describe/space.ts";
@@ -193,7 +194,7 @@ interface Board {
   clueDomain: Bx[];
   /** The description's sizes the board was built at, where they are not its
    * order alone. */
-  sizes: ReadonlyMap<string, number>;
+  sizes: ReadonlyMap<string, Nx>;
   /** The most cells a dealt partition's region has ({@link regionCells}). */
   regionCells: number;
 }
@@ -339,11 +340,22 @@ function makeBoard(
 ): Board {
   const space = spaceOf(order, d);
   const { sp } = space;
-  const sizes = new Map([...space.sizes, ...more]);
+  const fixed = new Map([...space.sizes, ...more]);
   const tag = `b${boardCount++}`;
   const n = sp.cells.length;
   const bound = d === undefined ? null : domainBound(d);
-  const top = Math.max(order, (bound === null ? null : sizes.get(bound)) ?? 0);
+  const top = Math.max(order, (bound === null ? null : fixed.get(bound)) ?? 0);
+  // A count wider than the board (Mines' mines) is one unknown, which is
+  // every value it can take at once: its worlds' union.
+  const sizes = new Map<string, Nx>(fixed);
+  const clueDomain: Bx[] = [];
+  if (d !== undefined)
+    for (const name of openSizes(d, order)) {
+      const v = Z3.Int.const(`${tag}_size_${name}`);
+      sizes.set(name, v);
+      const { min } = d.json.sizes[name];
+      clueDomain.push(and(cmp(">=", v, min), cmp("<=", v, n)));
+    }
   const ans = Array.from({ length: n }, (_, c) => Z3.Int.const(`${tag}_ans_${c}`));
   const known = Array.from({ length: n }, (_, c) => Z3.Bool.const(`${tag}_known_${c}`));
   const cand = Array.from({ length: n }, (_, c) =>
@@ -362,9 +374,31 @@ function makeBoard(
     clues: new Map(),
     regions: new Map(),
     regionCells: cells,
-    clueDomain: [],
+    clueDomain,
     sizes,
   };
+}
+
+/** The sizes an `order` board does not fix whose range is wider than its
+ * cells, so that no size of the board holds them all: each is checked as one
+ * unknown, not a world a value. The answer's domain's bound is not one. */
+function openSizes(d: Description, order: number): string[] {
+  const { grid } = d.json.space;
+  const { sp, sizes } = spaceOf(order, d);
+  const bound = domainBound(d);
+  return Object.entries(d.json.sizes)
+    .filter(
+      ([name, { max }]) =>
+        name !== "order" &&
+        name !== "w" &&
+        name !== "h" &&
+        name !== grid.w &&
+        name !== grid.h &&
+        name !== bound &&
+        !sizes.has(name) &&
+        max > sp.cells.length,
+    )
+    .map(([name]) => name);
 }
 
 /** Every partition the description deals, symbolically, and the rule that
@@ -494,6 +528,91 @@ function vsetOf(board: Board, members: (d: number) => Bx): V {
 function cellValue(ctx: Ctx, c: number): Nx {
   const a = ctx.board.ans[c];
   return ctx.mode === "rule" ? a : ite(ctx.board.known[c], a, -1);
+}
+
+/** A number under exclusive guards that cover every case. */
+function joinNum(parts: readonly (readonly [Bx, number])[]): Nx {
+  let acc: Nx = parts[parts.length - 1][1];
+  for (let i = parts.length - 2; i >= 0; i--) acc = ite(parts[i][0], parts[i][1], acc);
+  return acc;
+}
+
+/** Alternatives with one guard an id, the guards of a repeated id joined. */
+function merged(parts: readonly (readonly [number, Bx])[]): Alt[] {
+  const out = new Map<number, Bx>();
+  for (const [id, g] of parts) out.set(id, or(out.get(id) ?? false, g));
+  return [...out].filter(([, g]) => g !== false);
+}
+
+/** A cell the tracer asked about that the path so far has not settled. */
+class Unsettled {
+  constructor(readonly c: number) {}
+}
+
+const beamCache = new WeakMap<Board, Map<string, (readonly [Bx, number])[]>>();
+
+/**
+ * Every way the beam from slot `s` can go, as {@link traceBeam} says, each
+ * under the guard of what the cells it asked about hold: in a rule, a ball
+ * or not in the answer; in a technique, a ball placed, an empty square
+ * placed, or nothing placed, which ends the path there. Cell `u`, where it is
+ * not none, is taken to hold `d`. The tracer itself walks the paths, asked
+ * again with each cell it stops at settled each way, so the check reads the
+ * physics the runtime does.
+ */
+function beamPaths(ctx: Ctx, s: number, u: number, d: Nx): (readonly [Bx, number])[] {
+  const { board } = ctx;
+  const key = `${ctx.mode} ${s} ${u} ${d}`;
+  const memo = typeof d === "number" ? beamCache.get(board)?.get(key) : undefined;
+  if (memo !== undefined) return memo;
+  const ways = (c: number): (readonly [Bx, boolean | null])[] => {
+    if (c === u)
+      return [
+        [cmp("=", d, 1), true],
+        [not(cmp("=", d, 1)), false],
+      ];
+    const ball = cmp("=", board.ans[c], 1);
+    if (ctx.mode === "rule")
+      return [
+        [ball, true],
+        [not(ball), false],
+      ];
+    const k = board.known[c];
+    return [
+      [and(k, ball), true],
+      [and(k, not(ball)), false],
+      [not(k), null],
+    ];
+  };
+  const out: (readonly [Bx, number])[] = [];
+  const settled = new Map<number, boolean | null>();
+  const walk = (g: Bx): void => {
+    if (g === false) return;
+    let r: number;
+    try {
+      r = traceBeam(board.sp, s, (c) => {
+        const v = settled.get(c);
+        if (v === undefined) throw new Unsettled(c);
+        return v;
+      });
+    } catch (e) {
+      if (!(e instanceof Unsettled)) throw e;
+      for (const [h, v] of ways(e.c)) {
+        settled.set(e.c, v);
+        walk(and(g, h));
+      }
+      settled.delete(e.c);
+      return;
+    }
+    out.push([g, r]);
+  };
+  walk(true);
+  if (typeof d === "number") {
+    const m = beamCache.get(board) ?? new Map();
+    beamCache.set(board, m);
+    m.set(key, out);
+  }
+  return out;
 }
 
 /** `times(d)`: the repeated value's count, 1 for every other. */
@@ -1065,6 +1184,33 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       return lift(vs[0], fn, (s) => elem("slot", sp.opposite[s]));
     case "corners":
       return cellFn((c) => allOf("corner", sp.cellCorners[c]));
+    case "beam": {
+      // With a cell and a value, as if the cell held it; a cell that is none
+      // supposes nothing.
+      const as = vs.length === 3 ? alts(vs[1], fn) : ([[-1, true]] as const);
+      const d = vs.length === 3 ? num(vs[2], fn) : 0;
+      return lift(vs[0], fn, (s) =>
+        join(
+          as
+            .filter(([, g]) => g !== false)
+            .map(([u, g]) => [
+              g,
+              {
+                k: "num",
+                v: joinNum(
+                  beamPaths(ctx, s, u, d).map(([p, r]) => [p, r < 0 ? -1 : r]),
+                ),
+              },
+            ]),
+        ),
+      );
+    }
+    case "ahead":
+      return lift(vs[0], fn, (s) => ({
+        k: "elem",
+        sort: "cell",
+        alts: merged(beamPaths(ctx, s, -1, 0).map(([p, r]) => [r < 0 ? ~r : -1, p])),
+      }));
     case "across":
       return lift(vs[0], fn, (k) =>
         lift(vs[1], fn, (c) => {
@@ -1435,7 +1581,11 @@ export function sizings(d: Description, order: number): Map<string, number>[] {
     grid.h,
     ...spaceOf(order, d).sizes.keys(),
   ]);
-  const free = Object.entries(d.json.sizes).filter(([n]) => !fixed.has(n));
+  // A size wider than the board is one unknown on it, not a world a value.
+  const open = new Set(openSizes(d, order));
+  const free = Object.entries(d.json.sizes).filter(
+    ([n]) => !fixed.has(n) && !open.has(n),
+  );
   const bound = domainBound(d);
   let out: Map<string, number>[] = [new Map()];
   for (const [name, { min, max: most }] of free) {
@@ -1475,6 +1625,11 @@ export async function hasAnswer(
   return (await solver.check()) === "sat";
 }
 
+/** How long the default solver is given a query before the bit-blasting
+ * one is asked, and z3's own "no limit". */
+const QUICK_MS = Number(process.env["CHECK_QUICK_MS"] ?? 60_000);
+const NO_LIMIT = 4_294_967_295;
+
 /** Check one technique sound against `d`'s rules on an `order` board. */
 export async function checkTechnique(
   d: Description,
@@ -1483,6 +1638,13 @@ export async function checkTechnique(
   sizes: ReadonlyMap<string, number> = new Map(),
   split = 1,
   cells?: number,
+  run: {
+    /** Only every `of`th query, from the `index`th: one process's share. */
+    shard?: { index: number; of: number };
+    /** Called every 50 queries with how many are done of how many due, and
+     * the first binders of the query starting. */
+    progress?: (done: number, of: number, at: string) => void;
+  } = {},
 ): Promise<Verdict> {
   const t0 = performance.now();
   const board = makeBoard(order, d, sizes, cells);
@@ -1491,20 +1653,39 @@ export async function checkTechnique(
   const world = worldOf(d, board);
   const ctx: Ctx = { board, d, mode: "technique", concluding: false };
   const solver = new Z3.Solver();
-  for (const w of world) solver.add(asZ3(w));
+  const rules = world.map((w) => asZ3(w));
+  for (const w of rules) solver.add(w);
+  // A count of squares, a sum of terms each 0 or 1 (Mines' mine total read
+  // alone), sends the default search splitting square by square past an
+  // hour, and bit-blasted to SAT it is settled in seconds (2026-11-02). A
+  // query the default does not settle in a minute is asked of that, and
+  // where it cannot encode the query, of the default again without a limit;
+  // each answers soundly, so which settles a query is only a matter of time.
+  const blasted = Z3.AndThen(
+    "simplify",
+    "lia2card",
+    "pb2bv",
+    "bit-blast",
+    "sat",
+  ).solver();
+  for (const w of rules) blasted.add(w);
   // The first `split` binders concrete, one query each; the rest one
   // disjunction of every binding's premise without its conclusion, built as
   // its query runs, so that one group is held at a time.
-  const heads: { env: Env; g: Bx }[] = [];
+  const all: { env: Env; g: Bx }[] = [];
   bindings(t.binders.slice(0, split), 0, new Map(), true, ctx, (env, g) => {
-    heads.push({ env, g });
+    all.push({ env, g });
   });
+  const { shard, progress } = run;
+  const heads =
+    shard === undefined ? all : all.filter((_, i) => i % shard.of === shard.index);
   let queries = 0;
-  for (const head of heads) {
+  for (const [done, head] of heads.entries()) {
     const key = t.binders
       .slice(0, split)
       .map((b) => show(head.env.get(b.name) ?? null))
       .join(" ");
+    if (done % 50 === 0) progress?.(done, heads.length, key);
     const parts: Bx[] = [];
     bindings(t.binders, split, head.env, head.g, ctx, (env, g) => {
       const premise =
@@ -1518,9 +1699,27 @@ export async function checkTechnique(
     const bad = or(...parts);
     if (bad === false) continue;
     queries++;
+    // Split deeper, a run makes thousands of queries, and what the solver
+    // keeps between pushes grew Mines' `count` past z3's 2 GB heap on a 4×4
+    // board (2026-11-01); a reset solver starts each from the rules alone.
+    if (split > 1) {
+      solver.reset();
+      for (const w of rules) solver.add(w);
+    }
     solver.push();
     solver.add(asZ3(bad));
-    const r = await solver.check();
+    solver.set("timeout", QUICK_MS);
+    let r = await solver.check();
+    if (r === "unknown") {
+      blasted.push();
+      blasted.add(asZ3(bad));
+      r = await blasted.check();
+      blasted.pop();
+    }
+    if (r === "unknown") {
+      solver.set("timeout", NO_LIMIT);
+      r = await solver.check();
+    }
     solver.pop();
     if (r !== "unsat")
       return {

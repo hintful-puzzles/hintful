@@ -97,8 +97,6 @@ const KEPT_UNUSED = {
   // compiled today does.
   "src/engine/describe-runtime.ts::sameSet":
     "called by compiled code for = on element sets",
-  "src/engine/describe-runtime.ts::subsetOf":
-    "called by compiled code for subset on element sets",
   "src/engine/describe-runtime.ts::before":
     "called by compiled code for before(x, L) read as a set, not bound over",
   // Read by the soundness checker under research/, which this scan does not

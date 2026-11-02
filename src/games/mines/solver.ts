@@ -1,187 +1,304 @@
 /**
- * Minesweeper solver (`minesolve`, mines.c:702), used by the generator to
- * ensure a `unique` board is deducible without guessing.
+ * Mines' deduction: the ladder `mines.description.yaml` states, compiled, on
+ * the engine's marks (`engine/ladder-runtime.ts`). The hint walks it from the
+ * player's board, and the generator solves on it to certify each board it
+ * deals, so every board dealt is one the hint finishes.
  *
- * Idiomatic in shape (typed arrays, closures for the open/perturb callbacks,
- * a `SortedMultiset` for the set store) but faithful in *order*: the set store
- * is ordered by `setcmp = (y, x, mask)` and the square-todo is a FIFO, because
- * the generator picks its perturbation target by positional index into the
- * store at the deductive fixpoint (mines.c:1244) — so the deduction order is
- * byte-match surface, not a tidy convention.
+ * **The numbers are revealed, not dealt.** Each one is a clue of the
+ * description's `count` kind once its square is opened, so the clue list is
+ * rebuilt from the board as squares open: the hint after each of its steps,
+ * which can open more, and the generator after each pass and perturbation.
+ * A square is a mine or safe in the marks only once a deduction or an
+ * opening shows it; a flag is the player's claim and never a premise.
  */
 
+import { singleFirings } from "../../engine/deduction-fixpoint.ts";
+import {
+  clueList,
+  describedSpace,
+  type GridSpace,
+} from "../../engine/describe-runtime.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  runLadder,
+  TIERS as SCALE,
+} from "../../engine/ladder-runtime.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { SortedMultiset } from "../../engine/sorted-multiset.ts";
+import { stepBudget } from "../../engine/step-budget.ts";
+import * as mines from "./mines.compiled.ts";
 
-/** Count set bits in a value that never exceeds 9 bits (a 3×3 mask). */
-function bitcount16(word: number): number {
-  let w = word & 0xffff;
-  w = ((w & 0xaaaa) >> 1) + (w & 0x5555);
-  w = ((w & 0xcccc) >> 2) + (w & 0x3333);
-  w = ((w & 0xf0f0) >> 4) + (w & 0x0f0f);
-  w = ((w & 0xff00) >> 8) + (w & 0x00ff);
-  return w;
+/** What the marks hold: a mine, or a safe square. */
+const MINE = 1;
+const SAFE = 2;
+const DOMAIN = (1 << MINE) | (1 << SAFE);
+
+/** The unopened squares one opened number still has to account for. */
+export interface Group {
+  /** The number's square. */
+  readonly clue: number;
+  /** Its value. */
+  readonly value: number;
+  /** Its squares nothing has decided yet. */
+  readonly cells: readonly number[];
+  /** Mines still to place among {@link cells}. */
+  readonly need: number;
+  /** Its neighbors proved to be mines. */
+  readonly mines: readonly number[];
 }
 
-interface MineSet {
-  x: number;
-  y: number;
-  mask: number;
-  mines: number;
-  todo: boolean;
-  prev: MineSet | null;
-  next: MineSet | null;
+/** A number's squares beyond another's whose squares all touch it: they hold
+ * exactly {@link need} mines. */
+export interface Region {
+  readonly outer: Group;
+  readonly inner: Group;
+  readonly cells: readonly number[];
+  readonly need: number;
 }
 
-/** `(y, x, mask)` total order (upstream `setcmp`, mines.c:361). */
-function setcmp(a: MineSet, b: MineSet): number {
-  if (a.y !== b.y) return a.y - b.y;
-  if (a.x !== b.x) return a.x - b.x;
-  return a.mask - b.mask;
+/** One side of a pair: a number, or a region. */
+export type Side = { readonly group: Group } | { readonly region: Region };
+
+/** Why a firing decides its squares, as the hint says it. */
+export type Firing =
+  | { readonly rung: "satisfied"; readonly group: Group; readonly safes: number[] }
+  | { readonly rung: "full"; readonly group: Group; readonly mines: number[] }
+  | {
+      /** `heavy` needs more than `light`; its own squares are the mines and
+       * `light`'s own squares the safe ones. */
+      readonly rung: "pair";
+      readonly heavy: Side;
+      readonly light: Side;
+      readonly shared: number[];
+      readonly mines: number[];
+      readonly safes: number[];
+    }
+  | {
+      readonly rung: "count";
+      /** Mines in the whole board, proved so far, and still to find. */
+      readonly total: number;
+      readonly found: number;
+      readonly left: number;
+      /** The numbers counted, whose squares do not meet. */
+      readonly members: readonly Side[];
+      readonly counted: number[];
+      readonly mines: number[];
+      readonly safes: number[];
+    };
+
+/** What the board shows: its opened numbers, `-1` on a square not opened,
+ * and its size and mine count. */
+export interface Shown {
+  readonly w: number;
+  readonly h: number;
+  readonly n: number;
+  readonly numbers: ArrayLike<number>;
 }
 
-/**
- * Munge set 1 by intersecting (or, when `diff`, subtracting) set 2, after
- * translating set 2 onto set 1's origin. Returns the new mask (upstream
- * `setmunge`, mines.c:400).
- */
-function setmunge(
-  x1: number,
-  y1: number,
-  mask1: number,
-  x2: number,
-  y2: number,
-  mask2: number,
-  diff: boolean,
-): number {
-  if (Math.abs(x2 - x1) >= 3 || Math.abs(y2 - y1) >= 3) {
-    mask2 = 0;
-  } else {
-    while (x2 > x1) {
-      mask2 &= ~(4 | 32 | 256);
-      mask2 <<= 1;
-      x2--;
-    }
-    while (x2 < x1) {
-      mask2 &= ~(1 | 8 | 64);
-      mask2 >>= 1;
-      x2++;
-    }
-    while (y2 > y1) {
-      mask2 &= ~(64 | 128 | 256);
-      mask2 <<= 3;
-      y2--;
-    }
-    while (y2 < y1) {
-      mask2 &= ~(1 | 2 | 4);
-      mask2 >>= 3;
-      y2++;
-    }
+/** The opened numbers as the description reads them, written into `into`
+ * where given, so a ladder built on it reads the board as it is now. */
+function dealtOf(s: Shown, into?: mines.Dealt): mines.Dealt {
+  const at: number[] = [];
+  const v: number[] = [];
+  for (let i = 0; i < s.w * s.h; i++) {
+    if (s.numbers[i] < 0) continue;
+    at.push(i);
+    v.push(s.numbers[i]);
   }
-  if (diff) mask2 ^= 511;
-  return mask1 & mask2;
+  const count = clueList(at, v, s.w * s.h);
+  if (into === undefined) return { count, mines: s.n };
+  into.count = count;
+  return into;
 }
 
-class SetStore {
-  readonly sets = new SortedMultiset<MineSet>(setcmp);
-  todoHead: MineSet | null = null;
-  todoTail: MineSet | null = null;
+/** The last space built, kept: the generator builds marks again after each
+ * perturbation, hundreds of times a deal, on one size of board. */
+let space: GridSpace | null = null;
 
-  addTodo(s: MineSet): void {
-    if (s.todo) return;
-    s.prev = this.todoTail;
-    if (s.prev) s.prev.next = s;
-    else this.todoHead = s;
-    this.todoTail = s;
-    s.next = null;
-    s.todo = true;
-  }
+function spaceOf(s: Shown): GridSpace {
+  if (space?.w !== s.w || space.h !== s.h)
+    space = describedSpace(mines.units, s.w, s.h);
+  return space;
+}
 
-  /** Normalize (x, y) to the mask's bounding box, then insert; if a set with
-   * the same (x, y, mask) already exists it is left untouched (upstream
-   * `ss_add`, mines.c:465). */
-  add(x: number, y: number, mask: number, mines: number): void {
-    while (!(mask & (1 | 8 | 64))) {
-      mask >>= 1;
-      x++;
+/** The marks the ladder reads: each opened square safe, and `known` placed. */
+function marksOf(s: Shown, known: Uint8Array): CellMarks {
+  const grid = known.slice();
+  for (let i = 0; i < grid.length; i++) if (s.numbers[i] >= 0) grid[i] = SAFE;
+  const m = new CellMarks(spaceOf(s), DOMAIN, grid);
+  m.seed(grid);
+  return m;
+}
+
+/** The number at `c` as a group, on the marks before a firing's facts. */
+function groupOf(m: CellMarks, dealt: mines.Dealt, c: number): Group {
+  const { sp } = m;
+  const cells: number[] = [];
+  const found: number[] = [];
+  const x = c % sp.w;
+  const y = (c / sp.w) | 0;
+  for (let j = Math.max(0, y - 1); j <= Math.min(sp.h - 1, y + 1); j++)
+    for (let i = Math.max(0, x - 1); i <= Math.min(sp.w - 1, x + 1); i++) {
+      const d = j * sp.w + i;
+      if (d === c) continue;
+      if (!m.known(d)) cells.push(d);
+      else if (m.value(d) === MINE) found.push(d);
     }
-    while (!(mask & (1 | 2 | 4))) {
-      mask >>= 3;
-      y++;
-    }
-    const s: MineSet = { x, y, mask, mines, todo: false, prev: null, next: null };
-    if (!this.sets.add(s)) return; // already present — drop the duplicate
-    this.addTodo(s);
-  }
+  const value = dealt.count.v[dealt.count.byAt[c]];
+  return { clue: c, value, cells, need: value - found.length, mines: found };
+}
 
-  remove(s: MineSet): void {
-    const { next, prev } = s;
-    if (prev) prev.next = next;
-    else if (s === this.todoHead) this.todoHead = next;
-    if (next) next.prev = prev;
-    else if (s === this.todoTail) this.todoTail = prev;
-    s.todo = false;
-    this.sets.delete(s);
-  }
+const minus = (a: readonly number[], b: readonly number[]): number[] =>
+  a.filter((c) => !b.includes(c));
+const meet = (a: readonly number[], b: readonly number[]): number[] =>
+  a.filter((c) => b.includes(c));
 
-  /** All sets overlapping the input (x, y, mask) set, in store order
-   * (upstream `ss_overlap`, mines.c:543 — its scan order feeds deduction
-   * order). */
-  overlap(x: number, y: number, mask: number): MineSet[] {
-    const ret: MineSet[] = [];
-    for (let xx = x - 3; xx < x + 3; xx++) {
-      for (let yy = y - 3; yy < y + 3; yy++) {
-        const probe: MineSet = {
-          x: xx,
-          y: yy,
-          mask: 0,
-          mines: 0,
-          todo: false,
-          prev: null,
-          next: null,
+/** The ladder over the numbers `dealt` holds, each firing with its reason. */
+function minesLadder(dealt: mines.Dealt): Ladder {
+  return describedLadder(mines, {
+    alone: compiledRung(mines.alone, dealt, ({ c, U, n }, _c, _n, m): Firing => {
+      const group = groupOf(m, dealt, c);
+      return n === 0
+        ? { rung: "satisfied", group, safes: [...U] }
+        : { rung: "full", group, mines: [...U] };
+    }),
+    pair: compiledRung(mines.pair, dealt, ({ a, b, O, S }, _c, _n, m): Firing => {
+      const heavy = groupOf(m, dealt, a);
+      const light = groupOf(m, dealt, b);
+      return {
+        rung: "pair",
+        heavy: { group: heavy },
+        light: { group: light },
+        shared: meet(heavy.cells, light.cells),
+        mines: [...O],
+        safes: [...S],
+      };
+    }),
+    region: compiledRung(
+      mines.region,
+      dealt,
+      ({ o, i, b, R, B, r, heavy }, _c, _n, m): Firing => {
+        const region: Side = {
+          region: {
+            outer: groupOf(m, dealt, o),
+            inner: groupOf(m, dealt, i),
+            cells: [...R],
+            need: r,
+          },
         };
-        let pos = this.sets.lastIndexLessThan(probe) + 1;
-        while (pos < this.sets.size) {
-          const s = this.sets.get(pos);
-          if (s.x !== xx || s.y !== yy) break;
-          if (setmunge(x, y, mask, s.x, s.y, s.mask, false)) ret.push(s);
-          pos++;
-        }
+        const number: Side = { group: groupOf(m, dealt, b) };
+        return {
+          rung: "pair",
+          heavy: heavy ? region : number,
+          light: heavy ? number : region,
+          shared: meet(R, B),
+          mines: heavy ? minus(R, B) : minus(B, R),
+          safes: heavy ? minus(B, R) : minus(R, B),
+        };
+      },
+    ),
+    regions: compiledRung(
+      mines.regions,
+      dealt,
+      ({ o, i, R, r, p, q, S }, _c, _n, m): Firing => {
+        const side = (
+          outer: number,
+          inner: number,
+          cells: readonly number[],
+          need: number,
+        ): Side => ({
+          region: {
+            outer: groupOf(m, dealt, outer),
+            inner: groupOf(m, dealt, inner),
+            cells: [...cells],
+            need,
+          },
+        });
+        const heavy = side(o, i, R, r);
+        const light = side(
+          p,
+          q,
+          S,
+          groupOf(m, dealt, p).need - groupOf(m, dealt, q).need,
+        );
+        return {
+          rung: "pair",
+          heavy,
+          light,
+          shared: meet(R, S),
+          mines: minus(R, S),
+          safes: minus(S, R),
+        };
+      },
+    ),
+    count: compiledRung(mines.count, dealt, ({ T, L, n, X }, _c, _n, m): Firing => {
+      let found = 0;
+      const all: number[] = [];
+      for (let c = 0; c < m.sp.cells.length; c++) {
+        if (m.value(c) === MINE) found++;
+        if (!m.known(c) && !X.includes(c)) all.push(c);
       }
-    }
-    return ret;
-  }
-
-  popTodo(): MineSet | null {
-    if (!this.todoHead) return null;
-    const ret = this.todoHead;
-    this.todoHead = ret.next;
-    if (this.todoHead) this.todoHead.prev = null;
-    else this.todoTail = null;
-    ret.next = ret.prev = null;
-    ret.todo = false;
-    return ret;
-  }
+      return {
+        rung: "count",
+        total: dealt.mines,
+        found,
+        left: L,
+        members: T.map((k) => ({ group: groupOf(m, dealt, dealt.count.at[k]) })),
+        counted: [...X],
+        mines: n === L ? [] : all,
+        safes: n === L ? all : [],
+      };
+    }),
+  });
 }
 
-/** FIFO of grid indices whose contents just became known (upstream
- * `struct squaretodo`, mines.c:614). */
-class SquareTodo {
-  readonly next: Int32Array;
-  head = -1;
-  tail = -1;
-  constructor(wh: number) {
-    this.next = new Int32Array(wh);
-  }
-  add(i: number): void {
-    if (this.tail >= 0) this.next[this.tail] = i;
-    else this.head = i;
-    this.tail = i;
-    this.next[i] = -1;
-  }
+/** A hint's walk over the ladder from what `s` shows and `known` proves,
+ * one firing a call, the first the ladder's order makes, as `deduce.ts` took
+ * them: a continuing walk asks every rung for all its firings each step, and
+ * a plan runs to the end of the board, which on Expert took half a second a
+ * hint (2026-11-01). `reveal` is told after each, and says the board as it
+ * now shows, whose newly opened squares the marks then hold safe. */
+export interface MinesWalk {
+  next(): Firing | null;
+  /** The board after the last firing's moves were played on it. */
+  reveal(now: Shown): void;
 }
 
-/** A revealed square: mine count for a safe open, or -1 for *bang*. */
+export function minesWalk(s: Shown): MinesWalk {
+  const m = marksOf(s, new Uint8Array(s.w * s.h));
+  m.budget = stepBudget("mines hint");
+  const dealt = dealtOf(s);
+  const { entries } = minesLadder(dealt);
+  let taken: Firing | null = null;
+  m.recorder = (rec) => {
+    taken ??= rec.reason as Firing;
+  };
+  const driver = singleFirings({
+    techniques: ladderTechniques(m, entries, { [SCALE]: 0 }, {}),
+    budget: m.budget,
+    beforeTechnique: () => {
+      m.group++;
+    },
+  });
+  return {
+    next() {
+      taken = null;
+      return driver.next() === null ? null : taken;
+    },
+    reveal(now) {
+      dealtOf(now, dealt);
+      for (let i = 0; i < now.w * now.h; i++)
+        if (now.numbers[i] >= 0 && !m.known(i)) m.placeAt(i, SAFE);
+    },
+  };
+}
+
+// --- the generator's certificate --------------------------------------------
+
+/** A square opened: its number, or `-1` where it is a mine. */
 export type OpenCb = (x: number, y: number) => number;
 export interface Perturbation {
   x: number;
@@ -189,6 +306,9 @@ export interface Perturbation {
   /** +1 = became a mine; -1 = cleared. */
   delta: number;
 }
+/** Make the board easier around a set of undecided squares, the 3×3 `mask`
+ * from `(setx, sety)`, or anywhere where `mask` is 0, writing the numbers it
+ * changes into `grid`; `null` to give up. */
 export type PerturbCb = (
   grid: Int8Array,
   setx: number,
@@ -196,52 +316,19 @@ export type PerturbCb = (
   mask: number,
 ) => Perturbation[] | null;
 
-/**
- * Mark the squares of (x, y, mask) as known — mines when `mine`, else opened
- * via the `open` callback — adding freshly-known squares to `std` (upstream
- * `known_squares`, mines.c:631).
- */
-function knownSquares(
-  w: number,
-  std: SquareTodo,
-  grid: Int8Array,
-  open: OpenCb,
-  x: number,
-  y: number,
-  mask: number,
-  mine: boolean,
-): void {
-  let bit = 1;
-  for (let yy = 0; yy < 3; yy++) {
-    for (let xx = 0; xx < 3; xx++) {
-      if (mask & bit) {
-        const i = (y + yy) * w + (x + xx);
-        if (grid[i] === -2) {
-          if (mine) {
-            grid[i] = -1; // and don't open it
-          } else {
-            grid[i] = open(x + xx, y + yy);
-            // grid[i] must not be -1 here — that would be *bang*.
-          }
-          std.add(i);
-        }
-      }
-      bit <<= 1;
-    }
-  }
-}
+/** Unknown, in the generator's grid of what is known: `-1` a mine, a number
+ * an opened square. */
+const UNKNOWN = -2;
 
 /**
- * Main solver (upstream `minesolve`, mines.c:702). Fills in as much of `grid`
- * as it can from the given knowledge (-1 mine, 0..8 open, -2 unknown), opening
- * squares via `open` and, when stuck, nudging the board via `perturb`.
- *
- * Returns -1 (stalled with unknowns left), 0 (fully solved), or the number of
- * perturbation steps required (>0). `n < 0` disables the global mine-count
- * deduction (used when the total is unknown).
+ * Solve `grid` (`-2` unknown, `-1` a mine, `0..8` an opened square) in place
+ * on the ladder, opening each square it proves safe through `open`, and, where
+ * it stalls, asking `perturb` to make the board easier around a number it
+ * stalled on and solving again. Returns `-1` where it stalls with no
+ * perturbation to make, `0` where it finished without one, and otherwise how
+ * many it made: a board solved only after them is solved again from the start.
  */
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: the set-intersection solver plus its perturbation retry; upstream's hardest single function.
-export function minesolve(
+export function ladderSolve(
   w: number,
   h: number,
   n: number,
@@ -250,220 +337,76 @@ export function minesolve(
   perturb: PerturbCb | null,
   rs: RandomState | null,
 ): number {
-  const ss = new SetStore();
-  const std = new SquareTodo(w * h);
-  const known = (x: number, y: number, mask: number, mine: boolean) =>
-    knownSquares(w, std, grid, open, x, y, mask, mine);
+  const shown: Shown = {
+    w,
+    h,
+    n,
+    get numbers() {
+      return grid;
+    },
+  };
   let nperturbs = 0;
-
-  // Seed the square-todo with every already-known square.
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      if (grid[i] !== -2) std.add(i);
+  for (;;) {
+    // Deduce to a fixpoint, opening what it proves safe, until an opening
+    // shows no new number. The marks carry over an opening, which only adds
+    // a number; a perturbation can unsettle what they hold, so they are
+    // built again after one.
+    const known = new Uint8Array(w * h);
+    for (let i = 0; i < grid.length; i++) if (grid[i] === -1) known[i] = MINE;
+    const m = marksOf(shown, known);
+    const dealt = dealtOf(shown);
+    const techniques = ladderTechniques(
+      m,
+      minesLadder(dealt).entries,
+      { [SCALE]: 0 },
+      {},
+    );
+    for (let opened = true; opened; ) {
+      opened = false;
+      if (runLadder(m, techniques))
+        throw new Error("mines: the ladder found the board inconsistent");
+      for (let i = 0; i < grid.length; i++) {
+        if (grid[i] !== UNKNOWN || !m.known(i)) continue;
+        if (m.value(i) === MINE) grid[i] = -1;
+        else {
+          grid[i] = open(i % w, (i / w) | 0);
+          if (grid[i] < 0) throw new Error("mines: the ladder opened a mine");
+          opened = true;
+        }
+      }
+      if (opened) dealtOf(shown, dealt);
     }
-  }
-
-  while (true) {
-    let doneSomething = false;
-
-    // Process known squares, constructing a set for each open one.
-    while (std.head !== -1) {
-      const i = std.head;
-      std.head = std.next[i];
-      if (std.head === -1) std.tail = -1;
-
+    if (!grid.includes(UNKNOWN)) return nperturbs;
+    if (perturb === null) return -1;
+    nperturbs++;
+    // A number it stalled on: one with an undecided square.
+    const stalled: number[] = [];
+    for (let i = 0; i < grid.length; i++) {
+      if (grid[i] < 0) continue;
       const x = i % w;
-      const y = Math.floor(i / w);
-
-      if (grid[i] >= 0) {
-        // Empty square: build the set of unknown neighbors + its mine count.
-        let mines = grid[i];
-        let bit = 1;
-        let val = 0;
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            if (!(x + dx < 0 || x + dx >= w || y + dy < 0 || y + dy >= h)) {
-              const g = grid[i + dy * w + dx];
-              if (g === -1) mines--;
-              else if (g === -2) val |= bit;
-            }
-            bit <<= 1;
-          }
-        }
-        if (val) ss.add(x - 1, y - 1, val, mines);
-      }
-
-      // Whether empty or full, replace every set containing this square with
-      // one that does not.
-      for (const s of ss.overlap(x, y, 1)) {
-        const newmask = setmunge(s.x, s.y, s.mask, x, y, 1, true);
-        const newmines = s.mines - (grid[i] === -1 ? 1 : 0);
-        if (newmask) ss.add(s.x, s.y, newmask, newmines);
-        ss.remove(s);
-      }
-
-      doneSomething = true;
+      const y = (i / w) | 0;
+      let open = false;
+      for (let j = Math.max(0, y - 1); j <= Math.min(h - 1, y + 1); j++)
+        for (let k = Math.max(0, x - 1); k <= Math.min(w - 1, x + 1); k++)
+          if (grid[j * w + k] === UNKNOWN) open = true;
+      if (open) stalled.push(i);
     }
-
-    // Pick a set off the to-do list and attempt deductions.
-    const s = ss.popTodo();
-    if (s !== null) {
-      // Mine count of zero or of its full cardinality → mark everything.
-      if (s.mines === 0 || s.mines === bitcount16(s.mask)) {
-        known(s.x, s.y, s.mask, s.mines !== 0);
-        continue;
-      }
-
-      // Otherwise search the sets overlapping this one.
-      for (const s2 of ss.overlap(s.x, s.y, s.mask)) {
-        const swing = setmunge(s.x, s.y, s.mask, s2.x, s2.y, s2.mask, true);
-        const s2wing = setmunge(s2.x, s2.y, s2.mask, s.x, s.y, s.mask, true);
-        const swc = bitcount16(swing);
-        const s2wc = bitcount16(s2wing);
-
-        // If the extra-mine count equals a wing's cardinality, that wing is
-        // all mines and the other wing all clear.
-        if (swc === s.mines - s2.mines || s2wc === s2.mines - s.mines) {
-          known(s.x, s.y, swing, swc === s.mines - s2.mines);
-          known(s2.x, s2.y, s2wing, s2wc === s2.mines - s.mines);
-          continue;
+    let ret: Perturbation[] | null;
+    if (stalled.length === 0) ret = perturb(grid, 0, 0, 0);
+    else {
+      const c = stalled[randomUpto(rs as RandomState, stalled.length)];
+      const x = (c % w) - 1;
+      const y = ((c / w) | 0) - 1;
+      let mask = 0;
+      for (let dy = 0; dy < 3; dy++)
+        for (let dx = 0; dx < 3; dx++) {
+          const xx = x + dx;
+          const yy = y + dy;
+          if (xx >= 0 && xx < w && yy >= 0 && yy < h && grid[yy * w + xx] === UNKNOWN)
+            mask |= 1 << (dy * 3 + dx);
         }
-
-        // Failing that, subset: divide the larger set's mines.
-        if (swc === 0 && s2wc !== 0) {
-          // s is a subset of s2.
-          ss.add(s2.x, s2.y, s2wing, s2.mines - s.mines);
-        } else if (s2wc === 0 && swc !== 0) {
-          // s2 is a subset of s.
-          ss.add(s.x, s.y, swing, s.mines - s2.mines);
-        }
-      }
-
-      doneSomething = true;
-    } else if (n >= 0) {
-      // Global deduction on the total mine count (expensive; last resort).
-      let squaresleft = 0;
-      let minesleft = n;
-      for (let i = 0; i < w * h; i++) {
-        if (grid[i] === -1) minesleft--;
-        else if (grid[i] === -2) squaresleft++;
-      }
-
-      if (squaresleft === 0) break; // solved (minesleft === 0 by invariant)
-
-      // Simple case: no mines left, or as many mines as squares.
-      if (minesleft === 0 || minesleft === squaresleft) {
-        for (let i = 0; i < w * h; i++) {
-          if (grid[i] === -2) known(i % w, Math.floor(i / w), 1, minesleft !== 0);
-        }
-        continue;
-      }
-
-      // Real work: search every disjoint union of up to 10 sets for one whose
-      // complement is provably all-mines or all-clear (upstream's virtual
-      // recursion over `setused`, mines.c:1030).
-      const nsets = ss.sets.size;
-      if (nsets <= 10) {
-        const setused: boolean[] = new Array(nsets).fill(false);
-        const sets: MineSet[] = [];
-        for (let i = 0; i < nsets; i++) sets[i] = ss.sets.get(i);
-
-        let cursor = 0;
-        while (true) {
-          if (cursor < nsets) {
-            let ok = true;
-            for (let i = 0; i < cursor; i++) {
-              if (
-                setused[i] &&
-                setmunge(
-                  sets[cursor].x,
-                  sets[cursor].y,
-                  sets[cursor].mask,
-                  sets[i].x,
-                  sets[i].y,
-                  sets[i].mask,
-                  false,
-                )
-              ) {
-                ok = false;
-                break;
-              }
-            }
-            if (ok) {
-              minesleft -= sets[cursor].mines;
-              squaresleft -= bitcount16(sets[cursor].mask);
-            }
-            setused[cursor++] = ok;
-          } else {
-            if (squaresleft > 0 && (minesleft === 0 || minesleft === squaresleft)) {
-              for (let i = 0; i < w * h; i++) {
-                if (grid[i] === -2) {
-                  let outside = true;
-                  const yy = Math.floor(i / w);
-                  const xx = i % w;
-                  for (let j = 0; j < nsets; j++) {
-                    if (
-                      setused[j] &&
-                      setmunge(sets[j].x, sets[j].y, sets[j].mask, xx, yy, 1, false)
-                    ) {
-                      outside = false;
-                      break;
-                    }
-                  }
-                  if (outside) known(xx, yy, 1, minesleft !== 0);
-                }
-              }
-              doneSomething = true;
-              break;
-            }
-            // Backtrack cursor to the nearest used set, unset it, advance past.
-            while (--cursor >= 0 && !setused[cursor]);
-            if (cursor >= 0) {
-              minesleft += sets[cursor].mines;
-              squaresleft += bitcount16(sets[cursor].mask);
-              setused[cursor++] = false;
-            } else {
-              break; // exhausted all disjoint unions
-            }
-          }
-        }
-      }
+      ret = perturb(grid, x, y, mask);
     }
-
-    if (doneSomething) continue;
-
-    // Out of deductions: ask the perturb function to make the board easier.
-    if (perturb) {
-      nperturbs++;
-      let ret: Perturbation[] | null;
-      if (ss.sets.size === 0) {
-        ret = perturb(grid, 0, 0, 0);
-      } else {
-        const pset = ss.sets.get(randomUpto(rs as RandomState, ss.sets.size));
-        ret = perturb(grid, pset.x, pset.y, pset.mask);
-      }
-
-      if (ret) {
-        // Adjust the mine counts of any set overlapping a changed square, put
-        // those sets (and re-covered squares) back on the to-do lists.
-        for (const change of ret) {
-          if (change.delta < 0 && grid[change.y * w + change.x] !== -2) {
-            std.add(change.y * w + change.x);
-          }
-          for (const set of ss.overlap(change.x, change.y, 1)) {
-            set.mines += change.delta;
-            ss.addTodo(set);
-          }
-        }
-        continue;
-      }
-    }
-
-    // No perturb function, or it gave up: we are done.
-    break;
+    if (ret === null) return -1;
   }
-
-  // Any unknown squares left ⇒ we failed to complete.
-  return grid.includes(-2) ? -1 : nperturbs;
 }

@@ -74,7 +74,8 @@ const ONCE: Record<string, Plant> = {
 /** Planted defects: one condition loosened in each, so each claims a strike
  * or a contradiction the rules do not force. A loosening that only makes a
  * technique strike less, or that drops a condition consistency already
- * gives, is not a defect, and the checker rightly calls it sound. */
+ * gives, is not a defect, and the checker rightly calls it sound. Keyed by
+ * technique id, or `<game>.<id>` where two games state one id. */
 const PLANTS: Record<string, Plant> = {
   placed: { conclude: "forall p in cells(col(c)): strike(p, value(c))" },
   hiddenSingle: {
@@ -334,13 +335,62 @@ const PLANTS: Record<string, Plant> = {
   },
   // A slot with two colors left read as settled to each.
   noRepeats: { for: "s in cells where |cand(s)| <= 2, d in cand(s)" },
+  // Mines: a number one mine short read as having all its mines.
+  "mines.alone": {
+    for: "k in clues(count), c = at(k), U = open(c), n = need(c) where |U| > 0 and (n <= 1 or n >= |U|)",
+    conclude:
+      "n >= 0 and n <= |U| and (n <= 1 implies (forall d in U: place(d, 2))) and (n <= 1 or (forall d in U: place(d, 1)))",
+  },
+  // One square more of its own than the difference, all read as mines.
+  pair: {
+    for: "k in clues(count), a = at(k) where |open(a)| > 0, b in within(a, 2) where b != a and clue(count, b) != none and meet(a, b), by = need(a) - need(b), O = open(a) - open(b), S = open(b) - open(a) where by + 1 >= |O| and |O| + |S| > 0",
+    conclude: "(forall d in O: place(d, 1)) and (forall d in S: place(d, 2))",
+  },
+  // A region read off a number whose squares do not all touch the outer one.
+  region: {
+    for: "k in clues(count), o = at(k) where |open(o)| > 0, i in within(o, 2) where i != o and clue(count, i) != none and |open(i)| > 0 and |open(i)| < |open(o)|, b in within(o, 3) where b != o and b != i and clue(count, b) != none, R = open(o) - open(i), B = open(b) where (exists d in R: d in B), r = need(o) - need(i), nb = need(b), heavy = (r - nb >= |R - B|) where (heavy or nb - r >= |B - R|) and |R - B| + |B - R| > 0",
+  },
+  // A second region read off a number whose squares do not all touch its outer one.
+  regions: {
+    for: "k in clues(count), o = at(k) where |open(o)| > 0, i in within(o, 2) where i != o and clue(count, i) != none and |open(i)| > 0 and open(i) subset open(o) and |open(i)| < |open(o)|, R = open(o) - open(i), r = need(o) - need(i), p in within(o, 2) where p != o and clue(count, p) != none and |open(p)| > 0, q in within(p, 2) where q != p and clue(count, q) != none and |open(q)| > 0 and |open(q)| < |open(p)|, S = open(p) - open(q) where (exists d in R: d in S), by = r - (need(p) - need(q)) where by >= |R - S| and |R - S| + |S - R| > 0",
+  },
+  // Numbers whose squares meet counted as though they did not.
+  count: {
+    for: "C = {k in clues(count) where exists d in adj8(at(k)): not known(d)} where |C| <= 10, L = left, u = count(c in cells where not known(c)), size in range(0, 5), T in subsets(C) where |T| = size, n = sum(x in T of need(at(x))), X = set(d over x in T, d in open(at(x))) where u > |X| and (n = L or L - n = u - |X|)",
+  },
+  // Black Box: a laser another square still decides read as going astray.
+  ray: {
+    for: "k in clues(laser), s = at(k), u = ahead(s) where u != none, d in {1, 2}, r = beam(s, u, d) where r != clue(laser, s)",
+  },
 };
+
+/** How many of a technique's first binders each query fixes, one query a
+ * value of them: `CHECK_SPLIT`, 1 by default. A deeper split makes more,
+ * smaller queries, for a technique whose one query a value of its first
+ * binder outgrows z3's heap (Mines' `region` on a 4×4 board). */
+const SPLIT = Number(process.env["CHECK_SPLIT"] ?? 1);
+
+/** `CHECK_SHARD=i/n`: only every nth of a technique's split queries, from the
+ * ith, so that a check too long for one z3 heap, which only grows, runs as n
+ * processes, each recorded as it passes and the n folded into the verdict. */
+const SHARD = ((s) => {
+  if (s === undefined) return null;
+  const [index, of] = s.split("/").map(Number);
+  if (!(Number.isInteger(index) && Number.isInteger(of) && 0 <= index && index < of))
+    throw new Error(`CHECK_SHARD wants i/n with 0 <= i < n, not ${s}`);
+  return { index, of };
+})(process.env["CHECK_SHARD"]);
 
 const lines: string[] = [];
 /** A result line, and to `CHECK_LOG` as it comes, for a long run's watching. */
 const say = (s: string): void => {
   console.log(s);
   lines.push(s);
+  const log = process.env["CHECK_LOG"];
+  if (log) appendFileSync(log, `${s}\n`);
+};
+/** A progress line, to `CHECK_LOG` only: no part of the results. */
+const trace = (s: string): void => {
   const log = process.env["CHECK_LOG"];
   if (log) appendFileSync(log, `${s}\n`);
 };
@@ -365,8 +415,9 @@ async function checkAll(worlds: readonly World[], ids: readonly string[]) {
   const bad: string[] = [];
   for (const id of ids) {
     const name = id.includes(".") ? id.slice(id.indexOf(".") + 1) : id;
+    const game = worlds[0]?.d.json.game;
     const plants = [
-      { label: "planted", plant: PLANTS[name] },
+      { label: "planted", plant: PLANTS[`${game}.${name}`] ?? PLANTS[name] },
       { label: "planted once", plant: ONCE[name] },
     ].filter((p): p is { label: string; plant: Plant } => p.plant !== undefined);
     for (const order of ORDERS) {
@@ -385,7 +436,11 @@ async function checkAll(worlds: readonly World[], ids: readonly string[]) {
         const t = d.techniques.find((x) => x.id === id);
         const cells = await regionCells(d, order, sizes);
         if (t === undefined || !(await hasAnswer(d, order, sizes, cells))) continue;
-        const v = await checkTechnique(d, t, order, sizes, 1, cells);
+        const v = await checkTechnique(d, t, order, sizes, SPLIT, cells, {
+          shard: SHARD ?? undefined,
+          progress: (done, of, at) =>
+            trace(`..  ${where} ${id} ${order}: ${done} of ${of}, at ${at}`),
+        });
         line(where, v, "sound");
         if (v.verdict !== "sound") bad.push(`${id} ${order}`);
         if (order === 3 && (name === "set" || name === "fish" || name === "digitSet"))
@@ -463,26 +518,76 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
   const only = process.env["CHECK_GAMES"]?.split(",") ?? null;
   // CHECK_TECHNIQUES narrows a game's run further, by technique id.
   const techniques = process.env["CHECK_TECHNIQUES"]?.split(",") ?? null;
+  // A technique whose recorded verdict is current is not checked again, unless
+  // CHECK_AGAIN=1 or CHECK_TECHNIQUES names it; each verdict is recorded as
+  // it is proved, so a run cut short keeps what it finished.
+  const path = `${ROOT}src/describe/soundness.json`;
+  const readVerdicts = (): Record<string, string> =>
+    JSON.parse(readFileSync(path, "utf8")) as Record<string, string>;
+  const recorded = readVerdicts();
+  const again = process.env["CHECK_AGAIN"] === "1";
+  // A shard records under its own key, and a shard run checks only the
+  // shards not yet recorded, CHECK_TECHNIQUES or not, so it resumes.
+  const at = (key: string): string =>
+    SHARD === null ? key : `${key}@${SHARD.index}/${SHARD.of}`;
+  const due = (key: string, fp: string, id: string): boolean =>
+    again ||
+    (SHARD === null && (techniques?.includes(id) ?? false)) ||
+    (recorded[key] !== fp && recorded[at(key)] !== fp);
+  const record = (key: string, fp: string): void => {
+    let now = { ...readVerdicts(), [at(key)]: fp };
+    if (SHARD === null) verdicts[key] = fp;
+    else {
+      const shards = Array.from(
+        { length: SHARD.of },
+        (_, i) => `${key}@${i}/${SHARD.of}`,
+      );
+      if (shards.every((s) => now[s] === fp)) {
+        now = Object.fromEntries(
+          Object.entries(now).filter(([k]) => !shards.includes(k)),
+        );
+        now[key] = fp;
+        verdicts[key] = fp;
+        say(`ok  ${key}: all ${SHARD.of} shards sound, recorded`);
+      }
+    }
+    writeFileSync(
+      path,
+      `${JSON.stringify(Object.fromEntries(Object.entries(now).sort()), null, 2)}\n`,
+    );
+  };
+  /** Keep a current verdict without checking it, and say so in the results. */
+  const keep = (key: string, fp: string, id: string, where: string): void => {
+    const k = recorded[key] === fp ? key : at(key);
+    if (k === key) verdicts[key] = recorded[key];
+    say(
+      `ok  ${where.padEnd(10)} ${id.padEnd(30)} current: recorded ${k} ${recorded[k]}`,
+    );
+  };
   for (const [source, file] of files) {
     const name = isLibrary(file) ? file.library : file.game;
     if (only !== null && !only.includes(name)) continue;
     if (isLibrary(file)) {
       const square = libraryDescription(file);
       const repeated = libraryDescription(file, true);
-      const failed = await checkAll(
-        [
-          { where: file.library, d: { ...square.d, techniques: square.techniques } },
-          {
-            where: `${file.library} +repeat`,
-            d: { ...repeated.d, techniques: repeated.techniques },
-          },
-        ],
-        square.techniques.map((t) => t.id),
-      );
-      bad.push(...failed);
-      for (const id of Object.keys(file.techniques))
-        if (!failed.some((f) => f.startsWith(`${id} `)))
-          verdicts[soundnessKey(source, id)] = libraryFingerprint(file, id);
+      const worlds = [
+        { where: file.library, d: { ...square.d, techniques: square.techniques } },
+        {
+          where: `${file.library} +repeat`,
+          d: { ...repeated.d, techniques: repeated.techniques },
+        },
+      ];
+      for (const id of Object.keys(file.techniques)) {
+        const key = soundnessKey(source, id);
+        const fp = libraryFingerprint(file, id);
+        if (!due(key, fp, id)) {
+          keep(key, fp, id, file.library);
+          continue;
+        }
+        const failed = await checkAll(worlds, [id]);
+        bad.push(...failed);
+        if (failed.length === 0) record(key, fp);
+      }
       continue;
     }
     if (!isFormal(file) || file.techniques === undefined) continue;
@@ -513,22 +618,25 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
           .map((t) => t.id),
       ),
     );
-    const failed = await checkAll(worlds, [...own]);
-    bad.push(...failed);
-    for (const stated of withEveryVariation(file).techniques ?? [])
-      if (
-        !("use" in stated) &&
-        own.has(stated.id) &&
-        !failed.some((f) => f.startsWith(`${stated.id} `))
-      )
-        verdicts[soundnessKey(source, stated.id)] = gameFingerprint(file, stated);
+    for (const stated of withEveryVariation(file).techniques ?? []) {
+      if ("use" in stated || !own.has(stated.id)) continue;
+      const key = soundnessKey(source, stated.id);
+      const fp = gameFingerprint(file, stated);
+      if (!due(key, fp, stated.id)) {
+        keep(key, fp, stated.id, file.game);
+        continue;
+      }
+      const failed = await checkAll(worlds, [stated.id]);
+      bad.push(...failed);
+      if (failed.length === 0) record(key, fp);
+    }
   }
   writeFileSync(
     fileURLToPath(
       new URL(
         only === null
           ? "results-describe.txt"
-          : `results-describe-${only.join("-")}.txt`,
+          : `results-describe-${[...only, ...(techniques ?? [])].join("-")}.txt`,
         import.meta.url,
       ),
     ),
@@ -536,21 +644,25 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
   );
   // Only the planted defects may fail; a verdict is recorded only for a
   // technique found sound. A narrowed run keeps the others' verdicts, less
-  // those of the descriptions it checked, and every run keeps the dead-end
-  // checker's.
-  const path = `${ROOT}src/describe/soundness.json`;
+  // those of the descriptions it checked, or of the techniques where it
+  // names them, so runs of one game's techniques may go side by side; every
+  // run keeps the dead-end checker's. A verdict written as it was proved is
+  // kept by the same rule.
   const checked = [...files]
     .filter(
       ([, f]) => only === null || only.includes(isLibrary(f) ? f.library : f.game),
     )
     .map(([s]) => `${s}#`);
+  const isChecked = (k: string): boolean =>
+    checked.some((s) =>
+      techniques === null
+        ? k.startsWith(s)
+        : techniques.some((id) => k === `${s}${id}`),
+    );
   const kept: Record<string, string> = Object.fromEntries(
     Object.entries(
       JSON.parse(readFileSync(path, "utf8")) as Record<string, string>,
-    ).filter(
-      ([k]) =>
-        isDeadEndKey(k) || (only !== null && !checked.some((s) => k.startsWith(s))),
-    ),
+    ).filter(([k]) => isDeadEndKey(k) || (only !== null && !isChecked(k))),
   );
   writeFileSync(
     path,

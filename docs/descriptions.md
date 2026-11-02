@@ -117,6 +117,17 @@ research tools all read through it; the app never does.
   whole or absent; the schema says what each part requires.
 - **Only a library, a description with techniques and a planning game's
   description compile.**
+- **A clue revealed during play is a dealt clue**: a guess's score, an
+  opened square's number, a fired laser. The game builds `Dealt` from its
+  state on each hint and solve, and nothing declares where a clue came from,
+  since nothing would read it: the checker covers every set of clues a board
+  could show. Mines rebuilds it after each opening and keeps the marks,
+  since an opening only adds a clue.
+- **A clue at the board** (`at: board`, Guess's `score`) sits at no element.
+  Its value is `fields`, each a function of the clue (`black(k)`) and, where
+  the field is one a cell, of the cell (`peg(k, s)`); `means` reads the clue
+  as `k`. It compiles to plain arrays in `Dealt`, and the checker deals two,
+  each present or not.
 - **The compiler reads a description with every variation applied.** One
   ladder runs on every board the game deals, and a name a board's variations
   leave out is empty there, so a technique over it binds nothing (Solo's
@@ -175,6 +186,12 @@ description author acts on:
   `units` is the space's boxes, dealt or not (Solo's `box`). A partition and
   a clue kind may not share a name, since both are fields of `Dealt`.
 - **`cell(x, y)` must be on the grid**: the compiled code does not check.
+- **`beam(s)` is Black Box's laser fired in from slot `s`**: the slot it
+  comes out at, `s` itself where it is reflected, `|slots|` where it is
+  absorbed, and none where a cell no value is placed in decides it. A 1 is
+  what turns it. `beam(s, c, v)` supposes `c` holds `v`, and `ahead(s)` is
+  the first cell that decides it. The engine's `traceBeam` is the physics
+  for the game, the compiled code and the checker alike.
 - **A library name is looked up before a description's definitions**, so a
   name added to the library is spelled apart from every one a description
   defines (`on_grid`, since Solo defines `inside`).
@@ -257,6 +274,12 @@ author writing for speed uses these:
 - **Ask a per-cell question as an `exists fill` whose only read of the loops
   around it is its pin** `f(x) = t`: it is then enumerated once, not once per
   cell and value.
+- **Pin a `subsets` binder's size first in its `where`** (`|T| = size`): the
+  loop then counts only the subsets of that size, in the order it would
+  have met them, and a bound (`<=`, `<`) skips the others before building
+  them. A set of `n` still allows 2^`n` subsets of every size together, so
+  bound `n` too: Mines' `count` reads at most ten numbers
+  (`describe-revealed-clues`' `design.md` § "Mines").
 - **Bind a set a loop reads whole once, outside the loop**, by the statement
   itself: a comprehension or quantifier is never moved out of a loop
   (`set`'s `open`, `hiddenSingle`'s `placed`).
@@ -393,8 +416,35 @@ the rules. What a small board cannot cover:
 - **A filling of a set the marks decide is enumerated over every cell that
   may be in it**, so its cost doubles with each: Star Battle's `fill` of a
   region's open squares takes minutes. Each value of a technique's first
-  binder is one query, built as it runs. `CHECK_TECHNIQUES` narrows a run to
-  some techniques, by id.
+  binder is one query, built as it runs. **A technique whose recorded
+  verdict is current is not checked again**, and each verdict is recorded
+  as it is proved, so a run cut short keeps what it finished;
+  `CHECK_AGAIN=1` checks every one regardless. `CHECK_TECHNIQUES` narrows a
+  run to some techniques, by id, checks them whatever is recorded, and keeps
+  the others' verdicts, so one game's techniques can be checked side by
+  side. **A query that outgrows z3's
+  2 GB heap aborts and leaves the run hung**, not failed: watch its output
+  for `OOM`. `CHECK_SPLIT` fixes more of the first binders a query (Mines'
+  `region` and `regions` at 3, `count` at 5), more and smaller queries.
+  A run's heap only grows, a reset solver and a forced collection between
+  queries notwithstanding, so a check of thousands of queries still
+  outgrows it: `CHECK_SHARD=i/n` takes every nth query from the ith, n
+  processes side by side (Mines' `count` at 4), each recorded under a key
+  of its own as it passes and the n folded into the verdict; a shard
+  already recorded is not run again. A run with `CHECK_LOG` logs its
+  progress every 50 queries, naming the query it starts, so a stuck one
+  can be found. **A count of squares is bit-blasted**: a sum of terms each
+  0 or 1 sends z3's default search splitting square by square (Mines'
+  mine total read alone ran past an hour on a 4×4 board), so a query the
+  default does not settle in `CHECK_QUICK_MS` (a minute) goes to a SAT
+  solver by `pb2bv`, which settled that one in seconds, and back to the
+  default, unlimited, where it cannot encode the query. Native z3 on a
+  query dumped with `solver.toString()` is the quick way to try a tactic.
+- **A size larger than the board's cells is one unknown**, from its least
+  to the cell count (Mines' `mines`, `openSizes`), not a world a value.
+- **`beam` is read by walking `traceBeam` itself**, asked again with each
+  cell it stops at settled each way, so the check reads the game's physics,
+  under the guard of what each cell on the path holds.
 
 A description with variations is checked in each world it deals, on the
 plain board and each ruleset's, and a technique must be sound in every one
@@ -406,13 +456,18 @@ any Latin game adds to, and on one with a repeated value.
 **Each technique has a planted defect beside it in
 `describe-check.test.ts` that must come out unsound**, and each library
 technique that reads a multiplicity a second, the technique reading it as
-one, which must come out unsound where a value repeats. A plant that only
+one, which must come out unsound where a value repeats. A plant is keyed by
+technique id, or `<game>.<id>` where two games state one id. A plant that only
 makes a technique strike less, or drops a condition consistent marks already
 give, is not a defect, and the checker rightly calls it sound.
 
 The verdict is recorded under a fingerprint of the statement, the rules it
 was checked against and the orders (`src/describe/soundness.ts`), so editing
-either makes it unchecked until the check runs again.
+either makes it unchecked until the check runs again. The fingerprint reads
+the description, not the code that gives a statement its meaning: a change
+to a library term's runtime (`traceBeam`), the compiler or the checker
+leaves recorded verdicts standing, so such a change runs the check again on
+the games that read it, with `CHECK_AGAIN=1`.
 
 ## A planning game's position and moves
 

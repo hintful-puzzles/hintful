@@ -93,7 +93,7 @@ const pinned = describeHintPins({
       step.rung === "fire" && s.exits.some((e) => e !== LASER_EMPTY),
   },
   pins: {
-    /** Held on 516 of 966 positions walked. */
+    /** Held on 522 of 966 positions walked. */
     raysEndsEmpty: {
       id: "w8h8m5M5:df9dadb86021bc4da15414a4",
       moves: [{ type: "fire", rangeno: 0 }],
@@ -104,11 +104,11 @@ const pinned = describeHintPins({
       moves:
         '[{"type":"fire","rangeno":0},{"type":"fire","rangeno":1},{"type":"toggleLock","x":2,"y":1},{"type":"toggleLock","x":4,"y":1},{"type":"toggleLock","x":3,"y":1},{"type":"toggleLock","x":5,"y":1},{"type":"toggleLock","x":1,"y":1},{"type":"toggleLock","x":4,"y":2},{"type":"toggleLock","x":2,"y":2},{"type":"fire","rangeno":2},{"type":"fire","rangeno":4},{"type":"toggleLock","x":6,"y":1},{"type":"fire","rangeno":5},{"type":"toggleLock","x":7,"y":1},{"type":"fire","rangeno":6},{"type":"toggleLock","x":8,"y":1},{"type":"toggleLock","x":1,"y":2},{"type":"toggleLock","x":3,"y":2},{"type":"toggleLock","x":7,"y":2},{"type":"toggleLock","x":5,"y":2},{"type":"toggleLock","x":2,"y":3},{"type":"toggleLock","x":4,"y":3},{"type":"toggleLock","x":6,"y":2}]',
     },
-    /** Held on 87 of 966 positions walked. */
+    /** Held on 81 of 966 positions walked. */
     hitEmpty: {
-      id: "w8h8m5M5:bd040b071f206344ffd98bfe",
+      id: "w8h8m5M5:201977b862c6b6a3d08204dc",
       moves:
-        '[{"type":"fire","rangeno":0},{"type":"fire","rangeno":1},{"type":"toggleLock","x":2,"y":1},{"type":"toggleLock","x":1,"y":2},{"type":"toggleLock","x":3,"y":1},{"type":"toggleLock","x":1,"y":1}]',
+        '[{"type":"fire","rangeno":0},{"type":"fire","rangeno":1},{"type":"fire","rangeno":2},{"type":"toggleLock","x":3,"y":1},{"type":"toggleLock","x":4,"y":1},{"type":"toggleLock","x":2,"y":1}]',
     },
     /** Held on 9 of 966 positions walked. */
     hitBall: {

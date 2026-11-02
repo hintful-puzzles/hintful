@@ -1,17 +1,12 @@
 /**
  * Mine-layout generator (`minegen` + `mineperturb`, mines.c:1447/1863), which
- * drives {@link minesolve} to guarantee a board is deducible without
- * guessing — the mechanism behind this fork's guess-free policy for every
- * preset.
+ * drives {@link ladderSolve}, the hint's own ladder, to guarantee a board is
+ * deducible without guessing — the mechanism behind this fork's guess-free
+ * policy for every preset — so every board dealt is one the hint finishes.
  *
- * Byte-match-critical: the sort is the total-order `squarecmp`
- * (type / random / y / x), and several quirks are ported *verbatim* or the
- * layouts diverge from the C for a given seed —
- *   1. the two burned `random_upto` draws in the interactive desc path,
- *      handled in `index.ts`;
- *   2. the double-increment livelock guard here;
- *   3. `ss_overlap`'s scan order feeding the perturb target, in `solver.ts`;
- *   4. the never-assigned `prevret` in the solve-and-perturb loop (below).
+ * Upstream certified on its own solver, `minesolve`, so the layouts no longer
+ * match the C's for a seed; what is kept of its quirks (the double-increment
+ * livelock guard, the never-assigned `prevret`) keeps its give-up points.
  */
 
 import {
@@ -22,13 +17,13 @@ import {
 } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import type { Point } from "../../engine/types.ts";
-import { minesolve, type OpenCb, type Perturbation, type PerturbCb } from "./solver.ts";
 import {
-  encodeLayoutHex,
-  type MinesMove,
-  type MinesParams,
-  type MinesState,
-} from "./state.ts";
+  ladderSolve,
+  type OpenCb,
+  type Perturbation,
+  type PerturbCb,
+} from "./solver.ts";
+import { encodeLayoutHex, type MinesMove, type MinesState } from "./state.ts";
 
 /** Mutable generation context (upstream `struct minectx`, mines.c:1364). The
  * `grid` here is the *real* mine bitmap; `opened` tracks squares the solver has
@@ -372,8 +367,7 @@ export function minegen(
     // Only a full solve (0) or an unsolvable board (-1) ends this loop.
     // Upstream (mines.c:1940) also gives up once the perturb count stops
     // falling, but compares against a `prevret` it never assigns, so that
-    // never fires; honoring it would move the give-up point and diverge the
-    // byte-match desc. Hence a guard of its own.
+    // never fires. Hence a guard of its own.
     const round = retryLimit("mines: solve/perturb");
     while (true) {
       round();
@@ -381,7 +375,7 @@ export function minegen(
       solvegrid.fill(-2);
       solvegrid[y * w + x] = mineopen(ctx, x, y); // 0 by deliberate arrangement
 
-      const solveret = minesolve(w, h, n, solvegrid, open, perturb, rs);
+      const solveret = ladderSolve(w, h, n, solvegrid, open, perturb, rs);
       if (solveret <= 0) {
         success = solveret === 0;
         break;
@@ -399,22 +393,4 @@ export function firstOpen(s: MinesState, at: Point): MinesMove {
   if (!s.seed) throw new Error("mines: the board is already laid out");
   const mines = minegen(s.w, s.h, s.n, at.x, at.y, randomCopy(s.seed));
   return { type: "begin", ...at, mines: encodeLayoutHex(mines, s.w * s.h) };
-}
-
-/**
- * Reproduce `new_game_desc(interactive = false)` (mines.c:2033): pick (or take
- * the forced) first click, generate the layout, and return the *public* desc
- * `x,y,m<hex>`. This is the byte-match subject of the differential — the
- * running game uses the preliminary `r…` form; this batch form is what the C's
- * `--generate` path produced.
- */
-export function newGameDescBatch(p: MinesParams, rs: RandomState): string {
-  // Two draws for the initial click, consumed whether or not they are used.
-  // Forced first-click params override the values, not the draws.
-  const x0 = randomUpto(rs, p.w);
-  const y0 = randomUpto(rs, p.h);
-  const x = p.firstClickX >= 0 ? p.firstClickX : x0;
-  const y = p.firstClickY >= 0 ? p.firstClickY : y0;
-  const mines = minegen(p.w, p.h, p.n, x, y, rs);
-  return `${x},${y},m${encodeLayoutHex(mines, p.w * p.h)}`;
 }

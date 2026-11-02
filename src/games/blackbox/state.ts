@@ -2,13 +2,11 @@
  * Black Box — state, params, the obfuscated desc codec, the laser
  * ray-tracer, and `checkGuesses` (the reveal/verify logic).
  *
- * The grid representation is upstream's (one `Int32Array` overlaying ball
+ * The grid representation is upstream's: one `Int32Array` overlaying ball
  * flags on arena cells and laser display-values on the surrounding
  * firing-range ring, plus an `exits` array mapping each entry index to its
- * exit), because the laser physics — entry-cell instant-hit/reflect
- * priority, the clockwise/anticlockwise turn rules, the matched-pair
- * numbering — is subtle and there is no corpus to catch a re-derivation
- * slip.
+ * exit. The physics is the engine's `traceBeam`, which the description's
+ * `beam` reads.
  */
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
@@ -22,12 +20,18 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import {
+  describedSpace,
+  type GridSpace,
+  traceBeam,
+} from "../../engine/describe-runtime.ts";
 import type { PresetBoards } from "../../engine/game.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
+import { units } from "./blackbox.compiled.ts";
 
 // --- flag constants (upstream BALL_* / LASER_*) -----------------------
 
@@ -52,24 +56,6 @@ export const LASER_EMPTY = -1;
 
 /** Disjoint from both flag sets; an overlay drawn for the cursor tile. */
 export const FLAG_CURSOR = 0x10000;
-
-// --- directions (indices into `OFFSETS`) ------------------------------
-
-const DIR_UP = 0;
-const DIR_RIGHT = 1;
-const DIR_DOWN = 2;
-const DIR_LEFT = 3;
-
-const OFFSETS: ReadonlyArray<Point> = [
-  { x: 0, y: -1 },
-  { x: 1, y: 0 },
-  { x: 0, y: 1 },
-  { x: -1, y: 0 },
-];
-
-const LOOK_LEFT = 0;
-const LOOK_FORWARD = 1;
-const LOOK_RIGHT = 2;
 
 // --- types ------------------------------------------------------------
 
@@ -300,21 +286,17 @@ export function newState(p: BlackboxParams, desc: string): BlackboxState {
 
 // --- range <-> grid mapping -------------------------------------------
 
-interface RangeCell extends Point {
-  direction: number;
-}
-
 /** Map a firing-range index (0..2(w+h)−1, clockwise from the top-left)
- * to its grid cell + the direction a laser fired there travels. */
-export function range2grid(w: number, h: number, rangeno: number): RangeCell | null {
+ * to its grid cell. */
+export function range2grid(w: number, h: number, rangeno: number): Point | null {
   if (rangeno < 0) return null;
-  if (rangeno < w) return { x: rangeno + 1, y: 0, direction: DIR_DOWN };
+  if (rangeno < w) return { x: rangeno + 1, y: 0 };
   rangeno -= w;
-  if (rangeno < h) return { x: w + 1, y: rangeno + 1, direction: DIR_LEFT };
+  if (rangeno < h) return { x: w + 1, y: rangeno + 1 };
   rangeno -= h;
-  if (rangeno < w) return { x: w - rangeno, y: h + 1, direction: DIR_UP };
+  if (rangeno < w) return { x: w - rangeno, y: h + 1 };
   rangeno -= w;
-  if (rangeno < h) return { x: 0, y: h - rangeno, direction: DIR_RIGHT };
+  if (rangeno < h) return { x: 0, y: h - rangeno };
   return null;
 }
 
@@ -333,12 +315,25 @@ export function grid2range(w: number, h: number, x: number, y: number): number |
   return h - y + w + w + h; // LHS (counts backwards)
 }
 
-// --- laser ray-tracer -------------------------------------------------
-
-function offset(x: number, y: number, dir: number): Point {
-  const d = OFFSETS[(dir + 4) % 4];
-  return { x: x + d.x, y: y + d.y };
+/** The description's slot for range index `r`: its space numbers the slots
+ * above each column, below each, left of each row, right of each, where the
+ * range runs clockwise. */
+export function slotOf(w: number, h: number, r: number): number {
+  if (r < w) return r;
+  if (r < w + h) return 2 * w + h + (r - w);
+  if (r < 2 * w + h) return 2 * w - 1 - (r - w - h);
+  return 2 * w + h - 1 - (r - 2 * w - h);
 }
+
+/** Inverse of {@link slotOf}. */
+export function rangeOf(w: number, h: number, s: number): number {
+  if (s < w) return s;
+  if (s < 2 * w) return w + h + (2 * w - 1 - s);
+  if (s < 2 * w + h) return 2 * w + h + (2 * w + h - 1 - s);
+  return w + (s - 2 * w - h);
+}
+
+// --- laser ray-tracer -------------------------------------------------
 
 /** What a square of the box holds, as far as a trace knows: a ball, nothing,
  * or `null` for not known. */
@@ -348,13 +343,24 @@ export type Holds = boolean | null;
  * {@link traceLaser} was not told. */
 export type Traced = number | { readonly unknown: Point };
 
+/** The space of the last size traced, kept: a deal traces thousands of
+ * lasers on one size of box. */
+let space: GridSpace | null = null;
+
+/** The description's space for a `w` × `h` box. */
+export function spaceOf(w: number, h: number): GridSpace {
+  if (space?.w !== w || space.h !== h) space = describedSpace(units, w, h);
+  return space;
+}
+
 /**
  * Where a laser fired from range cell `entryno` goes, given what each square of
  * the box holds (`ballAt`, on the 1-based grid): `LASER_HIT`, `LASER_REFLECT`
  * or its exit range index. Where it looks at a square `ballAt` answers `null`
  * for, and what that square holds would change what the laser does, it stops
- * there and returns the square. One tracer for the real balls and for the
- * hint's partial knowledge, so the two cannot disagree about the physics.
+ * there and returns the square. The description's `beam` traces it
+ * (`traceBeam`), so the game, its hint and its soundness check read one
+ * physics.
  */
 export function traceLaser(
   w: number,
@@ -362,51 +368,12 @@ export function traceLaser(
   entryno: number,
   ballAt: (x: number, y: number) => Holds,
 ): Traced {
-  /** What lies forward (or diagonally forward) of `(gx, gy)`; off the box
-   * there is never a ball. */
-  const look = (gx: number, gy: number, direction: number, where: number) => {
-    let p = offset(gx, gy, direction);
-    if (where === LOOK_LEFT) p = offset(p.x, p.y, direction - 1);
-    else if (where === LOOK_RIGHT) p = offset(p.x, p.y, direction + 1);
-    const holds = p.x < 1 || p.y < 1 || p.x > w || p.y > h ? false : ballAt(p.x, p.y);
-    return { holds, at: p };
-  };
-
-  const { x: x0, y: y0, direction } = range2grid(w, h, entryno) as RangeCell;
-
-  // Entry-cell special cases: hit prioritized over reflection.
-  const front = look(x0, y0, direction, LOOK_FORWARD);
-  if (front.holds === null) return { unknown: front.at };
-  if (front.holds) return LASER_HIT;
-  const left = look(x0, y0, direction, LOOK_LEFT);
-  const right = look(x0, y0, direction, LOOK_RIGHT);
-  if (left.holds || right.holds) return LASER_REFLECT;
-  if (left.holds === null) return { unknown: left.at };
-  if (right.holds === null) return { unknown: right.at };
-
-  let { x, y } = offset(x0, y0, direction);
-  let dir = direction;
-  for (;;) {
-    const exitno = grid2range(w, h, x, y);
-    if (exitno !== null) return exitno === entryno ? LASER_REFLECT : exitno;
-
-    const ahead = look(x, y, dir, LOOK_FORWARD);
-    if (ahead.holds === null) return { unknown: ahead.at };
-    if (ahead.holds) return LASER_HIT;
-    const l = look(x, y, dir, LOOK_LEFT);
-    if (l.holds === null) return { unknown: l.at };
-    if (l.holds) {
-      dir = (dir + 1) % 4; // ball to our left: turn clockwise
-      continue;
-    }
-    const r = look(x, y, dir, LOOK_RIGHT);
-    if (r.holds === null) return { unknown: r.at };
-    if (r.holds) {
-      dir = (dir + 3) % 4; // ball to our right: turn anti-clockwise
-      continue;
-    }
-    ({ x, y } = offset(x, y, dir));
-  }
+  const sp = spaceOf(w, h);
+  const s = slotOf(w, h, entryno);
+  const r = traceBeam(sp, s, (c) => ballAt((c % w) + 1, ((c / w) | 0) + 1));
+  if (r < 0) return { unknown: { x: (~r % w) + 1, y: ((~r / w) | 0) + 1 } };
+  if (r === sp.slots.length) return LASER_HIT;
+  return r === s ? LASER_REFLECT : rangeOf(w, h, r);
 }
 
 /** Trace a laser fired from range cell `entryno` through the real balls,
@@ -424,12 +391,12 @@ function laserExit(st: BlackboxState, entryno: number): number {
 /** Show a laser's result on the range: `H`/`R` on its entry cell, or the
  * next pair number on both its entry and exit cells. */
 function paintLaser(st: BlackboxState, entryno: number, exitno: number): void {
-  const entry = range2grid(st.w, st.h, entryno) as RangeCell;
+  const entry = range2grid(st.w, st.h, entryno) as Point;
   if (exitno === LASER_HIT || exitno === LASER_REFLECT) {
     gridSet(st, entry.x, entry.y, exitno);
   } else {
     const newno = st.laserno++;
-    const end = range2grid(st.w, st.h, exitno) as RangeCell;
+    const end = range2grid(st.w, st.h, exitno) as Point;
     gridSet(st, entry.x, entry.y, newno);
     gridSet(st, end.x, end.y, newno);
   }

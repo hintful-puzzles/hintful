@@ -318,6 +318,8 @@ const GEOMETRY = new Set([
   "adj4",
   "adj8",
   "ray",
+  "beam",
+  "ahead",
   "within",
   "on_grid",
   "units_of",
@@ -875,7 +877,27 @@ function bindingLoops(
         } else out.emit(`const ${els} = ${s.code};`);
         // Counted in binary with the set's last member as the lowest bit, so
         // the subsets of {1, 2, 3} come as {3}, {2}, {2, 3}, {1}, ...
-        out.open(`for (let ${k} = 0; ${k} < 1 << ${els}.length; ${k}++) {`);
+        // A filter that opens on the subset's size is read off the counter,
+        // before the subset is built (Mines' `count`, by its fewest numbers),
+        // and a size it pins counts only the subsets of that size, in the
+        // same order.
+        const size = sizeTest(bnd.name, bnd.where);
+        if (size?.op === "===") {
+          const e = once(compileExpr(size.of, sc, env, out), out);
+          expect(e, "num", `|${bnd.name}|`);
+          env.used.add("nextOfSize");
+          const n = Out.fresh("_n");
+          out.emit(`const ${n} = 1 << ${els}.length;`);
+          out.open(
+            `for (let ${k} = ${e.code} > ${els}.length ? ${n} : (1 << ${e.code}) - 1; ${k} < ${n}; ${k} = ${e.code} === 0 ? ${n} : nextOfSize(${k})) {`,
+          );
+        } else out.open(`for (let ${k} = 0; ${k} < 1 << ${els}.length; ${k}++) {`);
+        if (size !== null && size.op !== "===") {
+          const e = compileExpr(size.of, sc, env, out);
+          expect(e, "num", `|${bnd.name}|`);
+          env.used.add("popcount");
+          out.emit(`if (!(popcount(${k}) ${size.op} ${e.code})) continue;`);
+        }
         if (isMask(of)) {
           out.emit(`let ${v} = 0;`);
           out.emit(
@@ -1310,6 +1332,20 @@ function fillLoop(
         ? null
         : rest.reduce((x, y) => ({ k: "bin", op: "and", a: x, b: y })),
   };
+}
+
+/** Where `where`'s first conjunct compares `|name|` with a term that does not
+ * read `name`: the comparison, as TypeScript, and the term. */
+function sizeTest(name: string, where: Expr | null): { op: string; of: Expr } | null {
+  let first = where;
+  while (first !== null && first.k === "bin" && first.op === "and") first = first.a;
+  if (first === null || first.k !== "bin") return null;
+  const ops: Readonly<Record<string, string>> = { "=": "===", "<=": "<=", "<": "<" };
+  const op = ops[first.op];
+  const { a, b } = first;
+  if (op === undefined || a.k !== "size" || a.of.k !== "name" || a.of.name !== name)
+    return null;
+  return reads(b, name) ? null : { op, of: b };
 }
 
 function clueKindArg(args: readonly Expr[], env: Env): string {
@@ -1877,6 +1913,30 @@ function call(
       arity(2);
       env.used.add("ray");
       return { code: `ray(sp, ${cell(0)}, ${cell(1)})`, sort: setOf(elem("cell")) };
+    case "beam": {
+      if (vs.length !== 1 && vs.length !== 3)
+        throw new CompileError(`beam takes 1 or 3, given ${vs.length}`);
+      expectElem(vs[0], "slot", fn);
+      if (env.answer) {
+        if (vs.length === 3) throw new CompileError("a rule reads beam(s) alone");
+        env.used.add("beamOf");
+        return { code: `beamOf(sp, g, ${vs[0].code})`, sort: NUM };
+      }
+      env.used.add("beam");
+      if (vs.length === 1) return { code: `beam(sp, b, ${vs[0].code})`, sort: NUM };
+      expect(vs[2], "num", fn);
+      return {
+        code: `beam(sp, b, ${vs[0].code}, ${cell(1)}, ${vs[2].code})`,
+        sort: NUM,
+      };
+    }
+    case "ahead":
+      arity(1);
+      expectElem(vs[0], "slot", fn);
+      if (env.answer)
+        throw new CompileError("a rule reads the answer, never the marks");
+      env.used.add("ahead");
+      return { code: `ahead(sp, b, ${vs[0].code})`, sort: elem("cell") };
     case "within":
       arity(2);
       expect(vs[1], "num", fn);

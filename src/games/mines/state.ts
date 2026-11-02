@@ -58,8 +58,9 @@ export interface MinesParams {
   w: number;
   h: number;
   n: number;
-  /** A forced first click for batch generation (the `X`/`Y` param letters,
-   * read by `newGameDescBatch`); -1 = unset. The running game never sets them. */
+  /** Upstream's forced first click for batch generation (the `X`/`Y` param
+   * letters), kept so a params string carrying them still reads; -1 = unset.
+   * Nothing here sets or deals by them. */
   firstClickX: number;
   firstClickY: number;
 }
