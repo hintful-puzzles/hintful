@@ -197,8 +197,8 @@ export function areaSingle(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<AreaS
   const _a32 = cl.area.parts;
   for (let _i33 = 0; _i33 < _a32.length; _i33++) {
     const v_r = _a32[_i33];
-    for (let _m34 = rangeMask(1, cl.area.cells[v_r].length); _m34 !== 0; _m34 &= _m34 - 1) {
-      const v_n = 31 - Math.clz32(_m34 & -_m34);
+    const _t34 = cl.area.cells[v_r].length;
+    for (let v_n = 1; v_n <= _t34; v_n++) {
       let _q35 = false;
       Q36: {
         const _a37 = cl.area.cells[v_r];
@@ -273,8 +273,8 @@ export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBind
   const _a64 = cl.area.parts;
   for (let _i65 = 0; _i65 < _a64.length; _i65++) {
     const v_r = _a64[_i65];
-    for (let _m66 = rangeMask(1, cl.area.cells[v_r].length); _m66 !== 0; _m66 &= _m66 - 1) {
-      const v_n = 31 - Math.clz32(_m66 & -_m66);
+    const _t66 = cl.area.cells[v_r].length;
+    for (let v_n = 1; v_n <= _t66; v_n++) {
       let _q67 = false;
       Q68: {
         const _a69 = cl.area.cells[v_r];

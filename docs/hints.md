@@ -136,8 +136,8 @@ registered games that declare a `hint`, derived by
 [`engine/testing/hint-games.ts`](../src/engine/testing/hint-games.ts).
 
 Exemplars: Palisade (grouped multi-leg deductions),
-[`src/games/range/`](../src/games/range/) (a recording solver, `hint` and
-`hintKeepTrack`, and the highlight), [`src/games/towers/`](../src/games/towers/)
+[`src/games/range/`](../src/games/range/) (a compiled ladder walked a firing
+at a time, `hint` and `hintKeepTrack`, and the highlight), [`src/games/towers/`](../src/games/towers/)
 (candidate elimination), and [`src/games/inertia/`](../src/games/inertia/)
 (no deduction: verified claims, a stable marked subgoal, a recompute-stable
 plan).
@@ -940,9 +940,10 @@ themselves. Decide first where the record comes from:
 
 - **Threaded**: an optional recorder passed into the game's own rules, built
   only on the hint path, with every reason allocation gated on it so the
-  generator's path is unchanged. Exemplars:
-  [`range/solver.ts`](../src/games/range/solver.ts) (a `record` callback),
-  the skeleton's `ladder`.
+  generator's path is unchanged. Exemplars: `compiledRung`
+  ([`engine/ladder-runtime.ts`](../src/engine/ladder-runtime.ts)), which
+  builds a reason only where the marks carry a recorder, and the skeleton's
+  `ladder`.
 - **Parallel**: separate code over the solver's primitives that the generator
   never calls. Choose it where the hint needs the deduction in another order
   or at another grain than the generator, which needs only that it fires
@@ -1225,7 +1226,8 @@ and does not hang inside one `hint()` call.
 
 - **Never guard the generator's path.** Gate the budget on the recorder or
   hint signal the function already carries, so generation runs the same loop
-  unguarded. Exemplars: `applyRules` in `range/solver.ts` (gated),
+  unguarded. Exemplars: `deduceHintPlan` in `range/solver.ts`, which sets
+  the marks' budget that only a hint's walk carries (gated),
   `deduceForcedEdges` in `palisade/solver.ts` (hint-only, so unconditional).
 - **A rung ladder does not hand-roll the loop.**
   [`runDeductionFixpoint`](../src/engine/deduction-fixpoint.ts) and

@@ -1,13 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import {
-  applyRules,
-  findClues,
-  findErrors,
-  generateGrid,
-  searchAnswers,
-} from "./solver.ts";
+import { applyRules, generateGrid, isSolved, searchAnswers } from "./solver.ts";
 import { BLACK, EMPTY, idx, newState, type RangeParams, WHITE } from "./state.ts";
 
 const PRESETS: RangeParams[] = [
@@ -31,7 +25,7 @@ describe("deductive rules", () => {
       EMPTY,
       EMPTY,
     ]);
-    applyRules(grid, 3, 3, findClues(grid, 3, 3));
+    applyRules(grid, 3, 3);
     expect(grid[idx(0, 1, 3)]).toBe(WHITE);
     expect(grid[idx(1, 0, 3)]).toBe(WHITE);
     expect(grid[idx(1, 2, 3)]).toBe(WHITE);
@@ -44,7 +38,7 @@ describe("deductive rules", () => {
     // 1x3: clue 3 at the left end can only reach its count by making
     // both cells to the right white (the sole direction with room).
     const grid = Int8Array.from([3, EMPTY, EMPTY]);
-    applyRules(grid, 3, 1, findClues(grid, 3, 1));
+    applyRules(grid, 3, 1);
     expect(grid[idx(0, 1, 3)]).toBe(WHITE);
     expect(grid[idx(0, 2, 3)]).toBe(WHITE);
   });
@@ -53,7 +47,7 @@ describe("deductive rules", () => {
     // Shading any square but an end cuts the strip in two. This is the
     // longest board the encoding allows.
     const grid = new Int8Array(127);
-    expect(applyRules(grid, 127, 1, [])).toBe(125);
+    expect(applyRules(grid, 127, 1)).toBe(125);
     expect(grid[0]).toBe(EMPTY);
     expect(grid[1]).toBe(WHITE);
     expect(grid[125]).toBe(WHITE);
@@ -64,7 +58,7 @@ describe("deductive rules", () => {
     // The walk through an open 64x64 board runs up and down its columns and
     // is 4,096 squares deep at its end.
     const grid = new Int8Array(64 * 64);
-    expect(applyRules(grid, 64, 64, [])).toBe(0);
+    expect(applyRules(grid, 64, 64)).toBe(0);
   });
 });
 
@@ -77,7 +71,7 @@ describe("a board that says more", () => {
     h: number,
   ): { asked: number; unfinished: string[] } {
     const answer = clues.slice();
-    applyRules(answer, w, h, findClues(answer, w, h));
+    applyRules(answer, w, h);
     expect(answer.includes(EMPTY)).toBe(false);
     const unfinished: string[] = [];
     let asked = 0;
@@ -86,7 +80,7 @@ describe("a board that says more", () => {
       asked++;
       const marked = clues.slice();
       marked[cell] = answer[cell];
-      applyRules(marked, w, h, findClues(marked, w, h));
+      applyRules(marked, w, h);
       if (!marked.every((v, i) => v === answer[i]))
         unfinished.push(`${Math.floor(cell / w)},${cell % w}`);
     }
@@ -104,7 +98,7 @@ describe("a board that says more", () => {
     );
     const marked = clues.slice();
     marked[idx(5, 5, w)] = WHITE;
-    applyRules(marked, w, h, findClues(marked, w, h));
+    applyRules(marked, w, h);
     expect(marked[idx(8, 4, w)]).toBe(WHITE);
     expect(marked.includes(EMPTY)).toBe(false);
     expect(unfinishedAfterOneMark(clues, w, h)).toEqual({ asked: 42, unfinished: [] });
@@ -150,9 +144,9 @@ describe("generator", () => {
         // No-recursion solvable: deduction alone fills every blank cell.
         const dup = grid.slice();
         const emptyCount = grid.reduce((a, v) => a + (v === EMPTY ? 1 : 0), 0);
-        const filled = applyRules(dup, p.w, p.h, findClues(dup, p.w, p.h));
+        const filled = applyRules(dup, p.w, p.h);
         expect(filled).toBe(emptyCount);
-        expect(findErrors(dup, p.w, p.h)).toBe(false);
+        expect(isSolved(dup, p.w, p.h)).toBe(true);
 
         // At least one black square in the solution.
         expect(Array.from(dup).filter((v) => v === BLACK).length).toBeGreaterThan(0);

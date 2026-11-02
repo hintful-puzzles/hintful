@@ -39,6 +39,7 @@ import {
   perElement,
   perPlace,
   perValue,
+  ray,
   traceBeam,
   within,
 } from "../../src/engine/describe-runtime.ts";
@@ -1302,6 +1303,13 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       if (typeof r !== "number") throw new Error("within: a distance the board fixes");
       return cellFn((c) => allOf("cell", within(sp, c, r)));
     }
+    case "ray":
+      // A cell with itself names no direction.
+      return lift(vs[0], fn, (c) =>
+        lift(vs[1], fn, (n) =>
+          allOf("cell", c < 0 || n < 0 || c === n ? [] : ray(sp, c, n)),
+        ),
+      );
     case "sight":
       return lift(vs[0], fn, (s) => allOf("cell", sp.sight[s]));
     case "opposite":

@@ -589,9 +589,28 @@ export function cuts(sp: GridSpace, S: readonly number[]): readonly number[] {
   return S.filter((c) => groups - 1 + pieces[c] + (parent[c] >= 0 ? 1 : 0) >= 2);
 }
 
+const rays = new WeakMap<GridSpace, Map<number, readonly number[]>>();
+/** The space asked last and its rays, by `c` and `n`. */
+let raySpace: GridSpace | null = null;
+let lastRays = new Map<number, readonly number[]>();
+
 /** `ray(c, n)`: the cells from `n` on, each a step from `c` to `n` further,
- * up to the grid's edge. */
-export function ray(sp: GridSpace, c: number, n: number): number[] {
+ * up to the grid's edge. Built once a space, `c` and `n`: a technique asks
+ * it of every arm of every cell it binds, every pass (Range's `seen`), and
+ * building it each time was a quarter of a large board's deal. */
+export function ray(sp: GridSpace, c: number, n: number): readonly number[] {
+  if (sp !== raySpace) {
+    let bySpace = rays.get(sp);
+    if (bySpace === undefined) {
+      bySpace = new Map();
+      rays.set(sp, bySpace);
+    }
+    raySpace = sp;
+    lastRays = bySpace;
+  }
+  const key = c * sp.cells.length + n;
+  const known = lastRays.get(key);
+  if (known !== undefined) return known;
   const dx = (n % sp.w) - (c % sp.w);
   const dy = ((n / sp.w) | 0) - ((c / sp.w) | 0);
   const out: number[] = [];
@@ -601,6 +620,7 @@ export function ray(sp: GridSpace, c: number, n: number): number[] {
     x += dx, y += dy
   )
     out.push(y * sp.w + x);
+  lastRays.set(key, out);
   return out;
 }
 

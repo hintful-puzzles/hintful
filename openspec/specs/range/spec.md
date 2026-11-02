@@ -6,7 +6,7 @@ squares touch, the squares left clear stay connected, and each number counts
 the clear squares it sees in four directions, itself included. This spec
 holds the puzzle's rules, what its params refuse and what a short params
 string means, its description encoding, what its generator promises, its
-three rules and what its search assumes, what its two verbs and a shifted
+ladder and what its search assumes, what its two verbs and a shifted
 arrow do, its live error highlighting and mistake check, its explained
 deduction hint, and how the board looks.
 
@@ -191,10 +191,10 @@ one answer, so its clues SHALL stay two-way rotationally symmetric.
 - **THEN** each is dealt, and the lowest difficulty that solves it is
   Unreasonable
 
-### Requirement: Generation: A Range board is Easy where the three rules finish it
+### Requirement: Generation: A Range board is Easy where its ladder finishes it
 
-A board SHALL count as Easy where the three rules finish it, and as
-Unreasonable where it has exactly one answer that they do not reach.
+A board SHALL count as Easy where its ladder finishes it, and as Unreasonable
+where it has exactly one answer that the ladder does not reach.
 
 #### Scenario: A board that needs search opens as Unreasonable
 
@@ -202,14 +202,14 @@ Unreasonable where it has exactly one answer that they do not reach.
   entered with no difficulty letter, with `de`, and with `du`
 - **THEN** each opens, and the board's params read `4x4du`
 
-### Requirement: Solver: Range's deduction applies three rules to a fixpoint
+### Requirement: Solver: Range's deduction is the ladder its description states
 
-The deductive solver SHALL repeat three rules until none fires. A cell
-adjacent to a black cell is white. From a clue's runs: when it already sees
-its count the next cell in each direction is black, a cell whose inclusion
-would exceed the clue is black, and cells it cannot reach its count without
-are white. A square whose painting black would disconnect the white region (a
-cut vertex of the white graph) is white.
+The deductive solver SHALL run the ladder `range.description.yaml` states, in
+its order, to a fixpoint: a shaded square's neighbors are clear; a number's
+view along an arm that can run no further than it is known to is capped by a
+shaded square; the view along an arm runs, clear, as far as the count needs
+with the other arms at their longest; and a square without which the squares
+not shaded would not be one group is clear.
 
 #### Scenario: The adjacency rule whitens a neighbor
 
@@ -244,8 +244,8 @@ non-clue cell as the board's one answer has it.
 
 ### Requirement: Solver: Range's search assumes the first undecided cell shaded, and then clear
 
-Where the three rules stop, Range's search SHALL take the first undecided cell
-and assume it shaded, and then clear.
+Where the ladder stops, Range's search SHALL take the first undecided cell and
+assume it shaded, and then clear.
 
 #### Scenario: The search tells one answer from several and from none
 
@@ -265,10 +265,11 @@ and assume it shaded, and then clear.
 
 ### Requirement: Solver: Range's search sees a position no answer fits before it is full
 
-The search SHALL call a position impossible as soon as the live error check
-flags a cell in it: a number that cannot see its count however the undecided
-cells go, or already sees too many, two shaded cells side by side, or clear
-cells cut off from the rest. It SHALL NOT wait for every cell to be decided.
+The search SHALL call a position impossible as soon as a technique of the
+ladder finds the marks inconsistent: a number that cannot see its count
+however its arms run, or already sees more than it, two shaded cells side by
+side, or the squares not shaded in more than one group while one of them is
+undecided. It SHALL NOT wait for every cell to be decided.
 
 #### Scenario: A board that takes three positions
 
@@ -384,31 +385,13 @@ follows the plan. It SHALL never include the target cell itself.
 ### Requirement: Hint: Range's hint stops where its rules do
 
 On an Unreasonable board as on any other, the steps of Range's hint SHALL be
-the cells the three rules force from the player's marks.
+the cells its ladder forces from the player's marks.
 
 #### Scenario: The hint stops, and goes on from a cell filled rightly
 
 - **WHEN** the hint is followed on an Unreasonable board until it refuses
 - **THEN** with a cell filled as the solution has it wherever the hint stops,
   the hint finishes the board
-
-### Requirement: Hint: Range's hint takes the clue rule first in each pass
-
-The hint's plan SHALL list the forced cells in the order the rules force
-them, one narrated step for each cell.
-Each pass SHALL take every clue in turn (a clue that sees its count, else a
-cell that would overrun it, then a cell it cannot reach its count without),
-then the adjacency rule, then the connectedness rule, and passes SHALL repeat
-until none forces a cell. Each rule SHALL read the cells the rules before it
-set in the same pass.
-
-#### Scenario: A clue's cell comes before a shaded square's neighbor
-
-- **WHEN** a hint is asked on a one-row board of seven squares with a 1 at
-  each end, whose middle square the player has shaded
-- **THEN** the plan shades the square beside each 1, as a clue that sees its
-  count, and only then clears the two squares beside the middle one, as
-  neighbors of a shaded square, though those were forced from the start
 
 ### Requirement: Hint: A shaded premise of a Range hint takes a doubled outline
 
@@ -421,6 +404,20 @@ outline in `COL_HINT_CELL`, and keep its piece.
   cell to be not shaded)
 - **THEN** the cited shaded premise takes a doubled outline in `COL_HINT_CELL`
   and the forced cell is ringed `COL_HINT`
+
+### Requirement: Hint: Range's hint walks its ladder a firing at a time
+
+The hint's plan SHALL take the ladder's firings one at a time, each the one
+that carries on from the cells the plan last decided, the ladder's order
+breaking ties, and SHALL narrate each cell a firing decides as a step of its
+own.
+
+#### Scenario: A shaded square's neighbors come first
+
+- **WHEN** a hint is asked on a dealt 9×6 board with one shaded square of its
+  answer marked, while numbers already force squares elsewhere
+- **THEN** the plan's first steps clear that square's undecided neighbors, as
+  neighbors of a shaded square, and the steps after them reason from numbers
 
 ### Requirement: Look: Range draws a shaded cell as the collection's shaded piece
 

@@ -201,6 +201,13 @@ description author acts on:
   line's segments are read by binding a cell of each, since no sort is a set
   of sets: ABCD counts a stretch's most letters as its cells at an even
   place (`index(c, stretch(L, c, O)) mod 2 = 0`).
+- **`ray(c, n)` is the cells from `c`'s neighbor `n` on, to the edge**, so
+  a number's four arms are `ray(k, a)` over `a in adj4(k)`, and a position
+  along one is a number bound by `range` (Range's `seen` and `far`).
+- **A set of numbers is a mask of 32 bits**, so it holds none past 31 and
+  none below 0: a domain, or a `range` read as a set. A binder over
+  `range(a, b)` counts instead, so it binds a position along a line of any
+  length.
 - **`connected(S)` says whether the cells `S` are one group**, each reaching
   every other through members side by side, and `cuts(S)` is the members
   without which the rest are not, in `S`'s order. Bind `cuts` once by `=`:

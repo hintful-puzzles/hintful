@@ -6,7 +6,7 @@
 
 ## 2. The games
 
-- [ ] 2.1 Each of Range, Rome, Slant and Boats described, its rungs retired, or the step split at its start
+- [ ] 2.1 Each of Rome, Slant and Boats described, its rungs retired, or the step split at its start
 
 ## 3. Close
 

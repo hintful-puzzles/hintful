@@ -41,7 +41,7 @@ export const outOfBounds = (r: number, c: number, w: number, h: number): boolean
 export interface RangeParams {
   w: number;
   h: number;
-  /** `DIFF_EASY`, a board the three rules finish, or `DIFF_UNREASONABLE`, one
+  /** `DIFF_EASY`, a board the ladder finishes, or `DIFF_UNREASONABLE`, one
    * with a single answer that they do not reach. Generation-time only. */
   diff: number;
 }

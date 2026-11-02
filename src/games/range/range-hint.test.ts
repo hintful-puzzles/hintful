@@ -4,7 +4,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { CLUE } from "./hint-text.ts";
 import { type RangeHint, rangeGame } from "./index.ts";
-import { deduceHintPlan, findErrors } from "./solver.ts";
+import { answerOf, deduceHintPlan } from "./solver.ts";
 import {
   BLACK,
   decodeParams,
@@ -78,6 +78,34 @@ describe("deduceHintPlan", () => {
     }
   });
 
+  it("takes the ladder's first rung first, one step a square", () => {
+    // A shaded square of the answer marked first: its neighbors are the first
+    // steps, though numbers force squares elsewhere from the start.
+    const st = newState(decodeParams("9x6"), "d11a12h7b10e11d7e4b9h5a2d");
+    const answer = answerOf(st);
+    if (answer.kind !== "one") throw new Error(answer.kind);
+    const shaded = answer.solution.indexOf(BLACK);
+    const grid = st.grid.slice();
+    grid[shaded] = BLACK;
+    const [r, c] = [Math.floor(shaded / 9), shaded % 9];
+    const open = [
+      [r - 1, c],
+      [r, c + 1],
+      [r + 1, c],
+      [r, c - 1],
+    ]
+      .filter(([y, x]) => y >= 0 && y < 6 && x >= 0 && x < 9)
+      .map(([y, x]) => y * 9 + x)
+      .filter((p) => grid[p] === EMPTY);
+    const plan = deduceHintPlan(grid, 9, 6);
+    const first = plan.slice(0, open.length);
+    expect(first.map((m) => m.reason.kind)).toEqual(open.map(() => "adjacency"));
+    expect(new Set(first.map((m) => m.r * 9 + m.c))).toEqual(new Set(open));
+    expect(plan.slice(open.length).some((m) => m.reason.kind !== "adjacency")).toBe(
+      true,
+    );
+  });
+
   it("records a clue reason on a generated board", () => {
     const st = fromSeed("9x6", "range-hint-reason");
     const plan = deduceHintPlan(st.grid, st.w, st.h);
@@ -97,12 +125,12 @@ describe("hint", () => {
     expect(res.steps.length).toBeGreaterThan(0);
     expect(res.steps[0].explanation.length).toBeGreaterThan(0);
 
-    // Apply every step move in order — the board ends error-free (solved).
+    // Apply every step move in order — the board ends full and solved.
     let cur = st;
     for (const step of res.steps) {
       cur = rangeGame.executeMove(cur, step.move);
     }
-    expect(findErrors(cur.grid, cur.w, cur.h)).toBe(false);
+    expect(cur.grid.includes(EMPTY)).toBe(false);
     expect(rangeGame.status(cur)).toBe("solved");
   });
 

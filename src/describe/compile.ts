@@ -904,6 +904,7 @@ function bindingLoops(
   env: Env,
   out: Out,
   body: (scope: Scope) => void,
+  descending = false,
 ): void {
   const walk = (i: number, sc: Scope): void => {
     if (i === binders.length) {
@@ -959,6 +960,21 @@ function bindingLoops(
       out.open(`for (let ${ix} = 0; ${ix} < ${n}; ${ix}++) {`);
       out.emit(`const ${v} = ${a}[${ix}];`);
       pos = { arr: L.code, i: ix };
+    } else if (bnd.of.k === "call" && bnd.of.fn === "range") {
+      // Counted rather than read off a mask, which holds no number past 31
+      // and none below 0: a position along a line of a large board.
+      if (bnd.of.args.length !== 2) throw new CompileError("range takes 2");
+      const [a, b] = bnd.of.args.map((x) => {
+        const t = once(compileExpr(x, sc, env, out), out);
+        expect(t, "num", "range");
+        return t;
+      });
+      sort = NUM;
+      out.open(
+        descending
+          ? `for (let ${v} = ${b.code}; ${v} >= ${a.code}; ${v}--) {`
+          : `for (let ${v} = ${a.code}; ${v} <= ${b.code}; ${v}++) {`,
+      );
     } else {
       const s = compileExpr(bnd.of, sc, env, out);
       if (s.sort.k === "subsets") {
@@ -1702,6 +1718,19 @@ function quantifier(
   return { code: r, sort: BOOL };
 }
 
+/** Whether an aggregate's one binder counts a range and its term is that
+ * binder, so a `min` or a `max` is the first number that passes. */
+function countedSelf(e: Extract<Expr, { k: "agg" }>): boolean {
+  if (e.binders.length !== 1) return false;
+  const [b] = e.binders;
+  return (
+    b.kind === "in" &&
+    b.of.k === "call" &&
+    b.of.fn === "range" &&
+    (e.term === null || (e.term.k === "name" && e.term.name === b.name))
+  );
+}
+
 function aggregate(
   e: Extract<Expr, { k: "agg" }>,
   scope: Scope,
@@ -1737,6 +1766,25 @@ function aggregate(
     case "max":
       // `-1` is none, below every value, so the first term always replaces it.
       out.emit(`let ${r} = -1;`);
+      if (countedSelf(e)) {
+        // Of the numbers a range counts, the first that passes from the end
+        // the answer lies at is the answer: a position along a long line,
+        // found without reading the rest of it.
+        out.open(`${label}: {`);
+        bindingLoops(
+          e.binders,
+          scope,
+          env,
+          out,
+          (sc) => {
+            out.emit(`${r} = ${name(last.name, sc, env, out).code};`);
+            out.emit(`break ${label};`);
+          },
+          e.fn === "max",
+        );
+        out.close();
+        break;
+      }
       loops((sc) => {
         const t = once(term(sc), out);
         expect(t, "num", e.fn);

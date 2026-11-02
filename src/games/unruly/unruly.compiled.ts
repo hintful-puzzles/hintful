@@ -56,8 +56,8 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, variations: readon
     const _a190 = sp.lines;
     for (let _i191 = 0; _i191 < _a190.length; _i191++) {
       const v_L = _a190[_i191];
-      for (let _m192 = rangeMask(0, (sp.lineCells[v_L].length - 3)); _m192 !== 0; _m192 &= _m192 - 1) {
-        const v_i = 31 - Math.clz32(_m192 & -_m192);
+      const _t192 = (sp.lineCells[v_L].length - 3);
+      for (let v_i = 0; v_i <= _t192; v_i++) {
         const _t193 = (v_i + 1);
         let _c196 = ((g[(sp.lineCells[v_L][v_i] ?? -1)] || -1) === (g[(sp.lineCells[v_L][_t193] ?? -1)] || -1));
         if (_c196) {
@@ -109,8 +109,8 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, variations: readon
           if (!(((v_B !== v_A) && ((sp.rows.includes(v_A)) === (sp.rows.includes(v_B)))))) continue;
           let _q212 = false;
           Q213: {
-            for (let _m214 = rangeMask(0, (sp.lineCells[v_A].length - 1)); _m214 !== 0; _m214 &= _m214 - 1) {
-              const v_i = 31 - Math.clz32(_m214 & -_m214);
+            const _t214 = (sp.lineCells[v_A].length - 1);
+            for (let v_i = 0; v_i <= _t214; v_i++) {
               if (((g[(sp.lineCells[v_A][v_i] ?? -1)] || -1) !== (g[(sp.lineCells[v_B][v_i] ?? -1)] || -1))) {
                 _q212 = true;
                 break Q213;
@@ -146,8 +146,8 @@ export function threes(b: Marks, sp: GridSpace, fire: Fire<ThreesBinding> | null
   const _a13 = sp.lines;
   for (let _i14 = 0; _i14 < _a13.length; _i14++) {
     const v_L = _a13[_i14];
-    for (let _m15 = rangeMask(0, (sp.lineCells[v_L].length - 3)); _m15 !== 0; _m15 &= _m15 - 1) {
-      const v_i = 31 - Math.clz32(_m15 & -_m15);
+    const _t15 = (sp.lineCells[v_L].length - 3);
+    for (let v_i = 0; v_i <= _t15; v_i++) {
       const _t16 = (v_i + 1);
       const _t17 = (v_i + 2);
       const v_W = setOf((sp.lineCells[v_L][v_i] ?? -1), (sp.lineCells[v_L][_t16] ?? -1), (sp.lineCells[v_L][_t17] ?? -1));
@@ -370,8 +370,8 @@ export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding> | nu
         _c127 = (_g120 <= _h126);
       }
       if (!(_c127)) continue;
-      for (let _m128 = rangeMask(0, (sp.lineCells[v_L].length - 3)); _m128 !== 0; _m128 &= _m128 - 1) {
-        const v_i = 31 - Math.clz32(_m128 & -_m128);
+      const _t128 = (sp.lineCells[v_L].length - 3);
+      for (let v_i = 0; v_i <= _t128; v_i++) {
         const _t129 = (v_i + 1);
         const _t130 = (v_i + 2);
         L131: {
@@ -482,8 +482,8 @@ export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding> | null
         if (_c183) {
           let _q180 = true;
           Q181: {
-            for (let _m182 = rangeMask(0, (sp.lineCells[v_A].length - 1)); _m182 !== 0; _m182 &= _m182 - 1) {
-              const v_j = 31 - Math.clz32(_m182 & -_m182);
+            const _t182 = (sp.lineCells[v_A].length - 1);
+            for (let v_j = 0; v_j <= _t182; v_j++) {
               if (!((b.value((sp.lineCells[v_B][v_j] ?? -1)) === v_d))) continue;
               if (!((b.value((sp.lineCells[v_A][v_j] ?? -1)) === v_d))) {
                 _q180 = false;
@@ -494,8 +494,8 @@ export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding> | null
           _c183 = _q180;
         }
         if (!(_c183)) continue;
-        for (let _m184 = rangeMask(0, (sp.lineCells[v_A].length - 1)); _m184 !== 0; _m184 &= _m184 - 1) {
-          const v_j = 31 - Math.clz32(_m184 & -_m184);
+        const _t184 = (sp.lineCells[v_A].length - 1);
+        for (let v_j = 0; v_j <= _t184; v_j++) {
           if (!(((b.value((sp.lineCells[v_A][v_j] ?? -1)) === v_d) && !(b.known((sp.lineCells[v_B][v_j] ?? -1)))))) continue;
           facts.length = 0;
           changed = false;

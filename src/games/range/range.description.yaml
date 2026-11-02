@@ -61,3 +61,88 @@ help:
     wrong, a few forced cells later some number can no longer see enough, or
     sees too much, and shows in red. The hint carries on from whatever you
     decide.
+name: Range
+family: shading
+sizes:
+  # A number is at most the width and the height less one, which the desc
+  # keeps below 128.
+  w: { min: 1, max: 127 }
+  h: { min: 1, max: 127 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is a shaded square, 2 a clear one, which a numbered square is.
+  value:
+    sort: cell
+    domain: "{d in range(1, 2) where d = 2 or clue(number, c) < 0}"
+define:
+  # The squares not shaded, which are one group.
+  unshaded: "{c in cells where value(c) != 1}"
+  # How far along R, a number's arm, its view is known to run: the squares
+  # before the first one not clear.
+  seen(R): "min(i in range(0, |R|) where i = |R| or value(nth(R, i)) != 2)"
+  # The squares along R before the first shaded one.
+  open(R): "min(i in range(0, |R|) where i = |R| or value(nth(R, i)) = 1)"
+  # The furthest a view along R that is known to run s squares can run, at
+  # most m and short of the shaded square at z: as far as a square past it
+  # that may be shaded, or the edge.
+  far(R, s, m, z): >-
+    max(i in range(s, |R|) where i = s
+    or (i <= m and i <= z and (i = |R| or value(nth(R, i)) != 2)))
+  # The squares a number at k sees, itself among them.
+  sees(k): "1 + sum(a in adj4(k) of seen(ray(k, a)))"
+shape:
+  # No two shaded squares touch.
+  - "forall c in cells where value(c) = 1: forall p in adj4(c): value(p) = 2"
+  # The clear squares are one group.
+  - "connected(unshaded)"
+clues:
+  # A number on a clear square, which sees as many clear squares along its
+  # row and its column, itself among them.
+  number:
+    at: cell
+    value: "range(1, |cells(row(at))| + |cells(col(at))| - 1)"
+    means: "sees(at) = v"
+freedom: { kind: fill }
+deal:
+  answer: squares shaded at random, none side by side, while the clear squares stay one group
+  number: on every clear square, then as many hidden as the board stays at its tier
+  tier: one of the tiers
+tiers: [Easy, Unreasonable]
+techniques:
+  # A shaded square's neighbors are clear, and one shaded beside it breaks
+  # the rules.
+  - id: besideShaded
+    tier: Easy
+    for: "c in cells where value(c) = 1"
+    conclude: "forall p in adj4(c): value(p) != 1 and place(p, 2)"
+  # A number's view along one arm runs at least as far as it is known to and
+  # at most as far as the other arms, as short as they can be, leave it
+  # room for. Where the two meet, the square past the view is shaded. A
+  # number that already sees more than its count breaks the rules.
+  - id: capped
+    tier: Easy
+    for: >-
+      k in cells, n = clue(number, k) where n > 0, W = sees(k),
+      a in adj4(k), R = ray(k, a), s = seen(R)
+      where far(R, s, n - W + s, open(R)) = s
+    conclude: "W <= n and (s = |R| or place(nth(R, s), 1))"
+  # With every other arm of a number's view as long as it can be, the view
+  # along this one must still run far enough to make up the count, so the
+  # squares that far are clear. A number that cannot see its count however
+  # its arms run breaks the rules.
+  - id: reach
+    tier: Easy
+    for: >-
+      k in cells, n = clue(number, k) where n > 0, W = sees(k),
+      M = 1 + sum(b in adj4(k), B = ray(k, b), t = seen(B) of far(B, t, n - W + t, open(B))),
+      a in adj4(k), R = ray(k, a), s = seen(R), f = far(R, s, n - W + s, open(R))
+    conclude: "M >= n and (forall p in R where index(p, R) < n - M + f: place(p, 2))"
+  # A square without which the squares not shaded would not be one group is
+  # clear: shaded, it would cut some of them off from the rest. Squares not
+  # shaded that are already apart break the rules.
+  - id: cut
+    tier: Easy
+    for: "U = unshaded, K = cuts(U), c in K where not known(c)"
+    conclude: "connected(U) and place(c, 2)"

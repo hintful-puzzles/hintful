@@ -58,9 +58,9 @@ import {
   DR,
   deduceHintPlan,
   deductionFinishes,
-  findErrors,
   generateGrid,
   type HintReason,
+  isSolved,
 } from "./solver.ts";
 import {
   BLACK,
@@ -172,9 +172,9 @@ function executeMove(state: RangeState, move: RangeMove): RangeState {
   return next;
 }
 
-/** Solved: every cell decided and every rule met. */
+/** Solved: every rule met, an undecided cell counting as clear. */
 function status(s: RangeState): GameStatus {
-  return findErrors(s.grid, s.w, s.h) ? "ongoing" : "solved";
+  return isSolved(s.grid, s.w, s.h) ? "solved" : "ongoing";
 }
 
 function solve(orig: RangeState, _curr: RangeState): SolveResult<RangeMove> {

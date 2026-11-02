@@ -538,6 +538,19 @@ const PLANTS: Record<string, Plant> = {
   split: {
     for: "K = cuts(uncovered), c in uncovered where not known(c) and c not in K",
   },
+  // Range: a shaded square's diagonal neighbors read as beside it.
+  besideShaded: { conclude: "forall p in adj8(c): value(p) != 1 and place(p, 2)" },
+  // A view's room read as one square shorter than its count leaves it.
+  capped: {
+    for: "k in cells, n = clue(number, k) where n > 0, W = sees(k), a in adj4(k), R = ray(k, a), s = seen(R) where far(R, s, n - W + s - 1, open(R)) = s",
+  },
+  // A view made to reach one square further than its count needs.
+  reach: {
+    conclude:
+      "M >= n and (forall p in R where index(p, R) < n - M + f + 1: place(p, 2))",
+  },
+  // Every square not shaded read as one the rest need.
+  cut: { for: "U = unshaded, K = U, c in K where not known(c)" },
 };
 
 /** How many of a technique's first binders each query fixes, one query a

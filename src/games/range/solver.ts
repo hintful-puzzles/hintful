@@ -1,33 +1,58 @@
 /**
- * Range solver, error-checker, and generator — port of the solver and
- * `new_game_desc` subsystems of `range.c`.
+ * Range's solver: the ladder `range.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/ladder-runtime.ts`), the answer check
+ * its rules compile to, the search beneath the ladder, and the generator, a
+ * port of `range.c`'s `new_game_desc`.
  *
- * The deductive solver applies three sound rules to a fixpoint: run-length
- * "not too big", black-adjacency, and white-connectedness via biconnected-
- * component cut vertices. Upstream also has a recursion rule; here
- * `searchAnswers` (the three rules, and trial and error where they stop, every
- * position checked by `findErrors`) counts a board's answers to two. It serves
- * the Solve command and `findMistakes`, and deals the Unreasonable tier. An
- * Easy board is kept only if uniquely solvable by the three rules without any
- * guessing, as upstream. The run-length rule bounds a run more tightly than
- * upstream's ({@link ruleNotTooBig} says why), so the rules finish every board
- * upstream's do and some they do not.
+ * The ladder is Easy: a shaded square's neighbors are clear, a number's view
+ * capped where it can run no further, a number's view made to reach its
+ * count, and a square that would cut the clear squares in two kept clear.
+ * Beneath it, a search by trial and error ({@link searchAnswers}) counts a
+ * board's answers to two. It serves the Solve command and `findMistakes`, and
+ * deals the Unreasonable tier. An Easy board is kept only where the ladder
+ * finishes it, as upstream's three rules did. The view's bound is tighter
+ * than upstream's (the description's `far` reads every gap, where upstream's
+ * `solver_reasoning_not_too_big` read the first), so the ladder finishes
+ * every board upstream's do and some they do not.
+ *
+ * A hint walks the same ladder, one firing at a time, and says each square
+ * a firing decides as a step of its own.
+ *
+ * The live error overlay ({@link findErrors}) stays the game's own: it judges
+ * a board still being filled, which no rule of the answer says.
  */
 
 import {
   type Answer,
   answerCache,
+  type Deduced,
   DIFF_EASY,
   dealUnreasonable,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
-import { singleFirings } from "../../engine/deduction-fixpoint.ts";
+import {
+  clueList,
+  describedSpace,
+  type GridSpace,
+} from "../../engine/describe-runtime.ts";
 import { Dsf } from "../../engine/dsf.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  ladderWalk,
+  runLadder,
+  type Taken,
+  TIERS,
+  uncluedRung,
+} from "../../engine/ladder-runtime.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { SweepOffers } from "../../engine/sweep-offers.ts";
+import * as range from "./range.compiled.ts";
 import {
   BLACK,
   type Cell,
@@ -52,6 +77,197 @@ import {
  * vitest". */
 export const DR = [1, 0, -1, 0];
 export const DC = [0, 1, 0, -1];
+
+/** What the description reads a square as holding. */
+const SHADED = 1;
+const CLEAR = 2;
+
+/** Why a cell is forced — the premise the hint narrates and highlights. */
+export type HintReason =
+  | { kind: "adjacency"; from: Cell } // a neighbor of this black must be white
+  | { kind: "satisfied"; clue: Cell; n: number } // clue's run is full → cap it black
+  | { kind: "overrun"; clue: Cell; n: number } // white here would exceed the clue
+  | { kind: "reach"; clue: Cell; n: number } // clue can only reach its count this way
+  | { kind: "connect" }; // black here would disconnect the white region
+
+export interface HintMove {
+  r: number;
+  c: number;
+  value: number;
+  reason: HintReason;
+  /** The solver's working grid at the moment this move fired (this move
+   * and every prior deduction applied) — the board state the hint's area
+   * highlight is computed against, so the shaded run reflects what the
+   * player sees as they follow the plan. */
+  grid: Int8Array;
+}
+
+// --- the board as the description reads it -----------------------------------
+
+/** The last board size's space, which every move's `status` reads again. */
+let lastSpace: GridSpace | null = null;
+function spaceOf(w: number, h: number): GridSpace {
+  if (lastSpace?.w !== w || lastSpace.h !== h)
+    lastSpace = describedSpace(range.units, w, h);
+  return lastSpace;
+}
+
+/** The board as the description deals it: the numbers. */
+function dealtOf(grid: Int8Array): range.Dealt {
+  const at: number[] = [];
+  const v: number[] = [];
+  grid.forEach((n, c) => {
+    if (n > 0) {
+      at.push(c);
+      v.push(n);
+    }
+  });
+  return { number: clueList(at, v, grid.length) };
+}
+
+/** The value the description reads in each square of a grid: a numbered
+ * square is clear, and an undecided one holds none. */
+function valuesOf(grid: Int8Array): Uint8Array {
+  return Uint8Array.from(grid, (v) =>
+    v > 0 || v === WHITE ? CLEAR : v === BLACK ? SHADED : 0,
+  );
+}
+
+/** Write what the marks decided into a grid's undecided squares. */
+function writeBack(grid: Int8Array, values: Uint8Array | Int8Array): void {
+  for (let c = 0; c < grid.length; c++)
+    if (grid[c] === EMPTY && values[c] !== 0)
+      grid[c] = values[c] === SHADED ? BLACK : WHITE;
+}
+
+const at = (sp: GridSpace, c: number): Cell => ({ r: (c / sp.w) | 0, c: c % sp.w });
+
+/** The ladder over the dealt board, each technique with its reason: built
+ * from the binding, on the marks before the firing. */
+function rangeLadder(dl: range.Dealt): Ladder {
+  return describedLadder(range, {
+    besideShaded: uncluedRung(range.besideShaded, ({ c }, _p, _to, m) => ({
+      kind: "adjacency",
+      from: at(m.sp, c),
+    })),
+    capped: compiledRung(range.capped, dl, ({ k, n, W }, _p, _to, m) => ({
+      kind: W === n ? "satisfied" : "overrun",
+      clue: at(m.sp, k),
+      n,
+    })),
+    reach: compiledRung(range.reach, dl, ({ k, n }, _p, _to, m) => ({
+      kind: "reach",
+      clue: at(m.sp, k),
+      n,
+    })),
+    cut: uncluedRung(range.cut, () => ({ kind: "connect" })),
+  });
+}
+
+/** The marks over a grid and the ladder over its numbers, or `null` where
+ * the grid holds a value a square cannot. */
+function deduction(
+  grid: Int8Array,
+  w: number,
+  h: number,
+): { m: CellMarks; ladder: Ladder; dl: range.Dealt } | null {
+  const sp = spaceOf(w, h);
+  const dl = dealtOf(grid);
+  const m = new CellMarks(sp, (1 << SHADED) | (1 << CLEAR), valuesOf(grid));
+  if (!m.seed(m.grid, (c) => range.domainOf(sp, dl, c))) return null;
+  return { m, ladder: rangeLadder(dl), dl };
+}
+
+/** Run the ladder on `m` to a fixpoint and say what it reached. */
+function deduce(m: CellMarks, ladder: Ladder, dl: range.Dealt): Deduced {
+  const techniques = ladderTechniques(m, ladder.entries, { [TIERS]: 0 }, {});
+  if (runLadder(m, techniques)) return "contradiction";
+  if (m.grid.includes(0)) return "stuck";
+  return range.isAnswer(m.grid, m.sp, dl) ? "solved" : "contradiction";
+}
+
+/** Run the ladder on `grid` in place, filling what it decides; returns the
+ * number of cells it filled. */
+export function applyRules(grid: Int8Array, w: number, h: number): number {
+  const d = deduction(grid, w, h);
+  if (d === null) return 0;
+  deduce(d.m, d.ladder, d.dl);
+  const before = grid.filter((v) => v === EMPTY).length;
+  writeBack(grid, d.m.grid);
+  return before - grid.filter((v) => v === EMPTY).length;
+}
+
+/** Whether the ladder alone decides every cell of a clue grid and breaks no
+ * rule doing it: the test `stripClues` keeps a clue's removal by, and the
+ * walk a hint plan narrates. */
+export function deductionFinishes(grid: Int8Array, w: number, h: number): boolean {
+  const d = deduction(grid, w, h);
+  return d !== null && deduce(d.m, d.ladder, d.dl) === "solved";
+}
+
+/** Whether a grid is solved: it breaks no rule, an undecided cell counting
+ * as clear. */
+export function isSolved(grid: Int8Array, w: number, h: number): boolean {
+  const g = Uint8Array.from(grid, (v) => (v === BLACK ? SHADED : CLEAR));
+  return range.isAnswer(g, spaceOf(w, h), dealtOf(grid));
+}
+
+// --- the hint's walk ---------------------------------------------------------
+
+/** The cells a firing's premise reads, besides those it decides: its number
+ * or the shaded square beside it. */
+function readsOf(reason: HintReason): Cell[] {
+  if ("clue" in reason) return [reason.clue];
+  if ("from" in reason) return [reason.from];
+  return [];
+}
+
+/**
+ * The ladder's firings from `grid` (the player's current marks), every
+ * forced cell recorded in order with the reason that forces it — the data a
+ * hint plan narrates — each with the grid as it stands once that cell is
+ * made.
+ *
+ * One firing at a time, each the one that carries on from the cells the plan
+ * has just decided (`ladderWalk`), so a plan finishes the clue it is working
+ * on before it moves on.
+ */
+export function deduceHintPlan(grid: Int8Array, w: number, h: number): HintMove[] {
+  const d = deduction(grid, w, h);
+  if (d === null) return [];
+  const { m, ladder } = d;
+  m.budget = stepBudget("range hint");
+  const walk = ladderWalk(
+    m,
+    ladder.entries,
+    { [TIERS]: 0 },
+    ({ facts, reasons }: Taken) => [
+      ...facts.filter((_, i) => i % 3 === 1),
+      ...(reasons as HintReason[]).flatMap(readsOf).map((p) => idx(p.r, p.c, w)),
+    ],
+  );
+  const plan: HintMove[] = [];
+  const now = grid.slice();
+  for (;;) {
+    const taken = walk.next();
+    if (taken === null || taken === "contradiction") break;
+    const { facts, reasons } = taken;
+    for (let i = 0; i < facts.length; i += 3) {
+      const cell = facts[i + 1];
+      const value = facts[i + 2] === SHADED ? BLACK : WHITE;
+      now[cell] = value;
+      plan.push({
+        ...at(m.sp, cell),
+        value,
+        reason: reasons[i / 3] as HintReason,
+        grid: now.slice(),
+      });
+    }
+  }
+  return plan;
+}
+
+// --- the live error overlay --------------------------------------------------
 
 // Cell-state bit masks: BLACK/WHITE/EMPTY (−2/−1/0) map to bits 0/1/2
 // via `1 << (v + 2)`. `HIGH` is every bit above bit 2 — a clue cell
@@ -90,348 +306,6 @@ function runLength(
   return sz;
 }
 
-/** Set an EMPTY in-bounds cell; returns true iff it actually changed
- * (upstream `solver_makemove` skips non-EMPTY cells silently). */
-function makeMove(
-  grid: Int8Array,
-  w: number,
-  h: number,
-  r: number,
-  c: number,
-  value: number,
-): boolean {
-  if (outOfBounds(r, c, w, h)) return false;
-  const cell = idx(r, c, w);
-  if (grid[cell] !== EMPTY) return false;
-  grid[cell] = value;
-  return true;
-}
-
-/** Why a cell is forced — the premise the hint narrates and highlights. */
-export type HintReason =
-  | { kind: "adjacency"; from: Cell } // a neighbor of this black must be white
-  | { kind: "satisfied"; clue: Cell; n: number } // clue's run is full → cap it black
-  | { kind: "overrun"; clue: Cell; n: number } // white here would exceed the clue
-  | { kind: "reach"; clue: Cell; n: number } // clue can only reach its count this way
-  | { kind: "connect" }; // black here would disconnect the white region
-
-export interface HintMove {
-  r: number;
-  c: number;
-  value: number;
-  reason: HintReason;
-  /** The solver's working grid at the moment this move fired (this move
-   * and every prior deduction applied) — the board state the hint's area
-   * highlight is computed against, so the shaded run reflects what the
-   * player sees as they follow the plan. */
-  grid: Int8Array;
-}
-
-/** Invoked at each forced cell when the deduction is run for a hint, once the
- * cell is written. */
-type Recorder = (r: number, c: number, value: number, reason: HintReason) => void;
-
-export function findClues(grid: Int8Array, w: number, h: number): Cell[] {
-  const clues: Cell[] = [];
-  for (let r = 0; r < h; r++) {
-    for (let c = 0; c < w; c++) {
-      if (grid[idx(r, c, w)] > 0) clues.push({ r, c });
-    }
-  }
-  return clues;
-}
-
-// --- the three deductive rules ---------------------------------------------
-
-/** A cell orthogonally adjacent to a black cell must be white. */
-function ruleAdjacency(grid: Int8Array, w: number, h: number, rec?: Recorder): number {
-  let made = 0;
-  for (let r = 0; r < h; r++) {
-    for (let c = 0; c < w; c++) {
-      if (grid[idx(r, c, w)] !== BLACK) continue;
-      for (let j = 0; j < 4; j++) {
-        const rr = r + DR[j];
-        const cc = c + DC[j];
-        if (makeMove(grid, w, h, rr, cc, WHITE)) {
-          made++;
-          rec?.(rr, cc, WHITE, { kind: "adjacency", from: { r, c } });
-        }
-      }
-    }
-  }
-  return made;
-}
-
-/** Whether a clue's run can end just before this cell: it is off the board,
- * shaded or undecided. A run that reaches a cell known to be white goes on
- * through it. */
-function canEndBefore(
-  grid: Int8Array,
-  w: number,
-  h: number,
-  r: number,
-  c: number,
-): boolean {
-  if (outOfBounds(r, c, w, h)) return true;
-  const v = grid[idx(r, c, w)];
-  return v === EMPTY || v === BLACK;
-}
-
-/**
- * A clue's run-length arithmetic. In each direction the clue's run is at
- * least the white cells it already sees and at most the furthest place it
- * can end with the other three no longer than they already are. Where the
- * most is what it sees, the next cell is shaded; and the cells the run needs
- * with the other three at their most are white.
- *
- * Upstream's `solver_reasoning_not_too_big` bounds the most by the first gap
- * alone: a run cannot fill it where that joins the white cells beyond and
- * passes the clue. A white cell marked inside a gap that long leaves a first
- * gap that fits, and the bound goes: the rule concluded less from a board
- * that says more. This bound is never above upstream's, so every board
- * upstream's rules finish these do, and it only falls as cells are decided,
- * which is what lets a hint carry on from an entry the player made first.
- */
-function ruleNotTooBig(
-  grid: Int8Array,
-  w: number,
-  h: number,
-  clues: Cell[],
-  rec?: Recorder,
-): number {
-  let made = 0;
-  const least = [0, 0, 0, 0];
-  const most = [0, 0, 0, 0];
-
-  for (const clueCell of clues) {
-    const { r: row, c: col } = clueCell;
-    const clue = grid[idx(row, col, w)];
-
-    let whites = 1;
-    for (let j = 0; j < 4; j++) {
-      least[j] = runLength(
-        grid,
-        w,
-        h,
-        row + DR[j],
-        col + DC[j],
-        DR[j],
-        DC[j],
-        MASK_KNOWN_WHITE,
-      );
-      whites += least[j];
-    }
-
-    let space = 1;
-    for (let j = 0; j < 4; j++) {
-      const room = clue - whites + least[j];
-      let far = least[j];
-      let r = row + (far + 1) * DR[j];
-      let c = col + (far + 1) * DC[j];
-      for (
-        let length = far + 1;
-        length <= room && !outOfBounds(r, c, w, h) && grid[idx(r, c, w)] !== BLACK;
-        length++
-      ) {
-        r += DR[j];
-        c += DC[j];
-        if (canEndBefore(grid, w, h, r, c)) far = length;
-      }
-      most[j] = far;
-      space += far;
-    }
-
-    for (let j = 0; j < 4; j++) {
-      if (most[j] !== least[j]) continue;
-      const r = row + (least[j] + 1) * DR[j];
-      const c = col + (least[j] + 1) * DC[j];
-      if (makeMove(grid, w, h, r, c, BLACK)) {
-        made++;
-        rec?.(r, c, BLACK, {
-          kind: whites === clue ? "satisfied" : "overrun",
-          clue: clueCell,
-          n: clue,
-        });
-      }
-    }
-
-    for (let j = 0; j < 4; j++) {
-      const needed = clue - space + most[j];
-      let r = row + DR[j];
-      let c = col + DC[j];
-      for (let k = 0; k < needed; k++, r += DR[j], c += DC[j]) {
-        if (makeMove(grid, w, h, r, c, WHITE)) {
-          made++;
-          rec?.(r, c, WHITE, { kind: "reach", clue: clueCell, n: clue });
-        }
-      }
-    }
-  }
-  return made;
-}
-
-const NOT_VISITED = -1;
-
-/** A square whose painting black would disconnect the white region (a
- * cut vertex of the white graph) must be white. DFS lowpoint
- * articulation-point detection, as upstream's
- * `solver_reasoning_connectedness` / `dfs_biconnect_visit`.
- *
- * Alone it can conclude less from a board that says more: shading the square
- * a cut vertex cut off leaves it no cut vertex. {@link ruleAdjacency} then
- * clears that same square, so the rules together lose nothing.
- *
- * The walk keeps its own stack. It goes as deep as the clear squares are
- * many, and a call a square overflows the engine's stack on a board of a few
- * thousand. */
-function ruleConnectedness(
-  grid: Int8Array,
-  w: number,
-  h: number,
-  rec?: Recorder,
-): number {
-  const n = w * h;
-  let start = 0;
-  while (start < n && grid[start] === BLACK) start++;
-  if (start >= n) return 0; // no white cells at all
-
-  let made = 0;
-  const cutVertex = (cell: number): void => {
-    const r = Math.floor(cell / w);
-    const c = cell % w;
-    if (makeMove(grid, w, h, r, c, WHITE)) {
-      made++;
-      rec?.(r, c, WHITE, { kind: "connect" });
-    }
-  };
-
-  const depth = new Int32Array(n).fill(NOT_VISITED);
-  const low = new Int32Array(n);
-  // The direction each square tries next, and the path from `start` to the
-  // square being visited: `path[d]` is at depth `d`, and its parent is the
-  // entry before it.
-  const tried = new Uint8Array(n);
-  const path = new Int32Array(n);
-  let top = 0;
-  let startChildren = 0;
-  path[0] = start;
-  depth[start] = 0;
-
-  while (top >= 0) {
-    const ci = path[top];
-    if (tried[ci] < 4) {
-      const j = tried[ci]++;
-      const rr = Math.floor(ci / w) + DR[j];
-      const cc = (ci % w) + DC[j];
-      if (outOfBounds(rr, cc, w, h)) continue;
-      const cell = idx(rr, cc, w);
-      if (grid[cell] === BLACK) continue;
-
-      if (depth[cell] === NOT_VISITED) {
-        top++;
-        path[top] = cell;
-        depth[cell] = top;
-        low[cell] = top;
-      } else if (top > 0 && cell !== path[top - 1]) {
-        low[ci] = Math.min(low[ci], depth[cell]);
-      }
-      continue;
-    }
-
-    // Every direction tried: back to the parent, which is a cut vertex when
-    // nothing under this square reaches above it.
-    top--;
-    if (top < 0) break;
-    const parent = path[top];
-    if (top === 0) startChildren++;
-    else if (low[ci] >= top) cutVertex(parent);
-    low[parent] = Math.min(low[parent], low[ci]);
-  }
-
-  // The start has nothing above it to reach: it is a cut vertex when the
-  // walk left it twice.
-  if (startChildren >= 2) cutVertex(start);
-  return made;
-}
-
-/** Run the three deductive rules to a fixpoint; returns the number of
- * cells newly filled. No guessing — this is the "without recursion"
- * solver the generator's uniqueness check uses. */
-export function applyRules(
-  grid: Int8Array,
-  w: number,
-  h: number,
-  clues: Cell[],
-): number {
-  let total = 0;
-  for (;;) {
-    const made =
-      ruleNotTooBig(grid, w, h, clues) +
-      ruleAdjacency(grid, w, h) +
-      ruleConnectedness(grid, w, h);
-    if (made === 0) break;
-    total += made;
-  }
-  return total;
-}
-
-/**
- * Run the deductive solver from `grid` (the player's current marks),
- * recording every forced cell in deduction order with the reason that
- * forces it — the data a hint plan narrates. Operates on a clone.
- *
- * One cell at a time, each the one beside the plan's last where there is
- * one, so a plan finishes the clue it is working on before it moves on.
- */
-export function deduceHintPlan(grid: Int8Array, w: number, h: number): HintMove[] {
-  const dup = grid.slice();
-  const clues = findClues(dup, w, h);
-  const plan: HintMove[] = [];
-  let moves: HintMove[] = [];
-  const offers = new SweepOffers<{ grid: Int8Array; moves: HintMove[] }, HintMove[]>({
-    save: () => ({ grid: dup.slice(), moves: [...moves] }),
-    restore: (s) => {
-      dup.set(s.grid);
-      moves = [...s.moves];
-    },
-    recorded: () => [...moves],
-    record: (m) => {
-      moves = [...m];
-    },
-    // The cell, and the clue or the black square that forces it.
-    reads: (m) =>
-      m.flatMap(({ r, c, reason }) => [
-        r * w + c,
-        ...("clue" in reason ? [reason.clue.r * w + reason.clue.c] : []),
-        ...("from" in reason ? [reason.from.r * w + reason.from.c] : []),
-      ]),
-    writes: (_before, _after, m) => m.map(({ r, c }) => r * w + c),
-  });
-  // Each cell is a firing of its own: the plan takes every firing through
-  // its offers, so a rule never runs on past the one.
-  const rec: Recorder = (r, c, value, reason) => {
-    moves.push({ r, c, value, reason, grid: dup.slice() });
-    offers.keep();
-  };
-  const pass = singleFirings({
-    techniques: offers.techniques([
-      { id: "not-too-big", tier: 0, run: () => ruleNotTooBig(dup, w, h, clues, rec) },
-      { id: "adjacency", tier: 0, run: () => ruleAdjacency(dup, w, h, rec) },
-      { id: "connectedness", tier: 0, run: () => ruleConnectedness(dup, w, h, rec) },
-    ]),
-    budget: stepBudget("range hint"),
-    continuing: true,
-  });
-  for (;;) {
-    moves = [];
-    if (!pass.next()) break;
-    plan.push(...moves);
-  }
-  return plan;
-}
-
-// --- error checking (solved-detection + live highlight) --------------------
-
 /** How many cells a clue at (r, c) sees: itself plus, in each direction, the
  * run matching `mask`. */
 function seenFrom(
@@ -449,17 +323,20 @@ function seenFrom(
   return seen;
 }
 
-/** True iff the grid violates a rule; when `report` is supplied it is
- * filled per-cell instead (and the return value is meaningless).
- * Port of `find_errors`. */
+/**
+ * Flag in `report` each cell of a board still being filled that breaks a
+ * rule: a shaded square beside another, a clue that falls short even with
+ * every undecided cell clear or already sees too many with only the known
+ * clear ones, and the clear cells outside the largest group of them. Port of
+ * `find_errors`.
+ */
 export function findErrors(
   grid: Int8Array,
   w: number,
   h: number,
-  report?: boolean[],
-): boolean {
+  report: boolean[],
+): void {
   const n = w * h;
-  // All white (non-black) cells must form one connected component.
   const dsf = new Dsf(n);
   let nblack = 0;
   let anyWhite = -1;
@@ -475,58 +352,39 @@ export function findErrors(
           const cc = c + DC[j];
           if (outOfBounds(rr, cc, w, h)) continue;
           if (grid[idx(rr, cc, w)] !== BLACK) continue;
-          if (!report) return true;
           report[i] = true;
           break;
         }
         continue;
       }
-      if (v > 0) {
-        // Solved means the clue sees exactly its count. As a live highlight, it
-        // is wrong if it falls short even with every undecided cell white, or
-        // already sees too many with only the known whites.
-        const seen = seenFrom(grid, w, h, r, c, ~MASK_BLACK);
-        if (!report) {
-          if (seen !== v) return true;
-        } else if (seen < v || seenFrom(grid, w, h, r, c, MASK_KNOWN_WHITE) > v) {
-          report[i] = true;
-        }
-      }
+      if (
+        v > 0 &&
+        (seenFrom(grid, w, h, r, c, ~MASK_BLACK) < v ||
+          seenFrom(grid, w, h, r, c, MASK_KNOWN_WHITE) > v)
+      )
+        report[i] = true;
       anyWhite = i;
       if (r + 1 < h && grid[i + w] !== BLACK) dsf.merge(i, i + w);
       if (c + 1 < w && grid[i + 1] !== BLACK) dsf.merge(i, i + 1);
     }
   }
 
-  if (anyWhite !== -1 && nblack + dsf.size(anyWhite) < n) {
-    if (!report) return true;
-    // Pick the largest component as canonical; flag every cell outside it.
-    let canonical = -1;
-    let biggest = 0;
-    for (let i = 0; i < n; i++) {
-      if (grid[i] !== BLACK) {
-        const size = dsf.size(i);
-        if (size > biggest) {
-          biggest = size;
-          canonical = dsf.canonify(i);
-        }
+  if (anyWhite === -1 || nblack + dsf.size(anyWhite) >= n) return;
+  // Pick the largest component as canonical; flag every cell outside it.
+  let canonical = -1;
+  let biggest = 0;
+  for (let i = 0; i < n; i++) {
+    if (grid[i] !== BLACK) {
+      const size = dsf.size(i);
+      if (size > biggest) {
+        biggest = size;
+        canonical = dsf.canonify(i);
       }
     }
-    for (let i = 0; i < n; i++) {
-      if (grid[i] !== BLACK && dsf.canonify(i) !== canonical) report[i] = true;
-    }
   }
-
-  return false;
-}
-
-/** Whether the three deductive rules alone decide every cell of a clue grid
- * and break no rule doing it: the test `stripClues` keeps a clue's removal by,
- * and the walk a hint plan narrates. */
-export function deductionFinishes(grid: Int8Array, w: number, h: number): boolean {
-  const dup = grid.slice();
-  applyRules(dup, w, h, findClues(dup, w, h));
-  return !dup.includes(EMPTY) && !findErrors(dup, w, h);
+  for (let i = 0; i < n; i++) {
+    if (grid[i] !== BLACK && dsf.canonify(i) !== canonical) report[i] = true;
+  }
 }
 
 // --- the answer (Solve command + findMistakes + the Unreasonable tier) -----
@@ -542,14 +400,10 @@ export type RangeAnswer = Answer<Int8Array>;
 const SEARCH_BUDGET = 2_000;
 
 /**
- * Count a clue grid's answers up to two, by trial and error over the three
- * rules: where they stop, take the first undecided cell and assume it
- * shaded, and then clear.
- *
- * The rules only ever fill a cell, so a position that no answer fits is
- * found by the checker: a clue that cannot see its count however the
- * undecided cells go, or already sees too many, two shaded cells side by
- * side, or clear cells cut off from the rest.
+ * Count a clue grid's answers up to two, by trial and error over the ladder:
+ * where it stops, take the first undecided cell and assume it shaded, and
+ * then clear. A position no answer fits is one a technique finds
+ * inconsistent, or a full one the answer check refuses.
  */
 export function searchAnswers(
   clueGrid: Int8Array,
@@ -557,27 +411,27 @@ export function searchAnswers(
   h: number,
   budget: number = SEARCH_BUDGET,
 ): RangeAnswer {
-  const clues = findClues(clueGrid, w, h);
-  const wrong: boolean[] = new Array(w * h);
-  return searchBoard<Int8Array, Int8Array>({
-    start: clueGrid.slice(),
-    deduce(position) {
-      applyRules(position, w, h, clues);
-      wrong.fill(false);
-      findErrors(position, w, h, wrong);
-      if (wrong.includes(true)) return "contradiction";
-      return position.includes(EMPTY) ? "stuck" : "solved";
-    },
-    assume(position) {
-      const cell = position.indexOf(EMPTY);
+  const d = deduction(clueGrid, w, h);
+  if (d === null) return { kind: "none" };
+  const { ladder, dl } = d;
+  return searchBoard<CellMarks, Int8Array>({
+    start: d.m,
+    deduce: (m) => deduce(m, ladder, dl),
+    assume(m) {
+      const cell = m.grid.indexOf(0);
       if (cell < 0) return [];
-      return [BLACK, WHITE].map((value) => {
-        const assumed = position.slice();
-        assumed[cell] = value;
-        return assumed;
+      return [SHADED, CLEAR].map((value) => {
+        const sub = new CellMarks(m.sp, m.domain, m.grid.slice());
+        sub.cands.set(m.cands);
+        sub.place(cell, value);
+        return sub;
       });
     },
-    solution: (position) => position,
+    solution: (m) => {
+      const solved = clueGrid.slice();
+      writeBack(solved, m.grid);
+      return solved;
+    },
     budget,
   });
 }
@@ -680,11 +534,10 @@ function computeClues(grid: Int8Array, w: number, h: number): void {
   }
 }
 
-/** Count the cells the no-recursion solver determines on a copy of the
- * grid. Equal to the number of EMPTY cells iff the board is solvable. */
+/** Count the cells the ladder determines on a copy of the grid. Equal to the
+ * number of EMPTY cells iff the board is solvable. */
 function solvableFillCount(grid: Int8Array, w: number, h: number): number {
-  const dup = grid.slice();
-  return applyRules(dup, w, h, findClues(dup, w, h));
+  return applyRules(grid.slice(), w, h);
 }
 
 /** Blank clues — those rotationally symmetric to a black square, then
@@ -777,8 +630,8 @@ function stripFurther(grid: Int8Array, order: number[], one: () => boolean): voi
 }
 
 /** Generate a rotationally-symmetric board with one answer; returns the clue
- * grid (clue cells > 0, every other cell EMPTY). At Easy the three rules
- * finish it, which is upstream's board, and at Unreasonable they do not. */
+ * grid (clue cells > 0, every other cell EMPTY). At Easy the ladder
+ * finishes it, and at Unreasonable it does not. */
 export function generateGrid(p: RangeParams, rng: RandomState): Int8Array {
   const { w, h } = p;
   const grid = new Int8Array(w * h);

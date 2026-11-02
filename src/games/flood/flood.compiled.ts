@@ -74,8 +74,8 @@ export function claims(sp: GridSpace, cl: Dealt, _variations: readonly string[])
       }
       let _g26 = 0;
       G27: {
-        for (let _m28 = rangeMask(0, (cl.colors - 1)); _m28 !== 0; _m28 &= _m28 - 1) {
-          const v_k = 31 - Math.clz32(_m28 & -_m28);
+        const _t28 = (cl.colors - 1);
+        for (let v_k = 0; v_k <= _t28; v_k++) {
           let _q29 = false;
           Q30: {
             const _a31 = sp.cells;
@@ -112,8 +112,8 @@ export function claimWitnesses(_sp: GridSpace, _cl: Dealt, _variations: readonly
  * has on. */
 export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): PositionRules<Position, Move, DeadEndId> {
   function fillMoves(p: Position, into: Move[]): void {
-    for (let _m2 = rangeMask(0, (cl.colors - 1)); _m2 !== 0; _m2 &= _m2 - 1) {
-      const v_k = 31 - Math.clz32(_m2 & -_m2);
+    const _t2 = (cl.colors - 1);
+    for (let v_k = 0; v_k <= _t2; v_k++) {
       if (!((v_k !== p.color[(0 * sp.w + 0)]))) continue;
       let _q3 = true;
       Q4: {
