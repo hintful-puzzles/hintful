@@ -45,9 +45,10 @@ itself is § "The file". A game whose techniques are stated:
    whose techniques the engine pairs: a technique of its own the
    description adds and the game does not pair is a type error. It pairs
    through `compiledRung`, or `uncluedRung` for a technique that reads
-   nothing the board deals, and `placingRung` for one run on placing
-   ([`seismic/solver.ts`](../src/games/seismic/solver.ts)); § "A firing's
-   reason is built from its binding".
+   nothing the board deals, `placingRung` for one run on placing
+   ([`seismic/solver.ts`](../src/games/seismic/solver.ts)), and
+   `strikingRung` for one run on striking; § "A firing's reason is built
+   from its binding".
 5. **Deals its board as the description reads it**, the compiled module's
    `Dealt`: one `ClueList` a kind, in the order the techniques should meet
    them; one `Partition` a dealt partition; and each size a technique reads
@@ -237,7 +238,16 @@ its keep-apart rule). It may place as well as strike: Light Up's `shine`
 places no bulb in every square a bulb lights, so a lit square and a crossed
 one read alike, and a board whose every square is placed is one the answer
 check can judge. Its false conclusion is not a contradiction, so a rung
-holds the rule it relies on (Light Up's `square`, a bulb lit by another). A game's may say `until: <tier>`, a tier above its own: the ladder
+holds the rule it relies on (Light Up's `square`, a bulb lit by another).
+`"on": "strike"` is the same as a fact strikes a value from a cell, bound
+to that cell, and it only strikes: Magnets' `tile` strikes from a tile's
+other end the opposite of each value its first end has lost, so a strike's
+consequence is part of the firing that made it, and a hint never shows it
+as a step of its own. A placement narrows its cell without running it,
+since what a placed value rules out is the placing techniques' to follow.
+A mark a player makes that is only a state of the candidates needs no
+construct: Magnets' `?`, a tile that is a magnet either way round, is
+neutral struck from both ends. A game's may say `until: <tier>`, a tier above its own: the ladder
 runs it only at a cap below that tier, for a weaker reading a higher
 technique strikes all of, which a grade at a higher cap should not rest on
 (Keen's `cageEasy`, as upstream omits it above Easy). `from: <tier>` is the
@@ -267,7 +277,10 @@ have is refused at compile time.
 so its reasons read the marks the firing read. A solve passes `null` and
 makes each fact as it concludes it, through every binding. That reaches the
 same fixpoint, because a fact concluded on marks a firing has narrowed still
-holds.
+holds. So a hand-written sweep that placed in turn, each placement read by
+the next, is two firings on a hint's walk: Magnets' upstream placed a tile
+that an earlier tile's pole had just forced in the same sweep, and its
+compiled `onlyEnd` leaves that tile to the next firing.
 
 **So a name bound before a loop holds the marks of that moment.** On the
 solve path the bindings inside the loop make facts as they go, so a name
@@ -324,7 +337,9 @@ speed) and of each `*-describe-<game>` change.
 [`engine/ladder-runtime.ts`](../src/engine/ladder-runtime.ts) owns the marks
 (`CellMarks`: a value and a candidate mask a cell), makes a firing's facts,
 runs the module's `placing` techniques as each value is placed (recording
-their strikes as the placement's cull), and runs the ladder: one technique
+their strikes as the placement's cull) and its `striking` techniques as a
+fact strikes a value (`CellMarks.striking`, set beside `placing`), and runs
+the ladder: one technique
 an entry, in the module's order, capped per scale. A game's solver extends
 `CellMarks` only to keep what no description states, a Search (`LatinSolver`
 and Solo's forcing chains and recursion); a game whose solve is its ladder
@@ -496,8 +511,8 @@ the rules. What a small board cannot cover:
 - **A set the marks decide keeps its order**: `stretch` holds each cell of
   its line under the guard that every cell between it and `c` is in `S`, and
   `index(x, S)` counts the members before `x` under theirs.
-- **A clue per value** is dealt at every element for every value of the
-  world's domain, each present or not.
+- **A clue per value** is dealt at every element for every value some
+  cell's domain holds, each present or not.
 - **A `with` is read as its supposition**: each read of the marks in it
   sees the supposed cell holding the value, under the guard that it is that
   cell. Ignoring it would make every `with` premise false and every

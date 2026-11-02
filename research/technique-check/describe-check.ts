@@ -1583,13 +1583,11 @@ function dealSymbolically(d: Description, board: Board): void {
       // present or not, its value within its range.
       if (c.value.k !== "call" || c.value.fn !== "range")
         throw new Error(`clue ${kind}: a clue per value is checked with a range`);
-      const dom = evaluate(d.domain, new Map(), ctx);
-      if (dom.k !== "vset")
-        throw new TypeError("the answer's domain is not a set of values");
+      const dom = domainOfAny(d, ctx);
       for (let e = 0; e < places; e++) {
         const here = new Map([["at", elem(placeSort(board, c.at), e)]]);
         const [lo, hi] = c.value.args.map((a) => num(evaluate(a, here, ctx), "range"));
-        dom.mem.forEach((g, n) => {
+        dom.forEach((g, n) => {
           if (g === false) return;
           const v = Z3.Int.const(`clue_${kind}_${e}_${n}_v_${boardCount}`);
           const present = Z3.Bool.const(`clue_${kind}_${e}_${n}_${boardCount}`);
@@ -1652,17 +1650,31 @@ function dealSymbolically(d: Description, board: Board): void {
   }
 }
 
+/** The answer's domain at cell `c`. A domain may be the cell's own
+ * (Seismic's, its area's numbers), unless the board is measured in a `c`
+ * (Solo's). */
+function domainAt(d: Description, ctx: Ctx, c: number): Bx[] {
+  const at = "c" in d.json.sizes ? new Map() : new Map([["c", elem("cell", c)]]);
+  const dom = evaluate(d.domain, at, ctx);
+  if (dom.k !== "vset")
+    throw new TypeError("the answer's domain is not a set of values");
+  return [...dom.mem];
+}
+
+/** The values some cell's domain holds: what a clue per value is dealt at. */
+function domainOfAny(d: Description, ctx: Ctx): Bx[] {
+  const each = ctx.board.ans.map((_, c) => domainAt(d, ctx, c));
+  return Array.from({ length: ctx.board.top + 1 }, (_, n) =>
+    or(...each.map((mem) => mem[n] ?? false)),
+  );
+}
+
 /** The rules, the answer's domain, and marks consistent with the answer. */
 function worldOf(d: Description, board: Board): Bx[] {
   const ctx: Ctx = { board, d, mode: "rule", concluding: false, supposed: [] };
   const out: Bx[] = [...board.clueDomain];
   board.ans.forEach((a, c) => {
-    // A domain may be the cell's own (Seismic's, its area's numbers), unless
-    // the board is measured in a `c` (Solo's).
-    const at = "c" in d.json.sizes ? new Map() : new Map([["c", elem("cell", c)]]);
-    const dom = evaluate(d.domain, at, ctx);
-    if (dom.k !== "vset")
-      throw new TypeError("the answer's domain is not a set of values");
+    const dom = { mem: domainAt(d, ctx, c) };
     out.push(or(...dom.mem.map((g, n) => and(g, a.eq(n)))));
     // A mark is of a value of the domain, which may be fewer than the order.
     board.cand[c].forEach((g, n) => {

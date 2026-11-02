@@ -2517,9 +2517,14 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   const fnName = t.id.includes(".") ? t.id.slice(t.id.indexOf(".") + 1) : t.id;
   const bindingType = `${capitalized(fnName)}Binding`;
   const readsClues = { yes: false };
-  const onPlace = t.on === "place";
+  const onPlace = t.on !== null;
+  // A strike runs no placing technique, so a rung's reads of `value` and
+  // `known` hold across one (`hoist` below).
+  if (t.on === "strike" && places(t.conclude, env))
+    throw new CompileError(`${t.id}: a technique run on striking only strikes`);
   // A rung reads a cell's candidates many times a scan, so it keeps them;
-  // a technique run on placing reads few, on every placement, and does not.
+  // a technique run on placing or striking reads few, each time, and does
+  // not.
   const scratch: string[] = [];
   const epoch = { used: false };
   const readsCands = { yes: false };
@@ -2544,9 +2549,11 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   // a `value` or `known` read before it; a strike changes neither.
   tenv.hoist = { root: body.slot(0), loops: 0, marks: !places(t.conclude, env) };
   // The facts and the kept candidates live in one buffer each a function,
-  // emptied each call: a technique never runs inside its own call (a firing
-  // that places runs only the technique run on placing), and `fire` reads the
-  // facts before it returns. The candidates are kept only by a technique that
+  // emptied each call: a rung never runs inside its own call (a firing runs
+  // only the techniques run on placing and striking), `fire` reads the facts
+  // before it returns, and one run on striking, which a strike of its own
+  // runs again, has its facts copied before they are made
+  // (`strikingRung`). The candidates are kept only by a technique that
   // reads them, which is known once its body is compiled.
   const buffer = `${fnName}Cands`;
   const keep = body.slot(0);
@@ -2582,7 +2589,7 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
     const [first, ...rest] = t.binders;
     if (first === undefined || first.kind !== "in")
       throw new CompileError(
-        `${t.id}: a technique run on placing binds the placed cell first`,
+        `${t.id}: a technique run on ${t.on === "strike" ? "striking binds the struck" : "placing binds the placed"} cell first`,
       );
     const of = compileExpr(first.of, new Map(), { ...tenv, hoist: null }, new Out(0));
     if (!(of.sort.k === "set" && of.sort.of.k === "elem" && of.sort.of.e === "cell"))
@@ -2923,6 +2930,7 @@ export function compileGame(
         ];
   const ids = d.techniques.filter((t) => t.on === null).map((t) => t.id);
   const placing = d.techniques.filter((t) => t.on === "place").map((t) => t.id);
+  const striking = d.techniques.filter((t) => t.on === "strike").map((t) => t.id);
   // A technique a variation adds runs only on a board the variation is on.
   const addedBy = new Map<string, string>();
   for (const [name, v] of Object.entries(json.variations ?? {}))
@@ -2930,6 +2938,14 @@ export function compileGame(
       addedBy.set("use" in t ? t.use : t.id, name);
   const quoted = (xs: readonly string[]): string =>
     xs.length === 0 ? "never" : xs.map((id) => JSON.stringify(id)).join(" | ");
+  const onCellEntry = (id: string): string => {
+    const by = addedBy.get(id);
+    const fields = [
+      `id: ${JSON.stringify(id)}`,
+      ...(by === undefined ? [] : [`variation: ${JSON.stringify(by)}`]),
+    ];
+    return `  { ${fields.join(", ")} },`;
+  };
   const ladder = [
     "/** The units no value repeats in, in the description's order: the",
     " * engine builds the space from them. */",
@@ -2944,14 +2960,17 @@ export function compileGame(
     "/** The techniques run as each value is placed, in the description's order,",
     " * each with the variation that adds it where one does. */",
     "export const placing: readonly { id: PlacingId; variation?: string }[] = [",
-    ...placing.map((id) => {
-      const by = addedBy.get(id);
-      const fields = [
-        `id: ${JSON.stringify(id)}`,
-        ...(by === undefined ? [] : [`variation: ${JSON.stringify(by)}`]),
-      ];
-      return `  { ${fields.join(", ")} },`;
-    }),
+    ...placing.map(onCellEntry),
+    "];",
+    "",
+    "/** Every technique run as a value is struck from a cell, by id. */",
+    `export type StrikingId = ${quoted(striking)};`,
+    "",
+    "/** The techniques run as a value is struck from a cell, in the",
+    " * description's order, each with the variation that adds it where one",
+    " * does. */",
+    "export const striking: readonly { id: StrikingId; variation?: string }[] = [",
+    ...striking.map(onCellEntry),
     "];",
     "",
     "/** The ladder: each technique's tier, on its scale where that is not the",

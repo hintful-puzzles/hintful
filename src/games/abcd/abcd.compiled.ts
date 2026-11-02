@@ -27,6 +27,15 @@ export const placing: readonly { id: PlacingId; variation?: string }[] = [
   { id: "placedDiagonal", variation: "no diagonal" },
 ];
 
+/** Every technique run as a value is struck from a cell, by id. */
+export type StrikingId = never;
+
+/** The techniques run as a value is struck from a cell, in the
+ * description's order, each with the variation that adds it where one
+ * does. */
+export const striking: readonly { id: StrikingId; variation?: string }[] = [
+];
+
 /** The ladder: each technique's tier, on its scale where that is not the
  * description's tiers, the least cap it runs at where that is above its
  * tier, the cap from which it no longer runs where it has one, and the

@@ -1,11 +1,7 @@
 /**
- * Magnets generator — faithful port of `new_game_desc` and its helpers
- * (`gen_game`, `lay_dominoes`, `check_difficulty`) in `magnets.c`. Byte-match
- * critical (docs/testing.md § "Byte-match: fidelity where there is a
- * right answer"): every RNG draw reproduces C in order — the `dominoLayout`
- * list/BFS shuffles, the `layDominoes` scratch shuffle (once per failed
- * attempt), and — only when `stripclues` — the clue-strip shuffle — and the
- * solver's verdict on each intermediate board must match C.
+ * Magnets generator — upstream's `new_game_desc` and its helpers (`gen_game`,
+ * `lay_dominoes`, `check_difficulty` in `magnets.c`), its RNG draws in
+ * upstream's order, graded by the compiled ladder (`solver.ts`).
  *
  * Strategy: lay a random domino tiling, fill it with a valid solution (a few
  * neutral dominoes first, then prefer magnets), derive the row/column counts,
@@ -17,14 +13,21 @@ import { dominoLayout } from "../../engine/laydomino.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { MagnetsSolver } from "./solver.ts";
+import {
+  cellValue,
+  dealtOf,
+  deduce,
+  givenValues,
+  magnetsLadder,
+  magnetsMarks,
+  magnetsSpace,
+  solveMagnets,
+  whichOf,
+} from "./solver.ts";
 import {
   COLUMN,
   DIFF_EASY,
   encodeDesc,
-  GS_NOTNEGATIVE,
-  GS_NOTPOSITIVE,
-  GS_SET,
   type MagnetsParams,
   NEGATIVE,
   NEUTRAL,
@@ -44,8 +47,12 @@ interface GenBoard {
   colcount: Int32Array;
 }
 
-/** Fill the domino tiling with a valid magnet/neutral solution, or return
- * null when this attempt reaches a contradiction. */
+/**
+ * Fill the domino tiling with a valid magnet/neutral solution, or return null
+ * when this attempt reaches a contradiction. Each square is laid in a
+ * shuffled order, and the ladder over a board with no numbers, which reads
+ * only the tiles and the poles, decides what it can before the next.
+ */
 function layDominoes(
   w: number,
   h: number,
@@ -53,37 +60,41 @@ function layDominoes(
   rs: RandomState,
 ): Int32Array | null {
   const wh = w * h;
-  const solver = new MagnetsSolver(w, h, {
+  const common = {
     dominoes,
-    rowcount: new Int32Array(3 * h),
-    colcount: new Int32Array(3 * w),
-  });
+    rowcount: new Int32Array(3 * h).fill(-1),
+    colcount: new Int32Array(3 * w).fill(-1),
+  };
+  const dl = dealtOf(w, h, common);
+  const ladder = magnetsLadder(dl);
+  const m = magnetsMarks(magnetsSpace(w, h), dl, ladder, givenValues(w, h, common));
+  if (m === null) throw new Error("magnets: a tiling with no clues clashes");
   const order = Array.from({ length: wh }, (_, i) => i);
   shuffle(order, rs);
 
   const nInitialNeutral = wh > 100 ? 5 : Math.floor(wh / 10);
+  const plus = cellValue(POSITIVE);
+  const minus = cellValue(NEGATIVE);
 
   for (let n = 0; n < wh; n++) {
     const i = order[n];
-    if (solver.flags[i] & GS_SET) continue; // already laid here
+    if (m.known(i)) continue; // already laid here
 
-    let ret: number;
-    if (n < nInitialNeutral) {
-      ret = solver.set(i, NEUTRAL);
-    } else if (!(solver.flags[i] & GS_NOTPOSITIVE)) {
-      ret = solver.set(i, POSITIVE);
-    } else if (!(solver.flags[i] & GS_NOTNEGATIVE)) {
-      ret = solver.set(i, NEGATIVE);
-    } else {
-      ret = solver.set(i, NEUTRAL);
-    }
-    if (!ret) return null; // couldn't lay anything here
-
-    ret = solver.solveUnnumbered();
-    if (ret < 0) return null;
-    if (ret > 0) break;
+    const d =
+      n < nInitialNeutral
+        ? cellValue(NEUTRAL)
+        : m.has(i, plus)
+          ? plus
+          : m.has(i, minus)
+            ? minus
+            : cellValue(NEUTRAL);
+    if (!m.has(i, d)) return null;
+    m.place(i, d);
+    const verdict = deduce(m, ladder, dl, DIFF_EASY);
+    if (verdict < 0) return null;
+    if (verdict > 0) break;
   }
-  return solver.grid;
+  return Int32Array.from(m.grid, whichOf);
 }
 
 /** Lay a tiling and a full solution; derive the row/column counts. */
@@ -125,20 +136,16 @@ function decodeClueSlot(
 /**
  * Gate difficulty and (for strip mode) minimize the clue set, mutating
  * `board.rowcount`/`board.colcount` in place. Returns whether to accept the
- * board. Faithful to upstream `check_difficulty`.
+ * board. Upstream's `check_difficulty`.
  */
 function checkDifficulty(p: MagnetsParams, board: GenBoard, rs: RandomState): boolean {
   const { w, h, rowcount, colcount } = board;
 
-  const solveFresh = (diff: number): { ret: number; grid: Int32Array } => {
-    const s = new MagnetsSolver(w, h, board);
-    const ret = s.solve(diff);
-    return { ret, grid: s.grid };
-  };
+  const solveFresh = (cap: number) => solveMagnets(w, h, board, cap);
 
-  if (p.diff > DIFF_EASY && solveFresh(p.diff - 1).ret > 0) return false; // too easy
+  if (p.diff > DIFF_EASY && solveFresh(p.diff - 1).verdict > 0) return false; // too easy
   const solved = solveFresh(p.diff);
-  if (solved.ret <= 0) return false; // not soluble at requested difficulty
+  if (solved.verdict <= 0) return false; // not soluble at requested difficulty
   if (!p.stripclues) return true;
 
   const order = Array.from({ length: 2 * (w + h) }, (_, i) => i);
@@ -155,10 +162,10 @@ function checkDifficulty(p: MagnetsParams, board: GenBoard, rs: RandomState): bo
     targets[base + which] = -1;
     targets[base + NEUTRAL] = -1;
 
-    // ret is never −1 here (removing a clue can't create a contradiction).
+    // Removing a clue can't make a contradiction, only room for another
+    // answer, or none the ladder reaches.
     const r = solveFresh(p.diff);
-    if (r.ret === 0 || r.grid.some((v, k) => v !== solved.grid[k])) {
-      // Made it ambiguous/different — put the clue back.
+    if (r.verdict <= 0 || r.grid.some((v, k) => v !== solved.grid[k])) {
       targets[base + which] = target;
       targets[base + NEUTRAL] = targetn;
     }

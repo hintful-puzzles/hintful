@@ -452,6 +452,47 @@ const PLANTS: Record<string, Plant> = {
     conclude:
       "shaded(k) < n - 1 or (forall c in around(k) where not known(c): place(c, 2))",
   },
+  // Magnets: a tile's other end read as holding the same value.
+  "magnets.pair": { conclude: "place(p, value(c))" },
+  // A pole read as leaving the squares diagonally beside it too.
+  "magnets.repel": {
+    for: "c in cells where known(c) and value(c) != 2, p in adj8(c)",
+  },
+  // A value struck from one end read as striking the same from the other.
+  "magnets.tile": {
+    conclude: "forall d in range(1, 3) where d not in cand(c): strike(p, d)",
+  },
+  // A square with two values left read as down to one.
+  "magnets.single": {
+    for: "c in cells where |cand(c)| < 3",
+    conclude: "|cand(c)| >= 1 and (known(c) or place(c, first(cand(c))))",
+  },
+  // A line one short of its count read as full.
+  "magnets.count": {
+    conclude:
+      "holds(L, d) <= v and (holds(L, d) < v - 1 or (forall c in O: strike(c, d)))",
+  },
+  // A line's open squares read as poles before its neutral squares are all
+  // placed.
+  "magnets.oddGap": {
+    for: "L in cols + rows, n = clue(count, L, 2) where n >= 0, d in range(1, 3) where d != 2 and clue(count, L, d) >= 0 and clue(count, L, 4 - d) >= 0 and clue(count, L, d) - holds(L, d) = clue(count, L, 4 - d) - holds(L, 4 - d) + 1, O = {c in cells(L) where not known(c)}, S = {c in O where index(c, stretch(L, c, O)) = 0 and |stretch(L, c, O)| mod 2 = 1} where |S| = 1",
+  },
+  // A magnet's two ends counted as two of the pole.
+  "magnets.marked": {
+    for: "L in cols + rows, M = {c in cells(L) where inMagnet(L, c)} where |M| > 0, d in range(1, 3) where d != 2, v = clue(count, L, d) where v >= 0 and v - holds(L, d) = |M|",
+  },
+  // A line with room for two neutral squares read as having room for one.
+  "magnets.oneNeutral": {
+    for: "L in cols + rows, n = clue(count, L, 2) where n >= 0 and holds(L, 2) + 2 = n",
+  },
+  // A line needing one fewer pole than it has open tiles read as needing one
+  // from each.
+  "magnets.everyTile": {
+    for: "L in cols + rows, d in range(1, 3) where d != 2, v = clue(count, L, d) where v >= 0, T = set(tile(c) over c in cells(L) where not known(c)) where |T| > 1 and v - holds(L, d) = |T| - 1",
+  },
+  "magnets.onlyEnd": {
+    for: "L in cols + rows, d in range(1, 3) where d != 2, v = clue(count, L, d) where v >= 0, O = {c in cells(L) where not known(c) and d in cand(c)}, T = set(tile(c) over c in O) where |T| > 1 and v - holds(L, d) = |T| - 1",
+  },
   // Light Up: a bulb read as lighting through walls.
   shine: {
     for: "c in cells where value(c) = 1, p in cells(row(c)) + cells(col(c)) where p != c and not known(p)",

@@ -185,8 +185,7 @@ the game's solve. Exemplar:
 - **Record a rung the corpus cannot reach in the census's `unreached`, with
   its reason, and check it against the C first**: an unreachable deduction is
   the shape a porting bug takes. An entry may be structural, a rung foreclosed
-  by the one beneath it; then say so
-  ([`magnets-ladder.test.ts`](../src/games/magnets/magnets-ladder.test.ts)).
+  by the one beneath it; then say so.
 - **A census cannot see a mis-tiered or reordered rung**, because the rung
   still fires. A frozen differential can. A game with no differential has
   only the census, so plant a mis-tier before relying on it.

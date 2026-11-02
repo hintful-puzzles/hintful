@@ -1,39 +1,47 @@
 /**
- * Magnets solver — faithful port of `solve_state` and its deduction helpers in
- * `magnets.c`. Byte-match critical (docs/solver-and-generator.md §
- * "Solver-gated generation"): the generator gates difficulty on this solver's
- * verdict, so it must reach C's exact solved/ambiguous/impossible outcome on
- * every intermediate board — including the upstream quirks (notably the
- * un-reset `ndom` accumulator in `countdominoesNonneutral`).
+ * Magnets' solver: the ladder `magnets.description.yaml` states, compiled,
+ * on the engine's marks and runner (`engine/ladder-runtime.ts`), and the
+ * answer check its rules compile to.
  *
- * The solver runs on its own scratch grid/flags (with the full NOT-mask
- * machinery), started empty from a board's clues; it never touches game state.
- * `solve` expects a freshly constructed solver. Return codes: −1 impossible,
- * 0 ambiguous/unfinished, 1 solved.
+ * Easy is upstream's: a square down to one value, a line whose count is met
+ * or has just enough room, and a line's one odd gap. Normal adds its count of
+ * the tiles along and across a line. A tile's two ends are kept opposite as
+ * values are placed and as they are struck, so a tile a player marks `?` is
+ * neutral struck from both ends. Every board is finished by the ladder: the
+ * game has no search tier.
  */
+
+import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
-  type DeductionTechnique,
-  type FiringTally,
-  runDeductionFixpoint,
-} from "../../engine/deduction-fixpoint.ts";
-import type { SweepOffers } from "../../engine/sweep-offers.ts";
+  clueList,
+  describedSpace,
+  type GridSpace,
+  partition,
+  perPlace,
+  rangeMask,
+} from "../../engine/describe-runtime.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  placingRung,
+  runLadder,
+  strikingRung,
+  TIERS,
+  uncluedPlacingRung,
+  uncluedRung,
+} from "../../engine/ladder-runtime.ts";
+import type { GameStatus } from "../../engine/types.ts";
+import * as magnets from "./magnets.compiled.ts";
 import {
   COLUMN,
-  checkCompletion,
-  DIFF_EASY,
-  DIFF_TRICKY,
-  GS_MARK,
-  GS_NOTMASK,
-  GS_NOTNEGATIVE,
-  GS_NOTNEUTRAL,
-  GS_NOTPOSITIVE,
   GS_SET,
-  inGrid,
   type MagnetsCommon,
+  type MagnetsState,
   NEGATIVE,
   NEUTRAL,
-  notFlag,
-  opposite,
   POSITIVE,
   ROW,
 } from "./state.ts";
@@ -44,26 +52,12 @@ export interface MagnetsLine {
   num: number;
 }
 
-/** A row or column: `n` cells from index `start`, `step` apart. */
-interface RowCol extends MagnetsLine {
-  start: number;
-  step: number;
-  n: number;
-  /** length-3 view into rowcount/colcount: [neutral, positive, negative]. */
-  targets: Int32Array;
-}
-
-const DX = [-1, 1, 0, 0];
-const DY = [0, 0, -1, 1];
-
 /**
- * The premise a rung was acting on when it changed the board: what the hint
- * narrates. Named by premise rather than by rung, because `checkfull` holds two
- * (a count already met, a count only just reachable). What the firing *did* is
- * read off a before/after comparison of the board, not from here.
+ * The premise a technique was acting on when it changed the board: what the
+ * hint narrates. `which` is a pole or neutral in the game's own values.
  */
 export type MagnetsReason =
-  /** Two NOT bits on an unset square leave it one value. */
+  /** Two values ruled out of an open square leave it one. */
   | { kind: "force"; cell: number }
   /** The line already has all the `which` its clue allows. */
   | { kind: "lineFull"; line: MagnetsLine; which: number }
@@ -82,516 +76,204 @@ export type MagnetsReason =
   /** …and a domino that can take `which` at only one end takes it there. */
   | { kind: "onlyEndLeft"; line: MagnetsLine; which: number };
 
-/**
- * The hint's recorder, standing only on the recording path. With one attached
- * each rung records its premise before acting and returns at the first line
- * (or square) that changed anything, so one firing is one premise
- * (docs/hints.md § "A rung is not a premise, so return per premise").
- * Without one, every rung accumulates across the whole grid exactly as the
- * generator has always run it.
- */
-export interface MagnetsRecorder {
-  reason: MagnetsReason | null;
+/** A square's value as the description reads it: + is 1, neutral 2 and −
+ * 3, so a tile's other end holds 4 less. */
+export function cellValue(which: number): number {
+  return which === POSITIVE ? 1 : which === NEGATIVE ? 3 : 2;
 }
 
-/** A line as the recorder names it, without the scratch fields. */
-const lineOf = (rc: RowCol): MagnetsLine => ({ roworcol: rc.roworcol, num: rc.num });
+/** A value the description reads, as the game's pole or neutral. */
+export function whichOf(d: number): number {
+  return d === 1 ? POSITIVE : d === 3 ? NEGATIVE : NEUTRAL;
+}
 
-export class MagnetsSolver {
-  readonly w: number;
-  readonly h: number;
-  readonly wh: number;
-  readonly common: MagnetsCommon;
-  readonly dominoes: Int32Array;
-  readonly grid: Int32Array;
-  readonly flags: Int32Array;
-  /** The hint's recorder; `null` on the generator's path. */
-  rec: MagnetsRecorder | null = null;
-  /** Hint path only: collects every firing a rung could make, for a plan
-   * that continues where its latest step was. */
-  offers: SweepOffers<
-    { grid: Int32Array; flags: Int32Array },
-    MagnetsReason | null
-  > | null = null;
+/** The space a board's ladder runs on: its rows, then its columns. */
+export function magnetsSpace(w: number, h: number): GridSpace {
+  return describedSpace(magnets.units, w, h);
+}
 
-  /** Where a rung on the hint path has made its firing: whether it returns. */
-  kept(): boolean {
-    return this.offers?.keep() ?? true;
+/** The space's line `L` as the hint names it. */
+function lineOf(sp: GridSpace, L: number): MagnetsLine {
+  return L < sp.h ? { roworcol: ROW, num: L } : { roworcol: COLUMN, num: L - sp.h };
+}
+
+/**
+ * The board as the description deals it: its tiles, and each line's count of
+ * + and of −, with the neutral squares' count where a line has both.
+ */
+export function dealtOf(w: number, h: number, common: MagnetsCommon): magnets.Dealt {
+  const { dominoes, rowcount, colcount } = common;
+  const tiles: number[][] = [];
+  for (let i = 0; i < w * h; i++) {
+    const j = dominoes[i];
+    if (j === i) tiles.push([i]);
+    else if (j > i) tiles.push([i, j]);
   }
-
-  constructor(w: number, h: number, common: MagnetsCommon) {
-    this.w = w;
-    this.h = h;
-    this.wh = w * h;
-    this.common = common;
-    this.dominoes = common.dominoes;
-    this.grid = new Int32Array(this.wh);
-    this.flags = new Int32Array(this.wh);
-    // Singletons are permanently-set neutral squares.
-    for (let i = 0; i < this.wh; i++) {
-      if (this.dominoes[i] === i) {
-        this.grid[i] = NEUTRAL;
-        this.flags[i] |= GS_SET;
-      }
+  const at: number[] = [];
+  const v: number[] = [];
+  const deal = (L: number, counts: Int32Array, base: number) => {
+    for (const which of [POSITIVE, NEUTRAL, NEGATIVE]) {
+      const n = counts[base + which];
+      if (n < 0) continue;
+      at.push(perPlace(L, cellValue(which)));
+      v.push(n);
     }
-  }
+  };
+  for (let y = 0; y < h; y++) deal(y, rowcount, y * 3);
+  for (let x = 0; x < w; x++) deal(h + x, colcount, x * 3);
+  return {
+    tile: partition(tiles, w * h),
+    count: clueList(at, v, perPlace(w + h, 0)),
+  };
+}
 
-  possible(i: number, which: number): boolean {
-    return (this.flags[i] & notFlag(which)) === 0;
-  }
+/** The ladder over the dealt board, each technique with the hint's reason
+ * for it. */
+export function magnetsLadder(dl: magnets.Dealt): Ladder {
+  return describedLadder(magnets, {
+    pair: placingRung(magnets.pair, dl),
+    repel: uncluedPlacingRung(magnets.repel),
+    tile: strikingRung(magnets.tile, dl),
+    single: uncluedRung(
+      magnets.single,
+      ({ c }): MagnetsReason => ({ kind: "force", cell: c }),
+    ),
+    count: compiledRung(
+      magnets.count,
+      dl,
+      ({ L, d, v }, _c, _n, m): MagnetsReason => ({
+        // A line's count read as met strikes; read as just reachable, it
+        // places.
+        kind:
+          m.sp.lineCells[L].filter((c) => m.grid[c] === d).length < v
+            ? "lineExact"
+            : "lineFull",
+        line: lineOf(m.sp, L),
+        which: whichOf(d),
+      }),
+    ),
+    oddGap: compiledRung(
+      magnets.oddGap,
+      dl,
+      ({ L, d }, _c, _n, m): MagnetsReason => ({
+        kind: "oddGap",
+        line: lineOf(m.sp, L),
+        which: whichOf(d),
+      }),
+    ),
+    marked: compiledRung(
+      magnets.marked,
+      dl,
+      ({ L }, _c, _n, m): MagnetsReason => ({
+        kind: "magnetsFill",
+        line: lineOf(m.sp, L),
+      }),
+    ),
+    oneNeutral: compiledRung(
+      magnets.oneNeutral,
+      dl,
+      ({ L }, _c, _n, m): MagnetsReason => ({
+        kind: "oneNeutralLeft",
+        line: lineOf(m.sp, L),
+      }),
+    ),
+    everyTile: compiledRung(
+      magnets.everyTile,
+      dl,
+      ({ L, d }, _c, _n, m): MagnetsReason => ({
+        kind: "everyDominoNeeded",
+        line: lineOf(m.sp, L),
+        which: whichOf(d),
+      }),
+    ),
+    onlyEnd: compiledRung(
+      magnets.onlyEnd,
+      dl,
+      ({ L, d }, _c, _n, m): MagnetsReason => ({
+        kind: "onlyEndLeft",
+        line: lineOf(m.sp, L),
+        which: whichOf(d),
+      }),
+    ),
+  });
+}
 
-  private mkrowcol(num: number, roworcol: number): RowCol {
-    if (roworcol === ROW) {
-      return {
-        roworcol,
-        num,
-        start: num * this.w,
-        step: 1,
-        n: this.w,
-        targets: this.common.rowcount.subarray(num * 3, num * 3 + 3),
-      };
-    }
-    return {
-      roworcol,
-      num,
-      start: num,
-      step: this.w,
-      n: this.h,
-      targets: this.common.colcount.subarray(num * 3, num * 3 + 3),
-    };
-  }
+/** The marks over `values`, every open square holding what its tile allows
+ * and each value on it placed; `null` where two of them clash. */
+export function magnetsMarks(
+  sp: GridSpace,
+  dl: magnets.Dealt,
+  ladder: Ladder,
+  values: Uint8Array,
+): CellMarks | null {
+  const m = new CellMarks(sp, rangeMask(1, 3), values);
+  m.placing = ladder.placing;
+  m.striking = ladder.striking;
+  return m.seed(values, (c) => magnets.domainOf(sp, dl, c)) ? m : null;
+}
 
-  /** Mark cell `i` (and, across its domino, the opposite color on the other
-   * end) as not `which`. Returns a change count, or −1 for a contradiction.
-   * Public: the hint seeds the player's `?` marks through it. */
-  unflag(i: number, which: number): number {
-    const ii = this.dominoes[i];
-    if (ii === i) return 0;
-    if (this.flags[i] & GS_SET && this.grid[i] === which) return -1;
-    if (this.flags[ii] & GS_SET && this.grid[ii] === opposite(which)) return -1;
-    let ret = 0;
-    if (this.possible(i, which)) {
-      this.flags[i] |= notFlag(which);
-      ret++;
-    }
-    if (this.possible(ii, opposite(which))) {
-      this.flags[ii] |= notFlag(opposite(which));
-      ret++;
-    }
-    return ret;
-  }
+/** The values a board starts from: the squares no tile covers, neutral. */
+export function givenValues(w: number, h: number, common: MagnetsCommon): Uint8Array {
+  return Uint8Array.from({ length: w * h }, (_, i) =>
+    common.dominoes[i] === i ? cellValue(NEUTRAL) : 0,
+  );
+}
 
-  private unflagSurrounds(i: number, which: number): number {
-    const x = i % this.w;
-    const y = Math.floor(i / this.w);
-    for (let j = 0; j < 4; j++) {
-      const xx = x + DX[j];
-      const yy = y + DY[j];
-      if (!inGrid(this.w, this.h, xx, yy)) continue;
-      if (this.unflag(yy * this.w + xx, which) < 0) return -1;
-    }
-    return 0;
-  }
+/** What a run of the ladder reached: `1` the board's one answer, `0` stuck
+ * short of one, `-1` a contradiction. */
+export type Verdict = -1 | 0 | 1;
 
-  /** Set cell `i` to `which` (and its domino partner to the opposite). Returns
-   * 1 (set), 0 (already so), or −1 (contradiction). Public: the generator's
-   * `layDominoes` drives it directly. */
-  set(i: number, which: number): number {
-    const ii = this.dominoes[i];
-    if (this.flags[i] & GS_SET) {
-      return this.grid[i] === which ? 0 : -1;
-    }
-    if (this.flags[ii] & GS_SET && this.grid[ii] !== opposite(which)) return -1;
-    if (!this.possible(i, which)) return -1;
-    if (!this.possible(ii, opposite(which))) return -1;
+/** Run the ladder on `m` to a fixpoint, no harder than `cap`, and say what
+ * it reached. */
+export function deduce(
+  m: CellMarks,
+  ladder: Ladder,
+  dl: magnets.Dealt,
+  cap: number,
+  firings?: FiringTally,
+): Verdict {
+  const techniques = ladderTechniques(m, ladder.entries, { [TIERS]: cap }, {});
+  if (runLadder(m, techniques, { firings })) return -1;
+  if (m.grid.includes(0)) return 0;
+  return magnets.isAnswer(m.grid, m.sp, dl) ? 1 : -1;
+}
 
-    if (which !== NEUTRAL) {
-      if (this.unflagSurrounds(i, which) < 0) return -1;
-      if (this.unflagSurrounds(ii, opposite(which)) < 0) return -1;
-    }
-    this.grid[i] = which;
-    this.grid[ii] = opposite(which);
-    this.flags[i] |= GS_SET;
-    this.flags[ii] |= GS_SET;
-    return 1;
-  }
+/** The ladder's verdict on a board from its clues alone, no harder than
+ * `cap`, and the grid it reached in the game's values (neutral where it
+ * placed nothing). */
+export function solveMagnets(
+  w: number,
+  h: number,
+  common: MagnetsCommon,
+  cap: number,
+  firings?: FiringTally,
+): { verdict: Verdict; grid: Int32Array } {
+  const dl = dealtOf(w, h, common);
+  const ladder = magnetsLadder(dl);
+  const m = magnetsMarks(magnetsSpace(w, h), dl, ladder, givenValues(w, h, common));
+  if (m === null) return { verdict: -1, grid: new Int32Array(w * h) };
+  const verdict = deduce(m, ladder, dl, cap, firings);
+  return { verdict, grid: Int32Array.from(m.grid, whichOf) };
+}
 
-  private countCells(rc: RowCol, counts: Int32Array, unset: Int32Array | null): void {
-    counts.fill(0);
-    if (unset) unset.fill(0);
-    let i = rc.start;
-    for (let j = 0; j < rc.n; j++, i += rc.step) {
-      if (this.flags[i] & GS_SET) {
-        counts[this.grid[i]]++;
-      } else if (unset) {
-        for (let which = 0; which <= 2; which++)
-          if (this.possible(i, which)) unset[which]++;
-      }
-    }
-  }
+/** The values a state's player has placed, 0 where a square is open. */
+export function placedValues(state: MagnetsState): Uint8Array {
+  return Uint8Array.from(state.grid, (which, i) =>
+    state.flags[i] & GS_SET ? cellValue(which) : 0,
+  );
+}
 
-  private force(): number {
-    let didsth = 0;
-    for (let i = 0; i < this.wh; i++) {
-      if (this.flags[i] & GS_SET) continue;
-      if (this.dominoes[i] === i) continue;
-      const f = this.flags[i] & GS_NOTMASK;
-      let which = -1;
-      if (f === (GS_NOTPOSITIVE | GS_NOTNEGATIVE)) which = NEUTRAL;
-      if (f === (GS_NOTPOSITIVE | GS_NOTNEUTRAL)) which = NEGATIVE;
-      if (f === (GS_NOTNEGATIVE | GS_NOTNEUTRAL)) which = POSITIVE;
-      if (which !== -1) {
-        if (this.rec) this.rec.reason = { kind: "force", cell: i };
-        if (this.set(i, which) < 0) return -1;
-        didsth = 1;
-        if (this.rec && this.kept()) return didsth;
-      }
-    }
-    return didsth;
-  }
+/** Whether a state's tiles are an answer to its board, by the rules the
+ * description compiles to. */
+export function isSolved(state: MagnetsState): boolean {
+  const { w, h, common } = state;
+  return magnets.isAnswer(
+    placedValues(state),
+    magnetsSpace(w, h),
+    dealtOf(w, h, common),
+  );
+}
 
-  private neither(): number {
-    let didsth = 0;
-    for (let i = 0; i < this.wh; i++) {
-      if (this.flags[i] & GS_SET) continue;
-      const j = this.dominoes[i];
-      if (i === j) continue;
-      if (
-        (this.flags[i] & GS_NOTPOSITIVE && this.flags[j] & GS_NOTPOSITIVE) ||
-        (this.flags[i] & GS_NOTNEGATIVE && this.flags[j] & GS_NOTNEGATIVE)
-      ) {
-        if (this.set(i, NEUTRAL) < 0) return -1;
-        didsth = 1;
-      }
-    }
-    return didsth;
-  }
-
-  private checkfull(rc: RowCol, _counts: Int32Array): number {
-    const counts = new Int32Array(4);
-    const unset = new Int32Array(4);
-    this.countCells(rc, counts, unset);
-    let didsth = 0;
-    for (let which = 0; which <= 2; which++) {
-      const target = rc.targets[which];
-      if (target === -1) continue;
-      if (target < counts[which]) return -1;
-      const before = didsth;
-      if (target === counts[which]) {
-        if (this.rec) this.rec.reason = { kind: "lineFull", line: lineOf(rc), which };
-        let ci = rc.start;
-        for (let j = 0; j < rc.n; j++, ci += rc.step) {
-          if (this.flags[ci] & GS_SET) continue;
-          if (!this.possible(ci, which)) continue;
-          if (this.unflag(ci, which) < 0) return -1;
-          didsth = 1;
-        }
-      } else if (target - counts[which] === unset[which]) {
-        if (this.rec) this.rec.reason = { kind: "lineExact", line: lineOf(rc), which };
-        let ci = rc.start;
-        for (let j = 0; j < rc.n; j++, ci += rc.step) {
-          if (this.flags[ci] & GS_SET) continue;
-          if (!this.possible(ci, which)) continue;
-          if (this.set(ci, which) < 0) return -1;
-          didsth = 1;
-        }
-      }
-      if (this.rec && didsth > before) return didsth;
-    }
-    return didsth;
-  }
-
-  private advancedfull(rc: RowCol, counts: Int32Array): number {
-    if (rc.targets[POSITIVE] === -1 && rc.targets[NEGATIVE] === -1) return 0;
-    if (
-      rc.targets[POSITIVE] >= 0 &&
-      counts[POSITIVE] === rc.targets[POSITIVE] &&
-      rc.targets[NEGATIVE] >= 0 &&
-      counts[NEGATIVE] === rc.targets[NEGATIVE]
-    ) {
-      return 0;
-    }
-
-    let ci = rc.start;
-    for (let j = 0; j < rc.n; j++, ci += rc.step) this.flags[ci] &= ~GS_MARK;
-
-    let nfound = 0;
-    ci = rc.start;
-    for (let j = 0; j < rc.n; j++, ci += rc.step) {
-      if (this.flags[ci] & GS_SET) continue;
-      // A domino wholly in this row/col pointing forward.
-      if (this.dominoes[ci] !== ci + rc.step) continue;
-      // Both ends must be forced +/− only (NOTNEUTRAL and nothing else).
-      if (
-        (this.flags[ci] & GS_NOTMASK) !== GS_NOTNEUTRAL ||
-        (this.flags[ci + rc.step] & GS_NOTMASK) !== GS_NOTNEUTRAL
-      ) {
-        continue;
-      }
-      this.flags[ci] |= GS_MARK;
-      this.flags[ci + rc.step] |= GS_MARK;
-      nfound++;
-    }
-    if (nfound === 0) return 0;
-
-    counts[POSITIVE] += nfound;
-    counts[NEGATIVE] += nfound;
-    const clearpos =
-      rc.targets[POSITIVE] >= 0 && counts[POSITIVE] === rc.targets[POSITIVE];
-    const clearneg =
-      rc.targets[NEGATIVE] >= 0 && counts[NEGATIVE] === rc.targets[NEGATIVE];
-    if (!clearpos && !clearneg) return 0;
-
-    if (this.rec) this.rec.reason = { kind: "magnetsFill", line: lineOf(rc) };
-    let ret = 0;
-    ci = rc.start;
-    for (let j = 0; j < rc.n; j++, ci += rc.step) {
-      if (this.flags[ci] & GS_SET) continue;
-      if (this.flags[ci] & GS_MARK) continue;
-      if (clearpos && !(this.flags[ci] & GS_NOTPOSITIVE)) {
-        if (this.unflag(ci, POSITIVE) < 0) return -1;
-        ret++;
-      }
-      if (clearneg && !(this.flags[ci] & GS_NOTNEGATIVE)) {
-        if (this.unflag(ci, NEGATIVE) < 0) return -1;
-        ret++;
-      }
-    }
-    return ret;
-  }
-
-  private nonneutral(rc: RowCol, counts: Int32Array): number {
-    if (rc.targets[NEUTRAL] !== counts[NEUTRAL] + 1) return 0;
-    if (this.rec) this.rec.reason = { kind: "oneNeutralLeft", line: lineOf(rc) };
-    let ret = 0;
-    let ci = rc.start;
-    for (let j = 0; j < rc.n; j++, ci += rc.step) {
-      if (this.flags[ci] & GS_SET) continue;
-      if (this.dominoes[ci] !== ci + rc.step) continue;
-      if (!(this.flags[ci] & GS_NOTNEUTRAL)) {
-        if (this.unflag(ci, NEUTRAL) < 0) return -1;
-        ret++;
-      }
-    }
-    return ret;
-  }
-
-  private oddlength(rc: RowCol, counts: Int32Array): number {
-    if (rc.targets[NEUTRAL] !== counts[NEUTRAL]) return 0;
-    const tpos = rc.targets[POSITIVE] - counts[POSITIVE];
-    const tneg = rc.targets[NEGATIVE] - counts[NEGATIVE];
-    let extra: number;
-    if (tpos === tneg + 1) extra = POSITIVE;
-    else if (tneg === tpos + 1) extra = NEGATIVE;
-    else return 0;
-
-    let start = -1;
-    let length = 0;
-    let startodd = -1;
-    let inempty = false;
-    let ci = rc.start;
-    for (let j = 0; j < rc.n; j++, ci += rc.step) {
-      if (this.flags[ci] & GS_SET) {
-        if (inempty) {
-          if (length % 2) {
-            if (startodd !== -1) return 0; // two odd sections — no deduction
-            startodd = start;
-          }
-          inempty = false;
-        }
-      } else if (inempty) {
-        length++;
-      } else {
-        start = ci;
-        length = 1;
-        inempty = true;
-      }
-    }
-    if (inempty && length % 2) {
-      if (startodd !== -1) return 0;
-      startodd = start;
-    }
-    if (startodd === -1) return 0;
-    if (this.rec) this.rec.reason = { kind: "oddGap", line: lineOf(rc), which: extra };
-    return this.set(startodd, extra);
-  }
-
-  private countdominoesNeutral(rc: RowCol, counts: Int32Array): number {
-    if (rc.targets[POSITIVE] === -1 && rc.targets[NEGATIVE] === -1) return 0;
-
-    let ndom = 0;
-    let ci = rc.start;
-    for (let j = 0; j < rc.n; j++, ci += rc.step) {
-      if (this.flags[ci] & GS_SET) continue;
-      // Skip solo cells and the 2nd cell of an in-row domino.
-      if (this.dominoes[ci] === ci || this.dominoes[ci] === ci - rc.step) continue;
-      ndom++;
-    }
-
-    // Which count forces it, for the hint to name: + when both do.
-    let nonn = -1;
-    if (
-      rc.targets[NEGATIVE] !== -1 &&
-      rc.targets[NEGATIVE] - counts[NEGATIVE] === ndom
-    ) {
-      nonn = NEGATIVE;
-    }
-    if (
-      rc.targets[POSITIVE] !== -1 &&
-      rc.targets[POSITIVE] - counts[POSITIVE] === ndom
-    ) {
-      nonn = POSITIVE;
-    }
-    if (nonn === -1) return 0;
-    if (this.rec) {
-      this.rec.reason = { kind: "everyDominoNeeded", line: lineOf(rc), which: nonn };
-    }
-
-    let ret = 0;
-    ci = rc.start;
-    for (let j = 0; j < rc.n; j++, ci += rc.step) {
-      if (this.flags[ci] & GS_SET) continue;
-      if (!(this.flags[ci] & GS_NOTNEUTRAL)) {
-        if (this.unflag(ci, NEUTRAL) < 0) return -1;
-        ret++;
-      }
-    }
-    return ret;
-  }
-
-  private dominoCount(rc: RowCol, i: number, which: number): number {
-    if (this.dominoes[i] === i || this.dominoes[i] === i - rc.step) return 0;
-    if (this.flags[i] & GS_SET) return 0;
-    let nposs = 0;
-    if (this.possible(i, which)) nposs++;
-    if (this.dominoes[i] === i + rc.step) {
-      if (this.possible(i + rc.step, which)) nposs++;
-    }
-    return nposs;
-  }
-
-  private countdominoesNonneutral(rc: RowCol, counts: Int32Array): number {
-    let didsth = 0;
-    // NB: `ndom` is deliberately NOT reset between the two color iterations —
-    // an upstream quirk reproduced verbatim, since a stronger or weaker solver
-    // would change which clues the generator strips and so diverge the
-    // byte-matched desc.
-    let ndom = 0;
-    let which = POSITIVE;
-    for (let k = 0; k < 2; k++, which = opposite(which)) {
-      if (rc.targets[which] === -1) continue;
-      let ci = rc.start;
-      for (let j = 0; j < rc.n; j++, ci += rc.step) {
-        if (this.dominoCount(rc, ci, which) > 0) ndom++;
-      }
-      if (rc.targets[which] - counts[which] !== ndom) continue;
-      if (this.rec) this.rec.reason = { kind: "onlyEndLeft", line: lineOf(rc), which };
-      const before = didsth;
-      ci = rc.start;
-      for (let j = 0; j < rc.n; j++, ci += rc.step) {
-        if (this.dominoCount(rc, ci, which) === 1) {
-          const toset = this.possible(ci, which) ? ci : ci + rc.step;
-          if (this.set(toset, which) < 0) return -1;
-          didsth++;
-        }
-      }
-      if (this.rec && didsth > before) return didsth;
-    }
-    return didsth;
-  }
-
-  private rowcols(fn: (rc: RowCol, counts: Int32Array) => number): number {
-    let didsth = 0;
-    const counts = new Int32Array(4);
-    for (let x = 0; x < this.w; x++) {
-      const rc = this.mkrowcol(x, COLUMN);
-      this.countCells(rc, counts, null);
-      const ret = fn.call(this, rc, counts);
-      if (ret < 0) return ret;
-      didsth += ret;
-      if (this.rec && ret > 0 && this.kept()) return didsth;
-    }
-    for (let y = 0; y < this.h; y++) {
-      const rc = this.mkrowcol(y, ROW);
-      this.countCells(rc, counts, null);
-      const ret = fn.call(this, rc, counts);
-      if (ret < 0) return ret;
-      didsth += ret;
-      if (this.rec && ret > 0 && this.kept()) return didsth;
-    }
-    return didsth;
-  }
-
-  /** Upstream solve_unnumbered: force + neither to a fixpoint, then report
-   * whether every cell is set (1), not (0), or a contradiction arose (−1).
-   * Used by the generator's `layDominoes` while placing dominoes, before the
-   * clue counts exist. `firings` is the test seam `magnets-ladder.test.ts`
-   * reads the census through. */
-  solveUnnumbered(firings?: FiringTally): number {
-    const { impossible } = runDeductionFixpoint({
-      techniques: [
-        { id: "force", tier: DIFF_EASY, run: () => this.force() },
-        { id: "neither", tier: DIFF_EASY, run: () => this.neither() },
-      ],
-      firings,
-    });
-    if (impossible) return -1;
-    return this.allSet();
-  }
-
-  /** 1 when every cell is set, else 0 — the unnumbered solve's verdict. */
-  private allSet(): number {
-    for (let i = 0; i < this.wh; i++) {
-      if (!(this.flags[i] & GS_SET)) return 0;
-    }
-    return 1;
-  }
-
-  /**
-   * The graded ladder, easiest first; each technique's tier is where upstream's
-   * mid-ladder `if (diff < DIFF_TRICKY) break;` put it. `solve` runs it to a
-   * fixpoint and the hint one firing at a time (`hint.ts`).
-   */
-  ladder(): DeductionTechnique[] {
-    return [
-      { id: "force", tier: DIFF_EASY, run: () => this.force() },
-      { id: "neither", tier: DIFF_EASY, run: () => this.neither() },
-      { id: "checkfull", tier: DIFF_EASY, run: () => this.rowcols(this.checkfull) },
-      { id: "oddlength", tier: DIFF_EASY, run: () => this.rowcols(this.oddlength) },
-      {
-        id: "advancedfull",
-        tier: DIFF_TRICKY,
-        run: () => this.rowcols(this.advancedfull),
-      },
-      {
-        id: "nonneutral",
-        tier: DIFF_TRICKY,
-        run: () => this.rowcols(this.nonneutral),
-      },
-      {
-        id: "count-dominoes-neutral",
-        tier: DIFF_TRICKY,
-        run: () => this.rowcols(this.countdominoesNeutral),
-      },
-      {
-        id: "count-dominoes-nonneutral",
-        tier: DIFF_TRICKY,
-        run: () => this.rowcols(this.countdominoesNonneutral),
-      },
-    ];
-  }
-
-  /** Run the graded solver at `diff` (DIFF_EASY / DIFF_TRICKY or higher) on
-   * the shared ladder (`engine/deduction-fixpoint.ts`). `firings` is the test
-   * seam `magnets-ladder.test.ts` reads the census through. Returns −1
-   * impossible, 0 ambiguous/unfinished, 1 solved. */
-  solve(diff: number, firings?: FiringTally): number {
-    const { impossible } = runDeductionFixpoint({
-      techniques: this.ladder(),
-      maxTier: diff,
-      firings,
-    });
-    if (impossible) return -1;
-    return checkCompletion(this);
-  }
+export function status(state: MagnetsState): GameStatus {
+  return isSolved(state) ? "solved" : "ongoing";
 }

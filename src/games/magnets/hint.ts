@@ -1,16 +1,8 @@
 /**
- * Magnets' explained hint: the recording projection of [`solver.ts`](./solver.ts).
- *
- * The deduction is entirely the solver's: the same graded ladder, run one
- * firing at a time through `singleFirings` with a recorder standing
- * (docs/hints.md § "Recording the deduction", the *threaded* shape). This
- * file turns each firing into a journey of moves the player can make, and the
- * sentence and picture that explain it.
- *
- * **One ladder, not two.** The solver has a second runner call site,
- * `solveUnnumbered`, but it runs only inside the generator while dominoes are
- * being laid, before any clue exists; nothing a player sees is ever at that
- * stage.
+ * Magnets' explained hint: the compiled ladder of [`solver.ts`](./solver.ts),
+ * walked one firing at a time (`ladderWalk`). This file turns each firing
+ * into a journey of moves the player can make, and the sentence and picture
+ * that explain it.
  *
  * **A firing is shown only when it changes something the player writes**: a
  * placed domino, or a `?` on one. A firing that sets only the solver's
@@ -19,7 +11,6 @@
  * it re-derives it from the board, in the board's own terms.
  */
 
-import { singleFirings } from "../../engine/deduction-fixpoint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
@@ -28,8 +19,13 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import {
+  type CellMarks,
+  type Ladder,
+  ladderWalk,
+  TIERS,
+} from "../../engine/ladder-runtime.ts";
 import { type StepBudget, stepBudget } from "../../engine/step-budget.ts";
-import { SweepOffers } from "../../engine/sweep-offers.ts";
 import {
   type Axis,
   type Cause,
@@ -46,17 +42,29 @@ import {
   type ReadableBoard,
   whyNot,
 } from "./reading.ts";
-import { type MagnetsLine, type MagnetsReason, MagnetsSolver } from "./solver.ts";
+import {
+  cellValue,
+  dealtOf,
+  type MagnetsLine,
+  type MagnetsReason,
+  magnetsLadder,
+  magnetsMarks,
+  magnetsSpace,
+  placedValues,
+  whichOf,
+} from "./solver.ts";
 import {
   clueIndex,
+  DIFF_TRICKY,
   executeMove,
-  GS_MARK,
   GS_NOTNEUTRAL,
   GS_SET,
+  type MagnetsCommon,
   type MagnetsMove,
   type MagnetsState,
   NEGATIVE,
   NEUTRAL,
+  notFlag,
   opposite,
   POSITIVE,
   ROW,
@@ -87,41 +95,58 @@ export interface MagnetsFiring {
   marked: number[];
 }
 
-/**
- * A solver standing where the player stands: every placed domino laid through
- * `set` (so its neighbors lose that pole, as the rules say) and every `?` taken
- * as the fact it records. The hint is asked only of a board `findMistakes`
- * passed, which re-solves and checks both, so none of this can contradict;
- * `null` if it somehow does.
- */
-export function seedSolver(state: MagnetsState): MagnetsSolver | null {
-  const { w, h, wh, grid, flags, common } = state;
-  const solver = new MagnetsSolver(w, h, common);
-  for (let i = 0; i < wh; i++) {
-    if (common.dominoes[i] === i || !(flags[i] & GS_SET)) continue;
-    if (solver.set(i, grid[i]) < 0) return null;
-  }
-  for (let i = 0; i < wh; i++) {
-    if (flags[i] & GS_SET || !(flags[i] & GS_NOTNEUTRAL)) continue;
-    if (solver.unflag(i, NEUTRAL) < 0) return null;
-  }
-  return solver;
+/** The compiled ladder's marks where the player stands, and what reads them. */
+export interface HintBoard {
+  readonly w: number;
+  readonly h: number;
+  readonly common: MagnetsCommon;
+  readonly m: CellMarks;
+  readonly ladder: Ladder;
 }
 
-const snapshot = (s: MagnetsSolver): Snapshot => ({
-  w: s.w,
-  h: s.h,
-  common: s.common,
-  grid: Int32Array.from(s.grid),
-  flags: Int32Array.from(s.flags),
-});
+/**
+ * The marks standing where the player stands: every placed domino placed (so
+ * its neighbors lose that pole, as the rules say) and every `?` taken as the
+ * fact it records, neutral struck from both ends. The hint is asked only of a
+ * board `findMistakes` passed, which re-solves and checks both, so none of
+ * this can contradict; `null` if it somehow does.
+ */
+export function seedMarks(state: MagnetsState): HintBoard | null {
+  const { w, h, wh, flags, common } = state;
+  const dl = dealtOf(w, h, common);
+  const ladder = magnetsLadder(dl);
+  const m = magnetsMarks(magnetsSpace(w, h), dl, ladder, placedValues(state));
+  if (m === null) return null;
+  const neutral = cellValue(NEUTRAL);
+  for (let i = 0; i < wh; i++)
+    if (!(flags[i] & GS_SET) && flags[i] & GS_NOTNEUTRAL) m.strikeAt(i, neutral);
+  return { w, h, common, m, ladder };
+}
+
+/** The marks as the sentences read them: a placed square's value and set
+ * bit, and a "cannot be" bit for each value a square has lost. */
+export function snapshot(b: HintBoard): Snapshot {
+  const { m } = b;
+  const n = m.grid.length;
+  const grid = new Int32Array(n);
+  const flags = new Int32Array(n);
+  for (let c = 0; c < n; c++) {
+    if (m.known(c)) {
+      grid[c] = whichOf(m.grid[c]);
+      flags[c] |= GS_SET;
+    }
+    for (const which of [NEUTRAL, POSITIVE, NEGATIVE])
+      if (!m.has(c, cellValue(which))) flags[c] |= notFlag(which);
+  }
+  return { w: b.w, h: b.h, common: b.common, grid, flags };
+}
 
 /** The domino's name: its lower-numbered square. */
 const dominoOf = (s: ReadableBoard, i: number): number =>
   Math.min(i, s.common.dominoes[i]);
 
 /** Which end of a newly placed domino the firing is about. */
-function endOf(s: MagnetsSolver, reason: MagnetsReason, first: number): number {
+function endOf(s: Snapshot, reason: MagnetsReason, first: number): number {
   const second = s.common.dominoes[first];
   if (reason.kind === "force") {
     if (reason.cell === first || reason.cell === second) return reason.cell;
@@ -137,95 +162,65 @@ function endOf(s: MagnetsSolver, reason: MagnetsReason, first: number): number {
 }
 
 /**
- * The next firing from the solver's board, or `null` when the ladder is
+ * The next firing from the board's marks, or `null` when the ladder is
  * exhausted (`impossible` says whether it stopped on a contradiction). Every
- * tier's rungs are tried, easiest first: a shared game ID carries no
- * difficulty, and the ladder restarts from the top after each firing anyway.
+ * tier's techniques are tried: a shared game ID carries no difficulty. The
+ * walk takes the firing that carries on from the squares and lines it has
+ * just decided, never a harder one than the ladder's own next.
  */
 export function recordingPass(
-  solver: MagnetsSolver,
+  b: HintBoard,
   budget: StepBudget,
 ): { next: () => MagnetsFiring | null; impossible: () => boolean } {
-  const rec = { reason: null as MagnetsReason | null };
-  solver.rec = rec;
-  const { w } = solver;
+  const { w, h, m } = b;
+  m.budget = budget;
   const lineCells = ({ roworcol, num }: MagnetsLine): number[] =>
     roworcol === ROW
       ? Array.from({ length: w }, (_, x) => num * w + x)
-      : Array.from({ length: solver.h }, (_, y) => y * w + num);
-  solver.offers = new SweepOffers({
-    save: () => ({ grid: solver.grid.slice(), flags: solver.flags.slice() }),
-    restore: (s) => {
-      solver.grid.set(s.grid);
-      solver.flags.set(s.flags);
-    },
-    recorded: () => rec.reason,
-    record: (r) => {
-      rec.reason = r;
-    },
-    // The square and its partner, or the line whose clue it counts.
-    reads: (r) =>
-      !r
-        ? []
-        : r.kind === "force"
-          ? [r.cell, solver.dominoes[r.cell]]
-          : lineCells(r.line),
-    // `GS_MARK` is `advancedfull`'s scratch, rewritten whether or not it fires.
-    writes: (before, after) => {
-      const out: number[] = [];
-      for (let i = 0; i < solver.wh; i++)
-        if (
-          before.grid[i] !== after.grid[i] ||
-          ((before.flags[i] ^ after.flags[i]) & ~GS_MARK) !== 0
-        )
-          out.push(i);
-      return out;
-    },
+      : Array.from({ length: h }, (_, y) => y * w + num);
+  // The square and its partner, or the line whose clue it counts, and what
+  // the firing decides.
+  const walk = ladderWalk(m, b.ladder.entries, { [TIERS]: DIFF_TRICKY }, (f) => {
+    const r = f.reasons[0] as MagnetsReason;
+    return [
+      ...(r.kind === "force" ? [r.cell, b.common.dominoes[r.cell]] : lineCells(r.line)),
+      ...f.facts.filter((_, i) => i % 3 === 1),
+    ];
   });
-  const ladder = singleFirings({
-    techniques: solver.offers.techniques(solver.ladder()),
-    budget,
-    beforeTechnique: () => {
-      rec.reason = null;
-    },
-    // A plan works on the squares and lines it has just decided before it
-    // moves on.
-    continuing: true,
-  });
+  let contradiction = false;
 
   const next = (): MagnetsFiring | null => {
-    const before = snapshot(solver);
-    if (!ladder.next()) return null;
-    const placed = new Map<number, number>();
+    const before = snapshot(b);
+    const taken = walk.next();
+    if (taken === "contradiction") contradiction = true;
+    if (taken === null || taken === "contradiction") return null;
+    const after = snapshot(b);
+    const placed = new Set<number>();
     const marked = new Set<number>();
-    for (let i = 0; i < solver.wh; i++) {
-      // `GS_MARK` is `advancedfull`'s scratch, rewritten whether or not it fires.
-      if (((solver.flags[i] ^ before.flags[i]) & ~GS_MARK) === 0) continue;
-      const d = dominoOf(solver, i);
-      if (solver.flags[i] & GS_SET && !(before.flags[i] & GS_SET)) {
-        placed.set(d, d);
-      } else if (
-        !(solver.flags[i] & GS_SET) &&
-        solver.flags[i] & GS_NOTNEUTRAL &&
+    for (let i = 0; i < w * h; i++) {
+      if (after.flags[i] === before.flags[i]) continue;
+      const d = dominoOf(after, i);
+      if (after.flags[i] & GS_SET && !(before.flags[i] & GS_SET)) placed.add(d);
+      else if (
+        !(after.flags[i] & GS_SET) &&
+        after.flags[i] & GS_NOTNEUTRAL &&
         !(before.flags[i] & GS_NOTNEUTRAL)
-      ) {
+      )
         marked.add(d);
-      }
     }
-    const reason = rec.reason as MagnetsReason | null;
-    if (!reason) throw new Error("magnets hint: a firing recorded no premise");
+    const reason = taken.reasons[0] as MagnetsReason;
     return {
       reason,
       before,
-      placed: [...placed.keys()].map((d) => {
-        const idx = endOf(solver, reason, d);
-        return { idx, which: solver.grid[idx] };
+      placed: [...placed].map((d) => {
+        const idx = endOf(after, reason, d);
+        return { idx, which: after.grid[idx] };
       }),
       marked: [...marked],
     };
   };
 
-  return { next, impossible: ladder.impossible };
+  return { next, impossible: () => contradiction };
 }
 
 // --- narration ------------------------------------------------------------
@@ -813,21 +808,17 @@ function stepsOf(f: MagnetsFiring): MagnetsStep[] {
   });
 }
 
-const allSet = (s: MagnetsSolver): boolean => {
-  for (let i = 0; i < s.wh; i++) if (!(s.flags[i] & GS_SET)) return false;
-  return true;
-};
-
 /** Deduce the plan from the player's board. */
 export function magnetsHint(
   state: MagnetsState,
 ): { ok: true; steps: MagnetsStep[] } | { ok: false; error: HintRefusal } {
-  const solver = seedSolver(state);
-  if (!solver) return { ok: false, error: PUZZLE_NOT_REASONABLE };
-  const pass = recordingPass(solver, stepBudget("magnets hint"));
-  const { plan } = deduceHintPlan<MagnetsSolver, MagnetsFiring, string>({
-    board: solver,
-    status: (s) => (pass.impossible() ? "broken" : allSet(s) ? "done" : "open"),
+  const board = seedMarks(state);
+  if (!board) return { ok: false, error: PUZZLE_NOT_REASONABLE };
+  const pass = recordingPass(board, stepBudget("magnets hint"));
+  const { plan } = deduceHintPlan<HintBoard, MagnetsFiring, string>({
+    board,
+    status: (b) =>
+      pass.impossible() ? "broken" : b.m.grid.includes(0) ? "open" : "done",
     incomplete: "open",
     next: () => pass.next(),
     showable: (_, f) => f.placed.length > 0 || f.marked.length > 0,

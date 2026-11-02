@@ -58,6 +58,7 @@ function cfg(maxdiff: number, repeats = true): LatinSolverConfig {
           { id: "latin.wing", tier: 3 },
         ],
         placing: [{ id: "latin.placed" }],
+        striking: [],
       },
       {},
     ),

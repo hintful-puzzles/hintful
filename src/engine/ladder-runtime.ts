@@ -49,6 +49,17 @@ export interface RepeatFullReason {
 /** A technique run as each value is placed, on the cell placed. */
 export type PlaceRung = (m: CellMarks, c: number) => void;
 
+/** A technique run as a value is struck from a cell, on the cell struck. */
+export type StrikeRung = (m: CellMarks, c: number) => void;
+
+/** Why a technique run on striking struck a value: one was struck from
+ * `(x, y)`. */
+interface StruckReason {
+  kind: "struck";
+  x: number;
+  y: number;
+}
+
 /**
  * The marks a compiled technique reads, over a {@link GridSpace}: a value per
  * cell (0 where there is none, as every game's grid holds it, since no value
@@ -67,6 +78,10 @@ export class CellMarks implements Marks {
   /** The techniques run as each value is placed, in the description's
    * order. */
   placing: readonly PlaceRung[] = [];
+  /** The techniques run as a fact strikes a value from a cell, in the
+   * description's order. A placement narrows its cell without them: what a
+   * placed value rules out is the placing techniques' to follow. */
+  striking: readonly StrikeRung[] = [];
 
   /** The hint path's: every fact a firing makes, with its reason. Unset on
    * the solve path, which then records nothing. */
@@ -112,7 +127,9 @@ export class CellMarks implements Marks {
     return ((this.cands[c] >> d) & 1) !== 0;
   }
   strikeAt(c: number, d: number): void {
+    if (!this.has(c, d)) return;
     this.cands[c] &= ~(1 << d);
+    for (const run of this.striking) run(this, c);
   }
   placeAt(c: number, d: number): void {
     this.place(c, d);
@@ -312,6 +329,34 @@ export function placingRung<B, C>(
   };
 }
 
+/**
+ * A compiled technique that runs as a value is struck from a cell, its
+ * strikes recorded as following that one ({@link StruckReason}).
+ */
+export function strikingRung<B, C>(
+  run: (b: Marks, sp: GridSpace, cl: C, c: number, fire: Fire<B> | null) => number,
+  cl: C,
+): StrikeRung {
+  return (m, c) => {
+    const w = m.sp.w;
+    const reason: StruckReason = { kind: "struck", x: c % w, y: (c / w) | 0 };
+    run(
+      m,
+      m.sp,
+      cl,
+      c,
+      m.recorder
+        ? (_, facts) => {
+            // Each strike runs the technique again, on the cell struck, which
+            // empties the buffer these facts are in.
+            m.applyFacts(facts.slice(), () => reason);
+            return true;
+          }
+        : null,
+    );
+  };
+}
+
 /** {@link placingRung} of a technique that reads nothing the board deals. */
 export function uncluedPlacingRung<B>(
   run: (b: Marks, sp: GridSpace, c: number, fire: Fire<B> | null) => number,
@@ -342,10 +387,12 @@ export interface LadderEntry<S extends CellMarks = CellMarks> extends CompiledEn
   run: Rung<S>;
 }
 
-/** A described game's ladder: its rungs, and what runs on placing. */
+/** A described game's ladder: its rungs, and what runs on placing and on
+ * striking. */
 export interface Ladder<S extends CellMarks = CellMarks> {
   entries: readonly LadderEntry<S>[];
   placing: readonly PlaceRung[];
+  striking: readonly StrikeRung[];
 }
 
 /** A game's own ids among a compiled module's: a library's are written
@@ -353,19 +400,27 @@ export interface Ladder<S extends CellMarks = CellMarks> {
 export type OwnId<Id extends string> = Exclude<Id, `${string}.${string}`>;
 
 /** What a compiled module says about its ladder. */
-export interface CompiledLadder<Id extends string, P extends string> {
+export interface CompiledLadder<
+  Id extends string,
+  P extends string,
+  K extends string = never,
+> {
   ladder: readonly CompiledEntry<Id>[];
   placing: readonly { id: P; variation?: string }[];
+  striking: readonly { id: K; variation?: string }[];
 }
 
 /** A game's pairing of its own techniques: each rung, and each technique
- * run on placing, by its id. A library technique may be paired too, where
- * the game's reason for it is not the library's. */
-export type OwnRungs<Id extends string, P extends string, S extends CellMarks> = Record<
-  OwnId<Id>,
-  Rung<S>
-> &
+ * run on placing or on striking, by its id. A library technique may be
+ * paired too, where the game's reason for it is not the library's. */
+export type OwnRungs<
+  Id extends string,
+  P extends string,
+  S extends CellMarks,
+  K extends string = never,
+> = Record<OwnId<Id>, Rung<S>> &
   Record<OwnId<P>, PlaceRung> &
+  Record<OwnId<K>, StrikeRung> &
   Partial<Record<Exclude<Id, OwnId<Id>>, Rung<S>>>;
 
 /** A library's techniques, paired by the engine: by id, a rung or what runs
@@ -386,13 +441,18 @@ export function describedLadder<
   Id extends string,
   P extends string,
   S extends CellMarks,
+  K extends string = never,
 >(
-  module: CompiledLadder<Id, P>,
-  own: OwnRungs<Id, P, S>,
+  module: CompiledLadder<Id, P, K>,
+  own: OwnRungs<Id, P, S, K>,
   library: Library = NO_LIBRARY,
   variations: readonly string[] = [],
 ): Ladder<S> {
-  const pairs = own as Readonly<Record<string, Rung<S> | PlaceRung | undefined>>;
+  const pairs = own as Readonly<
+    Record<string, Rung<S> | PlaceRung | StrikeRung | undefined>
+  >;
+  const on = (e: { variation?: string }): boolean =>
+    e.variation === undefined || variations.includes(e.variation);
   const pick = <T>(id: string, lib: Readonly<Record<string, T>>): T => {
     const run = (pairs[id] as T | undefined) ?? lib[id];
     if (run === undefined) throw new Error(`no rung pairs ${id}`);
@@ -400,11 +460,12 @@ export function describedLadder<
   };
   return {
     entries: module.ladder
-      .filter((e) => e.variation === undefined || variations.includes(e.variation))
+      .filter(on)
       .map((e) => ({ ...e, run: pick<Rung<S>>(e.id, library.rungs) })),
     placing: module.placing
-      .filter((e) => e.variation === undefined || variations.includes(e.variation))
+      .filter(on)
       .map((e) => pick<PlaceRung>(e.id, library.placing)),
+    striking: module.striking.filter(on).map((e) => pick<StrikeRung>(e.id, {})),
   };
 }
 

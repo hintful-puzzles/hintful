@@ -17,7 +17,7 @@ import {
   type MagnetsHighlights,
   magnetsKeepTrack,
   recordingPass,
-  seedSolver,
+  seedMarks,
 } from "./hint.ts";
 import {
   type Axis,
@@ -31,14 +31,13 @@ import {
   say,
 } from "./hint-text.ts";
 import { magnetsGame } from "./index.ts";
-import type { MagnetsReason } from "./solver.ts";
+import { isSolved, type MagnetsReason } from "./solver.ts";
 import {
   COLUMN,
   DIFF_TRICKY,
   executeMove,
   GS_NOTNEUTRAL,
   GS_SET,
-  isSolved,
   type MagnetsMove,
   type MagnetsParams,
   type MagnetsState,
@@ -185,9 +184,9 @@ describe("magnets hint", () => {
     const shown = new Set<string>();
     const hidden = new Set<string>();
     for (const { state } of CORPUS) {
-      const solver = seedSolver(state);
-      if (!solver) throw new Error("a fresh board failed to seed");
-      const pass = recordingPass(solver, stepBudget("magnets census"));
+      const seeded = seedMarks(state);
+      if (!seeded) throw new Error("a fresh board failed to seed");
+      const pass = recordingPass(seeded, stepBudget("magnets census"));
       for (let f = pass.next(); f; f = pass.next()) {
         const visible = f.placed.length > 0 || f.marked.length > 0;
         const key =
@@ -345,12 +344,14 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
   it("rings only the square that takes the pole, once the board forces it", () => {
     const [first, second, third] = steps();
     // The vertical domino's + goes at its bottom only because the second leg's
-    // + lands beside its top, so neither earlier step rings it.
+    // + lands beside its top, so neither earlier step rings it: it is the
+    // next step's, the column's count with one square left.
     expect(picture(first).targets).toEqual([at(2, 0), at(2, 3)]);
     expect(picture(second).targets).toEqual([at(2, 3)]);
     expect(picture(third).targets).toEqual([at(2, 5)]);
-    expect(third.explanation).toContain(
-      "A + at its far end would touch a +, so it must go in the ringed square.",
+    expect(third.explanation).toBe(
+      "This column needs one more +; a + in an outlined square would touch a +, " +
+        "so this square must be +.",
     );
     expect(picture(third).area).toEqual(expect.arrayContaining([at(2, 4), at(2, 3)]));
   });
@@ -391,9 +392,7 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
     expect(second.explanation).toMatch(
       /^This column needs 2 more \+s from just 2 tiles/,
     );
-    expect(third.explanation).toMatch(
-      /^This column needs one more \+ from only this tile;/,
-    );
+    expect(third.explanation).toMatch(/^This column needs one more \+;/);
   });
 });
 

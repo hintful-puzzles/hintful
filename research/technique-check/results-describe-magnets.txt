@@ -1,0 +1,13 @@
+ok  magnets    pair                           current: recorded src/games/magnets/magnets.description.yaml#pair dc076fef2e4ea27d
+ok  magnets    repel                          current: recorded src/games/magnets/magnets.description.yaml#repel e9ffc22bc177cda3
+ok  magnets    tile                           current: recorded src/games/magnets/magnets.description.yaml#tile b031d9b26087ceec
+ok  magnets    single                         current: recorded src/games/magnets/magnets.description.yaml#single c39e33c6cb459bda
+ok  magnets    count                          current: recorded src/games/magnets/magnets.description.yaml#count b90ff8e9ae00ba17
+ok  magnets    oddGap                         current: recorded src/games/magnets/magnets.description.yaml#oddGap 20daa93db3b3e43f
+ok  magnets    marked                         current: recorded src/games/magnets/magnets.description.yaml#marked 53ce858e6b2a6004
+ok  magnets    oneNeutral                     3  sound    (want sound   )     6 queries    0.2s
+ok  magnets    oneNeutral (planted)           3  unsound  (want unsound )     1 queries    0.1s   at line 3
+ok  magnets    oneNeutral                     4  sound    (want sound   )     8 queries    0.3s
+ok  magnets    oneNeutral (planted)           4  unsound  (want unsound )     1 queries    0.1s   at line 4
+ok  magnets    everyTile                      current: recorded src/games/magnets/magnets.description.yaml#everyTile e07b02415b29f219
+ok  magnets    onlyEnd                        current: recorded src/games/magnets/magnets.description.yaml#onlyEnd a60be8c4bddcb1d8

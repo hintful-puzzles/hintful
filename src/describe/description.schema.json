@@ -30,8 +30,8 @@
       "required": ["for", "conclude"],
       "properties": {
         "on": {
-          "const": "place",
-          "description": "The engine runs it as each value is placed, with its first binder bound to the placed cell, and not as a rung of the ladder."
+          "enum": ["place", "strike"],
+          "description": "The engine runs it as each value is placed (`place`), or as a fact strikes a value from a cell (`strike`), with its first binder bound to that cell, and not as a rung of the ladder. One run on striking only strikes."
         },
         "for": {
           "$ref": "#/$defs/formula",

@@ -5,15 +5,15 @@
  * the hint needs no notation for those two bits and may leave the firings that
  * set only them unshown (`hint.ts`).
  *
- * Held over whole solves from empty, one firing at a time, on the path the hint
- * actually walks (a recorder standing, so each rung returns per premise).
+ * Held over whole solves from empty, one firing at a time, on the walk the hint
+ * actually takes.
  */
 import { describe, expect, it } from "vitest";
 import { presetMenu } from "../../engine/param-label.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { newMagnetsDesc } from "./generator.ts";
-import { recordingPass, seedSolver } from "./hint.ts";
+import { recordingPass, seedMarks, snapshot } from "./hint.ts";
 import { magnetsGame } from "./index.ts";
 import { type ReadableBoard, whyNot } from "./reading.ts";
 import {
@@ -44,20 +44,21 @@ describe("magnets board reading", () => {
       for (let seed = 0; seed < SEEDS; seed++) {
         const label = `${p.w}x${p.h}d${p.diff}${p.stripclues ? "s" : ""}#${seed}`;
         const { desc } = newMagnetsDesc(p, randomNew(`magnets-reading-${label}`));
-        const solver = seedSolver(newState(p, desc));
-        if (!solver) throw new Error(`${label}: a fresh board failed to seed`);
-        const pass = recordingPass(solver, stepBudget("magnets reading"));
+        const seeded = seedMarks(newState(p, desc));
+        if (!seeded) throw new Error(`${label}: a fresh board failed to seed`);
+        const pass = recordingPass(seeded, stepBudget("magnets reading"));
         boards++;
         while (pass.next()) {
-          for (let i = 0; i < solver.wh; i++) {
-            if (solver.flags[i] & GS_SET) continue;
+          const now = snapshot(seeded);
+          for (let i = 0; i < now.grid.length; i++) {
+            if (now.flags[i] & GS_SET) continue;
             for (const [bit, pole] of [
               [GS_NOTPOSITIVE, POSITIVE],
               [GS_NOTNEGATIVE, NEGATIVE],
             ] as const) {
-              if (!(solver.flags[i] & bit)) continue;
+              if (!(now.flags[i] & bit)) continue;
               bits++;
-              const r = whyNot(solver, i, pole);
+              const r = whyNot(now, i, pole);
               if (!r) unread.push(`${label} ${desc}: square ${i} not ${pole}`);
               const own = r?.kind === "partner" ? r.inner : r;
               if (own?.kind === "full" && own.magnets.length > 0) viaMagnets++;
@@ -69,7 +70,7 @@ describe("magnets board reading", () => {
     }
     expect(unread).toEqual([]);
     // Vacuity: every preset walked, a real population of bits, and the arm
-    // that counts marked magnets reached (it is `advancedfull`'s, and the one
+    // that counts marked magnets reached (it is `marked`'s, and the one
     // most easily broken).
     expect(PRESETS.length).toBeGreaterThan(0);
     expect(boards).toBe(PRESETS.length * SEEDS);

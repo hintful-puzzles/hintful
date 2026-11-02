@@ -45,3 +45,151 @@ help:
     * **The odd gap.** When a line's empty squares must all hold poles, they
       alternate. If the line needs one more + than −, the extra + comes from
       its one odd-length gap, which must start with +.
+name: Magnets
+family: numbers
+sizes:
+  # A line's count is one character of the game ID's alphabet.
+  w: { min: 2, max: 61 }
+  h: { min: 2, max: 61 }
+space:
+  grid: { w: "w", h: "h" }
+  # The tiles are a dealt partition, each part one tile: two squares side by
+  # side, or one square no tile covers.
+  regions: { tile: dealt }
+  units: []
+answer:
+  # 1 is a + pole, 2 a neutral square and 3 a − pole, so the other end of a
+  # tile holds 4 less the value. A square no tile covers is neutral.
+  value:
+    sort: cell
+    domain: "{d in range(1, 3) where d = 2 or |cells(tile(c))| = 2}"
+marks:
+  # A tile marked ? is a magnet either way round: neither end is neutral,
+  # which the candidates say.
+  cand: { sort: cell, notation: "set of range(1, 3)" }
+  # A play aid with no meaning for the answer.
+  done: { sort: slot, notation: "bool" }
+define:
+  # The other squares of c's tile.
+  others(c): "{p in cells(tile(c)) where p != c}"
+  # How many of value d line L holds.
+  holds(L, d): "count(c in cells(L) where value(c) = d)"
+  # Whether c is an open end of a magnet lying along line L, either way
+  # round: neither it nor the tile's other end can be neutral.
+  inMagnet(L, c): >-
+    not known(c) and 2 not in cand(c)
+    and (exists p in others(c): p in cells(L) and not known(p) and 2 not in cand(p))
+shape:
+  # A tile is two squares at most.
+  - "forall c in cells: |cells(tile(c))| <= 2"
+  # A tile is a magnet, + at one end and − at the other, or neutral.
+  - "forall c in cells, p in others(c): value(p) = 4 - value(c)"
+  # Like poles do not touch.
+  - "forall c in cells where value(c) != 2, p in adj4(c): value(p) != value(c)"
+clues:
+  # A number round the grid: how many + poles (1) or − poles (3) a row or
+  # column holds. Where a line has both, the game deals its neutral squares'
+  # count (2) too, the squares the poles leave.
+  count:
+    at: line
+    per: value
+    value: "range(0, |cells(at)|)"
+    means: "holds(at, per) = v"
+freedom: { kind: fill }
+deal:
+  tiles: a random tiling, each tile two squares, one square left over where the area is odd
+  answer: a few neutral tiles, then a magnet wherever one fits
+  count: every number, or as many hidden as the answer stays unique at its tier
+  tier: one of the tiers
+tiers: [Easy, Normal]
+techniques:
+  # The other end of a placed tile holds the opposite.
+  - id: pair
+    on: place
+    tier: Easy
+    for: "c in cells where known(c), p in others(c) where not known(p)"
+    conclude: "place(p, 4 - value(c))"
+  # A placed pole leaves the squares beside it.
+  - id: repel
+    on: place
+    tier: Easy
+    for: "c in cells where known(c) and value(c) != 2, p in adj4(c)"
+    conclude: "strike(p, value(c))"
+  # A value struck from one end of a tile leaves the other end's opposite.
+  - id: tile
+    on: strike
+    tier: Easy
+    for: "c in cells, p in others(c)"
+    conclude: "forall d in range(1, 3) where d not in cand(c): strike(p, 4 - d)"
+  # A square down to one value holds it. One with none left, placed or not,
+  # makes the marks inconsistent.
+  - id: single
+    tier: Easy
+    for: "c in cells where |cand(c)| < 2"
+    conclude: "|cand(c)| = 1 and (known(c) or place(c, first(cand(c))))"
+  # Upstream scans the columns, then the rows, reading each count of a line
+  # in turn. A line holding all of a value its count asks has no room for
+  # another; one with just as many open squares able to take it as it still
+  # needs takes it in every one. A line holding more, or with too little
+  # room, makes the marks inconsistent.
+  - id: count
+    tier: Easy
+    for: >-
+      L in cols + rows, d in range(1, 3), v = clue(count, L, d) where v >= 0,
+      O = {c in cells(L) where not known(c) and d in cand(c)}
+    conclude: >-
+      holds(L, d) <= v and |O| >= v - holds(L, d)
+      and (holds(L, d) < v or (forall c in O: strike(c, d)))
+      and (holds(L, d) = v or |O| > v - holds(L, d) or (forall c in O: place(c, d)))
+  # Where a line's neutral squares are all placed, its open squares are
+  # poles, alternating along each stretch, so an even stretch holds as many
+  # + as −. A line needing one more of a pole than of the other has it from
+  # its odd stretches; where there is one, it starts with that pole.
+  - id: oddGap
+    tier: Easy
+    for: >-
+      L in cols + rows, n = clue(count, L, 2) where n >= 0 and holds(L, 2) = n,
+      d in range(1, 3) where d != 2 and clue(count, L, d) >= 0 and clue(count, L, 4 - d) >= 0
+      and clue(count, L, d) - holds(L, d) = clue(count, L, 4 - d) - holds(L, 4 - d) + 1,
+      O = {c in cells(L) where not known(c)},
+      S = {c in O where index(c, stretch(L, c, O)) = 0 and |stretch(L, c, O)| mod 2 = 1}
+      where |S| = 1
+    conclude: "place(first(S), d)"
+  # A magnet lying along a line brings it one + and one −, whichever way
+  # round, so where the line's magnets, both ends of each in M, make up its
+  # count of a pole, no other open square of it holds that pole.
+  - id: marked
+    tier: Normal
+    for: >-
+      L in cols + rows, M = {c in cells(L) where inMagnet(L, c)} where |M| > 0,
+      d in range(1, 3) where d != 2, v = clue(count, L, d)
+      where v >= 0 and 2 * (v - holds(L, d)) = |M|
+    conclude: "forall c in cells(L) where not known(c) and c not in M: strike(c, d)"
+  # An open tile lying along a line, neutral, would bring it two neutral
+  # squares, so a line with room for one more has none.
+  - id: oneNeutral
+    tier: Normal
+    for: "L in cols + rows, n = clue(count, L, 2) where n >= 0 and holds(L, 2) + 1 = n"
+    conclude: >-
+      forall c in cells(L) where not known(c),
+      p in others(c) where p in cells(L) and not known(p):
+      strike(c, 2)
+  # A tile brings a line at most one of a pole, so a line needing as many of
+  # one as it has open tiles has a pole from each, and none is neutral.
+  - id: everyTile
+    tier: Normal
+    for: >-
+      L in cols + rows, d in range(1, 3) where d != 2, v = clue(count, L, d) where v >= 0,
+      T = set(tile(c) over c in cells(L) where not known(c))
+      where |T| > 0 and v - holds(L, d) = |T|
+    conclude: "forall c in cells(L) where not known(c): strike(c, 2)"
+  # A line needing as many of a pole as it has tiles able to bring one has
+  # it from each, so a tile with one end able to holds it there.
+  - id: onlyEnd
+    tier: Normal
+    for: >-
+      L in cols + rows, d in range(1, 3) where d != 2, v = clue(count, L, d) where v >= 0,
+      O = {c in cells(L) where not known(c) and d in cand(c)},
+      T = set(tile(c) over c in O)
+      where |T| > 0 and v - holds(L, d) = |T|
+    conclude: "forall c in O where not (exists p in others(c): p in O): place(c, d)"

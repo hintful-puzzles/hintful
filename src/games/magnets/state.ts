@@ -27,7 +27,6 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import type { GameStatus } from "../../engine/types.ts";
 
 // --- cell values (upstream: EMPTY == NEUTRAL) -----------------------------
 export const EMPTY = 0;
@@ -44,8 +43,7 @@ export const GS_SET = 2;
 export const GS_NOTPOSITIVE = 4;
 export const GS_NOTNEGATIVE = 8;
 export const GS_NOTNEUTRAL = 16;
-export const GS_MARK = 32;
-export const GS_NOTMASK = GS_NOTPOSITIVE | GS_NOTNEGATIVE | GS_NOTNEUTRAL;
+const GS_NOTMASK = GS_NOTPOSITIVE | GS_NOTNEGATIVE | GS_NOTNEUTRAL;
 
 /** The NOT-flag bit for a given color (0 for out of range). */
 export const notFlag = (which: number): number =>
@@ -360,7 +358,7 @@ export function clueIndex(w: number, h: number, x: number, y: number): number {
 export const inGrid = (w: number, h: number, x: number, y: number): boolean =>
   x >= 0 && x < w && y >= 0 && y < h;
 
-/** What completion checking reads: a game state, or the solver's scratch. */
+/** What the counts and the error overlay read. */
 type Board = Pick<MagnetsState, "w" | "h" | "wh" | "flags" | "common"> & {
   readonly grid: ArrayLike<number>;
 };
@@ -395,57 +393,31 @@ export function countRowcol(
   return count;
 }
 
-/**
- * Upstream check_completion: set live GS_ERROR on two touching identical
- * terminals, and report over/under-committed clue counts. Mutates `flags`
- * (clears then re-sets GS_ERROR). Returns −1 (wrong) / 0 (incomplete) / 1
- * (complete).
- */
-export function checkCompletion(state: Board): number {
+/** The error overlay: set GS_ERROR on two touching like poles, clearing it
+ * everywhere else. Whether a board is solved is the answer check's
+ * (`solver.ts`). */
+function markErrors(state: Board): void {
   const { w, h, wh, grid, flags, common } = state;
-  const { rowcount, colcount, dominoes } = common;
-  let wrong = false;
-  let incomplete = false;
-
-  const checkRC = (targets: Int32Array, base: number, count: number) => {
-    const target = targets[base];
-    if (target === -1) return;
-    if (count < target) incomplete = true;
-    if (count > target) wrong = true;
-  };
-  for (const which of [POSITIVE, NEGATIVE]) {
-    for (let x = 0; x < w; x++) {
-      checkRC(colcount, x * 3 + which, countRowcol(state, x, COLUMN, which));
-    }
-    for (let y = 0; y < h; y++) {
-      checkRC(rowcount, y * 3 + which, countRowcol(state, y, ROW, which));
-    }
-  }
-
   for (let i = 0; i < wh; i++) flags[i] &= ~GS_ERROR;
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
       const idx = y * w + x;
-      if (dominoes[idx] === idx) continue; // no domino here
-      if (!(flags[idx] & GS_SET)) incomplete = true;
+      if (common.dominoes[idx] === idx) continue; // no domino here
       const which = grid[idx];
-      if (which !== NEUTRAL) {
-        for (const [xx, yy] of [
-          [x, y - 1],
-          [x, y + 1],
-          [x - 1, y],
-          [x + 1, y],
-        ]) {
-          if (inGrid(w, h, xx, yy) && grid[yy * w + xx] === which) {
-            wrong = true;
-            flags[yy * w + xx] |= GS_ERROR;
-            flags[idx] |= GS_ERROR;
-          }
+      if (which === NEUTRAL) continue;
+      for (const [xx, yy] of [
+        [x, y - 1],
+        [x, y + 1],
+        [x - 1, y],
+        [x + 1, y],
+      ]) {
+        if (inGrid(w, h, xx, yy) && grid[yy * w + xx] === which) {
+          flags[yy * w + xx] |= GS_ERROR;
+          flags[idx] |= GS_ERROR;
         }
       }
     }
   }
-  return wrong ? -1 : incomplete ? 0 : 1;
 }
 
 // --- moves ---------------------------------------------------------------
@@ -506,18 +478,8 @@ export function executeMove(state: MagnetsState, move: MagnetsMove): MagnetsStat
   }
 
   // Refreshes the live GS_ERROR marks the redraw reads.
-  checkCompletion(next);
+  markErrors(next);
   return next;
-}
-
-/** Solved: every domino set, every clue met, no like poles touching. Checked
- * on a copy of the flags, which `checkCompletion` writes its error marks to. */
-export function isSolved(state: MagnetsState): boolean {
-  return checkCompletion({ ...state, flags: state.flags.slice() }) === 1;
-}
-
-export function status(state: MagnetsState): GameStatus {
-  return isSolved(state) ? "solved" : "ongoing";
 }
 
 // --- text format (upstream game_text_format) ------------------------------

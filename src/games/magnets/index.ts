@@ -37,7 +37,7 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import { MagnetsSolver } from "./solver.ts";
+import { isSolved, solveMagnets, status } from "./solver.ts";
 import {
   clueIndex,
   DIFF_COUNT,
@@ -49,7 +49,6 @@ import {
   GS_NOTNEUTRAL,
   GS_SET,
   isClue,
-  isSolved,
   type MagnetsMistake,
   type MagnetsMove,
   type MagnetsParams,
@@ -61,7 +60,6 @@ import {
   newState,
   POSITIVE,
   paramConfig,
-  status,
   textFormat,
   validateParams,
 } from "./state.ts";
@@ -226,34 +224,33 @@ function solve(
   if (aux && aux.length === orig.wh) {
     return { ok: true, move: { type: "solve", solution: Array.from(aux, CHAR2GRID) } };
   }
-  const solver = new MagnetsSolver(orig.w, orig.h, orig.common);
-  const ret = solver.solve(DIFF_COUNT);
-  if (ret > 0) {
-    return { ok: true, move: { type: "solve", solution: Array.from(solver.grid) } };
+  const { verdict, grid } = solveMagnets(orig.w, orig.h, orig.common, DIFF_COUNT);
+  if (verdict > 0) {
+    return { ok: true, move: { type: "solve", solution: Array.from(grid) } };
   }
   return {
     ok: false,
-    error: ret < 0 ? NO_SOLUTION : PUZZLE_NOT_REASONABLE,
+    error: verdict < 0 ? NO_SOLUTION : PUZZLE_NOT_REASONABLE,
   };
 }
 
 /** Re-solve from the clues and flag every player-set cell whose value
  * contradicts the unique solution, and every `?` on a domino that is neutral
  * in it. The `?` counts because the hint reads it as a fact (`hint.ts`
- * `seedSolver`), so the check has to vouch for it (docs/hints-candidates.md §
+ * `seedMarks`), so the check has to vouch for it (docs/hints-candidates.md §
  * "Deduce from the notes when the mistake check vouches for them"). Blanks are
  * never mistakes, and a non-uniquely-solvable board yields none. */
 function findMistakes(state: MagnetsState): readonly MagnetsMistake[] {
   const { w, wh, grid, flags, common } = state;
-  const solver = new MagnetsSolver(w, state.h, common);
-  if (solver.solve(DIFF_COUNT) <= 0) return [];
+  const solved = solveMagnets(w, state.h, common, DIFF_COUNT);
+  if (solved.verdict <= 0) return [];
   const out: MagnetsMistake[] = [];
   for (let i = 0; i < wh; i++) {
     if (common.dominoes[i] === i) continue;
     const wrong =
       flags[i] & GS_SET
-        ? grid[i] !== solver.grid[i]
-        : (flags[i] & GS_NOTNEUTRAL) !== 0 && solver.grid[i] === NEUTRAL;
+        ? grid[i] !== solved.grid[i]
+        : (flags[i] & GS_NOTNEUTRAL) !== 0 && solved.grid[i] === NEUTRAL;
     if (wrong) out.push({ x: i % w, y: Math.floor(i / w) });
   }
   return out;
@@ -262,8 +259,8 @@ function findMistakes(state: MagnetsState): readonly MagnetsMistake[] {
 const difficulty: DifficultyContract<MagnetsParams> = {
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
-    const ret = new MagnetsSolver(s.w, s.h, s.common).solve(cap);
-    return ret < 0 ? "impossible" : ret > 0 ? "solved" : "unsolved";
+    const { verdict } = solveMagnets(s.w, s.h, s.common, cap);
+    return verdict < 0 ? "impossible" : verdict > 0 ? "solved" : "unsolved";
   },
 };
 

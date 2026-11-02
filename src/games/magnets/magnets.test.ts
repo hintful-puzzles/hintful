@@ -16,7 +16,7 @@ import {
 } from "../../engine/testing/absent-tiers.ts";
 import { newMagnetsDesc } from "./generator.ts";
 import { magnetsGame } from "./index.ts";
-import { MagnetsSolver } from "./solver.ts";
+import { solveMagnets } from "./solver.ts";
 import {
   DIFF_COUNT,
   DIFF_EASY,
@@ -131,8 +131,8 @@ describe("magnets generator + solver", () => {
     for (const p of [P(6, 5, DIFF_EASY), P(6, 5, DIFF_TRICKY), P(8, 7, DIFF_TRICKY)]) {
       const { desc, aux } = newMagnetsDesc(p, randomNew(`gen-${p.w}x${p.h}-${p.diff}`));
       const s = newState(p, desc);
-      const solver = new MagnetsSolver(s.w, s.h, s.common);
-      expect(solver.solve(DIFF_COUNT)).toBe(1); // uniquely solvable
+      const solver = solveMagnets(s.w, s.h, s.common, DIFF_COUNT);
+      expect(solver.verdict).toBe(1); // uniquely solvable
 
       // aux is the solution; the solver must reproduce it.
       for (let i = 0; i < s.wh; i++) {
@@ -146,8 +146,8 @@ describe("magnets generator + solver", () => {
     const p = P(8, 7, DIFF_TRICKY);
     const { desc } = newMagnetsDesc(p, randomNew("tricky-not-easy"));
     const s = newState(p, desc);
-    const easy = new MagnetsSolver(s.w, s.h, s.common);
-    expect(easy.solve(DIFF_EASY)).toBeLessThanOrEqual(0); // ambiguous at Easy
+    const easy = solveMagnets(s.w, s.h, s.common, DIFF_EASY);
+    expect(easy.verdict).toBeLessThanOrEqual(0); // ambiguous at Easy
   });
 });
 

@@ -166,8 +166,9 @@ interface Placing {
 /** What a technique says, wherever it is stated. */
 export interface StatedTechnique {
   /** `"place"`: the engine runs it as each value is placed, with its first
-   * binder bound to the placed cell, and not as a rung of the ladder. */
-  on?: "place";
+   * binder bound to the placed cell, and not as a rung of the ladder;
+   * `"strike"`, as a fact strikes a value from the cell. */
+  on?: "place" | "strike";
   for: string;
   premise?: string;
   conclude: string;
@@ -380,7 +381,7 @@ export interface Technique {
   until: number | null;
   /** The hint rungs a firing of it is recorded under. */
   rungs: string[];
-  on: "place" | null;
+  on: "place" | "strike" | null;
   binders: Binder[];
   premise: Expr | null;
   conclude: Expr;
