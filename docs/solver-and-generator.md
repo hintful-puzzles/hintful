@@ -454,6 +454,14 @@ The budget and the order:
   of a board with one answer; the order of its branches does not, since
   proving one answer visits them all. Plant out both and pin the one that
   moves.
+- **Where upstream's harder tier was a lookahead, `assume` is that
+  lookahead**: the first undecided thing the deduction refutes one way is
+  returned the other way alone, one position and no split, and only where
+  nothing is refuted is one split. Splitting on the first open square alone
+  took HEAD's 15×15 Bricks boards up to 611,629 positions, where the
+  lookahead takes 45 and deals upstream's boards
+  ([`bricks/solver.ts`](../src/games/bricks/solver.ts)). Measure the budget
+  on boards the old generator dealt beyond the presets.
 - **Start each position's deduction from the assumed thing** where the
   deduction can, and not from scratch: a position is one assumption on from a
   stop.
@@ -695,8 +703,8 @@ asks whether its tier is named `Unreasonable`, and for a game with no
   cells' candidates are notes: no mark records the conditional. Exemplar:
   `forcing` in [`engine/latin.ts`](../src/engine/latin.ts), a Search.
 - **Nested speculation is Search twice over**, and so is every true
-  recursion tier. Exemplars of a Search: `forcingPass` in Undead's solver,
-  `solverRecurse` in Bricks' and `deduceForcingChain` in Dominosa's.
+  recursion tier. Exemplars of a Search: `forcingPass` in Undead's solver
+  and `deduceForcingChain` in Dominosa's.
 - **A bounded walk is still a supposition**, whether a propagation from a
   supposed state is bounded by deductions or by firings. Measured at their
   stalls, such walks were mostly one firing long, and that firing was one

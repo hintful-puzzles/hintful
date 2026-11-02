@@ -351,7 +351,7 @@ const searchTierContracts = new WeakSet<object>();
 /**
  * Whether `contract` is one {@link searchTiers} made: the games whose
  * Unreasonable tier is this module's, apart from a game that names its tiers
- * the same and grades them by a solver of its own (Bricks, Galaxies).
+ * the same and grades them by a solver of its own.
  */
 export function isSearchTierContract(contract: object): boolean {
   return searchTierContracts.has(contract);

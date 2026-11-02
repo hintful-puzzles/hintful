@@ -56,16 +56,21 @@ import {
   offsets,
   PREFERRED_TILE_SIZE,
 } from "./render.ts";
-import { bricksValidate, findMistakes, solveGame } from "./solver.ts";
+import {
+  answerColors,
+  answerOf,
+  bricksValidate,
+  deductionFinishes,
+  findMistakes,
+  searchAnswers,
+} from "./solver.ts";
 import {
   applyBounds,
   type BricksMove,
   type BricksParams,
   type BricksState,
   type BricksUi,
-  bitsColor,
   COL_MASK,
-  DIFF_EASY,
   DIFF_NORMAL,
   DIFF_TRICKY,
   decodeParams,
@@ -189,23 +194,38 @@ describe("bricks desc codec", () => {
   });
 });
 
+/** A state's one answer, as the colors a solve paints. */
+function solvedColors(st: BricksState): ReturnType<typeof answerColors> {
+  const answer = answerOf(st);
+  if (answer.kind !== "one") throw new Error(`bricks: ${answer.kind} answers`);
+  return answerColors(answer.solution);
+}
+
 describe("bricks solver", () => {
-  it("solves every decoded fixture board to completion at Tricky", () => {
+  it("finds every decoded fixture board its one answer", () => {
     for (const f of fixtures) {
       const st = newState({ w: f.w, h: f.h, diff: f.diff }, f.desc);
-      const grid = st.grid.slice();
-      expect(solveGame(grid, st.w, st.h, 2, true, true)).toBe("complete");
+      expect(answerOf(st).kind, f.desc).toBe("one");
     }
   });
 
-  it("a tricky board is not completed by the Easy tier alone", () => {
+  // The lookahead `assume` makes is what keeps a board upstream's Normal
+  // dealt inside the budget: splitting on the first open square alone takes
+  // this one 47 positions.
+  it("searches upstream's 7x6 Normal board in 13 positions", () => {
+    const f = fixtures.find((x) => x.w === 7 && x.h === 6 && x.diff === 1);
+    if (!f) throw new Error("no 7x6 Normal fixture");
+    const st = newState({ w: f.w, h: f.h, diff: f.diff }, f.desc);
+    expect(searchAnswers(st, 13).kind).toBe("one");
+    expect(searchAnswers(st, 12).kind).toBe("out-of-reach");
+  });
+
+  it("a tricky board is not finished by the ladder alone", () => {
     const tricky = fixtures.find((f) => f.diff === 2 && f.w * f.h > 6);
     if (!tricky) throw new Error("no tricky fixture");
     const st = newState({ w: tricky.w, h: tricky.h, diff: tricky.diff }, tricky.desc);
-    const easy = st.grid.slice();
-    expect(solveGame(easy, st.w, st.h, 0, true, true)).not.toBe("complete");
-    const hard = st.grid.slice();
-    expect(solveGame(hard, st.w, st.h, 2, true, true)).toBe("complete");
+    expect(deductionFinishes(st)).toBe(false);
+    expect(answerOf(st).kind).toBe("one");
   });
 
   it("flags three shaded in a horizontal row as invalid", () => {
@@ -215,7 +235,7 @@ describe("bricks solver", () => {
     st.grid[base + 2] = F_SHADE;
     st.grid[base + 3] = F_SHADE;
     st.grid[base + 4] = F_SHADE;
-    expect(bricksValidate(st.grid, st.w, st.h, false)).toBe("invalid");
+    expect(bricksValidate(st.grid, st.w, st.h)).toBe("invalid");
   });
 });
 
@@ -392,12 +412,11 @@ describe("bricks completion and solve (through a real Midend)", () => {
 
   it("manually filling the solution completes the board, and the win flash sweeps it", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
-    const grid = st.grid.slice();
-    solveGame(grid, st.w, st.h, 2, true, true);
+    const colors = solvedColors(st);
     const cells = [];
     for (let i = 0; i < st.w * st.h; i++) {
       if (!(st.grid[i] & COL_MASK)) continue;
-      cells.push({ index: i, to: bitsColor(grid[i]) });
+      cells.push({ index: i, to: colors[i] });
     }
     const done = bricksGame.executeMove(st, { kind: "paint", cells });
     expect(bricksGame.status(st)).toBe("ongoing");
@@ -459,9 +478,7 @@ describe("bricks generator", () => {
     ] as BricksParams[]) {
       const { desc } = newBricksDesc(p, randomNew(`bricks-unit-${p.diff}`));
       expect(validateDesc(bricksGame, p, desc)).toBeNull();
-      const st = newState(p, desc);
-      const grid = st.grid.slice();
-      expect(solveGame(grid, st.w, st.h, 2, true, true)).toBe("complete");
+      expect(answerOf(newState(p, desc)).kind).toBe("one");
     }
   });
 
@@ -497,16 +514,12 @@ describe("bricks generator", () => {
       [7, 6],
       [10, 8],
     ]) {
-      it(`${w}x${h} Unreasonable needs its own rung, not Easy`, () => {
+      it(`${w}x${h} Unreasonable needs the search, not the ladder`, () => {
         const p: BricksParams = { w, h, diff: DIFF_NORMAL };
         const { desc } = newBricksDesc(p, randomNew(`bricks-tier-${w}x${h}`));
         const st = newState(p, desc);
-        expect(solveGame(st.grid.slice(), st.w, st.h, DIFF_NORMAL, true, true)).toBe(
-          "complete",
-        );
-        expect(solveGame(st.grid.slice(), st.w, st.h, DIFF_EASY, true, true)).not.toBe(
-          "complete",
-        );
+        expect(answerOf(st).kind).toBe("one");
+        expect(deductionFinishes(st)).toBe(false);
       });
     }
 
@@ -630,11 +643,9 @@ describe("bricks rendering (tier 2.5)", () => {
 
   it("draws a brick and a cross the answer contradicts in the error color, on a board already drawn", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
-    const sol = st.grid.slice();
-    solveGame(sol, st.w, st.h, DIFF_TRICKY, true, true);
     // The first undecided cell, entered each way: one way is right.
     const cell = st.grid.findIndex((c) => (c & COL_MASK) === F_EMPTY);
-    const shaded = (sol[cell] & COL_MASK) === F_SHADE;
+    const shaded = solvedColors(st)[cell] === "shade";
     const errorOps = (to: "shade" | "unshade"): string[] => {
       const { midend } = renderScenario({
         game: bricksGame,

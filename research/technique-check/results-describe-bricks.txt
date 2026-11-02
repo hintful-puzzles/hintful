@@ -1,0 +1,20 @@
+ok  bricks     strandSupport                  3  sound    (want sound   )     6 queries    0.0s
+ok  bricks     strandSupport (planted)        3  unsound  (want unsound )     2 queries    0.0s   at cell 1
+ok  bricks     strandSupport                  4  sound    (want sound   )    12 queries    0.1s
+ok  bricks     strandSupport (planted)        4  unsound  (want unsound )     2 queries    0.0s   at cell 1
+ok  bricks     undercount                     3  sound    (want sound   )     9 queries    0.1s
+ok  bricks     undercount (planted)           3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  bricks     undercount                     4  sound    (want sound   )    16 queries    0.2s
+ok  bricks     undercount (planted)           4  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  bricks     three                          3  sound    (want sound   )     3 queries    0.0s
+ok  bricks     three (planted)                3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  bricks     three                          4  sound    (want sound   )     4 queries    0.1s
+ok  bricks     three (planted)                4  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  bricks     unsupported                    3  sound    (want sound   )     6 queries    0.0s
+ok  bricks     unsupported (planted)          3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  bricks     unsupported                    4  sound    (want sound   )    12 queries    0.0s
+ok  bricks     unsupported (planted)          4  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  bricks     overcount                      3  sound    (want sound   )     9 queries    0.1s
+ok  bricks     overcount (planted)            3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  bricks     overcount                      4  sound    (want sound   )    16 queries    0.2s
+ok  bricks     overcount (planted)            4  unsound  (want unsound )     1 queries    0.0s   at cell 0

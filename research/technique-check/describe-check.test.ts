@@ -426,6 +426,32 @@ const PLANTS: Record<string, Plant> = {
     conclude:
       "forall c in cells(row(k)) + cells(col(k)) where blank(c), a in cand(c) where (with place(c, a): known(k) and reach(k) <= v): place(c, 3 - a)",
   },
+  // Bricks: a square beside a shaded brick read as making three. Unsound
+  // only where the checker reads the supposition: without it, an open
+  // square's run is empty.
+  three: {
+    conclude:
+      "forall c in cells(L) where not known(c) and (with place(c, 1): |run(c)| > 1): place(c, 2)",
+  },
+  // A support still open read as clear.
+  strandSupport: {
+    conclude:
+      "forall c in below(a) where not known(c) and (forall p in below(a) where p != c: value(p) != 1): place(c, 1)",
+  },
+  // A number with one square to spare read as having none.
+  undercount: {
+    conclude:
+      "open(k) > n + 1 or (forall c in around(k) where not known(c): place(c, 1))",
+  },
+  // A square beneath still open read as clear.
+  unsupported: {
+    for: "c in cells where not known(c) and y(c) < h - 1 and count(p in below(c) where value(p) = 1) = 0",
+  },
+  // A number one brick short read as full.
+  overcount: {
+    conclude:
+      "shaded(k) < n - 1 or (forall c in around(k) where not known(c): place(c, 2))",
+  },
 };
 
 /** How many of a technique's first binders each query fixes, one query a

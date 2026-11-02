@@ -83,6 +83,9 @@ export interface BricksState {
   pw: number;
   /** Packed cell field, row-major over the padded array. */
   grid: Uint16Array;
+  /** The grid as dealt, every playable square empty: shared by reference
+   * across every state of one game, which the answer search keys on. */
+  readonly board: Uint16Array;
 }
 
 /** A cell's play color — upstream `A`/`B`/`C`. */
@@ -156,20 +159,12 @@ export function applyBounds(w: number, h: number, grid: Uint16Array): void {
 /**
  * The hardest difficulty Bricks can actually generate.
  *
- * Upstream's tiers are lookahead depth: Easy assumes nothing, Normal assumes a
- * cell and looks for an Easy-level contradiction, Tricky lets that sub-solve
- * recurse in turn. **Depth 2 never pays.** Sampling 77 boards *chosen because Normal
- * cannot solve them* — the only region where Tricky could distinguish itself —
- * Tricky solved none, and 480 boards from a real stripping walk gave depth-1
- * and depth-2 identical verdicts throughout; 999 of 999 boards generated at
- * Tricky, and all four frozen C Tricky fixtures, fall to Normal. Bricks'
- * constraints (no three in a row, gravity support, clue counts) are local
- * enough that a contradiction either surfaces immediately or not at all, which
- * is why more lookahead buys nothing.
- *
- * The rung stays in the *solver* — hints and Solve use `DIFF_TRICKY` as "try as
- * hard as you can", where it costs nothing — but it is not a difficulty the
- * generator can honor, so it is not offered.
+ * Upstream's tiers were lookahead depth: Easy assumed nothing, Normal assumed
+ * a cell and looked for an Easy-level contradiction, and Tricky let that
+ * sub-solve recurse in turn. Tricky dealt no board of its own: 999 of 999
+ * boards generated at it, and all four frozen C Tricky fixtures, fell to
+ * Normal, since Bricks' rules are local enough that a contradiction surfaces
+ * at once or not at all. So it is not offered.
  */
 export const MAX_GENERABLE_DIFF = DIFF_NORMAL;
 
@@ -184,10 +179,10 @@ const BOARDS: BricksParams[] = [
  *
  * Two names for three `DIFF_*` levels, deliberately:
  *
- * - Upstream's `Normal` is **`Unreasonable`** here. Its rung, `solverRecurse`,
- *   commits a cell by solving the rest of the board from a hypothesis — a
- *   search, not a technique a player can follow, and only a tier named
- *   `Unreasonable` may ship one.
+ * - Upstream's `Normal` is **`Unreasonable`** here: a board with one answer
+ *   that the ladder stops short of, which the engine's search proves
+ *   (`engine/answer-search.ts`). A search is not a technique a player can
+ *   follow, and only a tier named `Unreasonable` may ship one.
  * - Upstream's `Tricky` has **no name at all**, because it has no boards (see
  *   `MAX_GENERABLE_DIFF`). `DIFF_CHARS` still spells it, so a game ID or saved
  *   game carrying `dt` still loads, and generation refuses it: it is the
@@ -214,7 +209,7 @@ export const paramConfig: ParamConfigItem<BricksParams>[] = [
   // and only generating one is refused.
   difficultyItem(DIFF_NAMES, "diff", {
     retired: 1,
-    doc: "An Easy puzzle can always be finished a square at a time: pick a square, try a color, and one of the three rules breaks immediately. An Unreasonable one needs at least one square where seeing the contradiction means working out most of the rest of the board first. So the Hint button will take you as far as plain deduction goes and then stop, rather than asking you to follow reasoning it cannot show you.",
+    doc: "An Easy puzzle can always be finished a square at a time: pick a square, try a color, and one of the three rules breaks immediately. An Unreasonable one has a single solution that those steps stop short of, so somewhere you have to try a color and see what follows. The Hint button stops where the forced squares do.",
   }),
 ];
 
@@ -225,7 +220,8 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 export function validateParams(p: BricksParams, full: boolean): string | null {
-  // Measured 2026-10-05: none in 2,300,000 boards built. A 2x3 and a 3x2 deal.
+  // Every 2x2 board with one answer the ladder stops short of holds one brick,
+  // under the deal's 40% (enumerated 2026-11-02). A 2x3 and a 3x2 deal.
   if (full && p.w === 2 && p.h === 2 && p.diff === DIFF_NORMAL)
     return noSuchTier("2x2 puzzle", DIFF_NAMES[p.diff]);
   return null;
@@ -265,7 +261,7 @@ function parseDesc(p: BricksParams, desc: string): DescParse<BricksState> {
       }
     }
     r.end();
-    return { w, h, pw: p.w, grid };
+    return { w, h, pw: p.w, grid, board: grid.slice() };
   });
 }
 

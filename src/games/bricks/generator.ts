@@ -6,13 +6,14 @@
  * The RNG draws, per outer attempt, are `fillGrid`'s conditional draws, then one
  * `shuffle` of the padded cell indices. The solver consumes no RNG, so the desc
  * is a pure function of the seed, and because every removal is gated on the
- * solver, a change to the solver's deductive power changes which boards exist.
+ * ladder or the search, a change to their power changes which boards exist.
  */
 
+import { dealUnreasonable } from "../../engine/answer-search.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { solveGame } from "./solver.ts";
+import { deducedBricks, deductionFinishes, searchAnswers } from "./solver.ts";
 import {
   applyBounds,
   BRICKS_STEPS,
@@ -89,35 +90,70 @@ function buildNumbers(grid: Uint16Array, w: number, h: number): number {
 
 /** Greedy clue minimization (upstream `bricks_remove_numbers`): one shuffle
  * of the padded cell indices, then blank each numbered cell in that order,
- * keeping the blank only while the board still solves uniquely at `maxdiff`. */
-function removeNumbers(
-  grid: Uint16Array,
-  w: number,
-  h: number,
-  maxdiff: number,
-  rs: RandomState,
-): void {
-  const s = w * h;
-  const spaces = Array.from({ length: s }, (_, i) => i);
+ * keeping the blank only while `keeps` still holds of what is left. */
+function removeNumbers(grid: Uint16Array, rs: RandomState, keeps: () => boolean): void {
+  const spaces = Array.from(grid, (_, i) => i);
   shuffle(spaces, rs);
-  for (let j = 0; j < s; j++) {
-    const i1 = spaces[j];
-    const temp = grid[i1];
+  for (const i of spaces) {
+    const temp = grid[i];
     if (temp & F_BOUND) continue;
-    grid[i1] = F_EMPTY;
-    if (solveGame(grid, w, h, maxdiff, true, true) !== "complete") {
-      grid[i1] = temp;
-    }
+    grid[i] = F_EMPTY;
+    if (!keeps()) grid[i] = temp;
   }
 }
 
-export function newBricksDesc(p: BricksParams, rs: RandomState): { desc: string } {
+/**
+ * A random wall with a number on every clear square, or `null` where too few
+ * squares are shaded. Each brick the ladder does not shade from those numbers
+ * is numbered too, which exposes an ambiguity the numbers leave: re-numbering
+ * can leave the brick above resting on nothing, a board with no answer, which
+ * the caller's test throws away.
+ */
+function drawBoard(p: BricksParams, rs: RandomState): Uint16Array | null {
   const { w, h } = gridSize(p);
-  const spaces = p.w * p.h; // playable-cell count
   const grid = new Uint16Array(w * h);
+  applyBounds(w, h, grid);
+  fillGrid(grid, w, h, rs);
+  buildNumbers(grid, w, h);
+  const shaded = deducedBricks({ w, h, grid });
+  for (let i = 0; i < grid.length; i++)
+    if (grid[i] & COL_MASK) grid[i] = shaded[i] ? F_SHADE : F_EMPTY;
+  const total = buildNumbers(grid, w, h);
+  // Upstream's float comparison.
+  return Math.fround(total / (p.w * p.h)) < MINIMUM_SHADED ? null : grid;
+}
 
+/** An Easy board, upstream's kind: a wall the ladder finishes from its
+ * numbers, with every number gone that it can do without. */
+function easyBoard(p: BricksParams, rs: RandomState): Uint16Array {
+  const { w, h } = gridSize(p);
+  const finishes = (grid: Uint16Array): boolean => deductionFinishes({ w, h, grid });
+  const attempt = retryLimit("bricks: generation attempts");
+  for (;;) {
+    attempt();
+    const grid = drawBoard(p, rs);
+    if (grid === null || !finishes(grid)) continue;
+    removeNumbers(grid, rs, () => finishes(grid));
+    return grid;
+  }
+}
+
+/** An Unreasonable board: a wall stripped by the search where an Easy one
+ * is stripped by the ladder. */
+function unreasonableBoard(p: BricksParams, rs: RandomState): Uint16Array {
+  const { w, h } = gridSize(p);
+  return dealUnreasonable<Uint16Array>({
+    label: `bricks: Unreasonable generation (${p.w}x${p.h})`,
+    draw: () => drawBoard(p, rs),
+    strip: (grid, one) => removeNumbers(grid, rs, one),
+    deduced: (grid) => deductionFinishes({ w, h, grid }),
+    answer: (grid, budget) => searchAnswers({ w, h, grid }, budget),
+  });
+}
+
+export function newBricksDesc(p: BricksParams, rs: RandomState): { desc: string } {
   // `paramsError` refuses this combination, so reaching it means a caller
-  // bypassed it. Fail immediately rather than let the gate below reject every
+  // bypassed it. Fail immediately rather than let the gate reject every
   // candidate until the retry bound: a synchronous generator that cannot
   // succeed owns its thread outright (see `engine/retry-limit.ts`).
   if (p.diff > MAX_GENERABLE_DIFF) {
@@ -125,42 +161,7 @@ export function newBricksDesc(p: BricksParams, rs: RandomState): { desc: string 
       `bricks: no board requires difficulty ${p.diff}; the generable maximum is ${MAX_GENERABLE_DIFF}`,
     );
   }
-
-  const attempt = retryLimit("bricks: generation attempts");
-  for (;;) {
-    attempt();
-    applyBounds(w, h, grid);
-
-    fillGrid(grid, w, h, rs);
-    buildNumbers(grid, w, h);
-
-    // Expose ambiguity: solve at Easy, then re-number every deduced cell.
-    solveGame(grid, w, h, DIFF_EASY, true, false);
-    const total = buildNumbers(grid, w, h);
-
-    // Enforce the minimum shaded proportion (upstream's float comparison).
-    if (Math.fround(total / spaces) < MINIMUM_SHADED) continue;
-
-    // Re-numbering turns each undecided brick into a clue, which can leave the
-    // brick above it resting on nothing: a board with no solution. Stripping
-    // keeps a blank only while the board still solves, so it cannot repair
-    // one. A solve that completes puts back exactly the bricks it cleared.
-    if (solveGame(grid, w, h, p.diff, true, true) !== "complete") continue;
-
-    removeNumbers(grid, w, h, p.diff, rs);
-
-    // The tier gate: a board the tier below already solves is not the
-    // difficulty the player asked for. Upstream always probed at `DIFF_EASY`
-    // whatever the tier requested, which was vacuous above Normal.
-    if (
-      p.diff > DIFF_EASY &&
-      solveGame(grid, w, h, p.diff - 1, true, true) === "complete"
-    ) {
-      continue;
-    }
-
-    break;
-  }
-
+  const grid = p.diff === DIFF_EASY ? easyBoard(p, rs) : unreasonableBoard(p, rs);
+  const { w, h } = gridSize(p);
   return { desc: encodeDesc(grid, w, h) };
 }

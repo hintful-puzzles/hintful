@@ -901,9 +901,10 @@ check marks which rule each cell breaks.
   tried on the target, and the break it makes at once, read off the
   validator's errors and outlined.
 
-Exemplars: `nextForcedMove` in
-[`bricks/solver.ts`](../src/games/bricks/solver.ts) with
-[`bricks/index.ts`](../src/games/bricks/index.ts), and the classifier ending
+A described game needs no classifier: each way a trial breaks is a technique
+of its own, and its reason is built from the binding
+([`descriptions.md`](./descriptions.md) § "A firing's reason is built from
+its binding"; Bricks and Sticks). Exemplar of the classifier: the one ending
 in `unfinishable` in
 [`boats/hint-solver.ts`](../src/games/boats/hint-solver.ts).
 

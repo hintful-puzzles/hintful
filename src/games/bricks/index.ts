@@ -13,8 +13,8 @@
  * Check & Save (`findMistakes`) hard-blocks on any current violation.
  */
 
+import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
   type Game,
   type HintResult,
@@ -25,6 +25,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
+import { hintFinishes } from "../../engine/hint-finishes.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
   DEDUCTION_EXHAUSTED,
@@ -47,7 +48,6 @@ import {
   shearedHexStep,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   buttonVerb,
   digitKey,
@@ -74,11 +74,13 @@ import {
   tileOrigin,
 } from "./render.ts";
 import {
+  answerColors,
+  answerOf,
   type BricksReason,
-  bricksValidate,
   deduceBricksPlan,
+  deductionFinishes,
   findMistakes,
-  solveGame,
+  isSolved,
 } from "./solver.ts";
 import {
   type BricksMistake,
@@ -91,7 +93,6 @@ import {
   COL_MASK,
   cloneState,
   colorBits,
-  DIFF_TRICKY,
   decodeParams,
   defaultParams,
   encodeParams,
@@ -347,19 +348,17 @@ function executeMove(state: BricksState, move: BricksMove): BricksState {
 }
 
 function status(s: BricksState): GameStatus {
-  return bricksValidate(s.grid, s.w, s.h, false) === "complete" ? "solved" : "ongoing";
+  return isSolved(s) ? "solved" : "ongoing";
 }
 
 function solve(orig: BricksState): SolveResult<BricksMove> {
-  const { w, h } = orig;
-  const grid = orig.grid.slice();
-  solveGame(grid, w, h, DIFF_TRICKY, true, true);
-  if (bricksValidate(grid, w, h, false) === "invalid")
-    return { ok: false, error: NO_SOLUTION };
-  return { ok: true, move: { kind: "solve", grid: Array.from(grid, bitsColor) } };
+  return solveFromAnswer(answerOf(orig), (solution) => ({
+    kind: "solve",
+    grid: answerColors(solution),
+  }));
 }
 
-// --- hint (a second projection of the contradiction solver) -----------------
+// --- hint (the compiled ladder's firings) -----------------------------------
 
 /** Plan data for a Bricks hint step, read by `hintKeepTrack`: the forced cell
  * (`target`, an index into the padded grid) and the color it is forced to
@@ -423,16 +422,13 @@ export const BRICKS_RUNGS = [
 export type BricksRung = (typeof BRICKS_RUNGS)[number];
 
 function hint(state: BricksState): HintResult<BricksMove, BricksHint, BricksRung> {
-  const { w, h, grid } = state;
-
   // The plan deduces onward from the player's marks, which `findMistakes` has
-  // compared with the answer wherever there is one. A board the solver cannot
-  // finish from its clues has none, and no plan to trust.
-  if (solveGame(grid.slice(), w, h, DIFF_TRICKY, true, true) !== "complete") {
+  // compared with the answer wherever there is one. A board the search found
+  // no one answer to has none, and no plan to trust.
+  if (answerOf(state).kind !== "one")
     return { ok: false, error: PUZZLE_NOT_REASONABLE };
-  }
 
-  const plan = deduceBricksPlan(grid, w, h);
+  const plan = deduceBricksPlan(state);
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   const steps: HintStep<BricksMove, BricksHint, BricksRung>[] = plan.map((m) => {
     const evidence = evidenceOf(m.reason).filter((c) => c !== m.index);
@@ -486,26 +482,15 @@ function hintGesture(
   );
 }
 
-/** Bricks' difficulty contract. `solveGame` returns `"complete"` exactly when
- * the deduction alone solves the board, and `clear` blanks the grid first, so
- * the verdict is about the puzzle rather than any marks already on it.
- *
- * Two tiers for three `DIFF_*` levels: the tier list is the tiers a player can
- * pick (`paramConfig`, from `DIFF_NAMES`), so upstream's ungenerable third is
- * not among them. `solveAtCap` takes a raw cap and answers for it regardless,
- * which a loaded `dt` game needs.
- */
-const difficulty: DifficultyContract<BricksParams> = {
-  solveAtCap: (p, desc, cap) => {
-    const s = newState(p, desc);
-    const ret = solveGame(s.grid, s.w, s.h, cap, true, true);
-    return ret === "complete"
-      ? "solved"
-      : ret === "invalid"
-        ? "impossible"
-        : "unsolved";
-  },
-};
+/** Bricks' difficulty contract: Easy where the ladder finishes the board from
+ * its numbers, and Unreasonable where the search finds it one answer. A loaded
+ * `dt` game, upstream's ungenerable third tier, is graded as Unreasonable. */
+const difficulty = searchTierContract<BricksParams, BricksState>({
+  newState,
+  deductionFinishes: (state) =>
+    deductionFinishes(state) && hintFinishes(bricksGame, state),
+  answerOf,
+});
 
 export const bricksGame: Game<
   BricksParams,

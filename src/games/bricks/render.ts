@@ -356,7 +356,7 @@ export function redraw(
   let errorFlags: Uint16Array | null = null;
   if (hasDrag) {
     errorFlags = new Uint16Array(s);
-    bricksValidate(shown, w, h, false, errorFlags);
+    bricksValidate(shown, w, h, errorFlags);
   } else if (mistakes && mistakes.length > 0) {
     errorFlags = new Uint16Array(s);
     for (const m of mistakes) errorFlags[m.index] |= m.flags;

@@ -1,9 +1,10 @@
 /**
  * Frozen upstream boards for Bricks: every description recorded from
  * `puzzles/unreleased/bricks.c` must still validate, load, round-trip through
- * the codec, and be completed by the contradiction solver capped at the tier it
- * was generated for. That keeps descriptions shared before the port readable,
- * and pins the codec and the solver's deductive reach against boards this
+ * the codec, and be solved at the tier it was generated for: by the ladder at
+ * Easy, and above it by the search, which finds upstream's Normal and Tricky
+ * boards their one answer. That keeps descriptions shared before the port
+ * readable, and pins the codec and the solver's reach against boards this
  * generator did not produce.
  *
  * It no longer asks the generator to reproduce them: the shipped generator gates
@@ -16,7 +17,6 @@ import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/desc-error.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
 import { bricksGame } from "./index.ts";
-import { solveGame } from "./solver.ts";
 import { type BricksParams, encodeDesc, newState } from "./state.ts";
 
 interface Fixture {
@@ -39,8 +39,7 @@ describe("bricks frozen upstream boards (decode, round-trip, solve at their tier
       expect(validateDesc(bricksGame, p, f.desc)).toBeNull();
       const state = newState(p, f.desc);
       expect(encodeDesc(state.grid, state.w, state.h)).toBe(f.desc);
-      const grid = state.grid.slice();
-      expect(solveGame(grid, state.w, state.h, f.diff, true, true)).toBe("complete");
+      expect(bricksGame.difficulty?.solveAtCap(p, f.desc, f.diff)).toBe("solved");
     });
   }
 });

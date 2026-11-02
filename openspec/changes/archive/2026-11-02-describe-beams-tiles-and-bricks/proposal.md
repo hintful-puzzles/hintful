@@ -2,9 +2,10 @@
 
 **Status: filed by `describe-sightlines-and-looks` (2026-11-02)**, the rest
 of step 7 of `describe-the-whole-catalog`'s plan (`design.md` § "The plan"),
-which split at its start and took Sticks and L. It files step 8,
-`describe-connectivity`, when it is archived. It may split again by game at
-its start, each part filing the next.
+which split at its start and took Sticks and L. **Split again at its start
+(2026-11-02): it takes Bricks** and files Magnets and Light Up as
+`describe-beams-and-tiles`, which files step 8, `describe-connectivity`
+(`design.md` § "The split").
 
 ## Why
 

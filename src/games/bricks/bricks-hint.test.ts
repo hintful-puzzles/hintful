@@ -1,14 +1,14 @@
 /**
- * Bricks explained-hint tests. The Easy-tier reason classification is pinned
- * on crafted minimal grids (one rule each), the plan's stop where only the
- * recursive rung progresses on a Tricky fixture, and the whole `hint()` —
- * refusals, plan stability, narration, `hintKeepTrack`, and the render
- * overlay — on a real board.
+ * Bricks explained-hint tests. Each technique's reason is pinned on crafted
+ * minimal grids (one rule each), the plan's stop where only the search
+ * progresses on a Tricky fixture, and the whole `hint()` — refusals, plan
+ * stability, narration, `hintKeepTrack`, and the render overlay — on a real
+ * board.
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -20,22 +20,23 @@ import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
 import { say } from "./hint-text.ts";
-import { BRICKS_RUNGS, type BricksHint, bricksGame } from "./index.ts";
+import { type BricksHint, bricksGame } from "./index.ts";
 import { COL_HINT_CELL, tileOrigin } from "./render.ts";
 import {
+  answerColors,
+  answerOf,
   bricksValidate,
   deduceBricksPlan,
   findMistakes,
-  nextForcedMove,
-  solveGame,
+  isSolved,
 } from "./solver.ts";
 import {
   type BricksMove,
   type BricksParams,
+  type BricksState,
   COL_MASK,
   colorBits,
   DIFF_EASY,
-  DIFF_TRICKY,
   encodeParams,
   F_BOUND,
   F_EMPTY,
@@ -90,9 +91,9 @@ describeHintPins({
   },
 });
 
-/** Build a raw rectangular grid (no F_BOUND — a full rectangle is a valid
- * grid for the solver) from a compact spec. `S`/`U`/`.`/digit. */
-function grid(spec: string[][]): { g: Uint16Array; w: number; h: number } {
+/** Build a raw rectangular board (no F_BOUND — a full rectangle is a valid
+ * grid for the ladder) from a compact spec. `S`/`U`/`.`/digit. */
+function grid(spec: string[][]): BricksState {
   const h = spec.length;
   const w = spec[0].length;
   const g = new Uint16Array(w * h);
@@ -102,24 +103,31 @@ function grid(spec: string[][]): { g: Uint16Array; w: number; h: number } {
       g[y * w + x] =
         c === "S" ? F_SHADE : c === "U" ? F_UNSHADE : c === "." ? F_EMPTY : Number(c);
     }
-  return { g, w, h };
+  return { w, h, pw: w, grid: g, board: g.map((c) => (c & COL_MASK ? F_EMPTY : c)) };
 }
 
-describe("bricks hint — Easy-tier reason classification", () => {
+/** A state's one answer, as the color bits each square holds in it. */
+function solvedBits(st: BricksState): number[] {
+  const answer = answerOf(st);
+  if (answer.kind !== "one") throw new Error(`bricks: ${answer.kind} answers`);
+  return answerColors(answer.solution).map(colorBits);
+}
+
+describe("bricks hint — each technique's reason", () => {
   it("three-in-a-row forces the middle cell clear", () => {
     // A single row S . S — shading the gap makes three in a row.
-    const { g, w, h } = grid([["S", ".", "S"]]);
-    const m = nextForcedMove(g, w, h);
+    const st = grid([["S", ".", "S"]]);
+    const [m] = deduceBricksPlan(st);
     expect(m).toMatchObject({ index: 1, to: "unshade", reason: { kind: "three" } });
   });
 
   it("an unsupportable cell is forced clear", () => {
     // Target (0,0); its only in-grid support below is an unshade.
-    const { g, w, h } = grid([
+    const st = grid([
       [".", "."],
       ["U", "U"],
     ]);
-    const m = nextForcedMove(g, w, h);
+    const [m] = deduceBricksPlan(st);
     expect(m).toMatchObject({
       index: 0,
       to: "unshade",
@@ -129,21 +137,21 @@ describe("bricks hint — Easy-tier reason classification", () => {
 
   it("an over-filled clue forces a neighbor clear", () => {
     // Clue 0 at (0,0); shading its neighbor would give it a shaded cell.
-    const { g, w, h } = grid([
+    const st = grid([
       ["0", ".", "."],
       ["U", ".", "."],
     ]);
-    const m = nextForcedMove(g, w, h);
+    const [m] = deduceBricksPlan(st);
     expect(m).toMatchObject({ index: 1, to: "unshade", reason: { kind: "overcount" } });
   });
 
   it("a brick's last support is forced shaded", () => {
     // Shaded brick (0,0); its only support is target (0,1). Clearing it strands.
-    const { g, w, h } = grid([
+    const st = grid([
       ["S", "."],
       [".", "U"],
     ]);
-    const m = nextForcedMove(g, w, h);
+    const [m] = deduceBricksPlan(st);
     expect(m).toMatchObject({
       index: 2,
       to: "shade",
@@ -154,60 +162,46 @@ describe("bricks hint — Easy-tier reason classification", () => {
   it("a clue that can no longer reach its count forces a neighbor shaded", () => {
     // Clue 1 at (0,0); its only other neighbor is unshaded, so the target
     // must supply the shade.
-    const { g, w, h } = grid([
+    const st = grid([
       ["1", "U"],
       [".", "."],
     ]);
-    const m = nextForcedMove(g, w, h);
+    const [m] = deduceBricksPlan(st);
     expect(m).toMatchObject({ index: 2, to: "shade", reason: { kind: "undercount" } });
   });
 
-  it("names every refutation on a board filled in any order", () => {
-    // The hint's own play fills cells in the order it deduces them, and a
-    // player does not. These are random shares of the answer, and the scan
-    // throws on a rejected trial that is none of the five reasons.
-    const p: BricksParams = { w: 6, h: 7, diff: DIFF_EASY };
-    const seen = new Set<string>();
-    let refuted = 0;
-    for (let k = 0; k < 4; k++) {
-      const rs = randomNew(`bricks-any-order-${k}`);
-      const st = newState(p, bricksGame.newDesc(p, rs).desc);
-      const answer = st.grid.slice();
-      solveGame(answer, st.w, st.h, DIFF_TRICKY, true, true);
-      for (let n = 0; n < 100; n++) {
-        const share = randomUpto(rs, 101);
-        const g = st.grid.map((v, i) =>
-          (v & COL_MASK) === F_EMPTY && randomUpto(rs, 100) < share ? answer[i] : v,
-        );
-        const m = nextForcedMove(g, st.w, st.h);
-        if (m === null) continue;
-        seen.add(m.reason.kind);
-        refuted++;
-      }
-    }
-    expect(refuted).toBeGreaterThan(300);
-    expect(seen.size).toBe(BRICKS_RUNGS.length);
+  it("a number with all its bricks clears its other neighbors, one step each", () => {
+    // The 1 at (1,0) has its brick at (0,1), so the rest of its neighbors are
+    // clear, and nothing else forces a cell. They come clockwise from above.
+    const st = grid([
+      [".", "1", "."],
+      ["S", ".", "U"],
+    ]);
+    const overcount = { kind: "overcount", clue: 1 };
+    expect(deduceBricksPlan(st)).toEqual([
+      { index: 2, to: "unshade", reason: overcount },
+      { index: 4, to: "unshade", reason: overcount },
+      { index: 0, to: "unshade", reason: overcount },
+    ]);
   });
 });
 
-describe("bricks hint — where the recursive tier used to be", () => {
-  it("stops at the single-cell stall instead of narrating the lookahead", () => {
-    // The hint never runs the recursive rung (a search, never a technique a
-    // hint may teach), but `solveGame` does: where the board stalls for the
-    // direct rung, the plan ends and the deeper solver still finishes it.
+describe("bricks hint — where the search takes over", () => {
+  it("stops where the ladder does instead of narrating a search", () => {
+    // The hint never searches, but Solve does: where the ladder stalls, the
+    // plan ends and the search still finds the board its one answer.
     const tricky = fixtures.find((f) => f.diff === 2) as Fixture;
-    const st = newState({ w: tricky.w, h: tricky.h, diff: tricky.diff }, tricky.desc);
-    const g = st.grid.slice();
-    solveGame(g, st.w, st.h, DIFF_EASY, true, false); // easy fixpoint (no recursion)
-    const stalled =
-      nextForcedMove(g, st.w, st.h) === null &&
-      bricksValidate(g, st.w, st.h, true) === "unfinished";
-    expect(stalled).toBe(true);
+    let st = newState({ w: tricky.w, h: tricky.h, diff: tricky.diff }, tricky.desc);
+    for (let plan = deduceBricksPlan(st); plan.length > 0; plan = deduceBricksPlan(st))
+      st = bricksGame.executeMove(st, {
+        kind: "paint",
+        cells: plan.map((m) => ({ index: m.index, to: m.to })),
+      });
     // The hint has nothing more to say here…
-    expect(deduceBricksPlan(g, st.w, st.h)).toHaveLength(0);
-    // …while the solver, which may search, still finishes the board.
-    const deeper = g.slice();
-    expect(solveGame(deeper, st.w, st.h, DIFF_TRICKY, false, true)).toBe("complete");
+    expect(bricksGame.status(st)).toBe("ongoing");
+    expect(bricksGame.hint?.(st)).toEqual({ ok: false, error: DEDUCTION_EXHAUSTED });
+    // …while the search, beneath it, still finishes the board.
+    expect(answerOf(st).kind).toBe("one");
   });
 });
 
@@ -230,11 +224,12 @@ describe("bricks hint — the full hint()", () => {
 
   it("the plan applied in order drives the board to completion", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
-    const plan = deduceBricksPlan(st.grid, st.w, st.h);
+    const plan = deduceBricksPlan(st);
     const g = st.grid.slice();
     for (const m of plan) g[m.index] = colorBits(m.to);
     // 7x6 easy has fewer than the plan cap of empties, so one plan finishes it.
-    expect(bricksValidate(g, st.w, st.h, true)).toBe("complete");
+    expect(g.some((c) => (c & COL_MASK) === F_EMPTY)).toBe(false);
+    expect(isSolved({ ...st, grid: g })).toBe(true);
   });
 
   it("is recompute-stable: a hint after following step 0 continues the plan", () => {
@@ -275,8 +270,7 @@ describe("bricks hint — a second mark on the board is named", () => {
     for (const f of fixtures) {
       if (f.w * f.h >= 96) continue; // the 12x8 Tricky fixture is test:slow
       const st = newState({ w: f.w, h: f.h, diff: f.diff }, f.desc);
-      const sol = st.grid.slice();
-      solveGame(sol, st.w, st.h, DIFF_TRICKY, true, true);
+      const sol = solvedBits(st);
       const empties: number[] = [];
       for (let i = 0; i < st.w * st.h; i++)
         if ((st.grid[i] & COL_MASK) === F_EMPTY) empties.push(i);
@@ -346,16 +340,15 @@ describe("bricks hint — refusals", () => {
 
   it("names a wrong-but-legal mark (contradicts the solution, no rule broken)", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
-    const sol = st.grid.slice();
-    solveGame(sol, st.w, st.h, DIFF_TRICKY, true, true);
+    const sol = solvedBits(st);
     // Find a cell the solution shades where placing an unshade breaks no rule.
     let cell = -1;
     for (let i = 0; i < st.w * st.h; i++) {
-      if ((sol[i] & COL_MASK) !== F_SHADE) continue;
+      if (sol[i] !== F_SHADE) continue;
       if ((st.grid[i] & COL_MASK) !== F_EMPTY) continue;
       const g = st.grid.slice();
       g[i] = F_UNSHADE;
-      if (bricksValidate(g, st.w, st.h, false) !== "invalid") {
+      if (bricksValidate(g, st.w, st.h) !== "invalid") {
         cell = i;
         break;
       }

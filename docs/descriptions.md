@@ -191,6 +191,10 @@ description author acts on:
   `units` is the space's boxes, dealt or not (Solo's `box`). A partition and
   a clue kind may not share a name, since both are fields of `Dealt`.
 - **`cell(x, y)` must be on the grid**: the compiled code does not check.
+- **A hexagonal board stored sheared needs no geometry of its own**: its
+  six neighbors are `adj8` less the diagonal that runs with the shear, and
+  the squares outside the hexagon are a clue whose meaning places a value
+  of their own (Bricks' `around` and `hole`).
 - **`stretch(L, c, S)` is the run of the cells `S` along the line `L` that
   holds `c`**, in the line's order, none where `S` does not hold `c`. A
   line's segments are read by binding a cell of each, since no sort is a set

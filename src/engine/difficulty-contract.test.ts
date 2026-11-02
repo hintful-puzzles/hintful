@@ -411,8 +411,8 @@ describe("a game with the search's tiers deals its Unreasonable boards through t
   // The loop, its bound and the test that keeps a board are
   // `dealUnreasonable`'s, and a game with a loop of its own has a second copy
   // of all three. The games are the ones whose contract `searchTiers` made,
-  // which is narrower than the tiers' names: Bricks and Galaxies name theirs
-  // the same and grade them by a solver of their own.
+  // which is narrower than the tiers' names: a game may name its tiers the
+  // same and grade them by a solver of its own.
   const searchTiered = tiered.filter(({ contract }) =>
     answerSearch.isSearchTierContract(contract),
   );

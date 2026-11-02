@@ -31,3 +31,99 @@ help:
     Each step is one of the rules at work on a single cell: shading it would make three in a row, leave it with nothing shaded beneath it to rest on, or give a number too many shaded neighbors; or clearing it would leave a shaded brick above with nothing to rest on, or leave a number unable to reach its count.
 
     If a brick or a cross is wrong, the hint asks you to fix the highlighted mistakes first, and the wrong one turns red, as it does for **Check & save**, whether or not it breaks a rule yet. A broken rule is marked as well: a bar over three in a row, a diamond under a brick with nothing to rest on, a number in red. On an Unreasonable board it may stop and say that nothing further follows by deduction.
+name: Bricks
+family: shading
+sizes:
+  # The hexagon is stored as a parallelogram half its height wider, its two
+  # corners holes. Unbounded but by the time a board takes to deal.
+  w: { min: 2, max: 99999 }
+  h: { min: 2, max: 99999 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is a shaded brick, 2 a clear square.
+  value:
+    sort: cell
+    domain: "{d in range(1, 2) where d = 2 or (clue(hole, c) < 0 and clue(number, c) < 0)}"
+define:
+  # The six squares around c: a hexagon stored sheared, so the two diagonal
+  # steps that run with the shear are no neighbors.
+  around(c): "{p in adj8(c) where x(p) - x(c) != y(p) - y(c)}"
+  # The two squares c rests on, one where c is at the left edge.
+  below(c): "{p in around(c) where y(p) > y(c)}"
+  # The shaded run through c along its row.
+  run(c): "stretch(row(c), c, {x in cells(row(c)) where value(x) = 1})"
+  # Whether c has a square beneath it that is shaded, or may yet be.
+  supportable(c): "exists p in below(c): value(p) != 2"
+  # The squares around k shaded, and those shaded or still open.
+  shaded(k): "count(p in around(k) where value(p) = 1)"
+  open(k): "count(p in around(k) where value(p) != 2)"
+shape:
+  # No three shaded in a row.
+  - "forall c in cells: |run(c)| <= 2"
+  # A shaded brick rests on a shaded one, but on the bottom row.
+  - "forall c in cells where value(c) = 1: y(c) = h - 1 or (exists p in below(c): value(p) = 1)"
+clues:
+  # A square no brick fills that shows no number: one of the stored grid's
+  # corners outside the hexagon, or a number left unknown, which no deal
+  # writes.
+  hole:
+    at: cell
+    value: "range(0, 0)"
+    means: "value(at) = 2"
+  # A number: its square is clear, and as many around it are shaded.
+  number:
+    at: cell
+    value: "range(0, 6)"
+    means: "value(at) = 2 and shaded(at) = v"
+freedom: { kind: fill }
+deal:
+  answer: bricks laid from the bottom row up, at random, at least 40% of the squares
+  number: on each clear square, then as many hidden as the board stays at its tier
+  tier: one of the tiers
+tiers: [Easy, Unreasonable]
+techniques:
+  # Each technique supposes a color in an open square and sees a rule
+  # broken at once, so the square is the other color: the order is the one
+  # upstream's trial ranked the breaks in, clearing first. Each also holds
+  # its rule on the marks as they stand, so a broken position is a
+  # contradiction.
+  #
+  # Clearing a square would leave a shaded brick above it nothing to rest on.
+  - id: strandSupport
+    tier: Easy
+    for: "a in cells where value(a) = 1 and y(a) < h - 1"
+    conclude: >-
+      supportable(a)
+      and (forall c in below(a) where not known(c)
+      and (forall p in below(a) where p != c: value(p) = 2):
+      place(c, 1))
+  # Clearing a square would leave a number too few squares to reach it.
+  - id: undercount
+    tier: Easy
+    for: "k in cells, n = clue(number, k) where n >= 0"
+    conclude: >-
+      open(k) >= n
+      and (open(k) > n or (forall c in around(k) where not known(c): place(c, 1)))
+  # Shading a square would make three in a row.
+  - id: three
+    tier: Easy
+    for: "L in rows"
+    conclude: >-
+      (forall c in cells(L) where value(c) = 1: |run(c)| <= 2)
+      and (forall c in cells(L) where not known(c)
+      and (with place(c, 1): |run(c)| > 2):
+      place(c, 2))
+  # Shading a square would leave it nothing beneath it to rest on.
+  - id: unsupported
+    tier: Easy
+    for: "c in cells where not known(c) and y(c) < h - 1 and not supportable(c)"
+    conclude: "place(c, 2)"
+  # Shading a square would give a number too many shaded around it.
+  - id: overcount
+    tier: Easy
+    for: "k in cells, n = clue(number, k) where n >= 0"
+    conclude: >-
+      shaded(k) <= n
+      and (shaded(k) < n or (forall c in around(k) where not known(c): place(c, 2)))

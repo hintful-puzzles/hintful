@@ -153,17 +153,18 @@ counts nothing, drawn as `?`.
 
 ### Requirement: Generation: Bricks offers Easy and Unreasonable, and no third tier
 
-Bricks SHALL offer two tiers, Easy and `Unreasonable`. The harder SHALL carry
-that name because its rung commits a cell by solving the rest of the board from
-a hypothesis, and only a tier of that name may ship such a rung. Upstream's
-third tier, whose sub-solve recurses in turn, names no boards, so it SHALL NOT
-be offered under any name: not in the preset menu, the difficulty contract or
-the custom-params dialog.
+Bricks SHALL offer two tiers, Easy and `Unreasonable`. An Easy board SHALL be one its ladder finishes from its numbers, and an Unreasonable one a board with one answer that the ladder stops short of, dealt and graded by the engine's search, since only a tier of that name may ask for a search. Upstream's third tier, whose sub-solve recursed in turn, names no boards, so it SHALL NOT be offered under any name: not in the preset menu, the difficulty contract or the custom-params dialog.
 
 #### Scenario: The preset menu offers two tiers
 
 - **WHEN** the preset menu is listed
 - **THEN** every entry is Easy or `Unreasonable`
+
+#### Scenario: An Unreasonable board needs the search
+
+- **WHEN** a board is dealt at Unreasonable
+- **THEN** the search finds it one answer
+- **AND** the ladder does not finish it
 
 ### Requirement: Generation: The Bricks generator solves the fully numbered board before it removes a number
 
@@ -184,31 +185,31 @@ removing numbers cannot repair a board that does not solve.
 - **WHEN** a board is dealt at a height of two
 - **THEN** loading the board's game ID is accepted
 
-### Requirement: Solver: The depth-2 rung stays in the Bricks solver
-
-Bricks' tiers are lookahead depth: Easy assumes nothing, the harder tier assumes
-a cell and looks for an Easy-level contradiction, and depth 2 lets that sub-solve
-recurse in turn. The depth-2 rung SHALL remain available to the solver, where the
-hint and Solve use it as "try as hard as you can".
-
-#### Scenario: Solve asks for the deepest rung
-
-- **WHEN** the player asks for the solution of a board
-- **THEN** the solver is run at depth 2, whatever tier the board was dealt at
-
 ### Requirement: Solver: The Bricks solver places cells by contradiction
 
-The solver SHALL place cells by contradiction, tentatively shading or unshading
-a cell and forcing the opposite when that leads to an invalid grid, with bounded
-lookahead for the harder difficulties. At every tier each cell it places
-SHALL be proved that way, and the solver SHALL NOT guess: the lookahead that
-makes the harder tier a search only refutes a trial, and commits none.
+The ladder SHALL place each cell by contradiction: a color supposed in an open cell breaks a rule at once, so the cell is the other color. Each way a rule breaks SHALL be a technique of the description, checked sound, and SHALL also hold its rule on the marks as they stand, so a broken position is a contradiction. The ladder SHALL NOT guess.
+
+#### Scenario: The five ways a supposed color breaks a rule
+
+- **WHEN** the description's techniques are listed
+- **THEN** they are: clearing the cell leaves a shaded brick above it nothing
+  to rest on, or a number too few cells to reach it; shading it makes three in
+  a row, leaves it nothing beneath it to rest on, or gives a number too many
 
 #### Scenario: A cell that would complete a row of three is cleared
 
 - **WHEN** an empty cell lies between two shaded cells of its row, on a board
   that has a solution
-- **THEN** the solver finds shading it invalid and sets it unshaded
+- **THEN** the ladder finds shading it breaks a rule and sets it unshaded
+
+### Requirement: Solver: Bricks knows a board's answer from the search beneath its ladder
+
+Solve, the hint's refusal and the mistake check SHALL know a board's answer from the engine's search by trial and error over the ladder, whatever tier the board was dealt at, and a board the search finds no one answer SHALL be one Solve refuses and the hint does not plan on.
+
+#### Scenario: Solve on an upstream Tricky board
+
+- **WHEN** the player asks for the solution of one of upstream's frozen Tricky boards
+- **THEN** the board is solved
 
 ### Requirement: Controls: Bricks cells cycle by a click or a drag
 
@@ -278,43 +279,13 @@ premise, the contradiction and the conclusion in the necessity voice.
 
 ### Requirement: Hint: A Bricks hint step is one journey of one cell
 
-Because every Bricks deduction forces exactly one cell, each hint step SHALL
-be a single self-contained journey. A paint that gives the step's cell the
-color it forces, alone or in a drag across other cells, SHALL complete the
-step, and every other move SHALL be off the plan.
+Each hint step SHALL decide one cell, a single self-contained journey: a firing that forces several is as many steps. A paint that gives the step's cell the color it forces, alone or in a drag across other cells, SHALL complete the step, and every other move SHALL be off the plan.
 
 #### Scenario: A step decides one cell and leaves it as it was
 
 - **WHEN** a hint step is shown
 - **THEN** it rings one cell, which is still empty on the board
 - **AND** the cells it reasons from carry a different mark
-
-### Requirement: Hint: The recursive lookahead rung is never narrated
-
-The recursive lookahead rung SHALL NOT be narrated at all: it commits a cell by
-solving the rest of the board from a hypothesis, which is a search, and no hint
-narrates a search on any tier. The recorder SHALL omit it while the solver
-retains it, so that grading and generation are unchanged and no description
-moves.
-
-#### Scenario: The lookahead rung never reaches a narration
-
-- **WHEN** hint plans are recorded across every tier and many seeds
-- **THEN** no step is forced by the recursive lookahead rung, and where only that
-  rung could progress the hint refuses instead
-
-### Requirement: Hint: A Bricks contradiction no named rule matches is an error, never a narration
-
-The single-cell rung places one color and calls the validator once. Every hint
-step SHALL give one of the named rules as its reason; a rejected trial that
-matches none of them SHALL throw, and SHALL NOT be narrated. No hint sentence
-SHALL claim that a chain of forced consequences was followed.
-
-#### Scenario: Every refutation on a board has a named rule
-
-- **WHEN** the single-cell rung is run over a board filled in any order that
-  agrees with its solution
-- **THEN** every forced cell is given one of the named rules, and nothing throws
 
 ### Requirement: Hint: Bricks calls its piece shaded and never by its color
 
@@ -327,21 +298,32 @@ piece's shape beside the placeholder for its color.
 - **WHEN** a hint step reasons from a cell that is shaded
 - **THEN** its sentence calls it a shaded brick and names no color
 
-### Requirement: Hint: A Bricks hint takes the first empty cell one color breaks a rule in
+### Requirement: Hint: The search beneath the Bricks ladder is never narrated
 
-The hint SHALL take the empty cells in reading order and give the first that
-one color breaks a rule in. In each it SHALL try clear first: where that
-strands a shaded brick above, or leaves a number unable to reach its count,
-the cell must be shaded. It SHALL then try shaded: where that makes three in
-a row, leaves the cell nothing to rest on, or gives a number too many, the
-cell must stay clear. Where several rules break, the first in that order
-SHALL be the reason given.
+The search beneath the ladder SHALL NOT be narrated at all: it commits a cell by solving the rest of the board from a hypothesis, and no hint narrates a search on any tier. Where only the search could progress, the hint SHALL refuse instead.
 
-#### Scenario: Two rules break at once
+#### Scenario: The search never reaches a narration
 
-- **WHEN** shading the first such cell would both make three in a row and
-  give a number beside it too many shaded neighbors
-- **THEN** the step's sentence gives the three in a row
+- **WHEN** a hint is asked for where the ladder forces no cell on a board the search finds one answer
+- **THEN** the hint refuses, saying that nothing further follows by deduction
+
+### Requirement: Hint: A Bricks hint step's reason is the technique that fired
+
+Every hint step SHALL give as its reason the technique that forced its cell, and SHALL name the rule that technique states. No hint sentence SHALL claim that a chain of forced consequences was followed.
+
+#### Scenario: Every technique reaches a narration
+
+- **WHEN** hint plans are recorded over dealt boards replayed from shares of their answers
+- **THEN** each of the five techniques gives some step its reason
+
+### Requirement: Hint: The Bricks hint carries on from its last step, by the rules in order
+
+`hint` SHALL take, of the firings the ladder could make, the one that carries on from the cells its last step read and decided, and otherwise the first by its rule: a shaded brick stranded, a number left short, three in a row, a brick resting on nothing, a number given too many. A firing that forces several cells SHALL be taken as consecutive steps of one cell each: clockwise round the number or brick it reasons from, and left to right along a row.
+
+#### Scenario: A number with all its bricks
+
+- **WHEN** a hint is asked for where a number has all its shaded neighbors and three of its neighbors are empty, and no other rule forces a cell
+- **THEN** the next three steps clear those three cells clockwise from above, each by that number
 
 ### Requirement: Look: Bricks marks a rule violation on the board
 
