@@ -50,3 +50,185 @@ help:
     same way, it puts the mark down first, as a step of its own that says why.
 
     {{hint-marks}}
+name: Slant
+family: lines
+sizes:
+  # Nothing in the game bounds a side but the time a deal takes. A board one
+  # square wide reaches no Normal board, so upstream refuses it.
+  w: { min: 2, max: 100 }
+  h: { min: 2, max: 100 }
+space:
+  grid: { w: "w", h: "h" }
+  # The points where squares meet, where the numbers sit, and the pairs of
+  # squares side by side, which the v-shapes mark.
+  points: true
+  edges: true
+  units: []
+answer:
+  # A diagonal: 1 from above left to below right, 2 from above right to
+  # below left, as `slash` reads them.
+  value:
+    sort: cell
+    domain: "range(1, 2)"
+marks:
+  # Where two squares side by side may still meet in a v: 1 at the first end
+  # of the side they share, 2 at its second, 3 at neither, where they slant
+  # alike. A same-slant mark is 3 alone.
+  vee: { sort: edge, notation: "set of range(1, 3)", of: "meeting(at)" }
+define:
+  # The two points at the ends of the side edge e's squares share, in
+  # reading order.
+  side(e): "{k in points(end1(e)) where k in points(end2(e))}"
+  # Where e's squares meet in a v: 1 at the first end of their side, 2 at
+  # its second, 3 at neither.
+  meeting(e): >-
+    the(i in range(1, 3) where (i < 3 and (forall c in ends(e):
+    value(c) = slash(c, nth(side(e), i - 1)))) or (i = 3 and not (exists k
+    in side(e): forall c in ends(e): value(c) = slash(c, k))))
+  # The diagonals meeting k, of those drawn.
+  lines(k): "count(c in cells(k) where value(c) = slash(c, k))"
+  # The squares round k with no diagonal yet.
+  open(k): "{c in cells(k) where not known(c)}"
+  # The pairs marked to slant alike.
+  alike: "{e in edges where vee(e) = {3}}"
+  # Whether diagonal d in square c would join two points already joined.
+  closes(c, d): >-
+    exists k in points(c) where slash(c, k) = d, q in before(k, points(c))
+    where slash(c, q) = d: q in linked(k)
+  # How many more diagonals may meet the points J: a number's lines still
+  # to come, and every open square round a point with none.
+  room(J): >-
+    sum(q in J where clue(n, q) >= 0 of clue(n, q) - lines(q))
+    + sum(q in J where clue(n, q) < 0 of |open(q)|)
+  # Whether the points J reach no border point and have room for at most
+  # one more diagonal.
+  shut(J): "(forall q in J: |cells(q)| = 4) and room(J) <= 1"
+  # Whether diagonal d in square c would join two such groups of points.
+  traps(c, d): >-
+    exists k in points(c) where slash(c, k) = d, q in before(k, points(c))
+    where slash(c, q) = d: shut(linked(k)) and shut(linked(q))
+shape:
+  # No loop: every point is joined, along the diagonals, to the border, which
+  # on a full board is the same.
+  - "forall k in points: exists q in linked(k): |cells(q)| < 4"
+clues:
+  # A number at a point, which that many diagonals meet.
+  n:
+    at: point
+    value: "range(0, |cells(at)|)"
+    means: "count(c in cells(at) where value(c) = slash(c, at)) = v"
+freedom: { kind: fill }
+deal:
+  answer: a diagonal a square in a random order, the one that closes no loop where the other does
+  n: at every point, then as many hidden as the board stays at its tier, the readiest first above Easy
+  tier: one of the tiers
+tiers: [Easy, Normal]
+techniques:
+  # A number with no lines left to come has none from its open squares, and
+  # one with as many left as open squares has one from each. One with more
+  # left than that, or fewer than none, makes the marks inconsistent.
+  - id: clue
+    tier: Easy
+    for: "k in points where clue(n, k) >= 0, O = open(k), left = clue(n, k) - lines(k)"
+    conclude: >-
+      left >= 0 and left <= |O|
+      and (left = 0 implies forall c in O: place(c, 3 - slash(c, k)))
+      and (left = |O| implies forall c in O: place(c, slash(c, k)))
+  # A diagonal joining two points already joined would close a loop, so the
+  # square takes the other. One whose diagonals both would makes the marks
+  # inconsistent. A solve places as it goes, so the square is asked again
+  # for each diagonal: once placed, its own diagonal joins its points.
+  - id: loop
+    tier: Easy
+    for: >-
+      c in cells where not known(c),
+      d in range(1, 2) where not known(c) and closes(c, d)
+    conclude: "not closes(c, 3 - d) and place(c, 3 - d)"
+  # Two open squares side by side round a number that slant alike give it
+  # one line between them whichever way they slant, so the rest of its open
+  # squares are read as `clue` reads them all.
+  - id: pair
+    tier: Normal
+    for: >-
+      A = alike, k in points where clue(n, k) >= 0, P = open(k) where |P| > 2,
+      a in P where not known(a),
+      b in before(a, P) where not known(b) and b in adj4(a)
+      and b in through(a, A),
+      O = {c in open(k) where c != a and c != b},
+      left = clue(n, k) - lines(k) - 1
+    conclude: >-
+      left >= 0 and left <= |O|
+      and (left = 0 implies forall c in O: place(c, 3 - slash(c, k)))
+      and (left = |O| implies forall c in O: place(c, slash(c, k)))
+  # Two open squares side by side round a number that still needs one line
+  # from them, its other open squares a pair slanting alike or none, give it
+  # exactly one: just one of them meets it, so they slant alike.
+  - id: share
+    tier: Normal
+    for: >-
+      A = alike, k in points where clue(n, k) >= 0,
+      P = open(k) where |P| = 2 or |P| = 4,
+      a in P where not known(a),
+      b in before(a, P) where not known(b) and b in adj4(a),
+      R = {c in open(k) where c != a and c != b}
+      where |R| = 0 or (|R| = 2 and nth(R, 1) in adj4(nth(R, 0))
+      and nth(R, 1) in through(nth(R, 0), A)),
+      left = clue(n, k) - lines(k) where 2 * left = 2 + |R|
+    conclude: "strike(edge(b, a), 1) and strike(edge(b, a), 2)"
+  # A diagonal joining two groups of points, each cut off from the border with
+  # room for one more diagonal at most, would shut them in for good, and a
+  # loop would close round them. The square takes the other.
+  - id: deadEnd
+    tier: Normal
+    for: >-
+      c in cells where not known(c),
+      d in range(1, 2) where not known(c) and traps(c, d)
+    conclude: "not closes(c, 3 - d) and not traps(c, 3 - d) and place(c, 3 - d)"
+  # A square slanting alike with a square that has its diagonal takes the
+  # same one.
+  - id: same
+    tier: Normal
+    for: "A = alike, c in cells where not known(c), q in through(c, A) where known(q)"
+    conclude: "place(c, value(q))"
+  # A diagonal meets one end of each side of its square, so it and the square
+  # beside it meet in no v at the other.
+  - id: drawn
+    on: place
+    tier: Easy
+    for: >-
+      c in cells where known(c), a in adj4(c), e = edge(c, a), S = side(e),
+      i in range(1, 2) where value(c) != slash(c, nth(S, i - 1))
+    conclude: "strike(e, i)"
+  # Two squares side by side round a 1 meet in no v there.
+  - id: one
+    tier: Normal
+    for: >-
+      k in points where clue(n, k) = 1, a in cells(k),
+      b in before(a, cells(k)) where b in adj4(a), e = edge(b, a),
+      i in range(1, 2) where nth(side(e), i - 1) = k
+    conclude: "strike(e, i)"
+  # Two squares side by side round a 3 meet in no v away from it.
+  - id: three
+    tier: Normal
+    for: >-
+      k in points where clue(n, k) = 3, a in cells(k),
+      b in before(a, cells(k)) where b in adj4(a), e = edge(b, a),
+      i in range(1, 2) where nth(side(e), i - 1) != k
+    conclude: "strike(e, i)"
+  # A 2 takes one line from each pair of its squares, or two from one and
+  # none from the other: two squares side by side meet in a v at it only
+  # where the two across it can meet away from it, and away from it only
+  # where those can meet at it.
+  - id: two
+    tier: Normal
+    for: >-
+      k in points where clue(n, k) = 2 and |cells(k)| = 4, a in cells(k),
+      b in before(a, cells(k)) where b in adj4(a), e = edge(b, a)
+      where vee(e) != {3},
+      R = {c in cells(k) where c != a and c != b},
+      f = edge(nth(R, 0), nth(R, 1)) where vee(f) != {1, 2, 3},
+      i in range(1, 2) where nth(side(e), i - 1) = k,
+      j in range(1, 2) where nth(side(f), j - 1) = k
+    conclude: >-
+      (3 - j not in vee(f) implies strike(e, i))
+      and (j not in vee(f) implies strike(e, 3 - i))

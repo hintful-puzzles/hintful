@@ -1,0 +1,10 @@
+ok  slant      clue                           current: recorded src/games/slant/slant.description.yaml#clue 0f8412a4c886a6ac
+ok  slant      loop                           current: recorded src/games/slant/slant.description.yaml#loop f68ab875da506665
+ok  slant      pair                           current: recorded src/games/slant/slant.description.yaml#pair 7e0167eb83c6be33
+ok  slant      share                          current: recorded src/games/slant/slant.description.yaml#share f5feabeed5e577c8
+ok  slant      deadEnd                        current: recorded src/games/slant/slant.description.yaml#deadEnd 920191dc219537d6
+ok  slant      same                           current: recorded src/games/slant/slant.description.yaml#same 992815544f5baede
+ok  slant      drawn                          current: recorded src/games/slant/slant.description.yaml#drawn e60ecfe7266c1f77
+ok  slant      one                            current: recorded src/games/slant/slant.description.yaml#one 1e381329cf3b3591
+ok  slant      three                          current: recorded src/games/slant/slant.description.yaml#three 43a9ef0c6741138e
+ok  slant      two                            current: recorded src/games/slant/slant.description.yaml#two 841cde6a977f0392

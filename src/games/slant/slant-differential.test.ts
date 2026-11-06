@@ -20,12 +20,7 @@ import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/slant-c-reference.json" with { type: "json" };
 import { newDesc } from "./generator.ts";
 import { slantGame } from "./index.ts";
-import {
-  SOLVE_NOT_CONVERGED,
-  SOLVE_UNIQUE,
-  SolverScratch,
-  slantSolve,
-} from "./solver.ts";
+import { SOLVE_NOT_CONVERGED, SOLVE_UNIQUE, slantSolve } from "./solver.ts";
 import { DIFF_HARD, decodeClues, type SlantParams } from "./state.ts";
 
 interface Fixture {
@@ -65,17 +60,14 @@ describe("Slant C-vs-TS differential — aux + solver agreement (gated)", () => 
 
       const clues = decodeClues(p, f.desc);
       const soln = new Int8Array(f.w * f.h);
-      const sc = new SolverScratch(f.w, f.h);
-      expect(slantSolve(f.w, f.h, clues, soln, sc, f.diff)).toBe(SOLVE_UNIQUE);
+      expect(slantSolve(f.w, f.h, clues, soln, f.diff)).toBe(SOLVE_UNIQUE);
       // The unique solution is the generator's grid.
       let got = "";
       for (let i = 0; i < f.w * f.h; i++) got += soln[i] < 0 ? "\\" : "/";
       expect(got).toBe(f.aux);
       // A `DIFF_HARD` board must genuinely need its techniques.
       if (f.diff === DIFF_HARD) {
-        expect(slantSolve(f.w, f.h, clues, soln, sc, f.diff - 1)).toBe(
-          SOLVE_NOT_CONVERGED,
-        );
+        expect(slantSolve(f.w, f.h, clues, soln, f.diff - 1)).toBe(SOLVE_NOT_CONVERGED);
       }
     });
   }

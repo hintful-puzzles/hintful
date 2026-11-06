@@ -18,6 +18,7 @@ import {
   type GridSpace,
   type Marks,
   STRIKE,
+  STRIKE_EDGE,
 } from "./describe-runtime.ts";
 import { type CellBoard, FiringReplay } from "./firing-replay.ts";
 import { type StepBudget, stepBudget } from "./step-budget.ts";
@@ -72,6 +73,10 @@ export class CellMarks implements Marks {
   grid: Uint8Array | Int8Array;
   /** The values each cell may still hold, as a bitmask (bit `d`). */
   readonly cands: Int32Array;
+  /** The values each edge's mark may still hold, as a bitmask, where the
+   * description marks the edges; the game seeds them. */
+  readonly edgeCands: Int32Array;
+  placed = 0;
   readonly domain: number;
   readonly repeat: number;
   readonly times: number;
@@ -110,6 +115,7 @@ export class CellMarks implements Marks {
     this.domain = domain;
     this.grid = grid;
     this.cands = new Int32Array(sp.cells.length);
+    this.edgeCands = new Int32Array(sp.edgeEnds.length / 2);
     this.repeat = repeat?.value ?? 0;
     this.times = repeat?.times ?? 1;
   }
@@ -134,6 +140,12 @@ export class CellMarks implements Marks {
   placeAt(c: number, d: number): void {
     this.place(c, d);
   }
+  edgeCand(e: number): number {
+    return this.edgeCands[e];
+  }
+  edgeStrikeAt(e: number, d: number): void {
+    this.edgeCands[e] &= ~(1 << d);
+  }
 
   /**
    * Every cell may hold what `domainOf` gives it (the description's domain
@@ -143,6 +155,7 @@ export class CellMarks implements Marks {
    */
   seed(grid: Uint8Array | Int8Array, domainOf?: (c: number) => number): boolean {
     this.grid = grid;
+    this.placed++;
     const { cands } = this;
     for (let c = 0; c < cands.length; c++)
       cands[c] = domainOf ? domainOf(c) & this.domain : this.domain;
@@ -175,6 +188,7 @@ export class CellMarks implements Marks {
     }
     this.cands[c] &= 1 << d;
     this.grid[c] = d;
+    this.placed++;
     for (const run of this.placing) run(this, c);
   }
 
@@ -193,6 +207,12 @@ export class CellMarks implements Marks {
       const c = facts[i + 1];
       const n = facts[i + 2];
       const reason = reasons ? (reasons[i / 3] ?? null) : null;
+      // An edge's mark is no cell's, so its strike is not recorded: a hint
+      // reads it from the firing's facts (Slant's).
+      if (facts[i] === STRIKE_EDGE) {
+        this.edgeStrikeAt(c, n);
+        continue;
+      }
       if (facts[i] !== STRIKE) {
         // Two facts of one firing can place one cell (Towers' facing pairs
         // of a row and a column); the cell was open when both were made.
@@ -608,9 +628,15 @@ export function ladderWalk<S extends CellMarks>(
   caps: Caps,
   reads: (firing: Taken<S>) => readonly number[],
 ): LadderWalk<S> {
+  // An edge's mark is written as its two cells are.
   const cellsOf = (facts: readonly number[]): number[] => {
     const out: number[] = [];
-    for (let i = 0; i < facts.length; i += 3) out.push(facts[i + 1]);
+    const ends = m.sp.edgeEnds;
+    for (let i = 0; i < facts.length; i += 3) {
+      const at = facts[i + 1];
+      if (facts[i] === STRIKE_EDGE) out.push(ends[2 * at], ends[2 * at + 1]);
+      else out.push(at);
+    }
     return out;
   };
   let taken: Taken<S> | null = null;

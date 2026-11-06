@@ -8,11 +8,12 @@
  * last checked.
  */
 
-import type {
-  DescriptionJson,
-  LibraryJson,
-  PlanningJson,
-  StatedTechnique,
+import {
+  type DescriptionJson,
+  edgeMarkOf,
+  type LibraryJson,
+  type PlanningJson,
+  type StatedTechnique,
 } from "./description.ts";
 
 /** The board orders every technique is checked at. */
@@ -111,6 +112,8 @@ export function gameFingerprint(d: DescriptionJson, t: StatedTechnique): string 
         clues: d.clues ?? {},
         space: d.space,
         ...(d.variations === undefined ? {} : { variations: d.variations }),
+        // A mark that means something of the answer is checked against it.
+        ...(edgeMarkOf(d) === null ? {} : { marks: d.marks }),
       },
       orders: CHECKED_ORDERS,
     }),

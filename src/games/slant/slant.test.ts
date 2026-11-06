@@ -43,7 +43,7 @@ import {
   COL_FLASH_LEAD,
   COL_GROUNDED,
 } from "./render.ts";
-import { SOLVE_UNIQUE, SolverScratch, slantSolve } from "./solver.ts";
+import { SOLVE_UNIQUE, slantSolve } from "./solver.ts";
 import {
   computeErrors,
   DIFF_EASY,
@@ -335,8 +335,7 @@ describe("slant generator (behavioral)", () => {
       expect(validateDesc(slantGame, p, desc)).toBeNull();
       const clues = decodeClues(p, desc);
       const soln = new Int8Array(36);
-      const sc = new SolverScratch(6, 6);
-      expect(slantSolve(6, 6, clues, soln, sc, diff)).toBe(SOLVE_UNIQUE);
+      expect(slantSolve(6, 6, clues, soln, diff)).toBe(SOLVE_UNIQUE);
     }
   });
 

@@ -127,6 +127,10 @@
           "type": "boolean",
           "description": "Every point inside the grid where four cells meet: `corners`, `cells(k)`, `corners(c)`, `across(k, c)`."
         },
+        "points": {
+          "type": "boolean",
+          "description": "Every point where cells meet, the border's included: `points`, `cells(k)`, `points(c)`, `slash(c, k)` (the value, 1 or 2, of `c`'s diagonal through `k`), `linked(k)` (the points the cells' diagonals join to `k`)."
+        },
         "diagonals": {
           "type": "boolean",
           "description": "The two diagonals of a square grid: `diagonals`."
@@ -406,7 +410,11 @@
             "additionalProperties": false,
             "properties": {
               "sort": { "type": "string" },
-              "notation": { "type": "string" }
+              "notation": { "type": "string" },
+              "of": {
+                "$ref": "#/$defs/formula",
+                "description": "For a mark on the edges a technique reads: the number of the answer it narrows, read of the edge `at`. The mark is read `name(e)`, the values it may still hold, and narrowed by `strike(e, d)`."
+              }
             }
           }
         },

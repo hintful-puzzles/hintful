@@ -575,6 +575,43 @@ const PLANTS: Record<string, Plant> = {
   },
   // A square left three arrows read as left two.
   opposite: { for: "c in cells where not known(c) and |cand(c)| = 3" },
+  // A number read as needing one line fewer than it does.
+  "slant.clue": {
+    for: "k in points where clue(n, k) >= 0, O = open(k), left = clue(n, k) - lines(k) - 1",
+  },
+  // The diagonal that closes the loop drawn, not the other.
+  "slant.loop": { conclude: "place(c, d)" },
+  // Any two open squares side by side read as slanting alike.
+  "slant.pair": {
+    for: "A = alike, k in points where clue(n, k) >= 0, P = open(k) where |P| > 2, a in P where not known(a), b in before(a, P) where not known(b) and b in adj4(a), O = {c in open(k) where c != a and c != b}, left = clue(n, k) - lines(k) - 1",
+  },
+  // Two squares read as giving one line where the number needs more.
+  "slant.share": {
+    for: "A = alike, k in points where clue(n, k) >= 0, P = open(k) where |P| = 2 or |P| = 4, a in P where not known(a), b in before(a, P) where not known(b) and b in adj4(a), R = {c in open(k) where c != a and c != b} where |R| = 0 or (|R| = 2 and nth(R, 1) in adj4(nth(R, 0)) and nth(R, 1) in through(nth(R, 0), A)), left = clue(n, k) - lines(k) where 2 * left >= 2 + |R|",
+  },
+  // The diagonal that shuts the groups in drawn, not the other.
+  "slant.deadEnd": { conclude: "place(c, d)" },
+  // A square read as slanting alike with any drawn square beside it.
+  "slant.same": {
+    for: "A = alike, c in cells where not known(c), q in adj4(c) where known(q)",
+  },
+  // The v-shape a diagonal meets struck, not the one it misses.
+  "slant.drawn": {
+    for: "c in cells where known(c), a in adj4(c), e = edge(c, a), S = side(e), i in range(1, 2) where value(c) = slash(c, nth(S, i - 1))",
+  },
+  // A 2 read as a 1.
+  "slant.one": {
+    for: "k in points where clue(n, k) = 2, a in cells(k), b in before(a, cells(k)) where b in adj4(a), e = edge(b, a), i in range(1, 2) where nth(side(e), i - 1) = k",
+  },
+  // A 2 read as a 3.
+  "slant.three": {
+    for: "k in points where clue(n, k) = 2, a in cells(k), b in before(a, cells(k)) where b in adj4(a), e = edge(b, a), i in range(1, 2) where nth(side(e), i - 1) != k",
+  },
+  // What the pair across can do read the wrong way round.
+  "slant.two": {
+    conclude:
+      "(j not in vee(f) implies strike(e, i)) and (3 - j not in vee(f) implies strike(e, 3 - i))",
+  },
 };
 
 /** How many of a technique's first binders each query fixes, one query a

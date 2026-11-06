@@ -41,6 +41,7 @@ export interface DescriptionJson {
     slots?: boolean;
     edges?: boolean;
     corners?: boolean;
+    points?: boolean;
     diagonals?: boolean;
     regions?: Record<string, "dealt" | string>;
     units: string[];
@@ -53,7 +54,9 @@ export interface DescriptionJson {
     };
   };
   given?: string[];
-  marks?: Record<string, { sort: string; notation: string }>;
+  /** What the player can write down. A mark on the edges a technique reads
+   * says what of the answer it narrows: `of`, read of the edge `at`. */
+  marks?: Record<string, { sort: string; notation: string; of?: string }>;
   define?: Record<string, string>;
   shape?: string[];
   rules?: Record<string, string>;
@@ -359,6 +362,20 @@ export function isLibrary(file: DescriptionFile): file is LibraryJson {
  * help page. */
 export function isFormal(file: DescriptionFile): file is DescriptionJson {
   return "space" in file && !("position" in file);
+}
+
+/** The one mark a description keeps on the edges for its techniques to read,
+ * its name and what of the answer it narrows, or `null`. A mark on the edges
+ * with no `of` is a play aid no technique reads. */
+export function edgeMarkOf(json: DescriptionJson): { name: string; of: string } | null {
+  const read = Object.entries(json.marks ?? {}).filter(
+    ([, m]) => m.sort === "edge" && m.of !== undefined,
+  );
+  if (read.length > 1)
+    throw new Error(`${json.game}: one mark on the edges, not ${read.length}`);
+  if (read.length === 0) return null;
+  const [name, m] = read[0];
+  return { name, of: m.of as string };
 }
 
 /** A planning game's description: a position and its moves. */

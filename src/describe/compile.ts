@@ -17,6 +17,7 @@ import {
   type ClueKind as DescribedClueKind,
   type Description,
   type DescriptionJson,
+  edgeMarkOf,
   type LibraryJson,
   loadDescription,
   parseTechnique,
@@ -34,6 +35,7 @@ type ElemSort =
   | "edge"
   | "slot"
   | "corner"
+  | "point"
   | `clue ${string}`
   | `region ${string}`;
 
@@ -257,6 +259,10 @@ interface Env {
   /** The relations the board deals, each a set of cells for each cell, read
    * `name(c)`: a planning game's. */
   relations: ReadonlySet<string>;
+  /** The name of the mark the description keeps on each edge, read
+   * `name(e)` as the values it may still hold, or `null` where it keeps
+   * none. */
+  edgeMark: string | null;
   /** The suppositions of the `with`s the code is inside, innermost first:
    * the names of the cell and of the value it is supposed to hold. */
   supposed: readonly { cell: string; value: string }[];
@@ -299,6 +305,8 @@ const NAMES: Record<string, Val> = {
   units: { code: "sp.units", sort: setOf(elem("line")) },
   slots: { code: "sp.slots", sort: setOf(elem("slot")) },
   corners: { code: "sp.corners", sort: setOf(elem("corner")) },
+  points: { code: "sp.points", sort: setOf(elem("point")) },
+  edges: { code: "sp.edges", sort: setOf(elem("edge")) },
   domain: { code: "b.domain", sort: setOf(NUM) },
   true: { code: "true", sort: BOOL },
   false: { code: "false", sort: BOOL },
@@ -314,6 +322,11 @@ const GEOMETRY = new Set([
   "units",
   "slots",
   "corners",
+  "points",
+  "edges",
+  "slash",
+  "linked",
+  "through",
   "w",
   "h",
   "order",
@@ -394,6 +407,9 @@ const EARLY = new Set([
   "cuts",
   "step",
   "chain",
+  "slash",
+  "linked",
+  "through",
   "x",
   "y",
   "cell",
@@ -457,7 +473,8 @@ function early(
     case "with":
       return false;
     case "call": {
-      if (e.fn === "value" || e.fn === "known" || e.fn === "chain") marks.read = true;
+      if (e.fn === "value" || e.fn === "known" || e.fn === "chain" || e.fn === "linked")
+        marks.read = true;
       if (e.fn === "clue") return all(e.args.slice(1));
       if (EARLY.has(e.fn) || partOf(e.fn, env)) return all(e.args);
       const def = env.defs.get(e.fn);
@@ -772,6 +789,24 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
       `b.has(${x}, ${at})`,
     );
     return { code: op === "in" ? has : `!${has}`, sort: BOOL };
+  }
+  // `q in linked(k)` asks whether two points share a group, which the marks'
+  // own groups answer without listing one.
+  if (
+    (op === "in" || op === "notin") &&
+    e.b.k === "call" &&
+    e.b.fn === "linked" &&
+    e.b.args.length === 1 &&
+    !env.answer &&
+    env.supposed.length === 0
+  ) {
+    const q = compileExpr(e.a, scope, env, out);
+    expectElem(q, "point", op);
+    const k = compileExpr(e.b.args[0], scope, env, out);
+    expectElem(k, "point", "linked");
+    env.used.add("linkedWith");
+    const code = `linkedWith(sp, b, ${q.code}, ${k.code})`;
+    return { code: op === "in" ? code : `!${code}`, sort: BOOL };
   }
   const a = compileExpr(e.a, scope, env, out);
   const b = compileExpr(e.b, scope, env, out);
@@ -1960,6 +1995,114 @@ function clueField(fn: string, k: Val, env: Env): Val {
   return { code: `${read}(${code})`, sort: fn === "at" ? decl.at : NUM };
 }
 
+/**
+ * The readings of a board of diagonals (Slant's), its arguments compiled:
+ * the mark on the edges, the squares round a point and a square's corners,
+ * which way a diagonal runs
+ * through one, the points the diagonals join, and the cells joined across a
+ * set of edges. `null` for any other function.
+ */
+function diagonalCall(fn: string, vs: readonly Val[], env: Env): Val | null {
+  const arity = (n: number): void => {
+    if (vs.length !== n) throw new CompileError(`${fn} takes ${n}, given ${vs.length}`);
+  };
+  const cell = (i: number): string => {
+    expectElem(vs[i], "cell", fn);
+    return vs[i].code;
+  };
+  // The mark on an edge, which only a technique reads.
+  if (fn === env.edgeMark) {
+    arity(1);
+    if (env.answer) throw new CompileError("a rule reads the answer, never the marks");
+    expectElem(vs[0], "edge", fn);
+    return { code: `b.edgeCand(${vs[0].code})`, sort: setOf(NUM) };
+  }
+  switch (fn) {
+    case "cells": {
+      // The squares round a point; any other `cells` is not this board's.
+      const s = vs[0]?.sort;
+      if (s?.k !== "elem" || s.e !== "point") return null;
+      arity(1);
+      return { code: `sp.pointCells[${vs[0].code}]`, sort: setOf(elem("cell")) };
+    }
+    case "points":
+      arity(1);
+      return { code: `sp.cellPoints[${cell(0)}]`, sort: setOf(elem("point")) };
+    case "slash":
+      arity(2);
+      expectElem(vs[1], "point", fn);
+      env.used.add("slash");
+      return { code: `slash(sp, ${cell(0)}, ${vs[1].code})`, sort: NUM };
+    case "linked": {
+      arity(1);
+      expectElem(vs[0], "point", fn);
+      // The marks' own groups, kept while no value is placed, where nothing
+      // is supposed.
+      if (!env.answer && env.supposed.length === 0) {
+        env.used.add("linkedOf");
+        return { code: `linkedOf(sp, b, ${vs[0].code})`, sort: setOf(elem("point")) };
+      }
+      // A cell's value read as the technique reads it, under any `with`.
+      const x = Out.fresh("_x");
+      const read = markRead("value", { code: x, sort: elem("cell") }, env, new Out(0));
+      // The answer check reads one grid, so its groups are joined once a
+      // check, not walked from each point.
+      if (env.answer && env.supposed.length === 0 && env.scratch !== null) {
+        if (!env.scratch.some((s) => s.startsWith("const _links ")))
+          env.scratch.push(
+            `const _links = pointGroups(sp, (${x}: number) => ${read.code});`,
+          );
+        env.used.add("pointGroups");
+        return { code: `_links.of(${vs[0].code})`, sort: setOf(elem("point")) };
+      }
+      env.used.add("linked");
+      return {
+        code: `linked(sp, (${x}: number) => ${read.code}, ${vs[0].code})`,
+        sort: setOf(elem("point")),
+      };
+    }
+    case "through": {
+      arity(2);
+      const E = vs[1];
+      if (!(E.sort.k === "set" && E.sort.of.k === "elem" && E.sort.of.e === "edge"))
+        throw new CompileError(
+          `through(c, E): E is a set of edges, not ${show(E.sort)}`,
+        );
+      // A set of edges a binder names is joined into groups once where it
+      // is bound, so each square's is a lookup, not a walk over the set.
+      if (E.at !== undefined && env.hoist !== null) {
+        const key = `edgeGroups(sp, ${E.code})`;
+        let groups = E.at.made.get(key);
+        if (groups === undefined) {
+          const t = Out.fresh("_eg");
+          E.at.lines.push({ indent: 0, text: `const ${t} = ${key};` });
+          groups = { code: t, sort: E.sort, at: E.at };
+          E.at.made.set(key, groups);
+        }
+        env.used.add("edgeGroups");
+        return { code: `${groups.code}.of(${cell(0)})`, sort: setOf(elem("cell")) };
+      }
+      env.used.add("through");
+      return { code: `through(sp, ${cell(0)}, ${E.code})`, sort: setOf(elem("cell")) };
+    }
+  }
+  return null;
+}
+
+/** `strike(e, d)` of an edge's mark, which is only ever narrowed. */
+function edgeStrike(fn: string, vs: readonly Val[], env: Env, out: Out): Val {
+  if (fn === "place" || env.edgeMark === null)
+    throw new CompileError(`${fn}(e, d): only a strike from an edge's mark`);
+  const e = once(vs[0], out);
+  expect(vs[1], "num", fn);
+  const d = once(vs[1], out);
+  out.emit(
+    `if ((b.edgeCand(${e.code}) >> ${d.code}) & 1) { if (fire === null) { b.edgeStrikeAt(${e.code}, ${d.code}); changed = true; } else facts.push(STRIKE_EDGE, ${e.code}, ${d.code}); }`,
+  );
+  env.used.add("STRIKE_EDGE");
+  return { code: "true", sort: BOOL };
+}
+
 function call(
   fn: string,
   args: readonly Expr[],
@@ -2075,6 +2218,8 @@ function call(
     expectElem(vs[i], "cell", fn);
     return vs[i].code;
   };
+  const diagonal = diagonalCall(fn, vs, env);
+  if (diagonal !== null) return diagonal;
   switch (fn) {
     case "cells": {
       arity(1);
@@ -2242,6 +2387,8 @@ function call(
         L.code === "sp.slots" ||
         L.code === "sp.lines" ||
         L.code === "sp.corners" ||
+        L.code === "sp.points" ||
+        L.code === "sp.edges" ||
         L.code.startsWith("facesOf(")
       )
         return { code: x.code, sort: NUM };
@@ -2325,6 +2472,8 @@ function call(
     case "place": {
       if (!env.concluding) throw new CompileError(`${fn} outside a conclusion`);
       arity(2);
+      if (vs[0].sort.k === "elem" && vs[0].sort.e === "edge")
+        return edgeStrike(fn, vs, env, out);
       const c = once({ code: cell(0), sort: vs[0].sort }, out);
       expect(vs[1], "num", fn);
       const d = once(vs[1], out);
@@ -2821,6 +2970,7 @@ export function compileLibrary(
     epoch: null,
     prelude: null,
     relations: new Set(),
+    edgeMark: null,
     supposed: [],
   };
   const parts = Object.entries(lib.techniques).map(([id, stated]) => {
@@ -2842,7 +2992,8 @@ function placeSort(what: string, at: string, env: Env): ElemSort {
     at === "cell" ||
     at === "line" ||
     at === "slot" ||
-    at === "corner"
+    at === "corner" ||
+    at === "point"
   )
     return at;
   if (env.regions.has(at)) return `region ${at}`;
@@ -2988,6 +3139,7 @@ export function compileGame(
     epoch: null,
     prelude: null,
     relations: new Set(relations),
+    edgeMark: edgeMarkOf(d.json)?.name ?? null,
     supposed: [],
   };
   for (const [kind, c] of d.clueKinds) clues.set(kind, clueSorts(kind, c, env));

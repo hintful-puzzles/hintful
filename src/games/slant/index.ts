@@ -78,7 +78,6 @@ import {
 import {
   SOLVE_IMPOSSIBLE,
   SOLVE_UNIQUE,
-  SolverScratch,
   slantSolve,
   solveFromClues,
 } from "./solver.ts";
@@ -335,7 +334,7 @@ const difficulty: DifficultyContract<SlantParams> = {
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
     const soln = new Int8Array(s.w * s.h);
-    const ret = slantSolve(s.w, s.h, s.clues, soln, new SolverScratch(s.w, s.h), cap);
+    const ret = slantSolve(s.w, s.h, s.clues, soln, cap);
     if (ret === SOLVE_UNIQUE) return "solved";
     return ret === SOLVE_IMPOSSIBLE ? "impossible" : "unsolved";
   },

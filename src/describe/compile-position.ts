@@ -480,6 +480,7 @@ export function compilePlanning(
     boxes: null,
     diagonals: false,
     cellDomain: false,
+    edgeMark: null,
     sizes: {
       names: new Set(
         Object.keys(d.sizes).filter(

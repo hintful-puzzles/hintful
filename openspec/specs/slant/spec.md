@@ -206,10 +206,12 @@ so that few of them survive.
   at the board's difficulty
 - **THEN** the clue is put back
 
-### Requirement: Solver: Slant solves with a graded deductive solver
+### Requirement: Solver: Slant's solver is the ladder its description states
 
-The solver SHALL apply its deductions by difficulty, Normal adding to Easy,
-and SHALL return one of three verdicts: impossible, unique or non-converged.
+The solver SHALL run the ladder `slant.description.yaml` states, compiled,
+in its order, to a fixpoint, by difficulty, Normal adding to Easy, and SHALL
+return one of three verdicts: impossible, unique or non-converged. A board
+the ladder fills SHALL be judged by the answer check its rules compile to.
 `findMistakes` SHALL reuse the solver, and so SHALL `solve()` where the board
 came with no answer from its deal; a dealt board's Solve is the generator's
 answer.
@@ -357,22 +359,6 @@ two squares, and any other move SHALL drop the plan.
 - **WHEN** a step asks for `\` in a square and the player draws `/` there
 - **THEN** the step is not completed and the plan is dropped
 
-### Requirement: Hint: Slant's hint steps come in the order its solver finds them
-
-The hint's square steps SHALL come in the order the solver forces them from
-the player's position. Clues are read first, row by row. Only when no clue
-forces a square are the empty squares read, for a slant that would close a
-loop, join two dead ends, or differ from a placed square marked alike with it;
-where several hold, the step names the last of them that does. Only then are
-v-shapes read, which join pairs and force no square. A pass that forces
-anything starts the clues again.
-
-#### Scenario: A clue comes before a loop
-
-- **WHEN** one clue has exactly as many empty squares as lines left, and an
-  empty square elsewhere would close a loop if slanted one way
-- **THEN** the plan's first step is the clue's
-
 ### Requirement: Hint: Slant's hint uses every technique at either difficulty
 
 `hint` SHALL seed the solver with the player's position, the placed diagonals
@@ -387,6 +373,19 @@ put down is used whatever the board's difficulty.
   drawn one
 - **THEN** the reading of the squares that follows gives it the drawn
   square's slant, citing the mark
+
+### Requirement: Hint: Slant's hint walks the ladder its solve runs
+
+The hint SHALL walk the ladder the solve runs, one firing at a time, from the
+player's diagonals and same-slant marks, and SHALL never take a step harder
+than the ladder's own next one: a clue or a loop is read before a square is
+read through a mark wherever one is there to read.
+
+#### Scenario: A clue comes before a mark
+
+- **WHEN** a clue has exactly as many empty squares as lines left, and an
+  empty square elsewhere slants alike with a drawn one by a mark
+- **THEN** the plan's first step is the clue's
 
 ### Requirement: Look: Slant draws its squares on the collection's quiet surface
 

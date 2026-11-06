@@ -97,6 +97,9 @@ const PINNED: Readonly<Record<string, readonly string[]>> = {
   seismic: ["4x4dh:1b3a2babaa1,i1f"],
   // An outlined cell.
   signpost: ["4x4c:1eefgc10cafcfcebca16a"],
+  // A same-slant mark ringed where it is placed, then outlined where a clue
+  // reads it, which the deal's plan reaches later than its run walks.
+  slant: ["8x8dh:j33a3a11b3b2b2d21c1b313131b32d1b12313g2a12b0c1c"],
   solo: [
     // Outlined cells, then a struck note.
     "2x3da:6f2b3c5b4_4b5c1b2f1",

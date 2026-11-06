@@ -9,7 +9,7 @@ import { Dsf } from "../../engine/dsf.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { fillSquare, SOLVE_UNIQUE, SolverScratch, slantSolve } from "./solver.ts";
+import { SOLVE_UNIQUE, slantSolve } from "./solver.ts";
 import { DIFF_EASY, encodeClues, type SlantParams, vertexDegree } from "./state.ts";
 
 /**
@@ -43,7 +43,9 @@ export function slantGenerate(
     if (fs && bs) throw new Error("slant generator: both diagonals forced");
 
     const v = fs ? 1 : bs ? -1 : 2 * randomUpto(rs, 2) - 1;
-    fillSquare(w, x, y, v, soln, connected, null);
+    soln[idx] = v;
+    if (v < 0) connected.merge(y * W + x, (y + 1) * W + (x + 1));
+    else connected.merge(y * W + (x + 1), (y + 1) * W + x);
   }
 }
 
@@ -70,7 +72,6 @@ export function newDesc(
   const soln = new Int8Array(w * h);
   const tmpsoln = new Int8Array(w * h);
   let clues: Int8Array;
-  const sc = new SolverScratch(w, h);
 
   const attempt = retryLimit("slant: a board at its difficulty");
   do {
@@ -80,7 +81,7 @@ export function newDesc(
 
     // With all clue points filled in, every puzzle is solvable at `DIFF_EASY`
     // (upstream asserts this; its solve consumes no RNG).
-    if (slantSolve(w, h, clues, tmpsoln, sc, DIFF_EASY) !== SOLVE_UNIQUE) {
+    if (slantSolve(w, h, clues, tmpsoln, DIFF_EASY) !== SOLVE_UNIQUE) {
       throw new Error("slant generator: full clue set not Easy-solvable");
     }
 
@@ -109,7 +110,7 @@ export function newDesc(
 
         if (pass === j) {
           clues[idx] = -1;
-          if (slantSolve(w, h, clues, tmpsoln, sc, diff) !== SOLVE_UNIQUE) {
+          if (slantSolve(w, h, clues, tmpsoln, diff) !== SOLVE_UNIQUE) {
             clues[idx] = v; // put it back
           }
         }
@@ -120,7 +121,7 @@ export function newDesc(
     // one level down must fail to converge.
   } while (
     diff > DIFF_EASY &&
-    slantSolve(w, h, clues, tmpsoln, sc, diff - 1) <= SOLVE_UNIQUE
+    slantSolve(w, h, clues, tmpsoln, diff - 1) <= SOLVE_UNIQUE
   );
 
   const aux = Array.from(soln, (s) => (s < 0 ? "\\" : "/")).join("");

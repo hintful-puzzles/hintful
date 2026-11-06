@@ -222,6 +222,25 @@ description author acts on:
   every other through members side by side, and `cuts(S)` is the members
   without which the rest are not, in `S`'s order. Bind `cuts` once by `=`:
   it is one search of the whole set (Singles' `split`).
+- **The points where squares meet are a sort** where the space says
+  `points: true` (Slant's): `points` is every one, border included, in
+  reading order, `cells(k)` the squares round a point, and `points(c)` a
+  square's four corners. A clue may sit at one (`at: point`). `slash(c, k)`
+  is the value of square `c`'s diagonal through its corner `k`, 1 from above
+  left to below right and 2 the other way; `linked(k)` is `k` and the points
+  the drawn diagonals join it to, in reading order. The compiled code keeps
+  every group of joined points until a value is placed, so `x in linked(k)`
+  costs a lookup.
+- **`through(c, E)` is `c` and the cells reached from it across the edges
+  `E`**, each between two squares side by side: Slant's squares marked
+  alike with one. Bind `E` once by `=`, since it is a set over every edge.
+- **A mark on the edges that means something of the answer** names it in
+  `of` (Slant's `vee`, `of: "meeting(at)"`, where two squares side by side
+  meet in a v). It is a set of values per edge, each at first; a technique
+  reads it as a function (`vee(e)`), a rule never does, and `strike(e, d)`
+  on an edge rules a meaning out. The checker holds each edge's mark to what
+  its `of` reads of the answer. A strike on an edge records no step of its
+  own: a hint reads it from the firing's facts.
 - **`beam(s)` is Black Box's laser fired in from slot `s`**: the slot it
   comes out at, `s` itself where it is reflected, `|slots|` where it is
   absorbed, and none where a cell no value is placed in decides it. A 1 is
@@ -399,7 +418,10 @@ uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
   `ladderWalk`, which takes the firing that continues from the walk's last
   steps and never one harder than the ladder's own next firing. It is
   `singleFirings`' continuing driver, so the continuity guard measures it as
-  it does every other ladder's.
+  it does every other ladder's. State the techniques in tier order: a
+  harder one stated first sets the walk's cap at its tier while an easier
+  firing waits, and the hint teaches the harder reasoning (Slant's `pair`
+  above `loop` did).
 - **A recorded run takes one firing a pass**, the order a hint says them
   in. A caller that asks only which firings a solve made, as Mosaic's Easy
   deal asks which numbers it read, sets `wholePasses` and takes every firing
@@ -429,6 +451,13 @@ readings the scan interleaves (each clue's first reading, then its second,
 then the next clue's) are one technique bound by the clue, its conclusion
 the first reading where that changes the marks and the second otherwise. A
 let binder says which, for the reason: Towers' `bounds` and its `near`.
+
+**A solve makes each fact as it concludes it**, so a set a binder computed
+before a placement in the same run reads as it was: a second binding of a
+square just placed, or a member of `open(k)` placed since `open(k)` was
+read. A technique that places says `not known(x)` again in the binder that
+reads `x` (Slant's `loop`, `pair` and `share`), or its solve concludes from
+marks that are no longer there and calls a sound board inconsistent.
 
 ## A conclusion that is false is a contradiction
 
@@ -551,6 +580,14 @@ the rules. What a small board cannot cover:
 - **`beam` is read by walking `traceBeam` itself**, asked again with each
   cell it stops at settled each way, so the check reads the game's physics,
   under the guard of what each cell on the path holds.
+- **`linked(k)` and `through(c, E)` are read as reach**, as `connected` is:
+  over the points, each step along a diagonal its square holds, and over
+  the cells, each step across an edge in `E`. A mark on the edges is a
+  candidate a value an edge, each held to its `of` read of the answer, so
+  `strike(e, d)` is the fact that the answer's `of` is not `d`. A technique
+  that binds a set over the whole board first (Slant's `same`, over its
+  alike pairs) is one query at order 4 for that binding; `CHECK_SPLIT=2`
+  fixes the next binder too.
 
 A description with variations is checked in each world it deals, on the
 plain board and each ruleset's, and a technique must be sound in every one

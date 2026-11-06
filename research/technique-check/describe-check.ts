@@ -24,6 +24,7 @@ import {
   type ClueKind,
   type Description,
   type DescriptionJson,
+  edgeMarkOf,
   type LibraryJson,
   loadDescription,
   parseTechnique,
@@ -40,6 +41,7 @@ import {
   perPlace,
   perValue,
   ray,
+  slash,
   step,
   traceBeam,
   within,
@@ -205,6 +207,16 @@ interface Board {
   sizes: ReadonlyMap<string, Nx>;
   /** The most cells a dealt partition's region has ({@link regionCells}). */
   regionCells: number;
+  /** The mark on the edges, where the description has one that means
+   * something of the answer: its name, each edge's candidates, and what each
+   * edge's mark means, as the answer reads it (`edgeMeaning`). */
+  edgeMark: {
+    name: string;
+    of: Expr;
+    notation: Expr;
+    cand: Bx[][];
+    meaning: (Nx | null)[];
+  } | null;
 }
 
 /**
@@ -411,6 +423,13 @@ function makeBoard(
       ),
     ]),
   );
+  const mark = d === undefined ? null : edgeMarkOf(d.json);
+  const notation = mark === null ? null : d?.json.marks?.[mark.name]?.notation;
+  const set =
+    notation === undefined || notation === null ? null : /^set of (.*)$/.exec(notation);
+  if (mark !== null && set === null)
+    throw new Error(`${mark.name}: only a mark that is a set of values is checked`);
+  const edgeCount = sp.edgeEnds.length / 2;
   return {
     sp,
     order,
@@ -424,7 +443,46 @@ function makeBoard(
     regionCells: cells,
     clueDomain,
     sizes,
+    edgeMark:
+      mark === null || set === null
+        ? null
+        : {
+            name: mark.name,
+            of: parse(mark.of),
+            notation: parse(set[1]),
+            cand: Array.from({ length: edgeCount }, (_, e) =>
+              Array.from(
+                { length: Math.max(top, MARK_TOP) + 1 },
+                (_, n): Bx =>
+                  n === 0 ? false : Z3.Bool.const(`${tag}_mark_${e}_${n}`),
+              ),
+            ),
+            meaning: Array.from({ length: edgeCount }, () => null),
+          },
   };
+}
+
+/** The largest value an edge's mark is checked holding, where the board's
+ * order is smaller. */
+const MARK_TOP = 3;
+
+/** What edge `e`'s mark means of the answer: its `of`, read in a rule. */
+function edgeMeaning(ctx: Ctx, e: number): Nx {
+  const mark = ctx.board.edgeMark;
+  if (mark === null) throw new Error("no mark on the edges");
+  const known = mark.meaning[e];
+  if (known !== null) return known;
+  const v = num(
+    evaluate(mark.of, new Map([["at", elem("edge", e)]]), {
+      ...ctx,
+      mode: "rule",
+      concluding: false,
+      supposed: [],
+    }),
+    mark.name,
+  );
+  mark.meaning[e] = v;
+  return v;
 }
 
 /** The sizes an `order` board does not fix whose range is wider than its
@@ -742,6 +800,10 @@ function evaluate(e: Expr, env: Env, ctx: Ctx): V {
           return allOf("slot", sp.slots);
         case "corners":
           return allOf("corner", sp.corners);
+        case "points":
+          return allOf("point", sp.points);
+        case "edges":
+          return allOf("edge", sp.edges);
         case "domain":
           return evaluate(ctx.d.domain, new Map(), ctx);
         case "order":
@@ -911,6 +973,55 @@ function connectedOf(sp: GridSpace, mem: readonly Bx[]): Bx {
     reach = mem.map((g, c) => and(g, or(was[c], ...sp.adj4[c].map((p) => was[p]))));
   }
   return and(...mem.map((g, c) => implies(g, reach[c])));
+}
+
+const linkedCache = new WeakMap<Board, Map<string, V>>();
+
+/**
+ * `linked(k)` read as reach: a point is in it where a point it shares a
+ * square with is, the square's diagonal joining the two, as many steps as
+ * the board has points. A read under no supposition is kept for the board.
+ */
+function linkedOf(ctx: Ctx, k: number): V {
+  const { board } = ctx;
+  const { sp } = board;
+  const key = `${ctx.mode} ${k}`;
+  const cache = ctx.supposed.length === 0 ? linkedCache.get(board) : undefined;
+  const kept = cache?.get(key);
+  if (kept !== undefined) return kept;
+  // Each point's diagonal neighbors, each under its square holding the
+  // diagonal joining them.
+  const joins: (readonly [number, Bx])[][] = sp.points.map(() => []);
+  for (const c of sp.cells) {
+    const v = cellValue(ctx, c);
+    const [tl, tr, bl, br] = sp.cellPoints[c];
+    for (const [p, q] of [
+      [tl, br],
+      [tr, bl],
+    ]) {
+      const g = cmp("=", v, slash(sp, c, p));
+      joins[p].push([q, g]);
+      joins[q].push([p, g]);
+    }
+  }
+  let reach: Bx[] = sp.points.map((p) => p === k);
+  for (let i = 1; i < sp.points.length; i++) {
+    const was = reach;
+    reach = sp.points.map((p) =>
+      or(was[p], ...joins[p].map(([q, g]) => and(was[q], g))),
+    );
+  }
+  const out: V = {
+    k: "eset",
+    sort: "point",
+    mem: sp.points.map((p) => [p, reach[p]] as const).filter(([, g]) => g !== false),
+  };
+  if (ctx.supposed.length === 0) {
+    const m = linkedCache.get(board) ?? new Map<string, V>();
+    m.set(key, out);
+    linkedCache.set(board, m);
+  }
+  return out;
 }
 
 function inEset(id: number, s: V): Bx {
@@ -1151,6 +1262,68 @@ function aggregate(e: Extract<Expr, { k: "agg" }>, env: Env, ctx: Ctx): V {
   }
 }
 
+/**
+ * The readings of a board of diagonals (Slant's): its points, which way a
+ * diagonal runs through one, the points the diagonals join, the cells
+ * joined across a set of edges, and the mark on the edges. `null` for any
+ * other function.
+ */
+function diagonalCall(fn: string, vs: readonly V[], ctx: Ctx): V | null {
+  const { board } = ctx;
+  const { sp } = board;
+  const mark = board.edgeMark;
+  // The mark on an edge: its candidates, which only a technique reads.
+  if (mark !== null && fn === mark.name) {
+    if (ctx.mode === "rule") throw new TypeError(`${fn} in a rule`);
+    return lift(vs[0], fn, (e) =>
+      vsetOf(board, (n) => (e < 0 ? false : (mark.cand[e][n] ?? false))),
+    );
+  }
+  switch (fn) {
+    case "points":
+      return lift(vs[0], fn, (c) => allOf("point", c < 0 ? [] : sp.cellPoints[c]));
+    case "slash":
+      return lift(vs[0], fn, (c) =>
+        lift(vs[1], fn, (k) => ({
+          k: "num",
+          v: c < 0 || k < 0 ? -1 : slash(sp, c, k),
+        })),
+      );
+    case "linked":
+      return lift(vs[0], fn, (k) => (k < 0 ? allOf("point", []) : linkedOf(ctx, k)));
+    case "through": {
+      // Read as reach: a cell is in it where a cell beside it is, across an
+      // edge of the set, as many steps as the board has cells.
+      const E =
+        vs[1].k === "vset" && vs[1].mem.every((g) => g === false)
+          ? allOf("edge", [])
+          : vs[1];
+      if (E.k !== "eset") throw new TypeError(`${fn}: not a set of edges`);
+      return lift(vs[0], fn, (c) => {
+        if (c < 0) return allOf("cell", []);
+        const across = sp.cells.map((x) =>
+          sp.adj4[x].map((p) => [p, inEset(sp.edgeOf(x, p), E)] as const),
+        );
+        let reach: Bx[] = sp.cells.map((x) => x === c);
+        for (let k = 1; k < sp.cells.length; k++) {
+          const was = reach;
+          reach = sp.cells.map((x) =>
+            or(was[x], ...across[x].map(([p, g]) => and(was[p], g))),
+          );
+        }
+        return {
+          k: "eset",
+          sort: "cell",
+          mem: sp.cells
+            .map((x) => [x, reach[x]] as const)
+            .filter(([, g]) => g !== false),
+        };
+      });
+    }
+  }
+  return null;
+}
+
 function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
   const { board } = ctx;
   const { sp } = board;
@@ -1254,6 +1427,8 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       if (v === undefined) throw new Error(`${fn} of none`);
       return v;
     });
+  const diagonal = diagonalCall(fn, vs, ctx);
+  if (diagonal !== null) return diagonal;
   // A partition named as a function: the part holding a cell, and of none,
   // none.
   const none: V = { k: "elem", sort: "none", alts: [[-1, true]] };
@@ -1292,6 +1467,8 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
         return lift(s, fn, (r) => allOf("cell", r < 0 ? [] : part.parts[r]));
       if (s.k === "elem" && s.sort === "corner")
         return lift(s, fn, (k) => allOf("cell", sp.cornerCells[k]));
+      if (s.k === "elem" && s.sort === "point")
+        return lift(s, fn, (k) => allOf("cell", k < 0 ? [] : sp.pointCells[k]));
       return lift(vs[0], fn, (L) => allOf("cell", L < 0 ? [] : sp.lineCells[L]));
     }
     case "row":
@@ -1409,9 +1586,19 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       );
     case "nth": {
       // Past either end is none.
-      const L = known(vs[0], fn);
       const v0 = vs[0];
       const i = num(vs[1], fn);
+      // In a set the marks decide, a member is the ith where it is in the
+      // set and i of the members before it are.
+      if (v0.k === "eset" && v0.mem.some(([, g]) => g !== true)) {
+        const at: Alt[] = v0.mem.map(([id, g], j) => {
+          const before = sumOf(v0.mem.slice(0, j).map(([, h]) => ite(h, 1, 0)));
+          return [id, and(g, cmp("=", before, i))] as const;
+        });
+        at.push([-1, not(or(...at.map(([, g]) => g)))]);
+        return { k: "elem", sort: v0.sort, alts: at.filter(([, g]) => g !== false) };
+      }
+      const L = known(v0, fn);
       const at: Alt[] = L.map((id, j) => [id, cmp("=", i, j)] as const);
       at.push([-1, not(or(...at.map(([, g]) => g)))]);
       return {
@@ -1591,6 +1778,14 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
     case "place": {
       if (!ctx.concluding) throw new Error(`${fn} outside a conclusion`);
       const d = num(vs[1], fn);
+      // A strike on an edge is a fact about what its mark means.
+      if (vs[0].k === "elem" && vs[0].sort === "edge") {
+        if (fn === "place") throw new Error("place on an edge");
+        return lift(vs[0], fn, (e) => ({
+          k: "bool",
+          v: e < 0 ? false : cmp("!=", edgeMeaning(ctx, e), d),
+        }));
+      }
       return cellFn((c) => ({
         k: "bool",
         v: cmp(fn === "strike" ? "!=" : "=", board.ans[c], d),
@@ -1670,14 +1865,16 @@ function dealSymbolically(d: Description, board: Board): void {
             ? board.sp.corners.length
             : c.at === "cell"
               ? board.sp.cells.length
-              : c.at === "line"
-                ? board.sp.lines.length
-                : part !== undefined
-                  ? part.parts.length
-                  : null;
+              : c.at === "point"
+                ? board.sp.points.length
+                : c.at === "line"
+                  ? board.sp.lines.length
+                  : part !== undefined
+                    ? part.parts.length
+                    : null;
     if (places === null)
       throw new Error(
-        `clue ${kind}: only edge, slot, corner, cell, line and region clues are checked yet`,
+        `clue ${kind}: only edge, slot, corner, cell, point, line and region clues are checked yet`,
       );
     const complete = d.json.clues?.[kind]?.complete === true;
     const list: ClueSym[] = [];
@@ -1793,6 +1990,20 @@ function worldOf(d: Description, board: Board): Bx[] {
       ),
     );
   });
+  // A consistent mark on an edge holds what its `of` reads of the answer,
+  // and only values its notation names.
+  const mark = board.edgeMark;
+  if (mark !== null) {
+    const dom = evaluate(mark.notation, new Map(), ctx);
+    if (dom.k !== "vset") throw new TypeError(`${mark.name}: not a set of values`);
+    mark.cand.forEach((cands, e) => {
+      const means = edgeMeaning(ctx, e);
+      out.push(or(...cands.map((g, n) => and(g, cmp("=", means, n)))));
+      cands.forEach((g, n) => {
+        if (n > 0) out.push(implies(g, dom.mem[n] ?? false));
+      });
+    });
+  }
   for (const r of d.rules) out.push(bool(evaluate(r.expr, new Map(), ctx), r.name));
   for (const [kind, c] of d.clueKinds)
     (board.clues.get(kind) ?? []).forEach((k, i) => {

@@ -47,25 +47,29 @@ const pinned = describeHintPins({
       first.move.type === "set",
   },
   pins: {
-    /** Held on 277 of 861 positions walked. */
+    /** Held on 267 of 852 positions walked. */
     clueWithSecondSquare: "8x8dh:j33a3a11b3b2b2d21c1b313131b32d1b12313g2a12b0c1c",
-    /** Held on 838 of 861 positions walked. */
+    /** Held on 835 of 852 positions walked. */
     "clue-fill": "8x8dh:1a111111a12c1e11c3112a21c1a13211a1b3b3b11b23a2d13131a1b1d1b",
-    /** Held on 838 of 861 positions walked. */
+    /** Held on 823 of 852 positions walked. */
     "clue-empty": "8x8dh:j33a3a11b3b2b2d21c1b313131b32d1b12313g2a12b0c1c",
-    /** Held on 758 of 861 positions walked. */
+    /** Held on 721 of 852 positions walked. */
     loop: {
       id: "8x8dh:j33a3a11b3b2b2d21c1b313131b32d1b12313g2a12b0c1c",
       moves:
         '[{"type":"set","x":0,"y":7,"v":1},{"type":"set","x":1,"y":7,"v":-1},{"type":"set","x":3,"y":3,"v":-1},{"type":"set","x":4,"y":3,"v":1},{"type":"alike","x":0,"y":1,"dir":"right","on":true},{"type":"set","x":0,"y":0,"v":-1},{"type":"set","x":1,"y":0,"v":1},{"type":"set","x":1,"y":1,"v":1},{"type":"set","x":0,"y":1,"v":1},{"type":"set","x":2,"y":1,"v":-1},{"type":"set","x":2,"y":0,"v":1},{"type":"set","x":0,"y":2,"v":1},{"type":"set","x":1,"y":2,"v":-1}]',
     },
-    /** Held on 362 of 861 positions walked. */
+    /** Held on 375 of 852 positions walked. */
     deadend: "8x8dh:a1e1c23123c3a21a21c2121e2a32211a3a2a2a2c123a12a1a22a33c1d11a",
-    /** Held on 274 of 861 positions walked. */
-    equiv: "8x8dh:a1a11d122212a1c3c11b2b1a32a113b32g2a3b2b3a21a112b3a11i",
-    /** Held on 467 of 861 positions walked. */
+    /** Held on 76 of 852 positions walked. */
+    equiv: {
+      id: "8x8dh:a11a11c12d21a1a3a3a2e2a3b1a1a112a11a22a31a21a222c2a1a31223c1b11a1a",
+      moves:
+        '[{"type":"alike","x":7,"y":3,"dir":"down","on":true},{"type":"set","x":6,"y":3,"v":1},{"type":"set","x":6,"y":4,"v":-1},{"type":"alike","x":7,"y":4,"dir":"down","on":true},{"type":"set","x":6,"y":5,"v":-1},{"type":"set","x":4,"y":4,"v":1},{"type":"alike","x":3,"y":3,"dir":"down","on":true},{"type":"set","x":2,"y":3,"v":1},{"type":"set","x":2,"y":4,"v":-1},{"type":"set","x":4,"y":3,"v":-1},{"type":"set","x":4,"y":2,"v":-1},{"type":"set","x":5,"y":3,"v":-1},{"type":"set","x":5,"y":2,"v":1},{"type":"set","x":5,"y":4,"v":1},{"type":"set","x":4,"y":5,"v":-1},{"type":"set","x":5,"y":5,"v":1},{"type":"set","x":6,"y":2,"v":1},{"type":"alike","x":1,"y":4,"dir":"right","on":true}]',
+    },
+    /** Held on 558 of 852 positions walked. */
     "mark-clue": "8x8dh:a1a11d122212a1c3c11b2b1a32a113b32g2a3b2b3a21a112b3a11i",
-    /** Held on 400 of 861 positions walked. */
+    /** Held on 270 of 852 positions walked. */
     "mark-v": {
       id: "8x8dh:j33a3a11b3b2b2d21c1b313131b32d1b12313g2a12b0c1c",
       moves:
@@ -145,6 +149,22 @@ describe("slant hint", () => {
     expect(journey[1].explanation).toMatch(
       /^…and (?:this square|these squares) must slant (?:away|toward it) too, for the same clue(?: and the outlined squares?)?\.$/,
     );
+  });
+
+  test("a clue there to read comes before a square read through a mark", () => {
+    const s = freshState(8, 8, DIFF_EASY, "clue-before-mark");
+    const sol = solveFromClues(s.w, s.h, s.clues);
+    if ("error" in sol) throw new Error("unsolvable");
+    // A drawn square and a mark to the empty square beside it, which slants
+    // alike: the mark could decide that square from the start.
+    const at = sol.soln.findIndex((v, i) => i % s.w < s.w - 1 && sol.soln[i + 1] === v);
+    const x = at % s.w;
+    const y = Math.floor(at / s.w);
+    let mid = executeMove(s, { type: "set", x, y, v: sol.soln[at] as 1 | -1 });
+    mid = executeMove(mid, { type: "alike", x, y, dir: "right", on: true });
+    const res = slantGame.hint?.(mid);
+    if (!res?.ok) throw new Error("expected a plan");
+    expect(["clue-fill", "clue-empty"]).toContain(res.steps[0].rung);
   });
 
   test("loop / dead-end / equivalence firings each get their narration", () => {

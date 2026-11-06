@@ -6,7 +6,8 @@
  * An element is its index: a cell `y·w + x`, a line its row `y`, `h + x`
  * for a column, and after the columns a space's boxes and then its
  * diagonals, an edge its place in {@link GridSpace.edgeEnds}, a corner
- * `y·(w − 1) + x` for the one below and right of cell `(x, y)`, a region
+ * `y·(w − 1) + x` for the one below and right of cell `(x, y)`, a point
+ * `y·(w + 1) + x` for the one above and left of it, a region
  * its part's index in its {@link Partition}. `-1` is
  * `none`, for an element and for a value alike, since no value is negative.
  * A set of values is a bitmask (bit `d`); a set of elements an ordered array.
@@ -22,6 +23,9 @@ export interface Marks {
    * so a compiled read is two loads every Latin game can inline. */
   readonly repeat: number;
   readonly times: number;
+  /** How many values have been placed, the seeding's included: a term that
+   * reads only the values placed may be kept while it stands. */
+  readonly placed: number;
   /** Whether the cell holds a value. */
   known(c: number): boolean;
   /** The cell's value, or `-1` where it has none. */
@@ -34,13 +38,21 @@ export interface Marks {
   strikeAt(c: number, d: number): void;
   /** Place `d` in the cell, where a technique has no `fire` to tell. */
   placeAt(c: number, d: number): void;
+  /** The values an edge's mark may still hold, as a bitmask, where the
+   * description marks the edges (Slant's v-shapes); 0 where it does not. */
+  edgeCand(e: number): number;
+  /** Strike `d` from the edge's mark, where a technique has no `fire` to
+   * tell. */
+  edgeStrikeAt(e: number, d: number): void;
 }
 
-/** One firing's facts, three numbers each: {@link STRIKE} or {@link PLACE},
- * the cell, the value. */
+/** One firing's facts, three numbers each: {@link STRIKE}, {@link PLACE} or
+ * {@link STRIKE_EDGE}, the cell or the edge, the value. */
 export type Facts = readonly number[];
 export const STRIKE = 0;
 export const PLACE = 1;
+/** A value struck from an edge's mark. */
+export const STRIKE_EDGE = 2;
 
 /**
  * Called once a binding's conclusion has facts that change the marks, with
@@ -159,6 +171,8 @@ export interface GridSpace {
   /** Two cells an edge, in reading order of the first, its right edge before
    * its lower. */
   readonly edgeEnds: Int32Array;
+  /** Every edge, in that order. */
+  readonly edges: readonly number[];
   /** The edge between two orthogonal neighbors, or `-1`. */
   edgeOf(a: number, b: number): number;
   /** One slot beyond each end of every line, numbered as Towers deals its
@@ -175,6 +189,13 @@ export interface GridSpace {
   /** Each cell's corners, those inside the grid: below right, above right,
    * below left, above left, the order Mathrax has always read its clues in. */
   readonly cellCorners: readonly (readonly number[])[];
+  /** Every point where cells meet, the grid's border included, in reading
+   * order: `y·(w + 1) + x` for the one above and left of cell `(x, y)`. */
+  readonly points: readonly number[];
+  /** Each point's cells, one to four, in reading order. */
+  readonly pointCells: readonly (readonly number[])[];
+  /** Each cell's four points, in reading order. */
+  readonly cellPoints: readonly (readonly number[])[];
 }
 
 /** The eight steps to a neighbor, clockwise from up, as `adj8` lists them. */
@@ -336,6 +357,25 @@ function gridSpace(
         if (kx >= 0 && ky >= 0 && kx < cw && ky < h - 1) out.push(ky * cw + kx);
     return out;
   });
+  const pw = w + 1;
+  const points = Array.from({ length: pw * (h + 1) }, (_, k) => k);
+  const pointCells = points.map((k) => {
+    const px = k % pw;
+    const py = (k / pw) | 0;
+    const out: number[] = [];
+    for (const [x, y] of [
+      [px - 1, py - 1],
+      [px, py - 1],
+      [px - 1, py],
+      [px, py],
+    ])
+      if (x >= 0 && y >= 0 && x < w && y < h) out.push(y * w + x);
+    return out;
+  });
+  const cellPoints = cells.map((c) => {
+    const k = ((c / w) | 0) * pw + (c % w);
+    return [k, k + 1, k + pw, k + pw + 1];
+  });
   const opposite = Int32Array.from(sight, (_, s) =>
     s < 2 * w ? (s < w ? s + w : s - w) : s < 2 * w + h ? s + h : s - h,
   );
@@ -364,6 +404,7 @@ function gridSpace(
     adj4,
     adj8,
     edgeEnds: Int32Array.from(ends),
+    edges: Array.from({ length: ends.length / 2 }, (_, e) => e),
     edgeOf(a, b) {
       if (a > b) return this.edgeOf(b, a);
       if (b === a + 1 && a % w !== w - 1) return right[a];
@@ -376,6 +417,9 @@ function gridSpace(
     corners,
     cornerCells,
     cellCorners,
+    points,
+    pointCells,
+    cellPoints,
   };
 }
 
@@ -671,6 +715,260 @@ export function chain(
     out.push(at);
   }
   return out.length > 1 ? out.sort((a, b) => a - b) : out;
+}
+
+/**
+ * `slash(c, k)`: the value cell `c` holds where its diagonal meets point
+ * `k`, 1 for the one from above left to below right and 2 for the other;
+ * none where `k` is not one of its points.
+ */
+export function slash(sp: GridSpace, c: number, k: number): number {
+  if (c < 0 || k < 0) return -1;
+  // Square c's corner above left is point c + y, and its other three are
+  // 1, w + 1 and w + 2 past it.
+  const d = k - c - ((c / sp.w) | 0);
+  return d === 0 || d === sp.w + 2 ? 1 : d === 1 || d === sp.w + 1 ? 2 : -1;
+}
+
+/** The marks {@link linkedOf} last read, at which placement, and the groups
+ * of points their diagonals join, as a union-find: each point's parent, the
+ * diagonal each square was joined at (0 for none), and every group's points
+ * by its root, listed at the first read since the last join. */
+let linkMarks: Marks | null = null;
+let linkSpace: GridSpace | null = null;
+let linkPlaced = -1;
+let linkParent = new Int32Array(0);
+let linkJoined = new Int8Array(0);
+const linkMembers = new Map<number, number[]>();
+
+function linkRoot(i: number): number {
+  while (linkParent[i] !== i) {
+    linkParent[i] = linkParent[linkParent[i]];
+    i = linkParent[i];
+  }
+  return i;
+}
+
+/**
+ * The groups of points the diagonals `b` holds join, brought up to date once
+ * for each placement the marks have made. A solve only places, so only the
+ * diagonals drawn since are joined; marks whose square has lost or changed
+ * its diagonal, seeded again, are joined afresh.
+ */
+function linkGroups(sp: GridSpace, b: Marks): void {
+  if (b === linkMarks && sp === linkSpace && b.placed === linkPlaced) return;
+  let fresh = b !== linkMarks || sp !== linkSpace;
+  linkMarks = b;
+  linkSpace = sp;
+  linkPlaced = b.placed;
+  for (;;) {
+    if (fresh) {
+      const n = sp.points.length;
+      if (linkParent.length < n) linkParent = new Int32Array(n);
+      for (let i = 0; i < n; i++) linkParent[i] = i;
+      if (linkJoined.length < sp.cells.length)
+        linkJoined = new Int8Array(sp.cells.length);
+      linkJoined.fill(0);
+      linkMembers.clear();
+    }
+    let stale = false;
+    for (const c of sp.cells) {
+      const raw = b.value(c);
+      const v = raw === 1 || raw === 2 ? raw : 0;
+      const was = linkJoined[c];
+      if (v === was) continue;
+      if (was !== 0) {
+        stale = true;
+        break;
+      }
+      const ps = sp.cellPoints[c];
+      const p = linkRoot(v === 1 ? ps[0] : ps[1]);
+      const q = linkRoot(v === 1 ? ps[3] : ps[2]);
+      linkJoined[c] = v;
+      if (p === q) continue;
+      linkParent[p] = q;
+      linkMembers.clear();
+    }
+    if (!stale) return;
+    fresh = true;
+  }
+}
+
+/** {@link linked} on the marks' own values, outside any supposition: the
+ * groups are kept up to date a placement, not walked each read. */
+export function linkedOf(sp: GridSpace, b: Marks, k: number): readonly number[] {
+  if (k < 0) return [];
+  linkGroups(sp, b);
+  if (linkMembers.size === 0)
+    for (const p of sp.points) {
+      const r = linkRoot(p);
+      const group = linkMembers.get(r);
+      if (group === undefined) linkMembers.set(r, [p]);
+      else group.push(p);
+    }
+  return linkMembers.get(linkRoot(k)) ?? [];
+}
+
+/** Whether `q` is in {@link linkedOf}`(k)`. */
+export function linkedWith(sp: GridSpace, b: Marks, q: number, k: number): boolean {
+  if (k < 0 || q < 0) return false;
+  linkGroups(sp, b);
+  return linkRoot(q) === linkRoot(k);
+}
+
+/**
+ * The groups of points the diagonals `value` reads join, for reading one
+ * grid many times (an answer check): `of(k)` is {@link linked}`(k)`, each
+ * group listed once it is read.
+ */
+export function pointGroups(
+  sp: GridSpace,
+  value: (c: number) => number,
+): { of(k: number): readonly number[] } {
+  const parent = Int32Array.from(sp.points, (_, i) => i);
+  const root = (i: number): number => {
+    while (parent[i] !== i) {
+      parent[i] = parent[parent[i]];
+      i = parent[i];
+    }
+    return i;
+  };
+  for (const c of sp.cells) {
+    const v = value(c);
+    if (v !== 1 && v !== 2) continue;
+    const ps = sp.cellPoints[c];
+    parent[root(v === 1 ? ps[0] : ps[1])] = root(v === 1 ? ps[3] : ps[2]);
+  }
+  let members: Map<number, number[]> | null = null;
+  return {
+    of(k) {
+      if (k < 0) return [];
+      if (members === null) {
+        members = new Map();
+        for (const p of sp.points) {
+          const r = root(p);
+          const group = members.get(r);
+          if (group === undefined) members.set(r, [p]);
+          else group.push(p);
+        }
+      }
+      return members.get(root(k)) ?? [];
+    },
+  };
+}
+
+/** The points a walk has reached, by the walk that reached them. */
+let met = new Int32Array(0);
+let metWalk = 0;
+
+/**
+ * `linked(k)`: `k` and the points joined to it by the diagonals the cells
+ * hold, in reading order. `value` reads a cell's value, `-1` where it has
+ * none.
+ */
+export function linked(
+  sp: GridSpace,
+  value: (c: number) => number,
+  k: number,
+): readonly number[] {
+  if (k < 0) return [];
+  if (met.length < sp.points.length) met = new Int32Array(sp.points.length);
+  if (++metWalk === 0x7fffffff) {
+    met.fill(0);
+    metWalk = 1;
+  }
+  const out = [k];
+  met[k] = metWalk;
+  for (let i = 0; i < out.length; i++) {
+    const p = out[i];
+    for (const c of sp.pointCells[p]) {
+      const v = value(c);
+      const at = sp.cellPoints[c].indexOf(p);
+      if (v !== (at === 0 || at === 3 ? 1 : 2)) continue;
+      const q = sp.cellPoints[c][3 - at];
+      if (met[q] === metWalk) continue;
+      met[q] = metWalk;
+      out.push(q);
+    }
+  }
+  return out.length > 1 ? out.sort((a, b) => a - b) : out;
+}
+
+/** The edges {@link through} may cross, set for one call. */
+let crossable = new Uint8Array(0);
+
+/**
+ * `through(c, E)`: `c` and the cells reached from it across the edges `E`,
+ * each between two orthogonal neighbors, in reading order.
+ */
+export function through(
+  sp: GridSpace,
+  c: number,
+  E: readonly number[],
+): readonly number[] {
+  if (c < 0) return [];
+  const n = sp.cells.length;
+  if (reached.length < n) reached = new Int32Array(n);
+  const edges = sp.edgeEnds.length / 2;
+  if (crossable.length < edges) crossable = new Uint8Array(edges);
+  if (++walk === 0x7fffffff) {
+    reached.fill(0);
+    walk = 1;
+  }
+  for (const e of E) crossable[e] = 1;
+  const out = [c];
+  reached[c] = walk;
+  for (let i = 0; i < out.length; i++)
+    for (const q of sp.adj4[out[i]]) {
+      if (reached[q] === walk || !crossable[sp.edgeOf(out[i], q)]) continue;
+      reached[q] = walk;
+      out.push(q);
+    }
+  for (const e of E) crossable[e] = 0;
+  return out.length > 1 ? out.sort((a, b) => a - b) : out;
+}
+
+/**
+ * The cells joined across the edges `E`, for reading {@link through} from
+ * many cells over one set: `of(c)` is `through(c, E)`, each group listed
+ * once it is read.
+ */
+export function edgeGroups(
+  sp: GridSpace,
+  E: readonly number[],
+): { of(c: number): readonly number[] } {
+  const n = sp.cells.length;
+  let parent: Int32Array | null = null;
+  const root = (p: Int32Array, i: number): number => {
+    while (p[i] !== i) {
+      p[i] = p[p[i]];
+      i = p[i];
+    }
+    return i;
+  };
+  if (E.length > 0) {
+    parent = Int32Array.from({ length: n }, (_, i) => i);
+    for (const e of E)
+      parent[root(parent, sp.edgeEnds[2 * e])] = root(parent, sp.edgeEnds[2 * e + 1]);
+  }
+  let members: Map<number, number[]> | null = null;
+  return {
+    of(c) {
+      if (c < 0) return [];
+      if (parent === null) return [c];
+      const p = parent;
+      if (members === null) {
+        members = new Map();
+        for (const x of sp.cells) {
+          const r = root(p, x);
+          const group = members.get(r);
+          if (group === undefined) members.set(r, [x]);
+          else group.push(x);
+        }
+      }
+      return members.get(root(p, c)) ?? [c];
+    },
+  };
 }
 
 /** The next mask above `k` with as many bits set (Gosper's hack), so a

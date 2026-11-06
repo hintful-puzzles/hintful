@@ -1,41 +1,84 @@
 # describe-loops-and-fleets
 
 **Status: filed by `describe-chains-loops-and-fleets` (2026-11-02)**, which
-split at its start and took Rome. The rest of step 8 of
-`describe-the-whole-catalog`'s plan (`design.md` § "The plan"). It files step
-9, `describe-edges-and-divisions`, when it is archived, or the part of itself
-it splits off first.
+split at its start and took Rome. Part of step 8 of
+`describe-the-whole-catalog`'s plan (`design.md` § "The plan"). It split at
+its start too (2026-11-06): it takes Slant, and filed Boats as
+`describe-fleets`, which files step 9.
 
 ## Why
 
-Slant and Boats each run a hand-written ladder beside a description that
-states only its help. What they read that the language lacks (the catalog's
-survey, `design.md` § "The constructs"): more of C (acyclic over Slant's
-border vertices, Boats' components and fleet); border vertices (Slant);
-relation marks (Slant's alike and v-shapes); and L or a restatement where a
-rule is a look. `ray(c, n)` (Range), `step(c, d)` and `chain(c)` (Rome)
-exist and the checker reads them.
+Slant ran a hand-written ladder beside a description that stated only its
+help. What it reads that the language lacked (the catalog's survey,
+`design.md` § "The constructs"): the points where squares meet, which way a
+diagonal runs through one, the groups of points the diagonals join (acyclic
+over the border vertices, C), and a mark on the pairs of squares side by
+side (its alike and v-shapes, a relation mark).
 
 ## What Changes
 
-- **The rest of C, border vertices and relation marks** in the description
-  language, the ladder runtime and the checker, as far as these games read
-  them; a direction step where Boats' reads more than `step`.
-- **Each game's ladder stated**, its tiers as it grades them, and its
-  hand-written rungs retired. Boats' `hint-solver.ts` is a second ladder; a
-  description makes the two one.
-- **Split at the start** if the session finds the step too large, as steps 7
-  and 8 split by game: the proposal is re-scoped to what it takes, and the
-  rest filed as a change of its own. Slant's answer fits today's `Marks` (two
-  slashes); Boats is the largest deletion in the catalog.
+- **Points, diagonals and a mark on the edges** in the description
+  language, the ladder runtime and the checker: `points: true`, `cells(k)`,
+  `points(c)`, `slash(c, k)`, `linked(k)`, `through(c, E)`, a clue at a
+  point, and a mark on the edges whose `of` says what it means of the
+  answer (`docs/descriptions.md` § "The formula syntax", § "Checking a
+  technique sound").
+- **Slant's ladder stated**, its tiers as it grades them, and its
+  hand-written solver retired: `solver.ts` runs the compiled ladder for the
+  generator, `solve()`, `findMistakes`, the difficulty and the hint, whose
+  walk is the engine's.
+- **Split at the start**, as steps 7 and 8 split by game: Boats, the
+  largest deletion in the catalog, is `describe-fleets`.
 
 ## Acceptance
 
-Each game runs its compiled ladder for its hint and its generator's grading;
+Slant runs its compiled ladder for its hint and its generator's grading;
 the hand-written rungs removed; every technique checked sound; the boards
 dealt, their tiers and the hint walks compared with HEAD and each difference
 reported, with which saves or links no longer load; the guides updated; the
 next step filed.
+
+## What the comparison found
+
+Recorded at HEAD (635538a0) before any code moved: every preset at both
+difficulties, eight seeds each (48 boards), dealt and walked to the end
+from empty.
+
+- **Boards and grades: all 48 descs and both grades identical.** The C
+  byte-match differential's 10 frozen boards still deal byte for byte, and
+  stay its test. The
+  old and new solvers agree on all 24,000 solves of random clue subsets
+  (boards 4–6 a side, both caps). **No save or link stops loading.**
+- **Hint walks**: 8 of 48 identical step for step, 17 the same length. Easy
+  walks read exactly HEAD's clue and loop steps (775 clue-fill, 735
+  clue-empty, 162 loop) without HEAD's 58 mark-clue steps: the engine's
+  walk never takes a step harder than the ladder's next, and HEAD's passes
+  read a marked pair while a clue was still to read. Normal walks: mark-clue
+  137→106, mark-v 56→59, dead end 39→44, equiv 0→5; the equiv steps say an
+  existing sentence. One pinned `mark-v` sentence reads the 1s at the pair's
+  ends where HEAD's read the 3s, since `one` runs before `three`.
+- **Deal time is slower**, timed back to back with a HEAD worktree (ms a
+  deal, two seeds):
+
+  | Board | HEAD | Now |
+  | --- | --- | --- |
+  | 10×12 Easy | 10 | 34 |
+  | 10×12 Normal | 21 | 185 |
+  | 20×20 Easy | 116 | 416 |
+  | 20×20 Normal | 252 | 2,902 |
+  | 30×30 Easy | 1,315 | 4,504 |
+  | 30×30 Normal | 2,069 | 25,622 |
+
+  The first working ladder was 21 times slower at 20×20 Normal; profiles
+  found three causes, each fixed in the runtime or the compiler (groups of
+  points kept by an incremental union-find, a set of edges joined once where
+  it is bound, the answer check's groups joined once a check). What is left
+  is the runner restarting at the first technique after every firing, about
+  74 runs a solve on a 20×20 board, each over the whole board, where HEAD's
+  three passes did each technique's work in one scan. A runner that sweeps
+  the ladder before restarting gives the same verdicts on all 24,000 solves
+  and saved 1.3–1.6× (20×20 Normal 2.1 s, 30×30 Normal 16.3 s): too little
+  to change the engine's runner for. The presets deal in under 0.2 s.
 
 ## What steps 7 and 8 learned that binds here
 
@@ -107,9 +150,6 @@ next step filed.
 
 ## Figures to re-check
 
-Measured on `describe-chains-loops-and-fleets`' last commit (2026-11-02),
-solver and hint files: Slant `solver.ts` 904 and `hint.ts` 802; Boats
-`solver.ts` 1,026 and `hint-solver.ts` 1,407. `firing-replay.ts` is imported
-by Seismic, Solo and Rome among the games, and by the engine's ladder
-runtime and candidate plan. Re-measure before designing against any of
-these, and record the HEAD baseline at the session's start.
+Measured on 635538a0 (2026-11-06): Slant's `solver.ts` went from 904 lines
+to 553, the adapter that rebuilds the trace `hint.ts` (802, unchanged)
+narrates from the engine's walk. Boats' figures moved to `describe-fleets`.
