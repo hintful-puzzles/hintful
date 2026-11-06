@@ -405,9 +405,13 @@ function makeBoard(
       const { min } = d.json.sizes[name];
       clueDomain.push(and(cmp(">=", v, min), cmp("<=", v, n)));
     }
-  const ans = Array.from({ length: n }, (_, c) => Z3.Int.const(`${tag}_ans_${c}`));
-  const known = Array.from({ length: n }, (_, c) => Z3.Bool.const(`${tag}_known_${c}`));
-  const cand = Array.from({ length: n }, (_, c) =>
+  // The answer's values sit on its cells, or on its edges (Separate's).
+  const held = d?.answerSort === "edge" ? sp.edges.length : n;
+  const ans = Array.from({ length: held }, (_, c) => Z3.Int.const(`${tag}_ans_${c}`));
+  const known = Array.from({ length: held }, (_, c) =>
+    Z3.Bool.const(`${tag}_known_${c}`),
+  );
+  const cand = Array.from({ length: held }, (_, c) =>
     Array.from(
       { length: top + 1 },
       (_, d): Bx => (d === 0 ? false : Z3.Bool.const(`${tag}_cand_${c}_${d}`)),
@@ -1778,8 +1782,9 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
     case "place": {
       if (!ctx.concluding) throw new Error(`${fn} outside a conclusion`);
       const d = num(vs[1], fn);
-      // A strike on an edge is a fact about what its mark means.
-      if (vs[0].k === "elem" && vs[0].sort === "edge") {
+      // A strike on an edge is a fact about what its mark means, where the
+      // answer is not the edges'.
+      if (vs[0].k === "elem" && vs[0].sort === "edge" && ctx.d.answerSort !== "edge") {
         if (fn === "place") throw new Error("place on an edge");
         return lift(vs[0], fn, (e) => ({
           k: "bool",

@@ -330,7 +330,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
         const _n134 = _i132;
         for (let _i135 = 0; _i135 < _n134; _i135++) {
           const v_b = _a133[_i135];
-          if (!(((!(b.known(v_b)) && (sp.adj4[v_a].includes(v_b))) && (_eg136.of(v_a).includes(v_b))))) continue;
+          if (!(((!(b.known(v_b)) && (sp.adj4[v_a].includes(v_b))) && (_eg136.of(v_b) === _eg136.of(v_a))))) continue;
           _g137.length = 0;
           G138: {
             _g147.length = 0;
@@ -501,7 +501,7 @@ export function share(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ShareBindin
           L263: {
             const v_R = _g244;
             const _h264 = v_R.length;
-            if (!(((_h264 === 0) || (((_h264 === 2) && (sp.adj4[(v_R[0] ?? -1)].includes((v_R[1] ?? -1)))) && (_eg265.of((v_R[0] ?? -1)).includes((v_R[1] ?? -1))))))) break L263;
+            if (!(((_h264 === 0) || (((_h264 === 2) && (sp.adj4[(v_R[0] ?? -1)].includes((v_R[1] ?? -1)))) && (_eg265.of((v_R[1] ?? -1)) === _eg265.of((v_R[0] ?? -1))))))) break L263;
             let _g266 = 0;
             G267: {
               const _a268 = sp.pointCells[v_k];

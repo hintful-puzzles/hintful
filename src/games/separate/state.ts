@@ -1,5 +1,6 @@
 /**
- * Separate — state, params, desc codec, completion test.
+ * Separate — state, params, desc codec. A board is solved by the rules its
+ * description compiles to (`solver.ts`'s `isSolved`).
  *
  * The wall model is Palisade's, adopted wholesale because the task (partition
  * the grid by drawing walls) is identical; what differs is the cell content (a
@@ -18,12 +19,9 @@ import {
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   BORDER,
-  BORDER_D,
   BORDER_L,
-  BORDER_R,
   BORDER_U,
   type BorderEdit,
-  buildDsf,
   DISABLED,
   DX,
   DY,
@@ -42,6 +40,7 @@ import {
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
+import { isSolved } from "./solver.ts";
 
 // --- types ----------------------------------------------------------------
 
@@ -166,46 +165,6 @@ export function validateParams(p: SeparateParams, full: boolean): string | null 
       SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string,
     );
   return null;
-}
-
-// --- borders --------------------------------------------------------------
-
-/**
- * A state is solved iff the walls divide the grid into components each of size
- * `k`, each containing every letter exactly once, and no wall lies within a
- * single component (no stray border). Size `k` + `k` letters present ⟺ one of
- * each, so a per-region letter-seen bitmap suffices.
- */
-export function isSolved(
-  w: number,
-  h: number,
-  k: number,
-  letters: Uint8Array,
-  borders: Uint8Array,
-): boolean {
-  const wh = w * h;
-  const dsf = buildDsf(w, h, borders, true);
-
-  // Per-canonical-root letter bitmap; a repeated letter fails immediately.
-  const seen = new Map<number, number>();
-  for (let i = 0; i < wh; i++) {
-    const root = dsf.canonify(i);
-    if (dsf.size(root) !== k) return false;
-    const bit = 1 << letters[i];
-    const cur = seen.get(root) ?? 0;
-    if (cur & bit) return false;
-    seen.set(root, cur | bit);
-  }
-
-  // No wall interior to a region.
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      if (x + 1 < w && borders[i] & BORDER_R && dsf.equivalent(i, i + 1)) return false;
-      if (y + 1 < h && borders[i] & BORDER_D && dsf.equivalent(i, i + w)) return false;
-    }
-  }
-  return true;
 }
 
 // --- desc codec -----------------------------------------------------------

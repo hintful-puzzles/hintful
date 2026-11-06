@@ -240,6 +240,15 @@ description author acts on:
 - **`through(c, E)` is `c` and the cells reached from it across the edges
   `E`**, each between two squares side by side: Slant's squares marked
   alike with one. Bind `E` once by `=`, since it is a set over every edge.
+  The compiled code keeps each group as one shared list, so `x in
+  through(c, E)` and `A = B` over two groups compare the lists, and keeps
+  the groups between runs while `E` is unchanged.
+- **An answer on the edges** (`value.sort: edge`, Separate's walls) places
+  its values on the edges between squares: `value(e)`, `known(e)` and
+  `place(e, d)` read an edge, and `CellMarks` holds a mark an edge
+  (`held: "edge"`). A hint step names an edge's two squares. A division
+  game states its regions as `through(c, O)`, `O` the edges known open,
+  since the answer is the walls.
 - **A mark on the edges that means something of the answer** names it in
   `of` (Slant's `vee`, `of: "meeting(at)"`, where two squares side by side
   meet in a v). It is a set of values per edge, each at first; a technique

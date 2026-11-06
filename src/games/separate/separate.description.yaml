@@ -40,3 +40,81 @@ help:
     the squares it could still take, starting with a region that has few of them:
     if it is wrong, before long some region is left short with every square around
     it walled off. The hint carries on from whatever you decide.
+name: Separate
+family: regions
+sizes:
+  w: { min: 1, max: 255 }
+  h: { min: 1, max: 255 }
+  # How many letters, which is how many squares each region holds.
+  k: { min: 2, max: 26 }
+space:
+  grid: { w: "w", h: "h" }
+  edges: true
+  units: []
+answer:
+  # The edge between two squares side by side: 1 a wall, 2 none.
+  value:
+    sort: edge
+    domain: "range(1, 2)"
+define:
+  # The edges known to have no wall.
+  joined: "{e in edges where value(e) = 2}"
+  # Whether a wall already stands between a square of A and one of B.
+  apart(A, B): "exists x in A, y in adj4(x) where y in B: value(edge(x, y)) = 1"
+  # Every edge between a square of A and one of B.
+  between(A, B): >-
+    {e in edges where (end1(e) in A and end2(e) in B)
+    or (end1(e) in B and end2(e) in A)}
+shape:
+  # A wall stands between two squares side by side exactly where they are in
+  # different regions.
+  - "forall O = joined, e in edges: value(e) = 1 iff end2(e) not in through(end1(e), O)"
+  # Every region holds k squares.
+  - "forall O = joined, c in cells: |through(c, O)| = k"
+clues:
+  # A letter on every square, which no other square of its region holds.
+  letter:
+    at: cell
+    value: "range(0, k - 1)"
+    complete: true
+    means: "forall x in through(at, joined) where x != at: clue(letter, x) != v"
+freedom: { kind: fill }
+deal:
+  answer: the grid divided at random into regions of k squares, none round another
+  letter: one of each letter a region, swapped until the ladder finishes the board
+  tier: one of the tiers
+tiers: [Easy, Unreasonable]
+techniques:
+  # Two groups side by side that hold a letter in common are different
+  # regions: wall every edge between them. The letter is the first they share.
+  - id: sharedLetter
+    tier: Easy
+    for: >-
+      O = joined, e in edges where not known(e),
+      A = through(end1(e), O), b = end2(e) where b not in A,
+      B = through(b, O), L = set(clue(letter, y) over y in B),
+      d in set(clue(letter, x) over x in A) where d in L and not apart(A, B),
+      x in A where clue(letter, x) = d, y in B where clue(letter, y) = d
+    conclude: "forall f in between(A, B): place(f, 1)"
+  # Two groups with a wall between them already are different regions: wall
+  # the rest of the edges between them.
+  - id: walledApart
+    tier: Easy
+    for: >-
+      O = joined, e in edges where not known(e),
+      A = through(end1(e), O), b = end2(e) where b not in A,
+      B = through(b, O) where apart(A, B)
+    conclude: "forall f in between(A, B): place(f, 1)"
+  # A group short of k squares grows into a square beside it that no wall
+  # keeps from it. Where only one such square is left, it takes that one;
+  # where none is, the marks are inconsistent. Run once the rungs above have
+  # walled every pair of groups they can, a square walled from the group is
+  # one whose own group is.
+  - id: onlyWay
+    tier: Easy
+    for: >-
+      O = joined, c in cells, A = through(c, O) where c = nth(A, 0) and |A| < k,
+      S = set(s over x in A, s in adj4(x) where s not in A and value(edge(x, s)) != 1)
+    conclude: >-
+      |S| > 0 and (|S| = 1 implies
+      forall x in A, y in adj4(x) where y in S: place(edge(x, y), 2))

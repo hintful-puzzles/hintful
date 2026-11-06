@@ -2,7 +2,7 @@
 
 ## 1. The vocabulary
 
-- [ ] 1.1 E and D stated, compiled, run and encoded in the checker, as far as the games taken read them
+- [ ] 1.1 What the games taken read, stated, compiled, run and encoded in the checker
 
 ## 2. The games
 

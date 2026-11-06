@@ -11,7 +11,7 @@
  */
 import { describe, expect, it } from "vitest";
 import cReference from "./__fixtures__/separate-c-reference.json" with { type: "json" };
-import { solve } from "./solver.ts";
+import { solveToBorders } from "./solver.ts";
 
 interface Fixture {
   seed: string;
@@ -28,6 +28,6 @@ describe("separate's solver on upstream's boards (frozen C reference)", () => {
   )("solves %s", (_label, f) => {
     const letters = Uint8Array.from(f.desc, (c) => c.charCodeAt(0) - 65);
     expect(letters).toHaveLength(f.w * f.h);
-    expect(solve(f, letters)).not.toBeNull();
+    expect(solveToBorders(f, letters)).not.toBeNull();
   });
 });

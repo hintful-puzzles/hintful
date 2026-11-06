@@ -6,16 +6,20 @@
 
 import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
 import { divvyRectangle } from "../../engine/divvy.ts";
+import type { Dsf } from "../../engine/dsf.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { adjacentCells, redivide, regionsBeside } from "../../engine/redivide.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import {
-  SOLVED,
-  SolverScratch,
+  type Deduction,
+  deduce,
+  deduction,
+  edgeValue,
+  groupsOf,
+  redealt,
   searchAnswers,
-  solve,
-  solverAttempt,
+  solveToBorders,
 } from "./solver.ts";
 import { encodeDesc, type SeparateParams, type SeparateShape } from "./state.ts";
 
@@ -106,10 +110,11 @@ function ringlessDivision(p: SeparateShape, rng: RandomState): Int32Array | null
 
 // --- letters placed for the solver ------------------------------------------
 
-/** Where the solver stops on some letters: its scratch, and the squares whose
- * letters a deduction has read. */
+/** Where the ladder stops on some letters: its marks, the groups they join,
+ * and the squares whose letters a deduction has read. */
 interface Reading {
-  sc: SolverScratch;
+  d: Deduction;
+  groups: Dsf;
   read: Uint8Array;
 }
 
@@ -168,9 +173,12 @@ function placedLetters(
       letters[sq] = order[i];
     });
   }
-  let at: Reading = { sc: new SolverScratch(w, h, k), read: new Uint8Array(wh) };
-  let spare: Reading = { sc: new SolverScratch(w, h, k), read: new Uint8Array(wh) };
-  at.sc.init();
+  /** A reading from nothing: no edge decided, no letter read. */
+  const fresh = (): Reading => {
+    const d = deduction(p, letters);
+    return { d, groups: groupsOf(d.m), read: new Uint8Array(wh) };
+  };
+  let at = fresh();
 
   const swap = (a: number, b: number): void => {
     const was = letters[a];
@@ -179,7 +187,7 @@ function placedLetters(
   };
   /** The squares of `i`'s component, which lie in its region. */
   const component = (i: number): number[] =>
-    squares[regions[i]].filter((sq) => at.sc.dsf.equivalent(sq, i));
+    squares[regions[i]].filter((sq) => at.groups.equivalent(sq, i));
 
   /**
    * Give `x`'s component a letter that `y`'s holds, by swapping one of its
@@ -211,23 +219,28 @@ function placedLetters(
    * solved the board.
    */
   const solveOn = (): [number, number][] | null => {
-    const { sc } = at;
-    if (solverAttempt(sc, letters, at.read) === SOLVED) return null;
+    // The letters may have changed since the marks were made, where no
+    // deduction had read them.
+    at.d = redealt(at.d, p, letters);
+    const solved = deduce(at.d, at.read) === "solved";
+    const groups = groupsOf(at.d.m);
+    at.groups = groups;
+    if (solved) return null;
     /** By component: the joins it has yet to make, and its open edges. */
     const joins = new Int32Array(wh);
     const openTo = new Int32Array(wh);
     const edges: [number, number][] = [];
     for (let i = 0; i < wh; i++) {
-      const a = sc.dsf.canonify(i);
+      const a = groups.canonify(i);
       // Right and down, so that each edge is met once.
       for (const j of [i % w < w - 1 ? i + 1 : -1, i + w < wh ? i + w : -1]) {
         if (j < 0) continue;
-        const b = sc.dsf.canonify(j);
+        const b = groups.canonify(j);
         if (a === b) continue;
         if (regions[i] === regions[j]) {
           joins[a]++;
           joins[b]++;
-        } else if (!sc.disconnect[a * wh + b]) {
+        } else if (edgeValue(at.d.m, i, j) === 0) {
           openTo[a]++;
           openTo[b]++;
           edges.push([i, j]);
@@ -238,7 +251,7 @@ function placedLetters(
     // region has one square to grow into at some end, and the solver joins it.
     if (edges.length === 0) throw new Error("separate: stopped with no edge open");
     const far = (i: number): number => {
-      const root = sc.dsf.canonify(i);
+      const root = groups.canonify(i);
       return openTo[root] + (joins[root] === 1 ? 0 : wh * 4);
     };
     shuffle(edges, rng);
@@ -270,14 +283,13 @@ function placedLetters(
       const [x, y] = randomUpto(rng, 2) === 0 ? [i, j] : [j, i];
       const swapped = share(x, y, false);
       if (swapped === null) continue;
-      [at, spare] = [spare, at];
-      at.sc.init();
-      at.read.fill(0);
+      const was = at;
+      at = fresh();
       const next = solveOn();
       const worse = randomUpto(rng, WORSE_ONE_IN) === 0 ? WORSE_BY : 0;
       if (next !== null && next.length > open.length + worse) {
         swap(...swapped);
-        [at, spare] = [spare, at];
+        at = was;
         continue;
       }
       open = next;
@@ -359,7 +371,7 @@ function unreasonableLetters(p: SeparateShape, rng: RandomState): Uint8Array {
         }
       }
     },
-    deduced: ({ letters }) => solve(p, letters) !== null,
+    deduced: ({ letters }) => solveToBorders(p, letters) !== null,
     answer: ({ letters }, budget) => searchAnswers(p, letters, budget),
   }).letters;
 }

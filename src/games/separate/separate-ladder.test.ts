@@ -1,5 +1,5 @@
 /*
- * Separate's `runDeductionFixpoint` ladder, certified by a census of which
+ * Separate's compiled ladder, certified by a census of which
  * rungs fire. The harness and the argument for it are
  * `engine/testing/ladder-census.ts`; this file is the declaration.
  *
@@ -12,7 +12,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newSeparateDesc } from "./generator.ts";
-import { SolverScratch, solverAttempt } from "./solver.ts";
+import { deduce, deduction } from "./solver.ts";
 import type { SeparateShape } from "./state.ts";
 
 const SHAPES: SeparateShape[] = [
@@ -70,14 +70,12 @@ const cases = SHAPES.flatMap((p) =>
 
 describeLadderCensus<Board>({
   game: "separate",
-  rungs: ["shared-letter", "walled-apart", "only-way"],
+  rungs: ["sharedLetter", "walledApart", "onlyWay"],
   unreached: {},
   // Every rung is tier 0: the second tier is a search, not a rung.
   caps: [0],
   cases,
   solve: ({ p, letters }, _cap, firings) => {
-    const sc = new SolverScratch(p.w, p.h, p.k);
-    sc.init();
-    solverAttempt(sc, letters, null, firings);
+    deduce(deduction(p, letters), null, firings);
   },
 });

@@ -230,18 +230,20 @@ Unreasonable where it has exactly one partition that they do not reach.
   is entered with no difficulty letter, with `de`, and with `du`
 - **THEN** each opens, and the board's params read `4x4n4du`
 
-### Requirement: Solver: The ladder's three techniques disconnect, wall and merge
+### Requirement: Solver: The ladder's three techniques wall and join
 
-`shared-letter` SHALL mark two adjacent components that already hold a common
-letter disconnected, and wall every edge between them. `walled-apart` SHALL
-wall an open edge between two disconnected components. `only-way` SHALL merge
-an under-size component that has exactly one legal neighboring square with that
-square, marking the edges between them "no wall".
+A region SHALL be the squares the edges known to have no wall join.
+`sharedLetter` SHALL wall every edge between two regions side by side that
+hold a common letter. `walledApart` SHALL wall every edge between two regions
+side by side with a wall between them already. `onlyWay` SHALL join a region
+short of its size to the one square beside it that no wall keeps from it,
+marking the edges between them "no wall", and SHALL report the position
+contradictory where no such square is left.
 
 #### Scenario: Two neighbors with the same letter are walled apart
 
 - **WHEN** two adjacent lone squares hold the same letter
-- **THEN** `shared-letter` disconnects them and walls the edge between them
+- **THEN** `sharedLetter` walls the edge between them
 
 ### Requirement: Solver: Separate's search tries the region with the fewest squares to grow into
 
@@ -293,16 +295,19 @@ keyboard cursor moves by half a cell". Separate SHALL depart from none.
 - **THEN** the returned move clears the wall bit and sets the no-wall bit on
   that edge of both cells
 
-### Requirement: Hint: Separate runs its solver as a declared ladder that its hint shares
+### Requirement: Hint: Separate's solver is the ladder its description states, which its hint shares
 
-Separate's solver SHALL run on `runDeductionFixpoint` as three tier-0
-techniques, in order: `shared-letter`, `walled-apart` and `only-way`.
+Separate's solver SHALL run the ladder `separate.description.yaml` states,
+compiled, in its order, to a fixpoint: three Easy techniques,
+`sharedLetter`, `walledApart` and `onlyWay`, with Unreasonable the engine's
+search over them. A board the ladder decides whole SHALL be judged by the
+answer check its rules compile to.
 
 #### Scenario: The hint and the generator run one ladder
 
 - **WHEN** the hint asks for the next firing on a player's board
 - **THEN** it comes from the same three techniques, in the same order, that
-  the generator's solve attempt runs
+  the generator's solve runs
 
 ### Requirement: Hint: The plan starts from the player's no-wall marks and walls
 

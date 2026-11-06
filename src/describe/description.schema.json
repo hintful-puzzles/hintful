@@ -380,7 +380,10 @@
               "required": ["sort", "domain"],
               "additionalProperties": false,
               "properties": {
-                "sort": { "const": "cell" },
+                "sort": {
+                  "enum": ["cell", "edge"],
+                  "description": "What holds a value: a cell, or the edge between two cells side by side (Separate's walls), where the space has its edges."
+                },
                 "domain": { "$ref": "#/$defs/formula" },
                 "repeat": {
                   "type": "object",

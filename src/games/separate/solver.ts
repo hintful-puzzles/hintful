@@ -1,36 +1,19 @@
 /**
- * Separate solver — upstream's `solver_attempt`, run as a ladder of declared
- * techniques on `runDeductionFixpoint`.
+ * Separate's solver: the ladder `separate.description.yaml` states, compiled,
+ * on the engine's marks and runner (`engine/ladder-runtime.ts`), the answer
+ * check its rules compile to, and the search beneath the ladder.
  *
- * The working state is a disjoint-set forest of squares plus, per component
- * (all indexed by the dsf canonical root):
- *  - `size[root]` — component size.
- *  - `contents[root*k + letter]` — the grid index contributing `letter` to this
- *    component, or `-1` if the component lacks it.
- *  - `disconnect[root1*wh + root2]` — components known to be distinct regions.
+ * The answer is on the edges between squares side by side, each a wall or
+ * none, and a group is the squares the edges known to have none join. The
+ * ladder is Easy, the three rungs upstream's `solver_attempt` ran: two groups
+ * that hold a letter in common are walled apart, two with a wall between them
+ * already have the rest of the edges between them walled, and a group short
+ * of its size with one square left to grow into takes it. Beneath it, a search
+ * by trial and error ({@link searchAnswers}) counts a board's answers to two:
+ * it serves the Solve command and `findMistakes`, and deals the Unreasonable
+ * tier. An Easy board is one the ladder finishes.
  *
- * and the same facts in the player's notation, `borders` (the border-grid byte
- * per square): a disconnect walls every edge between the two components, a
- * merge marks the edges it crossed "no wall". The generator reads only the
- * first set; the hint reads the second, and both are written by the one ladder.
- *
- * The rungs, easiest first, all on tier 0 (the ladder is an order and the
- * grade is unused: Separate's second tier is a search over all three, at the
- * foot of this file):
- *
- *  1. **shared-letter** — two adjacent components that already hold a common
- *     letter can never be one region: disconnect them.
- *  2. **walled-apart** — two components already disconnected, with an edge
- *     between them still unwalled: wall it. Upstream has no such step, because
- *     its disconnect matrix ORs rows on a merge, so a grown component inherits
- *     "separate from B" silently. On the player's board that inheritance is
- *     visible work (the new boundary needs its walls), and this rung is it. It
- *     touches no dsf, matrix or `genLock` state, so it moves no board.
- *  3. **only-way** — a component below the target size `k` with exactly one
- *     legal neighboring *square* to grow into must take it: merge.
- *
- * An Easy board is one the solver fully solves, so on it running this to a
- * fixpoint yields *the* unique partition.
+ * A hint walks the same ladder, one firing at a time ({@link hintFirings}).
  */
 
 import {
@@ -51,21 +34,33 @@ import {
   FLIP,
   initBorders,
 } from "../../engine/border-grid.ts";
+import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
-  type DeductionTechnique,
-  type FiringTally,
-  runDeductionFixpoint,
-  singleFirings,
-} from "../../engine/deduction-fixpoint.ts";
+  clueList,
+  describedSpace,
+  type GridSpace,
+  rangeMask,
+} from "../../engine/describe-runtime.ts";
 import { Dsf } from "../../engine/dsf.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  ladderWalk,
+  runLadder,
+  type Taken,
+  TIERS,
+  uncluedRung,
+} from "../../engine/ladder-runtime.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
-import { SweepOffers } from "../../engine/sweep-offers.ts";
+import * as separate from "./separate.compiled.ts";
 import type { SeparateShape } from "./state.ts";
 
-/** Solver verdict, mirroring upstream's 0/1/2. */
-const STUCK = 0;
-const PROGRESS = 1;
-export const SOLVED = 2;
+/** What the description reads an edge as holding. */
+const WALL = 1;
+const OPEN = 2;
 
 /** One edge a firing sets, on the square `(x, y)`'s `dir` side. */
 export interface SeparateEdge {
@@ -75,403 +70,253 @@ export interface SeparateEdge {
   kind: "wall" | "nowall";
 }
 
-/**
- * One firing, in the player's terms: which rung, the squares its premise names
- * (captured before the rung acted), and the edges it set, in scan order.
- */
-export type SeparateFiring =
+/** Why a firing set its edges: which rung, and the squares its premise names
+ * (read before the rung acted). */
+export type SeparateReason =
   | {
       kind: "sharedLetter";
-      /** The two components, as square lists. */
+      /** The two groups, as square lists. */
       a: number[];
       b: number[];
       letter: number;
       /** The square in `a`, then in `b`, carrying `letter`. */
       holders: [number, number];
-      edges: SeparateEdge[];
     }
-  | { kind: "walledApart"; a: number[]; b: number[]; edges: SeparateEdge[] }
+  | { kind: "walledApart"; a: number[]; b: number[] }
   | {
       kind: "onlyWay";
-      /** The component that must grow. */
+      /** The group that must grow. */
       region: number[];
       /** The one square it can grow into. */
       square: number;
-      edges: SeparateEdge[];
     };
 
-/** The solver's working state, which the generator keeps across changes of
- * letters no deduction has read. */
-export class SolverScratch {
-  readonly w: number;
-  readonly h: number;
-  readonly k: number;
-  readonly wh: number;
-  dsf: Dsf;
-  size: Int32Array;
-  contents: Int32Array;
-  disconnect: Uint8Array; // wh*wh boolean matrix
-  tmp: Int32Array;
-  /** The same facts as walls and no-wall marks, in the border-grid byte. */
-  borders: Uint8Array;
-  /** Hint path only: the last firing, captured by the rung that fired. */
-  rec: { firing: SeparateFiring | null } | null = null;
-  /** Hint path only: collects every firing a rung could make, for a plan
-   * that continues where its latest step was. */
-  offers: SweepOffers<SolverScratch, SeparateFiring | null> | null = null;
+/** One firing, in the player's terms: its reason and the edges it set, the
+ * squares of its first group in reading order, each square's sides from the
+ * top clockwise. */
+export type SeparateFiring = SeparateReason & { edges: SeparateEdge[] };
 
-  constructor(w: number, h: number, k: number) {
-    this.w = w;
-    this.h = h;
-    this.k = k;
-    this.wh = w * h;
-    this.dsf = new Dsf(this.wh);
-    this.size = new Int32Array(this.wh);
-    this.contents = new Int32Array(this.wh * k);
-    this.disconnect = new Uint8Array(this.wh * this.wh);
-    this.tmp = new Int32Array(this.wh);
-    this.borders = initBorders(w, h);
-  }
+// --- the board as the description reads it -----------------------------------
 
-  init(): void {
-    this.dsf = new Dsf(this.wh);
-    this.size.fill(1);
-    this.disconnect.fill(0);
-    this.borders = initBorders(this.w, this.h);
-  }
-
-  /** A copy that shares nothing with this one, for a search to assume on. */
-  clone(): SolverScratch {
-    const copy = new SolverScratch(this.w, this.h, this.k);
-    copy.dsf = this.dsf.clone();
-    copy.size.set(this.size);
-    copy.contents.set(this.contents);
-    copy.disconnect.set(this.disconnect);
-    copy.borders.set(this.borders);
-    return copy;
-  }
-
-  /** Take on everything `s` holds that a firing writes, sharing nothing. */
-  restore(s: SolverScratch): void {
-    this.dsf = s.dsf.clone();
-    this.size.set(s.size);
-    this.contents.set(s.contents);
-    this.disconnect.set(s.disconnect);
-    this.borders.set(s.borders);
-  }
-
-  /** Where a rung on the hint path has made its firing: whether it returns. */
-  kept(): boolean {
-    return this.offers?.keep() ?? true;
-  }
-
-  /** Index each component's letters from the grid and the current dsf. */
-  indexContents(letters: Uint8Array): void {
-    const { k, wh } = this;
-    this.contents.fill(-1);
-    for (let i = 0; i < wh; i++)
-      this.contents[this.dsf.canonify(i) * k + letters[i]] = i;
-  }
-
-  connect(yx1: number, yx2: number): void {
-    const { k, wh } = this;
-    yx1 = this.dsf.canonify(yx1);
-    yx2 = this.dsf.canonify(yx2);
-    this.dsf.merge(yx1, yx2);
-    const yxnew = this.dsf.canonify(yx2);
-
-    this.size[yxnew] = this.size[yx1] + this.size[yx2];
-
-    // Union the contents: at most one of the pair holds each letter, so
-    // (a + b + 1) yields -1 iff both were -1, else the other index.
-    for (let i = 0; i < k; i++) {
-      this.contents[yxnew * k + i] =
-        this.contents[yx1 * k + i] + this.contents[yx2 * k + i] + 1;
-    }
-
-    // Merge disconnect rows and columns.
-    for (let i = 0; i < wh; i++)
-      this.disconnect[yxnew * wh + i] =
-        this.disconnect[yx1 * wh + i] || this.disconnect[yx2 * wh + i];
-    for (let i = 0; i < wh; i++)
-      this.disconnect[i * wh + yxnew] =
-        this.disconnect[i * wh + yx1] || this.disconnect[i * wh + yx2];
-  }
-
-  disconnectPair(yx1: number, yx2: number): void {
-    const { wh } = this;
-    yx1 = this.dsf.canonify(yx1);
-    yx2 = this.dsf.canonify(yx2);
-    this.disconnect[yx1 * wh + yx2] = 1;
-    this.disconnect[yx2 * wh + yx1] = 1;
-  }
-
-  /** The squares of `yx`'s component, ascending. */
-  componentOf(yx: number): number[] {
-    const root = this.dsf.canonify(yx);
-    const out: number[] = [];
-    for (let i = 0; i < this.wh; i++) if (this.dsf.canonify(i) === root) out.push(i);
-    return out;
-  }
-
-  /**
-   * Set `bit` (a wall, or a no-wall mark) on every edge between a square in
-   * component `ra` and one for which `inB` holds, where neither is set yet.
-   * Returns the edges set, in scan order, each named on its `ra` side.
-   */
-  private markBetween(
-    ra: number,
-    inB: (sq: number) => boolean,
-    kind: SeparateEdge["kind"],
-  ): SeparateEdge[] {
-    const { w, h, wh, borders } = this;
-    const out: SeparateEdge[] = [];
-    for (let i = 0; i < wh; i++) {
-      if (this.dsf.canonify(i) !== ra) continue;
-      const x = i % w;
-      const y = (i - x) / w;
-      for (let dir = 0; dir < 4; dir++) {
-        const x2 = x + DX[dir];
-        const y2 = y + DY[dir];
-        if (x2 < 0 || x2 >= w || y2 < 0 || y2 >= h) continue;
-        const j = y2 * w + x2;
-        if (!inB(j)) continue;
-        const b = BORDER(dir);
-        if (borders[i] & (b | DISABLED(b))) continue;
-        const bit = kind === "wall" ? b : DISABLED(b);
-        const flip = kind === "wall" ? BORDER(FLIP(dir)) : DISABLED(BORDER(FLIP(dir)));
-        borders[i] |= bit;
-        borders[j] |= flip;
-        out.push({ x, y, dir, kind });
-      }
-    }
-    return out;
-  }
-
-  /** Wall every still-open edge between components `ra` and `rb`. */
-  wallBetween(ra: number, rb: number): SeparateEdge[] {
-    const root = this.dsf.canonify(rb);
-    return this.markBetween(
-      this.dsf.canonify(ra),
-      (j) => this.dsf.canonify(j) === root,
-      "wall",
-    );
-  }
-
-  /** Mark "no wall" on every still-open edge between component `ra` and square `sq`. */
-  openTo(ra: number, sq: number): SeparateEdge[] {
-    return this.markBetween(this.dsf.canonify(ra), (j) => j === sq, "nowall");
-  }
+/** The last board size's space, which every move's `status` reads again. */
+let lastSpace: GridSpace | null = null;
+function spaceOf(w: number, h: number): GridSpace {
+  if (lastSpace?.w !== w || lastSpace.h !== h)
+    lastSpace = describedSpace(separate.units, w, h);
+  return lastSpace;
 }
 
-/**
- * The three rungs over one scratch, whose `contents` index the letters. `genLock`, when supplied,
- * records which grid squares' letters a deduction has depended on (for the
- * generator). `progress.fired` is raised by the two rungs upstream counts as
- * progress; `walled-apart` restates a known disconnect and does not raise it.
- *
- * On the recording path (`sc.rec` set) each rung returns after its first
- * firing, so one firing is one hint step; without a recorder the first two
- * sweep the whole grid, as upstream's pass does. Both walks reach the same
- * state: a disconnect changes no component, so which pairs a sweep disconnects,
- * and which letters it locks, cannot depend on their order.
- */
-function separateLadder(
-  sc: SolverScratch,
-  genLock: Uint8Array | null,
-  progress: { fired: boolean },
-): DeductionTechnique[] {
-  const { w, h, k, wh } = sc;
-
-  const sharedLetter = (): number => {
-    let fired = 0;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        for (let dir = 0; dir < 2; dir++) {
-          const x2 = x + dir;
-          const y2 = y + 1 - dir;
-          if (x2 >= w || y2 >= h) continue;
-          const yx = sc.dsf.canonify(y * w + x);
-          const yx2 = sc.dsf.canonify(y2 * w + x2);
-          if (yx === yx2) continue;
-          if (sc.disconnect[yx * wh + yx2]) continue;
-
-          let i = 0;
-          for (; i < k; i++)
-            if (sc.contents[yx * k + i] >= 0 && sc.contents[yx2 * k + i] >= 0) break;
-          if (i === k) continue; // no letter in common
-
-          const a = sc.rec ? sc.componentOf(yx) : [];
-          const b = sc.rec ? sc.componentOf(yx2) : [];
-          sc.disconnectPair(yx, yx2);
-          const edges = sc.wallBetween(yx, yx2);
-          fired++;
-          progress.fired = true;
-          if (genLock) {
-            genLock[sc.contents[yx * k + i]] = 1;
-            genLock[sc.contents[yx2 * k + i]] = 1;
-          }
-          if (sc.rec) {
-            const holders: [number, number] = [
-              sc.contents[yx * k + i],
-              sc.contents[yx2 * k + i],
-            ];
-            sc.rec.firing = { kind: "sharedLetter", a, b, letter: i, holders, edges };
-            if (sc.kept()) return fired;
-          }
-        }
-      }
-    }
-    return fired;
-  };
-
-  const walledApart = (): number => {
-    let fired = 0;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        for (let dir = 1; dir <= 2; dir++) {
-          const x2 = x + DX[dir];
-          const y2 = y + DY[dir];
-          if (x2 >= w || y2 >= h) continue;
-          const i = y * w + x;
-          if (sc.borders[i] & BORDER(dir)) continue;
-          const yx = sc.dsf.canonify(i);
-          const yx2 = sc.dsf.canonify(y2 * w + x2);
-          if (yx === yx2 || !sc.disconnect[yx * wh + yx2]) continue;
-
-          const a = sc.rec ? sc.componentOf(yx) : [];
-          const b = sc.rec ? sc.componentOf(yx2) : [];
-          const edges = sc.wallBetween(yx, yx2);
-          fired++;
-          if (sc.rec) {
-            sc.rec.firing = { kind: "walledApart", a, b, edges };
-            if (sc.kept()) return fired;
-          }
-        }
-      }
-    }
-    return fired;
-  };
-
-  const onlyWay = (): number => {
-    sc.tmp.fill(-1);
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const yx = sc.dsf.canonify(y * w + x);
-        if (sc.size[yx] === k) continue;
-        for (let dir = 0; dir < 4; dir++) {
-          const x2 = x + (dir === 0 ? -1 : dir === 2 ? 1 : 0);
-          const y2 = y + (dir === 1 ? -1 : dir === 3 ? 1 : 0);
-          if (y2 < 0 || y2 >= h || x2 < 0 || x2 >= w) continue;
-          const yx2 = y2 * w + x2;
-          const yx2c = sc.dsf.canonify(yx2);
-          if (yx2c !== yx && !sc.disconnect[yx2c * wh + yx]) {
-            if (sc.tmp[yx] === -1) sc.tmp[yx] = yx2;
-            else if (sc.tmp[yx] !== yx2) sc.tmp[yx] = -2; // multiple choices
-          }
-        }
-      }
-    }
-    // Upstream merges the lowest-rooted component with a single choice and
-    // restarts. The order is load-bearing: a component that grows can gain
-    // choices, so extending another first can leave this one unforced, and the
-    // generator keeps only boards this exact walk solves.
-    for (let i = 0; i < wh; i++) {
-      const sq = sc.tmp[i];
-      if (sq < 0) continue;
-      // Skip if the two ends are already one component (both sides of a
-      // two-component pair can each be the other's sole extension).
-      if (sc.dsf.canonify(i) === sc.dsf.canonify(sq)) continue;
-      const region = sc.rec ? sc.componentOf(i) : [];
-      const edges = sc.openTo(i, sq);
-      sc.connect(i, sq);
-      progress.fired = true;
-      if (sc.rec) sc.rec.firing = { kind: "onlyWay", region, square: sq, edges };
-      if (sc.kept()) return 1;
-    }
-    return 0;
-  };
-
-  return [
-    { id: "shared-letter", tier: 0, run: sharedLetter },
-    { id: "walled-apart", tier: 0, run: walledApart },
-    { id: "only-way", tier: 0, run: onlyWay },
-  ];
+/** The board as the description deals it: a letter on every square, and the
+ * region size. */
+function dealtOf(p: SeparateShape, letters: Uint8Array): separate.Dealt {
+  const at = Array.from(letters, (_, c) => c);
+  return { letter: clueList(at, Array.from(letters), letters.length), k: p.k };
 }
 
-/** Every component is a full region. */
-function allFull(sc: SolverScratch): boolean {
-  for (let i = 0; i < sc.wh; i++)
-    if (sc.size[sc.dsf.canonify(i)] !== sc.k) return false;
-  return true;
+/** The side of square `a` that edge `e` is, and the square across it. */
+function sideOf(sp: GridSpace, e: number, a: number): { dir: number; to: number } {
+  const p = sp.edgeEnds[2 * e];
+  const q = sp.edgeEnds[2 * e + 1];
+  // A grid one square wide has its squares below one another `p + 1` apart.
+  const down = q === p + sp.w;
+  if (a === p) return { dir: down ? 2 : 1, to: q };
+  return { dir: down ? 0 : 3, to: p };
 }
 
-/**
- * One full solve attempt over `letters` on the given scratch (which must have
- * been `init()`ed; the generator keeps it while it changes only letters that
- * `genLock` does not mark). `genLock`, when supplied, records which grid squares' letters a
- * deduction has depended on. Returns STUCK / PROGRESS / SOLVED, mutating the
- * scratch to the deduced partition. `firings` is the ladder census's channel
- * (`separate-ladder.test.ts`).
- */
-export function solverAttempt(
-  sc: SolverScratch,
+/** What the description reads each edge as holding on `borders`, the
+ * border-grid byte a square: a wall, a no-wall mark, or 0 for neither. */
+function valuesOf(sp: GridSpace, borders: Uint8Array): Uint8Array {
+  const values = new Uint8Array(sp.edges.length);
+  for (const e of sp.edges) {
+    const p = sp.edgeEnds[2 * e];
+    const b = BORDER(sideOf(sp, e, p).dir);
+    values[e] = borders[p] & b ? WALL : borders[p] & DISABLED(b) ? OPEN : 0;
+  }
+  return values;
+}
+
+/** Whether `borders` is solved: the walls divide the grid into regions of `k`
+ * squares, each holding no letter twice, with no wall inside one. An edge
+ * with no wall is read as none, marked or not. */
+export function isSolved(
+  w: number,
+  h: number,
+  k: number,
   letters: Uint8Array,
-  genLock: Uint8Array | null,
-  firings?: FiringTally,
-): number {
-  sc.indexContents(letters);
-  const progress = { fired: false };
-  runDeductionFixpoint({
-    techniques: separateLadder(sc, genLock, progress),
-    firings,
+  borders: Uint8Array,
+): boolean {
+  const sp = spaceOf(w, h);
+  const g = valuesOf(sp, borders).map((v) => (v === WALL ? WALL : OPEN));
+  return separate.isAnswer(g, sp, dealtOf({ w, h, k }, letters));
+}
+
+/** A reason built once a firing, from its binding, and shared by each of its
+ * edges: a firing walls or opens many, and its reason copies its groups. */
+function perFiring<B extends object>(
+  build: (binding: B) => SeparateReason,
+): (binding: B) => SeparateReason {
+  let last: B | null = null;
+  let reason: SeparateReason | null = null;
+  return (binding) => {
+    if (binding !== last || reason === null) {
+      last = binding;
+      reason = build(binding);
+    }
+    return reason;
+  };
+}
+
+/** The ladder over the dealt board, each technique with its reason: built
+ * from the binding, on the marks before the firing. */
+function separateLadder(dl: separate.Dealt): Ladder {
+  return describedLadder(separate, {
+    sharedLetter: compiledRung(
+      separate.sharedLetter,
+      dl,
+      perFiring(({ A, B, d, x, y }: separate.SharedLetterBinding) => ({
+        kind: "sharedLetter",
+        a: [...A],
+        b: [...B],
+        letter: d,
+        holders: [x, y],
+      })),
+    ),
+    walledApart: uncluedRung(
+      separate.walledApart,
+      perFiring(({ A, B }: separate.WalledApartBinding) => ({
+        kind: "walledApart",
+        a: [...A],
+        b: [...B],
+      })),
+    ),
+    onlyWay: compiledRung(
+      separate.onlyWay,
+      dl,
+      perFiring(({ A, S }: separate.OnlyWayBinding) => ({
+        kind: "onlyWay",
+        region: [...A],
+        square: S[0],
+      })),
+    ),
   });
-  if (allFull(sc)) return SOLVED;
-  return progress.fired ? PROGRESS : STUCK;
+}
+
+/** The working state of a deduction: the marks on the edges, and the ladder
+ * over the board's letters. */
+export interface Deduction {
+  m: CellMarks;
+  ladder: Ladder;
+  dl: separate.Dealt;
+}
+
+/** The marks over `borders`, each wall and no-wall mark on it placed, and
+ * every edge undecided where no `borders` is given. */
+export function deduction(
+  p: SeparateShape,
+  letters: Uint8Array,
+  borders: Uint8Array | null = null,
+): Deduction {
+  const sp = spaceOf(p.w, p.h);
+  const dl = dealtOf(p, letters);
+  const grid =
+    borders === null ? new Uint8Array(sp.edges.length) : valuesOf(sp, borders);
+  const m = new CellMarks(sp, rangeMask(WALL, OPEN), grid, null, "edge");
+  m.seed(grid);
+  return { m, ladder: separateLadder(dl), dl };
+}
+
+/** `d`'s marks, kept, over the board `letters` deals: for a generator that
+ * changes letters no firing has read, which leaves every fact true. */
+export function redealt(
+  d: Deduction,
+  p: SeparateShape,
+  letters: Uint8Array,
+): Deduction {
+  const dl = dealtOf(p, letters);
+  return { m: d.m, ladder: separateLadder(dl), dl };
+}
+
+/** A copy of `d` that shares no marks with it, for a search to assume on. */
+function copied(d: Deduction): Deduction {
+  const m = new CellMarks(d.m.sp, d.m.domain, d.m.grid.slice(), null, "edge");
+  m.cands.set(d.m.cands);
+  return { ...d, m };
+}
+
+/** The squares the edges known to have no wall join. */
+export function groupsOf(m: CellMarks): Dsf {
+  const { sp } = m;
+  const dsf = new Dsf(sp.cells.length);
+  for (const e of sp.edges)
+    if (m.grid[e] === OPEN) dsf.merge(sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]);
+  return dsf;
+}
+
+/** What the marks hold on the edge between squares `a` and `b` side by side:
+ * a wall, none, or 0 where neither is known. */
+export function edgeValue(m: CellMarks, a: number, b: number): number {
+  return m.grid[m.sp.edgeOf(a, b)];
 }
 
 /**
- * Solve a board from its letters. Returns the deduced partition dsf if fully
- * solved, else `null` (not uniquely deducible by these rules).
+ * Run the ladder on `d` to a fixpoint and say what it reached. `read`, where
+ * given, is told each square whose letter a firing read: the two that share
+ * a letter, the only reading of a letter the ladder makes. `firings` is the
+ * ladder census's channel (`separate-ladder.test.ts`).
  */
-export function solve(p: SeparateShape, letters: Uint8Array): Dsf | null {
-  const sc = new SolverScratch(p.w, p.h, p.k);
-  sc.init();
-  return solverAttempt(sc, letters, null) === SOLVED ? sc.dsf : null;
+export function deduce(
+  d: Deduction,
+  read: Uint8Array | null = null,
+  firings?: FiringTally,
+): Deduced {
+  const { m, ladder, dl } = d;
+  if (read !== null) {
+    m.recorder = (rec) => {
+      const reason = rec.reason as SeparateReason;
+      if (reason.kind !== "sharedLetter") return;
+      read[reason.holders[0]] = 1;
+      read[reason.holders[1]] = 1;
+    };
+    m.wholePasses = true;
+  }
+  const impossible = runLadder(
+    m,
+    ladderTechniques(m, ladder.entries, { [TIERS]: 0 }, {}),
+    {
+      firings,
+    },
+  );
+  m.recorder = undefined;
+  if (impossible) return "contradiction";
+  if (m.grid.includes(0)) return "stuck";
+  return separate.isAnswer(m.grid, m.sp, dl) ? "solved" : "contradiction";
+}
+
+/** The walls of the answer the marks hold, every edge decided: the border-grid
+ * byte a square, walls only, the rim's included. */
+function wallsOf(m: CellMarks): Uint8Array {
+  const { sp } = m;
+  const sol = initBorders(sp.w, sp.h);
+  for (const e of sp.edges) {
+    if (m.grid[e] !== WALL) continue;
+    const p = sp.edgeEnds[2 * e];
+    const down = sideOf(sp, e, p).dir === 2;
+    sol[p] |= down ? BORDER_D : BORDER_R;
+    sol[sp.edgeEnds[2 * e + 1]] |= down ? BORDER_U : BORDER_L;
+  }
+  return sol;
 }
 
 /**
  * The unique solution's wall bytes (only wall bits set, including the rim), or
- * `null` if the board is not fully deducible. A wall lies on every edge between
- * two different components.
+ * `null` if the ladder does not finish the board.
  */
 export function solveToBorders(
   p: SeparateShape,
   letters: Uint8Array,
 ): Uint8Array | null {
-  const dsf = solve(p, letters);
-  return dsf ? wallsOf(p, dsf) : null;
-}
-
-/** A partition's wall bytes: a wall on every edge between two components,
- * and on the rim. */
-function wallsOf(p: SeparateShape, dsf: Dsf): Uint8Array {
-  const { w, h } = p;
-  const sol = initBorders(w, h);
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      if (x + 1 < w && !dsf.equivalent(i, i + 1)) {
-        sol[i] |= BORDER_R;
-        sol[i + 1] |= BORDER_L;
-      }
-      if (y + 1 < h && !dsf.equivalent(i, i + w)) {
-        sol[i] |= BORDER_D;
-        sol[i + w] |= BORDER_U;
-      }
-    }
-  }
-  return sol;
+  const d = deduction(p, letters);
+  return deduce(d) === "solved" ? wallsOf(d.m) : null;
 }
 
 // --- the search for a board's answers ---------------------------------------
@@ -481,42 +326,8 @@ function wallsOf(p: SeparateShape, dsf: Dsf): Uint8Array {
 export type SeparateAnswer = Answer<Uint8Array>;
 
 /**
- * Where the rungs leave a position.
- *
- * The rungs never say "impossible": each walls or joins, or does nothing,
- * which is all a board with an answer asks of them. Under a wrong assumption
- * they stop on a position that cannot be finished, and it is always the same
- * one: a region short of its size with no square left to take. A region past
- * its size, or holding a letter twice, cannot arise, since `shared-letter`
- * walls every pair that would make one before anything is joined.
- */
-function verdictOf(sc: SolverScratch): Deduced {
-  if (allFull(sc)) return "solved";
-  const { w, h, k, wh } = sc;
-  const canGrow = new Uint8Array(wh);
-  for (let i = 0; i < wh; i++) {
-    const root = sc.dsf.canonify(i);
-    if (sc.size[root] === k || canGrow[root]) continue;
-    const x = i % w;
-    const y = (i - x) / w;
-    for (let dir = 0; dir < 4; dir++) {
-      const x2 = x + DX[dir];
-      const y2 = y + DY[dir];
-      if (x2 < 0 || x2 >= w || y2 < 0 || y2 >= h) continue;
-      const other = sc.dsf.canonify(y2 * w + x2);
-      if (other !== root && !sc.disconnect[other * wh + root]) canGrow[root] = 1;
-    }
-  }
-  for (let i = 0; i < wh; i++) {
-    const root = sc.dsf.canonify(i);
-    if (sc.size[root] < k && !canGrow[root]) return "contradiction";
-  }
-  return "stuck";
-}
-
-/**
  * The positions a search may try before it gives up, each one a region
- * assumed to take a neighbor or not and the three rungs run from it.
+ * assumed to take a neighbor or not and the ladder run from it.
  *
  * It decides which Unreasonable boards exist: a board that needs more is
  * thrown away when dealing and refused when pasted. Lowering it refuses boards
@@ -528,8 +339,8 @@ function verdictOf(sc: SolverScratch): Deduced {
 const SEARCH_BUDGET = 2_000;
 
 /**
- * Count a board's answers up to two, by trial and error over the solver:
- * where it stops, take the region with the fewest squares it could still
+ * Count a board's answers up to two, by trial and error over the ladder:
+ * where it stops, take the group with the fewest squares it could still
  * grow into and assume it takes the first of them, then that it does not.
  */
 export function searchAnswers(
@@ -537,57 +348,64 @@ export function searchAnswers(
   letters: Uint8Array,
   budget: number = SEARCH_BUDGET,
 ): SeparateAnswer {
-  const start = new SolverScratch(p.w, p.h, p.k);
-  start.init();
-  return searchBoard<SolverScratch, Uint8Array>({
-    start,
-    deduce(position) {
-      solverAttempt(position, letters, null);
-      return verdictOf(position);
-    },
+  return searchBoard<Deduction, Uint8Array>({
+    start: deduction(p, letters),
+    deduce: (d) => deduce(d),
     assume: assumeNeighbor,
-    solution: (position) => wallsOf(p, position.dsf),
+    solution: (d) => wallsOf(d.m),
     budget,
   });
 }
 
 /**
- * The two positions a stuck one divides into: one region and one square
- * beside it that it may still take, joined and then walled apart. The region
+ * The two positions a stuck one divides into: one group and one square
+ * beside it that it may still take, joined and then walled apart. The group
  * is the one with the fewest such squares, where ruling one out is likeliest
- * to force another.
+ * to force another. Joined, every edge between the group and the square's is
+ * open, since no rung decides an edge inside one group; walled apart, the
+ * edges to the square are walls, and `walledApart` walls the rest.
  */
-function assumeNeighbor(sc: SolverScratch): SolverScratch[] {
-  const { w, h, k, wh } = sc;
-  const choices = new Int32Array(wh);
-  const first = new Int32Array(wh).fill(-1);
-  for (let i = 0; i < wh; i++) {
-    const root = sc.dsf.canonify(i);
-    if (sc.size[root] === k) continue;
-    const x = i % w;
-    const y = (i - x) / w;
-    for (let dir = 0; dir < 4; dir++) {
-      const x2 = x + DX[dir];
-      const y2 = y + DY[dir];
-      if (x2 < 0 || x2 >= w || y2 < 0 || y2 >= h) continue;
-      const sq = y2 * w + x2;
-      const other = sc.dsf.canonify(sq);
-      if (other === root || sc.disconnect[other * wh + root]) continue;
+function assumeNeighbor(d: Deduction): Deduction[] {
+  const { m } = d;
+  const { sp } = m;
+  const n = sp.cells.length;
+  const groups = groupsOf(m);
+  // Which groups have a wall between them already.
+  const apart = new Set<number>();
+  for (const e of sp.edges) {
+    if (m.grid[e] !== WALL) continue;
+    const a = groups.canonify(sp.edgeEnds[2 * e]);
+    const b = groups.canonify(sp.edgeEnds[2 * e + 1]);
+    apart.add(a * n + b).add(b * n + a);
+  }
+  const choices = new Int32Array(n);
+  const first = new Int32Array(n).fill(-1);
+  for (const c of sp.cells) {
+    const root = groups.canonify(c);
+    if (groups.size(root) >= d.dl.k) continue;
+    for (const s of sp.adj4[c]) {
+      const other = groups.canonify(s);
+      if (other === root || apart.has(root * n + other)) continue;
       choices[root]++;
-      if (first[root] < 0) first[root] = sq;
+      if (first[root] < 0) first[root] = s;
     }
   }
   let at = -1;
-  for (let root = 0; root < wh; root++)
+  for (let root = 0; root < n; root++)
     if (choices[root] > 0 && (at < 0 || choices[root] < choices[at])) at = root;
   if (at < 0) return [];
-  const sq = first[at];
-  const joined = sc.clone();
-  joined.openTo(at, sq);
-  joined.connect(at, sq);
-  const apart = sc.clone();
-  apart.disconnectPair(at, sq);
-  return [joined, apart];
+  const s = first[at];
+  const theirs = groups.canonify(s);
+  return [OPEN, WALL].map((value) => {
+    const sub = copied(d);
+    for (const c of sp.cells) {
+      if (groups.canonify(c) !== at) continue;
+      for (const q of sp.adj4[c])
+        if (value === OPEN ? groups.canonify(q) === theirs : q === s)
+          sub.m.place(sp.edgeOf(c, q), value);
+    }
+    return sub;
+  });
 }
 
 /** Keyed on a state's letters, which every state of a game shares. */
@@ -601,73 +419,78 @@ export function answerOf(
   return answers(state.letters, () => searchAnswers(state, state.letters));
 }
 
+// --- the hint's walk ---------------------------------------------------------
+
+/** A firing's edges in the player's terms, each named on the side of its
+ * first group's square, in that group's reading order and each square's sides
+ * from the top clockwise. */
+function edgesOf(
+  sp: GridSpace,
+  facts: readonly number[],
+  first: readonly number[],
+): SeparateEdge[] {
+  const inFirst = new Set(first);
+  const out: (SeparateEdge & { at: number })[] = [];
+  for (let i = 0; i < facts.length; i += 3) {
+    const e = facts[i + 1];
+    const p = sp.edgeEnds[2 * e];
+    const at = inFirst.has(p) ? p : sp.edgeEnds[2 * e + 1];
+    const { dir } = sideOf(sp, e, at);
+    out.push({
+      at,
+      x: at % sp.w,
+      y: (at / sp.w) | 0,
+      dir,
+      kind: facts[i + 2] === WALL ? "wall" : "nowall",
+    });
+  }
+  out.sort((a, b) => a.at - b.at || a.dir - b.dir);
+  return out.map(({ x, y, dir, kind }) => ({ x, y, dir, kind }));
+}
+
+/** The squares a firing's reason turns on: a player follows a region as it
+ * grows. */
+function readsOf(r: SeparateReason): number[] {
+  return r.kind === "onlyWay" ? [...r.region, r.square] : [...r.a, ...r.b];
+}
+
 /**
- * The recording projection: a scratch seeded from the player's `borders` (their
- * no-wall marks merged, their walls disconnecting the components either side),
- * and a closure returning the next single firing, or `null` when the ladder
- * has nothing left. The scratch's own `borders` is the working board the
- * firings advance.
- *
- * Seeding assumes the player's marks agree with the solution (the hint refuses
- * otherwise), so no merge joins two squares of one letter.
+ * The ladder's firings from the player's `borders` (their no-wall marks
+ * joining squares, their walls keeping groups apart), one a call, each the
+ * one that carries on from the regions the plan is working on
+ * (`ladderWalk`), or `null` when the ladder has nothing left. The marks
+ * advance with each firing; `borders` is the board they stand for.
  */
-export function separateRecordingPass(
+export function hintFirings(
   p: SeparateShape,
   letters: Uint8Array,
   borders: Uint8Array,
   budget: StepBudget,
-): { scratch: SolverScratch; next: () => SeparateFiring | null } {
-  const { w, h } = p;
-  const sc = new SolverScratch(w, h, p.k);
-  sc.init();
-  sc.borders = borders.slice();
-  /** Every interior edge carrying `kind`, as its two squares. */
-  const edgesMarked = (kind: SeparateEdge["kind"]): [number, number][] => {
-    const on = (b: number): number => (kind === "wall" ? b : DISABLED(b));
-    const out: [number, number][] = [];
-    for (let i = 0; i < w * h; i++) {
-      if (i % w < w - 1 && borders[i] & on(BORDER_R)) out.push([i, i + 1]);
-      if (i < w * (h - 1) && borders[i] & on(BORDER_D)) out.push([i, i + w]);
-    }
-    return out;
-  };
-  // No-wall marks first, so each wall disconnects whole components.
-  for (const [i, j] of edgesMarked("nowall"))
-    if (!sc.dsf.equivalent(i, j)) sc.connect(i, j);
-  for (const [i, j] of edgesMarked("wall"))
-    if (!sc.dsf.equivalent(i, j)) sc.disconnectPair(i, j);
-  sc.indexContents(letters);
-
-  const rec: { firing: SeparateFiring | null } = { firing: null };
-  sc.rec = rec;
-  sc.offers = new SweepOffers<SolverScratch, SeparateFiring | null>({
-    save: () => sc.clone(),
-    restore: (s) => sc.restore(s),
-    recorded: () => rec.firing,
-    record: (f) => {
-      rec.firing = f;
-    },
-    // The regions a firing turns on: a player follows a region as it grows.
-    reads: (f) =>
-      !f ? [] : f.kind === "onlyWay" ? [...f.region, f.square] : [...f.a, ...f.b],
-    // The squares either side of each edge it marks.
-    writes: (_before, _after, f) =>
-      (f?.edges ?? []).flatMap(({ x, y, dir }) => [
-        y * w + x,
-        (y + DY[dir]) * w + x + DX[dir],
-      ]),
-  });
-  const firings = singleFirings({
-    techniques: sc.offers.techniques(separateLadder(sc, null, { fired: false })),
-    budget,
-    beforeTechnique: () => {
-      rec.firing = null;
-    },
-    // A plan works on the regions it is growing before it moves on.
-    continuing: true,
-  });
+): { borders: Uint8Array; next: () => SeparateFiring | null } {
+  const d = deduction(p, letters, borders);
+  const { m, ladder } = d;
+  m.budget = budget;
+  const walk = ladderWalk(m, ladder.entries, { [TIERS]: 0 }, (f: Taken) =>
+    readsOf(f.reasons[0] as SeparateReason),
+  );
+  const board = borders.slice();
   return {
-    scratch: sc,
-    next: () => (firings.next() ? rec.firing : null),
+    borders: board,
+    next() {
+      const taken = walk.next();
+      if (taken === null || taken === "contradiction") return null;
+      const reason = taken.reasons[0] as SeparateReason;
+      const edges = edgesOf(
+        m.sp,
+        taken.facts,
+        reason.kind === "onlyWay" ? reason.region : reason.a,
+      );
+      for (const { x, y, dir, kind } of edges) {
+        const mark = (b: number): number => (kind === "wall" ? b : DISABLED(b));
+        board[y * m.sp.w + x] |= mark(BORDER(dir));
+        board[(y + DY[dir]) * m.sp.w + x + DX[dir]] |= mark(BORDER(FLIP(dir)));
+      }
+      return { ...reason, edges };
+    },
   };
 }

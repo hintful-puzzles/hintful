@@ -25,7 +25,7 @@ import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newSeparateDesc } from "./generator.ts";
 import { type SeparateRung, separateGame } from "./index.ts";
 import { COL_HINT_CELL } from "./render.ts";
-import { separateRecordingPass, solveToBorders } from "./solver.ts";
+import { hintFirings, solveToBorders } from "./solver.ts";
 import {
   executeMove,
   newState,
@@ -201,7 +201,7 @@ describe("the ledgered arm, reached directly", () => {
     mark(0, 0, 1, false);
     mark(0, 0, 2, false);
     mark(1, 0, 1, true);
-    const { next } = separateRecordingPass(p, letters, st.borders, stepBudget("test"));
+    const { next } = hintFirings(p, letters, st.borders, stepBudget("test"));
     const firings = [];
     for (let f = next(); f; f = next()) firings.push(f);
     const onlyWay = firings.find((f) => f.kind === "onlyWay");

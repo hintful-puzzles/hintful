@@ -612,6 +612,19 @@ const PLANTS: Record<string, Plant> = {
     conclude:
       "(j not in vee(f) implies strike(e, i)) and (3 - j not in vee(f) implies strike(e, 3 - i))",
   },
+  // Two groups side by side read as sharing a letter where one holds it.
+  sharedLetter: {
+    for: "O = joined, e in edges where not known(e), A = through(end1(e), O), b = end2(e) where b not in A, B = through(b, O), L = set(clue(letter, y) over y in B), d in set(clue(letter, x) over x in A) where not apart(A, B), x in A where clue(letter, x) = d, y in B",
+  },
+  // Any two groups side by side read as walled apart.
+  walledApart: {
+    for: "O = joined, e in edges where not known(e), A = through(end1(e), O), b = end2(e) where b not in A, B = through(b, O)",
+  },
+  // A group with two squares left to grow into read as taking both.
+  onlyWay: {
+    conclude:
+      "|S| > 0 and (|S| <= 2 implies forall x in A, y in adj4(x) where y in S: place(edge(x, y), 2))",
+  },
   // Every given segment read as a boat of one square.
   "boats.given": {
     conclude:

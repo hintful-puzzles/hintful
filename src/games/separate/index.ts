@@ -55,9 +55,9 @@ import {
 } from "./render.ts";
 import {
   answerOf,
+  hintFirings,
+  isSolved,
   type SeparateFiring,
-  type SolverScratch,
-  separateRecordingPass,
   solveToBorders,
 } from "./solver.ts";
 import {
@@ -65,7 +65,6 @@ import {
   defaultParams,
   encodeParams,
   executeMove,
-  isSolved,
   menu,
   newState,
   paramConfig,
@@ -190,20 +189,18 @@ export type SeparateRung = (typeof SEPARATE_RUNGS)[number];
 function hint(
   state: SeparateState,
 ): HintResult<SeparateMove, BorderHint, SeparateRung> {
-  const { scratch, next } = separateRecordingPass(
+  const walk = hintFirings(
     state,
     state.letters,
     state.borders,
     stepBudget("separate hint"),
   );
-  const { plan } = deduceHintPlan<SolverScratch, SeparateFiring, boolean>({
-    board: scratch,
-    status: (sc) => isSolved(sc.w, sc.h, sc.k, state.letters, sc.borders),
+  const { w, h, k, letters } = state;
+  const { plan } = deduceHintPlan<Uint8Array, SeparateFiring, boolean>({
+    board: walk.borders,
+    status: (borders) => isSolved(w, h, k, letters, borders),
     incomplete: false,
-    next: () => next(),
-    // Every firing sets an edge when the player's marks were seeded whole; one
-    // that set none restates the board and has nothing to show.
-    showable: (_, f) => f.edges.length > 0,
+    next: () => walk.next(),
   });
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
 

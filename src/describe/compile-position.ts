@@ -510,6 +510,7 @@ export function compilePlanning(
     ),
     geometry: grid !== null,
     faces: d.space.faces ?? null,
+    answerSort: "cell",
     memo: false,
     scratch: null,
     readsClues: { yes: false },

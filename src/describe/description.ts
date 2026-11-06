@@ -48,7 +48,7 @@ export interface DescriptionJson {
   };
   answer: {
     value: {
-      sort: "cell";
+      sort: "cell" | "edge";
       domain: string;
       repeat?: { value: string; times: string };
     };
@@ -436,6 +436,8 @@ export interface Description {
   /** The shape and the rules, each by name. */
   rules: { name: string; expr: Expr }[];
   clueKinds: Map<string, ClueKind>;
+  /** What holds a value of the answer: a cell, or an edge between two. */
+  answerSort: "cell" | "edge";
   domain: Expr;
   /** The value of the domain that may appear more than once in a unit, and
    * how many times; `null` where each appears once. */
@@ -606,6 +608,7 @@ export function loadDescription(
     defs,
     rules,
     clueKinds,
+    answerSort: json.answer.value.sort,
     domain: at("answer domain", json.answer.value.domain),
     repeat:
       json.answer.value.repeat === undefined

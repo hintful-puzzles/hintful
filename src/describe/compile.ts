@@ -236,6 +236,9 @@ interface Env {
   /** The size counting the faces, a second sort of element, or `null` where
    * the space has none. */
   faces: string | null;
+  /** What holds a value of the answer, which `known`, `value`, `cand`,
+   * `place` and `strike` read: a cell, or an edge (Separate's walls). */
+  answerSort: "cell" | "edge";
   /** Whether the function keeps each cell's candidates as it first reads
    * them (`cands`), until a firing it goes on from changes the marks. */
   memo: boolean;
@@ -361,6 +364,12 @@ function expectElem(v: Val, e: ElemSort, what: string): void {
   if (!(v.sort.k === "elem" && v.sort.e === e) && v.sort.k !== "none")
     throw new CompileError(`${what}: expected a ${e}, got ${show(v.sort)}`);
 }
+
+/** The elements that hold the answer's values, as code: the space's cells,
+ * or its edges. */
+const answerSet = (env: Env): string =>
+  env.answerSort === "edge" ? "sp.edges" : "sp.cells";
+const answerCount = (env: Env): string => `${answerSet(env)}.length`;
 
 /** Bind a value to a const when it will be read more than once. */
 function once(v: Val, out: Out): Val {
@@ -613,7 +622,7 @@ function supposing(
       "with supposes a value on the marks, which only a technique reads",
     );
   const c = compileExpr(e.cell, scope, env, out);
-  expectElem(c, "cell", "with");
+  expectElem(c, env.answerSort, "with");
   const d = compileExpr(e.value, scope, env, out);
   expect(d, "num", "with");
   const cell = Out.fresh("_wc");
@@ -781,7 +790,7 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
     const d = compileExpr(e.a, scope, env, out);
     expect(d, "num", op);
     const c = compileExpr(e.b.args[0], scope, env, out);
-    expectElem(c, "cell", "cand");
+    expectElem(c, env.answerSort, "cand");
     const x = env.supposed.length === 0 ? c.code : once(c, out).code;
     const at = env.supposed.length === 0 ? d.code : once(d, out).code;
     const has = supposedRead(
@@ -843,6 +852,15 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
     case "notin": {
       if (b.sort.k !== "set" || !sameSort(a.sort, b.sort.of))
         throw new CompileError(`${show(a.sort)} in ${show(b.sort)}`);
+      // A group of cells joined across a set of edges, read through the
+      // groups joined where the set is bound, is one list each of its cells
+      // reads: a cell is in it where its own group is that list, and no
+      // list is walked.
+      const group = /^(_eg\d+)\.of\(/.exec(setKey(b));
+      if (group !== null) {
+        const same = `(${group[1]}.of(${a.code}) === ${b.code})`;
+        return { code: op === "in" ? same : `!${same}`, sort: BOOL };
+      }
       const has = isMask(b.sort)
         ? `((${b.code} >> ${a.code}) & 1) !== 0`
         : `${b.code}.includes(${a.code})`;
@@ -2434,7 +2452,8 @@ function call(
     case "value":
     case "cand":
       arity(1);
-      return markRead(fn, { code: cell(0), sort: vs[0].sort }, env, out);
+      expectElem(vs[0], env.answerSort, fn);
+      return markRead(fn, vs[0], env, out);
     case "abs":
       arity(1);
       expect(vs[0], "num", fn);
@@ -2474,9 +2493,14 @@ function call(
     case "place": {
       if (!env.concluding) throw new CompileError(`${fn} outside a conclusion`);
       arity(2);
-      if (vs[0].sort.k === "elem" && vs[0].sort.e === "edge")
+      if (
+        vs[0].sort.k === "elem" &&
+        vs[0].sort.e === "edge" &&
+        env.answerSort !== "edge"
+      )
         return edgeStrike(fn, vs, env, out);
-      const c = once({ code: cell(0), sort: vs[0].sort }, out);
+      expectElem(vs[0], env.answerSort, fn);
+      const c = once(vs[0], out);
       expect(vs[1], "num", fn);
       const d = once(vs[1], out);
       // A fact that changes nothing is left out, so a binding fires only
@@ -2829,13 +2853,11 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
         `${t.id}: a technique run on ${t.on === "strike" ? "striking binds the struck" : "placing binds the placed"} cell first`,
       );
     const of = compileExpr(first.of, new Map(), { ...tenv, hoist: null }, new Out(0));
-    if (!(of.sort.k === "set" && of.sort.of.k === "elem" && of.sort.of.e === "cell"))
-      throw new CompileError(`${t.id}: its first binder is not over cells`);
+    const held = env.answerSort;
+    if (!(of.sort.k === "set" && of.sort.of.k === "elem" && of.sort.of.e === held))
+      throw new CompileError(`${t.id}: its first binder is not over ${held}s`);
     const sc = new Map<string, Val>([
-      [
-        first.name,
-        { code: `v_${first.name}`, sort: elem("cell"), at: tenv.hoist.root },
-      ],
+      [first.name, { code: `v_${first.name}`, sort: elem(held), at: tenv.hoist.root }],
     ]);
     if (first.where !== null) {
       const w = compileExpr(first.where, sc, tenv, body);
@@ -2853,7 +2875,7 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
     keep.lines.push(
       {
         indent: 0,
-        text: `if (${buffer}.length < sp.cells.length) ${buffer} = new Int32Array(sp.cells.length);`,
+        text: `if (${buffer}.length < ${answerCount(env)}) ${buffer} = new Int32Array(${answerCount(env)});`,
       },
       { indent: 0, text: `const cands = ${buffer};` },
       { indent: 0, text: "cands.fill(-1);" },
@@ -2965,6 +2987,7 @@ export function compileLibrary(
     tables: new Map(),
     geometry: true,
     faces: null,
+    answerSort: "cell",
     memo: false,
     scratch: null,
     readsClues: { yes: false },
@@ -3134,6 +3157,7 @@ export function compileGame(
     tables: new Map(),
     geometry: grid !== null,
     faces: null,
+    answerSort: d.answerSort,
     memo: false,
     scratch: null,
     readsClues: { yes: false },
@@ -3292,7 +3316,7 @@ function answerCheck(json: DescriptionJson, d: Description, env: Env): string[] 
   const { grid } = json.space;
   const measured = grid === undefined ? (e: Expr) => e : measuredBy(grid);
   const scope = new Map<string, Val>();
-  out.open("for (const cell of sp.cells) {");
+  out.open(`for (const cell of ${answerSet(env)}) {`);
   out.emit("const held = g[cell];");
   if (env.cellDomain) {
     readsClues.yes = true;

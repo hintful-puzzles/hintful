@@ -105,16 +105,23 @@ export class CellMarks implements Marks {
    * ({@link ladderReplay}). */
   replay: FiringReplay<string> | null = null;
 
+  /** Whether the answer's values sit on the edges between cells
+   * (Separate's walls), so that a "cell" here is an edge's index and its
+   * values are written on the two cells either side. */
+  readonly onEdges: boolean;
+
   constructor(
     sp: GridSpace,
     domain: number,
     grid: Uint8Array | Int8Array,
     repeat: { value: number; times: number } | null = null,
+    held: "cell" | "edge" = "cell",
   ) {
     this.sp = sp;
     this.domain = domain;
     this.grid = grid;
-    this.cands = new Int32Array(sp.cells.length);
+    this.onEdges = held === "edge";
+    this.cands = new Int32Array(this.onEdges ? sp.edges.length : sp.cells.length);
     this.edgeCands = new Int32Array(sp.edgeEnds.length / 2);
     this.repeat = repeat?.value ?? 0;
     this.times = repeat?.times ?? 1;
@@ -184,7 +191,15 @@ export class CellMarks implements Marks {
     const rec = this.recorder;
     if (rec && reason !== null) {
       const w = this.sp.w;
-      rec({ kind: "place", x: c % w, y: (c / w) | 0, n: d, reason, group: this.group });
+      const at = this.cellOf(c);
+      rec({
+        kind: "place",
+        x: at % w,
+        y: (at / w) | 0,
+        n: d,
+        reason,
+        group: this.group,
+      });
     }
     this.cands[c] &= 1 << d;
     this.grid[c] = d;
@@ -219,10 +234,18 @@ export class CellMarks implements Marks {
         if (this.grid[c] === 0) this.place(c, n, reason);
         continue;
       }
-      if (rec && this.has(c, n))
-        rec({ kind: "elim", x: c % w, y: (c / w) | 0, n, reason, group: this.group });
+      if (rec && this.has(c, n)) {
+        const at = this.cellOf(c);
+        rec({ kind: "elim", x: at % w, y: (at / w) | 0, n, reason, group: this.group });
+      }
       this.strikeAt(c, n);
     }
+  }
+
+  /** The cell a record names for the element `c`: itself, or where the
+   * values sit on edges, the edge's first cell. */
+  private cellOf(c: number): number {
+    return this.onEdges ? this.sp.edgeEnds[2 * c] : c;
   }
 
   /** Why the value placed in `placed` was struck from `struck`. */
@@ -628,13 +651,14 @@ export function ladderWalk<S extends CellMarks>(
   caps: Caps,
   reads: (firing: Taken<S>) => readonly number[],
 ): LadderWalk<S> {
-  // An edge's mark is written as its two cells are.
+  // An edge's mark, or value, is written as its two cells are.
   const cellsOf = (facts: readonly number[]): number[] => {
     const out: number[] = [];
     const ends = m.sp.edgeEnds;
     for (let i = 0; i < facts.length; i += 3) {
       const at = facts[i + 1];
-      if (facts[i] === STRIKE_EDGE) out.push(ends[2 * at], ends[2 * at + 1]);
+      if (facts[i] === STRIKE_EDGE || m.onEdges)
+        out.push(ends[2 * at], ends[2 * at + 1]);
       else out.push(at);
     }
     return out;

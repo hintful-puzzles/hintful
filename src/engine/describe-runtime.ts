@@ -928,17 +928,42 @@ export function through(
   return out.length > 1 ? out.sort((a, b) => a - b) : out;
 }
 
+/** The cells joined across a set of edges: `of(c)` is `c`'s group in
+ * reading order, one list that each of its cells reads, so a cell is in a
+ * group exactly where `of` gives it that list. */
+export interface EdgeGroups {
+  of(c: number): readonly number[];
+}
+
+/** The groups {@link edgeGroups} last joined: the space, a copy of the set
+ * of edges, and the groups. */
+let lastGroupSpace: GridSpace | null = null;
+let lastGroupEdges: number[] = [];
+let lastGroups: EdgeGroups | null = null;
+
 /**
  * The cells joined across the edges `E`, for reading {@link through} from
  * many cells over one set: `of(c)` is `through(c, E)`, each group listed
- * once it is read.
+ * once it is read. The groups of the last set asked for are kept while it
+ * is asked for again: each rung of a ladder binds the set afresh after every
+ * firing, and most firings leave it as it was (Separate's walls).
  */
-export function edgeGroups(
-  sp: GridSpace,
-  E: readonly number[],
-): { of(c: number): readonly number[] } {
+export function edgeGroups(sp: GridSpace, E: readonly number[]): EdgeGroups {
+  if (
+    lastGroups !== null &&
+    sp === lastGroupSpace &&
+    E.length === lastGroupEdges.length &&
+    E.every((e, i) => e === lastGroupEdges[i])
+  )
+    return lastGroups;
+  lastGroupSpace = sp;
+  lastGroupEdges = E.slice();
+  lastGroups = joinedAcross(sp, E);
+  return lastGroups;
+}
+
+function joinedAcross(sp: GridSpace, E: readonly number[]): EdgeGroups {
   const n = sp.cells.length;
-  let parent: Int32Array | null = null;
   const root = (p: Int32Array, i: number): number => {
     while (p[i] !== i) {
       p[i] = p[p[i]];
@@ -946,29 +971,21 @@ export function edgeGroups(
     }
     return i;
   };
-  if (E.length > 0) {
-    parent = Int32Array.from({ length: n }, (_, i) => i);
-    for (const e of E)
-      parent[root(parent, sp.edgeEnds[2 * e])] = root(parent, sp.edgeEnds[2 * e + 1]);
-  }
-  let members: Map<number, number[]> | null = null;
-  return {
-    of(c) {
-      if (c < 0) return [];
-      if (parent === null) return [c];
-      const p = parent;
-      if (members === null) {
-        members = new Map();
-        for (const x of sp.cells) {
-          const r = root(p, x);
-          const group = members.get(r);
-          if (group === undefined) members.set(r, [x]);
-          else group.push(x);
-        }
-      }
-      return members.get(root(p, c)) ?? [c];
-    },
-  };
+  const parent = Int32Array.from({ length: n }, (_, i) => i);
+  for (const e of E)
+    parent[root(parent, sp.edgeEnds[2 * e])] = root(parent, sp.edgeEnds[2 * e + 1]);
+  // Each cell's group, by cell: the cells are met in reading order, so each
+  // group's list is too.
+  const byRoot: number[][] = [];
+  const groupOf = sp.cells.map((x) => {
+    const r = root(parent, x);
+    const group = byRoot[r] ?? [];
+    byRoot[r] = group;
+    group.push(x);
+    return group;
+  });
+  const none: readonly number[] = [];
+  return { of: (c) => (c < 0 ? none : groupOf[c]) };
 }
 
 /** The next mask above `k` with as many bits set (Gosper's hack), so a

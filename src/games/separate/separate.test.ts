@@ -7,7 +7,13 @@
  */
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
-import { BORDER, BORDER_D, BORDER_L, BORDER_R } from "../../engine/border-grid.ts";
+import {
+  BORDER,
+  BORDER_D,
+  BORDER_L,
+  BORDER_R,
+  buildDsf,
+} from "../../engine/border-grid.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -28,13 +34,12 @@ import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newSeparateDesc } from "./generator.ts";
 import { separateGame } from "./index.ts";
 import { COL_CORRECT, COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "./render.ts";
-import { solve, solveToBorders } from "./solver.ts";
+import { isSolved, solveToBorders } from "./solver.ts";
 import {
   decodeParams,
   encodeDesc,
   encodeParams,
   executeMove,
-  isSolved,
   newState,
   type SeparateMove,
   type SeparateParams,
@@ -177,8 +182,6 @@ describe("separate solver + generator", () => {
       for (let n = 0; n < 5; n++) {
         const { desc } = newSeparateDesc(p, rng);
         const s = newState(p, desc);
-        const dsf = solve(p, s.letters);
-        expect(dsf).not.toBeNull();
         const sol = solveToBorders(p, s.letters);
         expect(sol).not.toBeNull();
         if (sol) expect(isSolved(p.w, p.h, p.k, s.letters, sol)).toBe(true);
@@ -268,9 +271,10 @@ describe("separate render scenarios", () => {
     // one k-omino is complete while the rest of the grid is still one big region.
     const desc = newSeparateDesc(P5, randomNew("sep-valid-region")).desc;
     const letters = newState(P5, desc).letters;
-    const dsf = solve(P5, letters);
-    expect(dsf).not.toBeNull();
-    if (!dsf) return;
+    const sol = solveToBorders(P5, letters);
+    expect(sol).not.toBeNull();
+    if (!sol) return;
+    const dsf = buildDsf(P5.w, P5.h, sol, true);
     const r0 = dsf.canonify(0);
     const edits: { x: number; y: number; flag: number }[] = [];
     for (let y = 0; y < P5.h; y++) {

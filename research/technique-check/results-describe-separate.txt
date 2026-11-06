@@ -1,0 +1,9 @@
+ok  separate   sharedLetter                   3  sound    (want sound   )     1 queries    1.7s
+ok  separate   sharedLetter (planted)         3  unsound  (want unsound )     1 queries    1.2s   at eset
+ok  separate   sharedLetter                   4  sound    (want sound   )     1 queries  395.2s
+ok  separate   sharedLetter (planted)         4  unsound  (want unsound )     1 queries   16.6s   at eset
+ok  separate   walledApart                    current: recorded src/games/separate/separate.description.yaml#walledApart 9d59bf39929aa43d
+ok  separate   onlyWay                        3  sound    (want sound   )     1 queries    0.5s
+ok  separate   onlyWay (planted)              3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  separate   onlyWay                        4  sound    (want sound   )     1 queries   30.9s
+ok  separate   onlyWay (planted)              4  unsound  (want unsound )     1 queries    1.0s   at eset

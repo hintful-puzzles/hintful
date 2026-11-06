@@ -1211,8 +1211,8 @@ owes a test from the player's positions**: the cross-game resume walk follows
 only the hint's own moves, so walk from random correct partial boards as
 well.
 
-Exemplars: `walled-apart` in
-[`separate/solver.ts`](../src/games/separate/solver.ts) and
+Exemplars: `walledApart` in
+[`separate.description.yaml`](../src/games/separate/separate.description.yaml) and
 `separate-hint.test.ts`; the pinned partial boards in `filling-hint.test.ts`.
 
 ### Notation and goal are different move sets
