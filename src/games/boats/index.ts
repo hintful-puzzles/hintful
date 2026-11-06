@@ -20,10 +20,11 @@
  *
  * Layout: [`state.ts`](./state.ts) (params, cell model, codecs, moves/ui),
  * [`validate.ts`](./validate.ts) (the shared status passes),
- * [`solver.ts`](./solver.ts) (the four deduction tiers + `findMistakes`),
+ * [`boats.description.yaml`](./boats.description.yaml) (the rules and the
+ * four tiers' techniques), [`solver.ts`](./solver.ts) (the ladder's solve,
+ * `findMistakes` and the hint's walk),
  * [`generator.ts`](./generator.ts) (solver-gated generation + `validateParams`),
- * [`hint-solver.ts`](./hint-solver.ts) and [`hint-text.ts`](./hint-text.ts)
- * (the explained hint), [`render.ts`](./render.ts).
+ * [`hint-text.ts`](./hint-text.ts) (the hint's words), [`render.ts`](./render.ts).
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
@@ -74,13 +75,6 @@ import {
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newBoatsDesc, validateParams } from "./generator.ts";
-import {
-  BOATS_RUNGS,
-  type BoatsFiring,
-  type BoatsRung,
-  type BoatsSquare,
-  deduceBoatsPlan,
-} from "./hint-solver.ts";
 import { type BoatsMarks, say } from "./hint-text.ts";
 import {
   BORDER,
@@ -93,7 +87,18 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import { type BoatsMistake, findMistakes, solveBoats, solveToGrid } from "./solver.ts";
+import {
+  BOATS_RUNGS,
+  type BoatsFiring,
+  type BoatsMistake,
+  type BoatsRung,
+  type BoatsSquare,
+  deduceBoatsPlan,
+  findMistakes,
+  isBoatsAnswer,
+  solveBoats,
+  solveToGrid,
+} from "./solver.ts";
 import {
   type BoatsFill,
   type BoatsFillFrom,
@@ -112,15 +117,15 @@ import {
   encodeParams,
   fillChangesAnything,
   fillOf,
+  isShip,
   menu,
   newState,
   newUi,
   SHIP_VAGUE,
-  STATUS_COMPLETE,
   textFormat,
   WATER,
 } from "./state.ts";
-import { adjustShips, validateFullState } from "./validate.ts";
+import { adjustShips } from "./validate.ts";
 
 // --- input -----------------------------------------------------------------
 
@@ -330,10 +335,11 @@ function solve(orig: BoatsState): SolveResult<BoatsMove> {
   return { ok: true, move: { kind: "solve", grid: Array.from(result.grid) } };
 }
 
+/** Solved once the boat segments, every other square read as water, are an
+ * answer by the rules. */
 function status(s: BoatsState): GameStatus {
-  const b = boardOf(s);
-  adjustShips(b);
-  return validateFullState(b) === STATUS_COMPLETE ? "solved" : "ongoing";
+  const grid = Array.from(s.grid, (v) => (isShip(v) ? SHIP_VAGUE : WATER));
+  return isBoatsAnswer(boardOf(s), grid) ? "solved" : "ongoing";
 }
 
 // --- hint (a second projection of the deduction engine) ---------------------

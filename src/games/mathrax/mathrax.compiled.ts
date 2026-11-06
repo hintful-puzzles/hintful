@@ -191,9 +191,9 @@ export function clueEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueEasy
         const _h58 = clueAt(cl.difference, v_j);
         const _h59 = clueAt(cl.product, v_j);
         const _h60 = clueAt(cl.quotient, v_j);
-        let _c63 = (_h56 !== -1);
+        let _c63: boolean = (_h56 !== -1);
         if (!_c63) {
-          let _c62 = ((((_h57 !== -1) || (_h58 !== -1)) || (_h59 !== -1)) || (_h60 !== -1));
+          let _c62: boolean = ((((_h57 !== -1) || (_h58 !== -1)) || (_h59 !== -1)) || (_h60 !== -1));
           if (_c62) {
             const _t61 = (sp.cornerCells[v_j][0] + sp.cornerCells[v_j][3] - v_c);
             _c62 = (popcount((cands[_t61] >= 0 ? cands[_t61] : (cands[_t61] = b.cand(_t61)))) < 2);
@@ -219,9 +219,9 @@ export function clueEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueEasy
         for (let _m64 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))); _m64 !== 0; _m64 &= _m64 - 1) {
           const v_d = 31 - Math.clz32(_m64 & -_m64);
           const _h83 = (_h60 * v_d);
-          let _c85 = (_h65 || ((v_d % 2) === _h56));
+          let _c85: boolean = (_h65 || ((v_d % 2) === _h56));
           if (_c85) {
-            let _c84 = (_h74 || (popcount((cands[_h75] >= 0 ? cands[_h75] : (cands[_h75] = b.cand(_h75)))) > 1));
+            let _c84: boolean = (_h74 || (popcount((cands[_h75] >= 0 ? cands[_h75] : (cands[_h75] = b.cand(_h75)))) > 1));
             if (!_c84) {
               let _q76 = false;
               Q77: {
@@ -272,16 +272,16 @@ export function clueEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueEasy
         const _h116 = (_h104 === -1);
         facts.length = 0;
         changed = false;
-        let _c120 = _h90;
+        let _c120: boolean = _h90;
         if (_c120) {
           let _q91 = true;
           Q92: {
             for (let _m93 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))); _m93 !== 0; _m93 &= _m93 - 1) {
               const v_d = 31 - Math.clz32(_m93 & -_m93);
               const _h117 = (_h104 * v_d);
-              let _c119 = (_h95 || ((v_d % 2) === _h94));
+              let _c119: boolean = (_h95 || ((v_d % 2) === _h94));
               if (_c119) {
-                let _c118 = (_h108 || (popcount((cands[_h109] >= 0 ? cands[_h109] : (cands[_h109] = b.cand(_h109)))) > 1));
+                let _c118: boolean = (_h108 || (popcount((cands[_h109] >= 0 ? cands[_h109] : (cands[_h109] = b.cand(_h109)))) > 1));
                 if (!_c118) {
                   let _q110 = false;
                   Q111: {
@@ -367,9 +367,9 @@ export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding>
         for (let _m166 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))); _m166 !== 0; _m166 &= _m166 - 1) {
           const v_d = 31 - Math.clz32(_m166 & -_m166);
           const _h185 = (_h165 * v_d);
-          let _c187 = (_h167 || ((v_d % 2) === _h161));
+          let _c187: boolean = (_h167 || ((v_d % 2) === _h161));
           if (_c187) {
-            let _c186 = _h176;
+            let _c186: boolean = _h176;
             if (!_c186) {
               let _q177 = false;
               Q178: {
@@ -420,16 +420,16 @@ export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding>
         const _h218 = (_h206 === -1);
         facts.length = 0;
         changed = false;
-        let _c222 = _h192;
+        let _c222: boolean = _h192;
         if (_c222) {
           let _q193 = true;
           Q194: {
             for (let _m195 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))); _m195 !== 0; _m195 &= _m195 - 1) {
               const v_d = 31 - Math.clz32(_m195 & -_m195);
               const _h219 = (_h206 * v_d);
-              let _c221 = (_h197 || ((v_d % 2) === _h196));
+              let _c221: boolean = (_h197 || ((v_d % 2) === _h196));
               if (_c221) {
-                let _c220 = _h210;
+                let _c220: boolean = _h210;
                 if (!_c220) {
                   let _q211 = false;
                   Q212: {
@@ -515,9 +515,9 @@ export function clueTricky(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueTr
         for (let _m267 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))); _m267 !== 0; _m267 &= _m267 - 1) {
           const v_d = 31 - Math.clz32(_m267 & -_m267);
           const _h286 = (_h266 * v_d);
-          let _c288 = (_h268 || ((v_d % 2) === _h262));
+          let _c288: boolean = (_h268 || ((v_d % 2) === _h262));
           if (_c288) {
-            let _c287 = _h277;
+            let _c287: boolean = _h277;
             if (!_c287) {
               let _q278 = false;
               Q279: {
@@ -566,16 +566,16 @@ export function clueTricky(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueTr
       const _h318 = (_h306 === -1);
       facts.length = 0;
       changed = false;
-      let _c322 = _h292;
+      let _c322: boolean = _h292;
       if (_c322) {
         let _q293 = true;
         Q294: {
           for (let _m295 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))); _m295 !== 0; _m295 &= _m295 - 1) {
             const v_d = 31 - Math.clz32(_m295 & -_m295);
             const _h319 = (_h306 * v_d);
-            let _c321 = (_h297 || ((v_d % 2) === _h296));
+            let _c321: boolean = (_h297 || ((v_d % 2) === _h296));
             if (_c321) {
-              let _c320 = _h310;
+              let _c320: boolean = _h310;
               if (!_c320) {
                 let _q311 = false;
                 Q312: {

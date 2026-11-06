@@ -612,6 +612,83 @@ const PLANTS: Record<string, Plant> = {
     conclude:
       "(j not in vee(f) implies strike(e, i)) and (3 - j not in vee(f) implies strike(e, 3 - i))",
   },
+  // Every given segment read as a boat of one square.
+  "boats.given": {
+    conclude:
+      "(v = 2 implies place(c, 2)) and (v > 2 implies place(c, 1) and (forall x in adj4(c): value(x) != 1 and place(x, 2)))",
+  },
+  // The squares beside a segment read as touching it.
+  "boats.near": {
+    for: "c in cells where value(c) = 1, D = {d in adj4(c) where not known(d)} where |D| > 0",
+  },
+  "boats.touch": {
+    for: "c in cells where value(c) = 1, d in adj4(c) where not known(d)",
+  },
+  // A line read as needing one more segment than its number leaves.
+  "boats.lineShips": {
+    for: "L in lines, v = clue(n, L) where v >= 0, O = open(cells(L)) where |O| > 0, left = v - ships(cells(L)) + 1",
+  },
+  "boats.total": {
+    for: "O = open(cells) where |O| > 0, left = total - ships(cells) + 1",
+  },
+  // A middle segment read as running toward the water beside it.
+  "boats.center": {
+    for: "c in cells where clue(seg, c) = 6, a in {1, 3}, b = a + 1, p = a, q = b where wet(step(c, a)) or wet(step(c, b))",
+  },
+  // A lone segment read as growing while boats of one square are missing.
+  "boats.extend": {
+    for: "F = full(1), c in cells where value(c) = 1 and not (exists x in adj4(c): value(x) = 1), O = {x in adj4(c) where not known(x)} where |O| = 1",
+  },
+  // A line read as needing one segment fewer than its number leaves.
+  "boats.lineWater": {
+    for: "L in lines, v = clue(n, L) where v >= 0, O = open(cells(L)) where |O| > 0, left = v - ships(cells(L)) - 1",
+  },
+  "boats.isolated": {
+    for: "F = full(1), c in cells where not known(c) and (forall x in adj4(c): value(x) = 2)",
+  },
+  // A boat read as growing while boats of its length are missing.
+  "boats.grow": {
+    for: "c in cells where value(c) = 1, L in {row(c), col(c)}, G = stretch(L, c, shipsOf(L)) where |G| >= 2 and nth(G, 0) = c, E = {x in cells(L) where not known(x) and (exists g in G: x in adj4(g))} where |E| = 1",
+  },
+  // A run that fits the boat filled whatever other runs could take it.
+  "boats.onlyFit": {
+    for: "M = top, L in lines, c in cells(L) where starts(L, c), R = run(L, c), m = |R| where m = M and fits(L, R, m), b = boatsOf(m) - done(m) where b = 1",
+  },
+  // A line read as having no room where it has room for exactly the sides.
+  "boats.centerRoom": {
+    for: "c in cells where clue(seg, c) = 6, L in {row(c), col(c)}, v = clue(n, L) where v >= 0, S = {x in adj4(c) where x in cells(L)} where |S| = 2 and v - ships(cells(L)) <= count(x in S where value(x) != 1)",
+  },
+  // A square read as too long for a boat exactly the longest still to close.
+  "boats.tooLong": {
+    for: "M = top, c in cells where not known(c) and 1 + sum(a in adj4(c) where value(a) = 1 of |boat(a)|) >= M",
+  },
+  // A run's last square read as water while boats of its length are missing.
+  "boats.shortRun": {
+    for: "L in lines, c in cells(L), R = run(L, c) where |R| >= 2 and nth(R, 0) = c, O = open(R) where |O| = 1",
+  },
+  // A hidden number read as one more than the fleet leaves.
+  "boats.hidden": {
+    for: "L in lines where clue(n, L) < 0, O = open(cells(L)) where |O| > 0, v = rec(L) + 1 where v >= 1, left = v - ships(cells(L))",
+  },
+  // More runs than boats read as each taking one.
+  "boats.onlyRuns": {
+    for: "m = top where m > 0, L in lines, c in cells(L) where starts(L, c), R = run(L, c) where ships(R) < |R| and fits(L, R, m) and |R| < 2 * m, C = {x in R where index(x, R) >= |R| - m and index(x, R) < m} where |C| > 0, b = boatsOf(m) - done(m), r = taking(m) where r >= b and b > 0",
+  },
+  // Three squares read as holding a boat where the line has room for them all.
+  "boats.shared": {
+    for: "L in lines, v = num(L) where v >= 0, t = room(L, v) where t = 1 or t = 2, k in cells(L), K = crossing(L, k), j = num(K), s = count(x in adj4(k) where x in cells(L) and not known(x)) + count(x in {k} where not known(x) and j >= 0 and j - ships(cells(K)) = 1) where s >= t",
+  },
+  // The crossing line filled too, whatever it needs.
+  "boats.lastWater": {
+    for: "T = longest, L in lines, v = num(L) where v >= 0 and room(L, v) = 1, c in cells(L) where not known(c), K = crossing(L, c), H = rest(L, c) + rest(K, c) where broken(H, {c}, T)",
+  },
+  "boats.lastShip": {
+    for: "T = longest, L in lines, v = num(L) where v >= 0 and v - ships(cells(L)) = 1, c in cells(L) where not known(c), K = crossing(L, c), W = rest(L, c) + rest(K, c) where broken({c}, W, T)",
+  },
+  // A middle segment's boat read as never running along a line it could.
+  "boats.centerTrial": {
+    for: "T = longest, c in cells where clue(seg, c) = 6, L in {row(c), col(c)}, S = {x in adj4(c) where x in cells(L)} where |S| = 2 and (exists x in S: not known(x))",
+  },
 };
 
 /** How many of a technique's first binders each query fixes, one query a

@@ -27,7 +27,7 @@ import {
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import type { BoatsBreach, BoatsLine, BoatsTechnique } from "./hint-solver.ts";
+import type { BoatsBreach, BoatsLine, BoatsTechnique } from "./solver.ts";
 import { SHIP_BOTTOM, SHIP_LEFT, SHIP_SINGLE, SHIP_TOP } from "./state.ts";
 
 type T<K extends BoatsTechnique["kind"]> = Extract<BoatsTechnique, { kind: K }>;

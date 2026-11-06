@@ -85,7 +85,7 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
       const _a63 = sp.sight[_at59];
       for (let _i64 = 0; _i64 < _a63.length; _i64++) {
         const v_c = _a63[_i64];
-        let _c70 = ((g[v_c] || -1) === _v60);
+        let _c70: boolean = ((g[v_c] || -1) === _v60);
         if (_c70) {
           let _q65 = true;
           Q66: {
@@ -184,7 +184,7 @@ export function border(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BorderBind
       for (let _i42 = 0; _i42 < _a41.length; _i42++) {
         const v_c = _a41[_i42];
         const v_i = _i42;
-        let _c48 = !((_h43 || (v_i <= v_f)));
+        let _c48: boolean = !((_h43 || (v_i <= v_f)));
         if (!_c48) {
           let _q44 = true;
           Q45: {
@@ -200,9 +200,9 @@ export function border(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BorderBind
           }
           _c48 = _q44;
         }
-        let _c51 = _c48;
+        let _c51: boolean = _c48;
         if (_c51) {
-          let _c50 = !(((_h49 && (v_i > v_stop)) || (v_i > v_reach)));
+          let _c50: boolean = !(((_h49 && (v_i > v_stop)) || (v_i > v_reach)));
           if (!_c50) {
             if (b.has(v_c, _h47)) { if (fire === null) { b.strikeAt(v_c, _h47); changed = true; } else facts.push(STRIKE, v_c, _h47); }
             _c50 = true;

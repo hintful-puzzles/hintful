@@ -1,85 +1,81 @@
 /**
- * Boats — the four-tier deductive solver (upstream's "Solver" block).
+ * Boats' solver: the ladder `boats.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/ladder-runtime.ts`), with the reason
+ * each technique records for the hint; and the answer check its rules
+ * compile to.
  *
- * `solveBoats(board, maxDiff)` runs a fixpoint loop of named techniques, each
- * gated by a difficulty threshold, and reports the **highest tier the deduction
- * actually needed**. It never guesses and never backtracks: there is no
- * board-wide trial, no recursion, no dup-and-try. The Hard tier's "attempt"
- * techniques try a *single* cell as the last of its kind a line needs, the
- * rest of the line filled the other way, and keep the result only when the
- * trial is immediately contradictory. That is one line's arrangement placed
- * and checked once, a Check (docs/solver-and-generator.md § "Check, Tactic,
- * Search"), not a guess.
- *
- * So **Boats satisfies the guess-free-generation policy at every named
- * difficulty** — Easy/Normal/Tricky/Hard are progressively harder *deduction*
- * and there is no "Unreasonable" guessing tier to exempt. Don't add a knob.
- *
- * **The loop is ported directly rather than onto the shared
- * `runDeductionFixpoint`** (docs/solver-and-generator.md § "Where the
- * fixpoint does not fit"). Three pieces of this loop's bookkeeping feed back
- * into which puzzles exist, and none of them fits the shared runner:
- *
- *  - `hasCenters` / `hasNoClue` are *latching* optimization flags. Once
- *    `centersTrivial` reports every center clue satisfied, the three
- *    center techniques are never tried again for the rest of the solve.
- *  - `diff` is a running maximum that a technique *reads*: the cheap
- *    `findMaxFleet(simple)` runs only while `diff < DIFF_TRICKY`, so it
- *    switches itself off once the solve has needed a Tricky technique once.
- *  - the Tricky tier writes missing border numbers *into the board* and the
- *    solver restores them on exit.
- *
- * The shared runner restarts from rung 0 on any firing and grades by "highest
- * rung that fired"; here the grade is "deepest tier the loop had to reach",
- * which is a different number. Since the generator is solver-gated, adopting
- * the shared loop would silently change every board.
+ * One ladder serves the generator, which keeps a removed clue only while the
+ * board still solves, so its verdict on every intermediate board decides
+ * which puzzles exist; `solve()`; `findMistakes`; the difficulty; and the
+ * hint, which walks it. No technique guesses: the Hard tier's trials suppose
+ * one square the last of its kind its line needs, fill the rest of the line
+ * the other way, and read the rules once, a Check
+ * (docs/solver-and-generator.md § "Check, Tactic, Search"). So a board the
+ * ladder fills is uniquely solved, at every tier.
  */
 
-import { Dsf } from "../../engine/dsf.ts";
+import {
+  clueList,
+  describedSpace,
+  type GridSpace,
+  PLACE,
+  rangeMask,
+} from "../../engine/describe-runtime.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  ladderWalk,
+  runLadder,
+  type Taken,
+  TIERS,
+  uncluedPlacingRung,
+  uncluedRung,
+} from "../../engine/ladder-runtime.ts";
 import { NO_SOLUTION, type SolveFailure } from "../../engine/solve-failure.ts";
+import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
+import * as boats from "./boats.compiled.ts";
 import {
   type BoatsBoard,
   type BoatsState,
   boardOf,
   CORRUPT,
+  cloneBoard,
   DIFF_EASY,
   DIFF_HARD,
-  DIFF_NORMAL,
-  DIFF_TRICKY,
+  DIFFCOUNT,
   EMPTY,
   isShip,
   NO_CLUE,
-  SHIP_BOTTOM,
-  SHIP_CENTER,
-  SHIP_LEFT,
-  SHIP_RIGHT,
-  SHIP_SINGLE,
-  SHIP_TOP,
   SHIP_VAGUE,
-  STATUS_INCOMPLETE,
   STATUS_INVALID,
   WATER,
 } from "./state.ts";
 import {
-  type BoatsRun,
-  collectRuns,
+  adjustShips,
+  checkCollision,
+  checkFleet,
+  countShips,
+  FE_COLLISION,
+  FE_FLEET,
+  FE_MISMATCH,
   fleetShipCount,
-  neighbors,
   validateFullState,
+  validateGridClues,
 } from "./validate.ts";
 
 /**
- * What a solve attempt concluded. Upstream returns the reached difficulty, or
- * the magic `-1` (stuck) / `-2` (contradiction); this discriminates them so a
- * caller cannot compare a difficulty against a sentinel by accident.
+ * What a solve concluded: solved, with the highest tier a firing needed;
+ * stuck, the ladder out of firings with the board unfinished; or invalid,
+ * the board contradicting itself.
  */
 export type BoatsSolveResult =
   | { kind: "solved"; diff: number }
-  /** Ran out of deductions with the board unfinished — upstream's `-1`. */
   | { kind: "stuck" }
-  /** The board contradicts itself — upstream's `-2`. */
   | { kind: "invalid" };
 
 // --- primitive placements --------------------------------------------------
@@ -87,7 +83,7 @@ export type BoatsSolveResult =
 /**
  * Upstream `boats_solver_place_water`. Returns how many squares changed (0 if
  * out of bounds or already water). Writing over a ship yields `CORRUPT`, which
- * is how the solver signals a contradiction to the validator.
+ * the validator reads as a contradiction.
  */
 export function placeWater(b: BoatsBoard, x: number, y: number): number {
   const { w, h, grid } = b;
@@ -106,17 +102,10 @@ export function placeWater(b: BoatsBoard, x: number, y: number): number {
 
 /**
  * Upstream `boats_solver_place_ship`: place a ship and, since boats never touch
- * diagonally, water on all four diagonal neighbors.
- *
- * **Divergence (deliberate, and free):** upstream `assert`s that the square is
- * in bounds where this port returns 0. A release build compiles that assert
- * out and then indexes out of bounds, so the C has no defined behavior there
- * (docs/solver-and-generator.md § "Divergence and what it costs", rule
- * 1). No generated board reaches it (`centersTrivial` is the only caller that
- * could pass an off-board square, and only for a center clue on an edge row
- * whose boat cannot be perpendicular), but a hand-written game ID can.
+ * diagonally, water on all four diagonal neighbors. Out of bounds places
+ * nothing.
  */
-export function placeShip(b: BoatsBoard, x: number, y: number): number {
+function placeShip(b: BoatsBoard, x: number, y: number): number {
   const { w, h, grid } = b;
   if (x < 0 || x >= w || y < 0 || y >= h) return 0;
   const i = y * w + x;
@@ -156,829 +145,724 @@ export function fillRow(
   return ret;
 }
 
-// --- Easy tier -------------------------------------------------------------
+// --- the board as the description reads it ---------------------------------
+
+/** A square's value as the description numbers it: a boat segment and
+ * water. */
+const SHIP = 1;
+const SEA = 2;
+
+const describedOf = (cell: number): number =>
+  isShip(cell) ? SHIP : cell === WATER ? SEA : 0;
+
+/** The description's line for a border number's slot: its lines are the
+ * rows and then the columns, where a slot is a column and then a row. */
+function lineOfSlot(b: BoatsBoard, slot: number): number {
+  return slot < b.w ? b.h + slot : slot - b.w;
+}
+function slotOfLine(b: BoatsBoard, L: number): number {
+  return L < b.h ? b.w + L : L - b.h;
+}
+
+/** The board as the description deals it: a number beside each line that
+ * shows one, each given square, and the fleet. */
+function dealtOf(b: BoatsBoard): boats.Dealt {
+  const nAt: number[] = [];
+  const nV: number[] = [];
+  for (let L = 0; L < b.w + b.h; L++) {
+    const v = b.borderClues[slotOfLine(b, L)];
+    if (v === NO_CLUE) continue;
+    nAt.push(L);
+    nV.push(v);
+  }
+  const segAt: number[] = [];
+  const segV: number[] = [];
+  b.gridClues.forEach((v, c) => {
+    if (v === EMPTY) return;
+    segAt.push(c);
+    segV.push(v);
+  });
+  return {
+    n: clueList(nAt, nV, b.w + b.h),
+    seg: clueList(segAt, segV, b.w * b.h),
+    fleet: {
+      n: b.fleet,
+      length: Array.from({ length: b.fleet }, (_, i) => i + 1),
+      boats: b.fleetData.slice(0, b.fleet),
+    },
+  };
+}
+
+// --- the hint's vocabulary ---------------------------------------------------
+
+/** A square the deduction decides, and what it decides it to be. */
+export interface BoatsSquare {
+  x: number;
+  y: number;
+  ship: boolean;
+}
+
+/** A row or column, named the way the player reads it: 1-based, counting from
+ * the top / the left, alongside the occupancy number drawn beside it. */
+export interface BoatsLine {
+  horizontal: boolean;
+  /** 0-based row (`horizontal`) or column index. */
+  index: number;
+  /** The occupancy number, which may be one the deduction read from the
+   * fleet — see {@link BoatsLine.deduced}. */
+  clue: number;
+  /** True when the puzzle hides this number and the deduction read it, so
+   * the narration must say where it came from rather than cite a number the
+   * player cannot see. */
+  deduced: boolean;
+}
+
+/** Why the board rejects a Hard tier's trial — read off the validators' own
+ * error arrays (docs/hints-marks.md § "Read the reason off the validator"). */
+export type BoatsBreach =
+  /** Two boats would touch, if only at a corner. */
+  | { kind: "collision" }
+  /** A row or column's occupancy number could no longer be met. */
+  | { kind: "count"; line: BoatsLine }
+  /** The fleet has no boat of the size that would be formed. */
+  | { kind: "fleet" }
+  /** More (or fewer) ship squares than the whole fleet accounts for. */
+  | { kind: "fleetTotal"; tooMany: boolean }
+  /** A given segment's own shape would be contradicted. */
+  | { kind: "clue" }
+  /**
+   * The board is left with no legal way to finish, without one rule naming
+   * itself the culprit. Honest catch-all rather than a fabricated cause
+   * (docs/hints-marks.md § "Honest non-local evidence").
+   */
+  | { kind: "unfinishable" };
 
 /**
- * Upstream `boats_solver_initial`: clear the board and re-derive it from the
- * given clues alone. An end-cap clue also forces the neighbor it points at
- * and the water behind it; a single is surrounded by water.
+ * The named technique that forced a firing, carrying exactly what its
+ * narration needs, in the order the tiers introduce them.
  */
-function solverInitial(b: BoatsBoard): number {
-  const { w, h, gridClues } = b;
-  b.grid.fill(EMPTY);
-  let ret = 0;
+export type BoatsTechnique =
+  // --- Easy ---
+  /** A given end cap or single says which way its boat runs. */
+  | { kind: "givenClue"; shape: number }
+  /** Boats never touch, so the diagonals of a segment are water. */
+  | { kind: "neverTouch" }
+  /** A line already shows all the ships its number allows. */
+  | { kind: "lineSatisfied"; line: BoatsLine }
+  /** A line has exactly as many free squares left as ships still to place. */
+  | { kind: "lineForced"; line: BoatsLine }
+  /** Every square of water is accounted for, so the rest is fleet. */
+  | { kind: "allWaterPlaced" }
+  /** A center segment with water to one side must run along the other axis. */
+  | { kind: "centerForced"; vertical: boolean; center: Point; water: Point }
+  /** Every 1-boat is placed, so a square hemmed in on all four sides is water. */
+  | { kind: "isolated" }
+  /** Every 1-boat is placed, so a segment hemmed in on three sides continues
+   * into the fourth. */
+  | { kind: "mustExtend" }
+  // --- Normal ---
+  /** A center segment's line cannot take the two more ships that direction needs. */
+  | { kind: "centerCount"; line: BoatsLine; vertical: boolean; room: number }
+  /** Filling a square would join runs into a boat longer than any left. */
+  | { kind: "growTooLong"; joined: number; largest: number }
+  /** Every boat of this length is placed, so an unfinished one must be longer. */
+  | { kind: "mustGrow"; length: number }
+  /** Every boat of this length is placed, so a run of exactly that length must
+   * not be filled. */
+  | { kind: "runTooShort"; length: number }
+  /** The runs that can still hold the largest missing boat are exactly as many
+   * as there are such boats, so every one of them is used. */
+  | { kind: "onlyRunsLeft"; size: number; runs: number }
+  // --- Tricky ---
+  /** Three squares in a nearly-full line can't all be water, and whichever is
+   * a ship, the middle one's two sides are water: an outer one touches them at
+   * a corner, and the middle one (`middle`, when it counts) would fill its own
+   * crossing line. */
+  | { kind: "sharedDiagonal"; line: BoatsLine; room: number; middle: Point | null }
+  // --- Hard ---
+  /** The opposite placement immediately contradicts the board. `center` is the
+   * given middle segment when the trial ran its boat one way through it
+   * (`vertical`), rather than trying a single square. */
+  | {
+      kind: "refuted";
+      trialShip: boolean;
+      breach: BoatsBreach;
+      center: { at: Point; vertical: boolean } | null;
+      /** A square's trial: the line it was the last of its kind in, filled
+       * with the other kind, and whether the crossing line was filled too.
+       * `null` for a middle segment's. */
+      filled: { horizontal: boolean; crossing: boolean } | null;
+    };
 
-  for (let x = 0; x < w; x++) {
-    for (let y = 0; y < h; y++) {
-      switch (gridClues[y * w + x]) {
-        case WATER:
-          ret += placeWater(b, x, y);
-          break;
-        case SHIP_VAGUE:
-        case SHIP_CENTER:
-          ret += placeShip(b, x, y);
-          break;
-        case SHIP_TOP:
-          ret += placeShip(b, x, y);
-          ret += placeShip(b, x, y + 1);
-          ret += placeWater(b, x, y - 1);
-          break;
-        case SHIP_BOTTOM:
-          ret += placeShip(b, x, y);
-          ret += placeShip(b, x, y - 1);
-          ret += placeWater(b, x, y + 1);
-          break;
-        case SHIP_LEFT:
-          ret += placeShip(b, x, y);
-          ret += placeShip(b, x + 1, y);
-          ret += placeWater(b, x - 1, y);
-          break;
-        case SHIP_RIGHT:
-          ret += placeShip(b, x, y);
-          ret += placeShip(b, x - 1, y);
-          ret += placeWater(b, x + 1, y);
-          break;
-        case SHIP_SINGLE:
-          ret += placeShip(b, x, y);
-          ret += placeWater(b, x + 1, y);
-          ret += placeWater(b, x - 1, y);
-          ret += placeWater(b, x, y + 1);
-          ret += placeWater(b, x, y - 1);
-          break;
-      }
+/** The rungs a hint step can be: the techniques' kinds. */
+export const BOATS_RUNGS = [
+  "givenClue",
+  "neverTouch",
+  "lineSatisfied",
+  "lineForced",
+  "allWaterPlaced",
+  "centerForced",
+  "isolated",
+  "mustExtend",
+  "centerCount",
+  "growTooLong",
+  "mustGrow",
+  "runTooShort",
+  "onlyRunsLeft",
+  "sharedDiagonal",
+  "refuted",
+] as const;
+export type BoatsRung = (typeof BOATS_RUNGS)[number];
+
+/** One deduction: what it forces, what follows from that by the never-touch
+ * rule, and the squares it reasons over. */
+export interface BoatsFiring {
+  technique: BoatsTechnique;
+  /** The squares the player is asked to decide — always still undecided. */
+  squares: BoatsSquare[];
+  /**
+   * Water that follows from this firing's own placements because boats never
+   * touch. Shown as part of the step so the player sees the rule doing its
+   * work, but never narrated separately.
+   */
+  consequences: BoatsSquare[];
+  /** The particular cells the deduction reasons from, outlined `COL_HINT_CELL`. */
+  evidence: Point[];
+  /** The row or column the sentence names ("Row 3 still needs…"), hatched with
+   * its clue; empty when it names none (docs/hints-marks.md § "Hatch the line
+   * the sentence names"). */
+  line: Point[];
+  /**
+   * The grid **as this firing fired** — every earlier firing applied, this one
+   * not yet. The step's move is built against it (a `fill` move is a rectangle
+   * that sets every still-empty cell in its span), and it is the board the
+   * narration and the shaded area describe.
+   */
+  grid: Int8Array;
+}
+
+/** What a firing's reason carries: its technique, in the narration's terms,
+ * and the squares and line it reasons from. */
+interface BoatsReason {
+  technique: BoatsTechnique;
+  evidence: readonly number[];
+  line: number;
+}
+
+// --- the reasons, read off each firing's binding -----------------------------
+
+/** What the reasons read beside the marks: the board's size and clues. */
+interface Board {
+  b: BoatsBoard;
+  sp: GridSpace;
+}
+
+const pointOf = (sp: GridSpace, c: number): Point => ({
+  x: c % sp.w,
+  y: (c / sp.w) | 0,
+});
+
+/** The square beside `c` in direction `d`, numbered as `step` numbers them:
+ * 1 up, 2 down, 3 left, 4 right; -1 off the board. */
+function stepOf(sp: GridSpace, c: number, d: number): number {
+  const { w, h } = sp;
+  const x = c % w;
+  const y = (c / w) | 0;
+  if (d === 1) return y > 0 ? c - w : -1;
+  if (d === 2) return y < h - 1 ? c + w : -1;
+  if (d === 3) return x > 0 ? c - 1 : -1;
+  return x < w - 1 ? c + 1 : -1;
+}
+
+/** The number beside line `L`: shown, or read from the fleet where every
+ * other line the same way shows one or is decided; -1 where neither. */
+function numOf(B: Board, m: CellMarks, L: number): number {
+  const { b, sp } = B;
+  const shown = b.borderClues[slotOfLine(b, L)];
+  if (shown !== NO_CLUE) return shown;
+  const rows = L < b.h;
+  let sum = 0;
+  for (let M = rows ? 0 : b.h; M < (rows ? b.h : b.h + b.w); M++) {
+    if (M === L) continue;
+    const v = b.borderClues[slotOfLine(b, M)];
+    if (v !== NO_CLUE) {
+      sum += v;
+      continue;
     }
+    const cells = sp.lineCells[M];
+    if (cells.some((c) => !m.known(c))) return -1;
+    sum += cells.filter((c) => m.grid[c] === SHIP).length;
   }
+  const v = fleetShipCount(b) - sum;
+  return v >= 0 && v <= sp.lineCells[L].length ? v : -1;
+}
 
-  return ret;
+function lineOf(B: Board, m: CellMarks, L: number): BoatsLine {
+  const { b } = B;
+  const horizontal = L < b.h;
+  return {
+    horizontal,
+    index: horizontal ? L : L - b.h,
+    clue: numOf(B, m, L),
+    deduced: b.borderClues[slotOfLine(b, L)] === NO_CLUE,
+  };
+}
+
+/** The segments of the boat through ship `c`, along its row and its column. */
+function boatAt(sp: GridSpace, m: CellMarks, c: number): number[] {
+  const out = [c];
+  for (const d of [1, 2, 3, 4])
+    for (let x = stepOf(sp, c, d); x >= 0 && m.grid[x] === SHIP; x = stepOf(sp, x, d))
+      out.push(x);
+  return out;
+}
+
+/** The marks as the game's grid: a ship segment and water, the rest empty. */
+function gameGrid(m: CellMarks): Int8Array {
+  return Int8Array.from(m.grid, (v) =>
+    v === SHIP ? SHIP_VAGUE : v === SEA ? WATER : EMPTY,
+  );
 }
 
 /**
- * Upstream `boats_solver_check_fill`: if the water already on the board plus
- * the fleet's own squares account for the whole grid, every remaining square
- * is a ship.
+ * Classify *why* a trial board is contradictory by running the validation
+ * family with its own error arrays and reading the flags back (Bricks'
+ * pattern, docs/hints-marks.md § "Read the reason off the validator"). A
+ * fixed priority picks the clearest reason when several fire at once, and
+ * every branch ends in a reason, `unfinishable` the honest catch-all, since
+ * `validateFullState` says INVALID through paths that flag nothing.
  */
-function checkFill(b: BoatsBoard, blankCounts: Int32Array): number {
-  const { w, h } = b;
-  let count = fleetShipCount(b);
-  for (let i = 0; i < w; i++) count += blankCounts[i];
+function classifyBreach(
+  B: Board,
+  m: CellMarks,
+  trial: BoatsBoard,
+): { breach: BoatsBreach; cells: number[] } {
+  const { w, h } = trial;
+  const cellErrs = new Int32Array(w * h);
+  const lineErrs = new Int32Array(w + h);
 
-  if (count !== w * h) return 0;
+  const countStatus = countShips(trial, undefined, undefined, lineErrs);
+  const collided = checkCollision(trial, cellErrs);
+  const fleetStatus = checkFleet(trial, undefined, cellErrs);
+  validateGridClues(trial, cellErrs);
 
-  let ret = 0;
-  for (let i = 0; i < w * h; i++)
-    if (b.grid[i] === EMPTY) ret += placeShip(b, i % w, Math.floor(i / w));
-  return ret;
-}
+  const cellsAt = (pred: (i: number) => boolean): number[] => {
+    const out: number[] = [];
+    for (let i = 0; i < w * h; i++) if (pred(i)) out.push(i);
+    return out;
+  };
+  const flagged = (mask: number) => cellsAt((i) => (cellErrs[i] & mask) !== 0);
 
-/**
- * Upstream `boats_solver_check_counts`: a line whose ships already meet its
- * number is finished with water; a line whose water already meets its
- * complement is finished with ships.
- */
-function checkCounts(
-  b: BoatsBoard,
-  blankCounts: Int32Array,
-  shipCounts: Int32Array,
-): number {
-  const { w, h, borderClues } = b;
-  let ret = 0;
-
-  for (let i = 0; i < w; i++) {
-    if (borderClues[i] === NO_CLUE) continue;
-    if (shipCounts[i] === borderClues[i] && blankCounts[i] !== h - borderClues[i])
-      ret += fillRow(b, i, 0, i, h - 1, WATER);
-    else if (shipCounts[i] !== borderClues[i] && blankCounts[i] === h - borderClues[i])
-      ret += fillRow(b, i, 0, i, h - 1, SHIP_VAGUE);
-  }
-  for (let i = 0; i < h; i++) {
-    const c = borderClues[i + w];
-    if (c === NO_CLUE) continue;
-    if (shipCounts[i + w] === c && blankCounts[i + w] !== w - c)
-      ret += fillRow(b, 0, i, w - 1, i, WATER);
-    else if (shipCounts[i + w] !== c && blankCounts[i + w] === w - c)
-      ret += fillRow(b, 0, i, w - 1, i, SHIP_VAGUE);
+  // A `CORRUPT` square is a placement over its opposite, which in a trial
+  // only the never-touch water round a segment makes: two boats touching.
+  const corrupt = cellsAt((i) => trial.grid[i] === CORRUPT);
+  if (collided || corrupt.length > 0) {
+    // The collision flag sits on the top-left cell of the offending 2×2; show
+    // all four, so the player sees the corner rather than one lone square.
+    const cells = [...corrupt];
+    for (const c of flagged(FE_COLLISION)) cells.push(c, c + 1, c + w, c + w + 1);
+    return { breach: { kind: "collision" }, cells };
   }
 
-  return ret;
+  if (countStatus === STATUS_INVALID)
+    for (let slot = 0; slot < w + h; slot++) {
+      if (lineErrs[slot] !== STATUS_INVALID) continue;
+      const L = lineOfSlot(trial, slot);
+      return {
+        breach: { kind: "count", line: lineOf(B, m, L) },
+        cells: [...B.sp.lineCells[L]],
+      };
+    }
+
+  const fleetCells = flagged(FE_FLEET);
+  if (fleetCells.length > 0) return { breach: { kind: "fleet" }, cells: fleetCells };
+
+  const clueCells = flagged(FE_MISMATCH);
+  if (clueCells.length > 0) return { breach: { kind: "clue" }, cells: clueCells };
+
+  // `adjustShips`' own verdict: too many ship squares for the fleet, or too
+  // few squares left undecided to fit it.
+  const maxShips = fleetShipCount(trial);
+  let ships = 0;
+  let water = 0;
+  for (let i = 0; i < w * h; i++) {
+    if (isShip(trial.grid[i])) ships++;
+    else if (trial.grid[i] === WATER) water++;
+  }
+  if (ships > maxShips || w * h - water < maxShips)
+    return {
+      breach: { kind: "fleetTotal", tooMany: ships > maxShips },
+      cells: cellsAt((i) => isShip(trial.grid[i])),
+    };
+
+  // …and `checkFleet` reporting one size over-placed without flagging it.
+  if (fleetStatus === STATUS_INVALID)
+    return { breach: { kind: "fleet" }, cells: cellsAt((i) => isShip(trial.grid[i])) };
+
+  return { breach: { kind: "unfinishable" }, cells: [] };
 }
 
-/**
- * Upstream `boats_solver_remove_singles`: once every size-1 boat is placed, an
- * isolated empty square can hold no boat at all (it would be another single),
- * and an isolated *ship* square must extend into its one free neighbor.
- */
-function removeSingles(b: BoatsBoard, fleetCount: Int32Array): number {
-  const { w, h, grid } = b;
-  if (fleetCount[0] !== b.fleetData[0]) return 0;
+/** A Hard trial's reason: the board with `ships` and `waters` placed as the
+ * trial supposes, and the rule that breaks. */
+function trialReason(
+  B: Board,
+  m: CellMarks,
+  ships: readonly number[],
+  waters: readonly number[],
+  technique: (breach: BoatsBreach) => BoatsTechnique,
+  evidence: readonly number[],
+): BoatsReason {
+  const trial = cloneBoard(B.b);
+  trial.grid.set(gameGrid(m));
+  const { w } = B.sp;
+  for (const c of ships) placeShip(trial, c % w, (c / w) | 0);
+  for (const c of waters) placeWater(trial, c % w, (c / w) | 0);
+  validateFullState(trial);
+  const found = classifyBreach(B, m, trial);
+  // A line that could no longer reach its number is the one line the
+  // sentence names, so it is the hatch rather than an outline.
+  if (found.breach.kind === "count") {
+    const { line } = found.breach;
+    return {
+      technique: technique(found.breach),
+      evidence,
+      line: line.horizontal ? line.index : B.b.h + line.index,
+    };
+  }
+  return {
+    technique: technique(found.breach),
+    evidence: [...evidence, ...found.cells],
+    line: -1,
+  };
+}
 
-  let ret = 0;
-  for (let x = 0; x < w; x++) {
-    for (let y = 0; y < h; y++) {
-      if (grid[y * w + x] === WATER) continue;
-      const { left, right, up, down } = neighbors(b, x, y);
-
+/** The runs that could take a boat of `size` along them, as `takes` reads
+ * them, each as its squares. */
+function runsTaking(B: Board, m: CellMarks, size: number): number[][] {
+  const { b, sp } = B;
+  const out: number[][] = [];
+  for (let L = 0; L < b.w + b.h; L++) {
+    const cells = sp.lineCells[L];
+    const v = b.borderClues[slotOfLine(b, L)];
+    const lineShips = cells.filter((c) => m.grid[c] === SHIP).length;
+    let run: number[] = [];
+    for (let i = 0; i <= cells.length; i++) {
+      if (i < cells.length && m.grid[cells[i]] !== SEA) {
+        run.push(cells[i]);
+        continue;
+      }
+      const ships = run.filter((c) => m.grid[c] === SHIP).length;
       if (
-        left === WATER &&
-        right === WATER &&
-        up === WATER &&
-        down === WATER &&
-        grid[y * w + x] === EMPTY
+        run.length >= size &&
+        ships < run.length &&
+        (v === NO_CLUE || v - lineShips + ships >= size)
       )
-        ret += placeWater(b, x, y);
-
-      if (grid[y * w + x] !== SHIP_VAGUE) continue;
-
-      if (left === WATER && right === WATER && up === WATER && down === EMPTY)
-        ret += placeShip(b, x, y + 1);
-      else if (left === WATER && right === WATER && down === WATER && up === EMPTY)
-        ret += placeShip(b, x, y - 1);
-      else if (down === WATER && right === WATER && up === WATER && left === EMPTY)
-        ret += placeShip(b, x - 1, y);
-      else if (down === WATER && left === WATER && up === WATER && right === EMPTY)
-        ret += placeShip(b, x + 1, y);
+        out.push(run);
+      run = [];
     }
   }
-  return ret;
+  return out;
 }
+
+/** The ladder over the dealt board, each technique with its reason. */
+function boatsLadder(B: Board, dl: boats.Dealt): Ladder {
+  const { b, sp } = B;
+  const none: readonly number[] = [];
+  // A line's number decides its open squares: boat segments, or water.
+  const line = (L: number, ships: boolean, m: CellMarks): BoatsReason => {
+    const ln = lineOf(B, m, L);
+    return {
+      technique: ships
+        ? { kind: "lineForced", line: ln }
+        : { kind: "lineSatisfied", line: ln },
+      evidence: none,
+      line: L,
+    };
+  };
+  return describedLadder(boats, {
+    given: compiledRung(
+      boats.given,
+      dl,
+      ({ c, v }): BoatsReason => ({
+        technique: { kind: "givenClue", shape: v },
+        evidence: [c],
+        line: -1,
+      }),
+    ),
+    near: uncluedRung(
+      boats.near,
+      ({ c }): BoatsReason => ({
+        technique: { kind: "neverTouch" },
+        evidence: [c],
+        line: -1,
+      }),
+    ),
+    touch: uncluedPlacingRung(boats.touch),
+    lineShips: compiledRung(boats.lineShips, dl, ({ L }, _c, _n, m) =>
+      line(L, true, m),
+    ),
+    total: compiledRung(
+      boats.total,
+      dl,
+      (): BoatsReason => ({
+        technique: { kind: "allWaterPlaced" },
+        evidence: none,
+        line: -1,
+      }),
+    ),
+    center: compiledRung(boats.center, dl, ({ c, a, b: o }, _c, _n, m): BoatsReason => {
+      // The side that is water, or off the board, which counts as water and
+      // the narration names as the board's edge.
+      const d =
+        [a, o].find((e) => stepOf(sp, c, e) < 0 || m.grid[stepOf(sp, c, e)] === SEA) ??
+        a;
+      const x = stepOf(sp, c, d);
+      return {
+        technique: {
+          kind: "centerForced",
+          vertical: a === 3,
+          center: pointOf(sp, c),
+          water: x >= 0 ? pointOf(sp, x) : offBoard(sp, c, d),
+        },
+        evidence: x >= 0 ? [c, x] : [c],
+        line: -1,
+      };
+    }),
+    extend: compiledRung(
+      boats.extend,
+      dl,
+      ({ c }): BoatsReason => ({
+        technique: { kind: "mustExtend" },
+        evidence: [c],
+        line: -1,
+      }),
+    ),
+    lineWater: compiledRung(boats.lineWater, dl, ({ L }, _c, _n, m) =>
+      line(L, false, m),
+    ),
+    isolated: compiledRung(
+      boats.isolated,
+      dl,
+      ({ c }): BoatsReason => ({
+        technique: { kind: "isolated" },
+        evidence: [1, 2, 3, 4].map((d) => stepOf(sp, c, d)).filter((x) => x >= 0),
+        line: -1,
+      }),
+    ),
+    grow: compiledRung(
+      boats.grow,
+      dl,
+      ({ G }): BoatsReason => ({
+        technique: { kind: "mustGrow", length: G.length },
+        evidence: G,
+        line: -1,
+      }),
+    ),
+    onlyFit: compiledRung(
+      boats.onlyFit,
+      dl,
+      ({ m: size }, _c, _n, m): BoatsReason => ({
+        technique: { kind: "onlyRunsLeft", size, runs: 1 },
+        evidence: runsTaking(B, m, size).flat(),
+        line: -1,
+      }),
+    ),
+    centerRoom: compiledRung(
+      boats.centerRoom,
+      dl,
+      ({ c, L, v }, _c, _n, m): BoatsReason => ({
+        technique: {
+          kind: "centerCount",
+          line: lineOf(B, m, L),
+          vertical: L < b.h,
+          room: v - sp.lineCells[L].filter((x) => m.grid[x] === SHIP).length,
+        },
+        evidence: [c],
+        line: L,
+      }),
+    ),
+    tooLong: compiledRung(boats.tooLong, dl, ({ M, c }, _c, _n, m): BoatsReason => {
+      const segs = [1, 2, 3, 4]
+        .map((d) => stepOf(sp, c, d))
+        .filter((x) => x >= 0 && m.grid[x] === SHIP)
+        .flatMap((x) => boatAt(sp, m, x));
+      return {
+        technique: {
+          kind: "growTooLong",
+          joined: 1 + segs.length,
+          largest: Math.max(M, 0),
+        },
+        evidence: segs,
+        line: -1,
+      };
+    }),
+    shortRun: compiledRung(
+      boats.shortRun,
+      dl,
+      ({ R }): BoatsReason => ({
+        technique: { kind: "runTooShort", length: R.length },
+        evidence: R,
+        line: -1,
+      }),
+    ),
+    hidden: compiledRung(boats.hidden, dl, ({ L }, _c, n, m) => line(L, n === SHIP, m)),
+    onlyRuns: compiledRung(
+      boats.onlyRuns,
+      dl,
+      ({ m: size, r }, _c, _n, m): BoatsReason => ({
+        technique: { kind: "onlyRunsLeft", size, runs: r },
+        evidence: runsTaking(B, m, size).flat(),
+        line: -1,
+      }),
+    ),
+    shared: compiledRung(boats.shared, dl, ({ L, t, k, K }, _c, _n, m): BoatsReason => {
+      const outer = [1, 2, 3, 4]
+        .map((d) => stepOf(sp, k, d))
+        .filter((x) => x >= 0 && sp.lineCells[L].includes(x) && !m.known(x));
+      const kNum = numOf(B, m, K);
+      const middle =
+        !m.known(k) &&
+        kNum >= 0 &&
+        kNum - sp.lineCells[K].filter((x) => m.grid[x] === SHIP).length === 1;
+      return {
+        technique: {
+          kind: "sharedDiagonal",
+          line: lineOf(B, m, L),
+          room: t,
+          middle: middle ? pointOf(sp, k) : null,
+        },
+        evidence: middle ? [k, ...outer] : outer,
+        line: L,
+      };
+    }),
+    lastWater: compiledRung(boats.lastWater, dl, ({ L, c, H }, _c, _n, m) =>
+      trialReason(
+        B,
+        m,
+        H,
+        [c],
+        (breach) => ({
+          kind: "refuted",
+          trialShip: false,
+          breach,
+          center: null,
+          filled: {
+            horizontal: L < b.h,
+            crossing: H.some((x) => !sp.lineCells[L].includes(x)),
+          },
+        }),
+        none,
+      ),
+    ),
+    lastShip: compiledRung(boats.lastShip, dl, ({ L, c, W }, _c, _n, m) =>
+      trialReason(
+        B,
+        m,
+        [c],
+        W,
+        (breach) => ({
+          kind: "refuted",
+          trialShip: true,
+          breach,
+          center: null,
+          filled: {
+            horizontal: L < b.h,
+            crossing: W.some((x) => !sp.lineCells[L].includes(x)),
+          },
+        }),
+        none,
+      ),
+    ),
+    centerTrial: compiledRung(boats.centerTrial, dl, ({ c, L, S }, _c, _n, m) =>
+      trialReason(
+        B,
+        m,
+        S,
+        none,
+        (breach) => ({
+          kind: "refuted",
+          trialShip: true,
+          breach,
+          center: { at: pointOf(sp, c), vertical: L >= b.h },
+          filled: null,
+        }),
+        [c],
+      ),
+    ),
+  });
+}
+
+/** The point just off the board beside square `c` in direction `d`, which
+ * the narration names as the board's edge. */
+function offBoard(sp: GridSpace, c: number, d: number): Point {
+  const { x, y } = pointOf(sp, c);
+  if (d === 1) return { x, y: y - 1 };
+  if (d === 2) return { x, y: y + 1 };
+  if (d === 3) return { x: x - 1, y };
+  return { x: x + 1, y };
+}
+
+/** The marks over `grid`, a value a square and 0 for none. False where two
+ * of its values clash. The water round the segments `grid` starts with is
+ * left to `near`, so the hint walks it as a step the player sees: seeding
+ * runs no placing technique. */
+function marksOf(sp: GridSpace, grid: Uint8Array, ladder: Ladder): CellMarks | null {
+  const m = new CellMarks(sp, rangeMask(1, 2), grid);
+  if (!m.seed(grid)) return null;
+  m.placing = ladder.placing;
+  return m;
+}
+
+// --- the solve ---------------------------------------------------------------
 
 /**
- * Upstream `boats_solver_centers_trivial`: a center clue with water on one side
- * of an axis must run along the other axis. Also latches `hasCenters` off once
- * every center clue is satisfied, so the solver stops trying center techniques.
+ * Solve `b` from its clues alone by the ladder up to `cap`. **Writes `b.grid`**:
+ * on return it holds however far the deduction got, each segment's shape
+ * resolved from its neighbors.
  */
-function centersTrivial(b: BoatsBoard): { ret: number; hasCenters: boolean } {
-  const { w, h, gridClues } = b;
-  let ret = 0;
-  let hasCenters = false;
-
-  for (let x = 0; x < w; x++) {
-    for (let y = 0; y < h; y++) {
-      if (gridClues[y * w + x] !== SHIP_CENTER) continue;
-      const { left, right, up, down } = neighbors(b, x, y);
-      if ((isShip(left) && isShip(right)) || (isShip(up) && isShip(down))) continue;
-
-      hasCenters = true;
-
-      if (left === WATER || right === WATER) {
-        ret += placeShip(b, x, y - 1);
-        ret += placeShip(b, x, y + 1);
-      } else if (up === WATER || down === WATER) {
-        ret += placeShip(b, x - 1, y);
-        ret += placeShip(b, x + 1, y);
-      }
-    }
+export function solveBoats(b: BoatsBoard, cap: number): BoatsSolveResult {
+  const sp = describedSpace(boats.units, b.w, b.h);
+  const dl = dealtOf(b);
+  const ladder = boatsLadder({ b, sp }, dl);
+  const grid = new Uint8Array(b.w * b.h);
+  const m = marksOf(sp, grid, ladder);
+  if (m === null) return { kind: "invalid" };
+  const grades: Record<string, number> = {};
+  const impossible = runLadder(
+    m,
+    ladderTechniques(m, ladder.entries, { [TIERS]: cap }, grades),
+  );
+  if (impossible) {
+    b.grid.set(gameGrid(m));
+    adjustShips(b);
+    return { kind: "invalid" };
   }
-
-  return { ret, hasCenters };
+  // The game is won once the fleet is placed, the water unmarked, and so is
+  // the solve: the squares left open are water where that is an answer, and
+  // no other answer has a segment more.
+  if (grid.includes(0)) {
+    const sea = grid.map((v) => (v === 0 ? SEA : v));
+    if (boats.isAnswer(sea, sp, dl)) grid.set(sea);
+  }
+  b.grid.set(gameGrid(m));
+  adjustShips(b);
+  if (grid.includes(0)) return { kind: "stuck" };
+  if (!boats.isAnswer(grid, sp, dl)) return { kind: "invalid" };
+  return { kind: "solved", diff: grades[TIERS] ?? DIFF_EASY };
 }
 
-// --- Normal tier -----------------------------------------------------------
-
-/**
- * Upstream `boats_solver_centers_normal`: a center clue needs two more ships in
- * whichever line its boat runs along, so a line that cannot take two more
- * rules that direction out.
- */
-function centersNormal(b: BoatsBoard, shipCounts: Int32Array): number {
-  const { w, h, gridClues, borderClues } = b;
-  let ret = 0;
-
-  for (let x = 0; x < w; x++) {
-    for (let y = 0; y < h; y++) {
-      if (gridClues[y * w + x] !== SHIP_CENTER) continue;
-      const { left, right, up, down } = neighbors(b, x, y);
-      if ((isShip(left) && isShip(right)) || (isShip(up) && isShip(down))) continue;
-
-      if (borderClues[y + w] !== NO_CLUE && borderClues[y + w] - shipCounts[y + w] < 2)
-        ret += placeWater(b, x + 1, y);
-      if (borderClues[x] !== NO_CLUE && borderClues[x] - shipCounts[x] < 2)
-        ret += placeWater(b, x, y + 1);
-    }
-  }
-
-  return ret;
-}
-
-/**
- * Upstream `boats_solver_min_expand_dsf_forward`: an unfinished boat whose
- * *first* square carries an end cap pointing right/down must grow that way,
- * once every boat of its current length is already accounted for. At most one
- * placement per call — adding a ship invalidates the dsf.
- */
-function minExpandForward(
-  b: BoatsBoard,
-  fleetCount: Int32Array,
-  dsf: Dsf,
-  sx: number,
-  sy: number,
-  d: number,
-  ship: number,
-): number {
-  const { w, h, grid } = b;
-  const end = dsf.canonify(w * h);
-
-  for (let y = sy; y < h; y++) {
-    for (let x = sx; x < w; x++) {
-      const i1 = y * w + x;
-      const i2 = i1 - d;
-      if (grid[i1] !== EMPTY || dsf.canonify(i2) === end) continue;
-      if (grid[dsf.minimal(i2)] !== ship) continue;
-
-      const s = dsf.size(i2) - 1;
-      if (s < 1 || s >= b.fleet || b.fleetData[s] !== fleetCount[s]) continue;
-
-      return placeShip(b, x, y);
-    }
-  }
-  return 0;
-}
-
-/**
- * Upstream `boats_solver_min_expand_dsf_back`: the mirror case — an end cap
- * pointing left/up means the boat can only grow the other way, into the square
- * before the run's first.
- */
-function minExpandBack(
-  b: BoatsBoard,
-  fleetCount: Int32Array,
-  dsf: Dsf,
-  d: number,
-  ship: number,
-): number {
-  const { w, h, grid } = b;
-  const end = dsf.canonify(w * h);
-
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i1 = y * w + x;
-      if (grid[i1] !== ship) continue;
-      if (dsf.canonify(i1) === end) continue;
-
-      const s = dsf.size(i1) - 1;
-      if (s < 1 || s >= b.fleet || b.fleetData[s] !== fleetCount[s]) continue;
-
-      const i2 = dsf.minimal(i1) - d;
-      return placeShip(b, i2 % w, Math.floor(i2 / w));
-    }
-  }
-  return 0;
-}
-
-/** Upstream `boats_solver_min_expand_dsf`: try each of the four directions. */
-function minExpandDsf(b: BoatsBoard, fleetCount: Int32Array, dsf: Dsf): number {
-  const { w } = b;
-  if (minExpandForward(b, fleetCount, dsf, 0, 1, w, SHIP_TOP)) return 1;
-  if (minExpandForward(b, fleetCount, dsf, 1, 0, 1, SHIP_LEFT)) return 1;
-  if (minExpandBack(b, fleetCount, dsf, w, SHIP_BOTTOM)) return 1;
-  if (minExpandBack(b, fleetCount, dsf, 1, SHIP_RIGHT)) return 1;
-  return 0;
-}
-
-/** The zero-based size of the largest boat the fleet still owes, or −1. */
-export function largestMissing(b: BoatsBoard, fleetCount: Int32Array): number {
-  let max = -1;
-  for (let i = 0; i < b.fleet; i++) if (b.fleetData[i] - fleetCount[i] !== 0) max = i;
-  return max;
-}
-
-/**
- * Upstream `boats_solver_max_expand_dsf`: an empty square that would join its
- * neighboring runs into a boat longer than any the fleet still owes must be
- * water.
- */
-function maxExpandDsf(b: BoatsBoard, fleetCount: Int32Array, dsf: Dsf): number {
-  const { w, h, grid } = b;
-  const max = largestMissing(b, fleetCount);
-
-  let ret = 0;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      if (grid[y * w + x] !== EMPTY) continue;
-
-      let count = 1;
-      if (x > 0 && grid[y * w + x - 1] === SHIP_VAGUE) count += dsf.size(y * w + x - 1);
-      if (x < w - 1 && grid[y * w + x + 1] === SHIP_VAGUE)
-        count += dsf.size(y * w + x + 1);
-      if (y > 0 && grid[(y - 1) * w + x] === SHIP_VAGUE)
-        count += dsf.size((y - 1) * w + x);
-      if (y < h - 1 && grid[(y + 1) * w + x] === SHIP_VAGUE)
-        count += dsf.size((y + 1) * w + x);
-
-      if (count > max + 1) ret += placeWater(b, x, y);
-    }
-  }
-  return ret;
-}
-
-/**
- * Upstream `boats_solver_find_max_fleet`: if the runs that can still take the
- * largest outstanding boat are exactly as many as there are such boats to
- * place, every one of them is used — so the squares every placement in a run
- * has in common are ships.
- *
- * With `simple` (the Normal tier) only runs that fit the boat *exactly* are
- * confirmed, and the technique gives up when more than one boat is outstanding.
- */
-function findMaxFleet(
-  b: BoatsBoard,
-  shipCounts: Int32Array,
-  fleetCount: Int32Array,
-  runs: BoatsRun[],
-  simple: boolean,
-): number {
-  const { w, borderClues } = b;
-  const max = largestMissing(b, fleetCount);
-  if (max === -1) return 0;
-
-  let bc = b.fleetData[max] - fleetCount[max];
-  // Unreachable from a non-contradictory board (an over-placed size makes
-  // `checkFleet` report INVALID and the solve loop exits first), but upstream
-  // would `snewn` a negative length here, so refuse rather than follow it.
-  if (bc < 1) return 0;
-  if (simple && bc > 1) return 0;
-
-  const idx: number[] = [];
-  let r = 0;
-
-  for (let i = 0; i < runs.length; i++) {
-    if (runs[i].ships === runs[i].len) continue; // already full
-    if (runs[i].len < max + 1) continue; // too small
-
-    const j = runs[i].row + (runs[i].horizontal ? w : 0);
-    if (
-      borderClues[j] !== NO_CLUE &&
-      borderClues[j] - (shipCounts[j] - runs[i].ships) < max + 1
-    )
-      continue; // the line's number cannot take the boat
-
-    // A run with room for two of them tells us nothing.
-    if (runs[i].len >= (max + 1) * 2 + 1) bc = -1;
-
-    if (r < bc) idx.push(i);
-    r++;
-  }
-
-  if (r !== bc) return 0;
-
-  let ret = 0;
-  for (let i = 0; i < r; i++) {
-    const run = runs[idx[i]];
-    // On lower difficulties, only runs that fit a boat exactly.
-    if (simple && run.len > max + 1) continue;
-
-    const start = run.start + run.len - (max + 1);
-    const end = run.start + (max + 1);
-
-    if (end - start === 1) {
-      // Only one square is common to every placement — and its perpendicular
-      // neighbors are then water, because the boat runs along this line.
-      if (run.horizontal) {
-        ret += placeShip(b, start, run.row);
-        ret += placeWater(b, start, run.row - 1);
-        ret += placeWater(b, start, run.row + 1);
-      } else {
-        ret += placeShip(b, run.row, start);
-        ret += placeWater(b, run.row - 1, start);
-        ret += placeWater(b, run.row + 1, start);
-      }
-    } else if (end - start > 1) {
-      if (run.horizontal)
-        ret += fillRow(b, start, run.row, end - 1, run.row, SHIP_VAGUE);
-      else ret += fillRow(b, run.row, start, run.row, end - 1, SHIP_VAGUE);
-    }
-  }
-
-  return ret;
-}
-
-/**
- * Upstream `boats_solver_split_runs`: a run with exactly one free square would
- * become a boat of the run's length if filled — so when every boat of that
- * length is already placed, the free square is water.
- */
-function splitRuns(b: BoatsBoard, fleetCount: Int32Array, runs: BoatsRun[]): number {
-  let ret = 0;
-  for (const run of runs) {
-    const len = run.len;
-    if (len < 2 || len > b.fleet) continue;
-    if (len - run.ships !== 1) continue;
-    if (b.fleetData[len - 1] !== fleetCount[len - 1]) continue;
-
-    if (run.horizontal)
-      ret += fillRow(b, run.start, run.row, run.start + len - 1, run.row, WATER);
-    else ret += fillRow(b, run.row, run.start, run.row, run.start + len - 1, WATER);
-  }
-  return ret;
-}
-
-// --- Tricky tier -----------------------------------------------------------
-
-/**
- * Upstream `boats_solver_shared_diagonals`: in a line that needs only one or
- * two more water squares, look at three consecutive positions. If more of them
- * could be ships than the line has room to *not* be, at least one of the outer
- * pair is a ship — and either way the two squares diagonally between them
- * (directly above and below the middle) must be water.
- */
-function sharedDiagonals(
-  b: BoatsBoard,
-  waterCounts: Int32Array,
-  shipCounts: Int32Array,
-): number {
-  const { w, h, grid, borderClues } = b;
-  let ret = 0;
-
-  for (let y = 0; y < h; y++) {
-    if (borderClues[y + w] === NO_CLUE) continue;
-    const target = w - (borderClues[y + w] + waterCounts[y + w]);
-    if (target !== 1 && target !== 2) continue;
-
-    for (let x = 0; x < w; x++) {
-      const front = x > 0 && grid[y * w + (x - 1)] === EMPTY ? 1 : 0;
-      const center =
-        grid[y * w + x] === EMPTY && borderClues[x] - shipCounts[x] === 1 ? 1 : 0;
-      const back = x < w - 1 && grid[y * w + (x + 1)] === EMPTY ? 1 : 0;
-
-      if (front + center + back > target) {
-        ret += placeWater(b, x, y - 1);
-        ret += placeWater(b, x, y + 1);
-      }
-    }
-  }
-
-  for (let x = 0; x < w; x++) {
-    if (borderClues[x] === NO_CLUE) continue;
-    const target = h - (borderClues[x] + waterCounts[x]);
-    if (target !== 1 && target !== 2) continue;
-
-    for (let y = 0; y < h; y++) {
-      const front = y > 0 && grid[(y - 1) * w + x] === EMPTY ? 1 : 0;
-      const center =
-        grid[y * w + x] === EMPTY && borderClues[y + w] - shipCounts[y + w] === 1
-          ? 1
-          : 0;
-      const back = y < h - 1 && grid[(y + 1) * w + x] === EMPTY ? 1 : 0;
-
-      if (front + center + back > target) {
-        ret += placeWater(b, x - 1, y);
-        ret += placeWater(b, x + 1, y);
-      }
-    }
-  }
-
-  return ret;
-}
-
-/**
- * Upstream `boats_solver_borderclues_fill`: a line that is completely decided
- * reveals its own hidden number. Returns whether *any* line still lacks one —
- * the latch that turns the whole missing-number machinery off.
- */
-function borderCluesFill(
-  b: BoatsBoard,
-  blankCounts: Int32Array,
-  shipCounts: Int32Array,
-): boolean {
-  const { w, h, borderClues } = b;
-  let found = false;
-
-  for (let i = 0; i < w; i++) {
-    if (borderClues[i] !== NO_CLUE) continue;
-    found = true;
-    if (shipCounts[i] + blankCounts[i] === h) borderClues[i] = shipCounts[i];
-  }
-  for (let i = 0; i < h; i++) {
-    if (borderClues[i + w] !== NO_CLUE) continue;
-    found = true;
-    if (shipCounts[i + w] + blankCounts[i + w] === w)
-      borderClues[i + w] = shipCounts[i + w];
-  }
-
-  return found;
-}
-
-/**
- * Upstream `boats_solver_borderclues_last`: the fleet's total ship count is
- * known, so if exactly one column (or row) number is hidden it is the
- * remainder. Also used by the generator to refuse a puzzle that hides only one
- * number, since that is no puzzle at all.
- */
-export function borderCluesLast(b: BoatsBoard): number {
-  const { w, h, borderClues } = b;
-  const maxShips = fleetShipCount(b);
-  let ret = 0;
-
-  let found = -1;
-  let shipCount = 0;
-  for (let i = 0; i < w; i++) {
-    if (borderClues[i] !== NO_CLUE) {
-      shipCount += borderClues[i];
-      continue;
-    }
-    found = found === -1 ? i : -2;
-  }
-  if (found >= 0) {
-    borderClues[found] = maxShips - shipCount;
-    ret++;
-  }
-
-  found = -1;
-  shipCount = 0;
-  for (let i = 0; i < h; i++) {
-    if (borderClues[i + w] !== NO_CLUE) {
-      shipCount += borderClues[i + w];
-      continue;
-    }
-    found = found === -1 ? i : -2;
-  }
-  if (found >= 0) {
-    borderClues[found + w] = maxShips - shipCount;
-    ret++;
-  }
-
-  return ret;
-}
-
-// --- Hard tier: single-square refutation -----------------------------------
-
-/**
- * End a single-square trial: restore the board from `tmpGrid`, and when the
- * trial was contradictory, `place` the opposite at (x, y) and make that the
- * new baseline. Returns how many squares the conclusion changed.
- */
-function concludeTrial(
-  b: BoatsBoard,
-  tmpGrid: Int8Array,
-  place: typeof placeWater,
-  x: number,
-  y: number,
-): number {
-  const refuted = validateFullState(b) === STATUS_INVALID;
-  b.grid.set(tmpGrid);
-  if (!refuted) return 0;
-  const ret = place(b, x, y);
-  tmpGrid.set(b.grid);
-  return ret;
-}
-
-/**
- * Upstream `boats_solver_attempt_ship_rows`: in a line needing exactly one more
- * water square, try that square as the water. If completing the line then
- * *immediately* contradicts the board, the square is a ship instead.
- *
- * This is refutation, not guessing: nothing is kept unless its negation is
- * provably impossible, and `validateFullState` looks only one step ahead.
- */
-function attemptShipRows(
-  b: BoatsBoard,
-  tmpGrid: Int8Array,
-  waterCounts: Int32Array,
-): number {
-  const { w, h, grid, borderClues } = b;
-  let ret = 0;
-  tmpGrid.set(grid);
-
-  const lineNeedsOneWater = (line: number, span: number): boolean =>
-    borderClues[line] !== NO_CLUE &&
-    span - (borderClues[line] + waterCounts[line]) === 1;
-
-  for (let y = 0; y < h; y++) {
-    if (!lineNeedsOneWater(y + w, w)) continue;
-    for (let x = 0; x < w; x++) {
-      if (grid[y * w + x] !== EMPTY) continue;
-
-      placeWater(b, x, y);
-      fillRow(b, 0, y, w - 1, y, SHIP_VAGUE);
-      // Also fill the column when this square sits at an intersection.
-      if (lineNeedsOneWater(x, h)) fillRow(b, x, 0, x, h - 1, SHIP_VAGUE);
-      ret += concludeTrial(b, tmpGrid, placeShip, x, y);
-    }
-  }
-
-  for (let x = 0; x < w; x++) {
-    if (!lineNeedsOneWater(x, h)) continue;
-    for (let y = 0; y < h; y++) {
-      if (lineNeedsOneWater(y + w, w)) continue; // already tried above
-      if (grid[y * w + x] !== EMPTY) continue;
-
-      placeWater(b, x, y);
-      fillRow(b, x, 0, x, h - 1, SHIP_VAGUE);
-      ret += concludeTrial(b, tmpGrid, placeShip, x, y);
-    }
-  }
-
-  return ret;
-}
-
-/**
- * Upstream `boats_solver_attempt_water_rows`: the mirror — in a line needing
- * exactly one more ship, a square whose ship placement immediately contradicts
- * the board is water.
- */
-function attemptWaterRows(
-  b: BoatsBoard,
-  tmpGrid: Int8Array,
-  shipCounts: Int32Array,
-): number {
-  const { w, h, grid, borderClues } = b;
-  let ret = 0;
-  tmpGrid.set(grid);
-
-  const lineNeedsOneShip = (line: number): boolean =>
-    borderClues[line] !== NO_CLUE && borderClues[line] - shipCounts[line] === 1;
-
-  for (let y = 0; y < h; y++) {
-    if (!lineNeedsOneShip(y + w)) continue;
-    for (let x = 0; x < w; x++) {
-      if (grid[y * w + x] !== EMPTY) continue;
-
-      placeShip(b, x, y);
-      fillRow(b, 0, y, w - 1, y, WATER);
-      if (lineNeedsOneShip(x)) fillRow(b, x, 0, x, h - 1, WATER);
-      ret += concludeTrial(b, tmpGrid, placeWater, x, y);
-    }
-  }
-
-  for (let x = 0; x < w; x++) {
-    if (!lineNeedsOneShip(x)) continue;
-    for (let y = 0; y < h; y++) {
-      if (lineNeedsOneShip(y + w)) continue;
-      if (grid[y * w + x] !== EMPTY) continue;
-
-      placeShip(b, x, y);
-      fillRow(b, x, 0, x, h - 1, WATER);
-      ret += concludeTrial(b, tmpGrid, placeWater, x, y);
-    }
-  }
-
-  return ret;
-}
-
-/**
- * Upstream `boats_solver_centers_attempt`: try each orientation of an
- * unsatisfied center clue; an orientation that immediately contradicts the
- * board rules itself out, leaving water past the center on that axis.
- */
-function centersAttempt(b: BoatsBoard, tmpGrid: Int8Array): number {
-  const { w, h, grid, gridClues } = b;
-  let ret = 0;
-  tmpGrid.set(grid);
-
-  for (let x = 0; x < w; x++) {
-    for (let y = 0; y < h; y++) {
-      if (gridClues[y * w + x] !== SHIP_CENTER) continue;
-      const { left, right, up, down } = neighbors(b, x, y);
-      if ((isShip(left) && isShip(right)) || (isShip(up) && isShip(down))) continue;
-
-      placeShip(b, x - 1, y);
-      placeShip(b, x + 1, y);
-      if (validateFullState(b) === STATUS_INVALID) {
-        grid.set(tmpGrid);
-        ret += placeWater(b, x + 1, y);
-        tmpGrid.set(grid);
-        continue;
-      }
-      grid.set(tmpGrid);
-
-      placeShip(b, x, y - 1);
-      placeShip(b, x, y + 1);
-      if (validateFullState(b) === STATUS_INVALID) {
-        grid.set(tmpGrid);
-        ret += placeWater(b, x, y + 1);
-        tmpGrid.set(grid);
-        continue;
-      }
-      grid.set(tmpGrid);
-    }
-  }
-
-  return ret;
-}
-
-// --- the fixpoint loop -----------------------------------------------------
-
-/**
- * A runaway backstop, never a gate. Every loop iteration must either resolve at
- * least one square (monotone: `EMPTY` → water/ship, or a contradiction to
- * `CORRUPT`, which ends the solve on the next validation) or reveal a hidden
- * border number (of which there are at most `w + h`), so the real bound is
- * `w·h + w + h`. The factor of two leaves room without letting a genuine
- * divergence hang the browser (docs/testing.md § "Seed-deterministic,
- * never clock-gated": bound non-termination in the code).
- */
-function iterationBudget(b: BoatsBoard): number {
-  return (b.w * b.h + b.w + b.h) * 2 + 16;
-}
-
-/**
- * Upstream `boats_solve_game`. **Mutates `b`**: on return `b.grid` holds
- * however far the deduction got, and `b.borderClues` is restored to the
- * numbers it came in with (the Tricky tier fills hidden ones in as it works).
- */
-export function solveBoats(b: BoatsBoard, maxDiff: number): BoatsSolveResult {
-  const { w, h } = b;
-
-  const blankCounts = new Int32Array(w + h);
-  const shipCounts = new Int32Array(w + h);
-  const fleetCount = new Int32Array(b.fleet);
-
-  const dsf = maxDiff >= DIFF_NORMAL ? Dsf.withMinimal(w * h + 1) : undefined;
-
-  let diff = DIFF_EASY;
-  // Optimization latches — see the module header; both are load-bearing.
-  let hasCenters = true;
-  let hasNoClue = b.borderClues.includes(NO_CLUE);
-
-  // The Tricky tier writes deduced numbers into the board; keep the originals.
-  const savedBorderClues =
-    maxDiff >= DIFF_TRICKY && hasNoClue ? Int32Array.from(b.borderClues) : undefined;
-  const tmpGrid = maxDiff >= DIFF_HARD ? new Int8Array(w * h) : undefined;
-
-  solverInitial(b);
-
-  let runs: BoatsRun[] = [];
-  let budget = iterationBudget(b);
-
-  for (;;) {
-    if (budget-- <= 0)
-      throw new Error("boats solver exceeded its iteration budget (a port bug)");
-
-    if (
-      validateFullState(b, blankCounts, shipCounts, fleetCount, dsf) !==
-      STATUS_INCOMPLETE
-    )
-      break;
-
-    // Easy techniques.
-    if (hasNoClue && checkFill(b, blankCounts)) continue;
-    if (checkCounts(b, blankCounts, shipCounts)) continue;
-    if (hasCenters) {
-      const centers = centersTrivial(b);
-      hasCenters = centers.hasCenters;
-      if (centers.ret) continue;
-    }
-    if (fleetCount[0] === b.fleetData[0] && removeSingles(b, fleetCount)) continue;
-
-    // Normal techniques.
-    if (maxDiff < DIFF_NORMAL) break;
-    diff = Math.max(diff, DIFF_NORMAL);
-
-    if (hasCenters && centersNormal(b, shipCounts)) continue;
-    // biome-ignore lint/style/noNonNullAssertion: dsf exists whenever maxDiff >= NORMAL.
-    if (maxExpandDsf(b, fleetCount, dsf!)) continue;
-    // biome-ignore lint/style/noNonNullAssertion: as above.
-    if (minExpandDsf(b, fleetCount, dsf!)) continue;
-
-    runs = collectRuns(b);
-
-    // Deliberately skipped once the solve has needed a Tricky technique: the
-    // unrestricted form below subsumes it, and running both would double-count.
-    if (diff < DIFF_TRICKY && findMaxFleet(b, shipCounts, fleetCount, runs, true))
-      continue;
-    if (splitRuns(b, fleetCount, runs)) continue;
-
-    // Tricky techniques.
-    if (maxDiff < DIFF_TRICKY) break;
-    diff = Math.max(diff, DIFF_TRICKY);
-
-    if (hasNoClue) {
-      hasNoClue = borderCluesFill(b, blankCounts, shipCounts);
-      if (borderCluesLast(b)) continue;
-    }
-    if (sharedDiagonals(b, blankCounts, shipCounts)) continue;
-    if (findMaxFleet(b, shipCounts, fleetCount, runs, false)) continue;
-
-    // Hard techniques.
-    if (maxDiff < DIFF_HARD) break;
-    diff = Math.max(diff, DIFF_HARD);
-
-    // biome-ignore lint/style/noNonNullAssertion: tmpGrid exists whenever maxDiff >= HARD.
-    if (hasCenters && centersAttempt(b, tmpGrid!)) continue;
-    // biome-ignore lint/style/noNonNullAssertion: as above.
-    if (attemptShipRows(b, tmpGrid!, blankCounts)) continue;
-    // biome-ignore lint/style/noNonNullAssertion: as above.
-    if (attemptWaterRows(b, tmpGrid!, shipCounts)) continue;
-
-    break;
-  }
-
-  const status = validateFullState(b, blankCounts, shipCounts, fleetCount);
-  if (savedBorderClues) b.borderClues.set(savedBorderClues);
-
-  if (status === STATUS_INCOMPLETE) return { kind: "stuck" };
-  if (status === STATUS_INVALID) return { kind: "invalid" };
-  return { kind: "solved", diff };
+/** Whether the whole grid `grid` is an answer to the board `b` deals. */
+export function isBoatsAnswer(b: BoatsBoard, grid: ArrayLike<number>): boolean {
+  const sp = describedSpace(boats.units, b.w, b.h);
+  return boats.isAnswer(Uint8Array.from(grid, describedOf), sp, dealtOf(b));
 }
 
 // --- entry points for `solve()` and `findMistakes()` ------------------------
 
 /**
- * Solve from the given clues alone and return the completed grid. Upstream
- * `solve_game`: any square the deduction never decided is filled with water, so
- * the returned move describes the whole board. The player's own marks play no
- * part, because `solveBoats` starts by wiping the grid. Every technique is
- * sound and a higher cap only adds some, so the top cap solves whatever any
- * cap does.
+ * Solve from the given clues alone and return the completed grid. The
+ * player's own marks play no part. Every technique is sound and a higher cap
+ * only adds some, so the top cap solves whatever any cap does.
  */
 export function solveToGrid(
   state: BoatsState,
@@ -987,8 +871,6 @@ export function solveToGrid(
   const result = solveBoats(b, DIFF_HARD);
   if (result.kind === "invalid") return { ok: false, error: NO_SOLUTION };
   if (result.kind === "stuck") return { ok: false, error: PUZZLE_NOT_REASONABLE };
-
-  for (let i = 0; i < b.grid.length; i++) if (b.grid[i] === EMPTY) b.grid[i] = WATER;
   return { ok: true, grid: b.grid };
 }
 
@@ -1018,9 +900,106 @@ export function findMistakes(state: BoatsState): readonly BoatsMistake[] {
       const i = y * w + x;
       const player = state.grid[i];
       if (player === EMPTY) continue;
-      const truth = solved.grid[i];
-      if (isShip(player) !== isShip(truth)) out.push({ x, y });
+      if (isShip(player) !== isShip(solved.grid[i])) out.push({ x, y });
     }
   }
   return out;
+}
+
+// --- the hint's plan ---------------------------------------------------------
+
+/** Runaway/UX cap on plan length, matching Spokes and Bricks: a player rarely
+ * follows more than a few steps before diverging, and a recompute yields the
+ * next batch. */
+const HINT_PLAN_MAX = 40;
+
+export interface BoatsPlan {
+  firings: BoatsFiring[];
+  /** The difficulty cap the plan was walked at. */
+  diff: number;
+}
+
+/**
+ * The lowest cap at which the puzzle solves from its clues alone, so the
+ * walk teaches the tier the board needs and does not move as the player
+ * plays (docs/hints-search.md § "Recompute-stable plans").
+ */
+function lowestSolvingDiff(state: BoatsState): number {
+  const result = solveBoats(boardOf(state), DIFF_HARD);
+  return result.kind === "solved" ? result.diff : DIFF_HARD;
+}
+
+const squareOf = (sp: GridSpace, c: number, ship: boolean): BoatsSquare => ({
+  ...pointOf(sp, c),
+  ship,
+});
+
+/**
+ * The ladder walked from the player's board at `cap`, one firing at a time
+ * (`ladderWalk`).
+ */
+function planAt(state: BoatsState, cap: number): BoatsPlan {
+  const b = boardOf(state);
+  const sp = describedSpace(boats.units, b.w, b.h);
+  const B: Board = { b, sp };
+  const ladder = boatsLadder(B, dealtOf(b));
+  const grid = Uint8Array.from(b.grid, describedOf);
+  const firings: BoatsFiring[] = [];
+  const m = marksOf(sp, grid, ladder);
+  if (m === null) return { firings, diff: cap };
+  m.budget = stepBudget("boats hint");
+  // What a firing rests on, with the squares it decides: its evidence and its
+  // line. A player works round the boats just placed.
+  const reads = ({ facts, reasons }: Taken): number[] => {
+    const r = reasons[0] as BoatsReason;
+    const out = [...r.evidence];
+    if (r.line >= 0) out.push(...sp.lineCells[r.line]);
+    for (let i = 0; i < facts.length; i += 3) out.push(facts[i + 1]);
+    return out;
+  };
+  const walk = ladderWalk(m, ladder.entries, { [TIERS]: cap }, reads);
+  while (firings.length < HINT_PLAN_MAX) {
+    const before = gameGrid(m);
+    const taken = walk.next();
+    if (taken === null || taken === "contradiction") break;
+    const { facts, reasons } = taken;
+    const r = reasons[0] as BoatsReason;
+    const primary = new Set<number>();
+    const squares: BoatsSquare[] = [];
+    for (let i = 0; i < facts.length; i += 3) {
+      if (facts[i] !== PLACE) continue;
+      const c = facts[i + 1];
+      if (before[c] !== EMPTY || primary.has(c)) continue;
+      primary.add(c);
+      squares.push(squareOf(sp, c, facts[i + 2] === SHIP));
+    }
+    const consequences: BoatsSquare[] = [];
+    for (let c = 0; c < grid.length; c++)
+      if (before[c] === EMPTY && grid[c] !== 0 && !primary.has(c))
+        consequences.push(squareOf(sp, c, grid[c] === SHIP));
+    firings.push({
+      technique: r.technique,
+      squares,
+      consequences,
+      evidence: r.evidence.filter((c) => !primary.has(c)).map((c) => pointOf(sp, c)),
+      line: r.line >= 0 ? sp.lineCells[r.line].map((c) => pointOf(sp, c)) : [],
+      grid: before,
+    });
+  }
+  return { firings, diff: cap };
+}
+
+/**
+ * Walk the deduction from the player's board, one firing at a time.
+ *
+ * Starts at the puzzle's own difficulty and escalates only if that tier has
+ * nothing left to say — so the plan teaches the simplest technique that works,
+ * while a board the player has walked into a harder corner still gets advice.
+ */
+export function deduceBoatsPlan(state: BoatsState): BoatsPlan {
+  const lowest = lowestSolvingDiff(state);
+  let last = planAt(state, lowest);
+  for (let d = lowest + 1; d < DIFFCOUNT && last.firings.length === 0; d++)
+    last = planAt(state, d);
+  return last;
 }

@@ -37,3 +37,362 @@ help:
     * **A full row is finished.** Once a row has as many boat segments as its number, everything else in it is water; once its free squares are exactly as many as it still needs, they are all boat segments.
     * **The fleet list counts too.** When every boat of some size is already placed, a square that would make another one, or make a boat longer than the largest still missing, must be water. And an unfinished boat that has reached that size can't stop there: it must continue into the next square.
     * On harder boards, **if this square were its row's last water**: where a row or column needs exactly one more water or boat square, the hint tries a square as that last one, the rest of the line the other, and shows which rule that would break, such as a column that could no longer reach its number.
+name: Boats
+family: shading
+sizes:
+  w: { min: 2, max: 99 }
+  h: { min: 2, max: 99 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is a boat segment, 2 water.
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  # Whether square x, which may be off the board, holds a boat segment, or
+  # water, where the board's edge counts as water.
+  ship(x): "x != none and value(x) = 1"
+  wet(x): "x = none or value(x) = 2"
+  # The squares of S that hold nothing yet, and how many hold a boat
+  # segment.
+  open(S): "{c in S where not known(c)}"
+  ships(S): "count(c in S where value(c) = 1)"
+  # The boat segments of line L.
+  shipsOf(L): "{x in cells(L) where value(x) = 1}"
+  # The segments round c across, and up and down; a boat runs one way, so
+  # its segments are the two together.
+  rowPart(c): "stretch(row(c), c, shipsOf(row(c)))"
+  colPart(c): "stretch(col(c), c, shipsOf(col(c)))"
+  boat(c): "rowPart(c) + colPart(c)"
+  # A boat's first segment, the one at its top or its left.
+  head(c): "value(c) = 1 and not ship(step(c, 1)) and not ship(step(c, 3))"
+  # Whether the boat c heads is closed: water or the edge at both of its
+  # ends, and all round a boat of one square.
+  closed(c): >-
+    forall G = boat(c), x in G, y in adj4(x) where y not in G
+    and (|rowPart(c)| = 1 or y in cells(row(c)))
+    and (|colPart(c)| = 1 or y in cells(col(c))): value(y) = 2
+  # The closed boats of m squares.
+  done(m): "count(c in cells where head(c) and |boat(c)| = m and closed(c))"
+  # Whether every boat of m squares the fleet holds is closed.
+  full(m): "forall k in clues(fleet) where length(k) = m: boats(k) <= done(m)"
+  # The squares the whole fleet covers.
+  total: "sum(k in clues(fleet) of length(k) * boats(k))"
+  # The longest boat the fleet holds, and the longest of which a boat is
+  # still to close.
+  longest: "max(k in clues(fleet) where boats(k) > 0 of length(k))"
+  top: "max(k in clues(fleet) where boats(k) > done(length(k)) of length(k))"
+  # The boats of m squares the fleet holds.
+  boatsOf(m): "sum(k in clues(fleet) where length(k) = m of boats(k))"
+  # Whether line L runs up and down, and the lines that run the same way.
+  vert(L): "x(nth(cells(L), 0)) = x(nth(cells(L), 1))"
+  par(L): "{M in lines where M != L and vert(M) = vert(L)}"
+  # A hidden number, where every other line the same way has one or is
+  # decided: what the fleet leaves them. -1 where it cannot be read, or the
+  # number is shown.
+  rec(L): >-
+    max(K in {L} where clue(n, K) < 0 and (forall M in par(K): clue(n, M) >= 0
+    or |open(cells(M))| = 0) of total - sum(M in par(K) where clue(n, M)
+    >= 0 of clue(n, M)) - sum(M in par(K) where clue(n, M) < 0 of
+    ships(cells(M))))
+  # Line L's number, shown or read; -1 where neither. One of the two is -1.
+  num(L): "clue(n, L) + rec(L) + 1"
+  # The water line L still needs, its number being v: its squares less its
+  # number and the water it has.
+  room(L, v): "|cells(L)| - v - count(c in cells(L) where value(c) = 2)"
+  # The line through c other than L.
+  crossing(L, c): "the(M in {row(c), col(c)} where M != L)"
+  # The stretch of squares of line L round c that are not water: where a
+  # boat along L could lie.
+  run(L, c): "stretch(L, c, {x in cells(L) where value(x) != 2})"
+  # Whether c starts a run of line L: no square before it in L that is not
+  # water.
+  starts(L, c): >-
+    value(c) != 2 and not (exists p in adj4(c) where p in cells(L)
+    and x(p) + y(p) < x(c) + y(c): value(p) != 2)
+  # Whether the run R of line L could still take a boat of m squares along
+  # L: not full of segments, long enough, and with room for them under its
+  # line's number.
+  fits(L, R, m): >-
+    ships(R) < |R| and |R| >= m
+    and (clue(n, L) < 0 or clue(n, L) - ships(cells(L)) + ships(R) >= m)
+  # The runs that could take a boat of m squares, each by its first square,
+  # and whether one of them could take two.
+  taking(m): "count(K in lines, d in cells(K) where starts(K, d) and fits(K, run(K, d), m))"
+  wide(m): >-
+    exists K in lines, d in cells(K) where starts(K, d),
+    R = run(K, d) where fits(K, R, m): |R| >= 2 * m + 1
+  # Whether square x holds a boat segment, supposing the squares H do.
+  sh(x, H): "x in H or value(x) = 1"
+  # The squares that close a stretch G of line L: its two ends along L, and
+  # all round a stretch of one square.
+  closers(G, L): >-
+    {y in set(z over g in G, z in adj4(g)) where y not in G
+    and (|G| = 1 or y in cells(L))}
+  # The boats of m squares that supposing the squares H boat segments and W
+  # water closes, each by its first square.
+  closes(H, W, m): >-
+    set(nth(G, 0) over a in set(y over x in H + W, y in {x} + adj4(x))
+    where sh(a, H), L in {row(a), col(a)},
+    G = stretch(L, a, {x in cells(L) where sh(x, H)}) where |G| = m
+    and (forall y in closers(G, L): y in W or value(y) = 2)
+    and (exists x in G + closers(G, L): x in H or x in W))
+  # Whether the marks, with the squares H holding boat segments and W water,
+  # break a rule: two boats touching at a corner, a line over its number or
+  # left short of it, the fleet's squares too many or too few, a boat longer
+  # than any, or more boats of a length closed than the fleet has left. The
+  # open squares at the corners of H are water too.
+  broken(H, W, T): >-
+    breaks(H, W + set(d over a in H, d in adj8(a) where d not in adj4(a)
+    and not known(d)), T)
+  breaks(H, W, T): >-
+    (exists a in H, b in adj8(a) where b not in adj4(a): sh(b, H))
+    or (exists L in set(M over a in H + W, M in {row(a), col(a)}), v = num(L)
+    where v >= 0: count(x in cells(L) where sh(x, H)) > v
+    or count(x in cells(L) where x not in W and value(x) != 2) < v)
+    or count(x in cells where sh(x, H)) > total
+    or count(x in cells where x not in W and value(x) != 2) < total
+    or (exists a in H, L in {row(a), col(a)}:
+    |stretch(L, a, {x in cells(L) where sh(x, H)})| > T)
+    or (exists m in range(1, T), C = closes(H, W, m) where |C| > 0:
+    |C| > boatsOf(m) - done(m))
+  # The open squares of line L besides c, where L needs one more square of
+  # the kind its number counts by need.
+  rest(L, c): "{x in cells(L) where x != c and not known(x)}"
+shape:
+  # Boats never touch, not even at a corner, so every boat runs straight.
+  - "forall a in cells where value(a) = 1: forall b in adj8(a) where b not in adj4(a): value(b) != 1"
+  # Every boat is of a length the fleet holds.
+  - "forall c in cells where head(c): exists k in clues(fleet): length(k) = |boat(c)|"
+  # The fleet names each length once.
+  - "forall k in clues(fleet), j in clues(fleet) where j != k: length(j) != length(k)"
+  # The fleet's boats cover its squares and no more. It follows from the
+  # rules above and the fleet's count of each length; stated, the checker
+  # need not count it out board by board.
+  - "count(c in cells where value(c) = 1) = total"
+clues:
+  # A number beside a row or column: how many of its squares hold a boat
+  # segment.
+  n:
+    at: line
+    value: "range(0, |cells(at)|)"
+    means: "ships(cells(at)) = v"
+  # A given square: 2 water, and a boat segment of a shape, 3 unknown, 4 a
+  # boat's top, 5 its bottom, 6 a middle, 7 its left, 8 its right, 9 a boat
+  # of one square.
+  seg:
+    at: cell
+    value: "range(2, 9)"
+    means: >-
+      (v = 2 and value(at) = 2) or (v > 2 and value(at) = 1 and (v = 3
+      or (v = 4 and ship(step(at, 2)) and not ship(step(at, 1)))
+      or (v = 5 and ship(step(at, 1)) and not ship(step(at, 2)))
+      or (v = 6 and ((ship(step(at, 1)) and ship(step(at, 2)))
+      or (ship(step(at, 3)) and ship(step(at, 4)))))
+      or (v = 7 and ship(step(at, 4)) and not ship(step(at, 3)))
+      or (v = 8 and ship(step(at, 3)) and not ship(step(at, 4)))
+      or (v = 9 and not (exists x in adj4(at): value(x) = 1))))
+  # The fleet: how many boats of each length.
+  fleet:
+    at: board
+    fields:
+      length: { value: "range(1, max(L in lines of |cells(L)|))" }
+      boats: { value: "range(0, |cells|)" }
+    means: "count(c in cells where head(c) and |boat(c)| = length(k)) = boats(k)"
+freedom: { kind: fill }
+deal:
+  answer: the fleet, largest boat first, each in a stretch of the board that can take it, at random
+  n: every number, or as many hidden as the board stays at its tier where asked
+  seg: added at random until Easy is not stuck, then as many removed as the board stays at its tier
+  tier: one of the tiers
+tiers: [Easy, Normal, Tricky, Hard]
+techniques:
+  # A given square decides itself, and an end or a boat of one square the
+  # squares round it: an end's boat continues away from the side it ends.
+  - id: given
+    tier: Easy
+    for: "c in cells, v = clue(seg, c) where v >= 2"
+    conclude: >-
+      (v = 2 implies place(c, 2)) and (v > 2 implies place(c, 1))
+      and (v = 4 implies ship(step(c, 2)) or (step(c, 2) != none and not known(step(c, 2))
+      and place(step(c, 2), 1)))
+      and (v = 4 implies wet(step(c, 1)) or (not known(step(c, 1)) and place(step(c, 1), 2)))
+      and (v = 5 implies ship(step(c, 1)) or (step(c, 1) != none and not known(step(c, 1))
+      and place(step(c, 1), 1)))
+      and (v = 5 implies wet(step(c, 2)) or (not known(step(c, 2)) and place(step(c, 2), 2)))
+      and (v = 7 implies ship(step(c, 4)) or (step(c, 4) != none and not known(step(c, 4))
+      and place(step(c, 4), 1)))
+      and (v = 7 implies wet(step(c, 3)) or (not known(step(c, 3)) and place(step(c, 3), 2)))
+      and (v = 8 implies ship(step(c, 3)) or (step(c, 3) != none and not known(step(c, 3))
+      and place(step(c, 3), 1)))
+      and (v = 8 implies wet(step(c, 4)) or (not known(step(c, 4)) and place(step(c, 4), 2)))
+      and (v = 9 implies forall x in adj4(c): value(x) != 1 and place(x, 2))
+  # A boat segment's diagonal neighbors are water: boats never touch, and a
+  # boat runs straight. Here for the segments the board starts with; touch,
+  # next, decides them for each segment as it is placed.
+  - id: near
+    tier: Easy
+    for: >-
+      c in cells where value(c) = 1,
+      D = {d in adj8(c) where d not in adj4(c) and not known(d)} where |D| > 0
+    conclude: "forall d in D: place(d, 2)"
+  - id: touch
+    on: place
+    tier: Easy
+    for: "c in cells where value(c) = 1, d in adj8(c) where d not in adj4(c) and not known(d)"
+    conclude: "place(d, 2)"
+  # A line whose open squares are as many as the segments it still needs
+  # has a segment in each. One that needs more makes the marks inconsistent.
+  - id: lineShips
+    tier: Easy
+    for: >-
+      L in lines, v = clue(n, L) where v >= 0, O = open(cells(L)) where |O| > 0,
+      left = v - ships(cells(L))
+    conclude: "left <= |O| and (left = |O| implies forall c in O: place(c, 1))"
+  # The whole board's open squares as many as the segments the fleet still
+  # needs: each holds one.
+  - id: total
+    tier: Easy
+    for: "O = open(cells) where |O| > 0, left = total - ships(cells)"
+    conclude: "left <= |O| and (left = |O| implies forall c in O: place(c, 1))"
+  # A middle segment with water or the edge beside it runs up and down, and
+  # with it above or below runs across.
+  - id: center
+    tier: Easy
+    for: "c in cells where clue(seg, c) = 6, a in {1, 3}, b = a + 1, p = 4 - a, q = 5 - a where wet(step(c, a)) or wet(step(c, b))"
+    conclude: >-
+      not wet(step(c, p)) and not wet(step(c, q))
+      and place(step(c, p), 1) and place(step(c, q), 1)
+  # With every boat of one square closed, a segment alone with one open
+  # square beside it continues into that square.
+  - id: extend
+    tier: Easy
+    for: >-
+      F = full(1), c in cells where F and value(c) = 1
+      and not (exists x in adj4(c): value(x) = 1),
+      O = {x in adj4(c) where not known(x)} where |O| = 1
+    conclude: "forall x in O: place(x, 1)"
+  # A line with all the segments its number asks for has water in its open
+  # squares. One with more makes the marks inconsistent.
+  - id: lineWater
+    tier: Easy
+    for: >-
+      L in lines, v = clue(n, L) where v >= 0, O = open(cells(L)) where |O| > 0,
+      left = v - ships(cells(L))
+    conclude: "left >= 0 and (left = 0 implies forall c in O: place(c, 2))"
+  # With every boat of one square closed, an open square shut in by water
+  # and the edge is water.
+  - id: isolated
+    tier: Easy
+    for: "F = full(1), c in cells where F and not known(c) and (forall x in adj4(c): value(x) = 2)"
+    conclude: "place(c, 2)"
+  # A boat of m squares, not closed, with every boat of m squares closed,
+  # must grow, into its one open end.
+  - id: grow
+    tier: Normal
+    for: >-
+      c in cells where value(c) = 1, L in {row(c), col(c)},
+      G = stretch(L, c, shipsOf(L)) where |G| >= 2 and nth(G, 0) = c,
+      E = {x in cells(L) where not known(x) and (exists g in G: x in adj4(g))}
+      where |E| = 1 and full(|G|)
+    conclude: "forall x in E: place(x, 1)"
+  # The runs that can take one of the longest boats still to close are as
+  # many as there are such boats, and none can take two: each takes one.
+  # One run that fits the boat exactly is filled.
+  - id: onlyFit
+    tier: Normal
+    for: >-
+      M = top, L in lines, c in cells(L) where starts(L, c), R = run(L, c),
+      m = |R| where m = M and fits(L, R, m),
+      b = boatsOf(m) - done(m)
+      where b = 1 and taking(m) = 1
+    conclude: "forall x in R: place(x, 1) and (m > 1 or forall y in adj4(x) where y not in cells(L): place(y, 2))"
+  # A middle segment whose boat would run along a line with too little of
+  # its number left for the squares beside it there runs the other way.
+  - id: centerRoom
+    tier: Normal
+    for: >-
+      c in cells where clue(seg, c) = 6, L in {row(c), col(c)}, v = clue(n, L)
+      where v >= 0, S = {x in adj4(c) where x in cells(L)} where |S| = 2
+      and v - ships(cells(L)) < count(x in S where value(x) != 1)
+    conclude: "forall x in S: place(x, 2)"
+  # An open square that would join the segments beside it into a boat
+  # longer than any still to close is water.
+  - id: tooLong
+    tier: Normal
+    for: >-
+      M = top, c in cells where not known(c)
+      and 1 + sum(a in adj4(c) where value(a) = 1 of |boat(a)|) > M
+    conclude: "place(c, 2)"
+  # A run with one open square, of a length every boat of which is closed,
+  # would be one boat too many filled: the square is water.
+  - id: shortRun
+    tier: Normal
+    for: >-
+      L in lines, c in cells(L), R = run(L, c) where |R| >= 2
+      and nth(R, 0) = c, O = open(R) where |O| = 1 and full(|R|)
+    conclude: "forall x in O: place(x, 2)"
+  # A hidden number read from the fleet decides its line as a number does.
+  - id: hidden
+    tier: Tricky
+    for: >-
+      L in lines where clue(n, L) < 0, O = open(cells(L)) where |O| > 0,
+      v = rec(L) where v >= 0, left = v - ships(cells(L))
+    conclude: >-
+      left >= 0 and left <= |O|
+      and (left = 0 implies forall c in O: place(c, 2))
+      and (left = |O| implies forall c in O: place(c, 1))
+  # As onlyFit, the squares every placing of the boat in each run covers.
+  - id: onlyRuns
+    tier: Tricky
+    for: >-
+      m = top where m > 0, L in lines, c in cells(L) where starts(L, c),
+      R = run(L, c) where ships(R) < |R| and fits(L, R, m) and |R| < 2 * m,
+      C = {x in R where index(x, R) >= |R| - m and index(x, R) < m} where |C| > 0,
+      b = boatsOf(m) - done(m),
+      r = taking(m) where r = b and not wide(m)
+    conclude: "forall x in C: place(x, 1) and (|C| > 1 or forall y in adj4(x) where y not in cells(L): place(y, 2))"
+  # A line with one or two water still to place, and three squares side by
+  # side in it of which more could be boats than that: one of them is, and
+  # it leaves water across the line from the middle one, at a corner of an
+  # outer one, or filling the middle one's crossing line.
+  - id: shared
+    tier: Tricky
+    for: >-
+      L in lines, v = num(L) where v >= 0, t = room(L, v) where t = 1 or t = 2,
+      k in cells(L), K = crossing(L, k), j = num(K),
+      s = count(x in adj4(k) where x in cells(L) and not known(x))
+      + count(x in {k} where not known(x) and j >= 0 and j - ships(cells(K)) = 1)
+      where s > t
+    conclude: "forall y in adj4(k) where y not in cells(L) and not known(y): place(y, 2)"
+  # Supposing an open square the last water its line needs, the rest of the
+  # line and of its crossing line, where that needs one more water too, are
+  # boat segments; where that breaks a rule, the square is one.
+  - id: lastWater
+    tier: Hard
+    for: >-
+      T = longest, L in lines, v = num(L) where v >= 0 and room(L, v) = 1,
+      c in cells(L) where not known(c), K = crossing(L, c), j = num(K),
+      t = room(K, j), H = rest(L, c) + {x in rest(K, c) where j >= 0 and t = 1}
+      where broken(H, {c}, T)
+    conclude: "place(c, 1)"
+  # The mirror: supposing an open square the last segment its line needs.
+  - id: lastShip
+    tier: Hard
+    for: >-
+      T = longest, L in lines, v = num(L) where v >= 0
+      and v - ships(cells(L)) = 1, c in cells(L) where not known(c),
+      K = crossing(L, c), j = num(K), u = j - ships(cells(K)),
+      W = rest(L, c) + {x in rest(K, c) where j >= 0 and u = 1}
+      where broken({c}, W, T)
+    conclude: "place(c, 2)"
+  # Supposing a middle segment's boat runs along a line: where that breaks
+  # a rule, the squares beside it there are water.
+  - id: centerTrial
+    tier: Hard
+    for: >-
+      T = longest, c in cells where clue(seg, c) = 6,
+      L in {row(c), col(c)}, S = {x in adj4(c) where x in cells(L)}
+      where |S| = 2 and (exists x in S: not known(x))
+      and broken(S, {x in S where x != x}, T)
+    conclude: "forall x in S: place(x, 2)"

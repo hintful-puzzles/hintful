@@ -46,7 +46,7 @@ export const deadEnds: readonly DeadEndId[] = ["colorOdd", "parity", "colorTurne
 export function claims(sp: GridSpace, cl: Dealt, variations: readonly string[]): Readonly<Record<DeadEndId, (p: Position) => boolean>> {
   return {
     colorOdd: (p) => {
-      let _c46 = ((cl.n % 2) === 1);
+      let _c46: boolean = ((cl.n % 2) === 1);
       if (_c46) {
         let _q25 = false;
         Q26: {
@@ -106,7 +106,7 @@ export function claims(sp: GridSpace, cl: Dealt, variations: readonly string[]):
       return _c46;
     },
     parity: (p) => {
-      let _c53 = ((cl.n % 4) !== 2);
+      let _c53: boolean = ((cl.n % 4) !== 2);
       if (_c53) {
         let _g47 = true;
         const _s49: number[] = [];
@@ -124,7 +124,7 @@ export function claims(sp: GridSpace, cl: Dealt, variations: readonly string[]):
         }
         _c53 = _g47;
       }
-      let _c60 = _c53;
+      let _c60: boolean = _c53;
       if (_c60) {
         let _g54 = 0;
         G55: {
@@ -145,7 +145,7 @@ export function claims(sp: GridSpace, cl: Dealt, variations: readonly string[]):
     },
     colorTurned: (p) => {
       if (!variations.includes("orientable")) return false;
-      let _c82 = ((cl.n % 2) === 0);
+      let _c82: boolean = ((cl.n % 2) === 0);
       if (_c82) {
         let _q61 = false;
         Q62: {
@@ -206,7 +206,7 @@ export function claims(sp: GridSpace, cl: Dealt, variations: readonly string[]):
     },
     turnSum: (p) => {
       if (!variations.includes("orientable")) return false;
-      let _c87 = ((cl.n % 2) === 0);
+      let _c87: boolean = ((cl.n % 2) === 0);
       if (_c87) {
         let _g83 = 0;
         G84: {

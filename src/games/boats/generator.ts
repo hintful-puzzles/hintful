@@ -31,7 +31,7 @@ import { noSuchTier } from "../../engine/difficulty.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { borderCluesLast, fillRow, placeWater, solveBoats } from "./solver.ts";
+import { fillRow, placeWater, solveBoats } from "./solver.ts";
 import {
   type BoatsBoard,
   type BoatsParams,
@@ -45,7 +45,7 @@ import {
   SHIP_VAGUE,
   WATER,
 } from "./state.ts";
-import { adjustShips, collectRuns } from "./validate.ts";
+import { adjustShips, collectRuns, fleetShipCount } from "./validate.ts";
 
 /**
  * Upstream `boats_generate_fleet`: place every boat, largest first, into a
@@ -220,9 +220,21 @@ export function newBoatsDesc(p: BoatsParams, rng: RandomState): { desc: string }
         if (solveBoats(board, diff).kind === "stuck") board.borderClues[j] = saved;
       }
 
-      // Don't ship a puzzle that hides only one number — it is derivable from
-      // the fleet's total, so it isn't hidden at all.
-      borderCluesLast(board);
+      // A number hidden alone among the columns, or the rows, is the fleet's
+      // total less the others', so it is not hidden at all: show it, and
+      // refuse a board that then hides none.
+      for (const [from, to] of [
+        [0, w],
+        [w, w + h],
+      ]) {
+        const hidden: number[] = [];
+        let shown = 0;
+        for (let i = from; i < to; i++)
+          if (board.borderClues[i] === NO_CLUE) hidden.push(i);
+          else shown += board.borderClues[i];
+        if (hidden.length === 1)
+          board.borderClues[hidden[0]] = fleetShipCount(board) - shown;
+      }
       if (!board.borderClues.includes(NO_CLUE)) continue;
     }
 

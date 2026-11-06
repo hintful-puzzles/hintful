@@ -239,7 +239,7 @@ export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasy
           _s194[_i197] = 0;
         }
         if (_i197 < 0) break;
-        let _c218 = _h213;
+        let _c218: boolean = _h213;
         if (!_c218) {
           let _g214 = 0;
           G215: {
@@ -251,9 +251,9 @@ export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasy
           }
           _c218 = (_g214 === _h200);
         }
-        let _c225 = _c218;
+        let _c225: boolean = _c218;
         if (_c225) {
-          let _c224 = _h219;
+          let _c224: boolean = _h219;
           if (!_c224) {
             let _g220 = 1;
             G221: {
@@ -267,9 +267,9 @@ export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasy
           }
           _c225 = _c224;
         }
-        let _c239 = _c225;
+        let _c239: boolean = _c225;
         if (_c239) {
-          let _c238 = _h227;
+          let _c238: boolean = _h227;
           if (!_c238) {
             let _g228 = -1;
             G229: {
@@ -293,9 +293,9 @@ export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasy
           }
           _c239 = _c238;
         }
-        let _c253 = _c239;
+        let _c253: boolean = _c239;
         if (_c253) {
-          let _c252 = _h241;
+          let _c252: boolean = _h241;
           if (!_c252) {
             let _g242 = -1;
             G243: {
@@ -455,7 +455,7 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
                 _s279[_i282] = 0;
               }
               if (_i282 < 0) break;
-              let _c302 = _h286;
+              let _c302: boolean = _h286;
               if (!_c302) {
                 let _g298 = 0;
                 G299: {
@@ -467,9 +467,9 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
                 }
                 _c302 = (_g298 === _h285);
               }
-              let _c308 = _c302;
+              let _c308: boolean = _c302;
               if (_c308) {
-                let _c307 = _h290;
+                let _c307: boolean = _h290;
                 if (!_c307) {
                   let _g303 = 1;
                   G304: {
@@ -483,9 +483,9 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
                 }
                 _c308 = _c307;
               }
-              let _c322 = _c308;
+              let _c322: boolean = _c308;
               if (_c322) {
-                let _c321 = _h310;
+                let _c321: boolean = _h310;
                 if (!_c321) {
                   let _g311 = -1;
                   G312: {
@@ -509,9 +509,9 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
                 }
                 _c322 = _c321;
               }
-              let _c336 = _c322;
+              let _c336: boolean = _c322;
               if (_c336) {
-                let _c335 = _h324;
+                let _c335: boolean = _h324;
                 if (!_c335) {
                   let _g325 = -1;
                   G326: {
@@ -654,7 +654,7 @@ export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLine
                 _s353[_i356] = 0;
               }
               if (_i356 < 0) break;
-              let _c376 = _h360;
+              let _c376: boolean = _h360;
               if (!_c376) {
                 let _g372 = 0;
                 G373: {
@@ -666,9 +666,9 @@ export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLine
                 }
                 _c376 = (_g372 === _h359);
               }
-              let _c382 = _c376;
+              let _c382: boolean = _c376;
               if (_c382) {
-                let _c381 = _h364;
+                let _c381: boolean = _h364;
                 if (!_c381) {
                   let _g377 = 1;
                   G378: {
@@ -682,9 +682,9 @@ export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLine
                 }
                 _c382 = _c381;
               }
-              let _c396 = _c382;
+              let _c396: boolean = _c382;
               if (_c396) {
-                let _c395 = _h384;
+                let _c395: boolean = _h384;
                 if (!_c395) {
                   let _g385 = -1;
                   G386: {
@@ -708,9 +708,9 @@ export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLine
                 }
                 _c396 = _c395;
               }
-              let _c410 = _c396;
+              let _c410: boolean = _c396;
               if (_c410) {
-                let _c409 = _h398;
+                let _c409: boolean = _h398;
                 if (!_c409) {
                   let _g399 = -1;
                   G400: {

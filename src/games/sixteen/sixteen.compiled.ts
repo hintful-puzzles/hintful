@@ -38,7 +38,7 @@ export const deadEnds: readonly DeadEndId[] = ["parity"];
 export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]): Readonly<Record<DeadEndId, (p: Position) => boolean>> {
   return {
     parity: (p) => {
-      let _c21 = (((sp.w % 2) === 1) && ((sp.h % 2) === 1));
+      let _c21: boolean = (((sp.w % 2) === 1) && ((sp.h % 2) === 1));
       if (_c21) {
         let _g15 = 0;
         G16: {

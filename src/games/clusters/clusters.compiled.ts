@@ -82,7 +82,7 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
   for (let _k650 = 0; _k650 < cl.dot.at.length; _k650++) {
     const _at651 = cl.dot.at[_k650];
     const _v652 = cl.dot.v[_k650];
-    let _c657 = ((g[_at651] || -1) === _v652);
+    let _c657: boolean = ((g[_at651] || -1) === _v652);
     if (_c657) {
       let _g653 = 0;
       G654: {
@@ -131,7 +131,7 @@ export function broken(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BrokenBind
     const v_r = _g12;
     facts.length = 0;
     changed = false;
-    let _c23 = (v_r >= 1);
+    let _c23: boolean = (v_r >= 1);
     if (_c23) {
       let _g18 = 0;
       G19: {
@@ -145,7 +145,7 @@ export function broken(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BrokenBind
       }
       _c23 = ((_g18 === 1) || (v_r >= 2));
     }
-    let _c35 = _c23;
+    let _c35: boolean = _c23;
     if (_c35) {
       let _g24 = 0;
       G25: {
@@ -157,7 +157,7 @@ export function broken(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BrokenBind
           _g24++;
         }
       }
-      let _c34 = (_g24 === 0);
+      let _c34: boolean = (_g24 === 0);
       if (!_c34) {
         let _g29 = 0;
         G30: {
@@ -224,9 +224,9 @@ export function refute(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RefuteBind
           }
           L76: {
             const v_r = _g72;
-            let _c83 = (_h70 || (v_e !== v_d));
+            let _c83: boolean = (_h70 || (v_e !== v_d));
             if (_c83) {
-              let _c82 = (v_r < 1);
+              let _c82: boolean = (v_r < 1);
               if (!_c82) {
                 let _g77 = 0;
                 G78: {
@@ -242,9 +242,9 @@ export function refute(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RefuteBind
               }
               _c83 = _c82;
             }
-            let _c95 = _c83;
+            let _c95: boolean = _c83;
             if (!_c95) {
-              let _c89 = (_h71 && (v_e === v_d));
+              let _c89: boolean = (_h71 && (v_e === v_d));
               if (_c89) {
                 let _g84 = 0;
                 G85: {
@@ -258,7 +258,7 @@ export function refute(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RefuteBind
                 }
                 _c89 = (_g84 === 1);
               }
-              let _c94 = _c89;
+              let _c94: boolean = _c89;
               if (_c94) {
                 let _g90 = 0;
                 G91: {
@@ -316,7 +316,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
   const _a250 = sp.cells;
   for (let _i251 = 0; _i251 < _a250.length; _i251++) {
     const v_a = _a250[_i251];
-    let _c277 = b.known(v_a);
+    let _c277: boolean = b.known(v_a);
     if (_c277) {
       let _g252 = 0;
       G253: {
@@ -433,9 +433,9 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
       }
       L326: {
         const v_bo = _g316;
-        let _c416 = ((_h327 > 0) && (_h328 > 0));
+        let _c416: boolean = ((_h327 > 0) && (_h328 > 0));
         if (_c416) {
-          let _c363 = (b.value(v_b) === b.value(v_a));
+          let _c363: boolean = (b.value(v_b) === b.value(v_a));
           if (_c363) {
             let _g329 = 0;
             G330: {
@@ -506,9 +506,9 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
             }
             _c363 = ((((2 - _g329) - _g334) - v_bo) >= ((_g338 * ((2 - _g343) - _g348)) + ((1 - _g352) * _g357.length)));
           }
-          let _c415 = _c363;
+          let _c415: boolean = _c363;
           if (!_c415) {
-            let _c414 = (b.value(v_b) !== b.value(v_a));
+            let _c414: boolean = (b.value(v_b) !== b.value(v_a));
             if (_c414) {
               let _g364 = 0;
               G365: {
@@ -665,7 +665,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
   const _a526 = sp.cells;
   for (let _i527 = 0; _i527 < _a526.length; _i527++) {
     const v_a = _a526[_i527];
-    let _c537 = b.known(v_a);
+    let _c537: boolean = b.known(v_a);
     if (_c537) {
       let _g528 = 0;
       G529: {
@@ -831,7 +831,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
       }
       L625: {
         const v_most = ((v_alike * ((_g590 * ((2 - _g595) - _g600)) + ((1 - _g604) * _g609.length))) + ((1 - v_alike) * ((_h615 - ((2 - _g616) - _g621)) + v_bo)));
-        let _c636 = (((_h615 > 0) && (_h626 > 0)) && (v_most < _h615));
+        let _c636: boolean = (((_h615 > 0) && (_h626 > 0)) && (v_most < _h615));
         if (_c636) {
           let _g627 = 0;
           G628: {

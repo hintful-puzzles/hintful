@@ -193,7 +193,7 @@ export function overConnected(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Ove
           _g15++;
         }
       }
-      let _c34 = (_g15 <= v_n);
+      let _c34: boolean = (_g15 <= v_n);
       if (_c34) {
         let _q21 = true;
         Q22: {
@@ -293,7 +293,7 @@ export function twoClues(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TwoClues
         _g40++;
       }
     }
-    let _c85 = (_g40 <= 1);
+    let _c85: boolean = (_g40 <= 1);
     if (_c85) {
       let _q57 = true;
       Q58: {
@@ -404,7 +404,7 @@ export function tooLong(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooLongBi
           _g99.push(v_x);
         }
       }
-      let _c128 = (union(stretch(sp.lineCells[sp.rowOf[v_k]], v_k, _g93), stretch(sp.lineCells[sp.colOf[v_k]], v_k, _g99)).length <= v_v);
+      let _c128: boolean = (union(stretch(sp.lineCells[sp.rowOf[v_k]], v_k, _g93), stretch(sp.lineCells[sp.colOf[v_k]], v_k, _g99)).length <= v_v);
       if (_c128) {
         let _q105 = true;
         Q106: {
@@ -494,7 +494,7 @@ export function starved(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarvedBi
           _g136++;
         }
       }
-      let _c157 = (_g136 >= v_n);
+      let _c157: boolean = (_g136 >= v_n);
       if (_c157) {
         let _q143 = true;
         Q144: {
@@ -574,7 +574,7 @@ export function unreachable(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Unrea
       if (!((v_v >= 0))) break L164;
       facts.length = 0;
       changed = false;
-      let _c229 = !(b.known(v_k));
+      let _c229: boolean = !(b.known(v_k));
       if (!_c229) {
         _g165.length = 0;
         G166: {
@@ -582,7 +582,7 @@ export function unreachable(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Unrea
           for (let _i182 = 0; _i182 < _a181.length; _i182++) {
             const v_x = _a181[_i182];
             const _h184 = clueAt(cl.block, v_x);
-            let _c196 = ((_h184 < 0) && (!(b.known(v_x)) || (b.value(v_x) === 1)));
+            let _c196: boolean = ((_h184 < 0) && (!(b.known(v_x)) || (b.value(v_x) === 1)));
             if (_c196) {
               let _q185 = true;
               Q186: {
@@ -617,7 +617,7 @@ export function unreachable(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Unrea
           for (let _i214 = 0; _i214 < _a213.length; _i214++) {
             const v_x = _a213[_i214];
             const _h216 = clueAt(cl.block, v_x);
-            let _c228 = ((_h216 < 0) && (!(b.known(v_x)) || (b.value(v_x) === 2)));
+            let _c228: boolean = ((_h216 < 0) && (!(b.known(v_x)) || (b.value(v_x) === 2)));
             if (_c228) {
               let _q217 = true;
               Q218: {
@@ -648,7 +648,7 @@ export function unreachable(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Unrea
         }
         _c229 = ((stretch(sp.lineCells[sp.rowOf[v_k]], v_k, _g165).length + stretch(sp.lineCells[sp.colOf[v_k]], v_k, _g197).length) >= v_v);
       }
-      let _c302 = _c229;
+      let _c302: boolean = _c229;
       if (_c302) {
         let _q230 = true;
         Q231: {
@@ -661,7 +661,7 @@ export function unreachable(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Unrea
               const v_a = 31 - Math.clz32(_m235 & -_m235);
               const _wc236 = v_c;
               const _wd237 = v_a;
-              let _c300 = (v_k === _wc236 ? true : b.known(v_k));
+              let _c300: boolean = (v_k === _wc236 ? true : b.known(v_k));
               if (_c300) {
                 _g238.length = 0;
                 G239: {
@@ -669,7 +669,7 @@ export function unreachable(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Unrea
                   for (let _i255 = 0; _i255 < _a254.length; _i255++) {
                     const v_x = _a254[_i255];
                     const _h256 = clueAt(cl.block, v_x);
-                    let _c268 = ((_h256 < 0) && (!((v_x === _wc236 ? true : b.known(v_x))) || ((v_x === _wc236 ? _wd237 : b.value(v_x)) === 1)));
+                    let _c268: boolean = ((_h256 < 0) && (!((v_x === _wc236 ? true : b.known(v_x))) || ((v_x === _wc236 ? _wd237 : b.value(v_x)) === 1)));
                     if (_c268) {
                       let _q257 = true;
                       Q258: {
@@ -704,7 +704,7 @@ export function unreachable(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Unrea
                   for (let _i286 = 0; _i286 < _a285.length; _i286++) {
                     const v_x = _a285[_i286];
                     const _h287 = clueAt(cl.block, v_x);
-                    let _c299 = ((_h287 < 0) && (!((v_x === _wc236 ? true : b.known(v_x))) || ((v_x === _wc236 ? _wd237 : b.value(v_x)) === 2)));
+                    let _c299: boolean = ((_h287 < 0) && (!((v_x === _wc236 ? true : b.known(v_x))) || ((v_x === _wc236 ? _wd237 : b.value(v_x)) === 2)));
                     if (_c299) {
                       let _q288 = true;
                       Q289: {

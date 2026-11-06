@@ -47,7 +47,7 @@ export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]
           }
         }
       }
-      let _c112 = _q100;
+      let _c112: boolean = _q100;
       if (_c112) {
         let _q104 = true;
         Q105: {
@@ -155,9 +155,9 @@ export function views(sp: GridSpace, _cl: Dealt, _variations: readonly string[])
           _grew130 = false;
           for (let _c129 = 0; _c129 < sp.cells.length; _c129++) {
             if (_fix128[_c129] === 1) continue;
-            let _c137 = (_c129 === _a131);
+            let _c137: boolean = (_c129 === _a131);
             if (!_c137) {
-              let _c136 = (p.tile[_c129] === p.tile[_a131]);
+              let _c136: boolean = (p.tile[_c129] === p.tile[_a131]);
               if (_c136) {
                 let _q132 = false;
                 Q133: {
@@ -205,9 +205,9 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
         _grew37 = false;
         for (let _c36 = 0; _c36 < sp.cells.length; _c36++) {
           if (_fix35[_c36] === 1) continue;
-          let _c44 = (_c36 === _a38);
+          let _c44: boolean = (_c36 === _a38);
           if (!_c44) {
-            let _c43 = (p.tile[_c36] === p.tile[_a38]);
+            let _c43: boolean = (p.tile[_c36] === p.tile[_a38]);
             if (_c43) {
               let _q39 = false;
               Q40: {
@@ -236,7 +236,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
     const _a24 = sp.cells;
     for (let _i25 = 0; _i25 < _a24.length; _i25++) {
       const v_s = _a24[_i25];
-      let _c30 = (p.tile[v_s] !== 0);
+      let _c30: boolean = (p.tile[v_s] !== 0);
       if (_c30) {
         let _q26 = false;
         Q27: {
@@ -251,7 +251,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
         }
         _c30 = _q26;
       }
-      let _c46 = _c30;
+      let _c46: boolean = _c30;
       if (_c46) {
         let _q31 = true;
         Q32: {
@@ -283,9 +283,9 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
         _grew58 = false;
         for (let _c57 = 0; _c57 < sp.cells.length; _c57++) {
           if (_fix56[_c57] === 1) continue;
-          let _c65 = (_c57 === _a59);
+          let _c65: boolean = (_c57 === _a59);
           if (!_c65) {
-            let _c64 = (p.tile[_c57] === p.tile[_a59]);
+            let _c64: boolean = (p.tile[_c57] === p.tile[_a59]);
             if (_c64) {
               let _q60 = false;
               Q61: {
@@ -312,7 +312,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       return _fix56;
     };
     if (!(Number.isInteger(v_s) && v_s >= 0 && v_s < sp.cells.length)) return false;
-    let _c51 = (p.tile[v_s] !== 0);
+    let _c51: boolean = (p.tile[v_s] !== 0);
     if (_c51) {
       let _q47 = false;
       Q48: {
@@ -327,7 +327,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       }
       _c51 = _q47;
     }
-    let _c67 = _c51;
+    let _c67: boolean = _c51;
     if (_c67) {
       let _q52 = true;
       Q53: {
@@ -358,9 +358,9 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
         _grew74 = false;
         for (let _c73 = 0; _c73 < sp.cells.length; _c73++) {
           if (_fix72[_c73] === 1) continue;
-          let _c81 = (_c73 === _a75);
+          let _c81: boolean = (_c73 === _a75);
           if (!_c81) {
-            let _c80 = (p.tile[_c73] === p.tile[_a75]);
+            let _c80: boolean = (p.tile[_c73] === p.tile[_a75]);
             if (_c80) {
               let _q76 = false;
               Q77: {

@@ -58,16 +58,16 @@ export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]
         _grew135 = false;
         for (let _c134 = 0; _c134 < sp.cells.length; _c134++) {
           if (_fix133[_c134] === 1) continue;
-          let _c144 = (p.ground[_c134] !== 1);
+          let _c144: boolean = (p.ground[_c134] !== 1);
           if (_c144) {
-            let _c143 = (p.target[_c134] === 1);
+            let _c143: boolean = (p.target[_c134] === 1);
             if (!_c143) {
               let _q136 = false;
               Q137: {
                 const _a138 = sp.adj4[_c134];
                 for (let _i139 = 0; _i139 < _a138.length; _i139++) {
                   const v_n = _a138[_i139];
-                  let _c142 = (p.ground[v_n] !== 1);
+                  let _c142: boolean = (p.ground[v_n] !== 1);
                   if (_c142) {
                     const _t140 = ((2 * (_c134 % sp.w)) - (v_n % sp.w));
                     const _t141 = ((2 * ((_c134 / sp.w) | 0)) - ((v_n / sp.w) | 0));
@@ -101,7 +101,7 @@ export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]
           }
         }
       }
-      let _c128 = _q116;
+      let _c128: boolean = _q116;
       if (_c128) {
         let _g120 = 0;
         G121: {
@@ -123,7 +123,7 @@ export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]
         }
         _c128 = (_g120 <= _g124);
       }
-      let _c145 = _c128;
+      let _c145: boolean = _c128;
       if (_c145) {
         let _q129 = false;
         Q130: {
@@ -147,16 +147,16 @@ export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]
         _grew175 = false;
         for (let _c174 = 0; _c174 < sp.cells.length; _c174++) {
           if (_fix173[_c174] === 1) continue;
-          let _c184 = (p.ground[_c174] !== 1);
+          let _c184: boolean = (p.ground[_c174] !== 1);
           if (_c184) {
-            let _c183 = (p.target[_c174] === 1);
+            let _c183: boolean = (p.target[_c174] === 1);
             if (!_c183) {
               let _q176 = false;
               Q177: {
                 const _a178 = sp.adj4[_c174];
                 for (let _i179 = 0; _i179 < _a178.length; _i179++) {
                   const v_n = _a178[_i179];
-                  let _c182 = (p.ground[v_n] !== 1);
+                  let _c182: boolean = (p.ground[v_n] !== 1);
                   if (_c182) {
                     const _t180 = ((2 * (_c174 % sp.w)) - (v_n % sp.w));
                     const _t181 = ((2 * ((_c174 / sp.w) | 0)) - ((v_n / sp.w) | 0));
@@ -189,7 +189,7 @@ export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]
             const _a168 = sp.adj4[_c164];
             for (let _i169 = 0; _i169 < _a168.length; _i169++) {
               const v_n = _a168[_i169];
-              let _c172 = (p.ground[v_n] !== 1);
+              let _c172: boolean = (p.ground[v_n] !== 1);
               if (_c172) {
                 const _t170 = ((2 * (_c164 % sp.w)) - (v_n % sp.w));
                 const _t171 = ((2 * ((_c164 / sp.w) | 0)) - ((v_n / sp.w) | 0));
@@ -220,7 +220,7 @@ export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]
           }
         }
       }
-      let _c158 = _q146;
+      let _c158: boolean = _q146;
       if (_c158) {
         let _g150 = 0;
         G151: {
@@ -242,7 +242,7 @@ export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]
         }
         _c158 = (_g150 <= _g154);
       }
-      let _c185 = _c158;
+      let _c185: boolean = _c158;
       if (_c185) {
         let _q159 = false;
         Q160: {
@@ -273,16 +273,16 @@ export function claimWitnesses(sp: GridSpace, _cl: Dealt, _variations: readonly 
         _grew203 = false;
         for (let _c202 = 0; _c202 < sp.cells.length; _c202++) {
           if (_fix201[_c202] === 1) continue;
-          let _c212 = (p.ground[_c202] !== 1);
+          let _c212: boolean = (p.ground[_c202] !== 1);
           if (_c212) {
-            let _c211 = (p.target[_c202] === 1);
+            let _c211: boolean = (p.target[_c202] === 1);
             if (!_c211) {
               let _q204 = false;
               Q205: {
                 const _a206 = sp.adj4[_c202];
                 for (let _i207 = 0; _i207 < _a206.length; _i207++) {
                   const v_n = _a206[_i207];
-                  let _c210 = (p.ground[v_n] !== 1);
+                  let _c210: boolean = (p.ground[v_n] !== 1);
                   if (_c210) {
                     const _t208 = ((2 * (_c202 % sp.w)) - (v_n % sp.w));
                     const _t209 = ((2 * ((_c202 / sp.w) | 0)) - ((v_n / sp.w) | 0));
@@ -317,7 +317,7 @@ export function claimWitnesses(sp: GridSpace, _cl: Dealt, _variations: readonly 
           }
         }
       }
-      let _c198 = _q186;
+      let _c198: boolean = _q186;
       if (_c198) {
         let _g190 = 0;
         G191: {
@@ -354,16 +354,16 @@ export function claimWitnesses(sp: GridSpace, _cl: Dealt, _variations: readonly 
         _grew240 = false;
         for (let _c239 = 0; _c239 < sp.cells.length; _c239++) {
           if (_fix238[_c239] === 1) continue;
-          let _c249 = (p.ground[_c239] !== 1);
+          let _c249: boolean = (p.ground[_c239] !== 1);
           if (_c249) {
-            let _c248 = (p.target[_c239] === 1);
+            let _c248: boolean = (p.target[_c239] === 1);
             if (!_c248) {
               let _q241 = false;
               Q242: {
                 const _a243 = sp.adj4[_c239];
                 for (let _i244 = 0; _i244 < _a243.length; _i244++) {
                   const v_n = _a243[_i244];
-                  let _c247 = (p.ground[v_n] !== 1);
+                  let _c247: boolean = (p.ground[v_n] !== 1);
                   if (_c247) {
                     const _t245 = ((2 * (_c239 % sp.w)) - (v_n % sp.w));
                     const _t246 = ((2 * ((_c239 / sp.w) | 0)) - ((v_n / sp.w) | 0));
@@ -396,7 +396,7 @@ export function claimWitnesses(sp: GridSpace, _cl: Dealt, _variations: readonly 
             const _a233 = sp.adj4[_c229];
             for (let _i234 = 0; _i234 < _a233.length; _i234++) {
               const v_n = _a233[_i234];
-              let _c237 = (p.ground[v_n] !== 1);
+              let _c237: boolean = (p.ground[v_n] !== 1);
               if (_c237) {
                 const _t235 = ((2 * (_c229 % sp.w)) - (v_n % sp.w));
                 const _t236 = ((2 * ((_c229 / sp.w) | 0)) - ((v_n / sp.w) | 0));
@@ -428,7 +428,7 @@ export function claimWitnesses(sp: GridSpace, _cl: Dealt, _variations: readonly 
           }
         }
       }
-      let _c225 = _q213;
+      let _c225: boolean = _q213;
       if (_c225) {
         let _g217 = 0;
         G218: {
@@ -473,14 +473,14 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       const _a12 = sp.adj8[v_b];
       for (let _i13 = 0; _i13 < _a12.length; _i13++) {
         const v_t = _a12[_i13];
-        let _c18 = ((p.ground[v_t] === 0) && (p.barrel[v_t] === 0));
+        let _c18: boolean = ((p.ground[v_t] === 0) && (p.barrel[v_t] === 0));
         if (_c18) {
-          let _c15 = (((v_t % sp.w) === (v_b % sp.w)) || (((v_t / sp.w) | 0) === ((v_b / sp.w) | 0)));
+          let _c15: boolean = (((v_t % sp.w) === (v_b % sp.w)) || (((v_t / sp.w) | 0) === ((v_b / sp.w) | 0)));
           if (!_c15) {
             const _t14 = (((v_b / sp.w) | 0) * sp.w + (v_t % sp.w));
             _c15 = ((p.ground[_t14] === 0) && (p.barrel[_t14] === 0));
           }
-          let _c17 = _c15;
+          let _c17: boolean = _c15;
           if (!_c17) {
             const _t16 = (((v_t / sp.w) | 0) * sp.w + (v_b % sp.w));
             _c17 = ((p.ground[_t16] === 0) && (p.barrel[_t16] === 0));
@@ -499,14 +499,14 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
     if (!(Number.isInteger(v_b) && v_b >= 0 && v_b < sp.cells.length)) return false;
     if (!((p.man[v_b] === 1))) return false;
     if (!sp.adj8[v_b].includes(v_t)) return false;
-    let _c23 = ((p.ground[v_t] === 0) && (p.barrel[v_t] === 0));
+    let _c23: boolean = ((p.ground[v_t] === 0) && (p.barrel[v_t] === 0));
     if (_c23) {
-      let _c20 = (((v_t % sp.w) === (v_b % sp.w)) || (((v_t / sp.w) | 0) === ((v_b / sp.w) | 0)));
+      let _c20: boolean = (((v_t % sp.w) === (v_b % sp.w)) || (((v_t / sp.w) | 0) === ((v_b / sp.w) | 0)));
       if (!_c20) {
         const _t19 = (((v_b / sp.w) | 0) * sp.w + (v_t % sp.w));
         _c20 = ((p.ground[_t19] === 0) && (p.barrel[_t19] === 0));
       }
-      let _c22 = _c20;
+      let _c22: boolean = _c20;
       if (!_c22) {
         const _t21 = (((v_t / sp.w) | 0) * sp.w + (v_b % sp.w));
         _c22 = ((p.ground[_t21] === 0) && (p.barrel[_t21] === 0));
@@ -538,9 +538,9 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       _grew39 = false;
       for (let _c38 = 0; _c38 < sp.cells.length; _c38++) {
         if (_fix37[_c38] === 1) continue;
-        let _c45 = (p.man[_c38] === 1);
+        let _c45: boolean = (p.man[_c38] === 1);
         if (!_c45) {
-          let _c44 = ((p.ground[_c38] === 0) && (p.barrel[_c38] === 0));
+          let _c44: boolean = ((p.ground[_c38] === 0) && (p.barrel[_c38] === 0));
           if (_c44) {
             let _q40 = false;
             Q41: {
@@ -578,9 +578,9 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       _grew48 = false;
       for (let _c47 = 0; _c47 < sp.cells.length; _c47++) {
         if (_fix46[_c47] === 1) continue;
-        let _c54 = (p.man[_c47] === 1);
+        let _c54: boolean = (p.man[_c47] === 1);
         if (!_c54) {
-          let _c53 = ((p.ground[_c47] === 0) && (p.barrel[_c47] === 0));
+          let _c53: boolean = ((p.ground[_c47] === 0) && (p.barrel[_c47] === 0));
           if (_c53) {
             let _q49 = false;
             Q50: {
@@ -632,9 +632,9 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       _grew78 = false;
       for (let _c77 = 0; _c77 < sp.cells.length; _c77++) {
         if (_fix76[_c77] === 1) continue;
-        let _c84 = (p.man[_c77] === 1);
+        let _c84: boolean = (p.man[_c77] === 1);
         if (!_c84) {
-          let _c83 = ((p.ground[_c77] === 0) && (p.barrel[_c77] === 0));
+          let _c83: boolean = ((p.ground[_c77] === 0) && (p.barrel[_c77] === 0));
           if (_c83) {
             let _q79 = false;
             Q80: {
@@ -664,7 +664,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       const _a85 = sp.adj4[v_s];
       for (let _i86 = 0; _i86 < _a85.length; _i86++) {
         const v_o = _a85[_i86];
-        let _c89 = (p.barrel[v_o] === 1);
+        let _c89: boolean = (p.barrel[v_o] === 1);
         if (_c89) {
           const _t87 = ((2 * (v_o % sp.w)) - (v_s % sp.w));
           const _t88 = ((2 * ((v_o / sp.w) | 0)) - ((v_s / sp.w) | 0));
@@ -689,9 +689,9 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       _grew93 = false;
       for (let _c92 = 0; _c92 < sp.cells.length; _c92++) {
         if (_fix91[_c92] === 1) continue;
-        let _c99 = (p.man[_c92] === 1);
+        let _c99: boolean = (p.man[_c92] === 1);
         if (!_c99) {
-          let _c98 = ((p.ground[_c92] === 0) && (p.barrel[_c92] === 0));
+          let _c98: boolean = ((p.ground[_c92] === 0) && (p.barrel[_c92] === 0));
           if (_c98) {
             let _q94 = false;
             Q95: {
@@ -717,7 +717,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
     if (!(Number.isInteger(v_s) && v_s >= 0 && v_s < sp.cells.length)) return false;
     if (!((_fix91[v_s] === 1))) return false;
     if (!sp.adj4[v_s].includes(v_o)) return false;
-    let _c102 = (p.barrel[v_o] === 1);
+    let _c102: boolean = (p.barrel[v_o] === 1);
     if (_c102) {
       const _t100 = ((2 * (v_o % sp.w)) - (v_s % sp.w));
       const _t101 = ((2 * ((v_o / sp.w) | 0)) - ((v_s / sp.w) | 0));
@@ -778,7 +778,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
           }
         }
       }
-      let _c115 = _q107;
+      let _c115: boolean = _q107;
       if (!_c115) {
         let _q111 = true;
         Q112: {

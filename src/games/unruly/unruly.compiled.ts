@@ -59,7 +59,7 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, variations: readon
       const _t192 = (sp.lineCells[v_L].length - 3);
       for (let v_i = 0; v_i <= _t192; v_i++) {
         const _t193 = (v_i + 1);
-        let _c196 = ((g[(sp.lineCells[v_L][v_i] ?? -1)] || -1) === (g[(sp.lineCells[v_L][_t193] ?? -1)] || -1));
+        let _c196: boolean = ((g[(sp.lineCells[v_L][v_i] ?? -1)] || -1) === (g[(sp.lineCells[v_L][_t193] ?? -1)] || -1));
         if (_c196) {
           const _t194 = (v_i + 1);
           const _t195 = (v_i + 2);
@@ -216,7 +216,7 @@ export function lastGap(b: Marks, sp: GridSpace, fire: Fire<LastGapBinding> | nu
           _g41++;
         }
       }
-      let _c52 = (_g41 === v_n);
+      let _c52: boolean = (_g41 === v_n);
       if (_c52) {
         let _g45 = 0;
         G46: {
@@ -284,7 +284,7 @@ export function quota(b: Marks, sp: GridSpace, fire: Fire<QuotaBinding> | null):
           _g72++;
         }
       }
-      let _c82 = (_g72 === v_n);
+      let _c82: boolean = (_g72 === v_n);
       if (_c82) {
         let _g76 = 0;
         G77: {
@@ -356,7 +356,7 @@ export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding> | nu
           _g115++;
         }
       }
-      let _c127 = (_g115 === _h119);
+      let _c127: boolean = (_g115 === _h119);
       if (_c127) {
         let _g120 = 0;
         G121: {
@@ -387,7 +387,7 @@ export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding> | nu
               }
             }
           }
-          let _c140 = _q132;
+          let _c140: boolean = _q132;
           if (_c140) {
             let _g136 = 0;
             G137: {
@@ -465,7 +465,7 @@ export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding> | null
       const _a171 = sp.lines;
       for (let _i172 = 0; _i172 < _a171.length; _i172++) {
         const v_B = _a171[_i172];
-        let _c179 = ((v_B !== v_A) && (_h173 === (sp.rows.includes(v_B))));
+        let _c179: boolean = ((v_B !== v_A) && (_h173 === (sp.rows.includes(v_B))));
         if (_c179) {
           let _g174 = 0;
           G175: {
@@ -478,7 +478,7 @@ export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding> | null
           }
           _c179 = (_g174 === _h178);
         }
-        let _c183 = _c179;
+        let _c183: boolean = _c179;
         if (_c183) {
           let _q180 = true;
           Q181: {

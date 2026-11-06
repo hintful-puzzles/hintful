@@ -128,7 +128,9 @@ research tools all read through it; the app never does.
   Its value is `fields`, each a function of the clue (`black(k)`) and, where
   the field is one a cell, of the cell (`peg(k, s)`); `means` reads the clue
   as `k`. It compiles to plain arrays in `Dealt`, and the checker deals two,
-  each present or not.
+  each present or not, with any values, so what the game guarantees of them
+  is a rule: Boats' fleet names each length once, and without the rule its
+  `total` was unsound on two entries of one length.
 - **A clue per value** (`per: value`, ABCD's number for each letter of a
   line) sits at its element once for each value of the domain, read
   `clue(count, L, d)`, and `per` in its meaning names the value. `Dealt`
@@ -222,6 +224,10 @@ description author acts on:
   every other through members side by side, and `cuts(S)` is the members
   without which the rest are not, in `S`'s order. Bind `cuts` once by `=`:
   it is one search of the whole set (Singles' `split`).
+- **A group that runs straight is two stretches**: Boats' boat through `c`
+  is `stretch` along its row plus along its column, one of them `{c}`, so
+  its boats need no grouping of their own. A boat is counted by its first
+  square, the one with no segment above or to its left.
 - **The points where squares meet are a sort** where the space says
   `points: true` (Slant's): `points` is every one, border included, in
   reading order, `cells(k)` the squares round a point, and `points(c)` a
@@ -249,7 +255,9 @@ description author acts on:
   for the game, the compiled code and the checker alike.
 - **A library name is looked up before a description's definitions**, so a
   name added to the library is spelled apart from every one a description
-  defines (`on_grid`, since Solo defines `inside`).
+  defines (`on_grid`, since Solo defines `inside`). A definition spelled as
+  a library name fails as a sort error, not a clash: Boats' `ends(G, L)`
+  compiled as "expected a edge, got set of cell".
 - **`strike(c, d)` and `place(c, d)` belong to a technique's conclusion
   only.**
 - **A `with` is a Check, a look at one supposed value**
@@ -259,6 +267,13 @@ description author acts on:
   supposition (Sticks' `stick` and `reach`). A technique states what the
   supposed value would break, and concludes the other value. A `with` reads
   no beam, and no rule may hold one.
+- **A supposition of many squares is a definition's parameters**: Boats'
+  trials suppose the rest of a line one value, so `broken(H, W, T)` reads
+  every rule with the squares `H` segments (`x in H or value(x) = 1`) and
+  `W` water. Nothing propagates, so what follows at once from the
+  supposition is stated in it: the water at a supposed segment's corners,
+  and every boat the supposition closes, counted against what the fleet has
+  left.
 - **A size the grid is not measured in** (Salad's `nums`) is read from what
   the board deals.
 
@@ -366,7 +381,11 @@ author writing for speed uses these:
   Up's `square` binds `L = lights(c)`, and its discounts bind `D =
   lights(d)` after the cheap `not known(d)`, which on 12×16 boards cut a deal
   by a quarter to a third (2026-11-02, `describe-beams-and-tiles`'
-  `design.md`).
+  `design.md`). Boats' `onlyFit` and `onlyRuns` read `top`, the longest
+  boat still to close, at every run, and were the two costliest rungs of a
+  10×10 Hard deal; bound first as `M = top`, they fell below the trials
+  (2026-11-06, `describe-fleets`). A count of closed boats only grows, so
+  `top` bound early is never smaller than a fresh read.
 
 The measurements behind these are in the `report.md` of
 `openspec/changes/archive/*-compile-the-latin-ladder` (its section on
@@ -422,6 +441,10 @@ uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
   harder one stated first sets the walk's cap at its tier while an easier
   firing waits, and the hint teaches the harder reasoning (Slant's `pair`
   above `loop` did).
+- **Seeding runs the techniques run on placing**, so what they decide
+  about the player's own marks is never a step. Where the player should see
+  it (Boats' water at a segment's corners), the game seeds before it sets
+  `placing` and states a rung that decides the same (`near`).
 - **A recorded run takes one firing a pass**, the order a hint says them
   in. A caller that asks only which firings a solve made, as Mosaic's Easy
   deal asks which numbers it read, sets `wholePasses` and takes every firing
@@ -556,6 +579,11 @@ the rules. What a small board cannot cover:
   solver by `pb2bv`, which settled that one in seconds, and back to the
   default, unlimited, where it cannot encode the query. Native z3 on a
   query dumped with `solver.toString()` is the quick way to try a tactic.
+- **A count the rules imply only through a sum is a rule of its own.**
+  Boats' fleet covers `total` squares because each length's boats are
+  counted by their first squares; z3 ran past 25 minutes on `total` at
+  order 4 deriving it, and 210 s with the count stated as a rule. A rule
+  every answer meets already changes no answer.
 - **A size larger than the board's cells is one unknown**, from its least
   to the cell count (Mines' `mines`, `openSizes`), not a world a value.
 - **A set the marks decide keeps its order**: `stretch` holds each cell of

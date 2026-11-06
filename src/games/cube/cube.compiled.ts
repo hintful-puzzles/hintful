@@ -122,7 +122,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       const _a7 = facesOf(cl.nfaces);
       for (let _i8 = 0; _i8 < _a7.length; _i8++) {
         const v_f = _a7[_i8];
-        let _c13 = (v_f !== cl.down);
+        let _c13: boolean = (v_f !== cl.down);
         if (!_c13) {
           let _q9 = true;
           Q10: {

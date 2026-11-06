@@ -56,7 +56,7 @@ export function rules(sp: GridSpace, _cl: Dealt, _variations: readonly string[])
     const _a12 = sp.cells;
     for (let _i13 = 0; _i13 < _a12.length; _i13++) {
       const v_a = _a12[_i13];
-      let _c20 = (p.block[v_a] !== 0);
+      let _c20: boolean = (p.block[v_a] !== 0);
       if (_c20) {
         const _g14: number[] = [];
         G15: {
@@ -97,7 +97,7 @@ export function rules(sp: GridSpace, _cl: Dealt, _variations: readonly string[])
     const v_a = m.a;
     const v_n = m.n;
     if (!(Number.isInteger(v_a) && v_a >= 0 && v_a < sp.cells.length)) return false;
-    let _c36 = (p.block[v_a] !== 0);
+    let _c36: boolean = (p.block[v_a] !== 0);
     if (_c36) {
       const _g30: number[] = [];
       G31: {
@@ -162,9 +162,9 @@ export function rules(sp: GridSpace, _cl: Dealt, _variations: readonly string[])
         for (let _i51 = 0; _i51 < _a50.length; _i51++) {
           const v_g = _a50[_i51];
           if (!((p.goal[v_g] === 1))) continue;
-          let _c59 = (p.block[v_g] === 1);
+          let _c59: boolean = (p.block[v_g] === 1);
           if (_c59) {
-            let _c58 = (p.block[v_g] !== 0);
+            let _c58: boolean = (p.block[v_g] !== 0);
             if (_c58) {
               const _g52: number[] = [];
               G53: {

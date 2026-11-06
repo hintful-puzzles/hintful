@@ -166,7 +166,7 @@ export function lone(b: Marks, sp: GridSpace, fire: Fire<LoneBinding> | null): n
     if (!((!(b.known(v_c)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) < 2)))) continue;
     facts.length = 0;
     changed = false;
-    let _c19 = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) === 1);
+    let _c19: boolean = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) === 1);
     if (_c19) {
       const _t18 = least((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))));
       if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, _t18); changed = true; } else facts.push(PLACE, v_c, _t18); }
@@ -225,7 +225,7 @@ export function areaSingle(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<AreaS
         if (!((v_k < 2))) break L43;
         facts.length = 0;
         changed = false;
-        let _c49 = (v_k === 1);
+        let _c49: boolean = (v_k === 1);
         if (_c49) {
           let _g44 = -1;
           let _n46 = 0;
@@ -312,7 +312,7 @@ export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBind
             const _h85 = b.known(v_c);
             const _h91 = ((v_c / sp.w) | 0);
             const _h92 = (v_c % sp.w);
-            let _c94 = (((cl.area.of[v_c] !== v_r) && !(_h85)) && b.has(v_c, v_n));
+            let _c94: boolean = (((cl.area.of[v_c] !== v_r) && !(_h85)) && b.has(v_c, v_n));
             if (_c94) {
               let _q86 = true;
               Q87: {

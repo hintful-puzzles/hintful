@@ -95,7 +95,7 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
         _g918 += (g[v_c] || -1);
       }
     }
-    let _c928 = (_g918 === _v917);
+    let _c928: boolean = (_g918 === _v917);
     if (_c928) {
       let _g922 = true;
       const _s924: number[] = [];
@@ -161,7 +161,7 @@ export function boxSingle(b: Marks, sp: GridSpace, fire: Fire<BoxSingleBinding> 
         if (!((v_n < 2))) break L30;
         facts.length = 0;
         changed = false;
-        let _c36 = (v_n === 1);
+        let _c36: boolean = (v_n === 1);
         if (_c36) {
           let _g31 = -1;
           let _n33 = 0;
@@ -235,7 +235,7 @@ export function cageSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSi
       const v_t = (_h60 - _g61);
       facts.length = 0;
       changed = false;
-      let _c65 = (((v_t >= 1) && (v_t <= sp.w)) && b.has(v_c, v_t));
+      let _c65: boolean = (((v_t >= 1) && (v_t <= sp.w)) && b.has(v_c, v_t));
       if (_c65) {
         if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, v_t); changed = true; } else facts.push(PLACE, v_c, v_t); }
         _c65 = true;
@@ -287,7 +287,7 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
             }
           }
         }
-        let _c154 = _q146;
+        let _c154: boolean = _q146;
         if (_c154) {
           let _q150 = true;
           Q151: {
@@ -386,11 +386,11 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
       const v_t = ((_h190 - _g191) - v_s);
       facts.length = 0;
       changed = false;
-      let _c198 = (v_s > 0);
+      let _c198: boolean = (v_s > 0);
       if (_c198) {
-        let _c197 = (_h166 !== 1);
+        let _c197: boolean = (_h166 !== 1);
         if (!_c197) {
-          let _c196 = ((v_s <= sp.w) && b.has((v_L.length > 0 ? v_L[0] : -1), v_s));
+          let _c196: boolean = ((v_s <= sp.w) && b.has((v_L.length > 0 ? v_L[0] : -1), v_s));
           if (_c196) {
             const _t195 = (v_L.length > 0 ? v_L[0] : -1);
             if (!b.known(_t195)) { if (fire === null) { b.placeAt(_t195, v_s); changed = true; } else facts.push(PLACE, _t195, v_s); }
@@ -400,9 +400,9 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
         }
         _c198 = _c197;
       }
-      let _c208 = _c198;
+      let _c208: boolean = _c198;
       if (_c208) {
-        let _c204 = ((_h166 === 1) || (_h199 !== 1));
+        let _c204: boolean = ((_h166 === 1) || (_h199 !== 1));
         if (!_c204) {
           let _q200 = false;
           Q201: {
@@ -417,9 +417,9 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
           }
           _c204 = _q200;
         }
-        let _c207 = _c204;
+        let _c207: boolean = _c204;
         if (!_c207) {
-          let _c206 = (((v_t >= 1) && (v_t <= sp.w)) && b.has((v_R.length > 0 ? v_R[0] : -1), v_t));
+          let _c206: boolean = (((v_t >= 1) && (v_t <= sp.w)) && b.has((v_R.length > 0 ? v_R[0] : -1), v_t));
           if (_c206) {
             const _t205 = (v_R.length > 0 ? v_R[0] : -1);
             if (!b.known(_t205)) { if (fire === null) { b.placeAt(_t205, v_t); changed = true; } else facts.push(PLACE, _t205, v_t); }
@@ -510,7 +510,7 @@ export function cageMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageMi
                 _g244 += _g248;
               }
             }
-            let _c258 = ((v_d + _g244) < v_t);
+            let _c258: boolean = ((v_d + _g244) < v_t);
             if (!_c258) {
               let _g251 = 0;
               G252: {
@@ -596,7 +596,7 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
             }
           }
         }
-        let _c363 = _q353;
+        let _c363: boolean = _q353;
         if (_c363) {
           let _q358 = true;
           Q359: {
@@ -718,9 +718,9 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
           const _h421 = v_K.length;
           L420: {
             const v_v = ((v_s * (1 - v_i)) + (v_t * v_i));
-            let _c427 = ((_h421 > 1) && (v_v !== 0));
+            let _c427: boolean = ((_h421 > 1) && (v_v !== 0));
             if (_c427) {
-              let _c426 = (v_i === 0);
+              let _c426: boolean = (v_i === 0);
               if (!_c426) {
                 let _q422 = true;
                 Q423: {
@@ -763,7 +763,7 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
                       _g433 += _g437;
                     }
                   }
-                  let _c447 = ((v_d + _g433) < v_v);
+                  let _c447: boolean = ((v_d + _g433) < v_v);
                   if (!_c447) {
                     let _g440 = 0;
                     G441: {
@@ -855,9 +855,9 @@ export function cageSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSums
       if (!((v_t !== 0))) break L477;
       facts.length = 0;
       changed = false;
-      let _c521 = (_h478 > 0);
+      let _c521: boolean = (_h478 > 0);
       if (_c521) {
-        let _c520 = ((_h478 < 2) || (_h478 > 4));
+        let _c520: boolean = ((_h478 < 2) || (_h478 > 4));
         if (!_c520) {
           let _q479 = true;
           Q480: {
@@ -869,7 +869,7 @@ export function cageSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSums
                 let v_T = 0;
                 for (let _j500 = 0; _j500 < _e498.length; _j500++) if ((_k499 >> (_e498.length - 1 - _j500)) & 1) v_T |= 1 << _e498[_j500];
                 const _h502 = popcount(v_T);
-                let _c506 = (_h502 === _h478);
+                let _c506: boolean = (_h502 === _h478);
                 if (_c506) {
                   let _g503 = 0;
                   G504: {
@@ -880,7 +880,7 @@ export function cageSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSums
                   }
                   _c506 = (_g503 === v_t);
                 }
-                let _c511 = _c506;
+                let _c511: boolean = _c506;
                 if (_c511) {
                   let _q507 = true;
                   Q508: {
@@ -904,7 +904,7 @@ export function cageSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSums
             }
             const v_P = _g481;
             const _h513 = popcount(v_P);
-            let _c519 = (_h513 > 0);
+            let _c519: boolean = (_h513 > 0);
             if (_c519) {
               let _q514 = true;
               Q515: {
@@ -990,7 +990,7 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
             }
           }
         }
-        let _c626 = _q616;
+        let _c626: boolean = _q616;
         if (_c626) {
           let _q621 = true;
           Q622: {
@@ -1112,9 +1112,9 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
           const _h684 = v_K.length;
           L683: {
             const v_v = ((v_s * (1 - v_i)) + (v_t * v_i));
-            let _c690 = (((_h684 > 1) && (_h684 <= 4)) && (v_v !== 0));
+            let _c690: boolean = (((_h684 > 1) && (_h684 <= 4)) && (v_v !== 0));
             if (_c690) {
-              let _c689 = (v_i === 0);
+              let _c689: boolean = (v_i === 0);
               if (!_c689) {
                 let _q685 = true;
                 Q686: {
@@ -1144,7 +1144,7 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
                   let v_T = 0;
                   for (let _j712 = 0; _j712 < _e710.length; _j712++) if ((_k711 >> (_e710.length - 1 - _j712)) & 1) v_T |= 1 << _e710[_j712];
                   const _h714 = popcount(v_T);
-                  let _c718 = (_h714 === _h684);
+                  let _c718: boolean = (_h714 === _h684);
                   if (_c718) {
                     let _g715 = 0;
                     G716: {
@@ -1155,7 +1155,7 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
                     }
                     _c718 = (_g715 === v_v);
                   }
-                  let _c723 = _c718;
+                  let _c723: boolean = _c718;
                   if (_c723) {
                     let _q719 = true;
                     Q720: {
@@ -1179,7 +1179,7 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
               }
               const v_P = _g693;
               const _h725 = popcount(v_P);
-              let _c731 = (_h725 > 0);
+              let _c731: boolean = (_h725 > 0);
               if (_c731) {
                 let _q726 = true;
                 Q727: {
@@ -1263,7 +1263,7 @@ export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> 
             }
           }
         }
-        let _c778 = !(_q768);
+        let _c778: boolean = !(_q768);
         if (_c778) {
           let _q773 = false;
           Q774: {
@@ -1292,7 +1292,7 @@ export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> 
             }
           }
         }
-        let _c787 = _q779;
+        let _c787: boolean = _q779;
         if (_c787) {
           let _q783 = false;
           Q784: {
@@ -1311,7 +1311,7 @@ export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> 
         const v_first = _c787;
         facts.length = 0;
         changed = false;
-        let _c792 = !(v_first);
+        let _c792: boolean = !(v_first);
         if (!_c792) {
           let _q788 = true;
           Q789: {
@@ -1328,9 +1328,9 @@ export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> 
           }
           _c792 = _q788;
         }
-        let _c803 = _c792;
+        let _c803: boolean = _c792;
         if (_c803) {
-          let _c802 = v_first;
+          let _c802: boolean = v_first;
           if (!_c802) {
             let _q793 = true;
             Q794: {
@@ -1344,7 +1344,7 @@ export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> 
                 }
               }
             }
-            let _c801 = !(_q793);
+            let _c801: boolean = !(_q793);
             if (!_c801) {
               let _q797 = true;
               Q798: {
@@ -1465,7 +1465,7 @@ export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | 
         if (!((_h891 >= (_h874 - _h873)))) break L890;
         facts.length = 0;
         changed = false;
-        let _c900 = (_h873 > 0);
+        let _c900: boolean = (_h873 > 0);
         if (!_c900) {
           let _q892 = true;
           Q893: {
@@ -1491,7 +1491,7 @@ export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | 
           }
           _c900 = _q892;
         }
-        let _c908 = (_c900 && (_h891 === (_h874 - _h873)));
+        let _c908: boolean = (_c900 && (_h891 === (_h874 - _h873)));
         if (_c908) {
           let _q901 = true;
           Q902: {

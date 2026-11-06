@@ -26,7 +26,7 @@ export function placed(b: Marks, sp: GridSpace, v_c: number, fire: Fire<PlacedBi
     const v_u = _a7[_i8];
     facts.length = 0;
     changed = false;
-    let _c15 = _h9;
+    let _c15: boolean = _h9;
     if (!_c15) {
       let _g10 = 0;
       G11: {
@@ -40,7 +40,7 @@ export function placed(b: Marks, sp: GridSpace, v_c: number, fire: Fire<PlacedBi
       }
       _c15 = (_g10 >= v_k);
     }
-    let _c21 = !(_c15);
+    let _c21: boolean = !(_c15);
     if (!_c21) {
       let _q16 = true;
       Q17: {
@@ -110,7 +110,7 @@ export function hiddenSingle(b: Marks, sp: GridSpace, fire: Fire<HiddenSingleBin
         if (!((v_n <= (v_d === b.repeat ? b.times : 1)))) break L51;
         facts.length = 0;
         changed = false;
-        let _c56 = (v_n === (v_d === b.repeat ? b.times : 1));
+        let _c56: boolean = (v_n === (v_d === b.repeat ? b.times : 1));
         if (_c56) {
           let _q52 = true;
           Q53: {
@@ -162,7 +162,7 @@ export function single(b: Marks, sp: GridSpace, fire: Fire<SingleBinding> | null
       if (!((!(b.known(v_c)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) < 2)))) continue;
       facts.length = 0;
       changed = false;
-      let _c66 = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) === 1);
+      let _c66: boolean = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) === 1);
       if (_c66) {
         const _t65 = least((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))));
         if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, _t65); changed = true; } else facts.push(PLACE, v_c, _t65); }
@@ -263,7 +263,7 @@ export function set(b: Marks, sp: GridSpace, fire: Fire<SetBinding> | null): num
         if (!((_h131 >= ((_h118 - _h122) + (v_extra * _h132))))) break L130;
         facts.length = 0;
         changed = false;
-        let _c137 = (_h122 > 0);
+        let _c137: boolean = (_h122 > 0);
         if (!_c137) {
           let _q133 = true;
           Q134: {
@@ -278,7 +278,7 @@ export function set(b: Marks, sp: GridSpace, fire: Fire<SetBinding> | null): num
           }
           _c137 = _q133;
         }
-        let _c144 = (_c137 && (_h131 === ((_h118 - _h122) + (v_extra * _h132))));
+        let _c144: boolean = (_c137 && (_h131 === ((_h118 - _h122) + (v_extra * _h132))));
         if (_c144) {
           let _q138 = true;
           Q139: {
@@ -352,9 +352,9 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
             }
           }
         }
-        let _c255 = !(_q243);
+        let _c255: boolean = !(_q243);
         if (!_c255) {
-          let _c254 = _h248;
+          let _c254: boolean = _h248;
           if (_c254) {
             let _g249 = 0;
             G250: {
@@ -383,9 +383,9 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
       for (let _i269 = 0; _i269 < _a268.length; _i269++) {
         const v_c = _a268[_i269];
         const _h270 = b.value(v_c);
-        let _c278 = (_h270 === v_d);
+        let _c278: boolean = (_h270 === v_d);
         if (_c278) {
-          let _c277 = _h271;
+          let _c277: boolean = _h271;
           if (!_c277) {
             let _g272 = 0;
             G273: {
@@ -438,9 +438,9 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
       L301: {
         const v_X = _g286;
         const _h302 = v_X.length;
-        let _c321 = (_h271 && (_h302 >= (_h284 - _h283)));
+        let _c321: boolean = (_h271 && (_h302 >= (_h284 - _h283)));
         if (!_c321) {
-          let _c320 = _h248;
+          let _c320: boolean = _h248;
           if (_c320) {
             let _g303 = 0;
             G304: {
@@ -484,7 +484,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
         if (!(_c321)) break L301;
         facts.length = 0;
         changed = false;
-        let _c330 = (_h283 > 0);
+        let _c330: boolean = (_h283 > 0);
         if (!_c330) {
           let _q322 = true;
           Q323: {
@@ -510,11 +510,11 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
           }
           _c330 = _q322;
         }
-        let _c350 = _c330;
+        let _c350: boolean = _c330;
         if (_c350) {
-          let _c349 = (_h271 && (_h302 === (_h284 - _h283)));
+          let _c349: boolean = (_h271 && (_h302 === (_h284 - _h283)));
           if (!_c349) {
-            let _c348 = _h248;
+            let _c348: boolean = _h248;
             if (_c348) {
               let _g331 = 0;
               G332: {
@@ -557,7 +557,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
           }
           _c350 = _c349;
         }
-        let _c359 = _c350;
+        let _c359: boolean = _c350;
         if (_c359) {
           let _q351 = true;
           Q352: {
@@ -622,14 +622,14 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): n
       L410: {
         const v_R = ((cands[v_m] >= 0 ? cands[v_m] : (cands[v_m] = b.cand(v_m))) & ~((1 << v_x)));
         const _h411 = popcount(v_R);
-        let _c422 = (_h411 >= 1);
+        let _c422: boolean = (_h411 >= 1);
         if (_c422) {
           let _q412 = true;
           Q413: {
             for (let _m414 = v_R; _m414 !== 0; _m414 &= _m414 - 1) {
               const v_a = 31 - Math.clz32(_m414 & -_m414);
               const _h420 = ((1 << v_a) | (1 << v_x));
-              let _c421 = ((v_a === b.repeat ? b.times : 1) === 1);
+              let _c421: boolean = ((v_a === b.repeat ? b.times : 1) === 1);
               if (_c421) {
                 let _q415 = false;
                 Q416: {
@@ -658,7 +658,7 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): n
         for (let _i424 = 0; _i424 < _a423.length; _i424++) {
           const v_k0 = _a423[_i424];
           const _h425 = b.known(v_k0);
-          let _c429 = !(_h425);
+          let _c429: boolean = !(_h425);
           if (_c429) {
             let _g426 = -1;
             G427: {
@@ -674,7 +674,7 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): n
           for (let _i431 = 0; _i431 < _a430.length; _i431++) {
             const v_t = _a430[_i431];
             const _h432 = b.known(v_t);
-            let _c442 = ((((v_t !== v_m) && !(_h432)) && b.has(v_t, v_x)) && (!b.has(v_m, v_x) || (sp.peers[v_m].includes(v_t))));
+            let _c442: boolean = ((((v_t !== v_m) && !(_h432)) && b.has(v_t, v_x)) && (!b.has(v_m, v_x) || (sp.peers[v_m].includes(v_t))));
             if (_c442) {
               let _q433 = true;
               Q434: {

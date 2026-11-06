@@ -72,7 +72,7 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
   for (let _k883 = 0; _k883 < cl.count.at.length; _k883++) {
     const _at884 = cl.count.at[_k883];
     const _v885 = cl.count.v[_k883];
-    let _c890 = ((g[_at884] || -1) === 2);
+    let _c890: boolean = ((g[_at884] || -1) === 2);
     if (_c890) {
       let _g886 = 0;
       G887: {
@@ -132,9 +132,9 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
       if (!(((_h24 > 0) && ((v_n <= 0) || (v_n >= _h24))))) break L23;
       facts.length = 0;
       changed = false;
-      let _c30 = ((v_n >= 0) && (v_n <= _h24));
+      let _c30: boolean = ((v_n >= 0) && (v_n <= _h24));
       if (_c30) {
-        let _c29 = !((v_n === 0));
+        let _c29: boolean = !((v_n === 0));
         if (!_c29) {
           let _q25 = true;
           Q26: {
@@ -152,9 +152,9 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
         }
         _c30 = _c29;
       }
-      let _c36 = _c30;
+      let _c36: boolean = _c30;
       if (_c36) {
-        let _c35 = (v_n === 0);
+        let _c35: boolean = (v_n === 0);
         if (!_c35) {
           let _q31 = true;
           Q32: {
@@ -224,9 +224,9 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
       for (let _i111 = 0; _i111 < _a110.length; _i111++) {
         const v_b = _a110[_i111];
         const _h112 = clueAt(cl.count, v_b);
-        let _c138 = ((v_b !== v_a) && (_h112 !== -1));
+        let _c138: boolean = ((v_b !== v_a) && (_h112 !== -1));
         if (_c138) {
-          let _c137 = ((Math.abs((_h113 - (v_b % sp.w))) <= 2) && (Math.abs((_h114 - ((v_b / sp.w) | 0))) <= 2));
+          let _c137: boolean = ((Math.abs((_h113 - (v_b % sp.w))) <= 2) && (Math.abs((_h114 - ((v_b / sp.w) | 0))) <= 2));
           if (_c137) {
             let _q121 = false;
             Q122: {
@@ -325,7 +325,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
           if (!(((v_by >= _h173) && ((_h173 + _h174) > 0)))) break L172;
           facts.length = 0;
           changed = false;
-          let _c179 = (v_by === _h173);
+          let _c179: boolean = (v_by === _h173);
           if (_c179) {
             let _q175 = true;
             Q176: {
@@ -341,7 +341,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
             }
             _c179 = _q175;
           }
-          let _c184 = _c179;
+          let _c184: boolean = _c179;
           if (_c184) {
             let _q180 = true;
             Q181: {
@@ -414,7 +414,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
       for (let _i273 = 0; _i273 < _a272.length; _i273++) {
         const v_i = _a272[_i273];
         const _h274 = clueAt(cl.count, v_i);
-        let _c281 = ((v_i !== v_o) && (_h274 !== -1));
+        let _c281: boolean = ((v_i !== v_o) && (_h274 !== -1));
         if (_c281) {
           _g275.length = 0;
           G276: {
@@ -427,7 +427,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
           }
           _c281 = (_g275.length > 0);
         }
-        let _c294 = _c281;
+        let _c294: boolean = _c281;
         if (_c294) {
           _g282.length = 0;
           G283: {
@@ -449,7 +449,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
           }
           _c294 = subsetOf(_g282, _g288);
         }
-        let _c307 = _c294;
+        let _c307: boolean = _c294;
         if (_c307) {
           _g295.length = 0;
           G296: {
@@ -555,9 +555,9 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
               if (!(((v_heavy || ((v_nb - v_r) >= _h349)) && ((_h347 + _h349) > 0)))) break L348;
               facts.length = 0;
               changed = false;
-              let _c360 = !(v_heavy);
+              let _c360: boolean = !(v_heavy);
               if (!_c360) {
-                let _c354 = ((v_r - v_nb) === _h347);
+                let _c354: boolean = ((v_r - v_nb) === _h347);
                 if (_c354) {
                   let _q350 = true;
                   Q351: {
@@ -573,7 +573,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
                   }
                   _c354 = _q350;
                 }
-                let _c359 = _c354;
+                let _c359: boolean = _c354;
                 if (_c359) {
                   let _q355 = true;
                   Q356: {
@@ -591,11 +591,11 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
                 }
                 _c360 = _c359;
               }
-              let _c372 = _c360;
+              let _c372: boolean = _c360;
               if (_c372) {
-                let _c371 = v_heavy;
+                let _c371: boolean = v_heavy;
                 if (!_c371) {
-                  let _c365 = ((v_nb - v_r) === _h349);
+                  let _c365: boolean = ((v_nb - v_r) === _h349);
                   if (_c365) {
                     let _q361 = true;
                     Q362: {
@@ -611,7 +611,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
                     }
                     _c365 = _q361;
                   }
-                  let _c370 = _c365;
+                  let _c370: boolean = _c365;
                   if (_c370) {
                     let _q366 = true;
                     Q367: {
@@ -697,7 +697,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
       for (let _i513 = 0; _i513 < _a512.length; _i513++) {
         const v_i = _a512[_i513];
         const _h514 = clueAt(cl.count, v_i);
-        let _c521 = ((v_i !== v_o) && (_h514 !== -1));
+        let _c521: boolean = ((v_i !== v_o) && (_h514 !== -1));
         if (_c521) {
           _g515.length = 0;
           G516: {
@@ -710,7 +710,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
           }
           _c521 = (_g515.length > 0);
         }
-        let _c534 = _c521;
+        let _c534: boolean = _c521;
         if (_c534) {
           _g522.length = 0;
           G523: {
@@ -732,7 +732,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
           }
           _c534 = subsetOf(_g522, _g528);
         }
-        let _c547 = _c534;
+        let _c547: boolean = _c534;
         if (_c547) {
           _g535.length = 0;
           G536: {
@@ -797,7 +797,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
         for (let _i570 = 0; _i570 < _a569.length; _i570++) {
           const v_p = _a569[_i570];
           const _h571 = clueAt(cl.count, v_p);
-          let _c578 = ((v_p !== v_o) && (_h571 !== -1));
+          let _c578: boolean = ((v_p !== v_o) && (_h571 !== -1));
           if (_c578) {
             _g572.length = 0;
             G573: {
@@ -815,7 +815,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
           for (let _i580 = 0; _i580 < _a579.length; _i580++) {
             const v_q = _a579[_i580];
             const _h581 = clueAt(cl.count, v_q);
-            let _c588 = ((v_q !== v_p) && (_h581 !== -1));
+            let _c588: boolean = ((v_q !== v_p) && (_h581 !== -1));
             if (_c588) {
               _g582.length = 0;
               G583: {
@@ -828,7 +828,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
               }
               _c588 = (_g582.length > 0);
             }
-            let _c601 = _c588;
+            let _c601: boolean = _c588;
             if (_c601) {
               _g589.length = 0;
               G590: {
@@ -850,7 +850,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
               }
               _c601 = subsetOf(_g589, _g595);
             }
-            let _c614 = _c601;
+            let _c614: boolean = _c601;
             if (_c614) {
               _g602.length = 0;
               G603: {
@@ -930,7 +930,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
                 if (!(((v_by >= _h641) && ((_h641 + _h642) > 0)))) break L640;
                 facts.length = 0;
                 changed = false;
-                let _c647 = (v_by === _h641);
+                let _c647: boolean = (v_by === _h641);
                 if (_c647) {
                   let _q643 = true;
                   Q644: {
@@ -946,7 +946,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
                   }
                   _c647 = _q643;
                 }
-                let _c652 = _c647;
+                let _c652: boolean = _c647;
                 if (_c652) {
                   let _q648 = true;
                   Q649: {
@@ -1050,7 +1050,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
         const v_T: number[] = [];
         for (let _j764 = 0; _j764 < _e762.length; _j764++) if ((_k763 >> (_e762.length - 1 - _j764)) & 1) v_T.push(_e762[_j764]);
         const _h766 = v_T.length;
-        let _c800 = (_h766 === v_size);
+        let _c800: boolean = (_h766 === v_size);
         if (_c800) {
           let _q767 = true;
           Q768: {
@@ -1065,7 +1065,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
                 const v_y = _a771[_i772];
                 if (!((v_x !== v_y))) continue;
                 const _t774 = cl.count.at[v_y];
-                let _c799 = ((Math.abs((_h775 - (_t774 % sp.w))) <= 2) && (Math.abs((_h776 - ((_t774 / sp.w) | 0))) <= 2));
+                let _c799: boolean = ((Math.abs((_h775 - (_t774 % sp.w))) <= 2) && (Math.abs((_h776 - ((_t774 / sp.w) | 0))) <= 2));
                 if (_c799) {
                   let _q783 = false;
                   Q784: {
@@ -1165,7 +1165,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
               _g837++;
             }
           }
-          let _c851 = !((v_n === (cl.mines - _g837)));
+          let _c851: boolean = !((v_n === (cl.mines - _g837)));
           if (!_c851) {
             let _q841 = true;
             Q842: {
@@ -1190,7 +1190,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
             }
             _c851 = _q841;
           }
-          let _c878 = _c851;
+          let _c878: boolean = _c851;
           if (_c878) {
             let _g852 = 0;
             G853: {
@@ -1201,7 +1201,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
                 _g852++;
               }
             }
-            let _c866 = (v_n !== (cl.mines - _g852));
+            let _c866: boolean = (v_n !== (cl.mines - _g852));
             if (_c866) {
               let _g856 = 0;
               G857: {
@@ -1223,7 +1223,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
               }
               _c866 = (((cl.mines - _g856) - v_n) === _g860.length);
             }
-            let _c877 = !(_c866);
+            let _c877: boolean = !(_c866);
             if (!_c877) {
               let _q867 = true;
               Q868: {

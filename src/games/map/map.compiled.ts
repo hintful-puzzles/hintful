@@ -127,7 +127,7 @@ export function lone(b: Marks, sp: GridSpace, fire: Fire<LoneBinding> | null): n
     if (!((!(b.known(v_c)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) < 2)))) continue;
     facts.length = 0;
     changed = false;
-    let _c15 = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) === 1);
+    let _c15: boolean = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) === 1);
     if (_c15) {
       const _t14 = least((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))));
       if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, _t14); changed = true; } else facts.push(PLACE, v_c, _t14); }
@@ -229,7 +229,7 @@ export function weigh(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighBindin
       L76: {
         const v_R = ((cands[v_m] >= 0 ? cands[v_m] : (cands[v_m] = b.cand(v_m))) & ~((1 << v_x)));
         const _h77 = popcount(v_R);
-        let _c87 = (_h77 >= 1);
+        let _c87: boolean = (_h77 >= 1);
         if (_c87) {
           let _q78 = true;
           Q79: {
@@ -261,7 +261,7 @@ export function weigh(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighBindin
         for (let _i89 = 0; _i89 < _a88.length; _i89++) {
           const v_t = _a88[_i89];
           const _h90 = b.known(v_t);
-          let _c100 = ((((v_t !== v_m) && !(_h90)) && b.has(v_t, v_x)) && (!b.has(v_m, v_x) || (cl.borders[v_m].includes(v_t))));
+          let _c100: boolean = ((((v_t !== v_m) && !(_h90)) && b.has(v_t, v_x)) && (!b.has(v_m, v_x) || (cl.borders[v_m].includes(v_t))));
           if (_c100) {
             let _q91 = true;
             Q92: {

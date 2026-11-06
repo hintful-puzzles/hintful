@@ -163,7 +163,7 @@ export function around(b: Marks, sp: GridSpace, fire: Fire<AroundBinding> | null
         }
       }
     }
-    let _c13 = _q5;
+    let _c13: boolean = _q5;
     if (_c13) {
       let _q9 = true;
       Q10: {
@@ -219,7 +219,7 @@ export function fullLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FullLine
       if (!((v_n <= 0))) break L29;
       facts.length = 0;
       changed = false;
-      let _c41 = (v_n === 0);
+      let _c41: boolean = (v_n === 0);
       if (_c41) {
         let _q30 = true;
         Q31: {
@@ -285,7 +285,7 @@ export function fullRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<FullR
       if (!((v_n <= 0))) break L57;
       facts.length = 0;
       changed = false;
-      let _c69 = (v_n === 0);
+      let _c69: boolean = (v_n === 0);
       if (_c69) {
         let _q58 = true;
         Q59: {
@@ -364,7 +364,7 @@ export function exactLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExactLi
       if (!(((v_n > 0) && (v_n >= _h100)))) break L99;
       facts.length = 0;
       changed = false;
-      let _c105 = (v_n === _h100);
+      let _c105: boolean = (v_n === _h100);
       if (_c105) {
         let _q101 = true;
         Q102: {
@@ -433,7 +433,7 @@ export function exactRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<Exac
       if (!(((v_n > 0) && (v_n >= _h136)))) break L135;
       facts.length = 0;
       changed = false;
-      let _c141 = (v_n === _h136);
+      let _c141: boolean = (v_n === _h136);
       if (_c141) {
         let _q137 = true;
         Q138: {
@@ -527,7 +527,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
                 _g337++;
               }
             }
-            let _c359 = ((cl.stars - _g337) > 0);
+            let _c359: boolean = ((cl.stars - _g337) > 0);
             if (_c359) {
               let _q348 = true;
               Q349: {
@@ -591,7 +591,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
                 _g400++;
               }
             }
-            let _c422 = ((cl.stars - _g400) > 0);
+            let _c422: boolean = ((cl.stars - _g400) > 0);
             if (_c422) {
               let _q411 = false;
               Q412: {
@@ -640,7 +640,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
           }
         }
         const v_mr = _g423;
-        let _c442 = (v_mi === v_n);
+        let _c442: boolean = (v_mi === v_n);
         if (_c442) {
           let _q432 = false;
           Q433: {
@@ -669,9 +669,9 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
           if (!(((v_mi >= v_n) || (v_mr <= v_n)))) break L443;
           facts.length = 0;
           changed = false;
-          let _c455 = ((v_mi <= v_n) && (v_mr >= v_n));
+          let _c455: boolean = ((v_mi <= v_n) && (v_mr >= v_n));
           if (_c455) {
-            let _c454 = !(v_lines);
+            let _c454: boolean = !(v_lines);
             if (!_c454) {
               let _q444 = true;
               Q445: {
@@ -699,9 +699,9 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
             }
             _c455 = _c454;
           }
-          let _c470 = _c455;
+          let _c470: boolean = _c455;
           if (_c470) {
-            let _c469 = (v_lines || (v_mr > v_n));
+            let _c469: boolean = (v_lines || (v_mr > v_n));
             if (!_c469) {
               let _q456 = true;
               Q457: {
@@ -1207,7 +1207,7 @@ export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Crowd
     const _a850 = sp.lines;
     for (let _i851 = 0; _i851 < _a850.length; _i851++) {
       const v_L = _a850[_i851];
-      let _c858 = ((v_L === _h852) || (v_L === _h853));
+      let _c858: boolean = ((v_L === _h852) || (v_L === _h853));
       if (!_c858) {
         let _q854 = false;
         Q855: {
@@ -1266,7 +1266,7 @@ export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Crowd
         const _h897 = v_E.length;
         const _h909 = (2 * _h897);
         const _h910 = (_h909 - v_n);
-        let _c911 = (v_n > 0);
+        let _c911: boolean = (v_n > 0);
         if (_c911) {
           let _q886 = false;
           Q887: {
@@ -1484,7 +1484,7 @@ export function crowdedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Cro
     const _a1070 = cl.region.parts;
     for (let _i1071 = 0; _i1071 < _a1070.length; _i1071++) {
       const v_g = _a1070[_i1071];
-      let _c1077 = (v_g === _h1072);
+      let _c1077: boolean = (v_g === _h1072);
       if (!_c1077) {
         let _q1073 = false;
         Q1074: {
@@ -1543,7 +1543,7 @@ export function crowdedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Cro
         const _h1116 = v_E.length;
         const _h1128 = (2 * _h1116);
         const _h1129 = (_h1128 - v_n);
-        let _c1130 = (v_n > 0);
+        let _c1130: boolean = (v_n > 0);
         if (_c1130) {
           let _q1105 = false;
           Q1106: {
@@ -1788,7 +1788,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
                   _g1373++;
                 }
               }
-              let _c1395 = ((cl.stars - _g1373) > 0);
+              let _c1395: boolean = ((cl.stars - _g1373) > 0);
               if (_c1395) {
                 let _q1384 = true;
                 Q1385: {
@@ -1852,7 +1852,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
                   _g1436++;
                 }
               }
-              let _c1458 = ((cl.stars - _g1436) > 0);
+              let _c1458: boolean = ((cl.stars - _g1436) > 0);
               if (_c1458) {
                 let _q1447 = false;
                 Q1448: {
@@ -1901,7 +1901,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
             }
           }
           const v_mr = _g1459;
-          let _c1478 = (v_mi === v_n);
+          let _c1478: boolean = (v_mi === v_n);
           if (_c1478) {
             let _q1468 = false;
             Q1469: {
@@ -1930,9 +1930,9 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
             if (!(((v_mi >= v_n) || (v_mr <= v_n)))) break L1479;
             facts.length = 0;
             changed = false;
-            let _c1491 = ((v_mi <= v_n) && (v_mr >= v_n));
+            let _c1491: boolean = ((v_mi <= v_n) && (v_mr >= v_n));
             if (_c1491) {
-              let _c1490 = !(v_lines);
+              let _c1490: boolean = !(v_lines);
               if (!_c1490) {
                 let _q1480 = true;
                 Q1481: {
@@ -1960,9 +1960,9 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
               }
               _c1491 = _c1490;
             }
-            let _c1506 = _c1491;
+            let _c1506: boolean = _c1491;
             if (_c1506) {
-              let _c1505 = (v_lines || (v_mr > v_n));
+              let _c1505: boolean = (v_lines || (v_mr > v_n));
               if (!_c1505) {
                 let _q1492 = true;
                 Q1493: {
@@ -2048,11 +2048,11 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
       const _a1686 = sp.cells;
       for (let _i1687 = 0; _i1687 < _a1686.length; _i1687++) {
         const v_p = _a1686[_i1687];
-        let _c1712 = (!(b.known(v_p)) && (v_p !== v_x));
+        let _c1712: boolean = (!(b.known(v_p)) && (v_p !== v_x));
         if (_c1712) {
-          let _c1695 = (sp.adj8[v_x].includes(v_p));
+          let _c1695: boolean = (sp.adj8[v_x].includes(v_p));
           if (!_c1695) {
-            let _c1694 = (sp.rowOf[v_p] === _h1688);
+            let _c1694: boolean = (sp.rowOf[v_p] === _h1688);
             if (_c1694) {
               const _t1689 = sp.lineCells[_h1688];
               let _g1690 = 0;
@@ -2068,9 +2068,9 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
             }
             _c1695 = _c1694;
           }
-          let _c1703 = _c1695;
+          let _c1703: boolean = _c1695;
           if (!_c1703) {
-            let _c1702 = (sp.colOf[v_p] === _h1696);
+            let _c1702: boolean = (sp.colOf[v_p] === _h1696);
             if (_c1702) {
               const _t1697 = sp.lineCells[_h1696];
               let _g1698 = 0;
@@ -2086,9 +2086,9 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
             }
             _c1703 = _c1702;
           }
-          let _c1711 = _c1703;
+          let _c1711: boolean = _c1703;
           if (!_c1711) {
-            let _c1710 = (cl.region.of[v_p] === _h1704);
+            let _c1710: boolean = (cl.region.of[v_p] === _h1704);
             if (_c1710) {
               const _t1705 = cl.region.cells[_h1704];
               let _g1706 = 0;
@@ -2114,7 +2114,7 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
     const _a1713 = sp.lines;
     for (let _i1714 = 0; _i1714 < _a1713.length; _i1714++) {
       const v_L = _a1713[_i1714];
-      let _c1719 = ((v_L === _h1688) || (v_L === _h1696));
+      let _c1719: boolean = ((v_L === _h1688) || (v_L === _h1696));
       if (!_c1719) {
         let _q1715 = false;
         Q1716: {
@@ -2173,7 +2173,7 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
         const _h1758 = v_E.length;
         const _h1770 = (2 * _h1758);
         const _h1771 = (_h1770 - v_n);
-        let _c1772 = (v_n > 0);
+        let _c1772: boolean = (v_n > 0);
         if (_c1772) {
           let _q1747 = false;
           Q1748: {
@@ -2385,11 +2385,11 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
       const _a1995 = sp.cells;
       for (let _i1996 = 0; _i1996 < _a1995.length; _i1996++) {
         const v_p = _a1995[_i1996];
-        let _c2021 = (!(b.known(v_p)) && (v_p !== v_x));
+        let _c2021: boolean = (!(b.known(v_p)) && (v_p !== v_x));
         if (_c2021) {
-          let _c2004 = (sp.adj8[v_x].includes(v_p));
+          let _c2004: boolean = (sp.adj8[v_x].includes(v_p));
           if (!_c2004) {
-            let _c2003 = (sp.rowOf[v_p] === _h1997);
+            let _c2003: boolean = (sp.rowOf[v_p] === _h1997);
             if (_c2003) {
               const _t1998 = sp.lineCells[_h1997];
               let _g1999 = 0;
@@ -2405,9 +2405,9 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
             }
             _c2004 = _c2003;
           }
-          let _c2012 = _c2004;
+          let _c2012: boolean = _c2004;
           if (!_c2012) {
-            let _c2011 = (sp.colOf[v_p] === _h2005);
+            let _c2011: boolean = (sp.colOf[v_p] === _h2005);
             if (_c2011) {
               const _t2006 = sp.lineCells[_h2005];
               let _g2007 = 0;
@@ -2423,9 +2423,9 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
             }
             _c2012 = _c2011;
           }
-          let _c2020 = _c2012;
+          let _c2020: boolean = _c2012;
           if (!_c2020) {
-            let _c2019 = (cl.region.of[v_p] === _h2013);
+            let _c2019: boolean = (cl.region.of[v_p] === _h2013);
             if (_c2019) {
               const _t2014 = cl.region.cells[_h2013];
               let _g2015 = 0;
@@ -2451,7 +2451,7 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
     const _a2022 = cl.region.parts;
     for (let _i2023 = 0; _i2023 < _a2022.length; _i2023++) {
       const v_g = _a2022[_i2023];
-      let _c2028 = (v_g === _h2013);
+      let _c2028: boolean = (v_g === _h2013);
       if (!_c2028) {
         let _q2024 = false;
         Q2025: {
@@ -2510,7 +2510,7 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
         const _h2067 = v_E.length;
         const _h2079 = (2 * _h2067);
         const _h2080 = (_h2079 - v_n);
-        let _c2081 = (v_n > 0);
+        let _c2081: boolean = (v_n > 0);
         if (_c2081) {
           let _q2056 = false;
           Q2057: {

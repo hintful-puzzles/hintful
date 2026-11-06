@@ -47,9 +47,9 @@ export function claims(sp: GridSpace, cl: Dealt, _variations: readonly string[])
         _grew35 = false;
         for (let _c34 = 0; _c34 < sp.cells.length; _c34++) {
           if (_fix33[_c34] === 1) continue;
-          let _c41 = (_c34 === (0 * sp.w + 0));
+          let _c41: boolean = (_c34 === (0 * sp.w + 0));
           if (!_c41) {
-            let _c40 = (p.color[_c34] === p.color[(0 * sp.w + 0)]);
+            let _c40: boolean = (p.color[_c34] === p.color[(0 * sp.w + 0)]);
             if (_c40) {
               let _q36 = false;
               Q37: {
@@ -155,9 +155,9 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       _grew15 = false;
       for (let _c14 = 0; _c14 < sp.cells.length; _c14++) {
         if (_fix13[_c14] === 1) continue;
-        let _c21 = (_c14 === (0 * sp.w + 0));
+        let _c21: boolean = (_c14 === (0 * sp.w + 0));
         if (!_c21) {
-          let _c20 = (p.color[_c14] === p.color[(0 * sp.w + 0)]);
+          let _c20: boolean = (p.color[_c14] === p.color[(0 * sp.w + 0)]);
           if (_c20) {
             let _q16 = false;
             Q17: {

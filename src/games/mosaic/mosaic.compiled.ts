@@ -112,9 +112,9 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
       if (!((((v_n <= 0) || (v_r <= cl.count.v[v_k])) && ((v_n !== 0) || (v_r !== cl.count.v[v_k]))))) break L19;
       facts.length = 0;
       changed = false;
-      let _c25 = ((v_n >= 0) && (v_r >= cl.count.v[v_k]));
+      let _c25: boolean = ((v_n >= 0) && (v_r >= cl.count.v[v_k]));
       if (_c25) {
-        let _c24 = !((v_n === 0));
+        let _c24: boolean = !((v_n === 0));
         if (!_c24) {
           let _q20 = true;
           Q21: {
@@ -133,9 +133,9 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
         }
         _c25 = _c24;
       }
-      let _c31 = _c25;
+      let _c31: boolean = _c25;
       if (_c31) {
-        let _c30 = (v_n === 0);
+        let _c30: boolean = (v_n === 0);
         if (!_c30) {
           let _q26 = true;
           Q27: {
@@ -204,7 +204,7 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
       for (let _i73 = 0; _i73 < _a72.length; _i73++) {
         const v_b = _a72[_i73];
         const _h74 = clueAt(cl.count, v_b);
-        let _c79 = ((v_b !== v_c) && (_h74 !== -1));
+        let _c79: boolean = ((v_b !== v_c) && (_h74 !== -1));
         if (_c79) {
           let _q75 = false;
           Q76: {
@@ -254,9 +254,9 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
         L97: {
           const v_O = _g89;
           const _h98 = v_O.length;
-          let _c108 = (v_by >= _h98);
+          let _c108: boolean = (v_by >= _h98);
           if (_c108) {
-            let _c107 = (v_by > 0);
+            let _c107: boolean = (v_by > 0);
             if (!_c107) {
               _g99.length = 0;
               G100: {
@@ -274,7 +274,7 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
           if (!(_c108)) break L97;
           facts.length = 0;
           changed = false;
-          let _c113 = (v_by === _h98);
+          let _c113: boolean = (v_by === _h98);
           if (_c113) {
             let _q109 = true;
             Q110: {
@@ -290,9 +290,9 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
             }
             _c113 = _q109;
           }
-          let _c125 = _c113;
+          let _c125: boolean = _c113;
           if (_c125) {
-            let _c124 = (v_by > 0);
+            let _c124: boolean = (v_by > 0);
             if (!_c124) {
               let _q114 = true;
               Q115: {

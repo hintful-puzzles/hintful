@@ -162,7 +162,7 @@ export function satisfied(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Satisfi
       const _h22 = clueAt(cl.count, (v_L < 0 ? -1 : perPlace(v_L, v_d)));
       L23: {
         const v_v = _h22;
-        let _c29 = (v_v >= 0);
+        let _c29: boolean = (v_v >= 0);
         if (_c29) {
           let _g24 = 0;
           G25: {
@@ -189,7 +189,7 @@ export function satisfied(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Satisfi
             _g30++;
           }
         }
-        let _c40 = (_g30 === v_v);
+        let _c40: boolean = (_g30 === v_v);
         if (_c40) {
           let _q35 = true;
           Q36: {
@@ -238,7 +238,7 @@ export function single(b: Marks, sp: GridSpace, fire: Fire<SingleBinding> | null
     if (!((!(b.known(v_c)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) < 2)))) continue;
     facts.length = 0;
     changed = false;
-    let _c46 = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) === 1);
+    let _c46: boolean = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) === 1);
     if (_c46) {
       const _t45 = least((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))));
       if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, _t45); changed = true; } else facts.push(PLACE, v_c, _t45); }

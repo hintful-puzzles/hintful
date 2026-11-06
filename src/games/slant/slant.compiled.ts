@@ -145,9 +145,9 @@ export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding>
     const v_left = (_h15 - _g22);
     facts.length = 0;
     changed = false;
-    let _c33 = ((v_left >= 0) && (v_left <= _h26));
+    let _c33: boolean = ((v_left >= 0) && (v_left <= _h26));
     if (_c33) {
-      let _c32 = !((v_left === 0));
+      let _c32: boolean = !((v_left === 0));
       if (!_c32) {
         let _q27 = true;
         Q28: {
@@ -166,9 +166,9 @@ export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding>
       }
       _c33 = _c32;
     }
-    let _c40 = _c33;
+    let _c40: boolean = _c33;
     if (_c40) {
-      let _c39 = !((v_left === _h26));
+      let _c39: boolean = !((v_left === _h26));
       if (!_c39) {
         let _q34 = true;
         Q35: {
@@ -212,7 +212,7 @@ export function loop(b: Marks, sp: GridSpace, fire: Fire<LoopBinding> | null): n
     const v_c = _a51[_i52];
     if (!(!(b.known(v_c)))) continue;
     for (let v_d = 1; v_d <= 2; v_d++) {
-      let _c60 = !(b.known(v_c));
+      let _c60: boolean = !(b.known(v_c));
       if (_c60) {
         let _q53 = false;
         Q54: {
@@ -256,7 +256,7 @@ export function loop(b: Marks, sp: GridSpace, fire: Fire<LoopBinding> | null): n
           }
         }
       }
-      let _c70 = !(_q62);
+      let _c70: boolean = !(_q62);
       if (_c70) {
         const _t69 = (3 - v_d);
         if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, _t69); changed = true; } else facts.push(PLACE, v_c, _t69); }
@@ -363,9 +363,9 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
           const v_left = ((_h122 - _g155) - 1);
           facts.length = 0;
           changed = false;
-          let _c166 = ((v_left >= 0) && (v_left <= _h159));
+          let _c166: boolean = ((v_left >= 0) && (v_left <= _h159));
           if (_c166) {
-            let _c165 = !((v_left === 0));
+            let _c165: boolean = !((v_left === 0));
             if (!_c165) {
               let _q160 = true;
               Q161: {
@@ -384,9 +384,9 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
             }
             _c166 = _c165;
           }
-          let _c173 = _c166;
+          let _c173: boolean = _c166;
           if (_c173) {
-            let _c172 = !((v_left === _h159));
+            let _c172: boolean = !((v_left === _h159));
             if (!_c172) {
               let _q167 = true;
               Q168: {
@@ -519,7 +519,7 @@ export function share(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ShareBindin
               changed = false;
               const _t272 = sp.edgeOf(v_b, v_a);
               if ((b.edgeCand(_t272) >> 1) & 1) { if (fire === null) { b.edgeStrikeAt(_t272, 1); changed = true; } else facts.push(STRIKE_EDGE, _t272, 1); }
-              let _c274 = true;
+              let _c274: boolean = true;
               if (_c274) {
                 const _t273 = sp.edgeOf(v_b, v_a);
                 if ((b.edgeCand(_t273) >> 2) & 1) { if (fire === null) { b.edgeStrikeAt(_t273, 2); changed = true; } else facts.push(STRIKE_EDGE, _t273, 2); }
@@ -559,7 +559,7 @@ export function deadEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DeadEndBi
     const v_c = _a334[_i335];
     if (!(!(b.known(v_c)))) continue;
     for (let v_d = 1; v_d <= 2; v_d++) {
-      let _c396 = !(b.known(v_c));
+      let _c396: boolean = !(b.known(v_c));
       if (_c396) {
         let _q336 = false;
         Q337: {
@@ -584,7 +584,7 @@ export function deadEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DeadEndBi
                   }
                 }
               }
-              let _c368 = _q344;
+              let _c368: boolean = _q344;
               if (_c368) {
                 let _g348 = 0;
                 G349: {
@@ -626,7 +626,7 @@ export function deadEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DeadEndBi
                 }
                 _c368 = ((_g348 + _g357) <= 1);
               }
-              let _c395 = _c368;
+              let _c395: boolean = _c368;
               if (_c395) {
                 const _t369 = linkedOf(sp, b, v_q);
                 let _q370 = true;
@@ -640,7 +640,7 @@ export function deadEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DeadEndBi
                     }
                   }
                 }
-                let _c394 = _q370;
+                let _c394: boolean = _q370;
                 if (_c394) {
                   let _g374 = 0;
                   G375: {
@@ -715,7 +715,7 @@ export function deadEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DeadEndBi
           }
         }
       }
-      let _c466 = !(_q398);
+      let _c466: boolean = !(_q398);
       if (_c466) {
         const _t405 = (3 - v_d);
         let _q406 = false;
@@ -741,7 +741,7 @@ export function deadEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DeadEndBi
                   }
                 }
               }
-              let _c438 = _q414;
+              let _c438: boolean = _q414;
               if (_c438) {
                 let _g418 = 0;
                 G419: {
@@ -783,7 +783,7 @@ export function deadEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DeadEndBi
                 }
                 _c438 = ((_g418 + _g427) <= 1);
               }
-              let _c465 = _c438;
+              let _c465: boolean = _c438;
               if (_c465) {
                 const _t439 = linkedOf(sp, b, v_q);
                 let _q440 = true;
@@ -797,7 +797,7 @@ export function deadEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DeadEndBi
                     }
                   }
                 }
-                let _c464 = _q440;
+                let _c464: boolean = _q440;
                 if (_c464) {
                   let _g444 = 0;
                   G445: {
@@ -850,7 +850,7 @@ export function deadEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DeadEndBi
         }
         _c466 = !(_q406);
       }
-      let _c468 = _c466;
+      let _c468: boolean = _c466;
       if (_c468) {
         const _t467 = (3 - v_d);
         if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, _t467); changed = true; } else facts.push(PLACE, v_c, _t467); }
@@ -1155,14 +1155,14 @@ export function two(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TwoBinding> |
                 if (!(((_g624[(v_j - 1)] ?? -1) === v_k))) continue;
                 facts.length = 0;
                 changed = false;
-                let _c632 = !(!(((b.edgeCand(v_f) >> (3 - v_j)) & 1) !== 0));
+                let _c632: boolean = !(!(((b.edgeCand(v_f) >> (3 - v_j)) & 1) !== 0));
                 if (!_c632) {
                   if ((b.edgeCand(v_e) >> v_i) & 1) { if (fire === null) { b.edgeStrikeAt(v_e, v_i); changed = true; } else facts.push(STRIKE_EDGE, v_e, v_i); }
                   _c632 = true;
                 }
-                let _c635 = _c632;
+                let _c635: boolean = _c632;
                 if (_c635) {
-                  let _c634 = !(!(((b.edgeCand(v_f) >> v_j) & 1) !== 0));
+                  let _c634: boolean = !(!(((b.edgeCand(v_f) >> v_j) & 1) !== 0));
                   if (!_c634) {
                     if ((b.edgeCand(v_e) >> _h633) & 1) { if (fire === null) { b.edgeStrikeAt(v_e, _h633); changed = true; } else facts.push(STRIKE_EDGE, v_e, _h633); }
                     _c634 = true;

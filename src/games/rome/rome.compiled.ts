@@ -180,7 +180,7 @@ export function lone(b: Marks, sp: GridSpace, fire: Fire<LoneBinding> | null): n
     if (!((!(b.known(v_c)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) < 2)))) continue;
     facts.length = 0;
     changed = false;
-    let _c16 = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) === 1);
+    let _c16: boolean = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) === 1);
     if (_c16) {
       const _t15 = least((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))));
       if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, _t15); changed = true; } else facts.push(PLACE, v_c, _t15); }
@@ -285,7 +285,7 @@ export function onlyHome(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyHome
         if (!((v_k < 2))) break L50;
         facts.length = 0;
         changed = false;
-        let _c56 = (v_k === 1);
+        let _c56: boolean = (v_k === 1);
         if (_c56) {
           let _q51 = true;
           Q52: {
@@ -424,7 +424,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
     if (!(!(_h122))) continue;
     for (let _m123 = (cands[v_p] >= 0 ? cands[v_p] : (cands[v_p] = b.cand(v_p))); _m123 !== 0; _m123 &= _m123 - 1) {
       const v_d = 31 - Math.clz32(_m123 & -_m123);
-      let _c131 = (v_H.includes(step(sp, v_p, v_d)));
+      let _c131: boolean = (v_H.includes(step(sp, v_p, v_d)));
       if (_c131) {
         let _q124 = false;
         Q125: {
@@ -502,7 +502,7 @@ export function opposite(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Opposite
         if (!((cl.area.of[v_a] === _h144))) continue;
         for (let _m145 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cand(v_a))); _m145 !== 0; _m145 &= _m145 - 1) {
           const v_d = 31 - Math.clz32(_m145 & -_m145);
-          let _c149 = ((step(sp, v_a, v_d) === v_c) && b.has(v_c, v_d));
+          let _c149: boolean = ((step(sp, v_a, v_d) === v_c) && b.has(v_c, v_d));
           if (_c149) {
             let _q146 = false;
             Q147: {

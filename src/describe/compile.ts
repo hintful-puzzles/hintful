@@ -761,7 +761,9 @@ function shortCircuit(
   if (inner.entries.length === 0)
     return { code: `(${left} ${op === "and" ? "&&" : "||"} ${vb.code})`, sort: BOOL };
   const r = Out.fresh("_c");
-  out.emit(`let ${r} = ${left};`);
+  // Typed, since a left side TypeScript has narrowed to `true` (a chain of
+  // conclusions, each true once made) would type the name as `true`.
+  out.emit(`let ${r}: boolean = ${left};`);
   out.open(op === "and" ? `if (${r}) {` : `if (!${r}) {`);
   out.append(inner);
   out.emit(`${r} = ${vb.code};`);

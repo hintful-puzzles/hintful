@@ -99,7 +99,7 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
   for (let _k174 = 0; _k174 < cl.number.at.length; _k174++) {
     const _at175 = cl.number.at[_k174];
     const _v176 = cl.number.v[_k174];
-    let _c183 = ((g[_at175] || -1) === 1);
+    let _c183: boolean = ((g[_at175] || -1) === 1);
     if (!_c183) {
       let _q177 = true;
       Q178: {
@@ -344,32 +344,32 @@ export function corner(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CornerBind
     const v_ni = _h75;
     facts.length = 0;
     changed = false;
-    let _c76 = ((v_ns !== v_n) || (v_nt !== v_n));
+    let _c76: boolean = ((v_ns !== v_n) || (v_nt !== v_n));
     if (!_c76) {
       if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, 1); changed = true; } else facts.push(PLACE, v_c, 1); }
       _c76 = true;
     }
-    let _c78 = _c76;
+    let _c78: boolean = _c76;
     if (_c78) {
-      let _c77 = ((v_ns !== v_nt) || (v_ni !== v_nt));
+      let _c77: boolean = ((v_ns !== v_nt) || (v_ni !== v_nt));
       if (!_c77) {
         if (!b.known(v_i)) { if (fire === null) { b.placeAt(v_i, 1); changed = true; } else facts.push(PLACE, v_i, 1); }
         _c77 = true;
       }
       _c78 = _c77;
     }
-    let _c83 = _c78;
+    let _c83: boolean = _c78;
     if (_c83) {
-      let _c82 = (((v_ns === v_n) && (v_nt === v_n)) || ((v_ns === v_nt) && (v_ni === v_nt)));
+      let _c82: boolean = (((v_ns === v_n) && (v_nt === v_n)) || ((v_ns === v_nt) && (v_ni === v_nt)));
       if (!_c82) {
-        let _c79 = ((v_ns !== v_n) && (v_ns !== v_ni));
+        let _c79: boolean = ((v_ns !== v_n) && (v_ns !== v_ni));
         if (!_c79) {
           if (!b.known(v_t)) { if (fire === null) { b.placeAt(v_t, 2); changed = true; } else facts.push(PLACE, v_t, 2); }
           _c79 = true;
         }
-        let _c81 = _c79;
+        let _c81: boolean = _c79;
         if (_c81) {
-          let _c80 = (((v_ns === v_n) || (v_ns === v_ni)) || ((v_nt !== v_n) && (v_nt !== v_ni)));
+          let _c80: boolean = (((v_ns === v_n) || (v_ns === v_ni)) || ((v_nt !== v_n) && (v_nt !== v_ni)));
           if (!_c80) {
             if (!b.known(v_s)) { if (fire === null) { b.placeAt(v_s, 2); changed = true; } else facts.push(PLACE, v_s, 2); }
             _c80 = true;
@@ -418,9 +418,9 @@ export function boxedIn(b: Marks, sp: GridSpace, fire: Fire<BoxedInBinding> | nu
     const _h100 = v_F.length;
     facts.length = 0;
     changed = false;
-    let _c103 = (_h100 > 0);
+    let _c103: boolean = (_h100 > 0);
     if (_c103) {
-      let _c102 = (_h100 > 1);
+      let _c102: boolean = (_h100 > 1);
       if (!_c102) {
         const _t101 = (v_F.length > 0 ? v_F[0] : -1);
         if (!b.known(_t101)) { if (fire === null) { b.placeAt(_t101, 2); changed = true; } else facts.push(PLACE, _t101, 2); }

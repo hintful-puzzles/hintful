@@ -150,7 +150,7 @@ export function besideShaded(b: Marks, sp: GridSpace, fire: Fire<BesideShadedBin
       const _a9 = sp.adj4[v_c];
       for (let _i10 = 0; _i10 < _a9.length; _i10++) {
         const v_p = _a9[_i10];
-        let _c11 = (b.value(v_p) !== 1);
+        let _c11: boolean = (b.value(v_p) !== 1);
         if (_c11) {
           if (!b.known(v_p)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
           _c11 = true;
@@ -248,9 +248,9 @@ export function capped(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CappedBind
           if (!((_g58 === v_s))) break L53;
           facts.length = 0;
           changed = false;
-          let _c63 = _h60;
+          let _c63: boolean = _h60;
           if (_c63) {
-            let _c62 = (v_s === _h52);
+            let _c62: boolean = (v_s === _h52);
             if (!_c62) {
               const _t61 = (v_R[v_s] ?? -1);
               if (!b.known(_t61)) { if (fire === null) { b.placeAt(_t61, 1); changed = true; } else facts.push(PLACE, _t61, 1); }
@@ -388,7 +388,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
         const _h142 = (_h141 + v_f);
         facts.length = 0;
         changed = false;
-        let _c143 = _h136;
+        let _c143: boolean = _h136;
         if (_c143) {
           let _q137 = true;
           Q138: {
@@ -447,7 +447,7 @@ export function cut(b: Marks, sp: GridSpace, fire: Fire<CutBinding> | null): num
     if (!(!(b.known(v_c)))) continue;
     facts.length = 0;
     changed = false;
-    let _c161 = _h160;
+    let _c161: boolean = _h160;
     if (_c161) {
       if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
       _c161 = true;

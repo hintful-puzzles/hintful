@@ -1,27 +1,23 @@
 /**
  * Boats — the board-validation family (upstream's "Validation and Tools"
  * block). One pass per rule: row/column occupancy counts, the
- * boats-never-touch-diagonally check, the fleet inventory, the given-clue
- * agreement check, and the unfinished-boat disjoint-set check.
+ * boats-never-touch-diagonally check, the fleet inventory, and the given-clue
+ * agreement check.
  *
  * **`adjustShips` mutates the board, and that is load-bearing.** Upstream's
  * `boats_adjust_ships` rewrites every `SHIP_VAGUE` into its resolved shape
  * (`TOP`/`LEFT`/`CENTER`/…) from its neighbors, and `boats_validate_full_state`
- * calls it in the middle of validating. Both the solver and `executeMove`
- * depend on that side effect — several deductions test for a specific shape,
- * and the fleet inventory only counts boats it can see a `LEFT`…`RIGHT` or
- * `TOP`…`BOTTOM` pair for. Porting `validateFullState` as a pure predicate
- * would silently disable half the solver (the mutating-validator hazard in
- * docs/solver-and-generator.md § "Solver-gated generation"). It is why
- * the solver works on a mutable {@link BoatsBoard} rather than on a
- * `BoatsState`.
+ * calls it in the middle of validating. The fleet inventory only counts boats
+ * it can see a `LEFT`…`RIGHT` or `TOP`…`BOTTOM` pair for, so a pure
+ * `validateFullState` would miss every boat still drawn vague (the
+ * mutating-validator hazard in docs/solver-and-generator.md § "Solver-gated
+ * generation").
  *
  * Each `errs` parameter is optional and, when given, is *filled in* with the
  * per-slot or per-cell error flags the renderer paints (and the hint reads back
  * to name the rule a refuted trial breaks); the solver passes none.
  */
 
-import type { Dsf } from "../../engine/dsf.ts";
 import {
   type BoatsBoard,
   EMPTY,
@@ -62,7 +58,7 @@ export interface BoatsRun {
 
 /** The four orthogonal neighbors of `(x, y)`, with off-board treated as
  * water — the idiom every upstream deduction opens with. */
-export function neighbors(
+function neighbors(
   b: BoatsBoard,
   x: number,
   y: number,
@@ -420,92 +416,18 @@ export function validateGridClues(b: BoatsBoard, errs?: Int32Array): number {
 }
 
 /**
- * Upstream `boats_check_dsf`: group the *unfinished* boats and check none has
- * already outgrown the fleet. Water, empty cells and every finished boat go
- * into one big class anchored at the sentinel index `w·h`, so what is left is
- * exactly the partially-drawn boats.
- *
- * **A boat is finished when its first square and its last are both end caps**,
- * and the first square is the class's smallest element (`dsf.minimal`), never
- * its root: union-by-size roots a boat at its second square. Upstream reads the
- * root here, under the comment "the canonical index always points to the first
- * square of a boat", which held for the `dsf.c` it was written against and not
- * for the one it is built with. Read that way no boat of two squares or more is
- * ever finished, each is counted a second time as unfinished, and a board
- * whose largest boats are all placed is called contradictory.
- */
-export function checkDsf(b: BoatsBoard, dsf: Dsf, fleetCount: Int32Array): number {
-  const { w, h, fleet, grid, fleetData } = b;
-  const end = w * h;
-  const tempFleet = Int32Array.from(fleetCount);
-  let ret = STATUS_COMPLETE;
-
-  dsf.reinit();
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      if (grid[i] === EMPTY || grid[i] === WATER) {
-        dsf.merge(i, end);
-        continue;
-      }
-
-      if (x < w - 1 && isShip(grid[i]) && isShip(grid[y * w + x + 1]))
-        dsf.merge(i, y * w + x + 1);
-      if (y < h - 1 && isShip(grid[i]) && isShip(grid[(y + 1) * w + x]))
-        dsf.merge(i, (y + 1) * w + x);
-
-      if (grid[i] === SHIP_SINGLE) dsf.merge(i, end);
-      else if (grid[i] === SHIP_RIGHT && grid[dsf.minimal(i)] === SHIP_LEFT)
-        dsf.merge(i, end);
-      else if (grid[i] === SHIP_BOTTOM && grid[dsf.minimal(i)] === SHIP_TOP)
-        dsf.merge(i, end);
-    }
-  }
-
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      if (dsf.canonify(i) === dsf.canonify(end)) continue;
-      if (i === dsf.canonify(i)) {
-        if (ret !== STATUS_INVALID) ret = STATUS_INCOMPLETE;
-        if (dsf.size(i) > fleet) ret = STATUS_INVALID;
-        else tempFleet[dsf.size(i) - 1]++;
-      }
-    }
-  }
-
-  for (let i = fleet - 1; i >= 0; i--) {
-    if (fleetCount[i] < fleetData[i]) break;
-    if (tempFleet[i] > fleetData[i]) ret = STATUS_INVALID;
-  }
-
-  return ret;
-}
-
-/**
  * Upstream `boats_validate_full_state`. **Mutates the board** (via
- * {@link adjustShips}) — see the module header. Pass a `dsf` to include the
- * unfinished-boat check (the solver does so from Normal upward; the final
- * verdict pass deliberately does not).
+ * {@link adjustShips}) — see the module header.
  */
-export function validateFullState(
-  b: BoatsBoard,
-  blankCounts?: Int32Array,
-  shipCounts?: Int32Array,
-  fleetCount?: Int32Array,
-  dsf?: Dsf,
-): number {
-  let status = countShips(b, blankCounts, shipCounts);
+export function validateFullState(b: BoatsBoard): number {
+  let status = countShips(b);
   if (status === STATUS_INVALID) return status;
   if (checkCollision(b)) return STATUS_INVALID;
 
   const adjustStatus = adjustShips(b);
 
-  status = Math.max(status, checkFleet(b, fleetCount));
+  status = Math.max(status, checkFleet(b));
   status = Math.max(status, validateGridClues(b));
-
-  if (status !== STATUS_INVALID && dsf && fleetCount)
-    status = Math.max(status, checkDsf(b, dsf, fleetCount));
 
   // When every ship is placed, everything else must already be finished.
   if (

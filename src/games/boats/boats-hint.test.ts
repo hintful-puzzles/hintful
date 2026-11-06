@@ -33,15 +33,14 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newBoatsDesc } from "./generator.ts";
+import { type BoatsHint, boatsGame } from "./index.ts";
+import { COL_HINT_CELL } from "./render.ts";
 import {
-  applyBoatsFiring,
   type BoatsFiring,
   type BoatsRung,
   deduceBoatsPlan,
-} from "./hint-solver.ts";
-import { type BoatsHint, boatsGame } from "./index.ts";
-import { COL_HINT_CELL } from "./render.ts";
-import { solveToGrid } from "./solver.ts";
+  solveToGrid,
+} from "./solver.ts";
 import {
   type BoatsMove,
   type BoatsParams,
@@ -237,7 +236,6 @@ describe("boats hint — soundness", () => {
         expect(truth.ok).toBe(true);
         if (!truth.ok) continue;
 
-        const b = boardOf(state);
         for (const f of deduceBoatsPlan(state).firings) {
           for (const sq of [...f.squares, ...f.consequences]) {
             const i = sq.y * state.params.w + sq.x;
@@ -253,7 +251,6 @@ describe("boats hint — soundness", () => {
             });
             checked++;
           }
-          applyBoatsFiring(b, f);
         }
       }
     }

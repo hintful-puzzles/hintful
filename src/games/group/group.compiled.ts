@@ -128,15 +128,15 @@ export function associativity(b: Marks, sp: GridSpace, fire: Fire<AssociativityB
               if (!((b.known(v_l) !== b.known(v_r)))) break L18;
               facts.length = 0;
               changed = false;
-              let _c20 = !((b.known(v_l) && b.has(v_r, b.value(v_l))));
+              let _c20: boolean = !((b.known(v_l) && b.has(v_r, b.value(v_l))));
               if (!_c20) {
                 const _t19 = b.value(v_l);
                 if (!b.known(v_r)) { if (fire === null) { b.placeAt(v_r, _t19); changed = true; } else facts.push(PLACE, v_r, _t19); }
                 _c20 = true;
               }
-              let _c23 = _c20;
+              let _c23: boolean = _c20;
               if (_c23) {
-                let _c22 = !((b.known(v_r) && b.has(v_l, b.value(v_r))));
+                let _c22: boolean = !((b.known(v_r) && b.has(v_l, b.value(v_r))));
                 if (!_c22) {
                   const _t21 = b.value(v_r);
                   if (!b.known(v_l)) { if (fire === null) { b.placeAt(v_l, _t21); changed = true; } else facts.push(PLACE, v_l, _t21); }
@@ -202,7 +202,7 @@ export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding> | 
           for (let _i51 = 0; _i51 < _a50.length; _i51++) {
             const v_c = _a50[_i51];
             if (!(!(b.known(v_c)))) continue;
-            let _c52 = b.has(v_c, v_j);
+            let _c52: boolean = b.has(v_c, v_j);
             if (_c52) {
               if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, v_j); changed = true; } else facts.push(PLACE, v_c, v_j); }
               _c52 = true;
@@ -261,9 +261,9 @@ export function notIdentity(b: Marks, sp: GridSpace, fire: Fire<NotIdentityBindi
           const v_j = 31 - Math.clz32(_m70 & -_m70);
           const _t71 = ((v_j - 1) * sp.w + _h62);
           if (b.has(_t71, v_j)) { if (fire === null) { b.strikeAt(_t71, v_j); changed = true; } else facts.push(STRIKE, _t71, v_j); }
-          let _c74 = true;
+          let _c74: boolean = true;
           if (_c74) {
-            let _c73 = (v_j === v_a);
+            let _c73: boolean = (v_j === v_a);
             if (!_c73) {
               const _t72 = (_h62 * sp.w + (v_j - 1));
               if (b.has(_t72, v_j)) { if (fire === null) { b.strikeAt(_t72, v_j); changed = true; } else facts.push(STRIKE, _t72, v_j); }

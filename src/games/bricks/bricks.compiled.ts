@@ -101,7 +101,7 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     for (let _i254 = 0; _i254 < _a253.length; _i254++) {
       const v_c = _a253[_i254];
       if (!(((g[v_c] || -1) === 1))) continue;
-      let _c277 = (((v_c / sp.w) | 0) === (sp.h - 1));
+      let _c277: boolean = (((v_c / sp.w) | 0) === (sp.h - 1));
       if (!_c277) {
         let _q255 = false;
         Q256: {
@@ -148,7 +148,7 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
   for (let _k281 = 0; _k281 < cl.number.at.length; _k281++) {
     const _at282 = cl.number.at[_k281];
     const _v283 = cl.number.v[_k281];
-    let _c294 = ((g[_at282] || -1) === 2);
+    let _c294: boolean = ((g[_at282] || -1) === 2);
     if (_c294) {
       let _g284 = 0;
       G285: {
@@ -229,7 +229,7 @@ export function strandSupport(b: Marks, sp: GridSpace, fire: Fire<StrandSupportB
         }
       }
     }
-    let _c77 = _q8;
+    let _c77: boolean = _q8;
     if (_c77) {
       let _q32 = true;
       Q33: {
@@ -254,7 +254,7 @@ export function strandSupport(b: Marks, sp: GridSpace, fire: Fire<StrandSupportB
         const _a52 = _g34;
         for (let _i53 = 0; _i53 < _a52.length; _i53++) {
           const v_c = _a52[_i53];
-          let _c76 = !(b.known(v_c));
+          let _c76: boolean = !(b.known(v_c));
           if (_c76) {
             let _q54 = true;
             Q55: {
@@ -350,7 +350,7 @@ export function undercount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Underc
           _g85++;
         }
       }
-      let _c118 = (_g85 >= v_n);
+      let _c118: boolean = (_g85 >= v_n);
       if (_c118) {
         let _g97 = 0;
         G98: {
@@ -370,7 +370,7 @@ export function undercount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Underc
             _g97++;
           }
         }
-        let _c117 = (_g97 > v_n);
+        let _c117: boolean = (_g97 > v_n);
         if (!_c117) {
           let _q107 = true;
           Q108: {
@@ -446,14 +446,14 @@ export function three(b: Marks, sp: GridSpace, fire: Fire<ThreeBinding> | null):
         }
       }
     }
-    let _c146 = _q123;
+    let _c146: boolean = _q123;
     if (_c146) {
       let _q133 = true;
       Q134: {
         const _a135 = sp.lineCells[v_L];
         for (let _i136 = 0; _i136 < _a135.length; _i136++) {
           const v_c = _a135[_i136];
-          let _c145 = !(b.known(v_c));
+          let _c145: boolean = !(b.known(v_c));
           if (_c145) {
             const _wc137 = v_c;
             const _wd138 = 1;
@@ -505,7 +505,7 @@ export function unsupported(b: Marks, sp: GridSpace, fire: Fire<UnsupportedBindi
     const v_c = _a172[_i173];
     const _h193 = (v_c % sp.w);
     const _h194 = ((v_c / sp.w) | 0);
-    let _c199 = (!(b.known(v_c)) && (((v_c / sp.w) | 0) < _h174));
+    let _c199: boolean = (!(b.known(v_c)) && (((v_c / sp.w) | 0) < _h174));
     if (_c199) {
       let _q175 = false;
       Q176: {
@@ -594,7 +594,7 @@ export function overcount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Overcou
           _g207++;
         }
       }
-      let _c240 = (_g207 <= v_n);
+      let _c240: boolean = (_g207 <= v_n);
       if (_c240) {
         let _g219 = 0;
         G220: {
@@ -614,7 +614,7 @@ export function overcount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Overcou
             _g219++;
           }
         }
-        let _c239 = (_g219 < v_n);
+        let _c239: boolean = (_g219 < v_n);
         if (!_c239) {
           let _q229 = true;
           Q230: {

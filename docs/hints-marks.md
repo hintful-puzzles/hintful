@@ -904,9 +904,10 @@ check marks which rule each cell breaks.
 A described game needs no classifier: each way a trial breaks is a technique
 of its own, and its reason is built from the binding
 ([`descriptions.md`](./descriptions.md) § "A firing's reason is built from
-its binding"; Bricks and Sticks). Exemplar of the classifier: the one ending
-in `unfinishable` in
-[`boats/hint-solver.ts`](../src/games/boats/hint-solver.ts).
+its binding"; Bricks and Sticks). Boats states every break as one
+`broken`, so its trials keep the classifier to name the one that happened:
+the one ending in `unfinishable` in
+[`boats/solver.ts`](../src/games/boats/solver.ts).
 
 ## A deduction the player can run with a gesture is its own rung
 

@@ -42,7 +42,7 @@ export const deadEnds: readonly DeadEndId[] = ["bare", "short"];
 export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]): Readonly<Record<DeadEndId, (p: Position) => boolean>> {
   return {
     bare: (p) => {
-      let _c29 = (sp.cells.length > 1);
+      let _c29: boolean = (sp.cells.length > 1);
       if (_c29) {
         let _q25 = false;
         Q26: {
@@ -114,7 +114,7 @@ export function views(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
         _grew42 = false;
         for (let _c41 = 0; _c41 < sp.cells.length; _c41++) {
           if (_fix40[_c41] === 1) continue;
-          let _c49 = (_c41 === (Math.trunc(sp.h / 2) * sp.w + Math.trunc(sp.w / 2)));
+          let _c49: boolean = (_c41 === (Math.trunc(sp.h / 2) * sp.w + Math.trunc(sp.w / 2)));
           if (!_c49) {
             let _q43 = false;
             Q44: {
@@ -122,7 +122,7 @@ export function views(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
                 const v_k = 31 - Math.clz32(_m45 & -_m45);
                 L46: {
                   const v_n = cl.beyond[_c41][v_k];
-                  let _c48 = ((v_n !== -1) && ((Math.trunc(p.tile[_c41] / v_k) % 2) === 1));
+                  let _c48: boolean = ((v_n !== -1) && ((Math.trunc(p.tile[_c41] / v_k) % 2) === 1));
                   if (_c48) {
                     const _t47 = ((4 * v_k) % 15);
                     _c48 = ((Math.trunc(p.tile[v_n] / _t47) % 2) === 1);
@@ -202,7 +202,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       _grew17 = false;
       for (let _c16 = 0; _c16 < sp.cells.length; _c16++) {
         if (_fix15[_c16] === 1) continue;
-        let _c24 = (_c16 === (Math.trunc(sp.h / 2) * sp.w + Math.trunc(sp.w / 2)));
+        let _c24: boolean = (_c16 === (Math.trunc(sp.h / 2) * sp.w + Math.trunc(sp.w / 2)));
         if (!_c24) {
           let _q18 = false;
           Q19: {
@@ -210,7 +210,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
               const v_k = 31 - Math.clz32(_m20 & -_m20);
               L21: {
                 const v_n = cl.beyond[_c16][v_k];
-                let _c23 = ((v_n !== -1) && ((Math.trunc(p.tile[_c16] / v_k) % 2) === 1));
+                let _c23: boolean = ((v_n !== -1) && ((Math.trunc(p.tile[_c16] / v_k) % 2) === 1));
                 if (_c23) {
                   const _t22 = ((4 * v_k) % 15);
                   _c23 = ((Math.trunc(p.tile[v_n] / _t22) % 2) === 1);

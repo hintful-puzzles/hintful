@@ -65,7 +65,7 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
       _g10++;
     }
   }
-  let _c18 = (_g10 >= cl.minballs);
+  let _c18: boolean = (_g10 >= cl.minballs);
   if (_c18) {
     let _g14 = 0;
     G15: {

@@ -118,12 +118,12 @@ export function sign(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SignBinding>
             }
           }
         }
-        let _c11 = !(_q8);
+        let _c11: boolean = !(_q8);
         if (!_c11) {
           if (b.has(v_big, v_d)) { if (fire === null) { b.strikeAt(v_big, v_d); changed = true; } else facts.push(STRIKE, v_big, v_d); }
           _c11 = true;
         }
-        let _c16 = _c11;
+        let _c16: boolean = _c11;
         if (_c16) {
           let _q12 = true;
           Q13: {
@@ -135,7 +135,7 @@ export function sign(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SignBinding>
               }
             }
           }
-          let _c15 = !(_q12);
+          let _c15: boolean = !(_q12);
           if (!_c15) {
             if (b.has(v_small, v_d)) { if (fire === null) { b.strikeAt(v_small, v_d); changed = true; } else facts.push(STRIKE, v_small, v_d); }
             _c15 = true;

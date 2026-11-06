@@ -9,8 +9,8 @@
  * boat's first square off the union-find's root, which was the smallest element
  * when it was written and is not in the `dsf.c` it was built against: no boat
  * of two squares or more was ever seen as finished, and the technique that
- * grows an unfinished boat never fired. The solver here asks for the smallest
- * element, so it decides more than upstream's did and its generator keeps
+ * grows an unfinished boat never fired. The ladder here reads each boat off
+ * the marks, so it decides more than upstream's did and its generator keeps
  * different boards. Generation is carried by `boats.test.ts` ("boats solver",
  * "boats generator") and by `difficulty-contract.test.ts`, which holds every
  * dealt board to its tier and to every cap above it.

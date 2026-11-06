@@ -1392,9 +1392,9 @@ catch a refactor that moves a verdict.
   The shape is a `canonify` result used as an index and not as an identity to
   compare. Then ask which `dsf.c` the C was written for: code that says "the
   canonical index is the first square" and calls `dsf_canonify` is broken
-  upstream, since the smallest element has its own call, `dsf_minimal`.
-  `Dsf.withMinimal` answers `minimal(i)`. Exemplar: `checkDsf` in
-  [`boats/validate.ts`](../src/games/boats/validate.ts).
+  upstream, since the smallest element has its own call, `dsf_minimal`, which
+  a map precomputed after all merges answers (`buildMinimal` in
+  [`keen/state.ts`](../src/games/keen/state.ts)).
 
 ### A divergence retires or re-founds its fixture
 
@@ -1647,9 +1647,8 @@ symbol.
   target difficulty
   ([`keen/generator.ts`](../src/games/keen/generator.ts)).
 - **A cage or region game takes its minimal elements from the shared
-  `Dsf`, and grows no min-tracking dsf of its own**: `Dsf.withMinimal` where
-  something reads a minimum mid-merge, or a map precomputed once after all
-  merges where nothing does (`buildMinimal` in
+  `Dsf`, and grows no min-tracking dsf of its own**: a map precomputed once
+  after all merges (`buildMinimal` in
   [`keen/state.ts`](../src/games/keen/state.ts)): a single ascending pass is
   exact whichever root union-by-size picks. First check whether the algorithm needs
   a minimum at all, or only a same-class test, and whether the root's

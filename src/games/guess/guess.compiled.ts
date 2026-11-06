@@ -88,7 +88,7 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt, variati
         _g163++;
       }
     }
-    let _c181 = (cl.score.black[_k160] === _g163);
+    let _c181: boolean = (cl.score.black[_k160] === _g163);
     if (_c181) {
       let _g167 = 0;
       G168: {
@@ -274,7 +274,7 @@ export function blacksForced(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Blac
   let fired = 0;
   let changed = false;
   for (let v_k = 0; v_k < cl.score.n; v_k++) {
-    let _c40 = (cl.score.black[v_k] > 0);
+    let _c40: boolean = (cl.score.black[v_k] > 0);
     if (_c40) {
       let _g36 = 0;
       G37: {

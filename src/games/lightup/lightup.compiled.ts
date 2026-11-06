@@ -169,7 +169,7 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
   for (let _k450 = 0; _k450 < cl.number.at.length; _k450++) {
     const _at451 = cl.number.at[_k450];
     const _v452 = cl.number.v[_k450];
-    let _c457 = ((g[_at451] || -1) === 2);
+    let _c457: boolean = ((g[_at451] || -1) === 2);
     if (_c457) {
       let _g453 = 0;
       G454: {
@@ -292,9 +292,9 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
       const v_L = union(stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g65), stretch(sp.lineCells[sp.colOf[v_c]], v_c, _g74));
       facts.length = 0;
       changed = false;
-      let _c108 = !(((_h82 < 0) && (_h63 < 0)));
+      let _c108: boolean = !(((_h82 < 0) && (_h63 < 0)));
       if (!_c108) {
-        let _c87 = (b.value(v_c) !== 1);
+        let _c87: boolean = (b.value(v_c) !== 1);
         if (!_c87) {
           let _q83 = true;
           Q84: {
@@ -310,7 +310,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
           }
           _c87 = _q83;
         }
-        let _c107 = _c87;
+        let _c107: boolean = _c87;
         if (_c107) {
           let _q88 = false;
           Q89: {
@@ -323,7 +323,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
               }
             }
           }
-          let _c106 = _q88;
+          let _c106: boolean = _q88;
           if (!_c106) {
             let _g92 = 0;
             G93: {
@@ -334,7 +334,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
                 _g92++;
               }
             }
-            let _c105 = (_g92 >= 1);
+            let _c105: boolean = (_g92 >= 1);
             if (_c105) {
               let _g96 = 0;
               G97: {
@@ -345,7 +345,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
                   _g96++;
                 }
               }
-              let _c104 = (_g96 > 1);
+              let _c104: boolean = (_g96 > 1);
               if (!_c104) {
                 let _q100 = true;
                 Q101: {
@@ -370,9 +370,9 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
         }
         _c108 = _c107;
       }
-      let _c147 = _c108;
+      let _c147: boolean = _c108;
       if (_c147) {
-        let _c146 = (v_n < 0);
+        let _c146: boolean = (v_n < 0);
         if (!_c146) {
           let _g109 = 0;
           G110: {
@@ -383,7 +383,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
               _g109++;
             }
           }
-          let _c121 = (_g109 <= v_n);
+          let _c121: boolean = (_g109 <= v_n);
           if (_c121) {
             let _g113 = 0;
             G114: {
@@ -405,7 +405,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
             }
             _c121 = ((_g113 + _g117) >= v_n);
           }
-          let _c131 = _c121;
+          let _c131: boolean = _c121;
           if (_c131) {
             let _g122 = 0;
             G123: {
@@ -416,7 +416,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
                 _g122++;
               }
             }
-            let _c130 = (_g122 < v_n);
+            let _c130: boolean = (_g122 < v_n);
             if (!_c130) {
               let _q126 = true;
               Q127: {
@@ -435,7 +435,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
             }
             _c131 = _c130;
           }
-          let _c145 = _c131;
+          let _c145: boolean = _c131;
           if (_c145) {
             let _g132 = 0;
             G133: {
@@ -455,7 +455,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
                 _g136++;
               }
             }
-            let _c144 = ((_g132 + _g136) > v_n);
+            let _c144: boolean = ((_g132 + _g136) > v_n);
             if (!_c144) {
               let _q140 = true;
               Q141: {
@@ -569,7 +569,7 @@ export function darkSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DarkSetBi
         const _h212 = v_S.length;
         facts.length = 0;
         changed = false;
-        let _c280 = (_h212 > 0);
+        let _c280: boolean = (_h212 > 0);
         if (_c280) {
           let _q213 = true;
           Q214: {
@@ -645,9 +645,9 @@ export function darkSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DarkSetBi
                   const _a267 = v_S;
                   for (let _i268 = 0; _i268 < _a267.length; _i268++) {
                     const v_s = _a267[_i268];
-                    let _c279 = (v_s !== v_d);
+                    let _c279: boolean = (v_s !== v_d);
                     if (_c279) {
-                      let _c278 = (v_D.includes(v_s));
+                      let _c278: boolean = (v_D.includes(v_s));
                       if (!_c278) {
                         let _q269 = false;
                         Q270: {
@@ -852,9 +852,9 @@ export function clueSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueSetBi
                     const _a390 = v_T;
                     for (let _i391 = 0; _i391 < _a390.length; _i391++) {
                       const v_s = _a390[_i391];
-                      let _c402 = (v_s !== v_d);
+                      let _c402: boolean = (v_s !== v_d);
                       if (_c402) {
-                        let _c401 = (v_D.includes(v_s));
+                        let _c401: boolean = (v_D.includes(v_s));
                         if (!_c401) {
                           let _q392 = false;
                           Q393: {

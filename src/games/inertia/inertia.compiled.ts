@@ -43,9 +43,9 @@ export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]
         _grew47 = false;
         for (let _c46 = 0; _c46 < sp.cells.length; _c46++) {
           if (_fix45[_c46] === 1) continue;
-          let _c62 = (p.ball[_c46] === 1);
+          let _c62: boolean = (p.ball[_c46] === 1);
           if (!_c62) {
-            let _c61 = (p.kind[_c46] !== 2);
+            let _c61: boolean = (p.kind[_c46] !== 2);
             if (_c61) {
               let _q48 = false;
               Q49: {
@@ -95,7 +95,7 @@ export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]
           }
         }
       }
-      let _c69 = !(_q31);
+      let _c69: boolean = !(_q31);
       if (_c69) {
         let _q35 = false;
         Q36: {
@@ -154,9 +154,9 @@ export function claimWitnesses(sp: GridSpace, _cl: Dealt, _variations: readonly 
         _grew84 = false;
         for (let _c83 = 0; _c83 < sp.cells.length; _c83++) {
           if (_fix82[_c83] === 1) continue;
-          let _c99 = (p.ball[_c83] === 1);
+          let _c99: boolean = (p.ball[_c83] === 1);
           if (!_c99) {
-            let _c98 = (p.kind[_c83] !== 2);
+            let _c98: boolean = (p.kind[_c83] !== 2);
             if (_c98) {
               let _q85 = false;
               Q86: {

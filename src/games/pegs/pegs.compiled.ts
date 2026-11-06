@@ -43,9 +43,9 @@ export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]
         _grew38 = false;
         for (let _c37 = 0; _c37 < sp.cells.length; _c37++) {
           if (_fix36[_c37] === 1) continue;
-          let _c46 = (p.grid[_c37] === 1);
+          let _c46: boolean = (p.grid[_c37] === 1);
           if (!_c46) {
-            let _c45 = (p.grid[_c37] === 0);
+            let _c45: boolean = (p.grid[_c37] === 0);
             if (_c45) {
               let _q39 = false;
               Q40: {
@@ -81,7 +81,7 @@ export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]
           _g24++;
         }
       }
-      let _c47 = (_g24 > 1);
+      let _c47: boolean = (_g24 > 1);
       if (_c47) {
         let _q28 = false;
         Q29: {
@@ -123,9 +123,9 @@ export function claimWitnesses(sp: GridSpace, _cl: Dealt, _variations: readonly 
         _grew60 = false;
         for (let _c59 = 0; _c59 < sp.cells.length; _c59++) {
           if (_fix58[_c59] === 1) continue;
-          let _c68 = (p.grid[_c59] === 1);
+          let _c68: boolean = (p.grid[_c59] === 1);
           if (!_c68) {
-            let _c67 = (p.grid[_c59] === 0);
+            let _c67: boolean = (p.grid[_c59] === 0);
             if (_c67) {
               let _q61 = false;
               Q62: {
@@ -196,7 +196,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       const _a11 = sp.adj4[v_f];
       for (let _i12 = 0; _i12 < _a11.length; _i12++) {
         const v_o = _a11[_i12];
-        let _c15 = (p.grid[v_o] === 1);
+        let _c15: boolean = (p.grid[v_o] === 1);
         if (_c15) {
           const _t13 = ((2 * (v_o % sp.w)) - (v_f % sp.w));
           const _t14 = ((2 * ((v_o / sp.w) | 0)) - ((v_f / sp.w) | 0));
@@ -219,7 +219,7 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
     if (!(Number.isInteger(v_f) && v_f >= 0 && v_f < sp.cells.length)) return false;
     if (!((p.grid[v_f] === 1))) return false;
     if (!sp.adj4[v_f].includes(v_o)) return false;
-    let _c19 = (p.grid[v_o] === 1);
+    let _c19: boolean = (p.grid[v_o] === 1);
     if (_c19) {
       const _t17 = ((2 * (v_o % sp.w)) - (v_f % sp.w));
       const _t18 = ((2 * ((v_o / sp.w) | 0)) - ((v_f / sp.w) | 0));

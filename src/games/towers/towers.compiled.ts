@@ -140,7 +140,7 @@ export function facing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FacingBind
         const v_s = _a21[_i22];
         const _h23 = clueAt(cl.sees, v_s);
         const v_c = (sp.sight[v_s][(_h23 - 1)] ?? -1);
-        let _c25 = b.has(v_c, sp.w);
+        let _c25: boolean = b.has(v_c, sp.w);
         if (_c25) {
           const _t24 = sp.w;
           if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, _t24); changed = true; } else facts.push(PLACE, v_c, _t24); }
@@ -215,7 +215,7 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
       for (let _i99 = 0; _i99 < _a98.length; _i99++) {
         const v_c = _a98[_i99];
         const _h100 = b.value(v_c);
-        let _c107 = (((v_R >> _h100) & 1) !== 0);
+        let _c107: boolean = (((v_R >> _h100) & 1) !== 0);
         if (_c107) {
           let _q101 = true;
           Q102: {
@@ -236,7 +236,7 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
         _g96++;
       }
     }
-    let _c112 = (v_v === (_g96 + 1));
+    let _c112: boolean = (v_v === (_g96 + 1));
     if (_c112) {
       let _g108 = -1;
       G109: {
@@ -250,7 +250,7 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
       }
       _c112 = (_g108 > 1);
     }
-    let _c148 = _c112;
+    let _c148: boolean = _c112;
     if (_c148) {
       let _g129 = -1;
       G130: {
@@ -289,7 +289,7 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
     const v_near = _c148;
     facts.length = 0;
     changed = false;
-    let _c171 = !(v_near);
+    let _c171: boolean = !(v_near);
     if (!_c171) {
       let _q149 = true;
       Q150: {
@@ -336,9 +336,9 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
       }
       _c171 = _q149;
     }
-    let _c203 = _c171;
+    let _c203: boolean = _c171;
     if (_c203) {
-      let _c202 = v_near;
+      let _c202: boolean = v_near;
       if (!_c202) {
         let _q172 = true;
         Q173: {
@@ -350,7 +350,7 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
               const _h186 = b.known(v_c);
               const _h193 = b.value(v_c);
               const _h194 = (_h193 + 1);
-              let _c195 = _h186;
+              let _c195: boolean = _h186;
               if (_c195) {
                 let _q187 = false;
                 Q188: {

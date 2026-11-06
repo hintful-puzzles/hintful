@@ -283,9 +283,9 @@ export function single(b: Marks, sp: GridSpace, fire: Fire<SingleBinding> | null
     if (!((popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) < 2))) continue;
     facts.length = 0;
     changed = false;
-    let _c57 = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) === 1);
+    let _c57: boolean = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) === 1);
     if (_c57) {
-      let _c56 = b.known(v_c);
+      let _c56: boolean = b.known(v_c);
       if (!_c56) {
         const _t55 = least((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))));
         if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, _t55); changed = true; } else facts.push(PLACE, v_c, _t55); }
@@ -347,7 +347,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
             _g77++;
           }
         }
-        let _c86 = (_g77 <= v_v);
+        let _c86: boolean = (_g77 <= v_v);
         if (_c86) {
           let _g82 = 0;
           G83: {
@@ -360,7 +360,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
           }
           _c86 = (_h81 >= (v_v - _g82));
         }
-        let _c96 = _c86;
+        let _c96: boolean = _c86;
         if (_c96) {
           let _g87 = 0;
           G88: {
@@ -371,7 +371,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
               _g87++;
             }
           }
-          let _c95 = (_g87 < v_v);
+          let _c95: boolean = (_g87 < v_v);
           if (!_c95) {
             let _q91 = true;
             Q92: {
@@ -389,7 +389,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
           }
           _c96 = _c95;
         }
-        let _c111 = _c96;
+        let _c111: boolean = _c96;
         if (_c111) {
           let _g97 = 0;
           G98: {
@@ -400,7 +400,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
               _g97++;
             }
           }
-          let _c105 = (_g97 === v_v);
+          let _c105: boolean = (_g97 === v_v);
           if (!_c105) {
             let _g101 = 0;
             G102: {
@@ -413,7 +413,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
             }
             _c105 = (_h81 > (v_v - _g101));
           }
-          let _c110 = _c105;
+          let _c110: boolean = _c105;
           if (!_c110) {
             let _q106 = true;
             Q107: {
@@ -464,7 +464,7 @@ export function oddGap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OddGapBind
     const _h145 = clueAt(cl.count, (v_L < 0 ? -1 : perPlace(v_L, 2)));
     L146: {
       const v_n = _h145;
-      let _c151 = (v_n >= 0);
+      let _c151: boolean = (v_n >= 0);
       if (_c151) {
         let _g147 = 0;
         G148: {
@@ -481,7 +481,7 @@ export function oddGap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OddGapBind
       for (let v_d = 1; v_d <= 3; v_d++) {
         const _h152 = clueAt(cl.count, (v_L < 0 ? -1 : perPlace(v_L, v_d)));
         const _h153 = clueAt(cl.count, (v_L < 0 ? -1 : perPlace(v_L, (4 - v_d))));
-        let _c163 = (((v_d !== 2) && (_h152 >= 0)) && (_h153 >= 0));
+        let _c163: boolean = (((v_d !== 2) && (_h152 >= 0)) && (_h153 >= 0));
         if (_c163) {
           let _g154 = 0;
           G155: {
@@ -569,7 +569,7 @@ export function marked(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MarkedBind
       for (let _i235 = 0; _i235 < _a234.length; _i235++) {
         const v_c = _a234[_i235];
         const _h236 = b.known(v_c);
-        let _c248 = (!(_h236) && !b.has(v_c, 2));
+        let _c248: boolean = (!(_h236) && !b.has(v_c, 2));
         if (_c248) {
           let _q237 = false;
           Q238: {
@@ -607,7 +607,7 @@ export function marked(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MarkedBind
         const _h251 = clueAt(cl.count, (v_L < 0 ? -1 : perPlace(v_L, v_d)));
         L252: {
           const v_v = _h251;
-          let _c258 = (v_v >= 0);
+          let _c258: boolean = (v_v >= 0);
           if (_c258) {
             let _g253 = 0;
             G254: {
@@ -668,7 +668,7 @@ export function oneNeutral(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneNeu
     const _h274 = clueAt(cl.count, (v_L < 0 ? -1 : perPlace(v_L, 2)));
     L275: {
       const v_n = _h274;
-      let _c281 = (v_n >= 0);
+      let _c281: boolean = (v_n >= 0);
       if (_c281) {
         let _g276 = 0;
         G277: {
@@ -761,7 +761,7 @@ export function everyTile(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EveryTi
         L324: {
           const v_T = _g316;
           const _h325 = v_T.length;
-          let _c331 = (_h325 > 0);
+          let _c331: boolean = (_h325 > 0);
           if (_c331) {
             let _g326 = 0;
             G327: {
@@ -852,7 +852,7 @@ export function onlyEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyEndBi
         L376: {
           const v_T = _g369;
           const _h377 = v_T.length;
-          let _c382 = (_h377 > 0);
+          let _c382: boolean = (_h377 > 0);
           if (_c382) {
             let _g378 = 0;
             G379: {

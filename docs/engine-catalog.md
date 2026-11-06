@@ -208,9 +208,8 @@ opposite sense. Exemplars: `galaxies/state.ts`, and `dominosa/solver.ts`
 for `FlipDsf`.
 
 - **For a class's minimal element, precompute a `minimal[i]` map after all
-  merges** (`buildMinimal` in `keen/state.ts`). A game that reads one while
-  still merging makes its dsf with `Dsf.withMinimal(n)` and asks
-  `minimal(i)`. Neither changes the canonical root.
+  merges** (`buildMinimal` in `keen/state.ts`). It does not change the
+  canonical root.
 - **Do not "fix" an upstream loop that uses the canonical root as an index
   bound** and not as an identity to compare. Which members the scan skips
   decides which boards a solver-gated generator emits.
