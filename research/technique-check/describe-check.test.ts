@@ -625,6 +625,36 @@ const PLANTS: Record<string, Plant> = {
     conclude:
       "|S| > 0 and (|S| <= 2 implies forall x in A, y in adj4(x) where y in S: place(edge(x, y), 2))",
   },
+  // Two numbers side by side read as too big a region one square sooner.
+  cluesVersusRegionSize: {
+    for: "q in clues(number), a = at(q), b in adj4(a) where not known(edge(a, b)), d = clue(number, b) where d != none and (8 - v(q) - d >= k or (v(q) = 3 and d = 3 and k != 2))",
+  },
+  // A number short of its walls read as having all it needs.
+  numberExhausted: {
+    conclude:
+      "n <= v(q) and n + |U| >= v(q) and (n = v(q) implies forall y in U: place(edge(c, y), 2)) and (n < v(q) implies forall y in U: place(edge(c, y), 2))",
+  },
+  // Two groups that together make a region read as too big for one.
+  notTooBig: {
+    for: "O = joined, e in edges where not known(e), A = through(end1(e), O), b = end2(e) where b not in A, B = through(b, O) where |A| + |B| >= k",
+  },
+  // A group read as joining the first group it can grow into, whatever the others.
+  notTooSmall: {
+    conclude:
+      "|A| < k and |S| > 0 and (forall B = through(nth(S, 0), O): forall x in A, y in adj4(x) where y in B: place(edge(x, y), 2))",
+  },
+  // Two walls at a corner read as needing a third.
+  noDanglingEdges: {
+    for: "p in corners, C = cells(p), F = set(edge(x, y) over x in C, y in adj4(x) where y in C), f in F where not known(f) and count(e in F where value(e) = 1) = 2 and count(e in F where not known(e)) = 1",
+  },
+  // Two edges of a number read as sharing a fate whatever groups they lead to.
+  equivalentEdges: {
+    for: "O = joined, q in clues(number), c = at(q) where v(q) >= 1 and v(q) <= 3, y in open(c) where not known(edge(c, y)), R = through(y, O) where c not in R, z in before(y, adj4(c)) where not known(edge(c, z))",
+  },
+  // Two squares in different groups read as one region.
+  inside: {
+    for: "O = joined, e in edges where value(e) != 2 and end2(e) not in through(end1(e), O)",
+  },
   // Every given segment read as a boat of one square.
   "boats.given": {
     conclude:

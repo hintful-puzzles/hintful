@@ -405,10 +405,14 @@ function gridSpace(
     adj8,
     edgeEnds: Int32Array.from(ends),
     edges: Array.from({ length: ends.length / 2 }, (_, e) => e),
+    // A division game reads an edge by its squares in every rung's inner
+    // loop: `right` holds -1 at a row's end, and a grid one square wide has
+    // its squares below one another 1 apart, so `w` is tried first.
     edgeOf(a, b) {
-      if (a > b) return this.edgeOf(b, a);
-      if (b === a + 1 && a % w !== w - 1) return right[a];
-      if (b === a + w) return down[a];
+      const lo = a < b ? a : b;
+      const gap = a < b ? b - a : a - b;
+      if (gap === w) return down[lo];
+      if (gap === 1) return right[lo];
       return -1;
     },
     slots: sight.map((_, s) => s),

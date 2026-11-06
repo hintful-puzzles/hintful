@@ -1,0 +1,19 @@
+ok  palisade   cluesVersusRegionSize          current: recorded src/games/palisade/palisade.description.yaml#cluesVersusRegionSize 306e99ef1c7604a1
+ok  palisade   numberExhausted                current: recorded src/games/palisade/palisade.description.yaml#numberExhausted 43a558dd5d9340cd
+ok  palisade   notTooBig                      current: recorded src/games/palisade/palisade.description.yaml#notTooBig be0999777791236f
+ok  palisade   notTooSmall                    3  sound    (want sound   )     1 queries    0.7s
+ok  palisade   notTooSmall (planted)          3  unsound  (want unsound )     1 queries    0.2s   at eset
+ok  palisade   notTooSmall                    4  sound    (want sound   )     1 queries   84.7s
+ok  palisade   notTooSmall (planted)          4  unsound  (want unsound )     1 queries    1.8s   at eset
+ok  palisade   noDanglingEdges                3  sound    (want sound   )     4 queries    0.2s
+ok  palisade   noDanglingEdges (planted)      3  unsound  (want unsound )     1 queries    0.1s   at corner 0
+ok  palisade   noDanglingEdges                4  sound    (want sound   )     9 queries    6.5s
+ok  palisade   noDanglingEdges (planted)      4  unsound  (want unsound )     1 queries    0.4s   at corner 0
+ok  palisade   equivalentEdges                3  sound    (want sound   )     1 queries    0.2s
+ok  palisade   equivalentEdges (planted)      3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  palisade   equivalentEdges                4  sound    (want sound   )     1 queries   14.8s
+ok  palisade   equivalentEdges (planted)      4  unsound  (want unsound )     1 queries    0.9s   at eset
+ok  palisade   inside                         3  sound    (want sound   )     1 queries    0.1s
+ok  palisade   inside (planted)               3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  palisade   inside                         4  sound    (want sound   )     1 queries   12.3s
+ok  palisade   inside (planted)               4  unsound  (want unsound )     1 queries    0.5s   at eset

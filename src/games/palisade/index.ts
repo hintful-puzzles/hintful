@@ -14,8 +14,6 @@ import {
   BORDER_MASK,
   borderGridVerbs,
   DISABLED,
-  DX,
-  DY,
 } from "../../engine/border-grid.ts";
 import {
   BORDER_RING_LEGEND,
@@ -32,12 +30,14 @@ import type {
   UiUpdate,
 } from "../../engine/game.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
+import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { edgeContinuation } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { stepBudget } from "../../engine/step-budget.ts";
 import { interpretTargetVerbs, verbClicks } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
@@ -52,8 +52,11 @@ import {
 } from "./render.ts";
 import {
   answerOf,
-  deduceForcedEdges,
-  type ForcedEdge,
+  hintFirings,
+  isSolved,
+  type PalisadeFiring,
+  type PalisadeRule,
+  palisadeLadderIds,
   solveToBorders,
 } from "./solver.ts";
 import {
@@ -125,106 +128,93 @@ function findMistakes(state: PalisadeState): readonly PalisadeMistake[] {
 
 // --- hint ------------------------------------------------------------------
 
-/** Narrate one leg of a deduction. A multi-edge firing (`equivalentEdges`
- * pair, `numberExhausted` sweep) narrates the coupling on its first leg and a
- * short continuation on the rest. The words, and why each reads as it does,
- * are [`hint-text.ts`](./hint-text.ts)'s. */
+/** The first leg's sentence for a firing; later legs continue it, pointing
+ * back to the evidence the first named. The words, and why each reads as it
+ * does, are [`hint-text.ts`](./hint-text.ts)'s. */
 function explain(
-  fe: ForcedEdge,
+  f: PalisadeFiring,
   clues: Int8Array,
   w: number,
   k: number,
   leg: number,
   left: readonly ForcedBorderEdge[],
-  groupSize: number,
 ): Sentence {
-  const c = clues[fe.y * w + fe.x];
   const at = (i: number): Point => ({ x: i % w, y: Math.floor(i / w) });
-  const cells = (fe.cells ?? []).map(at);
-  const clue = { x: fe.x, y: fe.y };
-  if (leg > 0) {
-    const basis =
-      fe.rule === "numberExhausted"
-        ? say.basis.clue(clue, c)
-        : fe.rule === "notTooSmall" || fe.rule === "equivalentEdges"
-          ? say.basis.region(cells)
-          : say.basis.outlined(cells, BASIS_NOUN[fe.rule]);
-    return edgeContinuation(left, basis);
-  }
-  const multi = groupSize > 1;
-  switch (fe.rule) {
+  const cells = (sqs: readonly number[]): Point[] => sqs.map(at);
+  const multi = f.edges.length > 1;
+  switch (f.kind) {
     case "cluesVersusRegionSize": {
-      // The clue on the other side of the edge.
-      const d = clues[(fe.y + DY[fe.dir]) * w + (fe.x + DX[fe.dir])];
-      return say.cluesVersusRegionSize(cells, c, d, k, left);
+      const [a, b] = f.clues;
+      if (leg > 0)
+        return edgeContinuation(left, say.basis.outlined(cells(f.clues), "clue"));
+      return say.cluesVersusRegionSize(cells(f.clues), clues[a], clues[b], k, left);
     }
     case "numberExhausted":
-      return say.numberExhausted(clue, c, left, multi);
-    case "notTooBig":
-      return say.notTooBig(cells, fe.cells?.length ?? null, k, left);
+      if (leg > 0)
+        return edgeContinuation(left, say.basis.clue(at(f.clue), clues[f.clue]));
+      return say.numberExhausted(at(f.clue), clues[f.clue], left, multi);
+    case "notTooBig": {
+      const both = [...f.a, ...f.b];
+      if (leg > 0)
+        return edgeContinuation(left, say.basis.outlined(cells(both), "region"));
+      return say.notTooBig(cells(both), both.length, k, left);
+    }
     case "notTooSmall":
-      return say.notTooSmall(cells, fe.cells?.length ?? null, k, left, multi);
+      if (leg > 0) return edgeContinuation(left, say.basis.region(cells(f.region)));
+      return say.notTooSmall(cells(f.region), f.region.length, k, left, multi);
     case "noDanglingEdges":
-      return say.noDanglingEdges(cells, left);
+      if (leg > 0)
+        return edgeContinuation(
+          left,
+          say.basis.outlined(cells(f.corner), ["corner", "corner"]),
+        );
+      return say.noDanglingEdges(cells(f.corner), left);
     case "equivalentEdges":
-      return say.equivalentEdges(cells, c, left, multi);
+      if (leg > 0) return edgeContinuation(left, say.basis.region(cells(f.region)));
+      return say.equivalentEdges(cells(f.region), clues[f.clue], left, multi);
+    case "inside":
+      if (leg > 0) return edgeContinuation(left, say.basis.region(cells(f.region)));
+      return say.inside(cells(f.region), left);
   }
 }
 
-/** What a later leg calls the outlined squares its first leg named, for the
- * rules whose evidence is outlined. */
-const BASIS_NOUN = {
-  cluesVersusRegionSize: "clue",
-  notTooBig: "region",
-  noDanglingEdges: ["corner", "corner"],
-} as const;
+/** The hint's rungs: the ladder's techniques, in its order. */
+const PALISADE_RUNGS = palisadeLadderIds;
+type PalisadeRung = PalisadeRule;
 
-/** The hint's rungs: the solver's deductions, by the rule that forced the
- * edge. */
-const PALISADE_RUNGS = [
-  "cluesVersusRegionSize",
-  "numberExhausted",
-  "notTooBig",
-  "notTooSmall",
-  "noDanglingEdges",
-  "equivalentEdges",
-] as const;
-type PalisadeRung = (typeof PALISADE_RUNGS)[number];
-
-/** Compute the next deductions as a hint plan, seeded from the player's
- * current borders and no-wall marks. Refuses only when the deductions
- * force no edge. Edges forced by one firing (the `equivalentEdges` pair,
- * a `numberExhausted` sweep) form one multi-leg journey; distinct firings
- * stay separate hints. */
+/**
+ * The deduction from the player's own marks to the end, as one journey per
+ * firing. Refuses only when the deduction has nothing left to set, which on
+ * an Unreasonable board is before the end.
+ */
 function hint(
   state: PalisadeState,
 ): HintResult<PalisadeMove, PalisadeHint, PalisadeRung> {
-  const forced = deduceForcedEdges(state, state.clues, state.borders);
-  if (forced.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
+  const walk = hintFirings(
+    state,
+    state.clues,
+    state.borders,
+    stepBudget("palisade hint"),
+  );
+  const { plan } = deduceHintPlan<Uint8Array, PalisadeFiring, boolean>({
+    board: walk.borders,
+    status: (borders) => isSolved(state, state.clues, borders),
+    incomplete: false,
+    next: () => walk.next(),
+  });
+  if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
 
-  // Split the flat, discovery-ordered list into contiguous runs of one
-  // firing (a firing's surviving edges stay contiguous after dedup), and
-  // emit one journey per run.
-  const steps: HintStep<PalisadeMove, PalisadeHint, PalisadeRung>[] = [];
-  for (let g = 0; g < forced.length; ) {
-    let end = g + 1;
-    while (end < forced.length && forced[end].group === forced[g].group) end++;
-    const group = forced.slice(g, end);
-    const fe = group[0];
-    steps.push(
-      ...borderHintJourney(
-        fe.rule,
-        group,
-        // The one region a sentence is about is striped (docs/hints-marks.md
-        // § "Hatch the line the sentence names"); a clue, a corner or the two
-        // regions a join would merge are outlined. The words say which.
-        (leg, left) =>
-          explain(fe, state.clues, state.w, state.k, leg, left, group.length),
-        (edits): PalisadeMove => ({ type: "edges", edits }),
-      ),
-    );
-    g = end;
-  }
+  const steps = plan.flatMap((f) =>
+    borderHintJourney<PalisadeMove, PalisadeRung>(
+      f.kind,
+      f.edges,
+      // The one region a sentence is about is striped (docs/hints-marks.md
+      // § "Hatch the line the sentence names"); a clue, a corner or the two
+      // regions a join would merge are outlined. The words say which.
+      (leg, left) => explain(f, state.clues, state.w, state.k, leg, left),
+      (edits): PalisadeMove => ({ type: "edges", edits }),
+    ),
+  );
   return { ok: true, steps };
 }
 
@@ -277,8 +267,8 @@ export const palisadeGame: Game<
       type: "solve",
       borders: Array.from(sol, (b) => (b & BORDER_MASK) | DISABLED(~b & BORDER_MASK)),
     })),
-  // Easy is what the solver's six deductions finish and the hint, which runs
-  // the same deductions from the player's edges, finishes too.
+  // Easy is what the ladder finishes and the hint, which walks the same
+  // ladder from the player's edges, finishes too.
   difficulty: searchTierContract<PalisadeParams, PalisadeState>({
     newState,
     deductionFinishes: (state) =>

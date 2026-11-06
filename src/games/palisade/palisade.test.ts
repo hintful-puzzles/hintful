@@ -8,7 +8,6 @@ import {
   DX,
   DY,
   FLIP,
-  initBorders,
 } from "../../engine/border-grid.ts";
 import { EDGE } from "../../engine/border-grid-hint.ts";
 import {
@@ -22,16 +21,21 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { stepBudget } from "../../engine/step-budget.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { newDesc } from "./generator.ts";
 import { palisadeGame } from "./index.ts";
-import { deduceForcedEdges, solver, solveToBorders } from "./solver.ts";
+import {
+  hintFirings,
+  isSolved,
+  type PalisadeFiring,
+  solveToBorders,
+} from "./solver.ts";
 import {
   bitcount,
   decodeParams,
   encodeDesc,
   encodeParams,
-  isSolved,
   newState,
   type PalisadeHint,
   type PalisadeMove,
@@ -114,7 +118,7 @@ describe("palisade solver + generator", () => {
       const sol = solveToBorders(p, state.clues);
       expect(sol).not.toBeNull();
       if (sol) {
-        expect(isSolved(p.w, p.h, p.k, state.clues, sol)).toBe(true);
+        expect(isSolved(p, state.clues, sol)).toBe(true);
       }
     }
   });
@@ -123,8 +127,8 @@ describe("palisade solver + generator", () => {
     const p = { w: 5, h: 5, k: 5, diff: DIFF_EASY };
     const { desc } = newDesc(p, randomNew("palisade-solve"));
     const clues = newState(p, desc).clues;
-    const borders = initBorders(p.w, p.h);
-    expect(solver(p, clues, borders)).toBe(true);
+    const borders = solveToBorders(p, clues);
+    if (borders === null) throw new Error(`the ladder stops short on ${desc}`);
     // Every region exactly k, every clue equals its wall count.
     const dsf = buildDsf(p.w, p.h, borders, true);
     for (let i = 0; i < p.w * p.h; i++) {
@@ -305,33 +309,33 @@ describe("palisade hint", () => {
         step.rung === "notTooSmall" && steps[1]?.continuesPrevious === true,
     },
     pins: {
-      /** Held on 306 of 1311 positions walked. */
+      /** Held on 324 of 1390 positions walked. */
       journey: "5x5n5:g0g2b2b2b2",
-      /** Held on 667 of 1311 positions walked. */
+      /** Held on 746 of 1390 positions walked. */
       noWall: "5x5n5:g0g2b2b2b2",
-      /** Held on 22 of 1311 positions walked. */
+      /** Held on 20 of 1390 positions walked. */
       join: {
         id: "5x5n5de:j12a1a3f232",
         moves:
           '[{"type":"edges","edits":[{"x":0,"y":2,"flag":16},{"x":0,"y":1,"flag":64}]},{"type":"edges","edits":[{"x":0,"y":2,"flag":32},{"x":1,"y":2,"flag":128}]},{"type":"edges","edits":[{"x":0,"y":2,"flag":64},{"x":0,"y":3,"flag":16}]},{"type":"edges","edits":[{"x":0,"y":3,"flag":2},{"x":1,"y":3,"flag":8}]},{"type":"edges","edits":[{"x":0,"y":3,"flag":4},{"x":0,"y":4,"flag":1}]},{"type":"edges","edits":[{"x":4,"y":4,"flag":16},{"x":4,"y":3,"flag":64}]},{"type":"edges","edits":[{"x":4,"y":4,"flag":128},{"x":3,"y":4,"flag":32}]},{"type":"edges","edits":[{"x":3,"y":4,"flag":1},{"x":3,"y":3,"flag":4}]},{"type":"edges","edits":[{"x":3,"y":4,"flag":8},{"x":2,"y":4,"flag":2}]},{"type":"edges","edits":[{"x":2,"y":4,"flag":16},{"x":2,"y":3,"flag":64}]},{"type":"edges","edits":[{"x":2,"y":4,"flag":128},{"x":1,"y":4,"flag":32}]},{"type":"edges","edits":[{"x":0,"y":4,"flag":32},{"x":1,"y":4,"flag":128}]},{"type":"edges","edits":[{"x":1,"y":3,"flag":1},{"x":1,"y":2,"flag":4}]}]',
       },
-      /** Held on 14 of 1311 positions walked. */
+      /** Held on 24 of 1390 positions walked. */
       cluesVersusRegionSize: "5x5n5:a2a1a2b2e1e33",
-      /** Held on 1124 of 1311 positions walked. */
+      /** Held on 1311 of 1390 positions walked. */
       numberExhausted: "5x5n5:g0g2b2b2b2",
-      /** Held on 1294 of 1311 positions walked. */
+      /** Held on 1383 of 1390 positions walked. */
       notTooBig: {
         id: "5x5n5:a2c1e232c22d2",
         moves:
           '[{"type":"edges","edits":[{"x":0,"y":1,"flag":16},{"x":0,"y":0,"flag":64}]},{"type":"edges","edits":[{"x":0,"y":1,"flag":32},{"x":1,"y":1,"flag":128}]},{"type":"edges","edits":[{"x":0,"y":1,"flag":64},{"x":0,"y":2,"flag":16}]},{"type":"edges","edits":[{"x":1,"y":0,"flag":64},{"x":1,"y":1,"flag":16}]},{"type":"edges","edits":[{"x":1,"y":0,"flag":2},{"x":2,"y":0,"flag":8}]}]',
       },
-      /** Held on 1305 of 1311 positions walked. */
+      /** Held on 1300 of 1390 positions walked. */
       notTooSmall: {
         id: "5x5n5:23m2a33b1a3",
         moves:
           '[{"type":"edges","edits":[{"x":2,"y":3,"flag":2},{"x":3,"y":3,"flag":8}]},{"type":"edges","edits":[{"x":3,"y":3,"flag":4},{"x":3,"y":4,"flag":1}]},{"type":"edges","edits":[{"x":0,"y":0,"flag":32},{"x":1,"y":0,"flag":128}]},{"type":"edges","edits":[{"x":0,"y":0,"flag":64},{"x":0,"y":1,"flag":16}]},{"type":"edges","edits":[{"x":1,"y":0,"flag":2},{"x":2,"y":0,"flag":8}]},{"type":"edges","edits":[{"x":1,"y":0,"flag":4},{"x":1,"y":1,"flag":1}]},{"type":"edges","edits":[{"x":1,"y":4,"flag":16},{"x":1,"y":3,"flag":64}]},{"type":"edges","edits":[{"x":1,"y":4,"flag":32},{"x":2,"y":4,"flag":128}]},{"type":"edges","edits":[{"x":1,"y":4,"flag":128},{"x":0,"y":4,"flag":32}]},{"type":"edges","edits":[{"x":1,"y":1,"flag":8},{"x":0,"y":1,"flag":2}]}]',
       },
-      /** Held on 1159 of 1311 positions walked. */
+      /** Held on 905 of 1390 positions walked. */
       noDanglingEdges: {
         id: "5x5n5:b31c2a3b3d1c2",
         moves:
@@ -341,6 +345,12 @@ describe("palisade hint", () => {
         id: "5x5n5:c2d2d22a13b222",
         moves:
           '[{"type":"edges","edits":[{"x":0,"y":4,"flag":16},{"x":0,"y":3,"flag":64}]},{"type":"edges","edits":[{"x":0,"y":4,"flag":32},{"x":1,"y":4,"flag":128}]}]',
+      },
+      /** Held on 737 of 1390 positions walked. */
+      inside: {
+        id: "8x6n6de:a2d33b3b2c22c2a22a1a3b21b12c1a333",
+        moves:
+          '[{"type":"edges","edits":[{"x":6,"y":0,"flag":2},{"x":7,"y":0,"flag":8}]},{"type":"edges","edits":[{"x":3,"y":5,"flag":2},{"x":4,"y":5,"flag":8}]},{"type":"edges","edits":[{"x":4,"y":5,"flag":2},{"x":5,"y":5,"flag":8}]},{"type":"edges","edits":[{"x":7,"y":0,"flag":64},{"x":7,"y":1,"flag":16}]},{"type":"edges","edits":[{"x":1,"y":5,"flag":16},{"x":1,"y":4,"flag":64}]},{"type":"edges","edits":[{"x":1,"y":5,"flag":32},{"x":2,"y":5,"flag":128}]},{"type":"edges","edits":[{"x":1,"y":5,"flag":128},{"x":0,"y":5,"flag":32}]},{"type":"edges","edits":[{"x":4,"y":5,"flag":16},{"x":4,"y":4,"flag":64}]},{"type":"edges","edits":[{"x":0,"y":4,"flag":32},{"x":1,"y":4,"flag":128}]}]',
       },
     },
   });
@@ -396,13 +406,27 @@ describe("palisade hint", () => {
     expect(off).toEqual([]);
   });
 
-  it("records de-duplicated interior edges (rim-seeded)", () => {
-    const s0 = newState(P, newDesc(P, randomNew("palisade-hint-rec")).desc);
-    const forced = deduceForcedEdges(P, s0.clues, s0.borders);
+  /** Every firing the ladder walks from the bare rim to its end, on a board
+   * dealt from `seed` or given as its desc. */
+  const firingsOf = (
+    board: { seed: string } | { desc: string },
+  ): { clues: Int8Array; firings: PalisadeFiring[] } => {
+    const desc = "desc" in board ? board.desc : newDesc(P, randomNew(board.seed)).desc;
+    const s0 = newState(P, desc);
+    const walk = hintFirings(P, s0.clues, s0.borders, stepBudget("palisade test"));
+    const firings: PalisadeFiring[] = [];
+    for (let f = walk.next(); f !== null; f = walk.next()) firings.push(f);
+    return { clues: s0.clues, firings };
+  };
+
+  it("sets each interior edge once (rim-seeded)", () => {
+    const forced = firingsOf({ seed: "palisade-hint-rec" }).firings.flatMap(
+      (f) => f.edges,
+    );
     expect(forced.length).toBeGreaterThan(0);
     const ids = forced.map((e) => physicalEdge(e, P.w));
-    // No physical edge appears twice (the dedup pass) and every edge is
-    // interior (its neighbor is on the grid).
+    // No physical edge is set twice, and every edge is interior (its
+    // neighbor is on the grid).
     expect(new Set(ids).size).toBe(ids.length);
     for (const e of forced) {
       const nx = e.x + DX[e.dir];
@@ -411,19 +435,26 @@ describe("palisade hint", () => {
     }
   });
 
-  it("captures referenced cells (and siblings) for highlighting", () => {
-    const s0 = newState(P, newDesc(P, randomNew("palisade-hint-ctx")).desc);
-    const forced = deduceForcedEdges(P, s0.clues, s0.borders);
-    // Clue-pair / region deductions name cells (the hint derives sibling
-    // edges from the firing group, not from the forced edge). The
-    // fresh-board opener is a clue-vs-region wall, so at least one forced
-    // edge carries a non-empty `cells` reference.
-    expect(forced.some((e) => (e.cells?.length ?? 0) > 0)).toBe(true);
-    const cvr = forced.find((e) => e.rule === "cluesVersusRegionSize");
-    if (cvr) {
-      // The two named cells are the two adjacent clues sharing the wall.
-      expect(cvr.cells).toHaveLength(2);
-      for (const i of cvr.cells ?? []) expect(s0.clues[i]).not.toBe(-1);
+  it("names the two numbers a clue-pair wall stands between", () => {
+    // The board pinned for the rung: two numbers side by side seldom
+    // allow less than a region.
+    const { clues, firings } = firingsOf({ desc: "a2a1a2b2e1e33" });
+    const pairs = firings.filter((f) => f.kind === "cluesVersusRegionSize");
+    expect(pairs.length).toBeGreaterThan(0);
+    for (const f of pairs) {
+      const [a, b] = f.clues;
+      expect(clues[a]).not.toBe(-1);
+      expect(clues[b]).not.toBe(-1);
+      // The wall is the edge between them, named from the first.
+      expect(f.edges).toEqual([
+        expect.objectContaining({ x: a % P.w, y: Math.floor(a / P.w), kind: "wall" }),
+      ]);
+      expect(physicalEdge(f.edges[0], P.w)).toBe(
+        physicalEdge(
+          { x: b % P.w, y: Math.floor(b / P.w), dir: FLIP(f.edges[0].dir) },
+          P.w,
+        ),
+      );
     }
   });
 

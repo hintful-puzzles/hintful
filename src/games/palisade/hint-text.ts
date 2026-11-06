@@ -203,6 +203,14 @@ export const say = {
         });
   },
 
+  /** The edge's two squares are already in the region `region`: the player's
+   * own no-wall marks join them some other way round. */
+  inside: (region: readonly Point[], edges: Edges): Sentence =>
+    so({
+      look: phrase`${mark.this("stripes", whole(CELL), region, "region")} already holds the squares either side of ${thisEdge(edges)}`,
+      move: phrase`it can't be a wall`,
+    }),
+
   /** What a later leg of a firing points back to: the evidence its first leg
    * named, which the leg still shows. */
   basis: {

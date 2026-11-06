@@ -275,9 +275,10 @@ keyboard cursor moves by half a cell". Palisade SHALL depart from none.
 
 `hint(state)` SHALL start the solver from the player's current state: the
 player's walls as walls already drawn, and every edge the player has marked
-"no wall" as a join already made. Its plan SHALL be the full chain of edges
-the deductions then force, in discovery order, so a single request shows the
-next deduction with all its legs and auto-hint can play the whole chain.
+"no wall" as an open edge. Its plan SHALL be the full chain of edges the
+ladder then forces, one firing a journey, each firing the one that carries on
+from the squares the plan's latest steps decided, so a single request shows
+the next deduction with all its legs and auto-hint can play the whole chain.
 
 #### Scenario: A player no-wall mark is not re-hinted
 
@@ -376,15 +377,15 @@ one square included, and a size a step says SHALL be one the board shows.
 
 #### Scenario: Two regions too big to join
 
-- **WHEN** the plan on `23d2e2c2e232` reaches an edge between regions of
-  squares that would together number 6
-- **THEN** the step says "Joining these two regions would make 6 cells, but a
-  region here holds 5, so this edge must be a wall."
+- **WHEN** a plan reaches an edge between two regions of 5 squares in all
+  that would together number 6
+- **THEN** the step says "Joining these two regions would make 6 cells, but
+  every region holds 5, so this edge must be a wall."
 
 #### Scenario: A region with one way to grow
 
-- **WHEN** the plan on `23d2e2c2e232` reaches three squares joined by no-wall
-  marks, with one undecided edge between them and the rest of the board
+- **WHEN** a plan reaches three squares joined by no-wall marks, in regions
+  of 5, with one undecided edge between them and the rest of the board
 - **THEN** the step says "This region has 3 of its 5 cells and just one way
   left to grow, so this edge can't be a wall."
 
@@ -427,10 +428,10 @@ stripe the region the edges border, and SHALL NOT mark the clue's cell.
 
 #### Scenario: A 2 that cannot afford two more walls
 
-- **WHEN** the plan on `23d2e2c2e232` reaches a 2 with two undecided edges
-  into one region, where walls on both would exceed it
-- **THEN** the step says "Both edges border the same region, so they share a
-  fate; walling both would exceed clue 2, so neither can be a wall."
+- **WHEN** a plan reaches a 2 with two undecided edges into one region, where
+  walls on both would exceed it
+- **THEN** the step says "Both ringed edges border the same region and share
+  a fate; walling both would exceed clue 2, so neither can be a wall."
 
 #### Scenario: The clue that decides the edges is not marked
 
@@ -438,21 +439,33 @@ stripe the region the edges border, and SHALL NOT mark the clue's cell.
 - **THEN** every cell of the region it names is hatched, and the clue cell is
   neither hatched nor outlined
 
-### Requirement: Hint: Palisade's hint runs its deductions in a fixed round
+### Requirement: Hint: Palisade's solver is the ladder its description states, which its hint shares
 
-The plan SHALL first take every wall between two clues side by side, once,
-and then repeat a round until a round forces nothing: the clues that are full
-or need every edge left, then regions too big to join, then regions with one
-way to grow, then walls at a corner, then edges that share a fate. Each SHALL
-sweep the grid in reading order and record every edge it forces before the
-next begins, so the plan's steps are in that order.
+Palisade's solver SHALL run the ladder `palisade.description.yaml` states,
+compiled, in its order, to a fixpoint: seven Easy techniques,
+`cluesVersusRegionSize`, `numberExhausted`, `notTooBig`, `notTooSmall`,
+`noDanglingEdges`, `equivalentEdges` and `inside`, with Unreasonable the
+engine's search over them. A board SHALL be solved where its walls, every
+other edge read as open, pass the answer check its rules compile to.
 
-#### Scenario: The round on a dealt board
+#### Scenario: The hint and the generator run one ladder
 
-- **WHEN** the hint's plan is read on `23d2e2c2e232`
-- **THEN** its first six steps are three clues' edges, each clue two legs,
-  and its seventh is a wall at a corner, neither rule about a region's size
-  having forced an edge in the first round
+- **WHEN** the hint asks for the next firing on a player's board
+- **THEN** it comes from the same seven techniques that the generator's solve
+  runs
+
+### Requirement: Hint: Two Palisade squares a region already joins have no wall between them
+
+An undecided edge between two squares that the board's no-wall marks already
+join some other way round SHALL be open. The step SHALL stripe the region and
+ring the edge.
+
+#### Scenario: A ring of no-wall marks closed but for one edge
+
+- **WHEN** three edges round a point where four squares meet are marked "no
+  wall" and the fourth is undecided
+- **THEN** the step says "This region already holds the squares either side
+  of this edge, so it can't be a wall."
 
 ### Requirement: Status bar: The Palisade status bar gives the region size
 

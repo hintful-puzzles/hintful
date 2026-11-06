@@ -1,6 +1,7 @@
 /**
- * Palisade — state, params, desc codec, completion test; the solver is
- * `solver.ts`'s and the generator `generator.ts`'s.
+ * Palisade — state, params, desc codec; the solver and the answer check the
+ * description compiles to are `solver.ts`'s, and the generator
+ * `generator.ts`'s.
  *
  * Border encoding is upstream's `borderflag` byte kept verbatim: per cell, low
  * nibble bits 0..3 are walls on the U/R/D/L edges, high nibble bits 4..7 are
@@ -44,19 +45,17 @@ import type { GameStatus } from "../../engine/types.ts";
 
 import {
   BORDER,
-  BORDER_D,
   BORDER_L,
   BORDER_MASK,
-  BORDER_R,
   BORDER_U,
   type BorderEdit,
-  buildDsf,
   DISABLED,
   DX,
   DY,
   initBorders,
   outOfBounds,
 } from "../../engine/border-grid.ts";
+import { isSolved } from "./solver.ts";
 
 /** Clue sentinel: no clue shown in this cell. */
 export const EMPTY = -1;
@@ -189,36 +188,6 @@ export function validateParams(p: PalisadeParams, full: boolean): string | null 
   return null;
 }
 
-// --- borders --------------------------------------------------------------
-
-/** Solved iff the walls divide the grid into components of exactly `k` cells,
- * every clue equals its wall count, and no wall lies within a component. */
-export function isSolved(
-  w: number,
-  h: number,
-  k: number,
-  clues: Int8Array,
-  borders: Uint8Array,
-): boolean {
-  const wh = w * h;
-  const dsf = buildDsf(w, h, borders, true);
-
-  for (let i = 0; i < wh; i++) {
-    if (dsf.size(i) !== k) return false;
-    if (clues[i] === EMPTY) continue;
-    if (clues[i] !== bitcount(borders[i])) return false;
-  }
-
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      if (x + 1 < w && borders[i] & BORDER_R && dsf.equivalent(i, i + 1)) return false;
-      if (y + 1 < h && borders[i] & BORDER_D && dsf.equivalent(i, i + w)) return false;
-    }
-  }
-  return true;
-}
-
 // --- desc codec -----------------------------------------------------------
 
 /** Run-length encode the clue grid: digit per clue, letter run per
@@ -290,8 +259,7 @@ export function executeMove(state: PalisadeState, move: PalisadeMove): PalisadeS
 }
 
 export function status(state: PalisadeState): GameStatus {
-  const { w, h, k, clues, borders } = state;
-  return isSolved(w, h, k, clues, borders) ? "solved" : "ongoing";
+  return isSolved(state, state.clues, state.borders) ? "solved" : "ongoing";
 }
 
 // --- text format ----------------------------------------------------------

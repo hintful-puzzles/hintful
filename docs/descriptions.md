@@ -489,7 +489,11 @@ before a placement in the same run reads as it was: a second binding of a
 square just placed, or a member of `open(k)` placed since `open(k)` was
 read. A technique that places says `not known(x)` again in the binder that
 reads `x` (Slant's `loop`, `pair` and `share`), or its solve concludes from
-marks that are no longer there and calls a sound board inconsistent.
+marks that are no longer there and calls a sound board inconsistent. A group
+`through(c, O)` is the same: a technique that opens edges reads a group only
+while no open edge leads out of it, or a square its own earlier binding
+joined to a group grows that group again as if alone (Palisade's
+`notTooSmall` opened a 1×4 strip end to end).
 
 ## A conclusion that is false is a contradiction
 

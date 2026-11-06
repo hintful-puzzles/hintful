@@ -56,6 +56,9 @@ help:
       It can't do one of each. So if walling both would exceed the clue,
       neither can be a wall; and if leaving both open would leave it short,
       both must be walls.
+    * **A region already joined.** When your "no wall" marks already join
+      two squares side by side some other way round, they are in one region,
+      so the edge between them can't be a wall.
 
     On an Unreasonable board there comes a point where none of these settles
     another edge, and the hint says that nothing further follows by deduction
@@ -63,3 +66,130 @@ help:
     number that has few edges left to decide, as a wall or as no wall: if it is
     wrong, before long a number has too many walls or a region cannot reach its
     size. The hint carries on from whatever you decide.
+name: Palisade
+family: regions
+sizes:
+  # The grid holds at most 2^31 - 1 squares.
+  w: { min: 1, max: 2147483647 }
+  h: { min: 1, max: 2147483647 }
+  # How many squares each region holds.
+  k: { min: 1, max: 2147483647 }
+space:
+  grid: { w: "w", h: "h" }
+  edges: true
+  units: []
+answer:
+  # The edge between two squares side by side: 1 a wall, 2 none.
+  value:
+    sort: edge
+    domain: "range(1, 2)"
+define:
+  # The edges known to have no wall.
+  joined: "{e in edges where value(e) = 2}"
+  # The walls round square c, the grid's rim included.
+  walls(c): "4 - |adj4(c)| + count(y in adj4(c) where value(edge(c, y)) = 1)"
+  # The sides of square c known to have no wall.
+  opens(c): "count(y in adj4(c) where value(edge(c, y)) = 2)"
+  # The squares beside c across an edge not yet decided.
+  open(c): "{y in adj4(c) where not known(edge(c, y))}"
+shape:
+  # A wall stands between two squares side by side exactly where they are in
+  # different regions.
+  - "forall O = joined, e in edges: value(e) = 1 iff end2(e) not in through(end1(e), O)"
+  # Every region holds k squares.
+  - "forall O = joined, c in cells: |through(c, O)| = k"
+clues:
+  # The walls round a square, the grid's rim included.
+  number: { at: cell, value: "range(0, 4)", means: "walls(at) = v" }
+freedom: { kind: fill }
+deal:
+  answer: the grid divided at random into regions of k squares, divided again where the ladder stops short with every number showing
+  number: every square's, stripped while the ladder, or the search at Unreasonable, still finds the one answer
+  tier: one of the tiers
+tiers: [Easy, Unreasonable]
+techniques:
+  # Two numbers side by side, c and d: open, the edge between them would
+  # join their squares, each with its other open sides leading further into
+  # the region, and two squares side by side share no neighbor, so the
+  # region would hold at least 8 - c - d. Two 3s would make a region of the
+  # two alone.
+  - id: cluesVersusRegionSize
+    tier: Easy
+    for: >-
+      q in clues(number), a = at(q), b in adj4(a) where not known(edge(a, b)),
+      d = clue(number, b) where d != none
+      and (8 - v(q) - d > k or (v(q) = 3 and d = 3 and k != 2))
+    conclude: "place(edge(a, b), 1)"
+  # A number with all its walls has no more: its other edges are open. One
+  # that reaches its count only with every edge left a wall has them all.
+  # One with more walls, or too few edges left, makes the marks inconsistent.
+  - id: numberExhausted
+    tier: Easy
+    for: >-
+      q in clues(number), c = at(q), U = open(c), n = walls(c)
+      where (|U| > 0 or n != v(q)) and (n >= v(q) or n + |U| <= v(q))
+    conclude: >-
+      n <= v(q) and n + |U| >= v(q)
+      and (n = v(q) implies forall y in U: place(edge(c, y), 2))
+      and (n < v(q) implies forall y in U: place(edge(c, y), 1))
+  # Two groups whose squares together outnumber a region are different
+  # regions: wall the edge between them.
+  - id: notTooBig
+    tier: Easy
+    for: >-
+      O = joined, e in edges where not known(e),
+      A = through(end1(e), O), b = end2(e) where b not in A,
+      B = through(b, O) where |A| + |B| > k
+    conclude: "place(e, 1)"
+  # A group short of k squares grows across an edge still to decide. Where
+  # every such edge leads into one other group, it joins that group: every
+  # edge between them is open. With no edge to grow across, or past k
+  # squares, the marks are inconsistent. A solve opens edges as it goes, so
+  # a group is read only while no open edge leads out of it.
+  - id: notTooSmall
+    tier: Easy
+    for: >-
+      O = joined, c in cells, A = through(c, O) where c = nth(A, 0) and |A| != k
+      and not (exists x in A, y in adj4(x) where y not in A: value(edge(x, y)) = 2),
+      S = set(s over x in A, s in open(x))
+    conclude: >-
+      |A| < k and |S| > 0
+      and (forall B = through(nth(S, 0), O):
+      (forall s in S: s in B) implies
+      forall x in A, y in adj4(x) where y in B: place(edge(x, y), 2))
+  # A wall cannot stop at a corner where four squares meet: of the four
+  # edges there, never exactly one is a wall. With one wall and one edge
+  # left, that edge is a wall.
+  - id: noDanglingEdges
+    tier: Easy
+    for: >-
+      p in corners, C = cells(p),
+      F = set(edge(x, y) over x in C, y in adj4(x) where y in C),
+      f in F where not known(f)
+      and count(e in F where value(e) = 1) = 1
+      and count(e in F where not known(e)) = 1
+    conclude: "place(f, 1)"
+  # Two edges still to decide between a number's square and one group: the
+  # square joins the group, both open, or is walled from it, both walls. So
+  # where both walls would pass the number, both are open, and where both
+  # open would leave it short, both are walls.
+  - id: equivalentEdges
+    tier: Easy
+    for: >-
+      O = joined, q in clues(number), c = at(q) where v(q) >= 1 and v(q) <= 3,
+      y in open(c) where not known(edge(c, y)), R = through(y, O) where c not in R,
+      z in before(y, adj4(c)) where not known(edge(c, z)) and z in R
+    conclude: >-
+      (walls(c) + 2 > v(q) implies
+      place(edge(c, y), 2) and place(edge(c, z), 2))
+      and (walls(c) + 2 <= v(q) and opens(c) + 2 > 4 - v(q) implies
+      place(edge(c, y), 1) and place(edge(c, z), 1))
+  # Two squares side by side that the open edges already join are one
+  # region: the edge between them is open. With a wall on it, the marks are
+  # inconsistent.
+  - id: inside
+    tier: Easy
+    for: >-
+      O = joined, e in edges where value(e) != 2
+      and end2(e) in through(end1(e), O)
+    conclude: "place(e, 2)"

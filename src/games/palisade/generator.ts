@@ -5,13 +5,19 @@
  */
 
 import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
-import { BORDER, DX, DY, initBorders, outOfBounds } from "../../engine/border-grid.ts";
 import { divvyRectangle } from "../../engine/divvy.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { adjacentCells, redivide, regionsBeside } from "../../engine/redivide.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { searchAnswers, solver } from "./solver.ts";
+import {
+  deduce,
+  deduction,
+  edgeValue,
+  ladderSolves,
+  searchAnswers,
+  WALL,
+} from "./solver.ts";
 import { EMPTY, encodeDesc, type PalisadeParams, type PalisadeShape } from "./state.ts";
 
 // --- a division the solver solves -------------------------------------------
@@ -32,9 +38,9 @@ function cluesOf(p: PalisadeShape, regions: Int32Array): Int8Array {
 }
 
 /**
- * The walls of a division that the solver, given every clue, does not place,
+ * The walls of a division that the ladder, given every clue, does not place,
  * each as the two cells it stands between. None means it solved the board:
- * the deductions place no wall the division lacks, so with every wall placed
+ * the ladder places no wall the division lacks, so with every wall placed
  * the board is the division.
  */
 function unplacedWalls(
@@ -42,18 +48,14 @@ function unplacedWalls(
   regions: Int32Array,
   clues: Int8Array,
 ): [number, number][] {
-  const { w, h } = p;
-  const borders = initBorders(w, h);
-  if (solver(p, clues, borders)) return [];
+  const d = deduction(p, clues);
+  if (deduce(d) === "solved") return [];
   const walls: [number, number][] = [];
-  for (let i = 0; i < w * h; i++) {
-    // Right and down, so that each edge is met once.
-    for (const dir of [1, 2]) {
-      const x = (i % w) + DX[dir];
-      const y = Math.floor(i / w) + DY[dir];
-      if (outOfBounds(x, y, w, h)) continue;
-      const j = y * w + x;
-      if (regions[i] !== regions[j] && !(borders[i] & BORDER(dir))) walls.push([i, j]);
+  for (const i of d.m.sp.cells) {
+    for (const j of d.m.sp.adj4[i]) {
+      // Each edge once, from its first square.
+      if (j < i || regions[i] === regions[j]) continue;
+      if (edgeValue(d.m, i, j) !== WALL) walls.push([i, j]);
     }
   }
   return walls;
@@ -160,9 +162,8 @@ function stripClues(
 /** An Easy board, upstream's only kind: a division the solver solves,
  * stripped of clues while it still does. */
 function easyClues(p: PalisadeShape, rng: RandomState): Int8Array {
-  const rim = initBorders(p.w, p.h);
   const numbers = solvableClues(p, rng);
-  stripClues(numbers, rng, (left) => solver(p, left, rim.slice()));
+  stripClues(numbers, rng, (left) => ladderSolves(p, left));
   return numbers;
 }
 
@@ -184,12 +185,11 @@ function easyClues(p: PalisadeShape, rng: RandomState): Int8Array {
  * deductions from it, one trial at a time, finished most.
  */
 function unreasonableClues(p: PalisadeShape, rng: RandomState): Int8Array {
-  const rim = initBorders(p.w, p.h);
   return dealUnreasonable<Int8Array>({
     label: `palisade: Unreasonable generation (${p.w}x${p.h} k${p.k})`,
     draw: () => easyClues(p, rng),
     strip: (numbers, one) => stripClues(numbers, rng, one),
-    deduced: (numbers) => solver(p, numbers, rim.slice()),
+    deduced: (numbers) => ladderSolves(p, numbers),
     answer: (numbers, budget) => searchAnswers(p, numbers, budget),
   });
 }
