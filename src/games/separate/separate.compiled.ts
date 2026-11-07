@@ -53,8 +53,8 @@ export const tiers: readonly string[] = ["Easy","Unreasonable"];
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
   const _g179: number[] = [];
-  const _g189: number[] = [];
-  const _g202: number[] = [];
+  const _g192: number[] = [];
+  const _g208: number[] = [];
   const _domain = rangeMask(1, 2);
   for (const cell of sp.edges) {
     const held = g[cell];
@@ -67,68 +67,76 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
       const _a183 = sp.edges;
       for (let _i184 = 0; _i184 < _a183.length; _i184++) {
         const v_e = _a183[_i184];
-        if (!(((g[v_e] || -1) === 2))) continue;
+        const _h185 = (g[v_e] || -1);
+        if (!((_h185 === 2))) continue;
         _g179.push(v_e);
       }
     }
     const v_O = _g179;
-    const _a185 = sp.edges;
-    for (let _i186 = 0; _i186 < _a185.length; _i186++) {
-      const v_e = _a185[_i186];
-      if (!((((g[v_e] || -1) === 1) === !(through(sp, sp.edgeEnds[2 * v_e], v_O).includes(sp.edgeEnds[2 * v_e + 1]))))) {
+    const _eg189 = edgeGroups(sp, v_O);
+    const _a186 = sp.edges;
+    for (let _i187 = 0; _i187 < _a186.length; _i187++) {
+      const v_e = _a186[_i187];
+      const _h188 = (g[v_e] || -1);
+      if (!(((_h188 === 1) === !(_eg189.of(sp.edgeEnds[2 * v_e + 1]) === _eg189.of(sp.edgeEnds[2 * v_e]))))) {
         _q177 = false;
         break Q178;
       }
     }
   }
   if (!(_q177)) return false;
-  let _q187 = true;
-  Q188: {
-    _g189.length = 0;
-    G190: {
-      const _a193 = sp.edges;
-      for (let _i194 = 0; _i194 < _a193.length; _i194++) {
-        const v_e = _a193[_i194];
-        if (!(((g[v_e] || -1) === 2))) continue;
-        _g189.push(v_e);
+  let _q190 = true;
+  Q191: {
+    _g192.length = 0;
+    G193: {
+      const _a196 = sp.edges;
+      for (let _i197 = 0; _i197 < _a196.length; _i197++) {
+        const v_e = _a196[_i197];
+        const _h198 = (g[v_e] || -1);
+        if (!((_h198 === 2))) continue;
+        _g192.push(v_e);
       }
     }
-    const v_O = _g189;
-    const _a195 = sp.cells;
-    for (let _i196 = 0; _i196 < _a195.length; _i196++) {
-      const v_c = _a195[_i196];
-      if (!((through(sp, v_c, v_O).length === cl.k))) {
-        _q187 = false;
-        break Q188;
+    const v_O = _g192;
+    const _eg201 = edgeGroups(sp, v_O);
+    const _a199 = sp.cells;
+    for (let _i200 = 0; _i200 < _a199.length; _i200++) {
+      const v_c = _a199[_i200];
+      const _h202 = _eg201.of(v_c).length;
+      if (!((_h202 === cl.k))) {
+        _q190 = false;
+        break Q191;
       }
     }
   }
-  if (!(_q187)) return false;
-  for (let _k197 = 0; _k197 < cl.letter.at.length; _k197++) {
-    const _at198 = cl.letter.at[_k197];
-    const _v199 = cl.letter.v[_k197];
-    let _q200 = true;
-    Q201: {
-      _g202.length = 0;
-      G203: {
-        const _a206 = sp.edges;
-        for (let _i207 = 0; _i207 < _a206.length; _i207++) {
-          const v_e = _a206[_i207];
-          if (!(((g[v_e] || -1) === 2))) continue;
-          _g202.push(v_e);
+  if (!(_q190)) return false;
+  for (let _k203 = 0; _k203 < cl.letter.at.length; _k203++) {
+    const _at204 = cl.letter.at[_k203];
+    const _v205 = cl.letter.v[_k203];
+    let _q206 = true;
+    Q207: {
+      _g208.length = 0;
+      G209: {
+        const _a212 = sp.edges;
+        for (let _i213 = 0; _i213 < _a212.length; _i213++) {
+          const v_e = _a212[_i213];
+          const _h214 = (g[v_e] || -1);
+          if (!((_h214 === 2))) continue;
+          _g208.push(v_e);
         }
       }
-      const _a208 = through(sp, _at198, _g202);
-      for (let _i209 = 0; _i209 < _a208.length; _i209++) {
-        const v_x = _a208[_i209];
-        if (!((v_x !== _at198))) continue;
-        if (!((clueAt(cl.letter, v_x) !== _v199))) {
-          _q200 = false;
-          break Q201;
+      const _a215 = through(sp, _at204, _g208);
+      for (let _i216 = 0; _i216 < _a215.length; _i216++) {
+        const v_x = _a215[_i216];
+        if (!((v_x !== _at204))) continue;
+        const _h217 = clueAt(cl.letter, v_x);
+        if (!((_h217 !== _v205))) {
+          _q206 = false;
+          break Q207;
         }
       }
     }
-    if (!(_q200)) return false;
+    if (!(_q206)) return false;
   }
   return true;
 }

@@ -92,28 +92,29 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
       const _a920 = cl.cage.cells[_at916];
       for (let _i921 = 0; _i921 < _a920.length; _i921++) {
         const v_c = _a920[_i921];
-        _g918 += (g[v_c] || -1);
+        const _h922 = (g[v_c] || -1);
+        _g918 += _h922;
       }
     }
-    let _c928: boolean = (_g918 === _v917);
-    if (_c928) {
-      let _g922 = true;
-      const _s924: number[] = [];
-      G923: {
-        const _a925 = cl.cage.cells[_at916];
-        for (let _i926 = 0; _i926 < _a925.length; _i926++) {
-          const v_c = _a925[_i926];
-          const _t927 = (g[v_c] || -1);
-          if (_s924.includes(_t927)) {
-            _g922 = false;
-            break G923;
+    let _c929: boolean = (_g918 === _v917);
+    if (_c929) {
+      let _g923 = true;
+      const _s925: number[] = [];
+      G924: {
+        const _a926 = cl.cage.cells[_at916];
+        for (let _i927 = 0; _i927 < _a926.length; _i927++) {
+          const v_c = _a926[_i927];
+          const _h928 = (g[v_c] || -1);
+          if (_s925.includes(_h928)) {
+            _g923 = false;
+            break G924;
           }
-          _s924.push(_t927);
+          _s925.push(_h928);
         }
       }
-      _c928 = _g922;
+      _c929 = _g923;
     }
-    if (!(_c928)) return false;
+    if (!(_c929)) return false;
   }
   return true;
 }

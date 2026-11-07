@@ -554,6 +554,10 @@
                 "additionalProperties": false,
                 "properties": {
                   "space": { "$ref": "#/$defs/space" },
+                  "clues": {
+                    "$ref": "#/$defs/clues",
+                    "description": "Clue kinds of the same names, each replaced whole: Rect's Patches widens its number to a question mark."
+                  },
                   "position": {
                     "type": "object",
                     "description": "A planning game's layers of the same names, replaced.",

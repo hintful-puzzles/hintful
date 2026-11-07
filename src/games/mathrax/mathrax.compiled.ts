@@ -87,7 +87,8 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
       const _a334 = sp.cornerCells[_at330];
       for (let _i335 = 0; _i335 < _a334.length; _i335++) {
         const v_c = _a334[_i335];
-        if (!((((g[v_c] || -1) + (g[(sp.cornerCells[_at330][0] + sp.cornerCells[_at330][3] - v_c)] || -1)) === _v331))) {
+        const _h336 = (g[v_c] || -1);
+        if (!(((_h336 + (g[(sp.cornerCells[_at330][0] + sp.cornerCells[_at330][3] - v_c)] || -1)) === _v331))) {
           _q332 = false;
           break Q333;
         }
@@ -95,69 +96,73 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     }
     if (!(_q332)) return false;
   }
-  for (let _k336 = 0; _k336 < cl.difference.at.length; _k336++) {
-    const _at337 = cl.difference.at[_k336];
-    const _v338 = cl.difference.v[_k336];
-    let _q339 = true;
-    Q340: {
-      const _a341 = sp.cornerCells[_at337];
-      for (let _i342 = 0; _i342 < _a341.length; _i342++) {
-        const v_c = _a341[_i342];
-        if (!((Math.abs(((g[v_c] || -1) - (g[(sp.cornerCells[_at337][0] + sp.cornerCells[_at337][3] - v_c)] || -1))) === _v338))) {
-          _q339 = false;
-          break Q340;
+  for (let _k337 = 0; _k337 < cl.difference.at.length; _k337++) {
+    const _at338 = cl.difference.at[_k337];
+    const _v339 = cl.difference.v[_k337];
+    let _q340 = true;
+    Q341: {
+      const _a342 = sp.cornerCells[_at338];
+      for (let _i343 = 0; _i343 < _a342.length; _i343++) {
+        const v_c = _a342[_i343];
+        const _h344 = (g[v_c] || -1);
+        if (!((Math.abs((_h344 - (g[(sp.cornerCells[_at338][0] + sp.cornerCells[_at338][3] - v_c)] || -1))) === _v339))) {
+          _q340 = false;
+          break Q341;
         }
       }
     }
-    if (!(_q339)) return false;
+    if (!(_q340)) return false;
   }
-  for (let _k343 = 0; _k343 < cl.product.at.length; _k343++) {
-    const _at344 = cl.product.at[_k343];
-    const _v345 = cl.product.v[_k343];
-    let _q346 = true;
-    Q347: {
-      const _a348 = sp.cornerCells[_at344];
-      for (let _i349 = 0; _i349 < _a348.length; _i349++) {
-        const v_c = _a348[_i349];
-        if (!((((g[v_c] || -1) * (g[(sp.cornerCells[_at344][0] + sp.cornerCells[_at344][3] - v_c)] || -1)) === _v345))) {
-          _q346 = false;
-          break Q347;
+  for (let _k345 = 0; _k345 < cl.product.at.length; _k345++) {
+    const _at346 = cl.product.at[_k345];
+    const _v347 = cl.product.v[_k345];
+    let _q348 = true;
+    Q349: {
+      const _a350 = sp.cornerCells[_at346];
+      for (let _i351 = 0; _i351 < _a350.length; _i351++) {
+        const v_c = _a350[_i351];
+        const _h352 = (g[v_c] || -1);
+        if (!(((_h352 * (g[(sp.cornerCells[_at346][0] + sp.cornerCells[_at346][3] - v_c)] || -1)) === _v347))) {
+          _q348 = false;
+          break Q349;
         }
       }
     }
-    if (!(_q346)) return false;
+    if (!(_q348)) return false;
   }
-  for (let _k350 = 0; _k350 < cl.quotient.at.length; _k350++) {
-    const _at351 = cl.quotient.at[_k350];
-    const _v352 = cl.quotient.v[_k350];
-    let _q353 = true;
-    Q354: {
-      const _a355 = sp.cornerCells[_at351];
-      for (let _i356 = 0; _i356 < _a355.length; _i356++) {
-        const v_c = _a355[_i356];
-        if (!((((g[v_c] || -1) === (_v352 * (g[(sp.cornerCells[_at351][0] + sp.cornerCells[_at351][3] - v_c)] || -1))) || ((g[(sp.cornerCells[_at351][0] + sp.cornerCells[_at351][3] - v_c)] || -1) === (_v352 * (g[v_c] || -1)))))) {
-          _q353 = false;
-          break Q354;
+  for (let _k353 = 0; _k353 < cl.quotient.at.length; _k353++) {
+    const _at354 = cl.quotient.at[_k353];
+    const _v355 = cl.quotient.v[_k353];
+    let _q356 = true;
+    Q357: {
+      const _a358 = sp.cornerCells[_at354];
+      for (let _i359 = 0; _i359 < _a358.length; _i359++) {
+        const v_c = _a358[_i359];
+        const _h360 = (g[v_c] || -1);
+        if (!(((_h360 === (_v355 * (g[(sp.cornerCells[_at354][0] + sp.cornerCells[_at354][3] - v_c)] || -1))) || ((g[(sp.cornerCells[_at354][0] + sp.cornerCells[_at354][3] - v_c)] || -1) === (_v355 * _h360))))) {
+          _q356 = false;
+          break Q357;
         }
       }
     }
-    if (!(_q353)) return false;
+    if (!(_q356)) return false;
   }
-  for (let _k357 = 0; _k357 < cl.parity.at.length; _k357++) {
-    const _at358 = cl.parity.at[_k357];
-    const _v359 = cl.parity.v[_k357];
-    let _q360 = true;
-    Q361: {
-      const _a362 = sp.cornerCells[_at358];
-      for (let _i363 = 0; _i363 < _a362.length; _i363++) {
-        const v_c = _a362[_i363];
-        if (!((((g[v_c] || -1) % 2) === _v359))) {
-          _q360 = false;
-          break Q361;
+  for (let _k361 = 0; _k361 < cl.parity.at.length; _k361++) {
+    const _at362 = cl.parity.at[_k361];
+    const _v363 = cl.parity.v[_k361];
+    let _q364 = true;
+    Q365: {
+      const _a366 = sp.cornerCells[_at362];
+      for (let _i367 = 0; _i367 < _a366.length; _i367++) {
+        const v_c = _a366[_i367];
+        const _h368 = (g[v_c] || -1);
+        if (!(((_h368 % 2) === _v363))) {
+          _q364 = false;
+          break Q365;
         }
       }
     }
-    if (!(_q360)) return false;
+    if (!(_q364)) return false;
   }
   return true;
 }

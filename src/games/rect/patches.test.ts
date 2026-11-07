@@ -13,9 +13,10 @@ import { randomNew } from "../../engine/random/index.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
-import { rectHint, TIER_RUNGS } from "./hint.ts";
+import { rectHint } from "./hint.ts";
 import { rectGame } from "./index.ts";
 import { executeMove, isSolved, newState, outlinedBoxAt } from "./moves.ts";
+import { ladder } from "./rect.compiled.ts";
 import {
   COL_EDGE_TINT,
   COL_FILL,
@@ -157,11 +158,10 @@ describe("the hint on a dealt Patches board", () => {
       new Set(
         plans.filter((p) => p.diff === diff).flatMap((p) => p.steps.map((s) => s.rung)),
       );
+    const tierOf = (r?: string) => ladder.find((e) => e.id === r)?.tier;
+    expect([...rungsAt(DIFF_EASY)].filter((r) => tierOf(r) !== DIFF_EASY)).toEqual([]);
     expect(
-      [...rungsAt(DIFF_EASY)].filter((r) => !TIER_RUNGS[DIFF_EASY].includes(r)),
-    ).toEqual([]);
-    expect(
-      [...rungsAt(DIFF_NORMAL)].filter((r) => TIER_RUNGS[DIFF_NORMAL].includes(r)),
+      [...rungsAt(DIFF_NORMAL)].filter((r) => tierOf(r) === DIFF_NORMAL),
     ).not.toEqual([]);
   });
 

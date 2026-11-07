@@ -65,10 +65,10 @@ export function domainOf(_sp: GridSpace, cl: Dealt, v_c: number): number {
  * board: every cell a value of its domain, and every rule and dealt clue
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
-  const _g411: number[] = [];
-  const _g418: number[] = [];
-  const _g433: number[] = [];
-  const _g440: number[] = [];
+  const _g413: number[] = [];
+  const _g422: number[] = [];
+  const _g441: number[] = [];
+  const _g450: number[] = [];
   for (const cell of sp.cells) {
     const held = g[cell];
     if (!(held > 0 && (domainOf(sp, cl, cell) >> held) & 1)) return false;
@@ -78,111 +78,125 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const _a406 = sp.cells;
     for (let _i407 = 0; _i407 < _a406.length; _i407++) {
       const v_c = _a406[_i407];
-      if (!(((clueAt(cl.wall, v_c) < 0) && (clueAt(cl.number, v_c) < 0)))) continue;
-      let _q408 = false;
-      Q409: {
-        const _t410 = sp.rowOf[v_c];
-        _g411.length = 0;
-        G412: {
-          const _a415 = sp.lineCells[_t410];
-          for (let _i416 = 0; _i416 < _a415.length; _i416++) {
-            const v_x = _a415[_i416];
-            if (!(((clueAt(cl.wall, v_x) < 0) && (clueAt(cl.number, v_x) < 0)))) continue;
-            _g411.push(v_x);
+      const _h408 = clueAt(cl.wall, v_c);
+      const _h409 = clueAt(cl.number, v_c);
+      if (!(((_h408 < 0) && (_h409 < 0)))) continue;
+      let _q410 = false;
+      Q411: {
+        const _t412 = sp.rowOf[v_c];
+        _g413.length = 0;
+        G414: {
+          const _a417 = sp.lineCells[_t412];
+          for (let _i418 = 0; _i418 < _a417.length; _i418++) {
+            const v_x = _a417[_i418];
+            const _h419 = clueAt(cl.wall, v_x);
+            const _h420 = clueAt(cl.number, v_x);
+            if (!(((_h419 < 0) && (_h420 < 0)))) continue;
+            _g413.push(v_x);
           }
         }
-        const _t417 = sp.colOf[v_c];
-        _g418.length = 0;
-        G419: {
-          const _a422 = sp.lineCells[_t417];
-          for (let _i423 = 0; _i423 < _a422.length; _i423++) {
-            const v_x = _a422[_i423];
-            if (!(((clueAt(cl.wall, v_x) < 0) && (clueAt(cl.number, v_x) < 0)))) continue;
-            _g418.push(v_x);
+        const _t421 = sp.colOf[v_c];
+        _g422.length = 0;
+        G423: {
+          const _a426 = sp.lineCells[_t421];
+          for (let _i427 = 0; _i427 < _a426.length; _i427++) {
+            const v_x = _a426[_i427];
+            const _h428 = clueAt(cl.wall, v_x);
+            const _h429 = clueAt(cl.number, v_x);
+            if (!(((_h428 < 0) && (_h429 < 0)))) continue;
+            _g422.push(v_x);
           }
         }
-        const _a424 = union(stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g411), stretch(sp.lineCells[sp.colOf[v_c]], v_c, _g418));
-        for (let _i425 = 0; _i425 < _a424.length; _i425++) {
-          const v_p = _a424[_i425];
-          if (((g[v_p] || -1) === 1)) {
-            _q408 = true;
-            break Q409;
+        const _a430 = union(stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g413), stretch(sp.lineCells[sp.colOf[v_c]], v_c, _g422));
+        for (let _i431 = 0; _i431 < _a430.length; _i431++) {
+          const v_p = _a430[_i431];
+          const _h432 = (g[v_p] || -1);
+          if ((_h432 === 1)) {
+            _q410 = true;
+            break Q411;
           }
         }
       }
-      if (!(_q408)) {
+      if (!(_q410)) {
         _q404 = false;
         break Q405;
       }
     }
   }
   if (!(_q404)) return false;
-  let _q426 = true;
-  Q427: {
-    const _a428 = sp.cells;
-    for (let _i429 = 0; _i429 < _a428.length; _i429++) {
-      const v_c = _a428[_i429];
-      if (!(((g[v_c] || -1) === 1))) continue;
-      let _q430 = true;
-      Q431: {
-        const _t432 = sp.rowOf[v_c];
-        _g433.length = 0;
-        G434: {
-          const _a437 = sp.lineCells[_t432];
-          for (let _i438 = 0; _i438 < _a437.length; _i438++) {
-            const v_x = _a437[_i438];
-            if (!(((clueAt(cl.wall, v_x) < 0) && (clueAt(cl.number, v_x) < 0)))) continue;
-            _g433.push(v_x);
+  let _q433 = true;
+  Q434: {
+    const _a435 = sp.cells;
+    for (let _i436 = 0; _i436 < _a435.length; _i436++) {
+      const v_c = _a435[_i436];
+      const _h437 = (g[v_c] || -1);
+      if (!((_h437 === 1))) continue;
+      let _q438 = true;
+      Q439: {
+        const _t440 = sp.rowOf[v_c];
+        _g441.length = 0;
+        G442: {
+          const _a445 = sp.lineCells[_t440];
+          for (let _i446 = 0; _i446 < _a445.length; _i446++) {
+            const v_x = _a445[_i446];
+            const _h447 = clueAt(cl.wall, v_x);
+            const _h448 = clueAt(cl.number, v_x);
+            if (!(((_h447 < 0) && (_h448 < 0)))) continue;
+            _g441.push(v_x);
           }
         }
-        const _t439 = sp.colOf[v_c];
-        _g440.length = 0;
-        G441: {
-          const _a444 = sp.lineCells[_t439];
-          for (let _i445 = 0; _i445 < _a444.length; _i445++) {
-            const v_x = _a444[_i445];
-            if (!(((clueAt(cl.wall, v_x) < 0) && (clueAt(cl.number, v_x) < 0)))) continue;
-            _g440.push(v_x);
+        const _t449 = sp.colOf[v_c];
+        _g450.length = 0;
+        G451: {
+          const _a454 = sp.lineCells[_t449];
+          for (let _i455 = 0; _i455 < _a454.length; _i455++) {
+            const v_x = _a454[_i455];
+            const _h456 = clueAt(cl.wall, v_x);
+            const _h457 = clueAt(cl.number, v_x);
+            if (!(((_h456 < 0) && (_h457 < 0)))) continue;
+            _g450.push(v_x);
           }
         }
-        const _a446 = union(stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g433), stretch(sp.lineCells[sp.colOf[v_c]], v_c, _g440));
-        for (let _i447 = 0; _i447 < _a446.length; _i447++) {
-          const v_p = _a446[_i447];
+        const _a458 = union(stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g441), stretch(sp.lineCells[sp.colOf[v_c]], v_c, _g450));
+        for (let _i459 = 0; _i459 < _a458.length; _i459++) {
+          const v_p = _a458[_i459];
           if (!((v_p !== v_c))) continue;
-          if (!(((g[v_p] || -1) === 2))) {
-            _q430 = false;
-            break Q431;
+          const _h460 = (g[v_p] || -1);
+          if (!((_h460 === 2))) {
+            _q438 = false;
+            break Q439;
           }
         }
       }
-      if (!(_q430)) {
-        _q426 = false;
-        break Q427;
+      if (!(_q438)) {
+        _q433 = false;
+        break Q434;
       }
     }
   }
-  if (!(_q426)) return false;
-  for (let _k448 = 0; _k448 < cl.wall.at.length; _k448++) {
-    const _at449 = cl.wall.at[_k448];
-    if (!(((g[_at449] || -1) === 2))) return false;
+  if (!(_q433)) return false;
+  for (let _k461 = 0; _k461 < cl.wall.at.length; _k461++) {
+    const _at462 = cl.wall.at[_k461];
+    if (!(((g[_at462] || -1) === 2))) return false;
   }
-  for (let _k451 = 0; _k451 < cl.number.at.length; _k451++) {
-    const _at452 = cl.number.at[_k451];
-    const _v453 = cl.number.v[_k451];
-    let _c458: boolean = ((g[_at452] || -1) === 2);
-    if (_c458) {
-      let _g454 = 0;
-      G455: {
-        const _a456 = sp.adj4[_at452];
-        for (let _i457 = 0; _i457 < _a456.length; _i457++) {
-          const v_p = _a456[_i457];
-          if (!(((g[v_p] || -1) === 1))) continue;
-          _g454++;
+  for (let _k464 = 0; _k464 < cl.number.at.length; _k464++) {
+    const _at465 = cl.number.at[_k464];
+    const _v466 = cl.number.v[_k464];
+    let _c472: boolean = ((g[_at465] || -1) === 2);
+    if (_c472) {
+      let _g467 = 0;
+      G468: {
+        const _a469 = sp.adj4[_at465];
+        for (let _i470 = 0; _i470 < _a469.length; _i470++) {
+          const v_p = _a469[_i470];
+          const _h471 = (g[v_p] || -1);
+          if (!((_h471 === 1))) continue;
+          _g467++;
         }
       }
-      _c458 = (_g454 === _v453);
+      _c472 = (_g467 === _v466);
     }
-    if (!(_c458)) return false;
+    if (!(_c472)) return false;
   }
   return true;
 }

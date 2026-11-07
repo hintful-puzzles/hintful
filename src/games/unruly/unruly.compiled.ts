@@ -85,7 +85,8 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, variations: readon
           const _a204 = sp.lineCells[v_L];
           for (let _i205 = 0; _i205 < _a204.length; _i205++) {
             const v_c = _a204[_i205];
-            if (!(((g[v_c] || -1) === v_d))) continue;
+            const _h206 = (g[v_c] || -1);
+            if (!((_h206 === v_d))) continue;
             _g202++;
           }
         }
@@ -98,33 +99,34 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, variations: readon
   }
   if (!(_q197)) return false;
   if (variations.includes("unique")) {
-    let _q206 = true;
-    Q207: {
-      const _a208 = sp.lines;
-      for (let _i209 = 0; _i209 < _a208.length; _i209++) {
-        const v_A = _a208[_i209];
-        const _a210 = sp.lines;
-        for (let _i211 = 0; _i211 < _a210.length; _i211++) {
-          const v_B = _a210[_i211];
-          if (!(((v_B !== v_A) && ((sp.rows.includes(v_A)) === (sp.rows.includes(v_B)))))) continue;
-          let _q212 = false;
-          Q213: {
-            const _t214 = (sp.lineCells[v_A].length - 1);
-            for (let v_i = 0; v_i <= _t214; v_i++) {
+    let _q207 = true;
+    Q208: {
+      const _a209 = sp.lines;
+      for (let _i210 = 0; _i210 < _a209.length; _i210++) {
+        const v_A = _a209[_i210];
+        const _h213 = (sp.rows.includes(v_A));
+        const _a211 = sp.lines;
+        for (let _i212 = 0; _i212 < _a211.length; _i212++) {
+          const v_B = _a211[_i212];
+          if (!(((v_B !== v_A) && (_h213 === (sp.rows.includes(v_B)))))) continue;
+          let _q214 = false;
+          Q215: {
+            const _t216 = (sp.lineCells[v_A].length - 1);
+            for (let v_i = 0; v_i <= _t216; v_i++) {
               if (((g[(sp.lineCells[v_A][v_i] ?? -1)] || -1) !== (g[(sp.lineCells[v_B][v_i] ?? -1)] || -1))) {
-                _q212 = true;
-                break Q213;
+                _q214 = true;
+                break Q215;
               }
             }
           }
-          if (!(_q212)) {
-            _q206 = false;
-            break Q207;
+          if (!(_q214)) {
+            _q207 = false;
+            break Q208;
           }
         }
       }
     }
-    if (!(_q206)) return false;
+    if (!(_q207)) return false;
   }
   return true;
 }

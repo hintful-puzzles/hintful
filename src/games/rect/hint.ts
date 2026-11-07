@@ -1,136 +1,55 @@
 /**
- * Rectangles' hint: the next rectangle, or line, that the board forces.
+ * Rectangles' hint: the next rectangle, or line, that the board forces, as
+ * the ladder `rect.description.yaml` states walks to it (`hintWalk`).
  *
- * Every rung reads only what the player can see: the clues and the lines
- * drawn. A clue's **fits** are the rectangles of its area that contain it, stay
- * on the board, take in no other clue and cross no drawn line; a step draws a
- * clue's rectangle when one fit is left, or draws a line where the only
- * rectangles that could cross an edge are ruled out. Nothing a step concludes needs a notation the game lacks: the
- * rectangle and the line it draws are the player's own marks, and every later
- * step rereads the board.
- *
- * The rungs, cheapest first:
- *
- * - **fit**: a clue has one fit.
- * - **reach**: a square only one clue can reach, and one of that clue's fits
- *   covers it.
- * - **overlap**: another clue covers some squares wherever it goes, and this
- *   clue has one fit left that avoids them.
- * - **starve**: every fit but one would leave another clue no room, or leave a
- *   square that no rectangle could cover.
- * - **line**: the fits across an edge are each out at a glance, for taking a
- *   square another clue covers wherever it goes, or for leaving out a square
- *   no other clue reaches.
- *
- * A line is the one notation the game has for "this placement is out", which
- * is what the solver keeps in its lists (`rectSolver`) and what lets the rungs
- * follow it: every later step rereads the lines.
+ * The walk reads only what the player can see: their lines, and the inside of
+ * each rectangle they drew round a clue (`readClaims`), which says those
+ * squares are the clue's. A step draws a clue's rectangle, a line round it and
+ * none inside, or one line; a line is the one notation the game has for "this
+ * placement is out", and every later step rereads the lines.
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { findingTechniques, singleFirings } from "../../engine/deduction-fixpoint.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { narratedStep } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import type { Rect } from "../../engine/types.ts";
-import type { RectEdge } from "./hint-marks.ts";
 import { say } from "./hint-text.ts";
+import { executeMove, isSolved, readClaims } from "./moves.ts";
 import {
-  type Claims,
-  executeMove,
-  hrange,
-  isSolved,
-  readClaims,
-  vrange,
-} from "./moves.ts";
-import { clueDimensions, HIDDEN, type RectMove, type RectState } from "./state.ts";
-
-export type RectFiring =
-  | {
-      kind: "fit";
-      clue: number;
-      rect: Rect;
-      /** Why each other rectangle of the clue's area around it fails. */
-      offBoard: boolean;
-      blockers: number[];
-      crossesLine: boolean;
-      /** Some would leave out squares of the clue's own drawn rectangle. */
-      leavesOut: boolean;
-    }
-  | { kind: "reach"; clue: number; rect: Rect; square: number }
-  | { kind: "overlap"; clue: number; rect: Rect; other: number; core: number[] }
-  | { kind: "starve"; clue: number; rect: Rect; starved: number[]; stranded: number[] }
-  | { kind: "line"; edge: RectEdge; across: Crossing[] };
-
-/** The rungs a step can be: the firings' kinds, cheapest first. */
-export const RECT_RUNGS = ["fit", "reach", "overlap", "starve", "line"] as const;
-export type RectRung = (typeof RECT_RUNGS)[number];
-
-/**
- * The rungs each tier below Unreasonable may use, by tier. An Easy step leans
- * on at most one fact the board does not show, a claim about every placement
- * of one clue: none for fit, that no other clue reaches the square for reach,
- * the squares another clue always covers for overlap. Starve makes that claim
- * once for each fit it rules out, and line makes two, that only these clues
- * cross the edge and why none of them can.
- */
-export const TIER_RUNGS: readonly (readonly RectRung[])[] = [
-  ["fit", "reach", "overlap"],
-  ["starve", "line"],
-];
-
-/** The rungs a board of `tier` may use: its own and every easier tier's. */
-const rungsUpTo = (tier: number): ReadonlySet<RectRung> =>
-  new Set(TIER_RUNGS.slice(0, tier + 1).flat());
-
-const EVERY_RUNG: ReadonlySet<RectRung> = new Set(RECT_RUNGS);
-
-/**
- * A clue with fits across an edge, and why none of them stands: each takes a
- * square (`takes`) that another clue (`owners`) covers wherever it goes, or
- * leaves out a square (`misses`) that no other clue reaches.
- */
-export interface Crossing {
-  clue: number;
-  takes: number[];
-  owners: number[];
-  misses: number[];
-}
+  hintWalk,
+  lineOf,
+  type RectFiring,
+  type RectRung,
+  spaceOf,
+  WALL,
+} from "./solver.ts";
+import type { RectMove, RectState } from "./state.ts";
 
 /** A step's highlights: nothing but the move's own data, which keep-track and
  * refresh compare against. The marks are the words' (`stepMarks`). */
 export type RectHint = null;
 
-const covers = (r: Rect, i: number, w: number): boolean => {
-  const x = i % w;
-  const y = Math.floor(i / w);
-  return x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h;
-};
-
-/** Whether `outer` holds every square of `inner`. */
-const contains = (outer: Rect, inner: Rect): boolean =>
-  inner.x >= outer.x &&
-  inner.y >= outer.y &&
-  inner.x + inner.w <= outer.x + outer.w &&
-  inner.y + inner.h <= outer.y + outer.h;
-
-const overlap = (a: Rect, b: Rect): boolean =>
-  a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
-
-const cellsOf = (r: Rect, w: number): number[] => {
-  const out: number[] = [];
-  for (let y = r.y; y < r.y + r.h; y++)
-    for (let x = r.x; x < r.x + r.w; x++) out.push(y * w + x);
-  return out;
-};
+/** What the player's marks say of each edge, as the description reads it: a
+ * line, none inside a rectangle drawn round a clue, or 0 where neither. */
+function marksOf(s: RectState): Uint8Array {
+  const sp = spaceOf(s.w, s.h);
+  const claims = readClaims(s);
+  const g = new Uint8Array(sp.edges.length);
+  for (const e of sp.edges) {
+    const { edge, x, y } = lineOf(sp, e);
+    const p = sp.edgeEnds[2 * e];
+    const q = sp.edgeEnds[2 * e + 1];
+    if ((edge === "h" ? claims.hedge : claims.vedge)[y * s.w + x]) g[e] = WALL;
+    else if (claims.owner[p] >= 0 && claims.owner[p] === claims.owner[q]) g[e] = 2;
+  }
+  return g;
+}
 
 /** Does a line of these run through the inside of `r`? */
-function crossesLine(
-  s: { readonly w: number; readonly hedge: Uint8Array; readonly vedge: Uint8Array },
-  r: Rect,
-): boolean {
+function crossesLine(s: RectState, r: Rect): boolean {
   const { w } = s;
   for (let y = r.y; y < r.y + r.h; y++)
     for (let x = r.x + 1; x < r.x + r.w; x++) if (s.vedge[y * w + x]) return true;
@@ -139,110 +58,7 @@ function crossesLine(
   return false;
 }
 
-/** Every rectangle the clue allows that contains the clue: on the board or
- * not where the clue has a size, and on the board where it has none, since
- * past it there are rectangles without end. */
-function shapesAround(s: RectState, clue: number): Rect[] {
-  const { w, h } = s;
-  const cx = clue % w;
-  const cy = Math.floor(clue / w);
-  const sized = s.grid[clue] !== HIDDEN;
-  const out: Rect[] = [];
-  for (const [rw, rh] of clueDimensions(s.shapes[clue], s.grid[clue], w, h))
-    for (let y = cy - rh + 1; y <= cy; y++)
-      for (let x = cx - rw + 1; x <= cx; x++)
-        if (sized || (x >= 0 && y >= 0 && x + rw <= w && y + rh <= h))
-          out.push({ x, y, w: rw, h: rh });
-  return out;
-}
-
-/**
- * Why a rectangle around a clue is not a fit: off the board, taking in
- * another clue, crossing a line or another clue's drawn rectangle, or leaving
- * out part of the clue's own (`short`).
- */
-type Verdict = "fits" | "offBoard" | { clue: number } | "line" | "short";
-
-function judge(s: RectState, claims: Claims, clue: number, r: Rect): Verdict {
-  const { w, h, grid } = s;
-  if (r.x < 0 || r.y < 0 || r.x + r.w > w || r.y + r.h > h) return "offBoard";
-  const cells = cellsOf(r, w);
-  for (const i of cells) if (i !== clue && grid[i]) return { clue: i };
-  for (const i of cells)
-    if (claims.owner[i] >= 0 && claims.owner[i] !== clue) return "line";
-  if (crossesLine({ w, hedge: claims.hedge, vedge: claims.vedge }, r)) return "line";
-  const mine = claims.boxes.get(clue)?.box;
-  return mine && !contains(r, mine) ? "short" : "fits";
-}
-
-/** Each clue's fits, the clues in reading order. */
-type Fits = ReadonlyMap<number, readonly Rect[]>;
-
-function readFits(s: RectState): Fits {
-  const claims = readClaims(s);
-  const fits = new Map<number, readonly Rect[]>();
-  for (let clue = 0; clue < s.grid.length; clue++)
-    if (s.grid[clue])
-      fits.set(
-        clue,
-        shapesAround(s, clue).filter((r) => judge(s, claims, clue, r) === "fits"),
-      );
-  return fits;
-}
-
-/** Whether `r` takes in both squares either side of `edge`. */
-function crossesEdge(r: Rect, edge: RectEdge): boolean {
-  const { x, y } = edge;
-  return edge.edge === "v"
-    ? r.x < x && x < r.x + r.w && r.y <= y && y < r.y + r.h
-    : r.y < y && y < r.y + r.h && r.x <= x && x < r.x + r.w;
-}
-
-/**
- * The fits left once `f` is known: a line rules out every fit across it, and
- * a rectangle is its clue's one fit and rules out every other clue's that
- * takes a square of it. That holds whether or not the firing draws anything,
- * which it does not where the player drew it already. Reading every shape
- * again at every step was most of the time a large board took to deal.
- */
-function fitsAfter(fits: Fits, f: RectFiring): Fits {
-  const left = new Map<number, readonly Rect[]>();
-  for (const [clue, rects] of fits) {
-    if (f.kind === "line")
-      left.set(
-        clue,
-        rects.filter((r) => !crossesEdge(r, f.edge)),
-      );
-    else
-      left.set(
-        clue,
-        clue === f.clue ? [f.rect] : rects.filter((r) => !overlap(r, f.rect)),
-      );
-  }
-  return left;
-}
-
-/** Whether `f` changes the board: a rectangle or a line the player has not
- * already drawn. */
-function drawsSomething(s: RectState, f: RectFiring): boolean {
-  if (f.kind === "line")
-    return !(f.edge.edge === "h" ? s.hedge : s.vedge)[f.edge.y * s.w + f.edge.x];
-  return !(isDrawn(s, f.rect) && !crossesLine(s, f.rect));
-}
-
-/** For each square, the clues with a fit over it, in reading order. */
-function reachersOf(s: RectState, fits: Fits): number[][] {
-  const reachers: number[][] = Array.from({ length: s.w * s.h }, () => []);
-  for (const [clue, rects] of fits)
-    for (const r of rects)
-      for (const i of cellsOf(r, s.w)) {
-        const who = reachers[i];
-        if (who[who.length - 1] !== clue) who.push(clue);
-      }
-  return reachers;
-}
-
-/** Are all four sides of `r` drawn? (Its inside is clear, since it fits.) */
+/** Are all four sides of `r` drawn? */
 function isDrawn(s: RectState, r: Rect): boolean {
   const { w, h } = s;
   for (let y = r.y; y < r.y + r.h; y++) {
@@ -256,233 +72,13 @@ function isDrawn(s: RectState, r: Rect): boolean {
   return true;
 }
 
-/**
- * The next firing on `s`, cheapest rung first, or null. `fits` is what
- * {@link fitsAfter} kept of an earlier board's, where the caller has them.
- */
-export function nextFiring(s: RectState, fits: Fits = readFits(s)): RectFiring | null {
-  for (const f of firingsOn(s, fits)) return f;
-  return null;
-}
-
-/** Every firing on `s` of `rungs`, cheapest rung first and in reading order
- * within one: {@link nextFiring}'s scan carried on. */
-export function* firingsOn(
-  s: RectState,
-  fits: Fits = readFits(s),
-  rungs: ReadonlySet<RectRung> = EVERY_RUNG,
-): Generator<RectFiring> {
-  const { w, h } = s;
-  const clues = [...fits.keys()];
-  const fitsFor = (c: number): readonly Rect[] => fits.get(c) ?? [];
-  const open = clues.filter((c) => {
-    const f = fitsFor(c);
-    return !(f.length === 1 && isDrawn(s, f[0]));
-  });
-  const isOpen = new Set(open);
-  const claims = readClaims(s);
-  // A rung not asked for is skipped whole, so a tier's scan pays for its own.
-  const asked = (rung: RectRung) => (rungs.has(rung) ? open : []);
-
-  for (const clue of asked("fit")) {
-    const f = fitsFor(clue);
-    if (f.length !== 1) continue;
-    const blockers = new Set<number>();
-    let offBoard = false;
-    let line = false;
-    let short = false;
-    for (const r of shapesAround(s, clue)) {
-      const v = judge(s, claims, clue, r);
-      if (v === "offBoard") offBoard = true;
-      else if (v === "line") line = true;
-      else if (v === "short") short = true;
-      else if (v !== "fits") blockers.add(v.clue);
-    }
-    yield {
-      kind: "fit",
-      clue,
-      rect: f[0],
-      offBoard,
-      blockers: [...blockers].sort((a, b) => a - b),
-      crossesLine: line,
-      leavesOut: short,
-    };
-  }
-
-  const reachers = reachersOf(s, fits);
-  for (let i = 0; rungs.has("reach") && i < w * h; i++) {
-    const who = reachers[i];
-    if (who.length !== 1 || !isOpen.has(who[0])) continue;
-    const through = fitsFor(who[0]).filter((r) => covers(r, i, w));
-    if (through.length === 1 && i !== who[0])
-      yield { kind: "reach", clue: who[0], rect: through[0], square: i };
-  }
-
-  // The squares each clue covers wherever it goes, its own among them.
-  const sure = new Map<number, Rect>();
-  for (const clue of clues) {
-    const core = common(fitsFor(clue));
-    if (core) sure.set(clue, core);
-  }
-
-  for (const [other, core] of sure) {
-    if (core.w * core.h === 1) continue;
-    for (const clue of asked("overlap")) {
-      if (clue === other) continue;
-      const f = fitsFor(clue);
-      // No fit takes in another clue, so one that overlaps `core` takes a
-      // square of it other than the clue's own.
-      const left = f.filter((r) => !overlap(r, core));
-      if (left.length !== 1 || left.length === f.length) continue;
-      const used = cellsOf(core, w).filter((i) => f.some((r) => covers(r, i, w)));
-      yield { kind: "overlap", clue, rect: left[0], other, core: used };
-    }
-  }
-
-  for (const clue of asked("starve")) {
-    const f = fitsFor(clue);
-    if (f.length < 2) continue;
-    const starved = new Set<number>();
-    const stranded = new Set<number>();
-    const ok = f.filter((r) => {
-      for (const j of clues)
-        if (j !== clue && !fitsFor(j).some((q) => !overlap(q, r))) {
-          starved.add(j);
-          return false;
-        }
-      for (let i = 0; i < w * h; i++) {
-        if (covers(r, i, w)) continue;
-        const reached = reachers[i].some(
-          (j) =>
-            j !== clue && fitsFor(j).some((q) => covers(q, i, w) && !overlap(q, r)),
-        );
-        if (!reached) {
-          stranded.add(i);
-          return false;
-        }
-      }
-      return true;
-    });
-    if (ok.length === 1)
-      yield {
-        kind: "starve",
-        clue,
-        rect: ok[0],
-        starved: [...starved].sort((a, b) => a - b),
-        stranded: [...stranded].sort((a, b) => a - b),
-      };
-  }
-
-  // A fit is out at a glance when it takes a square another clue is sure of,
-  // or leaves out one that only its own clue reaches. An edge is a line when
-  // every fit across it is out, and the line is how the player keeps that. An
-  // edge no fit crosses is left alone: a line there would cut no fit, so no
-  // later step could tell it had been drawn.
-  if (!rungs.has("line")) return;
-  const sole = new Map<number, number[]>();
-  reachers.forEach((who, i) => {
-    if (who.length !== 1) return;
-    const squares = sole.get(who[0]);
-    if (squares) squares.push(i);
-    else sole.set(who[0], [i]);
-  });
-  const owners = [...sure];
-  const crossing = (a: number, b: number): Crossing[] | null => {
-    const by = new Map<number, Crossing>();
-    for (const clue of reachers[b])
-      for (const rect of fitsFor(clue)) {
-        if (!covers(rect, a, w) || !covers(rect, b, w)) continue;
-        const c = by.get(clue) ?? { clue, takes: [], owners: [], misses: [] };
-        by.set(clue, c);
-        const owned = owners.find(([o, core]) => o !== clue && overlap(core, rect));
-        if (owned) {
-          const [owner, core] = owned;
-          for (const i of cellsOf(core, w))
-            if (covers(rect, i, w) && !c.takes.includes(i)) c.takes.push(i);
-          if (!c.owners.includes(owner)) c.owners.push(owner);
-          continue;
-        }
-        const missed = sole.get(clue)?.find((i) => !covers(rect, i, w));
-        if (missed === undefined) return null;
-        if (!c.misses.includes(missed)) c.misses.push(missed);
-      }
-    return [...by.values()];
-  };
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      const edges: [boolean, RectEdge, number][] = [
-        // An edge already a line is left; a drawn side of a rectangle that
-        // may still grow is not one yet, so it can be proved one.
-        [vrange(w, h, x, y) && !claims.vedge[i], { edge: "v", x, y }, i - 1],
-        [hrange(w, h, x, y) && !claims.hedge[i], { edge: "h", x, y }, i - w],
-      ];
-      for (const [open, edge, j] of edges) {
-        const across = open ? crossing(j, i) : null;
-        if (across && across.length > 0) yield { kind: "line", edge, across };
-      }
-    }
-}
-
-/** The squares a firing's premise reads, which a hint plan continues from:
- * the rectangle and the squares and clues it turns on, or the squares either
- * side of the line and those the fits across it would take or leave out. */
-function readsOf(s: RectState, f: RectFiring): number[] {
-  const { w } = s;
-  switch (f.kind) {
-    case "fit":
-      return [...cellsOf(f.rect, w), ...f.blockers];
-    case "reach":
-      return cellsOf(f.rect, w);
-    case "overlap":
-      return [...cellsOf(f.rect, w), f.other, ...f.core];
-    case "starve":
-      return [...cellsOf(f.rect, w), ...f.starved, ...f.stranded];
-    case "line":
-      return [
-        ...edgeSquares(f.edge, w),
-        ...f.across.flatMap((c) => [c.clue, ...c.takes, ...c.owners, ...c.misses]),
-      ];
-  }
-}
-
-/** The two squares either side of a line. */
-function edgeSquares(edge: RectEdge, w: number): number[] {
-  const i = edge.y * w + edge.x;
-  return [i, edge.edge === "v" ? i - 1 : i - w];
-}
-
-/** The squares a firing draws round or beside. */
-function writesOf(s: RectState, f: RectFiring): number[] {
-  return f.kind === "line" ? edgeSquares(f.edge, s.w) : cellsOf(f.rect, s.w);
-}
-
-/** The squares every one of `fits` covers, or null when there are none. */
-function common(fits: readonly Rect[]): Rect | null {
-  if (fits.length === 0) return null;
-  const x = Math.max(...fits.map((r) => r.x));
-  const y = Math.max(...fits.map((r) => r.y));
-  const x2 = Math.min(...fits.map((r) => r.x + r.w));
-  const y2 = Math.min(...fits.map((r) => r.y + r.h));
-  return x2 > x && y2 > y ? { x, y, w: x2 - x, h: y2 - y } : null;
-}
-
-/** Whether the rungs of `tier` and the tiers below it finish `s`, by default
- * all of them. The generator deals only boards they do, so the hint never
- * runs out on a board it dealt. Its cheapest firing is one of these rungs
- * wherever these rungs have one, so a board they finish the whole ladder
- * finishes the same way, and the answer is monotone in `tier`. */
-export function rungsFinish(s: RectState, tier = TIER_RUNGS.length - 1): boolean {
-  const rungs = rungsUpTo(tier);
-  let t = s;
-  let fits = readFits(t);
-  while (!isSolved(t)) {
-    const f = firingsOn(t, fits, rungs).next().value;
-    if (!f) return false;
-    if (drawsSomething(t, f)) t = executeMove(t, moveOf(f));
-    fits = fitsAfter(fits, f);
-  }
-  return true;
+/** Whether `f` changes the board: a rectangle or a line the player has not
+ * already drawn. A side of a rectangle that may still grow is not a line to
+ * the walk, so a firing can prove one the player drew. */
+function drawsSomething(s: RectState, f: RectFiring): boolean {
+  if (f.kind === "line")
+    return !(f.edge.edge === "h" ? s.hedge : s.vedge)[f.edge.y * s.w + f.edge.x];
+  return !(isDrawn(s, f.rect) && !crossesLine(s, f.rect));
 }
 
 /** The move a firing makes. */
@@ -500,45 +96,44 @@ function stepOf(s: RectState, f: RectFiring): HintStep<RectMove, RectHint, RectR
   });
 }
 
+/** The first firing the walk from the player's marks gives that draws
+ * something, or `null` where the ladder has none. */
+export function firstFiring(state: RectState): RectFiring | null {
+  const next = hintWalk(
+    state.w,
+    state.h,
+    state,
+    marksOf(state),
+    stepBudget("rect hint"),
+  );
+  for (let f = next(); f !== null; f = next()) if (drawsSomething(state, f)) return f;
+  return null;
+}
+
 /**
  * The plan from the player's lines to the end, a step per rectangle or line.
- * Stops where the rungs run out.
+ * Stops where the ladder runs out.
  */
 export function rectHint(state: RectState): HintResult<RectMove, RectHint, RectRung> {
-  const board = { s: state, fits: readFits(state) };
+  const budget = stepBudget("rect hint");
+  const next = hintWalk(state.w, state.h, state, marksOf(state), budget);
+  const board = { s: state };
   const steps: HintStep<RectMove, RectHint, RectRung>[] = [];
-  const pass = singleFirings({
-    // A technique for each tier's rungs, so that a plan continuing from its
-    // last step takes no Normal step while an Easy one is left anywhere.
-    // Within one, the scan's order, cheapest rung first, breaks a tie between
-    // firings that both continue.
-    techniques: findingTechniques(
-      TIER_RUNGS.map((rungs, tier) => ({
-        id: rungs.join("+"),
-        tier,
-        find: () => firingsOn(board.s, board.fits, new Set(rungs)),
-      })),
-      (f) => {
-        // A rectangle the player drew already, proved whole, or a side of
-        // one proved a line, is no step: nothing is left to draw.
-        if (drawsSomething(board.s, f)) {
-          steps.push(stepOf(board.s, f));
-          board.s = executeMove(board.s, moveOf(f));
-        }
-        board.fits = fitsAfter(board.fits, f);
-      },
-      { reads: (f) => readsOf(board.s, f), writes: (f) => writesOf(board.s, f) },
-    ),
-    budget: stepBudget("rect hint"),
-    // A plan works on the rectangles beside its last one before it moves on.
-    continuing: true,
-  });
   deduceHintPlan({
     board,
     status: (b) => isSolved(b.s),
     incomplete: false,
-    next: () => pass.next(),
-    budget: stepBudget("rect hint"),
+    next: () => {
+      const f = next();
+      // A rectangle the player drew already, proved whole, or a side of one
+      // proved a line, is no step: nothing is left to draw.
+      if (f !== null && drawsSomething(board.s, f)) {
+        steps.push(stepOf(board.s, f));
+        board.s = executeMove(board.s, moveOf(f));
+      }
+      return f;
+    },
+    budget,
   });
   if (steps.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   return { ok: true, steps };

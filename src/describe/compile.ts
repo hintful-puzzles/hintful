@@ -36,6 +36,7 @@ type ElemSort =
   | "slot"
   | "corner"
   | "point"
+  | "rect"
   | `clue ${string}`
   | `region ${string}`;
 
@@ -273,6 +274,15 @@ interface Env {
   /** The suppositions of the `with`s the code is inside, innermost first:
    * the names of the cell and of the value it is supposed to hold. */
   supposed: readonly { cell: string; value: string }[];
+  /** The definitions a game's techniques keep for each argument, by name,
+   * each compiled once as an exported function of the module
+   * (`keptDefinition`); `null` where nothing is kept. */
+  kept: {
+    defs: Map<string, { sort: Sort; clues: boolean; board: boolean; code: string }>;
+    /** The module's runtime helpers, which a function first compiled
+     * inside a probe still needs. */
+    used: Set<string>;
+  } | null;
 }
 
 /** What a position's layer holds a value of (an element's, or the board's
@@ -358,6 +368,11 @@ const GEOMETRY = new Set([
   "y",
   "cell",
   "edge",
+  "rects",
+  "width",
+  "height",
+  "inner",
+  "rim",
 ]);
 
 function expect(v: Val, k: Sort["k"], what: string): void {
@@ -829,6 +844,16 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
     return { code: op === "in" ? code : `!${code}`, sort: BOOL };
   }
   const a = compileExpr(e.a, scope, env, out);
+  // `c in cells(r)` of a rectangle a binder names compares the cell with its
+  // sides, and no list of its cells is made.
+  const named = e.b.k === "call" && e.b.fn === "cells" ? e.b.args[0] : undefined;
+  const r = named?.k === "name" ? scope.get(named.name) : undefined;
+  if ((op === "in" || op === "notin") && r?.sort.k === "elem" && r.sort.e === "rect") {
+    expectElem(a, "cell", op);
+    env.used.add("rectHolds");
+    const code = `rectHolds(sp, ${r.code}, ${a.code})`;
+    return { code: op === "in" ? code : `!${code}`, sort: BOOL };
+  }
   const b = compileExpr(e.b, scope, env, out);
   if (a.sort.k === "int" || b.sort.k === "int") return exact(op, a, b, env);
   switch (op) {
@@ -1718,6 +1743,51 @@ function setQuantifier(
   };
 }
 
+/**
+ * `exists x in cells(r): x in cells(s)` and `forall x in cells(r): x in
+ * cells(s)` (or `not in`), `r` and `s` rectangles, as a comparison of their
+ * sides: whether they meet, or one lies within the other. `null` where the
+ * quantifier has another shape.
+ */
+function rectQuantifier(
+  e: Extract<Expr, { k: "quant" }>,
+  scope: Scope,
+  env: Env,
+  out: Out,
+): Val | null {
+  const [b, ...more] = e.binders;
+  const body = e.body;
+  if (b === undefined || more.length > 0 || b.kind !== "in" || b.where !== null)
+    return null;
+  if (body.k !== "bin" || (body.op !== "in" && body.op !== "notin")) return null;
+  if (body.a.k !== "name" || body.a.name !== b.name) return null;
+  const cellsOf = (x: Expr): Expr | null =>
+    x.k === "call" &&
+    x.fn === "cells" &&
+    x.args.length === 1 &&
+    !reads(x.args[0], b.name)
+      ? x.args[0]
+      : null;
+  const re = cellsOf(b.of);
+  const se = cellsOf(body.b);
+  if (re === null || se === null) return null;
+  const probe: Env = { ...env, used: new Set(), scratch: null, hoist: null };
+  const isRect = (x: Expr): boolean => {
+    const s = compileExpr(x, scope, probe, new Out(0)).sort;
+    return s.k === "elem" && s.e === "rect";
+  };
+  if (!isRect(re) || !isRect(se)) return null;
+  const r = compileExpr(re, scope, env, out);
+  const s = compileExpr(se, scope, env, out);
+  // Every cell of r in s is r within s; some is r meeting s; `not in`
+  // turns each into the other's negation.
+  const within = e.q === "forall" ? body.op === "in" : body.op === "notin";
+  const fn = within ? "rectWithin" : "rectMeets";
+  env.used.add(fn);
+  const call = `${fn}(sp, ${r.code}, ${s.code})`;
+  return { code: body.op === "notin" ? `!${call}` : call, sort: BOOL };
+}
+
 /** The names `e` reads that it does not bind, function names included. */
 function freeNames(e: Expr, into: Set<string>, bound: ReadonlySet<string>): void {
   switch (e.k) {
@@ -1860,7 +1930,8 @@ function quantifier(
   out: Out,
 ): Val {
   const forall = e.q === "forall";
-  const masked = setQuantifier(e, scope, env, out);
+  const masked =
+    setQuantifier(e, scope, env, out) ?? rectQuantifier(e, scope, env, out);
   if (masked !== null) return masked;
   const projected = projection(e, scope, env, out);
   if (projected !== null) return projected;
@@ -2263,6 +2334,52 @@ function clueField(fn: string, k: Val, env: Env): Val {
 }
 
 /**
+ * The readings of a rectangle on the grid, its arguments compiled: the ones
+ * holding a cell, and a rectangle's cells, width, height, the edges inside it
+ * and the edges round it. `null` for any other function, and for `cells` of
+ * anything else.
+ */
+function rectCall(fn: string, vs: readonly Val[], env: Env): Val | null {
+  const arity = (n: number): void => {
+    if (vs.length !== n) throw new CompileError(`${fn} takes ${n}, given ${vs.length}`);
+  };
+  const isRect = (v?: Val): boolean => v?.sort.k === "elem" && v.sort.e === "rect";
+  switch (fn) {
+    case "cells":
+      if (!isRect(vs[0])) return null;
+      arity(1);
+      env.used.add("rectCells");
+      return { code: `rectCells(sp, ${vs[0].code})`, sort: setOf(elem("cell")) };
+    case "rects":
+      // The rectangles on the grid holding a cell, of a number of cells or,
+      // where it is 0, of any.
+      arity(2);
+      expectElem(vs[0], "cell", fn);
+      expect(vs[1], "num", fn);
+      env.used.add("rectsOf");
+      return {
+        code: `rectsOf(sp, ${vs[0].code}, ${vs[1].code})`,
+        sort: setOf(elem("rect")),
+      };
+    case "width":
+    case "height":
+    case "inner":
+    case "rim": {
+      arity(1);
+      expectElem(vs[0], "rect", fn);
+      const f = `rect${fn[0].toUpperCase()}${fn.slice(1)}`;
+      env.used.add(f);
+      return {
+        code: `${f}(sp, ${vs[0].code})`,
+        sort: fn === "width" || fn === "height" ? NUM : setOf(elem("edge")),
+      };
+    }
+    default:
+      return null;
+  }
+}
+
+/**
  * The readings of a board of diagonals (Slant's), its arguments compiled:
  * the mark on the edges, the squares round a point and a square's corners,
  * which way a diagonal runs
@@ -2485,8 +2602,8 @@ function call(
     expectElem(vs[i], "cell", fn);
     return vs[i].code;
   };
-  const diagonal = diagonalCall(fn, vs, env);
-  if (diagonal !== null) return diagonal;
+  const shaped = diagonalCall(fn, vs, env) ?? rectCall(fn, vs, env);
+  if (shaped !== null) return shaped;
   switch (fn) {
     case "cells": {
       arity(1);
@@ -2772,55 +2889,205 @@ function call(
     }
   }
   const def = env.defs.get(fn);
-  if (def !== undefined) {
-    if (def.params.length !== vs.length)
-      throw new CompileError(`${fn} takes ${def.params.length}, given ${vs.length}`);
-    const fixing = env.prelude?.fixing ?? null;
-    const last = vs.length - 1;
-    if (fixing?.name === fn) {
-      // A self read passes the parameters before the last through as they
-      // are, so it reads the set being computed.
-      args.slice(0, last).forEach((a, i) => {
-        if (!(a.k === "name" && a.name === def.params[i]))
-          throw new CompileError(
-            `${fn} reads itself with ${def.params[i]} changed: its fixed point is in ${def.params[last]} alone`,
-          );
-      });
-      expectElem(vs[last], "cell", fn);
-      return { code: `(${fixing.arr}[${vs[last].code}] === 1)`, sort: BOOL };
-    }
-    if (mentions(def.body, fn, env.defs, new Set())) {
-      expectElem(vs[last], "cell", fn);
-      const fixed = fixedPoint(fn, def, vs.slice(0, last), env);
-      const at =
-        last === 0
-          ? fixed
-          : `${fixed}(${vs
-              .slice(0, last)
-              .map((v) => v.code)
-              .join(", ")})`;
-      return { code: `(${at}[${vs[last].code}] === 1)`, sort: BOOL };
-    }
-    const inner = new Map<string, Val>();
-    const h = env.hoist;
-    def.params.forEach((p, i) => {
-      const v = once(vs[i], out);
-      // A parameter is a name the body may read early, from where it is
-      // bound: a literal anywhere, the argument's own name from its slot.
-      const at =
-        h === null
-          ? undefined
-          : /^-?\d+$/.test(v.code)
-            ? h.root
-            : (v.at ?? out.slot(h.loops));
-      inner.set(p, { ...v, at });
-    });
-    return compileExpr(def.body, inner, env, out);
-  }
+  if (def !== undefined) return definitionCall(fn, def, args, vs, env, out);
   throw new CompileError(`unknown function "${fn}"`);
 }
 
+/** A call of a definition the description makes, its arguments compiled. */
+function definitionCall(
+  fn: string,
+  def: Definition,
+  args: readonly Expr[],
+  vs: readonly Val[],
+  env: Env,
+  out: Out,
+): Val {
+  if (def.params.length !== vs.length)
+    throw new CompileError(`${fn} takes ${def.params.length}, given ${vs.length}`);
+  const fixing = env.prelude?.fixing ?? null;
+  const last = vs.length - 1;
+  if (fixing?.name === fn) {
+    // A self read passes the parameters before the last through as they
+    // are, so it reads the set being computed.
+    args.slice(0, last).forEach((a, i) => {
+      if (!(a.k === "name" && a.name === def.params[i]))
+        throw new CompileError(
+          `${fn} reads itself with ${def.params[i]} changed: its fixed point is in ${def.params[last]} alone`,
+        );
+    });
+    expectElem(vs[last], "cell", fn);
+    return { code: `(${fixing.arr}[${vs[last].code}] === 1)`, sort: BOOL };
+  }
+  if (mentions(def.body, fn, env.defs, new Set())) {
+    expectElem(vs[last], "cell", fn);
+    const fixed = fixedPoint(fn, def, vs.slice(0, last), env);
+    const at =
+      last === 0
+        ? fixed
+        : `${fixed}(${vs
+            .slice(0, last)
+            .map((v) => v.code)
+            .join(", ")})`;
+    return { code: `(${at}[${vs[last].code}] === 1)`, sort: BOOL };
+  }
+  const kept = keptDefinition(fn, def, vs, env);
+  if (kept !== null) return kept;
+  const inner = new Map<string, Val>();
+  const h = env.hoist;
+  def.params.forEach((p, i) => {
+    const v = once(vs[i], out);
+    // A parameter is a name the body may read early, from where it is
+    // bound: a literal anywhere, the argument's own name from its slot.
+    const at =
+      h === null
+        ? undefined
+        : /^-?\d+$/.test(v.code)
+          ? h.root
+          : (v.at ?? out.slot(h.loops));
+    inner.set(p, { ...v, at });
+  });
+  return compileExpr(def.body, inner, env, out);
+}
+
+/**
+ * A definition of one element whose set of elements a technique reads, kept
+ * for each element while no value is placed in the marks (`keptOf`): Rect's
+ * `fits(q)` is read for every other clue inside loops over the clues, and
+ * kept, it is made once a clue between placements and shared by every rung.
+ * Only one that reads the marks through `value` and `known` alone, and no
+ * name of the technique, is kept. `null` where the definition is not one.
+ */
+function keptDefinition(
+  fn: string,
+  def: Definition,
+  vs: readonly Val[],
+  env: Env,
+): Val | null {
+  const { kept } = env;
+  if (
+    kept === null ||
+    env.answer !== null ||
+    env.position !== null ||
+    env.supposed.length > 0 ||
+    def.params.length !== 1 ||
+    vs[0].sort.k !== "elem" ||
+    loopDepth(def.body, env.defs) < 2 ||
+    !keptWhilePlaced(def.body, env, new Set(), new Set(def.params))
+  )
+    return null;
+  let made = kept.defs.get(fn);
+  if (made === undefined) {
+    // Compiled once, as a function of its own: only a set of elements is
+    // kept, since a number or a mask costs less to make again than to look
+    // up.
+    const v = `v_${def.params[0]}`;
+    const readsClues = { yes: false };
+    const body = new Out(1);
+    const val = compileExpr(
+      def.body,
+      new Map([[def.params[0], { code: v, sort: vs[0].sort }]]),
+      // Its own arrays, not a technique's reused ones: each is kept.
+      {
+        ...env,
+        used: kept.used,
+        readsClues,
+        scratch: null,
+        hoist: null,
+        concluding: false,
+        memo: false,
+        epoch: null,
+      },
+      body,
+    );
+    if (!isArray(val.sort)) return null;
+    const type = tsType(val.sort);
+    // One that reads no marks is the board's, kept for as long as it is.
+    const board = !readsMarks(def.body, env.defs, new Set());
+    kept.used.add("keptStore");
+    kept.used.add("type Kept");
+    const store = `${fn}Kept`;
+    const keptAt = board
+      ? `${store}.board(${readsClues.yes ? "cl" : "sp"})`
+      : `${store}.marks(b)`;
+    made = {
+      sort: val.sort,
+      clues: readsClues.yes,
+      board,
+      code: [
+        `const ${store} = keptStore<${type}>();`,
+        "",
+        `/** \`${fn}(${def.params[0]})\` as the description defines it, kept for the`,
+        board
+          ? " * board, since it reads no marks. */"
+          : " * marks while no value is placed in them. */",
+        `export function ${fn}(${board ? "" : "b: Marks, "}sp: GridSpace, ${readsClues.yes ? "cl: Dealt, " : ""}${v}: number): ${type} {`,
+        `  const _kept: Kept<${type}> = ${keptAt};`,
+        `  if (_kept[${v}] !== undefined) return _kept[${v}];`,
+        ...body.text(),
+        `  const _made = ${val.code};`,
+        `  _kept[${v}] = _made;`,
+        "  return _made;",
+        "}",
+      ].join("\n"),
+    };
+    kept.defs.set(fn, made);
+  }
+  if (made.clues) env.readsClues.yes = true;
+  return {
+    code: `${fn}(${made.board ? "" : "b, "}sp, ${made.clues ? "cl, " : ""}${vs[0].code})`,
+    sort: made.sort,
+  };
+}
+
+/** How deep the loops of `e` nest, through the definitions it reads: a set
+ * made by one loop costs about what looking it up does. */
+function loopDepth(
+  e: Expr,
+  defs: ReadonlyMap<string, Definition>,
+  seen: ReadonlySet<string> = new Set(),
+): number {
+  const inner = Math.max(0, ...children(e).map((c) => loopDepth(c, defs, seen)));
+  if (e.k === "quant" || e.k === "agg") return inner + 1;
+  const def = e.k === "call" && !seen.has(e.fn) ? defs.get(e.fn) : undefined;
+  if (def === undefined) return inner;
+  return Math.max(
+    inner,
+    loopDepth(def.body, defs, new Set([...seen, e.k === "call" ? e.fn : ""])),
+  );
+}
+
 // --- a definition that reads itself -----------------------------------------
+
+/** The functions that read the marks, rather than the board. */
+const MARK_READS = new Set([
+  "value",
+  "known",
+  "cand",
+  "chain",
+  "linked",
+  "place",
+  "strike",
+]);
+
+/** Whether `e` reads the marks, itself or through a definition, a supposition
+ * included: what a definition kept for the whole board must not do. */
+function readsMarks(
+  e: Expr,
+  defs: ReadonlyMap<string, Definition>,
+  seen: Set<string>,
+): boolean {
+  if (e.k === "with") return true;
+  const name = e.k === "call" ? e.fn : e.k === "name" ? e.name : null;
+  if (name !== null) {
+    if (e.k === "call" && MARK_READS.has(name)) return true;
+    const d = defs.get(name);
+    if (d !== undefined && !seen.has(name)) {
+      seen.add(name);
+      if (readsMarks(d.body, defs, seen)) return true;
+    }
+  }
+  return children(e).some((c) => readsMarks(c, defs, seen));
+}
 
 /** The terms directly under `e`. */
 function children(e: Expr): Expr[] {
@@ -3254,6 +3521,7 @@ export function compileLibrary(
     relations: new Set(),
     edgeMark: null,
     supposed: [],
+    kept: null,
   };
   const parts = Object.entries(lib.techniques).map(([id, stated]) => {
     const t: Technique = { ...parseTechnique(lib.library, id, stated), ...UNPLACED };
@@ -3424,11 +3692,17 @@ export function compileGame(
     relations: new Set(relations),
     edgeMark: edgeMarkOf(d.json)?.name ?? null,
     supposed: [],
+    kept: { defs: new Map(), used },
   };
   for (const [kind, c] of d.clueKinds) clues.set(kind, clueSorts(kind, c, env));
   const domainLines = cellDomain(d.domain, env, d.json.sizes);
   const own = d.techniques.filter((t) => !t.id.includes("."));
   const code = own.map((t) => compileTechnique(t, env).code);
+  const kept = env.kept?.defs ?? new Map();
+  for (const fn of kept.keys())
+    if (own.some((t) => t.id === fn))
+      throw new CompileError(`${fn}: a kept definition and a technique share the name`);
+  code.push(...[...kept.values()].map((k) => k.code));
   const check = answerCheck(json, d, env);
   const scales = Object.entries(d.json.scales ?? {});
   const sizes = [...env.sizes.read].sort();
@@ -3569,6 +3843,10 @@ function answerCheck(json: DescriptionJson, d: Description, env: Env): string[] 
     concluding: false,
   };
   const out = new Out(1);
+  // A check reads a whole grid it never changes, so what a rule binds is
+  // made once where it is bound: a set of edges is joined into groups there,
+  // not walked again from each square (Rectangles' shape).
+  cenv.hoist = { root: out.slot(0), loops: 0, marks: true };
   // A board of cells alone is measured in nothing.
   const { grid } = json.space;
   const measured = grid === undefined ? (e: Expr) => e : measuredBy(grid);

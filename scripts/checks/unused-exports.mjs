@@ -101,6 +101,8 @@ const KEPT_UNUSED = {
     "called by compiled code for before(x, L) read as a set, not bound over",
   "src/engine/describe-runtime.ts::linked":
     "called by compiled code for linked(k) read with a square supposed",
+  "src/engine/describe-runtime.ts::rectWithin":
+    "called by compiled code for every cell of one rectangle in another",
   // Read by the soundness checker under research/, which this scan does not
   // read, so that it checks at the orders the fingerprint names.
   "src/describe/soundness.ts::CHECKED_ORDERS":

@@ -102,3 +102,187 @@ help:
   origins: |-
     {{choice:ruleset:0}} is Nikoli's *Shikaku*. {{choice:ruleset:1}} is the
     puzzle LinkedIn publishes daily under that name.
+name: Rectangles
+family: regions
+sizes:
+  # The grid holds at most 2^31 - 1 squares.
+  w: { min: 1, max: 2147483647 }
+  h: { min: 1, max: 2147483647 }
+space:
+  grid: { w: "w", h: "h" }
+  edges: true
+  units: []
+answer:
+  # The edge between two squares side by side: 1 a line, 2 none.
+  value:
+    sort: edge
+    domain: "range(1, 2)"
+define:
+  # The edges known to have no line: the inside of a rectangle drawn round a
+  # clue.
+  joined: "{e in edges where value(e) = 2}"
+  # Whether two rectangles share a square.
+  meets(r, s): "exists x in cells(r): x in cells(s)"
+  # Whether the clue at square c allows rectangle r by its shape, where it
+  # names one.
+  shaped(c, r): >-
+    clue(shape, c) = none
+    or (clue(shape, c) = 1 and width(r) = height(r))
+    or (clue(shape, c) = 2 and height(r) > width(r))
+    or (clue(shape, c) = 3 and width(r) > height(r))
+  # The rectangles round clue q's square that it allows and that take in no
+  # other clue: what the board alone leaves it.
+  allowed(q): >-
+    {r in rects(at(q), v(q)) where shaped(at(q), r)
+    and count(x in cells(r) where clue(number, x) != none) = 1}
+  # A clue's fits: the rectangles it is allowed that cross no line and leave
+  # out no square of a rectangle drawn round one of their own.
+  fits(q): >-
+    {r in allowed(q) where not (exists e in inner(r): value(e) = 1)
+    and not (exists e in rim(r): value(e) = 2)}
+  # The clues the board allows a rectangle over square c: none whose number,
+  # where it names one, is too small to reach from its square to c. The
+  # bound is the steps between them, which no rectangle over both is
+  # smaller than, kept linear for the checker.
+  near(c): >-
+    {q in clues(number)
+    where (v(q) = 0 or abs(x(c) - x(at(q))) + abs(y(c) - y(at(q))) < v(q))
+    and exists r in allowed(q): c in cells(r)}
+  # The clues with a fit over square x.
+  reachers(x): "{q in near(x) where exists r in fits(q): x in cells(r)}"
+  # The squares every fit of clue q covers.
+  core(q): "{x in cells(nth(fits(q), 0)) where forall r in fits(q): x in cells(r)}"
+  # The squares only clue q can reach.
+  sole(q): "{x in cells where |reachers(x)| = 1 and q in reachers(x)}"
+  # Whether a fit r of clue q takes a square another clue covers wherever
+  # it goes.
+  owned(q, r): "exists p in clues(number) where p != q: exists x in core(p): x in cells(r)"
+  # Whether clue q in fit r would leave another clue no fit, or a square
+  # outside r no other clue could still cover.
+  starves(q, r): >-
+    (exists j in clues(number) where j != q: forall t in fits(j): meets(t, r))
+    or (exists x in cells where x not in cells(r):
+    not (exists j in reachers(x) where j != q, t in fits(j) where x in cells(t): not meets(t, r)))
+shape:
+  # A line stands between two squares side by side exactly where they are
+  # in different rectangles.
+  - "forall O = joined, e in edges: value(e) = 1 iff end2(e) not in through(end1(e), O)"
+  # Every region is a rectangle: of the four squares round a corner, never
+  # three in one and the fourth in another, which is two lines turning
+  # there.
+  - >-
+    forall p in corners, C = cells(p), a = nth(C, 0), b = nth(C, 1), c = nth(C, 2), d = nth(C, 3):
+    (value(edge(a, b)) = 1 iff value(edge(c, d)) = 1)
+    or (value(edge(a, c)) = 1 iff value(edge(b, d)) = 1)
+  # Every rectangle holds one clue.
+  - "forall O = joined, c in cells: count(x in through(c, O) where clue(number, x) != none) = 1"
+clues:
+  # How many squares the clue's rectangle has.
+  number:
+    at: cell
+    value: "range(1, w * h)"
+    means: "forall O = joined: |through(at, O)| = v"
+freedom: { kind: fill }
+deal:
+  answer: the grid divided at random into rectangles, then stretched
+  number: one in each rectangle, placed where the solver settles every rectangle, and moved at Unreasonable until the search finds one answer
+  tier: one of the tiers
+variations:
+  Patches:
+    replace:
+      clues:
+        # How many squares the clue's rectangle has, or 0 for a question
+        # mark, which says nothing of it.
+        number:
+          at: cell
+          value: "range(0, w * h)"
+          means: "v = 0 or (forall O = joined: |through(at, O)| = v)"
+    add:
+      clues:
+        # The shape a clue names for its rectangle: 1 square, 2 tall, 3
+        # wide, its width and height the squares it has in the clue's row
+        # and column.
+        shape:
+          at: cell
+          value: "range(1, 3)"
+          means: >-
+            forall O = joined, R = through(at, O),
+            n = count(s in R where y(s) = y(at)), m = count(s in R where x(s) = x(at)):
+            (v = 1 implies n = m) and (v = 2 implies m > n) and (v = 3 implies n > m)
+tiers: [Easy, Normal, Unreasonable]
+techniques:
+  # A clue with one fit takes it: the line round it drawn, none inside. A
+  # clue with no fit makes the marks inconsistent.
+  - id: fit
+    tier: Easy
+    for: "q in clues(number), F = fits(q)"
+    conclude: >-
+      |F| > 0 and (|F| = 1 implies (forall r in F:
+      (forall e in inner(r): place(e, 2)) and (forall e in rim(r): place(e, 1))))
+  # A square no clue has a fit over leaves the marks with no answer, as a
+  # clue with no fit does.
+  - id: uncovered
+    tier: Easy
+    for: "c in cells"
+    conclude: "|reachers(c)| > 0"
+  # A fit of clue q whose every side is a line is closed round q alone, and
+  # every square inside lines is some clue's inside them, so it is q's: a
+  # rectangle drawn round a clue that names no size.
+  - id: boxed
+    tier: Easy
+    for: >-
+      q in clues(number), F = fits(q) where |F| > 1,
+      r in F where forall e in rim(r): value(e) = 1
+    conclude: "(forall e in inner(r): place(e, 2)) and (forall e in rim(r): place(e, 1))"
+  # Every square is some clue's. A square only one clue can reach is that
+  # clue's, and where one fit of it covers the square, the clue takes it.
+  - id: reach
+    tier: Easy
+    for: >-
+      c in cells, Q = reachers(c) where |Q| = 1, q = nth(Q, 0),
+      F = {r in fits(q) where c in cells(r)} where |F| = 1, r = nth(F, 0)
+    conclude: "(forall e in inner(r): place(e, 2)) and (forall e in rim(r): place(e, 1))"
+  # Wherever clue p goes, it covers its core, so a fit of another clue q
+  # that takes a square of it is out. Where one fit of q is left, q takes
+  # it.
+  - id: overlap
+    tier: Easy
+    for: >-
+      p in clues(number), K = core(p) where |K| > 1,
+      q in clues(number) where q != p, F = fits(q) where |F| > 1,
+      G = {r in F where not (exists x in K: x in cells(r))} where |G| = 1 and |G| < |F|,
+      r = nth(G, 0)
+    conclude: "(forall e in inner(r): place(e, 2)) and (forall e in rim(r): place(e, 1))"
+  # A fit of clue q that would leave another clue no fit (Z), or a square
+  # outside it that no other clue could still cover (U), is out. Where one
+  # fit is left, q takes it.
+  - id: starve
+    tier: Normal
+    for: >-
+      q in clues(number), F = fits(q) where |F| > 1,
+      G = {r in F where not starves(q, r)} where |G| = 1, r = nth(G, 0),
+      Z = {j in clues(number) where j != q
+      and (exists s in F where s != r: forall t in fits(j): meets(t, s))},
+      U = {x in cells where exists s in F where s != r and x not in cells(s):
+      not (exists j in reachers(x) where j != q, t in fits(j) where x in cells(t): not meets(t, s))}
+    conclude: "(forall e in inner(r): place(e, 2)) and (forall e in rim(r): place(e, 1))"
+  # Where every fit across an edge is out, for taking a square another
+  # clue's core holds (T, of the clues O) or for leaving out a square only
+  # its own clue reaches (M), the squares either side are in different
+  # rectangles: the edge is a line. C is the clues with a fit across it.
+  - id: line
+    tier: Normal
+    for: >-
+      e in edges where not known(e), a = end1(e), b = end2(e),
+      C = {q in reachers(a) where exists r in fits(q): a in cells(r) and b in cells(r)}
+      where |C| > 0
+      and (forall q in C, r in fits(q) where a in cells(r) and b in cells(r):
+      owned(q, r) or (exists x in sole(q): x not in cells(r))),
+      O = {p in clues(number) where exists q in C, r in fits(q)
+      where a in cells(r) and b in cells(r) and p != q:
+      exists x in core(p): x in cells(r)},
+      T = set(x over q in C, r in fits(q) where a in cells(r) and b in cells(r),
+      p in O where p != q, x in core(p) where x in cells(r)),
+      M = set(m over q in C, r in fits(q) where a in cells(r) and b in cells(r)
+      and not owned(q, r), m = nth({x in sole(q) where x not in cells(r)}, 0))
+    conclude: "place(e, 1)"

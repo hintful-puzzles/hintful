@@ -46,13 +46,13 @@ const RULESETS: readonly Ruleset[] = [
   },
 ];
 
-/** Easy and Normal, a tier for each part of the hint's rungs
- * (`TIER_LAST_RUNG` in `hint.ts`), and the search's above them. */
+/** Easy and Normal, the tiers of `rect.description.yaml`'s ladder, and the
+ * search's above them. */
 export const TIERS = searchTiers(2);
 /** A board the hint finishes once it may leave out a placement for what that
  * does to another clue, or draw a line. */
 export const DIFF_NORMAL = 1;
-/** A board with a single answer that the solver and the hint do not reach. */
+/** A board with a single answer that the ladder does not reach. */
 export const DIFF_UNREASONABLE = TIERS.unreasonable;
 
 /** What a clue says of its rectangle's shape, by `shapes`. */
@@ -114,8 +114,8 @@ export interface RectParams {
    * stretched. Default 0 (all presets). A byte-match float hazard, so encoded
    * `%g` and decoded `atof`. */
   expandfactor: number;
-  /** `DIFF_EASY` or {@link DIFF_NORMAL}, a board the hint's rungs of that
-   * tier finish, or {@link DIFF_UNREASONABLE}, one with a single answer that
+  /** `DIFF_EASY` or {@link DIFF_NORMAL}, a board the ladder's techniques
+   * of that tier finish, or {@link DIFF_UNREASONABLE}, one with a single answer that
    * they do not reach. Generation-time only. */
   diff: number;
   /** {@link MODE_RECT} or {@link MODE_PATCHES}. */
@@ -300,9 +300,9 @@ function unreasonableRefusal(p: RectParams): string | null {
   const short = Math.min(p.w, p.h);
   const long = Math.max(p.w, p.h);
   // On a strip the first number's rectangle starts at the end and is as long
-  // as its number, and so on along it: the solver settles every one. On the
+  // as its number, and so on along it: the ladder settles every one. On the
   // rest every division and every place for its numbers was tried
-  // (`rect-tier.test.ts`), and the hint finishes each board with one answer.
+  // (`rect-tier.test.ts`), and the ladder finishes each board with one answer.
   const none = short === 1 || (short === 2 && long <= 8) || (short === 3 && long <= 4);
   if (none) return noSuchTier(`${p.w}x${p.h} puzzle`, tier);
   // Two wide from 2×9 the tier exists and is dealt, though seldom: measured

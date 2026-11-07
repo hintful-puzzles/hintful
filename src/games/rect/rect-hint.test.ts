@@ -10,19 +10,11 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newDesc } from "./generator.ts";
-import {
-  type Crossing,
-  firingsOn,
-  moveOf,
-  nextFiring,
-  RECT_RUNGS,
-  rectHint,
-  rectKeepTrack,
-  rungsFinish,
-} from "./hint.ts";
+import { firstFiring, moveOf, rectHint, rectKeepTrack } from "./hint.ts";
 import { rectGame } from "./index.ts";
 import { executeMove, isSolved, newState } from "./moves.ts";
 import { COL_HINT_CELL } from "./render.ts";
+import { ladderFinishes, RECT_RUNGS, type RectReason } from "./solver.ts";
 import {
   MODE_RECT,
   type RectMove,
@@ -40,12 +32,25 @@ const params = (w: number, h: number, expandfactor = 0): RectParams => ({
 });
 const P7 = params(7, 7);
 
-/** The one clue with fits across the edge a line step opens with, when there
- * is just one. */
-function soleCrossing(state: RectState): Crossing | null {
-  const f = nextFiring(state);
-  return f?.kind === "line" && f.across.length === 1 ? f.across[0] : null;
+/** The line a step opens with, when one clue alone has fits across it. */
+function soleCrossing(state: RectState): Extract<RectReason, { kind: "line" }> | null {
+  const f = firstFiring(state);
+  return f?.kind === "line" && f.clues.length === 1 ? f : null;
 }
+
+const finishes = (s: RectState, cap?: number): boolean =>
+  ladderFinishes(s.w, s.h, s, cap);
+
+/** The rungs a hint never takes, each with the reason. */
+const UNREACHED = {
+  uncovered:
+    "A square no clue can reach makes no step, only a contradiction, which a " +
+    "board with an answer never shows: it ends a search's dead branch.",
+  boxed:
+    "A boxed rectangle has every side a line already, so on the player's board " +
+    "it is drawn and the step would draw nothing: it fires inside the deduction " +
+    "a grade or a search runs, where a line drawn by `line` closes it.",
+};
 
 /** Each rung, the two reasons a line has (the fit across the edge takes a
  * square another clue is sure of, or leaves one uncovered) and the
@@ -73,6 +78,7 @@ const pinned = describeHintPins({
     blockedByClue: (step) =>
       step.rung === "fit" && stepMarks(step).of("outline", CELL).length > 0,
   },
+  unreached: UNREACHED,
   pins: {
     /** Held on 5 of 14936 positions walked. */
     lineTakes: {
@@ -107,37 +113,25 @@ const pinned = describeHintPins({
 });
 
 describe("rect hint rungs", () => {
-  for (const rung of RECT_RUNGS)
-    it(`a ${rung} step is the solver's ${rung} firing`, () => {
-      // The firing the step was built from, on the board as its turn comes.
-      const { state, steps, index } = pinned(rung);
-      let s = state;
-      for (const earlier of steps.slice(0, index)) s = executeMove(s, earlier.move);
-      const f = [...firingsOn(s)].find(
-        (g) => JSON.stringify(moveOf(g)) === JSON.stringify(steps[index].move),
-      );
-      expect(f?.kind).toBe(rung);
-    });
-
-  it("a plan's every step is a firing its board gives when read afresh", () => {
-    // A plan reads each clue's fits once and takes away the ones each step's
-    // lines cross. `firingsOn` on a board alone reads them all again. The plan
-    // takes the one beside its last step, which need not be the first.
+  it("a plan ends where the board is solved or the ladder has nothing left", () => {
+    // A plan reads the player's lines once; the board its steps leave, read
+    // afresh, is solved or gives no firing.
     const rungs = new Set<string>();
     for (const diff of TIERS.names.keys())
       for (let seed = 0; seed < 6; seed++) {
         const p = { ...params(9, 9, seed % 2), diff };
         let s = newState(p, newDesc(p, randomNew(`afresh-${seed}`)).desc);
         const plan = rectHint(s);
-        // An Unreasonable board can be one the rungs have nothing to say of.
+        // An Unreasonable board can be one the ladder has nothing to say of.
         for (const step of plan.ok ? plan.steps : []) {
-          expect([...firingsOn(s)].map(moveOf)).toContainEqual(step.move);
           if (step.rung) rungs.add(step.rung);
           s = executeMove(s, step.move);
         }
-        expect(isSolved(s) || nextFiring(s) === null).toBe(true);
+        expect(isSolved(s) || firstFiring(s) === null).toBe(true);
       }
-    expect([...rungs].sort()).toEqual([...RECT_RUNGS].sort());
+    expect([...rungs].sort()).toEqual(
+      RECT_RUNGS.filter((r) => !(r in UNREACHED)).sort(),
+    );
   });
 
   it("a line says which of its two reasons rules the crossing out", () => {
@@ -172,10 +166,10 @@ describe("rect hint rungs", () => {
   it("several clues across one edge share a clause", () => {
     const p = params(15, 15, 1);
     let s = newState(p, "h12e8d15zc6a12k40d24e10zk24ze24k20zl10t20h");
-    let f = nextFiring(s);
-    while (f && !(f.kind === "line" && f.across.length > 1)) {
+    let f = firstFiring(s);
+    while (f && !(f.kind === "line" && f.clues.length > 1)) {
       s = executeMove(s, moveOf(f));
-      f = nextFiring(s);
+      f = firstFiring(s);
     }
     expect(f?.kind).toBe("line");
     const res = rectHint(s);
@@ -189,9 +183,9 @@ describe("rect hint rungs", () => {
     // A line no fit crosses would change nothing a later step reads, so the
     // rung leaves such an edge alone.
     const { state } = pinned("lineTakes");
-    const f = nextFiring(state);
+    const f = firstFiring(state);
     if (f?.kind !== "line") throw new Error("no line");
-    expect(f.across.length).toBeGreaterThan(0);
+    expect(f.clues.length).toBeGreaterThan(0);
     const before = rectHint(state);
     const after = rectHint(executeMove(state, moveOf(f)));
     if (!before.ok || !after.ok) throw new Error("no plan");
@@ -225,19 +219,19 @@ describe("rect hint plan", () => {
     expect(boards).toBe(8);
   });
 
-  it("the gate turns away a board the rungs cannot finish", () => {
-    // A board the solver settles (`rect.test.ts` pins that it opens as
-    // Unreasonable) by ruling fits out over several rounds, none of which
+  it("the gate turns away a board the ladder cannot finish", () => {
+    // A board upstream's solver settles (`rect.test.ts` pins that it opens
+    // as Unreasonable) by ruling fits out over several rounds, none of which
     // leaves an edge no fit crosses, so no line can record them and the
     // generator, dealing an Easy board, deals again.
     const p = params(9, 9);
-    expect(rungsFinish(newState(p, "c4c5b9c12b2h2k12e2f2_3c12a8l3d5d"))).toBe(false);
-    expect(rungsFinish(newState(P7, "2j8_4b2b4a4d3b6j6b6b2b2"))).toBe(true);
+    expect(finishes(newState(p, "c4c5b9c12b2h2k12e2f2_3c12a8l3d5d"))).toBe(false);
+    expect(finishes(newState(P7, "2j8_4b2b4a4d3b6j6b6b2b2"))).toBe(true);
   });
 
   it("finishes upstream's 10x10 board, which needs a line", () => {
     const p = params(10, 10, 0.5);
-    expect(rungsFinish(newState(p, "a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c"))).toBe(true);
+    expect(finishes(newState(p, "a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c"))).toBe(true);
   });
 });
 

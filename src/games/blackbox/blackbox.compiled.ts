@@ -61,28 +61,30 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const _a12 = sp.cells;
     for (let _i13 = 0; _i13 < _a12.length; _i13++) {
       const v_c = _a12[_i13];
-      if (!(((g[v_c] || -1) === 1))) continue;
+      const _h14 = (g[v_c] || -1);
+      if (!((_h14 === 1))) continue;
       _g10++;
     }
   }
-  let _c18: boolean = (_g10 >= cl.minballs);
-  if (_c18) {
-    let _g14 = 0;
-    G15: {
-      const _a16 = sp.cells;
-      for (let _i17 = 0; _i17 < _a16.length; _i17++) {
-        const v_c = _a16[_i17];
-        if (!(((g[v_c] || -1) === 1))) continue;
-        _g14++;
+  let _c20: boolean = (_g10 >= cl.minballs);
+  if (_c20) {
+    let _g15 = 0;
+    G16: {
+      const _a17 = sp.cells;
+      for (let _i18 = 0; _i18 < _a17.length; _i18++) {
+        const v_c = _a17[_i18];
+        const _h19 = (g[v_c] || -1);
+        if (!((_h19 === 1))) continue;
+        _g15++;
       }
     }
-    _c18 = (_g14 <= cl.maxballs);
+    _c20 = (_g15 <= cl.maxballs);
   }
-  if (!(_c18)) return false;
-  for (let _k19 = 0; _k19 < cl.laser.at.length; _k19++) {
-    const _at20 = cl.laser.at[_k19];
-    const _v21 = cl.laser.v[_k19];
-    if (!((beamOf(sp, g, _at20) === _v21))) return false;
+  if (!(_c20)) return false;
+  for (let _k21 = 0; _k21 < cl.laser.at.length; _k21++) {
+    const _at22 = cl.laser.at[_k21];
+    const _v23 = cl.laser.v[_k21];
+    if (!((beamOf(sp, g, _at22) === _v23))) return false;
   }
   return true;
 }

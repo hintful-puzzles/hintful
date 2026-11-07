@@ -11,8 +11,9 @@
  *     dropping a 3×3 over it).
  *  3. Stretch the base grid to full size in two passes — expand rows, transpose,
  *     expand rows again, transpose back — distributing the extra rows randomly.
- *  4. Enumerate the rectangles, and run the solver to winnow the number
- *     placements to a unique solution; place one number per rectangle.
+ *  4. Enumerate the rectangles, and winnow the number placements to a unique
+ *     solution with upstream's solver (`winnow.ts`); place one number per
+ *     rectangle, and keep the board where the ladder of its tier finishes it.
  *  5. Encode `aux` (the solution edges) and the run-length desc. A Patches
  *     board first names each rectangle's shape on its clue, and then hides
  *     what the board can do without (`stripClues`).
@@ -31,16 +32,7 @@ import { randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import type { Point, Rect } from "../../engine/types.ts";
-import { rungsFinish } from "./hint.ts";
-import { newState } from "./moves.ts";
-import {
-  firstTwoAnswers,
-  type NumberData,
-  rectSolver,
-  SOLVE_UNIQUE,
-  searchAnswers,
-  solverFinishes,
-} from "./solver.ts";
+import { firstTwoAnswers, ladderFinishes, searchAnswers } from "./solver.ts";
 import {
   DIFF_UNREASONABLE,
   encodeNumbers,
@@ -51,6 +43,7 @@ import {
   SHAPE_ANY,
   shapeOf,
 } from "./state.ts";
+import { type NumberData, winnowNumbers } from "./winnow.ts";
 
 /**
  * Count (when `pick` is undefined) or select the `pick`-th of the possible
@@ -148,7 +141,7 @@ function findRect(w: number, h: number, grid: Int32Array, x: number, y: number):
 }
 
 /**
- * A division of the grid into rectangles, and each rectangle as the solver
+ * A division of the grid into rectangles, and each rectangle as the winnowing
  * takes it before its number is placed: every square of it a candidate.
  * Steps 1 to 3 of the file comment, and the start of 4.
  */
@@ -377,8 +370,8 @@ function auxOf(w: number, h: number, grid: Int32Array): string {
 const MAX_NUMBERS_MOVED = 200;
 
 /** An Easy or a Normal board, upstream's only kind made stricter: its numbers
- * placed by the solver so that it settles every rectangle, and kept where the
- * hint's rungs of the tier finish it and the tier below's do not. `null` when
+ * placed by the winnowing so that it settles every rectangle, and kept where
+ * the ladder's techniques of the tier finish it and the tier below's do not. `null` when
  * this division did not give one. */
 function deducedBoard(
   params: RectParams,
@@ -388,7 +381,7 @@ function deducedBoard(
 ): { desc: string; aux: string } | null {
   const { w, h } = params;
   // give up and go round again
-  if (rectSolver(w, h, nd, null, null, rs) !== SOLVE_UNIQUE) return null;
+  if (!winnowNumbers(w, h, nd, rs)) return null;
 
   const clues = blankClues(w * h);
   for (const { area, shape, npoints, points } of nd) {
@@ -400,8 +393,7 @@ function deducedBoard(
   // A board the hint could not finish would leave a player it had helped
   // stranded with a refusal that blames the board's difficulty, which these
   // tiers do not excuse. Deal again.
-  const finishes = (tier: number) => () =>
-    rungsFinish(newState(params, descOf(w * h, clues)), tier);
+  const finishes = (tier: number) => () => ladderFinishes(w, h, clues, tier);
   if (!finishes(params.diff)()) return null;
   // Each tier strips what the one below left, so a Normal board is an Easy
   // one with more taken. Hiding never makes a board easier.
@@ -424,7 +416,7 @@ const descOf = (area: number, { grid, shapes }: RectClues): string =>
  * Take from a Patches board, in place, what its clues say, asking `keeps`
  * after each thing taken and putting back what it refuses: first each clue's
  * size, then each clue's shape, the clues in a random order each time. `keeps`
- * is Easy's or Normal's "the hint's rungs of the tier finish it", or
+ * is Easy's or Normal's "the ladder of the tier finishes it", or
  * Unreasonable's "the search proves one answer".
  */
 function stripClues(rs: RandomState, clues: RectClues, keeps: () => boolean): void {
@@ -447,11 +439,10 @@ function stripClues(rs: RandomState, clues: RectClues, keeps: () => boolean): vo
 
 /**
  * A candidate for an Unreasonable board: each number on a square of its
- * rectangle at random, with none of the solver's steering, then moved until
- * the search proves the division the only answer within the dealing budget.
- * `null` when this division did not give one. Most boards mended to one
- * answer are ones the solver settles, and the hint knows placements the
- * solver does not rule out, so a board is kept where both stop short.
+ * rectangle at random, with none of the winnowing's steering, then moved
+ * until the search proves the division the only answer within the dealing
+ * budget. `null` when this division did not give one. Most boards mended to
+ * one answer are ones the ladder finishes, and those are dealt again.
  *
  * Four draws in five have a second answer as their numbers fall. The search
  * hands that answer over, some number's rectangle in it is not the one dealt,
@@ -557,9 +548,7 @@ export function newDesc(
         params.mode === MODE_PATCHES
           ? ({ clues }, one) => stripClues(rs, clues, one)
           : undefined,
-      deduced: ({ clues }) =>
-        solverFinishes(w, h, clues) ||
-        rungsFinish(newState(params, descOf(w * h, clues))),
+      deduced: ({ clues }) => ladderFinishes(w, h, clues),
       answer: ({ clues }, budget) => searchAnswers(w, h, clues, budget),
     });
     return { desc: descOf(w * h, clues), aux: auxOf(w, h, grid) };

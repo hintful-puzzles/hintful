@@ -809,6 +809,35 @@ const PLANTS: Record<string, Plant> = {
   "boats.centerTrial": {
     for: "T = longest, c in cells where clue(seg, c) = 6, L in {row(c), col(c)}, S = {x in adj4(c) where x in cells(L)} where |S| = 2 and (exists x in S: not known(x))",
   },
+  // A clue with two fits read as taking the first.
+  "rect.fit": {
+    conclude:
+      "|F| > 0 and (|F| <= 2 implies (forall r in {nth(F, 0)}: (forall e in inner(r): place(e, 2)) and (forall e in rim(r): place(e, 1))))",
+  },
+  // A square only one clue can reach read as one no clue can.
+  "rect.uncovered": {
+    conclude: "|reachers(c)| > 1",
+  },
+  // A fit with one side not yet a line read as closed round its clue.
+  "rect.boxed": {
+    for: "q in clues(number), F = fits(q) where |F| > 1, r in F where count(e in rim(r) where value(e) != 1) <= 1",
+  },
+  // A square two clues can reach read as the first one's.
+  "rect.reach": {
+    for: "c in cells, Q = reachers(c) where |Q| >= 1 and |Q| <= 2, q = nth(Q, 0), F = {r in fits(q) where c in cells(r)} where |F| = 1, r = nth(F, 0)",
+  },
+  // One fit of the other clue read as where it goes.
+  "rect.overlap": {
+    for: "p in clues(number), K = cells(nth(fits(p), 0)) where |K| > 1, q in clues(number) where q != p, F = fits(q), G = {r in F where not (exists x in K: x in cells(r))} where |G| = 1 and |G| < |F|, r = nth(G, 0)",
+  },
+  // A fit read as out where it meets one fit of another clue, not all.
+  "rect.starve": {
+    for: "q in clues(number), F = fits(q) where |F| > 1, G = {r in F where not (exists j in clues(number) where j != q: exists t in fits(j): meets(t, r))} where |G| = 1, r = nth(G, 0)",
+  },
+  // The first fit across an edge left out of the reasons it is out.
+  "rect.line": {
+    for: "e in edges where not known(e), a = end1(e), b = end2(e), C = {q in reachers(a) where exists r in fits(q): a in cells(r) and b in cells(r)} where |C| > 0 and (forall q in C, r in fits(q) where a in cells(r) and b in cells(r) and r != nth(fits(q), 0): owned(q, r) or (exists x in sole(q): x not in cells(r)))",
+  },
 };
 
 /** How many of a technique's first binders each query fixes, one query a

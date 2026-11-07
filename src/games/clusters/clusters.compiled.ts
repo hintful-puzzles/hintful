@@ -62,40 +62,44 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const _a644 = cluesValued(cl.dot, -1);
     for (let _i645 = 0; _i645 < _a644.length; _i645++) {
       const v_c = _a644[_i645];
-      if (!((clueAt(cl.dot, v_c) === -1))) continue;
-      let _g646 = 0;
-      G647: {
-        const _a648 = sp.adj4[v_c];
-        for (let _i649 = 0; _i649 < _a648.length; _i649++) {
-          const v_m = _a648[_i649];
-          if (!(((g[v_m] || -1) === (g[v_c] || -1)))) continue;
-          _g646++;
+      const _h646 = clueAt(cl.dot, v_c);
+      if (!((_h646 === -1))) continue;
+      const _h652 = (g[v_c] || -1);
+      let _g647 = 0;
+      G648: {
+        const _a649 = sp.adj4[v_c];
+        for (let _i650 = 0; _i650 < _a649.length; _i650++) {
+          const v_m = _a649[_i650];
+          const _h651 = (g[v_m] || -1);
+          if (!((_h651 === _h652))) continue;
+          _g647++;
         }
       }
-      if (!((_g646 >= 2))) {
+      if (!((_g647 >= 2))) {
         _q642 = false;
         break Q643;
       }
     }
   }
   if (!(_q642)) return false;
-  for (let _k650 = 0; _k650 < cl.dot.at.length; _k650++) {
-    const _at651 = cl.dot.at[_k650];
-    const _v652 = cl.dot.v[_k650];
-    let _c657: boolean = ((g[_at651] || -1) === _v652);
-    if (_c657) {
-      let _g653 = 0;
-      G654: {
-        const _a655 = sp.adj4[_at651];
-        for (let _i656 = 0; _i656 < _a655.length; _i656++) {
-          const v_m = _a655[_i656];
-          if (!(((g[v_m] || -1) === _v652))) continue;
-          _g653++;
+  for (let _k653 = 0; _k653 < cl.dot.at.length; _k653++) {
+    const _at654 = cl.dot.at[_k653];
+    const _v655 = cl.dot.v[_k653];
+    let _c661: boolean = ((g[_at654] || -1) === _v655);
+    if (_c661) {
+      let _g656 = 0;
+      G657: {
+        const _a658 = sp.adj4[_at654];
+        for (let _i659 = 0; _i659 < _a658.length; _i659++) {
+          const v_m = _a658[_i659];
+          const _h660 = (g[v_m] || -1);
+          if (!((_h660 === _v655))) continue;
+          _g656++;
         }
       }
-      _c657 = (_g653 === 1);
+      _c661 = (_g656 === 1);
     }
-    if (!(_c657)) return false;
+    if (!(_c661)) return false;
   }
   return true;
 }

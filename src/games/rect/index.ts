@@ -42,15 +42,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point, Rect } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import {
-  RECT_RUNGS,
-  type RectHint,
-  type RectRung,
-  rectHint,
-  rectKeepTrack,
-  rectRefreshStep,
-  rungsFinish,
-} from "./hint.ts";
+import { type RectHint, rectHint, rectKeepTrack, rectRefreshStep } from "./hint.ts";
 import {
   drawnBoxAt,
   executeMove,
@@ -71,7 +63,7 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import { answerOf } from "./solver.ts";
+import { answerOf, ladderFinishes, RECT_RUNGS, type RectRung } from "./solver.ts";
 import {
   BOARDS,
   DIFF_NORMAL,
@@ -599,14 +591,11 @@ export const rectGame: Game<
 
   solve,
   findMistakes,
-  // Easy and Normal are boards the hint's rungs of the tier finish. The hint
-  // rules out placements the solver does not, so it finishes boards the
-  // solver stops on, and such a board needs no trial and error. It is asked
-  // for its one answer as well: the rungs are trusted to explain a board, not
-  // to prove it has one.
+  // Easy and Normal are boards the ladder's techniques of the tier finish.
+  // Each technique is checked sound, so a board they finish has one answer.
   difficulty: TIERS.contract<RectParams, RectState>({
     newState,
-    deductionFinishes: (s, cap) => rungsFinish(s, cap) && answerOf(s).kind === "one",
+    deductionFinishes: (s, cap) => ladderFinishes(s.w, s.h, s, cap),
     answerOf,
   }),
 

@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/palisade/palisade.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, edgeGroups, rangeMask, through } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, edgeGroups, rangeMask } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -57,7 +57,7 @@ export const tiers: readonly string[] = ["Easy","Unreasonable"];
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
   const _g298: number[] = [];
-  const _g308: number[] = [];
+  const _g311: number[] = [];
   const _domain = rangeMask(1, 2);
   for (const cell of sp.edges) {
     const held = g[cell];
@@ -70,56 +70,63 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
       const _a302 = sp.edges;
       for (let _i303 = 0; _i303 < _a302.length; _i303++) {
         const v_e = _a302[_i303];
-        if (!(((g[v_e] || -1) === 2))) continue;
+        const _h304 = (g[v_e] || -1);
+        if (!((_h304 === 2))) continue;
         _g298.push(v_e);
       }
     }
     const v_O = _g298;
-    const _a304 = sp.edges;
-    for (let _i305 = 0; _i305 < _a304.length; _i305++) {
-      const v_e = _a304[_i305];
-      if (!((((g[v_e] || -1) === 1) === !(through(sp, sp.edgeEnds[2 * v_e], v_O).includes(sp.edgeEnds[2 * v_e + 1]))))) {
+    const _eg308 = edgeGroups(sp, v_O);
+    const _a305 = sp.edges;
+    for (let _i306 = 0; _i306 < _a305.length; _i306++) {
+      const v_e = _a305[_i306];
+      const _h307 = (g[v_e] || -1);
+      if (!(((_h307 === 1) === !(_eg308.of(sp.edgeEnds[2 * v_e + 1]) === _eg308.of(sp.edgeEnds[2 * v_e]))))) {
         _q296 = false;
         break Q297;
       }
     }
   }
   if (!(_q296)) return false;
-  let _q306 = true;
-  Q307: {
-    _g308.length = 0;
-    G309: {
-      const _a312 = sp.edges;
-      for (let _i313 = 0; _i313 < _a312.length; _i313++) {
-        const v_e = _a312[_i313];
-        if (!(((g[v_e] || -1) === 2))) continue;
-        _g308.push(v_e);
+  let _q309 = true;
+  Q310: {
+    _g311.length = 0;
+    G312: {
+      const _a315 = sp.edges;
+      for (let _i316 = 0; _i316 < _a315.length; _i316++) {
+        const v_e = _a315[_i316];
+        const _h317 = (g[v_e] || -1);
+        if (!((_h317 === 2))) continue;
+        _g311.push(v_e);
       }
     }
-    const v_O = _g308;
-    const _a314 = sp.cells;
-    for (let _i315 = 0; _i315 < _a314.length; _i315++) {
-      const v_c = _a314[_i315];
-      if (!((through(sp, v_c, v_O).length === cl.k))) {
-        _q306 = false;
-        break Q307;
+    const v_O = _g311;
+    const _eg320 = edgeGroups(sp, v_O);
+    const _a318 = sp.cells;
+    for (let _i319 = 0; _i319 < _a318.length; _i319++) {
+      const v_c = _a318[_i319];
+      const _h321 = _eg320.of(v_c).length;
+      if (!((_h321 === cl.k))) {
+        _q309 = false;
+        break Q310;
       }
     }
   }
-  if (!(_q306)) return false;
-  for (let _k316 = 0; _k316 < cl.number.at.length; _k316++) {
-    const _at317 = cl.number.at[_k316];
-    const _v318 = cl.number.v[_k316];
-    let _g319 = 0;
-    G320: {
-      const _a321 = sp.adj4[_at317];
-      for (let _i322 = 0; _i322 < _a321.length; _i322++) {
-        const v_y = _a321[_i322];
-        if (!(((g[sp.edgeOf(_at317, v_y)] || -1) === 1))) continue;
-        _g319++;
+  if (!(_q309)) return false;
+  for (let _k322 = 0; _k322 < cl.number.at.length; _k322++) {
+    const _at323 = cl.number.at[_k322];
+    const _v324 = cl.number.v[_k322];
+    let _g325 = 0;
+    G326: {
+      const _a327 = sp.adj4[_at323];
+      for (let _i328 = 0; _i328 < _a327.length; _i328++) {
+        const v_y = _a327[_i328];
+        const _h329 = (g[sp.edgeOf(_at323, v_y)] || -1);
+        if (!((_h329 === 1))) continue;
+        _g325++;
       }
     }
-    if (!((((4 - sp.adj4[_at317].length) + _g319) === _v318))) return false;
+    if (!((((4 - sp.adj4[_at323].length) + _g325) === _v324))) return false;
   }
   return true;
 }

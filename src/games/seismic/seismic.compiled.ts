@@ -58,6 +58,8 @@ export function domainOf(_sp: GridSpace, cl: Dealt, v_c: number): number {
  * board: every cell a value of its domain, and every rule and dealt clue
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
+  const _h112 = (cl.mode === 0);
+  const _h115 = (cl.mode === 1);
   for (const cell of sp.cells) {
     const held = g[cell];
     if (!(held > 0 && (domainOf(sp, cl, cell) >> held) & 1)) return false;
@@ -73,12 +75,12 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
         const _a102 = cl.area.cells[v_r];
         for (let _i103 = 0; _i103 < _a102.length; _i103++) {
           const v_c = _a102[_i103];
-          const _t104 = (g[v_c] || -1);
-          if (_s101.includes(_t104)) {
+          const _h104 = (g[v_c] || -1);
+          if (_s101.includes(_h104)) {
             _g99 = false;
             break G100;
           }
-          _s101.push(_t104);
+          _s101.push(_h104);
         }
       }
       if (!(_g99)) {
@@ -93,12 +95,15 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const _a107 = sp.cells;
     for (let _i108 = 0; _i108 < _a107.length; _i108++) {
       const v_a = _a107[_i108];
+      const _h111 = (g[v_a] || -1);
+      const _h113 = ((v_a / sp.w) | 0);
+      const _h114 = (v_a % sp.w);
       const _a109 = sp.cells;
       for (let _i110 = 0; _i110 < _a109.length; _i110++) {
         const v_b = _a109[_i110];
-        const _t111 = (g[v_a] || -1);
-        if (!(((v_a !== v_b) && (((cl.mode === 0) && (((((v_a / sp.w) | 0) === ((v_b / sp.w) | 0)) && (Math.abs(((v_a % sp.w) - (v_b % sp.w))) <= _t111)) || (((v_a % sp.w) === (v_b % sp.w)) && (Math.abs((((v_a / sp.w) | 0) - ((v_b / sp.w) | 0))) <= _t111)))) || (((cl.mode === 1) && (Math.abs(((v_a % sp.w) - (v_b % sp.w))) <= 1)) && (Math.abs((((v_a / sp.w) | 0) - ((v_b / sp.w) | 0))) <= 1)))))) continue;
-        if (!(((g[v_b] || -1) !== (g[v_a] || -1)))) {
+        if (!(((v_a !== v_b) && ((_h112 && (((_h113 === ((v_b / sp.w) | 0)) && (Math.abs((_h114 - (v_b % sp.w))) <= _h111)) || ((_h114 === (v_b % sp.w)) && (Math.abs((_h113 - ((v_b / sp.w) | 0))) <= _h111)))) || ((_h115 && (Math.abs((_h114 - (v_b % sp.w))) <= 1)) && (Math.abs((_h113 - ((v_b / sp.w) | 0))) <= 1)))))) continue;
+        const _h116 = (g[v_b] || -1);
+        if (!((_h116 !== _h111))) {
           _q105 = false;
           break Q106;
         }

@@ -1,11 +1,11 @@
 /**
- * Rectangles' two tiers: Easy, which the hint finishes, and Unreasonable, a
- * board with one answer that the solver and the hint both stop short of.
+ * Rectangles' tiers: Easy and Normal, which the ladder finishes, and
+ * Unreasonable, a board with one answer that the ladder stops short of.
  *
  * The answer counts here come from {@link countDivisions}, which covers the
  * grid a rectangle at a time from its first uncovered square, keeping a
  * rectangle only where it holds exactly one number and that number is its
- * area. It asks nothing of the solver or the search over it, so it can say
+ * area. It asks nothing of the ladder or the search over it, so it can say
  * whether those two are right that a board has one answer.
  */
 import { describe, expect, it } from "vitest";
@@ -22,13 +22,11 @@ import {
 } from "../../engine/testing/absent-tiers.ts";
 import { itSlow } from "../../engine/testing/slow.ts";
 import type { Rect } from "../../engine/types.ts";
-import { rungsFinish } from "./hint.ts";
 import { rectGame } from "./index.ts";
 import { executeMove, isSolved, newState } from "./moves.ts";
-import { answerOf, searchAnswers, solverFinishes } from "./solver.ts";
+import { answerOf, ladderFinishes, searchAnswers } from "./solver.ts";
 import {
   DIFF_UNREASONABLE,
-  encodeNumbers,
   MODE_RECT,
   type RectClues,
   type RectMove,
@@ -107,9 +105,9 @@ const sized = (w: number, h: number, diff: number, expandfactor = 0): RectParams
 
 /** A 5x5 board for each thing a board can be. */
 const FIVE = sized(5, 5, DIFF_EASY);
-/** One answer, which the solver and the hint stop short of. */
+/** One answer, which the ladder stops short of. */
 const NEEDS_SEARCH = "a3b3_2a3e4b4_2f4";
-/** One answer, which the solver reaches. */
+/** One answer, which Easy's techniques reach. */
 const SOLVER_FINISHES = "b2_2a2_2_2_2j3_3_2_2_3a";
 /** Five 5s down the first column: the rows, and nothing else. */
 const FIVE_ROWS = "5d5d5d5d5d";
@@ -121,7 +119,7 @@ const MANY_ANSWERS_4X4 = "2b2_2a2b2b2a2_2";
 
 const numbersOf = (p: RectParams, desc: string): Int32Array => newState(p, desc).grid;
 
-/** A Rectangles board's numbers as the solver takes them: every clue plain. */
+/** A Rectangles board's numbers with every clue plain. */
 const plain = (grid: Int32Array): RectClues => ({
   grid,
   shapes: new Uint8Array(grid.length),
@@ -247,12 +245,11 @@ describe("an Unreasonable Rectangles board", () => {
     sized(7, 7, DIFF_UNREASONABLE),
     sized(3, 10, DIFF_UNREASONABLE),
     sized(11, 11, DIFF_UNREASONABLE, Math.fround(0.5)),
-  ])("%o is dealt with one answer that the solver and the hint do not reach", (p) => {
+  ])("%o is dealt with one answer that the ladder does not reach", (p) => {
     for (let seed = 0; seed < 3; seed++) {
       const { desc, aux } = rectGame.newDesc(p, randomNew(`unreasonable-${seed}`));
       const state = newState(p, desc);
-      expect(solverFinishes(p.w, p.h, state), desc).toBe(false);
-      expect(rungsFinish(state), desc).toBe(false);
+      expect(ladderFinishes(p.w, p.h, state), desc).toBe(false);
       if (p.w * p.h <= 49) expect(countDivisions(p.w, p.h, state.grid), desc).toBe(1);
       // The answer the mistake check goes by is the division the board was
       // drawn as, which Solve replays.
@@ -312,17 +309,15 @@ describe("an Unreasonable Rectangles board", () => {
     fill(0);
   };
 
-  /** How many boards of the shape have one answer that neither the solver
-   * nor the hint reaches, and how many boards there are. */
+  /** How many boards of the shape have one answer that the ladder does not
+   * reach, and how many boards there are. */
   const needingSearch = (w: number, h: number): { found: number; boards: number } => {
-    const p = sized(w, h, DIFF_EASY);
     let found = 0;
     let boards = 0;
     eachBoard(w, h, (grid) => {
       boards++;
-      if (solverFinishes(w, h, plain(grid))) return;
-      if (countDivisions(w, h, grid) !== 1) return;
-      if (!rungsFinish(newState(p, encodeNumbers(grid, w * h)))) found++;
+      if (ladderFinishes(w, h, plain(grid))) return;
+      if (countDivisions(w, h, grid) === 1) found++;
     });
     return { found, boards };
   };

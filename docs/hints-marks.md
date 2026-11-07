@@ -1050,8 +1050,8 @@ mark exactly that reach.**
 - **A mark the game already has may be the notation.** A step that leaves
   nothing a later step reads is not a step, and the notation's reach is the
   hint's reach: what it cannot record is where the rungs stop short of the
-  solver. Exemplar: the `line` rung in
-  [`rect/hint.ts`](../src/games/rect/hint.ts).
+  solver. Exemplar: the `line` technique in
+  [`rect.description.yaml`](../src/games/rect/rect.description.yaml).
 - **A state field the solver already keeps can be the notation**, set by a
   player's move, so the firing that wrote it becomes a step that writes it.
   Exemplar: the span limit in `src/games/bridges/`.

@@ -87,69 +87,71 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
       const _a428 = cl.cage.cells[_at424];
       for (let _i429 = 0; _i429 < _a428.length; _i429++) {
         const v_c = _a428[_i429];
-        _g426 += (g[v_c] || -1);
+        const _h430 = (g[v_c] || -1);
+        _g426 += _h430;
       }
     }
     if (!((_g426 === _v425))) return false;
   }
-  for (let _k430 = 0; _k430 < cl.product.at.length; _k430++) {
-    const _at431 = cl.product.at[_k430];
-    const _v432 = cl.product.v[_k430];
-    let _g433 = 1;
-    G434: {
-      const _a435 = cl.cage.cells[_at431];
-      for (let _i436 = 0; _i436 < _a435.length; _i436++) {
-        const v_c = _a435[_i436];
-        _g433 *= (g[v_c] || -1);
+  for (let _k431 = 0; _k431 < cl.product.at.length; _k431++) {
+    const _at432 = cl.product.at[_k431];
+    const _v433 = cl.product.v[_k431];
+    let _g434 = 1;
+    G435: {
+      const _a436 = cl.cage.cells[_at432];
+      for (let _i437 = 0; _i437 < _a436.length; _i437++) {
+        const v_c = _a436[_i437];
+        const _h438 = (g[v_c] || -1);
+        _g434 *= _h438;
       }
     }
-    if (!((_g433 === _v432))) return false;
+    if (!((_g434 === _v433))) return false;
   }
-  for (let _k437 = 0; _k437 < cl.difference.at.length; _k437++) {
-    const _at438 = cl.difference.at[_k437];
-    const _v439 = cl.difference.v[_k437];
-    let _g440 = -1;
-    G441: {
-      const _a442 = cl.cage.cells[_at438];
-      for (let _i443 = 0; _i443 < _a442.length; _i443++) {
-        const v_c = _a442[_i443];
-        const _t444 = (g[v_c] || -1);
-        if (_g440 === -1 || _t444 > _g440) _g440 = _t444;
+  for (let _k439 = 0; _k439 < cl.difference.at.length; _k439++) {
+    const _at440 = cl.difference.at[_k439];
+    const _v441 = cl.difference.v[_k439];
+    let _g442 = -1;
+    G443: {
+      const _a444 = cl.cage.cells[_at440];
+      for (let _i445 = 0; _i445 < _a444.length; _i445++) {
+        const v_c = _a444[_i445];
+        const _h446 = (g[v_c] || -1);
+        if (_g442 === -1 || _h446 > _g442) _g442 = _h446;
       }
     }
-    let _g445 = -1;
-    G446: {
-      const _a447 = cl.cage.cells[_at438];
-      for (let _i448 = 0; _i448 < _a447.length; _i448++) {
-        const v_c = _a447[_i448];
-        const _t449 = (g[v_c] || -1);
-        if (_g445 === -1 || _t449 < _g445) _g445 = _t449;
+    let _g447 = -1;
+    G448: {
+      const _a449 = cl.cage.cells[_at440];
+      for (let _i450 = 0; _i450 < _a449.length; _i450++) {
+        const v_c = _a449[_i450];
+        const _h451 = (g[v_c] || -1);
+        if (_g447 === -1 || _h451 < _g447) _g447 = _h451;
       }
     }
-    if (!(((_g440 - _g445) === _v439))) return false;
+    if (!(((_g442 - _g447) === _v441))) return false;
   }
-  for (let _k450 = 0; _k450 < cl.quotient.at.length; _k450++) {
-    const _at451 = cl.quotient.at[_k450];
-    const _v452 = cl.quotient.v[_k450];
-    let _g453 = -1;
-    G454: {
-      const _a455 = cl.cage.cells[_at451];
-      for (let _i456 = 0; _i456 < _a455.length; _i456++) {
-        const v_c = _a455[_i456];
-        const _t457 = (g[v_c] || -1);
-        if (_g453 === -1 || _t457 > _g453) _g453 = _t457;
+  for (let _k452 = 0; _k452 < cl.quotient.at.length; _k452++) {
+    const _at453 = cl.quotient.at[_k452];
+    const _v454 = cl.quotient.v[_k452];
+    let _g455 = -1;
+    G456: {
+      const _a457 = cl.cage.cells[_at453];
+      for (let _i458 = 0; _i458 < _a457.length; _i458++) {
+        const v_c = _a457[_i458];
+        const _h459 = (g[v_c] || -1);
+        if (_g455 === -1 || _h459 > _g455) _g455 = _h459;
       }
     }
-    let _g458 = -1;
-    G459: {
-      const _a460 = cl.cage.cells[_at451];
-      for (let _i461 = 0; _i461 < _a460.length; _i461++) {
-        const v_c = _a460[_i461];
-        const _t462 = (g[v_c] || -1);
-        if (_g458 === -1 || _t462 < _g458) _g458 = _t462;
+    let _g460 = -1;
+    G461: {
+      const _a462 = cl.cage.cells[_at453];
+      for (let _i463 = 0; _i463 < _a462.length; _i463++) {
+        const v_c = _a462[_i463];
+        const _h464 = (g[v_c] || -1);
+        if (_g460 === -1 || _h464 < _g460) _g460 = _h464;
       }
     }
-    if (!((_g453 === (_v452 * _g458)))) return false;
+    if (!((_g455 === (_v454 * _g460)))) return false;
   }
   return true;
 }

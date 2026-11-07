@@ -83,13 +83,15 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
       const _a247 = sp.sight[_at243];
       for (let _i248 = 0; _i248 < _a247.length; _i248++) {
         const v_c = _a247[_i248];
+        const _h255 = (g[v_c] || -1);
         let _q249 = true;
         Q250: {
           const _a251 = sp.sight[_at243];
           const _n252 = _i248;
           for (let _i253 = 0; _i253 < _n252; _i253++) {
             const v_c2 = _a251[_i253];
-            if (!(((g[v_c2] || -1) < (g[v_c] || -1)))) {
+            const _h254 = (g[v_c2] || -1);
+            if (!((_h254 < _h255))) {
               _q249 = false;
               break Q250;
             }

@@ -42,6 +42,12 @@ import {
   perPlace,
   perValue,
   ray,
+  rectCells,
+  rectHeight,
+  rectInner,
+  rectRim,
+  rectsOf,
+  rectWidth,
   slash,
   step,
   traceBeam,
@@ -584,7 +590,7 @@ const allOf = (sort: string, ids: readonly number[]): V => ({
  * slot's sight is: what reading a position in it needs. */
 function known(v: V, what: string): number[] {
   if (v.k !== "eset" || v.mem.some(([, g]) => g !== true))
-    throw new TypeError(`${what}: not a set whose members are known`);
+    throw new TypeError(`${what}: not a set whose members are known (a ${v.k})`);
   return v.mem.map(([id]) => id);
 }
 
@@ -983,6 +989,27 @@ function connectedOf(sp: GridSpace, mem: readonly Bx[]): Bx {
 const linkedCache = new WeakMap<Board, Map<string, V>>();
 
 /**
+ * A definition read at plain elements and numbers under no supposition, kept
+ * for the board: a technique that calls one inside a loop over another's
+ * members, as Rect's `line` reads `sole(q)` for every rectangle of `q`, would
+ * otherwise build its formula again at every call, and the query outgrows
+ * the heap before it is posed.
+ */
+const definitionCache = new WeakMap<Description, WeakMap<Board, Map<string, V>>>();
+
+function definitionKey(fn: string, vs: readonly V[], ctx: Ctx): string | null {
+  if (ctx.supposed.length > 0) return null;
+  const parts = [ctx.mode, fn];
+  for (const v of vs) {
+    if (v.k === "num" && typeof v.v === "number") parts.push(`n${v.v}`);
+    else if (v.k === "elem" && v.alts.length === 1 && v.alts[0][1] === true)
+      parts.push(`${v.sort}:${v.alts[0][0]}`);
+    else return null;
+  }
+  return parts.join(" ");
+}
+
+/**
  * `linked(k)` read as reach: a point is in it where a point it shares a
  * square with is, the square's diagonal joining the two, as many steps as
  * the board has points. A read under no supposition is kept for the board.
@@ -1178,10 +1205,10 @@ function bindings(
 
 /** A clue element's clues: an element of sort `clue <kind>` is its index in
  * the kind's list. */
-function clueOf(ctx: Ctx, v: V): { clue: ClueSym; g: Bx }[] {
+function clueOf(ctx: Ctx, v: V): { clue: ClueSym | null; g: Bx }[] {
   if (v.k !== "elem" || !v.sort.startsWith("clue ")) throw new TypeError("not a clue");
   const list = ctx.board.clues.get(v.sort.slice("clue ".length)) ?? [];
-  return v.alts.map(([i, g]) => ({ clue: list[i], g }));
+  return v.alts.map(([i, g]) => ({ clue: list[i] ?? null, g }));
 }
 
 function aggregate(e: Extract<Expr, { k: "agg" }>, env: Env, ctx: Ctx): V {
@@ -1345,6 +1372,7 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
     const x = field.fields.get(fn)?.at === null ? null : evaluate(args[1], env, ctx);
     return join(
       clueOf(ctx, k).map(({ clue, g }) => {
+        if (clue === null) return [g, { k: "num", v: -1 } as V] as const;
         const f = clue.fields?.get(fn);
         if (f === undefined) throw new Error(`no field ${fn}`);
         if (!Array.isArray(f)) return [g, { k: "num", v: f as Nx }] as const;
@@ -1474,8 +1502,41 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
         return lift(s, fn, (k) => allOf("cell", sp.cornerCells[k]));
       if (s.k === "elem" && s.sort === "point")
         return lift(s, fn, (k) => allOf("cell", k < 0 ? [] : sp.pointCells[k]));
+      if (s.k === "elem" && s.sort === "rect")
+        return lift(s, fn, (r) => allOf("cell", r < 0 ? [] : rectCells(sp, r)));
       return lift(vs[0], fn, (L) => allOf("cell", L < 0 ? [] : sp.lineCells[L]));
     }
+    case "rects": {
+      // Each rectangle holding the cell where the number is its size, or 0.
+      const n = num(vs[1], fn);
+      return lift(vs[0], fn, (c) => ({
+        k: "eset",
+        sort: "rect",
+        mem:
+          c < 0
+            ? []
+            : rectsOf(sp, c, 0)
+                .map(
+                  (r) =>
+                    [
+                      r,
+                      or(
+                        cmp("=", n, 0),
+                        cmp("=", n, rectWidth(sp, r) * rectHeight(sp, r)),
+                      ),
+                    ] as const,
+                )
+                .filter(([, g]) => g !== false),
+      }));
+    }
+    case "width":
+      return lift(vs[0], fn, (r) => ({ k: "num", v: r < 0 ? -1 : rectWidth(sp, r) }));
+    case "height":
+      return lift(vs[0], fn, (r) => ({ k: "num", v: r < 0 ? -1 : rectHeight(sp, r) }));
+    case "inner":
+      return lift(vs[0], fn, (r) => allOf("edge", r < 0 ? [] : rectInner(sp, r)));
+    case "rim":
+      return lift(vs[0], fn, (r) => allOf("edge", r < 0 ? [] : rectRim(sp, r)));
     case "row":
       return cellFn((c) => elem("line", sp.rowOf[c]));
     case "col":
@@ -1603,6 +1664,9 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
         at.push([-1, not(or(...at.map(([, g]) => g)))]);
         return { k: "elem", sort: v0.sort, alts: at.filter(([, g]) => g !== false) };
       }
+      // A set built from nothing is a set of values, and has no ith member.
+      if (v0.k === "vset" && v0.mem.every((g) => g === false))
+        return { k: "elem", sort: "?", alts: [[-1, true]] };
       const L = known(v0, fn);
       const at: Alt[] = L.map((id, j) => [id, cmp("=", i, j)] as const);
       at.push([-1, not(or(...at.map(([, g]) => g)))]);
@@ -1796,6 +1860,13 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       const place = (at: number): number => (decl?.per ? perElement(at) : at);
       return join(
         clueOf(ctx, k).map(({ clue, g }) => {
+          // No clue (an `nth` of an empty set) reads as none, -1, on the
+          // branch its guard leaves.
+          if (clue === null)
+            return [
+              g,
+              fn === "at" ? elem(sort, -1) : ({ k: "num", v: -1 } as V),
+            ] as const;
           if (fn === "v") return [g, clue.v] as const;
           if (fn === "at") return [g, elem(sort, place(clue.at))] as const;
           return [g, { k: "num", v: perValue(clue.at) } as V] as const;
@@ -1823,11 +1894,22 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
   }
   const def = ctx.d.defs.get(fn);
   if (def !== undefined) {
+    const key = definitionKey(fn, vs, ctx);
+    const byBoard = definitionCache.get(ctx.d) ?? new WeakMap<Board, Map<string, V>>();
+    definitionCache.set(ctx.d, byBoard);
+    const kept = key === null ? undefined : byBoard.get(board)?.get(key);
+    if (kept !== undefined) return kept;
     const inner = new Map<string, V>();
     def.params.forEach((p, i) => {
       inner.set(p, vs[i]);
     });
-    return evaluate(def.body, inner, ctx);
+    const out = evaluate(def.body, inner, ctx);
+    if (key !== null) {
+      const m = byBoard.get(board) ?? new Map<string, V>();
+      m.set(key, out);
+      byBoard.set(board, m);
+    }
+    return out;
   }
   throw new ReferenceError(`unknown function ${fn}`);
 }

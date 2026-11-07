@@ -8,6 +8,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import type { GameStatus, Rect } from "../../engine/types.ts";
+import { linesAnswer } from "./solver.ts";
 import {
   clueAllows,
   clueDimensions,
@@ -391,9 +392,10 @@ export function executeMove(from: RectState, move: RectMove): RectState {
   return { ...next, drawn, correct };
 }
 
-/** Solved: every cell lies in a valid rectangle. */
+/** Solved: the lines are an answer by the rules `rect.description.yaml`
+ * states. */
 export function isSolved(s: RectState): boolean {
-  return !s.correct.includes(0);
+  return linesAnswer(s.w, s.h, s, s.hedge, s.vedge);
 }
 
 export function status(s: RectState): GameStatus {

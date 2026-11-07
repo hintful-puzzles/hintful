@@ -28,6 +28,10 @@ incident only what a later session acts on: the rule, and the shape to look for.
 
 ## Rules for every session
 
+- **Run nothing without a time limit.** A run allowed more than ten minutes
+  reports its progress as it goes (a line per test, board or query), so it can
+  be seen to be moving and how far it has to go; one that cannot is
+  instrumented first, or cut into runs that can.
 - **Never bypass the gate**, in whole or in part, however small the change and
   however sure you are that it is not needed. No `--no-verify`, no disabled
   step.

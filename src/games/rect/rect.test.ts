@@ -24,7 +24,6 @@ import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { itSlow } from "../../engine/testing/slow.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
-import { rungsFinish } from "./hint.ts";
 import { rectGame } from "./index.ts";
 import {
   cloneRectState,
@@ -34,6 +33,7 @@ import {
   status,
 } from "./moves.ts";
 import { BORDER, COL_MISTAKE, newDrawState, redraw } from "./render.ts";
+import { ladderFinishes } from "./solver.ts";
 import {
   DIFF_NORMAL,
   DIFF_UNREASONABLE,
@@ -574,7 +574,7 @@ describe("rect deals past the menu", () => {
     ]) {
       const p = P({ w, h, expandfactor });
       const { desc } = newDesc(p, randomNew(`strip-${w}x${h}`));
-      expect(rungsFinish(newState(p, desc)), desc).toBe(true);
+      expect(ladderFinishes(w, h, newState(p, desc)), desc).toBe(true);
     }
   });
 
@@ -628,10 +628,9 @@ describe("rect loading", () => {
     );
   });
 
-  it("opens a board the solver finishes and the hint's rungs do not as Unreasonable", () => {
-    // `rect-hint.test.ts` pins it as one the generator's Easy gate turns
-    // away. It has one answer, and its hint stops short of it, which is what
-    // a player of it meets and what the tier's name is for.
+  it("opens a board upstream's solver finishes and the ladder does not as Unreasonable", () => {
+    // It has one answer, and its hint stops short of it, which is what a
+    // player of it meets and what the tier's name is for.
     expect(tierOf(P({ w: 9, h: 9 }), "c4c5b9c12b2h2k12e2f2_3c12a8l3d5d")).toBe("9x9du");
   });
 
@@ -640,15 +639,12 @@ describe("rect loading", () => {
     expect(loadVerdict(rectGame, p, "a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c")).toBeNull();
   });
 
-  it("opens a board only the hint's rungs finish as Normal", () => {
-    // The rungs look one fit ahead (`starve`), which the solver does not, so
-    // they finish this board and the solver stalls on it. A board the hint
-    // finishes needs no trial and error, and the answer the mistake check
-    // goes by is the search's, which has one here. Looking ahead is a Normal
-    // rung, so Easy's do not finish it.
+  it("opens a board only Normal's techniques finish as Normal", () => {
+    // Looking one fit ahead (`starve`) is a Normal technique, so Easy's do
+    // not finish this board.
     const desc = "b4c2b3a2_2a2b3c4a4b3_6b6h4e2a2a";
-    expect(rungsFinish(newState(P(), desc))).toBe(true);
-    expect(rungsFinish(newState(P(), desc), DIFF_EASY)).toBe(false);
+    expect(ladderFinishes(7, 7, newState(P(), desc))).toBe(true);
+    expect(ladderFinishes(7, 7, newState(P(), desc), DIFF_EASY)).toBe(false);
     expect(tierOf(P(), desc)).toBe("7x7dn");
   });
 });

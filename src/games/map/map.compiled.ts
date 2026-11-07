@@ -62,10 +62,12 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const _a122 = sp.cells;
     for (let _i123 = 0; _i123 < _a122.length; _i123++) {
       const v_a = _a122[_i123];
+      const _h127 = (g[v_a] || -1);
       const _a124 = cl.borders[v_a];
       for (let _i125 = 0; _i125 < _a124.length; _i125++) {
         const v_b = _a124[_i125];
-        if (!(((g[v_b] || -1) !== (g[v_a] || -1)))) {
+        const _h126 = (g[v_b] || -1);
+        if (!((_h126 !== _h127))) {
           _q120 = false;
           break Q121;
         }

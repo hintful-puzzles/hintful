@@ -1,0 +1,28 @@
+ok  rect       fit                            3  sound    (want sound   )     9 queries    1.1s
+ok  rect       fit (planted)                  3  unsound  (want unsound )     1 queries    0.2s   at clue number 0
+ok  rect +Patches fit                            3  sound    (want sound   )     9 queries    1.8s
+ok  rect +Patches fit (planted)                  3  unsound  (want unsound )     1 queries    0.2s   at clue number 0
+ok  rect       uncovered                      3  sound    (want sound   )     9 queries    1.5s
+ok  rect       uncovered (planted)            3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  rect +Patches uncovered                      3  sound    (want sound   )     9 queries    2.5s
+ok  rect +Patches uncovered (planted)            3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  rect       boxed                          3  sound    (want sound   )     9 queries    0.4s
+ok  rect       boxed (planted)                3  sound    (want either  )     9 queries    0.8s
+ok  rect +Patches boxed                          3  sound    (want sound   )     9 queries    1.3s
+ok  rect +Patches boxed (planted)                3  unsound  (want unsound )     1 queries    0.1s   at clue number 0
+ok  rect       reach                          3  sound    (want sound   )     9 queries    5.3s
+ok  rect       reach (planted)                3  unsound  (want unsound )     1 queries    0.3s   at cell 0
+ok  rect +Patches reach                          3  sound    (want sound   )     9 queries    8.5s
+ok  rect +Patches reach (planted)                3  unsound  (want unsound )     1 queries    0.3s   at cell 0
+ok  rect       overlap                        3  sound    (want sound   )     9 queries   13.9s
+ok  rect       overlap (planted)              3  unsound  (want unsound )     1 queries    0.2s   at clue number 0
+ok  rect +Patches overlap                        3  sound    (want sound   )     9 queries   47.8s
+ok  rect +Patches overlap (planted)              3  unsound  (want unsound )     1 queries    0.4s   at clue number 0
+ok  rect       starve                         3  sound    (want sound   )     9 queries    5.2s
+ok  rect       starve (planted)               3  sound    (want either  )     9 queries    2.8s
+ok  rect +Patches starve                         3  sound    (want sound   )     9 queries   41.1s
+ok  rect +Patches starve (planted)               3  unsound  (want unsound )     1 queries    0.2s   at clue number 0
+ok  rect       line                           3  sound    (want sound   )    12 queries   21.6s
+ok  rect       line (planted)                 3  unsound  (want unsound )     1 queries    0.2s   at edge 0
+ok  rect +Patches line                           3  sound    (want sound   )    12 queries   31.5s
+ok  rect +Patches line (planted)                 3  unsound  (want unsound )     1 queries    0.3s   at edge 0

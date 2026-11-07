@@ -96,6 +96,14 @@ export function withVariations(
     for (const r of Object.keys(v.replace?.space?.regions ?? {}))
       if (out.space.regions?.[r] === undefined)
         throw new Error(`${json.game}: ${name} replaces region ${r}, which it lacks`);
+    for (const k of Object.keys(v.replace?.clues ?? {}))
+      if (out.clues?.[k] === undefined)
+        throw new Error(
+          `${json.game}: ${name} replaces clue kind ${k}, which it lacks`,
+        );
+    for (const k of Object.keys(v.add?.clues ?? {}))
+      if (out.clues?.[k] !== undefined)
+        throw new Error(`${json.game}: ${name} adds clue kind ${k}, which it has`);
     out = {
       ...out,
       space: {
@@ -114,7 +122,7 @@ export function withVariations(
       },
       define: { ...out.define, ...v.add?.define },
       rules: { ...out.rules, ...v.add?.rules },
-      clues: { ...out.clues, ...v.add?.clues },
+      clues: { ...out.clues, ...v.replace?.clues, ...v.add?.clues },
       shape: [...(out.shape ?? []), ...(v.add?.shape ?? [])],
       techniques: [...(out.techniques ?? []), ...(v.add?.techniques ?? [])],
     };
@@ -139,7 +147,11 @@ export interface VariationJson {
       units?: string[];
     };
   };
-  replace?: { space?: Partial<DescriptionJson["space"]> };
+  replace?: {
+    space?: Partial<DescriptionJson["space"]>;
+    /** Clue kinds of the same names, each read as a whole. */
+    clues?: DescriptionJson["clues"];
+  };
 }
 
 /**

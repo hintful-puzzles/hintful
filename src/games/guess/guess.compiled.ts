@@ -68,12 +68,12 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt, variati
       const _a157 = sp.cells;
       for (let _i158 = 0; _i158 < _a157.length; _i158++) {
         const v_s = _a157[_i158];
-        const _t159 = (g[v_s] || -1);
-        if (_s156.includes(_t159)) {
+        const _h159 = (g[v_s] || -1);
+        if (_s156.includes(_h159)) {
           _g154 = false;
           break G155;
         }
-        _s156.push(_t159);
+        _s156.push(_h159);
       }
     }
     if (!(_g154)) return false;
@@ -84,47 +84,49 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt, variati
       const _a165 = sp.cells;
       for (let _i166 = 0; _i166 < _a165.length; _i166++) {
         const v_s = _a165[_i166];
-        if (!(((g[v_s] || -1) === cl.score.peg[_k160][v_s]))) continue;
+        const _h167 = (g[v_s] || -1);
+        if (!((_h167 === cl.score.peg[_k160][v_s]))) continue;
         _g163++;
       }
     }
-    let _c181: boolean = (cl.score.black[_k160] === _g163);
-    if (_c181) {
-      let _g167 = 0;
-      G168: {
-        for (let _m169 = _domain; _m169 !== 0; _m169 &= _m169 - 1) {
-          const v_d = 31 - Math.clz32(_m169 & -_m169);
-          let _g170 = -1;
-          G171: {
-            let _g172 = 0;
-            G173: {
-              const _a174 = sp.cells;
-              for (let _i175 = 0; _i175 < _a174.length; _i175++) {
-                const v_s = _a174[_i175];
+    let _c183: boolean = (cl.score.black[_k160] === _g163);
+    if (_c183) {
+      let _g168 = 0;
+      G169: {
+        for (let _m170 = _domain; _m170 !== 0; _m170 &= _m170 - 1) {
+          const v_d = 31 - Math.clz32(_m170 & -_m170);
+          let _g171 = -1;
+          G172: {
+            let _g173 = 0;
+            G174: {
+              const _a175 = sp.cells;
+              for (let _i176 = 0; _i176 < _a175.length; _i176++) {
+                const v_s = _a175[_i176];
                 if (!((cl.score.peg[_k160][v_s] === v_d))) continue;
-                _g172++;
+                _g173++;
               }
             }
-            let _g176 = 0;
-            G177: {
-              const _a178 = sp.cells;
-              for (let _i179 = 0; _i179 < _a178.length; _i179++) {
-                const v_s = _a178[_i179];
-                if (!(((g[v_s] || -1) === v_d))) continue;
-                _g176++;
+            let _g177 = 0;
+            G178: {
+              const _a179 = sp.cells;
+              for (let _i180 = 0; _i180 < _a179.length; _i180++) {
+                const v_s = _a179[_i180];
+                const _h181 = (g[v_s] || -1);
+                if (!((_h181 === v_d))) continue;
+                _g177++;
               }
             }
-            for (let _m180 = ((1 << _g172) | (1 << _g176)); _m180 !== 0; _m180 &= _m180 - 1) {
-              const v_n = 31 - Math.clz32(_m180 & -_m180);
-              if (_g170 === -1 || v_n < _g170) _g170 = v_n;
+            for (let _m182 = ((1 << _g173) | (1 << _g177)); _m182 !== 0; _m182 &= _m182 - 1) {
+              const v_n = 31 - Math.clz32(_m182 & -_m182);
+              if (_g171 === -1 || v_n < _g171) _g171 = v_n;
             }
           }
-          _g167 += _g170;
+          _g168 += _g171;
         }
       }
-      _c181 = (cl.score.total[_k160] === _g167);
+      _c183 = (cl.score.total[_k160] === _g168);
     }
-    if (!(_c181)) return false;
+    if (!(_c183)) return false;
   }
   return true;
 }

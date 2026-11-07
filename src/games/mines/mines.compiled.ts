@@ -64,28 +64,30 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const _a882 = sp.cells;
     for (let _i883 = 0; _i883 < _a882.length; _i883++) {
       const v_c = _a882[_i883];
-      if (!(((g[v_c] || -1) === 1))) continue;
+      const _h884 = (g[v_c] || -1);
+      if (!((_h884 === 1))) continue;
       _g880++;
     }
   }
   if (!((_g880 === cl.mines))) return false;
-  for (let _k884 = 0; _k884 < cl.count.at.length; _k884++) {
-    const _at885 = cl.count.at[_k884];
-    const _v886 = cl.count.v[_k884];
-    let _c891: boolean = ((g[_at885] || -1) === 2);
-    if (_c891) {
-      let _g887 = 0;
-      G888: {
-        const _a889 = sp.adj8[_at885];
-        for (let _i890 = 0; _i890 < _a889.length; _i890++) {
-          const v_d = _a889[_i890];
-          if (!(((g[v_d] || -1) === 1))) continue;
-          _g887++;
+  for (let _k885 = 0; _k885 < cl.count.at.length; _k885++) {
+    const _at886 = cl.count.at[_k885];
+    const _v887 = cl.count.v[_k885];
+    let _c893: boolean = ((g[_at886] || -1) === 2);
+    if (_c893) {
+      let _g888 = 0;
+      G889: {
+        const _a890 = sp.adj8[_at886];
+        for (let _i891 = 0; _i891 < _a890.length; _i891++) {
+          const v_d = _a890[_i891];
+          const _h892 = (g[v_d] || -1);
+          if (!((_h892 === 1))) continue;
+          _g888++;
         }
       }
-      _c891 = (_g887 === _v886);
+      _c893 = (_g888 === _v887);
     }
-    if (!(_c891)) return false;
+    if (!(_c893)) return false;
   }
   return true;
 }

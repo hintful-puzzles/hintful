@@ -83,12 +83,12 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
         const _a157 = cl.area.cells[v_r];
         for (let _i158 = 0; _i158 < _a157.length; _i158++) {
           const v_c = _a157[_i158];
-          const _t159 = (g[v_c] || -1);
-          if (_s156.includes(_t159)) {
+          const _h159 = (g[v_c] || -1);
+          if (_s156.includes(_h159)) {
             _g154 = false;
             break G155;
           }
-          _s156.push(_t159);
+          _s156.push(_h159);
         }
       }
       if (!(_g154)) {
@@ -108,7 +108,8 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
         const _a167 = chain(sp, (_x166: number) => (g[_x166] || -1), v_c);
         for (let _i168 = 0; _i168 < _a167.length; _i168++) {
           const v_g = _a167[_i168];
-          if (((g[v_g] || -1) === 5)) {
+          const _h169 = (g[v_g] || -1);
+          if ((_h169 === 5)) {
             _q164 = true;
             break Q165;
           }
@@ -121,9 +122,9 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     }
   }
   if (!(_q160)) return false;
-  for (let _k169 = 0; _k169 < cl.goal.at.length; _k169++) {
-    const _at170 = cl.goal.at[_k169];
-    if (!((((g[_at170] || -1) === 5) && (cl.area.cells[cl.area.of[_at170]].length === 1)))) return false;
+  for (let _k170 = 0; _k170 < cl.goal.at.length; _k170++) {
+    const _at171 = cl.goal.at[_k170];
+    if (!((((g[_at171] || -1) === 5) && (cl.area.cells[cl.area.of[_at171]].length === 1)))) return false;
   }
   return true;
 }

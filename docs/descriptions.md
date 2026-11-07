@@ -142,7 +142,9 @@ research tools all read through it; the app never does.
 - **A variation's word is read off what it does, never written.** One that
   only `add`s is a modifier, since an added rule only removes answers and
   every sound technique stays sound. One that `replace`s a block is a
-  ruleset, checked on its boards and the plain game's. A change to the deal
+  ruleset, checked on its boards and the plain game's. A ruleset may replace
+  a clue kind's statement (`replace.clues`): Patches widens Rect's number to
+  take the question mark that says nothing of the rectangle. A change to the deal
   alone is a setting and has no variation. A variation is named as the game
   offers it, a ruleset's name or a modifier's words, and
   `src/variations.test.ts` refuses a game whose field declares the other
@@ -257,6 +259,12 @@ description author acts on:
   (`held: "edge"`). A hint step names an edge's two squares. A division
   game states its regions as `through(c, O)`, `O` the edges known open,
   since the answer is the walls.
+- **A rectangle on the grid is a sort** (Rect's): `rects(c, n)` is the
+  rectangles holding cell `c` of `n` cells, or of any size where `n` is 0,
+  narrowest first; `cells(r)`, `width(r)` and `height(r)` read one, and
+  `inner(r)` and `rim(r)` are the edges inside it and round it. Drawing a
+  rectangle is `place` on both. `x in cells(r)` is a comparison of
+  coordinates, never a walk.
 - **A mark on the edges that means something of the answer** names it in
   `of` (Slant's `vee`, `of: "meeting(at)"`, where two squares side by side
   meet in a v). It is a set of values per edge, each at first; a technique
@@ -410,7 +418,38 @@ author writing for speed uses these:
 - **Bind a set a loop reads whole once, outside the loop**, by the statement
   itself: a comprehension or quantifier is never moved out of a loop
   (`set`'s `open`, `hiddenSingle`'s `placed`).
-- **A definition is computed at each read**, even one that reads only what
+- **A definition of one element whose loops nest two deep is kept**: one
+  that reads the marks only through `value` and `known`, and no name of the
+  technique, compiles once as a function of the module, and its value for
+  each element is kept until a value is placed, shared by every rung. Rect's
+  `fits(q)`, read for every other clue inside loops over the clues, is made
+  once a clue between placements. A shallower one is inlined, so the
+  keeping is paid only where a read inside nested loops repays it. One that
+  reads no marks at all is kept for the board, on the clues it deals, so a
+  ladder's every run shares it: Rect's `allowed(q)`, every rectangle a clue
+  could take, is made once a deal. Each keeps its values in a store of its
+  own, which looks at the marks it was last read on first: a lookup by the
+  definition's name cost Rect's deals a third of their time.
+- **Narrow a costly set by a board-kept one**: Rect's `fits(q)` filters
+  `allowed(q)` by the marks, and `near(c)` names the clues whose `allowed`
+  reaches a square, so `reachers(c)` reads a handful of clues, not all.
+  `near` itself first asks whether the clue's number is enough to reach the
+  square, by the steps between them, before it reads any rectangle.
+- **A set's size first**: a binder `F = fits(q) where |F| > 1` passes over
+  a clue already drawn before anything is read of it, which cut Rect's
+  `overlap` by three quarters on 12×14 boards.
+- **One rectangle against another is their sides**: `exists x in
+  cells(r): x in cells(s)` and its `forall` and `not in` forms compile to a
+  comparison of the two rectangles' corners, no list made.
+- **Let a cheap technique close what a costly definition would watch for**:
+  Rect's `boxed` fires on a fit whose rim is all lines, which a `fits(q)`
+  that dropped every rectangle crossing another's closed one would have had
+  to find per clue, quadratically (2026-11-07,
+  `describe-rectangles-and-galaxies`).
+- **An answer check hoists as a rung does**: a set a rule binds is made once
+  where it is bound, so `through(c, O)` over a bound `O` is a lookup in its
+  groups (Rect's shape rule, a walk per edge otherwise).
+- **Any other definition is computed at each read**, even one that reads only what
   the board deals, so bind it once where it is read more than once: Light
   Up's `square` binds `L = lights(c)`, and its discounts bind `D =
   lights(d)` after the cheap `not known(d)`, which on 12×16 boards cut a deal
@@ -528,7 +567,13 @@ checks consistency: a strike that empties a cell is made, and only a
 technique that reads the cell sees it. The library's `single`,
 `hiddenSingle`, `set` and `fish` state the engine's checks. A filled grid is
 then judged by the answer check, so a technique that misses a contradiction
-costs only the search's time, never a wrong answer.
+costs only the search's time, never a wrong answer. That time can decide
+which boards load: a search that finds a dead branch only once its grid is
+full can need sixteen times the positions. State each way a position dies as
+a technique of its own, with a conclusion and no fact (Clusters' `broken`,
+Rect's `uncovered`, a square no clue's fit reaches), as `fit`'s `|F| > 0` is
+for a clue: Rect's took the positions HEAD's Patches boards need from up to
+32,000 to under 2,000 (2026-11-07).
 
 ## The answer check
 

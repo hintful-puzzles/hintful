@@ -95,7 +95,8 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
       const _a650 = sp.pointCells[_at646];
       for (let _i651 = 0; _i651 < _a650.length; _i651++) {
         const v_c = _a650[_i651];
-        if (!(((g[v_c] || -1) === slash(sp, v_c, _at646)))) continue;
+        const _h652 = (g[v_c] || -1);
+        if (!((_h652 === slash(sp, v_c, _at646)))) continue;
         _g648++;
       }
     }

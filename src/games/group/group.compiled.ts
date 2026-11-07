@@ -72,13 +72,20 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace): boolean {
   Q82: {
     for (let _m83 = _domain; _m83 !== 0; _m83 &= _m83 - 1) {
       const v_a = 31 - Math.clz32(_m83 & -_m83);
+      const _h87 = (v_a - 1);
       for (let _m84 = _domain; _m84 !== 0; _m84 &= _m84 - 1) {
         const v_b = 31 - Math.clz32(_m84 & -_m84);
+        const _h86 = (v_b - 1);
+        const _h88 = (_h87 * sp.w + _h86);
+        const _h89 = _h88;
+        const _h90 = (g[_h89] || -1);
+        const _h91 = (_h90 - 1);
         for (let _m85 = _domain; _m85 !== 0; _m85 &= _m85 - 1) {
           const v_c = 31 - Math.clz32(_m85 & -_m85);
-          const _t86 = (g[((v_a - 1) * sp.w + (v_b - 1))] || -1);
-          const _t87 = (g[((v_b - 1) * sp.w + (v_c - 1))] || -1);
-          if (!(((g[((_t86 - 1) * sp.w + (v_c - 1))] || -1) === (g[((v_a - 1) * sp.w + (_t87 - 1))] || -1)))) {
+          const _h92 = (g[(_h91 * sp.w + (v_c - 1))] || -1);
+          const _h93 = (g[(_h86 * sp.w + (v_c - 1))] || -1);
+          const _h94 = (g[(_h87 * sp.w + (_h93 - 1))] || -1);
+          if (!((_h92 === _h94))) {
             _q81 = false;
             break Q82;
           }

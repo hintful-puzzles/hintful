@@ -15,8 +15,8 @@ import {
   so,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import type { Crossing, RectFiring } from "./hint.ts";
 import { LINE, RECTANGLE } from "./hint-marks.ts";
+import type { RectReason } from "./solver.ts";
 import { HIDDEN, type RectState } from "./state.ts";
 
 /** "a", "a or b", "a, b or c". */
@@ -56,7 +56,7 @@ function joinAnd(parts: readonly string[]): string {
  * covers". Several clues share one clause, since a clause each runs to a
  * paragraph.
  */
-function crossings(s: RectState, f: Extract<RectFiring, { kind: "line" }>): Narration {
+function crossings(s: RectState, f: Extract<RectReason, { kind: "line" }>): Narration {
   const at = (i: number): Point => ({ x: i % s.w, y: Math.floor(i / s.w) });
   // "Only these can cross" is a claim about every other clue's fits.
   const named = (clues: readonly number[]): Narration =>
@@ -68,13 +68,8 @@ function crossings(s: RectState, f: Extract<RectFiring, { kind: "line" }>): Narr
         `the outlined ${joinAnd(clues.map((c) => clueName(s, c)))}`,
       ),
     );
-  const union = (pick: (c: Crossing) => readonly number[]): number[] => [
-    ...new Set(f.across.flatMap(pick)),
-  ];
-  const takes = union((c) => c.takes);
-  const owners = union((c) => c.owners);
-  const misses = union((c) => c.misses);
-  const several = f.across.length > 1;
+  const { takes, owners, misses } = f;
+  const several = f.clues.length > 1;
   const why: Narration[] = [];
   if (takes.length > 0) {
     const striped = derived(
@@ -84,7 +79,7 @@ function crossings(s: RectState, f: Extract<RectFiring, { kind: "line" }>): Narr
     );
     // The clue that covers it is outlined beside the one crossing, so its
     // value names it, and "other" where the two read alike.
-    const crosser = clueName(s, f.across[0].clue);
+    const crosser = clueName(s, f.clues[0]);
     const owner = mark.as(
       "outline",
       CELL,
@@ -111,11 +106,11 @@ function crossings(s: RectState, f: Extract<RectFiring, { kind: "line" }>): Narr
     why.push(phrase`miss ${missed} only it reaches`);
   }
   const edge = mark.this("ring", LINE, [f.edge], "edge");
-  return phrase`Only ${named(f.across.map((c) => c.clue))} can cross ${edge}, and ${several ? "each" : "it"} would ${joinOr(why)}`;
+  return phrase`Only ${named(f.clues)} can cross ${edge}, and ${several ? "each" : "it"} would ${joinOr(why)}`;
 }
 
 export const say = {
-  firing(s: RectState, f: RectFiring): Sentence {
+  firing(s: RectState, f: RectReason): Sentence {
     const at = (i: number): Point => ({ x: i % s.w, y: Math.floor(i / s.w) });
     if (f.kind === "line")
       return so({ look: crossings(s, f), move: phrase`the edge is a line` });
@@ -147,6 +142,11 @@ export const say = {
           move: phrase`only ${rect} fits`,
         });
       }
+      case "boxed":
+        return so({
+          look: phrase`Lines close ${rect} round the ${n} alone`,
+          move: phrase`it is the ${n}'s whole rectangle`,
+        });
       case "reach":
         return so({
           look: phrase`No other clue can reach ${derived(mark.the("outline", CELL, [at(f.square)], "square"))}`,

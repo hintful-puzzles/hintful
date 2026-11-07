@@ -64,10 +64,12 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt, variati
     const _a110 = sp.cells;
     for (let _i111 = 0; _i111 < _a110.length; _i111++) {
       const v_c = _a110[_i111];
+      const _h115 = (g[v_c] || -1);
       const _a112 = sp.adj4[v_c];
       for (let _i113 = 0; _i113 < _a112.length; _i113++) {
         const v_p = _a112[_i113];
-        if (!(((g[v_p] || -1) !== (g[v_c] || -1)))) {
+        const _h114 = (g[v_p] || -1);
+        if (!((_h114 !== _h115))) {
           _q108 = false;
           break Q109;
         }
@@ -76,37 +78,40 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt, variati
   }
   if (!(_q108)) return false;
   if (variations.includes("no diagonal")) {
-    let _q114 = true;
-    Q115: {
-      const _a116 = sp.cells;
-      for (let _i117 = 0; _i117 < _a116.length; _i117++) {
-        const v_c = _a116[_i117];
-        const _a118 = sp.adj8[v_c];
-        for (let _i119 = 0; _i119 < _a118.length; _i119++) {
-          const v_p = _a118[_i119];
-          if (!(((g[v_p] || -1) !== (g[v_c] || -1)))) {
-            _q114 = false;
-            break Q115;
+    let _q116 = true;
+    Q117: {
+      const _a118 = sp.cells;
+      for (let _i119 = 0; _i119 < _a118.length; _i119++) {
+        const v_c = _a118[_i119];
+        const _h123 = (g[v_c] || -1);
+        const _a120 = sp.adj8[v_c];
+        for (let _i121 = 0; _i121 < _a120.length; _i121++) {
+          const v_p = _a120[_i121];
+          const _h122 = (g[v_p] || -1);
+          if (!((_h122 !== _h123))) {
+            _q116 = false;
+            break Q117;
           }
         }
       }
     }
-    if (!(_q114)) return false;
+    if (!(_q116)) return false;
   }
-  for (let _k120 = 0; _k120 < cl.count.at.length; _k120++) {
-    const _at121 = perElement(cl.count.at[_k120]);
-    const _per123 = perValue(cl.count.at[_k120]);
-    const _v122 = cl.count.v[_k120];
-    let _g124 = 0;
-    G125: {
-      const _a126 = sp.lineCells[_at121];
-      for (let _i127 = 0; _i127 < _a126.length; _i127++) {
-        const v_c = _a126[_i127];
-        if (!(((g[v_c] || -1) === _per123))) continue;
-        _g124++;
+  for (let _k124 = 0; _k124 < cl.count.at.length; _k124++) {
+    const _at125 = perElement(cl.count.at[_k124]);
+    const _per127 = perValue(cl.count.at[_k124]);
+    const _v126 = cl.count.v[_k124];
+    let _g128 = 0;
+    G129: {
+      const _a130 = sp.lineCells[_at125];
+      for (let _i131 = 0; _i131 < _a130.length; _i131++) {
+        const v_c = _a130[_i131];
+        const _h132 = (g[v_c] || -1);
+        if (!((_h132 === _per127))) continue;
+        _g128++;
       }
     }
-    if (!((_g124 === _v122))) return false;
+    if (!((_g128 === _v126))) return false;
   }
   return true;
 }

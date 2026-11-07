@@ -58,6 +58,7 @@ export const tiers: readonly string[] = ["Easy","Normal"];
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
   const _domain = rangeMask(1, (cl.nums + 1));
+  const _h72 = (cl.nums + 1);
   for (const cell of sp.cells) {
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
@@ -85,23 +86,25 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
       const _a63 = sp.sight[_at59];
       for (let _i64 = 0; _i64 < _a63.length; _i64++) {
         const v_c = _a63[_i64];
-        let _c70: boolean = ((g[v_c] || -1) === _v60);
-        if (_c70) {
-          let _q65 = true;
-          Q66: {
-            const _a67 = sp.sight[_at59];
-            const _n68 = _i64;
-            for (let _i69 = 0; _i69 < _n68; _i69++) {
-              const v_c2 = _a67[_i69];
-              if (!(((g[v_c2] || -1) === (cl.nums + 1)))) {
-                _q65 = false;
-                break Q66;
+        const _h65 = (g[v_c] || -1);
+        let _c73: boolean = (_h65 === _v60);
+        if (_c73) {
+          let _q66 = true;
+          Q67: {
+            const _a68 = sp.sight[_at59];
+            const _n69 = _i64;
+            for (let _i70 = 0; _i70 < _n69; _i70++) {
+              const v_c2 = _a68[_i70];
+              const _h71 = (g[v_c2] || -1);
+              if (!((_h71 === _h72))) {
+                _q66 = false;
+                break Q67;
               }
             }
           }
-          _c70 = _q65;
+          _c73 = _q66;
         }
-        if (_c70) {
+        if (_c73) {
           _q61 = true;
           break Q62;
         }
@@ -109,10 +112,10 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     }
     if (!(_q61)) return false;
   }
-  for (let _k71 = 0; _k71 < cl.ball.at.length; _k71++) {
-    const _at72 = cl.ball.at[_k71];
-    const _v73 = cl.ball.v[_k71];
-    if (!(((g[_at72] || -1) !== _v73))) return false;
+  for (let _k74 = 0; _k74 < cl.ball.at.length; _k74++) {
+    const _at75 = cl.ball.at[_k74];
+    const _v76 = cl.ball.v[_k74];
+    if (!(((g[_at75] || -1) !== _v76))) return false;
   }
   return true;
 }

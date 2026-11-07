@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/filling/filling.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, edgeGroups, popcount, rangeMask, reaches, through } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, edgeGroups, popcount, rangeMask, reaches } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -68,25 +68,30 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
       const _a362 = sp.edges;
       for (let _i363 = 0; _i363 < _a362.length; _i363++) {
         const v_e = _a362[_i363];
-        if (!(((g[sp.edgeEnds[2 * v_e]] || -1) === (g[sp.edgeEnds[2 * v_e + 1]] || -1)))) continue;
+        const _h364 = (g[sp.edgeEnds[2 * v_e]] || -1);
+        const _h365 = (g[sp.edgeEnds[2 * v_e + 1]] || -1);
+        if (!((_h364 === _h365))) continue;
         _g358.push(v_e);
       }
     }
     const v_O = _g358;
-    const _a364 = sp.cells;
-    for (let _i365 = 0; _i365 < _a364.length; _i365++) {
-      const v_c = _a364[_i365];
-      if (!((through(sp, v_c, v_O).length === (g[v_c] || -1)))) {
+    const _eg368 = edgeGroups(sp, v_O);
+    const _a366 = sp.cells;
+    for (let _i367 = 0; _i367 < _a366.length; _i367++) {
+      const v_c = _a366[_i367];
+      const _h369 = _eg368.of(v_c).length;
+      const _h370 = (g[v_c] || -1);
+      if (!((_h369 === _h370))) {
         _q356 = false;
         break Q357;
       }
     }
   }
   if (!(_q356)) return false;
-  for (let _k366 = 0; _k366 < cl.number.at.length; _k366++) {
-    const _at367 = cl.number.at[_k366];
-    const _v368 = cl.number.v[_k366];
-    if (!(((g[_at367] || -1) === _v368))) return false;
+  for (let _k371 = 0; _k371 < cl.number.at.length; _k371++) {
+    const _at372 = cl.number.at[_k371];
+    const _v373 = cl.number.v[_k371];
+    if (!(((g[_at372] || -1) === _v373))) return false;
   }
   return true;
 }

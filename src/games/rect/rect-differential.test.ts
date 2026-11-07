@@ -14,11 +14,11 @@
  * The fixtures are a frozen recording from upstream's `auxiliary/rect-trace.c`
  * harness; neither it nor `rect.c` is in this repo.
  *
- * The generator deals only boards the hint's rungs of the tier asked finish
- * (`rungsFinish`), and deals again where C would return one they do not, so a
+ * The generator deals only boards the ladder of the tier asked finishes
+ * (`ladderFinishes`), and deals again where C would return one it does not, so a
  * seed whose C board is one of those diverges from C there on purpose. Each
  * fixture is dealt at the tier its C board needs, which takes C's first board
- * as C did; no fixture here is a board the rungs cannot finish, and
+ * as C did; no fixture here is a board the ladder cannot finish, and
  * `rect-hint.test.ts` pins one as the board the gate turns away. The two
  * fixtures C dealt with "Ensure unique solution" off are retired with the
  * option.
@@ -30,9 +30,9 @@ import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import reference from "./__fixtures__/rect-c-reference.json" with { type: "json" };
 import { newDesc } from "./generator.ts";
-import { rungsFinish } from "./hint.ts";
 import { rectGame } from "./index.ts";
 import { newState } from "./moves.ts";
+import { ladderFinishes } from "./solver.ts";
 import { DIFF_NORMAL, MODE_RECT, type RectParams } from "./state.ts";
 
 interface RectFixture {
@@ -54,7 +54,9 @@ const paramsOf = (f: RectFixture): RectParams => {
     diff: DIFF_EASY,
     mode: MODE_RECT,
   };
-  return rungsFinish(newState(p, f.desc), DIFF_EASY) ? p : { ...p, diff: DIFF_NORMAL };
+  return ladderFinishes(f.w, f.h, newState(p, f.desc), DIFF_EASY)
+    ? p
+    : { ...p, diff: DIFF_NORMAL };
 };
 
 describe("rect differential (vs C reference)", () => {

@@ -56,7 +56,7 @@ export const tiers: readonly string[] = ["Easy","Normal"];
  * board: every cell a value of its domain, and every rule and dealt clue
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
-  const _g168: number[] = [];
+  const _g170: number[] = [];
   const _domain = rangeMask(1, 2);
   for (const cell of sp.cells) {
     const held = g[cell];
@@ -67,59 +67,64 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const _a162 = sp.cells;
     for (let _i163 = 0; _i163 < _a162.length; _i163++) {
       const v_c = _a162[_i163];
-      if (!(((g[v_c] || -1) === 1))) continue;
-      let _q164 = true;
-      Q165: {
-        const _a166 = sp.adj4[v_c];
-        for (let _i167 = 0; _i167 < _a166.length; _i167++) {
-          const v_p = _a166[_i167];
-          if (!(((g[v_p] || -1) === 2))) {
-            _q164 = false;
-            break Q165;
+      const _h164 = (g[v_c] || -1);
+      if (!((_h164 === 1))) continue;
+      let _q165 = true;
+      Q166: {
+        const _a167 = sp.adj4[v_c];
+        for (let _i168 = 0; _i168 < _a167.length; _i168++) {
+          const v_p = _a167[_i168];
+          const _h169 = (g[v_p] || -1);
+          if (!((_h169 === 2))) {
+            _q165 = false;
+            break Q166;
           }
         }
       }
-      if (!(_q164)) {
+      if (!(_q165)) {
         _q160 = false;
         break Q161;
       }
     }
   }
   if (!(_q160)) return false;
-  _g168.length = 0;
-  G169: {
-    const _a172 = sp.cells;
-    for (let _i173 = 0; _i173 < _a172.length; _i173++) {
-      const v_c = _a172[_i173];
-      if (!(((g[v_c] || -1) === 2))) continue;
-      _g168.push(v_c);
+  _g170.length = 0;
+  G171: {
+    const _a174 = sp.cells;
+    for (let _i175 = 0; _i175 < _a174.length; _i175++) {
+      const v_c = _a174[_i175];
+      const _h176 = (g[v_c] || -1);
+      if (!((_h176 === 2))) continue;
+      _g170.push(v_c);
     }
   }
-  if (!(connected(sp, _g168))) return false;
-  for (let _k174 = 0; _k174 < cl.number.at.length; _k174++) {
-    const _at175 = cl.number.at[_k174];
-    const _v176 = cl.number.v[_k174];
-    let _c183: boolean = ((g[_at175] || -1) === 1);
-    if (!_c183) {
-      let _q177 = true;
-      Q178: {
-        const _a179 = setOf(sp.rowOf[_at175], sp.colOf[_at175]);
-        for (let _i180 = 0; _i180 < _a179.length; _i180++) {
-          const v_L = _a179[_i180];
-          const _a181 = sp.lineCells[v_L];
-          for (let _i182 = 0; _i182 < _a181.length; _i182++) {
-            const v_p = _a181[_i182];
-            if (!(((v_p !== _at175) && (clueAt(cl.number, v_p) === _v176)))) continue;
-            if (!(((g[v_p] || -1) === 1))) {
-              _q177 = false;
-              break Q178;
+  if (!(connected(sp, _g170))) return false;
+  for (let _k177 = 0; _k177 < cl.number.at.length; _k177++) {
+    const _at178 = cl.number.at[_k177];
+    const _v179 = cl.number.v[_k177];
+    let _c188: boolean = ((g[_at178] || -1) === 1);
+    if (!_c188) {
+      let _q180 = true;
+      Q181: {
+        const _a182 = setOf(sp.rowOf[_at178], sp.colOf[_at178]);
+        for (let _i183 = 0; _i183 < _a182.length; _i183++) {
+          const v_L = _a182[_i183];
+          const _a184 = sp.lineCells[v_L];
+          for (let _i185 = 0; _i185 < _a184.length; _i185++) {
+            const v_p = _a184[_i185];
+            const _h186 = clueAt(cl.number, v_p);
+            if (!(((v_p !== _at178) && (_h186 === _v179)))) continue;
+            const _h187 = (g[v_p] || -1);
+            if (!((_h187 === 1))) {
+              _q180 = false;
+              break Q181;
             }
           }
         }
       }
-      _c183 = _q177;
+      _c188 = _q180;
     }
-    if (!(_c183)) return false;
+    if (!(_c188)) return false;
   }
   return true;
 }
