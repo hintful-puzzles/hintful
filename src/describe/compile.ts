@@ -184,10 +184,12 @@ class Out {
   }
   text(): string[] {
     const pad = (n: number): string => "  ".repeat(n);
-    return this.entries.flatMap((e) =>
-      "text" in e
-        ? [`${pad(e.indent)}${e.text}`]
-        : e.lines.map((l) => `${pad(e.indent + l.indent)}${l.text}`),
+    return unreadBindingsDropped(
+      this.entries.flatMap((e) =>
+        "text" in e
+          ? [`${pad(e.indent)}${e.text}`]
+          : e.lines.map((l) => `${pad(e.indent + l.indent)}${l.text}`),
+      ),
     );
   }
   static fresh(prefix: string): string {
@@ -197,6 +199,25 @@ class Out {
     Out.n = 0;
     Out.slots = 0;
   }
+}
+
+/**
+ * `lines` without each loop's binding of its element that nothing in the
+ * loop reads: a read the loop's counter answers (`edge(x, y)` over
+ * `adj4(x)`) can leave the element itself unread. A line's scope is the
+ * lines after it indented as deep or deeper.
+ */
+function unreadBindingsDropped(lines: string[]): string[] {
+  const indent = (l: string): number => l.length - l.trimStart().length;
+  return lines.filter((line, i) => {
+    const m = /^\s*const (v_\w+) = _a\d+\[_i\d+\];$/.exec(line);
+    if (m === null) return true;
+    const read = new RegExp(`\\b${m[1]}\\b`);
+    const depth = indent(line);
+    for (let j = i + 1; j < lines.length && indent(lines[j]) >= depth; j++)
+      if (read.test(lines[j])) return true;
+    return false;
+  });
 }
 
 /** A clue kind's sorts. A clue at the board has no place or value of its
@@ -3312,9 +3333,19 @@ function call(
       expect(vs[0], "num", fn);
       expect(vs[1], "num", fn);
       return { code: `(${vs[1].code} * sp.w + ${vs[0].code})`, sort: elem("cell") };
-    case "edge":
+    case "edge": {
       arity(2);
-      return { code: `sp.edgeOf(${cell(0)}, ${cell(1)})`, sort: elem("edge") };
+      // A neighbor bound by the loop over the other's `adj4` names its edge
+      // by the loop's counter.
+      const [a, b] = [cell(0), cell(1)];
+      for (const [x, y] of [
+        [a, vs[1]],
+        [b, vs[0]],
+      ] as const)
+        if (y.pos?.arr === `sp.adj4[${x}]`)
+          return { code: `sp.adj4Edges[${x}][${y.pos.i}]`, sort: elem("edge") };
+      return { code: `sp.edgeOf(${a}, ${b})`, sort: elem("edge") };
+    }
     case "ends":
     case "end1":
     case "end2":

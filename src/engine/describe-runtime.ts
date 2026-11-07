@@ -211,6 +211,9 @@ export interface GridSpace {
   readonly peers: readonly (readonly number[])[];
   /** Up, right, down, left, those on the grid. */
   readonly adj4: readonly (readonly number[])[];
+  /** The edge to each of `adj4`'s cells, in its order: what `edge(x, y)`
+   * reads where `y` is bound by a loop over `adj4(x)`. */
+  readonly adj4Edges: readonly (readonly number[])[];
   /** The eight around, clockwise from up, those on the grid. */
   readonly adj8: readonly (readonly number[])[];
   /** Two cells an edge, in reading order of the first, its right edge before
@@ -387,6 +390,16 @@ function gridSpace(
       ends.push(c, c + w);
     }
   }
+  // `right` holds -1 at a row's end, and a grid one square wide has its
+  // squares below one another 1 apart, so `w` is tried first.
+  const edgeOf = (a: number, b: number): number => {
+    const lo = a < b ? a : b;
+    const gap = a < b ? b - a : a - b;
+    if (gap === w) return down[lo];
+    if (gap === 1) return right[lo];
+    return -1;
+  };
+  const adj4Edges = adj4.map((around, c) => around.map((q) => edgeOf(c, q)));
   const colCells = lineCells.slice(h);
   const rowCells = lineCells.slice(0, h);
   const sight = [
@@ -465,19 +478,11 @@ function gridSpace(
     boxOf,
     peers,
     adj4,
+    adj4Edges,
     adj8,
     edgeEnds: Int32Array.from(ends),
     edges: Array.from({ length: ends.length / 2 }, (_, e) => e),
-    // A division game reads an edge by its squares in every rung's inner
-    // loop: `right` holds -1 at a row's end, and a grid one square wide has
-    // its squares below one another 1 apart, so `w` is tried first.
-    edgeOf(a, b) {
-      const lo = a < b ? a : b;
-      const gap = a < b ? b - a : a - b;
-      if (gap === w) return down[lo];
-      if (gap === 1) return right[lo];
-      return -1;
-    },
+    edgeOf,
     slots: sight.map((_, s) => s),
     sight,
     opposite,

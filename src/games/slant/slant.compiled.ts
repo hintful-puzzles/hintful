@@ -715,7 +715,7 @@ export function drawn(b: Marks, sp: GridSpace, v_c: number, fire: Fire<DrawnBind
   const _a360 = sp.adj4[v_c];
   for (let _i361 = 0; _i361 < _a360.length; _i361++) {
     const v_a = _a360[_i361];
-    const v_e = sp.edgeOf(v_c, v_a);
+    const v_e = sp.adj4Edges[v_c][_i361];
     const _h368 = sp.edgeEnds[2 * v_e + 1];
     _g362.length = 0;
     G363: {

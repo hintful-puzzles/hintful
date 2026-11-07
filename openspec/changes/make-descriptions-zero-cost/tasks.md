@@ -14,6 +14,7 @@ The engine and language (proposal § "What Changes"):
 - [x] 4a. Groups across a set of edges kept on the marks' log (`keptEdgeGroups`: joins and local splits), with `kept-structures.test.ts` checking every kept structure, the linked groups' included, against a fresh one in each game that keeps one (seen failing on an unlogged placement); Filling 0.86×, Palisade 0.94×, Separate and Galaxies level. A kept sum no longer admits a term reading candidates
 - [ ] 4. Kept state on the placement log for every group builtin (`pointGroups`, `edgeGroups`, `joinedAcross`, `of`, growing regions), with totals per group as `linkedSum` gives them; a guard each, seen failing on a plant
 - [ ] 5. Per-element kept definitions made again only for the elements a placement could change, by a dependency derived from the statement
+- [x] 6a. `edge(x, y)` over a loop on `adj4(x)` read from a table by the loop's counter, and a loop's binding no read uses dropped: Palisade 0.83×, Path 0.90×, Dominosa 0.95× (deals, same boards and verdicts)
 - [ ] 6. Code generation independent of phrasing: one loop for aggregates over one set, no set built only to be counted, cheap geometry and clue reads, a per-element value computed once a scan; each timed on the games whose profile names it
 - [ ] 7. The compiler's cost report at `npm run describe`, refusing or warning on a read that grows with the board; held by the gate
 - [ ] 8. The guide's cost rules for porters retired where the compiler covers them; the rest restated as what the compiler reports

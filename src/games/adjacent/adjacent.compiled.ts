@@ -111,7 +111,7 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjacent
       const _a12 = sp.adj4[v_a];
       for (let _i13 = 0; _i13 < _a12.length; _i13++) {
         const v_b = _a12[_i13];
-        const v_e = sp.edgeOf(v_a, v_b);
+        const v_e = sp.adj4Edges[v_a][_i13];
         const _h18 = clueAt(cl.bar, v_e);
         const _h19 = (_h18 === 1);
         facts.length = 0;
@@ -166,7 +166,7 @@ export function adjacentSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjac
       const _a30 = sp.adj4[v_a];
       for (let _i31 = 0; _i31 < _a30.length; _i31++) {
         const v_b = _a30[_i31];
-        const v_e = sp.edgeOf(v_a, v_b);
+        const v_e = sp.adj4Edges[v_a][_i31];
         const _h38 = clueAt(cl.bar, v_e);
         const _h39 = (_h38 === 1);
         facts.length = 0;

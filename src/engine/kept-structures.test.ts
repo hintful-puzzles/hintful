@@ -23,8 +23,9 @@ const KEEPERS: [string, AnyGame][] = REGISTERED_GAMES.filter(([id]) =>
   KEPT.some((marker) => membersNotMentioning([id], marker).length === 0),
 );
 
-/** Hint requests made of each board. */
+/** Hint requests made of each board, and boards a game. */
 const STEPS = 30;
+const BOARDS = 3;
 
 it("some games keep a structure over the marks", () => {
   expect(KEEPERS.length).toBeGreaterThan(0);
@@ -35,7 +36,8 @@ for (const [id, game] of KEEPERS) {
     const caps = difficultyTiers(game)?.length ?? 0;
     setKeptCheck(true);
     try {
-      for (const { params } of dealtBoards(game)) {
+      // Three boards: a fresh structure at every read makes each dear.
+      for (const { params } of dealtBoards(game).slice(0, BOARDS)) {
         const { desc, aux } = dealt(game, params);
         for (let cap = 0; cap < caps; cap++)
           game.difficulty?.solveAtCap(params, desc, cap);

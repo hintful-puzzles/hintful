@@ -496,6 +496,11 @@ author writing for speed uses these:
 - **A set's size first**: a binder `F = fits(q) where |F| > 1` passes over
   a clue already drawn before anything is read of it, which cut Rect's
   `overlap` by three quarters on 12×14 boards.
+- **An edge between a square and a neighbor its loop bound is a table
+  read**: `edge(x, y)` with `y` bound over `adj4(x)` reads
+  `sp.adj4Edges` at the loop's counter, which took Palisade's deals to 0.83
+  of the time and Path's to 0.90 on the same boards (2026-11-07). Any other
+  `edge(x, y)` asks `edgeOf`.
 - **One rectangle against another is their sides**: `exists x in
   cells(r): x in cells(s)` and its `forall` and `not in` forms compile to a
   comparison of the two rectangles' corners, no list made.

@@ -213,7 +213,7 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
               for (let _i66 = 0; _i66 < _a65.length; _i66++) {
                 const v_y = _a65[_i66];
                 if (!((_eg44.of(v_y) === v_B))) continue;
-                if (((b.grid[sp.edgeOf(v_x, v_y)] || -1) === 1)) {
+                if (((b.grid[sp.adj4Edges[v_x][_i66]] || -1) === 1)) {
                   _q61 = true;
                   break Q62;
                 }
@@ -315,7 +315,7 @@ export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBindi
             for (let _i116 = 0; _i116 < _a115.length; _i116++) {
               const v_y = _a115[_i116];
               if (!((_eg108.of(v_y) === v_B))) continue;
-              if (((b.grid[sp.edgeOf(v_x, v_y)] || -1) === 1)) {
+              if (((b.grid[sp.adj4Edges[v_x][_i116]] || -1) === 1)) {
                 _q111 = true;
                 break Q112;
               }
@@ -398,7 +398,7 @@ export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBi
           const _a165 = sp.adj4[v_x];
           for (let _i166 = 0; _i166 < _a165.length; _i166++) {
             const v_s = _a165[_i166];
-            if (!((!(_eg154.of(v_s) === v_A) && ((b.grid[sp.edgeOf(v_x, v_s)] || -1) !== 1)))) continue;
+            if (!((!(_eg154.of(v_s) === v_A) && ((b.grid[sp.adj4Edges[v_x][_i166]] || -1) !== 1)))) continue;
             if (!_g157.includes(v_s)) _g157.push(v_s);
           }
         }
@@ -420,7 +420,7 @@ export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBi
               for (let _i173 = 0; _i173 < _a172.length; _i173++) {
                 const v_y = _a172[_i173];
                 if (!((v_S.includes(v_y)))) continue;
-                const _t174 = sp.edgeOf(v_x, v_y);
+                const _t174 = sp.adj4Edges[v_x][_i173];
                 if (!(b.grid[_t174] !== 0)) { if (fire === null) { b.placeAt(_t174, 2); changed = true; } else facts.push(PLACE, _t174, 2); }
                 if (!(true)) {
                   _q168 = false;

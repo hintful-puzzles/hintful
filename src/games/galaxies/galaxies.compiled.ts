@@ -312,7 +312,7 @@ export function enclosed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Enclosed
       const _a53 = sp.adj4[v_c];
       for (let _i54 = 0; _i54 < _a53.length; _i54++) {
         const v_n = _a53[_i54];
-        const _h55 = (b.grid[sp.edgeOf(v_c, v_n)] || -1);
+        const _h55 = (b.grid[sp.adj4Edges[v_c][_i54]] || -1);
         if (!((_h55 !== 1))) continue;
         _g49.push(v_n);
       }
@@ -707,7 +707,7 @@ export function exclave(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExclaveBi
             const _a366 = sp.adj4[v_x];
             for (let _i367 = 0; _i367 < _a366.length; _i367++) {
               const v_n = _a366[_i367];
-              const _h368 = (b.grid[sp.edgeOf(v_x, v_n)] || -1);
+              const _h368 = (b.grid[sp.adj4Edges[v_x][_i367]] || -1);
               if (!(((b.markOf(v_n) === -1) && (_h368 !== 1)))) continue;
               if (!_g358.includes(v_n)) _g358.push(v_n);
             }
