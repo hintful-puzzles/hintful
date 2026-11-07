@@ -118,16 +118,16 @@ export function broken(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BrokenBind
   const _a8 = sp.cells;
   for (let _i9 = 0; _i9 < _a8.length; _i9++) {
     const v_c = _a8[_i9];
-    const _h10 = b.known(v_c);
+    const _h10 = (b.grid[v_c] !== 0);
     if (!(_h10)) continue;
-    const _h11 = b.value(v_c);
+    const _h11 = (b.grid[v_c] || -1);
     let _g12 = 0;
     G13: {
       const _a14 = sp.adj4[v_c];
       for (let _i15 = 0; _i15 < _a14.length; _i15++) {
         const v_m = _a14[_i15];
-        const _h16 = b.known(v_m);
-        const _h17 = b.value(v_m);
+        const _h16 = (b.grid[v_m] !== 0);
+        const _h17 = (b.grid[v_m] || -1);
         if (!(((v_m !== v_c) && (!(_h16) || (_h17 === _h11))))) continue;
         _g12++;
       }
@@ -168,7 +168,7 @@ export function broken(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BrokenBind
           const _a31 = sp.adj4[v_c];
           for (let _i32 = 0; _i32 < _a31.length; _i32++) {
             const v_m = _a31[_i32];
-            const _h33 = b.value(v_m);
+            const _h33 = (b.grid[v_m] || -1);
             if (!((_h33 === _h11))) continue;
             _g29++;
           }
@@ -203,7 +203,7 @@ export function refute(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RefuteBind
   const _a64 = sp.cells;
   for (let _i65 = 0; _i65 < _a64.length; _i65++) {
     const v_x = _a64[_i65];
-    if (!(!(b.known(v_x)))) continue;
+    if (!(!((b.grid[v_x] !== 0)))) continue;
     for (let _m66 = b.domain; _m66 !== 0; _m66 &= _m66 - 1) {
       const v_d = 31 - Math.clz32(_m66 & -_m66);
       const _h96 = (3 - v_d);
@@ -211,18 +211,18 @@ export function refute(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RefuteBind
       const _a67 = union(setOf(v_x), sp.adj4[v_x]);
       for (let _i68 = 0; _i68 < _a67.length; _i68++) {
         const v_n = _a67[_i68];
-        if (!(((v_n === v_x) || b.known(v_n)))) continue;
+        if (!(((v_n === v_x) || (b.grid[v_n] !== 0)))) continue;
         const _h70 = (v_n === v_x);
         const _h71 = (v_n !== v_x);
         for (let _m69 = b.domain; _m69 !== 0; _m69 &= _m69 - 1) {
           const v_e = 31 - Math.clz32(_m69 & -_m69);
-          if (!(((_h70 && (v_e === v_d)) || (_h71 && (v_e === b.value(v_n)))))) continue;
+          if (!(((_h70 && (v_e === v_d)) || (_h71 && (v_e === (b.grid[v_n] || -1)))))) continue;
           let _g72 = 0;
           G73: {
             const _a74 = sp.adj4[v_n];
             for (let _i75 = 0; _i75 < _a74.length; _i75++) {
               const v_m = _a74[_i75];
-              if (!(((v_m !== v_x) && (!(b.known(v_m)) || (b.value(v_m) === v_e))))) continue;
+              if (!(((v_m !== v_x) && (!((b.grid[v_m] !== 0)) || ((b.grid[v_m] || -1) === v_e))))) continue;
               _g72++;
             }
           }
@@ -269,7 +269,7 @@ export function refute(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RefuteBind
                   const _a92 = sp.adj4[v_n];
                   for (let _i93 = 0; _i93 < _a92.length; _i93++) {
                     const v_m = _a92[_i93];
-                    if (!((b.value(v_m) === b.value(v_n)))) continue;
+                    if (!(((b.grid[v_m] || -1) === (b.grid[v_n] || -1)))) continue;
                     _g90++;
                   }
                 }
@@ -280,7 +280,7 @@ export function refute(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RefuteBind
             if (!(_c95)) break L76;
             facts.length = 0;
             changed = false;
-            if (!b.known(v_x)) { if (fire === null) { b.placeAt(v_x, _h97); changed = true; } else facts.push(PLACE, v_x, _h97); }
+            if (!(b.grid[v_x] !== 0)) { if (fire === null) { b.placeAt(v_x, _h97); changed = true; } else facts.push(PLACE, v_x, _h97); }
             if (!(true)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
@@ -320,7 +320,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
   const _a250 = sp.cells;
   for (let _i251 = 0; _i251 < _a250.length; _i251++) {
     const v_a = _a250[_i251];
-    let _c277: boolean = b.known(v_a);
+    let _c277: boolean = (b.grid[v_a] !== 0);
     if (_c277) {
       let _g252 = 0;
       G253: {
@@ -347,7 +347,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
         const _a264 = sp.adj4[v_a];
         for (let _i265 = 0; _i265 < _a264.length; _i265++) {
           const v_m = _a264[_i265];
-          if (!((b.value(v_m) === b.value(v_a)))) continue;
+          if (!(((b.grid[v_m] || -1) === (b.grid[v_a] || -1)))) continue;
           _g262++;
         }
       }
@@ -366,7 +366,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
         const _a275 = sp.adj4[v_a];
         for (let _i276 = 0; _i276 < _a275.length; _i276++) {
           const v_m = _a275[_i276];
-          if (!(!(b.known(v_m)))) continue;
+          if (!(!((b.grid[v_m] !== 0)))) continue;
           _g271.push(v_m);
         }
       }
@@ -376,7 +376,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
     const _a278 = within(sp, v_a, 2);
     for (let _i279 = 0; _i279 < _a278.length; _i279++) {
       const v_b = _a278[_i279];
-      if (!(((v_b !== v_a) && b.known(v_b)))) continue;
+      if (!(((v_b !== v_a) && (b.grid[v_b] !== 0)))) continue;
       _g280.length = 0;
       G281: {
         _g290.length = 0;
@@ -384,7 +384,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
           const _a294 = sp.adj4[v_a];
           for (let _i295 = 0; _i295 < _a294.length; _i295++) {
             const v_m = _a294[_i295];
-            if (!(!(b.known(v_m)))) continue;
+            if (!(!((b.grid[v_m] !== 0)))) continue;
             _g290.push(v_m);
           }
         }
@@ -404,7 +404,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
           const _a312 = sp.adj4[v_a];
           for (let _i313 = 0; _i313 < _a312.length; _i313++) {
             const v_m = _a312[_i313];
-            if (!(!(b.known(v_m)))) continue;
+            if (!(!((b.grid[v_m] !== 0)))) continue;
             _g308.push(v_m);
           }
         }
@@ -424,7 +424,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
           const _a322 = sp.adj4[v_b];
           for (let _i323 = 0; _i323 < _a322.length; _i323++) {
             const v_m = _a322[_i323];
-            if (!(!(b.known(v_m)))) continue;
+            if (!(!((b.grid[v_m] !== 0)))) continue;
             _g318.push(v_m);
           }
         }
@@ -439,7 +439,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
         const v_bo = _g316;
         let _c416: boolean = ((_h327 > 0) && (_h328 > 0));
         if (_c416) {
-          let _c363: boolean = (b.value(v_b) === b.value(v_a));
+          let _c363: boolean = ((b.grid[v_b] || -1) === (b.grid[v_a] || -1));
           if (_c363) {
             let _g329 = 0;
             G330: {
@@ -456,7 +456,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
               const _a336 = sp.adj4[v_b];
               for (let _i337 = 0; _i337 < _a336.length; _i337++) {
                 const v_m = _a336[_i337];
-                if (!((b.value(v_m) === b.value(v_b)))) continue;
+                if (!(((b.grid[v_m] || -1) === (b.grid[v_b] || -1)))) continue;
                 _g334++;
               }
             }
@@ -485,7 +485,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
               const _a350 = sp.adj4[v_a];
               for (let _i351 = 0; _i351 < _a350.length; _i351++) {
                 const v_m = _a350[_i351];
-                if (!((b.value(v_m) === b.value(v_a)))) continue;
+                if (!(((b.grid[v_m] || -1) === (b.grid[v_a] || -1)))) continue;
                 _g348++;
               }
             }
@@ -504,7 +504,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
               const _a361 = sp.adj4[v_a];
               for (let _i362 = 0; _i362 < _a361.length; _i362++) {
                 const v_m = _a361[_i362];
-                if (!(!(b.known(v_m)))) continue;
+                if (!(!((b.grid[v_m] !== 0)))) continue;
                 _g357.push(v_m);
               }
             }
@@ -512,7 +512,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
           }
           let _c415: boolean = _c363;
           if (!_c415) {
-            let _c414: boolean = (b.value(v_b) !== b.value(v_a));
+            let _c414: boolean = ((b.grid[v_b] || -1) !== (b.grid[v_a] || -1));
             if (_c414) {
               let _g364 = 0;
               G365: {
@@ -539,7 +539,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
                 const _a376 = sp.adj4[v_b];
                 for (let _i377 = 0; _i377 < _a376.length; _i377++) {
                   const v_m = _a376[_i377];
-                  if (!((b.value(v_m) === b.value(v_b)))) continue;
+                  if (!(((b.grid[v_m] || -1) === (b.grid[v_b] || -1)))) continue;
                   _g374++;
                 }
               }
@@ -558,7 +558,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
                 const _a387 = sp.adj4[v_b];
                 for (let _i388 = 0; _i388 < _a387.length; _i388++) {
                   const v_m = _a387[_i388];
-                  if (!(!(b.known(v_m)))) continue;
+                  if (!(!((b.grid[v_m] !== 0)))) continue;
                   _g383.push(v_m);
                 }
               }
@@ -587,7 +587,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
                 const _a401 = sp.adj4[v_a];
                 for (let _i402 = 0; _i402 < _a401.length; _i402++) {
                   const v_m = _a401[_i402];
-                  if (!((b.value(v_m) === b.value(v_a)))) continue;
+                  if (!(((b.grid[v_m] || -1) === (b.grid[v_a] || -1)))) continue;
                   _g399++;
                 }
               }
@@ -606,7 +606,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
                 const _a412 = sp.adj4[v_a];
                 for (let _i413 = 0; _i413 < _a412.length; _i413++) {
                   const v_m = _a412[_i413];
-                  if (!(!(b.known(v_m)))) continue;
+                  if (!(!((b.grid[v_m] !== 0)))) continue;
                   _g408.push(v_m);
                 }
               }
@@ -624,9 +624,9 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
           const _a419 = v_R;
           for (let _i420 = 0; _i420 < _a419.length; _i420++) {
             const v_u = _a419[_i420];
-            const _t421 = b.value(v_a);
+            const _t421 = (b.grid[v_a] || -1);
             const _t422 = (3 - _t421);
-            if (!b.known(v_u)) { if (fire === null) { b.placeAt(v_u, _t422); changed = true; } else facts.push(PLACE, v_u, _t422); }
+            if (!(b.grid[v_u] !== 0)) { if (fire === null) { b.placeAt(v_u, _t422); changed = true; } else facts.push(PLACE, v_u, _t422); }
             if (!(true)) {
               _q417 = false;
               break Q418;
@@ -669,7 +669,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
   const _a526 = sp.cells;
   for (let _i527 = 0; _i527 < _a526.length; _i527++) {
     const v_a = _a526[_i527];
-    let _c537: boolean = b.known(v_a);
+    let _c537: boolean = (b.grid[v_a] !== 0);
     if (_c537) {
       let _g528 = 0;
       G529: {
@@ -686,7 +686,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
         const _a535 = sp.adj4[v_a];
         for (let _i536 = 0; _i536 < _a535.length; _i536++) {
           const v_m = _a535[_i536];
-          if (!((b.value(v_m) === b.value(v_a)))) continue;
+          if (!(((b.grid[v_m] || -1) === (b.grid[v_a] || -1)))) continue;
           _g533++;
         }
       }
@@ -696,7 +696,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
     const _a538 = within(sp, v_a, 2);
     for (let _i539 = 0; _i539 < _a538.length; _i539++) {
       const v_b = _a538[_i539];
-      if (!(((v_b !== v_a) && b.known(v_b)))) continue;
+      if (!(((v_b !== v_a) && (b.grid[v_b] !== 0)))) continue;
       _g540.length = 0;
       G541: {
         _g550.length = 0;
@@ -704,7 +704,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
           const _a554 = sp.adj4[v_a];
           for (let _i555 = 0; _i555 < _a554.length; _i555++) {
             const v_m = _a554[_i555];
-            if (!(!(b.known(v_m)))) continue;
+            if (!(!((b.grid[v_m] !== 0)))) continue;
             _g550.push(v_m);
           }
         }
@@ -724,7 +724,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
           const _a572 = sp.adj4[v_a];
           for (let _i573 = 0; _i573 < _a572.length; _i573++) {
             const v_m = _a572[_i573];
-            if (!(!(b.known(v_m)))) continue;
+            if (!(!((b.grid[v_m] !== 0)))) continue;
             _g568.push(v_m);
           }
         }
@@ -744,7 +744,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
           const _a582 = sp.adj4[v_b];
           for (let _i583 = 0; _i583 < _a582.length; _i583++) {
             const v_m = _a582[_i583];
-            if (!(!(b.known(v_m)))) continue;
+            if (!(!((b.grid[v_m] !== 0)))) continue;
             _g578.push(v_m);
           }
         }
@@ -761,7 +761,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
         const _a588 = setOf(v_b);
         for (let _i589 = 0; _i589 < _a588.length; _i589++) {
           const v_k = _a588[_i589];
-          if (!((b.value(v_k) === b.value(v_a)))) continue;
+          if (!(((b.grid[v_k] || -1) === (b.grid[v_a] || -1)))) continue;
           _g586++;
         }
       }
@@ -791,7 +791,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
         const _a602 = sp.adj4[v_b];
         for (let _i603 = 0; _i603 < _a602.length; _i603++) {
           const v_m = _a602[_i603];
-          if (!((b.value(v_m) === b.value(v_b)))) continue;
+          if (!(((b.grid[v_m] || -1) === (b.grid[v_b] || -1)))) continue;
           _g600++;
         }
       }
@@ -810,7 +810,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
         const _a613 = sp.adj4[v_b];
         for (let _i614 = 0; _i614 < _a613.length; _i614++) {
           const v_m = _a613[_i614];
-          if (!(!(b.known(v_m)))) continue;
+          if (!(!((b.grid[v_m] !== 0)))) continue;
           _g609.push(v_m);
         }
       }
@@ -829,7 +829,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
         const _a623 = sp.adj4[v_b];
         for (let _i624 = 0; _i624 < _a623.length; _i624++) {
           const v_m = _a623[_i624];
-          if (!((b.value(v_m) === b.value(v_b)))) continue;
+          if (!(((b.grid[v_m] || -1) === (b.grid[v_b] || -1)))) continue;
           _g621++;
         }
       }
@@ -852,7 +852,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
             const _a634 = sp.adj4[v_a];
             for (let _i635 = 0; _i635 < _a634.length; _i635++) {
               const v_m = _a634[_i635];
-              if (!((b.value(v_m) === b.value(v_a)))) continue;
+              if (!(((b.grid[v_m] || -1) === (b.grid[v_a] || -1)))) continue;
               _g632++;
             }
           }
@@ -866,8 +866,8 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
           const _a639 = v_R;
           for (let _i640 = 0; _i640 < _a639.length; _i640++) {
             const v_u = _a639[_i640];
-            const _t641 = b.value(v_a);
-            if (!b.known(v_u)) { if (fire === null) { b.placeAt(v_u, _t641); changed = true; } else facts.push(PLACE, v_u, _t641); }
+            const _t641 = (b.grid[v_a] || -1);
+            if (!(b.grid[v_u] !== 0)) { if (fire === null) { b.placeAt(v_u, _t641); changed = true; } else facts.push(PLACE, v_u, _t641); }
             if (!(true)) {
               _q637 = false;
               break Q638;

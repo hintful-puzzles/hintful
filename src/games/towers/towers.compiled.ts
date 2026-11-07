@@ -142,10 +142,10 @@ export function facing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FacingBind
         const v_s = _a21[_i22];
         const _h23 = clueAt(cl.sees, v_s);
         const v_c = (sp.sight[v_s][(_h23 - 1)] ?? -1);
-        let _c25: boolean = b.has(v_c, sp.w);
+        let _c25: boolean = (((b.cands[v_c] >> sp.w) & 1) !== 0);
         if (_c25) {
           const _t24 = sp.w;
-          if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, _t24); changed = true; } else facts.push(PLACE, v_c, _t24); }
+          if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, _t24); changed = true; } else facts.push(PLACE, v_c, _t24); }
           _c25 = true;
         }
         if (!(_c25)) {
@@ -195,9 +195,9 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
       const _a88 = v_L;
       for (let _i89 = 0; _i89 < _a88.length; _i89++) {
         const v_c = _a88[_i89];
-        const _h90 = b.known(v_c);
+        const _h90 = (b.grid[v_c] !== 0);
         if (!(_h90)) continue;
-        const _h91 = b.value(v_c);
+        const _h91 = (b.grid[v_c] || -1);
         _g84 |= 1 << _h91;
       }
     }
@@ -216,7 +216,7 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
       const _a98 = v_L;
       for (let _i99 = 0; _i99 < _a98.length; _i99++) {
         const v_c = _a98[_i99];
-        const _h100 = b.value(v_c);
+        const _h100 = (b.grid[v_c] || -1);
         let _c107: boolean = (((v_R >> _h100) & 1) !== 0);
         if (_c107) {
           let _q101 = true;
@@ -225,7 +225,7 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
             const _n104 = _i99;
             for (let _i105 = 0; _i105 < _n104; _i105++) {
               const v_c2 = _a103[_i105];
-              const _h106 = b.value(v_c2);
+              const _h106 = (b.grid[v_c2] || -1);
               if (!((_h106 < _h100))) {
                 _q101 = false;
                 break Q102;
@@ -244,7 +244,7 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
       G109: {
         const _t110 = sp.w;
         for (let v_i = 0; v_i <= _t110; v_i++) {
-          const _h111 = b.value((v_L[v_i] ?? -1));
+          const _h111 = (b.grid[(v_L[v_i] ?? -1)] || -1);
           if (!(((v_i === sp.w) || (((v_R >> _h111) & 1) !== 0)))) continue;
           _g108 = v_i;
           break G109;
@@ -258,7 +258,7 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
       G130: {
         const _t131 = sp.w;
         for (let v_i = 0; v_i <= _t131; v_i++) {
-          const _h132 = b.value((v_L[v_i] ?? -1));
+          const _h132 = (b.grid[(v_L[v_i] ?? -1)] || -1);
           if (!(((v_i === sp.w) || (((v_R >> _h132) & 1) !== 0)))) continue;
           _g129 = v_i;
           break G130;
@@ -269,9 +269,9 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
         const _a137 = v_L;
         for (let _i138 = 0; _i138 < _a137.length; _i138++) {
           const v_c = _a137[_i138];
-          const _h139 = b.known(v_c);
+          const _h139 = (b.grid[v_c] !== 0);
           if (!((_h139 && (_i138 >= _g129)))) continue;
-          const _h140 = b.value(v_c);
+          const _h140 = (b.grid[v_c] || -1);
           _g133 |= 1 << _h140;
         }
       }
@@ -286,7 +286,7 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
           _g143 |= 1 << v_h;
         }
       }
-      _c148 = ((_g143 & (cands[v_c0] >= 0 ? cands[v_c0] : (cands[v_c0] = b.cand(v_c0)))) !== 0);
+      _c148 = ((_g143 & (cands[v_c0] >= 0 ? cands[v_c0] : (cands[v_c0] = b.cands[v_c0]))) !== 0);
     }
     const v_near = _c148;
     facts.length = 0;
@@ -299,7 +299,7 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
         G152: {
           const _t153 = sp.w;
           for (let v_i = 0; v_i <= _t153; v_i++) {
-            const _h154 = b.value((v_L[v_i] ?? -1));
+            const _h154 = (b.grid[(v_L[v_i] ?? -1)] || -1);
             if (!(((v_i === sp.w) || (((v_R >> _h154) & 1) !== 0)))) continue;
             _g151 = v_i;
             break G152;
@@ -310,9 +310,9 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
           const _a159 = v_L;
           for (let _i160 = 0; _i160 < _a159.length; _i160++) {
             const v_c = _a159[_i160];
-            const _h161 = b.known(v_c);
+            const _h161 = (b.grid[v_c] !== 0);
             if (!((_h161 && (_i160 >= _g151)))) continue;
-            const _h162 = b.value(v_c);
+            const _h162 = (b.grid[v_c] || -1);
             _g155 |= 1 << _h162;
           }
         }
@@ -329,7 +329,7 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
         }
         for (let _m170 = _g165; _m170 !== 0; _m170 &= _m170 - 1) {
           const v_h = 31 - Math.clz32(_m170 & -_m170);
-          if (b.has(v_c0, v_h)) { if (fire === null) { b.strikeAt(v_c0, v_h); changed = true; } else facts.push(STRIKE, v_c0, v_h); }
+          if ((((b.cands[v_c0] >> v_h) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c0, v_h); changed = true; } else facts.push(STRIKE, v_c0, v_h); }
           if (!(true)) {
             _q149 = false;
             break Q150;
@@ -349,8 +349,8 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
             const _a184 = v_L;
             for (let _i185 = 0; _i185 < _a184.length; _i185++) {
               const v_c = _a184[_i185];
-              const _h186 = b.known(v_c);
-              const _h193 = b.value(v_c);
+              const _h186 = (b.grid[v_c] !== 0);
+              const _h193 = (b.grid[v_c] || -1);
               const _h194 = (_h193 + 1);
               let _c195: boolean = _h186;
               if (_c195) {
@@ -360,7 +360,7 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
                   const _n190 = _i185;
                   for (let _i191 = 0; _i191 < _n190; _i191++) {
                     const v_c2 = _a189[_i191];
-                    const _h192 = b.value(v_c2);
+                    const _h192 = (b.grid[v_c2] || -1);
                     if ((_h192 > _h194)) {
                       _q187 = true;
                       break Q188;
@@ -383,7 +383,7 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
               const _t200 = ((v_v - _h199) - 2);
               for (let v_j = 0; v_j <= _t200; v_j++) {
                 const _t201 = (v_L[v_j] ?? -1);
-                if (b.has(_t201, v_h)) { if (fire === null) { b.strikeAt(_t201, v_h); changed = true; } else facts.push(STRIKE, _t201, v_h); }
+                if ((((b.cands[_t201] >> v_h) & 1) !== 0)) { if (fire === null) { b.strikeAt(_t201, v_h); changed = true; } else facts.push(STRIKE, _t201, v_h); }
                 if (!(true)) {
                   _q172 = false;
                   break Q173;
@@ -443,7 +443,7 @@ export function arrangement(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Arran
       changed = false;
       let _q208 = true;
       Q209: {
-        for (let _m210 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))); _m210 !== 0; _m210 &= _m210 - 1) {
+        for (let _m210 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m210 !== 0; _m210 &= _m210 - 1) {
           const v_d = 31 - Math.clz32(_m210 & -_m210);
           if (_g214 !== _epoch) {
             _g214 = _epoch;
@@ -463,7 +463,7 @@ export function arrangement(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Arran
               while (_a216.length > 0 && _i222 >= 0) {
                 const _e220 = _a216[_i222];
                 if (_s219[_i222] > 0) _f217[_e220] = -1;
-                let _r225 = (cands[_e220] >= 0 ? cands[_e220] : (cands[_e220] = b.cand(_e220))) & ~((2 << _s219[_i222]) - 1);
+                let _r225 = (cands[_e220] >= 0 ? cands[_e220] : (cands[_e220] = b.cands[_e220])) & ~((2 << _s219[_i222]) - 1);
                 let _d221 = 0;
                 for (; _r225 !== 0; _r225 &= _r225 - 1) {
                   _d221 = 31 - Math.clz32(_r225 & -_r225);
@@ -510,7 +510,7 @@ export function arrangement(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Arran
             }
           }
           if (!(!(((((_p211[v_c] >> v_d) & 1) !== 0) || (v_d === -1 && _y213 && !v_L.includes(v_c)))))) continue;
-          if (b.has(v_c, v_d)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
+          if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
           if (!(true)) {
             _q208 = false;
             break Q209;

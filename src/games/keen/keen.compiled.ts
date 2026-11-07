@@ -207,7 +207,7 @@ export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasy
         while (_a191.length > 0 && _i197 >= 0) {
           const _e195 = _a191[_i197];
           if (_s194[_i197] > 0) _f192[_e195] = -1;
-          let _r208 = (cands[_e195] >= 0 ? cands[_e195] : (cands[_e195] = b.cand(_e195))) & ~((2 << _s194[_i197]) - 1);
+          let _r208 = (cands[_e195] >= 0 ? cands[_e195] : (cands[_e195] = b.cands[_e195])) & ~((2 << _s194[_i197]) - 1);
           let _d196 = 0;
           V199: for (; _r208 !== 0; _r208 &= _r208 - 1) {
             _d196 = 31 - Math.clz32(_r208 & -_r208);
@@ -338,10 +338,10 @@ export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasy
       const _a259 = v_K;
       for (let _i260 = 0; _i260 < _a259.length; _i260++) {
         const v_c = _a259[_i260];
-        for (let _m261 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))); _m261 !== 0; _m261 &= _m261 - 1) {
+        for (let _m261 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m261 !== 0; _m261 &= _m261 - 1) {
           const v_d = 31 - Math.clz32(_m261 & -_m261);
           if (!(!(((v_D >> v_d) & 1) !== 0))) continue;
-          if (b.has(v_c, v_d)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
+          if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
           if (!(true)) {
             _q257 = false;
             break Q258;
@@ -401,7 +401,7 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
       const _a268 = v_K;
       for (let _i269 = 0; _i269 < _a268.length; _i269++) {
         const v_c = _a268[_i269];
-        for (let _m270 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))); _m270 !== 0; _m270 &= _m270 - 1) {
+        for (let _m270 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m270 !== 0; _m270 &= _m270 - 1) {
           const v_d = 31 - Math.clz32(_m270 & -_m270);
           if (_g274 !== _epoch) {
             _g274 = _epoch;
@@ -423,7 +423,7 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
               while (_a276.length > 0 && _i282 >= 0) {
                 const _e280 = _a276[_i282];
                 if (_s279[_i282] > 0) _f277[_e280] = -1;
-                let _r293 = (cands[_e280] >= 0 ? cands[_e280] : (cands[_e280] = b.cand(_e280))) & ~((2 << _s279[_i282]) - 1);
+                let _r293 = (cands[_e280] >= 0 ? cands[_e280] : (cands[_e280] = b.cands[_e280])) & ~((2 << _s279[_i282]) - 1);
                 let _d281 = 0;
                 V284: for (; _r293 !== 0; _r293 &= _r293 - 1) {
                   _d281 = 31 - Math.clz32(_r293 & -_r293);
@@ -545,7 +545,7 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
             }
           }
           if (!(!(((((_p271[v_c] >> v_d) & 1) !== 0) || (v_d === -1 && _y273 && !v_K.includes(v_c)))))) continue;
-          if (b.has(v_c, v_d)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
+          if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
           if (!(true)) {
             _q266 = false;
             break Q267;
@@ -622,7 +622,7 @@ export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLine
               while (_a350.length > 0 && _i356 >= 0) {
                 const _e354 = _a350[_i356];
                 if (_s353[_i356] > 0) _f351[_e354] = -1;
-                let _r367 = (cands[_e354] >= 0 ? cands[_e354] : (cands[_e354] = b.cand(_e354))) & ~((2 << _s353[_i356]) - 1);
+                let _r367 = (cands[_e354] >= 0 ? cands[_e354] : (cands[_e354] = b.cands[_e354])) & ~((2 << _s353[_i356]) - 1);
                 let _d355 = 0;
                 V358: for (; _r367 !== 0; _r367 &= _r367 - 1) {
                   _d355 = 31 - Math.clz32(_r367 & -_r367);
@@ -759,7 +759,7 @@ export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLine
           for (let _i416 = 0; _i416 < _a415.length; _i416++) {
             const v_c = _a415[_i416];
             if (!(!(v_K.includes(v_c)))) continue;
-            if (b.has(v_c, v_d)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
+            if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
             if (!(true)) {
               _q345 = false;
               break Q346;

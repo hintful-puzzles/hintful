@@ -114,7 +114,7 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
       const _a16 = sp.adj8[v_c];
       for (let _i17 = 0; _i17 < _a16.length; _i17++) {
         const v_d = _a16[_i17];
-        if (!(!(b.known(v_d)))) continue;
+        if (!(!((b.grid[v_d] !== 0)))) continue;
         _g12.push(v_d);
       }
     }
@@ -125,7 +125,7 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
       const _a21 = sp.adj8[v_c];
       for (let _i22 = 0; _i22 < _a21.length; _i22++) {
         const v_d = _a21[_i22];
-        if (!((b.value(v_d) === 1))) continue;
+        if (!(((b.grid[v_d] || -1) === 1))) continue;
         _g19++;
       }
     }
@@ -143,7 +143,7 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
             const _a27 = v_U;
             for (let _i28 = 0; _i28 < _a27.length; _i28++) {
               const v_d = _a27[_i28];
-              if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
+              if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
               if (!(true)) {
                 _q25 = false;
                 break Q26;
@@ -163,7 +163,7 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
             const _a33 = v_U;
             for (let _i34 = 0; _i34 < _a33.length; _i34++) {
               const v_d = _a33[_i34];
-              if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
+              if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
               if (!(true)) {
                 _q31 = false;
                 break Q32;
@@ -214,7 +214,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
         const _a108 = sp.adj8[v_a];
         for (let _i109 = 0; _i109 < _a108.length; _i109++) {
           const v_d = _a108[_i109];
-          if (!(!(b.known(v_d)))) continue;
+          if (!(!((b.grid[v_d] !== 0)))) continue;
           _g104.push(v_d);
         }
       }
@@ -237,7 +237,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
                 const _a127 = sp.adj8[v_a];
                 for (let _i128 = 0; _i128 < _a127.length; _i128++) {
                   const v_d = _a127[_i128];
-                  if (!(!(b.known(v_d)))) continue;
+                  if (!(!((b.grid[v_d] !== 0)))) continue;
                   _g123.push(v_d);
                 }
               }
@@ -249,7 +249,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
                   const _a135 = sp.adj8[v_b];
                   for (let _i136 = 0; _i136 < _a135.length; _i136++) {
                     const v_d = _a135[_i136];
-                    if (!(!(b.known(v_d)))) continue;
+                    if (!(!((b.grid[v_d] !== 0)))) continue;
                     _g131.push(v_d);
                   }
                 }
@@ -269,7 +269,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
           const _a142 = sp.adj8[v_a];
           for (let _i143 = 0; _i143 < _a142.length; _i143++) {
             const v_d = _a142[_i143];
-            if (!((b.value(v_d) === 1))) continue;
+            if (!(((b.grid[v_d] || -1) === 1))) continue;
             _g140++;
           }
         }
@@ -278,7 +278,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
           const _a146 = sp.adj8[v_b];
           for (let _i147 = 0; _i147 < _a146.length; _i147++) {
             const v_d = _a146[_i147];
-            if (!((b.value(v_d) === 1))) continue;
+            if (!(((b.grid[v_d] || -1) === 1))) continue;
             _g144++;
           }
         }
@@ -288,7 +288,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
           const _a152 = sp.adj8[v_a];
           for (let _i153 = 0; _i153 < _a152.length; _i153++) {
             const v_d = _a152[_i153];
-            if (!(!(b.known(v_d)))) continue;
+            if (!(!((b.grid[v_d] !== 0)))) continue;
             _g148.push(v_d);
           }
         }
@@ -297,7 +297,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
           const _a158 = sp.adj8[v_b];
           for (let _i159 = 0; _i159 < _a158.length; _i159++) {
             const v_d = _a158[_i159];
-            if (!(!(b.known(v_d)))) continue;
+            if (!(!((b.grid[v_d] !== 0)))) continue;
             _g154.push(v_d);
           }
         }
@@ -308,7 +308,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
           const _a164 = sp.adj8[v_b];
           for (let _i165 = 0; _i165 < _a164.length; _i165++) {
             const v_d = _a164[_i165];
-            if (!(!(b.known(v_d)))) continue;
+            if (!(!((b.grid[v_d] !== 0)))) continue;
             _g160.push(v_d);
           }
         }
@@ -317,7 +317,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
           const _a170 = sp.adj8[v_a];
           for (let _i171 = 0; _i171 < _a170.length; _i171++) {
             const v_d = _a170[_i171];
-            if (!(!(b.known(v_d)))) continue;
+            if (!(!((b.grid[v_d] !== 0)))) continue;
             _g166.push(v_d);
           }
         }
@@ -334,7 +334,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
               const _a177 = v_O;
               for (let _i178 = 0; _i178 < _a177.length; _i178++) {
                 const v_d = _a177[_i178];
-                if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
+                if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
                 if (!(true)) {
                   _q175 = false;
                   break Q176;
@@ -350,7 +350,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
               const _a182 = v_S;
               for (let _i183 = 0; _i183 < _a182.length; _i183++) {
                 const v_d = _a182[_i183];
-                if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
+                if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
                 if (!(true)) {
                   _q180 = false;
                   break Q181;
@@ -406,7 +406,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
         const _a270 = sp.adj8[v_o];
         for (let _i271 = 0; _i271 < _a270.length; _i271++) {
           const v_d = _a270[_i271];
-          if (!(!(b.known(v_d)))) continue;
+          if (!(!((b.grid[v_d] !== 0)))) continue;
           _g266.push(v_d);
         }
       }
@@ -423,7 +423,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
             const _a279 = sp.adj8[v_i];
             for (let _i280 = 0; _i280 < _a279.length; _i280++) {
               const v_d = _a279[_i280];
-              if (!(!(b.known(v_d)))) continue;
+              if (!(!((b.grid[v_d] !== 0)))) continue;
               _g275.push(v_d);
             }
           }
@@ -436,7 +436,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
             const _a286 = sp.adj8[v_i];
             for (let _i287 = 0; _i287 < _a286.length; _i287++) {
               const v_d = _a286[_i287];
-              if (!(!(b.known(v_d)))) continue;
+              if (!(!((b.grid[v_d] !== 0)))) continue;
               _g282.push(v_d);
             }
           }
@@ -445,7 +445,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
             const _a292 = sp.adj8[v_o];
             for (let _i293 = 0; _i293 < _a292.length; _i293++) {
               const v_d = _a292[_i293];
-              if (!(!(b.known(v_d)))) continue;
+              if (!(!((b.grid[v_d] !== 0)))) continue;
               _g288.push(v_d);
             }
           }
@@ -458,7 +458,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
             const _a299 = sp.adj8[v_i];
             for (let _i300 = 0; _i300 < _a299.length; _i300++) {
               const v_d = _a299[_i300];
-              if (!(!(b.known(v_d)))) continue;
+              if (!(!((b.grid[v_d] !== 0)))) continue;
               _g295.push(v_d);
             }
           }
@@ -467,7 +467,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
             const _a305 = sp.adj8[v_o];
             for (let _i306 = 0; _i306 < _a305.length; _i306++) {
               const v_d = _a305[_i306];
-              if (!(!(b.known(v_d)))) continue;
+              if (!(!((b.grid[v_d] !== 0)))) continue;
               _g301.push(v_d);
             }
           }
@@ -484,7 +484,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
             const _a315 = sp.adj8[v_o];
             for (let _i316 = 0; _i316 < _a315.length; _i316++) {
               const v_d = _a315[_i316];
-              if (!(!(b.known(v_d)))) continue;
+              if (!(!((b.grid[v_d] !== 0)))) continue;
               _g311.push(v_d);
             }
           }
@@ -493,7 +493,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
             const _a321 = sp.adj8[v_i];
             for (let _i322 = 0; _i322 < _a321.length; _i322++) {
               const v_d = _a321[_i322];
-              if (!(!(b.known(v_d)))) continue;
+              if (!(!((b.grid[v_d] !== 0)))) continue;
               _g317.push(v_d);
             }
           }
@@ -503,7 +503,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
             const _a327 = sp.adj8[v_b];
             for (let _i328 = 0; _i328 < _a327.length; _i328++) {
               const v_d = _a327[_i328];
-              if (!(!(b.known(v_d)))) continue;
+              if (!(!((b.grid[v_d] !== 0)))) continue;
               _g323.push(v_d);
             }
           }
@@ -528,7 +528,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
               const _a337 = sp.adj8[v_o];
               for (let _i338 = 0; _i338 < _a337.length; _i338++) {
                 const v_d = _a337[_i338];
-                if (!((b.value(v_d) === 1))) continue;
+                if (!(((b.grid[v_d] || -1) === 1))) continue;
                 _g335++;
               }
             }
@@ -537,7 +537,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
               const _a341 = sp.adj8[v_i];
               for (let _i342 = 0; _i342 < _a341.length; _i342++) {
                 const v_d = _a341[_i342];
-                if (!((b.value(v_d) === 1))) continue;
+                if (!(((b.grid[v_d] || -1) === 1))) continue;
                 _g339++;
               }
             }
@@ -547,7 +547,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
               const _a345 = sp.adj8[v_b];
               for (let _i346 = 0; _i346 < _a345.length; _i346++) {
                 const v_d = _a345[_i346];
-                if (!((b.value(v_d) === 1))) continue;
+                if (!(((b.grid[v_d] || -1) === 1))) continue;
                 _g343++;
               }
             }
@@ -566,7 +566,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
                     const _a352 = minus(v_R, v_B);
                     for (let _i353 = 0; _i353 < _a352.length; _i353++) {
                       const v_d = _a352[_i353];
-                      if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
+                      if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
                       if (!(true)) {
                         _q350 = false;
                         break Q351;
@@ -582,7 +582,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
                     const _a357 = minus(v_B, v_R);
                     for (let _i358 = 0; _i358 < _a357.length; _i358++) {
                       const v_d = _a357[_i358];
-                      if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
+                      if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
                       if (!(true)) {
                         _q355 = false;
                         break Q356;
@@ -604,7 +604,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
                       const _a363 = minus(v_B, v_R);
                       for (let _i364 = 0; _i364 < _a363.length; _i364++) {
                         const v_d = _a363[_i364];
-                        if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
+                        if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
                         if (!(true)) {
                           _q361 = false;
                           break Q362;
@@ -620,7 +620,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
                       const _a368 = minus(v_R, v_B);
                       for (let _i369 = 0; _i369 < _a368.length; _i369++) {
                         const v_d = _a368[_i369];
-                        if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
+                        if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
                         if (!(true)) {
                           _q366 = false;
                           break Q367;
@@ -689,7 +689,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
         const _a510 = sp.adj8[v_o];
         for (let _i511 = 0; _i511 < _a510.length; _i511++) {
           const v_d = _a510[_i511];
-          if (!(!(b.known(v_d)))) continue;
+          if (!(!((b.grid[v_d] !== 0)))) continue;
           _g506.push(v_d);
         }
       }
@@ -706,7 +706,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
             const _a519 = sp.adj8[v_i];
             for (let _i520 = 0; _i520 < _a519.length; _i520++) {
               const v_d = _a519[_i520];
-              if (!(!(b.known(v_d)))) continue;
+              if (!(!((b.grid[v_d] !== 0)))) continue;
               _g515.push(v_d);
             }
           }
@@ -719,7 +719,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
             const _a526 = sp.adj8[v_i];
             for (let _i527 = 0; _i527 < _a526.length; _i527++) {
               const v_d = _a526[_i527];
-              if (!(!(b.known(v_d)))) continue;
+              if (!(!((b.grid[v_d] !== 0)))) continue;
               _g522.push(v_d);
             }
           }
@@ -728,7 +728,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
             const _a532 = sp.adj8[v_o];
             for (let _i533 = 0; _i533 < _a532.length; _i533++) {
               const v_d = _a532[_i533];
-              if (!(!(b.known(v_d)))) continue;
+              if (!(!((b.grid[v_d] !== 0)))) continue;
               _g528.push(v_d);
             }
           }
@@ -741,7 +741,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
             const _a539 = sp.adj8[v_i];
             for (let _i540 = 0; _i540 < _a539.length; _i540++) {
               const v_d = _a539[_i540];
-              if (!(!(b.known(v_d)))) continue;
+              if (!(!((b.grid[v_d] !== 0)))) continue;
               _g535.push(v_d);
             }
           }
@@ -750,7 +750,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
             const _a545 = sp.adj8[v_o];
             for (let _i546 = 0; _i546 < _a545.length; _i546++) {
               const v_d = _a545[_i546];
-              if (!(!(b.known(v_d)))) continue;
+              if (!(!((b.grid[v_d] !== 0)))) continue;
               _g541.push(v_d);
             }
           }
@@ -762,7 +762,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
           const _a552 = sp.adj8[v_o];
           for (let _i553 = 0; _i553 < _a552.length; _i553++) {
             const v_d = _a552[_i553];
-            if (!(!(b.known(v_d)))) continue;
+            if (!(!((b.grid[v_d] !== 0)))) continue;
             _g548.push(v_d);
           }
         }
@@ -771,7 +771,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
           const _a558 = sp.adj8[v_i];
           for (let _i559 = 0; _i559 < _a558.length; _i559++) {
             const v_d = _a558[_i559];
-            if (!(!(b.known(v_d)))) continue;
+            if (!(!((b.grid[v_d] !== 0)))) continue;
             _g554.push(v_d);
           }
         }
@@ -781,7 +781,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
           const _a563 = sp.adj8[v_o];
           for (let _i564 = 0; _i564 < _a563.length; _i564++) {
             const v_d = _a563[_i564];
-            if (!((b.value(v_d) === 1))) continue;
+            if (!(((b.grid[v_d] || -1) === 1))) continue;
             _g561++;
           }
         }
@@ -790,7 +790,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
           const _a567 = sp.adj8[v_i];
           for (let _i568 = 0; _i568 < _a567.length; _i568++) {
             const v_d = _a567[_i568];
-            if (!((b.value(v_d) === 1))) continue;
+            if (!(((b.grid[v_d] || -1) === 1))) continue;
             _g565++;
           }
         }
@@ -806,7 +806,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
               const _a576 = sp.adj8[v_p];
               for (let _i577 = 0; _i577 < _a576.length; _i577++) {
                 const v_d = _a576[_i577];
-                if (!(!(b.known(v_d)))) continue;
+                if (!(!((b.grid[v_d] !== 0)))) continue;
                 _g572.push(v_d);
               }
             }
@@ -824,7 +824,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
                 const _a586 = sp.adj8[v_q];
                 for (let _i587 = 0; _i587 < _a586.length; _i587++) {
                   const v_d = _a586[_i587];
-                  if (!(!(b.known(v_d)))) continue;
+                  if (!(!((b.grid[v_d] !== 0)))) continue;
                   _g582.push(v_d);
                 }
               }
@@ -837,7 +837,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
                 const _a593 = sp.adj8[v_q];
                 for (let _i594 = 0; _i594 < _a593.length; _i594++) {
                   const v_d = _a593[_i594];
-                  if (!(!(b.known(v_d)))) continue;
+                  if (!(!((b.grid[v_d] !== 0)))) continue;
                   _g589.push(v_d);
                 }
               }
@@ -846,7 +846,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
                 const _a599 = sp.adj8[v_p];
                 for (let _i600 = 0; _i600 < _a599.length; _i600++) {
                   const v_d = _a599[_i600];
-                  if (!(!(b.known(v_d)))) continue;
+                  if (!(!((b.grid[v_d] !== 0)))) continue;
                   _g595.push(v_d);
                 }
               }
@@ -859,7 +859,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
                 const _a606 = sp.adj8[v_q];
                 for (let _i607 = 0; _i607 < _a606.length; _i607++) {
                   const v_d = _a606[_i607];
-                  if (!(!(b.known(v_d)))) continue;
+                  if (!(!((b.grid[v_d] !== 0)))) continue;
                   _g602.push(v_d);
                 }
               }
@@ -868,7 +868,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
                 const _a612 = sp.adj8[v_p];
                 for (let _i613 = 0; _i613 < _a612.length; _i613++) {
                   const v_d = _a612[_i613];
-                  if (!(!(b.known(v_d)))) continue;
+                  if (!(!((b.grid[v_d] !== 0)))) continue;
                   _g608.push(v_d);
                 }
               }
@@ -880,7 +880,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
               const _a619 = sp.adj8[v_p];
               for (let _i620 = 0; _i620 < _a619.length; _i620++) {
                 const v_d = _a619[_i620];
-                if (!(!(b.known(v_d)))) continue;
+                if (!(!((b.grid[v_d] !== 0)))) continue;
                 _g615.push(v_d);
               }
             }
@@ -889,7 +889,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
               const _a625 = sp.adj8[v_q];
               for (let _i626 = 0; _i626 < _a625.length; _i626++) {
                 const v_d = _a625[_i626];
-                if (!(!(b.known(v_d)))) continue;
+                if (!(!((b.grid[v_d] !== 0)))) continue;
                 _g621.push(v_d);
               }
             }
@@ -914,7 +914,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
                 const _a634 = sp.adj8[v_p];
                 for (let _i635 = 0; _i635 < _a634.length; _i635++) {
                   const v_d = _a634[_i635];
-                  if (!((b.value(v_d) === 1))) continue;
+                  if (!(((b.grid[v_d] || -1) === 1))) continue;
                   _g632++;
                 }
               }
@@ -923,7 +923,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
                 const _a638 = sp.adj8[v_q];
                 for (let _i639 = 0; _i639 < _a638.length; _i639++) {
                   const v_d = _a638[_i639];
-                  if (!((b.value(v_d) === 1))) continue;
+                  if (!(((b.grid[v_d] || -1) === 1))) continue;
                   _g636++;
                 }
               }
@@ -939,7 +939,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
                     const _a645 = minus(v_R, v_S);
                     for (let _i646 = 0; _i646 < _a645.length; _i646++) {
                       const v_d = _a645[_i646];
-                      if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
+                      if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
                       if (!(true)) {
                         _q643 = false;
                         break Q644;
@@ -955,7 +955,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
                     const _a650 = minus(v_S, v_R);
                     for (let _i651 = 0; _i651 < _a650.length; _i651++) {
                       const v_d = _a650[_i651];
-                      if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
+                      if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
                       if (!(true)) {
                         _q648 = false;
                         break Q649;
@@ -1012,7 +1012,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
         const _a750 = sp.adj8[cl.count.at[v_k]];
         for (let _i751 = 0; _i751 < _a750.length; _i751++) {
           const v_d = _a750[_i751];
-          if (!(b.known(v_d))) {
+          if (!((b.grid[v_d] !== 0))) {
             _q748 = true;
             break Q749;
           }
@@ -1031,7 +1031,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
       const _a756 = sp.cells;
       for (let _i757 = 0; _i757 < _a756.length; _i757++) {
         const v_c = _a756[_i757];
-        if (!((b.value(v_c) === 1))) continue;
+        if (!(((b.grid[v_c] || -1) === 1))) continue;
         _g754++;
       }
     }
@@ -1041,7 +1041,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
       const _a760 = sp.cells;
       for (let _i761 = 0; _i761 < _a760.length; _i761++) {
         const v_c = _a760[_i761];
-        if (!(!(b.known(v_c)))) continue;
+        if (!(!((b.grid[v_c] !== 0)))) continue;
         _g758++;
       }
     }
@@ -1078,7 +1078,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
                       const _a790 = sp.adj8[_h774];
                       for (let _i791 = 0; _i791 < _a790.length; _i791++) {
                         const v_d = _a790[_i791];
-                        if (!(!(b.known(v_d)))) continue;
+                        if (!(!((b.grid[v_d] !== 0)))) continue;
                         _g786.push(v_d);
                       }
                     }
@@ -1090,7 +1090,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
                         const _a798 = sp.adj8[_t775];
                         for (let _i799 = 0; _i799 < _a798.length; _i799++) {
                           const v_d = _a798[_i799];
-                          if (!(!(b.known(v_d)))) continue;
+                          if (!(!((b.grid[v_d] !== 0)))) continue;
                           _g794.push(v_d);
                         }
                       }
@@ -1124,7 +1124,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
               const _a810 = sp.adj8[_t806];
               for (let _i811 = 0; _i811 < _a810.length; _i811++) {
                 const v_d = _a810[_i811];
-                if (!((b.value(v_d) === 1))) continue;
+                if (!(((b.grid[v_d] || -1) === 1))) continue;
                 _g808++;
               }
             }
@@ -1143,7 +1143,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
               const _a832 = sp.adj8[_t827];
               for (let _i833 = 0; _i833 < _a832.length; _i833++) {
                 const v_d = _a832[_i833];
-                if (!(!(b.known(v_d)))) continue;
+                if (!(!((b.grid[v_d] !== 0)))) continue;
                 _g828.push(v_d);
               }
             }
@@ -1165,7 +1165,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
             const _a840 = sp.cells;
             for (let _i841 = 0; _i841 < _a840.length; _i841++) {
               const v_c = _a840[_i841];
-              if (!((b.value(v_c) === 1))) continue;
+              if (!(((b.grid[v_c] || -1) === 1))) continue;
               _g838++;
             }
           }
@@ -1178,14 +1178,14 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
                 const _a848 = sp.cells;
                 for (let _i849 = 0; _i849 < _a848.length; _i849++) {
                   const v_c = _a848[_i849];
-                  if (!((!(b.known(v_c)) && !(v_X.includes(v_c))))) continue;
+                  if (!((!((b.grid[v_c] !== 0)) && !(v_X.includes(v_c))))) continue;
                   _g844.push(v_c);
                 }
               }
               const _a850 = _g844;
               for (let _i851 = 0; _i851 < _a850.length; _i851++) {
                 const v_d = _a850[_i851];
-                if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
+                if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
                 if (!(true)) {
                   _q842 = false;
                   break Q843;
@@ -1201,7 +1201,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
               const _a855 = sp.cells;
               for (let _i856 = 0; _i856 < _a855.length; _i856++) {
                 const v_c = _a855[_i856];
-                if (!((b.value(v_c) === 1))) continue;
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
                 _g853++;
               }
             }
@@ -1212,7 +1212,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
                 const _a859 = sp.cells;
                 for (let _i860 = 0; _i860 < _a859.length; _i860++) {
                   const v_c = _a859[_i860];
-                  if (!((b.value(v_c) === 1))) continue;
+                  if (!(((b.grid[v_c] || -1) === 1))) continue;
                   _g857++;
                 }
               }
@@ -1221,7 +1221,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
                 const _a865 = sp.cells;
                 for (let _i866 = 0; _i866 < _a865.length; _i866++) {
                   const v_c = _a865[_i866];
-                  if (!((!(b.known(v_c)) && !(v_X.includes(v_c))))) continue;
+                  if (!((!((b.grid[v_c] !== 0)) && !(v_X.includes(v_c))))) continue;
                   _g861.push(v_c);
                 }
               }
@@ -1236,14 +1236,14 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
                   const _a874 = sp.cells;
                   for (let _i875 = 0; _i875 < _a874.length; _i875++) {
                     const v_c = _a874[_i875];
-                    if (!((!(b.known(v_c)) && !(v_X.includes(v_c))))) continue;
+                    if (!((!((b.grid[v_c] !== 0)) && !(v_X.includes(v_c))))) continue;
                     _g870.push(v_c);
                   }
                 }
                 const _a876 = _g870;
                 for (let _i877 = 0; _i877 < _a876.length; _i877++) {
                   const v_d = _a876[_i877];
-                  if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
+                  if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
                   if (!(true)) {
                     _q868 = false;
                     break Q869;

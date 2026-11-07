@@ -162,7 +162,7 @@ export function scoredNothing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sco
         const _a11 = sp.cells;
         for (let _i12 = 0; _i12 < _a11.length; _i12++) {
           const v_s = _a11[_i12];
-          if (b.has(v_s, v_d)) { if (fire === null) { b.strikeAt(v_s, v_d); changed = true; } else facts.push(STRIKE, v_s, v_d); }
+          if ((((b.cands[v_s] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_s, v_d); changed = true; } else facts.push(STRIKE, v_s, v_d); }
           if (!(true)) {
             _q1 = false;
             break Q2;
@@ -200,7 +200,7 @@ export function noBlack(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NoBlackBi
         const v_s = _a15[_i16];
         if (!((cl.score.peg[v_k][v_s] > 0))) continue;
         const _t17 = cl.score.peg[v_k][v_s];
-        if (b.has(v_s, _t17)) { if (fire === null) { b.strikeAt(v_s, _t17); changed = true; } else facts.push(STRIKE, v_s, _t17); }
+        if ((((b.cands[v_s] >> _t17) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_s, _t17); changed = true; } else facts.push(STRIKE, v_s, _t17); }
         if (!(true)) {
           _q13 = false;
           break Q14;
@@ -248,7 +248,7 @@ export function everyPegScored(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Ev
         const _a29 = sp.cells;
         for (let _i30 = 0; _i30 < _a29.length; _i30++) {
           const v_s = _a29[_i30];
-          if (b.has(v_s, v_d)) { if (fire === null) { b.strikeAt(v_s, v_d); changed = true; } else facts.push(STRIKE, v_s, v_d); }
+          if ((((b.cands[v_s] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_s, v_d); changed = true; } else facts.push(STRIKE, v_s, v_d); }
           if (!(true)) {
             _q19 = false;
             break Q20;
@@ -283,7 +283,7 @@ export function blacksForced(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Blac
         const _a38 = sp.cells;
         for (let _i39 = 0; _i39 < _a38.length; _i39++) {
           const v_s = _a38[_i39];
-          if (!(((cl.score.peg[v_k][v_s] > 0) && b.has(v_s, cl.score.peg[v_k][v_s])))) continue;
+          if (!(((cl.score.peg[v_k][v_s] > 0) && (((b.cands[v_s] >> cl.score.peg[v_k][v_s]) & 1) !== 0)))) continue;
           _g36++;
         }
       }
@@ -297,11 +297,11 @@ export function blacksForced(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Blac
       const _a43 = sp.cells;
       for (let _i44 = 0; _i44 < _a43.length; _i44++) {
         const v_s = _a43[_i44];
-        if (!(((cl.score.peg[v_k][v_s] > 0) && b.has(v_s, cl.score.peg[v_k][v_s])))) continue;
+        if (!(((cl.score.peg[v_k][v_s] > 0) && (((b.cands[v_s] >> cl.score.peg[v_k][v_s]) & 1) !== 0)))) continue;
         for (let _m45 = b.domain; _m45 !== 0; _m45 &= _m45 - 1) {
           const v_d = 31 - Math.clz32(_m45 & -_m45);
           if (!((v_d !== cl.score.peg[v_k][v_s]))) continue;
-          if (b.has(v_s, v_d)) { if (fire === null) { b.strikeAt(v_s, v_d); changed = true; } else facts.push(STRIKE, v_s, v_d); }
+          if ((((b.cands[v_s] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_s, v_d); changed = true; } else facts.push(STRIKE, v_s, v_d); }
           if (!(true)) {
             _q41 = false;
             break Q42;
@@ -340,7 +340,7 @@ export function blacksAccounted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<B
       const _a57 = sp.cells;
       for (let _i58 = 0; _i58 < _a57.length; _i58++) {
         const v_s = _a57[_i58];
-        if (!(((cl.score.peg[v_k][v_s] > 0) && ((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cand(v_s))) === ((1 << cl.score.peg[v_k][v_s])))))) continue;
+        if (!(((cl.score.peg[v_k][v_s] > 0) && ((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])) === ((1 << cl.score.peg[v_k][v_s])))))) continue;
         _g53.push(v_s);
       }
     }
@@ -355,9 +355,9 @@ export function blacksAccounted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<B
         const _a63 = sp.cells;
         for (let _i64 = 0; _i64 < _a63.length; _i64++) {
           const v_s = _a63[_i64];
-          if (!((!(v_P.includes(v_s)) && ((cl.score.peg[v_k][v_s] > 0) && b.has(v_s, cl.score.peg[v_k][v_s]))))) continue;
+          if (!((!(v_P.includes(v_s)) && ((cl.score.peg[v_k][v_s] > 0) && (((b.cands[v_s] >> cl.score.peg[v_k][v_s]) & 1) !== 0))))) continue;
           const _t65 = cl.score.peg[v_k][v_s];
-          if (b.has(v_s, _t65)) { if (fire === null) { b.strikeAt(v_s, _t65); changed = true; } else facts.push(STRIKE, v_s, _t65); }
+          if ((((b.cands[v_s] >> _t65) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_s, _t65); changed = true; } else facts.push(STRIKE, v_s, _t65); }
           if (!(true)) {
             _q61 = false;
             break Q62;
@@ -425,7 +425,7 @@ export function totalAccounted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<To
             const _a110 = sp.cells;
             for (let _i111 = 0; _i111 < _a110.length; _i111++) {
               const v_s = _a110[_i111];
-              if (!(((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cand(v_s))) === _h112))) continue;
+              if (!(((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])) === _h112))) continue;
               _g106.push(v_s);
             }
           }
@@ -471,7 +471,7 @@ export function totalAccounted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<To
             const _a133 = sp.cells;
             for (let _i134 = 0; _i134 < _a133.length; _i134++) {
               const v_s = _a133[_i134];
-              if (!(((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cand(v_s))) === _h135))) continue;
+              if (!(((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])) === _h135))) continue;
               _g129.push(v_s);
             }
           }
@@ -484,12 +484,12 @@ export function totalAccounted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<To
               const _a142 = sp.cells;
               for (let _i143 = 0; _i143 < _a142.length; _i143++) {
                 const v_s = _a142[_i143];
-                if (!(((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cand(v_s))) === _h135))) continue;
+                if (!(((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])) === _h135))) continue;
                 _g138.push(v_s);
               }
             }
             if (!(!(_g138.includes(v_s)))) continue;
-            if (b.has(v_s, v_d)) { if (fire === null) { b.strikeAt(v_s, v_d); changed = true; } else facts.push(STRIKE, v_s, v_d); }
+            if ((((b.cands[v_s] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_s, v_d); changed = true; } else facts.push(STRIKE, v_s, v_d); }
             if (!(true)) {
               _q115 = false;
               break Q116;
@@ -526,8 +526,8 @@ export function noRepeats(b: Marks, sp: GridSpace, fire: Fire<NoRepeatsBinding> 
   const _a147 = sp.cells;
   for (let _i148 = 0; _i148 < _a147.length; _i148++) {
     const v_s = _a147[_i148];
-    if (!((popcount((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cand(v_s)))) === 1))) continue;
-    for (let _m149 = (cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cand(v_s))); _m149 !== 0; _m149 &= _m149 - 1) {
+    if (!((popcount((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s]))) === 1))) continue;
+    for (let _m149 = (cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])); _m149 !== 0; _m149 &= _m149 - 1) {
       const v_d = 31 - Math.clz32(_m149 & -_m149);
       facts.length = 0;
       changed = false;
@@ -537,7 +537,7 @@ export function noRepeats(b: Marks, sp: GridSpace, fire: Fire<NoRepeatsBinding> 
         for (let _i153 = 0; _i153 < _a152.length; _i153++) {
           const v_t = _a152[_i153];
           if (!((v_t !== v_s))) continue;
-          if (b.has(v_t, v_d)) { if (fire === null) { b.strikeAt(v_t, v_d); changed = true; } else facts.push(STRIKE, v_t, v_d); }
+          if ((((b.cands[v_t] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_t, v_d); changed = true; } else facts.push(STRIKE, v_t, v_d); }
           if (!(true)) {
             _q150 = false;
             break Q151;

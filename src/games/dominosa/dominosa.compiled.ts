@@ -208,7 +208,7 @@ export function placed(b: Marks, sp: GridSpace, cl: Dealt, v_e: number, fire: Fi
   const _h19 = sp.edgeEnds[2 * v_e + 1];
   const _h20 = clueAt(cl.number, _h19);
   const _h21 = _h20;
-  if (!((b.value(v_e) === 1))) return 0;
+  if (!(((b.grid[v_e] || -1) === 1))) return 0;
   facts.length = 0;
   changed = false;
   let _q3 = true;
@@ -221,7 +221,7 @@ export function placed(b: Marks, sp: GridSpace, cl: Dealt, v_e: number, fire: Fi
         const v_y = _a7[_i8];
         if (!((sp.edgeOf(v_x, v_y) !== v_e))) continue;
         const _t9 = sp.edgeOf(v_x, v_y);
-        if (!b.known(_t9)) { if (fire === null) { b.placeAt(_t9, 2); changed = true; } else facts.push(PLACE, _t9, 2); }
+        if (!(b.grid[_t9] !== 0)) { if (fire === null) { b.placeAt(_t9, 2); changed = true; } else facts.push(PLACE, _t9, 2); }
         if (!(true)) {
           _q3 = false;
           break Q4;
@@ -261,7 +261,7 @@ export function placed(b: Marks, sp: GridSpace, cl: Dealt, v_e: number, fire: Fi
           _c31 = _c30;
         }
         if (!(_c31)) continue;
-        if (!b.known(v_f)) { if (fire === null) { b.placeAt(v_f, 2); changed = true; } else facts.push(PLACE, v_f, 2); }
+        if (!(b.grid[v_f] !== 0)) { if (fire === null) { b.placeAt(v_f, 2); changed = true; } else facts.push(PLACE, v_f, 2); }
         if (!(true)) {
           _q10 = false;
           break Q11;
@@ -316,7 +316,7 @@ export function onlySpot(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlySpot
           for (let _i84 = 0; _i84 < _a83.length; _i84++) {
             const v_y = _a83[_i84];
             const _h85 = clueAt(cl.number, v_y);
-            if (!(((_h85 === v_b) && (b.value(sp.edgeOf(v_x, v_y)) !== 2)))) continue;
+            if (!(((_h85 === v_b) && ((b.grid[sp.edgeOf(v_x, v_y)] || -1) !== 2)))) continue;
             const _t86 = sp.edgeOf(v_x, v_y);
             if (!_g62.includes(_t86)) _g62.push(_t86);
           }
@@ -328,10 +328,10 @@ export function onlySpot(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlySpot
         if (!((_h88 === 1))) break L87;
         L89: {
           const v_e = (v_P[0] ?? -1);
-          if (!(!(b.known(v_e)))) break L89;
+          if (!(!((b.grid[v_e] !== 0)))) break L89;
           facts.length = 0;
           changed = false;
-          if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
+          if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
@@ -364,7 +364,7 @@ export function squareOnly(b: Marks, sp: GridSpace, fire: Fire<SquareOnlyBinding
       const _a111 = sp.adj4[v_c];
       for (let _i112 = 0; _i112 < _a111.length; _i112++) {
         const v_y = _a111[_i112];
-        if (!((b.value(sp.edgeOf(v_c, v_y)) !== 2))) continue;
+        if (!(((b.grid[sp.edgeOf(v_c, v_y)] || -1) !== 2))) continue;
         const _t113 = sp.edgeOf(v_c, v_y);
         if (!_g107.includes(_t113)) _g107.push(_t113);
       }
@@ -379,7 +379,7 @@ export function squareOnly(b: Marks, sp: GridSpace, fire: Fire<SquareOnlyBinding
           const _a118 = v_S;
           for (let _i119 = 0; _i119 < _a118.length; _i119++) {
             const v_f = _a118[_i119];
-            if (b.known(v_f)) {
+            if ((b.grid[v_f] !== 0)) {
               _q116 = true;
               break Q117;
             }
@@ -393,7 +393,7 @@ export function squareOnly(b: Marks, sp: GridSpace, fire: Fire<SquareOnlyBinding
       let _c122: boolean = (_h115 === 1);
       if (_c122) {
         const _t121 = (v_S[0] ?? -1);
-        if (!b.known(_t121)) { if (fire === null) { b.placeAt(_t121, 1); changed = true; } else facts.push(PLACE, _t121, 1); }
+        if (!(b.grid[_t121] !== 0)) { if (fire === null) { b.placeAt(_t121, 1); changed = true; } else facts.push(PLACE, _t121, 1); }
         _c122 = true;
       }
       if (!(_c122)) return -1;
@@ -427,7 +427,7 @@ export function squareSingleDomino(b: Marks, sp: GridSpace, cl: Dealt, fire: Fir
       const _a155 = sp.adj4[v_c];
       for (let _i156 = 0; _i156 < _a155.length; _i156++) {
         const v_y = _a155[_i156];
-        if (!((b.value(sp.edgeOf(v_c, v_y)) !== 2))) continue;
+        if (!(((b.grid[sp.edgeOf(v_c, v_y)] || -1) !== 2))) continue;
         const _t157 = sp.edgeOf(v_c, v_y);
         if (!_g151.includes(_t157)) _g151.push(_t157);
       }
@@ -483,7 +483,7 @@ export function squareSingleDomino(b: Marks, sp: GridSpace, cl: Dealt, fire: Fir
           const _a184 = sp.edges;
           for (let _i185 = 0; _i185 < _a184.length; _i185++) {
             const v_f = _a184[_i185];
-            let _c197: boolean = (!(v_S.includes(v_f)) && (b.value(v_f) !== 2));
+            let _c197: boolean = (!(v_S.includes(v_f)) && ((b.grid[v_f] || -1) !== 2));
             if (_c197) {
               const _t186 = sp.edgeEnds[2 * v_f];
               const _h187 = clueAt(cl.number, _t186);
@@ -508,7 +508,7 @@ export function squareSingleDomino(b: Marks, sp: GridSpace, cl: Dealt, fire: Fir
               _c197 = _c196;
             }
             if (!(_c197)) continue;
-            if (!b.known(v_f)) { if (fire === null) { b.placeAt(v_f, 2); changed = true; } else facts.push(PLACE, v_f, 2); }
+            if (!(b.grid[v_f] !== 0)) { if (fire === null) { b.placeAt(v_f, 2); changed = true; } else facts.push(PLACE, v_f, 2); }
             if (!(true)) {
               _q182 = false;
               break Q183;
@@ -564,7 +564,7 @@ export function mustOverlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MustO
           for (let _i248 = 0; _i248 < _a247.length; _i248++) {
             const v_y = _a247[_i248];
             const _h249 = clueAt(cl.number, v_y);
-            if (!(((_h249 === v_b) && (b.value(sp.edgeOf(v_x, v_y)) !== 2)))) continue;
+            if (!(((_h249 === v_b) && ((b.grid[sp.edgeOf(v_x, v_y)] || -1) !== 2)))) continue;
             const _t250 = sp.edgeOf(v_x, v_y);
             if (!_g226.includes(_t250)) _g226.push(_t250);
           }
@@ -588,7 +588,7 @@ export function mustOverlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MustO
               const _h263 = sp.edgeOf(v_x, v_y);
               const _h264 = sp.edgeEnds[2 * _h263];
               const _h265 = sp.edgeEnds[2 * _h263 + 1];
-              let _c266: boolean = (!(v_P.includes(sp.edgeOf(v_x, v_y))) && (b.value(sp.edgeOf(v_x, v_y)) !== 2));
+              let _c266: boolean = (!(v_P.includes(sp.edgeOf(v_x, v_y))) && ((b.grid[sp.edgeOf(v_x, v_y)] || -1) !== 2));
               if (_c266) {
                 let _q259 = true;
                 Q260: {
@@ -605,7 +605,7 @@ export function mustOverlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MustO
               }
               if (!(_c266)) continue;
               const _t267 = sp.edgeOf(v_x, v_y);
-              if (!b.known(_t267)) { if (fire === null) { b.placeAt(_t267, 2); changed = true; } else facts.push(PLACE, _t267, 2); }
+              if (!(b.grid[_t267] !== 0)) { if (fire === null) { b.placeAt(_t267, 2); changed = true; } else facts.push(PLACE, _t267, 2); }
               if (!(true)) {
                 _q253 = false;
                 break Q254;
@@ -641,7 +641,7 @@ export function localDuplicate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Lo
   const _a300 = sp.edges;
   for (let _i301 = 0; _i301 < _a300.length; _i301++) {
     const v_p = _a300[_i301];
-    if (!(!(b.known(v_p)))) continue;
+    if (!(!((b.grid[v_p] !== 0)))) continue;
     const _h322 = sp.edgeEnds[2 * v_p];
     const _h323 = clueAt(cl.number, _h322);
     const _h324 = _h323;
@@ -656,7 +656,7 @@ export function localDuplicate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Lo
         const v_y = _a304[_i305];
         L306: {
           const v_q = sp.edgeOf(v_x, v_y);
-          let _c337: boolean = ((v_q !== v_p) && (b.value(v_q) !== 2));
+          let _c337: boolean = ((v_q !== v_p) && ((b.grid[v_q] || -1) !== 2));
           if (_c337) {
             let _q307 = true;
             Q308: {
@@ -665,7 +665,7 @@ export function localDuplicate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Lo
                 const _a315 = sp.adj4[v_y];
                 for (let _i316 = 0; _i316 < _a315.length; _i316++) {
                   const v_y_314 = _a315[_i316];
-                  if (!((b.value(sp.edgeOf(v_y, v_y_314)) !== 2))) continue;
+                  if (!(((b.grid[sp.edgeOf(v_y, v_y_314)] || -1) !== 2))) continue;
                   const _t317 = sp.edgeOf(v_y, v_y_314);
                   if (!_g309.includes(_t317)) _g309.push(_t317);
                 }
@@ -705,7 +705,7 @@ export function localDuplicate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Lo
           if (!(_c337)) break L306;
           facts.length = 0;
           changed = false;
-          if (!b.known(v_p)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
+          if (!(b.grid[v_p] !== 0)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
@@ -744,7 +744,7 @@ export function localDuplicate2(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<L
   const _a428 = sp.edges;
   for (let _i429 = 0; _i429 < _a428.length; _i429++) {
     const v_p = _a428[_i429];
-    if (!(!(b.known(v_p)))) continue;
+    if (!(!((b.grid[v_p] !== 0)))) continue;
     const _h483 = sp.edgeEnds[2 * v_p];
     const _h484 = sp.edgeEnds[2 * v_p + 1];
     const _a430 = setOf(sp.edgeEnds[2 * v_p], sp.edgeEnds[2 * v_p + 1]);
@@ -755,7 +755,7 @@ export function localDuplicate2(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<L
         const v_y = _a432[_i433];
         L434: {
           const v_q = sp.edgeOf(v_x, v_y);
-          if (!(((v_q !== v_p) && (b.value(v_q) !== 2)))) break L434;
+          if (!(((v_q !== v_p) && ((b.grid[v_q] || -1) !== 2)))) break L434;
           const _h527 = sp.edgeEnds[2 * v_q];
           const _h528 = sp.edgeEnds[2 * v_q + 1];
           _g435.length = 0;
@@ -765,7 +765,7 @@ export function localDuplicate2(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<L
               const _a454 = sp.adj4[v_y];
               for (let _i455 = 0; _i455 < _a454.length; _i455++) {
                 const v_y_453 = _a454[_i455];
-                if (!((b.value(sp.edgeOf(v_y, v_y_453)) !== 2))) continue;
+                if (!(((b.grid[sp.edgeOf(v_y, v_y_453)] || -1) !== 2))) continue;
                 const _t456 = sp.edgeOf(v_y, v_y_453);
                 if (!_g448.includes(_t456)) _g448.push(_t456);
               }
@@ -829,7 +829,7 @@ export function localDuplicate2(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<L
                   const v_z = _a487[_i488];
                   L489: {
                     const v_q2 = sp.edgeOf(v_x2, v_z);
-                    if (!((((v_q2 !== v_p) && (v_q2 !== v_q)) && (b.value(v_q2) !== 2)))) break L489;
+                    if (!((((v_q2 !== v_p) && (v_q2 !== v_q)) && ((b.grid[v_q2] || -1) !== 2)))) break L489;
                     _g490.length = 0;
                     G491: {
                       _g501.length = 0;
@@ -837,7 +837,7 @@ export function localDuplicate2(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<L
                         const _a505 = sp.adj4[v_z];
                         for (let _i506 = 0; _i506 < _a505.length; _i506++) {
                           const v_y = _a505[_i506];
-                          if (!((b.value(sp.edgeOf(v_z, v_y)) !== 2))) continue;
+                          if (!(((b.grid[sp.edgeOf(v_z, v_y)] || -1) !== 2))) continue;
                           const _t507 = sp.edgeOf(v_z, v_y);
                           if (!_g501.includes(_t507)) _g501.push(_t507);
                         }
@@ -890,7 +890,7 @@ export function localDuplicate2(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<L
                       if (!(_c529)) break L510;
                       facts.length = 0;
                       changed = false;
-                      if (!b.known(v_p)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
+                      if (!(b.grid[v_p] !== 0)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
                       if (!(true)) return -1;
                       if (changed || facts.length > 0) {
                         fired = 1;
@@ -928,7 +928,7 @@ export function parity(b: Marks, sp: GridSpace, fire: Fire<ParityBinding> | null
     const _a550 = sp.edges;
     for (let _i551 = 0; _i551 < _a550.length; _i551++) {
       const v_e = _a550[_i551];
-      if (!((b.value(v_e) !== 2))) continue;
+      if (!(((b.grid[v_e] || -1) !== 2))) continue;
       _g546.push(v_e);
     }
   }
@@ -938,7 +938,7 @@ export function parity(b: Marks, sp: GridSpace, fire: Fire<ParityBinding> | null
     const v_p = _a552[_i553];
     const _h558 = sp.edgeEnds[2 * v_p + 1];
     const _h562 = sp.edgeEnds[2 * v_p];
-    let _c564: boolean = !(b.known(v_p));
+    let _c564: boolean = !((b.grid[v_p] !== 0));
     if (_c564) {
       let _q554 = false;
       Q555: {
@@ -951,7 +951,7 @@ export function parity(b: Marks, sp: GridSpace, fire: Fire<ParityBinding> | null
           for (let _i560 = 0; _i560 < _a559.length; _i560++) {
             const v_y = _a559[_i560];
             if (!(((_h561 && (v_y !== _h562)) && (sp.adj4[v_x].includes(v_y))))) continue;
-            if ((((b.value(_h563) !== 2) && (b.value(sp.edgeOf(_h558, v_y)) !== 2)) && (b.value(sp.edgeOf(v_x, v_y)) !== 2))) {
+            if (((((b.grid[_h563] || -1) !== 2) && ((b.grid[sp.edgeOf(_h558, v_y)] || -1) !== 2)) && ((b.grid[sp.edgeOf(v_x, v_y)] || -1) !== 2))) {
               _q554 = true;
               break Q555;
             }
@@ -970,7 +970,7 @@ export function parity(b: Marks, sp: GridSpace, fire: Fire<ParityBinding> | null
       if (!(((!(_eg565.of(sp.edgeEnds[2 * v_p + 1]) === v_A) && ((_h567 % 2) === 0)) && ((_h568 % 2) === 0)))) break L566;
       facts.length = 0;
       changed = false;
-      if (!b.known(v_p)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
+      if (!(b.grid[v_p] !== 0)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
@@ -1025,7 +1025,7 @@ export function set(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetBinding> |
             const _a635 = sp.adj4[v_c];
             for (let _i636 = 0; _i636 < _a635.length; _i636++) {
               const v_y = _a635[_i636];
-              if ((b.value(sp.edgeOf(v_c, v_y)) === 1)) {
+              if (((b.grid[sp.edgeOf(v_c, v_y)] || -1) === 1)) {
                 _q633 = true;
                 break Q634;
               }
@@ -1056,7 +1056,7 @@ export function set(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetBinding> |
               const _a657 = sp.adj4[v_m652];
               for (let _i658 = 0; _i658 < _a657.length; _i658++) {
                 const v_y = _a657[_i658];
-                if (!((b.value(sp.edgeOf(v_m652, v_y)) !== 2))) continue;
+                if (!(((b.grid[sp.edgeOf(v_m652, v_y)] || -1) !== 2))) continue;
                 const _t659 = clueAt(cl.number, v_y);
                 _g653 |= 1 << _t659;
               }
@@ -1079,7 +1079,7 @@ export function set(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetBinding> |
                 for (let _i667 = 0; _i667 < _a666.length; _i667++) {
                   const v_y = _a666[_i667];
                   if (!((v_T.includes(v_y)))) continue;
-                  if ((b.value(sp.edgeOf(v_x, v_y)) !== 2)) {
+                  if (((b.grid[sp.edgeOf(v_x, v_y)] || -1) !== 2)) {
                     _q662 = true;
                     break Q663;
                   }
@@ -1102,8 +1102,8 @@ export function set(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetBinding> |
                 const _h676 = clueAt(cl.number, v_y);
                 L675: {
                   const v_f = sp.edgeOf(v_x, v_y);
-                  if (!((((b.value(v_f) !== 2) && (!(v_T.includes(sp.edgeEnds[2 * v_f])) && !(v_T.includes(sp.edgeEnds[2 * v_f + 1])))) && (((v_O >> _h676) & 1) !== 0)))) break L675;
-                  if (!b.known(v_f)) { if (fire === null) { b.placeAt(v_f, 2); changed = true; } else facts.push(PLACE, v_f, 2); }
+                  if (!(((((b.grid[v_f] || -1) !== 2) && (!(v_T.includes(sp.edgeEnds[2 * v_f])) && !(v_T.includes(sp.edgeEnds[2 * v_f + 1])))) && (((v_O >> _h676) & 1) !== 0)))) break L675;
+                  if (!(b.grid[v_f] !== 0)) { if (fire === null) { b.placeAt(v_f, 2); changed = true; } else facts.push(PLACE, v_f, 2); }
                   if (!(true)) {
                     _q669 = false;
                     break Q670;
@@ -1168,7 +1168,7 @@ export function setDoubles(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetDou
             const _a743 = sp.adj4[v_c];
             for (let _i744 = 0; _i744 < _a743.length; _i744++) {
               const v_y = _a743[_i744];
-              if ((b.value(sp.edgeOf(v_c, v_y)) === 1)) {
+              if (((b.grid[sp.edgeOf(v_c, v_y)] || -1) === 1)) {
                 _q741 = true;
                 break Q742;
               }
@@ -1199,7 +1199,7 @@ export function setDoubles(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetDou
               const _a764 = sp.adj4[v_m759];
               for (let _i765 = 0; _i765 < _a764.length; _i765++) {
                 const v_y = _a764[_i765];
-                if (!((b.value(sp.edgeOf(v_m759, v_y)) !== 2))) continue;
+                if (!(((b.grid[sp.edgeOf(v_m759, v_y)] || -1) !== 2))) continue;
                 const _t766 = clueAt(cl.number, v_y);
                 _g760 |= 1 << _t766;
               }
@@ -1222,7 +1222,7 @@ export function setDoubles(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetDou
                 for (let _i775 = 0; _i775 < _a774.length; _i775++) {
                   const v_y = _a774[_i775];
                   if (!((v_T.includes(v_y)))) continue;
-                  if ((b.value(sp.edgeOf(v_x, v_y)) !== 2)) {
+                  if (((b.grid[sp.edgeOf(v_x, v_y)] || -1) !== 2)) {
                     _q770 = true;
                     break Q771;
                   }
@@ -1246,7 +1246,7 @@ export function setDoubles(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetDou
                 const _h784 = clueAt(cl.number, v_y);
                 L783: {
                   const v_f = sp.edgeOf(v_x, v_y);
-                  let _c798: boolean = ((b.value(v_f) !== 2) && (((v_O >> _h784) & 1) !== 0));
+                  let _c798: boolean = (((b.grid[v_f] || -1) !== 2) && (((v_O >> _h784) & 1) !== 0));
                   if (_c798) {
                     let _c791: boolean = (!(v_T.includes(sp.edgeEnds[2 * v_f])) && !(v_T.includes(sp.edgeEnds[2 * v_f + 1])));
                     if (_c791) {
@@ -1275,7 +1275,7 @@ export function setDoubles(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetDou
                     _c798 = _c797;
                   }
                   if (!(_c798)) break L783;
-                  if (!b.known(v_f)) { if (fire === null) { b.placeAt(v_f, 2); changed = true; } else facts.push(PLACE, v_f, 2); }
+                  if (!(b.grid[v_f] !== 0)) { if (fire === null) { b.placeAt(v_f, 2); changed = true; } else facts.push(PLACE, v_f, 2); }
                   if (!(true)) {
                     _q777 = false;
                     break Q778;

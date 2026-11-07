@@ -153,7 +153,7 @@ export function around(b: Marks, sp: GridSpace, fire: Fire<AroundBinding> | null
   const _a3 = sp.cells;
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_c = _a3[_i4];
-    if (!((b.value(v_c) === 1))) continue;
+    if (!(((b.grid[v_c] || -1) === 1))) continue;
     facts.length = 0;
     changed = false;
     let _q5 = true;
@@ -161,7 +161,7 @@ export function around(b: Marks, sp: GridSpace, fire: Fire<AroundBinding> | null
       const _a7 = sp.adj8[v_c];
       for (let _i8 = 0; _i8 < _a7.length; _i8++) {
         const v_p = _a7[_i8];
-        if (!((b.value(v_p) !== 1))) {
+        if (!(((b.grid[v_p] || -1) !== 1))) {
           _q5 = false;
           break Q6;
         }
@@ -174,8 +174,8 @@ export function around(b: Marks, sp: GridSpace, fire: Fire<AroundBinding> | null
         const _a11 = sp.adj8[v_c];
         for (let _i12 = 0; _i12 < _a11.length; _i12++) {
           const v_p = _a11[_i12];
-          if (!(!(b.known(v_p)))) continue;
-          if (!b.known(v_p)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
+          if (!(!((b.grid[v_p] !== 0)))) continue;
+          if (!(b.grid[v_p] !== 0)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
           if (!(true)) {
             _q9 = false;
             break Q10;
@@ -214,7 +214,7 @@ export function fullLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FullLine
       const _a27 = _t24;
       for (let _i28 = 0; _i28 < _a27.length; _i28++) {
         const v_c = _a27[_i28];
-        if (!((b.value(v_c) === 1))) continue;
+        if (!(((b.grid[v_c] || -1) === 1))) continue;
         _g25++;
       }
     }
@@ -233,14 +233,14 @@ export function fullLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FullLine
             const _a37 = _t32;
             for (let _i38 = 0; _i38 < _a37.length; _i38++) {
               const v_c = _a37[_i38];
-              if (!(!(b.known(v_c)))) continue;
+              if (!(!((b.grid[v_c] !== 0)))) continue;
               _g33.push(v_c);
             }
           }
           const _a39 = _g33;
           for (let _i40 = 0; _i40 < _a39.length; _i40++) {
             const v_c = _a39[_i40];
-            if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
+            if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
             if (!(true)) {
               _q30 = false;
               break Q31;
@@ -280,7 +280,7 @@ export function fullRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<FullR
       const _a55 = _t52;
       for (let _i56 = 0; _i56 < _a55.length; _i56++) {
         const v_c = _a55[_i56];
-        if (!((b.value(v_c) === 1))) continue;
+        if (!(((b.grid[v_c] || -1) === 1))) continue;
         _g53++;
       }
     }
@@ -299,14 +299,14 @@ export function fullRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<FullR
             const _a65 = _t60;
             for (let _i66 = 0; _i66 < _a65.length; _i66++) {
               const v_c = _a65[_i66];
-              if (!(!(b.known(v_c)))) continue;
+              if (!(!((b.grid[v_c] !== 0)))) continue;
               _g61.push(v_c);
             }
           }
           const _a67 = _g61;
           for (let _i68 = 0; _i68 < _a67.length; _i68++) {
             const v_c = _a67[_i68];
-            if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
+            if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
             if (!(true)) {
               _q58 = false;
               break Q59;
@@ -347,7 +347,7 @@ export function exactLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExactLi
       const _a90 = _t87;
       for (let _i91 = 0; _i91 < _a90.length; _i91++) {
         const v_c = _a90[_i91];
-        if (!((b.value(v_c) === 1))) continue;
+        if (!(((b.grid[v_c] || -1) === 1))) continue;
         _g88++;
       }
     }
@@ -358,7 +358,7 @@ export function exactLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExactLi
       const _a97 = _t92;
       for (let _i98 = 0; _i98 < _a97.length; _i98++) {
         const v_c = _a97[_i98];
-        if (!(!(b.known(v_c)))) continue;
+        if (!(!((b.grid[v_c] !== 0)))) continue;
         _g93.push(v_c);
       }
     }
@@ -375,7 +375,7 @@ export function exactLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExactLi
           const _a103 = v_O;
           for (let _i104 = 0; _i104 < _a103.length; _i104++) {
             const v_c = _a103[_i104];
-            if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, 1); changed = true; } else facts.push(PLACE, v_c, 1); }
+            if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 1); changed = true; } else facts.push(PLACE, v_c, 1); }
             if (!(true)) {
               _q101 = false;
               break Q102;
@@ -416,7 +416,7 @@ export function exactRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<Exac
       const _a126 = _t123;
       for (let _i127 = 0; _i127 < _a126.length; _i127++) {
         const v_c = _a126[_i127];
-        if (!((b.value(v_c) === 1))) continue;
+        if (!(((b.grid[v_c] || -1) === 1))) continue;
         _g124++;
       }
     }
@@ -427,7 +427,7 @@ export function exactRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<Exac
       const _a133 = _t128;
       for (let _i134 = 0; _i134 < _a133.length; _i134++) {
         const v_c = _a133[_i134];
-        if (!(!(b.known(v_c)))) continue;
+        if (!(!((b.grid[v_c] !== 0)))) continue;
         _g129.push(v_c);
       }
     }
@@ -444,7 +444,7 @@ export function exactRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<Exac
           const _a139 = v_O;
           for (let _i140 = 0; _i140 < _a139.length; _i140++) {
             const v_c = _a139[_i140];
-            if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, 1); changed = true; } else facts.push(PLACE, v_c, 1); }
+            if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 1); changed = true; } else facts.push(PLACE, v_c, 1); }
             if (!(true)) {
               _q137 = false;
               break Q138;
@@ -509,7 +509,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
         const _a303 = v_B;
         for (let _i304 = 0; _i304 < _a303.length; _i304++) {
           const v_c = _a303[_i304];
-          if (!((b.value(v_c) === 1))) continue;
+          if (!(((b.grid[v_c] || -1) === 1))) continue;
           _g301++;
         }
       }
@@ -527,7 +527,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
               const _a339 = _t336;
               for (let _i340 = 0; _i340 < _a339.length; _i340++) {
                 const v_c = _a339[_i340];
-                if (!((b.value(v_c) === 1))) continue;
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
                 _g337++;
               }
             }
@@ -541,7 +541,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
                   const _a355 = _t350;
                   for (let _i356 = 0; _i356 < _a355.length; _i356++) {
                     const v_c = _a355[_i356];
-                    if (!(!(b.known(v_c)))) continue;
+                    if (!(!((b.grid[v_c] !== 0)))) continue;
                     _g351.push(v_c);
                   }
                 }
@@ -572,7 +572,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
               const _a367 = _t364;
               for (let _i368 = 0; _i368 < _a367.length; _i368++) {
                 const v_c = _a367[_i368];
-                if (!((b.value(v_c) === 1))) continue;
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
                 _g365++;
               }
             }
@@ -591,7 +591,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
               const _a402 = _t399;
               for (let _i403 = 0; _i403 < _a402.length; _i403++) {
                 const v_c = _a402[_i403];
-                if (!((b.value(v_c) === 1))) continue;
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
                 _g400++;
               }
             }
@@ -605,7 +605,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
                   const _a418 = _t413;
                   for (let _i419 = 0; _i419 < _a418.length; _i419++) {
                     const v_c = _a418[_i419];
-                    if (!(!(b.known(v_c)))) continue;
+                    if (!(!((b.grid[v_c] !== 0)))) continue;
                     _g414.push(v_c);
                   }
                 }
@@ -636,7 +636,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
               const _a430 = _t427;
               for (let _i431 = 0; _i431 < _a430.length; _i431++) {
                 const v_c = _a430[_i431];
-                if (!((b.value(v_c) === 1))) continue;
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
                 _g428++;
               }
             }
@@ -653,7 +653,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
               const _a438 = v_B;
               for (let _i439 = 0; _i439 < _a438.length; _i439++) {
                 const v_c = _a438[_i439];
-                if (!(!(b.known(v_c)))) continue;
+                if (!(!((b.grid[v_c] !== 0)))) continue;
                 _g434.push(v_c);
               }
             }
@@ -684,7 +684,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
                   const _a450 = v_B;
                   for (let _i451 = 0; _i451 < _a450.length; _i451++) {
                     const v_c = _a450[_i451];
-                    if (!(!(b.known(v_c)))) continue;
+                    if (!(!((b.grid[v_c] !== 0)))) continue;
                     _g446.push(v_c);
                   }
                 }
@@ -692,7 +692,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
                 for (let _i453 = 0; _i453 < _a452.length; _i453++) {
                   const v_c = _a452[_i453];
                   if (!(!(v_I.includes(cl.region.of[v_c])))) continue;
-                  if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
+                  if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
                   if (!(true)) {
                     _q444 = false;
                     break Q445;
@@ -718,7 +718,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
                     const _a465 = _t460;
                     for (let _i466 = 0; _i466 < _a465.length; _i466++) {
                       const v_c = _a465[_i466];
-                      if (!(!(b.known(v_c)))) continue;
+                      if (!(!((b.grid[v_c] !== 0)))) continue;
                       _g461.push(v_c);
                     }
                   }
@@ -726,7 +726,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
                   for (let _i468 = 0; _i468 < _a467.length; _i468++) {
                     const v_c = _a467[_i468];
                     if (!(!(v_B.includes(v_c)))) continue;
-                    if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
+                    if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
                     if (!(true)) {
                       _q456 = false;
                       break Q457;
@@ -781,7 +781,7 @@ export function neededLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Needed
       const _a540 = _t537;
       for (let _i541 = 0; _i541 < _a540.length; _i541++) {
         const v_c = _a540[_i541];
-        if (!((b.value(v_c) === 1))) continue;
+        if (!(((b.grid[v_c] || -1) === 1))) continue;
         _g538++;
       }
     }
@@ -792,7 +792,7 @@ export function neededLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Needed
       const _a547 = _t542;
       for (let _i548 = 0; _i548 < _a547.length; _i548++) {
         const v_c = _a547[_i548];
-        if (!(!(b.known(v_c)))) continue;
+        if (!(!((b.grid[v_c] !== 0)))) continue;
         _g543.push(v_c);
       }
     }
@@ -944,7 +944,7 @@ export function neededLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Needed
           const v_room = _g578;
           facts.length = 0;
           changed = false;
-          if (!b.known(v_x)) { if (fire === null) { b.placeAt(v_x, 1); changed = true; } else facts.push(PLACE, v_x, 1); }
+          if (!(b.grid[v_x] !== 0)) { if (fire === null) { b.placeAt(v_x, 1); changed = true; } else facts.push(PLACE, v_x, 1); }
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
@@ -988,7 +988,7 @@ export function neededRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Need
       const _a672 = _t669;
       for (let _i673 = 0; _i673 < _a672.length; _i673++) {
         const v_c = _a672[_i673];
-        if (!((b.value(v_c) === 1))) continue;
+        if (!(((b.grid[v_c] || -1) === 1))) continue;
         _g670++;
       }
     }
@@ -999,7 +999,7 @@ export function neededRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Need
       const _a679 = _t674;
       for (let _i680 = 0; _i680 < _a679.length; _i680++) {
         const v_c = _a679[_i680];
-        if (!(!(b.known(v_c)))) continue;
+        if (!(!((b.grid[v_c] !== 0)))) continue;
         _g675.push(v_c);
       }
     }
@@ -1151,7 +1151,7 @@ export function neededRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Need
           const v_room = _g710;
           facts.length = 0;
           changed = false;
-          if (!b.known(v_x)) { if (fire === null) { b.placeAt(v_x, 1); changed = true; } else facts.push(PLACE, v_x, 1); }
+          if (!(b.grid[v_x] !== 0)) { if (fire === null) { b.placeAt(v_x, 1); changed = true; } else facts.push(PLACE, v_x, 1); }
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
@@ -1195,7 +1195,7 @@ export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Crowd
   const _a842 = sp.cells;
   for (let _i843 = 0; _i843 < _a842.length; _i843++) {
     const v_x = _a842[_i843];
-    if (!(!(b.known(v_x)))) continue;
+    if (!(!((b.grid[v_x] !== 0)))) continue;
     const _h852 = sp.rowOf[v_x];
     const _h853 = sp.colOf[v_x];
     _g844.length = 0;
@@ -1203,7 +1203,7 @@ export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Crowd
       const _a848 = sp.adj8[v_x];
       for (let _i849 = 0; _i849 < _a848.length; _i849++) {
         const v_p = _a848[_i849];
-        if (!(!(b.known(v_p)))) continue;
+        if (!(!((b.grid[v_p] !== 0)))) continue;
         _g844.push(v_p);
       }
     }
@@ -1233,7 +1233,7 @@ export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Crowd
         const _a861 = v_S;
         for (let _i862 = 0; _i862 < _a861.length; _i862++) {
           const v_c = _a861[_i862];
-          if (!((b.value(v_c) === 1))) continue;
+          if (!(((b.grid[v_c] || -1) === 1))) continue;
           _g859++;
         }
       }
@@ -1254,7 +1254,7 @@ export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Crowd
           const _a881 = v_S;
           for (let _i882 = 0; _i882 < _a881.length; _i882++) {
             const v_c = _a881[_i882];
-            if (!(!(b.known(v_c)))) continue;
+            if (!(!((b.grid[v_c] !== 0)))) continue;
             _g877.push(v_c);
           }
         }
@@ -1416,7 +1416,7 @@ export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Crowd
             const _a951 = v_S;
             for (let _i952 = 0; _i952 < _a951.length; _i952++) {
               const v_c = _a951[_i952];
-              if (!(!(b.known(v_c)))) continue;
+              if (!(!((b.grid[v_c] !== 0)))) continue;
               _g947.push(v_c);
             }
           }
@@ -1430,7 +1430,7 @@ export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Crowd
         const v_Q = _g937;
         facts.length = 0;
         changed = false;
-        if (!b.known(v_x)) { if (fire === null) { b.placeAt(v_x, 2); changed = true; } else facts.push(PLACE, v_x, 2); }
+        if (!(b.grid[v_x] !== 0)) { if (fire === null) { b.placeAt(v_x, 2); changed = true; } else facts.push(PLACE, v_x, 2); }
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
@@ -1473,14 +1473,14 @@ export function crowdedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Cro
   const _a1062 = sp.cells;
   for (let _i1063 = 0; _i1063 < _a1062.length; _i1063++) {
     const v_x = _a1062[_i1063];
-    if (!(!(b.known(v_x)))) continue;
+    if (!(!((b.grid[v_x] !== 0)))) continue;
     const _h1072 = cl.region.of[v_x];
     _g1064.length = 0;
     G1065: {
       const _a1068 = sp.adj8[v_x];
       for (let _i1069 = 0; _i1069 < _a1068.length; _i1069++) {
         const v_p = _a1068[_i1069];
-        if (!(!(b.known(v_p)))) continue;
+        if (!(!((b.grid[v_p] !== 0)))) continue;
         _g1064.push(v_p);
       }
     }
@@ -1510,7 +1510,7 @@ export function crowdedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Cro
         const _a1080 = v_S;
         for (let _i1081 = 0; _i1081 < _a1080.length; _i1081++) {
           const v_c = _a1080[_i1081];
-          if (!((b.value(v_c) === 1))) continue;
+          if (!(((b.grid[v_c] || -1) === 1))) continue;
           _g1078++;
         }
       }
@@ -1531,7 +1531,7 @@ export function crowdedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Cro
           const _a1100 = v_S;
           for (let _i1101 = 0; _i1101 < _a1100.length; _i1101++) {
             const v_c = _a1100[_i1101];
-            if (!(!(b.known(v_c)))) continue;
+            if (!(!((b.grid[v_c] !== 0)))) continue;
             _g1096.push(v_c);
           }
         }
@@ -1693,7 +1693,7 @@ export function crowdedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Cro
             const _a1170 = v_S;
             for (let _i1171 = 0; _i1171 < _a1170.length; _i1171++) {
               const v_c = _a1170[_i1171];
-              if (!(!(b.known(v_c)))) continue;
+              if (!(!((b.grid[v_c] !== 0)))) continue;
               _g1166.push(v_c);
             }
           }
@@ -1707,7 +1707,7 @@ export function crowdedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Cro
         const v_Q = _g1156;
         facts.length = 0;
         changed = false;
-        if (!b.known(v_x)) { if (fire === null) { b.placeAt(v_x, 2); changed = true; } else facts.push(PLACE, v_x, 2); }
+        if (!(b.grid[v_x] !== 0)) { if (fire === null) { b.placeAt(v_x, 2); changed = true; } else facts.push(PLACE, v_x, 2); }
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
@@ -1770,7 +1770,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
           const _a1337 = v_B;
           for (let _i1338 = 0; _i1338 < _a1337.length; _i1338++) {
             const v_c = _a1337[_i1338];
-            if (!((b.value(v_c) === 1))) continue;
+            if (!(((b.grid[v_c] || -1) === 1))) continue;
             _g1335++;
           }
         }
@@ -1788,7 +1788,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
                 const _a1375 = _t1372;
                 for (let _i1376 = 0; _i1376 < _a1375.length; _i1376++) {
                   const v_c = _a1375[_i1376];
-                  if (!((b.value(v_c) === 1))) continue;
+                  if (!(((b.grid[v_c] || -1) === 1))) continue;
                   _g1373++;
                 }
               }
@@ -1802,7 +1802,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
                     const _a1391 = _t1386;
                     for (let _i1392 = 0; _i1392 < _a1391.length; _i1392++) {
                       const v_c = _a1391[_i1392];
-                      if (!(!(b.known(v_c)))) continue;
+                      if (!(!((b.grid[v_c] !== 0)))) continue;
                       _g1387.push(v_c);
                     }
                   }
@@ -1833,7 +1833,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
                 const _a1403 = _t1400;
                 for (let _i1404 = 0; _i1404 < _a1403.length; _i1404++) {
                   const v_c = _a1403[_i1404];
-                  if (!((b.value(v_c) === 1))) continue;
+                  if (!(((b.grid[v_c] || -1) === 1))) continue;
                   _g1401++;
                 }
               }
@@ -1852,7 +1852,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
                 const _a1438 = _t1435;
                 for (let _i1439 = 0; _i1439 < _a1438.length; _i1439++) {
                   const v_c = _a1438[_i1439];
-                  if (!((b.value(v_c) === 1))) continue;
+                  if (!(((b.grid[v_c] || -1) === 1))) continue;
                   _g1436++;
                 }
               }
@@ -1866,7 +1866,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
                     const _a1454 = _t1449;
                     for (let _i1455 = 0; _i1455 < _a1454.length; _i1455++) {
                       const v_c = _a1454[_i1455];
-                      if (!(!(b.known(v_c)))) continue;
+                      if (!(!((b.grid[v_c] !== 0)))) continue;
                       _g1450.push(v_c);
                     }
                   }
@@ -1897,7 +1897,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
                 const _a1466 = _t1463;
                 for (let _i1467 = 0; _i1467 < _a1466.length; _i1467++) {
                   const v_c = _a1466[_i1467];
-                  if (!((b.value(v_c) === 1))) continue;
+                  if (!(((b.grid[v_c] || -1) === 1))) continue;
                   _g1464++;
                 }
               }
@@ -1914,7 +1914,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
                 const _a1474 = v_B;
                 for (let _i1475 = 0; _i1475 < _a1474.length; _i1475++) {
                   const v_c = _a1474[_i1475];
-                  if (!(!(b.known(v_c)))) continue;
+                  if (!(!((b.grid[v_c] !== 0)))) continue;
                   _g1470.push(v_c);
                 }
               }
@@ -1945,7 +1945,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
                     const _a1486 = v_B;
                     for (let _i1487 = 0; _i1487 < _a1486.length; _i1487++) {
                       const v_c = _a1486[_i1487];
-                      if (!(!(b.known(v_c)))) continue;
+                      if (!(!((b.grid[v_c] !== 0)))) continue;
                       _g1482.push(v_c);
                     }
                   }
@@ -1953,7 +1953,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
                   for (let _i1489 = 0; _i1489 < _a1488.length; _i1489++) {
                     const v_c = _a1488[_i1489];
                     if (!(!(v_I.includes(cl.region.of[v_c])))) continue;
-                    if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
+                    if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
                     if (!(true)) {
                       _q1480 = false;
                       break Q1481;
@@ -1979,7 +1979,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
                       const _a1501 = _t1496;
                       for (let _i1502 = 0; _i1502 < _a1501.length; _i1502++) {
                         const v_c = _a1501[_i1502];
-                        if (!(!(b.known(v_c)))) continue;
+                        if (!(!((b.grid[v_c] !== 0)))) continue;
                         _g1497.push(v_c);
                       }
                     }
@@ -1987,7 +1987,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
                     for (let _i1504 = 0; _i1504 < _a1503.length; _i1504++) {
                       const v_c = _a1503[_i1504];
                       if (!(!(v_B.includes(v_c)))) continue;
-                      if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
+                      if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
                       if (!(true)) {
                         _q1492 = false;
                         break Q1493;
@@ -2042,7 +2042,7 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
   const _a1658 = sp.cells;
   for (let _i1659 = 0; _i1659 < _a1658.length; _i1659++) {
     const v_x = _a1658[_i1659];
-    if (!(!(b.known(v_x)))) continue;
+    if (!(!((b.grid[v_x] !== 0)))) continue;
     const _h1662 = sp.rowOf[v_x];
     const _h1663 = sp.colOf[v_x];
     const v_R = ruled(b, sp, cl, v_x);
@@ -2071,7 +2071,7 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
         const _a1671 = v_S;
         for (let _i1672 = 0; _i1672 < _a1671.length; _i1672++) {
           const v_c = _a1671[_i1672];
-          if (!((b.value(v_c) === 1))) continue;
+          if (!(((b.grid[v_c] || -1) === 1))) continue;
           _g1669++;
         }
       }
@@ -2092,7 +2092,7 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
           const _a1691 = v_S;
           for (let _i1692 = 0; _i1692 < _a1691.length; _i1692++) {
             const v_c = _a1691[_i1692];
-            if (!(!(b.known(v_c)))) continue;
+            if (!(!((b.grid[v_c] !== 0)))) continue;
             _g1687.push(v_c);
           }
         }
@@ -2254,7 +2254,7 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
             const _a1761 = v_S;
             for (let _i1762 = 0; _i1762 < _a1761.length; _i1762++) {
               const v_c = _a1761[_i1762];
-              if (!(!(b.known(v_c)))) continue;
+              if (!(!((b.grid[v_c] !== 0)))) continue;
               _g1757.push(v_c);
             }
           }
@@ -2268,7 +2268,7 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
         const v_Q = _g1747;
         facts.length = 0;
         changed = false;
-        if (!b.known(v_x)) { if (fire === null) { b.placeAt(v_x, 2); changed = true; } else facts.push(PLACE, v_x, 2); }
+        if (!(b.grid[v_x] !== 0)) { if (fire === null) { b.placeAt(v_x, 2); changed = true; } else facts.push(PLACE, v_x, 2); }
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
@@ -2310,7 +2310,7 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
   const _a1866 = sp.cells;
   for (let _i1867 = 0; _i1867 < _a1866.length; _i1867++) {
     const v_x = _a1866[_i1867];
-    if (!(!(b.known(v_x)))) continue;
+    if (!(!((b.grid[v_x] !== 0)))) continue;
     const _h1870 = cl.region.of[v_x];
     const v_R = ruled(b, sp, cl, v_x);
     const _a1868 = cl.region.parts;
@@ -2338,7 +2338,7 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
         const _a1878 = v_S;
         for (let _i1879 = 0; _i1879 < _a1878.length; _i1879++) {
           const v_c = _a1878[_i1879];
-          if (!((b.value(v_c) === 1))) continue;
+          if (!(((b.grid[v_c] || -1) === 1))) continue;
           _g1876++;
         }
       }
@@ -2359,7 +2359,7 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
           const _a1898 = v_S;
           for (let _i1899 = 0; _i1899 < _a1898.length; _i1899++) {
             const v_c = _a1898[_i1899];
-            if (!(!(b.known(v_c)))) continue;
+            if (!(!((b.grid[v_c] !== 0)))) continue;
             _g1894.push(v_c);
           }
         }
@@ -2521,7 +2521,7 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
             const _a1968 = v_S;
             for (let _i1969 = 0; _i1969 < _a1968.length; _i1969++) {
               const v_c = _a1968[_i1969];
-              if (!(!(b.known(v_c)))) continue;
+              if (!(!((b.grid[v_c] !== 0)))) continue;
               _g1964.push(v_c);
             }
           }
@@ -2535,7 +2535,7 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
         const v_Q = _g1954;
         facts.length = 0;
         changed = false;
-        if (!b.known(v_x)) { if (fire === null) { b.placeAt(v_x, 2); changed = true; } else facts.push(PLACE, v_x, 2); }
+        if (!(b.grid[v_x] !== 0)) { if (fire === null) { b.placeAt(v_x, 2); changed = true; } else facts.push(PLACE, v_x, 2); }
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
@@ -2559,7 +2559,7 @@ export function ruled(b: Marks, sp: GridSpace, cl: Dealt, v_x: number): readonly
     const _a1535 = sp.cells;
     for (let _i1536 = 0; _i1536 < _a1535.length; _i1536++) {
       const v_p = _a1535[_i1536];
-      let _c1558: boolean = (!(b.known(v_p)) && (v_p !== v_x));
+      let _c1558: boolean = (!((b.grid[v_p] !== 0)) && (v_p !== v_x));
       if (_c1558) {
         let _c1543: boolean = (sp.adj8[v_x].includes(v_p));
         if (!_c1543) {
@@ -2571,7 +2571,7 @@ export function ruled(b: Marks, sp: GridSpace, cl: Dealt, v_x: number): readonly
               const _a1540 = _t1537;
               for (let _i1541 = 0; _i1541 < _a1540.length; _i1541++) {
                 const v_c = _a1540[_i1541];
-                if (!((b.value(v_c) === 1))) continue;
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
                 _g1538++;
               }
             }
@@ -2589,7 +2589,7 @@ export function ruled(b: Marks, sp: GridSpace, cl: Dealt, v_x: number): readonly
               const _a1547 = _t1544;
               for (let _i1548 = 0; _i1548 < _a1547.length; _i1548++) {
                 const v_c = _a1547[_i1548];
-                if (!((b.value(v_c) === 1))) continue;
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
                 _g1545++;
               }
             }
@@ -2607,7 +2607,7 @@ export function ruled(b: Marks, sp: GridSpace, cl: Dealt, v_x: number): readonly
               const _a1554 = _t1551;
               for (let _i1555 = 0; _i1555 < _a1554.length; _i1555++) {
                 const v_c = _a1554[_i1555];
-                if (!((b.value(v_c) === 1))) continue;
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
                 _g1552++;
               }
             }

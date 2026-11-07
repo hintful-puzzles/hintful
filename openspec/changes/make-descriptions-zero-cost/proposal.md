@@ -107,18 +107,45 @@ three leave it open, and at the end, for the games a fix moved.
   | Salad | Number Ball Normal +19% | `describe-salad` |
   | Group | Tricky +8%, and +11 to 12% compiled-on-compiled since | `describe-group`, `describe-salad` |
 
-- **Hot across many games** (self time in a deal, from the profile):
-  `ladder-runtime.ts`'s `CellMarks.value` is hot in 19 games and `rung` in
-  18. Each is often 5 to 20% of a deal, and neither exists in a hand-written
-  rung. `value(c)` is `grid[c] || -1`, reached as a method call from the
-  compiled techniques (`b.value(` appears 224 times in Boats' module, 152
-  in Path's). A large compiled function is past V8's inlining budget, so
-  each read is a real call; the hand-written rungs indexed the grid. That
-  makes it the first compiler lever, before any per-construct one. `rung`'s
-  self time is still to be checked against the instrument: it may be the
-  compiled technique inlined into its wrapper. After those come
-  `describe-runtime.ts`'s `clueAt` (4 games), `edgeOf` (3), `stretch` (3)
-  and `throughWhere` (2), with Rect's kept `allowed` and `near`.
+- **A tiny function's self time is not a call's cost.** The profile put
+  `CellMarks.value` (19 games) and `rung` (18) at 5 to 20% of a deal each.
+  Both readings were wrong.
+  - `rung`: profiled with `--no-turbo-inlining`, Sticks' `rung` fell from 20%
+    to 6% and `value` rose from 7% to 16%. The wrapper's time was the
+    technique and its reads, inlined into it.
+  - `value`: the compiler now reads the grid and candidates in place
+    (`marksRead` in `compile.ts`). Timed back to back on nine games
+    (Boats, Path, Star Battle, Sticks, Unruly, Mosaic, Range, Filling and
+    Light Up, the same boards, two rounds a side), Boats is about 9% faster
+    and Filling 3%, and the rest are within noise. V8 was already inlining
+    the call, so the loads it showed were the work itself.
+  - The rule: a profile shows where the work is, not what it costs above
+    the hand-written code. Only a timing on the same boards says that.
+- **Slant, the worst game, examined on the same boards** against `611a8df6^`
+  (2026-11-07):
+  - A single solve is 2 to 8× the hand-written one (10×12 Hard: 0.17 ms
+    against 1.33 ms), and a deal 9×. So the gap is in the solve, not in how
+    often the generator calls it.
+  - A solve runs about 56 rungs and makes 22 firings (`clue` alone runs 23
+    times). The hand-written solver went round about as often, with three
+    fused passes a round: its clue pass also did `pair` and `share`, and its
+    square pass `loop` and `deadEnd`.
+  - Sweeping every rung a round, rather than going back to the top after
+    each firing, gave the same verdicts at the same cost. The ladder's order
+    is not the multiplier.
+  - The time is spread across the techniques (`clue` 22% self, `loop` 12%,
+    `share` 7%, `pair` 6%, `deadEnd` 5%). Each recomputes per-point values
+    (`open(k)`, `lines(k)`, the clue) that the fused pass computed once, and
+    a value kept per marks is thrown away at every placement, which a solve
+    makes as it goes.
+  - `linked(k)` is caught up by scanning every square after each placement,
+    O(cells) where the hand-written union-find was O(1). That is small at
+    the menu's sizes (2 to 5%), and it is why Slant's gap grows with the
+    board (12× at 30×30).
+- **Hot runtime helpers by game count:** `clueAt` (4 games), `edgeOf` (3),
+  `stretch` (3) and `throughWhere` (2), with Rect's kept `allowed` and
+  `near`. Each is weighed by a timing on the same boards, never by its share
+  of the profile.
 
 ## What Changes
 

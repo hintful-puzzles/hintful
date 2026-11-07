@@ -421,8 +421,23 @@ function sameSort(a: Sort, b: Sort): boolean {
 /** A cell's candidates through the function's `cands`, read once a cell. */
 function candOf(c: string, env: Env): string {
   if (env.readsCands) env.readsCands.yes = true;
-  return `(cands[${c}] >= 0 ? cands[${c}] : (cands[${c}] = b.cand(${c})))`;
+  return `(cands[${c}] >= 0 ? cands[${c}] : (cands[${c}] = ${marksRead("cand", c)}))`;
 }
+
+/**
+ * Cell `c`'s marks as the solve's arrays hold them, read in place: a method
+ * call here was 5 to 20% of a described game's deal, because a compiled
+ * technique is past V8's inlining budget and each read stayed a call.
+ */
+function marksRead(fn: "known" | "value" | "cand", c: string): string {
+  if (fn === "known") return `(b.grid[${c}] !== 0)`;
+  if (fn === "value") return `(b.grid[${c}] || -1)`;
+  return `b.cands[${c}]`;
+}
+
+/** Whether cell `c` may still hold `d`, read in place as {@link marksRead}. */
+const hasRead = (c: string, d: string): string =>
+  `(((b.cands[${c}] >> ${d}) & 1) !== 0)`;
 
 function compileExpr(e: Expr, scope: Scope, env: Env, out: Out): Val {
   if (env.hoist !== null && e.k !== "num" && e.k !== "name") {
@@ -684,14 +699,20 @@ function markRead(fn: "known" | "value" | "cand", c: Val, env: Env, out: Out): V
   }
   if (env.supposed.length === 0 && !(fn === "cand" && env.memo)) {
     const sort = fn === "known" ? BOOL : fn === "value" ? NUM : setOf(NUM);
-    return { code: `b.${fn}(${c.code})`, sort };
+    return { code: marksRead(fn, c.code), sort };
   }
   const x = once(c, out).code;
   if (fn === "known")
-    return { code: supposedRead(x, env, () => "true", `b.known(${x})`), sort: BOOL };
+    return {
+      code: supposedRead(x, env, () => "true", marksRead("known", x)),
+      sort: BOOL,
+    };
   if (fn === "value")
-    return { code: supposedRead(x, env, (s) => s.value, `b.value(${x})`), sort: NUM };
-  const plain = env.memo ? candOf(x, env) : `b.cand(${x})`;
+    return {
+      code: supposedRead(x, env, (s) => s.value, marksRead("value", x)),
+      sort: NUM,
+    };
+  const plain = env.memo ? candOf(x, env) : marksRead("cand", x);
   return {
     code: supposedRead(x, env, (s) => `(1 << ${s.value})`, plain),
     sort: setOf(NUM),
@@ -825,12 +846,7 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
     expectElem(c, env.answerSort, "cand");
     const x = env.supposed.length === 0 ? c.code : once(c, out).code;
     const at = env.supposed.length === 0 ? d.code : once(d, out).code;
-    const has = supposedRead(
-      x,
-      env,
-      (s) => `${at} === ${s.value}`,
-      `b.has(${x}, ${at})`,
-    );
+    const has = supposedRead(x, env, (s) => `${at} === ${s.value}`, hasRead(x, at));
     return { code: op === "in" ? has : `!${has}`, sort: BOOL };
   }
   // `q in linked(k)` asks whether two points share a group, which the marks'
@@ -1597,7 +1613,7 @@ function fillLoop(
           e,
           env,
           (s) => `(1 << ${s.value})`,
-          env.memo ? candOf(e, env) : `b.cand(${e})`,
+          env.memo ? candOf(e, env) : marksRead("cand", e),
         );
   const r = Out.fresh("_r");
   const once0 = Out.fresh("_o");
@@ -2985,8 +3001,8 @@ function call(
       // where its conclusion changes the marks.
       out.emit(
         fn === "strike"
-          ? `if (b.has(${c.code}, ${d.code})) { if (fire === null) { b.strikeAt(${c.code}, ${d.code}); changed = true; } else facts.push(STRIKE, ${c.code}, ${d.code}); }`
-          : `if (!b.known(${c.code})) { if (fire === null) { b.placeAt(${c.code}, ${d.code}); changed = true; } else facts.push(PLACE, ${c.code}, ${d.code}); }`,
+          ? `if (${hasRead(c.code, d.code)}) { if (fire === null) { b.strikeAt(${c.code}, ${d.code}); changed = true; } else facts.push(STRIKE, ${c.code}, ${d.code}); }`
+          : `if (!${marksRead("known", c.code)}) { if (fire === null) { b.placeAt(${c.code}, ${d.code}); changed = true; } else facts.push(PLACE, ${c.code}, ${d.code}); }`,
       );
       env.used.add(fn === "strike" ? "STRIKE" : "PLACE");
       return { code: "true", sort: BOOL };

@@ -105,9 +105,9 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjacent
     const _a9 = sp.lineCells[v_L];
     for (let _i10 = 0; _i10 < _a9.length; _i10++) {
       const v_a = _a9[_i10];
-      const _h11 = b.known(v_a);
+      const _h11 = (b.grid[v_a] !== 0);
       if (!(_h11)) continue;
-      const _h17 = b.value(v_a);
+      const _h17 = (b.grid[v_a] || -1);
       const _a12 = sp.adj4[v_a];
       for (let _i13 = 0; _i13 < _a12.length; _i13++) {
         const v_b = _a12[_i13];
@@ -118,10 +118,10 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjacent
         changed = false;
         let _q14 = true;
         Q15: {
-          for (let _m16 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cand(v_b))); _m16 !== 0; _m16 &= _m16 - 1) {
+          for (let _m16 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])); _m16 !== 0; _m16 &= _m16 - 1) {
             const v_d = 31 - Math.clz32(_m16 & -_m16);
             if (!(!((_h19 === (Math.abs((_h17 - v_d)) === 1))))) continue;
-            if (b.has(v_b, v_d)) { if (fire === null) { b.strikeAt(v_b, v_d); changed = true; } else facts.push(STRIKE, v_b, v_d); }
+            if ((((b.cands[v_b] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_b, v_d); changed = true; } else facts.push(STRIKE, v_b, v_d); }
             if (!(true)) {
               _q14 = false;
               break Q15;
@@ -173,11 +173,11 @@ export function adjacentSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjac
         changed = false;
         let _q32 = true;
         Q33: {
-          for (let _m34 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cand(v_b))); _m34 !== 0; _m34 &= _m34 - 1) {
+          for (let _m34 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])); _m34 !== 0; _m34 &= _m34 - 1) {
             const v_d = 31 - Math.clz32(_m34 & -_m34);
             let _q35 = false;
             Q36: {
-              for (let _m37 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cand(v_a))); _m37 !== 0; _m37 &= _m37 - 1) {
+              for (let _m37 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])); _m37 !== 0; _m37 &= _m37 - 1) {
                 const v_d2 = 31 - Math.clz32(_m37 & -_m37);
                 if (((v_d2 !== v_d) && (_h39 === (Math.abs((v_d2 - v_d)) === 1)))) {
                   _q35 = true;
@@ -186,7 +186,7 @@ export function adjacentSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjac
               }
             }
             if (!(!(_q35))) continue;
-            if (b.has(v_b, v_d)) { if (fire === null) { b.strikeAt(v_b, v_d); changed = true; } else facts.push(STRIKE, v_b, v_d); }
+            if ((((b.cands[v_b] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_b, v_d); changed = true; } else facts.push(STRIKE, v_b, v_d); }
             if (!(true)) {
               _q32 = false;
               break Q33;

@@ -44,6 +44,8 @@ const PROGRESS = process.env["DEAL_PROFILE_PROGRESS"] ?? null;
 const ONLY = process.env["DEAL_PROFILE_GAMES"]?.split(",") ?? null;
 const SEEDS = Number(process.env["DEAL_PROFILE_SEEDS"] ?? 2);
 const BUDGET_MS = Number(process.env["DEAL_PROFILE_BUDGET_MS"] ?? 20_000);
+/** The hot functions listed a phase. */
+const TOP = Number(process.env["DEAL_PROFILE_TOP"] ?? 6);
 /** Steps walked on one board, and hint requests made of it. */
 const STEPS = 400;
 const ROUNDS = 80;
@@ -186,7 +188,7 @@ it("reports the share of each described game's deals and walks in described code
       const s = share(profile.nodes as ProfileNode[]);
       if (s.described > 0) profiled++;
       row.push(`${Math.round(ms)} ms`, pct(s.described, s.samples), bound(s));
-      notes.push(`|  | ${phase}: ${top(s, 6)} | | | | | |`);
+      notes.push(`|  | ${phase}: ${top(s, TOP)} | | | | | |`);
     }
     const mine = [`| ${row.join(" | ")} |`, ...notes];
     lines.push(...mine);

@@ -148,8 +148,8 @@ export function border(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BorderBind
       const _a22 = v_L;
       for (let _i23 = 0; _i23 < _a22.length; _i23++) {
         const v_c = _a22[_i23];
-        const _h24 = b.known(v_c);
-        const _h25 = b.value(v_c);
+        const _h24 = (b.grid[v_c] !== 0);
+        const _h25 = (b.grid[v_c] || -1);
         if (!(!((_h24 && (_h25 === _h26))))) continue;
         _g18.push(v_c);
       }
@@ -161,8 +161,8 @@ export function border(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BorderBind
       const _a29 = v_L;
       for (let _i30 = 0; _i30 < _a29.length; _i30++) {
         const v_c = _a29[_i30];
-        const _h31 = b.known(v_c);
-        const _h32 = b.value(v_c);
+        const _h31 = (b.grid[v_c] !== 0);
+        const _h32 = (b.grid[v_c] || -1);
         if (!((((_i30 >= v_H) && _h31) && (_h32 === _h26)))) continue;
         _g27++;
       }
@@ -173,7 +173,7 @@ export function border(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BorderBind
       const _a37 = v_L;
       for (let _i38 = 0; _i38 < _a37.length; _i38++) {
         const v_c = _a37[_i38];
-        if (!(!b.has(v_c, _h26))) continue;
+        if (!(!(((b.cands[v_c] >> _h26) & 1) !== 0))) continue;
         _g33.push(v_c);
       }
     }
@@ -194,7 +194,7 @@ export function border(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BorderBind
             for (let _m46 = b.domain; _m46 !== 0; _m46 &= _m46 - 1) {
               const v_e = 31 - Math.clz32(_m46 & -_m46);
               if (!(((v_e !== _h47) && (v_e <= cl.nums)))) continue;
-              if (b.has(v_c, v_e)) { if (fire === null) { b.strikeAt(v_c, v_e); changed = true; } else facts.push(STRIKE, v_c, v_e); }
+              if ((((b.cands[v_c] >> v_e) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_e); changed = true; } else facts.push(STRIKE, v_c, v_e); }
               if (!(true)) {
                 _q44 = false;
                 break Q45;
@@ -207,7 +207,7 @@ export function border(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BorderBind
         if (_c51) {
           let _c50: boolean = !(((_h49 && (v_i > v_stop)) || (v_i > v_reach)));
           if (!_c50) {
-            if (b.has(v_c, _h47)) { if (fire === null) { b.strikeAt(v_c, _h47); changed = true; } else facts.push(STRIKE, v_c, _h47); }
+            if ((((b.cands[v_c] >> _h47) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, _h47); changed = true; } else facts.push(STRIKE, v_c, _h47); }
             _c50 = true;
           }
           _c51 = _c50;

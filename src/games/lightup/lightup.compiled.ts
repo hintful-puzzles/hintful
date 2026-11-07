@@ -214,7 +214,7 @@ export function shine(b: Marks, sp: GridSpace, cl: Dealt, v_c: number, fire: Fir
   const facts = shineFacts;
   let fired = 0;
   let changed = false;
-  if (!((b.value(v_c) === 1))) return 0;
+  if (!(((b.grid[v_c] || -1) === 1))) return 0;
   const _t21 = sp.rowOf[v_c];
   _g22.length = 0;
   G23: {
@@ -242,10 +242,10 @@ export function shine(b: Marks, sp: GridSpace, cl: Dealt, v_c: number, fire: Fir
   const _a39 = union(stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g22), stretch(sp.lineCells[sp.colOf[v_c]], v_c, _g31));
   for (let _i40 = 0; _i40 < _a39.length; _i40++) {
     const v_p = _a39[_i40];
-    if (!(((v_p !== v_c) && !(b.known(v_p))))) continue;
+    if (!(((v_p !== v_c) && !((b.grid[v_p] !== 0))))) continue;
     facts.length = 0;
     changed = false;
-    if (!b.known(v_p)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
+    if (!(b.grid[v_p] !== 0)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
     if (!(true)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
@@ -308,7 +308,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
       changed = false;
       let _c108: boolean = !(((_h82 < 0) && (_h63 < 0)));
       if (!_c108) {
-        let _c87: boolean = (b.value(v_c) !== 1);
+        let _c87: boolean = ((b.grid[v_c] || -1) !== 1);
         if (!_c87) {
           let _q83 = true;
           Q84: {
@@ -316,7 +316,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
             for (let _i86 = 0; _i86 < _a85.length; _i86++) {
               const v_p = _a85[_i86];
               if (!((v_p !== v_c))) continue;
-              if (!((b.value(v_p) !== 1))) {
+              if (!(((b.grid[v_p] || -1) !== 1))) {
                 _q83 = false;
                 break Q84;
               }
@@ -331,7 +331,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
             const _a90 = v_L;
             for (let _i91 = 0; _i91 < _a90.length; _i91++) {
               const v_p = _a90[_i91];
-              if ((b.value(v_p) === 1)) {
+              if (((b.grid[v_p] || -1) === 1)) {
                 _q88 = true;
                 break Q89;
               }
@@ -344,7 +344,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
               const _a94 = v_L;
               for (let _i95 = 0; _i95 < _a94.length; _i95++) {
                 const v_p = _a94[_i95];
-                if (!(!(b.known(v_p)))) continue;
+                if (!(!((b.grid[v_p] !== 0)))) continue;
                 _g92++;
               }
             }
@@ -355,7 +355,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
                 const _a98 = v_L;
                 for (let _i99 = 0; _i99 < _a98.length; _i99++) {
                   const v_p = _a98[_i99];
-                  if (!(!(b.known(v_p)))) continue;
+                  if (!(!((b.grid[v_p] !== 0)))) continue;
                   _g96++;
                 }
               }
@@ -366,8 +366,8 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
                   const _a102 = v_L;
                   for (let _i103 = 0; _i103 < _a102.length; _i103++) {
                     const v_p = _a102[_i103];
-                    if (!(!(b.known(v_p)))) continue;
-                    if (!b.known(v_p)) { if (fire === null) { b.placeAt(v_p, 1); changed = true; } else facts.push(PLACE, v_p, 1); }
+                    if (!(!((b.grid[v_p] !== 0)))) continue;
+                    if (!(b.grid[v_p] !== 0)) { if (fire === null) { b.placeAt(v_p, 1); changed = true; } else facts.push(PLACE, v_p, 1); }
                     if (!(true)) {
                       _q100 = false;
                       break Q101;
@@ -393,7 +393,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
             const _a111 = sp.adj4[v_c];
             for (let _i112 = 0; _i112 < _a111.length; _i112++) {
               const v_p = _a111[_i112];
-              if (!((b.value(v_p) === 1))) continue;
+              if (!(((b.grid[v_p] || -1) === 1))) continue;
               _g109++;
             }
           }
@@ -404,7 +404,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
               const _a115 = sp.adj4[v_c];
               for (let _i116 = 0; _i116 < _a115.length; _i116++) {
                 const v_p = _a115[_i116];
-                if (!((b.value(v_p) === 1))) continue;
+                if (!(((b.grid[v_p] || -1) === 1))) continue;
                 _g113++;
               }
             }
@@ -413,7 +413,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
               const _a119 = sp.adj4[v_c];
               for (let _i120 = 0; _i120 < _a119.length; _i120++) {
                 const v_p = _a119[_i120];
-                if (!(!(b.known(v_p)))) continue;
+                if (!(!((b.grid[v_p] !== 0)))) continue;
                 _g117++;
               }
             }
@@ -426,7 +426,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
               const _a124 = sp.adj4[v_c];
               for (let _i125 = 0; _i125 < _a124.length; _i125++) {
                 const v_p = _a124[_i125];
-                if (!((b.value(v_p) === 1))) continue;
+                if (!(((b.grid[v_p] || -1) === 1))) continue;
                 _g122++;
               }
             }
@@ -437,8 +437,8 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
                 const _a128 = sp.adj4[v_c];
                 for (let _i129 = 0; _i129 < _a128.length; _i129++) {
                   const v_p = _a128[_i129];
-                  if (!(!(b.known(v_p)))) continue;
-                  if (!b.known(v_p)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
+                  if (!(!((b.grid[v_p] !== 0)))) continue;
+                  if (!(b.grid[v_p] !== 0)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
                   if (!(true)) {
                     _q126 = false;
                     break Q127;
@@ -456,7 +456,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
               const _a134 = sp.adj4[v_c];
               for (let _i135 = 0; _i135 < _a134.length; _i135++) {
                 const v_p = _a134[_i135];
-                if (!((b.value(v_p) === 1))) continue;
+                if (!(((b.grid[v_p] || -1) === 1))) continue;
                 _g132++;
               }
             }
@@ -465,7 +465,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
               const _a138 = sp.adj4[v_c];
               for (let _i139 = 0; _i139 < _a138.length; _i139++) {
                 const v_p = _a138[_i139];
-                if (!(!(b.known(v_p)))) continue;
+                if (!(!((b.grid[v_p] !== 0)))) continue;
                 _g136++;
               }
             }
@@ -476,8 +476,8 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
                 const _a142 = sp.adj4[v_c];
                 for (let _i143 = 0; _i143 < _a142.length; _i143++) {
                   const v_p = _a142[_i143];
-                  if (!(!(b.known(v_p)))) continue;
-                  if (!b.known(v_p)) { if (fire === null) { b.placeAt(v_p, 1); changed = true; } else facts.push(PLACE, v_p, 1); }
+                  if (!(!((b.grid[v_p] !== 0)))) continue;
+                  if (!(b.grid[v_p] !== 0)) { if (fire === null) { b.placeAt(v_p, 1); changed = true; } else facts.push(PLACE, v_p, 1); }
                   if (!(true)) {
                     _q140 = false;
                     break Q141;
@@ -563,7 +563,7 @@ export function darkSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DarkSetBi
           const _a204 = v_L;
           for (let _i205 = 0; _i205 < _a204.length; _i205++) {
             const v_p = _a204[_i205];
-            if ((b.value(v_p) === 1)) {
+            if (((b.grid[v_p] || -1) === 1)) {
               _q202 = true;
               break Q203;
             }
@@ -575,7 +575,7 @@ export function darkSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DarkSetBi
           const _a210 = v_L;
           for (let _i211 = 0; _i211 < _a210.length; _i211++) {
             const v_s = _a210[_i211];
-            if (!(!(b.known(v_s)))) continue;
+            if (!(!((b.grid[v_s] !== 0)))) continue;
             _g206.push(v_s);
           }
         }
@@ -627,7 +627,7 @@ export function darkSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DarkSetBi
             const _a244 = union(union(stretch(sp.lineCells[sp.rowOf[_t215]], _t215, _g217), stretch(sp.lineCells[sp.colOf[_t215]], _t215, _g226)), _g234);
             for (let _i245 = 0; _i245 < _a244.length; _i245++) {
               const v_d = _a244[_i245];
-              if (!(!(b.known(v_d)))) continue;
+              if (!(!((b.grid[v_d] !== 0)))) continue;
               const _t246 = sp.rowOf[v_d];
               _g247.length = 0;
               G248: {
@@ -675,7 +675,7 @@ export function darkSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DarkSetBi
                               const _a276 = sp.adj4[v_k];
                               for (let _i277 = 0; _i277 < _a276.length; _i277++) {
                                 const v_p = _a276[_i277];
-                                if (!((b.value(v_p) === 1))) continue;
+                                if (!(((b.grid[v_p] || -1) === 1))) continue;
                                 _g274++;
                               }
                             }
@@ -696,7 +696,7 @@ export function darkSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DarkSetBi
                   }
                 }
                 if (!(_q265)) break L264;
-                if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
+                if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
                 if (!(true)) {
                   _q213 = false;
                   break Q214;
@@ -753,7 +753,7 @@ export function clueSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueSetBi
           const _a314 = sp.adj4[v_k];
           for (let _i315 = 0; _i315 < _a314.length; _i315++) {
             const v_p = _a314[_i315];
-            if (!((b.value(v_p) === 1))) continue;
+            if (!(((b.grid[v_p] || -1) === 1))) continue;
             _g312++;
           }
         }
@@ -763,7 +763,7 @@ export function clueSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueSetBi
           const _a320 = sp.adj4[v_k];
           for (let _i321 = 0; _i321 < _a320.length; _i321++) {
             const v_p = _a320[_i321];
-            if (!(!(b.known(v_p)))) continue;
+            if (!(!((b.grid[v_p] !== 0)))) continue;
             _g316.push(v_p);
           }
         }
@@ -774,7 +774,7 @@ export function clueSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueSetBi
           const _a324 = sp.adj4[v_k];
           for (let _i325 = 0; _i325 < _a324.length; _i325++) {
             const v_p = _a324[_i325];
-            if (!((b.value(v_p) === 1))) continue;
+            if (!(((b.grid[v_p] || -1) === 1))) continue;
             _g322++;
           }
         }
@@ -836,7 +836,7 @@ export function clueSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueSetBi
               const _a368 = union(union(stretch(sp.lineCells[sp.rowOf[_t339]], _t339, _g341), stretch(sp.lineCells[sp.colOf[_t339]], _t339, _g350)), _g358);
               for (let _i369 = 0; _i369 < _a368.length; _i369++) {
                 const v_d = _a368[_i369];
-                if (!(!(b.known(v_d)))) continue;
+                if (!(!((b.grid[v_d] !== 0)))) continue;
                 const _t370 = sp.rowOf[v_d];
                 _g371.length = 0;
                 G372: {
@@ -884,7 +884,7 @@ export function clueSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueSetBi
                                 const _a400 = sp.adj4[v_k];
                                 for (let _i401 = 0; _i401 < _a400.length; _i401++) {
                                   const v_p = _a400[_i401];
-                                  if (!((b.value(v_p) === 1))) continue;
+                                  if (!(((b.grid[v_p] || -1) === 1))) continue;
                                   _g398++;
                                 }
                               }
@@ -905,7 +905,7 @@ export function clueSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueSetBi
                     }
                   }
                   if (!(_q389)) break L388;
-                  if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
+                  if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
                   if (!(true)) {
                     _q337 = false;
                     break Q338;

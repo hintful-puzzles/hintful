@@ -27,6 +27,11 @@ export interface Marks {
   /** How many values have been placed, the seeding's included: a term that
    * reads only the values placed may be kept while it stands. */
   readonly placed: number;
+  /** The values placed, 0 where none is, and the values each cell may
+   * still hold, as a bitmask (bit `d`): fields, so a compiled technique
+   * reads them in place. The methods below are what they give. */
+  readonly grid: Uint8Array | Int8Array;
+  readonly cands: Int32Array;
   /** Whether the cell holds a value. */
   known(c: number): boolean;
   /** The cell's value, or `-1` where it has none. */

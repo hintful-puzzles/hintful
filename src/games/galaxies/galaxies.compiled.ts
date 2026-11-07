@@ -237,7 +237,7 @@ export function split(b: Marks, sp: GridSpace, fire: Fire<SplitBinding> | null):
   const _a17 = sp.edges;
   for (let _i18 = 0; _i18 < _a17.length; _i18++) {
     const v_e = _a17[_i18];
-    const _h19 = b.value(v_e);
+    const _h19 = (b.grid[v_e] || -1);
     if (!((_h19 === 1))) continue;
     L20: {
       const v_q = b.markOf(sp.edgeEnds[2 * v_e]);
@@ -269,7 +269,7 @@ export function separate(b: Marks, sp: GridSpace, fire: Fire<SeparateBinding> | 
   const _a25 = sp.edges;
   for (let _i26 = 0; _i26 < _a25.length; _i26++) {
     const v_e = _a25[_i26];
-    if (!(!(b.known(v_e)))) continue;
+    if (!(!((b.grid[v_e] !== 0)))) continue;
     L27: {
       const v_p = b.markOf(sp.edgeEnds[2 * v_e]);
       if (!((v_p !== -1))) break L27;
@@ -278,7 +278,7 @@ export function separate(b: Marks, sp: GridSpace, fire: Fire<SeparateBinding> | 
         if (!(((v_q !== -1) && (v_q !== v_p)))) break L28;
         facts.length = 0;
         changed = false;
-        if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
+        if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
@@ -312,7 +312,7 @@ export function enclosed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Enclosed
       const _a53 = sp.adj4[v_c];
       for (let _i54 = 0; _i54 < _a53.length; _i54++) {
         const v_n = _a53[_i54];
-        const _h55 = b.value(sp.edgeOf(v_c, v_n));
+        const _h55 = (b.grid[sp.edgeOf(v_c, v_n)] || -1);
         if (!((_h55 !== 1))) continue;
         _g49.push(v_n);
       }
@@ -393,7 +393,7 @@ export function soleOwner(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SoleOwn
     const _a197 = sp.edges;
     for (let _i198 = 0; _i198 < _a197.length; _i198++) {
       const v_e = _a197[_i198];
-      const _h199 = b.value(v_e);
+      const _h199 = (b.grid[v_e] || -1);
       if (!((_h199 !== 1))) continue;
       _g193.push(v_e);
     }
@@ -697,7 +697,7 @@ export function exclave(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExclaveBi
       if (!((v_q !== -1))) break L355;
       const _h376 = cl.dot.at[v_q];
       L357: {
-        const v_G = throughWhere(sp, v_c, (_te356: number): boolean => {  return (((b.value(_te356) !== 1) && (b.markOf(sp.edgeEnds[2 * _te356]) === v_q)) && (b.markOf(sp.edgeEnds[2 * _te356 + 1]) === v_q)); });
+        const v_G = throughWhere(sp, v_c, (_te356: number): boolean => {  return ((((b.grid[_te356] || -1) !== 1) && (b.markOf(sp.edgeEnds[2 * _te356]) === v_q)) && (b.markOf(sp.edgeEnds[2 * _te356 + 1]) === v_q)); });
         if (!((((v_G[0] ?? -1) === v_c) && !(v_G.includes((sp.centerCells[cl.dot.at[v_q]][0] ?? -1)))))) break L357;
         _g358.length = 0;
         G359: {
@@ -707,7 +707,7 @@ export function exclave(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExclaveBi
             const _a366 = sp.adj4[v_x];
             for (let _i367 = 0; _i367 < _a366.length; _i367++) {
               const v_n = _a366[_i367];
-              const _h368 = b.value(sp.edgeOf(v_x, v_n));
+              const _h368 = (b.grid[sp.edgeOf(v_x, v_n)] || -1);
               if (!(((b.markOf(v_n) === -1) && (_h368 !== 1)))) continue;
               if (!_g358.includes(v_n)) _g358.push(v_n);
             }
@@ -773,7 +773,7 @@ export function mirrorWall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Mirror
   const _a388 = sp.edges;
   for (let _i389 = 0; _i389 < _a388.length; _i389++) {
     const v_e = _a388[_i389];
-    if (!(!(b.known(v_e)))) continue;
+    if (!(!((b.grid[v_e] !== 0)))) continue;
     const _a390 = setOf(sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]);
     for (let _i391 = 0; _i391 < _a390.length; _i391++) {
       const v_a = _a390[_i391];
@@ -786,10 +786,10 @@ export function mirrorWall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Mirror
           if (!((v_a2 !== -1))) break L393;
           L394: {
             const v_b2 = opp(sp, v_b, cl.dot.at[v_q]);
-            if (!(((v_b2 === -1) || (b.value(sp.edgeOf(v_a2, v_b2)) === 1)))) break L394;
+            if (!(((v_b2 === -1) || ((b.grid[sp.edgeOf(v_a2, v_b2)] || -1) === 1)))) break L394;
             facts.length = 0;
             changed = false;
-            if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
+            if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
             if (!(true)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
@@ -843,7 +843,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, v_q: number): readonly
   if (_kept[v_q] !== undefined) return _kept[v_q];
   const _g299: number[] = [];
   G300: {
-    const v_T = throughWhere(sp, (sp.centerCells[cl.dot.at[v_q]][0] ?? -1), (_te308: number): boolean => { let _c310: boolean = (b.value(_te308) !== 1); if (_c310) {   const _t309 = sp.edgeEnds[2 * _te308];   _c310 = (((opp(sp, _t309, cl.dot.at[v_q]) !== -1) && ((b.markOf(_t309) === -1) || (b.markOf(_t309) === v_q))) && ((b.markOf(opp(sp, _t309, cl.dot.at[v_q])) === -1) || (b.markOf(opp(sp, _t309, cl.dot.at[v_q])) === v_q))); } let _c312: boolean = _c310; if (_c312) {   const _t311 = sp.edgeEnds[2 * _te308 + 1];   _c312 = (((opp(sp, _t311, cl.dot.at[v_q]) !== -1) && ((b.markOf(_t311) === -1) || (b.markOf(_t311) === v_q))) && ((b.markOf(opp(sp, _t311, cl.dot.at[v_q])) === -1) || (b.markOf(opp(sp, _t311, cl.dot.at[v_q])) === v_q))); } return _c312; });
+    const v_T = throughWhere(sp, (sp.centerCells[cl.dot.at[v_q]][0] ?? -1), (_te308: number): boolean => { let _c310: boolean = ((b.grid[_te308] || -1) !== 1); if (_c310) {   const _t309 = sp.edgeEnds[2 * _te308];   _c310 = (((opp(sp, _t309, cl.dot.at[v_q]) !== -1) && ((b.markOf(_t309) === -1) || (b.markOf(_t309) === v_q))) && ((b.markOf(opp(sp, _t309, cl.dot.at[v_q])) === -1) || (b.markOf(opp(sp, _t309, cl.dot.at[v_q])) === v_q))); } let _c312: boolean = _c310; if (_c312) {   const _t311 = sp.edgeEnds[2 * _te308 + 1];   _c312 = (((opp(sp, _t311, cl.dot.at[v_q]) !== -1) && ((b.markOf(_t311) === -1) || (b.markOf(_t311) === v_q))) && ((b.markOf(opp(sp, _t311, cl.dot.at[v_q])) === -1) || (b.markOf(opp(sp, _t311, cl.dot.at[v_q])) === v_q))); } return _c312; });
     const _a313 = v_T;
     for (let _i314 = 0; _i314 < _a313.length; _i314++) {
       const v_x = _a313[_i314];

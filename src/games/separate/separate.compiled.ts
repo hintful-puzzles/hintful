@@ -166,7 +166,7 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
     const _a40 = sp.edges;
     for (let _i41 = 0; _i41 < _a40.length; _i41++) {
       const v_e = _a40[_i41];
-      if (!((b.value(v_e) === 2))) continue;
+      if (!(((b.grid[v_e] || -1) === 2))) continue;
       _g36.push(v_e);
     }
   }
@@ -175,7 +175,7 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
   const _a42 = sp.edges;
   for (let _i43 = 0; _i43 < _a42.length; _i43++) {
     const v_e = _a42[_i43];
-    if (!(!(b.known(v_e)))) continue;
+    if (!(!((b.grid[v_e] !== 0)))) continue;
     const v_A = _eg44.of(sp.edgeEnds[2 * v_e]);
     L45: {
       const v_b = sp.edgeEnds[2 * v_e + 1];
@@ -213,7 +213,7 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
               for (let _i66 = 0; _i66 < _a65.length; _i66++) {
                 const v_y = _a65[_i66];
                 if (!((_eg44.of(v_y) === v_B))) continue;
-                if ((b.value(sp.edgeOf(v_x, v_y)) === 1)) {
+                if (((b.grid[sp.edgeOf(v_x, v_y)] || -1) === 1)) {
                   _q61 = true;
                   break Q62;
                 }
@@ -249,7 +249,7 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
               const _a82 = _g76;
               for (let _i83 = 0; _i83 < _a82.length; _i83++) {
                 const v_f = _a82[_i83];
-                if (!b.known(v_f)) { if (fire === null) { b.placeAt(v_f, 1); changed = true; } else facts.push(PLACE, v_f, 1); }
+                if (!(b.grid[v_f] !== 0)) { if (fire === null) { b.placeAt(v_f, 1); changed = true; } else facts.push(PLACE, v_f, 1); }
                 if (!(true)) {
                   _q74 = false;
                   break Q75;
@@ -290,7 +290,7 @@ export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBindi
     const _a104 = sp.edges;
     for (let _i105 = 0; _i105 < _a104.length; _i105++) {
       const v_e = _a104[_i105];
-      if (!((b.value(v_e) === 2))) continue;
+      if (!(((b.grid[v_e] || -1) === 2))) continue;
       _g100.push(v_e);
     }
   }
@@ -299,7 +299,7 @@ export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBindi
   const _a106 = sp.edges;
   for (let _i107 = 0; _i107 < _a106.length; _i107++) {
     const v_e = _a106[_i107];
-    if (!(!(b.known(v_e)))) continue;
+    if (!(!((b.grid[v_e] !== 0)))) continue;
     const v_A = _eg108.of(sp.edgeEnds[2 * v_e]);
     L109: {
       const v_b = sp.edgeEnds[2 * v_e + 1];
@@ -315,7 +315,7 @@ export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBindi
             for (let _i116 = 0; _i116 < _a115.length; _i116++) {
               const v_y = _a115[_i116];
               if (!((_eg108.of(v_y) === v_B))) continue;
-              if ((b.value(sp.edgeOf(v_x, v_y)) === 1)) {
+              if (((b.grid[sp.edgeOf(v_x, v_y)] || -1) === 1)) {
                 _q111 = true;
                 break Q112;
               }
@@ -339,7 +339,7 @@ export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBindi
           const _a125 = _g119;
           for (let _i126 = 0; _i126 < _a125.length; _i126++) {
             const v_f = _a125[_i126];
-            if (!b.known(v_f)) { if (fire === null) { b.placeAt(v_f, 1); changed = true; } else facts.push(PLACE, v_f, 1); }
+            if (!(b.grid[v_f] !== 0)) { if (fire === null) { b.placeAt(v_f, 1); changed = true; } else facts.push(PLACE, v_f, 1); }
             if (!(true)) {
               _q117 = false;
               break Q118;
@@ -377,7 +377,7 @@ export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBi
     const _a150 = sp.edges;
     for (let _i151 = 0; _i151 < _a150.length; _i151++) {
       const v_e = _a150[_i151];
-      if (!((b.value(v_e) === 2))) continue;
+      if (!(((b.grid[v_e] || -1) === 2))) continue;
       _g146.push(v_e);
     }
   }
@@ -398,7 +398,7 @@ export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBi
           const _a165 = sp.adj4[v_x];
           for (let _i166 = 0; _i166 < _a165.length; _i166++) {
             const v_s = _a165[_i166];
-            if (!((!(_eg154.of(v_s) === v_A) && (b.value(sp.edgeOf(v_x, v_s)) !== 1)))) continue;
+            if (!((!(_eg154.of(v_s) === v_A) && ((b.grid[sp.edgeOf(v_x, v_s)] || -1) !== 1)))) continue;
             if (!_g157.includes(v_s)) _g157.push(v_s);
           }
         }
@@ -421,7 +421,7 @@ export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBi
                 const v_y = _a172[_i173];
                 if (!((v_S.includes(v_y)))) continue;
                 const _t174 = sp.edgeOf(v_x, v_y);
-                if (!b.known(_t174)) { if (fire === null) { b.placeAt(_t174, 2); changed = true; } else facts.push(PLACE, _t174, 2); }
+                if (!(b.grid[_t174] !== 0)) { if (fire === null) { b.placeAt(_t174, 2); changed = true; } else facts.push(PLACE, _t174, 2); }
                 if (!(true)) {
                   _q168 = false;
                   break Q169;

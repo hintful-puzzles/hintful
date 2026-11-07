@@ -15,8 +15,8 @@ export function placed(b: Marks, sp: GridSpace, v_c: number, fire: Fire<PlacedBi
   const facts = placedFacts;
   let fired = 0;
   let changed = false;
-  const _h5 = b.known(v_c);
-  const _h6 = b.value(v_c);
+  const _h5 = (b.grid[v_c] !== 0);
+  const _h6 = (b.grid[v_c] || -1);
   if (!(_h5)) return 0;
   const v_d = _h6;
   const v_k = (v_d === b.repeat ? b.times : 1);
@@ -33,7 +33,7 @@ export function placed(b: Marks, sp: GridSpace, v_c: number, fire: Fire<PlacedBi
         const _a12 = sp.lineCells[v_u];
         for (let _i13 = 0; _i13 < _a12.length; _i13++) {
           const v_p = _a12[_i13];
-          const _h14 = b.value(v_p);
+          const _h14 = (b.grid[v_p] || -1);
           if (!((_h14 === v_d))) continue;
           _g10++;
         }
@@ -47,9 +47,9 @@ export function placed(b: Marks, sp: GridSpace, v_c: number, fire: Fire<PlacedBi
         const _a18 = sp.lineCells[v_u];
         for (let _i19 = 0; _i19 < _a18.length; _i19++) {
           const v_p = _a18[_i19];
-          const _h20 = b.value(v_p);
+          const _h20 = (b.grid[v_p] || -1);
           if (!(((v_p !== v_c) && (_h9 || (_h20 !== v_d))))) continue;
-          if (b.has(v_p, v_d)) { if (fire === null) { b.strikeAt(v_p, v_d); changed = true; } else facts.push(STRIKE, v_p, v_d); }
+          if ((((b.cands[v_p] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_p, v_d); changed = true; } else facts.push(STRIKE, v_p, v_d); }
           if (!(true)) {
             _q16 = false;
             break Q17;
@@ -88,8 +88,8 @@ export function hiddenSingle(b: Marks, sp: GridSpace, fire: Fire<HiddenSingleBin
       const _a43 = sp.lineCells[v_u];
       for (let _i44 = 0; _i44 < _a43.length; _i44++) {
         const v_c = _a43[_i44];
-        if (!((b.known(v_c) && ((b.value(v_c) === b.repeat ? b.times : 1) === 1)))) continue;
-        const _t45 = b.value(v_c);
+        if (!(((b.grid[v_c] !== 0) && (((b.grid[v_c] || -1) === b.repeat ? b.times : 1) === 1)))) continue;
+        const _t45 = (b.grid[v_c] || -1);
         _g39 |= 1 << _t45;
       }
     }
@@ -101,7 +101,7 @@ export function hiddenSingle(b: Marks, sp: GridSpace, fire: Fire<HiddenSingleBin
         const _a49 = sp.lineCells[v_u];
         for (let _i50 = 0; _i50 < _a49.length; _i50++) {
           const v_c = _a49[_i50];
-          if (!(b.has(v_c, v_d))) continue;
+          if (!((((b.cands[v_c] >> v_d) & 1) !== 0))) continue;
           _g47++;
         }
       }
@@ -117,8 +117,8 @@ export function hiddenSingle(b: Marks, sp: GridSpace, fire: Fire<HiddenSingleBin
             const _a54 = sp.lineCells[v_u];
             for (let _i55 = 0; _i55 < _a54.length; _i55++) {
               const v_c = _a54[_i55];
-              if (!((b.has(v_c, v_d) && !(b.known(v_c))))) continue;
-              if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, v_d); changed = true; } else facts.push(PLACE, v_c, v_d); }
+              if (!(((((b.cands[v_c] >> v_d) & 1) !== 0) && !((b.grid[v_c] !== 0))))) continue;
+              if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, v_d); changed = true; } else facts.push(PLACE, v_c, v_d); }
               if (!(true)) {
                 _q52 = false;
                 break Q53;
@@ -159,13 +159,13 @@ export function single(b: Marks, sp: GridSpace, fire: Fire<SingleBinding> | null
     const _a63 = sp.lineCells[v_L];
     for (let _i64 = 0; _i64 < _a63.length; _i64++) {
       const v_c = _a63[_i64];
-      if (!((!(b.known(v_c)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) < 2)))) continue;
+      if (!((!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2)))) continue;
       facts.length = 0;
       changed = false;
-      let _c66: boolean = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) === 1);
+      let _c66: boolean = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) === 1);
       if (_c66) {
-        const _t65 = least((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))));
-        if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, _t65); changed = true; } else facts.push(PLACE, v_c, _t65); }
+        const _t65 = least((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])));
+        if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, _t65); changed = true; } else facts.push(PLACE, v_c, _t65); }
         _c66 = true;
       }
       if (!(_c66)) return -1;
@@ -209,8 +209,8 @@ export function set(b: Marks, sp: GridSpace, fire: Fire<SetBinding> | null): num
       const _a102 = sp.lineCells[v_u];
       for (let _i103 = 0; _i103 < _a102.length; _i103++) {
         const v_c = _a102[_i103];
-        const _h104 = b.known(v_c);
-        const _h105 = b.value(v_c);
+        const _h104 = (b.grid[v_c] !== 0);
+        const _h105 = (b.grid[v_c] || -1);
         if (!((_h104 && ((_h105 === b.repeat ? b.times : 1) === 1)))) continue;
         _g98 |= 1 << _h105;
       }
@@ -223,7 +223,7 @@ export function set(b: Marks, sp: GridSpace, fire: Fire<SetBinding> | null): num
       const _a110 = sp.lineCells[v_u];
       for (let _i111 = 0; _i111 < _a110.length; _i111++) {
         const v_c = _a110[_i111];
-        const _h112 = b.known(v_c);
+        const _h112 = (b.grid[v_c] !== 0);
         if (!(!(_h112))) continue;
         _g106.push(v_c);
       }
@@ -253,7 +253,7 @@ export function set(b: Marks, sp: GridSpace, fire: Fire<SetBinding> | null): num
         const _a128 = v_open;
         for (let _i129 = 0; _i129 < _a128.length; _i129++) {
           const v_c = _a128[_i129];
-          if (!(!(((v_T & (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) !== 0)))) continue;
+          if (!(!(((v_T & (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) !== 0)))) continue;
           _g124.push(v_c);
         }
       }
@@ -270,7 +270,7 @@ export function set(b: Marks, sp: GridSpace, fire: Fire<SetBinding> | null): num
             const _a135 = sp.lineCells[v_u];
             for (let _i136 = 0; _i136 < _a135.length; _i136++) {
               const v_c = _a135[_i136];
-              if (!((popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c)))) > 0))) {
+              if (!((popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) > 0))) {
                 _q133 = false;
                 break Q134;
               }
@@ -288,8 +288,8 @@ export function set(b: Marks, sp: GridSpace, fire: Fire<SetBinding> | null): num
               if (!(!(v_S.includes(v_c)))) continue;
               for (let _m143 = _h142; _m143 !== 0; _m143 &= _m143 - 1) {
                 const v_d = 31 - Math.clz32(_m143 & -_m143);
-                if (!(b.has(v_c, v_d))) continue;
-                if (b.has(v_c, v_d)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
+                if (!((((b.cands[v_c] >> v_d) & 1) !== 0))) continue;
+                if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
                 if (!(true)) {
                   _q138 = false;
                   break Q139;
@@ -345,7 +345,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
           const _a245 = sp.lineCells[v_L];
           for (let _i246 = 0; _i246 < _a245.length; _i246++) {
             const v_c = _a245[_i246];
-            const _h247 = b.value(v_c);
+            const _h247 = (b.grid[v_c] || -1);
             if ((_h247 === v_d)) {
               _q243 = true;
               break Q244;
@@ -361,7 +361,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
               const _a251 = sp.lineCells[v_L];
               for (let _i252 = 0; _i252 < _a251.length; _i252++) {
                 const v_c = _a251[_i252];
-                const _h253 = b.value(v_c);
+                const _h253 = (b.grid[v_c] || -1);
                 if (!((_h253 === v_d))) continue;
                 _g249++;
               }
@@ -382,7 +382,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
       const _a268 = sp.cells;
       for (let _i269 = 0; _i269 < _a268.length; _i269++) {
         const v_c = _a268[_i269];
-        const _h270 = b.value(v_c);
+        const _h270 = (b.grid[v_c] || -1);
         let _c278: boolean = (_h270 === v_d);
         if (_c278) {
           let _c277: boolean = _h271;
@@ -392,7 +392,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
               const _a274 = sp.lineCells[sp.rowOf[v_c]];
               for (let _i275 = 0; _i275 < _a274.length; _i275++) {
                 const v_p = _a274[_i275];
-                const _h276 = b.value(v_p);
+                const _h276 = (b.grid[v_p] || -1);
                 if (!((_h276 === v_d))) continue;
                 _g272++;
               }
@@ -424,8 +424,8 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
             const _a298 = sp.lineCells[v_L];
             for (let _i299 = 0; _i299 < _a298.length; _i299++) {
               const v_c = _a298[_i299];
-              const _h300 = b.known(v_c);
-              if ((((((v_T >> ((v_c / sp.w) | 0)) & 1) !== 0) && b.has(v_c, v_d)) && (_h271 || !(_h300)))) {
+              const _h300 = (b.grid[v_c] !== 0);
+              if ((((((v_T >> ((v_c / sp.w) | 0)) & 1) !== 0) && (((b.cands[v_c] >> v_d) & 1) !== 0)) && (_h271 || !(_h300)))) {
                 _q296 = true;
                 break Q297;
               }
@@ -452,7 +452,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
                   const _a309 = sp.lineCells[v_L];
                   for (let _i310 = 0; _i310 < _a309.length; _i310++) {
                     const v_c = _a309[_i310];
-                    const _h311 = b.value(v_c);
+                    const _h311 = (b.grid[v_c] || -1);
                     if (!((_h311 === v_d))) continue;
                     _g307++;
                   }
@@ -469,7 +469,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
                   const _a317 = sp.lineCells[sp.rowOf[(v_r * sp.w + 0)]];
                   for (let _i318 = 0; _i318 < _a317.length; _i318++) {
                     const v_c = _a317[_i318];
-                    const _h319 = b.value(v_c);
+                    const _h319 = (b.grid[v_c] || -1);
                     if (!((_h319 === v_d))) continue;
                     _g315++;
                   }
@@ -496,7 +496,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
                 const _a328 = sp.lineCells[v_L];
                 for (let _i329 = 0; _i329 < _a328.length; _i329++) {
                   const v_c = _a328[_i329];
-                  if (b.has(v_c, v_d)) {
+                  if ((((b.cands[v_c] >> v_d) & 1) !== 0)) {
                     _q326 = true;
                     break Q327;
                   }
@@ -526,7 +526,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
                     const _a337 = sp.lineCells[v_L];
                     for (let _i338 = 0; _i338 < _a337.length; _i338++) {
                       const v_c = _a337[_i338];
-                      const _h339 = b.value(v_c);
+                      const _h339 = (b.grid[v_c] || -1);
                       if (!((_h339 === v_d))) continue;
                       _g335++;
                     }
@@ -543,7 +543,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
                     const _a345 = sp.lineCells[sp.rowOf[(v_r * sp.w + 0)]];
                     for (let _i346 = 0; _i346 < _a345.length; _i346++) {
                       const v_c = _a345[_i346];
-                      const _h347 = b.value(v_c);
+                      const _h347 = (b.grid[v_c] || -1);
                       if (!((_h347 === v_d))) continue;
                       _g343++;
                     }
@@ -567,9 +567,9 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
               const _a355 = sp.lineCells[v_L];
               for (let _i356 = 0; _i356 < _a355.length; _i356++) {
                 const v_c = _a355[_i356];
-                const _h358 = b.known(v_c);
-                if (!((((((_h357 >> ((v_c / sp.w) | 0)) & 1) !== 0) && b.has(v_c, v_d)) && (_h271 || !(_h358))))) continue;
-                if (b.has(v_c, v_d)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
+                const _h358 = (b.grid[v_c] !== 0);
+                if (!((((((_h357 >> ((v_c / sp.w) | 0)) & 1) !== 0) && (((b.cands[v_c] >> v_d) & 1) !== 0)) && (_h271 || !(_h358))))) continue;
+                if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
                 if (!(true)) {
                   _q351 = false;
                   break Q352;
@@ -614,13 +614,13 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): n
   const _a406 = sp.cells;
   for (let _i407 = 0; _i407 < _a406.length; _i407++) {
     const v_m = _a406[_i407];
-    const _h408 = b.known(v_m);
+    const _h408 = (b.grid[v_m] !== 0);
     if (!(!(_h408))) continue;
     for (let _m409 = b.domain; _m409 !== 0; _m409 &= _m409 - 1) {
       const v_x = 31 - Math.clz32(_m409 & -_m409);
       if (!(((v_x === b.repeat ? b.times : 1) === 1))) continue;
       L410: {
-        const v_R = ((cands[v_m] >= 0 ? cands[v_m] : (cands[v_m] = b.cand(v_m))) & ~((1 << v_x)));
+        const v_R = ((cands[v_m] >= 0 ? cands[v_m] : (cands[v_m] = b.cands[v_m])) & ~((1 << v_x)));
         const _h411 = popcount(v_R);
         let _c422: boolean = (_h411 >= 1);
         if (_c422) {
@@ -636,8 +636,8 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): n
                   const _a417 = sp.peers[v_m];
                   for (let _i418 = 0; _i418 < _a417.length; _i418++) {
                     const v_k = _a417[_i418];
-                    const _h419 = b.known(v_k);
-                    if ((!(_h419) && ((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cand(v_k))) === _h420))) {
+                    const _h419 = (b.grid[v_k] !== 0);
+                    if ((!(_h419) && ((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k])) === _h420))) {
                       _q415 = true;
                       break Q416;
                     }
@@ -657,7 +657,7 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): n
         const _a423 = sp.peers[v_m];
         for (let _i424 = 0; _i424 < _a423.length; _i424++) {
           const v_k0 = _a423[_i424];
-          const _h425 = b.known(v_k0);
+          const _h425 = (b.grid[v_k0] !== 0);
           let _c429: boolean = !(_h425);
           if (_c429) {
             let _g426 = -1;
@@ -667,14 +667,14 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): n
                 if (_g426 === -1 || v_a < _g426) _g426 = v_a;
               }
             }
-            _c429 = ((cands[v_k0] >= 0 ? cands[v_k0] : (cands[v_k0] = b.cand(v_k0))) === ((1 << _g426) | (1 << v_x)));
+            _c429 = ((cands[v_k0] >= 0 ? cands[v_k0] : (cands[v_k0] = b.cands[v_k0])) === ((1 << _g426) | (1 << v_x)));
           }
           if (!(_c429)) continue;
           const _a430 = sp.peers[v_k0];
           for (let _i431 = 0; _i431 < _a430.length; _i431++) {
             const v_t = _a430[_i431];
-            const _h432 = b.known(v_t);
-            let _c442: boolean = ((((v_t !== v_m) && !(_h432)) && b.has(v_t, v_x)) && (!b.has(v_m, v_x) || (sp.peers[v_m].includes(v_t))));
+            const _h432 = (b.grid[v_t] !== 0);
+            let _c442: boolean = ((((v_t !== v_m) && !(_h432)) && (((b.cands[v_t] >> v_x) & 1) !== 0)) && (!(((b.cands[v_m] >> v_x) & 1) !== 0) || (sp.peers[v_m].includes(v_t))));
             if (_c442) {
               let _q433 = true;
               Q434: {
@@ -686,8 +686,8 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): n
                     const _a438 = sp.peers[v_m];
                     for (let _i439 = 0; _i439 < _a438.length; _i439++) {
                       const v_k = _a438[_i439];
-                      const _h440 = b.known(v_k);
-                      if ((((!(_h440) && ((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cand(v_k))) === _h441)) && (v_k !== v_t)) && (sp.peers[v_t].includes(v_k)))) {
+                      const _h440 = (b.grid[v_k] !== 0);
+                      if ((((!(_h440) && ((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k])) === _h441)) && (v_k !== v_t)) && (sp.peers[v_t].includes(v_k)))) {
                         _q436 = true;
                         break Q437;
                       }
@@ -712,8 +712,8 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): n
                   const _a457 = sp.peers[v_m];
                   for (let _i458 = 0; _i458 < _a457.length; _i458++) {
                     const v_k = _a457[_i458];
-                    const _h459 = b.known(v_k);
-                    if (!((((!(_h459) && ((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cand(v_k))) === _h460)) && (v_k !== v_t)) && (sp.peers[v_t].includes(v_k))))) continue;
+                    const _h459 = (b.grid[v_k] !== 0);
+                    if (!((((!(_h459) && ((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k])) === _h460)) && (v_k !== v_t)) && (sp.peers[v_t].includes(v_k))))) continue;
                     _g453.push(v_k);
                   }
                 }
@@ -724,7 +724,7 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): n
             const v_E = _g443;
             facts.length = 0;
             changed = false;
-            if (b.has(v_t, v_x)) { if (fire === null) { b.strikeAt(v_t, v_x); changed = true; } else facts.push(STRIKE, v_t, v_x); }
+            if ((((b.cands[v_t] >> v_x) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_t, v_x); changed = true; } else facts.push(STRIKE, v_t, v_x); }
             if (!(true)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;

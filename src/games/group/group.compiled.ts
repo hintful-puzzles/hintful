@@ -121,32 +121,32 @@ export function associativity(b: Marks, sp: GridSpace, fire: Fire<AssociativityB
       const _h14 = (v_b - 1);
       L12: {
         const v_p = (_h11 * sp.w + (v_b - 1));
-        if (!(b.known(v_p))) break L12;
+        if (!((b.grid[v_p] !== 0))) break L12;
         for (let _m13 = b.domain; _m13 !== 0; _m13 &= _m13 - 1) {
           const v_c = 31 - Math.clz32(_m13 & -_m13);
           L15: {
             const v_q = (_h14 * sp.w + (v_c - 1));
-            if (!(b.known(v_q))) break L15;
-            const _t16 = b.value(v_p);
+            if (!((b.grid[v_q] !== 0))) break L15;
+            const _t16 = (b.grid[v_p] || -1);
             const v_l = ((_t16 - 1) * sp.w + (v_c - 1));
-            const _t17 = b.value(v_q);
+            const _t17 = (b.grid[v_q] || -1);
             L18: {
               const v_r = (_h11 * sp.w + (_t17 - 1));
-              if (!((b.known(v_l) !== b.known(v_r)))) break L18;
+              if (!(((b.grid[v_l] !== 0) !== (b.grid[v_r] !== 0)))) break L18;
               facts.length = 0;
               changed = false;
-              let _c20: boolean = !((b.known(v_l) && b.has(v_r, b.value(v_l))));
+              let _c20: boolean = !(((b.grid[v_l] !== 0) && (((b.cands[v_r] >> (b.grid[v_l] || -1)) & 1) !== 0)));
               if (!_c20) {
-                const _t19 = b.value(v_l);
-                if (!b.known(v_r)) { if (fire === null) { b.placeAt(v_r, _t19); changed = true; } else facts.push(PLACE, v_r, _t19); }
+                const _t19 = (b.grid[v_l] || -1);
+                if (!(b.grid[v_r] !== 0)) { if (fire === null) { b.placeAt(v_r, _t19); changed = true; } else facts.push(PLACE, v_r, _t19); }
                 _c20 = true;
               }
               let _c23: boolean = _c20;
               if (_c23) {
-                let _c22: boolean = !((b.known(v_r) && b.has(v_l, b.value(v_r))));
+                let _c22: boolean = !(((b.grid[v_r] !== 0) && (((b.cands[v_l] >> (b.grid[v_r] || -1)) & 1) !== 0)));
                 if (!_c22) {
-                  const _t21 = b.value(v_r);
-                  if (!b.known(v_l)) { if (fire === null) { b.placeAt(v_l, _t21); changed = true; } else facts.push(PLACE, v_l, _t21); }
+                  const _t21 = (b.grid[v_r] || -1);
+                  if (!(b.grid[v_l] !== 0)) { if (fire === null) { b.placeAt(v_l, _t21); changed = true; } else facts.push(PLACE, v_l, _t21); }
                   _c22 = true;
                 }
                 _c23 = _c22;
@@ -182,7 +182,7 @@ export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding> | 
     const _a36 = sp.cells;
     for (let _i37 = 0; _i37 < _a36.length; _i37++) {
       const v_c = _a36[_i37];
-      if (!((b.known(v_c) && ((b.value(v_c) === (((v_c / sp.w) | 0) + 1)) || (b.value(v_c) === ((v_c % sp.w) + 1)))))) continue;
+      if (!(((b.grid[v_c] !== 0) && (((b.grid[v_c] || -1) === (((v_c / sp.w) | 0) + 1)) || ((b.grid[v_c] || -1) === ((v_c % sp.w) + 1)))))) continue;
       _g32.push(v_c);
     }
   }
@@ -197,7 +197,7 @@ export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding> | 
     const _h45 = _h44;
     for (let _m39 = b.domain; _m39 !== 0; _m39 &= _m39 - 1) {
       const v_e = 31 - Math.clz32(_m39 & -_m39);
-      if (!((((b.value(v_w0) === _h42) && (v_e === _h45)) || ((b.value(v_w0) !== _h42) && (v_e === _h42))))) continue;
+      if (!(((((b.grid[v_w0] || -1) === _h42) && (v_e === _h45)) || (((b.grid[v_w0] || -1) !== _h42) && (v_e === _h42))))) continue;
       const _h49 = (v_e - 1);
       facts.length = 0;
       changed = false;
@@ -208,10 +208,10 @@ export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding> | 
           const _a50 = setOf(((v_j - 1) * sp.w + _h49), (_h49 * sp.w + (v_j - 1)));
           for (let _i51 = 0; _i51 < _a50.length; _i51++) {
             const v_c = _a50[_i51];
-            if (!(!(b.known(v_c)))) continue;
-            let _c52: boolean = b.has(v_c, v_j);
+            if (!(!((b.grid[v_c] !== 0)))) continue;
+            let _c52: boolean = (((b.cands[v_c] >> v_j) & 1) !== 0);
             if (_c52) {
-              if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, v_j); changed = true; } else facts.push(PLACE, v_c, v_j); }
+              if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, v_j); changed = true; } else facts.push(PLACE, v_c, v_j); }
               _c52 = true;
             }
             if (!(_c52)) {
@@ -249,10 +249,10 @@ export function notIdentity(b: Marks, sp: GridSpace, fire: Fire<NotIdentityBindi
     G60: {
       for (let _m61 = b.domain; _m61 !== 0; _m61 &= _m61 - 1) {
         const v_j = 31 - Math.clz32(_m61 & -_m61);
-        const _h63 = b.known(((v_j - 1) * sp.w + _h62));
-        const _h64 = b.value(((v_j - 1) * sp.w + _h62));
-        const _h65 = b.known((_h62 * sp.w + (v_j - 1)));
-        const _h66 = b.value((_h62 * sp.w + (v_j - 1)));
+        const _h63 = (b.grid[((v_j - 1) * sp.w + _h62)] !== 0);
+        const _h64 = (b.grid[((v_j - 1) * sp.w + _h62)] || -1);
+        const _h65 = (b.grid[(_h62 * sp.w + (v_j - 1))] !== 0);
+        const _h66 = (b.grid[(_h62 * sp.w + (v_j - 1))] || -1);
         if (!(((_h63 && (_h64 !== v_j)) || (_h65 && (_h66 !== v_j))))) continue;
         if (_g59 === -1 || v_j < _g59) _g59 = v_j;
       }
@@ -267,13 +267,13 @@ export function notIdentity(b: Marks, sp: GridSpace, fire: Fire<NotIdentityBindi
         for (let _m70 = b.domain; _m70 !== 0; _m70 &= _m70 - 1) {
           const v_j = 31 - Math.clz32(_m70 & -_m70);
           const _t71 = ((v_j - 1) * sp.w + _h62);
-          if (b.has(_t71, v_j)) { if (fire === null) { b.strikeAt(_t71, v_j); changed = true; } else facts.push(STRIKE, _t71, v_j); }
+          if ((((b.cands[_t71] >> v_j) & 1) !== 0)) { if (fire === null) { b.strikeAt(_t71, v_j); changed = true; } else facts.push(STRIKE, _t71, v_j); }
           let _c74: boolean = true;
           if (_c74) {
             let _c73: boolean = (v_j === v_a);
             if (!_c73) {
               const _t72 = (_h62 * sp.w + (v_j - 1));
-              if (b.has(_t72, v_j)) { if (fire === null) { b.strikeAt(_t72, v_j); changed = true; } else facts.push(STRIKE, _t72, v_j); }
+              if ((((b.cands[_t72] >> v_j) & 1) !== 0)) { if (fire === null) { b.strikeAt(_t72, v_j); changed = true; } else facts.push(STRIKE, _t72, v_j); }
               _c73 = true;
             }
             _c74 = _c73;

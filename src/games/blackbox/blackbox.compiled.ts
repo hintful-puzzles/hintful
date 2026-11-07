@@ -118,7 +118,7 @@ export function ray(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RayBinding> |
           facts.length = 0;
           changed = false;
           const _t9 = (3 - v_d);
-          if (!b.known(v_u)) { if (fire === null) { b.placeAt(v_u, _t9); changed = true; } else facts.push(PLACE, v_u, _t9); }
+          if (!(b.grid[v_u] !== 0)) { if (fire === null) { b.placeAt(v_u, _t9); changed = true; } else facts.push(PLACE, v_u, _t9); }
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;

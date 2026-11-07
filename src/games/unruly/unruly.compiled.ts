@@ -156,7 +156,7 @@ export function threes(b: Marks, sp: GridSpace, fire: Fire<ThreesBinding> | null
       const _a18 = v_W;
       for (let _i19 = 0; _i19 < _a18.length; _i19++) {
         const v_x = _a18[_i19];
-        if (!(!(b.known(v_x)))) continue;
+        if (!(!((b.grid[v_x] !== 0)))) continue;
         for (let _m20 = b.domain; _m20 !== 0; _m20 &= _m20 - 1) {
           const v_d = 31 - Math.clz32(_m20 & -_m20);
           let _q21 = true;
@@ -165,7 +165,7 @@ export function threes(b: Marks, sp: GridSpace, fire: Fire<ThreesBinding> | null
             for (let _i24 = 0; _i24 < _a23.length; _i24++) {
               const v_c = _a23[_i24];
               if (!((v_c !== v_x))) continue;
-              if (!((b.value(v_c) === v_d))) {
+              if (!(((b.grid[v_c] || -1) === v_d))) {
                 _q21 = false;
                 break Q22;
               }
@@ -175,7 +175,7 @@ export function threes(b: Marks, sp: GridSpace, fire: Fire<ThreesBinding> | null
           facts.length = 0;
           changed = false;
           const _t25 = (3 - v_d);
-          if (!b.known(v_x)) { if (fire === null) { b.placeAt(v_x, _t25); changed = true; } else facts.push(PLACE, v_x, _t25); }
+          if (!(b.grid[v_x] !== 0)) { if (fire === null) { b.placeAt(v_x, _t25); changed = true; } else facts.push(PLACE, v_x, _t25); }
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
@@ -214,7 +214,7 @@ export function lastGap(b: Marks, sp: GridSpace, fire: Fire<LastGapBinding> | nu
         const _a43 = sp.lineCells[v_L];
         for (let _i44 = 0; _i44 < _a43.length; _i44++) {
           const v_c = _a43[_i44];
-          if (!((b.value(v_c) === v_d))) continue;
+          if (!(((b.grid[v_c] || -1) === v_d))) continue;
           _g41++;
         }
       }
@@ -225,7 +225,7 @@ export function lastGap(b: Marks, sp: GridSpace, fire: Fire<LastGapBinding> | nu
           const _a47 = sp.lineCells[v_L];
           for (let _i48 = 0; _i48 < _a47.length; _i48++) {
             const v_c = _a47[_i48];
-            if (!((b.value(v_c) === _h50))) continue;
+            if (!(((b.grid[v_c] || -1) === _h50))) continue;
             _g45++;
           }
         }
@@ -239,8 +239,8 @@ export function lastGap(b: Marks, sp: GridSpace, fire: Fire<LastGapBinding> | nu
         const _a55 = sp.lineCells[v_L];
         for (let _i56 = 0; _i56 < _a55.length; _i56++) {
           const v_c = _a55[_i56];
-          if (!(!(b.known(v_c)))) continue;
-          if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, _h50); changed = true; } else facts.push(PLACE, v_c, _h50); }
+          if (!(!((b.grid[v_c] !== 0)))) continue;
+          if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, _h50); changed = true; } else facts.push(PLACE, v_c, _h50); }
           if (!(true)) {
             _q53 = false;
             break Q54;
@@ -282,7 +282,7 @@ export function quota(b: Marks, sp: GridSpace, fire: Fire<QuotaBinding> | null):
         const _a74 = sp.lineCells[v_L];
         for (let _i75 = 0; _i75 < _a74.length; _i75++) {
           const v_c = _a74[_i75];
-          if (!((b.value(v_c) === v_d))) continue;
+          if (!(((b.grid[v_c] || -1) === v_d))) continue;
           _g72++;
         }
       }
@@ -293,7 +293,7 @@ export function quota(b: Marks, sp: GridSpace, fire: Fire<QuotaBinding> | null):
           const _a78 = sp.lineCells[v_L];
           for (let _i79 = 0; _i79 < _a78.length; _i79++) {
             const v_c = _a78[_i79];
-            if (!((b.value(v_c) === _h81))) continue;
+            if (!(((b.grid[v_c] || -1) === _h81))) continue;
             _g76++;
           }
         }
@@ -307,8 +307,8 @@ export function quota(b: Marks, sp: GridSpace, fire: Fire<QuotaBinding> | null):
         const _a85 = sp.lineCells[v_L];
         for (let _i86 = 0; _i86 < _a85.length; _i86++) {
           const v_c = _a85[_i86];
-          if (!(!(b.known(v_c)))) continue;
-          if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, _h81); changed = true; } else facts.push(PLACE, v_c, _h81); }
+          if (!(!((b.grid[v_c] !== 0)))) continue;
+          if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, _h81); changed = true; } else facts.push(PLACE, v_c, _h81); }
           if (!(true)) {
             _q83 = false;
             break Q84;
@@ -354,7 +354,7 @@ export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding> | nu
         const _a117 = sp.lineCells[v_L];
         for (let _i118 = 0; _i118 < _a117.length; _i118++) {
           const v_c = _a117[_i118];
-          if (!((b.value(v_c) === v_d))) continue;
+          if (!(((b.grid[v_c] || -1) === v_d))) continue;
           _g115++;
         }
       }
@@ -365,7 +365,7 @@ export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding> | nu
           const _a122 = sp.lineCells[v_L];
           for (let _i123 = 0; _i123 < _a122.length; _i123++) {
             const v_c = _a122[_i123];
-            if (!((b.value(v_c) === _h125))) continue;
+            if (!(((b.grid[v_c] || -1) === _h125))) continue;
             _g120++;
           }
         }
@@ -383,7 +383,7 @@ export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding> | nu
             const _a134 = v_W;
             for (let _i135 = 0; _i135 < _a134.length; _i135++) {
               const v_c = _a134[_i135];
-              if (!((b.value(v_c) !== v_d))) {
+              if (!(((b.grid[v_c] || -1) !== v_d))) {
                 _q132 = false;
                 break Q133;
               }
@@ -396,7 +396,7 @@ export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding> | nu
               const _a138 = v_W;
               for (let _i139 = 0; _i139 < _a138.length; _i139++) {
                 const v_c = _a138[_i139];
-                if (!(!(b.known(v_c)))) continue;
+                if (!(!((b.grid[v_c] !== 0)))) continue;
                 _g136++;
               }
             }
@@ -410,8 +410,8 @@ export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding> | nu
             const _a143 = sp.lineCells[v_L];
             for (let _i144 = 0; _i144 < _a143.length; _i144++) {
               const v_c = _a143[_i144];
-              if (!((!(b.known(v_c)) && !(v_W.includes(v_c))))) continue;
-              if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, _h125); changed = true; } else facts.push(PLACE, v_c, _h125); }
+              if (!((!((b.grid[v_c] !== 0)) && !(v_W.includes(v_c))))) continue;
+              if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, _h125); changed = true; } else facts.push(PLACE, v_c, _h125); }
               if (!(true)) {
                 _q141 = false;
                 break Q142;
@@ -457,7 +457,7 @@ export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding> | null
         const _a169 = sp.lineCells[v_A];
         for (let _i170 = 0; _i170 < _a169.length; _i170++) {
           const v_c = _a169[_i170];
-          if (!((b.value(v_c) === v_d))) continue;
+          if (!(((b.grid[v_c] || -1) === v_d))) continue;
           _g167++;
         }
       }
@@ -474,7 +474,7 @@ export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding> | null
             const _a176 = sp.lineCells[v_B];
             for (let _i177 = 0; _i177 < _a176.length; _i177++) {
               const v_c = _a176[_i177];
-              if (!((b.value(v_c) === v_d))) continue;
+              if (!(((b.grid[v_c] || -1) === v_d))) continue;
               _g174++;
             }
           }
@@ -486,8 +486,8 @@ export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding> | null
           Q181: {
             const _t182 = (sp.lineCells[v_A].length - 1);
             for (let v_j = 0; v_j <= _t182; v_j++) {
-              if (!((b.value((sp.lineCells[v_B][v_j] ?? -1)) === v_d))) continue;
-              if (!((b.value((sp.lineCells[v_A][v_j] ?? -1)) === v_d))) {
+              if (!(((b.grid[(sp.lineCells[v_B][v_j] ?? -1)] || -1) === v_d))) continue;
+              if (!(((b.grid[(sp.lineCells[v_A][v_j] ?? -1)] || -1) === v_d))) {
                 _q180 = false;
                 break Q181;
               }
@@ -498,11 +498,11 @@ export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding> | null
         if (!(_c183)) continue;
         const _t184 = (sp.lineCells[v_A].length - 1);
         for (let v_j = 0; v_j <= _t184; v_j++) {
-          if (!(((b.value((sp.lineCells[v_A][v_j] ?? -1)) === v_d) && !(b.known((sp.lineCells[v_B][v_j] ?? -1)))))) continue;
+          if (!((((b.grid[(sp.lineCells[v_A][v_j] ?? -1)] || -1) === v_d) && !((b.grid[(sp.lineCells[v_B][v_j] ?? -1)] !== 0))))) continue;
           facts.length = 0;
           changed = false;
           const _t187 = (sp.lineCells[v_B][v_j] ?? -1);
-          if (!b.known(_t187)) { if (fire === null) { b.placeAt(_t187, _h186); changed = true; } else facts.push(PLACE, _t187, _h186); }
+          if (!(b.grid[_t187] !== 0)) { if (fire === null) { b.placeAt(_t187, _h186); changed = true; } else facts.push(PLACE, _t187, _h186); }
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;

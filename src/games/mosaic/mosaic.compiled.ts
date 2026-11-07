@@ -94,7 +94,7 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
       const _a13 = within(sp, v_c, 1);
       for (let _i14 = 0; _i14 < _a13.length; _i14++) {
         const v_d = _a13[_i14];
-        if (!((b.value(v_d) === 1))) continue;
+        if (!(((b.grid[v_d] || -1) === 1))) continue;
         _g11++;
       }
     }
@@ -104,7 +104,7 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
       const _a17 = within(sp, v_c, 1);
       for (let _i18 = 0; _i18 < _a17.length; _i18++) {
         const v_d = _a17[_i18];
-        if (!((b.value(v_d) !== 2))) continue;
+        if (!(((b.grid[v_d] || -1) !== 2))) continue;
         _g15++;
       }
     }
@@ -122,8 +122,8 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
             const _a22 = within(sp, v_c, 1);
             for (let _i23 = 0; _i23 < _a22.length; _i23++) {
               const v_d = _a22[_i23];
-              if (!(!(b.known(v_d)))) continue;
-              if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
+              if (!(!((b.grid[v_d] !== 0)))) continue;
+              if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
               if (!(true)) {
                 _q20 = false;
                 break Q21;
@@ -143,8 +143,8 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
             const _a28 = within(sp, v_c, 1);
             for (let _i29 = 0; _i29 < _a28.length; _i29++) {
               const v_d = _a28[_i29];
-              if (!(!(b.known(v_d)))) continue;
-              if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
+              if (!(!((b.grid[v_d] !== 0)))) continue;
+              if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
               if (!(true)) {
                 _q26 = false;
                 break Q27;
@@ -191,7 +191,7 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
         const _a70 = within(sp, v_c, 1);
         for (let _i71 = 0; _i71 < _a70.length; _i71++) {
           const v_d = _a70[_i71];
-          if (!(b.known(v_d))) {
+          if (!((b.grid[v_d] !== 0))) {
             _q68 = true;
             break Q69;
           }
@@ -212,7 +212,7 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
             const _a77 = within(sp, v_b, 1);
             for (let _i78 = 0; _i78 < _a77.length; _i78++) {
               const v_d = _a77[_i78];
-              if (!(b.known(v_d))) {
+              if (!((b.grid[v_d] !== 0))) {
                 _q75 = true;
                 break Q76;
               }
@@ -228,7 +228,7 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
           const _a83 = within(sp, v_c, 1);
           for (let _i84 = 0; _i84 < _a83.length; _i84++) {
             const v_d = _a83[_i84];
-            if (!((b.value(v_d) === 1))) continue;
+            if (!(((b.grid[v_d] || -1) === 1))) continue;
             _g81++;
           }
         }
@@ -238,7 +238,7 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
           const _a87 = within(sp, v_b, 1);
           for (let _i88 = 0; _i88 < _a87.length; _i88++) {
             const v_d = _a87[_i88];
-            if (!((b.value(v_d) === 1))) continue;
+            if (!(((b.grid[v_d] || -1) === 1))) continue;
             _g85++;
           }
         }
@@ -248,7 +248,7 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
           const _a93 = within(sp, v_c, 1);
           for (let _i94 = 0; _i94 < _a93.length; _i94++) {
             const v_d = _a93[_i94];
-            if (!((!(b.known(v_d)) && !(((Math.abs(((v_d % sp.w) - _h95)) <= 1) && (Math.abs((((v_d / sp.w) | 0) - _h96)) <= 1)))))) continue;
+            if (!((!((b.grid[v_d] !== 0)) && !(((Math.abs(((v_d % sp.w) - _h95)) <= 1) && (Math.abs((((v_d / sp.w) | 0) - _h96)) <= 1)))))) continue;
             _g89.push(v_d);
           }
         }
@@ -264,7 +264,7 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
                 const _a103 = within(sp, v_b, 1);
                 for (let _i104 = 0; _i104 < _a103.length; _i104++) {
                   const v_d = _a103[_i104];
-                  if (!((!(b.known(v_d)) && !(((Math.abs(((v_d % sp.w) - _h105)) <= 1) && (Math.abs((((v_d / sp.w) | 0) - _h106)) <= 1)))))) continue;
+                  if (!((!((b.grid[v_d] !== 0)) && !(((Math.abs(((v_d % sp.w) - _h105)) <= 1) && (Math.abs((((v_d / sp.w) | 0) - _h106)) <= 1)))))) continue;
                   _g99.push(v_d);
                 }
               }
@@ -282,7 +282,7 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
               const _a111 = v_O;
               for (let _i112 = 0; _i112 < _a111.length; _i112++) {
                 const v_d = _a111[_i112];
-                if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
+                if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
                 if (!(true)) {
                   _q109 = false;
                   break Q110;
@@ -302,14 +302,14 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
                   const _a120 = within(sp, v_b, 1);
                   for (let _i121 = 0; _i121 < _a120.length; _i121++) {
                     const v_d = _a120[_i121];
-                    if (!((!(b.known(v_d)) && !(((Math.abs(((v_d % sp.w) - _h105)) <= 1) && (Math.abs((((v_d / sp.w) | 0) - _h106)) <= 1)))))) continue;
+                    if (!((!((b.grid[v_d] !== 0)) && !(((Math.abs(((v_d % sp.w) - _h105)) <= 1) && (Math.abs((((v_d / sp.w) | 0) - _h106)) <= 1)))))) continue;
                     _g116.push(v_d);
                   }
                 }
                 const _a122 = _g116;
                 for (let _i123 = 0; _i123 < _a122.length; _i123++) {
                   const v_d = _a122[_i123];
-                  if (!b.known(v_d)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
+                  if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
                   if (!(true)) {
                     _q114 = false;
                     break Q115;

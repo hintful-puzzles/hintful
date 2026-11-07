@@ -146,7 +146,7 @@ export function besideShaded(b: Marks, sp: GridSpace, fire: Fire<BesideShadedBin
   const _a5 = sp.cells;
   for (let _i6 = 0; _i6 < _a5.length; _i6++) {
     const v_c = _a5[_i6];
-    if (!((b.value(v_c) === 1))) continue;
+    if (!(((b.grid[v_c] || -1) === 1))) continue;
     facts.length = 0;
     changed = false;
     let _q7 = true;
@@ -154,9 +154,9 @@ export function besideShaded(b: Marks, sp: GridSpace, fire: Fire<BesideShadedBin
       const _a9 = sp.adj4[v_c];
       for (let _i10 = 0; _i10 < _a9.length; _i10++) {
         const v_p = _a9[_i10];
-        let _c11: boolean = (b.value(v_p) !== 1);
+        let _c11: boolean = ((b.grid[v_p] || -1) !== 1);
         if (_c11) {
-          if (!b.known(v_p)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
+          if (!(b.grid[v_p] !== 0)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
           _c11 = true;
         }
         if (!(_c11)) {
@@ -206,7 +206,7 @@ export function capped(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CappedBind
           let _g61 = -1;
           G62: {
             for (let v_i = 0; v_i <= _h63; v_i++) {
-              if (!(((v_i === _h63) || (b.value((_t60[v_i] ?? -1)) !== 2)))) continue;
+              if (!(((v_i === _h63) || ((b.grid[(_t60[v_i] ?? -1)] || -1) !== 2)))) continue;
               _g61 = v_i;
               break G62;
             }
@@ -225,7 +225,7 @@ export function capped(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CappedBind
         let _g66 = -1;
         G67: {
           for (let v_i = 0; v_i <= _h68; v_i++) {
-            if (!(((v_i === _h68) || (b.value((v_R[v_i] ?? -1)) !== 2)))) continue;
+            if (!(((v_i === _h68) || ((b.grid[(v_R[v_i] ?? -1)] || -1) !== 2)))) continue;
             _g66 = v_i;
             break G67;
           }
@@ -235,7 +235,7 @@ export function capped(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CappedBind
           let _g71 = -1;
           G72: {
             for (let v_i = 0; v_i <= _h68; v_i++) {
-              if (!(((v_i === _h68) || (b.value((v_R[v_i] ?? -1)) === 1)))) continue;
+              if (!(((v_i === _h68) || ((b.grid[(v_R[v_i] ?? -1)] || -1) === 1)))) continue;
               _g71 = v_i;
               break G72;
             }
@@ -244,7 +244,7 @@ export function capped(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CappedBind
           let _g74 = -1;
           G75: {
             for (let v_i = _h68; v_i >= v_s; v_i--) {
-              if (!(((v_i === v_s) || (((v_i <= _t73) && (v_i <= _g71)) && ((v_i === _h68) || (b.value((v_R[v_i] ?? -1)) !== 2)))))) continue;
+              if (!(((v_i === v_s) || (((v_i <= _t73) && (v_i <= _g71)) && ((v_i === _h68) || ((b.grid[(v_R[v_i] ?? -1)] || -1) !== 2)))))) continue;
               _g74 = v_i;
               break G75;
             }
@@ -257,7 +257,7 @@ export function capped(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CappedBind
             let _c78: boolean = (v_s === _h68);
             if (!_c78) {
               const _t77 = (v_R[v_s] ?? -1);
-              if (!b.known(_t77)) { if (fire === null) { b.placeAt(_t77, 1); changed = true; } else facts.push(PLACE, _t77, 1); }
+              if (!(b.grid[_t77] !== 0)) { if (fire === null) { b.placeAt(_t77, 1); changed = true; } else facts.push(PLACE, _t77, 1); }
               _c78 = true;
             }
             _c79 = _c78;
@@ -308,7 +308,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
           let _g142 = -1;
           G143: {
             for (let v_i = 0; v_i <= _h144; v_i++) {
-              if (!(((v_i === _h144) || (b.value((_t141[v_i] ?? -1)) !== 2)))) continue;
+              if (!(((v_i === _h144) || ((b.grid[(_t141[v_i] ?? -1)] || -1) !== 2)))) continue;
               _g142 = v_i;
               break G143;
             }
@@ -328,7 +328,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
           let _g149 = -1;
           G150: {
             for (let v_i = 0; v_i <= _h151; v_i++) {
-              if (!(((v_i === _h151) || (b.value((v_B[v_i] ?? -1)) !== 2)))) continue;
+              if (!(((v_i === _h151) || ((b.grid[(v_B[v_i] ?? -1)] || -1) !== 2)))) continue;
               _g149 = v_i;
               break G150;
             }
@@ -337,7 +337,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
           let _g153 = -1;
           G154: {
             for (let v_i = 0; v_i <= _h151; v_i++) {
-              if (!(((v_i === _h151) || (b.value((v_B[v_i] ?? -1)) === 1)))) continue;
+              if (!(((v_i === _h151) || ((b.grid[(v_B[v_i] ?? -1)] || -1) === 1)))) continue;
               _g153 = v_i;
               break G154;
             }
@@ -346,7 +346,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
           let _g156 = -1;
           G157: {
             for (let v_i = _h151; v_i >= v_t; v_i--) {
-              if (!(((v_i === v_t) || (((v_i <= _t155) && (v_i <= _g153)) && ((v_i === _h151) || (b.value((v_B[v_i] ?? -1)) !== 2)))))) continue;
+              if (!(((v_i === v_t) || (((v_i <= _t155) && (v_i <= _g153)) && ((v_i === _h151) || ((b.grid[(v_B[v_i] ?? -1)] || -1) !== 2)))))) continue;
               _g156 = v_i;
               break G157;
             }
@@ -365,7 +365,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
         let _g160 = -1;
         G161: {
           for (let v_i = 0; v_i <= _h162; v_i++) {
-            if (!(((v_i === _h162) || (b.value((v_R[v_i] ?? -1)) !== 2)))) continue;
+            if (!(((v_i === _h162) || ((b.grid[(v_R[v_i] ?? -1)] || -1) !== 2)))) continue;
             _g160 = v_i;
             break G161;
           }
@@ -374,7 +374,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
         let _g163 = -1;
         G164: {
           for (let v_i = 0; v_i <= _h162; v_i++) {
-            if (!(((v_i === _h162) || (b.value((v_R[v_i] ?? -1)) === 1)))) continue;
+            if (!(((v_i === _h162) || ((b.grid[(v_R[v_i] ?? -1)] || -1) === 1)))) continue;
             _g163 = v_i;
             break G164;
           }
@@ -383,7 +383,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
         let _g166 = -1;
         G167: {
           for (let v_i = _h162; v_i >= v_s; v_i--) {
-            if (!(((v_i === v_s) || (((v_i <= _t165) && (v_i <= _g163)) && ((v_i === _h162) || (b.value((v_R[v_i] ?? -1)) !== 2)))))) continue;
+            if (!(((v_i === v_s) || (((v_i <= _t165) && (v_i <= _g163)) && ((v_i === _h162) || ((b.grid[(v_R[v_i] ?? -1)] || -1) !== 2)))))) continue;
             _g166 = v_i;
             break G167;
           }
@@ -400,7 +400,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
             for (let _i172 = 0; _i172 < _a171.length; _i172++) {
               const v_p = _a171[_i172];
               if (!((_i172 < _h174))) continue;
-              if (!b.known(v_p)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
+              if (!(b.grid[v_p] !== 0)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
               if (!(true)) {
                 _q169 = false;
                 break Q170;
@@ -438,7 +438,7 @@ export function cut(b: Marks, sp: GridSpace, fire: Fire<CutBinding> | null): num
     const _a188 = sp.cells;
     for (let _i189 = 0; _i189 < _a188.length; _i189++) {
       const v_c = _a188[_i189];
-      if (!((b.value(v_c) !== 1))) continue;
+      if (!(((b.grid[v_c] || -1) !== 1))) continue;
       _g184.push(v_c);
     }
   }
@@ -448,12 +448,12 @@ export function cut(b: Marks, sp: GridSpace, fire: Fire<CutBinding> | null): num
   const _a190 = v_K;
   for (let _i191 = 0; _i191 < _a190.length; _i191++) {
     const v_c = _a190[_i191];
-    if (!(!(b.known(v_c)))) continue;
+    if (!(!((b.grid[v_c] !== 0)))) continue;
     facts.length = 0;
     changed = false;
     let _c193: boolean = _h192;
     if (_c193) {
-      if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
+      if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
       _c193 = true;
     }
     if (!(_c193)) return -1;

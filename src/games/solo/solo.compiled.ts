@@ -140,8 +140,8 @@ export function boxSingle(b: Marks, sp: GridSpace, fire: Fire<BoxSingleBinding> 
       const _a22 = sp.lineCells[v_u];
       for (let _i23 = 0; _i23 < _a22.length; _i23++) {
         const v_c = _a22[_i23];
-        if (!(b.known(v_c))) continue;
-        const _t24 = b.value(v_c);
+        if (!((b.grid[v_c] !== 0))) continue;
+        const _t24 = (b.grid[v_c] || -1);
         _g18 |= 1 << _t24;
       }
     }
@@ -153,7 +153,7 @@ export function boxSingle(b: Marks, sp: GridSpace, fire: Fire<BoxSingleBinding> 
         const _a28 = sp.lineCells[v_u];
         for (let _i29 = 0; _i29 < _a28.length; _i29++) {
           const v_c = _a28[_i29];
-          if (!(b.has(v_c, v_d))) continue;
+          if (!((((b.cands[v_c] >> v_d) & 1) !== 0))) continue;
           _g26++;
         }
       }
@@ -170,7 +170,7 @@ export function boxSingle(b: Marks, sp: GridSpace, fire: Fire<BoxSingleBinding> 
             const _a34 = sp.lineCells[v_u];
             for (let _i35 = 0; _i35 < _a34.length; _i35++) {
               const v_c = _a34[_i35];
-              if (!(b.has(v_c, v_d))) continue;
+              if (!((((b.cands[v_c] >> v_d) & 1) !== 0))) continue;
               if (++_n33 === 2) {
                 _g31 = -1;
                 break G32;
@@ -178,7 +178,7 @@ export function boxSingle(b: Marks, sp: GridSpace, fire: Fire<BoxSingleBinding> 
               _g31 = v_c;
             }
           }
-          if (!b.known(_g31)) { if (fire === null) { b.placeAt(_g31, v_d); changed = true; } else facts.push(PLACE, _g31, v_d); }
+          if (!(b.grid[_g31] !== 0)) { if (fire === null) { b.placeAt(_g31, v_d); changed = true; } else facts.push(PLACE, _g31, v_d); }
           _c36 = true;
         }
         if (!(_c36)) return -1;
@@ -215,7 +215,7 @@ export function cageSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSi
       const _a56 = cl.cage.cells[v_r];
       for (let _i57 = 0; _i57 < _a56.length; _i57++) {
         const v_c = _a56[_i57];
-        if (!(!(b.known(v_c)))) continue;
+        if (!(!((b.grid[v_c] !== 0)))) continue;
         _g52.push(v_c);
       }
     }
@@ -229,16 +229,16 @@ export function cageSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSi
         const _a63 = cl.cage.cells[v_r];
         for (let _i64 = 0; _i64 < _a63.length; _i64++) {
           const v_c = _a63[_i64];
-          if (!(b.known(v_c))) continue;
-          _g61 += b.value(v_c);
+          if (!((b.grid[v_c] !== 0))) continue;
+          _g61 += (b.grid[v_c] || -1);
         }
       }
       const v_t = (_h60 - _g61);
       facts.length = 0;
       changed = false;
-      let _c65: boolean = (((v_t >= 1) && (v_t <= sp.w)) && b.has(v_c, v_t));
+      let _c65: boolean = (((v_t >= 1) && (v_t <= sp.w)) && (((b.cands[v_c] >> v_t) & 1) !== 0));
       if (_c65) {
-        if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, v_t); changed = true; } else facts.push(PLACE, v_c, v_t); }
+        if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, v_t); changed = true; } else facts.push(PLACE, v_c, v_t); }
         _c65 = true;
       }
       if (!(_c65)) return -1;
@@ -282,7 +282,7 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
           const _a148 = cl.cage.cells[v_r];
           for (let _i149 = 0; _i149 < _a148.length; _i149++) {
             const v_c = _a148[_i149];
-            if (!(b.known(v_c))) {
+            if (!((b.grid[v_c] !== 0))) {
               _q146 = true;
               break Q147;
             }
@@ -295,7 +295,7 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
             const _a152 = cl.cage.cells[v_r];
             for (let _i153 = 0; _i153 < _a152.length; _i153++) {
               const v_c = _a152[_i153];
-              if (!(!(b.known(v_c)))) continue;
+              if (!(!((b.grid[v_c] !== 0)))) continue;
               if (!((sp.lineCells[v_u].includes(v_c)))) {
                 _q150 = false;
                 break Q151;
@@ -318,7 +318,7 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
         const _a163 = cl.cage.cells[v_r];
         for (let _i164 = 0; _i164 < _a163.length; _i164++) {
           const v_c = _a163[_i164];
-          if (!((!(b.known(v_c)) && (sp.lineCells[v_u].includes(v_c))))) continue;
+          if (!((!((b.grid[v_c] !== 0)) && (sp.lineCells[v_u].includes(v_c))))) continue;
           if (!_g155.includes(v_c)) _g155.push(v_c);
         }
       }
@@ -339,8 +339,8 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
         const _a172 = sp.lineCells[v_u];
         for (let _i173 = 0; _i173 < _a172.length; _i173++) {
           const v_c = _a172[_i173];
-          if (!(b.known(v_c))) continue;
-          _g170 += b.value(v_c);
+          if (!((b.grid[v_c] !== 0))) continue;
+          _g170 += (b.grid[v_c] || -1);
         }
       }
       let _g174 = 0;
@@ -354,8 +354,8 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
             const _a181 = cl.cage.cells[v_r];
             for (let _i182 = 0; _i182 < _a181.length; _i182++) {
               const v_c = _a181[_i182];
-              if (!(b.known(v_c))) continue;
-              _g179 += b.value(v_c);
+              if (!((b.grid[v_c] !== 0))) continue;
+              _g179 += (b.grid[v_c] || -1);
             }
           }
           _g174 += (_h178 - _g179);
@@ -367,7 +367,7 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
         const _a187 = cl.cage.cells[cl.cage.of[(v_L.length > 0 ? v_L[0] : -1)]];
         for (let _i188 = 0; _i188 < _a187.length; _i188++) {
           const v_c = _a187[_i188];
-          if (!((!(b.known(v_c)) && !(v_L.includes(v_c))))) continue;
+          if (!((!((b.grid[v_c] !== 0)) && !(v_L.includes(v_c))))) continue;
           _g183.push(v_c);
         }
       }
@@ -380,8 +380,8 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
         const _a193 = cl.cage.cells[_t189];
         for (let _i194 = 0; _i194 < _a193.length; _i194++) {
           const v_c = _a193[_i194];
-          if (!(b.known(v_c))) continue;
-          _g191 += b.value(v_c);
+          if (!((b.grid[v_c] !== 0))) continue;
+          _g191 += (b.grid[v_c] || -1);
         }
       }
       const v_t = ((_h190 - _g191) - v_s);
@@ -391,10 +391,10 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
       if (_c198) {
         let _c197: boolean = (_h166 !== 1);
         if (!_c197) {
-          let _c196: boolean = ((v_s <= sp.w) && b.has((v_L.length > 0 ? v_L[0] : -1), v_s));
+          let _c196: boolean = ((v_s <= sp.w) && (((b.cands[(v_L.length > 0 ? v_L[0] : -1)] >> v_s) & 1) !== 0));
           if (_c196) {
             const _t195 = (v_L.length > 0 ? v_L[0] : -1);
-            if (!b.known(_t195)) { if (fire === null) { b.placeAt(_t195, v_s); changed = true; } else facts.push(PLACE, _t195, v_s); }
+            if (!(b.grid[_t195] !== 0)) { if (fire === null) { b.placeAt(_t195, v_s); changed = true; } else facts.push(PLACE, _t195, v_s); }
             _c196 = true;
           }
           _c197 = _c196;
@@ -420,10 +420,10 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
         }
         let _c207: boolean = _c204;
         if (!_c207) {
-          let _c206: boolean = (((v_t >= 1) && (v_t <= sp.w)) && b.has((v_R.length > 0 ? v_R[0] : -1), v_t));
+          let _c206: boolean = (((v_t >= 1) && (v_t <= sp.w)) && (((b.cands[(v_R.length > 0 ? v_R[0] : -1)] >> v_t) & 1) !== 0));
           if (_c206) {
             const _t205 = (v_R.length > 0 ? v_R[0] : -1);
-            if (!b.known(_t205)) { if (fire === null) { b.placeAt(_t205, v_t); changed = true; } else facts.push(PLACE, _t205, v_t); }
+            if (!(b.grid[_t205] !== 0)) { if (fire === null) { b.placeAt(_t205, v_t); changed = true; } else facts.push(PLACE, _t205, v_t); }
             _c206 = true;
           }
           _c207 = _c206;
@@ -466,7 +466,7 @@ export function cageMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageMi
       const _a228 = cl.cage.cells[v_r];
       for (let _i229 = 0; _i229 < _a228.length; _i229++) {
         const v_c = _a228[_i229];
-        const _h230 = b.known(v_c);
+        const _h230 = (b.grid[v_c] !== 0);
         if (!(!(_h230))) continue;
         _g224.push(v_c);
       }
@@ -477,9 +477,9 @@ export function cageMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageMi
       const _a234 = cl.cage.cells[v_r];
       for (let _i235 = 0; _i235 < _a234.length; _i235++) {
         const v_c = _a234[_i235];
-        const _h236 = b.known(v_c);
+        const _h236 = (b.grid[v_c] !== 0);
         if (!(_h236)) continue;
-        const _h237 = b.value(v_c);
+        const _h237 = (b.grid[v_c] || -1);
         _g232 += _h237;
       }
     }
@@ -493,7 +493,7 @@ export function cageMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageMi
         const _a241 = v_K;
         for (let _i242 = 0; _i242 < _a241.length; _i242++) {
           const v_c = _a241[_i242];
-          for (let _m243 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))); _m243 !== 0; _m243 &= _m243 - 1) {
+          for (let _m243 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m243 !== 0; _m243 &= _m243 - 1) {
             const v_d = 31 - Math.clz32(_m243 & -_m243);
             let _g244 = 0;
             G245: {
@@ -503,7 +503,7 @@ export function cageMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageMi
                 if (!((v_x !== v_c))) continue;
                 let _g248 = -1;
                 G249: {
-                  for (let _m250 = (cands[v_x] >= 0 ? cands[v_x] : (cands[v_x] = b.cand(v_x))); _m250 !== 0; _m250 &= _m250 - 1) {
+                  for (let _m250 = (cands[v_x] >= 0 ? cands[v_x] : (cands[v_x] = b.cands[v_x])); _m250 !== 0; _m250 &= _m250 - 1) {
                     const v_e = 31 - Math.clz32(_m250 & -_m250);
                     if (_g248 === -1 || v_e > _g248) _g248 = v_e;
                   }
@@ -521,7 +521,7 @@ export function cageMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageMi
                   if (!((v_x !== v_c))) continue;
                   let _g255 = -1;
                   G256: {
-                    for (let _m257 = (cands[v_x] >= 0 ? cands[v_x] : (cands[v_x] = b.cand(v_x))); _m257 !== 0; _m257 &= _m257 - 1) {
+                    for (let _m257 = (cands[v_x] >= 0 ? cands[v_x] : (cands[v_x] = b.cands[v_x])); _m257 !== 0; _m257 &= _m257 - 1) {
                       const v_e = 31 - Math.clz32(_m257 & -_m257);
                       if (_g255 === -1 || v_e < _g255) _g255 = v_e;
                     }
@@ -532,7 +532,7 @@ export function cageMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageMi
               _c258 = ((v_d + _g251) > v_t);
             }
             if (!(_c258)) continue;
-            if (b.has(v_c, v_d)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
+            if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
             if (!(true)) {
               _q239 = false;
               break Q240;
@@ -590,7 +590,7 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
           const _a355 = cl.cage.cells[v_r];
           for (let _i356 = 0; _i356 < _a355.length; _i356++) {
             const v_c = _a355[_i356];
-            const _h357 = b.known(v_c);
+            const _h357 = (b.grid[v_c] !== 0);
             if (!(_h357)) {
               _q353 = true;
               break Q354;
@@ -604,7 +604,7 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
             const _a360 = cl.cage.cells[v_r];
             for (let _i361 = 0; _i361 < _a360.length; _i361++) {
               const v_c = _a360[_i361];
-              const _h362 = b.known(v_c);
+              const _h362 = (b.grid[v_c] !== 0);
               if (!(!(_h362))) continue;
               if (!((sp.lineCells[v_u].includes(v_c)))) {
                 _q358 = false;
@@ -628,7 +628,7 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
         const _a372 = cl.cage.cells[v_r];
         for (let _i373 = 0; _i373 < _a372.length; _i373++) {
           const v_c = _a372[_i373];
-          const _h374 = b.known(v_c);
+          const _h374 = (b.grid[v_c] !== 0);
           if (!((!(_h374) && (sp.lineCells[v_u].includes(v_c))))) continue;
           if (!_g364.includes(v_c)) _g364.push(v_c);
         }
@@ -650,9 +650,9 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
         const _a382 = sp.lineCells[v_u];
         for (let _i383 = 0; _i383 < _a382.length; _i383++) {
           const v_c = _a382[_i383];
-          const _h384 = b.known(v_c);
+          const _h384 = (b.grid[v_c] !== 0);
           if (!(_h384)) continue;
-          const _h385 = b.value(v_c);
+          const _h385 = (b.grid[v_c] || -1);
           _g380 += _h385;
         }
       }
@@ -667,9 +667,9 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
             const _a393 = cl.cage.cells[v_r];
             for (let _i394 = 0; _i394 < _a393.length; _i394++) {
               const v_c = _a393[_i394];
-              const _h395 = b.known(v_c);
+              const _h395 = (b.grid[v_c] !== 0);
               if (!(_h395)) continue;
-              const _h396 = b.value(v_c);
+              const _h396 = (b.grid[v_c] || -1);
               _g391 += _h396;
             }
           }
@@ -684,7 +684,7 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
           const _a402 = cl.cage.cells[cl.cage.of[(v_L.length > 0 ? v_L[0] : -1)]];
           for (let _i403 = 0; _i403 < _a402.length; _i403++) {
             const v_c = _a402[_i403];
-            const _h404 = b.known(v_c);
+            const _h404 = (b.grid[v_c] !== 0);
             if (!((!(_h404) && !(v_L.includes(v_c))))) continue;
             _g398.push(v_c);
           }
@@ -697,9 +697,9 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
           const _a409 = cl.cage.cells[_t405];
           for (let _i410 = 0; _i410 < _a409.length; _i410++) {
             const v_c = _a409[_i410];
-            const _h411 = b.known(v_c);
+            const _h411 = (b.grid[v_c] !== 0);
             if (!(_h411)) continue;
-            const _h412 = b.value(v_c);
+            const _h412 = (b.grid[v_c] || -1);
             _g407 += _h412;
           }
         }
@@ -746,7 +746,7 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
               const _a430 = v_K;
               for (let _i431 = 0; _i431 < _a430.length; _i431++) {
                 const v_c = _a430[_i431];
-                for (let _m432 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))); _m432 !== 0; _m432 &= _m432 - 1) {
+                for (let _m432 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m432 !== 0; _m432 &= _m432 - 1) {
                   const v_d = 31 - Math.clz32(_m432 & -_m432);
                   let _g433 = 0;
                   G434: {
@@ -756,7 +756,7 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
                       if (!((v_x !== v_c))) continue;
                       let _g437 = -1;
                       G438: {
-                        for (let _m439 = (cands[v_x] >= 0 ? cands[v_x] : (cands[v_x] = b.cand(v_x))); _m439 !== 0; _m439 &= _m439 - 1) {
+                        for (let _m439 = (cands[v_x] >= 0 ? cands[v_x] : (cands[v_x] = b.cands[v_x])); _m439 !== 0; _m439 &= _m439 - 1) {
                           const v_e = 31 - Math.clz32(_m439 & -_m439);
                           if (_g437 === -1 || v_e > _g437) _g437 = v_e;
                         }
@@ -774,7 +774,7 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
                         if (!((v_x !== v_c))) continue;
                         let _g444 = -1;
                         G445: {
-                          for (let _m446 = (cands[v_x] >= 0 ? cands[v_x] : (cands[v_x] = b.cand(v_x))); _m446 !== 0; _m446 &= _m446 - 1) {
+                          for (let _m446 = (cands[v_x] >= 0 ? cands[v_x] : (cands[v_x] = b.cands[v_x])); _m446 !== 0; _m446 &= _m446 - 1) {
                             const v_e = 31 - Math.clz32(_m446 & -_m446);
                             if (_g444 === -1 || v_e < _g444) _g444 = v_e;
                           }
@@ -785,7 +785,7 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
                     _c447 = ((v_d + _g440) > v_v);
                   }
                   if (!(_c447)) continue;
-                  if (b.has(v_c, v_d)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
+                  if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
                   if (!(true)) {
                     _q428 = false;
                     break Q429;
@@ -833,7 +833,7 @@ export function cageSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSums
       const _a467 = cl.cage.cells[v_r];
       for (let _i468 = 0; _i468 < _a467.length; _i468++) {
         const v_c = _a467[_i468];
-        const _h469 = b.known(v_c);
+        const _h469 = (b.grid[v_c] !== 0);
         if (!(!(_h469))) continue;
         _g463.push(v_c);
       }
@@ -845,9 +845,9 @@ export function cageSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSums
       const _a473 = cl.cage.cells[v_r];
       for (let _i474 = 0; _i474 < _a473.length; _i474++) {
         const v_c = _a473[_i474];
-        const _h475 = b.known(v_c);
+        const _h475 = (b.grid[v_c] !== 0);
         if (!(_h475)) continue;
-        const _h476 = b.value(v_c);
+        const _h476 = (b.grid[v_c] || -1);
         _g471 += _h476;
       }
     }
@@ -888,7 +888,7 @@ export function cageSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSums
                     const _a509 = v_K;
                     for (let _i510 = 0; _i510 < _a509.length; _i510++) {
                       const v_x = _a509[_i510];
-                      if (!(((v_T & (cands[v_x] >= 0 ? cands[v_x] : (cands[v_x] = b.cand(v_x)))) !== 0))) {
+                      if (!(((v_T & (cands[v_x] >= 0 ? cands[v_x] : (cands[v_x] = b.cands[v_x]))) !== 0))) {
                         _q507 = false;
                         break Q508;
                       }
@@ -912,10 +912,10 @@ export function cageSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSums
                 const _a516 = v_K;
                 for (let _i517 = 0; _i517 < _a516.length; _i517++) {
                   const v_c = _a516[_i517];
-                  for (let _m518 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))); _m518 !== 0; _m518 &= _m518 - 1) {
+                  for (let _m518 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m518 !== 0; _m518 &= _m518 - 1) {
                     const v_d = 31 - Math.clz32(_m518 & -_m518);
                     if (!(!(((v_P >> v_d) & 1) !== 0))) continue;
-                    if (b.has(v_c, v_d)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
+                    if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
                     if (!(true)) {
                       _q514 = false;
                       break Q515;
@@ -984,7 +984,7 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
           const _a618 = cl.cage.cells[v_r];
           for (let _i619 = 0; _i619 < _a618.length; _i619++) {
             const v_c = _a618[_i619];
-            const _h620 = b.known(v_c);
+            const _h620 = (b.grid[v_c] !== 0);
             if (!(_h620)) {
               _q616 = true;
               break Q617;
@@ -998,7 +998,7 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
             const _a623 = cl.cage.cells[v_r];
             for (let _i624 = 0; _i624 < _a623.length; _i624++) {
               const v_c = _a623[_i624];
-              const _h625 = b.known(v_c);
+              const _h625 = (b.grid[v_c] !== 0);
               if (!(!(_h625))) continue;
               if (!((sp.lineCells[v_u].includes(v_c)))) {
                 _q621 = false;
@@ -1022,7 +1022,7 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
         const _a635 = cl.cage.cells[v_r];
         for (let _i636 = 0; _i636 < _a635.length; _i636++) {
           const v_c = _a635[_i636];
-          const _h637 = b.known(v_c);
+          const _h637 = (b.grid[v_c] !== 0);
           if (!((!(_h637) && (sp.lineCells[v_u].includes(v_c))))) continue;
           if (!_g627.includes(v_c)) _g627.push(v_c);
         }
@@ -1044,9 +1044,9 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
         const _a645 = sp.lineCells[v_u];
         for (let _i646 = 0; _i646 < _a645.length; _i646++) {
           const v_c = _a645[_i646];
-          const _h647 = b.known(v_c);
+          const _h647 = (b.grid[v_c] !== 0);
           if (!(_h647)) continue;
-          const _h648 = b.value(v_c);
+          const _h648 = (b.grid[v_c] || -1);
           _g643 += _h648;
         }
       }
@@ -1061,9 +1061,9 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
             const _a656 = cl.cage.cells[v_r];
             for (let _i657 = 0; _i657 < _a656.length; _i657++) {
               const v_c = _a656[_i657];
-              const _h658 = b.known(v_c);
+              const _h658 = (b.grid[v_c] !== 0);
               if (!(_h658)) continue;
-              const _h659 = b.value(v_c);
+              const _h659 = (b.grid[v_c] || -1);
               _g654 += _h659;
             }
           }
@@ -1078,7 +1078,7 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
           const _a665 = cl.cage.cells[cl.cage.of[(v_L.length > 0 ? v_L[0] : -1)]];
           for (let _i666 = 0; _i666 < _a665.length; _i666++) {
             const v_c = _a665[_i666];
-            const _h667 = b.known(v_c);
+            const _h667 = (b.grid[v_c] !== 0);
             if (!((!(_h667) && !(v_L.includes(v_c))))) continue;
             _g661.push(v_c);
           }
@@ -1091,9 +1091,9 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
           const _a672 = cl.cage.cells[_t668];
           for (let _i673 = 0; _i673 < _a672.length; _i673++) {
             const v_c = _a672[_i673];
-            const _h674 = b.known(v_c);
+            const _h674 = (b.grid[v_c] !== 0);
             if (!(_h674)) continue;
-            const _h675 = b.value(v_c);
+            const _h675 = (b.grid[v_c] || -1);
             _g670 += _h675;
           }
         }
@@ -1163,7 +1163,7 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
                       const _a721 = v_K;
                       for (let _i722 = 0; _i722 < _a721.length; _i722++) {
                         const v_x = _a721[_i722];
-                        if (!(((v_T & (cands[v_x] >= 0 ? cands[v_x] : (cands[v_x] = b.cand(v_x)))) !== 0))) {
+                        if (!(((v_T & (cands[v_x] >= 0 ? cands[v_x] : (cands[v_x] = b.cands[v_x]))) !== 0))) {
                           _q719 = false;
                           break Q720;
                         }
@@ -1187,10 +1187,10 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
                   const _a728 = v_K;
                   for (let _i729 = 0; _i729 < _a728.length; _i729++) {
                     const v_c = _a728[_i729];
-                    for (let _m730 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cand(v_c))); _m730 !== 0; _m730 &= _m730 - 1) {
+                    for (let _m730 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m730 !== 0; _m730 &= _m730 - 1) {
                       const v_d = 31 - Math.clz32(_m730 & -_m730);
                       if (!(!(((v_P >> v_d) & 1) !== 0))) continue;
-                      if (b.has(v_c, v_d)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
+                      if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
                       if (!(true)) {
                         _q726 = false;
                         break Q727;
@@ -1257,7 +1257,7 @@ export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> 
           const _a770 = sp.lineCells[v_L];
           for (let _i771 = 0; _i771 < _a770.length; _i771++) {
             const v_c = _a770[_i771];
-            const _h772 = b.value(v_c);
+            const _h772 = (b.grid[v_c] || -1);
             if ((_h772 === v_d)) {
               _q768 = true;
               break Q769;
@@ -1271,7 +1271,7 @@ export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> 
             const _a775 = sp.lineCells[v_b];
             for (let _i776 = 0; _i776 < _a775.length; _i776++) {
               const v_c = _a775[_i776];
-              const _h777 = b.value(v_c);
+              const _h777 = (b.grid[v_c] || -1);
               if ((_h777 === v_d)) {
                 _q773 = true;
                 break Q774;
@@ -1286,7 +1286,7 @@ export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> 
           const _a781 = sp.lineCells[v_L];
           for (let _i782 = 0; _i782 < _a781.length; _i782++) {
             const v_c = _a781[_i782];
-            if (!(b.has(v_c, v_d))) continue;
+            if (!((((b.cands[v_c] >> v_d) & 1) !== 0))) continue;
             if (!((sp.boxOf[v_c] === v_b))) {
               _q779 = false;
               break Q780;
@@ -1301,7 +1301,7 @@ export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> 
             for (let _i786 = 0; _i786 < _a785.length; _i786++) {
               const v_c = _a785[_i786];
               if (!(!(sp.lineCells[v_L].includes(v_c)))) continue;
-              if (b.has(v_c, v_d)) {
+              if ((((b.cands[v_c] >> v_d) & 1) !== 0)) {
                 _q783 = true;
                 break Q784;
               }
@@ -1319,8 +1319,8 @@ export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> 
             const _a790 = sp.lineCells[v_b];
             for (let _i791 = 0; _i791 < _a790.length; _i791++) {
               const v_c = _a790[_i791];
-              if (!((!(sp.lineCells[v_L].includes(v_c)) && b.has(v_c, v_d)))) continue;
-              if (b.has(v_c, v_d)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
+              if (!((!(sp.lineCells[v_L].includes(v_c)) && (((b.cands[v_c] >> v_d) & 1) !== 0)))) continue;
+              if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
               if (!(true)) {
                 _q788 = false;
                 break Q789;
@@ -1338,7 +1338,7 @@ export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> 
               const _a795 = sp.lineCells[v_b];
               for (let _i796 = 0; _i796 < _a795.length; _i796++) {
                 const v_c = _a795[_i796];
-                if (!(b.has(v_c, v_d))) continue;
+                if (!((((b.cands[v_c] >> v_d) & 1) !== 0))) continue;
                 if (!((sp.lineCells[v_L].includes(v_c)))) {
                   _q793 = false;
                   break Q794;
@@ -1352,8 +1352,8 @@ export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> 
                 const _a799 = sp.lineCells[v_L];
                 for (let _i800 = 0; _i800 < _a799.length; _i800++) {
                   const v_c = _a799[_i800];
-                  if (!(((sp.boxOf[v_c] !== v_b) && b.has(v_c, v_d)))) continue;
-                  if (b.has(v_c, v_d)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
+                  if (!(((sp.boxOf[v_c] !== v_b) && (((b.cands[v_c] >> v_d) & 1) !== 0)))) continue;
+                  if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
                   if (!(true)) {
                     _q797 = false;
                     break Q798;
@@ -1407,7 +1407,7 @@ export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | 
           const _a857 = sp.lineCells[v_L];
           for (let _i858 = 0; _i858 < _a857.length; _i858++) {
             const v_c = _a857[_i858];
-            const _h859 = b.value(v_c);
+            const _h859 = (b.grid[v_c] || -1);
             if ((_h859 === v_d)) {
               _q855 = true;
               break Q856;
@@ -1426,7 +1426,7 @@ export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | 
       const _a866 = sp.cells;
       for (let _i867 = 0; _i867 < _a866.length; _i867++) {
         const v_c = _a866[_i867];
-        const _h868 = b.value(v_c);
+        const _h868 = (b.grid[v_c] || -1);
         if (!((_h868 === v_d))) continue;
         const _t869 = (v_c % sp.w);
         _g862 |= 1 << _t869;
@@ -1450,7 +1450,7 @@ export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | 
             const _a888 = sp.lineCells[v_L];
             for (let _i889 = 0; _i889 < _a888.length; _i889++) {
               const v_c = _a888[_i889];
-              if (((((v_T >> (v_c % sp.w)) & 1) !== 0) && b.has(v_c, v_d))) {
+              if (((((v_T >> (v_c % sp.w)) & 1) !== 0) && (((b.cands[v_c] >> v_d) & 1) !== 0))) {
                 _q886 = true;
                 break Q887;
               }
@@ -1478,7 +1478,7 @@ export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | 
                 const _a898 = sp.lineCells[v_L];
                 for (let _i899 = 0; _i899 < _a898.length; _i899++) {
                   const v_c = _a898[_i899];
-                  if (b.has(v_c, v_d)) {
+                  if ((((b.cands[v_c] >> v_d) & 1) !== 0)) {
                     _q896 = true;
                     break Q897;
                   }
@@ -1502,8 +1502,8 @@ export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | 
               const _a905 = sp.lineCells[v_L];
               for (let _i906 = 0; _i906 < _a905.length; _i906++) {
                 const v_c = _a905[_i906];
-                if (!(((((_h907 >> (v_c % sp.w)) & 1) !== 0) && b.has(v_c, v_d)))) continue;
-                if (b.has(v_c, v_d)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
+                if (!(((((_h907 >> (v_c % sp.w)) & 1) !== 0) && (((b.cands[v_c] >> v_d) & 1) !== 0)))) continue;
+                if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
                 if (!(true)) {
                   _q901 = false;
                   break Q902;

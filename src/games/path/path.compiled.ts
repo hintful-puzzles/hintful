@@ -338,7 +338,7 @@ export function forced(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ForcedBind
       const _a322 = sp.adj4[v_c];
       for (let _i323 = 0; _i323 < _a322.length; _i323++) {
         const v_y = _a322[_i323];
-        if (!((b.value(sp.edgeOf(v_c, v_y)) === 1))) continue;
+        if (!(((b.grid[sp.edgeOf(v_c, v_y)] || -1) === 1))) continue;
         _g320++;
       }
     }
@@ -360,7 +360,7 @@ export function forced(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ForcedBind
             const _n331 = _i329;
             for (let _i332 = 0; _i332 < _n331; _i332++) {
               const v_j = _a330[_i332];
-              let _c346: boolean = !(throughWhere(sp, v_i, (_te333: number): boolean => {  return (b.value(_te333) === 1); }).includes(v_j));
+              let _c346: boolean = !(throughWhere(sp, v_i, (_te333: number): boolean => {  return ((b.grid[_te333] || -1) === 1); }).includes(v_j));
               if (_c346) {
                 let _c345: boolean = _h336;
                 if (!_c345) {
@@ -402,7 +402,7 @@ export function forced(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ForcedBind
           for (let _i351 = 0; _i351 < _a350.length; _i351++) {
             const v_y = _a350[_i351];
             const _t352 = sp.edgeOf(v_c, v_y);
-            if (!b.known(_t352)) { if (fire === null) { b.placeAt(_t352, 1); changed = true; } else facts.push(PLACE, _t352, 1); }
+            if (!(b.grid[_t352] !== 0)) { if (fire === null) { b.placeAt(_t352, 1); changed = true; } else facts.push(PLACE, _t352, 1); }
             if (!(true)) {
               _q348 = false;
               break Q349;
@@ -456,14 +456,14 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
     const v_a = sp.edgeEnds[2 * v_e];
     L1009: {
       const v_b = sp.edgeEnds[2 * v_e + 1];
-      let _c1066: boolean = !(b.known(sp.edgeOf(v_a, v_b)));
+      let _c1066: boolean = !((b.grid[sp.edgeOf(v_a, v_b)] !== 0));
       if (_c1066) {
         let _g1036 = 0;
         G1037: {
           const _a1038 = sp.adj4[v_a];
           for (let _i1039 = 0; _i1039 < _a1038.length; _i1039++) {
             const v_y = _a1038[_i1039];
-            if (!((b.value(sp.edgeOf(v_a, v_y)) === 1))) continue;
+            if (!(((b.grid[sp.edgeOf(v_a, v_y)] || -1) === 1))) continue;
             _g1036++;
           }
         }
@@ -506,7 +506,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
           const _a1095 = sp.adj4[v_b];
           for (let _i1096 = 0; _i1096 < _a1095.length; _i1096++) {
             const v_y = _a1095[_i1096];
-            if (!((b.value(sp.edgeOf(v_b, v_y)) === 1))) continue;
+            if (!(((b.grid[sp.edgeOf(v_b, v_y)] || -1) === 1))) continue;
             _g1093++;
           }
         }
@@ -563,15 +563,15 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
         }
         _c1131 = _q1123;
       }
-      let _c1763: boolean = (_c1131 && (_h1056 || !(throughWhere(sp, v_a, (_te1132: number): boolean => {  return (b.value(_te1132) === 1); }).includes(v_b))));
+      let _c1763: boolean = (_c1131 && (_h1056 || !(throughWhere(sp, v_a, (_te1132: number): boolean => {  return ((b.grid[_te1132] || -1) === 1); }).includes(v_b))));
       if (_c1763) {
-        let _c1762: boolean = (throughWhere(sp, v_a, (_te1133: number): boolean => {  return (b.value(_te1133) === 1); }).includes(v_b));
+        let _c1762: boolean = (throughWhere(sp, v_a, (_te1133: number): boolean => {  return ((b.grid[_te1133] || -1) === 1); }).includes(v_b));
         if (!_c1762) {
           const _wc1134 = v_e;
           const _wd1135 = 1;
           let _q1136 = false;
           Q1137: {
-            const _a1139 = throughWhere(sp, v_a, (_te1138: number): boolean => {  return ((_te1138 === _wc1134 ? _wd1135 : b.value(_te1138)) === 1); });
+            const _a1139 = throughWhere(sp, v_a, (_te1138: number): boolean => {  return ((_te1138 === _wc1134 ? _wd1135 : (b.grid[_te1138] || -1)) === 1); });
             for (let _i1140 = 0; _i1140 < _a1139.length; _i1140++) {
               const v_t = _a1139[_i1140];
               let _c1160: boolean = (((v_t === v_a) || (v_t === v_b)) || (v_t === v_b));
@@ -582,7 +582,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                   for (let _i1144 = 0; _i1144 < _a1143.length; _i1144++) {
                     const v_y = _a1143[_i1144];
                     const _t1145 = sp.edgeOf(v_t, v_y);
-                    if (!(((_t1145 === _wc1134 ? _wd1135 : b.value(_t1145)) === 1))) continue;
+                    if (!(((_t1145 === _wc1134 ? _wd1135 : (b.grid[_t1145] || -1)) === 1))) continue;
                     _g1141++;
                   }
                 }
@@ -625,7 +625,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                 for (let _i1164 = 0; _i1164 < _a1163.length; _i1164++) {
                   const v_y = _a1163[_i1164];
                   const _t1165 = sp.edgeOf(v_t, v_y);
-                  if (!(((_t1165 === _wc1134 ? _wd1135 : b.value(_t1165)) === 1))) continue;
+                  if (!(((_t1165 === _wc1134 ? _wd1135 : (b.grid[_t1165] || -1)) === 1))) continue;
                   _g1161++;
                 }
               }
@@ -667,7 +667,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                   for (let _i1183 = 0; _i1183 < _a1182.length; _i1183++) {
                     const v_y = _a1182[_i1183];
                     const _t1184 = sp.edgeOf(v_t, v_y);
-                    let _c1204: boolean = !((_t1184 === _wc1134 ? true : b.known(_t1184)));
+                    let _c1204: boolean = !((_t1184 === _wc1134 ? true : (b.grid[_t1184] !== 0)));
                     if (_c1204) {
                       let _g1185 = 0;
                       G1186: {
@@ -675,7 +675,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                         for (let _i1188 = 0; _i1188 < _a1187.length; _i1188++) {
                           const v_y = _a1187[_i1188];
                           const _t1189 = sp.edgeOf(v_t, v_y);
-                          if (!(((_t1189 === _wc1134 ? _wd1135 : b.value(_t1189)) === 1))) continue;
+                          if (!(((_t1189 === _wc1134 ? _wd1135 : (b.grid[_t1189] || -1)) === 1))) continue;
                           _g1185++;
                         }
                       }
@@ -719,7 +719,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                         for (let _i1209 = 0; _i1209 < _a1208.length; _i1209++) {
                           const v_y_1207 = _a1208[_i1209];
                           const _t1210 = sp.edgeOf(v_y, v_y_1207);
-                          if (!(((_t1210 === _wc1134 ? _wd1135 : b.value(_t1210)) === 1))) continue;
+                          if (!(((_t1210 === _wc1134 ? _wd1135 : (b.grid[_t1210] || -1)) === 1))) continue;
                           _g1205++;
                         }
                       }
@@ -771,7 +771,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                         }
                         _g1235.length = 0;
                         G1236: {
-                          const _a1255 = throughWhere(sp, v_t, (_te1250: number): boolean => { let _c1252: boolean = ((_te1250 === _wc1134 ? _wd1135 : b.value(_te1250)) === 1); if (_c1252) {   const _t1251 = sp.edgeEnds[2 * _te1250];   _c1252 = !((clueAt(cl.number, _t1251) !== -1)); } let _c1254: boolean = _c1252; if (_c1254) {   const _t1253 = sp.edgeEnds[2 * _te1250 + 1];   _c1254 = !((clueAt(cl.number, _t1253) !== -1)); } return _c1254; });
+                          const _a1255 = throughWhere(sp, v_t, (_te1250: number): boolean => { let _c1252: boolean = ((_te1250 === _wc1134 ? _wd1135 : (b.grid[_te1250] || -1)) === 1); if (_c1252) {   const _t1251 = sp.edgeEnds[2 * _te1250];   _c1252 = !((clueAt(cl.number, _t1251) !== -1)); } let _c1254: boolean = _c1252; if (_c1254) {   const _t1253 = sp.edgeEnds[2 * _te1250 + 1];   _c1254 = !((clueAt(cl.number, _t1253) !== -1)); } return _c1254; });
                           for (let _i1256 = 0; _i1256 < _a1255.length; _i1256++) {
                             const v_t_1249 = _a1255[_i1256];
                             const _h1259 = clueAt(cl.number, v_t_1249);
@@ -785,7 +785,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                               let _c1265: boolean = (_h1262 && (_h1263 !== -1));
                               if (_c1265) {
                                 const _t1264 = sp.edgeOf(v_t_1249, v_x);
-                                _c1265 = ((_t1264 === _wc1134 ? _wd1135 : b.value(_t1264)) === 1);
+                                _c1265 = ((_t1264 === _wc1134 ? _wd1135 : (b.grid[_t1264] || -1)) === 1);
                               }
                               if (!(_c1265)) continue;
                               if (!_g1235.includes(v_x)) _g1235.push(v_x);
@@ -808,7 +808,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                           }
                           _g1275.length = 0;
                           G1276: {
-                            const _a1293 = throughWhere(sp, v_y, (_te1288: number): boolean => { let _c1290: boolean = ((_te1288 === _wc1134 ? _wd1135 : b.value(_te1288)) === 1); if (_c1290) {   const _t1289 = sp.edgeEnds[2 * _te1288];   _c1290 = !((clueAt(cl.number, _t1289) !== -1)); } let _c1292: boolean = _c1290; if (_c1292) {   const _t1291 = sp.edgeEnds[2 * _te1288 + 1];   _c1292 = !((clueAt(cl.number, _t1291) !== -1)); } return _c1292; });
+                            const _a1293 = throughWhere(sp, v_y, (_te1288: number): boolean => { let _c1290: boolean = ((_te1288 === _wc1134 ? _wd1135 : (b.grid[_te1288] || -1)) === 1); if (_c1290) {   const _t1289 = sp.edgeEnds[2 * _te1288];   _c1290 = !((clueAt(cl.number, _t1289) !== -1)); } let _c1292: boolean = _c1290; if (_c1292) {   const _t1291 = sp.edgeEnds[2 * _te1288 + 1];   _c1292 = !((clueAt(cl.number, _t1291) !== -1)); } return _c1292; });
                             for (let _i1294 = 0; _i1294 < _a1293.length; _i1294++) {
                               const v_t = _a1293[_i1294];
                               const _h1297 = clueAt(cl.number, v_t);
@@ -822,7 +822,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                                 let _c1303: boolean = (_h1300 && (_h1301 !== -1));
                                 if (_c1303) {
                                   const _t1302 = sp.edgeOf(v_t, v_x);
-                                  _c1303 = ((_t1302 === _wc1134 ? _wd1135 : b.value(_t1302)) === 1);
+                                  _c1303 = ((_t1302 === _wc1134 ? _wd1135 : (b.grid[_t1302] || -1)) === 1);
                                 }
                                 if (!(_c1303)) continue;
                                 if (!_g1275.includes(v_x)) _g1275.push(v_x);
@@ -842,14 +842,14 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                       }
                       _c1308 = _q1226;
                     }
-                    if (!((_c1308 && (_h1056 || !(throughWhere(sp, v_t, (_te1309: number): boolean => {  return ((_te1309 === _wc1134 ? _wd1135 : b.value(_te1309)) === 1); }).includes(v_y)))))) continue;
+                    if (!((_c1308 && (_h1056 || !(throughWhere(sp, v_t, (_te1309: number): boolean => {  return ((_te1309 === _wc1134 ? _wd1135 : (b.grid[_te1309] || -1)) === 1); }).includes(v_y)))))) continue;
                     let _g1310 = 0;
                     G1311: {
                       const _a1312 = sp.adj4[v_t];
                       for (let _i1313 = 0; _i1313 < _a1312.length; _i1313++) {
                         const v_y = _a1312[_i1313];
                         const _t1314 = sp.edgeOf(v_t, v_y);
-                        if (!(((_t1314 === _wc1134 ? _wd1135 : b.value(_t1314)) === 1))) continue;
+                        if (!(((_t1314 === _wc1134 ? _wd1135 : (b.grid[_t1314] || -1)) === 1))) continue;
                         _g1310++;
                       }
                     }
@@ -892,7 +892,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                         for (let _i1333 = 0; _i1333 < _n1332; _i1333++) {
                           const v_z = _a1331[_i1333];
                           const _t1334 = sp.edgeOf(v_t, v_z);
-                          let _c1354: boolean = !((_t1334 === _wc1134 ? true : b.known(_t1334)));
+                          let _c1354: boolean = !((_t1334 === _wc1134 ? true : (b.grid[_t1334] !== 0)));
                           if (_c1354) {
                             let _g1335 = 0;
                             G1336: {
@@ -900,7 +900,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                               for (let _i1338 = 0; _i1338 < _a1337.length; _i1338++) {
                                 const v_y = _a1337[_i1338];
                                 const _t1339 = sp.edgeOf(v_t, v_y);
-                                if (!(((_t1339 === _wc1134 ? _wd1135 : b.value(_t1339)) === 1))) continue;
+                                if (!(((_t1339 === _wc1134 ? _wd1135 : (b.grid[_t1339] || -1)) === 1))) continue;
                                 _g1335++;
                               }
                             }
@@ -944,7 +944,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                               for (let _i1358 = 0; _i1358 < _a1357.length; _i1358++) {
                                 const v_y = _a1357[_i1358];
                                 const _t1359 = sp.edgeOf(v_z, v_y);
-                                if (!(((_t1359 === _wc1134 ? _wd1135 : b.value(_t1359)) === 1))) continue;
+                                if (!(((_t1359 === _wc1134 ? _wd1135 : (b.grid[_t1359] || -1)) === 1))) continue;
                                 _g1355++;
                               }
                             }
@@ -996,7 +996,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                               }
                               _g1384.length = 0;
                               G1385: {
-                                const _a1404 = throughWhere(sp, v_t, (_te1399: number): boolean => { let _c1401: boolean = ((_te1399 === _wc1134 ? _wd1135 : b.value(_te1399)) === 1); if (_c1401) {   const _t1400 = sp.edgeEnds[2 * _te1399];   _c1401 = !((clueAt(cl.number, _t1400) !== -1)); } let _c1403: boolean = _c1401; if (_c1403) {   const _t1402 = sp.edgeEnds[2 * _te1399 + 1];   _c1403 = !((clueAt(cl.number, _t1402) !== -1)); } return _c1403; });
+                                const _a1404 = throughWhere(sp, v_t, (_te1399: number): boolean => { let _c1401: boolean = ((_te1399 === _wc1134 ? _wd1135 : (b.grid[_te1399] || -1)) === 1); if (_c1401) {   const _t1400 = sp.edgeEnds[2 * _te1399];   _c1401 = !((clueAt(cl.number, _t1400) !== -1)); } let _c1403: boolean = _c1401; if (_c1403) {   const _t1402 = sp.edgeEnds[2 * _te1399 + 1];   _c1403 = !((clueAt(cl.number, _t1402) !== -1)); } return _c1403; });
                                 for (let _i1405 = 0; _i1405 < _a1404.length; _i1405++) {
                                   const v_t_1398 = _a1404[_i1405];
                                   const _h1408 = clueAt(cl.number, v_t_1398);
@@ -1010,7 +1010,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                                     let _c1414: boolean = (_h1411 && (_h1412 !== -1));
                                     if (_c1414) {
                                       const _t1413 = sp.edgeOf(v_t_1398, v_x);
-                                      _c1414 = ((_t1413 === _wc1134 ? _wd1135 : b.value(_t1413)) === 1);
+                                      _c1414 = ((_t1413 === _wc1134 ? _wd1135 : (b.grid[_t1413] || -1)) === 1);
                                     }
                                     if (!(_c1414)) continue;
                                     if (!_g1384.includes(v_x)) _g1384.push(v_x);
@@ -1033,7 +1033,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                                 }
                                 _g1424.length = 0;
                                 G1425: {
-                                  const _a1442 = throughWhere(sp, v_z, (_te1437: number): boolean => { let _c1439: boolean = ((_te1437 === _wc1134 ? _wd1135 : b.value(_te1437)) === 1); if (_c1439) {   const _t1438 = sp.edgeEnds[2 * _te1437];   _c1439 = !((clueAt(cl.number, _t1438) !== -1)); } let _c1441: boolean = _c1439; if (_c1441) {   const _t1440 = sp.edgeEnds[2 * _te1437 + 1];   _c1441 = !((clueAt(cl.number, _t1440) !== -1)); } return _c1441; });
+                                  const _a1442 = throughWhere(sp, v_z, (_te1437: number): boolean => { let _c1439: boolean = ((_te1437 === _wc1134 ? _wd1135 : (b.grid[_te1437] || -1)) === 1); if (_c1439) {   const _t1438 = sp.edgeEnds[2 * _te1437];   _c1439 = !((clueAt(cl.number, _t1438) !== -1)); } let _c1441: boolean = _c1439; if (_c1441) {   const _t1440 = sp.edgeEnds[2 * _te1437 + 1];   _c1441 = !((clueAt(cl.number, _t1440) !== -1)); } return _c1441; });
                                   for (let _i1443 = 0; _i1443 < _a1442.length; _i1443++) {
                                     const v_t = _a1442[_i1443];
                                     const _h1446 = clueAt(cl.number, v_t);
@@ -1047,7 +1047,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                                       let _c1452: boolean = (_h1449 && (_h1450 !== -1));
                                       if (_c1452) {
                                         const _t1451 = sp.edgeOf(v_t, v_x);
-                                        _c1452 = ((_t1451 === _wc1134 ? _wd1135 : b.value(_t1451)) === 1);
+                                        _c1452 = ((_t1451 === _wc1134 ? _wd1135 : (b.grid[_t1451] || -1)) === 1);
                                       }
                                       if (!(_c1452)) continue;
                                       if (!_g1424.includes(v_x)) _g1424.push(v_x);
@@ -1067,7 +1067,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                             }
                             _c1457 = _q1375;
                           }
-                          if ((_c1457 && (_h1056 || !(throughWhere(sp, v_t, (_te1458: number): boolean => {  return ((_te1458 === _wc1134 ? _wd1135 : b.value(_te1458)) === 1); }).includes(v_z))))) {
+                          if ((_c1457 && (_h1056 || !(throughWhere(sp, v_t, (_te1458: number): boolean => {  return ((_te1458 === _wc1134 ? _wd1135 : (b.grid[_te1458] || -1)) === 1); }).includes(v_z))))) {
                             _q1329 = true;
                             break Q1330;
                           }
@@ -1096,7 +1096,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                       for (let _i1468 = 0; _i1468 < _a1467.length; _i1468++) {
                         const v_y = _a1467[_i1468];
                         const _t1469 = sp.edgeOf(v_s, v_y);
-                        if (!(((_t1469 === _wc1134 ? _wd1135 : b.value(_t1469)) === 1))) continue;
+                        if (!(((_t1469 === _wc1134 ? _wd1135 : (b.grid[_t1469] || -1)) === 1))) continue;
                         _g1465++;
                       }
                     }
@@ -1138,7 +1138,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                         for (let _i1487 = 0; _i1487 < _a1486.length; _i1487++) {
                           const v_y = _a1486[_i1487];
                           const _t1488 = sp.edgeOf(v_s, v_y);
-                          let _c1508: boolean = !((_t1488 === _wc1134 ? true : b.known(_t1488)));
+                          let _c1508: boolean = !((_t1488 === _wc1134 ? true : (b.grid[_t1488] !== 0)));
                           if (_c1508) {
                             let _g1489 = 0;
                             G1490: {
@@ -1146,7 +1146,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                               for (let _i1492 = 0; _i1492 < _a1491.length; _i1492++) {
                                 const v_y = _a1491[_i1492];
                                 const _t1493 = sp.edgeOf(v_s, v_y);
-                                if (!(((_t1493 === _wc1134 ? _wd1135 : b.value(_t1493)) === 1))) continue;
+                                if (!(((_t1493 === _wc1134 ? _wd1135 : (b.grid[_t1493] || -1)) === 1))) continue;
                                 _g1489++;
                               }
                             }
@@ -1190,7 +1190,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                               for (let _i1513 = 0; _i1513 < _a1512.length; _i1513++) {
                                 const v_y_1511 = _a1512[_i1513];
                                 const _t1514 = sp.edgeOf(v_y, v_y_1511);
-                                if (!(((_t1514 === _wc1134 ? _wd1135 : b.value(_t1514)) === 1))) continue;
+                                if (!(((_t1514 === _wc1134 ? _wd1135 : (b.grid[_t1514] || -1)) === 1))) continue;
                                 _g1509++;
                               }
                             }
@@ -1242,7 +1242,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                               }
                               _g1539.length = 0;
                               G1540: {
-                                const _a1557 = throughWhere(sp, v_s, (_te1552: number): boolean => { let _c1554: boolean = ((_te1552 === _wc1134 ? _wd1135 : b.value(_te1552)) === 1); if (_c1554) {   const _t1553 = sp.edgeEnds[2 * _te1552];   _c1554 = !((clueAt(cl.number, _t1553) !== -1)); } let _c1556: boolean = _c1554; if (_c1556) {   const _t1555 = sp.edgeEnds[2 * _te1552 + 1];   _c1556 = !((clueAt(cl.number, _t1555) !== -1)); } return _c1556; });
+                                const _a1557 = throughWhere(sp, v_s, (_te1552: number): boolean => { let _c1554: boolean = ((_te1552 === _wc1134 ? _wd1135 : (b.grid[_te1552] || -1)) === 1); if (_c1554) {   const _t1553 = sp.edgeEnds[2 * _te1552];   _c1554 = !((clueAt(cl.number, _t1553) !== -1)); } let _c1556: boolean = _c1554; if (_c1556) {   const _t1555 = sp.edgeEnds[2 * _te1552 + 1];   _c1556 = !((clueAt(cl.number, _t1555) !== -1)); } return _c1556; });
                                 for (let _i1558 = 0; _i1558 < _a1557.length; _i1558++) {
                                   const v_t = _a1557[_i1558];
                                   const _h1561 = clueAt(cl.number, v_t);
@@ -1256,7 +1256,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                                     let _c1567: boolean = (_h1564 && (_h1565 !== -1));
                                     if (_c1567) {
                                       const _t1566 = sp.edgeOf(v_t, v_x);
-                                      _c1567 = ((_t1566 === _wc1134 ? _wd1135 : b.value(_t1566)) === 1);
+                                      _c1567 = ((_t1566 === _wc1134 ? _wd1135 : (b.grid[_t1566] || -1)) === 1);
                                     }
                                     if (!(_c1567)) continue;
                                     if (!_g1539.includes(v_x)) _g1539.push(v_x);
@@ -1279,7 +1279,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                                 }
                                 _g1577.length = 0;
                                 G1578: {
-                                  const _a1595 = throughWhere(sp, v_y, (_te1590: number): boolean => { let _c1592: boolean = ((_te1590 === _wc1134 ? _wd1135 : b.value(_te1590)) === 1); if (_c1592) {   const _t1591 = sp.edgeEnds[2 * _te1590];   _c1592 = !((clueAt(cl.number, _t1591) !== -1)); } let _c1594: boolean = _c1592; if (_c1594) {   const _t1593 = sp.edgeEnds[2 * _te1590 + 1];   _c1594 = !((clueAt(cl.number, _t1593) !== -1)); } return _c1594; });
+                                  const _a1595 = throughWhere(sp, v_y, (_te1590: number): boolean => { let _c1592: boolean = ((_te1590 === _wc1134 ? _wd1135 : (b.grid[_te1590] || -1)) === 1); if (_c1592) {   const _t1591 = sp.edgeEnds[2 * _te1590];   _c1592 = !((clueAt(cl.number, _t1591) !== -1)); } let _c1594: boolean = _c1592; if (_c1594) {   const _t1593 = sp.edgeEnds[2 * _te1590 + 1];   _c1594 = !((clueAt(cl.number, _t1593) !== -1)); } return _c1594; });
                                   for (let _i1596 = 0; _i1596 < _a1595.length; _i1596++) {
                                     const v_t = _a1595[_i1596];
                                     const _h1599 = clueAt(cl.number, v_t);
@@ -1293,7 +1293,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                                       let _c1605: boolean = (_h1602 && (_h1603 !== -1));
                                       if (_c1605) {
                                         const _t1604 = sp.edgeOf(v_t, v_x);
-                                        _c1605 = ((_t1604 === _wc1134 ? _wd1135 : b.value(_t1604)) === 1);
+                                        _c1605 = ((_t1604 === _wc1134 ? _wd1135 : (b.grid[_t1604] || -1)) === 1);
                                       }
                                       if (!(_c1605)) continue;
                                       if (!_g1577.includes(v_x)) _g1577.push(v_x);
@@ -1313,14 +1313,14 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                             }
                             _c1610 = _q1530;
                           }
-                          if (!((_c1610 && (_h1056 || !(throughWhere(sp, v_s, (_te1611: number): boolean => {  return ((_te1611 === _wc1134 ? _wd1135 : b.value(_te1611)) === 1); }).includes(v_y)))))) continue;
+                          if (!((_c1610 && (_h1056 || !(throughWhere(sp, v_s, (_te1611: number): boolean => {  return ((_te1611 === _wc1134 ? _wd1135 : (b.grid[_te1611] || -1)) === 1); }).includes(v_y)))))) continue;
                           let _g1612 = 0;
                           G1613: {
                             const _a1614 = sp.adj4[v_s];
                             for (let _i1615 = 0; _i1615 < _a1614.length; _i1615++) {
                               const v_y = _a1614[_i1615];
                               const _t1616 = sp.edgeOf(v_s, v_y);
-                              if (!(((_t1616 === _wc1134 ? _wd1135 : b.value(_t1616)) === 1))) continue;
+                              if (!(((_t1616 === _wc1134 ? _wd1135 : (b.grid[_t1616] || -1)) === 1))) continue;
                               _g1612++;
                             }
                           }
@@ -1363,7 +1363,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                               for (let _i1635 = 0; _i1635 < _n1634; _i1635++) {
                                 const v_z = _a1633[_i1635];
                                 const _t1636 = sp.edgeOf(v_s, v_z);
-                                let _c1656: boolean = !((_t1636 === _wc1134 ? true : b.known(_t1636)));
+                                let _c1656: boolean = !((_t1636 === _wc1134 ? true : (b.grid[_t1636] !== 0)));
                                 if (_c1656) {
                                   let _g1637 = 0;
                                   G1638: {
@@ -1371,7 +1371,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                                     for (let _i1640 = 0; _i1640 < _a1639.length; _i1640++) {
                                       const v_y = _a1639[_i1640];
                                       const _t1641 = sp.edgeOf(v_s, v_y);
-                                      if (!(((_t1641 === _wc1134 ? _wd1135 : b.value(_t1641)) === 1))) continue;
+                                      if (!(((_t1641 === _wc1134 ? _wd1135 : (b.grid[_t1641] || -1)) === 1))) continue;
                                       _g1637++;
                                     }
                                   }
@@ -1415,7 +1415,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                                     for (let _i1660 = 0; _i1660 < _a1659.length; _i1660++) {
                                       const v_y = _a1659[_i1660];
                                       const _t1661 = sp.edgeOf(v_z, v_y);
-                                      if (!(((_t1661 === _wc1134 ? _wd1135 : b.value(_t1661)) === 1))) continue;
+                                      if (!(((_t1661 === _wc1134 ? _wd1135 : (b.grid[_t1661] || -1)) === 1))) continue;
                                       _g1657++;
                                     }
                                   }
@@ -1467,7 +1467,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                                     }
                                     _g1686.length = 0;
                                     G1687: {
-                                      const _a1704 = throughWhere(sp, v_s, (_te1699: number): boolean => { let _c1701: boolean = ((_te1699 === _wc1134 ? _wd1135 : b.value(_te1699)) === 1); if (_c1701) {   const _t1700 = sp.edgeEnds[2 * _te1699];   _c1701 = !((clueAt(cl.number, _t1700) !== -1)); } let _c1703: boolean = _c1701; if (_c1703) {   const _t1702 = sp.edgeEnds[2 * _te1699 + 1];   _c1703 = !((clueAt(cl.number, _t1702) !== -1)); } return _c1703; });
+                                      const _a1704 = throughWhere(sp, v_s, (_te1699: number): boolean => { let _c1701: boolean = ((_te1699 === _wc1134 ? _wd1135 : (b.grid[_te1699] || -1)) === 1); if (_c1701) {   const _t1700 = sp.edgeEnds[2 * _te1699];   _c1701 = !((clueAt(cl.number, _t1700) !== -1)); } let _c1703: boolean = _c1701; if (_c1703) {   const _t1702 = sp.edgeEnds[2 * _te1699 + 1];   _c1703 = !((clueAt(cl.number, _t1702) !== -1)); } return _c1703; });
                                       for (let _i1705 = 0; _i1705 < _a1704.length; _i1705++) {
                                         const v_t = _a1704[_i1705];
                                         const _h1708 = clueAt(cl.number, v_t);
@@ -1481,7 +1481,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                                           let _c1714: boolean = (_h1711 && (_h1712 !== -1));
                                           if (_c1714) {
                                             const _t1713 = sp.edgeOf(v_t, v_x);
-                                            _c1714 = ((_t1713 === _wc1134 ? _wd1135 : b.value(_t1713)) === 1);
+                                            _c1714 = ((_t1713 === _wc1134 ? _wd1135 : (b.grid[_t1713] || -1)) === 1);
                                           }
                                           if (!(_c1714)) continue;
                                           if (!_g1686.includes(v_x)) _g1686.push(v_x);
@@ -1504,7 +1504,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                                       }
                                       _g1724.length = 0;
                                       G1725: {
-                                        const _a1742 = throughWhere(sp, v_z, (_te1737: number): boolean => { let _c1739: boolean = ((_te1737 === _wc1134 ? _wd1135 : b.value(_te1737)) === 1); if (_c1739) {   const _t1738 = sp.edgeEnds[2 * _te1737];   _c1739 = !((clueAt(cl.number, _t1738) !== -1)); } let _c1741: boolean = _c1739; if (_c1741) {   const _t1740 = sp.edgeEnds[2 * _te1737 + 1];   _c1741 = !((clueAt(cl.number, _t1740) !== -1)); } return _c1741; });
+                                        const _a1742 = throughWhere(sp, v_z, (_te1737: number): boolean => { let _c1739: boolean = ((_te1737 === _wc1134 ? _wd1135 : (b.grid[_te1737] || -1)) === 1); if (_c1739) {   const _t1738 = sp.edgeEnds[2 * _te1737];   _c1739 = !((clueAt(cl.number, _t1738) !== -1)); } let _c1741: boolean = _c1739; if (_c1741) {   const _t1740 = sp.edgeEnds[2 * _te1737 + 1];   _c1741 = !((clueAt(cl.number, _t1740) !== -1)); } return _c1741; });
                                         for (let _i1743 = 0; _i1743 < _a1742.length; _i1743++) {
                                           const v_t = _a1742[_i1743];
                                           const _h1746 = clueAt(cl.number, v_t);
@@ -1518,7 +1518,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                                             let _c1752: boolean = (_h1749 && (_h1750 !== -1));
                                             if (_c1752) {
                                               const _t1751 = sp.edgeOf(v_t, v_x);
-                                              _c1752 = ((_t1751 === _wc1134 ? _wd1135 : b.value(_t1751)) === 1);
+                                              _c1752 = ((_t1751 === _wc1134 ? _wd1135 : (b.grid[_t1751] || -1)) === 1);
                                             }
                                             if (!(_c1752)) continue;
                                             if (!_g1724.includes(v_x)) _g1724.push(v_x);
@@ -1538,7 +1538,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
                                   }
                                   _c1757 = _q1677;
                                 }
-                                if ((_c1757 && (_h1056 || !(throughWhere(sp, v_s, (_te1758: number): boolean => {  return ((_te1758 === _wc1134 ? _wd1135 : b.value(_te1758)) === 1); }).includes(v_z))))) {
+                                if ((_c1757 && (_h1056 || !(throughWhere(sp, v_s, (_te1758: number): boolean => {  return ((_te1758 === _wc1134 ? _wd1135 : (b.grid[_te1758] || -1)) === 1); }).includes(v_z))))) {
                                   _q1631 = true;
                                   break Q1632;
                                 }
@@ -1575,7 +1575,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
       if (!(_c1763)) break L1009;
       facts.length = 0;
       changed = false;
-      if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 2); changed = true; } else facts.push(PLACE, v_e, 2); }
+      if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 2); changed = true; } else facts.push(PLACE, v_e, 2); }
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
@@ -1656,7 +1656,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
       const _a2372 = sp.adj4[v_c];
       for (let _i2373 = 0; _i2373 < _a2372.length; _i2373++) {
         const v_y = _a2372[_i2373];
-        if (!((b.value(sp.edgeOf(v_c, v_y)) === 1))) continue;
+        if (!(((b.grid[sp.edgeOf(v_c, v_y)] || -1) === 1))) continue;
         _g2370++;
       }
     }
@@ -1676,9 +1676,9 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
         const v_i = (v_I[0] ?? -1);
         L2378: {
           const v_j = (v_I[1] ?? -1);
-          let _c3025: boolean = ((!(b.known(sp.edgeOf(v_c, v_k))) && !(b.known(sp.edgeOf(v_c, v_i)))) && !(b.known(sp.edgeOf(v_c, v_j))));
+          let _c3025: boolean = ((!((b.grid[sp.edgeOf(v_c, v_k)] !== 0)) && !((b.grid[sp.edgeOf(v_c, v_i)] !== 0))) && !((b.grid[sp.edgeOf(v_c, v_j)] !== 0)));
           if (_c3025) {
-            let _c2393: boolean = (throughWhere(sp, v_i, (_te2379: number): boolean => {  return (b.value(_te2379) === 1); }).includes(v_j));
+            let _c2393: boolean = (throughWhere(sp, v_i, (_te2379: number): boolean => {  return ((b.grid[_te2379] || -1) === 1); }).includes(v_j));
             if (!_c2393) {
               let _c2392: boolean = _h2383;
               if (_c2392) {
@@ -1711,7 +1711,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
               const _wd2397 = 1;
               let _q2398 = false;
               Q2399: {
-                const _a2401 = throughWhere(sp, v_c, (_te2400: number): boolean => {  return ((_te2400 === _wc2396 ? _wd2397 : (_te2400 === _wc2394 ? _wd2395 : b.value(_te2400))) === 1); });
+                const _a2401 = throughWhere(sp, v_c, (_te2400: number): boolean => {  return ((_te2400 === _wc2396 ? _wd2397 : (_te2400 === _wc2394 ? _wd2395 : (b.grid[_te2400] || -1))) === 1); });
                 for (let _i2402 = 0; _i2402 < _a2401.length; _i2402++) {
                   const v_t = _a2401[_i2402];
                   let _c2422: boolean = (((v_t === v_c) || (v_t === v_i)) || (v_t === v_j));
@@ -1722,7 +1722,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                       for (let _i2406 = 0; _i2406 < _a2405.length; _i2406++) {
                         const v_y = _a2405[_i2406];
                         const _t2407 = sp.edgeOf(v_t, v_y);
-                        if (!(((_t2407 === _wc2396 ? _wd2397 : (_t2407 === _wc2394 ? _wd2395 : b.value(_t2407))) === 1))) continue;
+                        if (!(((_t2407 === _wc2396 ? _wd2397 : (_t2407 === _wc2394 ? _wd2395 : (b.grid[_t2407] || -1))) === 1))) continue;
                         _g2403++;
                       }
                     }
@@ -1765,7 +1765,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                     for (let _i2426 = 0; _i2426 < _a2425.length; _i2426++) {
                       const v_y = _a2425[_i2426];
                       const _t2427 = sp.edgeOf(v_t, v_y);
-                      if (!(((_t2427 === _wc2396 ? _wd2397 : (_t2427 === _wc2394 ? _wd2395 : b.value(_t2427))) === 1))) continue;
+                      if (!(((_t2427 === _wc2396 ? _wd2397 : (_t2427 === _wc2394 ? _wd2395 : (b.grid[_t2427] || -1))) === 1))) continue;
                       _g2423++;
                     }
                   }
@@ -1807,7 +1807,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                       for (let _i2445 = 0; _i2445 < _a2444.length; _i2445++) {
                         const v_y = _a2444[_i2445];
                         const _t2446 = sp.edgeOf(v_t, v_y);
-                        let _c2466: boolean = !((_t2446 === _wc2396 ? true : (_t2446 === _wc2394 ? true : b.known(_t2446))));
+                        let _c2466: boolean = !((_t2446 === _wc2396 ? true : (_t2446 === _wc2394 ? true : (b.grid[_t2446] !== 0))));
                         if (_c2466) {
                           let _g2447 = 0;
                           G2448: {
@@ -1815,7 +1815,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                             for (let _i2450 = 0; _i2450 < _a2449.length; _i2450++) {
                               const v_y = _a2449[_i2450];
                               const _t2451 = sp.edgeOf(v_t, v_y);
-                              if (!(((_t2451 === _wc2396 ? _wd2397 : (_t2451 === _wc2394 ? _wd2395 : b.value(_t2451))) === 1))) continue;
+                              if (!(((_t2451 === _wc2396 ? _wd2397 : (_t2451 === _wc2394 ? _wd2395 : (b.grid[_t2451] || -1))) === 1))) continue;
                               _g2447++;
                             }
                           }
@@ -1859,7 +1859,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                             for (let _i2471 = 0; _i2471 < _a2470.length; _i2471++) {
                               const v_y_2469 = _a2470[_i2471];
                               const _t2472 = sp.edgeOf(v_y, v_y_2469);
-                              if (!(((_t2472 === _wc2396 ? _wd2397 : (_t2472 === _wc2394 ? _wd2395 : b.value(_t2472))) === 1))) continue;
+                              if (!(((_t2472 === _wc2396 ? _wd2397 : (_t2472 === _wc2394 ? _wd2395 : (b.grid[_t2472] || -1))) === 1))) continue;
                               _g2467++;
                             }
                           }
@@ -1911,7 +1911,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                             }
                             _g2497.length = 0;
                             G2498: {
-                              const _a2517 = throughWhere(sp, v_t, (_te2512: number): boolean => { let _c2514: boolean = ((_te2512 === _wc2396 ? _wd2397 : (_te2512 === _wc2394 ? _wd2395 : b.value(_te2512))) === 1); if (_c2514) {   const _t2513 = sp.edgeEnds[2 * _te2512];   _c2514 = !((clueAt(cl.number, _t2513) !== -1)); } let _c2516: boolean = _c2514; if (_c2516) {   const _t2515 = sp.edgeEnds[2 * _te2512 + 1];   _c2516 = !((clueAt(cl.number, _t2515) !== -1)); } return _c2516; });
+                              const _a2517 = throughWhere(sp, v_t, (_te2512: number): boolean => { let _c2514: boolean = ((_te2512 === _wc2396 ? _wd2397 : (_te2512 === _wc2394 ? _wd2395 : (b.grid[_te2512] || -1))) === 1); if (_c2514) {   const _t2513 = sp.edgeEnds[2 * _te2512];   _c2514 = !((clueAt(cl.number, _t2513) !== -1)); } let _c2516: boolean = _c2514; if (_c2516) {   const _t2515 = sp.edgeEnds[2 * _te2512 + 1];   _c2516 = !((clueAt(cl.number, _t2515) !== -1)); } return _c2516; });
                               for (let _i2518 = 0; _i2518 < _a2517.length; _i2518++) {
                                 const v_t_2511 = _a2517[_i2518];
                                 const _h2521 = clueAt(cl.number, v_t_2511);
@@ -1925,7 +1925,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                   let _c2527: boolean = (_h2524 && (_h2525 !== -1));
                                   if (_c2527) {
                                     const _t2526 = sp.edgeOf(v_t_2511, v_x);
-                                    _c2527 = ((_t2526 === _wc2396 ? _wd2397 : (_t2526 === _wc2394 ? _wd2395 : b.value(_t2526))) === 1);
+                                    _c2527 = ((_t2526 === _wc2396 ? _wd2397 : (_t2526 === _wc2394 ? _wd2395 : (b.grid[_t2526] || -1))) === 1);
                                   }
                                   if (!(_c2527)) continue;
                                   if (!_g2497.includes(v_x)) _g2497.push(v_x);
@@ -1948,7 +1948,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                               }
                               _g2537.length = 0;
                               G2538: {
-                                const _a2555 = throughWhere(sp, v_y, (_te2550: number): boolean => { let _c2552: boolean = ((_te2550 === _wc2396 ? _wd2397 : (_te2550 === _wc2394 ? _wd2395 : b.value(_te2550))) === 1); if (_c2552) {   const _t2551 = sp.edgeEnds[2 * _te2550];   _c2552 = !((clueAt(cl.number, _t2551) !== -1)); } let _c2554: boolean = _c2552; if (_c2554) {   const _t2553 = sp.edgeEnds[2 * _te2550 + 1];   _c2554 = !((clueAt(cl.number, _t2553) !== -1)); } return _c2554; });
+                                const _a2555 = throughWhere(sp, v_y, (_te2550: number): boolean => { let _c2552: boolean = ((_te2550 === _wc2396 ? _wd2397 : (_te2550 === _wc2394 ? _wd2395 : (b.grid[_te2550] || -1))) === 1); if (_c2552) {   const _t2551 = sp.edgeEnds[2 * _te2550];   _c2552 = !((clueAt(cl.number, _t2551) !== -1)); } let _c2554: boolean = _c2552; if (_c2554) {   const _t2553 = sp.edgeEnds[2 * _te2550 + 1];   _c2554 = !((clueAt(cl.number, _t2553) !== -1)); } return _c2554; });
                                 for (let _i2556 = 0; _i2556 < _a2555.length; _i2556++) {
                                   const v_t = _a2555[_i2556];
                                   const _h2559 = clueAt(cl.number, v_t);
@@ -1962,7 +1962,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                     let _c2565: boolean = (_h2562 && (_h2563 !== -1));
                                     if (_c2565) {
                                       const _t2564 = sp.edgeOf(v_t, v_x);
-                                      _c2565 = ((_t2564 === _wc2396 ? _wd2397 : (_t2564 === _wc2394 ? _wd2395 : b.value(_t2564))) === 1);
+                                      _c2565 = ((_t2564 === _wc2396 ? _wd2397 : (_t2564 === _wc2394 ? _wd2395 : (b.grid[_t2564] || -1))) === 1);
                                     }
                                     if (!(_c2565)) continue;
                                     if (!_g2537.includes(v_x)) _g2537.push(v_x);
@@ -1982,14 +1982,14 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                           }
                           _c2570 = _q2488;
                         }
-                        if (!((_c2570 && (_h2360 || !(throughWhere(sp, v_t, (_te2571: number): boolean => {  return ((_te2571 === _wc2396 ? _wd2397 : (_te2571 === _wc2394 ? _wd2395 : b.value(_te2571))) === 1); }).includes(v_y)))))) continue;
+                        if (!((_c2570 && (_h2360 || !(throughWhere(sp, v_t, (_te2571: number): boolean => {  return ((_te2571 === _wc2396 ? _wd2397 : (_te2571 === _wc2394 ? _wd2395 : (b.grid[_te2571] || -1))) === 1); }).includes(v_y)))))) continue;
                         let _g2572 = 0;
                         G2573: {
                           const _a2574 = sp.adj4[v_t];
                           for (let _i2575 = 0; _i2575 < _a2574.length; _i2575++) {
                             const v_y = _a2574[_i2575];
                             const _t2576 = sp.edgeOf(v_t, v_y);
-                            if (!(((_t2576 === _wc2396 ? _wd2397 : (_t2576 === _wc2394 ? _wd2395 : b.value(_t2576))) === 1))) continue;
+                            if (!(((_t2576 === _wc2396 ? _wd2397 : (_t2576 === _wc2394 ? _wd2395 : (b.grid[_t2576] || -1))) === 1))) continue;
                             _g2572++;
                           }
                         }
@@ -2032,7 +2032,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                             for (let _i2595 = 0; _i2595 < _n2594; _i2595++) {
                               const v_z = _a2593[_i2595];
                               const _t2596 = sp.edgeOf(v_t, v_z);
-                              let _c2616: boolean = !((_t2596 === _wc2396 ? true : (_t2596 === _wc2394 ? true : b.known(_t2596))));
+                              let _c2616: boolean = !((_t2596 === _wc2396 ? true : (_t2596 === _wc2394 ? true : (b.grid[_t2596] !== 0))));
                               if (_c2616) {
                                 let _g2597 = 0;
                                 G2598: {
@@ -2040,7 +2040,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                   for (let _i2600 = 0; _i2600 < _a2599.length; _i2600++) {
                                     const v_y = _a2599[_i2600];
                                     const _t2601 = sp.edgeOf(v_t, v_y);
-                                    if (!(((_t2601 === _wc2396 ? _wd2397 : (_t2601 === _wc2394 ? _wd2395 : b.value(_t2601))) === 1))) continue;
+                                    if (!(((_t2601 === _wc2396 ? _wd2397 : (_t2601 === _wc2394 ? _wd2395 : (b.grid[_t2601] || -1))) === 1))) continue;
                                     _g2597++;
                                   }
                                 }
@@ -2084,7 +2084,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                   for (let _i2620 = 0; _i2620 < _a2619.length; _i2620++) {
                                     const v_y = _a2619[_i2620];
                                     const _t2621 = sp.edgeOf(v_z, v_y);
-                                    if (!(((_t2621 === _wc2396 ? _wd2397 : (_t2621 === _wc2394 ? _wd2395 : b.value(_t2621))) === 1))) continue;
+                                    if (!(((_t2621 === _wc2396 ? _wd2397 : (_t2621 === _wc2394 ? _wd2395 : (b.grid[_t2621] || -1))) === 1))) continue;
                                     _g2617++;
                                   }
                                 }
@@ -2136,7 +2136,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                   }
                                   _g2646.length = 0;
                                   G2647: {
-                                    const _a2666 = throughWhere(sp, v_t, (_te2661: number): boolean => { let _c2663: boolean = ((_te2661 === _wc2396 ? _wd2397 : (_te2661 === _wc2394 ? _wd2395 : b.value(_te2661))) === 1); if (_c2663) {   const _t2662 = sp.edgeEnds[2 * _te2661];   _c2663 = !((clueAt(cl.number, _t2662) !== -1)); } let _c2665: boolean = _c2663; if (_c2665) {   const _t2664 = sp.edgeEnds[2 * _te2661 + 1];   _c2665 = !((clueAt(cl.number, _t2664) !== -1)); } return _c2665; });
+                                    const _a2666 = throughWhere(sp, v_t, (_te2661: number): boolean => { let _c2663: boolean = ((_te2661 === _wc2396 ? _wd2397 : (_te2661 === _wc2394 ? _wd2395 : (b.grid[_te2661] || -1))) === 1); if (_c2663) {   const _t2662 = sp.edgeEnds[2 * _te2661];   _c2663 = !((clueAt(cl.number, _t2662) !== -1)); } let _c2665: boolean = _c2663; if (_c2665) {   const _t2664 = sp.edgeEnds[2 * _te2661 + 1];   _c2665 = !((clueAt(cl.number, _t2664) !== -1)); } return _c2665; });
                                     for (let _i2667 = 0; _i2667 < _a2666.length; _i2667++) {
                                       const v_t_2660 = _a2666[_i2667];
                                       const _h2670 = clueAt(cl.number, v_t_2660);
@@ -2150,7 +2150,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                         let _c2676: boolean = (_h2673 && (_h2674 !== -1));
                                         if (_c2676) {
                                           const _t2675 = sp.edgeOf(v_t_2660, v_x);
-                                          _c2676 = ((_t2675 === _wc2396 ? _wd2397 : (_t2675 === _wc2394 ? _wd2395 : b.value(_t2675))) === 1);
+                                          _c2676 = ((_t2675 === _wc2396 ? _wd2397 : (_t2675 === _wc2394 ? _wd2395 : (b.grid[_t2675] || -1))) === 1);
                                         }
                                         if (!(_c2676)) continue;
                                         if (!_g2646.includes(v_x)) _g2646.push(v_x);
@@ -2173,7 +2173,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                     }
                                     _g2686.length = 0;
                                     G2687: {
-                                      const _a2704 = throughWhere(sp, v_z, (_te2699: number): boolean => { let _c2701: boolean = ((_te2699 === _wc2396 ? _wd2397 : (_te2699 === _wc2394 ? _wd2395 : b.value(_te2699))) === 1); if (_c2701) {   const _t2700 = sp.edgeEnds[2 * _te2699];   _c2701 = !((clueAt(cl.number, _t2700) !== -1)); } let _c2703: boolean = _c2701; if (_c2703) {   const _t2702 = sp.edgeEnds[2 * _te2699 + 1];   _c2703 = !((clueAt(cl.number, _t2702) !== -1)); } return _c2703; });
+                                      const _a2704 = throughWhere(sp, v_z, (_te2699: number): boolean => { let _c2701: boolean = ((_te2699 === _wc2396 ? _wd2397 : (_te2699 === _wc2394 ? _wd2395 : (b.grid[_te2699] || -1))) === 1); if (_c2701) {   const _t2700 = sp.edgeEnds[2 * _te2699];   _c2701 = !((clueAt(cl.number, _t2700) !== -1)); } let _c2703: boolean = _c2701; if (_c2703) {   const _t2702 = sp.edgeEnds[2 * _te2699 + 1];   _c2703 = !((clueAt(cl.number, _t2702) !== -1)); } return _c2703; });
                                       for (let _i2705 = 0; _i2705 < _a2704.length; _i2705++) {
                                         const v_t = _a2704[_i2705];
                                         const _h2708 = clueAt(cl.number, v_t);
@@ -2187,7 +2187,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                           let _c2714: boolean = (_h2711 && (_h2712 !== -1));
                                           if (_c2714) {
                                             const _t2713 = sp.edgeOf(v_t, v_x);
-                                            _c2714 = ((_t2713 === _wc2396 ? _wd2397 : (_t2713 === _wc2394 ? _wd2395 : b.value(_t2713))) === 1);
+                                            _c2714 = ((_t2713 === _wc2396 ? _wd2397 : (_t2713 === _wc2394 ? _wd2395 : (b.grid[_t2713] || -1))) === 1);
                                           }
                                           if (!(_c2714)) continue;
                                           if (!_g2686.includes(v_x)) _g2686.push(v_x);
@@ -2207,7 +2207,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                 }
                                 _c2719 = _q2637;
                               }
-                              if ((_c2719 && (_h2360 || !(throughWhere(sp, v_t, (_te2720: number): boolean => {  return ((_te2720 === _wc2396 ? _wd2397 : (_te2720 === _wc2394 ? _wd2395 : b.value(_te2720))) === 1); }).includes(v_z))))) {
+                              if ((_c2719 && (_h2360 || !(throughWhere(sp, v_t, (_te2720: number): boolean => {  return ((_te2720 === _wc2396 ? _wd2397 : (_te2720 === _wc2394 ? _wd2395 : (b.grid[_te2720] || -1))) === 1); }).includes(v_z))))) {
                                 _q2591 = true;
                                 break Q2592;
                               }
@@ -2236,7 +2236,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                           for (let _i2730 = 0; _i2730 < _a2729.length; _i2730++) {
                             const v_y = _a2729[_i2730];
                             const _t2731 = sp.edgeOf(v_s, v_y);
-                            if (!(((_t2731 === _wc2396 ? _wd2397 : (_t2731 === _wc2394 ? _wd2395 : b.value(_t2731))) === 1))) continue;
+                            if (!(((_t2731 === _wc2396 ? _wd2397 : (_t2731 === _wc2394 ? _wd2395 : (b.grid[_t2731] || -1))) === 1))) continue;
                             _g2727++;
                           }
                         }
@@ -2278,7 +2278,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                             for (let _i2749 = 0; _i2749 < _a2748.length; _i2749++) {
                               const v_y = _a2748[_i2749];
                               const _t2750 = sp.edgeOf(v_s, v_y);
-                              let _c2770: boolean = !((_t2750 === _wc2396 ? true : (_t2750 === _wc2394 ? true : b.known(_t2750))));
+                              let _c2770: boolean = !((_t2750 === _wc2396 ? true : (_t2750 === _wc2394 ? true : (b.grid[_t2750] !== 0))));
                               if (_c2770) {
                                 let _g2751 = 0;
                                 G2752: {
@@ -2286,7 +2286,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                   for (let _i2754 = 0; _i2754 < _a2753.length; _i2754++) {
                                     const v_y = _a2753[_i2754];
                                     const _t2755 = sp.edgeOf(v_s, v_y);
-                                    if (!(((_t2755 === _wc2396 ? _wd2397 : (_t2755 === _wc2394 ? _wd2395 : b.value(_t2755))) === 1))) continue;
+                                    if (!(((_t2755 === _wc2396 ? _wd2397 : (_t2755 === _wc2394 ? _wd2395 : (b.grid[_t2755] || -1))) === 1))) continue;
                                     _g2751++;
                                   }
                                 }
@@ -2330,7 +2330,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                   for (let _i2775 = 0; _i2775 < _a2774.length; _i2775++) {
                                     const v_y_2773 = _a2774[_i2775];
                                     const _t2776 = sp.edgeOf(v_y, v_y_2773);
-                                    if (!(((_t2776 === _wc2396 ? _wd2397 : (_t2776 === _wc2394 ? _wd2395 : b.value(_t2776))) === 1))) continue;
+                                    if (!(((_t2776 === _wc2396 ? _wd2397 : (_t2776 === _wc2394 ? _wd2395 : (b.grid[_t2776] || -1))) === 1))) continue;
                                     _g2771++;
                                   }
                                 }
@@ -2382,7 +2382,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                   }
                                   _g2801.length = 0;
                                   G2802: {
-                                    const _a2819 = throughWhere(sp, v_s, (_te2814: number): boolean => { let _c2816: boolean = ((_te2814 === _wc2396 ? _wd2397 : (_te2814 === _wc2394 ? _wd2395 : b.value(_te2814))) === 1); if (_c2816) {   const _t2815 = sp.edgeEnds[2 * _te2814];   _c2816 = !((clueAt(cl.number, _t2815) !== -1)); } let _c2818: boolean = _c2816; if (_c2818) {   const _t2817 = sp.edgeEnds[2 * _te2814 + 1];   _c2818 = !((clueAt(cl.number, _t2817) !== -1)); } return _c2818; });
+                                    const _a2819 = throughWhere(sp, v_s, (_te2814: number): boolean => { let _c2816: boolean = ((_te2814 === _wc2396 ? _wd2397 : (_te2814 === _wc2394 ? _wd2395 : (b.grid[_te2814] || -1))) === 1); if (_c2816) {   const _t2815 = sp.edgeEnds[2 * _te2814];   _c2816 = !((clueAt(cl.number, _t2815) !== -1)); } let _c2818: boolean = _c2816; if (_c2818) {   const _t2817 = sp.edgeEnds[2 * _te2814 + 1];   _c2818 = !((clueAt(cl.number, _t2817) !== -1)); } return _c2818; });
                                     for (let _i2820 = 0; _i2820 < _a2819.length; _i2820++) {
                                       const v_t = _a2819[_i2820];
                                       const _h2823 = clueAt(cl.number, v_t);
@@ -2396,7 +2396,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                         let _c2829: boolean = (_h2826 && (_h2827 !== -1));
                                         if (_c2829) {
                                           const _t2828 = sp.edgeOf(v_t, v_x);
-                                          _c2829 = ((_t2828 === _wc2396 ? _wd2397 : (_t2828 === _wc2394 ? _wd2395 : b.value(_t2828))) === 1);
+                                          _c2829 = ((_t2828 === _wc2396 ? _wd2397 : (_t2828 === _wc2394 ? _wd2395 : (b.grid[_t2828] || -1))) === 1);
                                         }
                                         if (!(_c2829)) continue;
                                         if (!_g2801.includes(v_x)) _g2801.push(v_x);
@@ -2419,7 +2419,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                     }
                                     _g2839.length = 0;
                                     G2840: {
-                                      const _a2857 = throughWhere(sp, v_y, (_te2852: number): boolean => { let _c2854: boolean = ((_te2852 === _wc2396 ? _wd2397 : (_te2852 === _wc2394 ? _wd2395 : b.value(_te2852))) === 1); if (_c2854) {   const _t2853 = sp.edgeEnds[2 * _te2852];   _c2854 = !((clueAt(cl.number, _t2853) !== -1)); } let _c2856: boolean = _c2854; if (_c2856) {   const _t2855 = sp.edgeEnds[2 * _te2852 + 1];   _c2856 = !((clueAt(cl.number, _t2855) !== -1)); } return _c2856; });
+                                      const _a2857 = throughWhere(sp, v_y, (_te2852: number): boolean => { let _c2854: boolean = ((_te2852 === _wc2396 ? _wd2397 : (_te2852 === _wc2394 ? _wd2395 : (b.grid[_te2852] || -1))) === 1); if (_c2854) {   const _t2853 = sp.edgeEnds[2 * _te2852];   _c2854 = !((clueAt(cl.number, _t2853) !== -1)); } let _c2856: boolean = _c2854; if (_c2856) {   const _t2855 = sp.edgeEnds[2 * _te2852 + 1];   _c2856 = !((clueAt(cl.number, _t2855) !== -1)); } return _c2856; });
                                       for (let _i2858 = 0; _i2858 < _a2857.length; _i2858++) {
                                         const v_t = _a2857[_i2858];
                                         const _h2861 = clueAt(cl.number, v_t);
@@ -2433,7 +2433,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                           let _c2867: boolean = (_h2864 && (_h2865 !== -1));
                                           if (_c2867) {
                                             const _t2866 = sp.edgeOf(v_t, v_x);
-                                            _c2867 = ((_t2866 === _wc2396 ? _wd2397 : (_t2866 === _wc2394 ? _wd2395 : b.value(_t2866))) === 1);
+                                            _c2867 = ((_t2866 === _wc2396 ? _wd2397 : (_t2866 === _wc2394 ? _wd2395 : (b.grid[_t2866] || -1))) === 1);
                                           }
                                           if (!(_c2867)) continue;
                                           if (!_g2839.includes(v_x)) _g2839.push(v_x);
@@ -2453,14 +2453,14 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                 }
                                 _c2872 = _q2792;
                               }
-                              if (!((_c2872 && (_h2360 || !(throughWhere(sp, v_s, (_te2873: number): boolean => {  return ((_te2873 === _wc2396 ? _wd2397 : (_te2873 === _wc2394 ? _wd2395 : b.value(_te2873))) === 1); }).includes(v_y)))))) continue;
+                              if (!((_c2872 && (_h2360 || !(throughWhere(sp, v_s, (_te2873: number): boolean => {  return ((_te2873 === _wc2396 ? _wd2397 : (_te2873 === _wc2394 ? _wd2395 : (b.grid[_te2873] || -1))) === 1); }).includes(v_y)))))) continue;
                               let _g2874 = 0;
                               G2875: {
                                 const _a2876 = sp.adj4[v_s];
                                 for (let _i2877 = 0; _i2877 < _a2876.length; _i2877++) {
                                   const v_y = _a2876[_i2877];
                                   const _t2878 = sp.edgeOf(v_s, v_y);
-                                  if (!(((_t2878 === _wc2396 ? _wd2397 : (_t2878 === _wc2394 ? _wd2395 : b.value(_t2878))) === 1))) continue;
+                                  if (!(((_t2878 === _wc2396 ? _wd2397 : (_t2878 === _wc2394 ? _wd2395 : (b.grid[_t2878] || -1))) === 1))) continue;
                                   _g2874++;
                                 }
                               }
@@ -2503,7 +2503,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                   for (let _i2897 = 0; _i2897 < _n2896; _i2897++) {
                                     const v_z = _a2895[_i2897];
                                     const _t2898 = sp.edgeOf(v_s, v_z);
-                                    let _c2918: boolean = !((_t2898 === _wc2396 ? true : (_t2898 === _wc2394 ? true : b.known(_t2898))));
+                                    let _c2918: boolean = !((_t2898 === _wc2396 ? true : (_t2898 === _wc2394 ? true : (b.grid[_t2898] !== 0))));
                                     if (_c2918) {
                                       let _g2899 = 0;
                                       G2900: {
@@ -2511,7 +2511,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                         for (let _i2902 = 0; _i2902 < _a2901.length; _i2902++) {
                                           const v_y = _a2901[_i2902];
                                           const _t2903 = sp.edgeOf(v_s, v_y);
-                                          if (!(((_t2903 === _wc2396 ? _wd2397 : (_t2903 === _wc2394 ? _wd2395 : b.value(_t2903))) === 1))) continue;
+                                          if (!(((_t2903 === _wc2396 ? _wd2397 : (_t2903 === _wc2394 ? _wd2395 : (b.grid[_t2903] || -1))) === 1))) continue;
                                           _g2899++;
                                         }
                                       }
@@ -2555,7 +2555,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                         for (let _i2922 = 0; _i2922 < _a2921.length; _i2922++) {
                                           const v_y = _a2921[_i2922];
                                           const _t2923 = sp.edgeOf(v_z, v_y);
-                                          if (!(((_t2923 === _wc2396 ? _wd2397 : (_t2923 === _wc2394 ? _wd2395 : b.value(_t2923))) === 1))) continue;
+                                          if (!(((_t2923 === _wc2396 ? _wd2397 : (_t2923 === _wc2394 ? _wd2395 : (b.grid[_t2923] || -1))) === 1))) continue;
                                           _g2919++;
                                         }
                                       }
@@ -2607,7 +2607,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                         }
                                         _g2948.length = 0;
                                         G2949: {
-                                          const _a2966 = throughWhere(sp, v_s, (_te2961: number): boolean => { let _c2963: boolean = ((_te2961 === _wc2396 ? _wd2397 : (_te2961 === _wc2394 ? _wd2395 : b.value(_te2961))) === 1); if (_c2963) {   const _t2962 = sp.edgeEnds[2 * _te2961];   _c2963 = !((clueAt(cl.number, _t2962) !== -1)); } let _c2965: boolean = _c2963; if (_c2965) {   const _t2964 = sp.edgeEnds[2 * _te2961 + 1];   _c2965 = !((clueAt(cl.number, _t2964) !== -1)); } return _c2965; });
+                                          const _a2966 = throughWhere(sp, v_s, (_te2961: number): boolean => { let _c2963: boolean = ((_te2961 === _wc2396 ? _wd2397 : (_te2961 === _wc2394 ? _wd2395 : (b.grid[_te2961] || -1))) === 1); if (_c2963) {   const _t2962 = sp.edgeEnds[2 * _te2961];   _c2963 = !((clueAt(cl.number, _t2962) !== -1)); } let _c2965: boolean = _c2963; if (_c2965) {   const _t2964 = sp.edgeEnds[2 * _te2961 + 1];   _c2965 = !((clueAt(cl.number, _t2964) !== -1)); } return _c2965; });
                                           for (let _i2967 = 0; _i2967 < _a2966.length; _i2967++) {
                                             const v_t = _a2966[_i2967];
                                             const _h2970 = clueAt(cl.number, v_t);
@@ -2621,7 +2621,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                               let _c2976: boolean = (_h2973 && (_h2974 !== -1));
                                               if (_c2976) {
                                                 const _t2975 = sp.edgeOf(v_t, v_x);
-                                                _c2976 = ((_t2975 === _wc2396 ? _wd2397 : (_t2975 === _wc2394 ? _wd2395 : b.value(_t2975))) === 1);
+                                                _c2976 = ((_t2975 === _wc2396 ? _wd2397 : (_t2975 === _wc2394 ? _wd2395 : (b.grid[_t2975] || -1))) === 1);
                                               }
                                               if (!(_c2976)) continue;
                                               if (!_g2948.includes(v_x)) _g2948.push(v_x);
@@ -2644,7 +2644,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                           }
                                           _g2986.length = 0;
                                           G2987: {
-                                            const _a3004 = throughWhere(sp, v_z, (_te2999: number): boolean => { let _c3001: boolean = ((_te2999 === _wc2396 ? _wd2397 : (_te2999 === _wc2394 ? _wd2395 : b.value(_te2999))) === 1); if (_c3001) {   const _t3000 = sp.edgeEnds[2 * _te2999];   _c3001 = !((clueAt(cl.number, _t3000) !== -1)); } let _c3003: boolean = _c3001; if (_c3003) {   const _t3002 = sp.edgeEnds[2 * _te2999 + 1];   _c3003 = !((clueAt(cl.number, _t3002) !== -1)); } return _c3003; });
+                                            const _a3004 = throughWhere(sp, v_z, (_te2999: number): boolean => { let _c3001: boolean = ((_te2999 === _wc2396 ? _wd2397 : (_te2999 === _wc2394 ? _wd2395 : (b.grid[_te2999] || -1))) === 1); if (_c3001) {   const _t3000 = sp.edgeEnds[2 * _te2999];   _c3001 = !((clueAt(cl.number, _t3000) !== -1)); } let _c3003: boolean = _c3001; if (_c3003) {   const _t3002 = sp.edgeEnds[2 * _te2999 + 1];   _c3003 = !((clueAt(cl.number, _t3002) !== -1)); } return _c3003; });
                                             for (let _i3005 = 0; _i3005 < _a3004.length; _i3005++) {
                                               const v_t = _a3004[_i3005];
                                               const _h3008 = clueAt(cl.number, v_t);
@@ -2658,7 +2658,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                                 let _c3014: boolean = (_h3011 && (_h3012 !== -1));
                                                 if (_c3014) {
                                                   const _t3013 = sp.edgeOf(v_t, v_x);
-                                                  _c3014 = ((_t3013 === _wc2396 ? _wd2397 : (_t3013 === _wc2394 ? _wd2395 : b.value(_t3013))) === 1);
+                                                  _c3014 = ((_t3013 === _wc2396 ? _wd2397 : (_t3013 === _wc2394 ? _wd2395 : (b.grid[_t3013] || -1))) === 1);
                                                 }
                                                 if (!(_c3014)) continue;
                                                 if (!_g2986.includes(v_x)) _g2986.push(v_x);
@@ -2678,7 +2678,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                                       }
                                       _c3019 = _q2939;
                                     }
-                                    if ((_c3019 && (_h2360 || !(throughWhere(sp, v_s, (_te3020: number): boolean => {  return ((_te3020 === _wc2396 ? _wd2397 : (_te3020 === _wc2394 ? _wd2395 : b.value(_te3020))) === 1); }).includes(v_z))))) {
+                                    if ((_c3019 && (_h2360 || !(throughWhere(sp, v_s, (_te3020: number): boolean => {  return ((_te3020 === _wc2396 ? _wd2397 : (_te3020 === _wc2394 ? _wd2395 : (b.grid[_te3020] || -1))) === 1); }).includes(v_z))))) {
                                       _q2893 = true;
                                       break Q2894;
                                     }
@@ -2716,7 +2716,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
           facts.length = 0;
           changed = false;
           const _t3026 = sp.edgeOf(v_c, v_k);
-          if (!b.known(_t3026)) { if (fire === null) { b.placeAt(_t3026, 1); changed = true; } else facts.push(PLACE, _t3026, 1); }
+          if (!(b.grid[_t3026] !== 0)) { if (fire === null) { b.placeAt(_t3026, 1); changed = true; } else facts.push(PLACE, _t3026, 1); }
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
@@ -2820,7 +2820,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
       const _a5332 = sp.adj4[v_c];
       for (let _i5333 = 0; _i5333 < _a5332.length; _i5333++) {
         const v_y = _a5332[_i5333];
-        if (!((b.value(sp.edgeOf(v_c, v_y)) === 1))) continue;
+        if (!(((b.grid[sp.edgeOf(v_c, v_y)] || -1) === 1))) continue;
         _g5330++;
       }
     }
@@ -2847,7 +2847,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
             const v_j = _a5890[_i5891];
             let _c6541: boolean = (_h5893 && (_i5891 > 0));
             if (_c6541) {
-              let _c5908: boolean = (throughWhere(sp, v_i, (_te5894: number): boolean => {  return (b.value(_te5894) === 1); }).includes(v_j));
+              let _c5908: boolean = (throughWhere(sp, v_i, (_te5894: number): boolean => {  return ((b.grid[_te5894] || -1) === 1); }).includes(v_j));
               if (!_c5908) {
                 let _c5907: boolean = _h5898;
                 if (_c5907) {
@@ -2880,7 +2880,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                 const _wd5913 = 1;
                 let _q5914 = false;
                 Q5915: {
-                  const _a5917 = throughWhere(sp, v_c, (_te5916: number): boolean => {  return ((_te5916 === _wc5912 ? _wd5913 : (_te5916 === _wc5910 ? _wd5911 : b.value(_te5916))) === 1); });
+                  const _a5917 = throughWhere(sp, v_c, (_te5916: number): boolean => {  return ((_te5916 === _wc5912 ? _wd5913 : (_te5916 === _wc5910 ? _wd5911 : (b.grid[_te5916] || -1))) === 1); });
                   for (let _i5918 = 0; _i5918 < _a5917.length; _i5918++) {
                     const v_t = _a5917[_i5918];
                     let _c5938: boolean = (((v_t === v_c) || (v_t === v_i)) || (v_t === v_j));
@@ -2891,7 +2891,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                         for (let _i5922 = 0; _i5922 < _a5921.length; _i5922++) {
                           const v_y = _a5921[_i5922];
                           const _t5923 = sp.edgeOf(v_t, v_y);
-                          if (!(((_t5923 === _wc5912 ? _wd5913 : (_t5923 === _wc5910 ? _wd5911 : b.value(_t5923))) === 1))) continue;
+                          if (!(((_t5923 === _wc5912 ? _wd5913 : (_t5923 === _wc5910 ? _wd5911 : (b.grid[_t5923] || -1))) === 1))) continue;
                           _g5919++;
                         }
                       }
@@ -2934,7 +2934,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                       for (let _i5942 = 0; _i5942 < _a5941.length; _i5942++) {
                         const v_y = _a5941[_i5942];
                         const _t5943 = sp.edgeOf(v_t, v_y);
-                        if (!(((_t5943 === _wc5912 ? _wd5913 : (_t5943 === _wc5910 ? _wd5911 : b.value(_t5943))) === 1))) continue;
+                        if (!(((_t5943 === _wc5912 ? _wd5913 : (_t5943 === _wc5910 ? _wd5911 : (b.grid[_t5943] || -1))) === 1))) continue;
                         _g5939++;
                       }
                     }
@@ -2976,7 +2976,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                         for (let _i5961 = 0; _i5961 < _a5960.length; _i5961++) {
                           const v_y = _a5960[_i5961];
                           const _t5962 = sp.edgeOf(v_t, v_y);
-                          let _c5982: boolean = !((_t5962 === _wc5912 ? true : (_t5962 === _wc5910 ? true : b.known(_t5962))));
+                          let _c5982: boolean = !((_t5962 === _wc5912 ? true : (_t5962 === _wc5910 ? true : (b.grid[_t5962] !== 0))));
                           if (_c5982) {
                             let _g5963 = 0;
                             G5964: {
@@ -2984,7 +2984,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                               for (let _i5966 = 0; _i5966 < _a5965.length; _i5966++) {
                                 const v_y = _a5965[_i5966];
                                 const _t5967 = sp.edgeOf(v_t, v_y);
-                                if (!(((_t5967 === _wc5912 ? _wd5913 : (_t5967 === _wc5910 ? _wd5911 : b.value(_t5967))) === 1))) continue;
+                                if (!(((_t5967 === _wc5912 ? _wd5913 : (_t5967 === _wc5910 ? _wd5911 : (b.grid[_t5967] || -1))) === 1))) continue;
                                 _g5963++;
                               }
                             }
@@ -3028,7 +3028,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                               for (let _i5987 = 0; _i5987 < _a5986.length; _i5987++) {
                                 const v_y_5985 = _a5986[_i5987];
                                 const _t5988 = sp.edgeOf(v_y, v_y_5985);
-                                if (!(((_t5988 === _wc5912 ? _wd5913 : (_t5988 === _wc5910 ? _wd5911 : b.value(_t5988))) === 1))) continue;
+                                if (!(((_t5988 === _wc5912 ? _wd5913 : (_t5988 === _wc5910 ? _wd5911 : (b.grid[_t5988] || -1))) === 1))) continue;
                                 _g5983++;
                               }
                             }
@@ -3080,7 +3080,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                               }
                               _g6013.length = 0;
                               G6014: {
-                                const _a6033 = throughWhere(sp, v_t, (_te6028: number): boolean => { let _c6030: boolean = ((_te6028 === _wc5912 ? _wd5913 : (_te6028 === _wc5910 ? _wd5911 : b.value(_te6028))) === 1); if (_c6030) {   const _t6029 = sp.edgeEnds[2 * _te6028];   _c6030 = !((clueAt(cl.number, _t6029) !== -1)); } let _c6032: boolean = _c6030; if (_c6032) {   const _t6031 = sp.edgeEnds[2 * _te6028 + 1];   _c6032 = !((clueAt(cl.number, _t6031) !== -1)); } return _c6032; });
+                                const _a6033 = throughWhere(sp, v_t, (_te6028: number): boolean => { let _c6030: boolean = ((_te6028 === _wc5912 ? _wd5913 : (_te6028 === _wc5910 ? _wd5911 : (b.grid[_te6028] || -1))) === 1); if (_c6030) {   const _t6029 = sp.edgeEnds[2 * _te6028];   _c6030 = !((clueAt(cl.number, _t6029) !== -1)); } let _c6032: boolean = _c6030; if (_c6032) {   const _t6031 = sp.edgeEnds[2 * _te6028 + 1];   _c6032 = !((clueAt(cl.number, _t6031) !== -1)); } return _c6032; });
                                 for (let _i6034 = 0; _i6034 < _a6033.length; _i6034++) {
                                   const v_t_6027 = _a6033[_i6034];
                                   const _h6037 = clueAt(cl.number, v_t_6027);
@@ -3094,7 +3094,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                     let _c6043: boolean = (_h6040 && (_h6041 !== -1));
                                     if (_c6043) {
                                       const _t6042 = sp.edgeOf(v_t_6027, v_x);
-                                      _c6043 = ((_t6042 === _wc5912 ? _wd5913 : (_t6042 === _wc5910 ? _wd5911 : b.value(_t6042))) === 1);
+                                      _c6043 = ((_t6042 === _wc5912 ? _wd5913 : (_t6042 === _wc5910 ? _wd5911 : (b.grid[_t6042] || -1))) === 1);
                                     }
                                     if (!(_c6043)) continue;
                                     if (!_g6013.includes(v_x)) _g6013.push(v_x);
@@ -3117,7 +3117,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                 }
                                 _g6053.length = 0;
                                 G6054: {
-                                  const _a6071 = throughWhere(sp, v_y, (_te6066: number): boolean => { let _c6068: boolean = ((_te6066 === _wc5912 ? _wd5913 : (_te6066 === _wc5910 ? _wd5911 : b.value(_te6066))) === 1); if (_c6068) {   const _t6067 = sp.edgeEnds[2 * _te6066];   _c6068 = !((clueAt(cl.number, _t6067) !== -1)); } let _c6070: boolean = _c6068; if (_c6070) {   const _t6069 = sp.edgeEnds[2 * _te6066 + 1];   _c6070 = !((clueAt(cl.number, _t6069) !== -1)); } return _c6070; });
+                                  const _a6071 = throughWhere(sp, v_y, (_te6066: number): boolean => { let _c6068: boolean = ((_te6066 === _wc5912 ? _wd5913 : (_te6066 === _wc5910 ? _wd5911 : (b.grid[_te6066] || -1))) === 1); if (_c6068) {   const _t6067 = sp.edgeEnds[2 * _te6066];   _c6068 = !((clueAt(cl.number, _t6067) !== -1)); } let _c6070: boolean = _c6068; if (_c6070) {   const _t6069 = sp.edgeEnds[2 * _te6066 + 1];   _c6070 = !((clueAt(cl.number, _t6069) !== -1)); } return _c6070; });
                                   for (let _i6072 = 0; _i6072 < _a6071.length; _i6072++) {
                                     const v_t = _a6071[_i6072];
                                     const _h6075 = clueAt(cl.number, v_t);
@@ -3131,7 +3131,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                       let _c6081: boolean = (_h6078 && (_h6079 !== -1));
                                       if (_c6081) {
                                         const _t6080 = sp.edgeOf(v_t, v_x);
-                                        _c6081 = ((_t6080 === _wc5912 ? _wd5913 : (_t6080 === _wc5910 ? _wd5911 : b.value(_t6080))) === 1);
+                                        _c6081 = ((_t6080 === _wc5912 ? _wd5913 : (_t6080 === _wc5910 ? _wd5911 : (b.grid[_t6080] || -1))) === 1);
                                       }
                                       if (!(_c6081)) continue;
                                       if (!_g6053.includes(v_x)) _g6053.push(v_x);
@@ -3151,14 +3151,14 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                             }
                             _c6086 = _q6004;
                           }
-                          if (!((_c6086 && (_h5320 || !(throughWhere(sp, v_t, (_te6087: number): boolean => {  return ((_te6087 === _wc5912 ? _wd5913 : (_te6087 === _wc5910 ? _wd5911 : b.value(_te6087))) === 1); }).includes(v_y)))))) continue;
+                          if (!((_c6086 && (_h5320 || !(throughWhere(sp, v_t, (_te6087: number): boolean => {  return ((_te6087 === _wc5912 ? _wd5913 : (_te6087 === _wc5910 ? _wd5911 : (b.grid[_te6087] || -1))) === 1); }).includes(v_y)))))) continue;
                           let _g6088 = 0;
                           G6089: {
                             const _a6090 = sp.adj4[v_t];
                             for (let _i6091 = 0; _i6091 < _a6090.length; _i6091++) {
                               const v_y = _a6090[_i6091];
                               const _t6092 = sp.edgeOf(v_t, v_y);
-                              if (!(((_t6092 === _wc5912 ? _wd5913 : (_t6092 === _wc5910 ? _wd5911 : b.value(_t6092))) === 1))) continue;
+                              if (!(((_t6092 === _wc5912 ? _wd5913 : (_t6092 === _wc5910 ? _wd5911 : (b.grid[_t6092] || -1))) === 1))) continue;
                               _g6088++;
                             }
                           }
@@ -3201,7 +3201,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                               for (let _i6111 = 0; _i6111 < _n6110; _i6111++) {
                                 const v_z = _a6109[_i6111];
                                 const _t6112 = sp.edgeOf(v_t, v_z);
-                                let _c6132: boolean = !((_t6112 === _wc5912 ? true : (_t6112 === _wc5910 ? true : b.known(_t6112))));
+                                let _c6132: boolean = !((_t6112 === _wc5912 ? true : (_t6112 === _wc5910 ? true : (b.grid[_t6112] !== 0))));
                                 if (_c6132) {
                                   let _g6113 = 0;
                                   G6114: {
@@ -3209,7 +3209,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                     for (let _i6116 = 0; _i6116 < _a6115.length; _i6116++) {
                                       const v_y = _a6115[_i6116];
                                       const _t6117 = sp.edgeOf(v_t, v_y);
-                                      if (!(((_t6117 === _wc5912 ? _wd5913 : (_t6117 === _wc5910 ? _wd5911 : b.value(_t6117))) === 1))) continue;
+                                      if (!(((_t6117 === _wc5912 ? _wd5913 : (_t6117 === _wc5910 ? _wd5911 : (b.grid[_t6117] || -1))) === 1))) continue;
                                       _g6113++;
                                     }
                                   }
@@ -3253,7 +3253,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                     for (let _i6136 = 0; _i6136 < _a6135.length; _i6136++) {
                                       const v_y = _a6135[_i6136];
                                       const _t6137 = sp.edgeOf(v_z, v_y);
-                                      if (!(((_t6137 === _wc5912 ? _wd5913 : (_t6137 === _wc5910 ? _wd5911 : b.value(_t6137))) === 1))) continue;
+                                      if (!(((_t6137 === _wc5912 ? _wd5913 : (_t6137 === _wc5910 ? _wd5911 : (b.grid[_t6137] || -1))) === 1))) continue;
                                       _g6133++;
                                     }
                                   }
@@ -3305,7 +3305,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                     }
                                     _g6162.length = 0;
                                     G6163: {
-                                      const _a6182 = throughWhere(sp, v_t, (_te6177: number): boolean => { let _c6179: boolean = ((_te6177 === _wc5912 ? _wd5913 : (_te6177 === _wc5910 ? _wd5911 : b.value(_te6177))) === 1); if (_c6179) {   const _t6178 = sp.edgeEnds[2 * _te6177];   _c6179 = !((clueAt(cl.number, _t6178) !== -1)); } let _c6181: boolean = _c6179; if (_c6181) {   const _t6180 = sp.edgeEnds[2 * _te6177 + 1];   _c6181 = !((clueAt(cl.number, _t6180) !== -1)); } return _c6181; });
+                                      const _a6182 = throughWhere(sp, v_t, (_te6177: number): boolean => { let _c6179: boolean = ((_te6177 === _wc5912 ? _wd5913 : (_te6177 === _wc5910 ? _wd5911 : (b.grid[_te6177] || -1))) === 1); if (_c6179) {   const _t6178 = sp.edgeEnds[2 * _te6177];   _c6179 = !((clueAt(cl.number, _t6178) !== -1)); } let _c6181: boolean = _c6179; if (_c6181) {   const _t6180 = sp.edgeEnds[2 * _te6177 + 1];   _c6181 = !((clueAt(cl.number, _t6180) !== -1)); } return _c6181; });
                                       for (let _i6183 = 0; _i6183 < _a6182.length; _i6183++) {
                                         const v_t_6176 = _a6182[_i6183];
                                         const _h6186 = clueAt(cl.number, v_t_6176);
@@ -3319,7 +3319,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                           let _c6192: boolean = (_h6189 && (_h6190 !== -1));
                                           if (_c6192) {
                                             const _t6191 = sp.edgeOf(v_t_6176, v_x);
-                                            _c6192 = ((_t6191 === _wc5912 ? _wd5913 : (_t6191 === _wc5910 ? _wd5911 : b.value(_t6191))) === 1);
+                                            _c6192 = ((_t6191 === _wc5912 ? _wd5913 : (_t6191 === _wc5910 ? _wd5911 : (b.grid[_t6191] || -1))) === 1);
                                           }
                                           if (!(_c6192)) continue;
                                           if (!_g6162.includes(v_x)) _g6162.push(v_x);
@@ -3342,7 +3342,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                       }
                                       _g6202.length = 0;
                                       G6203: {
-                                        const _a6220 = throughWhere(sp, v_z, (_te6215: number): boolean => { let _c6217: boolean = ((_te6215 === _wc5912 ? _wd5913 : (_te6215 === _wc5910 ? _wd5911 : b.value(_te6215))) === 1); if (_c6217) {   const _t6216 = sp.edgeEnds[2 * _te6215];   _c6217 = !((clueAt(cl.number, _t6216) !== -1)); } let _c6219: boolean = _c6217; if (_c6219) {   const _t6218 = sp.edgeEnds[2 * _te6215 + 1];   _c6219 = !((clueAt(cl.number, _t6218) !== -1)); } return _c6219; });
+                                        const _a6220 = throughWhere(sp, v_z, (_te6215: number): boolean => { let _c6217: boolean = ((_te6215 === _wc5912 ? _wd5913 : (_te6215 === _wc5910 ? _wd5911 : (b.grid[_te6215] || -1))) === 1); if (_c6217) {   const _t6216 = sp.edgeEnds[2 * _te6215];   _c6217 = !((clueAt(cl.number, _t6216) !== -1)); } let _c6219: boolean = _c6217; if (_c6219) {   const _t6218 = sp.edgeEnds[2 * _te6215 + 1];   _c6219 = !((clueAt(cl.number, _t6218) !== -1)); } return _c6219; });
                                         for (let _i6221 = 0; _i6221 < _a6220.length; _i6221++) {
                                           const v_t = _a6220[_i6221];
                                           const _h6224 = clueAt(cl.number, v_t);
@@ -3356,7 +3356,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                             let _c6230: boolean = (_h6227 && (_h6228 !== -1));
                                             if (_c6230) {
                                               const _t6229 = sp.edgeOf(v_t, v_x);
-                                              _c6230 = ((_t6229 === _wc5912 ? _wd5913 : (_t6229 === _wc5910 ? _wd5911 : b.value(_t6229))) === 1);
+                                              _c6230 = ((_t6229 === _wc5912 ? _wd5913 : (_t6229 === _wc5910 ? _wd5911 : (b.grid[_t6229] || -1))) === 1);
                                             }
                                             if (!(_c6230)) continue;
                                             if (!_g6202.includes(v_x)) _g6202.push(v_x);
@@ -3376,7 +3376,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                   }
                                   _c6235 = _q6153;
                                 }
-                                if ((_c6235 && (_h5320 || !(throughWhere(sp, v_t, (_te6236: number): boolean => {  return ((_te6236 === _wc5912 ? _wd5913 : (_te6236 === _wc5910 ? _wd5911 : b.value(_te6236))) === 1); }).includes(v_z))))) {
+                                if ((_c6235 && (_h5320 || !(throughWhere(sp, v_t, (_te6236: number): boolean => {  return ((_te6236 === _wc5912 ? _wd5913 : (_te6236 === _wc5910 ? _wd5911 : (b.grid[_te6236] || -1))) === 1); }).includes(v_z))))) {
                                   _q6107 = true;
                                   break Q6108;
                                 }
@@ -3405,7 +3405,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                             for (let _i6246 = 0; _i6246 < _a6245.length; _i6246++) {
                               const v_y = _a6245[_i6246];
                               const _t6247 = sp.edgeOf(v_s, v_y);
-                              if (!(((_t6247 === _wc5912 ? _wd5913 : (_t6247 === _wc5910 ? _wd5911 : b.value(_t6247))) === 1))) continue;
+                              if (!(((_t6247 === _wc5912 ? _wd5913 : (_t6247 === _wc5910 ? _wd5911 : (b.grid[_t6247] || -1))) === 1))) continue;
                               _g6243++;
                             }
                           }
@@ -3447,7 +3447,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                               for (let _i6265 = 0; _i6265 < _a6264.length; _i6265++) {
                                 const v_y = _a6264[_i6265];
                                 const _t6266 = sp.edgeOf(v_s, v_y);
-                                let _c6286: boolean = !((_t6266 === _wc5912 ? true : (_t6266 === _wc5910 ? true : b.known(_t6266))));
+                                let _c6286: boolean = !((_t6266 === _wc5912 ? true : (_t6266 === _wc5910 ? true : (b.grid[_t6266] !== 0))));
                                 if (_c6286) {
                                   let _g6267 = 0;
                                   G6268: {
@@ -3455,7 +3455,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                     for (let _i6270 = 0; _i6270 < _a6269.length; _i6270++) {
                                       const v_y = _a6269[_i6270];
                                       const _t6271 = sp.edgeOf(v_s, v_y);
-                                      if (!(((_t6271 === _wc5912 ? _wd5913 : (_t6271 === _wc5910 ? _wd5911 : b.value(_t6271))) === 1))) continue;
+                                      if (!(((_t6271 === _wc5912 ? _wd5913 : (_t6271 === _wc5910 ? _wd5911 : (b.grid[_t6271] || -1))) === 1))) continue;
                                       _g6267++;
                                     }
                                   }
@@ -3499,7 +3499,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                     for (let _i6291 = 0; _i6291 < _a6290.length; _i6291++) {
                                       const v_y_6289 = _a6290[_i6291];
                                       const _t6292 = sp.edgeOf(v_y, v_y_6289);
-                                      if (!(((_t6292 === _wc5912 ? _wd5913 : (_t6292 === _wc5910 ? _wd5911 : b.value(_t6292))) === 1))) continue;
+                                      if (!(((_t6292 === _wc5912 ? _wd5913 : (_t6292 === _wc5910 ? _wd5911 : (b.grid[_t6292] || -1))) === 1))) continue;
                                       _g6287++;
                                     }
                                   }
@@ -3551,7 +3551,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                     }
                                     _g6317.length = 0;
                                     G6318: {
-                                      const _a6335 = throughWhere(sp, v_s, (_te6330: number): boolean => { let _c6332: boolean = ((_te6330 === _wc5912 ? _wd5913 : (_te6330 === _wc5910 ? _wd5911 : b.value(_te6330))) === 1); if (_c6332) {   const _t6331 = sp.edgeEnds[2 * _te6330];   _c6332 = !((clueAt(cl.number, _t6331) !== -1)); } let _c6334: boolean = _c6332; if (_c6334) {   const _t6333 = sp.edgeEnds[2 * _te6330 + 1];   _c6334 = !((clueAt(cl.number, _t6333) !== -1)); } return _c6334; });
+                                      const _a6335 = throughWhere(sp, v_s, (_te6330: number): boolean => { let _c6332: boolean = ((_te6330 === _wc5912 ? _wd5913 : (_te6330 === _wc5910 ? _wd5911 : (b.grid[_te6330] || -1))) === 1); if (_c6332) {   const _t6331 = sp.edgeEnds[2 * _te6330];   _c6332 = !((clueAt(cl.number, _t6331) !== -1)); } let _c6334: boolean = _c6332; if (_c6334) {   const _t6333 = sp.edgeEnds[2 * _te6330 + 1];   _c6334 = !((clueAt(cl.number, _t6333) !== -1)); } return _c6334; });
                                       for (let _i6336 = 0; _i6336 < _a6335.length; _i6336++) {
                                         const v_t = _a6335[_i6336];
                                         const _h6339 = clueAt(cl.number, v_t);
@@ -3565,7 +3565,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                           let _c6345: boolean = (_h6342 && (_h6343 !== -1));
                                           if (_c6345) {
                                             const _t6344 = sp.edgeOf(v_t, v_x);
-                                            _c6345 = ((_t6344 === _wc5912 ? _wd5913 : (_t6344 === _wc5910 ? _wd5911 : b.value(_t6344))) === 1);
+                                            _c6345 = ((_t6344 === _wc5912 ? _wd5913 : (_t6344 === _wc5910 ? _wd5911 : (b.grid[_t6344] || -1))) === 1);
                                           }
                                           if (!(_c6345)) continue;
                                           if (!_g6317.includes(v_x)) _g6317.push(v_x);
@@ -3588,7 +3588,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                       }
                                       _g6355.length = 0;
                                       G6356: {
-                                        const _a6373 = throughWhere(sp, v_y, (_te6368: number): boolean => { let _c6370: boolean = ((_te6368 === _wc5912 ? _wd5913 : (_te6368 === _wc5910 ? _wd5911 : b.value(_te6368))) === 1); if (_c6370) {   const _t6369 = sp.edgeEnds[2 * _te6368];   _c6370 = !((clueAt(cl.number, _t6369) !== -1)); } let _c6372: boolean = _c6370; if (_c6372) {   const _t6371 = sp.edgeEnds[2 * _te6368 + 1];   _c6372 = !((clueAt(cl.number, _t6371) !== -1)); } return _c6372; });
+                                        const _a6373 = throughWhere(sp, v_y, (_te6368: number): boolean => { let _c6370: boolean = ((_te6368 === _wc5912 ? _wd5913 : (_te6368 === _wc5910 ? _wd5911 : (b.grid[_te6368] || -1))) === 1); if (_c6370) {   const _t6369 = sp.edgeEnds[2 * _te6368];   _c6370 = !((clueAt(cl.number, _t6369) !== -1)); } let _c6372: boolean = _c6370; if (_c6372) {   const _t6371 = sp.edgeEnds[2 * _te6368 + 1];   _c6372 = !((clueAt(cl.number, _t6371) !== -1)); } return _c6372; });
                                         for (let _i6374 = 0; _i6374 < _a6373.length; _i6374++) {
                                           const v_t = _a6373[_i6374];
                                           const _h6377 = clueAt(cl.number, v_t);
@@ -3602,7 +3602,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                             let _c6383: boolean = (_h6380 && (_h6381 !== -1));
                                             if (_c6383) {
                                               const _t6382 = sp.edgeOf(v_t, v_x);
-                                              _c6383 = ((_t6382 === _wc5912 ? _wd5913 : (_t6382 === _wc5910 ? _wd5911 : b.value(_t6382))) === 1);
+                                              _c6383 = ((_t6382 === _wc5912 ? _wd5913 : (_t6382 === _wc5910 ? _wd5911 : (b.grid[_t6382] || -1))) === 1);
                                             }
                                             if (!(_c6383)) continue;
                                             if (!_g6355.includes(v_x)) _g6355.push(v_x);
@@ -3622,14 +3622,14 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                   }
                                   _c6388 = _q6308;
                                 }
-                                if (!((_c6388 && (_h5320 || !(throughWhere(sp, v_s, (_te6389: number): boolean => {  return ((_te6389 === _wc5912 ? _wd5913 : (_te6389 === _wc5910 ? _wd5911 : b.value(_te6389))) === 1); }).includes(v_y)))))) continue;
+                                if (!((_c6388 && (_h5320 || !(throughWhere(sp, v_s, (_te6389: number): boolean => {  return ((_te6389 === _wc5912 ? _wd5913 : (_te6389 === _wc5910 ? _wd5911 : (b.grid[_te6389] || -1))) === 1); }).includes(v_y)))))) continue;
                                 let _g6390 = 0;
                                 G6391: {
                                   const _a6392 = sp.adj4[v_s];
                                   for (let _i6393 = 0; _i6393 < _a6392.length; _i6393++) {
                                     const v_y = _a6392[_i6393];
                                     const _t6394 = sp.edgeOf(v_s, v_y);
-                                    if (!(((_t6394 === _wc5912 ? _wd5913 : (_t6394 === _wc5910 ? _wd5911 : b.value(_t6394))) === 1))) continue;
+                                    if (!(((_t6394 === _wc5912 ? _wd5913 : (_t6394 === _wc5910 ? _wd5911 : (b.grid[_t6394] || -1))) === 1))) continue;
                                     _g6390++;
                                   }
                                 }
@@ -3672,7 +3672,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                     for (let _i6413 = 0; _i6413 < _n6412; _i6413++) {
                                       const v_z = _a6411[_i6413];
                                       const _t6414 = sp.edgeOf(v_s, v_z);
-                                      let _c6434: boolean = !((_t6414 === _wc5912 ? true : (_t6414 === _wc5910 ? true : b.known(_t6414))));
+                                      let _c6434: boolean = !((_t6414 === _wc5912 ? true : (_t6414 === _wc5910 ? true : (b.grid[_t6414] !== 0))));
                                       if (_c6434) {
                                         let _g6415 = 0;
                                         G6416: {
@@ -3680,7 +3680,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                           for (let _i6418 = 0; _i6418 < _a6417.length; _i6418++) {
                                             const v_y = _a6417[_i6418];
                                             const _t6419 = sp.edgeOf(v_s, v_y);
-                                            if (!(((_t6419 === _wc5912 ? _wd5913 : (_t6419 === _wc5910 ? _wd5911 : b.value(_t6419))) === 1))) continue;
+                                            if (!(((_t6419 === _wc5912 ? _wd5913 : (_t6419 === _wc5910 ? _wd5911 : (b.grid[_t6419] || -1))) === 1))) continue;
                                             _g6415++;
                                           }
                                         }
@@ -3724,7 +3724,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                           for (let _i6438 = 0; _i6438 < _a6437.length; _i6438++) {
                                             const v_y = _a6437[_i6438];
                                             const _t6439 = sp.edgeOf(v_z, v_y);
-                                            if (!(((_t6439 === _wc5912 ? _wd5913 : (_t6439 === _wc5910 ? _wd5911 : b.value(_t6439))) === 1))) continue;
+                                            if (!(((_t6439 === _wc5912 ? _wd5913 : (_t6439 === _wc5910 ? _wd5911 : (b.grid[_t6439] || -1))) === 1))) continue;
                                             _g6435++;
                                           }
                                         }
@@ -3776,7 +3776,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                           }
                                           _g6464.length = 0;
                                           G6465: {
-                                            const _a6482 = throughWhere(sp, v_s, (_te6477: number): boolean => { let _c6479: boolean = ((_te6477 === _wc5912 ? _wd5913 : (_te6477 === _wc5910 ? _wd5911 : b.value(_te6477))) === 1); if (_c6479) {   const _t6478 = sp.edgeEnds[2 * _te6477];   _c6479 = !((clueAt(cl.number, _t6478) !== -1)); } let _c6481: boolean = _c6479; if (_c6481) {   const _t6480 = sp.edgeEnds[2 * _te6477 + 1];   _c6481 = !((clueAt(cl.number, _t6480) !== -1)); } return _c6481; });
+                                            const _a6482 = throughWhere(sp, v_s, (_te6477: number): boolean => { let _c6479: boolean = ((_te6477 === _wc5912 ? _wd5913 : (_te6477 === _wc5910 ? _wd5911 : (b.grid[_te6477] || -1))) === 1); if (_c6479) {   const _t6478 = sp.edgeEnds[2 * _te6477];   _c6479 = !((clueAt(cl.number, _t6478) !== -1)); } let _c6481: boolean = _c6479; if (_c6481) {   const _t6480 = sp.edgeEnds[2 * _te6477 + 1];   _c6481 = !((clueAt(cl.number, _t6480) !== -1)); } return _c6481; });
                                             for (let _i6483 = 0; _i6483 < _a6482.length; _i6483++) {
                                               const v_t = _a6482[_i6483];
                                               const _h6486 = clueAt(cl.number, v_t);
@@ -3790,7 +3790,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                                 let _c6492: boolean = (_h6489 && (_h6490 !== -1));
                                                 if (_c6492) {
                                                   const _t6491 = sp.edgeOf(v_t, v_x);
-                                                  _c6492 = ((_t6491 === _wc5912 ? _wd5913 : (_t6491 === _wc5910 ? _wd5911 : b.value(_t6491))) === 1);
+                                                  _c6492 = ((_t6491 === _wc5912 ? _wd5913 : (_t6491 === _wc5910 ? _wd5911 : (b.grid[_t6491] || -1))) === 1);
                                                 }
                                                 if (!(_c6492)) continue;
                                                 if (!_g6464.includes(v_x)) _g6464.push(v_x);
@@ -3813,7 +3813,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                             }
                                             _g6502.length = 0;
                                             G6503: {
-                                              const _a6520 = throughWhere(sp, v_z, (_te6515: number): boolean => { let _c6517: boolean = ((_te6515 === _wc5912 ? _wd5913 : (_te6515 === _wc5910 ? _wd5911 : b.value(_te6515))) === 1); if (_c6517) {   const _t6516 = sp.edgeEnds[2 * _te6515];   _c6517 = !((clueAt(cl.number, _t6516) !== -1)); } let _c6519: boolean = _c6517; if (_c6519) {   const _t6518 = sp.edgeEnds[2 * _te6515 + 1];   _c6519 = !((clueAt(cl.number, _t6518) !== -1)); } return _c6519; });
+                                              const _a6520 = throughWhere(sp, v_z, (_te6515: number): boolean => { let _c6517: boolean = ((_te6515 === _wc5912 ? _wd5913 : (_te6515 === _wc5910 ? _wd5911 : (b.grid[_te6515] || -1))) === 1); if (_c6517) {   const _t6516 = sp.edgeEnds[2 * _te6515];   _c6517 = !((clueAt(cl.number, _t6516) !== -1)); } let _c6519: boolean = _c6517; if (_c6519) {   const _t6518 = sp.edgeEnds[2 * _te6515 + 1];   _c6519 = !((clueAt(cl.number, _t6518) !== -1)); } return _c6519; });
                                               for (let _i6521 = 0; _i6521 < _a6520.length; _i6521++) {
                                                 const v_t = _a6520[_i6521];
                                                 const _h6524 = clueAt(cl.number, v_t);
@@ -3827,7 +3827,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                                   let _c6530: boolean = (_h6527 && (_h6528 !== -1));
                                                   if (_c6530) {
                                                     const _t6529 = sp.edgeOf(v_t, v_x);
-                                                    _c6530 = ((_t6529 === _wc5912 ? _wd5913 : (_t6529 === _wc5910 ? _wd5911 : b.value(_t6529))) === 1);
+                                                    _c6530 = ((_t6529 === _wc5912 ? _wd5913 : (_t6529 === _wc5910 ? _wd5911 : (b.grid[_t6529] || -1))) === 1);
                                                   }
                                                   if (!(_c6530)) continue;
                                                   if (!_g6502.includes(v_x)) _g6502.push(v_x);
@@ -3847,7 +3847,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                         }
                                         _c6535 = _q6455;
                                       }
-                                      if ((_c6535 && (_h5320 || !(throughWhere(sp, v_s, (_te6536: number): boolean => {  return ((_te6536 === _wc5912 ? _wd5913 : (_te6536 === _wc5910 ? _wd5911 : b.value(_te6536))) === 1); }).includes(v_z))))) {
+                                      if ((_c6535 && (_h5320 || !(throughWhere(sp, v_s, (_te6536: number): boolean => {  return ((_te6536 === _wc5912 ? _wd5913 : (_te6536 === _wc5910 ? _wd5911 : (b.grid[_te6536] || -1))) === 1); }).includes(v_z))))) {
                                         _q6409 = true;
                                         break Q6410;
                                       }
@@ -3902,7 +3902,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
             const v_j = _a7097[_i7098];
             let _c7744: boolean = (_h7100 && (_h7099 < _i7098));
             if (_c7744) {
-              let _c7111: boolean = (throughWhere(sp, v_i, (_te7101: number): boolean => {  return (b.value(_te7101) === 1); }).includes(v_j));
+              let _c7111: boolean = (throughWhere(sp, v_i, (_te7101: number): boolean => {  return ((b.grid[_te7101] || -1) === 1); }).includes(v_j));
               if (!_c7111) {
                 let _c7110: boolean = _h5898;
                 if (_c7110) {
@@ -3935,7 +3935,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                 const _wd7116 = 1;
                 let _q7117 = false;
                 Q7118: {
-                  const _a7120 = throughWhere(sp, v_c, (_te7119: number): boolean => {  return ((_te7119 === _wc7115 ? _wd7116 : (_te7119 === _wc7113 ? _wd7114 : b.value(_te7119))) === 1); });
+                  const _a7120 = throughWhere(sp, v_c, (_te7119: number): boolean => {  return ((_te7119 === _wc7115 ? _wd7116 : (_te7119 === _wc7113 ? _wd7114 : (b.grid[_te7119] || -1))) === 1); });
                   for (let _i7121 = 0; _i7121 < _a7120.length; _i7121++) {
                     const v_t = _a7120[_i7121];
                     let _c7141: boolean = (((v_t === v_c) || (v_t === v_i)) || (v_t === v_j));
@@ -3946,7 +3946,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                         for (let _i7125 = 0; _i7125 < _a7124.length; _i7125++) {
                           const v_y = _a7124[_i7125];
                           const _t7126 = sp.edgeOf(v_t, v_y);
-                          if (!(((_t7126 === _wc7115 ? _wd7116 : (_t7126 === _wc7113 ? _wd7114 : b.value(_t7126))) === 1))) continue;
+                          if (!(((_t7126 === _wc7115 ? _wd7116 : (_t7126 === _wc7113 ? _wd7114 : (b.grid[_t7126] || -1))) === 1))) continue;
                           _g7122++;
                         }
                       }
@@ -3989,7 +3989,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                       for (let _i7145 = 0; _i7145 < _a7144.length; _i7145++) {
                         const v_y = _a7144[_i7145];
                         const _t7146 = sp.edgeOf(v_t, v_y);
-                        if (!(((_t7146 === _wc7115 ? _wd7116 : (_t7146 === _wc7113 ? _wd7114 : b.value(_t7146))) === 1))) continue;
+                        if (!(((_t7146 === _wc7115 ? _wd7116 : (_t7146 === _wc7113 ? _wd7114 : (b.grid[_t7146] || -1))) === 1))) continue;
                         _g7142++;
                       }
                     }
@@ -4031,7 +4031,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                         for (let _i7164 = 0; _i7164 < _a7163.length; _i7164++) {
                           const v_y = _a7163[_i7164];
                           const _t7165 = sp.edgeOf(v_t, v_y);
-                          let _c7185: boolean = !((_t7165 === _wc7115 ? true : (_t7165 === _wc7113 ? true : b.known(_t7165))));
+                          let _c7185: boolean = !((_t7165 === _wc7115 ? true : (_t7165 === _wc7113 ? true : (b.grid[_t7165] !== 0))));
                           if (_c7185) {
                             let _g7166 = 0;
                             G7167: {
@@ -4039,7 +4039,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                               for (let _i7169 = 0; _i7169 < _a7168.length; _i7169++) {
                                 const v_y = _a7168[_i7169];
                                 const _t7170 = sp.edgeOf(v_t, v_y);
-                                if (!(((_t7170 === _wc7115 ? _wd7116 : (_t7170 === _wc7113 ? _wd7114 : b.value(_t7170))) === 1))) continue;
+                                if (!(((_t7170 === _wc7115 ? _wd7116 : (_t7170 === _wc7113 ? _wd7114 : (b.grid[_t7170] || -1))) === 1))) continue;
                                 _g7166++;
                               }
                             }
@@ -4083,7 +4083,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                               for (let _i7190 = 0; _i7190 < _a7189.length; _i7190++) {
                                 const v_y_7188 = _a7189[_i7190];
                                 const _t7191 = sp.edgeOf(v_y, v_y_7188);
-                                if (!(((_t7191 === _wc7115 ? _wd7116 : (_t7191 === _wc7113 ? _wd7114 : b.value(_t7191))) === 1))) continue;
+                                if (!(((_t7191 === _wc7115 ? _wd7116 : (_t7191 === _wc7113 ? _wd7114 : (b.grid[_t7191] || -1))) === 1))) continue;
                                 _g7186++;
                               }
                             }
@@ -4135,7 +4135,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                               }
                               _g7216.length = 0;
                               G7217: {
-                                const _a7236 = throughWhere(sp, v_t, (_te7231: number): boolean => { let _c7233: boolean = ((_te7231 === _wc7115 ? _wd7116 : (_te7231 === _wc7113 ? _wd7114 : b.value(_te7231))) === 1); if (_c7233) {   const _t7232 = sp.edgeEnds[2 * _te7231];   _c7233 = !((clueAt(cl.number, _t7232) !== -1)); } let _c7235: boolean = _c7233; if (_c7235) {   const _t7234 = sp.edgeEnds[2 * _te7231 + 1];   _c7235 = !((clueAt(cl.number, _t7234) !== -1)); } return _c7235; });
+                                const _a7236 = throughWhere(sp, v_t, (_te7231: number): boolean => { let _c7233: boolean = ((_te7231 === _wc7115 ? _wd7116 : (_te7231 === _wc7113 ? _wd7114 : (b.grid[_te7231] || -1))) === 1); if (_c7233) {   const _t7232 = sp.edgeEnds[2 * _te7231];   _c7233 = !((clueAt(cl.number, _t7232) !== -1)); } let _c7235: boolean = _c7233; if (_c7235) {   const _t7234 = sp.edgeEnds[2 * _te7231 + 1];   _c7235 = !((clueAt(cl.number, _t7234) !== -1)); } return _c7235; });
                                 for (let _i7237 = 0; _i7237 < _a7236.length; _i7237++) {
                                   const v_t_7230 = _a7236[_i7237];
                                   const _h7240 = clueAt(cl.number, v_t_7230);
@@ -4149,7 +4149,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                     let _c7246: boolean = (_h7243 && (_h7244 !== -1));
                                     if (_c7246) {
                                       const _t7245 = sp.edgeOf(v_t_7230, v_x);
-                                      _c7246 = ((_t7245 === _wc7115 ? _wd7116 : (_t7245 === _wc7113 ? _wd7114 : b.value(_t7245))) === 1);
+                                      _c7246 = ((_t7245 === _wc7115 ? _wd7116 : (_t7245 === _wc7113 ? _wd7114 : (b.grid[_t7245] || -1))) === 1);
                                     }
                                     if (!(_c7246)) continue;
                                     if (!_g7216.includes(v_x)) _g7216.push(v_x);
@@ -4172,7 +4172,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                 }
                                 _g7256.length = 0;
                                 G7257: {
-                                  const _a7274 = throughWhere(sp, v_y, (_te7269: number): boolean => { let _c7271: boolean = ((_te7269 === _wc7115 ? _wd7116 : (_te7269 === _wc7113 ? _wd7114 : b.value(_te7269))) === 1); if (_c7271) {   const _t7270 = sp.edgeEnds[2 * _te7269];   _c7271 = !((clueAt(cl.number, _t7270) !== -1)); } let _c7273: boolean = _c7271; if (_c7273) {   const _t7272 = sp.edgeEnds[2 * _te7269 + 1];   _c7273 = !((clueAt(cl.number, _t7272) !== -1)); } return _c7273; });
+                                  const _a7274 = throughWhere(sp, v_y, (_te7269: number): boolean => { let _c7271: boolean = ((_te7269 === _wc7115 ? _wd7116 : (_te7269 === _wc7113 ? _wd7114 : (b.grid[_te7269] || -1))) === 1); if (_c7271) {   const _t7270 = sp.edgeEnds[2 * _te7269];   _c7271 = !((clueAt(cl.number, _t7270) !== -1)); } let _c7273: boolean = _c7271; if (_c7273) {   const _t7272 = sp.edgeEnds[2 * _te7269 + 1];   _c7273 = !((clueAt(cl.number, _t7272) !== -1)); } return _c7273; });
                                   for (let _i7275 = 0; _i7275 < _a7274.length; _i7275++) {
                                     const v_t = _a7274[_i7275];
                                     const _h7278 = clueAt(cl.number, v_t);
@@ -4186,7 +4186,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                       let _c7284: boolean = (_h7281 && (_h7282 !== -1));
                                       if (_c7284) {
                                         const _t7283 = sp.edgeOf(v_t, v_x);
-                                        _c7284 = ((_t7283 === _wc7115 ? _wd7116 : (_t7283 === _wc7113 ? _wd7114 : b.value(_t7283))) === 1);
+                                        _c7284 = ((_t7283 === _wc7115 ? _wd7116 : (_t7283 === _wc7113 ? _wd7114 : (b.grid[_t7283] || -1))) === 1);
                                       }
                                       if (!(_c7284)) continue;
                                       if (!_g7256.includes(v_x)) _g7256.push(v_x);
@@ -4206,14 +4206,14 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                             }
                             _c7289 = _q7207;
                           }
-                          if (!((_c7289 && (_h5320 || !(throughWhere(sp, v_t, (_te7290: number): boolean => {  return ((_te7290 === _wc7115 ? _wd7116 : (_te7290 === _wc7113 ? _wd7114 : b.value(_te7290))) === 1); }).includes(v_y)))))) continue;
+                          if (!((_c7289 && (_h5320 || !(throughWhere(sp, v_t, (_te7290: number): boolean => {  return ((_te7290 === _wc7115 ? _wd7116 : (_te7290 === _wc7113 ? _wd7114 : (b.grid[_te7290] || -1))) === 1); }).includes(v_y)))))) continue;
                           let _g7291 = 0;
                           G7292: {
                             const _a7293 = sp.adj4[v_t];
                             for (let _i7294 = 0; _i7294 < _a7293.length; _i7294++) {
                               const v_y = _a7293[_i7294];
                               const _t7295 = sp.edgeOf(v_t, v_y);
-                              if (!(((_t7295 === _wc7115 ? _wd7116 : (_t7295 === _wc7113 ? _wd7114 : b.value(_t7295))) === 1))) continue;
+                              if (!(((_t7295 === _wc7115 ? _wd7116 : (_t7295 === _wc7113 ? _wd7114 : (b.grid[_t7295] || -1))) === 1))) continue;
                               _g7291++;
                             }
                           }
@@ -4256,7 +4256,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                               for (let _i7314 = 0; _i7314 < _n7313; _i7314++) {
                                 const v_z = _a7312[_i7314];
                                 const _t7315 = sp.edgeOf(v_t, v_z);
-                                let _c7335: boolean = !((_t7315 === _wc7115 ? true : (_t7315 === _wc7113 ? true : b.known(_t7315))));
+                                let _c7335: boolean = !((_t7315 === _wc7115 ? true : (_t7315 === _wc7113 ? true : (b.grid[_t7315] !== 0))));
                                 if (_c7335) {
                                   let _g7316 = 0;
                                   G7317: {
@@ -4264,7 +4264,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                     for (let _i7319 = 0; _i7319 < _a7318.length; _i7319++) {
                                       const v_y = _a7318[_i7319];
                                       const _t7320 = sp.edgeOf(v_t, v_y);
-                                      if (!(((_t7320 === _wc7115 ? _wd7116 : (_t7320 === _wc7113 ? _wd7114 : b.value(_t7320))) === 1))) continue;
+                                      if (!(((_t7320 === _wc7115 ? _wd7116 : (_t7320 === _wc7113 ? _wd7114 : (b.grid[_t7320] || -1))) === 1))) continue;
                                       _g7316++;
                                     }
                                   }
@@ -4308,7 +4308,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                     for (let _i7339 = 0; _i7339 < _a7338.length; _i7339++) {
                                       const v_y = _a7338[_i7339];
                                       const _t7340 = sp.edgeOf(v_z, v_y);
-                                      if (!(((_t7340 === _wc7115 ? _wd7116 : (_t7340 === _wc7113 ? _wd7114 : b.value(_t7340))) === 1))) continue;
+                                      if (!(((_t7340 === _wc7115 ? _wd7116 : (_t7340 === _wc7113 ? _wd7114 : (b.grid[_t7340] || -1))) === 1))) continue;
                                       _g7336++;
                                     }
                                   }
@@ -4360,7 +4360,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                     }
                                     _g7365.length = 0;
                                     G7366: {
-                                      const _a7385 = throughWhere(sp, v_t, (_te7380: number): boolean => { let _c7382: boolean = ((_te7380 === _wc7115 ? _wd7116 : (_te7380 === _wc7113 ? _wd7114 : b.value(_te7380))) === 1); if (_c7382) {   const _t7381 = sp.edgeEnds[2 * _te7380];   _c7382 = !((clueAt(cl.number, _t7381) !== -1)); } let _c7384: boolean = _c7382; if (_c7384) {   const _t7383 = sp.edgeEnds[2 * _te7380 + 1];   _c7384 = !((clueAt(cl.number, _t7383) !== -1)); } return _c7384; });
+                                      const _a7385 = throughWhere(sp, v_t, (_te7380: number): boolean => { let _c7382: boolean = ((_te7380 === _wc7115 ? _wd7116 : (_te7380 === _wc7113 ? _wd7114 : (b.grid[_te7380] || -1))) === 1); if (_c7382) {   const _t7381 = sp.edgeEnds[2 * _te7380];   _c7382 = !((clueAt(cl.number, _t7381) !== -1)); } let _c7384: boolean = _c7382; if (_c7384) {   const _t7383 = sp.edgeEnds[2 * _te7380 + 1];   _c7384 = !((clueAt(cl.number, _t7383) !== -1)); } return _c7384; });
                                       for (let _i7386 = 0; _i7386 < _a7385.length; _i7386++) {
                                         const v_t_7379 = _a7385[_i7386];
                                         const _h7389 = clueAt(cl.number, v_t_7379);
@@ -4374,7 +4374,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                           let _c7395: boolean = (_h7392 && (_h7393 !== -1));
                                           if (_c7395) {
                                             const _t7394 = sp.edgeOf(v_t_7379, v_x);
-                                            _c7395 = ((_t7394 === _wc7115 ? _wd7116 : (_t7394 === _wc7113 ? _wd7114 : b.value(_t7394))) === 1);
+                                            _c7395 = ((_t7394 === _wc7115 ? _wd7116 : (_t7394 === _wc7113 ? _wd7114 : (b.grid[_t7394] || -1))) === 1);
                                           }
                                           if (!(_c7395)) continue;
                                           if (!_g7365.includes(v_x)) _g7365.push(v_x);
@@ -4397,7 +4397,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                       }
                                       _g7405.length = 0;
                                       G7406: {
-                                        const _a7423 = throughWhere(sp, v_z, (_te7418: number): boolean => { let _c7420: boolean = ((_te7418 === _wc7115 ? _wd7116 : (_te7418 === _wc7113 ? _wd7114 : b.value(_te7418))) === 1); if (_c7420) {   const _t7419 = sp.edgeEnds[2 * _te7418];   _c7420 = !((clueAt(cl.number, _t7419) !== -1)); } let _c7422: boolean = _c7420; if (_c7422) {   const _t7421 = sp.edgeEnds[2 * _te7418 + 1];   _c7422 = !((clueAt(cl.number, _t7421) !== -1)); } return _c7422; });
+                                        const _a7423 = throughWhere(sp, v_z, (_te7418: number): boolean => { let _c7420: boolean = ((_te7418 === _wc7115 ? _wd7116 : (_te7418 === _wc7113 ? _wd7114 : (b.grid[_te7418] || -1))) === 1); if (_c7420) {   const _t7419 = sp.edgeEnds[2 * _te7418];   _c7420 = !((clueAt(cl.number, _t7419) !== -1)); } let _c7422: boolean = _c7420; if (_c7422) {   const _t7421 = sp.edgeEnds[2 * _te7418 + 1];   _c7422 = !((clueAt(cl.number, _t7421) !== -1)); } return _c7422; });
                                         for (let _i7424 = 0; _i7424 < _a7423.length; _i7424++) {
                                           const v_t = _a7423[_i7424];
                                           const _h7427 = clueAt(cl.number, v_t);
@@ -4411,7 +4411,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                             let _c7433: boolean = (_h7430 && (_h7431 !== -1));
                                             if (_c7433) {
                                               const _t7432 = sp.edgeOf(v_t, v_x);
-                                              _c7433 = ((_t7432 === _wc7115 ? _wd7116 : (_t7432 === _wc7113 ? _wd7114 : b.value(_t7432))) === 1);
+                                              _c7433 = ((_t7432 === _wc7115 ? _wd7116 : (_t7432 === _wc7113 ? _wd7114 : (b.grid[_t7432] || -1))) === 1);
                                             }
                                             if (!(_c7433)) continue;
                                             if (!_g7405.includes(v_x)) _g7405.push(v_x);
@@ -4431,7 +4431,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                   }
                                   _c7438 = _q7356;
                                 }
-                                if ((_c7438 && (_h5320 || !(throughWhere(sp, v_t, (_te7439: number): boolean => {  return ((_te7439 === _wc7115 ? _wd7116 : (_te7439 === _wc7113 ? _wd7114 : b.value(_te7439))) === 1); }).includes(v_z))))) {
+                                if ((_c7438 && (_h5320 || !(throughWhere(sp, v_t, (_te7439: number): boolean => {  return ((_te7439 === _wc7115 ? _wd7116 : (_te7439 === _wc7113 ? _wd7114 : (b.grid[_te7439] || -1))) === 1); }).includes(v_z))))) {
                                   _q7310 = true;
                                   break Q7311;
                                 }
@@ -4460,7 +4460,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                             for (let _i7449 = 0; _i7449 < _a7448.length; _i7449++) {
                               const v_y = _a7448[_i7449];
                               const _t7450 = sp.edgeOf(v_s, v_y);
-                              if (!(((_t7450 === _wc7115 ? _wd7116 : (_t7450 === _wc7113 ? _wd7114 : b.value(_t7450))) === 1))) continue;
+                              if (!(((_t7450 === _wc7115 ? _wd7116 : (_t7450 === _wc7113 ? _wd7114 : (b.grid[_t7450] || -1))) === 1))) continue;
                               _g7446++;
                             }
                           }
@@ -4502,7 +4502,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                               for (let _i7468 = 0; _i7468 < _a7467.length; _i7468++) {
                                 const v_y = _a7467[_i7468];
                                 const _t7469 = sp.edgeOf(v_s, v_y);
-                                let _c7489: boolean = !((_t7469 === _wc7115 ? true : (_t7469 === _wc7113 ? true : b.known(_t7469))));
+                                let _c7489: boolean = !((_t7469 === _wc7115 ? true : (_t7469 === _wc7113 ? true : (b.grid[_t7469] !== 0))));
                                 if (_c7489) {
                                   let _g7470 = 0;
                                   G7471: {
@@ -4510,7 +4510,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                     for (let _i7473 = 0; _i7473 < _a7472.length; _i7473++) {
                                       const v_y = _a7472[_i7473];
                                       const _t7474 = sp.edgeOf(v_s, v_y);
-                                      if (!(((_t7474 === _wc7115 ? _wd7116 : (_t7474 === _wc7113 ? _wd7114 : b.value(_t7474))) === 1))) continue;
+                                      if (!(((_t7474 === _wc7115 ? _wd7116 : (_t7474 === _wc7113 ? _wd7114 : (b.grid[_t7474] || -1))) === 1))) continue;
                                       _g7470++;
                                     }
                                   }
@@ -4554,7 +4554,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                     for (let _i7494 = 0; _i7494 < _a7493.length; _i7494++) {
                                       const v_y_7492 = _a7493[_i7494];
                                       const _t7495 = sp.edgeOf(v_y, v_y_7492);
-                                      if (!(((_t7495 === _wc7115 ? _wd7116 : (_t7495 === _wc7113 ? _wd7114 : b.value(_t7495))) === 1))) continue;
+                                      if (!(((_t7495 === _wc7115 ? _wd7116 : (_t7495 === _wc7113 ? _wd7114 : (b.grid[_t7495] || -1))) === 1))) continue;
                                       _g7490++;
                                     }
                                   }
@@ -4606,7 +4606,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                     }
                                     _g7520.length = 0;
                                     G7521: {
-                                      const _a7538 = throughWhere(sp, v_s, (_te7533: number): boolean => { let _c7535: boolean = ((_te7533 === _wc7115 ? _wd7116 : (_te7533 === _wc7113 ? _wd7114 : b.value(_te7533))) === 1); if (_c7535) {   const _t7534 = sp.edgeEnds[2 * _te7533];   _c7535 = !((clueAt(cl.number, _t7534) !== -1)); } let _c7537: boolean = _c7535; if (_c7537) {   const _t7536 = sp.edgeEnds[2 * _te7533 + 1];   _c7537 = !((clueAt(cl.number, _t7536) !== -1)); } return _c7537; });
+                                      const _a7538 = throughWhere(sp, v_s, (_te7533: number): boolean => { let _c7535: boolean = ((_te7533 === _wc7115 ? _wd7116 : (_te7533 === _wc7113 ? _wd7114 : (b.grid[_te7533] || -1))) === 1); if (_c7535) {   const _t7534 = sp.edgeEnds[2 * _te7533];   _c7535 = !((clueAt(cl.number, _t7534) !== -1)); } let _c7537: boolean = _c7535; if (_c7537) {   const _t7536 = sp.edgeEnds[2 * _te7533 + 1];   _c7537 = !((clueAt(cl.number, _t7536) !== -1)); } return _c7537; });
                                       for (let _i7539 = 0; _i7539 < _a7538.length; _i7539++) {
                                         const v_t = _a7538[_i7539];
                                         const _h7542 = clueAt(cl.number, v_t);
@@ -4620,7 +4620,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                           let _c7548: boolean = (_h7545 && (_h7546 !== -1));
                                           if (_c7548) {
                                             const _t7547 = sp.edgeOf(v_t, v_x);
-                                            _c7548 = ((_t7547 === _wc7115 ? _wd7116 : (_t7547 === _wc7113 ? _wd7114 : b.value(_t7547))) === 1);
+                                            _c7548 = ((_t7547 === _wc7115 ? _wd7116 : (_t7547 === _wc7113 ? _wd7114 : (b.grid[_t7547] || -1))) === 1);
                                           }
                                           if (!(_c7548)) continue;
                                           if (!_g7520.includes(v_x)) _g7520.push(v_x);
@@ -4643,7 +4643,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                       }
                                       _g7558.length = 0;
                                       G7559: {
-                                        const _a7576 = throughWhere(sp, v_y, (_te7571: number): boolean => { let _c7573: boolean = ((_te7571 === _wc7115 ? _wd7116 : (_te7571 === _wc7113 ? _wd7114 : b.value(_te7571))) === 1); if (_c7573) {   const _t7572 = sp.edgeEnds[2 * _te7571];   _c7573 = !((clueAt(cl.number, _t7572) !== -1)); } let _c7575: boolean = _c7573; if (_c7575) {   const _t7574 = sp.edgeEnds[2 * _te7571 + 1];   _c7575 = !((clueAt(cl.number, _t7574) !== -1)); } return _c7575; });
+                                        const _a7576 = throughWhere(sp, v_y, (_te7571: number): boolean => { let _c7573: boolean = ((_te7571 === _wc7115 ? _wd7116 : (_te7571 === _wc7113 ? _wd7114 : (b.grid[_te7571] || -1))) === 1); if (_c7573) {   const _t7572 = sp.edgeEnds[2 * _te7571];   _c7573 = !((clueAt(cl.number, _t7572) !== -1)); } let _c7575: boolean = _c7573; if (_c7575) {   const _t7574 = sp.edgeEnds[2 * _te7571 + 1];   _c7575 = !((clueAt(cl.number, _t7574) !== -1)); } return _c7575; });
                                         for (let _i7577 = 0; _i7577 < _a7576.length; _i7577++) {
                                           const v_t = _a7576[_i7577];
                                           const _h7580 = clueAt(cl.number, v_t);
@@ -4657,7 +4657,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                             let _c7586: boolean = (_h7583 && (_h7584 !== -1));
                                             if (_c7586) {
                                               const _t7585 = sp.edgeOf(v_t, v_x);
-                                              _c7586 = ((_t7585 === _wc7115 ? _wd7116 : (_t7585 === _wc7113 ? _wd7114 : b.value(_t7585))) === 1);
+                                              _c7586 = ((_t7585 === _wc7115 ? _wd7116 : (_t7585 === _wc7113 ? _wd7114 : (b.grid[_t7585] || -1))) === 1);
                                             }
                                             if (!(_c7586)) continue;
                                             if (!_g7558.includes(v_x)) _g7558.push(v_x);
@@ -4677,14 +4677,14 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                   }
                                   _c7591 = _q7511;
                                 }
-                                if (!((_c7591 && (_h5320 || !(throughWhere(sp, v_s, (_te7592: number): boolean => {  return ((_te7592 === _wc7115 ? _wd7116 : (_te7592 === _wc7113 ? _wd7114 : b.value(_te7592))) === 1); }).includes(v_y)))))) continue;
+                                if (!((_c7591 && (_h5320 || !(throughWhere(sp, v_s, (_te7592: number): boolean => {  return ((_te7592 === _wc7115 ? _wd7116 : (_te7592 === _wc7113 ? _wd7114 : (b.grid[_te7592] || -1))) === 1); }).includes(v_y)))))) continue;
                                 let _g7593 = 0;
                                 G7594: {
                                   const _a7595 = sp.adj4[v_s];
                                   for (let _i7596 = 0; _i7596 < _a7595.length; _i7596++) {
                                     const v_y = _a7595[_i7596];
                                     const _t7597 = sp.edgeOf(v_s, v_y);
-                                    if (!(((_t7597 === _wc7115 ? _wd7116 : (_t7597 === _wc7113 ? _wd7114 : b.value(_t7597))) === 1))) continue;
+                                    if (!(((_t7597 === _wc7115 ? _wd7116 : (_t7597 === _wc7113 ? _wd7114 : (b.grid[_t7597] || -1))) === 1))) continue;
                                     _g7593++;
                                   }
                                 }
@@ -4727,7 +4727,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                     for (let _i7616 = 0; _i7616 < _n7615; _i7616++) {
                                       const v_z = _a7614[_i7616];
                                       const _t7617 = sp.edgeOf(v_s, v_z);
-                                      let _c7637: boolean = !((_t7617 === _wc7115 ? true : (_t7617 === _wc7113 ? true : b.known(_t7617))));
+                                      let _c7637: boolean = !((_t7617 === _wc7115 ? true : (_t7617 === _wc7113 ? true : (b.grid[_t7617] !== 0))));
                                       if (_c7637) {
                                         let _g7618 = 0;
                                         G7619: {
@@ -4735,7 +4735,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                           for (let _i7621 = 0; _i7621 < _a7620.length; _i7621++) {
                                             const v_y = _a7620[_i7621];
                                             const _t7622 = sp.edgeOf(v_s, v_y);
-                                            if (!(((_t7622 === _wc7115 ? _wd7116 : (_t7622 === _wc7113 ? _wd7114 : b.value(_t7622))) === 1))) continue;
+                                            if (!(((_t7622 === _wc7115 ? _wd7116 : (_t7622 === _wc7113 ? _wd7114 : (b.grid[_t7622] || -1))) === 1))) continue;
                                             _g7618++;
                                           }
                                         }
@@ -4779,7 +4779,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                           for (let _i7641 = 0; _i7641 < _a7640.length; _i7641++) {
                                             const v_y = _a7640[_i7641];
                                             const _t7642 = sp.edgeOf(v_z, v_y);
-                                            if (!(((_t7642 === _wc7115 ? _wd7116 : (_t7642 === _wc7113 ? _wd7114 : b.value(_t7642))) === 1))) continue;
+                                            if (!(((_t7642 === _wc7115 ? _wd7116 : (_t7642 === _wc7113 ? _wd7114 : (b.grid[_t7642] || -1))) === 1))) continue;
                                             _g7638++;
                                           }
                                         }
@@ -4831,7 +4831,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                           }
                                           _g7667.length = 0;
                                           G7668: {
-                                            const _a7685 = throughWhere(sp, v_s, (_te7680: number): boolean => { let _c7682: boolean = ((_te7680 === _wc7115 ? _wd7116 : (_te7680 === _wc7113 ? _wd7114 : b.value(_te7680))) === 1); if (_c7682) {   const _t7681 = sp.edgeEnds[2 * _te7680];   _c7682 = !((clueAt(cl.number, _t7681) !== -1)); } let _c7684: boolean = _c7682; if (_c7684) {   const _t7683 = sp.edgeEnds[2 * _te7680 + 1];   _c7684 = !((clueAt(cl.number, _t7683) !== -1)); } return _c7684; });
+                                            const _a7685 = throughWhere(sp, v_s, (_te7680: number): boolean => { let _c7682: boolean = ((_te7680 === _wc7115 ? _wd7116 : (_te7680 === _wc7113 ? _wd7114 : (b.grid[_te7680] || -1))) === 1); if (_c7682) {   const _t7681 = sp.edgeEnds[2 * _te7680];   _c7682 = !((clueAt(cl.number, _t7681) !== -1)); } let _c7684: boolean = _c7682; if (_c7684) {   const _t7683 = sp.edgeEnds[2 * _te7680 + 1];   _c7684 = !((clueAt(cl.number, _t7683) !== -1)); } return _c7684; });
                                             for (let _i7686 = 0; _i7686 < _a7685.length; _i7686++) {
                                               const v_t = _a7685[_i7686];
                                               const _h7689 = clueAt(cl.number, v_t);
@@ -4845,7 +4845,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                                 let _c7695: boolean = (_h7692 && (_h7693 !== -1));
                                                 if (_c7695) {
                                                   const _t7694 = sp.edgeOf(v_t, v_x);
-                                                  _c7695 = ((_t7694 === _wc7115 ? _wd7116 : (_t7694 === _wc7113 ? _wd7114 : b.value(_t7694))) === 1);
+                                                  _c7695 = ((_t7694 === _wc7115 ? _wd7116 : (_t7694 === _wc7113 ? _wd7114 : (b.grid[_t7694] || -1))) === 1);
                                                 }
                                                 if (!(_c7695)) continue;
                                                 if (!_g7667.includes(v_x)) _g7667.push(v_x);
@@ -4868,7 +4868,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                             }
                                             _g7705.length = 0;
                                             G7706: {
-                                              const _a7723 = throughWhere(sp, v_z, (_te7718: number): boolean => { let _c7720: boolean = ((_te7718 === _wc7115 ? _wd7116 : (_te7718 === _wc7113 ? _wd7114 : b.value(_te7718))) === 1); if (_c7720) {   const _t7719 = sp.edgeEnds[2 * _te7718];   _c7720 = !((clueAt(cl.number, _t7719) !== -1)); } let _c7722: boolean = _c7720; if (_c7722) {   const _t7721 = sp.edgeEnds[2 * _te7718 + 1];   _c7722 = !((clueAt(cl.number, _t7721) !== -1)); } return _c7722; });
+                                              const _a7723 = throughWhere(sp, v_z, (_te7718: number): boolean => { let _c7720: boolean = ((_te7718 === _wc7115 ? _wd7116 : (_te7718 === _wc7113 ? _wd7114 : (b.grid[_te7718] || -1))) === 1); if (_c7720) {   const _t7719 = sp.edgeEnds[2 * _te7718];   _c7720 = !((clueAt(cl.number, _t7719) !== -1)); } let _c7722: boolean = _c7720; if (_c7722) {   const _t7721 = sp.edgeEnds[2 * _te7718 + 1];   _c7722 = !((clueAt(cl.number, _t7721) !== -1)); } return _c7722; });
                                               for (let _i7724 = 0; _i7724 < _a7723.length; _i7724++) {
                                                 const v_t = _a7723[_i7724];
                                                 const _h7727 = clueAt(cl.number, v_t);
@@ -4882,7 +4882,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                                   let _c7733: boolean = (_h7730 && (_h7731 !== -1));
                                                   if (_c7733) {
                                                     const _t7732 = sp.edgeOf(v_t, v_x);
-                                                    _c7733 = ((_t7732 === _wc7115 ? _wd7116 : (_t7732 === _wc7113 ? _wd7114 : b.value(_t7732))) === 1);
+                                                    _c7733 = ((_t7732 === _wc7115 ? _wd7116 : (_t7732 === _wc7113 ? _wd7114 : (b.grid[_t7732] || -1))) === 1);
                                                   }
                                                   if (!(_c7733)) continue;
                                                   if (!_g7705.includes(v_x)) _g7705.push(v_x);
@@ -4902,7 +4902,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
                                         }
                                         _c7738 = _q7658;
                                       }
-                                      if ((_c7738 && (_h5320 || !(throughWhere(sp, v_s, (_te7739: number): boolean => {  return ((_te7739 === _wc7115 ? _wd7116 : (_te7739 === _wc7113 ? _wd7114 : b.value(_te7739))) === 1); }).includes(v_z))))) {
+                                      if ((_c7738 && (_h5320 || !(throughWhere(sp, v_s, (_te7739: number): boolean => {  return ((_te7739 === _wc7115 ? _wd7116 : (_te7739 === _wc7113 ? _wd7114 : (b.grid[_te7739] || -1))) === 1); }).includes(v_z))))) {
                                         _q7612 = true;
                                         break Q7613;
                                       }
@@ -5026,7 +5026,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
             for (let _i7797 = 0; _i7797 < _a7796.length; _i7797++) {
               const v_y = _a7796[_i7797];
               const _t7798 = sp.edgeOf(v_c, v_y);
-              if (!b.known(_t7798)) { if (fire === null) { b.placeAt(_t7798, 1); changed = true; } else facts.push(PLACE, _t7798, 1); }
+              if (!(b.grid[_t7798] !== 0)) { if (fire === null) { b.placeAt(_t7798, 1); changed = true; } else facts.push(PLACE, _t7798, 1); }
               if (!(true)) {
                 _q7794 = false;
                 break Q7795;
@@ -5045,7 +5045,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
               for (let _i7803 = 0; _i7803 < _a7802.length; _i7803++) {
                 const v_y = _a7802[_i7803];
                 const _t7804 = sp.edgeOf(v_c, v_y);
-                if (!b.known(_t7804)) { if (fire === null) { b.placeAt(_t7804, 2); changed = true; } else facts.push(PLACE, _t7804, 2); }
+                if (!(b.grid[_t7804] !== 0)) { if (fire === null) { b.placeAt(_t7804, 2); changed = true; } else facts.push(PLACE, _t7804, 2); }
                 if (!(true)) {
                   _q7800 = false;
                   break Q7801;
@@ -5085,13 +5085,13 @@ export function nearest(b: Marks, sp: GridSpace, cl: Dealt, v_c: number): readon
   }
   const _g148: number[] = [];
   G149: {
-    const _a164 = throughWhere(sp, v_c, (_te159: number): boolean => { let _c161: boolean = (b.value(_te159) === 1); if (_c161) {   const _t160 = sp.edgeEnds[2 * _te159];   _c161 = !((clueAt(cl.number, _t160) !== -1)); } let _c163: boolean = _c161; if (_c163) {   const _t162 = sp.edgeEnds[2 * _te159 + 1];   _c163 = !((clueAt(cl.number, _t162) !== -1)); } return _c163; });
+    const _a164 = throughWhere(sp, v_c, (_te159: number): boolean => { let _c161: boolean = ((b.grid[_te159] || -1) === 1); if (_c161) {   const _t160 = sp.edgeEnds[2 * _te159];   _c161 = !((clueAt(cl.number, _t160) !== -1)); } let _c163: boolean = _c161; if (_c163) {   const _t162 = sp.edgeEnds[2 * _te159 + 1];   _c163 = !((clueAt(cl.number, _t162) !== -1)); } return _c163; });
     for (let _i165 = 0; _i165 < _a164.length; _i165++) {
       const v_t = _a164[_i165];
       const _a166 = sp.adj4[v_t];
       for (let _i167 = 0; _i167 < _a166.length; _i167++) {
         const v_x = _a166[_i167];
-        if (!(((!((clueAt(cl.number, v_t) !== -1)) && (clueAt(cl.number, v_x) !== -1)) && (b.value(sp.edgeOf(v_t, v_x)) === 1)))) continue;
+        if (!(((!((clueAt(cl.number, v_t) !== -1)) && (clueAt(cl.number, v_x) !== -1)) && ((b.grid[sp.edgeOf(v_t, v_x)] || -1) === 1)))) continue;
         if (!_g148.includes(v_x)) _g148.push(v_x);
       }
     }
@@ -5113,14 +5113,14 @@ export function ways(b: Marks, sp: GridSpace, cl: Dealt, v_c: number): readonly 
     const _a174 = sp.adj4[v_c];
     for (let _i175 = 0; _i175 < _a174.length; _i175++) {
       const v_y = _a174[_i175];
-      let _c228: boolean = !(b.known(sp.edgeOf(v_c, v_y)));
+      let _c228: boolean = !((b.grid[sp.edgeOf(v_c, v_y)] !== 0));
       if (_c228) {
         let _g202 = 0;
         G203: {
           const _a204 = sp.adj4[v_c];
           for (let _i205 = 0; _i205 < _a204.length; _i205++) {
             const v_y = _a204[_i205];
-            if (!((b.value(sp.edgeOf(v_c, v_y)) === 1))) continue;
+            if (!(((b.grid[sp.edgeOf(v_c, v_y)] || -1) === 1))) continue;
             _g202++;
           }
         }
@@ -5160,7 +5160,7 @@ export function ways(b: Marks, sp: GridSpace, cl: Dealt, v_c: number): readonly 
           const _a258 = sp.adj4[v_y];
           for (let _i259 = 0; _i259 < _a258.length; _i259++) {
             const v_y_257 = _a258[_i259];
-            if (!((b.value(sp.edgeOf(v_y, v_y_257)) === 1))) continue;
+            if (!(((b.grid[sp.edgeOf(v_y, v_y_257)] || -1) === 1))) continue;
             _g255++;
           }
         }
@@ -5212,7 +5212,7 @@ export function ways(b: Marks, sp: GridSpace, cl: Dealt, v_c: number): readonly 
         }
         _c289 = _q283;
       }
-      if (!((_c289 && ((cl.step === 0) || !(throughWhere(sp, v_c, (_te290: number): boolean => {  return (b.value(_te290) === 1); }).includes(v_y)))))) continue;
+      if (!((_c289 && ((cl.step === 0) || !(throughWhere(sp, v_c, (_te290: number): boolean => {  return ((b.grid[_te290] || -1) === 1); }).includes(v_y)))))) continue;
       _g29.push(v_y);
     }
   }

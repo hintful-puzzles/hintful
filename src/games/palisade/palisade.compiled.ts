@@ -153,7 +153,7 @@ export function cluesVersusRegionSize(b: Marks, sp: GridSpace, cl: Dealt, fire: 
     const _a4 = sp.adj4[v_a];
     for (let _i5 = 0; _i5 < _a4.length; _i5++) {
       const v_b = _a4[_i5];
-      if (!(!(b.known(sp.edgeOf(v_a, v_b))))) continue;
+      if (!(!((b.grid[sp.edgeOf(v_a, v_b)] !== 0)))) continue;
       const _h6 = clueAt(cl.number, v_b);
       L7: {
         const v_d = _h6;
@@ -161,7 +161,7 @@ export function cluesVersusRegionSize(b: Marks, sp: GridSpace, cl: Dealt, fire: 
         facts.length = 0;
         changed = false;
         const _t12 = sp.edgeOf(v_a, v_b);
-        if (!b.known(_t12)) { if (fire === null) { b.placeAt(_t12, 1); changed = true; } else facts.push(PLACE, _t12, 1); }
+        if (!(b.grid[_t12] !== 0)) { if (fire === null) { b.placeAt(_t12, 1); changed = true; } else facts.push(PLACE, _t12, 1); }
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
@@ -194,7 +194,7 @@ export function numberExhausted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<N
       const _a28 = sp.adj4[v_c];
       for (let _i29 = 0; _i29 < _a28.length; _i29++) {
         const v_y = _a28[_i29];
-        if (!(!(b.known(sp.edgeOf(v_c, v_y))))) continue;
+        if (!(!((b.grid[sp.edgeOf(v_c, v_y)] !== 0)))) continue;
         _g24.push(v_y);
       }
     }
@@ -205,7 +205,7 @@ export function numberExhausted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<N
       const _a32 = sp.adj4[v_c];
       for (let _i33 = 0; _i33 < _a32.length; _i33++) {
         const v_y = _a32[_i33];
-        if (!((b.value(sp.edgeOf(v_c, v_y)) === 1))) continue;
+        if (!(((b.grid[sp.edgeOf(v_c, v_y)] || -1) === 1))) continue;
         _g30++;
       }
     }
@@ -224,7 +224,7 @@ export function numberExhausted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<N
             for (let _i39 = 0; _i39 < _a38.length; _i39++) {
               const v_y = _a38[_i39];
               const _t40 = sp.edgeOf(v_c, v_y);
-              if (!b.known(_t40)) { if (fire === null) { b.placeAt(_t40, 2); changed = true; } else facts.push(PLACE, _t40, 2); }
+              if (!(b.grid[_t40] !== 0)) { if (fire === null) { b.placeAt(_t40, 2); changed = true; } else facts.push(PLACE, _t40, 2); }
               if (!(true)) {
                 _q36 = false;
                 break Q37;
@@ -245,7 +245,7 @@ export function numberExhausted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<N
             for (let _i46 = 0; _i46 < _a45.length; _i46++) {
               const v_y = _a45[_i46];
               const _t47 = sp.edgeOf(v_c, v_y);
-              if (!b.known(_t47)) { if (fire === null) { b.placeAt(_t47, 1); changed = true; } else facts.push(PLACE, _t47, 1); }
+              if (!(b.grid[_t47] !== 0)) { if (fire === null) { b.placeAt(_t47, 1); changed = true; } else facts.push(PLACE, _t47, 1); }
               if (!(true)) {
                 _q43 = false;
                 break Q44;
@@ -286,7 +286,7 @@ export function notTooBig(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTooB
     const _a64 = sp.edges;
     for (let _i65 = 0; _i65 < _a64.length; _i65++) {
       const v_e = _a64[_i65];
-      if (!((b.value(v_e) === 2))) continue;
+      if (!(((b.grid[v_e] || -1) === 2))) continue;
       _g60.push(v_e);
     }
   }
@@ -295,7 +295,7 @@ export function notTooBig(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTooB
   const _a66 = sp.edges;
   for (let _i67 = 0; _i67 < _a66.length; _i67++) {
     const v_e = _a66[_i67];
-    if (!(!(b.known(v_e)))) continue;
+    if (!(!((b.grid[v_e] !== 0)))) continue;
     const v_A = _eg68.of(sp.edgeEnds[2 * v_e]);
     const _h71 = v_A.length;
     L69: {
@@ -307,7 +307,7 @@ export function notTooBig(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTooB
         if (!(((_h71 + _h72) > cl.k))) break L70;
         facts.length = 0;
         changed = false;
-        if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
+        if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
@@ -340,7 +340,7 @@ export function notTooSmall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTo
     const _a115 = sp.edges;
     for (let _i116 = 0; _i116 < _a115.length; _i116++) {
       const v_e = _a115[_i116];
-      if (!((b.value(v_e) === 2))) continue;
+      if (!(((b.grid[v_e] || -1) === 2))) continue;
       _g111.push(v_e);
     }
   }
@@ -363,7 +363,7 @@ export function notTooSmall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTo
             for (let _i127 = 0; _i127 < _a126.length; _i127++) {
               const v_y = _a126[_i127];
               if (!(!(_eg119.of(v_y) === v_A))) continue;
-              if ((b.value(sp.edgeOf(v_x, v_y)) === 2)) {
+              if (((b.grid[sp.edgeOf(v_x, v_y)] || -1) === 2)) {
                 _q122 = true;
                 break Q123;
               }
@@ -383,7 +383,7 @@ export function notTooSmall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTo
             const _a147 = sp.adj4[v_x];
             for (let _i148 = 0; _i148 < _a147.length; _i148++) {
               const v_y = _a147[_i148];
-              if (!(!(b.known(sp.edgeOf(v_x, v_y))))) continue;
+              if (!(!((b.grid[sp.edgeOf(v_x, v_y)] !== 0)))) continue;
               _g143.push(v_y);
             }
           }
@@ -426,7 +426,7 @@ export function notTooSmall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTo
                   const v_y = _a162[_i163];
                   if (!((_eg119.of(v_y) === v_B))) continue;
                   const _t164 = sp.edgeOf(v_x, v_y);
-                  if (!b.known(_t164)) { if (fire === null) { b.placeAt(_t164, 2); changed = true; } else facts.push(PLACE, _t164, 2); }
+                  if (!(b.grid[_t164] !== 0)) { if (fire === null) { b.placeAt(_t164, 2); changed = true; } else facts.push(PLACE, _t164, 2); }
                   if (!(true)) {
                     _q158 = false;
                     break Q159;
@@ -489,14 +489,14 @@ export function noDanglingEdges(b: Marks, sp: GridSpace, fire: Fire<NoDanglingEd
     const _a205 = v_F;
     for (let _i206 = 0; _i206 < _a205.length; _i206++) {
       const v_f = _a205[_i206];
-      let _c211: boolean = !(b.known(v_f));
+      let _c211: boolean = !((b.grid[v_f] !== 0));
       if (_c211) {
         let _g207 = 0;
         G208: {
           const _a209 = v_F;
           for (let _i210 = 0; _i210 < _a209.length; _i210++) {
             const v_e = _a209[_i210];
-            if (!((b.value(v_e) === 1))) continue;
+            if (!(((b.grid[v_e] || -1) === 1))) continue;
             _g207++;
           }
         }
@@ -509,7 +509,7 @@ export function noDanglingEdges(b: Marks, sp: GridSpace, fire: Fire<NoDanglingEd
           const _a214 = v_F;
           for (let _i215 = 0; _i215 < _a214.length; _i215++) {
             const v_e = _a214[_i215];
-            if (!(!(b.known(v_e)))) continue;
+            if (!(!((b.grid[v_e] !== 0)))) continue;
             _g212++;
           }
         }
@@ -518,7 +518,7 @@ export function noDanglingEdges(b: Marks, sp: GridSpace, fire: Fire<NoDanglingEd
       if (!(_c216)) continue;
       facts.length = 0;
       changed = false;
-      if (!b.known(v_f)) { if (fire === null) { b.placeAt(v_f, 1); changed = true; } else facts.push(PLACE, v_f, 1); }
+      if (!(b.grid[v_f] !== 0)) { if (fire === null) { b.placeAt(v_f, 1); changed = true; } else facts.push(PLACE, v_f, 1); }
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
@@ -551,7 +551,7 @@ export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<E
     const _a240 = sp.edges;
     for (let _i241 = 0; _i241 < _a240.length; _i241++) {
       const v_e = _a240[_i241];
-      if (!((b.value(v_e) === 2))) continue;
+      if (!(((b.grid[v_e] || -1) === 2))) continue;
       _g236.push(v_e);
     }
   }
@@ -568,14 +568,14 @@ export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<E
         const _a247 = sp.adj4[v_c];
         for (let _i248 = 0; _i248 < _a247.length; _i248++) {
           const v_y = _a247[_i248];
-          if (!(!(b.known(sp.edgeOf(v_c, v_y))))) continue;
+          if (!(!((b.grid[sp.edgeOf(v_c, v_y)] !== 0)))) continue;
           _g243.push(v_y);
         }
       }
       const _a249 = _g243;
       for (let _i250 = 0; _i250 < _a249.length; _i250++) {
         const v_y = _a249[_i250];
-        if (!(!(b.known(sp.edgeOf(v_c, v_y))))) continue;
+        if (!(!((b.grid[sp.edgeOf(v_c, v_y)] !== 0)))) continue;
         const _h261 = sp.edgeOf(v_c, v_y);
         L252: {
           const v_R = _eg251.of(v_y);
@@ -584,7 +584,7 @@ export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<E
           const _n254 = _a253.indexOf(v_y);
           for (let _i255 = 0; _i255 < _n254; _i255++) {
             const v_z = _a253[_i255];
-            if (!((!(b.known(sp.edgeOf(v_c, v_z))) && (_eg251.of(v_z) === v_R)))) continue;
+            if (!((!((b.grid[sp.edgeOf(v_c, v_z)] !== 0)) && (_eg251.of(v_z) === v_R)))) continue;
             facts.length = 0;
             changed = false;
             let _g256 = 0;
@@ -592,17 +592,17 @@ export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<E
               const _a258 = sp.adj4[v_c];
               for (let _i259 = 0; _i259 < _a258.length; _i259++) {
                 const v_y = _a258[_i259];
-                if (!((b.value(sp.edgeOf(v_c, v_y)) === 1))) continue;
+                if (!(((b.grid[sp.edgeOf(v_c, v_y)] || -1) === 1))) continue;
                 _g256++;
               }
             }
             let _c264: boolean = !(((((4 - sp.adj4[v_c].length) + _g256) + 2) > _h260));
             if (!_c264) {
-              if (!b.known(_h261)) { if (fire === null) { b.placeAt(_h261, 2); changed = true; } else facts.push(PLACE, _h261, 2); }
+              if (!(b.grid[_h261] !== 0)) { if (fire === null) { b.placeAt(_h261, 2); changed = true; } else facts.push(PLACE, _h261, 2); }
               let _c263: boolean = true;
               if (_c263) {
                 const _t262 = sp.edgeOf(v_c, v_z);
-                if (!b.known(_t262)) { if (fire === null) { b.placeAt(_t262, 2); changed = true; } else facts.push(PLACE, _t262, 2); }
+                if (!(b.grid[_t262] !== 0)) { if (fire === null) { b.placeAt(_t262, 2); changed = true; } else facts.push(PLACE, _t262, 2); }
                 _c263 = true;
               }
               _c264 = _c263;
@@ -614,7 +614,7 @@ export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<E
                 const _a267 = sp.adj4[v_c];
                 for (let _i268 = 0; _i268 < _a267.length; _i268++) {
                   const v_y = _a267[_i268];
-                  if (!((b.value(sp.edgeOf(v_c, v_y)) === 1))) continue;
+                  if (!(((b.grid[sp.edgeOf(v_c, v_y)] || -1) === 1))) continue;
                   _g265++;
                 }
               }
@@ -625,7 +625,7 @@ export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<E
                   const _a271 = sp.adj4[v_c];
                   for (let _i272 = 0; _i272 < _a271.length; _i272++) {
                     const v_y = _a271[_i272];
-                    if (!((b.value(sp.edgeOf(v_c, v_y)) === 2))) continue;
+                    if (!(((b.grid[sp.edgeOf(v_c, v_y)] || -1) === 2))) continue;
                     _g269++;
                   }
                 }
@@ -633,11 +633,11 @@ export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<E
               }
               let _c277: boolean = !(_c274);
               if (!_c277) {
-                if (!b.known(_h261)) { if (fire === null) { b.placeAt(_h261, 1); changed = true; } else facts.push(PLACE, _h261, 1); }
+                if (!(b.grid[_h261] !== 0)) { if (fire === null) { b.placeAt(_h261, 1); changed = true; } else facts.push(PLACE, _h261, 1); }
                 let _c276: boolean = true;
                 if (_c276) {
                   const _t275 = sp.edgeOf(v_c, v_z);
-                  if (!b.known(_t275)) { if (fire === null) { b.placeAt(_t275, 1); changed = true; } else facts.push(PLACE, _t275, 1); }
+                  if (!(b.grid[_t275] !== 0)) { if (fire === null) { b.placeAt(_t275, 1); changed = true; } else facts.push(PLACE, _t275, 1); }
                   _c276 = true;
                 }
                 _c277 = _c276;
@@ -674,7 +674,7 @@ export function inside(b: Marks, sp: GridSpace, fire: Fire<InsideBinding> | null
     const _a291 = sp.edges;
     for (let _i292 = 0; _i292 < _a291.length; _i292++) {
       const v_e = _a291[_i292];
-      if (!((b.value(v_e) === 2))) continue;
+      if (!(((b.grid[v_e] || -1) === 2))) continue;
       _g287.push(v_e);
     }
   }
@@ -683,10 +683,10 @@ export function inside(b: Marks, sp: GridSpace, fire: Fire<InsideBinding> | null
   const _a293 = sp.edges;
   for (let _i294 = 0; _i294 < _a293.length; _i294++) {
     const v_e = _a293[_i294];
-    if (!(((b.value(v_e) !== 2) && (_eg295.of(sp.edgeEnds[2 * v_e + 1]) === _eg295.of(sp.edgeEnds[2 * v_e]))))) continue;
+    if (!((((b.grid[v_e] || -1) !== 2) && (_eg295.of(sp.edgeEnds[2 * v_e + 1]) === _eg295.of(sp.edgeEnds[2 * v_e]))))) continue;
     facts.length = 0;
     changed = false;
-    if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 2); changed = true; } else facts.push(PLACE, v_e, 2); }
+    if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 2); changed = true; } else facts.push(PLACE, v_e, 2); }
     if (!(true)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;

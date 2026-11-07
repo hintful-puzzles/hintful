@@ -251,7 +251,7 @@ export function fit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FitBinding> |
               const _a50 = rectInner(sp, v_r);
               for (let _i51 = 0; _i51 < _a50.length; _i51++) {
                 const v_e = _a50[_i51];
-                if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 2); changed = true; } else facts.push(PLACE, v_e, 2); }
+                if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 2); changed = true; } else facts.push(PLACE, v_e, 2); }
                 if (!(true)) {
                   _q48 = false;
                   break Q49;
@@ -265,7 +265,7 @@ export function fit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FitBinding> |
                 const _a54 = rectRim(sp, v_r);
                 for (let _i55 = 0; _i55 < _a54.length; _i55++) {
                   const v_e = _a54[_i55];
-                  if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
+                  if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
                   if (!(true)) {
                     _q52 = false;
                     break Q53;
@@ -342,7 +342,7 @@ export function boxed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoxedBindin
           const _a102 = rectRim(sp, v_r);
           for (let _i103 = 0; _i103 < _a102.length; _i103++) {
             const v_e = _a102[_i103];
-            if (!((b.value(v_e) === 1))) {
+            if (!(((b.grid[v_e] || -1) === 1))) {
               _q100 = false;
               break Q101;
             }
@@ -356,7 +356,7 @@ export function boxed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoxedBindin
           const _a106 = rectInner(sp, v_r);
           for (let _i107 = 0; _i107 < _a106.length; _i107++) {
             const v_e = _a106[_i107];
-            if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 2); changed = true; } else facts.push(PLACE, v_e, 2); }
+            if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 2); changed = true; } else facts.push(PLACE, v_e, 2); }
             if (!(true)) {
               _q104 = false;
               break Q105;
@@ -370,7 +370,7 @@ export function boxed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoxedBindin
             const _a110 = rectRim(sp, v_r);
             for (let _i111 = 0; _i111 < _a110.length; _i111++) {
               const v_e = _a110[_i111];
-              if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
+              if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
               if (!(true)) {
                 _q108 = false;
                 break Q109;
@@ -434,7 +434,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
           const _a137 = rectInner(sp, v_r);
           for (let _i138 = 0; _i138 < _a137.length; _i138++) {
             const v_e = _a137[_i138];
-            if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 2); changed = true; } else facts.push(PLACE, v_e, 2); }
+            if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 2); changed = true; } else facts.push(PLACE, v_e, 2); }
             if (!(true)) {
               _q135 = false;
               break Q136;
@@ -448,7 +448,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
             const _a141 = rectRim(sp, v_r);
             for (let _i142 = 0; _i142 < _a141.length; _i142++) {
               const v_e = _a141[_i142];
-              if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
+              if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
               if (!(true)) {
                 _q139 = false;
                 break Q140;
@@ -527,7 +527,7 @@ export function overlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OverlapBi
               const _a197 = rectInner(sp, v_r);
               for (let _i198 = 0; _i198 < _a197.length; _i198++) {
                 const v_e = _a197[_i198];
-                if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 2); changed = true; } else facts.push(PLACE, v_e, 2); }
+                if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 2); changed = true; } else facts.push(PLACE, v_e, 2); }
                 if (!(true)) {
                   _q195 = false;
                   break Q196;
@@ -541,7 +541,7 @@ export function overlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OverlapBi
                 const _a201 = rectRim(sp, v_r);
                 for (let _i202 = 0; _i202 < _a201.length; _i202++) {
                   const v_e = _a201[_i202];
-                  if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
+                  if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
                   if (!(true)) {
                     _q199 = false;
                     break Q200;
@@ -735,7 +735,7 @@ export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBind
           const _a384 = rectInner(sp, v_r);
           for (let _i385 = 0; _i385 < _a384.length; _i385++) {
             const v_e = _a384[_i385];
-            if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 2); changed = true; } else facts.push(PLACE, v_e, 2); }
+            if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 2); changed = true; } else facts.push(PLACE, v_e, 2); }
             if (!(true)) {
               _q382 = false;
               break Q383;
@@ -749,7 +749,7 @@ export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBind
             const _a388 = rectRim(sp, v_r);
             for (let _i389 = 0; _i389 < _a388.length; _i389++) {
               const v_e = _a388[_i389];
-              if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
+              if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
               if (!(true)) {
                 _q386 = false;
                 break Q387;
@@ -793,7 +793,7 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
   const _a508 = sp.edges;
   for (let _i509 = 0; _i509 < _a508.length; _i509++) {
     const v_e = _a508[_i509];
-    if (!(!(b.known(v_e)))) continue;
+    if (!(!((b.grid[v_e] !== 0)))) continue;
     const v_a = sp.edgeEnds[2 * v_e];
     const v_b = sp.edgeEnds[2 * v_e + 1];
     _g510.length = 0;
@@ -987,7 +987,7 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
       const v_M = _g585;
       facts.length = 0;
       changed = false;
-      if (!b.known(v_e)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
+      if (!(b.grid[v_e] !== 0)) { if (fire === null) { b.placeAt(v_e, 1); changed = true; } else facts.push(PLACE, v_e, 1); }
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
@@ -1050,7 +1050,7 @@ export function fits(b: Marks, sp: GridSpace, cl: Dealt, v_q: number): readonly 
         const _a36 = rectInner(sp, v_r);
         for (let _i37 = 0; _i37 < _a36.length; _i37++) {
           const v_e = _a36[_i37];
-          if ((b.value(v_e) === 1)) {
+          if (((b.grid[v_e] || -1) === 1)) {
             _q34 = true;
             break Q35;
           }
@@ -1063,7 +1063,7 @@ export function fits(b: Marks, sp: GridSpace, cl: Dealt, v_q: number): readonly 
           const _a40 = rectRim(sp, v_r);
           for (let _i41 = 0; _i41 < _a40.length; _i41++) {
             const v_e = _a40[_i41];
-            if ((b.value(v_e) === 2)) {
+            if (((b.grid[v_e] || -1) === 2)) {
               _q38 = true;
               break Q39;
             }

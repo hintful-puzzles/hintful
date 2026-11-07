@@ -198,7 +198,7 @@ export function strandSupport(b: Marks, sp: GridSpace, fire: Fire<StrandSupportB
   const _a5 = sp.cells;
   for (let _i6 = 0; _i6 < _a5.length; _i6++) {
     const v_a = _a5[_i6];
-    if (!(((b.value(v_a) === 1) && (((v_a / sp.w) | 0) < _h7)))) continue;
+    if (!((((b.grid[v_a] || -1) === 1) && (((v_a / sp.w) | 0) < _h7)))) continue;
     facts.length = 0;
     changed = false;
     let _q30 = false;
@@ -206,7 +206,7 @@ export function strandSupport(b: Marks, sp: GridSpace, fire: Fire<StrandSupportB
       const _a32 = below(sp, v_a);
       for (let _i33 = 0; _i33 < _a32.length; _i33++) {
         const v_p = _a32[_i33];
-        if ((b.value(v_p) !== 2)) {
+        if (((b.grid[v_p] || -1) !== 2)) {
           _q30 = true;
           break Q31;
         }
@@ -219,7 +219,7 @@ export function strandSupport(b: Marks, sp: GridSpace, fire: Fire<StrandSupportB
         const _a36 = below(sp, v_a);
         for (let _i37 = 0; _i37 < _a36.length; _i37++) {
           const v_c = _a36[_i37];
-          let _c42: boolean = !(b.known(v_c));
+          let _c42: boolean = !((b.grid[v_c] !== 0));
           if (_c42) {
             let _q38 = true;
             Q39: {
@@ -227,7 +227,7 @@ export function strandSupport(b: Marks, sp: GridSpace, fire: Fire<StrandSupportB
               for (let _i41 = 0; _i41 < _a40.length; _i41++) {
                 const v_p = _a40[_i41];
                 if (!((v_p !== v_c))) continue;
-                if (!((b.value(v_p) === 2))) {
+                if (!(((b.grid[v_p] || -1) === 2))) {
                   _q38 = false;
                   break Q39;
                 }
@@ -236,7 +236,7 @@ export function strandSupport(b: Marks, sp: GridSpace, fire: Fire<StrandSupportB
             _c42 = _q38;
           }
           if (!(_c42)) continue;
-          if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, 1); changed = true; } else facts.push(PLACE, v_c, 1); }
+          if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 1); changed = true; } else facts.push(PLACE, v_c, 1); }
           if (!(true)) {
             _q34 = false;
             break Q35;
@@ -293,7 +293,7 @@ export function undercount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Underc
         const _a71 = _g63;
         for (let _i72 = 0; _i72 < _a71.length; _i72++) {
           const v_p = _a71[_i72];
-          if (!((b.value(v_p) !== 2))) continue;
+          if (!(((b.grid[v_p] || -1) !== 2))) continue;
           _g61++;
         }
       }
@@ -313,7 +313,7 @@ export function undercount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Underc
           const _a91 = _g85;
           for (let _i92 = 0; _i92 < _a91.length; _i92++) {
             const v_p = _a91[_i92];
-            if (!((b.value(v_p) !== 2))) continue;
+            if (!(((b.grid[v_p] || -1) !== 2))) continue;
             _g83++;
           }
         }
@@ -333,8 +333,8 @@ export function undercount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Underc
             const _a101 = _g95;
             for (let _i102 = 0; _i102 < _a101.length; _i102++) {
               const v_c = _a101[_i102];
-              if (!(!(b.known(v_c)))) continue;
-              if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, 1); changed = true; } else facts.push(PLACE, v_c, 1); }
+              if (!(!((b.grid[v_c] !== 0)))) continue;
+              if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 1); changed = true; } else facts.push(PLACE, v_c, 1); }
               if (!(true)) {
                 _q93 = false;
                 break Q94;
@@ -377,13 +377,13 @@ export function three(b: Marks, sp: GridSpace, fire: Fire<ThreeBinding> | null):
       const _a111 = sp.lineCells[v_L];
       for (let _i112 = 0; _i112 < _a111.length; _i112++) {
         const v_c = _a111[_i112];
-        if (!((b.value(v_c) === 1))) continue;
+        if (!(((b.grid[v_c] || -1) === 1))) continue;
         _g113.length = 0;
         G114: {
           const _a117 = sp.lineCells[sp.rowOf[v_c]];
           for (let _i118 = 0; _i118 < _a117.length; _i118++) {
             const v_x = _a117[_i118];
-            if (!((b.value(v_x) === 1))) continue;
+            if (!(((b.grid[v_x] || -1) === 1))) continue;
             _g113.push(v_x);
           }
         }
@@ -400,7 +400,7 @@ export function three(b: Marks, sp: GridSpace, fire: Fire<ThreeBinding> | null):
         const _a121 = sp.lineCells[v_L];
         for (let _i122 = 0; _i122 < _a121.length; _i122++) {
           const v_c = _a121[_i122];
-          let _c131: boolean = !(b.known(v_c));
+          let _c131: boolean = !((b.grid[v_c] !== 0));
           if (_c131) {
             const _wc123 = v_c;
             const _wd124 = 1;
@@ -409,14 +409,14 @@ export function three(b: Marks, sp: GridSpace, fire: Fire<ThreeBinding> | null):
               const _a129 = sp.lineCells[sp.rowOf[v_c]];
               for (let _i130 = 0; _i130 < _a129.length; _i130++) {
                 const v_x = _a129[_i130];
-                if (!(((v_x === _wc123 ? _wd124 : b.value(v_x)) === 1))) continue;
+                if (!(((v_x === _wc123 ? _wd124 : (b.grid[v_x] || -1)) === 1))) continue;
                 _g125.push(v_x);
               }
             }
             _c131 = (stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g125).length > 2);
           }
           if (!(_c131)) continue;
-          if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
+          if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
           if (!(true)) {
             _q119 = false;
             break Q120;
@@ -448,14 +448,14 @@ export function unsupported(b: Marks, sp: GridSpace, fire: Fire<UnsupportedBindi
   const _a144 = sp.cells;
   for (let _i145 = 0; _i145 < _a144.length; _i145++) {
     const v_c = _a144[_i145];
-    let _c155: boolean = (!(b.known(v_c)) && (((v_c / sp.w) | 0) < _h146));
+    let _c155: boolean = (!((b.grid[v_c] !== 0)) && (((v_c / sp.w) | 0) < _h146));
     if (_c155) {
       let _q151 = false;
       Q152: {
         const _a153 = below(sp, v_c);
         for (let _i154 = 0; _i154 < _a153.length; _i154++) {
           const v_p = _a153[_i154];
-          if ((b.value(v_p) !== 2)) {
+          if (((b.grid[v_p] || -1) !== 2)) {
             _q151 = true;
             break Q152;
           }
@@ -466,7 +466,7 @@ export function unsupported(b: Marks, sp: GridSpace, fire: Fire<UnsupportedBindi
     if (!(_c155)) continue;
     facts.length = 0;
     changed = false;
-    if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
+    if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
     if (!(true)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
@@ -515,7 +515,7 @@ export function overcount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Overcou
         const _a183 = _g175;
         for (let _i184 = 0; _i184 < _a183.length; _i184++) {
           const v_p = _a183[_i184];
-          if (!((b.value(v_p) === 1))) continue;
+          if (!(((b.grid[v_p] || -1) === 1))) continue;
           _g173++;
         }
       }
@@ -535,7 +535,7 @@ export function overcount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Overcou
           const _a203 = _g197;
           for (let _i204 = 0; _i204 < _a203.length; _i204++) {
             const v_p = _a203[_i204];
-            if (!((b.value(v_p) === 1))) continue;
+            if (!(((b.grid[v_p] || -1) === 1))) continue;
             _g195++;
           }
         }
@@ -555,8 +555,8 @@ export function overcount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Overcou
             const _a213 = _g207;
             for (let _i214 = 0; _i214 < _a213.length; _i214++) {
               const v_c = _a213[_i214];
-              if (!(!(b.known(v_c)))) continue;
-              if (!b.known(v_c)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
+              if (!(!((b.grid[v_c] !== 0)))) continue;
+              if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
               if (!(true)) {
                 _q205 = false;
                 break Q206;
