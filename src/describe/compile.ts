@@ -260,6 +260,10 @@ function techniqueGrowth(lines: readonly string[]): number {
     const round = open.reduce((s, x) => s + x.cost, 0);
     worst = Math.max(worst, round + cost + walk);
     if (t.startsWith("for (")) open.push({ indent, cost });
+    // A truth made once a group (`groupQuantifier`) is made at most once a
+    // square, whatever loops read it.
+    else if (/^if \(_gq\d+ === undefined\) \{$/.test(t))
+      open.push({ indent, cost: 2 - round });
   }
   return worst;
 }
@@ -2402,6 +2406,77 @@ function keptEdgeSet(
   };
 }
 
+/**
+ * `forall R = through(x, O): P` (or `exists`), `O` a set whose groups are
+ * kept (`keptEdgeSet`), and `P` reading `R` but no marks and nothing else
+ * bound: a truth about the group, so it is made once a group, kept by the
+ * group's list beside where `O` is bound and read by every square of it.
+ * Galaxies' `finished(x, O)` was made once a square, and for each dot near
+ * it. `null` for any other quantifier.
+ */
+function groupQuantifier(
+  e: Extract<Expr, { k: "quant" }>,
+  scope: Scope,
+  env: Env,
+  out: Out,
+): Val | null {
+  if (env.hoist === null || e.binders.length !== 1) return null;
+  const [bnd] = e.binders;
+  if (bnd.kind !== "let" || bnd.where !== null) return null;
+  const of = inlined(bnd.of, scope, env);
+  if (
+    of.k !== "call" ||
+    of.fn !== "through" ||
+    of.args.length !== 2 ||
+    scope.has("through")
+  )
+    return null;
+  const [, setArg] = of.args;
+  if (setArg.k !== "name") return null;
+  const O = scope.get(setArg.name);
+  const kept = O?.edgeSet?.() ?? null;
+  if (O?.at === undefined || kept === null) return null;
+  const free = new Set<string>();
+  freeNames(e.body, free, new Set([bnd.name]));
+  if ([...free].some((n) => scope.has(n))) return null;
+  if (readsMarks(e.body, env.defs, new Set(), env.cellMark?.name ?? null)) return null;
+  const R = once(compileExpr(bnd.of, scope, env, out), out);
+  const key = `memo ${e.q} ${bnd.name} ${JSON.stringify(e.body)}`;
+  let memo = O.at.made.get(key);
+  if (memo === undefined) {
+    const m = Out.fresh("_memo");
+    O.at.lines.push({
+      indent: 0,
+      text: `const ${m} = new Map<readonly number[], boolean>();`,
+    });
+    memo = { code: m, sort: BOOL };
+    O.at.made.set(key, memo);
+  }
+  const v = Out.fresh("_gq");
+  out.emit(`let ${v} = ${memo.code}.get(${R.code});`);
+  out.open(`if (${v} === undefined) {`);
+  const inner = new Map(scope);
+  inner.set(bnd.name, { code: R.code, sort: R.sort });
+  // The quantifier read with its one binding made: its body, as it is.
+  const body = quantifierOver(e, inner, env, out);
+  out.emit(`${v} = ${body};`);
+  out.emit(`${memo.code}.set(${R.code}, ${v});`);
+  out.close();
+  return { code: v, sort: BOOL };
+}
+
+/** A quantifier whose one binding is in `scope` already: its body. */
+function quantifierOver(
+  e: Extract<Expr, { k: "quant" }>,
+  scope: Scope,
+  env: Env,
+  out: Out,
+): string {
+  const v = compileExpr(e.body, scope, env, out);
+  expect(v, "bool", e.q);
+  return v.code;
+}
+
 function quantifier(
   e: Extract<Expr, { k: "quant" }>,
   scope: Scope,
@@ -2410,6 +2485,8 @@ function quantifier(
 ): Val {
   const linked = linkedAggregate(e.q, e.binders, null, e.body, scope, env);
   if (linked !== null) return linked;
+  const ofGroup = groupQuantifier(e, scope, env, out);
+  if (ofGroup !== null) return ofGroup;
   const forall = e.q === "forall";
   const masked =
     setQuantifier(e, scope, env, out) ?? rectQuantifier(e, scope, env, out);

@@ -18,6 +18,6 @@ The engine and language (proposal § "What Changes"):
 - [ ] 6. Code generation independent of phrasing: one loop for aggregates over one set, no set built only to be counted, cheap geometry and clue reads, a per-element value computed once a scan; each timed on the games whose profile names it
 - [x] 7. The compiler's cost report: each technique's growth stated above it (`techniqueGrowth`), warned from `n^2.5` at `npm run describe` and refused past `n^3`; it lists Boats' six rungs at `n^2.5` and Galaxies' `soleOwner` at `n^3`, both games measured slow
 - [x] 7b. Boats' steep rungs brought down by an engine lever: `keptDefinition` keeps a definition of a number, and one whose value is a number or a truth, where its loops nest two deep. Boats' `done(m)` is kept, its rungs fall below `n^2.5`, and its deals take 0.74× (solves 0.69×), Path 0.92×, Bricks 0.91×, the rest level
-- [ ] 7c. Galaxies' `soleOwner` (`n^3`)
+- [x] 7c. Galaxies' `soleOwner`: a quantifier over a kept group whose body reads no marks and nothing else bound is made once a group (`groupQuantifier`); Galaxies' deals 0.71×, solves 0.41× (13×17 Unreasonable deals 0.44×). Its stated growth stays `n^3`, since the measure cannot see a loop guarded to one binding
 - [ ] 8. The guide's cost rules for porters retired where the compiler covers them; the rest restated as what the compiler reports
 - [ ] 9. The catalog's census redone with the tool against the baseline; any game past 10% brought to the owner with the shape that keeps it there

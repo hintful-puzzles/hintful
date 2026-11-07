@@ -510,6 +510,16 @@ author writing for speed uses these:
 - **A set's size first**: a binder `F = fits(q) where |F| > 1` passes over
   a clue already drawn before anything is read of it, which cut Rect's
   `overlap` by three quarters on 12×14 boards.
+- **A truth about a kept group is made once a group**: `forall R =
+  through(x, O): P` (or `exists`), `O`'s groups kept and `P` reading `R` but
+  no marks and no other bound name, is kept by the group's list beside
+  where `O` is bound, and every square of the group reads it
+  (`groupQuantifier`). Galaxies' `finished(x, O)`, read for every square
+  and for each dot near it, so kept took its deals to 0.71 of the time and
+  its solves to 0.41 on the same boards (2026-11-07). The growth the
+  compiler states counts the loops inside it once a group; it does not see
+  that a loop under a test runs for few bindings, so Galaxies'
+  `soleOwner` still reads `n^3`.
 - **An edge between a square and a neighbor its loop bound is a table
   read**: `edge(x, y)` with `y` bound over `adj4(x)` reads
   `sp.adj4Edges` at the loop's counter, which took Palisade's deals to 0.83
