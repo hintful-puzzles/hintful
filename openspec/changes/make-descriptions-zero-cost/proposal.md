@@ -1,9 +1,10 @@
 # make-descriptions-zero-cost
 
-**Status: filed on the owner's word (2026-11-07). It goes next, before the
-rest of step 10** (`describe-pearl-tracks-spokes-bridges-net-tents-and-loopy`
-waits on it). It takes in `keep-board-definitions-across-boards`, whose
-measurements are below.
+**Status: filed on the owner's word (2026-11-07), and refocused by them the
+same day. It goes next, before the rest of step 10**
+(`describe-pearl-tracks-spokes-bridges-net-tents-and-loopy` waits on it). It
+takes in `keep-board-definitions-across-boards`, whose measurements are
+below.
 
 ## Why
 
@@ -14,9 +15,46 @@ be a near-zero-cost-abstraction, and I'd want us to spend time to get that
 right before we continue. The download size improvement would be important
 too, but is secondary."
 
-A description states a game's rules and reasoning once and is checked
-sound. The compiled ladder should cost what the hand-written ladder it
-replaced cost, so a game never pays for being described.
+And on the first round of fixes, which worked on Slant: "please don't worry
+too much about Slant in particular, nor even just about the existing games
+in the catalog; what I want is to improve the engine and description
+language/interface so that things are as easy as they can be to develop and
+maintain a much larger future catalog."
+
+So the subject is the engine and the language, and the games are the test
+bed. A description written plainly, by a porter who knows no rule about
+cost, should compile to code that costs about what a careful hand-written
+ladder costs. When it can't, the compiler should say so at `npm run
+describe`, not leave it to a timing a session may never take.
+
+## What the work so far shows
+
+The sections below are the record of how the census was taken and what it
+found. Their lessons for the engine:
+
+- **The gap is in what the runtime keeps, and in the code generated per
+  scan; it is not in the ladder's design.** Changing the order the ladder
+  runs its rungs in did not change the cost. The hand-written solvers'
+  advantage was state they kept up to date at each placement (groups, and
+  totals per group), and a fused pass that read each element once for
+  several deductions.
+- **Keeping state is an engine mechanism, not a per-game trick.** The first
+  instance is in: `CellMarks` logs its placements, `linked` catches up from
+  the log, and an aggregate over a group whose term reads only round its
+  own point is a total kept at the group's root (`linkedAggregate`,
+  `linkedSum`). Every other group builtin (`pointGroups`, `edgeGroups`,
+  `joinedAcross`, `of`, regions that grow) still rebuilds or walks, and
+  six described games read them.
+- **The guide carries cost rules a porter must know**
+  (`docs/descriptions.md` § "What a technique compiles to": bind the thing
+  a firing is about, bind a whole set outside the loop, a set's size first,
+  narrow a costly set by a board-kept one, let a cheap technique close what
+  a costly definition would watch for). At dozens of games each is a trap.
+  Where the compiler can do it, the rule goes.
+- **A profile shows where the work is, never what it costs above the
+  hand-written code.** Only the same boards timed both ways say that, so
+  that comparison must be a tool in the tree. The one used here was a
+  scratch script.
 
 ## What is measured already
 
@@ -184,29 +222,66 @@ three leave it open, and at the end, for the games a fix moved.
 
 ## What Changes
 
-- **The census above**, completed only where it leaves a game open. A walk
-  is timed by the same profile.
-- **Fix it in the compiler and the runtime, never per game.** The levers
-  known now:
-  - Board-kept values remade for every board a generator tries: keyed by
-    what they read, made cheaper (a count over a rectangle as a prefix sum),
-    or the board shared by its clues.
-  - Inline set walks that a hand-written rung keeps incrementally.
-  - What `with` inlines, and evaluates again, at every use.
-- **Record each game's download size** against its hand-written rungs. A cut
-  that comes cheaply comes here; the rest is `shrink-the-download`'s.
+Everything here is in the engine, the compiler or the language; no game's
+description is reworded to be cheaper.
+
+1. **The instruments, in the tree.** A same-board comparison against any
+   commit: deal a game's boards on both, check they and their verdicts
+   match, and time deals and single solves, alternating the two sides. It
+   is today's scratch harness made a tool, beside `deal-profile`. Every
+   claim below is measured with it.
+2. **Kept state as one engine mechanism.** The placement log is the
+   general way to keep anything over the marks up to date: a structure
+   records how far into the log it has read, catches up a placement at a
+   time, and starts again from the grid when the epoch moves. Every group
+   builtin moves onto it, and a total kept per group comes with any of
+   them. A strike that a structure reads gets logged too, if one does. A
+   definition kept per element is then made again only for the elements a
+   placement could change, not for all. The read-recording tried in
+   `keep-definitions-across-placements` cost more than it saved; a
+   dependency the compiler derives from the statement's shape costs
+   nothing to run.
+3. **Code generation that does not depend on how a statement is phrased.**
+   Several aggregates over one set read in one loop; a set built only to
+   count it is not built; geometry builtins such as `slash`, and clue
+   reads, are cheap at every read; a per-element value several techniques
+   read is computed once a scan. As each of these lands, the cost rule
+   in the guide that it replaces is retired.
+4. **A cost the compiler reports.** `npm run describe` states each
+   technique's shape: its loops, and any set that depends on the marks and
+   is walked at each read, which no kept structure covers. It refuses or
+   warns where a read grows with the board. This is the structural rule
+   that keeps a future game cheap without anyone timing it, and the gate
+   can hold it where a timing could not be.
+5. **The catalog is the regression net, not the target.** The census
+   tables above are the baseline; each lever is timed on the games whose
+   profile names its construct, with boards and verdicts unchanged. A
+   game's own description changes only where the language gains a way to
+   say the same thing more plainly.
+
+The download size stays `shrink-the-download`'s, except where a cut comes
+free with a change here.
 
 ## The target
 
-Each described game's deal time, mean and tail at its menu's sizes, within
-about 10% of the hand-written ladder it replaced. A game past that is
-brought to the owner with its profile and what would close the gap.
+A game described plainly, without any cost rule known to its porter,
+compiles to code within about 10% of a careful hand-written ladder at its
+menu's sizes, and grows with the board as that ladder does. Where the
+language cannot get there for some shape of statement, the compiler says so
+for that shape, and the owner hears what it would take.
 
 ## Acceptance
 
-- The census table for every described game, before and after.
-- The boards dealt unchanged, and every soundness verdict and test unchanged.
-- The guides updated with what a description must not do to stay cheap.
-- An answer, brought to the owner, to how the cost stays near zero as the
-  remaining games are described. A timing is not a gate on a busy machine;
-  a structural rule or a cost the compiler reports may be.
+- The same-board comparison and `deal-profile` in the tree, documented in
+  the guide.
+- Kept state on the placement log for every group builtin, with totals per
+  group; a guard per structure, each seen failing on a planted defect.
+- The code-generation levers above, each timed on the same boards against
+  the commit before it, with boards, verdicts and tests unchanged.
+- The compiler's cost report, and its refusal or warning for a read that
+  grows with the board, in the gate.
+- The guide's cost rules for porters retired where the compiler now
+  covers them, and the rest stated as what the compiler reports.
+- The catalog's census redone at the end, by the same tool, against the
+  baseline above, with any game still past 10% brought to the owner
+  together with the shape that keeps it there.
