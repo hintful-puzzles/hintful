@@ -78,15 +78,19 @@ function crossings(s: RectState, f: Extract<RectReason, { kind: "line" }>): Narr
         : mark.the("stripes", CELL, takes.map(at), "square"),
     );
     // The clue that covers it is outlined beside the one crossing, so its
-    // value names it, and "other" where the two read alike.
+    // value names it, "other" where the two read alike, and "outlined" where
+    // it shows no number: "the wide clue" could be any wide clue.
     const crosser = clueName(s, f.clues[0]);
+    const ownerName = (c: number): string => {
+      const name = clueName(s, c);
+      if (name === crosser) return `other ${crosser}`;
+      return s.grid[c] === HIDDEN ? `outlined ${name}` : name;
+    };
     const owner = mark.as(
       "outline",
       CELL,
       owners.map(at),
-      several
-        ? "another outlined clue"
-        : `the ${joinAnd(owners.map((c) => (clueName(s, c) === crosser ? `other ${crosser}` : clueName(s, c))))}`,
+      several ? "another outlined clue" : `the ${joinAnd(owners.map(ownerName))}`,
     );
     why.push(
       several
