@@ -30,6 +30,7 @@ export default defineConfig({
       "scripts/checks/tier-walk.test.ts",
       "scripts/checks/deal-walk.test.ts",
       "scripts/checks/deal-profile.test.ts",
+      "scripts/checks/deal-compare.test.ts",
     ],
     environment: "node",
     // The same absurd ceiling `vitest.config.ts` argues for at length, and for

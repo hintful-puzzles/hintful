@@ -391,6 +391,18 @@ the checker found boards it gave two answers. A name that reads only what
 the board deals, or that nothing later compares with a fresh read, may be
 bound outside (Star Battle's `neededLine`).
 
+**What a description costs is measured on the same boards.**
+[`deal-profile`](../scripts/checks/deal-profile.test.ts) profiles every
+described game's deals and walks at HEAD and says where the work is, which
+bounds what the description could cost; it never says what a construct costs
+above the code it replaced, since the old code did much of the same work.
+[`deal-compare`](../scripts/checks/deal-compare.test.ts) says that: it deals
+some games' presets with the same seeds on the working tree and on any commit,
+alternating which goes first, times deals and single solves, and fails where
+a board's verdicts differ. A change to the compiler or the runtime is timed
+with it against the commit before, on the games whose profile names the
+construct; each file's header says how to run it.
+
 **What a statement costs** turns on the shapes the compiler recognizes. An
 author writing for speed uses these:
 

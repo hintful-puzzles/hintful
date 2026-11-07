@@ -40,6 +40,10 @@ node_modules/
 # Other scratch directories
 /patches/
 
+# Another commit's src/, extracted by scripts/checks/deal-compare.test.ts, and
+# its report.
+/.deal-compare/
+
 # Python's bytecode caches, written beside the development tools in research/
 __pycache__/
 
