@@ -149,8 +149,8 @@ const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
   ],
   "games/pegs/generator.ts › genMoves": ["each pass adds a peg to a finite board"],
   "games/rect/generator.ts › division": ["covers a square each pass"],
-  "games/rect/solver.ts › narrowPlacements": [
-    "a deduction fixpoint: each pass that goes round again rules a placement out",
+  "games/rect/winnow.ts › winnowNumbers": [
+    "a deduction fixpoint: each pass that goes round again rules a placement or a number's square out",
   ],
   "games/samegame/state.ts › genGrid": [
     "each pass fills cells, and one that can fill none leaves",
