@@ -89,11 +89,14 @@ export const MARK = 3;
 export type Fire<B> = (binding: B, facts: Facts) => boolean;
 
 /** A clue kind as dealt: the element each clue sits at and its value, by
- * clue index, and the clue at each element (`-1` where there is none). */
+ * clue index; and at each element, the clue there and its value (`-1` where
+ * there is none). `clueAt` reads the value by element, one load a read where
+ * the clue's index would make it two. */
 export interface ClueList {
   readonly at: Int32Array;
   readonly v: Int32Array;
   readonly byAt: Int32Array;
+  readonly valueAt: Int32Array;
 }
 
 /** The clue list of `n` clues, over `elements` elements to sit at. */
@@ -103,10 +106,12 @@ export function clueList(
   elements: number,
 ): ClueList {
   const byAt = new Int32Array(elements).fill(-1);
+  const valueAt = new Int32Array(elements).fill(-1);
   at.forEach((e, k) => {
     byAt[e] = k;
+    valueAt[e] = v[k];
   });
-  return { at: Int32Array.from(at), v: Int32Array.from(v), byAt };
+  return { at: Int32Array.from(at), v: Int32Array.from(v), byAt, valueAt };
 }
 
 /** Each clue list's elements by the value of the clue there, built at the
@@ -148,8 +153,7 @@ export function perValue(place: number): number {
 
 /** `clue(kind, x)`: the value of the clue at `x`, or `-1`. */
 export function clueAt(list: ClueList, x: number): number {
-  const k = x < 0 ? -1 : list.byAt[x];
-  return k < 0 ? -1 : list.v[k];
+  return x < 0 ? -1 : list.valueAt[x];
 }
 
 /** A partition of the cells the board deals: its parts by index, each

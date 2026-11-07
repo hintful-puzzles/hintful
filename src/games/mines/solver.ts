@@ -147,7 +147,7 @@ function groupOf(m: CellMarks, dealt: mines.Dealt, c: number): Group {
       if (!m.known(d)) cells.push(d);
       else if (m.value(d) === MINE) found.push(d);
     }
-  const value = dealt.count.v[dealt.count.byAt[c]];
+  const value = dealt.count.valueAt[c];
   return { clue: c, value, cells, need: value - found.length, mines: found };
 }
 

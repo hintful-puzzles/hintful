@@ -66,120 +66,120 @@ export function domainOf(_sp: GridSpace, cl: Dealt, v_c: number): number {
  * board: every cell a value of its domain, and every rule and dealt clue
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
-  const _g139: number[] = [];
-  const _g154: number[] = [];
-  const _g164: number[] = [];
-  const _g186: number[] = [];
-  const _h151 = (sp.h - 1);
+  const _g105: number[] = [];
+  const _g120: number[] = [];
+  const _g130: number[] = [];
+  const _g152: number[] = [];
+  const _h117 = (sp.h - 1);
   for (const cell of sp.cells) {
     const held = g[cell];
     if (!(held > 0 && (domainOf(sp, cl, cell) >> held) & 1)) return false;
   }
-  let _q135 = true;
-  Q136: {
-    const _a137 = sp.cells;
-    for (let _i138 = 0; _i138 < _a137.length; _i138++) {
-      const v_c = _a137[_i138];
-      _g139.length = 0;
-      G140: {
-        const _a143 = sp.lineCells[sp.rowOf[v_c]];
-        for (let _i144 = 0; _i144 < _a143.length; _i144++) {
-          const v_x = _a143[_i144];
-          const _h145 = (g[v_x] || -1);
-          if (!((_h145 === 1))) continue;
-          _g139.push(v_x);
+  let _q101 = true;
+  Q102: {
+    const _a103 = sp.cells;
+    for (let _i104 = 0; _i104 < _a103.length; _i104++) {
+      const v_c = _a103[_i104];
+      _g105.length = 0;
+      G106: {
+        const _a109 = sp.lineCells[sp.rowOf[v_c]];
+        for (let _i110 = 0; _i110 < _a109.length; _i110++) {
+          const v_x = _a109[_i110];
+          const _h111 = (g[v_x] || -1);
+          if (!((_h111 === 1))) continue;
+          _g105.push(v_x);
         }
       }
-      if (!((stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g139).length <= 2))) {
-        _q135 = false;
-        break Q136;
+      if (!((stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g105).length <= 2))) {
+        _q101 = false;
+        break Q102;
       }
     }
   }
-  if (!(_q135)) return false;
-  let _q146 = true;
-  Q147: {
-    const _a148 = sp.cells;
-    for (let _i149 = 0; _i149 < _a148.length; _i149++) {
-      const v_c = _a148[_i149];
-      const _h150 = (g[v_c] || -1);
-      if (!((_h150 === 1))) continue;
-      const _h170 = (v_c % sp.w);
-      const _h171 = ((v_c / sp.w) | 0);
-      let _c177: boolean = (((v_c / sp.w) | 0) === _h151);
-      if (!_c177) {
-        let _q152 = false;
-        Q153: {
-          _g154.length = 0;
-          G155: {
-            _g164.length = 0;
-            G165: {
-              const _a168 = sp.adj8[v_c];
-              for (let _i169 = 0; _i169 < _a168.length; _i169++) {
-                const v_p = _a168[_i169];
-                if (!((((v_p % sp.w) - _h170) !== (((v_p / sp.w) | 0) - _h171)))) continue;
-                _g164.push(v_p);
+  if (!(_q101)) return false;
+  let _q112 = true;
+  Q113: {
+    const _a114 = sp.cells;
+    for (let _i115 = 0; _i115 < _a114.length; _i115++) {
+      const v_c = _a114[_i115];
+      const _h116 = (g[v_c] || -1);
+      if (!((_h116 === 1))) continue;
+      const _h136 = (v_c % sp.w);
+      const _h137 = ((v_c / sp.w) | 0);
+      let _c143: boolean = (((v_c / sp.w) | 0) === _h117);
+      if (!_c143) {
+        let _q118 = false;
+        Q119: {
+          _g120.length = 0;
+          G121: {
+            _g130.length = 0;
+            G131: {
+              const _a134 = sp.adj8[v_c];
+              for (let _i135 = 0; _i135 < _a134.length; _i135++) {
+                const v_p = _a134[_i135];
+                if (!((((v_p % sp.w) - _h136) !== (((v_p / sp.w) | 0) - _h137)))) continue;
+                _g130.push(v_p);
               }
             }
-            const _a172 = _g164;
-            for (let _i173 = 0; _i173 < _a172.length; _i173++) {
-              const v_p = _a172[_i173];
-              if (!((((v_p / sp.w) | 0) > _h171))) continue;
-              _g154.push(v_p);
+            const _a138 = _g130;
+            for (let _i139 = 0; _i139 < _a138.length; _i139++) {
+              const v_p = _a138[_i139];
+              if (!((((v_p / sp.w) | 0) > _h137))) continue;
+              _g120.push(v_p);
             }
           }
-          const _a174 = _g154;
-          for (let _i175 = 0; _i175 < _a174.length; _i175++) {
-            const v_p = _a174[_i175];
-            const _h176 = (g[v_p] || -1);
-            if ((_h176 === 1)) {
-              _q152 = true;
-              break Q153;
+          const _a140 = _g120;
+          for (let _i141 = 0; _i141 < _a140.length; _i141++) {
+            const v_p = _a140[_i141];
+            const _h142 = (g[v_p] || -1);
+            if ((_h142 === 1)) {
+              _q118 = true;
+              break Q119;
             }
           }
         }
-        _c177 = _q152;
+        _c143 = _q118;
       }
-      if (!(_c177)) {
-        _q146 = false;
-        break Q147;
+      if (!(_c143)) {
+        _q112 = false;
+        break Q113;
       }
     }
   }
-  if (!(_q146)) return false;
-  for (let _k178 = 0; _k178 < cl.hole.at.length; _k178++) {
-    const _at179 = cl.hole.at[_k178];
-    if (!(((g[_at179] || -1) === 2))) return false;
+  if (!(_q112)) return false;
+  for (let _k144 = 0; _k144 < cl.hole.at.length; _k144++) {
+    const _at145 = cl.hole.at[_k144];
+    if (!(((g[_at145] || -1) === 2))) return false;
   }
-  for (let _k181 = 0; _k181 < cl.number.at.length; _k181++) {
-    const _at182 = cl.number.at[_k181];
-    const _v183 = cl.number.v[_k181];
-    let _c197: boolean = ((g[_at182] || -1) === 2);
-    if (_c197) {
-      const _h192 = (_at182 % sp.w);
-      const _h193 = ((_at182 / sp.w) | 0);
-      let _g184 = 0;
-      G185: {
-        _g186.length = 0;
-        G187: {
-          const _a190 = sp.adj8[_at182];
-          for (let _i191 = 0; _i191 < _a190.length; _i191++) {
-            const v_p = _a190[_i191];
-            if (!((((v_p % sp.w) - _h192) !== (((v_p / sp.w) | 0) - _h193)))) continue;
-            _g186.push(v_p);
+  for (let _k147 = 0; _k147 < cl.number.at.length; _k147++) {
+    const _at148 = cl.number.at[_k147];
+    const _v149 = cl.number.v[_k147];
+    let _c163: boolean = ((g[_at148] || -1) === 2);
+    if (_c163) {
+      const _h158 = (_at148 % sp.w);
+      const _h159 = ((_at148 / sp.w) | 0);
+      let _g150 = 0;
+      G151: {
+        _g152.length = 0;
+        G153: {
+          const _a156 = sp.adj8[_at148];
+          for (let _i157 = 0; _i157 < _a156.length; _i157++) {
+            const v_p = _a156[_i157];
+            if (!((((v_p % sp.w) - _h158) !== (((v_p / sp.w) | 0) - _h159)))) continue;
+            _g152.push(v_p);
           }
         }
-        const _a194 = _g186;
-        for (let _i195 = 0; _i195 < _a194.length; _i195++) {
-          const v_p = _a194[_i195];
-          const _h196 = (g[v_p] || -1);
-          if (!((_h196 === 1))) continue;
-          _g184++;
+        const _a160 = _g152;
+        for (let _i161 = 0; _i161 < _a160.length; _i161++) {
+          const v_p = _a160[_i161];
+          const _h162 = (g[v_p] || -1);
+          if (!((_h162 === 1))) continue;
+          _g150++;
         }
       }
-      _c197 = (_g184 === _v183);
+      _c163 = (_g150 === _v149);
     }
-    if (!(_c197)) return false;
+    if (!(_c163)) return false;
   }
   return true;
 }
@@ -202,40 +202,40 @@ export function strandSupport(b: Marks, sp: GridSpace, fire: Fire<StrandSupportB
     if (!((((b.grid[v_a] || -1) === 1) && (((v_a / sp.w) | 0) < _h7)))) continue;
     facts.length = 0;
     changed = false;
-    let _c39: boolean = supportable(b, sp, v_a);
-    if (_c39) {
-      let _q30 = true;
-      Q31: {
-        const _a32 = below(sp, v_a);
-        for (let _i33 = 0; _i33 < _a32.length; _i33++) {
-          const v_c = _a32[_i33];
-          let _c38: boolean = !((b.grid[v_c] !== 0));
-          if (_c38) {
-            let _q34 = true;
-            Q35: {
-              const _a36 = below(sp, v_a);
-              for (let _i37 = 0; _i37 < _a36.length; _i37++) {
-                const v_p = _a36[_i37];
+    let _c33: boolean = supportable(b, sp, v_a);
+    if (_c33) {
+      let _q24 = true;
+      Q25: {
+        const _a26 = below(sp, v_a);
+        for (let _i27 = 0; _i27 < _a26.length; _i27++) {
+          const v_c = _a26[_i27];
+          let _c32: boolean = !((b.grid[v_c] !== 0));
+          if (_c32) {
+            let _q28 = true;
+            Q29: {
+              const _a30 = below(sp, v_a);
+              for (let _i31 = 0; _i31 < _a30.length; _i31++) {
+                const v_p = _a30[_i31];
                 if (!((v_p !== v_c))) continue;
                 if (!(((b.grid[v_p] || -1) === 2))) {
-                  _q34 = false;
-                  break Q35;
+                  _q28 = false;
+                  break Q29;
                 }
               }
             }
-            _c38 = _q34;
+            _c32 = _q28;
           }
-          if (!(_c38)) continue;
+          if (!(_c32)) continue;
           if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 1); changed = true; } else facts.push(PLACE, v_c, 1); }
           if (!(true)) {
-            _q30 = false;
-            break Q31;
+            _q24 = false;
+            break Q25;
           }
         }
       }
-      _c39 = _q30;
+      _c33 = _q24;
     }
-    if (!(_c39)) return -1;
+    if (!(_c33)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null && !fire({ a: v_a }, facts)) return 1;
@@ -253,52 +253,40 @@ const undercountFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function undercount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<UndercountBinding> | null): number {
-  const _g59: number[] = [];
   const facts = undercountFacts;
   let fired = 0;
   let changed = false;
-  const _a43 = sp.cells;
-  for (let _i44 = 0; _i44 < _a43.length; _i44++) {
-    const v_k = _a43[_i44];
-    const _h45 = clueAt(cl.number, v_k);
-    const _h65 = (v_k % sp.w);
-    const _h66 = ((v_k / sp.w) | 0);
-    L46: {
-      const v_n = _h45;
-      if (!((v_n >= 0))) break L46;
+  const _a37 = sp.cells;
+  for (let _i38 = 0; _i38 < _a37.length; _i38++) {
+    const v_k = _a37[_i38];
+    const _h39 = clueAt(cl.number, v_k);
+    L40: {
+      const v_n = _h39;
+      if (!((v_n >= 0))) break L40;
       facts.length = 0;
       changed = false;
-      let _c70: boolean = (open(b, sp, v_k) >= v_n);
-      if (_c70) {
-        let _c69: boolean = (open(b, sp, v_k) > v_n);
-        if (!_c69) {
-          let _q57 = true;
-          Q58: {
-            _g59.length = 0;
-            G60: {
-              const _a63 = sp.adj8[v_k];
-              for (let _i64 = 0; _i64 < _a63.length; _i64++) {
-                const v_p = _a63[_i64];
-                if (!((((v_p % sp.w) - _h65) !== (((v_p / sp.w) | 0) - _h66)))) continue;
-                _g59.push(v_p);
-              }
-            }
-            const _a67 = _g59;
-            for (let _i68 = 0; _i68 < _a67.length; _i68++) {
-              const v_c = _a67[_i68];
+      let _c50: boolean = (open(b, sp, v_k) >= v_n);
+      if (_c50) {
+        let _c49: boolean = (open(b, sp, v_k) > v_n);
+        if (!_c49) {
+          let _q45 = true;
+          Q46: {
+            const _a47 = around(sp, v_k);
+            for (let _i48 = 0; _i48 < _a47.length; _i48++) {
+              const v_c = _a47[_i48];
               if (!(!((b.grid[v_c] !== 0)))) continue;
               if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 1); changed = true; } else facts.push(PLACE, v_c, 1); }
               if (!(true)) {
-                _q57 = false;
-                break Q58;
+                _q45 = false;
+                break Q46;
               }
             }
           }
-          _c69 = _q57;
+          _c49 = _q45;
         }
-        _c70 = _c69;
+        _c50 = _c49;
       }
-      if (!(_c70)) return -1;
+      if (!(_c50)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ k: v_k, n: v_n }, facts)) return 1;
@@ -316,70 +304,70 @@ const threeFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^1.5. */
 export function three(b: Marks, sp: GridSpace, fire: Fire<ThreeBinding> | null): number {
-  const _g79: number[] = [];
-  const _g91: number[] = [];
+  const _g59: number[] = [];
+  const _g71: number[] = [];
   const facts = threeFacts;
   let fired = 0;
   let changed = false;
-  const _a73 = sp.rows;
-  for (let _i74 = 0; _i74 < _a73.length; _i74++) {
-    const v_L = _a73[_i74];
+  const _a53 = sp.rows;
+  for (let _i54 = 0; _i54 < _a53.length; _i54++) {
+    const v_L = _a53[_i54];
     facts.length = 0;
     changed = false;
-    let _q75 = true;
-    Q76: {
-      const _a77 = sp.lineCells[v_L];
-      for (let _i78 = 0; _i78 < _a77.length; _i78++) {
-        const v_c = _a77[_i78];
+    let _q55 = true;
+    Q56: {
+      const _a57 = sp.lineCells[v_L];
+      for (let _i58 = 0; _i58 < _a57.length; _i58++) {
+        const v_c = _a57[_i58];
         if (!(((b.grid[v_c] || -1) === 1))) continue;
-        _g79.length = 0;
-        G80: {
-          const _a83 = sp.lineCells[sp.rowOf[v_c]];
-          for (let _i84 = 0; _i84 < _a83.length; _i84++) {
-            const v_x = _a83[_i84];
+        _g59.length = 0;
+        G60: {
+          const _a63 = sp.lineCells[sp.rowOf[v_c]];
+          for (let _i64 = 0; _i64 < _a63.length; _i64++) {
+            const v_x = _a63[_i64];
             if (!(((b.grid[v_x] || -1) === 1))) continue;
-            _g79.push(v_x);
+            _g59.push(v_x);
           }
         }
-        if (!((stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g79).length <= 2))) {
-          _q75 = false;
-          break Q76;
+        if (!((stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g59).length <= 2))) {
+          _q55 = false;
+          break Q56;
         }
       }
     }
-    let _c98: boolean = _q75;
-    if (_c98) {
-      let _q85 = true;
-      Q86: {
-        const _a87 = sp.lineCells[v_L];
-        for (let _i88 = 0; _i88 < _a87.length; _i88++) {
-          const v_c = _a87[_i88];
-          let _c97: boolean = !((b.grid[v_c] !== 0));
-          if (_c97) {
-            const _wc89 = v_c;
-            const _wd90 = 1;
-            _g91.length = 0;
-            G92: {
-              const _a95 = sp.lineCells[sp.rowOf[v_c]];
-              for (let _i96 = 0; _i96 < _a95.length; _i96++) {
-                const v_x = _a95[_i96];
-                if (!(((v_x === _wc89 ? _wd90 : (b.grid[v_x] || -1)) === 1))) continue;
-                _g91.push(v_x);
+    let _c78: boolean = _q55;
+    if (_c78) {
+      let _q65 = true;
+      Q66: {
+        const _a67 = sp.lineCells[v_L];
+        for (let _i68 = 0; _i68 < _a67.length; _i68++) {
+          const v_c = _a67[_i68];
+          let _c77: boolean = !((b.grid[v_c] !== 0));
+          if (_c77) {
+            const _wc69 = v_c;
+            const _wd70 = 1;
+            _g71.length = 0;
+            G72: {
+              const _a75 = sp.lineCells[sp.rowOf[v_c]];
+              for (let _i76 = 0; _i76 < _a75.length; _i76++) {
+                const v_x = _a75[_i76];
+                if (!(((v_x === _wc69 ? _wd70 : (b.grid[v_x] || -1)) === 1))) continue;
+                _g71.push(v_x);
               }
             }
-            _c97 = (stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g91).length > 2);
+            _c77 = (stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g71).length > 2);
           }
-          if (!(_c97)) continue;
+          if (!(_c77)) continue;
           if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
           if (!(true)) {
-            _q85 = false;
-            break Q86;
+            _q65 = false;
+            break Q66;
           }
         }
       }
-      _c98 = _q85;
+      _c78 = _q65;
     }
-    if (!(_c98)) return -1;
+    if (!(_c78)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null && !fire({ L: v_L }, facts)) return 1;
@@ -399,11 +387,11 @@ export function unsupported(b: Marks, sp: GridSpace, fire: Fire<UnsupportedBindi
   const facts = unsupportedFacts;
   let fired = 0;
   let changed = false;
-  const _h103 = (sp.h - 1);
-  const _a101 = sp.cells;
-  for (let _i102 = 0; _i102 < _a101.length; _i102++) {
-    const v_c = _a101[_i102];
-    if (!(((!((b.grid[v_c] !== 0)) && (((v_c / sp.w) | 0) < _h103)) && !(supportable(b, sp, v_c))))) continue;
+  const _h83 = (sp.h - 1);
+  const _a81 = sp.cells;
+  for (let _i82 = 0; _i82 < _a81.length; _i82++) {
+    const v_c = _a81[_i82];
+    if (!(((!((b.grid[v_c] !== 0)) && (((v_c / sp.w) | 0) < _h83)) && !(supportable(b, sp, v_c))))) continue;
     facts.length = 0;
     changed = false;
     if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
@@ -425,52 +413,40 @@ const overcountFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function overcount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OvercountBinding> | null): number {
-  const _g123: number[] = [];
   const facts = overcountFacts;
   let fired = 0;
   let changed = false;
-  const _a107 = sp.cells;
-  for (let _i108 = 0; _i108 < _a107.length; _i108++) {
-    const v_k = _a107[_i108];
-    const _h109 = clueAt(cl.number, v_k);
-    const _h129 = (v_k % sp.w);
-    const _h130 = ((v_k / sp.w) | 0);
-    L110: {
-      const v_n = _h109;
-      if (!((v_n >= 0))) break L110;
+  const _a87 = sp.cells;
+  for (let _i88 = 0; _i88 < _a87.length; _i88++) {
+    const v_k = _a87[_i88];
+    const _h89 = clueAt(cl.number, v_k);
+    L90: {
+      const v_n = _h89;
+      if (!((v_n >= 0))) break L90;
       facts.length = 0;
       changed = false;
-      let _c134: boolean = (shaded(b, sp, v_k) <= v_n);
-      if (_c134) {
-        let _c133: boolean = (shaded(b, sp, v_k) < v_n);
-        if (!_c133) {
-          let _q121 = true;
-          Q122: {
-            _g123.length = 0;
-            G124: {
-              const _a127 = sp.adj8[v_k];
-              for (let _i128 = 0; _i128 < _a127.length; _i128++) {
-                const v_p = _a127[_i128];
-                if (!((((v_p % sp.w) - _h129) !== (((v_p / sp.w) | 0) - _h130)))) continue;
-                _g123.push(v_p);
-              }
-            }
-            const _a131 = _g123;
-            for (let _i132 = 0; _i132 < _a131.length; _i132++) {
-              const v_c = _a131[_i132];
+      let _c100: boolean = (shaded(b, sp, v_k) <= v_n);
+      if (_c100) {
+        let _c99: boolean = (shaded(b, sp, v_k) < v_n);
+        if (!_c99) {
+          let _q95 = true;
+          Q96: {
+            const _a97 = around(sp, v_k);
+            for (let _i98 = 0; _i98 < _a97.length; _i98++) {
+              const v_c = _a97[_i98];
               if (!(!((b.grid[v_c] !== 0)))) continue;
               if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
               if (!(true)) {
-                _q121 = false;
-                break Q122;
+                _q95 = false;
+                break Q96;
               }
             }
           }
-          _c133 = _q121;
+          _c99 = _q95;
         }
-        _c134 = _c133;
+        _c100 = _c99;
       }
-      if (!(_c134)) return -1;
+      if (!(_c100)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ k: v_k, n: v_n }, facts)) return 1;
@@ -478,6 +454,27 @@ export function overcount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Overcou
     }
   }
   return fired;
+}
+
+const aroundKept = keptStore<readonly number[]>();
+
+/** `around(c)` as the description defines it, kept for the
+ * board, since it reads no marks. */
+export function around(sp: GridSpace, v_c: number): readonly number[] {
+  const _kept: Kept<readonly number[]> = aroundKept.board(sp);
+  if (_kept[v_c] !== undefined) return _kept[v_c];
+  const _g12: number[] = [];
+  G13: {
+    const _a16 = sp.adj8[v_c];
+    for (let _i17 = 0; _i17 < _a16.length; _i17++) {
+      const v_p = _a16[_i17];
+      if (!((((v_p % sp.w) - (v_c % sp.w)) !== (((v_p / sp.w) | 0) - ((v_c / sp.w) | 0))))) continue;
+      _g12.push(v_p);
+    }
+  }
+  const _made = _g12;
+  _kept[v_c] = _made;
+  return _made;
 }
 
 const belowKept = keptStore<readonly number[]>();
@@ -489,18 +486,9 @@ export function below(sp: GridSpace, v_c: number): readonly number[] {
   if (_kept[v_c] !== undefined) return _kept[v_c];
   const _g10: number[] = [];
   G11: {
-    const _g20: number[] = [];
-    G21: {
-      const _a24 = sp.adj8[v_c];
-      for (let _i25 = 0; _i25 < _a24.length; _i25++) {
-        const v_p = _a24[_i25];
-        if (!((((v_p % sp.w) - (v_c % sp.w)) !== (((v_p / sp.w) | 0) - ((v_c / sp.w) | 0))))) continue;
-        _g20.push(v_p);
-      }
-    }
-    const _a26 = _g20;
-    for (let _i27 = 0; _i27 < _a26.length; _i27++) {
-      const v_p = _a26[_i27];
+    const _a20 = around(sp, v_c);
+    for (let _i21 = 0; _i21 < _a20.length; _i21++) {
+      const v_p = _a20[_i21];
       if (!((((v_p / sp.w) | 0) > ((v_c / sp.w) | 0)))) continue;
       _g10.push(v_p);
     }
@@ -519,9 +507,9 @@ export function supportable(b: Marks, sp: GridSpace, v_c: number): boolean {
   if (_kept[v_c] !== undefined) return _kept[v_c];
   let _q8 = false;
   Q9: {
-    const _a28 = below(sp, v_c);
-    for (let _i29 = 0; _i29 < _a28.length; _i29++) {
-      const v_p = _a28[_i29];
+    const _a22 = below(sp, v_c);
+    for (let _i23 = 0; _i23 < _a22.length; _i23++) {
+      const v_p = _a22[_i23];
       if (((b.grid[v_p] || -1) !== 2)) {
         _q8 = true;
         break Q9;
@@ -540,25 +528,16 @@ const openKept = keptStore<number>();
 export function open(b: Marks, sp: GridSpace, v_k: number): number {
   const _kept: Kept<number> = openKept.marks(b);
   if (_kept[v_k] !== undefined) return _kept[v_k];
-  let _g47 = 0;
-  G48: {
-    const _g49: number[] = [];
-    G50: {
-      const _a53 = sp.adj8[v_k];
-      for (let _i54 = 0; _i54 < _a53.length; _i54++) {
-        const v_p = _a53[_i54];
-        if (!((((v_p % sp.w) - (v_k % sp.w)) !== (((v_p / sp.w) | 0) - ((v_k / sp.w) | 0))))) continue;
-        _g49.push(v_p);
-      }
-    }
-    const _a55 = _g49;
-    for (let _i56 = 0; _i56 < _a55.length; _i56++) {
-      const v_p = _a55[_i56];
+  let _g41 = 0;
+  G42: {
+    const _a43 = around(sp, v_k);
+    for (let _i44 = 0; _i44 < _a43.length; _i44++) {
+      const v_p = _a43[_i44];
       if (!(((b.grid[v_p] || -1) !== 2))) continue;
-      _g47++;
+      _g41++;
     }
   }
-  const _made = _g47;
+  const _made = _g41;
   _kept[v_k] = _made;
   return _made;
 }
@@ -570,25 +549,16 @@ const shadedKept = keptStore<number>();
 export function shaded(b: Marks, sp: GridSpace, v_k: number): number {
   const _kept: Kept<number> = shadedKept.marks(b);
   if (_kept[v_k] !== undefined) return _kept[v_k];
-  let _g111 = 0;
-  G112: {
-    const _g113: number[] = [];
-    G114: {
-      const _a117 = sp.adj8[v_k];
-      for (let _i118 = 0; _i118 < _a117.length; _i118++) {
-        const v_p = _a117[_i118];
-        if (!((((v_p % sp.w) - (v_k % sp.w)) !== (((v_p / sp.w) | 0) - ((v_k / sp.w) | 0))))) continue;
-        _g113.push(v_p);
-      }
-    }
-    const _a119 = _g113;
-    for (let _i120 = 0; _i120 < _a119.length; _i120++) {
-      const v_p = _a119[_i120];
+  let _g91 = 0;
+  G92: {
+    const _a93 = around(sp, v_k);
+    for (let _i94 = 0; _i94 < _a93.length; _i94++) {
+      const v_p = _a93[_i94];
       if (!(((b.grid[v_p] || -1) === 1))) continue;
-      _g111++;
+      _g91++;
     }
   }
-  const _made = _g111;
+  const _made = _g91;
   _kept[v_k] = _made;
   return _made;
 }

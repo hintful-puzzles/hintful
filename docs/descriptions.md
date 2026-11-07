@@ -471,8 +471,11 @@ author writing for speed uses these:
   once a clue between placements. A shallower one is inlined, so the
   keeping is paid only where a read inside nested loops repays it. One that
   reads no marks at all is kept for the board, on the clues it deals, so a
-  ladder's every run shares it: Rect's `allowed(q)`, every rectangle a clue
-  could take, is made once a deal. Each keeps its values in a store of its
+  ladder's every run shares it, wherever it has one loop or walks a line or
+  the board: Rect's `allowed(q)`, every rectangle a clue could take, is made
+  once a deal, and Light Up's `lights(c)` once a square, which took its
+  deals to 0.16 of the time on the same boards, Clusters' to 0.68 and
+  Dominosa's to 0.86 (2026-11-07). Each keeps its values in a store of its
   own, which looks at the marks it was last read on first: a lookup by the
   definition's name cost Rect's deals a third of their time. Keeping a value
   past a placement that misses what it read was built and timed, both by
@@ -536,12 +539,14 @@ author writing for speed uses these:
 - **An answer check hoists as a rung does**: a set a rule binds is made once
   where it is bound, so `through(c, O)` over a bound `O` is a lookup in its
   groups (Rect's shape rule, a walk per edge otherwise).
-- **Any other definition is computed at each read**, even one that reads only what
-  the board deals, so bind it once where it is read more than once: Light
-  Up's `square` binds `L = lights(c)`, and its discounts bind `D =
-  lights(d)` after the cheap `not known(d)`, which on 12×16 boards cut a deal
-  by a quarter to a third (2026-11-02, `describe-beams-and-tiles`'
-  `design.md`). Boats' `onlyFit` and `onlyRuns` read `top`, the longest
+- **A count, sum or truth read again in one binding's premise and
+  conclusion is made once**: `bulbs(c)` stated three times in Light Up's
+  `square` counts once. The compiler shares one only where the code that
+  made it has surely run since the last fact, so a read after a `place`, or
+  inside a loop, makes it again (`Shared` in `compile.ts`). Light Up's deals
+  took 0.96 of the time, Magnets' solves 0.89 (2026-11-07).
+- **Any other definition is computed at each read**, so bind a set read
+  inside a loop once outside it, where it holds for every pass. Boats' `onlyFit` and `onlyRuns` read `top`, the longest
   boat still to close, at every run, and were the two costliest rungs of a
   10×10 Hard deal; bound first as `M = top`, they fell below the trials
   (2026-11-06, `describe-fleets`). A count of closed boats only grows, so

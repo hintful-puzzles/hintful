@@ -113,6 +113,40 @@ interface Line {
   text: string;
 }
 
+interface Block {
+  id: number;
+  loop: boolean;
+}
+
+/**
+ * The aggregates and quantifiers a binding's premise and conclusion have
+ * computed, each kept where it was computed, by its statement and the
+ * code of the names it reads: so `bulbs(c)` stated three times in one
+ * conclusion counts once. One is read again only where the code that made
+ * it has surely run, and run since the last fact: in its own block, or one
+ * nested in it that is no loop's, and with no fact compiled in between
+ * (a solve makes each fact as it concludes it). A loop is never entered,
+ * since a later pass of it may follow a fact made further down it.
+ */
+interface Shared {
+  readonly made: Map<string, { out: Out; path: readonly Block[]; val: Val }>;
+}
+
+/** Whether code written to `cur` may read a term written to `out` when its
+ * blocks were `path`. */
+function sharedReach(out: Out, path: readonly Block[], cur: Out): boolean {
+  let o: Out | null = cur;
+  while (o !== null && o !== out) o = o.within;
+  if (o === null) return false;
+  const now = out.blocks;
+  if (now.length < path.length) return false;
+  for (let i = 0; i < path.length; i++) if (now[i].id !== path[i].id) return false;
+  for (let i = path.length; i < now.length; i++) if (now[i].loop) return false;
+  for (let p: Out = cur; p !== out; p = p.within as Out)
+    if (p.blocks.some((b) => b.loop)) return false;
+  return true;
+}
+
 function show(s: Sort): string {
   switch (s.k) {
     case "elem":
@@ -147,10 +181,19 @@ class CompileError extends Error {}
 class Out {
   readonly entries: (Line | Slot)[] = [];
   private depth: number;
+  /** The blocks open here, innermost last, each marked where it is a
+   * loop's: what a term computed in one may be read from (`Shared`). */
+  readonly blocks: Block[] = [];
+  /** The code this is written for, inside a block of its own that is no
+   * loop's: a connective's right side (`shortCircuit`). `null` for code
+   * whose place is not known as it is written. */
+  readonly within: Out | null;
   private static n = 0;
   private static slots = 0;
-  constructor(depth: number) {
+  private static blockIds = 0;
+  constructor(depth: number, within: Out | null = null) {
     this.depth = depth;
+    this.within = within;
   }
   emit(line: string): void {
     this.entries.push({ indent: this.depth, text: line });
@@ -158,9 +201,11 @@ class Out {
   open(line: string): void {
     this.emit(line);
     this.depth++;
+    this.blocks.push({ id: ++Out.blockIds, loop: /^(for|while|do)\b/.test(line) });
   }
   close(line = "}"): void {
     this.depth--;
+    this.blocks.pop();
     this.emit(line);
   }
   /** A slot here, `loops` deep. */
@@ -339,6 +384,9 @@ interface Env {
   /** Whether the function keeps each cell's candidates as it first reads
    * them (`cands`), until a firing it goes on from changes the marks. */
   memo: boolean;
+  /** What a binding's premise and conclusion have computed that a later
+   * read of the same term may share; absent elsewhere. */
+  shared?: Shared;
   /** Set where a technique's body reads a cell's candidates through
    * `cands`, which it then keeps; absent outside a technique. */
   readsCands?: { yes: boolean };
@@ -539,7 +587,43 @@ function compileExpr(e: Expr, scope: Scope, env: Env, out: Out): Val {
     const v = hoisted(e, scope, env, env.hoist);
     if (v !== null) return v;
   }
-  return compileNode(e, scope, env, out);
+  const shared = env.shared;
+  if (shared === undefined) return compileNode(e, scope, env, out);
+  if (e.k === "call" && FACTS.some((f) => mentions(e, f, env.defs, new Set())))
+    shared.made.clear();
+  if (e.k !== "agg" && e.k !== "quant") return compileNode(e, scope, env, out);
+  if (FACTS.some((f) => mentions(e, f, env.defs, new Set())))
+    return compileNode(e, scope, env, out);
+  const key = sharedKey(e, scope, env);
+  const kept = shared.made.get(key);
+  if (kept !== undefined && sharedReach(kept.out, kept.path, out)) return kept.val;
+  const v = compileNode(e, scope, env, out);
+  // Only a number or a truth its own loop declared is kept: a set's array is
+  // emptied where its site runs again, and a read the runtime answers is
+  // cheap.
+  const total = v.sort.k === "num" || v.sort.k === "bool" || isMask(v.sort);
+  if (total && /^_[gq]\d+$/.test(v.code))
+    shared.made.set(key, {
+      out,
+      path: [...out.blocks],
+      val: { code: v.code, sort: v.sort },
+    });
+  return v;
+}
+
+/** The calls that make a fact. */
+const FACTS = ["place", "strike", "mark"] as const;
+
+/** A term's statement, the code of each name it reads from its scope, and
+ * the suppositions it is read under. */
+function sharedKey(e: Expr, scope: Scope, env: Env): string {
+  const free = new Set<string>();
+  freeNames(e, free, new Set());
+  const names = [...free]
+    .sort()
+    .map((n) => `${n}=${scope.get(n)?.code ?? ""}`)
+    .join(",");
+  return `${JSON.stringify(e)}|${names}|${JSON.stringify(env.supposed)}`;
 }
 
 /** The functions a term may call and still be computed early: none reads
@@ -911,7 +995,7 @@ function shortCircuit(
 ): Val {
   const va = compileExpr(a, scope, env, out);
   expect(va, "bool", op);
-  const inner = new Out(0);
+  const inner = new Out(0, out);
   const vb = compileExpr(b, scope, env, inner);
   expect(vb, "bool", op);
   const left = op === "implies" ? `!(${va.code})` : va.code;
@@ -3649,9 +3733,14 @@ function keptDefinition(
     env.supposed.length > 0 ||
     def.params.length !== 1 ||
     (vs[0].sort.k !== "elem" && vs[0].sort.k !== "num") ||
-    loopDepth(def.body, env.defs) < 2 ||
     !keptWhilePlaced(def.body, env, new Set(), new Set(def.params))
   )
+    return null;
+  // One that reads no marks is made once a board, so a loop or a walk
+  // repays the keeping; one made again after each placement needs two.
+  const board = !readsMarks(def.body, env.defs, new Set(), env.cellMark?.name ?? null);
+  const depth = loopDepth(def.body, env.defs);
+  if (depth < 2 && !(board && (depth === 1 || walks(def.body, env.defs, new Set()))))
     return null;
   let made = kept.defs.get(fn);
   if (made === undefined) {
@@ -3681,13 +3770,6 @@ function keptDefinition(
     if (!isArray(val.sort) && val.sort.k !== "num" && val.sort.k !== "bool")
       return null;
     const type = tsType(val.sort);
-    // One that reads no marks is the board's, kept for as long as it is.
-    const board = !readsMarks(
-      def.body,
-      env.defs,
-      new Set(),
-      env.cellMark?.name ?? null,
-    );
     kept.used.add("keptStore");
     kept.used.add("type Kept");
     const store = `${fn}Kept`;
@@ -3725,6 +3807,36 @@ function keptDefinition(
     code: `${fn}(${made.board ? "" : "b, "}sp, ${made.clues ? "cl, " : ""}${vs[0].code})`,
     sort: made.sort,
   };
+}
+
+/** The functions whose runtime walks a line or the board. */
+const WALKS = new Set([
+  "stretch",
+  "ray",
+  "sight",
+  "through",
+  "reaches",
+  "connected",
+  "cuts",
+  "beam",
+  "look",
+]);
+
+/** Whether `e` walks a line or the board, through the definitions it reads. */
+function walks(
+  e: Expr,
+  defs: ReadonlyMap<string, Definition>,
+  seen: Set<string>,
+): boolean {
+  if (e.k === "call") {
+    if (WALKS.has(e.fn)) return true;
+    const d = defs.get(e.fn);
+    if (d !== undefined && !seen.has(e.fn)) {
+      seen.add(e.fn);
+      if (walks(d.body, defs, seen)) return true;
+    }
+  }
+  return children(e).some((c) => walks(c, defs, seen));
 }
 
 /** How deep the loops of `e` nest, through the definitions it reads: a set
@@ -4037,14 +4149,15 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   const keep = body.slot(0);
   const refills: Slot[] = [];
   const fire = (sc: Scope): void => {
+    const shared: Shared = { made: new Map() };
     if (t.premise !== null) {
-      const p = compileExpr(t.premise, sc, tenv, body);
+      const p = compileExpr(t.premise, sc, { ...tenv, shared }, body);
       expect(p, "bool", "premise");
       body.emit(`if (!(${p.code})) continue;`);
     }
     body.emit("facts.length = 0;");
     body.emit("changed = false;");
-    const c = compileExpr(t.conclude, sc, { ...tenv, concluding: true }, body);
+    const c = compileExpr(t.conclude, sc, { ...tenv, concluding: true, shared }, body);
     expect(c, "bool", "conclusion");
     const binding = `{ ${sorts.map((s) => `${s.name}: v_${s.name}`).join(", ")} }`;
     // A conclusion that is false proves the marks inconsistent.
