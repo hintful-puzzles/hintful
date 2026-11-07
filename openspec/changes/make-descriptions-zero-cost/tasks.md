@@ -17,6 +17,7 @@ The engine and language (proposal § "What Changes"):
 - [x] 6a. `edge(x, y)` over a loop on `adj4(x)` read from a table by the loop's counter, and a loop's binding no read uses dropped: Palisade 0.83×, Path 0.90×, Dominosa 0.95× (deals, same boards and verdicts)
 - [ ] 6. Code generation independent of phrasing: one loop for aggregates over one set, no set built only to be counted, cheap geometry and clue reads, a per-element value computed once a scan; each timed on the games whose profile names it
 - [x] 7. The compiler's cost report: each technique's growth stated above it (`techniqueGrowth`), warned from `n^2.5` at `npm run describe` and refused past `n^3`; it lists Boats' six rungs at `n^2.5` and Galaxies' `soleOwner` at `n^3`, both games measured slow
-- [ ] 7b. Bring the listed techniques down by an engine lever, not a rewording: Boats' `done(m)`, a count over the board read inside a loop over the cells, is a definition of a number that a placement changes, a candidate for keeping as `keptDefinition` keeps one of an element; Galaxies' `soleOwner`
+- [x] 7b. Boats' steep rungs brought down by an engine lever: `keptDefinition` keeps a definition of a number, and one whose value is a number or a truth, where its loops nest two deep. Boats' `done(m)` is kept, its rungs fall below `n^2.5`, and its deals take 0.74× (solves 0.69×), Path 0.92×, Bricks 0.91×, the rest level
+- [ ] 7c. Galaxies' `soleOwner` (`n^3`)
 - [ ] 8. The guide's cost rules for porters retired where the compiler covers them; the rest restated as what the compiler reports
 - [ ] 9. The catalog's census redone with the tool against the baseline; any game past 10% brought to the owner with the shape that keeps it there

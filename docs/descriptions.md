@@ -460,7 +460,10 @@ author writing for speed uses these:
 - **Bind a set a loop reads whole once, outside the loop**, by the statement
   itself: a comprehension or quantifier is never moved out of a loop
   (`set`'s `open`, `hiddenSingle`'s `placed`).
-- **A definition of one element whose loops nest two deep is kept**: one
+- **A definition of one element or number whose loops nest two deep is
+  kept**, its value a set, a number or a truth (Boats' `done(m)`, the
+  closed boats of `m` squares counted over the board, kept, took its deals
+  to 0.74 of the time on the same boards, 2026-11-07): one
   that reads the marks only through `value` and `known`, and no name of the
   technique, compiles once as a function of the module, and its value for
   each element is kept until a value is placed, shared by every rung. Rect's

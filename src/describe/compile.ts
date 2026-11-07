@@ -3571,16 +3571,17 @@ function keptDefinition(
     env.position !== null ||
     env.supposed.length > 0 ||
     def.params.length !== 1 ||
-    vs[0].sort.k !== "elem" ||
+    (vs[0].sort.k !== "elem" && vs[0].sort.k !== "num") ||
     loopDepth(def.body, env.defs) < 2 ||
     !keptWhilePlaced(def.body, env, new Set(), new Set(def.params))
   )
     return null;
   let made = kept.defs.get(fn);
   if (made === undefined) {
-    // Compiled once, as a function of its own: only a set of elements is
-    // kept, since a number or a mask costs less to make again than to look
-    // up.
+    // Compiled once, as a function of its own. A mask is not kept: its
+    // loops are over values, and cost less to make again than to look up. A
+    // number or a truth whose loops nest two deep is: Boats' `done(m)`
+    // counts the closed boats over the whole board.
     const v = `v_${def.params[0]}`;
     const readsClues = { yes: false };
     const body = new Out(1);
@@ -3600,7 +3601,8 @@ function keptDefinition(
       },
       body,
     );
-    if (!isArray(val.sort)) return null;
+    if (!isArray(val.sort) && val.sort.k !== "num" && val.sort.k !== "bool")
+      return null;
     const type = tsType(val.sort);
     // One that reads no marks is the board's, kept for as long as it is.
     const board = !readsMarks(
@@ -3615,6 +3617,9 @@ function keptDefinition(
     const keptAt = board
       ? `${store}.board(${readsClues.yes ? "cl" : "sp"})`
       : `${store}.marks(b)`;
+    const spParam = [keptAt, val.code, ...body.text()].some((l) => /\bsp\b/.test(l))
+      ? "sp"
+      : "_sp";
     made = {
       sort: val.sort,
       clues: readsClues.yes,
@@ -3626,7 +3631,7 @@ function keptDefinition(
         board
           ? " * board, since it reads no marks. */"
           : " * marks while no value is placed in them. */",
-        `export function ${fn}(${board ? "" : "b: Marks, "}sp: GridSpace, ${readsClues.yes ? "cl: Dealt, " : ""}${v}: number): ${type} {`,
+        `export function ${fn}(${board ? "" : "b: Marks, "}${spParam}: GridSpace, ${readsClues.yes ? "cl: Dealt, " : ""}${v}: number): ${type} {`,
         `  const _kept: Kept<${type}> = ${keptAt};`,
         `  if (_kept[${v}] !== undefined) return _kept[${v}];`,
         ...body.text(),
