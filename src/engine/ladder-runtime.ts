@@ -81,6 +81,8 @@ export class CellMarks implements Marks {
    * description marks each cell with one; the game seeds them. */
   readonly marked: Int32Array;
   placed = 0;
+  readonly log: number[] = [];
+  epoch = 0;
   readonly domain: number;
   readonly repeat: number;
   readonly times: number;
@@ -177,6 +179,8 @@ export class CellMarks implements Marks {
   seed(grid: Uint8Array | Int8Array, domainOf?: (c: number) => number): boolean {
     this.grid = grid;
     this.placed++;
+    this.epoch++;
+    this.log.length = 0;
     const { cands } = this;
     for (let c = 0; c < cands.length; c++)
       cands[c] = domainOf ? domainOf(c) & this.domain : this.domain;
@@ -218,7 +222,18 @@ export class CellMarks implements Marks {
     this.cands[c] &= 1 << d;
     this.grid[c] = d;
     this.placed++;
+    this.log.push(c);
     for (const run of this.placing) run(this, c);
+  }
+
+  /** Put the marks back as `grid` and `cands` hold them, as a search does
+   * between its branches: a setting wholesale, which no log can follow. */
+  restore(grid: ArrayLike<number>, cands: ArrayLike<number>): void {
+    this.grid.set(grid);
+    this.cands.set(cands);
+    this.placed++;
+    this.epoch++;
+    this.log.length = 0;
   }
 
   /**

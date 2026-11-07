@@ -301,8 +301,7 @@ function walkLayouts(
     for (const v of [EMPTY, BALL]) {
       m.placeAt(pick, v);
       if (!runLadder(m, techniques) && rec()) return true;
-      m.grid.set(grid);
-      m.cands.set(cands);
+      m.restore(grid, cands);
     }
     return false;
   };

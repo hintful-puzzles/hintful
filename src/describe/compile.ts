@@ -77,6 +77,10 @@ interface Val {
    * loop's counter, whose bits name the members, and the slot ahead of the
    * loop. */
   members?: { els: string; k: string; pre: Slot };
+  /** For the set `linked(k)` on the marks: the code of `k`, so that a sum
+   * over the set is read from the sums kept over the groups
+   * (`linkedAggregate`). */
+  group?: string;
 }
 
 /** The code a set is, a name bound by `=` read as its term: so a filling of
@@ -284,6 +288,9 @@ interface Env {
    * (`keptDefinition`); `null` where nothing is kept. */
   kept: {
     defs: Map<string, { sort: Sort; clues: boolean; board: boolean; code: string }>;
+    /** The terms summed over a group (`linkedAggregate`), each compiled once
+     * as a function of the module, by what it sums. */
+    terms: Map<string, { fn: string; clues: boolean }>;
     /** The module's runtime helpers, which a function first compiled
      * inside a probe still needs. */
     used: Set<string>;
@@ -407,7 +414,9 @@ function once(v: Val, out: Out): Val {
   if (/^[A-Za-z_$][\w$]*$/.test(v.code) || /^-?\d+$/.test(v.code)) return v;
   const t = Out.fresh("_t");
   out.emit(`const ${t} = ${v.code};`);
-  return { code: t, sort: v.sort };
+  return v.group === undefined
+    ? { code: t, sort: v.sort }
+    : { code: t, sort: v.sort, group: v.group };
 }
 
 function sameSort(a: Sort, b: Sort): boolean {
@@ -1947,12 +1956,205 @@ function projection(
   };
 }
 
+/** How a name in a term summed over a group reaches the marks: the group's
+ * point, a square round it, or anything else bound inside the term. */
+type RoundName = "point" | "round" | "other";
+
+/**
+ * Whether `e` reads the marks only at the squares round the point it is
+ * about, and no name from outside it: then a placement changes it only at
+ * the placed square's own points, which is what lets the runtime keep a sum
+ * of it over a group a placement at a time.
+ */
+function readsRound(
+  e: Expr,
+  names: ReadonlyMap<string, RoundName>,
+  env: Env,
+  depth = 0,
+): boolean {
+  if (depth > 8) return false;
+  const all = (es: readonly Expr[], ns = names): boolean =>
+    es.every((x) => readsRound(x, ns, env, depth));
+  switch (e.k) {
+    case "num":
+      return true;
+    case "name": {
+      if (names.has(e.name) || env.clues.has(e.name)) return true;
+      const def = env.defs.get(e.name);
+      if (def !== undefined)
+        return (
+          def.params.length === 0 && readsRound(def.body, new Map(), env, depth + 1)
+        );
+      return NAMES[e.name] !== undefined;
+    }
+    case "call": {
+      const { fn, args } = e;
+      if (fn === "value" || fn === "known" || fn === "cand") {
+        const [c] = args;
+        return args.length === 1 && c.k === "name" && names.get(c.name) === "round";
+      }
+      if (
+        MARK_READS.has(fn) ||
+        fn === "mark" ||
+        fn === env.cellMark?.name ||
+        fn === env.edgeMark ||
+        names.has(fn)
+      )
+        return false;
+      if (!all(args)) return false;
+      const def = env.defs.get(fn);
+      if (def === undefined) return true;
+      if (def.params.length !== args.length) return false;
+      const inner = new Map<string, RoundName>();
+      def.params.forEach((p, i) => {
+        const a = args[i];
+        inner.set(p, a.k === "name" ? (names.get(a.name) ?? "other") : "other");
+      });
+      return readsRound(def.body, inner, env, depth + 1);
+    }
+    case "with":
+      return false;
+    case "quant":
+    case "agg": {
+      const inner = new Map(names);
+      for (const b of e.binders) {
+        if (b.kind === "fill" || !readsRound(b.of, inner, env, depth)) return false;
+        const round =
+          b.kind === "in" &&
+          b.of.k === "call" &&
+          b.of.fn === "cells" &&
+          b.of.args.length === 1 &&
+          b.of.args[0].k === "name" &&
+          inner.get(b.of.args[0].name) === "point";
+        inner.set(b.name, round ? "round" : "other");
+        if (b.where !== null && !readsRound(b.where, inner, env, depth)) return false;
+      }
+      const rest =
+        e.k === "quant" ? [e.body] : [e.where, e.term].filter((x) => x !== null);
+      return all(rest, inner);
+    }
+    default:
+      return all(children(e));
+  }
+}
+
+/**
+ * A `sum`, `count`, `forall` or `exists` over the set `linked(k)` of the
+ * marks, whose term reads them only round its own point, read from the sum
+ * the runtime keeps over each group as the hand-written solver kept its
+ * groups' exits (`linkedSum`): joined as two groups join, and moved a
+ * placement at a time. Without it, every read walked the whole group. `null`
+ * where the aggregate is not one.
+ */
+function linkedAggregate(
+  how: "sum" | "count" | "forall" | "exists",
+  binders: readonly Binder[],
+  where: Expr | null,
+  term: Expr | null,
+  scope: Scope,
+  env: Env,
+): Val | null {
+  const { kept } = env;
+  if (
+    kept === null ||
+    env.answer !== null ||
+    env.position !== null ||
+    env.supposed.length > 0 ||
+    binders.length !== 1 ||
+    binders[0].kind !== "in"
+  )
+    return null;
+  const [binder] = binders;
+  const of = binder.of;
+  const set =
+    of.k === "name"
+      ? scope.get(of.name)
+      : of.k === "call" && of.fn === "linked" && !scope.has("linked")
+        ? compileExpr(of, scope, env, new Out(0))
+        : undefined;
+  if (set?.group === undefined) return null;
+  const filter =
+    binder.where === null
+      ? where
+      : where === null
+        ? binder.where
+        : ({ k: "bin", op: "and", a: binder.where, b: where } as const);
+  const point = new Map<string, RoundName>([[binder.name, "point"]]);
+  if (filter !== null && !readsRound(filter, point, env)) return null;
+  if (term !== null && !readsRound(term, point, env)) return null;
+
+  const key = JSON.stringify([how, binder.name, filter, term]);
+  let made = kept.terms.get(key);
+  if (made === undefined) {
+    const v = `v_${binder.name}`;
+    const readsClues = { yes: false };
+    const body = new Out(1);
+    const sc: Scope = new Map([[binder.name, { code: v, sort: elem("point") }]]);
+    const own: Env = {
+      ...env,
+      used: kept.used,
+      readsClues,
+      scratch: null,
+      hoist: null,
+      concluding: false,
+      memo: false,
+      epoch: null,
+    };
+    if (filter !== null) {
+      const w = compileExpr(filter, sc, own, body);
+      expect(w, "bool", how);
+      body.emit(`if (!(${w.code})) return 0;`);
+    }
+    if (how === "count") body.emit("return 1;");
+    else if (term !== null) {
+      const t = compileExpr(term, sc, own, body);
+      expect(t, how === "sum" ? "num" : "bool", how);
+      body.emit(
+        how === "sum"
+          ? `return ${t.code};`
+          : `return (${t.code}) ? ${how === "forall" ? "0 : 1" : "1 : 0"};`,
+      );
+    } else return null;
+    const fn = `linkTerm${kept.terms.size}`;
+    const text = body.text();
+    // A term that reads no marks, or no geometry, leaves its parameter unread.
+    const param = (p: string): string =>
+      new RegExp(`\\b${p}\\.`).test(text.join("\n")) ? p : `_${p}`;
+    kept.defs.set(fn, {
+      sort: NUM,
+      clues: readsClues.yes,
+      board: false,
+      code: [
+        `/** What each point of a group adds to a ${how} kept over the group. */`,
+        `function ${fn}(${param("b")}: Marks, ${param("sp")}: GridSpace, ${readsClues.yes ? "cl: Dealt" : "_cl: null"}, ${v}: number): number {`,
+        ...text,
+        "}",
+      ].join("\n"),
+    });
+    made = { fn, clues: readsClues.yes };
+    kept.terms.set(key, made);
+  }
+  if (made.clues) env.readsClues.yes = true;
+  env.used.add("linkedSum");
+  const sum = `linkedSum(sp, b, ${made.clues ? "cl" : "null"}, ${made.fn}, ${set.group})`;
+  switch (how) {
+    case "forall":
+      return { code: `(${sum} === 0)`, sort: BOOL };
+    case "exists":
+      return { code: `(${sum} > 0)`, sort: BOOL };
+    default:
+      return { code: sum, sort: NUM };
+  }
+}
+
 function quantifier(
   e: Extract<Expr, { k: "quant" }>,
   scope: Scope,
   env: Env,
   out: Out,
 ): Val {
+  const linked = linkedAggregate(e.q, e.binders, null, e.body, scope, env);
+  if (linked !== null) return linked;
   const forall = e.q === "forall";
   const masked =
     setQuantifier(e, scope, env, out) ?? rectQuantifier(e, scope, env, out);
@@ -1994,6 +2196,10 @@ function aggregate(
   env: Env,
   out: Out,
 ): Val {
+  if (e.fn === "sum" || e.fn === "count") {
+    const linked = linkedAggregate(e.fn, e.binders, e.where, e.term, scope, env);
+    if (linked !== null) return linked;
+  }
   const r = Out.fresh("_g");
   const label = Out.fresh("G");
   const last = e.binders[e.binders.length - 1];
@@ -2448,7 +2654,10 @@ function diagonalCall(fn: string, vs: readonly Val[], env: Env): Val | null {
       // is supposed.
       if (!env.answer && env.supposed.length === 0) {
         env.used.add("linkedOf");
-        return { code: `linkedOf(sp, b, ${vs[0].code})`, sort: setOf(elem("point")) };
+        const k = vs[0].code;
+        const set: Val = { code: `linkedOf(sp, b, ${k})`, sort: setOf(elem("point")) };
+        // A point named is read again where the set is summed.
+        return /^[A-Za-z_$][\w$]*$/.test(k) ? { ...set, group: k } : set;
       }
       // A cell's value read as the technique reads it, under any `with`.
       const x = Out.fresh("_x");
@@ -3055,7 +3264,9 @@ function definitionCall(
   const inner = new Map<string, Val>();
   const h = env.hoist;
   def.params.forEach((p, i) => {
-    const v = once(vs[i], out);
+    // A group's set is not made where it is passed: a sum over it reads the
+    // runtime's kept sums, and the set itself is read from the groups kept.
+    const v = vs[i].group === undefined ? once(vs[i], out) : vs[i];
     // A parameter is a name the body may read early, from where it is
     // bound: a literal anywhere, the argument's own name from its slot.
     const at =
@@ -3596,20 +3807,25 @@ function places(e: Expr, env: Env): boolean {
 
 // --- modules ----------------------------------------------------------------
 
-/** What a module needs from the runtime, as an import line. */
+/** What a module needs from the runtime, as an import line: of the helpers
+ * the compiler used, those its code still names, since a set compiled and
+ * then read another way (`linkedAggregate`) is never written. */
 function runtimeImport(
   used: ReadonlySet<string>,
   clues: boolean,
   regions: boolean,
   runtime: string,
+  body: string,
 ): string {
+  const named = (n: string): boolean =>
+    n.startsWith("type ") || new RegExp(`\\b${n}\\b`).test(body);
   const names = [
     ...(clues ? ["type ClueList"] : []),
     "type Fire",
     "type GridSpace",
     "type Marks",
     ...(regions ? ["type Partition"] : []),
-    ...[...used].sort(),
+    ...[...used].filter(named).sort(),
   ];
   return `import { ${names.join(", ")} } from "${runtime}";`;
 }
@@ -3663,7 +3879,8 @@ export function compileLibrary(
       );
     return out.code;
   });
-  return `${[HEADER(source), "", runtimeImport(used, false, false, runtime), "", parts.join("\n\n")].join("\n")}\n`;
+  const body = parts.join("\n\n");
+  return `${[HEADER(source), "", runtimeImport(used, false, false, runtime, body), "", body].join("\n")}\n`;
 }
 
 /** The element sort a clue, or a clue at the board's field, sits at. */
@@ -3825,7 +4042,7 @@ export function compileGame(
     edgeMark: edgeMarkOf(d.json)?.name ?? null,
     cellMark: cellMarkOf(d.json),
     supposed: [],
-    kept: { defs: new Map(), used },
+    kept: { defs: new Map(), used, terms: new Map() },
   };
   for (const [kind, c] of d.clueKinds) clues.set(kind, clueSorts(kind, c, env));
   const domainLines = cellDomain(d.domain, env, d.json.sizes);
@@ -3934,6 +4151,15 @@ export function compileGame(
           `export const scales: Readonly<Record<string, readonly string[]>> = ${JSON.stringify(Object.fromEntries(scales))};`,
         ]),
   ];
+  const body = [
+    ...clueLines,
+    ...ladder,
+    ...domainLines,
+    "",
+    ...check,
+    "",
+    code.join("\n\n"),
+  ].join("\n");
   return `${[
     HEADER(source),
     "",
@@ -3942,15 +4168,10 @@ export function compileGame(
       [...clues.values()].some((c) => c.fields === null),
       regions.size > 0,
       runtime,
+      body,
     ),
     "",
-    ...clueLines,
-    ...ladder,
-    ...domainLines,
-    "",
-    ...check,
-    "",
-    code.join("\n\n"),
+    body,
   ].join("\n")}\n`;
 }
 

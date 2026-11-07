@@ -142,6 +142,41 @@ three leave it open, and at the end, for the games a fix moved.
     O(cells) where the hand-written union-find was O(1). That is small at
     the menu's sizes (2 to 5%), and it is why Slant's gap grows with the
     board (12× at 30×30).
+- **What the hand-written Slant solver kept that the compiled one did not**
+  (2026-11-07, read from `611a8df6^`'s `solver.ts`):
+  - A union-find of points (`connected`), joined in O(1) as each diagonal
+    was filled. The compiled `linked` was a union-find too, but caught up by
+    scanning every square after each placement, and its member lists were
+    rebuilt for the whole board after each join.
+  - Each group's `exits` and `border` at its root, merged on a join and
+    decremented on a fill. The compiled `deadEnd` asked `shut(linked(k))`
+    for each open square and diagonal, and each ask walked the whole group,
+    recounting every point's open squares and lines.
+  - Not the clue counts: the hand-written clue pass recounted `nu` and `nl`
+    at every point on every pass, as the compiled `clue` does.
+  - Fixed in the runtime and compiler, not in Slant: `CellMarks` logs its
+    placements (`restore` starts the log again, and Black Box's search
+    uses it), `linked` catches up from the log, and an aggregate over
+    `linked(k)` whose term reads only round its point is a sum kept at the
+    group's root (`linkedAggregate`, `linkedSum`). The same boards and
+    verdicts, and solves on the same boards:
+
+    | Slant | Before | After | Hand-written |
+    | --- | --- | --- | --- |
+    | 10×12 Hard | 1.33 ms | 1.30 ms | 0.17 ms |
+    | 20×20 Hard | 14.2 ms | 9.4 ms | 0.93 ms |
+    | 30×30 Easy | 22.1 ms | 10.8 ms | 3.91 ms |
+
+- **What is left of Slant's gap is code, not design.** The hand-written
+  solver made about 25 passes a solve at 10×12 Hard (15.8 clue, 6.0 square,
+  3.4 v-shape) and the compiled one about 56 rungs. That is about 2.2×
+  the scans, at about 3.4× the cost a scan. With the groups kept, the profile
+  is whole-board scans (`clue` 35%, `loop` 21% at 20×20). Each compiled
+  scan does what the fused hand-written pass did with less: two loops over
+  a point's squares where one would count both, `slash(c, k)` computed per
+  read, the clue by two lookups, a set built where only its size is read.
+  These are the compiler's to close, construct by construct, each timed on
+  the same boards.
 - **Hot runtime helpers by game count:** `clueAt` (4 games), `edgeOf` (3),
   `stretch` (3) and `throughWhere` (2), with Rect's kept `allowed` and
   `near`. Each is weighed by a timing on the same boards, never by its share

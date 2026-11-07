@@ -236,9 +236,12 @@ description author acts on:
   square's four corners. A clue may sit at one (`at: point`). `slash(c, k)`
   is the value of square `c`'s diagonal through its corner `k`, 1 from above
   left to below right and 2 the other way; `linked(k)` is `k` and the points
-  the drawn diagonals join it to, in reading order. The compiled code keeps
-  every group of joined points until a value is placed, so `x in linked(k)`
-  costs a lookup.
+  the drawn diagonals join it to, in reading order. The runtime keeps the
+  groups as the hand-written solver did, joined a placement at a time from
+  the marks' log, so `x in linked(k)` costs a lookup, and a `sum`, `count`,
+  `forall` or `exists` over `linked(k)` whose term reads the marks only
+  round its own point reads a sum kept over the group (§ "What a technique
+  compiles to").
 - **The centers of squares, edges and points are a sort** where the space
   says `centers: true` (Galaxies' dots): `centers` is every half-grid point
   in reading order, `cells(p)` the one, two or four squares round it, and
@@ -451,6 +454,17 @@ author writing for speed uses these:
   narrow. The recording made Rect's and Star Battle's deals slower, and the
   narrowing gained 5%: a value made again after a placement is a twentieth
   of `fits`' reads (2026-11-07, `keep-definitions-across-placements`).
+- **A sum over a group is kept with the group**, as the hand-written solver
+  kept a group's exits at its root: added together as two groups join, and
+  moved by a point's change as a placement touches it. The compiler does it
+  for an aggregate over `linked(k)` whose term reads the marks only through
+  `value` and `known` of the squares round its point, and no name of the
+  technique (`linkedAggregate` in `compile.ts`); any other term walks the
+  group at each read, which made Slant's `deadEnd` quadratic in the board.
+  Slant's 30×30 solves took half the time, on the same boards, once it was
+  kept (2026-11-07, `make-descriptions-zero-cost`). A structure the runtime
+  keeps over the marks catches up from their log, and anything that sets the
+  marks wholesale says so with `restore`, which starts the log again.
 - **Narrow a costly set by a board-kept one**: Rect's `fits(q)` filters
   `allowed(q)` by the marks, and `near(c)` names the clues whose `allowed`
   reaches a square, so `reachers(c)` reads a handful of clues, not all.

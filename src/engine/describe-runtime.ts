@@ -32,6 +32,11 @@ export interface Marks {
    * reads them in place. The methods below are what they give. */
   readonly grid: Uint8Array | Int8Array;
   readonly cands: Int32Array;
+  /** The cells placed since the marks were last set wholesale, in order,
+   * and a count of those settings: what a structure kept over the marks
+   * catches up from, a placement at a time, as long as the epoch holds. */
+  readonly log: readonly number[];
+  readonly epoch: number;
   /** Whether the cell holds a value. */
   known(c: number): boolean;
   /** The cell's value, or `-1` where it has none. */
@@ -920,16 +925,39 @@ export function slash(sp: GridSpace, c: number, k: number): number {
   return d === 0 || d === sp.w + 2 ? 1 : d === 1 || d === sp.w + 1 ? 2 : -1;
 }
 
-/** The marks {@link linkedOf} last read, at which placement, and the groups
- * of points their diagonals join, as a union-find: each point's parent, the
- * diagonal each square was joined at (0 for none), and every group's points
- * by its root, listed at the first read since the last join. */
+/**
+ * A sum over a group of points of what `term` gives each, kept at the
+ * group's root: added together as two groups join, and moved by the change
+ * in a point's term as a placement touches it. A term reads the marks only
+ * at the squares round its point, so a placement changes only its own
+ * square's points' terms.
+ */
+export type LinkTerm<C> = (b: Marks, sp: GridSpace, cl: C, q: number) => number;
+
+interface LinkSum {
+  term: unknown;
+  cl: unknown;
+  at: (q: number) => number;
+  /** Each point's term, and each root's sum. */
+  value: Float64Array;
+  sum: Float64Array;
+}
+
+/** The marks {@link linkedOf} last read, at which epoch and how far into its
+ * log, and the groups of points their diagonals join, as a union-find: each
+ * point's parent and group size, the diagonal each square was joined at (0
+ * for none), every group's points by its root, once listed, and the sums kept
+ * over the groups. */
 let linkMarks: Marks | null = null;
 let linkSpace: GridSpace | null = null;
-let linkPlaced = -1;
+let linkEpoch = -1;
+let linkRead = 0;
 let linkParent = new Int32Array(0);
+let linkSize = new Int32Array(0);
 let linkJoined = new Int8Array(0);
+let linkListed = false;
 const linkMembers = new Map<number, number[]>();
+const linkSums: LinkSum[] = [];
 
 function linkRoot(i: number): number {
   while (linkParent[i] !== i) {
@@ -939,48 +967,92 @@ function linkRoot(i: number): number {
   return i;
 }
 
+function mergeSorted(a: readonly number[], b: readonly number[]): number[] {
+  const out: number[] = [];
+  let i = 0;
+  let j = 0;
+  while (i < a.length && j < b.length) out.push(a[i] < b[j] ? a[i++] : b[j++]);
+  while (i < a.length) out.push(a[i++]);
+  while (j < b.length) out.push(b[j++]);
+  return out;
+}
+
+/** Join square `c`'s points as diagonal `v` does, merging the groups' lists
+ * and sums into the larger group's. False where the square was joined at the
+ * other diagonal, which the marks have taken back. */
+function linkJoin(sp: GridSpace, c: number, v: number): boolean {
+  const was = linkJoined[c];
+  if (v === was) return true;
+  if (was !== 0) return false;
+  linkJoined[c] = v;
+  const ps = sp.cellPoints[c];
+  let p = linkRoot(v === 1 ? ps[0] : ps[1]);
+  let q = linkRoot(v === 1 ? ps[3] : ps[2]);
+  if (p === q) return true;
+  if (linkSize[p] > linkSize[q]) [p, q] = [q, p];
+  linkParent[p] = q;
+  linkSize[q] += linkSize[p];
+  // A list handed out stays as it was, since a technique may place while it
+  // reads one, so the joined group's is a new list, in point order as a
+  // listing from scratch gives it.
+  if (linkListed) {
+    linkMembers.set(q, mergeSorted(linkMembers.get(q) ?? [], linkMembers.get(p) ?? []));
+    linkMembers.delete(p);
+  }
+  for (const s of linkSums) s.sum[q] += s.sum[p];
+  return true;
+}
+
+/** Move each kept sum by the change in the terms of square `c`'s points. */
+function linkTouch(sp: GridSpace, c: number): void {
+  for (const s of linkSums)
+    for (const q of sp.cellPoints[c]) {
+      const now = s.at(q);
+      s.sum[linkRoot(q)] += now - s.value[q];
+      s.value[q] = now;
+    }
+}
+
 /**
- * The groups of points the diagonals `b` holds join, brought up to date once
- * for each placement the marks have made. A solve only places, so only the
- * diagonals drawn since are joined; marks whose square has lost or changed
- * its diagonal, seeded again, are joined afresh.
+ * The groups of points the diagonals `b` holds join, brought up to date from
+ * the cells `b` has placed since they were last read, as the hand-written
+ * solver kept them: a placement joins at most two groups. Marks set
+ * wholesale since, or whose square has lost or changed its diagonal, are
+ * joined afresh from their grid.
  */
 function linkGroups(sp: GridSpace, b: Marks): void {
-  if (b === linkMarks && sp === linkSpace && b.placed === linkPlaced) return;
-  let fresh = b !== linkMarks || sp !== linkSpace;
+  if (b === linkMarks && sp === linkSpace && b.epoch === linkEpoch) {
+    const { log } = b;
+    if (linkRead === log.length) return;
+    for (; linkRead < log.length; linkRead++) {
+      const c = log[linkRead];
+      const raw = b.grid[c];
+      if (!linkJoin(sp, c, raw === 1 || raw === 2 ? raw : 0)) break;
+      linkTouch(sp, c);
+    }
+    if (linkRead === log.length) return;
+  }
   linkMarks = b;
   linkSpace = sp;
-  linkPlaced = b.placed;
-  for (;;) {
-    if (fresh) {
-      const n = sp.points.length;
-      if (linkParent.length < n) linkParent = new Int32Array(n);
-      for (let i = 0; i < n; i++) linkParent[i] = i;
-      if (linkJoined.length < sp.cells.length)
-        linkJoined = new Int8Array(sp.cells.length);
-      linkJoined.fill(0);
-      linkMembers.clear();
-    }
-    let stale = false;
-    for (const c of sp.cells) {
-      const raw = b.value(c);
-      const v = raw === 1 || raw === 2 ? raw : 0;
-      const was = linkJoined[c];
-      if (v === was) continue;
-      if (was !== 0) {
-        stale = true;
-        break;
-      }
-      const ps = sp.cellPoints[c];
-      const p = linkRoot(v === 1 ? ps[0] : ps[1]);
-      const q = linkRoot(v === 1 ? ps[3] : ps[2]);
-      linkJoined[c] = v;
-      if (p === q) continue;
-      linkParent[p] = q;
-      linkMembers.clear();
-    }
-    if (!stale) return;
-    fresh = true;
+  linkEpoch = b.epoch;
+  linkRead = b.log.length;
+  const n = sp.points.length;
+  if (linkParent.length < n) {
+    linkParent = new Int32Array(n);
+    linkSize = new Int32Array(n);
+  }
+  for (let i = 0; i < n; i++) {
+    linkParent[i] = i;
+    linkSize[i] = 1;
+  }
+  if (linkJoined.length < sp.cells.length) linkJoined = new Int8Array(sp.cells.length);
+  linkJoined.fill(0);
+  linkMembers.clear();
+  linkListed = false;
+  linkSums.length = 0;
+  for (const c of sp.cells) {
+    const raw = b.grid[c];
+    linkJoin(sp, c, raw === 1 || raw === 2 ? raw : 0);
   }
 }
 
@@ -989,14 +1061,41 @@ function linkGroups(sp: GridSpace, b: Marks): void {
 export function linkedOf(sp: GridSpace, b: Marks, k: number): readonly number[] {
   if (k < 0) return [];
   linkGroups(sp, b);
-  if (linkMembers.size === 0)
+  if (!linkListed) {
     for (const p of sp.points) {
       const r = linkRoot(p);
       const group = linkMembers.get(r);
       if (group === undefined) linkMembers.set(r, [p]);
       else group.push(p);
     }
+    linkListed = true;
+  }
   return linkMembers.get(linkRoot(k)) ?? [];
+}
+
+/** The sum of `term` over {@link linkedOf}`(k)`, kept as the groups are
+ * (0 where `k` is no point). */
+export function linkedSum<C>(
+  sp: GridSpace,
+  b: Marks,
+  cl: C,
+  term: LinkTerm<C>,
+  k: number,
+): number {
+  if (k < 0) return 0;
+  linkGroups(sp, b);
+  let s = linkSums.find((x) => x.term === term && x.cl === cl);
+  if (s === undefined) {
+    const n = sp.points.length;
+    const at = (q: number): number => term(b, sp, cl, q);
+    s = { term, cl, at, value: new Float64Array(n), sum: new Float64Array(n) };
+    for (const q of sp.points) {
+      s.value[q] = at(q);
+      s.sum[linkRoot(q)] += s.value[q];
+    }
+    linkSums.push(s);
+  }
+  return s.sum[linkRoot(k)];
 }
 
 /** Whether `q` is in {@link linkedOf}`(k)`. */
