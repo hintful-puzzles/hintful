@@ -9,6 +9,7 @@
  * value highlights.
  */
 
+import { solveFromAnswer } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import type {
@@ -35,6 +36,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { stepBudget } from "../../engine/step-budget.ts";
 import {
   interpretTargetVerbs,
   rulingOut,
@@ -55,16 +57,17 @@ import {
   redraw,
 } from "./render.ts";
 import {
+  answerOf,
   DOMINOSA_RUNGS,
+  type DominosaFiring,
   type DominosaRung,
-  DominosaSolver,
+  hintFirings,
   solveNumbers,
 } from "./solver.ts";
 import {
   cloneState,
   DCOUNT,
   DIFF_NAMES,
-  DIFFCOUNT,
   DINDEX,
   type DominosaMistake,
   type DominosaMove,
@@ -330,7 +333,7 @@ function solve(
   _curr: DominosaState,
   aux?: string,
 ): SolveResult<DominosaMove> {
-  const { w, numbers, params } = orig;
+  const { w, numbers } = orig;
   const wh = numbers.length;
 
   if (aux && aux.length === wh) {
@@ -342,19 +345,18 @@ function solve(
     return { ok: true, move: { type: "solve", dominoes } };
   }
 
-  const { result, pairs } = solveNumbers(params, numbers, DIFFCOUNT);
-  if (result !== 1) return { ok: false, error: PUZZLE_NOT_REASONABLE };
-  return { ok: true, move: { type: "solve", dominoes: pairs } };
+  return solveFromAnswer(answerOf(orig), (dominoes) => ({ type: "solve", dominoes }));
 }
 
 /** Boards this fork generates are uniquely solvable: re-solve to the unique
  * solution and flag both cells of every player-placed domino the solution does
  * not contain. A non-uniquely-solvable board degrades to no mistakes. */
 function findMistakes(state: DominosaState): readonly DominosaMistake[] {
-  const { numbers, grid, params } = state;
+  const { numbers, grid } = state;
   const wh = numbers.length;
-  const { result, pairs } = solveNumbers(params, numbers, DIFFCOUNT);
-  if (result !== 1) return [];
+  const answer = answerOf(state);
+  if (answer.kind !== "one") return [];
+  const pairs = answer.solution;
 
   const solutionPartner = new Int32Array(wh);
   for (let i = 0; i < wh; i++) solutionPartner[i] = i;
@@ -387,24 +389,36 @@ const pointOf = (i: number, w: number): Point => ({ x: i % w, y: Math.floor(i / 
 
 const edgeKey = (a: number, b: number): string => (a < b ? `${a}-${b}` : `${b}-${a}`);
 
+/** The squares a step's words outline: those its reason rests on. */
+function evidenceOf(f: DominosaFiring): number[] {
+  switch (f.kind) {
+    case "onlySpot":
+    case "parity":
+      return [];
+    case "squareOnly":
+    case "squareSingleDomino":
+    case "localDuplicate":
+      return [f.square];
+    case "mustOverlap":
+    case "localDuplicate2":
+    case "set":
+    case "setDoubles":
+      return f.squares;
+  }
+}
+
 function hint(
   state: DominosaState,
 ): HintResult<DominosaMove, DominosaHint, DominosaRung> {
   const { w, numbers, grid, edges, params } = state;
-  const n = params.n;
   const wh = numbers.length;
 
   // A hint teaches a *forced* deduction; a board with several answers has none.
-  if (solveNumbers(params, numbers, DIFFCOUNT).result !== 1)
+  if (answerOf(state).kind !== "one")
     return { ok: false, error: PUZZLE_NOT_REASONABLE };
 
-  const solver = new DominosaSolver(params);
-  solver.setupGrid(numbers);
-  solver.seedFromDominoes(grid);
-
-  const placed = new Set<number>();
-  for (let i = 0; i < wh; i++)
-    if (grid[i] > i) placed.add(DINDEX(numbers[i], numbers[grid[i]]));
+  const walk = hintFirings(params, numbers, grid, stepBudget("dominosa hint"));
+  if (walk === null) return { ok: false, error: DEDUCTION_EXHAUSTED };
 
   // Barriers the player already drew (or we've already emitted) — skip display.
   const seenEdges = new Set<string>();
@@ -414,54 +428,40 @@ function hint(
   }
 
   const steps: HintStep<DominosaMove, DominosaHint, DominosaRung>[] = [];
-  const total = DCOUNT(n);
-  let budget = 12 * wh + 200;
-
-  while (budget-- > 0 && placed.size < total) {
-    const firing = solver.firstFiring(DIFFCOUNT, placed);
-    if (!firing) break;
-
+  for (let firing = walk.next(); firing !== null; firing = walk.next()) {
+    const evidence = evidenceOf(firing).map((i) => pointOf(i, w));
     // The numbers the domino or barrier would show name it in the sentence,
     // whose words are `hint-text.ts`'s.
-    if (firing.place) {
+    if (firing.kind === "onlySpot" || firing.kind === "squareOnly") {
+      if (!firing.place) throw new Error(`dominosa: ${firing.kind} placed no domino`);
       const [a, b] = firing.place;
-      placed.add(DINDEX(numbers[a], numbers[b]));
-      solver.forcePlacement(a, b);
-      const evidence = firing.evidence.map((i) => pointOf(i, w));
-      const words = say.place(
-        firing.technique,
-        numbers[a],
-        numbers[b],
-        [a, b],
-        evidence,
-      );
+      const words = say.place(firing, numbers[a], numbers[b], [a, b], evidence);
       steps.push({
         move: { type: "domino", d1: a, d2: b },
-        rung: firing.technique,
+        rung: firing.kind,
         explanation: words.text,
         words,
         highlights: { kind: "place" },
       });
-    } else {
-      const fresh = firing.barriers.filter(([a, b]) => !seenEdges.has(edgeKey(a, b)));
-      for (let idx = 0; idx < fresh.length; idx++) {
-        const [a, b] = fresh[idx];
-        seenEdges.add(edgeKey(a, b));
-        const evidence = firing.evidence.map((i) => pointOf(i, w));
-        // A later barrier of the same firing does not repeat the reason.
-        const words =
-          idx > 0
-            ? say.barrierNext([a, b], evidence)
-            : say.barrier(firing.technique, numbers[a], numbers[b], [a, b], evidence);
-        steps.push({
-          move: { type: "edge", d1: a, d2: b },
-          rung: firing.technique,
-          explanation: words.text,
-          words,
-          ...(idx > 0 ? { continuesPrevious: true } : {}),
-          highlights: { kind: "barrier" },
-        });
-      }
+      continue;
+    }
+    const fresh = firing.barriers.filter(([a, b]) => !seenEdges.has(edgeKey(a, b)));
+    for (let idx = 0; idx < fresh.length; idx++) {
+      const [a, b] = fresh[idx];
+      seenEdges.add(edgeKey(a, b));
+      // A later barrier of the same firing does not repeat the reason.
+      const words =
+        idx > 0
+          ? say.barrierNext([a, b], evidence)
+          : say.barrier(firing, numbers[a], numbers[b], [a, b], evidence);
+      steps.push({
+        move: { type: "edge", d1: a, d2: b },
+        rung: firing.kind,
+        explanation: words.text,
+        words,
+        ...(idx > 0 ? { continuesPrevious: true } : {}),
+        highlights: { kind: "barrier" },
+      });
     }
   }
 

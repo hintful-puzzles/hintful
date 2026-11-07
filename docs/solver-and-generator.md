@@ -688,8 +688,7 @@ asks whether its tier is named `Unreasonable`, and for a game with no
   cells' candidates are notes: no mark records the conditional. Exemplar:
   `forcing` in [`engine/latin.ts`](../src/engine/latin.ts), a Search.
 - **Nested speculation is Search twice over**, and so is every true
-  recursion tier. Exemplars of a Search: `forcingPass` in Undead's solver
-  and `deduceForcingChain` in Dominosa's.
+  recursion tier. Exemplar of a Search: `forcingPass` in Undead's solver.
 - **A bounded walk is still a supposition**, whether a propagation from a
   supposed state is bounded by deductions or by firings. Measured at their
   stalls, such walks were mostly one firing long, and that firing was one

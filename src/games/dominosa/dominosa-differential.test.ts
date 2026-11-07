@@ -1,54 +1,42 @@
 /**
- * Byte-match differential for the dominosa generator.
+ * The boards upstream's C dealt, against the compiled ladder.
  *
- * `random.ts` is bit-identical to `random.c`, so a faithful generator port
- * reproduces the C desc byte-for-byte for the same seed. Because the generator
- * is solver-gated (it keeps a board only if the solver grades it at exactly the
- * target difficulty), a byte-match on the desc transitively proves the TS
- * solver reached C's verdict on every intermediate board. The `extra` hook
- * also re-checks that each C board decodes validly, solves uniquely, and grades
- * at exactly its recorded difficulty under the TS solver.
+ * Upstream kept a board only where its solver graded it at the tier asked
+ * for, so the ladder grading each at the same tier says it reaches as far as
+ * upstream's solver did, and no further below. Its Unreasonable board, dealt
+ * for its forcing chains, is one the ladder below Unreasonable stops on and
+ * the search finishes. The generator is not upstream's draw for draw, so no
+ * seed is asked to deal its board again.
  *
- * The fixture is frozen and cannot be regenerated: it was captured from
- * upstream's C by a harness that no longer exists (see
- * `engine/testing/differential.ts`).
+ * The fixture is **frozen and cannot be regenerated**: the C harness that
+ * recorded it is gone (see `engine/testing/differential.ts`).
  */
-import { expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/desc-error.ts";
-import {
-  type DescFixture,
-  describeDescDifferential,
-} from "../../engine/testing/differential.ts";
 import reference from "./__fixtures__/dominosa-c-reference.json" with { type: "json" };
-import { newDominosaDesc } from "./generator.ts";
 import { dominosaGame } from "./index.ts";
 import { solveNumbers } from "./solver.ts";
-import { DIFFCOUNT, newState } from "./state.ts";
+import { DIFF_EXTREME, newState } from "./state.ts";
 
-interface DominosaFixture extends DescFixture {
+interface Fixture {
   name: string;
   n: number;
   diff: number;
+  desc: string;
 }
 
-const fixtures = reference.fixtures as DominosaFixture[];
-
-describeDescDifferential<DominosaFixture, { n: number; diff: number; tall: boolean }>({
-  title: "dominosa generator matches the C reference byte-for-byte",
-  fixtures,
-  label: (f) => `${f.name} (n=${f.n}, diff=${f.diff}, seed=${f.seed})`,
-  params: (f) => ({ n: f.n, diff: f.diff, tall: false }),
-  newDesc: (p, rng) => newDominosaDesc(p, rng),
-  extra: (f, p) => {
-    // The C board decodes validly and solves uniquely at exactly its recorded
-    // difficulty under the TS solver. The fixture C dealt at Ambiguous is
-    // retired with the tier.
+describe("dominosa's ladder on upstream's boards (frozen C reference)", () => {
+  it.each(
+    (reference.fixtures as Fixture[]).map((f) => [`${f.name} (n=${f.n})`, f] as const),
+  )("grades %s at upstream's tier", (_label, f) => {
+    const p = { n: f.n, diff: f.diff, tall: false };
     expect(validateDesc(dominosaGame, p, f.desc)).toBeNull();
     const state = newState(p, f.desc);
-    const full = solveNumbers(p, state.numbers, DIFFCOUNT);
-    expect(full.result).toBe(1);
-    const graded = solveNumbers(p, state.numbers, p.diff);
+    expect(solveNumbers(p, state.numbers, DIFF_EXTREME).result).toBe(1);
+    const graded = solveNumbers(p, state.numbers, f.diff);
     expect(graded.result).toBe(1);
-    expect(graded.maxDiffUsed).toBe(p.diff);
-  },
+    expect(graded.maxDiffUsed).toBe(f.diff);
+    if (f.diff > 0)
+      expect(solveNumbers(p, state.numbers, f.diff - 1).result).not.toBe(1);
+  });
 });

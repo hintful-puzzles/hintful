@@ -35,3 +35,202 @@ help:
     * On harder boards, **odd regions**: a domino that would cut the empty squares into regions with an odd number of squares can't go there, because dominoes can't fill them.
 
     On an Unreasonable board the hint may stop and say that nothing further follows by deduction.
+name: Dominosa
+family: regions
+sizes:
+  # The grid holds at most 2^31 - 1 squares.
+  w: { min: 1, max: 2147483647 }
+  h: { min: 1, max: 2147483647 }
+  # The highest number on a domino.
+  n: { min: 1, max: 2147483647 }
+space:
+  grid: { w: "w", h: "h" }
+  # The pairs of squares side by side, the spots a domino may cover.
+  edges: true
+  units: []
+answer:
+  # The spot between two squares side by side: 1 where one domino covers
+  # both, 2 where none does.
+  value:
+    sort: edge
+    domain: "range(1, 2)"
+define:
+  # The number on square c.
+  num(c): "clue(number, c)"
+  # Whether spots e and f show the same two numbers: spots of one domino.
+  same(e, f): >-
+    (num(end1(e)) = num(end1(f)) and num(end2(e)) = num(end2(f)))
+    or (num(end1(e)) = num(end2(f)) and num(end2(e)) = num(end1(f)))
+  # Whether spots e and f share a square.
+  touch(e, f): >-
+    end1(e) = end1(f) or end1(e) = end2(f) or end2(e) = end1(f)
+    or end2(e) = end2(f)
+  # The spots round square c not yet ruled out.
+  spots(c): "set(edge(c, y) over y in adj4(c) where value(edge(c, y)) != 2)"
+  # The squares showing a.
+  showing(a): "{c in cells where num(c) = a}"
+  # The spots of domino a-b not yet ruled out.
+  spotsOf(a, b): >-
+    set(edge(x, y) over x in showing(a), y in adj4(x)
+    where num(y) = b and value(edge(x, y)) != 2)
+  # Whether a domino covers square c.
+  covered(c): "exists y in adj4(c): value(edge(c, y)) = 1"
+  # The other numbers on the spots not yet ruled out round the squares T.
+  partners(T): "set(num(y) over x in T, y in adj4(x) where value(edge(x, y)) != 2)"
+  # Whether a spot not yet ruled out joins two of the squares T.
+  joinsTwo(T): "exists x in T, y in adj4(x) where y in T: value(edge(x, y)) != 2"
+  # Whether spot p is one side of a two-by-two block whose four spots are
+  # left.
+  inSquare(p): >-
+    exists x in adj4(end1(p)), y in adj4(end2(p))
+    where x != end2(p) and y != end1(p) and y in adj4(x):
+    value(edge(end1(p), x)) != 2 and value(edge(end2(p), y)) != 2
+    and value(edge(x, y)) != 2
+  # Whether neither of spot f's squares is among T.
+  away(f, T): "end1(f) not in T and end2(f) not in T"
+shape:
+  # Every square is covered by one domino.
+  - "forall c in cells: count(y in adj4(c) where value(edge(c, y)) = 1) = 1"
+  # No domino is used twice.
+  - >-
+    forall e in edges, f in edges where f != e and value(e) = 1 and value(f) = 1:
+    not same(e, f)
+clues:
+  # A number on every square. Every pair of numbers side by side somewhere
+  # is a domino of the set, so a domino covers two squares showing it: with
+  # every square covered and no domino twice, the set is used whole.
+  number:
+    at: cell
+    value: "range(0, n)"
+    complete: true
+    means: >-
+      forall y in adj4(at): exists f in edges where value(f) = 1:
+      same(edge(at, y), f)
+freedom: { kind: fill }
+deal:
+  answer: a random tiling of the grid by dominoes
+  number: one domino of the set on each tile, dealt again until the ladder finishes the board at the tier and not below it, or at Unreasonable the search finds one answer and the ladder below it stops short
+  tier: one of the tiers
+tiers: [Easy, Normal, Tricky, Unreasonable]
+techniques:
+  # A domino covers a spot: no other covers either of its squares, and no
+  # other spot holds that domino.
+  - id: placed
+    tier: Easy
+    on: place
+    for: "e in edges where value(e) = 1"
+    conclude: >-
+      (forall x in {end1(e), end2(e)}, y in adj4(x) where edge(x, y) != e:
+      place(edge(x, y), 2))
+      and (forall f in edges where f != e and same(e, f): place(f, 2))
+  # A domino with one spot left goes there.
+  - id: onlySpot
+    tier: Easy
+    for: >-
+      a in range(0, n), b in range(a, n), P = spotsOf(a, b) where |P| = 1,
+      e = nth(P, 0) where not known(e)
+    conclude: "place(e, 1)"
+  # A square with one spot left round it is covered there; with none, the
+  # marks are inconsistent.
+  - id: squareOnly
+    tier: Easy
+    for: >-
+      c in cells, S = spots(c)
+      where |S| <= 1 and not (exists f in S: known(f))
+    conclude: "|S| = 1 and place(nth(S, 0), 1)"
+  # A square whose spots left are all one domino's takes that domino: its
+  # other spots are out.
+  - id: squareSingleDomino
+    tier: Normal
+    for: >-
+      c in cells, S = spots(c) where |S| >= 2, s = nth(S, 0)
+      where forall f in S: same(f, s)
+    conclude: >-
+      forall f in edges where f not in S and value(f) != 2 and same(f, s):
+      place(f, 2)
+  # A spot that shares a square with every spot left for a domino would leave
+  # it nowhere to go: it is out. Such a spot touches each of them, so it is
+  # found beside the first.
+  - id: mustOverlap
+    tier: Normal
+    for: >-
+      a in range(0, n), b in range(a, n), P = spotsOf(a, b) where |P| >= 2,
+      e = nth(P, 0)
+    conclude: >-
+      forall x in {end1(e), end2(e)}, y in adj4(x)
+      where edge(x, y) not in P and value(edge(x, y)) != 2
+      and (forall f in P: touch(f, edge(x, y))):
+      place(edge(x, y), 2)
+  # A domino on spot p rules out the spot q beside it, and where every other
+  # spot left round q's far square y is p's domino, y could then be covered
+  # only by a second copy of it: p is out.
+  - id: localDuplicate
+    tier: Normal
+    for: >-
+      p in edges where not known(p), x in {end1(p), end2(p)}, y in adj4(x),
+      q = edge(x, y) where q != p and value(q) != 2
+      and (forall r in spots(y) where r != q: same(r, p))
+    conclude: "place(p, 2)"
+  # A domino on spot p rules out two spots beside it, whose far squares y and
+  # z could then each be covered only by one domino, the same for both, on
+  # two different spots: p is out.
+  - id: localDuplicate2
+    tier: Normal
+    for: >-
+      p in edges where not known(p), x in {end1(p), end2(p)}, y in adj4(x),
+      q = edge(x, y) where q != p and value(q) != 2,
+      R = {r in spots(y) where r != q} where |R| >= 1, d = nth(R, 0)
+      where forall r in R: same(r, d),
+      x2 in {end1(p), end2(p)}, z in adj4(x2),
+      q2 = edge(x2, z) where q2 != p and q2 != q and value(q2) != 2,
+      S = {r in spots(z) where r != q2}
+      where |S| >= 1 and (forall r in S: same(r, d) and not touch(r, q))
+    conclude: "place(p, 2)"
+  # A spot whose domino would cut its squares' group, the squares the spots
+  # left join, into two parts each of an even count would leave each part an
+  # odd count of squares to cover: it is out. A spot on a ring of four spots
+  # left cuts nothing, and is passed over before its group is walked.
+  - id: parity
+    tier: Normal
+    for: >-
+      P = {e in edges where value(e) != 2},
+      p in edges where not known(p) and not inSquare(p),
+      Q = P - {p}, A = through(end1(p), Q)
+      where end2(p) not in A and |A| mod 2 = 0
+      and |through(end2(p), Q)| mod 2 = 0
+    conclude: "place(p, 2)"
+  # Squares T showing a, no two of them joined by a spot left, whose spots
+  # left show as many other numbers between them as there are squares, take
+  # those dominoes between them: their spots away from T are out. Read only
+  # where a shows on at most 16 squares, as a set of 2 to all but 2 of them,
+  # each not yet covered: a covered square's domino has no spot left
+  # elsewhere, so adding it to T concludes nothing T does not.
+  - id: set
+    tier: Tricky
+    for: >-
+      a in range(0, n), S = showing(a) where |S| <= 16,
+      U = {c in S where not covered(c)},
+      T in subsets(U) where |T| >= 2 and |T| <= |S| - 2,
+      O = partners(T) where |O| = |T| and not joinsTwo(T)
+    conclude: >-
+      forall x in S, y in adj4(x), f = edge(x, y)
+      where value(f) != 2 and away(f, T) and num(y) in O: place(f, 2)
+  # The same where a spot left joins two squares of T, so the double a-a may
+  # cover two of them. With one other number fewer than squares, T takes
+  # every domino of a and those numbers, the double over two of its squares;
+  # with as many, the double covers one of them at least.
+  - id: setDoubles
+    tier: Unreasonable
+    for: >-
+      a in range(0, n), S = showing(a) where |S| <= 16,
+      U = {c in S where not covered(c)}, T in subsets(U) where |T| >= 3,
+      O = partners(T)
+      where 2 <= |O| and |O| <= |S| - 2 and (|O| = |T| or |O| = |T| - 1)
+      and joinsTwo(T)
+    conclude: >-
+      forall x in S, y in adj4(x), f = edge(x, y)
+      where value(f) != 2 and num(y) in O
+      and (away(f, T) and (|O| < |T| or num(end1(f)) = num(end2(f)))
+      or (|O| < |T| and num(end1(f)) = num(end2(f))
+      and not (end1(f) in T and end2(f) in T))):
+      place(f, 2)

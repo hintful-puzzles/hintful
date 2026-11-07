@@ -204,8 +204,8 @@ geometry.
 
 Reach for `Dsf` for any partition or connectivity question, and `FlipDsf`
 when a forcing chain needs to know whether two members have the same or the
-opposite sense. Exemplars: `galaxies/state.ts`, and `dominosa/solver.ts`
-for `FlipDsf`.
+opposite sense. Exemplars: `galaxies/state.ts`, and `loopy/solver.ts` for
+`FlipDsf`.
 
 - **For a class's minimal element, precompute a `minimal[i]` map after all
   merges** (`buildMinimal` in `keen/state.ts`). It does not change the

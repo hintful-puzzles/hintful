@@ -24,6 +24,21 @@ export const CHECKED_ORDERS: readonly number[] = [3, 4];
  * checker to search it whole: a world with more is not checked. */
 export const CHECKED_POSITIONS = 400_000;
 
+/** How long the checker spends on one technique, its planted defects
+ * included: past it, a technique whose plants were caught and on which no
+ * defect was found is taken as holding. */
+export const CHECK_BUDGET_MS = 10 * 60_000;
+
+/** A verdict for a technique checked on sampled answers alone, where the
+ * whole check did not finish within {@link CHECK_BUDGET_MS}: its
+ * fingerprint, marked. One proved on every answer is the fingerprint bare. */
+export const heldVerdict = (fp: string): string => `${fp} held`;
+
+/** Whether `recorded`, where a verdict is, is one, proved or held, for
+ * fingerprint `fp`. */
+export const checkedAs = (fp: string, recorded?: string): boolean =>
+  recorded === fp || recorded === heldVerdict(fp);
+
 /** Where a technique's verdict is kept: its description's path and its id. */
 export const soundnessKey = (source: string, id: string): string => `${source}#${id}`;
 

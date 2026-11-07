@@ -88,6 +88,30 @@ export function clueList(
   return { at: Int32Array.from(at), v: Int32Array.from(v), byAt };
 }
 
+/** Each clue list's elements by the value of the clue there, built at the
+ * first read: a list is never changed once made. */
+const byValue = new WeakMap<ClueList, Map<number, number[]>>();
+const NO_ELEMENTS: readonly number[] = [];
+
+/** `{x in cells where clue(kind, x) = v}`: the elements whose clue holds
+ * `v`, `-1` for none, in order, read off an index rather than a scan of
+ * every element. */
+export function cluesValued(list: ClueList, v: number): readonly number[] {
+  let index = byValue.get(list);
+  if (index === undefined) {
+    index = new Map();
+    for (let x = 0; x < list.byAt.length; x++) {
+      // An element with no clue reads as -1, as `clueAt` reads it.
+      const held = clueAt(list, x);
+      const at = index.get(held);
+      if (at === undefined) index.set(held, [x]);
+      else at.push(x);
+    }
+    byValue.set(list, index);
+  }
+  return index.get(v) ?? NO_ELEMENTS;
+}
+
 /** Where a clue of a kind dealt once for each value (`per: value`) sits: at
  * its element `x` for the value `d`, both read back by {@link perElement}
  * and {@link perValue}. A value fits the candidate bitmask's 31 bits. */

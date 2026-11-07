@@ -109,6 +109,10 @@ const KEPT_UNUSED = {
     "read by research/technique-check/dead-end-check.ts",
   "src/describe/soundness.ts::isDeadEndKey":
     "read by the two soundness checkers under research/, each keeping the other's verdicts",
+  "src/describe/soundness.ts::CHECK_BUDGET_MS":
+    "read by research/technique-check/describe-check.test.ts, which bounds each technique's check by it",
+  "src/describe/soundness.ts::heldVerdict":
+    "read by research/technique-check/describe-check.test.ts, which records a held verdict in the form checkedAs reads",
   "src/describe/description.ts::withVariations":
     "read by the interpreter and the soundness checker under research/",
   "src/games/netslide/state.ts::dealtOf":

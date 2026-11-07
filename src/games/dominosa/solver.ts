@@ -1,893 +1,475 @@
 /**
- * dominosa — the graded deductive solver, ported faithfully from
- * `dominosa.c`'s `run_solver` and its `deduce_*` techniques.
+ * Dominosa's solver: the ladder `dominosa.description.yaml` states,
+ * compiled, on the engine's marks and runner (`engine/ladder-runtime.ts`),
+ * the answer check its rules compile to, and the search beneath the ladder.
  *
- * The scratch is an object graph (`SolverDomino` / `SolverPlacement` /
- * `SolverSquare` with array cross-links) rather than C's parallel arrays, but
- * every deduction is ported operation-for-operation — including the swap-remove
- * back-index bookkeeping in `ruleOutPlacement` — so the verdict (0 impossible /
- * 1 unique / 2 ambiguous) matches C on every board. The generator is
- * solver-gated, so a faithful verdict is what makes the byte-match differential
- * hold (docs/solver-and-generator.md § "Solver-gated generation").
+ * The answer is on the spots, the edges between squares side by side, each
+ * covered by one domino or by none. The ladder is upstream's deductions up
+ * to its Hard tier, here Tricky, and its set reading with doubles at
+ * Unreasonable. Beneath it, a search by trial and error ({@link answerOf})
+ * counts a board's answers to two: it serves the Solve command and
+ * `findMistakes`, and deals the Unreasonable tier, where upstream's forcing
+ * chains dealt it. A board of a tier below is one the ladder finishes at
+ * that tier and not below it.
  *
- * The three `.sort()`s (`squaresByNumber`, the two forcing-chain comparators)
- * use total or tie-order-irrelevant orderings that feed set-membership
- * grouping, so a plain stable sort preserves the verdict.
+ * A hint walks the same ladder, one firing at a time ({@link hintFirings}).
  */
 
-import { FlipDsf } from "../../engine/dsf.ts";
-import { findLoops } from "../../engine/findloop.ts";
 import {
-  boardSize,
-  DCOUNT,
+  type Answer,
+  answerCache,
+  type Deduced,
+  searchAnswers as searchBoard,
+} from "../../engine/answer-search.ts";
+import { type GridSpace, rangeMask } from "../../engine/describe-runtime.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  ladderWalk,
+  placingRung,
+  type ReasonOf,
+  runLadder,
+  type Taken,
+  TIERS,
+  uncluedRung,
+} from "../../engine/ladder-runtime.ts";
+import type { StepBudget } from "../../engine/step-budget.ts";
+import * as dominosa from "./dominosa.compiled.ts";
+import {
   DIFF_BASIC,
   DIFF_EXTREME,
   DIFF_HARD,
-  DIFF_TRIVIAL,
-  DINDEX,
+  DOMINO,
   type DominosaShape,
+  dealtOf,
+  NONE,
+  spaceOf,
 } from "./state.ts";
 
-/** A technique that *places* a domino. */
+/** The rungs a hint step can be: the techniques, in the ladder's order. */
+export const DOMINOSA_RUNGS = dominosa.ladder.map((e) => e.id);
+export type DominosaRung = dominosa.LadderId;
+/** The techniques that place a domino; every other rules spots out. */
 export type PlaceTechnique = "onlySpot" | "squareOnly";
+export type BarrierTechnique = Exclude<DominosaRung, PlaceTechnique>;
+
+/** Why a firing decided its spots: which technique, and the squares its
+ * premise names, read before the firing acted. */
+export type DominosaReason =
+  | { kind: "onlySpot" }
+  | { kind: "squareOnly"; square: number }
+  | { kind: "squareSingleDomino"; square: number }
+  /** The squares of every spot left for the domino. */
+  | { kind: "mustOverlap"; squares: number[] }
+  /** The far square that only a second copy could then cover. */
+  | { kind: "localDuplicate"; square: number }
+  /** The two far squares that would need one domino between them. */
+  | { kind: "localDuplicate2"; squares: [number, number] }
+  | { kind: "parity" }
+  /** The squares that take a set of dominoes between them. */
+  | { kind: "set" | "setDoubles"; squares: number[] };
+
+/** One firing in the player's terms: its reason, and the spots it decides,
+ * each the pair of squares it joins, lower first. A placing technique's
+ * firing places one domino; any other's rules spots out. */
+export type DominosaFiring = DominosaReason & {
+  place: [number, number] | null;
+  barriers: [number, number][];
+};
+
+/** The two squares spot `e` joins, lower first. */
+function endsOf(sp: GridSpace, e: number): [number, number] {
+  return [sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]];
+}
+
+/** A reason built once a firing, from its binding, and shared by each of its
+ * spots: a firing may rule many out. */
+function perFiring<B extends object>(
+  build: (binding: B, sp: GridSpace) => DominosaReason,
+): ReasonOf<B> {
+  let last: B | null = null;
+  let reason: DominosaReason | null = null;
+  return (binding, _at, _n, m) => {
+    if (binding !== last || reason === null) {
+      last = binding;
+      reason = build(binding, m.sp);
+    }
+    return reason;
+  };
+}
+
+/** The ladder over the dealt numbers, each technique with its reason. */
+function dominosaLadder(dl: dominosa.Dealt): Ladder {
+  return describedLadder(dominosa, {
+    placed: placingRung(dominosa.placed, dl),
+    onlySpot: compiledRung(
+      dominosa.onlySpot,
+      dl,
+      perFiring(() => ({ kind: "onlySpot" })),
+    ),
+    squareOnly: uncluedRung(
+      dominosa.squareOnly,
+      perFiring(({ c }: dominosa.SquareOnlyBinding) => ({
+        kind: "squareOnly",
+        square: c,
+      })),
+    ),
+    squareSingleDomino: compiledRung(
+      dominosa.squareSingleDomino,
+      dl,
+      perFiring(({ c }: dominosa.SquareSingleDominoBinding) => ({
+        kind: "squareSingleDomino",
+        square: c,
+      })),
+    ),
+    mustOverlap: compiledRung(
+      dominosa.mustOverlap,
+      dl,
+      perFiring(({ P }: dominosa.MustOverlapBinding, sp) => ({
+        kind: "mustOverlap",
+        squares: P.flatMap((f) => endsOf(sp, f)),
+      })),
+    ),
+    localDuplicate: compiledRung(
+      dominosa.localDuplicate,
+      dl,
+      perFiring(({ y }: dominosa.LocalDuplicateBinding) => ({
+        kind: "localDuplicate",
+        square: y,
+      })),
+    ),
+    localDuplicate2: compiledRung(
+      dominosa.localDuplicate2,
+      dl,
+      perFiring(({ y, z }: dominosa.LocalDuplicate2Binding) => ({
+        kind: "localDuplicate2",
+        squares: [y, z],
+      })),
+    ),
+    parity: uncluedRung(
+      dominosa.parity,
+      perFiring(() => ({ kind: "parity" })),
+    ),
+    set: compiledRung(
+      dominosa.set,
+      dl,
+      perFiring(({ T }: dominosa.SetBinding) => ({ kind: "set", squares: [...T] })),
+    ),
+    setDoubles: compiledRung(
+      dominosa.setDoubles,
+      dl,
+      perFiring(({ T }: dominosa.SetDoublesBinding) => ({
+        kind: "setDoubles",
+        squares: [...T],
+      })),
+    ),
+  });
+}
+
+/** The working state of a deduction: the marks on the spots, and the ladder
+ * over the board's numbers. */
+interface Deduction {
+  m: CellMarks;
+  ladder: Ladder;
+  dl: dominosa.Dealt;
+}
+
+/** The marks with every domino of `partner` placed, and every spot
+ * undecided where no `partner` is given. False where two of them clash. */
+function deduction(
+  shape: DominosaShape,
+  numbers: ArrayLike<number>,
+  partner: ArrayLike<number> | null = null,
+): Deduction | null {
+  const sp = spaceOf(shape);
+  const dl = dealtOf(shape, numbers);
+  const ladder = dominosaLadder(dl);
+  const grid = new Uint8Array(sp.edges.length);
+  if (partner)
+    for (const e of sp.edges) {
+      const [a, b] = endsOf(sp, e);
+      if (partner[a] === b) grid[e] = DOMINO;
+    }
+  const m = new CellMarks(sp, rangeMask(DOMINO, NONE), grid, null, "edge");
+  m.placing = ladder.placing;
+  if (!m.seed(grid)) return null;
+  return { m, ladder, dl };
+}
+
+/** A copy of `d` that shares no marks with it, for a search to assume on. */
+function copied(d: Deduction): Deduction {
+  const m = new CellMarks(d.m.sp, d.m.domain, d.m.grid.slice(), null, "edge");
+  m.placing = d.ladder.placing;
+  m.cands.set(d.m.cands);
+  return { ...d, m };
+}
+
+/** A key naming the domino two numbers make, whichever way round. */
+const dominoKey = (a: number, b: number): number =>
+  a <= b ? b * (b + 1) + a : a * (a + 1) + b;
 
 /**
- * A technique that *rules out* placements. Split from {@link PlaceTechnique} so
- * each narrator is exhaustive over its own half: an unhandled technique is a
- * compile error rather than an unexplained fallback sentence. There is no
- * forcing-chain member, because no hint fires one (see `firstFiring`).
+ * Where the ladder left the marks, it having found nothing inconsistent:
+ * `"solved"` where every square is covered and the rules hold. Under a wrong
+ * assumption the ladder may stop on marks no answer extends without a rung
+ * saying so, and this says so where it sees it at once: a square with no
+ * spot left or covered twice, or a domino placed twice or with no spot left.
  */
-export type BarrierTechnique =
-  | "squareSingleDomino"
-  | "mustOverlap"
-  | "localDuplicate"
-  | "localDuplicate2"
-  | "parity"
-  | "set";
-
-/** The rungs a hint step can be: the techniques. */
-export const DOMINOSA_RUNGS = [
-  "onlySpot",
-  "squareOnly",
-  "squareSingleDomino",
-  "mustOverlap",
-  "localDuplicate",
-  "localDuplicate2",
-  "parity",
-  "set",
-] as const;
-export type DominosaRung = (typeof DOMINOSA_RUNGS)[number];
+function verdictOf(d: Deduction): Deduced {
+  const { m, dl } = d;
+  const { sp } = m;
+  const nums = dl.number.v;
+  const left = new Map<number, number>();
+  const placed = new Map<number, number>();
+  for (const e of sp.edges) {
+    const [a, b] = endsOf(sp, e);
+    const key = dominoKey(nums[a], nums[b]);
+    if (!left.has(key)) left.set(key, 0);
+    if (m.grid[e] === NONE) continue;
+    left.set(key, (left.get(key) ?? 0) + 1);
+    if (m.grid[e] === DOMINO) placed.set(key, (placed.get(key) ?? 0) + 1);
+  }
+  for (const count of left.values()) if (count === 0) return "contradiction";
+  for (const count of placed.values()) if (count > 1) return "contradiction";
+  let covered = 0;
+  for (const c of sp.cells) {
+    let open = 0;
+    let dominoes = 0;
+    for (const y of sp.adj4[c]) {
+      const v = m.grid[sp.edgeOf(c, y)];
+      if (v !== NONE) open++;
+      if (v === DOMINO) dominoes++;
+    }
+    if (open === 0 || dominoes > 1) return "contradiction";
+    if (dominoes === 1) covered++;
+  }
+  if (covered < sp.cells.length) return "stuck";
+  const g = Uint8Array.from(m.grid, (v) => (v === DOMINO ? DOMINO : NONE));
+  return dominosa.isAnswer(g, sp, dl) ? "solved" : "contradiction";
+}
 
 /**
- * One firing captured by the hint recorder — either a forced domino placement
- * or a set of ruled-out placements (barriers), plus the squares it reasons
- * over (shaded as evidence). Cell references are `y*w+x` indices. A
- * discriminated union on `place`, so a firing's kind and its technique cannot
- * disagree.
+ * Run the ladder on `d` no harder than `cap`, below Unreasonable's search,
+ * and say what it reached. `grades` takes the hardest tier a firing used.
  */
-export type HintFiring =
-  | {
-      technique: PlaceTechnique;
-      /** The `[a, b]` (a < b) square pair to lay a domino on. */
-      place: [number, number];
-      barriers: readonly never[];
-      /** Cells the deduction reasons over, to shade as evidence. */
-      evidence: number[];
-    }
-  | {
-      technique: BarrierTechnique;
-      place: null;
-      /** The `[a, b]` ruled-out placements to bar. */
-      barriers: Array<[number, number]>;
-      evidence: number[];
-    };
-
-class SolverDomino {
-  lo = 0;
-  hi = 0;
-  index = 0;
-  /** Live count in `placements[0..nplacements-1]`. */
-  nplacements = 0;
-  placements: SolverPlacement[] = [];
+function deduce(
+  d: Deduction,
+  cap: number,
+  grades: Record<string, number> = {},
+): Deduced {
+  const { m, ladder } = d;
+  const techniques = ladderTechniques(m, ladder.entries, { [TIERS]: cap }, grades);
+  return runLadder(m, techniques) ? "contradiction" : verdictOf(d);
 }
 
-class SolverPlacement {
-  index = 0;
-  /** The two squares this placement covers, lower index first. */
-  squares: [SolverSquare, SolverSquare];
-  domino!: SolverDomino;
-  /** Back-index of this placement in each square's placement list. */
-  spi: [number, number] = [0, 0];
-  /** Back-index of this placement in its domino's placement list. */
-  dpi = 0;
-  active = true;
-  noverlaps = 0;
-  overlaps: SolverPlacement[] = [];
-  constructor(a: SolverSquare, b: SolverSquare) {
-    this.squares = [a, b];
-  }
+/** The spots of the answer the marks hold, as square pairs, lower first. */
+function pairsOf(m: CellMarks): Array<[number, number]> {
+  return m.sp.edges.filter((e) => m.grid[e] === DOMINO).map((e) => endsOf(m.sp, e));
 }
 
-class SolverSquare {
-  index = 0;
-  nplacements = 0;
-  placements: SolverPlacement[] = [];
-  number = 0;
-}
+// --- the search for a board's answers ---------------------------------------
 
-/** Given two overlapping placements p,q, the index si such that
- * p.squares[si] is the square also in q. */
-function commonSquareIndex(p: SolverPlacement, q: SolverPlacement): number {
-  return p.squares[0] === q.squares[0] || p.squares[0] === q.squares[1] ? 0 : 1;
-}
+/** What a search established about a board's answers; the one answer is its
+ * dominoes, each a pair of squares. */
+export type DominosaAnswer = Answer<Array<[number, number]>>;
 
-export class DominosaSolver {
-  readonly n: number;
-  readonly dc: number;
-  readonly pc: number;
-  readonly w: number;
-  readonly h: number;
-  readonly wh: number;
-  maxDiffUsed = DIFF_TRIVIAL;
+/**
+ * The positions a search may try before it gives up, each one a domino
+ * assumed and the ladder run from it. It decides which Unreasonable boards
+ * exist: a board that needs more is thrown away when dealing and refused
+ * when pasted, so lowering it refuses boards already dealt.
+ */
+const SEARCH_BUDGET = 2_000;
 
-  readonly dominoes: SolverDomino[] = [];
-  readonly placements: SolverPlacement[] = [];
-  readonly squares: SolverSquare[] = [];
-
-  private squaresByNumber: SolverSquare[] | null = null;
-  private dsfScratch: FlipDsf | null = null;
-
-  /** The deductions in the order `runSolver` tries them, each with the tier it
-   * costs and how many indices it sweeps (1 for a whole-board deduction). */
-  private readonly rungs: ReadonlyArray<
-    readonly [tier: number, count: number, deduce: (i: number) => boolean]
-  >;
-
-  // --- hint recording (gated; runSolver / the generator never enable it) ----
-  private recording = false;
-  /** Edges (`[min, max]` square pair) ruled out during the current firing. */
-  private recBarriers: Array<[number, number]> = [];
-  /** Cell indices the current firing reasons over (shaded as evidence). */
-  private recEvidence: number[] = [];
-  /** For a placement-type firing, the square pair to lay a domino on. */
-  private recPlace: [number, number] | null = null;
-
-  private resetRec(): void {
-    this.recBarriers = [];
-    this.recEvidence = [];
-    this.recPlace = null;
-  }
-
-  private recordEvidence(cells: number[]): void {
-    if (this.recording) this.recEvidence = cells;
-  }
-
-  constructor(shape: DominosaShape) {
-    const n = shape.n;
-    const { w, h } = boardSize(shape);
-    const wh = w * h;
-    const dc = DCOUNT(n);
-    const pc = (w - 1) * h + w * (h - 1);
-    this.n = n;
-    this.dc = dc;
-    this.pc = pc;
-    this.w = w;
-    this.h = h;
-    this.wh = wh;
-
-    // Dominoes, indexed by DINDEX.
-    for (let hi = 0, di = 0; hi <= n; hi++)
-      for (let lo = 0; lo <= hi; lo++, di++) {
-        const d = new SolverDomino();
-        d.hi = hi;
-        d.lo = lo;
-        d.index = di;
-        this.dominoes.push(d);
-      }
-
-    for (let i = 0; i < wh; i++) {
-      const sq = new SolverSquare();
-      sq.index = i;
-      this.squares.push(sq);
+/** The positions a stuck one divides into: a domino on each spot left round
+ * the square with the fewest, each spot a position. */
+function assumeDomino(d: Deduction): Deduction[] {
+  const { m } = d;
+  const { sp } = m;
+  let at = -1;
+  let fewest = 5;
+  for (const c of sp.cells) {
+    let open = 0;
+    let covered = false;
+    for (const y of sp.adj4[c]) {
+      const v = m.grid[sp.edgeOf(c, y)];
+      if (v === DOMINO) covered = true;
+      if (v !== NONE) open++;
     }
-
-    // Placements: vertical first (each square with the one below), then
-    // horizontal — the exact upstream order (iteration order feeds deductions).
-    for (let y = 0; y < h - 1; y++)
-      for (let x = 0; x < w; x++)
-        this.placements.push(
-          new SolverPlacement(this.squares[y * w + x], this.squares[(y + 1) * w + x]),
-        );
-    for (let y = 0; y < h; y++)
-      for (let x = 0; x < w - 1; x++)
-        this.placements.push(
-          new SolverPlacement(this.squares[y * w + x], this.squares[y * w + (x + 1)]),
-        );
-
-    // Full placement lists per square (temporarily) to compute overlaps.
-    for (const p of this.placements)
-      for (let si = 0; si < 2; si++) {
-        const sq = p.squares[si];
-        p.spi[si] = sq.nplacements;
-        sq.placements[sq.nplacements++] = p;
-      }
-    for (const p of this.placements)
-      for (let si = 0; si < 2; si++) {
-        const sq = p.squares[si];
-        for (let j = 0; j < sq.nplacements; j++) {
-          const q = sq.placements[j];
-          if (q !== p) p.overlaps[p.noverlaps++] = q;
-        }
-      }
-    for (let pi = 0; pi < this.pc; pi++) this.placements[pi].index = pi;
-
-    this.rungs = [
-      [DIFF_TRIVIAL, dc, (di) => this.deduceDominoSinglePlacement(di)],
-      [DIFF_TRIVIAL, wh, (si) => this.deduceSquareSinglePlacement(si)],
-      [DIFF_BASIC, wh, (si) => this.deduceSquareSingleDomino(si)],
-      [DIFF_BASIC, dc, (di) => this.deduceDominoMustOverlap(di)],
-      [DIFF_BASIC, pc, (pi) => this.deduceLocalDuplicate(pi)],
-      [DIFF_BASIC, pc, (pi) => this.deduceLocalDuplicate2(pi)],
-      [DIFF_BASIC, 1, () => this.deduceParity()],
-      [DIFF_HARD, 1, () => this.deduceSet(false)],
-      [DIFF_EXTREME, 1, () => this.deduceSet(true)],
-      [DIFF_EXTREME, 1, () => this.deduceForcingChain()],
-    ];
-  }
-
-  /** (Re)initialize per-board: assign numbers, rebuild the domino/square
-   * placement lists, mark all placements active. Mirrors `solver_setup_grid`. */
-  setupGrid(numbers: Int32Array | number[]): void {
-    for (const sq of this.squares) sq.number = numbers[sq.index];
-    for (const p of this.placements)
-      p.domino = this.dominoes[DINDEX(p.squares[0].number, p.squares[1].number)];
-
-    for (const d of this.dominoes) d.nplacements = 0;
-    for (const p of this.placements) p.domino.nplacements++;
-    for (const d of this.dominoes) {
-      d.placements = new Array(d.nplacements);
-      d.nplacements = 0;
-    }
-    for (const p of this.placements) {
-      p.dpi = p.domino.nplacements;
-      p.domino.placements[p.domino.nplacements++] = p;
-      p.active = true;
-    }
-
-    for (const sq of this.squares) sq.nplacements = 0;
-    for (const p of this.placements)
-      for (let si = 0; si < 2; si++) {
-        const sq = p.squares[si];
-        p.spi[si] = sq.nplacements;
-        sq.placements[sq.nplacements++] = p;
-      }
-
-    this.maxDiffUsed = DIFF_TRIVIAL;
-    this.squaresByNumber = null;
-  }
-
-  private ruleOutPlacement(p: SolverPlacement): void {
-    const d = p.domino;
-    p.active = false;
-
-    if (this.recording) this.recBarriers.push([p.squares[0].index, p.squares[1].index]);
-
-    let i = p.dpi;
-    if (--d.nplacements !== i) {
-      d.placements[i] = d.placements[d.nplacements];
-      d.placements[i].dpi = i;
-    }
-
-    for (let si = 0; si < 2; si++) {
-      const sq = p.squares[si];
-      i = p.spi[si];
-      if (--sq.nplacements !== i) {
-        sq.placements[i] = sq.placements[sq.nplacements];
-        const j = sq.placements[i].squares[0] === sq ? 0 : 1;
-        sq.placements[i].spi[j] = i;
-      }
+    if (!covered && open < fewest) {
+      fewest = open;
+      at = c;
     }
   }
-
-  // --- Easy ---------------------------------------------------------------
-
-  private deduceDominoSinglePlacement(di: number): boolean {
-    const d = this.dominoes[di];
-    if (d.nplacements !== 1) return false;
-    const p = d.placements[0];
-    let done = false;
-    for (let oi = 0; oi < p.noverlaps; oi++) {
-      const q = p.overlaps[oi];
-      if (q.active) {
-        done = true;
-        this.ruleOutPlacement(q);
-      }
-    }
-    return done;
-  }
-
-  private deduceSquareSinglePlacement(si: number): boolean {
-    const sq = this.squares[si];
-    if (sq.nplacements !== 1) return false;
-    const p = sq.placements[0];
-    const d = p.domino;
-    if (d.nplacements <= 1) return false;
-    if (this.recording) {
-      this.recPlace = [p.squares[0].index, p.squares[1].index];
-      this.recEvidence = [sq.index];
-    }
-    while (d.nplacements > 1)
-      this.ruleOutPlacement(d.placements[0] === p ? d.placements[1] : d.placements[0]);
-    return true;
-  }
-
-  // --- Normal -------------------------------------------------------------
-
-  private deduceSquareSingleDomino(si: number): boolean {
-    const sq = this.squares[si];
-    if (sq.nplacements < 2) return false;
-    const d = sq.placements[0].domino;
-    for (let i = 1; i < sq.nplacements; i++)
-      if (sq.placements[i].domino !== d) return false;
-    if (d.nplacements <= sq.nplacements) return false;
-    this.recordEvidence([sq.index]);
-    for (let i = d.nplacements; i-- > 0; ) {
-      const p = d.placements[i];
-      if (p.squares[0] !== sq && p.squares[1] !== sq) this.ruleOutPlacement(p);
-    }
-    return true;
-  }
-
-  private deduceDominoMustOverlap(di: number): boolean {
-    const d = this.dominoes[di];
-    if (d.nplacements < 2) return false;
-    const intersection: SolverPlacement[] = [];
-    let nint = 0;
-    let p = d.placements[0];
-    for (let i = 0; i < p.noverlaps; i++)
-      if (p.overlaps[i].active) intersection[nint++] = p.overlaps[i];
-    for (let j = 1; j < d.nplacements; j++) {
-      p = d.placements[j];
-      const oldN = nint;
-      nint = 0;
-      for (let k = 0; k < oldN; k++) {
-        let found = false;
-        for (let i = 0; i < p.noverlaps; i++)
-          if (p.overlaps[i] === intersection[k]) {
-            found = true;
-            break;
-          }
-        if (found) intersection[nint++] = intersection[k];
-      }
-    }
-    if (nint === 0) return false;
-    if (this.recording) {
-      const cells: number[] = [];
-      for (let j = 0; j < d.nplacements; j++)
-        cells.push(d.placements[j].squares[0].index, d.placements[j].squares[1].index);
-      this.recEvidence = cells;
-    }
-    for (let i = 0; i < nint; i++) this.ruleOutPlacement(intersection[i]);
-    return true;
-  }
-
-  private deduceLocalDuplicate(pi: number): boolean {
-    const p = this.placements[pi];
-    const d = p.domino;
-    if (!p.active) return false;
-    for (let i = 0; i < p.noverlaps; i++) {
-      const q = p.overlaps[i];
-      if (!q.active) continue;
-      const sq = q.squares[1 - commonSquareIndex(q, p)];
-      let bad = false;
-      for (let j = 0; j < sq.nplacements; j++)
-        if (sq.placements[j] !== q && sq.placements[j].domino !== d) {
-          bad = true;
-          break;
-        }
-      if (bad) continue;
-      this.recordEvidence([sq.index]);
-      this.ruleOutPlacement(p);
-      return true;
-    }
-    return false;
-  }
-
-  private deduceLocalDuplicate2(pi: number): boolean {
-    const p = this.placements[pi];
-    if (!p.active) return false;
-    for (let i = 0; i < p.noverlaps; i++) {
-      const qi = p.overlaps[i];
-      if (!qi.active) continue;
-      const sqi = qi.squares[1 - commonSquareIndex(qi, p)];
-      let di: SolverDomino | null = null;
-      let badQi = false;
-      for (let k = 0; k < sqi.nplacements; k++) {
-        const pk = sqi.placements[k];
-        if (pk === qi) continue;
-        if (!di) di = pk.domino;
-        else if (di !== pk.domino) {
-          badQi = true;
-          break;
-        }
-      }
-      if (badQi || !di) continue;
-
-      for (let j = 0; j < p.noverlaps; j++) {
-        const qj = p.overlaps[j];
-        if (j === i || !qj.active) continue;
-        const sqj = qj.squares[1 - commonSquareIndex(qj, p)];
-        let foundDi = false;
-        let badQj = false;
-        for (let k = 0; k < sqj.nplacements; k++) {
-          const pk = sqj.placements[k];
-          if (pk === qj) continue;
-          if (pk.domino !== di) {
-            badQj = true;
-            break;
-          }
-          if (pk.squares[0] === sqi || pk.squares[1] === sqi) {
-            badQj = true;
-            break;
-          }
-          foundDi = true;
-        }
-        if (badQj || !foundDi) continue;
-        this.recordEvidence([sqi.index, sqj.index]);
-        this.ruleOutPlacement(p);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private deduceParity(): boolean {
-    // Bridge-finding over the graph whose vertices are squares and whose edges
-    // are active placements: a bridge is a domino whose placement would split
-    // the unfilled area, and if both resulting sides are even-sized, placing it
-    // would leave two odd (untileable) areas — so it can be ruled out.
-    const result = findLoops(this.wh, (v) => {
-      const sq = this.squares[v];
-      const out: number[] = [];
-      for (let i = 0; i < sq.nplacements; i++) {
-        const pp = sq.placements[i];
-        out.push(pp.squares[0].index + pp.squares[1].index - v);
-      }
-      return out;
+  if (at < 0) return [];
+  return sp.adj4[at]
+    .map((y) => sp.edgeOf(at, y))
+    .filter((e) => m.grid[e] === 0)
+    .map((e) => {
+      const next = copied(d);
+      next.m.place(e, DOMINO);
+      return next;
     });
-
-    let done = false;
-    for (let pi = 0; pi < this.pc; pi++) {
-      const p = this.placements[pi];
-      if (!p.active) continue;
-      const split = result.isBridge(p.squares[0].index, p.squares[1].index);
-      if (!split) continue;
-      if ((split.uVertices | split.vVertices) & 1) continue;
-      this.ruleOutPlacement(p);
-      done = true;
-    }
-    return done;
-  }
-
-  // --- Tricky / Unreasonable: set analysis --------------------------------
-
-  private deduceSet(doubles: boolean): boolean {
-    if (!this.squaresByNumber) {
-      this.squaresByNumber = this.squares.slice();
-      this.squaresByNumber.sort((a, b) =>
-        a.number !== b.number ? a.number - b.number : a.index - b.index,
-      );
-    }
-    const sqbn = this.squaresByNumber;
-    const whScratch = new Int32Array(this.wh); // square index → local group index
-    const ds: SolverDomino[] = new Array(this.n + 1);
-    let done = false;
-
-    let sqp = 0;
-    for (let num = 0; num <= this.n; num++) {
-      const sqs = sqp;
-      while (sqp < this.wh && sqbn[sqp].number === num) sqp++;
-      const nsq = sqp - sqs;
-
-      if (nsq > 16) continue; // too large to enumerate subsets (never for valid boards)
-
-      for (let i = 0; i < nsq; i++) whScratch[sqbn[sqs + i].index] = i;
-
-      const dominoSets: number[] = new Array(nsq).fill(0);
-      const adjacent: number[] = new Array(nsq).fill(0);
-      for (let i = 0; i < nsq; i++) {
-        const sq = sqbn[sqs + i];
-        let mask = 0;
-        for (let j = 0; j < sq.nplacements; j++) {
-          const p = sq.placements[j];
-          const othernum = p.domino.lo + p.domino.hi - num;
-          mask |= 1 << othernum;
-          ds[othernum] = p.domino;
-          if (othernum === num) {
-            const i2 = whScratch[p.squares[0].index + p.squares[1].index - sq.index];
-            adjacent[i] |= 1 << i2;
-            adjacent[i2] |= 1 << i;
-          }
-        }
-        dominoSets[i] = mask;
-      }
-
-      let squaresDone = 0;
-      for (let squares = 0; squares < 1 << nsq; squares++) {
-        if (squares & squaresDone) continue;
-
-        let dominoes = 0;
-        let nsquares = 0;
-        let gotAdj = false;
-        for (let bit = 0; bit < nsq; bit++) {
-          if (!((squares >> bit) & 1)) continue;
-          if (adjacent[bit] & squares) gotAdj = true;
-          dominoes |= dominoSets[bit];
-          nsquares++;
-        }
-
-        let ndominoes = 0;
-        for (let bit = 0; bit < nsq; bit++) ndominoes += (dominoes >> bit) & 1;
-
-        let ruleOutNondoubles: boolean;
-        let minNusedForDouble: number;
-        if (!gotAdj) {
-          if (ndominoes !== nsquares) continue;
-          ruleOutNondoubles = true;
-          minNusedForDouble = 1;
-        } else {
-          if (!doubles) continue;
-          if (ndominoes === nsquares - 1) {
-            ruleOutNondoubles = true;
-            minNusedForDouble = 2;
-          } else if (ndominoes === nsquares) {
-            ruleOutNondoubles = false;
-            minNusedForDouble = 1;
-          } else {
-            continue;
-          }
-        }
-
-        // Skip sets of size 1 or whose complement has size 1 (a simpler
-        // deduction handles those, and should, for cleaner diagnostics).
-        if (ndominoes <= 1 || ndominoes >= nsq - 1) continue;
-
-        if (ruleOutNondoubles) squaresDone |= squares;
-
-        let reported = false;
-        for (let bit = 0; bit < nsq; bit++) {
-          if (!((dominoes >> bit) & 1)) continue;
-          const d = ds[bit];
-          for (let i = d.nplacements; i-- > 0; ) {
-            const p = d.placements[i];
-            let nused = 0;
-            for (let si = 0; si < 2; si++) {
-              const sq2 = p.squares[si];
-              if (sq2.number === num && (squares >> whScratch[sq2.index]) & 1) nused++;
-            }
-            if (d.lo === d.hi) {
-              if (nused >= minNusedForDouble) continue;
-            } else {
-              if (nused > 0 || !ruleOutNondoubles) continue;
-            }
-            if (!reported) {
-              reported = true;
-              done = true;
-              squaresDone |= squares;
-              if (this.recording) {
-                const cells: number[] = [];
-                for (let bb = 0; bb < nsq; bb++)
-                  if ((squares >> bb) & 1) cells.push(sqbn[sqs + bb].index);
-                this.recEvidence = cells;
-              }
-            }
-            this.ruleOutPlacement(p);
-          }
-        }
-      }
-    }
-    return done;
-  }
-
-  // --- Extreme: forcing chains -------------------------------------------
-
-  private deduceForcingChain(): boolean {
-    const pc = this.pc;
-    const whScratch = new Int32Array(this.wh);
-    const pcScratch = new Int32Array(pc); // placement → chain id (root*2 + inv)
-    if (!this.dsfScratch) this.dsfScratch = new FlipDsf(pc);
-    const dsf = this.dsfScratch;
-    let done = false;
-
-    // Bind placements that must occur together (a square with exactly two
-    // placements links them as a flip pair — they are the two complementary
-    // choices for that square).
-    dsf.reinit();
-    for (const sq of this.squares)
-      if (sq.nplacements === 2)
-        dsf.mergeFlip(sq.placements[0].index, sq.placements[1].index, true);
-
-    for (let pi = 0; pi < pc; pi++) {
-      const { root, inverse } = dsf.canonify(pi);
-      pcScratch[pi] = root * 2 + (inverse ? 1 : 0);
-    }
-
-    // 1. A chain containing a duplicate domino is impossible → rule it out.
-    let order = Array.from({ length: pc }, (_, i) => i);
-    order.sort((a, b) => {
-      if (pcScratch[a] !== pcScratch[b]) return pcScratch[a] - pcScratch[b];
-      return this.placements[a].domino.index - this.placements[b].domino.index;
-    });
-
-    for (let j = 0; j < pc; ) {
-      const ci = pcScratch[order[j]];
-      const cstart = j;
-      while (j < pc && pcScratch[order[j]] === ci) j++;
-      const climit = j;
-      let duplicated = false;
-      for (let k = cstart; k + 1 < climit; k++) {
-        if (this.placements[order[k]].domino === this.placements[order[k + 1]].domino) {
-          duplicated = true;
-          break;
-        }
-      }
-      if (!duplicated) continue;
-      for (let k = cstart; k < climit; k++)
-        this.ruleOutPlacement(this.placements[order[k]]);
-      done = true;
-    }
-    if (done) return true;
-
-    // 2. A chain covering all placements of some other square is impossible.
-    order = Array.from({ length: pc }, (_, i) => i);
-    order.sort((a, b) => {
-      if (this.placements[a].domino.index !== this.placements[b].domino.index)
-        return this.placements[a].domino.index - this.placements[b].domino.index;
-      return pcScratch[a] - pcScratch[b];
-    });
-
-    const dcScratch = new Int32Array(this.dc); // domino index → first entry in `order`
-    for (let di = 0, j = 0; j < pc; j++) {
-      while (di <= this.placements[order[j]].domino.index) dcScratch[di++] = j;
-    }
-
-    for (const sq of this.squares) {
-      if (sq.nplacements < 2) continue;
-      let listSize = 0;
-
-      const exclude: number[] = [];
-      for (let j = 0; j < sq.nplacements; j++)
-        exclude.push(pcScratch[sq.placements[j].index]);
-
-      for (let j = 0; j < sq.nplacements; j++) {
-        const d = sq.placements[j].domino;
-        let listOut = 0;
-        let listPos = 0;
-        for (
-          let k = dcScratch[d.index];
-          k < pc && this.placements[order[k]].domino === d;
-          k++
-        ) {
-          const chain = pcScratch[order[k]];
-          if (!this.placements[order[k]].active) continue;
-          let keep: boolean;
-          if (j === 0) keep = true;
-          else {
-            while (listPos < listSize && whScratch[listPos] < chain) listPos++;
-            keep = listPos < listSize && whScratch[listPos] === chain;
-          }
-          for (let m = 0; m < exclude.length; m++)
-            if (chain === exclude[m]) keep = false;
-          if (keep) whScratch[listOut++] = chain;
-        }
-        listSize = listOut;
-        if (listSize === 0) break;
-      }
-
-      for (let listPos = 0; listPos < listSize; listPos++) {
-        const chain = whScratch[listPos];
-        for (let pi = 0; pi < pc; pi++)
-          if (pcScratch[pi] === chain) this.ruleOutPlacement(this.placements[pi]);
-        done = true;
-      }
-    }
-
-    // 3. A domino with placements in two complementary chains must occupy one
-    // of them → rule out its placements elsewhere.
-    for (let di = 0; di < this.dc; di++) {
-      const d = this.dominoes[di];
-      if (d.nplacements <= 2) continue;
-      let hit = false;
-      for (let j = 0; j + 1 < d.nplacements && !hit; j++) {
-        const cj = pcScratch[d.placements[j].index];
-        for (let k = j + 1; k < d.nplacements; k++) {
-          const ck = pcScratch[d.placements[k].index];
-          if ((cj ^ ck) === 1) {
-            for (let i = d.nplacements; i-- > 0; )
-              if (i !== j && i !== k) this.ruleOutPlacement(d.placements[i]);
-            done = true;
-            hit = true;
-            break;
-          }
-        }
-      }
-    }
-
-    return done;
-  }
-
-  // --- driver -------------------------------------------------------------
-
-  /** Run to a fixpoint, capped at `maxDiffAllowed`: each pass sweeps the rungs
-   * in order and starts over after the first one that makes progress. Returns 0
-   * (impossible), 1 (unique solution), or 2 (ambiguous / solver too weak). */
-  runSolver(maxDiffAllowed: number): number {
-    let progressed: boolean;
-    do {
-      progressed = false;
-      for (const [tier, count, deduce] of this.rungs) {
-        if (tier > maxDiffAllowed) break;
-        for (let i = 0; i < count; i++) if (deduce(i)) progressed = true;
-        if (progressed) {
-          this.maxDiffUsed = Math.max(this.maxDiffUsed, tier);
-          break;
-        }
-      }
-    } while (progressed);
-
-    for (const d of this.dominoes) if (d.nplacements === 0) return 0;
-    for (const d of this.dominoes) if (d.nplacements > 1) return 2;
-    return 1;
-  }
-
-  /** After a unique solve, the forced domino placements as `[d1, d2]` pairs
-   * (`d1 < d2`). Only meaningful when `runSolver` returned 1. */
-  solutionPairs(): Array<[number, number]> {
-    return this.dominoes
-      .filter((d) => d.nplacements === 1)
-      .map(({ placements: [p] }): [number, number] => [
-        p.squares[0].index,
-        p.squares[1].index,
-      ]);
-  }
-
-  // --- hint driver --------------------------------------------------------
-
-  /** Find the still-active placement covering squares `a` and `b`, or null. */
-  private placementOf(a: number, b: number): SolverPlacement | null {
-    const sq = this.squares[a];
-    for (let k = 0; k < sq.nplacements; k++) {
-      const p = sq.placements[k];
-      if (p.squares[0].index === b || p.squares[1].index === b) return p;
-    }
-    return null;
-  }
-
-  /** Realize "a domino is placed on (a, b)": rule out the placement's active
-   * overlaps and any other placements of its domino. Non-recording. */
-  forcePlacement(a: number, b: number): void {
-    const p = this.placementOf(a, b);
-    if (!p) return;
-    while (p.domino.nplacements > 1)
-      this.ruleOutPlacement(
-        p.domino.placements[0] === p ? p.domino.placements[1] : p.domino.placements[0],
-      );
-    for (let oi = 0; oi < p.noverlaps; oi++)
-      if (p.overlaps[oi].active) this.ruleOutPlacement(p.overlaps[oi]);
-  }
-
-  /** Seed the scratch from the player's placed dominoes (forcing each). The
-   * player's barrier annotations are deliberately NOT seeded (a wrong one must
-   * never break the hint — the recorder re-derives every rule-out itself). */
-  seedFromDominoes(grid: Int32Array): void {
-    for (let i = 0; i < this.wh; i++) {
-      const j = grid[i];
-      if (j > i) this.forcePlacement(i, j);
-    }
-  }
-
-  /** Run the deductions in `run_solver` order but return after the FIRST
-   * firing, capturing what it did — the hint-plan primitive. `placed` holds the
-   * domino indices already laid on the working board, so an already-placed
-   * determined domino isn't re-suggested. Returns null when no deduction fires
-   * (a fully-reduced or genuinely stuck board). */
-  firstFiring(maxDiffAllowed: number, placed: ReadonlySet<number>): HintFiring | null {
-    // A domino determined but not yet laid — the payoff "only spot" placement.
-    for (const d of this.dominoes) {
-      if (d.nplacements === 1 && !placed.has(d.index)) {
-        const [a, b] = d.placements[0].squares;
-        return {
-          technique: "onlySpot",
-          place: [a.index, b.index],
-          barriers: [],
-          evidence: [],
-        };
-      }
-    }
-
-    this.recording = true;
-    try {
-      const place = (technique: PlaceTechnique): HintFiring => {
-        // Reached just after a placement deduction fired, which sets `recPlace`.
-        // A placement with no pair is a recorder bug, not a firing to invent:
-        // swallowing it would surface as a hint pointing at nothing.
-        if (!this.recPlace) throw new Error(`${technique} recorded no placement`);
-        return {
-          technique,
-          place: this.recPlace,
-          barriers: [],
-          evidence: this.recEvidence,
-        };
-      };
-      const barrier = (technique: BarrierTechnique): HintFiring => ({
-        technique,
-        place: null,
-        barriers: this.recBarriers.slice(),
-        evidence: this.recEvidence.slice(),
-      });
-
-      // Easy
-      for (let si = 0; si < this.wh; si++) {
-        this.resetRec();
-        if (this.deduceSquareSinglePlacement(si)) return place("squareOnly");
-      }
-      if (maxDiffAllowed <= DIFF_TRIVIAL) return null;
-
-      // Normal
-      for (let si = 0; si < this.wh; si++) {
-        this.resetRec();
-        if (this.deduceSquareSingleDomino(si)) return barrier("squareSingleDomino");
-      }
-      for (let di = 0; di < this.dc; di++) {
-        this.resetRec();
-        if (this.deduceDominoMustOverlap(di)) return barrier("mustOverlap");
-      }
-      for (let pi = 0; pi < this.pc; pi++) {
-        this.resetRec();
-        if (this.deduceLocalDuplicate(pi)) return barrier("localDuplicate");
-      }
-      for (let pi = 0; pi < this.pc; pi++) {
-        this.resetRec();
-        if (this.deduceLocalDuplicate2(pi)) return barrier("localDuplicate2");
-      }
-      this.resetRec();
-      if (this.deduceParity()) return barrier("parity");
-      if (maxDiffAllowed <= DIFF_BASIC) return null;
-
-      // Tricky
-      this.resetRec();
-      if (this.deduceSet(false)) return barrier("set");
-      if (maxDiffAllowed <= DIFF_HARD) return null;
-
-      // Unreasonable
-      this.resetRec();
-      if (this.deduceSet(true)) return barrier("set");
-
-      // **No `deduceForcingChain` rung here.** It follows an implication closure
-      // across the board until a chain repeats a domino — a conclusion reached
-      // by propagating rather than by looking, which the collection never lets
-      // a hint present as a technique. `runSolver` keeps it for grading; the
-      // hint stops where it would start, and refuses.
-      return null;
-    } finally {
-      this.recording = false;
-    }
-  }
 }
 
-/** Convenience: solve a numbers grid from scratch. Returns the verdict, the
- * max difficulty used, and (when unique) the solution domino pairs. */
+/** Count a board's answers up to two, by trial and error over the whole
+ * ladder. */
+function searchAnswers(
+  shape: DominosaShape,
+  numbers: ArrayLike<number>,
+  budget: number = SEARCH_BUDGET,
+): DominosaAnswer {
+  const start = deduction(shape, numbers);
+  if (start === null) return { kind: "none" };
+  return searchBoard<Deduction, Array<[number, number]>>({
+    start,
+    deduce: (d) => deduce(d, DIFF_EXTREME),
+    assume: assumeDomino,
+    solution: (d) => pairsOf(d.m),
+    budget,
+  });
+}
+
+/** Keyed on a state's numbers, which every state of a game shares. */
+const answers = answerCache<Int32Array, Array<[number, number]>>();
+
+/** What a search of a board's numbers established about its answers. The
+ * player's dominoes are not read. */
+export function answerOf(state: {
+  params: DominosaShape;
+  numbers: Int32Array;
+}): DominosaAnswer {
+  return answers(state.numbers, () => searchAnswers(state.params, state.numbers));
+}
+
+/**
+ * Solve a board from its numbers alone, no harder than `maxDiff`: below
+ * Unreasonable by the ladder capped there, and at it by the search. `result`
+ * is 0 where it has no answer, 1 where it has one this finds, and 2 where it
+ * has several or the ladder stops short; `maxDiffUsed` is the hardest tier a
+ * firing used, or Unreasonable where the ladder below it stops short of the
+ * one answer.
+ */
 export function solveNumbers(
   shape: DominosaShape,
-  numbers: Int32Array | number[],
+  numbers: ArrayLike<number>,
   maxDiff: number,
+  budget: number = SEARCH_BUDGET,
 ): { result: number; maxDiffUsed: number; pairs: Array<[number, number]> } {
-  const sc = new DominosaSolver(shape);
-  sc.setupGrid(numbers);
-  const result = sc.runSolver(maxDiff);
+  const d = deduction(shape, numbers);
+  if (d === null) return { result: 0, maxDiffUsed: 0, pairs: [] };
+  const grades: Record<string, number> = {};
+  const got = deduce(d, Math.min(maxDiff, DIFF_HARD), grades);
+  const used = grades[TIERS] ?? 0;
+  if (got === "solved") return { result: 1, maxDiffUsed: used, pairs: pairsOf(d.m) };
+  if (got === "contradiction" || maxDiff < DIFF_EXTREME)
+    return { result: got === "contradiction" ? 0 : 2, maxDiffUsed: used, pairs: [] };
+  const answer = searchAnswers(shape, numbers, budget);
+  if (answer.kind === "none")
+    return { result: 0, maxDiffUsed: DIFF_EXTREME, pairs: [] };
+  if (answer.kind !== "one") return { result: 2, maxDiffUsed: DIFF_EXTREME, pairs: [] };
+  return { result: 1, maxDiffUsed: DIFF_EXTREME, pairs: answer.solution };
+}
+
+/** Whether some domino has one spot left or none: a toehold the tiers above
+ * Normal are dealt without. */
+function leavesToehold(d: Deduction): boolean {
+  const { m, dl } = d;
+  const nums = dl.number.v;
+  const left = new Map<number, number>();
+  for (const e of m.sp.edges) {
+    const [a, b] = endsOf(m.sp, e);
+    const key = dominoKey(nums[a], nums[b]);
+    left.set(key, (left.get(key) ?? 0) + (m.grid[e] === NONE ? 0 : 1));
+  }
+  for (const count of left.values()) if (count <= 1) return true;
+  return false;
+}
+
+/**
+ * Whether a board is one the deal keeps at tier `diff`. Below Tricky, the
+ * ladder capped there finishes it and needs that tier; above, the Normal
+ * ladder stops on it with no toehold, and from there Tricky finishes it, or
+ * at Unreasonable stops short and the search, held to `budget`, finds one
+ * answer. The ladder at Tricky carries on from the Normal ladder's marks.
+ */
+export function dealsAt(
+  shape: DominosaShape,
+  numbers: ArrayLike<number>,
+  diff: number,
+  budget: number,
+): boolean {
+  const d = deduction(shape, numbers);
+  if (d === null) return false;
+  if (diff < DIFF_HARD) {
+    const grades: Record<string, number> = {};
+    return deduce(d, diff, grades) === "solved" && (grades[TIERS] ?? 0) === diff;
+  }
+  if (deduce(d, DIFF_BASIC) !== "stuck" || leavesToehold(d)) return false;
+  const got = deduce(d, DIFF_HARD);
+  if (diff === DIFF_HARD) return got === "solved";
+  return got === "stuck" && searchAnswers(shape, numbers, budget).kind === "one";
+}
+
+// --- the hint's walk ---------------------------------------------------------
+
+/** The squares a firing's reason turns on, which a plan continues from. */
+function readsOf(sp: GridSpace, f: Taken): number[] {
+  const r = f.reasons[0] as DominosaReason;
+  const own: number[] = [];
+  for (let i = 0; i < f.facts.length; i += 3) own.push(...endsOf(sp, f.facts[i + 1]));
+  switch (r.kind) {
+    case "onlySpot":
+    case "parity":
+      return own;
+    case "squareOnly":
+    case "squareSingleDomino":
+    case "localDuplicate":
+      return [r.square, ...own];
+    case "mustOverlap":
+    case "localDuplicate2":
+    case "set":
+    case "setDoubles":
+      return [...r.squares, ...own];
+  }
+}
+
+/**
+ * The ladder's firings from the player's dominoes, one a call, each the one
+ * that carries on from the squares the plan is working on (`ladderWalk`),
+ * or `null` when the ladder has nothing left. The player's lines between
+ * squares are not read: a wrong one must not mislead the hint, which works
+ * each out again. Null where the player's dominoes clash.
+ */
+export function hintFirings(
+  shape: DominosaShape,
+  numbers: ArrayLike<number>,
+  partner: ArrayLike<number>,
+  budget: StepBudget,
+): { next: () => DominosaFiring | null } | null {
+  const d = deduction(shape, numbers, partner);
+  if (d === null) return null;
+  const { m, ladder } = d;
+  m.budget = budget;
+  const walk = ladderWalk(m, ladder.entries, { [TIERS]: DIFF_EXTREME }, (f) =>
+    readsOf(m.sp, f),
+  );
   return {
-    result,
-    maxDiffUsed: sc.maxDiffUsed,
-    pairs: result === 1 ? sc.solutionPairs() : [],
+    next() {
+      const taken = walk.next();
+      if (taken === null || taken === "contradiction") return null;
+      const reason = taken.reasons[0] as DominosaReason;
+      let place: [number, number] | null = null;
+      const barriers: [number, number][] = [];
+      for (let i = 0; i < taken.facts.length; i += 3) {
+        const spot = endsOf(m.sp, taken.facts[i + 1]);
+        if (taken.facts[i + 2] === DOMINO) place = spot;
+        else barriers.push(spot);
+      }
+      return { ...reason, place, barriers };
+    },
   };
 }

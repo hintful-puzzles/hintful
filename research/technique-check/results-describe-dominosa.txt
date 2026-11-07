@@ -1,0 +1,12 @@
+--  dominosa: no board of order 3 has an answer, so nothing is checked there
+..  dominosa   parity: not proved whole in time, asked on 24 boards: no defect
+ok  dominosa   parity                         4  sound    (want sound   )    24 queries  120.0s
+ok  dominosa   parity (planted)               4  unsound  (want unsound )     1 queries    0.7s   at eset
+..  dominosa   set: not proved whole in time, asked on 36 boards, one an answer, every answer: no defect
+ok  dominosa   set                            4  sound    (want sound   )    77 queries    7.9s
+..  dominosa   set (planted): not proved whole in time, asked on 8 boards: unsound
+ok  dominosa   set (planted)                  4  unsound  (want unsound )     1 queries    3.0s   at 3
+..  dominosa   setDoubles: not proved whole in time, asked on 36 boards, one an answer, every answer: no defect
+ok  dominosa   setDoubles                     4  sound    (want sound   )    68 queries    8.3s
+..  dominosa   setDoubles (planted): not proved whole in time, asked on 16 boards: unsound
+ok  dominosa   setDoubles (planted)           4  unsound  (want unsound )    21 queries    3.9s   at 1

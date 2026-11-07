@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
-  DESC_NO_SINGLE_ANSWER,
+  DESC_NOT_UNIQUE,
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -87,9 +87,7 @@ describe("dominosa params", () => {
     // The board upstream dealt at Ambiguous for the seed `dominosa-a6`.
     const desc = "25655326346361502346651410062120443426101135023020554413";
     for (const id of ["6da", "6db", "6de"])
-      expect(loadVerdict(dominosaGame, decodeParams(id), desc)).toBe(
-        DESC_NO_SINGLE_ANSWER,
-      );
+      expect(loadVerdict(dominosaGame, decodeParams(id), desc)).toBe(DESC_NOT_UNIQUE);
   });
 
   it("rejects n < 1", () => {

@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/clusters/clusters.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, rangeMask, setOf, union, within } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, cluesValued, rangeMask, setOf, union, within } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -59,7 +59,7 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
   }
   let _q642 = true;
   Q643: {
-    const _a644 = sp.cells;
+    const _a644 = cluesValued(cl.dot, -1);
     for (let _i645 = 0; _i645 < _a644.length; _i645++) {
       const v_c = _a644[_i645];
       if (!((clueAt(cl.dot, v_c) === -1))) continue;

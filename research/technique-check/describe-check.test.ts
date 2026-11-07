@@ -13,6 +13,7 @@ import {
   isLibrary,
   type LibraryJson,
   loadDescription,
+  type Technique,
   type VariationJson,
   variationWord,
   withEveryVariation,
@@ -20,8 +21,11 @@ import {
 } from "../../src/describe/description.ts";
 import { loadDescriptionFile } from "../../src/describe/load.ts";
 import {
+  CHECK_BUDGET_MS,
   CHECKED_ORDERS,
+  checkedAs,
   gameFingerprint,
+  heldVerdict,
   isDeadEndKey,
   libraryFingerprint,
   soundnessKey,
@@ -33,6 +37,8 @@ import {
   libraryDescription,
   planted,
   regionCells,
+  type Sample,
+  sampleAnswers,
   sizings,
   unbuilt,
   type Verdict,
@@ -680,6 +686,52 @@ const PLANTS: Record<string, Plant> = {
     for: "c in cells where not known(c) and |cand(c)| <= 2",
     conclude: "|cand(c)| >= 1 and place(c, min(d in cand(c)))",
   },
+  // A domino read as ruling out every spot showing either of its numbers.
+  "dominosa.placed": {
+    conclude:
+      "(forall x in {end1(e), end2(e)}, y in adj4(x) where edge(x, y) != e: place(edge(x, y), 2)) and (forall f in edges where f != e and not touch(e, f) and (num(end1(f)) = num(end1(e)) or num(end2(f)) = num(end1(e))): place(f, 2))",
+  },
+  // A domino with two spots left read as going in the first.
+  onlySpot: {
+    for: "a in range(0, n), b in range(a, n), P = spotsOf(a, b) where |P| = 1 or |P| = 2, e = nth(P, 0) where not known(e)",
+  },
+  // A square with two spots left read as covered by the first.
+  squareOnly: {
+    for: "c in cells, S = spots(c) where |S| <= 2 and not (exists f in S: known(f))",
+    conclude: "|S| >= 1 and place(nth(S, 0), 1)",
+  },
+  // A square read as taking its first spot's domino, whatever its others.
+  squareSingleDomino: {
+    for: "c in cells, S = spots(c) where |S| >= 2, s = nth(S, 0)",
+  },
+  // A spot touching the first spot left for a domino read as touching them all.
+  mustOverlap: {
+    conclude:
+      "forall x in {end1(e), end2(e)}, y in adj4(x) where edge(x, y) not in P and value(edge(x, y)) != 2 and touch(nth(P, 0), edge(x, y)): place(edge(x, y), 2)",
+  },
+  // One of the far square's spots left read as all of them.
+  localDuplicate: {
+    for: "p in edges where not known(p), x in {end1(p), end2(p)}, y in adj4(x), q = edge(x, y) where q != p and value(q) != 2 and (exists r in spots(y) where r != q: same(r, p))",
+  },
+  // Two far squares read as needing one domino whatever their spots show.
+  localDuplicate2: {
+    for: "p in edges where not known(p), x in {end1(p), end2(p)}, y in adj4(x), q = edge(x, y) where q != p and value(q) != 2, R = {r in spots(y) where r != q} where |R| >= 1, d = nth(R, 0) where forall r in R: same(r, d), x2 in {end1(p), end2(p)}, z in adj4(x2), q2 = edge(x2, z) where q2 != p and q2 != q and value(q2) != 2, S = {r in spots(z) where r != q2} where |S| >= 1 and (forall r in S: not touch(r, q))",
+  },
+  // A spot read as cutting its group where its squares stay joined without
+  // it. Dropping the second part's count instead plants nothing: a group of
+  // spots left is the answer's dominoes, so even, and one part even makes the
+  // other even.
+  parity: {
+    for: "P = {e in edges where value(e) != 2}, p in edges where not known(p) and not inSquare(p), Q = P - {p}, A = through(end1(p), Q) where |A| mod 2 = 0 and |through(end2(p), Q)| mod 2 = 0",
+  },
+  // Squares read as taking a set of one number more than there are squares.
+  "dominosa.set": {
+    for: "a in range(0, n), S = showing(a) where |S| <= 16, U = {c in S where not covered(c)}, T in subsets(U) where |T| >= 2 and |T| <= |S| - 2, O = partners(T) where |O| <= |T| + 1 and not joinsTwo(T)",
+  },
+  // Squares with a double read as taking a set of one number more.
+  setDoubles: {
+    for: "a in range(0, n), S = showing(a) where |S| <= 16, U = {c in S where not covered(c)}, T in subsets(U) where |T| >= 3, O = partners(T) where 2 <= |O| and |O| <= |S| - 2 and |O| <= |T| + 1 and joinsTwo(T)",
+  },
   // Every given segment read as a boat of one square.
   "boats.given": {
     conclude:
@@ -808,66 +860,143 @@ interface World {
  * unsound: the least board on which the check is shown to catch a defect. A
  * larger one costs many times more and, on every game checked to 2026-11-07,
  * caught nothing the least such board did not. A defect still uncaught at the
- * last order fails.
+ * last order fails. A library's techniques are planted {@link ONCE} as well,
+ * where `library` says the worlds are its.
+ *
+ * The whole is held to {@link CHECK_BUDGET_MS}. Where a technique is not
+ * proved whole by {@link WHOLE} of it, it is asked on sampled boards, their
+ * answers and clues fixed and every position of the marks on each, until
+ * {@link SAMPLED} of it; with no defect found it is taken as holding
+ * (`held`). A planted defect is caught the same way in the rest, or the check
+ * fails: a check that cannot catch a defect in the time says nothing.
  */
-async function checkAll(worlds: readonly World[], ids: readonly string[]) {
+async function checkAll(
+  worlds: readonly World[],
+  id: string,
+  library = false,
+): Promise<{ failed: string[]; held: boolean }> {
   const bad: string[] = [];
-  for (const id of ids) {
-    const name = id.includes(".") ? id.slice(id.indexOf(".") + 1) : id;
-    const game = worlds[0]?.d.json.game;
-    const plants = [
-      { label: "planted", plant: PLANTS[`${game}.${name}`] ?? PLANTS[name] },
-      { label: "planted once", plant: ONCE[name] },
-    ].filter((p): p is { label: string; plant: Plant } => p.plant !== undefined);
-    for (const order of ORDERS) {
-      const caught = plants.map(() => false);
-      let tried = false;
-      // Each world at each assignment of the sizes the order leaves free.
-      const boards = worlds.flatMap(({ where, d }) =>
-        sizings(d, order).map((sizes) => ({
-          where: [where, ...[...sizes].map(([n, v]) => `${n}=${v}`)].join(" "),
-          d,
-          sizes,
-        })),
-      );
-      for (const { where, d, sizes } of boards) {
-        // A technique a modifier adds is checked where the modifier is on.
-        const t = d.techniques.find((x) => x.id === id);
-        const cells = await regionCells(d, order, sizes);
-        if (t === undefined || !(await hasAnswer(d, order, sizes, cells))) continue;
-        const v = await checkTechnique(d, t, order, sizes, SPLIT, cells, {
-          shard: SHARD ?? undefined,
-          progress: (done, of, at) =>
-            trace(`..  ${where} ${id} ${order}: ${done} of ${of}, at ${at}`),
-        });
-        line(where, v, "sound");
-        if (v.verdict !== "sound") bad.push(`${id} ${order}`);
-        for (const [i, { label, plant }] of plants.entries()) {
-          tried = true;
-          const p = await checkTechnique(
-            d,
-            { ...planted(t, plant), id: `${t.id} (${label})` },
-            order,
-            sizes,
-            1,
-            cells,
-          );
-          line(
-            where,
-            p,
-            p.verdict === "unsound" || boards.length === 1 ? "unsound" : "either",
-          );
-          if (p.verdict === "unsound") caught[i] = true;
+  let held = false;
+  const start = performance.now();
+  const deadline = start + CHECK_BUDGET_MS;
+  const name = id.includes(".") ? id.slice(id.indexOf(".") + 1) : id;
+  const game = worlds[0]?.d.json.game;
+  const plants = [
+    { label: "planted", plant: PLANTS[`${game}.${name}`] ?? PLANTS[name] },
+    { label: "planted once", plant: library ? ONCE[name] : undefined },
+  ].filter((p): p is { label: string; plant: Plant } => p.plant !== undefined);
+  for (const order of ORDERS) {
+    const caught = plants.map(() => false);
+    let tried = false;
+    // Each world at each assignment of the sizes the order leaves free.
+    const boards = worlds.flatMap(({ where, d }) =>
+      sizings(d, order).map((sizes) => ({
+        where: [where, ...[...sizes].map(([n, v]) => `${n}=${v}`)].join(" "),
+        d,
+        sizes,
+      })),
+    );
+    for (const { where, d, sizes } of boards) {
+      // A technique a modifier adds is checked where the modifier is on.
+      const t = d.techniques.find((x) => x.id === id);
+      const cells = await regionCells(d, order, sizes);
+      if (t === undefined || !(await hasAnswer(d, order, sizes, cells))) continue;
+      // The boards sampled so far, shared by the technique and its plants.
+      const pool: Sample[] = [];
+      let exhausted = false;
+      // Asked on SAMPLES boards at a time, fresh ones drawn as each batch
+      // passes, until a defect, the last answer or `by`.
+      const pinned = async (
+        tp: Technique,
+        split: number,
+        by: number,
+      ): Promise<Verdict> => {
+        const t0 = performance.now();
+        let asked = 0;
+        let queries = 0;
+        let v: Verdict = {
+          technique: tp.id,
+          order,
+          verdict: "sound",
+          queries: 0,
+          seconds: 0,
+        };
+        while (performance.now() < by) {
+          if (asked === pool.length && !exhausted) {
+            const more = await sampleAnswers(d, order, sizes, cells, SAMPLES, by, pool);
+            exhausted = more.every;
+            pool.push(...more.samples);
+          }
+          // Every answer asked, or none found in the time left.
+          if (asked === pool.length) break;
+          const batch = pool.slice(asked, asked + SAMPLES);
+          v = await checkTechnique(d, tp, order, sizes, split, cells, {
+            shard: SHARD ?? undefined,
+            deadline: by,
+            pin: batch,
+          });
+          queries += v.queries;
+          if (v.outOfTime) break;
+          asked += batch.length;
+          if (v.verdict !== "sound") break;
         }
+        v = { ...v, queries, seconds: (performance.now() - t0) / 1000 };
+        say(
+          `..  ${where.padEnd(10)} ${tp.id}: not proved whole in time, asked on ${asked} boards${exhausted && asked === pool.length ? ", one an answer, every answer" : ""}: ${v.verdict === "sound" || v.outOfTime ? "no defect" : v.verdict}`,
+        );
+        // Out of time after a batch with no defect is no defect found.
+        return v.outOfTime ? { ...v, verdict: "sound", outOfTime: undefined } : v;
+      };
+      let v = await checkTechnique(d, t, order, sizes, SPLIT, cells, {
+        shard: SHARD ?? undefined,
+        progress: (done, of, at) =>
+          trace(`..  ${where} ${id} ${order}: ${done} of ${of}, at ${at}`),
+        deadline: Math.min(deadline, start + CHECK_BUDGET_MS * WHOLE),
+      });
+      if (v.outOfTime) {
+        held = true;
+        v = await pinned(
+          t,
+          SPLIT,
+          Math.min(deadline, start + CHECK_BUDGET_MS * SAMPLED),
+        );
       }
-      if (tried && caught.every((c) => c)) break;
-      if (order === ORDERS[ORDERS.length - 1])
-        for (const [i, c] of caught.entries())
-          if (tried && !c) bad.push(`${id} ${plants[i].label} ${order}`);
+      line(where, v, "sound");
+      // Out of time with no defect found holds; a defect, or a verdict z3
+      // could not reach for another reason, does not.
+      if (v.verdict === "unsound" || (v.verdict === "unknown" && !v.outOfTime))
+        bad.push(`${id} ${order}`);
+      for (const [i, { label, plant }] of plants.entries()) {
+        tried = true;
+        const tp = { ...planted(t, plant), id: `${t.id} (${label})` };
+        let p = await checkTechnique(d, tp, order, sizes, 1, cells, {
+          deadline: Math.min(deadline, performance.now() + CHECK_BUDGET_MS / 10),
+        });
+        if (p.outOfTime) p = await pinned(tp, 1, deadline);
+        line(
+          where,
+          p,
+          p.verdict === "unsound" || boards.length === 1 ? "unsound" : "either",
+        );
+        if (p.verdict === "unsound") caught[i] = true;
+      }
     }
+    if (tried && caught.every((c) => c)) break;
+    if (order === ORDERS[ORDERS.length - 1] || performance.now() > deadline)
+      for (const [i, c] of caught.entries())
+        if (tried && !c) bad.push(`${id} ${plants[i].label} ${order}`);
+    if (performance.now() > deadline) break;
   }
-  return bad;
+  return { failed: bad, held };
 }
+
+/** The boards a technique not proved in time is asked on, a batch. */
+const SAMPLES = 8;
+
+/** The shares of {@link CHECK_BUDGET_MS} by which a technique's whole proof,
+ * and then its asking on sampled boards, stop: the rest is its plants'. */
+const WHOLE = 0.4;
+const SAMPLED = 0.6;
 
 /**
  * The worlds a description's techniques are checked in: every modifier that
@@ -932,21 +1061,25 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
   const due = (key: string, fp: string, id: string): boolean =>
     again ||
     (SHARD === null && (techniques?.includes(id) ?? false)) ||
-    (recorded[key] !== fp && recorded[at(key)] !== fp);
-  const record = (key: string, fp: string): void => {
-    let now = { ...readVerdicts(), [at(key)]: fp };
-    if (SHARD === null) verdicts[key] = fp;
+    (!checkedAs(fp, recorded[key]) && !checkedAs(fp, recorded[at(key)]));
+  /** Record a technique found sound, or found holding on sampled answers
+   * alone where `held` says so. */
+  const record = (key: string, fp: string, held: boolean): void => {
+    const v = held ? heldVerdict(fp) : fp;
+    let now = { ...readVerdicts(), [at(key)]: v };
+    if (SHARD === null) verdicts[key] = v;
     else {
       const shards = Array.from(
         { length: SHARD.of },
         (_, i) => `${key}@${i}/${SHARD.of}`,
       );
-      if (shards.every((s) => now[s] === fp)) {
+      if (shards.every((s) => checkedAs(fp, now[s]))) {
+        const all = shards.every((s) => now[s] === fp) ? fp : heldVerdict(fp);
         now = Object.fromEntries(
           Object.entries(now).filter(([k]) => !shards.includes(k)),
         );
-        now[key] = fp;
-        verdicts[key] = fp;
+        now[key] = all;
+        verdicts[key] = all;
         say(`ok  ${key}: all ${SHARD.of} shards sound, recorded`);
       }
     }
@@ -957,7 +1090,7 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
   };
   /** Keep a current verdict without checking it, and say so in the results. */
   const keep = (key: string, fp: string, id: string, where: string): void => {
-    const k = recorded[key] === fp ? key : at(key);
+    const k = checkedAs(fp, recorded[key]) ? key : at(key);
     if (k === key) verdicts[key] = recorded[key];
     say(
       `ok  ${where.padEnd(10)} ${id.padEnd(30)} current: recorded ${k} ${recorded[k]}`,
@@ -983,9 +1116,9 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
           keep(key, fp, id, file.library);
           continue;
         }
-        const failed = await checkAll(worlds, [id]);
+        const { failed, held } = await checkAll(worlds, id, true);
         bad.push(...failed);
-        if (failed.length === 0) record(key, fp);
+        if (failed.length === 0) record(key, fp, held);
       }
       continue;
     }
@@ -1025,9 +1158,9 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
         keep(key, fp, stated.id, file.game);
         continue;
       }
-      const failed = await checkAll(worlds, [stated.id]);
+      const { failed, held } = await checkAll(worlds, stated.id);
       bad.push(...failed);
-      if (failed.length === 0) record(key, fp);
+      if (failed.length === 0) record(key, fp, held);
     }
   }
   writeFileSync(

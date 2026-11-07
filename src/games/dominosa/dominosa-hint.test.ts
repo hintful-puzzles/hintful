@@ -52,36 +52,42 @@ const pinned = describeHintPins({
     },
   },
   pins: {
-    /** Held on 1174 of 1651 positions walked. */
+    /** Held on 853 of 1202 positions walked. */
     placement: "4dt:401110342210234030414234130223",
-    /** Held on 691 of 1651 positions walked. */
+    /** Held on 504 of 1202 positions walked. */
     placementOnEdge: "4dt:132224034333014012440411302210",
-    /** Held on 1651 of 1651 positions walked. */
+    /** Held on 1097 of 1202 positions walked. */
     onlySpot: "4dt:401110342210234030414234130223",
-    /** Held on 1034 of 1651 positions walked. */
+    /** Held on 718 of 1202 positions walked. */
     squareOnly: {
       id: "4dt:132224034333014012440411302210",
       moves: [{ type: "domino", d1: 6, d2: 12 }],
     },
-    /** Held on 339 of 1651 positions walked. */
+    /** Held on 225 of 1202 positions walked. */
     squareSingleDomino: "6dh:56661412240411522433566235062033553461156010541342003420",
-    /** Held on 382 of 1651 positions walked. */
+    /** Held on 248 of 1202 positions walked. */
     mustOverlap: "6dh:33253306641260051434514431025160615156602241406353522420",
-    /** Held on 199 of 1651 positions walked. */
+    /** Held on 199 of 1202 positions walked. */
     localDuplicate: "6de:25534400040545262363554433636216111012222566143146001305",
-    /** Held on 133 of 1651 positions walked. */
+    /** Held on 127 of 1202 positions walked. */
     localDuplicate2: {
       id: "6de:56314533060004062163042633405124211152250511623425636454",
       moves: [{ type: "edge", d1: 39, d2: 47 }],
     },
-    /** Held on 85 of 1651 positions walked. */
+    /** Held on 116 of 1202 positions walked. */
     parity: {
       id: "6de:54534465221330331445551316161022001643006641325222006654",
       moves:
         '[{"type":"edge","d1":30,"d2":38},{"type":"edge","d1":41,"d2":49},{"type":"edge","d1":9,"d2":17},{"type":"edge","d1":18,"d2":19},{"type":"edge","d1":16,"d2":17},{"type":"edge","d1":38,"d2":39},{"type":"edge","d1":29,"d2":30},{"type":"edge","d1":49,"d2":50},{"type":"domino","d1":48,"d2":49},{"type":"domino","d1":45,"d2":53},{"type":"domino","d1":23,"d2":31},{"type":"edge","d1":33,"d2":41}]',
     },
-    /** Held on 402 of 1651 positions walked. */
+    /** Held on 246 of 1202 positions walked. */
     set: "6dh:56624312536066234140503461422601054003313346141012552255",
+    /** Held on 23 of 1202 positions walked. */
+    setDoubles: {
+      id: "6de:16420033640260135531446550524364512240601503233212566114",
+      moves:
+        '[{"type":"edge","d1":14,"d2":22},{"type":"edge","d1":52,"d2":53},{"type":"edge","d1":46,"d2":54},{"type":"edge","d1":45,"d2":46},{"type":"edge","d1":5,"d2":6},{"type":"edge","d1":29,"d2":30},{"type":"edge","d1":29,"d2":37},{"type":"edge","d1":13,"d2":21},{"type":"edge","d1":21,"d2":22},{"type":"edge","d1":27,"d2":28}]',
+    },
   },
 });
 

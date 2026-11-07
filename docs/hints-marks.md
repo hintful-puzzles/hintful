@@ -1173,9 +1173,11 @@ placement leans on a visible mark and its sentence stays short.
   the game's own test.
 - **Gate the recorder**, so the generator's path does not run it.
 
-Exemplar: `firstFiring` and `seedFromDominoes` in
-[`dominosa/solver.ts`](../src/games/dominosa/solver.ts), with requirement "A
-barrier step draws the edge a technique rules out" in its spec.
+Exemplar: `hintFirings` in
+[`dominosa/solver.ts`](../src/games/dominosa/solver.ts), whose ladder places
+before it rules out and is seeded from the player's dominoes alone, with
+requirement "A barrier step draws the edge a technique rules out" in its
+spec.
 
 ### A right mark is not yet a premise
 

@@ -10,6 +10,7 @@ import {
 import { loadDescriptionFile } from "./load.ts";
 import soundnessJson from "./soundness.json" with { type: "json" };
 import {
+  checkedAs,
   deadEndFingerprint,
   deadEndKey,
   gameFingerprint,
@@ -57,7 +58,9 @@ describe("compiled descriptions", () => {
     for (const [source, d] of sources) {
       if (isLibrary(d)) {
         for (const id of Object.keys(d.techniques))
-          if (soundness[soundnessKey(source, id)] !== libraryFingerprint(d, id))
+          if (
+            !checkedAs(libraryFingerprint(d, id), soundness[soundnessKey(source, id)])
+          )
             unchecked.push(soundnessKey(source, id));
         continue;
       }
@@ -66,7 +69,7 @@ describe("compiled descriptions", () => {
       for (const t of withEveryVariation(d).techniques ?? [])
         if (
           !("use" in t) &&
-          soundness[soundnessKey(source, t.id)] !== gameFingerprint(d, t)
+          !checkedAs(gameFingerprint(d, t), soundness[soundnessKey(source, t.id)])
         )
           unchecked.push(soundnessKey(source, t.id));
     }
@@ -116,6 +119,16 @@ describe("the compiler refuses an ill-sorted technique", () => {
 
   it("and a strike outside a conclusion", () => {
     expect(() => lib("true", "c in cells where strike(c, 1)")).toThrow(CompileError);
+  });
+
+  it("keeps a union over a subset's members only while no value is placed", () => {
+    // A solve places as it concludes, inside the loop over the subsets, so
+    // each member's set kept ahead of the loop is made again after.
+    const code = lib(
+      "|O| = 0 implies strike(nth(T, 0), 1)",
+      "u in units, U = cells(u), T in subsets(U) where |T| = 2, O = set(value(y) over x in T, y in cells(row(x)) where known(y))",
+    );
+    expect(code).toMatch(/if \(_pp\d+ !== b\.placed\) \{/);
   });
 
   it("compiles a well-sorted one", () => {

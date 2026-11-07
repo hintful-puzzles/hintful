@@ -20,6 +20,7 @@
  * concrete in the query, one query each, and the rest are one disjunction.
  */
 
+import { getHeapStatistics } from "node:v8";
 import {
   type ClueKind,
   type Description,
@@ -2063,6 +2064,8 @@ export interface Verdict {
   seconds: number;
   /** The first binding found unsound, by its names' concrete values. */
   at?: string;
+  /** Set where the check's deadline passed before it reached a verdict. */
+  outOfTime?: boolean;
 }
 
 /**
@@ -2162,6 +2165,110 @@ export async function hasAnswer(
 const QUICK_MS = Number(process.env["CHECK_QUICK_MS"] ?? 60_000);
 const NO_LIMIT = 4_294_967_295;
 
+/** Thrown where a check's deadline passes while it builds its queries. */
+class OutOfTime extends Error {}
+
+/** Whether a query being built holds most of the JavaScript heap. One that
+ * outgrows it aborts the process rather than throwing, losing the run, so
+ * a check stops there as it does at its deadline. */
+const outOfRoom = (): boolean => {
+  const h = getHeapStatistics();
+  return h.used_heap_size > 0.7 * h.heap_size_limit;
+};
+
+/** Milliseconds left before `deadline`, a `performance.now()` time, as a
+ * z3 timeout no longer than `cap`; 0 where it has passed. */
+function timeLeft(cap: number, deadline?: number): number {
+  if (deadline === undefined) return cap;
+  const left = Math.trunc(deadline - performance.now());
+  return left <= 0 ? 0 : Math.min(cap, left);
+}
+
+/** A board the rules allow: its answer, a value for every place the answer
+ * holds, and each clue dealt, by kind and place in the kind's list, its
+ * presence and its number (`null` where that part is not a plain truth or
+ * number, and is left unknown). */
+export interface Sample {
+  ans: readonly number[];
+  clues: ReadonlyMap<string, readonly { present: boolean | null; v: number | null }[]>;
+}
+
+/**
+ * Up to `count` boards the rules allow on an `order` board, their answers all
+ * different and none of `seen`'s, found before `deadline`. A check pinned to
+ * them ({@link checkTechnique}'s `pin`) asks every position of the marks on
+ * those boards alone. Their clues are dealt as constants, so a set the clues
+ * decide is built of its members alone: Dominosa's subsets of the squares
+ * showing a number were 2^30 unknowns on a board of order 4 and its JavaScript
+ * heap ran out building the query (2026-11-07).
+ */
+export async function sampleAnswers(
+  d: Description,
+  order: number,
+  sizes: ReadonlyMap<string, number>,
+  cells: number,
+  count: number,
+  deadline?: number,
+  seen: readonly Sample[] = [],
+): Promise<{ samples: Sample[]; every: boolean }> {
+  const board = makeBoard(order, d, sizes, cells);
+  dealPartitions(d, board);
+  dealSymbolically(d, board);
+  const solver = new Z3.Solver();
+  for (const w of worldOf(d, board)) solver.add(asZ3(w));
+  const block = (a: readonly number[]) =>
+    solver.add(Z3.Or(...board.ans.map((x, c) => x.neq(a[c]))));
+  for (const s of seen) block(s.ans);
+  const out: Sample[] = [];
+  while (out.length < count) {
+    const ms = timeLeft(NO_LIMIT, deadline);
+    if (ms === 0) break;
+    solver.set("timeout", ms);
+    const r = await solver.check();
+    // Only `unsat` says no answer is left; `unknown` says none was found.
+    if (r === "unsat") return { samples: out, every: true };
+    if (r === "unknown") break;
+    const m = solver.model();
+    const int = (x: I): number => {
+      const v = m.eval(x, true);
+      return Z3.isIntVal(v) ? Number(v.value()) : 0;
+    };
+    const ans = board.ans.map(int);
+    const clues = new Map(
+      [...board.clues].map(([kind, list]) => [
+        kind,
+        list.map((c) => ({
+          present:
+            typeof c.present === "boolean"
+              ? c.present
+              : Z3.isTrue(m.eval(c.present, true)),
+          v: c.v.k !== "num" ? null : typeof c.v.v === "number" ? c.v.v : int(c.v.v),
+        })),
+      ]),
+    );
+    out.push({ ans, clues });
+    block(ans);
+  }
+  return { samples: out, every: false };
+}
+
+/** `board`'s answer held to `s`'s, and its clues dealt as `s`'s constants. */
+function pinBoard(board: Board, s: Sample): Bx[] {
+  for (const [kind, list] of board.clues) {
+    const dealt = s.clues.get(kind);
+    if (dealt === undefined) continue;
+    board.clues.set(
+      kind,
+      list.map((c, i) => ({
+        ...c,
+        present: dealt[i].present ?? c.present,
+        v: c.v.k === "num" && dealt[i].v !== null ? { k: "num", v: dealt[i].v } : c.v,
+      })),
+    );
+  }
+  return board.ans.map((x, c) => cmp("=", x, s.ans[c]));
+}
+
 /** Check one technique sound against `d`'s rules on an `order` board. */
 export async function checkTechnique(
   d: Description,
@@ -2176,16 +2283,76 @@ export async function checkTechnique(
     /** Called every 50 queries with how many are done of how many due, and
      * the first binders of the query starting. */
     progress?: (done: number, of: number, at: string) => void;
+    /** A `performance.now()` time past which the check stops, its verdict
+     * then `unknown` with `outOfTime` set. */
+    deadline?: number;
+    /** Boards to ask on alone ({@link sampleAnswers}), one at a time: a
+     * counterexample on one is a counterexample, and `sound` then says only
+     * that none was found on them. */
+    pin?: readonly Sample[];
   } = {},
 ): Promise<Verdict> {
   const t0 = performance.now();
-  const board = makeBoard(order, d, sizes, cells);
+  try {
+    if (run.pin === undefined)
+      return await checkWithin(d, t, order, sizes, split, cells ?? null, run, null);
+    let queries = 0;
+    for (const s of run.pin) {
+      const v = await checkWithin(d, t, order, sizes, split, cells ?? null, run, s);
+      queries += v.queries;
+      if (v.verdict !== "sound")
+        return { ...v, queries, seconds: (performance.now() - t0) / 1000 };
+    }
+    return {
+      technique: t.id,
+      order,
+      verdict: "sound",
+      queries,
+      seconds: (performance.now() - t0) / 1000,
+    };
+  } catch (e) {
+    if (!(e instanceof OutOfTime)) throw e;
+    return {
+      technique: t.id,
+      order,
+      verdict: "unknown",
+      queries: 0,
+      seconds: 0,
+      outOfTime: true,
+    };
+  }
+}
+
+async function checkWithin(
+  d: Description,
+  t: Technique,
+  order: number,
+  sizes: ReadonlyMap<string, number>,
+  split: number,
+  cells: number | null,
+  run: {
+    shard?: { index: number; of: number };
+    progress?: (done: number, of: number, at: string) => void;
+    deadline?: number;
+  },
+  sample: Sample | null,
+): Promise<Verdict> {
+  const t0 = performance.now();
+  const { deadline } = run;
+  let calls = 0;
+  const stop = (): void => {
+    if (deadline !== undefined && performance.now() > deadline) throw new OutOfTime();
+    // The heap's statistics cost more than the clock, so read every 1,000th.
+    if (++calls % 1000 === 0 && outOfRoom()) throw new OutOfTime();
+  };
+  const board = makeBoard(order, d, sizes, cells ?? undefined);
   dealPartitions(d, board);
   dealSymbolically(d, board);
-  const world = worldOf(d, board);
+  const pinned = sample === null ? [] : pinBoard(board, sample);
+  const world = [...worldOf(d, board), ...pinned];
   const ctx: Ctx = { board, d, mode: "technique", concluding: false, supposed: [] };
   const solver = new Z3.Solver();
-  const rules = world.map((w) => asZ3(w));
+  const rules = world.filter((w) => w !== true).map((w) => asZ3(w));
   for (const w of rules) solver.add(w);
   // A count of squares, a sum of terms each 0 or 1 (Mines' mine total read
   // alone), sends the default search splitting square by square past an
@@ -2206,6 +2373,7 @@ export async function checkTechnique(
   // its query runs, so that one group is held at a time.
   const all: { env: Env; g: Bx }[] = [];
   bindings(t.binders.slice(0, split), 0, new Map(), true, ctx, (env, g) => {
+    stop();
     all.push({ env, g });
   });
   const { shard, progress } = run;
@@ -2220,6 +2388,7 @@ export async function checkTechnique(
     if (done % 50 === 0) progress?.(done, heads.length, key);
     const parts: Bx[] = [];
     bindings(t.binders, split, head.env, head.g, ctx, (env, g) => {
+      stop();
       const premise =
         t.premise === null ? true : bool(evaluate(t.premise, env, ctx), "premise");
       const concl = bool(
@@ -2240,19 +2409,27 @@ export async function checkTechnique(
     }
     solver.push();
     solver.add(asZ3(bad));
-    solver.set("timeout", QUICK_MS);
+    let ms = timeLeft(QUICK_MS, deadline);
+    if (ms === 0) throw new OutOfTime();
+    solver.set("timeout", ms);
     let r = await solver.check();
     if (r === "unknown") {
+      ms = timeLeft(NO_LIMIT, deadline);
+      if (ms === 0) throw new OutOfTime();
       blasted.push();
       blasted.add(asZ3(bad));
+      blasted.set("timeout", ms);
       r = await blasted.check();
       blasted.pop();
     }
     if (r === "unknown") {
-      solver.set("timeout", NO_LIMIT);
+      ms = timeLeft(NO_LIMIT, deadline);
+      if (ms === 0) throw new OutOfTime();
+      solver.set("timeout", ms);
       r = await solver.check();
     }
     solver.pop();
+    if (r === "unknown") stop();
     if (r !== "unsat")
       return {
         technique: t.id,

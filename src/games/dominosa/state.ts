@@ -21,10 +21,16 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
+import {
+  clueList,
+  describedSpace,
+  type GridSpace,
+} from "../../engine/describe-runtime.ts";
 import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { PresetBoards } from "../../engine/game.ts";
 import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import * as dominosa from "./dominosa.compiled.ts";
 
 // --- combinatorial helpers (upstream TRI / DCOUNT / DINDEX macros) ----------
 
@@ -221,10 +227,48 @@ export function cloneState(s: DominosaState): DominosaState {
 
 /** Solved once every domino of the set has been placed. */
 export function status(s: DominosaState): "solved" | "ongoing" {
-  const used = new Set<number>();
-  for (let i = 0; i < s.w * s.h; i++)
-    if (s.grid[i] > i) used.add(DINDEX(s.numbers[i], s.numbers[s.grid[i]]));
-  return used.size === DCOUNT(s.params.n) ? "solved" : "ongoing";
+  return isTiled(s.params, s.numbers, s.grid) ? "solved" : "ongoing";
+}
+
+// --- the board as the description reads it ----------------------------------
+
+/** The last board size's space, which every move's `status` reads again. */
+let lastSpace: GridSpace | null = null;
+export function spaceOf(shape: DominosaShape): GridSpace {
+  const { w, h } = boardSize(shape);
+  if (lastSpace?.w !== w || lastSpace.h !== h)
+    lastSpace = describedSpace(dominosa.units, w, h);
+  return lastSpace;
+}
+
+/** The board as the description deals it: a number on every square, and
+ * the highest. */
+export function dealtOf(
+  shape: DominosaShape,
+  numbers: ArrayLike<number>,
+): dominosa.Dealt {
+  const at = Array.from({ length: numbers.length }, (_, i) => i);
+  return { number: clueList(at, Array.from(numbers), numbers.length), n: shape.n };
+}
+
+/** What the description reads a spot, the edge between two squares side by
+ * side, as holding. */
+export const DOMINO = 1;
+export const NONE = 2;
+
+/** Whether `partner`, each square's domino partner or the square itself
+ * where it has none, tiles the board with one of each domino, by the rules
+ * the description compiles to. */
+function isTiled(
+  shape: DominosaShape,
+  numbers: ArrayLike<number>,
+  partner: ArrayLike<number>,
+): boolean {
+  const sp = spaceOf(shape);
+  const g = new Uint8Array(sp.edges.length);
+  for (const e of sp.edges)
+    g[e] = partner[sp.edgeEnds[2 * e]] === sp.edgeEnds[2 * e + 1] ? DOMINO : NONE;
+  return dominosa.isAnswer(g, sp, dealtOf(shape, numbers));
 }
 
 // --- move / ui / mistake types ----------------------------------------------

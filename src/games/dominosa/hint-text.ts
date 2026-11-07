@@ -48,7 +48,7 @@ const outlined = (cells: readonly Point[], noun: string, det?: string): Narratio
 export const say = {
   /** A placement of the domino showing `a` and `b`. */
   place: (
-    technique: PlaceTechnique,
+    { kind: technique }: { kind: PlaceTechnique },
     a: number,
     b: number,
     spot: Spot,
@@ -80,7 +80,7 @@ export const say = {
 
   /** A barrier between two squares showing `a` and `b`. */
   barrier: (
-    technique: BarrierTechnique,
+    { kind: technique }: { kind: BarrierTechnique },
     a: number,
     b: number,
     spot: Spot,
@@ -114,6 +114,7 @@ export const say = {
           move: phrase`it can't`,
         });
       case "set":
+      case "setDoubles":
         return so({
           look: phrase`${outlined(evidence, "square")} can only hold one set of dominoes, which uses the ${dom}`,
           move: phrase`${dom} can't sit on ${at(spot, RINGED)} as well`,

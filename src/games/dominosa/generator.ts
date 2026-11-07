@@ -1,25 +1,21 @@
 /**
- * dominosa — board generator, ported faithfully from `new_game_desc` and the
- * `alloc_*` allocator in `dominosa.c`.
+ * dominosa — board generator, after `new_game_desc` and the `alloc_*`
+ * allocator in `dominosa.c`.
  *
  * The strategy is brute force: lay a random domino tiling (`dominoLayout`),
- * assign numbers by one of three strategies keyed on difficulty, run the solver,
- * and keep the board only if it is uniquely solvable at *exactly* the target
- * difficulty. Every `shuffle` and `randomUpto` draw is reproduced in order over
- * the bit-identical `random.ts`, so `newDesc` matches C's desc byte-for-byte for
- * a given seed (docs/testing.md § "Byte-match: fidelity where there is a
- * right answer").
+ * number it by one of two strategies keyed on the tier, and keep the board
+ * only where the solver deals it at that tier (`dealsAt`).
  */
 
+import { DEALING_BUDGET } from "../../engine/answer-search.ts";
 import { dominoLayout } from "../../engine/laydomino.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { DominosaSolver } from "./solver.ts";
+import { dealsAt } from "./solver.ts";
 import {
   boardSize,
   DCOUNT,
-  DIFF_BASIC,
   DIFF_HARD,
   DINDEX,
   type DominosaParams,
@@ -79,10 +75,6 @@ class AllocScratch {
    * diagonally opposite the same number in the layout domino beside them (on
    * the side a quarter turn from `p0→p1`). That 2×2 block could then be retiled
    * the other way, so the solution would not be unique.
-   *
-   * The neighbor lookup is upstream's `alloc_find_neighbour`, including its
-   * `>= 1` lower bounds on the second square, kept as written so the
-   * differential matches.
    */
   private formsSwappableBlock(p0: number, p1: number, val: AllocVal): boolean {
     const w = this.w;
@@ -103,9 +95,9 @@ class AllocScratch {
         nx0 < w &&
         ny0 >= 0 &&
         ny0 < h &&
-        nx1 >= 1 &&
+        nx1 >= 0 &&
         nx1 < w &&
-        ny1 >= 1 &&
+        ny1 >= 0 &&
         ny1 < h
       )
     )
@@ -292,7 +284,6 @@ export function newDominosaDesc(
 ): { desc: string; aux: string } {
   const diff = p.diff;
 
-  const sc = new DominosaSolver(p);
   const as = new AllocScratch(p);
 
   const attempt = retryLimit("dominosa: generation");
@@ -301,23 +292,10 @@ export function newDominosaDesc(
 
     as.makeLayout(rng);
 
-    if (diff < DIFF_HARD) {
-      if (!as.tryUnique(rng)) continue;
-    } else {
-      // Tricky and up want no easy toehold: reject a board the Normal solver
-      // finishes, or on which it pins any domino to a single placement.
-      if (!as.tryHard(rng)) continue;
-      sc.setupGrid(as.numbers);
-      if (sc.runSolver(DIFF_BASIC) < 2) continue;
-      if (sc.dominoes.some((d) => d.nplacements <= 1)) continue;
-    }
-
-    sc.setupGrid(as.numbers);
-    const result = sc.runSolver(diff);
-    if (result > 1) continue; // not solvable at this difficulty
-    if (sc.maxDiffUsed < diff) continue; // solvable at an easier difficulty
-
-    break;
+    // Tricky and up are numbered to leave no easy toehold.
+    if (!(diff < DIFF_HARD ? as.tryUnique(rng) : as.tryHard(rng))) continue;
+    // Unreasonable's search is held to the budget a deal affords.
+    if (dealsAt(p, as.numbers, diff, DEALING_BUDGET)) break;
   }
 
   // The solved layout as aux: which half of its domino each square is.

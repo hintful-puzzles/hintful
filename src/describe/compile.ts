@@ -70,6 +70,10 @@ interface Val {
   pos?: { arr: string; i: string };
   /** For a name bound by `=`: the code of the term it names. */
   names?: string;
+  /** For a name bound to each subset of an array: the array's code, the
+   * loop's counter, whose bits name the members, and the slot ahead of the
+   * loop. */
+  members?: { els: string; k: string; pre: Slot };
 }
 
 /** The code a set is, a name bound by `=` read as its term: so a filling of
@@ -977,10 +981,19 @@ function bindingLoops(
     }
     const bnd = binders[i];
     let v = `v_${bnd.name}`;
+    // A definition's binder named as the variable an argument is held in
+    // (`spots(y)`, its body binding `y` again) would capture it.
+    const held = new RegExp(`\\b${v}\\b`);
+    for (const [name, val] of sc)
+      if (name !== bnd.name && held.test(val.code)) {
+        v = Out.fresh(`${v}_`);
+        break;
+      }
     let closeBlock = false;
     let skip = "continue";
     let sort: Sort;
     let pos: Val["pos"];
+    let members: Val["members"];
     let names: string | null = null;
     let where = bnd.where;
     if (bnd.kind === "fill") {
@@ -1024,6 +1037,26 @@ function bindingLoops(
       out.open(`for (let ${ix} = 0; ${ix} < ${n}; ${ix}++) {`);
       out.emit(`const ${v} = ${a}[${ix}];`);
       pos = { arr: L.code, i: ix };
+    } else if (
+      bnd.of.k === "name" &&
+      bnd.of.name === "cells" &&
+      cluePin(bnd, sc, env)
+    ) {
+      // The cells whose clue holds one value, read off the clue list's
+      // index: the where still reads each, so it says what it said.
+      const pin = cluePin(bnd, sc, env) as { kind: string; value: Expr };
+      const t = once(compileExpr(pin.value, sc, env, out), out);
+      // `none`, an element with no clue, is indexed as `clueAt` reads it.
+      if (t.sort.k !== "none") expect(t, "num", `clue(${pin.kind}, ${bnd.name})`);
+      env.readsClues.yes = true;
+      env.used.add("cluesValued");
+      sort = elem("cell");
+      const a = Out.fresh("_a");
+      const ix = Out.fresh("_i");
+      out.emit(`const ${a} = cluesValued(cl.${pin.kind}, ${t.code});`);
+      out.open(`for (let ${ix} = 0; ${ix} < ${a}.length; ${ix}++) {`);
+      out.emit(`const ${v} = ${a}[${ix}];`);
+      pos = { arr: a, i: ix };
     } else if (bnd.of.k === "call" && bnd.of.fn === "range") {
       // Counted rather than read off a mask, which holds no number past 31
       // and none below 0: a position along a line of a large board.
@@ -1051,6 +1084,10 @@ function bindingLoops(
           env.used.add("valuesOf");
           out.emit(`const ${els} = valuesOf(${s.code});`);
         } else out.emit(`const ${els} = ${s.code};`);
+        // Where a union over the subset's members is kept a member each
+        // (`memberUnion`), what is kept is declared here, once a set.
+        if (!isMask(of) && env.hoist !== null)
+          members = { els, k, pre: out.slot(env.hoist.loops) };
         // Counted in binary with the set's last member as the lowest bit, so
         // the subsets of {1, 2, 3} come as {3}, {2}, {2, 3}, {1}, ...
         // A filter that opens on the subset's size is read off the counter,
@@ -1080,7 +1117,14 @@ function bindingLoops(
             `for (let ${j} = 0; ${j} < ${els}.length; ${j}++) if ((${k} >> (${els}.length - 1 - ${j})) & 1) ${v} |= 1 << ${els}[${j}];`,
           );
         } else {
-          out.emit(`const ${v}: number[] = [];`);
+          // The subset is read only until the next is counted, as a set
+          // comprehension's array is (`aggregate`).
+          if (env.scratch !== null) {
+            const kept = Out.fresh("_g");
+            env.scratch.push(`const ${kept}: number[] = [];`);
+            out.emit(`const ${v} = ${kept};`);
+            out.emit(`${v}.length = 0;`);
+          } else out.emit(`const ${v}: number[] = [];`);
           out.emit(
             `for (let ${j} = 0; ${j} < ${els}.length; ${j}++) if ((${k} >> (${els}.length - 1 - ${j})) & 1) ${v}.push(${els}[${j}]);`,
           );
@@ -1110,6 +1154,7 @@ function bindingLoops(
       sort,
       at: h === null ? undefined : out.slot(h.loops),
       ...(pos === undefined ? {} : { pos }),
+      ...(members === undefined ? {} : { members }),
       ...(names === null ? {} : { names }),
     };
     inner.set(bnd.name, bound);
@@ -1131,6 +1176,53 @@ function bindingLoops(
     if (loop || closeBlock) out.close();
   };
   walk(0, scope);
+}
+
+/**
+ * Where `bnd`, a binder over the cells, opens its where with `clue(kind, x)
+ * = t` of a kind dealt once an element, `t` reading nothing `bnd` binds: the
+ * kind and `t`, so the cells can be read off the clue list's index. A
+ * definition is read as its body (Dominosa's `num(c) = a`).
+ */
+function cluePin(
+  bnd: Binder,
+  scope: Scope,
+  env: Env,
+): { kind: string; value: Expr } | null {
+  if (bnd.kind !== "in" || bnd.where === null) return null;
+  const [first] = fillConjuncts(bnd.where, scope, env);
+  if (first === undefined || first.k !== "bin" || first.op !== "=") return null;
+  const kindOf = (e: Expr): string | null => {
+    const read = inlined(e, scope, env);
+    if (read.k !== "call" || read.fn !== "clue" || read.args.length !== 2) return null;
+    const [k, x] = read.args;
+    if (k.k !== "name" || x.k !== "name" || x.name !== bnd.name) return null;
+    const kind = env.clues.get(k.name);
+    return kind === undefined || kind.per || kind.fields ? null : k.name;
+  };
+  for (const [side, other] of [
+    [first.a, first.b],
+    [first.b, first.a],
+  ] as const) {
+    const kind = kindOf(side);
+    if (kind === null) continue;
+    const reads = new Set<string>();
+    freeNames(other, reads, new Set());
+    if (!reads.has(bnd.name)) return { kind, value: other };
+  }
+  return null;
+}
+
+/** A call of a definition read as its body, its parameters replaced by the
+ * arguments, until it is no such call. */
+function inlined(e: Expr, scope: Scope, env: Env): Expr {
+  const def = e.k === "call" && !scope.has(e.fn) ? env.defs.get(e.fn) : undefined;
+  if (e.k !== "call" || def === undefined || def.params.length !== e.args.length)
+    return e;
+  const sub = new Map(def.params.map((p, i) => [p, e.args[i]] as const));
+  const avoid = new Set<string>();
+  for (const a of e.args) freeNames(a, avoid, new Set());
+  return inlined(substitute(def.body, sub, avoid), scope, env);
 }
 
 /**
@@ -1527,7 +1619,13 @@ function sizeTest(name: string, where: Expr | null): { op: string; of: Expr } | 
   let first = where;
   while (first !== null && first.k === "bin" && first.op === "and") first = first.a;
   if (first === null || first.k !== "bin") return null;
-  const ops: Readonly<Record<string, string>> = { "=": "===", "<=": "<=", "<": "<" };
+  const ops: Readonly<Record<string, string>> = {
+    "=": "===",
+    "<=": "<=",
+    "<": "<",
+    ">=": ">=",
+    ">": ">",
+  };
   const op = ops[first.op];
   const { a, b } = first;
   if (op === undefined || a.k !== "size" || a.of.k !== "name" || a.of.name !== name)
@@ -1909,8 +2007,10 @@ function aggregate(
       if (!scalar(termSort) || termSort.k === "none")
         throw new CompileError(`set(…) of ${show(termSort)}`);
       sort = setOf(termSort);
-      if (isMask(sort)) out.emit(`let ${r} = 0;`);
-      else if (env.scratch !== null) {
+      if (isMask(sort)) {
+        out.emit(`let ${r} = 0;`);
+        if (memberUnion(e, r, scope, env, out)) break;
+      } else if (env.scratch !== null) {
         // One array a site, emptied each time the site is evaluated: its
         // value is read only until the site is evaluated again, and a
         // reason copies what it keeps.
@@ -1927,6 +2027,148 @@ function aggregate(
     }
   }
   return { code: r, sort };
+}
+
+/**
+ * Whether `e` reads the marks only through `value` and `known`, which change
+ * only as a value is placed, and makes no fact: so it holds while
+ * `b.placed` stands. Its free names, those no binder of its own binds, are
+ * added to `free`.
+ */
+function keptWhilePlaced(
+  e: Expr,
+  env: Env,
+  free: Set<string>,
+  own: ReadonlySet<string> = new Set(),
+): boolean {
+  const all = (xs: readonly (Expr | null)[], names = own): boolean =>
+    xs.every((x) => x === null || keptWhilePlaced(x, env, free, names));
+  const binders = (bs: readonly Binder[], rest: readonly (Expr | null)[]): boolean => {
+    const names = new Set(own);
+    for (const b of bs) {
+      if (b.kind === "fill" || !all([b.of], names)) return false;
+      names.add(b.name);
+      if (!all([b.where], names)) return false;
+    }
+    return all(rest, names);
+  };
+  switch (e.k) {
+    case "num":
+      return true;
+    case "name":
+      if (!own.has(e.name)) free.add(e.name);
+      return true;
+    case "set":
+      return all(e.elems);
+    case "size":
+    case "not":
+    case "neg":
+      return all([e.of]);
+    case "bin":
+      return all([e.a, e.b]);
+    case "quant":
+      return binders(e.binders, [e.body]);
+    case "agg":
+      return binders(e.binders, [e.where, e.term]);
+    case "with":
+      return false;
+    case "call": {
+      if (
+        e.fn === "cand" ||
+        e.fn === "place" ||
+        e.fn === "strike" ||
+        e.fn === "chain" ||
+        e.fn === "linked" ||
+        e.fn === env.edgeMark
+      )
+        return false;
+      if (!all(e.fn === "clue" ? e.args.slice(1) : e.args)) return false;
+      const def = env.defs.get(e.fn);
+      return (
+        def === undefined ||
+        keptWhilePlaced(def.body, env, new Set(), new Set(def.params))
+      );
+    }
+  }
+}
+
+/**
+ * `set(t over x in T, …)` of numbers, `T` each subset of an array: the union
+ * of each member's own set, which the rest of the comprehension makes from
+ * the member alone. Each member's is kept ahead of the loop over the
+ * subsets, made again once a value has been placed since, so a subset's is
+ * an OR of its members'. The union goes into `r`; false where `e` is not of
+ * that shape, and nothing is written.
+ */
+function memberUnion(
+  e: Extract<Expr, { k: "agg" }>,
+  r: string,
+  scope: Scope,
+  env: Env,
+  out: Out,
+): boolean {
+  const [first, ...rest] = e.binders;
+  if (
+    env.hoist === null ||
+    env.answer !== null ||
+    env.supposed.length > 0 ||
+    e.where !== null ||
+    first.kind !== "in" ||
+    first.of.k !== "name"
+  )
+    return false;
+  const T = scope.get(first.of.name);
+  const of = T?.sort;
+  if (T?.members === undefined || of?.k !== "set") return false;
+  const { els, k, pre } = T.members;
+  const each: Extract<Expr, { k: "agg" }> = { ...e, binders: rest };
+  const free = new Set<string>();
+  const parts: (Expr | null)[] = [first.where, rest.length > 0 ? each : e.term];
+  if (
+    !parts.every(
+      (p) => p === null || keptWhilePlaced(p, env, free, new Set([first.name])),
+    )
+  )
+    return false;
+  for (const n of free) {
+    const v = scope.get(n);
+    if (v !== undefined && (v.at === undefined || v.at.seq > pre.seq)) return false;
+  }
+  const kept = Out.fresh("_pm");
+  const at = Out.fresh("_pp");
+  pre.lines.push({ indent: 0, text: `const ${kept}: number[] = [];` });
+  pre.lines.push({ indent: 0, text: `let ${at} = -1;` });
+  const j = Out.fresh("_j");
+  const x = Out.fresh("v_m");
+  out.open(`if (${at} !== b.placed) {`);
+  out.emit(`${at} = b.placed;`);
+  out.open(`for (let ${j} = 0; ${j} < ${els}.length; ${j}++) {`);
+  out.emit(`const ${x} = ${els}[${j}];`);
+  const inner = new Map(scope).set(first.name, { code: x, sort: of.of });
+  const flat: Env = { ...env, hoist: null };
+  let mask: Val;
+  if (rest.length > 0) mask = aggregate(each, inner, flat, out);
+  else {
+    const t = once(
+      e.term === null
+        ? name(first.name, inner, flat, out)
+        : compileExpr(e.term, inner, flat, out),
+      out,
+    );
+    expect(t, "num", "set");
+    mask = { code: `(1 << ${t.code})`, sort: setOf(NUM) };
+  }
+  if (first.where !== null) {
+    const w = compileExpr(first.where, inner, flat, out);
+    expect(w, "bool", `where of ${first.name}`);
+    out.emit(`${kept}[${j}] = ${w.code} ? ${mask.code} : 0;`);
+  } else out.emit(`${kept}[${j}] = ${mask.code};`);
+  out.close();
+  out.close();
+  out.emit(
+    `for (let ${j} = 0; ${j} < ${els}.length; ${j}++) if ((${k} >> (${els}.length - 1 - ${j})) & 1) ${r} |= ${kept}[${j}];`,
+  );
+  return true;
 }
 
 /**

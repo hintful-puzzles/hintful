@@ -386,10 +386,27 @@ author writing for speed uses these:
   cell and value.
 - **Pin a `subsets` binder's size first in its `where`** (`|T| = size`): the
   loop then counts only the subsets of that size, in the order it would
-  have met them, and a bound (`<=`, `<`) skips the others before building
-  them. A set of `n` still allows 2^`n` subsets of every size together, so
-  bound `n` too: Mines' `count` reads at most ten numbers
+  have met them, and a bound (`<=`, `<`, `>=`, `>`) skips the others before
+  building them. A set of `n` still allows 2^`n` subsets of every size
+  together, so bound `n` too: Mines' `count` reads at most ten numbers
   (`describe-revealed-clues`' `design.md` § "Mines").
+- **Make a union over a subset from its members alone**: a `set(t over x in
+  T, …)` of numbers, `T` a `subsets` binder, whose rest reads only `x`, names
+  bound before `T`, and the marks through `value` and `known`, is kept for
+  each member ahead of the loop over the subsets, and made again only once a
+  value has been placed since; each subset's is then an OR of its members'.
+  Dominosa's `partners` so read cost its `set` a quarter of what it had
+  (2026-11-07, `describe-dominoes-rectangles-and-galaxies`).
+- **Pin a clue in a binder over the cells**: `x in cells where clue(k, x) = t`
+  loops over the cells whose `k` clue is `t` alone, from an index the board's
+  clues are read into once (Dominosa's `showing`).
+- **Pass over cheaply what a costly read would reject**: a walk over a set is
+  read for each binding that reaches it, so a necessary condition read first
+  saves the walk. Dominosa's `parity` passes over a spot on a ring of four
+  before walking its group, which cut the rung by seven eighths.
+- **Bind the thing a firing is about, not each place it shows**: Dominosa's
+  `onlySpot` and `mustOverlap` bind each domino and read its spots once,
+  rather than reading every spot's domino's spots, a third of the cost.
 - **Bind a set a loop reads whole once, outside the loop**, by the statement
   itself: a comprehension or quantifier is never moved out of a loop
   (`set`'s `open`, `hiddenSingle`'s `placed`).
@@ -672,6 +689,26 @@ the description, not the code that gives a statement its meaning: a change
 to a library term's runtime (`traceBeam`), the compiler or the checker
 leaves recorded verdicts standing, so such a change runs the check again on
 the games that read it, with `CHECK_AGAIN=1`.
+
+**A technique gets `CHECK_BUDGET_MS` (ten minutes), its plants included, and
+no more.** A whole proof can run for hours on one technique (Dominosa's
+`parity` passed 70 minutes unfinished), and a proof unfinished says nothing a
+bounded search does not. So the proof over every board runs to `WHOLE` of
+the budget; if it has not finished, the same question is asked of boards z3
+samples (`sampleAnswers`), each answer and its clues fixed and every
+position of the marks on it, a batch at a time with fresh boards drawn,
+until `SAMPLED` of the budget. A technique on which no defect turned up is
+recorded as holding: `heldVerdict`, its fingerprint marked `held`, which the
+gate takes as checked. **The clues are dealt as constants on a sampled
+board**, so a set the clues decide is built of its members alone: Dominosa's
+subsets of the squares showing a number were 2^30 unknowns at order 4, and
+the query ran the JavaScript heap out while being built. A query that holds
+most of the heap stops as one past its deadline does. A plant gets a tenth
+of the budget for its whole proof, then sampled boards to the deadline, and
+**a plant not caught within the budget fails the run**: a check that cannot
+catch the planted defect in the time cannot vouch for the technique either.
+A held verdict is evidence, not proof; a technique whose held verdict a
+wrong hint later contradicts is the first place to look.
 
 ## A planning game's position and moves
 
