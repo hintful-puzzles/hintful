@@ -66,3 +66,154 @@ help:
     A hint is refused while anything on the board contradicts the solution.
     The offending squares and lines light up instead, exactly as they do
     for **Check & save**.
+name: Galaxies
+family: regions
+sizes:
+  w: { min: 3, max: 100 }
+  h: { min: 3, max: 100 }
+space:
+  grid: { w: "w", h: "h" }
+  edges: true
+  centers: true
+  units: []
+answer:
+  # The edge between two squares side by side: 1 a line, 2 none.
+  value:
+    sort: edge
+    domain: "range(1, 2)"
+marks:
+  # A square's arrow to a dot: the dot at the center of the square's galaxy.
+  arrow:
+    sort: cell
+    notation: "one of clues(dot)"
+    means: "forall O = joined: nth(cells(at(v)), 0) in through(at, O)"
+define:
+  # The edges with no line: the inside of the galaxies.
+  joined: "{e in edges where value(e) = 2}"
+  # The dots square x is under.
+  under(x): "{p in clues(dot) where x in cells(at(p))}"
+  # Whether square x could be dot q's by the dots alone: the square opposite
+  # it about q is on the grid, and neither is under another dot.
+  free(x, q): >-
+    opp(x, at(q)) != none
+    and (forall p in under(x): p = q) and (forall p in under(opp(x, at(q))): p = q)
+  # The squares dot q's galaxy could ever hold, by the dots alone: those
+  # joined to the dot through squares it could have.
+  room(q): >-
+    through(nth(cells(at(q)), 0),
+    {e in edges where free(end1(e), q) and free(end2(e), q)})
+  # The dots whose galaxy could ever hold square c.
+  near(c): "{q in clues(dot) where c in room(q)}"
+  # Whether square x lies in a finished galaxy, O the edges with no line:
+  # walled in with every square round one dot and none round another, and
+  # the same turned half a turn about that dot. A drag rings no dot for a
+  # square in one.
+  finished(x, O): >-
+    forall R = through(x, O):
+    exists p in clues(dot): nth(cells(at(p)), 0) in R
+    and (forall c in cells(at(p)): c in R)
+    and (forall r in clues(dot): r = p or (forall c in cells(at(r)): c not in R))
+    and (forall y in R: opp(y, at(p)) in R)
+  # Whether square x could still be dot q's: it and the square opposite it
+  # about q are each free or q's.
+  may(x, q): >-
+    opp(x, at(q)) != none
+    and (arrow(x) = none or arrow(x) = q)
+    and (arrow(opp(x, at(q))) = none or arrow(opp(x, at(q))) = q)
+  # The squares dot q's galaxy can still stretch to: joined to the dot
+  # across no line through squares it could still have, and with the square
+  # opposite joined too.
+  reach(q): >-
+    set(x over T = through(nth(cells(at(q)), 0),
+    {e in edges where value(e) != 1 and may(end1(e), q) and may(end2(e), q)}),
+    x in T where opp(x, at(q)) in T)
+shape:
+  # A line stands between two squares side by side exactly where they are
+  # in different galaxies.
+  - "forall O = joined, e in edges: value(e) = 1 iff end2(e) not in through(end1(e), O)"
+  # Every galaxy holds one dot.
+  - >-
+    forall O = joined, c in cells:
+    count(p in centers where clue(dot, p) != none and nth(cells(p), 0) in through(c, O)) = 1
+clues:
+  # A dot: its galaxy holds every square round it, and is the same turned
+  # half a turn about it.
+  dot:
+    at: center
+    value: "range(1, 1)"
+    means: >-
+      forall O = joined, R = through(nth(cells(at), 0), O):
+      (forall c in cells(at): c in R) and (forall c in R: opp(c, at) in R)
+freedom: { kind: fill }
+deal:
+  answer: the grid divided at random into galaxies, the wiggliest of ten
+  dot: one at the center of each galaxy
+  tier: one of the tiers
+tiers: [Normal, Unreasonable]
+techniques:
+  # The squares under a dot are its galaxy's.
+  - id: dotTile
+    tier: Normal
+    for: "q in clues(dot) where exists c in cells(at(q)): arrow(c) != q"
+    conclude: "forall c in cells(at(q)): mark(c, q)"
+  # A line between two squares of one galaxy leaves the marks no answer.
+  - id: split
+    tier: Normal
+    for: "e in edges where value(e) = 1, q = arrow(end1(e)) where q != none"
+    conclude: "arrow(end2(e)) != q"
+  # Two squares side by side in different galaxies have a line between them.
+  - id: separate
+    tier: Normal
+    for: >-
+      e in edges where not known(e), p = arrow(end1(e)) where p != none,
+      q = arrow(end2(e)) where q != none and q != p
+    conclude: "place(e, 1)"
+  # A square whose every side without a line leads into dot q's galaxy is
+  # in it, and so is the square opposite it about q. A square under a dot of
+  # its own may be a galaxy alone, so it is passed over.
+  - id: enclosed
+    tier: Normal
+    for: >-
+      c in cells where arrow(c) = none,
+      N = {n in adj4(c) where value(edge(c, n)) != 1} where |N| > 0,
+      q = arrow(nth(N, 0)) where q != none and (forall n in N: arrow(n) = q)
+      and not (exists p in clues(dot): opp(c, at(p)) = c)
+    conclude: "mark(c, q) and mark(opp(c, at(q)), q)"
+  # A square only one dot's galaxy could hold, by the dots and the finished
+  # galaxies, is that dot's: the one dot a drag from it rings.
+  - id: soleOwner
+    tier: Normal
+    for: >-
+      O = {e in edges where value(e) != 1},
+      c in cells where arrow(c) = none and not finished(c, O),
+      K = {q in near(c) where not finished(opp(c, at(q)), O)} where |K| < 2
+    conclude: "|K| > 0 and (forall q in K: mark(c, q) and mark(opp(c, at(q)), q))"
+  # A square only one dot's galaxy can still stretch to is that dot's.
+  - id: onlyReach
+    tier: Normal
+    for: >-
+      c in cells where arrow(c) = none,
+      K = {q in near(c) where c in reach(q)} where |K| < 2
+    conclude: "|K| > 0 and (forall q in K: mark(c, q) and mark(opp(c, at(q)), q))"
+  # A piece of dot q's galaxy that does not hold the dot must grow toward
+  # it: where only one free square lies beside it across no line, that
+  # square is q's. G is the piece, by its first square.
+  - id: exclave
+    tier: Normal
+    for: >-
+      c in cells, q = arrow(c) where q != none,
+      G = through(c, {e in edges where value(e) != 1 and arrow(end1(e)) = q and arrow(end2(e)) = q})
+      where nth(G, 0) = c and nth(cells(at(q)), 0) not in G,
+      L = set(n over x in G, n in adj4(x) where arrow(n) = none and value(edge(x, n)) != 1)
+      where |L| < 2
+    conclude: "|L| > 0 and (forall l in L: mark(l, q) and mark(opp(l, at(q)), q))"
+  # A galaxy is the same turned about its dot, so a line beside one of its
+  # squares, or the grid's edge, stands beside the square opposite too.
+  - id: mirrorWall
+    tier: Normal
+    for: >-
+      e in edges where not known(e), a in {end1(e), end2(e)},
+      q = arrow(a) where q != none, b = other(e, a),
+      a2 = opp(a, at(q)) where a2 != none, b2 = opp(b, at(q))
+      where b2 = none or value(edge(a2, b2)) = 1
+    conclude: "place(e, 1)"

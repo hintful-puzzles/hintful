@@ -20,6 +20,10 @@ change to the engine, rather than to Rect's rungs, could take. Keeping marks-kep
 values across placements could take at most a few percent, and was
 declined.
 
+Galaxies pays it too (2026-11-07, `describe-galaxies`, twenty 15×15
+Normal deals profiled): `near(c)` and the `room(q)` it reads are 17% of a
+deal, made again for each board as the generator moves a dot.
+
 ## What Changes
 
 - **A board-kept value is kept across boards that agree on what it read**,

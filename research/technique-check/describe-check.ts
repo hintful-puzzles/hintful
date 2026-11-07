@@ -23,6 +23,7 @@
 import { getHeapStatistics } from "node:v8";
 import {
   type ClueKind,
+  cellMarkOf,
   type Description,
   type DescriptionJson,
   edgeMarkOf,
@@ -38,6 +39,7 @@ import {
   describedSpace,
   type GridSpace,
   latinSpace,
+  opp,
   perElement,
   perPlace,
   perValue,
@@ -223,6 +225,18 @@ interface Board {
     notation: Expr;
     cand: Bx[][];
     meaning: (Nx | null)[];
+  } | null;
+  /** The mark on the cells naming a clue, where the description has one
+   * (Galaxies' arrow to a dot): its name, the kind it names, what a cell
+   * naming a clue means of the answer, whether each cell names each clue
+   * (by cell, then clue index), and each meaning as it is read. Made once
+   * the clues are dealt. */
+  cellMark: {
+    name: string;
+    kind: string;
+    means: Expr;
+    names: Bx[][];
+    meaning: Map<number, Bx>;
   } | null;
 }
 
@@ -470,7 +484,31 @@ function makeBoard(
             ),
             meaning: Array.from({ length: edgeCount }, () => null),
           },
+    cellMark: null,
   };
+}
+
+/** What cell `c` naming clue `i` means of the answer: the mark's `means`,
+ * read in a rule. */
+function cellMeaning(ctx: Ctx, c: number, i: number): Bx {
+  const mark = ctx.board.cellMark;
+  if (mark === null) throw new Error("no mark naming a clue");
+  const key = i * ctx.board.sp.cells.length + c;
+  const known = mark.meaning.get(key);
+  if (known !== undefined) return known;
+  const v = bool(
+    evaluate(
+      mark.means,
+      new Map([
+        ["at", elem("cell", c)],
+        ["v", elem(`clue ${mark.kind}`, i)],
+      ]),
+      { ...ctx, mode: "rule", concluding: false, supposed: [] },
+    ),
+    mark.name,
+  );
+  mark.meaning.set(key, v);
+  return v;
 }
 
 /** The largest value an edge's mark is checked holding, where the board's
@@ -813,6 +851,8 @@ function evaluate(e: Expr, env: Env, ctx: Ctx): V {
           return allOf("corner", sp.corners);
         case "points":
           return allOf("point", sp.points);
+        case "centers":
+          return allOf("center", sp.centers);
         case "edges":
           return allOf("edge", sp.edges);
         case "domain":
@@ -1311,7 +1351,35 @@ function diagonalCall(fn: string, vs: readonly V[], ctx: Ctx): V | null {
       vsetOf(board, (n) => (e < 0 ? false : (mark.cand[e][n] ?? false))),
     );
   }
+  // The mark on a cell naming a clue: which clue, or none, which only a
+  // technique reads. A consistent board's cell names one at most.
+  const named = board.cellMark;
+  if (named !== null && fn === named.name) {
+    if (ctx.mode === "rule") throw new TypeError(`${fn} in a rule`);
+    return lift(vs[0], fn, (c): V => {
+      if (c < 0) return elem(`clue ${named.kind}`, -1);
+      const row = named.names[c];
+      return {
+        k: "elem",
+        sort: `clue ${named.kind}`,
+        alts: [...row.map((g, i) => [i, g] as const), [-1, and(...row.map(not))]],
+      };
+    });
+  }
   switch (fn) {
+    case "opp":
+      return lift(vs[0], fn, (c) =>
+        lift(vs[1], fn, (p) => elem("cell", c < 0 || p < 0 ? -1 : opp(sp, c, p))),
+      );
+    case "mark":
+      // A cell named a clue is what the naming means of the answer.
+      if (!ctx.concluding) throw new Error("mark outside a conclusion");
+      return lift(vs[0], fn, (c) =>
+        lift(vs[1], fn, (i) => ({
+          k: "bool",
+          v: c < 0 || i < 0 ? false : cellMeaning(ctx, c, i),
+        })),
+      );
     case "points":
       return lift(vs[0], fn, (c) => allOf("point", c < 0 ? [] : sp.cellPoints[c]));
     case "slash":
@@ -1502,6 +1570,8 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
         return lift(s, fn, (k) => allOf("cell", sp.cornerCells[k]));
       if (s.k === "elem" && s.sort === "point")
         return lift(s, fn, (k) => allOf("cell", k < 0 ? [] : sp.pointCells[k]));
+      if (s.k === "elem" && s.sort === "center")
+        return lift(s, fn, (k) => allOf("cell", k < 0 ? [] : sp.centerCells[k]));
       if (s.k === "elem" && s.sort === "rect")
         return lift(s, fn, (r) => allOf("cell", r < 0 ? [] : rectCells(sp, r)));
       return lift(vs[0], fn, (L) => allOf("cell", L < 0 ? [] : sp.lineCells[L]));
@@ -1978,14 +2048,16 @@ function dealSymbolically(d: Description, board: Board): void {
               ? board.sp.cells.length
               : c.at === "point"
                 ? board.sp.points.length
-                : c.at === "line"
-                  ? board.sp.lines.length
-                  : part !== undefined
-                    ? part.parts.length
-                    : null;
+                : c.at === "center"
+                  ? board.sp.centers.length
+                  : c.at === "line"
+                    ? board.sp.lines.length
+                    : part !== undefined
+                      ? part.parts.length
+                      : null;
     if (places === null)
       throw new Error(
-        `clue ${kind}: only edge, slot, corner, cell, point, line and region clues are checked yet`,
+        `clue ${kind}: only edge, slot, corner, cell, point, center, line and region clues are checked yet`,
       );
     const complete = d.json.clues?.[kind]?.complete === true;
     const list: ClueSym[] = [];
@@ -2059,6 +2131,25 @@ function dealSymbolically(d: Description, board: Board): void {
     }
     board.clues.set(kind, list);
   }
+  // Each cell may name each clue of the kind its mark names, once they are
+  // dealt.
+  const mark = cellMarkOf(d.json);
+  if (mark !== null) {
+    const n = (board.clues.get(mark.kind) ?? []).length;
+    const tag = `b${boardCount}`;
+    board.cellMark = {
+      name: mark.name,
+      kind: mark.kind,
+      means: parse(mark.means),
+      names: board.sp.cells.map((c) =>
+        Array.from(
+          { length: n },
+          (_, i): Bx => Z3.Bool.const(`${tag}_names_${c}_${i}`),
+        ),
+      ),
+      meaning: new Map(),
+    };
+  }
 }
 
 /** The answer's domain at cell `c`. A domain may be the cell's own
@@ -2112,6 +2203,19 @@ function worldOf(d: Description, board: Board): Bx[] {
       out.push(or(...cands.map((g, n) => and(g, cmp("=", means, n)))));
       cands.forEach((g, n) => {
         if (n > 0) out.push(implies(g, dom.mem[n] ?? false));
+      });
+    });
+  }
+  // A consistent mark naming a clue names one at most, which is there, and
+  // means what the mark says of the answer.
+  const named = board.cellMark;
+  if (named !== null) {
+    const list = board.clues.get(named.kind) ?? [];
+    named.names.forEach((row, c) => {
+      row.forEach((g, i) => {
+        if (g === false) return;
+        out.push(implies(g, and(list[i].present, cellMeaning(ctx, c, i))));
+        for (let j = 0; j < i; j++) out.push(not(and(g, row[j])));
       });
     });
   }

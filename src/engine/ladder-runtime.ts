@@ -16,6 +16,7 @@ import {
   type Facts,
   type Fire,
   type GridSpace,
+  MARK,
   type Marks,
   STRIKE,
   STRIKE_EDGE,
@@ -76,6 +77,9 @@ export class CellMarks implements Marks {
   /** The values each edge's mark may still hold, as a bitmask, where the
    * description marks the edges; the game seeds them. */
   readonly edgeCands: Int32Array;
+  /** The element each cell's mark names, `-1` where none, where the
+   * description marks each cell with one; the game seeds them. */
+  readonly marked: Int32Array;
   placed = 0;
   readonly domain: number;
   readonly repeat: number;
@@ -123,6 +127,7 @@ export class CellMarks implements Marks {
     this.onEdges = held === "edge";
     this.cands = new Int32Array(this.onEdges ? sp.edges.length : sp.cells.length);
     this.edgeCands = new Int32Array(sp.edgeEnds.length / 2);
+    this.marked = new Int32Array(sp.cells.length).fill(-1);
     this.repeat = repeat?.value ?? 0;
     this.times = repeat?.times ?? 1;
   }
@@ -152,6 +157,15 @@ export class CellMarks implements Marks {
   }
   edgeStrikeAt(e: number, d: number): void {
     this.edgeCands[e] &= ~(1 << d);
+  }
+  markOf(c: number): number {
+    return this.marked[c];
+  }
+  /** A mark counts as a placement, since what reads it is kept while none
+   * is made. */
+  markAt(c: number, q: number): void {
+    this.marked[c] = q;
+    this.placed++;
   }
 
   /**
@@ -226,6 +240,12 @@ export class CellMarks implements Marks {
       // reads it from the firing's facts (Slant's).
       if (facts[i] === STRIKE_EDGE) {
         this.edgeStrikeAt(c, n);
+        continue;
+      }
+      // Nor is a cell's mark a value: a hint reads it from the facts too
+      // (Galaxies' arrows).
+      if (facts[i] === MARK) {
+        this.markAt(c, n);
         continue;
       }
       if (facts[i] !== STRIKE) {
@@ -643,13 +663,20 @@ export interface LadderWalk<S extends CellMarks = CellMarks> {
  * than the board needs where it stands. `reads` says which cells a firing's
  * premise reads. Each firing is made on `m` as a group of its own, recorded
  * where `m` has a recorder. The walk is `singleFirings`' continuing driver
- * over the compiled firings, so it is the one every ladder hint is.
+ * over the compiled firings, so it is the one every ladder hint is. `roles`
+ * names the techniques it takes as `DeductionTechnique`'s `prerequisite`
+ * and `fallback` (Galaxies: a dot's own squares come first, and a mirrored
+ * line only where nothing else follows).
  */
 export function ladderWalk<S extends CellMarks>(
   m: S,
   entries: readonly LadderEntry<S>[],
   caps: Caps,
   reads: (firing: Taken<S>) => readonly number[],
+  roles: {
+    readonly prerequisite?: readonly string[];
+    readonly fallback?: readonly string[];
+  } = {},
 ): LadderWalk<S> {
   // An edge's mark, or value, is written as its two cells are.
   const cellsOf = (facts: readonly number[]): number[] => {
@@ -657,7 +684,8 @@ export function ladderWalk<S extends CellMarks>(
     const ends = m.sp.edgeEnds;
     for (let i = 0; i < facts.length; i += 3) {
       const at = facts[i + 1];
-      if (facts[i] === STRIKE_EDGE || m.onEdges)
+      if (facts[i] === MARK) out.push(at);
+      else if (facts[i] === STRIKE_EDGE || m.onEdges)
         out.push(ends[2 * at], ends[2 * at + 1]);
       else out.push(at);
     }
@@ -672,6 +700,8 @@ export function ladderWalk<S extends CellMarks>(
       return {
         id: entry.id,
         tier: entry.tier,
+        prerequisite: roles.prerequisite?.includes(entry.id),
+        fallback: roles.fallback?.includes(entry.id),
         run: () => entry.run(m),
         available: () => {
           const got = firings(m);

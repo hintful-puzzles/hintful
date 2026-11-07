@@ -834,6 +834,44 @@ const PLANTS: Record<string, Plant> = {
   "rect.starve": {
     for: "q in clues(number), F = fits(q) where |F| > 1, G = {r in F where not (exists j in clues(number) where j != q: exists t in fits(j): meets(t, r))} where |G| = 1, r = nth(G, 0)",
   },
+  // A dot's squares read as the squares beside its first.
+  "galaxies.dotTile": {
+    conclude: "forall c in adj4(nth(cells(at(q)), 0)): mark(c, q)",
+  },
+  // A line beside a square read as a contradiction unless both sides name
+  // its dot.
+  "galaxies.split": {
+    conclude: "arrow(end2(e)) = q",
+  },
+  // A square with no arrow read as in another galaxy.
+  "galaxies.separate": {
+    for: "e in edges where not known(e), p = arrow(end1(e)) where p != none, q = arrow(end2(e)) where q != p",
+  },
+  // A square under a dot of its own read as any other.
+  "galaxies.enclosed": {
+    for: "c in cells where arrow(c) = none, N = {n in adj4(c) where value(edge(c, n)) != 1} where |N| > 0, q = arrow(nth(N, 0)) where q != none and (forall n in N: arrow(n) = q)",
+  },
+  // A square two dots could have read as the first's.
+  "galaxies.soleOwner": {
+    for:
+      "O = {e in edges where value(e) != 1}, c in cells where arrow(c) = none and not finished(c, O), " +
+      "K = {q in near(c) where not finished(opp(c, at(q)), O)} where |K| < 3",
+    conclude:
+      "|K| > 0 and (forall q in {nth(K, 0)}: mark(c, q) and mark(opp(c, at(q)), q))",
+  },
+  "galaxies.onlyReach": {
+    for: "c in cells where arrow(c) = none, K = {q in near(c) where c in reach(q)} where |K| < 3",
+    conclude:
+      "|K| > 0 and (forall q in {nth(K, 0)}: mark(c, q) and mark(opp(c, at(q)), q))",
+  },
+  // The piece holding its dot read as one that must grow.
+  "galaxies.exclave": {
+    for: "c in cells, q = arrow(c) where q != none, G = through(c, {e in edges where value(e) != 1 and arrow(end1(e)) = q and arrow(end2(e)) = q}) where nth(G, 0) = c, L = set(n over x in G, n in adj4(x) where arrow(n) = none and value(edge(x, n)) != 1) where |L| < 2",
+  },
+  // A line mirrored whether or not the square opposite has one.
+  "galaxies.mirrorWall": {
+    for: "e in edges where not known(e), a in {end1(e), end2(e)}, q = arrow(a) where q != none, b = other(e, a), a2 = opp(a, at(q)) where a2 != none, b2 = opp(b, at(q)) where b2 != none",
+  },
   // The first fit across an edge left out of the reasons it is out.
   "rect.line": {
     for: "e in edges where not known(e), a = end1(e), b = end2(e), C = {q in reachers(a) where exists r in fits(q): a in cells(r) and b in cells(r)} where |C| > 0 and (forall q in C, r in fits(q) where a in cells(r) and b in cells(r) and r != nth(fits(q), 0): owned(q, r) or (exists x in sole(q): x not in cells(r)))",

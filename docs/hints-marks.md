@@ -919,8 +919,11 @@ shorter story than the general argument that otherwise covers those cases.
 **Measure that the control and the deduction agree before making the
 claim**: a control's predicate may be more lenient than the solver's, and
 "only one lights up" is then false at firings the general rung makes. Adding
-the rung is what makes the claim true wherever it is made. Exemplar: the
-cell-to-dot drag rung in [`galaxies/hint.ts`](../src/games/galaxies/hint.ts).
+the rung is what makes the claim true wherever it is made. Exemplar:
+Galaxies' `soleOwner` in its
+[description](../src/games/galaxies/galaxies.description.yaml), which states
+the cell-to-dot drag's own test (`moves.ts`' `legalDotsFor`): by the dots
+and the finished galaxies, never the arrows.
 
 ## Give the facts a notation
 

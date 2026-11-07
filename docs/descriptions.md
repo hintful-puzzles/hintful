@@ -239,6 +239,18 @@ description author acts on:
   the drawn diagonals join it to, in reading order. The compiled code keeps
   every group of joined points until a value is placed, so `x in linked(k)`
   costs a lookup.
+- **The centers of squares, edges and points are a sort** where the space
+  says `centers: true` (Galaxies' dots): `centers` is every half-grid point
+  in reading order, `cells(p)` the one, two or four squares round it, and
+  `opp(c, p)` square `c` turned half a turn about `p`, or none off the grid.
+  A clue may sit at one (`at: center`).
+- **A mark on the cells may name a clue** (`notation: "one of clues(kind)"`,
+  Galaxies' arrow): read `arrow(c)`, the clue or none, and made by
+  `mark(c, q)`, which is false where `c` names another clue. Its `means`
+  says what the square naming clue `v` says of the answer, reading `at` as
+  the clue's place; the checker holds every named square to it. A mark is
+  a fact that counts as placing, so a definition that reads it is kept
+  only while nothing is placed.
 - **`through(c, E)` is `c` and the cells reached from it across the edges
   `E`**, each between two squares side by side: Slant's squares marked
   alike with one. Bind `E` once by `=`, since it is a set over every edge.
@@ -518,7 +530,13 @@ uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
   it does every other ladder's. State the techniques in tier order: a
   harder one stated first sets the walk's cap at its tier while an easier
   firing waits, and the hint teaches the harder reasoning (Slant's `pair`
-  above `loop` did).
+  above `loop` did). A game may name rungs whose order is not their tier's
+  (`ladderWalk`'s `roles`, `DeductionTechnique`'s meaning): the rungs after
+  a `prerequisite` are asked only once it has nothing left, and a
+  `fallback` only once every rung before it has nothing. Galaxies marks
+  each dot's own squares before any other step, and mirrors a wall only
+  when no arrow or line is otherwise forced, the order its hint had before
+  it was described.
 - **Seeding runs the techniques run on placing**, so what they decide
   about the player's own marks is never a step. Where the player should see
   it (Boats' water at a segment's corners), the game seeds before it sets

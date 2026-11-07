@@ -42,6 +42,7 @@ export interface DescriptionJson {
     edges?: boolean;
     corners?: boolean;
     points?: boolean;
+    centers?: boolean;
     diagonals?: boolean;
     regions?: Record<string, "dealt" | string>;
     units: string[];
@@ -55,8 +56,13 @@ export interface DescriptionJson {
   };
   given?: string[];
   /** What the player can write down. A mark on the edges a technique reads
-   * says what of the answer it narrows: `of`, read of the edge `at`. */
-  marks?: Record<string, { sort: string; notation: string; of?: string }>;
+   * says what of the answer it narrows: `of`, read of the edge `at`. A mark
+   * that names one element a cell says what its naming `v` means of the
+   * answer: `means`, read of the cell `at`. */
+  marks?: Record<
+    string,
+    { sort: string; notation: string; of?: string; means?: string }
+  >;
   define?: Record<string, string>;
   shape?: string[];
   rules?: Record<string, string>;
@@ -388,6 +394,28 @@ export function edgeMarkOf(json: DescriptionJson): { name: string; of: string } 
   if (read.length === 0) return null;
   const [name, m] = read[0];
   return { name, of: m.of as string };
+}
+
+/**
+ * The one mark a description keeps on the cells that names an element, read
+ * `name(c)`, the element or `none`, and made by `mark(c, x)`: its name, the
+ * clue kind whose clues it names (`notation: "one of clues(kind)"`), and what
+ * a cell's naming `v` means of the answer, or `null`.
+ */
+export function cellMarkOf(
+  json: DescriptionJson,
+): { name: string; kind: string; means: string } | null {
+  const read = Object.entries(json.marks ?? {}).filter(
+    ([, m]) => m.sort === "cell" && m.means !== undefined,
+  );
+  if (read.length > 1)
+    throw new Error(`${json.game}: one mark naming an element, not ${read.length}`);
+  if (read.length === 0) return null;
+  const [name, m] = read[0];
+  const kind = /^one of clues\((\w+)\)$/.exec(m.notation)?.[1];
+  if (kind === undefined)
+    throw new Error(`${name}: a mark on the cells names one of clues(kind)`);
+  return { name, kind, means: m.means as string };
 }
 
 /** A planning game's description: a position and its moves. */

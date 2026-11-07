@@ -45,15 +45,22 @@ export interface Marks {
   /** Strike `d` from the edge's mark, where a technique has no `fire` to
    * tell. */
   edgeStrikeAt(e: number, d: number): void;
+  /** The element a cell's mark names, where the description marks each
+   * cell with one (Galaxies' arrow to a dot), or `-1` where it names none. */
+  markOf(c: number): number;
+  /** Mark the cell with `q`, where a technique has no `fire` to tell. */
+  markAt(c: number, q: number): void;
 }
 
-/** One firing's facts, three numbers each: {@link STRIKE}, {@link PLACE} or
- * {@link STRIKE_EDGE}, the cell or the edge, the value. */
+/** One firing's facts, three numbers each: {@link STRIKE}, {@link PLACE},
+ * {@link STRIKE_EDGE} or {@link MARK}, the cell or the edge, the value. */
 export type Facts = readonly number[];
 export const STRIKE = 0;
 export const PLACE = 1;
 /** A value struck from an edge's mark. */
 export const STRIKE_EDGE = 2;
+/** A cell marked with an element: the value is the element. */
+export const MARK = 3;
 
 /**
  * Called once a binding's conclusion has facts that change the marks, with
@@ -221,6 +228,14 @@ export interface GridSpace {
   readonly pointCells: readonly (readonly number[])[];
   /** Each cell's four points, in reading order. */
   readonly cellPoints: readonly (readonly number[])[];
+  /** Every center a square can be turned about, in reading order: a
+   * square's middle, the middle of a side between two squares, and a point
+   * inside the grid where four meet. On the half grid, where square `(x, y)`
+   * is `(2x + 1, 2y + 1)`, the one at `(X, Y)`, each from 1 to `2w - 1` and
+   * `2h - 1`, is `(Y − 1)·(2w − 1) + X − 1`. */
+  readonly centers: readonly number[];
+  /** The squares round each center, one, two or four, in reading order. */
+  readonly centerCells: readonly (readonly number[])[];
 }
 
 /** The eight steps to a neighbor, clockwise from up, as `adj8` lists them. */
@@ -401,6 +416,16 @@ function gridSpace(
     const k = ((c / w) | 0) * pw + (c % w);
     return [k, k + 1, k + pw, k + pw + 1];
   });
+  const cx = 2 * w - 1;
+  const centers = Array.from({ length: Math.max(0, cx * (2 * h - 1)) }, (_, p) => p);
+  const centerCells = centers.map((p) => {
+    const X = (p % cx) + 1;
+    const Y = ((p / cx) | 0) + 1;
+    const out: number[] = [];
+    for (const y of Y & 1 ? [(Y - 1) / 2] : [Y / 2 - 1, Y / 2])
+      for (const x of X & 1 ? [(X - 1) / 2] : [X / 2 - 1, X / 2]) out.push(y * w + x);
+    return out;
+  });
   const opposite = Int32Array.from(sight, (_, s) =>
     s < 2 * w ? (s < w ? s + w : s - w) : s < 2 * w + h ? s + h : s - h,
   );
@@ -449,7 +474,22 @@ function gridSpace(
     points,
     pointCells,
     cellPoints,
+    centers,
+    centerCells,
   };
+}
+
+/**
+ * `opp(c, p)`: the square that square `c` turns to about center `p`, half a
+ * turn, or `-1` where that is off the grid. On the half grid it is
+ * `2p − c`, so the square at `(x, y)` turns to `(X − 1 − x, Y − 1 − y)`.
+ */
+export function opp(sp: GridSpace, c: number, p: number): number {
+  if (c < 0 || p < 0) return -1;
+  const cx = 2 * sp.w - 1;
+  const x = (p % cx) - (c % sp.w);
+  const y = ((p / cx) | 0) - ((c / sp.w) | 0);
+  return x < 0 || y < 0 || x >= sp.w || y >= sp.h ? -1 : y * sp.w + x;
 }
 
 // --- what the generated code calls for its set algebra -------------------

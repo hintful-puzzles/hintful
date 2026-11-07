@@ -131,6 +131,10 @@
           "type": "boolean",
           "description": "Every point where cells meet, the border's included: `points`, `cells(k)`, `points(c)`, `slash(c, k)` (the value, 1 or 2, of `c`'s diagonal through `k`), `linked(k)` (the points the cells' diagonals join to `k`)."
         },
+        "centers": {
+          "type": "boolean",
+          "description": "Every center inside the grid a square can be turned about, a square's middle, a side's or a point where four meet: `centers`, `cells(p)` (the squares round it), `opp(c, p)` (the square `c` turns to about `p`, half a turn, or none off the grid)."
+        },
         "diagonals": {
           "type": "boolean",
           "description": "The two diagonals of a square grid: `diagonals`."
@@ -417,6 +421,10 @@
               "of": {
                 "$ref": "#/$defs/formula",
                 "description": "For a mark on the edges a technique reads: the number of the answer it narrows, read of the edge `at`. The mark is read `name(e)`, the values it may still hold, and narrowed by `strike(e, d)`."
+              },
+              "means": {
+                "$ref": "#/$defs/formula",
+                "description": "For a mark on the cells that names one clue (`notation: \"one of clues(kind)\"`): what the cell `at` naming the clue `v` says of the answer. The mark is read `name(c)`, the clue or none, and made by `mark(c, q)`."
               }
             }
           }

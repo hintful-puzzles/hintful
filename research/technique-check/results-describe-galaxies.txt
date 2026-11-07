@@ -1,0 +1,16 @@
+ok  galaxies   dotTile                        3  sound    (want sound   )    16 queries    1.9s
+ok  galaxies   dotTile (planted)              3  unsound  (want unsound )     1 queries    0.3s   at clue dot 0
+ok  galaxies   split                          3  sound    (want sound   )    12 queries    1.6s
+ok  galaxies   split (planted)                3  unsound  (want unsound )     1 queries    0.3s   at edge 0
+ok  galaxies   separate                       3  sound    (want sound   )    12 queries    2.0s
+ok  galaxies   separate (planted)             3  unsound  (want unsound )     1 queries    0.3s   at edge 0
+ok  galaxies   enclosed                       3  sound    (want sound   )     9 queries    2.1s
+ok  galaxies   enclosed (planted)             3  unsound  (want unsound )     1 queries    0.3s   at cell 0
+ok  galaxies   soleOwner                      3  sound    (want sound   )     1 queries    2.4s
+ok  galaxies   soleOwner (planted)            3  unsound  (want unsound )     1 queries    1.3s   at eset
+ok  galaxies   onlyReach                      3  sound    (want sound   )     9 queries    2.5s
+ok  galaxies   onlyReach (planted)            3  unsound  (want unsound )     1 queries    0.4s   at cell 0
+ok  galaxies   exclave                        3  sound    (want sound   )     9 queries    2.2s
+ok  galaxies   exclave (planted)              3  unsound  (want unsound )     1 queries    0.4s   at cell 0
+ok  galaxies   mirrorWall                     3  sound    (want sound   )    12 queries    1.7s
+ok  galaxies   mirrorWall (planted)           3  unsound  (want unsound )     1 queries    0.3s   at edge 0

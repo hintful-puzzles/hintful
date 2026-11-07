@@ -13,6 +13,7 @@
  */
 
 import {
+  cellMarkOf,
   type Definition,
   type ClueKind as DescribedClueKind,
   type Description,
@@ -36,6 +37,7 @@ type ElemSort =
   | "slot"
   | "corner"
   | "point"
+  | "center"
   | "rect"
   | `clue ${string}`
   | `region ${string}`;
@@ -271,6 +273,9 @@ interface Env {
    * `name(e)` as the values it may still hold, or `null` where it keeps
    * none. */
   edgeMark: string | null;
+  /** The mark the description keeps on each cell naming a clue of `kind`,
+   * read `name(c)` and made by `mark(c, q)`, or `null` where it keeps none. */
+  cellMark: { name: string; kind: string } | null;
   /** The suppositions of the `with`s the code is inside, innermost first:
    * the names of the cell and of the value it is supposed to hold. */
   supposed: readonly { cell: string; value: string }[];
@@ -323,6 +328,7 @@ const NAMES: Record<string, Val> = {
   slots: { code: "sp.slots", sort: setOf(elem("slot")) },
   corners: { code: "sp.corners", sort: setOf(elem("corner")) },
   points: { code: "sp.points", sort: setOf(elem("point")) },
+  centers: { code: "sp.centers", sort: setOf(elem("center")) },
   edges: { code: "sp.edges", sort: setOf(elem("edge")) },
   domain: { code: "b.domain", sort: setOf(NUM) },
   true: { code: "true", sort: BOOL },
@@ -340,6 +346,8 @@ const GEOMETRY = new Set([
   "slots",
   "corners",
   "points",
+  "centers",
+  "opp",
   "edges",
   "slash",
   "linked",
@@ -2473,6 +2481,59 @@ function diagonalCall(fn: string, vs: readonly Val[], env: Env): Val | null {
   return null;
 }
 
+/**
+ * The readings of a board turned about its centers (Galaxies'), its
+ * arguments compiled: the squares round a center, the square one turns to
+ * about it, and the mark naming a clue each cell may hold, read `name(c)`
+ * and made by `mark(c, q)`. `null` for any other function.
+ */
+function centerCall(fn: string, vs: readonly Val[], env: Env, out: Out): Val | null {
+  const arity = (n: number): void => {
+    if (vs.length !== n) throw new CompileError(`${fn} takes ${n}, given ${vs.length}`);
+  };
+  const mark = env.cellMark;
+  if (mark !== null && fn === mark.name) {
+    arity(1);
+    if (env.answer) throw new CompileError("a rule reads the answer, never the marks");
+    expectElem(vs[0], "cell", fn);
+    return { code: `b.markOf(${vs[0].code})`, sort: elem(`clue ${mark.kind}`) };
+  }
+  switch (fn) {
+    case "cells": {
+      const s = vs[0]?.sort;
+      if (s?.k !== "elem" || s.e !== "center") return null;
+      arity(1);
+      return { code: `sp.centerCells[${vs[0].code}]`, sort: setOf(elem("cell")) };
+    }
+    case "opp":
+      arity(2);
+      expectElem(vs[0], "cell", fn);
+      expectElem(vs[1], "center", fn);
+      env.used.add("opp");
+      return { code: `opp(sp, ${vs[0].code}, ${vs[1].code})`, sort: elem("cell") };
+    case "mark": {
+      if (mark === null) throw new CompileError("mark(c, q): no mark names a clue");
+      if (!env.concluding) throw new CompileError(`${fn} outside a conclusion`);
+      arity(2);
+      expectElem(vs[0], "cell", fn);
+      expectElem(vs[1], `clue ${mark.kind}`, fn);
+      const c = once(vs[0], out);
+      const q = once(vs[1], out);
+      // A cell off the grid, or one naming another clue, cannot name this
+      // one: the conclusion is false. One naming it already is no fact.
+      const t = Out.fresh("_mk");
+      out.emit(`let ${t} = ${c.code} >= 0;`);
+      out.emit(
+        `if (${t}) { const _was = b.markOf(${c.code}); if (_was >= 0) ${t} = _was === ${q.code}; else if (fire === null) { b.markAt(${c.code}, ${q.code}); changed = true; } else facts.push(MARK, ${c.code}, ${q.code}); }`,
+      );
+      env.used.add("MARK");
+      return { code: t, sort: BOOL };
+    }
+    default:
+      return null;
+  }
+}
+
 /** `strike(e, d)` of an edge's mark, which is only ever narrowed. */
 function edgeStrike(fn: string, vs: readonly Val[], env: Env, out: Out): Val {
   if (fn === "place" || env.edgeMark === null)
@@ -2602,7 +2663,8 @@ function call(
     expectElem(vs[i], "cell", fn);
     return vs[i].code;
   };
-  const shaped = diagonalCall(fn, vs, env) ?? rectCall(fn, vs, env);
+  const shaped =
+    diagonalCall(fn, vs, env) ?? rectCall(fn, vs, env) ?? centerCall(fn, vs, env, out);
   if (shaped !== null) return shaped;
   switch (fn) {
     case "cells": {
@@ -3002,7 +3064,12 @@ function keptDefinition(
     if (!isArray(val.sort)) return null;
     const type = tsType(val.sort);
     // One that reads no marks is the board's, kept for as long as it is.
-    const board = !readsMarks(def.body, env.defs, new Set());
+    const board = !readsMarks(
+      def.body,
+      env.defs,
+      new Set(),
+      env.cellMark?.name ?? null,
+    );
     kept.used.add("keptStore");
     kept.used.add("type Kept");
     const store = `${fn}Kept`;
@@ -3075,18 +3142,23 @@ function readsMarks(
   e: Expr,
   defs: ReadonlyMap<string, Definition>,
   seen: Set<string>,
+  cellMark: string | null,
 ): boolean {
   if (e.k === "with") return true;
   const name = e.k === "call" ? e.fn : e.k === "name" ? e.name : null;
   if (name !== null) {
-    if (e.k === "call" && MARK_READS.has(name)) return true;
+    if (
+      e.k === "call" &&
+      (MARK_READS.has(name) || name === cellMark || name === "mark")
+    )
+      return true;
     const d = defs.get(name);
     if (d !== undefined && !seen.has(name)) {
       seen.add(name);
-      if (readsMarks(d.body, defs, seen)) return true;
+      if (readsMarks(d.body, defs, seen, cellMark)) return true;
     }
   }
-  return children(e).some((c) => readsMarks(c, defs, seen));
+  return children(e).some((c) => readsMarks(c, defs, seen, cellMark));
 }
 
 /** The terms directly under `e`. */
@@ -3520,6 +3592,7 @@ export function compileLibrary(
     prelude: null,
     relations: new Set(),
     edgeMark: null,
+    cellMark: null,
     supposed: [],
     kept: null,
   };
@@ -3543,7 +3616,8 @@ function placeSort(what: string, at: string, env: Env): ElemSort {
     at === "line" ||
     at === "slot" ||
     at === "corner" ||
-    at === "point"
+    at === "point" ||
+    at === "center"
   )
     return at;
   if (env.regions.has(at)) return `region ${at}`;
@@ -3691,6 +3765,7 @@ export function compileGame(
     prelude: null,
     relations: new Set(relations),
     edgeMark: edgeMarkOf(d.json)?.name ?? null,
+    cellMark: cellMarkOf(d.json),
     supposed: [],
     kept: { defs: new Map(), used },
   };
