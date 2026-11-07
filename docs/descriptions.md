@@ -429,7 +429,12 @@ author writing for speed uses these:
   ladder's every run shares it: Rect's `allowed(q)`, every rectangle a clue
   could take, is made once a deal. Each keeps its values in a store of its
   own, which looks at the marks it was last read on first: a lookup by the
-  definition's name cost Rect's deals a third of their time.
+  definition's name cost Rect's deals a third of their time. Keeping a value
+  past a placement that misses what it read was built and timed, both by
+  recording each value's reads and by refiltering a set that can only
+  narrow. The recording made Rect's and Star Battle's deals slower, and the
+  narrowing gained 5%: a value made again after a placement is a twentieth
+  of `fits`' reads (2026-11-07, `keep-definitions-across-placements`).
 - **Narrow a costly set by a board-kept one**: Rect's `fits(q)` filters
   `allowed(q)` by the marks, and `near(c)` names the clues whose `allowed`
   reaches a square, so `reachers(c)` reads a handful of clues, not all.

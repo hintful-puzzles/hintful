@@ -3,7 +3,10 @@
 **Status: filed by `describe-rectangles-and-galaxies` (2026-11-07)**, from
 what Rect's Unreasonable deals measured. The owner chose (2026-11-07) to
 ship Rect with that cost and take this change next, before
-`describe-galaxies`.
+`describe-galaxies`. **Concluded 2026-11-07: neither way is taken**.
+Both were built and timed, and rebuilding after a placement is not what
+the deals spend (`design.md`). `keep-board-definitions-across-boards` is
+filed for what they do spend.
 
 ## Why
 
