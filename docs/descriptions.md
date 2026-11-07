@@ -476,7 +476,18 @@ author writing for speed uses these:
   Slant's 30×30 solves took half the time, on the same boards, once it was
   kept (2026-11-07, `make-descriptions-zero-cost`). A structure the runtime
   keeps over the marks catches up from their log, and anything that sets the
-  marks wholesale says so with `restore`, which starts the log again.
+  marks wholesale says so with `restore`, which starts the log again. A sum
+  whose term reads candidates is walked: a strike is not logged.
+- **The groups a set of edges joins are kept on the marks** where the set
+  is bound as `{e in edges where P}`, directly or through a definition, and
+  `P` reads the marks only through `value` and `known` of the edge, or of
+  its two squares, and at most one number bound before it (Filling's
+  `room(d)`). A placement rechecks only the edges it could change: an edge
+  that joins the set joins two groups, and one that leaves it splits only
+  its own group (`keptEdgeGroups`). Filling's deals took 0.86 of the time
+  on the same boards, Palisade's 0.94 (2026-11-07). Any other set of edges
+  is joined afresh where it is bound. `kept-structures.test.ts` checks every
+  kept structure against a fresh one through each game that keeps one.
 - **Narrow a costly set by a board-kept one**: Rect's `fits(q)` filters
   `allowed(q)` by the marks, and `near(c)` names the clues whose `allowed`
   reaches a square, so `reachers(c)` reads a handful of clues, not all.

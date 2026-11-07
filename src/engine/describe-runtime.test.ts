@@ -3,7 +3,9 @@ import {
   connected,
   cuts,
   describedSpace,
+  type EdgeHolds,
   type GridSpace,
+  keptEdgeGroups,
   linkedOf,
   linkedSum,
   type Marks,
@@ -72,6 +74,87 @@ it("a sum kept over the linked groups is the sum over each group, placement by p
   }
   // Enough reads across enough joins that a sum moved wrongly would show.
   expect(checked).toBeGreaterThan(5000);
+});
+
+/** Each square's group across the edges `holds` keeps, from scratch. */
+function edgeGroupsOf(sp: GridSpace, crosses: (e: number) => boolean): number[][] {
+  const root = sp.cells.map((c) => c);
+  const find = (c: number): number => {
+    while (root[c] !== c) c = root[c];
+    return c;
+  };
+  for (const e of sp.edges)
+    if (crosses(e)) root[find(sp.edgeEnds[2 * e])] = find(sp.edgeEnds[2 * e + 1]);
+  return sp.cells.map((c) => sp.cells.filter((x) => find(x) === find(c)));
+}
+
+it("groups kept across a set of edges are the set's groups, placement by placement", () => {
+  // Two values, on the squares or on the edges. The pairs of equal squares
+  // only grow; the edges not yet 1 shrink, and the pairs each of whose
+  // squares is open or holds `a` shrink too, by the number read from outside.
+  const alike: EdgeHolds<null> = (b, sp, _cl, e) =>
+    b.grid[sp.edgeEnds[2 * e]] !== 0 &&
+    b.grid[sp.edgeEnds[2 * e]] === b.grid[sp.edgeEnds[2 * e + 1]];
+  const room: EdgeHolds<null> = (b, sp, _cl, e, a) =>
+    [sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]].every(
+      (c) => b.grid[c] === 0 || b.grid[c] === a,
+    );
+  const open: EdgeHolds<null> = (b, _sp, _cl, e) => b.grid[e] !== 1;
+  const cases = [
+    { holds: alike, byEdge: false, a: 0 },
+    { holds: room, byEdge: false, a: 2 },
+    { holds: open, byEdge: true, a: 0 },
+  ];
+  const rs = randomNew("kept-edge-groups");
+  let checked = 0;
+  for (let round = 0; round < 30; round++) {
+    const w = 1 + randomUpto(rs, 6);
+    const h = 1 + randomUpto(rs, 6);
+    const sp = describedSpace([], w, h);
+    for (const { holds, byEdge, a } of cases) {
+      const n = byEdge ? sp.edges.length : sp.cells.length;
+      const m = new CellMarks(
+        sp,
+        0b110,
+        new Uint8Array(n),
+        null,
+        byEdge ? "edge" : "cell",
+      );
+      m.seed(new Uint8Array(n));
+      const check = (): void => {
+        const want = edgeGroupsOf(sp, (e) => holds(m, sp, null, e, a));
+        const got = keptEdgeGroups(sp, m, null, holds, a, byEdge);
+        for (const c of sp.cells) {
+          expect(got.of(c)).toEqual(want[c]);
+          // A group is one list, which each of its squares reads.
+          expect(got.of(want[c][0])).toBe(got.of(c));
+        }
+        checked++;
+      };
+      // A handle reads the groups as they were when it was taken.
+      const first = keptEdgeGroups(sp, m, null, holds, a, byEdge);
+      const before = sp.cells.map((c) => [...first.of(c)]);
+      let saved: { grid: Uint8Array; cands: Int32Array } | null = null;
+      for (let x = 0; x < n; x++) {
+        if (randomUpto(rs, 4) === 0) continue;
+        m.placeAt(x, 1 + randomUpto(rs, 2));
+        if (randomUpto(rs, 2) === 0) check();
+        if (saved === null && randomUpto(rs, 4) === 0)
+          saved = { grid: Uint8Array.from(m.grid), cands: m.cands.slice() };
+      }
+      check();
+      expect(sp.cells.map((c) => [...first.of(c)])).toEqual(before);
+      if (saved !== null) {
+        m.restore(saved.grid, saved.cands);
+        for (let x = 0; x < n; x++)
+          if (m.grid[x] === 0) m.placeAt(x, 1 + randomUpto(rs, 2));
+        check();
+      }
+    }
+  }
+  // Enough boards and placements that a join missed or a split unseen would
+  // show.
+  expect(checked).toBeGreaterThan(500);
 });
 
 /** Whether `S` is one group, by merging every pair side by side. */

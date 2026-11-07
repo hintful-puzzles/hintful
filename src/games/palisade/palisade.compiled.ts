@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/palisade/palisade.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, edgeGroups, rangeMask } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, edgeGroups, keptEdgeGroups, rangeMask } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -291,7 +291,7 @@ export function notTooBig(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTooB
     }
   }
   const v_O = _g60;
-  const _eg68 = edgeGroups(sp, v_O);
+  const _eg68 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   const _a66 = sp.edges;
   for (let _i67 = 0; _i67 < _a66.length; _i67++) {
     const v_e = _a66[_i67];
@@ -345,7 +345,7 @@ export function notTooSmall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTo
     }
   }
   const v_O = _g111;
-  const _eg119 = edgeGroups(sp, v_O);
+  const _eg119 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   const _a117 = sp.cells;
   for (let _i118 = 0; _i118 < _a117.length; _i118++) {
     const v_c = _a117[_i118];
@@ -556,7 +556,7 @@ export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<E
     }
   }
   const v_O = _g236;
-  const _eg251 = edgeGroups(sp, v_O);
+  const _eg251 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   for (let v_q = 0; v_q < cl.number.at.length; v_q++) {
     const _h260 = cl.number.v[v_q];
     const _h273 = (4 - _h260);
@@ -679,7 +679,7 @@ export function inside(b: Marks, sp: GridSpace, fire: Fire<InsideBinding> | null
     }
   }
   const v_O = _g287;
-  const _eg295 = edgeGroups(sp, v_O);
+  const _eg295 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   const _a293 = sp.edges;
   for (let _i294 = 0; _i294 < _a293.length; _i294++) {
     const v_e = _a293[_i294];
@@ -694,4 +694,9 @@ export function inside(b: Marks, sp: GridSpace, fire: Fire<InsideBinding> | null
     }
   }
   return fired;
+}
+
+/** Whether an edge is in a set whose groups are kept on the marks. */
+function edgeHolds0(b: Marks, _sp: GridSpace, _cl: null, v_e: number, _a: number): boolean {
+  return ((b.grid[v_e] || -1) === 2);
 }

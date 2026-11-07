@@ -37,6 +37,9 @@ export interface Marks {
    * catches up from, a placement at a time, as long as the epoch holds. */
   readonly log: readonly number[];
   readonly epoch: number;
+  /** The structures kept over these marks, by what each keeps
+   * ({@link keptEdgeGroups}). */
+  readonly kept: Map<unknown, unknown>;
   /** Whether the cell holds a value. */
   known(c: number): boolean;
   /** The cell's value, or `-1` where it has none. */
@@ -1021,6 +1024,11 @@ function linkTouch(sp: GridSpace, c: number): void {
  * joined afresh from their grid.
  */
 function linkGroups(sp: GridSpace, b: Marks): void {
+  linkCatchUp(sp, b);
+  if (keptCheck) checkLinked(sp, b);
+}
+
+function linkCatchUp(sp: GridSpace, b: Marks): void {
   if (b === linkMarks && sp === linkSpace && b.epoch === linkEpoch) {
     const { log } = b;
     if (linkRead === log.length) return;
@@ -1327,6 +1335,268 @@ function joinedAcross(sp: GridSpace, E: readonly number[]): EdgeGroups {
   }
   const none: readonly number[] = [];
   return { of: (c) => (c < 0 ? none : groupOf[c]) };
+}
+
+/** Whether edge `e` is in a set {@link keptEdgeGroups} keeps, by the marks
+ * at the edge or at its two squares; `a` is the one number the set's
+ * statement reads from outside it (0 where it reads none). */
+export type EdgeHolds<C> = (
+  b: Marks,
+  sp: GridSpace,
+  cl: C,
+  e: number,
+  a: number,
+) => boolean;
+
+const NO_CELLS: readonly number[] = [];
+
+/** The groups one set of edges joins, kept over one marks. */
+class EdgeGroupsKept {
+  epoch = -1;
+  read = 0;
+  sp: GridSpace | null = null;
+  cl: unknown = null;
+  parent = new Int32Array(0);
+  /** Whether each edge is in the set. */
+  in = new Uint8Array(0);
+  /** Each cell's group, in reading order: every cell of a group holds the
+   * one list, and a list once made is never changed. */
+  groupOf: (readonly number[])[] = [];
+  /** Whether `groupOf` has been handed out since it was last copied: a
+   * handle reads the groups as they were when it was taken, so a join
+   * after it writes a copy. */
+  handed = false;
+  constructor(
+    private readonly holds: EdgeHolds<unknown>,
+    private readonly a: number,
+  ) {}
+
+  root(i: number): number {
+    const p = this.parent;
+    while (p[i] !== i) {
+      p[i] = p[p[i]];
+      i = p[i];
+    }
+    return i;
+  }
+
+  rebuild(b: Marks, sp: GridSpace, cl: unknown): void {
+    this.epoch = b.epoch;
+    this.read = b.log.length;
+    this.sp = sp;
+    this.cl = cl;
+    const n = sp.cells.length;
+    const edges = sp.edgeEnds.length / 2;
+    if (this.parent.length !== n) this.parent = new Int32Array(n);
+    if (this.in.length !== edges) this.in = new Uint8Array(edges);
+    for (let i = 0; i < n; i++) this.parent[i] = i;
+    for (let e = 0; e < edges; e++) {
+      const now = this.holds(b, sp, cl, e, this.a);
+      this.in[e] = now ? 1 : 0;
+      if (now)
+        this.parent[this.root(sp.edgeEnds[2 * e])] = this.root(sp.edgeEnds[2 * e + 1]);
+    }
+    const byRoot = new Array<number[]>(n);
+    const groupOf = new Array<number[]>(n);
+    for (let x = 0; x < n; x++) {
+      const r = this.root(x);
+      let group = byRoot[r];
+      if (group === undefined) {
+        group = [];
+        byRoot[r] = group;
+      }
+      group.push(x);
+      groupOf[x] = group;
+    }
+    this.groupOf = groupOf;
+    this.handed = false;
+  }
+
+  /** The lists about to change, copied first where a handle reads them. */
+  writable(): (readonly number[])[] {
+    if (this.handed) {
+      this.groupOf = this.groupOf.slice();
+      this.handed = false;
+    }
+    return this.groupOf;
+  }
+
+  /** Join edge `e`'s squares' groups into one new list. */
+  join(e: number): void {
+    const sp = this.sp as GridSpace;
+    const p = this.root(sp.edgeEnds[2 * e]);
+    const q = this.root(sp.edgeEnds[2 * e + 1]);
+    if (p === q) return;
+    this.parent[p] = q;
+    const g = this.writable();
+    const merged = mergeSorted(g[sp.edgeEnds[2 * e]], g[sp.edgeEnds[2 * e + 1]]);
+    for (const x of merged) g[x] = merged;
+  }
+
+  /** Join `group`'s squares afresh across the edges still in the set, where
+   * one has left it: only its own squares can come apart, and their parents
+   * all lie among them. */
+  split(group: readonly number[]): void {
+    const sp = this.sp as GridSpace;
+    if (this.mine.length !== this.parent.length)
+      this.mine = new Int32Array(this.parent.length);
+    const mark = ++this.marked;
+    for (const x of group) {
+      this.parent[x] = x;
+      this.mine[x] = mark;
+    }
+    for (const x of group)
+      for (const q of sp.adj4[x])
+        if (q > x && this.mine[q] === mark && this.in[sp.edgeOf(x, q)] === 1)
+          this.parent[this.root(x)] = this.root(q);
+    const g = this.writable();
+    const lists = new Map<number, number[]>();
+    for (const x of group) {
+      const r = this.root(x);
+      let list = lists.get(r);
+      if (list === undefined) {
+        list = [];
+        lists.set(r, list);
+      }
+      list.push(x);
+      g[x] = list;
+    }
+  }
+
+  /** The squares of the group a split is under way in, by a count of splits. */
+  mine = new Int32Array(0);
+  marked = 0;
+
+  /** Catch up from the marks' log: a placement can change only the edges
+   * whose condition reads its index, the edge itself where `byEdge`, else
+   * the square's own edges. The edges that leave the set split their groups
+   * before those that join it join theirs. */
+  update(b: Marks, sp: GridSpace, cl: unknown, byEdge: boolean): EdgeGroups {
+    if (b.epoch !== this.epoch || sp !== this.sp || cl !== this.cl)
+      this.rebuild(b, sp, cl);
+    const { log } = b;
+    const changed = byEdge ? [0] : [0, 0, 0, 0];
+    for (; this.read < log.length; this.read++) {
+      const x = log[this.read];
+      let n = 0;
+      if (byEdge) changed[n++] = x;
+      else for (const q of sp.adj4[x]) changed[n++] = sp.edgeOf(x, q);
+      let left = false;
+      for (let i = 0; i < n; i++) {
+        const e = changed[i];
+        const now = this.holds(b, sp, cl, e, this.a);
+        if (now === (this.in[e] === 1)) changed[i] = -1;
+        else {
+          this.in[e] = now ? 1 : 0;
+          if (!now) left = true;
+        }
+      }
+      if (left)
+        for (let i = 0; i < n; i++) {
+          const e = changed[i];
+          if (e < 0 || this.in[e] === 1) continue;
+          const group = this.groupOf[sp.edgeEnds[2 * e]];
+          // A group two edges left is split once: the first split gives its
+          // squares new lists.
+          if (this.groupOf[group[0]] === group) this.split(group);
+        }
+      for (let i = 0; i < n; i++) {
+        const e = changed[i];
+        if (e >= 0 && this.in[e] === 1) this.join(e);
+      }
+    }
+    if (keptCheck) checkKeptGroups(b, sp, cl, this.holds, this.a, this.groupOf);
+    this.handed = true;
+    const groupOf = this.groupOf;
+    return { of: (c) => (c < 0 ? NO_CELLS : groupOf[c]) };
+  }
+}
+
+/** Whether every kept structure is checked against one made afresh at each
+ * read, and how many reads have been: a guard's switch, never set in play. */
+let keptCheck = false;
+let keptChecked = 0;
+
+/** Turn the check of kept structures against fresh ones on or off, and say
+ * how many reads it checked since it was last turned. */
+export function setKeptCheck(on: boolean): number {
+  keptCheck = on;
+  const n = keptChecked;
+  keptChecked = 0;
+  return n;
+}
+
+function checkKeptGroups(
+  b: Marks,
+  sp: GridSpace,
+  cl: unknown,
+  holds: EdgeHolds<unknown>,
+  a: number,
+  groupOf: readonly (readonly number[])[],
+): void {
+  const fresh = joinedAcross(
+    sp,
+    sp.edges.filter((e) => holds(b, sp, cl, e, a)),
+  );
+  for (const c of sp.cells) {
+    const want = fresh.of(c);
+    const got = groupOf[c];
+    if (want.length !== got.length || want.some((x, i) => x !== got[i]))
+      throw new Error(`kept edge groups: square ${c} is in [${got}], not [${want}]`);
+  }
+  keptChecked++;
+}
+
+/** The linked groups and their sums, against the marks' groups made afresh. */
+function checkLinked(sp: GridSpace, b: Marks): void {
+  const fresh = pointGroups(sp, (c) => b.value(c));
+  for (const p of sp.points) {
+    const want = fresh.of(p);
+    for (const q of want)
+      if (linkRoot(q) !== linkRoot(p))
+        throw new Error(`kept linked groups: point ${q} is not with ${p}`);
+    if (linkSize[linkRoot(p)] !== want.length)
+      throw new Error(`kept linked groups: point ${p}'s group is not [${want}]`);
+    if (want[0] !== p) continue;
+    for (const s of linkSums) {
+      const sum = want.reduce((t, q) => t + s.at(q), 0);
+      if (s.sum[linkRoot(p)] !== sum)
+        throw new Error(
+          `kept linked sum: point ${p}'s group sums ${s.sum[linkRoot(p)]}, not ${sum}`,
+        );
+    }
+  }
+  keptChecked++;
+}
+
+/**
+ * The cells joined across the edges `holds` is true of, as {@link edgeGroups}
+ * joins a set it is given, kept on the marks: caught up from their log, a
+ * placement rechecking only the edges it could change, so a set that grows
+ * as values are placed (the edges with no wall, the pairs of equal numbers)
+ * is joined an edge at a time. An edge that leaves the set starts it again
+ * from the marks, as does a new epoch. `byEdge` says the answer is on the
+ * edges, so a placement is at an edge; otherwise it is at a square.
+ */
+export function keptEdgeGroups<C>(
+  sp: GridSpace,
+  b: Marks,
+  cl: C,
+  holds: EdgeHolds<C>,
+  a: number,
+  byEdge: boolean,
+): EdgeGroups {
+  let byA = b.kept.get(holds) as Map<number, EdgeGroupsKept> | undefined;
+  if (byA === undefined) {
+    byA = new Map();
+    b.kept.set(holds, byA);
+  }
+  let kept = byA.get(a);
+  if (kept === undefined) {
+    kept = new EdgeGroupsKept(holds as EdgeHolds<unknown>, a);
+    byA.set(a, kept);
+  }
+  return kept.update(b, sp, cl, byEdge);
 }
 
 /** The next mask above `k` with as many bits set (Gosper's hack), so a

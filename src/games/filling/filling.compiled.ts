@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/filling/filling.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, edgeGroups, popcount, rangeMask, reaches } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, edgeGroups, keptEdgeGroups, popcount, rangeMask, reaches } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -125,7 +125,7 @@ export function mustGrow(b: Marks, sp: GridSpace, fire: Fire<MustGrowBinding> | 
     }
   }
   const v_O = _g30;
-  const _eg45 = edgeGroups(sp, v_O);
+  const _eg45 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, false);
   for (let _m36 = b.domain; _m36 !== 0; _m36 &= _m36 - 1) {
     const v_d = 31 - Math.clz32(_m36 & -_m36);
     _g37.length = 0;
@@ -138,7 +138,7 @@ export function mustGrow(b: Marks, sp: GridSpace, fire: Fire<MustGrowBinding> | 
       }
     }
     const v_F = _g37;
-    const _eg55 = edgeGroups(sp, v_F);
+    const _eg55 = keptEdgeGroups(sp, b, null, edgeHolds1, v_d, false);
     const _a43 = sp.cells;
     for (let _i44 = 0; _i44 < _a43.length; _i44++) {
       const v_c = _a43[_i44];
@@ -235,7 +235,7 @@ export function onlyWay(b: Marks, sp: GridSpace, fire: Fire<OnlyWayBinding> | nu
     }
   }
   const v_O = _g117;
-  const _eg125 = edgeGroups(sp, v_O);
+  const _eg125 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, false);
   const _a123 = sp.cells;
   for (let _i124 = 0; _i124 < _a123.length; _i124++) {
     const v_c = _a123[_i124];
@@ -349,7 +349,7 @@ export function tooBig(b: Marks, sp: GridSpace, fire: Fire<TooBigBinding> | null
     }
   }
   const v_O = _g190;
-  const _eg212 = edgeGroups(sp, v_O);
+  const _eg212 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, false);
   const _a199 = sp.cells;
   for (let _i200 = 0; _i200 < _a199.length; _i200++) {
     const v_c = _a199[_i200];
@@ -415,7 +415,7 @@ export function noRoom(b: Marks, sp: GridSpace, fire: Fire<NoRoomBinding> | null
       }
     }
     const v_F = _g225;
-    const _eg238 = edgeGroups(sp, v_F);
+    const _eg238 = keptEdgeGroups(sp, b, null, edgeHolds1, v_d, false);
     const _a235 = sp.cells;
     for (let _i236 = 0; _i236 < _a235.length; _i236++) {
       const v_c = _a235[_i236];
@@ -463,7 +463,7 @@ export function tooFar(b: Marks, sp: GridSpace, fire: Fire<TooFarBinding> | null
     }
   }
   const v_O = _g286;
-  const _eg342 = edgeGroups(sp, v_O);
+  const _eg342 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, false);
   for (let _m295 = b.domain; _m295 !== 0; _m295 &= _m295 - 1) {
     const v_d = 31 - Math.clz32(_m295 & -_m295);
     _g296.length = 0;
@@ -601,4 +601,14 @@ export function onlyNumber(b: Marks, sp: GridSpace, fire: Fire<OnlyNumberBinding
     }
   }
   return fired;
+}
+
+/** Whether an edge is in a set whose groups are kept on the marks. */
+function edgeHolds0(b: Marks, sp: GridSpace, _cl: null, v_e: number, _a: number): boolean {
+  return ((b.grid[sp.edgeEnds[2 * v_e]] !== 0) && ((b.grid[sp.edgeEnds[2 * v_e]] || -1) === (b.grid[sp.edgeEnds[2 * v_e + 1]] || -1)));
+}
+
+/** Whether an edge is in a set whose groups are kept on the marks. */
+function edgeHolds1(b: Marks, sp: GridSpace, _cl: null, v_e: number, a: number): boolean {
+  return ((!((b.grid[sp.edgeEnds[2 * v_e]] !== 0)) || ((b.grid[sp.edgeEnds[2 * v_e]] || -1) === a)) && (!((b.grid[sp.edgeEnds[2 * v_e + 1]] !== 0)) || ((b.grid[sp.edgeEnds[2 * v_e + 1]] || -1) === a)));
 }

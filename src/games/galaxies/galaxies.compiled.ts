@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/galaxies/galaxies.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, MARK, PLACE, clueAt, edgeGroups, keptStore, opp, rangeMask, setOf, throughWhere, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, MARK, PLACE, clueAt, edgeGroups, keptEdgeGroups, keptStore, opp, rangeMask, setOf, throughWhere, type Kept } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -399,7 +399,7 @@ export function soleOwner(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SoleOwn
     }
   }
   const v_O = _g193;
-  const _eg204 = edgeGroups(sp, v_O);
+  const _eg204 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   const _a200 = sp.cells;
   for (let _i201 = 0; _i201 < _a200.length; _i201++) {
     const v_c = _a200[_i201];
@@ -832,6 +832,11 @@ export function near(sp: GridSpace, cl: Dealt, v_c: number): readonly number[] {
   const _made = _g106;
   _kept[v_c] = _made;
   return _made;
+}
+
+/** Whether an edge is in a set whose groups are kept on the marks. */
+function edgeHolds0(b: Marks, _sp: GridSpace, _cl: null, v_e: number, _a: number): boolean {
+  return ((b.grid[v_e] || -1) !== 1);
 }
 
 const reachKept = keptStore<readonly number[]>();

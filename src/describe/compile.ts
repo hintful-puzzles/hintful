@@ -81,6 +81,12 @@ interface Val {
    * over the set is read from the sums kept over the groups
    * (`linkedAggregate`). */
   group?: string;
+  /** For a name bound to a set of edges whose condition reads the marks only
+   * at the edge or its two squares: that condition, compiled as a function
+   * of the module, and the one number it reads from outside, so the groups
+   * the set joins are kept on the marks (`keptEdgeSet`). Made where a
+   * `through` first asks, so a set no walk reads adds no function. */
+  edgeSet?: () => { fn: string; arg: string; clues: boolean } | null;
 }
 
 /** The code a set is, a name bound by `=` read as its term: so a filling of
@@ -1053,6 +1059,7 @@ function bindingLoops(
     let pos: Val["pos"];
     let members: Val["members"];
     let names: string | null = null;
+    let edgeSet: Val["edgeSet"] | null = null;
     let where = bnd.where;
     if (bnd.kind === "fill") {
       const f = fillLoop(bnd, sc, env, out);
@@ -1063,6 +1070,9 @@ function bindingLoops(
       const t = compileExpr(bnd.of, sc, env, out);
       sort = t.sort;
       names = setKey(t);
+      const of = bnd.of;
+      const at = sc;
+      edgeSet = () => keptEdgeSet(of, at, env);
       if (bnd.where !== null) {
         const label = Out.fresh("L");
         out.open(`${label}: {`);
@@ -1214,6 +1224,7 @@ function bindingLoops(
       ...(pos === undefined ? {} : { pos }),
       ...(members === undefined ? {} : { members }),
       ...(names === null ? {} : { names }),
+      ...(edgeSet === null ? {} : { edgeSet }),
     };
     inner.set(bnd.name, bound);
     if (where !== null) {
@@ -1989,7 +2000,8 @@ function readsRound(
     }
     case "call": {
       const { fn, args } = e;
-      if (fn === "value" || fn === "known" || fn === "cand") {
+      // Not `cand`: a strike is not logged, so a kept sum would miss it.
+      if (fn === "value" || fn === "known") {
         const [c] = args;
         return args.length === 1 && c.k === "name" && names.get(c.name) === "round";
       }
@@ -2145,6 +2157,173 @@ function linkedAggregate(
     default:
       return { code: sum, sort: NUM };
   }
+}
+
+/**
+ * Whether `e` reads the marks only through `value` and `known` of edge `x`
+ * (an answer on the edges) or of `end1(x)` and `end2(x)` (one on the cells),
+ * and from outside only clues, constants and the scalar names it adds to
+ * `outer`: then a placement changes it only at the edges its index names.
+ * Candidates are not read, since a strike is not logged.
+ */
+function readsAtEdge(
+  e: Expr,
+  x: string,
+  scope: Scope,
+  env: Env,
+  outer: Set<string>,
+  depth = 0,
+): boolean {
+  if (depth > 8) return false;
+  const go = (y: Expr): boolean => readsAtEdge(y, x, scope, env, outer, depth);
+  switch (e.k) {
+    case "num":
+      return true;
+    case "name": {
+      if (e.name === x || env.clues.has(e.name)) return true;
+      const bound = scope.get(e.name);
+      if (bound !== undefined) {
+        if (!scalar(bound.sort)) return false;
+        outer.add(e.name);
+        return true;
+      }
+      const def = env.defs.get(e.name);
+      if (def !== undefined)
+        return (
+          def.params.length === 0 &&
+          readsAtEdge(def.body, x, scope, env, outer, depth + 1)
+        );
+      return NAMES[e.name] !== undefined;
+    }
+    case "call": {
+      const { fn, args } = e;
+      const isX = (a: Expr): boolean => a.k === "name" && a.name === x;
+      if (fn === "value" || fn === "known") {
+        const [c] = args;
+        if (args.length !== 1) return false;
+        return env.answerSort === "edge"
+          ? isX(c)
+          : c.k === "call" && (c.fn === "end1" || c.fn === "end2") && isX(c.args[0]);
+      }
+      if (
+        MARK_READS.has(fn) ||
+        fn === "mark" ||
+        fn === env.cellMark?.name ||
+        fn === env.edgeMark ||
+        scope.has(fn)
+      )
+        return false;
+      const def = env.defs.get(fn);
+      if (def !== undefined) {
+        const body = inlined(e, scope, env);
+        return body !== e && readsAtEdge(body, x, scope, env, outer, depth + 1);
+      }
+      return args.every(go);
+    }
+    case "not":
+    case "neg":
+    case "size":
+      return go(e.of);
+    case "bin":
+      return go(e.a) && go(e.b);
+    default:
+      return false;
+  }
+}
+
+/**
+ * Where `of`, the set a binder names, is `{x in edges where P}` and `P`
+ * reads the marks only at the edge (`readsAtEdge`), and at most one number
+ * bound before it: `P` compiled once as a function of the module, so the
+ * groups the set joins are kept on the marks a placement at a time
+ * (`keptEdgeGroups`) rather than joined afresh at each binding, which
+ * cost Filling's deals a fifth of their time. `null` for any other set.
+ */
+function keptEdgeSet(
+  of: Expr,
+  scope: Scope,
+  env: Env,
+): ReturnType<NonNullable<Val["edgeSet"]>> {
+  const { kept } = env;
+  if (
+    kept === null ||
+    env.answer !== null ||
+    env.position !== null ||
+    env.supposed.length > 0
+  )
+    return null;
+  let set = of;
+  if (set.k === "name" && !scope.has(set.name)) {
+    const def = env.defs.get(set.name);
+    if (def !== undefined && def.params.length === 0) set = def.body;
+  }
+  set = inlined(set, scope, env);
+  if (
+    set.k !== "agg" ||
+    set.fn !== "set" ||
+    set.binders.length !== 1 ||
+    set.where !== null ||
+    set.term?.k !== "name"
+  )
+    return null;
+  const [bnd] = set.binders;
+  if (
+    bnd.kind !== "in" ||
+    bnd.of.k !== "name" ||
+    bnd.of.name !== "edges" ||
+    scope.has("edges") ||
+    bnd.where === null ||
+    set.term.name !== bnd.name
+  )
+    return null;
+  const outer = new Set<string>();
+  if (!readsAtEdge(bnd.where, bnd.name, scope, env, outer) || outer.size > 1)
+    return null;
+  const [a] = outer;
+  const key = JSON.stringify(["edges", bnd.name, bnd.where, a ?? null]);
+  let made = kept.terms.get(key);
+  if (made === undefined) {
+    const v = `v_${bnd.name}`;
+    const readsClues = { yes: false };
+    const body = new Out(1);
+    const sc = new Map<string, Val>([[bnd.name, { code: v, sort: elem("edge") }]]);
+    if (a !== undefined) sc.set(a, { code: "a", sort: (scope.get(a) as Val).sort });
+    const own: Env = {
+      ...env,
+      used: kept.used,
+      readsClues,
+      scratch: null,
+      hoist: null,
+      concluding: false,
+      memo: false,
+      epoch: null,
+    };
+    const w = compileExpr(bnd.where, sc, own, body);
+    expect(w, "bool", `{${bnd.name} in edges where …}`);
+    body.emit(`return ${w.code};`);
+    const fn = `edgeHolds${kept.terms.size}`;
+    const text = body.text();
+    const param = (p: string): string =>
+      new RegExp(`\\b${p}\\b`).test(text.join("\n")) ? p : `_${p}`;
+    kept.defs.set(fn, {
+      sort: BOOL,
+      clues: readsClues.yes,
+      board: false,
+      code: [
+        "/** Whether an edge is in a set whose groups are kept on the marks. */",
+        `function ${fn}(${param("b")}: Marks, ${param("sp")}: GridSpace, ${readsClues.yes ? "cl: Dealt" : "_cl: null"}, ${v}: number, ${param("a")}: number): boolean {`,
+        ...text,
+        "}",
+      ].join("\n"),
+    });
+    made = { fn, clues: readsClues.yes };
+    kept.terms.set(key, made);
+  }
+  return {
+    fn: made.fn,
+    arg: a === undefined ? "0" : (scope.get(a) as Val).code,
+    clues: made.clues,
+  };
 }
 
 function quantifier(
@@ -2688,7 +2867,12 @@ function diagonalCall(fn: string, vs: readonly Val[], env: Env): Val | null {
       // A set of edges a binder names is joined into groups once where it
       // is bound, so each square's is a lookup, not a walk over the set.
       if (E.at !== undefined && env.hoist !== null) {
-        const key = `edgeGroups(sp, ${E.code})`;
+        const kept = E.edgeSet?.() ?? null;
+        if (kept?.clues) env.readsClues.yes = true;
+        const key =
+          kept === null
+            ? `edgeGroups(sp, ${E.code})`
+            : `keptEdgeGroups(sp, b, ${kept.clues ? "cl" : "null"}, ${kept.fn}, ${kept.arg}, ${env.answerSort === "edge"})`;
         let groups = E.at.made.get(key);
         if (groups === undefined) {
           const t = Out.fresh("_eg");
@@ -2696,7 +2880,7 @@ function diagonalCall(fn: string, vs: readonly Val[], env: Env): Val | null {
           groups = { code: t, sort: E.sort, at: E.at };
           E.at.made.set(key, groups);
         }
-        env.used.add("edgeGroups");
+        env.used.add(kept === null ? "edgeGroups" : "keptEdgeGroups");
         return { code: `${groups.code}.of(${cell(0)})`, sort: setOf(elem("cell")) };
       }
       env.used.add("through");

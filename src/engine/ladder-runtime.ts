@@ -83,6 +83,7 @@ export class CellMarks implements Marks {
   placed = 0;
   readonly log: number[] = [];
   epoch = 0;
+  readonly kept = new Map<unknown, unknown>();
   readonly domain: number;
   readonly repeat: number;
   readonly times: number;

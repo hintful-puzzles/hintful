@@ -11,6 +11,7 @@ Done before the owner refocused the change on the engine and language
 The engine and language (proposal § "What Changes"):
 
 - [x] 3. The same-board comparison as a tool in the tree: boards and verdicts checked equal, deals and single solves timed alternately against any commit; documented beside `deal-profile`
+- [x] 4a. Groups across a set of edges kept on the marks' log (`keptEdgeGroups`: joins and local splits), with `kept-structures.test.ts` checking every kept structure, the linked groups' included, against a fresh one in each game that keeps one (seen failing on an unlogged placement); Filling 0.86×, Palisade 0.94×, Separate and Galaxies level. A kept sum no longer admits a term reading candidates
 - [ ] 4. Kept state on the placement log for every group builtin (`pointGroups`, `edgeGroups`, `joinedAcross`, `of`, growing regions), with totals per group as `linkedSum` gives them; a guard each, seen failing on a plant
 - [ ] 5. Per-element kept definitions made again only for the elements a placement could change, by a dependency derived from the statement
 - [ ] 6. Code generation independent of phrasing: one loop for aggregates over one set, no set built only to be counted, cheap geometry and clue reads, a per-element value computed once a scan; each timed on the games whose profile names it

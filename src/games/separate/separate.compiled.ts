@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/separate/separate.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, edgeGroups, rangeMask, through } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, edgeGroups, keptEdgeGroups, rangeMask, through } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -171,7 +171,7 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
     }
   }
   const v_O = _g36;
-  const _eg44 = edgeGroups(sp, v_O);
+  const _eg44 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   const _a42 = sp.edges;
   for (let _i43 = 0; _i43 < _a42.length; _i43++) {
     const v_e = _a42[_i43];
@@ -295,7 +295,7 @@ export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBindi
     }
   }
   const v_O = _g100;
-  const _eg108 = edgeGroups(sp, v_O);
+  const _eg108 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   const _a106 = sp.edges;
   for (let _i107 = 0; _i107 < _a106.length; _i107++) {
     const v_e = _a106[_i107];
@@ -382,7 +382,7 @@ export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBi
     }
   }
   const v_O = _g146;
-  const _eg154 = edgeGroups(sp, v_O);
+  const _eg154 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   const _a152 = sp.cells;
   for (let _i153 = 0; _i153 < _a152.length; _i153++) {
     const v_c = _a152[_i153];
@@ -441,4 +441,9 @@ export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBi
     }
   }
   return fired;
+}
+
+/** Whether an edge is in a set whose groups are kept on the marks. */
+function edgeHolds0(b: Marks, _sp: GridSpace, _cl: null, v_e: number, _a: number): boolean {
+  return ((b.grid[v_e] || -1) === 2);
 }
