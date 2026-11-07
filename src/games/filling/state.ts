@@ -26,6 +26,11 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import {
+  clueList,
+  describedSpace,
+  type GridSpace,
+} from "../../engine/describe-runtime.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
@@ -34,6 +39,7 @@ import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import type { GameStatus } from "../../engine/types.ts";
+import * as filling from "./filling.compiled.ts";
 
 const EMPTY = 0;
 
@@ -146,6 +152,41 @@ export function largestNumber(w: number, h: number): number {
   return Math.min(Math.max(w, h, 3), 9);
 }
 
+// --- the board as the description reads it -----------------------------------
+
+/** The last board size's space, which every move's `status` reads again. */
+let lastSpace: GridSpace | null = null;
+export function spaceOf(w: number, h: number): GridSpace {
+  if (lastSpace?.w !== w || lastSpace.h !== h)
+    lastSpace = describedSpace(filling.units, w, h);
+  return lastSpace;
+}
+
+/** The board as the description deals it: the numbers given, and the largest
+ * number a square may hold. */
+export function dealtOf(clues: ArrayLike<number>, w: number, h: number): filling.Dealt {
+  const at: number[] = [];
+  const v: number[] = [];
+  for (let c = 0; c < clues.length; c++) {
+    if (clues[c] === 0) continue;
+    at.push(c);
+    v.push(clues[c]);
+  }
+  return { number: clueList(at, v, clues.length), largest: largestNumber(w, h) };
+}
+
+/** Whether `board`, every square filled, is an answer to `clues`: every group
+ * of equal numbers holds as many squares as its number, and every given
+ * number stands. */
+export function isSolved(
+  board: ArrayLike<number>,
+  clues: ArrayLike<number>,
+  w: number,
+  h: number,
+): boolean {
+  return filling.isAnswer(board, spaceOf(w, h), dealtOf(clues, w, h));
+}
+
 // --- desc codec ----------------------------------------------------------
 // Run-length: a lowercase letter 'a'..'z' advances past a run of 1..26 empty
 // cells; a digit places a clue of that value. The decoded area is exactly w·h.
@@ -201,7 +242,7 @@ export function encodeDesc(board: ArrayLike<number>, sz: number): string {
   });
 }
 
-// --- region DSF + completion --------------------------------------------
+// --- region DSF ------------------------------------------------------------
 
 /** Disjoint-set of orthogonally-connected equal-valued cells. */
 export function makeRegionDsf(board: ArrayLike<number>, w: number, h: number): Dsf {
@@ -214,15 +255,6 @@ export function makeRegionDsf(board: ArrayLike<number>, w: number, h: number): D
     }
   }
   return dsf;
-}
-
-/** Complete iff every cell's value equals the size of its region. (Empty
- * cells have value 0 but region size ≥ 1, so any empty cell fails.) */
-export function isComplete(board: ArrayLike<number>, w: number, h: number): boolean {
-  const dsf = makeRegionDsf(board, w, h);
-  const sz = w * h;
-  for (let i = 0; i < sz; i++) if (board[i] !== dsf.size(i)) return false;
-  return true;
 }
 
 // --- moves ---------------------------------------------------------------
@@ -260,7 +292,7 @@ export function executeMove(state: FillingState, move: FillingMove): FillingStat
 // --- status / text -------------------------------------------------------
 
 export function status(state: FillingState): GameStatus {
-  return isComplete(state.board, state.w, state.h) ? "solved" : "ongoing";
+  return isSolved(state.board, state.clues, state.w, state.h) ? "solved" : "ongoing";
 }
 
 /** Bordered ASCII grid (upstream `board_to_string`). */

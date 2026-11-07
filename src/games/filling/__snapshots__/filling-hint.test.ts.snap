@@ -1000,16 +1000,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 14,
-    "h": 32,
-    "op": "hatch",
-    "period": 11,
-    "rgb": "rgb(194, 85, 22)",
-    "w": 32,
-    "x": 272,
-    "y": 48,
-  },
-  {
     "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
@@ -3269,6 +3259,16 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
+    "color": 14,
+    "h": 32,
+    "op": "hatch",
+    "period": 11,
+    "rgb": "rgb(194, 85, 22)",
+    "w": 32,
+    "x": 176,
+    "y": 176,
+  },
+  {
     "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
@@ -4223,8 +4223,8 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "rgb": "rgb(21, 113, 233)",
     "thickness": 2,
     "w": 30,
-    "x": 241,
-    "y": 49,
+    "x": 145,
+    "y": 209,
   },
   {
     "color": 13,
@@ -4234,8 +4234,8 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "rgb": "rgb(21, 113, 233)",
     "thickness": 2,
     "w": 30,
-    "x": 209,
-    "y": 49,
+    "x": 177,
+    "y": 209,
   },
 ]
 `;
@@ -4244,8 +4244,8 @@ exports[`filling: pinned hint positions > says, at each pin 1`] = `
 {
   "bitmap": "Every other number in this square would match an outlined neighbor or leave a region short of its size, so it must be 2.",
   "blocked": "The striped region of 5 has only this one empty square to grow into.",
-  "growth": "The striped region of 5 can't fully grow without these squares.",
+  "growth": "The striped region of 3 fits exactly into these squares.",
   "lonely": "The region of each outlined neighbor can't grow to include this square, so it can only be a 1.",
-  "stripedRegion": "The striped region of 5 can't fully grow without these squares.",
+  "stripedRegion": "The striped region of 3 fits exactly into these squares.",
 }
 `;

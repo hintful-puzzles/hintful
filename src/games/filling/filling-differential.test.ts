@@ -1,24 +1,19 @@
 /**
- * Gated C-vs-TS differential for Filling (Fillomino).
+ * The boards upstream's C dealt, against the compiled ladder.
  *
- * Filling earns a differential: it runs a real uniqueness-driven generator
- * (a shuffled DSF region partition + solver-gated clue minimization) over the
- * bit-identical `random.ts`, so a faithful port reproduces the C desc exactly
- * for the same seed. Two assertions per fixture:
- *   1. byte-for-byte desc match (the generator + RNG are faithful);
- *   2. the TS solver uniquely solves the C-recorded board to a valid full
- *      Fillomino solution (every region's size equals its number).
+ * Upstream kept a clue only where its solver could not do without it, so the
+ * ladder solving every board says it reaches as far as upstream's solver did
+ * on them. The ladder is not upstream's (its rulings out read the board
+ * where upstream's candidate elimination did not), so it strips a different
+ * set of clues and no seed is asked to deal its board again.
  *
  * The fixture is **frozen and cannot be regenerated**: the C harness that
  * recorded it is gone (see `engine/testing/differential.ts`).
  */
-import { expect } from "vitest";
-import { DIFF_EASY } from "../../engine/answer-search.ts";
-import { describeDescDifferential } from "../../engine/testing/differential.ts";
+import { describe, expect, it } from "vitest";
 import cReference from "./__fixtures__/filling-c-reference.json" with { type: "json" };
-import { newFillingDesc } from "./generator.ts";
 import { solveFilling } from "./solver.ts";
-import { type FillingParams, makeRegionDsf, newState } from "./state.ts";
+import { decodeParams, isSolved, newState } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -28,21 +23,13 @@ interface Fixture {
 }
 const data = cReference as { version: number; fixtures: Fixture[] };
 
-describeDescDifferential<Fixture, FillingParams>({
-  title: "filling differential (frozen C reference)",
-  fixtures: data.fixtures,
-  label: (f) => `${f.w}x${f.h} seed=${f.seed}`,
-  // Upstream deals one kind of board, which is Easy here.
-  params: (f) => ({ w: f.w, h: f.h, diff: DIFF_EASY }),
-  newDesc: newFillingDesc,
-  extra: (f, p) => {
-    // The TS solver uniquely solves the C board to a valid full solution.
-    const st = newState(p, f.desc);
-    const { solved, board } = solveFilling(st.clues, p.w, p.h);
+describe("filling's ladder on upstream's boards (frozen C reference)", () => {
+  it.each(
+    data.fixtures.map((f) => [`${f.w}x${f.h} seed=${f.seed}`, f] as const),
+  )("solves %s", (_label, f) => {
+    const st = newState(decodeParams(`${f.w}x${f.h}`), f.desc);
+    const { solved, board } = solveFilling(st.clues, f.w, f.h);
     expect(solved).toBe(true);
-    const dsf = makeRegionDsf(board, p.w, p.h);
-    for (let i = 0; i < p.w * p.h; i++) {
-      expect(board[i]).toBe(dsf.size(i));
-    }
-  },
+    expect(isSolved(board, st.clues, f.w, f.h)).toBe(true);
+  });
 });

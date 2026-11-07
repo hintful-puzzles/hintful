@@ -655,6 +655,31 @@ const PLANTS: Record<string, Plant> = {
   inside: {
     for: "O = joined, e in edges where value(e) != 2 and end2(e) not in through(end1(e), O)",
   },
+  // A square whose loss leaves a region exactly enough read as one it needs.
+  "filling.mustGrow": {
+    for: "O = alike, d in domain, F = room(d), c in cells where value(c) = d, A = through(c, O) where c = nth(A, 0) and |A| != d and not grown(A), R = through(c, F), Y = {t in R where not known(t) and reaches(c, R, t) <= d}",
+  },
+  // A square that would complete the region read as one it can't take.
+  "filling.onlyWay": {
+    for: "O = alike, c in cells where known(c), A = through(c, O) where c = nth(A, 0) and |A| < value(c) and not grown(A), d = value(c), T = set(t over a in A, t in adj4(a) where not known(t) and 1 + |joins(t, d, O)| < d) where |T| <= 1",
+  },
+  // A d that would complete a region of d read as making it too big.
+  "filling.tooBig": {
+    for: "O = alike, c in cells where not known(c), d in cand(c) where 1 + |joins(c, d, O)| >= d",
+  },
+  // Exactly enough room read as too little.
+  "filling.noRoom": {
+    for: "d in domain, F = room(d), c in cells where not known(c) and d in cand(c) and |through(c, F)| <= d",
+  },
+  // A group exactly near enough to join read as too far.
+  "filling.tooFar": {
+    for: "O = alike, d in domain, F = fresh(d), c in cells where not known(c) and d in cand(c) and |through(c, F)| < d and not (exists a in cells where value(a) = d: holding(a, c, O) < d)",
+  },
+  // A square with two numbers left read as taking the smaller.
+  "filling.onlyNumber": {
+    for: "c in cells where not known(c) and |cand(c)| <= 2",
+    conclude: "|cand(c)| >= 1 and place(c, min(d in cand(c)))",
+  },
   // Every given segment read as a boat of one square.
   "boats.given": {
     conclude:
@@ -778,8 +803,12 @@ interface World {
 }
 
 /**
- * Each technique sound in every world at every order where the world has an
- * answer, and its planted defect unsound in at least one of them.
+ * Each technique sound in every world where the world has an answer, from the
+ * least order up to the first where each of its planted defects comes out
+ * unsound: the least board on which the check is shown to catch a defect. A
+ * larger one costs many times more and, on every game checked to 2026-11-07,
+ * caught nothing the least such board did not. A defect still uncaught at the
+ * last order fails.
  */
 async function checkAll(worlds: readonly World[], ids: readonly string[]) {
   const bad: string[] = [];
@@ -813,8 +842,6 @@ async function checkAll(worlds: readonly World[], ids: readonly string[]) {
         });
         line(where, v, "sound");
         if (v.verdict !== "sound") bad.push(`${id} ${order}`);
-        if (order === 3 && (name === "set" || name === "fish" || name === "digitSet"))
-          continue;
         for (const [i, { label, plant }] of plants.entries()) {
           tried = true;
           const p = await checkTechnique(
@@ -833,8 +860,10 @@ async function checkAll(worlds: readonly World[], ids: readonly string[]) {
           if (p.verdict === "unsound") caught[i] = true;
         }
       }
-      for (const [i, c] of caught.entries())
-        if (tried && !c) bad.push(`${id} ${plants[i].label} ${order}`);
+      if (tried && caught.every((c) => c)) break;
+      if (order === ORDERS[ORDERS.length - 1])
+        for (const [i, c] of caught.entries())
+          if (tried && !c) bad.push(`${id} ${plants[i].label} ${order}`);
     }
   }
   return bad;

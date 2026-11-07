@@ -344,6 +344,7 @@ const GEOMETRY = new Set([
   "stretch",
   "connected",
   "cuts",
+  "reaches",
   "beam",
   "ahead",
   "within",
@@ -364,6 +365,9 @@ function expectElem(v: Val, e: ElemSort, what: string): void {
   if (!(v.sort.k === "elem" && v.sort.e === e) && v.sort.k !== "none")
     throw new CompileError(`${what}: expected a ${e}, got ${show(v.sort)}`);
 }
+
+const isSetOf = (s: Sort, e: ElemSort): boolean =>
+  s.k === "set" && s.of.k === "elem" && s.of.e === e;
 
 /** The elements that hold the answer's values, as code: the space's cells,
  * or its edges. */
@@ -414,6 +418,7 @@ const EARLY = new Set([
   "stretch",
   "connected",
   "cuts",
+  "reaches",
   "step",
   "chain",
   "slash",
@@ -2084,7 +2089,7 @@ function diagonalCall(fn: string, vs: readonly Val[], env: Env): Val | null {
     case "through": {
       arity(2);
       const E = vs[1];
-      if (!(E.sort.k === "set" && E.sort.of.k === "elem" && E.sort.of.e === "edge"))
+      if (!isSetOf(E.sort, "edge"))
         throw new CompileError(
           `through(c, E): E is a set of edges, not ${show(E.sort)}`,
         );
@@ -2367,7 +2372,7 @@ function call(
       arity(3);
       expectElem(vs[0], "line", fn);
       const S = vs[2];
-      if (!(S.sort.k === "set" && S.sort.of.k === "elem" && S.sort.of.e === "cell"))
+      if (!isSetOf(S.sort, "cell"))
         throw new CompileError(`stretch(L, c, ${show(S.sort)}): S is a set of cells`);
       env.used.add("stretch");
       return {
@@ -2381,13 +2386,23 @@ function call(
       // without which the rest are not.
       arity(1);
       const S = vs[0];
-      if (!(S.sort.k === "set" && S.sort.of.k === "elem" && S.sort.of.e === "cell"))
+      if (!isSetOf(S.sort, "cell"))
         throw new CompileError(`${fn}(${show(S.sort)}): S is a set of cells`);
       env.used.add(fn);
       return {
         code: `${fn}(sp, ${S.code})`,
         sort: fn === "connected" ? BOOL : setOf(elem("cell")),
       };
+    }
+    case "reaches": {
+      // How many members of S square c reaches through members side by
+      // side once t is taken out.
+      arity(3);
+      const S = vs[1];
+      if (!isSetOf(S.sort, "cell"))
+        throw new CompileError(`reaches(c, ${show(S.sort)}, t): S is a set of cells`);
+      env.used.add("reaches");
+      return { code: `reaches(sp, ${cell(0)}, ${S.code}, ${cell(2)})`, sort: NUM };
     }
     case "index":
     case "before": {
@@ -2854,7 +2869,7 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
       );
     const of = compileExpr(first.of, new Map(), { ...tenv, hoist: null }, new Out(0));
     const held = env.answerSort;
-    if (!(of.sort.k === "set" && of.sort.of.k === "elem" && of.sort.of.e === held))
+    if (!isSetOf(of.sort, held))
       throw new CompileError(`${t.id}: its first binder is not over ${held}s`);
     const sc = new Map<string, Val>([
       [first.name, { code: `v_${first.name}`, sort: elem(held), at: tenv.hoist.root }],

@@ -16,7 +16,8 @@ import {
   type StatedTechnique,
 } from "./description.ts";
 
-/** The board orders every technique is checked at. */
+/** The board orders a technique is checked at, from the least up to the
+ * first where each of its planted defects comes out unsound. */
 export const CHECKED_ORDERS: readonly number[] = [3, 4];
 
 /** The most positions a world of a planning game may have for the dead-end

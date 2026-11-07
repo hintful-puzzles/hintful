@@ -750,8 +750,9 @@ is one journey").
   group, so its first cell opens a journey and the rest continue it
   (`deduceHintPlan` in [`unruly/solver.ts`](../src/games/unruly/solver.ts)).
 
-Exemplars: `regionGroups` in
-[`filling/solver.ts`](../src/games/filling/solver.ts), the plan and
+Exemplars: `mustGrow` in
+[`filling.description.yaml`](../src/games/filling/filling.description.yaml),
+one firing that places every square a region cannot do without, the plan and
 `hintKeepTrack` in [`filling/index.ts`](../src/games/filling/index.ts), and
 `skeletonKeepTrack` in the skeleton's `hint.ts`.
 

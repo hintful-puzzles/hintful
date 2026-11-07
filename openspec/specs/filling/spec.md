@@ -12,8 +12,8 @@ an explained deduction hint.
 
 Filling is Fillomino on a `w × h` grid: every cell is filled with a number `n`
 such that each maximal orthogonally-connected region of equal numbers contains
-exactly `n` cells. A state SHALL report `solved` when every cell's value equals
-the size of its region, and not before.
+exactly `n` cells. A state SHALL report `solved` when its description's rules,
+compiled, hold of the board, every given number standing, and not before.
 
 #### Scenario: A full grid with an oversized region is not a solution
 
@@ -99,13 +99,12 @@ SHALL require the decoded area to equal `w·h` exactly.
 
 `newDesc` SHALL deal a board whose regions are no larger than
 `min(max(max(w,h),3), 9)` cells. At Easy it SHALL publish only a clue set from
-which the solver still solves the board, and an Easy board SHALL be the one
-upstream's generator deals from the same seed.
+which the ladder still solves the board.
 
 #### Scenario: Every generated board is solvable
 
 - **WHEN** an Easy board is generated for any preset
-- **THEN** the solver fills every cell
+- **THEN** the ladder fills every cell
 - **AND** each resulting region's size equals its number
 
 ### Requirement: Generation: An Unreasonable Filling board is a full board with clues hidden while one answer is proved
@@ -134,13 +133,10 @@ Unreasonable where it has exactly one answer that they do not reach.
 
 ### Requirement: Solver: Filling solver deduces the unique solution
 
-The solver SHALL apply four sound deductive techniques to fixpoint, in a fixed
-order: forced single-direction region growth, capacity-forced expansion or the
-drop of an isolated `1`, critical distant squares, and per-cell
-possible-number bitmap elimination, which includes inferring unclued "ghost"
-regions. Every square it fills SHALL be right. How many it fills MAY depend on
-the order the squares were filled in, since the last technique is not
-monotone.
+The solver SHALL run the ladder Filling's description states, compiled, to a
+fixpoint, where regions grow into the squares they cannot do without and
+numbers are ruled out of squares they cannot hold. Each technique SHALL be
+checked sound, and SHALL read only the numbers on the board.
 
 #### Scenario: Solver completes a generated board
 
@@ -148,16 +144,21 @@ monotone.
 - **THEN** it reports solved
 - **AND** the produced board has every region sized to its number
 
+#### Scenario: Upstream's boards are solved
+
+- **WHEN** the solver runs on each board upstream's generator dealt
+- **THEN** it reports solved
+
 ### Requirement: Solver: Filling's search assumes each number an empty square can still take
 
-Filling's search for a clue set's answers SHALL run over the solver, assuming
-each number an empty square can still take where the solver stops. Its budget
+Filling's search for a clue set's answers SHALL run over the ladder, assuming
+each number an empty square can still take where the ladder stops. Its budget
 SHALL be 2,000 positions, and SHALL NOT be lowered: a board already dealt,
 which a saved game holds, loads only within it.
 
 #### Scenario: The search tells one answer from several and from none
 
-- **WHEN** the search runs on a board the solver finishes, on a 5×5 with one
+- **WHEN** the search runs on a board the ladder finishes, on a 5×5 with one
   answer that it does not reach, on an empty 3×1 and on a 3×1 of three 2s
 - **THEN** it reports one answer for the first two, several for the third and
   none for the fourth
@@ -172,9 +173,10 @@ which a saved game holds, loads only within it.
 
 ### Requirement: Solver: Filling's solver run says when a position is impossible
 
-After the deductions stop, a position SHALL be reported contradictory where a
-region is past its number's size or is walled in short of it, and solved only
-where every region is exactly its size.
+A position SHALL be reported contradictory where the ladder finds a region
+past its number's size, a region walled in short of it, or a square no number
+fits, and where every square is filled and the rules do not hold; and solved
+only where every square is filled and they do.
 
 #### Scenario: A region past its size, and one shut in short
 
@@ -268,10 +270,10 @@ repeating the region's number.
 
 ### Requirement: Hint: A cell no growth group covers is forced on its own
 
-Cells no region-growth group covers SHALL be forced individually by the
-remaining rules: a cell no neighboring region can grow into, which is a region
-of one and so a 1; a cell where every number but one is eliminated, which takes
-the survivor; or a region's single flood-reachable growth square.
+Cells no region-growth group covers SHALL be forced individually: a region's
+one square to grow into, or a square with one number left once the others are
+ruled out, narrated as a lonely 1 where every neighbor is filled and the number
+is 1, and otherwise as every other number breaking the rule.
 
 #### Scenario: A lonely cell is one step
 
@@ -293,29 +295,6 @@ square.
 - **THEN** every region-growth step carries a non-empty evidence area, and no
   step marks one of its own target squares as evidence
 
-### Requirement: Hint: Filling's hint keeps what the solver deduces from the clues alone
-
-The plan SHALL depart in one thing from `engine-hints`, "A hint is deduced
-from the board in play": where no rule forces a square of the board it has
-reached, it SHALL take the next still-empty square the solver fills from the
-clues alone, narrated with the deduction that forced it there and with its
-evidence read from the board the step is shown on. The plan SHALL so finish
-every mistake-free position of a board the solver finishes from its clues,
-whatever order its squares were filled in.
-
-#### Scenario: A board the rules stall on from its own hint's position
-
-- **WHEN** `hint` is asked on the opening of
-  `7x9:a24h8e45552a5255a4d8a2a4d1b544d53a444553b`
-- **THEN** applying every step's move in order solves the board
-- **AND** the plan made with no run from the clues to keep stops with squares
-  empty
-
-#### Scenario: A position the player filled in their own order
-
-- **WHEN** any share of that board's answer is filled in and `hint` is asked
-- **THEN** the plan fills every empty square with the answer's number
-
 ### Requirement: Hint: Filling's hint finishes an Unreasonable board from numbers tried rightly
 
 On an Unreasonable board the hint's steps SHALL be those its deductions force
@@ -327,6 +306,19 @@ wherever the hint stops, the hint SHALL finish the board.
 - **WHEN** the hint is followed on an Unreasonable board until it refuses, and
   a number is entered as the solution has it wherever the hint stops
 - **THEN** the hint finishes the board
+
+### Requirement: Hint: Filling's hint finishes every mistake-free position of a board the ladder finishes
+
+The plan SHALL be the ladder's firings from the player's numbers, and on a
+board the ladder finishes from its clues it SHALL fill every empty square of
+any mistake-free position, whatever order its squares were filled in.
+
+#### Scenario: A position the player filled in their own order
+
+- **WHEN** any share of the answer of
+  `7x9:a24h8e45552a5255a4d8a2a4d1b544d53a444553b` is filled in and `hint` is
+  asked
+- **THEN** the plan fills every empty square with the answer's number
 
 ### Requirement: Look: Filling rendering shows regions, errors, and completion
 

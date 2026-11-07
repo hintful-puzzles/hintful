@@ -1,9 +1,10 @@
 /**
- * Filling (Fillomino) generator — byte-faithful port of `filling.c`'s
- * `make_board` + `minimize_clue_set`: the same `shuffle` and `randomUpto`
- * draws in the same order, so a desc reproduces C's for the same seed (the
- * differential checks it). That is an Easy board. An Unreasonable one hides
- * clues by the search in `solver.ts` where upstream hides them by the solver.
+ * Filling (Fillomino) generator — port of `filling.c`'s `make_board` +
+ * `minimize_clue_set`, with the same `shuffle` and `randomUpto` draws in the
+ * same order. An Easy board hides clues while the compiled ladder still
+ * solves, where upstream asked its own solver, so the clues it keeps differ
+ * from upstream's for the same seed. An Unreasonable one hides clues by the
+ * search in `solver.ts`.
  *
  * Generation uses a plain mutable `number[]` board (negative sentinels appear
  * transiently in `mergeOnes`), distinct from the immutable game state.
@@ -229,10 +230,9 @@ function unreasonableClues(w: number, h: number, rng: RandomState): number[] {
   });
 }
 
-/** An Easy board, upstream's only kind: clues hidden while the solver still
- * solves. Asking the solver is asking the hint as well, which is what an
- * Easy board is held to at load: the hint's plan falls back on the solver's
- * own run from the clues, so it finishes exactly the boards the solver does. */
+/** An Easy board, upstream's only kind: clues hidden while the ladder still
+ * solves. Asking the ladder is asking the hint as well, which is what an
+ * Easy board is held to at load: the hint walks the same ladder. */
 function easyClues(w: number, h: number, rng: RandomState): number[] {
   const board = makeBoard(w, h, rng);
   minimizeClueSet(board, w, h, rng, (left) => solveFilling(left, w, h).solved);

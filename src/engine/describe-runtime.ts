@@ -637,6 +637,122 @@ export function cuts(sp: GridSpace, S: readonly number[]): readonly number[] {
   return S.filter((c) => groups - 1 + pieces[c] + (parent[c] >= 0 ? 1 : 0) >= 2);
 }
 
+/** The set, square and answers {@link reaches} last searched: a technique
+ * asks of one group's reach once for each square in it. */
+let reachSet: readonly number[] | null = null;
+let reachLength = -1;
+let reachFrom = -1;
+let reachSpace: GridSpace | null = null;
+/** How many members `c` reaches with each square taken out, by square, -1
+ * where the square is not one `c` reaches. */
+let reachKept = new Int32Array(0);
+/** The search's own arrays, a square each, kept between searches. */
+let reachIn = new Uint8Array(0);
+let reachDisc = new Int32Array(0);
+let reachLow = new Int32Array(0);
+let reachSize = new Int32Array(0);
+let reachLost = new Int32Array(0);
+let reachParent = new Int32Array(0);
+let reachNext = new Int32Array(0);
+
+/**
+ * `reaches(c, S, t)`: how many members of `S` the square `c` reaches through
+ * members side by side once `t` is taken out, `c` among them; 0 where `c` is
+ * `t` or not in `S`. One search from `c` answers every `t` (Hopcroft and
+ * Tarjan's: a member cuts off each child in the search tree whose subtree
+ * reaches no higher than it), so it is kept for the set and square last
+ * asked. A set is read as it was first asked: the compiled code never
+ * changes one it has bound.
+ */
+export function reaches(
+  sp: GridSpace,
+  c: number,
+  S: readonly number[],
+  t: number,
+): number {
+  if (
+    S !== reachSet ||
+    S.length !== reachLength ||
+    c !== reachFrom ||
+    sp !== reachSpace
+  )
+    searchReach(sp, c, S);
+  if (c < 0 || t === c) return 0;
+  const kept = t < 0 ? -1 : reachKept[t];
+  // A square outside c's group takes nothing from it.
+  return kept >= 0 ? kept : reachKept[c];
+}
+
+function searchReach(sp: GridSpace, c: number, S: readonly number[]): void {
+  reachSet = S;
+  reachLength = S.length;
+  reachFrom = c;
+  reachSpace = sp;
+  const n = sp.w * sp.h;
+  if (reachKept.length < n) {
+    reachKept = new Int32Array(n);
+    reachIn = new Uint8Array(n);
+    reachDisc = new Int32Array(n);
+    reachLow = new Int32Array(n);
+    reachSize = new Int32Array(n);
+    reachLost = new Int32Array(n);
+    reachParent = new Int32Array(n);
+    reachNext = new Int32Array(n);
+  }
+  reachKept.fill(-1, 0, n);
+  const inS = reachIn;
+  const disc = reachDisc;
+  const low = reachLow;
+  const size = reachSize;
+  const lost = reachLost;
+  const parent = reachParent;
+  const next = reachNext;
+  // Only the members are read before they are written.
+  for (const x of S) {
+    inS[x] = 1;
+    disc[x] = -1;
+    size[x] = 0;
+    lost[x] = 0;
+    parent[x] = -1;
+    next[x] = 0;
+  }
+  if (c < 0 || !inS[c]) {
+    for (const x of S) inS[x] = 0;
+    if (c >= 0) reachKept[c] = 0;
+    return;
+  }
+  const order: number[] = [];
+  let time = 0;
+  disc[c] = low[c] = time++;
+  const stack = [c];
+  while (stack.length > 0) {
+    const v = stack[stack.length - 1];
+    const around = sp.adj4[v];
+    if (next[v] < around.length) {
+      const u = around[next[v]++];
+      if (!inS[u]) continue;
+      if (disc[u] < 0) {
+        parent[u] = v;
+        disc[u] = low[u] = time++;
+        stack.push(u);
+      } else if (u !== parent[v]) low[v] = Math.min(low[v], disc[u]);
+      continue;
+    }
+    stack.pop();
+    order.push(v);
+    size[v] += 1;
+    const p = parent[v];
+    if (p < 0) continue;
+    size[p] += size[v];
+    low[p] = Math.min(low[p], low[v]);
+    if (low[v] >= disc[p]) lost[p] += size[v];
+  }
+  const total = size[c];
+  reachKept[c] = total;
+  for (const v of order) if (v !== c) reachKept[v] = total - 1 - lost[v];
+  for (const x of S) inS[x] = 0;
+}
+
 const rays = new WeakMap<GridSpace, Map<number, readonly number[]>>();
 /** The space asked last and its rays, by `c` and `n`. */
 let raySpace: GridSpace | null = null;
@@ -939,31 +1055,44 @@ export interface EdgeGroups {
   of(c: number): readonly number[];
 }
 
-/** The groups {@link edgeGroups} last joined: the space, a copy of the set
- * of edges, and the groups. */
-let lastGroupSpace: GridSpace | null = null;
-let lastGroupEdges: number[] = [];
-let lastGroups: EdgeGroups | null = null;
+/** A set of edges {@link edgeGroups} joined: the space, a hash and a copy of
+ * the set, and the groups. */
+interface JoinedSet {
+  sp: GridSpace;
+  hash: number;
+  edges: number[];
+  groups: EdgeGroups;
+}
+
+/** How many sets {@link edgeGroups} keeps: a ladder binds one a value of
+ * the domain in each of several rungs (Filling's nine numbers). */
+const KEPT_SETS = 32;
+const joinedSets: JoinedSet[] = [];
+let nextKept = 0;
 
 /**
  * The cells joined across the edges `E`, for reading {@link through} from
  * many cells over one set: `of(c)` is `through(c, E)`, each group listed
- * once it is read. The groups of the last set asked for are kept while it
- * is asked for again: each rung of a ladder binds the set afresh after every
- * firing, and most firings leave it as it was (Separate's walls).
+ * once it is read. The groups of the sets last asked for are kept while one
+ * is asked for again: each rung of a ladder binds its sets afresh after
+ * every firing, and most firings leave them as they were (Separate's walls,
+ * Filling's room for each number).
  */
 export function edgeGroups(sp: GridSpace, E: readonly number[]): EdgeGroups {
-  if (
-    lastGroups !== null &&
-    sp === lastGroupSpace &&
-    E.length === lastGroupEdges.length &&
-    E.every((e, i) => e === lastGroupEdges[i])
-  )
-    return lastGroups;
-  lastGroupSpace = sp;
-  lastGroupEdges = E.slice();
-  lastGroups = joinedAcross(sp, E);
-  return lastGroups;
+  let hash = E.length;
+  for (const e of E) hash = Math.imul(hash ^ e, 0x9e3779b1);
+  for (const kept of joinedSets)
+    if (
+      kept.hash === hash &&
+      kept.sp === sp &&
+      kept.edges.length === E.length &&
+      E.every((e, i) => e === kept.edges[i])
+    )
+      return kept.groups;
+  const joined = { sp, hash, edges: E.slice(), groups: joinedAcross(sp, E) };
+  joinedSets[nextKept] = joined;
+  nextKept = (nextKept + 1) % KEPT_SETS;
+  return joined.groups;
 }
 
 function joinedAcross(sp: GridSpace, E: readonly number[]): EdgeGroups {
@@ -975,19 +1104,24 @@ function joinedAcross(sp: GridSpace, E: readonly number[]): EdgeGroups {
     }
     return i;
   };
-  const parent = Int32Array.from({ length: n }, (_, i) => i);
+  const parent = new Int32Array(n);
+  for (let i = 0; i < n; i++) parent[i] = i;
   for (const e of E)
     parent[root(parent, sp.edgeEnds[2 * e])] = root(parent, sp.edgeEnds[2 * e + 1]);
   // Each cell's group, by cell: the cells are met in reading order, so each
-  // group's list is too.
-  const byRoot: number[][] = [];
-  const groupOf = sp.cells.map((x) => {
+  // group's list is too. A root's list is made when its first cell is met.
+  const byRoot = new Array<number[]>(n);
+  const groupOf = new Array<number[]>(n);
+  for (let x = 0; x < n; x++) {
     const r = root(parent, x);
-    const group = byRoot[r] ?? [];
-    byRoot[r] = group;
+    let group = byRoot[r];
+    if (group === undefined) {
+      group = [];
+      byRoot[r] = group;
+    }
     group.push(x);
-    return group;
-  });
+    groupOf[x] = group;
+  }
   const none: readonly number[] = [];
   return { of: (c) => (c < 0 ? none : groupOf[c]) };
 }

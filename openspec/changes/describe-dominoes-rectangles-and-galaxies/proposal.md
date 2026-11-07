@@ -1,22 +1,22 @@
-# describe-dominoes-rectangles-galaxies-and-fills
+# describe-dominoes-rectangles-and-galaxies
 
-**Status: filed by `describe-divisions` (2026-11-06)**, which split at its
-start and took Palisade. The rest of step 9 of
-`describe-the-whole-catalog`'s plan (`design.md` § "The plan"). It files
+**Status: filed by `describe-dominoes-rectangles-galaxies-and-fills`
+(2026-11-07)**, which split at its start and took Filling. The rest of step
+9 of `describe-the-whole-catalog`'s plan (`design.md` § "The plan"). It files
 step 10, `describe-lines-and-loops`, when it is archived, or the part of
 itself it splits off first.
 
 ## Why
 
-Dominosa, Rect, Galaxies and Filling run hand-written ladders, and Dominosa,
-Rect and Galaxies a second one for the hint (`design.md` § "Edge, line and
-division games"). Rect's `TIER_RUNGS` and Dominosa's `firstFiring` are hand
-copies of a ladder order a description states. The language has an answer on
-the edges (`value.sort: edge`) and regions as the groups the open edges join
-(`through(c, O)`), as Separate and Palisade state them; what these games read
-beyond that is theirs to add: dominoes and barriers (Dominosa), rectangles as
-a derived sort (Rect), point reflection over a half-grid (Galaxies), and a
-region's size as a clue (Filling).
+Dominosa, Rect and Galaxies run hand-written ladders, and each a second one
+for the hint (`design.md` § "Edge, line and division games"). Rect's
+`TIER_RUNGS` and Dominosa's `firstFiring` are hand copies of a ladder order a
+description states. The language has an answer on the edges
+(`value.sort: edge`) and regions as the groups the open edges join
+(`through(c, O)`), as Separate and Palisade state them, and a region's size
+and room to grow, as Filling states them; what these games read beyond that
+is theirs to add: dominoes and barriers (Dominosa), rectangles as a derived
+sort (Rect), point reflection over a half-grid (Galaxies).
 
 ## What Changes
 
@@ -41,10 +41,10 @@ filed.
 
 ## What step 9 learned that binds here
 
-Steps 7 and 8's lessons are in `describe-loops-and-fleets`' and
-`describe-fleets`' proposals, Separate's in `describe-edges-and-divisions`'
-and Palisade's in `describe-divisions'` (all archived); all of them bind
-here. The ones a division game meets first:
+Separate's lessons are in `describe-edges-and-divisions`' proposal,
+Palisade's in `describe-divisions`' and Filling's in
+`describe-dominoes-rectangles-galaxies-and-fills'` (all archived); all of
+them bind here. The ones a division game meets first:
 
 - **A region is `through(c, O)`, `O` the edges known open**, bound once by
   `=` (`docs/descriptions.md` § "The formula syntax").
@@ -57,12 +57,18 @@ here. The ones a division game meets first:
   answer check.
 - **A search over a division joins whole groups**: the branch that joins two
   groups opens every edge between them.
+- **A ruling out a hint never shows reads only what the board shows**
+  (Filling's `tooBig`, `noRoom`, `tooFar`), so the step that places by it can
+  name the squares that pin it; and a square a region cannot do without is a
+  cut of the squares it could reach (`cuts`), so a technique floods again
+  only from those.
 - **Compare where the ladders stop and what they read**, not only whether
-  they finish; random clue sets graded by both ladders are the cheap check.
+  they finish; random clue sets graded by both ladders are the cheap check,
+  with enough clues kept that most have one answer.
 
 ## Figures to re-check
 
-Measured on `describe-divisions`' last commit (2026-11-06), the `solver.ts`
-files: Dominosa 893 lines, Rect 559, Galaxies 832, Filling 776; Rect's
-`hint.ts` 598, Galaxies' 544. Re-measure before designing against any of
-these, and record the HEAD baseline at the session's start.
+Measured on `describe-dominoes-rectangles-galaxies-and-fills`' last commit
+(2026-11-07), the `solver.ts` files: Dominosa 893 lines, Rect 559, Galaxies
+832; Rect's `hint.ts` 598, Galaxies' 544. Re-measure before designing
+against any of these, and record the HEAD baseline at the session's start.

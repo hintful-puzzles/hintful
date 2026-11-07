@@ -273,7 +273,7 @@ function narrate(
 }
 
 function hint(state: FillingState): HintResult<FillingMove, FillingHint, FillingRung> {
-  const plan = deduceHintPlan(state.board, state.clues, state.w, state.h);
+  const plan = deduceHintPlan(state.board, state.w, state.h);
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   const w = state.w;
   const steps: HintStep<FillingMove, FillingHint, FillingRung>[] = plan.map((m) => {

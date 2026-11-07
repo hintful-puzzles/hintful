@@ -242,7 +242,15 @@ description author acts on:
   alike with one. Bind `E` once by `=`, since it is a set over every edge.
   The compiled code keeps each group as one shared list, so `x in
   through(c, E)` and `A = B` over two groups compare the lists, and keeps
-  the groups between runs while `E` is unchanged.
+  the groups of the last few sets between runs while each is unchanged, so
+  a technique binding one set per number (Filling's `room(d)`) still finds
+  its groups kept.
+- **`reaches(c, S, t)` is how many cells of `S` stay reachable from `c`
+  with `t` taken out**, `c` not counted: all of `c`'s group in `S` where `t`
+  is outside it, none where `t` is `c` or `c` is not in `S`. A region that
+  must hold `d` cells grows through `t` where `reaches(c, R, t) < d`
+  (Filling's `mustGrow`). Bind `S` once by `=`: one search of `c`'s group
+  answers every `t`.
 - **An answer on the edges** (`value.sort: edge`, Separate's walls) places
   its values on the edges between squares: `value(e)`, `known(e)` and
   `place(e, d)` read an edge, and `CellMarks` holds a mark an edge
@@ -549,7 +557,17 @@ reads a description's own formulas on small boards (`CHECKED_ORDERS` in
 `src/describe/soundness.ts`) as z3 constraints, with every clue the board
 could be dealt present or not, so one check covers every layout. A technique
 is sound when no binding's premise holds while its conclusion fails under
-the rules. What a small board cannot cover:
+the rules.
+
+**A technique is checked from the least order up to the first where each of
+its planted defects comes out unsound**, and no further: the check is worth
+its cost on the least board shown to catch a defect, and a larger one costs
+many times more. Of 110 plants across the games checked to 2026-11-07, 87
+came out unsound at order 3 in seconds; the rest had no board of order 3
+to run on (Unruly's, Star Battle's) or were not tried there (a set of two),
+so no plant tried at order 3 needed order 4, while Filling's `mustGrow`
+took 8 hours there. A plant still sound at the last order fails
+the check. What a small board cannot cover:
 
 - **A dealt partition is checked only up to the region size `REGION_CELLS`
   gives each order**, or one more in a world no board of those regions has
@@ -607,7 +625,9 @@ the rules. What a small board cannot cover:
 - **`connected(S)` is read as reach**: the first member reaches a member
   beside one it reaches, as many steps as the board has cells, and every
   member must be reached; `cuts(S)` holds each member under the guard that
-  the rest are not connected. It needs no unknown of its own. `chain(c)` is
+  the rest are not connected. It needs no unknown of its own.
+  `reaches(c, S, t)` is the same reach from `c` over the members other
+  than `t`, counted. `chain(c)` is
   read the same way, a cell reached where a member beside it holds the
   value stepping to it.
 - **A domain stated as the values of a range that pass a test** (`{d in

@@ -1,12 +1,20 @@
 /**
- * Filling (Fillomino) solver — port of `filling.c`'s `solver` and its four
- * `learn_*` deductions, iterated to fixpoint.
+ * Filling's solver: the ladder `filling.description.yaml` states, compiled,
+ * on the engine's marks and runner (`engine/ladder-runtime.ts`), and the
+ * search beneath the ladder.
  *
- * Every deduction only fills an *empty* cell with a *forced* value, so what
- * the solver fills is always right. How much it fills depends on the order
- * the techniques fire, because one of them is not monotone
- * (`learnBitmapDeductions`): the solved/stuck verdict the generator's clue
- * minimization depends on is C's because the ladder visits in C's order.
+ * A region is the squares side by side that hold one number. The ladder is
+ * Easy: a region grows where it must (`mustGrow`, `onlyWay`), a number is
+ * ruled out of a square where it would make a region too big (`tooBig`) or
+ * could not make one big enough (`noRoom`), and a square with one number
+ * left takes it (`onlyNumber`). Both rulings out read only the numbers on
+ * the board, so the square a hint fills by them is one the player can check
+ * by looking. Beneath the ladder, a search by trial and error
+ * ({@link searchAnswers}) counts a board's answers to two: it serves the Solve
+ * command and `findMistakes`, and deals the Unreasonable tier. An Easy board
+ * is one the ladder finishes.
+ *
+ * A hint walks the same ladder, one firing at a time ({@link deduceHintPlan}).
  */
 import {
   type Answer,
@@ -14,31 +22,35 @@ import {
   type Deduced,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
-import { valuesOneTo } from "../../engine/candidate-bits.ts";
+import type { DeductionRecord } from "../../engine/deduction-record.ts";
+import { popcount, rangeMask } from "../../engine/describe-runtime.ts";
 import {
-  findingTechniques,
-  runDeductionFixpoint,
-  singleFirings,
-} from "../../engine/deduction-fixpoint.ts";
-import { Dsf } from "../../engine/dsf.ts";
+  CellMarks,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  ladderWalk,
+  runLadder,
+  type Taken,
+  TIERS,
+  uncluedRung,
+} from "../../engine/ladder-runtime.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { DX, DY, largestNumber } from "./state.ts";
+import * as filling from "./filling.compiled.ts";
+import { dealtOf, spaceOf } from "./state.ts";
 
 /** Why a *set* of cells is forced — drives the hint's narration. A single
  * deduction usually forces several squares at once, so a hint step carries a
  * group of cells sharing one reason (the cross-game "one firing = one journey"
  * bar), not a lone cell.
  * - `growth`: a region cannot reach its size without these empty squares (they
- *   are on every completion). `exact` ⇒ they *complete* the region (the
- *   region's only completion is exactly these cells); otherwise the region
- *   still needs more cells beyond them. Covers the expand-to-complete and
- *   critical-square rules, grouped per region.
- * - `blocked`: a region whose *only* flood-reachable empty square is this one
- *   (it can only grow one way) — always a single cell.
- * - `lonely`: no neighboring region can grow to include this square, so it is
- *   a region of one — a 1.
- * - `bitmap`: every number but one is eliminated here (candidate elimination);
- *   the local eliminators are the filled orthogonal neighbors. */
+ *   are on every completion). `exact` ⇒ they *complete* the region.
+ * - `blocked`: a region with one empty square beside it that it can grow into
+ *   — always a single cell.
+ * - `lonely`: every neighbor is filled and no neighboring region can grow to
+ *   include this square, so it is a region of one — a 1.
+ * - `bitmap`: every number but one is ruled out here; the local eliminators
+ *   are the filled orthogonal neighbors. */
 export type FillingHintReason =
   | { kind: "growth"; n: number; exact: boolean }
   | { kind: "blocked"; n: number }
@@ -59,511 +71,119 @@ export interface FillingHintMove {
   reason: FillingHintReason;
 }
 
-/** Internal per-fill recorder used by the single-cell fallback: the solver
- * technique that fired (`kind`) and its evidence cells. */
-type RecorderKind = "blocked" | "capacity" | "lonely" | "bitmap";
-type FillingRecorder = (
-  cell: number,
-  value: number,
-  kind: RecorderKind,
-  evidence: number[],
-) => void;
-
-class FillingSolver {
-  readonly w: number;
-  readonly h: number;
-  readonly sz: number;
-  /** Working board (0 = empty, 1..9 = value). */
-  readonly board: Int32Array;
-  /** Connected components of filled equal-valued cells. */
-  dsf: Dsf;
-  /** Per-cell "next member of my component" cyclic linked list, kept in step
-   * with `dsf` (upstream `connected`). It lets `learnCriticalSquare` walk a
-   * region's members — including ones it fills *during the same pass*, which
-   * is load-bearing for differential parity (the distance pre-filter sees the
-   * grown region, exactly as C). */
-  private readonly connected: Int32Array;
-  nempty: number;
-  /** Optional per-fill recorder (built only on the hint path). */
-  private readonly rec?: FillingRecorder;
-
-  constructor(orig: ArrayLike<number>, w: number, h: number, rec?: FillingRecorder) {
-    this.rec = rec;
-    this.w = w;
-    this.h = h;
-    this.sz = w * h;
-    this.board = Int32Array.from(orig);
-    this.dsf = new Dsf(this.sz);
-    this.connected = new Int32Array(this.sz);
-    for (let i = 0; i < this.sz; i++) this.connected[i] = i;
-    this.nempty = 0;
-    for (let i = 0; i < this.sz; i++) {
-      if (this.board[i] === 0) this.nempty++;
-      else this.filledSquare(i);
-    }
-  }
-
-  /** Merge cells `a` and `b`'s components in both the dsf and the cyclic
-   * `connected` list (upstream `merge`): splice the two cycles by swapping
-   * the roots' `connected` pointers. */
-  private mergeCC(a: number, b: number): void {
-    const ra = this.dsf.canonify(a);
-    const rb = this.dsf.canonify(b);
-    if (ra === rb) return;
-    this.dsf.merge(ra, rb);
-    const c = this.connected[ra];
-    this.connected[ra] = this.connected[rb];
-    this.connected[rb] = c;
-  }
-
-  /** Merge a newly-filled cell with same-valued orthogonal neighbors. */
-  private filledSquare(i: number): void {
-    const { w, h, board } = this;
-    const x = i % w;
-    const y = (i / w) | 0;
-    for (let j = 0; j < 4; j++) {
-      const nx = x + DX[j];
-      const ny = y + DY[j];
-      if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-      const idx = ny * w + nx;
-      if (board[i] === board[idx]) this.mergeCC(i, idx);
-    }
-  }
-
-  /** Fill empty cell `i` with `n`, merging it into equal neighbors. */
-  private fillCell(i: number, n: number): void {
-    this.board[i] = n;
-    this.filledSquare(i);
-    this.nempty--;
-  }
-
-  /** Size of the region if empty cell `i` were filled with value `n`:
-   * 1 + the (deduplicated) sizes of the value-`n` regions it would join. */
-  private expandsize(i: number, n: number): number {
-    const { w, h, board, dsf } = this;
-    const x = i % w;
-    const y = (i / w) | 0;
-    let size = 1;
-    const hits: number[] = [];
-    for (let j = 0; j < 4; j++) {
-      const nx = x + DX[j];
-      const ny = y + DY[j];
-      if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-      const idx = ny * w + nx;
-      if (board[idx] !== n) continue;
-      const root = dsf.canonify(idx);
-      if (hits.includes(root)) continue;
-      size += dsf.size(root);
-      hits.push(root);
-    }
-    return size;
-  }
-
-  /** Can the region containing filled cell `i` (value n) still reach size n
-   * by flooding over empty / same-value cells, treating `blocked` as a wall?
-   * (Upstream `check_capacity` / `flood_count`, with an explicit visited set
-   * instead of negative-sentinel board mutation.) */
-  private checkCapacity(i: number, blocked: number): boolean {
-    const { w, h, board, sz } = this;
-    const n = board[i];
-    const visited = new Uint8Array(sz);
-    const stack = [i];
-    visited[i] = 1;
-    let count = 0;
-    while (stack.length > 0) {
-      const c = stack.pop() as number;
-      if (++count >= n) return true;
-      const x = c % w;
-      const y = (c / w) | 0;
-      for (let j = 0; j < 4; j++) {
-        const nx = x + DX[j];
-        const ny = y + DY[j];
-        if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-        const idx = ny * w + nx;
-        if (visited[idx] || idx === blocked) continue;
-        if (board[idx] === 0 || board[idx] === n) {
-          visited[idx] = 1;
-          stack.push(idx);
-        }
-      }
-    }
-    return count >= n;
-  }
-
-  /** Cells of the canonical region rooted at `root` (value-equal connected). */
-  private regionCells(root: number, value: number): number[] {
-    const { sz, board, dsf } = this;
-    const cells: number[] = [];
-    for (let c = 0; c < sz; c++) {
-      if (board[c] === value && dsf.canonify(c) === root) cells.push(c);
-    }
-    return cells;
-  }
-
-  /** The region a filled cell is in. */
-  regionOf(cell: number): number[] {
-    return this.regionCells(this.dsf.canonify(cell), this.board[cell]);
-  }
-
-  /** Filled orthogonal neighbors of cell `i` — the pinning evidence for a
-   * lonely-cell or candidate-elimination hint. */
-  filledNeighbors(i: number): number[] {
-    const { w, h, board } = this;
-    const x = i % w;
-    const y = (i / w) | 0;
-    const out: number[] = [];
-    for (let j = 0; j < 4; j++) {
-      const nx = x + DX[j];
-      const ny = y + DY[j];
-      if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-      const idx = ny * w + nx;
-      if (board[idx] !== 0) out.push(idx);
-    }
-    return out;
-  }
-
-  /** The empty cells the region rooted at `root` (value `n`) can flood into
-   * over empty cells — every cell it could ever grow to include. A forced
-   * cell is necessarily among these, so this bounds the capacity check. */
-  private regionReachableEmpties(root: number, n: number): number[] {
-    const { w, h, board, sz } = this;
-    const visited = new Uint8Array(sz);
-    const stack = this.regionCells(root, n);
-    for (const c of stack) visited[c] = 1;
-    const empties: number[] = [];
-    while (stack.length > 0) {
-      const c = stack.pop() as number;
-      const x = c % w;
-      const y = (c / w) | 0;
-      for (let j = 0; j < 4; j++) {
-        const nx = x + DX[j];
-        const ny = y + DY[j];
-        if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-        const idx = ny * w + nx;
-        if (visited[idx]) continue;
-        visited[idx] = 1;
-        if (board[idx] === 0) {
-          empties.push(idx);
-          stack.push(idx);
-        } else if (board[idx] === n) {
-          stack.push(idx);
-        }
-      }
-    }
-    return empties;
-  }
-
-  /** The next region-growth deduction, *grouped*: a region that cannot reach
-   * its size without a set of empty cells (each on every completion, so each
-   * forced to the region's value). `exact` ⇒ those cells complete the region
-   * (its only completion). Every region with a forced cell in the current
-   * position, lowest root first. */
-  *regionGroups(): Generator<{
-    cells: number[];
-    value: number;
-    region: number[];
-    exact: boolean;
-  }> {
-    const { sz, board, dsf } = this;
-    for (let i = 0; i < sz; i++) {
-      if (board[i] === 0 || i !== dsf.canonify(i)) continue;
-      const n = board[i];
-      const slack = n - dsf.size(i);
-      if (slack <= 0) continue;
-      const reach = this.regionReachableEmpties(i, n);
-      const forced = reach.filter((j) => !this.checkCapacity(i, j));
-      // forced.length never exceeds slack on a consistent board; guard anyway.
-      if (forced.length > 0 && forced.length <= slack) {
-        yield {
-          cells: forced,
-          value: n,
-          region: this.regionCells(i, n),
-          exact: forced.length === slack,
-        };
-      }
-    }
-  }
-
-  /** A region with exactly one legal growth cell must grow into it. */
-  private learnBlockedExpansion(): boolean {
-    const { w, h, board, dsf, sz } = this;
-    let learn = false;
-    for (let i = 0; i < sz; i++) {
-      if (board[i] === 0) continue;
-      if (i !== dsf.canonify(i)) continue; // canonical only
-      if (dsf.size(i) === board[i]) continue; // already complete
-      const region = this.regionCells(i, board[i]);
-      const targets = new Set<number>();
-      scan: for (const c of region) {
-        const x = c % w;
-        const y = (c / w) | 0;
-        for (let k = 0; k < 4; k++) {
-          const nx = x + DX[k];
-          const ny = y + DY[k];
-          if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-          const idx = ny * w + nx;
-          if (board[idx] !== 0 || targets.has(idx)) continue;
-          if (this.expandsize(idx, board[i]) > board[i]) continue;
-          targets.add(idx);
-          if (targets.size > 1) break scan;
-        }
-      }
-      if (targets.size !== 1) continue;
-      const [target] = targets;
-      this.fillCell(target, board[i]);
-      this.rec?.(target, board[i], "blocked", region);
-      learn = true;
-    }
-    return learn;
-  }
-
-  /** Either force an empty cell a neighboring region must include to reach
-   * capacity, or drop a `1` into an isolated cell no neighbor can extend. */
-  private learnExpandOrOne(): boolean {
-    const { w, h, board, dsf, sz } = this;
-    let learn = false;
-    for (let i = 0; i < sz; i++) {
-      if (board[i] !== 0) continue;
-      let one = true;
-      let expanded = false;
-      const x = i % w;
-      const y = (i / w) | 0;
-      for (let j = 0; j < 4; j++) {
-        const nx = x + DX[j];
-        const ny = y + DY[j];
-        if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-        const idx = ny * w + nx;
-        if (board[idx] === 0) {
-          one = false;
-          continue;
-        }
-        if (one && (board[idx] === 1 || board[idx] >= this.expandsize(i, board[idx]))) {
-          one = false;
-        }
-        if (dsf.size(idx) === board[idx]) continue; // region complete
-        if (this.checkCapacity(idx, i)) continue; // can still complete without i
-        const n = board[idx];
-        const region = this.regionCells(dsf.canonify(idx), n);
-        this.fillCell(i, n);
-        this.rec?.(i, n, "capacity", region);
-        learn = true;
-        expanded = true;
-        break;
-      }
-      if (!expanded && one) {
-        const neighbors = this.filledNeighbors(i);
-        this.fillCell(i, 1); // no neighbor is a 1, so nothing merges
-        this.rec?.(i, 1, "lonely", neighbors);
-        learn = true;
-      }
-    }
-    return learn;
-  }
-
-  /** A region with slack must include any empty cell (within Manhattan
-   * distance = slack) it can't reach its size without. */
-  private learnCriticalSquare(): boolean {
-    const { w, board, dsf, sz, connected } = this;
-    let learn = false;
-    for (let i = 0; i < sz; i++) {
-      if (board[i] === 0) continue;
-      if (i !== dsf.canonify(i)) continue;
-      const slack = board[i] - dsf.size(i);
-      if (slack === 0) continue;
-      for (let j = 0; j < sz; j++) {
-        if (board[j] !== 0) continue;
-        const jx = j % w;
-        const jy = (j / w) | 0;
-        // Walk the region's `connected` cycle from `i`, breaking on the first
-        // member within `slack`. Upstream's post-loop `if (i == k) continue`
-        // then skips `j` both when no member is in range AND when `i` itself is
-        // (it is tested first, so the walk breaks at `k == i`). The cycle grows
-        // as cells fill in this same loop, so later `j`s see the larger region
-        // — both behaviors preserved for differential parity.
-        let k = i;
-        do {
-          if (Math.abs((k % w) - jx) + Math.abs(((k / w) | 0) - jy) <= slack) break;
-          k = connected[k];
-        } while (k !== i);
-        if (k === i) continue; // not within range (or only `i` is — the quirk)
-        if (this.checkCapacity(i, j)) continue;
-        const n = board[i];
-        const region = this.regionCells(i, n);
-        this.fillCell(j, n);
-        this.rec?.(j, n, "capacity", region);
-        learn = true;
-      }
-    }
-    return learn;
-  }
-
-  /** Per-cell bitmap of still-possible numbers; a cell left with one
-   * possibility is forced. The one technique that infers *ghost regions*
-   * (a region with no clued cell). Upstream `learn_bitmap_deductions`.
-   *
-   * Not monotone. A number comes back as a candidate wherever an unfinished
-   * region of it could reach, and reach is measured from each connected piece
-   * by that piece's own size. A square filled away from the rest of its
-   * region is a piece of one, so it reaches further than the region it
-   * belongs to, and a board with more correct squares can force fewer. */
-  private learnBitmapDeductions(): boolean {
-    const { board, sz } = this;
-    const bm = this.candidates();
-    let learn = false;
-
-    // A cell with a single possible number is forced.
-    for (let i = 0; i < sz; i++) {
-      const mask = bm[i];
-      if (board[i] !== 0 || !mask || mask & (mask - 1)) continue;
-      const n = 31 - Math.clz32(mask); // the one set bit
-      const neighbors = this.filledNeighbors(i);
-      this.fillCell(i, n);
-      this.rec?.(i, n, "bitmap", neighbors);
-      learn = true;
-    }
-
-    return learn;
-  }
-
-  /** Each cell's still-possible numbers, as bits 1..9: zero in a filled cell,
-   * and zero in an empty one that nothing fits. */
-  candidates(): Int32Array {
-    const { w, h, board, dsf, sz } = this;
-    const bm = new Int32Array(sz);
-    const bmdsf = new Dsf(sz);
-    const minsize = new Int32Array(sz);
-    const ALL = valuesOneTo(9);
-
-    for (let i = 0; i < sz; i++) bm[i] = ALL;
-
-    // Zero filled cells; clear their number from orthogonal neighbors.
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const i = y * w + x;
-        const n = board[i];
-        if (n !== 0) {
-          bm[i] = 0;
-          if (x > 0) bm[i - 1] &= ~(1 << n);
-          if (x + 1 < w) bm[i + 1] &= ~(1 << n);
-          if (y > 0) bm[i - w] &= ~(1 << n);
-          if (y + 1 < h) bm[i + w] &= ~(1 << n);
-        }
-      }
-    }
-
-    // Winnow components too small to host a brand-new n-region.
-    for (let n = 1; n <= 9; n++) {
-      bmdsf.reinit();
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x + 1 < w; x++) {
-          if (bm[y * w + x] & bm[y * w + x + 1] & (1 << n)) {
-            bmdsf.merge(y * w + x, y * w + x + 1);
-          }
-        }
-      }
-      for (let y = 0; y + 1 < h; y++) {
-        for (let x = 0; x < w; x++) {
-          if (bm[y * w + x] & bm[(y + 1) * w + x] & (1 << n)) {
-            bmdsf.merge(y * w + x, (y + 1) * w + x);
-          }
-        }
-      }
-      for (let i = 0; i < sz; i++) {
-        if (bm[i] & (1 << n) && bmdsf.size(i) < n) bm[i] &= ~(1 << n);
-      }
-    }
-
-    // BFS out from existing n-regions to re-admit reachable cells.
-    for (let n = 1; n <= 9; n++) {
-      for (let i = 0; i < sz; i++) {
-        minsize[i] = board[i] === n ? dsf.size(i) : n + 1;
-      }
-      for (let j = 1; j < n; j++) {
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            const i = y * w + x;
-            if (minsize[i] !== j) continue;
-            if (x > 0 && minsize[i - 1] > j + 1) minsize[i - 1] = j + 1;
-            if (x + 1 < w && minsize[i + 1] > j + 1) minsize[i + 1] = j + 1;
-            if (y > 0 && minsize[i - w] > j + 1) minsize[i - w] = j + 1;
-            if (y + 1 < h && minsize[i + w] > j + 1) minsize[i + w] = j + 1;
-          }
-        }
-      }
-      for (let i = 0; i < sz; i++) if (minsize[i] <= n) bm[i] |= 1 << n;
-    }
-
-    return bm;
-  }
-
-  /**
-   * Where the board stands once {@link run} has stopped. `"solved"` is every
-   * region exactly its number's size, not a board merely full.
-   *
-   * The deductions never say "impossible": each fills a square or does
-   * nothing, which is all a board with an answer asks of them. Under a wrong
-   * assumption they stop on a board that cannot be finished, or fill one
-   * wrongly, and this is what says so: a region past its size, or a region
-   * walled in short of it. An empty square that no number of `allowed` fits
-   * is left as stuck with nothing `open` in it: the search takes that square
-   * first and it divides into no positions.
-   */
-  verdict(allowed: number): { deduced: Deduced; open: Int32Array } {
-    const { board, dsf, sz } = this;
-    const open = this.candidates();
-    for (let i = 0; i < sz; i++) {
-      if (board[i] === 0) {
-        open[i] &= allowed;
-      } else if (i === dsf.canonify(i)) {
-        const short = board[i] - dsf.size(i);
-        if (short < 0 || (short > 0 && !this.checkCapacity(i, -1)))
-          return { deduced: "contradiction", open };
-      }
-    }
-    return { deduced: this.nempty === 0 ? "solved" : "stuck", open };
-  }
-
-  run(): void {
-    // Only the hint path (with `rec`) is budgeted; the generator runs unguarded.
-    const budget = this.rec ? stepBudget("filling hint") : undefined;
-    // Easiest first, restarting after any firing, until every cell is filled.
-    // Filling has no difficulty tiers, so every technique sits on tier 0 and
-    // the reported grade is unused — the ladder is an *order*, not a grading.
-    runDeductionFixpoint({
-      techniques: [
-        {
-          id: "blocked-expansion",
-          tier: 0,
-          run: () => (this.learnBlockedExpansion() ? 1 : 0),
-        },
-        { id: "expand-or-one", tier: 0, run: () => (this.learnExpandOrOne() ? 1 : 0) },
-        {
-          id: "critical-square",
-          tier: 0,
-          run: () => (this.learnCriticalSquare() ? 1 : 0),
-        },
-        {
-          id: "bitmap-elimination",
-          tier: 0,
-          run: () => (this.learnBitmapDeductions() ? 1 : 0),
-        },
-      ],
-      budget,
-      settled: () => this.nempty === 0,
-    });
-  }
+/** What a firing records: the reason a hint step narrates and the squares it
+ * shades, or for a number ruled out of a square, which no step shows, `null`
+ * and the square. */
+interface Recorded {
+  reason: FillingHintReason | null;
+  area: number[];
 }
 
-/** Solve from `orig` to fixpoint. `solved` is true iff every cell was
- * filled; `board` is the (possibly partial) deduced grid. */
+/** The filled neighbors of square `c`: what pins a square's one number. */
+function filledNeighbors(m: CellMarks, c: number): number[] {
+  return m.sp.adj4[c].filter((y) => m.known(y));
+}
+
+/** The ladder, each technique with the reason its firings record, built from
+ * the binding on the marks before the firing. It reads no clue, the numbers
+ * given being placed on the marks, so one serves every board. */
+function fillingLadder(): Ladder {
+  return describedLadder(filling, {
+    mustGrow: uncluedRung(
+      filling.mustGrow,
+      ({ A, d, Y }: filling.MustGrowBinding): Recorded => ({
+        reason: { kind: "growth", n: d, exact: Y.length === d - A.length },
+        area: [...A],
+      }),
+    ),
+    onlyWay: uncluedRung(
+      filling.onlyWay,
+      ({ A, d }: filling.OnlyWayBinding): Recorded => ({
+        reason: { kind: "blocked", n: d },
+        area: [...A],
+      }),
+    ),
+    tooBig: uncluedRung(
+      filling.tooBig,
+      ({ c }: filling.TooBigBinding): Recorded => ({ reason: null, area: [c] }),
+    ),
+    noRoom: uncluedRung(
+      filling.noRoom,
+      ({ c }: filling.NoRoomBinding): Recorded => ({ reason: null, area: [c] }),
+    ),
+    tooFar: uncluedRung(
+      filling.tooFar,
+      ({ c }: filling.TooFarBinding): Recorded => ({ reason: null, area: [c] }),
+    ),
+    onlyNumber: uncluedRung(
+      filling.onlyNumber,
+      ({ c }: filling.OnlyNumberBinding, _at, n, m): Recorded => {
+        const evidence = filledNeighbors(m, c);
+        const lonely = n === 1 && evidence.length === m.sp.adj4[c].length;
+        return {
+          reason: lonely ? { kind: "lonely" } : { kind: "bitmap", n },
+          area: evidence,
+        };
+      },
+    ),
+  });
+}
+
+const LADDER = fillingLadder();
+
+/** The working state of a deduction: the marks, the board they deal, and
+ * whether the numbers on it already break the domain. */
+interface Deduction {
+  m: CellMarks;
+  dl: filling.Dealt;
+  impossible: boolean;
+}
+
+/** The marks over `board`, each number on it placed. */
+function deduction(
+  board: ArrayLike<number>,
+  clues: ArrayLike<number>,
+  w: number,
+  h: number,
+): Deduction {
+  const sp = spaceOf(w, h);
+  const dl = dealtOf(clues, w, h);
+  const grid = Uint8Array.from(board);
+  const m = new CellMarks(sp, rangeMask(1, dl.largest), grid);
+  // A number past the largest a square may hold is no value of the domain:
+  // the seeding refuses it, and the board has no answer.
+  return { m, dl, impossible: !m.seed(grid) };
+}
+
+/** Where the ladder left the marks, it having found nothing inconsistent:
+ * solved where every square is filled and the rules hold, inconsistent where
+ * every square is filled and they do not. */
+function verdictOf({ m, dl }: Deduction): Deduced {
+  if (m.grid.includes(0)) return "stuck";
+  return filling.isAnswer(m.grid, m.sp, dl) ? "solved" : "contradiction";
+}
+
+/** Run the ladder on `d` to a fixpoint and say what it reached. */
+function deduce(d: Deduction): Deduced {
+  const { m } = d;
+  if (d.impossible) return "contradiction";
+  const impossible = runLadder(
+    m,
+    ladderTechniques(m, LADDER.entries, { [TIERS]: 0 }, {}),
+  );
+  return impossible ? "contradiction" : verdictOf(d);
+}
+
+/** Solve from `orig` to fixpoint. `solved` is true iff the ladder filled every
+ * cell with an answer; `board` is the (possibly partial) deduced grid. */
 export function solveFilling(
   orig: ArrayLike<number>,
   w: number,
   h: number,
 ): { solved: boolean; board: Int32Array } {
-  const s = new FillingSolver(orig, w, h);
-  s.run();
-  return { solved: s.nempty === 0, board: s.board };
+  const d = deduction(orig, orig, w, h);
+  const solved = deduce(d) === "solved";
+  return { solved, board: Int32Array.from(d.m.grid) };
 }
 
 // --- the search for a board's answers ---------------------------------------
@@ -572,16 +192,9 @@ export function solveFilling(
  * the full grid. */
 export type FillingAnswer = Answer<Int32Array>;
 
-/** A board partly filled, and each empty square's numbers once the
- * deductions have run on it. */
-interface Position {
-  board: Int32Array;
-  open: Int32Array | null;
-}
-
 /**
  * The positions a search may try before it gives up, each one a number
- * assumed in a square and the four deductions run from it.
+ * assumed in a square and the ladder run from it.
  *
  * It decides which Unreasonable boards exist: a clue set that needs more is
  * thrown away when dealing and refused when pasted. Lowering it refuses boards
@@ -593,7 +206,7 @@ interface Position {
 const SEARCH_BUDGET = 2_000;
 
 /**
- * Count a clue set's answers up to two, by trial and error over the solver:
+ * Count a clue set's answers up to two, by trial and error over the ladder:
  * where it stops, take the empty square with the fewest numbers left and
  * assume each in turn.
  */
@@ -603,43 +216,39 @@ export function searchAnswers(
   h: number,
   budget: number = SEARCH_BUDGET,
 ): FillingAnswer {
-  const allowed = valuesOneTo(largestNumber(w, h));
-  return searchBoard<Position, Int32Array>({
-    start: { board: Int32Array.from(clues), open: null },
-    deduce(position) {
-      const solver = new FillingSolver(position.board, w, h);
-      solver.run();
-      const { deduced, open } = solver.verdict(allowed);
-      position.board = solver.board;
-      position.open = open;
-      return deduced;
-    },
+  return searchBoard<Deduction, Int32Array>({
+    start: deduction(clues, clues, w, h),
+    deduce,
     assume: assumeNumbers,
-    solution: (position) => position.board,
+    solution: (d) => Int32Array.from(d.m.grid),
     budget,
   });
 }
 
 /** The positions a stuck one divides into: its empty square with the fewest
  * numbers left, the first such in reading order, holding each of them. */
-function assumeNumbers({ board, open }: Position): Position[] {
-  if (open === null) throw new Error("filling: assuming before deducing");
-  let fewest: number[] | null = null;
+function assumeNumbers(d: Deduction): Deduction[] {
+  const { m } = d;
   let at = -1;
-  for (let i = 0; i < board.length; i++) {
-    if (board[i] !== 0) continue;
-    const numbers: number[] = [];
-    for (let n = 1; n <= 9; n++) if (open[i] & (1 << n)) numbers.push(n);
-    if (fewest === null || numbers.length < fewest.length) {
-      fewest = numbers;
-      at = i;
+  let fewest = Number.POSITIVE_INFINITY;
+  for (let c = 0; c < m.grid.length; c++) {
+    if (m.grid[c] !== 0) continue;
+    const left = popcount(m.cands[c]);
+    if (left < fewest) {
+      fewest = left;
+      at = c;
     }
   }
-  return (fewest ?? []).map((n) => {
-    const assumed = board.slice();
-    assumed[at] = n;
-    return { board: assumed, open: null };
-  });
+  if (at < 0) return [];
+  const out: Deduction[] = [];
+  for (let n = 1; n <= d.dl.largest; n++) {
+    if (!m.has(at, n)) continue;
+    const assumed = new CellMarks(m.sp, m.domain, m.grid.slice());
+    assumed.cands.set(m.cands);
+    assumed.place(at, n);
+    out.push({ ...d, m: assumed });
+  }
+  return out;
 }
 
 /** Keyed on a state's clues, which every state of a game shares. */
@@ -655,122 +264,52 @@ export function answerOf(state: {
   return answers(state.clues, () => searchAnswers(state.clues, state.w, state.h));
 }
 
-/** One fill of a recorded solver run: the cell, its number, the technique
- * that forced it and that technique's evidence on the board it ran on. */
-interface RecordedFill {
-  cell: number;
-  value: number;
-  kind: RecorderKind;
-  evidence: number[];
-}
+// --- the hint's walk ---------------------------------------------------------
 
-/** Every fill the four-technique solver makes from `board`, in order. */
-function recordFills(board: ArrayLike<number>, w: number, h: number): RecordedFill[] {
-  const fills: RecordedFill[] = [];
-  const s = new FillingSolver(board, w, h, (cell, value, kind, evidence) => {
-    fills.push({ cell, value, kind, evidence });
-  });
-  s.run();
-  return fills;
-}
-
-/** The hint step a recorded fill is when shown on `board`, a correct superset
- * of the board the fill was recorded on: the region it names and the
- * neighbors that pin it are read again from `board`. */
-function stepOf(
-  fill: RecordedFill,
-  board: ArrayLike<number>,
-  w: number,
-  h: number,
-): FillingHintMove {
-  const { cell, value, kind } = fill;
-  const reason: FillingHintReason =
-    kind === "lonely"
-      ? { kind: "lonely" }
-      : kind === "bitmap"
-        ? { kind: "bitmap", n: value }
-        : kind === "blocked"
-          ? { kind: "blocked", n: value }
-          : { kind: "growth", n: value, exact: false };
-  const on = new FillingSolver(board, w, h);
-  const area =
-    kind === "lonely" || kind === "bitmap"
-      ? on.filledNeighbors(cell)
-      : on.regionOf(fill.evidence[0]);
-  return { cells: [cell], value, area: area.filter((c) => c !== cell), reason };
-}
-
-/** Deduce a hint plan from `board` (the player's current marks, a correct
- * superset of `clues`): an ordered list of forced *groups* that drives the
- * board to its unique solution. Each step prefers the grouped region-growth
- * deduction (a region and all the empty squares it can't complete without);
- * when no region has a forced cell, it falls back to a single cell forced by
- * the lonely / candidate-elimination (or only-one-growth) rules.
- *
- * Those rules can stall on a board the clues solve, because candidate
- * elimination is not monotone (`learnBitmapDeductions`). The plan then takes
- * the next square the solver fills from the clues alone. Everything that
- * deduction stood on is still on the board, so it is as true there. Below
- * Unreasonable the solver's run from the clues reaches every square of a board
- * that loaded, so the plan finishes every mistake-free position of one; on an
- * Unreasonable board the run can stop short, and the plan ends where it does. */
+/**
+ * Deduce a hint plan from `board`, the player's current numbers with the
+ * clues among them: the ladder's firings, one at a time, each the one that
+ * carries on from the squares the plan last read and filled (`ladderWalk`),
+ * so the plan grows the region it is working on before it moves on. A firing
+ * that only rules a number out of a square is no step: the square's one
+ * number is, with the neighbors that pin it. Each technique reads more the
+ * more of the answer is filled in, so a board the ladder finishes from its
+ * clues it finishes from every correct position.
+ */
 export function deduceHintPlan(
   board: ArrayLike<number>,
-  clues: ArrayLike<number>,
   w: number,
   h: number,
 ): FillingHintMove[] {
+  const { m, impossible } = deduction(board, board, w, h);
+  if (impossible) return [];
   const plan: FillingHintMove[] = [];
-  const working = Int32Array.from(board);
-  let fromClues: RecordedFill[] | null = null;
-  const one = (fill: RecordedFill | null): FillingHintMove[] =>
-    fill ? [stepOf(fill, working, w, h)] : [];
-  const pass = singleFirings({
-    techniques: findingTechniques<FillingHintMove>(
-      [
-        {
-          id: "growth",
-          tier: 0,
-          find: function* () {
-            for (const group of new FillingSolver(working, w, h).regionGroups())
-              yield {
-                cells: group.cells,
-                value: group.value,
-                area: group.region.filter((c) => !group.cells.includes(c)),
-                reason: { kind: "growth", n: group.value, exact: group.exact },
-              };
-          },
-        },
-        // A single cell, where no region has a forced one: the solver's first
-        // fill, its run being a cascade whose later fills rest on the earlier.
-        {
-          id: "single",
-          tier: 0,
-          fallback: true,
-          find: () => one(recordFills(working, w, h).at(0) ?? null),
-        },
-        {
-          id: "fromClues",
-          tier: 0,
-          fallback: true,
-          find: () => {
-            fromClues ??= recordFills(clues, w, h);
-            return one(fromClues.find((f) => working[f.cell] === 0) ?? null);
-          },
-        },
-      ],
-      (move) => {
-        plan.push(move);
-        for (const c of move.cells) working[c] = move.value;
-      },
-      // A region as it grows: the region and the cells it takes.
-      { reads: (move) => [...move.area, ...move.cells], writes: (move) => move.cells },
-    ),
-    budget: stepBudget("filling hint"),
-    settled: () => !working.includes(0),
-    // A plan grows the region it is working on before it moves on.
-    continuing: true,
-  });
-  while (pass.next());
+  let group = -1;
+  m.recorder = (rec: DeductionRecord) => {
+    const { reason, area } = rec.reason as Recorded;
+    if (rec.kind !== "place" || reason === null) return;
+    const cell = rec.y * w + rec.x;
+    const last = plan.at(-1);
+    if (last !== undefined && rec.group === group) {
+      last.cells.push(cell);
+      return;
+    }
+    group = rec.group;
+    plan.push({ cells: [cell], value: rec.n, area, reason });
+  };
+  m.budget = stepBudget("filling hint");
+  // The squares a firing reads and fills: a player follows a region as it
+  // grows.
+  const reads = ({ facts, reasons }: Taken): number[] => {
+    const own: number[] = [];
+    for (let i = 0; i < facts.length; i += 3) own.push(facts[i + 1]);
+    return [...(reasons[0] as Recorded).area, ...own];
+  };
+  const walk = ladderWalk(m, LADDER.entries, { [TIERS]: 0 }, reads);
+  for (let f = walk.next(); f !== null && f !== "contradiction"; f = walk.next());
+  for (const step of plan) {
+    const filled = new Set(step.cells);
+    step.area = step.area.filter((c) => !filled.has(c));
+  }
   return plan;
 }

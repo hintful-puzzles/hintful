@@ -1671,6 +1671,29 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       );
       return { k: "eset", sort: "cell", mem: cut.filter(([, g]) => g !== false) };
     }
+    case "reaches": {
+      // Read as reach from c over the members of S other than t, as many
+      // steps as the board has cells, and counted.
+      const S =
+        vs[1].k === "vset" && vs[1].mem.every((g) => g === false)
+          ? allOf("cell", [])
+          : vs[1];
+      if (S.k !== "eset") throw new TypeError(`${fn}: not a set`);
+      return lift(vs[0], fn, (c) =>
+        lift(vs[2], fn, (t): V => {
+          if (c < 0) return { k: "num", v: 0 };
+          const mem = sp.cells.map((x) => (x === t ? false : inEset(x, S)));
+          let reach: Bx[] = sp.cells.map((x) => (x === c ? mem[x] : false));
+          for (let k = 1; k < sp.cells.length; k++) {
+            const was = reach;
+            reach = sp.cells.map((x) =>
+              or(was[x], and(mem[x], or(...sp.adj4[x].map((p) => was[p])))),
+            );
+          }
+          return { k: "num", v: sumOf(reach.map((g) => ite(g, 1, 0))) };
+        }),
+      );
+    }
     case "before": {
       // A set the marks decide keeps its order, so the members before one
       // are the earlier squares that may be in it, each under its guard.

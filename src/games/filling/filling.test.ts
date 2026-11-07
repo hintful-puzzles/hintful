@@ -52,7 +52,7 @@ import {
   executeMove,
   type FillingParams,
   type FillingState,
-  isComplete,
+  isSolved,
   makeRegionDsf,
   newState,
 } from "./state.ts";
@@ -122,9 +122,9 @@ describe("filling desc codec", () => {
   });
 
   it("refuses a board with every square clued that is not an answer", () => {
-    // Nothing is empty, so the solver has nothing to do and calls it solved;
-    // the search, which checks a full board against the rule, says it is not.
-    expect(solveFilling([2, 2, 2], 3, 1).solved).toBe(true);
+    // Nothing is empty, so the ladder has nothing to do, and the rules judge
+    // the full board.
+    expect(solveFilling([2, 2, 2], 3, 1).solved).toBe(false);
     expect(loadVerdict(fillingGame, size(3, 1), "222")).toBe(DESC_CONTRADICTORY);
     expect(loadVerdict(fillingGame, size(2, 1), "12")).toBe(DESC_CONTRADICTORY);
     expect(loadVerdict(fillingGame, size(3, 1), "122")).toBeNull();
@@ -160,9 +160,11 @@ describe("filling generator + solver", () => {
 
 describe("filling completion", () => {
   it("recognizes a full correct grid", () => {
-    expect(isComplete([1, 2, 2], 3, 1)).toBe(true);
-    expect(isComplete([1, 2, 0], 3, 1)).toBe(false); // empty cell
-    expect(isComplete([1, 1, 2], 3, 1)).toBe(false); // wrong region size
+    const clues = [1, 0, 2];
+    expect(isSolved([1, 2, 2], clues, 3, 1)).toBe(true);
+    expect(isSolved([1, 2, 0], clues, 3, 1)).toBe(false); // empty cell
+    expect(isSolved([1, 1, 2], [0, 0, 0], 3, 1)).toBe(false); // wrong region size
+    expect(isSolved([2, 2, 1], clues, 3, 1)).toBe(false); // a given number changed
   });
 
   it("marks the state solved when the last cell completes it", () => {

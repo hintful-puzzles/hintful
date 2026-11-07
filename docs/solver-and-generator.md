@@ -140,7 +140,6 @@ for a ladder that is not the plain shape:
 | Read this for | Where |
 | --- | --- |
 | a described game's ladder: one technique an entry, capped and graded per scale | [`engine/ladder-runtime.ts`](../src/engine/ladder-runtime.ts) `ladderTechniques` |
-| an untiered ladder: every technique on tier 0, the grade unused | [`filling/solver.ts`](../src/games/filling/solver.ts) `FillingSolver.run` |
 | a verdict richer than a boolean, carried out through `settled` | [`clusters/solver.ts`](../src/games/clusters/solver.ts) `solveGame` |
 | a ladder that is not a tier prefix, a clamped cap, and a cost accumulated across firings through `settled` | [`spokes/solver.ts`](../src/games/spokes/solver.ts) `spokesSolve` |
 | a rung that runs at one tier and not at the tier above, so it guards itself | [`ascent/solver.ts`](../src/games/ascent/solver.ts) `ascentLadder` |
@@ -341,18 +340,6 @@ Rectangles'.
   ask the hint's engine, at the state where it stalled, whether it still
   holds what the solver just dropped. The first disagreement is the missing
   deduction.
-- **Where the solver's own rule stops firing as the player fills squares,
-  the hint keeps the solver's run from the clues.** This is for a hint that
-  replans from the board at every step over a technique that is not monotone
-  and cannot be made so. Find it by the same trace turned round: take the
-  first fill the solver makes from the clues that the solver, restarted from
-  the stalled board, no longer makes. When replanning finds nothing, the plan
-  takes the next fill of the run from the clues whose square is still empty,
-  and reads its evidence again from the board it is shown on. Every earlier
-  fill is on the board, so the step is as true there, the plan finishes every
-  mistake-free position, and the generator can go on asking the solver alone.
-  A rule the hint never had is still a missing rung. Exemplar:
-  `deduceHintPlan` in [`filling/solver.ts`](../src/games/filling/solver.ts).
 
 ### Giving a deductive game an Unreasonable tier
 
@@ -1363,10 +1350,8 @@ catch a refactor that moves a verdict.
   contract.** Such a quirk may be a deliberate skip, verbatim dead code, the
   release build's semantics where a diagnostics `#ifdef` had early-outs, or a
   contradiction the shipped build does not report. Exemplars: `mergeSomeCages`
-  in [`solo/generator.ts`](../src/games/solo/generator.ts), `fillSquare` in
-  [`slant/solver.ts`](../src/games/slant/solver.ts) and the skipped square in
-  `learnCriticalSquare` in
-  [`filling/solver.ts`](../src/games/filling/solver.ts).
+  in [`solo/generator.ts`](../src/games/solo/generator.ts) and `fillSquare` in
+  [`slant/solver.ts`](../src/games/slant/solver.ts).
 - **The truthiness trap.** Grep a solver-gated generator for `if (solve(`
   and `if (!solve(`. A solver with a multi-valued verdict makes bare
   truthiness a bug: where a code for "ambiguous" is truthy, a strip runs

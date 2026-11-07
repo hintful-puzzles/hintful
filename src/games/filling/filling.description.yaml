@@ -34,3 +34,118 @@ help:
     it could take, beside a region that still has to grow: if it is wrong, a
     region nearby is soon too big or shut in too small. The hint carries on from
     whatever you enter.
+name: Filling
+family: regions
+sizes:
+  # The grid holds at most 2^53 - 1 squares.
+  w: { min: 1, max: 9007199254740991 }
+  h: { min: 1, max: 9007199254740991 }
+  # The largest number a square may hold: the grid's longer side, but at
+  # least 3 and at most 9. The game reads it off the grid.
+  largest: { min: 3, max: 9 }
+space:
+  grid: { w: "w", h: "h" }
+  # The pairs of squares side by side, which a region's squares are joined
+  # across.
+  edges: true
+  units: []
+answer:
+  value: { sort: cell, domain: "range(1, largest)" }
+define:
+  # The pairs side by side known to hold one number: a region is the squares
+  # these join.
+  alike: "{e in edges where known(end1(e)) and value(end1(e)) = value(end2(e))}"
+  # Whether a square of A's number stands beside A outside it: A read before
+  # its region grew.
+  grown(A): "exists a in A, z in adj4(a) where z not in A: value(z) = value(a)"
+  # The squares of d that a d in square c would join, by the groups O joins.
+  joins(c, d, O): "set(a over z in adj4(c) where value(z) = d, a in through(z, O))"
+  # The pairs side by side each of whose squares is empty or holds d: a region
+  # of d lies within the squares these join.
+  room(d): >-
+    {e in edges where (not known(end1(e)) or value(end1(e)) = d)
+    and (not known(end2(e)) or value(end2(e)) = d)}
+  # Whether square x is empty with no d beside it: a square a new region of
+  # d, one holding no d yet, may take.
+  apart(x, d): "not known(x) and not (exists z in adj4(x): value(z) = d)"
+  # The pairs side by side whose squares a new region of d may both take.
+  fresh(d): "{e in edges where apart(end1(e), d) and apart(end2(e), d)}"
+  # How many squares a region holding both square c and the square a, of its
+  # group across O, holds at least: the group, and a path from c to it.
+  holding(a, c, O): "|through(a, O)| + abs(x(a) - x(c)) + abs(y(a) - y(c))"
+shape:
+  # Every group of equal numbers side by side holds as many squares as its
+  # number.
+  - >-
+    forall O = {e in edges where value(end1(e)) = value(end2(e))}, c in cells:
+    |through(c, O)| = value(c)
+clues:
+  # A number given in a square.
+  number: { at: cell, value: "range(1, largest)", means: "value(at) = v" }
+freedom: { kind: fill }
+deal:
+  answer: the grid divided at random into regions, two side by side of one size merged, and a region of one joined to a neighbor where it fits
+  number: every square's, stripped while the ladder, or the search at Unreasonable, still finds the one answer
+  tier: one of the tiers
+tiers: [Easy, Unreasonable]
+techniques:
+  # A region short of its number grows through squares empty or of its
+  # number. A square without which the squares it can reach would hold too
+  # few is in it, so where they hold exactly enough, it takes them all. Past
+  # its number, or with too few squares to reach, the marks are
+  # inconsistent. A solve fills squares as it goes, so a group is read only
+  # while no square of its number stands beside it. A d placed leaves
+  # room(d) as it was, so it is bound once a number. It is stated first: it
+  # fills a region's squares in one firing, which keeps a hint's walk and a
+  # solve's passes short.
+  - id: mustGrow
+    tier: Easy
+    for: >-
+      O = alike, d in domain, F = room(d), c in cells where value(c) = d,
+      A = through(c, O) where c = nth(A, 0) and |A| != d and not grown(A),
+      R = through(c, F),
+      Y = {t in R where not known(t) and reaches(c, R, t) < d}
+    conclude: "|A| < d and |R| >= d and forall t in Y: place(t, d)"
+  # A region short of its number with one empty square beside it that it
+  # can take without joining squares of its number past it grows into that
+  # square. With none, the marks are inconsistent.
+  - id: onlyWay
+    tier: Easy
+    for: >-
+      O = alike, c in cells where known(c), A = through(c, O)
+      where c = nth(A, 0) and |A| < value(c) and not grown(A), d = value(c),
+      T = set(t over a in A, t in adj4(a) where not known(t)
+      and 1 + |joins(t, d, O)| <= d) where |T| <= 1
+    conclude: "|T| = 1 and place(nth(T, 0), d)"
+  # A d in an empty square that would join squares of d into a group past d
+  # can't go there.
+  - id: tooBig
+    tier: Easy
+    for: >-
+      O = alike, c in cells where not known(c),
+      d in cand(c) where 1 + |joins(c, d, O)| > d
+    conclude: "strike(c, d)"
+  # Nor can a d where the squares a region of d holding it could reach,
+  # empty or of d, number fewer than d.
+  - id: noRoom
+    tier: Easy
+    for: >-
+      d in domain, F = room(d),
+      c in cells where not known(c) and d in cand(c) and |through(c, F)| < d
+    conclude: "strike(c, d)"
+  # Nor can a d where every square of d is too far away for a region to hold
+  # both, and the empty squares it could share a new region with, none of
+  # them beside a d, number fewer than d.
+  - id: tooFar
+    tier: Easy
+    for: >-
+      O = alike, d in domain, F = fresh(d),
+      c in cells where not known(c) and d in cand(c) and |through(c, F)| < d
+      and not (exists a in cells where value(a) = d: holding(a, c, O) <= d)
+    conclude: "strike(c, d)"
+  # An empty square with one number left takes it; with none, the marks are
+  # inconsistent.
+  - id: onlyNumber
+    tier: Easy
+    for: "c in cells where not known(c) and |cand(c)| <= 1"
+    conclude: "|cand(c)| = 1 and place(c, the(d in cand(c)))"
