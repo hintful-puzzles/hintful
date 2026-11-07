@@ -1,0 +1,4 @@
+# The spec deltas (engine-hints, app-shell) are written once the owner has answered.
+schema: spec-driven
+created: 2026-11-07
+skip_specs: true

@@ -1,9 +1,10 @@
 # check-the-last-move
 
 **Status: filed on the owner's word (2026-11-07)**, "to see if we could":
-an exploration. **The owner wants to consider this before it is built.** The
-session that takes it up brings them what it measured and the answers it
-proposes to the questions below, before writing a design.
+an exploration. **The owner wants to consider this before it is built, and
+it waits until the description work (`describe-the-whole-catalog`) is
+done.** The session that takes it up brings them what it measured and the
+answers it proposes to the questions below, before writing a design.
 
 ## Why
 
