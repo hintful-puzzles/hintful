@@ -129,6 +129,7 @@ const NOT_A_LIVE_CHANGE = {
   "check-and-save": "a UI command id, one of the app's `data-command` values",
   "check-bridge-parity": "a Tracks solver rung",
   "single-number-simple": "an Ascent ladder rung",
+  "herdr-app-open": "an agent skill AGENTS.md names, which shows the owner a file",
 };
 
 /**
