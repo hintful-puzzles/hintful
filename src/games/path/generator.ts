@@ -27,7 +27,7 @@ import {
   squareEdges,
 } from "../../engine/square-edges.ts";
 import { newOnePathDesc } from "./one-path-generator.ts";
-import { PathBoard, searchAnswer, solvePath } from "./solver.ts";
+import { type PathSolve, searchAnswer, solvePath } from "./solver.ts";
 import {
   DIFF_EASY,
   DIFF_TRICKY,
@@ -36,7 +36,6 @@ import {
   MODE_PATH,
   type PathParams,
   puzzleOf,
-  startEdges,
 } from "./state.ts";
 
 /** The fewest squares a path may have: two numbers side by side would leave
@@ -162,11 +161,8 @@ function numberEnds(g: SquareEdges, paths: readonly Path[]): Uint8Array {
 }
 
 /** The ladder run on `ends` at `cap`, with the edges it decided. */
-function attempt(p: PathParams, ends: Uint8Array, cap: number): PathBoard {
-  const puzzle = puzzleOf(p, ends);
-  const board = new PathBoard(puzzle, startEdges(puzzle));
-  solvePath(board, cap);
-  return board;
+function attempt(p: PathParams, ends: Uint8Array, cap: number): PathSolve {
+  return solvePath(puzzleOf(p, ends), cap);
 }
 
 /**
@@ -188,7 +184,7 @@ function mend(
   for (;;) {
     cut();
     const board = attempt(p, numberEnds(g, paths), cap);
-    if (!board.unfinished()) return paths;
+    if (!board.unfinished) return paths;
     const cuts: { path: number; at: number }[] = [];
     paths.forEach((path, k) => {
       for (let at = MIN_LENGTH; at <= path.length - MIN_LENGTH; at++) {
@@ -208,7 +204,7 @@ function mend(
 const finishesAt =
   (p: PathParams, g: SquareEdges, cap: number) =>
   (paths: readonly Path[]): boolean =>
-    !attempt(p, numberEnds(g, paths), cap).unfinished();
+    !attempt(p, numberEnds(g, paths), cap).unfinished;
 
 /** Join paths, in a random order, wherever `keeps` still holds without the
  * two numbers a join takes away. A join refused is not tried again: joins
@@ -274,7 +270,7 @@ export function newPathDesc(p: PathParams, rng: RandomState): { desc: string } {
     if (p.diff > DIFF_EASY && !joined) continue;
     const ends = numberEnds(g, paths);
     const capped: CappedSolve = (cap) =>
-      attempt(p, ends, cap).unfinished() ? "unsolved" : "solved";
+      attempt(p, ends, cap).unfinished ? "unsolved" : "solved";
     if (solvableAtExactlyTier(capped, p.diff)) return { desc: encodeDesc(ends) };
   }
 }

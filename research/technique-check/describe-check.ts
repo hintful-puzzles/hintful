@@ -689,6 +689,85 @@ function vsetOf(board: Board, members: (d: number) => Bx): V {
   };
 }
 
+/** The least and most a number can be, read off its form where it is built
+ * of numerals, `ite`, sums and products (a count, `index`, `4 * index(i, U)
+ * + index(j, U)`), and `null` where it reads anything else. */
+function bounds(
+  x: Nx,
+  seen = new Map<number, readonly [number, number] | null>(),
+): readonly [number, number] | null {
+  if (typeof x === "number") return [x, x];
+  if (Z3.isIntVal(x)) {
+    const v = Number(x.value());
+    return [v, v];
+  }
+  if (!Z3.isApp(x)) return null;
+  // A term is a graph that shares its parts, and walked as a tree it is
+  // exponential: each part is bounded once.
+  const id = x.id();
+  const known = seen.get(id);
+  if (known !== undefined) return known;
+  seen.set(id, null);
+  const b = boundsOf(x, seen);
+  seen.set(id, b);
+  return b;
+}
+
+function boundsOf(
+  x: Extract<Nx, object>,
+  seen: Map<number, readonly [number, number] | null>,
+): readonly [number, number] | null {
+  const name = x.decl().name();
+  const args = x.children() as Nx[];
+  // An `ite`'s condition is no part of its value, and is never walked.
+  const terms = name === "if" ? args.slice(1) : args;
+  if (!["if", "+", "-", "*"].includes(String(name))) return null;
+  const parts = terms.map((t) => bounds(t, seen));
+  if (parts.some((p) => p === null)) return null;
+  const ps = parts as (readonly [number, number])[];
+  switch (name) {
+    case "if":
+      return [Math.min(ps[0][0], ps[1][0]), Math.max(ps[0][1], ps[1][1])];
+    case "+":
+      return ps.reduce(([a, b], [c, d]) => [a + c, b + d], [0, 0] as readonly [
+        number,
+        number,
+      ]);
+    case "-":
+      return ps.length === 1
+        ? [-ps[0][1], -ps[0][0]]
+        : ps.slice(1).reduce(([a, b], [c, d]) => [a - d, b - c], ps[0]);
+    case "*":
+      return ps.reduce(
+        ([a, b], [c, d]) => {
+          const xs = [a * c, a * d, b * c, b * d];
+          return [Math.min(...xs), Math.max(...xs)];
+        },
+        [1, 1] as readonly [number, number],
+      );
+    default:
+      return null;
+  }
+}
+
+/**
+ * Refuse a set of the numbers `xs` where one can be built past the board's
+ * `top`: a value set holds `0` to `top`, and a member past it would be
+ * dropped unseen, the technique judged on a reading that is not its own (a
+ * pair of a square's four edges coded `4 * index(i, U) + index(j, U)`, up to
+ * 11 on a board whose `top` is 3). A member that reads an unknown, an answer
+ * or a clue, is not bounded here.
+ */
+function heldByTop(board: Board, xs: readonly Nx[]): void {
+  for (const x of xs) {
+    const b = bounds(x);
+    if (b !== null && b[1] > board.top)
+      throw new RangeError(
+        `a set of numbers holds one up to ${b[1]}, past the ${board.top} the checker's sets hold: state it without the number`,
+      );
+  }
+}
+
 /** The value of cell `c`: the answer in a rule, the placed value or none in a
  * technique. */
 function cellValue(ctx: Ctx, c: number): Nx {
@@ -881,8 +960,11 @@ function evaluate(e: Expr, env: Env, ctx: Ctx): V {
     }
     case "set": {
       const vs = e.elems.map((x) => evaluate(x, env, ctx));
-      if (vs.every((v) => v.k === "num"))
-        return vsetOf(board, (d) => or(...vs.map((v) => cmp("=", num(v, "{}"), d))));
+      if (vs.every((v) => v.k === "num")) {
+        const xs = vs.map((v) => num(v, "{}"));
+        heldByTop(board, xs);
+        return vsetOf(board, (d) => or(...xs.map((x) => cmp("=", x, d))));
+      }
       const out = new Map<number, Bx>();
       for (const v of vs)
         for (const [id, g] of alts(v, "{}")) out.set(id, or(out.get(id) ?? false, g));
@@ -1315,10 +1397,13 @@ function aggregate(e: Extract<Expr, { k: "agg" }>, env: Env, ctx: Ctx): V {
     }
     case "set": {
       if (parts.length === 0) return vsetOf(ctx.board, () => false);
-      if (parts[0].t.k === "num")
+      if (parts[0].t.k === "num") {
+        const xs = parts.map((p) => num(p.t, "set"));
+        heldByTop(ctx.board, xs);
         return vsetOf(ctx.board, (d) =>
-          or(...parts.map((p) => and(p.g, cmp("=", num(p.t, "set"), d)))),
+          or(...parts.map((p, i) => and(p.g, cmp("=", xs[i], d)))),
         );
+      }
       const out = new Map<number, Bx>();
       for (const p of parts)
         for (const [id, g] of alts(p.t, "set"))
@@ -2614,6 +2699,11 @@ async function checkWithin(
       solver.set("timeout", ms);
       r = await solver.check();
     }
+    // `CHECK_MODEL=1` prints the board an unsound verdict was found on, which
+    // the result line names only by its first binder. The bit-blasted solver
+    // keeps no model once popped, so a verdict it settled prints none.
+    if (r === "sat" && process.env["CHECK_MODEL"])
+      printModel(solver, board, `${t.id} at ${key}`);
     solver.pop();
     if (r === "unknown") stop();
     if (r !== "unsat")
@@ -2633,6 +2723,32 @@ async function checkWithin(
     queries,
     seconds: (performance.now() - t0) / 1000,
   };
+}
+
+/** A counterexample: the answer on each cell or edge, which of them the
+ * marks know, each clue dealt (where it sits, whether it is there, its
+ * value) and the sizes. */
+function printModel(
+  solver: InstanceType<typeof Z3.Solver>,
+  board: Board,
+  what: string,
+): void {
+  const model = solver.model();
+  const ev = (x: Nx | Bx): string =>
+    typeof x === "number" || typeof x === "boolean"
+      ? String(x)
+      : String(model.eval(x, true));
+  const rows = [
+    `model of ${what}`,
+    `answer ${board.ans.map(ev).join(" ")}`,
+    `known  ${board.known.map((k) => (ev(k) === "true" ? "K" : ".")).join(" ")}`,
+    ...[...board.clues].map(
+      ([kind, cs]) =>
+        `clue ${kind}: ${cs.map((c) => `${c.at}:${ev(c.present)}:${c.v.k === "num" ? ev(c.v.v) : c.v.k}`).join(" ")}`,
+    ),
+    ...[...board.sizes].map(([n, v]) => `size ${n} = ${ev(v)}`),
+  ];
+  console.log(rows.join("\n"));
 }
 
 function show(v: V | null): string {

@@ -1,0 +1,10 @@
+ok  path       forced                         current: recorded src/games/path/path.description.yaml#forced 4166c7676819ceb9
+ok  path       lineBreaks                     current: recorded src/games/path/path.description.yaml#lineBreaks 03e5b94937ea48f3
+ok  path       pairBreaks                     current: recorded src/games/path/path.description.yaml#pairBreaks c7e3af7795ad73a7 held
+ok  path step=0 weighed                        3  sound    (want sound   )     9 queries  121.5s
+..  path step=0 weighed (planted): not proved whole in time, asked on 8 boards: unsound
+ok  path step=0 weighed (planted)              3  unsound  (want unsound )    50 queries   11.1s   at cell 4
+..  path step=1 weighed: not proved whole in time, asked on 16 boards: no defect
+ok  path step=1 weighed                        3  sound    (want sound   )   144 queries  108.4s
+..  path step=1 weighed (planted): not proved whole in time, asked on 8 boards: unsound
+ok  path step=1 weighed (planted)              3  unsound  (want unsound )     5 queries    7.3s   at cell 4

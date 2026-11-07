@@ -176,17 +176,27 @@ Under Path, the ladder SHALL count an edge as closed when a line on it would joi
 
 ### Requirement: Solver: The ladder and its Checks
 
-The Easy rung SHALL be: a square whose open edges are as many as the lines it still needs takes a line on each. Normal's rung SHALL cross out an edge whose line would break the board at once, and give a square needing two lines with three edges left the third where lines on the other two would. Tricky's SHALL weigh a square needing two lines with four edges left: what every pair that does not break shares is drawn, and an edge none takes is crossed out.
+The ladder SHALL be the description's compiled ladder, each technique checked sound, and the hint SHALL walk the same ladder. Easy SHALL fill a square whose open edges are the lines it still needs. Normal SHALL cross out an edge whose line breaks the board at once, and give a square needing two lines from three edges the third where lines on the other two would break it. Tricky SHALL weigh a square needing two lines from four edges, pair by pair.
 
 #### Scenario: A pair that breaks settles the third edge
 
 - **WHEN** a square needs two lines from three open edges, and lines on two of them would join the 4 to the 1
 - **THEN** the third edge takes a line
 
+#### Scenario: Four edges are weighed pair by pair
+
+- **WHEN** a square needs two lines from four open edges
+- **THEN** an edge every pair that breaks nothing shares takes a line, and an edge no such pair takes is crossed out
+
 #### Scenario: Nothing is followed from a tried line
 
 - **WHEN** a line would break the board only after the Easy rung fires from it
 - **THEN** no rung below Unreasonable decides that edge from it
+
+#### Scenario: A board the hand-written ladder dealt keeps its tier
+
+- **WHEN** a board dealt at Normal or Tricky before the ladder was described is graded
+- **THEN** it grades at the tier it was dealt at
 
 ### Requirement: Controls: A drag draws a line through the squares it passes
 

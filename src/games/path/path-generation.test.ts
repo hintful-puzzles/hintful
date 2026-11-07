@@ -18,7 +18,7 @@ import { leafPresets } from "../../engine/testing/presets.ts";
 import { countAnswers } from "./count-answers.ts";
 import { newPathDesc } from "./generator.ts";
 import { pathGame } from "./index.ts";
-import { answerOf, PATH_RUNGS, PathBoard, solvePath } from "./solver.ts";
+import { answerOf, PATH_RUNGS, solvePath } from "./solver.ts";
 import {
   DIFF_EASY,
   DIFF_NORMAL,
@@ -83,7 +83,7 @@ describeLadderCensus<PathParams & { desc: string }>({
   cases: dealt.map(({ label, p, desc }) => ({ label, board: () => ({ ...p, desc }) })),
   solve: (p, cap, firings) => {
     const s = newState(p, p.desc);
-    return solvePath(new PathBoard(s, s.edges), cap, firings);
+    return solvePath(s, cap, { edges: s.edges, firings }).verdict;
   },
 });
 

@@ -1113,6 +1113,40 @@ export function through(
   return out.length > 1 ? out.sort((a, b) => a - b) : out;
 }
 
+/**
+ * `through(c, {e in edges where P})`: {@link through} over the edges `crosses`
+ * holds of, asked only of the edges the walk from `c` meets. A set of edges
+ * stated in place, not bound, is read this way, so a walk along one piece of
+ * line costs the piece, not the board: a supposed line changes the set at
+ * every look (Path's).
+ */
+export function throughWhere(
+  sp: GridSpace,
+  c: number,
+  crosses: (e: number) => boolean,
+): readonly number[] {
+  if (c < 0) return [];
+  const n = sp.cells.length;
+  if (reached.length < n) reached = new Int32Array(n);
+  if (++walk === 0x7fffffff) {
+    reached.fill(0);
+    walk = 1;
+  }
+  // `crosses` may walk too (a piece's ends read inside a stretch's test),
+  // which takes the counter on: this walk's cells are the ones marked with
+  // its own.
+  const mine = walk;
+  const out = [c];
+  reached[c] = mine;
+  for (let i = 0; i < out.length; i++)
+    for (const q of sp.adj4[out[i]]) {
+      if (reached[q] === mine || !crosses(sp.edgeOf(out[i], q))) continue;
+      reached[q] = mine;
+      out.push(q);
+    }
+  return out.length > 1 ? out.sort((a, b) => a - b) : out;
+}
+
 /** The cells joined across a set of edges: `of(c)` is `c`'s group in
  * reading order, one list that each of its cells reads, so a cell is in a
  * group exactly where `of` gives it that list. */

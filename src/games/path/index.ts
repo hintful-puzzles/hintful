@@ -36,7 +36,6 @@ import {
   answerOf,
   isComplete,
   PATH_RUNGS,
-  PathBoard,
   type PathRung,
   solvePath,
 } from "./solver.ts";
@@ -90,7 +89,8 @@ function findMistakes(state: PathState): readonly EdgeMistake[] {
 
 const difficulty = TIERS.contract<PathParams, PathState>({
   newState,
-  deductionFinishes: (s, cap) => solvePath(new PathBoard(s, s.edges), cap) === "solved",
+  deductionFinishes: (s, cap) =>
+    solvePath(s, cap, { edges: s.edges }).verdict === "solved",
   answerOf: (s) => answerOf(s),
 });
 

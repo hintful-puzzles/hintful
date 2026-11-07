@@ -35,7 +35,7 @@ import type { Point } from "../../engine/types.ts";
 import { countAnswers } from "./count-answers.ts";
 import { pathGame } from "./index.ts";
 import { COL_ERROR, COL_WALL, centerOf, layout, newDrawState } from "./render.ts";
-import { answerOf, PathBoard, solvePath } from "./solver.ts";
+import { answerOf, solvePath } from "./solver.ts";
 import {
   DIFF_EASY,
   DIFF_NORMAL,
@@ -67,8 +67,7 @@ const set = (edge: number, mark: 0 | 1 | 2): PathMove => ({
 /** The edges of `s`'s answer that take lines, where the ladder finds it and
  * the search proves it the only one. */
 function answerLines(s: PathState): number[] | null {
-  if (solvePath(new PathBoard(s, s.edges.slice()), DIFF_TRICKY) !== "solved")
-    return null;
+  if (solvePath(s, DIFF_TRICKY, { edges: s.edges }).verdict !== "solved") return null;
   const answer = answerOf(s);
   if (answer.kind !== "one") return null;
   return answer.solution.flatMap((m, e) => (m === LINE ? [e] : []));
@@ -92,6 +91,24 @@ describe("path boards dealt before the Checks", () => {
     const m = new Midend(pathGame);
     expect(m.newGameFromId(id)).toBeNull();
     expect(m.getParams()).toBe(`${params.slice(0, -1)}u`);
+  });
+});
+
+describe("path boards the hand-written ladder dealt", () => {
+  // Each was dealt on 2026-11-07, before the ladder was described, and a
+  // `pairBreaks` that read its three edges as open after it had drawn one
+  // called it inconsistent.
+  it.each([
+    "5x5dn:1c2a2d3a4b1c4b3a",
+    "7x7dt:f1_2d2c3f4_3e1b5c4h6_5_6",
+    "8x8zdt:c7b9k8b12_10l11e6a5_2b3a4d1i,zjzazu",
+  ])("%s grades at its tier", (id) => {
+    const [params, desc] = id.split(":");
+    const p = decodeParams(params);
+    const contract = pathGame.difficulty;
+    if (!contract) throw new Error("Path is tiered");
+    expect(contract.solveAtCap(p, desc, p.diff - 1)).toBe("unsolved");
+    expect(contract.solveAtCap(p, desc, p.diff)).toBe("solved");
   });
 });
 

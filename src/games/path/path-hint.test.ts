@@ -59,14 +59,9 @@ const pinned = describeHintPins({
   ],
   kinds: {
     onePathForced: onOnePath("forced"),
-    onePathBreaks: { leg: onOnePath("breaks") },
+    onePathBreaks: { leg: onOnePath("lineBreaks") },
+    onePathPairBreaks: { leg: onOnePath("pairBreaks") },
     onePathWeighed: { leg: onOnePath("weighed") },
-    /** Normal's square: lines on two of its three edges would break the
-     * board, which outlines the two. */
-    pairBreaks: {
-      leg: (step) =>
-        step.rung === "breaks" && stepMarks(step).of("outline", EDGE).length === 2,
-    },
     /** Tricky's square with one pair of edges left takes both. */
     weighedPair: {
       leg: (step) =>
@@ -92,57 +87,47 @@ const pinned = describeHintPins({
         state.takes[c.y * state.w + c.x] === 2
       );
     },
-    /** A line that breaks the board where two numbers out of order would
+    /** Lines that break the board where two numbers out of order would
      * meet: the only break that outlines two numbered squares and nothing
      * else. */
     onePathOutOfOrder: {
       leg: (step, state) => {
         const { numbered, all } = outlinedNumbers(step, state);
-        return onOnePath("breaks")(step, state) && all === 2 && numbered.length === 2;
+        return (
+          onOnePath("pairBreaks")(step, state) && all === 2 && numbered.length === 2
+        );
       },
     },
   },
   pins: {
-    /** Held on 810 of 1739 positions walked. */
+    /** Held on 810 of 1738 positions walked. */
     onePathForced: "6x6zdn:p4_6b5_3b2c1g,zjog",
-    /** Held on 642 of 1739 positions walked. */
+    /** Held on 454 of 1738 positions walked. */
     onePathBreaks: {
       id: "6x6zdn:i6f5a8a4d7b3c2_1b",
       moves:
         '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":30,"mark":1}]},{"kind":"edges","changes":[{"edge":4,"mark":1},{"edge":35,"mark":1}]},{"kind":"edges","changes":[{"edge":25,"mark":1},{"edge":54,"mark":1}]},{"kind":"edges","changes":[{"edge":59,"mark":1},{"edge":29,"mark":1}]}]',
     },
-    /** Held on 251 of 1739 positions walked. */
+    onePathPairBreaks: "6x6zdn:p4_6b5_3b2c1g,zjog",
+    /** Held on 251 of 1738 positions walked. */
     onePathWeighed: {
       id: "8x8zdt:a12_10e11_13i9e2e8d7_5b1a3c4f6j,r1zzahpl",
       moves:
         '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":56,"mark":1}]},{"kind":"edges","changes":[{"edge":57,"mark":1}]},{"kind":"edges","changes":[{"edge":2,"mark":1},{"edge":58,"mark":1}]},{"kind":"edges","changes":[{"edge":6,"mark":1},{"edge":63,"mark":1}]},{"kind":"edges","changes":[{"edge":64,"mark":1}]},{"kind":"edges","changes":[{"edge":15,"mark":1},{"edge":14,"mark":1}]},{"kind":"edges","changes":[{"edge":69,"mark":1},{"edge":77,"mark":1}]},{"kind":"edges","changes":[{"edge":21,"mark":1},{"edge":80,"mark":1}]},{"kind":"edges","changes":[{"edge":49,"mark":1},{"edge":104,"mark":1}]},{"kind":"edges","changes":[{"edge":111,"mark":1},{"edge":55,"mark":1}]},{"kind":"edges","changes":[{"edge":23,"mark":1}]},{"kind":"edges","changes":[{"edge":75,"mark":2}]},{"kind":"edges","changes":[{"edge":17,"mark":1},{"edge":67,"mark":1}]}]',
     },
-    /** Held on 806 of 1739 positions walked. */
-    pairBreaks: {
-      id: "5x5dn:d1a2_3e4b4_2b1c3",
-      moves: [
-        {
-          kind: "edges",
-          changes: [
-            { edge: 0, mark: 1 },
-            { edge: 20, mark: 1 },
-          ],
-        },
-      ],
-    },
-    /** Held on 126 of 1739 positions walked. */
+    /** Held on 126 of 1738 positions walked. */
     weighedPair: {
       id: "7x7dt:d1a2b3b2_4_5d4f6e7b3a6a1_7a5f",
       moves:
         '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":42,"mark":1}]},{"kind":"edges","changes":[{"edge":5,"mark":1}]},{"kind":"edges","changes":[{"edge":47,"mark":1}]},{"kind":"edges","changes":[{"edge":55,"mark":1}]},{"kind":"edges","changes":[{"edge":36,"mark":1}]},{"kind":"edges","changes":[{"edge":83,"mark":1},{"edge":41,"mark":1}]},{"kind":"edges","changes":[{"edge":69,"mark":1}]},{"kind":"edges","changes":[{"edge":38,"mark":1}]},{"kind":"edges","changes":[{"edge":40,"mark":1}]}]',
     },
-    /** Held on 36 of 1739 positions walked. */
+    /** Held on 36 of 1738 positions walked. */
     weighedCross: {
       id: "8x8zdt:k11b3b4a10a13h12g2c6_8e5a7j9_1,wz1fbflze",
       moves:
         '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":56,"mark":1}]},{"kind":"edges","changes":[{"edge":1,"mark":1}]},{"kind":"edges","changes":[{"edge":4,"mark":1},{"edge":3,"mark":1}]},{"kind":"edges","changes":[{"edge":6,"mark":1},{"edge":63,"mark":1}]},{"kind":"edges","changes":[{"edge":21,"mark":1},{"edge":72,"mark":1}]},{"kind":"edges","changes":[{"edge":28,"mark":1},{"edge":88,"mark":1}]},{"kind":"edges","changes":[{"edge":49,"mark":1},{"edge":104,"mark":1}]},{"kind":"edges","changes":[{"edge":105,"mark":1}]},{"kind":"edges","changes":[{"edge":96,"mark":1}]},{"kind":"edges","changes":[{"edge":51,"mark":1},{"edge":106,"mark":1}]},{"kind":"edges","changes":[{"edge":110,"mark":1},{"edge":54,"mark":1}]},{"kind":"edges","changes":[{"edge":111,"mark":1}]},{"kind":"edges","changes":[{"edge":103,"mark":1}]},{"kind":"edges","changes":[{"edge":79,"mark":1}]},{"kind":"edges","changes":[{"edge":36,"mark":1}]},{"kind":"edges","changes":[{"edge":108,"mark":1}]}]',
     },
-    /** Held on 120 of 1739 positions walked. */
+    /** Held on 121 of 1738 positions walked. */
     onePathMiddleNumber: {
       id: "8x8zdt:a12_10e11_13i9e2e8a4c6b1a3c5f7j,r1kzzol",
       moves: [
@@ -155,16 +140,16 @@ const pinned = describeHintPins({
         },
       ],
     },
-    /** Held on 464 of 1739 positions walked. */
+    /** Held on 472 of 1738 positions walked. */
     onePathOutOfOrder: {
       id: "8x8zdt:b9h4_3_6i5j2b1_10j8c7j,zezrvl",
       moves:
         '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":56,"mark":1}]},{"kind":"edges","changes":[{"edge":6,"mark":1},{"edge":63,"mark":1}]},{"kind":"edges","changes":[{"edge":49,"mark":1},{"edge":104,"mark":1}]},{"kind":"edges","changes":[{"edge":111,"mark":1},{"edge":55,"mark":1}]}]',
     },
-    /** Held on 1739 of 1739 positions walked. */
+    /** Held on 1738 of 1738 positions walked. */
     forced: "5x5dn:1b2b3e4_1c2b3c4",
-    /** Held on 1050 of 1739 positions walked. */
-    breaks: {
+    /** Held on 821 of 1738 positions walked. */
+    lineBreaks: {
       id: "5x5dn:d1a2_3e4b4_2b1c3",
       moves: [
         {
@@ -176,7 +161,20 @@ const pinned = describeHintPins({
         },
       ],
     },
-    /** Held on 459 of 1739 positions walked. */
+    /** Held on 815 of 1738 positions walked. */
+    pairBreaks: {
+      id: "5x5dn:d1a2_3e4b4_2b1c3",
+      moves: [
+        {
+          kind: "edges",
+          changes: [
+            { edge: 0, mark: 1 },
+            { edge: 20, mark: 1 },
+          ],
+        },
+      ],
+    },
+    /** Held on 459 of 1738 positions walked. */
     weighed: {
       id: "7x7dt:e1_2a3a4_1_2b4g5_6a6b7_8a3d7c8f5",
       moves:

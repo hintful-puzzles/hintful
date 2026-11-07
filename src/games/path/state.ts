@@ -151,7 +151,7 @@ export function puzzleOf(
 }
 
 /** The edges of `puzzle` before any move: a cross on each wall. */
-export function startEdges(puzzle: PathPuzzle): Uint8Array {
+function startEdges(puzzle: PathPuzzle): Uint8Array {
   return puzzle.walls.map((wall) => (wall ? CROSS : 0));
 }
 

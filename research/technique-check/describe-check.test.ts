@@ -872,6 +872,23 @@ const PLANTS: Record<string, Plant> = {
   "galaxies.mirrorWall": {
     for: "e in edges where not known(e), a in {end1(e), end2(e)}, q = arrow(a) where q != none, b = other(e, a), a2 = opp(a, at(q)) where a2 != none, b2 = opp(b, at(q)) where b2 != none",
   },
+  // A square one edge short of its lines read as taking every edge left.
+  "path.forced": {
+    for: "c in cells, n = takes(c) - lines(c), U = ways(c) where n > 0 and |U| <= n + 1",
+    conclude: "forall y in U: place(edge(c, y), 1)",
+  },
+  // What a line breaks read with the edge crossed out rather than lined.
+  "path.lineBreaks": {
+    for: "e in edges, a = end1(e), b = end2(e) where live(a, b) and (with place(e, 2): shortNear(a, b, b))",
+  },
+  // A pair that breaks nothing read as one that does.
+  "path.pairBreaks": {
+    for: "c in cells where takes(c) - lines(c) = 2, U = ways(c) where |U| = 3, k in U, I = U - {k}, i = nth(I, 0), j = nth(I, 1) where not known(edge(c, k)) and not known(edge(c, i)) and not known(edge(c, j)) and not bothBreak(c, i, j)",
+  },
+  // The edges every pair left holds crossed out rather than lined.
+  "path.weighed": {
+    conclude: "|N| > 0 and (forall y in P: place(edge(c, y), 2))",
+  },
   // The first fit across an edge left out of the reasons it is out.
   "rect.line": {
     for: "e in edges where not known(e), a = end1(e), b = end2(e), C = {q in reachers(a) where exists r in fits(q): a in cells(r) and b in cells(r)} where |C| > 0 and (forall q in C, r in fits(q) where a in cells(r) and b in cells(r) and r != nth(fits(q), 0): owned(q, r) or (exists x in sole(q): x not in cells(r)))",

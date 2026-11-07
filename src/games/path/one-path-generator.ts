@@ -29,7 +29,7 @@ import {
   type SquareEdges,
   squareEdges,
 } from "../../engine/square-edges.ts";
-import { PathBoard, searchAnswer, solvePath } from "./solver.ts";
+import { type PathSolve, searchAnswer, solvePath } from "./solver.ts";
 import {
   DIFF_EASY,
   DIFF_TRICKY,
@@ -38,7 +38,6 @@ import {
   MAX_NUMBER,
   type PathParams,
   puzzleOf,
-  startEdges,
 } from "./state.ts";
 
 /** How many backbites per square shake the first path loose: past about
@@ -100,11 +99,8 @@ function attempt(
   marks: ReadonlySet<number>,
   walls: Uint8Array,
   cap: number,
-): PathBoard {
-  const puzzle = puzzleOf(p, numbered(g, line, marks), walls);
-  const board = new PathBoard(puzzle, startEdges(puzzle));
-  solvePath(board, cap);
-  return board;
+): PathSolve {
+  return solvePath(puzzleOf(p, numbered(g, line, marks), walls), cap);
 }
 
 /** Number squares of `line` beside an edge of it the ladder leaves open,
@@ -124,7 +120,7 @@ function mend(
   for (;;) {
     mark();
     const board = attempt(p, g, line, marks, walls, DIFF_EASY);
-    if (!board.unfinished()) return marks;
+    if (!board.unfinished) return marks;
     if (marks.size >= MAX_NUMBER) return null;
     const open: number[] = [];
     for (let k = 1; k < line.length - 1; k++) {
@@ -150,7 +146,7 @@ const finishesAt =
     cap: number,
   ) =>
   (marks: ReadonlySet<number>): boolean =>
-    !attempt(p, g, line, marks, walls, cap).unfinished();
+    !attempt(p, g, line, marks, walls, cap).unfinished;
 
 /** `marks` with every number taken away, in a random order, that `keeps`
  * still holds without. Taking one away only loosens which pieces may meet,
@@ -284,7 +280,7 @@ export function newOnePathDesc(p: PathParams, rng: RandomState): { desc: string 
     walls = stripWalls(walls, (w) => finishesAt(p, g, line, w, p.diff)(kept));
     const ends = numbered(g, line, marks);
     const capped: CappedSolve = (cap) =>
-      attempt(p, g, line, marks, walls, cap).unfinished() ? "unsolved" : "solved";
+      attempt(p, g, line, marks, walls, cap).unfinished ? "unsolved" : "solved";
     if (solvableAtExactlyTier(capped, p.diff)) return { desc: encodeDesc(ends, walls) };
   }
 }

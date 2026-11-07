@@ -2548,6 +2548,44 @@ function edgeStrike(fn: string, vs: readonly Val[], env: Env, out: Out): Val {
   return { code: "true", sort: BOOL };
 }
 
+/**
+ * `through(c, {e in edges where P})`, its set stated in place rather than
+ * bound: a walk from `c` that asks `P` of each edge it meets
+ * (`throughWhere`), never the set of every edge. `null` for any other
+ * `through`.
+ */
+function throughStated(
+  args: readonly Expr[],
+  scope: Scope,
+  env: Env,
+  out: Out,
+): Val | null {
+  const set = inlined(args[1], scope, env);
+  if (set.k !== "agg" || set.fn !== "set" || set.where !== null) return null;
+  const [bnd, ...more] = set.binders;
+  if (bnd === undefined || more.length > 0 || bnd.kind !== "in") return null;
+  if (bnd.of.k !== "name" || bnd.of.name !== "edges" || scope.has("edges")) return null;
+  if (set.term?.k !== "name" || set.term.name !== bnd.name) return null;
+  const c = compileExpr(args[0], scope, env, out);
+  expectElem(c, "cell", "through");
+  const e = Out.fresh("_te");
+  const inner = new Map(scope);
+  inner.set(bnd.name, { code: e, sort: elem("edge") });
+  const body = new Out(0);
+  // Asked once an edge met, so nothing in it is moved out of the walk.
+  const test =
+    bnd.where === null
+      ? { code: "true", sort: BOOL }
+      : compileExpr(bnd.where, inner, { ...env, hoist: null }, body);
+  expect(test, "bool", "through's set");
+  const lines = body.text().join(" ");
+  env.used.add("throughWhere");
+  return {
+    code: `throughWhere(sp, ${c.code}, (${e}: number): boolean => { ${lines} return ${test.code}; })`,
+    sort: setOf(elem("cell")),
+  };
+}
+
 function call(
   fn: string,
   args: readonly Expr[],
@@ -2654,6 +2692,10 @@ function call(
     const x = compileExpr(args[0], scope, env, out);
     expectElem(x, "cell", fn);
     return { code: `${filling.code}[${x.code}]`, sort: NUM };
+  }
+  if (fn === "through" && args.length === 2) {
+    const walked = throughStated(args, scope, env, out);
+    if (walked !== null) return walked;
   }
   const vs = args.map((x) => compileExpr(x, scope, env, out));
   const arity = (n: number): void => {

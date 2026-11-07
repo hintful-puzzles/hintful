@@ -97,3 +97,169 @@ help:
     break the board, the fourth takes a line; and an edge whose line would break
     the board beside any of the square's other edges is crossed out. Each way is
     looked at on the board as it stands, so nothing needs following further.
+name: Path
+family: lines
+sizes:
+  w: { min: 3, max: 133 }
+  h: { min: 3, max: 133 }
+  # How far apart two numbers a line joins are: 0 in Pairs, where a line
+  # joins like numbers, and 1 in Path, where it runs from each number to the
+  # next.
+  step: { min: 0, max: 1 }
+space:
+  grid: { w: "w", h: "h" }
+  edges: true
+  units: []
+answer:
+  # The edge between two squares side by side: 1 a line, 2 none.
+  value:
+    sort: edge
+    domain: "range(1, 2)"
+define:
+  numbered(c): "clue(number, c) != none"
+  # The lines square c takes: two through a square without a number; one
+  # from a Pairs number, and in Path from the 1 and the highest number.
+  takes(c): >-
+    2 - count(k in {c} where numbered(k) and (step = 0 or clue(number, k) = 1
+    or count(x in cells where clue(number, x) = clue(number, k) + 1) = 0))
+  # The lines square c has.
+  lines(c): "count(y in adj4(c) where value(edge(c, y)) = 1)"
+  # Whether square c takes another line.
+  spare(c): "lines(c) < takes(c)"
+  # Two numbers a line may join: alike in Pairs, one apart in Path.
+  fits(p, q): "abs(clue(number, p) - clue(number, q)) = step"
+  # The squares the lines join to square c.
+  piece(c): "through(c, {e in edges where value(e) = 1})"
+  # The numbers nearest square c along its piece of line: c's own where it
+  # has one, and otherwise those the lines reach first from c's stretch of
+  # squares without a number. One, at either end of a piece holding a number.
+  nearest(c): >-
+    {x in {c} where numbered(x)}
+    + set(x over t in through(c, {e in edges where value(e) = 1
+    and not numbered(end1(e)) and not numbered(end2(e))}),
+    x in adj4(t) where not numbered(t) and numbered(x) and value(edge(t, x)) = 1)
+  # Whether a line between a and b, each an end of its piece, joins numbers
+  # that may meet.
+  meets(a, b): "forall p in nearest(a), q in nearest(b): fits(p, q)"
+  # Whether the edge between a and b may still take a line: neither has all
+  # its lines, and a line there would join no two numbers that may not
+  # meet, nor in Path close a loop. A player sees each at a glance, so such
+  # an edge counts as closed, and no technique crosses it out.
+  live(a, b): >-
+    not known(edge(a, b)) and spare(a) and spare(b) and meets(a, b)
+    and (step = 0 or b not in piece(a))
+  # The edges square c may still take a line on.
+  ways(c): "{y in adj4(c) where live(c, y)}"
+  # Whether square c is left short of the lines it takes: too few edges
+  # left for them.
+  stuck(c): >-
+    spare(c) and not (exists y in adj4(c) where live(c, y):
+    lines(c) + 1 = takes(c) or (exists z in before(y, adj4(c)): live(c, z)))
+  # Whether a square near the piece through a, where lines were just tried
+  # on the edges of a, b and d, is left short: a square whose lines the
+  # trial changed, an end of the piece, or one beside either.
+  shortNear(a, b, d): >-
+    exists t in piece(a) where t = a or t = b or t = d or spare(t):
+    stuck(t) or (exists s in adj4(t): stuck(s))
+  # Whether lines on both edges between square c and squares i and j, two
+  # of its own, would break the board at once: close a loop, join two
+  # numbers that may not meet, or leave a square short.
+  bothBreak(c, i, j): >-
+    j in piece(i) or (not numbered(c) and not meets(i, j))
+    or (with place(edge(c, i), 1): with place(edge(c, j), 1): shortNear(c, i, j))
+shape:
+  # Every square has the lines it takes.
+  - "forall c in cells: lines(c) = takes(c)"
+  # A stretch of squares without a number runs between two numbers: no loop
+  # holds none.
+  - "forall c in cells where not numbered(c): |nearest(c)| = 2"
+rules:
+  # The numbers run from 1 with no gap, each on two squares in Pairs and on
+  # one in Path, the highest at least 2.
+  numbers: >-
+    (step = 0 or exists x in cells: clue(number, x) = 2)
+    and (forall x in cells where numbered(x):
+    count(y in cells where clue(number, y) = clue(number, x)) = 2 - step
+    and (clue(number, x) = 1 or exists y in cells: clue(number, y) = clue(number, x) - 1))
+clues:
+  # A square's number: each line from it leads to a number it may meet.
+  number:
+    at: cell
+    value: "range(1, w * h)"
+    means: >-
+      forall y in adj4(at) where value(edge(at, y)) = 1,
+      q in nearest(y) where q != at: fits(at, q)
+  # A wall between two squares, which no line crosses.
+  wall: { at: edge, value: "range(1, 1)", means: "value(at) = 2" }
+freedom: { kind: fill }
+deal:
+  answer: >-
+    Pairs: paths laid at random, cut where the ladder stops short and joined
+    where it still finishes at the tier; Path: one path through every square
+  number: each path's two ends in Pairs; in Path the ends and as many squares along it as the tier needs
+  wall: in Path, edges off the path the board needs at its tier
+  step: the ruleset
+  tier: one of the tiers
+tiers: [Easy, Normal, Tricky, Unreasonable]
+techniques:
+  # A square with only as many edges left as it still needs lines takes a
+  # line on each. One with more lines than it takes, or fewer edges left
+  # than it needs, makes the marks inconsistent, and so does one whose two
+  # last edges would close a loop or join two numbers that may not meet.
+  - id: forced
+    tier: Easy
+    for: >-
+      c in cells, n = takes(c) - lines(c), U = ways(c)
+      where n < 0 or (n > 0 and |U| <= n)
+    conclude: >-
+      n >= 0 and |U| = n
+      and (forall i in U, j in before(i, U): j not in piece(i)
+      and (numbered(c) or meets(i, j)))
+      and (forall y in U: place(edge(c, y), 1))
+  # A line on an edge would break the board at once: close a loop, or leave
+  # a square short. The edge is crossed out.
+  - id: lineBreaks
+    tier: Normal
+    for: >-
+      e in edges, a = end1(e), b = end2(e) where live(a, b)
+      and (b in piece(a) or (with place(e, 1): shortNear(a, b, b)))
+    conclude: "place(e, 2)"
+  # A square that takes two more lines from three edges left, where lines
+  # on two of them would break the board: the third takes a line. Each of
+  # the three is asked to be open still, since a solve places the line of
+  # one binding before it reads the next.
+  - id: pairBreaks
+    tier: Normal
+    for: >-
+      c in cells where takes(c) - lines(c) = 2, U = ways(c) where |U| = 3,
+      k in U, I = U - {k}, i = nth(I, 0), j = nth(I, 1)
+      where not known(edge(c, k)) and not known(edge(c, i))
+      and not known(edge(c, j)) and bothBreak(c, i, j)
+    conclude: "place(edge(c, k), 1)"
+  # A square that takes two more lines from four edges left, weighed whole:
+  # of its six pairs of edges, those that would not break the board are
+  # left. N is the edges some pair left holds. An edge every pair left
+  # holds, so that every pair without it breaks, takes a line; where none
+  # is, an edge no pair left holds is crossed out. With no pair left the
+  # marks are inconsistent. Each pair is tried once: A holds the edges whose
+  # pair with U's first breaks, and B, for each pair of the last three that
+  # breaks, the third.
+  - id: weighed
+    tier: Tricky
+    for: >-
+      c in cells where takes(c) - lines(c) = 2, U = ways(c) where |U| = 4,
+      A = set(j over i in U, j in U
+      where index(i, U) = 0 and index(j, U) > 0 and bothBreak(c, i, j)),
+      B = set(first(U - {nth(U, 0), i, j}) over i in U, j in U
+      where index(i, U) > 0 and index(i, U) < index(j, U) and bothBreak(c, i, j)),
+      N = {y in U where (index(y, U) = 0 and |A| < 3)
+      or (index(y, U) > 0 and (y not in A
+      or (exists m in U where index(m, U) > 0 and m != y: m not in B)))},
+      P = {y in N where (index(y, U) = 0 and |B| = 3)
+      or (index(y, U) > 0 and y in B
+      and (forall m in U where index(m, U) > 0 and m != y: m in A))},
+      X = U - N
+      where |N| = 0 or |P| > 0 or |X| > 0
+    conclude: >-
+      |N| > 0 and (forall y in P: place(edge(c, y), 1))
+      and (|P| = 0 implies forall y in X: place(edge(c, y), 2))

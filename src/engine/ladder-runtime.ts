@@ -666,7 +666,10 @@ export interface LadderWalk<S extends CellMarks = CellMarks> {
  * over the compiled firings, so it is the one every ladder hint is. `roles`
  * names the techniques it takes as `DeductionTechnique`'s `prerequisite`
  * and `fallback` (Galaxies: a dot's own squares come first, and a mirrored
- * line only where nothing else follows).
+ * line only where nothing else follows). What the walk keys continuity on is
+ * the game's: a cell by default, each fact's, or whatever `writes` names,
+ * in the elements `reads` names too (Path's numbers, whose line a player
+ * follows).
  */
 export function ladderWalk<S extends CellMarks>(
   m: S,
@@ -676,6 +679,7 @@ export function ladderWalk<S extends CellMarks>(
   roles: {
     readonly prerequisite?: readonly string[];
     readonly fallback?: readonly string[];
+    readonly writes?: (firing: Taken<S>) => readonly number[];
   } = {},
 ): LadderWalk<S> {
   // An edge's mark, or value, is written as its two cells are.
@@ -710,7 +714,7 @@ export function ladderWalk<S extends CellMarks>(
             const f: Taken<S> = { ...firing, entry };
             return {
               reads: () => reads(f),
-              writes: () => cellsOf(f.facts),
+              writes: () => (roles.writes ? roles.writes(f) : cellsOf(f.facts)),
               take: () => {
                 m.group++;
                 m.applyFacts(f.facts, (i) => f.reasons[i / 3]);

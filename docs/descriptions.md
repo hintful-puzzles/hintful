@@ -258,7 +258,11 @@ description author acts on:
   through(c, E)` and `A = B` over two groups compare the lists, and keeps
   the groups of the last few sets between runs while each is unchanged, so
   a technique binding one set per number (Filling's `room(d)`) still finds
-  its groups kept.
+  its groups kept. State `E` inline as `{e in edges where P}` where only
+  `c`'s own group is read, and especially under `with`: it compiles to a
+  walk from `c` that tests `P` at each edge it meets, where a bound set
+  would test every edge of the board at every supposition (Path's
+  `piece(c)` and `nearest(c)`).
 - **`reaches(c, S, t)` is how many cells of `S` stay reachable from `c`
   with `t` taken out**, `c` not counted: all of `c`'s group in `S` where `t`
   is outside it, none where `t` is `c` or `c` is not in `S`. A region that
@@ -536,7 +540,10 @@ uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
   `fallback` only once every rung before it has nothing. Galaxies marks
   each dot's own squares before any other step, and mirrors a wall only
   when no arrow or line is otherwise forced, the order its hint had before
-  it was described.
+  it was described. The walk continues from the cells a firing wrote,
+  unless `roles.writes` names other keys: Path continues along the numbers
+  a step's lines reach, since its edges' cells say nothing of which line a
+  player is following.
 - **Seeding runs the techniques run on placing**, so what they decide
   about the player's own marks is never a step. Where the player should see
   it (Boats' water at a segment's corners), the game seeds before it sets
@@ -575,8 +582,12 @@ let binder says which, for the reason: Towers' `bounds` and its `near`.
 before a placement in the same run reads as it was: a second binding of a
 square just placed, or a member of `open(k)` placed since `open(k)` was
 read. A technique that places says `not known(x)` again in the binder that
-reads `x` (Slant's `loop`, `pair` and `share`), or its solve concludes from
-marks that are no longer there and calls a sound board inconsistent. A group
+reads `x` (Slant's `loop`, `pair` and `share`, Path's `pairBreaks`), or its
+solve concludes from marks that are no longer there and calls a sound board
+inconsistent. The soundness check judges one binding on one position, never a
+run, so it passes such a technique; and the generator drops the boards it
+misgrades, so its own deals pass too. Grade boards the old solver dealt: Path's
+`pairBreaks` without the check called 21 of 260 of them impossible. A group
 `through(c, O)` is the same: a technique that opens edges reads a group only
 while no open edge leads out of it, or a square its own earlier binding
 joined to a group grows that group again as if alone (Palisade's
@@ -688,7 +699,9 @@ the check. What a small board cannot cover:
   of its own as it passes and the n folded into the verdict; a shard
   already recorded is not run again. A run with `CHECK_LOG=<file>` logs its
   progress to that file every 50 queries, naming the query it starts, so a stuck one
-  can be found. **A count of squares is bit-blasted**: a sum of terms each
+  can be found. `CHECK_MODEL=1` prints the board an unsound verdict was
+  found on (answer, known marks, clues, sizes): run it through the compiled
+  technique before believing either side. **A count of squares is bit-blasted**: a sum of terms each
   0 or 1 sends z3's default search splitting square by square (Mines'
   mine total read alone ran past an hour on a 4×4 board), so a query the
   default does not settle in `CHECK_QUICK_MS` (a minute) goes to a SAT
@@ -700,6 +713,14 @@ the check. What a small board cannot cover:
   counted by their first squares; z3 ran past 25 minutes on `total` at
   order 4 deriving it, and 210 s with the count stated as a rule. A rule
   every answer meets already changes no answer.
+- **A set of numbers holds only the board's values**, `0` to `top`; a
+  member past it would be dropped unseen, and the technique judged on a
+  reading that is not its own. A member made of numerals, counts, `index`
+  and arithmetic is bounded by its form, and the check refuses a set whose
+  member can pass `top` (a pair of a square's four edges coded `4 *
+  index(i, U) + index(j, U)` reaches 11, on a 3×3 board whose `top` is 3).
+  State such a set over cells: Path's `weighed` holds each pair's edges in
+  two sets of cells. A member that reads an answer or a clue is not bounded.
 - **A size larger than the board's cells is one unknown**, from its least
   to the cell count (Mines' `mines`, `openSizes`), not a world a value.
 - **A set the marks decide keeps its order**: `stretch` holds each cell of
