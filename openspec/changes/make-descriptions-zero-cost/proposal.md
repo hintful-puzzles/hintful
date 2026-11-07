@@ -40,14 +40,90 @@ replaced cost, so a game never pays for being described.
 - **Size:** Path's compiled ladder is about 15.5 KB minified and gzipped,
   against the 4.6 KB of the rungs it replaced.
 
+## How the census is taken (2026-11-07)
+
+The owner asked that it not be done by timing every game again against its
+last hand-written commit. It is taken from three sources, none of which
+needs an old worktree:
+
+1. **The archive already holds the back-to-back timing.** Every
+   `describe-*` change from `describe-group` on timed its games against the
+   ladder they replaced, and recorded it in its report, design or proposal.
+   What each says is in the table below. Those numbers are dated: the
+   compiler has changed with every game since, so they show where a game
+   stood, not where it stands.
+2. **A profile at HEAD bounds what the description can cost.**
+   `scripts/checks/deal-profile.test.ts` (`metrics/deal-profile.md`)
+   profiles every described game's deals and hint walks in one run of
+   about three minutes. It reports the share `f` of samples with a compiled
+   module or the described runtime on the stack. Whatever runs outside that
+   ran before too, so the description costs at most `1/(1−f) − 1`. That
+   clears a game, with no A/B, wherever `f` is under 9%.
+3. **The same profile names the hot runtime functions across games**, and
+   those are where a compiler fix pays at every game at once.
+
+A game is timed back to back against its hand-written commit only where all
+three leave it open, and at the end, for the games a fix moved.
+
+### What it found
+
+- **Cleared by the profile: every planning game's deals and walks.**
+  Cube, Flip, Flood, Inertia, Netslide, Numgame, Pegs, Same Game, Sixteen,
+  Slide, Sokoban and Untangle deal with no described code on the stack
+  (0.0%), and walk with 0 to 3% (bound ≤ 3%). Fifteen and Twiddle deal in
+  1 and 7 ms, which is too little to measure. Seismic deals at 2.1%
+  (bound 2%), because its generator does not run the compiled ladder.
+  Guess's deal runs no described code, and its walk is 22% described
+  code in 54 ms.
+- **Within 10% when measured, and not refuted since:** ABCD, Black Box,
+  Bricks, Clusters, Magnets, Palisade, Range, Rome, Unruly and Seismic
+  (several were faster). These are re-timed only if a fix changes their
+  modules materially.
+- **Recorded slower than 10%, so they need fixing:**
+
+  | Game | Recorded against the hand-written ladder | Where |
+  | --- | --- | --- |
+  | Slant | 3.4 to 12× | `describe-loops-and-fleets` |
+  | Mines | 3.5 to 15× (deals); hints level | `describe-revealed-clues` |
+  | Rect | Easy/Normal level; Patches 1.8 to 2.6×; Unreasonable 3.8 to 9× | `describe-rectangles-and-galaxies` |
+  | Dominosa | 2 to 9× through Tricky | `describe-dominoes-rectangles-and-galaxies` |
+  | Mosaic | 2 to 4× | `describe-the-king-move-games` |
+  | Path | 2.2 to 2.9× | `describe-lines-and-loops` |
+  | Star Battle | 1.5 to 2.9× | `describe-the-king-move-games` |
+  | Solo | Killer 2.1 to 3.4×; no cages 0.7 to 1.4× | `describe-solo` |
+  | Filling | 1.7 to 2.6× | `describe-dominoes-rectangles-galaxies-and-fills` |
+  | Light Up | 1.3 to 3× | `describe-beams-and-tiles` |
+  | Mathrax | 1.6 to 2.0× | `describe-mathrax` |
+  | Sticks | 1.2 to 2× | `describe-sightlines-and-looks` |
+  | Towers | 1.3 to 1.7× above Easy | `describe-towers` |
+  | Galaxies | 1.1 to 1.8× past small Normal | `describe-galaxies` |
+  | Keen | 1.27 to 1.58× from Hard; faster below | `describe-keen` |
+  | Unequal | 1.38 to 1.46× | `describe-group`, `describe-salad` |
+  | Boats | 10×10 1.5 to 9×; larger level | `describe-fleets` |
+  | Singles | small presets 1.5 to 3×; 12×12 Easy +20% | `describe-connectivity` |
+  | Adjacent | +6 to 21% | `describe-group` |
+  | Separate | k8 +19 to 29% | `describe-edges-and-divisions` |
+  | Map | up to +20% | `describe-on-a-graph` |
+  | Salad | Number Ball Normal +19% | `describe-salad` |
+  | Group | Tricky +8%, and +11 to 12% compiled-on-compiled since | `describe-group`, `describe-salad` |
+
+- **Hot across many games** (self time in a deal, from the profile):
+  `ladder-runtime.ts`'s `CellMarks.value` is hot in 19 games and `rung` in
+  18. Each is often 5 to 20% of a deal, and neither exists in a hand-written
+  rung. `value(c)` is `grid[c] || -1`, reached as a method call from the
+  compiled techniques (`b.value(` appears 224 times in Boats' module, 152
+  in Path's). A large compiled function is past V8's inlining budget, so
+  each read is a real call; the hand-written rungs indexed the grid. That
+  makes it the first compiler lever, before any per-construct one. `rung`'s
+  self time is still to be checked against the instrument: it may be the
+  compiled technique inlined into its wrapper. After those come
+  `describe-runtime.ts`'s `clueAt` (4 games), `edgeOf` (3), `stretch` (3)
+  and `throughWhere` (2), with Rect's kept `allowed` and `near`.
+
 ## What Changes
 
-- **A census first.** For every described game, time its deals and a hint
-  walk against the last commit before its `describe-*` change, back to back,
-  at its menu's sizes. `npm run deal-walk` with `DEAL_WALK_CELLS` and
-  `DEAL_WALK_SEEDS` deals named params. A walk has no tool yet. Profile the
-  worst games and list what the compiled code does that the hand-written
-  code did not.
+- **The census above**, completed only where it leaves a game open. A walk
+  is timed by the same profile.
 - **Fix it in the compiler and the runtime, never per game.** The levers
   known now:
   - Board-kept values remade for every board a generator tries: keyed by
