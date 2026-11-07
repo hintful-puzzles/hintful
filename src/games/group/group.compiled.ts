@@ -109,6 +109,7 @@ export interface AssociativityBinding {
 
 const associativityFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function associativity(b: Marks, sp: GridSpace, fire: Fire<AssociativityBinding> | null): number {
   const facts = associativityFacts;
   let fired = 0;
@@ -172,6 +173,7 @@ export interface IdentityBinding {
 
 const identityFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding> | null): number {
   const _g32: number[] = [];
   const facts = identityFacts;
@@ -238,6 +240,7 @@ export interface NotIdentityBinding {
 
 const notIdentityFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function notIdentity(b: Marks, sp: GridSpace, fire: Fire<NotIdentityBinding> | null): number {
   const facts = notIdentityFacts;
   let fired = 0;

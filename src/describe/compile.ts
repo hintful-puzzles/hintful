@@ -220,6 +220,61 @@ function unreadBindingsDropped(lines: string[]): string[] {
   });
 }
 
+/** An array the size of the board, or of a line: what a loop over it costs,
+ * in halves of a power of the board's size. */
+const BOARD_ARRAY = /^sp\.(cells|edges|points|corners|slots|centers)\b/;
+const LINE_ARRAY = /^sp\.(lines|rows|cols|lineCells\[)/;
+/** The runtime's walks, by what each walks. */
+const BOARD_WALKS =
+  /\b(through|throughWhere|linked|reaches|connected|cuts|edgeGroups|pointGroups|beam|look)\(/;
+const LINE_WALKS = /\b(stretch|ray|chain)\(/;
+
+/**
+ * How a technique's dearest read grows with the board, from its code: the
+ * loops round it over the board or a line, and a walk of the board or a line
+ * it makes, each a power of the board's size, a line's a half (§ "What a
+ * technique compiles to"). In halves: 4 is `n^2`. A kept structure's read is
+ * a lookup, and costs nothing here.
+ */
+function techniqueGrowth(lines: readonly string[]): number {
+  const arrays = new Map<string, string>();
+  const open: { indent: number; cost: number }[] = [];
+  let worst = 0;
+  for (const line of lines) {
+    const indent = line.length - line.trimStart().length;
+    while (open.length > 0 && (open.at(-1) as { indent: number }).indent >= indent)
+      open.pop();
+    const t = line.trim();
+    const a = /^const (_a\d+) = (.*);$/.exec(t);
+    if (a !== null) arrays.set(a[1], a[2]);
+    let cost = 0;
+    if (t.startsWith("for (")) {
+      const over = /< (_a\d+)\.length/.exec(t);
+      const of = over === null ? null : (arrays.get(over[1]) ?? "");
+      if (of !== null) cost = BOARD_ARRAY.test(of) ? 2 : LINE_ARRAY.test(of) ? 1 : 0;
+      // A kind dealt at elements is as many as they are; one of the
+      // board's fields (a fleet) is a handful.
+      else if (/< cl\.\w+\.at\.length|<= .*\bsp\.(w|h)\b/.test(t)) cost = 2;
+    }
+    const walk = BOARD_WALKS.test(t) ? 2 : LINE_WALKS.test(t) ? 1 : 0;
+    const round = open.reduce((s, x) => s + x.cost, 0);
+    worst = Math.max(worst, round + cost + walk);
+    if (t.startsWith("for (")) open.push({ indent, cost });
+  }
+  return worst;
+}
+
+/** The steepest growth a technique may have, refused past it, and the one
+ * `npm run describe` warns of from. The catalog's steepest was `n^3`
+ * (Galaxies' `soleOwner`) and its `n^2.5`s were Boats' (2026-11-07), both
+ * games measured slower than their hand-written ladders. */
+const MAX_GROWTH = 6;
+export const WARN_GROWTH = 5;
+
+/** A growth in halves as a power: 3 is `n^1.5`. */
+const power = (halves: number): string =>
+  halves === 0 ? "1" : halves === 2 ? "n" : `n^${halves / 2}`;
+
 /** A clue kind's sorts. A clue at the board has no place or value of its
  * own (`none`), and its fields are read as functions of it. */
 interface ClueKind {
@@ -3967,6 +4022,11 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   // The generated code names nothing else `sp`, so a body that never says it
   // reads no geometry, and the parameter is marked unread.
   const spParam = text.some((l) => /\bsp\b/.test(l)) ? "sp" : "_sp";
+  const growth = techniqueGrowth(text);
+  if (growth > MAX_GROWTH)
+    throw new CompileError(
+      `${t.id}: its dearest read grows with the board as ${power(growth)}, past ${power(MAX_GROWTH)}: bind a set once outside the loops that read it, or keep what it reads (docs/descriptions.md § "What a technique compiles to")`,
+    );
   const lines = [
     `export interface ${bindingType} {`,
     ...fields,
@@ -3975,6 +4035,7 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
     `const ${fnName}Facts: number[] = [];`,
     ...(readsCands.yes ? [`let ${buffer} = new Int32Array(0);`] : []),
     "",
+    `/** Its dearest read grows with the board as ${power(growth)}. */`,
     `export function ${fnName}(b: Marks, ${spParam}: GridSpace, ${clueParam}${params}fire: Fire<${bindingType}> | null): number {`,
     ...text,
     "}",

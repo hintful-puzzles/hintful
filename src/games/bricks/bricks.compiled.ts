@@ -190,6 +190,7 @@ export interface StrandSupportBinding {
 
 const strandSupportFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function strandSupport(b: Marks, sp: GridSpace, fire: Fire<StrandSupportBinding> | null): number {
   const facts = strandSupportFacts;
   let fired = 0;
@@ -261,6 +262,7 @@ export interface UndercountBinding {
 
 const undercountFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function undercount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<UndercountBinding> | null): number {
   const _g63: number[] = [];
   const _g85: number[] = [];
@@ -361,6 +363,7 @@ export interface ThreeBinding {
 
 const threeFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function three(b: Marks, sp: GridSpace, fire: Fire<ThreeBinding> | null): number {
   const _g113: number[] = [];
   const _g125: number[] = [];
@@ -440,6 +443,7 @@ export interface UnsupportedBinding {
 
 const unsupportedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function unsupported(b: Marks, sp: GridSpace, fire: Fire<UnsupportedBinding> | null): number {
   const facts = unsupportedFacts;
   let fired = 0;
@@ -483,6 +487,7 @@ export interface OvercountBinding {
 
 const overcountFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function overcount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OvercountBinding> | null): number {
   const _g175: number[] = [];
   const _g197: number[] = [];

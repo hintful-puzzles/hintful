@@ -182,6 +182,7 @@ export interface DotTileBinding {
 
 const dotTileFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function dotTile(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DotTileBinding> | null): number {
   const facts = dotTileFacts;
   let fired = 0;
@@ -230,6 +231,7 @@ export interface SplitBinding {
 
 const splitFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function split(b: Marks, sp: GridSpace, fire: Fire<SplitBinding> | null): number {
   const facts = splitFacts;
   let fired = 0;
@@ -262,6 +264,7 @@ export interface SeparateBinding {
 
 const separateFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function separate(b: Marks, sp: GridSpace, fire: Fire<SeparateBinding> | null): number {
   const facts = separateFacts;
   let fired = 0;
@@ -298,6 +301,7 @@ export interface EnclosedBinding {
 
 const enclosedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2. */
 export function enclosed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EnclosedBinding> | null): number {
   const _g49: number[] = [];
   const facts = enclosedFacts;
@@ -382,6 +386,7 @@ export interface SoleOwnerBinding {
 
 const soleOwnerFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^3. */
 export function soleOwner(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SoleOwnerBinding> | null): number {
   const _g193: number[] = [];
   const _g229: number[] = [];
@@ -617,6 +622,7 @@ export interface OnlyReachBinding {
 
 const onlyReachFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function onlyReach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyReachBinding> | null): number {
   const _g320: number[] = [];
   const facts = onlyReachFacts;
@@ -684,6 +690,7 @@ export interface ExclaveBinding {
 
 const exclaveFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2. */
 export function exclave(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExclaveBinding> | null): number {
   const _g358: number[] = [];
   const facts = exclaveFacts;
@@ -766,6 +773,7 @@ export interface MirrorWallBinding {
 
 const mirrorWallFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function mirrorWall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MirrorWallBinding> | null): number {
   const facts = mirrorWallFacts;
   let fired = 0;

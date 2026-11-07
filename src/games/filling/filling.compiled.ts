@@ -108,6 +108,7 @@ export interface MustGrowBinding {
 
 const mustGrowFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2. */
 export function mustGrow(b: Marks, sp: GridSpace, fire: Fire<MustGrowBinding> | null): number {
   const _g30: number[] = [];
   const _g37: number[] = [];
@@ -218,6 +219,7 @@ export interface OnlyWayBinding {
 
 const onlyWayFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function onlyWay(b: Marks, sp: GridSpace, fire: Fire<OnlyWayBinding> | null): number {
   const _g117: number[] = [];
   const _g135: number[] = [];
@@ -327,6 +329,7 @@ export interface TooBigBinding {
 const tooBigFacts: number[] = [];
 let tooBigCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function tooBig(b: Marks, sp: GridSpace, fire: Fire<TooBigBinding> | null): number {
   const _g190: number[] = [];
   const _g203: number[] = [];
@@ -394,6 +397,7 @@ export interface NoRoomBinding {
 
 const noRoomFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function noRoom(b: Marks, sp: GridSpace, fire: Fire<NoRoomBinding> | null): number {
   const _g225: number[] = [];
   const facts = noRoomFacts;
@@ -444,6 +448,7 @@ export interface TooFarBinding {
 
 const tooFarFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2. */
 export function tooFar(b: Marks, sp: GridSpace, fire: Fire<TooFarBinding> | null): number {
   const _g286: number[] = [];
   const _g296: number[] = [];
@@ -563,6 +568,7 @@ export interface OnlyNumberBinding {
 const onlyNumberFacts: number[] = [];
 let onlyNumberCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function onlyNumber(b: Marks, sp: GridSpace, fire: Fire<OnlyNumberBinding> | null): number {
   const facts = onlyNumberFacts;
   let fired = 0;

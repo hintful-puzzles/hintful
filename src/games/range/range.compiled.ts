@@ -139,6 +139,7 @@ export interface BesideShadedBinding {
 
 const besideShadedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function besideShaded(b: Marks, sp: GridSpace, fire: Fire<BesideShadedBinding> | null): number {
   const facts = besideShadedFacts;
   let fired = 0;
@@ -185,6 +186,7 @@ export interface CappedBinding {
 
 const cappedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function capped(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CappedBinding> | null): number {
   const facts = cappedFacts;
   let fired = 0;
@@ -287,6 +289,7 @@ export interface ReachBinding {
 
 const reachFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBinding> | null): number {
   const facts = reachFacts;
   let fired = 0;
@@ -428,6 +431,7 @@ export interface CutBinding {
 
 const cutFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function cut(b: Marks, sp: GridSpace, fire: Fire<CutBinding> | null): number {
   const _g184: number[] = [];
   const facts = cutFacts;

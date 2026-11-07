@@ -131,6 +131,7 @@ export interface BorderBinding {
 
 const borderFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function border(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BorderBinding> | null): number {
   const _g18: number[] = [];
   const _g33: number[] = [];

@@ -11,6 +11,7 @@ export interface PlacedBinding {
 
 const placedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function placed(b: Marks, sp: GridSpace, v_c: number, fire: Fire<PlacedBinding> | null): number {
   const facts = placedFacts;
   let fired = 0;
@@ -76,6 +77,7 @@ export interface HiddenSingleBinding {
 
 const hiddenSingleFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function hiddenSingle(b: Marks, sp: GridSpace, fire: Fire<HiddenSingleBinding> | null): number {
   const facts = hiddenSingleFacts;
   let fired = 0;
@@ -146,6 +148,7 @@ export interface SingleBinding {
 const singleFacts: number[] = [];
 let singleCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function single(b: Marks, sp: GridSpace, fire: Fire<SingleBinding> | null): number {
   const facts = singleFacts;
   let fired = 0;
@@ -192,6 +195,7 @@ export interface SetBinding {
 const setFacts: number[] = [];
 let setCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n^0.5. */
 export function set(b: Marks, sp: GridSpace, fire: Fire<SetBinding> | null): number {
   const _g106: number[] = [];
   const _g124: number[] = [];
@@ -322,6 +326,7 @@ export interface FishBinding {
 
 const fishFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): number {
   const _g227: number[] = [];
   const _g286: number[] = [];
@@ -602,6 +607,7 @@ export interface WingBinding {
 const wingFacts: number[] = [];
 let wingCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): number {
   const _g443: number[] = [];
   const _g453: number[] = [];

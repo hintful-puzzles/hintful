@@ -92,6 +92,7 @@ export interface AdjacentBinding {
 const adjacentFacts: number[] = [];
 let adjacentCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AdjacentBinding> | null): number {
   const facts = adjacentFacts;
   let fired = 0;
@@ -150,6 +151,7 @@ export interface AdjacentSetBinding {
 const adjacentSetFacts: number[] = [];
 let adjacentSetCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function adjacentSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AdjacentSetBinding> | null): number {
   const facts = adjacentSetFacts;
   let fired = 0;

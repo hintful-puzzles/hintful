@@ -155,6 +155,7 @@ export interface SharedLetterBinding {
 
 const sharedLetterFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2. */
 export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedLetterBinding> | null): number {
   const _g36: number[] = [];
   const _g76: number[] = [];
@@ -279,6 +280,7 @@ export interface WalledApartBinding {
 
 const walledApartFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2. */
 export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBinding> | null): number {
   const _g100: number[] = [];
   const _g119: number[] = [];
@@ -366,6 +368,7 @@ export interface OnlyWayBinding {
 
 const onlyWayFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBinding> | null): number {
   const _g146: number[] = [];
   const _g157: number[] = [];

@@ -122,6 +122,7 @@ export interface CullBinding {
 
 const cullFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function cull(b: Marks, sp: GridSpace, cl: Dealt, v_c: number, fire: Fire<CullBinding> | null): number {
   const facts = cullFacts;
   let fired = 0;
@@ -158,6 +159,7 @@ export interface LoneBinding {
 const loneFacts: number[] = [];
 let loneCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function lone(b: Marks, sp: GridSpace, fire: Fire<LoneBinding> | null): number {
   const facts = loneFacts;
   let fired = 0;
@@ -195,6 +197,7 @@ export interface AreaSingleBinding {
 
 const areaSingleFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function areaSingle(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<AreaSingleBinding> | null): number {
   const facts = areaSingleFacts;
   let fired = 0;
@@ -268,6 +271,7 @@ export interface StarveBinding {
 
 const starveFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBinding> | null): number {
   const _g72: number[] = [];
   const facts = starveFacts;

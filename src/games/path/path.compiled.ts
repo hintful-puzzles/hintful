@@ -291,6 +291,7 @@ export interface ForcedBinding {
 
 const forcedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2. */
 export function forced(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ForcedBinding> | null): number {
   const facts = forcedFacts;
   let fired = 0;
@@ -427,6 +428,7 @@ export interface LineBreaksBinding {
 
 const lineBreaksFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2. */
 export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBreaksBinding> | null): number {
   const _g1228: number[] = [];
   const _g1235: number[] = [];
@@ -1580,6 +1582,7 @@ export interface PairBreaksBinding {
 
 const pairBreaksFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2. */
 export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBreaksBinding> | null): number {
   const _g2490: number[] = [];
   const _g2497: number[] = [];
@@ -2710,6 +2713,7 @@ export interface WeighedBinding {
 
 const weighedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2. */
 export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBinding> | null): number {
   const _g5336: number[] = [];
   const _g6006: number[] = [];

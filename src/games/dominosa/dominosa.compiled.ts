@@ -196,6 +196,7 @@ export interface PlacedBinding {
 
 const placedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function placed(b: Marks, sp: GridSpace, cl: Dealt, v_e: number, fire: Fire<PlacedBinding> | null): number {
   const facts = placedFacts;
   let fired = 0;
@@ -284,6 +285,7 @@ export interface OnlySpotBinding {
 
 const onlySpotFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function onlySpot(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlySpotBinding> | null): number {
   const _g62: number[] = [];
   const _g74: number[] = [];
@@ -348,6 +350,7 @@ export interface SquareOnlyBinding {
 
 const squareOnlyFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function squareOnly(b: Marks, sp: GridSpace, fire: Fire<SquareOnlyBinding> | null): number {
   const _g107: number[] = [];
   const facts = squareOnlyFacts;
@@ -410,6 +413,7 @@ export interface SquareSingleDominoBinding {
 
 const squareSingleDominoFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2. */
 export function squareSingleDomino(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareSingleDominoBinding> | null): number {
   const _g151: number[] = [];
   const facts = squareSingleDominoFacts;
@@ -530,6 +534,7 @@ export interface MustOverlapBinding {
 
 const mustOverlapFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function mustOverlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MustOverlapBinding> | null): number {
   const _g226: number[] = [];
   const _g238: number[] = [];
@@ -627,6 +632,7 @@ export interface LocalDuplicateBinding {
 
 const localDuplicateFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function localDuplicate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LocalDuplicateBinding> | null): number {
   const _g309: number[] = [];
   const facts = localDuplicateFacts;
@@ -726,6 +732,7 @@ export interface LocalDuplicate2Binding {
 
 const localDuplicate2Facts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function localDuplicate2(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LocalDuplicate2Binding> | null): number {
   const _g435: number[] = [];
   const _g448: number[] = [];
@@ -909,6 +916,7 @@ export interface ParityBinding {
 
 const parityFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2. */
 export function parity(b: Marks, sp: GridSpace, fire: Fire<ParityBinding> | null): number {
   const _g546: number[] = [];
   const facts = parityFacts;
@@ -982,6 +990,7 @@ export interface SetBinding {
 
 const setFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function set(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetBinding> | null): number {
   const _g614: number[] = [];
   const _g623: number[] = [];
@@ -1124,6 +1133,7 @@ export interface SetDoublesBinding {
 
 const setDoublesFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function setDoubles(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetDoublesBinding> | null): number {
   const _g722: number[] = [];
   const _g731: number[] = [];

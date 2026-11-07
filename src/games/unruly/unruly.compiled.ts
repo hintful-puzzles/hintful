@@ -141,6 +141,7 @@ export interface ThreesBinding {
 
 const threesFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function threes(b: Marks, sp: GridSpace, fire: Fire<ThreesBinding> | null): number {
   const facts = threesFacts;
   let fired = 0;
@@ -196,6 +197,7 @@ export interface LastGapBinding {
 
 const lastGapFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function lastGap(b: Marks, sp: GridSpace, fire: Fire<LastGapBinding> | null): number {
   const facts = lastGapFacts;
   let fired = 0;
@@ -265,6 +267,7 @@ export interface QuotaBinding {
 
 const quotaFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function quota(b: Marks, sp: GridSpace, fire: Fire<QuotaBinding> | null): number {
   const facts = quotaFacts;
   let fired = 0;
@@ -335,6 +338,7 @@ export interface LastOneBinding {
 
 const lastOneFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding> | null): number {
   const facts = lastOneFacts;
   let fired = 0;
@@ -440,6 +444,7 @@ export interface UniqueBinding {
 
 const uniqueFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding> | null): number {
   const facts = uniqueFacts;
   let fired = 0;

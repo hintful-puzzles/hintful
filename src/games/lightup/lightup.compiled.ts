@@ -208,6 +208,7 @@ export interface ShineBinding {
 
 const shineFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function shine(b: Marks, sp: GridSpace, cl: Dealt, v_c: number, fire: Fire<ShineBinding> | null): number {
   const _g22: number[] = [];
   const _g31: number[] = [];
@@ -264,6 +265,7 @@ export interface SquareBinding {
 
 const squareFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBinding> | null): number {
   const _g65: number[] = [];
   const _g74: number[] = [];
@@ -511,6 +513,7 @@ export interface DarkSetBinding {
 
 const darkSetFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function darkSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DarkSetBinding> | null): number {
   const _g184: number[] = [];
   const _g193: number[] = [];
@@ -728,6 +731,7 @@ export interface ClueSetBinding {
 
 const clueSetFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function clueSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueSetBinding> | null): number {
   const _g316: number[] = [];
   const _g333: number[] = [];

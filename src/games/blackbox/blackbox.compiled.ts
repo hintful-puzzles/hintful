@@ -99,6 +99,7 @@ export interface RayBinding {
 
 const rayFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2. */
 export function ray(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RayBinding> | null): number {
   const facts = rayFacts;
   let fired = 0;

@@ -165,6 +165,7 @@ export interface CageEasyBinding {
 const cageEasyFacts: number[] = [];
 let cageEasyCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as 1. */
 export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasyBinding> | null): number {
   const _f192 = new Int32Array(sp.cells.length).fill(-1);
   let _l193: readonly number[] = [];
@@ -367,6 +368,7 @@ export interface CageBinding {
 const cageFacts: number[] = [];
 let cageCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as 1. */
 export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding> | null): number {
   const _p271 = new Int32Array(sp.cells.length);
   let _l272: readonly number[] = [];
@@ -573,6 +575,7 @@ export interface CageLineBinding {
 const cageLineFacts: number[] = [];
 let cageLineCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n^0.5. */
 export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLineBinding> | null): number {
   const _f351 = new Int32Array(sp.cells.length).fill(-1);
   let _l352: readonly number[] = [];

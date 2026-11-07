@@ -90,6 +90,7 @@ export interface SignBinding {
 const signFacts: number[] = [];
 let signCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function sign(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SignBinding> | null): number {
   const facts = signFacts;
   let fired = 0;

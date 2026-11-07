@@ -176,6 +176,7 @@ export interface ClueEasyBinding {
 const clueEasyFacts: number[] = [];
 let clueEasyCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function clueEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueEasyBinding> | null): number {
   const facts = clueEasyFacts;
   let fired = 0;
@@ -333,6 +334,7 @@ export interface ClueBinding {
 const clueFacts: number[] = [];
 let clueCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding> | null): number {
   const facts = clueFacts;
   let fired = 0;
@@ -481,6 +483,7 @@ export interface ClueTrickyBinding {
 const clueTrickyFacts: number[] = [];
 let clueTrickyCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function clueTricky(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueTrickyBinding> | null): number {
   const facts = clueTrickyFacts;
   let fired = 0;

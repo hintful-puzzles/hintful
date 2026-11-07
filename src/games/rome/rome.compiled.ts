@@ -137,6 +137,7 @@ export interface CullBinding {
 
 const cullFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function cull(b: Marks, _sp: GridSpace, cl: Dealt, v_c: number, fire: Fire<CullBinding> | null): number {
   const facts = cullFacts;
   let fired = 0;
@@ -168,6 +169,7 @@ export interface LoneBinding {
 const loneFacts: number[] = [];
 let loneCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function lone(b: Marks, sp: GridSpace, fire: Fire<LoneBinding> | null): number {
   const facts = loneFacts;
   let fired = 0;
@@ -206,6 +208,7 @@ export interface LoopBinding {
 const loopFacts: number[] = [];
 let loopCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n^1.5. */
 export function loop(b: Marks, sp: GridSpace, fire: Fire<LoopBinding> | null): number {
   const facts = loopFacts;
   let fired = 0;
@@ -247,6 +250,7 @@ export interface OnlyHomeBinding {
 const onlyHomeFacts: number[] = [];
 let onlyHomeCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as 1. */
 export function onlyHome(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyHomeBinding> | null): number {
   const facts = onlyHomeFacts;
   let fired = 0;
@@ -328,6 +332,7 @@ export interface PairBinding {
 const pairFacts: number[] = [];
 let pairCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as 1. */
 export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding> | null): number {
   const facts = pairFacts;
   let fired = 0;
@@ -388,6 +393,7 @@ export interface ReachBinding {
 const reachFacts: number[] = [];
 let reachCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n^2. */
 export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBinding> | null): number {
   const _g103: number[] = [];
   const facts = reachFacts;
@@ -480,6 +486,7 @@ export interface OppositeBinding {
 const oppositeFacts: number[] = [];
 let oppositeCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function opposite(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OppositeBinding> | null): number {
   const facts = oppositeFacts;
   let fired = 0;

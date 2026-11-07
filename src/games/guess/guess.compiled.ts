@@ -137,6 +137,7 @@ export interface ScoredNothingBinding {
 
 const scoredNothingFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function scoredNothing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ScoredNothingBinding> | null): number {
   const facts = scoredNothingFacts;
   let fired = 0;
@@ -185,6 +186,7 @@ export interface NoBlackBinding {
 
 const noBlackFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function noBlack(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NoBlackBinding> | null): number {
   const facts = noBlackFacts;
   let fired = 0;
@@ -222,6 +224,7 @@ export interface EveryPegScoredBinding {
 
 const everyPegScoredFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function everyPegScored(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EveryPegScoredBinding> | null): number {
   const facts = everyPegScoredFacts;
   let fired = 0;
@@ -271,6 +274,7 @@ export interface BlacksForcedBinding {
 
 const blacksForcedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function blacksForced(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BlacksForcedBinding> | null): number {
   const facts = blacksForcedFacts;
   let fired = 0;
@@ -326,6 +330,7 @@ export interface BlacksAccountedBinding {
 const blacksAccountedFacts: number[] = [];
 let blacksAccountedCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function blacksAccounted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BlacksAccountedBinding> | null): number {
   const _g53: number[] = [];
   const facts = blacksAccountedFacts;
@@ -383,6 +388,7 @@ export interface TotalAccountedBinding {
 const totalAccountedFacts: number[] = [];
 let totalAccountedCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n^2. */
 export function totalAccounted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TotalAccountedBinding> | null): number {
   const _g106: number[] = [];
   const _g129: number[] = [];
@@ -516,6 +522,7 @@ export interface NoRepeatsBinding {
 const noRepeatsFacts: number[] = [];
 let noRepeatsCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n^2. */
 export function noRepeats(b: Marks, sp: GridSpace, fire: Fire<NoRepeatsBinding> | null): number {
   const facts = noRepeatsFacts;
   let fired = 0;

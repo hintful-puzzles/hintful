@@ -228,6 +228,7 @@ export interface FitBinding {
 
 const fitFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function fit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FitBinding> | null): number {
   const facts = fitFacts;
   let fired = 0;
@@ -299,6 +300,7 @@ export interface UncoveredBinding {
 
 const uncoveredFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function uncovered(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<UncoveredBinding> | null): number {
   const facts = uncoveredFacts;
   let fired = 0;
@@ -325,6 +327,7 @@ export interface BoxedBinding {
 
 const boxedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function boxed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoxedBinding> | null): number {
   const facts = boxedFacts;
   let fired = 0;
@@ -400,6 +403,7 @@ export interface ReachBinding {
 
 const reachFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBinding> | null): number {
   const _g127: number[] = [];
   const facts = reachFacts;
@@ -479,6 +483,7 @@ export interface OverlapBinding {
 
 const overlapFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2. */
 export function overlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OverlapBinding> | null): number {
   const _g179: number[] = [];
   const facts = overlapFacts;
@@ -574,6 +579,7 @@ export interface StarveBinding {
 
 const starveFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2. */
 export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBinding> | null): number {
   const _g294: number[] = [];
   const _g336: number[] = [];
@@ -781,6 +787,7 @@ export interface LineBinding {
 
 const lineFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2. */
 export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding> | null): number {
   const _g510: number[] = [];
   const _g544: number[] = [];

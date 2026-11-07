@@ -146,6 +146,7 @@ export interface AroundBinding {
 
 const aroundFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function around(b: Marks, sp: GridSpace, fire: Fire<AroundBinding> | null): number {
   const facts = aroundFacts;
   let fired = 0;
@@ -200,6 +201,7 @@ export interface FullLineBinding {
 
 const fullLineFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function fullLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FullLineBinding> | null): number {
   const _g33: number[] = [];
   const facts = fullLineFacts;
@@ -266,6 +268,7 @@ export interface FullRegionBinding {
 
 const fullRegionFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function fullRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<FullRegionBinding> | null): number {
   const _g61: number[] = [];
   const facts = fullRegionFacts;
@@ -333,6 +336,7 @@ export interface ExactLineBinding {
 
 const exactLineFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function exactLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExactLineBinding> | null): number {
   const _g93: number[] = [];
   const facts = exactLineFacts;
@@ -402,6 +406,7 @@ export interface ExactRegionBinding {
 
 const exactRegionFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function exactRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<ExactRegionBinding> | null): number {
   const _g129: number[] = [];
   const facts = exactRegionFacts;
@@ -477,6 +482,7 @@ export interface ConfinedBinding {
 
 const confinedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ConfinedBinding> | null): number {
   const _g293: number[] = [];
   const _g306: number[] = [];
@@ -761,6 +767,7 @@ export interface NeededLineBinding {
 
 const neededLineFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function neededLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NeededLineBinding> | null): number {
   const _g543: number[] = [];
   const _f556 = new Int32Array(sp.cells.length).fill(-1);
@@ -968,6 +975,7 @@ export interface NeededRegionBinding {
 
 const neededRegionFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function neededRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NeededRegionBinding> | null): number {
   const _g675: number[] = [];
   const _f688 = new Int32Array(sp.cells.length).fill(-1);
@@ -1177,6 +1185,7 @@ export interface CrowdedLineBinding {
 
 const crowdedLineFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CrowdedLineBinding> | null): number {
   const _g844: number[] = [];
   const _g867: number[] = [];
@@ -1455,6 +1464,7 @@ export interface CrowdedRegionBinding {
 
 const crowdedRegionFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function crowdedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CrowdedRegionBinding> | null): number {
   const _g1064: number[] = [];
   const _g1086: number[] = [];
@@ -1734,6 +1744,7 @@ export interface BandedBinding {
 
 const bandedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBinding> | null): number {
   const _g1327: number[] = [];
   const _g1342: number[] = [];
@@ -2025,6 +2036,7 @@ export interface StarvedLineBinding {
 
 const starvedLineFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarvedLineBinding> | null): number {
   const _g1677: number[] = [];
   const _g1687: number[] = [];
@@ -2293,6 +2305,7 @@ export interface StarvedRegionBinding {
 
 const starvedRegionFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarvedRegionBinding> | null): number {
   const _g1884: number[] = [];
   const _g1894: number[] = [];

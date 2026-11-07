@@ -403,6 +403,17 @@ a board's verdicts differ. A change to the compiler or the runtime is timed
 with it against the commit before, on the games whose profile names the
 construct; each file's header says how to run it.
 
+**The compiler states how each technique grows with the board**, above its
+function in the compiled module: the loops round its dearest read over the
+board (`n`) or a line (`n^0.5`), and the walks it makes of either
+(`techniqueGrowth` in `compile.ts`). A read a kept structure answers is a
+lookup. `npm run describe` lists every technique from `n^2.5`, and the
+compiler refuses one past `n^3`; the module's comparison in the gate holds
+the rest, so a statement that grows steeper shows in its diff. A steep
+technique is where a description costs more than a hand-written ladder:
+Boats' and Galaxies' were the ones listed when the report came in, and both
+games were measured slower.
+
 **What a statement costs** turns on the shapes the compiler recognizes. An
 author writing for speed uses these:
 

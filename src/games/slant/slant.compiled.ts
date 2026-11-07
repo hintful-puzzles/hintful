@@ -113,6 +113,7 @@ export interface ClueBinding {
 
 const clueFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding> | null): number {
   const _g16: number[] = [];
   const facts = clueFacts;
@@ -204,6 +205,7 @@ export interface LoopBinding {
 
 const loopFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function loop(b: Marks, sp: GridSpace, fire: Fire<LoopBinding> | null): number {
   const facts = loopFacts;
   let fired = 0;
@@ -285,6 +287,7 @@ export interface PairBinding {
 
 const pairFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding> | null): number {
   const _g113: number[] = [];
   const _g123: number[] = [];
@@ -430,6 +433,7 @@ export interface ShareBinding {
 
 const shareFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function share(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ShareBinding> | null): number {
   const _g218: number[] = [];
   const _g228: number[] = [];
@@ -547,6 +551,7 @@ export interface DeadEndBinding {
 
 const deadEndFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function deadEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DeadEndBinding> | null): number {
   const facts = deadEndFacts;
   let fired = 0;
@@ -655,6 +660,7 @@ export interface SameBinding {
 
 const sameFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function same(b: Marks, sp: GridSpace, fire: Fire<SameBinding> | null): number {
   const _g336: number[] = [];
   const facts = sameFacts;
@@ -704,6 +710,7 @@ export interface DrawnBinding {
 
 const drawnFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function drawn(b: Marks, sp: GridSpace, v_c: number, fire: Fire<DrawnBinding> | null): number {
   const _g362: number[] = [];
   const facts = drawnFacts;
@@ -752,6 +759,7 @@ export interface OneBinding {
 
 const oneFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function one(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneBinding> | null): number {
   const _g391: number[] = [];
   const facts = oneFacts;
@@ -809,6 +817,7 @@ export interface ThreeBinding {
 
 const threeFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function three(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ThreeBinding> | null): number {
   const _g420: number[] = [];
   const facts = threeFacts;
@@ -869,6 +878,7 @@ export interface TwoBinding {
 
 const twoFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function two(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TwoBinding> | null): number {
   const _g465: number[] = [];
   const _g473: number[] = [];

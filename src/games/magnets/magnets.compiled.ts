@@ -161,6 +161,7 @@ export interface PairBinding {
 
 const pairFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function pair(b: Marks, _sp: GridSpace, cl: Dealt, v_c: number, fire: Fire<PairBinding> | null): number {
   const _g13: number[] = [];
   const facts = pairFacts;
@@ -200,6 +201,7 @@ export interface RepelBinding {
 
 const repelFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function repel(b: Marks, sp: GridSpace, v_c: number, fire: Fire<RepelBinding> | null): number {
   const facts = repelFacts;
   let fired = 0;
@@ -229,6 +231,7 @@ export interface TileBinding {
 
 const tileFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function tile(b: Marks, _sp: GridSpace, cl: Dealt, v_c: number, fire: Fire<TileBinding> | null): number {
   const _g40: number[] = [];
   const facts = tileFacts;
@@ -276,6 +279,7 @@ export interface SingleBinding {
 const singleFacts: number[] = [];
 let singleCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function single(b: Marks, sp: GridSpace, fire: Fire<SingleBinding> | null): number {
   const facts = singleFacts;
   let fired = 0;
@@ -318,6 +322,7 @@ export interface CountBinding {
 
 const countFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBinding> | null): number {
   const _g71: number[] = [];
   const facts = countFacts;
@@ -458,6 +463,7 @@ export interface OddGapBinding {
 
 const oddGapFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function oddGap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OddGapBinding> | null): number {
   const _g164: number[] = [];
   const _g170: number[] = [];
@@ -560,6 +566,7 @@ export interface MarkedBinding {
 
 const markedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function marked(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MarkedBinding> | null): number {
   const _g219: number[] = [];
   const _g239: number[] = [];
@@ -663,6 +670,7 @@ export interface OneNeutralBinding {
 
 const oneNeutralFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function oneNeutral(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneNeutralBinding> | null): number {
   const _g287: number[] = [];
   const facts = oneNeutralFacts;
@@ -739,6 +747,7 @@ export interface EveryTileBinding {
 
 const everyTileFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function everyTile(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EveryTileBinding> | null): number {
   const _g316: number[] = [];
   const facts = everyTileFacts;
@@ -820,6 +829,7 @@ export interface OnlyEndBinding {
 
 const onlyEndFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function onlyEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyEndBinding> | null): number {
   const _g363: number[] = [];
   const _g369: number[] = [];

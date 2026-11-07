@@ -111,6 +111,7 @@ export interface BrokenBinding {
 
 const brokenFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function broken(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BrokenBinding> | null): number {
   const facts = brokenFacts;
   let fired = 0;
@@ -196,6 +197,7 @@ export interface RefuteBinding {
 
 const refuteFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function refute(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RefuteBinding> | null): number {
   const facts = refuteFacts;
   let fired = 0;
@@ -304,6 +306,7 @@ export interface CountFullBinding {
 
 const countFullFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFullBinding> | null): number {
   const _g271: number[] = [];
   const _g280: number[] = [];
@@ -656,6 +659,7 @@ export interface CountShortBinding {
 
 const countShortFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountShortBinding> | null): number {
   const _g540: number[] = [];
   const _g550: number[] = [];

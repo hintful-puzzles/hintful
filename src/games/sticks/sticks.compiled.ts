@@ -172,6 +172,7 @@ export interface OverConnectedBinding {
 const overConnectedFacts: number[] = [];
 let overConnectedCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function overConnected(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OverConnectedBinding> | null): number {
   const facts = overConnectedFacts;
   let fired = 0;
@@ -251,6 +252,7 @@ export interface TwoCluesBinding {
 const twoCluesFacts: number[] = [];
 let twoCluesCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n^1.5. */
 export function twoClues(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TwoCluesBinding> | null): number {
   const _g42: number[] = [];
   const _g48: number[] = [];
@@ -370,6 +372,7 @@ export interface TooLongBinding {
 const tooLongFacts: number[] = [];
 let tooLongCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n^1.5. */
 export function tooLong(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooLongBinding> | null): number {
   const _g93: number[] = [];
   const _g99: number[] = [];
@@ -472,6 +475,7 @@ export interface StarvedBinding {
 const starvedFacts: number[] = [];
 let starvedCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function starved(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarvedBinding> | null): number {
   const facts = starvedFacts;
   let fired = 0;
@@ -554,6 +558,7 @@ export interface UnreachableBinding {
 const unreachableFacts: number[] = [];
 let unreachableCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n^2. */
 export function unreachable(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<UnreachableBinding> | null): number {
   const _g225: number[] = [];
   const _g247: number[] = [];

@@ -139,6 +139,7 @@ export interface CluesVersusRegionSizeBinding {
 
 const cluesVersusRegionSizeFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function cluesVersusRegionSize(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CluesVersusRegionSizeBinding> | null): number {
   const facts = cluesVersusRegionSizeFacts;
   let fired = 0;
@@ -181,6 +182,7 @@ export interface NumberExhaustedBinding {
 
 const numberExhaustedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function numberExhausted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NumberExhaustedBinding> | null): number {
   const _g24: number[] = [];
   const facts = numberExhaustedFacts;
@@ -274,6 +276,7 @@ export interface NotTooBigBinding {
 
 const notTooBigFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function notTooBig(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTooBigBinding> | null): number {
   const _g60: number[] = [];
   const facts = notTooBigFacts;
@@ -326,6 +329,7 @@ export interface NotTooSmallBinding {
 
 const notTooSmallFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function notTooSmall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTooSmallBinding> | null): number {
   const _g111: number[] = [];
   const _g129: number[] = [];
@@ -460,6 +464,7 @@ export interface NoDanglingEdgesBinding {
 
 const noDanglingEdgesFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function noDanglingEdges(b: Marks, sp: GridSpace, fire: Fire<NoDanglingEdgesBinding> | null): number {
   const _g194: number[] = [];
   const facts = noDanglingEdgesFacts;
@@ -538,6 +543,7 @@ export interface EquivalentEdgesBinding {
 
 const equivalentEdgesFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EquivalentEdgesBinding> | null): number {
   const _g236: number[] = [];
   const _g243: number[] = [];
@@ -659,6 +665,7 @@ export interface InsideBinding {
 
 const insideFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function inside(b: Marks, sp: GridSpace, fire: Fire<InsideBinding> | null): number {
   const _g287: number[] = [];
   const facts = insideFacts;

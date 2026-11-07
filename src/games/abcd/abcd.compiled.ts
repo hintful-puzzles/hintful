@@ -123,6 +123,7 @@ export interface PlacedBinding {
 
 const placedFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function placed(b: Marks, sp: GridSpace, v_c: number, fire: Fire<PlacedBinding> | null): number {
   const facts = placedFacts;
   let fired = 0;
@@ -155,6 +156,7 @@ export interface SatisfiedBinding {
 
 const satisfiedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function satisfied(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SatisfiedBinding> | null): number {
   const facts = satisfiedFacts;
   let fired = 0;
@@ -230,6 +232,7 @@ export interface SingleBinding {
 const singleFacts: number[] = [];
 let singleCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function single(b: Marks, sp: GridSpace, fire: Fire<SingleBinding> | null): number {
   const facts = singleFacts;
   let fired = 0;
@@ -268,6 +271,7 @@ export interface RunsBinding {
 
 const runsFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function runs(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RunsBinding> | null): number {
   const _g79: number[] = [];
   const facts = runsFacts;
@@ -356,6 +360,7 @@ export interface PlacedDiagonalBinding {
 
 const placedDiagonalFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function placedDiagonal(b: Marks, sp: GridSpace, v_c: number, fire: Fire<PlacedDiagonalBinding> | null): number {
   const facts = placedDiagonalFacts;
   let fired = 0;

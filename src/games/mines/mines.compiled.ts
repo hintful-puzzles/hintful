@@ -101,6 +101,7 @@ export interface AloneBinding {
 
 const aloneFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBinding> | null): number {
   const _g12: number[] = [];
   const facts = aloneFacts;
@@ -195,6 +196,7 @@ export interface PairBinding {
 
 const pairFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding> | null): number {
   const _g104: number[] = [];
   const _g123: number[] = [];
@@ -385,6 +387,7 @@ export interface RegionBinding {
 
 const regionFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBinding> | null): number {
   const _g266: number[] = [];
   const _g275: number[] = [];
@@ -661,6 +664,7 @@ export interface RegionsBinding {
 
 const regionsFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBinding> | null): number {
   const _g506: number[] = [];
   const _g515: number[] = [];
@@ -991,6 +995,7 @@ export interface CountBinding {
 
 const countFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBinding> | null): number {
   const _g742: number[] = [];
   const _g766: number[] = [];

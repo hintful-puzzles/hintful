@@ -137,3 +137,35 @@ describe("the compiler refuses an ill-sorted technique", () => {
     );
   });
 });
+
+describe("a technique states how its dearest read grows with the board", () => {
+  const lib = (forClause: string) =>
+    compileLibrary(
+      { library: "t", techniques: { x: { for: forClause, conclude: "strike(c, 1)" } } },
+      "t",
+      "./runtime.ts",
+    );
+  it.each([
+    ["one cell's candidates", "c in cells where |cand(c)| = 1", "n"],
+    [
+      "a count over the board per cell",
+      "c in cells where count(d in cells where known(d)) = 1",
+      "n^2",
+    ],
+    [
+      "a count over its line per cell",
+      "c in cells where count(d in cells(row(c)) where known(d)) = 1",
+      "n^1.5",
+    ],
+  ])("%s", (_, forClause, growth) => {
+    expect(lib(forClause)).toContain(`grows with the board as ${growth}.`);
+  });
+
+  it("and refuses one past the steepest allowed", () => {
+    expect(() =>
+      lib(
+        "c in cells, d in cells, e in cells where count(f in cells where known(f)) = 1",
+      ),
+    ).toThrow(/grows with the board as n\^4/);
+  });
+});

@@ -112,6 +112,7 @@ export interface FacingBinding {
 
 const facingFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function facing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FacingBinding> | null): number {
   const _g8: number[] = [];
   const facts = facingFacts;
@@ -177,6 +178,7 @@ export interface BoundsBinding {
 const boundsFacts: number[] = [];
 let boundsCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBinding> | null): number {
   const facts = boundsFacts;
   let fired = 0;
@@ -417,6 +419,7 @@ export interface ArrangementBinding {
 const arrangementFacts: number[] = [];
 let arrangementCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n. */
 export function arrangement(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ArrangementBinding> | null): number {
   const _p211 = new Int32Array(sp.cells.length);
   let _l212: readonly number[] = [];

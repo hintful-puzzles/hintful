@@ -82,6 +82,7 @@ export interface AloneBinding {
 
 const aloneFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBinding> | null): number {
   const facts = aloneFacts;
   let fired = 0;
@@ -176,6 +177,7 @@ export interface ComparedBinding {
 
 const comparedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ComparedBinding> | null): number {
   const _g89: number[] = [];
   const _g99: number[] = [];

@@ -135,6 +135,7 @@ export interface BesideCoveredBinding {
 
 const besideCoveredFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function besideCovered(b: Marks, sp: GridSpace, fire: Fire<BesideCoveredBinding> | null): number {
   const facts = besideCoveredFacts;
   let fired = 0;
@@ -173,6 +174,7 @@ export interface SameLineBinding {
 
 const sameLineFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function sameLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SameLineBinding> | null): number {
   const facts = sameLineFacts;
   let fired = 0;
@@ -220,6 +222,7 @@ export interface SandwichBinding {
 
 const sandwichFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function sandwich(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SandwichBinding> | null): number {
   const facts = sandwichFacts;
   let fired = 0;
@@ -258,6 +261,7 @@ export interface PairBinding {
 
 const pairFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding> | null): number {
   const facts = pairFacts;
   let fired = 0;
@@ -313,6 +317,7 @@ export interface CornerBinding {
 
 const cornerFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function corner(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CornerBinding> | null): number {
   const facts = cornerFacts;
   let fired = 0;
@@ -401,6 +406,7 @@ export interface BoxedInBinding {
 
 const boxedInFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function boxedIn(b: Marks, sp: GridSpace, fire: Fire<BoxedInBinding> | null): number {
   const _g94: number[] = [];
   const facts = boxedInFacts;
@@ -454,6 +460,7 @@ export interface OffsetBinding {
 
 const offsetFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function offset(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OffsetBinding> | null): number {
   const facts = offsetFacts;
   let fired = 0;
@@ -534,6 +541,7 @@ export interface SplitBinding {
 
 const splitFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function split(b: Marks, sp: GridSpace, fire: Fire<SplitBinding> | null): number {
   const _g152: number[] = [];
   const facts = splitFacts;

@@ -395,6 +395,7 @@ export interface GivenBinding {
 
 const givenFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function given(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<GivenBinding> | null): number {
   const facts = givenFacts;
   let fired = 0;
@@ -615,6 +616,7 @@ export interface NearBinding {
 
 const nearFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function near(b: Marks, sp: GridSpace, fire: Fire<NearBinding> | null): number {
   const _g82: number[] = [];
   const facts = nearFacts;
@@ -668,6 +670,7 @@ export interface TouchBinding {
 
 const touchFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function touch(b: Marks, sp: GridSpace, v_c: number, fire: Fire<TouchBinding> | null): number {
   const facts = touchFacts;
   let fired = 0;
@@ -698,6 +701,7 @@ export interface LineShipsBinding {
 
 const lineShipsFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function lineShips(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineShipsBinding> | null): number {
   const _g121: number[] = [];
   const facts = lineShipsFacts;
@@ -775,6 +779,7 @@ export interface TotalBinding {
 
 const totalFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function total(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TotalBinding> | null): number {
   const _g156: number[] = [];
   const facts = totalFacts;
@@ -852,6 +857,7 @@ export interface CenterBinding {
 
 const centerFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function center(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CenterBinding> | null): number {
   const facts = centerFacts;
   let fired = 0;
@@ -914,6 +920,7 @@ export interface ExtendBinding {
 
 const extendFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function extend(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExtendBinding> | null): number {
   const _g323: number[] = [];
   const _g330: number[] = [];
@@ -1113,6 +1120,7 @@ export interface LineWaterBinding {
 
 const lineWaterFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function lineWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineWaterBinding> | null): number {
   const _g450: number[] = [];
   const facts = lineWaterFacts;
@@ -1190,6 +1198,7 @@ export interface IsolatedBinding {
 
 const isolatedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function isolated(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<IsolatedBinding> | null): number {
   const _g585: number[] = [];
   const _g592: number[] = [];
@@ -1363,6 +1372,7 @@ export interface GrowBinding {
 
 const growFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2.5. */
 export function grow(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<GrowBinding> | null): number {
   const _g811: number[] = [];
   const _g819: number[] = [];
@@ -1586,6 +1596,7 @@ export interface OnlyFitBinding {
 
 const onlyFitFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2.5. */
 export function onlyFit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyFitBinding> | null): number {
   const _g1218: number[] = [];
   const _g1225: number[] = [];
@@ -2076,6 +2087,7 @@ export interface CenterRoomBinding {
 
 const centerRoomFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function centerRoom(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CenterRoomBinding> | null): number {
   const _g1524: number[] = [];
   const facts = centerRoomFacts;
@@ -2162,6 +2174,7 @@ export interface TooLongBinding {
 
 const tooLongFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function tooLong(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooLongBinding> | null): number {
   const _g1679: number[] = [];
   const _g1686: number[] = [];
@@ -2354,6 +2367,7 @@ export interface ShortRunBinding {
 
 const shortRunFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2.5. */
 export function shortRun(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ShortRunBinding> | null): number {
   const _g1910: number[] = [];
   const _g1918: number[] = [];
@@ -2559,6 +2573,7 @@ export interface HiddenBinding {
 
 const hiddenFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function hidden(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<HiddenBinding> | null): number {
   const _g2151: number[] = [];
   const _g2217: number[] = [];
@@ -2770,6 +2785,7 @@ export interface OnlyRunsBinding {
 
 const onlyRunsFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2.5. */
 export function onlyRuns(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRunsBinding> | null): number {
   const _g2606: number[] = [];
   const _g2613: number[] = [];
@@ -3381,6 +3397,7 @@ export interface SharedBinding {
 
 const sharedFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBinding> | null): number {
   const _g3540: number[] = [];
   const _g3550: number[] = [];
@@ -3717,6 +3734,7 @@ export interface LastWaterBinding {
 
 const lastWaterFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2.5. */
 export function lastWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastWaterBinding> | null): number {
   const _g4998: number[] = [];
   const _g5008: number[] = [];
@@ -4586,6 +4604,7 @@ export interface LastShipBinding {
 
 const lastShipFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^2.5. */
 export function lastShip(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastShipBinding> | null): number {
   const _g7023: number[] = [];
   const _g7033: number[] = [];
@@ -5453,6 +5472,7 @@ export interface CenterTrialBinding {
 
 const centerTrialFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^1.5. */
 export function centerTrial(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CenterTrialBinding> | null): number {
   const _g8459: number[] = [];
   const _g8472: number[] = [];

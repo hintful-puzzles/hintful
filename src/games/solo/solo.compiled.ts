@@ -128,6 +128,7 @@ export interface BoxSingleBinding {
 
 const boxSingleFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function boxSingle(b: Marks, sp: GridSpace, fire: Fire<BoxSingleBinding> | null): number {
   const facts = boxSingleFacts;
   let fired = 0;
@@ -201,6 +202,7 @@ export interface CageSingleBinding {
 
 const cageSingleFacts: number[] = [];
 
+/** Its dearest read grows with the board as 1. */
 export function cageSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSingleBinding> | null): number {
   const _g52: number[] = [];
   const facts = cageSingleFacts;
@@ -262,6 +264,7 @@ export interface RegionRuleBinding {
 
 const regionRuleFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionRuleBinding> | null): number {
   const _g131: number[] = [];
   const _g155: number[] = [];
@@ -449,6 +452,7 @@ export interface CageMinMaxBinding {
 const cageMinMaxFacts: number[] = [];
 let cageMinMaxCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as 1. */
 export function cageMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageMinMaxBinding> | null): number {
   const _g224: number[] = [];
   const facts = cageMinMaxFacts;
@@ -566,6 +570,7 @@ export interface PartMinMaxBinding {
 const partMinMaxFacts: number[] = [];
 let partMinMaxCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n^0.5. */
 export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMinMaxBinding> | null): number {
   const _g338: number[] = [];
   const _g364: number[] = [];
@@ -816,6 +821,7 @@ export interface CageSumsBinding {
 const cageSumsFacts: number[] = [];
 let cageSumsCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as 1. */
 export function cageSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSumsBinding> | null): number {
   const _g463: number[] = [];
   const facts = cageSumsFacts;
@@ -960,6 +966,7 @@ export interface PartSumsBinding {
 const partSumsFacts: number[] = [];
 let partSumsCands = new Int32Array(0);
 
+/** Its dearest read grows with the board as n^0.5. */
 export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSumsBinding> | null): number {
   const _g601: number[] = [];
   const _g627: number[] = [];
@@ -1228,6 +1235,7 @@ export interface IntersectBinding {
 
 const intersectFacts: number[] = [];
 
+/** Its dearest read grows with the board as n^0.5. */
 export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> | null): number {
   const facts = intersectFacts;
   let fired = 0;
@@ -1387,6 +1395,7 @@ export interface DigitSetBinding {
 
 const digitSetFacts: number[] = [];
 
+/** Its dearest read grows with the board as n. */
 export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | null): number {
   const _g845: number[] = [];
   const _g876: number[] = [];
