@@ -73,8 +73,8 @@ the board its desc was laid out for.
 
 ### Requirement: Params: The fourth Dominosa tier is named Unreasonable and keeps its character
 
-The fourth tier SHALL be named `Unreasonable`, because its forcing-chain
-deduction is a search over a closure of all placements, and its difficulty
+The fourth tier SHALL be named `Unreasonable`, because its boards are dealt by
+a search that tries a domino where deduction stops, and its difficulty
 character SHALL be `"e"`.
 
 #### Scenario: The fourth tier keeps its difficulty character
@@ -143,8 +143,7 @@ Easy SHALL perform the domino-single-placement and square-single-placement
 deductions. Normal SHALL additionally perform square-single-domino,
 domino-must-overlap, the two local-duplicate deductions, and the parity
 deduction. Tricky SHALL additionally perform set analysis without doubles.
-`Unreasonable` SHALL additionally perform set analysis with doubles and the
-forcing-chain deduction.
+`Unreasonable` SHALL additionally perform set analysis with doubles.
 
 #### Scenario: A cap leaves out the deductions above it
 
@@ -152,17 +151,39 @@ forcing-chain deduction.
   Normal
 - **THEN** the verdict is ambiguous (2)
 
+### Requirement: Generation: A Dominosa tier deals the boards it alone finishes
+
+A board of a tier below Unreasonable SHALL be one the ladder finishes at that
+tier and not below it. An `Unreasonable` board SHALL be one the ladder at
+Tricky stops on and the search finds one answer for.
+
+#### Scenario: Upstream's boards keep their tiers
+
+- **WHEN** each board upstream's generator dealt is graded
+- **THEN** it is graded at the tier upstream dealt it at, its Unreasonable
+  board by the search
+
 ### Requirement: Solver: What the parity and forcing-chain deductions conclude
 
-The parity deduction SHALL rule out a domino whose placement would split the
-unfilled area into two odd-sized regions. The forcing-chain deduction SHALL
-follow parity-linked chains of forced placements.
+The solver SHALL run the ladder Dominosa's description states, compiled, each
+technique checked sound. The parity deduction SHALL rule out a domino whose
+placement would split the unfilled area into two odd-sized regions. Beneath
+the ladder, a search SHALL assume a domino on each spot left round the square
+with the fewest, and count a board's answers to two; its budget SHALL be
+2,000 positions, and SHALL NOT be lowered: a board already dealt, which a
+saved game holds, loads only within it.
 
 #### Scenario: A placement that splits the board oddly is ruled out
 
 - **WHEN** a domino on a spot would leave an odd number of unfilled squares on
   each side of it
 - **THEN** the parity deduction rules a domino out of that spot
+
+#### Scenario: A board with several answers is told from one with none found
+
+- **WHEN** the board upstream dealt at Ambiguous for the seed `dominosa-a6` is
+  loaded at any tier
+- **THEN** it is refused as having more than one solution
 
 ### Requirement: Controls: Dominosa input places dominoes and barrier edges
 
@@ -270,8 +291,8 @@ edge, SHALL complete the step, and every other move SHALL be off the plan.
 
 #### Scenario: The plan solves the board from any mid-game position
 
-- **WHEN** a non-mistaken board that needs no forcing chain is advanced by
-  applying one freshly-recomputed hint step at a time
+- **WHEN** a non-mistaken board the ladder finishes is advanced by applying
+  one freshly-recomputed hint step at a time
 - **THEN** every step makes progress and the board reaches solved
 
 ### Requirement: Hint: A placement step places a domino that has one spot left
@@ -323,18 +344,6 @@ solvable, which has no forced deduction to teach.
 - **WHEN** a hint is requested on a board whose clue grid has more than one
   solution
 - **THEN** `hint()` returns a refusal and no step
-
-### Requirement: Hint: The forcing chain grades boards and is never narrated
-
-The forcing-chain deduction SHALL remain in the solver, so the generator grades
-on it. It SHALL NOT be recorded by the hint's deduction pass, because a closure
-over all placements is a search and no hint narrates a search on any tier.
-
-#### Scenario: A position only the forcing chain advances gets no firing
-
-- **WHEN** the hint's deduction pass reaches a position where only the forcing
-  chain makes progress
-- **THEN** the pass yields no firing, while the solver still solves the board
 
 ### Requirement: Hint: Dominosa's hint tries its techniques in one order
 

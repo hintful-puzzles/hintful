@@ -708,7 +708,11 @@ of the budget for its whole proof, then sampled boards to the deadline, and
 **a plant not caught within the budget fails the run**: a check that cannot
 catch the planted defect in the time cannot vouch for the technique either.
 A held verdict is evidence, not proof; a technique whose held verdict a
-wrong hint later contradicts is the first place to look.
+wrong hint later contradicts is the first place to look. **The check is a
+net, not a proof program**: the hand-written solvers and upstream's C played
+correctly with no such check, so a session does not widen what a held
+verdict samples, or spend past the budget, for rigor's sake (the owner,
+2026-11-07). A defect a player meets is the reason to look further.
 
 ## A planning game's position and moves
 
