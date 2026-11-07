@@ -1,7 +1,9 @@
 # keep-definitions-across-placements
 
 **Status: filed by `describe-rectangles-and-galaxies` (2026-11-07)**, from
-what Rect's Unreasonable deals measured.
+what Rect's Unreasonable deals measured. The owner chose (2026-11-07) to
+ship Rect with that cost and take this change next, before
+`describe-galaxies`.
 
 ## Why
 

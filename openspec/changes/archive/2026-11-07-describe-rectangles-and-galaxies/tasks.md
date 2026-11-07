@@ -12,6 +12,6 @@
 
 - [x] 3.1 Boards, tiers and hint walks compared with HEAD; saves and links checked
 - [x] 3.2 Every technique checked sound, each plant caught
-- [ ] 3.3 Large boards timed with HEAD, and the Unreasonable deal time settled with the owner
+- [x] 3.3 Large boards timed with HEAD, and the Unreasonable deal time settled with the owner (pushed as it is; `keep-definitions-across-placements` next)
 - [x] 3.4 The guides updated; the running app checked
-- [ ] 3.5 Archive; file the next step
+- [x] 3.5 Archive; file the next step (`describe-galaxies`, `keep-definitions-across-placements`)

@@ -75,14 +75,12 @@ does, or at Unreasonable the search still proves one answer.
 
 ### Requirement: Generation: An Easy or Normal Rectangles board is one the hint's rungs of its tier finish
 
-The game SHALL run the ladder its description states, compiled, each
-technique checked sound, for its hint and for its grading alike. Easy SHALL
-solve a board exactly where Easy's techniques, a clue with one fit, a square
-one clue reaches and squares another clue is sure to cover, finish it from
-an empty board. Normal SHALL add the techniques that leave a clue no room
-and draw a line. A board the ladder finishes has one answer, since each
-technique is sound, and neither tier asks whether upstream's solver reaches
-a unique placement.
+The game SHALL run its description's compiled ladder, each technique
+checked sound, for its hint and its grading alike. Easy SHALL solve a board
+exactly where Easy's techniques, a clue with one fit, a square one clue
+reaches and squares another clue is sure to cover, finish it from empty;
+Normal SHALL add the techniques that leave a clue no room and draw a line.
+A board the ladder finishes has one answer, each technique being sound.
 
 #### Scenario: A board only the hint finishes is Normal
 

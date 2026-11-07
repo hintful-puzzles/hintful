@@ -58,7 +58,8 @@ Twenty seeds a class, eleven classes from 7×7 to 15×15 and Patches 7×7 and
   Patches 7×7 29 and 110; four seeds each of 12×14 (26 to 197 against 210
   to 1,438) and 15×15 (58 to 212 against 423 to 2,109). The cost is a kept
   definition rebuilt after every placement; `keep-definitions-across-placements`
-  is filed for it.
+  is filed for it. The owner chose (2026-11-07) to ship Rect with this cost
+  and take that change next, before `describe-galaxies`.
 
 ## Why
 
