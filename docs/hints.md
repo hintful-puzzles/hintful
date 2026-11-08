@@ -759,8 +759,15 @@ side:
 
 - **Hide a firing whose move the game would refuse** (Galaxies: an arrow
   inside a region already closed correctly).
-- **Hide a firing whose contrary move the game would refuse** (Tracks: track
-  on a side of a square marked empty).
+- **Hide a firing whose contrary move the game would refuse.**
+
+**A described game needs neither when its description reads what the board
+already says before any technique concludes it.** Tracks' upstream solver
+had hidden rules (a square with a rail holds track, a square whose sides are
+closed but for one is empty) whose firings the plan hid; its description
+defines `on` and `shut` to read those facts instead, so no firing restates
+them, and `tracks-hint.test.ts` asserts that no firing in the walk concludes
+what the game's move legality already decides.
 
 What the loop cannot check:
 
@@ -770,11 +777,8 @@ What the loop cannot check:
 - **Never hide a change the win condition needs**, or the plan never
   finishes. `hint-resume.test.ts` catches it.
 - **Where a firing declares itself hidden, hold the declaration to the
-  legality test.** `tracks-hint.test.ts` asserts every reasonless firing is
-  evident, judged on the board before the firing landed, and that the
-  production predicate and the legality test agree across the corpus
-  ([`testing.md`](./testing.md) § "How a cross-game guard finds its
-  population").
+  legality test**, judged on the board before the firing landed, since after
+  it the firing's own flag is what makes the contrary illegal.
 
 Use `showable` when the hidden firing must still move the board. A filter
 that trims within a firing and never applies what it drops filters at find
@@ -961,8 +965,8 @@ not a record. What the ladder gives is the driver and a certified rung list:
   once over the working board, whose doc says what it takes and returns.
   Wrap it in a `next()` that turns the recorder into a firing and hand that
   to `deduceHintPlan`.
-  Exemplars: `skeletonRecordingPass`, and `tracksRecordingPass` in
-  [`tracks/solver.ts`](../src/games/tracks/solver.ts).
+  Exemplars: `skeletonRecordingPass`, and `minesWalk` in
+  [`mines/solver.ts`](../src/games/mines/solver.ts).
 - **Pass `continuing: true`, and give every rung `available()`**: every
   firing it could make, each with what it reads and writes. The plan then
   takes the firing that continues from its latest steps, rung order breaking
@@ -982,10 +986,11 @@ not a record. What the ladder gives is the driver and a certified rung list:
   - **A rung that presumes the rungs before it ran dry says so.** `fallback`
     is asked only once every rung before it has nothing (Tents' links);
     `prerequisite` holds back every rung after it until it has nothing
-    (Tracks' flags, which every line count reads). The order of the first
+    (Tracks' `oneWayIn` and `bothSidesLeft`, which every line count reads). The order of the first
     firing made both true; a plan that weighs every rung at once does not.
-- **`beforeTechnique` clears the standing reason**, so a rung that declares
-  none returns `null` and does not borrow the last one.
+- **`beforeTechnique` starts each attempt afresh**: clear a standing reason
+  there, or open a new group (Mines' `m.group`), so a rung that declares
+  none does not borrow the last one's.
 - **Record every firing, including one that changed nothing the player
   sees**, and let the plan loop hide it (§ "Show only what the board does not
   already say"). Do not bend `settled` to skip such firings: the `hidden`
@@ -1039,8 +1044,10 @@ rule that fired.
   destroy its own premise, and a snapshot afterward then shows a different
   set than the sentence counts.
 
-Exemplar: [`tracks/solver.ts`](../src/games/tracks/solver.ts); Bridges for
-the two levels.
+A described game has this by construction: its compiled ladder fires one
+binding at a time (`ladderWalk` in
+[`ladder-runtime.ts`](../src/engine/ladder-runtime.ts)), so the bullets bind
+a hand-written solver.
 
 ### A firing is not always a technique, so check the boundary too
 

@@ -116,6 +116,17 @@ describe("tracks desc codec", () => {
     );
   });
 
+  it("refuses track off the grid anywhere but A and B", () => {
+    const p = tracksGame.decodeParams("8x8dt");
+    const v = (third: string) =>
+      validateDesc(tracksGame, p, `b${third}tCCzlC,2,5,2,2,2,2,5,S6,4,5,4,S4,4,1,2,2`);
+    // The third square of the top row, given track left to bottom.
+    expect(v("C")).toBeNull();
+    // Given track from its top side, off the grid (a near-miss ID the
+    // described solver once finished without that rail).
+    expect(v("A")).toMatch(/somewhere other than A or B/);
+  });
+
   it("reads exactly what the encoder writes", () => {
     const v = (desc: string) => validateDesc(tracksGame, SMALL.p, desc);
     const clues = ",2,3,3,2,3,S3,3,S3,3,3,2,2";

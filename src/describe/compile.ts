@@ -21,6 +21,7 @@ import {
   edgeMarkOf,
   type LibraryJson,
   loadDescription,
+  type MarkSort,
   parseTechnique,
   relationMarkOf,
   type Technique,
@@ -432,9 +433,9 @@ interface Env {
    * `name(e)` as the values it may still hold, or `null` where it keeps
    * none. */
   edgeMark: string | null;
-  /** What the mark `edgeMark` names sits on: the edges, or a tiling's
-   * angles. */
-  edgeMarkSort: "edge" | "angle";
+  /** What the mark `edgeMark` names sits on: the edges, a tiling's angles,
+   * or the cells where the answer is on the edges. */
+  edgeMarkSort: MarkSort;
   /** The name of the relation the description keeps over the edges, read
    * `name(e, f)` and `related(e)` and made by `relate(e, f, d)`, or `null`
    * where it keeps none. */
@@ -545,6 +546,7 @@ const GEOMETRY = new Set([
   "stretch",
   "connected",
   "cuts",
+  "cut_edges",
   "matched",
   "reaches",
   "beam",
@@ -571,6 +573,7 @@ const TILING_HAS = new Set([
   "through",
   "connected",
   "cuts",
+  "cut_edges",
   "reaches",
 ]);
 
@@ -700,6 +703,7 @@ const EARLY = new Set([
   "stretch",
   "connected",
   "cuts",
+  "cut_edges",
   "matched",
   "reaches",
   "step",
@@ -3718,6 +3722,15 @@ function call(
         sort: fn === "connected" ? BOOL : setOf(elem("cell")),
       };
     }
+    case "cut_edges": {
+      // The members of E whose two cells E joins only through them.
+      arity(1);
+      const E = vs[0];
+      if (!isSetOf(E.sort, "edge"))
+        throw new CompileError(`cut_edges(${show(E.sort)}): E is a set of edges`);
+      env.used.add("cutEdges");
+      return { code: `cutEdges(sp, ${E.code})`, sort: setOf(elem("edge")) };
+    }
     case "matched":
       arity(2);
       return matchedCall(vs, env);
@@ -3843,7 +3856,10 @@ function call(
       if (
         vs[0].sort.k === "elem" &&
         ((vs[0].sort.e === "edge" && env.answerSort !== "edge") ||
-          vs[0].sort.e === "angle")
+          vs[0].sort.e === "angle" ||
+          (vs[0].sort.e === "cell" &&
+            env.answerSort !== "cell" &&
+            env.edgeMarkSort === "cell"))
       )
         return edgeStrike(fn, vs, env, out);
       expectElem(vs[0], env.answerSort, fn);
@@ -4177,6 +4193,7 @@ const WALKS = new Set([
   "reaches",
   "connected",
   "cuts",
+  "cut_edges",
   "matched",
   "beam",
   "look",

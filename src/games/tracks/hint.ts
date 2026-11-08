@@ -1,12 +1,8 @@
 /**
- * Tracks' explained hint: the narration half of the recording projection in
- * [`solver.ts`](./solver.ts).
- *
- * The deduction end is entirely `solver.ts`'s: the same eight rungs on the
- * same `runDeductionFixpoint`, run one firing at a time with a recorder
- * standing (docs/hints.md § "Recording the deduction", the *threaded*
- * shape). This file turns each firing into the sentence and the picture: what
- * the player is shown and what they are taught.
+ * Tracks' explained hint: the ladder `tracks.description.yaml` states,
+ * walked one firing a step from the player's marks (`ladderWalk`), and the
+ * sentence and the picture each firing's binding gives, read off the board
+ * as it stood before the firing.
  *
  * **A line is named by its clue, never by an index.** Tracks draws no row or
  * column numbers, so "column 5" is a name the player cannot check against the
@@ -16,6 +12,7 @@
  * words point at something visible.
  */
 
+import { PLACE, STRIKE_EDGE } from "../../engine/describe-runtime.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
@@ -25,22 +22,44 @@ import {
 } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
-import { dirX, dirY, L, opposite, U } from "../../engine/square-edges.ts";
+import { ladderWalk, type Taken, TIERS } from "../../engine/ladder-runtime.ts";
+import {
+  D,
+  dirCount,
+  dirX,
+  dirY,
+  L,
+  opposite,
+  R,
+  U,
+} from "../../engine/square-edges.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { type Axis, type Marked, PIECE, type Piece, say } from "./hint-text.ts";
 import { executeMove } from "./moves.ts";
-import { type TracksFiring, type TracksReason, tracksRecordingPass } from "./solver.ts";
+import {
+  clueLine,
+  edgeSide,
+  type Fired,
+  finished,
+  ladderOf,
+  marksOf,
+  NONE,
+  ROLES,
+  TRACK,
+} from "./solver.ts";
 import {
   type Board,
-  checkCompletion,
   DIRS,
+  E_NOTRACK,
   E_TRACK,
   inGrid,
   S_NOTRACK,
   S_NOTRACK_SHIFT,
   S_TRACK,
   S_TRACK_SHIFT,
-  sECount,
+  sEDirs,
+  sEFlags,
+  sESet,
   stateToBoard,
   type TracksMove,
   type TracksOp,
@@ -58,6 +77,294 @@ import {
  * after every move, which the cross-game resume walk does.
  */
 const PLAN_CAP = 24;
+
+// --- why a firing holds ---------------------------------------------------
+
+/** What a firing's sentence points at: squares (`y * w + x`), sides (as
+ * `(y * w + x) * 16 + dir`, the board's rim included), and clues (`0..w-1`
+ * columns, `w..w+h-1` rows). */
+export interface TracksEvidence {
+  cells: number[];
+  edges: number[];
+  clues: number[];
+}
+
+/**
+ * Why one firing holds, as its sentence tells it, read off the technique's
+ * binding on the board before the firing changed it.
+ */
+export type TracksReason = { ev: TracksEvidence } & (
+  | { kind: "onlyOneSideLeft"; x: number; y: number; open: number }
+  | { kind: "bothSidesLeft"; x: number; y: number }
+  | { kind: "clueFull"; line: number }
+  | { kind: "clueExact"; line: number }
+  | { kind: "wouldCloseLoop"; x: number; y: number; dir: number }
+  | { kind: "wouldStrandTrack"; x: number; y: number; dir: number }
+  | { kind: "wouldFinishEarly"; x: number; y: number; dir: number; unmet: number }
+  | { kind: "looseEndSpans"; line: number }
+  | {
+      kind: "sharedFate";
+      line: number;
+      x: number;
+      y: number;
+      dir: number;
+      /** Whether the line has room for one more track square, which empties
+       * this square; else for one more empty square, which fills the next. */
+      fills: boolean;
+    }
+  | { kind: "crossingParity"; x: number; y: number; dir: number; crossings: number }
+);
+
+/** One step: the flag changes it makes, and why they hold. */
+export interface TracksFiring {
+  reason: TracksReason;
+  ops: TracksOp[];
+}
+
+/** The four sides, in the order a step lists them. */
+const SIDES = [R, U, L, D] as const;
+
+const evEdge = (w: number, x: number, y: number, d: number): number =>
+  (y * w + x) * 16 + d;
+
+/** The sides of square `(x, y)` carrying track, the board's edge where the
+ * track leaves it included. */
+const rails = (b: Board, x: number, y: number): number => sEDirs(b, x, y, E_TRACK);
+
+/** Whether a square is known to hold track: marked, or a rail on it. */
+const holds = (b: Board, i: number): boolean =>
+  (b.sflags[i] & S_TRACK) !== 0 || rails(b, i % b.w, (i / b.w) | 0) !== 0;
+
+const empty = (b: Board, i: number): boolean => (b.sflags[i] & S_NOTRACK) !== 0;
+
+/**
+ * Whether the track is known not to cross side `d` of square `(x, y)`, as
+ * the description's `shut` reads it: the board's edge where no end leaves,
+ * a crossed-out side, a square either side marked empty, or one with both
+ * its rails elsewhere.
+ */
+function shut(b: Board, x: number, y: number, d: number): boolean {
+  const own = rails(b, x, y);
+  if (own & d) return false;
+  const nx = x + dirX(d);
+  const ny = y + dirY(d);
+  if (!inGrid(b, nx, ny)) return true;
+  return (
+    (sEFlags(b, x, y, d) & E_NOTRACK) !== 0 ||
+    empty(b, y * b.w + x) ||
+    empty(b, ny * b.w + nx) ||
+    dirCount(own) === 2 ||
+    dirCount(rails(b, nx, ny)) === 2
+  );
+}
+
+/** The sides of `(x, y)` the track is known not to cross, as evidence. */
+const shutSides = (b: Board, x: number, y: number, dirs = 15): number[] =>
+  SIDES.filter((d) => d & dirs && shut(b, x, y, d)).map((d) => evEdge(b.w, x, y, d));
+
+/** The squares of the game's line `line`, in order. */
+function lineSquares(b: Board, line: number): number[] {
+  const { w, h } = b;
+  return line < w
+    ? Array.from({ length: h }, (_, y) => y * w + line)
+    : Array.from({ length: w }, (_, x) => (line - w) * w + x);
+}
+
+/** The direction from square `i` to the square beside it, `j`. */
+function towards(i: number, j: number): number {
+  if (j === i + 1) return R;
+  if (j === i - 1) return L;
+  return j > i ? D : U;
+}
+
+/** A firing's premise, as its sentence tells it, from the technique's
+ * binding on the board `b` before the firing. */
+function reasonOf(b: Board, fired: Fired): TracksReason {
+  const { w, h } = b;
+  const at = (i: number) => ({ x: i % w, y: (i / w) | 0 });
+  const bd = fired.b;
+  const num = (k: string): number => bd[k] as number;
+  const set = (k: string): readonly number[] => bd[k] as readonly number[];
+  const edgeAt = () => edgeSide(ladderOf(b).sp, num("e"));
+  switch (fired.kind) {
+    case "oneWayIn": {
+      const { x, y } = at(num("c"));
+      const edges = shutSides(b, x, y);
+      return {
+        kind: "onlyOneSideLeft",
+        x,
+        y,
+        open: 4 - edges.length,
+        ev: { cells: [], edges, clues: [] },
+      };
+    }
+    case "bothSidesLeft": {
+      const { x, y } = at(num("c"));
+      return {
+        kind: "bothSidesLeft",
+        x,
+        y,
+        ev: { cells: [], edges: shutSides(b, x, y), clues: [] },
+      };
+    }
+    case "clueFull":
+    case "clueExact": {
+      const line = clueLine(w, h, num("L"));
+      const full = fired.kind === "clueFull";
+      return {
+        kind: fired.kind,
+        line,
+        ev: {
+          cells: lineSquares(b, line).filter((i) => (full ? holds(b, i) : empty(b, i))),
+          edges: [],
+          clues: [line],
+        },
+      };
+    }
+    case "closeLoop":
+      return {
+        kind: "wouldCloseLoop",
+        ...edgeAt(),
+        ev: { cells: [...set("G")], edges: [], clues: [] },
+      };
+    case "strand": {
+      const joined = new Set([...set("G"), ...set("H")]);
+      const stranded: number[] = [];
+      for (let i = 0; i < w * h; i++)
+        if (holds(b, i) && !joined.has(i)) stranded.push(i);
+      return {
+        kind: "wouldStrandTrack",
+        ...edgeAt(),
+        ev: { cells: stranded, edges: [], clues: [] },
+      };
+    }
+    case "finishEarly": {
+      const joined = new Set([...set("G"), ...set("H")]);
+      let unmet = -1;
+      for (let line = 0; line < w + h && unmet < 0; line++)
+        if (lineSquares(b, line).filter((i) => joined.has(i)).length < b.numbers[line])
+          unmet = line;
+      if (unmet < 0) throw new Error("tracks hint: finishEarly with every clue met");
+      return {
+        kind: "wouldFinishEarly",
+        ...edgeAt(),
+        unmet,
+        ev: {
+          cells: lineSquares(b, unmet).filter((i) => holds(b, i)),
+          edges: [],
+          clues: [unmet],
+        },
+      };
+    }
+    case "looseEnd": {
+      const line = clueLine(w, h, num("L"));
+      // Every unfinished square has a side blocked across the line, which is
+      // why none can be crossed straight through: show those sides.
+      const across = line < w ? R | L : U | D;
+      const unfinished = lineSquares(b, line).filter(
+        (i) => dirCount(rails(b, i % w, (i / w) | 0)) !== 2,
+      );
+      return {
+        kind: "looseEndSpans",
+        line,
+        ev: {
+          cells: unfinished,
+          edges: unfinished.flatMap((i) => shutSides(b, i % w, (i / w) | 0, across)),
+          clues: [line],
+        },
+      };
+    }
+    case "sharedFate":
+    case "sharedFateEmpties": {
+      const line = clueLine(w, h, num("L"));
+      const p = num("p");
+      const { x, y } = at(p);
+      const fills = fired.kind === "sharedFate";
+      return {
+        kind: "sharedFate",
+        line,
+        x,
+        y,
+        dir: towards(p, num("q")),
+        fills,
+        ev: {
+          cells: lineSquares(b, line).filter((i) =>
+            fills ? holds(b, i) : empty(b, i),
+          ),
+          edges: shutSides(b, x, y),
+          clues: [line],
+        },
+      };
+    }
+    case "parity": {
+      // The block and the crossings the sentence counts are the whole
+      // premise, so the picture is the argument.
+      const block = set("G");
+      const inside = new Set(block);
+      const edges: number[] = [];
+      for (const i of block) {
+        const { x, y } = at(i);
+        for (const d of SIDES) {
+          if (!(rails(b, x, y) & d)) continue;
+          const nx = x + dirX(d);
+          const ny = y + dirY(d);
+          if (!inGrid(b, nx, ny) || !inside.has(ny * w + nx))
+            edges.push(evEdge(w, x, y, d));
+        }
+      }
+      return {
+        kind: "crossingParity",
+        ...edgeAt(),
+        crossings: edges.length,
+        ev: { cells: [...block], edges, clues: [] },
+      };
+    }
+  }
+}
+
+/** The flag changes a firing's facts make. */
+function opsOf(b: Board, facts: readonly number[]): TracksOp[] {
+  const sp = ladderOf(b).sp;
+  const ops: TracksOp[] = [];
+  for (let i = 0; i < facts.length; i += 3) {
+    const at = facts[i + 1];
+    const n = facts[i + 2];
+    if (facts[i] === PLACE)
+      ops.push({ kind: "edge", ...edgeSide(sp, at), track: n === TRACK, set: true });
+    else if (facts[i] === STRIKE_EDGE)
+      // Striking "none" from a square leaves it track.
+      ops.push({
+        kind: "square",
+        x: at % b.w,
+        y: (at / b.w) | 0,
+        track: n === NONE,
+        set: true,
+      });
+  }
+  return ops;
+}
+
+/** Make a step's changes on the hint's copy of the board. */
+function applyOps(b: Board, ops: readonly TracksOp[]): void {
+  for (const op of ops) {
+    if (op.kind === "square")
+      b.sflags[op.y * b.w + op.x] |= op.track ? S_TRACK : S_NOTRACK;
+    else sESet(b, op.x, op.y, op.dir ?? 0, op.track ? E_TRACK : E_NOTRACK);
+  }
+}
+
+/** The squares a firing's premise reads, which a plan continues from: the
+ * square it turns on, the squares and sides it cites, and the lines whose
+ * clues it counts. A player follows the track through them. */
+function premise(b: Board, reason: TracksReason): number[] {
+  const { ev } = reason;
+  return [
+    ...("x" in reason ? [reason.y * b.w + reason.x] : []),
+    ...ev.cells,
+    ...ev.edges.map((e) => e >> 4),
+    ...ev.clues.flatMap((line) => lineSquares(b, line)),
+  ];
+}
 
 // --- the picture ----------------------------------------------------------
 
@@ -167,8 +474,6 @@ export function narrate(
     case "sharedFate": {
       const { axis, target } = lineOf(b, reason.line);
       const { dir } = reason;
-      if (reason.fills && reason.empties)
-        return say.sharedFateBoth(axis, dir, target, m);
       if (reason.fills) return say.sharedFateFills(axis, dir, target, m);
       return say.sharedFateEmpties(axis, target, m);
     }
@@ -186,8 +491,6 @@ const sideOf = ({ x, y, dir }: TracksHintEdge): Piece => ({ x, y, dir });
 function markedOf(hl: TracksPicture): Marked {
   return {
     decided: [...hl.targets.map(cellOf), ...hl.targetEdges.map(sideOf)],
-    emptied: hl.targets.filter((t) => !t.track).map(cellOf),
-    filled: hl.targets.filter((t) => t.track).map(cellOf),
     cells: hl.area.map(cellOf),
     sides: hl.areaEdges.map(sideOf),
     clues: hl.clues.map((clue) => ({ clue })),
@@ -234,44 +537,6 @@ function pictureOf(
 
 // --- the plan -------------------------------------------------------------
 
-/**
- * Does the player's board already decide this change? True when the **contrary**
- * move is one the game would refuse them: track on a side of a square they have
- * marked empty (or of the board's rim), track as a third side of a finished
- * piece, or "no track" on a square that already shows a rail. Those are
- * `uiCanFlipEdge` / `uiCanFlipSquare`'s own refusals, read as board facts so the
- * answer does not depend on the op having been applied yet.
- *
- * It reads only facts no firing's own ops can create (an edge block creates no
- * empty square and no rail, and marking a track square creates no rail), which
- * is the condition `showable` is judged under: it runs after the firing lands.
- */
-export function evident(b: Board, op: TracksOp): boolean {
-  if (op.kind === "square") return op.track && sECount(b, op.x, op.y, E_TRACK) > 0;
-  if (op.track) return false;
-  const d = op.dir ?? 0;
-  const closed = (x: number, y: number): boolean =>
-    !inGrid(b, x, y) ||
-    (b.sflags[y * b.w + x] & S_NOTRACK) !== 0 ||
-    sECount(b, x, y, E_TRACK) === 2;
-  return closed(op.x, op.y) || closed(op.x + dirX(d), op.y + dirY(d));
-}
-
-/**
- * A step is worth showing when it has a premise to narrate and tells the player
- * something their board does not already say (docs/hints.md § "Show only
- * what the board does not already say").
- *
- * Both halves are needed. Without the board check, a narrated rule that lands
- * on sides the player already closed off, by marking the squares beyond them
- * empty, is shown anyway, wherever the scan order puts it; without the reason
- * check, the plan would narrate `null`. Together, the rules with no reason are
- * the ones the board shows.
- */
-function showable(b: Board, f: TracksFiring): boolean {
-  return f.reason !== null && !f.ops.every((op) => evident(b, op));
-}
-
 /** The hint's rungs: the kinds of the solver's premises. */
 export const TRACKS_RUNGS = [
   "onlyOneSideLeft",
@@ -288,37 +553,96 @@ export const TRACKS_RUNGS = [
 export type TracksRung = (typeof TRACKS_RUNGS)[number];
 
 /**
- * Deduce the plan from the player's current marks.
+ * The firings a plan shows, walked from the player's marks: each with its
+ * reason and changes, and whether a technique found the marks inconsistent.
+ * Every firing is shown: the description reads a square with a rail as
+ * track and a side its squares close as shut, so no technique concludes
+ * what the board already says (docs/hints.md § "Show only what the board
+ * does not already say").
  *
- * `deduceHintPlan` supplies no `apply`: the rungs mutate the working board as
- * they detect, so re-applying a firing would be wrong rather than merely
- * redundant (`engine/hint-plan.ts`). The tier cap is the board's own
- * difficulty, not `DIFF_COUNT`: the generator only ever certified the board
- * soluble at that tier, and every rung is monotone in what is already marked,
- * so a correct partial board stays soluble there too. It is also what stops an
- * easiest-tier board being handed a parity argument it never needed.
+ * The tier cap is the board's own difficulty: the generator certified the
+ * board at that tier, every technique is monotone in what is marked, so a
+ * correct partial board stays soluble there, and an easiest-tier board is
+ * never handed a parity argument it did not need.
  */
+function tracksPlan(state: TracksState): {
+  board: Board;
+  impossible: boolean;
+  plan: TracksFiring[];
+} {
+  const steps = tracksSteps(state);
+  let broken = false;
+  const { plan } = deduceHintPlan<Board, TracksFiring, string>({
+    board: steps.board,
+    status: () => (broken ? "broken" : steps.finished() ? "done" : "open"),
+    incomplete: "open",
+    next: () => {
+      const f = steps.next();
+      if (f === "contradiction") broken = true;
+      return f === "contradiction" ? null : f;
+    },
+    planCap: PLAN_CAP,
+  });
+  return { board: steps.board, impossible: broken, plan };
+}
+
+/**
+ * The ladder walked from the player's marks one firing a call, shown or not,
+ * each made on `board` before it is returned: `null` once none is left.
+ */
+export function tracksSteps(state: TracksState): {
+  board: Board;
+  next(): TracksFiring | null | "contradiction";
+  finished(): boolean;
+} {
+  const board = stateToBoard(state);
+  const kept = ladderOf(board);
+  const m = marksOf(board, kept.sp);
+  m.budget = stepBudget("tracks hint");
+  // A reason is read off the board before its firing, once per firing.
+  const reasons = new WeakMap<object, TracksReason>();
+  const reasonFor = (t: Taken): TracksReason => {
+    const f = t.reasons[0] as Fired;
+    let r = reasons.get(f);
+    if (r === undefined) {
+      r = reasonOf(board, f);
+      reasons.set(f, r);
+    }
+    return r;
+  };
+  const walk = ladderWalk(
+    m,
+    kept.ladder.entries,
+    { [TIERS]: state.diff },
+    (t) => premise(board, reasonFor(t)),
+    ROLES,
+  );
+  return {
+    board,
+    next() {
+      const taken = walk.next();
+      if (taken === null || taken === "contradiction") return taken;
+      const reason = reasonFor(taken);
+      const ops = opsOf(board, taken.facts);
+      applyOps(board, ops);
+      return { reason, ops };
+    },
+    finished: () => finished(m, kept),
+  };
+}
+
+/** Deduce the hint's steps from the player's current marks. */
 export function tracksHint(
   state: TracksState,
 ):
   | { ok: true; steps: HintStep<TracksMove, unknown, TracksRung>[] }
   | { ok: false; error: HintRefusal } {
-  const board = stateToBoard(state);
-  const next = tracksRecordingPass(board, state.diff, stepBudget("tracks hint"));
-  const { plan } = deduceHintPlan<Board, TracksFiring, string>({
-    board,
-    status: (bd) =>
-      bd.impossible ? "broken" : checkCompletion(bd, false) ? "done" : "open",
-    incomplete: "open",
-    next,
-    showable,
-    planCap: PLAN_CAP,
-  });
+  const { board, impossible, plan } = tracksPlan(state);
 
   // A contradiction on a board `findMistakes` called clean would mean the
   // deduction is unsound, not that the player went wrong, so say the honest
   // thing rather than showing steps derived on the way to it.
-  if (board.impossible) return { ok: false, error: PUZZLE_NOT_REASONABLE };
+  if (impossible) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
 
   // A firing's reason carries its own evidence, and the narration reads only
@@ -326,11 +650,7 @@ export function tracksHint(
   return {
     ok: true,
     steps: plan.map((firing) => {
-      // `showable` admits only firings with a premise, so this cannot happen;
-      // if it ever does the plan has lost track of what it told the player,
-      // and that should reach Sentry rather than render a blank sentence.
       const { reason } = firing;
-      if (!reason) throw new Error("tracks hint: a step with no premise was shown");
       const words = narrate(board, reason, pictureOf(board, reason, firing));
       return {
         move: { ops: firing.ops },

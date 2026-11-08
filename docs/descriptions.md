@@ -131,7 +131,10 @@ research tools all read through it; the app never does.
   as `k`. It compiles to plain arrays in `Dealt`, and the checker deals two,
   each present or not, with any values, so what the game guarantees of them
   is a rule: Boats' fleet names each length once, and without the rule its
-  `total` was unsound on two entries of one length.
+  `total` was unsound on two entries of one length. **So is what the game
+  guarantees of any clue kind**: Tracks deals exactly two ends, and without
+  its `ends` rule `closeLoop` was unsound on a board dealt none, where a
+  lone loop is an answer.
 - **A clue per value** (`per: value`, ABCD's number for each letter of a
   line) sits at its element once for each value of the domain, read
   `clue(count, L, d)`, and `per` in its meaning names the value. `Dealt`
@@ -167,7 +170,7 @@ precedence first:
 | `a = b`, `!=`, `<`, `<=`, `>`, `>=` | `=` compares numbers, elements, truths and sets |
 | `x in S`, `x not in S`, `S subset T` | membership |
 | `a + b`, `a - b` | on sets, union and difference |
-| `a * b`, `a / b`, `a mod b`, `-a` | `/` truncates |
+| `a * b`, `a / b`, `a mod b`, `-a` | `/` truncates; the checker reads it only by a number the board fixes |
 | `f(a, ...)` | a library function, a definition, or an answer or mark function |
 | `\|S\|`, `{a, b}`, `{x in S where P}` | size, a set, a comprehension |
 
@@ -226,7 +229,12 @@ description author acts on:
 - **`connected(S)` says whether the cells `S` are one group**, each reaching
   every other through members side by side, and `cuts(S)` is the members
   without which the rest are not, in `S`'s order. Bind `cuts` once by `=`:
-  it is one search of the whole set (Singles' `split`).
+  it is one search of the whole set (Singles' `split`). **`cut_edges(E)` is
+  the members of a set of edges whose two cells `E` joins only through
+  them**: what `end2(e) not in through(end1(e), E - {e})` asks of one
+  member, answered for all in one search. A binder over the members of `E`
+  that asks it of each is a walk a member; Tracks' `parity` doubled its
+  deals so.
 - **A group that runs straight is two stretches**: Boats' boat through `c`
   is `stretch` along its row plus along its column, one of them `{c}`, so
   its boats need no grouping of their own. A boat is counted by its first
@@ -336,7 +344,10 @@ description author acts on:
   reads it as a function (`vee(e)`), a rule never does, and `strike(e, d)`
   on an edge rules a meaning out. The checker holds each edge's mark to what
   its `of` reads of the answer. A strike on an edge records no step of its
-  own: a hint reads it from the firing's facts.
+  own: a hint reads it from the firing's facts. **A mark on the cells may
+  mean something of an answer on the edges** the same way (Tracks' `track`,
+  `of: "2 - drawn(at) / 2"`, 1 track and 2 empty): the runtime keeps its
+  candidates per cell (`CellMarks`' `markOn`), and the hint names the cell.
 - **`beam(s)` is Black Box's laser fired in from slot `s`**: the slot it
   comes out at, `s` itself where it is reflected, `|slots|` where it is
   absorbed, and none where a cell no value is placed in decides it. A 1 is
@@ -926,7 +937,9 @@ the check. What a small board cannot cover:
 - **`connected(S)` is read as reach**: the first member reaches a member
   beside one it reaches, as many steps as the board has cells, and every
   member must be reached; `cuts(S)` holds each member under the guard that
-  the rest are not connected. It needs no unknown of its own.
+  the rest are not connected, and `cut_edges(E)` each member under the
+  guard that its second cell is not reached from its first across the
+  others. Neither needs an unknown of its own.
   `reaches(c, S, t)` is the same reach from `c` over the members other
   than `t`, counted. `matched(A, B)` is a witness pairing, an unknown
   for each pair side by side, each member of `A` and of `B` in exactly

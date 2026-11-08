@@ -17,9 +17,7 @@
  *  - **what the plan hides is exactly what the player's board already says.**
  *    The production predicate reads board facts; these guards hold it to the
  *    game's own move legality, judged on the board *before* each firing landed,
- *    so the two derivations are independent. It is also what would catch
- *    `check-single` if it ever started firing: its conclusions are real, and a
- *    reason-less firing that is not evident fails here.
+ *    so the two derivations are independent.
  */
 
 import { describe, expect, it } from "vitest";
@@ -27,18 +25,19 @@ import type { HintStep } from "../../engine/game.ts";
 import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { D, dirX, dirY, opposite, R, U } from "../../engine/square-edges.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { evident, narrate, type TracksPicture, type TracksRung } from "./hint.ts";
+import {
+  narrate,
+  type TracksFiring,
+  type TracksPicture,
+  type TracksReason,
+  type TracksRung,
+  tracksSteps,
+} from "./hint.ts";
 import { PIECE } from "./hint-text.ts";
 import { tracksGame } from "./index.ts";
 import { uiCanFlipEdge, uiCanFlipSquare } from "./moves.ts";
-import {
-  type TracksFiring,
-  type TracksReason,
-  tracksRecordingPass,
-  tracksSolve,
-} from "./solver.ts";
+import { tracksSolve } from "./solver.ts";
 import {
   type Board,
   DIFF_EASY,
@@ -128,11 +127,10 @@ describe("every move a Tracks hint asks for is one the player may make", () => {
 
 /**
  * Would the game refuse the player the *opposite* of this op, on the board
- * before it landed? The derivation the production `evident` is held to: it
- * asks `uiCanFlipSquare` / `uiCanFlipEdge` directly rather than reading board
- * facts, so the two are independent. Judged *before*, because after the op
- * lands its own flag is what makes the contrary illegal, and every block would
- * read as evident.
+ * before it landed? It asks `uiCanFlipSquare` / `uiCanFlipEdge` directly
+ * rather than reading the description's facts, so it is independent of them.
+ * Judged *before*, because after the op lands its own flag is what makes the
+ * contrary illegal, and every block would read as decided.
  */
 function contraryRefused(before: Board, op: TracksOp): boolean {
   return op.kind === "square"
@@ -140,74 +138,46 @@ function contraryRefused(before: Board, op: TracksOp): boolean {
     : !uiCanFlipEdge(before, op.x, op.y, op.dir ?? 0, op.track);
 }
 
-/** Every firing the recording pass makes on a fresh board, each with the board
- * as it stood before the firing and as it stands straight after. */
-function* recordedFirings(
+/** Every firing the hint's walk makes on a board, shown or not, each with the
+ * board as it stood before the firing and as it stands straight after. */
+function* walkedFirings(
   params: TracksParams,
-  seed: string,
+  desc: string,
 ): Generator<{ f: TracksFiring; before: Board; after: Board }> {
-  const { desc } = tracksGame.newDesc(params, randomNew(seed));
-  const board = stateToBoard(tracksGame.newState(params, desc));
-  const next = tracksRecordingPass(board, params.diff, stepBudget("probe"));
+  const steps = tracksSteps(tracksGame.newState(params, desc));
+  const { board } = steps;
   for (;;) {
     const before: Board = { ...board, sflags: Int32Array.from(board.sflags) };
-    const f = next();
-    if (!f) return;
+    const f = steps.next();
+    if (f === null || f === "contradiction") return;
     // Consumed before the next `next()` call, so `after` is this firing's board.
     yield { f, before, after: board };
   }
 }
 
+/** {@link walkedFirings} on a board dealt from `seed`. */
+const recordedFirings = (params: TracksParams, seed: string) =>
+  walkedFirings(params, tracksGame.newDesc(params, randomNew(seed)).desc);
+
 describe("what the plan hides is exactly what the board already says", () => {
-  it("every firing with no premise is one the player's board already decides", () => {
-    // The declaration, held to the derivation. The reason-less rules are a
-    // list somebody wrote; this is what makes it impossible for the list to
-    // hide a real deduction — including `check-single`, whose conclusions are
-    // real, should it ever start firing.
-    let reasonless = 0;
+  it("no firing the walk makes concludes what the board already decides", () => {
+    // The plan shows every firing, which is right only while the description
+    // reads what the board says (a rail lays a square, closed sides shut it)
+    // before any technique concludes it.
+    let firings = 0;
     for (const params of SHAPES) {
       for (const seed of SEEDS) {
         for (const { f, before } of recordedFirings(
           params,
-          `hide-${params.w}-${params.diff}-${seed}`,
-        )) {
-          if (f.reason !== null) continue;
-          reasonless++;
-          for (const op of f.ops) {
-            expect(
-              contraryRefused(before, op),
-              `${JSON.stringify(op)} was hidden but the player could have chosen otherwise`,
-            ).toBe(true);
-          }
-        }
-      }
-    }
-    expect(
-      reasonless,
-      "no reason-less firing; the guard proves nothing",
-    ).toBeGreaterThan(100);
-  });
-
-  it("the production predicate and the legality test agree on every firing", () => {
-    let firings = 0;
-    let evidentSeen = 0;
-    for (const params of SHAPES) {
-      for (const seed of SEEDS) {
-        for (const { f, before, after } of recordedFirings(
-          params,
           `agree-${params.w}-${params.diff}-${seed}`,
         )) {
           firings++;
-          const byFacts = f.ops.every((op) => evident(after, op));
-          const byLegality = f.ops.every((op) => contraryRefused(before, op));
-          if (byLegality) evidentSeen++;
-          expect(byFacts, `${JSON.stringify(f.ops)}`).toBe(byLegality);
+          const decided = f.ops.filter((op) => contraryRefused(before, op));
+          expect(decided, `${f.reason.kind}: ${JSON.stringify(decided)}`).toEqual([]);
         }
       }
     }
-    // Both classes, or agreement is vacuous on one side.
-    expect(evidentSeen).toBeGreaterThan(50);
-    expect(firings - evidentSeen).toBeGreaterThan(50);
+    expect(firings).toBeGreaterThan(200);
   });
 
   it("no step a player is shown is one their board already decides", () => {
@@ -340,40 +310,40 @@ describeHintPins({
   game: tracksGame,
   params: SHAPES,
   pins: {
-    /** Kept by hand: see `FINISHES_EARLY`. */
-    wouldFinishEarly: FINISHES_EARLY,
-    /** Held on 1324 of 1718 positions walked. */
+    /** Held on 1021 of 1664 positions walked. */
     onlyOneSideLeft: "8x8de:k3l6c5e6v9f,4,S7,6,6,6,5,6,2,8,6,7,S6,6,5,2,2",
-    /** Held on 1718 of 1718 positions walked. */
+    /** Held on 1664 of 1664 positions walked. */
     bothSidesLeft: "8x8de:h6eCzvA,2,4,2,2,1,4,7,S6,2,S6,5,4,2,3,3,3",
-    /** Held on 1371 of 1718 positions walked. */
+    /** Held on 1402 of 1664 positions walked. */
     clueFull: "8x8de:c5zbCm3n9b,2,4,3,5,1,S2,8,2,6,4,2,2,S5,4,2,2",
-    /** Held on 1427 of 1718 positions walked. */
+    /** Held on 1318 of 1664 positions walked. */
     clueExact: "8x8dt:p6zo9e,3,1,S2,4,6,4,2,6,8,4,S2,3,3,4,2,2",
-    /** Held on 848 of 1718 positions walked. */
+    /** Held on 623 of 1664 positions walked. */
     wouldCloseLoop: {
       id: "10x10dh:zdCo956zaAp3cCb,3,2,1,4,6,4,10,S8,6,6,4,3,3,S5,6,6,9,7,3,4",
       moves:
         '[{"ops":[{"kind":"square","x":6,"y":0,"track":true,"set":true},{"kind":"square","x":6,"y":1,"track":true,"set":true},{"kind":"square","x":6,"y":2,"track":true,"set":true},{"kind":"square","x":6,"y":3,"track":true,"set":true}]},{"ops":[{"kind":"square","x":0,"y":9,"track":false,"set":true},{"kind":"square","x":1,"y":9,"track":false,"set":true},{"kind":"square","x":2,"y":9,"track":false,"set":true},{"kind":"square","x":5,"y":9,"track":false,"set":true},{"kind":"square","x":8,"y":9,"track":false,"set":true},{"kind":"square","x":9,"y":9,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":4,"y":9,"dir":2,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":6,"y":9,"dir":2,"track":true,"set":true}]},{"ops":[{"kind":"square","x":0,"y":8,"track":false,"set":true},{"kind":"square","x":1,"y":8,"track":false,"set":true},{"kind":"square","x":2,"y":8,"track":false,"set":true},{"kind":"square","x":5,"y":8,"track":false,"set":true},{"kind":"square","x":7,"y":8,"track":false,"set":true},{"kind":"square","x":8,"y":8,"track":false,"set":true},{"kind":"square","x":9,"y":8,"track":false,"set":true}]}]',
     },
-    /** Held on 248 of 1718 positions walked. */
+    /** Held on 107 of 1664 positions walked. */
     wouldStrandTrack: {
-      id: "8x8de:k3l6c5e6v9f,4,S7,6,6,6,5,6,2,8,6,7,S6,6,5,2,2",
+      id: "10x10dh:z5jC9z9dCf5oAa5d,2,2,1,S3,6,6,8,6,7,5,2,5,5,6,4,3,3,S9,5,4",
       moves:
-        '[{"ops":[{"kind":"square","x":0,"y":7,"track":false,"set":true}]},{"ops":[{"kind":"square","x":0,"y":0,"track":true,"set":true},{"kind":"square","x":1,"y":0,"track":true,"set":true},{"kind":"square","x":2,"y":0,"track":true,"set":true},{"kind":"square","x":4,"y":0,"track":true,"set":true},{"kind":"square","x":5,"y":0,"track":true,"set":true},{"kind":"square","x":6,"y":0,"track":true,"set":true},{"kind":"square","x":7,"y":0,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":0,"y":0,"dir":1,"track":true,"set":true},{"kind":"edge","x":0,"y":0,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":7,"y":0,"dir":4,"track":true,"set":true},{"kind":"edge","x":7,"y":0,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"square","x":0,"y":4,"track":false,"set":true},{"kind":"square","x":0,"y":5,"track":false,"set":true},{"kind":"square","x":0,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"square","x":7,"y":2,"track":false,"set":true},{"kind":"square","x":7,"y":3,"track":false,"set":true},{"kind":"square","x":7,"y":4,"track":false,"set":true},{"kind":"square","x":7,"y":5,"track":false,"set":true},{"kind":"square","x":7,"y":6,"track":false,"set":true},{"kind":"square","x":7,"y":7,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":7,"y":1,"dir":4,"track":true,"set":true}]},{"ops":[{"kind":"square","x":1,"y":2,"track":true,"set":true},{"kind":"square","x":2,"y":2,"track":true,"set":true},{"kind":"square","x":3,"y":2,"track":true,"set":true},{"kind":"square","x":4,"y":2,"track":true,"set":true},{"kind":"square","x":5,"y":2,"track":true,"set":true},{"kind":"square","x":6,"y":2,"track":true,"set":true}]},{"ops":[{"kind":"square","x":3,"y":4,"track":true,"set":true},{"kind":"square","x":4,"y":4,"track":true,"set":true},{"kind":"square","x":5,"y":4,"track":true,"set":true},{"kind":"square","x":6,"y":4,"track":true,"set":true}]},{"ops":[{"kind":"square","x":3,"y":7,"track":false,"set":true},{"kind":"square","x":4,"y":7,"track":false,"set":true},{"kind":"square","x":5,"y":7,"track":false,"set":true},{"kind":"square","x":6,"y":7,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":2,"y":7,"dir":2,"track":true,"set":true}]},{"ops":[{"kind":"square","x":2,"y":1,"track":false,"set":true},{"kind":"square","x":2,"y":5,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":2,"y":0,"dir":1,"track":true,"set":true},{"kind":"edge","x":2,"y":0,"dir":4,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":4,"y":0,"dir":1,"track":true,"set":true},{"kind":"edge","x":4,"y":0,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":4,"y":2,"dir":1,"track":true,"set":true},{"kind":"edge","x":4,"y":2,"dir":4,"track":true,"set":true}]},{"ops":[{"kind":"square","x":1,"y":5,"track":true,"set":true},{"kind":"square","x":3,"y":5,"track":true,"set":true},{"kind":"square","x":4,"y":5,"track":true,"set":true},{"kind":"square","x":5,"y":5,"track":true,"set":true},{"kind":"square","x":6,"y":5,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":1,"y":5,"dir":2,"track":true,"set":true},{"kind":"edge","x":1,"y":5,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":1,"y":6,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"square","x":3,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":3,"y":5,"dir":1,"track":true,"set":true},{"kind":"edge","x":3,"y":5,"dir":2,"track":true,"set":true}]},{"ops":[{"kind":"square","x":4,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"square","x":5,"y":1,"track":false,"set":true},{"kind":"square","x":5,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":5,"y":0,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":6,"y":1,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"square","x":6,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":6,"y":5,"dir":2,"track":true,"set":true},{"kind":"edge","x":6,"y":5,"dir":4,"track":true,"set":true}]},{"ops":[{"kind":"square","x":6,"y":3,"track":true,"set":true}]},{"ops":[{"kind":"square","x":1,"y":1,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":1,"y":1,"dir":4,"track":true,"set":true},{"kind":"edge","x":1,"y":1,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":0,"y":2,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"square","x":1,"y":3,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":2,"y":2,"dir":1,"track":true,"set":true},{"kind":"edge","x":2,"y":2,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":3,"y":3,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":4,"y":4,"dir":1,"track":true,"set":true},{"kind":"edge","x":4,"y":4,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":5,"y":5,"dir":2,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":6,"y":4,"dir":2,"track":true,"set":true}]}]',
+        '[{"ops":[{"kind":"edge","x":4,"y":8,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"square","x":0,"y":9,"track":false,"set":true},{"kind":"square","x":1,"y":9,"track":false,"set":true},{"kind":"square","x":2,"y":9,"track":false,"set":true},{"kind":"square","x":7,"y":9,"track":false,"set":true},{"kind":"square","x":8,"y":9,"track":false,"set":true},{"kind":"square","x":9,"y":9,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":0,"y":8,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":6,"y":8,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"square","x":2,"y":8,"track":false,"set":true},{"kind":"square","x":5,"y":8,"track":false,"set":true},{"kind":"square","x":7,"y":8,"track":false,"set":true},{"kind":"square","x":8,"y":8,"track":false,"set":true},{"kind":"square","x":9,"y":8,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":1,"y":7,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":6,"y":7,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":4,"y":7,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"square","x":0,"y":0,"track":false,"set":true},{"kind":"square","x":0,"y":1,"track":false,"set":true},{"kind":"square","x":0,"y":2,"track":false,"set":true},{"kind":"square","x":0,"y":3,"track":false,"set":true},{"kind":"square","x":0,"y":4,"track":false,"set":true},{"kind":"square","x":0,"y":5,"track":false,"set":true},{"kind":"square","x":0,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"square","x":1,"y":0,"track":false,"set":true},{"kind":"square","x":1,"y":1,"track":false,"set":true},{"kind":"square","x":1,"y":2,"track":false,"set":true},{"kind":"square","x":1,"y":3,"track":false,"set":true},{"kind":"square","x":1,"y":4,"track":false,"set":true},{"kind":"square","x":1,"y":5,"track":false,"set":true},{"kind":"square","x":1,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":1,"y":7,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"square","x":2,"y":0,"track":false,"set":true},{"kind":"square","x":2,"y":1,"track":false,"set":true},{"kind":"square","x":2,"y":2,"track":false,"set":true},{"kind":"square","x":2,"y":3,"track":false,"set":true},{"kind":"square","x":2,"y":4,"track":false,"set":true},{"kind":"square","x":2,"y":5,"track":false,"set":true},{"kind":"square","x":2,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":2,"y":7,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"square","x":9,"y":7,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":8,"y":6,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"square","x":3,"y":6,"track":false,"set":true},{"kind":"square","x":4,"y":6,"track":false,"set":true},{"kind":"square","x":7,"y":6,"track":false,"set":true},{"kind":"square","x":9,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":6,"y":5,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":8,"y":5,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"square","x":3,"y":0,"track":false,"set":true},{"kind":"square","x":3,"y":1,"track":false,"set":true},{"kind":"square","x":3,"y":2,"track":false,"set":true},{"kind":"square","x":3,"y":3,"track":false,"set":true},{"kind":"square","x":3,"y":4,"track":false,"set":true},{"kind":"square","x":3,"y":5,"track":false,"set":true}]},{"ops":[{"kind":"square","x":4,"y":3,"track":true,"set":true},{"kind":"square","x":5,"y":3,"track":true,"set":true}]}]',
     },
-    /** Held on 162 of 1718 positions walked. */
+    /** Kept by hand: see `FINISHES_EARLY`. */
+    wouldFinishEarly: FINISHES_EARLY,
+    /** Held on 196 of 1664 positions walked. */
     looseEndSpans: {
       id: "8x8dt:h6q6r5e5kA,4,7,5,5,5,4,6,S4,3,S3,6,5,6,7,7,3",
       moves: [{ ops: [{ kind: "edge", x: 0, y: 0, dir: 1, track: true, set: true }] }],
     },
-    /** Held on 636 of 1718 positions walked. */
+    /** Held on 680 of 1664 positions walked. */
     sharedFate: {
       id: "10x10dh:zb3k6zzc9c,5,3,2,1,2,3,S2,5,4,5,6,8,6,2,S2,1,2,2,1,2",
       moves:
         '[{"ops":[{"kind":"square","x":0,"y":9,"track":false,"set":true},{"kind":"square","x":1,"y":9,"track":false,"set":true},{"kind":"square","x":2,"y":9,"track":false,"set":true},{"kind":"square","x":3,"y":9,"track":false,"set":true},{"kind":"square","x":4,"y":9,"track":false,"set":true},{"kind":"square","x":5,"y":9,"track":false,"set":true},{"kind":"square","x":8,"y":9,"track":false,"set":true},{"kind":"square","x":9,"y":9,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":7,"y":9,"dir":2,"track":true,"set":true}]},{"ops":[{"kind":"square","x":0,"y":8,"track":false,"set":true},{"kind":"square","x":1,"y":8,"track":false,"set":true},{"kind":"square","x":2,"y":8,"track":false,"set":true},{"kind":"square","x":3,"y":8,"track":false,"set":true},{"kind":"square","x":4,"y":8,"track":false,"set":true},{"kind":"square","x":5,"y":8,"track":false,"set":true},{"kind":"square","x":6,"y":8,"track":false,"set":true},{"kind":"square","x":8,"y":8,"track":false,"set":true},{"kind":"square","x":9,"y":8,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":7,"y":8,"dir":2,"track":true,"set":true}]}]',
     },
-    /** Held on 232 of 1718 positions walked. */
+    /** Held on 33 of 1664 positions walked. */
     crossingParity: {
       id: "10x10dh:zd6lAeCf96o9i3dCiAa,2,3,4,5,4,4,5,4,S4,4,2,2,3,S3,4,6,4,6,6,3",
       moves:
@@ -415,13 +385,9 @@ describe("every narratable premise is reached", () => {
       { params: tracksGame.decodeParams(small), desc: smallDesc },
     ];
     for (const { params, desc } of boards) {
-      const board = stateToBoard(tracksGame.newState(params, desc));
-      const next = tracksRecordingPass(board, params.diff, stepBudget("cover"));
-      for (;;) {
-        const f = next();
-        if (!f) break;
+      for (const { f } of walkedFirings(params, desc)) {
         firings++;
-        if (f.reason) seen.add(f.reason.kind);
+        seen.add(f.reason.kind);
       }
     }
     expect(firings, "the census walked no firings").toBeGreaterThan(200);
@@ -447,7 +413,8 @@ describe("every narratable premise is reached", () => {
       "track squares are the outlined ones", // clueFull
       "empty squares, the outlined ones", // clueExact
       "would close a loop", // wouldCloseLoop
-      "stranding the outlined track", // wouldStrandTrack
+      // wouldStrandTrack is never a first step on these boards, since the ladder
+      // tries closing a loop first; its pin above is the step that says it.
       "the loose end must run on", // looseEndSpans
       "The outlined sides send track in this square", // sharedFate, fill arm
       "Emptying this square empties the outlined one", // sharedFate, empty arm
@@ -526,22 +493,11 @@ describe("narration reads correctly at the degenerate extremes", () => {
     ).toContain("and it has 1 outlined crossing,");
   });
 
-  // Two arms few boards reach: one firing among 450 small boards, and the
-  // both-ways form of `sharedFate`.
-  it("the rarest arms are still English, and still in the necessity voice", () => {
+  // An arm few boards reach: one firing among 450 small boards.
+  it("the rarest arm is still English, and still in the necessity voice", () => {
     const NECESSITY = /\bmust\b|\bcan(?:no|')t\b|\bcannot\b|\bno other\b|\bonly\b/;
     for (const reason of [
       { kind: "wouldFinishEarly", x: 1, y: 1, dir: 8, unmet: 0, ev } as const,
-      {
-        kind: "sharedFate",
-        line: 0,
-        x: 1,
-        y: 1,
-        dir: 8,
-        fills: true,
-        empties: true,
-        ev,
-      } as const,
     ]) {
       const s = say(reason);
       expect(s.length, `${reason.kind} narrates nothing`).toBeGreaterThan(60);
@@ -553,22 +509,6 @@ describe("narration reads correctly at the degenerate extremes", () => {
       expect(s).not.toContain("—");
       expect(s, `${reason.kind} left a template hole`).not.toContain("undefined");
     }
-    // The both-arm forces two squares in opposite directions, so it is the one
-    // sentence that has to name both conclusions; a single-arm phrasing here
-    // would describe half the move it is attached to.
-    const both = say({
-      kind: "sharedFate",
-      line: 0,
-      x: 1,
-      y: 1,
-      dir: 8,
-      fills: true,
-      empties: true,
-      ev,
-    });
-    expect(both).toContain(
-      "it must be empty, and the ringed one beyond it must carry track",
-    );
   });
 });
 

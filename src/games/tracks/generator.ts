@@ -35,7 +35,6 @@ function clearBoard(b: Board): void {
   b.numErrors.fill(0);
   b.rowS = -1;
   b.colS = -1;
-  b.impossible = false;
 }
 
 function solveProgress(b: Board): number {

@@ -1,44 +1,43 @@
 /**
- * Tracks solver: a faithful port of `tracks_solve` and its deduction rungs
- * from `tracks.c`. Because the generator is solver-gated (it lays and strips
- * clues by re-running this solver and keeping only removals that stay soluble
- * at exactly the target difficulty), the desc is decided by this solver's
- * *verdict* on every intermediate board, so the port reproduces C's
- * deductions, and their order, verbatim (docs/solver-and-generator.md
- * § "Solver-gated generation"). Reused by `solve()` and `findMistakes`.
+ * Tracks' solver: the ladder `tracks.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/ladder-runtime.ts`). The answer is
+ * the edges between squares, each crossed by the track or not, and the
+ * player's mark on a square, track or none, is the mark the description
+ * keeps on the cells.
  *
- * **The ladder runs on the shared `runDeductionFixpoint`**, and three things
- * keep it upstream's ladder:
+ * One ladder serves the generator, which keeps a clue square only while the
+ * ladder finishes the board at its tier and not below, so its verdict on
+ * every intermediate board decides which puzzles exist; Solve; the mistake
+ * check's answer; the difficulty probe; and the hint, which walks it from
+ * the player's marks (`hint.ts`). No technique supposes anything, so a board
+ * the ladder finishes has one answer.
  *
- *  - **The tier guard skips, it does not stop.** A rung above `maxTier` is
- *    skipped and the ladder keeps going, as each `diff >= TIER` guard does in
- *    `tracks.c`.
- *  - **The grade is the highest tier that fired.** A game that bumps its grade
- *    on *reaching* a tier is not this shape.
- *  - **`b.impossible` is a board flag, not a `< 0` return**, and `settled`
- *    reads it at the top of each pass.
- *
- * `tracks-ladder.test.ts` holds the census of which rungs fire; see its header
- * for why the fixtures could not certify the ladder on their own.
+ * The game keeps upstream's flag word (`state.ts`), so a solve reads the
+ * board's flags into the marks and writes what it settled back as flags,
+ * which the generator's progress measure and the mistake check read.
  */
+
+import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
-  type DeductionTechnique,
-  type FiringTally,
-  runDeductionFixpoint,
-  singleFirings,
-} from "../../engine/deduction-fixpoint.ts";
-import { Dsf } from "../../engine/dsf.ts";
-import { findLoops } from "../../engine/findloop.ts";
-import { D, dirCount, dirX, dirY, L, R, U } from "../../engine/square-edges.ts";
-import type { StepBudget } from "../../engine/step-budget.ts";
-import { SweepOffers } from "../../engine/sweep-offers.ts";
+  clueList,
+  describedSpace,
+  type GridSpace,
+  rangeMask,
+} from "../../engine/describe-runtime.ts";
 import {
-  ALLDIR,
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  type ReasonOf,
+  runLadder,
+  TIERS,
+} from "../../engine/ladder-runtime.ts";
+import { D, dirX, dirY, L, R, U } from "../../engine/square-edges.ts";
+import {
   type Board,
   checkCompletion,
-  DIFF_EASY,
-  DIFF_HARD,
-  DIFF_TRICKY,
   E_NOTRACK,
   E_TRACK,
   inGrid,
@@ -48,1035 +47,234 @@ import {
   S_NOTRACK,
   S_TRACK,
   sEClear,
-  sECount,
   sEDirs,
   sEFlags,
   sESet,
-  type TracksOp,
-  type TracksRecorder,
-  type TracksSnapshot,
-  trackDsf,
 } from "./state.ts";
+import * as tracks from "./tracks.compiled.ts";
 
-// --- the recording projection: what a firing points at, and why ------------
+/** What the description reads an edge the track crosses as, and one it does
+ * not; a square's mark holds the same two values. */
+export const TRACK = 1;
+export const NONE = 2;
+/** A square's mark that says nothing yet. */
+const EITHER = rangeMask(TRACK, NONE);
+
+/** The side an end leaves the board by, numbered as `step` numbers it. */
+const STEP_OF: Readonly<Record<number, number>> = { [U]: 1, [D]: 2, [L]: 3, [R]: 4 };
+
+const spaces = new Map<string, GridSpace>();
+
+/** The space of a `w × h` board, built once a shape. */
+function spaceOf(w: number, h: number): GridSpace {
+  const key = `${w}x${h}`;
+  let sp = spaces.get(key);
+  if (sp === undefined) {
+    sp = describedSpace(tracks.units, w, h);
+    spaces.set(key, sp);
+  }
+  return sp;
+}
+
+/** The game's clue index of the space's line `L`: the space lists the rows
+ * first, the game the columns. */
+export const clueLine = (w: number, h: number, L: number): number =>
+  L < h ? w + L : L - h;
+
+/** An edge as the square it leaves and the side it leaves by: the square to
+ * its left or above it, and `R` or `D`. */
+export function edgeSide(
+  sp: GridSpace,
+  e: number,
+): { x: number; y: number; dir: number } {
+  const a = sp.edgeEnds[2 * e];
+  const b = sp.edgeEnds[2 * e + 1];
+  const i = Math.min(a, b);
+  return { x: i % sp.w, y: (i / sp.w) | 0, dir: Math.abs(a - b) === 1 ? R : D };
+}
+
+/** The board as the description deals it: every line's count, and the two
+ * squares the track leaves the board from, with the side. */
+function dealtOf(b: Board): tracks.Dealt {
+  const { w, h } = b;
+  const lines = Array.from({ length: w + h }, (_, L) => L);
+  return {
+    count: clueList(
+      lines,
+      lines.map((L) => b.numbers[clueLine(w, h, L)]),
+      w + h,
+    ),
+    end: clueList([b.rowS * w, (h - 1) * w + b.colS], [STEP_OF[L], STEP_OF[D]], w * h),
+  };
+}
+
+/** Why one firing of the ladder holds: its technique and its binding, read
+ * before the firing changes anything. */
+export interface Fired {
+  readonly kind: tracks.LadderId;
+  readonly b: Readonly<Record<string, unknown>>;
+}
+
+const fired =
+  <B extends object>(kind: tracks.LadderId): ReasonOf<B> =>
+  (b): Fired => ({ kind, b: { ...(b as Record<string, unknown>) } });
+
+/** The ladder over the dealt clues, each technique with its reason. */
+function tracksLadder(dl: tracks.Dealt): Ladder {
+  const rung = <B extends object>(
+    kind: tracks.LadderId,
+    run: (b: never, sp: GridSpace, cl: tracks.Dealt, fire: never) => number,
+  ) =>
+    compiledRung(
+      run as Parameters<typeof compiledRung<B, tracks.Dealt>>[0],
+      dl,
+      fired<B>(kind),
+    );
+  return describedLadder(tracks, {
+    oneWayIn: rung("oneWayIn", tracks.oneWayIn),
+    bothSidesLeft: rung("bothSidesLeft", tracks.bothSidesLeft),
+    clueFull: rung("clueFull", tracks.clueFull),
+    clueExact: rung("clueExact", tracks.clueExact),
+    closeLoop: rung("closeLoop", tracks.closeLoop),
+    strand: rung("strand", tracks.strand),
+    finishEarly: rung("finishEarly", tracks.finishEarly),
+    looseEnd: rung("looseEnd", tracks.looseEnd),
+    sharedFate: rung("sharedFate", tracks.sharedFate),
+    sharedFateEmpties: rung("sharedFateEmpties", tracks.sharedFateEmpties),
+    parity: rung("parity", tracks.parity),
+  });
+}
+
+/** The techniques a hint asks before any other, and the one it asks only
+ * where nothing else fires: a square's own sides are read before a clue is
+ * counted, and the loose end's argument is a last resort, as upstream's
+ * ladder ran them (`ladderWalk`'s roles). */
+export const ROLES = {
+  prerequisite: ["oneWayIn", "bothSidesLeft"],
+  fallback: ["looseEnd"],
+} as const satisfies Record<string, readonly tracks.LadderId[]>;
+
+/** A board's ladder and what it reads the board as. */
+export interface Kept {
+  readonly sp: GridSpace;
+  readonly dl: tracks.Dealt;
+  readonly ladder: Ladder;
+}
+
+const ladders = new WeakMap<Int32Array, { key: string; kept: Kept }>();
+
+/** The ladder of a board, kept per clue array while its numbers and ends are
+ * the same: the generator solves many boards sharing one. */
+export function ladderOf(b: Board): Kept {
+  const key = `${b.w}x${b.h} ${b.rowS} ${b.colS} ${b.numbers.join(",")}`;
+  const kept = ladders.get(b.numbers);
+  if (kept !== undefined && kept.key === key) return kept.kept;
+  const dl = dealtOf(b);
+  const made: Kept = { sp: spaceOf(b.w, b.h), dl, ladder: tracksLadder(dl) };
+  ladders.set(b.numbers, { key, kept: made });
+  return made;
+}
+
+/** Fresh marks holding what the board's flags say: each edge crossed or not,
+ * and each square marked track or none. */
+export function marksOf(b: Board, sp: GridSpace): CellMarks {
+  const grid = new Uint8Array(sp.edges.length);
+  for (let e = 0; e < grid.length; e++) {
+    const { x, y, dir } = edgeSide(sp, e);
+    const f = sEFlags(b, x, y, dir);
+    grid[e] = f & E_TRACK ? TRACK : f & E_NOTRACK ? NONE : 0;
+  }
+  const m = new CellMarks(sp, rangeMask(TRACK, NONE), grid, null, "edge", "cell");
+  m.seed(grid);
+  for (let c = 0; c < sp.cells.length; c++) {
+    const f = b.sflags[c];
+    m.edgeCands[c] = f & S_TRACK ? 1 << TRACK : f & S_NOTRACK ? 1 << NONE : EITHER;
+  }
+  return m;
+}
+
+/** Whether the marks hold the board's answer: the rails known are the whole
+ * track, every edge left open being one it does not cross. */
+export function finished(m: CellMarks, kept: Kept): boolean {
+  const g = Uint8Array.from(m.grid, (v) => (v === 0 ? NONE : v));
+  return tracks.isAnswer(g, kept.sp, kept.dl);
+}
 
 /**
- * The board geometry one firing reasons **from**, captured inside the rung at
- * the moment it fires and before it changes anything.
- *
- * Captured there rather than reconstructed afterwards because a rung can
- * destroy its own premise: `looseEndSpans` cites the column's *unfinished*
- * squares and then finishes one of them, so a snapshot taken after the firing
- * would shade a different set than the sentence counts
- * (docs/hints-marks.md § "Show the evidence as an area").
+ * Write what the marks settled back onto the board's flags, with what they
+ * imply as upstream's ladder recorded it: a square with a rail holds track,
+ * every side the track is known not to cross is crossed out, the board's
+ * rim included where no end leaves it, and once the board is finished every
+ * edge left open too.
  */
-export interface TracksEvidence {
-  /** Cell indices (`y * w + x`). */
-  cells: number[];
-  /** Edges, as `(y * w + x) * 16 + dir`. */
-  edges: number[];
-  /** Clue indices: `0..w-1` are columns, `w..w+h-1` rows. */
-  clues: number[];
-}
-
-/** Pack an edge for {@link TracksEvidence.edges}. */
-const evEdge = (w: number, x: number, y: number, d: number): number =>
-  (y * w + x) * 16 + d;
-
-/**
- * Why one firing is forced: the half of a hint `runDeductionFixpoint` is
- * *oblivious* to, and the reason this game needs a recording projection rather
- * than the rung id its `FiringTally` already reports.
- *
- * One variant per narratable **premise**, not one per rung: `update-flags` is a
- * single technique holding two teachable rules and three that only restate what
- * the board already draws. Those three, and `check-single` (which fires on no
- * board this generator produces: `tracks-ladder.test.ts`'s `unreached`
- * ledger), declare no reason: their firings come back with a `null` one and the
- * plan hides them. `tracks-hint.test.ts` holds every such firing to being
- * evident on the player's board, so the list of reason-less rules is a
- * declaration checked against a derivation rather than a roster that can rot.
- */
-export type TracksReason = { ev: TracksEvidence } & (
-  | { kind: "onlyOneSideLeft"; x: number; y: number; open: number }
-  | { kind: "bothSidesLeft"; x: number; y: number }
-  | { kind: "clueFull"; line: number }
-  | { kind: "clueExact"; line: number }
-  | { kind: "wouldCloseLoop"; x: number; y: number; dir: number }
-  | { kind: "wouldStrandTrack"; x: number; y: number; dir: number }
-  | { kind: "wouldFinishEarly"; x: number; y: number; dir: number; unmet: number }
-  | { kind: "looseEndSpans"; line: number }
-  | {
-      kind: "sharedFate";
-      line: number;
-      x: number;
-      y: number;
-      dir: number;
-      fills: boolean;
-      empties: boolean;
-    }
-  | { kind: "crossingParity"; x: number; y: number; dir: number; crossings: number }
-);
-
-/** One firing: the flag changes it forced, and the premise that forced them;
- * `null` for a rule that restates what the board already shows. */
-export interface TracksFiring {
-  reason: TracksReason | null;
-  ops: TracksOp[];
-}
-
-/*
- * How to read the recording arms below.
- *
- * **Every reason is built behind `const rec = b.rec; if (rec)`, and that is
- * load-bearing rather than stylistic.** A reason carries its evidence, and some
- * of that evidence costs a full-board scan (`cellsInClass`) or a line walk; a
- * helper taking the built reason as an argument would build all of it on the
- * generator's hot path, where nothing reads it.
- *
- * The two lines that follow every premise are the rest of the pattern:
- * `if (rec && did > before && kept(b)) return did;` is the **per-premise early
- * return** that keeps one firing = one hint step (a rung like `updateFlags`
- * scans the whole grid and would otherwise pile dozens of unrelated deductions
- * into one step: docs/hints-marks.md § "Group one firing into one step"), and
- * `if (rec) rec.reason = null;` stops a premise that changed nothing from
- * lending its reason to the next one. `kept` is false only while a plan's
- * frontier collects every firing a rung could make: the board is then put
- * back, and the scan goes on to the next premise.
- */
-
-/** Where a rung on the hint path has made its firing: whether it returns. */
-const kept = (b: Board): boolean => b.offers?.keep() ?? true;
-
-// --- primitive flag setters (upstream solve_set_sflag / solve_set_eflag) ---
-//
-// Every change they make is recorded for the firing `b.rec` is collecting,
-// whether or not a premise is standing; what is worth showing is decided later,
-// by the plan loop. They are how every rung but `neighborsTry` changes the
-// board, so the *what* of a firing costs these two lines; only the *why* is
-// per-rung work.
-
-function setSflag(b: Board, x: number, y: number, f: number): number {
-  const i = y * b.w + x;
-  if (b.sflags[i] & f) return 0;
-  if (b.sflags[i] & (f === S_TRACK ? S_NOTRACK : S_TRACK)) b.impossible = true;
-  else {
-    b.sflags[i] |= f;
-    b.rec?.ops.push({ kind: "square", x, y, track: f === S_TRACK, set: true });
-  }
-  return 1;
-}
-
-function setEflag(b: Board, x: number, y: number, d: number, f: number): number {
-  const sf = sEFlags(b, x, y, d);
-  if (sf & f) return 0;
-  if (sf & (f === E_TRACK ? E_NOTRACK : E_TRACK)) b.impossible = true;
-  else {
-    sESet(b, x, y, d, f);
-    b.rec?.ops.push({ kind: "edge", x, y, dir: d, track: f === E_TRACK, set: true });
-  }
-  return 1;
-}
-
-// --- DIFF_EASY rungs ------------------------------------------------------
-
-/** The sides of `(x,y)` carrying `eflag`, as evidence edges. */
-function sidesWith(b: Board, x: number, y: number, eflag: number): number[] {
-  const out: number[] = [];
-  for (let i = 0; i < 4; i++) {
-    const d = 1 << i;
-    if (sEFlags(b, x, y, d) & eflag) out.push(evEdge(b.w, x, y, d));
-  }
-  return out;
-}
-
-/**
- * Five local rules at one square, of which **two are narratable and three only
- * restate what the board already draws**:
- *
- *  - *a blocked square's four sides are blocked* adds four edge crosses around
- *    a square already showing its own cross;
- *  - *a square with a track side is a track square* changes nothing on screen
- *    at all: `s2dFlags` already sets `DS_TRACK` from the edge count;
- *  - *a finished piece's other two sides are blocked*: the player can see the
- *    piece is finished. Narrated, it was a third of every plan and redundant
- *    every time it fired (671 of 671, measured).
- *
- * All three are real and needed by the deduction, so they run; none claims a
- * reason, so each comes back as a firing the plan hides (docs/hints.md
- * § "Show only what the board does not already say"). Each returns on its own
- * on the recording path, like every narrated premise, so a hidden firing never
- * shares a step with a shown one.
- */
-function updateFlags(b: Board): number {
+function writeBack(b: Board, m: CellMarks, kept: Kept, done: boolean): void {
+  const { sp, dl } = kept;
   const { w, h } = b;
-  let did = 0;
-  for (let x = 0; x < w; x++) {
-    for (let y = 0; y < h; y++) {
-      // A NOTRACK square's four edges are all NOTRACK. (No reason: see above.)
-      if (b.sflags[y * w + x] & S_NOTRACK) {
-        const before = did;
-        for (let i = 0; i < 4; i++) did += setEflag(b, x, y, 1 << i, E_NOTRACK);
-        if (b.rec && did > before && kept(b)) return did;
-      }
-      // 3+ NOTRACK edges → the square is NOTRACK.
-      if (sECount(b, x, y, E_NOTRACK) >= 3) {
-        const before = did;
-        const rec = b.rec;
-        if (rec) {
-          rec.reason = {
-            kind: "onlyOneSideLeft",
-            x,
-            y,
-            open: 4 - sECount(b, x, y, E_NOTRACK),
-            ev: { cells: [], edges: sidesWith(b, x, y, E_NOTRACK), clues: [] },
-          };
-        }
-        did += setSflag(b, x, y, S_NOTRACK);
-        if (rec && did > before && kept(b)) return did;
-        if (rec) rec.reason = null;
-      }
-      // Any TRACK edge → the square is TRACK. (No reason: see above.)
-      if (sECount(b, x, y, E_TRACK) > 0) {
-        const before = did;
-        did += setSflag(b, x, y, S_TRACK);
-        if (b.rec && did > before && kept(b)) return did;
-      }
-      // TRACK square with 2 NOTRACK edges → the other two are TRACK.
-      if (
-        b.sflags[y * w + x] & S_TRACK &&
-        sECount(b, x, y, E_NOTRACK) === 2 &&
-        sECount(b, x, y, E_TRACK) < 2
-      ) {
-        const before = did;
-        const rec = b.rec;
-        if (rec) {
-          // The **sides**, not the square: the sentence counts sides, and a
-          // full-cell outline sits exactly on top of the side marks and hides
-          // them (the same square carries both roles, so the outline wins).
-          rec.reason = {
-            kind: "bothSidesLeft",
-            x,
-            y,
-            ev: { cells: [], edges: sidesWith(b, x, y, E_NOTRACK), clues: [] },
-          };
-        }
-        for (let i = 0; i < 4; i++) {
-          const d = 1 << i;
-          if (!(sEFlags(b, x, y, d) & (E_TRACK | E_NOTRACK))) {
-            did += setEflag(b, x, y, d, E_TRACK);
-          }
-        }
-        if (rec && did > before && kept(b)) return did;
-        if (rec) rec.reason = null;
-      }
-      // TRACK square with 2 TRACK edges → the other two are NOTRACK.
-      if (
-        b.sflags[y * w + x] & S_TRACK &&
-        sECount(b, x, y, E_TRACK) === 2 &&
-        sECount(b, x, y, E_NOTRACK) < 2
-      ) {
-        // (No reason: see above.)
-        const before = did;
-        for (let i = 0; i < 4; i++) {
-          const d = 1 << i;
-          if (!(sEFlags(b, x, y, d) & (E_TRACK | E_NOTRACK))) {
-            did += setEflag(b, x, y, d, E_NOTRACK);
-          }
-        }
-        if (b.rec && did > before && kept(b)) return did;
-      }
-    }
+  for (let e = 0; e < m.grid.length; e++) {
+    const { x, y, dir } = edgeSide(sp, e);
+    const v = m.grid[e] === 0 && done ? NONE : m.grid[e];
+    if (v === TRACK) sESet(b, x, y, dir, E_TRACK);
+    else if (v === NONE) sESet(b, x, y, dir, E_NOTRACK);
   }
-  return did;
-}
-
-function countCol(b: Board, col: number, f: number): number {
-  let c = 0;
-  for (let n = 0, i = col; n < b.h; n++, i += b.w) if (b.sflags[i] & f) c++;
-  return c;
-}
-
-function countRow(b: Board, row: number, f: number): number {
-  let c = 0;
-  for (let n = 0, i = b.w * row; n < b.w; n++, i++) if (b.sflags[i] & f) c++;
-  return c;
-}
-
-/** The squares of a line satisfying `pred`, as evidence cells. */
-function lineCellsWhere(
-  si: number,
-  id: number,
-  n: number,
-  pred: (i: number) => boolean,
-): number[] {
-  const out: number[] = [];
-  for (let j = 0, i = si; j < n; j++, i += id) if (pred(i)) out.push(i);
-  return out;
-}
-
-/** The squares of a line carrying `sflag`, as evidence cells. */
-const lineCellsWith = (
-  b: Board,
-  si: number,
-  id: number,
-  n: number,
-  sflag: number,
-): number[] => lineCellsWhere(si, id, n, (i) => (b.sflags[i] & sflag) !== 0);
-
-function countCluesSub(
-  b: Board,
-  si: number,
-  id: number,
-  n: number,
-  target: number,
-  line: number,
-): number {
-  const { w } = b;
-  let ctrack = 0;
-  let cnotrack = 0;
-  let did = 0;
-  for (let j = 0, i = si; j < n; j++, i += id) {
-    if (b.sflags[i] & S_TRACK) ctrack++;
-    if (b.sflags[i] & S_NOTRACK) cnotrack++;
+  for (let c = 0; c < sp.cells.length; c++) {
+    if (tracks.drawn(m, sp, dl, c) > 0 || (m.edgeCands[c] & (1 << NONE)) === 0)
+      b.sflags[c] |= S_TRACK;
+    else if ((m.edgeCands[c] & (1 << TRACK)) === 0 || done) b.sflags[c] |= S_NOTRACK;
   }
-  if (ctrack === target) {
-    const before = did;
-    const rec = b.rec;
-    if (rec) {
-      rec.reason = {
-        kind: "clueFull",
-        line,
-        ev: { cells: lineCellsWith(b, si, id, n, S_TRACK), edges: [], clues: [line] },
-      };
-    }
-    for (let j = 0, i = si; j < n; j++, i += id) {
-      if (!(b.sflags[i] & S_TRACK))
-        did += setSflag(b, i % w, Math.floor(i / w), S_NOTRACK);
-    }
-    if (rec && did > before && kept(b)) return did;
-    if (rec) rec.reason = null;
-  }
-  if (cnotrack === n - target) {
-    const before = did;
-    const rec = b.rec;
-    if (rec) {
-      rec.reason = {
-        kind: "clueExact",
-        line,
-        ev: { cells: lineCellsWith(b, si, id, n, S_NOTRACK), edges: [], clues: [line] },
-      };
-    }
-    for (let j = 0, i = si; j < n; j++, i += id) {
-      if (!(b.sflags[i] & S_NOTRACK))
-        did += setSflag(b, i % w, Math.floor(i / w), S_TRACK);
-    }
-    if (rec && did > before && kept(b)) return did;
-    if (rec) rec.reason = null;
-  }
-  return did;
-}
-
-function countClues(b: Board): number {
-  const { w, h } = b;
-  let did = 0;
-  for (let x = 0; x < w; x++) {
-    did += countCluesSub(b, x, w, h, b.numbers[x], x);
-    if (b.rec?.ops.length && kept(b)) return did;
-  }
-  for (let y = 0; y < h; y++) {
-    did += countCluesSub(b, y * w, 1, w, b.numbers[w + y], w + y);
-    if (b.rec?.ops.length && kept(b)) return did;
-  }
-  return did;
-}
-
-/** Every cell in `dsf`'s class `c`, as evidence cells. */
-function cellsInClass(b: Board, dsf: Dsf, c: number): number[] {
-  const out: number[] = [];
-  for (let k = 0; k < b.w * b.h; k++) if (dsf.canonify(k) === c) out.push(k);
-  return out;
-}
-
-function checkLoopSub(
-  b: Board,
-  x: number,
-  y: number,
-  dir: number,
-  dsf: Dsf,
-  startc: number,
-  endc: number,
-): number {
-  const { w, h } = b;
-  const i = y * w + x;
-  const j = (y + dirY(dir)) * w + (x + dirX(dir));
-  if (
-    b.sflags[i] & S_TRACK &&
-    b.sflags[j] & S_TRACK &&
-    !(sEDirs(b, x, y, E_TRACK) & dir) &&
-    !(sEDirs(b, x, y, E_NOTRACK) & dir)
-  ) {
-    const ic = dsf.canonify(i);
-    const jc = dsf.canonify(j);
-    if (ic === jc) {
-      if (b.rec) {
-        b.rec.reason = {
-          kind: "wouldCloseLoop",
-          x,
-          y,
-          dir,
-          // The run that already links the two squares: what makes it a loop.
-          ev: { cells: cellsInClass(b, dsf, ic), edges: [], clues: [] },
-        };
-      }
-      return setEflag(b, x, y, dir, E_NOTRACK);
-    }
-    if ((ic === startc && jc === endc) || (ic === endc && jc === startc)) {
-      // Joining start to end is only allowed when it misses no other track
-      // and every clue is already satisfied.
-      const stranded: number[] = [];
-      for (let k = 0; k < w * h; k++) {
-        if (
-          b.sflags[k] & S_TRACK &&
-          dsf.canonify(k) !== startc &&
-          dsf.canonify(k) !== endc
-        ) {
-          if (!b.rec) return setEflag(b, x, y, dir, E_NOTRACK);
-          stranded.push(k);
-        }
-      }
-      if (stranded.length > 0) {
-        if (b.rec) {
-          b.rec.reason = {
-            kind: "wouldStrandTrack",
-            x,
-            y,
-            dir,
-            ev: { cells: stranded, edges: [], clues: [] },
-          };
-        }
-        return setEflag(b, x, y, dir, E_NOTRACK);
-      }
-      let satisfied = true;
-      let unmet = -1;
-      for (let k = 0; k < w; k++)
-        if (countCol(b, k, S_TRACK) < b.numbers[k]) {
-          satisfied = false;
-          if (unmet < 0) unmet = k;
-        }
-      for (let k = 0; k < h; k++) {
-        if (countRow(b, k, S_TRACK) < b.numbers[w + k]) {
-          satisfied = false;
-          if (unmet < 0) unmet = w + k;
-        }
-      }
-      if (!satisfied) {
-        if (b.rec) {
-          b.rec.reason = {
-            kind: "wouldFinishEarly",
-            x,
-            y,
-            dir,
-            unmet,
-            ev: {
-              cells:
-                unmet < w
-                  ? lineCellsWith(b, unmet, w, h, S_TRACK)
-                  : lineCellsWith(b, (unmet - w) * w, 1, w, S_TRACK),
-              edges: [],
-              clues: [unmet],
-            },
-          };
-        }
-        return setEflag(b, x, y, dir, E_NOTRACK);
-      }
-    }
-  }
-  return 0;
-}
-
-function checkLoop(b: Board): number {
-  const { w, h } = b;
-  let did = 0;
-  const dsf = trackDsf(b);
-  const startc = dsf.canonify(b.rowS * w);
-  const endc = dsf.canonify((h - 1) * w + b.colS);
-  for (let x = 0; x < w; x++) {
-    for (let y = 0; y < h; y++) {
-      if (x < w - 1) did += checkLoopSub(b, x, y, R, dsf, startc, endc);
-      if (b.rec?.ops.length && kept(b)) return did;
-      if (y < h - 1) did += checkLoopSub(b, x, y, D, dsf, startc, endc);
-      if (b.rec?.ops.length && kept(b)) return did;
-    }
-  }
-  return did;
-}
-
-// --- DIFF_TRICKY rungs ----------------------------------------------------
-
-function checkSingleSub(
-  b: Board,
-  si: number,
-  id: number,
-  n: number,
-  target: number,
-  perpf: number,
-): number {
-  const { w } = b;
-  let ctrack = 0;
-  let nperp = 0;
-  let n1edge = 0;
-  let i1edge = 0;
-  let did = 0;
-  for (let j = 0, i = si; j < n; j++, i += id) {
-    if (b.sflags[i] & S_TRACK) ctrack++;
-    const notrackDirs = sEDirs(b, i % w, Math.floor(i / w), E_NOTRACK);
-    if ((perpf & notrackDirs) === 0) nperp++;
-    if (sECount(b, i % w, Math.floor(i / w), E_TRACK) <= 1) {
-      n1edge++;
-      i1edge = i;
-    }
-  }
-  if (ctrack !== target - 1) return 0;
-  if (nperp > 0 || n1edge !== 1) return 0;
-
-  const ox = i1edge % w;
-  const oy = Math.floor(i1edge / w);
-  for (let j = 0, i = si; j < n; j++, i += id) {
-    const x = i % w;
-    const y = Math.floor(i / w);
-    if (Math.abs(ox - x) > 1 || Math.abs(oy - y) > 1) {
-      if (!(b.sflags[i] & S_TRACK)) did += setSflag(b, x, y, S_NOTRACK);
-    }
-  }
-  return did;
-}
-
-function checkSingle(b: Board): number {
-  const { w, h } = b;
-  let did = 0;
-  for (let x = 0; x < w; x++) did += checkSingleSub(b, x, w, h, b.numbers[x], R | L);
+  // Sides the track cannot cross that no mark says yet.
   for (let y = 0; y < h; y++)
-    did += checkSingleSub(b, y * w, 1, w, b.numbers[w + y], U | D);
-  return did;
-}
-
-function checkLooseSub(
-  b: Board,
-  si: number,
-  id: number,
-  n: number,
-  target: number,
-  perpf: number,
-  line: number,
-): number {
-  const { w } = b;
-  let nperp = 0;
-  let nloose = 0;
-  let e2count = 0;
-  let did = 0;
-  const parf = ALLDIR & ~perpf;
-
-  for (let j = 0, i = si; j < n; j++, i += id) {
-    const fcount = sECount(b, i % w, Math.floor(i / w), E_TRACK);
-    if (fcount === 2) e2count++;
-    b.sflags[i] &= ~S_MARK;
-    if (fcount === 1 && parf & sEDirs(b, i % w, Math.floor(i / w), E_TRACK)) {
-      nloose++;
-      b.sflags[i] |= S_MARK;
-    }
-    if (fcount !== 2 && !(perpf & sEDirs(b, i % w, Math.floor(i / w), E_NOTRACK)))
-      nperp++;
-  }
-
-  if (nloose > target - e2count) b.impossible = true;
-  if (nloose > 0 && nloose === target - e2count) {
-    // The finished squares and the loose ends account for the whole clue, so
-    // no loose end may run on along the line. On a board that agrees with its
-    // answer this blocks nothing, which is why it has no reason to record:
-    // every one of those squares is a track square (`updateFlags`), so the
-    // clue is full and `countClues` has blocked the rest of the line, whose
-    // sides `updateFlags` then blocked, as it did a finished square's. Both
-    // run to exhaustion before this rung. It acts only on a board with more
-    // track in the line than its clue allows.
-    const before = did;
-    for (let j = 0, i = si; j < n; j++, i += id) {
-      if (!(b.sflags[i] & S_MARK)) continue;
-      if (j > 0 && b.sflags[i - id] & S_MARK) continue;
-      if (j < n - 1 && b.sflags[i + id] & S_MARK) continue;
-      for (let k = 0; k < 4; k++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      const rails = sEDirs(b, x, y, E_TRACK);
+      for (const d of [U, D, L, R]) {
+        if (rails & d) continue;
+        const nx = x + dirX(d);
+        const ny = y + dirY(d);
+        const j = ny * w + nx;
         if (
-          parf & (1 << k) &&
-          !(sEDirs(b, i % w, Math.floor(i / w), E_TRACK) & (1 << k))
-        ) {
-          did += setEflag(b, i % w, Math.floor(i / w), 1 << k, E_NOTRACK);
-        }
+          !inGrid(b, nx, ny) ||
+          b.sflags[i] & S_NOTRACK ||
+          b.sflags[j] & S_NOTRACK ||
+          countBits(rails) === 2 ||
+          countBits(sEDirs(b, nx, ny, E_TRACK)) === 2
+        )
+          sESet(b, x, y, d, E_NOTRACK);
       }
     }
-    // The hint is asked only of a board that agrees with its answer.
-    if (b.rec && did > before)
-      throw new Error(`tracks: a loose end in line ${line} had a side left to block`);
-  }
-  if (nloose === 1 && target - e2count === 2 && nperp === 0) {
-    const before = did;
-    const rec = b.rec;
-    if (rec) {
-      // `nperp === 0` says every unfinished square in the line already has one
-      // side blocked across the line, so none of them can be crossed straight
-      // through. Show that: the unfinished squares, and the blocked side on each.
-      const unfinished = lineCellsWhere(
-        si,
-        id,
-        n,
-        (i) => sECount(b, i % w, Math.floor(i / w), E_TRACK) !== 2,
-      );
-      rec.reason = {
-        kind: "looseEndSpans",
-        line,
-        ev: {
-          cells: unfinished,
-          edges: unfinished.flatMap((i) =>
-            sidesWith(b, i % w, Math.floor(i / w), E_NOTRACK).filter(
-              (e) => (e % 16) & perpf,
-            ),
-          ),
-          clues: [line],
-        },
-      };
-    }
-    for (let j = 0, i = si; j < n; j++, i += id) {
-      if (!(b.sflags[i] & S_MARK)) continue;
-      for (let k = 0; k < 4; k++) {
-        if (parf & (1 << k))
-          did += setEflag(b, i % w, Math.floor(i / w), 1 << k, E_TRACK);
-      }
-    }
-    if (rec && did > before && kept(b)) return did;
-    if (rec) rec.reason = null;
-  }
-  return did;
 }
 
-function checkLooseEnds(b: Board): number {
-  const { w, h } = b;
-  let did = 0;
-  for (let x = 0; x < w; x++) {
-    did += checkLooseSub(b, x, w, h, b.numbers[x], R | L, x);
-    if (b.rec?.ops.length && kept(b)) return did;
-  }
-  for (let y = 0; y < h; y++) {
-    did += checkLooseSub(b, y * w, 1, w, b.numbers[w + y], U | D, w + y);
-    if (b.rec?.ops.length && kept(b)) return did;
-  }
-  return did;
-}
-
-function neighborsCount(
-  b: Board,
-  start: number,
-  step: number,
-  n: number,
-  clueindex: number,
-): { onefill: boolean; oneempty: boolean } {
-  let toFill = b.numbers[clueindex];
-  let toEmpty = n - toFill;
-  for (let i = 0; i < n; i++) {
-    const p = start + i * step;
-    if (b.sflags[p] & S_TRACK) toFill--;
-    if (b.sflags[p] & S_NOTRACK) toEmpty--;
-  }
-  return { onefill: toFill === 1, oneempty: toEmpty === 1 };
-}
-
-function neighborsTry(
-  b: Board,
-  x: number,
-  y: number,
-  X: number,
-  Y: number,
-  onefill: boolean,
-  oneempty: boolean,
-  dir: number,
-  line: number,
-  lineStart: number,
-  lineStep: number,
-  lineLen: number,
-): number {
-  const { w } = b;
-  const p = y * w + x;
-  const P = Y * w + X;
-  if ((b.sflags[p] | b.sflags[P]) & (S_TRACK | S_NOTRACK)) return 0;
-  const possibleExitsExceptDir = dirCount(ALLDIR & ~dir & ~sEDirs(b, x, y, E_NOTRACK));
-  if (possibleExitsExceptDir >= 2) return 0;
-  // If p is filled, P must be too.
-  let did = 0;
-  // The blocked sides that leave `dir` as the only way through `p` are half the
-  // premise; the clue count is the other half, and which half of *it* holds
-  // decides which of the two squares is forced. This is the one place a rung
-  // sets a flag without going through the two primitive setters (upstream does
-  // the same), so it is also the one place that has to record by hand.
-  if (b.rec) {
-    b.rec.reason = {
-      kind: "sharedFate",
-      line,
-      x,
-      y,
-      dir,
-      fills: onefill,
-      empties: oneempty,
-      ev: {
-        cells:
-          onefill && oneempty
-            ? []
-            : lineCellsWith(
-                b,
-                lineStart,
-                lineStep,
-                lineLen,
-                onefill ? S_TRACK : S_NOTRACK,
-              ),
-        edges: sidesWith(b, x, y, E_NOTRACK),
-        clues: [line],
-      },
-    };
-  }
-  if (onefill) {
-    b.sflags[p] |= S_NOTRACK;
-    b.rec?.ops.push({ kind: "square", x, y, track: false, set: true });
-    did++;
-  }
-  if (oneempty) {
-    b.sflags[P] |= S_TRACK;
-    b.rec?.ops.push({ kind: "square", x: X, y: Y, track: true, set: true });
-    did++;
-  }
-  // Only when this premise recorded nothing: the reset exists to stop a
-  // premise that changed nothing lending its reason to the next one, and
-  // clearing it after a firing would hand the driver ops with no reason.
-  if (b.rec && b.rec.ops.length === 0) b.rec.reason = null;
-  return did;
-}
-
-function checkNeighbors(b: Board, bothWays: boolean): number {
-  const { w, h } = b;
-  let did = 0;
-  for (let x = 0; x < w; x++) {
-    const { onefill, oneempty: oe } = neighborsCount(b, x, w, h, x);
-    const oneempty = bothWays && oe;
-    if (!onefill && !oneempty) continue;
-    for (let y = 0; y + 1 < h; y++) {
-      did += neighborsTry(b, x, y, x, y + 1, onefill, oneempty, D, x, x, w, h);
-      if (b.rec?.ops.length && kept(b)) return did;
-      did += neighborsTry(b, x, y + 1, x, y, onefill, oneempty, U, x, x, w, h);
-      if (b.rec?.ops.length && kept(b)) return did;
-    }
-  }
-  for (let y = 0; y < h; y++) {
-    const { onefill, oneempty: oe } = neighborsCount(b, y * w, 1, w, w + y);
-    const oneempty = bothWays && oe;
-    if (!onefill && !oneempty) continue;
-    for (let x = 0; x + 1 < w; x++) {
-      did += neighborsTry(b, x, y, x + 1, y, onefill, oneempty, R, w + y, y * w, 1, w);
-      if (b.rec?.ops.length && kept(b)) return did;
-      did += neighborsTry(b, x + 1, y, x, y, onefill, oneempty, L, w + y, y * w, 1, w);
-      if (b.rec?.ops.length && kept(b)) return did;
-    }
-  }
-  return did;
-}
-
-// --- DIFF_HARD rung: bridge parity ----------------------------------------
-
-function bridgeSub(b: Board, x: number, y: number, d: number, dsf: Dsf): number {
-  const { w, h } = b;
-  const X = x + dirX(d);
-  const Y = y + dirY(d);
-  dsf.reinit();
-  for (let xi = 0; xi < w; xi++) {
-    for (let yi = 0; yi < h; yi++) {
-      if (
-        yi + 1 < h &&
-        !sEFlags(b, xi, yi, D) &&
-        !(xi === x && yi === y && xi === X && yi + 1 === Y)
-      ) {
-        dsf.merge(yi * w + xi, (yi + 1) * w + xi);
-      }
-      if (
-        xi + 1 < w &&
-        !sEFlags(b, xi, yi, R) &&
-        !(xi === x && yi === y && xi + 1 === X && yi === Y)
-      ) {
-        dsf.merge(yi * w + xi, yi * w + (xi + 1));
-      }
-    }
-  }
-  const component = dsf.canonify(y * w + x);
-  const rec = b.rec;
-  const cells: number[] = [];
-  const edges: number[] = [];
-  let parity = 0;
-  let crossings = 0;
-  for (let xi = 0; xi < w; xi++) {
-    for (let yi = 0; yi < h; yi++) {
-      if (dsf.canonify(yi * w + xi) !== component) continue;
-      if (rec) cells.push(yi * w + xi);
-      for (let di = 1; di < 16; di *= 2) {
-        const Xi = xi + dirX(di);
-        const Yi = yi + dirY(di);
-        if (
-          (Xi < 0 ||
-            Xi >= w ||
-            Yi < 0 ||
-            Yi >= h ||
-            dsf.canonify(Yi * w + Xi) !== component) &&
-          sEDirs(b, xi, yi, E_TRACK) & di
-        ) {
-          parity ^= 1;
-          if (rec) {
-            crossings++;
-            edges.push(evEdge(w, xi, yi, di));
-          }
-        }
-      }
-    }
-  }
-  // The block and the crossings the sentence counts are the *whole* premise
-  // here, so the picture is the argument: no other rung's evidence is this
-  // literally what the words say.
-  if (rec) {
-    rec.reason = {
-      kind: "crossingParity",
-      x,
-      y,
-      dir: d,
-      crossings,
-      ev: { cells, edges, clues: [] },
-    };
-  }
-  setEflag(b, x, y, d, parity ? E_TRACK : E_NOTRACK);
-  return 1;
-}
-
-function* bridgeNeighbors(b: Board, vertex: number): Iterable<number> {
-  const { w } = b;
-  const x = vertex % w;
-  const y = Math.floor(vertex / w);
-  const dirs = ALLDIR & ~sEDirs(b, x, y, E_TRACK) & ~sEDirs(b, x, y, E_NOTRACK);
-  for (let di = 1; di < 16; di *= 2) {
-    if (dirs & di) {
-      const xr = x + dirX(di);
-      const yr = y + dirY(di);
-      if (inGrid(b, xr, yr)) yield yr * w + xr;
-    }
-  }
-}
-
-function checkBridgeParity(b: Board, dsf: Dsf): number {
-  const { w, h } = b;
-  let did = 0;
-  const fls = findLoops(w * h, (v) => bridgeNeighbors(b, v));
-  for (let x = 0; x < w; x++) {
-    for (let y = 0; y < h; y++) {
-      if (y + 1 < h && !fls.isLoopEdge(y * w + x, (y + 1) * w + x)) {
-        did += bridgeSub(b, x, y, D, dsf);
-        if (b.rec?.ops.length && kept(b)) return did;
-      }
-      if (x + 1 < w && !fls.isLoopEdge(y * w + x, y * w + (x + 1))) {
-        did += bridgeSub(b, x, y, R, dsf);
-        if (b.rec?.ops.length && kept(b)) return did;
-      }
-    }
-  }
-  return did;
-}
-
-// --- outer border + driver ------------------------------------------------
-
-function discountEdge(b: Board, x: number, y: number, d: number): void {
-  if (sEDirs(b, x, y, E_TRACK) & d) return; // only clue squares carry outer edges
-  setEflag(b, x, y, d, E_NOTRACK);
-}
-
-/** The eight rungs, easiest first: the ladder `tracksSolve` runs.
- *
- * A factory rather than a constant because the rungs close over per-solve state:
- * every one needs the board, and `check-bridge-parity` needs a scratch dsf that
- * must not be shared between solves.
- *
- * **The rung ids are load-bearing beyond documentation**: `runDeductionFixpoint`
- * names them when a step budget trips, and `tracks-ladder.test.ts` asserts which
- * of them a corpus ever fires. */
-function tracksLadder(b: Board, bridgeDsf: Dsf): DeductionTechnique[] {
-  return [
-    // Every rung after it counts track squares off the flags it keeps.
-    {
-      id: "update-flags",
-      tier: DIFF_EASY,
-      run: () => updateFlags(b),
-      prerequisite: true,
-    },
-    { id: "count-clues", tier: DIFF_EASY, run: () => countClues(b) },
-    { id: "check-loop", tier: DIFF_EASY, run: () => checkLoop(b) },
-    { id: "check-single", tier: DIFF_TRICKY, run: () => checkSingle(b) },
-    // Its first premise holds the hint to a board the easy rungs have run dry
-    // on, so a plan that continues asks it only there.
-    {
-      id: "check-loose-ends",
-      tier: DIFF_TRICKY,
-      run: () => checkLooseEnds(b),
-      fallback: true,
-    },
-    { id: "check-neighbors", tier: DIFF_TRICKY, run: () => checkNeighbors(b, false) },
-    {
-      id: "check-neighbors-both-ways",
-      tier: DIFF_HARD,
-      run: () => checkNeighbors(b, true),
-    },
-    {
-      id: "check-bridge-parity",
-      tier: DIFF_HARD,
-      run: () => checkBridgeParity(b, bridgeDsf),
-    },
-  ];
-}
-
-/** The setup both `tracksSolve` and `tracksRecordingPass` need: clear the
- * impossible flag, discount the four outside edges, and hand back the scratch
- * dsf the parity rung uses. */
-function tracksSolveInit(b: Board): Dsf {
-  const { w, h } = b;
-  b.impossible = false;
-  for (let x = 0; x < w; x++) {
-    discountEdge(b, x, 0, U);
-    discountEdge(b, x, h - 1, D);
-  }
-  for (let y = 0; y < h; y++) {
-    discountEdge(b, 0, y, L);
-    discountEdge(b, w - 1, y, R);
-  }
-  return new Dsf(w * h);
-}
+const countBits = (d: number): number =>
+  (d & 1) + ((d >> 1) & 1) + ((d >> 2) & 1) + ((d >> 3) & 1);
 
 /**
- * Run the solver to a fixpoint at the given max difficulty (upstream
- * `tracks_solve`). Returns the verdict (`-1` impossible, `0` non-converged,
- * `1` uniquely solved) and the highest difficulty rung that fired.
+ * Run the ladder up to tier `diff` from the board's flags, and write what it
+ * settled back onto them. Returns the verdict (`-1` inconsistent, `0` not
+ * finished, `1` finished, so the board's one answer) and the highest tier
+ * that fired.
  *
- * @param firings test seam: the runner tallies each rung's firings into it.
- * Unused in production and deliberately so: `tracks-ladder.test.ts` has to
- * prove its corpus reaches every rung, and a ladder test that could pass over
- * boards needing only the easiest rung would certify nothing.
+ * @param firings test seam: the runner tallies each technique's firings into
+ *   it. Only `tracks-ladder.test.ts` passes one.
  */
 export function tracksSolve(
   b: Board,
   diff: number,
   firings?: FiringTally,
 ): { ret: number; maxDiff: number } {
-  const bridgeDsf = tracksSolveInit(b);
-  const ladder = tracksLadder(b, bridgeDsf);
-
-  const { grade: maxDiff } = runDeductionFixpoint({
-    techniques: ladder,
-    firings,
-    maxTier: diff,
-    baseGrade: DIFF_EASY,
-    // A rung never returns `< 0`; it raises the board's own flag instead, so
-    // the runner's `impossible` is always false and `ret` comes from the flag.
-    settled: () => b.impossible,
-  });
-
-  const ret = b.impossible ? -1 : checkCompletion(b, false) ? 1 : 0;
-  return { ret, maxDiff };
-}
-
-/**
- * The **recording projection**: the same eight rungs through `singleFirings`,
- * one firing at a time with its premise attached. `beforeTechnique` clears the
- * standing reason, so a rung that declares none comes back with `null` rather
- * than the previous rung's premise.
- *
- * **Every firing is returned, including the ones nobody should be shown.**
- * Deciding what is worth a step is the plan loop's job (`deduceHintPlan`'s
- * `showable`), not the recorder's.
- *
- * The returned closure ignores its argument so it can be handed straight to
- * `deduceHintPlan`'s `next(board)`; the board it walks is the one passed here,
- * and the rungs mutate it as they detect, so the plan loop supplies no `apply`.
- */
-export function tracksRecordingPass(
-  b: Board,
-  cap: number,
-  budget: StepBudget,
-): () => TracksFiring | null {
-  // Init *before* the recorder is attached, deliberately: it blocks the four
-  // outer borders, which are not a deduction and are not something the player
-  // could mark even if they were (`uiCanFlipEdge` needs both squares in grid).
-  const bridgeDsf = tracksSolveInit(b);
-  const ladder = tracksLadder(b, bridgeDsf);
-  const rec: TracksRecorder = { reason: null, ops: [] };
-  b.rec = rec;
-  const { w } = b;
-  const lineCells = (line: number): number[] =>
-    line < w
-      ? Array.from({ length: b.h }, (_, y) => y * w + line)
-      : Array.from({ length: w }, (_, x) => (line - w) * w + x);
-  const offers = new SweepOffers<TracksSnapshot, unknown>({
-    save: () => ({
-      sflags: b.sflags.slice(),
-      impossible: b.impossible,
-      ops: [...rec.ops],
-    }),
-    restore: (s) => {
-      b.sflags.set(s.sflags);
-      b.impossible = s.impossible;
-      rec.ops = [...s.ops];
-    },
-    recorded: () => rec.reason,
-    record: (r) => {
-      rec.reason = r;
-    },
-    // The square it turns on, the squares and sides it cites, and the lines
-    // whose clues it counts: a player follows the track through them.
-    reads: (r) => {
-      const reason = r as TracksReason | null;
-      if (!reason) return [];
-      const { ev } = reason;
-      return [
-        ...("x" in reason ? [reason.y * w + reason.x] : []),
-        ...ev.cells,
-        ...ev.edges.map((e) => e >> 4),
-        ...ev.clues.flatMap(lineCells),
-      ];
-    },
-    // The squares its changes are on, both sides of an edge.
-    writes: (before, after) =>
-      after.ops.slice(before.ops.length).flatMap((op) => {
-        const at = op.y * w + op.x;
-        return op.dir === undefined
-          ? [at]
-          : [at, (op.y + dirY(op.dir)) * w + op.x + dirX(op.dir)];
-      }),
-  });
-  b.offers = offers;
-  // A rung never returns `< 0`; it raises the board's own flag instead, which
-  // `settled` reads before the ladder runs and the closure reads after.
-  const firings = singleFirings({
-    techniques: offers.techniques(ladder),
-    maxTier: cap,
-    budget,
-    beforeTechnique: () => {
-      rec.reason = null;
-    },
-    settled: () => b.impossible,
-    // A plan follows the track it is laying before it moves on.
-    continuing: true,
-  });
-
-  return (): TracksFiring | null => {
-    rec.ops = [];
-    if (!firings.next() || b.impossible) return null;
-    return { reason: rec.reason as TracksReason | null, ops: rec.ops };
-  };
+  const kept = ladderOf(b);
+  const m = marksOf(b, kept.sp);
+  const grades: Record<string, number> = {};
+  const impossible = runLadder(
+    m,
+    ladderTechniques(m, kept.ladder.entries, { [TIERS]: diff }, grades),
+    { firings },
+  );
+  const maxDiff = grades[TIERS] ?? 0;
+  if (impossible) return { ret: -1, maxDiff };
+  const done = finished(m, kept);
+  writeBack(b, m, kept, done);
+  if (done && !checkCompletion(b, false))
+    throw new Error("tracks: the ladder finished a board the game does not");
+  return { ret: done ? 1 : 0, maxDiff };
 }
 
 /**
@@ -1095,7 +293,6 @@ export function copyAndStrip(b: Board, flipClueI: number): Board {
     rowS: b.rowS,
     colS: b.colS,
     numErrors: new Uint8Array(w + h),
-    impossible: false,
   };
   if (flipClueI !== -1) ret.sflags[flipClueI] ^= S_CLUE;
   for (let i = 0; i < w * h; i++) {

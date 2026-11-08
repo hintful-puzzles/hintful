@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import {
   connected,
+  cutEdges,
   cuts,
   describedSpace,
   type EdgeHolds,
@@ -10,6 +11,7 @@ import {
   linkedOf,
   linkedSum,
   type Marks,
+  through,
 } from "./describe-runtime.ts";
 import { CellMarks } from "./ladder-runtime.ts";
 import { randomNew, randomUpto } from "./random/index.ts";
@@ -240,4 +242,34 @@ it("connected and cuts read their definitions on every shape of set", () => {
     }
   // Enough sets with cuts that a search missing them would show.
   expect(cut).toBeGreaterThan(1000);
+});
+
+it("cut_edges reads its definition on every shape of set", () => {
+  // Its definition: the members whose second cell `through` does not reach
+  // from the first across the other members.
+  const rs = randomNew("cut-edges");
+  let cut = 0;
+  let kept = 0;
+  for (let w = 1; w <= 5; w++)
+    for (let h = 1; h <= 5; h++) {
+      const sp = describedSpace([], w, h);
+      for (let k = 0; k < 100; k++) {
+        const E = sp.edges.filter(() => randomUpto(rs, 4) > 0);
+        const want = E.filter(
+          (e) =>
+            !through(
+              sp,
+              sp.edgeEnds[2 * e],
+              E.filter((x) => x !== e),
+            ).includes(sp.edgeEnds[2 * e + 1]),
+        );
+        expect(cutEdges(sp, E)).toEqual(want);
+        cut += want.length;
+        kept += E.length - want.length;
+      }
+    }
+  // Enough of each that a search calling every member one, or none, would
+  // show.
+  expect(cut).toBeGreaterThan(1000);
+  expect(kept).toBeGreaterThan(1000);
 });

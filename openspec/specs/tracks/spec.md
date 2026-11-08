@@ -130,8 +130,15 @@ entrance and one exit.
 
 A clue square's hexadecimal character SHALL be the sum of the two sides its
 track leaves by: 1 for the right, 2 for the top, 4 for the left and 8 for the
-bottom. A square at the grid's rim MAY name the side on the rim, which is how
-the entrance and the exit are written.
+bottom. The entrance's square MAY name its left side and the exit's its
+bottom side, on the rim; a game ID naming a rim side anywhere else SHALL be
+refused.
+
+#### Scenario: Track off the grid away from A and B
+
+- **WHEN** a clue square in the top row, not the exit's, is given track from
+  its top side
+- **THEN** the game ID is refused
 
 #### Scenario: A dealt 8×8 board is read
 
@@ -163,19 +170,23 @@ letters and clue squares count past the grid's area.
 
 ### Requirement: Generation: Each Tracks difficulty adds its rungs
 
-Easy SHALL run edge and square flag propagation (`update-flags`), row and
-column track counts (`count-clues`) and immediate loop avoidance
-(`check-loop`). Normal SHALL add single-track reasoning
-(`check-single`), loose-end reasoning (`check-loose-ends`) and the one-way
-neighbor deduction (`check-neighbors`). Tricky SHALL add the two-way neighbor
-deduction (`check-neighbors-both-ways`) and the bridge-parity argument
-(`check-bridge-parity`).
+Each tier SHALL run the techniques `tracks.description.yaml` states at it and
+below: Easy a square's sides, a line's count and the side that would close a
+loop or finish the track too soon; Normal adds the loose end and the
+neighbor that would take a line's last track square; Tricky adds the
+neighbor that would take its last empty square and a block's crossings.
+
+#### Scenario: An Easy solve runs the Easy techniques only
+
+- **WHEN** the solver runs capped at Easy
+- **THEN** `oneWayIn`, `bothSidesLeft`, `clueFull`, `clueExact`,
+  `closeLoop`, `strand` and `finishEarly` may run, and `looseEnd` and
+  `sharedFate` do not
 
 #### Scenario: A capped solve leaves the higher rungs out
 
 - **WHEN** the solver runs capped at Normal
-- **THEN** neither the two-way neighbor deduction nor the bridge-parity
-  argument runs
+- **THEN** neither `sharedFateEmpties` nor `parity` runs
 
 ### Requirement: Generation: A Tracks deal lays its track by construction and strips the clues its tier can spare
 
@@ -219,6 +230,25 @@ already refuses any clue that finishes the board below the target tier.
 - **WHEN** the bare board of a laid track stalls at the target tier without any
   of that tier's rungs having fired
 - **THEN** the generator lays clues on it and does not ask for a new track
+
+### Requirement: Solver: Tracks' solver is a certified deduction ladder
+
+Tracks' solver SHALL deduce only, as the ladder `tracks.description.yaml`
+states. Each technique SHALL be checked sound, and a planted defect of each
+found unsound. The boards of its firing census SHALL be those generated at
+every tier, and every technique SHALL fire on them at the caps the generator
+uses.
+
+#### Scenario: A board needing Tricky is graded Tricky
+
+- **WHEN** a board that needs a Tricky technique is solved
+- **THEN** the solver capped at Tricky solves it and grades it Tricky
+- **AND** the solver capped at Normal leaves it unsolved
+
+#### Scenario: A silenced technique fails
+
+- **WHEN** any technique is removed from the description
+- **THEN** the firing census fails
 
 ### Requirement: Controls: Tracks input maps drag, click and cursor
 
@@ -319,10 +349,10 @@ soluble at.
 
 ### Requirement: Hint: One Tracks firing is one hint step
 
-One firing SHALL be one step: with a recorder attached, a rung SHALL return at
-its first premise that changed the board, so that a rung that scans the whole
-grid cannot pile several independent deductions into one step. Where one
-premise forces several ops, the step's move SHALL carry them all.
+One firing SHALL be one step: one binding of one technique of the compiled
+ladder, so a technique that scans the whole grid cannot pile several
+independent deductions into one step. Where one binding forces several ops,
+the step's move SHALL carry them all.
 
 #### Scenario: A hint explains a clue that is already met
 
@@ -331,35 +361,6 @@ premise forces several ops, the step's move SHALL carry them all.
 - **THEN** the step's narration names that count, its move marks every other
   square in the line empty, and its evidence is exactly the clue's own track
   squares with the clue's digit recolored
-
-### Requirement: Hint: A firing the board already shows is hidden
-
-Every change a rung makes SHALL be recorded. Tracks' `showable` judgment
-SHALL hide a firing that declares no reason or whose every change the
-player's board already decides. A change is already decided when the game
-would refuse the player its contrary: track on a side of a square marked
-empty or of the rim, track as a third side of a finished piece, or "no track"
-on a square showing a rail.
-
-#### Scenario: A blocked side on the rim is not a step
-
-- **WHEN** a rule with a reason fires and the one side it blocks lies on the
-  grid's rim
-- **THEN** the plan shows no step for it
-
-### Requirement: Hint: Three rules of update-flags declare no reason
-
-Three rules of the `update-flags` rung SHALL declare no reason, because the
-player's board already decides what each concludes: a square with a track side
-is a track square, a blocked square's four sides are blocked, and a finished
-piece's other two sides are blocked. Every reason-less firing SHALL be evident
-by the already-decided test.
-
-#### Scenario: A finished piece's sides are never a step
-
-- **WHEN** a finished piece's two free sides border squares the player has
-  marked empty and a hint is requested
-- **THEN** no step in the plan asks for either side to be blocked
 
 ### Requirement: Hint: Tracks marks a hint in its own vocabulary
 
@@ -398,8 +399,8 @@ outlines.
 ### Requirement: Hint: The Tracks hint counts a row or column against its clue
 
 A row or column that holds as many track squares as its clue SHALL have every
-other square in it marked empty ("This column already has all 4 of the track
-squares its clue allows"). One that has as many squares marked empty as its
+other square in it marked empty ("By clue 4, this column's track squares are
+the outlined ones"). One that has as many squares marked empty as its
 length less its clue SHALL have every other square in it marked as track. The
 step SHALL stripe the line, and outline its clue and the squares it counted.
 
@@ -407,9 +408,8 @@ step SHALL stripe the line, and outline its clue and the squares it counted.
 
 - **WHEN** a hint is asked for on the 8×8 Normal board
   `zn5CbApAb,5,8,8,7,4,S4,3,3,2,3,4,4,5,S8,8,8` with nothing marked
-- **THEN** the first step is about the second column, whose clue is 8: "This
-  column's clue is 8 and it is 8 squares long, so every square in it must
-  carry track."
+- **THEN** the first step is about the sixth row, whose clue is 8: "Clue 8 is
+  the length of this row, so every square in it must carry track."
 
 ### Requirement: Hint: The Tracks hint blocks a side that would close a loop or finish the track too soon
 
@@ -451,7 +451,7 @@ at most one side not blocked other than the side they share, track in the
 first would run on into the second. On a Normal or a Tricky board, where the
 line needs one more track square, a step SHALL mark the first empty. On a
 Tricky board, where the line can take one more empty square, a step SHALL mark
-the second as track, and where both hold it SHALL do both.
+the second as track. Where both hold, each is its own step.
 
 #### Scenario: A line with room for one more track square
 
@@ -479,23 +479,41 @@ the block and outline those crossings.
 
 ### Requirement: Hint: The Tracks hint tries a square's sides, then the clues, then the loop
 
-`hint` SHALL take the first of these that decides something the board does not
-show, and begin again after each: a square's blocked sides, the columns left
-to right and each from the top; a clue's count, columns before rows, a clue
-that is met before one whose empty squares are all marked; a loop or an early
-finish. Then, above Easy, a loose end, and the two neighbors where the line
-needs one more track square. Then, at Tricky, the two neighbors both ways and
-a block's crossings.
+`hint` SHALL take the first firing of the ladder `tracks.description.yaml`
+states, and begin again after each: a square's sides first, which hold back
+every technique after them; then a clue's count, rows before columns; then a
+loop or an early finish; then the techniques above Easy, a loose end only
+once nothing else fires.
+
+#### Scenario: A loose end waits for every other technique
+
+- **WHEN** a loose end could run on and another technique also fires
+- **THEN** the hint takes the other technique first
 
 #### Scenario: A dealt board's first steps
 
 - **WHEN** a hint is asked for on the 8×8 Normal board
   `zn5CbApAb,5,8,8,7,4,S4,3,3,2,3,4,4,5,S8,8,8` with nothing marked
-- **THEN** the first two steps fill the second and third columns, whose clues
-  are 8, and the third empties the rest of the top row, whose clue of 2 those
-  columns have met
+- **THEN** the first two steps fill the sixth and seventh rows, whose clues
+  are 8
 - **AND** only then does a step lay track through a square with two sides
-  blocked, since no square had two until the row was emptied
+  blocked, since no square had two until those rows were filled
+
+### Requirement: Hint: No Tracks firing concludes what the board already decides
+
+The description SHALL read what the player's board already says before any
+technique concludes it: a square with a rail holds track, and a side is shut
+where the rim, an empty square or a finished piece closes it. So no firing of
+the hint's walk SHALL ask for a change the game would refuse the contrary of:
+track on a side of a square marked empty or of the rim, track as a third side
+of a finished piece, or "no track" on a square showing a rail. Every firing
+SHALL be shown.
+
+#### Scenario: A finished piece's sides are never a step
+
+- **WHEN** a finished piece's two free sides border squares the player has
+  marked empty and a hint is requested
+- **THEN** no step in the plan asks for either side to be blocked
 
 ### Requirement: Look: Tracks renders rails, clues, drag previews and the completion flash
 

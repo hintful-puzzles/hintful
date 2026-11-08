@@ -1,0 +1,13 @@
+ok  tracks     oneWayIn                       current: recorded src/games/tracks/tracks.description.yaml#oneWayIn b0acfb3d652c8f2f
+ok  tracks     bothSidesLeft                  current: recorded src/games/tracks/tracks.description.yaml#bothSidesLeft df36f9894e8192d3
+ok  tracks     clueFull                       current: recorded src/games/tracks/tracks.description.yaml#clueFull a0399bf0aa422c82
+ok  tracks     clueExact                      current: recorded src/games/tracks/tracks.description.yaml#clueExact de9178a17bdc74db
+ok  tracks     closeLoop                      current: recorded src/games/tracks/tracks.description.yaml#closeLoop e475b55d6e99ba6f
+ok  tracks     strand                         current: recorded src/games/tracks/tracks.description.yaml#strand 7614620afe18a9bc
+ok  tracks     finishEarly                    current: recorded src/games/tracks/tracks.description.yaml#finishEarly a6da615d5c1a11ef
+ok  tracks     looseEnd                       current: recorded src/games/tracks/tracks.description.yaml#looseEnd bfa3a67d87e0e753
+ok  tracks     sharedFate                     current: recorded src/games/tracks/tracks.description.yaml#sharedFate 8cea3049aee9754d
+ok  tracks     sharedFateEmpties              current: recorded src/games/tracks/tracks.description.yaml#sharedFateEmpties 8d2a2f8ab3933cde
+..  tracks     parity: not proved whole in time, asked on 240 boards: no defect
+ok  tracks     parity                         3  sound    (want sound   )   240 queries  120.0s
+ok  tracks     parity (planted)               3  unsound  (want unsound )     1 queries    0.2s   at edge 0

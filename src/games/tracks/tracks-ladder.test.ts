@@ -1,12 +1,7 @@
 /*
- * Tracks' `runDeductionFixpoint` ladder, certified by a census of which rungs
- * fire. The harness and the argument for it are
+ * The census of Tracks' compiled ladder: which rungs the corpus fires, at
+ * each cap. The harness and the argument for it are
  * `engine/testing/ladder-census.ts`; this file is the declaration.
- *
- * **No corpus of boards can certify the ladder on its own.** Delete
- * `check-single` entirely and every board still grades as it did: that rung
- * fired on no board in 324 solves, every other rung firing, and no corpus can
- * guard what nothing reaches.
  */
 
 import { randomNew } from "../../engine/random/index.ts";
@@ -21,6 +16,7 @@ import {
   stateToBoard,
   type TracksParams,
 } from "./state.ts";
+import * as tracks from "./tracks.compiled.ts";
 
 /** Board shapes wide enough to need the harder rungs, small enough to generate
  * quickly. One params set per tier, since the tier is what gates the ladder. */
@@ -33,7 +29,19 @@ const SHAPES: TracksParams[] = [
 
 const SEEDS = ["lad-a", "lad-b", "lad-c", "lad-d", "lad-e"];
 
-const cases = SHAPES.flatMap((params) =>
+/** A board on which `finishEarly` fires: joining A's run to B's would strand
+ * no track and leave a clue short, which takes a board with no given piece
+ * between the runs. None of the boards above has one; this is one of 450
+ * boards of 4x4 to 7x7 (2026-10-07), and `tracks-hint.test.ts` pins it too. */
+const FINISHES_EARLY: TracksParams = {
+  w: 5,
+  h: 4,
+  diff: DIFF_TRICKY,
+  singleOnes: true,
+};
+const FINISHES_EARLY_DESC = "j5d9d,S2,3,3,3,3,3,3,S4,4";
+
+const dealt = SHAPES.flatMap((params) =>
   SEEDS.map((seed) => {
     const label = `${params.w}x${params.h} diff=${params.diff} ${seed}`;
     // Generated once per case, decoded fresh per solve.
@@ -42,30 +50,18 @@ const cases = SHAPES.flatMap((params) =>
   }),
 );
 
+const cases = [
+  ...dealt,
+  {
+    label: "5x4, finishes early",
+    board: () => stateToBoard(newState(FINISHES_EARLY, FINISHES_EARLY_DESC)),
+  },
+];
+
 describeLadderCensus({
   game: "tracks",
-  rungs: [
-    "update-flags",
-    "count-clues",
-    "check-loop",
-    "check-single",
-    "check-loose-ends",
-    "check-neighbors",
-    "check-neighbors-both-ways",
-    "check-bridge-parity",
-  ],
-  unreached: {
-    "check-single":
-      "Never fires. Measured over 324 solves — 36 shape/tier/single-ones " +
-      "combinations, every other rung firing (the next-rarest, " +
-      "check-bridge-parity, fires 20 times) — and it fired zero. **Not a port " +
-      "defect**: checked against `tracks.c`'s `solve_check_single_sub` and the " +
-      "port is line for line, including both guards (`ctrack != target-1`, " +
-      "`nperp > 0 || n1edge != 1`). It is upstream's narrowest rule — a line " +
-      "with one square left to fill and nowhere perpendicular to run — and the " +
-      "boards this generator produces do not reach it. Retire this entry by " +
-      "building a board that does.",
-  },
+  rungs: [...tracks.ladder.map((e) => e.id)],
+  unreached: {},
   caps: [DIFF_EASY, DIFF_TRICKY, DIFF_HARD],
   cases,
   solve: tracksSolve,

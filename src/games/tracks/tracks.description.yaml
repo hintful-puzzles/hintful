@@ -35,11 +35,228 @@ help:
     {{hint-marks}}
 
     Half of most Tracks deductions is a clue rather than anything on the grid, so
-    when a hint says "this column already has all 4 of the track squares its clue
-    allows", the 4 it means is the one that has changed color, and the squares it
+    when a hint says "by clue 4, this column's track squares are the outlined
+    ones", the 4 it means is the one that has changed color, and the squares it
     is counting are the ones outlined.
 
     Every hint is a deduction you could have made from what is on the board, so it
     never guesses. It is refused while anything you have marked contradicts the
     solution; the offending squares are marked in red instead, exactly as they are for
     **Check & save**.
+name: Tracks
+family: lines
+sizes:
+  w: { min: 4, max: 99999 }
+  h: { min: 4, max: 99999 }
+space:
+  grid: { w: "w", h: "h" }
+  edges: true
+  units: []
+answer:
+  # The edge between two squares side by side: 1 the track crosses it, 2 it
+  # does not.
+  value:
+    sort: edge
+    domain: "range(1, 2)"
+given: [value]
+marks:
+  # A square: 1 it holds track, 2 it holds none.
+  track:
+    sort: cell
+    notation: "set of range(1, 2)"
+    of: "2 - drawn(at) / 2"
+define:
+  # The track's end at square c: 1 where it leaves the board there, else 0.
+  exits(c): "count(q in clues(end) where at(q) = c)"
+  # The sides of square c the track crosses, the board's edge included
+  # where it leaves there.
+  drawn(c): "count(y in adj4(c) where value(edge(c, y)) = 1) + exits(c)"
+  # Whether square c is known to hold track: marked so, or a rail on it.
+  on(c): "2 not in track(c) or drawn(c) > 0"
+  # Whether square c is known to hold none.
+  off(c): "1 not in track(c)"
+  # Whether the track is known not to cross between squares c and y: the
+  # side is crossed out, a square either side holds none, or one has both
+  # its rails elsewhere already.
+  shut(c, y): >-
+    value(edge(c, y)) = 2 or off(c) or off(y)
+    or (value(edge(c, y)) != 1 and (drawn(c) = 2 or drawn(y) = 2))
+  # The sides of square c the track could still cross and does not yet.
+  open(c): "{y in adj4(c) where value(edge(c, y)) != 1 and not shut(c, y)}"
+  # The squares of line L known to hold track, and known to hold none.
+  laid(L): "count(c in cells(L) where on(c))"
+  emptied(L): "count(c in cells(L) where off(c))"
+  # The squares of line L not known either way.
+  undecided(L): "{c in cells(L) where not on(c) and not off(c)}"
+  # Whether square c's end leaves the board along line L.
+  endAlong(c, L): "clue(end, c) >= 1 and (clue(end, c) >= 3) = (L in rows)"
+  # Whether the track could run straight across line L through square c:
+  # neither of its sides across the line is shut or the board's edge.
+  crossable(c, L): >-
+    (forall y in adj4(c) where y not in cells(L): not shut(c, y))
+    and (count(y in adj4(c) where y not in cells(L)) = 2
+    or (clue(end, c) >= 1 and not endAlong(c, L)))
+  # Whether group G holds one of the track's ends.
+  ended(G): "exists q in clues(end): at(q) in G"
+shape:
+  # A square holds two rails, or none; an end counts as one.
+  - "forall c in cells: drawn(c) = 0 or drawn(c) = 2"
+rules:
+  # The track has two ends, A and B, so it is a path and never a loop.
+  ends: "count(q in clues(end)) = 2"
+  # The track is one piece: every square with track reaches every other
+  # along it. With its two ends, it is one path from one to the other.
+  path: >-
+    forall R = {e in edges where value(e) = 1},
+    a in cells where drawn(a) > 0, b in cells where drawn(b) > 0:
+    b in through(a, R)
+clues:
+  # A number beside a row or column: how many of its squares hold track.
+  count:
+    at: line
+    value: "range(0, |cells(at)|)"
+    complete: true
+    means: "count(c in cells(at) where drawn(c) > 0) = v"
+  # Where the track leaves the board, A or B: the square, and the side it
+  # leaves by, numbered as `step` numbers them (1 up, 2 down, 3 left, 4
+  # right), which is the board's edge.
+  end:
+    at: cell
+    value: "range(1, 4)"
+    means: "drawn(at) = 2 and step(at, v) = none"
+freedom: { kind: fill }
+deal:
+  answer: a track walked at random from the left edge to the bottom edge, through every row and column
+  count: every row's and column's track squares
+  end: where the track leaves the board, on the left and at the bottom
+  givens: >-
+    the squares at each end, and squares of track added at random while the
+    ladder does not finish the board at the tier, then removed in a random
+    order while it still does
+  tier: one of the tiers, the board finished at it and not at the tier below
+tiers: [Easy, Normal, Tricky]
+techniques:
+  # A square's own sides come first: a firing runs the ladder again from its
+  # top, so a rail forced along a run of squares is laid before a clue is
+  # counted again.
+  #
+  # A square left fewer than two sides the track could cross holds none. A
+  # track square so is inconsistent.
+  - id: oneWayIn
+    tier: Easy
+    for: "c in cells where not off(c) and |open(c)| + drawn(c) < 2"
+    conclude: "not on(c) and strike(c, 1)"
+  # A track square with as many sides left as it still needs rails: the
+  # track crosses every one.
+  - id: bothSidesLeft
+    tier: Easy
+    for: >-
+      c in cells where on(c) and drawn(c) < 2,
+      F = open(c) where |F| > 0 and |F| + drawn(c) <= 2
+    conclude: "|F| + drawn(c) = 2 and (forall y in F: place(edge(c, y), 1))"
+  # A row or column with all the track squares its clue allows: the rest
+  # hold none. One with more is inconsistent.
+  - id: clueFull
+    tier: Easy
+    for: "L in lines, O = undecided(L) where |O| > 0 and laid(L) >= clue(count, L)"
+    conclude: "laid(L) = clue(count, L) and (forall c in O: strike(c, 1))"
+  # A row or column with all the empty squares its clue allows: the rest
+  # hold track. One with more is inconsistent.
+  - id: clueExact
+    tier: Easy
+    for: >-
+      L in lines,
+      O = undecided(L) where |O| > 0 and |cells(L)| - emptied(L) <= clue(count, L)
+    conclude: >-
+      |cells(L)| - emptied(L) = clue(count, L) and (forall c in O: strike(c, 2))
+  # An open side between two track squares the rails already join: crossing
+  # it would close a loop.
+  - id: closeLoop
+    tier: Easy
+    for: >-
+      R = {e in edges where value(e) = 1},
+      e in edges where not known(e) and on(end1(e)) and on(end2(e))
+      and not shut(end1(e), end2(e)),
+      G = through(end1(e), R) where end2(e) in G
+    conclude: "place(e, 2)"
+  # An open side between two track squares the rails join to the track's
+  # two ends: crossing it would finish the track, leaving a track square
+  # off it.
+  - id: strand
+    tier: Easy
+    for: >-
+      R = {e in edges where value(e) = 1},
+      e in edges where not known(e) and on(end1(e)) and on(end2(e))
+      and not shut(end1(e), end2(e)),
+      G = through(end1(e), R), H = through(end2(e), R)
+      where end2(e) not in G and ended(G) and ended(H)
+      and (exists c in cells: on(c) and c not in G and c not in H)
+    conclude: "place(e, 2)"
+  # The same, where crossing it would finish the track short of a row's or
+  # column's clue.
+  - id: finishEarly
+    tier: Easy
+    for: >-
+      R = {e in edges where value(e) = 1},
+      e in edges where not known(e) and on(end1(e)) and on(end2(e))
+      and not shut(end1(e), end2(e)),
+      G = through(end1(e), R), H = through(end2(e), R)
+      where end2(e) not in G and ended(G) and ended(H)
+      and (exists L in lines:
+      count(c in cells(L) where c in G or c in H) < clue(count, L))
+    conclude: "place(e, 2)"
+  # A row or column two track squares short of its clue, besides its
+  # finished ones, with one loose end running along it, and no square
+  # unfinished in it that the track could cross it through: the loose end
+  # runs on along the line. Were it to turn off, the one track square left
+  # would need a rail along the line, and every square there holding track
+  # is finished or the loose end.
+  - id: looseEnd
+    tier: Normal
+    for: >-
+      L in lines,
+      F = {c in cells(L) where drawn(c) = 2} where clue(count, L) - |F| = 2
+      and (forall c in cells(L) where drawn(c) != 2: not crossable(c, L)),
+      P = {c in cells(L) where drawn(c) = 1 and (endAlong(c, L)
+      or (exists y in adj4(c) where y in cells(L): value(edge(c, y)) = 1))}
+      where |P| = 1,
+      p = nth(P, 0),
+      Q = {y in adj4(p) where y in cells(L) and value(edge(p, y)) != 1}
+    conclude: "|Q| = 1 and (forall y in Q: place(edge(p, y), 1))"
+  # A row or column one track square short of its clue: a square whose
+  # only way on, were it track, is into the next square along the line
+  # would take two, so it holds none.
+  - id: sharedFate
+    tier: Normal
+    for: >-
+      L in lines where clue(count, L) - laid(L) = 1,
+      p in undecided(L),
+      q in adj4(p) where q in undecided(L)
+      and count(y in adj4(p) where y != q and not shut(p, y)) < 2
+    conclude: "strike(p, 1)"
+  # A row or column one empty square short of its clue: the same square
+  # left empty would empty the next too, so the next holds track.
+  - id: sharedFateEmpties
+    tier: Tricky
+    for: >-
+      L in lines where |cells(L)| - clue(count, L) - emptied(L) = 1,
+      p in undecided(L),
+      q in adj4(p) where q in undecided(L)
+      and count(y in adj4(p) where y != q and not shut(p, y)) < 2
+    conclude: "strike(q, 2)"
+  # An open side whose squares no other open side joins: the track crosses
+  # into the block on one side of it as often as it leaves, its ends
+  # counted, so the side carries track where the block's crossings so far
+  # are odd.
+  - id: parity
+    tier: Tricky
+    # `cut_edges` finds every such side in one search: a stalled 15x15 deal
+    # sweeps every open side, and a walk for each doubled its time
+    # (2026-11-08).
+    for: >-
+      O = {x in edges where not known(x) and not shut(end1(x), end2(x))},
+      e in cut_edges(O),
+      G = through(end1(e), O - {e}),
+      k = sum(c in G of count(y in adj4(c) where y not in G and value(edge(c, y)) = 1)
+      + exits(c))
+    conclude: "(k mod 2 = 1 implies place(e, 1)) and (k mod 2 = 0 implies place(e, 2))"

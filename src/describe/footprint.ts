@@ -12,7 +12,7 @@
  * now fires.
  */
 import type { Footprint, FootprintStep as Step } from "../engine/describe-runtime.ts";
-import type { Definition, Technique } from "./description.ts";
+import type { Definition, MarkSort, Technique } from "./description.ts";
 import type { Binder, Expr } from "./expr.ts";
 
 /** Which marks a read is of: the answer's (`known`, `value`, `cand`), or the
@@ -27,7 +27,7 @@ export interface FootprintEnv {
   readonly tiling: boolean;
   readonly answerSort: "cell" | "edge";
   readonly edgeMark: string | null;
-  readonly edgeMarkSort: "edge" | "angle";
+  readonly edgeMarkSort: MarkSort;
   readonly relation: string | null;
 }
 

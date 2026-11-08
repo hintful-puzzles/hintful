@@ -386,22 +386,33 @@ export function isFormal(file: DescriptionFile): file is DescriptionJson {
   return "space" in file && !("position" in file);
 }
 
-/** The one mark a description keeps on the edges for its techniques to read,
- * its name and what of the answer it narrows, or `null`. A mark on the edges
- * with no `of` is a play aid no technique reads. */
+/** What a mark that narrows a number of the answer sits on. */
+export type MarkSort = "edge" | "angle" | "cell";
+
+/** The one mark a description keeps for its techniques to read that narrows
+ * a number of the answer (its `of`), its name and what it sits on, or
+ * `null`: on the edges, a tiling's angles, or the cells where the answer is
+ * on the edges (Tracks' squares). A mark with no `of` is a play aid no
+ * technique reads, or the candidates. */
 export function edgeMarkOf(
   json: DescriptionJson,
-): { name: string; of: string; sort: "edge" | "angle" } | null {
+): { name: string; of: string; sort: MarkSort } | null {
   const read = Object.entries(json.marks ?? {}).filter(
-    ([, m]) => (m.sort === "edge" || m.sort === "angle") && m.of !== undefined,
+    ([, m]) =>
+      (m.sort === "edge" || m.sort === "angle" || m.sort === "cell") &&
+      m.of !== undefined,
   );
   if (read.length > 1)
-    throw new Error(`${json.game}: one mark on the edges, not ${read.length}`);
+    throw new Error(
+      `${json.game}: one mark that narrows the answer, not ${read.length}`,
+    );
   if (read.length === 0) return null;
   const [name, m] = read[0];
   if (m.sort === "angle" && json.space.tiling === undefined)
     throw new Error(`${name}: a mark on the angles is a tiling's`);
-  return { name, of: m.of as string, sort: m.sort as "edge" | "angle" };
+  if (m.sort === json.answer.value.sort)
+    throw new Error(`${name}: a mark that narrows the answer sits off its elements`);
+  return { name, of: m.of as string, sort: m.sort as MarkSort };
 }
 
 /** What a relation over the edges is written: each pair known alike or

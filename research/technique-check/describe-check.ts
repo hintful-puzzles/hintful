@@ -29,6 +29,7 @@ import {
   edgeMarkOf,
   type LibraryJson,
   loadDescription,
+  type MarkSort,
   parseTechnique,
   relationMarkOf,
   type Technique,
@@ -219,13 +220,13 @@ interface Board {
   sizes: ReadonlyMap<string, Nx>;
   /** The most cells a dealt partition's region has ({@link regionCells}). */
   regionCells: number;
-  /** The mark on the edges, or on a tiling's angles, where the description
-   * has one that means something of the answer: its name, what it sits on,
-   * each element's candidates, and what each one's mark means, as the answer
-   * reads it (`edgeMeaning`). */
+  /** The mark on the edges, a tiling's angles, or the cells of an answer on
+   * the edges, where the description has one that means something of the
+   * answer: its name, what it sits on, each element's candidates, and what
+   * each one's mark means, as the answer reads it (`edgeMeaning`). */
   edgeMark: {
     name: string;
-    sort: "edge" | "angle";
+    sort: MarkSort;
     of: Expr;
     notation: Expr;
     cand: Bx[][];
@@ -528,7 +529,12 @@ function makeBoard(
   if (mark !== null && set === null)
     throw new Error(`${mark.name}: only a mark that is a set of values is checked`);
   const edgeCount = sp.edgeEnds.length / 2;
-  const marked = mark?.sort === "angle" ? sp.angles.length : edgeCount;
+  const marked =
+    mark?.sort === "angle"
+      ? sp.angles.length
+      : mark?.sort === "cell"
+        ? sp.cells.length
+        : edgeCount;
   // Each two edges known alike or opposite or neither, an unknown each a
   // pair, shared by its two orders.
   const relName = d === undefined ? null : relationMarkOf(d.json);
@@ -1184,13 +1190,20 @@ function binary(e: Extract<Expr, { k: "bin" }>, env: Env, ctx: Ctx): V {
     case "mod":
       return { k: "num", v: remainder(num(a, op), num(b, op)) };
     case "/": {
-      // Truncating, as the compiled code divides; only a number the board
-      // fixes (a line's length) is divided yet.
+      // Truncating, as the compiled code divides, by a number the board
+      // fixes (a line's length, Tracks' 2).
       const x = num(a, op);
       const y = num(b, op);
-      if (typeof x !== "number" || typeof y !== "number")
-        throw new Error("/ of a number the board does not fix is not checked yet");
-      return { k: "num", v: Math.trunc(x / y) };
+      if (typeof y !== "number")
+        throw new Error("/ by a number the board does not fix is not checked yet");
+      if (y === 0) throw new Error("/ by 0");
+      if (typeof x === "number") return { k: "num", v: Math.trunc(x / y) };
+      // z3's division floors for a positive divisor, so the quotient of the
+      // magnitude is taken and the sign put back.
+      const m = Math.abs(y);
+      const z = asZ3(x);
+      const q = Z3.If(z.lt(0), z.neg().div(m).neg(), z.div(m));
+      return { k: "num", v: y < 0 ? q.neg() : q };
     }
   }
 }
@@ -1646,6 +1659,38 @@ function diagonalCall(fn: string, vs: readonly V[], ctx: Ctx): V | null {
             .filter(([, g]) => g !== false),
         };
       });
+    }
+    case "cut_edges": {
+      // Read as what it answers for each member: its second cell is not
+      // reached from its first across the other members, as `through` reads
+      // reach.
+      const E =
+        vs[0].k === "vset" && vs[0].mem.every((g) => g === false)
+          ? allOf("edge", [])
+          : vs[0];
+      if (E.k !== "eset") throw new TypeError(`${fn}: not a set of edges`);
+      const edges = sp.edgeEnds.length / 2;
+      const inE: Bx[] = Array.from({ length: edges }, (_, x) => inEset(x, E));
+      const mem: Alt[] = [];
+      for (let e = 0; e < edges; e++) {
+        if (inE[e] === false) continue;
+        const across = sp.cells.map((x) =>
+          sp.edgeAdj[x].map((p, k) => {
+            const y = sp.cellEdges[x][k];
+            return [p, y === e ? false : inE[y]] as const;
+          }),
+        );
+        const from = sp.edgeEnds[2 * e];
+        let reach: Bx[] = sp.cells.map((x) => x === from);
+        for (let k = 1; k < sp.cells.length; k++) {
+          const was = reach;
+          reach = sp.cells.map((x) =>
+            or(was[x], ...across[x].map(([p, g]) => and(was[p], g))),
+          );
+        }
+        mem.push([e, and(inE[e], not(reach[sp.edgeEnds[2 * e + 1]]))] as const);
+      }
+      return { k: "eset", sort: "edge", mem: mem.filter(([, g]) => g !== false) };
     }
   }
   return null;
@@ -2301,7 +2346,10 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       if (
         vs[0].k === "elem" &&
         ((vs[0].sort === "edge" && ctx.d.answerSort !== "edge") ||
-          vs[0].sort === "angle")
+          vs[0].sort === "angle" ||
+          (vs[0].sort === "cell" &&
+            ctx.d.answerSort !== "cell" &&
+            board.edgeMark?.sort === "cell"))
       ) {
         if (fn === "place") throw new Error("place on an edge");
         return lift(vs[0], fn, (e) => ({

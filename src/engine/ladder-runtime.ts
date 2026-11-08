@@ -80,9 +80,12 @@ export class CellMarks implements Marks {
   /** The values each cell may still hold, as a bitmask (bit `d`). */
   readonly cands: Int32Array;
   /** The values each edge's mark may still hold, as a bitmask, where the
-   * description marks the edges, or on a tiling each angle's; the game
-   * seeds them. */
+   * description marks the edges, or on a tiling each angle's, or each
+   * cell's where the answer is on the edges ({@link markOn}); the game seeds
+   * them. */
   readonly edgeCands: Int32Array;
+  /** What the mark {@link edgeCands} holds sits on. */
+  readonly markOn: "edge" | "angle" | "cell";
   /** How the edges' values are known to relate, where the description
    * keeps a relation over them (Loopy's pairs); made at its first use. */
   private relation: EdgeRelation | null = null;
@@ -140,14 +143,20 @@ export class CellMarks implements Marks {
     grid: Uint8Array | Int8Array,
     repeat: { value: number; times: number } | null = null,
     held: "cell" | "edge" = "cell",
+    markOn: "edge" | "angle" | "cell" = sp.tiling ? "angle" : "edge",
   ) {
     this.sp = sp;
     this.domain = domain;
     this.grid = grid;
     this.onEdges = held === "edge";
     this.cands = new Int32Array(this.onEdges ? sp.edges.length : sp.cells.length);
+    this.markOn = markOn;
     this.edgeCands = new Int32Array(
-      sp.tiling ? sp.angles.length : sp.edgeEnds.length / 2,
+      markOn === "angle"
+        ? sp.angles.length
+        : markOn === "cell"
+          ? sp.cells.length
+          : sp.edgeEnds.length / 2,
     );
     this.marked = new Int32Array(sp.cells.length).fill(-1);
     this.repeat = repeat?.value ?? 0;
@@ -782,7 +791,9 @@ export function ladderWalk<S extends CellMarks>(
     for (let i = 0; i < facts.length; i += 3) {
       const at = facts[i + 1];
       if (facts[i] === MARK) out.push(at);
-      else if (facts[i] === STRIKE_EDGE && m.sp.tiling) out.push(m.sp.angleCell[at]);
+      else if (facts[i] === STRIKE_EDGE && m.markOn === "cell") out.push(at);
+      else if (facts[i] === STRIKE_EDGE && m.markOn === "angle")
+        out.push(m.sp.angleCell[at]);
       else if (facts[i] === RELATE) {
         const f = facts[i + 2] >> 2;
         out.push(ends[2 * at], ends[2 * at + 1], ends[2 * f], ends[2 * f + 1]);

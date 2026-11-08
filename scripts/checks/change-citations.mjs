@@ -123,11 +123,10 @@ const NOT_A_LIVE_CHANGE = {
   "puzzle-key-unhandled": "a DOM event `view-interactive.ts` raises",
   "game-state-change":
     "a midend notification type (`NotifyGameStateChange`); named in mechanics.md",
-  // The seven `src/` brought with it, all named-as-things rather than used as
+  // The ones `src/` brought with it, all named-as-things rather than used as
   // examples, so the backtick is right and the ledger is the answer.
   "8-3-3": "a Palisade params string, in a comment about the clue bound",
   "check-and-save": "a UI command id, one of the app's `data-command` values",
-  "check-bridge-parity": "a Tracks solver rung",
   "single-number-simple": "an Ascent ladder rung",
   "herdr-app-open": "an agent skill AGENTS.md names, which shows the owner a file",
 };

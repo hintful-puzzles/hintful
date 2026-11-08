@@ -54,11 +54,8 @@ export const LINE: MarkKind<number> = { name: "line", key: String };
 
 /** What a step marks, as its words name it. */
 export interface Marked {
-  /** The squares and sides the step decides; `emptied` and `filled` split the
-   * squares by what they become. */
+  /** The squares and sides the step decides. */
   readonly decided: readonly Piece[];
-  readonly emptied: readonly Piece[];
-  readonly filled: readonly Piece[];
   /** The squares and sides it reasons from, and the clues it counts. */
   readonly cells: readonly Piece[];
   readonly sides: readonly Piece[];
@@ -187,14 +184,8 @@ export const say = {
       move: phrase`the loose end must run ${mark.paren("ring", PIECE, m.decided, "on")}`,
     }),
 
-  /** Track here would carry on toward `dir`, which the line, with clue
-   * `value`, can afford once: this square empties and the next fills. */
-  sharedFateBoth: (axis: Axis, dir: number, value: number, m: Marked): Sentence =>
-    so({
-      look: phrase`${outlinedSides(m)} send track in ${mark.this("ring", PIECE, m.emptied, "square")} ${onward(dir)}, but ${line(m, `this ${axis}`)}'s ${lineClue(m, value)} has one track and one empty left`,
-      move: phrase`it must be empty, and ${mark.as("ring", PIECE, m.filled, "the ringed one beyond it")} must carry track`,
-    }),
-
+  /** Track here would carry on toward `dir`, into a second square the line,
+   * with clue `value`, cannot afford. */
   sharedFateFills: (axis: Axis, dir: number, value: number, m: Marked): Sentence =>
     so({
       look: phrase`${outlinedSides(m)} send track in ${mark.this("ring", PIECE, m.decided, "square")} ${onward(dir)}, but ${line(m, `this ${axis}`)}'s ${lineClue(m, value)} allows one more`,

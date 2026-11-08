@@ -1174,6 +1174,59 @@ export function cuts(sp: GridSpace, S: readonly number[]): readonly number[] {
   return S.filter((c) => groups - 1 + pieces[c] + (parent[c] >= 0 ? 1 : 0) >= 2);
 }
 
+/**
+ * `cut_edges(E)`: the members of `E` whose two cells `E` joins only through
+ * them, in `E`'s order. One depth-first search over the cells, across the
+ * members (Tarjan's bridges): the edge a cell was reached by is one where
+ * nothing below the cell reaches back above it. It answers for every member
+ * what `end2(e) not in through(end1(e), E - {e})` asks of one, each of which
+ * is a walk of its own.
+ */
+export function cutEdges(sp: GridSpace, E: readonly number[]): readonly number[] {
+  const n = sp.cells.length;
+  const inE = new Uint8Array(sp.edgeEnds.length / 2);
+  for (const e of E) inE[e] = 1;
+  const disc = new Int32Array(n).fill(-1);
+  const low = new Int32Array(n);
+  // The edge each cell was reached by, -1 at a root.
+  const via = new Int32Array(n).fill(-1);
+  const next = new Int32Array(n);
+  const bridge = new Uint8Array(inE.length);
+  let time = 0;
+  for (const e of E) {
+    for (let end = 0; end < 2; end++) {
+      const root = sp.edgeEnds[2 * e + end];
+      if (disc[root] >= 0) continue;
+      disc[root] = low[root] = time++;
+      const stack = [root];
+      while (stack.length > 0) {
+        const v = stack[stack.length - 1];
+        const across = sp.edgeAdj[v];
+        if (next[v] < across.length) {
+          const k = next[v]++;
+          const x = sp.cellEdges[v][k];
+          if (!inE[x] || x === via[v]) continue;
+          const u = across[k];
+          if (disc[u] < 0) {
+            via[u] = x;
+            disc[u] = low[u] = time++;
+            stack.push(u);
+          } else low[v] = Math.min(low[v], disc[u]);
+          continue;
+        }
+        stack.pop();
+        const x = via[v];
+        if (x < 0) continue;
+        const p =
+          sp.edgeEnds[2 * x] === v ? sp.edgeEnds[2 * x + 1] : sp.edgeEnds[2 * x];
+        low[p] = Math.min(low[p], low[v]);
+        if (low[v] > disc[p]) bridge[x] = 1;
+      }
+    }
+  }
+  return E.filter((e) => bridge[e] === 1);
+}
+
 /** The set, square and answers {@link reaches} last searched: a technique
  * asks of one group's reach once for each square in it. */
 let reachSet: readonly number[] | null = null;

@@ -42,7 +42,6 @@ import {
   R,
   U,
 } from "../../engine/square-edges.ts";
-import type { SweepOffers } from "../../engine/sweep-offers.ts";
 import type { GameStatus } from "../../engine/types.ts";
 
 // --- difficulty (upstream's Easy, Tricky, Hard; shown as tierNames(3)) ------
@@ -149,41 +148,6 @@ export interface Board {
   rowS: number;
   colS: number;
   numErrors: Uint8Array; // length w + h
-  impossible: boolean;
-  /**
-   * The hint path's recorder; the generator and `findMistakes` leave it
-   * undefined and allocate nothing. It rides on the board because every rung
-   * already takes the board, so one optional field reaches all eight and the
-   * flag setters they change it through (docs/hints.md § "Recording the
-   * deduction").
-   */
-  rec?: TracksRecorder;
-  /** The hint path's collector of every firing a rung could make, for a plan
-   * that continues where its latest step was; its record is the recorder's
-   * `reason`, `unknown` here for the same cause. */
-  offers?: SweepOffers<TracksSnapshot, unknown>;
-}
-
-/** Everything a hint firing writes, the changes recorded so far included. */
-export interface TracksSnapshot {
-  sflags: Int32Array;
-  impossible: boolean;
-  ops: TracksOp[];
-}
-
-/**
- * What the recording path collects for one firing: the flag changes it made,
- * and the premise that forced them. A change made with no premise standing
- * comes back as a firing with a `null` reason, which the plan hides
- * (`showable` in `hint.ts`).
- */
-export interface TracksRecorder {
-  /** The rung's premise; `null` when it declares none. `unknown` because the
-   * shape belongs to the solver, and naming it here would point this module at
-   * the deduction module; `tracksRecordingPass` narrows it. */
-  reason: unknown;
-  /** The flag changes this firing made, in the order it made them. */
-  ops: TracksOp[];
 }
 
 export function blankBoard(w: number, h: number): Board {
@@ -195,7 +159,6 @@ export function blankBoard(w: number, h: number): Board {
     rowS: -1,
     colS: -1,
     numErrors: new Uint8Array(w + h),
-    impossible: false,
   };
 }
 
@@ -209,7 +172,6 @@ export function stateToBoard(s: TracksState): Board {
     rowS: s.numbers.rowS,
     colS: s.numbers.colS,
     numErrors: Uint8Array.from(s.numErrors),
-    impossible: false,
   };
 }
 
@@ -350,6 +312,10 @@ const ONE_ENTRANCE_AND_EXIT = puzzleDescError(
   "This game ID needs exactly one entrance and one exit for its track.",
 );
 
+const TRACK_OFF_THE_GRID = puzzleDescError(
+  "This game ID has track leaving the grid somewhere other than A or B.",
+);
+
 function parseDesc(p: TracksParams, desc: string): DescParse<Board> {
   const { w, h } = p;
   const area = w * h;
@@ -390,6 +356,21 @@ function parseDesc(p: TracksParams, desc: string): DescParse<Board> {
     }
     r.end();
     if (b.colS === -1 || b.rowS === -1) r.fail(ONE_ENTRANCE_AND_EXIT);
+    // The track leaves the grid at A and B alone; a rail off the rim anywhere
+    // else is one no answer can hold, and the description, which has no edge
+    // there, would read the square as finished without it.
+    for (let i = 0; i < area; i++) {
+      if (!(b.sflags[i] & S_CLUE)) continue;
+      const x = i % w;
+      const y = Math.floor(i / w);
+      for (const d of DIRS) {
+        if (!(sEFlags(b, x, y, d) & E_TRACK) || inGrid(b, x + dirX(d), y + dirY(d)))
+          continue;
+        const atA = x === 0 && y === b.rowS && d === L;
+        const atB = y === h - 1 && x === b.colS && d === D;
+        if (!atA && !atB) r.fail(TRACK_OFF_THE_GRID);
+      }
+    }
     return b;
   });
 }
@@ -471,7 +452,7 @@ export function trackOrder(b: Board): Int32Array {
 // --- completion / error analysis (upstream check_completion) --------------
 
 /** Union every pair of squares joined by a laid track edge. */
-export function trackDsf(b: Board): Dsf {
+function trackDsf(b: Board): Dsf {
   const { w, h } = b;
   const dsf = new Dsf(w * h);
   for (let x = 0; x < w; x++) {

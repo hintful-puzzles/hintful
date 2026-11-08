@@ -1148,6 +1148,54 @@ const PLANTS: Record<string, Plant> = {
   "tents.lineCount": {
     for: "L in lines, k = need(L) + 1, O = open(L) where |O| > 0, T = {x in O where fits(O, k, x, 1)}, G = {x in O where fits(O, k, x, 2)} where (exists x in O: x not in T or x not in G)",
   },
+  // A square with two sides left read as left one.
+  "tracks.oneWayIn": {
+    for: "c in cells where not off(c) and |open(c)| + drawn(c) < 3",
+  },
+  // A track square with three sides left read as crossing them all.
+  "tracks.bothSidesLeft": {
+    for: "c in cells where on(c) and drawn(c) < 2, F = open(c) where |F| > 0 and |F| + drawn(c) <= 3",
+    conclude: "forall y in F: place(edge(c, y), 1)",
+  },
+  // A line one track square short read as full.
+  "tracks.clueFull": {
+    for: "L in lines, O = undecided(L) where |O| > 0 and laid(L) + 1 >= clue(count, L)",
+    conclude: "forall c in O: strike(c, 1)",
+  },
+  // A line one empty square short read as having them all.
+  "tracks.clueExact": {
+    for: "L in lines, O = undecided(L) where |O| > 0 and |cells(L)| - emptied(L) <= clue(count, L) + 1",
+    conclude: "forall c in O: strike(c, 2)",
+  },
+  // Any open side between two track squares read as closing a loop.
+  "tracks.closeLoop": {
+    for: "R = {e in edges where value(e) = 1}, e in edges where not known(e) and on(end1(e)) and on(end2(e)) and not shut(end1(e), end2(e)), G = through(end1(e), R)",
+  },
+  // The side that joins the two ends read as stranding track with none off
+  // them.
+  "tracks.strand": {
+    for: "R = {e in edges where value(e) = 1}, e in edges where not known(e) and on(end1(e)) and on(end2(e)) and not shut(end1(e), end2(e)), G = through(end1(e), R), H = through(end2(e), R) where end2(e) not in G and ended(G) and ended(H)",
+  },
+  // A line its finished track meets read as short of it.
+  "tracks.finishEarly": {
+    for: "R = {e in edges where value(e) = 1}, e in edges where not known(e) and on(end1(e)) and on(end2(e)) and not shut(end1(e), end2(e)), G = through(end1(e), R), H = through(end2(e), R) where end2(e) not in G and ended(G) and ended(H) and (exists L in lines: count(c in cells(L) where c in G or c in H) <= clue(count, L))",
+  },
+  // A line the track could still cross read as one it cannot.
+  "tracks.looseEnd": {
+    for: "L in lines, F = {c in cells(L) where drawn(c) = 2} where clue(count, L) - |F| = 2, P = {c in cells(L) where drawn(c) = 1 and (endAlong(c, L) or (exists y in adj4(c) where y in cells(L): value(edge(c, y)) = 1))} where |P| = 1, p = nth(P, 0), Q = {y in adj4(p) where y in cells(L) and value(edge(p, y)) != 1}",
+  },
+  // A square with two ways on besides the next read as having one.
+  "tracks.sharedFate": {
+    for: "L in lines where clue(count, L) - laid(L) = 1, p in undecided(L), q in adj4(p) where q in undecided(L) and count(y in adj4(p) where y != q and not shut(p, y)) < 3",
+  },
+  // The same, one empty square short.
+  "tracks.sharedFateEmpties": {
+    for: "L in lines where |cells(L)| - clue(count, L) - emptied(L) = 1, p in undecided(L), q in adj4(p) where q in undecided(L) and count(y in adj4(p) where y != q and not shut(p, y)) < 3",
+  },
+  // A side another open side joins the squares of read as the only one.
+  "tracks.parity": {
+    for: "e in edges where not known(e) and not shut(end1(e), end2(e)), G = through(end1(e), {x in edges where x != e and not known(x) and not shut(end1(x), end2(x))}), k = sum(c in G of count(y in adj4(c) where y not in G and value(edge(c, y)) = 1) + exits(c))",
+  },
   // A line read as needing one tent more than its count.
   "tents.lineNeighbors": {
     for: "L in lines, k = need(L) + 1, O = open(L) where |O| > 0 and k > 0, N = set(z over y in O, z in adj8(y) where blank(z) and z not in cells(L)) where |N| > 0, U = set(z over fill f of O from cand where spread(f, O, k), z in N where (forall y in O where y in adj8(z): f(y) = 2)) where (exists z in N: z not in U)",
