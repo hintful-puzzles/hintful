@@ -1085,7 +1085,7 @@ opposites.
 - **WHEN** the two edges of a corner are noted as opposites and a later line
   rests on the corner
 - **THEN** a step reads "The marked pair makes this corner's edges opposites,
-  so it takes exactly one line."
+  so it must take exactly one line."
 
 #### Scenario: A pair from a corner
 

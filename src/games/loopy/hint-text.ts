@@ -80,6 +80,10 @@ const takes = (bound: CornerBound): string => {
   }
 };
 
+/** {@link takes} as a step's conclusion, which says it is forced. */
+const mustTake = (bound: CornerBound): string =>
+  bound === "exactlyOne" ? "must take exactly one line" : takes(bound);
+
 /** What two related edges give a count between them. */
 const gives = (opposite: boolean): string => (opposite ? "exactly 1" : "0 or 2");
 
@@ -369,7 +373,7 @@ export const say = {
         })
       : so({
           look: phrase`The line at ${dot(m)} can only go on through ${thisCorner(m)}`,
-          move: phrase`it ${takes(bound)}`,
+          move: phrase`it ${mustTake(bound)}`,
         }),
 
   /** A corner read off a clue's count of its other edges. */
@@ -415,7 +419,7 @@ export const say = {
   cornerFromPair: (bound: CornerBound, m: Marked): Sentence =>
     so({
       look: phrase`${citedPair(m, "The marked pair")} makes ${mark.as("ring", CORNER, m.placedCorner === null ? [] : [m.placedCorner], "this corner's")} edges opposites`,
-      move: phrase`it ${takes(bound)}`,
+      move: phrase`it ${mustTake(bound)}`,
     }),
 
   // --- steps that place a pair note -------------------------------------------

@@ -4419,7 +4419,7 @@ exports[`loopy: pinned hint positions > says, at each pin 1`] = `
   "cornerCitingCorners": "The marked corner across the outlined dot needs a line, so this corner can take one line at most.",
   "cornerExit": "The marked corner takes exactly one line; the outlined dot has no line yet, so this edge must be its second.",
   "cornerFromClue": "This 3's other edges can give it 2 at most, so this corner needs a line.",
-  "cornerFromPair": "The marked pair makes this corner's edges opposites, so it takes exactly one line.",
+  "cornerFromPair": "The marked pair makes this corner's edges opposites, so it must take exactly one line.",
   "cornerNote": "The marked corner across the outlined dot needs a line, so this corner can take one line at most.",
   "cornerOppositeExit": "The marked corner takes exactly one of the outlined dot's two lines, so this corner needs the other.",
   "deadEnd": "The outlined dot has no line and no other open edge, so a line on this edge would dead-end: it can't be a line.",
