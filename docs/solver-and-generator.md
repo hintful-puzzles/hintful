@@ -252,7 +252,7 @@ accepted board is walkable to completion by a hint that runs the solver's own
 rungs with a recorder; tiers bind to real technique differences and
 generation is capped at the requested tier; and the recording path ticks a
 `stepBudget`, so non-termination fails loud. Exemplar: `hintFirings` in
-Loopy's solver.
+[`palisade/solver.ts`](../src/games/palisade/solver.ts).
 
 ## Guess-free generation
 

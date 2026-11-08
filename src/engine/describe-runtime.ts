@@ -63,17 +63,92 @@ export interface Marks {
   markOf(c: number): number;
   /** Mark the cell with `q`, where a technique has no `fire` to tell. */
   markAt(c: number, q: number): void;
+  /** What is known of how two edges' values relate, where the description
+   * keeps a relation over the edges (Loopy's pairs): bit 1 where they may
+   * be alike, bit 2 where they may be opposite. */
+  pairOf(e: number, f: number): number;
+  /** The edges whose values are known alike or opposite to `e`'s, `e`
+   * among them. */
+  relatedOf(e: number): readonly number[];
+  /** Relate two edges, 1 alike and 2 opposite, where a technique has no
+   * `fire` to tell. */
+  relateAt(e: number, f: number, d: number): void;
 }
 
 /** One firing's facts, three numbers each: {@link STRIKE}, {@link PLACE},
- * {@link STRIKE_EDGE} or {@link MARK}, the cell or the edge, the value. */
+ * {@link STRIKE_EDGE}, {@link MARK} or {@link RELATE}, the cell or the edge,
+ * the value. */
 export type Facts = readonly number[];
 export const STRIKE = 0;
 export const PLACE = 1;
-/** A value struck from an edge's mark. */
+/** A value struck from the mark on an edge, or on an angle. */
 export const STRIKE_EDGE = 2;
 /** A cell marked with an element: the value is the element. */
 export const MARK = 3;
+/** Two edges related: the edge, then `4·f + d` for the other edge `f` and
+ * the relation `d`, 1 alike and 2 opposite. */
+export const RELATE = 4;
+
+/**
+ * What is known of how the edges' values relate, two at a time: classes of
+ * edges each known alike or opposite to the class's root, joined as facts
+ * relate them. Each class keeps its members, so a read of the edges related
+ * to one walks only them.
+ */
+export class EdgeRelation {
+  private readonly root: Int32Array;
+  /** Whether each edge is opposite its parent. */
+  private readonly flip: Uint8Array;
+  private readonly members: number[][];
+
+  constructor(n: number) {
+    this.root = Int32Array.from({ length: n }, (_, e) => e);
+    this.flip = new Uint8Array(n);
+    this.members = Array.from({ length: n }, (_, e) => [e]);
+  }
+
+  /** The root of `e`'s class, with whether `e` is opposite it in the low
+   * bit: `2·root + opposite`. */
+  private find(e: number): number {
+    let o = 0;
+    let r = e;
+    while (this.root[r] !== r) {
+      o ^= this.flip[r];
+      r = this.root[r];
+    }
+    return 2 * r + o;
+  }
+
+  /** Bit 1 where the two may be alike, bit 2 where they may be opposite. */
+  of(e: number, f: number): number {
+    const a = this.find(e);
+    const b = this.find(f);
+    if (a >> 1 !== b >> 1) return 6;
+    return (a & 1) === (b & 1) ? 2 : 4;
+  }
+
+  /** The edges related to `e`, `e` among them. */
+  related(e: number): readonly number[] {
+    return this.members[this.find(e) >> 1];
+  }
+
+  /** Relate `e` and `f`, `d` 1 alike and 2 opposite; false where they were
+   * related already. */
+  relate(e: number, f: number, d: number): boolean {
+    const a = this.find(e);
+    const b = this.find(f);
+    const ra = a >> 1;
+    const rb = b >> 1;
+    if (ra === rb) return false;
+    const [big, small] =
+      this.members[ra].length >= this.members[rb].length ? [ra, rb] : [rb, ra];
+    this.root[small] = big;
+    this.flip[small] = (a & 1) ^ (b & 1) ^ (d === 2 ? 1 : 0);
+    for (const x of this.members[small]) this.members[big].push(x);
+    this.members[small] = [];
+    return true;
+  }
+}
 
 /**
  * Called once a binding's conclusion has facts that change the marks, with
@@ -270,6 +345,148 @@ export interface GridSpace {
   readonly centers: readonly number[];
   /** The squares round each center, one, two or four, in reading order. */
   readonly centerCells: readonly (readonly number[])[];
+  /** Whether the board is a tiling ({@link tilingSpace}): its cells the
+   * dots, joined by its edges, and its faces and angles the two sorts
+   * below. None of either on a rectangle. */
+  readonly tiling: boolean;
+  /** Every face, in the tiling's order. */
+  readonly faces: readonly number[];
+  /** Each face's dots, and its edges, round it: edge `i` joins dots `i`
+   * and `i + 1`. */
+  readonly faceCells: readonly (readonly number[])[];
+  readonly faceEdges: readonly (readonly number[])[];
+  /** Each face's angles, one at each of its dots, in `faceCells`' order. */
+  readonly faceAngles: readonly (readonly number[])[];
+  /** The faces either side of each edge, one at the tiling's rim. */
+  readonly edgeFaces: readonly (readonly number[])[];
+  /** Every angle: two edges side by side round a dot, numbered
+   * `2·e + (1 where the dot is e's first end)` for its first edge `e`, the
+   * other following it in the dot's turn. */
+  readonly angles: readonly number[];
+  /** Each angle's two edges, in the dot's turn, and its dot. */
+  readonly angleEdges: readonly (readonly number[])[];
+  readonly angleCell: Int32Array;
+  /** Each dot's angles, in its turn: angle `j` between its edges `j` and
+   * `j + 1`. */
+  readonly cellAngles: readonly (readonly number[])[];
+}
+
+/** A tiling's dots, edges and faces, as `engine/grid` makes them: each
+ * dot's edges in one turn, each face's dots and edges round it. */
+export interface Tiling {
+  readonly dots: readonly { readonly edges: readonly { readonly index: number }[] }[];
+  readonly edges: readonly {
+    readonly dot1: { readonly index: number };
+    readonly dot2: { readonly index: number };
+    readonly face1: { readonly index: number } | null;
+    readonly face2: { readonly index: number } | null;
+  }[];
+  readonly faces: readonly {
+    readonly dots: readonly ({ readonly index: number } | null)[];
+    readonly edges: readonly ({ readonly index: number } | null)[];
+  }[];
+}
+
+const tilings = new WeakMap<Tiling, GridSpace>();
+
+/**
+ * The space of a tiling (Loopy's): its dots are the cells, each edge joins
+ * two, and its faces and angles are elements of their own. It has no rows,
+ * columns, points or corners, which the compiler refuses on it, and is a
+ * row of its dots where a structure reads `w` and `h`. Kept for the life of
+ * the tiling.
+ */
+export function tilingSpace(t: Tiling): GridSpace {
+  const kept = tilings.get(t);
+  if (kept !== undefined) return kept;
+  const n = t.dots.length;
+  const cells = Array.from({ length: n }, (_, c) => c);
+  const ends: number[] = [];
+  const key = new Map<number, number>();
+  t.edges.forEach((e, i) => {
+    ends.push(e.dot1.index, e.dot2.index);
+    const lo = Math.min(e.dot1.index, e.dot2.index);
+    const hi = Math.max(e.dot1.index, e.dot2.index);
+    key.set(lo * n + hi, i);
+  });
+  const edgeOf = (a: number, b: number): number =>
+    key.get(Math.min(a, b) * n + Math.max(a, b)) ?? -1;
+  const cellEdges = t.dots.map((d) => d.edges.map((e) => e.index));
+  const edgeAdj = cellEdges.map((es, c) =>
+    es.map((e) => (ends[2 * e] === c ? ends[2 * e + 1] : ends[2 * e])),
+  );
+  const angleOf = (c: number, e: number): number => 2 * e + (ends[2 * e] === c ? 1 : 0);
+  const cellAngles = cellEdges.map((es, c) => es.map((e) => angleOf(c, e)));
+  const angleEdges: number[][] = Array.from({ length: ends.length }, () => []);
+  const angleCell = new Int32Array(ends.length).fill(-1);
+  cellEdges.forEach((es, c) => {
+    es.forEach((e, j) => {
+      const a = angleOf(c, e);
+      angleEdges[a] = [e, es[(j + 1) % es.length]];
+      angleCell[a] = c;
+    });
+  });
+  const faceCells = t.faces.map((f) => f.dots.map((d) => d?.index ?? -1));
+  const faceEdges = t.faces.map((f) => f.edges.map((e) => e?.index ?? -1));
+  // A face's angle at its dot `i` lies between its edges `i − 1` and `i`.
+  const faceAngles = faceCells.map((ds, f) =>
+    ds.map((c, i) => angleOf(c, faceEdges[f][i])),
+  );
+  const edgeFaces = t.edges.map((e) =>
+    [e.face1, e.face2].flatMap((f) => (f === null ? [] : [f.index])),
+  );
+  const none: readonly (readonly number[])[] = [];
+  const sp: GridSpace = {
+    w: n,
+    h: 1,
+    cells,
+    rows: [],
+    cols: [],
+    lines: [],
+    boxes: [],
+    diagonals: [],
+    units: [],
+    unitsOf: cells.map(() => []),
+    lineCells: [],
+    rowOf: new Int32Array(n),
+    colOf: new Int32Array(n),
+    boxOf: new Int32Array(n).fill(-1),
+    peers: none,
+    adj4: none,
+    adj4Edges: none,
+    adj8: none,
+    adj8Edges: none,
+    king: false,
+    edgeAdj,
+    cellEdges,
+    edgeEnds: Int32Array.from(ends),
+    edges: t.edges.map((_, e) => e),
+    crossing: new Int32Array(t.edges.length).fill(-1),
+    edgeOf,
+    slots: [],
+    sight: [],
+    opposite: new Int32Array(0),
+    corners: [],
+    cornerCells: [],
+    cellCorners: none,
+    points: [],
+    pointCells: [],
+    cellPoints: none,
+    centers: [],
+    centerCells: [],
+    tiling: true,
+    faces: t.faces.map((_, f) => f),
+    faceCells,
+    faceEdges,
+    faceAngles,
+    edgeFaces,
+    angles: Array.from({ length: ends.length }, (_, a) => a),
+    angleEdges,
+    angleCell,
+    cellAngles,
+  };
+  tilings.set(t, sp);
+  return sp;
 }
 
 /** The eight steps to a neighbor, clockwise from up, as `adj8` lists them. */
@@ -554,6 +771,16 @@ function gridSpace(
     cellPoints,
     centers,
     centerCells,
+    tiling: false,
+    faces: [],
+    faceCells: [],
+    faceEdges: [],
+    faceAngles: [],
+    edgeFaces: [],
+    angles: [],
+    angleEdges: [],
+    angleCell: new Int32Array(0),
+    cellAngles: [],
   };
 }
 

@@ -481,6 +481,9 @@ export function compilePlanning(
     diagonals: false,
     cellDomain: false,
     edgeMark: null,
+    edgeMarkSort: "edge",
+    relation: null,
+    tiling: false,
     cellMark: null,
     sizes: {
       names: new Set(

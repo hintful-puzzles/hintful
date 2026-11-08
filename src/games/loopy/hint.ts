@@ -1,12 +1,10 @@
 /**
  * Loopy's explained hint: the plan, walked on a copy of the player's own board.
  *
- * **Threaded through the solver, not written beside it.** Loopy's rungs are the
- * solver's own (`solver.ts`), run with a recorder that names the premise behind
- * each change, and with the tiers tried easiest first ({@link hintFirings}):
- * among a tier's firings the plan takes the one beside the line it is
- * drawing. The generator never builds a recorder, so no board
- * changes; the frozen differential is the proof.
+ * **Threaded through the solver, not written beside it.** The plan walks the
+ * ladder the solver runs (`solver.ts`, {@link hintWalk}), each firing paired
+ * with why it holds: among the easiest tier's firings it takes the one beside
+ * the line it is drawing.
  *
  * **Sound because the mistake check vouches for every mark.** `findMistakes`
  * compares the board, notes included, with its unique solution and the hint
@@ -45,11 +43,10 @@ import {
   type RelationFact,
 } from "./record.ts";
 import {
+  type HintBoard,
   hintBoardSolved,
-  hintFirings,
-  hintSolver,
+  hintWalk,
   type LoopyFiring,
-  type SolverState,
 } from "./solver.ts";
 import {
   AF_ADAPTIVE,
@@ -85,7 +82,6 @@ export const LOOPY_RUNGS = [
   "parity",
   "related",
   "earlyLoop",
-  "closesLoop",
   "cornerAtDot",
   "cornerFromClue",
   "cornerAcross",
@@ -120,12 +116,10 @@ export function deduceLoopyPlan(state: LoopyState): {
   tickOf: readonly number[];
   contradiction: boolean;
 } {
-  const ss = hintSolver(state);
-  const rec = ss.rec;
-  if (rec === null) throw new Error("loopy hint: the hint solver has no recorder");
-  const next = hintFirings(ss, stepBudget("loopy hint plan"));
-  const { plan } = deduceHintPlan<SolverState, Planned, PlanStatus>({
-    board: ss,
+  const { board, next } = hintWalk(state, stepBudget("loopy hint plan"));
+  const rec = board.rec;
+  const { plan } = deduceHintPlan<HintBoard, Planned, PlanStatus>({
+    board,
     status: (b) => (hintBoardSolved(b) ? "solved" : "incomplete"),
     incomplete: "incomplete",
     next: (b) => {
@@ -141,7 +135,7 @@ export function deduceLoopyPlan(state: LoopyState): {
     plan,
     facts: rec.facts,
     tickOf: rec.tickOf,
-    contradiction: ss.status === "mistake",
+    contradiction: board.status === "mistake",
   };
 }
 
@@ -472,12 +466,6 @@ function narrate(pl: Planner, p: Planned): { words: Words; marks: Partial<Marks>
         marks: { edges: chainThrough(state, p.before, edge), faces: unmet },
       };
     }
-    case "closesLoop":
-      return {
-        words: say.closesLoop,
-        marks: { edges: chainThrough(state, p.before, p.ops[0].edge) },
-      };
-
     case "clueBound": {
       const c = clue(r.face);
       return {

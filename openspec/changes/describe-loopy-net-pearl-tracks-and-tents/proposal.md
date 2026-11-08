@@ -40,6 +40,42 @@ and each difference is reported, with which saves or links no longer load.
 Large boards are timed back to back with HEAD. The guides are updated and
 the running app is checked.
 
+## What was done (2026-11-08)
+
+**Loopy alone**, the first group. Net, Pearl, Tracks and Tents are filed as
+`describe-net-pearl-tracks-and-tents`.
+
+- **The language** gained a tiling space (cells are dots; faces and angles
+  are sorts), an edge mark on the angles (Loopy's corners), and a relation
+  over the edges, alike or opposite (Loopy's pairs), kept closed by
+  `EdgeRelation`; an `exists fill` fills the answer's own sort. The engine's
+  `FlipDsf`, which only Loopy's solver used, is retired, and its property
+  test now holds `EdgeRelation` to the relations stated.
+- **Loopy's 27 techniques** replace its four hand-written rungs and the
+  hint's recorder threaded through them. The hint walks the compiled ladder;
+  a firing that only narrows a corner or relates two edges becomes a fact
+  with its parents, placed as a note where a line cites it, as before.
+  `closesLoop` is gone: closing a loop because it meets every clue rests on
+  the answer being unique, which is no deduction, and a rule settles that
+  edge instead. `related` (reading a pair) is Easy, as HEAD graded it.
+- **Boards are HEAD's.** The frozen differential against upstream's C (48
+  boards, every tiling and tier) still matches byte for byte, and
+  `deal-compare` found every board and every cap's verdict the same on 54
+  deals of every preset. No save or link changes.
+- **Hint walks** from the empty board, 36 boards over every preset, all
+  finish and resume halfway, within a few percent of HEAD's length, with a
+  rung mix close to HEAD's.
+- **Two traps**, recorded in `docs/descriptions.md`: `parityClue` and
+  `parityDot` read their open edges stale after placing one, which only a
+  run in place shows (§ "A statement's order is behavior"); and
+  `cornerFromClue` strikes both bits of a corner, each fact with its own
+  reason and witness.
+- **Speed.** Deals are 2–3× HEAD's, most under 300 ms. Over the bar:
+  9x14 Triangular Hard (1.24 s mean, 1.5 s worst; HEAD 0.54 s), and 9x9
+  Cairo Hard at it (0.85 s, 1.0 s worst). What is left is the fixpoint
+  running every technique again from the top after each firing, which is the
+  engine's policy for every game; raised with the owner.
+
 ## What Bridges learned that binds here
 
 The lessons of `describe-lines-and-loops` (Path),

@@ -11,10 +11,12 @@
  * eyeball this; here it is mechanical.
  */
 import { describe, expect, it } from "vitest";
+import { tilingSpace } from "../../engine/describe-runtime.ts";
 import { ALL_GRID_TYPES, type Grid, type GridType } from "../../engine/grid/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   dlineCount,
+  dlineEnds,
   dlineIndexFromDot,
   dlineIndexFromFace,
   isAtLeastOne,
@@ -91,6 +93,22 @@ describe("dline indexing", () => {
             );
             seen.add(index);
           }
+        }
+      });
+
+      it("names the same two edges as the description's angle of that index", () => {
+        // The solver reads a player's corner note at dline `i` as the
+        // description's angle `i` (`tilingSpace`), and the hint places a
+        // corner the ladder narrowed as the note of that index.
+        const sp = tilingSpace(g);
+        expect(sp.angles.length).toBe(dlineCount(g));
+        for (const a of sp.angles) {
+          const { dot, first, second } = dlineEnds(g, a);
+          expect([sp.angleCell[a], ...sp.angleEdges[a]]).toEqual([
+            dot.index,
+            first,
+            second,
+          ]);
         }
       });
 

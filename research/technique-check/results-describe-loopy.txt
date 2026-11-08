@@ -1,0 +1,162 @@
+ok  loopy square 2x2 deadEnd                        3  sound    (want sound   )     9 queries    0.2s
+ok  loopy square 2x2 deadEnd (planted)              3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  loopy triangular 2x1 deadEnd                        3  sound    (want sound   )     6 queries    0.1s
+ok  loopy triangular 2x1 deadEnd (planted)              3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  loopy honeycomb 2x1 deadEnd                        3  sound    (want sound   )    10 queries    0.2s
+ok  loopy honeycomb 2x1 deadEnd (planted)              3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  loopy square 2x2 lineContinues                  3  sound    (want sound   )     9 queries    0.3s
+ok  loopy square 2x2 lineContinues (planted)        3  unsound  (want unsound )     2 queries    0.1s   at cell 1
+ok  loopy triangular 2x1 lineContinues                  3  sound    (want sound   )     6 queries    0.1s
+ok  loopy triangular 2x1 lineContinues (planted)        3  unsound  (want unsound )     2 queries    0.0s   at cell 1
+ok  loopy honeycomb 2x1 lineContinues                  3  sound    (want sound   )    10 queries    0.2s
+ok  loopy honeycomb 2x1 lineContinues (planted)        3  unsound  (want unsound )     3 queries    0.1s   at cell 2
+ok  loopy square 2x2 dotFull                        3  sound    (want sound   )     9 queries    0.2s
+ok  loopy square 2x2 dotFull (planted)              3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  loopy triangular 2x1 dotFull                        3  sound    (want sound   )     6 queries    0.1s
+ok  loopy triangular 2x1 dotFull (planted)              3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  loopy honeycomb 2x1 dotFull                        3  sound    (want sound   )    10 queries    0.2s
+ok  loopy honeycomb 2x1 dotFull (planted)              3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  loopy square 2x2 clueFull                       3  sound    (want sound   )     4 queries    0.2s
+ok  loopy square 2x2 clueFull (planted)             3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy triangular 2x1 clueFull                       3  sound    (want sound   )     4 queries    0.1s
+ok  loopy triangular 2x1 clueFull (planted)             3  unsound  (want unsound )     1 queries    0.0s   at face 0
+ok  loopy honeycomb 2x1 clueFull                       3  sound    (want sound   )     2 queries    0.1s
+ok  loopy honeycomb 2x1 clueFull (planted)             3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy square 2x2 clueStarved                    3  sound    (want sound   )     4 queries    0.2s
+ok  loopy square 2x2 clueStarved (planted)          3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy triangular 2x1 clueStarved                    3  sound    (want sound   )     4 queries    0.1s
+ok  loopy triangular 2x1 clueStarved (planted)          3  unsound  (want unsound )     1 queries    0.0s   at face 0
+ok  loopy honeycomb 2x1 clueStarved                    3  sound    (want sound   )     2 queries    0.2s
+ok  loopy honeycomb 2x1 clueStarved (planted)          3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy square 2x2 clueBlockedPair                3  sound    (want sound   )     4 queries    0.2s
+ok  loopy square 2x2 clueBlockedPair (planted)      3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy triangular 2x1 clueBlockedPair                3  sound    (want sound   )     4 queries    0.1s
+ok  loopy triangular 2x1 clueBlockedPair (planted)      3  unsound  (want unsound )     1 queries    0.0s   at face 0
+ok  loopy honeycomb 2x1 clueBlockedPair                3  sound    (want sound   )     2 queries    0.1s
+ok  loopy honeycomb 2x1 clueBlockedPair (planted)      3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy square 2x2 clueOneShort                   3  sound    (want sound   )     4 queries    0.2s
+ok  loopy square 2x2 clueOneShort (planted)         3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy triangular 2x1 clueOneShort                   3  sound    (want sound   )     4 queries    0.1s
+ok  loopy triangular 2x1 clueOneShort (planted)         3  unsound  (want unsound )     1 queries    0.0s   at face 0
+ok  loopy honeycomb 2x1 clueOneShort                   3  sound    (want sound   )     2 queries    0.1s
+ok  loopy honeycomb 2x1 clueOneShort (planted)         3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy square 2x2 earlyLoop                      3  sound    (want sound   )     1 queries    0.2s
+ok  loopy square 2x2 earlyLoop (planted)            3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  loopy triangular 2x1 earlyLoop                      3  sound    (want sound   )     1 queries    0.1s
+ok  loopy triangular 2x1 earlyLoop (planted)            3  unsound  (want unsound )     1 queries    0.0s   at eset
+ok  loopy honeycomb 2x1 earlyLoop                      3  sound    (want sound   )     1 queries    0.1s
+ok  loopy honeycomb 2x1 earlyLoop (planted)            3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  loopy square 2x2 closed                         3  sound    (want sound   )     1 queries    0.2s
+ok  loopy square 2x2 closed (planted)               3  unsound  (want unsound )     1 queries    0.2s   at eset
+ok  loopy triangular 2x1 closed                         3  sound    (want sound   )     1 queries    0.1s
+ok  loopy triangular 2x1 closed (planted)               3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  loopy honeycomb 2x1 closed                         3  sound    (want sound   )     1 queries    0.1s
+ok  loopy honeycomb 2x1 closed (planted)               3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  loopy square 2x2 related                        3  sound    (want sound   )    12 queries    0.4s
+ok  loopy square 2x2 related (planted)              3  unsound  (want unsound )     1 queries    0.1s   at edge 0
+ok  loopy triangular 2x1 related                        3  sound    (want sound   )     9 queries    0.2s
+ok  loopy triangular 2x1 related (planted)              3  unsound  (want unsound )     1 queries    0.0s   at edge 0
+ok  loopy honeycomb 2x1 related                        3  sound    (want sound   )    11 queries    0.3s
+ok  loopy honeycomb 2x1 related (planted)              3  unsound  (want unsound )     1 queries    0.1s   at edge 0
+ok  loopy square 2x2 cornerAtDot                    3  sound    (want sound   )     9 queries    0.3s
+ok  loopy square 2x2 cornerAtDot (planted)          3  unsound  (want unsound )     3 queries    0.1s   at cell 2
+ok  loopy triangular 2x1 cornerAtDot                    3  sound    (want sound   )     6 queries    0.1s
+ok  loopy triangular 2x1 cornerAtDot (planted)          3  unsound  (want unsound )     2 queries    0.0s   at cell 1
+ok  loopy honeycomb 2x1 cornerAtDot                    3  sound    (want sound   )    10 queries    0.3s
+ok  loopy honeycomb 2x1 cornerAtDot (planted)          3  sound    (want either  )    10 queries    0.2s
+ok  loopy square 2x2 cornerOther                    3  sound    (want sound   )    24 queries    0.5s
+ok  loopy square 2x2 cornerOther (planted)          3  unsound  (want unsound )     1 queries    0.1s   at angle 0
+ok  loopy triangular 2x1 cornerOther                    3  sound    (want sound   )    18 queries    0.2s
+ok  loopy triangular 2x1 cornerOther (planted)          3  unsound  (want unsound )     1 queries    0.0s   at angle 0
+ok  loopy honeycomb 2x1 cornerOther                    3  sound    (want sound   )    22 queries    0.4s
+ok  loopy honeycomb 2x1 cornerOther (planted)          3  unsound  (want unsound )     1 queries    0.1s   at angle 0
+ok  loopy square 2x2 cornerBoth                     3  sound    (want sound   )    24 queries    0.5s
+ok  loopy square 2x2 cornerBoth (planted)           3  unsound  (want unsound )     1 queries    0.1s   at angle 0
+ok  loopy triangular 2x1 cornerBoth                     3  sound    (want sound   )    18 queries    0.2s
+ok  loopy triangular 2x1 cornerBoth (planted)           3  unsound  (want unsound )     1 queries    0.0s   at angle 0
+ok  loopy honeycomb 2x1 cornerBoth                     3  sound    (want sound   )    22 queries    0.4s
+ok  loopy honeycomb 2x1 cornerBoth (planted)           3  unsound  (want unsound )     3 queries    0.1s   at angle 2
+ok  loopy square 2x2 clueBound                      3  sound    (want sound   )     4 queries    0.2s
+ok  loopy square 2x2 clueBound (planted)            3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy triangular 2x1 clueBound                      3  sound    (want sound   )     4 queries    0.1s
+ok  loopy triangular 2x1 clueBound (planted)            3  unsound  (want unsound )     1 queries    0.0s   at face 0
+ok  loopy honeycomb 2x1 clueBound                      3  sound    (want sound   )     2 queries    0.2s
+ok  loopy honeycomb 2x1 clueBound (planted)            3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy square 2x2 cornerFromClue                 3  sound    (want sound   )     4 queries    0.2s
+ok  loopy square 2x2 cornerFromClue (planted)       3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy triangular 2x1 cornerFromClue                 3  sound    (want sound   )     4 queries    0.1s
+ok  loopy triangular 2x1 cornerFromClue (planted)       3  unsound  (want unsound )     1 queries    0.0s   at face 0
+ok  loopy honeycomb 2x1 cornerFromClue                 3  sound    (want sound   )     2 queries    0.2s
+ok  loopy honeycomb 2x1 cornerFromClue (planted)       3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy square 2x2 cornerAcross                   3  sound    (want sound   )     4 queries    0.1s
+ok  loopy square 2x2 cornerAcross (planted)         3  unsound  (want unsound )     1 queries    0.1s   at angle 0
+ok  loopy triangular 2x1 cornerAcross                   3  sound    (want sound   )     8 queries    0.1s
+ok  loopy triangular 2x1 cornerAcross (planted)         3  unsound  (want unsound )     1 queries    0.0s   at angle 0
+ok  loopy honeycomb 2x1 cornerAcross                   3  sound    (want sound   )     0 queries    0.0s
+ok  loopy honeycomb 2x1 cornerAcross (planted)         3  unsound  (want unsound )     1 queries    0.1s   at angle 0
+ok  loopy square 2x2 cornerExit                     3  sound    (want sound   )    16 queries    0.3s
+ok  loopy square 2x2 cornerExit (planted)           3  unsound  (want unsound )     2 queries    0.1s   at angle 2
+ok  loopy triangular 2x1 cornerExit                     3  sound    (want sound   )    14 queries    0.1s
+ok  loopy triangular 2x1 cornerExit (planted)           3  unsound  (want unsound )     1 queries    0.0s   at angle 0
+ok  loopy honeycomb 2x1 cornerExit                     3  sound    (want sound   )     6 queries    0.1s
+ok  loopy honeycomb 2x1 cornerExit (planted)           3  sound    (want either  )     6 queries    0.1s
+ok  loopy square 2x2 cornerOppositeExit             3  sound    (want sound   )     4 queries    0.1s
+ok  loopy square 2x2 cornerOppositeExit (planted)   3  unsound  (want unsound )     3 queries    0.1s   at angle 2
+ok  loopy triangular 2x1 cornerOppositeExit             3  sound    (want sound   )     8 queries    0.1s
+ok  loopy triangular 2x1 cornerOppositeExit (planted)   3  unsound  (want unsound )     1 queries    0.0s   at angle 0
+ok  loopy honeycomb 2x1 cornerOppositeExit             3  sound    (want sound   )     0 queries    0.1s
+ok  loopy honeycomb 2x1 cornerOppositeExit (planted)   3  sound    (want either  )    22 queries    0.4s
+ok  loopy square 2x2 matchingPair                   3  sound    (want sound   )     4 queries    0.2s
+ok  loopy square 2x2 matchingPair (planted)         3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy triangular 2x1 matchingPair                   3  sound    (want sound   )     4 queries    0.1s
+ok  loopy triangular 2x1 matchingPair (planted)         3  unsound  (want unsound )     1 queries    0.0s   at face 0
+ok  loopy honeycomb 2x1 matchingPair                   3  sound    (want sound   )     2 queries    0.1s
+ok  loopy honeycomb 2x1 matchingPair (planted)         3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy square 2x2 pairAtClue                     3  sound    (want sound   )     4 queries    0.5s
+ok  loopy square 2x2 pairAtClue (planted)           3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy triangular 2x1 pairAtClue                     3  sound    (want sound   )     4 queries    0.2s
+ok  loopy triangular 2x1 pairAtClue (planted)           3  unsound  (want unsound )     1 queries    0.0s   at face 0
+ok  loopy honeycomb 2x1 pairAtClue                     3  sound    (want sound   )     2 queries    0.2s
+ok  loopy honeycomb 2x1 pairAtClue (planted)           3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy square 2x2 parityClue                     3  sound    (want sound   )     4 queries    2.0s
+ok  loopy square 2x2 parityClue (planted)           3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy triangular 2x1 parityClue                     3  sound    (want sound   )     4 queries    0.4s
+ok  loopy triangular 2x1 parityClue (planted)           3  unsound  (want unsound )     1 queries    0.0s   at face 0
+ok  loopy honeycomb 2x1 parityClue                     3  sound    (want sound   )     2 queries    1.7s
+ok  loopy honeycomb 2x1 parityClue (planted)           3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy square 2x2 linkClue                       3  sound    (want sound   )     4 queries    0.9s
+ok  loopy square 2x2 linkClue (planted)             3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy triangular 2x1 linkClue                       3  sound    (want sound   )     4 queries    0.1s
+ok  loopy triangular 2x1 linkClue (planted)             3  sound    (want either  )     4 queries    0.1s
+ok  loopy honeycomb 2x1 linkClue                       3  sound    (want sound   )     2 queries    1.0s
+ok  loopy honeycomb 2x1 linkClue (planted)             3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy square 2x2 pairFromCorner                 3  sound    (want sound   )    24 queries    0.4s
+ok  loopy square 2x2 pairFromCorner (planted)       3  unsound  (want unsound )     1 queries    0.1s   at angle 0
+ok  loopy triangular 2x1 pairFromCorner                 3  sound    (want sound   )    18 queries    0.1s
+ok  loopy triangular 2x1 pairFromCorner (planted)       3  unsound  (want unsound )     1 queries    0.0s   at angle 0
+ok  loopy honeycomb 2x1 pairFromCorner                 3  sound    (want sound   )    22 queries    0.3s
+ok  loopy honeycomb 2x1 pairFromCorner (planted)       3  unsound  (want unsound )     3 queries    0.1s   at angle 2
+ok  loopy square 2x2 cornerFromPair                 3  sound    (want sound   )    24 queries    0.5s
+ok  loopy square 2x2 cornerFromPair (planted)       3  unsound  (want unsound )     1 queries    0.1s   at angle 0
+ok  loopy triangular 2x1 cornerFromPair                 3  sound    (want sound   )    18 queries    0.2s
+ok  loopy triangular 2x1 cornerFromPair (planted)       3  unsound  (want unsound )     1 queries    0.0s   at angle 0
+ok  loopy honeycomb 2x1 cornerFromPair                 3  sound    (want sound   )    22 queries    0.4s
+ok  loopy honeycomb 2x1 cornerFromPair (planted)       3  unsound  (want unsound )     1 queries    0.1s   at angle 0
+ok  loopy square 2x2 pairAtDot                      3  sound    (want sound   )     9 queries    0.4s
+ok  loopy square 2x2 pairAtDot (planted)            3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  loopy triangular 2x1 pairAtDot                      3  sound    (want sound   )     6 queries    0.2s
+ok  loopy triangular 2x1 pairAtDot (planted)            3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  loopy honeycomb 2x1 pairAtDot                      3  sound    (want sound   )    10 queries    0.3s
+ok  loopy honeycomb 2x1 pairAtDot (planted)            3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  loopy square 2x2 parityDot                      3  sound    (want sound   )     9 queries    0.8s
+ok  loopy square 2x2 parityDot (planted)            3  unsound  (want unsound )     2 queries    0.1s   at cell 1
+ok  loopy triangular 2x1 parityDot                      3  sound    (want sound   )     6 queries    0.7s
+ok  loopy triangular 2x1 parityDot (planted)            3  unsound  (want unsound )     2 queries    0.0s   at cell 1
+ok  loopy honeycomb 2x1 parityDot                      3  sound    (want sound   )    10 queries    0.3s
+ok  loopy honeycomb 2x1 parityDot (planted)            3  unsound  (want unsound )     3 queries    0.1s   at cell 2
+ok  loopy square 2x2 linkDot                        3  sound    (want sound   )     5 queries    0.2s
+ok  loopy square 2x2 linkDot (planted)              3  unsound  (want unsound )     2 queries    0.1s   at cell 2
+ok  loopy triangular 2x1 linkDot                        3  sound    (want sound   )     4 queries    0.2s
+ok  loopy triangular 2x1 linkDot (planted)              3  unsound  (want unsound )     1 queries    0.1s   at cell 1
+ok  loopy honeycomb 2x1 linkDot                        3  sound    (want sound   )     2 queries    0.1s
+ok  loopy honeycomb 2x1 linkDot (planted)              3  sound    (want either  )     2 queries    0.1s

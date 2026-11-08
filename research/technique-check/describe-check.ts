@@ -30,6 +30,7 @@ import {
   type LibraryJson,
   loadDescription,
   parseTechnique,
+  relationMarkOf,
   type Technique,
   UNPLACED,
 } from "../../src/describe/description.ts";
@@ -52,9 +53,11 @@ import {
   rectWidth,
   slash,
   step,
+  tilingSpace,
   traceBeam,
   within,
 } from "../../src/engine/describe-runtime.ts";
+import { type GridType, gridNew } from "../../src/engine/grid/index.ts";
 import { blocks } from "../describe/space.ts";
 import { asZ3, type B, type I, Z3 } from "./pzl.ts";
 
@@ -216,11 +219,13 @@ interface Board {
   sizes: ReadonlyMap<string, Nx>;
   /** The most cells a dealt partition's region has ({@link regionCells}). */
   regionCells: number;
-  /** The mark on the edges, where the description has one that means
-   * something of the answer: its name, each edge's candidates, and what each
-   * edge's mark means, as the answer reads it (`edgeMeaning`). */
+  /** The mark on the edges, or on a tiling's angles, where the description
+   * has one that means something of the answer: its name, what it sits on,
+   * each element's candidates, and what each one's mark means, as the answer
+   * reads it (`edgeMeaning`). */
   edgeMark: {
     name: string;
+    sort: "edge" | "angle";
     of: Expr;
     notation: Expr;
     cand: Bx[][];
@@ -238,6 +243,60 @@ interface Board {
     names: Bx[][];
     meaning: Map<number, Bx>;
   } | null;
+  /** The relation over the edges, where the description keeps one (Loopy's
+   * pairs): its name, and whether each two edges are known alike, or known
+   * opposite, by edge and edge, one unknown a pair. An edge is alike itself. */
+  relation: {
+    name: string;
+    alike: readonly (readonly Bx[])[];
+    opposite: readonly (readonly Bx[])[];
+  } | null;
+}
+
+/**
+ * The tilings a board of a tiling (Loopy's) is checked on, by order: the
+ * type and size `gridNew` builds. Order 3 holds a dot of four edges and a
+ * face of four (the square's), a dot of three (each), a face of three and of
+ * six; order 4 the same larger, with dots of five and six and faces of five.
+ */
+const TILINGS: Readonly<
+  Record<number, readonly (readonly [GridType, number, number])[]>
+> = {
+  3: [
+    ["square", 2, 2],
+    ["triangular", 2, 1],
+    ["honeycomb", 2, 1],
+  ],
+  4: [
+    ["square", 3, 2],
+    ["triangular", 2, 2],
+    ["cairo", 2, 2],
+  ],
+};
+
+/** The size naming which of {@link TILINGS} a board of a tiling is. */
+const TILING_SIZE = "tiling";
+
+const tilingGrids = new Map<string, GridSpace>();
+
+/** The space of the `i`th of {@link TILINGS} at `order`, built once. */
+function tilingOf(order: number, i: number): GridSpace {
+  const at = TILINGS[order]?.[i];
+  if (at === undefined) throw new Error(`no tiling ${i} at order ${order}`);
+  const key = at.join(" ");
+  const kept = tilingGrids.get(key);
+  if (kept !== undefined) return kept;
+  const sp = tilingSpace(gridNew(at[0], at[1], at[2], null));
+  tilingGrids.set(key, sp);
+  return sp;
+}
+
+/** How a size of a board reads in a result line: a tiling by its type and
+ * size, any other as `name=value`. */
+export function sizeLabel(order: number, name: string, v: number): string {
+  if (name !== TILING_SIZE) return `${name}=${v}`;
+  const at = TILINGS[order]?.[v];
+  return at === undefined ? `${name}=${v}` : `${at[0]} ${at[1]}x${at[2]}`;
 }
 
 /**
@@ -322,11 +381,15 @@ export function unbuilt(d: Description): string | null {
 function spaceOf(
   order: number,
   d?: Description,
+  more: ReadonlyMap<string, number> = new Map(),
 ): { sp: GridSpace; sizes: ReadonlyMap<string, number> } {
   const space = d?.json.space;
   const unit = unitRegion(d);
   if (d === undefined || space === undefined)
     return { sp: latinSpace(order), sizes: new Map() };
+  // A tiling is one of the order's, which its sizing names.
+  if (space.tiling === true)
+    return { sp: tilingOf(order, more.get(TILING_SIZE) ?? 0), sizes: new Map() };
   // A board of cells alone (Map's regions) has as many as the square of the
   // order; its neighbors are a relation dealt on them.
   if (space.grid === undefined) {
@@ -410,17 +473,21 @@ function makeBoard(
   more: ReadonlyMap<string, number> = new Map(),
   cells: number = REGION_CELLS[order] ?? 2,
 ): Board {
-  const space = spaceOf(order, d);
+  const space = spaceOf(order, d, more);
   const { sp } = space;
   const fixed = new Map([...space.sizes, ...more]);
   const tag = `b${boardCount++}`;
   const n = sp.cells.length;
   const bound = d === undefined ? null : domainBound(d);
-  const top = Math.max(
-    order,
-    d === undefined ? 0 : domainEnd(d),
-    (bound === null ? null : fixed.get(bound)) ?? 0,
-  );
+  // A tiling's order names its boards, and no number on it: its values are
+  // its domain's, and its marks' are counted apart (`MARK_TOP`).
+  const top = sp.tiling
+    ? Math.max(2, d === undefined ? 0 : domainEnd(d))
+    : Math.max(
+        order,
+        d === undefined ? 0 : domainEnd(d),
+        (bound === null ? null : fixed.get(bound)) ?? 0,
+      );
   // A count wider than the board (Mines' mines) is one unknown, which is
   // every value it can take at once: its worlds' union.
   const sizes = new Map<string, Nx>(fixed);
@@ -461,6 +528,21 @@ function makeBoard(
   if (mark !== null && set === null)
     throw new Error(`${mark.name}: only a mark that is a set of values is checked`);
   const edgeCount = sp.edgeEnds.length / 2;
+  const marked = mark?.sort === "angle" ? sp.angles.length : edgeCount;
+  // Each two edges known alike or opposite or neither, an unknown each a
+  // pair, shared by its two orders.
+  const relName = d === undefined ? null : relationMarkOf(d.json);
+  const alike: Bx[][] = Array.from({ length: edgeCount }, () => []);
+  const opposite: Bx[][] = Array.from({ length: edgeCount }, () => []);
+  if (relName !== null)
+    for (let e = 0; e < edgeCount; e++) {
+      alike[e][e] = true;
+      opposite[e][e] = false;
+      for (let f = e + 1; f < edgeCount; f++) {
+        alike[e][f] = alike[f][e] = Z3.Bool.const(`${tag}_alike_${e}_${f}`);
+        opposite[e][f] = opposite[f][e] = Z3.Bool.const(`${tag}_opposite_${e}_${f}`);
+      }
+    }
   return {
     sp,
     order,
@@ -479,18 +561,21 @@ function makeBoard(
         ? null
         : {
             name: mark.name,
+            sort: mark.sort,
             of: parse(mark.of),
             notation: parse(set[1]),
-            cand: Array.from({ length: edgeCount }, (_, e) =>
+            // 0 among them: a corner's count of lines is 0 to 2. The notation
+            // holds each to the values it names.
+            cand: Array.from({ length: marked }, (_, e) =>
               Array.from(
                 { length: Math.max(top, MARK_TOP) + 1 },
-                (_, n): Bx =>
-                  n === 0 ? false : Z3.Bool.const(`${tag}_mark_${e}_${n}`),
+                (_, n): Bx => Z3.Bool.const(`${tag}_mark_${e}_${n}`),
               ),
             ),
-            meaning: Array.from({ length: edgeCount }, () => null),
+            meaning: Array.from({ length: marked }, () => null),
           },
     cellMark: null,
+    relation: relName === null ? null : { name: relName, alike, opposite },
   };
 }
 
@@ -521,14 +606,15 @@ function cellMeaning(ctx: Ctx, c: number, i: number): Bx {
  * order is smaller. */
 const MARK_TOP = 3;
 
-/** What edge `e`'s mark means of the answer: its `of`, read in a rule. */
+/** What edge or angle `e`'s mark means of the answer: its `of`, read in a
+ * rule. */
 function edgeMeaning(ctx: Ctx, e: number): Nx {
   const mark = ctx.board.edgeMark;
   if (mark === null) throw new Error("no mark on the edges");
   const known = mark.meaning[e];
   if (known !== null) return known;
   const v = num(
-    evaluate(mark.of, new Map([["at", elem("edge", e)]]), {
+    evaluate(mark.of, new Map([["at", elem(mark.sort, e)]]), {
       ...ctx,
       mode: "rule",
       concluding: false,
@@ -940,6 +1026,13 @@ function evaluate(e: Expr, env: Env, ctx: Ctx): V {
           return allOf("center", sp.centers);
         case "edges":
           return allOf("edge", sp.edges);
+        // A tiling's own; elsewhere `faces` may be a size (Cube's).
+        case "faces":
+          if (sp.tiling) return allOf("face", sp.faces);
+          break;
+        case "angles":
+          if (sp.tiling) return allOf("angle", sp.angles);
+          break;
         case "domain":
           return evaluate(ctx.d.domain, new Map(), ctx);
         case "order":
@@ -1515,6 +1608,87 @@ function diagonalCall(fn: string, vs: readonly V[], ctx: Ctx): V | null {
   return null;
 }
 
+/**
+ * The readings of a tiling (`tilingSpace`, Loopy's): the edges round a dot,
+ * a face or an angle, the angles round a dot or a face, a face's dots, the
+ * faces beside an edge and an angle's dot, each in the order the runtime
+ * lists them; and the relation over the edges, where the description keeps
+ * one. `null` for any other function.
+ */
+function tilingCall(fn: string, vs: readonly V[], ctx: Ctx): V | null {
+  const { board } = ctx;
+  const { sp } = board;
+  const rel = board.relation;
+  if (rel !== null && (fn === rel.name || fn === "related" || fn === "relate")) {
+    if (ctx.mode === "rule") throw new TypeError(`${fn} in a rule`);
+    // `pair(e, f)`: 1 where they may be alike, 2 where they may be opposite.
+    if (fn === rel.name)
+      return lift(vs[0], fn, (e) =>
+        lift(vs[1], fn, (f) =>
+          vsetOf(board, (d) =>
+            e < 0 || f < 0
+              ? false
+              : d === 1
+                ? not(rel.opposite[e][f])
+                : d === 2
+                  ? not(rel.alike[e][f])
+                  : false,
+          ),
+        ),
+      );
+    if (fn === "related")
+      return lift(vs[0], fn, (e) => ({
+        k: "eset",
+        sort: "edge",
+        mem:
+          e < 0
+            ? []
+            : sp.edges
+                .map(
+                  (f) =>
+                    [
+                      f,
+                      or(rel.alike[e][f] ?? false, rel.opposite[e][f] ?? false),
+                    ] as const,
+                )
+                .filter(([, g]) => g !== false),
+      }));
+    // `relate(e, f, d)`: the fact that the answer relates them so.
+    if (!ctx.concluding) throw new Error("relate outside a conclusion");
+    const d = num(vs[2], fn);
+    return lift(vs[0], fn, (e) =>
+      lift(vs[1], fn, (f): V => {
+        if (e < 0 || f < 0) return { k: "bool", v: false };
+        const same = cmp("=", board.ans[e], board.ans[f]);
+        return {
+          k: "bool",
+          v: or(and(cmp("=", d, 1), same), and(cmp("=", d, 2), not(same))),
+        };
+      }),
+    );
+  }
+  if (!sp.tiling) return null;
+  const sortOf = vs[0]?.k === "elem" ? vs[0].sort : null;
+  const listed = (sort: string, of: readonly (readonly number[])[]): V =>
+    lift(vs[0], fn, (x) => allOf(sort, x < 0 ? [] : of[x]));
+  switch (fn) {
+    case "edges":
+      if (sortOf === "face") return listed("edge", sp.faceEdges);
+      if (sortOf === "angle") return listed("edge", sp.angleEdges);
+      return listed("edge", sp.cellEdges);
+    case "angles":
+      if (sortOf === "face") return listed("angle", sp.faceAngles);
+      return listed("angle", sp.cellAngles);
+    case "cells":
+      return sortOf === "face" ? listed("cell", sp.faceCells) : null;
+    case "faces":
+      return listed("face", sp.edgeFaces);
+    case "apex":
+      return lift(vs[0], fn, (a) => elem("cell", a < 0 ? -1 : sp.angleCell[a]));
+  }
+  return null;
+}
+
 function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
   const { board } = ctx;
   const { sp } = board;
@@ -1619,7 +1793,7 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       if (v === undefined) throw new Error(`${fn} of none`);
       return v;
     });
-  const diagonal = diagonalCall(fn, vs, ctx);
+  const diagonal = diagonalCall(fn, vs, ctx) ?? tilingCall(fn, vs, ctx);
   if (diagonal !== null) return diagonal;
   // A partition named as a function: the part holding a cell, and of none,
   // none.
@@ -1952,12 +2126,13 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       return lift(vs[0], fn, (e) => elem("edge", e < 0 ? -1 : sp.crossing[e]));
     case "ends":
       return lift(vs[0], fn, (e) =>
-        allOf("cell", [sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]]),
+        allOf("cell", e < 0 ? [] : [sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]]),
       );
     case "end1":
     case "end2":
+      // Of none (`first` of an empty set), none.
       return lift(vs[0], fn, (e) =>
-        elem("cell", sp.edgeEnds[2 * e + (fn === "end1" ? 0 : 1)]),
+        elem("cell", e < 0 ? -1 : sp.edgeEnds[2 * e + (fn === "end1" ? 0 : 1)]),
       );
     case "other":
       return lift(vs[0], fn, (e) =>
@@ -2041,8 +2216,12 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       if (!ctx.concluding) throw new Error(`${fn} outside a conclusion`);
       const d = num(vs[1], fn);
       // A strike on an edge is a fact about what its mark means, where the
-      // answer is not the edges'.
-      if (vs[0].k === "elem" && vs[0].sort === "edge" && ctx.d.answerSort !== "edge") {
+      // answer is not the edges', and so is a strike on an angle.
+      if (
+        vs[0].k === "elem" &&
+        ((vs[0].sort === "edge" && ctx.d.answerSort !== "edge") ||
+          vs[0].sort === "angle")
+      ) {
         if (fn === "place") throw new Error("place on an edge");
         return lift(vs[0], fn, (e) => ({
           k: "bool",
@@ -2145,12 +2324,14 @@ function dealSymbolically(d: Description, board: Board): void {
                   ? board.sp.centers.length
                   : c.at === "line"
                     ? board.sp.lines.length
-                    : part !== undefined
-                      ? part.parts.length
-                      : null;
+                    : c.at === "face"
+                      ? board.sp.faces.length
+                      : part !== undefined
+                        ? part.parts.length
+                        : null;
     if (places === null)
       throw new Error(
-        `clue ${kind}: only edge, slot, corner, cell, point, center, line and region clues are checked yet`,
+        `clue ${kind}: only edge, slot, corner, cell, point, center, line, face and region clues are checked yet`,
       );
     const complete = d.json.clues?.[kind]?.complete === true;
     const list: ClueSym[] = [];
@@ -2285,8 +2466,8 @@ function worldOf(d: Description, board: Board): Bx[] {
       ),
     );
   });
-  // A consistent mark on an edge holds what its `of` reads of the answer,
-  // and only values its notation names.
+  // A consistent mark on an edge or an angle holds what its `of` reads of
+  // the answer, and only values its notation names.
   const mark = board.edgeMark;
   if (mark !== null) {
     const dom = evaluate(mark.notation, new Map(), ctx);
@@ -2295,9 +2476,40 @@ function worldOf(d: Description, board: Board): Bx[] {
       const means = edgeMeaning(ctx, e);
       out.push(or(...cands.map((g, n) => and(g, cmp("=", means, n)))));
       cands.forEach((g, n) => {
-        if (n > 0) out.push(implies(g, dom.mem[n] ?? false));
+        out.push(implies(g, dom.mem[n] ?? false));
       });
     });
+  }
+  // A consistent relation is true of the answer, and closed, as the
+  // runtime's classes are: two edges each related to a third are related to
+  // each other, alike where both are or neither.
+  const rel = board.relation;
+  if (rel !== null) {
+    const n = rel.alike.length;
+    const known = (e: number, f: number): Bx => or(rel.alike[e][f], rel.opposite[e][f]);
+    for (let e = 0; e < n; e++)
+      for (let f = e + 1; f < n; f++) {
+        out.push(not(and(rel.alike[e][f], rel.opposite[e][f])));
+        out.push(implies(rel.alike[e][f], cmp("=", board.ans[e], board.ans[f])));
+        out.push(implies(rel.opposite[e][f], cmp("!=", board.ans[e], board.ans[f])));
+      }
+    for (let e = 0; e < n; e++)
+      for (let f = 0; f < n; f++)
+        for (let g = e + 1; g < n; g++) {
+          if (f === e || f === g) continue;
+          out.push(
+            implies(
+              and(known(e, f), known(f, g)),
+              and(
+                known(e, g),
+                iff(
+                  rel.opposite[e][g],
+                  not(iff(rel.opposite[e][f], rel.opposite[f][g])),
+                ),
+              ),
+            ),
+          );
+        }
   }
   // A consistent mark naming a clue names one at most, which is there, and
   // means what the mark says of the answer.
@@ -2386,6 +2598,9 @@ export async function impossibleKinds(
  * board: one map a board, and one empty map where there are none.
  */
 export function sizings(d: Description, order: number): Map<string, number>[] {
+  // A tiling's boards are the order's tilings, one a board.
+  if (d.json.space.tiling === true)
+    return (TILINGS[order] ?? []).map((_, i) => new Map([[TILING_SIZE, i]]));
   const { grid } = d.json.space;
   const fixed = new Set([
     "order",

@@ -22,6 +22,7 @@ import {
   type LibraryJson,
   loadDescription,
   parseTechnique,
+  relationMarkOf,
   type Technique,
   UNPLACED,
   withEveryVariation,
@@ -39,6 +40,7 @@ type ElemSort =
   | "point"
   | "center"
   | "rect"
+  | "angle"
   | `clue ${string}`
   | `region ${string}`;
 
@@ -271,7 +273,7 @@ function unreadBindingsDropped(lines: string[]): string[] {
 
 /** An array the size of the board, or of a line: what a loop over it costs,
  * in halves of a power of the board's size. */
-const BOARD_ARRAY = /^sp\.(cells|edges|points|corners|slots|centers)\b/;
+const BOARD_ARRAY = /^sp\.(cells|edges|points|corners|slots|centers|faces|angles)\b/;
 const LINE_ARRAY = /^sp\.(lines|rows|cols|lineCells\[)/;
 /** The runtime's walks, by what each walks. */
 const BOARD_WALKS =
@@ -379,6 +381,9 @@ interface Env {
   /** Whether the space is a rectangle, with the geometry that reads one;
    * false on a board of cells alone. */
   geometry: boolean;
+  /** Whether the space is a tiling (`tilingSpace`): edges join its cells,
+   * and it has faces and angles, but nothing of a rectangle's. */
+  tiling: boolean;
   /** The size counting the faces, a second sort of element, or `null` where
    * the space has none. */
   faces: string | null;
@@ -419,6 +424,13 @@ interface Env {
    * `name(e)` as the values it may still hold, or `null` where it keeps
    * none. */
   edgeMark: string | null;
+  /** What the mark `edgeMark` names sits on: the edges, or a tiling's
+   * angles. */
+  edgeMarkSort: "edge" | "angle";
+  /** The name of the relation the description keeps over the edges, read
+   * `name(e, f)` and `related(e)` and made by `relate(e, f, d)`, or `null`
+   * where it keeps none. */
+  relation: string | null;
   /** The mark the description keeps on each cell naming a clue of `kind`,
    * read `name(c)` and made by `mark(c, q)`, or `null` where it keeps none. */
   cellMark: { name: string; kind: string } | null;
@@ -541,6 +553,28 @@ const GEOMETRY = new Set([
   "inner",
   "rim",
 ]);
+
+/** What a tiling has of a rectangle's geometry: its edges, and the groups
+ * and walks over them. */
+const TILING_HAS = new Set([
+  "edges",
+  "edge",
+  "through",
+  "connected",
+  "cuts",
+  "reaches",
+]);
+
+/** Why a name of the rectangle's geometry is refused here, or `null`. */
+function noGeometry(n: string, env: Env): string | null {
+  if (!GEOMETRY.has(n)) return null;
+  if (env.tiling)
+    return TILING_HAS.has(n) ? null : `${n}: a tiling has no rows, columns or squares`;
+  return env.geometry ? null : `${n}: the board is cells alone, with no geometry`;
+}
+
+/** What only a tiling has. */
+const TILING_ONLY = new Set(["angles", "apex"]);
 
 function expect(v: Val, k: Sort["k"], what: string): void {
   if (v.sort.k !== k)
@@ -941,8 +975,12 @@ function name(n: string, scope: Scope, env: Env, out: Out): Val {
     throw new CompileError("the domain is each cell's here: read a cell's candidates");
   if (n === "domain" && env.position !== null)
     throw new CompileError("a position has a domain a layer, read by the checker only");
-  if (!env.geometry && GEOMETRY.has(n))
-    throw new CompileError(`${n}: the board is cells alone, with no geometry`);
+  const refused = noGeometry(n, env);
+  if (refused !== null) throw new CompileError(refused);
+  if (env.tiling && n === "faces")
+    return { code: "sp.faces", sort: setOf(elem("face")) };
+  if (env.tiling && n === "angles")
+    return { code: "sp.angles", sort: setOf(elem("angle")) };
   const layer = env.position?.get(n);
   if (layer?.over === "board") return layerRead(n, layer, "0", env);
   if (n === "integers")
@@ -1727,8 +1765,12 @@ function fillLoop(
 ): { code: string; arr: string; rest: Expr | null } {
   const f = bnd.name;
   const s = compileExpr(bnd.of, scope, env, out);
-  if (!(isArray(s.sort) && s.sort.k === "set" && sameSort(s.sort.of, elem("cell"))))
-    throw new CompileError(`fill ${f} of ${show(s.sort)}: not a set of cells`);
+  // A filling gives values to what holds the answer's: cells, or edges.
+  const held = elem(env.answerSort);
+  if (!(isArray(s.sort) && s.sort.k === "set" && sameSort(s.sort.of, held)))
+    throw new CompileError(
+      `fill ${f} of ${show(s.sort)}: not a set of ${env.answerSort}s`,
+    );
   if (bnd.from !== undefined && bnd.from !== "cand")
     throw new CompileError(`fill ${f} from ${bnd.from}: only from cand`);
   const a = Out.fresh("_a");
@@ -1738,7 +1780,7 @@ function fillLoop(
   // Each a call: the values by cell, the set they were last given over, so
   // the next enumeration clears it, and each depth's last value tried.
   const decls = [
-    `const ${fv} = new Int32Array(sp.cells.length).fill(-1);`,
+    `const ${fv} = new Int32Array(${answerCount(env)}).fill(-1);`,
     `let ${last}: readonly number[] = [];`,
     `const ${st}: number[] = [];`,
   ];
@@ -1765,7 +1807,7 @@ function fillLoop(
       pinned === null && pair === null ? totalOf(c, f, setKey(s), scope, env) : null;
     if (pinned !== null) {
       const x = once(compileExpr(pinned.x, scope, env, out), out);
-      expectElem(x, "cell", f);
+      expectElem(x, env.answerSort, f);
       const t = once(compileExpr(pinned.t, scope, env, out), out);
       expect(t, "num", f);
       checks.push((o) =>
@@ -1779,8 +1821,8 @@ function fillLoop(
         const y = Out.fresh("_y");
         const inner = new Map(scope);
         inner.set(f, filling);
-        inner.set(pair.x, { code: e, sort: elem("cell") });
-        inner.set(pair.y, { code: y, sort: elem("cell") });
+        inner.set(pair.x, { code: e, sort: held });
+        inner.set(pair.y, { code: y, sort: held });
         const flat: Env = { ...env, hoist: null };
         o.open(`for (let ${j} = 0; ${j} < ${i}; ${j}++) {`);
         o.emit(`const ${y} = ${a}[${j}];`);
@@ -2228,14 +2270,7 @@ function readsRound(
         const [c] = args;
         return args.length === 1 && c.k === "name" && names.get(c.name) === "round";
       }
-      if (
-        MARK_READS.has(fn) ||
-        fn === "mark" ||
-        fn === env.cellMark?.name ||
-        fn === env.edgeMark ||
-        names.has(fn)
-      )
-        return false;
+      if (MARK_READS.has(fn) || isMarkRead(fn, env) || names.has(fn)) return false;
       if (!all(args)) return false;
       const def = env.defs.get(fn);
       if (def === undefined) return true;
@@ -2428,14 +2463,7 @@ function readsAtEdge(
           ? isX(c)
           : c.k === "call" && (c.fn === "end1" || c.fn === "end2") && isX(c.args[0]);
       }
-      if (
-        MARK_READS.has(fn) ||
-        fn === "mark" ||
-        fn === env.cellMark?.name ||
-        fn === env.edgeMark ||
-        scope.has(fn)
-      )
-        return false;
+      if (MARK_READS.has(fn) || isMarkRead(fn, env) || scope.has(fn)) return false;
       const def = env.defs.get(fn);
       if (def !== undefined) {
         const body = inlined(e, scope, env);
@@ -2582,7 +2610,7 @@ function groupQuantifier(
   const free = new Set<string>();
   freeNames(e.body, free, new Set([bnd.name]));
   if ([...free].some((n) => scope.has(n))) return null;
-  if (readsMarks(e.body, env.defs, new Set(), env.cellMark?.name ?? null)) return null;
+  if (readsMarks(e.body, env)) return null;
   const R = once(compileExpr(bnd.of, scope, env, out), out);
   const key = `memo ${e.q} ${bnd.name} ${JSON.stringify(e.body)}`;
   let memo = O.at.made.get(key);
@@ -2855,7 +2883,9 @@ function keptWhilePlaced(
         e.fn === "strike" ||
         e.fn === "chain" ||
         e.fn === "linked" ||
-        e.fn === env.edgeMark
+        // A strike from an edge's mark and a relation count as no
+        // placement, as a cell's mark does.
+        (e.fn !== "mark" && e.fn !== env.cellMark?.name && isMarkRead(e.fn, env))
       )
         return false;
       if (!all(e.fn === "clue" ? e.args.slice(1) : e.args)) return false;
@@ -3103,7 +3133,7 @@ function diagonalCall(fn: string, vs: readonly Val[], env: Env): Val | null {
   if (fn === env.edgeMark) {
     arity(1);
     if (env.answer) throw new CompileError("a rule reads the answer, never the marks");
-    expectElem(vs[0], "edge", fn);
+    expectElem(vs[0], env.edgeMarkSort, fn);
     return { code: `b.edgeCand(${vs[0].code})`, sort: setOf(NUM) };
   }
   switch (fn) {
@@ -3239,10 +3269,88 @@ function centerCall(fn: string, vs: readonly Val[], env: Env, out: Out): Val | n
   }
 }
 
+/**
+ * A tiling's own functions (`tilingSpace`): the edges, dots and angles round
+ * a face, a dot's edges and angles in its turn, an angle's edges and dot,
+ * and the faces either side of an edge. `null` for any other function.
+ */
+function tilingCall(fn: string, vs: readonly Val[], env: Env): Val | null {
+  if (!env.tiling) return null;
+  const arity = (n: number): void => {
+    if (vs.length !== n) throw new CompileError(`${fn} takes ${n}, given ${vs.length}`);
+  };
+  const of = vs[0]?.sort.k === "elem" ? vs[0].sort.e : null;
+  switch (fn) {
+    case "edges":
+      arity(1);
+      if (of === "face")
+        return { code: `sp.faceEdges[${vs[0].code}]`, sort: setOf(elem("edge")) };
+      if (of === "angle")
+        return { code: `sp.angleEdges[${vs[0].code}]`, sort: setOf(elem("edge")) };
+      expectElem(vs[0], "cell", fn);
+      return { code: `sp.cellEdges[${vs[0].code}]`, sort: setOf(elem("edge")) };
+    case "angles":
+      arity(1);
+      if (of === "face")
+        return { code: `sp.faceAngles[${vs[0].code}]`, sort: setOf(elem("angle")) };
+      expectElem(vs[0], "cell", fn);
+      return { code: `sp.cellAngles[${vs[0].code}]`, sort: setOf(elem("angle")) };
+    case "cells":
+      if (of !== "face") return null;
+      arity(1);
+      return { code: `sp.faceCells[${vs[0].code}]`, sort: setOf(elem("cell")) };
+    case "faces":
+      arity(1);
+      expectElem(vs[0], "edge", fn);
+      return { code: `sp.edgeFaces[${vs[0].code}]`, sort: setOf(elem("face")) };
+    case "apex":
+      arity(1);
+      expectElem(vs[0], "angle", fn);
+      return { code: `sp.angleCell[${vs[0].code}]`, sort: elem("cell") };
+  }
+  return null;
+}
+
+/**
+ * The relation over the edges (Loopy's pairs): `name(e, f)` the relations
+ * still open between two edges, 1 alike and 2 opposite; `related(e)` the
+ * edges related to `e`, itself among them; and `relate(e, f, d)` in a
+ * conclusion, true where the two may still relate so. `null` for any other
+ * function.
+ */
+function relationCall(fn: string, vs: readonly Val[], env: Env, out: Out): Val | null {
+  if (env.relation === null) return null;
+  if (fn !== env.relation && fn !== "related" && fn !== "relate") return null;
+  if (env.answer) throw new CompileError("a rule reads the answer, never the marks");
+  const want = fn === "related" ? 1 : fn === "relate" ? 3 : 2;
+  if (vs.length !== want)
+    throw new CompileError(`${fn} takes ${want}, given ${vs.length}`);
+  expectElem(vs[0], "edge", fn);
+  if (fn === "related")
+    return { code: `b.relatedOf(${vs[0].code})`, sort: setOf(elem("edge")) };
+  expectElem(vs[1], "edge", fn);
+  if (fn === env.relation)
+    return { code: `b.pairOf(${vs[0].code}, ${vs[1].code})`, sort: setOf(NUM) };
+  if (!env.concluding) throw new CompileError("relate outside a conclusion");
+  expect(vs[2], "num", fn);
+  const e = once(vs[0], out);
+  const f = once(vs[1], out);
+  const d = once(vs[2], out);
+  out.emit(
+    `if (b.pairOf(${e.code}, ${f.code}) === 6) { if (fire === null) { b.relateAt(${e.code}, ${f.code}, ${d.code}); changed = true; } else facts.push(RELATE, ${e.code}, 4 * ${f.code} + ${d.code}); }`,
+  );
+  env.used.add("RELATE");
+  return {
+    code: `((b.pairOf(${e.code}, ${f.code}) >> ${d.code}) & 1) !== 0`,
+    sort: BOOL,
+  };
+}
+
 /** `strike(e, d)` of an edge's mark, which is only ever narrowed. */
 function edgeStrike(fn: string, vs: readonly Val[], env: Env, out: Out): Val {
   if (fn === "place" || env.edgeMark === null)
     throw new CompileError(`${fn}(e, d): only a strike from an edge's mark`);
+  expectElem(vs[0], env.edgeMarkSort, fn);
   const e = once(vs[0], out);
   expect(vs[1], "num", fn);
   const d = once(vs[1], out);
@@ -3341,8 +3449,10 @@ function call(
     });
     return { code, sort: table.to };
   }
-  if (!env.geometry && GEOMETRY.has(fn))
-    throw new CompileError(`${fn}: the board is cells alone, with no geometry`);
+  const refused = noGeometry(fn, env);
+  if (refused !== null) throw new CompileError(refused);
+  if (!env.tiling && TILING_ONLY.has(fn))
+    throw new CompileError(`${fn}: only a tiling has angles`);
   if (env.position !== null && (fn === "value" || fn === "known" || fn === "cand"))
     throw new CompileError(`${fn}: a position is read by its layers`);
   if (fn === "clue") {
@@ -3409,7 +3519,7 @@ function call(
     if (args.length !== 1)
       throw new CompileError(`${fn} takes 1, given ${args.length}`);
     const x = compileExpr(args[0], scope, env, out);
-    expectElem(x, "cell", fn);
+    expectElem(x, env.answerSort, fn);
     return { code: `${filling.code}[${x.code}]`, sort: NUM };
   }
   if (fn === "through" && args.length === 2) {
@@ -3425,7 +3535,11 @@ function call(
     return vs[i].code;
   };
   const shaped =
-    diagonalCall(fn, vs, env) ?? rectCall(fn, vs, env) ?? centerCall(fn, vs, env, out);
+    tilingCall(fn, vs, env) ??
+    relationCall(fn, vs, env, out) ??
+    diagonalCall(fn, vs, env) ??
+    rectCall(fn, vs, env) ??
+    centerCall(fn, vs, env, out);
   if (shaped !== null) return shaped;
   switch (fn) {
     case "cells": {
@@ -3697,8 +3811,8 @@ function call(
       arity(2);
       if (
         vs[0].sort.k === "elem" &&
-        vs[0].sort.e === "edge" &&
-        env.answerSort !== "edge"
+        ((vs[0].sort.e === "edge" && env.answerSort !== "edge") ||
+          vs[0].sort.e === "angle")
       )
         return edgeStrike(fn, vs, env, out);
       expectElem(vs[0], env.answerSort, fn);
@@ -3811,7 +3925,7 @@ function rungKept(
     vs.length > 2 ||
     vs.some((v) => v.sort.k !== "elem" || v.group !== undefined) ||
     loopDepth(def.body, env.defs) < 2 ||
-    !readsMarks(def.body, env.defs, new Set(), env.cellMark?.name ?? null) ||
+    !readsMarks(def.body, env) ||
     FACTS.some((f) => mentions(def.body, f, env.defs, new Set()))
   )
     return null;
@@ -3910,7 +4024,7 @@ function keptDefinition(
   // one read inside a loop that does not bind its argument, which would
   // otherwise make it again on each pass for the same argument (Mosaic's
   // `need(c)`, read for each clue near `c`).
-  const board = !readsMarks(def.body, env.defs, new Set(), env.cellMark?.name ?? null);
+  const board = !readsMarks(def.body, env);
   const depth = loopDepth(def.body, env.defs);
   const h = env.hoist;
   const repeated =
@@ -4085,27 +4199,31 @@ const MARK_READS = new Set([
 
 /** Whether `e` reads the marks, itself or through a definition, a supposition
  * included: what a definition kept for the whole board must not do. */
-function readsMarks(
-  e: Expr,
-  defs: ReadonlyMap<string, Definition>,
-  seen: Set<string>,
-  cellMark: string | null,
-): boolean {
+function readsMarks(e: Expr, env: Env, seen: Set<string> = new Set()): boolean {
   if (e.k === "with") return true;
   const name = e.k === "call" ? e.fn : e.k === "name" ? e.name : null;
   if (name !== null) {
-    if (
-      e.k === "call" &&
-      (MARK_READS.has(name) || name === cellMark || name === "mark")
-    )
-      return true;
-    const d = defs.get(name);
+    if (e.k === "call" && (MARK_READS.has(name) || isMarkRead(name, env))) return true;
+    const d = env.defs.get(name);
     if (d !== undefined && !seen.has(name)) {
       seen.add(name);
-      if (readsMarks(d.body, defs, seen, cellMark)) return true;
+      if (readsMarks(d.body, env, seen)) return true;
     }
   }
-  return children(e).some((c) => readsMarks(c, defs, seen, cellMark));
+  return children(e).some((c) => readsMarks(c, env, seen));
+}
+
+/** Whether `fn` reads or makes one of the description's own marks: the mark
+ * naming an element a cell, the mark on the edges or angles, or the
+ * relation over the edges. */
+function isMarkRead(fn: string, env: Env): boolean {
+  return (
+    fn === "mark" ||
+    fn === env.cellMark?.name ||
+    fn === env.edgeMark ||
+    (env.relation !== null &&
+      (fn === env.relation || fn === "related" || fn === "relate"))
+  );
 }
 
 /** The terms directly under `e`. */
@@ -4556,6 +4674,7 @@ export function compileLibrary(
     carrying: null,
     tables: new Map(),
     geometry: true,
+    tiling: false,
     faces: null,
     answerSort: "cell",
     memo: false,
@@ -4566,6 +4685,8 @@ export function compileLibrary(
     prelude: null,
     relations: new Set(),
     edgeMark: null,
+    edgeMarkSort: "edge",
+    relation: null,
     cellMark: null,
     supposed: [],
     kept: null,
@@ -4595,6 +4716,7 @@ function placeSort(what: string, at: string, env: Env): ElemSort {
     at === "center"
   )
     return at;
+  if (env.tiling && (at === "face" || at === "angle")) return at;
   if (env.regions.has(at)) return `region ${at}`;
   throw new CompileError(`${what}: no element sort "${at}"`);
 }
@@ -4687,9 +4809,13 @@ export function compileGame(
   const clues = new Map<string, ClueKind>();
   const { space } = d.json;
   const grid = space.grid ?? null;
-  if ((grid === null) === (space.cells === undefined))
-    throw new CompileError(`${json.game}: a space is a grid or cells, one of them`);
+  const tiling = space.tiling === true;
+  if ([grid !== null, space.cells !== undefined, tiling].filter(Boolean).length !== 1)
+    throw new CompileError(
+      `${json.game}: a space is a grid, cells or a tiling, one of them`,
+    );
   const relations = Object.keys(space.relations ?? {});
+  const edgeMark = edgeMarkOf(d.json);
   const parts = Object.keys(space.regions ?? {});
   const unitParts = parts.filter((name) => space.units.includes(name));
   if (unitParts.length > 1)
@@ -4729,7 +4855,8 @@ export function compileGame(
     position: null,
     carrying: null,
     tables: new Map(),
-    geometry: grid !== null,
+    geometry: grid !== null || tiling,
+    tiling,
     faces: null,
     answerSort: d.answerSort,
     memo: false,
@@ -4739,7 +4866,9 @@ export function compileGame(
     epoch: null,
     prelude: null,
     relations: new Set(relations),
-    edgeMark: edgeMarkOf(d.json)?.name ?? null,
+    edgeMark: edgeMark?.name ?? null,
+    edgeMarkSort: edgeMark?.sort ?? "edge",
+    relation: relationMarkOf(d.json),
     cellMark: cellMarkOf(d.json),
     supposed: [],
     kept: { defs: new Map(), used, terms: new Map() },

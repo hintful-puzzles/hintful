@@ -686,6 +686,11 @@ export function verbGesture<S, U, D, T, M>(
  * want cannot be played at all; a gesture that presses a target several times
  * over values the step accepts (Loopy's notes) is the game's own.
  *
+ * A click may settle a later target too (Loopy's line, whose click rules out
+ * the edges it forces), and clicking that target again would undo it, so a
+ * game whose clicks carry more than their target says when one is `settled`
+ * and it is skipped.
+ *
  * The step is judged on a copy, since `hintKeepTrack` may shrink it, and the
  * verbs see a copy of the `Ui`, since a verb may keep a tally there. A target no button reaches is a
  * defect in the game's hint, and throws.
@@ -699,6 +704,8 @@ export function verbClicks<S, U, D, T, M, H>(
       step: HintStep<M, H>,
       state: S,
     ) => HintTrackVerdict;
+    /** Whether `target` is already as the step wants it on `state`. */
+    readonly settled?: (state: S, target: T) => boolean;
   },
   state: S,
   ui: U,
@@ -740,10 +747,14 @@ export function verbClicks<S, U, D, T, M, H>(
       null,
     );
   };
-  for (const target of targets) {
+  for (const [i, target] of targets.entries()) {
+    if (rules.settled?.(board, target) === true) continue;
     const found = kept(target);
+    // By its place in the list: a target may be a graph that does not print.
     if (found === null)
-      throw new Error(`no button's verb keeps the step on ${JSON.stringify(target)}`);
+      throw new Error(
+        `no button's verb keeps the step on target ${i} of ${targets.length}`,
+      );
     judged = found.trial;
     board = rules.executeMove(board, found.move);
     out.push(click(verbs.geometry.pointAt(state, ds, target, ui), found.button));

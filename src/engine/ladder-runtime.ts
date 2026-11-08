@@ -13,11 +13,13 @@ import type { DeductionTechnique, FiringTally } from "./deduction-fixpoint.ts";
 import { runDeductionFixpoint, singleFirings } from "./deduction-fixpoint.ts";
 import type { DeductionRecorder } from "./deduction-record.ts";
 import {
+  EdgeRelation,
   type Facts,
   type Fire,
   type GridSpace,
   MARK,
   type Marks,
+  RELATE,
   STRIKE,
   STRIKE_EDGE,
 } from "./describe-runtime.ts";
@@ -75,8 +77,12 @@ export class CellMarks implements Marks {
   /** The values each cell may still hold, as a bitmask (bit `d`). */
   readonly cands: Int32Array;
   /** The values each edge's mark may still hold, as a bitmask, where the
-   * description marks the edges; the game seeds them. */
+   * description marks the edges, or on a tiling each angle's; the game
+   * seeds them. */
   readonly edgeCands: Int32Array;
+  /** How the edges' values are known to relate, where the description
+   * keeps a relation over them (Loopy's pairs); made at its first use. */
+  private relation: EdgeRelation | null = null;
   /** The element each cell's mark names, `-1` where none, where the
    * description marks each cell with one; the game seeds them. */
   readonly marked: Int32Array;
@@ -129,7 +135,9 @@ export class CellMarks implements Marks {
     this.grid = grid;
     this.onEdges = held === "edge";
     this.cands = new Int32Array(this.onEdges ? sp.edges.length : sp.cells.length);
-    this.edgeCands = new Int32Array(sp.edgeEnds.length / 2);
+    this.edgeCands = new Int32Array(
+      sp.tiling ? sp.angles.length : sp.edgeEnds.length / 2,
+    );
     this.marked = new Int32Array(sp.cells.length).fill(-1);
     this.repeat = repeat?.value ?? 0;
     this.times = repeat?.times ?? 1;
@@ -169,6 +177,25 @@ export class CellMarks implements Marks {
   markAt(c: number, q: number): void {
     this.marked[c] = q;
     this.placed++;
+  }
+  /** The relation over the edges, made empty at its first use. */
+  get pairs(): EdgeRelation {
+    this.relation ??= new EdgeRelation(this.sp.edges.length);
+    return this.relation;
+  }
+  pairOf(e: number, f: number): number {
+    return this.pairs.of(e, f);
+  }
+  relatedOf(e: number): readonly number[] {
+    return this.pairs.related(e);
+  }
+  relateAt(e: number, f: number, d: number): void {
+    this.pairs.relate(e, f, d);
+  }
+  /** Forget every relation, as a game does before it seeds the player's
+   * own. */
+  clearPairs(): void {
+    this.relation = null;
   }
 
   /**
@@ -262,6 +289,11 @@ export class CellMarks implements Marks {
       // (Galaxies' arrows).
       if (facts[i] === MARK) {
         this.markAt(c, n);
+        continue;
+      }
+      // Nor a relation between two edges (Loopy's pairs).
+      if (facts[i] === RELATE) {
+        this.relateAt(c, n >> 2, n & 3);
         continue;
       }
       if (facts[i] !== STRIKE) {
@@ -705,7 +737,11 @@ export function ladderWalk<S extends CellMarks>(
     for (let i = 0; i < facts.length; i += 3) {
       const at = facts[i + 1];
       if (facts[i] === MARK) out.push(at);
-      else if (facts[i] === STRIKE_EDGE || m.onEdges)
+      else if (facts[i] === STRIKE_EDGE && m.sp.tiling) out.push(m.sp.angleCell[at]);
+      else if (facts[i] === RELATE) {
+        const f = facts[i + 2] >> 2;
+        out.push(ends[2 * at], ends[2 * at + 1], ends[2 * f], ends[2 * f + 1]);
+      } else if (facts[i] === STRIKE_EDGE || m.onEdges)
         out.push(ends[2 * at], ends[2 * at + 1]);
       else out.push(at);
     }

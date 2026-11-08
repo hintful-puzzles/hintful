@@ -113,3 +113,350 @@ help:
     a step reasons from is already on the board. Two pairs that share an edge
     relate their other two edges, so a longer chain of pairs is written down one
     link at a time.
+name: Loopy
+family: lines
+sizes:
+  w: { min: 3, max: 100 }
+  h: { min: 3, max: 100 }
+space:
+  # The tiling the type and size give: its dots are the cells, joined by
+  # its edges, round its faces.
+  tiling: true
+  units: []
+answer:
+  # Each edge: 1 a line of the loop, 2 none.
+  value:
+    sort: edge
+    domain: "range(1, 2)"
+marks:
+  # A corner: how many lines its two edges hold, 0 to 2. At least one line
+  # strikes 0, at most one strikes 2.
+  corner:
+    sort: angle
+    notation: "set of range(0, 2)"
+    of: "count(e in edges(at) where value(e) = 1)"
+  # A pair of edges known to match, both lines or neither, or to be
+  # opposites, exactly one of them a line.
+  pair: { sort: edge, notation: "alike or opposite" }
+define:
+  # The lines at a dot, and its edges still open.
+  dotLines(c): "count(e in edges(c) where value(e) = 1)"
+  dotOpen(c): "count(e in edges(c) where not known(e))"
+  # The lines round a face, its edges still open, and how many more lines
+  # its clue needs.
+  faceLines(f): "count(e in edges(f) where value(e) = 1)"
+  faceOpen(f): "count(e in edges(f) where not known(e))"
+  need(f): "clue(number, f) - faceLines(f)"
+  # Whether both of a corner's edges are open.
+  bare(a): "forall e in edges(a): not known(e)"
+  # Whether the edges S, a face's f, can hold k lines, given what is known
+  # of them and the corners of f between two of them. A line is 1 and an
+  # empty edge 2, so two edges hold 4 - g(x) - g(y) lines: read off the pair
+  # alone, it is checked as each edge is filled.
+  holds(f, S, k): >-
+    exists fill g of S from cand
+    where sum(x in S of g(x)) = 2 * |S| - k
+    and (forall x in S, y in before(x, S):
+    forall a in angles(f) where x in edges(a) and y in edges(a):
+    4 - g(x) - g(y) in corner(a)): true
+shape:
+  # A dot takes two lines, or none.
+  - "forall c in cells: dotLines(c) = 0 or dotLines(c) = 2"
+rules:
+  # The lines are one loop: every dot with a line reaches every other
+  # along them, and there is a line.
+  loop: >-
+    (exists e in edges: value(e) = 1)
+    and (forall L = {e in edges where value(e) = 1},
+    a in cells where dotLines(a) > 0, b in cells where dotLines(b) > 0:
+    b in through(a, L))
+clues:
+  # A face's number: how many of its edges are lines.
+  number:
+    at: face
+    value: "range(0, 30)"
+    means: "count(e in edges(at) where value(e) = 1) = clue(number, at)"
+freedom: { kind: fill }
+deal:
+  tiling: the tiling of the type, at the size
+  answer: a loop grown over the faces at random
+  number: >-
+    each face's lines in the answer, then removed in a random order while
+    the ladder still finishes the board at the tier; dealt where it does not
+    finish it at the tier below
+  tier: one of the tiers
+tiers: [Easy, Normal, Tricky, Hard]
+techniques:
+  # The dots' techniques come first: they cost a scan of the dots, and a
+  # firing runs the ladder again from its top, so a line forced along a
+  # chain of dots is drawn before the clues are counted again.
+  #
+  # A dot with no line and one edge open: a line there would end there.
+  - id: deadEnd
+    tier: Easy
+    for: "c in cells where dotLines(c) = 0 and dotOpen(c) = 1"
+    conclude: "forall e in edges(c) where not known(e): place(e, 2)"
+  # A dot with one line and one edge open: the line goes on along it. One
+  # with no edge open is inconsistent.
+  - id: lineContinues
+    tier: Easy
+    for: "c in cells, o = dotOpen(c) where dotLines(c) = 1 and o <= 1"
+    conclude: "o = 1 and (forall e in edges(c) where not known(e): place(e, 1))"
+  # A dot with two lines: its other edges are empty. One with more is
+  # inconsistent.
+  - id: dotFull
+    tier: Easy
+    for: >-
+      c in cells, k = dotLines(c) where k > 2 or (k = 2 and dotOpen(c) > 0)
+    conclude: "k = 2 and (forall e in edges(c) where not known(e): place(e, 2))"
+  # A clue with all its lines: its other edges are empty. One with more is
+  # inconsistent.
+  - id: clueFull
+    tier: Easy
+    for: >-
+      f in faces where clue(number, f) != none, n = need(f)
+      where n < 0 or (n = 0 and faceOpen(f) > 0)
+    conclude: "n = 0 and (forall e in edges(f) where not known(e): place(e, 2))"
+  # A clue with only as many edges open as it still needs: each is a
+  # line. One with fewer is inconsistent.
+  - id: clueStarved
+    tier: Easy
+    for: >-
+      f in faces where clue(number, f) != none, n = need(f), o = faceOpen(f)
+      where n > 0 and o <= n
+    conclude: "o = n and (forall e in edges(f) where not known(e): place(e, 1))"
+  # A clue that needs all but one of its open edges, and an open edge
+  # whose dots both have a line from outside the face with the face's other
+  # edges there open: a line on it would fill both dots, leave the edges
+  # either side empty, and the clue short. It is empty, and the rest are
+  # lines.
+  - id: clueBlockedPair
+    tier: Easy
+    for: >-
+      f in faces where clue(number, f) != none and need(f) = faceOpen(f) - 1
+      and faceOpen(f) > 2,
+      e in edges(f) where not known(e)
+      and (forall c in ends(e): dotLines(c) > 0
+      and (forall g in edges(f) where g != e and c in ends(g): not known(g)))
+    conclude: >-
+      place(e, 2) and (forall g in edges(f) where g != e and not known(g): place(g, 1))
+  # A clue that needs all but one of its open edges, two of which meet at
+  # a dot with a line: they cannot both be lines, so every other open edge
+  # is.
+  - id: clueOneShort
+    tier: Easy
+    for: >-
+      f in faces where clue(number, f) != none and need(f) = faceOpen(f) - 1
+      and faceOpen(f) > 2,
+      a in angles(f) where bare(a) and dotLines(apex(a)) > 0
+    conclude: >-
+      forall g in edges(f) where not known(g) and g not in edges(a): place(g, 1)
+  # An open edge whose dots the lines already join: a line on it would
+  # close a loop, which leaves a line out of it, or a clue unmet.
+  - id: earlyLoop
+    tier: Easy
+    for: >-
+      L = {e in edges where value(e) = 1},
+      e in edges where not known(e), G = through(end1(e), L)
+      where end2(e) in G
+      and ((exists g in L: end1(g) not in G)
+      or (exists f in faces where clue(number, f) != none:
+      need(f) != count(x in edges(f) where x = e)))
+    conclude: "place(e, 2)"
+  # The lines are one closed loop: every other edge is empty.
+  - id: closed
+    tier: Easy
+    for: >-
+      L = {e in edges where value(e) = 1}, g = first(L)
+      where g != none and (exists e in edges: not known(e))
+      and (forall c in cells: dotLines(c) != 1)
+      and (forall x in L: end1(x) in through(end1(g), L))
+    conclude: "forall e in edges where not known(e): place(e, 2)"
+  # An open edge related to a settled one: it is the same, or the other
+  # way. Easy, as reading a pair note is: only Hard techniques relate two
+  # edges, so it changes no board's tier, and a hint uses a pair the player
+  # noted before anything harder.
+  - id: related
+    tier: Easy
+    for: >-
+      e in edges where not known(e), g in related(e) where known(g)
+    conclude: >-
+      (pair(e, g) = {1} implies place(e, value(g)))
+      and (pair(e, g) = {2} implies place(e, 3 - value(g)))
+  # A dot with one line, and a corner there whose edges are open: at most
+  # one of them is a line, or the dot would have three. Where they are the
+  # dot's only open edges, at least one is, or the line would end there.
+  - id: cornerAtDot
+    tier: Normal
+    for: "c in cells where dotLines(c) = 1, a in angles(c) where bare(a)"
+    conclude: "strike(a, 2) and (dotOpen(c) = 2 implies strike(a, 0))"
+  # A corner with at most one line and one edge a line, or at least one
+  # and one edge empty: the other edge is the other way.
+  - id: cornerOther
+    tier: Normal
+    for: >-
+      a in angles where corner(a) != {0, 1, 2}, e in edges(a), g in edges(a)
+      where g != e and known(e) and not known(g)
+      and ((value(e) = 1 and 2 not in corner(a)) or (value(e) = 2 and 0 not in corner(a)))
+    conclude: "place(g, 3 - value(e))"
+  # A corner whose two edges are its dot's only open ones, at a dot with
+  # no line: they are both lines or both empty, which at most one line
+  # settles as empty, and at least one as lines. Exactly one is
+  # inconsistent.
+  - id: cornerBoth
+    tier: Normal
+    for: >-
+      a in angles where corner(a) != {0, 1, 2} and bare(a), c = apex(a)
+      where dotLines(c) = 0 and dotOpen(c) = 2
+    conclude: >-
+      (0 in corner(a) or 2 in corner(a))
+      and (2 not in corner(a) implies (forall e in edges(a): place(e, 2)))
+      and (0 not in corner(a) implies (forall e in edges(a): place(e, 1)))
+  # A clue's other edges, counted with what its corners say, cannot hold
+  # the lines it needs without this edge, or can hold no fewer: the edge
+  # is a line, or empty. A clue none of whose corners says anything is
+  # plain counting, which the rungs above decide; so is one whose marked
+  # corners each have an edge settled, since such a corner either says no
+  # more or settles its other edge (`cornerOther`, at this tier).
+  - id: clueBound
+    tier: Normal
+    for: >-
+      f in faces where clue(number, f) != none
+      and (exists a in angles(f): bare(a) and corner(a) != {0, 1, 2}),
+      n = clue(number, f), e in edges(f) where not known(e), S = edges(f) - {e},
+      P = holds(f, S, n), Q = holds(f, S, n - 1)
+      where not P or not Q
+    conclude: >-
+      (P or Q) and (not P implies place(e, 1)) and (not Q implies place(e, 2))
+  # A clue's other edges cannot hold all but two of its lines, or cannot
+  # hold all of them: the corner of the face between its two open edges has
+  # at most one line, or at least one. With no corner of the face marked,
+  # the other edges hold any count from its lines to its lines and open
+  # edges, so a corner is decided only where the clue needs at most one
+  # more line or all but one of its open edges: the guard says so before
+  # any count is filled.
+  - id: cornerFromClue
+    tier: Tricky
+    for: >-
+      f in faces where clue(number, f) != none, n = clue(number, f),
+      k = need(f), o = faceOpen(f)
+      where k <= 1 or k >= o - 1
+      or (exists b in angles(f): corner(b) != {0, 1, 2}),
+      a in angles(f) where bare(a), S = edges(f) - edges(a),
+      P = holds(f, S, n - 2), Q = holds(f, S, n)
+      where (not P and 2 in corner(a)) or (not Q and 0 in corner(a))
+    conclude: "(not P implies strike(a, 2)) and (not Q implies strike(a, 0))"
+  # A corner with at least one line: a dot takes two at most, so every
+  # corner there sharing no edge with it has at most one.
+  - id: cornerAcross
+    tier: Tricky
+    for: >-
+      a in angles where 0 not in corner(a) and bare(a),
+      b in angles(apex(a)) where 2 in corner(b)
+      and (forall e in edges(b): e not in edges(a))
+    conclude: "strike(b, 2)"
+  # A corner with exactly one line, at a dot with no line and three edges
+  # open: the loop leaves the dot along the third.
+  - id: cornerExit
+    tier: Tricky
+    for: >-
+      a in angles where corner(a) = {1} and bare(a), c = apex(a)
+      where dotLines(c) = 0 and dotOpen(c) = 3
+    conclude: "forall e in edges(c) where not known(e) and e not in edges(a): place(e, 1)"
+  # A corner with exactly one line, at a dot with no line and four edges
+  # open: the corner of its other two holds the dot's other line, so
+  # exactly one too.
+  - id: cornerOppositeExit
+    tier: Tricky
+    for: >-
+      a in angles where corner(a) = {1} and bare(a), c = apex(a)
+      where dotLines(c) = 0 and dotOpen(c) = 4,
+      b in angles(c) where bare(b) and corner(b) != {1}
+      and (forall e in edges(b): e not in edges(a))
+    conclude: "strike(b, 0) and strike(b, 2)"
+  # Two open edges of a clue that match, where it needs one more line, are
+  # both empty; where it needs all but one of its open edges, both lines.
+  - id: matchingPair
+    tier: Hard
+    for: >-
+      f in faces where clue(number, f) != none, n = need(f), o = faceOpen(f)
+      where n = 1 or o - n = 1,
+      e in edges(f) where not known(e),
+      g in edges(f) where not known(g) and index(g, edges(f)) > index(e, edges(f))
+      and pair(e, g) = {1}
+    conclude: >-
+      (n = 1 implies place(e, 2) and place(g, 2))
+      and (n != 1 implies place(e, 1) and place(g, 1))
+  # A clue with two edges open: they match where it needs none or both,
+  # and are opposites where it needs one.
+  - id: pairAtClue
+    tier: Hard
+    for: >-
+      f in faces where clue(number, f) != none and need(f) >= 0,
+      O = {e in edges(f) where not known(e)} where |O| = 2,
+      e = nth(O, 0), g = nth(O, 1) where pair(e, g) = {1, 2}
+    conclude: "relate(e, g, 1 + need(f) mod 2)"
+  # A clue with three edges open, two of them related: what they hold
+  # together decides the third. All three are asked open again, since a
+  # line this placed for one pair leaves `O` stale for the next.
+  - id: parityClue
+    tier: Hard
+    for: >-
+      f in faces where clue(number, f) != none and need(f) >= 0,
+      O = {e in edges(f) where not known(e)} where |O| = 3,
+      e in O, g in O where index(g, O) > index(e, O) and |pair(e, g)| = 1,
+      k = first(O - {e, g})
+      where not known(e) and not known(g) and not known(k)
+    conclude: "place(k, 2 - (need(f) + first(pair(e, g)) - 1) mod 2)"
+  # A clue with four edges open, two of them related: the other two are
+  # related too.
+  - id: linkClue
+    tier: Hard
+    for: >-
+      f in faces where clue(number, f) != none and need(f) >= 0,
+      O = {e in edges(f) where not known(e)} where |O| = 4,
+      e in O, g in O where index(g, O) > index(e, O) and |pair(e, g)| = 1,
+      R = O - {e, g}, h = nth(R, 0), k = nth(R, 1) where pair(h, k) = {1, 2}
+    conclude: "relate(h, k, 1 + (need(f) + first(pair(e, g)) - 1) mod 2)"
+  # A corner with exactly one line: its edges are opposites.
+  - id: pairFromCorner
+    tier: Hard
+    for: >-
+      a in angles where corner(a) = {1} and bare(a),
+      e = nth(edges(a), 0), g = nth(edges(a), 1) where pair(e, g) = {1, 2}
+    conclude: "relate(e, g, 2)"
+  # A corner whose edges are opposites has exactly one line.
+  - id: cornerFromPair
+    tier: Hard
+    for: >-
+      a in angles where corner(a) != {1} and bare(a),
+      e = nth(edges(a), 0), g = nth(edges(a), 1) where pair(e, g) = {2}
+    conclude: "strike(a, 0) and strike(a, 2)"
+  # A dot with two edges open: they match where it has no line, and are
+  # opposites where it has one.
+  - id: pairAtDot
+    tier: Hard
+    for: >-
+      c in cells, O = {e in edges(c) where not known(e)} where |O| = 2,
+      e = nth(O, 0), g = nth(O, 1) where pair(e, g) = {1, 2}
+    conclude: "relate(e, g, 1 + dotLines(c) mod 2)"
+  # A dot with three edges open, two of them related: what they hold
+  # together decides the third. All three are asked open again, as at a
+  # clue.
+  - id: parityDot
+    tier: Hard
+    for: >-
+      c in cells, O = {e in edges(c) where not known(e)} where |O| = 3,
+      e in O, g in O where index(g, O) > index(e, O) and |pair(e, g)| = 1,
+      k = first(O - {e, g})
+      where not known(e) and not known(g) and not known(k)
+    conclude: "place(k, 2 - (dotLines(c) + first(pair(e, g)) - 1) mod 2)"
+  # A dot with four edges open, two of them related: the other two are
+  # related too.
+  - id: linkDot
+    tier: Hard
+    for: >-
+      c in cells, O = {e in edges(c) where not known(e)} where |O| = 4,
+      e in O, g in O where index(g, O) > index(e, O) and |pair(e, g)| = 1,
+      R = O - {e, g}, h = nth(R, 0), k = nth(R, 1) where pair(h, k) = {1, 2}
+    conclude: "relate(h, k, 1 + (dotLines(c) + first(pair(e, g)) - 1) mod 2)"

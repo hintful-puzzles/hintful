@@ -202,10 +202,10 @@ geometry.
 
 ### `dsf.ts` — union-find
 
-Reach for `Dsf` for any partition or connectivity question, and `FlipDsf`
-when a forcing chain needs to know whether two members have the same or the
-opposite sense. Exemplars: `galaxies/state.ts`, and `loopy/solver.ts` for
-`FlipDsf`.
+Reach for `Dsf` for any partition or connectivity question. Exemplar:
+`galaxies/state.ts`. Where a description must know whether two edges have
+the same or the opposite value, it states the relation and the runtime keeps
+it (`EdgeRelation` in `describe-runtime.ts`).
 
 - **For a class's minimal element, precompute a `minimal[i]` map after all
   merges** (`buildMinimal` in `keen/state.ts`). It does not change the

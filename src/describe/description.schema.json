@@ -149,6 +149,10 @@
           "description": "A planning game's relations the board deals, each a set of cells for each cell, read `name(c)`.",
           "additionalProperties": { "const": "dealt" }
         },
+        "tiling": {
+          "const": true,
+          "description": "A board that is a tiling the deal decides (Loopy's), in place of `grid`: its cells are the dots, `edges` join them (`edges(c)` a dot's, in its turn), and two sorts of element more, `faces` (`cells(f)` and `edges(f)` round a face, `faces(e)` either side of an edge) and `angles`, two edges side by side round a dot (`angles(c)` a dot's in its turn, `angles(f)` a face's, `edges(a)`, `apex(a)` its dot). Rows, columns, neighbors by direction and coordinates are refused on it."
+        },
         "cells": {
           "$ref": "#/$defs/formula",
           "description": "A planning game's board that is not a rectangle: this many cells and no geometry, so `x`, `y`, `cell`, the neighbors, rays and lines are refused on it. In place of `grid`."
@@ -370,7 +374,11 @@
             {
               "type": "object",
               "required": ["units"],
-              "oneOf": [{ "required": ["grid"] }, { "required": ["cells"] }]
+              "oneOf": [
+                { "required": ["grid"] },
+                { "required": ["cells"] },
+                { "required": ["tiling"] }
+              ]
             }
           ]
         },
@@ -420,7 +428,7 @@
               "notation": { "type": "string" },
               "of": {
                 "$ref": "#/$defs/formula",
-                "description": "For a mark on the edges a technique reads: the number of the answer it narrows, read of the edge `at`. The mark is read `name(e)`, the values it may still hold, and narrowed by `strike(e, d)`."
+                "description": "For a mark on the edges, or on a tiling's angles, a technique reads: the number of the answer it narrows, read of the element `at`. The mark is read `name(e)`, the values it may still hold, and narrowed by `strike(e, d)`."
               },
               "means": {
                 "$ref": "#/$defs/formula",

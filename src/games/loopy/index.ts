@@ -99,7 +99,7 @@ import {
   nextPairNote,
 } from "./notes.ts";
 import {
-  DIFF_MAX,
+  DIFF_HARD,
   decodeParams,
   defaultParams,
   encodeParams,
@@ -627,13 +627,16 @@ function hintGesture(
   const notes = m.kind === "corner" || m.kind === "pair";
   const out: PointerAction[] = [];
   if (m.kind === "set") {
+    const wanted = new Map(m.ops.map((op) => [op.edge, op.state]));
+    const settled = (b: LoopyState, e: GridEdge): boolean =>
+      b.lines[e.index] === wanted.get(e.index);
     const edges = m.ops
       .filter((op) => s.lines[op.edge] !== op.state)
       .map((op) => s.grid.edges[op.edge]);
     out.push(
       ...verbClicks(
         targetVerbs,
-        { executeMove, hintKeepTrack },
+        { executeMove, hintKeepTrack, settled },
         s,
         ui,
         ds,
@@ -791,10 +794,10 @@ function executeLines(
 /** Fill in the solution. Solves from the **initial** state, not the player's —
  * a partly-filled board with a mistake on it would otherwise poison the run. */
 function solve(orig: LoopyState, _curr: LoopyState): SolveResult<LoopyMove> {
-  const ss = solveGame(orig, DIFF_MAX);
+  const { lines } = solveGame(orig, DIFF_HARD);
   const ops: LoopyOp[] = [];
-  for (let i = 0; i < ss.state.lines.length; i++) {
-    const line = ss.state.lines[i];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     if (line !== LINE_UNKNOWN) ops.push({ edge: i, state: line as LineState });
   }
   // Upstream returns the solver's best effort whatever its verdict — an
@@ -839,13 +842,10 @@ function findMistakes(state: LoopyState): readonly LoopyMistake[] {
   return out;
 }
 
-/** Loopy's difficulty contract (`engine/difficulty.ts`). Its generator gates
- * every clue removal on `"solved"` specifically: an `"ambiguous"` verdict means
- * the solver only got there by trying a loop closure, which is not a deduction
- * a player could be expected to make. `solveGame` is used directly rather than
- * `gameHasUniqueSoln`, which throws on a contradiction because the generator
- * only ever asks it about boards derived from a real loop — a probe has no such
- * guarantee, and a contradiction is a verdict here, not a porting bug. */
+/** Loopy's difficulty contract (`engine/difficulty.ts`). `solveGame` is used
+ * directly rather than `gameHasUniqueSoln`, which throws on a contradiction
+ * because the generator only ever asks it about boards derived from a real
+ * loop: a probe has no such guarantee, and a contradiction is a verdict here. */
 const difficulty: DifficultyContract<LoopyParams> = {
   solveAtCap: (p, desc, cap) => {
     const ss = solveGame(newState(p, desc), cap);

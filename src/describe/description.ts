@@ -36,6 +36,9 @@ export interface DescriptionJson {
      * geometry, whose neighbors are a relation the board deals. */
     grid?: { w: string; h: string };
     cells?: string;
+    /** A tiling the deal decides, in place of a grid: its dots, edges,
+     * faces and angles. */
+    tiling?: true;
     /** Relations the board deals, each a set of cells for each cell. */
     relations?: Record<string, "dealt">;
     slots?: boolean;
@@ -386,15 +389,38 @@ export function isFormal(file: DescriptionFile): file is DescriptionJson {
 /** The one mark a description keeps on the edges for its techniques to read,
  * its name and what of the answer it narrows, or `null`. A mark on the edges
  * with no `of` is a play aid no technique reads. */
-export function edgeMarkOf(json: DescriptionJson): { name: string; of: string } | null {
+export function edgeMarkOf(
+  json: DescriptionJson,
+): { name: string; of: string; sort: "edge" | "angle" } | null {
   const read = Object.entries(json.marks ?? {}).filter(
-    ([, m]) => m.sort === "edge" && m.of !== undefined,
+    ([, m]) => (m.sort === "edge" || m.sort === "angle") && m.of !== undefined,
   );
   if (read.length > 1)
     throw new Error(`${json.game}: one mark on the edges, not ${read.length}`);
   if (read.length === 0) return null;
   const [name, m] = read[0];
-  return { name, of: m.of as string };
+  if (m.sort === "angle" && json.space.tiling !== true)
+    throw new Error(`${name}: a mark on the angles is a tiling's`);
+  return { name, of: m.of as string, sort: m.sort as "edge" | "angle" };
+}
+
+/** What a relation over the edges is written: each pair known alike or
+ * opposite (Loopy's pairs). */
+const RELATION_NOTATION = "alike or opposite";
+
+/**
+ * The one relation a description keeps over its edges for its techniques to
+ * read, `name(e, f)` the relations still open between two (1 alike, 2
+ * opposite), `related(e)` the edges related to one, and made by
+ * `relate(e, f, d)`: its name, or `null`.
+ */
+export function relationMarkOf(json: DescriptionJson): string | null {
+  const read = Object.entries(json.marks ?? {}).filter(
+    ([, m]) => m.sort === "edge" && m.notation === RELATION_NOTATION,
+  );
+  if (read.length > 1)
+    throw new Error(`${json.game}: one relation over the edges, not ${read.length}`);
+  return read[0]?.[0] ?? null;
 }
 
 /**

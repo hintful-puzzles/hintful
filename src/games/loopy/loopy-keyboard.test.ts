@@ -59,7 +59,7 @@ import { buildLoopyGrid } from "./grid-build.ts";
 import { type LoopyMove, type LoopyUi, loopyGame } from "./index.ts";
 import {
   DIFF_EASY,
-  DIFF_MAX,
+  DIFF_HARD,
   encodeParams,
   gridTypeOf,
   LOOPY_GRIDS,
@@ -456,7 +456,7 @@ describe("the cursor", () => {
  */
 function playToCompletionByKeyboard(type: number, w: number, h: number, seed: string) {
   const { p, desc, s: orig } = board(type, w, h, seed);
-  const solution = solveGame(orig, DIFF_MAX).state;
+  const solution = solveGame(orig, DIFF_HARD);
   const g = orig.grid;
   const yes = new Set<number>();
   for (let i = 0; i < g.numEdges; i++) if (solution.lines[i] === LINE_YES) yes.add(i);

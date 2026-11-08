@@ -4408,7 +4408,6 @@ exports[`Loopy hint frames > rings the pair a step places, and draws the pairs i
 
 exports[`loopy: pinned hint positions > says, at each pin 1`] = `
 {
-  "closesLoop": "This edge closes the marked lines into one loop that meets every clue, so it must be a line.",
   "clueBlockedPair": "Both outlined dots already have a line, so joining them leaves this 2 short: that edge is out and the other 2 are lines.",
   "clueBound": "This 3's other edges can give it only 2, counting the marked corner as one, so this edge must be a line.",
   "clueFull": "This 0 takes no lines, so each ringed edge can't be a line.",
@@ -4424,7 +4423,7 @@ exports[`loopy: pinned hint positions > says, at each pin 1`] = `
   "cornerNote": "The marked corner across the outlined dot needs a line, so this corner can take one line at most.",
   "cornerOppositeExit": "The marked corner takes exactly one of the outlined dot's two lines, so this corner needs the other.",
   "deadEnd": "The outlined dot has no line and no other open edge, so a line on this edge would dead-end: it can't be a line.",
-  "dotFull": "The outlined dot already has its two lines, so the ringed edge can't be a line.",
+  "dotFull": "The outlined dot already has its two lines, so each ringed edge can't be a line.",
   "earlyLoop": "This edge would close the marked lines into a loop that leaves other lines out, so it can't be a line.",
   "lineContinues": "The line at the outlined dot has no other way to go on, so this edge must be a line.",
   "matchingPair": "The marked pair makes these two edges match, and this 1 has room for one more line, so neither can be one.",

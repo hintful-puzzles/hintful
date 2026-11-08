@@ -4,6 +4,7 @@ import {
   cuts,
   describedSpace,
   type EdgeHolds,
+  EdgeRelation,
   type GridSpace,
   keptEdgeGroups,
   linkedOf,
@@ -12,6 +13,52 @@ import {
 } from "./describe-runtime.ts";
 import { CellMarks } from "./ladder-runtime.ts";
 import { randomNew, randomUpto } from "./random/index.ts";
+
+it("relates edges as the relations stated imply, transitively", () => {
+  // From scratch: each element's sense relative to `a`, by breadth-first
+  // search over every relation stated; absent where it is unrelated.
+  const n = 16;
+  const stated: [number, number, number][] = [];
+  const senses = (a: number): Map<number, number> => {
+    const sense = new Map([[a, 0]]);
+    const queue = [a];
+    for (let u = queue.shift(); u !== undefined; u = queue.shift()) {
+      for (const [x, y, s] of stated)
+        for (const [from, to] of [
+          [x, y],
+          [y, x],
+        ])
+          if (from === u && !sense.has(to)) {
+            sense.set(to, (sense.get(u) ?? 0) ^ s);
+            queue.push(to);
+          }
+    }
+    return sense;
+  };
+  const rng = randomNew("edge-relation");
+  for (let trial = 0; trial < 5; trial++) {
+    const r = new EdgeRelation(n);
+    stated.length = 0;
+    for (let op = 0; op < 40; op++) {
+      const a = randomUpto(rng, n);
+      const b = randomUpto(rng, n);
+      const s = randomUpto(rng, 2);
+      const fresh = !senses(a).has(b);
+      expect(r.relate(a, b, s === 1 ? 2 : 1)).toBe(fresh);
+      if (fresh) stated.push([a, b, s]);
+      for (let x = 0; x < n; x++) {
+        const sense = senses(x);
+        expect([...r.related(x)].sort((p, q) => p - q)).toEqual(
+          [...sense.keys()].sort((p, q) => p - q),
+        );
+        for (let y = 0; y < n; y++) {
+          const v = sense.get(y);
+          expect(r.of(x, y)).toBe(v === undefined ? 6 : v === 0 ? 2 : 4);
+        }
+      }
+    }
+  }
+});
 
 /** The points each point is joined to by the drawn diagonals, from scratch. */
 function groupsOf(sp: GridSpace, grid: ArrayLike<number>): number[] {

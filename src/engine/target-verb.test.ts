@@ -291,6 +291,56 @@ describe("verbClicks: a hint step's clicks, found by its keep-track", () => {
     ]);
   });
 
+  it("skips a target an earlier click settled", () => {
+    // Loopy's shape: a fill at 0,0 also dots 1,0, where a second dot would
+    // take the dot away again, and keep-track judges against the board
+    // without shrinking the step.
+    const toggling: TargetVerbs<S, U, typeof ds, Point, M> = {
+      ...verbs,
+      primary: {
+        does: "fill it",
+        apply: (_s, t) => ({
+          set: [[key(t), "fill"], ...(key(t) === "0,0" ? [["1,0", "dot"]] : [])] as [
+            string,
+            string,
+          ][],
+        }),
+      },
+      secondary: {
+        does: "dot it",
+        apply: (s, t) => ({ set: [[key(t), s.marks[key(t)] === "dot" ? "" : "dot"]] }),
+      },
+    };
+    const judging = {
+      ...rules,
+      hintKeepTrack: (m: M, step: HintStep<M>, s: S): HintTrackVerdict => {
+        const wanted = new Map(step.move.set);
+        if (!m.set.every(([k, v]) => wanted.get(k) === v)) return "off";
+        const after = rules.executeMove(s, m).marks;
+        return step.move.set.every(([k, v]) => after[k] === v)
+          ? "completed"
+          : "onTrack";
+      },
+      settled: (s: S, t: Point) =>
+        new Map(step.move.set).get(key(t)) === s.marks[key(t)],
+    };
+    const step = stepOf([
+      ["0,0", "fill"],
+      ["1,0", "dot"],
+      ["2,0", "fill"],
+    ]);
+    const ui = { cursor: newCursor(), tally: 0 };
+    const gesture = verbClicks(toggling, judging, state, ui, ds, step, [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 2, y: 0 },
+    ]);
+    expect(gesture).toEqual([
+      { kind: "click", button: "primary", at: { x: 10, y: 10 } },
+      { kind: "click", button: "primary", at: { x: 30, y: 10 } },
+    ]);
+  });
+
   it("throws on a target no button's verb keeps on the step", () => {
     const step = stepOf([["1,0", "cross"]]);
     const ui = { cursor: newCursor(), tally: 0 };

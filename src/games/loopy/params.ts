@@ -104,9 +104,6 @@ export const DIFF_EASY = 0;
 export const DIFF_NORMAL = 1;
 export const DIFF_TRICKY = 2;
 export const DIFF_HARD = 3;
-/** One past the hardest difficulty. Doubles as the solver rungs' "no progress"
- * sentinel, exactly as upstream. */
-export const DIFF_MAX = 4;
 
 export interface LoopyParams {
   w: number;

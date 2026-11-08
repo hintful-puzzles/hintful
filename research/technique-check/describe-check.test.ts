@@ -39,6 +39,7 @@ import {
   regionCells,
   type Sample,
   sampleAnswers,
+  sizeLabel,
   sizings,
   unbuilt,
   type Verdict,
@@ -940,6 +941,107 @@ const PLANTS: Record<string, Plant> = {
   "bridges.loop": {
     for: "L = {e in edges where drawn(e) > 0}, c in cells where island(c), y in adj4(c), f = far(c, y) where f != none and has(c, y) = 0 and more(c, y) > 0",
   },
+  // A clue one line short read as full.
+  "loopy.clueFull": {
+    for: "f in faces where clue(number, f) != none, n = need(f) - 1 where n < 0 or (n = 0 and faceOpen(f) > 0)",
+  },
+  // A clue with one edge open more than it needs read as needing them all.
+  "loopy.clueStarved": {
+    for: "f in faces where clue(number, f) != none, n = need(f), o = faceOpen(f) where n > 0 and o <= n + 1",
+    conclude: "forall e in edges(f) where not known(e): place(e, 1)",
+  },
+  // An edge blocked at one of its dots read as blocked at both.
+  "loopy.clueBlockedPair": {
+    for: "f in faces where clue(number, f) != none and need(f) = faceOpen(f) - 1 and faceOpen(f) > 2, e in edges(f) where not known(e) and (exists c in ends(e): dotLines(c) > 0 and (forall g in edges(f) where g != e and c in ends(g): not known(g)))",
+  },
+  // Any two open edges of the clue side by side read as not both lines.
+  "loopy.clueOneShort": {
+    for: "f in faces where clue(number, f) != none and need(f) = faceOpen(f) - 1 and faceOpen(f) > 2, a in angles(f) where bare(a)",
+  },
+  // A dot with two edges open read as a dead end.
+  "loopy.deadEnd": {
+    for: "c in cells where dotLines(c) = 0 and dotOpen(c) = 2",
+  },
+  // A line with two ways on read as going on along both.
+  "loopy.lineContinues": {
+    for: "c in cells, o = dotOpen(c) where dotLines(c) = 1 and o <= 2",
+    conclude: "forall e in edges(c) where not known(e): place(e, 1)",
+  },
+  // A dot with one line read as full.
+  "loopy.dotFull": {
+    for: "c in cells, k = dotLines(c) + 1 where k > 2 or (k = 2 and dotOpen(c) > 0)",
+  },
+  // An edge closing the only loop, every clue met, read as closing it early.
+  "loopy.earlyLoop": {
+    for: "L = {e in edges where value(e) = 1}, e in edges where not known(e), G = through(end1(e), L) where end2(e) in G",
+  },
+  // One path of lines, not yet closed, read as the loop.
+  "loopy.closed": {
+    for: "L = {e in edges where value(e) = 1}, g = first(L) where g != none and (exists e in edges: not known(e)) and (forall x in L: end1(x) in through(end1(g), L))",
+  },
+  // A pair read the other way round.
+  "loopy.related": {
+    conclude:
+      "(pair(e, g) = {1} implies place(e, 3 - value(g))) and (pair(e, g) = {2} implies place(e, value(g)))",
+  },
+  // A line with three edges open read as needing a line at each corner.
+  "loopy.cornerAtDot": {
+    conclude: "strike(a, 2) and (dotOpen(c) = 3 implies strike(a, 0))",
+  },
+  // A corner's at most and at least read the wrong way round.
+  "loopy.cornerOther": {
+    for: "a in angles where corner(a) != {0, 1, 2}, e in edges(a), g in edges(a) where g != e and known(e) and not known(g) and ((value(e) = 1 and 0 not in corner(a)) or (value(e) = 2 and 2 not in corner(a)))",
+  },
+  // A corner at a dot with three edges open read as all or nothing.
+  "loopy.cornerBoth": {
+    for: "a in angles where corner(a) != {0, 1, 2} and bare(a), c = apex(a) where dotLines(c) = 0 and dotOpen(c) = 3",
+  },
+  // The two counts the edge decides read the wrong way round.
+  "loopy.clueBound": {
+    for: "f in faces where clue(number, f) != none and (exists a in angles(f): bare(a) and corner(a) != {0, 1, 2}), n = clue(number, f), e in edges(f) where not known(e), S = edges(f) - {e}, P = holds(f, S, n - 1), Q = holds(f, S, n) where not P or not Q",
+  },
+  // The two counts the corner decides read the wrong way round.
+  "loopy.cornerFromClue": {
+    for: "f in faces where clue(number, f) != none, n = clue(number, f), k = need(f), o = faceOpen(f) where k <= 1 or k >= o - 1 or (exists b in angles(f): corner(b) != {0, 1, 2}), a in angles(f) where bare(a), S = edges(f) - edges(a), P = holds(f, S, n), Q = holds(f, S, n - 2) where (not P and 2 in corner(a)) or (not Q and 0 in corner(a))",
+  },
+  // A corner sharing an edge with the one with a line read as across it.
+  "loopy.cornerAcross": {
+    for: "a in angles where 0 not in corner(a) and bare(a), b in angles(apex(a)) where 2 in corner(b)",
+  },
+  // A dot with four edges open read as having three.
+  "loopy.cornerExit": {
+    for: "a in angles where corner(a) = {1} and bare(a), c = apex(a) where dotLines(c) = 0 and dotOpen(c) = 4",
+  },
+  // A corner sharing an edge with the one with a line read as opposite it.
+  "loopy.cornerOppositeExit": {
+    for: "a in angles where corner(a) = {1} and bare(a), c = apex(a) where dotLines(c) = 0 and dotOpen(c) = 4, b in angles(c) where bare(b) and corner(b) != {1}",
+  },
+  // Opposite edges read as matching.
+  "loopy.matchingPair": {
+    for: "f in faces where clue(number, f) != none, n = need(f), o = faceOpen(f) where n = 1 or o - n = 1, e in edges(f) where not known(e), g in edges(f) where not known(g) and index(g, edges(f)) > index(e, edges(f)) and pair(e, g) = {2}",
+  },
+  // A clue's last two edges related the wrong way.
+  "loopy.pairAtClue": { conclude: "relate(e, g, 2 - need(f) mod 2)" },
+  "loopy.parityClue": {
+    conclude: "place(k, 1 + (need(f) + first(pair(e, g)) - 1) mod 2)",
+  },
+  "loopy.linkClue": {
+    conclude: "relate(h, k, 2 - (need(f) + first(pair(e, g)) - 1) mod 2)",
+  },
+  // A corner with exactly one line read as its edges matching.
+  "loopy.pairFromCorner": { conclude: "relate(e, g, 1)" },
+  // Matching edges read as a corner with exactly one line.
+  "loopy.cornerFromPair": {
+    for: "a in angles where corner(a) != {1} and bare(a), e = nth(edges(a), 0), g = nth(edges(a), 1) where pair(e, g) = {1}",
+  },
+  // A dot's last two edges related the wrong way.
+  "loopy.pairAtDot": { conclude: "relate(e, g, 2 - dotLines(c) mod 2)" },
+  "loopy.parityDot": {
+    conclude: "place(k, 1 + (dotLines(c) + first(pair(e, g)) - 1) mod 2)",
+  },
+  "loopy.linkDot": {
+    conclude: "relate(h, k, 2 - (dotLines(c) + first(pair(e, g)) - 1) mod 2)",
+  },
   // The first fit across an edge left out of the reasons it is out.
   "rect.line": {
     for: "e in edges where not known(e), a = end1(e), b = end2(e), C = {q in reachers(a) where exists r in fits(q): a in cells(r) and b in cells(r)} where |C| > 0 and (forall q in C, r in fits(q) where a in cells(r) and b in cells(r) and r != nth(fits(q), 0): owned(q, r) or (exists x in sole(q): x not in cells(r)))",
@@ -1026,7 +1128,7 @@ async function checkAll(
     // Each world at each assignment of the sizes the order leaves free.
     const boards = worlds.flatMap(({ where, d }) =>
       sizings(d, order).map((sizes) => ({
-        where: [where, ...[...sizes].map(([n, v]) => `${n}=${v}`)].join(" "),
+        where: [where, ...[...sizes].map(([n, v]) => sizeLabel(order, n, v))].join(" "),
         d,
         sizes,
       })),
@@ -1265,7 +1367,10 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
     for (const { where, d } of worlds)
       for (const order of ORDERS)
         for (const sizes of sizings(d, order)) {
-          const at = [where, ...[...sizes].map(([n, v]) => `${n}=${v}`)].join(" ");
+          const at = [
+            where,
+            ...[...sizes].map(([n, v]) => sizeLabel(order, n, v)),
+          ].join(" ");
           const cells = await regionCells(d, order, sizes);
           if (!(await hasAnswer(d, order, sizes, cells))) {
             note(

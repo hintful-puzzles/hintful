@@ -1,6 +1,6 @@
 /**
- * What Loopy's solver records on the hint path: each change to a line, the
- * premise that forced it, and the notes it rests on.
+ * What Loopy's hint walk records: the premise behind each change to a line,
+ * and the notes it rests on.
  *
  * **Two kinds of fact live beside the lines.** From Normal the solver reasons
  * about *corners* — two edges adjacent around a dot, known to carry at most one or
@@ -9,11 +9,6 @@
  * (`LoopyState.corners` and `pairs`), and the hint places each fact it relies on as
  * a note before the step that cites it, so every fact carries its own premise and
  * the facts it was derived from, and the plan position it was found at.
- *
- * The recorder exists only on the hint path. `solveGame` never builds one, and
- * every recording site in `solver.ts` is behind `ss.rec`, so the generator's
- * path — and with it which boards exist — is unchanged; the frozen differential
- * is the proof.
  */
 
 import type { LineState } from "./state.ts";
@@ -142,9 +137,7 @@ export type LoopyReason =
    * gives it. `from` is the known edge. */
   | { kind: "related"; from: number; path: readonly number[] }
   /** The edge would close a loop that is not the whole answer. */
-  | { kind: "earlyLoop"; because: "strayLines" | "unmetClues" }
-  /** The edge closes a loop through every line with every clue met. */
-  | { kind: "closesLoop" };
+  | { kind: "earlyLoop"; because: "strayLines" | "unmetClues" };
 
 /** The facts a firing's premise names directly; everything else it rests on is
  * reached through their parents. */
@@ -178,16 +171,6 @@ interface RelationEdge {
   fact: number;
 }
 
-/** A recorder's place, as {@link LoopyRecorder.mark} took it. */
-export interface RecorderMark {
-  facts: LoopyFact[];
-  tickOf: number[];
-  bitFact: Int32Array;
-  relations: RelationEdge[][];
-  ops: RecordedOp[];
-  reason: LoopyReason | null;
-}
-
 export class LoopyRecorder {
   readonly facts: LoopyFact[] = [];
   /** The plan position each fact was found at: how many firings came before it.
@@ -200,45 +183,13 @@ export class LoopyRecorder {
    * where the bit was read straight off a line in the pair, which no consumer
    * ever needs a fact for. */
   readonly bitFact: Int32Array;
-  /** Every relation recorded, both ways round. The flip dsf answers *whether* two
+  /** Every relation recorded, both ways round. The ladder's relation answers *whether* two
    * edges are related; only this answers *through what*. */
   private readonly relations: RelationEdge[][];
-  /** The lines the current firing changed, captured by `solverSetLine`. */
-  ops: RecordedOp[] = [];
-  reason: LoopyReason | null = null;
-  /** The plan's `SweepOffers.keep`: whether a rung returns at the firing it
-   * has just made, or scans on while the plan collects every firing. */
-  keep: (() => boolean) | null = null;
 
   constructor(numEdges: number) {
     this.bitFact = new Int32Array(4 * numEdges).fill(-1);
     this.relations = Array.from({ length: numEdges }, () => []);
-  }
-
-  /** Where the recorder stands, for {@link rewind}. Its logs are copied, not
-   * measured: a plan offering firings rewinds to before one and records
-   * another in its place, and taking the first again must bring its own
-   * facts back. */
-  mark(): RecorderMark {
-    return {
-      facts: this.facts.slice(),
-      tickOf: this.tickOf.slice(),
-      bitFact: this.bitFact.slice(),
-      relations: this.relations.map((r) => r.slice()),
-      ops: [...this.ops],
-      reason: this.reason,
-    };
-  }
-
-  /** Put the recorder back where {@link mark} found it. */
-  rewind(m: RecorderMark): void {
-    this.facts.splice(0, this.facts.length, ...m.facts);
-    this.tickOf.splice(0, this.tickOf.length, ...m.tickOf);
-    this.bitFact.set(m.bitFact);
-    for (const [k, r] of m.relations.entries())
-      this.relations[k].splice(0, this.relations[k].length, ...r);
-    this.ops = [...m.ops];
-    this.reason = m.reason;
   }
 
   private addFact(fact: LoopyFact): number {
@@ -268,7 +219,7 @@ export class LoopyRecorder {
 
   /**
    * The relation facts joining edge `a` to edge `b`, in order from `a`, by the
-   * shortest chain. The flip dsf said they are related, so a chain exists; not
+   * shortest chain. The ladder's relation said they are related, so a chain exists; not
    * finding one means a merge went unrecorded.
    */
   path(a: number, b: number): number[] {

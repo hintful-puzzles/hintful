@@ -40,7 +40,7 @@ import {
   type LoopyParams,
   validateParams,
 } from "./params.ts";
-import { _internals, checkCaches, SolverState, solveGame } from "./solver.ts";
+import { solveGame } from "./solver.ts";
 import {
   AF_ADAPTIVE,
   AF_FIXED,
@@ -517,18 +517,6 @@ describe("completion and error highlighting", () => {
 });
 
 describe("solver", () => {
-  it("keeps its incremental caches in step with a fresh recount", () => {
-    // A solverSetLine bookkeeping slip otherwise surfaces three rungs later as
-    // a wrong deduction. This is upstream's DEBUG_CACHES check, always on.
-    for (const diff of [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY, DIFF_HARD]) {
-      const p = squareParams(5, 5, diff);
-      const { desc } = newDesc(p, randomNew(`caches-${diff}`));
-      const ss = solveGame(newState(p, desc), diff);
-      expect(ss.status).toBe("solved");
-      checkCaches(ss);
-    }
-  });
-
   it("solves what it generates, at each difficulty and not below", () => {
     for (const diff of [DIFF_NORMAL, DIFF_TRICKY, DIFF_HARD]) {
       const p = squareParams(6, 6, diff);
@@ -538,28 +526,6 @@ describe("solver", () => {
       // The generator explicitly rejects a board solvable one rung easier.
       expect(solveGame(s, diff - 1).status).not.toBe("solved");
     }
-  });
-
-  it("preserves faceSetallIdentical's lost return value", () => {
-    // Upstream sets `retval = false` and never reassigns it, so this reports
-    // "no progress" even when it changed the board. That makes the solver
-    // strictly weaker than intended — and that weakness is baked into which
-    // puzzles upstream generates, because the generator is solver-gated.
-    // Repairing it would change every board from every seed. See solver.ts.
-    const s = blankState();
-    s.clues[0] = 1; // yes(0) + 1 === clue, so the rung tries to set NO
-    const ss = new SolverState(s, DIFF_HARD);
-    const face = ss.grid.faces[0];
-    const e1 = face.edges[0]?.index ?? 0;
-    const e2 = face.edges[1]?.index ?? 0;
-    // Declare the two edges identical, which is the precondition it looks for.
-    ss.linedsf?.mergeFlip(e1, e2, false);
-
-    const returned = _internals.faceSetallIdentical(ss, 0, LINE_NO);
-
-    expect(ss.state.lines[e1]).toBe(LINE_NO); // it definitely mutated...
-    expect(ss.state.lines[e2]).toBe(LINE_NO);
-    expect(returned).toBe(false); // ...and still reported no progress.
   });
 
   it("fills in a solution for the Solve action", () => {

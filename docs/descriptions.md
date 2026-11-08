@@ -295,6 +295,21 @@ description author acts on:
   `allows` the least either leaves), and a group shut off is one that no
   bridge known drawn leaves (`closed(G)`). Read off one edge,
   `exactSpace` came out unsound in every world.
+- **A board may be any tiling** (`space: { tiling: true }`, Loopy's): the
+  cells are its dots, the answer sits on its edges, and `faces` and
+  `angles` are sorts, so a clue sits on a face. An angle is two edges side
+  by side round a dot: `edges(a)`, `apex(a)`, and `angles(c)` or
+  `angles(f)` the angles round a dot or inside a face, in order. The game
+  passes its grid to `tilingSpace`; the rectangle's names (rows, `edge(a,
+  b)`, directions) are refused. An edge mark may sit on the angles
+  (`marks.<name>.sort: angle`, Loopy's corners: how many of the two are
+  lines), read and struck as Slant's edge mark is.
+- **Two edges may be known alike or opposite** (a mark with `sort: edge`
+  and `notation: alike or opposite`, Loopy's pairs): `pair(e, f)` is `{1}`
+  alike, `{2}` opposite and `{1, 2}` unrelated, `related(e)` the edges
+  related to `e`, and `relate(e, f, d)` concludes one. The marks keep the
+  relation closed (`EdgeRelation`), so a chain of pairs reads as one, and a
+  hint that cites one names its links (`LoopyRecorder.path`).
 - **A rectangle on the grid is a sort** (Rect's): `rects(c, n)` is the
   rectangles holding cell `c` of `n` cells, or of any size where `n` is 0,
   narrowest first; `cells(r)`, `width(r)` and `height(r)` read one, and
@@ -712,12 +727,17 @@ let binder says which, for the reason: Towers' `bounds` and its `near`.
 before a placement in the same run reads as it was: a second binding of a
 square just placed, or a member of `open(k)` placed since `open(k)` was
 read. A technique that places says `not known(x)` again in the binder that
-reads `x` (Slant's `loop`, `pair` and `share`, Path's `pairBreaks`), or its
+reads `x` (Slant's `loop`, `pair` and `share`, Path's `pairBreaks`, Loopy's
+`parityClue` and `parityDot`), or its
 solve concludes from marks that are no longer there and calls a sound board
 inconsistent. The soundness check judges one binding on one position, never a
 run, so it passes such a technique; and the generator drops the boards it
 misgrades, so its own deals pass too. Grade boards the old solver dealt: Path's
-`pairBreaks` without the check called 21 of 260 of them impossible. A group
+`pairBreaks` without the check called 21 of 260 of them impossible. Or run
+the ladder in place on boards dealt from a known answer and compare the
+marks with it after every technique's run: a hint's walk, one firing at a
+time, never shows it. Loopy's `parityDot` misplaced a line on two of 18
+tilings' first deals, and on none of 30,788 runs once it asked again. A group
 `through(c, O)` is the same: a technique that opens edges reads a group only
 while no open edge leads out of it, or a square its own earlier binding
 joined to a group grows that group again as if alone (Palisade's
@@ -803,6 +823,12 @@ the check. What a small board cannot cover:
   relation it deals is every relation on them, each pair in it or not, a
   cell with itself too: the description states no symmetry, so none is
   assumed, and a technique sound on every relation is sound on a map's.
+- **A tiling is checked on the boards `TILINGS` names at each order**, which
+  between them hold dots and faces of each size a technique tells apart (a
+  plant on a dot of four edges is caught only where there is one). A mark on
+  its angles is read as an edge's mark is, and a relation over the edges as
+  two unknowns a pair, alike and opposite, true of the answer and closed as
+  the runtime's classes are.
 - **Boxes a board deals are not built**, so Solo's Jigsaw world is named in
   the results as unchecked.
 - **A world or a kind a small board cannot hold is checked on nothing**,

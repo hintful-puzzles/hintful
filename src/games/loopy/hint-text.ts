@@ -290,12 +290,6 @@ export const say = {
     });
   },
 
-  closesLoop: (m: Marked): Sentence =>
-    so({
-      look: phrase`${thisEdge(m)} closes ${citedLine(m, "the marked lines")} into one loop that meets every clue`,
-      move: phrase`it must be a line`,
-    }),
-
   /** A clue's other edges can give it one line fewer than it needs. */
   boundLine: (clue: number, m: Marked): Sentence =>
     so({
