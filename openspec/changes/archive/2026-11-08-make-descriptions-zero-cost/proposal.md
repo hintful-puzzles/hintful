@@ -1,7 +1,10 @@
 # make-descriptions-zero-cost
 
-**Status: filed on the owner's word (2026-11-07), and refocused by them the
-same day. It goes next, before the rest of step 10**
+**Status: concluded on the owner's word (2026-11-08)**, after a last hour
+on known costs: what is left is done as work passes, not as an effort of its
+own, and the census against the hand-written ladders is not redone
+(`tasks.md`). Filed on the owner's word (2026-11-07), and refocused by them
+the same day. It goes next, before the rest of step 10**
 (`describe-pearl-tracks-spokes-bridges-net-tents-and-loopy` waits on it). It
 takes in `keep-board-definitions-across-boards`, whose measurements are
 below.

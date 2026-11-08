@@ -3731,8 +3731,8 @@ function keptDefinition(
     env.answer !== null ||
     env.position !== null ||
     env.supposed.length > 0 ||
-    def.params.length !== 1 ||
-    (vs[0].sort.k !== "elem" && vs[0].sort.k !== "num") ||
+    vs.length === 0 ||
+    vs.some((v) => v.sort.k !== "elem" && v.sort.k !== "num") ||
     !keptWhilePlaced(def.body, env, new Set(), new Set(def.params))
   )
     return null;
@@ -3745,25 +3745,31 @@ function keptDefinition(
   const depth = loopDepth(def.body, env.defs);
   const h = env.hoist;
   const repeated =
-    depth >= 1 && h !== null && vs[0].at !== undefined && vs[0].at.loops < h.loops;
+    depth >= 1 &&
+    h !== null &&
+    vs.every((v) => v.at !== undefined && v.at.loops < h.loops);
   if (
     depth < 2 &&
     !repeated &&
     !(board && (depth === 1 || walks(def.body, env.defs, new Set())))
   )
     return null;
+  // Of several arguments, one is kept only for the board: kept for the marks,
+  // each pair's value made again after every placement cost Rect's and
+  // Path's deals more than it saved (2026-11-08).
+  if (vs.length > 1 && !board) return null;
   let made = kept.defs.get(fn);
   if (made === undefined) {
     // Compiled once, as a function of its own. A mask is not kept: its
     // loops are over values, and cost less to make again than to look up. A
     // number or a truth whose loops nest two deep is: Boats' `done(m)`
     // counts the closed boats over the whole board.
-    const v = `v_${def.params[0]}`;
+    const ps = def.params.map((p) => `v_${p}`);
     const readsClues = { yes: false };
     const body = new Out(1);
     const val = compileExpr(
       def.body,
-      new Map([[def.params[0], { code: v, sort: vs[0].sort }]]),
+      new Map(def.params.map((p, i) => [p, { code: ps[i], sort: vs[i].sort }])),
       // Its own arrays, not a technique's reused ones: each is kept.
       {
         ...env,
@@ -3779,7 +3785,28 @@ function keptDefinition(
     );
     if (!isArray(val.sort) && val.sort.k !== "num" && val.sort.k !== "bool")
       return null;
+    // A statement whose loop compiles away costs less than the lookup: Rect's
+    // `meets(r, s)` is a comparison of corners, and kept, its deals took 1.09
+    // of the time (2026-11-08).
+    if (
+      body.entries.length === 0 &&
+      !BOARD_WALKS.test(val.code) &&
+      !LINE_WALKS.test(val.code)
+    )
+      return null;
     const type = tsType(val.sort);
+    // One array a parameter, the last holding the values: `under[i]` is the
+    // type of what the array reached by the first `i` arguments holds.
+    const under = [type];
+    for (let i = 1; i < ps.length; i++) under.push(`Kept<${under[i - 1]}>`);
+    const held = under[ps.length - 1];
+    const last = ps[ps.length - 1];
+    const reach = ps
+      .slice(0, -1)
+      .map(
+        (p, i) => `  const _kept${i + 1} = (_kept${i === 0 ? "" : i}[${p}] ??= []);`,
+      );
+    const at = ps.length === 1 ? "_kept" : `_kept${ps.length - 1}`;
     kept.used.add("keptStore");
     kept.used.add("type Kept");
     const store = `${fn}Kept`;
@@ -3794,18 +3821,19 @@ function keptDefinition(
       clues: readsClues.yes,
       board,
       code: [
-        `const ${store} = keptStore<${type}>();`,
+        `const ${store} = keptStore<${held}>();`,
         "",
-        `/** \`${fn}(${def.params[0]})\` as the description defines it, kept for the`,
+        `/** \`${fn}(${def.params.join(", ")})\` as the description defines it, kept for the`,
         board
           ? " * board, since it reads no marks. */"
           : " * marks while no value is placed in them. */",
-        `export function ${fn}(${board ? "" : "b: Marks, "}${spParam}: GridSpace, ${readsClues.yes ? "cl: Dealt, " : ""}${v}: number): ${type} {`,
-        `  const _kept: Kept<${type}> = ${keptAt};`,
-        `  if (_kept[${v}] !== undefined) return _kept[${v}];`,
+        `export function ${fn}(${board ? "" : "b: Marks, "}${spParam}: GridSpace, ${readsClues.yes ? "cl: Dealt, " : ""}${ps.map((p) => `${p}: number`).join(", ")}): ${type} {`,
+        `  const _kept: Kept<${held}> = ${keptAt};`,
+        ...reach,
+        `  if (${at}[${last}] !== undefined) return ${at}[${last}];`,
         ...body.text(),
         `  const _made = ${val.code};`,
-        `  _kept[${v}] = _made;`,
+        `  ${at}[${last}] = _made;`,
         "  return _made;",
         "}",
       ].join("\n"),
@@ -3814,7 +3842,7 @@ function keptDefinition(
   }
   if (made.clues) env.readsClues.yes = true;
   return {
-    code: `${fn}(${made.board ? "" : "b, "}sp, ${made.clues ? "cl, " : ""}${vs[0].code})`,
+    code: `${fn}(${made.board ? "" : "b, "}sp, ${made.clues ? "cl, " : ""}${vs.map((v) => v.code).join(", ")})`,
     sort: made.sort,
   };
 }

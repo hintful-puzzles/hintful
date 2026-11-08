@@ -403,6 +403,14 @@ a board's verdicts differ. A change to the compiler or the runtime is timed
 with it against the commit before, on the games whose profile names the
 construct; each file's header says how to run it.
 
+**Speed is improved as work passes, not in a campaign of its own.** Where a
+session finds a described game slow, or meets a statement the compiler makes
+costly, it makes the engine or the compiler cheaper for that shape, never the
+game's description, and times the change as above. Timing the catalog
+against the hand-written ladders it replaced is not done again: it told less
+than a profile and the commit before (2026-11-08,
+`make-descriptions-zero-cost`).
+
 **The compiler states how each technique grows with the board**, above its
 function in the compiled module: the loops round its dearest read over the
 board (`n`) or a line (`n^0.5`), and the walks it makes of either
@@ -479,7 +487,13 @@ author writing for speed uses these:
   the board: Rect's `allowed(q)`, every rectangle a clue could take, is made
   once a deal, and Light Up's `lights(c)` once a square, which took its
   deals to 0.16 of the time on the same boards, Clusters' to 0.68 and
-  Dominosa's to 0.86 (2026-11-07). Each keeps its values in a store of its
+  Dominosa's to 0.86 (2026-11-07). One of several arguments, each an
+  element or a number, is kept only for the board (Star Battle's `band(k,
+  dir, a)`, 0.95 of its solves): kept for the marks, a pair's values made
+  again after each placement made Rect's and Path's deals slower. None is
+  kept whose statement compiles to one expression with no loop or walk,
+  since the lookup costs more (Rect's `meets(r, s)`, a comparison of
+  corners). Each keeps its values in a store of its
   own, which looks at the marks it was last read on first: a lookup by the
   definition's name cost Rect's deals a third of their time. Keeping a value
   past a placement that misses what it read was built and timed, both by
