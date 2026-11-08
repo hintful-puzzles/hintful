@@ -2,10 +2,11 @@
 
 **Status: filed by `describe-lines-and-loops` (2026-11-07)**, which split at
 its start and took Path. The rest of step 10 of `describe-the-whole-catalog`'s
-plan (`design.md` § "The plan"). **It waits for `make-descriptions-zero-cost`**
-(the owner, 2026-11-07: the description layer is to cost near nothing
-before more games are described), and is timed against that change's
-target. Seven games is more than one session describes. Split at the start
+plan (`design.md` § "The plan"). It waited for `make-descriptions-zero-cost`,
+now archived (2026-11-08): a game that comes out slow is made cheaper in
+the engine or the compiler as it is described, timed against the commit
+before, not against its hand-written ladder (`docs/descriptions.md`
+§ "What a technique compiles to"). Seven games is more than one session describes. Split at the start
 by what each game adds to the language, not by game alone: the graphs
 derived from the grid (Spokes, Bridges), Loopy's tilings and edge marks,
 Net's rotations, and the line games on the square grid (Pearl, Tracks,
