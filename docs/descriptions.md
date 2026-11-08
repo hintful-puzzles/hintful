@@ -468,8 +468,12 @@ author writing for speed uses these:
   technique, compiles once as a function of the module, and its value for
   each element is kept until a value is placed, shared by every rung. Rect's
   `fits(q)`, read for every other clue inside loops over the clues, is made
-  once a clue between placements. A shallower one is inlined, so the
-  keeping is paid only where a read inside nested loops repays it. One that
+  once a clue between placements. A shallower one is kept where it is read
+  inside a loop that does not bind its argument, so each pass would make it
+  again for the same argument: Mosaic's `need(c)`, read for each clue near
+  `c`, so kept took Mosaic's, Path's, Slant's and Clusters' deals to 0.93
+  of the time (2026-11-08). Elsewhere it is inlined, so the keeping is paid
+  only where the reads repay it. One that
   reads no marks at all is kept for the board, on the clues it deals, so a
   ladder's every run shares it, wherever it has one loop or walks a line or
   the board: Rect's `allowed(q)`, every rectangle a clue could take, is made

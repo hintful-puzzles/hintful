@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/mosaic/mosaic.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, rangeMask, within } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, keptStore, rangeMask, type Kept, within } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -55,20 +55,20 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  for (let _k126 = 0; _k126 < cl.count.at.length; _k126++) {
-    const _at127 = cl.count.at[_k126];
-    const _v128 = cl.count.v[_k126];
-    let _g129 = 0;
-    G130: {
-      const _a131 = within(sp, _at127, 1);
-      for (let _i132 = 0; _i132 < _a131.length; _i132++) {
-        const v_d = _a131[_i132];
-        const _h133 = (g[v_d] || -1);
-        if (!((_h133 === 1))) continue;
-        _g129++;
+  for (let _k125 = 0; _k125 < cl.count.at.length; _k125++) {
+    const _at126 = cl.count.at[_k125];
+    const _v127 = cl.count.v[_k125];
+    let _g128 = 0;
+    G129: {
+      const _a130 = within(sp, _at126, 1);
+      for (let _i131 = 0; _i131 < _a130.length; _i131++) {
+        const v_d = _a130[_i131];
+        const _h132 = (g[v_d] || -1);
+        if (!((_h132 === 1))) continue;
+        _g128++;
       }
     }
-    if (!((_g129 === _v128))) return false;
+    if (!((_g128 === _v127))) return false;
   }
   return true;
 }
@@ -179,9 +179,9 @@ const comparedFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ComparedBinding> | null): number {
-  const _g89: number[] = [];
-  const _g99: number[] = [];
-  const _g116: number[] = [];
+  const _g88: number[] = [];
+  const _g98: number[] = [];
+  const _g115: number[] = [];
   const facts = comparedFacts;
   let fired = 0;
   let changed = false;
@@ -200,9 +200,8 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
         }
       }
       if (!(_q68)) break L67;
-      const _h80 = clueAt(cl.count, v_c);
-      const _h105 = (v_c % sp.w);
-      const _h106 = ((v_c / sp.w) | 0);
+      const _h104 = (v_c % sp.w);
+      const _h105 = ((v_c / sp.w) | 0);
       const _a72 = within(sp, v_c, 2);
       for (let _i73 = 0; _i73 < _a72.length; _i73++) {
         const v_b = _a72[_i73];
@@ -223,106 +222,97 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
           _c79 = _q75;
         }
         if (!(_c79)) continue;
-        const _h95 = (v_b % sp.w);
-        const _h96 = ((v_b / sp.w) | 0);
-        let _g81 = 0;
-        G82: {
-          const _a83 = within(sp, v_c, 1);
-          for (let _i84 = 0; _i84 < _a83.length; _i84++) {
-            const v_d = _a83[_i84];
+        const _h94 = (v_b % sp.w);
+        const _h95 = ((v_b / sp.w) | 0);
+        const v_n = need(b, sp, cl, v_c);
+        let _g84 = 0;
+        G85: {
+          const _a86 = within(sp, v_b, 1);
+          for (let _i87 = 0; _i87 < _a86.length; _i87++) {
+            const v_d = _a86[_i87];
             if (!(((b.grid[v_d] || -1) === 1))) continue;
-            _g81++;
+            _g84++;
           }
         }
-        const v_n = (_h80 - _g81);
-        let _g85 = 0;
-        G86: {
-          const _a87 = within(sp, v_b, 1);
-          for (let _i88 = 0; _i88 < _a87.length; _i88++) {
-            const v_d = _a87[_i88];
-            if (!(((b.grid[v_d] || -1) === 1))) continue;
-            _g85++;
+        const v_by = (v_n - (_h74 - _g84));
+        _g88.length = 0;
+        G89: {
+          const _a92 = within(sp, v_c, 1);
+          for (let _i93 = 0; _i93 < _a92.length; _i93++) {
+            const v_d = _a92[_i93];
+            if (!((!((b.grid[v_d] !== 0)) && !(((Math.abs(((v_d % sp.w) - _h94)) <= 1) && (Math.abs((((v_d / sp.w) | 0) - _h95)) <= 1)))))) continue;
+            _g88.push(v_d);
           }
         }
-        const v_by = (v_n - (_h74 - _g85));
-        _g89.length = 0;
-        G90: {
-          const _a93 = within(sp, v_c, 1);
-          for (let _i94 = 0; _i94 < _a93.length; _i94++) {
-            const v_d = _a93[_i94];
-            if (!((!((b.grid[v_d] !== 0)) && !(((Math.abs(((v_d % sp.w) - _h95)) <= 1) && (Math.abs((((v_d / sp.w) | 0) - _h96)) <= 1)))))) continue;
-            _g89.push(v_d);
-          }
-        }
-        L97: {
-          const v_O = _g89;
-          const _h98 = v_O.length;
-          let _c108: boolean = (v_by >= _h98);
-          if (_c108) {
-            let _c107: boolean = (v_by > 0);
-            if (!_c107) {
-              _g99.length = 0;
-              G100: {
-                const _a103 = within(sp, v_b, 1);
-                for (let _i104 = 0; _i104 < _a103.length; _i104++) {
-                  const v_d = _a103[_i104];
-                  if (!((!((b.grid[v_d] !== 0)) && !(((Math.abs(((v_d % sp.w) - _h105)) <= 1) && (Math.abs((((v_d / sp.w) | 0) - _h106)) <= 1)))))) continue;
-                  _g99.push(v_d);
+        L96: {
+          const v_O = _g88;
+          const _h97 = v_O.length;
+          let _c107: boolean = (v_by >= _h97);
+          if (_c107) {
+            let _c106: boolean = (v_by > 0);
+            if (!_c106) {
+              _g98.length = 0;
+              G99: {
+                const _a102 = within(sp, v_b, 1);
+                for (let _i103 = 0; _i103 < _a102.length; _i103++) {
+                  const v_d = _a102[_i103];
+                  if (!((!((b.grid[v_d] !== 0)) && !(((Math.abs(((v_d % sp.w) - _h104)) <= 1) && (Math.abs((((v_d / sp.w) | 0) - _h105)) <= 1)))))) continue;
+                  _g98.push(v_d);
                 }
               }
-              _c107 = (_g99.length > 0);
+              _c106 = (_g98.length > 0);
             }
-            _c108 = _c107;
+            _c107 = _c106;
           }
-          if (!(_c108)) break L97;
+          if (!(_c107)) break L96;
           facts.length = 0;
           changed = false;
-          let _c113: boolean = (v_by === _h98);
-          if (_c113) {
-            let _q109 = true;
-            Q110: {
-              const _a111 = v_O;
-              for (let _i112 = 0; _i112 < _a111.length; _i112++) {
-                const v_d = _a111[_i112];
+          let _c112: boolean = (v_by === _h97);
+          if (_c112) {
+            let _q108 = true;
+            Q109: {
+              const _a110 = v_O;
+              for (let _i111 = 0; _i111 < _a110.length; _i111++) {
+                const v_d = _a110[_i111];
                 if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
                 if (!(true)) {
-                  _q109 = false;
-                  break Q110;
+                  _q108 = false;
+                  break Q109;
                 }
               }
             }
-            _c113 = _q109;
+            _c112 = _q108;
           }
-          let _c125: boolean = _c113;
-          if (_c125) {
-            let _c124: boolean = (v_by > 0);
-            if (!_c124) {
-              let _q114 = true;
-              Q115: {
-                _g116.length = 0;
-                G117: {
-                  const _a120 = within(sp, v_b, 1);
-                  for (let _i121 = 0; _i121 < _a120.length; _i121++) {
-                    const v_d = _a120[_i121];
-                    if (!((!((b.grid[v_d] !== 0)) && !(((Math.abs(((v_d % sp.w) - _h105)) <= 1) && (Math.abs((((v_d / sp.w) | 0) - _h106)) <= 1)))))) continue;
-                    _g116.push(v_d);
+          let _c124: boolean = _c112;
+          if (_c124) {
+            let _c123: boolean = (v_by > 0);
+            if (!_c123) {
+              let _q113 = true;
+              Q114: {
+                _g115.length = 0;
+                G116: {
+                  const _a119 = within(sp, v_b, 1);
+                  for (let _i120 = 0; _i120 < _a119.length; _i120++) {
+                    const v_d = _a119[_i120];
+                    if (!((!((b.grid[v_d] !== 0)) && !(((Math.abs(((v_d % sp.w) - _h104)) <= 1) && (Math.abs((((v_d / sp.w) | 0) - _h105)) <= 1)))))) continue;
+                    _g115.push(v_d);
                   }
                 }
-                const _a122 = _g116;
-                for (let _i123 = 0; _i123 < _a122.length; _i123++) {
-                  const v_d = _a122[_i123];
+                const _a121 = _g115;
+                for (let _i122 = 0; _i122 < _a121.length; _i122++) {
+                  const v_d = _a121[_i122];
                   if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
                   if (!(true)) {
-                    _q114 = false;
-                    break Q115;
+                    _q113 = false;
+                    break Q114;
                   }
                 }
               }
-              _c124 = _q114;
+              _c123 = _q113;
             }
-            _c125 = _c124;
+            _c124 = _c123;
           }
-          if (!(_c125)) return -1;
+          if (!(_c124)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null && !fire({ k: v_k, c: v_c, b: v_b, n: v_n, by: v_by, O: v_O }, facts)) return 1;
@@ -332,4 +322,25 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
     }
   }
   return fired;
+}
+
+const needKept = keptStore<number>();
+
+/** `need(c)` as the description defines it, kept for the
+ * marks while no value is placed in them. */
+export function need(b: Marks, sp: GridSpace, cl: Dealt, v_c: number): number {
+  const _kept: Kept<number> = needKept.marks(b);
+  if (_kept[v_c] !== undefined) return _kept[v_c];
+  let _g80 = 0;
+  G81: {
+    const _a82 = within(sp, v_c, 1);
+    for (let _i83 = 0; _i83 < _a82.length; _i83++) {
+      const v_d = _a82[_i83];
+      if (!(((b.grid[v_d] || -1) === 1))) continue;
+      _g80++;
+    }
+  }
+  const _made = (clueAt(cl.count, v_c) - _g80);
+  _kept[v_c] = _made;
+  return _made;
 }

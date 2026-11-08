@@ -3737,10 +3737,20 @@ function keptDefinition(
   )
     return null;
   // One that reads no marks is made once a board, so a loop or a walk
-  // repays the keeping; one made again after each placement needs two.
+  // repays the keeping; one made again after each placement needs two, or
+  // one read inside a loop that does not bind its argument, which would
+  // otherwise make it again on each pass for the same argument (Mosaic's
+  // `need(c)`, read for each clue near `c`).
   const board = !readsMarks(def.body, env.defs, new Set(), env.cellMark?.name ?? null);
   const depth = loopDepth(def.body, env.defs);
-  if (depth < 2 && !(board && (depth === 1 || walks(def.body, env.defs, new Set()))))
+  const h = env.hoist;
+  const repeated =
+    depth >= 1 && h !== null && vs[0].at !== undefined && vs[0].at.loops < h.loops;
+  if (
+    depth < 2 &&
+    !repeated &&
+    !(board && (depth === 1 || walks(def.body, env.defs, new Set())))
+  )
     return null;
   let made = kept.defs.get(fn);
   if (made === undefined) {
