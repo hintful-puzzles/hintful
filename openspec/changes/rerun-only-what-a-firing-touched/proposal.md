@@ -33,16 +33,29 @@ pays it, and Net, Pearl, Tracks and Tents are described next.
   first, and so every tier a board is graded at, is unchanged: a technique
   is deterministic in the marks, so one that found nothing on marks it reads
   unchanged finds nothing again.
-- **What a technique reads is the compiler's to say.** It knows each
-  technique's mark reads (the candidates, the line marks, a mark on the
-  angles, the edge relation, a set the runtime keeps), so a compiled
-  technique carries them, and `CellMarks` keeps a version for each that a
-  fact bumps. A hand-written technique declares none and is always run, as
-  now.
-- **Finer grain is measured, not assumed.** A version per kind of mark may
-  skip too little where every firing touches the kind every technique
-  reads (Loopy's lines). Whether the first binder should run only over the
-  elements that changed is decided by the measurement in task 1.
+- **The skip is by element, not by kind of mark** (task 1's measurement,
+  below). A technique runs again only over the elements of its first binder
+  whose reads a fact changed since it last found nothing there.
+- **What a technique reads is the compiler's to say.** Where every mark it
+  reads is reached from its first binder's element through the board's
+  geometry (a face's edges, an angle's edges, an edge's ends), the compiler
+  emits that footprint, and the runtime inverts it once per board. A
+  technique reading anything else (connectivity, a loop, the pair classes,
+  a fill over a set the marks decide) is whole, and runs as now. So is a
+  hand-written technique.
+
+## Measured (2026-11-08)
+
+Three 9x14 Triangular Hard deals, every technique run timed (a scratch
+profile of `firstFiring`): 983 ms a deal, 912 of it in techniques, and 751
+of that in runs that found nothing. Of 247k runs, 37k fired. Every firing
+sets a line and nearly every technique reads lines, so a skip by kind of
+mark would skip almost nothing. The techniques whose reads are local to
+their first binder (`clueBound`, `clueFull`, `deadEnd`, `lineContinues`,
+`clueStarved`, `clueBlockedPair`, `clueOneShort`, `cornerOther`,
+`cornerFromClue`, `dotFull`, `cornerAtDot`, …) hold at least 600 ms of the
+751; `earlyLoop` and `related`, which read the loop and the pair classes,
+hold about 50.
 
 ## Acceptance
 
