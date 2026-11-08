@@ -1196,6 +1196,28 @@ const PLANTS: Record<string, Plant> = {
   "tracks.parity": {
     for: "e in edges where not known(e) and not shut(end1(e), end2(e)), G = through(end1(e), {x in edges where x != e and not known(x) and not shut(end1(x), end2(x))}), k = sum(c in G of count(y in adj4(c) where y not in G and value(edge(c, y)) = 1) + exits(c))",
   },
+  // A square with two monsters left read as down to one.
+  "undead.single": {
+    for: "c in cells where |cand(c)| < 3",
+    conclude: "|cand(c)| >= 1 and (known(c) or place(c, first(cand(c))))",
+  },
+  // A ghost read as showing before the first mirror, as a vampire does.
+  "undead.sightline": {
+    conclude: `forall c in L, d in cand(c) where not (exists fill f of L from cand
+      where f(c) = d: (a < 0 or count(x in sight_direct(s, mirror) where f(x) != 2)
+      + count(x in sight_bent(s, mirror) where f(x) != 2)
+      + count(x in sight_twice(s, mirror) where f(x) != 2) = a)
+      and (b < 0 or shows(f, t) = b)
+      and count(x in L where f(x) = 1 and |cand(x)| > 1) <= g
+      and count(x in L where f(x) = 2 and |cand(x)| > 1) <= v
+      and count(x in L where f(x) = 3 and |cand(x)| > 1) <= z):
+      strike(c, d)`,
+  },
+  // A monster one short of its count read as all placed.
+  "undead.total": {
+    conclude:
+      "|P| <= n and |O| >= n and (|P| < n - 1 or (forall c in O - P: strike(c, d)))",
+  },
   // A line read as needing one tent more than its count.
   "tents.lineNeighbors": {
     for: "L in lines, k = need(L) + 1, O = open(L) where |O| > 0 and k > 0, N = set(z over y in O, z in adj8(y) where blank(z) and z not in cells(L)) where |N| > 0, U = set(z over fill f of O from cand where spread(f, O, k), z in N where (forall y in O where y in adj8(z): f(y) = 2)) where (exists z in N: z not in U)",
@@ -1359,6 +1381,10 @@ async function checkAll(
         bad.push(`${id} ${order}`);
       for (const [i, { label, plant }] of plants.entries()) {
         tried = true;
+        // A plant one board of the order has caught is not asked again: the
+        // check is shown to catch it, and a later board's whole query may
+        // outgrow the heap (Bridges' `tooMany` at three bridges a line).
+        if (caught[i]) continue;
         const tp = { ...planted(t, plant), id: `${t.id} (${label})` };
         let p = await checkTechnique(d, tp, order, sizes, 1, cells, {
           deadline: Math.min(deadline, performance.now() + CHECK_BUDGET_MS / 10),

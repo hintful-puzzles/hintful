@@ -52,6 +52,10 @@ import {
   rectRim,
   rectsOf,
   rectWidth,
+  type SightAt,
+  sightAhead,
+  sightEntry,
+  sightTurn,
   slash,
   step,
   tilingSpace,
@@ -60,7 +64,7 @@ import {
 } from "../../src/engine/describe-runtime.ts";
 import { type GridType, gridNew } from "../../src/engine/grid/index.ts";
 import { blocks } from "../describe/space.ts";
-import { asZ3, type B, type I, Z3 } from "./pzl.ts";
+import { asZ3, type B, fresh, type I, Z3 } from "./pzl.ts";
 
 type Bx = B | boolean;
 type Nx = I | number;
@@ -76,7 +80,7 @@ type V =
   | { k: "subsets"; of: V }
   | { k: "clues"; kind: string }
   /** One assignment of a filling, its values by cell. */
-  | { k: "fill"; vals: ReadonlyMap<number, number> };
+  | { k: "fill"; vals: ReadonlyMap<number, Nx> };
 
 // --- truths and numbers that simplify their constants -----------------------
 
@@ -454,9 +458,15 @@ function domainBound(d: Description): string | null {
 }
 
 /** The number the answer's domain ends at where it is `range(a, k)` of a
- * number (Map's four colors), which a board's values reach whatever its
+ * number (Map's four colors), of sizes the board fixes (Bridges' `maxb +
+ * 1`), or of a region's size (Seismic's `|cells(area(c))|`, up to the
+ * `regionCells` the board deals), which a board's values reach whatever its
  * order; `0` elsewhere. */
-function domainEnd(d: Description): number {
+function domainEnd(
+  d: Description,
+  fixed: ReadonlyMap<string, number> = new Map(),
+  regionCells = 0,
+): number {
   // A domain stated as the values of a range that pass a test (Rome's goal,
   // a value no arrow is) ends where the range does.
   const e =
@@ -464,8 +474,18 @@ function domainEnd(d: Description): number {
       ? d.domain.binders[0].of
       : d.domain;
   if (e.k !== "call" || e.fn !== "range") return 0;
-  const hi = e.args[1];
-  return hi.k === "num" ? hi.v : 0;
+  const value = (x: Expr): number | null => {
+    if (x.k === "num") return x.v;
+    if (x.k === "name") return fixed.get(x.name) ?? null;
+    // A region's size is at most the most cells a dealt region holds.
+    if (x.k === "size" && x.of.k === "call" && x.of.fn === "cells") return regionCells;
+    if (x.k !== "bin" || !["+", "-", "*"].includes(x.op)) return null;
+    const a = value(x.a);
+    const b = value(x.b);
+    if (a === null || b === null) return null;
+    return x.op === "+" ? a + b : x.op === "-" ? a - b : a * b;
+  };
+  return value(e.args[1]) ?? 0;
 }
 
 function makeBoard(
@@ -479,16 +499,11 @@ function makeBoard(
   const fixed = new Map([...space.sizes, ...more]);
   const tag = `b${boardCount++}`;
   const n = sp.cells.length;
-  const bound = d === undefined ? null : domainBound(d);
   // A tiling's order names its boards, and no number on it: its values are
   // its domain's, and its marks' are counted apart (`MARK_TOP`).
   const top = sp.tiling
     ? Math.max(2, d === undefined ? 0 : domainEnd(d))
-    : Math.max(
-        order,
-        d === undefined ? 0 : domainEnd(d),
-        (bound === null ? null : fixed.get(bound)) ?? 0,
-      );
+    : Math.max(order, d === undefined ? 0 : domainEnd(d, fixed, cells));
   // A count wider than the board (Mines' mines) is one unknown, which is
   // every value it can take at once: its worlds' union.
   const sizes = new Map<string, Nx>(fixed);
@@ -985,6 +1000,132 @@ function beamPaths(ctx: Ctx, s: number, u: number, d: Nx): (readonly [Bx, number
   return out;
 }
 
+/** What each of `sight(s, M)`'s kin reads of a sightline. */
+const SIGHT_FIELDS: ReadonlyMap<string, "all" | "direct" | "bent" | "twice" | "exit"> =
+  new Map([
+    ["sight", "all"],
+    ["sight_direct", "direct"],
+    ["sight_bent", "bent"],
+    ["sight_twice", "twice"],
+    ["sight_exit", "exit"],
+  ]);
+
+/** `sight(s, M)` and its kin: a sightline bent by the mirrors a clue kind
+ * deals, read off every way the mirrors it meets can lie; null for any
+ * other call. */
+function bentSight(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V | null {
+  const bent = SIGHT_FIELDS.get(fn);
+  if (bent === undefined || (fn === "sight" && args.length !== 2)) return null;
+  const a = args[1];
+  if (a.k !== "name") throw new TypeError(`${fn}(s, mirrors)`);
+  return lift(evaluate(args[0], env, ctx), fn, (s) => {
+    const guards = sightGuards(ctx.board, a.name, s);
+    if (bent === "exit") return { k: "elem", sort: "slot", alts: [...guards.exit] };
+    return { k: "eset", sort: "cell", mem: [...guards[bent]] };
+  });
+}
+
+/** A sightline as the check reads it: whether each cell is in each of the
+ * runtime's `SightSets`, and whether it comes out at each slot. */
+export type SightGuards = {
+  readonly [K in "all" | "direct" | "bent" | "twice"]: ReadonlyMap<number, Bx>;
+} & { readonly exit: ReadonlyMap<number, Bx> };
+
+const sightCache = new WeakMap<Board, Map<string, SightGuards>>();
+
+/**
+ * The sightline from slot `s`, each cell it may pass and slot it may come
+ * out at under the guard of what the clues of kind `kind` deal at the cells
+ * before: a mirror `\` (1), a mirror `/` (2), or none. Walked a step at a
+ * time over every way it could be standing, each under its guard, with the
+ * runtime's own steps and turns, so the check reads the geometry the game
+ * does; and a step at a time, so that one way it stands is the only one
+ * true of a board at each step, and no loop of ways holds itself up. A
+ * walk of each way whole, mirror by mirror, made 298,240 at order 4. A cell
+ * is passed at most once each way across, so it is passed twice after a
+ * mirror where it is passed after one both across and up or down.
+ */
+function sightGuards(board: Board, kind: string, s: number): SightGuards {
+  const key = `${kind} ${s}`;
+  const memo = sightCache.get(board)?.get(key);
+  if (memo !== undefined) return memo;
+  const list = board.clues.get(kind) ?? [];
+  const ways = (c: number): (readonly [Bx, number])[] => {
+    const here = list.filter((k) => k.at === c);
+    if (here.length === 0) return [[true, 0]];
+    const v = (k: ClueSym): Nx => num(k.v, "a mirror");
+    return [
+      ...here.flatMap((k) =>
+        [1, 2].map((m) => [and(k.present, cmp("=", v(k), m)), m] as const),
+      ),
+      [not(or(...here.map((k) => k.present))), 0],
+    ];
+  };
+  const out = sightlineGuards(board.sp, s, ways);
+  const memoOf = sightCache.get(board) ?? new Map();
+  sightCache.set(board, memoOf);
+  memoOf.set(key, out);
+  return out;
+}
+
+/** {@link sightGuards} on `sp`, where `ways` says what each cell may hold,
+ * each under its guard: 0 none, 1 a mirror `\`, 2 a mirror `/`. */
+export function sightlineGuards(
+  sp: GridSpace,
+  s: number,
+  ways: (c: number) => readonly (readonly [Bx, number])[],
+): SightGuards {
+  const add = (to: Map<number, Bx>, x: number, g: Bx): void => {
+    if (g !== false) to.set(x, or(to.get(x) ?? false, g));
+  };
+  // By axis (across 0, up and down 1) and whether a mirror was passed.
+  const passed = [0, 1].map(() => [0, 1].map(() => new Map<number, Bx>()));
+  const exit = new Map<number, Bx>();
+  type Way = { at: SightAt; bent: number; g: Bx };
+  let now: Way[] = [{ at: sightEntry(sp, s), bent: 0, g: true }];
+  // A sightline on a board passes each cell twice at most, and is out by
+  // then; a way still standing after that holds of no board.
+  for (let step = 0; now.length > 0 && step <= 2 * sp.cells.length; step++) {
+    const next = new Map<string, Way>();
+    for (const { at, bent, g } of now) {
+      const ahead = sightAhead(sp, at);
+      if (ahead.exit >= 0) {
+        add(exit, ahead.exit, g);
+        continue;
+      }
+      for (const [h, m] of ways(ahead.c)) {
+        const gm = and(g, h);
+        if (gm === false) continue;
+        if (m === 0) add(passed[at.dir & 1][bent], ahead.c, gm);
+        const dir = sightTurn(at.dir, m);
+        const b = m === 0 ? bent : 1;
+        const k = `${ahead.c} ${dir} ${b}`;
+        const was = next.get(k);
+        next.set(k, {
+          at: { c: ahead.c, dir },
+          bent: b,
+          g: was === undefined ? gm : or(was.g, gm),
+        });
+      }
+    }
+    now = [...next.values()];
+  }
+  const either = (a: ReadonlyMap<number, Bx>, b: ReadonlyMap<number, Bx>) => {
+    const out = new Map<number, Bx>();
+    for (const c of sp.cells) {
+      const g = or(a.get(c) ?? false, b.get(c) ?? false);
+      if (g !== false) out.set(c, g);
+    }
+    return out;
+  };
+  const direct = either(passed[0][0], passed[1][0]);
+  const bent = either(passed[0][1], passed[1][1]);
+  const twice = new Map<number, Bx>();
+  for (const c of sp.cells)
+    add(twice, c, and(passed[0][1].get(c) ?? false, passed[1][1].get(c) ?? false));
+  return { all: either(direct, bent), direct, bent, twice, exit };
+}
+
 /** `times(d)`: the repeated value's count, 1 for every other. */
 function timesOf(ctx: Ctx, d: Nx): Nx {
   const r = ctx.d.repeat;
@@ -1090,6 +1231,8 @@ function evaluate(e: Expr, env: Env, ctx: Ctx): V {
       return binary(e, env, ctx);
     case "quant": {
       const forall = e.q === "forall";
+      const quantified = quantifiedFill(e, env, ctx);
+      if (quantified !== null) return { k: "bool", v: quantified };
       const parts: Bx[] = [];
       bindings(e.binders, 0, env, true, ctx, (inner, g) => {
         const body = bool(evaluate(e.body, inner, ctx), e.q);
@@ -1375,6 +1518,64 @@ function equal(a: V, b: V): Bx {
   throw new TypeError(`= of ${a.k} and ${b.k}`);
 }
 
+/**
+ * The most assignments a fill is listed by. A fill's assignments are its
+ * values to the power of its members, and a quantifier that ranges over more
+ * is asked of z3 whole ({@link quantifiedFill}): Undead's sightline fills up to
+ * nine squares with four values, 262,144 assignments a binding, which listed
+ * ran the check out of memory.
+ */
+const LISTED_FILLS = 4096;
+
+/**
+ * `forall fill f of L from cand: …` or `exists …` with too many assignments
+ * to list, as a z3 quantifier over a value for each square that may be in
+ * `L`, held to the square's candidates where it is. Null where the quantifier
+ * does not begin with a fill, or its fill is small enough to list.
+ */
+function quantifiedFill(
+  e: Extract<Expr, { k: "quant" }>,
+  env: Env,
+  ctx: Ctx,
+): Bx | null {
+  const b = e.binders[0];
+  if (b?.kind !== "fill") return null;
+  if (b.from !== undefined && b.from !== "cand")
+    throw new Error(`fill ${b.name} from ${b.from}`);
+  const of = evaluate(b.of, env, ctx);
+  if (of.k !== "eset") return null;
+  const members = of.mem.filter(([, g]) => g !== false);
+  const { top } = ctx.board;
+  if (top ** members.length <= LISTED_FILLS) return null;
+  const [first, ...rest] = members.map(([c]) => Z3.Int.const(fresh(`${b.name}${c}`)));
+  const vars: [I, ...I[]] = [first, ...rest];
+  const vals = new Map<number, Nx>(members.map(([c], j) => [c, vars[j]]));
+  const held = and(
+    ...members.map(([c, g], j) =>
+      implies(
+        g,
+        or(
+          ...Array.from({ length: top }, (_, k) =>
+            and(vars[j].eq(k + 1), b.from === "cand" ? candAt(ctx, c, k + 1) : true),
+          ),
+        ),
+      ),
+    ),
+  );
+  const inner = new Map(env);
+  inner.set(b.name, { k: "fill", vals });
+  const w =
+    b.where === null ? true : bool(evaluate(b.where, inner, ctx), `where of ${b.name}`);
+  const forall = e.q === "forall";
+  const parts: Bx[] = [];
+  bindings(e.binders, 1, inner, and(held, w), ctx, (at, g) => {
+    const body = bool(evaluate(e.body, at, ctx), e.q);
+    parts.push(forall ? implies(g, body) : and(g, body));
+  });
+  const whole = asZ3(forall ? and(...parts) : or(...parts));
+  return forall ? Z3.ForAll(vars, whole) : Z3.Exists(vars, whole);
+}
+
 /** Every binding of `bs` from `i`, each with the guard under which it is one. */
 function bindings(
   bs: readonly Binder[],
@@ -1432,6 +1633,20 @@ function bindings(
       vals.delete(c);
     };
     assign(0, true);
+    return;
+  }
+  // A range bound over is its numbers, each under its being between the
+  // ends: as a set of values it would hold none past the board's top
+  // (Undead's sightline binds a slot's place in the round, up to 15 on a
+  // board whose top is 4). An end that reads the answer or a clue is not
+  // bounded by its form, and is held to the board's values, as a set is.
+  if (b.of.k === "call" && b.of.fn === "range") {
+    const lo = num(evaluate(b.of.args[0], env, ctx), "range");
+    const hi = num(evaluate(b.of.args[1], env, ctx), "range");
+    const from = bounds(lo)?.[0] ?? 0;
+    const to = bounds(hi)?.[1] ?? ctx.board.top;
+    for (let d = from; d <= to; d++)
+      next({ k: "num", v: d }, and(cmp(">=", d, lo), cmp("<=", d, hi)));
     return;
   }
   const s = evaluate(b.of, env, ctx);
@@ -1824,6 +2039,8 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       ]);
     });
   }
+  const sighted = bentSight(fn, args, env, ctx);
+  if (sighted !== null) return sighted;
   if (fn === "latin") {
     // `latin(value, lines)`: the answer distinct in every line, or where a
     // value repeats, each value of the domain `times(d)` times in each.

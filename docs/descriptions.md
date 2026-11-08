@@ -354,6 +354,13 @@ description author acts on:
   what turns it. `beam(s, c, v)` supposes `c` holds `v`, and `ahead(s)` is
   the first cell that decides it. The engine's `traceBeam` is the physics
   for the game, the compiled code and the checker alike.
+- **`sight(s, M)` is the cells seen from slot `s`** through the mirrors a
+  cell clue kind `M` deals (Undead's), each mirror turning the line, 1 as
+  `\` and 2 as `/`. `sight_direct`
+  holds those before the first mirror, `sight_bent` those passed after one,
+  `sight_twice` those passed twice after one, and `sight_exit(s, M)` is the
+  slot the line leaves by. The engine's `traceSight` is the physics, built
+  once a board.
 - **A library name is looked up before a description's definitions**, so a
   name added to the library is spelled apart from every one a description
   defines (`on_grid`, since Solo defines `inside`). A definition spelled as
@@ -887,7 +894,11 @@ the check. What a small board cannot cover:
   answer check and the comparison with the code it replaced.
 - **A filling of a set the marks decide is enumerated over every cell that
   may be in it**, so its cost doubles with each: Star Battle's `fill` of a
-  region's open squares takes minutes. Each value of a technique's first
+  region's open squares takes minutes. A `forall` or `exists` over a fill
+  of more than `LISTED_FILLS` assignments is a z3 quantifier instead, one
+  integer a member held to its candidates: Undead's sightline fills nine
+  squares four ways, 262,144 assignments a binding, which listed ran the
+  heap out. Each value of a technique's first
   binder is one query, built as it runs. **A technique whose recorded
   verdict is current is not checked again**, and each verdict is recorded
   as it is proved, so a run cut short keeps what it finished;
@@ -897,7 +908,9 @@ the check. What a small board cannot cover:
   side. **A query that outgrows z3's
   2 GB heap aborts and leaves the run hung**, not failed: watch its output
   for `OOM`. `CHECK_SPLIT` fixes more of the first binders a query (Mines'
-  `region` and `regions` at 3, `count` at 5), more and smaller queries.
+  `region` and `regions` at 3, `count` at 5; Bridges at 3), more and
+  smaller queries. A plant is asked as one query, and once a board of an
+  order has caught it, not on that order's other boards.
   A run's heap only grows, a reset solver and a forced collection between
   queries notwithstanding, so a check of thousands of queries still
   outgrows it: `CHECK_SHARD=i/n` takes every nth query from the ith, n
@@ -927,6 +940,12 @@ the check. What a small board cannot cover:
   index(i, U) + index(j, U)` reaches 11, on a 3×3 board whose `top` is 3).
   State such a set over cells: Path's `weighed` holds each pair's edges in
   two sets of cells. A member that reads an answer or a clue is not bounded.
+  `top` is the order, or past it where the domain ends past it, at a number,
+  at sizes the board fixes (Bridges' `range(1, maxb + 1)`) or at a region's
+  size (Seismic's, up to the region cells the board deals). **A binder
+  over `range(a, b)` counts** its numbers, as the runtime's does, so a
+  position along the round of Undead's slots is bound past `top`; an end
+  that reads the answer or a clue is held to `top`.
 - **A size larger than the board's cells is one unknown**, from its least
   to the cell count (Mines' `mines`, `openSizes`), not a world a value.
 - **A set the marks decide keeps its order**: `stretch` holds each cell of
@@ -957,6 +976,13 @@ the check. What a small board cannot cover:
 - **`beam` is read by walking `traceBeam` itself**, asked again with each
   cell it stops at settled each way, so the check reads the game's physics,
   under the guard of what each cell on the path holds.
+- **`sight` is read a step at a time** (`sightlineGuards`), each way the line
+  can stand on a cell, heading a direction, bent or not, kept once under the
+  guard of the mirrors that bring it there, by the engine's `sightEntry`,
+  `sightAhead` and `sightTurn`. Walking every mirror layout whole, as
+  `beam` is, made 298,240 ways at order 4 and ran z3 out of memory.
+  `sightline.test.ts` holds the two readings equal on every layout of two
+  small boards.
 - **`linked(k)` and `through(c, E)` are read as reach**, as `connected` is:
   over the points, each step along a diagonal its square holds, and over
   the cells, each step across an edge in `E`. A mark on the edges is a

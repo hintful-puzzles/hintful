@@ -78,6 +78,7 @@ import {
   type HintOp,
   recordUndeadDeductions,
   solveDeductive,
+  status,
   TIER_RUNG,
   type UndeadReason,
 } from "./solver.ts";
@@ -99,7 +100,6 @@ import {
   newUi,
   paramConfig,
   recomputeErrors,
-  status,
   textFormat,
   type UndeadCommon,
   type UndeadMove,

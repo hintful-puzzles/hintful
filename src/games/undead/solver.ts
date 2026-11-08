@@ -1,34 +1,64 @@
 /**
- * Undead solver — port of `undead.c`'s `solve_iterative` / `solve_bruteforce`,
- * plus this fork's deductive ladder and hint recorder.
+ * Undead's solver: the ladder `undead.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/ladder-runtime.ts`), and the two
+ * searches no description states.
  *
- * Both upstream solvers enumerate the `{ghost, vampire, zombie}` choice at each
- * monster cell via the {@link nextList} odometer, constrained by each cell's
- * candidate bitmask. The **iterative** solver narrows a path's cells to those
- * candidates that survive in *some* legal assignment of that path (intersected
- * to a fixpoint); the **brute-force** solver enumerates whole-grid assignments
- * and succeeds only when exactly one is consistent.
+ * One ladder serves the generator's grading, the difficulty probe and the
+ * hint, which records its firings ({@link recordUndeadDeductions}). Its Easy
+ * rungs are upstream's iterative solver: each sightline narrowed to the
+ * monsters some filling of it allows, which upstream counts in passes over
+ * every sightline. Its Normal rung is this fork's exact counting. Above them
+ * are the searches: depth-1 forcing, which grades a board Unreasonable, and
+ * upstream's brute force, which Solve and the generator's uniqueness check
+ * run where the ladder stops.
  *
- * Monster bitmask values: 1 ghost, 2 vampire, 4 zombie, 7 undecided, 0
- * inconsistent (no candidate left).
+ * The game keeps a monster as a bit (1 ghost, 2 vampire, 4 zombie) for each
+ * monster square, numbered in reading order with the mirrors left out; the
+ * description keeps a value a square (1 ghost, 2 vampire, 3 zombie, 4 a
+ * mirror), so a game mask is the description's shifted down one.
  */
 
-import { runDeductionFixpoint } from "../../engine/deduction-fixpoint.ts";
+import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+import {
+  clueList,
+  describedSpace,
+  type GridSpace,
+} from "../../engine/describe-runtime.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  type Rung,
+  runLadder,
+  TIERS,
+  uncluedRung,
+} from "../../engine/ladder-runtime.ts";
 import { NO_SOLUTION, type SolveFailure } from "../../engine/solve-failure.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
+import type { GameStatus } from "../../engine/types.ts";
 import {
+  CELL_MIRROR_L,
+  CELL_MIRROR_R,
+  DIFF_EASY,
+  DIFF_NORMAL,
   isSingleton,
-  MON_GHOST,
   MON_NONE,
-  MON_VAMPIRE,
-  MON_ZOMBIE,
   MONSTERS,
+  range2grid,
+  rangeOfSlot,
   type UndeadCommon,
-  type UndeadPath,
   type UndeadState,
-  visibleCount,
 } from "./state.ts";
+import * as undead from "./undead.compiled.ts";
+
+/** The description's value of a mirror. */
+const D_MIRROR = 4;
+
+/** Every value a square may hold, as the marks keep them: bits 1 to 4. */
+const DOMAIN = 0b11110;
 
 /** Lowest set monster bit (the odometer's starting value for a candidate set). */
 export function lowestBit(v: number): number {
@@ -36,7 +66,7 @@ export function lowestBit(v: number): number {
 }
 
 /**
- * The odometer the solvers enumerate with (upstream `next_list`): advance
+ * The odometer the searches enumerate with (upstream `next_list`): advance
  * `guess` to the next assignment within `possible`, where `guess[pos]` is one
  * monster bit and `possible[pos]` the bits allowed there. Position `pos` turns
  * fastest, each position through its allowed bits in increasing order. Returns
@@ -60,92 +90,341 @@ export function nextList(
   return false;
 }
 
-/** True iff the placed monsters (cells equal to 1/2/4) do not exceed any total. */
-function checkNumbers(common: UndeadCommon, guess: Int32Array | Uint8Array): boolean {
-  let cg = 0;
-  let cv = 0;
-  let cz = 0;
-  for (let i = 0; i < common.numTotal; i++) {
-    if (guess[i] === MON_GHOST) cg++;
-    else if (guess[i] === MON_VAMPIRE) cv++;
-    else if (guess[i] === MON_ZOMBIE) cz++;
+// --- the board as the description reads it --------------------------------
+
+const spaces = new Map<string, GridSpace>();
+
+/** The space of a `w × h` board, built once a shape. */
+function spaceOf(w: number, h: number): GridSpace {
+  const key = `${w}x${h}`;
+  let sp = spaces.get(key);
+  if (sp === undefined) {
+    sp = describedSpace(undead.units, w, h);
+    spaces.set(key, sp);
   }
-  return cg <= common.numGhosts && cv <= common.numVampires && cz <= common.numZombies;
+  return sp;
 }
 
-/** True iff a full assignment satisfies both of a path's sighting clues. */
-function checkSolution(guess: Int32Array | Uint8Array, path: UndeadPath): boolean {
-  return (
-    visibleCount(path, guess, false) === path.sightingsStart &&
-    visibleCount(path, guess, true) === path.sightingsEnd
-  );
+/** A board as the ladder reads it, and how its squares number the game's
+ * monsters. */
+interface Board {
+  common: UndeadCommon;
+  sp: GridSpace;
+  dl: undead.Dealt;
+  /** Each monster's square, by monster. */
+  squareOf: Int32Array;
+  /** Each square's monster, `-1` at a mirror. */
+  monsterOf: Int32Array;
 }
 
-/** The candidate bits each monster on `path` (indexed as `path.mapping`) keeps
- * in *some* assignment that meets both of the path's clues and exceeds no
- * total: one path's worth of upstream `solve_iterative`. */
-function pathSurvivors(
-  common: UndeadCommon,
-  cand: Uint8Array,
-  path: UndeadPath,
-): Int32Array {
-  const nm = path.numMonsters;
-  const survivors = new Int32Array(nm);
-  if (nm === 0) return survivors;
-  const loopGuess = new Int32Array(nm);
-  const loopPossible = new Int32Array(nm);
-  for (let i = 0; i < nm; i++) {
-    loopPossible[i] = cand[path.mapping[i]];
-    loopGuess[i] = lowestBit(loopPossible[i]);
-  }
-  // Only the path's own cells differ from `cand` between assignments.
-  const full = new Int32Array(cand);
-  do {
-    for (let i = 0; i < nm; i++) full[path.mapping[i]] = loopGuess[i];
-    if (checkNumbers(common, full) && checkSolution(full, path)) {
-      for (let i = 0; i < nm; i++) survivors[i] |= loopGuess[i];
+/** The board `common` holds, as the description deals it: its mirrors, the
+ * number in every slot, and the three totals. */
+function boardOf(common: UndeadCommon): Board {
+  const { w, h, grid, xinfo } = common;
+  const stride = w + 2;
+  const sp = spaceOf(w, h);
+  const mirrorAt: number[] = [];
+  const mirrorV: number[] = [];
+  const squareOf = new Int32Array(common.numTotal);
+  const monsterOf = new Int32Array(w * h).fill(-1);
+  for (const c of sp.cells) {
+    const g = (c % w) + 1 + ((c / w) | 0) * stride + stride;
+    if (grid[g] === CELL_MIRROR_L || grid[g] === CELL_MIRROR_R) {
+      mirrorAt.push(c);
+      mirrorV.push(grid[g] === CELL_MIRROR_L ? 1 : 2);
+    } else {
+      monsterOf[c] = xinfo[g];
+      squareOf[xinfo[g]] = c;
     }
-  } while (nextList(loopGuess, loopPossible, nm - 1));
-  return survivors;
+  }
+  const sees = sp.slots.map((s) => {
+    const at = range2grid(rangeOfSlot(s, w, h), w, h);
+    return grid[at.x + at.y * stride];
+  });
+  const dl: undead.Dealt = {
+    mirror: clueList(mirrorAt, mirrorV, w * h),
+    sees: clueList(sp.slots, sees, sp.slots.length),
+    ghosts: common.numGhosts,
+    vampires: common.numVampires,
+    zombies: common.numZombies,
+  };
+  return { common, sp, dl, squareOf, monsterOf };
+}
+
+/** A game monster bit's value in the description: 1, 2 or 3. */
+const monsterValue = (bit: number): number => 31 - Math.clz32(bit) + 1;
+
+/**
+ * The marks on `board` from `start`, a game mask a monster: each mirror
+ * placed, each monster down to one placed, and every other square's
+ * candidates narrowed to its mask. `null` where the masks clash with the
+ * mirrors (never, from a board's own masks).
+ */
+function marksOf(board: Board, start: ArrayLike<number>): CellMarks | null {
+  const { sp, dl, squareOf } = board;
+  const grid = new Uint8Array(sp.cells.length);
+  for (const c of dl.mirror.at) grid[c] = D_MIRROR;
+  for (let i = 0; i < squareOf.length; i++)
+    if (isSingleton(start[i])) grid[squareOf[i]] = monsterValue(start[i]);
+  const m = new CellMarks(sp, DOMAIN, grid);
+  if (!m.seed(grid, (c) => undead.domainOf(sp, dl, c))) return null;
+  for (let i = 0; i < squareOf.length; i++) {
+    if (isSingleton(start[i])) continue;
+    for (let d = 1; d <= 3; d++)
+      if (!(start[i] & (1 << (d - 1)))) m.strikeAt(squareOf[i], d);
+  }
+  return m;
+}
+
+/** Each monster's candidates on `m`, as the game keeps them. */
+function guessOf(board: Board, m: CellMarks): Uint8Array {
+  return Uint8Array.from(board.squareOf, (c) => (m.cand(c) >> 1) & MON_NONE);
+}
+
+/** Whether `guess`, a game monster a square, answers the board, by the
+ * rules the description compiles to. */
+function answers(board: Board, guess: ArrayLike<number>): boolean {
+  const { sp, dl, squareOf } = board;
+  const grid = new Uint8Array(sp.cells.length);
+  for (const c of dl.mirror.at) grid[c] = D_MIRROR;
+  for (let i = 0; i < squareOf.length; i++)
+    if (isSingleton(guess[i])) grid[squareOf[i]] = monsterValue(guess[i]);
+  return undead.isAnswer(grid, sp, dl);
+}
+
+/** Solved where every monster square holds one and the board's rules hold. */
+export function status(state: UndeadState): GameStatus {
+  return answers(boardOf(state.common), state.guess) ? "solved" : "ongoing";
+}
+
+// --- the ladder -------------------------------------------------------------
+
+/** Why a candidate was eliminated, or a cell forced (docs/hints-candidates.md
+ * § "What every game does"):
+ * - `sightline` — one path's two count clues admit no filling leaving this
+ *   cell the eliminated monster (the core mirror-sighting deduction);
+ * - `total` — a monster type's full count is already placed, so it is struck
+ *   from every still-undecided cell;
+ * - `onlyCells` — exactly as many cells can still hold a type as remain to
+ *   place, so each of them is forced to it (counting's dual, a placement);
+ * - `single` — the cell's notes are down to one monster.
+ *
+ * There is no `forcing` reason, so a hint narrating the search is a compile
+ * error rather than a convention. */
+export type UndeadReason =
+  | { kind: "sightline"; path: number }
+  | { kind: "total"; monster: number }
+  | { kind: "onlyCells"; monster: number; nCells: number }
+  | { kind: "single" };
+
+/** The ladder over `board`, each technique with its reason; `passes` counts
+ * the runs of the sightline rung that narrowed something. */
+function ladderOf(board: Board, passes: { n: number }): Ladder {
+  const { common, dl } = board;
+  const { w, h } = common;
+  // A sightline's path in the game's list, by the slot it is read from.
+  const pathOf = new Map<number, number>();
+  common.paths.slice(0, common.numPaths).forEach((p, i) => {
+    pathOf.set(p.gridStart, i);
+    pathOf.set(p.gridEnd, i);
+  });
+  const sightline = compiledRung(
+    undead.sightline,
+    dl,
+    ({ s }): UndeadReason => ({
+      kind: "sightline",
+      path: pathOf.get(rangeOfSlot(s, w, h)) ?? -1,
+    }),
+  );
+  const counted: Rung = Object.assign(
+    (m: CellMarks): number => {
+      const ret = sightline(m);
+      if (ret > 0) passes.n++;
+      return ret;
+    },
+    { firings: sightline.firings },
+  );
+  return describedLadder(undead, {
+    single: uncluedRung(undead.single, (): UndeadReason => ({ kind: "single" })),
+    sightline: counted,
+    total: compiledRung(
+      undead.total,
+      dl,
+      ({ d, n, P }): UndeadReason =>
+        P.length === n
+          ? { kind: "total", monster: MONSTERS[d - 1] }
+          : { kind: "onlyCells", monster: MONSTERS[d - 1], nCells: n },
+    ),
+  });
+}
+
+/** A ladder run's marks and their verdict. */
+interface Run {
+  m: CellMarks;
+  /** A technique proved the marks inconsistent, or a square has no
+   * candidate left. */
+  impossible: boolean;
+}
+
+/** Run `ladder` on `m` to a fixpoint at tier `cap`, counting each technique's
+ * firings into `firings` where one is given. */
+function runAt(ladder: Ladder, m: CellMarks, cap: number, firings?: FiringTally): Run {
+  const grades = { [TIERS]: -1 };
+  const impossible = runLadder(
+    m,
+    ladderTechniques(m, ladder.entries, { [TIERS]: cap }, grades),
+    { firings },
+  );
+  return { m, impossible: impossible || m.cands.includes(0) };
+}
+
+/** Whether every square of `m` holds a value. */
+const filled = (m: CellMarks): boolean => !m.grid.includes(0);
+
+// --- grading ----------------------------------------------------------------
+
+/** Highest deductive technique a board needs (or `RECURSION` if the ladder
+ * stalls — that board needs nested hypothesizing = guessing). */
+export const RUNG_ARC = 0;
+export const RUNG_COUNTING = 1;
+export const RUNG_FORCING = 2;
+const RUNG_RECURSION = 3;
+export type TierRung = 0 | 1 | 2 | 3;
+
+/** The ladder's cap for each tier level, `DIFF_EASY` upward. */
+export const TIER_RUNG: readonly TierRung[] = [RUNG_ARC, RUNG_COUNTING, RUNG_FORCING];
+
+/**
+ * Easy's bound on sightline passes, upstream's arc-consistency passes, the
+ * last of which narrows nothing: a board needing more than this falls to
+ * Normal even though it never leaves the Easy rungs.
+ *
+ * It lives beside the rungs because Easy is a rung *and a bound* and both of
+ * its readers need the pair: the generator's tier-acceptance rule
+ * (`gradeMatchesTier`) and the difficulty contract's `solveAtCap` are two
+ * spellings of one rule.
+ */
+export const EASY_MAX_ARC_PASSES = 3;
+
+export interface DeductiveResult {
+  /** highest rung the ladder needed; `RUNG_RECURSION` if it never solved. */
+  rung: TierRung;
+  /** the ladder narrowed every cell to a single monster (⇒ unique solution). */
+  solved: boolean;
+  /** a contradiction surfaced (the board has no solution). */
+  inconsistent: boolean;
+  /** sightline passes at the Easy cap, the last narrowing nothing. */
+  arcPasses: number;
+  /** each monster's candidates after the ladder ran, as the game keeps them. */
+  guess: Uint8Array;
 }
 
 /**
- * One iterative pass (upstream `solve_iterative`): narrow each path's cells, in
- * turn, to their {@link pathSurvivors}. Mutates `guess` in place; returns
- * whether every cell is now a single monster.
+ * Upstream's forcing pass, one round: each candidate of each undecided
+ * square in turn, supposed, and the Normal ladder run from it on a copy; one
+ * that leads to a contradiction is struck. Returns `-1` where a square is
+ * left with none, `1` where anything was struck, else `0`. A supposition is
+ * never made inside another: a board that needs one is left unsolved.
  */
-function solveIterative(common: UndeadCommon, guess: Uint8Array): boolean {
-  for (const path of common.paths) {
-    const survivors = pathSurvivors(common, guess, path);
-    for (let i = 0; i < path.numMonsters; i++) guess[path.mapping[i]] &= survivors[i];
+function forcingPass(ladder: Ladder, m: CellMarks): number {
+  const { cells } = m.sp;
+  let changed = 0;
+  for (const c of cells) {
+    if (m.known(c)) continue;
+    for (let d = 1; d <= 3; d++) {
+      if (!m.has(c, d)) continue;
+      const grid = m.grid.slice();
+      const cands = m.snapshot();
+      m.place(c, d);
+      const dead = runAt(ladder, m, DIFF_NORMAL).impossible;
+      m.restore(grid, cands);
+      if (!dead) continue;
+      m.strikeAt(c, d);
+      changed = 1;
+      if (m.cand(c) === 0) return -1;
+    }
   }
-  return guess.every(isSingleton);
+  return changed;
 }
+
+/**
+ * Run the deductive ladder over a starting candidate grid, a tier at a time
+ * so the result records the highest technique needed: the Easy rungs, then
+ * the Normal rung, then depth-1 forcing to a fixpoint, never a supposition
+ * inside one. This is the generator's grading entry.
+ *
+ * `maxRung` stops escalation early: grading for a tier rejects anything the
+ * tier's rung cannot solve, so Easy and Normal need not pay for forcing.
+ * `solved=false` then means "needs more than `maxRung`", reported as
+ * `RUNG_RECURSION`.
+ *
+ * `firings` counts the techniques fired on the board itself, for the ladder
+ * census; a supposition's are not the board's, and are not counted.
+ */
+export function solveDeductive(
+  common: UndeadCommon,
+  start: Uint8Array,
+  maxRung: TierRung = RUNG_FORCING,
+  firings?: FiringTally,
+): DeductiveResult {
+  const board = boardOf(common);
+  const passes = { n: 0 };
+  const ladder = ladderOf(board, passes);
+  const m = marksOf(board, start);
+  // The passes are the Easy attempt's alone, as upstream counted them.
+  let arcPasses = 0;
+  const result = (rung: TierRung, inconsistent = false): DeductiveResult => ({
+    rung,
+    solved: rung !== RUNG_RECURSION,
+    inconsistent,
+    arcPasses,
+    guess: m === null ? new Uint8Array(common.numTotal) : guessOf(board, m),
+  });
+  if (m === null) return result(RUNG_RECURSION, true);
+
+  const easy = runAt(ladder, m, DIFF_EASY, firings);
+  arcPasses = passes.n + 1;
+  if (easy.impossible) return result(RUNG_RECURSION, true);
+  if (filled(m)) return result(RUNG_ARC);
+  if (maxRung < RUNG_COUNTING) return result(RUNG_RECURSION);
+
+  if (runAt(ladder, m, DIFF_NORMAL, firings).impossible)
+    return result(RUNG_RECURSION, true);
+  if (filled(m)) return result(RUNG_COUNTING);
+  if (maxRung < RUNG_FORCING) return result(RUNG_RECURSION);
+
+  for (;;) {
+    const ret = forcingPass(ladder, m);
+    if (ret < 0) return result(RUNG_RECURSION, true);
+    if (ret === 0) break;
+    if (runAt(ladder, m, DIFF_NORMAL, firings).impossible)
+      return result(RUNG_RECURSION, true);
+    if (filled(m)) break;
+  }
+  return result(filled(m) ? RUNG_FORCING : RUNG_RECURSION);
+}
+
+// --- upstream's solve: the iterative solver, then brute force ---------------
 
 /**
  * Whole-grid brute-force uniqueness check (upstream `solve_bruteforce`):
  * enumerate every assignment within the current candidate sets; succeed only
- * when exactly one is fully consistent, recording it into `guess`.
+ * when exactly one answers the board, recording it into `guess`.
  */
-function solveBruteforce(common: UndeadCommon, guess: Uint8Array): boolean {
-  const numTotal = common.numTotal;
+function solveBruteforce(board: Board, guess: Uint8Array): boolean {
+  const numTotal = guess.length;
   if (numTotal === 0) return false;
   const loopPossible = new Int32Array(guess);
   const loopGuess = loopPossible.map(lowestBit);
   let solutions = 0;
   do {
-    if (
-      checkNumbers(common, loopGuess) &&
-      common.paths.every((path) => checkSolution(loopGuess, path))
-    ) {
+    if (answers(board, loopGuess)) {
       if (++solutions > 1) return false;
       guess.set(loopGuess);
     }
   } while (nextList(loopGuess, loopPossible, numTotal - 1));
   return solutions === 1;
 }
-
-// --- upstream's grading, and the solution -----------------------------------
 
 export interface GradeResult {
   iterativeSolved: boolean;
@@ -158,30 +437,32 @@ export interface GradeResult {
 }
 
 /**
- * Upstream's solver pipeline (`new_game_desc`'s grading block): the iterative
- * solver to a fixpoint, then brute force when `diffAllowsBruteforce` (upstream
- * skips it at Easy). The differential checks its verdicts against C; the
- * generator grades by {@link solveDeductive} instead.
+ * Upstream's solver pipeline (`new_game_desc`'s grading block): its
+ * iterative solver, the ladder's Easy rungs, to a fixpoint, then brute force
+ * when `diffAllowsBruteforce` (upstream skips it at Easy). The differential
+ * checks its verdicts against C; the generator grades by
+ * {@link solveDeductive} instead.
  */
 export function gradeUndead(
   common: UndeadCommon,
   start: Uint8Array,
   diffAllowsBruteforce: boolean,
 ): GradeResult {
-  const guess = start.slice();
-  let iterativeSolved: boolean;
-  let before: Uint8Array;
-  do {
-    before = guess.slice();
-    iterativeSolved = solveIterative(common, guess);
-  } while (!iterativeSolved && before.some((v, i) => v !== guess[i]));
+  const board = boardOf(common);
+  const m = marksOf(board, start);
+  const guess = m === null ? new Uint8Array(common.numTotal) : guessOf(board, m);
+  if (m !== null) {
+    runAt(ladderOf(board, { n: 0 }), m, DIFF_EASY);
+    guess.set(guessOf(board, m));
+  }
+  const iterativeSolved = guess.every(isSingleton);
   const inconsistent = guess.includes(0);
 
   let ambiguous = 0;
   let bruteforceSolved = false;
   if (diffAllowsBruteforce && !iterativeSolved && !inconsistent) {
     ambiguous = guess.filter((v) => !isSingleton(v)).length;
-    bruteforceSolved = solveBruteforce(common, guess);
+    bruteforceSolved = solveBruteforce(board, guess);
   }
   return { iterativeSolved, bruteforceSolved, inconsistent, ambiguous, guess };
 }
@@ -207,268 +488,14 @@ export function findUndeadSolution(state: UndeadState): SolutionResult {
 }
 
 /** True iff the board has exactly one solution (iterative-or-brute-force,
- * order-independent). Used by the differential's uniqueness assertion. */
+ * order-independent). Used by the generator and the differential. */
 export function isUniquelySolvable(common: UndeadCommon): boolean {
   const start = new Uint8Array(common.numTotal).fill(MON_NONE);
   const grade = gradeUndead(common, start, true);
   return !grade.inconsistent && (grade.iterativeSolved || grade.bruteforceSolved);
 }
 
-// --- the deductive ladder (fork divergence: guess-free generation) ---------
-//
-// Upstream grades difficulty by *how much brute force* a board needs, which
-// conflicts with guess-free generation (docs/solver-and-generator.md
-// § "Guess-free generation"). This ladder adds the two rungs upstream never
-// built, **exact counting** and **depth-1 forcing**, above arc-consistency
-// (`solveIterative`), and grades a board by the highest rung it needs.
-//
-// Every rung is *sound*: it narrows a cell only to values the true solution
-// still allows, so a ladder that narrows every cell to a singleton has proven
-// that singleton the unique solution. `solveBruteforce` remains the
-// independent uniqueness oracle.
-
-/** Highest deductive technique a board needs (or `RECURSION` if the ladder
- * stalls — that board needs nested hypothesizing = guessing). */
-export const RUNG_ARC = 0;
-export const RUNG_COUNTING = 1;
-export const RUNG_FORCING = 2;
-const RUNG_RECURSION = 3;
-export type Rung = 0 | 1 | 2 | 3;
-
-/** The ladder's cap for each tier level, `DIFF_EASY` upward. */
-export const TIER_RUNG: readonly Rung[] = [RUNG_ARC, RUNG_COUNTING, RUNG_FORCING];
-
-/**
- * Easy's bound on arc-consistency passes: a board needing more than this falls
- * to Normal even though it never leaves the arc rung.
- *
- * It lives beside the rungs because Easy is a rung *and a bound* and both of
- * its readers need the pair: the generator's tier-acceptance rule
- * (`gradeMatchesTier`) and the difficulty contract's `solveAtCap` are two
- * spellings of one rule. A copy of the bound in either could drift unnoticed,
- * because the game's own tests exercise the generator's spelling and every
- * cross-game guard the contract's.
- */
-export const EASY_MAX_ARC_PASSES = 3;
-
-/** Outcome of one propagation step/fixpoint. */
-type Step = "progress" | "stuck" | "inconsistent";
-
-/**
- * Rung 1 — arc-consistency to a fixpoint: repeat `solveIterative` (the
- * per-sightline candidate intersection) until nothing changes. Reports whether
- * it made progress / stalled / hit a contradiction, plus the pass count (used by
- * the Easy cap).
- */
-function arcFixpoint(
-  common: UndeadCommon,
-  guess: Uint8Array,
-): { step: Step; passes: number } {
-  let passes = 0;
-  let everChanged = false;
-  while (true) {
-    const before = guess.slice();
-    solveIterative(common, guess);
-    passes++;
-    if (guess.includes(0)) return { step: "inconsistent", passes };
-    if (before.every((v, i) => v === guess[i])) break;
-    everChanged = true;
-  }
-  return { step: everChanged ? "progress" : "stuck", passes };
-}
-
-/**
- * Rung 2 — exact counting (one pass). The three monster totals sum to the cell
- * count, so they are *equalities*: exactly `numGhosts` cells are ghosts, etc.
- * That licenses Hall-type deductions per type `T` (mask `m`, target `nT`):
- *  - `placed_T > nT` or `possible_T < nT` ⇒ contradiction;
- *  - `placed_T === nT` (all `T`s pinned) ⇒ strike `m` from every other cell;
- *  - `possible_T === nT` (only `nT` cells can be `T`, and `nT` are needed) ⇒
- *    force all of them to `T`.
- * `placed_T` counts singleton-`T` cells; `possible_T` counts cells whose
- * candidate set still includes `m`.
- */
-function countingPass(common: UndeadCommon, guess: Uint8Array): Step {
-  const numTotal = common.numTotal;
-  const targets = [common.numGhosts, common.numVampires, common.numZombies];
-  let changed = false;
-  for (let t = 0; t < 3; t++) {
-    const m = MONSTERS[t];
-    const nT = targets[t];
-    let placed = 0;
-    let possible = 0;
-    for (let i = 0; i < numTotal; i++) {
-      const g = guess[i];
-      if (g === m) placed++;
-      if (g & m) possible++;
-    }
-    if (placed > nT || possible < nT) return "inconsistent";
-    if (placed === nT) {
-      for (let i = 0; i < numTotal; i++) {
-        const g = guess[i];
-        if (g !== m && g & m) {
-          guess[i] = g & ~m;
-          changed = true;
-          if (guess[i] === 0) return "inconsistent";
-        }
-      }
-    } else if (possible === nT) {
-      for (let i = 0; i < numTotal; i++) {
-        const g = guess[i];
-        if (g & m && g !== m) {
-          guess[i] = m;
-          changed = true;
-        }
-      }
-    }
-  }
-  return changed ? "progress" : "stuck";
-}
-
-/** Rungs 1+2 to a combined fixpoint: arc-consistency and counting cascade until
- * neither changes anything. */
-function arcCountFixpoint(common: UndeadCommon, guess: Uint8Array): Step {
-  let everChanged = false;
-  while (true) {
-    const arc = arcFixpoint(common, guess);
-    if (arc.step === "inconsistent") return "inconsistent";
-    const cnt = countingPass(common, guess);
-    if (cnt === "inconsistent") return "inconsistent";
-    if (arc.step === "progress" || cnt === "progress") everChanged = true;
-    if (cnt !== "progress") break; // counting added nothing new ⇒ arc is also at fixpoint
-  }
-  return everChanged ? "progress" : "stuck";
-}
-
-/**
- * Rung 3 — one depth-1 forcing pass. For each remaining candidate of each
- * undecided cell, hypothesize it and run the arc+counting fixpoint on a copy; a
- * contradiction eliminates the candidate from the real grid. That is a
- * solve-from-hypothesis, so the tier needing it is `Unreasonable` and the hint
- * recorder has no such technique. **The inner fixpoint never forces**: a
- * hypothesis inside a hypothesis would be guessing, and a board that needs one
- * is left unsolved.
- */
-function forcingPass(common: UndeadCommon, guess: Uint8Array): Step {
-  let changed = false;
-  for (let i = 0; i < common.numTotal; i++) {
-    if (isSingleton(guess[i]) || guess[i] === 0) continue;
-    for (const b of MONSTERS) {
-      if (!(guess[i] & b)) continue;
-      const trial = guess.slice();
-      trial[i] = b;
-      if (arcCountFixpoint(common, trial) === "inconsistent") {
-        guess[i] &= ~b;
-        changed = true;
-        if (guess[i] === 0) return "inconsistent";
-      }
-    }
-  }
-  return changed ? "progress" : "stuck";
-}
-
-/** Rungs 1+2+3 to a fixpoint: alternate forcing with arc+counting propagation
- * of each elimination until forcing finds nothing more (or the board solves). */
-function forcingFixpoint(common: UndeadCommon, guess: Uint8Array): Step {
-  let everChanged = false;
-  while (true) {
-    const fr = forcingPass(common, guess);
-    if (fr === "inconsistent") return "inconsistent";
-    if (fr === "stuck") break;
-    everChanged = true;
-    const cr = arcCountFixpoint(common, guess);
-    if (cr === "inconsistent") return "inconsistent";
-    if (guess.every(isSingleton)) break;
-  }
-  return everChanged ? "progress" : "stuck";
-}
-
-export interface DeductiveResult {
-  /** highest rung the ladder needed; `RUNG_RECURSION` if it never solved. */
-  rung: Rung;
-  /** the ladder narrowed every cell to a single monster (⇒ unique solution). */
-  solved: boolean;
-  /** a contradiction surfaced (the board has no solution). */
-  inconsistent: boolean;
-  /** arc-consistency passes in the pure-arc attempt (the Easy-tier cap). */
-  arcPasses: number;
-  /** the (possibly partial) candidate grid after the ladder ran. */
-  guess: Uint8Array;
-}
-
-/**
- * Run the deductive ladder (arc-consistency → counting → forcing, each to a
- * combined fixpoint, **without recursion**) over a starting candidate grid,
- * escalating one rung at a time so the result records the *highest* technique
- * needed. This is the generator's grading entry.
- *
- * `maxRung` stops escalation early: grading for a tier rejects anything the
- * tier's rung cannot solve, so Easy and Normal need not pay for the expensive
- * forcing rung. `solved=false` then means "needs more than `maxRung`", reported
- * as `RUNG_RECURSION`. The default runs the full ladder.
- */
-export function solveDeductive(
-  common: UndeadCommon,
-  start: Uint8Array,
-  maxRung: Rung = RUNG_FORCING,
-): DeductiveResult {
-  const guess = start.slice();
-  const arc = arcFixpoint(common, guess);
-  const result = (rung: Rung, inconsistent = false): DeductiveResult => ({
-    rung,
-    solved: rung !== RUNG_RECURSION,
-    inconsistent,
-    arcPasses: arc.passes,
-    guess,
-  });
-
-  if (arc.step === "inconsistent") return result(RUNG_RECURSION, true);
-  if (guess.every(isSingleton)) return result(RUNG_ARC);
-  if (maxRung < RUNG_COUNTING) return result(RUNG_RECURSION);
-
-  if (arcCountFixpoint(common, guess) === "inconsistent") {
-    return result(RUNG_RECURSION, true);
-  }
-  if (guess.every(isSingleton)) return result(RUNG_COUNTING);
-  if (maxRung < RUNG_FORCING) return result(RUNG_RECURSION);
-
-  if (forcingFixpoint(common, guess) === "inconsistent") {
-    return result(RUNG_RECURSION, true);
-  }
-  // A stall here means the board needs recursion (nested hypothesizing).
-  return result(guess.every(isSingleton) ? RUNG_FORCING : RUNG_RECURSION);
-}
-
-// --- the hint recorder (fork divergence; never on the generate/solve path) ---
-//
-// `recordUndeadDeductions` re-runs the ladder, but captures *each firing* —
-// the candidate it eliminated or the cell it forced, and the deduction that did
-// it — in dependency order, so the hint plan (`undead/index.ts`) can narrate
-// every step. It is separate code from the grading and solve paths, so those
-// cannot change under it. Like every rung it narrows a cell only to values the
-// true solution allows, so its firings are sound to teach. It cannot recurse:
-// a board the ladder cannot crack without guessing yields a short plan, and
-// guess-free generation keeps such boards out of every tier below Unreasonable.
-
-/** Why a candidate was eliminated, or a cell forced (docs/hints-candidates.md
- * § "What every game does"):
- * - `sightline` — one path's two count clues admit no legal beam arrangement
- *   leaving this cell the eliminated monster (the core mirror-sighting deduction);
- * - `total` — a monster type's full count is already placed, so it is struck from
- *   every still-undecided cell;
- * - `onlyCells` — exactly as many cells can still hold a type as remain to place,
- *   so each of them is forced to it (counting's dual, a placement);
- * - `single` — the cell's notes are down to one monster (the planner's reason,
- *   never the recorder's).
- *
- * There is deliberately no `forcing` reason, so a hint narrating the search rung
- * is a compile error rather than a convention; see
- * {@link recordUndeadDeductions}. */
-export type UndeadReason =
-  | { kind: "sightline"; path: number }
-  | { kind: "total"; monster: number }
-  | { kind: "onlyCells"; monster: number; nCells: number }
-  | { kind: "single" };
+// --- the hint's record ------------------------------------------------------
 
 /** One recorded firing op. `kind: "elim"` removes `monster` from `cell`'s
  * candidates; `kind: "place"` forces `cell` to `monster`. `group` ties the ops
@@ -481,135 +508,36 @@ export interface HintOp {
   group: number;
 }
 
-/** Record the first path-pass that eliminates a candidate; apply it to `cand`.
- * One path-pass is one firing (`group`). Returns its ops, or `[]`. */
-function recordSightlinePass(
-  common: UndeadCommon,
-  cand: Uint8Array,
-  group: number,
-): HintOp[] {
-  for (let p = 0; p < common.numPaths; p++) {
-    const path = common.paths[p];
-    const survivors = pathSurvivors(common, cand, path);
-    const ops: HintOp[] = [];
-    for (let j = 0; j < path.numMonsters; j++) {
-      const m = path.mapping[j];
-      const removed = cand[m] & ~survivors[j];
-      if (!removed) continue;
-      for (const b of MONSTERS) {
-        if (removed & b)
-          ops.push({
-            kind: "elim",
-            cell: m,
-            monster: b,
-            reason: { kind: "sightline", path: p },
-            group,
-          });
-      }
-    }
-    if (ops.length > 0) {
-      for (let j = 0; j < path.numMonsters; j++) cand[path.mapping[j]] &= survivors[j];
-      return ops;
-    }
-  }
-  return [];
-}
-
-/** Record the first counting deduction (total exhaustion, or its dual "only this
- * many cells can hold the type"); apply it to `cand`. Returns its ops, or `[]`. */
-function recordCountingPass(
-  common: UndeadCommon,
-  cand: Uint8Array,
-  group: number,
-): HintOp[] {
-  const numTotal = common.numTotal;
-  const targets = [common.numGhosts, common.numVampires, common.numZombies];
-  for (let t = 0; t < 3; t++) {
-    const m = MONSTERS[t];
-    const nT = targets[t];
-    let placed = 0;
-    let possible = 0;
-    for (let i = 0; i < numTotal; i++) {
-      if (cand[i] === m) placed++;
-      if (cand[i] & m) possible++;
-    }
-    if (placed === nT && possible > nT) {
-      // All of this type are placed — strike it from every other candidate cell.
-      const ops: HintOp[] = [];
-      for (let i = 0; i < numTotal; i++) {
-        if (cand[i] !== m && cand[i] & m) {
-          ops.push({
-            kind: "elim",
-            cell: i,
-            monster: m,
-            reason: { kind: "total", monster: m },
-            group,
-          });
-          cand[i] &= ~m;
-        }
-      }
-      return ops;
-    }
-    if (possible === nT && placed < nT) {
-      // Exactly nT cells can hold the type and nT remain — force each of them.
-      const ops: HintOp[] = [];
-      for (let i = 0; i < numTotal; i++) {
-        if (cand[i] !== m && cand[i] & m) {
-          ops.push({
-            kind: "place",
-            cell: i,
-            monster: m,
-            reason: { kind: "onlyCells", monster: m, nCells: nT },
-            group,
-          });
-          cand[i] = m;
-        }
-      }
-      return ops;
-    }
-  }
-  return [];
-}
-
 /**
- * Run the ladder's counting and sightline rungs over the candidates `placed`
- * implies (a placed cell's single monster, otherwise all three), recording every
- * firing in dependency order. Each round records the first technique that
- * fires, counting first (totals lead), until neither does.
+ * Run the ladder's Easy and Normal rungs over the candidates `placed`
+ * implies (a placed cell's single monster, otherwise all three), recording
+ * every firing in the order the ladder makes them, one a pass. A square the
+ * ladder places because its candidates are down to one is the plan's own
+ * step, read off the player's notes, so its record is left out. The forcing
+ * search is not run: a board that needs it gives a short record, and the
+ * hint stops where it would begin.
  */
 export function recordUndeadDeductions(
   common: UndeadCommon,
   placed: Uint8Array,
 ): HintOp[] {
-  const cand = placed.map((v) => (isSingleton(v) ? v : MON_NONE));
+  const board = boardOf(common);
+  const start = placed.map((v) => (isSingleton(v) ? v : MON_NONE));
+  const m = marksOf(board, start);
+  if (m === null) return [];
   const ops: HintOp[] = [];
-  let group = 0;
-  // One firing = one `group`, bumped only after it fires.
-  const record = (
-    pass: (common: UndeadCommon, cand: Uint8Array, group: number) => HintOp[],
-  ): number => {
-    const fired = pass(common, cand, group);
-    if (fired.length === 0) return 0;
-    for (const op of fired) ops.push(op);
-    group++;
-    return 1;
+  m.recorder = (rec) => {
+    const reason = rec.reason as UndeadReason;
+    if (reason.kind === "single") return;
+    ops.push({
+      kind: rec.kind,
+      cell: board.monsterOf[rec.y * common.w + rec.x],
+      monster: MONSTERS[rec.n - 1],
+      reason,
+      group: rec.group,
+    });
   };
-  runDeductionFixpoint({
-    // **No forcing technique.** The ladder's third rung hypothesizes a
-    // candidate and runs the arc+counting *fixpoint* from it, a search the
-    // collection permits only on an `Unreasonable` board and never presents as
-    // a technique. `solveDeductive` keeps the rung for grading; the hint stops
-    // where the search would begin, and refuses. Both techniques sit on tier 0:
-    // this ladder records, it does not grade.
-    techniques: [
-      { id: "counting", tier: 0, run: () => record(recordCountingPass) },
-      { id: "sightline", tier: 0, run: () => record(recordSightlinePass) },
-    ],
-    budget: stepBudget("undead hint recorder"),
-    // A contradiction (an emptied candidate cell) stops the ladder — the hint
-    // refuses on such a board anyway. So `settled` here means that, never
-    // "solved".
-    settled: () => cand.includes(0),
-  });
+  m.budget = stepBudget("undead hint recorder");
+  runAt(ladderOf(board, { n: 0 }), m, DIFF_NORMAL);
   return ops;
 }

@@ -756,7 +756,8 @@ with zero recursion, verified against a brute-force oracle. Exemplar for a
 candidate game that is not on a Latin square:
 [`undead/solver.ts`](../src/games/undead/solver.ts).
 
-- **Exact counting** off a global tally that is an equality (`countingPass`):
+- **Exact counting** off a global tally that is an equality (`total` in
+  `undead.description.yaml`):
   a type whose full count is placed is struck everywhere; a type whose
   candidate cells equal its remaining need forces them all; too few candidate
   cells is a contradiction.
@@ -764,7 +765,7 @@ candidate game that is not on a Latin square:
   fixpoint, which is a solve from a hypothesis and so a Search (§ "Check,
   Tactic, Search"): the tier that needs it is named Unreasonable and the hint
   refuses there.
-- **Cap the ladder at the tier while grading** (`maxTier`). A board the tier
+- **Cap the ladder at the tier while grading** (`maxRung`). A board the tier
   cannot use is rejected anyway.
 - **Count a candidate rung's firings on the boards the ladder stalls on
   before writing its words.** A rung a person would name first may decide

@@ -59,3 +59,124 @@ help:
     that is what [the difficulty name means](features#difficulty). The hint
     says so rather than guessing for you: save your position, try it, and
     undo if it breaks.
+name: Undead
+family: numbers
+sizes:
+  # At most 54 squares in all.
+  w: { min: 3, max: 18 }
+  h: { min: 3, max: 18 }
+  # How many ghosts, vampires and zombies the board holds, which it shows.
+  ghosts: { min: 0, max: 54 }
+  vampires: { min: 0, max: 54 }
+  zombies: { min: 0, max: 54 }
+space:
+  # A number sits in the slot beyond each end of every row and column.
+  grid: { w: "w", h: "h" }
+  slots: true
+  units: []
+answer:
+  # 1 is a ghost, 2 a vampire, 3 a zombie and 4 a mirror, which holds no
+  # monster.
+  value: { sort: cell, domain: "{d in range(1, 4) where (d = 4) = (clue(mirror, c) >= 0)}" }
+marks:
+  cand: { sort: cell, notation: "set of range(1, 4)" }
+  # A play aid with no meaning for the answer.
+  done: { sort: slot, notation: "bool" }
+define:
+  # How many of monster d the board holds.
+  holds(d): >-
+    the(n in range(0, |cells|) where (d = 1 and n = ghosts)
+    or (d = 2 and n = vampires) or (d = 3 and n = zombies))
+  # How many monsters the sightline from slot s shows: a vampire or a zombie
+  # it passes before its first mirror, and a ghost or a zombie it passes
+  # after one, each time it passes it.
+  seen(s): >-
+    count(x in sight_direct(s, mirror) where value(x) != 1)
+    + count(x in sight_bent(s, mirror) where value(x) != 2)
+    + count(x in sight_twice(s, mirror) where value(x) != 2)
+  # The same, of a filling f of its squares.
+  shows(f, s): >-
+    count(x in sight_direct(s, mirror) where f(x) != 1)
+    + count(x in sight_bent(s, mirror) where f(x) != 2)
+    + count(x in sight_twice(s, mirror) where f(x) != 2)
+  # A slot's place going round the grid clockwise from the top left, as
+  # upstream numbers them: along the top, down the right, back along the
+  # bottom and up the left; and the slot at each place.
+  round(s): >-
+    the(r in range(0, |slots| - 1) where ofRound(r) = index(s, slots))
+  ofRound(r): >-
+    the(i in range(0, |slots| - 1) where (r < w and i = r)
+    or (r >= w and r < w + h and i = w + h + r)
+    or (r >= w + h and r < 2 * w + h and i = 3 * w + h - 1 - r)
+    or (r >= 2 * w + h and i = 4 * w + 2 * h - 1 - r))
+  # How many more of monster d there is room for: those the board holds,
+  # less the squares down to it alone.
+  room(d): "holds(d) - count(x in cells where cand(x) = {d})"
+rules:
+  # The board holds as many of each monster as it shows.
+  totals: "forall d in range(1, 3): count(c in cells where value(c) = d) = holds(d)"
+clues:
+  # A mirror, `\` (1) or `/` (2), which turns a sightline a quarter turn.
+  mirror:
+    at: cell
+    value: "range(1, 2)"
+    means: "value(at) = 4"
+  # A number beside a row or column: how many monsters its sightline shows.
+  sees:
+    at: slot
+    value: "range(0, 2 * |cells|)"
+    means: "seen(at) = v"
+freedom: { kind: fill }
+deal:
+  mirror: a share of the squares, at random
+  answer: >-
+    the monsters of a few sightlines that only one filling shows as it does,
+    then the rest at random
+  sees: every number
+  tier: one of the tiers
+tiers: [Easy, Normal, Unreasonable]
+techniques:
+  # A square down to one monster holds it. One with none left, placed or
+  # not, makes the marks inconsistent.
+  - id: single
+    tier: Easy
+    for: "c in cells where |cand(c)| < 2"
+    conclude: "|cand(c)| = 1 and (known(c) or place(c, first(cand(c))))"
+  # Monster by monster: where the squares down to it alone are all the board
+  # holds, no other square holds it; where just as many squares can hold it
+  # as the board holds, each does. More of it, or too few squares for it,
+  # makes the marks inconsistent.
+  #
+  # Stated before the sightlines, though above them, so that a hint says
+  # a count is used up before a sightline does it again: every square lies on
+  # a sightline, whose filling leaves no room for a monster all placed. Easy
+  # grades without it, and its order changes no grade above.
+  - id: total
+    tier: Normal
+    for: >-
+      d in range(1, 3), n = holds(d),
+      P = {c in cells where cand(c) = {d}}, O = {c in cells where d in cand(c)}
+    conclude: >-
+      |P| <= n and |O| >= n
+      and (|P| < n or (forall c in O - P: strike(c, d)))
+      and (|O| > n or (forall c in O - P: place(c, d)))
+  # Sightline by sightline, the fewest squares first, as upstream sorts
+  # them, each read from the end that comes first going round the grid: a
+  # monster no filling of its squares puts in a square, showing both its
+  # numbers and leaving room for each monster in the counts, is struck from
+  # it. How many passes over every sightline Easy needs is part of its
+  # grade, and the order of the sightlines in a pass moves it.
+  - id: sightline
+    tier: Easy
+    for: >-
+      n in range(0, |cells|), r in range(0, |slots| - 1), s = nth(slots, ofRound(r))
+      where |sight(s, mirror)| = n and r < round(sight_exit(s, mirror)),
+      t = sight_exit(s, mirror), L = sight(s, mirror),
+      a = clue(sees, s), b = clue(sees, t), g = room(1), v = room(2), z = room(3)
+    conclude: >-
+      forall c in L, d in cand(c) where not (exists fill f of L from cand
+      where f(c) = d: (a < 0 or shows(f, s) = a) and (b < 0 or shows(f, t) = b)
+      and count(x in L where f(x) = 1 and |cand(x)| > 1) <= g
+      and count(x in L where f(x) = 2 and |cand(x)| > 1) <= v
+      and count(x in L where f(x) = 3 and |cand(x)| > 1) <= z):
+      strike(c, d)

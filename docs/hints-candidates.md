@@ -446,9 +446,10 @@ whether the deduction logic is cheap to run again.
   that reuses its building blocks. The generate, solve and `findMistakes`
   paths never call it, so they are unchanged by construction and no flag is
   threaded. Each ladder pass returns after its first firing and bumps the
-  group; the recorder loops to a fixpoint. Exemplar:
-  `recordUndeadDeductions` in
-  [`undead/solver.ts`](../src/games/undead/solver.ts).
+  group; the recorder loops to a fixpoint. A described ladder is recorded
+  so: `recordUndeadDeductions` in
+  [`undead/solver.ts`](../src/games/undead/solver.ts) runs the compiled
+  ladder again with the marks' `recorder` set.
 - **Not cheap: thread a gated recorder through the live solver.** Hold a
   nullable `recorder`, set only after the givens are placed, and gate every
   behavioral change on it. Exemplar:

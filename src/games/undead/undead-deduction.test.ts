@@ -1,13 +1,9 @@
 /**
- * The Undead deductive ladder: unit tests for each rung (arc-consistency →
- * exact counting → depth-1 forcing) and the guess-free generation property.
- *
- * The counting rung is path-independent, so it is exercised in isolation with a
- * synthetic paths-free `UndeadCommon` (arc-consistency is then a no-op, isolating
- * counting). The forcing rung and the no-guess boundary use real generated /
- * constructed boards. The property test confirms the generation gate: every
- * accepted board is solved by the ladder with **zero recursion**, at the rung its
- * tier demands.
+ * The Undead ladder as the generator grades by it: each tier's rung needed
+ * on a board that needs it, a board with two answers left unsolved rather
+ * than guessed, and the guess-free generation property: every accepted board
+ * is solved by the ladder with **zero recursion**, at the rung its tier
+ * demands. Each technique's soundness is the description checker's.
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
@@ -21,65 +17,29 @@ import {
 } from "./solver.ts";
 import {
   type Difficulty,
-  MON_GHOST,
   MON_NONE,
   MON_VAMPIRE,
+  MON_ZOMBIE,
   newState,
-  type UndeadCommon,
   type UndeadParams,
 } from "./state.ts";
 
-/** A synthetic monster-only `common` with no sightlines, so arc-consistency is a
- * pure no-op and only the counting rung can make progress. */
-function paintByNumbers(
-  numTotal: number,
-  g: number,
-  v: number,
-  z: number,
-): UndeadCommon {
-  return {
-    params: { w: 1, h: 1, diff: "easy" },
-    w: 1,
-    h: 1,
-    wh: 9,
-    numGhosts: g,
-    numVampires: v,
-    numZombies: z,
-    numTotal,
-    grid: new Int32Array(9),
-    xinfo: new Int32Array(9),
-    fixed: new Uint8Array(numTotal),
-    paths: [],
-    numPaths: 0,
-  };
-}
+const undecided = (n: number): Uint8Array => new Uint8Array(n).fill(MON_NONE);
 
 describe("undead counting rung", () => {
-  it("a fully-placed type strikes itself and Hall-forces the rest", () => {
-    // Two cells, one ghost one vampire (no zombies). Cell 0 is a given ghost.
-    // Arc-consistency (no paths) cannot touch cell 1; counting must finish it:
-    // ghost fully placed ⇒ strike ghost from cell 1; vampire's last candidate
-    // cell ⇒ force it; zombie total 0 ⇒ strike zombie everywhere.
-    const common = paintByNumbers(2, 1, 1, 0);
-    const start = Uint8Array.from([MON_GHOST, MON_NONE]);
-
-    const arc = solveDeductive(common, start, RUNG_ARC);
-    expect(arc.solved).toBe(false); // arc alone is stuck
-
-    const counting = solveDeductive(common, start, RUNG_COUNTING);
+  it("is required for a Normal board the sightlines alone leave open", () => {
+    // Dealt by the generator from the seed "undead-counting-2".
+    const params: UndeadParams = { w: 4, h: 4, diff: "normal" };
+    const common = newState(
+      params,
+      "2,5,4,RgLaRbRLa,0,4,2,4,5,3,2,2,4,0,0,1,1,1,3,0",
+    ).common;
+    expect(solveDeductive(common, undecided(common.numTotal), RUNG_ARC).solved).toBe(
+      false,
+    );
+    const counting = solveDeductive(common, undecided(common.numTotal), RUNG_COUNTING);
     expect(counting.solved).toBe(true);
     expect(counting.rung).toBe(RUNG_COUNTING);
-    expect(Array.from(counting.guess)).toEqual([MON_GHOST, MON_VAMPIRE]);
-  });
-
-  it("a zero-total monster type is struck from every cell", () => {
-    // Three cells, two ghosts one vampire, no zombies. Counting strikes zombie
-    // everywhere (total 0) and pins the vampire once both ghosts are forced.
-    const common = paintByNumbers(3, 2, 1, 0);
-    const start = Uint8Array.from([MON_GHOST, MON_GHOST, MON_NONE]);
-    const counting = solveDeductive(common, start, RUNG_COUNTING);
-    expect(counting.solved).toBe(true);
-    expect(Array.from(counting.guess)).toEqual([MON_GHOST, MON_GHOST, MON_VAMPIRE]);
   });
 });
 
@@ -88,9 +48,9 @@ describe("undead forcing rung", () => {
     const params: UndeadParams = { w: 5, h: 5, diff: "tricky" };
     const { desc } = newUndeadDesc(params, randomNew("undead-forcing-rung"));
     const common = newState(params, desc).common;
-    const start = new Uint8Array(common.numTotal).fill(MON_NONE);
+    const start = undecided(common.numTotal);
 
-    // Arc + counting cannot finish a Tricky board…
+    // Sightlines and counting cannot finish a Tricky board…
     expect(solveDeductive(common, start, RUNG_COUNTING).solved).toBe(false);
     // …but the depth-1 forcing rung does, with no recursion.
     const forcing = solveDeductive(common, start, RUNG_FORCING);
@@ -101,15 +61,18 @@ describe("undead forcing rung", () => {
 
 describe("undead deduction/recursion boundary", () => {
   it("leaves a genuinely ambiguous board unsolved rather than guessing", () => {
-    // Two cells, one ghost one vampire, no clues: both completions (G,V) and
-    // (V,G) are consistent, so depth-1 forcing finds no contradiction either
-    // way. The ladder must NOT nest hypotheses to pick one — it leaves the board
-    // unsolved (= recursion needed), and the board is genuinely non-unique.
-    const common = paintByNumbers(2, 1, 1, 0);
-    const start = new Uint8Array(2).fill(MON_NONE);
-    const result = solveDeductive(common, start, RUNG_FORCING);
+    // Two squares side by side, no mirror, a vampire and a zombie: each shows
+    // one monster up and down its column and two along the row either way
+    // round, so depth-1 forcing finds no contradiction either way. The ladder
+    // must NOT nest hypotheses to pick one: it leaves the board unsolved.
+    const common = newState({ w: 2, h: 1, diff: "easy" }, "0,1,1,b,1,1,2,1,1,2").common;
+    const result = solveDeductive(common, undecided(2), RUNG_FORCING);
     expect(result.solved).toBe(false);
     expect(result.inconsistent).toBe(false);
+    expect(Array.from(result.guess)).toEqual([
+      MON_VAMPIRE | MON_ZOMBIE,
+      MON_VAMPIRE | MON_ZOMBIE,
+    ]);
     expect(isUniquelySolvable(common)).toBe(false);
   });
 });
@@ -131,8 +94,7 @@ describe("undead guess-free generation property", () => {
           randomNew(`prop-${w}x${h}-${diff}-${i}`),
         );
         const common = newState(params, desc).common;
-        const start = new Uint8Array(common.numTotal).fill(MON_NONE);
-        const grade = solveDeductive(common, start); // full ladder
+        const grade = solveDeductive(common, undecided(common.numTotal)); // full ladder
         expect(grade.solved).toBe(true); // deductive, zero recursion
         expect(grade.inconsistent).toBe(false);
         if (diff === "easy") expect(grade.rung).toBe(RUNG_ARC);

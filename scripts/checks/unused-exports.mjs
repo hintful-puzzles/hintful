@@ -117,6 +117,16 @@ const KEPT_UNUSED = {
     "read by research/technique-check/describe-check.test.ts, which records a held verdict in the form checkedAs reads",
   "src/describe/description.ts::withVariations":
     "read by the interpreter and the soundness checker under research/",
+  "src/engine/describe-runtime.ts::SightAt":
+    "read by research/technique-check/describe-check.ts, whose step-wise sightline keeps one a way",
+  "src/engine/describe-runtime.ts::sightEntry":
+    "read by research/technique-check/describe-check.ts, which walks a sightline a step at a time from the game's own entry",
+  "src/engine/describe-runtime.ts::sightAhead":
+    "read by research/technique-check/describe-check.ts, which walks a sightline a step at a time by the game's own step",
+  "src/engine/describe-runtime.ts::sightTurn":
+    "read by research/technique-check/describe-check.ts, which walks a sightline a step at a time with the game's own turn",
+  "src/engine/describe-runtime.ts::sightSets":
+    "read by research/technique-check/sightline.test.ts, which holds the checker's sightline equal to it on every small layout",
   "src/games/netslide/state.ts::dealtOf":
     "read by research/technique-check/boards/netslide.ts, which deals the dead-end checker its boards as the game does",
 };

@@ -1,0 +1,7 @@
+ok  undead     single                         3  sound    (want sound   )     9 queries    0.2s
+ok  undead     single (planted)               3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  undead     total                          3  sound    (want sound   )     3 queries    3.2s
+ok  undead     total (planted)                3  unsound  (want unsound )     1 queries    0.1s   at 1
+..  undead     sightline: not proved whole in time, asked on 408 boards: no defect
+ok  undead     sightline                      3  sound    (want sound   )   912 queries  119.9s
+ok  undead     sightline (planted)            3  unsound  (want unsound )     2 queries   53.6s   at 1

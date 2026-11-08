@@ -5,12 +5,14 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { describedSpace, traceSight } from "../../engine/describe-runtime.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
+import * as undead from "./undead.compiled.ts";
 /**
  * Types and pure state helpers for Undead ("Haunted Mirror Mazes"), from
  * upstream `undead.c`.
@@ -77,14 +79,6 @@ export const MONSTERS = [MON_GHOST, MON_VAMPIRE, MON_ZOMBIE] as const;
 export const isSingleton = (v: number): boolean =>
   v === MON_GHOST || v === MON_VAMPIRE || v === MON_ZOMBIE;
 
-// --- grid walk directions (upstream DIRECTION_* enum) ----------------------
-
-const DIRECTION_NONE = 0;
-const DIRECTION_UP = 1;
-const DIRECTION_RIGHT = 2;
-const DIRECTION_LEFT = 3;
-const DIRECTION_DOWN = 4;
-
 // --- params ----------------------------------------------------------------
 
 export interface UndeadParams {
@@ -136,21 +130,39 @@ export function validateParams(p: UndeadParams, _full: boolean): string | null {
 // --- edge <-> grid mapping (range2grid / grid2range / num2grid) -------------
 
 /** Map an edge position index (clockwise from the top-left) to the border cell
- * `(x, y)` and the inward direction a sightline entering there travels. */
+ * `(x, y)`. */
 export function range2grid(
   rangeno: number,
   width: number,
   height: number,
-): { x: number; y: number; dir: number } {
-  if (rangeno < 0) return { x: 0, y: 0, dir: DIRECTION_NONE };
-  if (rangeno < width) return { x: rangeno + 1, y: 0, dir: DIRECTION_DOWN };
+): { x: number; y: number } {
+  if (rangeno < 0) return { x: 0, y: 0 };
+  if (rangeno < width) return { x: rangeno + 1, y: 0 };
   rangeno -= width;
-  if (rangeno < height) return { x: width + 1, y: rangeno + 1, dir: DIRECTION_LEFT };
+  if (rangeno < height) return { x: width + 1, y: rangeno + 1 };
   rangeno -= height;
-  if (rangeno < width) return { x: width - rangeno, y: height + 1, dir: DIRECTION_UP };
+  if (rangeno < width) return { x: width - rangeno, y: height + 1 };
   rangeno -= width;
-  if (rangeno < height) return { x: 0, y: height - rangeno, dir: DIRECTION_RIGHT };
-  return { x: 0, y: 0, dir: DIRECTION_NONE };
+  if (rangeno < height) return { x: 0, y: height - rangeno };
+  return { x: 0, y: 0 };
+}
+
+/** The edge position index (clockwise from the top-left) of the description's
+ * slot `s`: above each column, below each, left of each row, right of each. */
+export function rangeOfSlot(s: number, w: number, h: number): number {
+  if (s < w) return s;
+  if (s < 2 * w) return 2 * w + h - 1 - (s - w);
+  if (s < 2 * w + h) return 2 * w + 2 * h - 1 - (s - 2 * w);
+  return w + (s - 2 * w - h);
+}
+
+/** The description's slot of edge position index `r`: {@link rangeOfSlot}'s
+ * inverse. */
+function slotOfRange(r: number, w: number, h: number): number {
+  if (r < w) return r;
+  if (r < w + h) return 2 * w + h + (r - w);
+  if (r < 2 * w + h) return w + (2 * w + h - 1 - r);
+  return 2 * w + (2 * w + 2 * h - 1 - r);
 }
 
 /** Inverse of {@link range2grid}: the edge index for a border (clue) cell, or
@@ -219,6 +231,11 @@ export interface UndeadCommon {
 export function makePaths(common: UndeadCommon): void {
   const { w, h, grid, xinfo, paths } = common;
   const stride = w + 2;
+  const sp = describedSpace(undead.units, w, h);
+  const mirrorAt = (c: number): number => {
+    const v = grid[(c % w) + 1 + ((c / w) | 0) * stride + stride];
+    return v === CELL_MIRROR_L ? 1 : v === CELL_MIRROR_R ? 2 : 0;
+  };
   let count = 0;
   const tracedEnds = new Set<number>();
 
@@ -228,38 +245,19 @@ export function makePaths(common: UndeadCommon): void {
     const path = paths[count++];
     path.length = 0;
     path.gridStart = i;
-    let { x, y, dir } = range2grid(i, w, h);
-    path.sightingsStart = grid[x + y * stride];
-
-    while (true) {
-      if (dir === DIRECTION_DOWN) y++;
-      else if (dir === DIRECTION_LEFT) x--;
-      else if (dir === DIRECTION_UP) y--;
-      else if (dir === DIRECTION_RIGHT) x++;
-
-      const r = grid2range(x, y, w, h);
-      if (r !== -1) {
-        path.gridEnd = r;
-        path.sightingsEnd = grid[x + y * stride];
-        tracedEnds.add(r);
-        break;
-      }
-
-      const cell = x + y * stride;
+    const start = range2grid(i, w, h);
+    path.sightingsStart = grid[start.x + start.y * stride];
+    const line = traceSight(sp, slotOfRange(i, w, h), mirrorAt);
+    for (const c of line.visits) {
+      const cell = (c % w) + 1 + ((c / w) | 0) * stride + stride;
       path.xy[path.length] = cell;
       path.p[path.length++] = xinfo[cell]; // -1 at a mirror
-      if (grid[cell] === CELL_MIRROR_L) {
-        if (dir === DIRECTION_DOWN) dir = DIRECTION_RIGHT;
-        else if (dir === DIRECTION_LEFT) dir = DIRECTION_UP;
-        else if (dir === DIRECTION_UP) dir = DIRECTION_LEFT;
-        else if (dir === DIRECTION_RIGHT) dir = DIRECTION_DOWN;
-      } else if (grid[cell] === CELL_MIRROR_R) {
-        if (dir === DIRECTION_DOWN) dir = DIRECTION_LEFT;
-        else if (dir === DIRECTION_LEFT) dir = DIRECTION_DOWN;
-        else if (dir === DIRECTION_UP) dir = DIRECTION_RIGHT;
-        else if (dir === DIRECTION_RIGHT) dir = DIRECTION_UP;
-      }
     }
+    const r = rangeOfSlot(line.exit, w, h);
+    const end = range2grid(r, w, h);
+    path.gridEnd = r;
+    path.sightingsEnd = grid[end.x + end.y * stride];
+    tracedEnds.add(r);
 
     // The distinct monsters on the path, in traversal order.
     const distinct = new Set<number>();
@@ -535,31 +533,24 @@ export function newState(params: UndeadParams, desc: string): UndeadState {
 /**
  * Recompute the live legality overlays from `state.guess` (upstream
  * `execute_move`'s post-move sweep). Mutates `state.cellErrors`/`hintErrors`/
- * `countErrors`; returns whether the board is fully placed *and* legal (every
- * cell a single monster, all counts and sightings satisfied) — the completion
- * signal.
+ * `countErrors`. It never decides that the board is solved: the rules do.
  */
-export function recomputeErrors(state: UndeadState): boolean {
+export function recomputeErrors(state: UndeadState): void {
   state.cellErrors.fill(0);
   state.hintErrors.fill(0);
   state.countErrors.fill(0);
-  let correct = checkNumbersDraw(state);
-  for (const path of state.common.paths) {
-    if (!checkPathSolution(state, path)) correct = false;
-  }
-  return correct && state.guess.every(isSingleton);
+  checkNumbersDraw(state);
+  for (const path of state.common.paths) checkPathSolution(state, path);
 }
 
-function checkNumbersDraw(state: UndeadState): boolean {
+function checkNumbersDraw(state: UndeadState): void {
   const common = state.common;
   const stride = common.w + 2;
   const counts = MONSTERS.map((m) => state.guess.filter((g) => g === m).length);
   const totals = [common.numGhosts, common.numVampires, common.numZombies];
   const filled = counts[0] + counts[1] + counts[2] >= common.numTotal;
-  let valid = true;
   for (let t = 0; t < 3; t++) {
     if (counts[t] > totals[t] || (filled && counts[t] !== totals[t])) {
-      valid = false;
       state.countErrors[t] = 1;
       for (let x = 1; x <= common.w; x++) {
         for (let y = 1; y <= common.h; y++) {
@@ -570,13 +561,12 @@ function checkNumbersDraw(state: UndeadState): boolean {
       }
     }
   }
-  return valid;
 }
 
 /** Flag each of `path`'s clues that its cells can no longer meet: more
  * monsters already visible than it says, or too few even if every undecided
  * cell turned out visible. */
-function checkPathSolution(state: UndeadState, path: UndeadPath): boolean {
+function checkPathSolution(state: UndeadState, path: UndeadPath): void {
   let unfilled = 0;
   for (let i = 0; i < path.length; i++) {
     if (path.p[i] !== -1 && state.guess[path.p[i]] === MON_NONE) unfilled++;
@@ -594,15 +584,9 @@ function checkPathSolution(state: UndeadState, path: UndeadPath): boolean {
   if (!correct) {
     for (let i = 0; i < path.length; i++) state.cellErrors[path.xy[i]] = 1;
   }
-  return correct;
 }
 
-// --- status / text ---------------------------------------------------------
-
-/** The move's error check, run on a copy because it writes the error flags. */
-export function status(s: UndeadState): "solved" | "ongoing" {
-  return recomputeErrors(cloneState(s)) ? "solved" : "ongoing";
-}
+// --- text ------------------------------------------------------------------
 
 /** ASCII board, matching `game_text_format`. */
 export function textFormat(s: UndeadState): string {

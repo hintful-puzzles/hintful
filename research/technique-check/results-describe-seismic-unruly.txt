@@ -1,28 +1,19 @@
---  seismic mode=1: no board of order 3 has an answer, so nothing is checked there
-ok  seismic mode=0 cull                           3  sound    (want sound   )     9 queries    0.8s
-ok  seismic mode=0 cull (planted)                 3  unsound  (want unsound )     1 queries    0.4s   at cell 0
-ok  seismic mode=0 cull                           4  sound    (want sound   )    16 queries    2.9s
-ok  seismic mode=0 cull (planted)                 4  unsound  (want unsound )     1 queries    0.1s   at cell 0
-ok  seismic mode=1 cull                           4  sound    (want sound   )    16 queries    5.0s
-ok  seismic mode=1 cull (planted)                 4  sound    (want either  )    16 queries    4.4s
-ok  seismic mode=0 lone                           3  sound    (want sound   )     9 queries    0.5s
+ok  seismic mode=0 cull                           3  sound    (want sound   )     9 queries    0.3s
+ok  seismic mode=0 cull (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  seismic mode=1 cull                           3  sound    (want sound   )     9 queries    0.3s
+ok  seismic mode=1 cull (planted)                 3  sound    (want either  )     9 queries    0.3s
+ok  seismic mode=0 lone                           3  sound    (want sound   )     9 queries    0.2s
 ok  seismic mode=0 lone (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
-ok  seismic mode=0 lone                           4  sound    (want sound   )    16 queries    1.2s
-ok  seismic mode=0 lone (planted)                 4  unsound  (want unsound )     1 queries    0.2s   at cell 0
-ok  seismic mode=1 lone                           4  sound    (want sound   )    16 queries    3.0s
-ok  seismic mode=1 lone (planted)                 4  unsound  (want unsound )     1 queries    0.4s   at cell 0
-ok  seismic mode=0 areaSingle                     3  sound    (want sound   )    79 queries    2.4s
-ok  seismic mode=0 areaSingle (planted)           3  unsound  (want unsound )    10 queries    0.3s   at region area 9
-ok  seismic mode=0 areaSingle                     4  sound    (want sound   )    92 queries   10.0s
-ok  seismic mode=0 areaSingle (planted)           4  unsound  (want unsound )    17 queries    0.7s   at region area 16
-ok  seismic mode=1 areaSingle                     4  sound    (want sound   )   205 queries   44.7s
-ok  seismic mode=1 areaSingle (planted)           4  unsound  (want unsound )    94 queries   19.8s   at region area 93
-ok  seismic mode=0 starve                         3  sound    (want sound   )    79 queries    3.3s
-ok  seismic mode=0 starve (planted)               3  unsound  (want unsound )    10 queries    0.5s   at region area 9
-ok  seismic mode=0 starve                         4  sound    (want sound   )    92 queries    4.8s
-ok  seismic mode=0 starve (planted)               4  unsound  (want unsound )    17 queries    0.8s   at region area 16
-ok  seismic mode=1 starve                         4  sound    (want sound   )   205 queries   30.1s
-ok  seismic mode=1 starve (planted)               4  unsound  (want unsound )    94 queries   26.7s   at region area 93
+ok  seismic mode=1 lone                           3  sound    (want sound   )     9 queries    0.3s
+ok  seismic mode=1 lone (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  seismic mode=0 areaSingle                     3  sound    (want sound   )    79 queries    2.8s
+ok  seismic mode=0 areaSingle (planted)           3  unsound  (want unsound )    10 queries    0.2s   at region area 9
+ok  seismic mode=1 areaSingle                     3  sound    (want sound   )    79 queries    1.7s
+ok  seismic mode=1 areaSingle (planted)           3  unsound  (want unsound )    10 queries    0.2s   at region area 9
+ok  seismic mode=0 starve                         3  sound    (want sound   )    79 queries    2.3s
+ok  seismic mode=0 starve (planted)               3  unsound  (want unsound )    10 queries    0.2s   at region area 9
+ok  seismic mode=1 starve                         3  sound    (want sound   )    79 queries    1.5s
+ok  seismic mode=1 starve (planted)               3  unsound  (want unsound )    10 queries    0.1s   at region area 9
 --  unruly: no board of order 3 has an answer, so nothing is checked there
 --  unruly +unique: no board of order 3 has an answer, so nothing is checked there
 ok  unruly     threes                         4  sound    (want sound   )     8 queries    0.1s

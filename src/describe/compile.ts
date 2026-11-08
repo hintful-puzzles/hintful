@@ -690,6 +690,16 @@ function sharedKey(e: Expr, scope: Scope, env: Env): string {
   return `${JSON.stringify(e)}|${names}|${JSON.stringify(env.supposed)}`;
 }
 
+/** Whether `e` is a sightline bent by a clue kind's mirrors. */
+const isBentSight = (fn: string, args: readonly Expr[]): boolean =>
+  SIGHT_BENT.has(fn) && (fn !== "sight" || args.length === 2);
+
+/** A call's arguments that are values, not a clue kind's name. */
+function valueArgs(e: Extract<Expr, { k: "call" }>): readonly Expr[] {
+  if (e.fn === "clue") return e.args.slice(1);
+  return isBentSight(e.fn, e.args) ? e.args.slice(0, 1) : e.args;
+}
+
 /** The functions a term may call and still be computed early: none reads
  * the candidates, binds a name, or makes a fact. Nor may one throw: a moved
  * term is computed whether or not the guard around it holds. */
@@ -724,6 +734,10 @@ const EARLY = new Set([
   "times",
   "range",
   "sight",
+  "sight_direct",
+  "sight_bent",
+  "sight_twice",
+  "sight_exit",
   "opposite",
   "across",
   "nth",
@@ -776,7 +790,7 @@ function early(
     case "call": {
       if (e.fn === "value" || e.fn === "known" || e.fn === "chain" || e.fn === "linked")
         marks.read = true;
-      if (e.fn === "clue") return all(e.args.slice(1));
+      if (e.fn === "clue" || isBentSight(e.fn, e.args)) return all(valueArgs(e));
       if (EARLY.has(e.fn) || partOf(e.fn, env)) return all(e.args);
       const def = env.defs.get(e.fn);
       if (def === undefined || !all(e.args)) return false;
@@ -805,7 +819,7 @@ function namesIn(e: Expr, into: Set<string>, env: Env): void {
       namesIn(e.b, into, env);
       return;
     case "call":
-      for (const x of e.fn === "clue" ? e.args.slice(1) : e.args) namesIn(x, into, env);
+      for (const x of valueArgs(e)) namesIn(x, into, env);
       return;
     default:
       return;
@@ -2910,7 +2924,7 @@ function keptWhilePlaced(
         (e.fn !== "mark" && e.fn !== env.cellMark?.name && isMarkRead(e.fn, env))
       )
         return false;
-      if (!all(e.fn === "clue" ? e.args.slice(1) : e.args)) return false;
+      if (!all(valueArgs(e))) return false;
       const def = env.defs.get(e.fn);
       return (
         def === undefined ||
@@ -3445,6 +3459,58 @@ function matchedCall(vs: readonly Val[], env: Env): Val {
   return { code: `matched(sp, ${vs[0].code}, ${vs[1].code})`, sort: BOOL };
 }
 
+/** A sightline bent by the mirrors a clue kind deals, and what it reads:
+ * the field of the runtime's `SightSets` each function is. */
+const SIGHT_BENT: ReadonlyMap<string, string> = new Map([
+  ["sight", "all"],
+  ["sight_direct", "direct"],
+  ["sight_bent", "bent"],
+  ["sight_twice", "twice"],
+  ["sight_exit", "exit"],
+]);
+
+/** `sight(s, M)` and its kin: the sightline from slot `s`, turned by the
+ * mirrors clue kind `M` deals, 1 `\` and 2 `/`. */
+function bentSight(
+  fn: string,
+  args: readonly Expr[],
+  scope: Scope,
+  env: Env,
+  out: Out,
+): Val {
+  if (args.length !== 2) throw new CompileError(`${fn}(s, mirrors) takes 2`);
+  const m = args[1];
+  if (m.k !== "name" || !env.clues.has(m.name))
+    throw new CompileError(`${fn}(s, M): M names a clue kind of the description`);
+  const kind = env.clues.get(m.name) as ClueKind;
+  if (!sameSort(kind.at, elem("cell")) || kind.per)
+    throw new CompileError(`${fn}(s, ${m.name}): the mirrors sit one a cell`);
+  const refused = noGeometry("slots", env);
+  if (refused !== null) throw new CompileError(refused);
+  const s = compileExpr(args[0], scope, env, out);
+  expectElem(s, "slot", fn);
+  env.readsClues.yes = true;
+  env.used.add("sights");
+  const field = SIGHT_BENT.get(fn) as string;
+  return {
+    code: `sights(sp, cl.${m.name})[${s.code}].${field}`,
+    sort: field === "exit" ? elem("slot") : setOf(elem("cell")),
+  };
+}
+
+/** A call with a form of its own, `latin(…)` or a bent sightline, or null. */
+function ownForm(
+  fn: string,
+  args: readonly Expr[],
+  scope: Scope,
+  env: Env,
+  out: Out,
+): Val | null {
+  if (fn === "latin") return latin(args, scope, env, out);
+  if (isBentSight(fn, args)) return bentSight(fn, args, scope, env, out);
+  return null;
+}
+
 function call(
   fn: string,
   args: readonly Expr[],
@@ -3454,7 +3520,8 @@ function call(
 ): Val {
   if (fn === "clues")
     throw new CompileError("clues(kind) is read only as a binder's set");
-  if (fn === "latin") return latin(args, scope, env, out);
+  const own = ownForm(fn, args, scope, env, out);
+  if (own !== null) return own;
   const layer = env.position?.get(fn);
   if (layer !== undefined) {
     // A layer of the position, read at a cell, or at a face.
@@ -4197,6 +4264,9 @@ const WALKS = new Set([
   "matched",
   "beam",
   "look",
+  "sight_direct",
+  "sight_bent",
+  "sight_twice",
 ]);
 
 /** Whether `e` walks a line or the board, through the definitions it reads. */
