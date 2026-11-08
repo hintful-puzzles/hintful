@@ -61,7 +61,7 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import { spokesSolve, spokesValidate } from "./solver.ts";
+import { spokesAnswer, spokesSolve, spokesSolved } from "./solver.ts";
 import {
   clearBoard,
   cloneBoard,
@@ -70,7 +70,6 @@ import {
   DIFF_HARD,
   DIFF_NAMES,
   DIFF_TRICKY,
-  DIFFCOUNT,
   DIR_BOTLEFT,
   DIR_BOTRIGHT,
   DIR_RIGHT,
@@ -125,10 +124,9 @@ function press(
 
 /** The unique solution as a board, via the game's own solver. */
 function solutionOf(state: SpokesState) {
-  const b = cloneBoard(state);
-  clearBoard(b);
-  expect(spokesSolve(b, null, DIFFCOUNT)).toBe("valid");
-  return b;
+  const answer = spokesAnswer(state);
+  if (answer.kind !== "one") throw new Error(`no one answer: ${answer.kind}`);
+  return answer.solution;
 }
 
 /** Every spoke of the solution in a given state, as `{index, dir}` pairs. */
@@ -244,66 +242,42 @@ describe("spokes description codec", () => {
 // --- solver and generator ---------------------------------------------------
 
 describe("spokes solver", () => {
-  it("deduces the unique solution and reports it valid", () => {
+  it("deduces the unique solution, which solves the board", () => {
     const b = solutionOf(newState(FIX, FIX_DESC));
-    expect(spokesValidate(b)).toBe("valid");
+    expect(spokesSolved(b)).toBe(true);
   });
 
-  it("reports an over-filled hub invalid", () => {
-    const s = newState(FIX, FIX_DESC);
-    const b = cloneBoard(s);
+  it("does not take an over-filled hub for solved", () => {
+    const b = solutionOf(newState(FIX, FIX_DESC));
+    // Hub 0 has clue 1; a second line contradicts the clue.
+    const extra = getSpoke(b.spokes[0], DIR_RIGHT) === SPOKE_LINE ? 2 : DIR_RIGHT;
+    spokesPlace(b, 0, extra, SPOKE_LINE);
+    expect(spokesSolved(b)).toBe(false);
+  });
+
+  it("does not take an untouched board for solved", () => {
+    const b = cloneBoard(newState(FIX, FIX_DESC));
     clearBoard(b);
-    // Hub 0 has clue 1; giving it two lines contradicts the clue.
-    spokesPlace(b, 0, DIR_RIGHT, SPOKE_LINE);
-    spokesPlace(b, 0, 2 /* DIR_BOT */, SPOKE_LINE);
-    expect(spokesValidate(b)).toBe("invalid");
+    expect(spokesSolved(b)).toBe(false);
   });
 
-  it("reports an untouched board incomplete", () => {
-    const s = newState(FIX, FIX_DESC);
-    const b = cloneBoard(s);
-    clearBoard(b);
-    expect(spokesValidate(b)).toBe("incomplete");
-  });
-
-  it("solves every generated board at its own difficulty", () => {
+  it("solves every generated board at its own difficulty, and not below", () => {
     for (const [diff, level] of [
       ["tricky", DIFF_TRICKY],
       ["hard", DIFF_HARD],
     ] as const) {
-      const p: SpokesParams = { w: 4, h: 4, diff };
-      const { desc } = newSpokesDesc(p, randomNew(`grade-${diff}`));
-      const b = cloneBoard(newState(p, desc));
-      clearBoard(b);
-      expect(spokesSolve(b, null, level)).toBe("valid");
+      for (const k of [0, 1, 2]) {
+        const p: SpokesParams = { w: 4, h: 4, diff };
+        const { desc } = newSpokesDesc(p, randomNew(`grade-${diff}-${k}`));
+        const s = newState(p, desc);
+        expect(spokesSolve(s, level)).toBe("solved");
+        expect(spokesSolve(s, level - 1)).not.toBe("solved");
+      }
     }
   });
 
-  it("grades honestly: an Unreasonable board is not crackable at Normal", () => {
-    // The corrected difficulty gate (see `spokesGenerate`). Upstream's
-    // acceptance check reads "…and it does *not* solve one tier easier", but it
-    // re-solves the scratch board from the *leftover* position of the previous
-    // candidate rather than from empty, so it answers a question about that
-    // leftover instead of about the puzzle. Measured on 12 fixed seeds each:
-    // upstream's gate lets 10/12 4×4 and 5/12 6×6 Unreasonable boards through
-    // that Normal also cracks; clearing first gives 0/12 on both, and costs
-    // nothing (6×6 Normal generation actually gets ~3× faster, because most of the
-    // dirty gate's rejections were spurious).
-    for (const k of [0, 1, 2, 3]) {
-      const p: SpokesParams = { w: 4, h: 4, diff: "hard" };
-      const { desc } = newSpokesDesc(p, randomNew(`gate-hard-${k}`));
-      const b = cloneBoard(newState(p, desc));
-      clearBoard(b);
-      expect(spokesSolve(b, null, DIFF_TRICKY)).not.toBe("valid");
-      clearBoard(b);
-      expect(spokesSolve(b, null, DIFF_HARD)).toBe("valid");
-    }
-  });
-
-  it("solves an Easy board without the look-ahead", () => {
-    const b = cloneBoard(newState(FIX, FIX_DESC));
-    clearBoard(b);
-    expect(spokesSolve(b, null, DIFF_EASY)).toBe("valid");
+  it("solves an Easy board at Easy", () => {
+    expect(spokesSolve(newState(FIX, FIX_DESC), DIFF_EASY)).toBe("solved");
   });
 });
 
@@ -351,9 +325,7 @@ describe("spokes generator", () => {
     ] as SpokesParams[]) {
       const { desc } = newSpokesDesc(p, randomNew(`shape-${p.w}x${p.h}-${p.diff}`));
       expect(validateDesc(spokesGame, p, desc)).toBeNull();
-      const b = cloneBoard(newState(p, desc));
-      clearBoard(b);
-      expect(spokesSolve(b, null, DIFFCOUNT)).toBe("valid");
+      expect(spokesSolve(newState(p, desc), DIFF_HARD)).toBe("solved");
       // Every hub keeps at least one line, so no hub is stranded by the clues.
       for (let i = 0; i < p.w * p.h; i++)
         expect(desc.charCodeAt(i) - 48).toBeGreaterThan(0);

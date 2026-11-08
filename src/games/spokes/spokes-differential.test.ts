@@ -22,8 +22,6 @@ import { newSpokesDesc } from "./generator.ts";
 import { spokesGame } from "./index.ts";
 import { spokesSolve } from "./solver.ts";
 import {
-  clearBoard,
-  cloneBoard,
   DIFF_EASY,
   DIFF_HARD,
   diffFromLevel,
@@ -63,9 +61,7 @@ describe("spokes frozen boards", () => {
     it(`${label(f)} loads and solves`, () => {
       const p = params(f);
       expect(validateDesc(spokesGame, p, f.desc)).toBeNull();
-      const b = cloneBoard(newState(p, f.desc));
-      clearBoard(b);
-      expect(spokesSolve(b, null, tier)).toBe("valid");
+      expect(spokesSolve(newState(p, f.desc), tier)).toBe("solved");
     });
   }
 });

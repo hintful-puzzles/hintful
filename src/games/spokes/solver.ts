@@ -1,797 +1,557 @@
 /**
- * Spokes — the tiered deductive solver and the connectivity validator.
+ * Spokes' solver: the ladder `spokes.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/ladder-runtime.ts`), the answer
+ * check its rules compile to, and the search beneath the ladder.
  *
- * Port of `spokes_solve` and friends from `puzzles/unreleased/spokes.c`. The
- * solver runs a fixpoint of four rules, gated by a difficulty tier:
+ * The answer is on the links between hubs, side by side and corner to
+ * corner (the space's edges, `edges: king`), each a line or none; a mark, a
+ * spoke a hole hides and a link no line will take are all "none".
  *
- * - {@link spokesSolverOnes} — a spoke joining two clue-`1` hubs would strand
- *   that pair, so mark it. A one-shot pre-pass, run once per solve.
- * - {@link spokesSolverFull} — hub saturation and exhaustion: if every
- *   remaining spoke must be a line, draw them all; if the clue is already
- *   satisfied, mark the rest.
- * - {@link spokesSolverDiagonal} — mark the diagonal that would cross an
- *   existing diagonal line in the same cell corner.
- * - {@link findBreaks} (Normal) — a Check: a hub's value is which of its
- *   spokes are lines, so one spoke tried as a line, with the hubs it fills
- *   taking no more, or ruled out, with the hub it leaves no spare spoke
- *   drawing the rest, is one value placed and looked at once. Where the board
- *   breaks, the spoke takes the other state (docs/solver-and-generator.md
- *   § "Check, Tactic, Search"). It replaced upstream's look-ahead capped at
- *   four deductions on 2026-10-28: at every stall measured, that walk was at
- *   most one deduction long, and the one was this value's.
- * - {@link spokesSolverAttempt} (Unreasonable) — contradiction look-ahead: try
- *   a spoke both ways, solve on from it with no bound, and if one way proves
- *   invalid, commit the other. That is a Search, and it is why the tier
- *   upstream calls `Hard` is named `Unreasonable` here.
- *
- * Validity is decided by counting lines/marks per hub, rejecting crossing
- * diagonals, and — over a `Dsf` of the line-connected hubs, plus a per-class
- * count of the lines still drawable out of it — rejecting a closed-off set
- * that can never reach the rest of the board.
+ * The ladder runs to a fixpoint ({@link spokesSolve}), which is how the
+ * generator grades a board below Unreasonable. Beneath it a search by trial
+ * and error ({@link searchAnswer}) counts a board's answers to two, which
+ * grades Unreasonable and serves Solve and the mistake check. A hint walks
+ * the same ladder one firing at a time ({@link deduceSpokesPlan}).
  */
 
 import {
-  type FindingRung,
-  findingTechniques,
-  runDeductionFixpoint,
-  singleFirings,
-} from "../../engine/deduction-fixpoint.ts";
-import { Dsf } from "../../engine/dsf.ts";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+  type Answer,
+  answerCache,
+  type Deduced,
+  searchAnswers,
+} from "../../engine/answer-search.ts";
+import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
-  cloneBoard,
-  copyBoard,
-  DIFF_EASY,
+  clueList,
+  describedSpace,
+  type GridSpace,
+} from "../../engine/describe-runtime.ts";
+import type { DifficultyVerdict } from "../../engine/difficulty.ts";
+import { deduceHintPlan } from "../../engine/hint-plan.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  ladderWalk,
+  type ReasonOf,
+  runLadder,
+  type Taken,
+  TIERS,
+} from "../../engine/ladder-runtime.ts";
+import { stepBudget } from "../../engine/step-budget.ts";
+import * as spokes from "./spokes.compiled.ts";
+import {
   DIFF_HARD,
   DIFF_TRICKY,
-  DIR_BOTLEFT,
-  DIR_BOTRIGHT,
   getSpoke,
   SPOKE_DIRS,
   SPOKE_EMPTY,
+  SPOKE_HIDDEN,
   SPOKE_LINE,
   SPOKE_MARKED,
   type SpokesBoard,
   type SpokesSpokeRef,
-  spokeCounts,
-  spokesCount,
-  spokesPlace,
-  syncDiagonalBlock,
 } from "./state.ts";
 
-/** Upstream's `STATUS_INVALID` / `STATUS_INCOMPLETE` / `STATUS_VALID`. */
-export type SpokesStatus = "invalid" | "incomplete" | "valid";
+/** What the description reads a link as holding. */
+const LINED = 1;
+const NONE = 2;
 
-/** The solver's reusable scratch (upstream `struct spokes_scratch`). */
-export class SpokesScratch {
-  /** Placeable spokes per hub (8 minus the hidden ones). */
-  readonly nodes: Int32Array;
-  /** Lines drawn per hub. */
-  readonly lines: Int32Array;
-  /** Marks placed per hub. */
-  readonly marked: Int32Array;
-  /** Line-connectivity of the hubs. */
-  readonly dsf: Dsf;
-  /** Per connected class (indexed by its canonical root), how many more lines
-   * the class can still draw out of itself. */
-  readonly open: Int32Array;
+/** The rungs, easiest first: the ladder's techniques. */
+export const SPOKES_RUNGS = spokes.ladder.map((e) => e.id);
+export type SpokesRung = spokes.LadderId;
 
-  constructor(cells: number) {
-    this.nodes = new Int32Array(cells);
-    this.lines = new Int32Array(cells);
-    this.marked = new Int32Array(cells);
-    this.dsf = new Dsf(cells);
-    this.open = new Int32Array(cells);
-  }
-}
+/** How a tried link breaks the board at once: a hub left too few spokes
+ * for its number, or a group of hubs closed off from the rest. */
+export type SpokesBreakKind = "starved" | "sealed";
 
 /**
- * Recount the per-hub tallies and rebuild the connectivity `Dsf`.
- *
- * `full` adds the *diagonal* bonus: a drawn diagonal makes the crossing
- * diagonal unplaceable, so the two hubs at its other corners count one extra
- * mark. Only the renderer asks for that (it decides whether a hub is
- * over-marked); the solve loop deliberately recounts without it, exactly as
- * upstream — `spokes_solver_diagonal` is what turns those into real marks.
- */
-export function spokesSolverRecount(
-  b: SpokesBoard,
-  s: SpokesScratch,
-  full: boolean,
-): void {
-  const { w, h } = b;
-  const n = w * h;
-
-  for (let i = 0; i < n; i++) {
-    const counts = spokeCounts(b.spokes[i]);
-    s.nodes[i] = 8 - (counts & 0xff);
-    s.lines[i] = (counts >>> (SPOKE_LINE * 8)) & 0xff;
-    s.marked[i] = (counts >>> (SPOKE_MARKED * 8)) & 0xff;
-  }
-
-  if (full) {
-    for (let y = 0; y < h - 1; y++) {
-      for (let x = 0; x < w - 1; x++) {
-        const i = y * w + x;
-        const hub = b.spokes[i];
-        const hub2 = b.spokes[i + 1];
-        if (
-          getSpoke(hub, DIR_BOTRIGHT) === SPOKE_LINE &&
-          getSpoke(hub2, DIR_BOTLEFT) === SPOKE_EMPTY
-        ) {
-          s.marked[i + 1]++;
-          s.marked[i + w]++;
-        }
-        if (
-          getSpoke(hub2, DIR_BOTLEFT) === SPOKE_LINE &&
-          getSpoke(hub, DIR_BOTRIGHT) === SPOKE_EMPTY
-        ) {
-          s.marked[i]++;
-          s.marked[i + w + 1]++;
-        }
-      }
-    }
-  }
-
-  s.dsf.reinit();
-
-  // Holes are folded into cell 0's class so that "one class of w*h cells"
-  // means solved even on a board with holes in it. If cell 0 is *itself* a
-  // hole, it first joins the earliest real hub so the class has a hub in it.
-  if (!b.numbers[0]) {
-    for (let i = 1; i < n; i++) {
-      if (b.numbers[i]) {
-        s.dsf.merge(i, 0);
-        break;
-      }
-    }
-  }
-
-  for (let i = 0; i < n; i++) {
-    if (!b.numbers[i]) {
-      s.dsf.merge(i, 0);
-    } else {
-      for (let j = 0; j < 4; j++) {
-        const x = (i % w) + SPOKE_DIRS[j].dx;
-        const y = ((i / w) | 0) + SPOKE_DIRS[j].dy;
-        if (
-          x >= 0 &&
-          x < w &&
-          y >= 0 &&
-          y < h &&
-          getSpoke(b.spokes[i], j) === SPOKE_LINE
-        ) {
-          s.dsf.merge(i, y * w + x);
-        }
-      }
-    }
-  }
-}
-
-/**
- * For each connected class, how many more lines it can draw out of itself:
- * the sum over its hubs of "clue minus lines already drawn". Zero means the
- * class is closed — which is a win if it is the whole board and a dead end
- * otherwise.
- */
-export function spokesFindIsolated(b: SpokesBoard, s: SpokesScratch): void {
-  const n = b.w * b.h;
-  s.open.fill(0);
-  for (let i = 0; i < n; i++) {
-    s.open[s.dsf.canonify(i)] += b.numbers[i] - s.lines[i];
-  }
-}
-
-/** Is the board solved, still in progress, or already contradictory? */
-export function spokesValidate(b: SpokesBoard, scratch?: SpokesScratch): SpokesStatus {
-  const n = b.w * b.h;
-  const s = scratch ?? new SpokesScratch(n);
-
-  spokesSolverRecount(b, s, false);
-
-  let ret: SpokesStatus = "valid";
-
-  for (let i = 0; i < n && ret !== "invalid"; i++) {
-    if (s.lines[i] < b.numbers[i]) ret = "incomplete";
-    // Too many marks to still reach the clue, or too many lines already.
-    if (s.marked[i] > s.nodes[i] - b.numbers[i]) ret = "invalid";
-    if (s.lines[i] > b.numbers[i]) ret = "invalid";
-  }
-
-  for (let i = 0; i < n && ret !== "invalid"; i++) {
-    // Crossing diagonals. The `i + 1 < n` guard is ours: upstream reads one
-    // past the end, harmlessly, because the last hub's BOTRIGHT is hidden and
-    // `&&` stops first.
-    if (
-      i + 1 < n &&
-      getSpoke(b.spokes[i], DIR_BOTRIGHT) === SPOKE_LINE &&
-      getSpoke(b.spokes[i + 1], DIR_BOTLEFT) === SPOKE_LINE
-    ) {
-      ret = "invalid";
-    }
-  }
-
-  if (ret !== "invalid") {
-    spokesFindIsolated(b, s);
-    for (let i = 0; i < n && ret !== "invalid"; i++) {
-      if (s.open[i] === 0 && s.dsf.canonify(i) === i && s.dsf.size(i) < n) {
-        ret = "invalid";
-      }
-    }
-  }
-
-  return ret;
-}
-
-// --- deduction rules --------------------------------------------------------
-
-/**
- * Mark every spoke joining two clue-`1` hubs: connecting them would close off
- * a group of two with no way to reach the rest. Skipped when the whole grid is
- * exactly two hubs, where that pair *is* the answer.
- *
- * Faithful quirk: the mark is placed without checking that the spoke is
- * `EMPTY`, so it overwrites a diagonal an `'X'` hole has hidden. Only
- * hand-authored descriptions reach that: the generator never emits `'X'`.
- */
-function spokesSolverOnes(b: SpokesBoard): number {
-  const { w, h } = b;
-  let count = 0;
-  for (let i = 0; i < w * h; i++) if (b.numbers[i]) count++;
-  if (count === 2) return 0;
-
-  let ret = 0;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      if (b.numbers[y * w + x] !== 1) continue;
-      for (let j = 0; j < 4; j++) {
-        const nx = x + SPOKE_DIRS[j].dx;
-        const ny = y + SPOKE_DIRS[j].dy;
-        if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-        if (b.numbers[ny * w + nx] === 1) {
-          spokesPlace(b, y * w + x, j, SPOKE_MARKED);
-          ret++;
-        }
-      }
-    }
-  }
-  return ret;
-}
-
-/**
- * Hub saturation and exhaustion. Reads the tallies {@link spokesValidate} last
- * computed and mutates as it sweeps, so later hubs in the same pass see
- * earlier placements but stale counts — faithful to upstream, and harmless
- * because the loop re-runs to a fixpoint.
- */
-function spokesSolverFull(b: SpokesBoard, s: SpokesScratch): number {
-  const n = b.w * b.h;
-  let ret = 0;
-
-  for (let i = 0; i < n; i++) {
-    let changed = false;
-
-    // Every placeable spoke that isn't marked must be a line.
-    if (s.nodes[i] - s.marked[i] === b.numbers[i]) {
-      for (let j = 0; j < 8; j++) {
-        if (getSpoke(b.spokes[i], j) === SPOKE_EMPTY) {
-          spokesPlace(b, i, j, SPOKE_LINE);
-          changed = true;
-        }
-      }
-    }
-
-    // The clue is already satisfied, so nothing else can be a line.
-    if (s.lines[i] === b.numbers[i]) {
-      for (let j = 0; j < 8; j++) {
-        if (getSpoke(b.spokes[i], j) === SPOKE_EMPTY) {
-          spokesPlace(b, i, j, SPOKE_MARKED);
-          changed = true;
-        }
-      }
-    }
-
-    if (changed) ret++;
-  }
-
-  return ret;
-}
-
-/** Mark the empty diagonal that would cross a drawn diagonal. */
-function spokesSolverDiagonal(b: SpokesBoard): number {
-  const { w, h } = b;
-  let ret = 0;
-  for (let y = 0; y < h - 1; y++) {
-    for (let x = 0; x < w - 1; x++) {
-      const i = y * w + x;
-      if (
-        getSpoke(b.spokes[i], DIR_BOTRIGHT) === SPOKE_LINE &&
-        getSpoke(b.spokes[i + 1], DIR_BOTLEFT) === SPOKE_EMPTY
-      ) {
-        spokesPlace(b, i + 1, DIR_BOTLEFT, SPOKE_MARKED);
-        ret++;
-      }
-      if (
-        getSpoke(b.spokes[i], DIR_BOTRIGHT) === SPOKE_EMPTY &&
-        getSpoke(b.spokes[i + 1], DIR_BOTLEFT) === SPOKE_LINE
-      ) {
-        spokesPlace(b, i, DIR_BOTRIGHT, SPOKE_MARKED);
-        ret++;
-      }
-    }
-  }
-  return ret ? 1 : 0;
-}
-
-/**
- * Contradiction look-ahead. For every undecided spoke, try it as a mark and as
- * a line; whenever the trial board provably becomes invalid at the (lower)
- * recursion tier, commit the opposite value on the real board.
- *
- * `copy` is a reusable scratch board and `s` the shared scratch — both are
- * clobbered, exactly as upstream, and the recursion tier is below
- * `DIFF_TRICKY`, so the recursive solve never re-enters this function.
- */
-function spokesSolverAttempt(
-  b: SpokesBoard,
-  copy: SpokesBoard,
-  s: SpokesScratch,
-  diff: number,
-): number {
-  const n = b.w * b.h;
-  let ret = 0;
-
-  for (let i = 0; i < n; i++) {
-    for (let dir = 0; dir < 8; dir++) {
-      for (let l = 0; l < 2; l++) {
-        if (getSpoke(b.spokes[i], dir) !== SPOKE_EMPTY) continue;
-
-        copyBoard(b, copy);
-        spokesPlace(copy, i, dir, l ? SPOKE_LINE : SPOKE_MARKED);
-        if (spokesSolve(copy, s, diff) === "invalid") {
-          spokesPlace(b, i, dir, l ? SPOKE_MARKED : SPOKE_LINE);
-          ret++;
-        }
-      }
-    }
-  }
-
-  return ret;
-}
-
-// --- the recording deduction pass (the hint's second projection) -----------
-
-/** Which rung forced a firing. */
-export type SpokesFiringKind = "twoOnes" | "saturation" | "exhaustion" | "breaks";
-
-/** How a trial board is impossible: a hub with more lines than its count, or
- * too few spokes left for it; two diagonals crossing; or hubs walled off from
- * the rest. */
-export type SpokesBreakKind = "overfilled" | "starved" | "crossing" | "sealed";
-
-/**
- * One *firing*: one rung reaching one conclusion, with everything the hint
- * needs to narrate and highlight it. `forced` is the spokes it forces (each
- * becomes one leg of a single journey — they share a fate, so a saturated hub's
- * four lines are one hint, not four). `evidenceHubs` are the hubs whose clue or
- * lines are the argument (ringed, and read for their clue value in the prose).
+ * One firing: one rung reaching one conclusion, with everything the hint
+ * needs to narrate and highlight it. `forced` is the spokes it decides, each
+ * by its canonical end (`dir < 4`); `evidenceHubs` are the hubs whose
+ * number or lines are the argument.
  */
 export interface SpokesFiring {
-  kind: SpokesFiringKind;
+  kind: SpokesRung;
   forced: SpokesSpokeRef[];
   evidenceHubs: number[];
-  /** Breaks only: the state tried, whose break forces `forced`. */
+  /** A Check's: the spoke tried, the other way from what it is forced to. */
   hypothesis?: SpokesSpokeRef;
-  /** Breaks only: the hub a rule-out left no spoke to spare, which took all
-   * its others, or `null`. */
-  filled?: number | null;
-  /** Breaks only: how, and where, the tried state breaks the board. */
+  /** `spareBreaks`': the hub that the rule-out leaves no spoke to spare,
+   * which takes all its others. */
+  filled?: number;
+  /** A Check's: how the trial breaks the board, at `evidenceHubs` (after
+   * `filled`). */
   breakKind?: SpokesBreakKind;
 }
 
-/** Runaway/UX cap on plan length: Normal's Checks try every spoke and a
- * player rarely follows more than a few steps before diverging, so a
- * recompute yields the next batch. */
-const HINT_PLAN_MAX = 40;
+// --- the board as the description reads it -----------------------------------
 
-/** The EMPTY spoke directions of a hub, in `DIR_*` order. */
-function emptyDirs(hub: number): number[] {
-  const dirs: number[] = [];
-  for (let d = 0; d < 8; d++) if (getSpoke(hub, d) === SPOKE_EMPTY) dirs.push(d);
-  return dirs;
+/** A board size's space, and the game's direction for each of its links,
+ * read from the link's first square. */
+interface Geometry {
+  sp: GridSpace;
+  dirOf: Int8Array;
 }
 
-/** Whether a hub still needs more lines than it has drawn. */
-function unsatisfied(b: SpokesBoard, i: number): boolean {
-  return spokesCount(b.spokes[i], SPOKE_LINE) < b.numbers[i];
+let lastGeometry: Geometry | null = null;
+function geometryOf(w: number, h: number): Geometry {
+  if (lastGeometry?.sp.w === w && lastGeometry.sp.h === h) return lastGeometry;
+  const sp = describedSpace(spokes.units, w, h, [], spokes.edgeGeometry);
+  const dirOf = new Int8Array(sp.edges.length);
+  for (const e of sp.edges) {
+    const a = sp.edgeEnds[2 * e];
+    const b = sp.edgeEnds[2 * e + 1];
+    const dx = (b % w) - (a % w);
+    const dy = ((b / w) | 0) - ((a / w) | 0);
+    dirOf[e] = SPOKE_DIRS.findIndex((d) => d.dx === dx && d.dy === dy);
+  }
+  lastGeometry = { sp, dirOf };
+  return lastGeometry;
+}
+
+/** The spoke a link is, by its first square. */
+function spokeOf(geo: Geometry, e: number, state: number): SpokesSpokeRef {
+  return { index: geo.sp.edgeEnds[2 * e], dir: geo.dirOf[e], state };
 }
 
 /**
- * Whether ruling out the spoke `(i, d)` actually advances the puzzle: only when
- * a hub at either end still needs lines. A mark between two satisfied hubs
- * narrows nothing, so it is never hinted. Nor is it ever load-bearing:
- * completion needs only the lines, and a spoke with both ends full feeds no
- * hub's saturation, so skipping it cannot stall the plan.
+ * The holes no diagonal runs past (a board ID's `X`): a hole whose two
+ * squares beside it, corner to corner from each other, are hubs with the
+ * spoke between them hidden. The state keeps only the hidden spokes, and a
+ * hole whose neighbors leave no such pair says nothing a block would.
  */
-function markHelps(b: SpokesBoard, i: number, d: number): boolean {
-  if (unsatisfied(b, i)) return true;
-  const nx = (i % b.w) + SPOKE_DIRS[d].dx;
-  const ny = ((i / b.w) | 0) + SPOKE_DIRS[d].dy;
-  if (nx < 0 || nx >= b.w || ny < 0 || ny >= b.h) return false;
-  const j = ny * b.w + nx;
-  return b.numbers[j] > 0 && unsatisfied(b, j);
-}
-
-/**
- * The two-ones rung as a firing: the still-EMPTY spoke joining two clue-`1`
- * hubs that **both still need their line**. Connecting them would satisfy both
- * yet seal the pair off, so the spoke is ruled out. Once either hub has its
- * line the pair can no longer connect, so the deduction is moot.
- *
- * Iterating `d < 4` visits each such edge once, from its lower-indexed end.
- * Skipped on a two-hub board, where the pair *is* the answer, as
- * {@link spokesSolverOnes} is.
- */
-function* findTwoOnes(b: SpokesBoard): Generator<SpokesFiring> {
-  const { w, h } = b;
-  let clues = 0;
-  for (let i = 0; i < w * h; i++) if (b.numbers[i]) clues++;
-  if (clues === 2) return;
-
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      if (b.numbers[i] !== 1 || !unsatisfied(b, i)) continue;
-      for (let d = 0; d < 4; d++) {
-        const nx = x + SPOKE_DIRS[d].dx;
-        const ny = y + SPOKE_DIRS[d].dy;
-        if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-        const j = ny * w + nx;
-        if (
-          b.numbers[j] === 1 &&
-          unsatisfied(b, j) &&
-          getSpoke(b.spokes[i], d) === SPOKE_EMPTY
-        ) {
-          yield {
-            kind: "twoOnes",
-            forced: [{ index: i, dir: d, state: SPOKE_MARKED }],
-            evidenceHubs: [i, j],
-          };
-        }
-      }
-    }
+function blocksOf(board: SpokesBoard, geo: Geometry): number[] {
+  const { sp } = geo;
+  const out: number[] = [];
+  for (const c of sp.cells) {
+    if (board.numbers[c] !== 0) continue;
+    const beside = sp.adj4[c];
+    const blocked = beside.some((a) =>
+      beside.some((b) => {
+        const e = sp.edgeOf(a, b);
+        return (
+          a < b &&
+          e >= 0 &&
+          board.numbers[a] > 0 &&
+          board.numbers[b] > 0 &&
+          getSpoke(board.spokes[a], geo.dirOf[e]) === SPOKE_HIDDEN
+        );
+      }),
+    );
+    if (blocked) out.push(c);
   }
+  return out;
 }
 
-/**
- * Hub saturation: a hub with exactly as many free spokes as the lines it still
- * needs — so every one of them is a line. The connection-drawing rung, and the
- * most direct progress, so it is tried first. Reads the tallies
- * {@link spokesValidate} last left in `s`.
- */
-function* findSaturation(b: SpokesBoard, s: SpokesScratch): Generator<SpokesFiring> {
-  const n = b.w * b.h;
-  for (let i = 0; i < n; i++) {
-    if (s.nodes[i] - s.marked[i] === b.numbers[i]) {
-      const dirs = emptyDirs(b.spokes[i]);
-      if (dirs.length) {
-        yield {
-          kind: "saturation",
-          forced: dirs.map((d) => ({ index: i, dir: d, state: SPOKE_LINE })),
-          evidenceHubs: [i],
-        };
-      }
-    }
-  }
-}
-
-/**
- * Hub exhaustion: a satisfied hub's remaining spokes cannot be lines. Only the
- * ones that reach a hub still needing lines are hinted ({@link markHelps}) — an
- * exhaustion mark onto another finished hub is busywork, and never needed for
- * completion.
- */
-function* findExhaustion(b: SpokesBoard, s: SpokesScratch): Generator<SpokesFiring> {
-  const n = b.w * b.h;
-  for (let i = 0; i < n; i++) {
-    if (s.lines[i] !== b.numbers[i]) continue;
-    const dirs = emptyDirs(b.spokes[i]).filter((d) => markHelps(b, i, d));
-    if (dirs.length) {
-      yield {
-        kind: "exhaustion",
-        forced: dirs.map((d) => ({ index: i, dir: d, state: SPOKE_MARKED })),
-        evidenceHubs: [i],
-      };
-    }
-  }
-}
-
-/** Classify why an invalid board is impossible, and name the hubs at fault, so
- * a hint can point at the break rather than assert one. */
-function analyzeBreak(
-  b: SpokesBoard,
-  s: SpokesScratch,
-): { breakKind: SpokesBreakKind; hubs: number[] } {
-  const n = b.w * b.h;
-  spokesSolverRecount(b, s, false);
-
-  for (let i = 0; i < n; i++) {
-    if (s.lines[i] > b.numbers[i]) return { breakKind: "overfilled", hubs: [i] };
-    if (s.marked[i] > s.nodes[i] - b.numbers[i])
-      return { breakKind: "starved", hubs: [i] };
-  }
-
-  for (let i = 0; i + 1 < n; i++) {
-    if (
-      getSpoke(b.spokes[i], DIR_BOTRIGHT) === SPOKE_LINE &&
-      getSpoke(b.spokes[i + 1], DIR_BOTLEFT) === SPOKE_LINE
-    ) {
-      return { breakKind: "crossing", hubs: [i, i + 1] };
-    }
-  }
-
-  spokesFindIsolated(b, s);
-  for (let i = 0; i < n; i++) {
-    if (s.open[i] === 0 && s.dsf.canonify(i) === i && s.dsf.size(i) < n) {
-      const hubs: number[] = [];
-      for (let j = 0; j < n; j++) {
-        if (b.numbers[j] && s.dsf.canonify(j) === i) hubs.push(j);
-      }
-      return { breakKind: "sealed", hubs };
-    }
-  }
-
-  // Unreachable on a genuinely-invalid board, but keep the return total.
-  return { breakKind: "sealed", hubs: [] };
-}
-
-/** Put `state` on spoke `(i, dir)` of `b`, ruling out the diagonal a line
- * crosses, as a move does. */
-function place(b: SpokesBoard, i: number, dir: number, state: number): void {
-  const old = getSpoke(b.spokes[i], dir);
-  spokesPlace(b, i, dir, state);
-  syncDiagonalBlock(b, i, dir, old, state, null);
-}
-
-/** The hubs at either end of spoke `(i, dir)`, the off-board end left out. */
-function endsOf(b: SpokesBoard, i: number, dir: number): number[] {
-  const x = (i % b.w) + SPOKE_DIRS[dir].dx;
-  const y = ((i / b.w) | 0) + SPOKE_DIRS[dir].dy;
-  return x < 0 || x >= b.w || y < 0 || y >= b.h ? [i] : [i, y * b.w + x];
-}
-
-/**
- * What `copy`, a trial board one value has been placed on, breaks at once, or
- * `null`. Nothing follows from the value first: the board is read as it would
- * stand, with what a player rules out there at a glance, which is every free
- * spoke of a hub that has all its lines. The trial board is left read.
- */
-function breaksAt(
-  copy: SpokesBoard,
-  s: SpokesScratch,
-): { breakKind: SpokesBreakKind; hubs: number[] } | null {
-  spokesSolverRecount(copy, s, false);
-  const n = copy.w * copy.h;
-  const full: number[] = [];
-  for (let i = 0; i < n; i++) if (s.lines[i] === copy.numbers[i]) full.push(i);
-  for (const i of full)
-    for (const d of emptyDirs(copy.spokes[i])) spokesPlace(copy, i, d, SPOKE_MARKED);
-  return spokesValidate(copy, s) === "invalid" ? analyzeBreak(copy, s) : null;
-}
-
-/**
- * Normal's rung as firings: each free spoke that breaks the board at once one
- * way, and so takes the other. Tried as a line, the hubs it fills take no more
- * spokes; ruled out, a hub it leaves with no spoke to spare takes all its
- * others, which is that hub's value placed whole. Where the solver commits
- * every firing, `helpful` is off; a hint offers no rule-out that helps no hub.
- */
-function* findBreaks(
-  b: SpokesBoard,
-  copy: SpokesBoard,
-  s: SpokesScratch,
-  helpful: boolean,
-): Generator<SpokesFiring> {
-  const n = b.w * b.h;
-  for (let i = 0; i < n; i++) {
-    for (let dir = 0; dir < 8; dir++) {
-      if (getSpoke(b.spokes[i], dir) !== SPOKE_EMPTY) continue;
-      // Each edge once, from the end that comes first.
-      const ends = endsOf(b, i, dir);
-      if (ends.length === 2 && ends[1] < i) continue;
-      if (!helpful || markHelps(b, i, dir)) {
-        copyBoard(b, copy);
-        place(copy, i, dir, SPOKE_LINE);
-        const broken = breaksAt(copy, s);
-        if (broken) {
-          yield {
-            kind: "breaks",
-            forced: [{ index: i, dir, state: SPOKE_MARKED }],
-            hypothesis: { index: i, dir, state: SPOKE_LINE },
-            evidenceHubs: broken.hubs,
-            breakKind: broken.breakKind,
-          };
-          continue;
-        }
-      }
-      copyBoard(b, copy);
-      place(copy, i, dir, SPOKE_MARKED);
-      // A hub this leaves with only as many free spokes as it needs lines.
-      spokesSolverRecount(copy, s, false);
-      const short = ends.find(
-        (h) =>
-          copy.numbers[h] > s.lines[h] && s.nodes[h] - s.marked[h] === copy.numbers[h],
-      );
-      if (short !== undefined)
-        for (const d of emptyDirs(copy.spokes[short]))
-          place(copy, short, d, SPOKE_LINE);
-      const broken = breaksAt(copy, s);
-      if (broken)
-        yield {
-          kind: "breaks",
-          forced: [{ index: i, dir, state: SPOKE_LINE }],
-          hypothesis: { index: i, dir, state: SPOKE_MARKED },
-          filled: short ?? null,
-          evidenceHubs: [
-            ...new Set([...(short === undefined ? [] : [short]), ...broken.hubs]),
-          ],
-          breakKind: broken.breakKind,
-        };
-    }
-  }
-}
-
-/** Normal's rung for the solver: commit every firing {@link findBreaks}
- * finds, each against the board as the ones before it left it. */
-function spokesSolverBreaks(
-  b: SpokesBoard,
-  copy: SpokesBoard,
-  s: SpokesScratch,
-): number {
-  let ret = 0;
-  for (const f of findBreaks(b, copy, s, false)) {
-    applyFiring(b, f);
-    ret++;
-  }
-  return ret;
-}
-
-/** Apply a firing's forced spokes to a working board (both ends kept in sync),
- * auto-ruling-out the crossing of any diagonal line — exactly as `executeMove`
- * does in the real game, so the plan replay stays consistent without a separate
- * crossing rung. */
-function applyFiring(b: SpokesBoard, f: SpokesFiring): void {
-  for (const { index, dir, state } of f.forced) {
-    const old = getSpoke(b.spokes[index], dir);
-    spokesPlace(b, index, dir, state);
-    syncDiagonalBlock(b, index, dir, old, state, null);
-  }
-}
-
-/**
- * The hint's rungs over `b`, **goal-first**: forced connections
- * ({@link findSaturation}), then the genuinely-useful rule-outs (each gated so
- * it only fires when it helps a hub still needing lines), then Normal's
- * Checks. This deliberately reorders the solver's rungs — the hint only
- * needs each firing to be *forced*, not to match the solver's internal order,
- * and among firings beside the plan's work, or with none there, a connection
- * leads. `copy` is the Checks' trial board, and `null` below Normal.
- *
- * **The `Unreasonable` rung is deliberately absent.** `spokesSolve`'s
- * look-ahead solves on from a tried spoke with no bound, and that is a search,
- * not a technique, so no hint narrates it on any tier. The plan therefore stalls where bounded reasoning stalls and `hint`
- * says so, which is the honest answer. The *solver* keeps the rung: the
- * generator grades on it.
- */
-function spokesRungs(
-  b: SpokesBoard,
-  s: SpokesScratch,
-  copy: SpokesBoard | null,
-): FindingRung<SpokesFiring>[] {
-  // The tallies are read afresh: the Checks' trials leave their own in `s`.
-  const tallied = (find: () => Iterable<SpokesFiring>) => () => {
-    spokesSolverRecount(b, s, false);
-    return find();
-  };
-  return [
-    { id: "saturation", tier: 0, find: tallied(() => findSaturation(b, s)) },
-    { id: "twoOnes", tier: 0, find: () => findTwoOnes(b) },
-    { id: "exhaustion", tier: 0, find: tallied(() => findExhaustion(b, s)) },
-    { id: "breaks", tier: 1, find: () => (copy ? findBreaks(b, copy, s, true) : []) },
-  ];
-}
-
-/** The hubs at either end of a spoke. */
-function spokeEnds(b: SpokesBoard, { index, dir }: SpokesSpokeRef): number[] {
-  const nx = (index % b.w) + SPOKE_DIRS[dir].dx;
-  const ny = ((index / b.w) | 0) + SPOKE_DIRS[dir].dy;
-  return nx < 0 || nx >= b.w || ny < 0 || ny >= b.h ? [index] : [index, ny * b.w + nx];
-}
-
-/**
- * Replay the solver from the player's board, one firing at a time, returning
- * the ordered plan. Pure on its argument: it clones first.
- *
- * The default is `DIFF_TRICKY`, not the top tier: the hint reasons as hard as it
- * is *allowed* to, and the rung above Normal is a search
- * ({@link spokesRungs}). Passing `DIFF_HARD` changes nothing.
- */
-export function deduceSpokesPlan(
-  board0: SpokesBoard,
-  diff: number = DIFF_TRICKY,
-): SpokesFiring[] {
-  const b = cloneBoard(board0);
-  const s = new SpokesScratch(b.w * b.h);
-  const copy = diff >= DIFF_TRICKY ? cloneBoard(b) : null;
-
-  let last: SpokesFiring | null = null;
-  const pass = singleFirings({
-    techniques: findingTechniques(
-      spokesRungs(b, s, copy),
-      (f) => {
-        applyFiring(b, f);
-        last = f;
-      },
-      // A player follows the hubs: a firing reads the hubs it argues from and
-      // the ends of the spokes it decides, and writes those ends.
-      {
-        reads: (f) => [...f.evidenceHubs, ...f.forced.flatMap((r) => spokeEnds(b, r))],
-        writes: (f) => f.forced.flatMap((r) => spokeEnds(b, r)),
-      },
-    ),
-    budget: stepBudget("spokes hint"),
-    // A plan works round the hubs it has just joined before it moves on.
-    continuing: true,
+/** The board as the description deals it: a number on each hub, and the
+ * holes no diagonal runs past. */
+function dealtOf(board: SpokesBoard, geo: Geometry): spokes.Dealt {
+  const n = board.numbers.length;
+  const at: number[] = [];
+  const v: number[] = [];
+  board.numbers.forEach((k, c) => {
+    if (k <= 0) return;
+    at.push(c);
+    v.push(k);
   });
-  return deduceHintPlan<SpokesBoard, SpokesFiring, SpokesStatus>({
-    board: b,
-    status: (board) => spokesValidate(board, s),
-    incomplete: "incomplete",
-    next: () => (pass.next() ? last : null),
-    planCap: HINT_PLAN_MAX,
-  }).plan;
+  const blocks = blocksOf(board, geo);
+  return {
+    number: clueList(at, v, n),
+    block: clueList(
+      blocks,
+      blocks.map(() => 1),
+      n,
+    ),
+  };
 }
 
-// --- the solve loop ---------------------------------------------------------
+/** A board the ladder works on: the marks, and what it reads them by. */
+interface Deduction {
+  board: SpokesBoard;
+  geo: Geometry;
+  dl: spokes.Dealt;
+  m: CellMarks;
+  ladder: Ladder;
+}
+
+/** The marks the board's spokes hold as the description reads them: a line,
+ * or none for a mark or a hidden spoke, and nothing for an open one. */
+function deduction(board: SpokesBoard): Deduction {
+  const geo = geometryOf(board.w, board.h);
+  const dl = dealtOf(board, geo);
+  const grid = new Uint8Array(geo.sp.edges.length);
+  for (const e of geo.sp.edges) {
+    const s = getSpoke(board.spokes[geo.sp.edgeEnds[2 * e]], geo.dirOf[e]);
+    if (s !== SPOKE_EMPTY) grid[e] = s === SPOKE_LINE ? LINED : NONE;
+  }
+  const m = new CellMarks(geo.sp, (1 << LINED) | (1 << NONE), grid, null, "edge");
+  m.seed(grid);
+  return { board, geo, dl, m, ladder: spokesLadder(geo, board, dl) };
+}
+
+/** A copy of `d` that shares no marks with it, for a search to assume on. */
+function copied(d: Deduction): Deduction {
+  const m = new CellMarks(d.m.sp, d.m.domain, d.m.grid.slice(), null, "edge");
+  m.cands.set(d.m.cands);
+  return { ...d, m };
+}
+
+/** How many lines each square has on `grid`. */
+function linesOf(sp: GridSpace, grid: ArrayLike<number>, c: number): number {
+  let n = 0;
+  for (const e of sp.cellEdges[c]) if (grid[e] === LINED) n++;
+  return n;
+}
+
+/** Whether some hub still lacks a line it takes. */
+function unfinished(d: Deduction): boolean {
+  const { sp } = d.geo;
+  for (const c of sp.cells)
+    if (linesOf(sp, d.m.grid, c) < d.board.numbers[c]) return true;
+  return false;
+}
+
+/** Whether `grid`'s lines, every other link taking none, answer the board. */
+function answers(geo: Geometry, dl: spokes.Dealt, grid: ArrayLike<number>): boolean {
+  const g = Uint8Array.from(grid, (v) => (v === LINED ? LINED : NONE));
+  return spokes.isAnswer(g, geo.sp, dl);
+}
+
+/** Where the ladder left the marks, it having found nothing inconsistent. */
+function verdictOf(d: Deduction): Deduced {
+  if (unfinished(d)) return "stuck";
+  return answers(d.geo, d.dl, d.m.grid) ? "solved" : "contradiction";
+}
+
+/** Run the ladder on `d` to a fixpoint at `cap` and say what it reached. */
+function deduce(d: Deduction, cap: number, firings?: FiringTally): Deduced {
+  const { m, ladder } = d;
+  const impossible = runLadder(
+    m,
+    ladderTechniques(m, ladder.entries, { [TIERS]: cap }, {}),
+    { firings },
+  );
+  return impossible ? "contradiction" : verdictOf(d);
+}
+
+// --- what a tried link breaks --------------------------------------------------
 
 /**
- * Deduce as far as `diff` allows, mutating `b` in place, and report the
- * resulting status. `"valid"` means the board is fully and uniquely solved:
- * the generator accepts a clue set only while this holds.
+ * How lines on `tried`, read on `grid`, break the board at once near the
+ * hubs `changed`, whose lines they change: a hub there or beside one left
+ * too few links for its number, else the group a changed hub is in closed
+ * off with every hub of it full. The words a Check's hint needs, read as the
+ * description's `brokenH` reads them; `null` where nothing breaks.
+ */
+function breakOf(
+  sp: GridSpace,
+  takes: ArrayLike<number>,
+  grid: ArrayLike<number>,
+  tried: readonly number[],
+  changed: readonly number[],
+): { kind: SpokesBreakKind; hubs: number[] } | null {
+  const on = (e: number): boolean => grid[e] === LINED || tried.includes(e);
+  const lines = (c: number): number => sp.cellEdges[c].filter(on).length;
+  const spare = (c: number): boolean => lines(c) < takes[c];
+  const live = (c: number, k: number): boolean => {
+    const e = sp.cellEdges[c][k];
+    const x = sp.crossing[e];
+    return (
+      grid[e] === 0 &&
+      !tried.includes(e) &&
+      spare(c) &&
+      spare(sp.edgeAdj[c][k]) &&
+      !(x >= 0 && on(x))
+    );
+  };
+  const short = (c: number): boolean => {
+    if (!spare(c)) return false;
+    let ways = 0;
+    for (let k = 0; k < sp.edgeAdj[c].length; k++) if (live(c, k)) ways++;
+    return ways < takes[c] - lines(c);
+  };
+  const near = [...new Set(changed.flatMap((c) => [c, ...sp.adj8[c]]))].sort(
+    (a, b) => a - b,
+  );
+  const starved = near.find(short);
+  if (starved !== undefined) return { kind: "starved", hubs: [starved] };
+  let hubs = 0;
+  for (const c of sp.cells) if (takes[c] > 0) hubs++;
+  for (const c of changed) {
+    const group = [c];
+    for (let i = 0; i < group.length; i++)
+      sp.cellEdges[group[i]].forEach((e, k) => {
+        const q = sp.edgeAdj[group[i]][k];
+        if (on(e) && !group.includes(q)) group.push(q);
+      });
+    const held = group.filter((x) => takes[x] > 0);
+    if (group.every((x) => !spare(x)) && held.length < hubs)
+      return { kind: "sealed", hubs: held.sort((a, b) => a - b) };
+  }
+  return null;
+}
+
+// --- why a firing set what it set --------------------------------------------
+
+/** A firing's reason, before its forced spokes are known. */
+type SpokesReason = Omit<SpokesFiring, "forced">;
+
+/** A reason built once a firing, from its binding, and shared by each of its
+ * facts. */
+function perFiring<B extends object>(
+  build: (binding: B, m: CellMarks) => SpokesReason,
+): ReasonOf<B> {
+  let last: B | null = null;
+  let reason: SpokesReason | null = null;
+  return (binding, _at, _n, m) => {
+    if (binding !== last || reason === null) {
+      last = binding;
+      reason = build(binding, m);
+    }
+    return reason;
+  };
+}
+
+/** The ladder over the dealt board, each technique with its reason. */
+function spokesLadder(geo: Geometry, board: SpokesBoard, dl: spokes.Dealt): Ladder {
+  const { sp } = geo;
+  // What a Check's trial breaks, which a firing of it must break.
+  const broken = (
+    grid: ArrayLike<number>,
+    tried: readonly number[],
+    changed: readonly number[],
+  ): { kind: SpokesBreakKind; hubs: number[] } => {
+    const got = breakOf(sp, board.numbers, grid, tried, changed);
+    if (got === null)
+      throw new Error("spokes: a Check fired where its trial breaks nothing");
+    return got;
+  };
+  return describedLadder(spokes, {
+    saturation: compiledRung(
+      spokes.saturation,
+      dl,
+      perFiring(({ c }) => ({ kind: "saturation", evidenceHubs: [c] })),
+    ),
+    twoOnes: compiledRung(
+      spokes.twoOnes,
+      dl,
+      perFiring(({ a, b }) => ({ kind: "twoOnes", evidenceHubs: [a, b] })),
+    ),
+    exhaustion: compiledRung(
+      spokes.exhaustion,
+      dl,
+      perFiring(({ c }) => ({ kind: "exhaustion", evidenceHubs: [c] })),
+    ),
+    lineBreaks: compiledRung(
+      spokes.lineBreaks,
+      dl,
+      perFiring(({ e, a, b }, m) => {
+        const why = broken(m.grid, [e], [a, b]);
+        return {
+          kind: "lineBreaks",
+          evidenceHubs: why.hubs,
+          hypothesis: spokeOf(geo, e, SPOKE_LINE),
+          breakKind: why.kind,
+        };
+      }),
+    ),
+    spareBreaks: compiledRung(
+      spokes.spareBreaks,
+      dl,
+      perFiring(({ c, y, H }, m) => {
+        const ends = H.map((e) =>
+          sp.edgeEnds[2 * e] === c ? sp.edgeEnds[2 * e + 1] : sp.edgeEnds[2 * e],
+        );
+        const why = broken(m.grid, H, [c, ...ends]);
+        return {
+          kind: "spareBreaks",
+          evidenceHubs: [...new Set([c, ...why.hubs])],
+          hypothesis: spokeOf(geo, sp.edgeOf(c, y), SPOKE_MARKED),
+          filled: c,
+          breakKind: why.kind,
+        };
+      }),
+    ),
+  });
+}
+
+// --- solving -----------------------------------------------------------------
+
+/** How many positions {@link searchAnswer} may try on a board that arrives
+ * by its ID. A board the generator deals needs far fewer: every removal it
+ * keeps is proved within `DEALING_BUDGET`. */
+const ANSWER_BUDGET = 5000;
+
+/** The positions a stuck one divides into: a link both of whose hubs still
+ * take a line and that crosses no line, as a line and as none. A stuck board
+ * has one, or a short hub would have no link left, which `saturation`
+ * refuses. */
+function assumeLink(d: Deduction): Deduction[] {
+  const { sp } = d.geo;
+  const takes = d.board.numbers;
+  const spare = (c: number): boolean => linesOf(sp, d.m.grid, c) < takes[c];
+  for (const e of sp.edges) {
+    const x = sp.crossing[e];
+    if (
+      d.m.known(e) ||
+      (x >= 0 && d.m.grid[x] === LINED) ||
+      !spare(sp.edgeEnds[2 * e]) ||
+      !spare(sp.edgeEnds[2 * e + 1])
+    )
+      continue;
+    return [LINED, NONE].map((v) => {
+      const next = copied(d);
+      next.m.place(e, v);
+      return next;
+    });
+  }
+  return [];
+}
+
+/** The board's answers from its clues alone, counted to two by trial and
+ * error over the whole ladder. The answer is a value for each link. */
+function searchAnswer(board: SpokesBoard, budget = ANSWER_BUDGET): Answer<Uint8Array> {
+  return searchAnswers<Deduction, Uint8Array>({
+    start: deduction(cleared(board)),
+    deduce: (d) => deduce(d, DIFF_TRICKY),
+    assume: assumeLink,
+    solution: (d) => Uint8Array.from(d.m.grid, (v) => (v === LINED ? LINED : NONE)),
+    budget,
+  });
+}
+
+/** `board` with every spoke it can hold open: its clues and holes alone. */
+function cleared(board: SpokesBoard): SpokesBoard {
+  // Each two-bit spoke that is not hidden (0) becomes empty (1).
+  const spokesNow = board.spokes.map((hub) => (hub | (hub >>> 1)) & 0x5555);
+  return { w: board.w, h: board.h, numbers: board.numbers, spokes: spokesNow };
+}
+
+/** Each board's answer, by its clues, which every state of a board shares. */
+const answerOf = answerCache<Int8Array, SpokesBoard>();
+
+/** The board's answer, as a board with every link a line or a mark, which
+ * Solve and the mistake check go by. */
+export function spokesAnswer(board: SpokesBoard): Answer<SpokesBoard> {
+  return answerOf(board.numbers, () => {
+    const answer = searchAnswer(board);
+    if (answer.kind !== "one") return answer;
+    return { kind: "one", solution: boardOf(board, answer.solution) };
+  });
+}
+
+/** `board`'s spokes set to `grid`'s values: a line, a mark where it holds
+ * none, and open where it holds nothing; a hidden spoke stays hidden. */
+function boardOf(board: SpokesBoard, grid: ArrayLike<number>): SpokesBoard {
+  const geo = geometryOf(board.w, board.h);
+  const out: SpokesBoard = { ...board, spokes: board.spokes.slice() };
+  for (const e of geo.sp.edges) {
+    const a = geo.sp.edgeEnds[2 * e];
+    const b = geo.sp.edgeEnds[2 * e + 1];
+    const d = geo.dirOf[e];
+    if (getSpoke(out.spokes[a], d) === SPOKE_HIDDEN) continue;
+    const s =
+      grid[e] === LINED ? SPOKE_LINE : grid[e] === NONE ? SPOKE_MARKED : SPOKE_EMPTY;
+    out.spokes[a] = (out.spokes[a] & ~(3 << (d * 2))) | (s << (d * 2));
+    const back = d ^ 4;
+    out.spokes[b] = (out.spokes[b] & ~(3 << (back * 2))) | (s << (back * 2));
+  }
+  return out;
+}
+
+/**
+ * Grade `board` from its clues at tier `cap`: the ladder to a fixpoint below
+ * Unreasonable, and at Unreasonable the search, solved where it finds one
+ * answer. `budget` bounds the search; a deal asks within `DEALING_BUDGET`.
  */
 export function spokesSolve(
-  b: SpokesBoard,
-  scratch: SpokesScratch | null,
-  diff: number,
-): SpokesStatus {
-  const s = scratch ?? new SpokesScratch(b.w * b.h);
+  board: SpokesBoard,
+  cap: number,
+  opts: { budget?: number; firings?: FiringTally } = {},
+): DifficultyVerdict {
+  if (cap >= DIFF_HARD) {
+    const answer = searchAnswer(board, opts.budget);
+    return answer.kind === "one"
+      ? "solved"
+      : answer.kind === "none"
+        ? "impossible"
+        : "unsolved";
+  }
+  const reached = deduce(deduction(cleared(board)), cap, opts.firings);
+  return reached === "contradiction"
+    ? "impossible"
+    : reached === "solved"
+      ? "solved"
+      : "unsolved";
+}
 
-  spokesSolverOnes(b); // one-shot pre-pass; never a ladder member
+/** Whether the player's lines solve the board: every hub has its number,
+ * no two diagonals cross, and the hubs are one group. Marks play no part. */
+export function spokesSolved(board: SpokesBoard): boolean {
+  const geo = geometryOf(board.w, board.h);
+  const grid = new Uint8Array(geo.sp.edges.length);
+  for (const e of geo.sp.edges)
+    if (getSpoke(board.spokes[geo.sp.edgeEnds[2 * e]], geo.dirOf[e]) === SPOKE_LINE)
+      grid[e] = LINED;
+  return answers(geo, dealtOf(board, geo), grid);
+}
 
-  const copy = diff >= DIFF_TRICKY ? cloneBoard(b) : null;
+// --- the hint's walk ---------------------------------------------------------
 
-  // The shared ordered technique ladder (`engine/deduction-fixpoint.ts`). This
-  // solver reports a *status*, so the runner's grade is unused. `copy` is
-  // non-null exactly when diff >= DIFF_TRICKY.
-  runDeductionFixpoint({
-    techniques: [
-      { id: "saturation", tier: DIFF_EASY, run: () => spokesSolverFull(b, s) },
-      { id: "crossing-diagonal", tier: DIFF_EASY, run: () => spokesSolverDiagonal(b) },
-      {
-        id: "breaks",
-        tier: DIFF_TRICKY,
-        run: () => (copy ? spokesSolverBreaks(b, copy, s) : 0),
-      },
-      {
-        id: "contradiction-unbounded",
-        tier: DIFF_HARD,
-        run: () => (copy && spokesSolverAttempt(b, copy, s, DIFF_EASY) ? 1 : 0),
-      },
-    ],
-    maxTier: diff,
-    settled: () => spokesValidate(b, s) !== "incomplete",
-  });
+/** Runaway and UX cap on a plan's length: a player rarely follows more than
+ * a few steps before going their own way, and the plan is asked for again
+ * then. */
+const HINT_PLAN_MAX = 40;
 
-  return spokesValidate(b, s);
+/** A taken firing in the game's terms: its reason, and the spokes it set. */
+function firingOf(d: Deduction, taken: Taken): SpokesFiring {
+  const forced: SpokesSpokeRef[] = [];
+  for (let i = 0; i < taken.facts.length; i += 3)
+    forced.push(
+      spokeOf(
+        d.geo,
+        taken.facts[i + 1],
+        taken.facts[i + 2] === LINED ? SPOKE_LINE : SPOKE_MARKED,
+      ),
+    );
+  return { ...(taken.reasons[0] as SpokesReason), forced };
+}
+
+/**
+ * The ladder's firings from the player's board, one at a time, each the one
+ * that carries on from the hubs the plan is working round (`ladderWalk`),
+ * up to Normal: the search beneath is not a deduction, so the plan stops
+ * where the ladder does and the hint says so. Pure on its argument.
+ */
+export function deduceSpokesPlan(board: SpokesBoard): SpokesFiring[] {
+  const d = deduction(board);
+  d.m.budget = stepBudget("spokes hint");
+  const { sp } = d.geo;
+  const ends = (f: Taken): number[] => {
+    const out: number[] = [];
+    for (let i = 0; i < f.facts.length; i += 3) {
+      const e = f.facts[i + 1];
+      out.push(sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]);
+    }
+    return out;
+  };
+  // A player follows the hubs: a firing reads the hubs it argues from and
+  // the ends of the spokes it decides.
+  const walk = ladderWalk(d.m, d.ladder.entries, { [TIERS]: DIFF_TRICKY }, (f) => [
+    ...(f.reasons[0] as SpokesReason).evidenceHubs,
+    ...ends(f),
+  ]);
+  return deduceHintPlan<null, SpokesFiring, "open" | "done">({
+    board: null,
+    status: () => (unfinished(d) ? "open" : "done"),
+    incomplete: "open",
+    next: () => {
+      const taken = walk.next();
+      return taken === null || taken === "contradiction" ? null : firingOf(d, taken);
+    },
+    planCap: HINT_PLAN_MAX,
+  }).plan;
 }

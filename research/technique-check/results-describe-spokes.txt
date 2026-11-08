@@ -1,0 +1,11 @@
+ok  spokes     saturation                     3  sound    (want sound   )     9 queries    3.7s
+ok  spokes     saturation (planted)           3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  spokes     twoOnes                        3  sound    (want sound   )     1 queries    0.3s
+ok  spokes     twoOnes (planted)              3  unsound  (want unsound )     1 queries    0.2s   at ?
+ok  spokes     exhaustion                     3  sound    (want sound   )     9 queries    0.6s
+ok  spokes     exhaustion (planted)           3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  spokes     lineBreaks                     3  sound    (want sound   )    20 queries   93.2s
+ok  spokes     lineBreaks (planted)           3  unsound  (want unsound )     1 queries    0.2s   at edge 0
+..  spokes     spareBreaks: not proved whole in time, asked on 16 boards: no defect
+ok  spokes     spareBreaks                    3  sound    (want sound   )   144 queries  120.0s
+ok  spokes     spareBreaks (planted)          3  unsound  (want unsound )     1 queries    0.5s   at cell 0

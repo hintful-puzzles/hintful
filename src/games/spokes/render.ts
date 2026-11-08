@@ -34,6 +34,7 @@ import {
   INK,
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
+import { Dsf } from "../../engine/dsf.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
@@ -42,7 +43,6 @@ import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/typ
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { HUB, SPOKE } from "./hint-text.ts";
 import type { SpokesHint } from "./index.ts";
-import { SpokesScratch, spokesFindIsolated, spokesSolverRecount } from "./solver.ts";
 import {
   DIR_BOTLEFT,
   DIR_BOTRIGHT,
@@ -52,12 +52,89 @@ import {
   SPOKE_HIDDEN,
   SPOKE_LINE,
   SPOKE_MARKED,
+  type SpokesBoard,
   type SpokesMistake,
   type SpokesMove,
   type SpokesParams,
   type SpokesState,
   type SpokesUi,
+  spokeCounts,
 } from "./state.ts";
+
+// --- the tallies a hub is colored by ----------------------------------------
+
+/** Each hub's counts and the groups its lines make, which decide how it is
+ * drawn: met, over-marked, or closed off from the rest. */
+class SpokesTallies {
+  /** Placeable spokes per hub (8 less the hidden ones). */
+  readonly nodes: Int32Array;
+  /** Lines drawn per hub. */
+  readonly lines: Int32Array;
+  /** Marks per hub, a crossing a drawn diagonal blocks counted as one. */
+  readonly marked: Int32Array;
+  /** The hubs joined by lines, holes folded into the first hub's group so
+   * that a board whose hubs are joined is one group of every cell. */
+  readonly dsf: Dsf;
+  /** For each group, by its root, how many more lines it can draw out of
+   * itself: 0 is closed. */
+  readonly open: Int32Array;
+
+  constructor(cells: number) {
+    this.nodes = new Int32Array(cells);
+    this.lines = new Int32Array(cells);
+    this.marked = new Int32Array(cells);
+    this.dsf = new Dsf(cells);
+    this.open = new Int32Array(cells);
+  }
+
+  /** Count `b` again. A drawn diagonal makes its crossing unplaceable, so the
+   * two hubs at the crossing's ends each count one more mark: a hub facing a
+   * drawn diagonal reads as over-marked by what it can still place. */
+  count(b: SpokesBoard): void {
+    const { w, h } = b;
+    const n = w * h;
+    for (let i = 0; i < n; i++) {
+      const counts = spokeCounts(b.spokes[i]);
+      this.nodes[i] = 8 - (counts & 0xff);
+      this.lines[i] = (counts >>> (SPOKE_LINE * 8)) & 0xff;
+      this.marked[i] = (counts >>> (SPOKE_MARKED * 8)) & 0xff;
+    }
+    for (let y = 0; y < h - 1; y++)
+      for (let x = 0; x < w - 1; x++) {
+        const i = y * w + x;
+        const down = getSpoke(b.spokes[i], DIR_BOTRIGHT);
+        const up = getSpoke(b.spokes[i + 1], DIR_BOTLEFT);
+        if (down === SPOKE_LINE && up === SPOKE_EMPTY) {
+          this.marked[i + 1]++;
+          this.marked[i + w]++;
+        }
+        if (up === SPOKE_LINE && down === SPOKE_EMPTY) {
+          this.marked[i]++;
+          this.marked[i + w + 1]++;
+        }
+      }
+    this.dsf.reinit();
+    if (!b.numbers[0]) {
+      const first = b.numbers.findIndex((k) => k > 0);
+      if (first > 0) this.dsf.merge(first, 0);
+    }
+    for (let i = 0; i < n; i++) {
+      if (!b.numbers[i]) {
+        this.dsf.merge(i, 0);
+        continue;
+      }
+      for (let j = 0; j < 4; j++) {
+        const x = (i % w) + SPOKE_DIRS[j].dx;
+        const y = ((i / w) | 0) + SPOKE_DIRS[j].dy;
+        if (x >= 0 && x < w && y < h && getSpoke(b.spokes[i], j) === SPOKE_LINE)
+          this.dsf.merge(i, y * w + x);
+      }
+    }
+    this.open.fill(0);
+    for (let i = 0; i < n; i++)
+      this.open[this.dsf.canonify(i)] += b.numbers[i] - this.lines[i];
+  }
+}
 
 export const PREFERRED_TILE_SIZE = 72;
 
@@ -150,7 +227,7 @@ export interface SpokesDrawState {
   h: number;
   /** Recount scratch, so the renderer can color hubs by line/mark counts and
    * by whether their group is closed off. */
-  scratch: SpokesScratch;
+  scratch: SpokesTallies;
   /** Last-drawn packed hub per cell (−1 = never drawn). */
   spokes: Int32Array;
   /** Last-drawn color hash per cell (−1 = never drawn). */
@@ -243,7 +320,7 @@ export function newDrawState(state: SpokesState, tileSize: number): SpokesDrawSt
     tileSize,
     w: state.w,
     h: state.h,
-    scratch: new SpokesScratch(n),
+    scratch: new SpokesTallies(n),
     spokes: new Int32Array(n).fill(-1),
     colors: new Int32Array(n).fill(-1),
     corners: new Int8Array(n).fill(-1),
@@ -333,11 +410,7 @@ export function redraw(
   const thick = ts <= 80 ? 2 : 4;
   const radius = ts / 3.5;
 
-  // The renderer's counts use the diagonal-aware `full` recount: a hub facing
-  // a drawn diagonal has one fewer placeable spoke than its own word admits,
-  // and that is what decides whether it reads as over-marked.
-  spokesSolverRecount(state, ds.scratch, true);
-  spokesFindIsolated(state, ds.scratch);
+  ds.scratch.count(state);
   const connected = ds.scratch.dsf.size(0) === w * h;
 
   // Mistake overlay: flag both ends of each offending spoke, so both cells

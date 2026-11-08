@@ -278,6 +278,12 @@ description author acts on:
   (`held: "edge"`). A hint step names an edge's two squares. A division
   game states its regions as `through(c, O)`, `O` the edges known open,
   since the answer is the walls.
+- **A diagonal neighbor is across an edge too where the space says
+  `edges: king`** (Spokes' links between hubs): `edges` holds the
+  diagonals, `edge(a, b)` names one between squares corner to corner,
+  `through` crosses them, and `crossedBy(e)` is the other diagonal of the
+  four squares a diagonal crosses, none for an orthogonal edge. The module
+  exports `edgeGeometry`, which the game passes to `describedSpace`.
 - **A rectangle on the grid is a sort** (Rect's): `rects(c, n)` is the
   rectangles holding cell `c` of `n` cells, or of any size where `n` is 0,
   narrowest first; `cells(r)`, `width(r)` and `height(r)` read one, and
@@ -317,7 +323,8 @@ description author acts on:
   `W` water. Nothing propagates, so what follows at once from the
   supposition is stated in it: the water at a supposed segment's corners,
   and every boat the supposition closes, counted against what the fleet has
-  left.
+  left. A set of edges supposed lines is the same: Spokes' `spareBreaks`
+  supposes a hub's other links all lines as `H`, read through `drawn(e, H)`.
 - **A size the grid is not measured in** (Salad's `nums`) is read from what
   the board deals.
 
@@ -556,7 +563,10 @@ author writing for speed uses these:
   `describe-rectangles-and-galaxies`).
 - **An answer check hoists as a rung does**: a set a rule binds is made once
   where it is bound, so `through(c, O)` over a bound `O` is a lookup in its
-  groups (Rect's shape rule, a walk per edge otherwise).
+  groups (Rect's shape rule, a walk per edge otherwise). Spokes' `joined`
+  binds its lines as `L` ahead of the pairs of hubs it reads: with the set
+  stated inside `through`, the check walked once a pair, three quarters of
+  an Easy deal (2026-11-08).
 - **A count, sum or truth read again in one binding's premise and
   conclusion is made once**: `bulbs(c)` stated three times in Light Up's
   `square` counts once. The compiler shares one only where the code that

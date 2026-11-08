@@ -1,6 +1,6 @@
 /**
  * Spokes hint tests — the deduction narrated by each rung, the multi-leg
- * journey a saturated hub becomes, the contradiction look-ahead, the refusal
+ * journey a saturated hub becomes, the search kept out of the hint, the refusal
  * paths, and a tier-2.5 render frame (including a diagonal hint, the
  * corner-invalidation case).
  *
@@ -12,6 +12,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { NARRATION_LIMIT } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -27,16 +28,11 @@ import { COL_HINT_CELL } from "./render.ts";
 import {
   deduceSpokesPlan,
   type SpokesFiring,
-  spokesSolve,
-  spokesValidate,
+  spokesAnswer,
+  spokesSolved,
 } from "./solver.ts";
 import {
-  clearBoard,
   cloneBoard,
-  DIFF_EASY,
-  DIFF_HARD,
-  DIFF_TRICKY,
-  DIFFCOUNT,
   getSpoke,
   newState,
   SPOKE_DIRS,
@@ -81,11 +77,12 @@ const UNREASONABLE: SpokesParams = { w: 4, h: 4, diff: "hard" };
  * expensive part: measured 2026-10-07, 0.07 to 2.4 s to deal one against about
  * 5 ms to plan on it. A description stays a board of its tier while the
  * ladder below it does, so these were dealt again when Normal's rung changed
- * (2026-10-28). */
+ * (2026-10-28), and the third when the described ladder finished it
+ * (2026-11-08). */
 const UNREASONABLE_BOARDS = [
   "1143136316522341",
   "2211133116631311",
-  "1311422321641111",
+  "1133152226442431",
   "1112317345531131",
   "3421155426541241",
   "1231126332621241",
@@ -110,16 +107,15 @@ const LOOK_AHEAD_FILTER_BOARDS = [
 
 /** The unique solution as a board (the same one `hint`/`findMistakes` use). */
 function solutionOf(state: SpokesState) {
-  const b = cloneBoard(state);
-  clearBoard(b);
-  expect(spokesSolve(b, null, DIFFCOUNT)).toBe("valid");
-  return b;
+  const answer = spokesAnswer(state);
+  if (answer.kind !== "one") throw new Error(`no one answer: ${answer.kind}`);
+  return answer.solution;
 }
 
 /** The firing the deductive plan opens with on `state`: the one a hint there
  * narrates. */
 function firingAt(state: SpokesState): SpokesFiring {
-  const [firing] = deduceSpokesPlan(cloneBoard(state));
+  const [firing] = deduceSpokesPlan(state);
   if (!firing) throw new Error("deduction has nothing to offer here");
   return firing;
 }
@@ -149,43 +145,49 @@ const pinned = describeHintPins({
     // Normal's Check concluding a line: a rule-out that leaves a hub no spare
     // spoke, whose other spokes break the board.
     breaksLine: (step) =>
-      step.rung === "breaks" &&
+      step.rung === "spareBreaks" &&
       !isRuleOut(lit(step)) &&
       step.explanation.includes("no spare spoke"),
     // Normal's Check ruling a spoke out: a line that breaks the board.
-    breaksRuleOut: (step) => step.rung === "breaks" && isRuleOut(lit(step)),
+    breaksRuleOut: (step) => step.rung === "lineBreaks" && isRuleOut(lit(step)),
   },
   pins: {
-    /** Held on 247 of 1000 positions walked. */
+    /** Held on 271 of 782 positions walked. */
     saturationOfSeveral: "4x4de:1511455143121112",
-    /** Held on 193 of 1000 positions walked. */
+    /** Held on 336 of 782 positions walked. */
     diagonalLine: "4x4de:1511455143121112",
-    /** Held on 458 of 1000 positions walked. */
+    /** Held on 241 of 782 positions walked. */
     ruleOut: "4x4dt:1442456446431112",
-    /** Held on 100 of 1000 positions walked. */
+    /** Held on 58 of 782 positions walked. */
     breaksLine: {
-      id: "4x4dt:1311363336711342",
-      moves: [{ kind: "set", index: 2, dir: 0, state: 3 }],
+      id: "4x4dt:2142155423721122",
+      moves:
+        '[{"kind":"set","index":1,"dir":3,"state":3},{"kind":"set","index":12,"dir":0,"state":3},{"kind":"set","index":1,"dir":1,"state":3}]',
     },
-    /** Held on 59 of 1000 positions walked. */
+    /** Held on 90 of 782 positions walked. */
     breaksRuleOut: {
       id: "4x4dh:1321231446531321",
       moves: [{ kind: "set", index: 3, dir: 3, state: 3 }],
     },
-    /** Held on 232 of 1000 positions walked. */
-    twoOnes: "4x4dt:1442456446431112",
-    /** Held on 950 of 1000 positions walked. */
+    /** Held on 743 of 782 positions walked. */
     saturation: "4x4de:1511455143121112",
-    /** Held on 892 of 1000 positions walked. */
+    /** Held on 185 of 782 positions walked. */
+    twoOnes: "4x4dt:1442456446431112",
+    /** Held on 523 of 782 positions walked. */
     exhaustion: {
       id: "4x4de:3341313212131431",
       moves:
         '[{"kind":"set","index":0,"dir":0,"state":2},{"kind":"set","index":0,"dir":1,"state":2},{"kind":"set","index":0,"dir":2,"state":2},{"kind":"set","index":8,"dir":2,"state":3},{"kind":"set","index":10,"dir":1,"state":3}]',
     },
-    /** Held on 476 of 1000 positions walked. */
-    breaks: {
-      id: "4x4dt:1311363336711342",
-      moves: [{ kind: "set", index: 2, dir: 0, state: 3 }],
+    lineBreaks: {
+      id: "4x4dh:1321231446531321",
+      moves: [{ kind: "set", index: 3, dir: 3, state: 3 }],
+    },
+    /** Held on 294 of 782 positions walked. */
+    spareBreaks: {
+      id: "4x4dt:2142155423721122",
+      moves:
+        '[{"kind":"set","index":1,"dir":3,"state":3},{"kind":"set","index":12,"dir":0,"state":3},{"kind":"set","index":1,"dir":1,"state":3}]',
     },
   },
 });
@@ -193,14 +195,20 @@ const pinned = describeHintPins({
 // --- each rung's forced move agrees with the unique solution ----------------
 
 describe("each rung forces the move the solution agrees with", () => {
-  for (const kind of ["twoOnes", "saturation", "exhaustion", "breaks"] as const) {
+  for (const kind of [
+    "twoOnes",
+    "saturation",
+    "exhaustion",
+    "lineBreaks",
+    "spareBreaks",
+  ] as const) {
     it(`${kind}: every forced spoke matches the solution`, () => {
-      const { state, index } = pinned(kind);
-      // The pin opens with the rung, so the plan's first firing is its own.
-      expect(index).toBe(0);
-      expect(firingAt(state).kind).toBe(kind);
+      const { state } = pinned(kind);
+      // The pin's plan holds the rung; its firing there is the one checked.
+      const firing = deduceSpokesPlan(state).find((f) => f.kind === kind);
+      if (firing === undefined) throw new Error(`the pin's plan has no ${kind}`);
       const solution = solutionOf(state);
-      for (const sp of firingAt(state).forced) {
+      for (const sp of firing.forced) {
         const inSolution = getSpoke(solution.spokes[sp.index], sp.dir);
         // A forced LINE must be a line in the solution; a forced MARK must not.
         if (sp.state === SPOKE_LINE) {
@@ -239,18 +247,16 @@ describe("narration states the premise, in the necessity voice", () => {
   });
 
   it.each([
-    "breaks",
+    "lineBreaks",
+    "spareBreaks",
     "breaksLine",
     "breaksRuleOut",
   ] as const)("%s states the state tried and the break it makes", (kind) => {
-    const { state, step } = pinned(kind);
+    const { step } = pinned(kind);
     expect(step.explanation).toMatch(/^(?:Drawing this line|Ruling this spoke out)/);
-    expect(step.explanation).toMatch(
-      /(?:too many lines|overfill|too few spokes|force the diagonals|strand)/,
-    );
+    expect(step.explanation).toMatch(/(?:too few spokes|strand)/);
     expect(step.explanation).toMatch(/(?:rule it out|must be a line)/);
     // The break it names is outlined as evidence (words and picture agree).
-    expect(firingAt(state).breakKind).toBeDefined();
     expect((step.highlights as SpokesHint).evidence.length).toBeGreaterThan(0);
     expect(step.explanation.length).toBeLessThanOrEqual(NARRATION_LIMIT);
   });
@@ -258,8 +264,7 @@ describe("narration states the premise, in the necessity voice", () => {
   it("a rule-out that leaves a hub no spare spoke names that hub first", () => {
     const { state, step } = pinned("breaksLine");
     const { filled } = firingAt(state);
-    if (filled === null || filled === undefined)
-      throw new Error("no hub was left short");
+    if (filled === undefined) throw new Error("no hub was left short");
     expect((step.highlights as SpokesHint).evidence).toContain(filled);
   });
 });
@@ -439,49 +444,28 @@ describe("the hint frame paints the overlay", () => {
   });
 });
 
-// --- the Unreasonable rung is unreachable from the hint ---------------------
+// --- the search beneath the ladder never reaches a hint ---------------------
 
-describe("the top tier's look-ahead never reaches a hint", () => {
+describe("the search beneath the ladder never reaches a hint", () => {
   /**
-   * `spokesSolve`'s top tier tries a spoke and solves on from it with no bound,
-   * which was measured settling **35 of 36 hubs** on a 6x6 board: a search,
-   * and no hint narrates a search on any tier. Its refutation would read like
-   * Normal's Check, which names a break too, so `hint-quality.test.ts`'s
-   * vocabulary check cannot tell them apart; the guarantee has to be
-   * structural. This is it, stated as the consequence a player would feel:
-   * **asking for the top tier's reasoning buys the plan nothing.** The two
-   * controls below are what stop it passing vacuously.
-   *
-   * What this alone catches is that rung reaching a plan. Planted 2026-10-07
-   * (the unbounded trial run after the bounded one, at the top tier only), the
-   * plan grew by 7 to 28 firings on every one of these boards and no other
-   * test in the file noticed.
+   * The top tier is the engine's search over the ladder, and no hint narrates
+   * a search. The hint walks the ladder alone, so on a board of the top tier
+   * its plan stops short of solved, and the hint says it has run out. A board
+   * this fails on has come within the hint's reach: replace it.
    */
-  it("planning at the top tier gives the same plan as planning at Normal", () => {
+  it("walks an Unreasonable board only as far as the ladder reaches", () => {
     for (const desc of UNREASONABLE_BOARDS) {
-      const base = newState(UNREASONABLE, desc);
-      const plan = (diff: number) => deduceSpokesPlan(cloneBoard(base), diff);
-      const normal = plan(DIFF_TRICKY);
-
-      expect(
-        plan(DIFF_HARD).map((f) => f.kind),
-        desc,
-      ).toEqual(normal.map((f) => f.kind));
-
-      // The first control: the Normal rung adds firings an Easy plan lacks, so
-      // the equality is a fact about the top tier and not an artifact of every
-      // tier planning alike.
-      expect(normal.length, `${desc}: the Normal rung adds no firing`).toBeGreaterThan(
-        plan(DIFF_EASY).length,
-      );
-      // The second: the Normal plan stops short of solved, so a rung above it
-      // would have firings to add. A board this fails on has come within the
-      // hint's reach and no longer tells the tiers apart: replace it.
-      const after = cloneBoard(base);
-      for (const f of normal) applyForced(after, f.forced);
-      expect(spokesValidate(after), `${desc}: the Normal plan finishes it`).toBe(
-        "incomplete",
-      );
+      const board = cloneBoard(newState(UNREASONABLE, desc));
+      let firings = 0;
+      for (let plan = deduceSpokesPlan(board); plan.length > 0; ) {
+        for (const f of plan) applyForced(board, f.forced);
+        firings += plan.length;
+        plan = deduceSpokesPlan(board);
+      }
+      expect(firings, `${desc}: the ladder decides nothing`).toBeGreaterThan(0);
+      expect(spokesSolved(board), `${desc}: the ladder finishes it`).toBe(false);
+      const refused = spokesGame.hint?.({ ...newState(UNREASONABLE, desc), ...board });
+      expect(refused?.ok === false && refused.error).toBe(DEDUCTION_EXHAUSTED);
     }
   });
 });

@@ -120,8 +120,8 @@
           "description": "One slot beyond each end of every row and column, seeing along it: `slots`, `sight(s)`, `opposite(s)`."
         },
         "edges": {
-          "type": "boolean",
-          "description": "The orthogonal pairs: `edges`, `ends(e)`, `end1(e)`, `end2(e)`, `other(e, c)`, `edge(a, b)`."
+          "enum": [true, false, "king"],
+          "description": "The orthogonal pairs: `edges`, `ends(e)`, `end1(e)`, `end2(e)`, `other(e, c)`, `edge(a, b)`. `king` adds the diagonal pairs, and `crossedBy(e)`, the other diagonal of the four squares a diagonal edge crosses (none for an orthogonal one)."
         },
         "corners": {
           "type": "boolean",

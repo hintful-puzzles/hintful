@@ -889,6 +889,28 @@ const PLANTS: Record<string, Plant> = {
   "path.weighed": {
     conclude: "|N| > 0 and (forall y in P: place(edge(c, y), 2))",
   },
+  // A hub one edge short of its lines read as taking every edge left.
+  saturation: {
+    for: "c in cells, n = takes(c) - lines(c), U = ways(c) where n > 0 and |U| <= n + 1",
+    conclude: "forall y in U: place(edge(c, y), 1)",
+  },
+  // A line between a 1-hub and a 2-hub read as closing them off.
+  twoOnes: {
+    for: "N = hubs where N > 2, e in edges, a = end1(e), b = end2(e) where takes(a) = 1 and takes(b) <= 2 and live(a, b)",
+  },
+  // A hub one line short read as having all its lines.
+  exhaustion: {
+    for: "c in cells where hub(c) and lines(c) + 1 >= takes(c), U = {y in adj8(c) where not known(edge(c, y)) and spare(y) and not crossed(edge(c, y))} where |U| > 0",
+  },
+  // A line read as breaking the board where it leaves a hub still short.
+  lineBreaks: {
+    for: "e in edges, a = end1(e), b = end2(e), H = {e} where live(a, b) and (brokenH(a, H) or spareH(b, H))",
+  },
+  // The edge whose crossing out breaks the board crossed out rather than
+  // lined.
+  spareBreaks: {
+    conclude: "place(edge(c, y), 2)",
+  },
   // The first fit across an edge left out of the reasons it is out.
   "rect.line": {
     for: "e in edges where not known(e), a = end1(e), b = end2(e), C = {q in reachers(a) where exists r in fits(q): a in cells(r) and b in cells(r)} where |C| > 0 and (forall q in C, r in fits(q) where a in cells(r) and b in cells(r) and r != nth(fits(q), 0): owned(q, r) or (exists x in sole(q): x not in cells(r)))",

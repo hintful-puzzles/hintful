@@ -3232,6 +3232,20 @@ function throughStated(
   };
 }
 
+/** The code of `edge(a, b)`, where `va` and `vb` are the terms whose code
+ * is `a` and `b`. A neighbor bound by the loop over the other's `adj4` or
+ * `adj8` names its edge by the loop's counter. */
+function edgeBetween(a: string, b: string, va: Val, vb: Val): string {
+  for (const [x, y] of [
+    [a, vb],
+    [b, va],
+  ] as const)
+    for (const around of ["adj4", "adj8"])
+      if (y.pos?.arr === `sp.${around}[${x}]`)
+        return `sp.${around}Edges[${x}][${y.pos.i}]`;
+  return `sp.edgeOf(${a}, ${b})`;
+}
+
 function call(
   fn: string,
   args: readonly Expr[],
@@ -3549,18 +3563,13 @@ function call(
       expect(vs[0], "num", fn);
       expect(vs[1], "num", fn);
       return { code: `(${vs[1].code} * sp.w + ${vs[0].code})`, sort: elem("cell") };
-    case "edge": {
+    case "edge":
       arity(2);
-      // A neighbor bound by the loop over the other's `adj4` names its edge
-      // by the loop's counter.
-      const [a, b] = [cell(0), cell(1)];
-      for (const [x, y] of [
-        [a, vs[1]],
-        [b, vs[0]],
-      ] as const)
-        if (y.pos?.arr === `sp.adj4[${x}]`)
-          return { code: `sp.adj4Edges[${x}][${y.pos.i}]`, sort: elem("edge") };
-      return { code: `sp.edgeOf(${a}, ${b})`, sort: elem("edge") };
+      return { code: edgeBetween(cell(0), cell(1), vs[0], vs[1]), sort: elem("edge") };
+    case "crossedBy": {
+      arity(1);
+      expectElem(vs[0], "edge", fn);
+      return { code: `sp.crossing[${vs[0].code}]`, sort: elem("edge") };
     }
     case "ends":
     case "end1":
@@ -4605,6 +4614,14 @@ export function compileGame(
     " * engine builds the space from them. */",
     `export const units: readonly string[] = ${JSON.stringify(space.units)};`,
     "",
+    ...(space.edges === "king"
+      ? [
+          "/** A diagonal neighbor is across an edge too: the engine builds the",
+          " * space's edges by it. */",
+          'export const edgeGeometry = "king";',
+          "",
+        ]
+      : []),
     "/** Every technique a rung runs, by id: the description's, in its order. */",
     `export type LadderId = ${quoted(ids)};`,
     "",

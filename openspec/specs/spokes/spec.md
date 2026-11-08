@@ -84,10 +84,7 @@ deadline"). It SHALL set no upper bound on the width or the height.
 
 ### Requirement: Params: Spokes' top tier is named Unreasonable
 
-The top tier SHALL be named `Unreasonable`, because its look-ahead runs an
-unbounded sub-solve from a hypothesis. Its internal key SHALL be `hard` and its
-encoded difficulty character SHALL be `h`, so that a game ID carrying that
-character names the same board whatever the tier is called.
+The top tier SHALL be named `Unreasonable`, because a board of it has one answer that only a search by trial and error finds. Its internal key SHALL be `hard` and its encoded difficulty character SHALL be `h`, so that a game ID carrying that character names the same board whatever the tier is called.
 
 #### Scenario: The top tier keeps its difficulty character
 
@@ -161,17 +158,26 @@ Every hub of a generated board SHALL carry at least one line.
 
 ### Requirement: Solver: Spokes solves with a tiered deductive solver
 
-Spokes SHALL provide a solver that draws the forced lines and marks for a board, or
-reports the board invalid or incomplete, at a requested difficulty of Easy, Normal
-or `Unreasonable`. The solver SHALL apply hub saturation and exhaustion,
-diagonal-crossing marks, and the two-ones rule; Normal SHALL add its Check on one
-spoke, and `Unreasonable` the contradiction look-ahead.
+Spokes' ladder SHALL be its description's compiled ladder, each technique checked sound, and the hint SHALL walk the same ladder. Easy SHALL hold the rules a hub's count gives; Normal SHALL add its Check on one link. At `Unreasonable` a board SHALL be solved where the engine's search over the ladder finds it one answer.
 
 #### Scenario: The solver deduces the unique solution
 
 - **WHEN** a generated board is solved at its difficulty
-- **THEN** the solver reaches a single fully connected, fully satisfied
-  configuration of lines and marks
+- **THEN** the solver reaches a single fully connected, fully satisfied configuration of lines
+
+#### Scenario: A board the hand-written ladder dealt at Easy is dealt again
+
+- **WHEN** the generator deals a seed at Easy
+- **THEN** it deals the board the hand-written ladder dealt for that seed
+
+### Requirement: Solver: Easy's rungs read a hub's count
+
+Easy SHALL draw the links of a hub with only as many left as lines it still needs, rule out the link between two 1-hubs where the board has another hub, and rule out a full hub's links to hubs still short of lines. A link to a full hub, or across a drawn diagonal, SHALL count as closed, as a player sees it, and no rung SHALL rule it out.
+
+#### Scenario: A finished hub rules out only its open links
+
+- **WHEN** a hub has all its lines, one free link reaches a hub short of lines, and another reaches a full hub
+- **THEN** Easy rules out the first and leaves the second unmarked
 
 ### Requirement: Solver: Spokes' solver decides validity by connectivity
 
@@ -185,21 +191,9 @@ connected, fully satisfied board as solved.
   with other hubs
 - **THEN** the solver reports the board invalid
 
-### Requirement: Solver: The contradiction look-ahead never guesses
-
-The contradiction look-ahead SHALL be deterministic and exhaustive, not a guessing
-tier: a value is committed only when the opposite value provably leads to an
-invalid board.
-
-#### Scenario: A hypothesis that is not refuted commits nothing
-
-- **WHEN** the look-ahead tries a value on a spoke and the board that follows is
-  not shown to be invalid
-- **THEN** the opposite value is not committed on that account
-
 ### Requirement: Solver: Normal's rung is a Check on one spoke
 
-Normal SHALL rule out a free spoke whose line breaks the board at once, the hubs it fills taking no more spokes, and draw one whose rule-out does, a hub left with no spare spoke drawing all its others. Nothing SHALL be followed from the state tried: the board is read as it would stand, with every free spoke of a full hub ruled out.
+Normal SHALL rule out a free spoke whose line breaks the board at once, the hubs it fills taking no more spokes, and draw one whose rule-out does, a hub at either end left with no spare spoke drawing all its others. Nothing SHALL be followed from the state tried: the board is read as it would stand, with every free spoke of a full hub ruled out.
 
 #### Scenario: A rule-out that starves a hub forces a line
 
@@ -209,7 +203,16 @@ Normal SHALL rule out a free spoke whose line breaks the board at once, the hubs
 #### Scenario: A break past one look belongs to the top tier
 
 - **WHEN** a spoke's other state breaks the board only after a further deduction
-- **THEN** the solver at Normal does not decide it on that account, and at `Unreasonable` it does
+- **THEN** the solver at Normal does not decide it on that account, and at `Unreasonable` the search does
+
+### Requirement: Solver: A Check breaks the board near the hubs it changed
+
+A Check's trial SHALL break the board where a hub it changed, or one beside it, is left too few spokes for its number, or where the group of a hub it changed has every hub full while some hub is outside it.
+
+#### Scenario: A line that closes a group off is ruled out
+
+- **WHEN** drawing a spoke would fill both its hubs and leave their group with every hub full while another hub is outside it
+- **THEN** Normal rules the spoke out
 
 ### Requirement: Controls: Spokes is played by dragging between hubs or with a keyboard cursor
 
@@ -347,33 +350,13 @@ satisfied advances nothing and SHALL NOT be hinted.
   met count forces a helpful rule-out
 - **THEN** the hint offers the lines first
 
-### Requirement: Hint: Spokes' hint stops at bounded reasoning
-
-The Spokes hint SHALL narrate the contradiction look-ahead only at its bounded
-strength. The unbounded rung, the one the `Unreasonable` tier is named for, SHALL
-NOT contribute a firing to a hint plan on any tier, including boards generated
-below that tier.
-
-#### Scenario: Planning at the top tier buys the plan nothing
-
-- **WHEN** a hint plan is computed for the same board at the top tier and at
-  Normal
-- **THEN** the two plans are the same sequence of firings
-
 ### Requirement: Hint: Spokes' hint tries its techniques in one order
 
-The plan's next step SHALL be the first of these that the board gives: a hub
-with exactly as many free spokes as lines it still needs; two neighboring
-1-hubs that both still need their line; a hub with all its lines, for those
-of its free spokes that reach a hub still needing one; and last the bounded
-look-ahead, which reads the free spokes hub by hub and tries each as a forced
-line before a forced rule-out.
+The plan's next step SHALL be the first of these that the board gives: a hub with exactly as many free spokes as lines it still needs; two neighboring 1-hubs that both still need their line; a hub with all its lines, for those of its free spokes that reach a hub still needing one; then Normal's Check, which tries each free spoke as a line, and last each hub with one spoke to spare without each of its spokes.
 
 #### Scenario: Two 1-hubs come before a finished hub
 
-- **WHEN** no hub's count forces a line, two neighboring 1-hubs both still
-  need their line, and a finished hub elsewhere has a free spoke toward an
-  unfinished one
+- **WHEN** no hub's count forces a line, two neighboring 1-hubs both still need their line, and a finished hub elsewhere has a free spoke toward an unfinished one
 - **THEN** the plan's next step rules out the spoke between the 1-hubs
 
 ### Requirement: Hint: A Spokes hint shows a line to draw and marks a dot to rule out
@@ -390,6 +373,15 @@ SHALL carry no hint mark.
   first
 - **THEN** the step shows the two lines still to draw in the hint color and
   the hub with its outline, and the line already drawn is drawn as any line is
+
+### Requirement: Hint: Spokes' hint never searches
+
+The Spokes hint SHALL walk the ladder alone, which has no rung above Normal. The search beneath it SHALL NOT contribute a step to a hint plan on any tier, so on an `Unreasonable` board the plan stops short of solved and the hint says that no deduction is left.
+
+#### Scenario: An Unreasonable board's plan stops short
+
+- **WHEN** a hint plan is walked to its end on a board the generator dealt at `Unreasonable`
+- **THEN** the board is not solved, and the hint then refuses with no deduction left
 
 ### Requirement: Look: Spokes marks hubs whose spoke count is met
 

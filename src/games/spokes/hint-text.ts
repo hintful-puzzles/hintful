@@ -21,7 +21,7 @@ import {
   sentence,
   so,
 } from "../../engine/hint-words.ts";
-import type { SpokesFiring } from "./solver.ts";
+import type { SpokesBreakKind } from "./solver.ts";
 
 /** A spoke, by its canonical end (`dir < 4`), so both ends compare equal. */
 export interface Spoke {
@@ -87,7 +87,7 @@ export const say = {
    */
   breaks: (
     asLine: boolean,
-    breakKind: SpokesFiring["breakKind"],
+    breakKind: SpokesBreakKind,
     m: Marked,
     filled: Hub | null,
     broken: readonly Hub[],
@@ -109,19 +109,11 @@ export const say = {
     // After "leave the outlined 7 no spare spoke and", a starved hub shares
     // the verb, which keeps the sentence within its length.
     const consequence =
-      breakKind === "overfilled"
+      breakKind === "starved"
         ? filled === null
-          ? phrase`give ${at(one)} too many lines`
-          : phrase`overfill ${at(one)}`
-        : breakKind === "starved"
-          ? filled === null
-            ? phrase`leave ${at(one)} too few spokes`
-            : phrase`${at(one)} too few spokes`
-          : breakKind === "crossing"
-            ? phrase`force the diagonals of ${at("the outlined hubs")} to cross`
-            : broken.length > 0
-              ? phrase`strand ${at("the outlined hubs")}`
-              : phrase`strand a group of hubs`;
+          ? phrase`leave ${at(one)} too few spokes`
+          : phrase`${at(one)} too few spokes`
+        : phrase`strand ${at("the outlined hubs")}`;
     if (asLine)
       return so({
         look: phrase`Drawing ${mark.as("ring", SPOKE, m.spokes, "this line")} would ${consequence}`,

@@ -42,9 +42,9 @@ help:
     **Normal** boards they do, the hint looks at what one spoke would do the
     other way, on the board as it stands. Drawn as a line, the hubs it fills can
     take no more lines; ruled out, a hub it leaves with no spoke to spare must
-    draw all its others. If that would give the outlined hub more lines than its
-    number, leave it too few spokes for its number, or strand the outlined hubs
-    in a group of their own, the spoke must be the other way.
+    draw all its others. If that would leave the outlined hub too few spokes
+    for its number, or strand the outlined hubs in a group of their own, the
+    spoke must be the other way.
 
     Every hint is a deduction you could have made from what is on the board.
     On an **Unreasonable** board there may come a point where no deduction is
@@ -52,3 +52,144 @@ help:
     that is what [the difficulty name means](features#difficulty). The hint
     says so rather than guessing for you: save your position, try it, and
     undo if it breaks.
+name: Spokes
+family: lines
+sizes:
+  w: { min: 2, max: 100 }
+  h: { min: 2, max: 100 }
+space:
+  grid: { w: "w", h: "h" }
+  # A hub joins the eight around it: a line runs corner to corner too.
+  edges: king
+  units: []
+answer:
+  # The edge between two squares, side by side or corner to corner: 1 a
+  # line, 2 none.
+  value:
+    sort: edge
+    domain: "range(1, 2)"
+define:
+  # A square with a number is a hub; one without is a hole, which takes no
+  # line.
+  hub(c): "clue(number, c) != none"
+  # The lines square c takes.
+  takes(c): "sum(k in {c} where hub(k) of clue(number, k))"
+  # The lines square c has.
+  lines(c): "count(y in adj8(c) where value(edge(c, y)) = 1)"
+  # Whether square c takes another line.
+  spare(c): "lines(c) < takes(c)"
+  # Whether the diagonal that edge e crosses is a line.
+  crossed(e): "crossedBy(e) != none and value(crossedBy(e)) = 1"
+  # Whether the edge between a and b may still take a line: neither has all
+  # its lines, and it crosses no line. A player sees each at a glance, so
+  # such an edge counts as closed.
+  live(a, b): >-
+    not known(edge(a, b)) and spare(a) and spare(b) and not crossed(edge(a, b))
+  # The squares square c may still draw a line to.
+  ways(c): "{y in adj8(c) where live(c, y)}"
+  # The same, read with lines supposed on the edges H.
+  drawn(e, H): "value(e) = 1 or e in H"
+  linesH(c, H): "count(y in adj8(c) where drawn(edge(c, y), H))"
+  spareH(c, H): "linesH(c, H) < takes(c)"
+  # Whether square c, with lines on H, is left too few edges that may still
+  # take a line for the lines it still takes. Its own lines are counted
+  # once, so each edge asks only the square across it.
+  shortH(c, H): >-
+    exists n = takes(c) - linesH(c, H) where n > 0:
+    count(y in adj8(c) where not known(edge(c, y)) and edge(c, y) not in H
+    and spareH(y, H)
+    and not (crossedBy(edge(c, y)) != none and drawn(crossedBy(edge(c, y)), H))) < n
+  # Whether the hubs the lines join to square c, with lines on H, all have
+  # their lines while some hub is not among them: a group closed off.
+  sealedH(c, H): >-
+    not spareH(c, H)
+    and (forall x in through(c, {e in edges where drawn(e, H)}): not spareH(x, H))
+    and count(x in through(c, {e in edges where drawn(e, H)}) where hub(x)) < hubs
+  # How many hubs the board has.
+  hubs: "count(y in cells where hub(y))"
+  # Whether lines on H break the board at once near square c, whose lines
+  # they changed: it or a square beside it left short, or its group closed
+  # off.
+  brokenH(c, H): >-
+    shortH(c, H) or (exists s in adj8(c): shortH(s, H)) or sealedH(c, H)
+rules:
+  # No two diagonals that cross are both lines.
+  uncrossed: >-
+    forall e in edges where crossedBy(e) != none:
+    value(e) = 2 or value(crossedBy(e)) = 2
+  # The lines join every hub into one group.
+  joined: >-
+    forall L = {e in edges where value(e) = 1},
+    a in cells where hub(a), b in cells where hub(b): b in through(a, L)
+shape:
+  # A hole takes no line.
+  - "forall c in cells where not hub(c): lines(c) = 0"
+clues:
+  # A hub's number: how many lines it starts.
+  number:
+    at: cell
+    value: "range(1, 8)"
+    means: "lines(at) = clue(number, at)"
+  # A hole no diagonal runs past: none joins two of the squares beside it.
+  block:
+    at: cell
+    value: "range(1, 1)"
+    means: >-
+      forall a in adj4(at), b in adj4(at) where edge(a, b) != none:
+      value(edge(a, b)) = 2
+freedom: { kind: fill }
+deal:
+  answer: >-
+    every line side by side and one diagonal of each square of four, drawn,
+    then each taken away in a shuffled order where every hub keeps a line
+    and the board still has one answer at the tier
+  number: each hub's lines in the answer
+  block: none; a board's ID may hold one, as an X
+  tier: one of the tiers
+tiers: [Easy, Normal, Unreasonable]
+techniques:
+  # A hub with only as many edges left as it still needs lines takes a line
+  # on each. One with more lines than its number, or fewer edges left than
+  # it needs, makes the marks inconsistent.
+  - id: saturation
+    tier: Easy
+    for: >-
+      c in cells, n = takes(c) - lines(c), U = ways(c)
+      where n < 0 or (n > 0 and |U| <= n)
+    conclude: "n >= 0 and |U| = n and (forall y in U: place(edge(c, y), 1))"
+  # A line between two 1-hubs would close the pair off from the other hubs.
+  - id: twoOnes
+    tier: Easy
+    for: >-
+      N = hubs where N > 2, e in edges, a = end1(e), b = end2(e)
+      where takes(a) = 1 and takes(b) = 1 and live(a, b)
+    conclude: "place(e, 2)"
+  # A hub with all its lines takes none on its other edges: those to a hub
+  # still short of lines are crossed out.
+  - id: exhaustion
+    tier: Easy
+    for: >-
+      c in cells where hub(c) and lines(c) = takes(c),
+      U = {y in adj8(c) where not known(edge(c, y)) and spare(y)
+      and not crossed(edge(c, y))}
+      where |U| > 0
+    conclude: "forall y in U: place(edge(c, y), 2)"
+  # A line on an edge would break the board at once, the hubs it fills
+  # taking no more lines: the edge is crossed out.
+  - id: lineBreaks
+    tier: Normal
+    for: >-
+      e in edges, a = end1(e), b = end2(e), H = {e}
+      where live(a, b) and (brokenH(a, H) or brokenH(b, H))
+    conclude: "place(e, 2)"
+  # A hub with one edge to spare: crossing one out would leave it lines on
+  # all the others. Where those would break the board at once, it takes a
+  # line.
+  - id: spareBreaks
+    tier: Normal
+    for: >-
+      c in cells, U = ways(c) where spare(c) and |U| = takes(c) - lines(c) + 1,
+      y in U, H = set(edge(c, x) over x in U where x != y)
+      where not known(edge(c, y))
+      and (brokenH(c, H) or (exists x in U where x != y: brokenH(x, H)))
+    conclude: "place(edge(c, y), 1)"

@@ -8,30 +8,29 @@
  *    diagonals in each interior cell, recording each drawn line.
  * 2. Shuffle that list.
  * 3. Walk it, tentatively removing each line; keep the removal only while
- *    every hub still has at least one line and the board still solves
- *    uniquely at the target difficulty. Otherwise put the line back.
+ *    every hub still has at least one line and the board still solves at the
+ *    target tier: by the ladder below Unreasonable, and at it by the search
+ *    finding one answer within `DEALING_BUDGET`. Otherwise put the line back.
  * 4. Accept only if the result additionally does *not* solve one tier easier,
  *    so the puzzle genuinely needs its difficulty (Easy is exempt — there is
- *    no easier tier). The check re-solves from a cleared board; upstream re-ran
- *    it on the scratch board the last solve left behind, which let through
- *    boards an easier tier cracks.
+ *    no easier tier).
  *
  * The description is then just each hub's line count as a digit. Every hub
  * keeps a line, so no clue is `0` and a generated board has no holes.
  *
- * **This whole path is byte-match surface.** The only randomness is one
- * `randomUpto(rng, 2)` per interior cell (which diagonal) and the single
- * shuffle; everything after that is decided by the solver's verdict on each
- * intermediate board. So one byte-for-byte desc comparison against a frozen
- * fixture validates the generator, the tiered solver *and* the codec at once —
- * but it also means any reordering or "optimization" of the draws silently
- * changes every board.
+ * The only randomness is one `randomUpto(rng, 2)` per interior cell (which
+ * diagonal) and the single shuffle; everything after that is decided by the
+ * solver's verdict on each intermediate board. So an Easy board, which no
+ * final gate decides, is fixed by the draws, the strip loop and the Easy
+ * ladder's closure, and a frozen fixture of them checks all three — but any
+ * reordering of the draws changes every board.
  */
 
+import { DEALING_BUDGET } from "../../engine/answer-search.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { SpokesScratch, spokesSolve } from "./solver.ts";
+import { spokesSolve } from "./solver.ts";
 import {
   blankBoard,
   DIFF_EASY,
@@ -95,7 +94,6 @@ function spokesGenerate(
   p: SpokesParams,
   generated: SpokesBoard,
   board: SpokesBoard,
-  scratch: SpokesScratch,
   rng: RandomState,
 ): boolean {
   const { w, h } = p;
@@ -116,22 +114,17 @@ function spokesGenerate(
     if (linesAt(i) === 1 || linesAt(i2) === 1) continue;
 
     spokesPlace(generated, i, d, SPOKE_EMPTY);
-    blankBoard(w, h, board);
     for (let k = 0; k < n; k++) board.numbers[k] = linesAt(k);
-    if (spokesSolve(board, scratch, diff) !== "valid") {
+    if (spokesSolve(board, diff, { budget: DEALING_BUDGET }) !== "solved") {
       spokesPlace(generated, i, d, SPOKE_LINE);
     }
   }
 
-  // Re-solve from an *empty* position, as the strip loop does, so the gate's
-  // verdict is about this puzzle rather than about whatever the last solve left
-  // on the scratch board. Upstream skipped the clear, and its gate then saw an
-  // already-complete board in 31–45% of attempts on fixed seeds and let through
-  // boards an easier tier cracks (10 of 12 4×4 Unreasonable boards also solved
-  // at Normal).
-  blankBoard(w, h, board);
+  // The board as stripped must not solve a tier lower. Upstream graded what
+  // its last solve had left on the board, and so let through boards an easier
+  // tier cracks (10 of 12 4×4 Unreasonable boards also solved at Normal).
   for (let k = 0; k < n; k++) board.numbers[k] = linesAt(k);
-  return diff === DIFF_EASY || spokesSolve(board, scratch, diff - 1) !== "valid";
+  return diff === DIFF_EASY || spokesSolve(board, diff - 1) !== "solved";
 }
 
 /**
@@ -146,10 +139,9 @@ export function newSpokesDesc(p: SpokesParams, rng: RandomState): { desc: string
   const { w, h } = p;
   const board = blankBoard(w, h);
   const generated = blankBoard(w, h);
-  const scratch = new SpokesScratch(w * h);
 
   const attempt = retryLimit(`spokes: generation (${w}x${h} ${p.diff})`);
-  while (!spokesGenerate(p, generated, board, scratch, rng)) attempt();
+  while (!spokesGenerate(p, generated, board, rng)) attempt();
 
   return { desc: board.numbers.join("") };
 }

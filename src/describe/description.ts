@@ -39,7 +39,8 @@ export interface DescriptionJson {
     /** Relations the board deals, each a set of cells for each cell. */
     relations?: Record<string, "dealt">;
     slots?: boolean;
-    edges?: boolean;
+    /** `king` where a diagonal neighbor is across an edge too. */
+    edges?: boolean | "king";
     corners?: boolean;
     points?: boolean;
     centers?: boolean;

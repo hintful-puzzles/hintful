@@ -101,10 +101,13 @@ export function instantiate(d: Description, dealt: Dealt): Instance {
   const { grid } = d.json.space;
   if (grid === undefined)
     throw new Error(`${d.json.game}: the interpreter builds a grid, not cells alone`);
+  const { edges } = d.json.space;
+  if (edges === "king")
+    throw new Error(`${d.json.game}: the interpreter builds no diagonal edges`);
   const spec: SpaceSpec = {
     grid: { w: num(grid.w), h: num(grid.h) },
     slots: d.json.space.slots,
-    edges: d.json.space.edges,
+    edges,
     corners: d.json.space.corners,
     diagonals: d.json.space.diagonals,
     regions,

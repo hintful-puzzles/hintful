@@ -220,12 +220,26 @@ export interface GridSpace {
   readonly adj4Edges: readonly (readonly number[])[];
   /** The eight around, clockwise from up, those on the grid. */
   readonly adj8: readonly (readonly number[])[];
-  /** Two cells an edge, in reading order of the first, its right edge before
-   * its lower. */
+  /** The edge to each of `adj8`'s cells, in its order, `-1` to a diagonal
+   * neighbor where the edges are only the orthogonal ones. */
+  readonly adj8Edges: readonly (readonly number[])[];
+  /** Whether a diagonal neighbor is across an edge too: Spokes' king's-move
+   * links between hubs. */
+  readonly king: boolean;
+  /** The cells across an edge from each cell: `adj4`, or `adj8` on a king's
+   * space. */
+  readonly edgeAdj: readonly (readonly number[])[];
+  /** The edge to each of `edgeAdj`'s cells, in its order. */
+  readonly cellEdges: readonly (readonly number[])[];
+  /** Two cells an edge, the first before the second in reading order, in
+   * reading order of the pair: a cell's right edge before its lower ones. */
   readonly edgeEnds: Int32Array;
   /** Every edge, in that order. */
   readonly edges: readonly number[];
-  /** The edge between two orthogonal neighbors, or `-1`. */
+  /** The other diagonal of the square of four cells a diagonal edge crosses,
+   * `-1` for an orthogonal edge. */
+  readonly crossing: Int32Array;
+  /** The edge between two neighbors, or `-1`. */
   edgeOf(a: number, b: number): number;
   /** One slot beyond each end of every line, numbered as Towers deals its
    * clues: above each column, below each, left of each row, right of each. */
@@ -285,8 +299,9 @@ export function describedSpace(
   w: number,
   h: number,
   parts: readonly (readonly number[])[] = [],
+  edges: EdgeGeometry = "square",
 ): GridSpace {
-  const key = `${units.join(",")} ${w} ${h}`;
+  const key = `${units.join(",")} ${w} ${h} ${edges}`;
   let cache = plain;
   if (parts.length > 0) {
     let byKey = parted.get(parts);
@@ -298,11 +313,15 @@ export function describedSpace(
   }
   let sp = cache.get(key);
   if (sp === undefined) {
-    sp = gridSpace(units, w, h, parts);
+    sp = gridSpace(units, w, h, parts, edges === "king");
     cache.set(key, sp);
   }
   return sp;
 }
+
+/** Which neighbors an edge joins: those side by side, or on a king's space
+ * those corner to corner too (a compiled module's `edgeGeometry`). */
+export type EdgeGeometry = "square" | "king";
 
 /** The `o × o` Latin grid: its units are its rows and columns. */
 export function latinSpace(o: number): GridSpace {
@@ -314,6 +333,7 @@ function gridSpace(
   w: number,
   h: number,
   boxCells: readonly (readonly number[])[],
+  king: boolean,
 ): GridSpace {
   const n = w * h;
   const hasDiagonals = unitNames.includes("diagonals");
@@ -360,6 +380,8 @@ function gridSpace(
   const adj8: number[][] = [];
   const right = new Int32Array(n).fill(-1);
   const down = new Int32Array(n).fill(-1);
+  const downLeft = new Int32Array(n).fill(-1);
+  const downRight = new Int32Array(n).fill(-1);
   const ends: number[] = [];
   for (let c = 0; c < n; c++) {
     const x = c % w;
@@ -389,21 +411,50 @@ function gridSpace(
       right[c] = ends.length / 2;
       ends.push(c, c + 1);
     }
+    if (king && y + 1 < h && x > 0) {
+      downLeft[c] = ends.length / 2;
+      ends.push(c, c + w - 1);
+    }
     if (y + 1 < h) {
       down[c] = ends.length / 2;
       ends.push(c, c + w);
     }
+    if (king && y + 1 < h && x + 1 < w) {
+      downRight[c] = ends.length / 2;
+      ends.push(c, c + w + 1);
+    }
   }
   // `right` holds -1 at a row's end, and a grid one square wide has its
   // squares below one another 1 apart, so `w` is tried first.
-  const edgeOf = (a: number, b: number): number => {
+  const square = (a: number, b: number): number => {
     const lo = a < b ? a : b;
     const gap = a < b ? b - a : a - b;
     if (gap === w) return down[lo];
     if (gap === 1) return right[lo];
     return -1;
   };
+  // On a grid two wide a cell's lower left neighbor is 1 after it, as its
+  // right one is, so a diagonal is told by the rows.
+  const edgeOf = king
+    ? (a: number, b: number): number => {
+        const lo = a < b ? a : b;
+        const hi = a < b ? b : a;
+        if (((hi / w) | 0) !== ((lo / w) | 0) + 1)
+          return hi === lo + 1 ? right[lo] : -1;
+        const dx = (hi % w) - (lo % w);
+        if (dx === 0) return down[lo];
+        if (dx === 1) return downRight[lo];
+        return dx === -1 ? downLeft[lo] : -1;
+      }
+    : square;
   const adj4Edges = adj4.map((around, c) => around.map((q) => edgeOf(c, q)));
+  const adj8Edges = adj8.map((around, c) => around.map((q) => edgeOf(c, q)));
+  const crossing = new Int32Array(ends.length / 2).fill(-1);
+  for (let c = 0; c < n; c++) {
+    if (downRight[c] < 0) continue;
+    crossing[downRight[c]] = downLeft[c + 1];
+    crossing[downLeft[c + 1]] = downRight[c];
+  }
   const colCells = lineCells.slice(h);
   const rowCells = lineCells.slice(0, h);
   const sight = [
@@ -484,8 +535,13 @@ function gridSpace(
     adj4,
     adj4Edges,
     adj8,
+    adj8Edges,
+    king,
+    edgeAdj: king ? adj8 : adj4,
+    cellEdges: king ? adj8Edges : adj4Edges,
     edgeEnds: Int32Array.from(ends),
     edges: Array.from({ length: ends.length / 2 }, (_, e) => e),
+    crossing,
     edgeOf,
     slots: sight.map((_, s) => s),
     sight,
@@ -1224,12 +1280,16 @@ export function through(
   for (const e of E) crossable[e] = 1;
   const out = [c];
   reached[c] = walk;
-  for (let i = 0; i < out.length; i++)
-    for (const q of sp.adj4[out[i]]) {
-      if (reached[q] === walk || !crossable[sp.edgeOf(out[i], q)]) continue;
+  for (let i = 0; i < out.length; i++) {
+    const across = sp.edgeAdj[out[i]];
+    const by = sp.cellEdges[out[i]];
+    for (let k = 0; k < across.length; k++) {
+      const q = across[k];
+      if (reached[q] === walk || !crossable[by[k]]) continue;
       reached[q] = walk;
       out.push(q);
     }
+  }
   for (const e of E) crossable[e] = 0;
   return out.length > 1 ? out.sort((a, b) => a - b) : out;
 }
@@ -1259,12 +1319,16 @@ export function throughWhere(
   const mine = walk;
   const out = [c];
   reached[c] = mine;
-  for (let i = 0; i < out.length; i++)
-    for (const q of sp.adj4[out[i]]) {
-      if (reached[q] === mine || !crosses(sp.edgeOf(out[i], q))) continue;
+  for (let i = 0; i < out.length; i++) {
+    const across = sp.edgeAdj[out[i]];
+    const by = sp.cellEdges[out[i]];
+    for (let k = 0; k < across.length; k++) {
+      const q = across[k];
+      if (reached[q] === mine || !crosses(by[k])) continue;
       reached[q] = mine;
       out.push(q);
     }
+  }
   return out.length > 1 ? out.sort((a, b) => a - b) : out;
 }
 
@@ -1454,10 +1518,13 @@ class EdgeGroupsKept {
       this.parent[x] = x;
       this.mine[x] = mark;
     }
-    for (const x of group)
-      for (const q of sp.adj4[x])
-        if (q > x && this.mine[q] === mark && this.in[sp.edgeOf(x, q)] === 1)
-          this.parent[this.root(x)] = this.root(q);
+    for (const x of group) {
+      const across = sp.edgeAdj[x];
+      const by = sp.cellEdges[x];
+      for (let k = 0; k < across.length; k++)
+        if (across[k] > x && this.mine[across[k]] === mark && this.in[by[k]] === 1)
+          this.parent[this.root(x)] = this.root(across[k]);
+    }
     const g = this.writable();
     const lists = new Map<number, number[]>();
     for (const x of group) {
@@ -1484,12 +1551,12 @@ class EdgeGroupsKept {
     if (b.epoch !== this.epoch || sp !== this.sp || cl !== this.cl)
       this.rebuild(b, sp, cl);
     const { log } = b;
-    const changed = byEdge ? [0] : [0, 0, 0, 0];
+    const changed = byEdge ? [0] : [0, 0, 0, 0, 0, 0, 0, 0];
     for (; this.read < log.length; this.read++) {
       const x = log[this.read];
       let n = 0;
       if (byEdge) changed[n++] = x;
-      else for (const q of sp.adj4[x]) changed[n++] = sp.edgeOf(x, q);
+      else for (const e of sp.cellEdges[x]) changed[n++] = e;
       let left = false;
       for (let i = 0; i < n; i++) {
         const e = changed[i];

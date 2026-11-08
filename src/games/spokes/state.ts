@@ -88,7 +88,6 @@ export type SpokesDiff = "easy" | "tricky" | "hard";
 export const DIFF_EASY = 0;
 export const DIFF_TRICKY = 1;
 export const DIFF_HARD = 2;
-export const DIFFCOUNT = 3;
 
 const DIFFS: readonly SpokesDiff[] = ["easy", "tricky", "hard"];
 // The top tier is `Unreasonable` where upstream says `Hard`: its look-ahead has
@@ -328,12 +327,6 @@ export function blankBoard(w: number, h: number, into?: SpokesBoard): SpokesBoar
     setSpoke(b.spokes, right, DIR_BOTRIGHT, SPOKE_HIDDEN);
   }
   return b;
-}
-
-/** Copy `from` into `to` (both must have the same dimensions). */
-export function copyBoard(from: SpokesBoard, to: SpokesBoard): void {
-  to.numbers.set(from.numbers);
-  to.spokes.set(from.spokes);
 }
 
 /** A fresh board with the same contents. */

@@ -342,7 +342,13 @@ function spaceOf(
   const side = (s: string): number => (/^\d+$/.test(s) ? Number(s) : order);
   if (unit === null)
     return {
-      sp: describedSpace(space.units, side(space.grid.w), side(space.grid.h)),
+      sp: describedSpace(
+        space.units,
+        side(space.grid.w),
+        side(space.grid.h),
+        [],
+        space.edges === "king" ? "king" : "square",
+      ),
       sizes: new Map(),
     };
   const m = BLOCKS.exec(unit[1]);
@@ -1487,7 +1493,7 @@ function diagonalCall(fn: string, vs: readonly V[], ctx: Ctx): V | null {
       return lift(vs[0], fn, (c) => {
         if (c < 0) return allOf("cell", []);
         const across = sp.cells.map((x) =>
-          sp.adj4[x].map((p) => [p, inEset(sp.edgeOf(x, p), E)] as const),
+          sp.edgeAdj[x].map((p, k) => [p, inEset(sp.cellEdges[x][k], E)] as const),
         );
         let reach: Bx[] = sp.cells.map((x) => x === c);
         for (let k = 1; k < sp.cells.length; k++) {
@@ -1942,6 +1948,8 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       return lift(vs[0], fn, (a) =>
         lift(vs[1], fn, (b) => elem("edge", sp.edgeOf(a, b))),
       );
+    case "crossedBy":
+      return lift(vs[0], fn, (e) => elem("edge", e < 0 ? -1 : sp.crossing[e]));
     case "ends":
       return lift(vs[0], fn, (e) =>
         allOf("cell", [sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]]),

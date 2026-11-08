@@ -17,6 +17,7 @@
  * local validation, not a comparison against the answer.
  */
 
+import { solveFromAnswer } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
@@ -71,16 +72,17 @@ import {
 } from "./render.ts";
 import {
   deduceSpokesPlan,
+  SPOKES_RUNGS,
   type SpokesFiring,
+  type SpokesRung,
+  spokesAnswer,
   spokesSolve,
-  spokesValidate,
+  spokesSolved,
 } from "./solver.ts";
 import {
   clearBoard,
-  cloneBoard,
   cloneState,
   crossingSpoke,
-  DIFFCOUNT,
   decodeParams,
   defaultParams,
   encodeParams,
@@ -323,34 +325,24 @@ function executeMove(state: SpokesState, move: SpokesMove): SpokesState {
 
 // --- solving ----------------------------------------------------------------
 
-/** Deduce the unique solution from the clues alone, on a fresh board that
- * keeps this state's spoke topology (which hubs exist, which spokes can) but
- * none of the player's marks. `null` when the board is not uniquely
- * deducible. */
-function solveFromClues(state: SpokesState) {
-  const board = cloneBoard(state);
-  clearBoard(board);
-  return spokesSolve(board, null, DIFFCOUNT) === "valid" ? board : null;
-}
-
 function solve(orig: SpokesState): SolveResult<SpokesMove> {
-  const solved = solveFromClues(orig);
-  if (!solved) return { ok: false, error: PUZZLE_NOT_REASONABLE };
-
-  const spokes: SpokesSpokeRef[] = [];
-  for (let i = 0; i < solved.w * solved.h; i++) {
-    for (let d = 0; d < 4; d++) {
-      const s = getSpoke(solved.spokes[i], d);
-      if (s === SPOKE_LINE || s === SPOKE_MARKED)
-        spokes.push({ index: i, dir: d, state: s });
+  return solveFromAnswer(spokesAnswer(orig), (solved) => {
+    const spokes: SpokesSpokeRef[] = [];
+    for (let i = 0; i < solved.w * solved.h; i++) {
+      for (let d = 0; d < 4; d++) {
+        const s = getSpoke(solved.spokes[i], d);
+        if (s === SPOKE_LINE || s === SPOKE_MARKED)
+          spokes.push({ index: i, dir: d, state: s });
+      }
     }
-  }
-  return { ok: true, move: { kind: "solve", spokes } };
+    return { kind: "solve", spokes };
+  });
 }
 
 function findMistakes(state: SpokesState): readonly SpokesMistake[] {
-  const solved = solveFromClues(state);
-  if (!solved) return [];
+  const answer = spokesAnswer(state);
+  if (answer.kind !== "one") return [];
+  const solved = answer.solution;
 
   const out: SpokesMistake[] = [];
   // `d < 4` visits each edge exactly once, from its lower-indexed end.
@@ -396,14 +388,10 @@ const markedOf = (hl: SpokesHint): Marked => ({
   hubs: hl.evidence,
 });
 
-/** The hint's rungs: the kinds of the solver's firings. */
-export const SPOKES_RUNGS = ["twoOnes", "saturation", "exhaustion", "breaks"] as const;
-export type SpokesRung = (typeof SPOKES_RUNGS)[number];
-
 /**
  * Narrate why a firing is forced — one crisp line for a player who knows the
  * rules, premise then conclusion, in the necessity voice (the hint quality bar).
- * Every claim here is one {@link deduceSpokesPlan} has checked.
+ * Every claim here is one the compiled ladder has checked.
  */
 function narrate(
   f: SpokesFiring,
@@ -419,11 +407,12 @@ function narrate(
       return say.saturation(f.forced.length, m);
     case "exhaustion":
       return say.exhaustion(m);
-    case "breaks": {
+    case "lineBreaks":
+    case "spareBreaks": {
       const filled = f.filled ?? null;
       return say.breaks(
-        f.hypothesis?.state === SPOKE_LINE,
-        f.breakKind,
+        f.kind === "lineBreaks",
+        f.breakKind ?? "sealed",
         m,
         filled === null ? null : hubOf(filled),
         f.evidenceHubs.filter((h) => h !== filled).map(hubOf),
@@ -464,11 +453,11 @@ function stepsOfFiring(
 }
 
 function hint(state: SpokesState): HintResult<SpokesMove, SpokesHint, SpokesRung> {
-  if (!solveFromClues(state)) {
+  if (spokesAnswer(state).kind !== "one") {
     return { ok: false, error: PUZZLE_NOT_REASONABLE };
   }
 
-  const plan = deduceSpokesPlan(cloneBoard(state));
+  const plan = deduceSpokesPlan(state);
   if (plan.length === 0) {
     return { ok: false, error: DEDUCTION_EXHAUSTED };
   }
@@ -534,14 +523,10 @@ function canonicalEdge(
 
 // --- the game ---------------------------------------------------------------
 
-/** Spokes' difficulty contract (`engine/difficulty.ts`). `spokesSolve` returns
- * `"valid"` (fully and uniquely solved — what the generator gates on),
- * `"incomplete"` or `"invalid"`, run on a fresh board from the clues alone. */
+/** Spokes' difficulty contract (`engine/difficulty.ts`): the ladder from the
+ * clues alone below Unreasonable, and the search at it. */
 const difficulty: DifficultyContract<SpokesParams> = {
-  solveAtCap: (p, desc, cap) => {
-    const ret = spokesSolve(newState(p, desc), null, cap);
-    return ret === "valid" ? "solved" : ret === "invalid" ? "impossible" : "unsolved";
-  },
+  solveAtCap: (p, desc, cap) => spokesSolve(newState(p, desc), cap),
 };
 
 export const spokesGame: Game<
@@ -585,7 +570,7 @@ export const spokesGame: Game<
   targetVerbs,
   interpretMove,
   executeMove,
-  status: (s): GameStatus => (spokesValidate(s) === "valid" ? "solved" : "ongoing"),
+  status: (s): GameStatus => (spokesSolved(s) ? "solved" : "ongoing"),
 
   solve,
   difficulty,
