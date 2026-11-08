@@ -259,7 +259,9 @@ description author acts on:
   `E`**, each between two squares side by side: Slant's squares marked
   alike with one. Bind `E` once by `=`, since it is a set over every edge.
   The compiled code keeps each group as one shared list, so `x in
-  through(c, E)` and `A = B` over two groups compare the lists, and keeps
+  through(c, E)` and `A = B` over two groups compare the lists, wherever
+  in the technique they are read, a filling's test of each pair of its
+  sides included (Net's `loopFits`), and keeps
   the groups of the last few sets between runs while each is unchanged, so
   a technique binding one set per number (Filling's `room(d)`) still finds
   its groups kept. State `E` inline as `{e in edges where P}` where only
@@ -302,7 +304,9 @@ description author acts on:
   by side round a dot: `edges(a)`, `apex(a)`, and `angles(c)` or
   `angles(f)` the angles round a dot or inside a face, in order. The game
   passes its grid to `tilingSpace`; the rectangle's names (rows, `edge(a,
-  b)`, directions) are refused. An edge mark may sit on the angles
+  b)`, directions) are refused. A square grid, wrapping or not, is one
+  through `squareTiling` (Net's: a square's two sides meet at a corner
+  where they bound one face). An edge mark may sit on the angles
   (`marks.<name>.sort: angle`, Loopy's corners: how many of the two are
   lines), read and struck as Slant's edge mark is.
 - **Two edges may be known alike or opposite** (a mark with `sort: edge`

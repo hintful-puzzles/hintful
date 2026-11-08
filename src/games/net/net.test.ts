@@ -29,7 +29,7 @@ import { newDesc } from "./generator.ts";
 import { netGame } from "./index.ts";
 import { computeLoops } from "./loops.ts";
 import { boardMargin, lineThick } from "./render.ts";
-import { netSolver, SOLVER_UNIQUE } from "./solver.ts";
+import { finishes } from "./solver.ts";
 import {
   ACTIVE,
   computeActive,
@@ -194,11 +194,8 @@ describe("generator", () => {
         const solved = { ...state, tiles: solvedTiles };
         expect(isComplete(solved)).toBe(true);
 
-        // A unique board solves to a unique solution with no guessing.
-        const work = new Uint8Array(state.tiles);
-        expect(netSolver(p.w, p.h, work, state.barriers, state.wrapping)).toBe(
-          SOLVER_UNIQUE,
-        );
+        // An Easy board is one the ladder finishes, with no guessing.
+        expect(finishes(state)).toBe(true);
       }
     });
   }

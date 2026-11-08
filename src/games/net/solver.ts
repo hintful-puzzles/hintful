@@ -1,24 +1,15 @@
 /**
- * Net's uniqueness solver — an idiomatic TS port of `net_solver` in net.c.
+ * Net's solver: the ladder `net.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/ladder-runtime.ts`) over the board read
+ * as a tiling (`engine/square-tiling.ts`): each square a dot, each side
+ * between two squares an edge, wired or not.
  *
- * It is used two ways: by the generator to *gate* a candidate grid for a unique
- * solution (and, with `perturb`, to steer generation toward one), and by Solve
- * when the game arrived without a stored solution. It is byte-match-critical:
- * the generator's desc depends on the solver's verdict on every candidate grid,
- * so a divergence here diverges the generated board.
- *
- * The deductions, verbatim from upstream:
- *  - **orientation elimination** — for each tile, keep only the (up to four)
- *    rotations of its wire mask consistent with what is known about its edges;
- *  - **edge deduction** — an edge that is wired in *every* surviving orientation
- *    is open, one wired in *none* is closed;
- *  - **loop avoidance** — an orientation that would connect two tiles already in
- *    the same connected component is ruled out (tracked with a `Dsf`);
- *  - **dead-end counting** — an orientation that would seal off a sub-network
- *    smaller than the whole grid is ruled out.
- *
- * A tile is *locked* once its orientation is fully determined. The return code
- * says whether the grid is inconsistent, still ambiguous, or uniquely solved.
+ * One ladder serves the generator, which rewires a network until the ladder
+ * settles it and keeps an Easy board only where the ladder finishes it from
+ * its walls; the answer search, which assumes a side either way where the
+ * ladder stops; the difficulty probe; and the hint, which walks it from the
+ * player's locks, notes and walls (`hint.ts`). No technique supposes
+ * anything, so a board the ladder finishes has one answer.
  */
 
 import {
@@ -26,299 +17,29 @@ import {
   answerCache,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
-import { Dsf } from "../../engine/dsf.ts";
-import { anticlockwise, DIRECTIONS, opposite } from "../../engine/square-edges.ts";
-import { computeActive, offset } from "../../engine/wires.ts";
-import { LOCKED, type NetState } from "./state.ts";
+import {
+  clueList,
+  type GridSpace,
+  rangeMask,
+  tilingSpace,
+} from "../../engine/describe-runtime.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  runLadder,
+  TIERS,
+} from "../../engine/ladder-runtime.ts";
+import { D, DIRECTIONS, L, R, U } from "../../engine/square-edges.ts";
+import { type SquareTiling, squareTiling } from "../../engine/square-tiling.ts";
+import * as net from "./net.compiled.ts";
+import { LOCKED, type NetState, NOTE_NONE, NOTE_WIRE, sideIndex } from "./state.ts";
 
-/** Proved to have no solution at all. */
-const SOLVER_INCONSISTENT = -1;
-/** Consistent, but not narrowed to a single solution. */
-const SOLVER_AMBIGUOUS = 0;
-/** Solved: every tile's orientation is determined. */
-export const SOLVER_UNIQUE = 1;
-
-/**
- * A FIFO worklist with a "already queued" bitmap — upstream's `struct todo`.
- * Deductions are mostly local, so processing a to-do list of touched tiles
- * scales better than re-scanning the whole grid each pass.
- */
-class Todo {
-  private readonly marked: Uint8Array;
-  private readonly buffer: Int32Array;
-  private readonly buflen: number;
-  private head = 0;
-  private tail = 0;
-
-  constructor(maxsize: number) {
-    this.marked = new Uint8Array(maxsize);
-    this.buflen = maxsize + 1;
-    this.buffer = new Int32Array(this.buflen);
-  }
-
-  add(index: number): void {
-    if (this.marked[index]) return;
-    this.marked[index] = 1;
-    this.buffer[this.tail++] = index;
-    if (this.tail === this.buflen) this.tail = 0;
-  }
-
-  get(): number {
-    if (this.head === this.tail) return -1;
-    const ret = this.buffer[this.head++];
-    if (this.head === this.buflen) this.head = 0;
-    this.marked[ret] = 0;
-    return ret;
-  }
-}
-
-/**
- * Every way each tile can turn: up to four wire masks a tile, indexed in
- * fours and padded with 255 from the end. This is what the solver narrows,
- * and a position of the answer search.
- */
-function allTurnings(tiles: Uint8Array): Uint8Array {
-  const wh = tiles.length;
-  const tilestate = new Uint8Array(wh * 4);
-  for (let i = 0; i < wh; i++) {
-    tilestate[i * 4] = tiles[i] & 0xf;
-    for (let j = 1; j < 4; j++) {
-      if (
-        tilestate[i * 4 + j - 1] === 255 ||
-        anticlockwise(tilestate[i * 4 + j - 1]) === tilestate[i * 4]
-      ) {
-        tilestate[i * 4 + j] = 255;
-      } else {
-        tilestate[i * 4 + j] = anticlockwise(tilestate[i * 4 + j - 1]);
-      }
-    }
-  }
-  return tilestate;
-}
-
-/**
- * Run the solver over `tiles` (mutated: locked tiles gain the `LOCKED` bit,
- * others lose it). `barriers` may be `null` (generator's first pass, no
- * barriers yet). Returns {@link SOLVER_INCONSISTENT}/{@link SOLVER_AMBIGUOUS}/
- * {@link SOLVER_UNIQUE}.
- */
-export function netSolver(
-  w: number,
-  h: number,
-  tiles: Uint8Array,
-  barriers: Uint8Array | null,
-  wrapping: boolean,
-): number {
-  const tilestate = allTurnings(tiles);
-  const verdict = narrowTurnings(w, h, tilestate, barriers, wrapping);
-  if (verdict === SOLVER_INCONSISTENT) return verdict;
-  // Mark every fully-determined tile as locked; the grid is unique iff all are.
-  for (let i = 0; i < w * h; i++) {
-    if (tilestate[i * 4 + 1] === 255) tiles[i] = tilestate[i * 4] | LOCKED;
-    else tiles[i] &= ~LOCKED;
-  }
-  return verdict;
-}
-
-/**
- * The solver's deductions, run in place on `tilestate`: the turnings each
- * tile has left, which is {@link allTurnings} or fewer where some are ruled
- * out already. {@link SOLVER_UNIQUE} says only that every tile is down to one
- * turning.
- */
-function narrowTurnings(
-  w: number,
-  h: number,
-  tilestate: Uint8Array,
-  barriers: Uint8Array | null,
-  wrapping: boolean,
-): number {
-  const wh = w * h;
-
-  // The grid's area is its non-empty tiles: w*h for a grid this generator
-  // makes, but the solver stays general.
-  let area = 0;
-  for (let i = 0; i < wh; i++) if (tilestate[i * 4] !== 0) area++;
-
-  /*
-   * edgestate: 0 unknown, 1 open, 2 closed. Five bytes per tile so that
-   * direction d ∈ {1,2,4,8} indexes `(y*w+x)*5 + d` without overlap.
-   */
-  const edgeLen = (wh - 1) * 5 + 9;
-  const edgestate = new Uint8Array(edgeLen);
-
-  /*
-   * deadends[(y*w+x)*5 + d]: at most this many tiles can be reached by heading
-   * out of (x,y) in direction d. area+1 means "no dead end known".
-   */
-  const deadends = new Int32Array(edgeLen).fill(area + 1);
-
-  /* equivalence classes of connected tiles, to avoid creating loops. */
-  const equivalence = new Dsf(wh);
-
-  /* On a non-wrapping grid the border edges are instantly closed. */
-  if (!wrapping) {
-    for (let i = 0; i < w; i++) {
-      edgestate[i * 5 + 2] = 2;
-      edgestate[((h - 1) * w + i) * 5 + 8] = 2;
-    }
-    for (let i = 0; i < h; i++) {
-      edgestate[(i * w + w - 1) * 5 + 1] = 2;
-      edgestate[i * w * 5 + 4] = 2;
-    }
-  }
-
-  /* Barriers close their edges too. */
-  if (barriers) {
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        for (let d = 1; d <= 8; d += d) {
-          if (barriers[y * w + x] & d) {
-            const { x: x2, y: y2 } = offset(x, y, d, w, h);
-            edgestate[(y * w + x) * 5 + d] = 2;
-            edgestate[(y2 * w + x2) * 5 + opposite(d)] = 2;
-          }
-        }
-      }
-    }
-  }
-
-  const todo = new Todo(wh);
-
-  let doneSomething = true; // prevent instant termination
-  for (;;) {
-    let index = todo.get();
-    if (index === -1) {
-      // Nothing immediate: scan the whole grid once more for longer-range
-      // deductions, terminating if a full pass finds nothing.
-      if (!doneSomething) break;
-      for (let i = 0; i < wh; i++) todo.add(i);
-      doneSomething = false;
-      index = todo.get();
-    }
-
-    const y = Math.floor(index / w);
-    const x = index % w;
-    const ourclass = equivalence.canonify(y * w + x);
-    // Indexed by direction (1,2,4,8).
-    const deadendmax = new Int32Array(9);
-
-    let i: number;
-    let j = 0;
-    for (i = 0; i < 4 && tilestate[(y * w + x) * 4 + i] !== 255; i++) {
-      const val = tilestate[(y * w + x) * 4 + i];
-      let valid = true;
-      let nnondeadends = 0;
-      const nondeadends: number[] = [];
-      let deadendtotal = 0;
-      const equiv = [ourclass];
-
-      for (let d = 1; d <= 8; d += d) {
-        // Rule out this orientation if it conflicts with a known edge.
-        if (
-          (edgestate[(y * w + x) * 5 + d] === 1 && !(val & d)) ||
-          (edgestate[(y * w + x) * 5 + d] === 2 && val & d)
-        ) {
-          valid = false;
-        }
-
-        if (val & d) {
-          // Dead-end statistics.
-          if (deadends[(y * w + x) * 5 + d] <= area) {
-            deadendtotal += deadends[(y * w + x) * 5 + d];
-          } else {
-            nondeadends[nnondeadends++] = d;
-          }
-
-          // Loop avoidance: don't link through an unknown edge to a tile
-          // already in one of the classes we're about to be part of.
-          if (edgestate[(y * w + x) * 5 + d] === 0) {
-            const { x: x2, y: y2 } = offset(x, y, d, w, h);
-            const c = equivalence.canonify(y2 * w + x2);
-            let k = 0;
-            for (; k < equiv.length; k++) if (c === equiv[k]) break;
-            if (k === equiv.length) equiv.push(c);
-            else valid = false;
-          }
-        }
-      }
-
-      if (nnondeadends === 0) {
-        // Links only dead-ends: invalid if the sub-network it seals off is
-        // smaller than the whole grid (+1 for this tile itself).
-        if (deadendtotal > 0 && deadendtotal + 1 < area) valid = false;
-      } else if (nnondeadends === 1) {
-        // Links dead-ends plus exactly one non-dead-end — that non-dead-end may
-        // become a dead end the other way, if every surviving orientation
-        // agrees.
-        deadendtotal++;
-        if (deadendmax[nondeadends[0]] < deadendtotal) {
-          deadendmax[nondeadends[0]] = deadendtotal;
-        }
-      } else {
-        // Links two or more non-dead-ends: rule out new dead-end markings there.
-        for (let k = 0; k < nnondeadends; k++) deadendmax[nondeadends[k]] = area + 1;
-      }
-
-      if (valid) tilestate[(y * w + x) * 4 + j++] = val;
-    }
-
-    if (j === 0) return SOLVER_INCONSISTENT; // no possible orientation
-
-    if (j < i) {
-      doneSomething = true;
-      while (j < 4) tilestate[(y * w + x) * 4 + j++] = 255;
-    }
-
-    // Deduce new edge states: open in all surviving orientations, or closed in
-    // all of them.
-    {
-      let a = 0xf;
-      let o = 0;
-      for (let k = 0; k < 4 && tilestate[(y * w + x) * 4 + k] !== 255; k++) {
-        a &= tilestate[(y * w + x) * 4 + k];
-        o |= tilestate[(y * w + x) * 4 + k];
-      }
-      for (let d = 1; d <= 8; d += d) {
-        if (edgestate[(y * w + x) * 5 + d] === 0) {
-          const { x: x2, y: y2 } = offset(x, y, d, w, h);
-          const d2 = opposite(d);
-          if (a & d) {
-            edgestate[(y * w + x) * 5 + d] = 1;
-            edgestate[(y2 * w + x2) * 5 + d2] = 1;
-            equivalence.merge(y * w + x, y2 * w + x2);
-            doneSomething = true;
-            todo.add(y2 * w + x2);
-          } else if (!(o & d)) {
-            edgestate[(y * w + x) * 5 + d] = 2;
-            edgestate[(y2 * w + x2) * 5 + d2] = 2;
-            doneSomething = true;
-            todo.add(y2 * w + x2);
-          }
-        }
-      }
-    }
-
-    // Propagate any lowered dead-end markers.
-    for (let d = 1; d <= 8; d += d) {
-      const { x: x2, y: y2 } = offset(x, y, d, w, h);
-      const d2 = opposite(d);
-      if (deadendmax[d] > 0 && deadends[(y2 * w + x2) * 5 + d2] > deadendmax[d]) {
-        deadends[(y2 * w + x2) * 5 + d2] = deadendmax[d];
-        doneSomething = true;
-        todo.add(y2 * w + x2);
-      }
-    }
-  }
-
-  for (let i = 0; i < wh; i++)
-    if (tilestate[i * 4 + 1] !== 255) return SOLVER_AMBIGUOUS;
-  return SOLVER_UNIQUE;
-}
-
-/* ----------------------------------------------------------------------
- * The answer: a search over the solver that counts a board's answers to two.
- */
+/** What the description reads a wire as, and a side with none. */
+export const WIRE = 1;
+export const NONE = 2;
 
 /** A board's wires and walls: what an answer depends on. A `NetState` is one,
  * and its locks and the way its tiles happen to be turned are not read. */
@@ -327,38 +48,277 @@ export type NetBoard = Pick<NetState, "w" | "h" | "tiles" | "barriers" | "wrappi
 /** A board's one answer is each tile's wires as they are turned in it. */
 export type NetAnswer = Answer<Uint8Array>;
 
+/** A board's squares as a tiling, and the space the ladder reads it as. */
+export interface NetGeometry extends SquareTiling {
+  readonly sp: GridSpace;
+}
+
+const geometries = new Map<string, NetGeometry>();
+
+/** The tiling of a `w × h` board, wrapping or not, built once a shape. */
+function geometryOf(w: number, h: number, wrapping: boolean): NetGeometry {
+  const key = `${w}x${h}${wrapping ? "w" : ""}`;
+  let g = geometries.get(key);
+  if (g === undefined) {
+    const t = squareTiling(w, h, wrapping);
+    g = { ...t, sp: tilingSpace(t.tiling) };
+    geometries.set(key, g);
+  }
+  return g;
+}
+
+/** The piece a set of wires is, as the description numbers it: 1 a dead
+ * end, 2 a straight, 3 a corner, 4 a T, 5 a cross, and 0 for no wires. */
+function pieceOf(wires: number): number {
+  let n = 0;
+  for (const d of DIRECTIONS) if (wires & d) n++;
+  if (n === 2) return wires === (L | R) || wires === (U | D) ? 2 : 3;
+  return n === 0 ? 0 : n === 1 ? 1 : n + 1;
+}
+
+/** The board as the description deals it: each square's piece, and a wall
+ * on each side a barrier crosses. A side across the grid's edge of a board
+ * that does not wrap is no edge at all. */
+function dealtOf(board: NetBoard, g: NetGeometry): net.Dealt {
+  const n = board.w * board.h;
+  const at: number[] = [];
+  const v: number[] = [];
+  const walls: number[] = [];
+  for (let i = 0; i < n; i++) {
+    const piece = pieceOf(board.tiles[i] & 0xf);
+    if (piece > 0) {
+      at.push(i);
+      v.push(piece);
+    }
+    for (const d of [R, D]) {
+      const e = g.sideEdge[i * 16 + d];
+      if (e >= 0 && board.barriers[i] & d) walls.push(e);
+    }
+  }
+  return {
+    piece: clueList(at, v, n),
+    wall: clueList(
+      walls,
+      walls.map(() => 1),
+      g.sp.edges.length,
+    ),
+  };
+}
+
+/** Why one firing of the ladder holds: its technique and its binding, read
+ * before the firing changes anything. */
+export interface Fired {
+  readonly kind: net.LadderId;
+  readonly c: number;
+  /** The side a note settles; absent for a lock. */
+  readonly e?: number;
+}
+
+/** The ladder over the dealt board, each technique with its reason. */
+function netLadder(dl: net.Dealt): Ladder {
+  const rung = <B extends { c: number; e?: number }>(
+    kind: net.LadderId,
+    run: (b: never, sp: GridSpace, cl: net.Dealt, fire: never) => number,
+  ) =>
+    compiledRung(
+      run as Parameters<typeof compiledRung<B, net.Dealt>>[0],
+      dl,
+      (b: B): Fired =>
+        b.e === undefined ? { kind, c: b.c } : { kind, c: b.c, e: b.e },
+    );
+  return describedLadder(net, {
+    fitLock: rung("fitLock", net.fitLock),
+    fitNote: rung("fitNote", net.fitNote),
+    loopLock: rung("loopLock", net.loopLock),
+    loopNote: rung("loopNote", net.loopNote),
+    sealLock: rung("sealLock", net.sealLock),
+    sealNote: rung("sealNote", net.sealNote),
+    strandLock: rung("strandLock", net.strandLock),
+    strandNote: rung("strandNote", net.strandNote),
+  });
+}
+
+/** A board's ladder and what it reads the board as, kept with the tiles and
+ * walls it was dealt from: every solve of one board shares it. */
+interface Kept {
+  readonly tiles: Uint8Array;
+  readonly barriers: Uint8Array;
+  readonly g: NetGeometry;
+  readonly dl: net.Dealt;
+  readonly ladder: Ladder;
+  /** The ladder's first ideas alone, {@link QUICK}. */
+  readonly quick: Ladder;
+}
+
 /**
- * Whether `tiles`, each turned one way, are one network with no loop: they
- * have the wire ends a tree of them has, two a join and one join fewer than
- * tiles, and the wires light every tile from the first. With no end to spare,
- * tiles that are all lit meet end to end and close no loop.
- *
- * This is the search's "solved", which has to be a grid checked against the
- * rules and not one merely full. The solver's own verdict is that every tile
- * is down to one turning, and it joins two tiles wherever a side is wired in
- * every turning left without asking whether that closes a loop. No grid was
- * found where the two differ: every one of the 2,195 the solver settled among
- * all grids of dead ends, corners, straights and Ts up to 3×3 is a network,
- * and so was every position it settled under a wrong assumption on 360 dealt
- * boards (2026-10-10).
+ * The ideas that read no reach: what an Unreasonable deal rewires a network
+ * by and searches it with, before the whole ladder is asked once whether it
+ * finishes the board. The whole ladder settles most networks, so asking it
+ * at every rewiring cost a 9x11 wrapping deal seconds.
  */
-function isOneNetwork(
+const QUICK: ReadonlySet<net.LadderId> = new Set<net.LadderId>([
+  "fitLock",
+  "fitNote",
+  "loopLock",
+  "loopNote",
+]);
+
+const ladders = new WeakMap<Uint8Array, Kept>();
+
+/** The ladder of `board`, kept per tile array while its wires and walls are
+ * the same: the generator rewires one array between solves. */
+export function ladderOf(board: NetBoard): Kept {
+  const kept = ladders.get(board.tiles);
+  if (
+    kept !== undefined &&
+    kept.g === geometryOf(board.w, board.h, board.wrapping) &&
+    kept.barriers.every((b, i) => b === board.barriers[i]) &&
+    kept.tiles.every((t, i) => pieceOf(t & 0xf) === pieceOf(board.tiles[i] & 0xf))
+  )
+    return kept;
+  const g = geometryOf(board.w, board.h, board.wrapping);
+  const dl = dealtOf(board, g);
+  const ladder = netLadder(dl);
+  const made: Kept = {
+    tiles: board.tiles.slice(),
+    barriers: board.barriers.slice(),
+    g,
+    dl,
+    ladder,
+    quick: {
+      ...ladder,
+      entries: ladder.entries.filter((e) => QUICK.has(e.id as net.LadderId)),
+    },
+  };
+  ladders.set(board.tiles, made);
+  return made;
+}
+
+/** Fresh marks on `g`, each side as `known` has it (0 open, {@link WIRE},
+ * {@link NONE}). */
+export function marksOn(g: NetGeometry, known: Uint8Array): CellMarks {
+  const m = new CellMarks(g.sp, rangeMask(WIRE, NONE), known, null, "edge");
+  m.seed(known);
+  return m;
+}
+
+/** What the board itself says of its sides: none across a wall. */
+function wallMarks(g: NetGeometry, dl: net.Dealt): Uint8Array {
+  const known = new Uint8Array(g.sp.edges.length);
+  for (const e of dl.wall.at) known[e] = NONE;
+  return known;
+}
+
+/**
+ * What the player has recorded of the sides: a wall's none, a note, and each
+ * side of a locked tile as it shows. A side two of them disagree about is
+ * read as the first says, in that order; the mistake check is what reports
+ * the disagreement.
+ */
+export function recordedMarks(s: NetState, g: NetGeometry, dl: net.Dealt): Uint8Array {
+  const known = wallMarks(g, dl);
+  const n = s.w * s.h;
+  for (let i = 0; i < n; i++) {
+    const x = i % s.w;
+    const y = (i / s.w) | 0;
+    for (const d of DIRECTIONS) {
+      const e = g.sideEdge[i * 16 + d];
+      if (e < 0 || known[e] !== 0) continue;
+      const note = s.sides[sideIndex(s, x, y, d)];
+      if (note === NOTE_WIRE) known[e] = WIRE;
+      else if (note === NOTE_NONE) known[e] = NONE;
+    }
+  }
+  for (let i = 0; i < n; i++) {
+    if (!(s.tiles[i] & LOCKED)) continue;
+    for (const d of DIRECTIONS) {
+      const e = g.sideEdge[i * 16 + d];
+      if (e >= 0 && known[e] === 0) known[e] = s.tiles[i] & d ? WIRE : NONE;
+    }
+  }
+  return known;
+}
+
+/** Run the ladder on `m` to its fixpoint, at Easy: whether it found the
+ * marks inconsistent. */
+function deduce(m: CellMarks, ladder: Ladder): boolean {
+  return runLadder(m, ladderTechniques(m, ladder.entries, { [TIERS]: 0 }, {}));
+}
+
+/** Each tile's wires as the marks have its sides: a wire where a side is
+ * known wired. */
+function wiresOf(g: NetGeometry, grid: ArrayLike<number>, n: number): Uint8Array {
+  const out = new Uint8Array(n);
+  for (let i = 0; i < n; i++)
+    for (const d of DIRECTIONS) {
+      const e = g.sideEdge[i * 16 + d];
+      if (e >= 0 && grid[e] === WIRE) out[i] |= d;
+    }
+  return out;
+}
+
+/** Whether every side of tile `i` is known. */
+function tileKnown(g: NetGeometry, grid: ArrayLike<number>, i: number): boolean {
+  for (const d of DIRECTIONS) {
+    const e = g.sideEdge[i * 16 + d];
+    if (e >= 0 && grid[e] === 0) return false;
+  }
+  return true;
+}
+
+/**
+ * Whether the ladder alone settles every side of `tiles`, a network's wires
+ * however they are turned, with the walls `barriers` (none where `null`):
+ * the whole ladder, or with `quick` its first ideas. Each tile it settles
+ * gains the `LOCKED` bit and each other loses it, which the generator
+ * rewires the network along.
+ */
+export function settle(
   w: number,
   h: number,
   tiles: Uint8Array,
-  barriers: Uint8Array,
+  barriers: Uint8Array | null,
+  wrapping: boolean,
+  quick = false,
 ): boolean {
-  const first = tiles.findIndex((wires) => wires !== 0);
-  if (first < 0) return true;
-  let wired = 0;
-  let ends = 0;
-  for (const wires of tiles) {
-    if (wires !== 0) wired++;
-    for (const d of DIRECTIONS) if (wires & d) ends++;
+  const board: NetBoard = {
+    w,
+    h,
+    tiles,
+    barriers: barriers ?? new Uint8Array(w * h),
+    wrapping,
+  };
+  const kept = ladderOf(board);
+  const { g, dl } = kept;
+  const m = marksOn(g, wallMarks(g, dl));
+  const impossible = deduce(m, quick ? kept.quick : kept.ladder);
+  let all = !impossible;
+  for (let i = 0; i < w * h; i++) {
+    if (!impossible && tileKnown(g, m.grid, i)) tiles[i] |= LOCKED;
+    else {
+      tiles[i] &= ~LOCKED;
+      all = false;
+    }
   }
-  if (ends !== 2 * (wired - 1)) return false;
-  const lit = computeActive(w, h, tiles, barriers, first % w, Math.floor(first / w), 1);
-  return tiles.every((wires, i) => wires === 0 || lit[i] !== 0);
+  return all && net.isAnswer(m.grid, g.sp, dl);
+}
+
+/** Whether the ladder finishes the board from what its player has recorded:
+ * from its walls alone on a board just dealt. */
+export function finishes(s: NetState): boolean {
+  const { g, dl, ladder } = ladderOf(s);
+  const m = marksOn(g, recordedMarks(s, g, dl));
+  if (deduce(m, ladder)) return false;
+  return !m.grid.includes(0) && net.isAnswer(m.grid, g.sp, dl);
+}
+
+/* ----------------------------------------------------------------------
+ * The answer: a search over the ladder that counts a board's answers to two.
+ */
+
+/** A position of the search: its marks, which it narrows in place. */
+interface Position {
+  readonly m: CellMarks;
 }
 
 /**
@@ -369,50 +329,47 @@ function isOneNetwork(
 const SEARCH_BUDGET = 2_000;
 
 /**
- * Count a board's answers up to two, by trial and error over the solver:
- * where it stops, take the first tile with the fewest turnings left and
- * assume each in turn.
+ * Count a board's answers up to two, by trial and error over the ladder:
+ * where it stops, take an open side of the tile with the fewest open sides
+ * and assume it wired, then not. With `quick`, over the ladder's first ideas
+ * ({@link QUICK}), as a deal asks it.
  */
 export function searchAnswers(
   board: NetBoard,
   budget: number = SEARCH_BUDGET,
+  quick = false,
 ): NetAnswer {
-  const { w, h, barriers, wrapping } = board;
-  const wh = w * h;
-  /** Each tile's wires in a position where every tile has one turning. */
-  const settled = (position: Uint8Array): Uint8Array =>
-    Uint8Array.from({ length: wh }, (_, i) => position[i * 4]);
-  return searchBoard<Uint8Array, Uint8Array>({
-    start: allTurnings(board.tiles),
-    deduce(position) {
-      const verdict = narrowTurnings(w, h, position, barriers, wrapping);
-      if (verdict === SOLVER_INCONSISTENT) return "contradiction";
-      if (verdict === SOLVER_AMBIGUOUS) return "stuck";
-      return isOneNetwork(w, h, settled(position), barriers)
-        ? "solved"
-        : "contradiction";
+  const kept = ladderOf(board);
+  const { g, dl } = kept;
+  const ladder = quick ? kept.quick : kept.ladder;
+  const n = board.w * board.h;
+  return searchBoard<Position, Uint8Array>({
+    start: { m: marksOn(g, wallMarks(g, dl)) },
+    deduce({ m }) {
+      if (deduce(m, ladder)) return "contradiction";
+      if (m.grid.includes(0)) return "stuck";
+      return net.isAnswer(m.grid, g.sp, dl) ? "solved" : "contradiction";
     },
-    assume(position) {
+    assume({ m }) {
       let at = -1;
       let fewest = 5;
-      for (let i = 0; i < wh; i++) {
-        let left = 1;
-        while (left < 4 && position[i * 4 + left] !== 255) left++;
-        if (left > 1 && left < fewest) {
+      for (let i = 0; i < n; i++) {
+        let open = 0;
+        for (const e of g.sp.cellEdges[i]) if (m.grid[e] === 0) open++;
+        if (open > 0 && open < fewest) {
           at = i;
-          fewest = left;
+          fewest = open;
         }
       }
-      const next: Uint8Array[] = [];
-      for (let k = 0; k < fewest && at >= 0; k++) {
-        const assumed = position.slice();
-        assumed[at * 4] = position[at * 4 + k];
-        assumed.fill(255, at * 4 + 1, at * 4 + 4);
-        next.push(assumed);
-      }
-      return next;
+      if (at < 0) return [];
+      const e = g.sp.cellEdges[at].find((x) => m.grid[x] === 0) as number;
+      return [WIRE, NONE].map((v) => {
+        const next = marksOn(g, Uint8Array.from(m.grid));
+        next.place(e, v);
+        return { m: next };
+      });
     },
-    solution: settled,
+    solution: ({ m }) => wiresOf(g, m.grid, n),
     budget,
   });
 }
@@ -424,12 +381,4 @@ const answers = answerCache<Uint8Array, Uint8Array>();
  * answers. */
 export function answerOf(state: NetState): NetAnswer {
   return answers(state.barriers, () => searchAnswers(state));
-}
-
-/** Whether the solver alone settles every tile of the board. */
-export function solverFinishes(board: NetBoard): boolean {
-  const tiles = Uint8Array.from(board.tiles, (t) => t & 0xf);
-  return (
-    netSolver(board.w, board.h, tiles, board.barriers, board.wrapping) === SOLVER_UNIQUE
-  );
 }

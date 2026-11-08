@@ -1004,7 +1004,7 @@ notation a decision and names its size.
 - **Where the recorded facts still fall short, the generator can close the
   gap**: it keeps only boards the hint's own engine finishes
   ([`solver-and-generator.md`](./solver-and-generator.md) § "Guess-free
-  generation"). Exemplar: `finishes` in `src/games/net/`.
+  generation"). Exemplar: `filling/index.ts`.
 - **A hint that has to patch the solver's reading has found a solver
   defect.** Fix the solver, since it is grading boards wrongly, and delete
   the patch.

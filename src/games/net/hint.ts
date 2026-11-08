@@ -1,10 +1,14 @@
 /**
- * Net's hint: `deduce.ts`'s engine, one fact per step, easiest first. A note
- * step places a side note; a lock step turns a tile and locks it, as one
- * journey of two legs. Every move is one the declared verbs make
- * (`targetVerbs` in `index.ts`), so a hint teaches the controls it plays.
+ * Net's hint: the ladder `net.description.yaml` states, walked one firing a
+ * step from the player's locks, notes and walls (`ladderWalk`), each idea
+ * only where every easier one has nothing left, and its words from why each
+ * way of turning the tile is ruled out (`explain.ts`). A note step places a
+ * side note; a lock step turns a tile and locks it, as one journey of two
+ * legs. Every move is one the declared verbs make (`targetVerbs` in
+ * `index.ts`), so a hint teaches the controls it plays.
  */
 
+import { PLACE } from "../../engine/describe-runtime.ts";
 import type {
   HintResult,
   HintStep,
@@ -12,10 +16,12 @@ import type {
   UiUpdate,
 } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
 import {
   anticlockwise,
   clockwise,
   D,
+  DIRECTIONS,
   dirCount,
   dirX,
   dirY,
@@ -26,7 +32,7 @@ import {
 } from "../../engine/square-edges.ts";
 import type { TargetVerbs } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
-import { Facts, nextStep, record, type Side, type Step } from "./deduce.ts";
+import { Facts, type Rung, record, type Side, type Step, survey } from "./explain.ts";
 import {
   type Fit,
   type Premises,
@@ -34,30 +40,37 @@ import {
   type Stranded,
   say,
 } from "./hint-text.ts";
+import * as net from "./net.compiled.ts";
 import type { NetDrawState } from "./render.ts";
+import { type Fired, ladderOf, marksOn, NONE, recordedMarks, WIRE } from "./solver.ts";
 import {
   LOCKED,
   type NetMove,
   type NetState,
   type NetUi,
+  NOTE_NONE,
+  NOTE_UNKNOWN,
+  NOTE_WIRE,
   type SideNote,
 } from "./state.ts";
 
-/** What a step rests on: the hardest reason it cites for ruling a turning
- * out, by `Why`'s kinds. A turn and the lock after it are one firing. */
-export const NET_RUNGS = ["side", "loop", "sealed", "neighbor"] as const;
-export type NetRung = (typeof NET_RUNGS)[number];
+/** The hint's rungs: the ladder's techniques. A turn and the lock after it
+ * are one firing. */
+export const NET_RUNGS = net.ladder.map((e) => e.id);
+export type NetRung = net.LadderId;
 
-function rungOf(step: Step): NetRung {
-  const cited = (kind: NetRung) => step.because.some((b) => b.why.kind === kind);
-  return cited("neighbor")
-    ? "neighbor"
-    : cited("sealed")
-      ? "sealed"
-      : cited("loop")
-        ? "loop"
-        : "side";
-}
+/** The rung of the ladder each technique is, whose reasons `explain.ts`
+ * gives: a lock and a note of one idea are one rung. */
+const RUNG_OF: Readonly<Record<NetRung, Rung>> = {
+  fitLock: "fit",
+  fitNote: "fit",
+  loopLock: "loop",
+  loopNote: "loop",
+  sealLock: "seal",
+  sealNote: "seal",
+  strandLock: "strand",
+  strandNote: "strand",
+};
 
 /** What keep-track compares a move against. The marks are the step's words'. */
 export type NetHint =
@@ -113,8 +126,6 @@ function premisesOf(f: Facts, step: Step): Premises {
   const trapping: number[] = [];
   let loop = false;
   let seal = false;
-  let runsOn = false;
-  let barLoops = false;
   const striped = new Map<number, Point>();
   const stripe = (t: number) => {
     if (t !== step.at) striped.set(t, pointOf(f, t));
@@ -160,8 +171,6 @@ function premisesOf(f: Facts, step: Step): Premises {
       });
     } else {
       seal = true;
-      if (why.runsOn) runsOn = true;
-      if (why.barLoops) barLoops = true;
       for (const t of why.group) stripe(t);
     }
   }
@@ -175,9 +184,51 @@ function premisesOf(f: Facts, step: Step): Premises {
       striped.size > 0 && [...striped.keys()].every((t) => dirCount(f.wires[t]) === 1),
     // A striped neighbor reached by stepping off one edge and on at the other.
     acrossEdge: [...striped.keys()].some(overEdge),
-    runsOn: runsOn || barLoops,
-    barLoops,
     only: trapping.length === 1 ? trapping[0] : null,
+  };
+}
+
+/**
+ * The step a firing of the ladder is, with why each way of turning its tile
+ * is ruled out at the firing's rung, read before the step is recorded. A
+ * lock leaves its tile one way to turn, which sets every side it placed; a
+ * note leaves ways that all agree about its side. A firing whose ways
+ * `explain.ts` does not rule out so is refused: the words would not be why
+ * the step holds.
+ */
+function stepOf(f: Facts, fired: Fired, facts: readonly number[]): Step {
+  const { c } = fired;
+  const r = survey(f, c, RUNG_OF[fired.kind]);
+  const placed = new Map<number, number>();
+  for (let i = 0; i < facts.length; i += 3)
+    if (facts[i] === PLACE) placed.set(facts[i + 1], facts[i + 2]);
+  const sideOfEdge = (e: number): number => {
+    const d = [R, U, L, D].find((x) => f.g.sideEdge[c * 16 + x] === e);
+    if (d === undefined) throw new Error(`net hint: edge ${e} is no side of tile ${c}`);
+    return d;
+  };
+  const agrees = (wires: number): boolean =>
+    [...placed].every(([e, v]) => ((wires & sideOfEdge(e)) !== 0) === (v === WIRE));
+  if (fired.e === undefined) {
+    const [wires] = r.alive;
+    if (r.alive.length !== 1 || !agrees(wires))
+      throw new Error(`net hint: ${fired.kind} at ${c} leaves ${r.alive.length} ways`);
+    return { kind: "lock", at: c, wires, because: r.ruledOut };
+  }
+  const dir = sideOfEdge(fired.e);
+  const wire = placed.get(fired.e) === WIRE;
+  if (placed.get(fired.e) !== WIRE && placed.get(fired.e) !== NONE)
+    throw new Error(`net hint: ${fired.kind} at ${c} placed nothing on its side`);
+  if (r.alive.length === 0 || !r.alive.every(agrees))
+    throw new Error(`net hint: ${fired.kind} at ${c} leaves ways that disagree`);
+  return {
+    kind: "note",
+    at: c,
+    dir,
+    value: wire ? NOTE_WIRE : NOTE_NONE,
+    alive: r.alive,
+    // Only the ways that would say otherwise about this side need a reason.
+    because: r.ruledOut.filter((b) => ((b.wires & dir) !== 0) !== wire),
   };
 }
 
@@ -216,13 +267,30 @@ export function netHint(
   verbs: Verbs,
   ui: NetUi,
 ): HintResult<NetMove, NetHint, NetRung> {
-  const f = new Facts(state);
+  const { g, dl, ladder } = ladderOf(state);
+  const f = new Facts(state, g);
+  const m = marksOn(g, recordedMarks(state, g, dl));
+  // The tiles a firing reads: its own, and those across its sides.
+  const reads = (taken: { reasons: readonly object[] }): number[] => {
+    const { c } = taken.reasons[0] as Fired;
+    const out = [c];
+    for (const e of g.sp.cellEdges[c]) {
+      const a = g.sp.edgeEnds[2 * e];
+      out.push(a === c ? g.sp.edgeEnds[2 * e + 1] : a);
+    }
+    return out;
+  };
+  // Each idea, and a note after a lock, only once every one before it has
+  // nothing anywhere: the easiest reason first, as a player would look.
+  const ids = ladder.entries.map((e) => e.id);
+  const walk = ladderWalk(m, ladder.entries, { [TIERS]: 0 }, reads, {
+    fallback: ids.slice(1),
+  });
   let s = state;
   const steps: HintStep<NetMove, NetHint, NetRung>[] = [];
-  for (let step = nextStep(f); step !== null; step = nextStep(f)) {
+  const say1 = (step: Step, rung: NetRung): void => {
     const p = premisesOf(f, step);
     const at = pointOf(f, step.at);
-    const rung = rungOf(step);
     if (step.kind === "note") {
       const side = sideOf(f, step.at, step.dir, step.value);
       const words = say.note(at, s.tiles[step.at] & 0xf, side, step.dir, p);
@@ -274,6 +342,28 @@ export function netHint(
       s = { ...s, tiles };
     }
     record(f, step);
+  };
+  // A tile whose every side its neighbors settled gives the ladder nothing
+  // to place, so it is locked here, as the one way its known sides fit.
+  const lockIfSettled = (c: number): void => {
+    if (f.locked[c] || DIRECTIONS.some((d) => f.get(c, d) === NOTE_UNKNOWN)) return;
+    const r = survey(f, c, "fit");
+    if (r.alive.length !== 1)
+      throw new Error(
+        `net hint: tile ${c} has every side known and ${r.alive.length} ways`,
+      );
+    say1({ kind: "lock", at: c, wires: r.alive[0], because: r.ruledOut }, "fitLock");
+  };
+  for (let c = 0; c < f.area; c++) lockIfSettled(c);
+  for (
+    let taken = walk.next();
+    taken !== null && taken !== "contradiction";
+    taken = walk.next()
+  ) {
+    const fired = taken.reasons[0] as Fired;
+    const step = stepOf(f, fired, taken.facts);
+    say1(step, fired.kind);
+    for (const c of reads(taken)) lockIfSettled(c);
   }
   if (steps.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   return { ok: true, steps };

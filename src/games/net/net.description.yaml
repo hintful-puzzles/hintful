@@ -69,11 +69,12 @@ help:
     * **Nothing sealed off.** A way of turning that would close a group of
       squares off, with no wire left to lead anywhere else, cannot be right
       unless the group is the whole grid: two dead ends facing each other are
-      the smallest case. The wire need not be drawn yet. A way of turning
-      that leads only into squares where the wire must stop, however they turn
-      without closing a loop, seals them off just the same. Picture the square
-      turned that way while you follow its wire: the squares the wire runs into
-      have to fit it, and a loop through it is still a loop.
+      the smallest case. The wire need not be drawn yet: follow it into the
+      square it enters and out only across a side that square could carry it
+      on to, then from square to square across any side both squares could
+      carry a wire across, stopping at a dead end. If every square it could
+      reach that way still falls short of the whole grid, the turning seals
+      them off just the same.
     * **No square left stuck.** A way of turning that would leave the square
       beside it no way to turn cannot be right. Every way the square beside it
       has either fails to fit, or closes a loop through the squares the hint
@@ -88,3 +89,247 @@ help:
     with two ways left one way, and carry on: if it was wrong, some square a
     few steps later has no way left. The hint carries on from whatever you
     lock.
+name: Net
+family: regions
+sizes:
+  w: { min: 1, max: 1000 }
+  h: { min: 1, max: 1000 }
+space:
+  # The squares are the dots of a tiling, joined by the sides between them,
+  # its edges, and across the grid's edge where the board wraps round. A
+  # face is where four squares meet, so two sides of a square meet at a
+  # corner where they bound one face.
+  tiling: true
+  units: []
+answer:
+  # Each side between two squares: 1 a wire crosses it, 2 none does.
+  value:
+    sort: edge
+    domain: "range(1, 2)"
+define:
+  # The wires of the piece on square c: one for a dead end, two for a
+  # straight or a corner, three for a T, four for a cross.
+  arms(c): "clue(piece, c) - count(k in {c} where clue(piece, k) >= 3)"
+  # Whether two sides of a square meet at a corner.
+  bent(e, x): "exists f in faces(e): f in faces(x)"
+  # Whether square c can turn so that its wires fit the sides known, with
+  # side e as d: a wire (1) or none (2). Its two wires, where it has two,
+  # meet at a corner for a corner piece and lie straight for a straight.
+  fits(c, e, d): >-
+    exists fill g of edges(c) from cand
+    where g(e) = d and count(x in edges(c) where g(x) = 1) = arms(c)
+    and (forall x in edges(c), y in before(x, edges(c))
+    where arms(c) = 2 and g(x) = 1 and g(y) = 1:
+    bent(x, y) = (clue(piece, c) = 3)): true
+  # Whether some way square c can turn carries a wire across side e.
+  usable(c, e): "fits(c, e, 1)"
+  # The same, and turned so it closes no loop: none of its new wires
+  # reaches a square the known wires L already join to c (its group G), and
+  # no two reach squares they already join to each other.
+  loopFits(c, e, d, L, G): >-
+    exists fill g of edges(c) from cand
+    where g(e) = d and count(x in edges(c) where g(x) = 1) = arms(c)
+    and (forall x in edges(c), y in before(x, edges(c))
+    where arms(c) = 2 and g(x) = 1 and g(y) = 1:
+    bent(x, y) = (clue(piece, c) = 3))
+    and (forall x in edges(c) where g(x) = 1 and not known(x): other(x, c) not in G)
+    and (forall x in edges(c), y in before(x, edges(c))
+    where g(x) = 1 and g(y) = 1 and not known(x) and not known(y):
+    other(y, c) not in through(other(x, c), L)): true
+  # The squares a wire into square u could reach: a dead end has no other
+  # wire to lead on with; any other square leads on across the sides P, and
+  # across the sides U to the dead ends beside the squares it reaches. U is
+  # the sides some way of each of their squares wires, and P those of U
+  # between two squares that are not dead ends.
+  run(u, P, U): >-
+    through(u, P)
+    + set(z over t in through(u, P) where arms(t) > 1, y in edges(t),
+    z = other(y, t) where arms(z) = 1 and y in U)
+  # Whether square j, with a wire across side x, has a way to turn that
+  # fits the sides known and carries the wire on across side y.
+  passes(j, x, y): >-
+    exists fill q of edges(j) from cand
+    where q(x) = 1 and q(y) = 1 and count(z in edges(j) where q(z) = 1) = arms(j)
+    and (forall z in edges(j), w in before(z, edges(j))
+    where arms(j) = 2 and q(z) = 1 and q(w) = 1:
+    bent(z, w) = (clue(piece, j) = 3)): true
+  # The squares a wire from square c across side x into square j could
+  # reach: j, and on from each side j could carry the wire on across, the
+  # run past it, not back through c or j.
+  reach(c, j, x, P, U): >-
+    {j} + set(t over y in edges(j) where y != x and passes(j, x, y),
+    t in run(other(y, j), P - edges(c) - edges(j), U))
+  # The sides x of square c whose reach, with c, is every square: a way
+  # that wires one of them seals nothing off.
+  open(c, P, U): >-
+    {x in edges(c) where |{c} + reach(c, other(x, c), x, P, U)| >= |cells|}
+  # The same as loopFits, and turned so it closes no group off from the
+  # rest: its wires, and the squares they could run on to, reach every
+  # square. K is open(c, P, U).
+  sealFits(c, e, d, L, G, P, U, K): >-
+    exists fill g of edges(c) from cand
+    where g(e) = d and count(x in edges(c) where g(x) = 1) = arms(c)
+    and (forall x in edges(c), y in before(x, edges(c))
+    where arms(c) = 2 and g(x) = 1 and g(y) = 1:
+    bent(x, y) = (clue(piece, c) = 3))
+    and (forall x in edges(c) where g(x) = 1 and not known(x): other(x, c) not in G)
+    and (forall x in edges(c), y in before(x, edges(c))
+    where g(x) = 1 and g(y) = 1 and not known(x) and not known(y):
+    other(y, c) not in through(other(x, c), L))
+    and ((exists x in edges(c) where g(x) = 1: x in K)
+    or |{c} + set(t over x in edges(c) where g(x) = 1,
+    t in reach(c, other(x, c), x, P, U))| >= |cells|): true
+  # The same as sealFits, and turned so it leaves each square beside it
+  # some way to turn that fits the sides known and this square's wires, and
+  # closes no loop through the wires known and this square's.
+  strandFits(c, e, d, L, G, P, U, K): >-
+    exists fill g of edges(c) from cand
+    where g(e) = d and count(x in edges(c) where g(x) = 1) = arms(c)
+    and (forall x in edges(c), y in before(x, edges(c))
+    where arms(c) = 2 and g(x) = 1 and g(y) = 1:
+    bent(x, y) = (clue(piece, c) = 3))
+    and (forall x in edges(c) where g(x) = 1 and not known(x): other(x, c) not in G)
+    and (forall x in edges(c), y in before(x, edges(c))
+    where g(x) = 1 and g(y) = 1 and not known(x) and not known(y):
+    other(y, c) not in through(other(x, c), L))
+    and ((exists x in edges(c) where g(x) = 1: x in K)
+    or |{c} + set(t over x in edges(c) where g(x) = 1,
+    t in reach(c, other(x, c), x, P, U))| >= |cells|)
+    and (forall M = L + {x in edges(c) where g(x) = 1}, x in edges(c), j = other(x, c)
+    where j != c and (exists y in edges(j): not known(y) and c not in ends(y)):
+    exists fill q of edges(j) from cand
+    where (forall y in edges(j) where c in ends(y): q(y) = g(y))
+    and count(y in edges(j) where q(y) = 1) = arms(j)
+    and (forall y in edges(j), z in before(y, edges(j))
+    where arms(j) = 2 and q(y) = 1 and q(z) = 1:
+    bent(y, z) = (clue(piece, j) = 3))
+    and (forall y in edges(j) where q(y) = 1 and not known(y) and c not in ends(y):
+    other(y, j) not in through(j, M))
+    and (forall y in edges(j), z in before(y, edges(j))
+    where q(y) = 1 and q(z) = 1 and not known(y) and not known(z)
+    and c not in ends(y) and c not in ends(z):
+    other(z, j) not in through(other(y, j), M)): true): true
+rules:
+  # Every square holds a piece.
+  pieces: "forall c in cells: clue(piece, c) != none"
+  # The wires are one network with no loop: one fewer of them than there
+  # are squares, and every square reached from the first along them.
+  network: >-
+    forall L = {e in edges where value(e) = 1}, s = first(cells):
+    |L| = |cells| - 1 and (forall c in cells: c in through(s, L))
+clues:
+  # The piece on a square, however it is turned: 1 a dead end, 2 a
+  # straight, 3 a corner, 4 a T, 5 a cross.
+  piece:
+    at: cell
+    value: "range(1, 5)"
+    means: >-
+      count(e in edges(at) where value(e) = 1) = arms(at)
+      and (forall e in edges(at), x in before(e, edges(at))
+      where arms(at) = 2 and value(e) = 1 and value(x) = 1:
+      bent(e, x) = (v = 3))
+  # A wall between two squares, which no wire crosses.
+  wall: { at: edge, value: "range(1, 1)", means: "value(at) = 2" }
+freedom: { kind: fill }
+deal:
+  tiling: the squares at the size, wrapping round where the board does
+  answer: a network grown from the middle at random, rewired where the ladder stops short until it finishes
+  piece: each square's wires in the answer
+  wall: across some of the sides the answer leaves without a wire, at the barrier rate
+  tier: one of the tiers
+tiers: [Easy, Unreasonable]
+techniques:
+  # Each idea comes as a lock, where one way of turning a square is left,
+  # and a note, where every way left agrees about one side. A lock comes
+  # before a note, and an idea before a harder one: a solve runs the ladder
+  # from its top after every firing.
+  #
+  # A square with one way left that fits its piece and the sides known:
+  # each of its open sides is as that way has it. One with no way left is
+  # inconsistent.
+  - id: fitLock
+    tier: Easy
+    for: >-
+      c in cells, F = {e in edges(c) where not known(e)} where |F| > 0,
+      W = {e in F where fits(c, e, 1)}, N = {e in F where fits(c, e, 2)}
+      where (forall e in F: e not in W or e not in N)
+    conclude: >-
+      forall e in F: (e in W or e in N)
+      and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
+  # A side every way left that fits agrees about.
+  - id: fitNote
+    tier: Easy
+    for: >-
+      c in cells, e in edges(c) where not known(e),
+      A = fits(c, e, 1), B = fits(c, e, 2) where not A or not B
+    conclude: "(A or B) and (not A implies place(e, 2)) and (not B implies place(e, 1))"
+  # The same, among the ways that close no loop.
+  - id: loopLock
+    tier: Easy
+    for: >-
+      L = {e in edges where value(e) = 1},
+      c in cells, F = {e in edges(c) where not known(e)} where |F| > 0,
+      G = through(c, L),
+      W = {e in F where loopFits(c, e, 1, L, G)}, N = {e in F where loopFits(c, e, 2, L, G)}
+      where (forall e in F: e not in W or e not in N)
+    conclude: >-
+      forall e in F: (e in W or e in N)
+      and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
+  - id: loopNote
+    tier: Easy
+    for: >-
+      L = {e in edges where value(e) = 1},
+      c in cells, G = through(c, L), e in edges(c) where not known(e),
+      A = loopFits(c, e, 1, L, G), B = loopFits(c, e, 2, L, G) where not A or not B
+    conclude: "(A or B) and (not A implies place(e, 2)) and (not B implies place(e, 1))"
+  # The same, among the ways that also seal nothing off.
+  - id: sealLock
+    tier: Easy
+    for: >-
+      L = {e in edges where value(e) = 1},
+      U = {e in edges where usable(end1(e), e) and usable(end2(e), e)},
+      P = {e in U where arms(end1(e)) > 1 and arms(end2(e)) > 1},
+      c in cells, F = {e in edges(c) where not known(e)} where |F| > 0,
+      G = through(c, L), K = open(c, P, U),
+      W = {e in F where sealFits(c, e, 1, L, G, P, U, K)},
+      N = {e in F where sealFits(c, e, 2, L, G, P, U, K)}
+      where (forall e in F: e not in W or e not in N)
+    conclude: >-
+      forall e in F: (e in W or e in N)
+      and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
+  - id: sealNote
+    tier: Easy
+    for: >-
+      L = {e in edges where value(e) = 1},
+      U = {e in edges where usable(end1(e), e) and usable(end2(e), e)},
+      P = {e in U where arms(end1(e)) > 1 and arms(end2(e)) > 1},
+      c in cells, G = through(c, L), K = open(c, P, U), e in edges(c) where not known(e),
+      A = sealFits(c, e, 1, L, G, P, U, K), B = sealFits(c, e, 2, L, G, P, U, K)
+      where not A or not B
+    conclude: "(A or B) and (not A implies place(e, 2)) and (not B implies place(e, 1))"
+  # The same, among the ways that also leave each square beside them a way
+  # to turn.
+  - id: strandLock
+    tier: Easy
+    for: >-
+      L = {e in edges where value(e) = 1},
+      U = {e in edges where usable(end1(e), e) and usable(end2(e), e)},
+      P = {e in U where arms(end1(e)) > 1 and arms(end2(e)) > 1},
+      c in cells, F = {e in edges(c) where not known(e)} where |F| > 0,
+      G = through(c, L), K = open(c, P, U),
+      W = {e in F where strandFits(c, e, 1, L, G, P, U, K)},
+      N = {e in F where strandFits(c, e, 2, L, G, P, U, K)}
+      where (forall e in F: e not in W or e not in N)
+    conclude: >-
+      forall e in F: (e in W or e in N)
+      and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
+  - id: strandNote
+    tier: Easy
+    for: >-
+      L = {e in edges where value(e) = 1},
+      U = {e in edges where usable(end1(e), e) and usable(end2(e), e)},
+      P = {e in U where arms(end1(e)) > 1 and arms(end2(e)) > 1},
+      c in cells, G = through(c, L), K = open(c, P, U), e in edges(c) where not known(e),
+      A = strandFits(c, e, 1, L, G, P, U, K), B = strandFits(c, e, 2, L, G, P, U, K)
+      where not A or not B
+    conclude: "(A or B) and (not A implies place(e, 2)) and (not B implies place(e, 1))"

@@ -413,6 +413,10 @@ interface Env {
   /** Where a technique's body moves terms to; `null` outside one, and in
    * code that is compiled only for its sort. */
   hoist: Hoist | null;
+  /** Set where nothing is moved (`hoist` is `null`) but the code is a
+   * technique's own, run where its binders are bound: a set a binder names
+   * is still joined into groups once, there (`through`). */
+  boundSets?: boolean;
   /** Whether a technique's body keeps a projection of fillings, valid while
    * the kept candidates are: then it counts their generations in `_epoch`.
    * `null` outside a technique. */
@@ -1834,7 +1838,7 @@ function fillLoop(
         inner.set(f, filling);
         inner.set(pair.x, { code: e, sort: held });
         inner.set(pair.y, { code: y, sort: held });
-        const flat: Env = { ...env, hoist: null };
+        const flat: Env = { ...env, hoist: null, boundSets: env.hoist !== null };
         o.open(`for (let ${j} = 0; ${j} < ${i}; ${j}++) {`);
         o.emit(`const ${y} = ${a}[${j}];`);
         if (pair.when !== null) {
@@ -2198,7 +2202,7 @@ function projection(
   const any = Out.fresh("_y");
   const made = Out.fresh("_g");
   const decls = [
-    `const ${pj} = new Int32Array(sp.cells.length);`,
+    `const ${pj} = new Int32Array(${answerCount(env)});`,
     `let ${last}: readonly number[] = [];`,
     `let ${any} = false;`,
   ];
@@ -2232,13 +2236,14 @@ function projection(
   out.close();
   out.close();
   const x = once(compileExpr(pin.x, scope, env, out), out);
-  expectElem(x, "cell", f);
+  expectElem(x, env.answerSort, f);
   const t = once(compileExpr(pin.t, scope, env, out), out);
   expect(t, "num", f);
   const s = compileExpr(bnd.of, scope, env, out);
-  // Off S, f(x) is -1, which only a t of -1 equals.
+  // Off S, f(x) is -1, which only a t of -1 equals. A numeral t is widened,
+  // which the typechecker otherwise calls a comparison that cannot hold.
   return {
-    code: `((((${pj}[${x.code}] >> ${t.code}) & 1) !== 0) || (${t.code} === -1 && ${any} && !${s.code}.includes(${x.code})))`,
+    code: `((((${pj}[${x.code}] >> ${t.code}) & 1) !== 0) || ((${t.code} as number) === -1 && ${any} && !${s.code}.includes(${x.code})))`,
     sort: BOOL,
   };
 }
@@ -3203,7 +3208,7 @@ function diagonalCall(fn: string, vs: readonly Val[], env: Env): Val | null {
         );
       // A set of edges a binder names is joined into groups once where it
       // is bound, so each square's is a lookup, not a walk over the set.
-      if (E.at !== undefined && env.hoist !== null) {
+      if (E.at !== undefined && (env.hoist !== null || env.boundSets === true)) {
         const kept = E.edgeSet?.() ?? null;
         if (kept?.clues) env.readsClues.yes = true;
         const key =

@@ -77,6 +77,9 @@ const PINNED: Readonly<Record<string, readonly string[]>> = {
   ],
   // A struck note.
   mathrax: ["5dn:m1g1c,aS2cS1S3dS0d"],
+  // A side noted and a step citing the note: the seeded deal's plan opens
+  // with locks, which mark only squares.
+  net: ["5x5de:862912b7641b336ab5eccda18"],
   // Outlined edges, the pair of lines a square is tried with.
   path: ["5x5dn:d1a2_3e4b4_2b1c3"],
   rect: [

@@ -1019,14 +1019,30 @@ export function setOf(...xs: number[]): number[] {
 /** `a + b` of element sets: `a`, then what `b` adds, in order. */
 export function union(a: readonly number[], b: readonly number[]): number[] {
   const out = a.slice();
-  for (const x of b) if (!out.includes(x)) out.push(x);
+  // A scan of `out` for each member is quadratic, which a reach over a whole
+  // board (Net's) spends most of its time in; a set pays only past a few.
+  if (a.length + b.length <= SMALL_SET) {
+    for (const x of b) if (!out.includes(x)) out.push(x);
+    return out;
+  }
+  const seen = new Set(a);
+  for (const x of b)
+    if (!seen.has(x)) {
+      seen.add(x);
+      out.push(x);
+    }
   return out;
 }
 
 /** `a - b` of element sets, in `a`'s order. */
 export function minus(a: readonly number[], b: readonly number[]): number[] {
-  return a.filter((x) => !b.includes(x));
+  if (b.length <= SMALL_SET) return a.filter((x) => !b.includes(x));
+  const gone = new Set(b);
+  return a.filter((x) => !gone.has(x));
 }
+
+/** The size up to which a scan beats building a `Set`. */
+const SMALL_SET = 16;
 
 /** `a subset b` of element sets. */
 export function subsetOf(a: readonly number[], b: readonly number[]): boolean {

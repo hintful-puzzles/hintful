@@ -99,12 +99,6 @@ export interface Premises extends Fit {
   /** Whether a striped square is the tile's neighbor only across the edge of
    * a wrapping grid, which nothing on screen shows. */
   readonly acrossEdge: boolean;
-  /** Whether a sealed group is reached only through striped squares whose
-   * turning is still open, so that no wire drawn yet shows it. */
-  readonly runsOn: boolean;
-  /** Whether one of those squares could carry the wire on only by closing a
-   * loop, which the sentence then has to rule out aloud. */
-  readonly barLoops: boolean;
   /** How the turnings that loop or seal point, when there is one of them:
    * its wires, or `null` for several. */
   readonly only: number | null;
@@ -243,8 +237,6 @@ function trapped(p: Premises, piece: string | null): Narration {
     const closing = all === 2 ? "the two" : `all ${NUMBER[all] ?? String(all)}`;
     return phrase`would join ${mark.the("stripes", CELL, p.striped, "dead end")}${wraps}, which ${n > 1 ? "have" : "has"} no other wire, closing ${closing} off from the rest`;
   }
-  if (p.seal && !p.loop && p.runsOn)
-    return phrase`would lead only into ${mark.the("stripes", CELL, p.striped, "square")}${wraps}, which ${p.barLoops ? "end or loop" : "end"} its wire however they turn`;
   const verb =
     p.loop && p.seal
       ? "close a loop through or seal off"

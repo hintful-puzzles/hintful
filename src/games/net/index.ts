@@ -71,7 +71,6 @@ import {
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { offset } from "../../engine/wires.ts";
-import { finishes } from "./deduce.ts";
 import { newDesc } from "./generator.ts";
 import {
   NET_RUNGS,
@@ -92,7 +91,7 @@ import {
   ROTATE_TIME,
   redraw,
 } from "./render.ts";
-import { answerOf, type NetAnswer } from "./solver.ts";
+import { answerOf, finishes, type NetAnswer } from "./solver.ts";
 import {
   computeActive,
   decodeParams,
@@ -839,9 +838,6 @@ export const netGame: Game<
 
   solve,
   findMistakes,
-  // Easy is what the hint finishes, whether or not the solver does: a board
-  // it finishes by looking at a tile as turned is one the generator deals at
-  // neither tier, and it needs no trial and error.
   difficulty: searchTierContract<NetParams, NetState>({
     newState,
     deductionFinishes: finishes,

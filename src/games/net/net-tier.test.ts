@@ -1,11 +1,11 @@
 /**
- * Net's two tiers: Easy, which the hint finishes, and Unreasonable, a board
- * with one answer that neither the solver nor the hint reaches.
+ * Net's two tiers: Easy, which the ladder finishes, and Unreasonable, a board
+ * with one answer that it does not.
  *
  * The answer counts here come from {@link countNetworks}, which turns the
  * tiles one at a time in reading order, keeping a turning only where it meets
  * the tiles already turned, and reads each finished grid for one network with
- * no loop. It asks nothing of the solver or the search over it, so it can say
+ * no loop. It asks nothing of the ladder or the search over it, so it can say
  * whether those two are right that a board has one answer. It is for boards
  * of thirty squares or so.
  */
@@ -23,9 +23,8 @@ import {
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { itSlow } from "../../engine/testing/slow.ts";
 import { encodeWireDesc, growSpanningTree } from "../../engine/wires.ts";
-import { finishes } from "./deduce.ts";
 import { netGame } from "./index.ts";
-import { answerOf, searchAnswers, solverFinishes } from "./solver.ts";
+import { answerOf, finishes, searchAnswers } from "./solver.ts";
 import {
   LOCKED,
   type NetMove,
@@ -128,13 +127,12 @@ const sized = (
 
 /** A 3x4 wrapping board for each thing a board can be. */
 const WRAP = sized(3, 4, DIFF_EASY, true);
-/** One answer, which the solver stops short of. The hint finishes it, by a
- * group a square seals off once its own wires are counted. */
+/** One answer, which the ladder stops short of. */
 const NEEDS_SEARCH = "8cec738e1432";
-/** One answer, which the solver and the hint both stop short of. */
+/** Another, which the hint is followed on below. */
 const HINT_STOPS = "227c42ec934d";
-/** One answer, which the solver reaches. */
-const SOLVER_FINISHES = "1771e84628b5";
+/** One answer, which the ladder reaches. */
+const LADDER_FINISHES = "1771e84628b5";
 /** A network as it was first drawn, which other turnings join up as well. */
 const MANY_ANSWERS = "e21e81374dc1";
 /** `NEEDS_SEARCH` with its last dead end made a corner, so that there is one
@@ -145,7 +143,7 @@ describe("the count of a Net board's answers that the tests go by", () => {
   it("counts the boards whose answers are known", () => {
     const count = (desc: string, limit?: number) =>
       countNetworks(newState(WRAP, desc), limit);
-    expect(count(SOLVER_FINISHES)).toBe(1);
+    expect(count(LADDER_FINISHES)).toBe(1);
     expect(count(NEEDS_SEARCH, 100)).toBe(1);
     expect(count(NO_ANSWER)).toBe(0);
     expect(count(MANY_ANSWERS, 100)).toBeGreaterThan(1);
@@ -165,14 +163,14 @@ describe("net's search for a board's answers", () => {
 
   it("says one, several or none", () => {
     expect(answers(NEEDS_SEARCH)).toBe("one");
-    expect(answers(SOLVER_FINISHES)).toBe("one");
+    expect(answers(LADDER_FINISHES)).toBe("one");
     expect(answers(MANY_ANSWERS)).toBe("several");
     expect(answers(NO_ANSWER)).toBe("none");
   });
 
   it("says neither once its budget is spent", () => {
-    // The solver finishes a board in the one position the search starts from.
-    expect(answers(SOLVER_FINISHES, 1)).toBe("one");
+    // The ladder finishes a board in the one position the search starts from.
+    expect(answers(LADDER_FINISHES, 1)).toBe("one");
     expect(answers(NEEDS_SEARCH, 1)).toBe("out-of-reach");
   });
 
@@ -200,19 +198,19 @@ describe("net's search for a board's answers", () => {
 
   it("calls four corners that can only close a loop no answer", () => {
     const loop = newState(sized(2, 2, DIFF_EASY), "9c36");
-    expect(solverFinishes(loop)).toBe(false);
+    expect(finishes(loop)).toBe(false);
     expect(searchAnswers(loop).kind).toBe("none");
   });
 
-  // The search's "solved" is the solver's verdict checked for one network
+  // The search's "solved" is the ladder's verdict checked for one network
   // with no loop, and no grid has been found where the check says no. This is
   // the count behind that: every grid of dead ends, corners, straights and Ts
-  // on these shapes that the solver settles.
+  // on these shapes that the ladder settles.
   it.each([
     [2, 2, false, 4],
     [2, 3, false, 15],
     [3, 3, false, 176],
-  ])("every %ix%i grid the solver settles is a network", (w, h, wrapping, settled) => {
+  ])("every %ix%i grid the ladder settles is a network", (w, h, wrapping, settled) => {
     const p = sized(w, h, DIFF_EASY, wrapping);
     const kinds = "1357";
     let count = 0;
@@ -220,7 +218,7 @@ describe("net's search for a board's answers", () => {
       let desc = "";
       for (let i = 0, c = code; i < w * h; i++, c >>= 2) desc += kinds[c & 3];
       const grid = newState(p, desc);
-      if (!solverFinishes(grid)) continue;
+      if (!finishes(grid)) continue;
       count++;
       if (countNetworks(grid) !== 1) throw new Error(`${desc} is no network`);
     }
@@ -398,7 +396,6 @@ describe("an Unreasonable Net board", () => {
     for (let seed = 0; seed < 3; seed++) {
       const { desc, aux } = netGame.newDesc(p, randomNew(`unreasonable-${seed}`));
       const state = newState(p, desc);
-      expect(solverFinishes(state), desc).toBe(false);
       expect(finishes(state), desc).toBe(false);
       expect(countNetworks(state), desc).toBe(1);
       // The answer Solve and the mistake check go by is that network, and it
@@ -419,13 +416,13 @@ describe("an Unreasonable Net board", () => {
   // The smallest without wrapping, the largest preset, and the most walls.
   describeDealtTiers(netGame, ["5x6du", "11x13du", "11x13b0.2du"], { seldom: true });
 
-  /** How many boards of the shape the solver leaves unsettled with exactly
+  /** How many boards of the shape the ladder leaves unsettled with exactly
    * one answer, and how many it settles. */
   const needingSearch = (p: NetParams): { found: number; settled: number } => {
     let found = 0;
     let settled = 0;
     eachBoard(p, (board) => {
-      if (solverFinishes(board)) settled++;
+      if (finishes(board)) settled++;
       else if (countNetworks(board) === 1) found++;
       return false;
     });
@@ -433,7 +430,7 @@ describe("an Unreasonable Net board", () => {
   };
 
   // Each of these is every board of its shape, walls and all, so it is a
-  // proof for it. The solver settles every one.
+  // proof for it. The ladder settles every one.
   it.each([
     [1, 2, 1],
     [1, 6, 1],
@@ -445,7 +442,7 @@ describe("an Unreasonable Net board", () => {
   ])("no %ix%i board needs a search and has one answer", (w, h, boards) => {
     const { found, settled } = needingSearch(sized(w, h, DIFF_EASY));
     expect(found).toBe(0);
-    // The solver settles all of them but the two 3x3 networks with several
+    // The ladder settles all of them but the two 3x3 networks with several
     // answers.
     expect(settled).toBe(w === 3 ? boards - 2 : boards);
   });
@@ -470,7 +467,7 @@ describe("an Unreasonable Net board", () => {
     eachBoard(
       sized(3, 4, DIFF_EASY, true),
       (board, desc) => {
-        if (solverFinishes(board) || countNetworks(board) !== 1) return false;
+        if (finishes(board) || countNetworks(board) !== 1) return false;
         found = desc;
         return true;
       },
@@ -494,22 +491,18 @@ describe("a pasted Net board", () => {
     expect(load(`3x4w:${HINT_STOPS}`)).toBe("3x4wdu");
     expect(load(`3x4wde:${HINT_STOPS}`)).toBe("3x4wdu");
     expect(load(`3x4wdu:${HINT_STOPS}`)).toBe("3x4wdu");
+    expect(load(`3x4w:${NEEDS_SEARCH}`)).toBe("3x4wdu");
   });
 
-  it("that the solver stops short of and the hint finishes opens as Easy", () => {
-    expect(load(`3x4w:${NEEDS_SEARCH}`)).toBe("3x4wde");
+  it("that the ladder finishes opens as Easy", () => {
+    expect(load(`3x4w:${LADDER_FINISHES}`)).toBe("3x4wde");
+    expect(load(`3x4wde:${LADDER_FINISHES}`)).toBe("3x4wde");
   });
 
-  it("that the solver finishes opens as Easy", () => {
-    expect(load(`3x4w:${SOLVER_FINISHES}`)).toBe("3x4wde");
-    expect(load(`3x4wde:${SOLVER_FINISHES}`)).toBe("3x4wde");
-  });
-
-  it("that the hint finishes and the solver does not opens as Easy", () => {
-    // Neither tier deals this board: the hint settles a T by the straight
-    // beside it, which one way of turning the T would leave no way to turn.
+  it("that the ladder finishes only by its last idea opens as Easy", () => {
+    // The ladder settles a T by the straight beside it, which one way of
+    // turning the T would leave no way to turn.
     const desc = "81924a3be3be5731bb848cca2";
-    expect(solverFinishes(newState(sized(5, 5, DIFF_EASY), desc))).toBe(false);
     expect(load(`5x5:${desc}`)).toBe("5x5de");
     expect(load(`5x5du:${desc}`)).toBe("5x5du");
   });

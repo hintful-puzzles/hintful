@@ -326,7 +326,7 @@ solver stops on, and the hint is what the player meets. The engine gives
 `hintFinishes` ([`engine/hint-finishes.ts`](../src/engine/hint-finishes.ts));
 a game may walk its own hint engine instead. The walk reads the hint's
 refusals, so a hint that meets a board it cannot finish returns a refusal and
-does not throw. Exemplar: `finishes` in Net's generator.
+does not throw. Exemplar: `filling/index.ts`.
 
 - **Close the gap in the engine first**: one deduction engine, so the hint
   knows what the solver does (§ "One engine, two projections"). A board with

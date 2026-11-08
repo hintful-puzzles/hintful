@@ -546,7 +546,7 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
               for (const _e275 of _a276) _p271[_e275] |= 1 << _f277[_e275];
             }
           }
-          if (!(!(((((_p271[v_c] >> v_d) & 1) !== 0) || (v_d === -1 && _y273 && !v_K.includes(v_c)))))) continue;
+          if (!(!(((((_p271[v_c] >> v_d) & 1) !== 0) || ((v_d as number) === -1 && _y273 && !v_K.includes(v_c)))))) continue;
           if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
           if (!(true)) {
             _q266 = false;

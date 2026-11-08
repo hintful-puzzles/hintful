@@ -58,6 +58,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `symmetric-blacks.ts` — symmetric black-square placement |
 | – `loopgen.ts` — random loop generation |
 | – `wires.ts` — the Net/Netslide wire model |
+| – `square-tiling.ts` — a square grid as a tiling |
 | – `obfuscate.ts` — solution masking in descs |
 | – `latin.ts` — Latin-square solver *and* generator |
 | – `ladder-runtime.ts` — what a compiled ladder runs on |
@@ -510,6 +511,17 @@ and the `computeActive` power flood. `wireDistance`, a tile's distance from
 the source along the wires, is the position to hand the win flash. **Only
 the bits `0x0F` are wires; each game owns the high bits**, and the header's
 "0x10 trap" says how they collide. Exemplar: `net/state.ts`.
+
+### `square-tiling.ts` — a square grid as a tiling
+
+Reach for it when a description reads a square grid as a tiling
+(`space: { tiling: true }`): squares are the dots, the sides between them
+the edges, and a face where four squares meet, so two sides of a square
+meet at a corner exactly where they bound a face. A wrapping board is a
+torus. `sideEdge` maps a square's side to its edge, -1 where it joins no
+square. **A dimension of 2 wraps to two edges between the same pair of
+squares**, one each way round, so key on the edge, never on the pair.
+Exemplar: `net/solver.ts`.
 
 ### `obfuscate.ts` — solution masking in descs
 

@@ -108,7 +108,7 @@ side of length 2.
 
 `validateParams` SHALL refuse, when a board is to be dealt, an Unreasonable
 board one square wide, wrapping or not, and without wrapping one two wide and
-up to six long, a 3×3 one and a 3×4 one. The solver settles every board of
+up to six long, a 3×3 one and a 3×4 one. The ladder settles every board of
 those shapes that has one answer.
 
 #### Scenario: The small boards are not dealt at Unreasonable
@@ -122,7 +122,7 @@ those shapes that has one answer.
 #### Scenario: Every board of a refused shape is tried
 
 - **WHEN** every network on a 2×2 to 2×6, a 3×3 and a 3×4 board, with every
-  set of walls on the sides it leaves unwired, is given to the solver, and
+  set of walls on the sides it leaves unwired, is given to the ladder, and
   those it leaves unfinished are counted
 - **THEN** none of them has exactly one answer
 - **AND** the same walk over a 3×4 wrapping board finds one that does
@@ -174,17 +174,16 @@ border side SHALL open as a board that does not wrap in play.
 
 ### Requirement: Generation: Every Easy Net board is uniquely solvable without guessing
 
-At Easy the generator SHALL gate every board through its own solver,
-perturbing the wiring until the board has exactly one solution reachable by
-pure deduction, and SHALL then keep the board only if the hint's engine
-finishes it from the opening position, dealing another otherwise. The boards
-it deals for a seed SHALL be upstream's, draw for draw.
+At Easy the generator SHALL perturb the wiring of a network until the ladder
+`net.description.yaml` states settles every side of it from no walls, and
+SHALL keep that network. Walls only add to what the ladder knows, so the
+board dealt with its walls drawn is settled too. The ladder is the hint's, so
+the hint finishes every Easy board.
 
 #### Scenario: A generated board has one deducible solution
 
 - **WHEN** a board is generated at Easy
-- **THEN** the solver reports it uniquely solvable, and no guess is required to reach the
-  solution
+- **THEN** the ladder finishes it from its walls, with no guess
 
 ### Requirement: Generation: A board two squares wide is dealt
 
@@ -198,38 +197,19 @@ joins as a loop.
 - **WHEN** 2×5, 5×2 and 2×9 boards are dealt from forty seeds each
 - **THEN** every deal returns a board
 
-### Requirement: Generation: A Net board is Easy where the hint finishes it
-
-A board SHALL count as Easy where the hint finishes it, whether or not the
-solver does, and as Unreasonable where it has exactly one answer the hint does
-not reach.
-
-#### Scenario: A board that needs search opens as Unreasonable
-
-- **WHEN** a 3×4 wrapping ID whose board has one answer the hint does not
-  reach is entered with no difficulty letter, with `de`, and with `du`
-- **THEN** each opens, and the board's params read `3x4wdu`
-
-#### Scenario: A board the hint finishes past the solver opens as Easy
-
-- **WHEN** `5x5:81924a3be3be5731bb848cca2`, which the solver stops short of
-  and the hint finishes, is entered with no difficulty letter
-- **THEN** it opens, and the board's params read `5x5de`
-
 ### Requirement: Generation: An Unreasonable Net board has one answer that the hint does not reach
 
 At Unreasonable the generator SHALL stop the perturbing of the wiring at the
-first network the solver cannot settle that the search proves has one answer,
-within the engine's dealing budget, and SHALL draw another network where the
-solver settles one. The board SHALL be kept only when, as dealt with its walls
-drawn, the solver stops short of it and so does the hint's engine, asked from
-the tiles the solver settled.
+first network the ladder cannot settle that the search proves has one
+answer, within the engine's dealing budget, and SHALL draw another network
+where the ladder settles one. The board SHALL be kept only when, as dealt
+with its walls drawn, the ladder still stops short of it.
 
 #### Scenario: A dealt Unreasonable board needs search and has one answer
 
 - **WHEN** `newDesc` produces Unreasonable boards at 3×4 and 4×4 wrapping, at
   5×6 and 6×6, and at 5×5 wrapping with a barrier probability of 0.2
-- **THEN** the solver leaves each unfinished, and so does the hint's engine
+- **THEN** the ladder leaves each unfinished
 - **AND** exactly one turning fits each, by a count that has no search in it
 - **AND** that answer is the network the board was drawn as
 
@@ -240,18 +220,37 @@ the tiles the solver settled.
 - **THEN** each is dealt, and the lowest difficulty that solves it is
   Unreasonable
 
+### Requirement: Generation: A Net board is Easy where the ladder finishes it
+
+A board SHALL count as Easy where the ladder finishes it, and as Unreasonable
+where it has exactly one answer the ladder does not reach. The hint and Solve
+read the same ladder, so no board is finished by one and not the other.
+
+#### Scenario: A board that needs search opens as Unreasonable
+
+- **WHEN** a 3×4 wrapping ID whose board has one answer the ladder does not
+  reach is entered with no difficulty letter, with `de`, and with `du`
+- **THEN** each opens, and the board's params read `3x4wdu`
+
+#### Scenario: A board the ladder finishes only by its last idea opens as Easy
+
+- **WHEN** `5x5:81924a3be3be5731bb848cca2`, which the ladder finishes only by
+  a square that would leave the one beside it no way to turn, is entered
+  with no difficulty letter
+- **THEN** it opens, and the board's params read `5x5de`
+
 ### Requirement: Solver: Net's search assumes each turning of the tile with the fewest left
 
 Net's search SHALL count a board's answers by trial and error over the
-solver: where the solver stops, it SHALL take the first tile with the fewest
-turnings left and assume each in turn. Solve on a board Net dealt SHALL take
-the network the board was drawn as.
+ladder: where the ladder stops, it SHALL take an open side of the first tile
+with the fewest open sides and assume it wired, then not. Solve on a board
+Net dealt SHALL take the network the board was drawn as.
 
 #### Scenario: The search tells one answer from several and from none
 
-- **WHEN** the search runs on a 3×4 wrapping board the solver finishes, on one
-  with one answer that it does not reach, on a network as first drawn that
-  other turnings join up too, and on a board with one wire end too many
+- **WHEN** the search runs on a 3×4 wrapping board the ladder finishes, on
+  one with one answer that it does not reach, on a network as first drawn
+  that other turnings join up too, and on a board with one wire end too many
 - **THEN** it reports one answer for the first two, several for the third and
   none for the fourth
 
@@ -417,15 +416,22 @@ alone.
 
 Net's hint SHALL reason only from the facts a player records, side notes and
 locked tiles, and the walls the board shows, treating an unlocked tile as
-unknown however it is turned. Each step SHALL add
-one fact: a note on a side every surviving way of turning a tile agrees on, or
-a lock on a tile only one way of turning survives for.
+unknown however it is turned. Each step SHALL add one fact: a note on a side
+every surviving way of turning a tile agrees on, or a lock on a tile only one
+way of turning survives for. A tile whose every side is known, and which is
+not locked, SHALL be locked as the one way its sides fit.
 
 #### Scenario: A tile turned right but not locked
 
 - **WHEN** a tile already shows the only way it can turn and is not locked
 - **THEN** the step that settles it locks it without turning it, and no step
   before it rests on how that tile is turned
+
+#### Scenario: Every square is locked by the end of an Easy plan
+
+- **WHEN** the hint's plan is followed on an Easy board of each preset
+- **THEN** every square ends locked, including those whose sides the squares
+  beside them settled, and the board is solved
 
 ### Requirement: Hint: A hint's lock is one journey of the turn and the lock
 
@@ -452,48 +458,6 @@ SHALL drop the plan.
 - **WHEN** a step asks for a half turn of a tile and the player turns that
   tile a quarter turn
 - **THEN** the step stays and asks for the quarter turn left
-
-### Requirement: Hint: Net's hint follows a wire through tiles not settled yet
-
-A way of turning a tile SHALL count as sealing a group off when each of its
-wires stops within a bounded run of tiles and together they reach fewer tiles
-than the grid holds. The run past a side SHALL be bounded over every way the
-tiles it enters can turn, among the ways that fit the known sides and close
-no loop through known wires. A side whose wire could lead on, or come back
-round, SHALL bound nothing. Where no step follows, it SHALL be bounded again
-with the tile held as turned.
-
-#### Scenario: Two dead ends and two straights in one column
-
-- **WHEN** the hint is asked on the wrapping board `5x5w:19d7aaae8449d5636cad43c44`
-- **THEN** the plan finishes the board, every step agreeing with the solver's answer, and one step locks a straight lying across because, standing upright, it would lead only into the striped squares
-
-#### Scenario: Upstream's boards are hinted to the end
-
-- **WHEN** the generator is run on a seed whose board from upstream's generator is recorded
-- **THEN** the hint's engine finishes upstream's board for that seed, and the generator returns that board
-
-#### Scenario: A group sealed only once the tile's own wires count
-
-- **WHEN** the hint is followed on `5x5:64432a4be63e6364eb7815332`, which the
-  solver stops short of
-- **THEN** the plan finishes the board, every step agreeing with its one
-  answer, and no step rests on a tile beside the one it turns
-
-### Requirement: Hint: A hint says when a wire only leads into open tiles
-
-Where the one turning a step rules out as sealing reaches its group across a
-side not yet known to be wired, or past a tile only a loop keeps from leading
-on, and the step cites no loop, its words SHALL say that the turning leads
-only into the striped squares, which end its wire however they turn, saying
-"end or loop" in the second case. Any step whose sealed group is reached
-across such a side SHALL rank as harder than one whose group the known wires
-already join.
-
-#### Scenario: A tile on the way could lead on only round a loop
-
-- **WHEN** a tile the wire enters has a way of turning that fits its known sides and would carry the wire on, and that way closes a loop through known wires
-- **THEN** the turning is still ruled out as sealing the group, and the step's words say the striped squares end or loop its wire however they turn
 
 ### Requirement: Hint: Net's hint stops where its deductions do
 
@@ -540,13 +504,10 @@ the tile beside it and stripe the squares the loops run through.
 
 ### Requirement: Hint: Net's hint takes the easiest step first
 
-Each step SHALL be the easiest the recorded facts give, judged by the hardest
-reason it cites: walls alone, then a note or a lock, then a loop, then a
-sealed group the known wires join, then one a wire reaches through open
-tiles, then a tile beside it left no way. Among steps equally hard a lock
-SHALL come before a note, and then the tile first in reading order. A tile
-SHALL be looked at as turned only where no step follows from the facts as
-recorded.
+Each step SHALL be the easiest the recorded facts give, by the ideas in
+order: the known sides alone, then a loop, then a sealed group, then a tile
+beside it left no way. An idea SHALL be used only where every easier one
+gives no step anywhere, and within an idea a lock SHALL come before a note.
 
 #### Scenario: The walls come first
 
@@ -554,9 +515,24 @@ recorded.
   `843886bbb66dae95ceda11112`
 - **THEN** it opens "This straight must fit the wall, so only one way fits:
   turn it." and then locks that straight
-- **AND** its one journey that cites a sealed group, a dead end that would
-  join another and close the two off, comes after 23 steps that cite sides
-  alone
+- **AND** its first journey that cites a sealed group, a corner that would
+  seal off the striped squares, comes after 21 steps that cite sides alone
+
+### Requirement: Hint: Net's hint seals off what a wire could reach
+
+A way of turning a tile SHALL count as sealing a group off when the squares
+its wires could reach, with the tile, fall short of the grid. A wire
+reaches the square it enters and leaves it only across a side that square
+could carry it on to. Then it crosses any side two squares that are not dead
+ends could both carry a wire across, never back across a side of the tile
+or of the square it entered, and reaches the dead ends beside.
+
+#### Scenario: A straight between two dead ends
+
+- **WHEN** the hint is followed on `5x5wde:5196412d61c4dd89ee7392653`
+- **THEN** the plan finishes the board, every step agreeing with its one
+  answer, and one step turns a straight because, lying across, it would join
+  the striped dead ends, one across the wrapped edge, closing all three off
 
 ### Requirement: Status bar: Net's status bar counts the squares lit
 

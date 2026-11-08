@@ -1046,6 +1046,36 @@ const PLANTS: Record<string, Plant> = {
   "rect.line": {
     for: "e in edges where not known(e), a = end1(e), b = end2(e), C = {q in reachers(a) where exists r in fits(q): a in cells(r) and b in cells(r)} where |C| > 0 and (forall q in C, r in fits(q) where a in cells(r) and b in cells(r) and r != nth(fits(q), 0): owned(q, r) or (exists x in sole(q): x not in cells(r)))",
   },
+  // A dead end read as fitting no wire.
+  "net.fitLock": {
+    for: "c in cells, F = {e in edges(c) where not known(e)} where |F| > 0, W = {e in F where fits(c, e, 1) and arms(c) > 1}, N = {e in F where fits(c, e, 2)} where (forall e in F: e not in W or e not in N)",
+  },
+  "net.fitNote": {
+    for: "c in cells, e in edges(c) where not known(e), A = fits(c, e, 1), B = fits(c, e, 2) where not A or not B or arms(c) = 1",
+    conclude:
+      "(A or B) and ((not A or arms(c) = 1) implies place(e, 2)) and (not B implies place(e, 1))",
+  },
+  // A side known empty read as a wire a loop could close through.
+  "net.loopLock": {
+    for: "L = {e in edges where known(e)}, c in cells, F = {e in edges(c) where not known(e)} where |F| > 0, G = through(c, L), W = {e in F where loopFits(c, e, 1, L, G)}, N = {e in F where loopFits(c, e, 2, L, G)} where (forall e in F: e not in W or e not in N)",
+  },
+  "net.loopNote": {
+    for: "L = {e in edges where known(e)}, c in cells, G = through(c, L), e in edges(c) where not known(e), A = loopFits(c, e, 1, L, G), B = loopFits(c, e, 2, L, G) where not A or not B",
+  },
+  // No square leads a wire on.
+  "net.sealLock": {
+    for: "L = {e in edges where value(e) = 1}, U = {e in edges where usable(end1(e), e) and usable(end2(e), e)}, P = {e in U where arms(end1(e)) > 4}, c in cells, F = {e in edges(c) where not known(e)} where |F| > 0, G = through(c, L), K = open(c, P, U), W = {e in F where sealFits(c, e, 1, L, G, P, U, K)}, N = {e in F where sealFits(c, e, 2, L, G, P, U, K)} where (forall e in F: e not in W or e not in N)",
+  },
+  "net.sealNote": {
+    for: "L = {e in edges where value(e) = 1}, U = {e in edges where usable(end1(e), e) and usable(end2(e), e)}, P = {e in U where arms(end1(e)) > 4}, c in cells, G = through(c, L), K = open(c, P, U), e in edges(c) where not known(e), A = sealFits(c, e, 1, L, G, P, U, K), B = sealFits(c, e, 2, L, G, P, U, K) where not A or not B",
+  },
+  // A side known empty read as a wire the square beside would loop through.
+  "net.strandLock": {
+    for: "L = {e in edges where known(e)}, U = {e in edges where usable(end1(e), e) and usable(end2(e), e)}, P = {e in U where arms(end1(e)) > 1 and arms(end2(e)) > 1}, c in cells, F = {e in edges(c) where not known(e)} where |F| > 0, G = through(c, L), K = open(c, P, U), W = {e in F where strandFits(c, e, 1, L, G, P, U, K)}, N = {e in F where strandFits(c, e, 2, L, G, P, U, K)} where (forall e in F: e not in W or e not in N)",
+  },
+  "net.strandNote": {
+    for: "L = {e in edges where known(e)}, U = {e in edges where usable(end1(e), e) and usable(end2(e), e)}, P = {e in U where arms(end1(e)) > 1 and arms(end2(e)) > 1}, c in cells, G = through(c, L), K = open(c, P, U), e in edges(c) where not known(e), A = strandFits(c, e, 1, L, G, P, U, K), B = strandFits(c, e, 2, L, G, P, U, K) where not A or not B",
+  },
 };
 
 /** How many of a technique's first binders each query fixes, one query a

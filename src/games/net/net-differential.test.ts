@@ -1,29 +1,24 @@
 /**
- * Gated differential: the TS generator reproduces the C generator's desc **and**
- * `aux` byte for byte for the same seed.
+ * Net: the frozen C-generated boards (`__fixtures__/net-c-reference.json`),
+ * decoded rather than regenerated.
  *
- * This is the strongest bar available (docs/testing.md § "Byte-match: fidelity where there is a right answer"), and it is the guard that
- * `net_solver`, `perturb`, and the generator's phase order are faithful: the
- * generated desc depends on the solver's verdict on every candidate grid and on
- * every RNG draw perturbation makes, so a subtle divergence in either shows up
- * here as a mismatched desc. `random.ts` is bit-identical to `random.c`, every
- * draw is a `randomUpto`, and the ordered structures indexed into (the sorted
- * candidate set by `xyd_cmp`; the perimeter sort, whose keys are distinct so its
- * order is total) are reproduced exactly.
+ * Each board was one upstream's generator accepted, with its solution as
+ * upstream recorded it. So each must still validate and have one answer, the
+ * solution recorded: a net under the codec and the search that no longer
+ * depends on reproducing upstream's generator, which the ladder the
+ * description states replaced. What the shipped generator guarantees is
+ * asserted in `net.test.ts` and `net-tier.test.ts`.
  *
- * The fixtures are a frozen recording from upstream's `auxiliary/net-trace.c`
- * harness, which this repo does not carry.
+ * The fixture is **frozen and cannot be regenerated**: the harness that
+ * captured it is gone (see `engine/testing/differential.ts`).
  */
 
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { validateDesc } from "../../engine/desc-error.ts";
-import { randomNew } from "../../engine/random/index.ts";
-import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import reference from "./__fixtures__/net-c-reference.json" with { type: "json" };
-import { finishes } from "./deduce.ts";
-import { newDesc } from "./generator.ts";
 import { netGame } from "./index.ts";
+import { answerOf } from "./solver.ts";
 import { isComplete, type NetParams, newState } from "./state.ts";
 
 interface NetFixture {
@@ -38,38 +33,25 @@ interface NetFixture {
 
 const FIXTURES: readonly NetFixture[] = reference.fixtures;
 
-const paramsOf = (f: NetFixture): NetParams => ({
-  w: f.w,
-  h: f.h,
-  wrapping: f.wrapping,
-  barrierProbability: f.barrierProbability,
-  diff: DIFF_EASY,
-});
+describe("Net frozen C boards", () => {
+  it("covers every recorded board", () => {
+    expect(FIXTURES).toHaveLength(12);
+  });
 
-describeDescDifferential<NetFixture, NetParams>({
-  title: "net differential (vs C reference)",
-  fixtures: FIXTURES,
-  params: paramsOf,
-  label: (f) => `${f.w}x${f.h}${f.wrapping ? "w" : ""} b=${f.barrierProbability}`,
-  newDesc,
-  extra: (f, p) => {
-    expect(validateDesc(netGame, p, f.desc)).toBeNull();
-    // The generator keeps only boards the hint finishes, so the byte-match
-    // holds exactly while the hint finishes upstream's board for the seed.
-    expect(finishes(newState(p, f.desc))).toBe(true);
-  },
-});
-
-describe("net differential: the solution grid", () => {
   for (const f of FIXTURES) {
-    it(`${f.w}x${f.h} ${f.seed}: TS aux matches C, and solves the board`, () => {
-      const p = paramsOf(f);
-      const { aux } = newDesc(p, randomNew(f.seed));
-      expect(aux).toBe(f.aux);
-
-      // The aux *is* the solution, so this also pins that Solve leaves a
-      // genuinely finished board.
+    const p: NetParams = {
+      w: f.w,
+      h: f.h,
+      wrapping: f.wrapping,
+      barrierProbability: f.barrierProbability,
+      diff: DIFF_EASY,
+    };
+    it(`${f.w}x${f.h}${f.wrapping ? "w" : ""} ${f.seed}: decodes and has one answer, upstream's`, () => {
+      expect(validateDesc(netGame, p, f.desc)).toBeNull();
       const s = newState(p, f.desc);
+      const answer = answerOf(s);
+      if (answer.kind !== "one") throw new Error(`${f.seed}: ${answer.kind}`);
+      expect(Array.from(answer.solution, (t) => t.toString(16)).join("")).toBe(f.aux);
       const solved = {
         ...s,
         tiles: Uint8Array.from(f.aux, (c) => Number.parseInt(c, 16)),

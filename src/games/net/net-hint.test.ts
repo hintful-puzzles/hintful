@@ -1,11 +1,12 @@
 /**
- * Net's hint (`add-net-hint`): a plan that finishes every board the generator
- * deals, soundly; keep-track on a turn and a lock; the refusal on a mistake;
- * and the marks on the frame.
+ * Net's hint: the ladder walked from the player's facts, finishing every
+ * board the generator deals, soundly; the words of a step that reads a
+ * square as turned; keep-track on a turn and a lock; the refusal on a
+ * mistake; and the marks on the frame.
  *
  * "Every generated board is hinted to the end, every step agreeing with the
- * solution" is the property that stands in for the byte-match on the seeds
- * where the generator now leaves upstream (`net-differential.test.ts`).
+ * solution" is the property that stands in for the byte-match the generator
+ * left behind with upstream's solver (`net-differential.test.ts`).
  */
 
 import { describe, expect, it } from "vitest";
@@ -18,11 +19,10 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { Facts, nextStep } from "./deduce.ts";
 import { newDesc } from "./generator.ts";
 import type { NetHint, NetRung } from "./hint.ts";
 import { netGame } from "./index.ts";
-import { answerOf, netSolver, SOLVER_UNIQUE, solverFinishes } from "./solver.ts";
+import { answerOf } from "./solver.ts";
 import {
   LOCKED,
   type NetMove,
@@ -59,12 +59,10 @@ const W5: NetParams = {
   diff: DIFF_EASY,
 };
 
-/** Two boards the solver stops on and the hint finishes. On the first a T,
- * turned one way, leaves the straight beside it no way to turn. On the second
- * no turning does that, and a T is settled by the group it would seal off
- * once its own wires are counted. */
+/** A board whose plan settles a T by reading the straight beside it as left
+ * no way to turn: turned one way, the T has no wire for the straight to lie
+ * across to, and upright the straight closes a loop through the T. */
 const STRANDS = "5x5:81924a3be3be5731bb848cca2";
-const SEALS_IN_PLACE = "5x5:64432a4be63e6364eb7815332";
 
 /** The steps the tests below read, each pinned on a position whose hint opens
  * with one. */
@@ -74,43 +72,52 @@ const pinned = describeHintPins({
   seeds: 40,
   kinds: {
     turn: (step) => step.highlights?.kind === "turn",
-    // A square's turnings read off the loops they would close as well as off
-    // its sides. No mark tells it from a group a wire merely runs on into, so
-    // the board's own next deduction is asked.
-    loopOnTheWay: (step, state) =>
-      step.rung === "sealed" &&
-      (nextStep(new Facts(state))?.because.some(
-        (b) => b.why.kind === "sealed" && b.why.barLoops,
-      ) ??
-        false),
   },
   pins: {
-    /** Held on 1454 of 3618 positions walked. */
-    turn: "5x5:2a5e482a79d77eb51aa568818",
-    /** Held on 2 of 3618 positions walked. */
-    loopOnTheWay: {
-      id: "5x5w:473d4acd331eb98138cc37198",
-      moves:
-        '[{"type":"rotate","op":"A","x":0,"y":1},{"type":"lock","x":0,"y":1},{"type":"note","x":1,"y":1,"dir":1,"note":2},{"type":"rotate","op":"A","x":2,"y":1},{"type":"lock","x":2,"y":1},{"type":"note","x":3,"y":1,"dir":1,"note":2},{"type":"lock","x":0,"y":2},{"type":"note","x":4,"y":0,"dir":1,"note":2},{"type":"note","x":4,"y":4,"dir":8,"note":2},{"type":"note","x":2,"y":3,"dir":8,"note":2},{"type":"note","x":4,"y":3,"dir":1,"note":2},{"type":"note","x":3,"y":3,"dir":1,"note":1},{"type":"note","x":0,"y":4,"dir":1,"note":1},{"type":"note","x":4,"y":4,"dir":1,"note":2}]',
+    /** Held on 1453 of 3507 positions walked. */
+    turn: "5x5de:2a5e482a79d77eb51aa568818",
+    /** Held on 3507 of 3507 positions walked. */
+    fitLock: "5x5de:2a5e482a79d77eb51aa568818",
+    /** Held on 747 of 3507 positions walked. */
+    fitNote: {
+      id: "5x5wde:dbd59c2d8845d7c2313447a15",
+      moves: [{ type: "lock", x: 3, y: 0 }],
     },
-    /** Held on 3618 of 3618 positions walked. */
-    side: "5x5:2a5e482a79d77eb51aa568818",
-    /** Held on 423 of 3618 positions walked. */
-    loop: {
-      id: "5x5w:5ad241a7a81ebc3ce3d8c3914",
+    /** Held on 476 of 3507 positions walked. */
+    loopLock: {
+      id: "5x5wde:473d4acd331eb98138cc37198",
       moves:
-        '[{"type":"rotate","op":"F","x":4,"y":0},{"type":"lock","x":4,"y":0},{"type":"lock","x":0,"y":0},{"type":"rotate","op":"A","x":1,"y":0},{"type":"lock","x":1,"y":0},{"type":"rotate","op":"A","x":1,"y":1},{"type":"lock","x":1,"y":1},{"type":"lock","x":0,"y":1},{"type":"rotate","op":"A","x":1,"y":2},{"type":"lock","x":1,"y":2},{"type":"lock","x":0,"y":2},{"type":"note","x":3,"y":2,"dir":1,"note":1},{"type":"note","x":0,"y":3,"dir":8,"note":1},{"type":"note","x":1,"y":3,"dir":8,"note":1},{"type":"rotate","op":"F","x":4,"y":4},{"type":"lock","x":4,"y":4},{"type":"rotate","op":"C","x":0,"y":4},{"type":"lock","x":0,"y":4},{"type":"lock","x":1,"y":4},{"type":"note","x":2,"y":4,"dir":1,"note":2}]',
+        '[{"type":"rotate","op":"A","x":0,"y":1},{"type":"lock","x":0,"y":1},{"type":"note","x":1,"y":1,"dir":1,"note":2},{"type":"rotate","op":"A","x":2,"y":1},{"type":"lock","x":2,"y":1},{"type":"note","x":2,"y":4,"dir":8,"note":2},{"type":"note","x":3,"y":1,"dir":1,"note":2},{"type":"note","x":3,"y":4,"dir":8,"note":1},{"type":"note","x":3,"y":3,"dir":8,"note":2},{"type":"note","x":3,"y":2,"dir":8,"note":1},{"type":"note","x":3,"y":1,"dir":8,"note":2},{"type":"rotate","op":"A","x":3,"y":1},{"type":"lock","x":3,"y":1}]',
     },
-    /** Held on 607 of 3618 positions walked. */
-    sealed: "5x5w:3325223c386e7a755e354585a",
-    /** Kept by hand, where the step opens the plan. The scan deals no board
-     * like it: the hint finishes this one and the solver does not, so it is
-     * neither an Easy deal nor an Unreasonable one. */
-    neighbor: {
-      id: STRANDS,
+    /** Held on 103 of 3507 positions walked. */
+    loopNote: {
+      id: "5x5wde:473d4acd331eb98138cc37198",
       moves:
-        '[{"type":"lock","x":0,"y":1},{"type":"rotate","op":"A","x":3,"y":4},{"type":"lock","x":3,"y":4},{"type":"note","x":2,"y":0,"dir":8,"note":1},{"type":"note","x":3,"y":1,"dir":1,"note":1},{"type":"note","x":3,"y":2,"dir":1,"note":1},{"type":"note","x":1,"y":3,"dir":8,"note":1},{"type":"lock","x":0,"y":0},{"type":"lock","x":0,"y":2},{"type":"rotate","op":"A","x":0,"y":3},{"type":"lock","x":0,"y":3},{"type":"lock","x":1,"y":3},{"type":"rotate","op":"A","x":0,"y":4},{"type":"lock","x":0,"y":4},{"type":"rotate","op":"C","x":1,"y":4},{"type":"lock","x":1,"y":4},{"type":"rotate","op":"F","x":2,"y":4},{"type":"lock","x":2,"y":4},{"type":"rotate","op":"A","x":4,"y":4},{"type":"lock","x":4,"y":4},{"type":"note","x":1,"y":1,"dir":1,"note":1},{"type":"rotate","op":"A","x":4,"y":0},{"type":"lock","x":4,"y":0},{"type":"rotate","op":"A","x":4,"y":1},{"type":"lock","x":4,"y":1},{"type":"rotate","op":"F","x":4,"y":2},{"type":"lock","x":4,"y":2},{"type":"rotate","op":"C","x":4,"y":3},{"type":"lock","x":4,"y":3}]',
+        '[{"type":"rotate","op":"A","x":0,"y":1},{"type":"lock","x":0,"y":1},{"type":"note","x":1,"y":1,"dir":1,"note":2},{"type":"rotate","op":"A","x":2,"y":1},{"type":"lock","x":2,"y":1},{"type":"note","x":2,"y":4,"dir":8,"note":2},{"type":"note","x":3,"y":1,"dir":1,"note":2}]',
     },
+    /** Held on 359 of 3507 positions walked. */
+    sealLock: "5x5wde:3325223c386e7a755e354585a",
+    /** Held on 56 of 3507 positions walked. */
+    sealNote: {
+      id: "5x5wde:84ebb19a428edd1d9e68aac18",
+      moves:
+        '[{"type":"lock","x":0,"y":1},{"type":"note","x":1,"y":1,"dir":1,"note":2},{"type":"lock","x":2,"y":1},{"type":"rotate","op":"C","x":1,"y":1},{"type":"lock","x":1,"y":1},{"type":"lock","x":4,"y":1},{"type":"rotate","op":"F","x":4,"y":2},{"type":"lock","x":4,"y":2}]',
+    },
+    /** Held on 76 of 3372 positions walked. */
+    // By hand: no board the scan deals needs the idea, the seal settling
+    // first. STRANDS, at its T.
+    strandLock: {
+      id: "5x5de:81924a3be3be5731bb848cca2",
+      moves:
+        '[{"type":"lock","x":0,"y":1},{"type":"lock","x":0,"y":0},{"type":"lock","x":0,"y":2},{"type":"rotate","op":"A","x":0,"y":3},{"type":"lock","x":0,"y":3},{"type":"lock","x":1,"y":3},{"type":"rotate","op":"A","x":0,"y":4},{"type":"lock","x":0,"y":4},{"type":"rotate","op":"C","x":1,"y":4},{"type":"lock","x":1,"y":4},{"type":"rotate","op":"F","x":2,"y":4},{"type":"lock","x":2,"y":4},{"type":"rotate","op":"A","x":3,"y":4},{"type":"lock","x":3,"y":4},{"type":"rotate","op":"A","x":4,"y":4},{"type":"lock","x":4,"y":4},{"type":"note","x":3,"y":2,"dir":1,"note":1},{"type":"note","x":3,"y":1,"dir":1,"note":1},{"type":"note","x":2,"y":0,"dir":8,"note":1},{"type":"note","x":1,"y":1,"dir":1,"note":1},{"type":"rotate","op":"A","x":4,"y":0},{"type":"lock","x":4,"y":0},{"type":"rotate","op":"A","x":4,"y":1},{"type":"lock","x":4,"y":1},{"type":"rotate","op":"F","x":4,"y":2},{"type":"lock","x":4,"y":2},{"type":"rotate","op":"C","x":4,"y":3},{"type":"lock","x":4,"y":3}]',
+    },
+  },
+  unreached: {
+    strandNote:
+      "A neighbor left no way to turn rules out a whole turning of the " +
+      "square, so on the boards walked its every side was settled at once " +
+      "and the lock fired first, and the seal settles most squares before " +
+      "it: no position of 3,507 opened with the note.",
   },
 });
 
@@ -137,106 +144,76 @@ describe("the plan", () => {
   }
 });
 
-describe("boards the solver settles", () => {
-  /** The plan's sentences on `desc`, each step checked against the solver's
-   * answer, and the board it leaves. */
-  function follow(p: NetParams, desc: string) {
-    const state = newState(p, desc);
-    const solution = Uint8Array.from(state.tiles, (t) => t & 0xf);
-    expect(netSolver(p.w, p.h, solution, state.barriers, p.wrapping)).toBe(
-      SOLVER_UNIQUE,
-    );
-    let s = state;
-    const said: string[] = [];
-    for (const step of plan(state)) {
-      const m = step.move;
-      said.push(step.explanation);
-      if (m.type === "note")
-        expect((solution[m.y * p.w + m.x] & m.dir) !== 0).toBe(m.note === NOTE_WIRE);
-      s = netGame.executeMove(s, m);
-      if (m.type === "lock")
-        expect(s.tiles[m.y * p.w + m.x] & 0xf).toBe(solution[m.y * p.w + m.x] & 0xf);
-    }
-    return { said, solved: netGame.status(s) === "solved" };
+/** The plan's sentences and rungs on a pasted board, each step checked
+ * against the answer the search finds, and whether it finishes the board. */
+function follow(id: string) {
+  const colon = id.indexOf(":");
+  const p = netGame.decodeParams(id.slice(0, colon));
+  const state = newState(p, id.slice(colon + 1));
+  const answer = answerOf(state);
+  if (answer.kind !== "one") throw new Error(`${id}: no one answer`);
+  const { solution } = answer;
+  let s = state;
+  const said: string[] = [];
+  const rungs = new Set<NetRung>();
+  for (const step of plan(state)) {
+    const m = step.move;
+    said.push(step.explanation);
+    if (step.rung) rungs.add(step.rung);
+    if (m.type === "note")
+      expect((solution[m.y * p.w + m.x] & m.dir) !== 0).toBe(m.note === NOTE_WIRE);
+    s = netGame.executeMove(s, m);
+    if (m.type === "lock")
+      expect(s.tiles[m.y * p.w + m.x] & 0xf).toBe(solution[m.y * p.w + m.x]);
   }
+  return { said, rungs, solved: netGame.status(s) === "solved" };
+}
 
-  it("follows a wire through squares not settled yet", () => {
-    // Upstream's board for the seed "net-trace-4". A dead end, two straights
-    // and a dead end stand in one column: upright, the straight joins all
-    // four and nothing else, though no wire between them is known. No pin: the
-    // sentence opened none of 3618 hints over 80 boards dealt today.
-    const { said, solved } = follow(W5, "19d7aaae8449d5636cad43c44");
+describe("the easiest step first", () => {
+  it("opens with the walls, and seals nothing while a side alone gives a step", () => {
+    const { said, rungs } = follow("5x5:843886bbb66dae95ceda11112");
+    expect(said[0]).toBe(
+      "This straight must fit the wall, so only one way fits: turn it.",
+    );
+    expect(said[1]).toBe("…and lock this straight, for no other way fits.");
+    expect(said.findIndex((t) => t.includes("seal off the striped squares"))).toBe(21);
+    expect(rungs.has("sealLock")).toBe(true);
+  });
+});
+
+describe("a wire followed through squares not settled yet", () => {
+  it("is sealed off where the dead ends it runs into have no other wire", () => {
+    // A straight between two dead ends, one of them across the wrapped edge:
+    // lying across, it would join both and nothing else, though no wire
+    // between them is known.
+    const { said, solved } = follow("5x5wde:5196412d61c4dd89ee7392653");
     expect(solved).toBe(true);
     expect(said).toContain(
-      "Standing upright, this straight would lead only into the striped squares, which end its wire however they turn, so it must stay across: lock it.",
+      "Lying across, this straight would join the striped dead ends (one across the wrapped edge), which have no other wire, closing all three off from the rest, so only one way fits: turn it.",
     );
-  });
-
-  it("counts out a turning that would close a loop on the way", () => {
-    // A board the hint finishes only by reading a square's turnings off the
-    // loops they would close as well as off its sides.
-    const { id } = pinned("loopOnTheWay");
-    const { said, solved } = follow(W5, id.slice(id.indexOf(":") + 1));
-    expect(solved).toBe(true);
-    expect(
-      said.some((t) => t.includes("which end or loop its wire however they turn")),
-    ).toBe(true);
   });
 });
 
 describe("a square looked at as turned", () => {
-  /** The rungs of the plan on a pasted board, each step checked against the
-   * answer the search finds, and whether the plan finishes the board. */
-  function follow(id: string) {
-    const colon = id.indexOf(":");
-    const p = netGame.decodeParams(id.slice(0, colon));
-    const state = newState(p, id.slice(colon + 1));
-    const answer = answerOf(state);
-    if (answer.kind !== "one") throw new Error(`${id}: no one answer`);
-    const { solution } = answer;
-    let s = state;
-    const rungs = new Set<NetRung>();
-    for (const step of plan(state)) {
-      const m = step.move;
-      if (step.rung) rungs.add(step.rung);
-      if (m.type === "note")
-        expect((solution[m.y * p.w + m.x] & m.dir) !== 0).toBe(m.note === NOTE_WIRE);
-      s = netGame.executeMove(s, m);
-      if (m.type === "lock")
-        expect(s.tiles[m.y * p.w + m.x] & 0xf).toBe(solution[m.y * p.w + m.x]);
-    }
-    return { state, rungs, solved: netGame.status(s) === "solved" };
-  }
-
   it("rules out a turning that leaves the square beside it no way to turn", () => {
-    const { state, step } = pinned("neighbor");
-    // The T at 1,2, pointing up, down and left, has no wire for the straight
-    // at 2,2 to lie across to; upright, the straight joins 2,1 to 2,3, which
-    // the T then joins already, by way of 1,1 and 1,3.
-    const next = nextStep(new Facts(state));
-    const cited = next?.because.map((b) => b.why).find((w) => w.kind === "neighbor");
-    if (next?.kind !== "lock" || cited?.kind !== "neighbor")
-      throw new Error("the plan does not open with a lock that cites a neighbor");
-    expect([next.at, cited.at]).toEqual([2 * 5 + 1, 2 * 5 + 2]);
-    expect(cited.ways.map((w) => w.why.kind).sort()).toEqual(["loop", "side"]);
-
+    const { state, step } = pinned("strandLock");
+    expect(step.rung).toBe("strandLock");
     const marks = stepMarks(step);
-    const keys = (points: readonly { x: number; y: number }[]) =>
-      points.map((p) => `${p.x},${p.y}`).sort();
-    expect(keys(marks.of("ring", CELL))).toEqual(["1,2"]);
-    expect(keys(marks.of("outline", CELL))).toContain("2,2");
-    expect(keys(marks.of("stripes", CELL))).toEqual(["1,1", "1,3", "2,1", "2,3"]);
+    const ring = marks.of("ring", CELL);
+    expect(ring).toHaveLength(1);
+    // The square left no way to turn is outlined beside the ringed one.
+    const [at] = ring;
+    const beside = marks
+      .of("outline", CELL)
+      .filter((q) => Math.abs(q.x - at.x) + Math.abs(q.y - at.y) === 1);
+    expect(beside.length, `${state.w}x${state.h}`).toBeGreaterThan(0);
+    expect(step.explanation).toMatch(/no way to fit it/);
   });
 
-  it("finishes a board the solver stops on", () => {
-    for (const id of [STRANDS, SEALS_IN_PLACE]) {
-      const { state, rungs, solved } = follow(id);
-      expect(solverFinishes(state), id).toBe(false);
-      expect(solved, id).toBe(true);
-      // The second board has no step of the first's kind, so what finishes
-      // it is the sealed group.
-      expect(rungs.has("neighbor"), id).toBe(id === STRANDS);
-    }
+  it("finishes a board that needs it", () => {
+    const { rungs, solved } = follow(STRANDS);
+    expect(solved).toBe(true);
+    expect([...rungs].some((r) => r.startsWith("strand"))).toBe(true);
   });
 });
 

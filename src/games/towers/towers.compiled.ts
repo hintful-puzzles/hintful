@@ -512,7 +512,7 @@ export function arrangement(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Arran
               for (const _e215 of _a216) _p211[_e215] |= 1 << _f217[_e215];
             }
           }
-          if (!(!(((((_p211[v_c] >> v_d) & 1) !== 0) || (v_d === -1 && _y213 && !v_L.includes(v_c)))))) continue;
+          if (!(!(((((_p211[v_c] >> v_d) & 1) !== 0) || ((v_d as number) === -1 && _y213 && !v_L.includes(v_c)))))) continue;
           if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
           if (!(true)) {
             _q208 = false;
