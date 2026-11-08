@@ -288,7 +288,7 @@ export function fit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FitBinding> |
     if (!(_c58)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ q: v_q, F: v_F }, facts)) return 1;
+      if (fire !== null && !fire({ q: v_q, F: v_F.slice() }, facts)) return 1;
     }
   }
   return fired;
@@ -385,7 +385,7 @@ export function boxed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoxedBindin
         if (!(_c112)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ q: v_q, F: v_F, r: v_r }, facts)) return 1;
+          if (fire !== null && !fire({ q: v_q, F: v_F.slice(), r: v_r }, facts)) return 1;
         }
       }
     }
@@ -464,7 +464,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
         if (!(_c143)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, Q: v_Q, q: v_q, F: v_F, r: v_r }, facts)) return 1;
+          if (fire !== null && !fire({ c: v_c, Q: v_Q.slice(), q: v_q, F: v_F.slice(), r: v_r }, facts)) return 1;
         }
       }
     }
@@ -558,7 +558,7 @@ export function overlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OverlapBi
             if (!(_c203)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ p: v_p, K: v_K, q: v_q, F: v_F, G: v_G, r: v_r }, facts)) return 1;
+              if (fire !== null && !fire({ p: v_p, K: v_K.slice(), q: v_q, F: v_F.slice(), G: v_G.slice(), r: v_r }, facts)) return 1;
             }
           }
         }
@@ -718,7 +718,7 @@ export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBind
         if (!(_c339)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ q: v_q, F: v_F, G: v_G, r: v_r, Z: v_Z, U: v_U }, facts)) return 1;
+          if (fire !== null && !fire({ q: v_q, F: v_F.slice(), G: v_G.slice(), r: v_r, Z: v_Z.slice(), U: v_U.slice() }, facts)) return 1;
           cands.fill(-1);
           starvesMarkedKept.clear();
         }
@@ -910,7 +910,7 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ e: v_e, a: v_a, b: v_b, C: v_C, O: v_O, T: v_T, M: v_M }, facts)) return 1;
+        if (fire !== null && !fire({ e: v_e, a: v_a, b: v_b, C: v_C.slice(), O: v_O.slice(), T: v_T.slice(), M: v_M.slice() }, facts)) return 1;
         cands.fill(-1);
         ownedMarkedKept.clear();
       }

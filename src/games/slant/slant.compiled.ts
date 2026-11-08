@@ -192,7 +192,7 @@ export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding>
     if (!(_c40)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ k: v_k, O: v_O, left: v_left }, facts)) return 1;
+      if (fire !== null && !fire({ k: v_k, O: v_O.slice(), left: v_left }, facts)) return 1;
     }
   }
   return fired;
@@ -393,7 +393,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
           if (!(_c173)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ A: v_A, k: v_k, P: v_P, a: v_a, b: v_b, O: v_O, left: v_left }, facts)) return 1;
+            if (fire !== null && !fire({ A: v_A.slice(), k: v_k, P: v_P.slice(), a: v_a, b: v_b, O: v_O.slice(), left: v_left }, facts)) return 1;
           }
         }
       }
@@ -493,7 +493,7 @@ export function share(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ShareBindin
               if (!(_c262)) return -1;
               if (changed || facts.length > 0) {
                 fired = 1;
-                if (fire !== null && !fire({ A: v_A, k: v_k, P: v_P, a: v_a, b: v_b, R: v_R, left: v_left }, facts)) return 1;
+                if (fire !== null && !fire({ A: v_A.slice(), k: v_k, P: v_P.slice(), a: v_a, b: v_b, R: v_R.slice(), left: v_left }, facts)) return 1;
               }
             }
           }
@@ -653,7 +653,7 @@ export function same(b: Marks, sp: GridSpace, fire: Fire<SameBinding> | null): n
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ A: v_A, c: v_c, q: v_q }, facts)) return 1;
+        if (fire !== null && !fire({ A: v_A.slice(), c: v_c, q: v_q }, facts)) return 1;
       }
     }
   }
@@ -691,7 +691,7 @@ export function drawn(b: Marks, sp: GridSpace, v_c: number, fire: Fire<DrawnBind
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null) fire({ c: v_c, a: v_a, e: v_e, S: v_S, i: v_i }, facts);
+        if (fire !== null) fire({ c: v_c, a: v_a, e: v_e, S: v_S.slice(), i: v_i }, facts);
       }
     }
   }
@@ -864,7 +864,7 @@ export function two(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TwoBinding> |
                 if (!(_c417)) return -1;
                 if (changed || facts.length > 0) {
                   fired = 1;
-                  if (fire !== null && !fire({ k: v_k, a: v_a, b: v_b, e: v_e, R: v_R, f: v_f, i: v_i, j: v_j }, facts)) return 1;
+                  if (fire !== null && !fire({ k: v_k, a: v_a, b: v_b, e: v_e, R: v_R.slice(), f: v_f, i: v_i, j: v_j }, facts)) return 1;
                 }
               }
             }

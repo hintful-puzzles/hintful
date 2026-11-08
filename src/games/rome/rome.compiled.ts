@@ -471,7 +471,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
       if (!(_q132)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ H: v_H, p: v_p, d: v_d }, facts)) return 1;
+        if (fire !== null && !fire({ H: v_H.slice(), p: v_p, d: v_d }, facts)) return 1;
         cands.fill(-1);
       }
     }

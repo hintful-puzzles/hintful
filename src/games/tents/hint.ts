@@ -1,17 +1,13 @@
 /**
- * Tents' explained hint: the narration half of the recording projection in
- * [`solver.ts`](./solver.ts).
- *
- * The deduction end is the solver's own rungs, run one firing at a time by
- * `tentsRecordingPass` with a recorder standing (docs/hints.md
- * § "Recording the deduction", the *threaded* shape). This file turns each
- * firing into its steps, sentences and picture.
+ * Tents' explained hint: the narration of the ladder's firings, which
+ * `tentsHintWalk` in [`solver.ts`](./solver.ts) takes one at a time. This
+ * file turns each firing into its steps, sentences and picture.
  *
  * **Every fact a step rests on is a tent, grass, a tree, a clue or a link.**
- * The solver ties tents to trees as it goes, and the player sees a pairing
+ * The ladder ties tents to trees as it goes, and the player sees a pairing
  * only where they have drawn it or can read it off the board at a glance. So
- * the recording pass reads the links afresh before every firing, and a
- * pairing the solver needs beyond that is drawn by a step of its own
+ * the walk reads the links afresh before every firing, and a pairing the
+ * ladder needs beyond that is drawn by a step of its own
  * (docs/hints-marks.md § "Give the facts a notation", and
  * `add-tents-hint`'s design).
  */
@@ -29,14 +25,13 @@ import { stepBudget } from "../../engine/step-budget.ts";
 import { lineSquares, pointOf } from "./hint-marks.ts";
 import { type Counted, type Dir, type LineKind, say } from "./hint-text.ts";
 import {
-  TentsBoard,
+  isSolved,
   type TentsFiring,
   type TentsReason,
-  tentsRecordingPass,
+  tentsHintWalk,
 } from "./solver.ts";
 import {
   BLANK,
-  checkCompletion,
   D,
   DX,
   DY,
@@ -60,8 +55,7 @@ import {
  */
 const PLAN_CAP = 24;
 
-/** The solver's rungs and its two link steps, by the `kind` of the reason a
- * firing carries. */
+/** The ladder's techniques, by the `kind` of the reason a firing carries. */
 export const TENTS_RUNGS = [
   "noTree",
   "treesDone",
@@ -77,19 +71,11 @@ export type TentsRung = (typeof TENTS_RUNGS)[number];
 
 type TentsStep = HintStep<TentsMove, unknown, TentsRung>;
 
-/** The player's board as the solver's: their squares, and their links as the
- * links drawn. */
-export function boardOf(state: TentsState): TentsBoard {
-  const b = new TentsBoard(state.w, state.h, state.grid, state.numbers);
-  b.drawn = Int8Array.from(state.links);
-  return b;
-}
-
 /**
  * Deduce the plan from the player's tents, grass and links.
  *
  * No tier cap: a shared game ID carries no difficulty, and the ladder tries
- * the easy rungs before the Tricky ones, which is the order a hint wants anyway.
+ * the Easy techniques before the Normal ones, which is the order a hint wants anyway.
  */
 export function tentsHint(
   state: TentsState,
@@ -108,18 +94,17 @@ export function tentsPlan(state: TentsState): {
   impossible: boolean;
   plan: { firing: TentsFiring; steps: TentsStep[] }[];
 } {
-  const { w, h, numbers } = state;
-  const board = boardOf(state);
-  const pass = tentsRecordingPass(board, stepBudget("tents hint"));
-  const { plan } = deduceHintPlan<TentsBoard, TentsFiring, "open" | "done">({
-    board,
-    status: (b) => (checkCompletion(w, h, b.soln, numbers) ? "done" : "open"),
+  const { w, h, grid, numbers, links } = state;
+  const walk = tentsHintWalk(w, h, grid, numbers, links, stepBudget("tents hint"));
+  const { plan } = deduceHintPlan<null, TentsFiring, "open" | "done">({
+    board: null,
+    status: () => (isSolved(w, h, walk.soln(), numbers) ? "done" : "open"),
     incomplete: "open",
-    next: () => pass.next(),
+    next: () => walk.next(),
     planCap: PLAN_CAP,
   });
   return {
-    impossible: pass.impossible(),
+    impossible: walk.impossible(),
     plan: plan.map((firing) => ({ firing, steps: stepsOf(state, firing) })),
   };
 }

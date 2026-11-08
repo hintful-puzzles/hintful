@@ -1,50 +1,67 @@
 /**
- * Tents solver — port of `tents_solve` in `tents.c`, as a
- * `runDeductionFixpoint` ladder. Returns the upstream verdict: 0 impossible
- * (no consistent solution), 1 unique (fully determined), 2 ambiguous /
- * non-converged. The generator gates on this exact verdict, so the deductive
- * power must match C on every board
- * (docs/solver-and-generator.md § "Solver-gated generation").
+ * Tents' solver: the ladder `tents.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/ladder-runtime.ts`): a value a square
+ * (a tent, grass or a tree), and on each tent the player's link to its tree,
+ * a mark naming one tree.
  *
- * `diff` caps the ladder by tier: `DIFF_EASY - 1` runs only the tent↔tree
- * link, which is what the generator's "not solvable one level down" check asks
- * of an Easy board; `DIFF_EASY` adds the grass marks, a tree's single
- * candidate and the per-line count; `DIFF_TRICKY` adds the tree diagonal-pair
- * elimination and the line count's reach into the neighboring lines.
- *
- * Upstream folds each Tricky deduction into an Easy sweep behind a difficulty
- * test, and ties a tree to a tent already beside it inside the sweep that
- * places tents. Here each is a rung of its own, so a census can see whether the
- * generator ever reaches it (`tents-ladder.test.ts`) and the hint can narrate
- * it. That moves when they run and not what the ladder concludes, because every
- * rung is sound and only decides squares or ties links.
- *
- * The hint runs the same rungs through {@link tentsRecordingPass}, where a
- * link counts only if the player has drawn it or can read it off the board
- * ({@link TentsBoard.readLinks}).
+ * One ladder serves the generator, which keeps a board only where the ladder
+ * finishes it at its tier and not at the tier below, so its verdict on every
+ * board decides which puzzles exist (the frozen differential holds those
+ * verdicts to upstream's); Solve; the mistake check's answer; the difficulty
+ * probe; and the hint, which walks it from the player's squares and links
+ * ({@link tentsHintWalk}). Finished means every square decided and every tent
+ * linked, as upstream's was.
  */
+
+import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
-  type DeductionTechnique,
-  type FiringTally,
-  runDeductionFixpoint,
-  singleFirings,
-} from "../../engine/deduction-fixpoint.ts";
+  clueList,
+  describedSpace,
+  type GridSpace,
+  MARK,
+  PLACE,
+  rangeMask,
+} from "../../engine/describe-runtime.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Firing,
+  type Ladder,
+  type LadderEntry,
+  ladderTechniques,
+  ladderWalk,
+  type ReasonOf,
+  type Rung,
+  runLadder,
+  type Taken,
+  TIERS,
+} from "../../engine/ladder-runtime.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
-import { changed, SweepOffers } from "../../engine/sweep-offers.ts";
+import type { GameStatus } from "../../engine/types.ts";
 import {
   BLANK,
-  DIFF_EASY,
-  DIFF_TRICKY,
   DX,
   DY,
   FLIP,
-  MAGIC,
   MAXDIR,
   N,
   NONTENT,
   TENT,
+  type TentsState,
   TREE,
 } from "./state.ts";
+import * as tents from "./tents.compiled.ts";
+
+/** The description's values: a tent, grass and a tree. */
+const D_TENT = 1;
+const D_GRASS = 2;
+const D_TREE = 3;
+
+/** A square's value as the game stores it, by the description's. */
+const GAME_VALUE = [BLANK, TENT, NONTENT, TREE];
+/** A square's value as the description reads it, by the game's. */
+const DESC_VALUE = [0, D_TREE, D_TENT, D_GRASS];
 
 export interface SolveResult {
   ret: number;
@@ -57,11 +74,11 @@ export interface SolveResult {
  * cites is read off the board the firing found. */
 export type TentsReason =
   /** Blank squares beside no tree at all. */
-  | { kind: "noTree"; squares: number[] }
+  | { kind: "noTree"; squares: readonly number[] }
   /** Blank squares every tree beside which already has its tent. */
-  | { kind: "treesDone"; squares: number[] }
+  | { kind: "treesDone"; squares: readonly number[] }
   /** The blank squares round one tent. */
-  | { kind: "nextToTent"; tent: number; squares: number[] }
+  | { kind: "nextToTent"; tent: number; squares: readonly number[] }
   /** A tree with one square left that could hold its tent. */
   | { kind: "treeSingle"; tree: number; square: number }
   /** A tree whose two squares left sit round a corner, and the square between
@@ -74,597 +91,197 @@ export type TentsReason =
   | { kind: "lineNeighbors"; line: number }
   /** A tent every other tree beside which already has its tent. `serves` is
    * on a link the hint draws: what the firing it was drawn for reads. */
-  | { kind: "tentLink"; tent: number; tree: number; serves?: number[] }
+  | { kind: "tentLink"; tent: number; tree: number; serves?: readonly number[] }
   /** A tree whose one remaining square holds a tent. */
-  | { kind: "treeLink"; tree: number; tent: number; serves?: number[] };
+  | { kind: "treeLink"; tree: number; tent: number; serves?: readonly number[] };
 
-/** The hint's recorder: the reason for the firing in progress. */
-interface TentsRecorder {
-  reason: TentsReason | null;
+// --- the board as the description reads it --------------------------------
+
+const spaces = new Map<string, GridSpace>();
+
+/** The space of a `w × h` board, built once a shape. */
+function spaceOf(w: number, h: number): GridSpace {
+  const key = `${w}x${h}`;
+  let sp = spaces.get(key);
+  if (sp === undefined) {
+    sp = describedSpace(tents.units, w, h);
+    spaces.set(key, sp);
+  }
+  return sp;
 }
 
-/** Everything a hint firing writes. */
-interface TentsSnapshot {
-  soln: Int8Array;
-  links: Int8Array;
-  drawn: Int8Array;
+/** The game's clue index of the space's line `L`: the space lists the rows
+ * first, the game the columns. */
+const clueLine = (w: number, h: number, L: number): number => (L < h ? w + L : L - h);
+
+/** The board as the description deals it: a tree on each square that has
+ * one, and every row's and column's count. */
+function dealtOf(
+  w: number,
+  h: number,
+  grid: Int8Array,
+  numbers: Int32Array,
+): tents.Dealt {
+  const trees: number[] = [];
+  grid.forEach((v, i) => {
+    if (v === TREE) trees.push(i);
+  });
+  const lines = Array.from({ length: w + h }, (_, L) => L);
+  return {
+    tree: clueList(
+      trees,
+      trees.map(() => 0),
+      w * h,
+    ),
+    count: clueList(
+      lines,
+      lines.map((L) => numbers[clueLine(w, h, L)]),
+      w + h,
+    ),
+  };
 }
 
-/** The working board the rungs share: the squares, the tent↔tree links, and
- * scratch for the line enumeration. */
-export class TentsBoard {
-  readonly links: Int8Array;
-  readonly soln: Int8Array;
-  // Scratch for the line enumeration.
-  readonly locs: Int32Array;
-  readonly place: Int8Array;
-  readonly mrows: Int8Array;
-  readonly trows: Int8Array;
-  /** Set on the hint path only: each rung then stops at its first premise. */
-  rec: TentsRecorder | null = null;
-  /** Set on the hint path only: the links the player has drawn, which
-   * {@link readLinks} rebuilds `links` from. */
-  drawn: Int8Array | null = null;
-  /** Set on the hint path only: collects every firing a rung could make, for
-   * a plan that continues where its latest step was. */
-  offers: SweepOffers<TentsSnapshot, TentsReason | null> | null = null;
-
-  constructor(
-    readonly w: number,
-    readonly h: number,
-    grid: Int8Array,
-    readonly numbers: Int32Array,
-  ) {
-    this.links = new Int8Array(w * h).fill(N);
-    this.soln = Int8Array.from(grid);
-    const maxlen = Math.max(w, h);
-    this.locs = new Int32Array(maxlen);
-    this.place = new Int8Array(maxlen);
-    this.mrows = new Int8Array(3 * maxlen);
-    this.trows = new Int8Array(3 * maxlen);
-  }
-
-  /** A copy with no recorder: for trying a link before drawing it. */
-  clone(): TentsBoard {
-    const b = new TentsBoard(this.w, this.h, this.soln, this.numbers);
-    b.links.set(this.links);
-    if (this.drawn) b.drawn = Int8Array.from(this.drawn);
-    return b;
-  }
-
-  /** Where a rung on the hint path has made its firing: whether it returns. */
-  kept(): boolean {
-    return this.offers?.keep() ?? true;
-  }
-
-  /**
-   * The squares a firing's premise reads, which a hint plan continues from:
-   * what its sentence points at, and the squares round the tree or tent it
-   * turns on, whose decisions are why it fires.
-   */
-  premise(r: TentsReason): number[] {
-    const round = (i: number): number[] => [i, ...this.neighbors(i).map(({ j }) => j)];
-    switch (r.kind) {
-      case "noTree":
-        return r.squares;
-      case "treesDone":
-        return r.squares.flatMap((i) =>
-          round(i).filter((j) => j === i || this.soln[j] === TREE),
-        );
-      case "nextToTent":
-        return [r.tent, ...r.squares];
-      case "treeSingle":
-        return round(r.tree);
-      case "treeDiagonal":
-        return [...round(r.tree), r.square];
-      case "lineCount":
-      case "lineNeighbors": {
-        const { w, h } = this;
-        return r.line < w
-          ? Array.from({ length: h }, (_, k) => r.line + k * w)
-          : Array.from({ length: w }, (_, k) => (r.line - w) * w + k);
-      }
-      case "tentLink":
-        return [...round(r.tent), r.tree];
-      case "treeLink":
-        return [...round(r.tree), r.tent];
-    }
-  }
-
-  private inGrid(x: number, y: number): boolean {
-    return x >= 0 && x < this.w && y >= 0 && y < this.h;
-  }
-
-  private isUnmatchedTree(x: number, y: number): boolean {
-    const i = y * this.w + x;
-    return this.inGrid(x, y) && this.soln[i] === TREE && !this.links[i];
-  }
-
-  /** The orthogonal neighbors of square `i` that are on the board. */
-  private neighbors(i: number): { j: number; d: number }[] {
-    const x = i % this.w;
-    const y = Math.floor(i / this.w);
-    const out: { j: number; d: number }[] = [];
-    for (let d = 1; d < MAXDIR; d++) {
-      if (this.inGrid(x + DX(d), y + DY(d)))
-        out.push({ j: i + DY(d) * this.w + DX(d), d });
-    }
-    return out;
-  }
-
-  /** The directions from tree `(x, y)` to a square that could still be its
-   * tent: blank, or a tent not yet tied to a tree. */
-  private treeCandidates(x: number, y: number): number[] {
-    const found: number[] = [];
-    for (let d = 1; d < MAXDIR; d++) {
-      const x2 = x + DX(d);
-      const y2 = y + DY(d);
-      if (!this.inGrid(x2, y2)) continue;
-      const i = y2 * this.w + x2;
-      if (this.soln[i] === BLANK || (this.soln[i] === TENT && !this.links[i])) {
-        found.push(d);
-      }
-    }
-    return found;
-  }
-
-  private link(x: number, y: number, d: number): void {
-    this.links[y * this.w + x] = d;
-    this.links[(y + DY(d)) * this.w + x + DX(d)] = FLIP(d);
-  }
-
-  /**
-   * Rebuild `links` from what the player can see: the links they have drawn,
-   * and the ones the board shows at a glance given those. A tent is a tree's
-   * at a glance when that tree is the only one beside it not drawn to another
-   * tent, or when it is the only square beside the tree that is blank or an
-   * undrawn tent. Only one reading deep: a pairing that needs another pairing
-   * read first is not on the board, and the hint draws it
-   * ({@link tentsRecordingPass}). -1 when the board contradicts itself.
-   */
-  readLinks(): number {
-    const { soln, links } = this;
-    const drawn = this.drawn;
-    if (!drawn) throw new Error("tents: readLinks without drawn links");
-    links.set(drawn);
-    const pairs: [number, number][] = [];
-    for (let i = 0; i < soln.length; i++) {
-      if (drawn[i]) continue;
-      if (soln[i] === TENT) {
-        const trees = this.neighbors(i).filter(
-          ({ j }) => soln[j] === TREE && !drawn[j],
-        );
-        if (trees.length === 0) return -1;
-        if (trees.length === 1) pairs.push([i, trees[0].j]);
-      } else if (soln[i] === TREE) {
-        const open = this.neighbors(i).filter(
-          ({ j }) => soln[j] === BLANK || (soln[j] === TENT && !drawn[j]),
-        );
-        if (open.length === 0) return -1;
-        if (open.length === 1 && soln[open[0].j] === TENT) pairs.push([open[0].j, i]);
-      }
-    }
-    for (const [tent, tree] of pairs) {
-      const d = this.neighbors(tent).find(({ j }) => j === tree)?.d ?? N;
-      if (links[tent] === d && links[tree] === FLIP(d)) continue;
-      if (links[tent] || links[tree]) return -1; // one tree, two tents, or the reverse
-      links[tent] = d;
-      links[tree] = FLIP(d);
-    }
-    return 0;
-  }
-
-  /** Draw the link between `tent` and `tree`, as the hint asks the player to. */
-  drawLink(tent: number, tree: number): void {
-    const d = this.neighbors(tent).find(({ j }) => j === tree)?.d ?? N;
-    if (d === N || !this.drawn) throw new Error("tents: drawLink off the hint path");
-    this.drawn[tent] = this.links[tent] = d;
-    this.drawn[tree] = this.links[tree] = FLIP(d);
-  }
-
-  /**
-   * Every link the two link rungs would tie now, with its reason, without
-   * tying any: a tent with one unmatched tree beside it, and a tree whose one
-   * remaining square holds a tent.
-   */
-  pendingLinks(): Extract<TentsReason, { kind: "tentLink" | "treeLink" }>[] {
-    const { w, soln, links } = this;
-    const out: Extract<TentsReason, { kind: "tentLink" | "treeLink" }>[] = [];
-    const seen = new Set<number>();
-    for (let i = 0; i < soln.length; i++) {
-      if (links[i]) continue;
-      const x = i % w;
-      const y = Math.floor(i / w);
-      if (soln[i] === TENT) {
-        const trees = this.neighbors(i).filter(({ j }) =>
-          this.isUnmatchedTree(j % w, Math.floor(j / w)),
-        );
-        if (trees.length === 1 && !seen.has(i)) {
-          seen.add(i);
-          out.push({ kind: "tentLink", tent: i, tree: trees[0].j });
-        }
-      } else if (soln[i] === TREE) {
-        const cands = this.treeCandidates(x, y);
-        if (cands.length !== 1) continue;
-        const tent = i + DY(cands[0]) * w + DX(cands[0]);
-        if (soln[tent] === TENT && !seen.has(tent)) {
-          seen.add(tent);
-          out.push({ kind: "treeLink", tree: i, tent });
-        }
-      }
-    }
-    return out;
-  }
-
-  /** A tent with only one unattached adjacent tree is tied to that tree. */
-  linkTents(): number {
-    const { w, h, soln, links, rec } = this;
-    let fired = 0;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        if (soln[y * w + x] !== TENT || links[y * w + x]) continue;
-        const trees: number[] = [];
-        for (let d = 1; d < MAXDIR && trees.length < 2; d++) {
-          if (this.isUnmatchedTree(x + DX(d), y + DY(d))) trees.push(d);
-        }
-        if (trees.length === 0) return -1; // tent cannot link to anything
-        if (trees.length === 1) {
-          this.link(x, y, trees[0]);
-          fired++;
-          if (rec) {
-            const tree = (y + DY(trees[0])) * w + x + DX(trees[0]);
-            rec.reason = { kind: "tentLink", tent: y * w + x, tree };
-            return fired;
-          }
-        }
-      }
-    }
-    return fired;
-  }
-
-  /** An unmatched tree whose one remaining square already holds a tent is tied
-   * to that tent. */
-  treeLinks(): number {
-    const { w, h, soln, links, rec } = this;
-    let fired = 0;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        if (soln[y * w + x] !== TREE || links[y * w + x]) continue;
-        const cands = this.treeCandidates(x, y);
-        if (cands.length === 0) return -1; // tree cannot link to anything
-        const d = cands[0];
-        const tent = (y + DY(d)) * w + x + DX(d);
-        if (cands.length === 1 && soln[tent] === TENT) {
-          this.link(x, y, d);
-          fired++;
-          if (rec) {
-            rec.reason = { kind: "treeLink", tree: y * w + x, tent };
-            return fired;
-          }
-        }
-      }
-    }
-    return fired;
-  }
-
-  /** A blank square orthogonally adjacent to no unmatched tree is grass. */
-  grassAwayFromTrees(): number {
-    const { w, h, soln, rec } = this;
-    let fired = 0;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        if (soln[y * w + x] !== BLANK || this.nearUnmatchedTree(x, y)) continue;
-        if (rec) {
-          const n = this.recordGrassAway(y * w + x, rec);
-          if (this.kept()) return n;
-          continue;
-        }
-        soln[y * w + x] = NONTENT;
-        fired++;
-      }
-    }
-    return fired;
-  }
-
-  private nearUnmatchedTree(x: number, y: number): boolean {
-    for (let d = 1; d < MAXDIR; d++) {
-      if (this.isUnmatchedTree(x + DX(d), y + DY(d))) return true;
-    }
-    return false;
-  }
-
-  /**
-   * One grass-away premise from its first square `first`. A square beside no
-   * tree at all is one kind, and the step takes every such square; otherwise
-   * the step takes the squares beside the same tree as `first`, every tree
-   * beside each of which already has its tent.
-   */
-  private recordGrassAway(first: number, rec: TentsRecorder): number {
-    const { w, soln } = this;
-    const nearTree = (i: number): boolean =>
-      this.neighbors(i).some(({ j }) => soln[j] === TREE);
-    const away = (i: number): boolean =>
-      soln[i] === BLANK && !this.nearUnmatchedTree(i % w, Math.floor(i / w));
-    let squares: number[];
-    if (!nearTree(first)) {
-      squares = [];
-      for (let i = 0; i < soln.length; i++)
-        if (away(i) && !nearTree(i)) squares.push(i);
-      rec.reason = { kind: "noTree", squares };
-    } else {
-      const tree = this.neighbors(first).find(({ j }) => soln[j] === TREE)?.j ?? -1;
-      squares = this.neighbors(tree)
-        .map(({ j }) => j)
-        .filter(away)
-        .sort((a, b) => a - b);
-      rec.reason = { kind: "treesDone", squares };
-    }
-    for (const i of squares) soln[i] = NONTENT;
-    return squares.length;
-  }
-
-  /** A blank square touching a tent, even diagonally, is grass. */
-  grassNextToTents(): number {
-    const { w, h, soln, rec } = this;
-    let fired = 0;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        if (soln[y * w + x] !== BLANK) continue;
-        const tent = this.touchingTent(x, y);
-        if (tent < 0) continue;
-        if (rec) {
-          // The step takes every blank round that tent.
-          const squares: number[] = [];
-          const tx = tent % w;
-          const ty = Math.floor(tent / w);
-          for (let yy = ty - 1; yy <= ty + 1; yy++)
-            for (let xx = tx - 1; xx <= tx + 1; xx++)
-              if (this.inGrid(xx, yy) && soln[yy * w + xx] === BLANK)
-                squares.push(yy * w + xx);
-          for (const i of squares) soln[i] = NONTENT;
-          rec.reason = { kind: "nextToTent", tent, squares };
-          if (this.kept()) return squares.length;
-          continue;
-        }
-        soln[y * w + x] = NONTENT;
-        fired++;
-      }
-    }
-    return fired;
-  }
-
-  /** The first tent touching `(x, y)`, even diagonally, or -1. */
-  private touchingTent(x: number, y: number): number {
-    const { w, soln } = this;
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        if (!dy && !dx) continue;
-        const x2 = x + dx;
-        const y2 = y + dy;
-        if (this.inGrid(x2, y2) && soln[y2 * w + x2] === TENT) return y2 * w + x2;
-      }
-    }
-    return -1;
-  }
-
-  /** An unmatched tree with exactly one square that could be its tent, and that
-   * square blank, has its tent there. */
-  treeSingles(): number {
-    const { w, h, soln, links, rec } = this;
-    let fired = 0;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        if (soln[y * w + x] !== TREE || links[y * w + x]) continue;
-        const cands = this.treeCandidates(x, y);
-        if (cands.length === 0) return -1; // tree cannot link to anything
-        const d = cands[0];
-        const square = (y + DY(d)) * w + x + DX(d);
-        if (cands.length === 1 && soln[square] === BLANK) {
-          soln[square] = TENT;
-          this.link(x, y, d);
-          fired++;
-          if (rec) {
-            rec.reason = { kind: "treeSingle", tree: y * w + x, square };
-            if (this.kept()) return fired;
-          }
-        }
-      }
-    }
-    return fired;
-  }
-
-  /** An unmatched tree whose two candidates sit round a corner from each
-   * other: whichever holds its tent, the square diagonal to the tree between
-   * them touches that tent, so it is grass. */
-  treeDiagonalPairs(): number {
-    const { w, h, soln, links, rec } = this;
-    let fired = 0;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        if (soln[y * w + x] !== TREE || links[y * w + x]) continue;
-        const cands = this.treeCandidates(x, y);
-        if (cands.length !== 2) continue;
-        const [d1, d2] = cands;
-        if ((DX(d1) === 0) === (DX(d2) === 0)) continue; // opposite sides
-        const i = (y + DY(d1) + DY(d2)) * w + x + DX(d1) + DX(d2);
-        if (soln[i] === BLANK) {
-          soln[i] = NONTENT;
-          fired++;
-          if (rec) {
-            const tree = y * w + x;
-            const pair: [number, number] = [
-              tree + DY(d1) * w + DX(d1),
-              tree + DY(d2) * w + DX(d2),
-            ];
-            rec.reason = { kind: "treeDiagonal", tree, pair, square: i };
-            if (this.kept()) return fired;
-          }
-        }
-      }
-    }
-    return fired;
-  }
-
-  /**
-   * The numbers round the edge. For each row and column, enumerate every
-   * placement of its unplaced tents, drop the ones putting two tents side by
-   * side, and fix any blank square every remaining placement agrees on.
-   *
-   * With `neighbors` the same placements are read for what they do to the two
-   * lines alongside, a square there being grass when every placement puts a
-   * tent next to it, and only those squares are written: what the line itself
-   * agrees on is the plain rung's to find.
-   */
-  lineCounts(neighbors: boolean): number {
-    const { w, h, soln, numbers, locs, mrows, rec } = this;
-    let fired = 0;
-    for (let i = 0; i < w + h; i++) {
-      let start: number;
-      let step: number;
-      let len: number;
-      let start1: number;
-      let start2: number;
-      if (i < w) {
-        start = i;
-        step = w;
-        len = h;
-        start1 = i > 0 ? start - 1 : -1;
-        start2 = i + 1 < w ? start + 1 : -1;
-      } else {
-        start = (i - w) * w;
-        step = 1;
-        len = w;
-        start1 = i > w ? start - w : -1;
-        start2 = i + 1 < w + h ? start + w : -1;
-      }
-
-      let k = numbers[i];
-      let n = 0;
-      for (let j = 0; j < len; j++) {
-        if (soln[start + j * step] === TENT) k--;
-        else if (soln[start + j * step] === BLANK) locs[n++] = j;
-      }
-      if (n === 0) continue;
-
-      this.enumerateLine(n, k, len);
-
-      // No placement valid at all ⇒ inconsistent puzzle.
-      if (mrows[locs[0]] === MAGIC) return -1;
-
-      const before = fired;
-      const targets = neighbors ? [-1, start1, start2] : [start, -1, -1];
-      for (let j = 0; j < len; j++) {
-        for (let whichrow = 0; whichrow < 3; whichrow++) {
-          const m = mrows[whichrow * len + j];
-          const tstart = targets[whichrow];
-          if (
-            tstart >= 0 &&
-            m !== MAGIC &&
-            m !== BLANK &&
-            soln[tstart + j * step] === BLANK
-          ) {
-            soln[tstart + j * step] = m;
-            fired++;
-          }
-        }
-      }
-      if (rec && fired > before) {
-        rec.reason = { kind: neighbors ? "lineNeighbors" : "lineCount", line: i };
-        if (this.kept()) return fired;
-      }
-    }
-    return fired;
-  }
-
-  /**
-   * Fold every valid placement of `k` tents among the line's `n` free squares
-   * into `mrows`: `[0, len)` the line itself, `[len, 3·len)` the two lines
-   * alongside. A square every placement agrees on keeps that value, one they
-   * disagree on becomes `BLANK`, and one no valid placement reached stays
-   * `MAGIC`.
-   */
-  private enumerateLine(n: number, k: number, len: number): void {
-    const { locs, place, mrows, trows } = this;
-
-    // First possibility: k tents in the leftmost of the n free squares.
-    for (let j = 0; j < n; j++) place[j] = j < k ? TENT : NONTENT;
-    mrows.fill(MAGIC, 0, 3 * len);
-
-    while (true) {
-      // Valid unless two chosen tents are physically adjacent.
-      let valid = true;
-      for (let j = 0; j + 1 < n; j++) {
-        if (place[j] === TENT && place[j + 1] === TENT && locs[j + 1] === locs[j] + 1) {
-          valid = false;
-          break;
-        }
-      }
-
-      if (valid) {
-        trows.fill(MAGIC, 0, len);
-        trows.fill(BLANK, len, 3 * len);
-        for (let j = 0; j < n; j++) {
-          trows[locs[j]] = place[j];
-          if (place[j] === TENT) {
-            for (let jj = locs[j] - 1; jj <= locs[j] + 1; jj++) {
-              if (jj >= 0 && jj < len) {
-                trows[len + jj] = NONTENT;
-                trows[2 * len + jj] = NONTENT;
-              }
-            }
-          }
-        }
-        for (let j = 0; j < 3 * len; j++) {
-          if (trows[j] === MAGIC) continue;
-          if (mrows[j] === MAGIC || mrows[j] === trows[j]) mrows[j] = trows[j];
-          else mrows[j] = BLANK;
-        }
-      }
-
-      // Next combination of k choices from n.
-      let p = 0;
-      let j = n - 1;
-      for (; j > 0; j--) {
-        if (place[j] === TENT) p++;
-        if (place[j] === NONTENT && place[j - 1] === TENT) {
-          place[j - 1] = NONTENT;
-          place[j] = TENT;
-          while (p-- > 0) place[++j] = TENT;
-          while (++j < n) place[j] = NONTENT;
-          break;
-        }
-      }
-      if (j <= 0) return; // finished enumerating
-    }
-  }
-
-  /** Every square decided and every tent and tree tied. */
-  complete(): boolean {
-    const { soln, links } = this;
-    for (let i = 0; i < soln.length; i++) {
-      if (soln[i] === BLANK) return false;
-      if (soln[i] !== NONTENT && links[i] === N) return false;
-    }
-    return true;
-  }
+/** The squares a reason's binding names, as the game numbers them. */
+function reasonsOf(dl: tents.Dealt, w: number, h: number) {
+  const tree = (q: number): number => dl.tree.at[q];
+  const reason =
+    <B>(build: (b: B) => TentsReason): ReasonOf<B> =>
+    (b) =>
+      build(b);
+  return {
+    tentLink: reason(({ c, K }: tents.TentLinkBinding) => ({
+      kind: "tentLink",
+      tent: c,
+      tree: tree(K[0]),
+    })),
+    noTree: reason(({ S }: tents.NoTreeBinding) => ({ kind: "noTree", squares: S })),
+    treesDone: reason(({ S }: tents.TreesDoneBinding) => ({
+      kind: "treesDone",
+      squares: S,
+    })),
+    nextToTent: reason(({ t, S }: tents.NextToTentBinding) => ({
+      kind: "nextToTent",
+      tent: t,
+      squares: S,
+    })),
+    treeSingle: reason(({ q, R }: tents.TreeSingleBinding) => ({
+      kind: "treeSingle",
+      tree: tree(q),
+      square: R[0],
+    })),
+    treeLink: reason(({ q, x }: tents.TreeLinkBinding) => ({
+      kind: "treeLink",
+      tree: tree(q),
+      tent: x,
+    })),
+    treeDiagonal: reason(({ q, a, b, z }: tents.TreeDiagonalBinding) => ({
+      kind: "treeDiagonal",
+      tree: tree(q),
+      pair: [a, b],
+      square: z,
+    })),
+    lineCount: reason(({ L }: tents.LineCountBinding) => ({
+      kind: "lineCount",
+      line: clueLine(w, h, L),
+    })),
+    lineNeighbors: reason(({ L }: tents.LineNeighborsBinding) => ({
+      kind: "lineNeighbors",
+      line: clueLine(w, h, L),
+    })),
+  };
 }
 
-function tentsLadder(b: TentsBoard): DeductionTechnique[] {
-  return [
-    { id: "tent-link", tier: DIFF_EASY - 1, run: () => b.linkTents() },
-    { id: "grass-away-from-trees", tier: DIFF_EASY, run: () => b.grassAwayFromTrees() },
-    { id: "grass-next-to-tents", tier: DIFF_EASY, run: () => b.grassNextToTents() },
-    { id: "tree-single", tier: DIFF_EASY, run: () => b.treeSingles() },
-    { id: "tree-link", tier: DIFF_EASY, run: () => b.treeLinks() },
-    { id: "tree-diagonal-pair", tier: DIFF_TRICKY, run: () => b.treeDiagonalPairs() },
-    { id: "line-count", tier: DIFF_EASY, run: () => b.lineCounts(false) },
-    { id: "line-neighbors", tier: DIFF_TRICKY, run: () => b.lineCounts(true) },
-  ];
+/** The ladder over the dealt board, each technique with its reason. */
+function tentsLadder(dl: tents.Dealt, w: number, h: number): Ladder {
+  const r = reasonsOf(dl, w, h);
+  return describedLadder(tents, {
+    tentLink: compiledRung(tents.tentLink, dl, r.tentLink),
+    noTree: compiledRung(tents.noTree, dl, r.noTree),
+    treesDone: compiledRung(tents.treesDone, dl, r.treesDone),
+    nextToTent: compiledRung(tents.nextToTent, dl, r.nextToTent),
+    treeSingle: compiledRung(tents.treeSingle, dl, r.treeSingle),
+    treeLink: compiledRung(tents.treeLink, dl, r.treeLink),
+    treeDiagonal: compiledRung(tents.treeDiagonal, dl, r.treeDiagonal),
+    lineCount: compiledRung(tents.lineCount, dl, r.lineCount),
+    lineNeighbors: compiledRung(tents.lineNeighbors, dl, r.lineNeighbors),
+  });
+}
+
+/** A board's space, deal and ladder. */
+interface Board {
+  readonly w: number;
+  readonly h: number;
+  readonly sp: GridSpace;
+  readonly dl: tents.Dealt;
+  readonly ladder: Ladder;
+}
+
+function boardOf(w: number, h: number, grid: Int8Array, numbers: Int32Array): Board {
+  const dl = dealtOf(w, h, grid, numbers);
+  return { w, h, sp: spaceOf(w, h), dl, ladder: tentsLadder(dl, w, h) };
+}
+
+/** Fresh marks holding the game's squares `grid` and, on each tent, the tree
+ * `links` ties it to. False where they clash with the board's trees. */
+function marksOf(
+  b: Board,
+  grid: Int8Array,
+  links: Int8Array | null,
+): { m: CellMarks; ok: boolean } {
+  const values = Uint8Array.from(grid, (v) => DESC_VALUE[v]);
+  const m = new CellMarks(b.sp, rangeMask(D_TENT, D_TREE), values);
+  const ok = m.seed(values, (c) => tents.domainOf(b.sp, b.dl, c));
+  if (links) m.marked.set(namesOf(b, grid, links));
+  return { m, ok };
+}
+
+/** Each tent's tree, as the clue the mark names, from the game's links;
+ * `-1` elsewhere. */
+function namesOf(b: Board, grid: Int8Array, links: Int8Array): Int32Array {
+  const names = new Int32Array(grid.length).fill(-1);
+  for (let i = 0; i < grid.length; i++) {
+    const d = links[i];
+    if (grid[i] !== TENT || d === N) continue;
+    names[i] = b.dl.tree.byAt[i + DY(d) * b.w + DX(d)];
+  }
+  return names;
+}
+
+/** The direction from square `a` to its neighbor `b`. */
+function dirBetween(w: number, a: number, b: number): number {
+  for (let d = 1; d < MAXDIR; d++) if (a + DY(d) * w + DX(d) === b) return d;
+  throw new Error("tents: squares not side by side");
+}
+
+/** The game's squares and links the marks hold. */
+function gameOf(b: Board, m: CellMarks): { soln: Int8Array; links: Int8Array } {
+  const soln = Int8Array.from(m.grid, (v) => GAME_VALUE[v]);
+  const links = new Int8Array(soln.length).fill(N);
+  m.marked.forEach((q, i) => {
+    if (q < 0) return;
+    const t = b.dl.tree.at[q];
+    const d = dirBetween(b.w, i, t);
+    links[i] = d;
+    links[t] = FLIP(d);
+  });
+  return { soln, links };
+}
+
+/** Every square decided and every tent linked. */
+function complete(m: CellMarks): boolean {
+  for (let i = 0; i < m.grid.length; i++) {
+    if (m.grid[i] === 0) return false;
+    if (m.grid[i] === D_TENT && m.marked[i] < 0) return false;
+  }
+  return true;
 }
 
 /**
- * @param diff the highest tier to run (see the module doc).
- * @param firings the census sink, forwarded to `runDeductionFixpoint`; only
+ * Run the ladder up to tier `diff` (none at all below Easy) from the trees
+ * alone: 0 where it found the board inconsistent, 1 where it finished it, 2
+ * where it stopped short.
+ *
+ * @param firings the census sink, forwarded to the runner; only
  *   `tents-ladder.test.ts` passes one.
  */
 export function tentsSolve(
@@ -675,100 +292,47 @@ export function tentsSolve(
   diff: number,
   firings?: FiringTally,
 ): SolveResult {
-  const b = new TentsBoard(w, h, grid, numbers);
-  const { impossible } = runDeductionFixpoint({
-    techniques: tentsLadder(b),
-    maxTier: diff,
-    firings,
-  });
-  const ret = impossible ? 0 : b.complete() ? 1 : 2;
-  return { ret, soln: b.soln, links: b.links };
+  const b = boardOf(w, h, grid, numbers);
+  const { m, ok } = marksOf(b, grid, null);
+  const impossible =
+    !ok ||
+    runLadder(m, ladderTechniques(m, b.ladder.entries, { [TIERS]: diff }, {}), {
+      firings,
+    });
+  const ret = impossible
+    ? 0
+    : !complete(m)
+      ? 2
+      : tents.isAnswer(m.grid, b.sp, b.dl)
+        ? 1
+        : 0;
+  return { ret, ...gameOf(b, m) };
 }
 
-// --- the hint's projection ---------------------------------------------------
-
-/** The rungs that place a square, easiest first: what a link is drawn for. */
-const NEAR = [
-  "grass-away-from-trees",
-  "grass-next-to-tents",
-  "tree-single",
-  "tree-diagonal-pair",
-];
-const LINES = ["line-count", "line-neighbors"];
-
-/**
- * The hint's ladder: the solver's square-placing rungs, in the solver's
- * order, with its two link rungs replaced by one that draws a link only for a
- * step that rests on it.
- *
- * A link the board already shows is read by {@link TentsBoard.readLinks}
- * before every firing, so the link rungs are left with pairings one reading
- * deeper, which the player cannot see until one is drawn. Drawing them as
- * they are found would ask for links nothing uses. So a link is drawn when,
- * with it drawn, a rung that the board stalled on fires: first one of the near
- * rungs, before the line counts are tried, then any rung at all. Only when no
- * single link unlocks anything is the first one drawn anyway, since a chain
- * two links long is still a chain the solver would follow.
- */
-function tentsHintLadder(b: TentsBoard): DeductionTechnique[] {
-  const byId = new Map(tentsLadder(b).map((t) => [t.id, t]));
-  const rung = (id: string): DeductionTechnique => {
-    const t = byId.get(id);
-    if (!t) throw new Error(`tents: no rung ${id}`);
-    return t;
-  };
-  // A link is drawn only where every rung before it has stalled.
-  const drawFor = (id: string, then: readonly string[], anyway: boolean) => ({
-    id,
-    tier: DIFF_EASY,
-    run: () => drawLinkFor(b, then, anyway),
-    fallback: true,
-  });
-  return [
-    ...NEAR.map(rung),
-    drawFor("link-for-near", NEAR, false),
-    ...LINES.map(rung),
-    drawFor("link-for-any", [...NEAR, ...LINES], true),
-  ];
+/** Whether the squares `grid` are an answer to the board: the description's
+ * rules, compiled. A square left open is grass, since the tents alone are the
+ * answer, and links are the player's notes and play no part. */
+export function isSolved(
+  w: number,
+  h: number,
+  grid: Int8Array,
+  numbers: Int32Array,
+): boolean {
+  const b = boardOf(w, h, grid, numbers);
+  return tents.isAnswer(
+    Uint8Array.from(grid, (v) => (v === BLANK ? D_GRASS : DESC_VALUE[v])),
+    b.sp,
+    b.dl,
+  );
 }
 
-/**
- * Draw the first pending link after which one of the rungs `then` fires (or
- * the first pending link at all, `anyway`), recording why it holds and what
- * the firing it unlocks reads.
- */
-function drawLinkFor(b: TentsBoard, then: readonly string[], anyway: boolean): number {
-  // What the first of `then` to fire on `board` reads, or `null` if none does.
-  const fires = (board: TentsBoard): number[] | null => {
-    const rec: TentsRecorder = { reason: null };
-    board.rec = rec;
-    const fired = tentsLadder(board).some((t) => then.includes(t.id) && t.run() > 0);
-    return fired && rec.reason ? board.premise(rec.reason) : null;
-  };
-  const pending = b.pendingLinks();
-  const unlocks = (link: (typeof pending)[number]): number[] | null => {
-    const trial = b.clone();
-    trial.drawLink(link.tent, link.tree);
-    if (trial.readLinks() < 0) return null;
-    return fires(trial);
-  };
-  const draw = (link: (typeof pending)[number], serves?: number[]): boolean => {
-    b.drawLink(link.tent, link.tree);
-    if (b.rec) b.rec.reason = serves ? { ...link, serves } : link;
-    return b.kept();
-  };
-  let found = false;
-  for (const link of pending) {
-    const serves = unlocks(link);
-    if (!serves) continue;
-    found = true;
-    if (draw(link, serves)) return 1;
-  }
-  if (found) return 1;
-  if (!anyway || pending.length === 0) return 0;
-  draw(pending[0]);
-  return 1;
+/** Solved where the player's squares are an answer. */
+export function status(state: TentsState): GameStatus {
+  const { w, h, grid, numbers } = state;
+  return isSolved(w, h, grid, numbers) ? "solved" : "ongoing";
 }
+
+// --- the hint's walk ---------------------------------------------------------
 
 /** One firing on the hint path. */
 export interface TentsFiring {
@@ -782,85 +346,281 @@ export interface TentsFiring {
   link: { tent: number; tree: number } | null;
 }
 
+/** The squares round square `i`, it included. */
+function round(sp: GridSpace, i: number): number[] {
+  return [i, ...sp.adj4[i]];
+}
+
 /**
- * The recording projection's driver: the hint ladder one firing at a time,
- * over the player's board `b`, whose `drawn` holds the player's links.
- *
- * **Before every firing the links are read afresh** ({@link
- * TentsBoard.readLinks}), so no firing rests on a pairing some earlier rung
- * tied and the board does not show. A pairing the solver needs beyond that
- * becomes a link the hint draws, and from then on it is on the board.
+ * The squares a firing's premise reads, which a hint plan continues from:
+ * what its sentence points at, and the squares round the tree or tent it
+ * turns on, whose decisions are why it fires.
  */
-export function tentsRecordingPass(
-  b: TentsBoard,
-  budget: StepBudget,
-): { next(): TentsFiring | null; impossible(): boolean } {
-  const rec: TentsRecorder = { reason: null };
-  b.rec = rec;
-  b.offers = new SweepOffers<TentsSnapshot, TentsReason | null>({
-    save: () => ({
-      soln: b.soln.slice(),
-      links: b.links.slice(),
-      drawn: (b.drawn ?? b.links).slice(),
-    }),
-    restore: (s) => {
-      b.soln.set(s.soln);
-      b.links.set(s.links);
-      b.drawn?.set(s.drawn);
-    },
-    recorded: () => rec.reason,
-    record: (r) => {
-      rec.reason = r;
-    },
-    reads: (r) => (r ? b.premise(r) : []),
-    // A link writes both its ends, and where the firing it was drawn for
-    // reads: the link is for that firing, which is where the work goes next.
-    writes: (before, after, r) => [
-      ...changed(before.soln, after.soln),
-      ...changed(before.links, after.links),
-      ...(r && (r.kind === "tentLink" || r.kind === "treeLink")
-        ? (r.serves ?? [])
-        : []),
-    ],
-  });
-  let broken = false;
-  const firings = singleFirings({
-    techniques: b.offers.techniques(tentsHintLadder(b)),
-    budget,
-    beforeTechnique: () => {
-      rec.reason = null;
-    },
-    // A plan works round the trees and lines it is on before it moves on.
-    continuing: true,
-  });
-  const drawnOf = (): Int8Array => {
-    if (!b.drawn) throw new Error("tents: a recording pass needs the drawn links");
-    return b.drawn;
+function premise(b: Board, m: CellMarks, r: TentsReason): number[] {
+  const { sp, w, h } = b;
+  switch (r.kind) {
+    case "noTree":
+      return [...r.squares];
+    case "treesDone":
+      return r.squares.flatMap((i) =>
+        round(sp, i).filter((j) => j === i || m.grid[j] === D_TREE),
+      );
+    case "nextToTent":
+      return [r.tent, ...r.squares];
+    case "treeSingle":
+      return round(sp, r.tree);
+    case "treeDiagonal":
+      return [...round(sp, r.tree), r.square];
+    case "lineCount":
+    case "lineNeighbors":
+      return r.line < w
+        ? Array.from({ length: h }, (_, k) => r.line + k * w)
+        : Array.from({ length: w }, (_, k) => (r.line - w) * w + k);
+    case "tentLink":
+      return [...round(sp, r.tent), r.tree];
+    case "treeLink":
+      return [...round(sp, r.tree), r.tent];
+  }
+}
+
+/** A copy of `m` that shares no marks with it, for trying a link. */
+function copied(m: CellMarks): CellMarks {
+  const c = new CellMarks(m.sp, m.domain, m.grid.slice());
+  c.cands.set(m.cands);
+  c.marked.set(m.marked);
+  return c;
+}
+
+/**
+ * Read onto `m`, holding the links `drawn`, the links the board shows at a
+ * glance given those: a tent is a tree's when that tree is the only one beside
+ * it not drawn to another tent, or when it is the only square beside the tree
+ * that is open or an undrawn tent. The two link techniques, run once on the
+ * drawn links alone: a pairing that needs another pairing read first is not on
+ * the board, and the hint draws it. False where the board contradicts itself.
+ */
+function readLinks(m: CellMarks, drawn: Int32Array, rungs: Board["ladder"]): boolean {
+  m.marked.set(drawn);
+  m.placed++;
+  const read: Firing[] = [];
+  for (const entry of rungs.entries) {
+    if (entry.id !== "tentLink" && entry.id !== "treeLink") continue;
+    const found = entry.run.firings?.(m) ?? [];
+    if (found === "contradiction") return false;
+    read.push(...found);
+  }
+  const named = new Set<number>();
+  for (let c = 0; c < drawn.length; c++) if (drawn[c] >= 0) named.add(drawn[c]);
+  for (const f of read)
+    for (let i = 0; i < f.facts.length; i += 3) {
+      const [c, q] = [f.facts[i + 1], f.facts[i + 2]];
+      if (m.marked[c] === q) continue;
+      // One tree, two tents, or the reverse.
+      if (m.marked[c] >= 0 || named.has(q)) return false;
+      m.markAt(c, q);
+      named.add(q);
+    }
+  return true;
+}
+
+/** The player's board as the hint reads it: their squares, their links and
+ * the links the board shows at a glance ({@link readLinks}). Null where it
+ * contradicts itself. */
+function seenMarks(
+  w: number,
+  h: number,
+  grid: Int8Array,
+  numbers: Int32Array,
+  links: Int8Array,
+): { b: Board; m: CellMarks } | null {
+  const b = boardOf(w, h, grid, numbers);
+  const { m, ok } = marksOf(b, grid, null);
+  if (!ok || !readLinks(m, namesOf(b, grid, links), b.ladder)) return null;
+  return { b, m };
+}
+
+/** The squares and links a hint reads off the player's board, theirs and
+ * those it shows at a glance; null where it contradicts itself. */
+export function seenBoard(
+  state: TentsState,
+): { soln: Int8Array; links: Int8Array } | null {
+  const seen = seenMarks(state.w, state.h, state.grid, state.numbers, state.links);
+  return seen && gameOf(seen.b, seen.m);
+}
+
+/** Whether technique `id` fires on the player's board as a hint reads it. */
+export function firesOn(state: TentsState, id: tents.LadderId): boolean {
+  const seen = seenMarks(state.w, state.h, state.grid, state.numbers, state.links);
+  if (seen === null) throw new Error("tents: the board contradicts itself");
+  const found = seen.b.ladder.entries.find((e) => e.id === id)?.run.firings?.(seen.m);
+  return found !== undefined && found !== "contradiction" && found.length > 0;
+}
+
+/**
+ * A rung of the hint's own that draws a link only for a step that rests on
+ * it. The links the board shows are read before every firing
+ * ({@link readLinks}), so the link techniques are left with pairings one
+ * reading deeper, which the player cannot see until one is drawn. Drawing them
+ * as they are found would ask for links nothing uses. So a link is offered
+ * where, with it drawn, one of the techniques `then` fires, and what that
+ * firing reads is what the link serves; with `anyway`, where none does, the
+ * first link is offered alone, since a chain two links long is still a chain
+ * the ladder would follow.
+ */
+function linkFor(
+  b: Board,
+  drawn: Int32Array,
+  then: readonly string[],
+  anyway: boolean,
+): Rung {
+  const byId = new Map(b.ladder.entries.map((e) => [e.id, e]));
+  const links = ["tentLink", "treeLink"].map((id) => byId.get(id));
+  const fires = (trial: CellMarks): number[] | null => {
+    for (const id of then) {
+      const found = byId.get(id)?.run.firings?.(trial) ?? [];
+      if (found === "contradiction" || found.length === 0) continue;
+      return premise(b, trial, found[0].reasons[0] as TentsReason);
+    }
+    return null;
   };
+  const offers = (m: CellMarks): readonly Firing[] | "contradiction" => {
+    const pending: Firing[] = [];
+    for (const entry of links) {
+      const found = entry?.run.firings?.(m) ?? [];
+      if (found === "contradiction") return found;
+      pending.push(...found);
+    }
+    const out: Firing[] = [];
+    for (const p of pending) {
+      const [c, q] = [p.facts[1], p.facts[2]];
+      const trial = copied(m);
+      const trialDrawn = drawn.slice();
+      trialDrawn[c] = q;
+      if (!readLinks(trial, trialDrawn, b.ladder)) continue;
+      const serves = fires(trial);
+      if (serves === null) continue;
+      out.push({ facts: p.facts, reasons: [{ ...p.reasons[0], serves }] });
+    }
+    if (out.length > 0 || !anyway || pending.length === 0) return out;
+    return [pending[0]];
+  };
+  const rung = (m: CellMarks): number => {
+    const found = offers(m);
+    if (found === "contradiction") return -1;
+    if (found.length === 0) return 0;
+    m.applyFacts(found[0].facts, () => found[0].reasons[0]);
+    return 1;
+  };
+  rung.firings = offers;
+  return rung;
+}
+
+/** The techniques that place a square, easiest first: what a link is drawn
+ * for before the line counts are tried. */
+const NEAR = ["noTree", "treesDone", "nextToTent", "treeSingle", "treeDiagonal"];
+const LINES = ["lineCount", "lineNeighbors"];
+
+/**
+ * The hint's ladder: the techniques that place a square, in the ladder's
+ * order, with its two link techniques replaced by one that draws a link only
+ * for a step that rests on it ({@link linkFor}): first for one of the near
+ * techniques, before the line counts are tried, then for any.
+ */
+function hintEntries(b: Board, drawn: Int32Array): LadderEntry[] {
+  const byId = new Map(b.ladder.entries.map((e) => [e.id, e]));
+  const entry = (id: string): LadderEntry => {
+    const e = byId.get(id);
+    if (e === undefined) throw new Error(`tents: no technique ${id}`);
+    return e;
+  };
+  const drawFor = (id: string, then: readonly string[], anyway: boolean) => ({
+    id,
+    tier: 0,
+    run: linkFor(b, drawn, then, anyway),
+  });
+  return [
+    ...NEAR.map(entry),
+    drawFor("linkForNear", NEAR, false),
+    ...LINES.map(entry),
+    drawFor("linkForAny", [...NEAR, ...LINES], true),
+  ];
+}
+
+/**
+ * The hint's walk over the ladder from the player's squares and links, one
+ * firing a call, each the one that continues from the trees and lines the plan
+ * is on (`ladderWalk`).
+ *
+ * **Before every firing the links are read afresh** ({@link readLinks}), so no
+ * firing rests on a pairing the board does not show. A pairing the ladder
+ * needs beyond that becomes a link the hint draws, and from then on it is on
+ * the board.
+ */
+export function tentsHintWalk(
+  w: number,
+  h: number,
+  grid: Int8Array,
+  numbers: Int32Array,
+  links: Int8Array,
+  budget: StepBudget,
+): { next(): TentsFiring | null; impossible(): boolean; soln(): Int8Array } {
+  const b = boardOf(w, h, grid, numbers);
+  const { m, ok } = marksOf(b, grid, null);
+  const drawn = namesOf(b, grid, links);
+  m.budget = budget;
+  const walk = ladderWalk(
+    m,
+    hintEntries(b, drawn),
+    { [TIERS]: tents.tiers.length - 1 },
+    (f: Taken) => premise(b, m, f.reasons[0] as TentsReason),
+    {
+      fallback: ["linkForNear", "linkForAny"],
+      // A link writes both its ends, and where the firing it was drawn for
+      // reads: the link is for that firing, which is where the work goes next.
+      writes: (f: Taken) => {
+        const out: number[] = [];
+        for (let i = 0; i < f.facts.length; i += 3) {
+          const at = f.facts[i + 1];
+          out.push(at);
+          if (f.facts[i] === MARK) out.push(b.dl.tree.at[f.facts[i + 2]]);
+        }
+        const r = f.reasons[0] as TentsReason;
+        if ((r.kind === "tentLink" || r.kind === "treeLink") && r.serves)
+          out.push(...r.serves);
+        return out;
+      },
+    },
+  );
+  let broken = !ok;
   return {
     next(): TentsFiring | null {
       if (broken) return null;
-      if (b.readLinks() < 0) {
+      if (!readLinks(m, drawn, b.ladder)) {
         broken = true;
         return null;
       }
-      const before = { soln: b.soln.slice(), links: b.links.slice() };
-      const drawnBefore = drawnOf().slice();
-      if (!firings.next()) return null;
-      const { reason } = rec;
-      if (!reason) throw new Error("tents: a hint firing recorded no reason");
-      // The tent a tree has no other square for is placed joined to it, in the
-      // one move the link gesture makes.
-      if (reason.kind === "treeSingle") b.drawLink(reason.square, reason.tree);
+      const before = gameOf(b, m);
+      const taken = walk.next();
+      if (taken === "contradiction") {
+        broken = true;
+        return null;
+      }
+      if (taken === null) return null;
+      const reason = taken.reasons[0] as TentsReason;
       const cells: { i: number; v: number }[] = [];
-      for (let i = 0; i < b.soln.length; i++)
-        if (b.soln[i] !== before.soln[i]) cells.push({ i, v: b.soln[i] });
       let link: { tent: number; tree: number } | null = null;
-      for (let i = 0; i < b.soln.length; i++)
-        if (drawnOf()[i] !== drawnBefore[i] && b.soln[i] === TENT)
-          link = { tent: i, tree: i + DY(drawnOf()[i]) * b.w + DX(drawnOf()[i]) };
+      for (let i = 0; i < taken.facts.length; i += 3) {
+        const at = taken.facts[i + 1];
+        const n = taken.facts[i + 2];
+        if (taken.facts[i] === PLACE) cells.push({ i: at, v: GAME_VALUE[n] });
+        else if (taken.facts[i] === MARK) {
+          drawn[at] = n;
+          link = { tent: at, tree: b.dl.tree.at[n] };
+        }
+      }
       return { reason, before, cells, link };
     },
-    impossible: () => broken || firings.impossible(),
+    impossible: () => broken,
+    soln: () => Int8Array.from(m.grid, (v) => GAME_VALUE[v]),
   };
 }

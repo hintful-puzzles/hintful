@@ -1096,6 +1096,37 @@ export function connected(sp: GridSpace, S: readonly number[]): boolean {
 }
 
 /**
+ * `matched(A, B)`: whether the cells `A` and `B` pair off one to one, each
+ * member of `A` with a member of `B` side by side (Tents' tents and trees).
+ * Kuhn's augmenting paths, from each member of `A` in turn.
+ */
+export function matched(
+  sp: GridSpace,
+  A: readonly number[],
+  B: readonly number[],
+): boolean {
+  if (A.length !== B.length) return false;
+  const n = sp.w * sp.h;
+  const inB = new Uint8Array(n);
+  for (const c of B) inB[c] = 1;
+  const partner = new Int32Array(n).fill(-1);
+  const seen = new Int32Array(n).fill(-1);
+  const augment = (a: number, round: number): boolean => {
+    for (const b of sp.adj4[a]) {
+      if (inB[b] === 0 || seen[b] === round) continue;
+      seen[b] = round;
+      if (partner[b] < 0 || augment(partner[b], round)) {
+        partner[b] = a;
+        return true;
+      }
+    }
+    return false;
+  };
+  for (let i = 0; i < A.length; i++) if (!augment(A[i], i)) return false;
+  return true;
+}
+
+/**
  * `cuts(S)`: the members of `S` without which the rest are not one group, in
  * `S`'s order. A depth-first search counts, for each member, the pieces its
  * own group falls into without it (Hopcroft and Tarjan's articulation

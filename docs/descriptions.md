@@ -275,6 +275,11 @@ description author acts on:
   must hold `d` cells grows through `t` where `reaches(c, R, t) < d`
   (Filling's `mustGrow`). Bind `S` once by `=`: one search of `c`'s group
   answers every `t`.
+- **`matched(A, B)` says the cells of `A` and of `B` pair off one to one,
+  each pair side by side** (Tents' tents and trees), a rule only. A mark
+  naming the partner is read in its `means` by `paired(a, b)`, true where
+  the rules' pairing joins `a` and `b`, so the checker holds a named square
+  to the pairing the answer has, not to any it could have.
 - **An answer on the edges** (`value.sort: edge`, Separate's walls) places
   its values on the edges between squares: `value(e)`, `known(e)` and
   `place(e, d)` read an edge, and `CellMarks` holds a mark an edge
@@ -691,7 +696,12 @@ uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
   that concludes the other of two values guards its square with the clue,
   since the checker's marks may leave a block open. Where no rule tells it
   from an empty square, it holds the empty square's value (Bricks' holes,
-  Light Up's walls).
+  Light Up's walls). A technique reads an open square as one with no value
+  and no clue (Tents' `blank(c)`, its trees): the checker's marks need not
+  have placed the clue's value. Likewise a mark the player makes beside a
+  value is read with the value (a link names a tree from a square that
+  holds a tent, in Tents' `has(q)`), since the checker's marks may name a
+  partner from a square left open.
 - **A variation's techniques**, rungs and those run on placing alike, run
   only where the board has it on (`describedLadder`'s `variations`), and the
   ladder places each rung before the first technique of a higher tier on its
@@ -814,7 +824,10 @@ Its comparison with the checks it replaced is in the `report.md` of
 
 `compiledRung(run, clues, reason)` pairs a compiled technique with the
 function that turns its binding and one fact into the reason the record
-carries, read off the marks before any of the firing's facts is made. A
+carries, read off the marks before any of the firing's facts is made. A set
+in the binding is the reason's own copy, so a reason may keep it: a hint's
+plan holds reasons while the technique binds again into the buffer it was
+built in (Tents' `treesDone` read as no squares at all before it was). A
 reason is not the bare binding where its words quote the board: a sign's
 reason quotes the other end's least candidate as it stood when the step
 fired. A reason names the unit it reads where that is not a row or a
@@ -915,7 +928,9 @@ the check. What a small board cannot cover:
   member must be reached; `cuts(S)` holds each member under the guard that
   the rest are not connected. It needs no unknown of its own.
   `reaches(c, S, t)` is the same reach from `c` over the members other
-  than `t`, counted. `chain(c)` is
+  than `t`, counted. `matched(A, B)` is a witness pairing, an unknown
+  for each pair side by side, each member of `A` and of `B` in exactly
+  one, and `paired` reads it. `chain(c)` is
   read the same way, a cell reached where a member beside it holds the
   value stepping to it.
 - **A domain stated as the values of a range that pass a test** (`{d in

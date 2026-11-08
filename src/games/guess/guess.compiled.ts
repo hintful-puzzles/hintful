@@ -372,7 +372,7 @@ export function blacksAccounted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<B
       if (!(_q75)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ k: v_k, P: v_P }, facts)) return 1;
+        if (fire !== null && !fire({ k: v_k, P: v_P.slice() }, facts)) return 1;
         cands.fill(-1);
       }
     }

@@ -347,7 +347,7 @@ export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBind
         if (!(_q81)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ r: v_r, n: v_n, H: v_H }, facts)) return 1;
+          if (fire !== null && !fire({ r: v_r, n: v_n, H: v_H.slice() }, facts)) return 1;
         }
       }
     }

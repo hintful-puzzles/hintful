@@ -1113,6 +1113,45 @@ const PLANTS: Record<string, Plant> = {
   "pearl.earlyThrough": {
     for: "L = {e in edges where value(e) = 1}, Q = {q in cells where true}, c in cells where drawn(c) = 0, F = {e in edges(c) where not known(e)} where |F| > 1, W = {e in F where loopFits(c, e, 1, L, Q)}, N = {e in F where loopFits(c, e, 2, L, Q)} where (exists e in F: e not in W or e not in N)",
   },
+  // A tent with two trees beside it still without their tent read as the
+  // first one's.
+  "tents.tentLink": {
+    for: "c in cells where value(c) = 1 and link(c) = none, K = free(c) where |K| < 3",
+    conclude: "|K| > 0 and mark(c, nth(K, 0))",
+  },
+  // A square beside one tree read as beside none.
+  "tents.noTree": {
+    for: "S = {c in cells where blank(c) and |trees(c)| < 2} where |S| > 0",
+  },
+  // A square beside a tree with its tent read as grass whatever else is
+  // beside it.
+  "tents.treesDone": {
+    for: "q in clues(tree) where has(q), S = {c in adj4(at(q)) where blank(c)} where |S| > 0",
+  },
+  // A tent read as touching the squares two along its row too.
+  "tents.nextToTent": {
+    for: "t in cells where value(t) = 1, S = {x in cells where blank(x) and abs(x(x) - x(t)) <= 2 and abs(y(x) - y(t)) <= 1} where |S| > 0",
+  },
+  // A tent linked to no tree read as no room for the tree's own.
+  "tents.treeSingle": {
+    for: "q in clues(tree) where not has(q), R = {x in adj4(at(q)) where blank(x)} where |R| = 1",
+  },
+  // An open square beside the tree read as no room for its tent.
+  "tents.treeLink": {
+    for: "q in clues(tree) where not has(q), R = {x in adj4(at(q)) where value(x) = 1 and link(x) = none} where |R| = 1, x = nth(R, 0) where value(x) = 1",
+  },
+  // A tree with three squares left read as two round a corner.
+  "tents.treeDiagonal": {
+    for: "q in clues(tree) where not has(q), R = room(q) where |R| = 3, a = nth(R, 0), b = nth(R, 1) where x(a) != x(b) and y(a) != y(b), z = cell(x(a) + x(b) - x(at(q)), y(a) + y(b) - y(at(q))) where blank(z)",
+  },
+  // A line read as needing one tent more than its count.
+  "tents.lineCount": {
+    for: "L in lines, k = need(L) + 1, O = open(L) where |O| > 0, T = {x in O where fits(O, k, x, 1)}, G = {x in O where fits(O, k, x, 2)} where (exists x in O: x not in T or x not in G)",
+  },
+  // A line read as needing one tent more than its count.
+  "tents.lineNeighbors": {
+    for: "L in lines, k = need(L) + 1, O = open(L) where |O| > 0 and k > 0, N = set(z over y in O, z in adj8(y) where blank(z) and z not in cells(L)) where |N| > 0, U = set(z over fill f of O from cand where spread(f, O, k), z in N where (forall y in O where y in adj8(z): f(y) = 2)) where (exists z in N: z not in U)",
+  },
 };
 
 /** How many of a technique's first binders each query fixes, one query a

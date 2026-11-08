@@ -1,0 +1,18 @@
+ok  tents      tentLink                       3  sound    (want sound   )     9 queries    0.1s
+ok  tents      tentLink (planted)             3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  tents      noTree                         3  sound    (want sound   )     1 queries    0.0s
+ok  tents      noTree (planted)               3  unsound  (want unsound )     1 queries    0.0s   at eset
+ok  tents      treesDone                      3  sound    (want sound   )     9 queries    0.0s
+ok  tents      treesDone (planted)            3  unsound  (want unsound )     2 queries    0.0s   at clue tree 1
+ok  tents      nextToTent                     3  sound    (want sound   )     9 queries    0.0s
+ok  tents      nextToTent (planted)           3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  tents      treeSingle                     3  sound    (want sound   )     9 queries    0.1s
+ok  tents      treeSingle (planted)           3  unsound  (want unsound )     1 queries    0.0s   at clue tree 0
+ok  tents      treeLink                       3  sound    (want sound   )     9 queries    0.0s
+ok  tents      treeLink (planted)             3  unsound  (want unsound )     2 queries    0.0s   at clue tree 1
+ok  tents      treeDiagonal                   3  sound    (want sound   )     9 queries    0.1s
+ok  tents      treeDiagonal (planted)         3  unsound  (want unsound )     2 queries    0.0s   at clue tree 1
+ok  tents      lineCount                      3  sound    (want sound   )     6 queries    0.2s
+ok  tents      lineCount (planted)            3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  tents      lineNeighbors                  3  sound    (want sound   )     6 queries    0.1s
+ok  tents      lineNeighbors (planted)        3  unsound  (want unsound )     1 queries    0.0s   at line 0

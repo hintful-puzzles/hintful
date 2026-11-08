@@ -446,7 +446,7 @@ export function boxedIn(b: Marks, sp: GridSpace, fire: Fire<BoxedInBinding> | nu
     if (!(_c105)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ c: v_c, F: v_F }, facts)) return 1;
+      if (fire !== null && !fire({ c: v_c, F: v_F.slice() }, facts)) return 1;
     }
   }
   return fired;
@@ -571,7 +571,7 @@ export function split(b: Marks, sp: GridSpace, fire: Fire<SplitBinding> | null):
     if (!(true)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ K: v_K, c: v_c }, facts)) return 1;
+      if (fire !== null && !fire({ K: v_K.slice(), c: v_c }, facts)) return 1;
     }
   }
   return fired;

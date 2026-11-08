@@ -1195,6 +1195,49 @@ function binary(e: Extract<Expr, { k: "bin" }>, env: Env, ctx: Ctx): V {
   }
 }
 
+const pairings = new WeakMap<Board, (a: number, b: number) => B>();
+let pairingCount = 0;
+
+/** The board's pairing of cells side by side, a cell `a` of `matched`'s
+ * first set with `b` of its second: one unknown each, made at the first
+ * read. */
+function pairingOf(board: Board): (a: number, b: number) => B {
+  let p = pairings.get(board);
+  if (p === undefined) {
+    const made = new Map<number, B>();
+    const n = board.sp.cells.length;
+    const tag = `pairing${pairingCount++}`;
+    p = (a, b) => {
+      const key = a * n + b;
+      let v = made.get(key);
+      if (v === undefined) {
+        v = Z3.Bool.const(`${tag}_${a}_${b}`);
+        made.set(key, v);
+      }
+      return v;
+    };
+    pairings.set(board, p);
+  }
+  return p;
+}
+
+/** Whether a description's rules assert a `matched`, which `paired`
+ * reads. */
+function assertsMatched(d: Description): boolean {
+  const calls = (e: Expr): boolean =>
+    e.k === "call" && e.fn === "matched"
+      ? true
+      : Object.values(e).some(
+          (v) =>
+            (Array.isArray(v) && v.some((x) => isExpr(x) && calls(x))) ||
+            (isExpr(v) && calls(v)),
+        );
+  return d.rules.some((r) => calls(r.expr));
+}
+
+const isExpr = (v: unknown): v is Expr =>
+  typeof v === "object" && v !== null && "k" in v && typeof v.k === "string";
+
 /** Whether the cells, each a member under its guard in `mem`, are one group
  * side by side: each reached from the first member through members, in as
  * many steps as a path can take. */
@@ -2070,6 +2113,44 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
           ] as const,
       );
       return { k: "eset", sort: "cell", mem: cut.filter(([, g]) => g !== false) };
+    }
+    case "matched": {
+      // A rule: the pairing that witnesses it is unknowns of the board's own
+      // (`pairingOf`), which `paired` reads, so it holds only where it is
+      // asserted, never under a negation.
+      if (ctx.mode !== "rule") throw new TypeError("matched outside a rule");
+      const [A, B] = vs.map((s) =>
+        s.k === "vset" && s.mem.every((g) => g === false) ? allOf("cell", []) : s,
+      );
+      if (A.k !== "eset" || B.k !== "eset") throw new TypeError("matched: not sets");
+      const p = pairingOf(ctx.board);
+      const out: Bx[] = [];
+      const exactlyOne = (gs: Bx[]): Bx =>
+        and(
+          or(...gs),
+          ...gs.flatMap((g, i) => gs.slice(0, i).map((h) => not(and(g, h)))),
+        );
+      for (const a of sp.cells) {
+        const inA = inEset(a, A);
+        const own = sp.adj4[a].map((b) => p(a, b));
+        out.push(implies(inA, exactlyOne(own)));
+        for (const b of sp.adj4[a]) out.push(implies(p(a, b), and(inA, inEset(b, B))));
+      }
+      for (const b of sp.cells)
+        out.push(implies(inEset(b, B), exactlyOne(sp.adj4[b].map((a) => p(a, b)))));
+      return { k: "bool", v: and(...out) };
+    }
+    case "paired": {
+      // Whether two cells are a pair of the pairing `matched` asserts.
+      if (!assertsMatched(ctx.d))
+        throw new TypeError("paired: the rules assert no matched");
+      const p = pairingOf(ctx.board);
+      return lift(vs[0], fn, (a) =>
+        lift(vs[1], fn, (b) => ({
+          k: "bool",
+          v: a < 0 || b < 0 || !sp.adj4[a].includes(b) ? false : p(a, b),
+        })),
+      );
     }
     case "reaches": {
       // Read as reach from c over the members of S other than t, as many
@@ -2974,6 +3055,14 @@ function printModel(
         `clue ${kind}: ${cs.map((c) => `${c.at}:${ev(c.present)}:${c.v.k === "num" ? ev(c.v.v) : c.v.k}`).join(" ")}`,
     ),
     ...[...board.sizes].map(([n, v]) => `size ${n} = ${ev(v)}`),
+    ...(board.cellMark === null
+      ? []
+      : [
+          `${board.cellMark.name}   ${board.cellMark.names
+            .map((row) => row.findIndex((g) => ev(g) === "true"))
+            .map((i) => (i < 0 ? "." : String(i)))
+            .join(" ")}`,
+        ]),
   ];
   console.log(rows.join("\n"));
 }

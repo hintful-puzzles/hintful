@@ -555,7 +555,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
         if (!(_q230)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, F: v_F, W: v_W, N: v_N }, facts)) return 1;
+          if (fire !== null && !fire({ c: v_c, F: v_F.slice(), W: v_W.slice(), N: v_N.slice() }, facts)) return 1;
           cands.fill(-1);
           _epoch++;
         }
@@ -1226,7 +1226,7 @@ export function whiteCannotTurn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<W
         if (!(_c569)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, e: v_e, f: v_f, P: v_P }, facts)) return 1;
+          if (fire !== null && !fire({ c: v_c, e: v_e, f: v_f, P: v_P.slice() }, facts)) return 1;
           cands.fill(-1);
           _epoch++;
         }
@@ -1670,7 +1670,7 @@ export function whiteTurnsOpposite(b: Marks, sp: GridSpace, cl: Dealt, fire: Fir
               if (!(_q922)) return -1;
               if (changed || facts.length > 0) {
                 fired = 1;
-                if (fire !== null && !fire({ c: v_c, e: v_e, f: v_f, k: v_k, F: v_F, W: v_W, N: v_N }, facts)) return 1;
+                if (fire !== null && !fire({ c: v_c, e: v_e, f: v_f, k: v_k, F: v_F.slice(), W: v_W.slice(), N: v_N.slice() }, facts)) return 1;
                 cands.fill(-1);
                 _epoch++;
               }
@@ -1801,7 +1801,7 @@ export function closed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClosedBind
     if (!(_c987)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ L: v_L, g: v_g, G: v_G }, facts)) return 1;
+      if (fire !== null && !fire({ L: v_L.slice(), g: v_g, G: v_G.slice() }, facts)) return 1;
     }
   }
   return fired;
@@ -1878,7 +1878,7 @@ export function earlyLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyLo
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ L: v_L, e: v_e, G: v_G }, facts)) return 1;
+        if (fire !== null && !fire({ L: v_L.slice(), e: v_e, G: v_G.slice() }, facts)) return 1;
       }
     }
   }
@@ -2169,7 +2169,7 @@ export function earlyThrough(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Earl
         if (!(_q1309)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, Q: v_Q, c: v_c, F: v_F, W: v_W, N: v_N }, facts)) return 1;
+          if (fire !== null && !fire({ L: v_L.slice(), Q: v_Q.slice(), c: v_c, F: v_F.slice(), W: v_W.slice(), N: v_N.slice() }, facts)) return 1;
           cands.fill(-1);
           _epoch++;
         }

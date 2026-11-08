@@ -158,7 +158,7 @@ export function facing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FacingBind
     if (!(_q19)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ P: v_P }, facts)) return 1;
+      if (fire !== null && !fire({ P: v_P.slice() }, facts)) return 1;
     }
   }
   return fired;
@@ -401,7 +401,7 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
     if (!(_c203)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ k: v_k, s: v_s, v: v_v, L: v_L, c0: v_c0, P: v_P, R: v_R, near: v_near }, facts)) return 1;
+      if (fire !== null && !fire({ k: v_k, s: v_s, v: v_v, L: v_L.slice(), c0: v_c0, P: v_P, R: v_R, near: v_near }, facts)) return 1;
       cands.fill(-1);
     }
   }
@@ -523,7 +523,7 @@ export function arrangement(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Arran
       if (!(_q208)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ k: v_k, s: v_s, v: v_v, L: v_L, c: v_c }, facts)) return 1;
+        if (fire !== null && !fire({ k: v_k, s: v_s, v: v_v, L: v_L.slice(), c: v_c }, facts)) return 1;
         cands.fill(-1);
         _epoch++;
       }

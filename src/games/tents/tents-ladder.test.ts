@@ -1,15 +1,10 @@
 /*
- * Tents' `runDeductionFixpoint` ladder, certified by a census of which rungs
- * fire. The harness and the argument for it are
+ * Tents' ladder, its description's techniques, certified by a census of which
+ * rungs fire. The harness and the argument for it are
  * `engine/testing/ladder-census.ts`; this file is the declaration.
  *
- * Each Tricky deduction upstream folds into an Easy sweep behind a difficulty
- * test (the diagonal pair inside the tree sweep, the neighboring lines inside
- * the line count) is a rung of its own here, so the census can see each one
- * fire rather than taking the sweep it once hid in as evidence.
- *
- * The caps are the tiers the generator asks for: links alone (an Easy board's
- * "not solvable one level down"), Easy and Tricky.
+ * The caps are the tiers the generator asks for: none (an Easy board's "not
+ * solvable one level down"), Easy and Normal.
  */
 
 import { randomNew } from "../../engine/random/index.ts";
@@ -47,14 +42,15 @@ const cases = SHAPES.flatMap((p) =>
 describeLadderCensus<Board>({
   game: "tents",
   rungs: [
-    "tent-link",
-    "grass-away-from-trees",
-    "grass-next-to-tents",
-    "tree-single",
-    "tree-link",
-    "tree-diagonal-pair",
-    "line-count",
-    "line-neighbors",
+    "tentLink",
+    "noTree",
+    "treesDone",
+    "nextToTent",
+    "treeSingle",
+    "treeLink",
+    "treeDiagonal",
+    "lineCount",
+    "lineNeighbors",
   ],
   unreached: {},
   caps: [DIFF_EASY - 1, DIFF_EASY, DIFF_TRICKY],

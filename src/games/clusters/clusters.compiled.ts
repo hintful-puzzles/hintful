@@ -378,7 +378,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
         if (!(_q250)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ a: v_a, b: v_b, S: v_S, R: v_R, bo: v_bo }, facts)) return 1;
+          if (fire !== null && !fire({ a: v_a, b: v_b, S: v_S.slice(), R: v_R.slice(), bo: v_bo }, facts)) return 1;
         }
       }
     }
@@ -517,7 +517,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
         if (!(_q397)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ a: v_a, b: v_b, S: v_S, R: v_R, bo: v_bo, alike: v_alike, most: v_most }, facts)) return 1;
+          if (fire !== null && !fire({ a: v_a, b: v_b, S: v_S.slice(), R: v_R.slice(), bo: v_bo, alike: v_alike, most: v_most }, facts)) return 1;
         }
       }
     }

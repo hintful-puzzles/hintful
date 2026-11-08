@@ -222,7 +222,7 @@ export function border(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BorderBind
     if (!(_q39)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ k: v_k, L: v_L, H: v_H, f: v_f, reach: v_reach, stop: v_stop }, facts)) return 1;
+      if (fire !== null && !fire({ k: v_k, L: v_L.slice(), H: v_H, f: v_f, reach: v_reach, stop: v_stop }, facts)) return 1;
     }
   }
   return fired;

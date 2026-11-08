@@ -656,7 +656,7 @@ export function near(b: Marks, sp: GridSpace, fire: Fire<NearBinding> | null): n
       if (!(_q90)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, D: v_D }, facts)) return 1;
+        if (fire !== null && !fire({ c: v_c, D: v_D.slice() }, facts)) return 1;
       }
     }
   }
@@ -764,7 +764,7 @@ export function lineShips(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineShi
         if (!(_c139)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, v: v_v, O: v_O, left: v_left }, facts)) return 1;
+          if (fire !== null && !fire({ L: v_L, v: v_v, O: v_O.slice(), left: v_left }, facts)) return 1;
         }
       }
     }
@@ -841,7 +841,7 @@ export function total(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TotalBindin
     if (!(_c176)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ O: v_O, left: v_left }, facts)) return 1;
+      if (fire !== null && !fire({ O: v_O.slice(), left: v_left }, facts)) return 1;
     }
   }
   return fired;
@@ -976,7 +976,7 @@ export function extend(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExtendBind
       if (!(_q290)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ F: v_F, c: v_c, O: v_O }, facts)) return 1;
+        if (fire !== null && !fire({ F: v_F, c: v_c, O: v_O.slice() }, facts)) return 1;
       }
     }
   }
@@ -1055,7 +1055,7 @@ export function lineWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineWat
         if (!(_c333)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, v: v_v, O: v_O, left: v_left }, facts)) return 1;
+          if (fire !== null && !fire({ L: v_L, v: v_v, O: v_O.slice(), left: v_left }, facts)) return 1;
         }
       }
     }
@@ -1190,7 +1190,7 @@ export function grow(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<GrowBinding>
           if (!(_q408)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ c: v_c, L: v_L, G: v_G, E: v_E }, facts)) return 1;
+            if (fire !== null && !fire({ c: v_c, L: v_L, G: v_G.slice(), E: v_E.slice() }, facts)) return 1;
           }
         }
       }
@@ -1340,7 +1340,7 @@ export function onlyFit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyFitBi
           if (!(_q522)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ M: v_M, L: v_L, c: v_c, R: v_R, m: v_m, b: v_b }, facts)) return 1;
+            if (fire !== null && !fire({ M: v_M, L: v_L, c: v_c, R: v_R.slice(), m: v_m, b: v_b }, facts)) return 1;
           }
         }
       }
@@ -1431,7 +1431,7 @@ export function centerRoom(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Center
           if (!(_q582)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ c: v_c, L: v_L, v: v_v, S: v_S }, facts)) return 1;
+            if (fire !== null && !fire({ c: v_c, L: v_L, v: v_v, S: v_S.slice() }, facts)) return 1;
           }
         }
       }
@@ -1577,7 +1577,7 @@ export function shortRun(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ShortRun
           if (!(_q672)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, c: v_c, R: v_R, O: v_O }, facts)) return 1;
+            if (fire !== null && !fire({ L: v_L, c: v_c, R: v_R.slice(), O: v_O.slice() }, facts)) return 1;
           }
         }
       }
@@ -1679,7 +1679,7 @@ export function hidden(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<HiddenBind
         if (!(_c759)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, O: v_O, v: v_v, left: v_left }, facts)) return 1;
+          if (fire !== null && !fire({ L: v_L, O: v_O.slice(), v: v_v, left: v_left }, facts)) return 1;
         }
       }
     }
@@ -1847,7 +1847,7 @@ export function onlyRuns(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRuns
               if (!(_q890)) return -1;
               if (changed || facts.length > 0) {
                 fired = 1;
-                if (fire !== null && !fire({ m: v_m, L: v_L, c: v_c, R: v_R, C: v_C, b: v_b, r: v_r }, facts)) return 1;
+                if (fire !== null && !fire({ m: v_m, L: v_L, c: v_c, R: v_R.slice(), C: v_C.slice(), b: v_b, r: v_r }, facts)) return 1;
               }
             }
           }
@@ -2374,7 +2374,7 @@ export function lastWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastWat
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ T: v_T, L: v_L, v: v_v, c: v_c, K: v_K, j: v_j, t: v_t, H: v_H }, facts)) return 1;
+            if (fire !== null && !fire({ T: v_T, L: v_L, v: v_v, c: v_c, K: v_K, j: v_j, t: v_t, H: v_H.slice() }, facts)) return 1;
             cands.fill(-1);
             numMarkedKept.clear();
           }
@@ -2793,7 +2793,7 @@ export function lastShip(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastShip
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ T: v_T, L: v_L, v: v_v, c: v_c, K: v_K, j: v_j, u: v_u, W: v_W }, facts)) return 1;
+            if (fire !== null && !fire({ T: v_T, L: v_L, v: v_v, c: v_c, K: v_K, j: v_j, u: v_u, W: v_W.slice() }, facts)) return 1;
             cands.fill(-1);
             numMarkedKept.clear();
           }
@@ -3198,7 +3198,7 @@ export function centerTrial(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Cente
         if (!(_q2689)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ T: v_T, c: v_c, L: v_L, S: v_S }, facts)) return 1;
+          if (fire !== null && !fire({ T: v_T, c: v_c, L: v_L, S: v_S.slice() }, facts)) return 1;
           cands.fill(-1);
           numMarkedKept.clear();
         }

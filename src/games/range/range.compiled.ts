@@ -249,7 +249,7 @@ export function capped(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CappedBind
           if (!(_c55)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ k: v_k, n: v_n, W: v_W, a: v_a, R: v_R, s: v_s }, facts)) return 1;
+            if (fire !== null && !fire({ k: v_k, n: v_n, W: v_W, a: v_a, R: v_R.slice(), s: v_s }, facts)) return 1;
           }
         }
       }
@@ -379,7 +379,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
         if (!(_c119)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ k: v_k, n: v_n, W: v_W, M: v_M, a: v_a, R: v_R, s: v_s, f: v_f }, facts)) return 1;
+          if (fire !== null && !fire({ k: v_k, n: v_n, W: v_W, M: v_M, a: v_a, R: v_R.slice(), s: v_s, f: v_f }, facts)) return 1;
         }
       }
     }
@@ -427,7 +427,7 @@ export function cut(b: Marks, sp: GridSpace, fire: Fire<CutBinding> | null): num
     if (!(_c137)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ U: v_U, K: v_K, c: v_c }, facts)) return 1;
+      if (fire !== null && !fire({ U: v_U.slice(), K: v_K.slice(), c: v_c }, facts)) return 1;
     }
   }
   return fired;

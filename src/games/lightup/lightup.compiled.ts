@@ -418,7 +418,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
       if (!(_c77)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ X: v_X, c: v_c, n: v_n, L: v_L }, facts)) return 1;
+        if (fire !== null && !fire({ X: v_X, c: v_c, n: v_n, L: v_L.slice() }, facts)) return 1;
       }
     }
   }
@@ -541,7 +541,7 @@ export function darkSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DarkSetBi
         if (!(_c141)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ X: v_X, u: v_u, L: v_L, S: v_S }, facts)) return 1;
+          if (fire !== null && !fire({ X: v_X, u: v_u, L: v_L.slice(), S: v_S.slice() }, facts)) return 1;
         }
       }
     }
@@ -674,7 +674,7 @@ export function clueSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueSetBi
             if (!(_q194)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ X: v_X, k: v_k, n: v_n, F: v_F, m: v_m, T: v_T }, facts)) return 1;
+              if (fire !== null && !fire({ X: v_X, k: v_k, n: v_n, F: v_F.slice(), m: v_m, T: v_T.slice() }, facts)) return 1;
             }
           }
         }

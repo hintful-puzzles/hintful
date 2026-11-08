@@ -921,9 +921,9 @@ path, and while offers are collected each site's firing is saved with its
 record and undone, so the scan goes on. Taking an offer restores what was
 saved. The game gives `save`/`restore` over everything a firing writes, and
 `reads`/`writes` keyed on what the player follows. A rung that fires without
-asking is one offer. Exemplars: `tentsRecordingPass` in
-[`tents/solver.ts`](../src/games/tents/solver.ts), and Tracks, whose rungs
-ask at every per-premise return.
+asking is one offer. Exemplar: Tracks
+([`tracks/solver.ts`](../src/games/tracks/solver.ts)), whose rungs ask at
+every per-premise return.
 
 ### `latin-hint.ts` — truthful Latin single classification
 

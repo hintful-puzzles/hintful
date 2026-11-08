@@ -10,8 +10,8 @@
  *    true**: after each one the board has no mistake, links included.
  *  - **Every firing stands on the board the player can see.** Its premise
  *    snapshot is exactly the player's board with the links read off it
- *    (`TentsBoard.readLinks`), so no firing rests on a pairing the solver
- *    tied and the board does not show.
+ *    (`seenBoard`), so no firing rests on a pairing the ladder tied and the
+ *    board does not show.
  *  - **A link is drawn only for a step that rests on it**: the firing after a
  *    link step could not have fired before it.
  *  - **Every premise and every line case is reached** (docs/hints.md
@@ -24,16 +24,10 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import {
-  boardOf,
-  TENTS_RUNGS,
-  type TentsRung,
-  tentsKeepTrack,
-  tentsPlan,
-} from "./hint.ts";
+import { TENTS_RUNGS, type TentsRung, tentsKeepTrack, tentsPlan } from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { tentsGame } from "./index.ts";
-import { type TentsBoard, type TentsReason, tentsSolve } from "./solver.ts";
+import { firesOn, seenBoard, tentsSolve } from "./solver.ts";
 import {
   BLANK,
   DIFF_EASY,
@@ -113,9 +107,9 @@ describe("following the hint finishes every board, one true step at a time", () 
 
 /** The board a firing should have reasoned from: the player's, with the links
  * read off it. */
-function seen(state: TentsState): TentsBoard {
-  const b = boardOf(state);
-  expect(b.readLinks()).toBe(0);
+function seen(state: TentsState): { soln: Int8Array; links: Int8Array } {
+  const b = seenBoard(state);
+  if (b === null) throw new Error("the player's board contradicts itself");
   return b;
 }
 
@@ -142,44 +136,20 @@ describe("every firing stands on the board the player can see", () => {
   });
 });
 
-/** Run the rung behind a reason on `b`, and report whether it fires. */
-function rungFires(b: TentsBoard, kind: TentsReason["kind"]): boolean {
-  switch (kind) {
-    case "noTree":
-    case "treesDone":
-      return b.grassAwayFromTrees() > 0;
-    case "nextToTent":
-      return b.grassNextToTents() > 0;
-    case "treeSingle":
-      return b.treeSingles() > 0;
-    case "treeDiagonal":
-      return b.treeDiagonalPairs() > 0;
-    case "lineCount":
-      return b.lineCounts(false) > 0;
-    case "lineNeighbors":
-      return b.lineCounts(true) > 0;
-    case "tentLink":
-    case "treeLink":
-      return false;
-  }
-}
-
 describe("a link is drawn only for a step that rests on it", () => {
   // A tent placed for a tree is joined in the same move, as the gesture does;
   // what this holds to account is a step that draws only a link.
   it("the firing after a link could not have fired without it", () => {
     let checked = 0;
     for (const { p, seed } of CORPUS) {
-      let pending: TentsBoard | null = null;
+      let pending: TentsState | null = null;
       walk(deal(p, seed), ({ firing }, state) => {
         const linkOnly = (k: string) => k === "tentLink" || k === "treeLink";
         if (pending && !linkOnly(firing.reason.kind)) {
-          expect(rungFires(pending, firing.reason.kind), firing.reason.kind).toBe(
-            false,
-          );
+          expect(firesOn(pending, firing.reason.kind), firing.reason.kind).toBe(false);
           checked++;
         }
-        pending = linkOnly(firing.reason.kind) ? seen(state) : null;
+        pending = linkOnly(firing.reason.kind) ? state : null;
       });
     }
     // A plan that stays where its work is asks for few links of their own:
@@ -238,85 +208,85 @@ const pinned = describeHintPins({
     link: (step: Step) => step.move.type === "link",
   },
   pins: {
-    /** Held on 206 of 2560 positions walked. */
+    /** Held on 202 of 2605 positions walked. */
     countMet: {
       id: "8x8de:_adra_fecbhac,1,2,0,4,0,3,0,2,1,2,1,2,1,3,0,2",
       moves:
         '[{"type":"cells","cells":[{"x":4,"y":0,"v":3},{"x":5,"y":0,"v":3},{"x":1,"y":1,"v":3},{"x":3,"y":1,"v":3},{"x":4,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":6,"y":1,"v":3},{"x":0,"y":2,"v":3},{"x":1,"y":2,"v":3},{"x":3,"y":2,"v":3},{"x":6,"y":2,"v":3},{"x":7,"y":2,"v":3},{"x":0,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":0,"y":4,"v":3},{"x":1,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":3,"y":6,"v":3},{"x":5,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
     },
-    /** Held on 341 of 2560 positions walked. */
+    /** Held on 341 of 2605 positions walked. */
     allOpen: {
-      id: "8x8de:cbfaafihbbdec,3,0,2,1,0,3,0,3,2,0,3,1,1,1,3,1",
+      id: "10x10de:dacb_hdafcdfanebag_ga,5,0,3,1,2,2,2,2,2,1,4,0,3,2,1,3,1,2,2,2",
       moves:
-        '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":1,"y":0,"v":3},{"x":0,"y":1,"v":3},{"x":2,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":6,"y":2,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":5,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
+        '[{"type":"cells","cells":[{"x":1,"y":0,"v":3},{"x":2,"y":0,"v":3},{"x":8,"y":0,"v":3},{"x":9,"y":0,"v":3},{"x":7,"y":1,"v":3},{"x":9,"y":1,"v":3},{"x":1,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":6,"y":2,"v":3},{"x":2,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":5,"y":3,"v":3},{"x":9,"y":3,"v":3},{"x":4,"y":4,"v":3},{"x":8,"y":4,"v":3},{"x":9,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":7,"y":5,"v":3},{"x":8,"y":5,"v":3},{"x":9,"y":5,"v":3},{"x":1,"y":6,"v":3},{"x":2,"y":6,"v":3},{"x":4,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":8,"y":6,"v":3},{"x":2,"y":7,"v":3},{"x":3,"y":7,"v":3},{"x":4,"y":7,"v":3},{"x":3,"y":8,"v":3},{"x":4,"y":8,"v":3},{"x":5,"y":8,"v":3},{"x":7,"y":8,"v":3},{"x":2,"y":9,"v":3},{"x":3,"y":9,"v":3},{"x":4,"y":9,"v":3},{"x":5,"y":9,"v":3},{"x":6,"y":9,"v":3}]}]',
     },
-    /** Held on 110 of 2560 positions walked. */
+    /** Held on 113 of 2605 positions walked. */
     noSpareRoom: {
       id: "8x8de:hdfb_eh_abmba,1,2,1,2,0,2,1,3,1,2,1,3,0,2,1,2",
       moves:
         '[{"type":"cells","cells":[{"x":1,"y":0,"v":3},{"x":2,"y":0,"v":3},{"x":3,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":6,"y":0,"v":3},{"x":7,"y":0,"v":3},{"x":2,"y":1,"v":3},{"x":3,"y":1,"v":3},{"x":1,"y":2,"v":3},{"x":2,"y":2,"v":3},{"x":2,"y":3,"v":3},{"x":3,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":1,"y":6,"v":3},{"x":4,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3}]}]',
     },
-    /** Held on 12 of 2560 positions walked. */
+    /** Held on 11 of 2605 positions walked. */
     betweenThem: {
-      id: "8x8de:_adra_fecbhac,1,2,0,4,0,3,0,2,1,2,1,2,1,3,0,2",
+      id: "15x15dt:aecadc_adcg_clcbfagehbdcgabbffaocbggacebecf_ga,4,3,2,3,3,3,3,4,3,2,4,1,3,2,5,6,1,5,1,2,4,1,6,0,3,4,4,2,4,2",
       moves:
-        '[{"type":"cells","cells":[{"x":4,"y":0,"v":3},{"x":5,"y":0,"v":3},{"x":1,"y":1,"v":3},{"x":3,"y":1,"v":3},{"x":4,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":6,"y":1,"v":3},{"x":0,"y":2,"v":3},{"x":1,"y":2,"v":3},{"x":3,"y":2,"v":3},{"x":6,"y":2,"v":3},{"x":7,"y":2,"v":3},{"x":0,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":0,"y":4,"v":3},{"x":1,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":3,"y":6,"v":3},{"x":5,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]},{"type":"cells","cells":[{"x":2,"y":1,"v":3},{"x":2,"y":2,"v":3},{"x":2,"y":4,"v":3},{"x":2,"y":6,"v":3}]}]',
+        '[{"type":"cells","cells":[{"x":4,"y":0,"v":3},{"x":5,"y":0,"v":3},{"x":9,"y":0,"v":3},{"x":5,"y":1,"v":3},{"x":14,"y":1,"v":3},{"x":6,"y":2,"v":3},{"x":9,"y":2,"v":3},{"x":5,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":8,"y":3,"v":3},{"x":9,"y":3,"v":3},{"x":10,"y":3,"v":3},{"x":11,"y":3,"v":3},{"x":10,"y":4,"v":3},{"x":11,"y":4,"v":3},{"x":12,"y":4,"v":3},{"x":3,"y":5,"v":3},{"x":5,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":11,"y":5,"v":3},{"x":13,"y":5,"v":3},{"x":3,"y":6,"v":3},{"x":4,"y":6,"v":3},{"x":5,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":8,"y":7,"v":3},{"x":10,"y":7,"v":3},{"x":11,"y":7,"v":3},{"x":9,"y":8,"v":3},{"x":10,"y":8,"v":3},{"x":11,"y":8,"v":3},{"x":12,"y":8,"v":3},{"x":0,"y":9,"v":3},{"x":2,"y":9,"v":3},{"x":3,"y":9,"v":3},{"x":10,"y":9,"v":3},{"x":11,"y":9,"v":3},{"x":12,"y":9,"v":3},{"x":0,"y":10,"v":3},{"x":2,"y":10,"v":3},{"x":3,"y":10,"v":3},{"x":4,"y":10,"v":3},{"x":5,"y":10,"v":3},{"x":7,"y":10,"v":3},{"x":11,"y":10,"v":3},{"x":3,"y":11,"v":3},{"x":5,"y":11,"v":3},{"x":6,"y":11,"v":3},{"x":7,"y":11,"v":3},{"x":11,"y":11,"v":3},{"x":12,"y":11,"v":3},{"x":0,"y":12,"v":3},{"x":6,"y":12,"v":3},{"x":10,"y":12,"v":3},{"x":11,"y":12,"v":3},{"x":0,"y":13,"v":3},{"x":6,"y":13,"v":3},{"x":10,"y":13,"v":3},{"x":0,"y":14,"v":3},{"x":1,"y":14,"v":3},{"x":7,"y":14,"v":3},{"x":9,"y":14,"v":3},{"x":10,"y":14,"v":3},{"x":11,"y":14,"v":3}]},{"type":"cells","cells":[{"x":13,"y":6,"v":3}]},{"type":"cells","cells":[{"x":13,"y":9,"v":3}]},{"type":"cells","cells":[{"x":3,"y":13,"v":3}]}]',
     },
-    /** Held on 1446 of 2560 positions walked. */
+    /** Held on 1492 of 2605 positions walked. */
     grass: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
-    /** Held on 468 of 2560 positions walked. */
+    /** Held on 467 of 2605 positions walked. */
     grassOfSeveral: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
-    /** Held on 663 of 2560 positions walked. */
+    /** Held on 659 of 2605 positions walked. */
     link: {
       id: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
       moves:
         '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":3,"y":1,"v":3},{"x":4,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":0,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":3,"y":5,"v":3},{"x":5,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":6,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3},{"x":3,"y":7,"v":3},{"x":5,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
     },
-    /** Held on 60 of 2560 positions walked. */
+    /** Held on 60 of 2605 positions walked. */
     noTree: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
-    /** Held on 1977 of 2560 positions walked. */
+    /** Held on 1096 of 2605 positions walked. */
     treesDone: {
       id: "8x8de:cbfaafihbbdec,3,0,2,1,0,3,0,3,2,0,3,1,1,1,3,1",
       moves:
         '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":1,"y":0,"v":3},{"x":0,"y":1,"v":3},{"x":2,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":6,"y":2,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":5,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":7,"y":7,"v":3}]},{"type":"cells","cells":[{"x":0,"y":2,"v":2},{"x":0,"y":4,"v":2},{"x":0,"y":6,"v":2}]}]',
     },
-    /** Held on 2362 of 2560 positions walked. */
+    /** Held on 2450 of 2605 positions walked. */
     nextToTent: {
       id: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
       moves:
         '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":3,"y":1,"v":3},{"x":4,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":0,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":3,"y":5,"v":3},{"x":5,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":6,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3},{"x":3,"y":7,"v":3},{"x":5,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]},{"type":"link","x":7,"y":2,"d":4,"on":true}]',
     },
-    /** Held on 2435 of 2560 positions walked. */
+    /** Held on 2497 of 2605 positions walked. */
     treeSingle: {
       id: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
       moves:
         '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":3,"y":1,"v":3},{"x":4,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":0,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":3,"y":5,"v":3},{"x":5,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":6,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3},{"x":3,"y":7,"v":3},{"x":5,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
     },
-    /** Held on 985 of 2560 positions walked. */
+    /** Held on 628 of 2605 positions walked. */
     treeDiagonal: {
       id: "8x8de:hfbad_ibdbacj,2,1,1,2,1,2,1,2,1,3,0,3,1,2,1,1",
       moves:
         '[{"type":"cells","cells":[{"x":1,"y":0,"v":3},{"x":2,"y":0,"v":3},{"x":3,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":5,"y":0,"v":3},{"x":6,"y":0,"v":3},{"x":3,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":6,"y":2,"v":3},{"x":5,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":0,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":2,"y":5,"v":3},{"x":3,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":3,"y":7,"v":3},{"x":4,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
     },
-    /** Held on 2430 of 2560 positions walked. */
+    /** Held on 2454 of 2605 positions walked. */
     lineCount: {
       id: "8x8de:cbfaafihbbdec,3,0,2,1,0,3,0,3,2,0,3,1,1,1,3,1",
       moves:
         '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":1,"y":0,"v":3},{"x":0,"y":1,"v":3},{"x":2,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":6,"y":2,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":5,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
     },
-    /** Held on 573 of 2560 positions walked. */
+    /** Held on 662 of 2605 positions walked. */
     lineNeighbors: {
       id: "10x10dt:cbcbb_aijdabakdffdbg_,3,1,2,3,1,2,1,2,2,3,4,1,2,2,3,1,2,2,1,2",
       moves:
         '[{"type":"cells","cells":[{"x":1,"y":0,"v":3},{"x":8,"y":0,"v":3},{"x":1,"y":2,"v":3},{"x":2,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":1,"y":3,"v":3},{"x":2,"y":3,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":8,"y":3,"v":3},{"x":3,"y":4,"v":3},{"x":9,"y":4,"v":3},{"x":6,"y":5,"v":3},{"x":8,"y":5,"v":3},{"x":1,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":0,"y":8,"v":3},{"x":5,"y":8,"v":3},{"x":4,"y":9,"v":3},{"x":5,"y":9,"v":3},{"x":6,"y":9,"v":3},{"x":7,"y":9,"v":3}]}]',
     },
-    /** Held on 534 of 2560 positions walked. */
+    /** Held on 275 of 2605 positions walked. */
     tentLink: {
       id: "8x8de:hcabfehj_adbb,3,1,1,1,1,1,1,3,1,1,2,1,1,3,0,3",
       moves:
         '[{"type":"cells","cells":[{"x":1,"y":0,"v":3},{"x":2,"y":0,"v":3},{"x":3,"y":0,"v":3},{"x":5,"y":0,"v":3},{"x":7,"y":0,"v":3},{"x":2,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":7,"y":2,"v":3},{"x":2,"y":3,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":2,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":1,"y":5,"v":3},{"x":4,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":0,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":7,"y":7,"v":3}]},{"type":"cells","cells":[{"x":0,"y":0,"v":2},{"x":0,"y":2,"v":2},{"x":0,"y":4,"v":2}]},{"type":"cells","cells":[{"x":1,"y":1,"v":3}]},{"type":"cells","cells":[{"x":1,"y":3,"v":3}]}]',
     },
-    /** Held on 81 of 2560 positions walked. */
+    /** Held on 64 of 2605 positions walked. */
     treeLink: {
       id: "10x10dt:agaa_aidlcldbdbcadcbd,3,1,2,2,2,1,4,1,1,3,1,4,1,3,1,3,1,1,4,1",
       moves:

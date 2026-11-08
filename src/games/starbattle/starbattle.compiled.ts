@@ -391,7 +391,7 @@ export function exactLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExactLi
       if (!(_c105)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ L: v_L, n: v_n, O: v_O }, facts)) return 1;
+        if (fire !== null && !fire({ L: v_L, n: v_n, O: v_O.slice() }, facts)) return 1;
       }
     }
   }
@@ -461,7 +461,7 @@ export function exactRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<Exac
       if (!(_c141)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ r: v_r, n: v_n, O: v_O }, facts)) return 1;
+        if (fire !== null && !fire({ r: v_r, n: v_n, O: v_O.slice() }, facts)) return 1;
       }
     }
   }
@@ -735,7 +735,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
           if (!(_c462)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ dir: v_dir, a: v_a, B: v_B, n: v_n, I: v_I, mi: v_mi, R: v_R, mr: v_mr, lines: v_lines }, facts)) return 1;
+            if (fire !== null && !fire({ dir: v_dir, a: v_a, B: v_B.slice(), n: v_n, I: v_I.slice(), mi: v_mi, R: v_R.slice(), mr: v_mr, lines: v_lines }, facts)) return 1;
           }
         }
       }
@@ -943,7 +943,7 @@ export function neededLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Needed
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, n: v_n, O: v_O, x: v_x, E: v_E, room: v_room }, facts)) return 1;
+            if (fire !== null && !fire({ L: v_L, n: v_n, O: v_O.slice(), x: v_x, E: v_E.slice(), room: v_room }, facts)) return 1;
           }
         }
       }
@@ -1151,7 +1151,7 @@ export function neededRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Need
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ r: v_r, n: v_n, O: v_O, x: v_x, E: v_E, room: v_room }, facts)) return 1;
+            if (fire !== null && !fire({ r: v_r, n: v_n, O: v_O.slice(), x: v_x, E: v_E.slice(), room: v_room }, facts)) return 1;
           }
         }
       }
@@ -1430,7 +1430,7 @@ export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Crowd
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ x: v_x, R: v_R, L: v_L, S: v_S, n: v_n, E: v_E, room: v_room, Q: v_Q }, facts)) return 1;
+          if (fire !== null && !fire({ x: v_x, R: v_R.slice(), L: v_L, S: v_S.slice(), n: v_n, E: v_E.slice(), room: v_room, Q: v_Q.slice() }, facts)) return 1;
         }
       }
     }
@@ -1707,7 +1707,7 @@ export function crowdedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Cro
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ x: v_x, R: v_R, g: v_g, S: v_S, n: v_n, E: v_E, room: v_room, Q: v_Q }, facts)) return 1;
+          if (fire !== null && !fire({ x: v_x, R: v_R.slice(), g: v_g, S: v_S.slice(), n: v_n, E: v_E.slice(), room: v_room, Q: v_Q.slice() }, facts)) return 1;
         }
       }
     }
@@ -1987,7 +1987,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
             if (!(_c1480)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ k: v_k, dir: v_dir, a: v_a, B: v_B, n: v_n, I: v_I, mi: v_mi, R: v_R, mr: v_mr, lines: v_lines }, facts)) return 1;
+              if (fire !== null && !fire({ k: v_k, dir: v_dir, a: v_a, B: v_B.slice(), n: v_n, I: v_I.slice(), mi: v_mi, R: v_R.slice(), mr: v_mr, lines: v_lines }, facts)) return 1;
             }
           }
         }
@@ -2257,7 +2257,7 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ x: v_x, R: v_R, L: v_L, S: v_S, n: v_n, E: v_E, room: v_room, Q: v_Q }, facts)) return 1;
+          if (fire !== null && !fire({ x: v_x, R: v_R.slice(), L: v_L, S: v_S.slice(), n: v_n, E: v_E.slice(), room: v_room, Q: v_Q.slice() }, facts)) return 1;
         }
       }
     }
@@ -2524,7 +2524,7 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ x: v_x, R: v_R, g: v_g, S: v_S, n: v_n, E: v_E, room: v_room, Q: v_Q }, facts)) return 1;
+          if (fire !== null && !fire({ x: v_x, R: v_R.slice(), g: v_g, S: v_S.slice(), n: v_n, E: v_E.slice(), room: v_room, Q: v_Q.slice() }, facts)) return 1;
         }
       }
     }

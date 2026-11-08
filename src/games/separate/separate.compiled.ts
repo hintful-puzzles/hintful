@@ -260,7 +260,7 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
             if (!(_q74)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ O: v_O, e: v_e, A: v_A, b: v_b, B: v_B, L: v_L, d: v_d, x: v_x, y: v_y }, facts)) return 1;
+              if (fire !== null && !fire({ O: v_O.slice(), e: v_e, A: v_A.slice(), b: v_b, B: v_B.slice(), L: v_L, d: v_d, x: v_x, y: v_y }, facts)) return 1;
             }
           }
         }
@@ -351,7 +351,7 @@ export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBindi
         if (!(_q117)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ O: v_O, e: v_e, A: v_A, b: v_b, B: v_B }, facts)) return 1;
+          if (fire !== null && !fire({ O: v_O.slice(), e: v_e, A: v_A.slice(), b: v_b, B: v_B.slice() }, facts)) return 1;
         }
       }
     }
@@ -439,7 +439,7 @@ export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBi
       if (!(_c176)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ O: v_O, c: v_c, A: v_A, S: v_S }, facts)) return 1;
+        if (fire !== null && !fire({ O: v_O.slice(), c: v_c, A: v_A.slice(), S: v_S.slice() }, facts)) return 1;
       }
     }
   }

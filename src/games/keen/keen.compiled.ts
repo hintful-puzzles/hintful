@@ -353,7 +353,7 @@ export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasy
     if (!(_q257)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ r: v_r, K: v_K, D: v_D }, facts)) return 1;
+      if (fire !== null && !fire({ r: v_r, K: v_K.slice(), D: v_D }, facts)) return 1;
       cands.fill(-1);
     }
   }
@@ -558,7 +558,7 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
     if (!(_q266)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ r: v_r, K: v_K }, facts)) return 1;
+      if (fire !== null && !fire({ r: v_r, K: v_K.slice() }, facts)) return 1;
       cands.fill(-1);
       _epoch++;
     }
@@ -773,7 +773,7 @@ export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLine
       if (!(_q345)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ r: v_r, K: v_K, L: v_L }, facts)) return 1;
+        if (fire !== null && !fire({ r: v_r, K: v_K.slice(), L: v_L }, facts)) return 1;
         cands.fill(-1);
       }
     }

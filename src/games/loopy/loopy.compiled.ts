@@ -898,7 +898,7 @@ export function earlyLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyLo
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ L: v_L, e: v_e, G: v_G }, facts)) return 1;
+        if (fire !== null && !fire({ L: v_L.slice(), e: v_e, G: v_G.slice() }, facts)) return 1;
       }
     }
   }
@@ -1005,7 +1005,7 @@ export function closed(b: Marks, sp: GridSpace, fire: Fire<ClosedBinding> | null
     if (!(_q386)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ L: v_L, g: v_g }, facts)) return 1;
+      if (fire !== null && !fire({ L: v_L.slice(), g: v_g }, facts)) return 1;
     }
   }
   return fired;
@@ -1538,7 +1538,7 @@ export function clueBound(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBou
         if (!(_c641)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ f: v_f, n: v_n, e: v_e, S: v_S, P: v_P, Q: v_Q }, facts)) return 1;
+          if (fire !== null && !fire({ f: v_f, n: v_n, e: v_e, S: v_S.slice(), P: v_P, Q: v_Q }, facts)) return 1;
           cands.fill(-1);
         }
       }
@@ -1819,7 +1819,7 @@ export function cornerFromClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Co
           if (!(_c805)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ f: v_f, n: v_n, k: v_k, o: v_o, a: v_a, S: v_S, P: v_P, Q: v_Q }, facts)) return 1;
+            if (fire !== null && !fire({ f: v_f, n: v_n, k: v_k, o: v_o, a: v_a, S: v_S.slice(), P: v_P, Q: v_Q }, facts)) return 1;
             cands.fill(-1);
           }
         }
@@ -2272,7 +2272,7 @@ export function pairAtClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairAt
         if (!(((b.pairOf(v_e, v_g) >> _t1015) & 1) !== 0)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ f: v_f, O: v_O, e: v_e, g: v_g }, facts)) return 1;
+          if (fire !== null && !fire({ f: v_f, O: v_O.slice(), e: v_e, g: v_g }, facts)) return 1;
         }
       }
     }
@@ -2351,7 +2351,7 @@ export function parityClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Parity
             if (!(true)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ f: v_f, O: v_O, e: v_e, g: v_g, k: v_k }, facts)) return 1;
+              if (fire !== null && !fire({ f: v_f, O: v_O.slice(), e: v_e, g: v_g, k: v_k }, facts)) return 1;
             }
           }
         }
@@ -2438,7 +2438,7 @@ export function linkClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LinkClue
             if (!(((b.pairOf(v_h, v_k) >> _t1108) & 1) !== 0)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ f: v_f, O: v_O, e: v_e, g: v_g, R: v_R, h: v_h, k: v_k }, facts)) return 1;
+              if (fire !== null && !fire({ f: v_f, O: v_O.slice(), e: v_e, g: v_g, R: v_R.slice(), h: v_h, k: v_k }, facts)) return 1;
             }
           }
         }
@@ -2626,7 +2626,7 @@ export function pairAtDot(b: Marks, sp: GridSpace, fire: Fire<PairAtDotBinding> 
         if (!(((b.pairOf(v_e, v_g) >> _t1176) & 1) !== 0)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, O: v_O, e: v_e, g: v_g }, facts)) return 1;
+          if (fire !== null && !fire({ c: v_c, O: v_O.slice(), e: v_e, g: v_g }, facts)) return 1;
         }
       }
     }
@@ -2690,7 +2690,7 @@ export function parityDot(b: Marks, sp: GridSpace, fire: Fire<ParityDotBinding> 
             if (!(true)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ c: v_c, O: v_O, e: v_e, g: v_g, k: v_k }, facts)) return 1;
+              if (fire !== null && !fire({ c: v_c, O: v_O.slice(), e: v_e, g: v_g, k: v_k }, facts)) return 1;
             }
           }
         }
@@ -2761,7 +2761,7 @@ export function linkDot(b: Marks, sp: GridSpace, fire: Fire<LinkDotBinding> | nu
             if (!(((b.pairOf(v_h, v_k) >> _t1246) & 1) !== 0)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ c: v_c, O: v_O, e: v_e, g: v_g, R: v_R, h: v_h, k: v_k }, facts)) return 1;
+              if (fire !== null && !fire({ c: v_c, O: v_O.slice(), e: v_e, g: v_g, R: v_R.slice(), h: v_h, k: v_k }, facts)) return 1;
             }
           }
         }

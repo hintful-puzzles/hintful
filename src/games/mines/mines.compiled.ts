@@ -178,7 +178,7 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
       if (!(_c36)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ k: v_k, c: v_c, U: v_U, n: v_n }, facts)) return 1;
+        if (fire !== null && !fire({ k: v_k, c: v_c, U: v_U.slice(), n: v_n }, facts)) return 1;
       }
     }
   }
@@ -298,7 +298,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
           if (!(_c150)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ k: v_k, a: v_a, b: v_b, by: v_by, O: v_O, S: v_S }, facts)) return 1;
+            if (fire !== null && !fire({ k: v_k, a: v_a, b: v_b, by: v_by, O: v_O.slice(), S: v_S.slice() }, facts)) return 1;
             cands.fill(-1);
             meetMarkedKept.clear();
           }
@@ -516,7 +516,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
               if (!(_c305)) return -1;
               if (changed || facts.length > 0) {
                 fired = 1;
-                if (fire !== null && !fire({ k: v_k, o: v_o, i: v_i, b: v_b, R: v_R, B: v_B, r: v_r, nb: v_nb, heavy: v_heavy }, facts)) return 1;
+                if (fire !== null && !fire({ k: v_k, o: v_o, i: v_i, b: v_b, R: v_R.slice(), B: v_B.slice(), r: v_r, nb: v_nb, heavy: v_heavy }, facts)) return 1;
               }
             }
           }
@@ -769,7 +769,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
                 if (!(_c540)) return -1;
                 if (changed || facts.length > 0) {
                   fired = 1;
-                  if (fire !== null && !fire({ k: v_k, o: v_o, i: v_i, R: v_R, r: v_r, p: v_p, q: v_q, S: v_S, by: v_by }, facts)) return 1;
+                  if (fire !== null && !fire({ k: v_k, o: v_o, i: v_i, R: v_R.slice(), r: v_r, p: v_p, q: v_q, S: v_S.slice(), by: v_by }, facts)) return 1;
                 }
               }
             }
@@ -1019,7 +1019,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
           if (!(_c715)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ C: v_C, L: v_L, u: v_u, size: v_size, T: v_T, n: v_n, X: v_X }, facts)) return 1;
+            if (fire !== null && !fire({ C: v_C.slice(), L: v_L, u: v_u, size: v_size, T: v_T.slice(), n: v_n, X: v_X.slice() }, facts)) return 1;
             cands.fill(-1);
             meetMarkedKept.clear();
           }

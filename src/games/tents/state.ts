@@ -4,7 +4,7 @@
  * two tents are even diagonally adjacent, and the trees and tents admit a
  * one-to-one orthogonal-adjacency matching).
  *
- * A cell is BLANK / TREE / TENT / NONTENT (MAGIC is a solver-only sentinel).
+ * A cell is BLANK / TREE / TENT / NONTENT.
  * Trees are fixed givens; the player marks squares tent / non-tent / blank.
  * `numbers` holds the `w + h` edge clues — columns `0..w-1` then rows
  * `0..h-1` — shared (frozen) across a game's states.
@@ -15,18 +15,15 @@ import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-erro
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { matching } from "../../engine/latin.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
-import type { GameStatus } from "../../engine/types.ts";
 
-// --- cell values (upstream enum BLANK, TREE, TENT, NONTENT, MAGIC) ---------
+// --- cell values (upstream enum BLANK, TREE, TENT, NONTENT) ----------------
 export const BLANK = 0;
 export const TREE = 1;
 export const TENT = 2;
 export const NONTENT = 3;
-export const MAGIC = 4;
 
 /** What a click makes of a square that is not a tree: a tent on an empty one,
  * and empty of anything else. The drag preview and the declared verb both
@@ -230,69 +227,6 @@ export function newState(p: TentsParams, desc: string): TentsState {
   return { w: p.w, h: p.h, numbers, grid, links };
 }
 
-// --- completion check (upstream execute_move tail) ------------------------
-
-/** Upstream `execute_move`'s completion test: every edge number met, no two
- * tents adjacent (orthogonally or diagonally), and a one-to-one matching of
- * trees to orthogonally adjacent tents. */
-export function checkCompletion(
-  w: number,
-  h: number,
-  grid: Int8Array,
-  numbers: Int32Array,
-): boolean {
-  // Tents and trees are numbered separately, in reading order, for the matching.
-  const ids = new Int32Array(w * h);
-  const counts = new Int32Array(w + h);
-  let nTents = 0;
-  let nTrees = 0;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      if (grid[y * w + x] === TREE) ids[y * w + x] = nTrees++;
-      if (grid[y * w + x] !== TENT) continue;
-      ids[y * w + x] = nTents++;
-      counts[x]++;
-      counts[w + y]++;
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          if (!dx && !dy) continue;
-          const x2 = x + dx;
-          const y2 = y + dy;
-          if (x2 >= 0 && x2 < w && y2 >= 0 && y2 < h && grid[y2 * w + x2] === TENT) {
-            return false;
-          }
-        }
-      }
-    }
-  }
-  if (nTents !== nTrees) return false;
-  for (let i = 0; i < w + h; i++) if (counts[i] !== numbers[i]) return false;
-
-  const adjlists: number[][] = [];
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      if (grid[y * w + x] !== TREE) continue;
-      const list: number[] = [];
-      for (let d = 1; d < MAXDIR; d++) {
-        const x2 = x + DX(d);
-        const y2 = y + DY(d);
-        if (x2 >= 0 && x2 < w && y2 >= 0 && y2 < h && grid[y2 * w + x2] === TENT) {
-          list.push(ids[y2 * w + x2]);
-        }
-      }
-      adjlists.push(list);
-    }
-  }
-  // No `rs`: upstream's deterministic existence check.
-  const ltoR = matching(
-    nTrees,
-    nTrees,
-    adjlists,
-    adjlists.map((l) => l.length),
-  );
-  return !ltoR.includes(-1);
-}
-
 // --- moves ---------------------------------------------------------------
 
 export function executeMove(state: TentsState, move: TentsMove): TentsState {
@@ -369,12 +303,7 @@ export function partnerOf(w: number, links: Int8Array, i: number): number {
   return d === N ? -1 : i + DY(d) * w + DX(d);
 }
 
-// --- status / text -------------------------------------------------------
-
-export function status(state: TentsState): GameStatus {
-  const { w, h, grid, numbers } = state;
-  return checkCompletion(w, h, grid, numbers) ? "solved" : "ongoing";
-}
+// --- text ----------------------------------------------------------------
 
 /** Upstream `game_text_format`: a box-drawn grid with `//\` tents, `T` trees,
  * `.` blanks, and the edge numbers along the bottom and right. */

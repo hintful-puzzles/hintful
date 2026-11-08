@@ -306,7 +306,7 @@ export function set(b: Marks, sp: GridSpace, fire: Fire<SetBinding> | null): num
         if (!(_c144)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ u: v_u, V: v_V, open: v_open, R: v_R, extra: v_extra, T: v_T, S: v_S }, facts)) return 1;
+          if (fire !== null && !fire({ u: v_u, V: v_V, open: v_open.slice(), R: v_R, extra: v_extra, T: v_T, S: v_S.slice() }, facts)) return 1;
           cands.fill(-1);
         }
       }
@@ -587,7 +587,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
         if (!(_c359)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ d: v_d, k: v_k, X0: v_X0, Y0: v_Y0, T: v_T, X: v_X }, facts)) return 1;
+          if (fire !== null && !fire({ d: v_d, k: v_k, X0: v_X0.slice(), Y0: v_Y0, T: v_T, X: v_X.slice() }, facts)) return 1;
         }
       }
     }
@@ -734,7 +734,7 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): n
             if (!(true)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ m: v_m, x: v_x, R: v_R, k0: v_k0, t: v_t, E: v_E }, facts)) return 1;
+              if (fire !== null && !fire({ m: v_m, x: v_x, R: v_R, k0: v_k0, t: v_t, E: v_E.slice() }, facts)) return 1;
               cands.fill(-1);
             }
           }

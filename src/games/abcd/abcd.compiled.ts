@@ -335,7 +335,7 @@ export function runs(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RunsBinding>
           if (!(_q90)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, d: v_d, v: v_v, O: v_O }, facts)) return 1;
+            if (fire !== null && !fire({ L: v_L, d: v_d, v: v_v, O: v_O.slice() }, facts)) return 1;
           }
         }
       }

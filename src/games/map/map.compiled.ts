@@ -321,7 +321,7 @@ export function weigh(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighBindin
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ m: v_m, x: v_x, R: v_R, t: v_t, E: v_E }, facts)) return 1;
+            if (fire !== null && !fire({ m: v_m, x: v_x, R: v_R, t: v_t, E: v_E.slice() }, facts)) return 1;
             cands.fill(-1);
           }
         }

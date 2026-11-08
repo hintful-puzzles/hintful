@@ -370,7 +370,7 @@ export function enclosed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Enclosed
         if (!(_c70)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, N: v_N, q: v_q }, facts)) return 1;
+          if (fire !== null && !fire({ c: v_c, N: v_N.slice(), q: v_q }, facts)) return 1;
         }
       }
     }
@@ -605,7 +605,7 @@ export function soleOwner(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SoleOwn
       if (!(_c272)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ O: v_O, c: v_c, K: v_K }, facts)) return 1;
+        if (fire !== null && !fire({ O: v_O.slice(), c: v_c, K: v_K.slice() }, facts)) return 1;
       }
     }
   }
@@ -671,7 +671,7 @@ export function onlyReach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRea
       if (!(_c316)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, K: v_K }, facts)) return 1;
+        if (fire !== null && !fire({ c: v_c, K: v_K.slice() }, facts)) return 1;
       }
     }
   }
@@ -750,7 +750,7 @@ export function exclave(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExclaveBi
           if (!(_c360)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ c: v_c, q: v_q, G: v_G, L: v_L }, facts)) return 1;
+            if (fire !== null && !fire({ c: v_c, q: v_q, G: v_G.slice(), L: v_L.slice() }, facts)) return 1;
           }
         }
       }

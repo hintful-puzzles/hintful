@@ -180,7 +180,7 @@ export function threes(b: Marks, sp: GridSpace, fire: Fire<ThreesBinding> | null
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, i: v_i, W: v_W, x: v_x, d: v_d }, facts)) return 1;
+            if (fire !== null && !fire({ L: v_L, i: v_i, W: v_W.slice(), x: v_x, d: v_d }, facts)) return 1;
           }
         }
       }
@@ -425,7 +425,7 @@ export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding> | nu
           if (!(_q141)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, n: v_n, d: v_d, i: v_i, W: v_W }, facts)) return 1;
+            if (fire !== null && !fire({ L: v_L, n: v_n, d: v_d, i: v_i, W: v_W.slice() }, facts)) return 1;
           }
         }
       }

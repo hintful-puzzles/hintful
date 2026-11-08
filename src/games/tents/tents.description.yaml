@@ -69,3 +69,145 @@ help:
     * On harder boards: **wherever a row's tents go**, some squares in the
       rows beside it are always touched by one of them, so they must be
       grass.
+name: Tents
+family: shading
+sizes:
+  w: { min: 4, max: 99999 }
+  h: { min: 4, max: 99999 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is a tent, 2 grass, and 3 a tree, which holds neither.
+  value: { sort: cell, domain: "{d in range(1, 3) where (d = 3) = (clue(tree, c) >= 0)}" }
+marks:
+  # A tent's link to its tree: the tree it is paired with.
+  link:
+    sort: cell
+    notation: "one of clues(tree)"
+    means: "paired(at, at(v))"
+define:
+  # The trees beside square c.
+  trees(c): "{q in clues(tree) where at(q) in adj4(c)}"
+  # Whether tree q has its tent: a tent beside it is linked to it.
+  has(q): "exists x in adj4(at(q)): link(x) = q and value(x) = 1"
+  # The trees beside square c still without their tent.
+  free(c): "{q in trees(c) where not has(q)}"
+  # The squares beside tree q that could still be its tent: open, or a tent
+  # linked to no tree.
+  room(q): "{x in adj4(at(q)) where blank(x) or (value(x) = 1 and link(x) = none)}"
+  # Whether square c is open: no tree, and neither a tent nor grass yet.
+  blank(c): "not known(c) and clue(tree, c) < 0"
+  # The tents line L still needs.
+  need(L): "clue(count, L) - count(c in cells(L) where value(c) = 1)"
+  # The open squares of line L.
+  open(L): "{c in cells(L) where blank(c)}"
+  # Whether filling f of the open squares O of a line puts k tents in them,
+  # none side by side: a tent is 1 and grass 2, so k tents sum to 2|O| - k.
+  spread(f, O, k): >-
+    sum(y in O of f(y)) = 2 * |O| - k
+    and (forall y in O, z in before(y, O): not (f(y) = 1 and f(z) = 1 and z in adj4(y)))
+  # Whether k tents fit in the open squares O of a line, none side by side,
+  # square x of them holding d.
+  fits(O, k, x, d): "exists fill f of O from cand where f(x) = d and spread(f, O, k): true"
+shape:
+  # No two tents touch, even at a corner.
+  - "forall a in cells where value(a) = 1: forall b in adj8(a): value(b) != 1"
+rules:
+  # The tents and the trees pair off, each tent with a tree beside it.
+  pairs: "matched({c in cells where value(c) = 1}, {c in cells where value(c) = 3})"
+clues:
+  # A tree, which holds no tent.
+  tree:
+    at: cell
+    value: "range(0, 0)"
+    means: "value(at) = 3"
+  # A number beside a row or column: how many tents it holds.
+  count:
+    at: line
+    value: "range(0, |cells(at)|)"
+    complete: true
+    means: "count(c in cells(at) where value(c) = 1) = v"
+freedom: { kind: fill }
+deal:
+  answer: a fifth of the squares tents, at random, none touching, and a tree beside each, paired at random
+  tree: beside each tent, as the pairing put it
+  count: every row's and column's tents
+  tier: one of the tiers, the board finished at it and not at the tier below
+tiers: [Easy, Normal]
+techniques:
+  # A tent with one tree beside it still without its tent is that tree's.
+  # One with none makes the marks inconsistent.
+  - id: tentLink
+    tier: Easy
+    for: "c in cells where value(c) = 1 and link(c) = none, K = free(c) where |K| < 2"
+    conclude: "|K| > 0 and (forall q in K: mark(c, q))"
+  # The open squares beside no tree are grass, every one at once.
+  - id: noTree
+    tier: Easy
+    for: "S = {c in cells where blank(c) and |trees(c)| = 0} where |S| > 0"
+    conclude: "forall c in S: place(c, 2)"
+  # The open squares round a tree with its tent, beside no tree still
+  # without one, are grass.
+  - id: treesDone
+    tier: Easy
+    for: >-
+      q in clues(tree) where has(q),
+      S = {c in adj4(at(q)) where blank(c) and |free(c)| = 0} where |S| > 0
+    conclude: "forall c in S: place(c, 2)"
+  # The open squares round a tent are grass. A tent touching another makes
+  # the marks inconsistent.
+  - id: nextToTent
+    tier: Easy
+    for: "t in cells where value(t) = 1, S = {x in adj8(t) where blank(x)} where |S| > 0"
+    conclude: "(forall x in adj8(t): value(x) != 1) and (forall x in S: place(x, 2))"
+  # A tree without its tent, with one square left that could hold it, and
+  # that square open: the tent is there, and the tree's. One with none left
+  # makes the marks inconsistent.
+  - id: treeSingle
+    tier: Easy
+    for: >-
+      q in clues(tree) where not has(q),
+      R = room(q) where |R| < 2 and (forall x in R: blank(x))
+    conclude: "|R| > 0 and (forall x in R: place(x, 1) and mark(x, q))"
+  # A tree without its tent whose one square left holds a tent: the tent is
+  # the tree's.
+  - id: treeLink
+    tier: Easy
+    for: "q in clues(tree) where not has(q), R = room(q) where |R| = 1, x = nth(R, 0) where value(x) = 1"
+    conclude: "mark(x, q)"
+  # A tree without its tent whose two squares left sit round a corner from
+  # each other: whichever holds its tent, the square between them, at the
+  # tree's corner, touches it, so it is grass.
+  - id: treeDiagonal
+    tier: Normal
+    for: >-
+      q in clues(tree) where not has(q), R = room(q) where |R| = 2,
+      a = nth(R, 0), b = nth(R, 1) where x(a) != x(b) and y(a) != y(b),
+      z = cell(x(a) + x(b) - x(at(q)), y(a) + y(b) - y(at(q))) where blank(z)
+    conclude: "place(z, 2)"
+  # A row or column's count, over its own open squares: a square that holds
+  # a tent in every way to place the tents it still needs, none side by
+  # side, is a tent, and one that holds grass in every way is grass. A line
+  # with no way makes the marks inconsistent.
+  - id: lineCount
+    tier: Easy
+    for: >-
+      L in lines, k = need(L), O = open(L) where |O| > 0,
+      T = {x in O where fits(O, k, x, 1)}, G = {x in O where fits(O, k, x, 2)}
+      where (exists x in O: x not in T or x not in G)
+    conclude: >-
+      forall x in O: (x in T or x in G)
+      and (x not in T implies place(x, 2)) and (x not in G implies place(x, 1))
+  # A row or column's count, over the lines either side of it: an open
+  # square there that every way to place the line's tents touches is grass.
+  - id: lineNeighbors
+    tier: Normal
+    for: >-
+      L in lines, k = need(L), O = open(L) where |O| > 0 and k > 0,
+      N = set(z over y in O, z in adj8(y) where blank(z) and z not in cells(L))
+      where |N| > 0,
+      U = set(z over fill f of O from cand where spread(f, O, k),
+      z in N where (forall y in O where y in adj8(z): f(y) = 2))
+      where (exists z in N: z not in U)
+    conclude: "forall z in N where z not in U: place(z, 2)"

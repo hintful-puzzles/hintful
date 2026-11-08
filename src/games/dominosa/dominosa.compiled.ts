@@ -325,7 +325,7 @@ export function onlySpot(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlySpot
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ a: v_a, b: v_b, P: v_P, e: v_e }, facts)) return 1;
+            if (fire !== null && !fire({ a: v_a, b: v_b, P: v_P.slice(), e: v_e }, facts)) return 1;
           }
         }
       }
@@ -389,7 +389,7 @@ export function squareOnly(b: Marks, sp: GridSpace, fire: Fire<SquareOnlyBinding
       if (!(_c104)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, S: v_S }, facts)) return 1;
+        if (fire !== null && !fire({ c: v_c, S: v_S.slice() }, facts)) return 1;
       }
     }
   }
@@ -508,7 +508,7 @@ export function squareSingleDomino(b: Marks, sp: GridSpace, cl: Dealt, fire: Fir
         if (!(_q164)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, S: v_S, s: v_s }, facts)) return 1;
+          if (fire !== null && !fire({ c: v_c, S: v_S.slice(), s: v_s }, facts)) return 1;
         }
       }
     }
@@ -597,7 +597,7 @@ export function mustOverlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MustO
         if (!(_q210)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ a: v_a, b: v_b, P: v_P, e: v_e }, facts)) return 1;
+          if (fire !== null && !fire({ a: v_a, b: v_b, P: v_P.slice(), e: v_e }, facts)) return 1;
         }
       }
     }
@@ -878,7 +878,7 @@ export function localDuplicate2(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<L
                       if (!(true)) return -1;
                       if (changed || facts.length > 0) {
                         fired = 1;
-                        if (fire !== null && !fire({ p: v_p, x: v_x, y: v_y, q: v_q, R: v_R, d: v_d, x2: v_x2, z: v_z, q2: v_q2, S: v_S }, facts)) return 1;
+                        if (fire !== null && !fire({ p: v_p, x: v_x, y: v_y, q: v_q, R: v_R.slice(), d: v_d, x2: v_x2, z: v_z, q2: v_q2, S: v_S.slice() }, facts)) return 1;
                       }
                     }
                   }
@@ -959,7 +959,7 @@ export function parity(b: Marks, sp: GridSpace, fire: Fire<ParityBinding> | null
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ P: v_P, p: v_p, Q: v_Q, A: v_A }, facts)) return 1;
+        if (fire !== null && !fire({ P: v_P.slice(), p: v_p, Q: v_Q.slice(), A: v_A.slice() }, facts)) return 1;
       }
     }
   }
@@ -1089,7 +1089,7 @@ export function set(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetBinding> |
           if (!(_q618)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ a: v_a, S: v_S, U: v_U, T: v_T, O: v_O }, facts)) return 1;
+            if (fire !== null && !fire({ a: v_a, S: v_S.slice(), U: v_U.slice(), T: v_T.slice(), O: v_O }, facts)) return 1;
           }
         }
       }
@@ -1250,7 +1250,7 @@ export function setDoubles(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetDou
           if (!(_q713)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ a: v_a, S: v_S, U: v_U, T: v_T, O: v_O }, facts)) return 1;
+            if (fire !== null && !fire({ a: v_a, S: v_S.slice(), U: v_U.slice(), T: v_T.slice(), O: v_O }, facts)) return 1;
           }
         }
       }

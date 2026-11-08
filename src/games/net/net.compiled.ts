@@ -430,7 +430,7 @@ export function fitLock(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FitLockBi
         if (!(_q211)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, F: v_F, W: v_W, N: v_N }, facts)) return 1;
+          if (fire !== null && !fire({ c: v_c, F: v_F.slice(), W: v_W.slice(), N: v_N.slice() }, facts)) return 1;
           cands.fill(-1);
           _epoch++;
         }
@@ -926,7 +926,7 @@ export function loopLock(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LoopLock
         if (!(_q575)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, c: v_c, F: v_F, G: v_G, W: v_W, N: v_N }, facts)) return 1;
+          if (fire !== null && !fire({ L: v_L.slice(), c: v_c, F: v_F.slice(), G: v_G.slice(), W: v_W.slice(), N: v_N.slice() }, facts)) return 1;
           cands.fill(-1);
           _epoch++;
         }
@@ -1174,7 +1174,7 @@ export function loopNote(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LoopNote
         if (!(_c711)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, c: v_c, G: v_G, e: v_e, A: v_A, B: v_B }, facts)) return 1;
+          if (fire !== null && !fire({ L: v_L.slice(), c: v_c, G: v_G.slice(), e: v_e, A: v_A, B: v_B }, facts)) return 1;
           cands.fill(-1);
           _epoch++;
         }
@@ -2003,7 +2003,7 @@ export function sealLock(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SealLock
         if (!(_q2840)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, U: v_U, P: v_P, c: v_c, F: v_F, G: v_G, K: v_K, W: v_W, N: v_N }, facts)) return 1;
+          if (fire !== null && !fire({ L: v_L.slice(), U: v_U.slice(), P: v_P.slice(), c: v_c, F: v_F.slice(), G: v_G.slice(), K: v_K.slice(), W: v_W.slice(), N: v_N.slice() }, facts)) return 1;
           cands.fill(-1);
           _epoch++;
         }
@@ -2780,7 +2780,7 @@ export function sealNote(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SealNote
         if (!(_c4160)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, U: v_U, P: v_P, c: v_c, G: v_G, K: v_K, e: v_e, A: v_A, B: v_B }, facts)) return 1;
+          if (fire !== null && !fire({ L: v_L.slice(), U: v_U.slice(), P: v_P.slice(), c: v_c, G: v_G.slice(), K: v_K.slice(), e: v_e, A: v_A, B: v_B }, facts)) return 1;
           cands.fill(-1);
           _epoch++;
         }
@@ -3891,7 +3891,7 @@ export function strandLock(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Strand
         if (!(_q6659)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, U: v_U, P: v_P, c: v_c, F: v_F, G: v_G, K: v_K, W: v_W, N: v_N }, facts)) return 1;
+          if (fire !== null && !fire({ L: v_L.slice(), U: v_U.slice(), P: v_P.slice(), c: v_c, F: v_F.slice(), G: v_G.slice(), K: v_K.slice(), W: v_W.slice(), N: v_N.slice() }, facts)) return 1;
           cands.fill(-1);
           _epoch++;
         }
@@ -4950,7 +4950,7 @@ export function strandNote(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Strand
         if (!(_c8165)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, U: v_U, P: v_P, c: v_c, G: v_G, K: v_K, e: v_e, A: v_A, B: v_B }, facts)) return 1;
+          if (fire !== null && !fire({ L: v_L.slice(), U: v_U.slice(), P: v_P.slice(), c: v_c, G: v_G.slice(), K: v_K.slice(), e: v_e, A: v_A, B: v_B }, facts)) return 1;
           cands.fill(-1);
           _epoch++;
         }

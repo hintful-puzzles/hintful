@@ -545,6 +545,7 @@ const GEOMETRY = new Set([
   "stretch",
   "connected",
   "cuts",
+  "matched",
   "reaches",
   "beam",
   "ahead",
@@ -699,6 +700,7 @@ const EARLY = new Set([
   "stretch",
   "connected",
   "cuts",
+  "matched",
   "reaches",
   "step",
   "chain",
@@ -3429,6 +3431,16 @@ function edgeBetween(a: string, b: string, va: Val, vb: Val): string {
   return `sp.edgeOf(${a}, ${b})`;
 }
 
+/** `matched(A, B)`: whether the cells of A and B pair off one to one, each
+ * pair side by side. */
+function matchedCall(vs: readonly Val[], env: Env): Val {
+  for (const S of vs)
+    if (!isSetOf(S.sort, "cell"))
+      throw new CompileError(`matched(${show(S.sort)}): A and B are sets of cells`);
+  env.used.add("matched");
+  return { code: `matched(sp, ${vs[0].code}, ${vs[1].code})`, sort: BOOL };
+}
+
 function call(
   fn: string,
   args: readonly Expr[],
@@ -3706,6 +3718,9 @@ function call(
         sort: fn === "connected" ? BOOL : setOf(elem("cell")),
       };
     }
+    case "matched":
+      arity(2);
+      return matchedCall(vs, env);
     case "reaches": {
       // How many members of S square c reaches through members side by
       // side once t is taken out.
@@ -4162,6 +4177,7 @@ const WALKS = new Set([
   "reaches",
   "connected",
   "cuts",
+  "matched",
   "beam",
   "look",
 ]);
@@ -4509,7 +4525,11 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
     body.emit("changed = false;");
     const c = compileExpr(t.conclude, sc, { ...tenv, concluding: true, shared }, body);
     expect(c, "bool", "conclusion");
-    const binding = `{ ${sorts.map((s) => `${s.name}: v_${s.name}`).join(", ")} }`;
+    // A set is a buffer the next binding refills, and a reason may keep it
+    // past that, as a plan does, so the binding holds a copy.
+    const binding = `{ ${sorts
+      .map((s) => `${s.name}: v_${s.name}${isArray(s.sort) ? ".slice()" : ""}`)
+      .join(", ")} }`;
     // A conclusion that is false proves the marks inconsistent.
     body.emit(`if (!(${c.code})) return -1;`);
     body.open("if (changed || facts.length > 0) {");

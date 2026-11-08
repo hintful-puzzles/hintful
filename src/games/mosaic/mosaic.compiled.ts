@@ -315,7 +315,7 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
           if (!(_c124)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ k: v_k, c: v_c, b: v_b, n: v_n, by: v_by, O: v_O }, facts)) return 1;
+            if (fire !== null && !fire({ k: v_k, c: v_c, b: v_b, n: v_n, by: v_by, O: v_O.slice() }, facts)) return 1;
           }
         }
       }

@@ -105,10 +105,3 @@ export class SweepOffers<S, R> {
     return ladder.map((t) => ({ ...t, available: () => this.offer(t.run) }));
   }
 }
-
-/** The elements whose value differs between two copies of one array. */
-export function changed(before: ArrayLike<number>, after: ArrayLike<number>): number[] {
-  const out: number[] = [];
-  for (let i = 0; i < before.length; i++) if (before[i] !== after[i]) out.push(i);
-  return out;
-}

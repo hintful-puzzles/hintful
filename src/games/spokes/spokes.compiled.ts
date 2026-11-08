@@ -221,7 +221,7 @@ export function saturation(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Satura
       if (!(_c56)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, n: v_n, U: v_U }, facts)) return 1;
+        if (fire !== null && !fire({ c: v_c, n: v_n, U: v_U.slice() }, facts)) return 1;
       }
     }
   }
@@ -387,7 +387,7 @@ export function exhaustion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Exhaus
       if (!(_q162)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, U: v_U }, facts)) return 1;
+        if (fire !== null && !fire({ c: v_c, U: v_U.slice() }, facts)) return 1;
       }
     }
   }
@@ -815,7 +815,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ e: v_e, a: v_a, b: v_b, H: v_H }, facts)) return 1;
+        if (fire !== null && !fire({ e: v_e, a: v_a, b: v_b, H: v_H.slice() }, facts)) return 1;
       }
     }
   }
@@ -1251,7 +1251,7 @@ export function spareBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Spare
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ c: v_c, U: v_U, y: v_y, H: v_H }, facts)) return 1;
+            if (fire !== null && !fire({ c: v_c, U: v_U.slice(), y: v_y, H: v_H.slice() }, facts)) return 1;
           }
         }
       }

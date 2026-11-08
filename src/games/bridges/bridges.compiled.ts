@@ -392,7 +392,7 @@ export function everyNeighbor(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Eve
       if (!(_q107)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, A: v_A }, facts)) return 1;
+        if (fire !== null && !fire({ c: v_c, A: v_A.slice() }, facts)) return 1;
         cands.fill(-1);
         needMarkedKept.clear();
         bridgesMarkedKept.clear();
@@ -611,7 +611,7 @@ export function sealing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SealingBi
           if (!(_q195)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ N: v_N, c: v_c, y: v_y, f: v_f, G: v_G }, facts)) return 1;
+            if (fire !== null && !fire({ N: v_N, c: v_c, y: v_y, f: v_f, G: v_G.slice() }, facts)) return 1;
             cands.fill(-1);
             needMarkedKept.clear();
             bridgesMarkedKept.clear();
@@ -905,7 +905,7 @@ export function tooMany(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooManyBi
           if (!(_q407)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ N: v_N, c: v_c, y: v_y, r: v_r, H: v_H, G: v_G, t: v_t, k: v_k }, facts)) return 1;
+            if (fire !== null && !fire({ N: v_N, c: v_c, y: v_y, r: v_r, H: v_H.slice(), G: v_G.slice(), t: v_t, k: v_k }, facts)) return 1;
             cands.fill(-1);
             needMarkedKept.clear();
             bridgesMarkedKept.clear();
@@ -1078,7 +1078,7 @@ export function mustReachOut(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Must
         if (!(_q507)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ N: v_N, c: v_c, y: v_y, F: v_F, G: v_G }, facts)) return 1;
+          if (fire !== null && !fire({ N: v_N, c: v_c, y: v_y, F: v_F.slice(), G: v_G.slice() }, facts)) return 1;
           cands.fill(-1);
           needMarkedKept.clear();
           bridgesMarkedKept.clear();
@@ -1166,7 +1166,7 @@ export function loop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LoopBinding>
         if (!(_q535)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, c: v_c, y: v_y, f: v_f }, facts)) return 1;
+          if (fire !== null && !fire({ L: v_L.slice(), c: v_c, y: v_y, f: v_f }, facts)) return 1;
           cands.fill(-1);
           hasMarkedKept.clear();
           moreMarkedKept.clear();

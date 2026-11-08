@@ -246,7 +246,7 @@ export function cageSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSi
       if (!(_c65)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ r: v_r, K: v_K, c: v_c, t: v_t }, facts)) return 1;
+        if (fire !== null && !fire({ r: v_r, K: v_K.slice(), c: v_c, t: v_t }, facts)) return 1;
       }
     }
   }
@@ -436,7 +436,7 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
       if (!(_c208)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ u: v_u, W: v_W, L: v_L, s: v_s, R: v_R, t: v_t }, facts)) return 1;
+        if (fire !== null && !fire({ u: v_u, W: v_W.slice(), L: v_L.slice(), s: v_s, R: v_R.slice(), t: v_t }, facts)) return 1;
       }
     }
   }
@@ -547,7 +547,7 @@ export function cageMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageMi
       if (!(_q239)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ r: v_r, K: v_K, t: v_t }, facts)) return 1;
+        if (fire !== null && !fire({ r: v_r, K: v_K.slice(), t: v_t }, facts)) return 1;
         cands.fill(-1);
       }
     }
@@ -801,7 +801,7 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
             if (!(_q428)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ u: v_u, W: v_W, L: v_L, s: v_s, R: v_R, t: v_t, i: v_i, K: v_K, v: v_v }, facts)) return 1;
+              if (fire !== null && !fire({ u: v_u, W: v_W.slice(), L: v_L.slice(), s: v_s, R: v_R.slice(), t: v_t, i: v_i, K: v_K.slice(), v: v_v }, facts)) return 1;
               cands.fill(-1);
             }
           }
@@ -943,7 +943,7 @@ export function cageSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSums
       if (!(_c521)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ r: v_r, K: v_K, t: v_t }, facts)) return 1;
+        if (fire !== null && !fire({ r: v_r, K: v_K.slice(), t: v_t }, facts)) return 1;
         cands.fill(-1);
       }
     }
@@ -1215,7 +1215,7 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
             if (!(_q691)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ u: v_u, W: v_W, L: v_L, s: v_s, R: v_R, t: v_t, i: v_i, K: v_K, v: v_v }, facts)) return 1;
+              if (fire !== null && !fire({ u: v_u, W: v_W.slice(), L: v_L.slice(), s: v_s, R: v_R.slice(), t: v_t, i: v_i, K: v_K.slice(), v: v_v }, facts)) return 1;
               cands.fill(-1);
             }
           }
@@ -1525,7 +1525,7 @@ export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | 
         if (!(_c908)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ d: v_d, Y0: v_Y0, X0: v_X0, T: v_T, Y: v_Y }, facts)) return 1;
+          if (fire !== null && !fire({ d: v_d, Y0: v_Y0.slice(), X0: v_X0, T: v_T, Y: v_Y.slice() }, facts)) return 1;
         }
       }
     }

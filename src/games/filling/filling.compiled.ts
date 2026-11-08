@@ -201,7 +201,7 @@ export function mustGrow(b: Marks, sp: GridSpace, fire: Fire<MustGrowBinding> | 
         if (!(_c67)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ O: v_O, d: v_d, F: v_F, c: v_c, A: v_A, R: v_R, Y: v_Y }, facts)) return 1;
+          if (fire !== null && !fire({ O: v_O.slice(), d: v_d, F: v_F.slice(), c: v_c, A: v_A.slice(), R: v_R.slice(), Y: v_Y.slice() }, facts)) return 1;
         }
       }
     }
@@ -312,7 +312,7 @@ export function onlyWay(b: Marks, sp: GridSpace, fire: Fire<OnlyWayBinding> | nu
         if (!(_c170)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ O: v_O, c: v_c, A: v_A, d: v_d, T: v_T }, facts)) return 1;
+          if (fire !== null && !fire({ O: v_O.slice(), c: v_c, A: v_A.slice(), d: v_d, T: v_T.slice() }, facts)) return 1;
         }
       }
     }
@@ -381,7 +381,7 @@ export function tooBig(b: Marks, sp: GridSpace, fire: Fire<TooBigBinding> | null
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ O: v_O, c: v_c, d: v_d }, facts)) return 1;
+        if (fire !== null && !fire({ O: v_O.slice(), c: v_c, d: v_d }, facts)) return 1;
         cands.fill(-1);
       }
     }
@@ -432,7 +432,7 @@ export function noRoom(b: Marks, sp: GridSpace, fire: Fire<NoRoomBinding> | null
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ d: v_d, F: v_F, c: v_c }, facts)) return 1;
+        if (fire !== null && !fire({ d: v_d, F: v_F.slice(), c: v_c }, facts)) return 1;
       }
     }
   }
@@ -504,7 +504,7 @@ export function tooFar(b: Marks, sp: GridSpace, fire: Fire<TooFarBinding> | null
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ O: v_O, d: v_d, F: v_F, c: v_c }, facts)) return 1;
+        if (fire !== null && !fire({ O: v_O.slice(), d: v_d, F: v_F.slice(), c: v_c }, facts)) return 1;
       }
     }
   }

@@ -50,10 +50,9 @@ import {
   newDrawState,
   redraw,
 } from "./render.ts";
-import { tentsSolve } from "./solver.ts";
+import { isSolved, tentsSolve } from "./solver.ts";
 import {
   BLANK,
-  checkCompletion,
   DIFF_EASY,
   DIFF_TRICKY,
   encodeDesc,
@@ -153,7 +152,7 @@ describe("tents generator", () => {
     for (let i = 0; i < p.w * p.h; i++) {
       if (full[i] !== TREE) full[i] = soln[i] === TENT ? TENT : NONTENT;
     }
-    expect(checkCompletion(p.w, p.h, full, state.numbers)).toBe(true);
+    expect(isSolved(p.w, p.h, full, state.numbers)).toBe(true);
   });
 });
 
@@ -165,6 +164,19 @@ describe("tents completion (executeMove)", () => {
     for (let i = 0; i < p.w * p.h; i++) if (soln[i] === TENT) tents.push(i);
     const done = executeMove(state, { type: "solve", tents });
     expect(tentsGame.status(done)).toBe("solved");
+  });
+
+  it("the tents alone finish a board: an open square is grass", () => {
+    const p = { w: 8, h: 8, diff: DIFF_EASY };
+    const { state, soln } = genBoard(p, "complete-2");
+    const placed = executeMove(state, {
+      type: "cells",
+      cells: [...Array(p.w * p.h).keys()]
+        .filter((i) => soln[i] === TENT)
+        .map((i) => ({ x: i % p.w, y: Math.floor(i / p.w), v: TENT })),
+    });
+    expect(placed.grid.some((v) => v === BLANK)).toBe(true);
+    expect(tentsGame.status(placed)).toBe("solved");
   });
 
   it("an all-non-tent board is not complete", () => {

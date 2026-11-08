@@ -13,16 +13,23 @@ painting arrows, the link notation, mistake-checking and the explained hint.
 ### Requirement: Rules: Tents completion is judged from the board
 
 Tents are placed on a `w × h` grid of fixed trees. The board SHALL be reported
-complete when the tent count equals the tree count, every row and column holds
-exactly its edge number of tents, no two tents are adjacent even diagonally,
-and the trees and tents admit a one-to-one matching of each tent to an
-orthogonally adjacent tree.
+complete exactly while its tents are an answer of `tents.description.yaml`, a
+square left open read as grass: the tent count equals the tree count, every
+row and column holds exactly its edge number of tents, no two tents are
+adjacent even diagonally, and the trees and tents admit a one-to-one matching
+of each tent to an orthogonally adjacent tree. Links SHALL play no part.
 
 #### Scenario: Completion requires a valid matching
 
 - **WHEN** the tents match all edge numbers and are non-adjacent but no
   perfect matching of trees and tents exists
 - **THEN** the state does not report completed
+
+#### Scenario: The tents alone finish a board
+
+- **WHEN** every tent of the answer is placed and the other squares are left
+  open
+- **THEN** the state reports completed
 
 ### Requirement: Rules: Adjacent tents are marked with an error diamond
 
@@ -207,26 +214,13 @@ one level below.
 - **THEN** it is thrown away before the solver is asked, and another layout
   is drawn
 
-### Requirement: Generation: Tents' link rung sits beneath Easy, and its Easy rungs at Easy
+### Requirement: Solver: Tents' solver is a certified deduction ladder
 
-The rung that links a tent to its one unattached adjacent tree SHALL sit
-beneath Easy, so that the generator's links-only cap runs it alone. At Easy the
-ladder SHALL run: grass on a blank square with no adjacent unmatched tree;
-grass on a blank square touching a tent, even diagonally; a tent, linked to
-the tree, on a tree's single candidate square; the link of a tree to a tent
-already on its single candidate square; and the per-line count.
-
-#### Scenario: The links-only cap runs one rung
-
-- **WHEN** the solver runs at the cap beneath Easy
-- **THEN** only the rung that links a tent to its tree runs
-
-### Requirement: Generation: Tents' Normal rungs are rungs of their own
-
-At Normal the ladder SHALL add the tree diagonal-pair elimination, which makes
-a non-tent of the square between a tree's two diagonal candidates, and the line
-count's reading of the two lines alongside. Each SHALL be a rung of its own that
-writes only what its Normal half deduces.
+Tents' solver SHALL deduce only, as the ladder `tents.description.yaml`
+states. Each technique SHALL be checked sound, and a planted defect of each
+found unsound. The boards of its firing census SHALL be those generated at
+every preset and at a non-square size, at every cap the generator uses, and
+every technique SHALL fire on them.
 
 #### Scenario: Generated boards solve at exactly their difficulty
 
@@ -234,25 +228,36 @@ writes only what its Normal half deduces.
 - **THEN** the Normal solver reaches the unique solution
 - **AND** the Easy solver fails to converge on it
 
-#### Scenario: A mis-tiered Normal rung fails
+#### Scenario: A mis-tiered Normal technique fails
 
-- **WHEN** either Normal rung is declared at Easy
+- **WHEN** either Normal technique is declared at Easy
 - **THEN** the generator's gate accepts different boards, and the frozen
   differential fails
 
-### Requirement: Solver: Tents' solver is a certified deduction ladder
+#### Scenario: A silenced technique fails
 
-Tents' solver SHALL run its deductions as a `runDeductionFixpoint` ladder,
-each deduction a rung of its own. The boards of its firing census SHALL be
-those generated at every preset, read from `presets`, and at a non-square
-size, at every cap the generator uses, and every rung SHALL fire on them. The
-solver SHALL NOT keep a hand-written loop beside the ladder.
+- **WHEN** any technique is removed from the description
+- **THEN** the firing census or the frozen differential fails
 
 #### Scenario: A Normal rung nothing depends on is still certified
 
-- **WHEN** the tree diagonal-pair rung is silenced
+- **WHEN** the tree diagonal-pair technique is silenced
 - **THEN** the census reports it as never fired, even though the frozen
-  differential still passes, because other rungs reach its conclusions
+  differential still passes, because other techniques reach its conclusions
+
+### Requirement: Solver: Tents' techniques by tier
+
+At Easy the ladder SHALL hold a tent's link to its one tree still without a
+tent, grass where no tree is beside, grass round a tree that has its tent,
+grass round a tent, a tree's tent on its one square left, a tree's link to the
+tent on its one square left, and a line's count. At Normal it SHALL add the
+square both of a tree's two diagonal candidates touch, and the squares beside
+a line that each placement of its tents touches.
+
+#### Scenario: The cap beneath Easy deduces nothing
+
+- **WHEN** the solver runs at the cap beneath Easy
+- **THEN** no technique runs, and the board is not solved
 
 ### Requirement: Solver: Tents' line count reads every placement of a line's tents
 

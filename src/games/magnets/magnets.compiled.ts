@@ -390,7 +390,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
         if (!(_c79)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, d: v_d, v: v_v, O: v_O }, facts)) return 1;
+          if (fire !== null && !fire({ L: v_L, d: v_d, v: v_v, O: v_O.slice() }, facts)) return 1;
         }
       }
     }
@@ -493,7 +493,7 @@ export function oddGap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OddGapBind
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, n: v_n, d: v_d, O: v_O, S: v_S }, facts)) return 1;
+            if (fire !== null && !fire({ L: v_L, n: v_n, d: v_d, O: v_O.slice(), S: v_S.slice() }, facts)) return 1;
           }
         }
       }
@@ -577,7 +577,7 @@ export function marked(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MarkedBind
           if (!(_q186)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, M: v_M, d: v_d, v: v_v }, facts)) return 1;
+            if (fire !== null && !fire({ L: v_L, M: v_M.slice(), d: v_d, v: v_v }, facts)) return 1;
             cands.fill(-1);
             inMagnetMarkedKept.clear();
           }
@@ -725,7 +725,7 @@ export function everyTile(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EveryTi
           if (!(_q253)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, d: v_d, v: v_v, T: v_T }, facts)) return 1;
+            if (fire !== null && !fire({ L: v_L, d: v_d, v: v_v, T: v_T.slice() }, facts)) return 1;
           }
         }
       }
@@ -825,7 +825,7 @@ export function onlyEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyEndBi
           if (!(_q304)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, d: v_d, v: v_v, O: v_O, T: v_T }, facts)) return 1;
+            if (fire !== null && !fire({ L: v_L, d: v_d, v: v_v, O: v_O.slice(), T: v_T.slice() }, facts)) return 1;
           }
         }
       }

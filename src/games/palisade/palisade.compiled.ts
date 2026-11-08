@@ -259,7 +259,7 @@ export function numberExhausted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<N
       if (!(_c49)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ q: v_q, c: v_c, U: v_U, n: v_n }, facts)) return 1;
+        if (fire !== null && !fire({ q: v_q, c: v_c, U: v_U.slice(), n: v_n }, facts)) return 1;
       }
     }
   }
@@ -312,7 +312,7 @@ export function notTooBig(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTooB
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ O: v_O, e: v_e, A: v_A, b: v_b, B: v_B }, facts)) return 1;
+          if (fire !== null && !fire({ O: v_O.slice(), e: v_e, A: v_A.slice(), b: v_b, B: v_B.slice() }, facts)) return 1;
         }
       }
     }
@@ -448,7 +448,7 @@ export function notTooSmall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTo
       if (!(_c166)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ O: v_O, c: v_c, A: v_A, S: v_S }, facts)) return 1;
+        if (fire !== null && !fire({ O: v_O.slice(), c: v_c, A: v_A.slice(), S: v_S.slice() }, facts)) return 1;
       }
     }
   }
@@ -525,7 +525,7 @@ export function noDanglingEdges(b: Marks, sp: GridSpace, fire: Fire<NoDanglingEd
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ p: v_p, C: v_C, F: v_F, f: v_f }, facts)) return 1;
+        if (fire !== null && !fire({ p: v_p, C: v_C.slice(), F: v_F.slice(), f: v_f }, facts)) return 1;
       }
     }
   }
@@ -620,7 +620,7 @@ export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<E
             if (!(_c273)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ O: v_O, q: v_q, c: v_c, y: v_y, R: v_R, z: v_z }, facts)) return 1;
+              if (fire !== null && !fire({ O: v_O.slice(), q: v_q, c: v_c, y: v_y, R: v_R.slice(), z: v_z }, facts)) return 1;
             }
           }
         }
@@ -664,7 +664,7 @@ export function inside(b: Marks, sp: GridSpace, fire: Fire<InsideBinding> | null
     if (!(true)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ O: v_O, e: v_e }, facts)) return 1;
+      if (fire !== null && !fire({ O: v_O.slice(), e: v_e }, facts)) return 1;
     }
   }
   return fired;

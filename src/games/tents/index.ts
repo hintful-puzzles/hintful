@@ -70,7 +70,7 @@ import {
   type TentsDrawState,
   TLBORDER,
 } from "./render.ts";
-import { tentsSolve } from "./solver.ts";
+import { status, tentsSolve } from "./solver.ts";
 import {
   BLANK,
   canJoin,
@@ -89,7 +89,6 @@ import {
   newState,
   paramConfig,
   partnerOf,
-  status,
   TENT,
   type TentsMistake,
   type TentsMove,
