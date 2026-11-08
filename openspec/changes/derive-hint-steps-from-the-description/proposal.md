@@ -79,10 +79,22 @@ what can the engine take over from what a game states.
   Loopy's corners: a clue against the dot's degree), whose pairing the
   engine could propose but only a census on dealt boards can keep; the
   order and tiers, a teaching decision; and the words.
-- **Fully automatic is the wrong goal.** Demystify explains every step by a
-  minimal set of rules with no stated techniques, and its authors call its
-  loop and connectivity explanations poor; its steps are not techniques a
+- **Fully automatic is the wrong goal.** Demystify (Espasa and others,
+  2021) explains every step of a constraint model by the smallest set of
+  rules and known facts that rules a value out, printed from a sentence per
+  rule, and prices a step by that set's size. Its steps matched tutorials
+  89% on average, on encodings tuned to do so; its authors call its loop and
+  connectivity explanations poor, since those rules are encoded through
+  hidden variables no player sees. Each step is a one-off, not a technique a
   player learns, which is this project's hint bar.
+- **What to borrow from it is the finding, not the hint.** Where a dealt
+  board leaves a ladder stuck, a minimal unsatisfiable subset over the
+  description's rules (z3, which the checker already runs, gives unsat
+  cores to minimize) names the rules a missing technique must combine: the
+  "two rules meet" group, proposed from evidence rather than by pairing
+  every two rules. Untried; worth trying if step 3 below finds that group
+  large. The works and what each gave are `docs/descriptions.md`
+  § "What this builds on".
 
 ## Before it starts
 

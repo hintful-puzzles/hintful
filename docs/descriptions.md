@@ -97,6 +97,7 @@ and techniques, and:
 | Checking a technique sound | you state or edit a technique, or the gate reports one unchecked |
 | A planning game's position and moves | you describe a planning game, or its moves or finish change |
 | Checking a dead-end claim sound | you state or edit a dead-end claim, a move or a finish, or the gate reports a claim unchecked |
+| What this builds on | you design a new part of the language or the engine, or write about the approach |
 
 ## The file
 
@@ -1143,3 +1144,23 @@ whose positions number at most `CHECKED_POSITIONS`
 The verdict is recorded in `src/describe/soundness.json` under a fingerprint
 of the claim and every part of the rules the search reads, and the gate
 fails on a compiled claim with none.
+
+## What this builds on
+
+The works the language and its engine take from, kept here so that a design
+builds on them and anything written about the approach cites them. The
+reading, with each work's limits and the corrections to what was first said
+of it, is
+[`prior-art.md`](../openspec/changes/archive/2026-10-29-investigate-a-language-for-puzzle-games/prior-art.md).
+A design that takes from a work adds it here, with what was taken.
+
+| Work | What is taken from it |
+| --- | --- |
+| Butler, Torlak and Popović, FDG 2017 (Nonograms) | A technique as a program in a typed condition-action language, checked sound by an SMT solver: § "Checking a technique sound". Their synthesis recovered 9 of 14 documented strategies, in one genre |
+| Espasa, Gent, Hoffmann, Jefferson and Lynch, 2021 (Demystify) | A step explained by a minimal unsatisfiable subset of named rules and facts, for any constraint model. Not taken as the hint: its steps are not techniques a player learns, and its authors call loop and connectivity explanations poor. A candidate tool for finding the rules a missing technique combines |
+| Bogaerts, Gamba and Guns, 2021 | A step as the facts used, the constraints used and the facts derived, with a cost: a firing's premises and conclusion (§ "A firing's reason is built from its binding") |
+| cspuz and cspuz_rs (semiexp); Ludii (Browne, Piette and others) | The space kept apart from the rules, so one game's rules run on any tiling; connectivity and the single loop as named primitives, not encodings |
+| PuzzleScript (Lavelle, 2013) | Moves as rewrite rules over positions: § "A planning game's position and moves" |
+| Browne, CIG 2013; Lantz, Isaksen, Jaffe, Nealen and Togelius, 2017 | A technique as a derived constraint that saves a level of lookahead, and depth as the steps of a strategy ladder: the ladder and its tiers |
+| Pelánek, 2014; HoDoKu's rating | A tier as a set of techniques is a partial account of difficulty, and the order of techniques changes both the grade and the technique a hint names (§ "A statement's order is behavior") |
+| AC-3 (Mackworth, 1977); semi-naive Datalog evaluation | Running again only what a changed fact can reach: `CellMarks.visit` (§ "What a technique compiles to") |

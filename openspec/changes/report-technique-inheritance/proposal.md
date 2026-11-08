@@ -28,6 +28,16 @@ write. Today a port finds this out by writing the game.
 - Whether the report runs before every port, which depends on how many
   families state their techniques by then.
 
+## Prior art
+
+Butler, Torlak and Popović (FDG 2017) check Nonogram techniques sound
+against a genre's rules with an SMT solver; this report asks the same of
+one family's techniques against another game's rules. For a rule of the
+candidate no rung reads, a minimal unsatisfiable subset over its rules on a
+board where the inherited ladder stalls (Demystify's method, Espasa and
+others, 2021) would name what the missing technique must combine; untried.
+`docs/descriptions.md` § "What this builds on" lists the works.
+
 ## Acceptance
 
 The report run on one candidate, and its table compared with the port.
