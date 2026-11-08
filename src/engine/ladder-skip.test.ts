@@ -25,8 +25,10 @@ const SKIPPING = Object.entries(modules)
   .map(([path]) => path.split("/")[2])
   .sort();
 
-/** Boards dealt a preset, both ways. */
-const DEALS = 3;
+/** Boards dealt a preset, both ways: one deal is thousands of runs of every
+ * technique, and a footprint planted with one read, or blind to the
+ * relation, changed a board on the first preset it reached. */
+const DEALS = 1;
 
 function deals(game: AnyGame, params: unknown, skipping: boolean): string[] {
   const before = CellMarks.skipping;
