@@ -60,6 +60,30 @@ The decline gave two reasons.
   parents, and any step a sentence per technique cannot carry, each with its
   reason.
 
+## The further question: techniques the engine supplies
+
+The owner asked (2026-11-08) whether the engine could hold abstract kinds
+of deduction and match them to a description, so that a game states few or
+none of its techniques. The same question as this change's, one layer down:
+what can the engine take over from what a game states.
+
+- **By kind of rule, not by search.** A kind of rule carries the deductions
+  that follow from it alone ("exactly k of these": k in, strike the rest;
+  "all different": the Latin library, already shared; "single loop": no
+  early closure, a dead end takes no line). A game whose rules are of that
+  kind gets them, sound by construction and confirmed by the checker.
+  Searching templates and filtering by the checker and a census is the other
+  way; Butler and others recovered 9 of 14 Nonogram strategies by it, in one
+  genre (`2026-10-29-investigate-a-language-for-puzzle-games/prior-art.md`).
+- **What stays the game's:** techniques where two rules meet (most of
+  Loopy's corners: a clue against the dot's degree), whose pairing the
+  engine could propose but only a census on dealt boards can keep; the
+  order and tiers, a teaching decision; and the words.
+- **Fully automatic is the wrong goal.** Demystify explains every step by a
+  minimal set of rules with no stated techniques, and its authors call its
+  loop and connectivity explanations poor; its steps are not techniques a
+  player learns, which is this project's hint bar.
+
 ## Before it starts
 
 1. **Measure what is a sentence per technique.** For each described game,
@@ -70,7 +94,13 @@ The decline gave two reasons.
 2. **Write three games' steps both ways**, one with sentences alone
    (Unequal), one with marks (Singles), one with a plan (Loopy), and compare
    the words a player reads, step for step, on the hint walks.
-3. **Ask the owner** before any player-visible wording changes: a derived
+3. **Sort each described game's stated techniques** into those that follow
+   from one rule alone, those where two rules meet, and those that are the
+   game's own. The first share is what an engine library by kind of rule
+   would save; the second says whether proposing pairs is worth building.
+   Whether that library is filed, and as what, is decided from these
+   numbers.
+4. **Ask the owner** before any player-visible wording changes: a derived
    sentence that reads worse than today's is not taken.
 
 ## Acceptance

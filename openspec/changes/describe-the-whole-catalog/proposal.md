@@ -62,6 +62,14 @@ This change comes before every new game: `add-ball-sort` and
 `add-word-list-puzzles` wait for it. `report-technique-inheritance` reads
 stated techniques, so it gains from every family this change describes.
 
+**The first new game after it is a measurement** (the owner, 2026-11-08,
+"up to you"): an easy deduction game from the corpus's group closest to
+today's language, written from its description, with its per-game code
+counted against a hand-written game of its kind. It comes after this change
+so that it measures the finished language, not one still growing. Ball sort
+is not that measurement: the owner wants games like it as curiosities, as
+Untangle is, and not as evidence about the language.
+
 ## Open
 
 - **What a game with no deduction ladder describes.** That includes a
