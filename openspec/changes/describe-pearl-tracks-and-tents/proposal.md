@@ -52,6 +52,11 @@ bind here, and the list in `describe-net-…`'s proposal before them.
 - **A square settled by its neighbors' notes is locked by the hint** before
   the walk and after each firing, where the game has locks; the plan ends
   with every square locked.
+- **A technique that reads connectivity runs whole** after every firing,
+  and that is where Net's large Unreasonable deals went past the bar. The
+  engine fix is filed as `rerun-connected-techniques-only-where-a-firing-reached`.
+  Where a game here is slow on those techniques, measure it and add it to
+  that change; do not work around it in the game.
 - **A set past a few dozen elements is the cost to watch**: `union` and
   `minus` switch to a `Set` past `SMALL_SET` in `describe-runtime.ts`;
   membership tests inside a quantifier are where a solve spent its time.
