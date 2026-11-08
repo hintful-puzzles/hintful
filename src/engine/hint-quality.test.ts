@@ -138,14 +138,6 @@ const LONG_NARRATIONS: {
     },
   },
   {
-    games: ["pearl"],
-    rungs: ["whiteTurnsOpposite"],
-    why: PEARL_CARRIES_ON,
-    spokenOn: {
-      pearl: "10x12dt:BbBcWaBnBaBeBBaBaBaBbBcBaBfBdWcBaBfBaBfWdWeWWeWWaWaWWWaWj",
-    },
-  },
-  {
     // Spoken over the limit on 18 of 300 boards from 6x6 to 10x12, none of
     // them a board the walk deals (2026-10-27): pinned on one.
     games: ["pearl"],
@@ -223,7 +215,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["net"],
-    rungs: ["loop", "sealed"],
+    rungs: ["loopLock", "loopNote", "sealLock", "sealNote"],
     why:
       "A turning ruled out because it would close a loop or seal a group off is " +
       "a second premise beside the notes and locks the others clash with, and " +
@@ -231,11 +223,9 @@ const LONG_NARRATIONS: {
       "of the two would leave a way of turning the tile unaccounted for. When " +
       "dead ends are what seal the group, the sentence says so (they have no " +
       "other wire) and counts what is cut off, because the owner found the bare " +
-      "'seal off' unreadable in playtest (2026-09-30). When the group is one the " +
-      "wire only runs into, through squares not settled yet, the sentence says " +
-      "what makes it a group: they end its wire however they turn. Over the " +
-      "limit where a wrapped grid's edge, a group of dead ends or a run into " +
-      "squares not settled yet stands beside a fit to the notes and locks.",
+      "'seal off' unreadable in playtest (2026-09-30). Over the limit where a " +
+      "wrapped grid's edge or a group of dead ends stands beside a fit to the " +
+      "notes and locks.",
     spokenOn: {
       net: "7x7de:c83a8913a78ec845de71a421beb9677e4ec8bd78544c43cc4",
     },
