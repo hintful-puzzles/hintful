@@ -48,6 +48,10 @@ export interface Marks {
   cand(c: number): number;
   /** Whether the cell may still hold `d`. */
   has(c: number, d: number): boolean;
+  /** The elements of a technique's first binder its solve run is still to
+   * visit, 1 each, by {@link Footprint}; `null` where every one is visited
+   * (`skipping` off, or marks that keep no such sets). */
+  visit?(f: Footprint): Uint8Array | null;
   /** Strike `d` from the cell, where a technique has no `fire` to tell. */
   strikeAt(c: number, d: number): void;
   /** Place `d` in the cell, where a technique has no `fire` to tell. */
@@ -88,6 +92,122 @@ export const MARK = 3;
 /** Two edges related: the edge, then `4·f + d` for the other edge `f` and
  * the relation `d`, 1 alike and 2 opposite. */
 export const RELATE = 4;
+
+/** A step through a tiling's geometry: the {@link GridSpace} array read. */
+export type FootprintStep =
+  | "faceEdges"
+  | "angleEdges"
+  | "cellEdges"
+  | "faceAngles"
+  | "cellAngles"
+  | "faceCells"
+  | "edgeFaces"
+  | "angleCell"
+  | "edgeEnds";
+
+/**
+ * What a binding at one element of a technique's first binder reads: each
+ * read as the steps from that element to the marked one, and of which marks
+ * (the answer's, or the edge mark); and whether it reads the relation over
+ * the edges, which a relating fact changes for whole classes. The compiler
+ * emits it (`src/describe/footprint.ts`).
+ */
+export interface Footprint {
+  readonly sort: "face" | "cell" | "edge" | "angle";
+  readonly reads: readonly {
+    readonly steps: readonly FootprintStep[];
+    readonly kind: "answer" | "edgeMark";
+  }[];
+  readonly relation: boolean;
+}
+
+/** For each marked element, the first-binder elements whose bindings read
+ * it, as offsets into a list (`start[x]` to `start[x + 1]`). */
+export interface ReadBy {
+  readonly start: Int32Array;
+  readonly list: Int32Array;
+}
+
+/** A footprint read backwards on one board: how many elements its first
+ * binder has, and which of them read each answer element and each marked
+ * one. */
+export interface Inverse {
+  readonly n: number;
+  readonly answer: ReadBy;
+  readonly edgeMark: ReadBy;
+  readonly relation: boolean;
+}
+
+const inverses = new WeakMap<GridSpace, Map<Footprint, Inverse>>();
+
+/** The elements `steps` reach from `x`, a negative entry (a face's missing
+ * dot) dropped. */
+function reach(sp: GridSpace, x: number, steps: readonly FootprintStep[]): number[] {
+  let at = [x];
+  for (const s of steps) {
+    const next: number[] = [];
+    for (const y of at) {
+      if (s === "angleCell") next.push(sp.angleCell[y]);
+      else if (s === "edgeEnds") next.push(sp.edgeEnds[2 * y], sp.edgeEnds[2 * y + 1]);
+      else next.push(...sp[s][y]);
+    }
+    at = next.filter((y) => y >= 0);
+  }
+  return at;
+}
+
+function readBy(pairs: readonly number[][], size: number): ReadBy {
+  const start = new Int32Array(size + 1);
+  for (let t = 0; t < size; t++) start[t + 1] = start[t] + (pairs[t]?.length ?? 0);
+  const list = new Int32Array(start[size]);
+  for (let t = 0; t < size; t++) list.set(pairs[t] ?? [], start[t]);
+  return { start, list };
+}
+
+/** `f` read backwards on `sp`, built once a board. `answers` and `marked`
+ * are how many answer elements and marked elements the marks hold. */
+export function inverseOf(
+  sp: GridSpace,
+  f: Footprint,
+  answers: number,
+  marked: number,
+): Inverse {
+  let byBoard = inverses.get(sp);
+  if (byBoard === undefined) {
+    byBoard = new Map();
+    inverses.set(sp, byBoard);
+  }
+  const kept = byBoard.get(f);
+  if (kept !== undefined) return kept;
+  const n =
+    f.sort === "face"
+      ? sp.faces.length
+      : f.sort === "angle"
+        ? sp.angles.length
+        : f.sort === "edge"
+          ? sp.edges.length
+          : sp.cells.length;
+  const answer: number[][] = Array.from({ length: answers }, () => []);
+  const mark: number[][] = Array.from({ length: marked }, () => []);
+  for (let x = 0; x < n; x++)
+    for (const r of f.reads) {
+      const into = r.kind === "answer" ? answer : mark;
+      for (const t of reach(sp, x, r.steps)) {
+        const at = into[t];
+        if (at === undefined)
+          throw new Error(`a footprint reaches ${r.kind} ${t}, past the marks`);
+        if (at.at(-1) !== x) at.push(x);
+      }
+    }
+  const made: Inverse = {
+    n,
+    answer: readBy(answer, answers),
+    edgeMark: readBy(mark, marked),
+    relation: f.relation,
+  };
+  byBoard.set(f, made);
+  return made;
+}
 
 /**
  * What is known of how the edges' values relate, two at a time: classes of

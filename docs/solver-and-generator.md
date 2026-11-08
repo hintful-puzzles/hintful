@@ -140,6 +140,7 @@ for a ladder that is not the plain shape:
 | Read this for | Where |
 | --- | --- |
 | a described game's ladder: one technique an entry, capped and graded per scale | [`engine/ladder-runtime.ts`](../src/engine/ladder-runtime.ts) `ladderTechniques` |
+| a technique that, restarted, visits only what a firing reached, so the restart costs little | `CellMarks.visit`, and [`descriptions.md`](./descriptions.md) § "What a technique compiles to" |
 | a verdict richer than a boolean, carried out through `settled` | [`clusters/solver.ts`](../src/games/clusters/solver.ts) `solveGame` |
 | a ladder that is not a tier prefix, a clamped cap, and a cost accumulated across firings through `settled` | [`spokes/solver.ts`](../src/games/spokes/solver.ts) `spokesSolve` |
 | a rung that runs at one tier and not at the tier above, so it guards itself | [`ascent/solver.ts`](../src/games/ascent/solver.ts) `ascentLadder` |

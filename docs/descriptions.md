@@ -424,6 +424,22 @@ the checker found boards it gave two answers. A name that reads only what
 the board deals, or that nothing later compares with a fresh read, may be
 bound outside (Star Battle's `neededLine`).
 
+**A solve visits again only the elements a fact reached.** The fixpoint
+runs every technique again from the top after each firing, and most find
+nothing. Where every mark a binding reads is reached from its first binder's
+element through a tiling's geometry, the compiler emits that footprint
+([`footprint.ts`](../src/describe/footprint.ts)), and on the solve path the
+technique visits only the elements a fact reached since a binding there
+found nothing (`CellMarks.visit`): a binding that found nothing finds
+nothing again on the same marks, so every firing and every tier stands.
+What the analysis cannot follow (connectivity, a loop, a set over the whole
+board, a supposition) makes the technique whole, and it visits every
+element as before; so does every technique off a tiling, until the grid's
+geometry is followed too. `ladder-skip.test.ts` deals each game that skips
+both ways and compares the boards. A new way to read the marks is added to
+the analysis, or it must make the technique whole: a read it lets through
+unnamed skips a binding that now fires.
+
 **What a description costs is measured on the same boards.**
 [`deal-profile`](../scripts/checks/deal-profile.test.ts) profiles every
 described game's deals and walks at HEAD and says where the work is, which

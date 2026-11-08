@@ -28,6 +28,7 @@ import {
   withEveryVariation,
 } from "./description.ts";
 import { type Binder, type Expr, parse } from "./expr.ts";
+import { footprintOf } from "./footprint.ts";
 
 /** A region's sort names its partition, as a clue's names its kind. */
 type ElemSort =
@@ -343,6 +344,9 @@ interface ClueKind {
 }
 
 interface Env {
+  /** The binder a technique's solve run visits only where a fact reached
+   * (`footprint.ts`): its loop skips an element `_visit` does not hold. */
+  visitBinder?: Binder;
   defs: ReadonlyMap<string, Definition>;
   clues: ReadonlyMap<string, ClueKind>;
   /** The partitions the board deals, by name. */
@@ -1488,6 +1492,13 @@ function bindingLoops(
       ...(edgeSet === null ? {} : { edgeSet }),
     };
     inner.set(bnd.name, bound);
+    if (bnd === env.visitBinder) {
+      if (skip !== "continue")
+        throw new CompileError(`${bnd.name}: a visited binder loops`);
+      out.emit(
+        `if (_visit !== null) { if (_visit[${v}] === 0) continue; _visit[${v}] = 0; }`,
+      );
+    }
     if (where !== null) {
       const w = compileExpr(where, inner, env, out);
       expect(w, "bool", `where of ${bnd.name}`);
@@ -4513,6 +4524,15 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   // made among them, and one is read again only where `sharedReach` allows.
   // Bridges' `cap(c, y)` reads `has(c, y)` three times in one `where`.
   const benv: Env = { ...tenv, shared: { made: new Map() } };
+  const foot = footprintOf(t, env);
+  const footName = `${fnName}Footprint`;
+  if (foot !== null) {
+    benv.visitBinder = t.binders[0];
+    env.used.add("type Footprint");
+    body.emit(
+      `const _visit = fire === null ? (b.visit?.(${footName}) ?? null) : null;`,
+    );
+  }
   let params: string;
   if (onPlace) {
     const [first, ...rest] = t.binders;
@@ -4576,6 +4596,13 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
     "",
     `const ${fnName}Facts: number[] = [];`,
     ...(readsCands.yes ? [`let ${buffer} = new Int32Array(0);`] : []),
+    ...(foot === null
+      ? []
+      : [
+          "",
+          "/** What a binding at one element of its first binder reads. */",
+          `const ${footName}: Footprint = ${JSON.stringify(foot)};`,
+        ]),
     "",
     `/** Its dearest read grows with the board as ${power(growth)}. */`,
     `export function ${fnName}(b: Marks, ${spParam}: GridSpace, ${clueParam}${params}fire: Fire<${bindingType}> | null): number {`,

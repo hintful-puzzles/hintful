@@ -52,7 +52,11 @@ and `describe-loopy-…` changes bind here.
   propagating techniques belong first in their tier, and the hint's own
   order can be kept apart (`ladderWalk` takes the entries in any order).
   A technique asking a fill per element is the cost to watch: guard it with
-  the cheap count that decides most cases exactly.
+  the cheap count that decides most cases exactly. A solve skips the
+  bindings no fact reached only where the footprint analysis follows the
+  geometry (`rerun-only-what-a-firing-touched`), which is a tiling's alone so
+  far; where one of these games is slow on the grid, teach the analysis the
+  grid's steps (a cell's neighbors and edges) before anything else.
 - **A fill reads its own values only at the pair** to prune pair by pair:
   `4 - g(x) - g(y)`, not `count(z in {x, y} where g(z) = 1)`.
 - **The frozen differential is the strongest comparison** where a game has

@@ -21,11 +21,10 @@
  * should.** The ladder *shape* is near-universal, but the bookkeeping wrapped
  * around it is per-game and often decides which puzzles exist, so a solver whose
  * loop *looks* like this one is not evidence that it is this one; the
- * differential is. One solver breaks a promise this runner makes:
- *
- * - **Loopy** breaks *a pass attempts every technique at or below the cap*: each
- *   of its firings reports the cheapest rung that could use the new
- *   information, and the next pass skips the techniques below it.
+ * differential is. No solver breaks a promise this runner makes: Loopy's,
+ * which skipped the rungs below the cheapest a firing could feed, runs its
+ * compiled ladder here, and a compiled technique skips only the bindings no
+ * fact reached, inside its own run (`CellMarks.visit`).
  *
  * That list is re-derived whenever this contract changes, never carried forward
  * (`docs/solver-and-generator.md` § "Where the fixpoint does not fit").

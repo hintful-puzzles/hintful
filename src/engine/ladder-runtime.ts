@@ -16,7 +16,10 @@ import {
   EdgeRelation,
   type Facts,
   type Fire,
+  type Footprint,
   type GridSpace,
+  type Inverse,
+  inverseOf,
   MARK,
   type Marks,
   RELATE,
@@ -123,6 +126,14 @@ export class CellMarks implements Marks {
    * values are written on the two cells either side. */
   readonly onEdges: boolean;
 
+  /** Whether a technique's solve run visits only the elements a fact
+   * reached since a binding there found nothing ({@link visit}). Off only
+   * to compare a run with one that visits every element. */
+  static skipping = true;
+  /** Each technique's elements still to visit, by its footprint, with the
+   * footprint read backwards. */
+  private readonly visits = new Map<Footprint, { at: Uint8Array; by: Inverse }>();
+
   constructor(
     sp: GridSpace,
     domain: number,
@@ -158,7 +169,35 @@ export class CellMarks implements Marks {
   strikeAt(c: number, d: number): void {
     if (!this.has(c, d)) return;
     this.cands[c] &= ~(1 << d);
+    if (this.visits.size > 0) this.reached("answer", c);
     for (const run of this.striking) run(this, c);
+  }
+
+  visit(f: Footprint): Uint8Array | null {
+    if (!CellMarks.skipping) return null;
+    const kept = this.visits.get(f);
+    if (kept !== undefined) return kept.at;
+    const by = inverseOf(this.sp, f, this.cands.length, this.edgeCands.length);
+    const at = new Uint8Array(by.n).fill(1);
+    this.visits.set(f, { at, by });
+    return at;
+  }
+
+  /** A fact changed `kind`'s element `x`: every binding that reads it is to
+   * be visited again. */
+  private reached(kind: "answer" | "edgeMark", x: number): void {
+    for (const { at, by } of this.visits.values()) {
+      const { start, list } = by[kind];
+      for (let i = start[x]; i < start[x + 1]; i++) at[list[i]] = 1;
+    }
+  }
+
+  /** The marks changed wholesale, or a relation changed whole classes:
+   * every binding is to be visited again, or every one that reads the
+   * relation. */
+  private reachedAll(relation: boolean): void {
+    for (const { at, by } of this.visits.values())
+      if (!relation || by.relation) at.fill(1);
   }
   placeAt(c: number, d: number): void {
     this.place(c, d);
@@ -167,7 +206,9 @@ export class CellMarks implements Marks {
     return this.edgeCands[e];
   }
   edgeStrikeAt(e: number, d: number): void {
+    if ((this.edgeCands[e] & (1 << d)) === 0) return;
     this.edgeCands[e] &= ~(1 << d);
+    if (this.visits.size > 0) this.reached("edgeMark", e);
   }
   markOf(c: number): number {
     return this.marked[c];
@@ -190,12 +231,13 @@ export class CellMarks implements Marks {
     return this.pairs.related(e);
   }
   relateAt(e: number, f: number, d: number): void {
-    this.pairs.relate(e, f, d);
+    if (this.pairs.relate(e, f, d) && this.visits.size > 0) this.reachedAll(true);
   }
   /** Forget every relation, as a game does before it seeds the player's
    * own. */
   clearPairs(): void {
     this.relation = null;
+    this.reachedAll(true);
   }
 
   /**
@@ -206,6 +248,7 @@ export class CellMarks implements Marks {
    */
   seed(grid: Uint8Array | Int8Array, domainOf?: (c: number) => number): boolean {
     this.grid = grid;
+    this.reachedAll(false);
     this.placed++;
     this.epoch++;
     this.log.length = 0;
@@ -251,6 +294,7 @@ export class CellMarks implements Marks {
     this.grid[c] = d;
     this.placed++;
     this.log.push(c);
+    if (this.visits.size > 0) this.reached("answer", c);
     for (const run of this.placing) run(this, c);
   }
 
@@ -259,6 +303,7 @@ export class CellMarks implements Marks {
   restore(grid: ArrayLike<number>, cands: ArrayLike<number>): void {
     this.grid.set(grid);
     this.cands.set(cands);
+    this.reachedAll(false);
     this.placed++;
     this.epoch++;
     this.log.length = 0;

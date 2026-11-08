@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/loopy/loopy.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, RELATE, STRIKE_EDGE, clueAt, edgeGroups, keptEdgeGroups, keptStore, least, minus, popcount, rangeMask, setOf, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, RELATE, STRIKE_EDGE, clueAt, edgeGroups, keptEdgeGroups, keptStore, least, minus, popcount, rangeMask, setOf, type Footprint, type Kept } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -206,14 +206,19 @@ export interface DeadEndBinding {
 
 const deadEndFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const deadEndFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"}],"relation":false};
+
 /** Its dearest read grows with the board as n. */
 export function deadEnd(b: Marks, sp: GridSpace, fire: Fire<DeadEndBinding> | null): number {
   const facts = deadEndFacts;
   let fired = 0;
   let changed = false;
+  const _visit = fire === null ? (b.visit?.(deadEndFootprint) ?? null) : null;
   const _a12 = sp.cells;
   for (let _i13 = 0; _i13 < _a12.length; _i13++) {
     const v_c = _a12[_i13];
+    if (_visit !== null) { if (_visit[v_c] === 0) continue; _visit[v_c] = 0; }
     let _g14 = 0;
     G15: {
       const _a16 = sp.cellEdges[v_c];
@@ -268,14 +273,19 @@ export interface LineContinuesBinding {
 
 const lineContinuesFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const lineContinuesFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"}],"relation":false};
+
 /** Its dearest read grows with the board as n. */
 export function lineContinues(b: Marks, sp: GridSpace, fire: Fire<LineContinuesBinding> | null): number {
   const facts = lineContinuesFacts;
   let fired = 0;
   let changed = false;
+  const _visit = fire === null ? (b.visit?.(lineContinuesFootprint) ?? null) : null;
   const _a38 = sp.cells;
   for (let _i39 = 0; _i39 < _a38.length; _i39++) {
     const v_c = _a38[_i39];
+    if (_visit !== null) { if (_visit[v_c] === 0) continue; _visit[v_c] = 0; }
     let _g40 = 0;
     G41: {
       const _a42 = sp.cellEdges[v_c];
@@ -333,14 +343,19 @@ export interface DotFullBinding {
 
 const dotFullFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const dotFullFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"}],"relation":false};
+
 /** Its dearest read grows with the board as n. */
 export function dotFull(b: Marks, sp: GridSpace, fire: Fire<DotFullBinding> | null): number {
   const facts = dotFullFacts;
   let fired = 0;
   let changed = false;
+  const _visit = fire === null ? (b.visit?.(dotFullFootprint) ?? null) : null;
   const _a67 = sp.cells;
   for (let _i68 = 0; _i68 < _a67.length; _i68++) {
     const v_c = _a67[_i68];
+    if (_visit !== null) { if (_visit[v_c] === 0) continue; _visit[v_c] = 0; }
     let _g69 = 0;
     G70: {
       const _a71 = sp.cellEdges[v_c];
@@ -406,15 +421,20 @@ export interface ClueFullBinding {
 
 const clueFullFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const clueFullFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"}],"relation":false};
+
 /** Its dearest read grows with the board as n. */
 export function clueFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueFullBinding> | null): number {
   const facts = clueFullFacts;
   let fired = 0;
   let changed = false;
+  const _visit = fire === null ? (b.visit?.(clueFullFootprint) ?? null) : null;
   const _a98 = sp.faces;
   for (let _i99 = 0; _i99 < _a98.length; _i99++) {
     const v_f = _a98[_i99];
     const _h100 = clueAt(cl.number, v_f);
+    if (_visit !== null) { if (_visit[v_f] === 0) continue; _visit[v_f] = 0; }
     if (!((_h100 !== -1))) continue;
     let _g101 = 0;
     G102: {
@@ -482,15 +502,20 @@ export interface ClueStarvedBinding {
 
 const clueStarvedFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const clueStarvedFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"}],"relation":false};
+
 /** Its dearest read grows with the board as n. */
 export function clueStarved(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueStarvedBinding> | null): number {
   const facts = clueStarvedFacts;
   let fired = 0;
   let changed = false;
+  const _visit = fire === null ? (b.visit?.(clueStarvedFootprint) ?? null) : null;
   const _a128 = sp.faces;
   for (let _i129 = 0; _i129 < _a128.length; _i129++) {
     const v_f = _a128[_i129];
     const _h130 = clueAt(cl.number, v_f);
+    if (_visit !== null) { if (_visit[v_f] === 0) continue; _visit[v_f] = 0; }
     if (!((_h130 !== -1))) continue;
     let _g131 = 0;
     G132: {
@@ -550,15 +575,20 @@ export interface ClueBlockedPairBinding {
 
 const clueBlockedPairFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const clueBlockedPairFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"},{"steps":["faceEdges","edgeEnds","cellEdges"],"kind":"answer"}],"relation":false};
+
 /** Its dearest read grows with the board as n. */
 export function clueBlockedPair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBlockedPairBinding> | null): number {
   const facts = clueBlockedPairFacts;
   let fired = 0;
   let changed = false;
+  const _visit = fire === null ? (b.visit?.(clueBlockedPairFootprint) ?? null) : null;
   const _a177 = sp.faces;
   for (let _i178 = 0; _i178 < _a177.length; _i178++) {
     const v_f = _a177[_i178];
     const _h179 = clueAt(cl.number, v_f);
+    if (_visit !== null) { if (_visit[v_f] === 0) continue; _visit[v_f] = 0; }
     let _c188: boolean = (_h179 !== -1);
     if (_c188) {
       let _g180 = 0;
@@ -676,15 +706,20 @@ export interface ClueOneShortBinding {
 
 const clueOneShortFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const clueOneShortFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"},{"steps":["faceAngles","angleEdges"],"kind":"answer"},{"steps":["faceAngles","angleCell","cellEdges"],"kind":"answer"}],"relation":false};
+
 /** Its dearest read grows with the board as n. */
 export function clueOneShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueOneShortBinding> | null): number {
   const facts = clueOneShortFacts;
   let fired = 0;
   let changed = false;
+  const _visit = fire === null ? (b.visit?.(clueOneShortFootprint) ?? null) : null;
   const _a243 = sp.faces;
   for (let _i244 = 0; _i244 < _a243.length; _i244++) {
     const v_f = _a243[_i244];
     const _h245 = clueAt(cl.number, v_f);
+    if (_visit !== null) { if (_visit[v_f] === 0) continue; _visit[v_f] = 0; }
     let _c254: boolean = (_h245 !== -1);
     if (_c254) {
       let _g246 = 0;
@@ -1033,14 +1068,19 @@ export interface CornerAtDotBinding {
 
 const cornerAtDotFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const cornerAtDotFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"},{"steps":["cellAngles","angleEdges"],"kind":"answer"},{"steps":["cellAngles"],"kind":"edgeMark"}],"relation":false};
+
 /** Its dearest read grows with the board as n. */
 export function cornerAtDot(b: Marks, sp: GridSpace, fire: Fire<CornerAtDotBinding> | null): number {
   const facts = cornerAtDotFacts;
   let fired = 0;
   let changed = false;
+  const _visit = fire === null ? (b.visit?.(cornerAtDotFootprint) ?? null) : null;
   const _a417 = sp.cells;
   for (let _i418 = 0; _i418 < _a417.length; _i418++) {
     const v_c = _a417[_i418];
+    if (_visit !== null) { if (_visit[v_c] === 0) continue; _visit[v_c] = 0; }
     let _g419 = 0;
     G420: {
       const _a421 = sp.cellEdges[v_c];
@@ -1098,15 +1138,20 @@ export interface CornerOtherBinding {
 
 const cornerOtherFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const cornerOtherFootprint: Footprint = {"sort":"angle","reads":[{"steps":[],"kind":"edgeMark"},{"steps":["angleEdges"],"kind":"answer"}],"relation":false};
+
 /** Its dearest read grows with the board as n. */
 export function cornerOther(b: Marks, sp: GridSpace, fire: Fire<CornerOtherBinding> | null): number {
   const facts = cornerOtherFacts;
   let fired = 0;
   let changed = false;
   const _h445 = ((1 << 0) | (1 << 1) | (1 << 2));
+  const _visit = fire === null ? (b.visit?.(cornerOtherFootprint) ?? null) : null;
   const _a443 = sp.angles;
   for (let _i444 = 0; _i444 < _a443.length; _i444++) {
     const v_a = _a443[_i444];
+    if (_visit !== null) { if (_visit[v_a] === 0) continue; _visit[v_a] = 0; }
     if (!((b.edgeCand(v_a) !== _h445))) continue;
     const _a446 = sp.angleEdges[v_a];
     for (let _i447 = 0; _i447 < _a446.length; _i447++) {
@@ -1137,15 +1182,20 @@ export interface CornerBothBinding {
 
 const cornerBothFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const cornerBothFootprint: Footprint = {"sort":"angle","reads":[{"steps":[],"kind":"edgeMark"},{"steps":["angleEdges"],"kind":"answer"},{"steps":["angleCell","cellEdges"],"kind":"answer"}],"relation":false};
+
 /** Its dearest read grows with the board as n. */
 export function cornerBoth(b: Marks, sp: GridSpace, fire: Fire<CornerBothBinding> | null): number {
   const facts = cornerBothFacts;
   let fired = 0;
   let changed = false;
   const _h470 = ((1 << 0) | (1 << 1) | (1 << 2));
+  const _visit = fire === null ? (b.visit?.(cornerBothFootprint) ?? null) : null;
   const _a468 = sp.angles;
   for (let _i469 = 0; _i469 < _a468.length; _i469++) {
     const v_a = _a468[_i469];
+    if (_visit !== null) { if (_visit[v_a] === 0) continue; _visit[v_a] = 0; }
     let _c475: boolean = (b.edgeCand(v_a) !== _h470);
     if (_c475) {
       let _q471 = true;
@@ -1251,6 +1301,9 @@ export interface ClueBoundBinding {
 const clueBoundFacts: number[] = [];
 let clueBoundCands = new Int32Array(0);
 
+/** What a binding at one element of its first binder reads. */
+const clueBoundFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceAngles","angleEdges"],"kind":"answer"},{"steps":["faceAngles"],"kind":"edgeMark"},{"steps":["faceEdges"],"kind":"answer"}],"relation":false};
+
 /** Its dearest read grows with the board as n. */
 export function clueBound(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBoundBinding> | null): number {
   const _f583 = new Int32Array(sp.edges.length).fill(-1);
@@ -1266,10 +1319,12 @@ export function clueBound(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBou
   if (clueBoundCands.length < sp.edges.length) clueBoundCands = new Int32Array(sp.edges.length);
   const cands = clueBoundCands;
   cands.fill(-1);
+  const _visit = fire === null ? (b.visit?.(clueBoundFootprint) ?? null) : null;
   const _a565 = sp.faces;
   for (let _i566 = 0; _i566 < _a565.length; _i566++) {
     const v_f = _a565[_i566];
     const _h567 = clueAt(cl.number, v_f);
+    if (_visit !== null) { if (_visit[v_f] === 0) continue; _visit[v_f] = 0; }
     let _c577: boolean = (_h567 !== -1);
     if (_c577) {
       let _q568 = false;
@@ -1506,6 +1561,9 @@ export interface CornerFromClueBinding {
 const cornerFromClueFacts: number[] = [];
 let cornerFromClueCands = new Int32Array(0);
 
+/** What a binding at one element of its first binder reads. */
+const cornerFromClueFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"},{"steps":["faceAngles"],"kind":"edgeMark"},{"steps":["faceAngles","angleEdges"],"kind":"answer"}],"relation":false};
+
 /** Its dearest read grows with the board as n. */
 export function cornerFromClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CornerFromClueBinding> | null): number {
   const _f749 = new Int32Array(sp.edges.length).fill(-1);
@@ -1521,10 +1579,12 @@ export function cornerFromClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Co
   if (cornerFromClueCands.length < sp.edges.length) cornerFromClueCands = new Int32Array(sp.edges.length);
   const cands = cornerFromClueCands;
   cands.fill(-1);
+  const _visit = fire === null ? (b.visit?.(cornerFromClueFootprint) ?? null) : null;
   const _a718 = sp.faces;
   for (let _i719 = 0; _i719 < _a718.length; _i719++) {
     const v_f = _a718[_i719];
     const _h720 = clueAt(cl.number, v_f);
+    if (_visit !== null) { if (_visit[v_f] === 0) continue; _visit[v_f] = 0; }
     if (!((_h720 !== -1))) continue;
     const v_n = _h720;
     const _h745 = (v_n - 2);
@@ -1776,14 +1836,19 @@ export interface CornerAcrossBinding {
 
 const cornerAcrossFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const cornerAcrossFootprint: Footprint = {"sort":"angle","reads":[{"steps":[],"kind":"edgeMark"},{"steps":["angleEdges"],"kind":"answer"},{"steps":["angleCell","cellAngles"],"kind":"edgeMark"}],"relation":false};
+
 /** Its dearest read grows with the board as n. */
 export function cornerAcross(b: Marks, sp: GridSpace, fire: Fire<CornerAcrossBinding> | null): number {
   const facts = cornerAcrossFacts;
   let fired = 0;
   let changed = false;
+  const _visit = fire === null ? (b.visit?.(cornerAcrossFootprint) ?? null) : null;
   const _a820 = sp.angles;
   for (let _i821 = 0; _i821 < _a820.length; _i821++) {
     const v_a = _a820[_i821];
+    if (_visit !== null) { if (_visit[v_a] === 0) continue; _visit[v_a] = 0; }
     let _c827: boolean = !(((b.edgeCand(v_a) >> 0) & 1) !== 0);
     if (_c827) {
       let _q822 = true;
@@ -1840,15 +1905,20 @@ export interface CornerExitBinding {
 
 const cornerExitFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const cornerExitFootprint: Footprint = {"sort":"angle","reads":[{"steps":[],"kind":"edgeMark"},{"steps":["angleEdges"],"kind":"answer"},{"steps":["angleCell","cellEdges"],"kind":"answer"}],"relation":false};
+
 /** Its dearest read grows with the board as n. */
 export function cornerExit(b: Marks, sp: GridSpace, fire: Fire<CornerExitBinding> | null): number {
   const facts = cornerExitFacts;
   let fired = 0;
   let changed = false;
   const _h854 = ((1 << 1));
+  const _visit = fire === null ? (b.visit?.(cornerExitFootprint) ?? null) : null;
   const _a852 = sp.angles;
   for (let _i853 = 0; _i853 < _a852.length; _i853++) {
     const v_a = _a852[_i853];
+    if (_visit !== null) { if (_visit[v_a] === 0) continue; _visit[v_a] = 0; }
     let _c859: boolean = (b.edgeCand(v_a) === _h854);
     if (_c859) {
       let _q855 = true;
@@ -1923,15 +1993,20 @@ export interface CornerOppositeExitBinding {
 
 const cornerOppositeExitFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const cornerOppositeExitFootprint: Footprint = {"sort":"angle","reads":[{"steps":[],"kind":"edgeMark"},{"steps":["angleEdges"],"kind":"answer"},{"steps":["angleCell","cellEdges"],"kind":"answer"},{"steps":["angleCell","cellAngles","angleEdges"],"kind":"answer"},{"steps":["angleCell","cellAngles"],"kind":"edgeMark"}],"relation":false};
+
 /** Its dearest read grows with the board as n. */
 export function cornerOppositeExit(b: Marks, sp: GridSpace, fire: Fire<CornerOppositeExitBinding> | null): number {
   const facts = cornerOppositeExitFacts;
   let fired = 0;
   let changed = false;
   const _h904 = ((1 << 1));
+  const _visit = fire === null ? (b.visit?.(cornerOppositeExitFootprint) ?? null) : null;
   const _a902 = sp.angles;
   for (let _i903 = 0; _i903 < _a902.length; _i903++) {
     const v_a = _a902[_i903];
+    if (_visit !== null) { if (_visit[v_a] === 0) continue; _visit[v_a] = 0; }
     let _c910: boolean = (b.edgeCand(v_a) === _h904);
     if (_c910) {
       let _q905 = true;
@@ -2036,16 +2111,21 @@ export interface MatchingPairBinding {
 
 const matchingPairFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const matchingPairFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"}],"relation":true};
+
 /** Its dearest read grows with the board as n. */
 export function matchingPair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MatchingPairBinding> | null): number {
   const facts = matchingPairFacts;
   let fired = 0;
   let changed = false;
   const _h967 = ((1 << 1));
+  const _visit = fire === null ? (b.visit?.(matchingPairFootprint) ?? null) : null;
   const _a951 = sp.faces;
   for (let _i952 = 0; _i952 < _a951.length; _i952++) {
     const v_f = _a951[_i952];
     const _h953 = clueAt(cl.number, v_f);
+    if (_visit !== null) { if (_visit[v_f] === 0) continue; _visit[v_f] = 0; }
     if (!((_h953 !== -1))) continue;
     let _g954 = 0;
     G955: {
@@ -2126,6 +2206,9 @@ export interface PairAtClueBinding {
 
 const pairAtClueFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const pairAtClueFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"}],"relation":true};
+
 /** Its dearest read grows with the board as n. */
 export function pairAtClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairAtClueBinding> | null): number {
   const _g999: number[] = [];
@@ -2133,10 +2216,12 @@ export function pairAtClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairAt
   let fired = 0;
   let changed = false;
   const _h1009 = ((1 << 1) | (1 << 2));
+  const _visit = fire === null ? (b.visit?.(pairAtClueFootprint) ?? null) : null;
   const _a990 = sp.faces;
   for (let _i991 = 0; _i991 < _a990.length; _i991++) {
     const v_f = _a990[_i991];
     const _h992 = clueAt(cl.number, v_f);
+    if (_visit !== null) { if (_visit[v_f] === 0) continue; _visit[v_f] = 0; }
     let _c998: boolean = (_h992 !== -1);
     if (_c998) {
       let _g993 = 0;
@@ -2205,16 +2290,21 @@ export interface ParityClueBinding {
 
 const parityClueFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const parityClueFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"}],"relation":true};
+
 /** Its dearest read grows with the board as n. */
 export function parityClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ParityClueBinding> | null): number {
   const _g1044: number[] = [];
   const facts = parityClueFacts;
   let fired = 0;
   let changed = false;
+  const _visit = fire === null ? (b.visit?.(parityClueFootprint) ?? null) : null;
   const _a1036 = sp.faces;
   for (let _i1037 = 0; _i1037 < _a1036.length; _i1037++) {
     const v_f = _a1036[_i1037];
     const _h1038 = clueAt(cl.number, v_f);
+    if (_visit !== null) { if (_visit[v_f] === 0) continue; _visit[v_f] = 0; }
     let _c1043: boolean = (_h1038 !== -1);
     if (_c1043) {
       let _g1039 = 0;
@@ -2283,6 +2373,9 @@ export interface LinkClueBinding {
 
 const linkClueFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const linkClueFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"}],"relation":true};
+
 /** Its dearest read grows with the board as n. */
 export function linkClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LinkClueBinding> | null): number {
   const _g1092: number[] = [];
@@ -2290,10 +2383,12 @@ export function linkClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LinkClue
   let fired = 0;
   let changed = false;
   const _h1107 = ((1 << 1) | (1 << 2));
+  const _visit = fire === null ? (b.visit?.(linkClueFootprint) ?? null) : null;
   const _a1083 = sp.faces;
   for (let _i1084 = 0; _i1084 < _a1083.length; _i1084++) {
     const v_f = _a1083[_i1084];
     const _h1085 = clueAt(cl.number, v_f);
+    if (_visit !== null) { if (_visit[v_f] === 0) continue; _visit[v_f] = 0; }
     let _c1091: boolean = (_h1085 !== -1);
     if (_c1091) {
       let _g1086 = 0;
@@ -2361,6 +2456,9 @@ export interface PairFromCornerBinding {
 
 const pairFromCornerFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const pairFromCornerFootprint: Footprint = {"sort":"angle","reads":[{"steps":[],"kind":"edgeMark"},{"steps":["angleEdges"],"kind":"answer"}],"relation":true};
+
 /** Its dearest read grows with the board as n. */
 export function pairFromCorner(b: Marks, sp: GridSpace, fire: Fire<PairFromCornerBinding> | null): number {
   const facts = pairFromCornerFacts;
@@ -2368,9 +2466,11 @@ export function pairFromCorner(b: Marks, sp: GridSpace, fire: Fire<PairFromCorne
   let changed = false;
   const _h1119 = ((1 << 1));
   const _h1127 = ((1 << 1) | (1 << 2));
+  const _visit = fire === null ? (b.visit?.(pairFromCornerFootprint) ?? null) : null;
   const _a1117 = sp.angles;
   for (let _i1118 = 0; _i1118 < _a1117.length; _i1118++) {
     const v_a = _a1117[_i1118];
+    if (_visit !== null) { if (_visit[v_a] === 0) continue; _visit[v_a] = 0; }
     let _c1125: boolean = (b.edgeCand(v_a) === _h1119);
     if (_c1125) {
       let _q1120 = true;
@@ -2413,6 +2513,9 @@ export interface CornerFromPairBinding {
 
 const cornerFromPairFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const cornerFromPairFootprint: Footprint = {"sort":"angle","reads":[{"steps":[],"kind":"edgeMark"},{"steps":["angleEdges"],"kind":"answer"}],"relation":true};
+
 /** Its dearest read grows with the board as n. */
 export function cornerFromPair(b: Marks, sp: GridSpace, fire: Fire<CornerFromPairBinding> | null): number {
   const facts = cornerFromPairFacts;
@@ -2420,9 +2523,11 @@ export function cornerFromPair(b: Marks, sp: GridSpace, fire: Fire<CornerFromPai
   let changed = false;
   const _h1138 = ((1 << 1));
   const _h1146 = ((1 << 2));
+  const _visit = fire === null ? (b.visit?.(cornerFromPairFootprint) ?? null) : null;
   const _a1136 = sp.angles;
   for (let _i1137 = 0; _i1137 < _a1136.length; _i1137++) {
     const v_a = _a1136[_i1137];
+    if (_visit !== null) { if (_visit[v_a] === 0) continue; _visit[v_a] = 0; }
     let _c1144: boolean = (b.edgeCand(v_a) !== _h1138);
     if (_c1144) {
       let _q1139 = true;
@@ -2471,6 +2576,9 @@ export interface PairAtDotBinding {
 
 const pairAtDotFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const pairAtDotFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"}],"relation":true};
+
 /** Its dearest read grows with the board as n. */
 export function pairAtDot(b: Marks, sp: GridSpace, fire: Fire<PairAtDotBinding> | null): number {
   const _g1160: number[] = [];
@@ -2478,9 +2586,11 @@ export function pairAtDot(b: Marks, sp: GridSpace, fire: Fire<PairAtDotBinding> 
   let fired = 0;
   let changed = false;
   const _h1170 = ((1 << 1) | (1 << 2));
+  const _visit = fire === null ? (b.visit?.(pairAtDotFootprint) ?? null) : null;
   const _a1158 = sp.cells;
   for (let _i1159 = 0; _i1159 < _a1158.length; _i1159++) {
     const v_c = _a1158[_i1159];
+    if (_visit !== null) { if (_visit[v_c] === 0) continue; _visit[v_c] = 0; }
     _g1160.length = 0;
     G1161: {
       const _a1164 = sp.cellEdges[v_c];
@@ -2534,15 +2644,20 @@ export interface ParityDotBinding {
 
 const parityDotFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const parityDotFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"}],"relation":true};
+
 /** Its dearest read grows with the board as n. */
 export function parityDot(b: Marks, sp: GridSpace, fire: Fire<ParityDotBinding> | null): number {
   const _g1194: number[] = [];
   const facts = parityDotFacts;
   let fired = 0;
   let changed = false;
+  const _visit = fire === null ? (b.visit?.(parityDotFootprint) ?? null) : null;
   const _a1192 = sp.cells;
   for (let _i1193 = 0; _i1193 < _a1192.length; _i1193++) {
     const v_c = _a1192[_i1193];
+    if (_visit !== null) { if (_visit[v_c] === 0) continue; _visit[v_c] = 0; }
     _g1194.length = 0;
     G1195: {
       const _a1198 = sp.cellEdges[v_c];
@@ -2597,6 +2712,9 @@ export interface LinkDotBinding {
 
 const linkDotFacts: number[] = [];
 
+/** What a binding at one element of its first binder reads. */
+const linkDotFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"}],"relation":true};
+
 /** Its dearest read grows with the board as n. */
 export function linkDot(b: Marks, sp: GridSpace, fire: Fire<LinkDotBinding> | null): number {
   const _g1230: number[] = [];
@@ -2604,9 +2722,11 @@ export function linkDot(b: Marks, sp: GridSpace, fire: Fire<LinkDotBinding> | nu
   let fired = 0;
   let changed = false;
   const _h1245 = ((1 << 1) | (1 << 2));
+  const _visit = fire === null ? (b.visit?.(linkDotFootprint) ?? null) : null;
   const _a1228 = sp.cells;
   for (let _i1229 = 0; _i1229 < _a1228.length; _i1229++) {
     const v_c = _a1228[_i1229];
+    if (_visit !== null) { if (_visit[v_c] === 0) continue; _visit[v_c] = 0; }
     _g1230.length = 0;
     G1231: {
       const _a1234 = sp.cellEdges[v_c];

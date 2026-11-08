@@ -57,6 +57,23 @@ their first binder (`clueBound`, `clueFull`, `deadEnd`, `lineContinues`,
 751; `earlyLoop` and `related`, which read the loop and the pair classes,
 hold about 50.
 
+## What was done (2026-11-08)
+
+- **24 of Loopy's 27 techniques skip**: `earlyLoop`, `closed` and `related`
+  read the loop, connectivity and the pair classes, and stay whole. Only a
+  tiling's geometry is followed, so no other game skips yet; Net, Pearl,
+  Tracks and Tents, on the grid, are told so in their change.
+- **Boards are HEAD's**: `deal-compare` against HEAD found every board and
+  every cap's verdict the same on 54 Loopy deals, 36 of Towers and 30 of
+  Bridges, and `ladder-skip.test.ts` deals Loopy's gate presets both ways.
+  Planting a footprint with one read, and one blind to the relation, each
+  failed it.
+- **Speed** (`deal-compare`, mean against HEAD): Loopy's deals 0.47×, from
+  331 ms to 157 ms; 9x14 Triangular Hard 1,118 ms to 576 ms (worst 651),
+  9x9 Cairo Hard 847 ms to 326 ms. Towers and Bridges, which do not skip,
+  1.00× and 0.96×. A single solve of a small Loopy board pays for building
+  each footprint's inverse, about 2 ms more.
+
 ## Acceptance
 
 - Every described game's boards and tiers are identical with HEAD's, by
