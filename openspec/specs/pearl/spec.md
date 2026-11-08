@@ -27,8 +27,9 @@ cell on each side of it) and passes straight through every white pearl
 
 ### Requirement: Rules: Pearl reports completion and mistakes
 
-The game SHALL report the board solved exactly while the lines form one closed
-loop satisfying every clue. It SHALL show always-on error marks, flagging
+The game SHALL report the board solved exactly while its lines are an answer
+of `pearl.description.yaml`: one closed loop through every pearl, with every
+clue's meaning holding. It SHALL show always-on error marks, flagging
 squares of degree greater than two and clue contradictions. A move that leaves
 a line with no reciprocal line in the neighboring square SHALL be refused.
 
@@ -150,21 +151,22 @@ clues.
 
 ### Requirement: Solver: Pearl's solver is a certified deduction ladder
 
-Pearl's solver SHALL deduce only, with no guessing or recursion, as a
-`runDeductionFixpoint` ladder of these rungs: square shapes from known edges,
-edges from surviving shapes, the pearl clue deductions, and a closed-loop rung,
-all at Easy; and the shortcut-loop rule at Normal. The closed-loop rung SHALL
-end the ladder through `settled` once a loop has closed and everything off it
-is blank.
+Pearl's solver SHALL deduce only, as the ladder `pearl.description.yaml`
+states, over the edges alone: at Easy, a square read off its own edges, a
+black pearl's turn one axis at a time, its run-on and the run-on it cannot
+take, a white pearl that cannot turn or turns opposite, and a closed loop;
+at Normal, an edge or a way through a square that would close a loop early.
+Each technique SHALL be checked sound on square boards, and a planted defect
+of each found unsound.
 
 #### Scenario: A mis-tiered shortcut rung fails
 
-- **WHEN** the shortcut-loop rung is declared at Easy
+- **WHEN** the early-loop technique is declared at Easy
 - **THEN** boards that need it pass as Easy, and the frozen differential fails
 
 #### Scenario: A silenced rung fails
 
-- **WHEN** any rung is removed from the ladder
+- **WHEN** any technique is removed from the description
 - **THEN** the firing census or the frozen differential fails
 
 ### Requirement: Controls: Pearl draws the loop by dragging along grid edges
@@ -268,9 +270,9 @@ an `appearance` preference (default traditional).
 
 ### Requirement: Hint: One Pearl hint step is one premise of the solver's ladder
 
-A hint step SHALL be one premise of the solver's ladder: a square read off its
-own edges (one axis of a black pearl at a time), each of the four pearl rules,
-an edge that would close a loop early, and a square state that would.
+A hint step SHALL be one firing of the solver's ladder: a square read off its
+own edges, one axis of a black pearl at a time, each of the four pearl rules,
+an edge that would close a loop early, and a way through a square that would.
 
 #### Scenario: A black pearl settled on both axes
 
@@ -282,16 +284,15 @@ an edge that would close a loop early, and a square state that would.
 ### Requirement: Hint: A Pearl hint step rests only on edges and pearls
 
 Every fact a hint step rests on SHALL be an edge the player has drawn or
-crossed, or a pearl: before each firing, every square's possible shapes SHALL
-be re-read from its pearl and its four edges, and a shape the ladder rules out
-SHALL count only through the edges it settles at its own square in the same
-step.
+crossed, or a pearl: the ladder the hint walks SHALL hold nothing but the
+edges, so a square's ways through are read afresh from its pearl and its four
+edges at every firing.
 
 #### Scenario: A step rests on nothing the player cannot mark
 
-- **WHEN** any firing of the hint's recording pass is taken
-- **THEN** every square in the board it reasons from holds exactly the shapes its
-  pearl and edges allow
+- **WHEN** any step of a hint's plan is taken
+- **THEN** every edge it reads is one the player's lines and crosses, or an
+  earlier step of the same plan, has decided
 
 ### Requirement: Hint: A Pearl hint step asks for no cross the square already shows
 
@@ -394,17 +395,17 @@ the loop would miss a pearl or only other lines.
 
 ### Requirement: Hint: Pearl's hint tries a square, then a pearl, then an early loop
 
-At each step the hint SHALL take the first that fires of: a square read off
-its own edges, a pearl read from the squares beside it, and, only where
-neither fires anywhere, a loop that would close early, an edge before a
-square. It SHALL apply no difficulty cap, so a board dealt at Easy and one
-dealt at Normal are hinted in the same order.
+At each step the hint SHALL take, of every firing the ladder could make, the
+one that continues from the latest steps, the ladder's order breaking ties: a
+square, then a pearl, then a closed loop, all at Easy, and an early loop only
+where no Easy technique fires anywhere. It SHALL apply no difficulty cap, so a
+board dealt at Easy and one dealt at Normal are hinted in the same order.
 
 #### Scenario: A loop rule waits for the plainer steps
 
 - **WHEN** some square can be read off its own edges and some edge would also
   close a loop early
-- **THEN** the step is the square's
+- **THEN** the step is not the early loop's
 
 ### Requirement: Look: Pearl's mistakes draw apart from its error marks
 

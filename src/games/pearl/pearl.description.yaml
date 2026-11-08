@@ -58,9 +58,243 @@ help:
     * If a white pearl's line already runs straight on through the square on one
       side, it must turn in the square on the other.
     * On harder boards: **the loop is one loop**. An edge that would join the two
-      ends of a stretch of loop into a closed circle, while some pearl is still
-      outside it, can't be part of the loop.
+      ends of a stretch of loop into a closed circle, while some pearl or other
+      line is still outside it, can't be part of the loop; nor can a way through
+      an empty square that would join them so.
 
     A square that already has its two lines needs no crosses on its other edges,
     so the hint never asks you to draw them, and it counts such an edge as
     closed when it reasons.
+name: Pearl
+family: lines
+sizes:
+  w: { min: 5, max: 100 }
+  h: { min: 5, max: 100 }
+space:
+  # The squares are the dots of a tiling, joined by the edges between them
+  # side by side. A face is where four squares meet, so two edges of a
+  # square meet at a corner where they bound one face, and lie straight
+  # across it where they do not. It is always the grid of squares, so each
+  # edge has one edge of its square across from it, or none at the board's
+  # edge.
+  tiling: square
+  units: []
+answer:
+  # Each edge between two squares: 1 the loop runs along it, 2 it does not.
+  value:
+    sort: edge
+    domain: "range(1, 2)"
+define:
+  # The lines at a square.
+  drawn(c): "count(e in edges(c) where value(e) = 1)"
+  # Whether two edges of a square meet at a corner.
+  bent(e, x): "exists f in faces(e): f in faces(x)"
+  # Whether square c has a way through that fits its pearl and the edges
+  # known, with edge e as d: two lines or none, two where a pearl is, which
+  # turn at a black pearl and run straight at a white one.
+  fits(c, e, d): >-
+    exists fill g of edges(c) from cand
+    where g(e) = d
+    and (forall x in edges(c), y in before(x, edges(c))
+    where g(x) = 1 and g(y) = 1:
+    (clue(pearl, c) != 1 or bent(x, y)) and (clue(pearl, c) != 2 or not bent(x, y)))
+    and (count(x in edges(c) where g(x) = 1) = 2
+    or (count(x in edges(c) where g(x) = 1) = 0 and clue(pearl, c) = none)): true
+  # Whether black pearl c has a way to turn that fits the edges known, with
+  # edge e as d: two lines meeting at a corner.
+  turnsAt(c, e, d): >-
+    exists fill g of edges(c) from cand
+    where g(e) = d
+    and (forall x in edges(c), y in before(x, edges(c))
+    where g(x) = 1 and g(y) = 1: bent(x, y))
+    and count(x in edges(c) where g(x) = 1) = 2: true
+  # Whether a line across edge e into square j can turn there, as the edges
+  # known allow: j holds no white pearl, and its other line meets e at a
+  # corner.
+  turns(j, e): >-
+    exists fill g of edges(j) from cand
+    where g(e) = 1 and clue(pearl, j) != 2
+    and count(x in edges(j) where g(x) = 1) = 2
+    and (forall x in edges(j) where g(x) = 1 and x != e: bent(x, e)): true
+  # Whether a line across edge e into square j can run straight through it:
+  # j holds no black pearl, and its other line lies across from e.
+  runs(j, e): >-
+    exists fill g of edges(j) from cand
+    where g(e) = 1 and clue(pearl, j) != 1
+    and count(x in edges(j) where g(x) = 1) = 2
+    and (forall x in edges(j) where g(x) = 1 and x != e: not bent(x, e)): true
+  # Whether square k, its line across edge f, has a way to turn there with
+  # its edge x as d.
+  turnFits(k, f, x, d): >-
+    exists fill g of edges(k) from cand
+    where g(f) = 1 and g(x) = d and clue(pearl, k) != 2
+    and count(y in edges(k) where g(y) = 1) = 2
+    and (forall y in edges(k) where g(y) = 1 and y != f: bent(y, f)): true
+  # Whether square c, which has no line, has a way through as fits says
+  # with edge e as d, that does not join two squares the lines L already
+  # join while a pearl or a line other than c lies off them: that would
+  # close a loop leaving it out. Q is the squares with a pearl or a line.
+  loopFits(c, e, d, L, Q): >-
+    exists fill g of edges(c) from cand
+    where g(e) = d
+    and (forall x in edges(c), y in before(x, edges(c))
+    where g(x) = 1 and g(y) = 1:
+    (clue(pearl, c) != 1 or bent(x, y)) and (clue(pearl, c) != 2 or not bent(x, y))
+    and (other(y, c) not in through(other(x, c), L)
+    or |Q - through(other(x, c), L) - {c}| = 0))
+    and (count(x in edges(c) where g(x) = 1) = 2
+    or (count(x in edges(c) where g(x) = 1) = 0 and clue(pearl, c) = none)): true
+shape:
+  # A square takes two lines, or none.
+  - "forall c in cells: drawn(c) = 0 or drawn(c) = 2"
+rules:
+  # The lines are one loop: every square with a line reaches every other
+  # along them, and there is a line.
+  loop: >-
+    (exists e in edges: value(e) = 1)
+    and (forall L = {e in edges where value(e) = 1},
+    a in cells where drawn(a) > 0, b in cells where drawn(b) > 0:
+    b in through(a, L))
+clues:
+  # A pearl: 1 black, where the loop turns and runs straight on through the
+  # square on each side; 2 white, where it runs straight through and turns
+  # in a square beside it.
+  pearl:
+    at: cell
+    value: "range(1, 2)"
+    means: >-
+      drawn(at) = 2
+      and (forall e in edges(at), x in before(e, edges(at))
+      where value(e) = 1 and value(x) = 1: bent(e, x) = (v = 1))
+      and (v != 1 or (forall e in edges(at) where value(e) = 1:
+      exists x in edges(other(e, at)): x != e and value(x) = 1 and not bent(x, e)))
+      and (v != 2 or (exists e in edges(at) where value(e) = 1:
+      exists x in edges(other(e, at)): x != e and value(x) = 1 and bent(x, e)))
+freedom: { kind: fill }
+deal:
+  tiling: the squares at the size
+  answer: a loop grown at random
+  pearl: >-
+    a black pearl at each corner of the loop whose squares either side run
+    straight, and a white pearl at each straight beside a corner; white
+    pearls then removed in a random order while the ladder still finishes
+    the board at the tier, which it does not at the tier below
+  tier: one of the tiers
+tiers: [Easy, Normal]
+techniques:
+  # The squares' own ways come first: they cost a scan of the squares, and
+  # a firing runs the ladder again from its top, so a line forced along a
+  # run of squares is drawn before a pearl is read again.
+  #
+  # A square with no black pearl: every edge its ways agree on, at once.
+  # One with no way left is inconsistent.
+  - id: square
+    tier: Easy
+    for: >-
+      c in cells where clue(pearl, c) != 1,
+      F = {e in edges(c) where not known(e)} where |F| > 0,
+      W = {e in F where fits(c, e, 1)}, N = {e in F where fits(c, e, 2)}
+      where (exists e in F: e not in W or e not in N)
+    conclude: >-
+      forall e in F: (e in W or e in N)
+      and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
+  # A black pearl's edge its ways agree on. It turns, so of each two edges
+  # across from each other it takes exactly one: an edge is settled where
+  # the other across from it is, or is off the board.
+  - id: blackPearl
+    tier: Easy
+    for: >-
+      c in cells where clue(pearl, c) = 1, e in edges(c) where not known(e),
+      A = turnsAt(c, e, 1), B = turnsAt(c, e, 2) where not A or not B
+    conclude: "(A or B) and (not A implies place(e, 2)) and (not B implies place(e, 1))"
+  # A black pearl's line runs straight on through the next square: on out
+  # of its far side, and off neither of its others.
+  - id: blackRunsOn
+    tier: Easy
+    for: >-
+      c in cells where clue(pearl, c) = 1, e in edges(c) where value(e) = 1,
+      j = other(e, c)
+      where not (exists x in edges(j): x != e and not bent(x, e) and value(x) = 1)
+    conclude: >-
+      (exists x in edges(j): x != e and not bent(x, e))
+      and (forall x in edges(j) where x != e:
+      (bent(x, e) implies place(x, 2)) and (not bent(x, e) implies place(x, 1)))
+  # A black pearl's edge into a square that cannot carry a line straight
+  # through from it is empty.
+  - id: blackCannotRunOn
+    tier: Easy
+    for: >-
+      c in cells where clue(pearl, c) = 1, e in edges(c) where not known(e),
+      j = other(e, c) where not runs(j, e)
+    conclude: "place(e, 2)"
+  # A white pearl whose squares along one line can neither turn into it
+  # runs along the other line.
+  - id: whiteCannotTurn
+    tier: Easy
+    for: >-
+      c in cells where clue(pearl, c) = 2
+      and (exists x in edges(c): not known(x)),
+      e in edges(c) where value(e) != 2,
+      f in edges(c) where index(f, edges(c)) > index(e, edges(c))
+      and not bent(e, f) and value(f) != 2
+      and not turns(other(e, c), e) and not turns(other(f, c), f),
+      P = {x in edges(c) where x != e and x != f}
+    conclude: >-
+      place(e, 2) and place(f, 2) and |P| = 2 and (forall x in P: place(x, 1))
+  # A white pearl whose line runs straight on through the square on one
+  # side turns in the square on the other, where that square could still
+  # run straight: every edge there its ways of turning agree on. A black
+  # pearl there turns anyway, and its own technique settles it.
+  - id: whiteTurnsOpposite
+    tier: Easy
+    for: >-
+      c in cells where clue(pearl, c) = 2,
+      e in edges(c) where value(e) = 1,
+      f in edges(c) where f != e and value(f) = 1 and not bent(e, f)
+      and not turns(other(e, c), e),
+      k = other(f, c) where runs(k, f),
+      F = {x in edges(k) where not known(x)} where |F| > 0,
+      W = {x in F where turnFits(k, f, x, 1)}, N = {x in F where turnFits(k, f, x, 2)}
+      where (exists x in F: x not in W or x not in N)
+    conclude: >-
+      forall x in F: (x in W or x in N)
+      and (x not in W implies place(x, 2)) and (x not in N implies place(x, 1))
+  # The lines are closed, each square with one line or none: they are the
+  # loop, and every other edge is empty. One that leaves a line or a pearl
+  # off it is inconsistent.
+  - id: closed
+    tier: Easy
+    for: >-
+      L = {e in edges where value(e) = 1}, g = first(L)
+      where g != none and (exists e in edges: not known(e))
+      and (forall c in cells: drawn(c) != 1),
+      G = through(end1(g), L)
+    conclude: >-
+      (forall x in L: end1(x) in G)
+      and (forall c in cells where clue(pearl, c) != none: c in G)
+      and (forall e in edges where not known(e): place(e, 2))
+  # An open edge whose squares the lines already join, while a pearl or a
+  # line lies off them: a line there would close a loop that leaves it out.
+  - id: earlyLoop
+    tier: Normal
+    for: >-
+      L = {e in edges where value(e) = 1},
+      e in edges where not known(e), G = through(end1(e), L)
+      where end2(e) in G
+      and (exists c in cells: c not in G and (clue(pearl, c) != none or drawn(c) > 0))
+    conclude: "place(e, 2)"
+  # A square with no line whose ways through would join two squares the
+  # lines already join, while a pearl or a line lies off them: those ways
+  # would close a loop that leaves it out, and the rest agree.
+  - id: earlyThrough
+    tier: Normal
+    for: >-
+      L = {e in edges where value(e) = 1},
+      Q = {q in cells where clue(pearl, q) != none or drawn(q) > 0},
+      c in cells where drawn(c) = 0,
+      F = {e in edges(c) where not known(e)} where |F| > 1,
+      W = {e in F where loopFits(c, e, 1, L, Q)}, N = {e in F where loopFits(c, e, 2, L, Q)}
+      where (exists e in F: e not in W or e not in N)
+    conclude: >-
+      forall e in F: (e in W or e in N)
+      and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))

@@ -36,7 +36,6 @@ export const bLU = 1 << (L | U);
 export const bLD = 1 << (L | D);
 export const bRU = 1 << (R | U);
 export const bRD = 1 << (R | D);
-export const bBLANK = 1 << BLANK;
 
 /** Error bit that flags a contradicted clue (upstream `ERROR_CLUE`), OR-ed
  * into `errors` alongside the four direction bits. */
@@ -59,7 +58,7 @@ export interface PearlParams {
 
 /** Every size at both tiers. The largest are where a deal's slowest of a dozen
  * stays near a second, measured 2026-10-27 (`npm run deal-walk` with the
- * cells named, slowest of twelve, Easy and Tricky): 10x10 0.3 and 0.4 s,
+ * cells named, slowest of twelve, Easy and Normal): 10x10 0.3 and 0.4 s,
  * 10x12 1 and 1 s. Past 120 squares Easy leaves it first: 12x12 Easy took up
  * to 9 s and 10x14 Easy 10 s, as a large loop's full clue set rarely solves at
  * Easy, and those sizes are a Custom away. */
@@ -72,7 +71,7 @@ const BOARDS: readonly PearlParams[] = [
   { w: 10, h: 12, difficulty: DIFF_EASY },
 ];
 
-/** 8x8 Tricky, upstream's default. */
+/** 8x8 Normal (upstream's Tricky), upstream's default. */
 export function defaultParams(): PearlParams {
   return { w: 8, h: 8, difficulty: DIFF_TRICKY };
 }

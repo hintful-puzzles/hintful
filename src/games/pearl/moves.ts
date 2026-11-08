@@ -1,7 +1,8 @@
 /**
- * Pearl move application, the rules its loop is drawn by, and completion
- * checking — ports of `execute_move` and `check_completion` /
- * `dsf_update_completion` (pearl.c).
+ * Pearl move application, the rules its loop is drawn by, and the error
+ * overlay — ports of `execute_move` and `check_completion` /
+ * `dsf_update_completion` (pearl.c). Whether the board is solved is the
+ * description's answer check (`solver.ts`'s `isSolved`).
  *
  * Split out of `index.ts` so `render.ts`, which previews the in-progress drag,
  * reads the same rules without an import cycle (docs/rendering.md
@@ -21,7 +22,7 @@ import {
   squareEdges,
 } from "../../engine/square-edges.ts";
 import type { GameStatus } from "../../engine/types.ts";
-import { pearlSolve } from "./solver.ts";
+import { isSolved, pearlSolve } from "./solver.ts";
 import {
   BLANK,
   bLD,
@@ -55,7 +56,7 @@ export const pearlLines: LineRules<PearlState> = {
   loops: true,
 };
 
-// --- completion checking ---------------------------------------------------
+// --- the error overlay -----------------------------------------------------
 const COMP_NONE = 0;
 const COMP_LOOP = 1;
 const COMP_PATH = 2;
@@ -83,23 +84,20 @@ function dsfUpdateCompletion(
   return true;
 }
 
-interface CompletionResult {
+interface ErrorsResult {
   /** False when the line data is structurally invalid (a bad move). */
   valid: boolean;
-  completed: boolean;
   errors: Uint8Array;
 }
 
 /** Classify the loop and mark errors (upstream `check_completion` with
- * `mark = true`). Pure: builds and returns a fresh `errors` array. */
-function checkCompletion(state: PearlState): CompletionResult {
+ * `mark = true`). Pure: builds and returns a fresh `errors` array. Whether
+ * the board is solved is the answer check's (`status`). */
+function markErrors(state: PearlState): ErrorsResult {
   const { w, h, lines, clues } = state;
   const errors = new Uint8Array(w * h);
-  let hadError = false;
-  let completed = false;
 
   const error = (x: number, y: number, e: number): void => {
-    hadError = true;
     errors[y * w + x] |= e;
   };
 
@@ -110,7 +108,7 @@ function checkCompletion(state: PearlState): CompletionResult {
         !dsfUpdateCompletion(state, x, y, R, dsf) ||
         !dsfUpdateCompletion(state, x, y, D, dsf)
       ) {
-        return { valid: false, completed, errors };
+        return { valid: false, errors };
       }
     }
 
@@ -213,14 +211,13 @@ function checkCompletion(state: PearlState): CompletionResult {
         if (lines[y * w + x] === BLANK && clues[y * w + x] !== NOCLUE)
           error(x, y, ERROR_CLUE);
       }
-    if (!hadError) completed = true;
   }
 
-  return { valid: true, completed, errors };
+  return { valid: true, errors };
 }
 
 // --- move application ------------------------------------------------------
-/** Apply a move purely, recompute completion/errors. Throws on an illegal
+/** Apply a move purely, recompute the errors. Throws on an illegal
  * move (upstream `execute_move` returning NULL). */
 export function executeMove(state: PearlState, move: PearlMove): PearlState {
   // A move is an op list, not a union, so there is no discriminant to narrow to
@@ -258,13 +255,12 @@ export function executeMove(state: PearlState, move: PearlMove): PearlState {
   }
 
   const next = { ...state, lines, marks };
-  const check = checkCompletion(next);
+  const check = markErrors(next);
   if (!check.valid) throw new Error("pearl: invalid move");
   return { ...next, errors: check.errors };
 }
 
-/** Solved: one loop, through every clue, contradicting none. */
+/** Solved: the lines are the answer the description's rules say. */
 export function status(state: PearlState): GameStatus {
-  const check = checkCompletion(state);
-  return check.valid && check.completed ? "solved" : "ongoing";
+  return isSolved(state) ? "solved" : "ongoing";
 }

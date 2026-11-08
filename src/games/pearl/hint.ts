@@ -1,18 +1,12 @@
 /**
- * Pearl's explained hint: the narration half of the recording projection in
- * [`solver.ts`](./solver.ts).
+ * Pearl's explained hint: the ladder `pearl.description.yaml` states, walked
+ * one firing a step from the player's lines and crosses (`ladderWalk`), and
+ * the sentence and the picture each firing's binding gives.
  *
- * The deduction end is the solver's own ladder, run one firing at a time by
- * `pearlRecordingPass` with a recorder standing (docs/hints.md
- * § "Recording the deduction", the *threaded* shape). This file turns each
- * firing into the sentence and the picture.
- *
- * **Every fact a step rests on is an edge or a pearl.** The solver also keeps,
- * per square, the shapes it may still take, which the player has no way to
- * mark; the recording pass re-reads those off the edges before each firing and
- * counts a shape it rules out only through the edges that settles there and
- * then (docs/hints-marks.md § "Give the facts a notation", and the
- * measurement in `add-pearl-hint`'s design).
+ * **Every fact a step rests on is an edge or a pearl**, since those are all
+ * the ladder reads: a square's ways through are read off its edges whenever
+ * a technique asks, so nothing struck from a square outlives the edges that
+ * struck it.
  */
 
 import { EDGE } from "../../engine/edge-hint.ts";
@@ -25,6 +19,7 @@ import {
 } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import { ladderWalk, type Taken, TIERS } from "../../engine/ladder-runtime.ts";
 import {
   bitDirection,
   D,
@@ -35,8 +30,8 @@ import {
   opposite,
   R,
   squareEdges,
+  U,
 } from "../../engine/square-edges.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import {
   type Axis,
   type LeftOut,
@@ -45,12 +40,15 @@ import {
   say,
 } from "./hint-text.ts";
 import { executeMove } from "./moves.ts";
+import type * as pearl from "./pearl.compiled.ts";
 import {
-  PearlBoard,
-  type PearlEdgeOp,
-  type PearlFiring,
-  type PearlReason,
-  pearlRecordingPass,
+  type Fired,
+  LINE,
+  ladderOf,
+  marksOn,
+  NONE,
+  type PearlGeometry,
+  sideEdge,
 } from "./solver.ts";
 import {
   CORNER,
@@ -69,10 +67,63 @@ import {
  */
 const PLAN_CAP = 24;
 
+/** An edge a step decides: the side of square `sq` toward `dir` (`R` or `D`,
+ * so each edge has one name), and whether it carries the line. */
+export interface PearlEdgeOp {
+  sq: number;
+  dir: number;
+  line: boolean;
+}
+
 /** What one step plans. */
 export interface PearlHint {
   /** Edges the step decides, and whether each must carry the line. */
   targets: PearlEdgeOp[];
+}
+
+/**
+ * Why one firing holds, as its sentence tells it, read off the technique's
+ * binding. Squares are cell indices (`y * w + x`); a direction is a single
+ * `R`/`U`/`L`/`D` bit.
+ */
+export type PearlReason =
+  /** A square's pearl and edges leave it one way to take some edge. */
+  | { kind: "square"; sq: number }
+  /** A black pearl's line runs straight through the next square along `dir`. */
+  | { kind: "blackRunsOn"; pearl: number; dir: number }
+  /** ...and it cannot here, so the pearl's side toward `dir` is ruled out. */
+  | { kind: "blackCannotRunOn"; pearl: number; dir: number }
+  /** A white pearl cannot run along `axis` (`R` across, `U` up and down),
+   * because neither square beside it that way can turn into it. */
+  | { kind: "whiteCannotTurn"; pearl: number; axis: number }
+  /** A white pearl's line runs straight on through the square toward `dir`, so
+   * it must turn in the square on the other side. */
+  | { kind: "whiteTurnsOpposite"; pearl: number; dir: number }
+  /** The edge from `sq` toward `dir` would close the lines through `piece`
+   * into a loop that leaves something out. */
+  | { kind: "closesEarly"; sq: number; dir: number; piece: number[] }
+  /** Taking `shape` would join `sq` to both ends of `piece`, with the same
+   * result. */
+  | { kind: "closesEarlyThrough"; sq: number; shape: number; piece: number[] };
+
+/** A board as the hint reads it: its pearls, its tiling, and its edges as
+ * the walk's marks hold them (0 open, `LINE`, `NONE`). */
+interface View {
+  readonly w: number;
+  readonly h: number;
+  readonly clues: Uint8Array;
+  readonly g: PearlGeometry;
+  readonly grid: Uint8Array | Int8Array;
+}
+
+/** One firing on the hint path. */
+interface PearlFiring {
+  /** Why it holds; `null` for the closed loop, which only confirms. */
+  reason: PearlReason | null;
+  /** The edges it decided. */
+  ops: PearlEdgeOp[];
+  /** The edges just before it fired, which is what its sentence describes. */
+  before: Uint8Array;
 }
 
 /** A line a pearl's rule carries on from a line the step draws: through the
@@ -90,52 +141,150 @@ interface ShownFiring extends PearlFiring {
   carried: Carried[];
 }
 
-// --- reading a workspace --------------------------------------------------
+// --- reading the edges ----------------------------------------------------
 
-/** Edge states: 1 a line, 2 ruled out (or the board's edge), 3 unknown. */
-function edgeState(b: PearlBoard, ws: Int32Array, sq: number, d: number): number {
-  return ws[b.edgeAt(sq % b.w, Math.floor(sq / b.w), d)];
+/** Edge states as the narration reads them: 1 a line, 2 ruled out (or the
+ * board's edge), 3 unknown. */
+function edgeState(v: View, grid: ArrayLike<number>, sq: number, d: number): number {
+  const e = sideEdge(v.g, sq, d);
+  if (e < 0) return 2;
+  return grid[e] === 0 ? 3 : grid[e];
 }
 
-function onBoard(b: PearlBoard, sq: number, d: number): boolean {
-  const x = (sq % b.w) + dirX(d);
-  const y = Math.floor(sq / b.w) + dirY(d);
-  return x >= 0 && x < b.w && y >= 0 && y < b.h;
+function onBoard(v: View, sq: number, d: number): boolean {
+  return sideEdge(v.g, sq, d) >= 0;
 }
 
-const step = (b: PearlBoard, sq: number, d: number): number =>
-  sq + dirY(d) * b.w + dirX(d);
+const step = (v: { w: number }, sq: number, d: number): number =>
+  sq + dirY(d) * v.w + dirX(d);
 
-function linesAt(b: PearlBoard, ws: Int32Array, sq: number): number {
+function linesAt(v: View, grid: ArrayLike<number>, sq: number): number {
   let n = 0;
-  for (const d of DIRECTIONS) if (edgeState(b, ws, sq, d) === 1) n++;
+  for (const d of DIRECTIONS) if (edgeState(v, grid, sq, d) === 1) n++;
   return n;
 }
 
 const axisOf = (d: number): Axis => (d === R || d === L ? "across" : "upDown");
 const otherAxis = (a: Axis): Axis => (a === "across" ? "upDown" : "across");
 
+/** The edge `e` as an op of the given value. */
+function opOf(g: PearlGeometry, e: number, line: boolean): PearlEdgeOp {
+  return { sq: g.edgeSquare[e], dir: g.edgeSide[e], line };
+}
+
+/** The direction edge `e` leaves square `sq` by. */
+function dirOf(v: View, sq: number, e: number): number {
+  const d = DIRECTIONS.find((x) => sideEdge(v.g, sq, x) === e);
+  if (d === undefined) throw new Error(`pearl hint: edge ${e} is no side of ${sq}`);
+  return d;
+}
+
 /** The op's edge as seen from square `sq`: the direction it leaves `sq` by, or
  * 0 when it is not one of `sq`'s edges. */
-function dirFrom(b: PearlBoard, op: PearlEdgeOp, sq: number): number {
+function dirFrom(v: { w: number }, op: PearlEdgeOp, sq: number): number {
   if (op.sq === sq) return op.dir;
-  if (step(b, op.sq, op.dir) === sq) return opposite(op.dir);
+  if (step(v, op.sq, op.dir) === sq) return opposite(op.dir);
   return 0;
 }
 
+/** The squares the lines in `grid` join to `sq`, in reading order. */
+function pieceOf(v: View, grid: ArrayLike<number>, sq: number): number[] {
+  const seen = new Set([sq]);
+  const work = [sq];
+  for (let c = work.pop(); c !== undefined; c = work.pop())
+    for (const d of DIRECTIONS)
+      if (edgeState(v, grid, c, d) === 1) {
+        const n = step(v, c, d);
+        if (!seen.has(n)) {
+          seen.add(n);
+          work.push(n);
+        }
+      }
+  return [...seen].sort((a, b) => a - b);
+}
+
 /** Does anything a closed loop through `piece` (and `also`) would leave out
- * hold a pearl? Otherwise what it leaves out is lines: the rung fires only
- * when it leaves out a pearl or a line. */
-function leftOut(
-  b: PearlBoard,
-  piece: readonly number[],
-  also: number | null,
-): LeftOut {
+ * hold a pearl? Otherwise what it leaves out is lines: the technique fires
+ * only when it leaves out a pearl or a line. */
+function leftOut(v: View, piece: readonly number[], also: number | null): LeftOut {
   const on = new Set(piece);
   if (also !== null) on.add(also);
-  for (let c = 0; c < b.w * b.h; c++)
-    if (!on.has(c) && b.clues[c] !== NOCLUE) return "pearl";
+  for (let c = 0; c < v.w * v.h; c++)
+    if (!on.has(c) && v.clues[c] !== NOCLUE) return "pearl";
   return "lines";
+}
+
+/**
+ * The firing's premise, as the narration names it, from its technique's
+ * binding on the edges before it fired. `null` for the closed loop.
+ */
+function reasonOf(v: View, fired: Fired, before: Uint8Array): PearlReason | null {
+  const b = fired.b;
+  const c = b["c"] as number;
+  const e = b["e"] as number;
+  switch (fired.kind) {
+    case "square":
+    case "blackPearl":
+      return { kind: "square", sq: c };
+    case "blackRunsOn":
+      return { kind: "blackRunsOn", pearl: c, dir: dirOf(v, c, e) };
+    case "blackCannotRunOn":
+      return { kind: "blackCannotRunOn", pearl: c, dir: dirOf(v, c, e) };
+    case "whiteCannotTurn": {
+      const d = dirOf(v, c, e);
+      return { kind: "whiteCannotTurn", pearl: c, axis: d === L || d === R ? R : U };
+    }
+    case "whiteTurnsOpposite":
+      return { kind: "whiteTurnsOpposite", pearl: c, dir: dirOf(v, c, e) };
+    case "closed":
+      return null;
+    case "earlyLoop":
+      return {
+        kind: "closesEarly",
+        sq: v.g.edgeSquare[e],
+        dir: v.g.edgeSide[e],
+        piece: pieceOf(v, before, v.g.edgeSquare[e]),
+      };
+    case "earlyThrough": {
+      // The way through it rules out: two of its open edges into one piece.
+      const open = DIRECTIONS.filter((d) => edgeState(v, before, c, d) === 3);
+      for (const [i, x] of open.entries())
+        for (const y of open.slice(i + 1)) {
+          const piece = pieceOf(v, before, step(v, c, x));
+          if (piece.includes(step(v, c, y)))
+            return { kind: "closesEarlyThrough", sq: c, shape: x | y, piece };
+        }
+      throw new Error(`pearl hint: earlyThrough at ${c} joins no piece`);
+    }
+  }
+}
+
+/**
+ * The squares a firing's premise reads, which a hint plan continues from:
+ * the square it reads, the pearl and the squares beside it its rule looks
+ * along, or the piece of line it would close.
+ */
+function premise(v: View, r: PearlReason): number[] {
+  const at = (cell: number, d: number, k: number): number[] => {
+    const x = (cell % v.w) + k * dirX(d);
+    const y = ((cell / v.w) | 0) + k * dirY(d);
+    return x >= 0 && y >= 0 && x < v.w && y < v.h ? [y * v.w + x] : [];
+  };
+  switch (r.kind) {
+    case "square":
+      return [r.sq];
+    case "blackRunsOn":
+    case "blackCannotRunOn":
+      return [r.pearl, ...at(r.pearl, r.dir, 1), ...at(r.pearl, r.dir, 2)];
+    case "whiteCannotTurn":
+      return [r.pearl, ...at(r.pearl, r.axis, 1), ...at(r.pearl, r.axis, -1)];
+    case "whiteTurnsOpposite":
+      return [r.pearl, ...at(r.pearl, r.dir, 1), ...at(r.pearl, r.dir, -1)];
+    case "closesEarly":
+      return [r.sq, ...at(r.sq, r.dir, 1), ...r.piece];
+    case "closesEarlyThrough":
+      return [r.sq, ...r.piece];
+  }
 }
 
 /**
@@ -146,30 +295,30 @@ function leftOut(
  * they are the rules, not deductions, and asking for them one at a time costs
  * the player steps that teach nothing (owner, 2026-09-27).
  */
-function carryOn(b: PearlBoard, ops: readonly PearlEdgeOp[]): Carried[] {
+function carryOn(
+  v: View,
+  draw1: (e: number) => void,
+  ops: readonly PearlEdgeOp[],
+): Carried[] {
   const carried: Carried[] = [];
   const work = ops.filter((op) => op.line);
   const draw = (sq: number, d: number, rule: Carried["rule"]) => {
-    if (!onBoard(b, sq, d)) return;
-    const e = b.edgeAt(sq % b.w, Math.floor(sq / b.w), d);
-    if (b.ws[e] !== 3) return;
-    b.ws[e] = 1;
-    const op =
-      d === R || d === D
-        ? { sq, dir: d, line: true }
-        : { sq: step(b, sq, d), dir: opposite(d), line: true };
+    const e = sideEdge(v.g, sq, d);
+    if (e < 0 || v.grid[e] !== 0) return;
+    draw1(e);
+    const op = opOf(v.g, e, true);
     carried.push({ op, rule });
     work.push(op);
   };
   for (let op = work.pop(); op; op = work.pop()) {
-    const far = step(b, op.sq, op.dir);
+    const far = step(v, op.sq, op.dir);
     for (const [sq, next, d] of [
       [op.sq, far, op.dir],
       [far, op.sq, opposite(op.dir)],
     ]) {
       // `d` leads from `sq` along the line to `next`.
-      if (b.clues[sq] === CORNER) draw(next, d, "black");
-      if (b.clues[sq] === STRAIGHT) draw(sq, opposite(d), "white");
+      if (v.clues[sq] === CORNER) draw(next, d, "black");
+      if (v.clues[sq] === STRAIGHT) draw(sq, opposite(d), "white");
     }
   }
   return carried;
@@ -179,41 +328,41 @@ function carryOn(b: PearlBoard, ops: readonly PearlEdgeOp[]): Carried[] {
 
 /** Why the square past a black pearl cannot run straight on toward `d`. */
 function noStraight(
-  b: PearlBoard,
-  ws: Int32Array,
+  v: View,
+  grid: ArrayLike<number>,
   next: number,
   d: number,
 ): NoStraight {
-  if (b.clues[next] === CORNER) return "blackPearl";
+  if (v.clues[next] === CORNER) return "blackPearl";
   for (const s of DIRECTIONS)
-    if (s !== d && s !== opposite(d) && edgeState(b, ws, next, s) === 1)
+    if (s !== d && s !== opposite(d) && edgeState(v, grid, next, s) === 1)
       return "sideLine";
-  return onBoard(b, next, d) ? "farEdge" : "boardEdge";
+  return onBoard(v, next, d) ? "farEdge" : "boardEdge";
 }
 
 /** A firing that reads one square's own edges. */
-function narrateSquare(b: PearlBoard, f: ShownFiring, sq: number, m: Marked): Sentence {
-  const ws = f.before;
-  const clue = b.clues[sq];
+function narrateSquare(v: View, f: ShownFiring, sq: number, m: Marked): Sentence {
+  const grid = f.before;
+  const clue = v.clues[sq];
   if (clue === CORNER) {
     // One axis: the op's edge, and the edge opposite it.
-    const d = dirFrom(b, f.ops[0], sq);
-    const facing = edgeState(b, ws, sq, opposite(d));
+    const d = dirFrom(v, f.ops[0], sq);
+    const facing = edgeState(v, grid, sq, opposite(d));
     if (facing === 1) return say.blackOpposite("line", m);
     return say.blackOpposite(
-      onBoard(b, sq, opposite(d)) ? "ruledOut" : "boardEdge",
+      onBoard(v, sq, opposite(d)) ? "ruledOut" : "boardEdge",
       m,
       m.black.length > 0,
     );
   }
   if (clue === STRAIGHT) {
-    if (linesAt(b, ws, sq) > 0) return say.whiteCarriesOn(m);
+    if (linesAt(v, grid, sq) > 0) return say.whiteCarriesOn(m);
     for (const d of DIRECTIONS)
-      if (edgeState(b, ws, sq, d) === 2)
-        return say.whiteBlocked(otherAxis(axisOf(d)), !onBoard(b, sq, d), m);
+      if (edgeState(v, grid, sq, d) === 2)
+        return say.whiteBlocked(otherAxis(axisOf(d)), !onBoard(v, sq, d), m);
     throw new Error("pearl hint: a white pearl settled with nothing beside it");
   }
-  const lines = linesAt(b, ws, sq);
+  const lines = linesAt(v, grid, sq);
   if (lines === 2) return say.squareFull(m);
   return lines === 1 ? say.lineGoesOn(m) : say.deadEnd(m);
 }
@@ -225,48 +374,43 @@ export function edgeOf(board: { w: number; h: number }, op: PearlEdgeOp): number
 
 /** What a firing's step marks, split the way its words name it: the edges its
  * own deduction decides, and the lines each pearl rule carries on from them. */
-function markedOf(b: PearlBoard, f: ShownFiring, reason: PearlReason): Marked {
-  const carried = new Map(f.carried.map((c) => [edgeOf(b, c.op), c.rule]));
-  const rule = (op: PearlEdgeOp) => carried.get(edgeOf(b, op)) ?? null;
+function markedOf(v: View, f: ShownFiring, reason: PearlReason): Marked {
+  const carried = new Map(f.carried.map((c) => [edgeOf(v, c.op), c.rule]));
+  const rule = (op: PearlEdgeOp) => carried.get(edgeOf(v, op)) ?? null;
   const edges = (r: Carried["rule"] | null) =>
-    f.shown.filter((op) => rule(op) === r).map((op) => edgeOf(b, op));
+    f.shown.filter((op) => rule(op) === r).map((op) => edgeOf(v, op));
   return {
     own: edges(null),
     black: edges("black"),
     white: edges("white"),
-    area: areaOf(b, reason),
+    area: areaOf(v, reason),
   };
 }
 
 /** Which sentence a firing speaks, and with what values. */
-function narrate(b: PearlBoard, f: ShownFiring, reason: PearlReason): Sentence {
+function narrate(v: View, f: ShownFiring, reason: PearlReason): Sentence {
   // Only a black pearl's own square firing draws a line whose run-on is still
-  // open, and its sentence names it; the other rungs that draw a line beside
-  // one draw its run-on too.
+  // open, and its sentence names it; the other techniques that draw a line
+  // beside one draw its run-on too.
   if (
     f.carried.some((c) => c.rule === "black") &&
-    !(reason.kind === "square" && b.clues[reason.sq] === CORNER)
+    !(reason.kind === "square" && v.clues[reason.sq] === CORNER)
   )
     throw new Error(`pearl hint: a ${reason.kind} step drew a black pearl's run-on`);
-  return premise(b, f, reason, markedOf(b, f, reason));
+  return sentenceOf(v, f, reason, markedOf(v, f, reason));
 }
 
 /** The sentence for the firing's own deduction. */
-function premise(
-  b: PearlBoard,
-  f: ShownFiring,
-  reason: PearlReason,
-  m: Marked,
-): Sentence {
-  const ws = f.before;
+function sentenceOf(v: View, f: ShownFiring, reason: PearlReason, m: Marked): Sentence {
+  const grid = f.before;
   switch (reason.kind) {
     case "square":
-      return narrateSquare(b, f, reason.sq, m);
+      return narrateSquare(v, f, reason.sq, m);
     case "blackRunsOn":
       return say.blackRunsOn(m);
     case "blackCannotRunOn": {
-      const next = step(b, reason.pearl, reason.dir);
-      return say.blackCannotRunOn(noStraight(b, ws, next, reason.dir), m);
+      const next = step(v, reason.pearl, reason.dir);
+      return say.blackCannotRunOn(noStraight(v, grid, next, reason.dir), m);
     }
     case "whiteCannotTurn": {
       const blocked = axisOf(reason.axis);
@@ -278,17 +422,17 @@ function premise(
       // shown, and the words go by the edges the step shows: all lines, or all
       // crosses.
       const lines = f.shown
-        .filter((op) => m.own.includes(edgeOf(b, op)))
+        .filter((op) => m.own.includes(edgeOf(v, op)))
         .map((op) => op.line);
       if (lines.includes(true) && lines.includes(false))
         throw new Error("pearl hint: a white pearl's turn showed a line and a cross");
       return say.whiteTurnsOpposite(lines[0], m);
     }
     case "closesEarly":
-      return say.closesEarly(leftOut(b, reason.piece, null), m);
+      return say.closesEarly(leftOut(v, reason.piece, null), m);
     case "closesEarlyThrough": {
-      const out = leftOut(b, reason.piece, reason.sq);
-      if (b.clues[reason.sq] === STRAIGHT) {
+      const out = leftOut(v, reason.piece, reason.sq);
+      if (v.clues[reason.sq] === STRAIGHT) {
         const blocked = axisOf(reason.shape & -reason.shape);
         return say.closesEarlyWhite(blocked, otherAxis(blocked), out, m);
       }
@@ -300,20 +444,20 @@ function premise(
 // --- highlights -----------------------------------------------------------
 
 /** The squares a firing reasons from. */
-function areaOf(b: PearlBoard, reason: PearlReason): number[] {
+function areaOf(v: View, reason: PearlReason): number[] {
   switch (reason.kind) {
     case "square":
       return [reason.sq];
     case "blackRunsOn":
       return [reason.pearl];
     case "blackCannotRunOn":
-      return [step(b, reason.pearl, reason.dir)];
+      return [step(v, reason.pearl, reason.dir)];
     case "whiteCannotTurn": {
       const d = reason.axis;
-      return [step(b, reason.pearl, d), step(b, reason.pearl, opposite(d))];
+      return [step(v, reason.pearl, d), step(v, reason.pearl, opposite(d))];
     }
     case "whiteTurnsOpposite":
-      return [step(b, reason.pearl, reason.dir)];
+      return [step(v, reason.pearl, reason.dir)];
     case "closesEarly":
     case "closesEarlyThrough":
       return reason.piece;
@@ -322,21 +466,18 @@ function areaOf(b: PearlBoard, reason: PearlReason): number[] {
 
 // --- the plan -------------------------------------------------------------
 
-/** The player's board as the solver's workspace: their lines and crosses. */
-export function boardOf(state: PearlState): PearlBoard {
-  const { w, h, clues, lines, marks } = state;
-  const b = new PearlBoard(w, h, clues);
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++)
-      for (const d of [R, D]) {
-        if (x + dirX(d) >= w || y + dirY(d) >= h) continue;
-        const i = y * w + x;
-        const j = i + dirY(d) * w + dirX(d);
-        const e = b.edgeAt(x, y, d);
-        if (lines[i] & d || lines[j] & opposite(d)) b.ws[e] = 1;
-        else if (marks[i] & d || marks[j] & opposite(d)) b.ws[e] = 2;
-      }
-  return b;
+/** The player's edges as the description reads them: a line, a cross, or
+ * open. */
+export function recordedEdges(state: PearlState, g: PearlGeometry): Uint8Array {
+  const known = new Uint8Array(g.sp.edges.length);
+  for (let e = 0; e < known.length; e++) {
+    const i = g.edgeSquare[e];
+    const d = g.edgeSide[e];
+    const j = step(state, i, d);
+    if (state.lines[i] & d || state.lines[j] & opposite(d)) known[e] = LINE;
+    else if (state.marks[i] & d || state.marks[j] & opposite(d)) known[e] = NONE;
+  }
+  return known;
 }
 
 /**
@@ -344,14 +485,14 @@ export function boardOf(state: PearlState): PearlBoard {
  * both its lines, which the player can read off the square as surely as off a
  * cross: the step's own lines count, since following the step draws them.
  */
-function evident(b: PearlBoard, op: PearlEdgeOp): boolean {
+function evident(v: View, op: PearlEdgeOp): boolean {
   if (op.line) return false;
   return (
-    linesAt(b, b.ws, op.sq) === 2 || linesAt(b, b.ws, step(b, op.sq, op.dir)) === 2
+    linesAt(v, v.grid, op.sq) === 2 || linesAt(v, v.grid, step(v, op.sq, op.dir)) === 2
   );
 }
 
-/** The hint's rungs: the kinds of the solver's premises. */
+/** The hint's rungs: the kinds of premise the narration speaks. */
 export const PEARL_RUNGS = [
   "square",
   "blackRunsOn",
@@ -366,16 +507,16 @@ export type PearlRung = (typeof PEARL_RUNGS)[number];
 /**
  * Deduce the plan from the player's lines and crosses.
  *
- * No tier cap: a shared game ID carries no difficulty, and the ladder already
- * tries every Easy rung before the Tricky one, which is the easiest-first
- * order a hint wants anyway.
+ * No tier cap: a shared game ID carries no difficulty, and the walk never
+ * takes a Normal firing while an Easy one is left, which is the
+ * easiest-first order a hint wants anyway.
  */
 export function pearlHint(
   state: PearlState,
 ):
   | { ok: true; steps: HintStep<PearlMove, PearlHint, PearlRung>[] }
   | { ok: false; error: HintRefusal } {
-  const { board, impossible, plan } = pearlPlan(state);
+  const { view, impossible, plan } = pearlPlan(state);
 
   // `findMistakes` vouches for every line and cross, so a contradiction here
   // would mean the deduction is unsound: say the honest thing.
@@ -388,9 +529,9 @@ export function pearlHint(
       // `showable` admits only firings with a premise.
       const { reason } = f;
       if (!reason) throw new Error("pearl hint: a step with no premise was shown");
-      const words = narrate(board, f, reason);
+      const words = narrate(view, f, reason);
       return {
-        move: moveOf(board, f.shown),
+        move: moveOf(view, f.shown),
         rung: reason.kind,
         explanation: words.text,
         words,
@@ -400,36 +541,69 @@ export function pearlHint(
   };
 }
 
-/** The firings a plan shows, each with the workspace it was found on. */
+/** The firings a plan shows, each with the edges it was found on. */
 export function pearlPlan(state: PearlState): {
-  board: PearlBoard;
+  view: View;
   impossible: boolean;
   plan: ShownFiring[];
 } {
-  const board = boardOf(state);
-  const pass = pearlRecordingPass(board, stepBudget("pearl hint"));
-  const { plan } = deduceHintPlan<PearlBoard, ShownFiring, string>({
-    board,
-    status: (b) => (pass.impossible() ? "broken" : b.closed ? "done" : "open"),
-    incomplete: "open",
-    next: (b) => {
-      const f = pass.next();
-      if (!f) return null;
-      const carried = carryOn(b, f.ops);
-      const shown = [...f.ops, ...carried.map((c) => c.op)].filter(
-        (op) => !evident(b, op),
-      );
-      return { ...f, carried, shown };
+  const { g, ladder } = ladderOf(state.w, state.h, state.clues);
+  const m = marksOn(g, recordedEdges(state, g));
+  const view: View = { w: state.w, h: state.h, clues: state.clues, g, grid: m.grid };
+  const reasons = new WeakMap<object, PearlReason | null>();
+  let before = Uint8Array.from(m.grid);
+  const reasonFor = (taken: Taken): PearlReason | null => {
+    const fired = taken.reasons[0] as Fired;
+    let r = reasons.get(fired);
+    if (r === undefined) {
+      r = reasonOf(view, fired, before);
+      reasons.set(fired, r);
+    }
+    return r;
+  };
+  const walk = ladderWalk(
+    m,
+    ladder.entries,
+    { [TIERS]: ladder.entries.length },
+    (t) => {
+      const r = reasonFor(t);
+      return r ? premise(view, r) : [];
     },
-    showable: (_b, f) => f.reason !== null && f.shown.length > 0,
+  );
+  let broken = false;
+  let closed = false;
+  const { plan } = deduceHintPlan<View, ShownFiring, string>({
+    board: view,
+    status: () => (broken ? "broken" : closed || !m.grid.includes(0) ? "done" : "open"),
+    incomplete: "open",
+    next: (v) => {
+      before = Uint8Array.from(m.grid);
+      const taken = walk.next();
+      if (taken === null) return null;
+      if (taken === "contradiction") {
+        broken = true;
+        return null;
+      }
+      const reason = reasonFor(taken);
+      if ((taken.entry.id as pearl.LadderId) === "closed") closed = true;
+      const ops: PearlEdgeOp[] = [];
+      for (let e = 0; e < m.grid.length; e++)
+        if (m.grid[e] !== before[e]) ops.push(opOf(g, e, m.grid[e] === LINE));
+      const carried = carryOn(v, (e) => m.place(e, LINE), ops);
+      const shown = [...ops, ...carried.map((c) => c.op)].filter(
+        (op) => !evident(v, op),
+      );
+      return { reason, ops, before, carried, shown };
+    },
+    showable: (_v, f) => f.reason !== null && f.shown.length > 0,
     planCap: PLAN_CAP,
   });
-  return { board, impossible: pass.impossible(), plan };
+  return { view, impossible: broken, plan };
 }
 
 /** The move that makes these edges: each a line or a cross, set on the squares
  * either side of it. */
-function moveOf(b: PearlBoard, targets: readonly PearlEdgeOp[]): PearlMove {
+function moveOf(b: { w: number }, targets: readonly PearlEdgeOp[]): PearlMove {
   const ops: PearlOp[] = [];
   for (const t of targets) {
     const kind = t.line ? "line" : "mark";
@@ -488,7 +662,7 @@ export function pearlKeepTrack(
     holds: (t) => edgeOn(after, t) === want(t),
   });
   if (verdict === "onTrack") {
-    hintStep.move = moveOf(boardOf(state), left);
+    hintStep.move = moveOf(state, left);
     if (hintStep.highlights)
       hintStep.highlights = { ...hintStep.highlights, targets: left };
     if (hintStep.words) {

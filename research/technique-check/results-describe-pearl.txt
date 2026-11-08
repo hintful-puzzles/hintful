@@ -1,0 +1,22 @@
+ok  pearl square 2x2 square                         3  sound    (want sound   )     9 queries    0.2s
+ok  pearl square 2x2 square (planted)               3  unsound  (want unsound )     2 queries    0.1s   at cell 1
+ok  pearl square 2x2 blackPearl                     3  sound    (want sound   )     9 queries    0.1s
+ok  pearl square 2x2 blackPearl (planted)           3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  pearl square 2x2 blackRunsOn                    3  sound    (want sound   )     9 queries    0.1s
+ok  pearl square 2x2 blackRunsOn (planted)          3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  pearl square 2x2 blackCannotRunOn               3  sound    (want sound   )     9 queries    0.1s
+ok  pearl square 2x2 blackCannotRunOn (planted)     3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  pearl square 2x2 whiteCannotTurn                3  sound    (want sound   )     5 queries    0.1s
+BAD pearl square 2x2 whiteCannotTurn (planted)      3  sound    (want unsound )     5 queries    0.1s
+ok  pearl square 3x2 whiteCannotTurn                4  sound    (want sound   )     8 queries    0.3s
+ok  pearl square 3x2 whiteCannotTurn (planted)      4  unsound  (want unsound )     4 queries    0.2s   at cell 4
+ok  pearl square 2x2 whiteTurnsOpposite             3  sound    (want sound   )     0 queries    0.0s
+BAD pearl square 2x2 whiteTurnsOpposite (planted)   3  sound    (want unsound )     0 queries    0.0s
+ok  pearl square 3x2 whiteTurnsOpposite             4  sound    (want sound   )     6 queries    0.3s
+ok  pearl square 3x2 whiteTurnsOpposite (planted)   4  unsound  (want unsound )     1 queries    0.1s   at cell 1
+ok  pearl square 2x2 closed                         3  sound    (want sound   )     1 queries    0.1s
+ok  pearl square 2x2 closed (planted)               3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  pearl square 2x2 earlyLoop                      3  sound    (want sound   )     1 queries    0.1s
+ok  pearl square 2x2 earlyLoop (planted)            3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  pearl square 2x2 earlyThrough                   3  sound    (want sound   )     1 queries    0.3s
+ok  pearl square 2x2 earlyThrough (planted)         3  unsound  (want unsound )     1 queries    0.2s   at eset

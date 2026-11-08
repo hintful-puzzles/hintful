@@ -306,7 +306,11 @@ description author acts on:
   passes its grid to `tilingSpace`; the rectangle's names (rows, `edge(a,
   b)`, directions) are refused. A square grid, wrapping or not, is one
   through `squareTiling` (Net's: a square's two sides meet at a corner
-  where they bound one face). An edge mark may sit on the angles
+  where they bound one face). **A description that is only ever dealt the
+  square grid says `tiling: square`** (Pearl's), and its techniques are
+  checked on square tilings alone: a statement true only of squares, as
+  that an edge has one edge of its square across from it, would be judged
+  unsound on a triangle the game never deals. An edge mark may sit on the angles
   (`marks.<name>.sort: angle`, Loopy's corners: how many of the two are
   lines), read and struck as Slant's edge mark is.
 - **Two edges may be known alike or opposite** (a mark with `sort: edge`
@@ -846,7 +850,8 @@ the check. What a small board cannot cover:
   assumed, and a technique sound on every relation is sound on a map's.
 - **A tiling is checked on the boards `TILINGS` names at each order**, which
   between them hold dots and faces of each size a technique tells apart (a
-  plant on a dot of four edges is caught only where there is one). A mark on
+  plant on a dot of four edges is caught only where there is one), and on
+  their square ones alone where the tiling is `square`. A mark on
   its angles is read as an edge's mark is, and a relation over the edges as
   two unknowns a pair, alike and opposite, true of the answer and closed as
   the runtime's classes are.

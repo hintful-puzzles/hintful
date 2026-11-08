@@ -6,13 +6,13 @@
  * position and the overlay reaching the render cache; Pearl joined them by
  * declaring `hint()`. What is left here:
  *
- *  - **Following the hint finishes every board it deals, at both tiers.** This
- *    is the guard on the design's one real bet: the hint reasons from edges and
- *    pearls alone, forgetting the shape strikes the solver keeps, and nothing
- *    but the boards can say that loses no board.
- *  - **Every step stands on the board the player can see.** The workspace a
- *    step was found on is the player's own board after following the plan up
- *    to it: no fact the plan used is one the player does not have.
+ *  - **Following the hint finishes every board it deals, at both tiers.** The
+ *    hint walks the ladder the generator grades with from the player's edges
+ *    alone, in its own order, and only the boards can say that order loses
+ *    none.
+ *  - **Every step stands on the board the player can see.** The edges a step
+ *    was found on are the player's own board after following the plan up to
+ *    it: no fact the plan used is one the player does not have.
  *  - **Every premise the corpus reaches is reached**, with the census one level
  *    finer than the ladder's (docs/hints.md § "Census the reasons, not
  *    only the rungs").
@@ -21,20 +21,20 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { D, dirX, dirY, L, opposite, R, U } from "../../engine/square-edges.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+import { dirX, dirY, opposite } from "../../engine/square-edges.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import {
-  boardOf,
   type PearlHint,
+  type PearlReason,
   type PearlRung,
   pearlKeepTrack,
   pearlPlan,
+  recordedEdges,
 } from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { type PearlMistake, pearlGame } from "./index.ts";
 import { executeMove } from "./moves.ts";
-import { type PearlReason, pearlRecordingPass, pearlSolve } from "./solver.ts";
+import { geometryOf, LINE, pearlSolve } from "./solver.ts";
 import {
   CORNER,
   DIFF_COUNT,
@@ -58,7 +58,7 @@ const SEEDS = ["ph-a", "ph-b", "ph-c"];
 type Step = HintStep<PearlMove, PearlHint, PearlRung>;
 
 const label = (p: PearlParams, seed: string) =>
-  `${p.w}x${p.h} ${p.difficulty === DIFF_EASY ? "Easy" : "Tricky"} / ${seed}`;
+  `${p.w}x${p.h} ${p.difficulty === DIFF_EASY ? "Easy" : "Normal"} / ${seed}`;
 
 function deal(p: PearlParams, seed: string): PearlState {
   return newState(p, pearlGame.newDesc(p, randomNew(`${label(p, seed)}`)).desc);
@@ -174,50 +174,36 @@ describe("a step draws what the pearls' rules carry on from its lines", () => {
 });
 
 describe("every step stands on the board the player can see", () => {
-  // The workspace each step was found on holds, edge for edge, the player's
-  // own board after following the plan up to it, but for the crosses beside a
+  // The edges each step was found on are, edge for edge, the player's own
+  // board after following the plan up to it, but for the crosses beside a
   // square with both its lines, which the plan writes without asking. A plan
   // resting on something the player has not got (a cross it hid, a line it
-  // drew unasked) differs here. Shapes are read off the edges before every
-  // firing, which the census below holds.
+  // drew unasked) differs here.
   for (const { p, seed } of CORPUS.filter((_, i) => i % 3 === 0)) {
     it(label(p, seed), () => {
       let state = deal(p, seed);
+      const g = geometryOf(p.w, p.h);
       const { plan } = pearlPlan(state);
       const steps = hintSteps(state);
       expect(plan.length).toBeGreaterThan(5);
       for (const [i, f] of plan.entries()) {
-        const seen = boardOf(state);
-        const { w, h } = seen;
-        const lines = (ws: Int32Array, x: number, y: number): number =>
-          [R, U, L, D].filter((d) => ws[seen.edgeAt(x, y, d)] === 1).length;
-        for (let y = 0; y < h; y++)
-          for (let x = 0; x < w; x++)
-            for (const d of [R, D]) {
-              if (x + dirX(d) >= w || y + dirY(d) >= h) continue;
-              const e = seen.edgeAt(x, y, d);
-              if (f.before[e] === seen.ws[e]) continue;
-              const full =
-                lines(seen.ws, x, y) === 2 ||
-                lines(seen.ws, x + dirX(d), y + dirY(d)) === 2;
-              expect({
-                step: i,
-                x,
-                y,
-                d,
-                was: seen.ws[e],
-                is: f.before[e],
-                full,
-              }).toEqual({
-                step: i,
-                x,
-                y,
-                d,
-                was: 3,
-                is: 2,
-                full: true,
-              });
-            }
+        const seen = recordedEdges(state, g);
+        const lines = (sq: number): number =>
+          g.sp.cellEdges[sq].filter((e) => seen[e] === LINE).length;
+        for (let e = 0; e < seen.length; e++) {
+          if (f.before[e] === seen[e]) continue;
+          const sq = g.edgeSquare[e];
+          const d = g.edgeSide[e];
+          const far = sq + dirY(d) * p.w + dirX(d);
+          expect({
+            step: i,
+            sq,
+            d,
+            was: seen[e],
+            is: f.before[e],
+            full: lines(sq) === 2 || lines(far) === 2,
+          }).toEqual({ step: i, sq, d, was: 0, is: 2, full: true });
+        }
         state = executeMove(state, steps[i].move);
       }
     });
@@ -225,9 +211,12 @@ describe("every step stands on the board the player can see", () => {
 });
 
 describe("every narratable premise the corpus reaches is reached", () => {
-  const ALL: Record<PearlReason["kind"], true> = {
+  // Following each step whole: a black pearl's step draws its line's run-on
+  // with it, so only a player who drew a black pearl's line alone leaves one
+  // for `blackRunsOn`, and the pins below, which play a step in part, reach it.
+  const ALL: Record<PearlReason["kind"], boolean> = {
     square: true,
-    blackRunsOn: true,
+    blackRunsOn: false,
     blackCannotRunOn: true,
     whiteCannotTurn: true,
     whiteTurnsOpposite: true,
@@ -235,36 +224,21 @@ describe("every narratable premise the corpus reaches is reached", () => {
     closesEarlyThrough: true,
   };
 
-  it("reaches every kind of premise, and every one nails an edge", () => {
+  it("reaches every kind of premise, and every one decides an edge", () => {
     const reached = new Map<string, number>();
-    let firings = 0;
-    for (const { p, seed } of CORPUS) {
-      const start = deal(p, seed);
-      const b = boardOf(start);
-      const pass = pearlRecordingPass(b, stepBudget("pearl census"));
-      for (let f = pass.next(); f; f = pass.next()) {
-        firings++;
-        // The board each firing reasons from holds nothing the edges do not:
-        // every square exactly what its pearl and its four edges leave it. A
-        // shape struck by an earlier firing and kept would show up here, since
-        // the player has no mark for it.
-        const read = boardOf(start);
-        for (let i = 0; i < read.ws.length; i++)
-          if ((i % read.W) % 2 === 0 || Math.floor(i / read.W) % 2 === 0)
-            read.ws[i] = f.before[i];
-        expect(read.readSquaresFromEdges()).toBe(0);
-        expect(Array.from(f.before), `${label(p, seed)} firing ${firings}`).toEqual(
-          Array.from(read.ws),
-        );
-        if (!f.reason) continue;
-        expect(f.ops.length, f.reason.kind).toBeGreaterThan(0);
-        reached.set(f.reason.kind, (reached.get(f.reason.kind) ?? 0) + 1);
+    let steps = 0;
+    for (const { p, seed } of CORPUS)
+      for (const { step } of walk(deal(p, seed)).seen) {
+        steps++;
+        expect(step.highlights?.targets.length, step.rung).toBeGreaterThan(0);
+        reached.set(step.rung, (reached.get(step.rung) ?? 0) + 1);
       }
-      expect(pass.impossible()).toBe(false);
-      expect(b.closed).toBe(true);
-    }
-    expect(firings, "the census looked at almost nothing").toBeGreaterThan(500);
-    expect([...reached.keys()].sort()).toEqual(Object.keys(ALL).sort());
+    expect(steps, "the census looked at almost nothing").toBeGreaterThan(300);
+    expect([...reached.keys()].sort()).toEqual(
+      Object.keys(ALL)
+        .filter((k) => ALL[k as PearlReason["kind"]])
+        .sort(),
+    );
   });
 
   it("the arms no corpus board reaches still read as English, in the necessity voice", () => {

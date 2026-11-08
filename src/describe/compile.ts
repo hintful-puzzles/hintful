@@ -4841,7 +4841,7 @@ export function compileGame(
   const clues = new Map<string, ClueKind>();
   const { space } = d.json;
   const grid = space.grid ?? null;
-  const tiling = space.tiling === true;
+  const tiling = space.tiling !== undefined;
   if ([grid !== null, space.cells !== undefined, tiling].filter(Boolean).length !== 1)
     throw new CompileError(
       `${json.game}: a space is a grid, cells or a tiling, one of them`,

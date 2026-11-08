@@ -150,8 +150,8 @@
           "additionalProperties": { "const": "dealt" }
         },
         "tiling": {
-          "const": true,
-          "description": "A board that is a tiling the deal decides (Loopy's), in place of `grid`: its cells are the dots, `edges` join them (`edges(c)` a dot's, in its turn), and two sorts of element more, `faces` (`cells(f)` and `edges(f)` round a face, `faces(e)` either side of an edge) and `angles`, two edges side by side round a dot (`angles(c)` a dot's in its turn, `angles(f)` a face's, `edges(a)`, `apex(a)` its dot). Rows, columns, neighbors by direction and coordinates are refused on it."
+          "enum": [true, "square"],
+          "description": "A board that is a tiling the deal decides (Loopy's), in place of `grid`: its cells are the dots, `edges` join them (`edges(c)` a dot's, in its turn), and two sorts of element more, `faces` (`cells(f)` and `edges(f)` round a face, `faces(e)` either side of an edge) and `angles`, two edges side by side round a dot (`angles(c)` a dot's in its turn, `angles(f)` a face's, `edges(a)`, `apex(a)` its dot). Rows, columns, neighbors by direction and coordinates are refused on it. `square` where the tiling is always the grid of squares, the dots its squares (Pearl's): the techniques are checked on square tilings alone."
         },
         "cells": {
           "$ref": "#/$defs/formula",

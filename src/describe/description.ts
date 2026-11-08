@@ -37,8 +37,8 @@ export interface DescriptionJson {
     grid?: { w: string; h: string };
     cells?: string;
     /** A tiling the deal decides, in place of a grid: its dots, edges,
-     * faces and angles. */
-    tiling?: true;
+     * faces and angles. `square` where it is always the grid of squares. */
+    tiling?: true | "square";
     /** Relations the board deals, each a set of cells for each cell. */
     relations?: Record<string, "dealt">;
     slots?: boolean;
@@ -399,7 +399,7 @@ export function edgeMarkOf(
     throw new Error(`${json.game}: one mark on the edges, not ${read.length}`);
   if (read.length === 0) return null;
   const [name, m] = read[0];
-  if (m.sort === "angle" && json.space.tiling !== true)
+  if (m.sort === "angle" && json.space.tiling === undefined)
     throw new Error(`${name}: a mark on the angles is a tiling's`);
   return { name, of: m.of as string, sort: m.sort as "edge" | "angle" };
 }

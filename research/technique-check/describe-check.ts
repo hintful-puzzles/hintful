@@ -388,7 +388,7 @@ function spaceOf(
   if (d === undefined || space === undefined)
     return { sp: latinSpace(order), sizes: new Map() };
   // A tiling is one of the order's, which its sizing names.
-  if (space.tiling === true)
+  if (space.tiling !== undefined)
     return { sp: tilingOf(order, more.get(TILING_SIZE) ?? 0), sizes: new Map() };
   // A board of cells alone (Map's regions) has as many as the square of the
   // order; its neighbors are a relation dealt on them.
@@ -2598,9 +2598,13 @@ export async function impossibleKinds(
  * board: one map a board, and one empty map where there are none.
  */
 export function sizings(d: Description, order: number): Map<string, number>[] {
-  // A tiling's boards are the order's tilings, one a board.
-  if (d.json.space.tiling === true)
-    return (TILINGS[order] ?? []).map((_, i) => new Map([[TILING_SIZE, i]]));
+  // A tiling's boards are the order's tilings, one a board, and only the
+  // square ones where the description's tiling is always the grid of squares.
+  const { tiling } = d.json.space;
+  if (tiling !== undefined)
+    return (TILINGS[order] ?? []).flatMap(([type], i) =>
+      tiling === true || type === "square" ? [new Map([[TILING_SIZE, i]])] : [],
+    );
   const { grid } = d.json.space;
   const fixed = new Set([
     "order",

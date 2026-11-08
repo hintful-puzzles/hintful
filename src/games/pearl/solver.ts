@@ -1,772 +1,223 @@
 /**
- * Pearl solver — port of `pearl_solve` (pearl.c), as a `runDeductionFixpoint`
- * ladder. Pure iterative constraint propagation (no guessing, no recursion):
- * edge↔square elimination, the black-pearl (CORNER) and white-pearl
- * (STRAIGHT) clue deductions, and loop detection over a union-find. The Tricky
- * tier adds the shortcut-loop rule, so both tiers are guess-free.
+ * Pearl's solver: the ladder `pearl.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/ladder-runtime.ts`) over the board
+ * read as a tiling (`engine/square-tiling.ts`): each square a dot, each edge
+ * between two squares side by side an edge, the loop's or not.
  *
- * The workspace is `(2w+1)×(2h+1)`: squares sit at odd (x, y) and hold a
- * bitmask of their possible states (`1 << <directions>`); the edges between
- * them are 1 connected, 2 disconnected, 3 unknown.
- *
- * Upstream's loop runs the first two stages in one pass and has a `continue`
- * inside its Easy-only branch that reads as the Tricky rung running after an
- * earlier stage fired. It never does: the clue stage's own `continue` sits
- * just before it, so that branch is reached only with nothing fired, and the
- * first stage leaves nothing for itself to find a second time. So the runner's
- * walk is upstream's; `pearl-ladder.test.ts` is the census of which rungs fire.
- *
- * Used by the generator (uniqueness gating), `solve`, `findMistakes`, and the
- * hint's recording pass ({@link pearlRecordingPass}).
+ * One ladder serves the generator, which keeps a removed pearl only while
+ * the ladder still finishes the board at its tier, so its verdict on every
+ * intermediate board decides which puzzles exist (the frozen differential
+ * holds those verdicts to upstream's); Solve; the mistake check's answer;
+ * the difficulty probe; and the hint, which walks it from the player's lines
+ * and crosses (`hint.ts`). No technique supposes anything, so a board the
+ * ladder finishes has one answer.
  */
+
+import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
-  type DeductionTechnique,
-  type FiringTally,
-  runDeductionFixpoint,
-  singleFirings,
-} from "../../engine/deduction-fixpoint.ts";
-import { Dsf } from "../../engine/dsf.ts";
+  clueList,
+  type GridSpace,
+  rangeMask,
+  tilingSpace,
+} from "../../engine/describe-runtime.ts";
 import {
-  anticlockwise,
-  clockwise,
-  D,
-  dirX,
-  dirY,
-  L,
-  opposite,
-  R,
-  U,
-} from "../../engine/square-edges.ts";
-import type { StepBudget } from "../../engine/step-budget.ts";
-import { SweepOffers } from "../../engine/sweep-offers.ts";
-import {
-  bBLANK,
-  bLD,
-  bLR,
-  bLU,
-  bRD,
-  bRU,
-  bUD,
-  CORNER,
-  DIFF_COUNT,
-  DIFF_EASY,
-  DIFF_TRICKY,
-  STRAIGHT,
-} from "./state.ts";
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  type ReasonOf,
+  runLadder,
+  TIERS,
+} from "../../engine/ladder-runtime.ts";
+import { DIRECTIONS, dirX, dirY, opposite } from "../../engine/square-edges.ts";
+import { type SquareTiling, squareTiling } from "../../engine/square-tiling.ts";
+import * as pearl from "./pearl.compiled.ts";
+import { NOCLUE, type PearlState } from "./state.ts";
 
-/** A square's states are bits `1 << b` for `b` below this, `b` the
- * directions its line leaves by. */
-const STATE_LIMIT = 0xd;
+/** What the description reads a line as, and an edge with none. */
+export const LINE = 1;
+export const NONE = 2;
 
-/** The states a square's known edges leave it, by `connected * 16 +
- * disconnected` (each a mask of directions): a state survives unless it leaves
- * by a disconnected edge or not by a connected one. The solver reads it on
- * every pass of every gate solve. */
-const SURVIVING = Int32Array.from({ length: 256 }, (_, i) => {
-  const connected = i >> 4;
-  const disconnected = i & 15;
-  let states = 0;
-  for (let b = 0; b < STATE_LIMIT; b++)
-    if (!(b & disconnected) && !(connected & ~b)) states |= 1 << b;
-  return states;
-});
-
-/** The directions some state of a set leaves by (`EDGE_OR`), and that every
- * one does (`EDGE_AND`, 15 for no state), by the set's mask. */
-const EDGE_OR = new Uint8Array(1 << STATE_LIMIT);
-const EDGE_AND = new Uint8Array(1 << STATE_LIMIT);
-for (let s = 0; s < 1 << STATE_LIMIT; s++) {
-  let or = 0;
-  let and = 15;
-  for (let b = 0; b < STATE_LIMIT; b++)
-    if (s & (1 << b)) {
-      or |= b;
-      and &= b;
-    }
-  EDGE_OR[s] = or;
-  EDGE_AND[s] = and;
+/** A board's squares as a tiling, and the space the ladder reads it as. */
+export interface PearlGeometry extends SquareTiling {
+  readonly w: number;
+  readonly h: number;
+  readonly sp: GridSpace;
 }
 
-/** The solver's verdict and the workspace it left. */
-export interface PearlWorkspace {
-  /** 0 inconsistent, 1 unique, 2 ambiguous. */
-  ret: number;
-  ws: Int32Array;
+const geometries = new Map<string, PearlGeometry>();
+
+/** The tiling of a `w × h` board, built once a shape. */
+export function geometryOf(w: number, h: number): PearlGeometry {
+  const key = `${w}x${h}`;
+  let g = geometries.get(key);
+  if (g === undefined) {
+    const t = squareTiling(w, h, false);
+    g = { ...t, w, h, sp: tilingSpace(t.tiling) };
+    geometries.set(key, g);
+  }
+  return g;
 }
 
-/** Every square open to the states its clue allows, the border edges
- * disconnected and every other edge unknown. */
-function initialWorkspace(w: number, h: number, clues: Uint8Array): Int32Array {
-  const W = 2 * w + 1;
-  const ws = new Int32Array(W * (2 * h + 1));
+/** The edge across side `d` of square `sq`, or -1 off the board. */
+export const sideEdge = (g: PearlGeometry, sq: number, d: number): number =>
+  g.sideEdge[sq * 16 + d];
 
-  // Square states.
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++) {
-      const sq = (2 * y + 1) * W + 2 * x + 1;
-      switch (clues[y * w + x]) {
-        case CORNER:
-          ws[sq] = bLU | bLD | bRU | bRD;
-          break;
-        case STRAIGHT:
-          ws[sq] = bLR | bUD;
-          break;
-        default:
-          ws[sq] = bLR | bUD | bLU | bLD | bRU | bRD | bBLANK;
-          break;
-      }
+/** The board as the description deals it: a pearl on each square that has
+ * one, numbered as the game stores it (1 black, 2 white). */
+function dealtOf(clues: Uint8Array): pearl.Dealt {
+  const at: number[] = [];
+  const v: number[] = [];
+  clues.forEach((c, i) => {
+    if (c !== NOCLUE) {
+      at.push(i);
+      v.push(c);
     }
-  // Horizontal edges (disconnected at the top/bottom border, else unknown).
-  for (let y = 0; y <= h; y++)
-    for (let x = 0; x < w; x++)
-      ws[2 * y * W + (2 * x + 1)] = y === 0 || y === h ? 2 : 3;
-  // Vertical edges (disconnected at the left/right border, else unknown).
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x <= w; x++)
-      ws[(2 * y + 1) * W + 2 * x] = x === 0 || x === w ? 2 : 3;
-  return ws;
+  });
+  return { pearl: clueList(at, v, clues.length) };
 }
 
-// --- the recording projection ----------------------------------------------
-
-/**
- * Why one firing on the hint path holds, set by the rung as it fires. Squares
- * are cell indices (`y * w + x`); a direction is a single `R`/`U`/`L`/`D` bit.
- */
-export type PearlReason =
-  /** A square's pearl and edges leave it one way to take some edge. */
-  | { kind: "square"; sq: number }
-  /** A black pearl's line runs straight through the next square along `dir`. */
-  | { kind: "blackRunsOn"; pearl: number; dir: number }
-  /** ...and it cannot here, so the pearl's side toward `dir` is ruled out. */
-  | { kind: "blackCannotRunOn"; pearl: number; dir: number }
-  /** A white pearl cannot run along `axis` (`R` across, `U` up and down),
-   * because neither square beside it that way can turn into it. */
-  | { kind: "whiteCannotTurn"; pearl: number; axis: number }
-  /** A white pearl's line runs straight on through the square toward `dir`, so
-   * it must turn in the square on the other side. */
-  | { kind: "whiteTurnsOpposite"; pearl: number; dir: number }
-  /** The edge from `sq` toward `dir` would close the lines through `piece`
-   * into a loop that leaves something out. */
-  | { kind: "closesEarly"; sq: number; dir: number; piece: number[] }
-  /** Taking `shape` would join `sq` to both ends of `piece`, with the same
-   * result. */
-  | { kind: "closesEarlyThrough"; sq: number; shape: number; piece: number[] };
-
-/** The hint path's recorder: present only there, so every reason and every
- * per-premise return below sits behind `if (rec)` and the generator's path is
- * the ladder upstream ran. */
-export interface PearlRecorder {
-  reason: PearlReason | null;
+/** Why one firing of the ladder holds: its technique and its binding, read
+ * before the firing changes anything. */
+export interface Fired {
+  readonly kind: pearl.LadderId;
+  readonly b: Readonly<Record<string, unknown>>;
 }
 
-/** The workspace the rungs share, and the loop pieces the last
- * {@link PearlBoard.buildLoops} found. */
-export class PearlBoard {
-  readonly W: number;
-  readonly H: number;
-  readonly ws: Int32Array;
-  /** A closed loop was found and everything off it blanked: solved. */
-  closed = false;
-  readonly dsf: Dsf;
-  readonly dsfsize: Int32Array;
-  nonblanks = 0;
-  rec: PearlRecorder | null = null;
-  /** Hint path only: collects every firing a rung could make, for a plan
-   * that continues where its latest step was. */
-  offers: SweepOffers<{ ws: Int32Array; closed: boolean }, PearlReason | null> | null =
-    null;
-  /** Every square's states before any edge is known: what its clue allows. */
-  private readonly clueShapes: Int32Array;
-  /** From a square to its edge toward each direction bit, in the workspace. */
-  private readonly edgeStep = new Int32Array(D + 1);
+const fired =
+  <B extends object>(kind: pearl.LadderId): ReasonOf<B> =>
+  (b): Fired => ({ kind, b: { ...(b as Record<string, unknown>) } });
 
-  constructor(
-    readonly w: number,
-    readonly h: number,
-    readonly clues: Uint8Array,
-  ) {
-    this.W = 2 * w + 1;
-    this.H = 2 * h + 1;
-    for (const d of [R, U, L, D]) this.edgeStep[d] = dirY(d) * this.W + dirX(d);
-    this.ws = initialWorkspace(w, h, clues);
-    this.clueShapes = this.ws.slice();
-    this.dsf = new Dsf(w * h);
-    this.dsfsize = new Int32Array(w * h);
-  }
-
-  /** Where a rung on the hint path has made its firing: whether it returns. */
-  kept(): boolean {
-    return this.offers?.keep() ?? true;
-  }
-
-  /**
-   * The squares a firing's premise reads, which a hint plan continues from:
-   * the square it reads, the pearl and the squares beside it its rule looks
-   * along, or the piece of line it would close.
-   */
-  premise(r: PearlReason): number[] {
-    const { w, h } = this;
-    const step = (cell: number, d: number, k: number): number[] => {
-      const x = (cell % w) + k * dirX(d);
-      const y = ((cell / w) | 0) + k * dirY(d);
-      return x >= 0 && y >= 0 && x < w && y < h ? [y * w + x] : [];
-    };
-    switch (r.kind) {
-      case "square":
-        return [r.sq];
-      case "blackRunsOn":
-      case "blackCannotRunOn":
-        return [r.pearl, ...step(r.pearl, r.dir, 1), ...step(r.pearl, r.dir, 2)];
-      case "whiteCannotTurn":
-        return [r.pearl, ...step(r.pearl, r.axis, 1), ...step(r.pearl, r.axis, -1)];
-      case "whiteTurnsOpposite":
-        return [r.pearl, ...step(r.pearl, r.dir, 1), ...step(r.pearl, r.dir, -1)];
-      case "closesEarly":
-        return [r.sq, ...step(r.sq, r.dir, 1), ...r.piece];
-      case "closesEarlyThrough":
-        return [r.sq, ...r.piece];
-    }
-  }
-
-  /** The squares either side of every edge that differs between two
-   * workspaces. */
-  edgeSquares(before: Int32Array, after: Int32Array): number[] {
-    const { w, h, W } = this;
-    const out: number[] = [];
-    for (let i = 0; i < before.length; i++) {
-      if (before[i] === after[i]) continue;
-      const x = i % W;
-      const y = (i / W) | 0;
-      if (!((x ^ y) & 1)) continue;
-      for (const [cx, cy] of [
-        [(x - 1) >> 1, (y - 1) >> 1],
-        [x >> 1, y >> 1],
-      ])
-        if (cx >= 0 && cy >= 0 && cx < w && cy < h) out.push(cy * w + cx);
-    }
-    return out;
-  }
-
-  /** The workspace index of the edge leaving square `(x, y)` toward `d`. */
-  edgeAt(x: number, y: number, d: number): number {
-    return (2 * y + 1) * this.W + 2 * x + 1 + this.edgeStep[d];
-  }
-
-  /**
-   * Forget every state a square was struck to that its clue and its four edges
-   * do not rule out themselves. The hint calls this before every firing, so
-   * nothing a step rests on is a fact the player has no mark for: the player
-   * marks edges, and a square's states are read off those. Returns `-1` if some
-   * square is left with no state at all.
-   */
-  readSquaresFromEdges(): number {
-    const { w, h, W, ws } = this;
-    for (let y = 0; y < h; y++)
-      for (let x = 0; x < w; x++) {
-        const sq = (2 * y + 1) * W + 2 * x + 1;
-        ws[sq] = this.clueShapes[sq];
-      }
-    return this.shapesFromEdges() < 0 ? -1 : 0;
-  }
-
-  /**
-   * Nail every unknown edge around square `(x, y)` that all its surviving
-   * states agree on. With `oneAxis`, a black pearl's nails stop at the first
-   * axis that has one, since each of its axes is a deduction of its own.
-   * Returns how many edges it nailed, or `-1` if the states disagree with
-   * themselves.
-   */
-  private nailSquare(x: number, y: number, oneAxis: boolean): number {
-    const { W, ws } = this;
-    const sq = (2 * y + 1) * W + 2 * x + 1;
-    const states = ws[sq] & ((1 << STATE_LIMIT) - 1);
-    const edgeor = EDGE_OR[states];
-    const edgeand = EDGE_AND[states];
-    // Consistency: no bit both connected and disconnected.
-    if (edgeand & ~edgeor) return -1;
-    let nail = 0;
-    for (let d = 1; d <= 8; d += d)
-      if (ws[this.edgeAt(x, y, d)] === 3 && (!(edgeor & d) || edgeand & d)) nail |= d;
-    if (oneAxis && nail && this.clues[y * this.w + x] === CORNER)
-      nail &= nail & (R | L) ? R | L : U | D;
-    let fired = 0;
-    for (let d = 1; d <= 8; d += d)
-      if (nail & d) {
-        ws[this.edgeAt(x, y, d)] = edgeor & d ? 1 : 2;
-        fired++;
-      }
-    return fired;
-  }
-
-  /**
-   * Narrow square `sq` (a workspace index) to `states`. On the hint path a
-   * narrowed square counts only through the edges it nails there and then,
-   * because the player has no mark for a square's states, so it is settled at
-   * once and taken back if it nails none. Returns the changes made, or `-1`.
-   */
-  private narrow(sq: number, states: number, reason: PearlReason): number {
-    const { ws, rec } = this;
-    if (!rec) {
-      ws[sq] = states;
-      return 1;
-    }
-    const was = ws[sq];
-    ws[sq] = states;
-    const x = ((sq % this.W) - 1) >> 1;
-    const y = (((sq / this.W) | 0) - 1) >> 1;
-    const nailed = this.nailSquare(x, y, false);
-    if (nailed > 0) rec.reason = reason;
-    else if (nailed === 0) ws[sq] = was;
-    return nailed;
-  }
-
-  /** Discard any square state inconsistent with the known edges around it. */
-  shapesFromEdges(): number {
-    const { w, h, W, ws } = this;
-    let fired = 0;
-    for (let y = 0; y < h; y++)
-      for (let x = 0; x < w; x++) {
-        const sq = (2 * y + 1) * W + 2 * x + 1;
-        let connected = 0;
-        let disconnected = 0;
-        for (let d = 1; d <= 8; d += d) {
-          const edge = ws[this.edgeAt(x, y, d)];
-          if (edge === 1) connected |= d;
-          else if (edge === 2) disconnected |= d;
-        }
-        const gone =
-          ws[sq] & ((1 << STATE_LIMIT) - 1) & ~SURVIVING[connected * 16 + disconnected];
-        ws[sq] &= ~gone;
-        for (let g = gone; g; g &= g - 1) fired++;
-        // Consistency: each square must have at least one state left.
-        if (!ws[sq]) return -1;
-      }
-    return fired;
-  }
-
-  /** Nail down any unknown edge its square's surviving states agree on. On the
-   * hint path, one square's nails (one axis of a black pearl's) are a firing. */
-  edgesFromShapes(): number {
-    const { w, h, rec } = this;
-    let fired = 0;
-    for (let y = 0; y < h; y++)
-      for (let x = 0; x < w; x++) {
-        const nailed = this.nailSquare(x, y, rec !== null);
-        if (nailed < 0) return -1;
-        fired += nailed;
-        if (rec && nailed) {
-          rec.reason = { kind: "square", sq: y * w + x };
-          if (this.kept()) return fired;
-        }
-      }
-    return fired;
-  }
-
-  /** The longer-range deductions from the black and white pearls. On the hint
-   * path, each pearl rule that nails an edge is a firing of its own. */
-  pearlClues(): number {
-    const { w, h, W, ws, clues, rec } = this;
-    let fired = 0;
-    for (let y = 0; y < h; y++)
-      for (let x = 0; x < w; x++) {
-        const pearl = y * w + x;
-        const clue = clues[pearl];
-        if (clue === CORNER) {
-          for (let d = 1; d <= 8; d += d) {
-            const ex = 2 * x + 1 + dirX(d);
-            const ey = 2 * y + 1 + dirY(d);
-            const fx = ex + dirX(d);
-            const fy = ey + dirY(d);
-            const type = d | opposite(d);
-            if (ws[ey * W + ex] === 1) {
-              // Corner connected on an edge ⇒ the square beyond it is a
-              // straight in that direction.
-              if (ws[fy * W + fx] !== 1 << type) {
-                const n = this.narrow(fy * W + fx, 1 << type, {
-                  kind: "blackRunsOn",
-                  pearl,
-                  dir: d,
-                });
-                if (n < 0) return -1;
-                fired += n;
-                if (rec && n && this.kept()) return fired;
-              }
-            } else if (ws[ey * W + ex] === 3) {
-              // Corner separated by an unknown edge from a square that
-              // cannot be the required straight ⇒ that edge is disconnected.
-              if (!(ws[fy * W + fx] & (1 << type))) {
-                ws[ey * W + ex] = 2;
-                fired++;
-                if (rec) {
-                  rec.reason = { kind: "blackCannotRunOn", pearl, dir: d };
-                  if (this.kept()) return fired;
-                }
-              }
-            }
-          }
-        } else if (clue === STRAIGHT) {
-          const sq = (2 * y + 1) * W + 2 * x + 1;
-          // If a straight is between two squares neither of which can be a
-          // corner connected to it, it cannot point that way.
-          for (let d = 1; d <= 2; d += d) {
-            const fx = 2 * x + 1 + 2 * dirX(d);
-            const fy = 2 * y + 1 + 2 * dirY(d);
-            const gx = 2 * x + 1 - 2 * dirX(d);
-            const gy = 2 * y + 1 - 2 * dirY(d);
-            const type = d | opposite(d);
-            if (!(ws[sq] & (1 << type))) continue;
-            if (
-              !(
-                ws[fy * W + fx] &
-                ((1 << (opposite(d) | anticlockwise(d))) |
-                  (1 << (opposite(d) | clockwise(d))))
-              ) &&
-              !(
-                ws[gy * W + gx] &
-                ((1 << (d | anticlockwise(d))) | (1 << (d | clockwise(d))))
-              )
-            ) {
-              const n = this.narrow(sq, ws[sq] & ~(1 << type), {
-                kind: "whiteCannotTurn",
-                pearl,
-                axis: d,
-              });
-              if (n < 0) return -1;
-              fired += n;
-              if (rec && n && this.kept()) return fired;
-            }
-          }
-          // If a straight with known direction connects on one side to a
-          // known straight, the other side must be a corner.
-          for (let d = 1; d <= 8; d += d) {
-            const fx = 2 * x + 1 + 2 * dirX(d);
-            const fy = 2 * y + 1 + 2 * dirY(d);
-            const gx = 2 * x + 1 - 2 * dirX(d);
-            const gy = 2 * y + 1 - 2 * dirY(d);
-            const type = d | opposite(d);
-            if (ws[sq] !== 1 << type) continue;
-            if (
-              !(ws[fy * W + fx] & ~(bLR | bUD)) &&
-              ws[gy * W + gx] & ~(bLU | bLD | bRU | bRD)
-            ) {
-              const g = gy * W + gx;
-              const n = this.narrow(g, ws[g] & (bLU | bLD | bRU | bRD), {
-                kind: "whiteTurnsOpposite",
-                pearl,
-                dir: d,
-              });
-              if (n < 0) return -1;
-              fired += n;
-              if (rec && n && this.kept()) return fired;
-            }
-          }
-        }
-      }
-    return fired;
-  }
-
-  /**
-   * Union the squares the connected edges join into loop pieces, counting the
-   * squares that cannot be blank. Returns the piece that has closed into a
-   * loop, `-1` when none has, or `-2` when two have.
-   */
-  private buildLoops(): number {
-    const { w, W, H, ws, dsf, dsfsize } = this;
-    dsf.reinit();
-    dsfsize.fill(1);
-    this.nonblanks = 0;
-    let loopclass = -1;
-    for (let y = 1; y < H - 1; y++)
-      for (let x = 1; x < W - 1; x++) {
-        if ((y ^ x) & 1) {
-          // Edge field. Compute the squares it connects.
-          const ac = ((y - 1) >> 1) * w + ((x - 1) >> 1);
-          const bc = (y >> 1) * w + (x >> 1);
-          if (ws[y * W + x] === 1) {
-            let ae = dsf.canonify(ac);
-            const be = dsf.canonify(bc);
-            if (ae === be) {
-              if (loopclass !== -1) return -2; // two separate loops: doom
-              loopclass = ae;
-            } else {
-              const size = dsfsize[ae] + dsfsize[be];
-              dsf.merge(ac, bc);
-              ae = dsf.canonify(ac);
-              dsfsize[ae] = size;
-            }
-          }
-        } else if (y & x & 1) {
-          // Square field. Count if it's definitely non-blank.
-          if (!(ws[y * W + x] & bBLANK)) this.nonblanks++;
-        }
-      }
-    return loopclass;
-  }
-
-  /**
-   * A loop has closed: blank every square off it and stop, solved. Fires once,
-   * and {@link closed} is the ladder's `settled`, so nothing runs after it.
-   */
-  closedLoop(): number {
-    const { w, h, W, ws, dsf } = this;
-    const loopclass = this.buildLoops();
-    if (loopclass === -2) return -1;
-    if (loopclass === -1) return 0;
-    for (let y = 0; y < h; y++)
-      for (let x = 0; x < w; x++)
-        if (dsf.canonify(y * w + x) !== loopclass) {
-          const sq = (2 * y + 1) * W + 2 * x + 1;
-          // A non-blank square outside the loop: goofed.
-          if (!(ws[sq] & bBLANK)) return -1;
-          ws[sq] = bBLANK;
-        }
-    this.closed = true;
-    return 1;
-  }
-
-  /** Mark any edge or square state that would close a loop short of every
-   * square that cannot be blank. */
-  shortcutLoops(): number {
-    const { W, H, ws, rec } = this;
-    // The closed-loop rung runs before this one at every cap and found no
-    // loop, so this rebuilds the open pieces it saw.
-    this.buildLoops();
-    if (rec) return this.firstShortcut(rec);
-    let fired = 0;
-    for (let y = 1; y < H - 1; y++)
-      for (let x = 1; x < W - 1; x++) {
-        if ((y ^ x) & 1) {
-          if (this.edgeClosesEarly(x, y)) {
-            ws[y * W + x] = 2;
-            fired++;
-          }
-        } else if (y & x & 1) {
-          for (let b = 2; b < 0xd; b++)
-            if (ws[y * W + x] & (1 << b) && this.shapeClosesEarly(x, y, b)) {
-              ws[y * W + x] &= ~(1 << b);
-              fired++;
-            }
-        }
-      }
-    return fired;
-  }
-
-  /**
-   * The hint path's shortcut rung: the first edge that would close a loop
-   * early, and failing that the first square state that would. Edges go first
-   * because a state that runs from the end of a piece to its other end is
-   * ruled out by exactly the edge the first half finds.
-   */
-  private firstShortcut(rec: PearlRecorder): number {
-    const { w, W, H, ws } = this;
-    let found = false;
-    for (let y = 1; y < H - 1; y++)
-      for (let x = 1; x < W - 1; x++)
-        if ((y ^ x) & 1 && this.edgeClosesEarly(x, y)) {
-          ws[y * W + x] = 2;
-          const vertical = y & 1;
-          const cx = (x - 1) >> 1;
-          const cy = (y - 1) >> 1;
-          const sq = cy * w + cx;
-          rec.reason = {
-            kind: "closesEarly",
-            sq,
-            dir: vertical ? R : D,
-            piece: this.pieceOf(sq),
-          };
-          found = true;
-          if (this.kept()) return 1;
-        }
-    if (found) return 1;
-    for (let y = 1; y < H - 1; y += 2)
-      for (let x = 1; x < W - 1; x += 2)
-        for (let b = 2; b < 0xd; b++) {
-          const sq = y * W + x;
-          if (!(ws[sq] & (1 << b)) || !this.shapeClosesEarly(x, y, b)) continue;
-          const cell = ((y - 1) >> 1) * w + ((x - 1) >> 1);
-          const d = b & -b;
-          const end = cell + dirY(d) * w + dirX(d);
-          const n = this.narrow(sq, ws[sq] & ~(1 << b), {
-            kind: "closesEarlyThrough",
-            sq: cell,
-            shape: b,
-            piece: this.pieceOf(end),
-          });
-          if (n < 0) return n;
-          if (n) {
-            found = true;
-            if (this.kept()) return n;
-          }
-        }
-    return found ? 1 : 0;
-  }
-
-  /** Is the unknown edge at workspace `(x, y)` one that joins two squares of
-   * the same piece, when some square that cannot be blank lies off it? */
-  private edgeClosesEarly(x: number, y: number): boolean {
-    const { w, W, ws, dsf, dsfsize } = this;
-    if (ws[y * W + x] !== 3) return false;
-    const ae = dsf.canonify(((y - 1) >> 1) * w + ((x - 1) >> 1));
-    const be = dsf.canonify((y >> 1) * w + (x >> 1));
-    return ae === be && dsfsize[ae] < this.nonblanks;
-  }
-
-  /** Would the square at workspace `(x, y)` taking state `b` join two ends of
-   * one piece, when some square that cannot be blank lies off it? */
-  private shapeClosesEarly(x: number, y: number, b: number): boolean {
-    const { w, W, ws, dsf, dsfsize } = this;
-    const ae = dsf.canonify(((y / 2) | 0) * w + ((x / 2) | 0));
-    let e = -1;
-    let connections = 0;
-    for (let d = 1; d <= 8; d += d)
-      if (b & d) {
-        const xx = ((x / 2) | 0) + dirX(d);
-        const yy = ((y / 2) | 0) + dirY(d);
-        const ee = dsf.canonify(yy * w + xx);
-        if (e === -1) e = ee;
-        else if (e !== ee) e = -2;
-        if (ws[(y + dirY(d)) * W + (x + dirX(d))] === 1) connections++;
-      }
-    if (e < 0 || connections >= 2) return false;
-    let loopsize = dsfsize[e];
-    if (e !== ae) loopsize++; // add the square itself
-    return loopsize < this.nonblanks;
-  }
-
-  /** The cells of the piece holding cell `c`, in scan order. */
-  private pieceOf(c: number): number[] {
-    const { w, h, dsf } = this;
-    const root = dsf.canonify(c);
-    const cells: number[] = [];
-    for (let i = 0; i < w * h; i++) if (dsf.canonify(i) === root) cells.push(i);
-    return cells;
-  }
+/** The ladder over the dealt pearls, each technique with its reason. */
+function pearlLadder(dl: pearl.Dealt): Ladder {
+  const rung = <B extends object>(
+    kind: pearl.LadderId,
+    run: (b: never, sp: GridSpace, cl: pearl.Dealt, fire: never) => number,
+  ) =>
+    compiledRung(
+      run as Parameters<typeof compiledRung<B, pearl.Dealt>>[0],
+      dl,
+      fired<B>(kind),
+    );
+  return describedLadder(pearl, {
+    square: rung("square", pearl.square),
+    blackPearl: rung("blackPearl", pearl.blackPearl),
+    blackRunsOn: rung("blackRunsOn", pearl.blackRunsOn),
+    blackCannotRunOn: rung("blackCannotRunOn", pearl.blackCannotRunOn),
+    whiteCannotTurn: rung("whiteCannotTurn", pearl.whiteCannotTurn),
+    whiteTurnsOpposite: rung("whiteTurnsOpposite", pearl.whiteTurnsOpposite),
+    closed: rung("closed", pearl.closed),
+    earlyLoop: rung("earlyLoop", pearl.earlyLoop),
+    earlyThrough: rung("earlyThrough", pearl.earlyThrough),
+  });
 }
 
-function pearlLadder(b: PearlBoard): DeductionTechnique[] {
-  return [
-    { id: "shapes-from-edges", tier: DIFF_EASY, run: () => b.shapesFromEdges() },
-    { id: "edges-from-shapes", tier: DIFF_EASY, run: () => b.edgesFromShapes() },
-    { id: "pearl-clues", tier: DIFF_EASY, run: () => b.pearlClues() },
-    { id: "closed-loop", tier: DIFF_EASY, run: () => b.closedLoop() },
-    { id: "shortcut-loop", tier: DIFF_TRICKY, run: () => b.shortcutLoops() },
-  ];
+/** A board's ladder and what it reads the board as. */
+export interface Kept {
+  readonly clues: Uint8Array;
+  readonly g: PearlGeometry;
+  readonly dl: pearl.Dealt;
+  readonly ladder: Ladder;
+}
+
+const ladders = new WeakMap<Uint8Array, Kept>();
+
+/** The ladder of a board, kept per clue array while its pearls are the
+ * same: the generator removes pearls from one array between solves. */
+export function ladderOf(w: number, h: number, clues: Uint8Array): Kept {
+  const kept = ladders.get(clues);
+  if (
+    kept !== undefined &&
+    kept.g.w === w &&
+    kept.g.h === h &&
+    kept.clues.every((c, i) => c === clues[i])
+  )
+    return kept;
+  const dl = dealtOf(clues);
+  const made: Kept = {
+    clues: clues.slice(),
+    g: geometryOf(w, h),
+    dl,
+    ladder: pearlLadder(dl),
+  };
+  ladders.set(clues, made);
+  return made;
+}
+
+/** Fresh marks on `g`, each edge as `known` has it (0 open, {@link LINE},
+ * {@link NONE}). */
+export function marksOn(g: PearlGeometry, known: Uint8Array): CellMarks {
+  const m = new CellMarks(g.sp, rangeMask(LINE, NONE), known, null, "edge");
+  m.seed(known);
+  return m;
 }
 
 /**
- * Run the ladder to its fixpoint and return the verdict with the workspace.
+ * Run the ladder up to tier `cap` from the pearls alone: the marks it ends
+ * with, and 0 where it found them inconsistent, 1 where they are the
+ * board's one answer, 2 where it stopped short.
  *
- * @param difficulty the highest tier to run (`DIFF_COUNT` runs them all).
- * @param firings the census sink, forwarded to `runDeductionFixpoint`; only
+ * @param firings the census sink, forwarded to the runner; only
  *   `pearl-ladder.test.ts` passes one.
  */
-export function pearlWorkspace(
+export function pearlMarks(
   w: number,
   h: number,
   clues: Uint8Array,
-  difficulty: number,
+  cap: number,
   firings?: FiringTally,
-): PearlWorkspace {
-  const b = new PearlBoard(w, h, clues);
-  const { impossible } = runDeductionFixpoint({
-    techniques: pearlLadder(b),
-    maxTier: difficulty,
-    settled: () => b.closed,
-    firings,
-  });
-  return { ret: impossible ? 0 : b.closed ? 1 : 2, ws: b.ws };
+): { ret: number; grid: Uint8Array } {
+  const { g, dl, ladder } = ladderOf(w, h, clues);
+  const m = marksOn(g, new Uint8Array(g.sp.edges.length));
+  const impossible = runLadder(
+    m,
+    ladderTechniques(m, ladder.entries, { [TIERS]: cap }, {}),
+    { firings },
+  );
+  const grid = Uint8Array.from(m.grid);
+  if (impossible) return { ret: 0, grid };
+  if (grid.includes(0)) return { ret: 2, grid };
+  return { ret: pearl.isAnswer(grid, g.sp, dl) ? 1 : 0, grid };
 }
 
-/** An edge a firing decided: the side of square `sq` toward `dir` (`R` or `D`,
- * so each edge has one name), and whether it carries the line. */
-export interface PearlEdgeOp {
-  sq: number;
-  dir: number;
-  line: boolean;
+/** Whether the lines a player has drawn are the answer to the pearls: the
+ * description's rules, compiled, over every edge a line or none. */
+export function isSolved(
+  state: Pick<PearlState, "w" | "h" | "clues" | "lines">,
+): boolean {
+  const { g, dl } = ladderOf(state.w, state.h, state.clues);
+  const grid = new Uint8Array(g.sp.edges.length);
+  for (let e = 0; e < grid.length; e++) {
+    const i = g.edgeSquare[e];
+    const d = g.edgeSide[e];
+    const j = i + dirY(d) * state.w + dirX(d);
+    grid[e] = state.lines[i] & d || state.lines[j] & opposite(d) ? LINE : NONE;
+  }
+  return pearl.isAnswer(grid, g.sp, dl);
 }
 
-/** One firing on the hint path. */
-export interface PearlFiring {
-  /** Why it holds; `null` for the closed-loop rung, which only confirms. */
-  reason: PearlReason | null;
-  /** The edges it decided. */
-  ops: PearlEdgeOp[];
-  /** The workspace just before it fired, which is what its sentence describes. */
-  before: Int32Array;
-}
-
-/**
- * The recording projection's driver: the ladder one firing at a time, over the
- * player's board `b`.
- *
- * **Before every firing, each square's states are read afresh off its pearl and
- * its edges** ({@link PearlBoard.readSquaresFromEdges}), so no firing rests on
- * a state some earlier rung struck and no edge shows. The solver keeps those
- * strikes; the hint does not need them. Measured when this was written, over
- * 11,568 verdicts on generator-shaped boards from 6x6 to 10x10 at both tiers,
- * a solver that forgets them agrees with one that keeps them every time;
- * `pearl-hint.test.ts` holds the plans to finishing every board it deals.
- */
-export function pearlRecordingPass(
-  b: PearlBoard,
-  budget: StepBudget,
-): { next(): PearlFiring | null; impossible(): boolean } {
-  const rec: PearlRecorder = { reason: null };
-  b.rec = rec;
-  b.offers = new SweepOffers({
-    save: () => ({ ws: b.ws.slice(), closed: b.closed }),
-    restore: (s) => {
-      b.ws.set(s.ws);
-      b.closed = s.closed;
-    },
-    recorded: () => rec.reason,
-    record: (r) => {
-      rec.reason = r;
-    },
-    reads: (r) => (r ? b.premise(r) : []),
-    writes: (before, after) => b.edgeSquares(before.ws, after.ws),
-  });
-  let broken = false;
-  const firings = singleFirings({
-    techniques: b.offers.techniques(pearlLadder(b)),
-    budget,
-    beforeTechnique: () => {
-      rec.reason = null;
-    },
-    settled: () => b.closed,
-    // A plan follows the line it is drawing before it moves on.
-    continuing: true,
-  });
-  const { w, h, ws } = b;
-  return {
-    next(): PearlFiring | null {
-      if (broken) return null;
-      if (b.readSquaresFromEdges() < 0) {
-        broken = true;
-        return null;
-      }
-      const before = ws.slice();
-      if (!firings.next()) return null;
-      const ops: PearlEdgeOp[] = [];
-      for (let y = 0; y < h; y++)
-        for (let x = 0; x < w; x++)
-          for (const dir of [R, D]) {
-            const e = b.edgeAt(x, y, dir);
-            if (e < ws.length && ws[e] !== before[e])
-              ops.push({ sq: y * w + x, dir, line: ws[e] === 1 });
-          }
-      return { reason: rec.reason, ops, before };
-    },
-    impossible: () => broken || firings.impossible(),
-  };
+/** Each square's lines, as direction bits, where `grid` has every edge of
+ * it known; `-1` where it has not. */
+function squareLines(g: PearlGeometry, grid: ArrayLike<number>, sq: number): number {
+  let lines = 0;
+  for (const d of DIRECTIONS) {
+    const e = sideEdge(g, sq, d);
+    if (e < 0) continue;
+    if (grid[e] === 0) return -1;
+    if (grid[e] === LINE) lines |= d;
+  }
+  return lines;
 }
 
 /**
  * @param clues clue grid (NOCLUE/CORNER/STRAIGHT), length w*h
- * @param result out array (length w*h): written when solved (or `partial`)
- * @param difficulty DIFF_EASY or DIFF_TRICKY (or DIFF_COUNT to run all rungs)
- * @param partial when true, transcribe the partial workspace even if unsolved
+ * @param result out array (length w*h): each square's lines as direction
+ *   bits, written when solved, or under `partial` for each square whose
+ *   edges the ladder settled
+ * @param difficulty the highest tier to run (`DIFF_COUNT` runs them all)
+ * @param partial when true, transcribe what the ladder settled even if
+ *   unsolved
  * @returns 0 inconsistent, 1 unique, 2 ambiguous
  */
 export function pearlSolve(
@@ -777,31 +228,26 @@ export function pearlSolve(
   difficulty: number,
   partial: boolean,
 ): number {
-  const { ret, ws } = pearlWorkspace(w, h, clues, difficulty);
-  if (ret === 1 || partial) transcribe(w, h, ws, result);
+  const { ret, grid } = pearlMarks(w, h, clues, difficulty);
+  if (ret === 1 || partial) transcribe(geometryOf(w, h), grid, result);
   return ret;
 }
 
-/** Transcribe the workspace's decided squares into `result`. */
-function transcribe(w: number, h: number, ws: Int32Array, result: Uint8Array): void {
-  const W = 2 * w + 1;
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++) {
-      // When the square is nailed to one state, write it; otherwise (only
-      // possible under `partial`) leave the caller's prior value in place.
-      const sq = (2 * y + 1) * W + 2 * x + 1;
-      for (let b = 0; b < 0xd; b++)
-        if (ws[sq] === 1 << b) {
-          result[y * w + x] = b;
-          break;
-        }
-    }
+/** Transcribe the settled squares into `result`. */
+function transcribe(g: PearlGeometry, grid: Uint8Array, result: Uint8Array): void {
+  const { w, h } = g;
+  for (let sq = 0; sq < w * h; sq++) {
+    // A square with an edge still open keeps the caller's prior value: only
+    // possible under `partial`.
+    const lines = squareLines(g, grid, sq);
+    if (lines >= 0) result[sq] = lines;
+  }
 
   // Fix up reciprocity: never leave a square linked to a neighbor that
   // does not link back (can happen when we give up on an impossible board).
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++)
-      for (let d = 1; d <= 8; d += d) {
+      for (const d of DIRECTIONS) {
         const nx = x + dirX(d);
         const ny = y + dirY(d);
         const linksBack =
@@ -813,8 +259,7 @@ function transcribe(w: number, h: number, ws: Int32Array, result: Uint8Array): v
 /** Easiest difficulty (0-based) at which `clues` has a unique solution, or
  * -1 if none. */
 export function gradePearl(w: number, h: number, clues: Uint8Array): number {
-  const scratch = new Uint8Array(w * h);
-  for (let diff = DIFF_EASY; diff < DIFF_COUNT; diff++)
-    if (pearlSolve(w, h, clues, scratch, diff, false) === 1) return diff;
+  for (let diff = 0; diff < pearl.tiers.length; diff++)
+    if (pearlMarks(w, h, clues, diff).ret === 1) return diff;
   return -1;
 }

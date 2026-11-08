@@ -1039,9 +1039,12 @@ each firing.** Then no step can rest on a fact the board does not show.
   deductions rest on, seeds the player's own as facts, and `findMistakes`
   vouches for it.
 
-Exemplars: `pearlRecordingPass` in
-[`pearl/hint.ts`](../src/games/pearl/hint.ts) with the snapshot test in
-`pearl-hint.test.ts`; `reading` in
+A ladder stated in a description whose only state is the player's marks is
+forgetful by construction, since every technique reads them afresh: a Pearl
+square's ways through are a filling of its edges, read whenever a technique
+asks ([`pearl.description.yaml`](../src/games/pearl/pearl.description.yaml)).
+
+Exemplars: `reading` in
 [`ascent/hint.ts`](../src/games/ascent/hint.ts) with `techniqueTier`;
 `TentsBoard.readLinks` in [`tents/solver.ts`](../src/games/tents/solver.ts).
 

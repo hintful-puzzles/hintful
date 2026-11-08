@@ -1076,6 +1076,43 @@ const PLANTS: Record<string, Plant> = {
   "net.strandNote": {
     for: "L = {e in edges where known(e)}, U = {e in edges where usable(end1(e), e) and usable(end2(e), e)}, P = {e in U where arms(end1(e)) > 1 and arms(end2(e)) > 1}, c in cells, G = through(c, L), K = open(c, P, U), e in edges(c) where not known(e), A = strandFits(c, e, 1, L, G, P, U, K), B = strandFits(c, e, 2, L, G, P, U, K) where not A or not B",
   },
+  // A white pearl read as taking no line.
+  "pearl.square": {
+    for: "c in cells where clue(pearl, c) != 1, F = {e in edges(c) where not known(e)} where |F| > 0, W = {e in F where fits(c, e, 1) and clue(pearl, c) != 2}, N = {e in F where fits(c, e, 2)} where (exists e in F: e not in W or e not in N)",
+  },
+  // A black pearl read as taking no line until it has one.
+  "pearl.blackPearl": {
+    for: "c in cells where clue(pearl, c) = 1, e in edges(c) where not known(e), A = (turnsAt(c, e, 1) and drawn(c) > 0), B = turnsAt(c, e, 2) where not A or not B",
+  },
+  // The line through the next square read as turning there.
+  "pearl.blackRunsOn": {
+    conclude:
+      "(exists x in edges(j): x != e and not bent(x, e)) and (forall x in edges(j) where x != e: (bent(x, e) implies place(x, 1)) and (not bent(x, e) implies place(x, 2)))",
+  },
+  // The next square read as having to turn, not run straight.
+  "pearl.blackCannotRunOn": {
+    for: "c in cells where clue(pearl, c) = 1, e in edges(c) where not known(e), j = other(e, c) where not turns(j, e)",
+  },
+  // One square that cannot turn read as enough.
+  "pearl.whiteCannotTurn": {
+    for: "c in cells where clue(pearl, c) = 2 and (exists x in edges(c): not known(x)), e in edges(c) where value(e) != 2, f in edges(c) where index(f, edges(c)) > index(e, edges(c)) and not bent(e, f) and value(f) != 2 and not turns(other(e, c), e), P = {x in edges(c) where x != e and x != f}",
+  },
+  // The other square read as having to turn whatever the first does.
+  "pearl.whiteTurnsOpposite": {
+    for: "c in cells where clue(pearl, c) = 2, e in edges(c) where value(e) = 1, f in edges(c) where f != e and value(f) = 1 and not bent(e, f), k = other(f, c) where runs(k, f), F = {x in edges(k) where not known(x)} where |F| > 0, W = {x in F where turnFits(k, f, x, 1)}, N = {x in F where turnFits(k, f, x, 2)} where (exists x in F: x not in W or x not in N)",
+  },
+  // The lines read as closed while one still has a loose end.
+  "pearl.closed": {
+    for: "L = {e in edges where value(e) = 1}, g = first(L) where g != none and (exists e in edges: not known(e)), G = through(end1(g), L)",
+  },
+  // The edge that closes the whole loop read as closing it early.
+  "pearl.earlyLoop": {
+    for: "L = {e in edges where value(e) = 1}, e in edges where not known(e), G = through(end1(e), L) where end2(e) in G",
+  },
+  // Every square read as left out of the loop a way through would close.
+  "pearl.earlyThrough": {
+    for: "L = {e in edges where value(e) = 1}, Q = {q in cells where true}, c in cells where drawn(c) = 0, F = {e in edges(c) where not known(e)} where |F| > 1, W = {e in F where loopFits(c, e, 1, L, Q)}, N = {e in F where loopFits(c, e, 2, L, Q)} where (exists e in F: e not in W or e not in N)",
+  },
 };
 
 /** How many of a technique's first binders each query fixes, one query a
