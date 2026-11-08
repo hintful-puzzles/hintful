@@ -49,3 +49,245 @@ help:
     **Check & save**. An island marked completed before it really is counts as a
     mistake too, because the mark locks bridges the island still needs: the island
     lights up, and taking the mark off clears it.
+name: Bridges
+family: lines
+sizes:
+  w: { min: 3, max: 100 }
+  h: { min: 3, max: 100 }
+  # The most bridges one line may carry.
+  maxb: { min: 1, max: 4 }
+space:
+  grid: { w: "w", h: "h" }
+  edges: true
+  units: []
+answer:
+  # The edge between two squares side by side: one more than the bridges
+  # running across it, so 1 is none. A bridge between two islands runs
+  # across every edge between them.
+  value:
+    sort: edge
+    domain: "range(1, maxb + 1)"
+define:
+  # A square with a number is an island.
+  island(c): "clue(number, c) != none"
+  # The bridges edge e is known to carry at least, and may carry at most:
+  # a bridge drawn raises the first, and a limit lowers the second.
+  drawn(e): "first(cand(e)) - 1"
+  limit(e): "max(d in cand(e)) - 1"
+  # The island a line from island c, leaving by its neighbor y, reaches
+  # first, or none, as where y is an island itself: a bridge crosses a
+  # square at least. Then the squares it crosses on the way, and the edges
+  # it runs along.
+  far(c, y): "first({x in ray(c, y) where island(x) and not island(y)})"
+  mid(c, y): "{x in ray(c, y) where index(x, ray(c, y)) < index(far(c, y), ray(c, y))}"
+  run(c, y): >-
+    {edge(c, y)} + set(edge(m, nth(ray(c, y), index(m, ray(c, y)) + 1)) over m in mid(c, y))
+  # The edge it ends on, at the island it reaches.
+  end(c, y): "edge(far(c, y), the(x in adj4(far(c, y)) where x = c or x in mid(c, y)))"
+  # The bridges the line is known to carry at least, and may carry at most,
+  # as either end says: a bridge runs across every edge of its line, so
+  # what one edge says, the line does.
+  has(c, y): "max(e in {edge(c, y), end(c, y)} of drawn(e))"
+  allows(c, y): "min(e in {edge(c, y), end(c, y)} of limit(e))"
+  # The bridges island c is known to have, and how many more it needs.
+  bridges(c): "sum(y in adj4(c) where far(c, y) != none of has(c, y))"
+  need(c): "clue(number, c) - bridges(c)"
+  # Whether the line from c by y would cross a bridge drawn.
+  crossed(c, y): >-
+    exists m in mid(c, y), p in adj4(m) where (x(p) = x(m)) != (x(y) = x(c)):
+    drawn(edge(m, p)) > 0
+  # Whether the line from c by y may take another bridge, as a player sees
+  # at a glance: it crosses no bridge, and neither island has all its own.
+  open(c, y): "need(c) > 0 and need(far(c, y)) > 0 and not crossed(c, y)"
+  # The most bridges its limit and both islands' numbers let the line take
+  # beyond those it has.
+  cap(c, y): >-
+    max(k in range(0, maxb) where k = 0
+    or (has(c, y) + k <= allows(c, y)
+    and has(c, y) + k <= clue(number, c)
+    and has(c, y) + k <= clue(number, far(c, y))))
+  # How many more bridges the line may take: its cap where it is open.
+  more(c, y): "sum(z in {c} where open(c, y) of cap(c, y))"
+  # The most bridges the line may end with.
+  most(c, y): "has(c, y) + more(c, y)"
+  # How many more bridges island c could still draw by y, at most what it
+  # needs.
+  room(c, y): "max(k in range(0, more(c, y)) where k <= need(c))"
+  # The squares the bridges drawn join to square c, the edges H taken as
+  # bridged too.
+  group(c, H): "through(c, {e in edges where drawn(e) > 0 or e in H})"
+  # Whether no island of the group G has a line known to carry a bridge to
+  # an island outside it.
+  closed(G): >-
+    forall x in G where island(x), z in adj4(x) where far(x, z) != none and has(x, z) > 0:
+    far(x, z) in G
+  # How many islands the board has.
+  islands: "count(x in cells where island(x))"
+  # The same reads, with at least j bridges supposed on the line whose
+  # edges are H.
+  hasAt(c, y, H, j): "has(c, y) + sum(z in {edge(c, y)} where z in H of j - has(c, y))"
+  needAt(c, H, j): >-
+    clue(number, c) - sum(y in adj4(c) where far(c, y) != none of hasAt(c, y, H, j))
+  crossedAt(c, y, H): >-
+    exists m in mid(c, y), p in adj4(m) where (x(p) = x(m)) != (x(y) = x(c)):
+    drawn(edge(m, p)) > 0 or edge(m, p) in H
+  # How many more bridges the line from c by y could still take with the
+  # bridges supposed: at most what the island it reaches needs.
+  availAt(c, y, H, j): >-
+    max(k in range(0, maxb) where k = 0
+    or (not crossedAt(c, y, H) and k <= needAt(far(c, y), H, j)
+    and hasAt(c, y, H, j) + k <= allows(c, y)))
+  # Whether island c, with the bridges supposed, has more bridges than its
+  # number, or too few lines left to take those it still needs.
+  starvedAt(c, H, j): >-
+    needAt(c, H, j) < 0
+    or sum(y in adj4(c) where far(c, y) != none of availAt(c, y, H, j)) < needAt(c, H, j)
+  # The islands a bridge from c by y could leave short at once: the two it
+  # joins, those either reaches, and those at the ends of the lines it
+  # crosses.
+  near(c, y): >-
+    {c} + set(far(x, z) over x in {c, far(c, y)}, z in adj4(x) where far(x, z) != none)
+    + set(far(m, p) over m in mid(c, y), p in adj4(m)
+    where (x(p) = x(m)) != (x(y) = x(c)) and far(m, p) != none)
+  # Whether at least j bridges on the line from c by y, its edges H, would
+  # break the board at once: an island near it left short, or its group G
+  # finished, every island in it with all its bridges, while some island
+  # is not in it.
+  breaksAt(c, y, G, H, j, N): >-
+    (exists x in near(c, y): starvedAt(x, H, j))
+    or closed(G) and (forall x in G where island(x): needAt(x, H, j) = 0)
+    and count(x in G where island(x)) < N
+rules:
+  # No two bridges cross: a square with no island takes bridges one way at
+  # most.
+  uncrossed: >-
+    forall c in cells where not island(c), a in adj4(c), b in adj4(c)
+    where x(a) = x(c) and y(b) = y(c):
+    value(edge(c, a)) = 1 or value(edge(c, b)) = 1
+  # The bridges join every island into one group.
+  joined: >-
+    forall L = {e in edges where value(e) > 1},
+    a in cells where island(a), b in cells where island(b): b in through(a, L)
+shape:
+  # Two islands side by side take no bridge between them.
+  - "forall e in edges where island(end1(e)) and island(end2(e)): value(e) = 1"
+  # A bridge runs straight on through a square with no island, so it ends
+  # at an island at both ends.
+  - >-
+    forall c in cells where not island(c), a in adj4(c):
+    value(edge(c, a)) = 1
+    or (exists b in adj4(c) where x(a) + x(b) = 2 * x(c) and y(a) + y(b) = 2 * y(c):
+    value(edge(c, b)) = value(edge(c, a)))
+clues:
+  # An island's number: how many bridges end there.
+  number:
+    at: cell
+    value: "range(1, 4 * maxb)"
+    means: "sum(y in adj4(at) of value(edge(at, y)) - 1) = clue(number, at)"
+freedom: { kind: fill }
+deal:
+  answer: >-
+    islands grown from one at random, each joined to the last by up to the
+    most bridges a line may carry, until the board holds its share of
+    islands; dealt where the ladder finishes it at the tier and not at the
+    one below
+  number: each island's bridges in the answer
+  maxb: the setting
+  tier: one of the tiers
+tiers: [Easy, Normal, Tricky]
+techniques:
+  # An island with only as much room left as it needs bridges takes the
+  # most each line allows. One with more bridges than its number, or less
+  # room than it needs, makes the marks inconsistent.
+  - id: exactSpace
+    tier: Easy
+    for: >-
+      c in cells where island(c), n = need(c) where n != 0,
+      R = sum(y in adj4(c) where far(c, y) != none of room(c, y))
+      where n < 0 or R <= n
+    conclude: >-
+      n >= 0 and R = n
+      and (forall y in adj4(c) where far(c, y) != none,
+      t = has(c, y) + room(c, y), e in run(c, y), d in cand(e)
+      where d <= t: strike(e, d))
+  # An island whose number is more than all but one of the lines it may
+  # still use could carry takes a bridge on each.
+  - id: everyNeighbor
+    tier: Easy
+    for: >-
+      c in cells where island(c) and need(c) > 0,
+      A = {y in adj4(c) where far(c, y) != none and most(c, y) > 0}
+      where clue(number, c) > (|A| - 1) * maxb
+    conclude: >-
+      forall y in A where has(c, y) = 0, e in run(c, y): strike(e, 1)
+  # An island whose other lines could carry fewer bridges than its number
+  # takes one on this line.
+  - id: needsThisWay
+    tier: Normal
+    for: >-
+      c in cells where island(c) and need(c) > 0,
+      V = sum(y in adj4(c) where far(c, y) != none of most(c, y)),
+      y in adj4(c) where far(c, y) != none and has(c, y) = 0
+      and more(c, y) > 0 and V - more(c, y) < clue(number, c)
+    conclude: "forall e in run(c, y): strike(e, 1)"
+  # A bridge on a line between two islands that each need one more would
+  # finish a group shut off from the rest: the line is blocked.
+  - id: sealing
+    tier: Normal
+    for: >-
+      N = islands, c in cells where island(c) and need(c) = 1,
+      y in adj4(c), f = far(c, y)
+      where f != none and need(f) = 1 and has(c, y) = 0 and more(c, y) > 0,
+      G = group(c, run(c, y))
+      where closed(G) and (forall x in G where island(x) and x != c and x != f: need(x) = 0)
+      and count(x in G where island(x)) < N
+    conclude: "forall e in run(c, y), d in cand(e) where d > 1: strike(e, d)"
+  # The fewest bridges past those a line has that would break the board at
+  # once, leaving an island short or a finished group shut off: the line
+  # takes fewer.
+  - id: tooMany
+    tier: Tricky
+    for: >-
+      N = islands, c in cells where island(c) and need(c) > 0,
+      y in adj4(c) where far(c, y) != none,
+      r = room(c, y) where r > 0,
+      H = run(c, y), G = group(c, H), t = has(c, y),
+      k = min(j in range(t + 1, t + r) where breaksAt(c, y, G, H, j, N))
+      where k > 0
+    conclude: "forall e in H, d in cand(e) where d > k: strike(e, d)"
+  # An island that would fill its other lines to the most each allows, and
+  # so finish a group shut off from the rest: this line takes a bridge.
+  - id: mustReachOut
+    tier: Tricky
+    for: >-
+      N = islands, c in cells where island(c) and need(c) > 0,
+      y in adj4(c) where far(c, y) != none and has(c, y) = 0
+      and room(c, y) > 0
+      and sum(z in adj4(c) where z != y and far(c, z) != none of room(c, z)) = need(c),
+      F = set(e over z in adj4(c) where z != y and far(c, z) != none and room(c, z) > 0,
+      e in run(c, z)),
+      G = group(c, F)
+      where closed(G) and (forall x in G where island(x) and x != c:
+      need(x) = sum(z in adj4(c) where z != y and far(c, z) = x of room(c, z)))
+      and count(x in G where island(x)) < N
+    conclude: "forall e in run(c, y): strike(e, 1)"
+variations:
+  no loops:
+    add:
+      rules:
+        # No bridge closes a loop: each one bridged joins two groups the
+        # rest would leave apart.
+        acyclic: >-
+          forall L = {e in edges where value(e) > 1}, e in L:
+          end2(e) not in through(end1(e), L - {e})
+      techniques:
+        # A line between two islands the bridges already join would close a
+        # loop: it is blocked.
+        - id: loop
+          tier: Normal
+          for: >-
+            L = {e in edges where drawn(e) > 0},
+            c in cells where island(c), y in adj4(c), f = far(c, y)
+            where f != none and has(c, y) = 0 and more(c, y) > 0
+            and f in through(c, L)
+          conclude: "forall e in run(c, y), d in cand(e) where d > 1: strike(e, d)"

@@ -255,7 +255,11 @@ class Out {
 function unreadBindingsDropped(lines: string[]): string[] {
   const indent = (l: string): number => l.length - l.trimStart().length;
   return lines.filter((line, i) => {
-    const m = /^\s*const (v_\w+) = _a\d+\[_i\d+\];$/.exec(line);
+    // An array's element, or a stated set's member (`bindingLoops`).
+    const m =
+      /^\s*const (v_\w+) = (?:_a\d+\[_i\d+\]|(?:_i\d+ === \d+ \? [\w.[\]]+ : )*[\w.[\]]+);$/.exec(
+        line,
+      );
     if (m === null) return true;
     const read = new RegExp(`\\b${m[1]}\\b`);
     const depth = indent(line);
@@ -387,6 +391,10 @@ interface Env {
   /** What a binding's premise and conclusion have computed that a later
    * read of the same term may share; absent elsewhere. */
   shared?: Shared;
+  /** The functions of the definitions a rung keeps the value of, for each
+   * argument, while its kept candidates hold (`rungKept`), each to the maps
+   * a call of it fills. Absent outside a rung. */
+  memos?: Map<string, readonly string[]>;
   /** Set where a technique's body reads a cell's candidates through
    * `cands`, which it then keeps; absent outside a technique. */
   readsCands?: { yes: boolean };
@@ -421,7 +429,17 @@ interface Env {
    * each compiled once as an exported function of the module
    * (`keptDefinition`); `null` where nothing is kept. */
   kept: {
-    defs: Map<string, { sort: Sort; clues: boolean; board: boolean; code: string }>;
+    defs: Map<
+      string,
+      {
+        sort: Sort;
+        clues: boolean;
+        board: boolean;
+        code: string;
+        /** The maps a call fills, where a rung keeps it (`rungKept`). */
+        maps?: readonly string[];
+      }
+    >;
     /** The terms summed over a group (`linkedAggregate`), each compiled once
      * as a function of the module, by what it sums. */
     terms: Map<string, { fn: string; clues: boolean }>;
@@ -983,6 +1001,20 @@ function setLiteral(elems: readonly Expr[], scope: Scope, env: Env, out: Out): V
   return { code: `setOf(${vs.map((v) => v.code).join(", ")})`, sort: setOf(sort) };
 }
 
+/** Whether a set literal's members are all elements of one sort, as a probe
+ * that writes nothing reads them. */
+function setLiteralElements(elems: readonly Expr[], scope: Scope, env: Env): boolean {
+  const probe: Env = {
+    ...env,
+    used: new Set(),
+    scratch: null,
+    hoist: null,
+    shared: undefined,
+  };
+  const sorts = elems.map((x) => compileExpr(x, scope, probe, new Out(0)).sort);
+  return sorts.every((s) => s.k === "elem" && sameSort(s, sorts[0]));
+}
+
 /** A connective whose right side may need statements: they run only where
  * the left side leaves the answer open, so a premise can guard what it reads. */
 function shortCircuit(
@@ -1304,6 +1336,33 @@ function bindingLoops(
           ? `for (let ${v} = ${b.code}; ${v} >= ${a.code}; ${v}--) {`
           : `for (let ${v} = ${a.code}; ${v} <= ${b.code}; ${v}++) {`,
       );
+    } else if (
+      bnd.of.k === "set" &&
+      bnd.of.elems.length <= 4 &&
+      setLiteralElements(bnd.of.elems, sc, env)
+    ) {
+      // A set stated member by member is looped over as its members, with
+      // no array made: Bridges' `{edge(c, y), end(c, y)}` and the `{c}` of
+      // a conditional sum are read for every line at every rung. A member
+      // equal to one before it is passed over, as the set holds it once.
+      const vals = bnd.of.elems.map((x) => once(compileExpr(x, sc, env, out), out));
+      const es = vals.map((x) => x.code);
+      sort = vals[0].sort;
+      const ix = Out.fresh("_i");
+      out.open(`for (let ${ix} = 0; ${ix} < ${es.length}; ${ix}++) {`);
+      out.emit(
+        `const ${v} = ${es
+          .slice(0, -1)
+          .map((e, i) => `${ix} === ${i} ? ${e} : `)
+          .join("")}${es[es.length - 1]};`,
+      );
+      for (let i = 1; i < es.length; i++)
+        out.emit(
+          `if (${ix} === ${i} && (${es
+            .slice(0, i)
+            .map((e) => `${v} === ${e}`)
+            .join(" || ")})) continue;`,
+        );
     } else {
       const s = compileExpr(bnd.of, sc, env, out);
       if (s.sort.k === "subsets") {
@@ -3717,7 +3776,108 @@ function definitionCall(
           : (v.at ?? out.slot(h.loops));
     inner.set(p, { ...v, at });
   });
-  return compileExpr(def.body, inner, env, out);
+  return rungKept(fn, def, vs, inner, env) ?? compileExpr(def.body, inner, env, out);
+}
+
+/**
+ * A definition that reads the marks, of one or two elements, kept by the
+ * rung reading it for each argument until a firing changes the marks, as
+ * the rung keeps its candidates (`candOf`): Bridges' `need(c)` and
+ * `has(c, y)` are read for an island and each of its lines by every line
+ * near it, and made again at each read they cost Bridges' deals four times
+ * its hand-written ladder's (2026-11-08). Compiled once, as a function of
+ * the module that the rung passes its candidates to, and whose map each rung
+ * that calls it empties where it empties its candidates. Only one whose
+ * loops nest two deep, through the definitions it reads, is kept: a single
+ * loop over a few cells costs less to make again than to look up, and kept,
+ * Mosaic's `need(c)` over its 3x3 block cost its deals a quarter more
+ * (2026-11-08). None is kept under a supposition, whose reads differ. `null`
+ * where the definition is not one.
+ */
+function rungKept(
+  fn: string,
+  def: Definition,
+  vs: readonly Val[],
+  inner: Scope,
+  env: Env,
+): Val | null {
+  const { memos, kept } = env;
+  if (
+    memos === undefined ||
+    kept === null ||
+    !env.memo ||
+    env.supposed.length > 0 ||
+    vs.length === 0 ||
+    vs.length > 2 ||
+    vs.some((v) => v.sort.k !== "elem" || v.group !== undefined) ||
+    loopDepth(def.body, env.defs) < 2 ||
+    !readsMarks(def.body, env.defs, new Set(), env.cellMark?.name ?? null) ||
+    FACTS.some((f) => mentions(def.body, f, env.defs, new Set()))
+  )
+    return null;
+  const name = `${fn}Marked`;
+  const key = `rung ${fn}`;
+  let made = kept.defs.get(key);
+  if (made === undefined) {
+    const ps = def.params.map((p) => `v_${p}`);
+    const readsClues = { yes: false };
+    const nested = new Map<string, readonly string[]>();
+    const body = new Out(1);
+    const val = compileExpr(
+      def.body,
+      new Map(def.params.map((p, i) => [p, { code: ps[i], sort: vs[i].sort }])),
+      {
+        ...env,
+        used: kept.used,
+        readsClues,
+        readsCands: { yes: false },
+        memos: nested,
+        scratch: null,
+        hoist: null,
+        shared: undefined,
+        epoch: null,
+        concluding: false,
+      },
+      body,
+    );
+    if (val.sort.k !== "num" && val.sort.k !== "bool") return null;
+    const type = tsType(val.sort);
+    const map = `${name}Kept`;
+    // An element is an index from -1, `none`, past which the second
+    // argument's fits in 2^20, and the key a double holds exactly.
+    const at = ps.length === 1 ? ps[0] : `(${ps[0]} + 1) * 1048577 + (${ps[1]} + 1)`;
+    const lines = [...body.text(), `  const _made = ${val.code};`];
+    const reads = (n: string): string =>
+      lines.some((l) => new RegExp(`(?<!\\.)\\b${n}\\b`).test(l)) ? n : `_${n}`;
+    made = {
+      sort: val.sort,
+      clues: readsClues.yes,
+      board: false,
+      maps: [map, ...[...nested.values()].flat()],
+      code: [
+        `const ${map} = new Map<number, ${type}>();`,
+        "",
+        `/** \`${fn}(${def.params.join(", ")})\` as the description defines it, kept by`,
+        " * the rung that reads it until a firing changes the marks. */",
+        `export function ${name}(${reads("b")}: Marks, ${reads("sp")}: GridSpace, ${readsClues.yes ? "cl: Dealt, " : ""}${reads("cands")}: Int32Array, ${ps.map((p) => `${p}: number`).join(", ")}): ${type} {`,
+        `  const _was = ${map}.get(${at});`,
+        "  if (_was !== undefined) return _was;",
+        ...lines,
+        `  ${map}.set(${at}, _made);`,
+        "  return _made;",
+        "}",
+      ].join("\n"),
+    };
+    kept.defs.set(key, made);
+  }
+  if (made.clues) env.readsClues.yes = true;
+  if (env.readsCands) env.readsCands.yes = true;
+  memos.set(name, made.maps ?? []);
+  const args = def.params.map((p) => inner.get(p)?.code ?? "");
+  return {
+    code: `${name}(b, sp, ${made.clues ? "cl, " : ""}cands, ${args.join(", ")})`,
+    sort: made.sort,
+  };
 }
 
 /**
@@ -3792,7 +3952,14 @@ function keptDefinition(
       },
       body,
     );
-    if (!isArray(val.sort) && val.sort.k !== "num" && val.sort.k !== "bool")
+    // An element is kept as its index: Bridges' `far(c, y)`, the island a
+    // ray from an island reaches, is read for every line at every rung.
+    if (
+      !isArray(val.sort) &&
+      val.sort.k !== "num" &&
+      val.sort.k !== "bool" &&
+      val.sort.k !== "elem"
+    )
       return null;
     // A statement whose loop compiles away costs less than the lookup: Rect's
     // `meets(r, s)` is a comparison of corners, and kept, its deals took 1.09
@@ -4165,10 +4332,12 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   const scratch: string[] = [];
   const epoch = { used: false };
   const readsCands = { yes: false };
+  const memos = new Map<string, readonly string[]>();
   const tenv: Env = {
     ...env,
     readsClues,
     readsCands,
+    memos: onPlace ? undefined : memos,
     memo: !onPlace,
     scratch,
     hoist: null,
@@ -4222,6 +4391,10 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
     }
     body.close();
   };
+  // The binders' statements share their terms as a premise's do: no fact is
+  // made among them, and one is read again only where `sharedReach` allows.
+  // Bridges' `cap(c, y)` reads `has(c, y)` three times in one `where`.
+  const benv: Env = { ...tenv, shared: { made: new Map() } };
   let params: string;
   if (onPlace) {
     const [first, ...rest] = t.binders;
@@ -4237,14 +4410,14 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
       [first.name, { code: `v_${first.name}`, sort: elem(held), at: tenv.hoist.root }],
     ]);
     if (first.where !== null) {
-      const w = compileExpr(first.where, sc, tenv, body);
+      const w = compileExpr(first.where, sc, benv, body);
       expect(w, "bool", `where of ${first.name}`);
       body.emit(`if (!(${w.code})) return 0;`);
     }
-    bindingLoops(rest, sc, tenv, body, fire);
+    bindingLoops(rest, sc, benv, body, fire);
     params = `v_${first.name}: number, `;
   } else {
-    bindingLoops(t.binders, new Map(), tenv, body, fire);
+    bindingLoops(t.binders, new Map(), benv, body, fire);
     params = "";
   }
   body.emit("return fired;");
@@ -4259,6 +4432,15 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
     );
     for (const s of refills) s.lines.push({ indent: 0, text: "cands.fill(-1);" });
   }
+  // A probe of the body's sorts may have called a function the body does
+  // not.
+  const called = body.text().join("\n");
+  const maps = new Set(
+    [...memos].flatMap(([name, m]) => (called.includes(`${name}(`) ? m : [])),
+  );
+  for (const m of maps)
+    for (const s of [keep, ...refills])
+      s.lines.push({ indent: 0, text: `${m}.clear();` });
   const clueParam = readsClues.yes ? "cl: Dealt, " : "";
   const text = [...scratch.map((d) => `  ${d}`), ...body.text()];
   // The generated code names nothing else `sp`, so a body that never says it

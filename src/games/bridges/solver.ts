@@ -1,46 +1,50 @@
 /**
- * Bridges solver — a port of the multi-stage deductive solver in
- * `puzzles/bridges.c` (`solve_sub` and friends), transcribed rule-for-rule with
- * one deliberate divergence: sealing off is graded Normal rather than Tricky.
+ * Bridges' solver: the ladder `bridges.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/ladder-runtime.ts`), and the answer
+ * check its rules compile to.
  *
- * Structure:
- *  - Stage 1 (Easy): whole-island arithmetic — fill when forced, mark full.
- *  - Stage 2 (Normal): per-connection reasoning — a direction that must carry a
- *    bridge, and loop-avoidance when `allowloops` is off — plus sealing off, the
- *    first bridge that would finish a group cut off from the rest (upstream's
- *    stage 3, taken down to Normal; see `solveIslandSeal`).
- *  - Stage 3 (Tricky): group reasoning over a dsf — speculatively cap/force a
- *    direction to avoid an isolated finished subgraph or an impossibility.
+ * The answer is on the edges between squares, each holding one more than the
+ * bridges running across it, so a bridge between two islands is one value on
+ * every edge of its line. The marks hold what is known of each line, the same
+ * on all its edges: a bridge drawn strikes the values below it, and a limit or
+ * a cross those above.
  *
- * `solve_sub`'s `difficulty` is a monotone stage gate (0/1/2 = stage 1 / +2 /
- * +3), not a recursion depth; there is no guessing search. The dsf's canonical
- * root is never observed (only same-group and group-count queries), so the
- * shared union-by-size `Dsf` is safe here without root-identity discipline.
+ * The ladder runs to a fixpoint ({@link solveFromScratch}), which is how the
+ * generator grades a board and how Solve and the mistake check find its
+ * answer. A hint walks the same ladder one firing at a time
+ * ({@link bridgesWalk}).
  */
+
+import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
-  type DeductionTechnique,
-  type FiringTally,
-  runDeductionFixpoint,
-  singleFirings,
-} from "../../engine/deduction-fixpoint.ts";
-import { Dsf } from "../../engine/dsf.ts";
-import { findLoops } from "../../engine/findloop.ts";
-import type { StepBudget } from "../../engine/step-budget.ts";
-import { SweepOffers } from "../../engine/sweep-offers.ts";
+  clueList,
+  describedSpace,
+  type GridSpace,
+} from "../../engine/describe-runtime.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  ladderWalk,
+  type ReasonOf,
+  runLadder,
+  type Taken,
+  TIERS,
+} from "../../engine/ladder-runtime.ts";
+import { stepBudget } from "../../engine/step-budget.ts";
+import * as bridges from "./bridges.compiled.ts";
 import {
   type BridgesOp,
   type BridgesState,
-  G_ISLAND,
-  G_LINE,
   G_LINEH,
   G_LINEV,
-  G_MARK,
-  G_SWEEP,
-  G_WARN,
-  type Island,
+  G_NOLINEH,
+  G_NOLINEV,
 } from "./state.ts";
 
-// --- the recording projection: what a firing points at, and why ------------
+// --- what a firing points at, and why ----------------------------------------
 
 /** A bridge span, by the two islands it runs between. */
 export interface BridgesSpan {
@@ -50,15 +54,7 @@ export interface BridgesSpan {
   y2: number;
 }
 
-/**
- * The board one firing reasons **from**, captured inside the rung at the moment
- * it fires and before it changes anything.
- *
- * Captured there rather than reconstructed afterwards because two of the three
- * stages destroy their own premise: stage 3 rolls its trial back before the
- * conclusion is drawn, so the group it would have sealed off exists only while
- * the trial stands (docs/hints-marks.md § "Show the evidence as an area").
- */
+/** The board one firing reasons from, read before it changes anything. */
 export interface BridgesEvidence {
   /** Island indices the argument counts. */
   islands: number[];
@@ -67,18 +63,10 @@ export interface BridgesEvidence {
 }
 
 /**
- * Why one firing is forced: the half of a hint `runDeductionFixpoint` is
- * *oblivious* to.
- *
- * One variant per narratable **premise**, not one per rung: a rung can fire
- * for more than one reason, and the sentence follows the reason. `island` is
- * the island whose arithmetic forces the move, and is the one the narration is
- * about.
- *
- * The single rule that declares **no** reason is stage 1's "this island now has
- * all its bridges, mark it complete": a bookkeeping annotation the fork's own
- * auto-mark aid already draws, so the plan hides it
- * (docs/hints.md § "Show only what the board does not already say").
+ * Why one firing is forced. One variant per narratable premise: a technique
+ * can fire for more than one reason, and the sentence follows the reason.
+ * `island` is the island whose arithmetic forces the move, and is the one the
+ * narration is about.
  */
 export type BridgesReason = { ev: BridgesEvidence; island: number } & (
   | { kind: "exactSpace"; missing: number }
@@ -90,821 +78,481 @@ export type BridgesReason = { ev: BridgesEvidence; island: number } & (
   | { kind: "mustReachOut"; group: number }
 );
 
-/** One firing: the moves it forces, and the premise that forced them. */
+/** One firing: the moves it makes, and the premise that forced them. */
 export interface BridgesFiring {
-  reason: BridgesReason | null;
+  reason: BridgesReason;
   ops: BridgesOp[];
 }
 
-/** What the solver writes a firing into while a hint is being planned. */
-interface BridgesRecorder {
-  reason: BridgesReason | null;
-  ops: BridgesOp[];
+// --- the board as the description reads it -----------------------------------
+
+/** What the description reads a line holding no bridge as. */
+const NONE = 1;
+
+/** A line two islands may be bridged along: a square between them at least,
+ * and no island. */
+interface Line {
+  /** Its islands' cells, `a` above or left of `b`. */
+  a: number;
+  b: number;
+  /** Its squares from `a` to `b`, both included. */
+  cells: number[];
+  /** Its edges, from `a`. */
+  edges: number[];
+  span: BridgesSpan;
 }
 
-/** Everything a hint firing writes. */
-interface BridgesSnapshot {
-  grid: Uint16Array;
-  lines: Uint8Array;
-  possv: Uint8Array;
-  possh: Uint8Array;
-  maxv: Uint8Array;
-  maxh: Uint8Array;
-  dsf: Dsf;
-  ops: BridgesOp[];
+/** A board's lines and what the description reads it as. */
+interface Geometry {
+  sp: GridSpace;
+  dealt: bridges.Dealt;
+  lines: Line[];
+  /** The line each edge is on, `-1` for none. */
+  lineOf: Int32Array;
+  /** The lines each island cell ends, by cell. */
+  linesAt: number[][];
+  variations: readonly string[];
 }
 
-/**
- * Neighbors of grid vertex `v` for loop detection — mirrors C
- * `bridges_neighbour`. An island vertex reports every island it currently has a
- * bridge to; a bridge-carrying empty square reports the two cells the line runs
- * between (each edge is thus reported from both ends, as findloop requires).
- */
-function bridgesNeighbors(st: BridgesState, v: number): number[] {
-  const w = st.w;
-  const x = v % w;
-  const y = (v / w) | 0;
-  const grid = st.gridAt(x, y);
-  const out: number[] = [];
-  const is = st.islandAt(x, y);
-  if (is) {
+function geometryOf(state: BridgesState): Geometry {
+  const { w, h } = state;
+  const sp = describedSpace(bridges.units, w, h);
+  const lines: Line[] = [];
+  const lineOf = new Int32Array(sp.edges.length).fill(-1);
+  const linesAt: number[][] = Array.from({ length: w * h }, () => []);
+  for (const is of state.islands) {
     for (const pt of is.points) {
-      const gline = pt.dx ? G_LINEH : G_LINEV;
-      if (st.gridAt(pt.x, pt.y) & gline) out.push(pt.y * w + pt.x);
+      if (pt.dx === -1 || pt.dy === -1 || pt.off < 2) continue;
+      const cells: number[] = [];
+      for (let k = 0; k <= pt.off; k++)
+        cells.push(state.idx(is.x + k * pt.dx, is.y + k * pt.dy));
+      const edges = cells.slice(1).map((c, k) => sp.edgeOf(cells[k], c));
+      const n = lines.length;
+      const a = cells[0];
+      const b = cells[cells.length - 1];
+      for (const e of edges) lineOf[e] = n;
+      linesAt[a].push(n);
+      linesAt[b].push(n);
+      lines.push({
+        a,
+        b,
+        cells,
+        edges,
+        span: { x1: a % w, y1: (a / w) | 0, x2: b % w, y2: (b / w) | 0 },
+      });
     }
-  } else {
-    const gline = grid & G_LINE;
-    if (gline) {
-      let x1: number;
-      let y1: number;
-      let x2: number;
-      let y2: number;
-      if (gline & G_LINEV) {
-        x1 = x2 = x;
-        y1 = y - 1;
-        y2 = y + 1;
-      } else {
-        x1 = x - 1;
-        x2 = x + 1;
-        y1 = y2 = y;
+  }
+  const at: number[] = [];
+  const v: number[] = [];
+  for (const is of state.islands) {
+    at.push(state.idx(is.x, is.y));
+    v.push(is.count);
+  }
+  return {
+    sp,
+    dealt: { number: clueList(at, v, w * h), maxb: state.maxb },
+    lines,
+    lineOf,
+    linesAt,
+    variations: state.allowloops ? [] : ["no loops"],
+  };
+}
+
+/** The values a line may hold, from `lo` to `hi` bridges. */
+const between = (lo: number, hi: number): number =>
+  ((1 << (hi + 2)) - 1) & ~((1 << (lo + 1)) - 1);
+
+/** The first cell of a line, where the state keeps its bridges and marks. */
+function firstCell(line: Line): number {
+  return line.cells[1];
+}
+
+/** The bridges a line has on the state, and the most it may take. */
+function lineOnState(state: BridgesState, line: Line): { lo: number; hi: number } {
+  const c = firstCell(line);
+  const x = c % state.w;
+  const y = (c / state.w) | 0;
+  const horizontal = line.span.y1 === line.span.y2;
+  const lo = state.gridCount(x, y, horizontal ? G_LINEH : G_LINEV);
+  const crossed = (state.grid[c] & (horizontal ? G_NOLINEH : G_NOLINEV)) !== 0;
+  const hi = crossed ? 0 : state.maximum(horizontal ? 1 : 0, x, y);
+  return { lo, hi: Math.max(lo, hi) };
+}
+
+/** A board the ladder works on: the marks, and what it reads them by. */
+interface Deduction {
+  state: BridgesState;
+  geo: Geometry;
+  m: CellMarks;
+  ladder: Ladder;
+}
+
+/** The marks the state's bridges and limits make, or none where `cleared`. */
+function deduction(state: BridgesState, cleared: boolean): Deduction {
+  const geo = geometryOf(state);
+  const domain = between(0, state.maxb);
+  const grid = new Uint8Array(geo.sp.edges.length);
+  const known = cleared ? [] : geo.lines.map((line) => lineOnState(state, line));
+  known.forEach(({ lo, hi }, n) => {
+    if (lo === hi) for (const e of geo.lines[n].edges) grid[e] = lo + NONE;
+  });
+  const m = new CellMarks(geo.sp, domain, grid, null, "edge");
+  m.seed(grid);
+  known.forEach(({ lo, hi }, n) => {
+    for (const e of geo.lines[n].edges) m.cands[e] &= between(lo, hi);
+  });
+  return { state, geo, m, ladder: bridgesLadder(state, geo) };
+}
+
+/** The marks' reads the description makes, for a firing's reason and the
+ * hint's status: what a line has and allows, and what an island needs. */
+class Reads {
+  constructor(
+    readonly state: BridgesState,
+    readonly geo: Geometry,
+    readonly m: CellMarks,
+  ) {}
+
+  private drawn(e: number): number {
+    const c = this.m.cands[e];
+    return c === 0 ? this.state.maxb + 1 : 31 - Math.clz32(c & -c) - NONE;
+  }
+  private limit(e: number): number {
+    const c = this.m.cands[e];
+    return c === 0 ? -1 : 31 - Math.clz32(c) - NONE;
+  }
+  has(line: Line): number {
+    return Math.max(
+      this.drawn(line.edges[0]),
+      this.drawn(line.edges[line.edges.length - 1]),
+    );
+  }
+  allows(line: Line): number {
+    return Math.min(
+      this.limit(line.edges[0]),
+      this.limit(line.edges[line.edges.length - 1]),
+    );
+  }
+  clue(c: number): number {
+    return this.geo.dealt.number.valueAt[c];
+  }
+  lines(c: number): Line[] {
+    return this.geo.linesAt[c].map((n) => this.geo.lines[n]);
+  }
+  /** `hasAt` for the line `tried` supposed to hold `j`. */
+  private hasAt(line: Line, tried: Line | null, j: number): number {
+    return line === tried ? j : this.has(line);
+  }
+  needAt(c: number, tried: Line | null = null, j = 0): number {
+    let n = this.clue(c);
+    for (const line of this.lines(c)) n -= this.hasAt(line, tried, j);
+    return n;
+  }
+  need(c: number): number {
+    return this.needAt(c);
+  }
+  other(line: Line, c: number): number {
+    return line.a === c ? line.b : line.a;
+  }
+  /** Whether a bridge drawn, or the line `tried`, crosses `line`. */
+  crossedAt(line: Line, tried: Line | null = null): boolean {
+    const { sp } = this.geo;
+    const horizontal = line.span.y1 === line.span.y2;
+    for (const mid of line.cells.slice(1, -1)) {
+      for (const p of sp.adj4[mid]) {
+        const sameRow = ((p / this.state.w) | 0) === ((mid / this.state.w) | 0);
+        if (horizontal === sameRow) continue;
+        const e = sp.edgeOf(mid, p);
+        if (this.drawn(e) > 0) return true;
+        const n = this.geo.lineOf[e];
+        if (n >= 0 && this.geo.lines[n] === tried) return true;
       }
-      if (st.gridAt(x1, y1) & (gline | G_ISLAND)) out.push(y1 * w + x1);
-      if (st.gridAt(x2, y2) & (gline | G_ISLAND)) out.push(y2 * w + x2);
     }
+    return false;
+  }
+  /** How many more bridges `line` may take, read from its island `c`. */
+  more(line: Line, c: number): number {
+    if (
+      this.need(c) <= 0 ||
+      this.need(this.other(line, c)) <= 0 ||
+      this.crossedAt(line)
+    )
+      return 0;
+    const has = this.has(line);
+    return Math.max(
+      0,
+      Math.min(
+        this.state.maxb,
+        this.allows(line) - has,
+        this.clue(c) - has,
+        this.clue(this.other(line, c)) - has,
+      ),
+    );
+  }
+  most(line: Line, c: number): number {
+    return this.has(line) + this.more(line, c);
+  }
+  /** Whether island `c` is left short with `tried` supposed to hold `j`. */
+  starvedAt(c: number, tried: Line, j: number): boolean {
+    const need = this.needAt(c, tried, j);
+    if (need < 0) return true;
+    let avail = 0;
+    for (const line of this.lines(c)) {
+      if (this.crossedAt(line, tried)) continue;
+      const far = this.other(line, c);
+      avail += Math.max(
+        0,
+        Math.min(
+          this.state.maxb,
+          this.needAt(far, tried, j),
+          this.allows(line) - this.hasAt(line, tried, j),
+        ),
+      );
+    }
+    return avail < need;
+  }
+  /** The island index of cell `c`. */
+  index(c: number): number {
+    return this.state.gridi[c];
+  }
+  /** The bridges known between the islands `cells`, for an outline. */
+  spansAmong(cells: readonly number[]): BridgesSpan[] {
+    const member = new Set(cells);
+    return this.geo.lines
+      .filter((l) => member.has(l.a) && member.has(l.b) && this.has(l) > 0)
+      .map((l) => l.span);
+  }
+}
+
+/** The line from island cell `c` leaving by its neighbor `y`. */
+function lineFrom(geo: Geometry, c: number, y: number): Line {
+  const n = geo.lineOf[geo.sp.edgeOf(c, y)];
+  if (n < 0) throw new Error("bridges: a firing names no line");
+  return geo.lines[n];
+}
+
+/** The islands among `cells`, as cells. */
+function islandsIn(state: BridgesState, cells: readonly number[]): number[] {
+  return cells.filter((c) => state.gridi[c] >= 0);
+}
+
+/** A reason built once a firing, from its binding, and shared by its facts. */
+function perFiring<B extends object>(
+  build: (binding: B, m: CellMarks) => BridgesReason,
+): ReasonOf<B> {
+  let last: B | null = null;
+  let reason: BridgesReason | null = null;
+  return (binding, _at, _n, m) => {
+    if (binding !== last || reason === null) {
+      last = binding;
+      reason = build(binding, m);
+    }
+    return reason;
+  };
+}
+
+/** The ladder over the dealt board, each technique with its reason. */
+function bridgesLadder(state: BridgesState, geo: Geometry): Ladder {
+  const dl = geo.dealt;
+  const reads = (m: CellMarks): Reads => new Reads(state, geo, m);
+  /** A group's islands and the bridges between them, as an argument counts
+   * them. */
+  const groupEvidence = (r: Reads, cells: readonly number[]): BridgesEvidence => {
+    const isl = islandsIn(state, cells);
+    return { islands: isl.map((c) => r.index(c)), spans: r.spansAmong(isl) };
+  };
+  return describedLadder(
+    bridges,
+    {
+      exactSpace: compiledRung(
+        bridges.exactSpace,
+        dl,
+        perFiring(({ c, n }, m) => ({
+          kind: "exactSpace",
+          island: reads(m).index(c),
+          missing: n,
+          ev: { islands: [], spans: [] },
+        })),
+      ),
+      everyNeighbor: compiledRung(
+        bridges.everyNeighbor,
+        dl,
+        perFiring(({ c, A }, m) => {
+          const r = reads(m);
+          return {
+            kind: "everyNeighbor",
+            island: r.index(c),
+            neighbors: A.length,
+            ev: {
+              islands: A.map((y) => r.index(r.other(lineFrom(geo, c, y), c))),
+              spans: [],
+            },
+          };
+        }),
+      ),
+      needsThisWay: compiledRung(
+        bridges.needsThisWay,
+        dl,
+        perFiring(({ c, V, y }, m) => {
+          const r = reads(m);
+          const line = lineFrom(geo, c, y);
+          return {
+            kind: "needsThisWay",
+            island: r.index(c),
+            elsewhere: V - r.most(line, c),
+            ev: {
+              islands: r
+                .lines(c)
+                .filter((l) => l !== line && r.most(l, c) > 0)
+                .map((l) => r.index(r.other(l, c))),
+              spans: [],
+            },
+          };
+        }),
+      ),
+      sealing: compiledRung(
+        bridges.sealing,
+        dl,
+        perFiring(({ c, G }, m) => {
+          const r = reads(m);
+          const ev = groupEvidence(r, G);
+          return {
+            kind: "wouldSealGroup",
+            island: r.index(c),
+            group: ev.islands.length,
+            limit: 0,
+            ev,
+          };
+        }),
+      ),
+      loop: compiledRung(
+        bridges.loop,
+        dl,
+        perFiring(({ c, L }, m) => {
+          const r = reads(m);
+          return {
+            kind: "wouldCloseLoop",
+            island: r.index(c),
+            ev: groupEvidence(r, joined(geo.sp, c, L)),
+          };
+        }),
+      ),
+      tooMany: compiledRung(
+        bridges.tooMany,
+        dl,
+        perFiring(({ c, y, G, k, N }, m) => {
+          const r = reads(m);
+          const line = lineFrom(geo, c, y);
+          const isl = islandsIn(state, G);
+          const sealed =
+            isl.length < N &&
+            isl.every((x) => r.needAt(x, line, k) === 0) &&
+            isl.every((x) =>
+              r.lines(x).every((l) => r.has(l) === 0 || G.includes(r.other(l, x))),
+            );
+          if (sealed) {
+            const ev = groupEvidence(r, G);
+            return {
+              kind: "wouldSealGroup",
+              island: r.index(c),
+              group: ev.islands.length,
+              limit: k - 1,
+              ev,
+            };
+          }
+          const starved = bridges
+            .near(geo.sp, dl, c, y)
+            .find((x) => r.starvedAt(x, line, k));
+          if (starved === undefined)
+            throw new Error("bridges: tooMany fired where its trial breaks nothing");
+          return {
+            kind: "wouldStarve",
+            island: r.index(c),
+            limit: k - 1,
+            ev: { islands: [r.index(starved)], spans: [] },
+          };
+        }),
+      ),
+      mustReachOut: compiledRung(
+        bridges.mustReachOut,
+        dl,
+        perFiring(({ c, G }, m) => {
+          const r = reads(m);
+          const ev = groupEvidence(r, G);
+          return {
+            kind: "mustReachOut",
+            island: r.index(c),
+            group: ev.islands.length,
+            ev,
+          };
+        }),
+      ),
+    },
+    undefined,
+    geo.variations,
+  );
+}
+
+/** Square `c` and the squares the edges `E` join to it. */
+function joined(sp: GridSpace, c: number, E: readonly number[]): number[] {
+  const on = new Set(E);
+  const out = [c];
+  for (let i = 0; i < out.length; i++) {
+    const x = out[i];
+    sp.adj4[x].forEach((y) => {
+      if (!out.includes(y) && on.has(sp.edgeOf(x, y))) out.push(y);
+    });
   }
   return out;
 }
 
-/** C `map_hasloops`: returns true if the current bridges contain a loop. */
-function mapHasloops(st: BridgesState, mark: boolean): boolean {
-  const wh = st.w * st.h;
-  const res = findLoops(wh, (v) => bridgesNeighbors(st, v));
-  if (mark) {
-    for (let y = 0; y < st.h; y++) {
-      for (let x = 0; x < st.w; x++) {
-        const u = y * st.w + x;
-        for (const v of bridgesNeighbors(st, u)) {
-          if (res.isLoopEdge(u, v)) st.grid[u] |= G_WARN;
-        }
-      }
-    }
+// --- solving -----------------------------------------------------------------
+
+/** The cap of a tier past every technique's. */
+const TOP = 2;
+
+/** The value grid the marks' known bridges make: every line at what it
+ * has, every other edge none. */
+function answerGrid(d: Deduction): Uint8Array {
+  const r = new Reads(d.state, d.geo, d.m);
+  const g = new Uint8Array(d.geo.sp.edges.length).fill(NONE);
+  for (const line of d.geo.lines) {
+    const has = r.has(line);
+    for (const e of line.edges) g[e] = has + NONE;
   }
-  return res.anyLoop;
+  return g;
 }
 
-class Solver {
-  st: BridgesState;
-  dsf: Dsf;
-  /**
-   * Present only on the hint path. Every reason is built behind `if (rec)`,
-   * which is load-bearing rather than stylistic: a reason carries its evidence,
-   * and some of that evidence costs a walk of the whole island list, on the
-   * generator's hot path where nothing would read it.
-   */
-  rec: BridgesRecorder | null = null;
-  /** Hint path only: collects every firing a rung could make, for a plan
-   * that continues where its latest step was. */
-  offers: SweepOffers<BridgesSnapshot, BridgesReason | null> | null = null;
+/** Whether some island still needs a bridge, by the marks. */
+function unfinished(d: Deduction): boolean {
+  const r = new Reads(d.state, d.geo, d.m);
+  return d.state.islands.some((is) => r.need(d.state.idx(is.x, is.y)) > 0);
+}
 
-  constructor(st: BridgesState) {
-    this.st = st;
-    this.dsf = new Dsf(st.w * st.h);
-  }
-
-  /** Where a rung on the hint path has made its firing: whether it returns. */
-  private kept(): boolean {
-    return this.offers?.keep() ?? true;
-  }
-
-  /** Everything a firing writes, the ops recorded so far included. */
-  save(): BridgesSnapshot {
-    const { st } = this;
-    return {
-      grid: st.grid.slice(),
-      lines: st.lines.slice(),
-      possv: st.possv.slice(),
-      possh: st.possh.slice(),
-      maxv: st.maxv.slice(),
-      maxh: st.maxh.slice(),
-      dsf: this.dsf.clone(),
-      ops: [...(this.rec?.ops ?? [])],
-    };
-  }
-
-  restore(s: BridgesSnapshot): void {
-    const { st } = this;
-    st.grid.set(s.grid);
-    st.lines.set(s.lines);
-    st.possv.set(s.possv);
-    st.possh.set(s.possh);
-    st.maxv.set(s.maxv);
-    st.maxh.set(s.maxh);
-    this.dsf = s.dsf.clone();
-    if (this.rec) this.rec.ops = [...s.ops];
-  }
-
-  /** The islands a firing's premise reads, which a hint plan continues from:
-   * its island and every island it can still reach a bridge to. */
-  premise(r: BridgesReason): number[] {
-    return [r.island, ...this.adjacentIslands(this.st.islands[r.island])];
-  }
-
-  /** The islands at either end of the spans `ops` write. */
-  islandsOf(ops: readonly BridgesOp[]): number[] {
-    const { st } = this;
-    return ops.flatMap((o) =>
-      o.op === "S"
-        ? []
-        : o.op === "M"
-          ? [st.gridi[st.idx(o.x, o.y)]]
-          : [st.gridi[st.idx(o.x1, o.y1)], st.gridi[st.idx(o.x2, o.y2)]],
-    );
-  }
-
-  // --- recording helpers (no-ops with no recorder attached) ---------------
-
-  /** `is`'s place in the island list — how a reason names an island. */
-  private islandIndex(is: Island): number {
-    return this.st.gridi[this.st.idx(is.x, is.y)];
-  }
-
-  /** The islands `is` can still reach a bridge to, as island indices. This is
-   * the set `islandCountadj` counts, so a sentence quoting that count and a
-   * picture ringing this list cannot disagree. */
-  private adjacentIslands(is: Island): number[] {
-    const st = this.st;
-    const out: number[] = [];
-    for (let i = 0; i < is.points.length; i++) {
-      if (!is.points[i].off) continue;
-      if (!st.islandIsadj(is, i)) continue;
-      out.push(st.gridi[st.idx(st.islandOrthX(is, i), st.islandOrthY(is, i))]);
-    }
-    return out;
-  }
-
-  /** {@link adjacentIslands} without the one `direction` points at — the "other
-   * neighbors" a counting argument is about. */
-  private adjacentIslandsExcept(is: Island, direction: number): number[] {
-    const st = this.st;
-    const skip =
-      st.gridi[st.idx(st.islandOrthX(is, direction), st.islandOrthY(is, direction))];
-    return this.adjacentIslands(is).filter((i) => i !== skip);
-  }
-
-  /** The islands of the group `canon` roots, as island indices. */
-  private groupIslands(canon: number): number[] {
-    const st = this.st;
-    const out: number[] = [];
-    for (let i = 0; i < st.islands.length; i++) {
-      const is = st.islands[i];
-      if (this.dsf.canonify(st.idx(is.x, is.y)) === canon) out.push(i);
-    }
-    return out;
-  }
-
-  /** The bridges running between the islands of `group`, for its evidence. */
-  private groupSpans(group: readonly number[]): BridgesSpan[] {
-    const st = this.st;
-    const out: BridgesSpan[] = [];
-    const members = new Set(group);
-    for (const i of group) {
-      const is = st.islands[i];
-      for (let d = 0; d < is.points.length; d++) {
-        const pt = is.points[d];
-        if (pt.dx === -1 || pt.dy === -1) continue; // span once (right/down)
-        const other = st.islandFindConnection(is, d);
-        if (!other) continue;
-        const oi = st.gridi[st.idx(other.x, other.y)];
-        if (!members.has(oi)) continue;
-        out.push({ x1: is.x, y1: is.y, x2: other.x, y2: other.y });
-      }
-    }
-    return out;
-  }
-
-  /** Record a bridge count the firing sets in `direction`. */
-  private recordJoin(is: Island, direction: number, n: number): void {
-    const rec = this.rec;
-    if (!rec) return;
-    rec.ops.push({
-      op: "L",
-      x1: is.x,
-      y1: is.y,
-      x2: this.st.islandOrthX(is, direction),
-      y2: this.st.islandOrthY(is, direction),
-      n,
-    });
-  }
-
-  /** Record the "at most `n`" limit the firing writes in `direction`. */
-  private recordLimit(is: Island, direction: number, n: number): void {
-    const rec = this.rec;
-    if (!rec) return;
-    rec.ops.push({
-      op: "C",
-      x1: is.x,
-      y1: is.y,
-      x2: this.st.islandOrthX(is, direction),
-      y2: this.st.islandOrthY(is, direction),
-      n,
-    });
-  }
-
-  /** Record the no-line the firing draws in `direction`. */
-  private recordNoline(is: Island, direction: number): void {
-    const rec = this.rec;
-    if (!rec) return;
-    rec.ops.push({
-      op: "N",
-      x1: is.x,
-      y1: is.y,
-      x2: this.st.islandOrthX(is, direction),
-      y2: this.st.islandOrthY(is, direction),
-    });
-  }
-
-  // --- Grouping (C map_group / map_group_check / map_group_full) ---
-
-  mapGroup(): void {
-    const st = this.st;
-    const dsf = this.dsf;
-    dsf.reinit();
-    for (let x = 0; x < st.w; x++) {
-      for (let y = 0; y < st.h; y++) {
-        st.grid[y * st.w + x] &= ~(G_SWEEP | G_WARN);
-        const is = st.islandAt(x, y);
-        if (!is) continue;
-        const d1 = st.idx(x, y);
-        for (let i = 0; i < is.points.length; i++) {
-          const pt = is.points[i];
-          if (pt.dx === -1 || pt.dy === -1) continue; // only right/down
-          const isJoin = st.islandFindConnection(is, i);
-          if (!isJoin) continue;
-          // Merge every square between the two islands (a straight line).
-          for (let x2 = x; x2 <= isJoin.x; x2++) {
-            for (let y2 = y; y2 <= isJoin.y; y2++) {
-              const d2 = st.idx(x2, y2);
-              if (d1 !== d2) dsf.merge(d1, d2);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  /** Sweep the group with canon `canon`; returns [allfull, nislands]. */
-  mapGroupCheck(canon: number, warn: boolean): [boolean, number] {
-    const st = this.st;
-    const dsf = this.dsf;
-    let nislands = 0;
-    let allfull = true;
-    for (const is of st.islands) {
-      if (dsf.canonify(st.idx(is.x, is.y)) !== canon) continue;
-      st.grid[is.y * st.w + is.x] |= G_SWEEP;
-      nislands++;
-      if (st.islandCountbridges(is) !== is.count) allfull = false;
-    }
-    if (warn && allfull && nislands !== st.islands.length) {
-      for (let x = 0; x < st.w; x++) {
-        for (let y = 0; y < st.h; y++) {
-          if (dsf.canonify(st.idx(x, y)) === canon) st.grid[y * st.w + x] |= G_WARN;
-        }
-      }
-    }
-    return [allfull, nislands];
-  }
-
-  /** Returns [anyfull, ngroups]. Assumes G_SWEEP already cleared (by mapGroup). */
-  mapGroupFull(): [boolean, number] {
-    const st = this.st;
-    let ngroups = 0;
-    let anyfull = false;
-    for (const is of st.islands) {
-      if (st.grid[is.y * st.w + is.x] & G_SWEEP) continue;
-      ngroups++;
-      const [full] = this.mapGroupCheck(this.dsf.canonify(st.idx(is.x, is.y)), true);
-      if (full) anyfull = true;
-    }
-    return [anyfull, ngroups];
-  }
-
-  /** Upstream's `map_check`: whether the board is complete. As a deliberate
-   * side effect it leaves `G_WARN`/`G_SWEEP` set on loop edges and on
-   * prematurely satisfied groups, which is the warning overlay the renderer
-   * reads. */
-  mapCheck(): boolean {
-    const st = this.st;
-    // Groups before loops: grouping is what clears the last check's marks, and
-    // marking a loop only adds to them, so a board answered on its loop alone
-    // would keep every mark an earlier check left.
-    this.mapGroup(); // clears WARN and SWEEP
-    const [anyfull, ngroups] = this.mapGroupFull();
-    if (!st.allowloops && mapHasloops(st, true)) return false;
-    return anyfull && ngroups === 1;
-  }
-
-  // --- Join with dsf bookkeeping (C solve_join) ---
-
-  solveJoin(is: Island, direction: number, n: number, isMax: boolean): void {
-    const st = this.st;
-    const isOrth = st.islandAt(
-      st.islandOrthX(is, direction),
-      st.islandOrthY(is, direction),
-    );
-    if (!isOrth) throw new Error("solveJoin: no orthogonal island");
-    st.islandJoin(is, isOrth, n, isMax);
-    if (n > 0 && !isMax) {
-      const d1 = st.idx(is.x, is.y);
-      const d2 = st.idx(isOrth.x, isOrth.y);
-      if (!this.dsf.equivalent(d1, d2)) this.dsf.merge(d1, d2);
-    }
-  }
-
-  // --- Stage-1 primitives (C solve_fillone / solve_fill) ---
-
-  solveFillone(is: Island): number {
-    const st = this.st;
-    let nadded = 0;
-    for (let i = 0; i < is.points.length; i++) {
-      if (st.islandIsadj(is, i) && !st.islandHasbridge(is, i)) {
-        this.solveJoin(is, i, 1, false);
-        this.recordJoin(is, i, 1);
-        nadded++;
-      }
-    }
-    return nadded;
-  }
-
-  solveFill(is: Island): number {
-    const st = this.st;
-    let nadded = 0;
-    const missing = is.count - st.islandCountbridges(is);
-    if (missing < 0) return 0;
-    for (let i = 0; i < is.points.length; i++) {
-      const nnew = st.islandAdjspace(is, true, missing, i);
-      if (nnew) {
-        const pt = is.points[i];
-        const ncurr = st.gridCount(pt.x, pt.y, pt.dx ? G_LINEH : G_LINEV);
-        this.solveJoin(is, i, nnew + ncurr, false);
-        this.recordJoin(is, i, nnew + ncurr);
-        nadded += nnew;
-      }
-    }
-    return nadded;
-  }
-
-  /** `ok` is false when this island proves the puzzle unsolvable. */
-  solveIslandStage1(is: Island): { ok: boolean; didsth: boolean } {
-    const st = this.st;
-    const rec = this.rec;
-    const bridges = st.islandCountbridges(is);
-    const nspaces = st.islandCountspaces(is, true);
-    const nadj = st.islandCountadj(is);
-    let didsth = false;
-
-    if (bridges > is.count) {
-      return { ok: false, didsth: false }; // overpopulated
-    } else if (bridges === is.count) {
-      if (!(st.gridAt(is.x, is.y) & G_MARK)) {
-        st.islandTogglemark(is);
-        // No reason: the island's own digit against its own bridges says this,
-        // and the fork's auto-mark aid lifts it. The plan hides the firing and
-        // never asks the player for the `M` move.
-        rec?.ops.push({ op: "M", x: is.x, y: is.y });
-        didsth = true;
-      }
-    } else if (st.gridAt(is.x, is.y) & G_MARK) {
-      return { ok: false, didsth: false }; // marked but unfinished
-    } else if (is.count === bridges + nspaces) {
-      if (rec) {
-        rec.reason = {
-          kind: "exactSpace",
-          island: this.islandIndex(is),
-          missing: is.count - bridges,
-          ev: { islands: [], spans: [] },
-        };
-      }
-      if (this.solveFill(is) > 0) didsth = true;
-      else if (rec) rec.reason = null;
-    } else if (is.count > (nadj - 1) * st.maxb) {
-      if (rec) {
-        rec.reason = {
-          kind: "everyNeighbor",
-          island: this.islandIndex(is),
-          neighbors: nadj,
-          // The neighbors are what the sentence counts, so it says `nadj` and
-          // the picture rings exactly that many.
-          ev: { islands: this.adjacentIslands(is), spans: [] },
-        };
-      }
-      if (this.solveFillone(is) > 0) didsth = true;
-      else if (rec) rec.reason = null;
-    }
-    if (didsth) st.mapUpdatePossibles();
-    return { ok: true, didsth };
-  }
-
-  // --- Stage-2 (C solve_island_checkloop / solve_island_stage2) ---
-
-  /** True if a new line in `direction` would close a loop (loops disallowed). */
-  solveIslandCheckloop(is: Island, direction: number): boolean {
-    const st = this.st;
-    if (st.allowloops) return false;
-    if (st.islandHasbridge(is, direction)) return false;
-    if (st.islandIsadj(is, direction) === 0) return false;
-    const isOrth = st.islandAt(
-      st.islandOrthX(is, direction),
-      st.islandOrthY(is, direction),
-    );
-    if (!isOrth) return false;
-    return this.dsf.equivalent(st.idx(is.x, is.y), st.idx(isOrth.x, isOrth.y));
-  }
-
-  /**
-   * Two separate teachable rules in one rung — a bridge that would close a loop
-   * and a direction the island's count cannot do without — so on the recording
-   * path each returns as soon as it fires
-   * (docs/hints.md § "A rung is not a premise, so return per premise").
-   */
-  solveIslandStage2(is: Island): { ok: boolean; didsth: boolean } {
-    const st = this.st;
-    const rec = this.rec;
-    let navail = 0;
-    let added = false;
-    let removed = false;
-
-    for (let i = 0; i < is.points.length; i++) {
-      if (this.solveIslandCheckloop(is, i)) {
-        if (rec) {
-          // The group is the premise, and joining is about to enlarge it, so
-          // it is read here rather than after.
-          const group = this.groupIslands(this.dsf.canonify(st.idx(is.x, is.y)));
-          rec.reason = {
-            kind: "wouldCloseLoop",
-            island: this.islandIndex(is),
-            ev: { islands: group, spans: this.groupSpans(group) },
-          };
-        }
-        this.solveJoin(is, i, -1, false);
-        this.recordNoline(is, i);
-        st.mapUpdatePossibles();
-        removed = true;
-        if (rec) return { ok: true, didsth: true };
-      } else {
-        navail += st.islandIsadj(is, i);
-      }
-    }
-
-    for (let i = 0; i < is.points.length; i++) {
-      if (!st.islandHasbridge(is, i)) {
-        const nadj = st.islandIsadj(is, i);
-        if (nadj > 0 && navail - nadj < is.count) {
-          if (rec) {
-            rec.reason = {
-              kind: "needsThisWay",
-              island: this.islandIndex(is),
-              elsewhere: navail - nadj,
-              ev: { islands: this.adjacentIslandsExcept(is, i), spans: [] },
-            };
-          }
-          this.solveJoin(is, i, 1, false);
-          this.recordJoin(is, i, 1);
-          added = true;
-          if (rec) {
-            st.mapUpdatePossibles();
-            return { ok: true, didsth: true };
-          }
-        }
-      }
-    }
-    if (added) st.mapUpdatePossibles();
-    return { ok: true, didsth: added || removed };
-  }
-
-  // --- Sealing off (Normal; the first bridge of stage 3's block) ---
-
-  /**
-   * A direction still empty where one bridge would finish this island and its
-   * neighbor into a group cut off from the rest: block it. The case a player
-   * meets first is two 1s side by side.
-   *
-   * Stage 3 draws the same cross, and upstream graded it Tricky with the rest of
-   * that stage. It is taken down to Normal on its own (owner, 2026-09-21: "this
-   * seems conceptually easy"), beside the loop rule, the other one about the
-   * shape of the network. What stays Tricky is what needs more than one bridge
-   * or more than one island's room: an "at most" limit, a starved neighbor, and
-   * filling every other direction at once.
-   */
-  solveIslandSeal(is: Island): { ok: boolean; didsth: boolean } {
-    const st = this.st;
-    const rec = this.rec;
-    const missing = is.count - st.islandCountbridges(is);
-    if (missing <= 0) return { ok: true, didsth: false };
-    let didsth = false;
-    for (let i = 0; i < is.points.length; i++) {
-      const pt = is.points[i];
-      if (st.gridCount(pt.x, pt.y, pt.dx ? G_LINEH : G_LINEV) !== 0) continue;
-      if (st.islandAdjspace(is, true, missing, i) === 0) continue;
-
-      const saved = this.dsf.clone();
-      this.solveJoin(is, i, 1, false);
-      st.mapUpdatePossibles();
-      const sealed = this.solveIslandSubgroup(is, i)
-        ? this.groupIslands(this.dsf.canonify(st.idx(is.x, is.y)))
-        : null;
-      this.solveJoin(is, i, 0, false);
-      this.dsf = saved;
-      st.mapUpdatePossibles();
-      if (!sealed) continue;
-
-      if (rec) {
-        rec.reason = {
-          kind: "wouldSealGroup",
-          island: this.islandIndex(is),
-          group: sealed.length,
-          limit: 0,
-          ev: { islands: sealed, spans: this.groupSpans(sealed) },
-        };
-      }
-      this.solveJoin(is, i, -1, false); // NOLINE
-      this.recordNoline(is, i);
-      st.mapUpdatePossibles();
-      didsth = true;
-      if (rec) break;
-    }
-    return { ok: true, didsth };
-  }
-
-  // --- Stage-3 (C solve_island_subgroup / _impossible / _stage3) ---
-
-  /** True if the (full) island's group is a finished subgraph that isn't the whole set. */
-  solveIslandSubgroup(is: Island, direction: number): boolean {
-    const st = this.st;
-    if (st.islandCountbridges(is) < is.count) return false;
-    if (direction >= 0) {
-      const isJoin = st.islandAt(
-        st.islandOrthX(is, direction),
-        st.islandOrthY(is, direction),
-      );
-      if (!isJoin) throw new Error("solveIslandSubgroup: no join island");
-      if (st.islandCountbridges(isJoin) < isJoin.count) return false;
-    }
-    const [full, nislands] = this.mapGroupCheck(
-      this.dsf.canonify(st.idx(is.x, is.y)),
-      false,
-    );
-    return full && nislands < st.islands.length;
-  }
-
-  /** The first island the current board leaves unsatisfiable, or -1. The index
-   * rather than a boolean, so a firing forced by one can ring it. */
-  firstImpossibleIsland(): number {
-    for (let i = 0; i < this.st.islands.length; i++) {
-      if (this.st.islandImpossible(this.st.islands[i], false)) return i;
-    }
-    return -1;
-  }
-
-  solveIslandImpossible(): boolean {
-    return this.firstImpossibleIsland() >= 0;
-  }
-
-  /**
-   * Two rules again, and both are **Checks** rather than Searches
-   * ([`solver-and-generator.md`](../../../docs/solver-and-generator.md)
-   * § "Check, Tactic, Search"): each places bridges, asks two validators that
-   * run no fixpoint and no sub-solve, and rolls back. So both narrate directly
-   * at Tricky, and the per-premise early return applies here as it does above.
-   */
-  solveIslandStage3(is: Island): { ok: boolean; didsth: boolean } {
-    const st = this.st;
-    const rec = this.rec;
-    let didsth = false;
-    const missing = is.count - st.islandCountbridges(is);
-    if (missing <= 0) return { ok: true, didsth: false };
-
-    // Pass 1: each direction, cap or forbid bridges that would isolate a subgraph.
-    for (let i = 0; i < is.points.length; i++) {
-      const pt = is.points[i];
-      const spc = st.islandAdjspace(is, true, missing, i);
-      if (spc === 0) continue;
-      const curr = st.gridCount(pt.x, pt.y, pt.dx ? G_LINEH : G_LINEV);
-
-      let maxb = -1;
-      // Which of the two validators refused, read while the trial still
-      // stands: rolling it back destroys both answers, and naming the wrong
-      // one is docs/hints.md § "The premise must single out the
-      // conclusion".
-      let sealed: number[] | null = null;
-      let starved = -1;
-      const saved = this.dsf.clone(); // C: dsf_copy(tmpdsf, dsf)
-      for (let n = curr + 1; n <= curr + spc; n++) {
-        this.solveJoin(is, i, n, false);
-        st.mapUpdatePossibles();
-        const subgroup = this.solveIslandSubgroup(is, i);
-        if (subgroup || this.solveIslandImpossible()) {
-          maxb = n - 1;
-          if (rec) {
-            if (subgroup) {
-              sealed = this.groupIslands(this.dsf.canonify(st.idx(is.x, is.y)));
-            } else {
-              starved = this.firstImpossibleIsland();
-            }
-          }
-          break;
-        }
-      }
-      this.solveJoin(is, i, curr, false); // put grid back
-      this.dsf = saved; // C: dsf_copy(dsf, tmpdsf)
-
-      if (maxb !== -1) {
-        // One argument whatever the limit: `maxb + 1` bridges this way would
-        // seal a group off or starve an island, so at most `maxb` may run here.
-        // At none the limit is the no-line cross; above it, the "at most" mark
-        // the player can write with the same gesture.
-        if (rec) {
-          rec.reason = sealed
-            ? {
-                kind: "wouldSealGroup",
-                island: this.islandIndex(is),
-                group: sealed.length,
-                limit: maxb,
-                ev: { islands: sealed, spans: this.groupSpans(sealed) },
-              }
-            : {
-                kind: "wouldStarve",
-                island: this.islandIndex(is),
-                limit: maxb,
-                ev: { islands: starved >= 0 ? [starved] : [], spans: [] },
-              };
-        }
-        if (maxb === 0) {
-          this.solveJoin(is, i, -1, false); // NOLINE
-          this.recordNoline(is, i);
-        } else {
-          this.solveJoin(is, i, maxb, true);
-          this.recordLimit(is, i, maxb);
-        }
-        didsth = true;
-      }
-      st.mapUpdatePossibles();
-      if (rec && didsth) return { ok: true, didsth };
-    }
-
-    // Pass 2: a currently-empty direction that must carry >=1 bridge to avoid
-    // isolating a subgraph reached by connecting maximally to all *other*
-    // neighbors at once (the multi-target case pass 1 can't see).
-    for (let i = 0; i < is.points.length; i++) {
-      if (st.islandAdjspace(is, true, missing, i) === 0) continue;
-      const before = is.points.map((pt) =>
-        st.gridCount(pt.x, pt.y, pt.dx ? G_LINEH : G_LINEV),
-      );
-      if (before[i] !== 0) continue;
-
-      const saved = this.dsf.clone();
-      for (let j = 0; j < is.points.length; j++) {
-        if (j === i) continue;
-        const spc = st.islandAdjspace(is, true, missing, j);
-        if (spc) this.solveJoin(is, j, before[j] + spc, false);
-      }
-      st.mapUpdatePossibles();
-      const got = this.solveIslandSubgroup(is, -1);
-      // Membership while the trial stands; the *bridges* after it is rolled
-      // back, so the picture outlines only spans the player can actually see.
-      const sealed =
-        rec && got ? this.groupIslands(this.dsf.canonify(st.idx(is.x, is.y))) : null;
-      for (let j = 0; j < is.points.length; j++) {
-        this.solveJoin(is, j, before[j], false);
-      }
-      this.dsf = saved;
-
-      if (got) {
-        if (rec && sealed) {
-          rec.reason = {
-            kind: "mustReachOut",
-            island: this.islandIndex(is),
-            group: sealed.length,
-            ev: { islands: sealed, spans: this.groupSpans(sealed) },
-          };
-        }
-        this.solveJoin(is, i, 1, false);
-        this.recordJoin(is, i, 1);
-        didsth = true;
-      }
-      st.mapUpdatePossibles();
-      if (rec && didsth) return { ok: true, didsth };
-    }
-
-    return { ok: true, didsth };
-  }
-
-  // --- Driver (C solve_sub) ---
-
-  /**
-   * The stages as ladder rungs: stage 2 is two of them, its counting and its
-   * sealing off, which share a tier.
-   *
-   * **A "rung" here sweeps every island before reporting**, which is the
-   * runner's contract at the *ladder* level rather than a violation of it: the
-   * runner restarts the ladder the moment a rung reports progress, and a rung is
-   * free to do as much work as it likes before it does. The distinction that
-   * would matter — a pass that must sweep the whole ladder before restarting —
-   * is Lightup's, and it is why Lightup stays out.
-   *
-   * `!ok` is a contradiction, which is the runner's `< 0`; `solveSub` reports it
-   * as 0.
-   *
-   * **On the recording path a sweep stops at the first island that moved**, so
-   * that one firing is one hint step. A stage that reports after sweeping
-   * sixty-seven islands is the right unit for a *grade* and the wrong one for a
-   * *sentence* (docs/hints.md § "A rung is not a premise, so return per
-   * premise"); the generator keeps the accumulate-across-the-whole-list pass it
-   * always had, which `bridges-differential.test.ts` proves.
-   */
-  ladder(): DeductionTechnique[] {
-    const st = this.st;
-    const sweep = (
-      run: (is: Island) => { ok: boolean; didsth: boolean },
-      skip?: (is: Island) => boolean,
-    ): number => {
-      let didsth = false;
-      for (const is of st.islands) {
-        if (skip?.(is)) continue;
-        const r = run(is);
-        if (!r.ok) return -1;
-        if (r.didsth) {
-          didsth = true;
-          if (this.rec && this.kept()) return 1;
-        }
-      }
-      return didsth ? 1 : 0;
-    };
-    return [
-      {
-        id: "stage1-arithmetic",
-        tier: 0,
-        run: () => sweep((is) => this.solveIslandStage1(is)),
-      },
-      {
-        id: "stage2-counting",
-        tier: 1,
-        // CONTINUE_IF_FULL: a marked-complete island is skipped, as upstream.
-        run: () =>
-          sweep(
-            (is) => this.solveIslandStage2(is),
-            (is) => (st.gridAt(is.x, is.y) & G_MARK) !== 0,
-          ),
-      },
-      {
-        id: "stage2-sealing",
-        tier: 1,
-        run: () => sweep((is) => this.solveIslandSeal(is)),
-      },
-      {
-        id: "stage3-connectivity",
-        tier: 2,
-        run: () => sweep((is) => this.solveIslandStage3(is)),
-      },
-    ];
-  }
-
-  solveSub(difficulty: number, firings?: FiringTally): number {
-    const { impossible } = runDeductionFixpoint({
-      techniques: this.ladder(),
-      firings,
-      // Each stage's tier is the difficulty that unlocks it.
-      maxTier: difficulty,
-    });
-    if (impossible) return 0;
-    return this.mapCheck() ? 1 : 0;
-  }
+/** Run the ladder on `d` to a fixpoint at `cap` and say what it reached. */
+function deduce(
+  d: Deduction,
+  cap: number,
+  firings?: FiringTally,
+): "solved" | "stuck" | "contradiction" {
+  const { m, ladder } = d;
+  const impossible = runLadder(
+    m,
+    ladderTechniques(m, ladder.entries, { [TIERS]: Math.min(cap, TOP) }, {}),
+    { firings },
+  );
+  if (impossible) return "contradiction";
+  if (unfinished(d)) return "stuck";
+  return bridges.isAnswer(answerGrid(d), d.geo.sp, d.geo.dealt, d.geo.variations)
+    ? "solved"
+    : "contradiction";
 }
 
 /**
- * Solve `state` in place from the clue-only position at `difficulty` (0/1/2).
- * Clears all bridges first (C `solve_from_scratch` → `map_clear`), so the passed
- * state must be a working copy the caller is happy to have overwritten.
- * Returns 1 if fully solved, 0 otherwise.
+ * Solve `state` in place from its clues alone at `difficulty` (0, 1 or 2;
+ * higher caps nothing more). Clears every bridge and mark first, so the state
+ * must be a working copy the caller is happy to have overwritten; solved, it
+ * holds the answer's bridges. Returns 1 if solved, 0 otherwise.
  */
 export function solveFromScratch(
   state: BridgesState,
@@ -912,100 +560,120 @@ export function solveFromScratch(
   firings?: FiringTally,
 ): number {
   state.mapClear();
-  const solver = new Solver(state);
-  solver.mapGroup();
-  state.mapUpdatePossibles();
-  return solver.solveSub(difficulty, firings);
-}
-
-/**
- * What a hint asks the deduction for: the next firing from the board in front
- * of it, whether that board is finished, and whether it has been proved
- * inconsistent.
- */
-export interface BridgesRecordingPass {
-  /** The next single firing, or `null` when deduction is exhausted. */
-  next(): BridgesFiring | null;
-  /** Upstream `map_check` over the working board. */
-  solved(): boolean;
-  /** A rung proved the board inconsistent. */
-  impossible(): boolean;
-}
-
-/**
- * The recording projection: the *same* `DeductionTechnique` objects
- * `solveFromScratch` runs, through `singleFirings`, with a recorder attached —
- * no rung is reimplemented for the hint. `beforeTechnique` clears the standing
- * reason, which is what makes "a rule that declares no reason narrates
- * nothing" a checked property rather than a hope.
- *
- * Every firing is returned. The one that declares no reason, the bookkeeping
- * mark, is hidden by the plan loop's `showable` and counted in `hidden`.
- *
- * `st` must be a working copy the caller is happy to have overwritten, and —
- * unlike {@link solveFromScratch} — it is **not** cleared: the deduction
- * resumes from the bridges the player has drawn.
- */
-export function bridgesRecordingPass(
-  st: BridgesState,
-  cap: number,
-  budget: StepBudget,
-): BridgesRecordingPass {
-  const solver = new Solver(st);
-  solver.mapGroup();
-  st.mapUpdatePossibles();
-  // Seed the marks a from-scratch solve would already be holding at these
-  // bridges. Stage 1 derives them itself, but only when its sweep reaches the
-  // island — from empty that is always before any bridge lands on it, and on a
-  // board the player has half-built it need not be. Marking first is what makes
-  // a resumed position the same kind of position the ladder was certified on.
-  for (const is of st.islands) {
-    if (st.islandCountbridges(is) === is.count && !(st.gridAt(is.x, is.y) & G_MARK)) {
-      st.islandTogglemark(is);
-    }
+  const d = deduction(state, true);
+  if (deduce(d, difficulty, firings) !== "solved") return 0;
+  const r = new Reads(state, d.geo, d.m);
+  for (const line of d.geo.lines) {
+    const has = r.has(line);
+    if (has === 0) continue;
+    const a = state.islandAt(line.span.x1, line.span.y1);
+    const b = state.islandAt(line.span.x2, line.span.y2);
+    if (a === null || b === null) throw new Error("bridges: a line ends off an island");
+    state.islandJoin(a, b, has, false);
   }
-  const rec: BridgesRecorder = { reason: null, ops: [] };
-  solver.rec = rec;
-  solver.offers = new SweepOffers<BridgesSnapshot, BridgesReason | null>({
-    save: () => solver.save(),
-    restore: (s) => solver.restore(s),
-    recorded: () => rec.reason,
-    record: (r) => {
-      rec.reason = r;
-    },
-    reads: (r) => (r ? solver.premise(r) : []),
-    // A firing's own ops are those recorded since the board it started on.
-    writes: (before, after) => solver.islandsOf(after.ops.slice(before.ops.length)),
-  });
-  const firings = singleFirings({
-    techniques: solver.offers.techniques(solver.ladder()),
-    maxTier: cap,
-    budget,
-    beforeTechnique: () => {
-      rec.reason = null;
-    },
-    // A plan works round the islands it has just bridged before it moves on.
-    continuing: true,
-  });
+  state.mapUpdatePossibles();
+  return 1;
+}
 
-  return {
-    next(): BridgesFiring | null {
-      rec.ops = [];
-      if (!firings.next()) return null;
-      return { reason: rec.reason, ops: rec.ops };
-    },
-    solved: () => solver.mapCheck(),
-    impossible: firings.impossible,
-  };
+/** Whether the bridges on `state` answer the board, by its rules. */
+export function bridgesSolved(state: BridgesState): boolean {
+  const geo = geometryOf(state);
+  const g = new Uint8Array(geo.sp.edges.length).fill(NONE);
+  for (const line of geo.lines) {
+    const { lo } = lineOnState(state, line);
+    for (const e of line.edges) g[e] = lo + NONE;
+  }
+  return bridges.isAnswer(g, geo.sp, geo.dealt, geo.variations);
+}
+
+// --- the hint's walk ---------------------------------------------------------
+
+/** What a hint asks the ladder for, from the player's own bridges and marks. */
+export interface BridgesWalk {
+  /** The next firing, `null` once the ladder has none, or `"contradiction"`
+   * where the marks are inconsistent. */
+  next(): BridgesFiring | null | "contradiction";
+  /** Whether some island still needs a bridge. */
+  unfinished(): boolean;
 }
 
 /**
- * Run C `map_check` on `state` in place: true iff the board is complete (one
- * connected group, every island satisfied, no illegal loop). Like C, it leaves
- * the `G_WARN`/`G_SWEEP` flags set (loop edges, or a prematurely-satisfied
- * subgroup), which is how `executeMove`'s result carries the warning overlay
- * the renderer reads.
+ * The moves a firing made, from what each line it decided had and allowed
+ * before (`before`, by line) to what the marks hold now: a count of bridges,
+ * a cross, or a limit, each from the island cell `from` where that is an end
+ * of the line, since a sentence reasons from it.
  */
-export function runMapCheck(state: BridgesState): boolean {
-  return new Solver(state).mapCheck();
+function opsOf(
+  d: Deduction,
+  taken: Taken,
+  before: readonly { has: number; allows: number }[],
+  from: number,
+): BridgesOp[] {
+  const r = new Reads(d.state, d.geo, d.m);
+  const touched = new Set<number>();
+  for (let i = 0; i < taken.facts.length; i += 3) {
+    const n = d.geo.lineOf[taken.facts[i + 1]];
+    if (n >= 0) touched.add(n);
+  }
+  const ops: BridgesOp[] = [];
+  for (const n of touched) {
+    const line = d.geo.lines[n];
+    const s = line.span;
+    const ends =
+      line.b === from ? { x1: s.x2, y1: s.y2, x2: s.x1, y2: s.y1 } : { ...s };
+    const has = r.has(line);
+    const allows = r.allows(line);
+    // A step's moves are all the player is shown, so the line must hold no
+    // more than a count of bridges and a limit can say, at both ends.
+    const first = d.m.cands[line.edges[0]];
+    if (first !== between(has, allows) || d.m.cands[line.edges.at(-1) ?? 0] !== first)
+      throw new Error("bridges: a firing leaves a line its marks cannot show");
+    if (has > before[n].has) ops.push({ op: "L", ...ends, n: has });
+    if (allows < before[n].allows)
+      ops.push(allows === 0 ? { op: "N", ...ends } : { op: "C", ...ends, n: allows });
+  }
+  return ops;
+}
+
+/**
+ * The ladder's firings from the player's board, one at a time, each the one
+ * that carries on from the islands the plan is working round (`ladderWalk`),
+ * up to `cap`. `state` is read, never written.
+ */
+export function bridgesWalk(state: BridgesState, cap: number): BridgesWalk {
+  const d = deduction(state, false);
+  d.m.budget = stepBudget("bridges hint");
+  const { geo } = d;
+  const linesOf = (f: Taken): Line[] => {
+    const out = new Set<number>();
+    for (let i = 0; i < f.facts.length; i += 3) {
+      const n = geo.lineOf[f.facts[i + 1]];
+      if (n >= 0) out.add(n);
+    }
+    return [...out].map((n) => geo.lines[n]);
+  };
+  const reasonOf = (f: Taken): BridgesReason => f.reasons[0] as BridgesReason;
+  const islandCell = (i: number): number =>
+    state.idx(state.islands[i].x, state.islands[i].y);
+  // A player follows the islands: a firing reads the island it is about and
+  // those it counts, and writes the islands its lines join.
+  const walk = ladderWalk(
+    d.m,
+    d.ladder.entries,
+    { [TIERS]: Math.min(cap, TOP) },
+    (f) => [islandCell(reasonOf(f).island), ...reasonOf(f).ev.islands.map(islandCell)],
+    { writes: (f) => linesOf(f).flatMap((l) => [l.a, l.b]) },
+  );
+  return {
+    next() {
+      // The walk makes the firing it takes, so each line is read before.
+      const r = new Reads(state, geo, d.m);
+      const before = geo.lines.map((l) => ({ has: r.has(l), allows: r.allows(l) }));
+      const taken = walk.next();
+      if (taken === null || taken === "contradiction") return taken;
+      const reason = reasonOf(taken);
+      return { reason, ops: opsOf(d, taken, before, islandCell(reason.island)) };
+    },
+    unfinished: () => unfinished(d),
+  };
 }

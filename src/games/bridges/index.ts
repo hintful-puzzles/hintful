@@ -73,7 +73,7 @@ import {
   redrawBridges,
   toCoord,
 } from "./render.ts";
-import { type BridgesSpan, runMapCheck, solveFromScratch } from "./solver.ts";
+import { type BridgesSpan, bridgesSolved, solveFromScratch } from "./solver.ts";
 import {
   type BridgesMistake,
   type BridgesMove,
@@ -541,8 +541,7 @@ export const bridgesGame: Game<
   executeMove,
 
   status(s: BridgesState): GameStatus {
-    // On a copy: the check rewrites the grid's warning flags as it groups.
-    return runMapCheck(s.clone()) ? "solved" : "ongoing";
+    return bridgesSolved(s) ? "solved" : "ongoing";
   },
 
   solve,

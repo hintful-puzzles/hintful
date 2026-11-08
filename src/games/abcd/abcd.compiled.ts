@@ -59,59 +59,59 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt, variati
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  let _q108 = true;
-  Q109: {
-    const _a110 = sp.cells;
-    for (let _i111 = 0; _i111 < _a110.length; _i111++) {
-      const v_c = _a110[_i111];
-      const _h115 = (g[v_c] || -1);
-      const _a112 = sp.adj4[v_c];
-      for (let _i113 = 0; _i113 < _a112.length; _i113++) {
-        const v_p = _a112[_i113];
-        const _h114 = (g[v_p] || -1);
-        if (!((_h114 !== _h115))) {
-          _q108 = false;
-          break Q109;
+  let _q104 = true;
+  Q105: {
+    const _a106 = sp.cells;
+    for (let _i107 = 0; _i107 < _a106.length; _i107++) {
+      const v_c = _a106[_i107];
+      const _h111 = (g[v_c] || -1);
+      const _a108 = sp.adj4[v_c];
+      for (let _i109 = 0; _i109 < _a108.length; _i109++) {
+        const v_p = _a108[_i109];
+        const _h110 = (g[v_p] || -1);
+        if (!((_h110 !== _h111))) {
+          _q104 = false;
+          break Q105;
         }
       }
     }
   }
-  if (!(_q108)) return false;
+  if (!(_q104)) return false;
   if (variations.includes("no diagonal")) {
-    let _q116 = true;
-    Q117: {
-      const _a118 = sp.cells;
-      for (let _i119 = 0; _i119 < _a118.length; _i119++) {
-        const v_c = _a118[_i119];
-        const _h123 = (g[v_c] || -1);
-        const _a120 = sp.adj8[v_c];
-        for (let _i121 = 0; _i121 < _a120.length; _i121++) {
-          const v_p = _a120[_i121];
-          const _h122 = (g[v_p] || -1);
-          if (!((_h122 !== _h123))) {
-            _q116 = false;
-            break Q117;
+    let _q112 = true;
+    Q113: {
+      const _a114 = sp.cells;
+      for (let _i115 = 0; _i115 < _a114.length; _i115++) {
+        const v_c = _a114[_i115];
+        const _h119 = (g[v_c] || -1);
+        const _a116 = sp.adj8[v_c];
+        for (let _i117 = 0; _i117 < _a116.length; _i117++) {
+          const v_p = _a116[_i117];
+          const _h118 = (g[v_p] || -1);
+          if (!((_h118 !== _h119))) {
+            _q112 = false;
+            break Q113;
           }
         }
       }
     }
-    if (!(_q116)) return false;
+    if (!(_q112)) return false;
   }
-  for (let _k124 = 0; _k124 < cl.count.at.length; _k124++) {
-    const _at125 = perElement(cl.count.at[_k124]);
-    const _per127 = perValue(cl.count.at[_k124]);
-    const _v126 = cl.count.v[_k124];
-    let _g128 = 0;
-    G129: {
-      const _a130 = sp.lineCells[_at125];
-      for (let _i131 = 0; _i131 < _a130.length; _i131++) {
-        const v_c = _a130[_i131];
-        const _h132 = (g[v_c] || -1);
-        if (!((_h132 === _per127))) continue;
-        _g128++;
+  for (let _k120 = 0; _k120 < cl.count.at.length; _k120++) {
+    const _at121 = perElement(cl.count.at[_k120]);
+    const _per123 = perValue(cl.count.at[_k120]);
+    const _v122 = cl.count.v[_k120];
+    let _g124 = 0;
+    G125: {
+      const _a126 = sp.lineCells[_at121];
+      for (let _i127 = 0; _i127 < _a126.length; _i127++) {
+        const v_c = _a126[_i127];
+        const _h128 = (g[v_c] || -1);
+        if (!((_h128 === _per123))) continue;
+        _g124++;
       }
     }
-    if (!((_g128 === _v126))) return false;
+    if (!((_g124 === _v122))) return false;
   }
   return true;
 }
@@ -315,33 +315,24 @@ export function runs(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RunsBinding>
               _g86++;
             }
           }
-          let _g90 = 0;
-          G91: {
-            const _a92 = sp.lineCells[v_L];
-            for (let _i93 = 0; _i93 < _a92.length; _i93++) {
-              const v_c = _a92[_i93];
-              if (!(((b.grid[v_c] || -1) === v_d))) continue;
-              _g90++;
-            }
-          }
-          if (!((_g86 === (v_v - _g90)))) break L85;
+          if (!((_g86 === (v_v - _g75)))) break L85;
           facts.length = 0;
           changed = false;
-          let _q94 = true;
-          Q95: {
-            const _a96 = v_O;
-            for (let _i97 = 0; _i97 < _a96.length; _i97++) {
-              const v_c = _a96[_i97];
-              const _h98 = stretch(sp.lineCells[v_L], v_c, v_O).length;
-              if (!((((_h98 % 2) === 1) && ((stretch(sp.lineCells[v_L], v_c, v_O).indexOf(v_c) % 2) === 0)))) continue;
+          let _q90 = true;
+          Q91: {
+            const _a92 = v_O;
+            for (let _i93 = 0; _i93 < _a92.length; _i93++) {
+              const v_c = _a92[_i93];
+              const _h94 = stretch(sp.lineCells[v_L], v_c, v_O).length;
+              if (!((((_h94 % 2) === 1) && ((stretch(sp.lineCells[v_L], v_c, v_O).indexOf(v_c) % 2) === 0)))) continue;
               if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, v_d); changed = true; } else facts.push(PLACE, v_c, v_d); }
               if (!(true)) {
-                _q94 = false;
-                break Q95;
+                _q90 = false;
+                break Q91;
               }
             }
           }
-          if (!(_q94)) return -1;
+          if (!(_q90)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null && !fire({ L: v_L, d: v_d, v: v_v, O: v_O }, facts)) return 1;
@@ -365,17 +356,17 @@ export function placedDiagonal(b: Marks, sp: GridSpace, v_c: number, fire: Fire<
   const facts = placedDiagonalFacts;
   let fired = 0;
   let changed = false;
-  const _h103 = (b.grid[v_c] !== 0);
-  const _h107 = (b.grid[v_c] || -1);
-  if (!(_h103)) return 0;
-  const _a104 = sp.adj8[v_c];
-  for (let _i105 = 0; _i105 < _a104.length; _i105++) {
-    const v_p = _a104[_i105];
-    const _h106 = (b.grid[v_p] !== 0);
-    if (!((!(sp.adj4[v_c].includes(v_p)) && !(_h106)))) continue;
+  const _h99 = (b.grid[v_c] !== 0);
+  const _h103 = (b.grid[v_c] || -1);
+  if (!(_h99)) return 0;
+  const _a100 = sp.adj8[v_c];
+  for (let _i101 = 0; _i101 < _a100.length; _i101++) {
+    const v_p = _a100[_i101];
+    const _h102 = (b.grid[v_p] !== 0);
+    if (!((!(sp.adj4[v_c].includes(v_p)) && !(_h102)))) continue;
     facts.length = 0;
     changed = false;
-    if ((((b.cands[v_p] >> _h107) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_p, _h107); changed = true; } else facts.push(STRIKE, v_p, _h107); }
+    if ((((b.cands[v_p] >> _h103) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_p, _h103); changed = true; } else facts.push(STRIKE, v_p, _h103); }
     if (!(true)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;

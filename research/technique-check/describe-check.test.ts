@@ -911,6 +911,35 @@ const PLANTS: Record<string, Plant> = {
   spareBreaks: {
     conclude: "place(edge(c, y), 2)",
   },
+  // An island with one bridge more room than it needs read as exactly
+  // filled.
+  exactSpace: {
+    for: "c in cells where island(c), n = need(c), R = sum(y in adj4(c) where far(c, y) != none of room(c, y)) where n < 0 or (n > 0 and R <= n + 1)",
+  },
+  // An island one bridge short of needing every line read as needing it.
+  everyNeighbor: {
+    for: "c in cells where island(c) and need(c) > 0, A = {y in adj4(c) where far(c, y) != none and most(c, y) > 0} where clue(number, c) + 1 > (|A| - 1) * maxb",
+  },
+  // The other lines carrying exactly the number read as falling short.
+  needsThisWay: {
+    for: "c in cells where island(c) and need(c) > 0, V = sum(y in adj4(c) where far(c, y) != none of most(c, y)), y in adj4(c) where far(c, y) != none and has(c, y) = 0 and more(c, y) > 0 and V - more(c, y) <= clue(number, c)",
+  },
+  // A group read as shut off when it holds every island.
+  sealing: {
+    for: "N = islands, c in cells where island(c) and need(c) = 1, y in adj4(c), f = far(c, y) where f != none and need(f) = 1 and has(c, y) = 0 and more(c, y) > 0, G = group(c, run(c, y)) where closed(G) and (forall x in G where island(x) and x != c and x != f: need(x) = 0)",
+  },
+  // The fewest bridges that break the board read as one too few.
+  tooMany: {
+    conclude: "forall e in H, d in cand(e) where d >= k: strike(e, d)",
+  },
+  // The line read as taking the most it could, not one bridge at least.
+  mustReachOut: {
+    conclude: "forall e in run(c, y), d in cand(e) where d <= maxb: strike(e, d)",
+  },
+  // Any line two islands could still bridge read as closing a loop.
+  "bridges.loop": {
+    for: "L = {e in edges where drawn(e) > 0}, c in cells where island(c), y in adj4(c), f = far(c, y) where f != none and has(c, y) = 0 and more(c, y) > 0",
+  },
   // The first fit across an edge left out of the reasons it is out.
   "rect.line": {
     for: "e in edges where not known(e), a = end1(e), b = end2(e), C = {q in reachers(a) where exists r in fits(q): a in cells(r) and b in cells(r)} where |C| > 0 and (forall q in C, r in fits(q) where a in cells(r) and b in cells(r) and r != nth(fits(q), 0): owned(q, r) or (exists x in sole(q): x not in cells(r)))",

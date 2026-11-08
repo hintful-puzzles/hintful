@@ -73,15 +73,19 @@ const pinned = describeHintKindPins({
       }),
   },
   pins: {
-    /** Held on 60 of 145 positions walked. */
-    citesIslands: "7x7i30e10m2d2:3a3a2a2n2l3g2a4a5a4",
-    /** Held on 19 of 145 positions walked. */
+    /** Held on 54 of 142 positions walked. */
+    citesIslands: {
+      id: "7x7i30e10m2d2:3c4a2o3b3j1e2c2a2",
+      moves:
+        '[{"ops":[{"op":"L","x1":1,"y1":3,"x2":4,"y2":3,"n":2},{"op":"L","x1":1,"y1":3,"x2":1,"y2":5,"n":1}]}]',
+    },
+    /** Held on 17 of 142 positions walked. */
     limitsSpan: {
       id: "7x7i30e10m2d2:3c4a2o3b3j1e2c2a2",
       moves:
         '[{"ops":[{"op":"L","x1":0,"y1":0,"x2":4,"y2":0,"n":1},{"op":"L","x1":0,"y1":0,"x2":0,"y2":6,"n":1}]},{"ops":[{"op":"L","x1":1,"y1":3,"x2":4,"y2":3,"n":2},{"op":"L","x1":1,"y1":3,"x2":1,"y2":5,"n":1}]}]',
     },
-    /** Held on 20 of 145 positions walked. */
+    /** Held on 15 of 142 positions walked. */
     raisesSpan: {
       id: "7x7i30e10m2d2:2a4c2g5a7b3d1c5a3b1h2b3b2",
       moves:

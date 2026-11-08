@@ -4,8 +4,8 @@
  * The cross-game guards already walk every tier for voice, length, marks,
  * overlay repaint, purity and resume (`engine/hint-*.test.ts`, enrolled by the
  * `hint()` declaration alone). What is here is what only this game can say:
- * which premises its corpus reaches, that its one reason-less rule is the
- * bookkeeping mark and nothing else, that a firing's sentence and its picture
+ * which premises its corpus reaches, that each step moves the board, that a
+ * firing's moves run from the island it is about, that its sentence and picture
  * hold the same numbers, and that the plan's own moves solve a real board
  * through the real `executeMove`.
  */
@@ -14,7 +14,6 @@ import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { decodeSave, encodeSave } from "../../engine/save.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import { observeMidend } from "../../engine/testing/drive-midend.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
@@ -26,7 +25,7 @@ import {
   type BridgesFiring,
   type BridgesReason,
   type BridgesSpan,
-  bridgesRecordingPass,
+  bridgesWalk,
 } from "./solver.ts";
 import {
   type BridgesMove,
@@ -35,8 +34,6 @@ import {
   decodeParams,
   G_LINEH,
   G_LINEV,
-  G_NOLINEH,
-  G_NOLINEV,
   type Island,
   newStateFromDesc,
 } from "./state.ts";
@@ -47,7 +44,7 @@ const BRIDGES_PRESETS = leafPresets(bridgesGame).map((l) => l.params);
 type Kind = BridgesReason["kind"];
 
 /**
- * Every premise the recording projection can speak, as a total record: adding
+ * Every premise the ladder's reasons can speak, as a total record: adding
  * a variant fails to compile until the census below lists it, which is what
  * stops a new arm shipping unreached and unread
  * (docs/hints.md § "Census the reasons, not only the rungs").
@@ -112,7 +109,7 @@ function makeBoard(params: BridgesParams, seed: string): BridgesState {
   return newStateFromDesc(params, desc);
 }
 
-/** Every firing the deduction makes on this board, hidden ones included, plus
+/** Every firing the hint's walk makes on this board, plus
  * the island list a reason's `island` index names. */
 function allFirings(
   params: BridgesParams,
@@ -126,18 +123,18 @@ function firingsFrom(
   params: BridgesParams,
   start: BridgesState,
 ): { firings: BridgesFiring[]; status: string; islands: Island[] } {
-  const work = start.workingCopy();
-  const pass = bridgesRecordingPass(
-    work,
-    params.difficulty,
-    stepBudget("bridges test"),
-  );
-  const r = deduceHintPlan<BridgesState, BridgesFiring, string>({
-    board: work,
-    status: () => (pass.impossible() ? "broken" : pass.solved() ? "done" : "open"),
+  const walk = bridgesWalk(start, params.difficulty);
+  let broken = false;
+  const r = deduceHintPlan<null, BridgesFiring, string>({
+    board: null,
+    status: () => (broken ? "broken" : walk.unfinished() ? "open" : "done"),
     incomplete: "open",
-    next: () => pass.next(),
-    showable: () => true,
+    next: () => {
+      const f = walk.next();
+      if (f !== "contradiction") return f;
+      broken = true;
+      return null;
+    },
   });
   return { firings: r.plan, status: r.status, islands: start.islands };
 }
@@ -176,7 +173,7 @@ describe("the corpus reaches every premise, and the ledger says which it cannot"
 
   it("looked at enough firings to mean anything", () => {
     // The vacuity guard: every assertion below passes over an empty census.
-    expect(firingCount).toBeGreaterThan(2000);
+    expect(firingCount).toBeGreaterThan(1000);
     expect(stalled, "a board the deduction could not finish").toBe(0);
   });
 
@@ -206,64 +203,35 @@ const LIMITED = [
   "7x7i30e10m2d2:2e3a1a4a2a3a3g2b32d1h2a4b2a",
 ];
 
-/** Where two boards disagree about a bridge, a cross or a limit, if anywhere. */
-function unseen(player: BridgesState, work: BridgesState): string | null {
-  for (let y = 0; y < work.h; y++) {
-    for (let x = 0; x < work.w; x++) {
-      for (const [dx, line, cross] of [
-        [1, G_LINEH, G_NOLINEH],
-        [0, G_LINEV, G_NOLINEV],
-      ]) {
-        const at = `(${x},${y}) ${dx ? "across" : "down"}`;
-        if (player.gridCount(x, y, line) !== work.gridCount(x, y, line))
-          return `bridges at ${at}`;
-        if ((player.gridAt(x, y) & cross) !== (work.gridAt(x, y) & cross))
-          return `cross at ${at}`;
-        if (player.maximum(dx, x, y) !== work.maximum(dx, x, y))
-          return `limit at ${at}: player ${player.maximum(dx, x, y)}, hint ${work.maximum(dx, x, y)}`;
-      }
-    }
-  }
-  return null;
-}
-
 describe("every step stands on the board the player can see", () => {
   /**
-   * Plays only the steps the plan shows onto a player's board, through the
-   * real `executeMove`, and before each one compares it with the board the
-   * deduction is reasoning from. Any bridge, cross or limit the deduction holds
-   * and the player does not is a fact the step's sentence may be leaning on
-   * that the player has no way to see (docs/hints.md § "The quality bar", rule 6).
+   * The deduction reads the player's own board, and a step's moves are read
+   * off the lines it changed, which `bridgesWalk` refuses to leave holding
+   * what a count and a limit cannot say. What is left to show is that each
+   * step moves the board, and that the limits a later step counts are
+   * written as steps of their own (docs/hints.md § "The quality bar", rule
+   * 6): played through the real `executeMove`, the steps change the player's
+   * board every time.
    */
   function walk(params: BridgesParams, desc: string) {
-    const start = newStateFromDesc(params, desc);
-    const work = start.workingCopy();
-    const pass = bridgesRecordingPass(work, params.difficulty, stepBudget("bh"));
-    let player = start;
-    let before = work.workingCopy();
-    const out = { shown: 0, limits: 0, hiddenMoves: 0, first: null as string | null };
-    deduceHintPlan<BridgesState, BridgesFiring, string>({
-      board: work,
-      status: () => (pass.impossible() ? "broken" : pass.solved() ? "done" : "open"),
-      incomplete: "open",
-      next: () => {
-        before = work.workingCopy();
-        return pass.next();
-      },
-      showable: (_board, f) => {
-        if (!f.reason) {
-          if (f.ops.some((op) => op.op !== "M")) out.hiddenMoves++;
-          return false;
-        }
-        out.shown++;
-        if (f.ops.some((op) => op.op === "C")) out.limits++;
-        const gap = unseen(player, before);
-        if (gap && !out.first)
-          out.first = `step ${out.shown} (${f.reason.kind}): ${gap}`;
-        player = bridgesGame.executeMove(player, { ops: f.ops });
-        return true;
-      },
-    });
+    let player = newStateFromDesc(params, desc);
+    const out = { shown: 0, limits: 0, idle: null as string | null };
+    for (const f of firingsFrom(params, player).firings) {
+      out.shown++;
+      if (f.ops.some((op) => op.op === "C")) out.limits++;
+      const next = bridgesGame.executeMove(player, { ops: f.ops });
+      const same = (a: ArrayLike<number>, b: ArrayLike<number>): boolean =>
+        Array.prototype.every.call(a, (v: number, i: number) => v === b[i]);
+      if (
+        !out.idle &&
+        same(next.grid, player.grid) &&
+        same(next.lines, player.lines) &&
+        same(next.maxh, player.maxh) &&
+        same(next.maxv, player.maxv)
+      )
+        out.idle = `step ${out.shown} (${f.reason.kind}) moved nothing`;
+      player = next;
+    }
     return out;
   }
 
@@ -271,7 +239,7 @@ describe("every step stands on the board the player can see", () => {
     for (const pd of LIMITED) {
       const [p, desc] = pd.split(":");
       const r = walk(decodeParams(p), desc);
-      expect(r.first, pd).toBeNull();
+      expect(r.idle, pd).toBeNull();
       expect(r.limits, `${pd} wrote no limit`).toBeGreaterThan(0);
     }
   });
@@ -283,8 +251,7 @@ describe("every step stands on the board the player can see", () => {
       for (const seed of SEEDS) {
         const { desc } = newBridgesDesc(params, randomNew(seed));
         const r = walk(params, desc);
-        expect(r.first, `${bridgesGame.encodeParams(params, true)}:${desc}`).toBeNull();
-        expect(r.hiddenMoves, "a firing moved the board without a sentence").toBe(0);
+        expect(r.idle, `${bridgesGame.encodeParams(params, true)}:${desc}`).toBeNull();
         shown += r.shown;
         limits += r.limits;
       }
@@ -296,22 +263,6 @@ describe("every step stands on the board the player can see", () => {
 });
 
 describe("what the plan shows, and what it keeps to itself", () => {
-  it("a reason-less firing is only ever the bookkeeping mark", () => {
-    let hidden = 0;
-    for (const { params } of SHAPES) {
-      for (const seed of SEEDS) {
-        for (const f of allFirings(params, seed).firings) {
-          if (f.reason) continue;
-          hidden++;
-          // Nothing but `M`, which is what the fork's auto-mark aid already
-          // draws: the island's own digit against its own bridges says it.
-          expect(f.ops.every((op) => op.op === "M")).toBe(true);
-        }
-      }
-    }
-    expect(hidden, "no hidden firing to judge").toBeGreaterThan(500);
-  });
-
   it("one firing is one step: every move in it runs from one island", () => {
     let multi = 0;
     let steps = 0;
@@ -335,8 +286,7 @@ describe("what the plan shows, and what it keeps to itself", () => {
     }
     // Not vacuous in either direction: some steps really do force several
     // bridges at once, which is what makes the single-origin claim worth
-    // asserting rather than trivially true. Deleting the recorder's
-    // per-premise early return in `Solver.ladder`'s sweep turns this red.
+    // asserting rather than trivially true.
     expect(steps).toBeGreaterThan(1000);
     expect(multi).toBeGreaterThan(100);
   });
@@ -381,13 +331,8 @@ describe("what the plan shows, and what it keeps to itself", () => {
     for (const { label, params } of SHAPES) {
       for (const seed of SEEDS) {
         let player = makeBoard(params, seed);
-        for (const f of allFirings(params, seed).firings) {
-          if (!f.reason) continue;
+        for (const f of allFirings(params, seed).firings)
           player = bridgesGame.executeMove(player, { ops: f.ops });
-        }
-        // Every hidden firing is a mark, and `map_check` does not read marks —
-        // so hiding them cannot cost the player the win (`engine/hint-plan.ts`:
-        // never hide a change the win condition needs).
         expect(bridgesGame.status(player), `${label} ${seed} did not finish`).toBe(
           "solved",
         );

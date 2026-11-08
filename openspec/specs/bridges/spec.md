@@ -185,10 +185,7 @@ square of the grid, the empty ones after the last island included.
 
 ### Requirement: Generation: Bridges Easy runs the single-island deductions
 
-Easy SHALL run stage 1: force the bridges an island must place because its
-remaining count equals its available adjacent space, force one bridge to every
-neighbor of an island whose count is more than the others could carry at the
-bridge limit, and forbid bridges into a satisfied island.
+Easy SHALL run the single-island deductions: draw the bridges an island must place because its remaining count equals the room it has along its lines, and draw one bridge to every neighbor of an island whose count is more than the others could carry at the bridge limit. A line to an island with all its bridges, or across a bridge drawn, has no room.
 
 #### Scenario: An island with exactly enough room is filled at Easy
 
@@ -228,12 +225,11 @@ because filling every other direction would seal a group off.
 
 ### Requirement: Solver: Bridges solves with a graded multi-stage deductive solver
 
-The solver SHALL run the stages of its tier and no others, and SHALL be purely
-deductive: it SHALL NOT guess and verify.
+Bridges' ladder SHALL be its description's compiled ladder, each technique checked sound, and the hint SHALL walk the same ladder. The solver SHALL run the techniques of its tier and no others, and SHALL be purely deductive: it SHALL NOT guess and verify.
 
 #### Scenario: A board the stages leave short
 
-- **WHEN** the stages allowed at a tier stop with a span still undecided
+- **WHEN** the techniques allowed at a tier stop with a span still undecided
 - **THEN** the solver reports the board unsolved at that tier, having tried no
   bridge to see what follows
 
@@ -406,12 +402,7 @@ top rung, since that is the tier the generator certified it soluble at.
 
 ### Requirement: Hint: One Bridges firing is one hint step
 
-One firing SHALL be one step. When a recorder is attached, a stage SHALL stop
-at the first island that moved, and a rung holding more than one teachable
-rule SHALL return at the first of them that changed the board, so a stage that
-sweeps the whole board cannot pile several independent deductions into one
-step. Where one premise forces bridges on several spans, the step's move SHALL
-carry them all.
+One firing of a technique SHALL be one step, and a technique SHALL fire for one island at a time. Where one premise forces bridges on several spans, the step's move SHALL carry them all.
 
 #### Scenario: One premise that forces two spans is one step
 

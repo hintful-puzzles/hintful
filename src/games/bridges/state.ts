@@ -33,7 +33,6 @@ export const G_MARK = G_MARKV | G_MARKH;
 export const G_NOLINEV = 0x0020;
 export const G_NOLINEH = 0x0040;
 export const G_WARN = 0x0080;
-export const G_SWEEP = 0x1000;
 
 export interface BridgesParams {
   w: number;

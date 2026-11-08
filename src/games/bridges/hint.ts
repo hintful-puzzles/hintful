@@ -1,11 +1,8 @@
 /**
- * Bridges' explained hint: the narration half of the recording projection in
- * [`solver.ts`](./solver.ts).
- *
- * The deduction end is entirely `solver.ts`'s: the same rungs on the same
- * `runDeductionFixpoint`, run one firing at a time with a recorder standing
- * (docs/hints.md § "Recording the deduction", the *threaded* shape). This
- * file turns each firing into the sentence and the picture.
+ * Bridges' explained hint: the narration of the firings `bridgesWalk` in
+ * [`solver.ts`](./solver.ts) takes, one at a time, from the compiled ladder
+ * the description states (`bridges.description.yaml`). This file turns each
+ * firing into the sentence and the picture.
  *
  * **An island is named by its clue, and a bridge is named by nothing.** Bridges
  * draws no coordinates, so an island's digit is the only handle a sentence can
@@ -23,13 +20,12 @@ import {
   type HintRefusal,
 } from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import { SPAN, say } from "./hint-text.ts";
 import {
   type BridgesFiring,
   type BridgesReason,
   type BridgesSpan,
-  bridgesRecordingPass,
+  bridgesWalk,
 } from "./solver.ts";
 import {
   type BridgesMove,
@@ -197,43 +193,37 @@ export type BridgesRung = (typeof BRIDGES_RUNGS)[number];
 /**
  * Deduce the plan from the player's own bridges.
  *
- * `deduceHintPlan` supplies no `apply`: the rungs mutate the working board as
- * they detect, so re-applying a firing would be wrong rather than merely
+ * `deduceHintPlan` supplies no `apply`: the walk makes each firing's facts on
+ * its own marks, so re-applying one would be wrong rather than merely
  * redundant. The tier cap is the board's own difficulty rather than the top
  * rung: that is the tier the generator certified it soluble at, and it is what
  * stops an Easy board being handed a connectivity argument it never needed.
- *
- * **`showable` is the reason test alone, with no board-legality half.** One
- * firing declares no reason: the bookkeeping mark, which the fork's own
- * auto-mark aid draws. Every other firing changes something the player could
- * not already have: a bridge count the solver only ever raises, a no-line it
- * only ever draws where `possibles` is still nonzero, which a cross the player
- * has drawn already zeroes, and an "at most" limit it only ever writes below
- * the one standing, which the player's own limit already lowers.
+ * The plan stops where the ladder does: a line the player can see is closed
+ * may be left unmarked.
  *
  * **Every fact a step leans on is one the player can see**, because the
- * per-direction limit is a mark the player writes too, and the hint writes it
- * as a step of its own. `bridges-hint.test.ts` holds the plan to that: the
- * board the deduction reasons from never carries a limit, a bridge or a cross
- * the player's board does not.
+ * per-direction limit is a mark the player writes too, and a step writes
+ * what its firing concluded as bridges, crosses and limits. `bridgesWalk`
+ * throws on a firing that leaves a line its marks cannot show, and
+ * `bridges-hint.test.ts` holds each step to moving the board.
  */
 export function bridgesHint(
   state: BridgesState,
 ):
   | { ok: true; steps: HintStep<BridgesMove, BridgesHighlights, BridgesRung>[] }
   | { ok: false; error: HintRefusal } {
-  const work = state.workingCopy();
-  const pass = bridgesRecordingPass(
-    work,
-    state.params.difficulty,
-    stepBudget("bridges hint"),
-  );
-  const { plan } = deduceHintPlan<BridgesState, BridgesFiring, string>({
-    board: work,
-    status: () => (pass.impossible() ? "broken" : pass.solved() ? "done" : "open"),
+  const walk = bridgesWalk(state, state.params.difficulty);
+  let broken = false;
+  const { plan } = deduceHintPlan<null, BridgesFiring, string>({
+    board: null,
+    status: () => (broken ? "broken" : walk.unfinished() ? "open" : "done"),
     incomplete: "open",
-    next: () => pass.next(),
-    showable: (_board, firing) => firing.reason !== null,
+    next: () => {
+      const firing = walk.next();
+      if (firing !== "contradiction") return firing;
+      broken = true;
+      return null;
+    },
     planCap: PLAN_CAP,
   });
 
@@ -241,19 +231,15 @@ export function bridgesHint(
   // island's mark, so the deduction contradicts itself here only on a board
   // that solve cannot finish, where there is no answer to say which entry is
   // wrong.
-  if (pass.impossible()) return { ok: false, error: CONTRADICTION_UNLOCALIZED };
+  if (broken) return { ok: false, error: CONTRADICTION_UNLOCALIZED };
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
 
   return {
     ok: true,
     steps: plan.map((firing) => {
-      // `showable` admits only firings with a premise, so this cannot happen;
-      // if it ever does the plan has lost track of what it told the player,
-      // and that should reach Sentry rather than render a blank sentence.
       const { reason } = firing;
-      if (!reason) throw new Error("bridges hint: a step with no premise was shown");
-      const highlights = highlightsOf(work, reason, firing);
-      const words = narrate(work, reason, highlights);
+      const highlights = highlightsOf(state, reason, firing);
+      const words = narrate(state, reason, highlights);
       return {
         move: { ops: firing.ops },
         rung: reason.kind,

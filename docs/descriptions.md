@@ -284,6 +284,17 @@ description author acts on:
   `through` crosses them, and `crossedBy(e)` is the other diagonal of the
   four squares a diagonal crosses, none for an orthogonal edge. The module
   exports `edgeGeometry`, which the game passes to `describedSpace`.
+- **A line the deal decides is a run of edges** (Bridges' spans): the
+  answer's value on each edge between squares is a count, and a shape rule
+  makes a bridge run straight on through a square with no island, so the
+  description needs no space of its own. A definition that reads no marks
+  names a line's far end and its edges (`far(c, y)`, `run(c, y)`), kept for
+  the board. **A read of a line holds edge by edge**: the checker allows
+  any consistent marks, which need not agree along a run, so a line's count
+  is read from both of its end edges (`has` the most either says is drawn,
+  `allows` the least either leaves), and a group shut off is one that no
+  bridge known drawn leaves (`closed(G)`). Read off one edge,
+  `exactSpace` came out unsound in every world.
 - **A rectangle on the grid is a sort** (Rect's): `rects(c, n)` is the
   rectangles holding cell `c` of `n` cells, or of any size where `n` is 0,
   narrowest first; `cells(r)`, `width(r)` and `height(r)` read one, and
@@ -476,7 +487,7 @@ author writing for speed uses these:
   itself: a comprehension or quantifier is never moved out of a loop
   (`set`'s `open`, `hiddenSingle`'s `placed`).
 - **A definition of one element or number whose loops nest two deep is
-  kept**, its value a set, a number or a truth (Boats' `done(m)`, the
+  kept**, its value a set, a number, a truth or an element (Boats' `done(m)`, the
   closed boats of `m` squares counted over the board, kept, took its deals
   to 0.74 of the time on the same boards, 2026-11-07): one
   that reads the marks only through `value` and `known`, and no name of the
@@ -494,7 +505,10 @@ author writing for speed uses these:
   the board: Rect's `allowed(q)`, every rectangle a clue could take, is made
   once a deal, and Light Up's `lights(c)` once a square, which took its
   deals to 0.16 of the time on the same boards, Clusters' to 0.68 and
-  Dominosa's to 0.86 (2026-11-07). One of several arguments, each an
+  Dominosa's to 0.86 (2026-11-07). Bridges' `far(c, y)`, the island a ray
+  from an island reaches, is an element kept so; inlined, it was a ray
+  scanned at every read, and Bridges' deals took 23 times HEAD's
+  (2026-11-08). One of several arguments, each an
   element or a number, is kept only for the board (Star Battle's `band(k,
   dir, a)`, 0.95 of its solves): kept for the marks, a pair's values made
   again after each placement made Rect's and Path's deals slower. None is
@@ -572,7 +586,24 @@ author writing for speed uses these:
   `square` counts once. The compiler shares one only where the code that
   made it has surely run since the last fact, so a read after a `place`, or
   inside a loop, makes it again (`Shared` in `compile.ts`). Light Up's deals
-  took 0.96 of the time, Magnets' solves 0.89 (2026-11-07).
+  took 0.96 of the time, Magnets' solves 0.89 (2026-11-07). A technique's
+  binders share theirs the same way, since no fact is made among them:
+  Bridges' `cap(c, y)` reads `has(c, y)` three times in one `where`.
+- **A definition that reads the candidates, of one or two elements, whose
+  loops nest two deep through the definitions it reads, is kept by the rung
+  that reads it** until a firing changes the marks, as the rung keeps the
+  candidates themselves (`rungKept` in `compile.ts`). It compiles once as a
+  function of the module, which the rung passes its candidates to. Bridges'
+  `need(c)`, `room(c, y)` and the reads under them are asked for an island
+  and each of its lines by every line near it; kept, Bridges' module fell
+  from 437 KB to 57 KB and its deals from 4 to 3 times HEAD's. A single
+  loop over a few cells is not kept: a lookup costs more, and kept,
+  Mosaic's `need(c)` over its 3×3 block took its deals to 1.26 of the time
+  (2026-11-08).
+- **A set stated member by member is looped over as its members**, no
+  array made, a member equal to one before it passed over: `max(e in
+  {edge(c, y), end(c, y)} of …)`, and the `{c}` of a conditional `sum(z in
+  {c} where P of t)`.
 - **Any other definition is computed at each read**, so bind a set read
   inside a loop once outside it, where it holds for every pass. Boats' `onlyFit` and `onlyRuns` read `top`, the longest
   boat still to close, at every run, and were the two costliest rungs of a

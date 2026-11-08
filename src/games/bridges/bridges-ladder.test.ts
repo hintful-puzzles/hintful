@@ -1,12 +1,12 @@
 /*
- * The firing census of Bridges' `runDeductionFixpoint` ladder: which stages the
+ * The firing census of Bridges' compiled ladder: which techniques the
  * generated corpus reaches. The harness and the argument for it are
- * `engine/testing/ladder-census.ts`; why a rung that sweeps every island before
- * reporting is legal is at `Solver.ladder`.
+ * `engine/testing/ladder-census.ts`.
  */
 import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
+import * as bridges from "./bridges.compiled.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { bridgesGame } from "./index.ts";
 import { solveFromScratch } from "./solver.ts";
@@ -36,12 +36,7 @@ const cases = SHAPES.flatMap((params) =>
 
 describeLadderCensus<BridgesState>({
   game: "bridges",
-  rungs: [
-    "stage1-arithmetic",
-    "stage2-counting",
-    "stage2-sealing",
-    "stage3-connectivity",
-  ],
+  rungs: [...bridges.ladder.map((e) => e.id)],
   unreached: {},
   // The stages' own tiers, plus one above the top, where `difficulty` caps nothing.
   caps: [0, 1, 2, 3],
