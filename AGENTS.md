@@ -186,10 +186,10 @@ with openspec, through its skills; one change per coherent unit of work.
   `npm run refs -- <file> <Name>`. An edit's errors arrive seconds later, on a
   later tool result; `npm run agent-diagnostics` checks that they still do.
 - **Show the owner the openspec file you are working from.** Where
-  `HERDR_PANE_ID` is set, and only there: when you start on a change's
+  `HC_TERMINAL_ID` is set, and only there: when you start on a change's
   proposal, design, tasks or spec delta, or move from one to another, open it
-  with the `herdr-app-open` skill so they can follow along. Once per file, not per
-  edit: each call replaces what they are reading.
+  with the `herdr-app-open` skill so they can follow along. Once per file, not
+  per edit: each call replaces what they are reading.
 - **When a change is archived, and nothing the owner asked or doubted is
   open, pick the next one yourself and hand it to a fresh session; never ask
   which.** Read the open changes, take one that can
