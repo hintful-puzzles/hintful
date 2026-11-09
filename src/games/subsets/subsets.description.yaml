@@ -46,3 +46,124 @@ help:
       *Easy* puzzles can be solved by reading the horseshoes forwards: a set placed on the closed end of a horseshoe tells you letters the open end must contain, and a letter ruled out of the open end is ruled out of the closed end too.
 
       *Normal* puzzles also need the argument run backwards. Because a horseshoe forces the closed end to be a **strictly smaller** set than the open end — two cells can never hold the same set, since each set is placed exactly once — a candidate for the closed end is only viable if some candidate for the open end still contains it. Rule out the last set that could sit on the open end above it, and the closed end loses that option, even though nothing about it changed directly.
+name: Subsets
+family: regions
+sizes: {}
+space:
+  # The one board there is: the sixteen sets over four letters exactly fill
+  # sixteen squares.
+  grid: { w: "4", h: "4" }
+  edges: true
+  units: []
+answer:
+  # A set, one more than the number its letters add up to, A as 1, B as 2,
+  # C as 4 and D as 8, since the marks hold no value 0.
+  value: { sort: cell, domain: "range(1, 16)" }
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, 16)" }
+define:
+  # The letters of set d, A as 0 up to D as 3.
+  letters(d): "bits(d - 1)"
+  # Every letter.
+  alphabet: "letters(16)"
+  # Whether set x holds set y, and is not it.
+  holds(x, y): "x != y and letters(y) subset letters(x)"
+  # Whether square a is the open end of a horseshoe across edge e, its set
+  # holding the other end's.
+  opens(e, a): >-
+    (clue(shoe, e) = 1 and a = end1(e)) or (clue(shoe, e) = 2 and a = end2(e))
+shape:
+  # Every set is placed once.
+  - "distinct(value(c) over c in cells)"
+clues:
+  # The horseshoe between two squares side by side: 1 where the first
+  # square's set holds the second's, 2 where the second's holds the first's,
+  # and 0, none, where neither holds the other. Every one there is shows.
+  shoe:
+    at: edge
+    value: "{0, 1, 2}"
+    complete: true
+    means: >-
+      (v = 1) = holds(value(end1(at)), value(end2(at)))
+      and (v = 2) = holds(value(end2(at)), value(end1(at)))
+freedom: { kind: fill }
+deal:
+  answer: every set in a square, shuffled
+  shoe: every edge's, read off the answer
+  value: every set, then as many hidden in a shuffled order as the board stays at its tier
+  tier: one of the tiers, the board finished at it and not at the tier below
+tiers: [Easy, Normal]
+techniques:
+  # A placed set goes in no other square.
+  - id: placed
+    on: place
+    tier: Easy
+    for: "c in cells where known(c), k in cells where k != c and not known(k)"
+    conclude: "strike(k, value(c))"
+  # Every letter that every set the closed end of a horseshoe can hold has,
+  # the set at its open end has too.
+  - id: carryIn
+    tier: Easy
+    for: >-
+      e in edges, a in ends(e) where opens(e, a), b = other(e, a),
+      K = {l in alphabet where forall u in cand(b): l in letters(u)}
+    conclude: "forall d in cand(a) where not (K subset letters(d)): strike(a, d)"
+  # A letter no set the open end of a horseshoe can hold has, the set at its
+  # closed end lacks too.
+  - id: carryOut
+    tier: Easy
+    for: >-
+      e in edges, a in ends(e) where opens(e, a), b = other(e, a),
+      L = {l in alphabet where forall u in cand(a): l not in letters(u)}
+    conclude: >-
+      forall d in cand(b) where (exists l in L: l in letters(d)): strike(b, d)
+  # Neither of two squares side by side with no horseshoe between them holds
+  # the empty set, which every set holds, or the set of every letter, which
+  # holds every set.
+  - id: noShoe
+    tier: Easy
+    for: "e in edges where clue(shoe, e) = 0, c in ends(e)"
+    conclude: >-
+      forall d in cand(c) where |letters(d)| = 0 or letters(d) = alphabet:
+      strike(c, d)
+  # Beside a square down to one set, with no horseshoe between them, a square
+  # holds no set that holds that one or lies inside it.
+  - id: noShoeBeside
+    tier: Easy
+    for: >-
+      e in edges where clue(shoe, e) = 0, k in ends(e) where |cand(k)| = 1,
+      c = other(e, k), x = first(cand(k))
+    conclude: >-
+      forall d in cand(c) where letters(d) subset letters(x)
+      or letters(x) subset letters(d): strike(c, d)
+  # A square down to one set holds it. One with none left makes the marks
+  # inconsistent.
+  - id: lone
+    tier: Easy
+    for: "c in cells where not known(c) and |cand(c)| < 2"
+    conclude: "|cand(c)| = 1 and place(c, first(cand(c)))"
+  # A set only one square can hold goes there. One no square can hold makes
+  # the marks inconsistent.
+  - id: onlyCell
+    tier: Easy
+    for: >-
+      d in domain, C = {c in cells where d in cand(c)}
+      where |C| < 2 and (|C| = 0 or not known(first(C)))
+    conclude: "|C| = 1 and place(first(C), d)"
+  # The open end of a horseshoe holds a set only where the closed end can
+  # hold a smaller one inside it.
+  - id: smaller
+    tier: Easy
+    for: "e in edges, a in ends(e) where opens(e, a), b = other(e, a)"
+    conclude: >-
+      forall d in cand(a) where not (exists u in cand(b): holds(d, u)):
+      strike(a, d)
+  # The closed end of a horseshoe holds a set only where the open end can
+  # hold a bigger one holding it.
+  - id: bigger
+    tier: Normal
+    for: "e in edges, a in ends(e) where opens(e, a), b = other(e, a)"
+    conclude: >-
+      forall d in cand(b) where not (exists u in cand(a): holds(u, d)):
+      strike(b, d)

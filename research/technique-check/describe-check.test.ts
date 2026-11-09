@@ -358,6 +358,42 @@ const PLANTS: Record<string, Plant> = {
   "map.weigh": {
     for: "m in cells where not known(m), x in domain, R = cand(m) - {x} where |R| >= 1 and (forall a in R: exists k in borders(m): not known(k) and cand(k) = {a, x}), t in cells where t != m and not known(t) and x in cand(t) and (forall a in R: exists k in borders(m): not known(k) and cand(k) = {a, x} and k != t and k in borders(t)), E = set(first({k in borders(m) where not known(k) and cand(k) = {a, x} and k != t and k in borders(t)}) over a in R)",
   },
+  // Subsets: a placed set struck with the set one more.
+  "subsets.placed": {
+    conclude: "strike(k, value(c)) and (value(c) = 16 or strike(k, value(c) + 1))",
+  },
+  // A letter some set at the closed end has read as one every set has.
+  "subsets.carryIn": {
+    for: "e in edges, a in ends(e) where opens(e, a), b = other(e, a), K = {l in alphabet where exists u in cand(b): l in letters(u)}",
+  },
+  // A letter some set at the open end lacks read as one every set lacks.
+  "subsets.carryOut": {
+    for: "e in edges, a in ends(e) where opens(e, a), b = other(e, a), L = {l in alphabet where exists u in cand(a): l not in letters(u)}",
+  },
+  // The empty and the full set struck beside a horseshoe too.
+  "subsets.noShoe": { for: "e in edges, c in ends(e)" },
+  // Sets that hold one another struck across a horseshoe too.
+  "subsets.noShoeBeside": {
+    for: "e in edges, k in ends(e) where |cand(k)| = 1, c = other(e, k), x = first(cand(k))",
+  },
+  "subsets.lone": {
+    for: "c in cells where not known(c) and |cand(c)| < 3",
+    conclude: "|cand(c)| >= 1 and place(c, first(cand(c)))",
+  },
+  "subsets.onlyCell": {
+    for: "d in domain, C = {c in cells where d in cand(c)} where |C| < 3 and (|C| = 0 or not known(first(C)))",
+    conclude: "|C| >= 1 and place(first(C), d)",
+  },
+  // A smaller set one letter short read as no smaller set.
+  "subsets.smaller": {
+    conclude:
+      "forall d in cand(a) where not (exists u in cand(b): holds(d, u) and |letters(u)| < |letters(d)| - 1): strike(a, d)",
+  },
+  // A bigger set one letter more read as no bigger set.
+  "subsets.bigger": {
+    conclude:
+      "forall d in cand(b) where not (exists u in cand(a): holds(u, d) and |letters(u)| > |letters(d)| + 1): strike(b, d)",
+  },
   // Mines: a number one mine short read as having all its mines.
   "mines.alone": {
     for: "k in clues(count), c = at(k), U = open(c), n = need(c) where |U| > 0 and (n <= 1 or n >= |U|)",
@@ -1574,6 +1610,7 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
             where,
             ...[...sizes].map(([n, v]) => sizeLabel(order, n, v)),
           ].join(" ");
+          trace(`..  ${at}: whether any board of order ${order} has an answer`);
           const cells = await regionCells(d, order, sizes);
           if (!(await hasAnswer(d, order, sizes, cells))) {
             note(

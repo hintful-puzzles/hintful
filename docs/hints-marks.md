@@ -1129,7 +1129,7 @@ derivations".
 
 Exemplars: `planSteps`, `sentenceExpires` and `sentenceHolds` in
 [`loopy/hint.ts`](../src/games/loopy/hint.ts) with `seedNotes` in its
-solver; `syncToBoard` and `canHold` in
+solver; `markRuleOuts` and `canHold` in
 [`subsets/solver.ts`](../src/games/subsets/solver.ts), where one predicate
 answers the aid, the hint's premises and "is this already on the board";
 `drawLinkFor` in [`tents/solver.ts`](../src/games/tents/solver.ts).

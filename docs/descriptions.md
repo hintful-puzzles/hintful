@@ -407,6 +407,13 @@ description author acts on:
   supposes a hub's other links all lines as `H`, read through `drawn(e, H)`.
 - **A size the grid is not measured in** (Salad's `nums`) is read from what
   the board deals.
+- **`bits(n)` is the positions of `n`'s one bits, as a set**, so a value
+  that is a set of things fits the mask where the number of such sets does:
+  Subsets' set is one more than its letters add up to, A as 1 up to D as 8,
+  and `bits(d - 1)` its letters, compared with `subset`. The checker reads
+  each bit of an unknown number by cases, as the number being one of the
+  values up to the board's word with that bit set: read by `div` and `mod`,
+  z3 found no answer to a Subsets board in 17 minutes.
 
 **A value that repeats.** A description may declare one value of its domain
 that appears more than once in a unit (`answer.value.repeat`, Salad's empty
@@ -923,6 +930,10 @@ the check. What a small board cannot cover:
   relation it deals is every relation on them, each pair in it or not, a
   cell with itself too: the description states no symmetry, so none is
   assumed, and a technique sound on every relation is sound on a map's.
+- **A grid of fixed size is checked as itself at every order**: Subsets'
+  4×4 is checked whole, its sixteen sets at once. Its encoding is timed on
+  that board first, since z3's first query there, whether any board has an
+  answer, has no deadline.
 - **A tiling is checked on the boards `TILINGS` names at each order**, which
   between them hold dots and faces of each size a technique tells apart (a
   plant on a dot of four edges is caught only where there is one), and on

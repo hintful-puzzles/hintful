@@ -1,11 +1,9 @@
 /*
- * The census of Subsets' `runDeductionFixpoint` ladder: which rungs the corpus
- * fires. The harness and the argument for it are
+ * Subsets' ladder, its description's techniques, certified by a census of
+ * which rungs fire. The harness and the argument for it are
  * `engine/testing/ladder-census.ts`; this file is the declaration.
  *
- * Subsets' difficulty is a boolean handed to one rung rather than a cap over
- * the ladder, so `maxTier` is unused. The `caps` below are still both tiers,
- * because the boolean changes what `arrows-advanced` does.
+ * The caps are the tiers the generator asks for, Easy and Normal.
  */
 import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
@@ -31,7 +29,16 @@ const cases = SHAPES.flatMap((params) =>
 
 describeLadderCensus({
   game: "subsets",
-  rungs: ["arrows", "disjoint", "bits-from-cube", "single-position", "arrows-advanced"],
+  rungs: [
+    "carryIn",
+    "carryOut",
+    "noShoe",
+    "noShoeBeside",
+    "lone",
+    "onlyCell",
+    "smaller",
+    "bigger",
+  ],
   unreached: {},
   caps: [DIFF_EASY, DIFF_NORMAL],
   cases,

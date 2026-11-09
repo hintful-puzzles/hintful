@@ -915,17 +915,6 @@ the board needs; `fallback` and `prerequisite` on a technique keep a rung
 that presumes others ran dry from being asked before they have
 ([`hints.md`](./hints.md) § "Recording the deduction").
 
-For a rung that sweeps its sites and returns its first firing,
-[`sweep-offers.ts`](../src/engine/sweep-offers.ts)'s `SweepOffers` builds a technique's `available()` from the rung as written:
-the rung asks `kept()` where it would return its firing on the recording
-path, and while offers are collected each site's firing is saved with its
-record and undone, so the scan goes on. Taking an offer restores what was
-saved. The game gives `save`/`restore` over everything a firing writes, and
-`reads`/`writes` keyed on what the player follows. A rung that fires without
-asking is one offer. Exemplar: Subsets
-([`subsets/solver.ts`](../src/games/subsets/solver.ts)), whose rungs `keep`
-each firing they find.
-
 ### `latin-hint.ts` — truthful Latin single classification
 
 Reach for it when a Latin game's hint narrates a single. It re-derives

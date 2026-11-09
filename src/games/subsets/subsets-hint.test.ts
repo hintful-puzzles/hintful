@@ -29,7 +29,6 @@ import {
   candidateSets,
   deduceHintPlan,
   findMistakes,
-  firingsOffered,
   pickExclusion,
   type SubsetsDeduction,
   solveCopy,
@@ -40,6 +39,7 @@ import {
   ALL_BITS,
   cloneState,
   DIFF_EASY,
+  DIFF_NORMAL,
   newState,
   type SubsetsState,
 } from "./state.ts";
@@ -106,37 +106,37 @@ const pinned = describeHintPins({
     },
   },
   pins: {
-    /** Held on 2 of 2659 positions walked. */
+    /** Held on 2 of 2610 positions walked. */
     cubeLastPlace: {
       id: "4x4n4de:_,_RL,_,_,3,_D,9D,6,10,_R,_,13L,12,_UR,1U,_UL",
       moves:
         '[{"kind":"set","type":"cleared","pos":10,"bit":1},{"kind":"set","type":"cleared","pos":10,"bit":2},{"kind":"set","type":"known","pos":13,"bit":0},{"kind":"set","type":"cleared","pos":10,"bit":3},{"kind":"set","type":"known","pos":15,"bit":0},{"kind":"set","type":"known","pos":15,"bit":2},{"kind":"set","type":"known","pos":15,"bit":3},{"kind":"set","type":"cleared","pos":10,"bit":0},{"kind":"set","type":"known","pos":15,"bit":1},{"kind":"set","type":"known","pos":5,"bit":2},{"kind":"set","type":"known","pos":9,"bit":2},{"kind":"set","type":"known","pos":13,"bit":2},{"kind":"set","type":"cleared","pos":9,"bit":3},{"kind":"set","type":"cleared","pos":13,"bit":3}]',
     },
-    /** Held on 1245 of 2659 positions walked. */
-    severalLetters: "4x4n4de:4,_RDL,9,_D,_D,_,_UDL,10,_D,_,_D,_D,_,_URL,8,_",
-    /** Held on 836 of 2659 positions walked. */
+    /** Held on 664 of 2610 positions walked. */
+    severalLetters: "4x4n4de:_,12D,5R,_,_R,_,_L,2,7,_U,_U,11U,13,_,1,_UL",
+    /** Held on 1595 of 2610 positions walked. */
     collapseWithCompetitor: {
       id: "4x4n4de:12D,_R,_,_DL,_,4L,7RL,2,10U,_,_,_UDL,_,9,_,_",
       moves:
         '[{"kind":"set","type":"cleared","pos":4,"bit":0},{"kind":"set","type":"cleared","pos":4,"bit":1},{"kind":"set","type":"known","pos":3,"bit":1},{"kind":"set","type":"cleared","pos":4,"bit":3},{"kind":"set","type":"cleared","pos":4,"bit":2},{"kind":"set","type":"known","pos":11,"bit":1}]',
     },
-    /** Held on 1281 of 2659 positions walked. */
+    /** Held on 1299 of 2610 positions walked. */
     ruleOut: {
-      id: "4x4n4de:12D,_R,_,_DL,_,4L,7RL,2,10U,_,_,_UDL,_,9,_,_",
+      id: "4x4n4de:7RD,_,_L,_D,_,_L,_,_D,2,1,_D,8,_,_URL,_,11UL",
       moves:
-        '[{"kind":"set","type":"cleared","pos":4,"bit":0},{"kind":"set","type":"cleared","pos":4,"bit":1},{"kind":"set","type":"known","pos":3,"bit":1},{"kind":"set","type":"cleared","pos":4,"bit":3},{"kind":"set","type":"cleared","pos":4,"bit":2},{"kind":"set","type":"known","pos":11,"bit":1}]',
+        '[{"kind":"set","type":"known","pos":7,"bit":3},{"kind":"set","type":"known","pos":3,"bit":3},{"kind":"set","type":"known","pos":13,"bit":0},{"kind":"set","type":"cleared","pos":1,"bit":3},{"kind":"set","type":"cleared","pos":4,"bit":3},{"kind":"set","type":"cleared","pos":14,"bit":2}]',
     },
-    /** Held on 1492 of 2659 positions walked. */
+    /** Held on 1488 of 2610 positions walked. */
     arrowKnown: "4x4n4de:4,_RDL,9,_D,_D,_,_UDL,10,_D,_,_D,_D,_,_URL,8,_",
-    /** Held on 1738 of 2659 positions walked. */
+    /** Held on 1849 of 2610 positions walked. */
     arrowMask: "4x4n4de:_R,_,11RL,_,5,_U,_,_UDL,_,_RDL,8,_,10,_,_RL,4",
-    /** Held on 2657 of 2659 positions walked. */
+    /** Held on 1427 of 2610 positions walked. */
     hiddenSingle: {
       id: "4x4n4de:3,12,_RDL,8,_,_R,_,_L,11,_,_UDL,_U,5,_UR,_R,_",
       moves:
         '[{"kind":"set","type":"known","pos":2,"bit":3},{"kind":"set","type":"known","pos":2,"bit":2}]',
     },
-    /** Held on 1804 of 2659 positions walked. */
+    /** Held on 2610 of 2610 positions walked. */
     collapse: {
       id: "4x4n4de:12D,_R,_,_DL,_,4L,7RL,2,10U,_,_,_UDL,_,9,_,_",
       moves:
@@ -145,13 +145,45 @@ const pinned = describeHintPins({
   },
 });
 
-/** A pinned position and the firing the deduction opens with there. */
-function firingAt(kind: Parameters<typeof pinned>[0]) {
-  const { state } = pinned(kind);
-  return { state, d: deduceHintPlan(state).deductions[0] };
+/** A pinned position's first firing of its kind, and the board as the plan's
+ * steps before it leave it: the plan continues from what it decided, so the
+ * kind need not open it. */
+function firingAt(
+  kind: "arrowKnown" | "arrowMask" | "collapse" | "hiddenSingle" | "cubeLastPlace",
+) {
+  let { state } = pinned(kind);
+  for (const d of deduceHintPlan(state).deductions) {
+    if (
+      kind === "cubeLastPlace"
+        ? d.reason.kind === "hiddenSingle" && d.marks.length > 0
+        : d.reason.kind === kind
+    )
+      return { state, d };
+    state = applyFiring(state, d);
+  }
+  throw new Error(`the pin's plan has no ${kind} firing`);
 }
 
 describe("deduceHintPlan", () => {
+  it("plans an Easy board as a plan without the Normal technique does", () => {
+    for (let s = 0; s < 20; s++) {
+      const state = gen(`cap-${s}`);
+      expect(deduceHintPlan(state)).toEqual(deduceHintPlan(state, DIFF_EASY));
+    }
+  });
+
+  it("narrates a Normal board whole, which the Easy techniques do not", () => {
+    const normal = { ...P, diff: DIFF_NORMAL };
+    for (let s = 0; s < 10; s++) {
+      const state = newState(
+        normal,
+        newSubsetsDesc(normal, randomNew(`cap-n-${s}`)).desc,
+      );
+      expect(deduceHintPlan(state).status).toBe("complete");
+      expect(deduceHintPlan(state, DIFF_EASY).status).not.toBe("complete");
+    }
+  });
+
   it("solves every generated board from the givens; complete certifies it", () => {
     for (let s = 0; s < 30; s++) {
       const state = gen(`plan-${s}`);
@@ -175,17 +207,41 @@ describe("deduceHintPlan", () => {
     }
   });
 
-  it("every step is one a fresh plan from the board as followed could open with", () => {
-    // The cube and its reasons persist across a plan's firings. A step must
-    // still rest on the board the player has by then, and on nothing the plan
-    // carried: so it is among the firings a plan begun afresh from that board
-    // offers. (A fresh plan opens with the ladder's first, where a plan that
-    // continues takes the one beside its last step.)
+  it("every step rests on the board as followed, once its rule-outs are placed", () => {
+    // The plan keeps the reasons for what it struck across its steps. A step
+    // must still rest on the board the player has by then, its own rule-outs
+    // included, and on nothing the plan carried.
     let compared = 0;
     for (let s = 0; s < 12; s++) {
       let state = gen(`stable-${s}`);
       for (const d of deduceHintPlan(state).deductions) {
-        expect(firingsOffered(state)).toContainEqual(d);
+        const board = cloneState(state);
+        for (const m of d.marks) {
+          // No set the neighbor can still hold is a partner for the one ruled out.
+          const partners = candidateSets(board, m.why.via).filter((v) =>
+            m.why.head
+              ? v !== m.value && (v & m.value) === m.value
+              : v !== m.value && (m.value & v) === v,
+          );
+          expect(partners).toEqual([]);
+          board.ruledOut[m.pos] |= 1 << m.value;
+        }
+        const r = d.reason;
+        const present = d.sets.filter((x) => x.type === "known").map((x) => 1 << x.bit);
+        const cleared = d.sets
+          .filter((x) => x.type === "cleared")
+          .map((x) => 1 << x.bit);
+        if (r.kind === "arrowKnown")
+          for (const b of present) expect(board.known[r.to] & b).toBe(b);
+        else if (r.kind === "arrowMask")
+          for (const b of cleared) expect(board.mask[r.from] & b).toBe(0);
+        else if (r.kind === "hiddenSingle")
+          expect(candidateCells(board, r.value)).toEqual([d.pos]);
+        else
+          for (const v of candidateSets(board, d.pos)) {
+            for (const b of present) expect(v & b).toBe(b);
+            for (const b of cleared) expect(v & b).toBe(0);
+          }
         state = applyFiring(state, d);
         compared++;
       }

@@ -756,6 +756,7 @@ const EARLY = new Set([
   "end2",
   "other",
   "abs",
+  "bits",
   "times",
   "range",
   "sight",
@@ -4297,6 +4298,12 @@ function call(
       arity(1);
       expect(vs[0], "num", fn);
       return { code: `Math.abs(${vs[0].code})`, sort: NUM };
+    case "bits":
+      // A number's one bits are a set of numbers as the mask holds one; none,
+      // a number below 0, has none.
+      arity(1);
+      expect(vs[0], "num", fn);
+      return { code: `Math.max(0, ${vs[0].code})`, sort: setOf(NUM) };
     case "times":
       arity(1);
       expect(vs[0], "num", fn);

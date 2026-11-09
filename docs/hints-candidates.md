@@ -947,16 +947,22 @@ candidates eliminated: the list is long and dishonestly precise. Exemplars:
 [`subsets/solver.ts`](../src/games/subsets/solver.ts),
 [`subsets/index.ts`](../src/games/subsets/index.ts).
 
-- **Sync the recorder's cube to the shallow reading the board gives**, so
-  what the board already says is never a step. What a rule derives beyond it
-  the player is given a mark for, and the hint places each such mark as a
-  step before the firing that needs it
-  ([`hints-marks.md`](./hints-marks.md) § "Give the facts a
-  notation").
-- **Look for the dual counting deduction and try it first.** "This value has
-  one place left" is usually cleaner to show than "this cell fits only one
-  value". Measure how many deductions move to it; the shallow test is weaker
-  than the cube's.
+- **Start the plan's candidates from the player's own marks, and let the
+  ladder find what a neighbor rules out.** Seeded from the whole shallow
+  reading, every letter a decided neighbor's horseshoe carries read as a
+  collapse rather than as the horseshoe's: Subsets' plans opened with a
+  dozen collapses. What a rule derives that the board cannot show the
+  player is given a mark for, and the hint places each such mark as a step
+  before the firing that needs it
+  ([`hints-marks.md`](./hints-marks.md) § "Give the facts a notation").
+- **Take a step as soon as its firing decides what the player marks**, so
+  the marks always say what the candidates agree on and a technique that
+  reads a neighbor's marks reads the board. A collapse decides every letter
+  the values it outlines agree on, narrowed by the shallow reading too, or
+  it shows one value and marks half of it.
+- **Give the dual counting deduction a technique of its own.** "This value
+  has one place left" is usually cleaner to show than "this cell fits only
+  one value", and the aid makes it checkable.
 - **Give the game a reference aid that shows where a value can go**, computed
   shallowly from the board with no solver and no solution, and use the same
   computation in the hint, so its "only this cell" claim is checkable
@@ -974,8 +980,9 @@ candidates eliminated: the list is long and dishonestly precise. Exemplars:
   against the surviving values, highlighted where the player counts them.
   Name one excluded competitor and why, preferring "already placed
   elsewhere", and highlight the blocker.
-- **A parallel recorder that loops to a fixpoint keeps its cube and its
-  reasons across iterations.**
+- **The plan keeps a reason for each strike the board cannot show** across
+  its steps, and only those: every other strike the board shows once the
+  steps before it are taken, which `markRuleOuts` holds it to by throwing.
 
 ## A candidate game off the shared walk
 

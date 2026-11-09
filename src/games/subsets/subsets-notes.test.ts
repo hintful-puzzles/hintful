@@ -394,11 +394,11 @@ const pinned = describeHintKindPins({
   params: [{ w: 4, h: 4, n: 4, diff: DIFF_NORMAL }],
   kinds: { ruleOut: (step) => step.rung === "ruleOut" },
   pins: {
-    /** Held on 140 of 668 positions walked. */
+    /** Held on 106 of 634 positions walked. */
     ruleOut: {
-      id: "4x4n4dt:14D,7R,_,_DL,_,_,_UD,_,1,6,_,15UDL,13U,10,_URL,_",
+      id: "4x4n4dt:7RD,_,_L,_D,_,_L,_,_D,2,1,_D,_,_,_URL,_,11UL",
       moves:
-        '[{"kind":"set","type":"cleared","pos":4,"bit":0},{"kind":"set","type":"cleared","pos":2,"bit":3},{"kind":"set","type":"known","pos":14,"bit":1},{"kind":"set","type":"known","pos":14,"bit":3},{"kind":"set","type":"known","pos":5,"bit":3}]',
+        '[{"kind":"set","type":"known","pos":13,"bit":0},{"kind":"set","type":"cleared","pos":1,"bit":3},{"kind":"set","type":"cleared","pos":4,"bit":3},{"kind":"set","type":"cleared","pos":11,"bit":2},{"kind":"set","type":"cleared","pos":14,"bit":2}]',
     },
   },
 });

@@ -73,8 +73,9 @@ const GEOMETRY: Readonly<Record<string, Partial<Record<Sort, [Step, Sort]>>>> = 
   end2: { edge: ["edgeEnds", "cell"] },
 };
 
-/** Functions that read no marks and whose value is a number or a truth. */
-const PURE = new Set(["clue", "index", "abs", "range"]);
+/** Functions that read no marks and whose value is a number, a truth or a
+ * set of numbers. */
+const PURE = new Set(["clue", "index", "abs", "bits", "range"]);
 
 /** Functions whose value is one of their first argument's members. */
 const MEMBER = new Set(["first", "nth"]);

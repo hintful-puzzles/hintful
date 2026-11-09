@@ -1,7 +1,9 @@
 # describe-subsets-crossing-and-ascent
 
-**Status: filed by `describe-subsets-crossing-ascent-and-signpost`
-(2026-11-09)**, which took Signpost alone. It is the rest of step 11 of
+**Status: done (2026-11-09) for Subsets alone**; Crossing and Ascent are
+filed as `describe-crossing-and-ascent`. Filed by
+`describe-subsets-crossing-ascent-and-signpost` (2026-11-09), which took
+Signpost alone. It is the rest of step 11 of
 `describe-the-whole-catalog`'s plan (`design.md` § "The plan"), the last.
 It splits again at its start if the session finds it too large, filing the
 rest as it goes. When the last of it is archived,
@@ -46,6 +48,25 @@ completion and the hint walks are compared with HEAD, and each difference is
 reported, with which saves or links no longer load. Large boards are timed
 back to back with HEAD. The guides and help are updated and the running app
 is checked.
+
+## What was done
+
+Subsets alone; Crossing and Ascent are filed as `describe-crossing-and-ascent`.
+The scaffold's 31-bit worry was false: Subsets is only ever dealt four
+letters, so a set is a mark value from 1 to 16, its letters read by the new
+`bits(n)`. The description states nine techniques, eight at Easy and
+`bigger` at Normal. Each has a planted defect that comes out unsound at
+order 3. Eight are proved sound in seconds. `onlyCell` was not proved whole
+in its two minutes and held on 48 boards, so it is recorded `held`. The hint walks the compiled ladder from the player's own marks
+(`ladderWalk`), and every hand-written rung and `SweepOffers`, its last user
+gone, are removed. A board with no answer now validates as `invalid`.
+
+Measured 2026-11-09, 100 seeds a tier against HEAD: the boards dealt are the
+same, and 400 of 400 tier verdicts agree. Deals take 0.9 ms at Easy against
+HEAD's 0.8, and 3.8 ms at Normal against 3.6. Every hint walk ends on the
+same answer, in fewer steps (4,379 against 4,490 at Easy) and with fewer
+rule-outs (199 against 310). Most hidden singles become collapses, since the
+walk settles each cell as soon as its sets agree. No save or link changes.
 
 ## What Signpost learned that binds here
 

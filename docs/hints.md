@@ -923,8 +923,7 @@ the game. Exemplar: `skeletonHint` in `src/skeleton/grid/hint.ts`.
 - **`planCap` and a `StepBudget` are separate bounds**: one stops a plan
   running on, the other catches a rule that is not advancing.
 - **`status()` is called before `next()` on every iteration**, and a game may
-  depend on it (Subsets' validator refills what its later rungs read), so do
-  not skip it.
+  depend on it, so do not skip it.
 - **Omit `apply` when the rungs mutate as they detect.** Applying a firing
   twice is wrong for a rung that reads its own effect.
 - **A plan continues where its last step was.** Its `next` is a ladder
@@ -978,11 +977,6 @@ not a record. What the ladder gives is the driver and a certified rung list:
     leaves the plan where it was. `reads` is everything its premise rests on,
     not only what it fills: a firing that reads only its own square never
     continues (Slant's equivalence reads its whole class).
-  - **A sweep-shaped rung need not be written twice.** Where it would return
-    its firing, it asks `keep()` of a `SweepOffers`
-    ([`sweep-offers.ts`](../src/engine/sweep-offers.ts)), which collects
-    every site's firing and undoes it. A finder that returns its first
-    firing becomes a generator that yields them all (`starbattle/solver.ts`).
   - **A rung that presumes the rungs before it ran dry says so.** `fallback`
     is asked only once every rung before it has nothing (Tents' links);
     `prerequisite` holds back every rung after it until it has nothing

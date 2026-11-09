@@ -304,6 +304,10 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): Value {
       return range(asNum(arg(0), "range"), asNum(arg(1), "range"));
     case "abs":
       return Math.abs(asNum(arg(0), "abs"));
+    case "bits": {
+      const n = asNum(arg(0), "bits");
+      return range(0, 31).filter((b) => n >= 0 && ((n >> b) & 1) === 1);
+    }
     case "index": {
       const x = arg(0);
       return asSet(arg(1), "index").findIndex((y) => same(x, y));

@@ -2641,6 +2641,32 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
             : ite(cmp("<", a, 0), arith("-", 0, a), a),
       };
     }
+    case "bits": {
+      // Each of the board's values is a member where that bit of the number
+      // is one, and none is where the number is below 0. An unknown number
+      // is read by cases up to the board's word, every number whose bits
+      // reach no further than `top`'s, since z3 left with `div` and `mod`
+      // on a Subsets board could not find even one answer in 17 minutes
+      // (2026-11-09); past the word, by arithmetic.
+      const a = num(vs[0], fn);
+      if (typeof a === "number")
+        return vsetOf(board, (d) => a >= 0 && ((a >> d) & 1) === 1);
+      const word = 2 ** Math.max(1, Math.ceil(Math.log2(board.top + 1)));
+      return vsetOf(board, (d) =>
+        or(
+          ...Array.from({ length: word }, (_, v) => v)
+            .filter((v) => ((v >> d) & 1) === 1)
+            .map((v) => cmp("=", a, v)),
+          and(
+            cmp(">=", a, word),
+            asZ3(a)
+              .div(2 ** d)
+              .mod(2)
+              .eq(1),
+          ),
+        ),
+      );
+    }
     case "times":
       return { k: "num", v: timesOf(ctx, num(vs[0], fn)) };
     case "range": {

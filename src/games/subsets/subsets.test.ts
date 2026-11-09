@@ -261,9 +261,17 @@ describe("subsets solver", () => {
   });
 
   it("reports unfinished for an underdetermined board", () => {
-    // No givens, no arrows: nothing forces any placement.
-    const state = newState(PARAMS, Array.from({ length: 16 }, () => "_").join(","));
+    // The fixture's horseshoes with no set given, which the ladder does not
+    // finish.
+    const state = newState(PARAMS, FIX.desc.replace(/\d+/g, "_"));
     expect(subsetsSolveGame(state, DIFF_NORMAL)).toBe("unfinished");
+  });
+
+  it("reports invalid for a board no answer fits", () => {
+    // No horseshoes: every square is beside one it neither holds nor lies
+    // inside, so none can hold the empty set, which must go somewhere.
+    const state = newState(PARAMS, Array.from({ length: 16 }, () => "_").join(","));
+    expect(subsetsSolveGame(state, DIFF_NORMAL)).toBe("invalid");
   });
 
   it("validate classifies a partially-played board as unfinished", () => {

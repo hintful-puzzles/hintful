@@ -1,0 +1,19 @@
+ok  subsets    placed                         3  sound    (want sound   )    16 queries    0.3s
+ok  subsets    placed (planted)               3  unsound  (want unsound )     1 queries    0.5s   at cell 0
+ok  subsets    carryIn                        3  sound    (want sound   )    24 queries    1.9s
+ok  subsets    carryIn (planted)              3  unsound  (want unsound )     1 queries    0.7s   at edge 0
+ok  subsets    carryOut                       3  sound    (want sound   )    24 queries    1.8s
+ok  subsets    carryOut (planted)             3  unsound  (want unsound )     1 queries    2.6s   at edge 0
+ok  subsets    noShoe                         3  sound    (want sound   )    24 queries    1.2s
+ok  subsets    noShoe (planted)               3  unsound  (want unsound )     1 queries    0.2s   at edge 0
+ok  subsets    noShoeBeside                   3  sound    (want sound   )    24 queries    6.4s
+ok  subsets    noShoeBeside (planted)         3  unsound  (want unsound )     1 queries    0.4s   at edge 0
+ok  subsets    lone                           3  sound    (want sound   )    16 queries    2.8s
+ok  subsets    lone (planted)                 3  unsound  (want unsound )     1 queries    0.4s   at cell 0
+..  subsets    onlyCell: not proved whole in time, asked on 48 boards: no defect
+ok  subsets    onlyCell                       3  sound    (want sound   )   768 queries  120.0s
+ok  subsets    onlyCell (planted)             3  unsound  (want unsound )     1 queries    0.5s   at 1
+ok  subsets    smaller                        3  sound    (want sound   )    24 queries    1.8s
+ok  subsets    smaller (planted)              3  unsound  (want unsound )     1 queries    0.5s   at edge 0
+ok  subsets    bigger                         3  sound    (want sound   )    24 queries    2.1s
+ok  subsets    bigger (planted)               3  unsound  (want unsound )     1 queries    0.4s   at edge 0
