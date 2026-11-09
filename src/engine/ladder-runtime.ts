@@ -17,11 +17,14 @@ import type {
 import { runDeductionFixpoint, singleFirings } from "./deduction-fixpoint.ts";
 import type { DeductionRecorder } from "./deduction-record.ts";
 import {
+  type EdgeGroups,
   EdgeRelation,
   type Facts,
   type Fire,
   type Footprint,
+  forkKept,
   type GridSpace,
+  type GroupChanges,
   type Inverse,
   inverseOf,
   MARK,
@@ -138,8 +141,9 @@ export class CellMarks implements Marks {
    * to compare a run with one that visits every element. */
   static skipping = true;
   /** Each technique's elements still to visit, by its footprint, with the
-   * footprint read backwards. */
-  private readonly visits = new Map<Footprint, { at: Uint8Array; by: Inverse }>();
+   * footprint read backwards and how far it has read each set's groups'
+   * changes. */
+  private readonly visits = new Map<Footprint, Visits>();
 
   constructor(
     sp: GridSpace,
@@ -215,13 +219,34 @@ export class CellMarks implements Marks {
     for (const run of this.striking) run(this, c);
   }
 
-  visit(f: Footprint): Uint8Array | null {
+  visit(f: Footprint, groups: readonly EdgeGroups[] = []): Uint8Array | null {
     if (!CellMarks.skipping) return null;
-    const kept = this.visits.get(f);
-    if (kept !== undefined) return kept.at;
-    const by = inverseOf(this.sp, f, this.cands.length, this.edgeCands.length);
-    const at = new Uint8Array(by.n).fill(1);
-    this.visits.set(f, { at, by });
+    let kept = this.visits.get(f);
+    if (kept === undefined) {
+      const by = inverseOf(this.sp, f, this.cands.length, this.edgeCands.length);
+      kept = { at: new Uint8Array(by.n).fill(1), by, seen: [] };
+      this.visits.set(f, kept);
+    }
+    const { at, by, seen } = kept;
+    // A binding reads two squares' groups only by whether they are one, which
+    // a join or a split changes only for the squares the change lists.
+    for (let s = 0; s < by.group.length; s++) {
+      const changes = groups[s]?.changes;
+      const was = seen[s];
+      if (changes === undefined) {
+        at.fill(1);
+        seen[s] = null;
+        continue;
+      }
+      if (was?.of !== changes || was.made !== changes.made) at.fill(1);
+      else {
+        const { start, list } = by.group[s];
+        for (let i = was.read; i < changes.changed.length; i++)
+          for (const x of changes.changed[i])
+            for (let j = start[x]; j < start[x + 1]; j++) at[list[j]] = 1;
+      }
+      seen[s] = { of: changes, made: changes.made, read: changes.changed.length };
+    }
     return at;
   }
 
@@ -425,6 +450,65 @@ export class CellMarks implements Marks {
   snapshot(): Int32Array {
     return this.cands.slice();
   }
+
+  /**
+   * Marks that start as these do, on a grid of their own, as a search's
+   * branch does: each technique visits only what a fact reaches from here,
+   * since a binding that found nothing on these marks finds nothing on the
+   * copy. The techniques run on placing and striking are the caller's to
+   * set, as on any new marks. Marks that relate edges are not forked: no
+   * game that relates them forks yet, and a copy of the relation is not
+   * built until one does.
+   */
+  fork(): CellMarks {
+    if (this.relation !== null)
+      throw new Error("marks that relate edges are not forked");
+    // A game's own marks keep what these do not copy (`LatinSolver`'s).
+    if (this.constructor !== CellMarks) throw new Error("only plain marks are forked");
+    const m = new CellMarks(
+      this.sp,
+      this.domain,
+      this.grid.slice(),
+      { value: this.repeat, times: this.times },
+      this.onEdges ? "edge" : "cell",
+      this.markOn,
+    );
+    m.cands.set(this.cands);
+    m.edgeCands.set(this.edgeCands);
+    m.marked.set(this.marked);
+    m.placed = this.placed;
+    m.epoch = this.epoch;
+    const copies = forkKept(this, m.kept);
+    for (const [f, { at, by, seen }] of this.visits) {
+      const again = at.slice();
+      // A set's groups the fork does not carry, or changes the technique has
+      // not yet read, are read again whole.
+      const carried = seen.map((was) => {
+        const copy = was === null ? undefined : copies.get(was.of);
+        if (
+          was === null ||
+          copy === undefined ||
+          was.made !== was.of.made ||
+          was.read !== was.of.changed.length
+        ) {
+          again.fill(1);
+          return null;
+        }
+        return { of: copy, made: copy.made, read: copy.changed.length };
+      });
+      m.visits.set(f, { at: again, by, seen: carried });
+    }
+    return m;
+  }
+}
+
+/** A technique's elements still to visit ({@link CellMarks.visit}), and for
+ * each set of edges its footprint reads the groups of, the changes it has
+ * read: `null` where the groups were not kept. */
+interface Visits {
+  readonly at: Uint8Array;
+  readonly by: Inverse;
+  readonly seen: ({ of: GroupChanges; made: number; read: number } | null)[];
 }
 
 /**

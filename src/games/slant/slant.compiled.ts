@@ -58,49 +58,49 @@ export const tiers: readonly string[] = ["Easy","Normal"];
  * board: every cell a value of its domain, and every rule and dealt clue
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
-  const _links = pointGroups(sp, (_x424: number) => (g[_x424] || -1));
+  const _links = pointGroups(sp, (_x428: number) => (g[_x428] || -1));
   const _domain = rangeMask(1, 2);
   for (const cell of sp.cells) {
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  let _q418 = true;
-  Q419: {
-    const _a420 = sp.points;
-    for (let _i421 = 0; _i421 < _a420.length; _i421++) {
-      const v_k = _a420[_i421];
-      let _q422 = false;
-      Q423: {
-        const _a425 = _links.of(v_k);
-        for (let _i426 = 0; _i426 < _a425.length; _i426++) {
-          const v_q = _a425[_i426];
+  let _q422 = true;
+  Q423: {
+    const _a424 = sp.points;
+    for (let _i425 = 0; _i425 < _a424.length; _i425++) {
+      const v_k = _a424[_i425];
+      let _q426 = false;
+      Q427: {
+        const _a429 = _links.of(v_k);
+        for (let _i430 = 0; _i430 < _a429.length; _i430++) {
+          const v_q = _a429[_i430];
           if ((sp.pointCells[v_q].length < 4)) {
-            _q422 = true;
-            break Q423;
+            _q426 = true;
+            break Q427;
           }
         }
       }
-      if (!(_q422)) {
-        _q418 = false;
-        break Q419;
+      if (!(_q426)) {
+        _q422 = false;
+        break Q423;
       }
     }
   }
-  if (!(_q418)) return false;
-  for (let _k427 = 0; _k427 < cl.n.at.length; _k427++) {
-    const _at428 = cl.n.at[_k427];
-    const _v429 = cl.n.v[_k427];
-    let _g430 = 0;
-    G431: {
-      const _a432 = sp.pointCells[_at428];
-      for (let _i433 = 0; _i433 < _a432.length; _i433++) {
-        const v_c = _a432[_i433];
-        const _h434 = (g[v_c] || -1);
-        if (!((_h434 === slash(sp, v_c, _at428)))) continue;
-        _g430++;
+  if (!(_q422)) return false;
+  for (let _k431 = 0; _k431 < cl.n.at.length; _k431++) {
+    const _at432 = cl.n.at[_k431];
+    const _v433 = cl.n.v[_k431];
+    let _g434 = 0;
+    G435: {
+      const _a436 = sp.pointCells[_at432];
+      for (let _i437 = 0; _i437 < _a436.length; _i437++) {
+        const v_c = _a436[_i437];
+        const _h438 = (g[v_c] || -1);
+        if (!((_h438 === slash(sp, v_c, _at432)))) continue;
+        _g434++;
       }
     }
-    if (!((_g430 === _v429))) return false;
+    if (!((_g434 === _v433))) return false;
   }
   return true;
 }
@@ -676,15 +676,16 @@ export function drawn(b: Marks, sp: GridSpace, v_c: number, fire: Fire<DrawnBind
   let fired = 0;
   let changed = false;
   const _h347 = (b.grid[v_c] !== 0);
-  const _h350 = (b.grid[v_c] || -1);
+  const _k350 = sideKept.board(sp);
+  const _h351 = (b.grid[v_c] || -1);
   if (!(_h347)) return 0;
   const _a348 = sp.adj4[v_c];
   for (let _i349 = 0; _i349 < _a348.length; _i349++) {
     const v_a = _a348[_i349];
     const v_e = sp.adj4Edges[v_c][_i349];
-    const v_S = side(sp, v_e);
+    const v_S = (_k350[v_e] ?? side(sp, v_e));
     for (let v_i = 1; v_i <= 2; v_i++) {
-      if (!((_h350 !== slash(sp, v_c, (v_S[(v_i - 1)] ?? -1))))) continue;
+      if (!((_h351 !== slash(sp, v_c, (v_S[(v_i - 1)] ?? -1))))) continue;
       facts.length = 0;
       changed = false;
       if ((b.edgeCand(v_e) >> v_i) & 1) { if (fire === null) { b.edgeStrikeAt(v_e, v_i); changed = true; } else facts.push(STRIKE_EDGE, v_e, v_i); }
@@ -713,22 +714,23 @@ export function one(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneBinding> |
   const facts = oneFacts;
   let fired = 0;
   let changed = false;
-  const _a358 = sp.points;
-  for (let _i359 = 0; _i359 < _a358.length; _i359++) {
-    const v_k = _a358[_i359];
-    const _h360 = clueAt(cl.n, v_k);
-    if (!((_h360 === 1))) continue;
-    const _a361 = sp.pointCells[v_k];
-    for (let _i362 = 0; _i362 < _a361.length; _i362++) {
-      const v_a = _a361[_i362];
-      const _a363 = sp.pointCells[v_k];
-      const _n364 = _i362;
-      for (let _i365 = 0; _i365 < _n364; _i365++) {
-        const v_b = _a363[_i365];
+  const _k367 = sideKept.board(sp);
+  const _a359 = sp.points;
+  for (let _i360 = 0; _i360 < _a359.length; _i360++) {
+    const v_k = _a359[_i360];
+    const _h361 = clueAt(cl.n, v_k);
+    if (!((_h361 === 1))) continue;
+    const _a362 = sp.pointCells[v_k];
+    for (let _i363 = 0; _i363 < _a362.length; _i363++) {
+      const v_a = _a362[_i363];
+      const _a364 = sp.pointCells[v_k];
+      const _n365 = _i363;
+      for (let _i366 = 0; _i366 < _n365; _i366++) {
+        const v_b = _a364[_i366];
         if (!((sp.adj4[v_a].includes(v_b)))) continue;
         const v_e = sp.edgeOf(v_b, v_a);
         for (let v_i = 1; v_i <= 2; v_i++) {
-          if (!(((side(sp, v_e)[(v_i - 1)] ?? -1) === v_k))) continue;
+          if (!((((_k367[v_e] ?? side(sp, v_e))[(v_i - 1)] ?? -1) === v_k))) continue;
           facts.length = 0;
           changed = false;
           if ((b.edgeCand(v_e) >> v_i) & 1) { if (fire === null) { b.edgeStrikeAt(v_e, v_i); changed = true; } else facts.push(STRIKE_EDGE, v_e, v_i); }
@@ -759,22 +761,23 @@ export function three(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ThreeBindin
   const facts = threeFacts;
   let fired = 0;
   let changed = false;
-  const _a373 = sp.points;
-  for (let _i374 = 0; _i374 < _a373.length; _i374++) {
-    const v_k = _a373[_i374];
-    const _h375 = clueAt(cl.n, v_k);
-    if (!((_h375 === 3))) continue;
-    const _a376 = sp.pointCells[v_k];
-    for (let _i377 = 0; _i377 < _a376.length; _i377++) {
-      const v_a = _a376[_i377];
-      const _a378 = sp.pointCells[v_k];
-      const _n379 = _i377;
-      for (let _i380 = 0; _i380 < _n379; _i380++) {
-        const v_b = _a378[_i380];
+  const _k383 = sideKept.board(sp);
+  const _a375 = sp.points;
+  for (let _i376 = 0; _i376 < _a375.length; _i376++) {
+    const v_k = _a375[_i376];
+    const _h377 = clueAt(cl.n, v_k);
+    if (!((_h377 === 3))) continue;
+    const _a378 = sp.pointCells[v_k];
+    for (let _i379 = 0; _i379 < _a378.length; _i379++) {
+      const v_a = _a378[_i379];
+      const _a380 = sp.pointCells[v_k];
+      const _n381 = _i379;
+      for (let _i382 = 0; _i382 < _n381; _i382++) {
+        const v_b = _a380[_i382];
         if (!((sp.adj4[v_a].includes(v_b)))) continue;
         const v_e = sp.edgeOf(v_b, v_a);
         for (let v_i = 1; v_i <= 2; v_i++) {
-          if (!(((side(sp, v_e)[(v_i - 1)] ?? -1) !== v_k))) continue;
+          if (!((((_k383[v_e] ?? side(sp, v_e))[(v_i - 1)] ?? -1) !== v_k))) continue;
           facts.length = 0;
           changed = false;
           if ((b.edgeCand(v_e) >> v_i) & 1) { if (fire === null) { b.edgeStrikeAt(v_e, v_i); changed = true; } else facts.push(STRIKE_EDGE, v_e, v_i); }
@@ -805,63 +808,64 @@ const twoFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function two(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TwoBinding> | null): number {
-  const _g406: number[] = [];
+  const _g409: number[] = [];
   const facts = twoFacts;
   let fired = 0;
   let changed = false;
-  const _h405 = ((1 << 3));
-  const _h413 = ((1 << 1) | (1 << 2) | (1 << 3));
-  const _a396 = sp.points;
-  for (let _i397 = 0; _i397 < _a396.length; _i397++) {
-    const v_k = _a396[_i397];
-    const _h398 = clueAt(cl.n, v_k);
-    if (!(((_h398 === 2) && (sp.pointCells[v_k].length === 4)))) continue;
-    const _a399 = sp.pointCells[v_k];
-    for (let _i400 = 0; _i400 < _a399.length; _i400++) {
-      const v_a = _a399[_i400];
-      const _a401 = sp.pointCells[v_k];
-      const _n402 = _i400;
-      for (let _i403 = 0; _i403 < _n402; _i403++) {
-        const v_b = _a401[_i403];
+  const _h408 = ((1 << 3));
+  const _h416 = ((1 << 1) | (1 << 2) | (1 << 3));
+  const _k417 = sideKept.board(sp);
+  const _a399 = sp.points;
+  for (let _i400 = 0; _i400 < _a399.length; _i400++) {
+    const v_k = _a399[_i400];
+    const _h401 = clueAt(cl.n, v_k);
+    if (!(((_h401 === 2) && (sp.pointCells[v_k].length === 4)))) continue;
+    const _a402 = sp.pointCells[v_k];
+    for (let _i403 = 0; _i403 < _a402.length; _i403++) {
+      const v_a = _a402[_i403];
+      const _a404 = sp.pointCells[v_k];
+      const _n405 = _i403;
+      for (let _i406 = 0; _i406 < _n405; _i406++) {
+        const v_b = _a404[_i406];
         if (!((sp.adj4[v_a].includes(v_b)))) continue;
-        L404: {
+        L407: {
           const v_e = sp.edgeOf(v_b, v_a);
-          if (!((b.edgeCand(v_e) !== _h405))) break L404;
-          _g406.length = 0;
-          G407: {
-            const _a410 = sp.pointCells[v_k];
-            for (let _i411 = 0; _i411 < _a410.length; _i411++) {
-              const v_c = _a410[_i411];
+          if (!((b.edgeCand(v_e) !== _h408))) break L407;
+          _g409.length = 0;
+          G410: {
+            const _a413 = sp.pointCells[v_k];
+            for (let _i414 = 0; _i414 < _a413.length; _i414++) {
+              const v_c = _a413[_i414];
               if (!(((v_c !== v_a) && (v_c !== v_b)))) continue;
-              _g406.push(v_c);
+              _g409.push(v_c);
             }
           }
-          const v_R = _g406;
-          L412: {
+          const v_R = _g409;
+          L415: {
             const v_f = sp.edgeOf((v_R[0] ?? -1), (v_R[1] ?? -1));
-            if (!((b.edgeCand(v_f) !== _h413))) break L412;
+            if (!((b.edgeCand(v_f) !== _h416))) break L415;
             for (let v_i = 1; v_i <= 2; v_i++) {
-              if (!(((side(sp, v_e)[(v_i - 1)] ?? -1) === v_k))) continue;
-              const _h415 = (3 - v_i);
+              if (!((((_k417[v_e] ?? side(sp, v_e))[(v_i - 1)] ?? -1) === v_k))) continue;
+              const _h419 = (3 - v_i);
               for (let v_j = 1; v_j <= 2; v_j++) {
-                if (!(((side(sp, v_f)[(v_j - 1)] ?? -1) === v_k))) continue;
+                if (!((((_k417[v_f] ?? side(sp, v_f))[(v_j - 1)] ?? -1) === v_k))) continue;
                 facts.length = 0;
                 changed = false;
-                let _c414: boolean = !(!(((b.edgeCand(v_f) >> (3 - v_j)) & 1) !== 0));
-                if (!_c414) {
+                let _c418: boolean = !(!(((b.edgeCand(v_f) >> (3 - v_j)) & 1) !== 0));
+                if (!_c418) {
                   if ((b.edgeCand(v_e) >> v_i) & 1) { if (fire === null) { b.edgeStrikeAt(v_e, v_i); changed = true; } else facts.push(STRIKE_EDGE, v_e, v_i); }
-                  _c414 = true;
+                  _c418 = true;
                 }
-                let _c417: boolean = _c414;
-                if (_c417) {
-                  let _c416: boolean = !(!(((b.edgeCand(v_f) >> v_j) & 1) !== 0));
-                  if (!_c416) {
-                    if ((b.edgeCand(v_e) >> _h415) & 1) { if (fire === null) { b.edgeStrikeAt(v_e, _h415); changed = true; } else facts.push(STRIKE_EDGE, v_e, _h415); }
-                    _c416 = true;
+                let _c421: boolean = _c418;
+                if (_c421) {
+                  let _c420: boolean = !(!(((b.edgeCand(v_f) >> v_j) & 1) !== 0));
+                  if (!_c420) {
+                    if ((b.edgeCand(v_e) >> _h419) & 1) { if (fire === null) { b.edgeStrikeAt(v_e, _h419); changed = true; } else facts.push(STRIKE_EDGE, v_e, _h419); }
+                    _c420 = true;
                   }
-                  _c417 = _c416;
+                  _c421 = _c420;
                 }
-                if (!(_c417)) return -1;
+                if (!(_c421)) return -1;
                 if (changed || facts.length > 0) {
                   fired = 1;
                   if (fire !== null && !fire({ k: v_k, a: v_a, b: v_b, e: v_e, R: v_R.slice(), f: v_f, i: v_i, j: v_j }, facts)) return 1;
@@ -954,11 +958,17 @@ function linkTerm2(b: Marks, sp: GridSpace, cl: Dealt, v_q: number): number {
 }
 
 const sideKept = keptStore<readonly number[]>();
+let sideOn: object | null = null;
+let sideAt: Kept<readonly number[]> = [];
 
 /** `side(e)` as the description defines it, kept for the
  * board, since it reads no marks. */
 export function side(sp: GridSpace, v_e: number): readonly number[] {
-  const _kept: Kept<readonly number[]> = sideKept.board(sp);
+  if (sp !== sideOn) {
+    sideAt = sideKept.board(sp);
+    sideOn = sp;
+  }
+  const _kept: Kept<readonly number[]> = sideAt;
   if (_kept[v_e] !== undefined) return _kept[v_e];
   const _g341: number[] = [];
   G342: {

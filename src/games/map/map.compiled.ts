@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/map/map.description.yaml: edit that, not this.
 
-import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, least, popcount, rangeMask } from "../../engine/describe-runtime.ts";
+import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, addOnce, least, popcount, rangeMask, stamps } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -57,24 +57,24 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  let _q120 = true;
-  Q121: {
-    const _a122 = sp.cells;
-    for (let _i123 = 0; _i123 < _a122.length; _i123++) {
-      const v_a = _a122[_i123];
-      const _h127 = (g[v_a] || -1);
-      const _a124 = cl.borders[v_a];
-      for (let _i125 = 0; _i125 < _a124.length; _i125++) {
-        const v_b = _a124[_i125];
-        const _h126 = (g[v_b] || -1);
-        if (!((_h126 !== _h127))) {
-          _q120 = false;
-          break Q121;
+  let _q122 = true;
+  Q123: {
+    const _a124 = sp.cells;
+    for (let _i125 = 0; _i125 < _a124.length; _i125++) {
+      const v_a = _a124[_i125];
+      const _h129 = (g[v_a] || -1);
+      const _a126 = cl.borders[v_a];
+      for (let _i127 = 0; _i127 < _a126.length; _i127++) {
+        const v_b = _a126[_i127];
+        const _h128 = (g[v_b] || -1);
+        if (!((_h128 !== _h129))) {
+          _q122 = false;
+          break Q123;
         }
       }
     }
   }
-  if (!(_q120)) return false;
+  if (!(_q122)) return false;
   return true;
 }
 
@@ -214,11 +214,12 @@ export interface WeighBinding {
 
 const weighFacts: number[] = [];
 let weighCands = new Int32Array(0);
+const _st110 = stamps();
 
 /** Its dearest read grows with the board as n^2. */
 export function weigh(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighBinding> | null): number {
   const _g101: number[] = [];
-  const _g111: number[] = [];
+  const _g112: number[] = [];
   const facts = weighFacts;
   let fired = 0;
   let changed = false;
@@ -296,22 +297,24 @@ export function weigh(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighBindin
           }
           if (!(_c100)) continue;
           _g101.length = 0;
+          _st110.pass++;
           G102: {
-            for (let _m110 = v_R; _m110 !== 0; _m110 &= _m110 - 1) {
-              const v_a = 31 - Math.clz32(_m110 & -_m110);
-              const _h118 = ((1 << v_a) | (1 << v_x));
-              _g111.length = 0;
-              G112: {
-                const _a115 = cl.borders[v_m];
-                for (let _i116 = 0; _i116 < _a115.length; _i116++) {
-                  const v_k = _a115[_i116];
-                  const _h117 = (b.grid[v_k] !== 0);
-                  if (!((((!(_h117) && ((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k])) === _h118)) && (v_k !== v_t)) && (cl.borders[v_t].includes(v_k))))) continue;
-                  _g111.push(v_k);
+            for (let _m111 = v_R; _m111 !== 0; _m111 &= _m111 - 1) {
+              const v_a = 31 - Math.clz32(_m111 & -_m111);
+              const _h119 = ((1 << v_a) | (1 << v_x));
+              _g112.length = 0;
+              G113: {
+                const _a116 = cl.borders[v_m];
+                for (let _i117 = 0; _i117 < _a116.length; _i117++) {
+                  const v_k = _a116[_i117];
+                  const _h118 = (b.grid[v_k] !== 0);
+                  if (!((((!(_h118) && ((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k])) === _h119)) && (v_k !== v_t)) && (cl.borders[v_t].includes(v_k))))) continue;
+                  _g112.push(v_k);
                 }
               }
-              const _t119 = (_g111.length > 0 ? _g111[0] : -1);
-              if (!_g101.includes(_t119)) _g101.push(_t119);
+              const _t120 = (_g112.length > 0 ? _g112[0] : -1);
+              const _t121 = _t120;
+              if (_g101.length < 16) { if (!_g101.includes(_t121)) _g101.push(_t121); } else addOnce(_g101, _st110, _t121);
             }
           }
           const v_E = _g101;

@@ -848,11 +848,17 @@ export function twice(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TwiceBindin
 }
 
 const runKept = keptStore<Kept<readonly number[]>>();
+let runOn: object | null = null;
+let runAt: Kept<Kept<readonly number[]>> = [];
 
 /** `run(L, c)` as the description defines it, kept for the
  * board, since it reads no marks. */
 export function run(sp: GridSpace, cl: Dealt, v_L: number, v_c: number): readonly number[] {
-  const _kept: Kept<Kept<readonly number[]>> = runKept.board(cl);
+  if (cl !== runOn) {
+    runAt = runKept.board(cl);
+    runOn = cl;
+  }
+  const _kept: Kept<Kept<readonly number[]>> = runAt;
   const _kept1 = (_kept[v_L] ??= []);
   if (_kept1[v_c] !== undefined) return _kept1[v_c];
   const _g7: number[] = [];
@@ -870,11 +876,17 @@ export function run(sp: GridSpace, cl: Dealt, v_L: number, v_c: number): readonl
 }
 
 const headKept = keptStore<Kept<boolean>>();
+let headOn: object | null = null;
+let headAt: Kept<Kept<boolean>> = [];
 
 /** `head(L, c)` as the description defines it, kept for the
  * board, since it reads no marks. */
 export function head(sp: GridSpace, cl: Dealt, v_L: number, v_c: number): boolean {
-  const _kept: Kept<Kept<boolean>> = headKept.board(cl);
+  if (cl !== headOn) {
+    headAt = headKept.board(cl);
+    headOn = cl;
+  }
+  const _kept: Kept<Kept<boolean>> = headAt;
   const _kept1 = (_kept[v_L] ??= []);
   if (_kept1[v_c] !== undefined) return _kept1[v_c];
   let _c14: boolean = ((clueAt(cl.blank, v_c) < 0) && (run(sp, cl, v_L, v_c).length >= 2));

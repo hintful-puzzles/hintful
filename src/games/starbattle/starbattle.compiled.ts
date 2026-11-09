@@ -754,15 +754,21 @@ export interface NeededLineBinding {
 }
 
 const neededLineFacts: number[] = [];
+let _f548 = new Int32Array(0);
+let _l549: readonly number[] = [];
+let _f575 = new Int32Array(0);
+let _l576: readonly number[] = [];
 
 /** Its dearest read grows with the board as n^0.5. */
 export function neededLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NeededLineBinding> | null): number {
   const _g535: number[] = [];
-  const _f548 = new Int32Array(sp.cells.length).fill(-1);
-  let _l549: readonly number[] = [];
+  if (_f548.length < sp.cells.length) _f548 = new Int32Array(sp.cells.length).fill(-1);
+  else _f548.fill(-1);
+  _l549 = [];
   const _s550: number[] = [];
-  const _f575 = new Int32Array(sp.cells.length).fill(-1);
-  let _l576: readonly number[] = [];
+  if (_f575.length < sp.cells.length) _f575 = new Int32Array(sp.cells.length).fill(-1);
+  else _f575.fill(-1);
+  _l576 = [];
   const _s577: number[] = [];
   const facts = neededLineFacts;
   let fired = 0;
@@ -962,15 +968,21 @@ export interface NeededRegionBinding {
 }
 
 const neededRegionFacts: number[] = [];
+let _f680 = new Int32Array(0);
+let _l681: readonly number[] = [];
+let _f707 = new Int32Array(0);
+let _l708: readonly number[] = [];
 
 /** Its dearest read grows with the board as 1. */
 export function neededRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NeededRegionBinding> | null): number {
   const _g667: number[] = [];
-  const _f680 = new Int32Array(sp.cells.length).fill(-1);
-  let _l681: readonly number[] = [];
+  if (_f680.length < sp.cells.length) _f680 = new Int32Array(sp.cells.length).fill(-1);
+  else _f680.fill(-1);
+  _l681 = [];
   const _s682: number[] = [];
-  const _f707 = new Int32Array(sp.cells.length).fill(-1);
-  let _l708: readonly number[] = [];
+  if (_f707.length < sp.cells.length) _f707 = new Int32Array(sp.cells.length).fill(-1);
+  else _f707.fill(-1);
+  _l708 = [];
   const _s709: number[] = [];
   const facts = neededRegionFacts;
   let fired = 0;
@@ -1172,17 +1184,23 @@ export interface CrowdedLineBinding {
 }
 
 const crowdedLineFacts: number[] = [];
+let _f879 = new Int32Array(0);
+let _l880: readonly number[] = [];
+let _f907 = new Int32Array(0);
+let _l908: readonly number[] = [];
 
 /** Its dearest read grows with the board as n^1.5. */
 export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CrowdedLineBinding> | null): number {
   const _g835: number[] = [];
   const _g857: number[] = [];
   const _g867: number[] = [];
-  const _f879 = new Int32Array(sp.cells.length).fill(-1);
-  let _l880: readonly number[] = [];
+  if (_f879.length < sp.cells.length) _f879 = new Int32Array(sp.cells.length).fill(-1);
+  else _f879.fill(-1);
+  _l880 = [];
   const _s881: number[] = [];
-  const _f907 = new Int32Array(sp.cells.length).fill(-1);
-  let _l908: readonly number[] = [];
+  if (_f907.length < sp.cells.length) _f907 = new Int32Array(sp.cells.length).fill(-1);
+  else _f907.fill(-1);
+  _l908 = [];
   const _s909: number[] = [];
   const _g927: number[] = [];
   const _g937: number[] = [];
@@ -1450,17 +1468,23 @@ export interface CrowdedRegionBinding {
 }
 
 const crowdedRegionFacts: number[] = [];
+let _f1096 = new Int32Array(0);
+let _l1097: readonly number[] = [];
+let _f1124 = new Int32Array(0);
+let _l1125: readonly number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function crowdedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CrowdedRegionBinding> | null): number {
   const _g1053: number[] = [];
   const _g1074: number[] = [];
   const _g1084: number[] = [];
-  const _f1096 = new Int32Array(sp.cells.length).fill(-1);
-  let _l1097: readonly number[] = [];
+  if (_f1096.length < sp.cells.length) _f1096 = new Int32Array(sp.cells.length).fill(-1);
+  else _f1096.fill(-1);
+  _l1097 = [];
   const _s1098: number[] = [];
-  const _f1124 = new Int32Array(sp.cells.length).fill(-1);
-  let _l1125: readonly number[] = [];
+  if (_f1124.length < sp.cells.length) _f1124 = new Int32Array(sp.cells.length).fill(-1);
+  else _f1124.fill(-1);
+  _l1125 = [];
   const _s1126: number[] = [];
   const _g1144: number[] = [];
   const _g1154: number[] = [];
@@ -2009,16 +2033,22 @@ export interface StarvedLineBinding {
 }
 
 const starvedLineFacts: number[] = [];
+let _f1671 = new Int32Array(0);
+let _l1672: readonly number[] = [];
+let _f1699 = new Int32Array(0);
+let _l1700: readonly number[] = [];
 
 /** Its dearest read grows with the board as n^1.5. */
 export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarvedLineBinding> | null): number {
   const _g1649: number[] = [];
   const _g1659: number[] = [];
-  const _f1671 = new Int32Array(sp.cells.length).fill(-1);
-  let _l1672: readonly number[] = [];
+  if (_f1671.length < sp.cells.length) _f1671 = new Int32Array(sp.cells.length).fill(-1);
+  else _f1671.fill(-1);
+  _l1672 = [];
   const _s1673: number[] = [];
-  const _f1699 = new Int32Array(sp.cells.length).fill(-1);
-  let _l1700: readonly number[] = [];
+  if (_f1699.length < sp.cells.length) _f1699 = new Int32Array(sp.cells.length).fill(-1);
+  else _f1699.fill(-1);
+  _l1700 = [];
   const _s1701: number[] = [];
   const _g1719: number[] = [];
   const _g1729: number[] = [];
@@ -2277,16 +2307,22 @@ export interface StarvedRegionBinding {
 }
 
 const starvedRegionFacts: number[] = [];
+let _f1876 = new Int32Array(0);
+let _l1877: readonly number[] = [];
+let _f1904 = new Int32Array(0);
+let _l1905: readonly number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarvedRegionBinding> | null): number {
   const _g1854: number[] = [];
   const _g1864: number[] = [];
-  const _f1876 = new Int32Array(sp.cells.length).fill(-1);
-  let _l1877: readonly number[] = [];
+  if (_f1876.length < sp.cells.length) _f1876 = new Int32Array(sp.cells.length).fill(-1);
+  else _f1876.fill(-1);
+  _l1877 = [];
   const _s1878: number[] = [];
-  const _f1904 = new Int32Array(sp.cells.length).fill(-1);
-  let _l1905: readonly number[] = [];
+  if (_f1904.length < sp.cells.length) _f1904 = new Int32Array(sp.cells.length).fill(-1);
+  else _f1904.fill(-1);
+  _l1905 = [];
   const _s1906: number[] = [];
   const _g1924: number[] = [];
   const _g1934: number[] = [];
@@ -2533,11 +2569,17 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
 }
 
 const bandKept = keptStore<Kept<Kept<readonly number[]>>>();
+let bandOn: object | null = null;
+let bandAt: Kept<Kept<Kept<readonly number[]>>> = [];
 
 /** `band(k, dir, a)` as the description defines it, kept for the
  * board, since it reads no marks. */
 export function band(sp: GridSpace, v_k: number, v_dir: number, v_a: number): readonly number[] {
-  const _kept: Kept<Kept<Kept<readonly number[]>>> = bandKept.board(sp);
+  if (sp !== bandOn) {
+    bandAt = bandKept.board(sp);
+    bandOn = sp;
+  }
+  const _kept: Kept<Kept<Kept<readonly number[]>>> = bandAt;
   const _kept1 = (_kept[v_k] ??= []);
   const _kept2 = (_kept1[v_dir] ??= []);
   if (_kept2[v_a] !== undefined) return _kept2[v_a];

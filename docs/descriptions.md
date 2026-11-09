@@ -512,13 +512,28 @@ element through a tiling's geometry, the compiler emits that footprint
 technique visits only the elements a fact reached since a binding there
 found nothing (`CellMarks.visit`): a binding that found nothing finds
 nothing again on the same marks, so every firing and every tier stands.
-What the analysis cannot follow (connectivity, a loop, a set over the whole
-board, a supposition) makes the technique whole, and it visits every
-element as before; so does every technique off a tiling, until the grid's
-geometry is followed too. `ladder-skip.test.ts` deals each game that skips
-both ways and compares the boards. A new way to read the marks is added to
+Connectivity is followed where a technique binds a set of edges first, as
+`L = {e in edges where …}`, and reads it only by whether squares near its
+element share a group of `L` (`x in through(c, L)`): the footprint names
+those squares, and the kept groups list the squares a join or a split moved,
+so a binding is visited again only where a group it compares changed. Net's
+`loopLock` and `loopNote` so skip. Any other read of connectivity (a reach
+built step by step, the set read whole), a loop, a set over the whole board
+or a supposition makes the technique whole, and it visits every element as
+before; so does every technique off a tiling, until the grid's geometry is
+followed too. Net's seal and strand techniques stay whole: their reach
+spans the board, and their cost is the runs that fire, which a skip would
+not cut (2026-11-09). `ladder-skip.test.ts` deals each game that skips both
+ways and compares the boards; it failed at one deal when the footprint
+dropped the neighbors' group read. A new way to read the marks is added to
 the analysis, or it must make the technique whole: a read it lets through
 unnamed skips a binding that now fires.
+
+**A search's positions fork the marks**: `CellMarks.fork` copies the marks,
+the edge groups they keep (sharing what neither changes) and what each
+technique last visited, so a child position starts where its parent's
+ladder stopped, not from empty marks. It took the fit techniques' share of
+Net's search to under half (2026-11-09).
 
 **What a description costs is measured on the same boards.**
 [`deal-profile`](../scripts/checks/deal-profile.test.ts) profiles every
@@ -741,6 +756,28 @@ author writing for speed uses these:
   loop over a few cells is not kept: a lookup costs more, and kept,
   Mosaic's `need(c)` over its 3×3 block took its deals to 1.26 of the time
   (2026-11-08).
+- **A board-kept definition of one argument is a table read**: the table is
+  fetched once at the top of the technique's function, and the definition
+  is called only for an element it has not yet made. That holds inside a
+  filling's pairwise test too, where nothing else is moved. Net's `arms(c)`,
+  read for every pair in every filling, was a tenth of its deals when it was
+  asked through the store at each read (2026-11-09).
+- **Set arithmetic stamps its members**: `A + B`, `A - B` and a comprehension
+  that may meet a member twice mark the members in one shared array, not a
+  `Set` (`union`, `minus`, `addOnce`), once the set is past sixteen members:
+  a shorter one is scanned, and stamping Palisade's short ones took its
+  deals to 1.13 of the time (2026-11-09). A set bound outside every loop, asked
+  `x in S` inside one, is read from a table of its members. One made by `+`
+  or `-` of sets already bound is made once where they are. With a set of
+  `through(c, O)` over a bound `O`, kept a group of `O` beside where `O` is
+  bound, these took Net's `sealLock` from 1.6 s to 1.0 s of ten 9x11
+  wrapping deals (2026-11-09).
+- **A run of costly names before a cheap binder asks first whether the
+  binder has any member**: `G = through(c, L), K = open(c, P, U), e in
+  edges(c) where not known(e)`, where the `where` reads none of the names,
+  passes over a square with no open side before making `G` or `K`. It took
+  Net's `sealNote` and `strandNote` from 0.77 s to 0.06 s of ten deals
+  (2026-11-09).
 - **A set stated member by member is looped over as its members**, no
   array made, a member equal to one before it passed over: `max(e in
   {edge(c, y), end(c, y)} of …)`, and the `{c}` of a conditional `sum(z in

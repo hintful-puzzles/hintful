@@ -364,7 +364,7 @@ export function searchAnswers(
       if (at < 0) return [];
       const e = g.sp.cellEdges[at].find((x) => m.grid[x] === 0) as number;
       return [WIRE, NONE].map((v) => {
-        const next = marksOn(g, Uint8Array.from(m.grid));
+        const next = m.fork();
         next.place(e, v);
         return { m: next };
       });

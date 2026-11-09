@@ -418,14 +418,20 @@ export interface ArrangementBinding {
 
 const arrangementFacts: number[] = [];
 let arrangementCands = new Int32Array(0);
+let _p211 = new Int32Array(0);
+let _l212: readonly number[] = [];
+let _f217 = new Int32Array(0);
+let _l218: readonly number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function arrangement(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ArrangementBinding> | null): number {
-  const _p211 = new Int32Array(sp.cells.length);
-  let _l212: readonly number[] = [];
+  if (_p211.length < sp.cells.length) _p211 = new Int32Array(sp.cells.length);
+  else _p211.fill(0);
+  _l212 = [];
   let _y213 = false;
-  const _f217 = new Int32Array(sp.cells.length).fill(-1);
-  let _l218: readonly number[] = [];
+  if (_f217.length < sp.cells.length) _f217 = new Int32Array(sp.cells.length).fill(-1);
+  else _f217.fill(-1);
+  _l218 = [];
   const _s219: number[] = [];
   const facts = arrangementFacts;
   let fired = 0;

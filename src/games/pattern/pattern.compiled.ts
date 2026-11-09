@@ -83,17 +83,23 @@ export interface LineBinding {
 
 const lineFacts: number[] = [];
 let lineCands = new Int32Array(0);
+let _p49 = new Int32Array(0);
+let _l50: readonly number[] = [];
+let _p65 = new Int32Array(0);
+let _l66: readonly number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding> | null): number {
   const _g34: number[] = [];
-  const _p49 = new Int32Array(sp.cells.length);
-  let _l50: readonly number[] = [];
+  if (_p49.length < sp.cells.length) _p49 = new Int32Array(sp.cells.length);
+  else _p49.fill(0);
+  _l50 = [];
   let _y51 = false;
   const _m56 = new Int32Array(sp.cells.length);
   const _o55 = new Int32Array(sp.cells.length);
-  const _p65 = new Int32Array(sp.cells.length);
-  let _l66: readonly number[] = [];
+  if (_p65.length < sp.cells.length) _p65 = new Int32Array(sp.cells.length);
+  else _p65.fill(0);
+  _l66 = [];
   let _y67 = false;
   const _m72 = new Int32Array(sp.cells.length);
   const _o71 = new Int32Array(sp.cells.length);

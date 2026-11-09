@@ -6,6 +6,14 @@
  * elements a fact reached (`docs/descriptions.md` § "What a technique
  * compiles to").
  *
+ * A set of edges bound ahead of the first binder, across the whole board,
+ * is read only by the groups it joins, and only by asking whether two
+ * squares are in one group (`x in through(c, L)`): a binding's reads of it
+ * are the squares it asks about, which change only where two groups join or
+ * one splits. The runtime is told of each by the groups the marks keep
+ * (`keptEdgeGroups`), so the compiler keeps the set's groups or calls the
+ * technique whole.
+ *
  * A technique whose reads cannot all be named that way is whole, `null`, and
  * runs over every element. What this cannot follow it calls whole, so a
  * footprint never leaves out a read: a missed read would skip a binding that
@@ -36,13 +44,17 @@ type Sort = Footprint["sort"];
 /** What an expression is: free of marks (`fixed`); a value read off marks
  * the footprint holds (`local`); elements reached from the first binder's
  * element by each of `paths`; elements of a sort reached some other way
- * (`free`); or a function bound by a filling (`fillFn`). */
+ * (`free`); a function bound by a filling (`fillFn`); the set of edges bound
+ * ahead of the first binder as `sets[set]` (`edgeSet`); or the group that set
+ * joins the squares reached by `paths` into (`group`). */
 type Kind =
   | { k: "fixed" }
   | { k: "local" }
   | { k: "elems"; sort: Sort; paths: readonly (readonly Step[])[] }
   | { k: "free"; sort: Sort }
-  | { k: "fillFn" };
+  | { k: "fillFn" }
+  | { k: "edgeSet"; set: number }
+  | { k: "group"; set: number; paths: readonly (readonly Step[])[] };
 
 class Whole extends Error {}
 
@@ -82,7 +94,7 @@ const MEMBER = new Set(["first", "nth"]);
 
 interface Ctx {
   readonly env: FootprintEnv;
-  readonly reads: { steps: readonly Step[]; kind: MarkKind }[];
+  readonly reads: { steps: readonly Step[]; kind: MarkKind; set?: number }[];
   relation: boolean;
   /** Definitions being read, against a definition that reads itself. */
   readonly open: Set<string>;
@@ -93,13 +105,25 @@ type Scope = ReadonlyMap<string, Kind>;
 /** The footprint of `t`, or `null` where it is whole. */
 export function footprintOf(t: Technique, env: FootprintEnv): Footprint | null {
   if (!env.tiling || t.on !== null) return null;
-  const [first, ...rest] = t.binders;
+  const ahead = t.binders.findIndex((b) => b.kind !== "let");
+  const sets: string[] = [];
+  const outer = new Map<string, Kind>();
+  for (const b of t.binders.slice(0, Math.max(ahead, 0))) {
+    if (b.where !== null || !edgeSetOf(b.of)) return null;
+    outer.set(b.name, { k: "edgeSet", set: sets.length });
+    sets.push(b.name);
+  }
+  const first = t.binders[ahead];
+  const rest = t.binders.slice(ahead + 1);
   if (first === undefined || first.kind !== "in" || first.of.k !== "name") return null;
   const sort = SORT_NAMES[first.of.name];
   if (sort === undefined) return null;
   const ctx: Ctx = { env, reads: [], relation: false, open: new Set() };
   try {
-    let scope: Scope = new Map([[first.name, { k: "elems", sort, paths: [[]] }]]);
+    let scope: Scope = new Map([
+      ...outer,
+      [first.name, { k: "elems", sort, paths: [[]] }],
+    ]);
     if (first.where !== null) kindOf(first.where, scope, ctx);
     scope = binders(rest, scope, ctx);
     if (t.premise !== null) kindOf(t.premise, scope, ctx);
@@ -110,12 +134,38 @@ export function footprintOf(t: Technique, env: FootprintEnv): Footprint | null {
   }
   const seen = new Set<string>();
   const reads = ctx.reads.filter((r) => {
-    const key = `${r.kind}:${r.steps.join(",")}`;
+    const key = `${r.kind}:${r.set ?? ""}:${r.steps.join(",")}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
-  return { sort, reads, relation: ctx.relation };
+  return sets.length === 0
+    ? { sort, reads, relation: ctx.relation }
+    : { sort, reads, relation: ctx.relation, sets };
+}
+
+/** Whether `e` states a set of edges, `{e in edges where …}`: what a binder
+ * ahead of the first may bind, read only through the groups it joins. */
+function edgeSetOf(e: Expr): boolean {
+  if (e.k !== "agg" || e.fn !== "set" || e.binders.length !== 1) return false;
+  const [b] = e.binders;
+  return (
+    b.kind === "in" &&
+    b.of.k === "name" &&
+    b.of.name === "edges" &&
+    (e.term === null || (e.term.k === "name" && e.term.name === b.name))
+  );
+}
+
+/** Record that two squares' groups are compared, and what the comparison
+ * is: a truth read off the footprint. */
+function sameGroup(a: Kind, b: Kind, ctx: Ctx): Kind {
+  if (b.k !== "group" || (a.k !== "elems" && a.k !== "group")) throw new Whole();
+  if (a.k === "group" && a.set !== b.set) throw new Whole();
+  if (a.k === "elems" && a.sort !== "cell") throw new Whole();
+  for (const k of [a, b])
+    for (const steps of k.paths) ctx.reads.push({ steps, kind: "group", set: b.set });
+  return LOCAL;
 }
 
 function binders(bs: readonly Binder[], scope: Scope, ctx: Ctx): Scope {
@@ -137,7 +187,7 @@ function binders(bs: readonly Binder[], scope: Scope, ctx: Ctx): Scope {
 
 /** A member of a set of kind `s`. */
 function memberOf(s: Kind): Kind {
-  if (s.k === "fillFn") throw new Whole();
+  if (s.k === "fillFn" || s.k === "edgeSet" || s.k === "group") throw new Whole();
   return s;
 }
 
@@ -172,8 +222,7 @@ function kindOf(e: Expr, scope: Scope, ctx: Ctx): Kind {
       const ks = e.elems.map((x) => kindOf(x, scope, ctx));
       if (ks.every((k) => k.k === "fixed")) return FIXED;
       if (ks.every((k) => k.k === "elems")) return union(ks);
-      if (ks.some((k) => k.k === "elems" || k.k === "free" || k.k === "fillFn"))
-        throw new Whole();
+      if (ks.some((k) => k.k !== "fixed" && k.k !== "local")) throw new Whole();
       return LOCAL;
     }
     case "size":
@@ -183,6 +232,10 @@ function kindOf(e: Expr, scope: Scope, ctx: Ctx): Kind {
     case "bin": {
       const a = kindOf(e.a, scope, ctx);
       const b = kindOf(e.b, scope, ctx);
+      if (e.op === "in" || e.op === "notin") {
+        if (b.k === "group") return sameGroup(a, b, ctx);
+      } else if ((e.op === "=" || e.op === "!=") && b.k === "group" && a.k === "group")
+        return sameGroup(a, b, ctx);
       // A set's members less some: still members of the first.
       if (e.op === "-" && a.k === "elems") return a;
       if (e.op === "-" && a.k === "free") return a;
@@ -220,7 +273,7 @@ function kindOf(e: Expr, scope: Scope, ctx: Ctx): Kind {
 /** A value read off `k`: an element's index is a number the footprint
  * fixes, so it is local where reached from the first binder. */
 function value(k: Kind): Kind {
-  if (k.k === "fillFn") throw new Whole();
+  if (k.k === "fillFn" || k.k === "edgeSet" || k.k === "group") throw new Whole();
   if (k.k === "free") return LOCAL;
   if (k.k === "elems") return LOCAL;
   return k;
@@ -266,6 +319,21 @@ function call(fn: string, args: readonly Expr[], scope: Scope, ctx: Ctx): Kind {
       sort: step[1],
       paths: arg.paths.map((p) => [...p, step[0]]),
     };
+  }
+  // The square across an edge from one of its ends: among the edge's ends.
+  if (fn === "other" && args.length === 2) {
+    const [x, from] = ks();
+    value(from);
+    if (x.k === "fixed") return FIXED;
+    if (x.k === "free" && x.sort === "edge") return { k: "free", sort: "cell" };
+    if (x.k !== "elems" || x.sort !== "edge") throw new Whole();
+    return { k: "elems", sort: "cell", paths: x.paths.map((p) => [...p, "edgeEnds"]) };
+  }
+  if (fn === "through" && args.length === 2) {
+    const [at, set] = ks();
+    if (set.k !== "edgeSet" || at.k !== "elems" || at.sort !== "cell")
+      throw new Whole();
+    return { k: "group", set: set.set, paths: at.paths };
   }
   switch (fn) {
     case "known":
@@ -313,7 +381,7 @@ function call(fn: string, args: readonly Expr[], scope: Scope, ctx: Ctx): Kind {
     const [of, ...more] = ks();
     for (const m of more) value(m);
     if (of.k === "elems" || of.k === "free" || of.k === "fixed") return of;
-    return LOCAL;
+    return value(of);
   }
   if (PURE.has(fn)) {
     return ks().map(value).reduce(join, FIXED);

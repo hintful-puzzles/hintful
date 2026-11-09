@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/engine/latin.description.yaml: edit that, not this.
 
-import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, cellsValued, least, minus, popcount, rangeMask, valuesOf } from "./describe-runtime.ts";
+import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, addOnce, cellsValued, least, minus, popcount, rangeMask, stamps, valuesOf } from "./describe-runtime.ts";
 
 export interface PlacedBinding {
   c: number;
@@ -606,11 +606,12 @@ export interface WingBinding {
 
 const wingFacts: number[] = [];
 let wingCands = new Int32Array(0);
+const _st452 = stamps();
 
 /** Its dearest read grows with the board as n. */
 export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): number {
   const _g443: number[] = [];
-  const _g453: number[] = [];
+  const _g454: number[] = [];
   const facts = wingFacts;
   let fired = 0;
   let changed = false;
@@ -709,22 +710,24 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): n
             }
             if (!(_c442)) continue;
             _g443.length = 0;
+            _st452.pass++;
             G444: {
-              for (let _m452 = v_R; _m452 !== 0; _m452 &= _m452 - 1) {
-                const v_a = 31 - Math.clz32(_m452 & -_m452);
-                const _h460 = ((1 << v_a) | (1 << v_x));
-                _g453.length = 0;
-                G454: {
-                  const _a457 = sp.peers[v_m];
-                  for (let _i458 = 0; _i458 < _a457.length; _i458++) {
-                    const v_k = _a457[_i458];
-                    const _h459 = (b.grid[v_k] !== 0);
-                    if (!((((!(_h459) && ((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k])) === _h460)) && (v_k !== v_t)) && (sp.peers[v_t].includes(v_k))))) continue;
-                    _g453.push(v_k);
+              for (let _m453 = v_R; _m453 !== 0; _m453 &= _m453 - 1) {
+                const v_a = 31 - Math.clz32(_m453 & -_m453);
+                const _h461 = ((1 << v_a) | (1 << v_x));
+                _g454.length = 0;
+                G455: {
+                  const _a458 = sp.peers[v_m];
+                  for (let _i459 = 0; _i459 < _a458.length; _i459++) {
+                    const v_k = _a458[_i459];
+                    const _h460 = (b.grid[v_k] !== 0);
+                    if (!((((!(_h460) && ((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k])) === _h461)) && (v_k !== v_t)) && (sp.peers[v_t].includes(v_k))))) continue;
+                    _g454.push(v_k);
                   }
                 }
-                const _t461 = (_g453.length > 0 ? _g453[0] : -1);
-                if (!_g443.includes(_t461)) _g443.push(_t461);
+                const _t462 = (_g454.length > 0 ? _g454[0] : -1);
+                const _t463 = _t462;
+                if (_g443.length < 16) { if (!_g443.includes(_t463)) _g443.push(_t463); } else addOnce(_g443, _st452, _t463);
               }
             }
             const v_E = _g443;

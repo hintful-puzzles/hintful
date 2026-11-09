@@ -342,6 +342,10 @@ function techniqueGrowth(lines: readonly string[]): number {
  * (Galaxies' `soleOwner`) and its `n^2.5`s were Boats' (2026-11-07), both
  * games measured slower than their hand-written ladders. */
 const MAX_GROWTH = 6;
+
+/** The length below which a set a comprehension makes is scanned for a
+ * member, not stamped (`addOnce`). */
+const SCANNED_SET = 16;
 export const WARN_GROWTH = 5;
 
 /** A growth in halves as a power: 3 is `n^1.5`. */
@@ -366,6 +370,10 @@ interface Env {
   /** The binder a technique's solve run visits only where a fact reached
    * (`footprint.ts`): its loop skips an element `_visit` does not hold. */
   visitBinder?: Binder;
+  /** Where `_visit` is read, just ahead of the visited binder's loop and
+   * after the groups of the sets bound before it are made; and those groups,
+   * by the code of the set, as `through` joins them. */
+  visitAt?: { slot: Slot | null; groups: Map<string, string> };
   defs: ReadonlyMap<string, Definition>;
   clues: ReadonlyMap<string, ClueKind>;
   /** The partitions the board deals, by name. */
@@ -386,6 +394,13 @@ interface Env {
   /** The declarations of the arrays a technique's comprehensions reuse, made
    * once a call; `null` outside a technique's body. */
   scratch: string[] | null;
+  /** In a rung's body, the module's declarations of the arrays as long as the
+   * board that its fillings and projections keep across its calls, each
+   * with the list it last wrote, which its next use clears: made once a
+   * call, they cost Net's deals a tenth, its rungs run a hundred thousand
+   * times a deal. A technique run on placing or striking runs inside its
+   * own call, and makes its own. */
+  held?: string[];
   /** Whether `strike` and `place` may be called: in a conclusion only. */
   concluding: boolean;
   /** Where the code is the answer check, which reads a whole grid's values
@@ -438,6 +453,10 @@ interface Env {
   /** Where a technique's body moves terms to; `null` outside one, and in
    * code that is compiled only for its sort. */
   hoist: Hoist | null;
+  /** The start of the function the code is written in, where a table kept
+   * for the board is fetched once: kept where `hoist` is dropped only so
+   * nothing moves out of a loop, and `null` in a probe or another function. */
+  boardRoot?: Slot | null;
   /** Set where nothing is moved (`hoist` is `null`) but the code is a
    * technique's own, run where its binders are bound: a set a binder names
    * is still joined into groups once, there (`through`). */
@@ -771,6 +790,12 @@ const EARLY = new Set([
   "end1",
   "end2",
   "other",
+  // A tiling's geometry (`tilingCall`).
+  "edges",
+  "faces",
+  "angles",
+  "apex",
+  "ends",
   "abs",
   "bits",
   "times",
@@ -904,7 +929,13 @@ function hoisted(e: Expr, scope: Scope, env: Env, h: Hoist): Val | null {
   // the clue once.
   const tmp = new Out(0);
   const v = compileNode(e, scope, env, tmp);
-  if (isArray(v.sort) || v.sort.k === "subsets" || v.sort.k === "clues") return null;
+  // A set is moved only where it is a fresh array no code writes, made by a
+  // sum or difference of sets: Net's reach took the same difference of a
+  // square's sides from `P` for each side of the square beside it.
+  const fresh =
+    e.k === "bin" && (e.op === "+" || e.op === "-") && tmp.entries.length === 0;
+  if ((isArray(v.sort) && !fresh) || v.sort.k === "subsets" || v.sort.k === "clues")
+    return null;
   if (tmp.entries.length === 0) {
     const made = slot.made.get(v.code);
     if (made !== undefined) return made;
@@ -1152,6 +1183,7 @@ function setLiteralElements(elems: readonly Expr[], scope: Scope, env: Env): boo
     used: new Set(),
     scratch: null,
     hoist: null,
+    boardRoot: null,
     shared: undefined,
   };
   const sorts = elems.map((x) => compileExpr(x, scope, probe, new Out(0)).sort);
@@ -1302,9 +1334,12 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
         const same = `(${group[1]}.of(${a.code}) === ${b.code})`;
         return { code: op === "in" ? same : `!${same}`, sort: BOOL };
       }
+      const marks = memberTable(b, env);
       const has = isMask(b.sort)
         ? `((${b.code} >> ${a.code}) & 1) !== 0`
-        : `${b.code}.includes(${a.code})`;
+        : marks !== null
+          ? `${marks}[${a.code} + 1] === 1`
+          : `${b.code}.includes(${a.code})`;
       return { code: op === "in" ? `(${has})` : `!(${has})`, sort: BOOL };
     }
     case "subset":
@@ -1398,6 +1433,44 @@ function exact(op: Extract<Expr, { k: "bin" }>["op"], a: Val, b: Val, env: Env):
  * inside them. A binding a `where` refuses is skipped: `continue` inside a
  * loop, and leaving a labeled block for a name bound by `=`.
  */
+/**
+ * Where the names bound from `binders[i]` on are costly to make (a walk or
+ * a loop) and the next set binder reads none of them, whether that set has
+ * a member, read before they are made: where it has none there is no
+ * binding, so they are not made. `null` where the check would not pay, or
+ * where there is no loop of these binders' own to pass on to. Net's
+ * `sealNote` made a square's reach for every square, the squares with every
+ * side known among them.
+ */
+function emptyAhead(binders: readonly Binder[], i: number, env: Env): Expr | null {
+  const prior = binders[i - 1];
+  if (prior === undefined || prior.kind === "let") return null;
+  let j = i;
+  while (binders[j]?.kind === "let") j++;
+  const next = binders[j];
+  // A set with no filter of its own is rarely empty: the check would only
+  // cost.
+  if (next === undefined || next.kind !== "in" || next.where === null) return null;
+  const lets = binders.slice(i, j);
+  if (
+    !lets.some((b) => walks(b.of, env.defs, new Set()) || loopDepth(b.of, env.defs) > 0)
+  )
+    return null;
+  const cheap = (e: Expr | null): boolean =>
+    e === null || (!walks(e, env.defs, new Set()) && loopDepth(e, env.defs) === 0);
+  if (!cheap(next.of) || !cheap(next.where)) return null;
+  const read = new Set<string>();
+  freeNames(next.of, read, new Set());
+  if (next.where !== null) freeNames(next.where, read, new Set([next.name]));
+  if (lets.some((b) => read.has(b.name))) return null;
+  return {
+    k: "quant",
+    q: "exists",
+    binders: [next],
+    body: { k: "name", name: "true" },
+  };
+}
+
 function bindingLoops(
   binders: readonly Binder[],
   scope: Scope,
@@ -1429,6 +1502,8 @@ function bindingLoops(
     let names: string | null = null;
     let edgeSet: Val["edgeSet"] | null = null;
     let where = bnd.where;
+    if (bnd === env.visitBinder && env.visitAt !== undefined)
+      env.visitAt.slot = out.slot(env.hoist?.loops ?? 0);
     if (bnd.kind === "fill") {
       if (env.wide) throw new CompileError(`${bnd.name}: ${NOT_WIDE}`);
       const f = fillLoop(bnd, sc, env, out);
@@ -1436,6 +1511,11 @@ function bindingLoops(
       sort = { k: "fill" };
       where = f.rest;
     } else if (bnd.kind === "let") {
+      const empty = emptyAhead(binders, i, env);
+      if (empty !== null) {
+        const has = compileExpr(empty, sc, env, out);
+        out.emit(`if (!(${has.code})) continue;`);
+      }
       const t = compileExpr(bnd.of, sc, env, out);
       sort = t.sort;
       names = setKey(t);
@@ -1997,7 +2077,13 @@ function pairOf(
     return null;
   const [xe, s2] = by.of.args;
   if (xe.k !== "name" || xe.name !== bx.name) return null;
-  const probe: Env = { ...env, used: new Set(), scratch: null, hoist: null };
+  const probe: Env = {
+    ...env,
+    used: new Set(),
+    scratch: null,
+    hoist: null,
+    boardRoot: null,
+  };
   for (const s of [bx.of, s2]) {
     if (reads(s, f) || setKey(compileExpr(s, scope, probe, new Out(0))) !== set)
       return null;
@@ -2044,7 +2130,13 @@ function totalOf(
       continue;
     const x = agg.term === null ? null : readOf(agg.term, f);
     if (x?.k !== "name" || x.name !== b.name || reads(b.of, f)) continue;
-    const probe: Env = { ...env, used: new Set(), scratch: null, hoist: null };
+    const probe: Env = {
+      ...env,
+      used: new Set(),
+      scratch: null,
+      hoist: null,
+      boardRoot: null,
+    };
     if (setKey(compileExpr(b.of, scope, probe, new Out(0))) !== set) continue;
     return { fn: agg.fn, t, unless };
   }
@@ -2106,7 +2198,20 @@ function fillLoop(
     `let ${last}: readonly number[] = [];`,
     `const ${st}: number[] = [];`,
   ];
-  if (env.scratch !== null) env.scratch.push(...decls);
+  if (env.scratch !== null && env.held !== undefined) {
+    env.held.push(
+      `let ${fv} = new Int32Array(0);`,
+      `let ${last}: readonly number[] = [];`,
+    );
+    // Cleared whole each run: the set it was last given over may be a
+    // scratch array the run before has since refilled.
+    env.scratch.push(
+      `if (${fv}.length < ${answerCount(env)}) ${fv} = new Int32Array(${answerCount(env)}).fill(-1);`,
+      `else ${fv}.fill(-1);`,
+      `${last} = [];`,
+      `const ${st}: number[] = [];`,
+    );
+  } else if (env.scratch !== null) env.scratch.push(...decls);
   else for (const d of decls) out.emit(d);
   out.emit(`const ${a} = ${s.code};`);
   // Each check is written into the loop over a cell's values, where
@@ -2359,7 +2464,13 @@ function setQuantifier(
   if (body.k !== "bin" || (body.op !== "in" && body.op !== "notin")) return null;
   if (body.a.k !== "name" || body.a.name !== b.name || reads(body.b, b.name))
     return null;
-  const probe: Env = { ...env, used: new Set(), scratch: null, hoist: null };
+  const probe: Env = {
+    ...env,
+    used: new Set(),
+    scratch: null,
+    hoist: null,
+    boardRoot: null,
+  };
   if (!isMask(compileExpr(b.of, scope, probe, new Out(0)).sort)) return null;
   if (!isMask(compileExpr(body.b, scope, probe, new Out(0)).sort)) return null;
   const s = compileExpr(b.of, scope, env, out);
@@ -2402,7 +2513,13 @@ function rectQuantifier(
   const re = cellsOf(b.of);
   const se = cellsOf(body.b);
   if (re === null || se === null) return null;
-  const probe: Env = { ...env, used: new Set(), scratch: null, hoist: null };
+  const probe: Env = {
+    ...env,
+    used: new Set(),
+    scratch: null,
+    hoist: null,
+    boardRoot: null,
+  };
   const isRect = (x: Expr): boolean => {
     const s = compileExpr(x, scope, probe, new Out(0)).sort;
     return s.k === "elem" && s.e === "rect";
@@ -2513,7 +2630,19 @@ function projection(
     `let ${last}: readonly number[] = [];`,
     `let ${any} = false;`,
   ];
-  if (env.scratch !== null) env.scratch.push(...decls);
+  if (env.scratch !== null && env.held !== undefined) {
+    env.held.push(
+      `let ${pj} = new Int32Array(0);`,
+      `let ${last}: readonly number[] = [];`,
+    );
+    // Cleared whole each run, as the filling's values are.
+    env.scratch.push(
+      `if (${pj}.length < ${answerCount(env)}) ${pj} = new Int32Array(${answerCount(env)});`,
+      `else ${pj}.fill(0);`,
+      `${last} = [];`,
+      `let ${any} = false;`,
+    );
+  } else if (env.scratch !== null) env.scratch.push(...decls);
   else for (const d of decls) out.emit(d);
   // The rest's names are bound anew there, so the projection is due again.
   slot.lines.push({ indent: 0, text: `let ${made} = -1;` });
@@ -2596,7 +2725,13 @@ function runPatternOf(
     if (JSON.stringify(b.of) !== JSON.stringify(cellsOfL)) continue;
     const pin = pinOf(b.where, f);
     if (pin === null || pin.x.k !== "name" || pin.x.name !== b.name) continue;
-    const probe: Env = { ...env, used: new Set(), scratch: null, hoist: null };
+    const probe: Env = {
+      ...env,
+      used: new Set(),
+      scratch: null,
+      hoist: null,
+      boardRoot: null,
+    };
     if (setKey(compileExpr(cellsOfL, scope, probe, new Out(0))) !== set) continue;
     return { L, v: pin.t, R };
   }
@@ -2619,7 +2754,13 @@ function onlyRunPattern(
     .flatMap((c) => fillConjuncts(c, scope, env))
     .filter((c) => !(c.k === "name" && c.name === "true"));
   if (cs.length !== 1) return null;
-  const probe: Env = { ...env, used: new Set(), scratch: null, hoist: null };
+  const probe: Env = {
+    ...env,
+    used: new Set(),
+    scratch: null,
+    hoist: null,
+    boardRoot: null,
+  };
   const s = compileExpr(bnd.of, scope, probe, new Out(0));
   return runPatternOf(cs[0], bnd.name, setKey(s), scope, env);
 }
@@ -2859,6 +3000,7 @@ function linkedAggregate(
       readsClues,
       scratch: null,
       hoist: null,
+      boardRoot: null,
       concluding: false,
       memo: false,
       epoch: null,
@@ -3038,6 +3180,7 @@ function keptEdgeSet(
       readsClues,
       scratch: null,
       hoist: null,
+      boardRoot: null,
       concluding: false,
       memo: false,
       epoch: null,
@@ -3129,6 +3272,76 @@ function groupQuantifier(
   return { code: v, sort: BOOL };
 }
 
+/**
+ * `set(t over x in through(c, O) …)`, `O` a set of edges a binder or a
+ * parameter names, and the rest reading no marks and no name bound after
+ * `O`: a set made of the group, so it is made once a group, kept by the
+ * group's list beside where `O` is bound. Net's `run` made the dead ends
+ * round a reach's group once from each side of the square it walked from,
+ * and those walks mostly meet one group. `null` for any other aggregate.
+ */
+function groupSet(
+  e: Extract<Expr, { k: "agg" }>,
+  scope: Scope,
+  env: Env,
+  out: Out,
+): Val | null {
+  if (env.hoist === null || e.fn !== "set" || e.where !== null) return null;
+  const [first, ...rest] = e.binders;
+  if (first?.kind !== "in") return null;
+  const of = first.of;
+  if (
+    of.k !== "call" ||
+    of.fn !== "through" ||
+    of.args.length !== 2 ||
+    scope.has("through")
+  )
+    return null;
+  const [, setArg] = of.args;
+  if (setArg.k !== "name") return null;
+  const O = scope.get(setArg.name);
+  if (O?.at === undefined || !isSetOf(O.sort, "edge")) return null;
+  const Oat = O.at;
+  // The set with its group a name of its own, which nothing else binds.
+  const group = Out.fresh("_grp");
+  const over: Extract<Expr, { k: "agg" }> = {
+    ...e,
+    binders: [{ ...first, of: { k: "name", name: group } }, ...rest],
+  };
+  // What the set reads past its group: names bound no later than `O`, so the
+  // group's set stands for as long as `O` does.
+  const free = new Set<string>();
+  freeNames(over, free, new Set([group]));
+  for (const n of free) {
+    const v = scope.get(n);
+    if (v !== undefined && (v.at === undefined || v.at.seq > Oat.seq)) return null;
+  }
+  if (readsMarks(over, env)) return null;
+  const R = once(compileExpr(first.of, scope, env, out), out);
+  const key = `memo set ${JSON.stringify(e)}`;
+  const kept = Oat.made.get(key);
+  const m = kept?.code ?? Out.fresh("_memo");
+  const v = Out.fresh("_gs");
+  out.emit(`let ${v} = ${m}.get(${R.code});`);
+  out.open(`if (${v} === undefined) {`);
+  const inner = new Map(scope);
+  inner.set(group, { code: R.code, sort: R.sort });
+  const made = compileNode(over, inner, env, out);
+  // A set of elements is the site's array, which its next making empties:
+  // the memo keeps a copy.
+  out.emit(`${v} = ${made.code}${isArray(made.sort) ? ".slice()" : ""};`);
+  out.emit(`${m}.set(${R.code}, ${v});`);
+  out.close();
+  if (kept === undefined) {
+    Oat.lines.push({
+      indent: 0,
+      text: `const ${m} = new Map<readonly number[], ${tsType(made.sort)}>();`,
+    });
+    Oat.made.set(key, { code: m, sort: made.sort });
+  }
+  return { code: v, sort: made.sort };
+}
+
 /** A quantifier whose one binding is in `scope` already: its body. */
 function quantifierOver(
   e: Extract<Expr, { k: "quant" }>,
@@ -3213,6 +3426,8 @@ function aggregate(
     const linked = linkedAggregate(e.fn, e.binders, e.where, e.term, scope, env);
     if (linked !== null) return linked;
   }
+  const ofGroup = groupSet(e, scope, env, out);
+  if (ofGroup !== null) return ofGroup;
   const r = Out.fresh("_g");
   const label = Out.fresh("G");
   const last = e.binders[e.binders.length - 1];
@@ -3313,7 +3528,13 @@ function aggregate(
       // The term's sort decides the result's representation, so it is read
       // off a pass whose code is thrown away before the result is declared.
       let termSort: Sort = NUM;
-      const probe: Env = { ...env, used: new Set(), scratch: null, hoist: null };
+      const probe: Env = {
+        ...env,
+        used: new Set(),
+        scratch: null,
+        hoist: null,
+        boardRoot: null,
+      };
       bindingLoops(e.binders, scope, probe, new Out(0), (sc) => {
         termSort =
           e.term === null
@@ -3324,6 +3545,11 @@ function aggregate(
         throw new CompileError(`set(…) of ${show(termSort)}`);
       sort = setOf(termSort);
       if (isMask(sort) && env.wide) throw new CompileError(MASK_IN_WIDE);
+      // A member already kept is told by the site's marks, not a scan of
+      // what it has kept, which grows quadratic over a reach across the
+      // board (Net's `run`).
+      const marks =
+        !plain && !isMask(sort) && env.scratch !== null ? Out.fresh("_st") : null;
       if (isMask(sort)) {
         out.emit(`let ${r} = 0;`);
         if (memberUnion(e, r, scope, env, out)) break;
@@ -3333,12 +3559,30 @@ function aggregate(
         // reason copies what it keeps.
         env.scratch.push(`const ${r}: number[] = [];`);
         out.emit(`${r}.length = 0;`);
+        if (marks !== null) {
+          // A rung's stamps outlive its run: the pass only grows, so a
+          // stamp from an earlier run never matches.
+          if (env.held !== undefined) env.held.push(`const ${marks} = stamps();`);
+          else env.scratch.push(`const ${marks} = stamps();`);
+          env.used.add("stamps");
+          env.used.add("addOnce");
+          out.emit(`${marks}.pass++;`);
+        }
       } else out.emit(`const ${r}: number[] = [];`);
       loops((sc) => {
         const t = once(term(sc), out);
         if (t.sort.k === "num") out.emit(`${r} |= 1 << ${t.code};`);
         else if (plain) out.emit(`${r}.push(${t.code});`);
-        else out.emit(`if (!${r}.includes(${t.code})) ${r}.push(${t.code});`);
+        else if (marks !== null) {
+          // A short set is scanned in place, which a call to stamp costs
+          // more than: Palisade's deals took 1.13 of the time stamping every
+          // member (2026-11-09).
+          const v = Out.fresh("_t");
+          out.emit(`const ${v} = ${t.code};`);
+          out.emit(
+            `if (${r}.length < ${SCANNED_SET}) { if (!${r}.includes(${v})) ${r}.push(${v}); } else addOnce(${r}, ${marks}, ${v});`,
+          );
+        } else out.emit(`if (!${r}.includes(${t.code})) ${r}.push(${t.code});`);
       });
       break;
     }
@@ -3718,6 +3962,7 @@ function diagonalCall(fn: string, vs: readonly Val[], env: Env): Val | null {
           groups = { code: t, sort: E.sort, at: E.at };
           E.at.made.set(key, groups);
         }
+        if (kept !== null) env.visitAt?.groups.set(E.code, groups.code);
         env.used.add(kept === null ? "edgeGroups" : "keptEdgeGroups");
         return { code: `${groups.code}.of(${cell(0)})`, sort: setOf(elem("cell")) };
       }
@@ -4514,7 +4759,12 @@ function namedBy(x: string, env: Env): string {
     ["c", { code: x, sort: elem("cell") }],
     ["d", { code: d, sort: NUM }],
   ]);
-  const v = compileExpr(to, scope, { ...env, hoist: null, shared: undefined }, out);
+  const v = compileExpr(
+    to,
+    scope,
+    { ...env, hoist: null, boardRoot: null, shared: undefined },
+    out,
+  );
   expectElem(v, "cell", "the answer's to");
   // One line, as every term's code is.
   return [
@@ -4639,6 +4889,7 @@ function rungKept(
         memos: nested,
         scratch: null,
         hoist: null,
+        boardRoot: null,
         shared: undefined,
         epoch: null,
         concluding: false,
@@ -4754,6 +5005,7 @@ function keptDefinition(
         readsClues,
         scratch: null,
         hoist: null,
+        boardRoot: null,
         concluding: false,
         memo: false,
         epoch: null,
@@ -4800,19 +5052,34 @@ function keptDefinition(
     const spParam = [keptAt, val.code, ...body.text()].some((l) => /\bsp\b/.test(l))
       ? "sp"
       : "_sp";
+    // The board last read and its values, in the module: asking the store
+    // at every read cost Net's deals a twentieth, its function shared by
+    // every store.
+    const on = readsClues.yes ? "cl" : spParam;
     made = {
       sort: val.sort,
       clues: readsClues.yes,
       board,
       code: [
         `const ${store} = keptStore<${held}>();`,
+        ...(board
+          ? [`let ${fn}On: object | null = null;`, `let ${fn}At: Kept<${held}> = [];`]
+          : []),
         "",
         `/** \`${fn}(${def.params.join(", ")})\` as the description defines it, kept for the`,
         board
           ? " * board, since it reads no marks. */"
           : " * marks while no value is placed in them. */",
         `export function ${fn}(${board ? "" : "b: Marks, "}${spParam}: GridSpace, ${readsClues.yes ? "cl: Dealt, " : ""}${ps.map((p) => `${p}: number`).join(", ")}): ${type} {`,
-        `  const _kept: Kept<${held}> = ${keptAt};`,
+        ...(board
+          ? [
+              `  if (${on} !== ${fn}On) {`,
+              `    ${fn}At = ${keptAt};`,
+              `    ${fn}On = ${on};`,
+              "  }",
+              `  const _kept: Kept<${held}> = ${fn}At;`,
+            ]
+          : [`  const _kept: Kept<${held}> = ${keptAt};`]),
         ...reach,
         `  if (${at}[${last}] !== undefined) return ${at}[${last}];`,
         ...body.text(),
@@ -4825,10 +5092,23 @@ function keptDefinition(
     kept.defs.set(fn, made);
   }
   if (made.clues) env.readsClues.yes = true;
-  return {
-    code: `${fn}(${made.board ? "" : "b, "}sp, ${made.clues ? "cl, " : ""}${vs.map((v) => v.code).join(", ")})`,
-    sort: made.sort,
-  };
+  const call = `${fn}(${made.board ? "" : "b, "}sp, ${made.clues ? "cl, " : ""}${vs.map((v) => v.code).join(", ")})`;
+  // A value kept for the board is read from its table, fetched once a run,
+  // and the function asked only for one not yet made: asking the store for
+  // the table at each read was a tenth of Net's deals, which read a square's
+  // `arms(c)` in every filling.
+  const root = env.hoist?.root ?? env.boardRoot ?? undefined;
+  if (!made.board || vs.length !== 1 || root === undefined)
+    return { code: call, sort: made.sort };
+  const fetch = `${fn}Kept.board(${made.clues ? "cl" : "sp"})`;
+  let table = root.made.get(fetch);
+  if (table === undefined) {
+    const t = Out.fresh("_k");
+    root.lines.push({ indent: 0, text: `const ${t} = ${fetch};` });
+    table = { code: t, sort: made.sort };
+    root.made.set(fetch, table);
+  }
+  return { code: `(${table.code}[${vs[0].code}] ?? ${call})`, sort: made.sort };
 }
 
 /** The functions whose runtime walks a line or the board. */
@@ -4849,6 +5129,33 @@ const WALKS = new Set([
   "sight_bent",
   "sight_twice",
 ]);
+
+/**
+ * Where a set of elements a binder named outside every loop is asked about
+ * inside one, the code of a table of its members, made once where it is
+ * bound (`memberMarks`); `null` elsewhere, where a scan costs no more than
+ * the table. Net's `run` asked whether
+ * each edge round a reach across the board was in `U`, a set of most of
+ * the board's edges, by scanning it.
+ */
+function memberTable(s: Val, env: Env): string | null {
+  const h = env.hoist;
+  // A set bound inside a loop is made once a pass, mostly of a few members
+  // round one element (Net's `W`, a square's sides), which a table made each
+  // pass costs more than scanning.
+  if (h === null || s.at === undefined || s.at.loops > 0 || h.loops === 0) return null;
+  if (s.sort.k !== "set" || s.sort.of.k !== "elem" || !isArray(s.sort)) return null;
+  const key = `memberMarks(${s.code})`;
+  let made = s.at.made.get(key);
+  if (made === undefined) {
+    const t = Out.fresh("_mm");
+    s.at.lines.push({ indent: 0, text: `const ${t} = ${key};` });
+    made = { code: t, sort: s.sort, at: s.at };
+    s.at.made.set(key, made);
+  }
+  env.used.add("memberMarks");
+  return made.code;
+}
 
 /** Whether `e` walks a line or the board, through the definitions it reads. */
 function walks(
@@ -5127,7 +5434,7 @@ function binderSorts(t: Technique, env: Env): { name: string; sort: Sort }[] {
   bindingLoops(
     t.binders,
     new Map(),
-    { ...env, used: new Set(), scratch: null, hoist: null },
+    { ...env, used: new Set(), scratch: null, hoist: null, boardRoot: null },
     probe,
     (sc) => {
       for (const b of t.binders) {
@@ -5152,6 +5459,7 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   // a technique run on placing or striking reads few, each time, and does
   // not.
   const scratch: string[] = [];
+  const held: string[] = [];
   const epoch = { used: false };
   const readsCands = { yes: false };
   const memos = new Map<string, readonly string[]>();
@@ -5162,7 +5470,9 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
     memos: onPlace ? undefined : memos,
     memo: !onPlace,
     scratch,
+    ...(onPlace ? {} : { held }),
     hoist: null,
+    boardRoot: null,
     epoch: onPlace ? null : epoch,
   };
   if (t.binders.some((b) => b.kind === "fill"))
@@ -5176,6 +5486,7 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   // A solve makes each fact as it concludes it, so a placement would change
   // a `value` or `known` read before it; a strike changes neither.
   tenv.hoist = { root: body.slot(0), loops: 0, marks: !places(t.conclude, env) };
+  tenv.boardRoot = tenv.hoist.root;
   // The facts and the kept candidates live in one buffer each a function,
   // emptied each call: a rung never runs inside its own call (a firing runs
   // only the techniques run on placing and striking), `fire` reads the facts
@@ -5223,12 +5534,11 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   const benv: Env = { ...tenv, shared: { made: new Map() } };
   const foot = footprintOf(t, env);
   const footName = `${fnName}Footprint`;
+  const visitAt = { slot: null as Slot | null, groups: new Map<string, string>() };
   if (foot !== null) {
-    benv.visitBinder = t.binders[0];
+    benv.visitBinder = t.binders[foot.sets?.length ?? 0];
+    benv.visitAt = visitAt;
     env.used.add("type Footprint");
-    body.emit(
-      `const _visit = fire === null ? (b.visit?.(${footName}) ?? null) : null;`,
-    );
   }
   let params: string;
   if (onPlace) {
@@ -5237,7 +5547,12 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
       throw new CompileError(
         `${t.id}: a technique run on ${t.on === "strike" ? "striking binds the struck" : "placing binds the placed"} cell first`,
       );
-    const of = compileExpr(first.of, new Map(), { ...tenv, hoist: null }, new Out(0));
+    const of = compileExpr(
+      first.of,
+      new Map(),
+      { ...tenv, hoist: null, boardRoot: null },
+      new Out(0),
+    );
     const held = env.answerSort;
     if (!isSetOf(of.sort, held))
       throw new CompileError(`${t.id}: its first binder is not over ${held}s`);
@@ -5256,6 +5571,20 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
     params = "";
   }
   body.emit("return fired;");
+  if (foot !== null) {
+    if (visitAt.slot === null)
+      throw new CompileError(`${t.id}: its visited binder was not met`);
+    // A set whose groups are not kept hands none, and its technique visits
+    // every element each run.
+    const groups = (foot.sets ?? []).map(
+      (name) => visitAt.groups.get(`v_${name}`) ?? "undefined",
+    );
+    const args = groups.length === 0 ? footName : `${footName}, [${groups.join(", ")}]`;
+    visitAt.slot.lines.push({
+      indent: 0,
+      text: `const _visit = fire === null ? (b.visit?.(${args}) ?? null) : null;`,
+    });
+  }
   if (readsCands.yes) {
     keep.lines.push(
       {
@@ -5293,6 +5622,7 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
     "",
     `const ${fnName}Facts: number[] = [];`,
     ...(readsCands.yes ? [`let ${buffer} = new Int32Array(0);`] : []),
+    ...held,
     ...(foot === null
       ? []
       : [
@@ -5405,6 +5735,7 @@ export function compileLibrary(
     scratch: null,
     readsClues: { yes: false },
     hoist: null,
+    boardRoot: null,
     epoch: null,
     prelude: null,
     relations: new Set(),
@@ -5590,6 +5921,7 @@ export function compileGame(
     scratch: null,
     readsClues: { yes: false },
     hoist: null,
+    boardRoot: null,
     epoch: null,
     prelude: null,
     relations: new Set(relations),
@@ -5764,6 +6096,7 @@ function answerCheck(json: DescriptionJson, d: Description, env: Env): string[] 
     scratch,
     memo: false,
     hoist: null,
+    boardRoot: null,
     epoch: null,
     concluding: false,
   };
@@ -5772,6 +6105,7 @@ function answerCheck(json: DescriptionJson, d: Description, env: Env): string[] 
   // made once where it is bound: a set of edges is joined into groups there,
   // not walked again from each square (Rectangles' shape).
   cenv.hoist = { root: out.slot(0), loops: 0, marks: true };
+  cenv.boardRoot = cenv.hoist.root;
   // A board of cells alone is measured in nothing.
   const { grid } = json.space;
   const measured = grid === undefined ? (e: Expr) => e : measuredBy(grid);

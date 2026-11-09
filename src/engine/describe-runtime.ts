@@ -58,8 +58,9 @@ export interface Marks {
   candList(c: number): readonly number[];
   /** The elements of a technique's first binder its solve run is still to
    * visit, 1 each, by {@link Footprint}; `null` where every one is visited
-   * (`skipping` off, or marks that keep no such sets). */
-  visit?(f: Footprint): Uint8Array | null;
+   * (`skipping` off, or marks that keep no such sets). `groups` are the
+   * groups of the footprint's `sets`, in order, as the run reads them. */
+  visit?(f: Footprint, groups?: readonly EdgeGroups[]): Uint8Array | null;
   /** Strike `d` from the cell, where a technique has no `fire` to tell. */
   strikeAt(c: number, d: number): void;
   /** Place `d` in the cell, where a technique has no `fire` to tell. */
@@ -116,17 +117,22 @@ export type FootprintStep =
 /**
  * What a binding at one element of a technique's first binder reads: each
  * read as the steps from that element to the marked one, and of which marks
- * (the answer's, or the edge mark); and whether it reads the relation over
- * the edges, which a relating fact changes for whole classes. The compiler
- * emits it (`src/describe/footprint.ts`).
+ * (the answer's, the edge mark, or the group a set of edges joins the square
+ * into); and whether it reads the relation over the edges, which a relating
+ * fact changes for whole classes. `sets` names the sets of edges bound ahead
+ * of the first binder, whose groups a `group` read's `set` indexes and the
+ * technique hands {@link Marks.visit} in that order. The compiler emits it
+ * (`src/describe/footprint.ts`).
  */
 export interface Footprint {
   readonly sort: "face" | "cell" | "edge" | "angle";
   readonly reads: readonly {
     readonly steps: readonly FootprintStep[];
-    readonly kind: "answer" | "edgeMark";
+    readonly kind: "answer" | "edgeMark" | "group";
+    readonly set?: number;
   }[];
   readonly relation: boolean;
+  readonly sets?: readonly string[];
 }
 
 /** For each marked element, the first-binder elements whose bindings read
@@ -137,12 +143,13 @@ export interface ReadBy {
 }
 
 /** A footprint read backwards on one board: how many elements its first
- * binder has, and which of them read each answer element and each marked
- * one. */
+ * binder has, and which of them read each answer element, each marked one,
+ * and each square's group in each of its sets. */
 export interface Inverse {
   readonly n: number;
   readonly answer: ReadBy;
   readonly edgeMark: ReadBy;
+  readonly group: readonly ReadBy[];
   readonly relation: boolean;
 }
 
@@ -197,9 +204,15 @@ export function inverseOf(
           : sp.cells.length;
   const answer: number[][] = Array.from({ length: answers }, () => []);
   const mark: number[][] = Array.from({ length: marked }, () => []);
+  const group = (f.sets ?? []).map((): number[][] =>
+    Array.from({ length: sp.cells.length }, () => []),
+  );
   for (let x = 0; x < n; x++)
     for (const r of f.reads) {
-      const into = r.kind === "answer" ? answer : mark;
+      const into =
+        r.kind === "answer" ? answer : r.kind === "edgeMark" ? mark : group[r.set ?? 0];
+      if (into === undefined)
+        throw new Error(`a footprint reads set ${r.set}, past its sets`);
       for (const t of reach(sp, x, r.steps)) {
         const at = into[t];
         if (at === undefined)
@@ -211,6 +224,7 @@ export function inverseOf(
     n,
     answer: readBy(answer, answers),
     edgeMark: readBy(mark, marked),
+    group: group.map((g) => readBy(g, sp.cells.length)),
     relation: f.relation,
   };
   byBoard.set(f, made);
@@ -1265,29 +1279,121 @@ export function setOf(...xs: number[]): number[] {
 export function union(a: readonly number[], b: readonly number[]): number[] {
   const out = a.slice();
   // A scan of `out` for each member is quadratic, which a reach over a whole
-  // board (Net's) spends most of its time in; a set pays only past a few.
+  // board (Net's) spends most of its time in; marks pay only past a few.
   if (a.length + b.length <= SMALL_SET) {
     for (const x of b) if (!out.includes(x)) out.push(x);
     return out;
   }
-  const seen = new Set(a);
+  const ep = stamped(a, b);
+  if (ep < 0) {
+    const seen = new Set(a);
+    for (const x of b)
+      if (!seen.has(x)) {
+        seen.add(x);
+        out.push(x);
+      }
+    return out;
+  }
   for (const x of b)
-    if (!seen.has(x)) {
-      seen.add(x);
+    if (setMarks[x] !== ep) {
+      setMarks[x] = ep;
       out.push(x);
     }
   return out;
 }
 
+/** Which elements a set holds, by index past the element (`none` at 0), so
+ * a set bound once and asked about in a loop is asked in constant time. */
+export function memberMarks(s: readonly number[]): Uint8Array {
+  let top = -1;
+  for (const x of s) if (x > top) top = x;
+  const m = new Uint8Array(top + 2);
+  for (const x of s) m[x + 1] = 1;
+  return m;
+}
+
+/** A comprehension's marks on what it has kept, by element, as
+ * {@link stamped}'s are: one a site, a pass each time the site is made. */
+export interface Stamps {
+  m: Int32Array;
+  pass: number;
+  /** The pass whose members so far are all stamped. */
+  full: number;
+}
+
+export function stamps(): Stamps {
+  return { m: new Int32Array(0), pass: 0, full: 0 };
+}
+
+/** Add `t` to the set `r` a comprehension is making, where it has not yet
+ * been added this pass. */
+export function addOnce(r: number[], s: Stamps, t: number): void {
+  // The members added before the first call of a pass were scanned for, not
+  // stamped (the compiled site scans a short set itself).
+  if (s.full !== s.pass) {
+    s.full = s.pass;
+    for (const x of r) if (x >= 0) stampOne(s, x);
+  }
+  if (t < 0) {
+    if (!r.includes(t)) r.push(t);
+    return;
+  }
+  if (t < s.m.length && s.m[t] === s.pass) return;
+  stampOne(s, t);
+  r.push(t);
+}
+
+function stampOne(s: Stamps, t: number): void {
+  if (t >= s.m.length) {
+    const m = new Int32Array(Math.max(64, 2 * t + 2));
+    m.set(s.m);
+    s.m = m;
+  }
+  s.m[t] = s.pass;
+}
+
 /** `a - b` of element sets, in `a`'s order. */
 export function minus(a: readonly number[], b: readonly number[]): number[] {
   if (b.length <= SMALL_SET) return a.filter((x) => !b.includes(x));
-  const gone = new Set(b);
-  return a.filter((x) => !gone.has(x));
+  const ep = stamped(b, a);
+  if (ep < 0) {
+    const gone = new Set(b);
+    return a.filter((x) => !gone.has(x));
+  }
+  return a.filter((x) => setMarks[x] !== ep);
 }
 
-/** The size up to which a scan beats building a `Set`. */
+/** The size up to which a scan beats marking. */
 const SMALL_SET = 16;
+
+/** Marks on elements, by index: an element is marked in a pass where its
+ * entry holds the pass's number, so a pass starts without clearing any. One
+ * pass is live at a time, and only inside the function that started it. A
+ * `Set` cost Net's reach over the whole board a tenth of a deal. */
+let setMarks = new Int32Array(1024);
+let setPass = 0;
+
+/** Start a pass that marks `marked`, sized for every element of it and of
+ * `also`; `-1` where either holds `none`, which no entry can mark. */
+function stamped(marked: readonly number[], also: readonly number[]): number {
+  let top = setMarks.length - 1;
+  let least = 0;
+  for (const x of marked)
+    if (x > top) top = x;
+    else if (x < least) least = x;
+  for (const x of also)
+    if (x > top) top = x;
+    else if (x < least) least = x;
+  if (least < 0) return -1;
+  if (top >= setMarks.length) setMarks = new Int32Array(2 * top + 2);
+  if (setPass === 0x7fffffff) {
+    setMarks.fill(0);
+    setPass = 0;
+  }
+  const ep = ++setPass;
+  for (const x of marked) setMarks[x] = ep;
+  return ep;
+}
 
 /** `a subset b` of element sets. */
 export function subsetOf(a: readonly number[], b: readonly number[]): boolean {
@@ -2224,6 +2330,20 @@ export function throughWhere(
  * group exactly where `of` gives it that list. */
 export interface EdgeGroups {
   of(c: number): readonly number[];
+  /** Where the groups are kept on the marks, what has changed in them. */
+  readonly changes?: GroupChanges;
+}
+
+/**
+ * The changes to kept groups since they were last made afresh (`made`
+ * counts the times): for each join, the smaller group's squares, and for
+ * each split, the squares of the group split. Whether two squares share a
+ * group changes only for squares of one of these, so a binding that reads
+ * none of them reads the same.
+ */
+export interface GroupChanges {
+  readonly made: number;
+  readonly changed: readonly (readonly number[])[];
 }
 
 /** A set of edges {@link edgeGroups} joined: the space, a hash and a copy of
@@ -2311,9 +2431,11 @@ export type EdgeHolds<C> = (
 const NO_CELLS: readonly number[] = [];
 
 /** The groups one set of edges joins, kept over one marks. */
-class EdgeGroupsKept {
+class EdgeGroupsKept implements GroupChanges {
   epoch = -1;
   read = 0;
+  made = 0;
+  changed: (readonly number[])[] = [];
   sp: GridSpace | null = null;
   cl: unknown = null;
   parent = new Int32Array(0);
@@ -2343,6 +2465,8 @@ class EdgeGroupsKept {
   rebuild(b: Marks, sp: GridSpace, cl: unknown): void {
     this.epoch = b.epoch;
     this.read = b.log.length;
+    this.made++;
+    this.changed = [];
     this.sp = sp;
     this.cl = cl;
     const n = sp.cells.length;
@@ -2372,6 +2496,22 @@ class EdgeGroupsKept {
     this.handed = false;
   }
 
+  /** A copy for a fork of the marks these are caught up with, which reads
+   * the fork's log from its start. The two share their lists until either
+   * changes them. */
+  fork(): EdgeGroupsKept {
+    const k = new EdgeGroupsKept(this.holds, this.a);
+    k.epoch = this.epoch;
+    k.sp = this.sp;
+    k.cl = this.cl;
+    k.parent = this.parent.slice();
+    k.in = this.in.slice();
+    k.groupOf = this.groupOf;
+    k.handed = true;
+    this.handed = true;
+    return k;
+  }
+
   /** The lists about to change, copied first where a handle reads them. */
   writable(): (readonly number[])[] {
     if (this.handed) {
@@ -2389,7 +2529,10 @@ class EdgeGroupsKept {
     if (p === q) return;
     this.parent[p] = q;
     const g = this.writable();
-    const merged = mergeSorted(g[sp.edgeEnds[2 * e]], g[sp.edgeEnds[2 * e + 1]]);
+    const a = g[sp.edgeEnds[2 * e]];
+    const b = g[sp.edgeEnds[2 * e + 1]];
+    this.changed.push(a.length <= b.length ? a : b);
+    const merged = mergeSorted(a, b);
     for (const x of merged) g[x] = merged;
   }
 
@@ -2398,6 +2541,7 @@ class EdgeGroupsKept {
    * all lie among them. */
   split(group: readonly number[]): void {
     const sp = this.sp as GridSpace;
+    this.changed.push(group);
     if (this.mine.length !== this.parent.length)
       this.mine = new Int32Array(this.parent.length);
     const mark = ++this.marked;
@@ -2471,7 +2615,7 @@ class EdgeGroupsKept {
     if (keptCheck) checkKeptGroups(b, sp, cl, this.holds, this.a, this.groupOf);
     this.handed = true;
     const groupOf = this.groupOf;
-    return { of: (c) => (c < 0 ? NO_CELLS : groupOf[c]) };
+    return { of: (c) => (c < 0 ? NO_CELLS : groupOf[c]), changes: this };
   }
 }
 
@@ -2560,6 +2704,34 @@ export function keptEdgeGroups<C>(
     byA.set(a, kept);
   }
   return kept.update(b, sp, cl, byEdge);
+}
+
+/**
+ * Copy into `into` the groups kept over the marks `from` that have caught up
+ * with them, for a fork of the marks whose log starts empty: each copy, by
+ * the groups it copies. Whatever else is kept is made afresh on the fork.
+ */
+export function forkKept(
+  from: Marks,
+  into: Map<unknown, unknown>,
+): Map<GroupChanges, GroupChanges> {
+  const copies = new Map<GroupChanges, GroupChanges>();
+  for (const [key, byA] of from.kept) {
+    if (!(byA instanceof Map)) continue;
+    const forked = new Map<number, EdgeGroupsKept>();
+    for (const [a, kept] of byA)
+      if (
+        kept instanceof EdgeGroupsKept &&
+        kept.epoch === from.epoch &&
+        kept.read === from.log.length
+      ) {
+        const copy = kept.fork();
+        forked.set(a, copy);
+        copies.set(kept, copy);
+      }
+    if (forked.size > 0) into.set(key, forked);
+  }
+  return copies;
 }
 
 /** The next mask above `k` with as many bits set (Gosper's hack), so a

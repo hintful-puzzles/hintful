@@ -536,11 +536,17 @@ export function noRepeats(b: Marks, sp: GridSpace, fire: Fire<NoRepeatsBinding> 
 }
 
 const pegsKept = keptStore<Kept<number>>();
+let pegsOn: object | null = null;
+let pegsAt: Kept<Kept<number>> = [];
 
 /** `pegs(k, d)` as the description defines it, kept for the
  * board, since it reads no marks. */
 export function pegs(sp: GridSpace, cl: Dealt, v_k: number, v_d: number): number {
-  const _kept: Kept<Kept<number>> = pegsKept.board(cl);
+  if (cl !== pegsOn) {
+    pegsAt = pegsKept.board(cl);
+    pegsOn = cl;
+  }
+  const _kept: Kept<Kept<number>> = pegsAt;
   const _kept1 = (_kept[v_k] ??= []);
   if (_kept1[v_d] !== undefined) return _kept1[v_d];
   let _g99 = 0;
