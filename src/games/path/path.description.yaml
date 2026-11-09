@@ -14,23 +14,23 @@ help:
     change your mind mid-stroke, draw back along its end: the squares you
     retrace are taken back. Brushing any other part of the stroke does
     nothing, and it carries on once you return to where it reached, so a long
-    line can be drawn in one stroke. Undo takes a stroke back. A drag along a line you
-    have drawn and on past its end carries that line on, and a drag that runs
-    only along lines you have drawn takes them up. A line stops where it would give a square more
-    lines than it takes, where you have crossed the edge out, or at a wall. You
-    can also click near the edge between two squares to draw or remove a line
-    there.
+    line can be drawn in one stroke. Undo takes a stroke back. A drag from the
+    loose end of a line you have drawn carries it on, or, back along it, takes
+    it up. A line stops where it would give a square more lines than it takes,
+    where you have crossed the edge out, or at a wall. You can also click near
+    the edge between two squares to draw or remove a line there.
 
-    A stroke that starts on a number draws that number's line again: once it
-    leaves the line that ran on from the number, that line is taken up, as far
-    as it went, and your stroke is drawn in its place. A stroke that only
-    follows the old line changes nothing. In {{choice:ruleset:0}} the line that
-    leads into the number from a lower one stays, so a stroke from the 2 keeps
-    the line from the 1 and replaces everything on from the 2. A line from the
-    number that reaches no other number is replaced only where it must be the
-    line on: from the 1, opposite a line from a lower number, or where the
-    number has both its lines and neither reaches a number. In {{choice:ruleset:1}} the number's whole
-    line is replaced.
+    A stroke that starts on a number, or anywhere along a line but its ends,
+    picks the line up there and draws it again from there on: once it turns
+    off the old line, the old line ahead is taken up, as far as it went, and
+    your stroke is drawn in its place. A stroke that only follows the old line
+    changes nothing. In {{choice:ruleset:0}} the line ahead runs toward the
+    higher numbers, so a stroke from the 2, or from between the 2 and the 3,
+    keeps the line back to the 1. Where the numbers do not say which way is
+    ahead, it is the way your stroke sets off along the line. In
+    {{choice:ruleset:1}} a stroke from a number replaces the number's whole
+    line, and one from the middle of a line replaces the side away from the
+    number it reaches.
 
     Right-click an edge to cross it out, to mark that you are sure no line goes
     there, and keep the button down and drag to cross out every edge you pass.

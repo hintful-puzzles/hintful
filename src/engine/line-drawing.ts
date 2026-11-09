@@ -13,9 +13,9 @@
  * a drag started along even where it went on to lay one, and a player tracing
  * a line to continue it lost it (owner, 2026-10-21 for Path, 2026-10-22 for
  * both). A game may say which lines a drag from a square replaces
- * ({@link LineRules.restarts}), as Path's line ahead of a number: the drag
- * draws as if they were not there, and once it leaves them its release takes
- * up those it does not lay again. A press released where it began is a click on the edge it
+ * ({@link LineRules.restarts}), as Path's line ahead of a number or of a
+ * square in the middle of a line: the drag draws as if they were not there,
+ * and once it lays a line its release takes up those it does not lay again. A press released where it began is a click on the edge it
  * was aimed at, and replaces nothing. The right button crosses an edge, and drags to cross every edge it
  * passes, through the engine's sweep.
  *
@@ -99,10 +99,12 @@ export interface LineRules<S extends Board> {
   /** Whether edge `e` is the board's and not the player's, as a wall is: no
    * click, key or drag changes it. Absent, every edge is the player's. */
   fixed?(state: S, e: number): boolean;
-  /** The lines a drag that begins on square `i` replaces: the drag sees them
-   * as open, and once it leaves them its release takes up each one it does
-   * not lay again. Absent, a drag replaces nothing. */
-  restarts?(state: S, i: number): readonly number[];
+  /** The lines a drag that begins on square `i` and steps first to square
+   * `toward` replaces: the drag sees them as open, and once it lays a line
+   * its release takes up each one it does not lay again. Asked at the first
+   * step and not at the press, so a game can take the way the drag sets off
+   * as the way it means to redraw. Absent, a drag replaces nothing. */
+  restarts?(state: S, i: number, toward: number): readonly number[];
 }
 
 interface Board {
@@ -122,8 +124,8 @@ export interface LineDrag {
    * a press released where it began is aimed at. */
   at: Point | null;
   /** The lines it replaces, from {@link LineRules.restarts} on its first
-   * square. */
-  replaces: readonly number[];
+   * square, or `null` before its first step. */
+  replaces: readonly number[] | null;
 }
 
 /** The `Ui` a line-drawing game holds. */
@@ -185,29 +187,32 @@ function dragChanges<S extends Board>(
 
 /** `rules` as `drag` sees the board: the lines it replaces open. */
 function seenBy<S extends Board>(rules: LineRules<S>, drag: LineDrag): LineRules<S> {
-  if (drag.replaces.length === 0) return rules;
+  if (!drag.replaces?.length) return rules;
   const open = new Set(drag.replaces);
   return { ...rules, mark: (state, e) => (open.has(e) ? OPEN : rules.mark(state, e)) };
 }
 
 /** The edges `drag` would change if released now, which its preview shows:
- * none for no drag or a press that has not left its square. Once it leaves
- * the lines it replaces, they are taken up but for those it lays again; a
- * drag that only retraces them changes nothing, so a finger that slips off
- * a number along its line loses none of it (owner, 2026-11-09). */
+ * none for no drag or a press that has not left its square. A drag that
+ * replaces lines changes nothing until it lays one: then they are taken up
+ * but for those it lays again. So a finger that slips along the line it
+ * picked up, or traces it, loses none of it (owner, 2026-11-09). */
 export function dragPreview<S extends Board>(
   rules: LineRules<S>,
   state: S,
   drag: LineDrag | null,
 ): EdgeChange[] {
   if (!drag || drag.cells.length < 2) return [];
-  const g = squareEdges(state.w, state.h);
-  const replaced = new Set(drag.replaces);
-  let retraces = replaced.size > 0;
-  for (let k = 1; retraces && k < drag.cells.length; k++)
-    retraces = replaced.has(edgeBetween(g, drag.cells[k - 1], drag.cells[k]));
-  if (retraces) return [];
-  const marks = new Map<number, EdgeMark>(drag.replaces.map((e) => [e, OPEN]));
+  const replaces = drag.replaces ?? [];
+  if (replaces.length > 0) {
+    const g = squareEdges(state.w, state.h);
+    let lays = false;
+    for (let k = 1; !lays && k < drag.cells.length; k++)
+      lays =
+        rules.mark(state, edgeBetween(g, drag.cells[k - 1], drag.cells[k])) !== LINE;
+    if (!lays) return [];
+  }
+  const marks = new Map<number, EdgeMark>(replaces.map((e) => [e, OPEN]));
   for (const c of dragChanges(seenBy(rules, drag), state, drag.cells))
     marks.set(c.edge, c.mark);
   return [...marks]
@@ -280,25 +285,30 @@ function extendDrag<S extends Board>(
   const closing = seen === 0 && rules.loops && cells.length >= 4;
   if (retreats || (seen >= 0 && !closing)) {
     if (retreats || drag.keyboard) cells.length = seen + 1;
+    // Back on its first square, the drag may set off another way.
+    if (cells.length === 1) drag.replaces = null;
     return;
   }
   if (lx !== tx && ly !== ty) return;
   const step = lx === tx ? (ty > ly ? w : -w) : tx > lx ? 1 : -1;
+  drag.replaces ??= rules.restarts?.(state, cells[0], cells[0] + step) ?? [];
+  const view = seenBy(rules, drag);
   for (let at = last; at !== to; ) {
     const next = at + step;
     if (cells.includes(next) && !(closing && next === to)) break;
     // Judged on the board as the drag would leave it with this step, since
     // a step that lays a line keeps the lines the drag has passed.
     const e = edgeBetween(g, at, next);
-    if (rules.mark(state, e) === CROSS) break;
-    const marks = marksOf(rules, state);
-    for (const c of dragChanges(rules, state, [...cells, next])) marks[c.edge] = c.mark;
-    if ([at, next].some((i) => linesAt(state, marks, i) > rules.takes(state, i))) break;
+    if (view.mark(state, e) === CROSS) break;
+    const marks = marksOf(view, state);
+    for (const c of dragChanges(view, state, [...cells, next])) marks[c.edge] = c.mark;
+    if ([at, next].some((i) => linesAt(state, marks, i) > view.takes(state, i))) break;
     cells.push(next);
     at = next;
   }
   // A loop that cannot close is a drag back onto its first square.
   if (closing && drag.keyboard && cells[cells.length - 1] !== to) cells.length = 1;
+  if (cells.length === 1) drag.replaces = null;
 }
 
 // --- the input --------------------------------------------------------------
@@ -337,8 +347,6 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
     changes.length > 0 ? input.move(state, changes) : null;
 
   const fixed = (state: S, e: number): boolean => rules.fixed?.(state, e) ?? false;
-  const restartsAt = (state: S, i: number): readonly number[] =>
-    rules.restarts?.(state, i) ?? [];
 
   /** A line on edge `e`, or the line taken off it. */
   const toggleLine = (state: S, e: number): M | null => {
@@ -394,10 +402,7 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
     if (button === LEFT_BUTTON) {
       hideCursor(ui.cursor);
       const i = squareAtP();
-      ui.drag =
-        i < 0
-          ? null
-          : { cells: [i], keyboard: false, at: p, replaces: restartsAt(state, i) };
+      ui.drag = i < 0 ? null : { cells: [i], keyboard: false, at: p, replaces: null };
       return UI_UPDATE;
     }
     if (button === RIGHT_BUTTON) {
@@ -410,7 +415,7 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
     if (button === LEFT_DRAG) {
       if (!ui.drag || ui.drag.keyboard) return null;
       const i = squareAtP();
-      if (i >= 0) extendDrag(seenBy(rules, ui.drag), state, ui.drag, i);
+      if (i >= 0) extendDrag(rules, state, ui.drag, i);
       return UI_UPDATE;
     }
     if (button === RIGHT_DRAG)
@@ -448,12 +453,7 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
       }
       if (!moveCursor(ui.cursor, button, state.w, state.h)) return null;
       if (ui.drag?.keyboard)
-        extendDrag(
-          seenBy(rules, ui.drag),
-          state,
-          ui.drag,
-          ui.cursor.y * state.w + ui.cursor.x,
-        );
+        extendDrag(rules, state, ui.drag, ui.cursor.y * state.w + ui.cursor.x);
       return UI_UPDATE;
     }
     if (button === CURSOR_SELECT) {
@@ -468,7 +468,7 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
         cells: [i],
         keyboard: true,
         at: null,
-        replaces: restartsAt(state, i),
+        replaces: null,
       };
       return UI_UPDATE;
     }

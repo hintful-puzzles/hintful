@@ -245,7 +245,27 @@ describe("path input", () => {
     expect(move).toEqual({ kind: "edges", changes: [{ edge: 6, mark: LINE }] });
   });
 
-  it("a drag that starts along a line takes lines up", () => {
+  it("a stroke from the middle of a line redraws the side away from its number", () => {
+    // The top 2's line runs down two squares; from its middle, left.
+    const drawn = executeMove(start, {
+      kind: "edges",
+      changes: [10, 14].map((edge) => ({ edge, mark: LINE })),
+    });
+    const move = play(drawn, [
+      [LEFT_BUTTON, at(5)],
+      [LEFT_DRAG, at(4)],
+      [LEFT_RELEASE, at(4)],
+    ]);
+    expect(move).toEqual({
+      kind: "edges",
+      changes: [
+        { edge: 3, mark: LINE },
+        { edge: 14, mark: OPEN },
+      ],
+    });
+  });
+
+  it("a drag that starts at a line's loose end and runs along it takes it up", () => {
     const drawn = executeMove(start, {
       kind: "edges",
       changes: [6, 7].map((edge) => ({ edge, mark: LINE })),
@@ -619,6 +639,28 @@ describe("path, the one-line ruleset", () => {
     expect(stroke(lines(start, [0, 1, 2, 12, 5]), [7, 11])).toEqual(["5-", "16+"]);
     // The 1's is ahead.
     expect(stroke(lines(start, [9]), [0, 1])).toEqual(["0+", "9-"]);
+    // Set off along, it is the one the stroke redraws.
+    expect(stroke(lines(start, [5, 4]), [7, 6, 2])).toEqual(["4-", "11+"]);
+  });
+
+  it("a stroke from the middle of a line redraws it from there on", () => {
+    const drawn = lines(start, ONE_PATH_ANSWER);
+    // From the middle row's second square, between the 2 and the 3, down: the
+    // line on through the 3 to the 4 goes, and the line back to the 2 stays.
+    expect(stroke(drawn, [5, 9])).toEqual(["3-", "6-", "7-", "8-", "13-", "14+"]);
+    // Along the line either way and let go: nothing changes.
+    expect(stroke(drawn, [5, 4])).toBeNull();
+    expect(stroke(drawn, [5, 6])).toBeNull();
+    // From a line's loose end, a stroke back along it pulls it back.
+    expect(stroke(lines(start, [0, 1]), [2, 1])).toEqual(["1-"]);
+  });
+
+  it("on a line that meets no number, a stroke redraws the side it sets off along", () => {
+    // Up the second column from the bottom, along the middle row and down.
+    const fragment = lines(start, [14, 4, 15]);
+    expect(stroke(fragment, [5, 6, 2])).toEqual(["11+", "15-"]);
+    // A new way at once: nothing says which side goes, and the square is full.
+    expect(stroke(fragment, [5, 1])).toBeNull();
   });
 
   it("draws its walls, and its line in a color that runs from the 1 to the 4", () => {
