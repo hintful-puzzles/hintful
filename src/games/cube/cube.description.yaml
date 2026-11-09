@@ -43,6 +43,19 @@ help:
 
     On a custom grid much larger than the ones on the Type menu, the search
     can run out before it finds a line, and the hint says so.
+
+    *Show solution…* plans the same way, but all the way to the end, and
+    rolls the solid along the whole line from wherever it stands, one roll
+    after another. As with the hint, the line is a shortest one on the cube
+    and the tetrahedron, and need not be on the other two solids. One
+    undo takes the whole line back. If the search runs out before the end,
+    it says so and leaves the board as it was.
+  parameters:
+    after: |-
+      A grid of squares wider than it is tall, or taller than it is wide, is
+      dealt whichever way round [fits your screen](features#board-shape). A
+      grid of triangles is always dealt the way you chose it: its two numbers
+      swapped give the same patch upside down, not on its side.
 name: Cube
 family: position
 sizes:

@@ -304,7 +304,8 @@ Turning your device never changes a game you're in the middle of: the next new
 game fits the new shape. A few boards are always dealt the way you chose them,
 because turned they would be a different puzzle: Same Game and Bricks, where
 things fall downward; Slide, whose exit is always on the right; and the grid
-types in Loopy and Ascent that become a different grid on their side. Square
+types in Loopy and Ascent that become a different grid on their side, and the
+grids of triangles in Cube, which no Cube grid matches on its side. Square
 boards, like every Latin square, are the same either way round.
 
 ## Filling in all the pencil marks {#mark-all}

@@ -3,7 +3,11 @@
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { PresetBoards } from "../../engine/game.ts";
-import { endParams, parseDimensions } from "../../engine/params.ts";
+import {
+  endParams,
+  parseDimensions,
+  transposeDimensions,
+} from "../../engine/params.ts";
 import { enumGridSquares, type GridSquare, gridArea } from "./grid.ts";
 import { alignPolyKeys, SOLIDS, SolidType } from "./solids.ts";
 
@@ -16,10 +20,17 @@ export interface CubeParams {
   d2: number;
 }
 
-/** A roll in one of the four orthogonal directions. Diagonal inputs on
- * triangular grids resolve to the equivalent orthogonal roll, so a stored
- * move is always one of these four (JSON-safe: the default codec suffices). */
-export type CubeMove = { dir: "L" | "R" | "U" | "D" };
+/** One of the four orthogonal directions. Diagonal inputs on triangular grids
+ * resolve to the equivalent orthogonal roll, so a stored roll is always one of
+ * these four. */
+export type RollLetter = "L" | "R" | "U" | "D";
+
+/** JSON-safe as it is: the default codec suffices. */
+export type CubeMove =
+  /** One roll. */
+  | { dir: RollLetter }
+  /** Show solution: every roll of a line that finishes the board, in order. */
+  | { solution: readonly RollLetter[] };
 
 /** A key-point pair: indices into either a grid square's corners or the
  * solid's vertices. */
@@ -45,6 +56,9 @@ export interface CubeState {
   readonly previous: number;
   readonly angle: number;
   readonly movecount: number;
+  /** The boards a move of several rolls passed through, after each roll but
+   * the last, so that its animation plays every roll; empty after one. */
+  readonly via: readonly CubeState[];
 }
 
 // --- params ----------------------------------------------------------
@@ -72,6 +86,15 @@ function presetOf(solid: SolidType): CubeParams {
 export function hasPresetSize(p: CubeParams): boolean {
   const size = PRESET_SIZES[p.solid];
   return size !== undefined && size[0] === p.d1 && size[1] === p.d2;
+}
+
+const turnGrid = transposeDimensions<CubeParams>({ w: "d1", h: "d2" });
+
+/** A square grid turns by exchanging its width and height. A triangle grid
+ * with its two numbers exchanged is the same patch mirrored top to bottom,
+ * drawn the same size, so it never turns. */
+export function transposeParams(p: CubeParams): CubeParams | null {
+  return SOLIDS[p.solid].order === 4 ? turnGrid(p) : null;
 }
 
 export const menu: PresetBoards<CubeParams> = {
@@ -198,6 +221,7 @@ export function newState(p: CubeParams, desc: string): CubeState {
     previous: current,
     angle: 0,
     movecount: 0,
+    via: [],
   };
 }
 

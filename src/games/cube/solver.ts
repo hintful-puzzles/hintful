@@ -265,6 +265,29 @@ export function planRolls(
   state: CubeState,
   allowance: Allowance = { left: HINT_ALLOWANCE },
 ): SearchOutcome<Roll> {
+  const { line, finished } = plan(state, allowance);
+  if (line.length === 0 && !finished) return { kind: "out-of-reach" };
+  return { kind: "found", line };
+}
+
+/**
+ * The rolls that finish the board from `state`, for Show solution: the plan
+ * {@link planRolls} makes, out of reach where it stops short of the finish,
+ * since a solution that leaves paint on the arena is no solution.
+ */
+export function finishingRolls(
+  state: CubeState,
+  allowance: Allowance = { left: HINT_ALLOWANCE },
+): SearchOutcome<Roll> {
+  const { line, finished } = plan(state, allowance);
+  return finished ? { kind: "found", line } : { kind: "out-of-reach" };
+}
+
+/** The line of {@link planRolls}, and whether it reaches the finish. */
+function plan(
+  state: CubeState,
+  allowance: Allowance,
+): { line: Roll[]; finished: boolean } {
   const packer = new Packer(rollsOf(state));
   const window = WINDOW[state.solidIndex];
   packer.packState(state);
@@ -279,9 +302,7 @@ export function planRolls(
     }
     line.push(...next.line);
   }
-  if (line.length === 0 && paintedOf(at) > packer.floor)
-    return { kind: "out-of-reach" };
-  return { kind: "found", line };
+  return { line, finished: paintedOf(at) <= packer.floor };
 }
 
 /**

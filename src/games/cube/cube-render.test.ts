@@ -18,10 +18,12 @@ import {
   COL_GRID,
   COL_PAINT,
   COL_SOLID,
+  LINE_TIME,
+  ROLLTIME,
 } from "./render.ts";
 import { executeMove } from "./roll.ts";
 import { SOLIDS, SolidType } from "./solids.ts";
-import { type CubeParams, newState } from "./state.ts";
+import { type CubeParams, type CubeState, newState } from "./state.ts";
 
 const PALETTE = cubeGame.colors(DEFAULT_BACKGROUND);
 
@@ -108,6 +110,38 @@ describe("Cube rendering", () => {
 
     const polys = opsOfKind(ops, "polygon");
     expect(polys.length).toBeGreaterThan(state.grid.length);
+  });
+
+  it.each([
+    ["a short line at a roll's own pace", ["R", "D", "L"]],
+    // Long enough to run past LINE_TIME at a roll's own pace.
+    [
+      "a long line quickened",
+      Array.from({ length: 60 }, (_, i) => (i % 2 ? "L" : "R")),
+    ],
+  ] as const)("plays %s one roll after another, forward and undone", (_name, letters) => {
+    const { state, ds } = freshCube();
+    const boards = [state];
+    for (const dir of letters)
+      boards.push(executeMove(boards[boards.length - 1], { dir }));
+    const solved = executeMove(state, { solution: letters });
+    const total = Math.min(letters.length * ROLLTIME, LINE_TIME);
+    const each = total / letters.length;
+    const paint = (prev: CubeState, cur: CubeState, dir: number, at: number) => {
+      const { dr, ops } = recordingDrawing();
+      redraw(dr, ds, prev, cur, dir, {}, at, NO_FLASH);
+      return ops;
+    };
+    expect(cubeGame.animLength?.(state, solved, 1, {})).toBeCloseTo(total);
+    expect(cubeGame.animLength?.(solved, state, -1, {})).toBeCloseTo(total);
+    for (const k of [0, 1, letters.length - 1]) {
+      // A roll of the line, 40% through, is the single roll 40% through.
+      const single = paint(boards[k], boards[k + 1], 1, ROLLTIME * 0.4);
+      expect(paint(state, solved, 1, (k + 0.4) * each)).toEqual(single);
+      // Undone, the line plays backwards: the last roll first.
+      const undone = paint(boards[k + 1], boards[k], -1, ROLLTIME * 0.6);
+      expect(paint(solved, state, -1, total - (k + 0.4) * each)).toEqual(undone);
+    }
   });
 
   it.each([

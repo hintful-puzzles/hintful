@@ -76,21 +76,27 @@ function menuParams(game: AnyGame): AnyParams[] {
   });
 }
 
-/** The menu's boards, plus each one made a column wider through the Custom
- * dialog's own width item where that is still valid (two wider, for a game
- * that wants even sizes). Most menu boards are square, and a square board turns
- * into itself, so without these the exchange below could hardly fail. */
+/** The menu's boards, plus each one made a size larger along one side, through
+ * the first Custom dialog item that turning the board moves, where that is
+ * still valid (two larger, for a game that wants even sizes). Most menu boards
+ * are square, and a square board turns into itself, so without these the
+ * exchange below could hardly fail. The item is found by turning, not by its
+ * keyword, which a game names for what its numbers mean. */
 function boardsToTurn(game: AnyGame): AnyParams[] {
-  const width = (game.paramConfig ?? []).find((item) => item.kw === "width");
   const out = menuParams(game);
-  if (width === undefined || width.type !== "string") return out;
+  const turn = game.transposeParams;
+  if (turn === undefined) return out;
   for (const p of menuParams(game)) {
-    for (const extra of [1, 2]) {
-      const q = structuredClone(p);
-      width.set(q, String(Number(width.get(q)) + extra));
-      if (paramsError(game, q, true) === null) {
+    widen: for (const item of game.paramConfig ?? []) {
+      if (item.type !== "string") continue;
+      for (const extra of [1, 2]) {
+        const q = structuredClone(p);
+        item.set(q, String(Number(item.get(q)) + extra));
+        if (paramsError(game, q, true) !== null) continue;
+        const t = turn(q);
+        if (t === null || item.get(t) === item.get(q)) continue;
         out.push(q);
-        break;
+        break widen;
       }
     }
   }

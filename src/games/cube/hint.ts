@@ -154,5 +154,7 @@ export function hintKeepTrack(
   step: HintStep<CubeMove>,
   _state: CubeState,
 ): HintTrackVerdict {
-  return m.dir === step.move.dir ? "completed" : "off";
+  return "dir" in m && "dir" in step.move && m.dir === step.move.dir
+    ? "completed"
+    : "off";
 }

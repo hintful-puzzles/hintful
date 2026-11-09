@@ -17,10 +17,10 @@ import {
   sqr,
   transformPoly,
 } from "./solids.ts";
-import type { CubeMove, CubeState } from "./state.ts";
+import type { CubeMove, CubeState, RollLetter } from "./state.ts";
 
 /** Move letters, indexed by the orthogonal `Direction`s. */
-export const DIR_CHARS: readonly CubeMove["dir"][] = ["L", "R", "U", "D"];
+export const DIR_CHARS: readonly RollLetter[] = ["L", "R", "U", "D"];
 
 /**
  * The square that rolling `direction` from square `current` lands on, and
@@ -168,14 +168,24 @@ export function positionOf(state: CubeState): cube.Position {
   return { blue: state.blue, at, paint: state.faceColors };
 }
 
-/** A roll, by the description's rules, and the key points its animation
- * turns the solid about. */
+/** A roll, or a line of them, by the description's rules. */
 export function executeMove(from: CubeState, move: CubeMove): CubeState {
-  // Cube's move has no discriminant to narrow to `never`, so check the one
+  if ("solution" in move) {
+    if (!Array.isArray(move.solution)) rejectMove(move, "cube: executeMove");
+    const boards = [from];
+    for (const dir of move.solution) boards.push(roll(boards[boards.length - 1], dir));
+    return { ...boards[boards.length - 1], via: boards.slice(1, -1) };
+  }
+  return roll(from, move.dir);
+}
+
+/** One roll, and the key points its animation turns the solid about. */
+function roll(from: CubeState, dir: RollLetter): CubeState {
+  // Cube's moves have no discriminant to narrow to `never`, so check the one
   // field the dispatch reads: an unknown letter from another build must be
   // rejected as unrecognized, not reported as a roll into a wall.
-  const direction: Direction = DIR_CHARS.indexOf(move.dir);
-  if (direction < 0) rejectMove(move, "cube: executeMove");
+  const direction: Direction = DIR_CHARS.indexOf(dir);
+  if (direction < 0) rejectMove({ dir }, "cube: executeMove");
 
   const rules = rulesOf(from);
   const p = positionOf(from);
@@ -201,6 +211,7 @@ export function executeMove(from: CubeState, move: CubeMove): CubeState {
     sgkey: geo.skey,
     previous: from.current,
     angle: geo.angle,
+    via: [],
   };
 }
 

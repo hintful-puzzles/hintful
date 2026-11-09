@@ -31,6 +31,24 @@ import { SOLIDS, transformPoly } from "./solids.ts";
 import type { CubeMove, CubeParams, CubeState, KeyPair } from "./state.ts";
 
 export const ROLLTIME = 0.13;
+
+/** The longest a line of rolls takes to play, in seconds. Show solution's
+ * line on the icosahedron runs past a hundred rolls, which at a roll's own
+ * time would hold the player watching for a quarter of a minute. */
+export const LINE_TIME = 5;
+
+/** How long each roll of a move of `rolls` rolls takes: a roll's own time,
+ * quickened on a line long enough to run past {@link LINE_TIME}. */
+function rollTime(rolls: number): number {
+  return Math.min(ROLLTIME, LINE_TIME / rolls);
+}
+
+/** How long the move that made `state` takes to play. */
+export function moveTime(state: CubeState): number {
+  const rolls = state.via.length + 1;
+  return rolls * rollTime(rolls);
+}
+
 export const PREFERRED_TILE_SIZE = 48;
 
 export const COL_BACKGROUND = 0; // the board around the arena
@@ -120,7 +138,17 @@ export function redraw(
     const t = oldstate;
     oldstate = cur;
     cur = t;
-    at = ROLLTIME - at;
+    at = moveTime(cur) - at;
+  }
+  // A move of several rolls plays them one after another: draw the roll
+  // `at` has reached, as if it were the only one.
+  if (oldstate && cur.via.length > 0) {
+    const boards = [oldstate, ...cur.via, cur];
+    const each = rollTime(boards.length - 1);
+    const k = Math.max(0, Math.min(Math.floor(at / each), boards.length - 2));
+    oldstate = boards[k];
+    cur = boards[k + 1];
+    at = ((at - k * each) * ROLLTIME) / each;
   }
 
   let angle: number;

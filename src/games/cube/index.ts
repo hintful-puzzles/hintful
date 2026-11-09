@@ -11,9 +11,10 @@
  * transformed geometry is re-derived each frame in `render.ts`.
  */
 
-import type { Game, UiUpdate } from "../../engine/game.ts";
+import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click } from "../../engine/hint-gesture.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { numberItem } from "../../engine/params.ts";
 import {
   cursorDelta,
@@ -31,12 +32,13 @@ import {
   type CubeDrawState,
   colors,
   computeSize,
+  moveTime,
   newDrawState,
   PREFERRED_TILE_SIZE,
-  ROLLTIME,
   redraw,
 } from "./render.ts";
 import { DIR_CHARS, executeMove, positionOf, rollDest, rulesOf } from "./roll.ts";
+import { finishingRolls } from "./solver.ts";
 import {
   type CubeMove,
   type CubeParams,
@@ -47,6 +49,7 @@ import {
   hasPresetSize,
   menu,
   newState,
+  transposeParams,
   validateParams,
 } from "./state.ts";
 
@@ -158,6 +161,19 @@ function status(state: CubeState): GameStatus {
   return rulesOf(state).finished(positionOf(state)) ? "solved" : "ongoing";
 }
 
+/**
+ * Show solution: the hint's planner, run until the board is finished, played
+ * as one move whose rolls animate one after another. The line need not be the
+ * shortest. Planned from where the solid stands only, never from the board as
+ * dealt: the move is rolls from where the solid stands, and every position of
+ * a dealt board can still be finished.
+ */
+function solve(_orig: CubeState, curr: CubeState): SolveResult<CubeMove> {
+  const planned = finishingRolls(curr);
+  if (planned.kind !== "found") return { ok: false, error: PUZZLE_NOT_REASONABLE };
+  return { ok: true, move: { solution: planned.line.map((r) => DIR_CHARS[r]) } };
+}
+
 // --- Game object ------------------------------------------------------
 
 export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawState> = {
@@ -171,6 +187,7 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
   encodeParams,
   decodeParams,
   validateParams,
+  transposeParams,
   paramConfig: [
     {
       kw: "type-of-solid",
@@ -212,6 +229,8 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
       "Every position of the solid is a step on the way to the answer, so no roll can be wrong, only longer.",
   },
 
+  solve,
+
   hint,
   hintRungs: CUBE_RUNGS,
   hintMarks: {
@@ -225,6 +244,7 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
   // A tap on the square the roll lands on, which `directionFromClick` reads
   // as a roll toward it.
   hintGesture(s, _ui, ds, m) {
+    if (!("dir" in m)) return [];
     const dest = rollDest(s, DIR_CHARS.indexOf(m.dir));
     if (dest < 0) return [];
     const sq = s.grid[dest];
@@ -244,7 +264,8 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
   newDrawState,
   redraw,
 
-  animLength: () => ROLLTIME,
+  // An undo animates the move that made the board it leaves.
+  animLength: (a, b, dir) => moveTime(dir < 0 ? a : b),
 };
 
 registerGame(cubeGame);

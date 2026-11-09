@@ -22,8 +22,9 @@ import { type CubeUi, cubeGame } from "./index.ts";
 import type { CubeDrawState } from "./render.ts";
 import { DIR_CHARS, executeMove, rollDest } from "./roll.ts";
 import { SOLIDS, SolidType } from "./solids.ts";
-import { Packer, rollsOf } from "./solver.ts";
+import { finishingRolls, Packer, rollsOf } from "./solver.ts";
 import {
+  type CubeMove,
   type CubeParams,
   type CubeState,
   decodeParams,
@@ -286,10 +287,78 @@ describe("cube rolling", () => {
   });
 });
 
+describe("Show solution", () => {
+  const solve = cubeGame.solve as NonNullable<typeof cubeGame.solve>;
+
+  /** The board Show solution leaves from `s`, after checking it is one move. */
+  const solveFrom = (s: CubeState): CubeState => {
+    const res = solve(s, s);
+    if (!res.ok) throw new Error(res.error);
+    if (!("solution" in res.move)) throw new Error("not a line of rolls");
+    const after = executeMove(s, res.move);
+    expect(after.via.length).toBe(res.move.solution.length - 1);
+    expect(after.movecount).toBe(s.movecount + res.move.solution.length);
+    return after;
+  };
+
+  it("finishes every preset from the deal and from a board part-played", () => {
+    for (const p of PRESETS) {
+      for (const seed of ["s-a", "s-b", "s-c"]) {
+        let s = newState(p, newDesc(p, randomNew(seed)).desc);
+        expect(cubeGame.status(solveFrom(s)), `${seed} ${encodeParams(p, true)}`).toBe(
+          "solved",
+        );
+        // Wander, putting paint down on the way, and solve from there.
+        const rng = randomNew(`${seed}-rolls`);
+        for (let i = 0; i < 25; i++) {
+          const legal = DIR_CHARS.filter((_, r) => rollDest(s, r) >= 0);
+          s = executeMove(s, { dir: legal[randomUpto(rng, legal.length)] });
+        }
+        if (cubeGame.status(s) === "solved") continue;
+        expect(cubeGame.status(solveFrom(s)), `${seed} ${encodeParams(p, true)}`).toBe(
+          "solved",
+        );
+      }
+    }
+  });
+
+  it("refuses rather than offer a line that stops short of the finish", () => {
+    const p = PRESETS[3];
+    const s = newState(p, newDesc(p, randomNew("short")).desc);
+    // An allowance the planner spends before its first line ends.
+    expect(finishingRolls(s, { left: 50 }).kind).toBe("out-of-reach");
+    expect(finishingRolls(s).kind).toBe("found");
+  });
+
+  it("refuses a solution that is not a list of rolls", () => {
+    const s = newState(PRESETS[0], newDesc(PRESETS[0], randomNew("x")).desc);
+    const foreign = { solution: "LR" } as unknown as CubeMove;
+    expect(() => executeMove(s, foreign)).toThrow(/cube: executeMove: unrecognized/);
+  });
+});
+
+describe("turning the board", () => {
+  const turn = cubeGame.transposeParams as NonNullable<typeof cubeGame.transposeParams>;
+
+  it("turns a cube's grid and no triangle grid", () => {
+    expect(turn({ solid: SolidType.Cube, d1: 4, d2: 6 })).toEqual({
+      solid: SolidType.Cube,
+      d1: 6,
+      d2: 4,
+    });
+    for (const solid of [
+      SolidType.Tetrahedron,
+      SolidType.Octahedron,
+      SolidType.Icosahedron,
+    ])
+      expect(turn({ solid, d1: 2, d2: 3 })).toBeNull();
+  });
+});
+
 describe("cube Game wiring", () => {
   it("advertises the right capabilities", () => {
     expect(cubeGame.id).toBe("cube");
-    expect(cubeGame.solve).toBeUndefined();
+    expect(cubeGame.solve).toBeDefined();
     expect(cubeGame.textFormat).toBeUndefined();
     expect(cubeGame.statusbarText).toBeDefined();
     expect(cubeGame.hint).toBeDefined();
