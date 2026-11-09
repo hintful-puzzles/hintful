@@ -54,8 +54,9 @@ const PINNED: Readonly<Record<string, readonly string[]>> = {
   // A striped square: the reach of the one run that can fill it.
   ascent: ["5x5mRdt:25_1a4b24_2_8_6_22d12a15a17c19a"],
   crossing: [
-    // A note ruled out in a square, which the 7x7 deal's plan never needs.
-    "11x11:2a6a2a2b1a1a2b3a6a1a3b1a2b1a1a2a1a3b1a1a3a2a5a1b2c1a3b3b1b3b2a4a3a1,19,23,24,31,32,42,46,48,51,53,59,63,65,74,77,83,89,97,126,276,343,361,435,443,498,547,693,794,886,948,4777,5618,6843,8629,9745,37664,47511,944232,2183531",
+    // A note ruled out in a square, which the 7x7 deal's plan never needs:
+    // this plan's third step narrows notes its second wrote.
+    "7x9:4a1a1b8a1b1a2a1a1b1a2a1a1a2a1a7a1a1b4,27,36,189,294,475,546,858,918,4179,5566,6259,6855,7594,7878,8742,9482,9663",
     // The outlined squares a number's one run clashes with elsewhere, which
     // the deal's plan takes later than its run reaches.
     "7x7du:a8a1b2a5a2c3a2a2b1a1a7,11,13,19,43,49,53,58,83,88,112,175,356,36961,56159,143643,2985635",
