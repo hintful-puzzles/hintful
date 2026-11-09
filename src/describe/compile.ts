@@ -5525,12 +5525,20 @@ interface Reread {
  * between it and the binding, a loop opened since; and only where it reads
  * the marks, since the board's deal and the binders' names do not change. A
  * read the language cannot state again (a subset's membership) is false, so
- * its bindings are passed over whenever a count moves.
+ * its bindings are passed over whenever a count moves. A set named by `=`
+ * that the binding reads only by its groups is read again only at those
+ * groups (`groupRereads`).
  */
-function rereads(binders: readonly Binder[], scope: Scope, env: Env): Reread[] {
-  const out: { expr: Expr; read: number; leave: number }[] = [];
+function rereads(
+  binders: readonly Binder[],
+  rest: readonly (Expr | null)[],
+  scope: Scope,
+  env: Env,
+): Reread[] {
+  const out: { expr: Expr; read: number; leave: number; set?: number }[] = [];
+  const levels = new Map<string, number>();
   let loops = 0;
-  for (const bnd of binders) {
+  for (const [i, bnd] of binders.entries()) {
     const name: Expr = { k: "name", name: bnd.name };
     if (bnd.kind === "let") {
       if (readsMarks(bnd.of, env))
@@ -5538,6 +5546,7 @@ function rereads(binders: readonly Binder[], scope: Scope, env: Env): Reread[] {
           expr: { k: "bin", op: "=", a: name, b: bnd.of },
           read: loops,
           leave: loops,
+          set: i,
         });
     } else {
       loops++;
@@ -5548,10 +5557,20 @@ function rereads(binders: readonly Binder[], scope: Scope, env: Env): Reread[] {
     }
     if (bnd.where !== null && readsMarks(bnd.where, env))
       out.push({ expr: bnd.where, read: loops, leave: loops });
+    levels.set(bnd.name, loops);
   }
   return out
     .filter((r) => r.read < loops)
-    .map(({ expr, leave }) => {
+    .flatMap(({ expr, leave, set }): Reread[] => {
+      if (set !== undefined) {
+        const after = [
+          binders[set].where,
+          ...binders.slice(set + 1).flatMap((b) => [b.of, b.where]),
+          ...rest,
+        ].filter((e): e is Expr => e !== null);
+        const groups = groupRereads(binders[set].name, after, levels, scope, env);
+        if (groups !== null) return groups;
+      }
       const o = new Out(0);
       const mark = Out.mark();
       const used = new Set(env.used);
@@ -5560,15 +5579,93 @@ function rereads(binders: readonly Binder[], scope: Scope, env: Env): Reread[] {
         const v = compileExpr(expr, scope, { ...env, scratch }, o);
         expect(v, "bool", "a read made again");
         env.scratch?.push(...scratch);
-        return { lines: flatLines(o), code: v.code, leave };
+        return [{ lines: flatLines(o), code: v.code, leave }];
       } catch (e) {
         if (!(e instanceof CompileError)) throw e;
         Out.rewind(mark);
         env.used.clear();
         for (const u of used) env.used.add(u);
-        return { lines: [], code: "false", leave };
+        return [{ lines: [], code: "false", leave }];
       }
     });
+}
+
+/**
+ * A set `S` named by `=` ahead of the loops, read by the binding only as the
+ * groups `through(t, S)` of terms `t` of the binders, its groups kept on the
+ * marks: whether each such group is the one the binding took, the kept
+ * groups caught up and read at `t`. A placement elsewhere leaves the binding
+ * as it was, where reading `S` whole again would pass it over: Filling's
+ * `O = alike` changed with nearly every placement, and ended each run at
+ * its first. A group's read fails for the bindings of its terms' values, so
+ * that is the scope it leaves. `null` where `after`, what is read after `S`
+ * is bound, reads it otherwise, or its groups are not kept.
+ */
+function groupRereads(
+  s: string,
+  after: readonly Expr[],
+  levels: ReadonlyMap<string, number>,
+  scope: Scope,
+  env: Env,
+): Reread[] | null {
+  const terms = new Map<string, Expr>();
+  if (!after.every((e) => throughOnly(e, s, new Set(), terms))) return null;
+  const S = scope.get(s);
+  const kept = S?.edgeSet?.() ?? null;
+  if (S?.at === undefined || kept === null) return null;
+  const key = `keptEdgeGroups(sp, b, ${kept.clues ? "cl" : "null"}, ${kept.fn}, ${kept.arg}, ${env.answerSort === "edge"})`;
+  // The groups the binding read, taken where `S` is bound.
+  const then = S.at.made.get(key);
+  if (then === undefined) return null;
+  const reads: Reread[] = [];
+  for (const t of terms.values()) {
+    if (readsMarks(t, env)) return null;
+    const names = new Set<string>();
+    freeNames(t, names, new Set());
+    let leave = levels.get(s) ?? 0;
+    for (const n of names) leave = Math.max(leave, levels.get(n) ?? 0);
+    const o = new Out(0);
+    const x = compileExpr(t, scope, env, o);
+    expectElem(x, "cell", "through");
+    const now = Out.fresh("_now");
+    const was = `${then.code}.of(${x.code})`;
+    reads.push({
+      lines: [
+        ...flatLines(o),
+        { indent: 0, text: `const ${now} = ${key}.of(${x.code});` },
+      ],
+      code: `${now} === ${was} || sameSet(${now}, ${was})`,
+      leave,
+    });
+  }
+  if (kept.clues) env.readsClues.yes = true;
+  env.used.add("keptEdgeGroups");
+  env.used.add("sameSet");
+  return reads;
+}
+
+/** Whether `e` reads the set named `s` only as `through(t, s)`, each `t`
+ * bound outside `e` (gathered into `terms`, by its form). */
+function throughOnly(
+  e: Expr,
+  s: string,
+  local: ReadonlySet<string>,
+  terms: Map<string, Expr>,
+): boolean {
+  if (e.k === "name") return e.name !== s;
+  const [t, set] = e.k === "call" && e.fn === "through" ? e.args : [];
+  if (set?.k === "name" && set.name === s && !local.has(s)) {
+    const names = new Set<string>();
+    freeNames(t, names, new Set());
+    if ([...names].some((n) => local.has(n))) return false;
+    terms.set(JSON.stringify(t), t);
+    return throughOnly(t, s, local, terms);
+  }
+  if (e.k === "quant" || e.k === "agg") {
+    const inner = new Set([...local, ...e.binders.map((b) => b.name)]);
+    return children(e).every((c) => throughOnly(c, s, inner, terms));
+  }
+  return children(e).every((c) => throughOnly(c, s, local, terms));
 }
 
 /** `x in of`, where `of` is a range or a set stated member by member, which
@@ -5796,7 +5893,7 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
       visit: visited?.code ?? null,
       // Nothing is moved out of the binding, nor shared with what was
       // computed before the facts that made the read stale.
-      reads: rereads(recheck.binders, sc, {
+      reads: rereads(recheck.binders, [t.premise, t.conclude], sc, {
         ...benv,
         hoist: null,
         boardRoot: null,

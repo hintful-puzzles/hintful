@@ -1,0 +1,4 @@
+# Tasks
+
+- [x] 1. The compiler re-reads, for a set bound whole ahead of a binding, only the part the binding took from it (`groupRereads`: a kept edge set read only as `through(t, S)`; narrows Filling, Palisade, Pearl, Separate and Tracks. Slant's `alike` keeps no groups and Net's `L` is passed whole to definitions, so both still read whole)
+- [x] 2. Timed against HEAD on Filling, Slant and Net, and the whole catalog's deals graded as before (2026-11-09, deal-compare, 5 seeds a preset, under load: Filling 0.88× in all, 13x17de 0.68×, 13x17du 0.93× at 1.56 s mean; Palisade 0.78×; Pearl, Tracks, Slant and Net 0.98–1.00×; Separate 0.94×, 10 of 40 boards dealt differently, since its generator swaps letters by what the solver read; no verdict differs. The other games' compiled code is unchanged. A narrowed read made always true fails 19 of Palisade's tests)

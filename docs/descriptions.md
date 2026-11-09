@@ -520,9 +520,18 @@ the runtime is given the marks, reads every kind. A new member of the marks
 is added there, or it is read as every kind, which is safe and costs only
 reads made again.
 
-What a binder's place still decides is cost. A set read whole at the top
-(Slant's `alike`, Net's `L`) is read whole again at each binding after a fact
-of its kinds, and where it changed, the run ends. So a name compared across
+A set named by `=` before the loops, whose groups are kept on the marks, and
+which the binding reads only as `through(t, S)` with `t` a term of its
+binders, is read again only at those groups (`groupRereads`). A changed group
+passes over the bindings of `t`'s value, and a placement elsewhere passes
+over none. Filling's `O = alike` changed with nearly every placement, and
+read whole it ended each run at its first.
+
+What a binder's place still decides is cost. Any other set read whole at
+the top is read whole again at each binding after a fact of its kinds. That
+covers a set whose groups are not kept (Slant's `alike`, of the edge marks)
+and one passed whole to a definition (Net's `L`). Where it changed, the run
+ends. So a name compared across
 a loop is bound inside it: Mosaic's `compared` binds the first number's need
 after the loop over its partners.
 

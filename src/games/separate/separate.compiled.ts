@@ -52,14 +52,39 @@ export const tiers: readonly string[] = ["Easy","Unreasonable"];
  * board: every cell a value of its domain, and every rule and dealt clue
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
+  const _g193: number[] = [];
   const _g206: number[] = [];
-  const _g219: number[] = [];
-  const _g235: number[] = [];
+  const _g222: number[] = [];
   const _domain = rangeMask(1, 2);
   for (const cell of sp.edges) {
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
+  let _q191 = true;
+  Q192: {
+    _g193.length = 0;
+    G194: {
+      const _a197 = sp.edges;
+      for (let _i198 = 0; _i198 < _a197.length; _i198++) {
+        const v_e = _a197[_i198];
+        const _h199 = (g[v_e] || -1);
+        if (!((_h199 === 2))) continue;
+        _g193.push(v_e);
+      }
+    }
+    const v_O = _g193;
+    const _eg203 = edgeGroups(sp, v_O);
+    const _a200 = sp.edges;
+    for (let _i201 = 0; _i201 < _a200.length; _i201++) {
+      const v_e = _a200[_i201];
+      const _h202 = (g[v_e] || -1);
+      if (!(((_h202 === 1) === !(_eg203.of(sp.edgeEnds[2 * v_e + 1]) === _eg203.of(sp.edgeEnds[2 * v_e]))))) {
+        _q191 = false;
+        break Q192;
+      }
+    }
+  }
+  if (!(_q191)) return false;
   let _q204 = true;
   Q205: {
     _g206.length = 0;
@@ -73,70 +98,45 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
       }
     }
     const v_O = _g206;
-    const _eg216 = edgeGroups(sp, v_O);
-    const _a213 = sp.edges;
+    const _eg215 = edgeGroups(sp, v_O);
+    const _a213 = sp.cells;
     for (let _i214 = 0; _i214 < _a213.length; _i214++) {
-      const v_e = _a213[_i214];
-      const _h215 = (g[v_e] || -1);
-      if (!(((_h215 === 1) === !(_eg216.of(sp.edgeEnds[2 * v_e + 1]) === _eg216.of(sp.edgeEnds[2 * v_e]))))) {
+      const v_c = _a213[_i214];
+      const _h216 = _eg215.of(v_c).length;
+      if (!((_h216 === cl.k))) {
         _q204 = false;
         break Q205;
       }
     }
   }
   if (!(_q204)) return false;
-  let _q217 = true;
-  Q218: {
-    _g219.length = 0;
-    G220: {
-      const _a223 = sp.edges;
-      for (let _i224 = 0; _i224 < _a223.length; _i224++) {
-        const v_e = _a223[_i224];
-        const _h225 = (g[v_e] || -1);
-        if (!((_h225 === 2))) continue;
-        _g219.push(v_e);
-      }
-    }
-    const v_O = _g219;
-    const _eg228 = edgeGroups(sp, v_O);
-    const _a226 = sp.cells;
-    for (let _i227 = 0; _i227 < _a226.length; _i227++) {
-      const v_c = _a226[_i227];
-      const _h229 = _eg228.of(v_c).length;
-      if (!((_h229 === cl.k))) {
-        _q217 = false;
-        break Q218;
-      }
-    }
-  }
-  if (!(_q217)) return false;
-  for (let _k230 = 0; _k230 < cl.letter.at.length; _k230++) {
-    const _at231 = cl.letter.at[_k230];
-    const _v232 = cl.letter.v[_k230];
-    let _q233 = true;
-    Q234: {
-      _g235.length = 0;
-      G236: {
-        const _a239 = sp.edges;
-        for (let _i240 = 0; _i240 < _a239.length; _i240++) {
-          const v_e = _a239[_i240];
-          const _h241 = (g[v_e] || -1);
-          if (!((_h241 === 2))) continue;
-          _g235.push(v_e);
+  for (let _k217 = 0; _k217 < cl.letter.at.length; _k217++) {
+    const _at218 = cl.letter.at[_k217];
+    const _v219 = cl.letter.v[_k217];
+    let _q220 = true;
+    Q221: {
+      _g222.length = 0;
+      G223: {
+        const _a226 = sp.edges;
+        for (let _i227 = 0; _i227 < _a226.length; _i227++) {
+          const v_e = _a226[_i227];
+          const _h228 = (g[v_e] || -1);
+          if (!((_h228 === 2))) continue;
+          _g222.push(v_e);
         }
       }
-      const _a242 = through(sp, _at231, _g235);
-      for (let _i243 = 0; _i243 < _a242.length; _i243++) {
-        const v_x = _a242[_i243];
-        if (!((v_x !== _at231))) continue;
-        const _h244 = clueAt(cl.letter, v_x);
-        if (!((_h244 !== _v232))) {
-          _q233 = false;
-          break Q234;
+      const _a229 = through(sp, _at218, _g222);
+      for (let _i230 = 0; _i230 < _a229.length; _i230++) {
+        const v_x = _a229[_i230];
+        if (!((v_x !== _at218))) continue;
+        const _h231 = clueAt(cl.letter, v_x);
+        if (!((_h231 !== _v219))) {
+          _q220 = false;
+          break Q221;
         }
       }
     }
-    if (!(_q233)) return false;
+    if (!(_q220)) return false;
   }
   return true;
 }
@@ -158,8 +158,7 @@ const sharedLetterFacts: number[] = [];
 /** Its dearest read grows with the board as n^2. */
 export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedLetterBinding> | null): number {
   const _g36: number[] = [];
-  const _g74: number[] = [];
-  const _g89: number[] = [];
+  const _g85: number[] = [];
   const facts = sharedLetterFacts;
   let fired = 0;
   let changed = false;
@@ -240,63 +239,57 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
             const _h73 = clueAt(cl.letter, v_y);
             if (!((_h73 === v_d))) continue;
             if (b.made[0] !== _m4_0 || b.made[1] !== _m7_1) {
-              _g74.length = 0;
-              G75: {
-                const _a78 = sp.edges;
-                for (let _i79 = 0; _i79 < _a78.length; _i79++) {
-                  const v_e = _a78[_i79];
-                  if (!(((b.grid[v_e] || -1) === 2))) continue;
-                  _g74.push(v_e);
-                }
-              }
-              if (!(sameSet(v_O, _g74))) { return fired; }
+              const _now74 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e]);
+              if (!(_now74 === _eg44.of(sp.edgeEnds[2 * v_e]) || sameSet(_now74, _eg44.of(sp.edgeEnds[2 * v_e])))) { continue R1; }
+              const _now75 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_b);
+              if (!(_now75 === _eg44.of(v_b) || sameSet(_now75, _eg44.of(v_b)))) { continue R1; }
               if (!(!((b.grid[v_e] !== 0)))) { continue R1; }
-              let _c86: boolean = (((v_L >> v_d) & 1) !== 0);
-              if (_c86) {
-                let _q80 = false;
-                Q81: {
-                  const _a82 = v_A;
-                  for (let _i83 = 0; _i83 < _a82.length; _i83++) {
-                    const v_x = _a82[_i83];
-                    const _a84 = sp.adj4[v_x];
-                    for (let _i85 = 0; _i85 < _a84.length; _i85++) {
-                      const v_y = _a84[_i85];
+              let _c82: boolean = (((v_L >> v_d) & 1) !== 0);
+              if (_c82) {
+                let _q76 = false;
+                Q77: {
+                  const _a78 = v_A;
+                  for (let _i79 = 0; _i79 < _a78.length; _i79++) {
+                    const v_x = _a78[_i79];
+                    const _a80 = sp.adj4[v_x];
+                    for (let _i81 = 0; _i81 < _a80.length; _i81++) {
+                      const v_y = _a80[_i81];
                       if (!((_eg44.of(v_y) === v_B))) continue;
-                      if (((b.grid[sp.adj4Edges[v_x][_i85]] || -1) === 1)) {
-                        _q80 = true;
-                        break Q81;
+                      if (((b.grid[sp.adj4Edges[v_x][_i81]] || -1) === 1)) {
+                        _q76 = true;
+                        break Q77;
                       }
                     }
                   }
                 }
-                _c86 = !(_q80);
+                _c82 = !(_q76);
               }
-              if (!(_c86)) { continue R2; }
+              if (!(_c82)) { continue R2; }
             }
             facts.length = 0;
             changed = false;
-            let _q87 = true;
-            Q88: {
-              _g89.length = 0;
-              G90: {
-                const _a93 = sp.edges;
-                for (let _i94 = 0; _i94 < _a93.length; _i94++) {
-                  const v_e = _a93[_i94];
+            let _q83 = true;
+            Q84: {
+              _g85.length = 0;
+              G86: {
+                const _a89 = sp.edges;
+                for (let _i90 = 0; _i90 < _a89.length; _i90++) {
+                  const v_e = _a89[_i90];
                   if (!((((_eg44.of(sp.edgeEnds[2 * v_e]) === v_A) && (_eg44.of(sp.edgeEnds[2 * v_e + 1]) === v_B)) || ((_eg44.of(sp.edgeEnds[2 * v_e]) === v_B) && (_eg44.of(sp.edgeEnds[2 * v_e + 1]) === v_A))))) continue;
-                  _g89.push(v_e);
+                  _g85.push(v_e);
                 }
               }
-              const _a95 = _g89;
-              for (let _i96 = 0; _i96 < _a95.length; _i96++) {
-                const v_f = _a95[_i96];
+              const _a91 = _g85;
+              for (let _i92 = 0; _i92 < _a91.length; _i92++) {
+                const v_f = _a91[_i92];
                 if (!(b.grid[v_f] !== 0)) { if (fire === null) { b.placeAt(v_f, 1); changed = true; } else facts.push(PLACE, v_f, 1); }
                 if (!(true)) {
-                  _q87 = false;
-                  break Q88;
+                  _q83 = false;
+                  break Q84;
                 }
               }
             }
-            if (!(_q87)) return -1;
+            if (!(_q83)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
               if (fire !== null && !fire({ O: v_O.slice(), e: v_e, A: v_A.slice(), b: v_b, B: v_B.slice(), L: v_L, d: v_d, x: v_x, y: v_y }, facts)) return 1;
@@ -321,88 +314,82 @@ const walledApartFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^2. */
 export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBinding> | null): number {
-  const _g113: number[] = [];
+  const _g109: number[] = [];
   const _g130: number[] = [];
-  const _g138: number[] = [];
   const facts = walledApartFacts;
   let fired = 0;
   let changed = false;
   const _m52_0 = b.made[0];
-  _g113.length = 0;
-  G114: {
-    const _a117 = sp.edges;
-    for (let _i118 = 0; _i118 < _a117.length; _i118++) {
-      const v_e = _a117[_i118];
+  _g109.length = 0;
+  G110: {
+    const _a113 = sp.edges;
+    for (let _i114 = 0; _i114 < _a113.length; _i114++) {
+      const v_e = _a113[_i114];
       if (!(((b.grid[v_e] || -1) === 2))) continue;
-      _g113.push(v_e);
+      _g109.push(v_e);
     }
   }
-  const v_O = _g113;
+  const v_O = _g109;
   const _m55_1 = b.made[1];
-  const _eg121 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
-  const _a119 = sp.edges;
-  for (let _i120 = 0; _i120 < _a119.length; _i120++) {
-    const v_e = _a119[_i120];
+  const _eg117 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
+  const _a115 = sp.edges;
+  R1:
+  for (let _i116 = 0; _i116 < _a115.length; _i116++) {
+    const v_e = _a115[_i116];
     if (!(!((b.grid[v_e] !== 0)))) continue;
-    const v_A = _eg121.of(sp.edgeEnds[2 * v_e]);
-    L122: {
+    const v_A = _eg117.of(sp.edgeEnds[2 * v_e]);
+    L118: {
       const v_b = sp.edgeEnds[2 * v_e + 1];
-      if (!(!(_eg121.of(v_b) === v_A))) break L122;
-      L123: {
-        const v_B = _eg121.of(v_b);
-        let _q124 = false;
-        Q125: {
-          const _a126 = v_A;
-          for (let _i127 = 0; _i127 < _a126.length; _i127++) {
-            const v_x = _a126[_i127];
-            const _a128 = sp.adj4[v_x];
-            for (let _i129 = 0; _i129 < _a128.length; _i129++) {
-              const v_y = _a128[_i129];
-              if (!((_eg121.of(v_y) === v_B))) continue;
-              if (((b.grid[sp.adj4Edges[v_x][_i129]] || -1) === 1)) {
-                _q124 = true;
-                break Q125;
+      if (!(!(_eg117.of(v_b) === v_A))) break L118;
+      L119: {
+        const v_B = _eg117.of(v_b);
+        let _q120 = false;
+        Q121: {
+          const _a122 = v_A;
+          for (let _i123 = 0; _i123 < _a122.length; _i123++) {
+            const v_x = _a122[_i123];
+            const _a124 = sp.adj4[v_x];
+            for (let _i125 = 0; _i125 < _a124.length; _i125++) {
+              const v_y = _a124[_i125];
+              if (!((_eg117.of(v_y) === v_B))) continue;
+              if (((b.grid[sp.adj4Edges[v_x][_i125]] || -1) === 1)) {
+                _q120 = true;
+                break Q121;
               }
             }
           }
         }
-        if (!(_q124)) break L123;
+        if (!(_q120)) break L119;
         if (b.made[0] !== _m52_0 || b.made[1] !== _m55_1) {
+          const _now126 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e]);
+          if (!(_now126 === _eg117.of(sp.edgeEnds[2 * v_e]) || sameSet(_now126, _eg117.of(sp.edgeEnds[2 * v_e])))) { continue R1; }
+          const _now127 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_b);
+          if (!(_now127 === _eg117.of(v_b) || sameSet(_now127, _eg117.of(v_b)))) { continue R1; }
+        }
+        facts.length = 0;
+        changed = false;
+        let _q128 = true;
+        Q129: {
           _g130.length = 0;
           G131: {
             const _a134 = sp.edges;
             for (let _i135 = 0; _i135 < _a134.length; _i135++) {
               const v_e = _a134[_i135];
-              if (!(((b.grid[v_e] || -1) === 2))) continue;
+              if (!((((_eg117.of(sp.edgeEnds[2 * v_e]) === v_A) && (_eg117.of(sp.edgeEnds[2 * v_e + 1]) === v_B)) || ((_eg117.of(sp.edgeEnds[2 * v_e]) === v_B) && (_eg117.of(sp.edgeEnds[2 * v_e + 1]) === v_A))))) continue;
               _g130.push(v_e);
             }
           }
-          if (!(sameSet(v_O, _g130))) { return fired; }
-        }
-        facts.length = 0;
-        changed = false;
-        let _q136 = true;
-        Q137: {
-          _g138.length = 0;
-          G139: {
-            const _a142 = sp.edges;
-            for (let _i143 = 0; _i143 < _a142.length; _i143++) {
-              const v_e = _a142[_i143];
-              if (!((((_eg121.of(sp.edgeEnds[2 * v_e]) === v_A) && (_eg121.of(sp.edgeEnds[2 * v_e + 1]) === v_B)) || ((_eg121.of(sp.edgeEnds[2 * v_e]) === v_B) && (_eg121.of(sp.edgeEnds[2 * v_e + 1]) === v_A))))) continue;
-              _g138.push(v_e);
-            }
-          }
-          const _a144 = _g138;
-          for (let _i145 = 0; _i145 < _a144.length; _i145++) {
-            const v_f = _a144[_i145];
+          const _a136 = _g130;
+          for (let _i137 = 0; _i137 < _a136.length; _i137++) {
+            const v_f = _a136[_i137];
             if (!(b.grid[v_f] !== 0)) { if (fire === null) { b.placeAt(v_f, 1); changed = true; } else facts.push(PLACE, v_f, 1); }
             if (!(true)) {
-              _q136 = false;
-              break Q137;
+              _q128 = false;
+              break Q129;
             }
           }
         }
-        if (!(_q136)) return -1;
+        if (!(_q128)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ O: v_O.slice(), e: v_e, A: v_A.slice(), b: v_b, B: v_B.slice() }, facts)) return 1;
@@ -421,94 +408,86 @@ export interface OnlyWayBinding {
 }
 
 const onlyWayFacts: number[] = [];
-const _st182 = stamps();
+const _st174 = stamps();
 
 /** Its dearest read grows with the board as n. */
 export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBinding> | null): number {
-  const _g165: number[] = [];
-  const _g176: number[] = [];
-  const _g188: number[] = [];
+  const _g157: number[] = [];
+  const _g168: number[] = [];
   const facts = onlyWayFacts;
   let fired = 0;
   let changed = false;
   const _m84_0 = b.made[0];
-  _g165.length = 0;
-  G166: {
-    const _a169 = sp.edges;
-    for (let _i170 = 0; _i170 < _a169.length; _i170++) {
-      const v_e = _a169[_i170];
+  _g157.length = 0;
+  G158: {
+    const _a161 = sp.edges;
+    for (let _i162 = 0; _i162 < _a161.length; _i162++) {
+      const v_e = _a161[_i162];
       if (!(((b.grid[v_e] || -1) === 2))) continue;
-      _g165.push(v_e);
+      _g157.push(v_e);
     }
   }
-  const v_O = _g165;
+  const v_O = _g157;
   const _m87_1 = b.made[1];
-  const _eg173 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
-  const _a171 = sp.cells;
-  for (let _i172 = 0; _i172 < _a171.length; _i172++) {
-    const v_c = _a171[_i172];
-    L174: {
-      const v_A = _eg173.of(v_c);
-      const _h175 = v_A.length;
-      if (!(((v_c === (v_A[0] ?? -1)) && (_h175 < cl.k)))) break L174;
-      _g176.length = 0;
-      _st182.pass++;
-      G177: {
-        const _a183 = v_A;
-        for (let _i184 = 0; _i184 < _a183.length; _i184++) {
-          const v_x = _a183[_i184];
-          const _a185 = sp.adj4[v_x];
-          for (let _i186 = 0; _i186 < _a185.length; _i186++) {
-            const v_s = _a185[_i186];
-            if (!((!(_eg173.of(v_s) === v_A) && ((b.grid[sp.adj4Edges[v_x][_i186]] || -1) !== 1)))) continue;
-            const _t187 = v_s;
-            if (_g176.length < 16) { if (!_g176.includes(_t187)) _g176.push(_t187); } else addOnce(_g176, _st182, _t187);
+  const _eg165 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
+  const _a163 = sp.cells;
+  R1:
+  for (let _i164 = 0; _i164 < _a163.length; _i164++) {
+    const v_c = _a163[_i164];
+    L166: {
+      const v_A = _eg165.of(v_c);
+      const _h167 = v_A.length;
+      if (!(((v_c === (v_A[0] ?? -1)) && (_h167 < cl.k)))) break L166;
+      _g168.length = 0;
+      _st174.pass++;
+      G169: {
+        const _a175 = v_A;
+        for (let _i176 = 0; _i176 < _a175.length; _i176++) {
+          const v_x = _a175[_i176];
+          const _a177 = sp.adj4[v_x];
+          for (let _i178 = 0; _i178 < _a177.length; _i178++) {
+            const v_s = _a177[_i178];
+            if (!((!(_eg165.of(v_s) === v_A) && ((b.grid[sp.adj4Edges[v_x][_i178]] || -1) !== 1)))) continue;
+            const _t179 = v_s;
+            if (_g168.length < 16) { if (!_g168.includes(_t179)) _g168.push(_t179); } else addOnce(_g168, _st174, _t179);
           }
         }
       }
-      const v_S = _g176;
-      const _h194 = v_S.length;
+      const v_S = _g168;
+      const _h181 = v_S.length;
       if (b.made[0] !== _m84_0 || b.made[1] !== _m87_1) {
-        _g188.length = 0;
-        G189: {
-          const _a192 = sp.edges;
-          for (let _i193 = 0; _i193 < _a192.length; _i193++) {
-            const v_e = _a192[_i193];
-            if (!(((b.grid[v_e] || -1) === 2))) continue;
-            _g188.push(v_e);
-          }
-        }
-        if (!(sameSet(v_O, _g188))) { return fired; }
+        const _now180 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_c);
+        if (!(_now180 === _eg165.of(v_c) || sameSet(_now180, _eg165.of(v_c)))) { continue R1; }
       }
       facts.length = 0;
       changed = false;
-      let _c203: boolean = (_h194 > 0);
-      if (_c203) {
-        let _c202: boolean = !((_h194 === 1));
-        if (!_c202) {
-          let _q195 = true;
-          Q196: {
-            const _a197 = v_A;
-            for (let _i198 = 0; _i198 < _a197.length; _i198++) {
-              const v_x = _a197[_i198];
-              const _a199 = sp.adj4[v_x];
-              for (let _i200 = 0; _i200 < _a199.length; _i200++) {
-                const v_y = _a199[_i200];
+      let _c190: boolean = (_h181 > 0);
+      if (_c190) {
+        let _c189: boolean = !((_h181 === 1));
+        if (!_c189) {
+          let _q182 = true;
+          Q183: {
+            const _a184 = v_A;
+            for (let _i185 = 0; _i185 < _a184.length; _i185++) {
+              const v_x = _a184[_i185];
+              const _a186 = sp.adj4[v_x];
+              for (let _i187 = 0; _i187 < _a186.length; _i187++) {
+                const v_y = _a186[_i187];
                 if (!((v_S.includes(v_y)))) continue;
-                const _t201 = sp.adj4Edges[v_x][_i200];
-                if (!(b.grid[_t201] !== 0)) { if (fire === null) { b.placeAt(_t201, 2); changed = true; } else facts.push(PLACE, _t201, 2); }
+                const _t188 = sp.adj4Edges[v_x][_i187];
+                if (!(b.grid[_t188] !== 0)) { if (fire === null) { b.placeAt(_t188, 2); changed = true; } else facts.push(PLACE, _t188, 2); }
                 if (!(true)) {
-                  _q195 = false;
-                  break Q196;
+                  _q182 = false;
+                  break Q183;
                 }
               }
             }
           }
-          _c202 = _q195;
+          _c189 = _q182;
         }
-        _c203 = _c202;
+        _c190 = _c189;
       }
-      if (!(_c203)) return -1;
+      if (!(_c190)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ O: v_O.slice(), c: v_c, A: v_A.slice(), S: v_S.slice() }, facts)) return 1;
