@@ -11,9 +11,10 @@ help:
     must be a straight which is connected to *at least one* corner.
   controls: |-
     Drag from square to square to draw the loop along the edges you pass.
-    A drag only adds: passing back over a square it has already drawn through
-    does nothing, and it carries on once you return to where it reached, while
-    dragging back onto the square you started from closes the loop. Undo takes
+    To change your mind mid-stroke, draw back along its end: the squares you
+    retrace are taken back. Brushing any other part of the stroke does
+    nothing, and it carries on once you return to where it reached, while
+    dragging round onto the square you started from closes the loop. Undo takes
     a stroke back. A drag
     along a stretch of loop you have drawn and on past its end carries that
     stretch on, and a drag that runs only along lines you have drawn takes

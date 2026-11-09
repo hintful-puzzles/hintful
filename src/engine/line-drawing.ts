@@ -4,9 +4,9 @@
  * click and keys that change it.
  *
  * The left button drags a line from square to square: a rook move a square
- * at a time that only adds, waiting where it returns to a square it has
- * passed, stopped by a crossed edge and by a square that would get more
- * lines than it takes. On
+ * at a time, drawn back over its own end to take back steps, waiting where it
+ * returns to any other square it has passed, stopped by a crossed edge and by
+ * a square that would get more lines than it takes. On
  * release it draws a line along every edge it passed, keeping the lines
  * already there, so a drag along a line and on past its end carries the line
  * on; a drag that passes only lines takes them up. Upstream took up the lines
@@ -246,12 +246,15 @@ function lineFits<S extends Board>(rules: LineRules<S>, state: S, e: number): bo
  * more lines than it takes. A step off the row and column it is on does
  * nothing, as upstream's do: the drag waits for the pointer to come back.
  *
- * Back onto a square it has passed through, unless it closes a loop on its
- * first square, a pointer's drag does nothing either and keeps all it has
- * drawn: a player drawing a long line in one stroke who brushed an earlier
- * part of it lost everything after (owner, 2026-10-23). The keyboard's is
- * cut back to there, which is how it takes back a step before Enter, and an
- * arrow cannot brush a square by accident.
+ * Back onto a square it has passed through, a pointer's drag is cut back to
+ * there only where it draws back over its own end: onto the square it just
+ * came from, or straight back along its last straight stretch. A player can
+ * change their mind mid-stroke (owner, 2026-11-09). Onto any other square it
+ * has passed, unless it closes a loop on its first square, it does nothing
+ * and keeps all it has drawn: a player drawing a long line in one stroke who
+ * brushed an earlier part of it lost everything after (owner, 2026-10-23).
+ * The keyboard's is cut back to any square it passed, which is how it takes
+ * back steps before Enter, and an arrow cannot brush a square by accident.
  */
 function extendDrag<S extends Board>(
   rules: LineRules<S>,
@@ -263,15 +266,22 @@ function extendDrag<S extends Board>(
   const g = squareEdges(state.w, state.h);
   const { cells } = drag;
   const seen = cells.indexOf(to);
-  // The smallest loop of squares has four.
-  const closing = seen === 0 && rules.loops && cells.length >= 4;
-  if (seen >= 0 && !closing) {
-    if (drag.keyboard) cells.length = seen + 1;
-    return;
-  }
   const last = cells[cells.length - 1];
   const [lx, ly] = [last % w, Math.floor(last / w)];
   const [tx, ty] = [to % w, Math.floor(to / w)];
+  // Every square from `to` to the end in `to`'s row, or every one in its
+  // column: the drag drawing back over its end. A loop never closes this way,
+  // as its squares are never all in one row or column.
+  const retreats =
+    seen >= 0 &&
+    (cells.slice(seen).every((c) => Math.floor(c / w) === ty) ||
+      cells.slice(seen).every((c) => c % w === tx));
+  // The smallest loop of squares has four.
+  const closing = seen === 0 && rules.loops && cells.length >= 4;
+  if (retreats || (seen >= 0 && !closing)) {
+    if (retreats || drag.keyboard) cells.length = seen + 1;
+    return;
+  }
   if (lx !== tx && ly !== ty) return;
   const step = lx === tx ? (ty > ly ? w : -w) : tx > lx ? 1 : -1;
   for (let at = last; at !== to; ) {

@@ -11,8 +11,9 @@ help:
 
     Every puzzle has exactly one solution, and none needs a guess.
   controls: |-
-    Drag from square to square to draw a line along the edges you pass. A drag
-    only adds: passing back over a square it has already drawn through does
+    Drag from square to square to draw a line along the edges you pass. To
+    change your mind mid-stroke, draw back along its end: the squares you
+    retrace are taken back. Brushing any other part of the stroke does
     nothing, and it carries on once you return to where it reached. Undo takes
     a stroke back. A drag along a line you
     have drawn and on past its end carries that line on, and a drag that runs

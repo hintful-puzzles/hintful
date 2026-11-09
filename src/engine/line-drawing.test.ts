@@ -96,13 +96,19 @@ describe("the line drag", () => {
     expect(drag(setup(), board(), [0, 2])).toEqual(lineOn([0, 1], [1, 2]));
   });
 
-  it("keeps all it drew where it returns to a square it passed", () => {
-    expect(drag(setup(), board(), [0, 1, 2, 1])).toEqual(lineOn([0, 1], [1, 2]));
+  it("takes back a step drawn back over its end, and goes on from there", () => {
+    expect(drag(setup(), board(), [0, 1, 2, 1])).toEqual(lineOn([0, 1]));
+    expect(drag(setup(), board(), [0, 1, 2, 1, 4])).toEqual(lineOn([0, 1], [1, 4]));
+    // Back to where it began, a step at a time or in one straight pull.
+    expect(drag(setup(), board(), [0, 1, 2, 1, 0])).toBe(UI_UPDATE);
+    expect(drag(setup(), board(), [0, 1, 2, 0])).toBe(UI_UPDATE);
   });
 
-  it("waits at its end after brushing a square it passed, and carries on from there", () => {
-    expect(drag(setup(), board(), [0, 1, 2, 1, 2, 5])).toEqual(
-      lineOn([0, 1], [1, 2], [2, 5]),
+  it("waits at its end after brushing a square it passed off its end, and carries on from there", () => {
+    // Round a U, then onto its first square, which is beside the end but not
+    // the way it came.
+    expect(drag(setup(), board(), [0, 1, 4, 3, 0, 6])).toEqual(
+      lineOn([0, 1], [1, 4], [4, 3], [3, 6]),
     );
   });
 
