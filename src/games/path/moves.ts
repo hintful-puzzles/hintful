@@ -30,8 +30,13 @@ export const pathLines: LineRules<PathState> = {
  * The lines that run on from the number on square `i`, to the end of its
  * piece, through any numbers on the way: a stroke from a number draws its
  * line again from there (owner, 2026-10-23). In Path, a side whose first
- * number is lower is the line behind, and stays; every other side is ahead.
- * In Pairs a number's one line is ahead, as in Flow Free.
+ * number is lower is the line behind, and stays, and one whose first number
+ * is higher is ahead. A side that reaches no number runs opposite to the
+ * number's other side; the 1's is ahead and the last number's behind. A
+ * middle number's lone loose side may be either, so it stays while the
+ * number has room for the stroke: a player drawing back toward the number
+ * before lost it to a stroke on toward the next (owner, 2026-11-09). In
+ * Pairs a number's one line is ahead, as in Flow Free.
  */
 function lineAhead(state: PathState, i: number): number[] {
   const n = state.ends[i];
@@ -44,7 +49,7 @@ function lineAhead(state: PathState, i: number): number[] {
     }
     return -1;
   };
-  const out: number[] = [];
+  const sides: { run: number[]; reached: number }[] = [];
   for (let d = 0; d < 4; d++) {
     const first = g.around[i * 4 + d];
     if (first < 0 || state.edges[first] !== LINE) continue;
@@ -57,10 +62,21 @@ function lineAhead(state: PathState, i: number): number[] {
       run.push(next);
       at = across(g, next, at);
     }
-    const behind = state.mode === MODE_PATH && reached !== NO_END && reached < n;
-    if (!behind) out.push(...run);
+    sides.push({ run, reached });
   }
-  return out;
+  if (state.mode !== MODE_PATH) return sides.flatMap((s) => s.run);
+  const last = n !== 1 && state.takes[i] === 1;
+  const ahead = (side: { reached: number }, other: { reached: number } | null) => {
+    if (side.reached !== NO_END) return side.reached > n;
+    if (n === 1 || last) return n === 1;
+    if (other === null) return false;
+    if (other.reached !== NO_END) return other.reached < n;
+    // Two loose sides fill the number, and nothing says which runs on.
+    return true;
+  };
+  return sides.flatMap((side, k) =>
+    ahead(side, sides.length > 1 ? sides[1 - k] : null) ? side.run : [],
+  );
 }
 
 /** The edges of `state` with `changes` made. */

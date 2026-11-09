@@ -259,9 +259,10 @@ describe("path input", () => {
     expect(move).toEqual(set(7, LINE));
   });
 
-  it("a stroke from a number replaces the line it had", () => {
-    // The corner 1's line runs down two squares; a stroke from it down one
-    // keeps that edge and takes up the one past it.
+  it("a stroke from a number replaces the line it had once it leaves it", () => {
+    // The corner 1's line runs down two squares. A stroke down one only
+    // retraces it and changes nothing; one that turns off it keeps what it
+    // retraced and takes up the rest.
     const lined = executeMove(start, {
       kind: "edges",
       changes: [9, 13].map((edge) => ({ edge, mark: LINE })),
@@ -272,7 +273,21 @@ describe("path input", () => {
         [LEFT_DRAG, at(4)],
         [LEFT_RELEASE, at(4)],
       ]),
-    ).toEqual(set(13, OPEN));
+    ).toBeNull();
+    expect(
+      play(lined, [
+        [LEFT_BUTTON, at(0)],
+        [LEFT_DRAG, at(4)],
+        [LEFT_DRAG, at(5)],
+        [LEFT_RELEASE, at(5)],
+      ]),
+    ).toEqual({
+      kind: "edges",
+      changes: [
+        { edge: 3, mark: LINE },
+        { edge: 13, mark: OPEN },
+      ],
+    });
   });
 
   it("a drag stops where a square already has its lines, and at a cross", () => {
@@ -467,6 +482,26 @@ describe("path, the one-line ruleset", () => {
       kind: "edges",
       changes: edges.map((edge) => ({ edge, mark: LINE })),
     });
+  /** The edges a left-button stroke through `cells` on `drawn` changes, as
+   * `<edge>+` for a line laid and `<edge>-` for one taken up, or `null` for
+   * no move. */
+  const stroke = (drawn: PathState, cells: number[]): string[] | null => {
+    const ds = newDrawState(drawn, 40);
+    const ui = pathGame.newUi(drawn);
+    let made: PathMove | null = null;
+    const presses: [number, number][] = [
+      [LEFT_BUTTON, cells[0]],
+      ...cells.slice(1).map((c): [number, number] => [LEFT_DRAG, c]),
+      [LEFT_RELEASE, cells[cells.length - 1]],
+    ];
+    for (const [button, c] of presses) {
+      const r = pathGame.interpretMove(drawn, ui, ds, centerOf(drawn, 40, c), button);
+      if (r !== null && typeof r === "object") made = r;
+    }
+    return made?.kind === "edges"
+      ? made.changes.map(({ edge, mark }) => `${edge}${mark === LINE ? "+" : "-"}`)
+      : null;
+  };
 
   it("reads each number on one square, and refuses one twice or a gap", () => {
     expect(Array.from(start.ends)).toEqual([1, 0, 0, 0, 0, 0, 0, 2, 3, 0, 0, 4]);
@@ -524,30 +559,15 @@ describe("path, the one-line ruleset", () => {
     // The whole answer is drawn. A stroke from the 2 replaces the line on
     // from it, through the 3 to the 4, and keeps the 1's line into it.
     const drawn = lines(start, ONE_PATH_ANSWER);
-    const ds = newDrawState(drawn, 40);
-    const at = (i: number): Point => centerOf(drawn, 40, i);
-    const stroke = (cells: number[]): PathMove | null => {
-      const ui = pathGame.newUi(drawn);
-      let made: PathMove | null = null;
-      const presses: [number, number][] = [
-        [LEFT_BUTTON, cells[0]],
-        ...cells.slice(1).map((c): [number, number] => [LEFT_DRAG, c]),
-        [LEFT_RELEASE, cells[cells.length - 1]],
-      ];
-      for (const [button, c] of presses) {
-        const r = pathGame.interpretMove(drawn, ui, ds, at(c), button);
-        if (r !== null && typeof r === "object") made = r;
-      }
-      return made;
-    };
-    const changed = (move: PathMove | null) =>
-      move?.kind === "edges"
-        ? move.changes.map(({ edge, mark }) => `${edge}${mark === LINE ? "+" : "-"}`)
-        : null;
-    // Over the same three squares again: kept, and the rest taken up.
-    expect(changed(stroke([7, 6, 5, 4]))).toEqual(["6-", "7-", "8-", "13-"]);
+    // Over the same squares again, as a finger slipping off the 2 along its
+    // line, or back onto the 2: nothing changes.
+    expect(stroke(drawn, [7, 6, 5, 4])).toBeNull();
+    expect(stroke(drawn, [7, 6, 7])).toBeNull();
+    // Along it and off it, down from the second square of the middle row:
+    // what it retraced is kept, and the rest of the old line ahead goes.
+    expect(stroke(drawn, [7, 6, 5, 9])).toEqual(["3-", "6-", "7-", "8-", "13-", "14+"]);
     // Down to the 4 instead: all of the old line ahead goes.
-    expect(changed(stroke([7, 11]))).toEqual([
+    expect(stroke(drawn, [7, 11])).toEqual([
       "3-",
       "4-",
       "5-",
@@ -557,6 +577,17 @@ describe("path, the one-line ruleset", () => {
       "13-",
       "16+",
     ]);
+  });
+
+  it("a line from a number that reaches no number runs opposite to its other side", () => {
+    // Alone on a middle number it may run either way, so it stays: the 3's
+    // line up toward the 2, and the 2's left toward the 3.
+    expect(stroke(lines(start, [13]), [8, 9, 10, 11])).toEqual(["6+", "7+", "8+"]);
+    expect(stroke(lines(start, [5]), [7, 3])).toEqual(["12+"]);
+    // Beside the line behind it, it is ahead, and goes.
+    expect(stroke(lines(start, [0, 1, 2, 12, 5]), [7, 11])).toEqual(["5-", "16+"]);
+    // The 1's is ahead.
+    expect(stroke(lines(start, [9]), [0, 1])).toEqual(["0+", "9-"]);
   });
 
   it("draws its walls, and its line in a color that runs from the 1 to the 4", () => {

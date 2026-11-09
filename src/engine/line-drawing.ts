@@ -14,8 +14,8 @@
  * a line to continue it lost it (owner, 2026-10-21 for Path, 2026-10-22 for
  * both). A game may say which lines a drag from a square replaces
  * ({@link LineRules.restarts}), as Path's line ahead of a number: the drag
- * draws as if they were not there, and its release takes up those it does
- * not lay again. A press released where it began is a click on the edge it
+ * draws as if they were not there, and once it leaves them its release takes
+ * up those it does not lay again. A press released where it began is a click on the edge it
  * was aimed at, and replaces nothing. The right button crosses an edge, and drags to cross every edge it
  * passes, through the engine's sweep.
  *
@@ -100,8 +100,8 @@ export interface LineRules<S extends Board> {
    * click, key or drag changes it. Absent, every edge is the player's. */
   fixed?(state: S, e: number): boolean;
   /** The lines a drag that begins on square `i` replaces: the drag sees them
-   * as open, and its release takes up each one it does not lay again.
-   * Absent, a drag replaces nothing. */
+   * as open, and once it leaves them its release takes up each one it does
+   * not lay again. Absent, a drag replaces nothing. */
   restarts?(state: S, i: number): readonly number[];
 }
 
@@ -191,14 +191,22 @@ function seenBy<S extends Board>(rules: LineRules<S>, drag: LineDrag): LineRules
 }
 
 /** The edges `drag` would change if released now, which its preview shows:
- * none for no drag or a press that has not left its square. The lines it
- * replaces are taken up, but for those it lays again. */
+ * none for no drag or a press that has not left its square. Once it leaves
+ * the lines it replaces, they are taken up but for those it lays again; a
+ * drag that only retraces them changes nothing, so a finger that slips off
+ * a number along its line loses none of it (owner, 2026-11-09). */
 export function dragPreview<S extends Board>(
   rules: LineRules<S>,
   state: S,
   drag: LineDrag | null,
 ): EdgeChange[] {
   if (!drag || drag.cells.length < 2) return [];
+  const g = squareEdges(state.w, state.h);
+  const replaced = new Set(drag.replaces);
+  let retraces = replaced.size > 0;
+  for (let k = 1; retraces && k < drag.cells.length; k++)
+    retraces = replaced.has(edgeBetween(g, drag.cells[k - 1], drag.cells[k]));
+  if (retraces) return [];
   const marks = new Map<number, EdgeMark>(drag.replaces.map((e) => [e, OPEN]));
   for (const c of dragChanges(seenBy(rules, drag), state, drag.cells))
     marks.set(c.edge, c.mark);

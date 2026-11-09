@@ -20,12 +20,16 @@ help:
     can also click near the edge between two squares to draw or remove a line
     there.
 
-    A stroke that starts on a number draws that number's line again: when you let
-    go, the line that ran on from the number before is taken up, as far as it
-    went, and your stroke is drawn in its place. In {{choice:ruleset:0}} the
-    line that leads into the number from a lower one stays, so a stroke from the
-    2 keeps the line from the 1 and replaces everything on from the 2. In
-    {{choice:ruleset:1}} the number's whole line is replaced.
+    A stroke that starts on a number draws that number's line again: once it
+    leaves the line that ran on from the number, that line is taken up, as far
+    as it went, and your stroke is drawn in its place. A stroke that only
+    follows the old line changes nothing. In {{choice:ruleset:0}} the line that
+    leads into the number from a lower one stays, so a stroke from the 2 keeps
+    the line from the 1 and replaces everything on from the 2. A line from the
+    number that reaches no other number is replaced only where it must be the
+    line on: from the 1, opposite a line from a lower number, or where the
+    number has both its lines and neither reaches a number. In {{choice:ruleset:1}} the number's whole
+    line is replaced.
 
     Right-click an edge to cross it out, to mark that you are sure no line goes
     there, and keep the button down and drag to cross out every edge you pass.

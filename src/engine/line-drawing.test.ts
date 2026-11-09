@@ -197,10 +197,18 @@ describe("a drag that replaces lines", () => {
     ]);
   });
 
-  it("keeps a replaced line it lays again, and draws as if the rest were not there", () => {
+  it("changes nothing while it only retraces what it replaces", () => {
     // Along the replaced line, which would otherwise be taken up as a drag
     // along nothing but lines.
-    expect(drag(replacing(), top, [0, 1])).toEqual([{ edge: edge(1, 2), mark: OPEN }]);
+    expect(drag(replacing(), top, [0, 1])).toBe(UI_UPDATE);
+    expect(drag(replacing(), top, [0, 1, 2])).toBe(UI_UPDATE);
+  });
+
+  it("keeps a replaced line it lays again once it leaves the rest", () => {
+    expect(drag(replacing(), top, [0, 1, 4])).toEqual([
+      { edge: edge(1, 2), mark: OPEN },
+      ...lineOn([1, 4]),
+    ]);
   });
 
   it("replaces nothing for a press released where it began", () => {
