@@ -1,27 +1,24 @@
 /**
- * The Edges techniques of Ascent's hint: the reasoning of 1to25, where every
+ * The Edges narrations of Ascent's hint: the reasoning of 1to25, where every
  * missing number already has a line the player can see, its arrow's.
  *
- * The run techniques in [`hint.ts`](./hint.ts) reason from the placed numbers,
+ * The run narrations in [`hint.ts`](./hint.ts) reason from the placed numbers,
  * which is all a Hidato board offers. On an Edges board the placed numbers are
  * few and far apart, so a run's reach covers most of the board and says
- * nothing; what decides a square is where the lines cross. Two readings,
- * both projections of the solver's `overlap` rung over the arrows'
- * candidate lines:
+ * nothing; what decides a square is where the lines cross. Both narrations
+ * tell a placement the `route` reading makes (the ladder's `overlapEdges`
+ * over each number's arrow line, `onLine`), from premises a player sees:
  *
  * - `lines`: a number is on its own line and within `k` steps of the line of
  *   the number `k` places from it, and of each placed number as far as it is
  *   in the sequence. Where one square satisfies them all, the number goes
- *   there. `overlap` implies each premise at its fixpoint, and it runs at
- *   Normal in Edges mode, so this is a Normal technique.
+ *   there: an `onlySquare` placement. `overlapEdges` implies each premise at
+ *   its fixpoint.
  * - `pointers`: of the missing numbers whose arrows point at a square, all but
- *   one fail one of those premises there, so the square is that one's. The
- *   solver's `single-number` rung over the same candidates: Tricky when the
- *   number has a placed neighbor in the sequence, as that rung's simple form
- *   asks, Hard otherwise.
+ *   one fail one of those premises there, so the square is that one's: an
+ *   `onlyNumberNear` or `onlyNumber` placement.
  *
- * Neither is offered outside Edges mode (`ascentPlan`), so nothing here can
- * change a hint on any other board.
+ * A placement the premises do not explain is told by the run narrations.
  */
 
 import {
@@ -32,13 +29,7 @@ import {
   squaresMeeting,
   squaresOnLine,
 } from "./premises.ts";
-import {
-  type AscentState,
-  CELL_NONE,
-  DIFF_HARD,
-  DIFF_TRICKY,
-  isEdgeValid,
-} from "./state.ts";
+import { type AscentState, CELL_NONE, isEdgeValid } from "./state.ts";
 
 /** A number ruled out of a square, and the premise it fails there. */
 export interface RuledOut {
@@ -61,115 +52,56 @@ function* choose<T>(xs: readonly T[], k: number, from = 0): Generator<T[]> {
     for (const rest of choose(xs, k - 1, i + 1)) yield [xs[i], ...rest];
 }
 
-/** A `lines` firing: `n` at `cell`, singled out by its own line and `premises`. */
-export interface LinesFound {
-  n: number;
-  cell: number;
-  premises: Premise[];
-}
-
 /**
- * The simplest `lines` firing on the board: the one naming fewest premises,
- * then the nearest. At least one premise is a line, or the reading is only the
- * `reach` technique's, which comes first.
+ * The fewest premises that, with its own line, single out `cell` for missing
+ * number `n`, at least one of them a line; `null` where the premises leave
+ * another square, or need more than {@link MOST_PREMISES} to say.
  */
-export function findLines(
-  state: AscentState,
-  focus: { lo: number; hi: number } | null,
-): LinesFound | null {
+export function linesAt(state: AscentState, n: number, cell: number): Premise[] | null {
   const b = readBoard(state);
-  let best: LinesFound | null = null;
-  const cost = (f: LinesFound) =>
-    f.premises.length * 100 + Math.max(0, ...f.premises.map((p) => p.d));
-  for (let n = 0; n <= state.last; n++) {
-    if (b.positions[n] !== CELL_NONE) continue;
-    if (focus && (n < focus.lo || n > focus.hi)) continue;
-    const own = b.arrows[n];
-    const all = premisesOf(b, n).sort((x, y) => x.d - y.d);
-    const left = squaresMeeting(b, own, all);
-    if (left.length !== 1) continue;
-    const cell = left[0];
-    // The fewest premises that single the square out on their own.
-    const line = squaresOnLine(b, own);
-    let chosen: Premise[] | null = null;
-    for (let k = 1; k <= MOST_PREMISES && !chosen; k++)
-      for (const ps of choose(all, k)) {
-        if (!ps.some((p) => p.arrow !== null)) continue;
-        if (line.filter((sq) => ps.every((p) => allows(b, p, sq))).length === 1) {
-          chosen = ps;
-          break;
-        }
-      }
-    if (!chosen) continue;
-    const f = { n, cell, premises: chosen };
-    if (!best || cost(f) < cost(best)) best = f;
-  }
-  return best;
+  const own = b.arrows[n];
+  const all = premisesOf(b, n).sort((x, y) => x.d - y.d);
+  const left = squaresMeeting(b, own, all);
+  if (left.length !== 1 || left[0] !== cell) return null;
+  const line = squaresOnLine(b, own);
+  for (let k = 1; k <= MOST_PREMISES; k++)
+    for (const ps of choose(all, k)) {
+      if (!ps.some((p) => p.arrow !== null)) continue;
+      if (line.filter((sq) => ps.every((p) => allows(b, p, sq))).length === 1)
+        return ps;
+    }
+  return null;
 }
 
-/** A `pointers` firing: `n` at `cell`, every rival there ruled out. */
-export interface PointersFound {
-  n: number;
-  cell: number;
-  /** The other missing numbers that could otherwise stand here. */
-  ruledOut: RuledOut[];
-  tier: number;
-}
+/** How hard a `lines` sentence is to follow: its premises, then the
+ * farthest of them. */
+export const linesCost = (premises: readonly Premise[]): number =>
+  premises.length * 100 + Math.max(0, ...premises.map((p) => p.d));
 
 /**
- * The square only one missing number can stand on: every other number whose
- * arrow points at it, or that has none, fails a premise there. The firing
- * with fewest rivals to rule out.
+ * Every other missing number that could stand on `cell`, by its arrow or for
+ * want of one, each with the premise it fails there; `null` where one fails
+ * none.
  */
-export function findPointers(
+export function pointersAt(
   state: AscentState,
-  focus: { lo: number; hi: number } | null,
-): PointersFound | null {
+  n: number,
+  cell: number,
+): RuledOut[] | null {
   const b = readBoard(state);
   const { w, h, last } = state;
-  const premises = new Map<number, Premise[]>();
-  const premisesFor = (m: number) => {
-    let ps = premises.get(m);
-    if (!ps) {
-      ps = premisesOf(b, m).sort((x, y) => x.d - y.d);
-      premises.set(m, ps);
-    }
-    return ps;
-  };
-  let best: PointersFound | null = null;
-  for (const cell of b.empty) {
-    const rivals: number[] = [];
-    for (let m = 0; m <= last; m++) {
-      if (b.positions[m] !== CELL_NONE) continue;
-      const arrow = b.arrows[m];
-      if (arrow < 0 || isEdgeValid(arrow, cell, w, h)) rivals.push(m);
-    }
-    let keeper = -1;
-    const ruledOut: RuledOut[] = [];
-    for (const m of rivals) {
-      // A line premise first: it is what this technique teaches.
-      const ps = premisesFor(m);
-      const by =
-        ps.find((p) => p.arrow !== null && !allows(b, p, cell)) ??
-        ps.find((p) => !allows(b, p, cell));
-      if (by) ruledOut.push({ m, arrowless: b.arrows[m] < 0, by });
-      else if (keeper < 0) keeper = m;
-      else {
-        keeper = -2;
-        break;
-      }
-    }
-    if (keeper < 0) continue;
-    if (focus && (keeper < focus.lo || keeper > focus.hi)) continue;
-    const placed = (m: number) => m >= 0 && m <= last && b.positions[m] !== CELL_NONE;
-    const tier = placed(keeper - 1) || placed(keeper + 1) ? DIFF_TRICKY : DIFF_HARD;
-    const f = { n: keeper, cell, ruledOut, tier };
-    if (
-      !best ||
-      f.tier < best.tier ||
-      (f.tier === best.tier && f.ruledOut.length < best.ruledOut.length)
-    )
-      best = f;
+  const ruledOut: RuledOut[] = [];
+  for (let m = 0; m <= last; m++) {
+    if (m === n || b.positions[m] !== CELL_NONE) continue;
+    const arrow = b.arrows[m];
+    if (arrow >= 0 && !isEdgeValid(arrow, cell, w, h)) continue;
+    // A line premise first: it is what this narration teaches.
+    const ps = premisesOf(b, m).sort((x, y) => x.d - y.d);
+    const by =
+      ps.find((p) => p.arrow !== null && !allows(b, p, cell)) ??
+      ps.find((p) => !allows(b, p, cell));
+    if (!by) return null;
+    ruledOut.push({ m, arrowless: arrow < 0, by });
   }
-  return best;
+  return ruledOut;
 }

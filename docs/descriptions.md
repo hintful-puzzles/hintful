@@ -814,7 +814,11 @@ uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
   it was described. The walk continues from the cells a firing wrote,
   unless `roles.writes` names other keys: Path continues along the numbers
   a step's lines reach, since its edges' cells say nothing of which line a
-  player is following.
+  player is following. A game whose ladder strikes candidates its player
+  cannot mark, and whose steps only place, does not walk the strikes as
+  steps: it reads the board afresh through the striking techniques, weakest
+  reading first, and takes a placing technique's firing on it, keeping its
+  own plan (`readingOf` in [`ascent/solver.ts`](../src/games/ascent/solver.ts)).
 - **Seeding runs the techniques run on placing**, so what they decide
   about the player's own marks is never a step. Where the player should see
   it (Boats' water at a segment's corners), the game seeds before it sets

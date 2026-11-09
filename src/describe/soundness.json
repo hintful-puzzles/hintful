@@ -12,6 +12,7 @@
   "src/games/abcd/abcd.description.yaml#single": "8df2899ff39685cf",
   "src/games/adjacent/adjacent.description.yaml#adjacent": "2fb58118aa866778",
   "src/games/adjacent/adjacent.description.yaml#adjacentSet": "14ea8ea02dde0804",
+  "src/games/ascent/ascent.description.yaml#deadEnd": "453938b1d5c3d951",
   "src/games/ascent/ascent.description.yaml#nextTo": "dad3dfb3972589bf",
   "src/games/ascent/ascent.description.yaml#onLine": "af1667393c43b2cb",
   "src/games/ascent/ascent.description.yaml#once": "6c4ca0bf1e0261e5",

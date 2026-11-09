@@ -33,15 +33,7 @@ import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newAscentDesc } from "./generator.ts";
 import { ascentGame } from "./index.ts";
 import { COL_PATH, COL_TARGET } from "./render.ts";
-import {
-  ascentSolve,
-  SolverScratch,
-  solverOverlap,
-  solverPlace,
-  solverProximityFull,
-  solverProximitySimple,
-  solverStart,
-} from "./solver.ts";
+import { ascentSolve, type Reading, readingOf } from "./solver.ts";
 import {
   type AscentMove,
   type AscentParams,
@@ -820,19 +812,21 @@ describe("ascent treats the last number like any other", () => {
     return { state, grid, last: state.last, s: state.w * state.h };
   }
 
-  /** The solution with `blank` numbers removed, read into a fresh scratch. */
+  /** The solution with `blank` numbers removed, and whether the last number
+   * may still go in a square by each of the hint's readings of it. */
   function readWithout(blank: number[]) {
-    const { state, grid, last, s } = solved();
+    const { state, grid, last } = solved();
     const puzzle = grid.slice();
     for (const n of blank) puzzle[grid.indexOf(n)] = NUMBER_EMPTY;
-    const sc = new SolverScratch(state.w, state.h, state.mode, last);
-    solverStart(puzzle, sc);
+    const board = { ...state, grid: puzzle };
+    const lastMay = (how: Reading, cell: number): boolean | null =>
+      readingOf(board, how)?.may(cell, last) ?? null;
     const at = (n: number) => grid.indexOf(n);
     const far = (from: number, d: number) =>
       blank.find(
         (n) => n !== last && stepDistance(at(n), at(from), state.w, state.mode) > d,
       );
-    return { sc, at, far, last, s };
+    return { lastMay, at, far, last };
   }
 
   it("measures it from the number below, one step and further", () => {
@@ -845,8 +839,7 @@ describe("ascent treats the last number like any other", () => {
     const simple = readWithout([probe.last, ...nearOf(probe.last - 1, 1).slice(0, 3)]);
     const f1 = simple.far(simple.last - 1, 1);
     expect(f1).toBeDefined();
-    solverProximitySimple(simple.sc);
-    expect(simple.sc.marks[simple.at(f1 ?? -1) * simple.s + simple.last]).toBe(0);
+    expect(simple.lastMay("touch", simple.at(f1 ?? -1))).toBe(false);
 
     const blanks = [
       probe.last,
@@ -856,11 +849,11 @@ describe("ascent treats the last number like any other", () => {
     const full = readWithout(blanks);
     const f2 = full.far(full.last - 2, 2);
     expect(f2).toBeDefined();
-    solverProximityFull(full.sc);
-    expect(full.sc.marks[full.at(f2 ?? -1) * full.s + full.last]).toBe(0);
+    expect(full.lastMay("touch", full.at(f2 ?? -1))).toBe(true);
+    expect(full.lastMay("reach", full.at(f2 ?? -1))).toBe(false);
   });
 
-  it("narrows it by overlap, and clears it from a square a placement fills", () => {
+  it("narrows it by overlap, and clears it from a square a number fills", () => {
     const probe = readWithout([]);
     // The last two numbers and a far one blanked: the last must touch a square
     // the one before it could take, which `overlap` alone decides.
@@ -869,15 +862,14 @@ describe("ascent treats the last number like any other", () => {
     );
     const r = readWithout([probe.last, probe.last - 1, others[0]]);
     const farCell = r.at(others[0]);
-    while (solverOverlap(r.sc) > 0);
-    expect(r.sc.marks[farCell * r.s + r.last]).toBe(0);
+    expect(r.lastMay("route", farCell)).toBe(false);
 
-    // Placing a number in a square rules every other number out of it.
-    const p = readWithout([probe.last, others[0]]);
-    const square = p.at(others[0]);
-    expect(p.sc.marks[square * p.s + p.last]).toBe(1);
-    solverPlace(p.sc, square, others[0]);
-    expect(p.sc.marks[square * p.s + p.last]).toBe(0);
+    // A number in a square rules every other number out of it: the square of
+    // the one two before the last is beside the one before, so in reach.
+    const square = probe.at(probe.last - 2);
+    const twoBefore = readWithout([probe.last, probe.last - 2]);
+    expect(twoBefore.lastMay("touch", square)).toBe(true);
+    expect(readWithout([probe.last]).lastMay("touch", square)).toBe(false);
   });
 });
 

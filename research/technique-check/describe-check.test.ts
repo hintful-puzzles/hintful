@@ -1339,6 +1339,15 @@ const PLANTS: Record<string, Plant> = {
     conclude:
       "forall p in cells where m in cand(p) and not near(p, c, abs(m - n) - 1): strike(p, m)",
   },
+  // A square with two neighbors open to the path read as a dead end.
+  "ascent.deadEnd": {
+    for: `c in cells where not known(c) and open(c)
+      and count(p in nbr(c) where open(p) and (not known(p)
+      or (value(p) > 1 and not held(value(p) - 1))
+      or (value(p) < top and not held(value(p) + 1)))) <= 2,
+      n in {1, top} where not held(n) and n in cand(c)
+      and not (exists e in {1, top} where e != n and not held(e): e in cand(c))`,
+  },
   // A missing number read as needing the one two before it beside it.
   "ascent.overlap": {
     conclude: `forall c in cells where n in cand(c)

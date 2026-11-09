@@ -2,27 +2,34 @@
  * Ascent's explained hint. Every step places one number.
  *
  * **Every fact a step rests on is a number, a wall or an arrow on the board.**
- * The solver reasons over a candidate bitmap the player has no way to note, and
- * over a second one of possible path links. Neither survives between steps
- * here: each technique rebuilds what it reads from the player's board, through
- * the solver's own rungs, and places the one number that reading forces.
- * `add-ascent-hint`'s design D1 measured that nothing more is ever needed
- * (docs/hints-marks.md § "Give the facts a notation").
+ * The ladder reasons over candidates the player has no way to note, so none
+ * survives between steps here: each technique reads the player's board afresh
+ * through the ladder's striking techniques (`readingOf`), and places the
+ * one number a placing technique finds on that reading. `add-ascent-hint`'s
+ * design D1 measured that nothing more is ever needed (docs/hints-marks.md
+ * § "Give the facts a notation").
  *
- * The techniques, easiest first, and the rungs each is a projection of:
+ * The techniques, easiest first, each a placing technique of the description
+ * on a reading:
  *
  * - `touch`: a number must sit next to its placed neighbors in the sequence
- *   (`proximity-simple`, then `single-position`).
+ *   (`onlySquare` on the `touch` reading).
  * - `reach`: a number must be within as many steps of each placed number either
- *   side of it as they are apart (`proximity-full`, then `single-position`).
+ *   side of it as they are apart (`onlySquare` on `reach`).
  * - `deadEnd`: a square the path can reach from one neighbor only is an end of
- *   the path. The solver reaches this through three of its path rungs
- *   (`update-path`, `adjacent-path`, `remove-endpoints`); the hint reads it off
- *   the numbers directly, which is how a player sees it.
- * - `only`: one missing number can reach a square (`single-number`, the Tricky
- *   form first, where that number's neighbor in the sequence is placed).
- * - `route`, `routeOnly`: the same two readings with reach counted along a
- *   route of empty squares, one step per number (`overlap`, to its fixpoint).
+ *   the path (`deadEnd` on `reach`).
+ * - `onlyBeside`, `only`: one missing number can reach a square
+ *   (`onlyNumberNear`, where that number's neighbor in the sequence is placed,
+ *   then `onlyNumber`, on `reach`).
+ * - `route`, `routeBeside`, `routeOnly`: the same three with reach counted
+ *   along a route of empty squares, one step per number (on `route`).
+ * - `lines`, `pointers` (Edges): the `route` placements the arrows' lines
+ *   explain (`hint-edges.ts`).
+ * - `wholeRun`: a run with one route, placed at once. A count of routes is
+ *   no technique of the description: the ladder's own placements reach every
+ *   number of the run, one at a time, and the count is how a player sees them
+ *   all together, so it stays a narration, checked against the placement that
+ *   began it.
  */
 
 import {
@@ -34,7 +41,7 @@ import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import { DEDUCTION_EXHAUSTED, type HintRefusal } from "../../engine/hint-refusal.ts";
 import { type Sentence, StepMarks } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { findLines, findPointers, type RuledOut } from "./hint-edges.ts";
+import { linesAt, linesCost, pointersAt, type RuledOut } from "./hint-edges.ts";
 import {
   type Arrowed,
   type Bound,
@@ -59,14 +66,11 @@ import {
   squaresMeeting,
 } from "./premises.ts";
 import {
+  type BoardReading,
   isSolved,
-  SolverScratch,
-  solverOverlap,
-  solverProximityFull,
-  solverProximitySimple,
-  solverSingleNumber,
-  solverSinglePosition,
-  solverStart,
+  type Placer,
+  type Reading,
+  readingOf,
 } from "./solver.ts";
 import {
   type AscentMove,
@@ -164,23 +168,22 @@ export interface AscentFiring {
 
 // --- reading the board -------------------------------------------------------
 
-/** How far a reading counts reach from the placed numbers. */
-type Reach = "touch" | "reach" | "route";
+/** Each board's readings, read once: a plan asks the same board for every
+ * run, and a board is never changed in place. */
+const READINGS = new WeakMap<AscentState, Map<Reading, BoardReading | null>>();
 
 /**
- * The candidate bitmap the solver's own rungs build from the board alone:
- * every number may go in any empty square on its arrow's line, narrowed by
- * reach from the placed numbers. Built fresh for every question, so nothing it
- * holds outlives the board it was read from.
+ * The board as one of the ladder's readings narrows it, from the board alone,
+ * so nothing it holds outlives the board it was read from.
  */
-function reading(state: AscentState, reach: Reach): SolverScratch {
-  const sc = new SolverScratch(state.w, state.h, state.mode, state.last);
-  solverStart(state.grid, sc);
-  if (reach === "touch") solverProximitySimple(sc);
-  else solverProximityFull(sc);
-  if (reach === "route") while (solverOverlap(sc) > 0);
-  sc.recording = true;
-  return sc;
+function reading(state: AscentState, how: Reading): BoardReading | null {
+  let of = READINGS.get(state);
+  if (!of) {
+    of = new Map();
+    READINGS.set(state, of);
+  }
+  if (!of.has(how)) of.set(how, readingOf(state, how));
+  return of.get(how) ?? null;
 }
 
 /** The squares a move away from `i`. */
@@ -211,63 +214,81 @@ type Focus = { lo: number; hi: number } | null;
 /** Find the next placement a technique makes, within `focus` when given. */
 type Finder = (state: AscentState, focus: Focus) => Found | null;
 
-/** Place with a placing rung over a reading, reporting the first placement. */
-function placeBy(
-  reason: HintReason,
-  reach: Reach,
-  rung: (sc: SolverScratch) => number,
-): Finder {
+/** The placements `placer` makes on a reading of the board, within `focus`
+ * when given, in its scan's order. */
+function placementsBy(
+  state: AscentState,
+  how: Reading,
+  placer: Placer,
+  focus: Focus,
+): { cell: number; n: number }[] {
+  const all = reading(state, how)?.placements(placer) ?? [];
+  return focus ? all.filter(({ n }) => focus.lo <= n && n <= focus.hi) : all;
+}
+
+/** Place by a placing technique on a reading, reporting its first placement. */
+function placeBy(reason: HintReason, how: Reading, placer: Placer): Finder {
   return (state, focus) => {
-    const sc = reading(state, reach);
-    sc.focus = focus;
-    return rung(sc) > 0 && sc.placed ? { reason, ...sc.placed } : null;
+    const [first] = placementsBy(state, how, placer, focus);
+    return first ? { reason, ...first } : null;
   };
 }
 
 /**
- * A square the path can reach from only one neighbor must be an end of it. A
- * neighbor is still open to the path when it is empty, or holds a number with
- * a neighbor in the sequence not yet placed beside it; walls, arrows, and
- * numbers already joined on both sides are closed.
+ * The neighbors of `c` still open to the path: empty, or holding a number
+ * with a neighbor in the sequence not yet placed; walls, arrows, and numbers
+ * already joined on both sides are closed. As the description's `deadEnd`
+ * counts them.
  */
-function deadEnd(state: AscentState, focus: Focus): Found | null {
+function openNeighbors(state: AscentState, c: number): number[] {
   const { grid, last } = state;
-  const sc = reading(state, "reach");
-  const s = state.w * state.h;
-  const placed = (m: number) => sc.positions[m] !== CELL_NONE;
+  const positions = positionsOf(state);
+  const placed = (m: number) => positions[m] !== CELL_NONE;
   const joinsMore = (m: number) =>
     (m > 0 && !placed(m - 1)) || (m < last && !placed(m + 1));
-  for (let c = 0; c < s; c++) {
-    if (grid[c] !== NUMBER_EMPTY) continue;
-    const open = neighbors(state, c).filter(
-      (j) => grid[j] === NUMBER_EMPTY || (grid[j] >= 0 && joinsMore(grid[j])),
-    );
-    if (open.length !== 1) continue;
-    const ends = [0, last].filter((n) => !placed(n) && sc.marks[c * s + n]);
-    const n = ends.length === 1 ? ends[0] : -1;
-    if (n >= 0 && (!focus || (focus.lo <= n && n <= focus.hi)))
-      return { reason: { kind: "deadEnd", open: open[0] }, n, cell: c };
-  }
-  return null;
+  return neighbors(state, c).filter(
+    (j) => grid[j] === NUMBER_EMPTY || (grid[j] >= 0 && joinsMore(grid[j])),
+  );
 }
 
-const linesFinder: Finder = (state, focus) => {
-  const f = findLines(state, focus);
-  return f && { reason: { kind: "lines", premises: f.premises }, n: f.n, cell: f.cell };
+/** A square the path can reach from only one neighbor is an end of it. */
+const deadEnd: Finder = (state, focus) => {
+  const [first] = placementsBy(state, "reach", "deadEnd", focus);
+  if (!first) return null;
+  const [open] = openNeighbors(state, first.cell);
+  return { reason: { kind: "deadEnd", open }, ...first };
 };
 
-/** `pointers` firings at or below `tier`. */
+/** The `route` placement the lines explain most simply. */
+const linesFinder: Finder = (state, focus) => {
+  let best: Found | null = null;
+  let cost = Number.POSITIVE_INFINITY;
+  for (const p of placementsBy(state, "route", "onlySquare", focus)) {
+    const premises = linesAt(state, p.n, p.cell);
+    if (premises && linesCost(premises) < cost) {
+      cost = linesCost(premises);
+      best = { reason: { kind: "lines", premises }, ...p };
+    }
+  }
+  return best;
+};
+
+/** The `route` placement by `placer` the arrows explain with fewest rivals,
+ * at `tier`: Tricky where the number has a placed neighbor in the sequence,
+ * as `onlyNumberNear` asks, Hard otherwise. */
 const pointersFinder =
-  (tier: number): Finder =>
+  (placer: Placer, tier: number): Finder =>
   (state, focus) => {
-    const f = findPointers(state, focus);
-    return f && f.tier <= tier
-      ? {
-          reason: { kind: "pointers", ruledOut: f.ruledOut, tier: f.tier },
-          n: f.n,
-          cell: f.cell,
-        }
-      : null;
+    let best: Found | null = null;
+    let rivals = Number.POSITIVE_INFINITY;
+    for (const p of placementsBy(state, "route", placer, focus)) {
+      const ruledOut = pointersAt(state, p.n, p.cell);
+      if (ruledOut && ruledOut.length < rivals) {
+        rivals = ruledOut.length;
+        best = { reason: { kind: "pointers", ruledOut, tier }, ...p };
+      }
+    }
+    return best;
   };
 
 /**
@@ -323,8 +344,6 @@ interface Board {
  * the easiest techniques first, which is the order a hint wants anyway.
  */
 export function ascentPlan(start: AscentState): AscentFiring[] {
-  const number = (simple: boolean) => (sc: SolverScratch) =>
-    solverSingleNumber(sc, simple);
   // Easiest first; the sort is stable, so within a tier the order is as listed.
   const tech = (
     kind: Exclude<HintReason["kind"], "wholeRun" | "pointers">,
@@ -339,8 +358,8 @@ export function ascentPlan(start: AscentState): AscentFiring[] {
   // more than the runs do. On any other board they are absent.
   const edges = start.mode === MODE_EDGES;
   const ladder: { kind: HintReason["kind"]; tier: number; find: Finder }[] = [
-    tech("touch", placeBy({ kind: "touch" }, "touch", solverSinglePosition)),
-    tech("reach", placeBy({ kind: "reach" }, "reach", solverSinglePosition)),
+    tech("touch", placeBy({ kind: "touch" }, "touch", "onlySquare")),
+    tech("reach", placeBy({ kind: "reach" }, "reach", "onlySquare")),
     tech("deadEnd", deadEnd),
     ...(edges
       ? [
@@ -348,20 +367,20 @@ export function ascentPlan(start: AscentState): AscentFiring[] {
           {
             kind: "pointers" as const,
             tier: DIFF_TRICKY,
-            find: pointersFinder(DIFF_TRICKY),
+            find: pointersFinder("onlyNumberNear", DIFF_TRICKY),
           },
           {
             kind: "pointers" as const,
             tier: DIFF_HARD,
-            find: pointersFinder(DIFF_HARD),
+            find: pointersFinder("onlyNumber", DIFF_HARD),
           },
         ]
       : []),
-    tech("onlyBeside", placeBy({ kind: "onlyBeside" }, "reach", number(true))),
-    tech("only", placeBy({ kind: "only" }, "reach", number(false))),
-    tech("route", placeBy({ kind: "route" }, "route", solverSinglePosition)),
-    tech("routeBeside", placeBy({ kind: "routeBeside" }, "route", number(true))),
-    tech("routeOnly", placeBy({ kind: "routeOnly" }, "route", number(false))),
+    tech("onlyBeside", placeBy({ kind: "onlyBeside" }, "reach", "onlyNumberNear")),
+    tech("only", placeBy({ kind: "only" }, "reach", "onlyNumber")),
+    tech("route", placeBy({ kind: "route" }, "route", "onlySquare")),
+    tech("routeBeside", placeBy({ kind: "routeBeside" }, "route", "onlyNumberNear")),
+    tech("routeOnly", placeBy({ kind: "routeOnly" }, "route", "onlyNumber")),
   ].sort((a, b) => a.tier - b.tier);
 
   const board: Board = { state: start, spilled: false };
@@ -638,16 +657,16 @@ function arrowNeeded(f: AscentFiring, bounds: readonly Placed[]): number {
  * either side of it (absent at an end of the path), their squares, and every
  * square the run's numbers may use by `reach`.
  */
-function runOf(f: AscentFiring, reach: Reach) {
+function runOf(f: AscentFiring, how: Reading) {
   const { n, before } = f;
   const { below, above } = bracket(before, n);
   const lo = below ? below.m + 1 : 0;
   const hi = above ? above.m - 1 : before.last;
-  const sc = reading(before, reach);
+  const read = reading(before, how);
   const s = before.w * before.h;
   const squares = new Set<number>();
   for (let k = lo; k <= hi; k++)
-    for (let i = 0; i < s; i++) if (sc.marks[i * s + k]) squares.add(i);
+    for (let i = 0; i < s; i++) if (read?.may(i, k)) squares.add(i);
   const ends: number[] = [];
   if (below) ends.push(below.cell);
   if (above) ends.push(above.cell);

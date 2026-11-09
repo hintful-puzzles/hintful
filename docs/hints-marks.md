@@ -1027,8 +1027,11 @@ each firing.** Then no step can rest on a fact the board does not show.
   board re-read from scratch. "Recomputing gives the same step" cannot see a
   leaked fact, because the recompute's scan re-derives it. See it fail with
   the reset removed.
-- **Each technique is a solver rung over a fresh reading**, and a placing
-  rung stops at its first placement while recording.
+- **Each technique is one of the ladder's placing techniques over a fresh
+  reading**, which the ladder's striking techniques narrow, and the step is
+  its first firing. A reading the ladder lacks is first a technique of the
+  description; one stays the hint's only as a narration, checked against the
+  placement it begins (Ascent's whole runs).
 - **The reading is the premise, and a notation extends it.** A sentence may
   cite what the reading shows, drawn or not; only a fact past the reading
   becomes a step that draws a note.

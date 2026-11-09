@@ -1,0 +1,10 @@
+ok  ascent +Edges moves=0 deadEnd                        3  sound    (want sound   )     9 queries    0.6s
+ok  ascent +Edges moves=0 deadEnd (planted)              3  sound    (want either  )     9 queries    0.6s
+ok  ascent +Edges moves=1 deadEnd                        3  sound    (want sound   )     9 queries    0.6s
+ok  ascent +Edges moves=1 deadEnd (planted)              3  sound    (want either  )     9 queries    0.7s
+ok  ascent +Edges moves=2 deadEnd                        3  sound    (want sound   )     9 queries    0.7s
+ok  ascent +Edges moves=2 deadEnd (planted)              3  sound    (want either  )     9 queries    0.7s
+ok  ascent +Edges moves=0 deadEnd                        4  sound    (want sound   )    16 queries    9.5s
+ok  ascent +Edges moves=0 deadEnd (planted)              4  unsound  (want unsound )     1 queries    0.4s   at cell 0
+ok  ascent +Edges moves=1 deadEnd                        4  sound    (want sound   )    16 queries   12.6s
+ok  ascent +Edges moves=2 deadEnd                        4  sound    (want sound   )    16 queries   17.1s
