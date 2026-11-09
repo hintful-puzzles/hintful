@@ -405,6 +405,10 @@
                   "description": "What holds a value: a cell, or the edge between two cells side by side (Separate's walls), where the space has its edges."
                 },
                 "domain": { "$ref": "#/$defs/formula" },
+                "wide": {
+                  "type": "boolean",
+                  "description": "Whether a value may run past 31, the most a mask of 32 bits holds: Ascent's number on a square, up to the board's square count. A cell's candidates are then read by membership, a count, the least and a binder, never as a set, and the domain is `range(a, b)` or `{d in range(a, b) where P}`."
+                },
                 "to": {
                   "$ref": "#/$defs/formula",
                   "description": "The cell a cell's value names, a term of the cell `c` and the value `d`, none where it names none: what `to(c)` reads and `chain(c)` follows. Rome's arrows are `step(c, d)`; Signpost's links `compass(c, clue(arrow, c), d)`."

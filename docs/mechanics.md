@@ -1174,6 +1174,11 @@ and its half-tile offset is the renderer's alone. Exemplars:
 [`ascent/state.ts`](../src/games/ascent/state.ts) and
 [`ascent/solver.ts`](../src/games/ascent/solver.ts).
 
+- **A description states the table as a size of the board**, not a
+  variation, since the shapes and the rulesets cross: a definition of a
+  square's neighbors filters `adj8` by it, and a sheared hexagon drops the
+  diagonal that runs with the shear (`nbr` in
+  [`ascent.description.yaml`](../src/games/ascent/ascent.description.yaml)).
 - **Keep the physical grid size (state) and the user-facing size (params)
   explicit and separate.** The physical size is frozen into ids.
 - **Port the table's order as it is where the solver relies on it.**

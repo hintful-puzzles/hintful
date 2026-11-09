@@ -18,13 +18,8 @@ import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/desc-error.ts";
 import cReference from "./__fixtures__/ascent-c-reference.json" with { type: "json" };
 import { ascentGame } from "./index.ts";
-import { ascentSolve, SolverScratch } from "./solver.ts";
-import {
-  type AscentParams,
-  checkCompletion,
-  encodeGridDesc,
-  newAscentState,
-} from "./state.ts";
+import { ascentSolve } from "./solver.ts";
+import { type AscentParams, encodeGridDesc, newAscentState } from "./state.ts";
 
 interface Fixture {
   seed: string;
@@ -60,9 +55,9 @@ describe("ascent frozen upstream boards (decode, round-trip, solve at their tier
       expect(validateDesc(ascentGame, p, f.desc)).toBeNull();
       const state = newAscentState(p, f.desc);
       expect(encodeGridDesc(state.grid, state.w * state.h)).toBe(f.desc);
-      const sc = new SolverScratch(state.w, state.h, state.mode, state.last);
-      ascentSolve(state.grid, f.diff, sc);
-      expect(checkCompletion(sc.grid, state.w, state.h, state.mode)).toBe(true);
+      expect(ascentSolve(state.grid, state.w, state.h, state.mode, f.diff).solved).toBe(
+        true,
+      );
     });
   }
 });

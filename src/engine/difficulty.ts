@@ -70,8 +70,8 @@ export type CappedSolve = (cap: number) => DifficultyVerdict;
 export interface DifficultyContract<Params> {
   /** Run the game's solver over `desc` with its deduction ladder capped at
    * `cap`, from a *fresh* solver state. Freshness is load-bearing: a reused
-   * scratch can carry state that weakens the solver (Ascent's retained
-   * `foundEndpoints` does) and leaves side effects for the next caller. */
+   * scratch can carry state that weakens the solver and leaves side
+   * effects for the next caller. */
   solveAtCap(p: Params, desc: string, cap: number): DifficultyVerdict;
 }
 

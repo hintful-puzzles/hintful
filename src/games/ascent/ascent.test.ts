@@ -3,7 +3,7 @@
  *
  * Generation is solver-gated, so "generates a board that decodes, re-solves
  * to a single completion, and round-trips through the codec" exercises the
- * generator, the four-tier solver, the codec and `checkCompletion` together.
+ * generator, the described ladder, the codec and the answer check together.
  */
 import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/desc-error.ts";
@@ -46,7 +46,6 @@ import {
   type AscentMove,
   type AscentParams,
   type AscentState,
-  checkCompletion,
   DIFFCOUNT,
   encodeGridDesc,
   isNear,
@@ -96,9 +95,9 @@ describe("ascent generation + solving", () => {
 
       // Decode, re-solve at max difficulty, and it completes uniquely.
       const state = newAscentState(params, desc);
-      const sc = new SolverScratch(state.w, state.h, state.mode, state.last);
-      ascentSolve(state.grid, DIFFCOUNT, sc);
-      expect(checkCompletion(sc.grid, state.w, state.h, state.mode)).toBe(true);
+      expect(
+        ascentSolve(state.grid, state.w, state.h, state.mode, DIFFCOUNT).solved,
+      ).toBe(true);
 
       // The solution decodes back to the same clue desc (codec inverse).
       expect(encodeGridDesc(state.grid, state.w * state.h)).toBe(desc);
@@ -295,9 +294,7 @@ describe("ascent difficulty tiers bind", () => {
   /** Does the graded solver finish this board with its ladder capped at `cap`? */
   function solvesAt(p: AscentParams, desc: string, cap: number): boolean {
     const state = newAscentState(p, desc);
-    const sc = new SolverScratch(state.w, state.h, state.mode, state.last);
-    ascentSolve(state.grid, cap, sc);
-    return checkCompletion(sc.grid, state.w, state.h, state.mode);
+    return ascentSolve(state.grid, state.w, state.h, state.mode, cap).solved;
   }
 
   for (const [name, params] of TIERED) {
@@ -786,9 +783,8 @@ describe("ascent findMistakes", () => {
     const state = newAscentState(p, desc);
 
     // Solve to the unique solution.
-    const sc = new SolverScratch(state.w, state.h, state.mode, state.last);
-    ascentSolve(state.grid, DIFFCOUNT, sc);
-    const solved = { ...state, grid: sc.grid.slice() };
+    const { grid } = ascentSolve(state.grid, state.w, state.h, state.mode, DIFFCOUNT);
+    const solved = { ...state, grid };
     expect(ascentGame.findMistakes?.(solved)).toEqual([]);
 
     // Corrupt a non-immutable cell to a wrong number.
@@ -820,9 +816,8 @@ describe("ascent treats the last number like any other", () => {
   function solved() {
     const p = mk(6, 6, 1, MODE_RECT);
     const state = newAscentState(p, newAscentDesc(p, randomNew("last-seed")).desc);
-    const sc = new SolverScratch(state.w, state.h, state.mode, state.last);
-    ascentSolve(state.grid, DIFFCOUNT, sc);
-    return { state, grid: sc.grid.slice(), last: state.last, s: state.w * state.h };
+    const { grid } = ascentSolve(state.grid, state.w, state.h, state.mode, DIFFCOUNT);
+    return { state, grid, last: state.last, s: state.w * state.h };
   }
 
   /** The solution with `blank` numbers removed, read into a fresh scratch. */

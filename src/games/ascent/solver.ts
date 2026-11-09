@@ -1,52 +1,52 @@
 /**
- * Ascent solver: a four-tier deductive fixpoint (upstream `ascent_solve`).
+ * Ascent's solver: the ladder `ascent.description.yaml` states, compiled, on
+ * the engine's wide marks and runner (`engine/ladder-runtime.ts`), and the
+ * answer check its rules compile to. The generator removes a clue only while
+ * the ladder at the board's tier still solves the result, so its verdict on
+ * every intermediate board decides which puzzles exist; `solve()`,
+ * `findMistakes` and the difficulty ask it too. No tier supposes anything.
  *
- * **No tier guesses or backtracks.** Easy runs single-position + simple
- * proximity; Normal adds the path-segment reasoning; Tricky adds the simple
- * single-number rule; Hard adds the full single-number rule and the overlap
- * rule (also enabled at any difficulty in Edges mode). Every rule is a pure
- * deduction, so all four tiers are guess-free and there is no "Unreasonable"
- * tier to add.
- *
- * The generator removes a clue only if the graded solver still solves the
- * result, so a change to the solver changes which boards exist.
+ * The hand-written rungs below the ladder are the hint's own readings, run on
+ * a `SolverScratch` of their own until the hint walks the compiled firings.
  */
 
+import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+import { clueList, describedSpace } from "../../engine/describe-runtime.ts";
 import {
-  type DeductionTechnique,
-  type FiringTally,
-  runDeductionFixpoint,
-} from "../../engine/deduction-fixpoint.ts";
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  placingRung,
+  runLadder,
+  TIERS,
+  WideCellMarks,
+} from "../../engine/ladder-runtime.ts";
+import * as ascent from "./ascent.compiled.ts";
 import {
-  type AscentMovement,
+  type AscentState,
   CELL_MULTIPLE,
   CELL_NONE,
-  DIFF_EASY,
-  DIFF_HARD,
-  DIFF_NORMAL,
-  DIFF_TRICKY,
-  FLAG_COMPLETE,
-  FLAG_ENDPOINT,
-  findDirection,
   fromNumberEdge,
   isEdgeValid,
+  isHexagonal,
   isNear,
   isNumberEdge,
   isObstacle,
-  MAXIMUM_DIRS,
   MODE_EDGES,
-  movementForMode,
+  MODE_ORTHOGONAL,
   NUMBER_EMPTY,
   NUMBER_WALL,
   stepDistance,
   updatePositions,
 } from "./state.ts";
 
+/** The hint's own readings of a board: a candidate bitmap of number by
+ * square, which its rungs below read and narrow. */
 export class SolverScratch {
   readonly w: number;
   readonly h: number;
   readonly mode: number;
-  readonly movement: AscentMovement;
   /** The last number on the path (set by the caller before each solve). */
   end: number;
 
@@ -54,9 +54,6 @@ export class SolverScratch {
   readonly grid: Int16Array;
   /** Candidate bitmap: `marks[i*s + n]` is 1 if number `n` may sit at cell `i`. */
   readonly marks: Uint8Array;
-  /** Per-cell possible path segments (`1<<dir` | flags). */
-  readonly path: Int32Array;
-  foundEndpoints: boolean;
   /** Scratch for `solverOverlap`: `overlap[i]` prev-adjacency, `overlap[i+s]` next. */
   readonly overlap: Uint8Array;
   /**
@@ -76,11 +73,8 @@ export class SolverScratch {
     this.h = h;
     this.mode = mode;
     this.end = last;
-    this.movement = movementForMode(mode);
     this.positions = new Int32Array(n).fill(CELL_NONE);
     this.grid = new Int16Array(n).fill(NUMBER_EMPTY);
-    this.path = new Int32Array(n);
-    this.foundEndpoints = false;
     this.marks = new Uint8Array(n * n);
     this.overlap = new Uint8Array(n * 2);
   }
@@ -221,192 +215,6 @@ export function solverProximityFull(sc: SolverScratch): number {
   return ret;
 }
 
-function solverInitializePath(sc: SolverScratch): void {
-  const { w, h, movement } = sc;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      sc.path[y * w + x] = FLAG_ENDPOINT;
-      for (let dir = 0; dir < movement.dircount; dir++) {
-        const x2 = x + movement.dirs[dir].dx;
-        const y2 = y + movement.dirs[dir].dy;
-        if (x2 < 0 || x2 >= w || y2 < 0 || y2 >= h) continue;
-        sc.path[y * w + x] |= 1 << dir;
-      }
-    }
-  }
-}
-
-function solverUpdatePath(sc: SolverScratch): number {
-  const { w, h, movement } = sc;
-  const s = w * h;
-  const end = sc.end;
-  let ret = 0;
-
-  let ib = sc.positions[0];
-  const ic = sc.positions[end];
-  if (!sc.foundEndpoints && ib !== CELL_NONE && ic !== CELL_NONE) {
-    sc.foundEndpoints = true;
-    ret++;
-    for (let i = 0; i < s; i++) {
-      if (i === ib || i === ic) continue;
-      sc.path[i] &= ~FLAG_ENDPOINT;
-    }
-  }
-
-  /* First number points to the second; last points to the penultimate. */
-  let i = sc.positions[1];
-  ib = sc.positions[0];
-  if (i !== CELL_NONE && ib !== CELL_NONE && !(sc.path[ib] & FLAG_COMPLETE)) {
-    sc.path[ib] = (1 << findDirection(ib, i, w, movement)) | FLAG_ENDPOINT;
-  }
-  i = sc.positions[end - 1];
-  if (i !== CELL_NONE && ic !== CELL_NONE && !(sc.path[ic] & FLAG_COMPLETE)) {
-    sc.path[ic] = (1 << findDirection(ic, i, w, movement)) | FLAG_ENDPOINT;
-  }
-
-  /* Middle numbers: set the path when both neighbors are known. */
-  for (let n = 1; n <= end - 1; n++) {
-    i = sc.positions[n];
-    if (i === CELL_NONE || sc.path[i] & FLAG_COMPLETE) continue;
-    const pib = sc.positions[n - 1];
-    const pic = sc.positions[n + 1];
-    if (pib === CELL_NONE || pic === CELL_NONE) continue;
-    sc.path[i] = 1 << findDirection(i, pib, w, movement);
-    sc.path[i] |= 1 << findDirection(i, pic, w, movement);
-  }
-
-  for (let idx = 0; idx < s; idx++) {
-    if (sc.path[idx] & FLAG_COMPLETE) continue;
-    let count = 0;
-    /* Count segments; an endpoint (bit 8 = FLAG_ENDPOINT) counts as one. */
-    for (let dir = 0; dir <= MAXIMUM_DIRS; dir++) {
-      if (sc.path[idx] & (1 << dir)) count++;
-    }
-    if (count === 2) {
-      sc.path[idx] |= FLAG_COMPLETE;
-      ret++;
-      /* For every direction this cell does NOT go, tell that neighbor it
-       * cannot connect back. Bits beyond `dircount` are never set, so the
-       * upstream 0..MAXIMUM_DIRS loop is a no-op there — iterate to
-       * `dircount` directly. */
-      for (let dir = 0; dir < movement.dircount; dir++) {
-        if (sc.path[idx] & (1 << dir)) continue;
-        const x = (idx % w) + movement.dirs[dir].dx;
-        const y = Math.trunc(idx / w) + movement.dirs[dir].dy;
-        if (x < 0 || y < 0 || x >= w || y >= h) continue;
-        sc.path[y * w + x] &= ~(1 << (movement.dircount - (dir + 1)));
-      }
-    }
-  }
-
-  return ret;
-}
-
-function solverRemoveEndpoints(sc: SolverScratch): number {
-  if (sc.foundEndpoints) return 0;
-  const { w, h } = sc;
-  const s = w * h;
-  const end = sc.end;
-  let ret = 0;
-
-  for (let i = 0; i < s; i++) {
-    if (sc.path[i] & FLAG_ENDPOINT) {
-      if (sc.marks[i * s] || sc.marks[i * s + end]) continue;
-      sc.path[i] &= ~FLAG_ENDPOINT;
-      ret++;
-    } else {
-      if (sc.marks[i * s]) {
-        sc.marks[i * s] = 0;
-        ret++;
-      }
-      if (sc.marks[i * s + end]) {
-        sc.marks[i * s + end] = 0;
-        ret++;
-      }
-    }
-  }
-
-  return ret;
-}
-
-function solverAdjacentPath(sc: SolverScratch): number {
-  const { w, h, movement } = sc;
-  const s = w * h;
-  let ret = 0;
-
-  for (let i = 0; i < s; i++) {
-    if (sc.path[i] & FLAG_COMPLETE && sc.grid[i] === NUMBER_EMPTY) {
-      /* The bit-set guard means we only index `dirs[dir]` for dir < dircount. */
-      for (let dir = 0; dir < MAXIMUM_DIRS; dir++) {
-        if (!(sc.path[i] & (1 << dir))) continue;
-        const i2 = movement.dirs[dir].dy * w + movement.dirs[dir].dx + i;
-        const n1 = sc.grid[i2];
-        if (n1 >= 0) {
-          for (let n = 0; n <= sc.end; n++) {
-            if (Math.abs(n - n1) === 1) continue;
-            if (!sc.marks[i * s + n]) continue;
-            sc.marks[i * s + n] = 0;
-            ret++;
-          }
-        }
-      }
-
-      if (sc.path[i] & FLAG_ENDPOINT) {
-        for (let n = 1; n < sc.end; n++) {
-          if (!sc.marks[i * s + n]) continue;
-          sc.marks[i * s + n] = 0;
-          ret++;
-        }
-      }
-    }
-  }
-
-  return ret;
-}
-
-function solverRemovePath(sc: SolverScratch): number {
-  const { w, movement } = sc;
-  const s = w * sc.h;
-  let ret = 0;
-
-  for (let i1 = 0; i1 < s; i1++) {
-    if (sc.path[i1] & FLAG_COMPLETE) continue;
-    const n1 = sc.grid[i1];
-    if (n1 < 0) continue;
-    for (let dir = 0; dir < MAXIMUM_DIRS; dir++) {
-      if (!(sc.path[i1] & (1 << dir))) continue;
-      const i2 = movement.dirs[dir].dy * w + movement.dirs[dir].dx + i1;
-      const n2 = sc.grid[i2];
-      if (n2 >= 0 && Math.abs(n1 - n2) !== 1) {
-        sc.path[i1] &= ~(1 << dir);
-        sc.path[i2] &= ~(1 << (movement.dircount - (dir + 1)));
-        ret++;
-      }
-    }
-  }
-
-  return ret;
-}
-
-function solverRemoveBlocks(sc: SolverScratch): number {
-  const { w, movement } = sc;
-  const s = w * sc.h;
-  let ret = 0;
-
-  for (let i1 = 0; i1 < s; i1++) {
-    if (!isObstacle(sc.grid[i1])) continue;
-    for (let dir = 0; dir < MAXIMUM_DIRS; dir++) {
-      if (!(sc.path[i1] & (1 << dir))) continue;
-      const i2 = movement.dirs[dir].dy * w + movement.dirs[dir].dx + i1;
-      sc.path[i2] &= ~(1 << (movement.dircount - (dir + 1)));
-      ret++;
-    }
-    sc.path[i1] = 0;
-  }
-
-  return ret;
-}
-
 export function solverOverlap(sc: SolverScratch): number {
   const { w, mode } = sc;
   const s = w * sc.h;
@@ -461,7 +269,7 @@ function solverEdges(sc: SolverScratch): void {
   }
 }
 
-/** Load `puzzle` into the scratch, seed every candidate, and set up the path. */
+/** Load `puzzle` into the scratch and seed every candidate. */
 export function solverStart(puzzle: Int16Array, sc: SolverScratch): void {
   const s = sc.w * sc.h;
 
@@ -482,72 +290,148 @@ export function solverStart(puzzle: Int16Array, sc: SolverScratch): void {
   }
 
   solverEdges(sc);
-  solverInitializePath(sc);
-  /* Upstream never resets `foundEndpoints`, so on a reused scratch it stays set
-   * from an earlier board, and `solverUpdatePath`'s endpoint clearing and
-   * `solverRemoveEndpoints` stop firing. The generator reuses one scratch, so
-   * this weakening decides which boards ship. */
-  solverRemoveBlocks(sc);
 }
 
-/** Run the tiered deductive fixpoint over `puzzle` into `sc.grid`. */
-export function ascentSolve(
-  puzzle: Int16Array,
-  diff: number,
-  sc: SolverScratch,
-  firings?: FiringTally,
-): void {
-  solverStart(puzzle, sc);
-  runDeductionFixpoint({
-    techniques: ascentLadder(sc, diff),
-    firings,
-    // `diff` is purely a cap: every rung above it is skipped.
-    maxTier: diff,
-  });
+// --- the described ladder ---------------------------------------------------
+
+/** Which squares are neighbors, as the description numbers it. */
+function movesOf(mode: number): number {
+  if (mode === MODE_ORTHOGONAL) return 0;
+  return isHexagonal(mode) ? 1 : 2;
+}
+
+/** The board as the description deals it: a given number at its square, a
+ * wall at each obstacle, an arrow at each of an Edges board's, each number
+ * counted from 1, and the path's last number. */
+function dealtOf(puzzle: Int16Array, mode: number): ascent.Dealt {
+  const s = puzzle.length;
+  const number: [number[], number[]] = [[], []];
+  const wall: [number[], number[]] = [[], []];
+  const arrow: [number[], number[]] = [[], []];
+  const add = (list: [number[], number[]], at: number, v: number): void => {
+    list[0].push(at);
+    list[1].push(v);
+  };
+  let open = 0;
+  for (let i = 0; i < s; i++) {
+    const v = puzzle[i];
+    // An arrow is an obstacle too, so it is told apart first.
+    if (isNumberEdge(v)) add(arrow, i, fromNumberEdge(v) + 1);
+    else if (isObstacle(v)) add(wall, i, 0);
+    else {
+      open++;
+      if (v >= 0) add(number, i, v + 1);
+    }
+  }
+  return {
+    number: clueList(number[0], number[1], s),
+    wall: clueList(wall[0], wall[1], s),
+    arrow: clueList(arrow[0], arrow[1], s),
+    moves: movesOf(mode),
+    top: open,
+  };
+}
+
+/** Why a technique fired, for the hint that is to walk the ladder: its id
+ * and binding. */
+interface DescribedReason {
+  kind: ascent.LadderId;
+  binding: object;
+}
+
+const reasonOf =
+  (kind: ascent.LadderId) =>
+  (binding: object): DescribedReason => ({ kind, binding });
+
+/** The ladder over the board `dl`, with an Edges board's own techniques where
+ * it has arrows. */
+function ascentLadder(dl: ascent.Dealt, mode: number): Ladder<WideCellMarks> {
+  return describedLadder<ascent.LadderId, ascent.PlacingId, WideCellMarks>(
+    ascent,
+    {
+      once: placingRung(ascent.once, dl),
+      onlySquare: compiledRung(ascent.onlySquare, dl, reasonOf("onlySquare")),
+      nextTo: compiledRung(ascent.nextTo, dl, reasonOf("nextTo")),
+      reach: compiledRung(ascent.reach, dl, reasonOf("reach")),
+      overlap: compiledRung(ascent.overlap, dl, reasonOf("overlap")),
+      onlyNumberNear: compiledRung(
+        ascent.onlyNumberNear,
+        dl,
+        reasonOf("onlyNumberNear"),
+      ),
+      onlyNumber: compiledRung(ascent.onlyNumber, dl, reasonOf("onlyNumber")),
+      onLine: compiledRung(ascent.onLine, dl, reasonOf("onLine")),
+      overlapEdges: compiledRung(ascent.overlapEdges, dl, reasonOf("overlapEdges")),
+    },
+    undefined,
+    mode === MODE_EDGES ? ["Edges"] : [],
+  );
 }
 
 /**
- * The rungs, easiest first. Ascent returns no grade (`diff` is purely a cap),
- * so only the runner's loop and cap are used.
- *
- * **Two rungs cannot be expressed as a tier and guard themselves instead:**
- *
- *  - **`overlap` runs at Hard *or* in Edges mode at any difficulty.** Declaring
- *    it `tier: DIFF_HARD` would take it away from an Edges board at Normal,
- *    where upstream runs it. It is declared at the tier of the block it sits in
- *    and tests the disjunction itself.
- *  - **`single-number-simple` runs at Tricky and *not* at Hard**: availability
- *    that is non-monotone in the cap, which no `tier` can say, because
- *    `maxTier` includes every rung at or below it. Declared at Tricky so a
- *    lower cap skips it, and self-guarded against Hard, where its thorough
- *    sibling replaces it.
- *
- * A `when` predicate on the runner would be indistinguishable from returning
- * `0`, which is why the runner has none.
+ * The board's numbers as the description holds them: each given counted from
+ * 1, a wall or an arrow `top + 1`, an empty square 0.
  */
-function ascentLadder(sc: SolverScratch, diff: number): DeductionTechnique[] {
-  return [
-    { id: "single-position", tier: DIFF_EASY, run: () => solverSinglePosition(sc) },
-    { id: "proximity-simple", tier: DIFF_EASY, run: () => solverProximitySimple(sc) },
-    { id: "update-path", tier: DIFF_NORMAL, run: () => solverUpdatePath(sc) },
-    { id: "adjacent-path", tier: DIFF_NORMAL, run: () => solverAdjacentPath(sc) },
-    { id: "remove-endpoints", tier: DIFF_NORMAL, run: () => solverRemoveEndpoints(sc) },
-    { id: "remove-path", tier: DIFF_NORMAL, run: () => solverRemovePath(sc) },
-    { id: "proximity-full", tier: DIFF_NORMAL, run: () => solverProximityFull(sc) },
-    {
-      id: "overlap",
-      tier: DIFF_NORMAL,
-      run: () => (diff >= DIFF_HARD || sc.mode === MODE_EDGES ? solverOverlap(sc) : 0),
-    },
-    {
-      id: "single-number-simple",
-      tier: DIFF_TRICKY,
-      run: () => (diff < DIFF_HARD ? solverSingleNumber(sc, true) : 0),
-    },
-    {
-      id: "single-number-full",
-      tier: DIFF_HARD,
-      run: () => solverSingleNumber(sc, false),
-    },
-  ];
+function describedValues(puzzle: Int16Array, top: number): Int16Array {
+  const values = new Int16Array(puzzle.length);
+  for (let i = 0; i < puzzle.length; i++) {
+    const v = puzzle[i];
+    values[i] = v >= 0 ? v + 1 : v === NUMBER_EMPTY ? 0 : top + 1;
+  }
+  return values;
+}
+
+/** What a solve leaves: the board with every number it placed, in the
+ * game's numbering, and whether that is the board's answer. */
+export interface AscentSolved {
+  grid: Int16Array;
+  solved: boolean;
+}
+
+/**
+ * Solve `puzzle`, a `w`×`h` board of `mode`, by the described ladder up to
+ * the tier `cap`. No technique supposes anything, so a board the ladder
+ * fills is uniquely solved.
+ */
+export function ascentSolve(
+  puzzle: Int16Array,
+  w: number,
+  h: number,
+  mode: number,
+  cap: number,
+  firings?: FiringTally,
+): AscentSolved {
+  const dl = dealtOf(puzzle, mode);
+  const sp = describedSpace(ascent.units, w, h);
+  const values = describedValues(puzzle, dl.top);
+  const m = new WideCellMarks(sp, dl.top + 1, values, (c, d) =>
+    ascent.domainOf(sp, dl, c, d),
+  );
+  const ladder = ascentLadder(dl, mode);
+  m.placing = ladder.placing;
+  m.striking = ladder.striking;
+  const grid = puzzle.slice();
+  if (!m.seed(values)) return { grid, solved: false };
+  const broken = runLadder(
+    m,
+    ladderTechniques(m, ladder.entries, { [TIERS]: cap }, {}),
+    { firings },
+  );
+  for (let i = 0; i < grid.length; i++)
+    if (grid[i] === NUMBER_EMPTY && values[i] > 0 && values[i] <= dl.top)
+      grid[i] = values[i] - 1;
+  return {
+    grid,
+    solved: !broken && !values.includes(0) && ascent.isAnswer(values, sp, dl),
+  };
+}
+
+/** Whether the board is solved: its numbers are the answer, by the
+ * description's rules. */
+export function isSolved(s: AscentState): boolean {
+  const dl = dealtOf(s.grid, s.mode);
+  const values = describedValues(s.grid, dl.top);
+  if (values.includes(0)) return false;
+  const sp = describedSpace(ascent.units, s.w, s.h);
+  return ascent.isAnswer(values, sp, dl);
 }

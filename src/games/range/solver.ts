@@ -134,7 +134,7 @@ function valuesOf(grid: Int8Array): Uint8Array {
 }
 
 /** Write what the marks decided into a grid's undecided squares. */
-function writeBack(grid: Int8Array, values: Uint8Array | Int8Array): void {
+function writeBack(grid: Int8Array, values: ArrayLike<number>): void {
   for (let c = 0; c < grid.length; c++)
     if (grid[c] === EMPTY && values[c] !== 0)
       grid[c] = values[c] === SHADED ? BLACK : WHITE;

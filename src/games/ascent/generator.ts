@@ -13,12 +13,11 @@ import { matching } from "../../engine/latin.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { ascentSolve, SolverScratch } from "./solver.ts";
+import { ascentSolve } from "./solver.ts";
 import {
   type AscentParams,
   type AscentStep,
   ascentGridSize,
-  checkCompletion,
   DIFF_EASY,
   encodeGridDesc,
   isBorderCell,
@@ -190,13 +189,12 @@ function generateHamiltonianPath(
  * matching, accepting only a graded-solvable result (upstream
  * `ascent_add_edges`). Mutates `grid`; returns whether it succeeded. */
 function ascentAddEdges(
-  sc: SolverScratch,
+  w: number,
+  h: number,
   grid: Int16Array,
   params: AscentParams,
   rs: RandomState,
 ): boolean {
-  const w = sc.w;
-  const h = sc.h;
   const aw = w - 2;
   const ah = h - 2;
 
@@ -221,26 +219,27 @@ function ascentAddEdges(
 
   let attempts = 0;
   let match: Int32Array = new Int32Array(aw * ah).fill(-1);
+  let solved = grid;
   while (attempts < MAX_ATTEMPTS) {
     match = matching(aw * ah, w * h, adjlists, adjsizes, rs);
 
-    sc.grid.set(grid);
+    const puzzle = grid.slice();
     for (let i = 0; i < aw * ah; i++) {
       if (match[i] === -1) continue;
       const x = (i % aw) + 1;
       const y = Math.trunc(i / aw) + 1;
-      sc.grid[match[i]] = numberEdge(grid[y * w + x]);
-      sc.grid[y * w + x] = NUMBER_EMPTY;
+      puzzle[match[i]] = numberEdge(grid[y * w + x]);
+      puzzle[y * w + x] = NUMBER_EMPTY;
     }
 
-    /* Solve in place (puzzle === sc.grid, so no copy). */
-    ascentSolve(sc.grid, params.diff, sc);
-    if (checkCompletion(sc.grid, w, h, params.mode)) break;
+    const result = ascentSolve(puzzle, w, h, params.mode, params.diff);
+    solved = result.grid;
+    if (result.solved) break;
 
     attempts++;
   }
 
-  grid.set(sc.grid);
+  grid.set(solved);
   for (let i = 0; i < aw * ah; i++) {
     if (match[i] === -1) continue;
     const x = (i % aw) + 1;
@@ -254,13 +253,13 @@ function ascentAddEdges(
 /** Blank as many clues as the graded solver still permits (upstream
  * `ascent_remove_numbers`). Mutates `grid`; always succeeds. */
 function ascentBlankClues(
-  sc: SolverScratch,
+  w: number,
+  h: number,
+  end: number,
   grid: Int16Array,
   params: AscentParams,
   rs: RandomState,
 ): boolean {
-  const w = sc.w;
-  const h = sc.h;
   const spaces = Array.from({ length: w * h }, (_, j) => j);
   shuffle(spaces, rs);
   for (let j = 0; j < w * h; j++) {
@@ -270,15 +269,13 @@ function ascentBlankClues(
     const temp2 = grid[i2];
     if (temp1 < 0) continue;
     if (params.symmetrical && temp2 < 0) continue;
-    if (!params.removeends && (temp1 === 0 || temp1 === sc.end)) continue;
-    if (!params.removeends && params.symmetrical && (temp2 === 0 || temp2 === sc.end))
+    if (!params.removeends && (temp1 === 0 || temp1 === end)) continue;
+    if (!params.removeends && params.symmetrical && (temp2 === 0 || temp2 === end))
       continue;
     grid[i1] = NUMBER_EMPTY;
     if (params.symmetrical) grid[i2] = NUMBER_EMPTY;
 
-    ascentSolve(grid, params.diff, sc);
-
-    if (!checkCompletion(sc.grid, w, h, params.mode)) {
+    if (!ascentSolve(grid, w, h, params.mode, params.diff).solved) {
       if (params.symmetrical) grid[i2] = temp2;
       grid[i1] = temp1;
     }
@@ -299,7 +296,6 @@ export function newAscentDesc(
   rng: RandomState,
 ): { desc: string } {
   const { w, h } = ascentGridSize(params);
-  const sc = new SolverScratch(w, h, params.mode, w * h - 1);
   let grid: Int16Array | null = null;
   let success = false;
 
@@ -308,7 +304,7 @@ export function newAscentDesc(
   const attempt = retryLimit(`ascent: generation (${w}x${h} d${params.diff})`);
   do {
     attempt();
-    sc.end = w * h - 1;
+    let end = w * h - 1;
 
     grid = null;
     const path = retryLimit("ascent: a path through every cell");
@@ -318,24 +314,22 @@ export function newAscentDesc(
     }
 
     for (let i = 0; i < w * h; i++) {
-      if (isObstacle(grid[i])) sc.end--;
+      if (isObstacle(grid[i])) end--;
     }
 
     success =
       params.mode === MODE_EDGES
-        ? ascentAddEdges(sc, grid, params, rng)
-        : ascentBlankClues(sc, grid, params, rng);
+        ? ascentAddEdges(w, h, grid, params, rng)
+        : ascentBlankClues(w, h, end, grid, params, rng);
 
     // The tier gate (the divergence): a board the tier below already cracks is
-    // not the difficulty the player asked for. **The probe gets its own
-    // scratch**: `foundEndpoints` persists across solves (see `solverStart`), so
-    // reusing `sc` would ask an already-weakened solver, under-rejecting, and
-    // would leave the probe's state behind to change which later boards ship.
-    if (success && params.diff > DIFF_EASY) {
-      const probe = new SolverScratch(w, h, params.mode, sc.end);
-      ascentSolve(grid, params.diff - 1, probe);
-      if (checkCompletion(probe.grid, w, h, params.mode)) success = false;
-    }
+    // not the difficulty the player asked for.
+    if (
+      success &&
+      params.diff > DIFF_EASY &&
+      ascentSolve(grid, w, h, params.mode, params.diff - 1).solved
+    )
+      success = false;
   } while (!success);
 
   return { desc: encodeGridDesc(grid, w * h) };

@@ -29,8 +29,10 @@ export interface Marks {
   readonly placed: number;
   /** The values placed, 0 where none is, and the values each cell may
    * still hold, as a bitmask (bit `d`): fields, so a compiled technique
-   * reads them in place. The methods below are what they give. */
-  readonly grid: Uint8Array | Int8Array;
+   * reads them in place. The methods below are what they give. Where the
+   * domain is wide, `cands` holds nothing, and the methods read the
+   * candidates. */
+  readonly grid: Uint8Array | Int8Array | Int16Array;
   readonly cands: Int32Array;
   /** The cells placed since the marks were last set wholesale, in order,
    * and a count of those settings: what a structure kept over the marks
@@ -48,6 +50,12 @@ export interface Marks {
   cand(c: number): number;
   /** Whether the cell may still hold `d`. */
   has(c: number, d: number): boolean;
+  /** How many values the cell may still hold, the least of them (`-1`
+   * where none), and all of them in order: what a wide domain's compiled
+   * technique reads of a cell's candidates. */
+  candCount(c: number): number;
+  candFirst(c: number): number;
+  candList(c: number): readonly number[];
   /** The elements of a technique's first binder its solve run is still to
    * visit, 1 each, by {@link Footprint}; `null` where every one is visited
    * (`skipping` off, or marks that keep no such sets). */

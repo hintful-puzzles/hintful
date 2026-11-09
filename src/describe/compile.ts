@@ -61,7 +61,10 @@ type Sort =
   | { k: "fill" }
   /** A list of numbers in order, repeats kept: a list clue, or the lengths
    * `run_lengths(L, S)` gives. `null` where a clue kind has none at an element. */
-  | { k: "list" };
+  | { k: "list" }
+  /** A cell's candidates where the domain is wide, no mask: its code is the
+   * cell, and it is read by membership, a count, the least and a binder. */
+  | { k: "cands" };
 
 const NUM: Sort = { k: "num" };
 const INT: Sort = { k: "int" };
@@ -413,6 +416,9 @@ interface Env {
   /** The cell a cell `c`'s value `d` names (the answer's `to`), which `to(c)`
    * and `chain(c)` read; absent where the answer names none. */
   to?: Expr | null;
+  /** Whether the answer's values run past 31, so a cell's candidates are
+   * read through the marks' methods and never as a mask. */
+  wide?: boolean;
   /** Whether the function keeps each cell's candidates as it first reads
    * them (`cands`), until a firing it goes on from changes the marks. */
   memo: boolean;
@@ -663,9 +669,19 @@ function marksRead(fn: "known" | "value" | "cand", c: string): string {
   return `b.cands[${c}]`;
 }
 
-/** Whether cell `c` may still hold `d`, read in place as {@link marksRead}. */
-const hasRead = (c: string, d: string): string =>
-  `(((b.cands[${c}] >> ${d}) & 1) !== 0)`;
+/** Whether cell `c` may still hold `d`, read in place as {@link marksRead},
+ * or of a wide domain's words. */
+const hasRead = (c: string, d: string, env: Env): string =>
+  env.wide ? `b.has(${c}, ${d})` : `(((b.cands[${c}] >> ${d}) & 1) !== 0)`;
+
+/** A wide domain's candidates read otherwise than through its methods. */
+const NOT_WIDE =
+  "a wide domain's candidates are read by membership, a count, `first` and a binder";
+
+/** A set of numbers made as a mask where the values run past what one holds:
+ * bind its members, or count them, instead. */
+const MASK_IN_WIDE =
+  "a set of numbers is a mask of 32 bits, which a wide domain's values pass: bind its members";
 
 function compileExpr(e: Expr, scope: Scope, env: Env, out: Out): Val {
   if (env.hoist !== null && e.k !== "num" && e.k !== "name") {
@@ -925,6 +941,7 @@ function compileNode(e: Expr, scope: Scope, env: Env, out: Out): Val {
         };
       }
       const s = compileExpr(e.of, scope, env, out);
+      if (s.sort.k === "cands") return { code: `b.candCount(${s.code})`, sort: NUM };
       if (isMask(s.sort)) {
         env.used.add("popcount");
         return { code: `popcount(${s.code})`, sort: NUM };
@@ -1007,6 +1024,11 @@ function markRead(fn: "known" | "value" | "cand", c: Val, env: Env, out: Out): V
       ? { code: `(g[${c.code}] > 0)`, sort: BOOL }
       : { code: `(g[${c.code}] || -1)`, sort: NUM };
   }
+  if (fn === "cand" && env.wide) {
+    if (env.supposed.length > 0)
+      throw new CompileError("a supposition reads no wide domain's candidates");
+    return { code: once(c, out).code, sort: { k: "cands" } };
+  }
   if (env.supposed.length === 0 && !(fn === "cand" && env.memo)) {
     const sort = fn === "known" ? BOOL : fn === "value" ? NUM : setOf(NUM);
     return { code: marksRead(fn, c.code), sort };
@@ -1050,6 +1072,7 @@ const partOf = (fn: string, env: Env): boolean =>
 function name(n: string, scope: Scope, env: Env, out: Out): Val {
   const bound = scope.get(n);
   if (bound !== undefined) return bound;
+  if (n === "domain" && env.wide) throw new CompileError(NOT_WIDE);
   if (n === "domain" && env.cellDomain)
     throw new CompileError("the domain is each cell's here: read a cell's candidates");
   if (n === "domain" && env.position !== null)
@@ -1108,11 +1131,14 @@ function setLiteral(elems: readonly Expr[], scope: Scope, env: Env, out: Out): V
     throw new CompileError(
       `a set of mixed sorts: ${vs.map((v) => show(v.sort)).join(", ")}`,
     );
-  if (sort.k === "num")
+  if (sort.k === "num") {
+    if (env.wide && !elems.every((x) => x.k === "num" && x.v >= 0 && x.v <= 31))
+      throw new CompileError(MASK_IN_WIDE);
     return {
       code: `(${vs.map((v) => `(1 << ${v.code})`).join(" | ")})`,
       sort: setOf(NUM),
     };
+  }
   if (sort.k !== "elem") throw new CompileError(`a set of ${show(sort)}`);
   env.used.add("setOf");
   return { code: `setOf(${vs.map((v) => v.code).join(", ")})`, sort: setOf(sort) };
@@ -1129,7 +1155,10 @@ function setLiteralElements(elems: readonly Expr[], scope: Scope, env: Env): boo
     shared: undefined,
   };
   const sorts = elems.map((x) => compileExpr(x, scope, probe, new Out(0)).sort);
-  return sorts.every((s) => s.k === "elem" && sameSort(s, sorts[0]));
+  // Numbers too where the domain is wide, as no mask holds them.
+  const looped = (s: Sort): boolean =>
+    s.k === "elem" || (env.wide === true && s.k === "num");
+  return sorts.every((s) => looped(s) && sameSort(s, sorts[0]));
 }
 
 /** A connective whose right side may need statements: they run only where
@@ -1174,7 +1203,12 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
     expectElem(c, env.answerSort, "cand");
     const x = env.supposed.length === 0 ? c.code : once(c, out).code;
     const at = env.supposed.length === 0 ? d.code : once(d, out).code;
-    const has = supposedRead(x, env, (s) => `${at} === ${s.value}`, hasRead(x, at));
+    const has = supposedRead(
+      x,
+      env,
+      (s) => `${at} === ${s.value}`,
+      hasRead(x, at, env),
+    );
     return { code: op === "in" ? has : `!${has}`, sort: BOOL };
   }
   // `q in linked(k)` asks whether two points share a group, which the marks'
@@ -1396,6 +1430,7 @@ function bindingLoops(
     let edgeSet: Val["edgeSet"] | null = null;
     let where = bnd.where;
     if (bnd.kind === "fill") {
+      if (env.wide) throw new CompileError(`${bnd.name}: ${NOT_WIDE}`);
       const f = fillLoop(bnd, sc, env, out);
       v = f.code;
       sort = { k: "fill" };
@@ -1619,6 +1654,15 @@ function bindingLoops(
         const m = Out.fresh("_m");
         out.open(`for (let ${m} = ${s.code}; ${m} !== 0; ${m} &= ${m} - 1) {`);
         out.emit(`const ${v} = 31 - Math.clz32(${m} & -${m});`);
+      } else if (s.sort.k === "cands") {
+        // Listed before the loop, so a strike the loop makes moves nothing
+        // it walks.
+        sort = NUM;
+        const a = Out.fresh("_a");
+        const ix = Out.fresh("_i");
+        out.emit(`const ${a} = b.candList(${s.code});`);
+        out.open(`for (let ${ix} = 0; ${ix} < ${a}.length; ${ix}++) {`);
+        out.emit(`const ${v} = ${a}[${ix}];`);
       } else if (isArray(s.sort) && s.sort.k === "set") {
         sort = s.sort.of;
         const a = Out.fresh("_a");
@@ -3279,6 +3323,7 @@ function aggregate(
       if (!scalar(termSort) || termSort.k === "none")
         throw new CompileError(`set(…) of ${show(termSort)}`);
       sort = setOf(termSort);
+      if (isMask(sort) && env.wide) throw new CompileError(MASK_IN_WIDE);
       if (isMask(sort)) {
         out.emit(`let ${r} = 0;`);
         if (memberUnion(e, r, scope, env, out)) break;
@@ -4380,6 +4425,7 @@ function call(
       arity(2);
       expect(vs[0], "num", fn);
       expect(vs[1], "num", fn);
+      if (env.wide) throw new CompileError(MASK_IN_WIDE);
       env.used.add("rangeMask");
       return { code: `rangeMask(${vs[0].code}, ${vs[1].code})`, sort: setOf(NUM) };
     case "subsets":
@@ -4390,6 +4436,7 @@ function call(
     case "first": {
       arity(1);
       const s = vs[0];
+      if (s.sort.k === "cands") return { code: `b.candFirst(${s.code})`, sort: NUM };
       if (isMask(s.sort)) {
         env.used.add("least");
         return { code: `least(${s.code})`, sort: NUM };
@@ -4424,7 +4471,7 @@ function call(
       // where its conclusion changes the marks.
       out.emit(
         fn === "strike"
-          ? `if (${hasRead(c.code, d.code)}) { if (fire === null) { b.strikeAt(${c.code}, ${d.code}); changed = true; } else facts.push(STRIKE, ${c.code}, ${d.code}); }`
+          ? `if (${hasRead(c.code, d.code, env)}) { if (fire === null) { b.strikeAt(${c.code}, ${d.code}); changed = true; } else facts.push(STRIKE, ${c.code}, ${d.code}); }`
           : `if (!${marksRead("known", c.code)}) { if (fire === null) { b.placeAt(${c.code}, ${d.code}); changed = true; } else facts.push(PLACE, ${c.code}, ${d.code}); }`,
       );
       env.used.add(fn === "strike" ? "STRIKE" : "PLACE");
@@ -5400,12 +5447,14 @@ function placeSort(what: string, at: string, env: Env): ElemSort {
 
 /** The sort of the members of `value`, a set, which may read `at`. */
 function valuesSort(what: string, value: Expr, at: Sort | null, env: Env): Sort {
-  // Compiled only for its sort, so what it would call is not imported.
+  // Compiled only for its sort, so what it would call is not imported, and
+  // a mask it would make runs nowhere.
   const v = compileExpr(
     value,
     new Map(at === null ? [] : [["at", { code: "at", sort: at }]]),
     {
       ...env,
+      wide: false,
       used: new Set(),
       readsClues: { yes: false },
       sizes: { ...env.sizes, read: new Set() },
@@ -5536,6 +5585,7 @@ export function compileGame(
     faces: null,
     answerSort: d.answerSort,
     to: d.to,
+    wide: d.wide,
     memo: false,
     scratch: null,
     readsClues: { yes: false },
@@ -5730,7 +5780,11 @@ function answerCheck(json: DescriptionJson, d: Description, env: Env): string[] 
   out.emit("const held = g[cell];");
   if (env.cellDomain) {
     readsClues.yes = true;
-    out.emit("if (!(held > 0 && (domainOf(sp, cl, cell) >> held) & 1)) return false;");
+    out.emit(
+      env.wide
+        ? "if (!(held > 0 && domainOf(sp, cl, cell, held))) return false;"
+        : "if (!(held > 0 && (domainOf(sp, cl, cell) >> held) & 1)) return false;",
+    );
     out.close();
   } else {
     const at = new Out(1);
@@ -5885,6 +5939,7 @@ function cellDomain(
   env: Env,
   sizes: Readonly<Record<string, unknown>>,
 ): string[] {
+  if (env.wide) return wideDomain(domain, env);
   const names = new Set<string>();
   freeNames(domain, names, new Set());
   // Solo's board is measured in a `c`, which is no cell.
@@ -5902,6 +5957,61 @@ function cellDomain(
     "",
     "/** The values each cell may hold, by cell: its domain. */",
     `export function domainOf(${sp}: GridSpace, ${cl}v_c: number): number {`,
+    ...body,
+    "}",
+  ];
+}
+
+/**
+ * A wide domain, which no mask holds, as whether cell `c` may hold `d`: the
+ * domain is `range(a, b)` or `{d in range(a, b) where P}`, so the engine
+ * seeds each cell by asking it of every value. Always a cell's, so `domain`
+ * alone is refused in a technique.
+ */
+function wideDomain(domain: Expr, env: Env): string[] {
+  let range: Expr = domain;
+  let d = "d";
+  let where: Expr | null = null;
+  if (domain.k === "agg" && domain.fn === "set" && domain.binders.length === 1) {
+    const [bnd] = domain.binders;
+    const term = domain.term;
+    if (
+      bnd.kind !== "in" ||
+      (term !== null && !(term.k === "name" && term.name === bnd.name))
+    )
+      throw new CompileError(
+        "a wide domain is `range(a, b)` or `{d in range(a, b) where P}`",
+      );
+    range = bnd.of;
+    d = bnd.name;
+    where = bnd.where ?? domain.where;
+  }
+  if (range.k !== "call" || range.fn !== "range" || range.args.length !== 2)
+    throw new CompileError(
+      "a wide domain is `range(a, b)` or `{d in range(a, b) where P}`",
+    );
+  env.cellDomain = true;
+  const out = new Out(1);
+  const scope = new Map<string, Val>([
+    ["c", { code: "v_c", sort: elem("cell") }],
+    [d, { code: "v_d", sort: NUM }],
+  ]);
+  const [a, b] = range.args.map((x) => {
+    const t = once(compileExpr(x, scope, env, out), out);
+    expect(t, "num", "range");
+    return t.code;
+  });
+  out.emit(`if (v_d < ${a} || v_d > ${b}) return false;`);
+  const p = where === null ? null : compileExpr(where, scope, env, out);
+  if (p !== null) expect(p, "bool", "where");
+  const cl = env.readsClues.yes ? "cl: Dealt, " : "_cl: Dealt, ";
+  env.readsClues.yes = false;
+  const body = [...out.text(), `  return ${p === null ? "true" : p.code};`];
+  const sp = body.some((l) => /\bsp\b/.test(l)) ? "sp" : "_sp";
+  return [
+    "",
+    "/** Whether cell `v_c` may hold `v_d`: its domain, wider than a mask. */",
+    `export function domainOf(${sp}: GridSpace, ${cl}v_c: number, v_d: number): boolean {`,
     ...body,
     "}",
   ];

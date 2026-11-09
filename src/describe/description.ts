@@ -55,6 +55,7 @@ export interface DescriptionJson {
     value: {
       sort: "cell" | "edge";
       domain: string;
+      wide?: boolean;
       to?: string;
       repeat?: { value: string; times: string };
     };
@@ -523,6 +524,8 @@ export interface Description {
   /** What holds a value of the answer: a cell, or an edge between two. */
   answerSort: "cell" | "edge";
   domain: Expr;
+  /** Whether a value may run past 31, so a cell's candidates are no mask. */
+  wide: boolean;
   /** The cell a cell `c`'s value `d` names, which `to(c)` reads and
    * `chain(c)` follows; `null` where the answer names none. */
   to: Expr | null;
@@ -712,6 +715,7 @@ export function loadDescription(
     clueKinds,
     answerSort: json.answer.value.sort,
     domain: at("answer domain", json.answer.value.domain),
+    wide: json.answer.value.wide === true,
     to:
       json.answer.value.to === undefined ? null : at("answer to", json.answer.value.to),
     repeat:

@@ -252,7 +252,14 @@ description author acts on:
 - **A set of numbers is a mask of 32 bits**, so it holds none past 31 and
   none below 0: a domain, or a `range` read as a set. A binder over
   `range(a, b)` counts instead, so it binds a position along a line of any
-  length.
+  length. **A domain whose values pass 31 says `wide: true`** (Ascent's
+  numbers, up to the board's square count): a cell's candidates are then
+  read by `d in cand(c)`, `|cand(c)|`, `first(cand(c))` and a binder, and
+  the compiler refuses any other read, any set of numbers but constants
+  under 32, and a supposition. A binder over a set stated member by member
+  loops its members, so `m in {n - 1, n + 1}` is how a wide description
+  names two numbers; `{n}` made as a mask wrapped past 31 unseen before the
+  compiler refused it.
 - **`connected(S)` says whether the cells `S` are one group**, each reaching
   every other through members side by side, and `cuts(S)` is the members
   without which the rest are not, in `S`'s order. Bind `cuts` once by `=`:
@@ -771,7 +778,9 @@ uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
 - **A domain may be a cell's.** Where the answer's domain reads `c`
   (Seismic's `range(1, |cells(area(c))|)`), the module exports `domainOf`,
   `CellMarks.seed` starts each cell from it, and `domain` alone is refused
-  in a technique.
+  in a technique. A wide domain's `domainOf` says whether a cell may hold a
+  value, and the game keeps its marks in `WideCellMarks`, which seeds each
+  cell by asking it of every value and keeps its candidates in words.
 - **A square that holds no line or piece is a value of its own, given by a
   clue** (Sticks' blocks): the clue's meaning places the value, and the
   domain, read off the clue, keeps it out of every other square. A technique

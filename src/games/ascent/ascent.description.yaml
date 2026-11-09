@@ -1,6 +1,171 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
 game: ascent
+name: Ascent
+family: numbers
+sizes:
+  # The board as stored: a hexagonal one sheared, padded with walls, and an
+  # Edges one ringed by its arrows. Unbounded but by the time a board takes
+  # to deal.
+  w: { min: 1, max: 99999 }
+  h: { min: 1, max: 99999 }
+  # Which squares are neighbors: 0 the four beside, 1 the six of a
+  # hexagonal board, 2 the eight around.
+  moves: { min: 0, max: 2 }
+  # The last number of the path, as many as the squares on it.
+  top: { min: 1, max: 99999 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # A square's number on the path, from 1 to the last, top. A wall or an
+  # arrow holds top + 1: it is on no path.
+  value:
+    sort: cell
+    wide: true
+    domain: "{d in range(1, top + 1) where (d <= top and open(c)) or (d = top + 1 and not open(c))}"
+define:
+  # Whether square c is on the path: neither a wall nor an arrow.
+  open(c): "clue(wall, c) = none and clue(arrow, c) = none"
+  # The squares beside c as the board's ruleset has them. A hexagonal board
+  # is stored sheared, so the two diagonal steps that run with the shear
+  # are no neighbors.
+  nbr(c): >-
+    {p in adj8(c) where moves = 2 or (moves = 0 and p in adj4(c))
+    or (moves = 1 and x(p) - x(c) != y(p) - y(c))}
+  # Whether squares a and b are measured side by side: on a board of four
+  # ways, or of six where the offsets run with the shear, which takes two
+  # steps a square.
+  sideways(a, b): "moves = 0 or (moves = 1 and (x(a) - x(b)) * (y(a) - y(b)) > 0)"
+  # Whether squares a and b are at most d steps apart, whatever lies
+  # between: the two offsets summed side by side, each alone corner to
+  # corner.
+  near(a, b, d): >-
+    (sideways(a, b) and abs(x(a) - x(b)) + abs(y(a) - y(b)) <= d)
+    or (not sideways(a, b) and abs(x(a) - x(b)) <= d and abs(y(a) - y(b)) <= d)
+  # Whether some square holds number n.
+  held(n): "count(x in cells where value(x) = n) > 0"
+  # How far below and above number n the nearest held numbers are, or the
+  # path's ends where none is.
+  gapBelow(n): "min(j in range(1, n) where j = n or held(n - j) of j)"
+  gapAbove(n): "min(j in range(1, top + 1 - n) where j = top + 1 - n or held(n + j) of j)"
+  # Whether square a, an Edges board's arrow, points along a line that
+  # passes square p: its row from the left or right side, its column from
+  # the top or bottom, or a diagonal from a corner.
+  online(a, p): >-
+    (y(a) > 0 and y(a) < h - 1 and y(p) = y(a))
+    or ((y(a) = 0 or y(a) = h - 1) and x(a) > 0 and x(a) < w - 1 and x(p) = x(a))
+    or ((y(a) = 0 or y(a) = h - 1) and (x(a) = 0 or x(a) = w - 1)
+    and abs(x(p) - x(a)) = abs(y(p) - y(a)))
+shape:
+  # Every number of the path but the last has the next beside it.
+  - "forall c in cells where value(c) < top: exists p in nbr(c): value(p) = value(c) + 1"
+  # No number is on the path twice.
+  - "forall c in cells where value(c) <= top: count(x in cells where value(x) = value(c)) = 1"
+rules:
+  # The path runs through every square but the walls and the arrows.
+  dealt: "top = count(x in cells where open(x))"
+clues:
+  # A number given on the path.
+  number:
+    at: cell
+    value: "range(1, w * h)"
+    means: "value(at) = v"
+  # A square the path does not enter.
+  wall:
+    at: cell
+    value: "range(0, 0)"
+    means: "value(at) = top + 1"
+freedom: { kind: fill }
+deal:
+  answer: a path through every open square, each number beside the next
+  number: as many hidden as the board stays at its tier
+  tier: one of the tiers
+variations:
+  # Arrows round the board each point along a row, column or diagonal that
+  # holds their number.
+  Edges:
+    add:
+      clues:
+        arrow:
+          at: cell
+          value: "range(1, w * h)"
+          means: >-
+            value(at) = top + 1
+            and (exists p in cells where open(p) and online(at, p): value(p) = v)
+      techniques:
+        # A number is on its arrow's line.
+        - id: onLine
+          tier: Easy
+          for: "a in cells, n = clue(arrow, a) where n != none"
+          conclude: "forall p in cells where n in cand(p) and not online(a, p): strike(p, n)"
+        # The overlap reading, from Normal on an Edges board.
+        - id: overlapEdges
+          tier: Normal
+          for: "n in range(1, top) where not held(n)"
+          conclude: >-
+            forall c in cells where n in cand(c)
+            and ((n > 1 and not (exists p in nbr(c): n - 1 in cand(p)))
+            or (n < top and not (exists p in nbr(c): n + 1 in cand(p)))):
+            strike(c, n)
+tiers: [Easy, Normal, Tricky, Hard]
+techniques:
+  # A placed number is on no other square.
+  - id: once
+    on: place
+    tier: Easy
+    for: "c in cells where known(c) and open(c), p in cells where p != c and not known(p)"
+    conclude: "strike(p, value(c))"
+  # A number with one square left goes there. One with none makes the marks
+  # inconsistent.
+  - id: onlySquare
+    tier: Easy
+    for: >-
+      n in range(1, top) where not held(n),
+      S = {c in cells where not known(c) and n in cand(c)} where |S| < 2
+    conclude: "|S| = 1 and place(first(S), n)"
+  # The numbers just before and after a placed one are beside it.
+  - id: nextTo
+    tier: Easy
+    for: >-
+      c in cells where known(c) and open(c),
+      m in {value(c) - 1, value(c) + 1} where m >= 1 and m <= top and not held(m)
+    conclude: "forall p in cells where m in cand(p) and not near(p, c, 1): strike(p, m)"
+  # A number missing from the board is within as many steps of a placed
+  # one as they are apart, out to the next placed number either way.
+  - id: reach
+    tier: Normal
+    for: >-
+      c in cells where known(c) and open(c), n = value(c),
+      m in range(n - gapBelow(n) + 1, n + gapAbove(n) - 1) where m != n
+    conclude: "forall p in cells where m in cand(p) and not near(p, c, abs(m - n)): strike(p, m)"
+  # A missing number has a square beside it that may hold the number before
+  # and one that may hold the number after, so a square with neither is
+  # struck.
+  - id: overlap
+    tier: Normal
+    from: Hard
+    for: "n in range(1, top) where not held(n)"
+    conclude: >-
+      forall c in cells where n in cand(c)
+      and ((n > 1 and not (exists p in nbr(c): n - 1 in cand(p)))
+      or (n < top and not (exists p in nbr(c): n + 1 in cand(p)))):
+      strike(c, n)
+  # A square with one number left that is the next or the one before a
+  # placed number holds it.
+  - id: onlyNumberNear
+    tier: Tricky
+    until: Hard
+    for: >-
+      c in cells where not known(c) and open(c) and |cand(c)| = 1,
+      n = first(cand(c)) where (n > 1 and held(n - 1)) or (n < top and held(n + 1))
+    conclude: "place(c, n)"
+  # A square with one number left holds it. One with none makes the marks
+  # inconsistent.
+  - id: onlyNumber
+    tier: Hard
+    for: "c in cells where not known(c) and open(c) and |cand(c)| < 2"
+    conclude: "|cand(c)| = 1 and place(c, first(cand(c)))"
 help:
   rules: |-
     Place each number once, so they form a path from 1 to the highest, each in a square neighboring the one before. Some are given. Which squares are neighbors depends on the game mode:

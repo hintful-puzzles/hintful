@@ -138,6 +138,47 @@ describe("the compiler refuses an ill-sorted technique", () => {
   });
 });
 
+describe("a wide domain's numbers are never a mask", () => {
+  // Ascent's numbers run past 31, so a set of them built as 32 bits wraps.
+  const source = "src/games/ascent/ascent.description.yaml";
+  const ascent = sources.get(source);
+  const withNextTo = (forClause: string, conclude: string): string => {
+    if (ascent === undefined || !isFormal(ascent)) throw new Error(`${source} moved`);
+    const techniques = (ascent.techniques ?? []).map((t) =>
+      "id" in t && t.id === "nextTo" ? { ...t, for: forClause, conclude } : t,
+    );
+    const all = new Map(sources);
+    all.set(source, { ...ascent, techniques });
+    return compileSource(source, all);
+  };
+  const near = "c in cells where known(c) and open(c)";
+  it.each([
+    [
+      "a set literal of numbers",
+      `${near}, M = {value(c) - 1, value(c) + 1}`,
+      "|M| = 2",
+    ],
+    ["a range as a set", `${near}, M = range(1, top)`, "|M| > 0"],
+    ["a domain's size", near, "|domain| > 0"],
+    [
+      "a set of values gathered",
+      `${near}, M = set(value(p) over p in cells where known(p))`,
+      "|M| > 0",
+    ],
+  ])("refuses %s", (_, forClause, conclude) => {
+    expect(() => withNextTo(forClause, conclude)).toThrow(/wide domain/);
+  });
+
+  it("binds a literal's members one by one", () => {
+    expect(
+      withNextTo(
+        `${near}, m in {value(c) - 1, value(c) + 1} where m >= 1 and m <= top`,
+        "forall p in cells where m in cand(p) and not near(p, c, 1): strike(p, m)",
+      ),
+    ).not.toMatch(/1 << /);
+  });
+});
+
 describe("a technique states how its dearest read grows with the board", () => {
   const lib = (forClause: string) =>
     compileLibrary(

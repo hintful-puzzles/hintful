@@ -167,7 +167,7 @@ function valuesOf(state: SinglesState): Uint8Array {
 }
 
 /** Write the marks' values back into a state's flags. */
-function writeBack(state: SinglesState, grid: Uint8Array | Int8Array): void {
+function writeBack(state: SinglesState, grid: ArrayLike<number>): void {
   for (let c = 0; c < state.n; c++) {
     state.flags[c] &= ~(F_BLACK | F_CIRCLE);
     if (grid[c] === COVERED) state.flags[c] |= F_BLACK;

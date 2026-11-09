@@ -1321,6 +1321,48 @@ const PLANTS: Record<string, Plant> = {
     conclude:
       "count(L in lines, c in cells(L) where head(L, c) and reads(k, run(L, c))) < 1",
   },
+  // Ascent: a placed number read as the next one too.
+  "ascent.once": { conclude: "strike(p, value(c) + 1)" },
+  // A number with two squares left read as going in the first.
+  "ascent.onlySquare": {
+    for: `n in range(1, top) where not held(n),
+      S = {c in cells where not known(c) and n in cand(c)} where |S| < 3`,
+    conclude: "|S| >= 1 and place(first(S), n)",
+  },
+  // The numbers next to a placed one read as not beside it.
+  "ascent.nextTo": {
+    conclude:
+      "forall p in cells where m in cand(p) and not near(p, c, 0): strike(p, m)",
+  },
+  // A missing number read as a step nearer a placed one than it must be.
+  "ascent.reach": {
+    conclude:
+      "forall p in cells where m in cand(p) and not near(p, c, abs(m - n) - 1): strike(p, m)",
+  },
+  // A missing number read as needing the one two before it beside it.
+  "ascent.overlap": {
+    conclude: `forall c in cells where n in cand(c)
+      and n > 2 and not (exists p in nbr(c): n - 2 in cand(p)):
+      strike(c, n)`,
+  },
+  "ascent.overlapEdges": {
+    conclude: `forall c in cells where n in cand(c)
+      and n > 2 and not (exists p in nbr(c): n - 2 in cand(p)):
+      strike(c, n)`,
+  },
+  // A square with two numbers left read as holding its first.
+  "ascent.onlyNumberNear": {
+    for: `c in cells where not known(c) and open(c) and |cand(c)| = 2,
+      n = first(cand(c)) where (n > 1 and held(n - 1)) or (n < top and held(n + 1))`,
+  },
+  "ascent.onlyNumber": {
+    for: "c in cells where not known(c) and open(c) and |cand(c)| < 3",
+    conclude: "|cand(c)| >= 1 and place(c, first(cand(c)))",
+  },
+  // An arrow's number read as off its line.
+  "ascent.onLine": {
+    conclude: "forall p in cells where n in cand(p) and online(a, p): strike(p, n)",
+  },
   // A line read as needing one tent more than its count.
   "tents.lineNeighbors": {
     for: "L in lines, k = need(L) + 1, O = open(L) where |O| > 0 and k > 0, N = set(z over y in O, z in adj8(y) where blank(z) and z not in cells(L)) where |N| > 0, U = set(z over fill f of O from cand where spread(f, O, k), z in N where (forall y in O where y in adj8(z): f(y) = 2)) where (exists z in N: z not in U)",

@@ -47,9 +47,9 @@ export const CELL_MULTIPLE = -2;
 
 // --- path segment flags (upstream `FLAG_*`) ------------------------
 
-export const MAXIMUM_DIRS = 8;
-/** This cell may be an endpoint (number 0 or `last`). */
-export const FLAG_ENDPOINT = 1 << MAXIMUM_DIRS;
+// A bit a direction below the flags. Upstream's `FLAG_ENDPOINT` held the
+// next bit, a mark of its solver's only, so it stays unused here.
+const MAXIMUM_DIRS = 8;
 /** This cell's path is fully determined (two segments). */
 export const FLAG_COMPLETE = 1 << (MAXIMUM_DIRS + 1);
 /** A path segment joins two non-sequential numbers (render error). */
@@ -371,61 +371,6 @@ export function updatePathHints(
       nexthints[i] = hint <= state.last ? hint : NUMBER_WALL;
     }
   }
-}
-
-/** The board is solved: {@link checkCompletion} of its numbers. */
-export function isSolved(s: AscentState): boolean {
-  return checkCompletion(s.grid, s.w, s.h, s.mode);
-}
-
-/** True if the whole grid forms a single 1..last path (upstream
- * `check_completion`) and every arrow clue is satisfied. */
-export function checkCompletion(
-  grid: Int16Array,
-  w: number,
-  h: number,
-  mode: number,
-): boolean {
-  let x = -1;
-  let y = -1;
-  let last = w * h - 1;
-  const movement = movementForMode(mode);
-
-  for (let i = 0; i < w * h; i++) {
-    if (grid[i] === NUMBER_EMPTY) return false;
-    if (grid[i] === 0) {
-      x = i % w;
-      y = Math.trunc(i / w);
-    }
-    if (isObstacle(grid[i])) last--;
-  }
-  if (x === -1) return false;
-
-  while (grid[y * w + x] !== last) {
-    let i = 0;
-    let x2 = -1;
-    let y2 = -1;
-    for (; i < movement.dircount; i++) {
-      x2 = x + movement.dirs[i].dx;
-      y2 = y + movement.dirs[i].dy;
-      if (y2 < 0 || y2 >= h || x2 < 0 || x2 >= w) continue;
-      if (grid[y2 * w + x2] === grid[y * w + x] + 1) break;
-    }
-    if (i === movement.dircount) return false;
-    x = x2;
-    y = y2;
-  }
-
-  for (let i = 0; i < w * h; i++) {
-    if (!isNumberEdge(grid[i])) continue;
-    const n = fromNumberEdge(grid[i]);
-    let found = false;
-    for (let j = 0; j < w * h; j++)
-      if (grid[j] === n && isEdgeValid(i, j, w, h)) found = true;
-    if (!found) return false;
-  }
-
-  return true;
 }
 
 // --- desc codec ----------------------------------------------------

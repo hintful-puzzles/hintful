@@ -49,7 +49,7 @@ import {
   newAscentDrawState,
   redrawAscent,
 } from "./render.ts";
-import { ascentSolve, SolverScratch } from "./solver.ts";
+import { ascentSolve, isSolved } from "./solver.ts";
 import {
   ASCENT_DIFFCHARS,
   ASCENT_DIFFNAMES,
@@ -60,7 +60,6 @@ import {
   type AscentParams,
   type AscentState,
   CELL_NONE,
-  checkCompletion,
   DIFF_EASY,
   DIFF_HARD,
   DIFF_NORMAL,
@@ -70,7 +69,6 @@ import {
   isHexagonal,
   isNear,
   isNumberEdge,
-  isSolved,
   MODE_EDGES,
   MODE_HEXAGON,
   MODE_HONEYCOMB,
@@ -484,17 +482,12 @@ const paramConfig: ParamConfigItem<AscentParams>[] = [
   difficultyItem(ASCENT_DIFFNAMES, "diff"),
 ];
 
-/** Ascent's difficulty contract (`engine/difficulty.ts`). `ascentSolve` reports
- * nothing itself: it deduces into `sc.grid` and the caller asks
- * `checkCompletion`, as the generator's tier gate does, so there is no
- * "impossible" verdict to map. **The scratch is fresh per call**, because its
- * `foundEndpoints` persists and permanently weakens the solver. */
+/** Ascent's difficulty contract (`engine/difficulty.ts`). The generator's
+ * tier gate asks the same of the ladder: whether it fills the board. */
 const difficulty: DifficultyContract<AscentParams> = {
   solveAtCap: (p, desc, cap) => {
     const s = newAscentState(p, desc);
-    const sc = new SolverScratch(s.w, s.h, s.mode, s.last);
-    ascentSolve(s.grid, cap, sc);
-    return checkCompletion(sc.grid, s.w, s.h, s.mode) ? "solved" : "unsolved";
+    return ascentSolve(s.grid, s.w, s.h, s.mode, cap).solved ? "solved" : "unsolved";
   },
 };
 
@@ -523,11 +516,10 @@ const prefs: GamePref<AscentUi>[] = [
 // --- solve & mistakes ----------------------------------------------
 
 function solve(orig: AscentState): SolveResult<AscentMove> {
-  const sc = new SolverScratch(orig.w, orig.h, orig.mode, orig.last);
-  ascentSolve(orig.grid, DIFFCOUNT, sc);
+  const { grid: solved } = ascentSolve(orig.grid, orig.w, orig.h, orig.mode, DIFFCOUNT);
   const grid: number[] = new Array(orig.w * orig.h);
   for (let i = 0; i < grid.length; i++)
-    grid[i] = sc.grid[i] >= 0 ? sc.grid[i] : NUMBER_EMPTY;
+    grid[i] = solved[i] >= 0 ? solved[i] : NUMBER_EMPTY;
   return { ok: true, move: { kind: "solve", grid } };
 }
 
@@ -539,13 +531,12 @@ function findMistakes(state: AscentState): readonly AscentMistake[] {
   for (let i = 0; i < s; i++)
     clues[i] = state.immutable[i] ? state.grid[i] : NUMBER_EMPTY;
 
-  const sc = new SolverScratch(w, h, state.mode, state.last);
-  ascentSolve(clues, DIFFCOUNT, sc);
-  if (!checkCompletion(sc.grid, w, h, state.mode)) return [];
+  const answer = ascentSolve(clues, w, h, state.mode, DIFFCOUNT);
+  if (!answer.solved) return [];
 
   const out: AscentMistake[] = [];
   for (let i = 0; i < s; i++) {
-    if (!state.immutable[i] && state.grid[i] >= 0 && sc.grid[i] !== state.grid[i])
+    if (!state.immutable[i] && state.grid[i] >= 0 && answer.grid[i] !== state.grid[i])
       out.push({ cell: i });
   }
   return out;

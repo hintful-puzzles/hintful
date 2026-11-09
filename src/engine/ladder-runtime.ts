@@ -76,7 +76,7 @@ export class CellMarks implements Marks {
   readonly sp: GridSpace;
   /** The values placed, 0 where none is: the caller's own array, written in
    * place. */
-  grid: Uint8Array | Int8Array;
+  grid: Uint8Array | Int8Array | Int16Array;
   /** The values each cell may still hold, as a bitmask (bit `d`). */
   readonly cands: Int32Array;
   /** The values each edge's mark may still hold, as a bitmask, where the
@@ -140,7 +140,7 @@ export class CellMarks implements Marks {
   constructor(
     sp: GridSpace,
     domain: number,
-    grid: Uint8Array | Int8Array,
+    grid: Uint8Array | Int8Array | Int16Array,
     repeat: { value: number; times: number } | null = null,
     held: "cell" | "edge" = "cell",
     markOn: "edge" | "angle" | "cell" = sp.tiling ? "angle" : "edge",
@@ -175,9 +175,38 @@ export class CellMarks implements Marks {
   has(c: number, d: number): boolean {
     return ((this.cands[c] >> d) & 1) !== 0;
   }
+  candCount(c: number): number {
+    let n = 0;
+    for (let m = this.cands[c]; m !== 0; m &= m - 1) n++;
+    return n;
+  }
+  candFirst(c: number): number {
+    const m = this.cands[c];
+    return m === 0 ? -1 : 31 - Math.clz32(m & -m);
+  }
+  candList(c: number): readonly number[] {
+    const out: number[] = [];
+    for (let m = this.cands[c]; m !== 0; m &= m - 1) out.push(31 - Math.clz32(m & -m));
+    return out;
+  }
+  /** Take `d` from the cell's candidates, and keep only `d`: the two
+   * writes {@link strikeAt} and {@link place} make, a wide domain's in its
+   * words. */
+  protected drop(c: number, d: number): void {
+    this.cands[c] &= ~(1 << d);
+  }
+  protected keepOnly(c: number, d: number): void {
+    this.cands[c] &= 1 << d;
+  }
+  /** Start every cell from its domain. */
+  protected seedCands(domainOf?: (c: number) => number): void {
+    const { cands } = this;
+    for (let c = 0; c < cands.length; c++)
+      cands[c] = domainOf ? domainOf(c) & this.domain : this.domain;
+  }
   strikeAt(c: number, d: number): void {
     if (!this.has(c, d)) return;
-    this.cands[c] &= ~(1 << d);
+    this.drop(c, d);
     if (this.visits.size > 0) this.reached("answer", c);
     for (const run of this.striking) run(this, c);
   }
@@ -255,19 +284,20 @@ export class CellMarks implements Marks {
    * a value is placed in a cell that can no longer hold it, as two givens
    * that clash leave one. Records nothing: a given is not a deduction.
    */
-  seed(grid: Uint8Array | Int8Array, domainOf?: (c: number) => number): boolean {
+  seed(
+    grid: Uint8Array | Int8Array | Int16Array,
+    domainOf?: (c: number) => number,
+  ): boolean {
     this.grid = grid;
     this.reachedAll(false);
     this.placed++;
     this.epoch++;
     this.log.length = 0;
-    const { cands } = this;
-    for (let c = 0; c < cands.length; c++)
-      cands[c] = domainOf ? domainOf(c) & this.domain : this.domain;
+    this.seedCands(domainOf);
     const recorder = this.recorder;
     this.recorder = undefined;
     try {
-      for (let c = 0; c < cands.length; c++) {
+      for (let c = 0; c < this.cands.length; c++) {
         const d = grid[c];
         if (d === 0) continue;
         if (!this.has(c, d)) return false;
@@ -299,7 +329,7 @@ export class CellMarks implements Marks {
         group: this.group,
       });
     }
-    this.cands[c] &= 1 << d;
+    this.keepOnly(c, d);
     this.grid[c] = d;
     this.placed++;
     this.log.push(c);
@@ -390,6 +420,93 @@ export class CellMarks implements Marks {
   /** The values each cell may hold, by cell. */
   snapshot(): Int32Array {
     return this.cands.slice();
+  }
+}
+
+/**
+ * The marks of a wide domain, whose values run past 31 (Ascent's numbers, up
+ * to the board's square count): each cell's candidates are `words` words of
+ * 32 bits, bit `d` of the cell's row, and `cands` holds nothing. A compiled
+ * wide technique reads them only through the candidate methods.
+ */
+export class WideCellMarks extends CellMarks {
+  /** The most a value may be, and the words each cell's row takes. */
+  readonly most: number;
+  readonly words: number;
+  /** Every cell's candidates, row after row. */
+  readonly wide: Int32Array;
+  /** Whether cell `c`'s domain holds `d`, which seeding asks of every value
+   * from 1 to {@link most}. */
+  private readonly inDomain: (c: number, d: number) => boolean;
+
+  constructor(
+    sp: GridSpace,
+    most: number,
+    grid: Int16Array,
+    inDomain: (c: number, d: number) => boolean,
+  ) {
+    super(sp, 0, grid);
+    this.most = most;
+    this.words = (most >> 5) + 1;
+    this.wide = new Int32Array(sp.cells.length * this.words);
+    this.inDomain = inDomain;
+  }
+
+  override cand(): number {
+    throw new Error("a wide domain's candidates are no mask");
+  }
+  override has(c: number, d: number): boolean {
+    return (
+      d >= 0 &&
+      d <= this.most &&
+      ((this.wide[c * this.words + (d >> 5)] >>> (d & 31)) & 1) !== 0
+    );
+  }
+  override candCount(c: number): number {
+    let n = 0;
+    const at = c * this.words;
+    for (let i = 0; i < this.words; i++)
+      for (let m = this.wide[at + i]; m !== 0; m &= m - 1) n++;
+    return n;
+  }
+  override candFirst(c: number): number {
+    const at = c * this.words;
+    for (let i = 0; i < this.words; i++) {
+      const m = this.wide[at + i];
+      if (m !== 0) return i * 32 + 31 - Math.clz32(m & -m);
+    }
+    return -1;
+  }
+  override candList(c: number): readonly number[] {
+    const out: number[] = [];
+    const at = c * this.words;
+    for (let i = 0; i < this.words; i++)
+      for (let m = this.wide[at + i]; m !== 0; m &= m - 1)
+        out.push(i * 32 + 31 - Math.clz32(m & -m));
+    return out;
+  }
+  protected override drop(c: number, d: number): void {
+    this.wide[c * this.words + (d >> 5)] &= ~(1 << (d & 31));
+  }
+  protected override keepOnly(c: number, d: number): void {
+    const at = c * this.words;
+    const kept = this.has(c, d);
+    this.wide.fill(0, at, at + this.words);
+    if (kept) this.wide[at + (d >> 5)] = 1 << (d & 31);
+  }
+  protected override seedCands(): void {
+    const { wide, words, most } = this;
+    wide.fill(0);
+    for (let c = 0; c < this.sp.cells.length; c++)
+      for (let d = 1; d <= most; d++)
+        if (this.inDomain(c, d)) wide[c * words + (d >> 5)] |= 1 << (d & 31);
+  }
+  override restore(grid: ArrayLike<number>, cands: ArrayLike<number>): void {
+    super.restore(grid, []);
+    this.wide.set(cands);
+  }
+  override snapshot(): Int32Array {
+    return this.wide.slice();
   }
 }
 

@@ -113,7 +113,7 @@ interface View {
   readonly h: number;
   readonly clues: Uint8Array;
   readonly g: PearlGeometry;
-  readonly grid: Uint8Array | Int8Array;
+  readonly grid: ArrayLike<number>;
 }
 
 /** One firing on the hint path. */

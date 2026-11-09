@@ -37,6 +37,7 @@ import {
 } from "../../engine/pointer.ts";
 import type { Point } from "../../engine/types.ts";
 import type { AscentDrawState } from "./render.ts";
+import { isSolved } from "./solver.ts";
 import {
   type AscentMove,
   type AscentState,
@@ -51,7 +52,6 @@ import {
   isNear,
   isNumberEdge,
   isObstacle,
-  isSolved,
   MODE_HEXAGON,
   MODE_HONEYCOMB,
   movementForMode,

@@ -59,6 +59,7 @@ import {
   squaresMeeting,
 } from "./premises.ts";
 import {
+  isSolved,
   SolverScratch,
   solverOverlap,
   solverProximityFull,
@@ -78,7 +79,6 @@ import {
   fromNumberEdge,
   isEdgeValid,
   isNumberEdge,
-  isSolved,
   MODE_EDGES,
   movementForMode,
   NUMBER_EMPTY,

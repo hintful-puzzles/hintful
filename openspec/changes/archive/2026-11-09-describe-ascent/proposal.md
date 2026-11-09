@@ -3,9 +3,10 @@
 **Status: filed by `describe-crossing-and-ascent` (2026-11-09)**, which took
 Crossing alone. It is the rest of step 11 of `describe-the-whole-catalog`'s
 plan (`design.md` § "The plan"), the last. It splits again at its start if
-the session finds it too large, filing the rest as it goes. When it is
-archived, `describe-the-whole-catalog`'s task 4 (the engine's old layer, and
-the guard) is next.
+the session finds it too large, filing the rest as it goes: it filed
+`describe-ascents-hint`, which is next, and then
+`describe-the-whole-catalog`'s task 4 (the engine's old layer, and the
+guard).
 
 ## Why
 
@@ -32,8 +33,10 @@ reasoning once, and the checker proves each technique sound.
 
 ## Acceptance
 
-Ascent runs its compiled ladder for its hint and its generator's grading,
-and its hand-written rungs are removed. Every technique is checked sound, each
+Ascent runs its compiled ladder for its solver and its generator's grading,
+and the hand-written rungs only the solver ran are removed. The hint, and
+the rungs it alone still runs, move in `describe-ascents-hint`, split off at
+this change's start (`design.md` § "Decisions"). Every technique is checked sound, each
 with a planted defect that comes out unsound. The boards dealt, their tiers,
 completion and the hint walks are compared with HEAD, and each difference is
 reported, with which saves or links no longer load. Large boards are timed

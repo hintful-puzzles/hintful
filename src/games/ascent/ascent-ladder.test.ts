@@ -1,25 +1,19 @@
 /*
- * The firing census of Ascent's `runDeductionFixpoint` ladder: which rungs the
- * generated corpus reaches. The harness and the argument for it are
+ * Ascent's ladder, its description's techniques, certified by a census of
+ * which rungs fire. The harness and the argument for it are
  * `engine/testing/ladder-census.ts`; this file is the declaration.
  *
- * Two rungs have availability no `tier` can express and guard themselves
- * (`ascentLadder`'s doc comment has the argument). One of them,
- * `single-number-simple`, runs at Tricky and **not** at Hard, so this walks
- * **all four caps**.
- *
- * **Each case builds a fresh `SolverScratch` per solve, deliberately.**
- * `foundEndpoints` persists across solves on one scratch (an upstream quirk the
- * differential holds), and a latched scratch silences `remove-endpoints`, so a
- * shared one would starve the census for a reason that has nothing to do with
- * the ladder.
+ * `onlyNumberNear` runs at Tricky and not at Hard (`until`), and `overlap`
+ * only at Hard but for an Edges board's own `overlapEdges` from Normal, so
+ * this walks all four caps and every mode.
  */
 import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newAscentDesc } from "./generator.ts";
-import { ascentSolve, SolverScratch } from "./solver.ts";
+import { ascentSolve } from "./solver.ts";
 import {
   type AscentParams,
+  type AscentState,
   DIFF_EASY,
   DIFF_HARD,
   DIFF_NORMAL,
@@ -39,8 +33,6 @@ const mk = (
   removeends = false,
 ): AscentParams => ({ w, h, diff, mode, removeends, symmetrical: false });
 
-/** Every mode, because `overlap`'s self-guard reads `sc.mode`, and Edges is the
- * arm that makes it run below Hard. */
 const SHAPES: [string, AscentParams][] = [
   ["5x5 rect normal", mk(5, 5, DIFF_NORMAL, MODE_RECT)],
   ["5x5 rect hard", mk(5, 5, DIFF_HARD, MODE_RECT)],
@@ -51,44 +43,30 @@ const SHAPES: [string, AscentParams][] = [
 
 const SEEDS = ["lad-a", "lad-b", "lad-c"];
 
-interface AscentCase {
-  grid: Int16Array;
-  sc: SolverScratch;
-}
-
 const cases = SHAPES.flatMap(([name, params]) =>
   SEEDS.map((seed) => {
     const label = `${name} ${seed}`;
     const { desc } = newAscentDesc(params, randomNew(`ascent-ladder-${label}`));
-    return {
-      label,
-      board: (): AscentCase => {
-        const state = newAscentState(params, desc);
-        return {
-          grid: state.grid,
-          sc: new SolverScratch(state.w, state.h, state.mode, state.last),
-        };
-      },
-    };
+    return { label, board: (): AscentState => newAscentState(params, desc) };
   }),
 );
 
-describeLadderCensus<AscentCase>({
+describeLadderCensus<AscentState>({
   game: "ascent",
   rungs: [
-    "single-position",
-    "proximity-simple",
-    "update-path",
-    "adjacent-path",
-    "remove-endpoints",
-    "remove-path",
-    "proximity-full",
+    "onlySquare",
+    "nextTo",
+    "onLine",
+    "reach",
     "overlap",
-    "single-number-simple",
-    "single-number-full",
+    "overlapEdges",
+    "onlyNumberNear",
+    "onlyNumber",
   ],
   unreached: {},
   caps: [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY, DIFF_HARD],
   cases,
-  solve: (b, cap, firings) => ascentSolve(b.grid, cap, b.sc, firings),
+  solve: (s, cap, firings) => {
+    ascentSolve(s.grid, s.w, s.h, s.mode, cap, firings);
+  },
 });
