@@ -85,19 +85,28 @@ It plays just the same; hold the pointer over the label to see what's still to
 come. When a puzzle has no such thing by its nature, such as mistakes to check
 in a sliding-tile puzzle, its own help page says why under *Not in this game*.
 
-Hint works in two beats:
+Hint works in three beats:
 
-* **Press once to see it.** The board marks what the hint is talking about and
-  the explanation appears just above the bar, without moving the board or any
-  key. Nothing has been played — the move is still yours to make, with the
-  puzzle's own keys still in reach, and you're free to make a different one.
+* **Press once to see where to look.** The board marks one thing, the part of
+  it the next step reasons from, and the line just above the bar says *Look
+  here.* That may be all the nudge you need. Where a step reasons from nothing
+  but the square it decides, that square is what's marked.
 
-* **Press again to play it.** The button now says **Apply the hint**. A second
+* **Press again to see why.** The button now says **Explain the hint**. The
+  board marks everything the hint is talking about and the explanation appears
+  just above the bar, without moving the board or any key. Nothing has been
+  played — the move is still yours to make, with the puzzle's own keys still
+  in reach, and you're free to make a different one.
+
+* **Press again to play it.** The button now says **Apply the hint**. A third
   press, with nothing done in between, plays that one step in slow motion and
   stops there. Ask again for the next.
 
-Anything you do in between — a move of your own, undo, redo — puts the hint back
-to the first beat, so a second press always *shows* before it plays.
+A step that carries on from the one before, such as the second half of a slide
+or the rest of a run the last step started, skips the first beat: you're
+already looking there. Anything you do in between — a move of your own, undo,
+redo — puts the hint back to the first beat, so a press always shows before it
+plays.
 
 **The words in pills point at the board.** Tap or click one, "this cell" or
 "the outlined cells", and the marks those words mean light up for a second,

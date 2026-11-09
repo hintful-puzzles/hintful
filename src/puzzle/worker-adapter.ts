@@ -110,8 +110,14 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   solve(): string | null {
     return this.engine.solve();
   }
-  hint(): string | null {
-    return this.engine.hint();
+  hint(look = false): string | null {
+    return this.engine.hint(look);
+  }
+  hintLooking(): boolean {
+    return this.engine.hintLooking();
+  }
+  explainHint(): void {
+    this.engine.explainHint();
   }
   executeHint(hideAfter = false): string | null {
     return this.engine.executeHint(hideAfter);

@@ -1,8 +1,10 @@
-// The toolbar Hint button alternates show/apply: the first press *shows* a hint step; a second press with nothing done in
-// between *applies* that one step via executeHint(true) (which hides the plan
-// rather than previewing the next) and disarms, so the player gets a clean
-// show, apply, show, apply rhythm — one applied hint per request. Any
-// intervening user action also disarms. These tests drive Puzzle's
+// The toolbar Hint button walks three beats: the first press *shows* where to
+// look for a hint step, a second press with nothing done in between *explains*
+// it, and a third *applies* that one step via executeHint(true) (which hides the
+// plan rather than previewing the next) and disarms, so the player gets one
+// applied hint per request. A step the midend shows whole at once (a journey's
+// later leg) skips the explain. Any intervening user action also disarms.
+// These tests drive Puzzle's
 // orchestration directly against a stub worker — the logic lives entirely in
 // Puzzle, no midend/worker needed.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -44,15 +46,23 @@ function makePuzzle(
   setHintError: (e: string | null) => void;
   setExecuteError: (e: string | null) => void;
   setWayForward: (w: WayForward | null) => void;
+  setLooking: (l: boolean) => void;
 } {
   const calls: string[] = [];
   let hintError: string | null = null;
   let executeError: string | null = null;
   let wayForward: WayForward | null = null;
+  // The midend shows a step whole at once unless a test says otherwise, which
+  // is the stepper's two-beat rhythm.
+  let looking = false;
   const workerPuzzle = {
     hint: vi.fn(async () => {
       calls.push("show");
       return hintError;
+    }),
+    hintLooking: vi.fn(async () => hintError === null && looking),
+    explainHint: vi.fn(async () => {
+      calls.push("explain");
     }),
     hintWayForward: vi.fn(async () => (hintError === null ? null : wayForward)),
     executeHint: vi.fn(async () => {
@@ -99,10 +109,37 @@ function makePuzzle(
     setWayForward: (w) => {
       wayForward = w;
     },
+    setLooking: (l) => {
+      looking = l;
+    },
   };
 }
 
 describe("Hint button stepper", () => {
+  it("shows where to look, then explains, then applies", async () => {
+    const { puzzle, calls, workerPuzzle, setLooking } = makePuzzle();
+    setLooking(true);
+    expect(puzzle.hintBeat).toBe("show");
+    await puzzle.hint();
+    expect(workerPuzzle.hint).toHaveBeenCalledWith(true);
+    expect(puzzle.hintBeat).toBe("explain");
+    await puzzle.hint();
+    expect(puzzle.hintBeat).toBe("apply");
+    await puzzle.hint();
+    expect(puzzle.hintBeat).toBe("show");
+    expect(calls).toEqual(["show", "explain", "apply"]);
+  });
+
+  it("an action after where to look shows where to look again", async () => {
+    const { puzzle, calls, setLooking } = makePuzzle();
+    setLooking(true);
+    await puzzle.hint();
+    await puzzle.processKey(65);
+    expect(puzzle.hintBeat).toBe("show");
+    await puzzle.hint();
+    expect(calls).toEqual(["show", "key", "show"]);
+  });
+
   it("first press shows, second press applies (with hideAfter)", async () => {
     const { puzzle, calls, workerPuzzle } = makePuzzle();
     await puzzle.hint();
@@ -152,7 +189,7 @@ describe("Hint button stepper", () => {
     setHintError(FIX_MISTAKES_FIRST);
     setWayForward("clear");
     await puzzle.hint();
-    expect(puzzle.hintArmedToApply).toBe(true);
+    expect(puzzle.hintBeat).toBe("apply");
     expect(puzzle.helpMessage).toBe(`${FIX_MISTAKES_FIRST} ${WAY_FORWARD.clear}`);
     await puzzle.hint();
     expect(calls).toEqual(["show", "apply"]);
@@ -164,7 +201,7 @@ describe("Hint button stepper", () => {
     setWayForward("clear");
     await puzzle.hint();
     await puzzle.processKey(65);
-    expect(puzzle.hintArmedToApply).toBe(false);
+    expect(puzzle.hintBeat).toBe("show");
     expect(puzzle.helpMessage).toBe("");
   });
 
@@ -267,11 +304,11 @@ describe("Hint presses coalesce while one is in flight (coalesce-hint-requests)"
     // A press reaches the worker a tick after it is made (`Puzzle.board`).
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(calls).toEqual(["show"]);
-    expect(puzzle.hintArmedToApply).toBe(false);
+    expect(puzzle.hintBeat).toBe("show");
     await release();
     await first;
     expect(await Promise.all(dropped)).toEqual([null, null]);
-    expect(puzzle.hintArmedToApply).toBe(true);
+    expect(puzzle.hintBeat).toBe("apply");
     // The next press is the apply — the rhythm survived the dropped presses.
     const apply = puzzle.hint();
     await release();
@@ -308,7 +345,7 @@ describe("Hint presses coalesce while one is in flight (coalesce-hint-requests)"
     puzzle.startAutoHint(); // its loop's first apply is now in flight too
     await release(); // answers the show, oldest first
     await show;
-    expect(puzzle.hintArmedToApply).toBe(false);
+    expect(puzzle.hintBeat).toBe("show");
     puzzle.stopAutoHint();
     await release(); // lets the loop's apply finish
     expect(calls.slice(0, 2)).toEqual(["show", "apply"]);
@@ -366,7 +403,7 @@ describe("a slow hint says it is thinking (coalesce-hint-requests)", () => {
     // down rather than left under the explanation; and the press armed.
     expect(puzzle.hintPending).toBe(false);
     expect(puzzle.helpMessage).toBe("");
-    expect(puzzle.hintArmedToApply).toBe(true);
+    expect(puzzle.hintBeat).toBe("apply");
   });
 
   it("never labels a hint that answers in time", async () => {

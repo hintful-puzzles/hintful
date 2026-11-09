@@ -335,3 +335,25 @@ describe("a sentence is its parts, joined in the relation's words", () => {
     expect(keysOf(s.refs)).toContain("ring|move|move");
   });
 });
+
+describe("whereToLook", () => {
+  const at = (x: number) => ({ x, y: 0 });
+  const row = [at(0), at(1), at(2), at(3)];
+  const look = (n: Narration): string[] => keysOf(n.whereToLook().refs);
+
+  it("shows the smallest outline, before any stripes", () => {
+    const s = phrase`${mark.as("stripes", CELL, [at(5)], "this row")} and ${mark.as("outline", CELL, row, "these cells")} and ${mark.as("outline", CELL, [at(2)], "the 2")}, so ${mark.as("ring", CELL, [at(4)], "this cell")} must be 3.`;
+    expect(look(s)).toEqual(["outline|cell|2,0"]);
+  });
+
+  it("shows the smallest stripes where there is no outline", () => {
+    const s = phrase`${mark.as("stripes", CELL, row, "this row")} and ${mark.as("stripes", CELL, [at(1), at(2)], "this cage")}, so ${mark.as("ring", CELL, [at(4)], "this cell")} must be 3.`;
+    expect(look(s)).toEqual(["stripes|cell|1,0", "stripes|cell|2,0"]);
+  });
+
+  it("shows the ring of a step with no evidence, and its move last", () => {
+    const ring = phrase`${mark.move("Go back")} to ${mark.as("ring", CELL, [at(1)], "this cell")}.`;
+    expect(look(ring)).toEqual(["ring|cell|1,0"]);
+    expect(look(mark.move("Go back"))).toEqual(["ring|move|move"]);
+  });
+});

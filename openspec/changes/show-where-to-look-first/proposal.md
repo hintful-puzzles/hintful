@@ -30,21 +30,25 @@ The engine chooses the one mark from the step's own marks: their roles
 them. No game writes anything new, and no game's hint changes. Any other
 action disarms the next beat, as any action disarms the apply today.
 
-## Questions the session brings to the owner, with its answers
+## The measurement, and the owner's answers (2026-11-09)
 
-- **Which mark is the "one"?**
-  - The recommendation is the evidence the step reasons from: its first
-    outline, or its stripes where it names a line or region.
-  - The ring is where the answer is, so showing it gives the move away.
-  - A step with no outline or stripes would show its ring.
-  - Measure how many steps of each game's hint walks fall in each case
-    before deciding.
-- **What the status line says at the first beat**: nothing, or one fixed
-  sentence ("Look here.").
-- **Whether a step that is a leg of a journey** (`continuesPrevious`) skips
-  the first beat, since the player is already looking there.
-- **Whether keyboard `H` and every other hint entry point walk all three
-  beats.**
+Over every hinting game's gate presets, up to 40 steps a board, 5,506 steps:
+the first non-ring mark the words name is an outline in 59%, stripes in 18%;
+23% name only rings (all of the search games, and most of Solo's singles);
+under 1% name nothing. 26% name more than one piece of evidence, and 17% are
+a journey's later leg.
+
+- **Which mark is the "one"**: the evidence the step reasons from, shown in
+  the outline (green), and **the smallest reference available**, so it is
+  only a nudge. An outline before stripes, which are the larger pointer; a
+  step with neither shows its ring.
+- **A step whose only mark is its ring** shows the ring alone.
+- **The status line** says "Look here."
+- **A journey's later leg**, and a step whose words name no mark, skip the
+  first beat.
+- **Entry points**: keyboard `H` is the same command as the button, so it
+  walks the three beats with no work of its own. Auto-solve shows each step
+  whole, as before.
 
 ## What it touches
 

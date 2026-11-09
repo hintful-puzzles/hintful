@@ -35,6 +35,12 @@ const COMMANDS: Record<string, (p: Puzzle) => Promise<unknown>> = {
   selectReference: (p) => p.selectReference(null),
 };
 
+/** What a command asks the board after its own method, where it asks more. */
+const THEN_ASKS: Record<string, readonly string[]> = {
+  // Whether the step is shown at where to look decides the next beat.
+  hint: ["hintLooking"],
+};
+
 function makePuzzle(): { puzzle: Puzzle; asked: string[]; dealBoard: () => void } {
   const asked: string[] = [];
   const worker = new Proxy(
@@ -74,7 +80,7 @@ describe("a command sent before the first board", () => {
       expect(puzzle.hasBoard).toBe(false);
       dealBoard();
       await answer;
-      expect(asked).toEqual([name]);
+      expect(asked).toEqual([name, ...(THEN_ASKS[name] ?? [])]);
       expect(puzzle.hasBoard).toBe(true);
     });
   }

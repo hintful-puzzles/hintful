@@ -112,6 +112,10 @@ export const ROLE_ADJECTIVES: readonly string[] = Object.values(MARK_ROLES).map(
 /** `role`'s adjective, as a sentence says it: "outlined". */
 export const roleAdjective = (role: MarkRole): string => MARK_ROLES[role].adjective;
 
+/** The roles {@link Narration.whereToLook} looks in, in turn: what the step
+ * reasons from before what it decides. */
+const LOOK_ORDER: readonly MarkRole[] = ["outline", "stripes", "ring", "strike"];
+
 /** A literal that says what only a reference may. "There" names a place except
  * as the existential ("there is one way left"), which points at nothing; "there
  * would" alone is still a place ("a bulb there would…"). */
@@ -345,6 +349,36 @@ export class Narration {
     return this.narrow(
       (role, kind, key) =>
         !(role === ref.role && kind === ref.kind.name && keys.has(key)),
+    );
+  }
+
+  /** The same words drawing one mark only: where on the board to look for the
+   * step, without giving its answer away. That is the smallest piece of
+   * evidence the words name, an outline before stripes because an outline is
+   * the narrower pointer; only a step with no evidence shows what it
+   * decides. The step's own move is a last resort, since it draws the
+   * answer. */
+  whereToLook(): this {
+    const refs = this.refs;
+    const pick = (moves: boolean): MarkRef | null => {
+      for (const role of LOOK_ORDER) {
+        let best: MarkRef | null = null;
+        for (const r of refs)
+          if (
+            r.role === role &&
+            (moves || r.kind.name !== MOVE.name) &&
+            (best === null || r.elements.length < best.elements.length)
+          )
+            best = r;
+        if (best) return best;
+      }
+      return null;
+    };
+    const ref = pick(false) ?? pick(true);
+    if (!ref) return this;
+    const keys = new Set(ref.elements.map((e) => ref.kind.key(e)));
+    return this.narrow(
+      (role, kind, key) => role === ref.role && kind === ref.kind.name && keys.has(key),
     );
   }
 

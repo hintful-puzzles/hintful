@@ -90,7 +90,7 @@ function fullyCapablePuzzle(overrides: FakePuzzle = {}): FakePuzzle {
     wantsStatusbar: true,
     statusbarText: "3 lights placed",
     hintPending: false,
-    hintArmedToApply: false,
+    hintBeat: "show",
     autoHintActive: false,
     // A deal is being looked for, which is when its way out has a control.
     dealMessage: "Looking for a board…",

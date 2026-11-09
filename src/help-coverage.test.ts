@@ -450,22 +450,23 @@ describe("a game's page stands alone for a newcomer", () => {
   // looks for those words on the screen. The labels are the command list's,
   // read in each state that changes one.
   const labels = new Map<string, string>();
-  for (const on of [false, true]) {
-    const stub: CommandPuzzle = {
-      puzzleId: "solo",
-      canUndo: on,
-      canRedo: on,
-      canHint: on,
-      canSolve: on,
-      canCheck: on,
-      isSolved: on,
-      hintPending: on,
-      hintArmedToApply: on,
-      autoHintActive: on,
-    };
-    for (const { label } of commandList(stub, "Solo"))
-      if (label) labels.set(label.toLowerCase(), label);
-  }
+  for (const on of [false, true])
+    for (const hintBeat of ["show", "explain", "apply"] as const) {
+      const stub: CommandPuzzle = {
+        puzzleId: "solo",
+        canUndo: on,
+        canRedo: on,
+        canHint: true,
+        canSolve: on,
+        canCheck: on,
+        isSolved: on,
+        hintPending: on,
+        hintBeat,
+        autoHintActive: on,
+      };
+      for (const { label } of commandList(stub, "Solo"))
+        if (label) labels.set(label.toLowerCase(), label);
+    }
   let bolded = 0;
   it.each(puzzleIds)("%s: names a command in bold as the app does", (id) => {
     for (const [, bold] of helpProse(id).matchAll(/\*\*([^*]+)\*\*/g)) {

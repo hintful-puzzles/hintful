@@ -105,6 +105,10 @@ import { NO_FLASH, ownFlash, WinWave } from "./win-wave.ts";
  * with no move animation (`animLength` 0) stays instant; the dwell paces it. */
 const HINT_ANIM_S = 1.0;
 
+/** What the status line says while a step shows only where to look: the same
+ * in every game, so it gives nothing of the step away. */
+export const LOOK_HERE = "Look here.";
+
 /** The preference key of the solve timer, which the engine offers in every
  * game beside the game's own `prefs`. */
 export const SHOW_TIMER_PREF = "show-timer";
@@ -235,7 +239,14 @@ export interface EngineCore {
    * an undo left, until a step is made on this one. */
   redo(): void;
   solve(): string | null;
-  hint(): string | null;
+  /** Show the current step; with `look`, at first only where to look for it
+   * ({@link Narration.whereToLook}), unless it continues a journey the player
+   * is already looking at. */
+  hint(look?: boolean): string | null;
+  /** Whether the displayed step shows only where to look. */
+  hintLooking(): boolean;
+  /** Show the whole of a step shown at where to look: its words and marks. */
+  explainHint(): void;
   executeHint(hideAfter?: boolean): string | null;
   /** What applying the hint does after the refusal `hint` just gave, or
    * `null` where it does nothing (`WAY_FORWARD`). Dropped by any change to the
@@ -473,6 +484,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     index: number;
     drawn: HintStep<Move>;
   } | null = null;
+  /** The displayed step shown only where to look, and that step drawn so.
+   * Kept with the step, as {@link hintHidden} is. */
+  private hintLook: { step: HintStep<Move>; drawn: HintStep<Move> } | null = null;
   /** The mistake overlay currently displayed (game-specific highlight
    * data), or null. Midend-only, never in game state, never persisted;
    * shown until the next transition, exactly like a displayed hint. */
@@ -1389,12 +1403,52 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return this.hintHidden;
   }
 
-  /** The step as `redraw` paints it: without the hidden reference's marks. */
+  /** The displayed step as where to look shows it, ending one left on a step
+   * no longer displayed. */
+  private get displayedHintLook(): HintStep<Move> | null {
+    if (this.hintLook !== null && this.hintLook.step !== this.displayedHintStep)
+      this.hintLook = null;
+    return this.hintLook?.drawn ?? null;
+  }
+
+  /** The step as `redraw` paints it: where to look only, or without the hidden
+   * reference's marks. */
   private get drawnHintStep(): HintStep<Move> | null {
-    return this.displayedHintHidden?.drawn ?? this.displayedHintStep;
+    return (
+      this.displayedHintLook ??
+      this.displayedHintHidden?.drawn ??
+      this.displayedHintStep
+    );
+  }
+
+  hintLooking(): boolean {
+    return this.displayedHintLook !== null;
+  }
+
+  explainHint(): void {
+    if (this.hintLook === null) return;
+    this.hintLook = null;
+    this.emitStatusBar();
+    this.requestRedraw();
+  }
+
+  /** Show the displayed step whole, or with `look` at where to look, unless it
+   * continues a journey or names no mark to look at. */
+  private lookFirst(look: boolean): void {
+    const step = this.displayedHintStep;
+    this.hintLook =
+      look &&
+      step?.words &&
+      step.words.refs.length > 0 &&
+      step.continuesPrevious !== true
+        ? { step, drawn: { ...step, words: step.words.whereToLook() } }
+        : null;
   }
 
   hintReferenceRoles(): readonly MarkRole[] {
+    // Where to look names no reference in words, so the player has none to
+    // point at.
+    if (this.hintLooking()) return [];
     return this.displayedHintStep?.words?.refs.map((r) => r.role) ?? [];
   }
 
@@ -1767,7 +1821,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (this.displayedHintStep !== before) this.emitStatusBar();
   }
 
-  hint(): string | null {
+  hint(look = false): string | null {
     // An executed step still animating has already been played, so the answer
     // is the step after it: settle it now, or its settle would hide the step
     // this press shows.
@@ -1783,6 +1837,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       this.refreshActiveHint();
       if (this.activeHint) {
         this.hintDisplayed = true;
+        this.lookFirst(look);
         this.emitStatusBar();
         this.requestRedraw();
         return null;
@@ -1792,6 +1847,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     }
     const err = this.computeHintPlan();
     if (err) return err;
+    this.lookFirst(look);
     this.clearAnimation();
     this.afterTransition();
     return null;
@@ -1827,6 +1883,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // (`hideAfter` true, the Hint-button stepper) the plan is hidden so
     // the player gets one applied hint per press and asks again for more.
     this.hintDisplayed = true;
+    this.hintLook = null;
     this.playHintGesture(step, hideAfter);
     return null;
   }
@@ -2808,11 +2865,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
           this.game.statusbarText(this.state, this.ui),
         )
       : "";
-    const words = this.displayedHintStep?.words;
+    const looking = this.hintLooking();
+    const words = looking ? undefined : this.displayedHintStep?.words;
     this.emit({
       type: "status-bar-change",
       statusBarText: text,
-      activeHintExplanation: this.displayedHintStep?.explanation,
+      activeHintExplanation: looking ? LOOK_HERE : this.displayedHintStep?.explanation,
       activeHintSpans: words && {
         light: words.spansIn("light"),
         dark: words.spansIn("dark"),

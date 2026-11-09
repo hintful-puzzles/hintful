@@ -52,7 +52,12 @@ export interface BoardSurface {
   undo(): void;
   redo(): void;
   solve(): string | null;
-  hint(): string | null;
+  /** Show the current step; with `look`, at first only where to look for it. */
+  hint(look?: boolean): string | null;
+  /** Whether the displayed step shows only where to look. */
+  hintLooking(): boolean;
+  /** Show the whole of a step shown at where to look. */
+  explainHint(): void;
   /** Apply one step of the stored plan in slow motion. `hideAfter` (the
    * Hint-button stepper) hides the plan once the step settles instead of
    * previewing the next step; auto-play leaves it false. */

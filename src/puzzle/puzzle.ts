@@ -91,6 +91,10 @@ function sameMarks(a: Uint8ClampedArray, b: Uint8ClampedArray): boolean {
 /** The banner's wording for a pending hint; the Hint control says it too. */
 export const HINT_PENDING_MESSAGE = "Thinking…";
 
+/** What a Hint press does next: show where to look for a step, show it whole,
+ * or play it. */
+export type HintBeat = "show" | "explain" | "apply";
+
 /**
  * How long a New game may go unanswered before the app says what it is doing
  * (`Puzzle.dealPending`). Most types deal in well under this, and a kept board
@@ -402,19 +406,21 @@ export class Puzzle {
    * Wrapped, because the position may itself be `null` (the pointer left). */
   private hoverPending: { at: Point | null } | null = null;
   /**
-   * Stepper state for the Hint button. A press that *shows* a step arms this;
-   * the next press (with nothing else done in between) *applies* that one step
-   * via `executeHint`, then re-arms so repeated presses walk the plan one move
-   * per press — a manual, self-paced version of Auto-Hint. Any intervening user
-   * action disarms it via `disarmHintApply()`, so the next press shows the
-   * now-relevant step rather than applying a stale one.
+   * Stepper state for the Hint button: what the next press does. A press that
+   * *shows* a step shows only where to look and moves this to `explain`, or,
+   * for a step with nothing to narrow, straight to `apply`; the next press
+   * (with nothing else done in between) explains it, and the one after
+   * *applies* that one step via `executeHint` and comes back to `show`, so
+   * repeated presses walk the plan one move per three presses, a manual,
+   * self-paced version of Auto-Hint. Any intervening user action sends it back
+   * to `show` via `disarmHintApply()`, so the next press shows the
+   * now-relevant step rather than explaining or applying a stale one.
    *
-   * A **signal**, because the chrome reads it: the hint control says
-   * `Next hint` while a press would show one and `Apply the hint` while a press
-   * would play it, and a label that only changed on the *next* unrelated
-   * re-render would be wrong for exactly the moment it matters.
+   * A **signal**, because the chrome reads it: the hint control's label says
+   * what the next press does, and a label that only changed on the *next*
+   * unrelated re-render would be wrong for exactly the moment it matters.
    */
-  private _hintArmedToApply = signal(false);
+  private _hintBeat = signal<HintBeat>("show");
 
   /**
    * True while a Hint press is being answered by the worker. A further press
@@ -445,10 +451,10 @@ export class Puzzle {
    */
   private _hintPending = signal(false);
 
-  /** Whether the next Hint press applies the step on display rather than
-   * showing a new one — the stepper's second beat. */
-  public get hintArmedToApply(): boolean {
-    return this._hintArmedToApply.get();
+  /** What the next Hint press does: show where to look, explain the step on
+   * display, or apply it. */
+  public get hintBeat(): HintBeat {
+    return this._hintBeat.get();
   }
 
   /** Whether a Hint press has been waiting on the worker long enough to say so. */
@@ -460,7 +466,7 @@ export class Puzzle {
    * rather than applies. The stepper's own `executeHint` deliberately does not
    * route through here. */
   private disarmHintApply(): void {
-    this._hintArmedToApply.set(false);
+    this._hintBeat.set("show");
     if (this.armedRefusal !== null && this._helpMessage.get() === this.armedRefusal) {
       this.setHelpMessage("");
     }
@@ -899,12 +905,19 @@ export class Puzzle {
   }
 
   private async hintOnce(): Promise<string | null> {
-    if (this.hintArmedToApply) {
-      // Second press with nothing done in between: apply this one step in slow
+    if (this.hintBeat === "explain") {
+      // Second press with nothing done in between: the step shown at where to
+      // look is shown whole, its words and every mark.
+      this._hintBeat.set("apply");
+      await (await this.board()).explainHint();
+      return null;
+    }
+    if (this.hintBeat === "apply") {
+      // Last press with nothing done in between: apply this one step in slow
       // motion and stop — `executeHint(true)` hides the plan on settle rather
       // than previewing the next step, and we disarm so the player gets a clean
-      // show/apply/show/apply rhythm (one applied hint per request, ask again
-      // for the next). An error (e.g. solved) just surfaces in the banner.
+      // rhythm (one applied hint per request, ask again for the next). An error
+      // (e.g. solved) just surfaces in the banner.
       this.disarmHintApply();
       const err = await this.executeHint(true);
       if (err) {
@@ -916,15 +929,16 @@ export class Puzzle {
       }
       return err;
     }
-    // First press: show the current step. `stopAutoHint` disarms (and cancels
-    // any running Auto-Hint); we arm only if the show succeeds, so the *next*
-    // press applies. A refusal ("fix the highlighted mistakes first", "already
+    // First press: show where to look for the current step. `stopAutoHint`
+    // disarms (and cancels any running Auto-Hint); we arm only if the show
+    // succeeds, so the *next* press explains, or applies a step the midend
+    // showed whole. A refusal ("fix the highlighted mistakes first", "already
     // solved", …) is surfaced in the same transient banner the auto-hint flow
     // uses (the midend also lights up any mistakes behind the message) and
     // never arms.
     this.stopAutoHint("Canceled by manual move");
     const board = await this.board();
-    const err = await board.hint();
+    const err = await board.hint(true);
     if (err) {
       // A refusal with a way forward arms like a step: the next press plays
       // it, and the banner says what it will do until then.
@@ -936,13 +950,14 @@ export class Puzzle {
       const message = `${err} ${WAY_FORWARD[way]}`;
       this.setHelpMessage(message);
       this.armedRefusal = message;
-      this._hintArmedToApply.set(true);
+      this._hintBeat.set("apply");
       return err;
     }
     // Auto-Hint may have been started while the show was computing; it owns
     // the plan now, and arming behind it would make the next manual press
     // apply a step Auto-Hint is already applying.
-    if (!this._autoHintActive.get()) this._hintArmedToApply.set(true);
+    const looking = await board.hintLooking();
+    if (!this._autoHintActive.get()) this._hintBeat.set(looking ? "explain" : "apply");
     return null;
   }
 

@@ -12,7 +12,7 @@
  * (`components/game-controls.ts`).
  */
 import { savedGames } from "../store/saved-games.ts";
-import type { Puzzle } from "./puzzle.ts";
+import type { HintBeat, Puzzle } from "./puzzle.ts";
 import { justSaved } from "./quick-save-actions.ts";
 
 /** The Menu's groups, in order. `bar` is the unlabeled run that leads the list:
@@ -60,11 +60,18 @@ export type CommandPuzzle = Pick<
   | "canCheck"
   | "isSolved"
   | "hintPending"
-  | "hintArmedToApply"
+  | "hintBeat"
   | "autoHintActive"
 >;
 
 const CHECK_AND_SAVE = "Check & save";
+
+/** The Hint control's label: what its next press does. */
+const HINT_LABELS: Readonly<Record<HintBeat, string>> = {
+  show: "Hint",
+  explain: "Explain the hint",
+  apply: "Apply the hint",
+};
 
 /** The Bar never shows fewer than this many of the list's leading entries. */
 export const MIN_BAR_LENGTH = 4;
@@ -85,18 +92,14 @@ export function commandList(puzzle: CommandPuzzle, gameName: string): CommandEnt
     command("bar", "redo", "redo", "Redo", { disabled: !puzzle.canRedo }),
     ...when(
       puzzle.canHint,
-      // The hint has two beats, show then play, and the label says which one
-      // the next press is; while a press is still being answered it says the
-      // button is working, not dead.
+      // The hint has three beats, where to look, why, then play, and the label
+      // says which one the next press is; while a press is still being
+      // answered it says the button is working, not dead.
       command(
         "bar",
         "hint",
         "hint",
-        puzzle.hintPending
-          ? "Thinking…"
-          : puzzle.hintArmedToApply
-            ? "Apply the hint"
-            : "Hint",
+        puzzle.hintPending ? "Thinking…" : HINT_LABELS[puzzle.hintBeat],
         { disabled: solved },
       ),
     ),
