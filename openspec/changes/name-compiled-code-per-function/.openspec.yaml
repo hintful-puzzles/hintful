@@ -1,0 +1,4 @@
+# What the compiled code is called; nothing it does moves.
+schema: spec-driven
+created: 2026-11-09
+skip_specs: true
