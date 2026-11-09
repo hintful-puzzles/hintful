@@ -200,7 +200,7 @@ The ladder SHALL be the description's compiled ladder, each technique checked so
 
 ### Requirement: Controls: A drag draws a line through the squares it passes
 
-A press and drag with the left button SHALL draw a line along each edge between the squares it passes, a rook move at a time, keeping the lines already there; back over a square it has passed it SHALL change nothing, and carry on from where it reached. A drag that passes only edges holding lines SHALL take them up. A drag SHALL stop where an edge is crossed or where its line would give a square more lines than it takes. A left click near an edge SHALL draw or remove its line.
+A press and drag with the left button SHALL draw a line along each edge between the squares it passes, a rook move at a time, keeping the lines already there, as the engine's line drag does, and taking back the steps it retraces over its end. A drag that passes only edges holding lines SHALL take them up. It SHALL stop where an edge is crossed or where its line would give a square more lines than it takes. A left click near an edge SHALL draw or remove its line.
 
 #### Scenario: A drag draws a line
 

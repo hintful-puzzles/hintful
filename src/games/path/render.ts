@@ -579,13 +579,14 @@ export function redraw(
 
   const numberAt = (x: number, y: number): number =>
     x >= 0 && x < w && y >= 0 && y < h ? ends[y * w + x] : NO_END;
+  const steps = flash.winning ? lineSteps(state, edges) : null;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       const square =
         ends[i] |
         (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y ? F_CURSOR : 0) |
-        (flash.win(sweepStep(x, y)) << K_TONE) |
+        (flash.win(steps ? steps[i] : sweepStep(x, y)) << K_TONE) |
         (ends[i] !== NO_END && done.has(ends[i]) ? F_DONE : 0) |
         (inEvidence(x, y) ? outlineSides(x, y, inEvidence) << K_OUTLINE : 0) |
         (reach[i] !== NO_END ? (ds.numberColor[reach[i]] + 1) << K_PIECE : 0) |
@@ -635,6 +636,36 @@ interface LineLook {
   done: Set<number>;
   arrives: Int8Array;
   arrivesFrom: Uint8Array;
+}
+
+/**
+ * Each square's step along the lines, numbers in order, so the win flash
+ * travels them as they are read (owner, 2026-11-09): under Path, the one
+ * line from the 1; under Pairs, the 1s' line from its first square in
+ * reading order, then the 2s', and on. `null` where the lines do not reach
+ * every square.
+ */
+function lineSteps(state: PathState, edges: Uint8Array): Int32Array | null {
+  const g = squareEdges(state.w, state.h);
+  const steps = new Int32Array(g.cells).fill(-1);
+  let k = 0;
+  for (
+    let n = 1, start = state.ends.indexOf(n);
+    start >= 0;
+    start = state.ends.indexOf(++n)
+  ) {
+    for (let at = steps[start] < 0 ? start : -1; at >= 0; k++) {
+      steps[at] = k;
+      let next = -1;
+      for (let d = 0; d < 4 && next < 0; d++) {
+        const e = g.around[at * 4 + d];
+        if (e >= 0 && edges[e] === LINE && steps[across(g, e, at)] < 0)
+          next = across(g, e, at);
+      }
+      at = next;
+    }
+  }
+  return steps.includes(-1) ? null : steps;
 }
 
 function noArrivals(cells: number): Pick<LineLook, "arrives" | "arrivesFrom"> {

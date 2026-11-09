@@ -1492,14 +1492,19 @@ The engine's line drawing SHALL take Enter to start a line at the cursor, the ar
 - **WHEN** Ctrl+Shift+Right is pressed on a showing cursor beside an open edge
 - **THEN** the edge takes a line and the cursor stays on its square
 
-### Requirement: A line drawn through squares is the engine's add-only drag
+### Requirement: A line drawn through squares is the engine's drag, taken back over its end
 
-The engine SHALL provide the drag that draws a line along the edges between the squares it passes, a rook move at a time, stopped by a crossed edge or a square given more lines than it takes. A pointer's drag back onto a square it passed SHALL change nothing, unless it closes a declared loop; the keyboard's SHALL be cut back there. Its release SHALL keep the lines it passes, or take them up where it passes nothing else. A game drawing lines this way SHALL use it.
+The engine SHALL provide the drag that draws a line along the edges between the squares it passes, a rook move at a time, stopped by a crossed edge or an over-filled square. Drawn back over its end it SHALL be cut back there. A pointer's drag onto another square it passed SHALL change nothing unless it closes a declared loop; the keyboard's SHALL be cut back. Its release SHALL keep the lines it passes, or take them up where it passes nothing else. A game drawing lines this way SHALL use it.
 
-#### Scenario: A drag back over its own way keeps what it drew
+#### Scenario: A drag drawn back over its end takes back the step
 
-- **WHEN** a drag passes three squares and returns to the second
-- **THEN** releasing it draws both edges it passed
+- **WHEN** a drag passes three squares in a row and returns to the second
+- **THEN** releasing it draws only the edge between the first two
+
+#### Scenario: A drag that brushes its way off its end keeps what it drew
+
+- **WHEN** a drag goes round three sides of a square of four squares and onto the first, where no loop is declared
+- **THEN** it keeps all three edges, and carries on from the fourth square
 
 #### Scenario: An arrow back over the line takes back the step
 

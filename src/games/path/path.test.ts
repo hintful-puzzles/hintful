@@ -29,9 +29,13 @@ import {
 } from "../../engine/pointer.ts";
 import { pointAtEdge, squareEdges } from "../../engine/square-edges.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
-import { paintsWith } from "../../engine/testing/recording-drawing.ts";
+import {
+  paintsWith,
+  RecordingDrawing,
+} from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
+import { type Flash, WIN_NONE } from "../../engine/win-wave.ts";
 import { countAnswers } from "./count-answers.ts";
 import { pathGame } from "./index.ts";
 import { COL_ERROR, COL_WALL, centerOf, layout, newDrawState } from "./render.ts";
@@ -71,6 +75,23 @@ function answerLines(s: PathState): number[] | null {
   const answer = answerOf(s);
   if (answer.kind !== "one") return null;
   return answer.solution.flatMap((m, e) => (m === LINE ? [e] : []));
+}
+
+/** Each square's position on the win flash's route, painting `s`, in
+ * reading order, which is the order `redraw` asks. */
+function winRoute(s: PathState): number[] {
+  const asked: number[] = [];
+  const flash: Flash = {
+    time: 0,
+    winning: true,
+    win: (p) => {
+      asked.push(p);
+      return WIN_NONE;
+    },
+  };
+  const dr = new RecordingDrawing(pathGame.colors([0.9, 0.9, 0.9]));
+  pathGame.redraw(dr, newDrawState(s, 40), null, s, 1, pathGame.newUi(s), 0, flash);
+  return asked;
 }
 
 describe("path boards dealt before the Checks", () => {
@@ -375,6 +396,14 @@ describe("path completion", () => {
     expect(pathGame.status(lines(start, ANSWER))).toBe("solved");
   });
 
+  it("lights its win along each pair's line in turn, the 1s first", () => {
+    // The 1s' line runs from the corner down, along the bottom row, up the
+    // right side and back to the other 1; then the 2s' runs down and right.
+    expect(winRoute(lines(start, ANSWER))).toEqual([
+      0, 9, 8, 7, 1, 10, 11, 6, 2, 3, 4, 5,
+    ]);
+  });
+
   it("a line the answer lacks and a cross on one it has are mistakes", () => {
     const right = lines(start, [9]);
     expect(pathGame.findMistakes?.(right)).toEqual([]);
@@ -570,6 +599,14 @@ describe("path, the one-line ruleset", () => {
       "8-",
       "13-",
       "16+",
+    ]);
+  });
+
+  it("lights its win along the line from the 1", () => {
+    // The line runs along the top row, down to the 2, back along the middle
+    // row, down to the 3 and along the bottom row to the 4.
+    expect(winRoute(lines(start, ONE_PATH_ANSWER))).toEqual([
+      0, 1, 2, 3, 7, 6, 5, 4, 8, 9, 10, 11,
     ]);
   });
 
