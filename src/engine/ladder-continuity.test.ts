@@ -7,9 +7,8 @@
 import { describe, expect, it } from "vitest";
 import { dealt } from "./testing/dealt.ts";
 import { membersNotMentioning } from "./testing/enrollment.ts";
-import { HINT_GAMES } from "./testing/hint-games.ts";
+import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 import { ladderContinuity } from "./testing/ladder-continuity.ts";
-import { leafPresets } from "./testing/presets.ts";
 
 const IDS = HINT_GAMES.map(([id]) => id);
 const mentioning = (marker: string): string[] => {
@@ -17,25 +16,31 @@ const mentioning = (marker: string): string[] => {
   return IDS.filter((id) => !without.has(id));
 };
 
-/** Each game's corpus at seed `s`: every leaf preset. */
+/** Each game's corpus at seed `s`: the gate's boards, one of each kind
+ * (`gatePresets`), and every leaf preset in the slow tier. */
 function corpus(
   id: string,
   s = 0,
 ): { game: (typeof HINT_GAMES)[number][1]; state: unknown }[] {
   const game = HINT_GAMES.find(([g]) => g === id)?.[1];
   if (!game) throw new Error(`${id} is not a hint game`);
-  return leafPresets(game).map((p) => ({
+  return gatePresets(game).map((p) => ({
     game,
     state: game.newState(p.params, dealt(game, p.params, s).desc),
   }));
 }
 
-/** How many positions where a plan could continue a game's share is read
- * over: enough that one avoidable jump reads under the bound and two over. */
-const ENOUGH = 30;
+/**
+ * How many positions where a plan could continue a game's share is read over.
+ * The gate's boards are small, and on them a frontier planted off leaves
+ * fewer positions than on a large one: at 30 Singles read under the bound, at
+ * 60 Mosaic did, and at 120 every game but Range failed (2026-11-09). Every
+ * leaf preset at 30 was the corpus before, and it missed Range too.
+ */
+const ENOUGH = 120;
 
 /** The most seeds dealt to reach {@link ENOUGH}. */
-const MAX_SEEDS = 8;
+const MAX_SEEDS = 40;
 
 /**
  * The games whose hint builds a continuing driver, found by running each hint
@@ -62,9 +67,9 @@ const NOT_CONTINUING: Record<string, string> = {
 
 /**
  * The share of the positions where a plan could continue that it left
- * anyway. With the frontier taking it is none on this corpus; with the
- * frontier planted off it was 6% at the least (3 of 48) and 96% at the most,
- * most games over 20% (2026-10-22), so the bound sits between them.
+ * anyway. With the frontier planted off it was 6% at the least (3 of 48) and
+ * 96% at the most, most games over 20% (2026-10-22), so the bound sits
+ * between them; a frontier given no history is the plant ({@link ENOUGH}).
  */
 const MAX_AVOIDABLE = 0.05;
 

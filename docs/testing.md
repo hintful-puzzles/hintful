@@ -595,7 +595,8 @@ file.
   good file, though heavy oversubscription can raise one by a fifth, which the
   margin above "near the budget" absorbs.
 - **A file is charged for every shared board it used** (`dealt`), whichever
-  file dealt it. The gate prints each file's cost after the suite.
+  file or worker dealt it, and the suite for each board once. The gate prints
+  each file's cost after the suite.
 - **Cut a file that goes over by one of the treatments below; never raise the
   budget to fit it.** A file that is useful for development but too heavy for
   every commit keeps its full amount in the slow tier.
@@ -867,8 +868,10 @@ so the slice replaces a `tiers.map(withTier(base))` loop.
 For the author of a cross-game sweep. Take its boards from
 `dealt(game, params, n)`
 ([`testing/dealt.ts`](../src/engine/testing/dealt.ts)), and begin a midend
-on one with `beginDealt`. Dealing is where a sweep's time goes, and the
-dealer's cache is one per worker, so every guard shares a board.
+on one with `beginDealt`. Dealing is where a sweep's time goes, and a run
+deals each board once and hands it to every worker, so every guard shares a
+board. A guard that compares the shared board with one dealt under a changed
+setting deals that one with `dealtAgain`, from the same seed.
 
 - Take a second board of the same params with `n` only where the property
   needs one. Never seed a deal from the guard's own name.

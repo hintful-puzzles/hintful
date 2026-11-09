@@ -9,8 +9,8 @@
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
 import { CellMarks } from "./ladder-runtime.ts";
-import { randomNew } from "./random/index.ts";
 import { getTsGame } from "./registry.ts";
+import { dealt, dealtAgain } from "./testing/dealt.ts";
 import { type AnyGame, gatePresets } from "./testing/hint-games.ts";
 
 const modules = import.meta.glob<string>("../games/*/*.compiled.ts", {
@@ -25,19 +25,17 @@ const SKIPPING = Object.entries(modules)
   .map(([path]) => path.split("/")[2])
   .sort();
 
-/** Boards dealt a preset, both ways: one deal is thousands of runs of every
- * technique, and a footprint planted with one read, or blind to the
- * relation, changed a board on the first preset it reached. */
-const DEALS = 1;
-
-function deals(game: AnyGame, params: unknown, skipping: boolean): string[] {
+/**
+ * The board the sweeps share, dealt again without skipping. One deal is
+ * thousands of runs of every technique, and a footprint planted with one
+ * read, or blind to the relation, changed a board on the first preset it
+ * reached. The shared board is the skipping deal, skipping being on.
+ */
+function unskipped(game: AnyGame, params: unknown): string {
   const before = CellMarks.skipping;
-  CellMarks.skipping = skipping;
+  CellMarks.skipping = false;
   try {
-    return Array.from(
-      { length: DEALS },
-      (_, i) => game.newDesc(params, randomNew(`skip-${i}`)).desc,
-    );
+    return dealtAgain(game, params).desc;
   } finally {
     CellMarks.skipping = before;
   }
@@ -52,7 +50,8 @@ describe("a solve that skips deals the boards one that does not deals", () => {
     const game = getTsGame(id) as AnyGame;
     const presets = gatePresets(game);
     expect(presets.length).toBeGreaterThan(0);
+    expect(CellMarks.skipping).toBe(true);
     for (const { title, params } of presets)
-      expect(deals(game, params, true), title).toEqual(deals(game, params, false));
+      expect(unskipped(game, params), title).toBe(dealt(game, params).desc);
   });
 });

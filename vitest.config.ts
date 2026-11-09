@@ -191,12 +191,15 @@ export default defineConfig({
     projects: projects(),
     ...gameScopeFilter(),
     environment: "node",
+    // The directory through which the workers share the boards they deal.
+    globalSetup: ["./scripts/checks/dealt-store.ts"],
     // Dexie reads `globalThis.indexedDB` once, when its module is first
     // evaluated, and with `isolate: false` that module is shared by every file
     // in a worker. So the fake has to be in place before any test file's
     // imports run: a file that reached Dexie first, through `puzzle.ts`, left
     // the store's own tests without a database whenever it ran ahead of them.
     setupFiles: [
+      "./scripts/checks/dealt-store.ts",
       "./scripts/checks/test-cost-setup.ts",
       "./src/test-setup/indexeddb.ts",
       "./src/test-setup/dom.ts",

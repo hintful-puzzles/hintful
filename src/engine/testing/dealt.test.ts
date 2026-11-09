@@ -1,8 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import { abcdGame } from "../../games/abcd/index.ts";
 import type { RandomState } from "../random/index.ts";
 import { randomUpto } from "../random/index.ts";
 import { RetryLimitExceeded } from "../retry-limit.ts";
-import { beginDealt, dealt } from "./dealt.ts";
+import {
+  beginDealt,
+  type DealStore,
+  dealt,
+  inheritedDealCost,
+  type StoredDeal,
+  shareDealsThrough,
+} from "./dealt.ts";
 
 /** A game that counts its deals, and deals nothing at size 0. */
 function counting() {
@@ -103,5 +111,64 @@ describe("beginning a midend on a shared board", () => {
     expect(() => beginDealt(midend(null, "s9"), counting(), { size: 3 })).toThrow(
       /s9, not s3/,
     );
+  });
+});
+
+describe("sharing deals between a run's workers", () => {
+  /** A store holding `held`, recording what is put into it. */
+  function memoryStore(held: Record<string, StoredDeal> = {}) {
+    const put: Record<string, StoredDeal> = {};
+    const store: DealStore = {
+      take: (key) => held[key] ?? null,
+      put(key, deal) {
+        put[key] = deal;
+      },
+    };
+    return { store, put };
+  }
+
+  let before: DealStore | null = null;
+  afterEach(() => {
+    shareDealsThrough(before);
+  });
+
+  /** Params no other file deals at the `n` the tests below ask for. */
+  const params = abcdGame.defaultParams();
+  const at = (n: number) => `abcd|${abcdGame.encodeParams(params, true)}#${n}`;
+
+  it("takes a board another worker dealt, and is charged for it", () => {
+    const { store } = memoryStore({ [at(7)]: { cpu: 5e6, board: { desc: "kept" } } });
+    before = shareDealsThrough(store);
+    const charged = inheritedDealCost();
+    expect(dealt(abcdGame, params, 7)).toEqual({ desc: "kept" });
+    expect(inheritedDealCost() - charged).toBe(5e6);
+  });
+
+  it("hands the others a board it dealt", () => {
+    const { store, put } = memoryStore();
+    before = shareDealsThrough(store);
+    const board = dealt(abcdGame, params, 8);
+    expect(put[at(8)]).toMatchObject({ board });
+  });
+
+  it("throws a refusal another worker met, as the generator threw it", () => {
+    const message = "abcd: gave up after 3 attempts, at the third";
+    const { store } = memoryStore({
+      [at(9)]: { cpu: 1, retryLimit: { label: "abcd", max: 3, message } },
+    });
+    before = shareDealsThrough(store);
+    expect(() => dealt(abcdGame, params, 9)).toThrow(
+      expect.objectContaining({ name: "RetryLimitExceeded", message, max: 3 }),
+    );
+  });
+
+  it("shares nothing of a copy of a game, whose generator may differ", () => {
+    const { store, put } = memoryStore({
+      [at(10)]: { cpu: 1, board: { desc: "kept" } },
+    });
+    before = shareDealsThrough(store);
+    const copy = { ...abcdGame, newDesc: () => ({ desc: "the copy's" }) };
+    expect(dealt(copy, params, 10)).toEqual({ desc: "the copy's" });
+    expect(put).toEqual({});
   });
 });

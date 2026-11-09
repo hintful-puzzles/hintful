@@ -19,16 +19,56 @@
  * A deal that throws is kept and thrown again, because an ungenerable board
  * can be the dearest of all: the generator makes every try it is allowed.
  *
- * Reads only the game it is handed, never the registry.
+ * **A run's workers share their boards too**, through the {@link DealStore}
+ * the suite's setup installs (`scripts/checks/dealt-store.ts`): CI runs four
+ * workers, and without it each dealt the same boards, 2,323 deals of 794
+ * boards in the engine's tests (2026-11-09). Only a game registered under its
+ * `id` is shared that way, since a test may hand over a copy of a game with
+ * its generator changed, and a copy is its own object here as anywhere.
  *
  * Dev/test-only; never imported by production code.
  */
 import { type RandomState, randomNew } from "../random/index.ts";
+import { getTsGame } from "../registry.ts";
 import { MAX_REGENERATE, RetryLimitExceeded, underDealTries } from "../retry-limit.ts";
 
+/** A dealt board, as `newDesc` returns it. */
+type Board = { desc: string; aux?: string };
+
 export interface Dealing<Params> {
+  /** Present on every game; a test's stand-in may leave it out. */
+  readonly id?: string;
   encodeParams(p: Params, full: boolean): string;
-  newDesc(p: Params, rng: RandomState): { desc: string; aux?: string };
+  newDesc(p: Params, rng: RandomState): Board;
+}
+
+/** A deal as the workers of a run hand it to each other. */
+export type StoredDeal = { cpu: number } & (
+  | { board: Board }
+  | { retryLimit: { label: string; max: number; message: string } }
+  /** It threw something else, which each worker meets for itself. */
+  | { unshared: true }
+);
+
+/**
+ * The boards a run's workers deal, shared between them. `take` returns what a
+ * worker already dealt under `key`, waiting while one is dealing it, or
+ * returns `null` having made this worker the one to deal it, which then
+ * `put`s it.
+ */
+export interface DealStore {
+  take(key: string): StoredDeal | null;
+  put(key: string, deal: StoredDeal): void;
+}
+
+let store: DealStore | null = null;
+
+/** Shares this worker's deals through `next`, or stops sharing them; returns
+ * the store it shared them through before. */
+export function shareDealsThrough(next: DealStore | null): DealStore | null {
+  const before = store;
+  store = next;
+  return before;
 }
 
 /**
@@ -53,7 +93,7 @@ export function dealRare<Params, Board extends { desc: string }>(
   return underDealTries(RARE_BOARD_TRIES, () => game.newDesc(params, rng));
 }
 
-type Deal = ({ board: { desc: string; aux?: string } } | { thrown: unknown }) & {
+type Deal = ({ board: Board } | { thrown: unknown }) & {
   /** The CPU microseconds the deal took. */
   cpu: number;
   /** The {@link openCostWindow} it was dealt in. */
@@ -111,9 +151,9 @@ function used(deal: Deal): void {
 }
 
 /** Deals a board, timed, keeping what it threw. */
-function timed(make: () => { desc: string; aux?: string }): Deal {
+function timed(make: () => Board): Deal {
   const start = cpuNow();
-  let outcome: { board: { desc: string; aux?: string } } | { thrown: unknown };
+  let outcome: { board: Board } | { thrown: unknown };
   try {
     outcome = { board: make() };
   } catch (thrown) {
@@ -122,6 +162,45 @@ function timed(make: () => { desc: string; aux?: string }): Deal {
   const cpu = cpuNow() - start;
   dealtHere += cpu;
   return { ...outcome, cpu, costWindow };
+}
+
+/** The deal under `key`, from the run's store where another worker made it,
+ * else {@link timed} here and handed to the others. A deal from the store is
+ * charged as one an earlier file dealt. */
+function dealShared(game: { id?: string }, key: string, make: () => Board): Deal {
+  const shared =
+    store !== null && game.id !== undefined && getTsGame(game.id) === game
+      ? store
+      : null;
+  const at = `${game.id}|${key}`;
+  const stored = shared?.take(at) ?? null;
+  if (stored !== null && !("unshared" in stored)) {
+    const outcome =
+      "board" in stored
+        ? { board: stored.board }
+        : {
+            thrown: Object.assign(
+              new RetryLimitExceeded(stored.retryLimit.label, stored.retryLimit.max),
+              { message: stored.retryLimit.message },
+            ),
+          };
+    return { ...outcome, cpu: stored.cpu, costWindow: -1 };
+  }
+  const deal = timed(make);
+  if (shared !== null && stored === null) shared.put(at, toStored(deal));
+  return deal;
+}
+
+function toStored(deal: Deal): StoredDeal {
+  const { cpu } = deal;
+  if ("board" in deal) return { cpu, board: deal.board };
+  const { thrown } = deal;
+  if (thrown instanceof RetryLimitExceeded)
+    return {
+      cpu,
+      retryLimit: { label: thrown.label, max: thrown.max, message: thrown.message },
+    };
+  return { cpu, unshared: true };
 }
 
 function dealsOf(game: object): Map<string, Deal> {
@@ -157,10 +236,13 @@ export function dealsPromptly<Params>(game: Dealing<Params>, params: Params): bo
     used(refused);
     return false;
   }
-  const rng = randomNew(`dealt-${key}`);
-  const deal = timed(() =>
+  const rng = seedOf(key);
+  // Its own key in the store: the board it finds is the rare deal's, but a
+  // refusal is not.
+  const deal = dealShared(game, `${key} promptly`, () =>
     underDealTries(MAX_REGENERATE, () => game.newDesc(params, rng)),
   );
+  used(deal);
   if ("thrown" in deal && deal.thrown instanceof RetryLimitExceeded) {
     slow.set(key, deal);
     return false;
@@ -186,22 +268,37 @@ function slowOf(game: object): Map<string, Deal> {
  * Take `n` above zero only where a second board of the same params is what the
  * property needs.
  */
-export function dealt<Params>(
-  game: Dealing<Params>,
-  params: Params,
-  n = 0,
-): { desc: string; aux?: string } {
+export function dealt<Params>(game: Dealing<Params>, params: Params, n = 0): Board {
   const ofGame = dealsOf(game);
   const key = `${game.encodeParams(params, true)}#${n}`;
   let deal = ofGame.get(key);
   if (deal === undefined) {
     // As a rare board is dealt: a sweep is handed the types the app deals,
     // and the app's deal counts no tries.
-    deal = timed(() => dealRare(game, params, randomNew(`dealt-${key}`)));
+    deal = dealShared(game, key, () => dealRare(game, params, seedOf(key)));
     ofGame.set(key, deal);
-  } else used(deal);
+  }
+  used(deal);
   if ("thrown" in deal) throw deal.thrown;
   return deal.board;
+}
+
+/** The seed of the board {@link dealt} keeps under `key`. */
+function seedOf(key: string): RandomState {
+  return randomNew(`dealt-${key}`);
+}
+
+/**
+ * The `n`th board of `params` dealt again from {@link dealt}'s seed, and kept
+ * by nobody: the board a test compares with `dealt`'s, having changed
+ * something the generator reads, as `ladder-skip.test.ts` turns skipping off.
+ */
+export function dealtAgain<Params>(
+  game: Dealing<Params>,
+  params: Params,
+  n = 0,
+): Board {
+  return dealRare(game, params, seedOf(`${game.encodeParams(params, true)}#${n}`));
 }
 
 /** The part of a midend {@link beginDealt} drives. */
@@ -232,7 +329,7 @@ export function beginDealt<Params>(
   // A kept board at other params is dealt over in silence, from a fresh seed.
   if (midend.dealParams() !== encoded)
     throw new Error(`the midend deals ${midend.dealParams()}, not ${encoded}`);
-  let board: { desc: string; aux?: string };
+  let board: Board;
   try {
     board = dealt(game, params, n);
   } catch (e) {
