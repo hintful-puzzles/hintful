@@ -329,11 +329,11 @@ set found.
 
 No control in the chrome SHALL be styled to recommend taking a hint. The hint
 SHALL be as reachable as any other command (same surface, same label, the same
-two beats of show-then-apply) and SHALL NOT be given an emphasis that sets it
-above the commands beside it: whether to take a hint is the player's call. The
-hint's own amber is unaffected: the explanation is the hint speaking, as
-loudly as it likes once asked, and the button is the chrome offering, which it
-SHALL do plainly.
+three beats of where to look, why, and apply) and SHALL NOT be given an
+emphasis that sets it above the commands beside it: whether to take a hint is
+the player's call. The hint's own amber is unaffected: the explanation is the
+hint speaking, as loudly as it likes once asked, and the button is the chrome
+offering, which it SHALL do plainly.
 
 #### Scenario: A player opens a puzzle they have not asked for help with
 
@@ -1015,7 +1015,7 @@ not of commands.
 #### Scenario: The Bar at a phone width
 
 - **WHEN** the puzzle screen renders at 360 CSS pixels wide with the hint
-  reading "Apply the hint"
+  reading "Explain the hint", its widest caption
 - **THEN** the Bar does not overflow horizontally, and no caption runs over a
   neighboring button
 
