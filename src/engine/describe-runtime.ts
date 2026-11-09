@@ -1623,19 +1623,36 @@ export function step(sp: GridSpace, c: number, d: number): number {
   }
 }
 
+/** The compass's steps, from up clockwise, as `compass` numbers them from 1. */
+const COMPASS_DX = [0, 1, 1, 1, 0, -1, -1, -1];
+const COMPASS_DY = [-1, -1, 0, 1, 1, 1, 0, -1];
+
+/**
+ * `compass(c, a, k)`: the cell `k` squares from `c` along compass direction
+ * `a`, numbered from 1 up and clockwise, so 2 is up and right and 8 up and
+ * left; none off the grid, and for `k` below 1 or any other `a`.
+ */
+export function compass(sp: GridSpace, c: number, a: number, k: number): number {
+  if (c < 0 || k < 1 || a < 1 || a > 8) return -1;
+  const x = (c % sp.w) + k * COMPASS_DX[a - 1];
+  const y = ((c / sp.w) | 0) + k * COMPASS_DY[a - 1];
+  return x >= 0 && x < sp.w && y >= 0 && y < sp.h ? y * sp.w + x : -1;
+}
+
 /** The cells a chain has reached, by the walk that reached them. */
 let reached = new Int32Array(0);
 let walk = 0;
 
 /**
- * `chain(c)`: `c` and the cells its value steps to ({@link step}), each from
- * the one before, ending at a cell whose value names no cell or one already
- * reached; in reading order, the order the soundness checker can give a set
- * the marks decide. `value` reads a cell's value, `-1` where it has none.
+ * `chain(c)`: `c` and the cells its value names (the answer's `to`), each
+ * from the one before, ending at a cell whose value names no cell or one
+ * already reached; in reading order, the order the soundness checker can
+ * give a set the marks decide. `next` is the cell a cell's value names, `-1`
+ * where it has none.
  */
 export function chain(
   sp: GridSpace,
-  value: (c: number) => number,
+  next: (c: number) => number,
   c: number,
 ): readonly number[] {
   if (c < 0) return [];
@@ -1645,10 +1662,188 @@ export function chain(
     walk = 1;
   }
   const out: number[] = [];
-  for (let at = c; at >= 0 && reached[at] !== walk; at = step(sp, at, value(at))) {
+  for (let at = c; at >= 0 && reached[at] !== walk; at = next(at)) {
     reached[at] = walk;
     out.push(at);
   }
+  return out.length > 1 ? out.sort((a, b) => a - b) : out;
+}
+
+/**
+ * The chains of every cell of some marks at once, kept while their values
+ * stand: each cell's chain read as a tree of the cells leading into the
+ * cell it ends at, so that its length and whether it holds a cell are
+ * lookups. Each cell names one cell, so a group holds at most one loop, and
+ * each cell of a loop roots a tree of its own.
+ */
+interface Chains {
+  placed: number;
+  epoch: number;
+  /** `|chain(c)|`. */
+  len: Int32Array;
+  /** The cell each cell's tree is rooted at: the cell its chain ends at,
+   * or the first cell of the loop it runs into. */
+  root: Int32Array;
+  /** Each cell's loop, by one of its cells, -1 for none. */
+  loop: Int32Array;
+  /** When the walk of the trees enters each cell and leaves it: a cell's
+   * chain holds the cells whose interval holds its own. */
+  enter: Int32Array;
+  leave: Int32Array;
+  /** The cell entered at each tick of the walk's clock, -1 at a tick that
+   * leaves one: a cell's tree is the cells entered between its ticks. */
+  tick: Int32Array;
+}
+
+/** The key the marks keep their {@link Chains} under. */
+const CHAINS = Symbol("chains");
+
+function chainsOf(sp: GridSpace, b: Marks, next: (c: number) => number): Chains {
+  const was = b.kept.get(CHAINS) as Chains | undefined;
+  if (was !== undefined && was.placed === b.placed && was.epoch === b.epoch) return was;
+  const n = sp.cells.length;
+  const to = new Int32Array(n);
+  for (let c = 0; c < n; c++) to[c] = next(c);
+  const loop = new Int32Array(n).fill(-1);
+  // 0 unseen, 1 on the walk being made, 2 done.
+  const seen = new Uint8Array(n);
+  const path: number[] = [];
+  for (let c = 0; c < n; c++) {
+    path.length = 0;
+    let at = c;
+    while (at >= 0 && seen[at] === 0) {
+      seen[at] = 1;
+      path.push(at);
+      at = to[at];
+    }
+    if (at >= 0 && seen[at] === 1)
+      for (let i = path.indexOf(at); i < path.length; i++) loop[path[i]] = at;
+    for (const p of path) seen[p] = 2;
+  }
+  const loopSize = new Int32Array(n);
+  for (let c = 0; c < n; c++) if (loop[c] >= 0) loopSize[loop[c]]++;
+  // The trees: each cell off a loop under the cell it names.
+  const first = new Int32Array(n).fill(-1);
+  const sibling = new Int32Array(n).fill(-1);
+  for (let c = n - 1; c >= 0; c--) {
+    if (loop[c] >= 0 || to[c] < 0) continue;
+    sibling[c] = first[to[c]];
+    first[to[c]] = c;
+  }
+  const len = new Int32Array(n);
+  const root = new Int32Array(n);
+  const enter = new Int32Array(n);
+  const leave = new Int32Array(n);
+  const tick = new Int32Array(2 * n).fill(-1);
+  const stack: number[] = [];
+  // Each cell is pushed as it is entered, and left once its last child has
+  // been: `child` is the next of its children to enter.
+  const child = first;
+  let clock = 0;
+  for (let r = 0; r < n; r++) {
+    if (loop[r] < 0 && to[r] >= 0) continue;
+    root[r] = r;
+    len[r] = loop[r] >= 0 ? loopSize[loop[r]] : 1;
+    tick[clock] = r;
+    enter[r] = clock++;
+    stack.push(r);
+    while (stack.length > 0) {
+      const top = stack[stack.length - 1];
+      const k = child[top];
+      if (k < 0) {
+        leave[top] = clock++;
+        stack.pop();
+        continue;
+      }
+      child[top] = sibling[k];
+      root[k] = r;
+      len[k] = len[top] + 1;
+      tick[clock] = k;
+      enter[k] = clock++;
+      stack.push(k);
+    }
+  }
+  const made: Chains = {
+    placed: b.placed,
+    epoch: b.epoch,
+    len,
+    root,
+    loop,
+    enter,
+    leave,
+    tick,
+  };
+  b.kept.set(CHAINS, made);
+  return made;
+}
+
+/** `|chain(c)|` on the marks, from their kept chains. */
+export function chainLength(
+  sp: GridSpace,
+  b: Marks,
+  next: (c: number) => number,
+  c: number,
+): number {
+  return c < 0 ? 0 : chainsOf(sp, b, next).len[c];
+}
+
+/** Whether `x` is in `chain(c)` on the marks, from their kept chains. */
+export function chainHas(
+  sp: GridSpace,
+  b: Marks,
+  next: (c: number) => number,
+  x: number,
+  c: number,
+): boolean {
+  if (x < 0 || c < 0) return false;
+  const s = chainsOf(sp, b, next);
+  const r = s.root[c];
+  if (s.loop[x] >= 0) return s.loop[x] === s.loop[r];
+  return s.root[x] === r && s.enter[x] <= s.enter[c] && s.leave[c] <= s.leave[x];
+}
+
+/** `last(c)` on the marks, from their kept chains: the cell `c`'s chain
+ * ends at, none where it runs into a loop. */
+export function chainEnd(
+  sp: GridSpace,
+  b: Marks,
+  next: (c: number) => number,
+  c: number,
+): number {
+  if (c < 0) return -1;
+  const s = chainsOf(sp, b, next);
+  return s.loop[s.root[c]] >= 0 ? -1 : s.root[c];
+}
+
+/** `last(c)` walked: the cell `c`'s chain ends at, none where it runs into
+ * a loop. */
+export function lastOf(next: (c: number) => number, c: number): number {
+  const seen = new Set<number>();
+  for (let at = c; at >= 0; at = next(at)) {
+    if (seen.has(at)) return -1;
+    seen.add(at);
+    if (next(at) < 0) return at;
+  }
+  return -1;
+}
+
+/** The cells whose chain holds `x` on the marks, in reading order: `x`'s
+ * tree read off the kept chains, or on a loop every cell running into it. */
+export function chainHolders(
+  sp: GridSpace,
+  b: Marks,
+  next: (c: number) => number,
+  x: number,
+): number[] {
+  if (x < 0) return [];
+  const s = chainsOf(sp, b, next);
+  const out: number[] = [];
+  if (s.loop[x] >= 0) {
+    for (let k = 0; k < s.root.length; k++)
+      if (s.loop[s.root[k]] === s.loop[x]) out.push(k);
+    return out;
+  }
+  for (let t = s.enter[x]; t < s.leave[x]; t++) if (s.tick[t] >= 0) out.push(s.tick[t]);
   return out.length > 1 ? out.sort((a, b) => a - b) : out;
 }
 
@@ -2628,6 +2823,14 @@ export interface KeptStore<T> {
    * placed since, which is the one change to what a kept definition reads. A
    * marks object reads one board, so the board needs no key of its own. */
   marks(b: Marks): Kept<T>;
+  /** The cells whose value on the marks `b` is `t`, in reading order: an
+   * index of every cell's value, `of` reading each, made once a placement. */
+  valued(
+    b: Marks,
+    of: (x: number) => T,
+    cells: readonly number[],
+    t: T,
+  ): readonly number[];
   /** The values kept for the board `on` (its dealt clues, or its space where
    * it reads none), for as long as the board is: the definition reads
    * nothing a placement changes. */
@@ -2637,27 +2840,46 @@ export interface KeptStore<T> {
 /** A store of one definition's values, which the compiled module makes once
  * for it. */
 export function keptStore<T>(): KeptStore<T> {
-  const byMarks = new WeakMap<Marks, { placed: number; kept: Kept<T> }>();
+  interface Held {
+    placed: number;
+    kept: Kept<T>;
+    index: Map<T, number[]> | null;
+  }
+  const byMarks = new WeakMap<Marks, Held>();
   const byBoard = new WeakMap<object, Kept<T>>();
+  const none: readonly number[] = [];
   // A run reads one marks object, or one board, many times over, so the last
   // one read is looked at first.
   let lastMarks: Marks | null = null;
-  let lastPlaced = -1;
-  let lastKept: Kept<T> = [];
+  let last: Held = { placed: -1, kept: [], index: null };
   let lastBoard: object | null = null;
   let lastOfBoard: Kept<T> = [];
+  const held = (b: Marks): Held => {
+    if (b === lastMarks && b.placed === last.placed) return last;
+    let at = byMarks.get(b);
+    if (at === undefined || at.placed !== b.placed) {
+      at = { placed: b.placed, kept: [], index: null };
+      byMarks.set(b, at);
+    }
+    lastMarks = b;
+    last = at;
+    return at;
+  };
   return {
-    marks(b) {
-      if (b === lastMarks && b.placed === lastPlaced) return lastKept;
-      let at = byMarks.get(b);
-      if (at === undefined || at.placed !== b.placed) {
-        at = { placed: b.placed, kept: [] };
-        byMarks.set(b, at);
+    marks: (b) => held(b).kept,
+    valued(b, of, cells, t) {
+      const at = held(b);
+      if (at.index === null) {
+        const index = new Map<T, number[]>();
+        for (const x of cells) {
+          const v = of(x);
+          const list = index.get(v);
+          if (list === undefined) index.set(v, [x]);
+          else list.push(x);
+        }
+        at.index = index;
       }
-      lastMarks = b;
-      lastPlaced = b.placed;
-      lastKept = at.kept;
-      return at.kept;
+      return at.index.get(t) ?? none;
     },
     board(on) {
       if (on === lastBoard) return lastOfBoard;

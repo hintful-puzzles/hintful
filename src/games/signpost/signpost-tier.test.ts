@@ -481,9 +481,9 @@ describe("the tier in Signpost's params", () => {
 
   it.each([
     "16x16cdu",
-    "5x45cdu",
-    "30x30cdu",
-    "2x450cdu",
+    "5x31cdu",
+    "31x31cdu",
+    "2x31cdu",
   ])("deals an Unreasonable %s, however long it takes", (id) => {
     expect(refusal(id)).toBeNull();
   });

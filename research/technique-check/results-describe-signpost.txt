@@ -1,0 +1,20 @@
+ok  rome       cull                           3  sound    (want sound   )     9 queries    0.2s
+ok  rome       cull (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  rome       lone                           3  sound    (want sound   )     9 queries    0.2s
+ok  rome       lone (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  rome       loop                           3  sound    (want sound   )     9 queries    0.3s
+ok  rome       loop (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  rome       onlyHome                       3  sound    (want sound   )    36 queries    0.8s
+ok  rome       onlyHome (planted)             3  unsound  (want unsound )     1 queries    0.1s   at region area 21
+ok  rome       pair                           3  sound    (want sound   )    58 queries    1.1s
+ok  rome       pair (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at region area 21
+ok  rome       reach                          3  sound    (want sound   )     1 queries    0.7s
+ok  rome       reach (planted)                3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  rome       opposite                       3  sound    (want sound   )     9 queries    0.2s
+ok  rome       opposite (planted)             3  unsound  (want unsound )     2 queries    0.1s   at cell 1
+..  signpost   onlyNext: not proved whole in time, asked on 96 boards: no defect
+ok  signpost   onlyNext                       3  sound    (want sound   )   864 queries  120.0s
+ok  signpost   onlyNext (planted)             3  unsound  (want unsound )     1 queries    4.1s   at cell 0
+..  signpost   onlyBefore: not proved whole in time, asked on 120 boards: no defect
+ok  signpost   onlyBefore                     3  sound    (want sound   )   960 queries  120.0s
+ok  signpost   onlyBefore (planted)           3  unsound  (want unsound )     1 queries    1.2s   at cell 0

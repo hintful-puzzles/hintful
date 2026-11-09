@@ -2,7 +2,7 @@
 
 ## 1. The split
 
-- [ ] 1.1 Size the four games' constructs against their solvers; split the
+- [ ] 1.1 Size the three games' constructs against their solvers; split the
       change by game if it is too large, filing the rest
 
 ## 2. The language

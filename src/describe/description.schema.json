@@ -401,6 +401,10 @@
                   "description": "What holds a value: a cell, or the edge between two cells side by side (Separate's walls), where the space has its edges."
                 },
                 "domain": { "$ref": "#/$defs/formula" },
+                "to": {
+                  "$ref": "#/$defs/formula",
+                  "description": "The cell a cell's value names, a term of the cell `c` and the value `d`, none where it names none: what `to(c)` reads and `chain(c)` follows. Rome's arrows are `step(c, d)`; Signpost's links `compass(c, clue(arrow, c), d)`."
+                },
                 "repeat": {
                   "type": "object",
                   "description": "The one value of the domain that appears more than once in a unit, and how many times: `times(d)` reads it, 1 for every other value. Salad's empty square.",

@@ -1,5 +1,11 @@
 import { expect, it } from "vitest";
 import {
+  chain,
+  chainEnd,
+  chainHas,
+  chainHolders,
+  chainLength,
+  compass,
   connected,
   cutEdges,
   cuts,
@@ -8,9 +14,11 @@ import {
   EdgeRelation,
   type GridSpace,
   keptEdgeGroups,
+  lastOf,
   linkedOf,
   linkedSum,
   type Marks,
+  rangeMask,
   runFits,
   runsOf,
   sameList,
@@ -326,6 +334,77 @@ it("runFits answers as listing every filling would, and its projection too", () 
   // Enough of each that a program answering one way throughout would show.
   expect(fitting).toBeGreaterThan(500);
   expect(failing).toBeGreaterThan(500);
+});
+
+it("the chains kept over the marks read as walking each chain, placement by placement", () => {
+  const rs = randomNew("kept-chains");
+  let checked = 0;
+  let loops = 0;
+  for (let round = 0; round < 60; round++) {
+    const w = 1 + randomUpto(rs, 5);
+    const h = 1 + randomUpto(rs, 5);
+    const n = w * h;
+    const sp = describedSpace([], w, h);
+    // A cell's value names the cell one below it, any cell, itself included,
+    // so the marks may hold loops and several cells naming one.
+    const m = new CellMarks(sp, rangeMask(1, n), new Uint8Array(n));
+    m.seed(new Uint8Array(n));
+    const next = (c: number): number => (m.grid[c] > 0 ? m.grid[c] - 1 : -1);
+    const check = (): void => {
+      const walks = sp.cells.map((c) => chain(sp, next, c));
+      for (const c of sp.cells) {
+        const walked = walks[c];
+        expect(chainLength(sp, m, next, c)).toBe(walked.length);
+        for (const x of sp.cells)
+          expect(chainHas(sp, m, next, x, c)).toBe(walked.includes(x));
+        // The end is the member naming none, and a loop has none.
+        const end = walked.find((x) => next(x) < 0) ?? -1;
+        expect(chainEnd(sp, m, next, c)).toBe(end);
+        expect(lastOf(next, c)).toBe(end);
+        expect(chainHolders(sp, m, next, c)).toEqual(
+          sp.cells.filter((x) => walks[x].includes(c)),
+        );
+        checked++;
+      }
+    };
+    check();
+    for (const c of sp.cells.filter(() => randomUpto(rs, 3) > 0)) {
+      m.placeAt(c, 1 + randomUpto(rs, n));
+      check();
+    }
+    if (
+      sp.cells.some(
+        (c) =>
+          chain(sp, next, c).length > 0 &&
+          next(c) >= 0 &&
+          chain(sp, next, next(c)).includes(c),
+      )
+    )
+      loops++;
+    // Marks put back wholesale, as a search going back does.
+    m.restore(
+      Uint8Array.from(sp.cells, () => randomUpto(rs, n + 1)),
+      m.cands.slice(),
+    );
+    check();
+  }
+  // Enough cells read, on enough boards holding a loop, that a chain read
+  // wrongly round a loop or across a placement would show.
+  expect(checked).toBeGreaterThan(3000);
+  expect(loops).toBeGreaterThan(20);
+});
+
+it("compass walks a straight line in each of the eight directions", () => {
+  const sp = describedSpace([], 4, 3);
+  // From the middle of the second row, one square each way, clockwise from up.
+  expect([1, 2, 3, 4, 5, 6, 7, 8].map((a) => compass(sp, 5, a, 1))).toEqual([
+    1, 2, 6, 10, 9, 8, 4, 0,
+  ]);
+  expect(compass(sp, 4, 3, 3)).toBe(7);
+  expect(compass(sp, 4, 3, 4)).toBe(-1);
+  expect(compass(sp, 5, 1, 2)).toBe(-1);
+  expect(compass(sp, 5, 3, 0)).toBe(-1);
+  expect(compass(sp, 5, 9, 1)).toBe(-1);
 });
 
 it("run_lengths reads a line's runs in order", () => {

@@ -1218,6 +1218,22 @@ const PLANTS: Record<string, Plant> = {
     conclude:
       "|P| <= n and |O| >= n and (|P| < n - 1 or (forall c in O - P: strike(c, d)))",
   },
+  // An unnumbered square's links read as fitting after a number only with
+  // room to spare.
+  "signpost.onlyNext": {
+    for: `c in cells where not known(c) and 1 not in cand(c),
+      U = {d in cand(c) where may(c, compass(c, clue(arrow, c), d - 1))
+      and (num(c) = none or num(compass(c, clue(arrow, c), d - 1)) != none
+      or |chain(compass(c, clue(arrow, c), d - 1))| < roomAfter(c))}
+      where |U| < 2`,
+  },
+  // An arrow from a numbered square read as unable to lead in.
+  "signpost.onlyBefore": {
+    for: `j in cells where clue(number, j) != 1 and not entered(j),
+      P = {p in aims(j) where not known(p) and 1 not in cand(p) and may(p, j)
+      and clue(number, p) = none}
+      where |P| < 2`,
+  },
   // A square no fitting of its line can make d read as one every fitting does.
   "pattern.line": {
     for: `L in lines, R = clue(runs, L), d in domain,

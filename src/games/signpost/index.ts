@@ -14,6 +14,7 @@ import {
   searchTierSegment,
   solveFromAnswer,
 } from "../../engine/answer-search.ts";
+import { MAX_CANDIDATE_VALUE } from "../../engine/candidate-bits.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
@@ -27,11 +28,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
-import {
-  AREA_TOO_LARGE,
-  dimensionParamConfig,
-  transposeDimensions,
-} from "../../engine/params.ts";
+import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import { dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import {
   CURSOR_SELECT,
@@ -57,7 +54,7 @@ import {
 } from "./hint.ts";
 import { dragReleaseMove, executeMove } from "./moves.ts";
 import { BORDER, buildPalette, redrawSignpost } from "./render.ts";
-import { answerOf, solverFinishes } from "./solver.ts";
+import { answerOf, isAnswer, solverFinishes } from "./solver.ts";
 import {
   checkCompletion,
   FLAG_IMMUTABLE,
@@ -106,9 +103,6 @@ function defaultParams(): SignpostParams {
 }
 
 function validateParams(p: SignpostParams, full: boolean): string | null {
-  if (p.w > 2147483647 / p.h) {
-    return AREA_TOO_LARGE;
-  }
   if (full && p.w === 1 && p.h === 1) return "Width and height cannot both be one.";
   if (!full || p.diff !== DIFF_UNREASONABLE) return null;
   const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
@@ -126,15 +120,16 @@ function validateParams(p: SignpostParams, full: boolean): string | null {
     return noSuchTier(`${p.w}x${p.h}${ends}`, tier);
   }
   // A larger board is dealt however long it takes: measured 2026-10-21,
-  // twelve deals a size, a 30×30 took 114 s and gave up on five, and a 2×200
-  // took 23 s.
+  // twelve deals a size, a 30×30 took 114 s and gave up on five.
   return null;
 }
 
 const paramConfig: ParamConfigItem<SignpostParams>[] = [
   ...dimensionParamConfig<SignpostParams>({
-    doc: "Size of the grid in squares. Either may be 1, but not both.",
-    bounds: { min: 1 },
+    doc: "Size of the grid in squares, at most 31 each. Either may be 1, but not both.",
+    // A square's link is a value of a candidate mask: how far it lies along
+    // the arrow, plus one.
+    bounds: { min: 1, max: MAX_CANDIDATE_VALUE },
   }),
   {
     kw: "start-and-end-in-corners",
@@ -311,7 +306,7 @@ function findMistakes(state: SignpostState): readonly SignpostMistake[] {
 // --- status / text ---------------------------------------------------
 
 function status(s: SignpostState): GameStatus {
-  return checkCompletion(s, false) ? "solved" : "ongoing";
+  return isAnswer(s) ? "solved" : "ongoing";
 }
 
 const DIR_STRINGS = ["N ", "NE", "E ", "SE", "S ", "SW", "W ", "NW"] as const;

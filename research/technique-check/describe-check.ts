@@ -38,6 +38,7 @@ import {
 import type { Binder, Expr } from "../../src/describe/expr.ts";
 import { parse } from "../../src/describe/expr.ts";
 import {
+  compass,
   describedSpace,
   type GridSpace,
   latinSpace,
@@ -919,6 +920,52 @@ function cellValue(ctx: Ctx, c: number): Nx {
   for (let i = ctx.supposed.length - 1; i >= 0; i--)
     v = ite(supposedAt(ctx.supposed[i], c), ctx.supposed[i].v, v);
   return v;
+}
+
+/** The cells cell `c`'s value names by the answer's `to`, each under the
+ * values naming it, and none under no value or one naming none. */
+function namedBy(ctx: Ctx, c: number): Alt[] {
+  const to = ctx.d.to;
+  if (to === null) throw new TypeError("to and chain follow the answer's to");
+  const v = cellValue(ctx, c);
+  const parts: (readonly [number, Bx])[] = [];
+  const held: Bx[] = [];
+  for (let d = 1; d < ctx.board.cand[c].length; d++) {
+    const g = cmp("=", v, d);
+    if (g === false) continue;
+    held.push(g);
+    const env = new Map<string, V>([
+      ["c", elem("cell", c)],
+      ["d", { k: "num", v: d }],
+    ]);
+    for (const [at, h] of alts(evaluate(to, env, ctx), "to"))
+      parts.push([at, and(g, h)]);
+  }
+  parts.push([-1, not(or(...held))]);
+  return merged(parts);
+}
+
+/** Each cell's chain read as reach: a cell is in it where a member holds
+ * the value naming it, as many steps as the board has cells. */
+function chainReach(ctx: Ctx): (c: number) => Bx[] {
+  const sp = ctx.board.sp;
+  const named = sp.cells.map((p) => namedBy(ctx, p));
+  const into = sp.cells.map((x) =>
+    sp.cells.flatMap((p) => {
+      const g = named[p].find(([at]) => at === x)?.[1] ?? false;
+      return g === false ? [] : [[p, g] as const];
+    }),
+  );
+  return (c) => {
+    let reach: Bx[] = sp.cells.map((x) => x === c);
+    for (let k = 1; k < sp.cells.length; k++) {
+      const was = reach;
+      reach = sp.cells.map((x) =>
+        or(was[x], ...into[x].map(([p, g]) => and(was[p], g))),
+      );
+    }
+    return reach;
+  };
 }
 
 /** Whether cell `c` is placed, under the suppositions in force. */
@@ -2281,30 +2328,35 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
         };
       });
     }
-    case "chain":
-      // Read as reach: a cell is in it where a member beside it holds the
-      // value stepping to it, as many steps as the board has cells.
+    case "compass": {
+      // Each direction and distance under the values naming them, and none
+      // under every other.
+      const a = num(vs[1], fn);
+      const k = num(vs[2], fn);
+      const far = Math.max(sp.w, sp.h);
+      return lift(vs[0], fn, (c) => {
+        if (c < 0) return none;
+        const parts: (readonly [number, Bx])[] = [];
+        for (let i = 1; i <= 8; i++)
+          for (let n = 1; n < far; n++)
+            parts.push([compass(sp, c, i, n), and(cmp("=", a, i), cmp("=", k, n))]);
+        const named = parts.filter(([at]) => at >= 0);
+        return {
+          k: "elem",
+          sort: "cell",
+          alts: merged([...named, [-1, not(or(...named.map(([, g]) => g)))]]),
+        };
+      });
+    }
+    case "to":
+      return lift(vs[0], fn, (c) =>
+        c < 0 ? none : { k: "elem", sort: "cell", alts: namedBy(ctx, c) },
+      );
+    case "chain": {
+      const reachOf = chainReach(ctx);
       return lift(vs[0], fn, (c) => {
         if (c < 0) return allOf("cell", []);
-        let reach: Bx[] = sp.cells.map((x) => x === c);
-        for (let k = 1; k < sp.cells.length; k++) {
-          const was = reach;
-          reach = sp.cells.map((x) =>
-            or(
-              was[x],
-              ...sp.adj4[x].map((p) =>
-                and(
-                  was[p],
-                  cmp(
-                    "=",
-                    cellValue(ctx, p),
-                    DIRECTIONS.find((d) => step(sp, p, d) === x) ?? -1,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
+        const reach = reachOf(c);
         return {
           k: "eset",
           sort: "cell",
@@ -2313,6 +2365,28 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
             .filter(([, g]) => g !== false),
         };
       });
+    }
+    case "last": {
+      // The member of the chain whose value names none; none where every
+      // member names one, a loop.
+      const reachOf = chainReach(ctx);
+      const ends = sp.cells.map(
+        (x) => namedBy(ctx, x).find(([at]) => at === -1)?.[1] ?? false,
+      );
+      return lift(vs[0], fn, (c) => {
+        if (c < 0) return { k: "elem", sort: "none", alts: [[-1, true]] };
+        const reach = reachOf(c);
+        const at = sp.cells.map((x) => and(reach[x], ends[x]));
+        return {
+          k: "elem",
+          sort: "cell",
+          alts: merged([
+            ...sp.cells.map((x) => [x, at[x]] as const),
+            [-1, not(or(...at))],
+          ]),
+        };
+      });
+    }
     case "sight":
       return lift(vs[0], fn, (s) => allOf("cell", sp.sight[s]));
     case "opposite":

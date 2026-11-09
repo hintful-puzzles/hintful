@@ -51,6 +51,7 @@ answer:
     domain: >-
       {d in range(1, 5) where (d = 5) = (clue(goal, c) >= 0)
       and (d = 5 or step(c, d) != none)}
+    to: "step(c, d)"
 given: [value]
 marks:
   cand: { sort: cell, notation: "set of range(1, 4)" }

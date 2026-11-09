@@ -51,3 +51,111 @@ help:
     wrong, before long some square has nothing that can lead into it, or a
     chain cannot fit between two numbers. The hint carries on from whatever
     you decide.
+name: Signpost
+family: lines
+sizes:
+  # A square's link is a value of the candidate mask, at most 31, so a side
+  # is at most 31 squares.
+  w: { min: 1, max: 31 }
+  h: { min: 1, max: 31 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is the last square, which links to none. Any other value d links a
+  # square to the one d - 1 squares along its arrow.
+  value:
+    sort: cell
+    domain: >-
+      {d in range(1, w + h) where (d = 1) = (clue(number, c) = |cells|)
+      and (d = 1 or compass(c, clue(arrow, c), d - 1) != none)}
+    to: "compass(c, clue(arrow, c), d - 1)"
+define:
+  # The squares whose arrows point at square j: along each direction from
+  # j, those whose arrow points back the other way.
+  aims(j): >-
+    set(p over a in range(1, 8), k in range(1, w + h), p = compass(j, a, k)
+    where p != none and clue(arrow, p) = (a + 3) mod 8 + 1)
+  # Whether a square already links into square j.
+  entered(j): "exists p in aims(j): to(p) = j"
+  # One past the number of square e, where e ends a chain: counted along the
+  # links from each square given a number whose links reach e. Stated for
+  # the end, so it is counted once a chain.
+  top(e): >-
+    min(g in cells where e in chain(g) and clue(number, g) != none
+    of clue(number, g) + |chain(g)|)
+  # The number square c holds: its own, or one counted along its links from
+  # a square given one; none where its links reach none, or run into a loop.
+  num(c): >-
+    min(e in {last(c)} where e != none and top(e) != none of top(e) - |chain(c)|)
+  # Whether some square holds number k.
+  held(k): "count(x in cells where num(x) = k) > 0"
+  # How many numbers in a row after square c's are held by no square, and
+  # before it: the room its links may still take, read from c's number
+  # outward. None where no number is held beyond it, which the first and
+  # last numbers always are.
+  roomAfter(c): "min(k in range(num(c) + 1, |cells|) where held(k) of k - num(c) - 1)"
+  roomBefore(c): "min(k in range(1, num(c) - 1) where held(k) of num(c) - k - 1)"
+  # Whether square c's number and square j's let c link into j: j's follows
+  # c's, or where one of the two has a number, the squares the other's links
+  # join fit in the room beside it. A square c links to none yet ends its
+  # links, and a square j no square links into starts them.
+  fits(c, j): >-
+    (num(c) = none and num(j) = none)
+    or (num(c) != none and num(j) != none and num(j) = num(c) + 1)
+    or (num(c) != none and num(j) = none and |chain(j)| <= roomAfter(c))
+    or (num(c) = none and num(j) != none
+    and count(x in cells where c in chain(x)) <= roomBefore(j))
+  # Whether square c, which links to none yet, may link into square j: no
+  # square links into j, j's links do not lead round to c, and the numbers
+  # let it.
+  may(c, j): "not entered(j) and c not in chain(j) and fits(c, j)"
+shape:
+  # The links run through every square in one sequence, from the first.
+  - "exists c in cells: |chain(c)| = |cells|"
+rules:
+  # Every square has an arrow, and the first and last numbers are given.
+  dealt: >-
+    (forall c in cells: clue(arrow, c) != none)
+    and (exists c in cells: clue(number, c) = 1)
+    and (exists c in cells: clue(number, c) = |cells|)
+clues:
+  # A square's arrow, 1 up, and on clockwise to 8, up and left.
+  arrow: { at: cell, value: "range(1, 8)", means: "true" }
+  # A square's number: its place in the sequence, counted from 1.
+  number:
+    at: cell
+    value: "range(1, w * h)"
+    means: "|chain(at)| = |cells| + 1 - v"
+freedom: { kind: fill }
+deal:
+  answer: a sequence through every square, each square's arrow pointing on to the next
+  arrow: every square's
+  number: the first and last, and as many more as the board stays at its tier
+  tier: one of the tiers
+tiers: [Easy, Unreasonable]
+techniques:
+  # Of the squares an arrow points at, only one can come next: every other
+  # already has a square before it, leads round to the arrow, or holds a
+  # number that cannot follow. The arrow links to it. One with none left
+  # makes the marks inconsistent. The last square links to none.
+  - id: onlyNext
+    tier: Easy
+    for: >-
+      c in cells where not known(c) and 1 not in cand(c),
+      U = {d in cand(c) where may(c, compass(c, clue(arrow, c), d - 1))}
+      where |U| < 2
+    conclude: "|U| = 1 and place(c, first(U))"
+  # Of the arrows pointing at a square, only one can lead into it, the
+  # others ruled out the same way, or already linking elsewhere. It links
+  # into it. Every square but the first has one, so one with none left
+  # makes the marks inconsistent.
+  - id: onlyBefore
+    tier: Easy
+    for: >-
+      j in cells where clue(number, j) != 1 and not entered(j),
+      P = {p in aims(j) where not known(p) and 1 not in cand(p) and may(p, j)}
+      where |P| < 2
+    conclude: >-
+      |P| = 1 and (forall p in P, d in cand(p)
+      where compass(p, clue(arrow, p), d - 1) = j: place(p, d))

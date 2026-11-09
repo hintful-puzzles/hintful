@@ -248,6 +248,15 @@ class Out {
   static fresh(prefix: string): string {
     return `${prefix}${++Out.n}`;
   }
+  /** Where the fresh names have reached, so a probe whose code is thrown
+   * away can give back those it took (`rewind`): what another description
+   * compiles to does not move with a probe it never uses. */
+  static mark(): number {
+    return Out.n;
+  }
+  static rewind(n: number): void {
+    Out.n = n;
+  }
   static reset(): void {
     Out.n = 0;
     Out.slots = 0;
@@ -401,6 +410,9 @@ interface Env {
   /** What holds a value of the answer, which `known`, `value`, `cand`,
    * `place` and `strike` read: a cell, or an edge (Separate's walls). */
   answerSort: "cell" | "edge";
+  /** The cell a cell `c`'s value `d` names (the answer's `to`), which `to(c)`
+   * and `chain(c)` read; absent where the answer names none. */
+  to?: Expr | null;
   /** Whether the function keeps each cell's candidates as it first reads
    * them (`cands`), until a firing it goes on from changes the marks. */
   memo: boolean;
@@ -548,7 +560,9 @@ const GEOMETRY = new Set([
   "adj8",
   "ray",
   "step",
+  "compass",
   "chain",
+  "last",
   "stretch",
   "run_lengths",
   "connected",
@@ -725,7 +739,10 @@ const EARLY = new Set([
   "matched",
   "reaches",
   "step",
+  "compass",
+  "to",
   "chain",
+  "last",
   "slash",
   "linked",
   "through",
@@ -796,7 +813,14 @@ function early(
     case "with":
       return false;
     case "call": {
-      if (e.fn === "value" || e.fn === "known" || e.fn === "chain" || e.fn === "linked")
+      if (
+        e.fn === "value" ||
+        e.fn === "known" ||
+        e.fn === "to" ||
+        e.fn === "chain" ||
+        e.fn === "last" ||
+        e.fn === "linked"
+      )
         marks.read = true;
       if (e.fn === "clue" || isBentSight(e.fn, e.args)) return all(valueArgs(e));
       if (EARLY.has(e.fn) || partOf(e.fn, env)) return all(e.args);
@@ -885,6 +909,20 @@ function compileNode(e: Expr, scope: Scope, env: Env, out: Out): Val {
     case "set":
       return setLiteral(e.elems, scope, env, out);
     case "size": {
+      if (keptChain(e.of, env)) {
+        const c = compileExpr(
+          (e.of as Extract<Expr, { k: "call" }>).args[0],
+          scope,
+          env,
+          out,
+        );
+        expectElem(c, "cell", "chain");
+        env.used.add("chainLength");
+        return {
+          code: `chainLength(sp, b, ${namedBy(Out.fresh("_x"), env)}, ${c.code})`,
+          sort: NUM,
+        };
+      }
       const s = compileExpr(e.of, scope, env, out);
       if (isMask(s.sort)) {
         env.used.add("popcount");
@@ -1152,6 +1190,22 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
     const code = `linkedWith(sp, b, ${q.code}, ${k.code})`;
     return { code: op === "in" ? code : `!${code}`, sort: BOOL };
   }
+  // `x in chain(c)` asks whether the walk from `c` reaches `x`, which the
+  // marks' kept chains answer without walking it.
+  if ((op === "in" || op === "notin") && keptChain(e.b, env)) {
+    const x = compileExpr(e.a, scope, env, out);
+    expectElem(x, "cell", op);
+    const c = compileExpr(
+      (e.b as Extract<Expr, { k: "call" }>).args[0],
+      scope,
+      env,
+      out,
+    );
+    expectElem(c, "cell", "chain");
+    env.used.add("chainHas");
+    const code = `chainHas(sp, b, ${namedBy(Out.fresh("_x"), env)}, ${x.code}, ${c.code})`;
+    return { code: op === "in" ? code : `!${code}`, sort: BOOL };
+  }
   const a = compileExpr(e.a, scope, env, out);
   // `c in cells(r)` of a rectangle a binder names compares the cell with its
   // sides, and no list of its cells is made.
@@ -1400,6 +1454,45 @@ function bindingLoops(
       out.open(`for (let ${ix} = 0; ${ix} < ${a}.length; ${ix}++) {`);
       out.emit(`const ${v} = ${a}[${ix}];`);
       pos = { arr: a, i: ix };
+    } else if (
+      bnd.of.k === "name" &&
+      bnd.of.name === "cells" &&
+      keptPin(bnd, sc, env) !== null
+    ) {
+      // The cells where a kept definition has one value, read off an index
+      // of every cell's, made once a placement: the where still reads each.
+      const pin = keptPin(bnd, sc, env) as { fn: string; read: string; value: Expr };
+      const t = once(compileExpr(pin.value, sc, env, out), out);
+      expect(t, "num", `${pin.fn}(${bnd.name})`);
+      sort = elem("cell");
+      const a = Out.fresh("_a");
+      const ix = Out.fresh("_i");
+      out.emit(
+        `const ${a} = ${pin.fn}Kept.valued(b, ${pin.read}, sp.cells, ${t.code});`,
+      );
+      out.open(`for (let ${ix} = 0; ${ix} < ${a}.length; ${ix}++) {`);
+      out.emit(`const ${v} = ${a}[${ix}];`);
+      pos = { arr: a, i: ix };
+    } else if (
+      bnd.of.k === "name" &&
+      bnd.of.name === "cells" &&
+      chainPin(bnd, sc, env) !== null
+    ) {
+      // The cells whose chain holds one cell, read off the kept chains'
+      // tree under it: the where still reads each, so it says what it said.
+      const pin = chainPin(bnd, sc, env) as Expr;
+      const x = once(compileExpr(pin, sc, env, out), out);
+      expectElem(x, "cell", "chain");
+      env.used.add("chainHolders");
+      sort = elem("cell");
+      const a = Out.fresh("_a");
+      const ix = Out.fresh("_i");
+      out.emit(
+        `const ${a} = chainHolders(sp, b, ${namedBy(Out.fresh("_x"), env)}, ${x.code});`,
+      );
+      out.open(`for (let ${ix} = 0; ${ix} < ${a}.length; ${ix}++) {`);
+      out.emit(`const ${v} = ${a}[${ix}];`);
+      pos = { arr: a, i: ix };
     } else if (bnd.of.k === "call" && bnd.of.fn === "range") {
       // Counted rather than read off a mask, which holds no number past 31
       // and none below 0: a position along a line of a large board.
@@ -1587,6 +1680,79 @@ function cluePin(
     const reads = new Set<string>();
     freeNames(other, reads, new Set());
     if (!reads.has(bnd.name)) return { kind, value: other };
+  }
+  return null;
+}
+
+/**
+ * Where `bnd`, a binder over the cells, has a conjunct `f(x) = t` of a
+ * definition `f` kept for the marks, `t` reading nothing `bnd` binds: `f`,
+ * the code reading it of a cell, and `t`, so the cells can be read off an
+ * index of every cell's value (Signpost's squares holding a number).
+ */
+function keptPin(
+  bnd: Binder,
+  scope: Scope,
+  env: Env,
+): { fn: string; read: string; value: Expr } | null {
+  if (bnd.kind !== "in" || bnd.where === null) return null;
+  for (const c of fillConjuncts(bnd.where, scope, env)) {
+    if (c.k !== "bin" || c.op !== "=") continue;
+    for (const [side, other] of [
+      [c.a, c.b],
+      [c.b, c.a],
+    ] as const) {
+      if (
+        side.k !== "call" ||
+        scope.has(side.fn) ||
+        !env.defs.has(side.fn) ||
+        side.args.length !== 1 ||
+        side.args[0].k !== "name" ||
+        side.args[0].name !== bnd.name
+      )
+        continue;
+      const reads = new Set<string>();
+      freeNames(other, reads, new Set());
+      if (reads.has(bnd.name)) continue;
+      const mark = Out.mark();
+      const y = Out.fresh("_y");
+      const probe = new Out(0);
+      const f = compileExpr(
+        side,
+        new Map([...scope, [bnd.name, { code: y, sort: elem("cell") }]]),
+        env,
+        probe,
+      );
+      if (
+        probe.entries.length > 0 ||
+        f.sort.k !== "num" ||
+        !f.code.startsWith(`${side.fn}(b, `)
+      ) {
+        Out.rewind(mark);
+        continue;
+      }
+      return { fn: side.fn, read: `(${y}: number): number => ${f.code}`, value: other };
+    }
+  }
+  return null;
+}
+
+/**
+ * Where `bnd`, a binder over the cells, has a conjunct `t in chain(x)` of the
+ * chains the marks keep, `t` reading nothing `bnd` binds: `t`, so the cells
+ * can be read off the tree of the cells whose chain holds it.
+ */
+function chainPin(bnd: Binder, scope: Scope, env: Env): Expr | null {
+  if (bnd.kind !== "in" || bnd.where === null || !chainsKept(env)) return null;
+  for (const c of fillConjuncts(bnd.where, scope, env)) {
+    if (c.k !== "bin" || c.op !== "in") continue;
+    const ch = inlined(c.b, scope, env);
+    if (!keptChain(ch, env)) continue;
+    const [at] = (ch as Extract<Expr, { k: "call" }>).args;
+    if (at.k !== "name" || at.name !== bnd.name) continue;
+    const reads = new Set<string>();
+    freeNames(c.a, reads, new Set());
+    if (!reads.has(bnd.name)) return c.a;
   }
   return null;
 }
@@ -2901,17 +3067,32 @@ function quantifier(
   return { code: r, sort: BOOL };
 }
 
-/** Whether an aggregate's one binder counts a range and its term is that
- * binder, so a `min` or a `max` is the first number that passes. */
-function countedSelf(e: Extract<Expr, { k: "agg" }>): boolean {
-  if (e.binders.length !== 1) return false;
+/**
+ * Where an aggregate's one binder counts a range and its term is that
+ * binder plus or minus what does not read it, so that a `min` or a `max` is
+ * the first number that passes counted from one end: 1 where the term rises
+ * with the binder, -1 where it falls; 0 where it is not of that shape.
+ */
+function countedSlope(e: Extract<Expr, { k: "agg" }>): number {
+  if (e.binders.length !== 1) return 0;
   const [b] = e.binders;
-  return (
-    b.kind === "in" &&
-    b.of.k === "call" &&
-    b.of.fn === "range" &&
-    (e.term === null || (e.term.k === "name" && e.term.name === b.name))
-  );
+  if (b.kind !== "in" || b.of.k !== "call" || b.of.fn !== "range") return 0;
+  if (e.term === null) return 1;
+  // How the term moves with the binder: null where it is not a sum of the
+  // binder once and what does not read it.
+  const slope = (x: Expr): number | null => {
+    if (x.k === "name" && x.name === b.name) return 1;
+    const reads = new Set<string>();
+    freeNames(x, reads, new Set());
+    if (!reads.has(b.name)) return 0;
+    if (x.k !== "bin" || (x.op !== "+" && x.op !== "-")) return null;
+    const l = slope(x.a);
+    const r = slope(x.b);
+    if (l === null || r === null) return null;
+    return x.op === "+" ? l + r : l - r;
+  };
+  const s = slope(e.term);
+  return s === 1 || s === -1 ? s : 0;
 }
 
 function aggregate(
@@ -2953,10 +3134,10 @@ function aggregate(
     case "max":
       // `-1` is none, below every value, so the first term always replaces it.
       out.emit(`let ${r} = -1;`);
-      if (countedSelf(e)) {
+      if (countedSlope(e) !== 0) {
         // Of the numbers a range counts, the first that passes from the end
-        // the answer lies at is the answer: a position along a long line,
-        // found without reading the rest of it.
+        // the answer lies at is the answer: a position along a long line, or
+        // Signpost's nearest number held, found without reading the rest.
         out.open(`${label}: {`);
         bindingLoops(
           e.binders,
@@ -2964,10 +3145,12 @@ function aggregate(
           env,
           out,
           (sc) => {
-            out.emit(`${r} = ${name(last.name, sc, env, out).code};`);
+            const t = once(term(sc), out);
+            expect(t, "num", e.fn);
+            out.emit(`${r} = ${t.code};`);
             out.emit(`break ${label};`);
           },
-          e.fn === "max",
+          (e.fn === "max") === (countedSlope(e) === 1),
         );
         out.close();
         break;
@@ -3102,7 +3285,6 @@ function keptWhilePlaced(
         e.fn === "cand" ||
         e.fn === "place" ||
         e.fn === "strike" ||
-        e.fn === "chain" ||
         e.fn === "linked" ||
         // A strike from an edge's mark and a relation count as no
         // placement, as a cell's mark does.
@@ -3867,15 +4049,39 @@ function call(
       expect(vs[1], "num", fn);
       env.used.add("step");
       return { code: `step(sp, ${cell(0)}, ${vs[1].code})`, sort: elem("cell") };
-    case "chain": {
-      // A cell's value read as the technique reads it, under any `with`.
+    case "compass":
+      arity(3);
+      expect(vs[1], "num", fn);
+      expect(vs[2], "num", fn);
+      env.used.add("compass");
+      return {
+        code: `compass(sp, ${cell(0)}, ${vs[1].code}, ${vs[2].code})`,
+        sort: elem("cell"),
+      };
+    case "to":
       arity(1);
-      const x = Out.fresh("_x");
-      const read = markRead("value", { code: x, sort: elem("cell") }, env, new Out(0));
+      return {
+        code: `(${namedBy(Out.fresh("_x"), env)})(${cell(0)})`,
+        sort: elem("cell"),
+      };
+    case "chain": {
+      arity(1);
       env.used.add("chain");
       return {
-        code: `chain(sp, (${x}: number) => ${read.code}, ${cell(0)})`,
+        code: `chain(sp, ${namedBy(Out.fresh("_x"), env)}, ${cell(0)})`,
         sort: setOf(elem("cell")),
+      };
+    }
+    case "last": {
+      arity(1);
+      const kept = chainsKept(env);
+      env.used.add(kept ? "chainEnd" : "lastOf");
+      const next = namedBy(Out.fresh("_x"), env);
+      return {
+        code: kept
+          ? `chainEnd(sp, b, ${next}, ${cell(0)})`
+          : `lastOf(${next}, ${cell(0)})`,
+        sort: elem("cell"),
       };
     }
     case "beam": {
@@ -4153,6 +4359,49 @@ function call(
   const def = env.defs.get(fn);
   if (def !== undefined) return definitionCall(fn, def, args, vs, env, out);
   throw new CompileError(`unknown function "${fn}"`);
+}
+
+/** Whether chains are read off what the marks keep (`chainsOf`): on the
+ * marks themselves, under no supposition, and not by the answer check. */
+const chainsKept = (env: Env): boolean =>
+  !env.answer && env.position === null && env.supposed.length === 0;
+
+/** Whether `e` is a chain the marks keep. */
+const keptChain = (e: Expr, env: Env): boolean =>
+  e.k === "call" && e.fn === "chain" && e.args.length === 1 && chainsKept(env);
+
+/**
+ * The function from a cell to the cell its value names by the answer's `to`,
+ * -1 where it holds no value or names none: what `to(c)` and `chain(c)`
+ * read. The value is read as the technique reads it, under any `with`. `x`
+ * is the name of its parameter.
+ */
+function namedBy(x: string, env: Env): string {
+  const to = env.to ?? null;
+  if (to === null)
+    throw new CompileError(
+      "to and chain follow the answer's `to`, which it does not say",
+    );
+  const out = new Out(1);
+  const read = markRead("value", { code: x, sort: elem("cell") }, env, out);
+  const d = Out.fresh("_d");
+  out.emit(`const ${d} = ${read.code};`);
+  out.emit(`if (${d} < 0) return -1;`);
+  // Compiled where it is read, not moved out of the function it makes.
+  const scope = new Map<string, Val>([
+    ["c", { code: x, sort: elem("cell") }],
+    ["d", { code: d, sort: NUM }],
+  ]);
+  const v = compileExpr(to, scope, { ...env, hoist: null, shared: undefined }, out);
+  expectElem(v, "cell", "the answer's to");
+  // One line, as every term's code is.
+  return [
+    `(${x}: number): number => {`,
+    `if (${x} < 0) return -1;`,
+    ...out.text().map((l) => l.trim()),
+    `return ${v.code};`,
+    "}",
+  ].join(" ");
 }
 
 /** A call of a definition the description makes, its arguments compiled. */
@@ -4501,7 +4750,9 @@ function loopDepth(
   seen: ReadonlySet<string> = new Set(),
 ): number {
   const inner = Math.max(0, ...children(e).map((c) => loopDepth(c, defs, seen)));
-  if (e.k === "quant" || e.k === "agg") return inner + 1;
+  // A chain walks as far as the board, as a loop over it does.
+  if (e.k === "quant" || e.k === "agg" || (e.k === "call" && e.fn === "chain"))
+    return inner + 1;
   const def = e.k === "call" && !seen.has(e.fn) ? defs.get(e.fn) : undefined;
   if (def === undefined) return inner;
   return Math.max(
@@ -4517,7 +4768,9 @@ const MARK_READS = new Set([
   "value",
   "known",
   "cand",
+  "to",
   "chain",
+  "last",
   "linked",
   "place",
   "strike",
@@ -5203,6 +5456,7 @@ export function compileGame(
     tiling,
     faces: null,
     answerSort: d.answerSort,
+    to: d.to,
     memo: false,
     scratch: null,
     readsClues: { yes: false },
@@ -5434,6 +5688,9 @@ function answerCheck(json: DescriptionJson, d: Description, env: Env): string[] 
     if (on !== null) out.close();
   }
   for (const [kind, c] of d.clueKinds) {
+    // A clue that says nothing of the answer itself (Signpost's arrow, which
+    // the domain reads) holds of any.
+    if (c.means.k === "name" && c.means.name === "true") continue;
     const sorts = env.clues.get(kind) as ClueKind;
     const k = Out.fresh("_k");
     const at = Out.fresh("_at");

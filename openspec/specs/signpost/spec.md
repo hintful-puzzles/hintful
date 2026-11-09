@@ -155,16 +155,16 @@ first and last numbers and has one chain.
 - **THEN** none of them has exactly one chain
 - **AND** the same walk over a 1×6 board with corner start finds two that do
 
-### Requirement: Params: Signpost refuses an area past what a signed 32-bit number holds
+### Requirement: Params: Signpost refuses a side longer than 31 squares
 
-`validateParams` SHALL refuse a `w·h` above 2,147,483,647, in the collection's
-sentence "Width times height must not be unreasonably large."
+Signpost's width and height SHALL each be bounded to 31 by its `paramConfig`,
+so a game ID or a Custom size with a longer side SHALL be refused, naming
+the field.
 
-#### Scenario: A height of ten digits
+#### Scenario: A height of 32
 
-- **WHEN** the preset `4x4cde` has its height changed to `1000000000`
-- **THEN** the params are refused with "Width times height must not be
-  unreasonably large."
+- **WHEN** the preset `4x4cde` has its height changed to `32`
+- **THEN** the params are refused with "Height must be at most 31."
 
 ### Requirement: Description: Signpost descriptions use the upstream per-cell encoding
 
@@ -238,11 +238,13 @@ Unreasonable where it has exactly one chain that they do not reach.
 
 ### Requirement: Solver: Signpost solves by forced-link deduction
 
-The solver SHALL iterate the renumbering and a single forced-link deduction to
-a fixpoint: if a cell has exactly one legal next cell it can link to, the
-solver SHALL make that link, and symmetrically for a sole legal predecessor. A
-link SHALL be legal to the solver only where the region fits the numeric gap it
-would bridge. The solver SHALL report the board solved, stuck, or impossible.
+The solver SHALL be the ladder `signpost.description.yaml` states, run to a
+fixpoint, each square's number read off its chain of links: `onlyNext` links a square to
+the one square its arrow points at that can come next, and `onlyBefore`
+links a square other than the 1 to the one arrow that can lead into it. A
+link SHALL be legal to the solver only where the region fits the numeric gap
+it would bridge. The solver SHALL report the board solved, stuck, or
+impossible.
 
 #### Scenario: Forced links are deduced
 
@@ -381,10 +383,11 @@ copy after each step, as the board does after each move.
 
 Where all but one of the squares an unlinked arrow points at are ruled out, the
 hint SHALL link the arrow to the one left. A square SHALL be ruled out when it
-is in the arrow's own chain, when its number or its chain's cannot follow the
-arrow's, or when it already follows another square. The sentence SHALL give
-each reason some ruled-out square has: "follow others", "are in its chain",
-"hold the wrong number", in the singular of one such square.
+is in the arrow's own chain, when it already follows another square, or when
+its number or its chain's cannot follow the arrow's, and SHALL be given the
+first of those it has. The sentence SHALL give each reason some ruled-out
+square is given: "follow others", "are in its chain", "hold the wrong
+number", in the singular of one such square.
 
 #### Scenario: An arrow with one square ahead of it
 
@@ -398,50 +401,38 @@ each reason some ruled-out square has: "follow others", "are in its chain",
 - **WHEN** the first step is asked for on the 5×5 board
   `degffe1egegb4eccacbbagca25aah`, where an arrow points at two squares and
   one holds a number that cannot come next
-- **THEN** the step says "The other square this arrow points at holds the
-  wrong number, so only the ringed one can follow it."
+- **THEN** the step says "This arrow's other square holds the wrong number,
+  so only the ringed one can follow."
 
 #### Scenario: Two reasons among the rivals
 
 - **WHEN** of the squares an arrow points at, one already follows another
   square and one holds a number that cannot come next
-- **THEN** the step says "The other squares this arrow points at follow others
-  or hold the wrong number, so only the ringed one can follow it."
+- **THEN** the step says "This arrow's other squares follow others or hold
+  the wrong number, so only the ringed one can follow."
 
 ### Requirement: Hint: Signpost's hint finds the one arrow that can lead in
 
 Where a square other than the 1 has nothing before it and all but one of the
 arrows pointing at it are ruled out, the hint SHALL link the arrow left to it.
-An arrow SHALL be ruled out when its square already leads elsewhere, is in the
-target's own chain, or holds a number that cannot come before the target's,
-and the sentence SHALL give each reason some ruled-out arrow has: "lead
-elsewhere", "are in its chain", "hold the wrong number".
+An arrow SHALL be ruled out when its square already leads elsewhere, is in
+the target's own chain, or holds a number that cannot come before the
+target's, and SHALL be given the first of those reasons it has. The sentence
+SHALL give each reason some ruled-out arrow is given: "lead elsewhere", "are
+in its chain", "hold the wrong number".
 
 #### Scenario: One arrow points at the square
 
 - **WHEN** a single arrow points at a square with nothing before it
-- **THEN** the step says "Only this arrow points at the ringed square, so it
-  must lead there."
+- **THEN** the step says "Only this arrow points at the ringed square, so the
+  square must follow it."
 
 #### Scenario: Rivals with two reasons
 
 - **WHEN** of the other arrows pointing at the square, one is already linked
   onward and one is in the square's own chain
 - **THEN** the step says "The outlined arrows into the ringed square lead
-  elsewhere or are in its chain, so this arrow must lead there."
-
-### Requirement: Hint: Signpost's hint tries the next square, then the arrow in
-
-Each step of the plan SHALL be one link, the first that the board allows with
-the plan's earlier links made: an arrow with one square that can come next,
-the first in reading order; failing that, a square with one arrow that can
-lead in, the first in reading order.
-
-#### Scenario: An arrow in waits for the arrows out
-
-- **WHEN** one arrow on the board has a single square that can come next, and
-  an earlier square in reading order has a single arrow that can lead into it
-- **THEN** the step is the arrow with one square that can come next
+  elsewhere or are in its chain, so it must follow this arrow."
 
 ### Requirement: Hint: A Signpost hint step stripes the squares ahead of its arrow only where there are several
 
@@ -453,6 +444,21 @@ arrow points at only where there are several.
 - **WHEN** a step's arrow points at a single square
 - **THEN** that square is ringed, the arrow is in the hint color, and no
   square is striped
+
+### Requirement: Hint: Signpost's hint continues from its last link
+
+`hint` SHALL take, of every link the ladder could make, one that continues
+from the squares the latest steps linked, and otherwise the first in the
+ladder's order: an arrow with one square that can come next, the first in
+reading order; failing that, a square with one arrow that can lead in, the
+first in reading order.
+
+#### Scenario: An arrow in waits for the arrows out
+
+- **WHEN** no link the ladder could make continues from the latest steps, one
+  arrow on the board has a single square that can come next, and an earlier
+  square in reading order has a single arrow that can lead into it
+- **THEN** the step is the arrow with one square that can come next
 
 ### Requirement: Look: An arrow follows a Signpost drag
 

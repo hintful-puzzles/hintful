@@ -135,6 +135,9 @@ research tools all read through it; the app never does.
   guarantees of any clue kind**: Tracks deals exactly two ends, and without
   its `ends` rule `closeLoop` was unsound on a board dealt none, where a
   lone loop is an answer.
+- **A clue that says nothing of the answer itself means `true`**, and the
+  answer check reads nothing of it: Signpost's arrows, which its domain and
+  its `to` read.
 - **A clue per value** (`per: value`, ABCD's number for each letter of a
   line) sits at its element once for each value of the domain, read
   `clue(count, L, d)`, and `per` in its meaning names the value. `Dealt`
@@ -222,12 +225,25 @@ description author acts on:
   slots are, 1 up, 2 down, 3 left, 4 right, and none off the grid or for
   any other `d`. A value that names a direction is numbered the same, so a
   goal or a square of no direction is a value past 4 (Rome's 5).
-- **`chain(c)` is `c` and the cells its value steps to**, each from the one
+- **A value may name a cell**: the answer's `to` is the cell `c`'s value `d`
+  names, none where it names none (Rome's `step(c, d)`, Signpost's
+  `compass(c, clue(arrow, c), d - 1)`), and `to(c)` reads it on the marks.
+  **`chain(c)` is `c` and the cells its value names**, each from the one
   before, ending at a cell whose value names no cell or one already
-  reached: Rome's arrows followed from a square. It is a set in reading
-  order, not the walk's, since that is the order the checker gives it, so
-  a sentence that names the walk computes it in the game's reason (Rome's
-  `arrowPath`).
+  reached: Rome's arrows followed from a square, Signpost's links. It is a
+  set in reading order, not the walk's, since that is the order the checker
+  gives it, so a sentence that names the walk computes it in the game's
+  reason (Rome's `arrowPath`). Read on the marks under no supposition,
+  `|chain(c)|` and `x in chain(c)` are lookups in the chains the marks keep
+  while their values stand (`chainsOf`), every cell's at once; read
+  otherwise, the walk is made. A chain counts as a loop for keeping a
+  definition (§ "What a technique compiles to"). **`last(c)` is the cell
+  `c`'s chain ends at**, whose value names none; none where the chain runs
+  into a loop. On the marks it is a lookup too.
+- **`compass(c, a, k)` is the cell `k` squares from `c` along compass
+  direction `a`**, numbered from 1 up and on clockwise to 8, up and left;
+  none off the grid, or for `k` below 1. A position along an arrow is a
+  number bound by `range`, as along a `ray`.
 - **A set of numbers is a mask of 32 bits**, so it holds none past 31 and
   none below 0: a domain, or a `range` read as a set. A binder over
   `range(a, b)` counts instead, so it binds a position along a line of any
@@ -552,6 +568,21 @@ author writing for speed uses these:
 - **Pin a clue in a binder over the cells**: `x in cells where clue(k, x) = t`
   loops over the cells whose `k` clue is `t` alone, from an index the board's
   clues are read into once (Dominosa's `showing`).
+- **Pin a kept definition the same way**: `x in cells where f(x) = t`, `f` a
+  definition of one cell kept for the marks, loops over the cells an index
+  of every cell's `f` names for `t`, made once a placement (Signpost's
+  `held(k)`, whether some square holds number `k`, is a lookup).
+- **Bind the cells whose chain holds one**: `x in cells where t in
+  chain(x)`, read on the marks, loops over `t`'s tree in the chains the
+  marks keep, not the board. State a value every cell of a chain shares for
+  the chain's `last` square, so it is made once a chain: Signpost's `top(e)`
+  and `num(c) = top(last(c)) - |chain(c)|`, which took a 12×12 deal from
+  8.8 s to 1.1 s, where `num(c)` read every square for each square.
+- **Count a range from the end the answer lies at**: a `min` or a `max` over
+  `k in range(a, b)` whose term is `k`, or `k` plus or minus what does not
+  read it, stops at the first number that passes from that end: a position
+  along a long line, or Signpost's nearest number held after a square's
+  (`roomAfter`), read a number at a time as the hand-written solver did.
 - **Pass over cheaply what a costly read would reject**: a walk over a set is
   read for each binding that reaches it, so a necessary condition read first
   saves the walk. Dominosa's `parity` passes over a spot on a ring of four
@@ -979,8 +1010,9 @@ the check. What a small board cannot cover:
   than `t`, counted. `matched(A, B)` is a witness pairing, an unknown
   for each pair side by side, each member of `A` and of `B` in exactly
   one, and `paired` reads it. `chain(c)` is
-  read the same way, a cell reached where a member beside it holds the
-  value stepping to it.
+  read the same way, a cell reached where a member holds the value naming
+  it by the answer's `to`, and `last(c)` as the member reached whose value
+  names none.
 - **A domain stated as the values of a range that pass a test** (`{d in
   range(1, 5) where ...}`, Rome's) is checked up to the range's end, as
   `range(1, 5)` is, past the order.

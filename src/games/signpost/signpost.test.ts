@@ -83,6 +83,14 @@ describe("signpost params codec", () => {
     ).toBe("Height must be at least 1.");
   });
 
+  it("refuses a side longer than 31 squares", () => {
+    const p = signpostGame.decodeParams("4x4cde");
+    expect(paramsError(signpostGame, { ...p, h: 31 }, false)).toBeNull();
+    expect(paramsError(signpostGame, { ...p, h: 32 }, false)).toBe(
+      "Height must be at most 31.",
+    );
+  });
+
   it("labels free ends, and says nothing of corners", () => {
     expect(
       describeParams(signpostGame, {

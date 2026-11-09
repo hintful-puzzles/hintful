@@ -70,3 +70,51 @@ proposal and its predecessors' bind here, and these:
 - **Check a fast "sound" with a second plant**: Pattern's check took 0.1 s,
   and a subtler plant (runs read of the clear squares) confirmed it reads
   the fillings.
+
+## What was done
+
+- **The split**: this change took Signpost alone. Ascent, Crossing and
+  Subsets each need a construct of their own and are filed as
+  `describe-subsets-crossing-and-ascent`, with what Signpost taught.
+- **The language**: an answer's value may name a cell (`answer.value.to`),
+  which `to(c)` reads and `chain(c)` follows; `last(c)` is where a chain
+  ends; `compass(c, a, k)` is a step along one of eight directions; and a
+  clue that says nothing of the answer means `true`. On the marks, every
+  chain is kept at once while the placements stand (`chainsOf`), so
+  `|chain(c)|`, `x in chain(c)` and `last(c)` are lookups, and a binder
+  over the cells whose chain holds one walks that cell's tree. A binder
+  pinned on a definition kept for the marks (`num(x) = k`) reads an index
+  made once a placement, and a `min` or `max` over a range whose term is
+  the counter plus or minus a constant stops at its first number. Rome's
+  arrows are its `to`; its techniques compile as they did, and still check
+  sound.
+- **Signpost is described** (`signpost.description.yaml`): a link is how far
+  along the arrow the next square lies, plus one, and 1 is the last
+  square, so a value fits the candidate mask; a square's number is read off
+  its chain. Two techniques, both Easy: `onlyNext`, the one square an arrow
+  can lead to, and `onlyBefore`, the one arrow that can lead into a square.
+  Each held at order 3 on 96 and 120 sampled boards, its whole proof not
+  finished in the time, and each plant (a room read one too small; the
+  arrows of numbered squares left out of a square's rivals) came out
+  unsound. The hand-written rungs and the hint's own copy of the ladder are
+  retired; the search that grades Unreasonable stays the game's own, and
+  still branches on `isValidMove`.
+- **A side is at most 31 squares**, since a link is a value of the mask.
+  HEAD dealt larger boards; a game ID or a saved game with a side past 31
+  no longer loads. Every preset is 8 squares a side or less.
+- **Compared with HEAD** (10 deals a preset, 100 boards): every verdict
+  agrees; every Easy deal is the same, and 10 of the 40 Unreasonable deals
+  differ, since the ladder is stronger and the search has less to do: on
+  400 of HEAD's boards, 4×4 to 7×7, every finish verdict and answer kind
+  agreed, and the least search budget each needed never rose. On 200 Easy
+  boards every hint walk finishes in the same steps, each the same move as
+  HEAD's; about one step in eight words its rivals differently, naming a
+  square that follows another before one that holds the wrong number where
+  both hold, as the board shows the link.
+- **Timed back to back with HEAD**: a deal of the largest preset, 6×8
+  Unreasonable, costs 82 ms against 10 (106 at most); a 10×10 Easy deal
+  230 ms against 23; a 15×15 Easy deal 2.9 s against 0.23 s, and
+  Unreasonable 9 s against 1 s; a 20×20 Easy deal 18 s against 1.5 s. Before `num` was stated once a chain and
+  the rooms read outward, a 15×15 Easy deal took a minute. What is left is
+  spread over the ladder's generic reads, each made again after every
+  placement where HEAD renumbers once.
