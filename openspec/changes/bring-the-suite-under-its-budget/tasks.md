@@ -19,5 +19,22 @@
   - [x] `ladder-skip` compares the shared board with one dealt again without
         skipping, instead of dealing both itself: 44 s to 28 s alone, most of
         it the shared deal.
-  - [ ] Read CI's suite cost on the pushed tree, and cut further from it
+  - [x] Read CI's suite cost on the pushed tree: 36.3 minutes, dealing 2.1
+        of them (Gate run 42690070962, 2026-11-09). The same kind of tree
+        has read from 35.9 to 53.0 by runner, so one reading under 40 does
+        not settle it.
+  - [x] `desc-error-games` is spread: charged for a board of every game, it
+        read 126 s, over its file budget, once its boards came from other
+        workers. Its near-miss floor is held per share (the shares loaded
+        227, 420, 407 and 134).
+  - [x] The cost report names each file's boards dealt elsewhere, so that a
+        cut is chosen by the file's own work.
+  - [ ] If a reading goes over 40, cut from the files whose own work is
+        largest in that run's report. Measured and declined (2026-11-09):
+        `hint-resume` at 32 recomputes (24 s, and its comment's guarantee for
+        the searching hints and Solo is unmeasured there), `hint-quality`'s
+        bound walk at 150 steps (23 s, and one Loopy rung leaves the walk),
+        Loopy's Custom-only tilings smaller (36 s if dropped whole), the
+        near-miss sweep at fewer mutants (its own work is 19 s), and
+        SameGame's largest-board walk (`hint-resume`'s ledger names it).
 - [ ] 3. Three consecutive CI gate runs on `main` under 40 minutes

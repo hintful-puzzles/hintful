@@ -21,6 +21,7 @@ import { dealtBoards } from "./testing/presets.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { itOverWholeSweep, SLOW_TESTS_ENABLED } from "./testing/slow.ts";
+import { FIRST_SHARE, ofThisShare, shareFloor } from "./testing/sweep-share.ts";
 
 const MALFORMED = ["", "!", "~,~,~", "_", "9".repeat(4000), "z".repeat(4000)];
 
@@ -30,28 +31,29 @@ const MALFORMED = ["", "!", "~,~,~", "_", "9".repeat(4000), "z".repeat(4000)];
  * reads through `descValue` refuses nothing, and would pass the no-throw half
  * by checking nothing. This is what holds a game to deriving its verdict.
  */
-describe("a malformed game ID", () => {
-  it("is refused by every game, never thrown", () => {
-    expect(REGISTERED_GAME_COUNT).toBeGreaterThanOrEqual(57);
+if (FIRST_SHARE)
+  describe("a malformed game ID", () => {
+    it("is refused by every game, never thrown", () => {
+      expect(REGISTERED_GAME_COUNT).toBeGreaterThanOrEqual(57);
 
-    const threw: string[] = [];
-    const acceptsAll: string[] = [];
-    for (const [id, game] of REGISTERED_GAMES) {
-      const params = game.defaultParams();
-      let refused = 0;
-      for (const desc of MALFORMED) {
-        try {
-          if (validateDesc(game, params, desc) !== null) refused++;
-        } catch (e) {
-          threw.push(`${id} on ${JSON.stringify(desc.slice(0, 12))}: ${e}`);
+      const threw: string[] = [];
+      const acceptsAll: string[] = [];
+      for (const [id, game] of REGISTERED_GAMES) {
+        const params = game.defaultParams();
+        let refused = 0;
+        for (const desc of MALFORMED) {
+          try {
+            if (validateDesc(game, params, desc) !== null) refused++;
+          } catch (e) {
+            threw.push(`${id} on ${JSON.stringify(desc.slice(0, 12))}: ${e}`);
+          }
         }
+        if (refused === 0) acceptsAll.push(id);
       }
-      if (refused === 0) acceptsAll.push(id);
-    }
-    expect(threw).toEqual([]);
-    expect(acceptsAll).toEqual([]);
+      expect(threw).toEqual([]);
+      expect(acceptsAll).toEqual([]);
+    });
   });
-});
 
 const gameById = new Map(REGISTERED_GAMES);
 
@@ -72,42 +74,43 @@ function statusOnOpening(game: AnyGame, gameId: string): string | null {
  * move. Dealing passes such a board over (`generate`); loading does not, since
  * the generators themselves write them and their IDs have been handed out.
  */
-describe("a game ID whose board is already solved", () => {
-  // Written by hand: a game whose description is the position itself.
-  const TYPED: readonly [string, string][] = [
-    ["fifteen", "3x3:1,2,3,4,5,6,7,8,0"],
-    ["sixteen", "3x3:1,2,3,4,5,6,7,8,9"],
-    ["twiddle", "3x3n2:1,2,3,4,5,6,7,8,9"],
-    ["flip", "3x3c:000000000000000000000,000"],
-    ["flood", "3x3c3m5:000000000,5"],
-  ];
+if (FIRST_SHARE)
+  describe("a game ID whose board is already solved", () => {
+    // Written by hand: a game whose description is the position itself.
+    const TYPED: readonly [string, string][] = [
+      ["fifteen", "3x3:1,2,3,4,5,6,7,8,0"],
+      ["sixteen", "3x3:1,2,3,4,5,6,7,8,9"],
+      ["twiddle", "3x3n2:1,2,3,4,5,6,7,8,9"],
+      ["flip", "3x3c:000000000000000000000,000"],
+      ["flood", "3x3c3m5:000000000,5"],
+    ];
 
-  it.each(TYPED)("%s: opens, solved at move 0", (id, gameId) => {
-    expect(statusOnOpening(registered(id), gameId)).toBe("solved");
+    it.each(TYPED)("%s: opens, solved at move 0", (id, gameId) => {
+      expect(statusOnOpening(registered(id), gameId)).toBe("solved");
+    });
+
+    // The params at which a generator was measured writing solved boards
+    // (`MAX_DEALT_SOLVED`), asked directly so that nothing deals again.
+    const WRITTEN: readonly [string, string][] = [
+      ["rect", "3x3"],
+      ["netslide", "3x3m1"],
+    ];
+
+    it.each(
+      WRITTEN,
+    )("%s at %s: opens every solved board its generator writes", (id, type) => {
+      const game = registered(id);
+      const params = game.decodeParams(type);
+      const solved: string[] = [];
+      for (let seed = 0; seed < 100; seed++) {
+        const { desc } = game.newDesc(params, randomNew(`solved-${seed}`));
+        if (game.status(game.newState(params, desc)) === "solved") solved.push(desc);
+      }
+      expect(solved.length).toBeGreaterThan(0);
+      const statuses = solved.map((desc) => statusOnOpening(game, `${type}:${desc}`));
+      expect(new Set(statuses)).toEqual(new Set(["solved"]));
+    });
   });
-
-  // The params at which a generator was measured writing solved boards
-  // (`MAX_DEALT_SOLVED`), asked directly so that nothing deals again.
-  const WRITTEN: readonly [string, string][] = [
-    ["rect", "3x3"],
-    ["netslide", "3x3m1"],
-  ];
-
-  it.each(
-    WRITTEN,
-  )("%s at %s: opens every solved board its generator writes", (id, type) => {
-    const game = registered(id);
-    const params = game.decodeParams(type);
-    const solved: string[] = [];
-    for (let seed = 0; seed < 100; seed++) {
-      const { desc } = game.newDesc(params, randomNew(`solved-${seed}`));
-      if (game.status(game.newState(params, desc)) === "solved") solved.push(desc);
-    }
-    expect(solved.length).toBeGreaterThan(0);
-    const statuses = solved.map((desc) => statusOnOpening(game, `${type}:${desc}`));
-    expect(new Set(statuses)).toEqual(new Set(["solved"]));
-  });
-});
 
 /**
  * Mutants tried per board on a per-commit run, taken at an even stride through
@@ -139,8 +142,12 @@ const accepted = new Map<string, number>();
  * board cost Slide 30 s on its own. The uncapped run, every preset and every
  * mutant, found no failure.
  */
+/** This share's games: the sweep is spread (`vitest.config.ts`'s `SPREAD`),
+ * since every board of every game is charged to the file that uses it. */
+const SHARE_GAMES = ofThisShare(REGISTERED_GAMES);
+
 describe("a near-miss game ID", () => {
-  for (const [id, game] of REGISTERED_GAMES) {
+  for (const [id, game] of SHARE_GAMES) {
     it(`${id}: is refused, or builds a board that draws`, () => {
       const presets = dealtBoards(game, {
         every: SLOW_TESTS_ENABLED,
@@ -189,17 +196,19 @@ describe("a near-miss game ID", () => {
     });
   }
 
-  // How many accepted near misses reached `newState`, collection-wide. Several
-  // games accept none (an exact validator refuses every one-edit change), so the
-  // floor is on the sum: a mutator or a slice that went blind would drop it.
+  // How many accepted near misses reached `newState`, over the share's games.
+  // Several games accept none (an exact validator refuses every one-edit
+  // change), so the floor is on the sum: a mutator or a slice that went blind
+  // would drop it. The shares loaded 227, 420, 407 and 134 (2026-11-09), so
+  // the floor is a quarter of 400, under the least of them.
   // Loading refuses most near misses before `newState`: a strict parser refuses
   // a malformed one, and one edit to a puzzle with one answer usually leaves it
   // with several or none, which the answer check and the deduction check
   // refuse. A stricter loader lowers the sum, and the floor with it; a blind
   // sweep falls far below either.
   itOverWholeSweep("loaded enough accepted near misses to mean something", () => {
-    expect(accepted.size).toBe(REGISTERED_GAME_COUNT);
+    expect(accepted.size).toBe(SHARE_GAMES.length);
     const total = [...accepted.values()].reduce((a, b) => a + b, 0);
-    expect(total).toBeGreaterThanOrEqual(900);
+    expect(total).toBeGreaterThanOrEqual(shareFloor(400));
   });
 });

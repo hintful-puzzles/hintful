@@ -126,7 +126,13 @@ function report(log: string, wholeSuite: boolean): boolean {
   );
   const failed: string[] = [];
   for (const l of lines) {
-    const at = `${seconds(l.cpu)}  ${label(l.file, l.project)}`;
+    // What a cut can save is the file's own work, which a board another file
+    // dealt is not: the suite counts that board once, where it was dealt.
+    const elsewhere =
+      l.inherited >= 1
+        ? `  [${l.inherited.toFixed(0)} s of boards dealt elsewhere]`
+        : "";
+    const at = `${seconds(l.cpu)}  ${label(l.file, l.project)}${elsewhere}`;
     if (l.cpu > MARGIN * BUDGET.file) failed.push(at);
     else if (l.cpu > NEAR * BUDGET.file)
       console.log(`${at}  (${standing(l.cpu, BUDGET.file)} of ${BUDGET.file} s)`);
