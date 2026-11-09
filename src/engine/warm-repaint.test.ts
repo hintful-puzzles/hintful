@@ -154,6 +154,14 @@ const WRONG: Readonly<Record<string, { board: string; moves: readonly unknown[] 
     board: "c6p4g10Bm:85914229",
     moves: [{ type: "mark", marks: [{ pos: 2, color: 4 }], ruledOut: true }],
   },
+  keen: {
+    board: "6dn:a_24b_a7ca3baa,a12m15m72a3d2s1a7d3s1d3a5d2m12m20s1s1",
+    moves: [{ type: "set", x: 0, y: 0, n: 2, pencil: false }],
+  },
+  mathrax: {
+    board: "5de:f1e5i1b,aM4bS0eA7e",
+    moves: [{ type: "set", x: 0, y: 0, n: 1, pencil: false }],
+  },
   mines: {
     board:
       "9x9n10:r10,u,45df7c5c7dbc0652701ae2bbd0e2972739a2ba45c19a369d25b62fa360597a266f5a0c1a67eff466d2719bf494e2c41cb633a95bc321699fd5c1439302",
@@ -184,6 +192,10 @@ const WRONG: Readonly<Record<string, { board: string; moves: readonly unknown[] 
   towers: {
     board: "5de:4/2/1/4/2/2/3/3/1/2/3/2/2/1/3/2/3/1/3/2",
     moves: [{ type: "set", x: 0, y: 2, n: 2, pencil: false, autoElim: false }],
+  },
+  undead: {
+    board: "4x4dn:1,2,7,dLLbRRcLLa,2,3,4,3,4,3,2,3,3,2,1,1,1,0,0,4",
+    moves: [{ type: "set", cell: 0, monster: 1 }],
   },
 };
 
