@@ -35,6 +35,11 @@
         every move, 51 s to 30 s alone; `hint-quality`'s bound walk checks
         150 steps a board, not 400 (126 s to 103 s), meeting every form and
         every rung but one pinned Loopy rung.
+  - [x] The next reading was 35.1 (Gate run 42698926709, `1bc53fd2`). In
+        it `starbattle-generation` cost 107 s, against 26 and 30 s on the two
+        runs before, all of it in "a size that carries its tier" (8s1dt 13 s,
+        9s2dt 19 s, 10s2dt 21 s), which nothing this change touched. Watch
+        the next readings for it before cutting there.
   - [ ] If a reading goes over 40, cut from the files whose own work is
         largest in that run's report. Measured and declined (2026-11-09):
         `hint-resume` at 32 recomputes (24 s, and its comment's guarantee for
@@ -45,3 +50,5 @@
         warm-repaint's plan walk (Sixteen's 11 s is its random events' hint
         searches, not the walk).
 - [ ] 3. Three consecutive CI gate runs on `main` under 40 minutes
+  - Readings so far: 36.3 (`37111ea7`), 40.1 (`6ffaca12`), 35.1
+    (`1bc53fd2`). The count starts again at 35.1.
