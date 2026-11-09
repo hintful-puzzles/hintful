@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/solo/solo.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, type Partition, PLACE, STRIKE, clueAt, minus, nextOfSize, popcount, rangeMask, union, valuesOf } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, type Partition, PLACE, STRIKE, cellsValued, clueAt, minus, nextOfSize, popcount, rangeMask, union, valuesOf } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -1432,7 +1432,7 @@ export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | 
     const _h875 = (_h874 - 2);
     let _g862 = 0;
     G863: {
-      const _a866 = sp.cells;
+      const _a866 = cellsValued(b, sp.cells, v_d);
       for (let _i867 = 0; _i867 < _a866.length; _i867++) {
         const v_c = _a866[_i867];
         const _h868 = (b.grid[v_c] || -1);

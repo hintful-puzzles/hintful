@@ -134,7 +134,12 @@ research tools all read through it; the app never does.
   `total` was unsound on two entries of one length. **So is what the game
   guarantees of any clue kind**: Tracks deals exactly two ends, and without
   its `ends` rule `closeLoop` was unsound on a board dealt none, where a
-  lone loop is an answer.
+  lone loop is an answer. **A field may be a list** (`list: true`,
+  Crossing's listed numbers' `digits`), one a clue and at no element: read
+  `f(k)` whole, its length `|f(k)|`, and a member `nth(f(k), i)`, counted
+  from 0 and -1 past the end. It compiles to an `Int32Array` a clue, and
+  the checker deals each a length up to the longest line and members within
+  `value`'s range.
 - **A clue that says nothing of the answer itself means `true`**, and the
   answer check reads nothing of it: Signpost's arrows, which its domain and
   its `to` read.
@@ -579,6 +584,11 @@ author writing for speed uses these:
   definition of one cell kept for the marks, loops over the cells an index
   of every cell's `f` names for `t`, made once a placement (Signpost's
   `held(k)`, whether some square holds number `k`, is a lookup).
+- **Pin a value the same way**: `x in cells where value(x) = t` loops over
+  the cells an index of the placed values names for `t`, made once a
+  placement (`cellsValued`). Crossing's `written(k)` reads only the squares
+  holding a number's first digit; scanning the board for each number, it was
+  a third of an Unreasonable deal (2026-11-09).
 - **Bind the cells whose chain holds one**: `x in cells where t in
   chain(x)`, read on the marks, loops over `t`'s tree in the chains the
   marks keep, not the board. State a value every cell of a chain shares for
@@ -694,7 +704,10 @@ author writing for speed uses these:
   groups (Rect's shape rule, a walk per edge otherwise). Spokes' `joined`
   binds its lines as `L` ahead of the pairs of hubs it reads: with the set
   stated inside `through`, the check walked once a pair, three quarters of
-  an Easy deal (2026-11-08).
+  an Easy deal (2026-11-08). A definition kept for the board is read there
+  as a rung reads it, since it reads no marks; one kept for the marks is
+  inlined. Inlined, Crossing's `head(L, c)` walked the board for every
+  square of every line, two thirds of an Unreasonable deal (2026-11-09).
 - **A count, sum or truth read again in one binding's premise and
   conclusion is made once**: `bulbs(c)` stated three times in Light Up's
   `square` counts once. The compiler shares one only where the code that

@@ -87,6 +87,54 @@ type V =
    * can be, each read only below the length. */
   | { k: "list"; len: Nx; items: readonly Nx[] };
 
+/** Whether a board clue's field is a list, not a number or one an element. */
+const isListV = (f: unknown): f is Extract<V, { k: "list" }> =>
+  typeof f === "object" && f !== null && "k" in f && f.k === "list";
+
+/** A board clue's field `fn`: a number, a list, or where it is one a cell,
+ * the one at `x`. */
+function fieldOf(clue: ClueSym, fn: string, x: V | null): V {
+  const f = clue.fields?.get(fn);
+  if (f === undefined) throw new Error(`no field ${fn}`);
+  if (isListV(f)) return f;
+  if (!Array.isArray(f)) return { k: "num", v: f as Nx };
+  return lift(x as V, fn, (c) => ({ k: "num", v: (f as readonly Nx[])[c] }));
+}
+
+/** `nth(v0, i)`: a set's or a list's member at `i`, none past either end. */
+function nthOf(v0: V, i: Nx, fn: string): V {
+  if (v0.k === "list") return listMember(v0, i);
+  // In a set the marks decide, a member is the ith where it is in the
+  // set and i of the members before it are.
+  if (v0.k === "eset" && v0.mem.some(([, g]) => g !== true)) {
+    const at: Alt[] = v0.mem.map(([id, g], j) => {
+      const before = sumOf(v0.mem.slice(0, j).map(([, h]) => ite(h, 1, 0)));
+      return [id, and(g, cmp("=", before, i))] as const;
+    });
+    at.push([-1, not(or(...at.map(([, g]) => g)))]);
+    return { k: "elem", sort: v0.sort, alts: at.filter(([, g]) => g !== false) };
+  }
+  // A set built from nothing is a set of values, and has no ith member.
+  if (v0.k === "vset" && v0.mem.every((g) => g === false))
+    return { k: "elem", sort: "?", alts: [[-1, true]] };
+  const L = known(v0, fn);
+  const at: Alt[] = L.map((id, j) => [id, cmp("=", i, j)] as const);
+  at.push([-1, not(or(...at.map(([, g]) => g)))]);
+  return {
+    k: "elem",
+    sort: v0.k === "eset" ? v0.sort : "?",
+    alts: at.filter(([, g]) => g !== false),
+  };
+}
+
+/** A list's member at `i`, read below its length, and -1 past it. */
+function listMember(l: Extract<V, { k: "list" }>, i: Nx): V {
+  let acc: Nx = -1;
+  for (let j = l.items.length - 1; j >= 0; j--)
+    acc = ite(and(cmp("=", i, j), cmp(">", l.len, j)), l.items[j], acc);
+  return { k: "num", v: acc };
+}
+
 // --- truths and numbers that simplify their constants -----------------------
 
 function and(...xs: Bx[]): Bx {
@@ -192,9 +240,9 @@ interface ClueSym {
   at: number;
   present: Bx;
   v: V;
-  /** A clue at the board's fields, by name: a number, or one an element by
-   * element. */
-  fields?: ReadonlyMap<string, Nx | readonly Nx[]>;
+  /** A clue at the board's fields, by name: a number, one an element by
+   * element, or a list. */
+  fields?: ReadonlyMap<string, Nx | readonly Nx[] | Extract<V, { k: "list" }>>;
 }
 
 /** The clues at the board each kind of them is checked with, each present
@@ -1296,6 +1344,8 @@ function evaluate(e: Expr, env: Env, ctx: Ctx): V {
       if (s.k === "vset") return { k: "num", v: sumOf(s.mem.map((g) => ite(g, 1, 0))) };
       if (s.k === "eset")
         return { k: "num", v: sumOf(s.mem.map(([, g]) => ite(g, 1, 0))) };
+      // No list dealt (length -1) holds none.
+      if (s.k === "list") return { k: "num", v: ite(cmp("<", s.len, 0), 0, s.len) };
       throw new TypeError("|…| of a non-set");
     }
     case "not":
@@ -2119,14 +2169,7 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
     return join(
       clueOf(ctx, k).map(({ clue, g }) => {
         if (clue === null) return [g, { k: "num", v: -1 } as V] as const;
-        const f = clue.fields?.get(fn);
-        if (f === undefined) throw new Error(`no field ${fn}`);
-        if (!Array.isArray(f)) return [g, { k: "num", v: f as Nx }] as const;
-        const at = x as V;
-        return [
-          g,
-          lift(at, fn, (c) => ({ k: "num", v: (f as readonly Nx[])[c] })),
-        ] as const;
+        return [g, fieldOf(clue, fn, x)] as const;
       }),
     );
   }
@@ -2427,32 +2470,8 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
           return elem("cell", cs[3 - cs.indexOf(c)]);
         }),
       );
-    case "nth": {
-      // Past either end is none.
-      const v0 = vs[0];
-      const i = num(vs[1], fn);
-      // In a set the marks decide, a member is the ith where it is in the
-      // set and i of the members before it are.
-      if (v0.k === "eset" && v0.mem.some(([, g]) => g !== true)) {
-        const at: Alt[] = v0.mem.map(([id, g], j) => {
-          const before = sumOf(v0.mem.slice(0, j).map(([, h]) => ite(h, 1, 0)));
-          return [id, and(g, cmp("=", before, i))] as const;
-        });
-        at.push([-1, not(or(...at.map(([, g]) => g)))]);
-        return { k: "elem", sort: v0.sort, alts: at.filter(([, g]) => g !== false) };
-      }
-      // A set built from nothing is a set of values, and has no ith member.
-      if (v0.k === "vset" && v0.mem.every((g) => g === false))
-        return { k: "elem", sort: "?", alts: [[-1, true]] };
-      const L = known(v0, fn);
-      const at: Alt[] = L.map((id, j) => [id, cmp("=", i, j)] as const);
-      at.push([-1, not(or(...at.map(([, g]) => g)))]);
-      return {
-        k: "elem",
-        sort: v0.k === "eset" ? v0.sort : "?",
-        alts: at.filter(([, g]) => g !== false),
-      };
-    }
+    case "nth":
+      return nthOf(vs[0], num(vs[1], fn), fn);
     case "index": {
       // In a set the marks decide, the members before one each count under
       // their guard, and an element not in it is at -1.
@@ -2775,7 +2794,7 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
 function boardClues(kind: string, fields: ClueKind["fields"], ctx: Ctx): ClueSym[] {
   const { board } = ctx;
   return Array.from({ length: BOARD_CLUES }, (_, k): ClueSym => {
-    const values = new Map<string, Nx | readonly Nx[]>();
+    const values = new Map<string, Nx | readonly Nx[] | Extract<V, { k: "list" }>>();
     for (const [name, f] of fields) {
       if (f.value.k !== "call" || f.value.fn !== "range")
         throw new Error(
@@ -2789,7 +2808,15 @@ function boardClues(kind: string, fields: ClueKind["fields"], ctx: Ctx): ClueSym
         board.clueDomain.push(and(cmp(">=", v, lo), cmp("<=", v, hi)));
         return v;
       };
-      if (f.at === null) values.set(name, one(""));
+      if (f.list) {
+        // A list as long as the board's longest line, at most: a number's
+        // digits fill a run of squares.
+        const longest = Math.max(...board.sp.lineCells.map((l) => l.length));
+        const len = Z3.Int.const(`clue_${kind}_${k}_${name}_len_${boardCount}`);
+        board.clueDomain.push(and(cmp(">=", len, 0), cmp("<=", len, longest)));
+        const items = Array.from({ length: longest }, (_, i) => one(`_${i}`));
+        values.set(name, { k: "list", len, items });
+      } else if (f.at === null) values.set(name, one(""));
       else {
         if (f.at !== "cell")
           throw new Error(`clue ${kind} ${name}: only a field a cell is checked yet`);

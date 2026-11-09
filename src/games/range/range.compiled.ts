@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/range/range.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, connected, cuts, keptStore, ray, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, cellsValued, clueAt, connected, cuts, keptStore, ray, type Kept } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -139,12 +139,12 @@ export interface BesideShadedBinding {
 
 const besideShadedFacts: number[] = [];
 
-/** Its dearest read grows with the board as n. */
+/** Its dearest read grows with the board as 1. */
 export function besideShaded(b: Marks, sp: GridSpace, fire: Fire<BesideShadedBinding> | null): number {
   const facts = besideShadedFacts;
   let fired = 0;
   let changed = false;
-  const _a5 = sp.cells;
+  const _a5 = cellsValued(b, sp.cells, 1);
   for (let _i6 = 0; _i6 < _a5.length; _i6++) {
     const v_c = _a5[_i6];
     if (!(((b.grid[v_c] || -1) === 1))) continue;

@@ -395,6 +395,18 @@ export function sameList(
   return true;
 }
 
+/** `|l|` of a list: how many numbers it holds, none for a list a clue kind
+ * has none of. */
+export function listLength(l: ArrayLike<number> | null): number {
+  return l === null ? 0 : l.length;
+}
+
+/** `nth(l, i)`: the list's member at `i`, counted from 0, or none (`-1`)
+ * past either end. */
+export function nth(l: ArrayLike<number> | null, i: number): number {
+  return l === null || i < 0 || i >= l.length ? -1 : l[i];
+}
+
 /** `runs(L, S)`: the lengths of the maximal runs of `S` along the line
  * `L`, in `L`'s order. */
 export function runsOf(L: readonly number[], S: readonly number[]): Int32Array {
@@ -2893,6 +2905,19 @@ export function keptStore<T>(): KeptStore<T> {
       return kept;
     },
   };
+}
+
+const placedValues = keptStore<number>();
+
+/** `{x in cells where value(x) = t}` on the marks `b`: the cells holding `t`,
+ * `-1` for those holding none, in order, read off an index of every cell's
+ * value made once a placement rather than a scan for each `t`. */
+export function cellsValued(
+  b: Marks,
+  cells: readonly number[],
+  t: number,
+): readonly number[] {
+  return placedValues.valued(b, (x) => b.grid[x] || -1, cells, t);
 }
 
 // --- rectangles --------------------------------------------------------------

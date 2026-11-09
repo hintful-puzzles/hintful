@@ -169,12 +169,11 @@ Unreasonable where it has exactly one answer that they do not reach.
 
 ### Requirement: Solver: Crossing's solver propagates what the fitting numbers allow
 
-Crossing SHALL provide a solver that determines the unique solution, or reports
-that the board is not fully determined or is contradictory. For each run it
-SHALL intersect each open cell's candidate digits with the digits some
-still-fitting clue number places there, and confirm any cell left one digit.
-Where that settles nothing more it SHALL give a clue number that still fits one
-run only that run's cells, and iterate all three to a fixpoint.
+Crossing's solver SHALL find the unique solution, or report the board not
+fully determined or contradictory, by its description's ladder: strike from a
+run's cells the digits no still-fitting number puts there, place a digit all
+of them agree on, give a number that fits one run only that run, and iterate.
+The hint SHALL read its steps off the same ladder.
 
 #### Scenario: The solver finds the unique solution
 
@@ -438,12 +437,12 @@ reading of the board it is shown on.
 
 ### Requirement: Hint: A placement the board does not yet support waits for its notes
 
-Where the solver's propagation reaches a placement that no premise read off the
-board yet supports, the hint SHALL NOT assert it. It SHALL instead place, as
-note steps ahead of it, the rule-outs the placement rests on: writing into a
-square without notes the digits one run's still-fitting numbers leave there, or
-striking from a square's notes the digits they leave out. Each such step SHALL
-be narrated by the run whose still-fitting numbers decide it.
+Where the board shows no placement but the ladder's narrowing reaches one, the
+hint SHALL NOT assert it. It SHALL first write as note steps only the rule-outs
+that placement rests on, traced back to what the board shows, each narrated by
+the run whose still-fitting numbers decide it. Where no placement follows at
+all, it SHALL only strike from the player's own notes what their runs rule
+out.
 
 #### Scenario: A placement the board does not yet support is preceded by the notes it needs
 
@@ -453,6 +452,14 @@ be narrated by the run whose still-fitting numbers decide it.
 - **THEN** the hint first offers note steps, each naming the run whose
   still-fitting numbers leave those digits in that square, and offers the
   placement only once the notes on the board support it
+
+#### Scenario: Only the notes the placement rests on are written
+
+- **WHEN** the hint is asked on the 5×5 board
+  `3a1a1a4a1a1a6a1,11,22,33,73,84,112,361,576,764,811,838`, on which no
+  placement shows
+- **THEN** it writes notes in three squares and then places the digit they
+  show, and writes no note that placement does not rest on
 
 ### Requirement: Hint: The narration states the elimination that does the work
 

@@ -1,0 +1,14 @@
+ok  crossing   onlyNumber                     3  sound    (want sound   )     6 queries    1.5s
+ok  crossing   onlyNumber (planted)           3  unsound  (want unsound )     1 queries    0.2s   at line 0
+ok  crossing   onlyRun                        3  sound    (want sound   )     2 queries    0.9s
+ok  crossing   onlyRun (planted)              3  unsound  (want unsound )     1 queries    0.2s   at clue numbers 0
+ok  crossing   sharedDigit                    3  sound    (want sound   )     6 queries    2.5s
+ok  crossing   sharedDigit (planted)          3  unsound  (want unsound )     1 queries    0.1s   at line 0
+ok  crossing   crossRuns                      3  sound    (want sound   )     9 queries    1.9s
+ok  crossing   crossRuns (planted)            3  unsound  (want unsound )     2 queries    0.2s   at cell 1
+ok  crossing   narrow                         3  sound    (want sound   )     6 queries    2.2s
+ok  crossing   narrow (planted)               3  unsound  (want unsound )     1 queries    0.2s   at line 0
+ok  crossing   misread                        3  sound    (want sound   )     6 queries    0.3s
+ok  crossing   misread (planted)              3  unsound  (want unsound )     1 queries    0.1s   at line 0
+ok  crossing   twice                          3  sound    (want sound   )     2 queries    0.4s
+ok  crossing   twice (planted)                3  unsound  (want unsound )     1 queries    0.1s   at clue numbers 0

@@ -78,7 +78,7 @@ export interface DescriptionJson {
       per?: "value";
       list?: true;
       value?: string;
-      fields?: Record<string, { at?: string; value: string }>;
+      fields?: Record<string, { at?: string; list?: true; value: string }>;
       means: string;
       complete?: boolean;
     }
@@ -504,8 +504,9 @@ export interface ClueKind {
   /** Its values; `null` for a clue at the board, whose fields say theirs. */
   value: Expr | null;
   /** A clue at the board's fields, by name: the element sort each is one
-   * of, `null` for one a clue, and its values. Empty for any other. */
-  fields: ReadonlyMap<string, { at: string | null; value: Expr }>;
+   * of, `null` for one a clue, whether it is a list of its values, in order
+   * (Crossing's digits of a number), and its values. Empty for any other. */
+  fields: ReadonlyMap<string, { at: string | null; list: boolean; value: Expr }>;
   means: Expr;
 }
 
@@ -644,10 +645,20 @@ export function loadDescription(
       list: c.list === true,
       value: c.value === undefined ? null : at(`clue ${kind} value`, c.value),
       fields: new Map(
-        fields.map(([name, f]) => [
-          name,
-          { at: f.at ?? null, value: at(`clue ${kind} ${name}`, f.value) },
-        ]),
+        fields.map(([name, f]) => {
+          if (f.list === true && f.at !== undefined)
+            throw new SyntaxError(
+              `${json.game} clue ${kind} ${name}: a list is one a clue, at no element`,
+            );
+          return [
+            name,
+            {
+              at: f.at ?? null,
+              list: f.list === true,
+              value: at(`clue ${kind} ${name}`, f.value),
+            },
+          ];
+        }),
       ),
       means: at(`clue ${kind}`, c.means),
     });

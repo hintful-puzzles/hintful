@@ -1277,6 +1277,50 @@ const PLANTS: Record<string, Plant> = {
       and not (exists fill f of cells(L) from cand where f(x) = d: fits(f, L, R))},
       c in O where index(c, stretch(L, c, O)) = 0`,
   },
+  // Crossing: a run two numbers still fit read as taking the first.
+  "crossing.onlyNumber": {
+    for: `L in lines, c in cells(L) where head(L, c), R = run(L, c)
+      where (exists x in R: not known(x)),
+      K = {k in clues(numbers) where free(k, R)} where |K| < 3`,
+    conclude:
+      "|K| >= 1 and (forall x in R where not known(x): place(x, digit(first(K), x, R)))",
+  },
+  // A number two runs still fit read as going in either.
+  "crossing.onlyRun": {
+    for: `k in clues(numbers) where not written(k)
+      and count(M in lines, b in cells(M) where head(M, b) and fits(k, run(M, b))) <= 2,
+      L in lines, c in cells(L) where head(L, c) and fits(k, run(L, c)), R = run(L, c)`,
+  },
+  // A square two digits still fit read as taking the first.
+  "crossing.sharedDigit": {
+    for: `L in lines, c in cells(L) where head(L, c), R = run(L, c)
+      where (exists x in R: not known(x)),
+      K = {k in clues(numbers) where free(k, R)} where |K| > 0,
+      x in R where not known(x), D = set(digit(k, x, R) over k in K) where |D| <= 2`,
+  },
+  // A crossing read as the digit the other run does not allow.
+  "crossing.crossRuns": {
+    for: `x in cells where clue(blank, x) < 0 and not known(x),
+      A = run(row(x), x), B = run(col(x), x) where |A| >= 2 and |B| >= 2,
+      KA = {k in clues(numbers) where free(k, A)},
+      KB = {k in clues(numbers) where free(k, B)},
+      D = {d in set(digit(k, x, A) over k in KA) where not (exists k in KB: digit(k, x, B) = d)}
+      where |D| = 1`,
+  },
+  // A run's first fitting number left out of what it allows.
+  "crossing.narrow": {
+    conclude:
+      "forall d in cand(x) where not (exists k in K - {first(K)}: digit(k, x, R) = d): strike(x, d)",
+  },
+  // A full run of two read as reading no number.
+  "crossing.misread": {
+    conclude: "exists k in clues(numbers): reads(k, R) and |R| >= 3",
+  },
+  // A number read once read as read too often.
+  "crossing.twice": {
+    conclude:
+      "count(L in lines, c in cells(L) where head(L, c) and reads(k, run(L, c))) < 1",
+  },
   // A line read as needing one tent more than its count.
   "tents.lineNeighbors": {
     for: "L in lines, k = need(L) + 1, O = open(L) where |O| > 0 and k > 0, N = set(z over y in O, z in adj8(y) where blank(z) and z not in cells(L)) where |N| > 0, U = set(z over fill f of O from cand where spread(f, O, k), z in N where (forall y in O where y in adj8(z): f(y) = 2)) where (exists z in N: z not in U)",

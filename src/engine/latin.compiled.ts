@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/engine/latin.description.yaml: edit that, not this.
 
-import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, least, minus, popcount, rangeMask, valuesOf } from "./describe-runtime.ts";
+import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, cellsValued, least, minus, popcount, rangeMask, valuesOf } from "./describe-runtime.ts";
 
 export interface PlacedBinding {
   c: number;
@@ -326,7 +326,7 @@ export interface FishBinding {
 
 const fishFacts: number[] = [];
 
-/** Its dearest read grows with the board as n^1.5. */
+/** Its dearest read grows with the board as n. */
 export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): number {
   const _g227: number[] = [];
   const _g286: number[] = [];
@@ -384,7 +384,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
     const _h285 = (_h284 - 2);
     let _g258 = 0;
     G259: {
-      const _a268 = sp.cells;
+      const _a268 = cellsValued(b, sp.cells, v_d);
       for (let _i269 = 0; _i269 < _a268.length; _i269++) {
         const v_c = _a268[_i269];
         const _h270 = (b.grid[v_c] || -1);

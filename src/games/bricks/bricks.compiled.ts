@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/bricks/bricks.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, keptStore, stretch, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, cellsValued, clueAt, keptStore, stretch, type Kept } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -67,9 +67,6 @@ export function domainOf(_sp: GridSpace, cl: Dealt, v_c: number): number {
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
   const _g105: number[] = [];
-  const _g120: number[] = [];
-  const _g130: number[] = [];
-  const _g152: number[] = [];
   const _h117 = (sp.h - 1);
   for (const cell of sp.cells) {
     const held = g[cell];
@@ -104,82 +101,51 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
       const v_c = _a114[_i115];
       const _h116 = (g[v_c] || -1);
       if (!((_h116 === 1))) continue;
-      const _h136 = (v_c % sp.w);
-      const _h137 = ((v_c / sp.w) | 0);
-      let _c143: boolean = (((v_c / sp.w) | 0) === _h117);
-      if (!_c143) {
+      let _c123: boolean = (((v_c / sp.w) | 0) === _h117);
+      if (!_c123) {
         let _q118 = false;
         Q119: {
-          _g120.length = 0;
-          G121: {
-            _g130.length = 0;
-            G131: {
-              const _a134 = sp.adj8[v_c];
-              for (let _i135 = 0; _i135 < _a134.length; _i135++) {
-                const v_p = _a134[_i135];
-                if (!((((v_p % sp.w) - _h136) !== (((v_p / sp.w) | 0) - _h137)))) continue;
-                _g130.push(v_p);
-              }
-            }
-            const _a138 = _g130;
-            for (let _i139 = 0; _i139 < _a138.length; _i139++) {
-              const v_p = _a138[_i139];
-              if (!((((v_p / sp.w) | 0) > _h137))) continue;
-              _g120.push(v_p);
-            }
-          }
-          const _a140 = _g120;
-          for (let _i141 = 0; _i141 < _a140.length; _i141++) {
-            const v_p = _a140[_i141];
-            const _h142 = (g[v_p] || -1);
-            if ((_h142 === 1)) {
+          const _a120 = below(sp, v_c);
+          for (let _i121 = 0; _i121 < _a120.length; _i121++) {
+            const v_p = _a120[_i121];
+            const _h122 = (g[v_p] || -1);
+            if ((_h122 === 1)) {
               _q118 = true;
               break Q119;
             }
           }
         }
-        _c143 = _q118;
+        _c123 = _q118;
       }
-      if (!(_c143)) {
+      if (!(_c123)) {
         _q112 = false;
         break Q113;
       }
     }
   }
   if (!(_q112)) return false;
-  for (let _k144 = 0; _k144 < cl.hole.at.length; _k144++) {
-    const _at145 = cl.hole.at[_k144];
-    if (!(((g[_at145] || -1) === 2))) return false;
+  for (let _k124 = 0; _k124 < cl.hole.at.length; _k124++) {
+    const _at125 = cl.hole.at[_k124];
+    if (!(((g[_at125] || -1) === 2))) return false;
   }
-  for (let _k147 = 0; _k147 < cl.number.at.length; _k147++) {
-    const _at148 = cl.number.at[_k147];
-    const _v149 = cl.number.v[_k147];
-    let _c163: boolean = ((g[_at148] || -1) === 2);
-    if (_c163) {
-      const _h158 = (_at148 % sp.w);
-      const _h159 = ((_at148 / sp.w) | 0);
-      let _g150 = 0;
-      G151: {
-        _g152.length = 0;
-        G153: {
-          const _a156 = sp.adj8[_at148];
-          for (let _i157 = 0; _i157 < _a156.length; _i157++) {
-            const v_p = _a156[_i157];
-            if (!((((v_p % sp.w) - _h158) !== (((v_p / sp.w) | 0) - _h159)))) continue;
-            _g152.push(v_p);
-          }
-        }
-        const _a160 = _g152;
-        for (let _i161 = 0; _i161 < _a160.length; _i161++) {
-          const v_p = _a160[_i161];
-          const _h162 = (g[v_p] || -1);
-          if (!((_h162 === 1))) continue;
-          _g150++;
+  for (let _k127 = 0; _k127 < cl.number.at.length; _k127++) {
+    const _at128 = cl.number.at[_k127];
+    const _v129 = cl.number.v[_k127];
+    let _c135: boolean = ((g[_at128] || -1) === 2);
+    if (_c135) {
+      let _g130 = 0;
+      G131: {
+        const _a132 = around(sp, _at128);
+        for (let _i133 = 0; _i133 < _a132.length; _i133++) {
+          const v_p = _a132[_i133];
+          const _h134 = (g[v_p] || -1);
+          if (!((_h134 === 1))) continue;
+          _g130++;
         }
       }
-      _c163 = (_g150 === _v149);
+      _c135 = (_g130 === _v129);
     }
-    if (!(_c163)) return false;
+    if (!(_c135)) return false;
   }
   return true;
 }
@@ -190,13 +156,13 @@ export interface StrandSupportBinding {
 
 const strandSupportFacts: number[] = [];
 
-/** Its dearest read grows with the board as n. */
+/** Its dearest read grows with the board as 1. */
 export function strandSupport(b: Marks, sp: GridSpace, fire: Fire<StrandSupportBinding> | null): number {
   const facts = strandSupportFacts;
   let fired = 0;
   let changed = false;
   const _h7 = (sp.h - 1);
-  const _a5 = sp.cells;
+  const _a5 = cellsValued(b, sp.cells, 1);
   for (let _i6 = 0; _i6 < _a5.length; _i6++) {
     const v_a = _a5[_i6];
     if (!((((b.grid[v_a] || -1) === 1) && (((v_a / sp.w) | 0) < _h7)))) continue;

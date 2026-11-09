@@ -77,7 +77,7 @@ describe("one note-taking vocabulary", () => {
     expect(DECLARATION.test("  marks: Mark[];")).toBe(false);
     // And the solver rule matches solvers and nothing else.
     expect(isSolver("../games/mathrax/solver.ts")).toBe(true);
-    expect(isSolver("../games/crossing/hint-solver.ts")).toBe(true);
+    expect(isSolver("../games/boats/hint-solver.ts")).toBe(true);
     expect(isSolver("../games/seismic/state.ts")).toBe(false);
   });
 

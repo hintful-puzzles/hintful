@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/mines/mines.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, keptStore, minus, nextOfSize, rangeMask, subsetOf, type Kept, within } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, cellsValued, clueAt, keptStore, minus, nextOfSize, rangeMask, subsetOf, type Kept, within } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -834,7 +834,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
     if (!((_h618 <= 10))) break L617;
     let _g619 = 0;
     G620: {
-      const _a621 = sp.cells;
+      const _a621 = cellsValued(b, sp.cells, 1);
       for (let _i622 = 0; _i622 < _a621.length; _i622++) {
         const v_c = _a621[_i622];
         if (!(((b.grid[v_c] || -1) === 1))) continue;
@@ -933,7 +933,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
           changed = false;
           let _g678 = 0;
           G679: {
-            const _a680 = sp.cells;
+            const _a680 = cellsValued(b, sp.cells, 1);
             for (let _i681 = 0; _i681 < _a680.length; _i681++) {
               const v_c = _a680[_i681];
               if (!(((b.grid[v_c] || -1) === 1))) continue;
@@ -969,7 +969,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
           if (_c715) {
             let _g693 = 0;
             G694: {
-              const _a695 = sp.cells;
+              const _a695 = cellsValued(b, sp.cells, 1);
               for (let _i696 = 0; _i696 < _a695.length; _i696++) {
                 const v_c = _a695[_i696];
                 if (!(((b.grid[v_c] || -1) === 1))) continue;

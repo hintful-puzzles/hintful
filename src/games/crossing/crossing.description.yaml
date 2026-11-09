@@ -37,7 +37,7 @@ help:
 
     A number *still fits* a run, in the hint's words, when it is the run's length, is not already written in elsewhere, and agrees with every square of the run: the digit you entered, or else its pencil marks.
 
-    When the hint needs to narrow a square down before it can say more, it writes the digits that square can still take into its pencil marks ("so note them"), or crosses out the ones it can't ("so rule it out"), as steps of their own.
+    When the hint needs to narrow a square down before it can say more, it writes the digits that square can still take into its pencil marks ("so note them"), or crosses out the ones it can't ("must go"), as steps of their own. It writes only the marks its next digit rests on.
 
     A few ideas are worth learning by name:
 
@@ -50,3 +50,130 @@ help:
     another square, and the hint says that nothing further follows by deduction
     instead of choosing for you. Save your position and try a digit in a square
     with few left. The hint carries on from whatever you enter.
+name: Crossing
+family: numbers
+sizes:
+  # One side at least 4; unbounded but by the time a board takes to deal.
+  w: { min: 1, max: 99999 }
+  h: { min: 1, max: 99999 }
+space:
+  grid: { w: "w", h: "h" }
+  # A digit may repeat anywhere: the numbers say what a run holds.
+  units: []
+answer:
+  # A digit, and 10 in a square that holds none: a wall, or a square no run
+  # passes through.
+  value: { sort: cell, domain: "{d in range(1, 10) where (d = 10) = (clue(blank, c) >= 0)}" }
+define:
+  # Every square a digit goes in.
+  open: "{c in cells where clue(blank, c) < 0}"
+  # The run along line L through square c: the open squares in a row there.
+  run(L, c): "stretch(L, c, open)"
+  # Whether c is the first square of a run along L, which is two squares or
+  # more. A run is named by its first square and its line.
+  head(L, c): "clue(blank, c) < 0 and |run(L, c)| >= 2 and first(run(L, c)) = c"
+  # The digit number k puts in square x of run R.
+  digit(k, x, R): "nth(digits(k), index(x, R))"
+  # Whether run R reads number k.
+  reads(k, R): "|digits(k)| = |R| and (forall x in R: value(x) = digit(k, x, R))"
+  # Whether number k is written in a run: one whose first square holds its
+  # first digit, which is read first, since it rules out all but a few.
+  written(k): "exists c in cells where value(c) = nth(digits(k), 0), L in {row(c), col(c)} where head(L, c): reads(k, run(L, c))"
+  # Whether number k still fits run R: as long, and each digit one its square
+  # can still hold.
+  fits(k, R): "|digits(k)| = |R| and (forall x in R: digit(k, x, R) in cand(x))"
+  # Whether number k still fits run R, in the hint's words: fits it, and is
+  # written nowhere. Fitting is read first: most numbers fail it on their
+  # length, and whether one is written is read again after each placement.
+  free(k, R): "fits(k, R) and not written(k)"
+shape:
+  # Every run reads a number.
+  - "forall L in lines, c in cells(L) where head(L, c): exists k in clues(numbers): reads(k, run(L, c))"
+  # The list names each number once.
+  - "forall k in clues(numbers), j in clues(numbers) where j != k: digits(j) != digits(k)"
+clues:
+  # A wall, or an open square no run passes through, which holds no digit.
+  blank:
+    at: cell
+    value: "range(0, 0)"
+    means: "value(at) = 10"
+  # A number of the list: its digits, first to last. Each is read in exactly
+  # one run.
+  numbers:
+    at: board
+    fields:
+      digits: { list: true, value: "range(1, 9)" }
+    means: "count(L in lines, c in cells(L) where head(L, c) and reads(k, run(L, c))) = 1"
+freedom: { kind: fill }
+deal:
+  blank: walls grown at random, symmetric as asked, until no two by two block is open and the open squares are joined; a board with a square no run passes through is dealt again
+  answer: a digit a square, at random
+  numbers: every run's, sorted by length and then by digit; a board two runs read alike on is dealt again
+  tier: one of the tiers
+tiers: [Easy, Unreasonable]
+techniques:
+  # A run that only one number still fits is that number. One no number fits
+  # makes the marks inconsistent.
+  - id: onlyNumber
+    tier: Easy
+    for: >-
+      L in lines, c in cells(L) where head(L, c), R = run(L, c)
+      where (exists x in R: not known(x)),
+      K = {k in clues(numbers) where free(k, R)} where |K| < 2
+    conclude: "|K| = 1 and (forall x in R where not known(x): place(x, digit(first(K), x, R)))"
+  # A number that still fits only one run goes there, whatever else the run
+  # could take.
+  - id: onlyRun
+    tier: Easy
+    for: >-
+      k in clues(numbers) where not written(k)
+      and count(M in lines, b in cells(M) where head(M, b) and fits(k, run(M, b))) = 1,
+      L in lines, c in cells(L) where head(L, c) and fits(k, run(L, c)), R = run(L, c)
+    conclude: "forall x in R where not known(x): place(x, digit(k, x, R))"
+  # Every number that still fits a run puts the same digit in one of its
+  # squares.
+  - id: sharedDigit
+    tier: Easy
+    for: >-
+      L in lines, c in cells(L) where head(L, c), R = run(L, c)
+      where (exists x in R: not known(x)),
+      K = {k in clues(numbers) where free(k, R)} where |K| > 0,
+      x in R where not known(x), D = set(digit(k, x, R) over k in K) where |D| = 1
+    conclude: "place(x, first(D))"
+  # The numbers still fitting a square's across run and those fitting its down
+  # run share one digit there.
+  - id: crossRuns
+    tier: Easy
+    for: >-
+      x in cells where clue(blank, x) < 0 and not known(x),
+      A = run(row(x), x), B = run(col(x), x) where |A| >= 2 and |B| >= 2,
+      KA = {k in clues(numbers) where free(k, A)},
+      KB = {k in clues(numbers) where free(k, B)},
+      D = {d in set(digit(k, x, A) over k in KA) where exists k in KB: digit(k, x, B) = d}
+      where |D| = 1
+    conclude: "place(x, first(D))"
+  # A square of a run holds only a digit some number still fitting the run
+  # puts there.
+  - id: narrow
+    tier: Easy
+    for: >-
+      L in lines, c in cells(L) where head(L, c), R = run(L, c)
+      where (exists x in R: not known(x)),
+      K = {k in clues(numbers) where free(k, R)},
+      x in R where not known(x)
+    conclude: "forall d in cand(x) where not (exists k in K: digit(k, x, R) = d): strike(x, d)"
+  # A square down to one digit needs no technique of its own: every number
+  # still fitting its run puts that digit there, and a square with none left
+  # leaves its run no number.
+  #
+  # A run whose squares are all filled reads a number. One that reads none
+  # makes the marks inconsistent.
+  - id: misread
+    tier: Easy
+    for: "L in lines, c in cells(L) where head(L, c), R = run(L, c) where forall x in R: known(x)"
+    conclude: "exists k in clues(numbers): reads(k, R)"
+  # A number read in two runs makes the marks inconsistent.
+  - id: twice
+    tier: Easy
+    for: "k in clues(numbers)"
+    conclude: "count(L in lines, c in cells(L) where head(L, c) and reads(k, run(L, c))) < 2"

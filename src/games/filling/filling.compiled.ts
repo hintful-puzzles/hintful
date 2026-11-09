@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/filling/filling.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, edgeGroups, keptEdgeGroups, keptStore, popcount, rangeMask, reaches, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, cellsValued, edgeGroups, keptEdgeGroups, keptStore, popcount, rangeMask, reaches, type Kept } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -108,7 +108,7 @@ export interface MustGrowBinding {
 
 const mustGrowFacts: number[] = [];
 
-/** Its dearest read grows with the board as n^2. */
+/** Its dearest read grows with the board as n. */
 export function mustGrow(b: Marks, sp: GridSpace, fire: Fire<MustGrowBinding> | null): number {
   const _g30: number[] = [];
   const _g37: number[] = [];
@@ -140,7 +140,7 @@ export function mustGrow(b: Marks, sp: GridSpace, fire: Fire<MustGrowBinding> | 
     }
     const v_F = _g37;
     const _eg55 = keptEdgeGroups(sp, b, null, edgeHolds1, v_d, false);
-    const _a43 = sp.cells;
+    const _a43 = cellsValued(b, sp.cells, v_d);
     for (let _i44 = 0; _i44 < _a43.length; _i44++) {
       const v_c = _a43[_i44];
       if (!(((b.grid[v_c] || -1) === v_d))) continue;
@@ -448,7 +448,7 @@ export interface TooFarBinding {
 
 const tooFarFacts: number[] = [];
 
-/** Its dearest read grows with the board as n^2. */
+/** Its dearest read grows with the board as n. */
 export function tooFar(b: Marks, sp: GridSpace, fire: Fire<TooFarBinding> | null): number {
   const _g286: number[] = [];
   const facts = tooFarFacts;
@@ -483,7 +483,7 @@ export function tooFar(b: Marks, sp: GridSpace, fire: Fire<TooFarBinding> | null
       if (_c310) {
         let _q301 = false;
         Q302: {
-          const _a303 = sp.cells;
+          const _a303 = cellsValued(b, sp.cells, v_d);
           for (let _i304 = 0; _i304 < _a303.length; _i304++) {
             const v_a = _a303[_i304];
             const _h305 = (b.grid[v_a] || -1);

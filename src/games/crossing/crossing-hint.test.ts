@@ -29,12 +29,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newCrossingDesc } from "./generator.ts";
-import {
-  applyCrossingFiring,
-  type CrossingFiring,
-  deduceCrossingPlan,
-  narrateCrossing,
-} from "./hint-solver.ts";
+import { narrateCrossing } from "./hint-text.ts";
 import { crossingGame } from "./index.ts";
 import {
   COL_ACROSS,
@@ -46,7 +41,12 @@ import {
   PREFERRED_TILE_SIZE,
   tileOrigin,
 } from "./render.ts";
-import { solveCrossing } from "./solver.ts";
+import {
+  applyCrossingFiring,
+  type CrossingFiring,
+  deduceCrossingPlan,
+  solveCrossing,
+} from "./solver.ts";
 import {
   type CrossingMove,
   type CrossingParams,
@@ -70,7 +70,7 @@ function board(p: CrossingParams, seed: string): CrossingState {
 /** Apply a firing to a state, as the plan's own working board does. */
 function afterFiring(state: CrossingState, f: CrossingFiring): CrossingState {
   const next = { ...state, grid: state.grid.slice(), pencil: state.pencil.slice() };
-  applyCrossingFiring({ puzzle: next.puzzle, grid: next.grid, marks: next.pencil }, f);
+  applyCrossingFiring(next, f);
   return next;
 }
 
@@ -365,9 +365,8 @@ describe("crossing hint — ruling a candidate out", () => {
   });
 });
 
-// Two generated boards whose plans once needed the solver's narrowing fixpoint:
-// the first at its opening move, the second for a chain of notes that writes
-// two squares of one run.
+// Two generated boards whose plans need notes: the first at its opening move,
+// the second for a chain of notes that writes two squares of one run.
 const NEEDS_NOTES = {
   params: { w: 5, h: 5, sym: false, diff: DIFF_EASY },
   desc: "3a1a1a4a1a1a6a1,11,22,33,73,84,112,361,576,764,811,838",
@@ -502,21 +501,28 @@ describe("crossing hint — every premise is on the board", () => {
     const state = newState(NEEDS_NOTES.params, NEEDS_NOTES.desc);
     const res = crossingGame.hint?.(state);
     if (!res?.ok) throw new Error("hint refused");
-    const [first, second, third] = res.steps as Step[];
+    const steps = res.steps as Step[];
+    const [first, second] = steps;
     expect(first.move).toEqual({
       kind: "pencilAdd",
-      marks: [1, 3, 5, 7, 8].map((n) => ({ x: 0, y: 4, n })),
+      marks: [1, 3, 6, 7].map((n) => ({ x: 1, y: 0, n })),
     });
     expect(first.explanation).toBe(
-      "Every outlined number still fitting this across run puts 1, 3, 5, 7 or 8 in this square, so note them.",
+      "Every outlined number still fitting this across run puts 1, 3, 6 or 7 in this square, so note them.",
     );
-    expect(first.highlights?.targets).toEqual([{ x: 0, y: 4 }]);
+    expect(first.highlights?.targets).toEqual([{ x: 1, y: 0 }]);
     expect(second.move.kind).toBe("pencilAdd");
     // Two runs, two deductions: not one journey.
     expect(second.continuesPrevious).toBeUndefined();
-    expect(third.move.kind).toBe("set");
-    expect(third.explanation).toMatch(
-      /^This across run's outlined numbers give this square 3 or 4; this down run's outlined ones/,
+    // Only the notes the digit rests on, then the digit.
+    expect(steps.slice(0, 4).map((s) => s.move.kind)).toEqual([
+      "pencilAdd",
+      "pencilAdd",
+      "pencilAdd",
+      "set",
+    ]);
+    expect(steps[3].explanation).toBe(
+      "Every outlined number still fitting this down run has a 6 in this square, so it must be 6.",
     );
   });
 
@@ -530,11 +536,13 @@ describe("crossing hint — every premise is on the board", () => {
     const [a, b] = [steps[j - 1].move, steps[j].move];
     if (a.kind !== "pencilAdd" || b.kind !== "pencilAdd")
       throw new Error("expected notes");
-    // Column 4, rows 0 and 2: one down run, two squares.
+    // Row 3, columns 10 and 12: one across run, two squares.
     expect([a.marks[0].x, a.marks[0].y, b.marks[0].x, b.marks[0].y]).toEqual([
-      4, 0, 4, 2,
+      10, 3, 12, 3,
     ]);
-    expect(state.puzzle.downRun[0 * 13 + 4]).toBe(state.puzzle.downRun[2 * 13 + 4]);
+    expect(state.puzzle.acrossRun[3 * 13 + 10]).toBe(
+      state.puzzle.acrossRun[3 * 13 + 12],
+    );
     // A leg continues only the note step before it, on the same run.
     for (const [k, s] of steps.entries()) {
       if (!s.continuesPrevious) continue;
@@ -551,19 +559,19 @@ describe("crossing hint — every premise is on the board", () => {
     if (step.move.kind !== "pencilAdd") throw new Error("expected a note step");
     const toggle = (digit: number): CrossingMove => ({
       kind: "pencil",
-      x: 0,
-      y: 4,
+      x: 1,
+      y: 0,
       digit,
     });
 
     expect(crossingGame.hintKeepTrack?.(toggle(2), step, state)).toBe("off");
     let cur = state;
     const verdicts: string[] = [];
-    for (const n of [1, 3, 5, 7, 8]) {
+    for (const n of [1, 3, 6, 7]) {
       verdicts.push(crossingGame.hintKeepTrack?.(toggle(n), step, cur) ?? "?");
       cur = crossingGame.executeMove(cur, toggle(n));
     }
-    expect(verdicts).toEqual(["onTrack", "onTrack", "onTrack", "onTrack", "completed"]);
+    expect(verdicts).toEqual(["onTrack", "onTrack", "onTrack", "completed"]);
   });
 
   it("resolves a note step once its notes are there, and shrinks it before that", () => {
@@ -573,13 +581,13 @@ describe("crossing hint — every premise is on the board", () => {
     const step = res.steps[0] as Step;
     const partial = crossingGame.executeMove(state, {
       kind: "pencil",
-      x: 0,
-      y: 4,
+      x: 1,
+      y: 0,
       digit: 3,
     });
     expect(crossingGame.refreshHintStep?.(step, partial)?.move).toEqual({
       kind: "pencilAdd",
-      marks: [1, 5, 7, 8].map((n) => ({ x: 0, y: 4, n })),
+      marks: [1, 6, 7].map((n) => ({ x: 1, y: 0, n })),
     });
     const done = crossingGame.executeMove(state, step.move);
     expect(crossingGame.refreshHintStep?.(step, done)).toBeNull();

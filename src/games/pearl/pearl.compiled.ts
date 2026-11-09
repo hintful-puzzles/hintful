@@ -178,8 +178,8 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
         _g1365++;
       }
     }
-    let _c1384: boolean = (_g1365 === 2);
-    if (_c1384) {
+    let _c1380: boolean = (_g1365 === 2);
+    if (_c1380) {
       let _q1370 = true;
       Q1371: {
         const _a1372 = sp.cellEdges[_at1363];
@@ -193,123 +193,82 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
             const v_x = _a1374[_i1376];
             const _h1379 = (g[v_x] || -1);
             if (!((_h1378 && (_h1379 === 1)))) continue;
-            let _q1380 = false;
-            Q1381: {
-              const _a1382 = sp.edgeFaces[v_e];
-              for (let _i1383 = 0; _i1383 < _a1382.length; _i1383++) {
-                const v_f = _a1382[_i1383];
-                if ((sp.edgeFaces[v_x].includes(v_f))) {
-                  _q1380 = true;
-                  break Q1381;
-                }
-              }
-            }
-            if (!((_q1380 === (_v1364 === 1)))) {
+            if (!((bent(sp, v_e, v_x) === (_v1364 === 1)))) {
               _q1370 = false;
               break Q1371;
             }
           }
         }
       }
-      _c1384 = _q1370;
+      _c1380 = _q1370;
     }
-    let _c1401: boolean = _c1384;
-    if (_c1401) {
-      let _c1400: boolean = (_v1364 !== 1);
-      if (!_c1400) {
-        let _q1385 = true;
-        Q1386: {
-          const _a1387 = sp.cellEdges[_at1363];
-          for (let _i1388 = 0; _i1388 < _a1387.length; _i1388++) {
-            const v_e = _a1387[_i1388];
-            const _h1389 = (g[v_e] || -1);
-            if (!((_h1389 === 1))) continue;
-            let _q1390 = false;
-            Q1391: {
-              const _a1392 = sp.cellEdges[(sp.edgeEnds[2 * v_e] === _at1363 ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e])];
-              for (let _i1393 = 0; _i1393 < _a1392.length; _i1393++) {
-                const v_x = _a1392[_i1393];
-                const _h1394 = (g[v_x] || -1);
-                let _c1399: boolean = ((v_x !== v_e) && (_h1394 === 1));
-                if (_c1399) {
-                  let _q1395 = false;
-                  Q1396: {
-                    const _a1397 = sp.edgeFaces[v_x];
-                    for (let _i1398 = 0; _i1398 < _a1397.length; _i1398++) {
-                      const v_f = _a1397[_i1398];
-                      if ((sp.edgeFaces[v_e].includes(v_f))) {
-                        _q1395 = true;
-                        break Q1396;
-                      }
-                    }
-                  }
-                  _c1399 = !(_q1395);
-                }
-                if (_c1399) {
-                  _q1390 = true;
-                  break Q1391;
+    let _c1392: boolean = _c1380;
+    if (_c1392) {
+      let _c1391: boolean = (_v1364 !== 1);
+      if (!_c1391) {
+        let _q1381 = true;
+        Q1382: {
+          const _a1383 = sp.cellEdges[_at1363];
+          for (let _i1384 = 0; _i1384 < _a1383.length; _i1384++) {
+            const v_e = _a1383[_i1384];
+            const _h1385 = (g[v_e] || -1);
+            if (!((_h1385 === 1))) continue;
+            let _q1386 = false;
+            Q1387: {
+              const _a1388 = sp.cellEdges[(sp.edgeEnds[2 * v_e] === _at1363 ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e])];
+              for (let _i1389 = 0; _i1389 < _a1388.length; _i1389++) {
+                const v_x = _a1388[_i1389];
+                const _h1390 = (g[v_x] || -1);
+                if ((((v_x !== v_e) && (_h1390 === 1)) && !(bent(sp, v_x, v_e)))) {
+                  _q1386 = true;
+                  break Q1387;
                 }
               }
             }
-            if (!(_q1390)) {
-              _q1385 = false;
-              break Q1386;
+            if (!(_q1386)) {
+              _q1381 = false;
+              break Q1382;
             }
           }
         }
-        _c1400 = _q1385;
+        _c1391 = _q1381;
       }
-      _c1401 = _c1400;
+      _c1392 = _c1391;
     }
-    let _c1418: boolean = _c1401;
-    if (_c1418) {
-      let _c1417: boolean = (_v1364 !== 2);
-      if (!_c1417) {
-        let _q1402 = false;
-        Q1403: {
-          const _a1404 = sp.cellEdges[_at1363];
-          for (let _i1405 = 0; _i1405 < _a1404.length; _i1405++) {
-            const v_e = _a1404[_i1405];
-            const _h1406 = (g[v_e] || -1);
-            if (!((_h1406 === 1))) continue;
-            let _q1407 = false;
-            Q1408: {
-              const _a1409 = sp.cellEdges[(sp.edgeEnds[2 * v_e] === _at1363 ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e])];
-              for (let _i1410 = 0; _i1410 < _a1409.length; _i1410++) {
-                const v_x = _a1409[_i1410];
-                const _h1411 = (g[v_x] || -1);
-                let _c1416: boolean = ((v_x !== v_e) && (_h1411 === 1));
-                if (_c1416) {
-                  let _q1412 = false;
-                  Q1413: {
-                    const _a1414 = sp.edgeFaces[v_x];
-                    for (let _i1415 = 0; _i1415 < _a1414.length; _i1415++) {
-                      const v_f = _a1414[_i1415];
-                      if ((sp.edgeFaces[v_e].includes(v_f))) {
-                        _q1412 = true;
-                        break Q1413;
-                      }
-                    }
-                  }
-                  _c1416 = _q1412;
-                }
-                if (_c1416) {
-                  _q1407 = true;
-                  break Q1408;
+    let _c1404: boolean = _c1392;
+    if (_c1404) {
+      let _c1403: boolean = (_v1364 !== 2);
+      if (!_c1403) {
+        let _q1393 = false;
+        Q1394: {
+          const _a1395 = sp.cellEdges[_at1363];
+          for (let _i1396 = 0; _i1396 < _a1395.length; _i1396++) {
+            const v_e = _a1395[_i1396];
+            const _h1397 = (g[v_e] || -1);
+            if (!((_h1397 === 1))) continue;
+            let _q1398 = false;
+            Q1399: {
+              const _a1400 = sp.cellEdges[(sp.edgeEnds[2 * v_e] === _at1363 ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e])];
+              for (let _i1401 = 0; _i1401 < _a1400.length; _i1401++) {
+                const v_x = _a1400[_i1401];
+                const _h1402 = (g[v_x] || -1);
+                if ((((v_x !== v_e) && (_h1402 === 1)) && bent(sp, v_x, v_e))) {
+                  _q1398 = true;
+                  break Q1399;
                 }
               }
             }
-            if (_q1407) {
-              _q1402 = true;
-              break Q1403;
+            if (_q1398) {
+              _q1393 = true;
+              break Q1394;
             }
           }
         }
-        _c1417 = _q1402;
+        _c1403 = _q1393;
       }
-      _c1418 = _c1417;
+      _c1404 = _c1403;
     }
-    if (!(_c1418)) return false;
+    if (!(_c1404)) return false;
   }
   return true;
 }

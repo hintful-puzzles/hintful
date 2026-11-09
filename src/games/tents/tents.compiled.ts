@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/tents/tents.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, MARK, PLACE, clueAt, keptStore, matched, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, MARK, PLACE, cellsValued, clueAt, keptStore, matched, type Kept } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -152,12 +152,12 @@ export interface TentLinkBinding {
 
 const tentLinkFacts: number[] = [];
 
-/** Its dearest read grows with the board as n. */
+/** Its dearest read grows with the board as 1. */
 export function tentLink(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TentLinkBinding> | null): number {
   const facts = tentLinkFacts;
   let fired = 0;
   let changed = false;
-  const _a22 = sp.cells;
+  const _a22 = cellsValued(b, sp.cells, 1);
   for (let _i23 = 0; _i23 < _a22.length; _i23++) {
     const v_c = _a22[_i23];
     const _h24 = (b.grid[v_c] || -1);
@@ -315,13 +315,13 @@ export interface NextToTentBinding {
 
 const nextToTentFacts: number[] = [];
 
-/** Its dearest read grows with the board as n. */
+/** Its dearest read grows with the board as 1. */
 export function nextToTent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NextToTentBinding> | null): number {
   const _g92: number[] = [];
   const facts = nextToTentFacts;
   let fired = 0;
   let changed = false;
-  const _a90 = sp.cells;
+  const _a90 = cellsValued(b, sp.cells, 1);
   for (let _i91 = 0; _i91 < _a90.length; _i91++) {
     const v_t = _a90[_i91];
     if (!(((b.grid[v_t] || -1) === 1))) continue;

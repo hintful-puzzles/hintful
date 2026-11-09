@@ -89,44 +89,35 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt, variati
         _g202++;
       }
     }
-    let _c230: boolean = (cl.score.black[_k199] === _g202);
-    if (_c230) {
+    let _c222: boolean = (cl.score.black[_k199] === _g202);
+    if (_c222) {
       let _g207 = 0;
       G208: {
         for (let _m209 = _domain; _m209 !== 0; _m209 &= _m209 - 1) {
           const v_d = 31 - Math.clz32(_m209 & -_m209);
           let _g210 = -1;
           G211: {
-            let _g220 = 0;
-            G221: {
-              const _a222 = sp.cells;
-              for (let _i223 = 0; _i223 < _a222.length; _i223++) {
-                const v_s = _a222[_i223];
-                if (!((cl.score.peg[_k199][v_s] === v_d))) continue;
-                _g220++;
+            let _g216 = 0;
+            G217: {
+              const _a218 = sp.cells;
+              for (let _i219 = 0; _i219 < _a218.length; _i219++) {
+                const v_s = _a218[_i219];
+                const _h220 = (g[v_s] || -1);
+                if (!((_h220 === v_d))) continue;
+                _g216++;
               }
             }
-            let _g224 = 0;
-            G225: {
-              const _a226 = sp.cells;
-              for (let _i227 = 0; _i227 < _a226.length; _i227++) {
-                const v_s = _a226[_i227];
-                const _h228 = (g[v_s] || -1);
-                if (!((_h228 === v_d))) continue;
-                _g224++;
-              }
-            }
-            for (let _m229 = ((1 << _g220) | (1 << _g224)); _m229 !== 0; _m229 &= _m229 - 1) {
-              const v_n = 31 - Math.clz32(_m229 & -_m229);
+            for (let _m221 = ((1 << pegs(sp, cl, _k199, v_d)) | (1 << _g216)); _m221 !== 0; _m221 &= _m221 - 1) {
+              const v_n = 31 - Math.clz32(_m221 & -_m221);
               if (_g210 === -1 || v_n < _g210) _g210 = v_n;
             }
           }
           _g207 += _g210;
         }
       }
-      _c230 = (cl.score.total[_k199] === _g207);
+      _c222 = (cl.score.total[_k199] === _g207);
     }
-    if (!(_c230)) return false;
+    if (!(_c222)) return false;
   }
   return true;
 }

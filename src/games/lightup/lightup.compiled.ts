@@ -65,10 +65,6 @@ export function domainOf(_sp: GridSpace, cl: Dealt, v_c: number): number {
  * board: every cell a value of its domain, and every rule and dealt clue
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
-  const _g223: number[] = [];
-  const _g232: number[] = [];
-  const _g251: number[] = [];
-  const _g260: number[] = [];
   for (const cell of sp.cells) {
     const held = g[cell];
     if (!(held > 0 && (domainOf(sp, cl, cell) >> held) & 1)) return false;
@@ -83,35 +79,11 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
       if (!(((_h218 < 0) && (_h219 < 0)))) continue;
       let _q220 = false;
       Q221: {
-        const _t222 = sp.rowOf[v_c];
-        _g223.length = 0;
-        G224: {
-          const _a227 = sp.lineCells[_t222];
-          for (let _i228 = 0; _i228 < _a227.length; _i228++) {
-            const v_x = _a227[_i228];
-            const _h229 = clueAt(cl.wall, v_x);
-            const _h230 = clueAt(cl.number, v_x);
-            if (!(((_h229 < 0) && (_h230 < 0)))) continue;
-            _g223.push(v_x);
-          }
-        }
-        const _t231 = sp.colOf[v_c];
-        _g232.length = 0;
-        G233: {
-          const _a236 = sp.lineCells[_t231];
-          for (let _i237 = 0; _i237 < _a236.length; _i237++) {
-            const v_x = _a236[_i237];
-            const _h238 = clueAt(cl.wall, v_x);
-            const _h239 = clueAt(cl.number, v_x);
-            if (!(((_h238 < 0) && (_h239 < 0)))) continue;
-            _g232.push(v_x);
-          }
-        }
-        const _a240 = union(stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g223), stretch(sp.lineCells[sp.colOf[v_c]], v_c, _g232));
-        for (let _i241 = 0; _i241 < _a240.length; _i241++) {
-          const v_p = _a240[_i241];
-          const _h242 = (g[v_p] || -1);
-          if ((_h242 === 1)) {
+        const _a222 = lights(sp, cl, v_c);
+        for (let _i223 = 0; _i223 < _a222.length; _i223++) {
+          const v_p = _a222[_i223];
+          const _h224 = (g[v_p] || -1);
+          if ((_h224 === 1)) {
             _q220 = true;
             break Q221;
           }
@@ -124,79 +96,55 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     }
   }
   if (!(_q214)) return false;
-  let _q243 = true;
-  Q244: {
-    const _a245 = sp.cells;
-    for (let _i246 = 0; _i246 < _a245.length; _i246++) {
-      const v_c = _a245[_i246];
-      const _h247 = (g[v_c] || -1);
-      if (!((_h247 === 1))) continue;
-      let _q248 = true;
-      Q249: {
-        const _t250 = sp.rowOf[v_c];
-        _g251.length = 0;
-        G252: {
-          const _a255 = sp.lineCells[_t250];
-          for (let _i256 = 0; _i256 < _a255.length; _i256++) {
-            const v_x = _a255[_i256];
-            const _h257 = clueAt(cl.wall, v_x);
-            const _h258 = clueAt(cl.number, v_x);
-            if (!(((_h257 < 0) && (_h258 < 0)))) continue;
-            _g251.push(v_x);
-          }
-        }
-        const _t259 = sp.colOf[v_c];
-        _g260.length = 0;
-        G261: {
-          const _a264 = sp.lineCells[_t259];
-          for (let _i265 = 0; _i265 < _a264.length; _i265++) {
-            const v_x = _a264[_i265];
-            const _h266 = clueAt(cl.wall, v_x);
-            const _h267 = clueAt(cl.number, v_x);
-            if (!(((_h266 < 0) && (_h267 < 0)))) continue;
-            _g260.push(v_x);
-          }
-        }
-        const _a268 = union(stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g251), stretch(sp.lineCells[sp.colOf[v_c]], v_c, _g260));
-        for (let _i269 = 0; _i269 < _a268.length; _i269++) {
-          const v_p = _a268[_i269];
+  let _q225 = true;
+  Q226: {
+    const _a227 = sp.cells;
+    for (let _i228 = 0; _i228 < _a227.length; _i228++) {
+      const v_c = _a227[_i228];
+      const _h229 = (g[v_c] || -1);
+      if (!((_h229 === 1))) continue;
+      let _q230 = true;
+      Q231: {
+        const _a232 = lights(sp, cl, v_c);
+        for (let _i233 = 0; _i233 < _a232.length; _i233++) {
+          const v_p = _a232[_i233];
           if (!((v_p !== v_c))) continue;
-          const _h270 = (g[v_p] || -1);
-          if (!((_h270 === 2))) {
-            _q248 = false;
-            break Q249;
+          const _h234 = (g[v_p] || -1);
+          if (!((_h234 === 2))) {
+            _q230 = false;
+            break Q231;
           }
         }
       }
-      if (!(_q248)) {
-        _q243 = false;
-        break Q244;
+      if (!(_q230)) {
+        _q225 = false;
+        break Q226;
       }
     }
   }
-  if (!(_q243)) return false;
-  for (let _k271 = 0; _k271 < cl.wall.at.length; _k271++) {
-    const _at272 = cl.wall.at[_k271];
-    if (!(((g[_at272] || -1) === 2))) return false;
+  if (!(_q225)) return false;
+  for (let _k235 = 0; _k235 < cl.wall.at.length; _k235++) {
+    const _at236 = cl.wall.at[_k235];
+    if (!(((g[_at236] || -1) === 2))) return false;
   }
-  for (let _k274 = 0; _k274 < cl.number.at.length; _k274++) {
-    const _at275 = cl.number.at[_k274];
-    const _v276 = cl.number.v[_k274];
-    let _c282: boolean = ((g[_at275] || -1) === 2);
-    if (_c282) {
-      let _g277 = 0;
-      G278: {
-        const _a279 = sp.adj4[_at275];
-        for (let _i280 = 0; _i280 < _a279.length; _i280++) {
-          const v_p = _a279[_i280];
-          const _h281 = (g[v_p] || -1);
-          if (!((_h281 === 1))) continue;
-          _g277++;
+  for (let _k238 = 0; _k238 < cl.number.at.length; _k238++) {
+    const _at239 = cl.number.at[_k238];
+    const _v240 = cl.number.v[_k238];
+    let _c246: boolean = ((g[_at239] || -1) === 2);
+    if (_c246) {
+      let _g241 = 0;
+      G242: {
+        const _a243 = sp.adj4[_at239];
+        for (let _i244 = 0; _i244 < _a243.length; _i244++) {
+          const v_p = _a243[_i244];
+          const _h245 = (g[v_p] || -1);
+          if (!((_h245 === 1))) continue;
+          _g241++;
         }
       }
-      _c282 = (_g277 === _v276);
+      _c246 = (_g241 === _v240);
     }
-    if (!(_c282)) return false;
+    if (!(_c246)) return false;
   }
   return true;
 }

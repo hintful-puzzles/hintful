@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/boats/boats.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, cluesValued, keptStore, rangeMask, setOf, step, stretch, type Kept, union } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, cellsValued, clueAt, cluesValued, keptStore, rangeMask, setOf, step, stretch, type Kept, union } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -616,13 +616,13 @@ export interface NearBinding {
 
 const nearFacts: number[] = [];
 
-/** Its dearest read grows with the board as n. */
+/** Its dearest read grows with the board as 1. */
 export function near(b: Marks, sp: GridSpace, fire: Fire<NearBinding> | null): number {
   const _g82: number[] = [];
   const facts = nearFacts;
   let fired = 0;
   let changed = false;
-  const _a80 = sp.cells;
+  const _a80 = cellsValued(b, sp.cells, 1);
   for (let _i81 = 0; _i81 < _a80.length; _i81++) {
     const v_c = _a80[_i81];
     if (!(((b.grid[v_c] || -1) === 1))) continue;
@@ -920,14 +920,14 @@ export interface ExtendBinding {
 
 const extendFacts: number[] = [];
 
-/** Its dearest read grows with the board as n. */
+/** Its dearest read grows with the board as 1. */
 export function extend(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExtendBinding> | null): number {
   const _g282: number[] = [];
   const facts = extendFacts;
   let fired = 0;
   let changed = false;
   const v_F = full(b, sp, cl, 1);
-  const _a275 = sp.cells;
+  const _a275 = cellsValued(b, sp.cells, 1);
   for (let _i276 = 0; _i276 < _a275.length; _i276++) {
     const v_c = _a275[_i276];
     let _c281: boolean = (v_F && ((b.grid[v_c] || -1) === 1));
@@ -1116,14 +1116,14 @@ export interface GrowBinding {
 
 const growFacts: number[] = [];
 
-/** Its dearest read grows with the board as n^1.5. */
+/** Its dearest read grows with the board as n^0.5. */
 export function grow(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<GrowBinding> | null): number {
   const _g382: number[] = [];
   const _g390: number[] = [];
   const facts = growFacts;
   let fired = 0;
   let changed = false;
-  const _a377 = sp.cells;
+  const _a377 = cellsValued(b, sp.cells, 1);
   for (let _i378 = 0; _i378 < _a377.length; _i378++) {
     const v_c = _a377[_i378];
     if (!(((b.grid[v_c] || -1) === 1))) continue;
@@ -3294,7 +3294,7 @@ export function done(b: Marks, sp: GridSpace, v_m: number): number {
   if (_kept[v_m] !== undefined) return _kept[v_m];
   let _g202 = 0;
   G203: {
-    const _a204 = sp.cells;
+    const _a204 = cellsValued(b, sp.cells, 1);
     for (let _i205 = 0; _i205 < _a204.length; _i205++) {
       const v_c = _a204[_i205];
       let _c207: boolean = ((b.grid[v_c] || -1) === 1);

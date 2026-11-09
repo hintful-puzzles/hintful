@@ -59,11 +59,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newCrossingDesc } from "./generator.ts";
-import {
-  type CrossingFiring,
-  deduceCrossingPlan,
-  narrateCrossing,
-} from "./hint-solver.ts";
+import { narrateCrossing } from "./hint-text.ts";
 import {
   type CrossingDrawState,
   type CrossingHint,
@@ -79,7 +75,9 @@ import {
 } from "./render.ts";
 import {
   answerOf,
+  type CrossingFiring,
   type CrossingMistake,
+  deduceCrossingPlan,
   findMistakes,
   solveCrossing,
 } from "./solver.ts";

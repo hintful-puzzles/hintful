@@ -1147,16 +1147,22 @@ and cannot be checked.
 - **Record provenance for each rule-out**: which narrowing removed it and
   what that narrowing rested on. A second kind of narrowing has a second kind
   of support, and the trace follows the kind.
-- **Emit the oldest narrowing in the support, then recompute.** The oldest
-  rests only on the board, so its sentence is checkable as it stands. No
-  recorded script is replayed.
+- **On a compiled ladder, run the narrowing ahead on a copy of the marks**
+  until a placing technique fires, and trace back from that placement, fact
+  by fact: what it needs ruled out, the strike that first ruled each out,
+  and what that strike rested on. Walking the narrowing as a fallback
+  instead wrote 4.7 times the notes (Crossing, 2026-11-09), and tracing by
+  cell rather than by fact kept almost all of them.
+- **Emit the support oldest first, each taken again on the live marks**, so
+  its sentence reads the board as it then stands. The oldest rests only on
+  the board.
 - **Writing notes into an empty element needs a move that only adds**, as a
   strike only removes: a toggle is not idempotent. Its keep-track and refresh
   are the game's, since the shared candidate helpers know only strikes.
 - **Measure the notes placed, not the steps affected.**
 
-Exemplar: `support` in
-[`crossing/hint-solver.ts`](../src/games/crossing/hint-solver.ts), with
+Exemplar: `aimedNotes` in
+[`crossing/solver.ts`](../src/games/crossing/solver.ts), with
 requirement "A placement the board does not yet support waits for its notes"
 in its spec.
 

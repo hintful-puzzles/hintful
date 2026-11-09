@@ -229,6 +229,10 @@
               "additionalProperties": false,
               "properties": {
                 "at": { "type": "string" },
+                "list": {
+                  "const": true,
+                  "description": "The field of a clue is a list of numbers, each one of `value`, in order: a number's digits. Read whole as `f(k)`, its length `|f(k)|`, and a member `nth(f(k), i)`, counted from 0."
+                },
                 "value": { "$ref": "#/$defs/formula" }
               }
             }

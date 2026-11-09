@@ -930,6 +930,10 @@ function compileNode(e: Expr, scope: Scope, env: Env, out: Out): Val {
         return { code: `popcount(${s.code})`, sort: NUM };
       }
       if (isArray(s.sort)) return { code: `${s.code}.length`, sort: NUM };
+      if (s.sort.k === "list") {
+        env.used.add("listLength");
+        return { code: `listLength(${s.code})`, sort: NUM };
+      }
       throw new CompileError(`|…| of ${show(s.sort)}`);
     }
     case "not": {
@@ -1477,6 +1481,23 @@ function bindingLoops(
     } else if (
       bnd.of.k === "name" &&
       bnd.of.name === "cells" &&
+      valuePin(bnd, sc, env) !== null
+    ) {
+      // The cells holding one value, read off an index of every cell's, made
+      // once a placement: the where still reads each.
+      const t = once(compileExpr(valuePin(bnd, sc, env) as Expr, sc, env, out), out);
+      expect(t, "num", `value(${bnd.name})`);
+      env.used.add("cellsValued");
+      sort = elem("cell");
+      const a = Out.fresh("_a");
+      const ix = Out.fresh("_i");
+      out.emit(`const ${a} = cellsValued(b, sp.cells, ${t.code});`);
+      out.open(`for (let ${ix} = 0; ${ix} < ${a}.length; ${ix}++) {`);
+      out.emit(`const ${v} = ${a}[${ix}];`);
+      pos = { arr: a, i: ix };
+    } else if (
+      bnd.of.k === "name" &&
+      bnd.of.name === "cells" &&
       chainPin(bnd, sc, env) !== null
     ) {
       // The cells whose chain holds one cell, read off the kept chains'
@@ -1681,6 +1702,48 @@ function cluePin(
     const reads = new Set<string>();
     freeNames(other, reads, new Set());
     if (!reads.has(bnd.name)) return { kind, value: other };
+  }
+  return null;
+}
+
+/**
+ * Where `bnd`, a binder over the cells, has a conjunct `value(x) = t`, `t`
+ * reading nothing `bnd` binds, and `value` reads the marks' own grid: `t`, so
+ * the cells can be read off an index of every cell's value (Crossing's
+ * squares holding a number's first digit).
+ */
+function valuePin(bnd: Binder, scope: Scope, env: Env): Expr | null {
+  if (bnd.kind !== "in" || bnd.where === null) return null;
+  for (const c of fillConjuncts(bnd.where, scope, env)) {
+    if (c.k !== "bin" || c.op !== "=") continue;
+    for (const [side, other] of [
+      [c.a, c.b],
+      [c.b, c.a],
+    ] as const) {
+      if (
+        side.k !== "call" ||
+        side.fn !== "value" ||
+        scope.has("value") ||
+        side.args.length !== 1 ||
+        side.args[0].k !== "name" ||
+        side.args[0].name !== bnd.name
+      )
+        continue;
+      const reads = new Set<string>();
+      freeNames(other, reads, new Set());
+      if (reads.has(bnd.name)) continue;
+      const mark = Out.mark();
+      const y = Out.fresh("_y");
+      const probe = new Out(0);
+      const f = compileExpr(
+        side,
+        new Map([...scope, [bnd.name, { code: y, sort: elem("cell") }]]),
+        env,
+        probe,
+      );
+      Out.rewind(mark);
+      if (probe.entries.length === 0 && f.code === `(b.grid[${y}] || -1)`) return other;
+    }
   }
   return null;
 }
@@ -4157,9 +4220,14 @@ function call(
     case "nth": {
       arity(2);
       const L = vs[0];
-      if (!isArray(L.sort) || L.sort.k !== "set")
-        throw new CompileError(`nth of ${show(L.sort)}: not an ordered set`);
       expect(vs[1], "num", fn);
+      if (L.sort.k === "list") {
+        // A list's member, none past either end.
+        env.used.add("nth");
+        return { code: `nth(${L.code}, ${vs[1].code})`, sort: NUM };
+      }
+      if (!isArray(L.sort) || L.sort.k !== "set")
+        throw new CompileError(`nth of ${show(L.sort)}: not an ordered set or a list`);
       return { code: `(${L.code}[${vs[1].code}] ?? -1)`, sort: L.sort.of };
     }
     case "stretch": {
@@ -4587,7 +4655,6 @@ function keptDefinition(
   const { kept } = env;
   if (
     kept === null ||
-    env.answer !== null ||
     env.position !== null ||
     env.supposed.length > 0 ||
     vs.length === 0 ||
@@ -4601,6 +4668,10 @@ function keptDefinition(
   // otherwise make it again on each pass for the same argument (Mosaic's
   // `need(c)`, read for each clue near `c`).
   const board = !readsMarks(def.body, env);
+  // The answer check reads a grid and no marks, so only what is kept for the
+  // board is the same there: inlined, Crossing's `head(L, c)` walked the
+  // board again for every square of every line, two thirds of its deals.
+  if (env.answer !== null && !board) return null;
   const depth = loopDepth(def.body, env.defs);
   const h = env.hoist;
   const repeated =
@@ -5346,11 +5417,12 @@ function valuesSort(what: string, value: Expr, at: Sort | null, env: Env): Sort 
 }
 
 /** The type a clue at the board is dealt as: how many there are, and each
- * field's values by clue, and by element where it is one an element. */
+ * field's values by clue, and by element where it is one an element, or
+ * its list. */
 function recordsType(fields: NonNullable<ClueKind["fields"]>): string {
   const parts = [...fields].map(
     ([name, f]) =>
-      `readonly ${name}: readonly ${f.at === null ? "number" : "(readonly number[])"}[]`,
+      `readonly ${name}: readonly ${f.v.k === "list" ? "Int32Array" : f.at === null ? "number" : "(readonly number[])"}[]`,
   );
   return `{ readonly n: number; ${parts.join("; ")} }`;
 }
@@ -5367,7 +5439,7 @@ function clueSorts(kind: string, c: DescribedClueKind, env: Env): ClueKind {
       const v = valuesSort(`clue ${kind} ${name}`, f.value, null, env);
       if (v.k !== "num")
         throw new CompileError(`clue ${kind} ${name}: its values are not numbers`);
-      fields.set(name, { at, v });
+      fields.set(name, { at, v: f.list ? { k: "list" } : v });
     }
     return { at: { k: "none" }, v: { k: "none" }, per: false, list: false, fields };
   }

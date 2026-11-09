@@ -1,11 +1,11 @@
 /**
  * Every sentence Crossing's hint speaks, and the words inside them.
  *
- * The deduction decides which sentence and with what values
- * (`hint-solver.ts`'s `narrateCrossing`, which reads the runs and numbers off
- * the puzzle); this file decides only how it reads. One firing, one sentence:
- * the indication (the pattern to learn to spot), then the premise, then the
- * forced action in the necessity voice.
+ * The deduction decides which sentence and with what values (`solver.ts`'s
+ * firings); {@link narrateCrossing} reads the runs and numbers off the puzzle,
+ * and `say` decides how it reads. One firing, one sentence: the indication
+ * (the pattern to learn to spot), then the premise, then the forced action in
+ * the necessity voice.
  *
  * Every word that points at the board is a reference to the mark it points at
  * (`engine/hint-words.ts`): the squares the step writes, the notes it rules out
@@ -27,7 +27,8 @@ import {
   so,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import type { CrossingFiring } from "./hint-solver.ts";
+import type { CrossingFiring } from "./solver.ts";
+import type { CrossingPuzzle } from "./state.ts";
 
 type Firing<K extends CrossingFiring["technique"]> = Extract<
   CrossingFiring,
@@ -175,3 +176,99 @@ export const say = {
     });
   },
 };
+
+/**
+ * One firing, in one sentence: which one, with the run's length, direction and
+ * number read off the puzzle.
+ */
+export function narrateCrossing(
+  puzzle: CrossingPuzzle,
+  firing: CrossingFiring,
+): Sentence {
+  const m = markedOf(puzzle, firing);
+  switch (firing.technique) {
+    case "onlyNumber": {
+      const run = puzzle.runs[firing.run];
+      return say.onlyNumber(
+        firing,
+        run.cells.length,
+        puzzle.numbers[firing.number].join(""),
+        m,
+      );
+    }
+    case "onlyRun":
+      return say.onlyRun(firing, puzzle.numbers[firing.number].join(""), m);
+    case "sharedDigit":
+      return say.sharedDigit(firing, puzzle.runs[firing.run].horizontal, m);
+    case "crossRuns":
+      return say.crossRuns(firing, m);
+    case "noteDigits":
+      return say.noteDigits(firing, puzzle.runs[firing.run].horizontal, m);
+    case "noteStrike":
+      return say.noteStrike(firing, puzzle.runs[firing.run].horizontal, m);
+  }
+}
+
+/** What a firing's step marks, split the way its words name it; the same
+ * elements `index.ts`'s highlights draw. */
+function markedOf(puzzle: CrossingPuzzle, f: CrossingFiring): Marked {
+  const at = (i: number): Point => ({ x: i % puzzle.w, y: Math.floor(i / puzzle.w) });
+  const runCells = (r: number): Point[] => puzzle.runs[r].cells.map(at);
+  const none = {
+    notes: [],
+    run: [],
+    otherRun: [],
+    fitting: [],
+    otherFitting: [],
+    number: null,
+    against: [],
+  };
+  switch (f.technique) {
+    case "onlyNumber":
+      return {
+        ...none,
+        targets: f.fill.map(at),
+        run: runCells(f.run),
+        fitting: f.fitting.filter((l) => l !== f.number),
+        number: f.number,
+      };
+    case "onlyRun":
+      return {
+        ...none,
+        targets: f.fill.map(at),
+        run: runCells(f.run),
+        number: f.number,
+        against: f.against.map(at),
+      };
+    case "crossRuns": {
+      const leadAcross = leadsAcross(f);
+      const [near, far] = leadAcross
+        ? [f.acrossRun, f.downRun]
+        : [f.downRun, f.acrossRun];
+      return {
+        ...none,
+        targets: [at(f.cell)],
+        run: runCells(near),
+        otherRun: runCells(far),
+        fitting: leadAcross ? f.acrossFitting : f.downFitting,
+        otherFitting: leadAcross ? f.downFitting : f.acrossFitting,
+      };
+    }
+    case "sharedDigit":
+    case "noteDigits":
+      return {
+        ...none,
+        targets: [at(f.cell)],
+        run: runCells(f.run),
+        fitting: f.fitting,
+      };
+    case "noteStrike":
+      return {
+        ...none,
+        targets: [at(f.cell)],
+        notes: f.digits.map((n) => ({ ...at(f.cell), n })),
+        run: runCells(f.run),
+        fitting: f.fitting,
+      };
+  }
+}

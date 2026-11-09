@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/singles/singles.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, connected, cuts, rangeMask } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, cellsValued, clueAt, connected, cuts, rangeMask } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -137,12 +137,12 @@ export interface BesideCoveredBinding {
 
 const besideCoveredFacts: number[] = [];
 
-/** Its dearest read grows with the board as n. */
+/** Its dearest read grows with the board as 1. */
 export function besideCovered(b: Marks, sp: GridSpace, fire: Fire<BesideCoveredBinding> | null): number {
   const facts = besideCoveredFacts;
   let fired = 0;
   let changed = false;
-  const _a9 = sp.cells;
+  const _a9 = cellsValued(b, sp.cells, 1);
   for (let _i10 = 0; _i10 < _a9.length; _i10++) {
     const v_c = _a9[_i10];
     if (!(((b.grid[v_c] || -1) === 1))) continue;
@@ -176,12 +176,12 @@ export interface SameLineBinding {
 
 const sameLineFacts: number[] = [];
 
-/** Its dearest read grows with the board as n^1.5. */
+/** Its dearest read grows with the board as n^0.5. */
 export function sameLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SameLineBinding> | null): number {
   const facts = sameLineFacts;
   let fired = 0;
   let changed = false;
-  const _a17 = sp.cells;
+  const _a17 = cellsValued(b, sp.cells, 2);
   for (let _i18 = 0; _i18 < _a17.length; _i18++) {
     const v_c = _a17[_i18];
     if (!(((b.grid[v_c] || -1) === 2))) continue;

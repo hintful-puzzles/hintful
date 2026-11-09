@@ -67,7 +67,6 @@ export function domainOf(_sp: GridSpace, cl: Dealt, v_c: number): number {
  * board: every cell a value of its domain, and every rule and dealt clue
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
-  const _h173 = sp.cells.length;
   for (const cell of sp.cells) {
     const held = g[cell];
     if (!(held > 0 && (domainOf(sp, cl, cell) >> held) & 1)) return false;
@@ -75,9 +74,6 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
   let _q163 = true;
   Q164: {
     for (let v_d = 1; v_d <= 3; v_d++) {
-      const _h174 = (v_d === 1);
-      const _h175 = (v_d === 2);
-      const _h176 = (v_d === 3);
       let _g165 = 0;
       G166: {
         const _a167 = sp.cells;
@@ -88,63 +84,51 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
           _g165++;
         }
       }
-      let _g170 = -1;
-      let _n172 = 0;
-      G171: {
-        for (let v_n = 0; v_n <= _h173; v_n++) {
-          if (!((((_h174 && (v_n === cl.ghosts)) || (_h175 && (v_n === cl.vampires))) || (_h176 && (v_n === cl.zombies))))) continue;
-          if (++_n172 === 2) {
-            _g170 = -1;
-            break G171;
-          }
-          _g170 = v_n;
-        }
-      }
-      if (!((_g165 === _g170))) {
+      if (!((_g165 === holds(sp, cl, v_d)))) {
         _q163 = false;
         break Q164;
       }
     }
   }
   if (!(_q163)) return false;
-  for (let _k177 = 0; _k177 < cl.mirror.at.length; _k177++) {
-    const _at178 = cl.mirror.at[_k177];
-    if (!(((g[_at178] || -1) === 4))) return false;
+  for (let _k170 = 0; _k170 < cl.mirror.at.length; _k170++) {
+    const _at171 = cl.mirror.at[_k170];
+    if (!(((g[_at171] || -1) === 4))) return false;
   }
-  for (let _k180 = 0; _k180 < cl.sees.at.length; _k180++) {
-    const _at181 = cl.sees.at[_k180];
-    const _v182 = cl.sees.v[_k180];
-    let _g183 = 0;
-    G184: {
-      const _a185 = sights(sp, cl.mirror)[_at181].direct;
-      for (let _i186 = 0; _i186 < _a185.length; _i186++) {
-        const v_x = _a185[_i186];
-        const _h187 = (g[v_x] || -1);
-        if (!((_h187 !== 1))) continue;
-        _g183++;
+  for (let _k173 = 0; _k173 < cl.sees.at.length; _k173++) {
+    const _at174 = cl.sees.at[_k173];
+    const _v175 = cl.sees.v[_k173];
+    let _g176 = 0;
+    G177: {
+      const _a178 = sights(sp, cl.mirror)[_at174].direct;
+      for (let _i179 = 0; _i179 < _a178.length; _i179++) {
+        const v_x = _a178[_i179];
+        const _h180 = (g[v_x] || -1);
+        if (!((_h180 !== 1))) continue;
+        _g176++;
       }
     }
-    let _g188 = 0;
-    G189: {
-      const _a190 = sights(sp, cl.mirror)[_at181].bent;
-      for (let _i191 = 0; _i191 < _a190.length; _i191++) {
-        const v_x = _a190[_i191];
-        const _h192 = (g[v_x] || -1);
-        if (!((_h192 !== 2))) continue;
-        _g188++;
+    let _g181 = 0;
+    G182: {
+      const _a183 = sights(sp, cl.mirror)[_at174].bent;
+      for (let _i184 = 0; _i184 < _a183.length; _i184++) {
+        const v_x = _a183[_i184];
+        const _h185 = (g[v_x] || -1);
+        if (!((_h185 !== 2))) continue;
+        _g181++;
       }
     }
-    let _g193 = 0;
-    G194: {
-      const _a195 = sights(sp, cl.mirror)[_at181].twice;
-      for (let _i196 = 0; _i196 < _a195.length; _i196++) {
-        const v_x = _a195[_i196];
-        const _h197 = (g[v_x] || -1);
-        if (!((_h197 !== 2))) continue;
-        _g193++;
+    let _g186 = 0;
+    G187: {
+      const _a188 = sights(sp, cl.mirror)[_at174].twice;
+      for (let _i189 = 0; _i189 < _a188.length; _i189++) {
+        const v_x = _a188[_i189];
+        const _h190 = (g[v_x] || -1);
+        if (!((_h190 !== 2))) continue;
+        _g186++;
       }
     }
-    if (!((((_g183 + _g188) + _g193) === _v182))) return false;
+    if (!((((_g176 + _g181) + _g186) === _v175))) return false;
   }
   return true;
 }

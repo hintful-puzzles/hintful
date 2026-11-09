@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/starbattle/starbattle.description.yaml: edit that, not this.
 
-import { type Fire, type GridSpace, type Marks, type Partition, PLACE, keptStore, minus, rangeMask, setOf, type Kept } from "../../engine/describe-runtime.ts";
+import { type Fire, type GridSpace, type Marks, type Partition, PLACE, cellsValued, keptStore, minus, rangeMask, setOf, type Kept } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -146,12 +146,12 @@ export interface AroundBinding {
 
 const aroundFacts: number[] = [];
 
-/** Its dearest read grows with the board as n. */
+/** Its dearest read grows with the board as 1. */
 export function around(b: Marks, sp: GridSpace, fire: Fire<AroundBinding> | null): number {
   const facts = aroundFacts;
   let fired = 0;
   let changed = false;
-  const _a3 = sp.cells;
+  const _a3 = cellsValued(b, sp.cells, 1);
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_c = _a3[_i4];
     if (!(((b.grid[v_c] || -1) === 1))) continue;

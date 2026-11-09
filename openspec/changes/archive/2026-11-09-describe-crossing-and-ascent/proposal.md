@@ -1,12 +1,10 @@
 # describe-crossing-and-ascent
 
-**Status: filed by `describe-subsets-crossing-and-ascent` (2026-11-09)**,
-which took Subsets alone. It is the rest of step 11 of
-`describe-the-whole-catalog`'s plan (`design.md` § "The plan"), the last.
-It splits again at its start if the session finds it too large, filing the
-rest as it goes. When the last of it is archived,
-`describe-the-whole-catalog`'s task 4 (the engine's old layer, and the
-guard) is next.
+**Status: done (2026-11-09), for Crossing alone.** Filed by
+`describe-subsets-crossing-and-ascent`, which took Subsets alone, it split
+again at its start: Ascent's constructs (numbers past 31 bits, hexagonal
+tilings, the path's reach) are a change of their own, filed as
+`describe-ascent`.
 
 ## Why
 
@@ -44,6 +42,37 @@ completion and the hint walks are compared with HEAD, and each difference is
 reported, with which saves or links no longer load. Large boards are timed
 back to back with HEAD. The guides and help are updated and the running app
 is checked.
+
+## What was done
+
+- **A board clue's field may be a list** (`list: true`): Crossing's listed
+  numbers are one `numbers` clue at the board, each a list of digits, read
+  whole, by `|f(k)|` and by `nth(f(k), i)`. The checker deals each a length
+  up to the longest line, members in range. A run is a `stretch` of the
+  open squares; the matching is a rule (each run reads exactly one number,
+  numbers distinct), so no new sort was needed.
+- **The ladder is seven techniques at one tier**: `onlyNumber`, `onlyRun`,
+  `sharedDigit`, `crossRuns`, `narrow`, and the checks `misread` and
+  `twice`. All are sound, and each plant comes out unsound. Upstream's
+  "square down to one digit" is not a technique: `sharedDigit` always
+  covers it, and `onlyNumber` turns an emptied square into a contradiction.
+- **`hint-solver.ts` is retired**; the plan reads the compiled firings.
+  Where no placement shows, `narrow` runs ahead on a copy until one does,
+  and only the strikes that placement rests on are written, traced fact by
+  fact. On 70 Easy boards, 10 a preset, both solve all 70; the plan takes
+  2,097 steps against HEAD's 2,110, 83 of them notes against 103.
+- **Deals, tiers and completion are HEAD's**: `crossing-differential`
+  matches the generator's boards, and `deal-compare` found no board or
+  verdict that differs. No save or link stops loading.
+- **Timed with HEAD on the same boards**, 6 deals a preset: deals take 2.2
+  times HEAD's on the whole; 15×15 1.2 times (440 ms against 366), 9×11
+  Unreasonable 3.8 times (515 ms against 137, at most 2.1 s). Two compiler
+  changes got it there from 15 times: the answer check reads a definition
+  kept for the board rather than inlining it, and a binder pinned by
+  `value(x) = t` reads an index of the placed values. Both reach other
+  games; `deal-compare` over the 17 whose modules changed, and the 7 that
+  run the Latin library's `fish` through it, found no difference in a board
+  or verdict, and times within HEAD's own spread (0.89 to 1.13 times).
 
 ## What Subsets learned that binds here
 
