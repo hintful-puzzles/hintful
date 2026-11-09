@@ -58,7 +58,10 @@ type Sort =
   | { k: "subsets"; of: Sort }
   | { k: "clues"; kind: string }
   /** A filling's values, read `f(x)`: an array by cell, `-1` off its set. */
-  | { k: "fill" };
+  | { k: "fill" }
+  /** A list of numbers in order, repeats kept: a list clue, or the lengths
+   * `run_lengths(L, S)` gives. `null` where a clue kind has none at an element. */
+  | { k: "list" };
 
 const NUM: Sort = { k: "num" };
 const INT: Sort = { k: "int" };
@@ -175,6 +178,7 @@ function tsType(s: Sort): string {
   if (s.k === "bool") return "boolean";
   if (s.k === "int") return "number | bigint";
   if (isArray(s)) return "readonly number[]";
+  if (s.k === "list") return "Int32Array | null";
   return "number";
 }
 
@@ -339,6 +343,8 @@ interface ClueKind {
   v: Sort;
   /** A clue at its element for each value, dealt at `perPlace(x, d)`. */
   per: boolean;
+  /** A clue that is a list of its values, dealt as `ListClues`. */
+  list: boolean;
   /** A clue at the board's fields, by name: the element sort a field is one
    * of where it is one an element, and its values' sort. */
   fields: ReadonlyMap<string, { at: ElemSort | null; v: Sort }> | null;
@@ -544,6 +550,7 @@ const GEOMETRY = new Set([
   "step",
   "chain",
   "stretch",
+  "run_lengths",
   "connected",
   "cuts",
   "cut_edges",
@@ -711,6 +718,7 @@ const EARLY = new Set([
   "per",
   "v",
   "stretch",
+  "run_lengths",
   "connected",
   "cuts",
   "cut_edges",
@@ -1169,6 +1177,11 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
       if (isArray(a.sort)) {
         env.used.add("sameSet");
         const eq = `sameSet(${a.code}, ${b.code})`;
+        return { code: op === "=" ? eq : `!${eq}`, sort: BOOL };
+      }
+      if (a.sort.k === "list") {
+        env.used.add("sameList");
+        const eq = `sameList(${a.code}, ${b.code})`;
         return { code: op === "=" ? eq : `!${eq}`, sort: BOOL };
       }
       return {
@@ -2235,25 +2248,40 @@ function projection(
   const x0 = Out.fresh("_e");
   out.emit(`for (const ${x0} of ${last}) ${pj}[${x0}] = 0;`);
   out.emit(`${any} = false;`);
-  const where =
-    rest.length === 0
-      ? null
-      : rest.reduce((a, b): Expr => ({ k: "bin", op: "and", a, b }));
-  const fl = fillLoop({ ...bnd, where }, scope, env, out);
-  h.loops++;
-  const inner = new Map(scope);
-  inner.set(f, { code: fl.code, sort: { k: "fill" }, at: out.slot(h.loops) });
-  for (const cond of [fl.rest, e.body]) {
-    if (cond === null) continue;
-    const v = compileExpr(cond, inner, env, out);
-    expect(v, "bool", "exists fill");
-    out.emit(`if (!(${v.code})) continue;`);
+  const pattern = onlyRunPattern(bnd, [...rest, e.body], scope, env);
+  if (pattern !== null) {
+    // Every filling at once, by the line's dynamic program.
+    const S = once(compileExpr(bnd.of, scope, env, out), out);
+    const o = Out.fresh("_o");
+    const fits = fitsCall(bnd, S, pattern, o, scope, env, out);
+    out.open(`if (${fits}) {`);
+    out.emit(`${last} = ${S.code};`);
+    out.emit(`${any} = true;`);
+    out.emit(
+      `for (let ${x0} = 0; ${x0} < ${S.code}.length; ${x0}++) ${pj}[${S.code}[${x0}]] = ${o}[${x0}];`,
+    );
+    out.close();
+  } else {
+    const where =
+      rest.length === 0
+        ? null
+        : rest.reduce((a, b): Expr => ({ k: "bin", op: "and", a, b }));
+    const fl = fillLoop({ ...bnd, where }, scope, env, out);
+    h.loops++;
+    const inner = new Map(scope);
+    inner.set(f, { code: fl.code, sort: { k: "fill" }, at: out.slot(h.loops) });
+    for (const cond of [fl.rest, e.body]) {
+      if (cond === null) continue;
+      const v = compileExpr(cond, inner, env, out);
+      expect(v, "bool", "exists fill");
+      out.emit(`if (!(${v.code})) continue;`);
+    }
+    out.emit(`${last} = ${fl.arr};`);
+    out.emit(`${any} = true;`);
+    out.emit(`for (const ${x0} of ${fl.arr}) ${pj}[${x0}] |= 1 << ${fl.code}[${x0}];`);
+    h.loops--;
+    out.close();
   }
-  out.emit(`${last} = ${fl.arr};`);
-  out.emit(`${any} = true;`);
-  out.emit(`for (const ${x0} of ${fl.arr}) ${pj}[${x0}] |= 1 << ${fl.code}[${x0}];`);
-  h.loops--;
-  out.close();
   out.close();
   const x = once(compileExpr(pin.x, scope, env, out), out);
   expectElem(x, env.answerSort, f);
@@ -2266,6 +2294,161 @@ function projection(
     code: `((((${pj}[${x.code}] >> ${t.code}) & 1) !== 0) || ((${t.code} as number) === -1 && ${any} && !${s.code}.includes(${x.code})))`,
     sort: BOOL,
   };
+}
+
+/** `run_lengths(L, {x in cells(L) where f(x) = v}) = R`, either way round, where
+ * the filling `f` is of `cells(L)` itself and neither `v` nor `R` reads it:
+ * the line, the run value and the lengths. */
+function runPatternOf(
+  c: Expr,
+  f: string,
+  set: string,
+  scope: Scope,
+  env: Env,
+): { L: Expr; v: Expr; R: Expr } | null {
+  if (c.k !== "bin" || c.op !== "=") return null;
+  for (const [r, R] of [
+    [c.a, c.b],
+    [c.b, c.a],
+  ]) {
+    if (r.k !== "call" || r.fn !== "run_lengths" || r.args.length !== 2 || reads(R, f))
+      continue;
+    const [L, T] = r.args;
+    if (reads(L, f) || T.k !== "agg" || T.fn !== "set" || T.where !== null) continue;
+    const [b] = T.binders;
+    if (T.binders.length !== 1 || b.kind !== "in" || b.where === null) continue;
+    if (T.term?.k !== "name" || T.term.name !== b.name) continue;
+    const cellsOfL: Expr = { k: "call", fn: "cells", args: [L] };
+    if (JSON.stringify(b.of) !== JSON.stringify(cellsOfL)) continue;
+    const pin = pinOf(b.where, f);
+    if (pin === null || pin.x.k !== "name" || pin.x.name !== b.name) continue;
+    const probe: Env = { ...env, used: new Set(), scratch: null, hoist: null };
+    if (setKey(compileExpr(cellsOfL, scope, probe, new Out(0))) !== set) continue;
+    return { L, v: pin.t, R };
+  }
+  return null;
+}
+
+/** The run pattern a filling's conditions `conds` are, read through the
+ * definitions they call, where they are that and nothing else (a `true`
+ * aside), and the filling is of a line's squares from `cand` or from the
+ * domain; else `null`. */
+function onlyRunPattern(
+  bnd: Binder,
+  conds: readonly Expr[],
+  scope: Scope,
+  env: Env,
+): { L: Expr; v: Expr; R: Expr } | null {
+  if (bnd.kind !== "fill" || (bnd.from !== undefined && bnd.from !== "cand"))
+    return null;
+  const cs = conds
+    .flatMap((c) => fillConjuncts(c, scope, env))
+    .filter((c) => !(c.k === "name" && c.name === "true"));
+  if (cs.length !== 1) return null;
+  const probe: Env = { ...env, used: new Set(), scratch: null, hoist: null };
+  const s = compileExpr(bnd.of, scope, probe, new Out(0));
+  return runPatternOf(cs[0], bnd.name, setKey(s), scope, env);
+}
+
+/**
+ * The runtime's `runFits` over the filling `bnd` of the line `S`, with its
+ * squares' masks read from `cand` or the domain: TypeScript that is whether
+ * any filling fits `pattern`, and that writes each square's values over the
+ * fillings into `o`, by the square's place on the line, where `o` is given.
+ */
+function fitsCall(
+  bnd: Binder,
+  S: Val,
+  pattern: { L: Expr; v: Expr; R: Expr },
+  o: string | null,
+  scope: Scope,
+  env: Env,
+  out: Out,
+): string {
+  const v = compileExpr(pattern.v, scope, env, out);
+  expect(v, "num", "run_lengths");
+  const R = compileExpr(pattern.R, scope, env, out);
+  if (R.sort.k !== "list")
+    throw new CompileError(`run_lengths(L, S) = ${show(R.sort)}`);
+  const m = Out.fresh("_m");
+  const i = Out.fresh("_i");
+  const x = Out.fresh("_e");
+  const decls = [
+    `const ${m} = new Int32Array(${answerCount(env)});`,
+    ...(o === null ? [] : [`const ${o} = new Int32Array(${answerCount(env)});`]),
+  ];
+  if (env.scratch !== null) env.scratch.push(...decls);
+  else for (const d of decls) out.emit(d);
+  const mask =
+    bnd.from === undefined
+      ? "b.domain"
+      : supposedRead(
+          x,
+          env,
+          (sup) => `(1 << ${sup.value})`,
+          env.memo ? candOf(x, env) : marksRead("cand", x),
+        );
+  out.open(`for (let ${i} = 0; ${i} < ${S.code}.length; ${i}++) {`);
+  out.emit(`const ${x} = ${S.code}[${i}];`);
+  out.emit(`${m}[${i}] = ${mask};`);
+  out.close();
+  env.used.add("runFits");
+  const fits = Out.fresh("_y");
+  out.emit(
+    `const ${fits} = runFits(${m}, ${S.code}.length, ${v.code}, ${R.code}, ${o ?? "null"});`,
+  );
+  return fits;
+}
+
+/**
+ * `exists fill f of cells(L) [from cand] where ...: ...` whose conditions,
+ * its `where` and its body alike, are one run pattern (`runPatternOf`) and
+ * any number of pins `f(x) = t`: decided by the runtime's `runFits`, a
+ * dynamic program over the line, where listing the fillings would take time
+ * exponential in the line's length. `null` for any other shape.
+ */
+function runFill(
+  e: Extract<Expr, { k: "quant" }>,
+  scope: Scope,
+  env: Env,
+  out: Out,
+): Val | null {
+  const [bnd, ...more] = e.binders;
+  if (e.q !== "exists" || more.length > 0 || bnd.kind !== "fill") return null;
+  const f = bnd.name;
+  const conds = [
+    ...(bnd.where === null ? [] : fillConjuncts(bnd.where, scope, env)),
+    e.body,
+  ];
+  const pinned = conds.flatMap((c) => {
+    const pin = pinOf(c, f);
+    return pin === null ? [] : [pin];
+  });
+  const pattern = onlyRunPattern(
+    bnd,
+    conds.filter((c) => pinOf(c, f) === null),
+    scope,
+    env,
+  );
+  if (pattern === null) return null;
+  const S = once(compileExpr(bnd.of, scope, env, out), out);
+  const o = Out.fresh("_o");
+  const tests = [
+    fitsCall(bnd, S, pattern, pinned.length > 0 ? o : null, scope, env, out),
+  ];
+  for (const pin of pinned) {
+    const px = once(compileExpr(pin.x, scope, env, out), out);
+    expectElem(px, env.answerSort, f);
+    const t = once(compileExpr(pin.t, scope, env, out), out);
+    expect(t, "num", f);
+    const at = Out.fresh("_p");
+    out.emit(`const ${at} = ${S.code}.indexOf(${px.code});`);
+    // Off the line f(x) is -1, which only a t of -1 equals.
+    tests.push(
+      `(${at} < 0 ? (${t.code} as number) === -1 : ((${o}[${at}] >> ${t.code}) & 1) !== 0)`,
+    );
+  }
+  return { code: `(${tests.join(" && ")})`, sort: BOOL };
 }
 
 /** How a name in a term summed over a group reaches the marks: the group's
@@ -2700,6 +2883,8 @@ function quantifier(
   if (masked !== null) return masked;
   const projected = projection(e, scope, env, out);
   if (projected !== null) return projected;
+  const fitted = runFill(e, scope, env, out);
+  if (fitted !== null) return fitted;
   const r = Out.fresh("_q");
   const label = Out.fresh("Q");
   out.emit(`let ${r} = ${forall};`);
@@ -3511,6 +3696,36 @@ function ownForm(
   return null;
 }
 
+/** `clue(kind, x)`, or `clue(kind, x, d)` of a clue per value: the clue of
+ * that kind at `x`. */
+function clueCall(args: readonly Expr[], scope: Scope, env: Env, out: Out): Val {
+  const a = args[0];
+  if (a.k !== "name" || !env.clues.has(a.name))
+    throw new CompileError("clue(kind, x) names a clue kind of the description");
+  const kind = env.clues.get(a.name) as ClueKind;
+  if (kind.fields)
+    throw new CompileError(`clue(${a.name}, x): a clue at the board sits at nothing`);
+  if (args.length !== (kind.per ? 3 : 2))
+    throw new CompileError(
+      kind.per ? `clue(${a.name}, x, d): one a value` : `clue(${a.name}, x)`,
+    );
+  const x = compileExpr(args[1], scope, env, out);
+  if (!sameSort(x.sort, kind.at))
+    throw new CompileError(`clue(${a.name}, ${show(x.sort)})`);
+  env.readsClues.yes = true;
+  if (kind.list) {
+    env.used.add("listAt");
+    return { code: `listAt(cl.${a.name}, ${x.code})`, sort: kind.v };
+  }
+  env.used.add("clueAt");
+  if (!kind.per) return { code: `clueAt(cl.${a.name}, ${x.code})`, sort: kind.v };
+  const d = compileExpr(args[2], scope, env, out);
+  expect(d, "num", "clue");
+  env.used.add("perPlace");
+  const place = `(${x.code} < 0 ? -1 : perPlace(${x.code}, ${d.code}))`;
+  return { code: `clueAt(cl.${a.name}, ${place})`, sort: kind.v };
+}
+
 function call(
   fn: string,
   args: readonly Expr[],
@@ -3554,29 +3769,7 @@ function call(
     throw new CompileError(`${fn}: only a tiling has angles`);
   if (env.position !== null && (fn === "value" || fn === "known" || fn === "cand"))
     throw new CompileError(`${fn}: a position is read by its layers`);
-  if (fn === "clue") {
-    const a = args[0];
-    if (a.k !== "name" || !env.clues.has(a.name))
-      throw new CompileError("clue(kind, x) names a clue kind of the description");
-    const kind = env.clues.get(a.name) as ClueKind;
-    if (kind.fields)
-      throw new CompileError(`clue(${a.name}, x): a clue at the board sits at nothing`);
-    if (args.length !== (kind.per ? 3 : 2))
-      throw new CompileError(
-        kind.per ? `clue(${a.name}, x, d): one a value` : `clue(${a.name}, x)`,
-      );
-    const x = compileExpr(args[1], scope, env, out);
-    if (!sameSort(x.sort, kind.at))
-      throw new CompileError(`clue(${a.name}, ${show(x.sort)})`);
-    env.readsClues.yes = true;
-    env.used.add("clueAt");
-    if (!kind.per) return { code: `clueAt(cl.${a.name}, ${x.code})`, sort: kind.v };
-    const d = compileExpr(args[2], scope, env, out);
-    expect(d, "num", "clue");
-    env.used.add("perPlace");
-    const place = `(${x.code} < 0 ? -1 : perPlace(${x.code}, ${d.code}))`;
-    return { code: `clueAt(cl.${a.name}, ${place})`, sort: kind.v };
-  }
+  if (fn === "clue") return clueCall(args, scope, env, out);
   const field = fieldOf(fn, env);
   if (field !== null) {
     // A clue at the board's field, read of the clue, and of an element
@@ -3773,6 +3966,19 @@ function call(
       return {
         code: `stretch(sp.lineCells[${vs[0].code}], ${cell(1)}, ${S.code})`,
         sort: setOf(elem("cell")),
+      };
+    }
+    case "run_lengths": {
+      // The lengths of the maximal runs of S along L, in L's order.
+      arity(2);
+      expectElem(vs[0], "line", fn);
+      const S = vs[1];
+      if (!isSetOf(S.sort, "cell"))
+        throw new CompileError(`run_lengths(L, ${show(S.sort)}): S is a set of cells`);
+      env.used.add("runsOf");
+      return {
+        code: `runsOf(sp.lineCells[${vs[0].code}], ${S.code})`,
+        sort: { k: "list" },
       };
     }
     case "connected":
@@ -4254,6 +4460,7 @@ function keptDefinition(
 /** The functions whose runtime walks a line or the board. */
 const WALKS = new Set([
   "stretch",
+  "run_lengths",
   "ray",
   "sight",
   "through",
@@ -4769,7 +4976,7 @@ function places(e: Expr, env: Env): boolean {
  * then read another way (`linkedAggregate`) is never written. */
 function runtimeImport(
   used: ReadonlySet<string>,
-  clues: boolean,
+  clueTypes: readonly string[],
   regions: boolean,
   runtime: string,
   body: string,
@@ -4777,7 +4984,7 @@ function runtimeImport(
   const named = (n: string): boolean =>
     n.startsWith("type ") || new RegExp(`\\b${n}\\b`).test(body);
   const names = [
-    ...(clues ? ["type ClueList"] : []),
+    ...clueTypes.map((t) => `type ${t}`),
     "type Fire",
     "type GridSpace",
     "type Marks",
@@ -4840,7 +5047,7 @@ export function compileLibrary(
     return out.code;
   });
   const body = parts.join("\n\n");
-  return `${[HEADER(source), "", runtimeImport(used, false, false, runtime, body), "", body].join("\n")}\n`;
+  return `${[HEADER(source), "", runtimeImport(used, [], false, runtime, body), "", body].join("\n")}\n`;
 }
 
 /** The element sort a clue, or a clue at the board's field, sits at. */
@@ -4902,15 +5109,13 @@ function clueSorts(kind: string, c: DescribedClueKind, env: Env): ClueKind {
         throw new CompileError(`clue ${kind} ${name}: its values are not numbers`);
       fields.set(name, { at, v });
     }
-    return { at: { k: "none" }, v: { k: "none" }, per: false, fields };
+    return { at: { k: "none" }, v: { k: "none" }, per: false, list: false, fields };
   }
   const at = elem(placeSort(`clue ${kind}`, c.at, env));
-  return {
-    at,
-    v: valuesSort(`clue ${kind}`, c.value, at, env),
-    per: c.per,
-    fields: null,
-  };
+  const v = valuesSort(`clue ${kind}`, c.value, at, env);
+  if (c.list && v.k !== "num")
+    throw new CompileError(`clue ${kind}: a list holds numbers`);
+  return { at, v: c.list ? { k: "list" } : v, per: c.per, list: c.list, fields: null };
 }
 
 /**
@@ -5035,7 +5240,8 @@ export function compileGame(
           ...[...regions].map((r) => `  ${r}: Partition;`),
           ...relations.map((r) => `  readonly ${r}: readonly (readonly number[])[];`),
           ...[...clues].map(
-            ([k, c]) => `  ${k}: ${c.fields ? recordsType(c.fields) : "ClueList"};`,
+            ([k, c]) =>
+              `  ${k}: ${c.fields ? recordsType(c.fields) : c.list ? "ListClues" : "ClueList"};`,
           ),
           ...sizes.map((n) => `  ${n}: number;`),
           "}",
@@ -5141,7 +5347,13 @@ export function compileGame(
     "",
     runtimeImport(
       used,
-      [...clues.values()].some((c) => c.fields === null),
+      [
+        ...new Set(
+          [...clues.values()].flatMap((c) =>
+            c.fields !== null ? [] : [c.list ? "ListClues" : "ClueList"],
+          ),
+        ),
+      ].sort(),
       regions.size > 0,
       runtime,
       body,
@@ -5249,7 +5461,8 @@ function answerCheck(json: DescriptionJson, d: Description, env: Env): string[] 
       out.emit(`const ${at} = cl.${kind}.at[${k}];`);
       // A clue whose place is the whole of what it says (a block) has a value
       // its meaning never reads.
-      if (reads(c.means, "v")) out.emit(`const ${v} = cl.${kind}.v[${k}];`);
+      if (reads(c.means, "v"))
+        out.emit(`const ${v} = cl.${kind}.${sorts.list ? "lists" : "v"}[${k}];`);
     }
     const means = compileExpr(
       measured(c.means),

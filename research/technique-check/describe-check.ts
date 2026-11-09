@@ -52,6 +52,7 @@ import {
   rectRim,
   rectsOf,
   rectWidth,
+  runsOf,
   type SightAt,
   sightAhead,
   sightEntry,
@@ -80,7 +81,10 @@ type V =
   | { k: "subsets"; of: V }
   | { k: "clues"; kind: string }
   /** One assignment of a filling, its values by cell. */
-  | { k: "fill"; vals: ReadonlyMap<number, Nx> };
+  | { k: "fill"; vals: ReadonlyMap<number, Nx> }
+  /** A list of numbers: its length, and its members as far as the longest it
+   * can be, each read only below the length. */
+  | { k: "list"; len: Nx; items: readonly Nx[] };
 
 // --- truths and numbers that simplify their constants -----------------------
 
@@ -789,6 +793,30 @@ function join(parts: readonly (readonly [Bx, V])[]): V {
         if (x.k === "eset")
           for (const [id, h] of x.mem) out.set(id, or(out.get(id) ?? false, and(g, h)));
       return { k: "eset", sort: first.sort, mem: [...out] };
+    }
+    case "list": {
+      // No clue (a number -1) is a list of length -1, equal to no list dealt.
+      const lists = parts.map(([g, x]) => {
+        if (x.k === "num" && x.v === -1)
+          return [
+            g,
+            { k: "list", len: -1, items: [] } as Extract<V, { k: "list" }>,
+          ] as const;
+        if (x.k !== "list") throw new Error(`cannot join a list with ${x.k}`);
+        return [g, x] as const;
+      });
+      const longest = Math.max(...lists.map(([, x]) => x.items.length));
+      const pick = (at: (x: Extract<V, { k: "list" }>) => Nx): Nx => {
+        let acc = at(lists[lists.length - 1][1]);
+        for (let i = lists.length - 2; i >= 0; i--)
+          acc = ite(lists[i][0], at(lists[i][1]), acc);
+        return acc;
+      };
+      return {
+        k: "list",
+        len: pick((x) => x.len),
+        items: Array.from({ length: longest }, (_, i) => pick((x) => x.items[i] ?? 0)),
+      };
     }
     default:
       throw new Error(`cannot join ${first.k}`);
@@ -1515,6 +1543,15 @@ function equal(a: V, b: V): Bx {
     const ids = new Set([...a.mem.map(([id]) => id), ...b.mem.map(([id]) => id)]);
     return and(...[...ids].map((id) => iff(inEset(id, a), inEset(id, b))));
   }
+  if (a.k === "list" && b.k === "list") {
+    const longest = Math.max(a.items.length, b.items.length);
+    return and(
+      cmp("=", a.len, b.len),
+      ...Array.from({ length: longest }, (_, i) =>
+        implies(cmp(">", a.len, i), cmp("=", a.items[i] ?? 0, b.items[i] ?? 0)),
+      ),
+    );
+  }
   throw new TypeError(`= of ${a.k} and ${b.k}`);
 }
 
@@ -1992,6 +2029,32 @@ function tilingCall(fn: string, vs: readonly V[], ctx: Ctx): V | null {
   return null;
 }
 
+/** `run_lengths(L, S)`: each way the line's squares can be in `S` or not,
+ * under its guard, and the lengths that way makes; a line of a small board
+ * has few. */
+function runLengths(line: V, set: V, sp: GridSpace): V {
+  const S =
+    set.k === "vset" && set.mem.every((g) => g === false) ? allOf("cell", []) : set;
+  if (S.k !== "eset") throw new TypeError("run_lengths: not a set");
+  return lift(line, "run_lengths", (L) => {
+    const cells = L < 0 ? [] : sp.lineCells[L];
+    const held = cells.map((c) => inEset(c, S));
+    const ways: (readonly [Bx, V])[] = [];
+    for (let p = 0; p < 1 << cells.length; p++) {
+      const g = and(...held.map((h, i) => ((p >> i) & 1 ? h : not(h))));
+      if (g === false) continue;
+      const lengths = [
+        ...runsOf(
+          cells,
+          cells.filter((_, i) => (p >> i) & 1),
+        ),
+      ];
+      ways.push([g, { k: "list", len: lengths.length, items: lengths }]);
+    }
+    return join(ways);
+  });
+}
+
 function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
   const { board } = ctx;
   const { sp } = board;
@@ -2350,6 +2413,8 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
         }),
       );
     }
+    case "run_lengths":
+      return runLengths(vs[0], vs[1], sp);
     case "connected":
     case "cuts": {
       const S =
@@ -2681,6 +2746,31 @@ function dealSymbolically(d: Description, board: Board): void {
       );
     const complete = d.json.clues?.[kind]?.complete === true;
     const list: ClueSym[] = [];
+    if (c.list) {
+      // A list at each place: as many members as a line of it could have
+      // runs, each read below the list's length, each within the range.
+      if (c.at !== "line" || c.value.k !== "call" || c.value.fn !== "range")
+        throw new Error(`clue ${kind}: a list is checked at lines, with a range`);
+      for (let e = 0; e < places; e++) {
+        const here = new Map([["at", elem(placeSort(board, c.at), e)]]);
+        const [lo, hi] = c.value.args.map((a) => num(evaluate(a, here, ctx), "range"));
+        const longest = Math.ceil(board.sp.lineCells[e].length / 2);
+        const len = Z3.Int.const(`clue_${kind}_${e}_len_${boardCount}`);
+        const items = Array.from({ length: longest }, (_, i) =>
+          Z3.Int.const(`clue_${kind}_${e}_${i}_${boardCount}`),
+        );
+        board.clueDomain.push(
+          and(cmp(">=", len, 0), cmp("<=", len, longest)),
+          ...items.map((x) => and(cmp(">=", x, lo), cmp("<=", x, hi))),
+        );
+        const present: Bx = complete
+          ? true
+          : Z3.Bool.const(`clue_${kind}_${e}_${boardCount}`);
+        list.push({ at: e, present, v: { k: "list", len, items } });
+      }
+      board.clues.set(kind, list);
+      continue;
+    }
     if (c.per) {
       // One clue at each place for each value the domain may hold, each
       // present or not, its value within its range.

@@ -132,11 +132,12 @@ specifications, and any unrecognized character in either section.
 
 ### Requirement: Generation: An Easy Pattern board is one the per-line solver solves
 
-The per-line solver is the row and column fixpoint that narrows each line
-against its run-length clue until no further cell is forced. At Easy the
-generator SHALL produce a random grid and accept it only when that solver,
-from the grid's derived clues alone, completes it to one fully determined
-grid.
+The per-line solver SHALL be the ladder `pattern.description.yaml` states: its
+one technique, `line`, settles each stretch of a row's or column's undecided
+cells that every way the line's runs can fit around its marks agrees on, and
+it runs to a fixpoint. At Easy the generator SHALL produce a random grid and
+accept it only when that solver, from the grid's derived clues alone,
+completes it to one fully determined grid.
 
 #### Scenario: Generated boards are uniquely line-solvable
 
@@ -311,40 +312,42 @@ one arrangement fits".
 
 ### Requirement: Hint: A Pattern run's overlap is shaded, and a cell no run reaches is clear
 
-With each run packed as far to one end of its line as the line's marks
-allow, and then to the other, the cells a run covers both ways SHALL be
-shaded, and a cell no run covers anywhere between its two placings SHALL be
-clear. Every cell of a line with no clues SHALL be clear. A step SHALL take
-one unbroken stretch of undecided cells: of one run's overlap, or of the
-cells out of reach.
+A step SHALL take one unbroken stretch of undecided cells of one line that
+every fit of the line's runs around its marks agrees on, all shaded or all
+clear. With each run packed as far to one end of its line as the line's marks
+allow, and then to the other, a stretch every cell of which one run covers
+both ways SHALL be narrated as that run's overlap, and a stretch no run covers
+anywhere between its two placings as out of reach. Every cell of a line with
+no clues SHALL be clear.
 
 #### Scenario: A run with no room to slide
 
 - **WHEN** the hint's plan on the 10×10 board
   `8/6.1/4.1.1.1/4.1/4.3/2/2/2.2/2.1.2/1.2/3.2/3.2/5/5/2.2/5/1.2/3.1/6/8`
-  reaches its third column, whose runs 4, 1, 1 and 1 fill the column with
-  one gap between each
-- **THEN** four steps shade the runs, each saying its run "has nowhere to
-  slide", and three more clear the gaps, each saying "No run of this column's
-  outlined clue can reach the ringed cell, so that cell must be clear."
+  is read
+- **THEN** its seventh step shades the top four cells of the third column,
+  saying "This column's run of 4 has nowhere to slide, so these cells must be
+  purple."
+- **AND** its nineteenth clears the top three cells of the sixth column,
+  saying "No run of this column's outlined clue can reach the ringed cells,
+  so those cells must be clear."
 
-### Requirement: Hint: Pattern's hint takes the first line a named technique decides
+### Requirement: Hint: Pattern's hint continues from its last step
 
-Each step SHALL come from the first line, the columns from the left and then
-the rows from the top, on which a named technique decides a cell: on a line
-with no clues, its cells; otherwise the first run whose overlap has an
-undecided cell; otherwise the first cells out of reach. Only where no line
-has one SHALL the step be the first cells every fit agrees on, of the first
-line that has any. The plan SHALL look again from the first column after
-every step.
+`hint` SHALL take, of every stretch the ladder could settle, the one that
+continues from the cells the latest steps decided, and otherwise the first in
+the ladder's order: the rows from the top, then the columns from the left,
+and on a line its shaded stretches before its clear ones.
 
-#### Scenario: The columns come before the rows
+#### Scenario: The plan follows the cells it decides
 
 - **WHEN** the hint's plan is read on the 10×10 board
   `8/6.1/4.1.1.1/4.1/4.3/2/2/2.2/2.1.2/1.2/3.2/3.2/5/5/2.2/5/1.2/3.1/6/8`
-- **THEN** its first step is the first column's, "This column's run of 8 can
-  slide only 2 cells, so these cells must be purple.", its second the second
-  column's run of 6, and its next seven the third column's
+- **THEN** its first step is the ninth row's, "This row's run of 6 can slide
+  only 4 cells, so these cells must be purple.", the first row any run's
+  overlap reaches
+- **AND** its second is the fifth column's, which holds one of the cells the
+  first step shaded
 
 ### Requirement: Look: Pattern doubles every fifth grid line, and its frame is one line thick
 

@@ -1218,6 +1218,13 @@ const PLANTS: Record<string, Plant> = {
     conclude:
       "|P| <= n and |O| >= n and (|P| < n - 1 or (forall c in O - P: strike(c, d)))",
   },
+  // A square no fitting of its line can make d read as one every fitting does.
+  "pattern.line": {
+    for: `L in lines, R = clue(runs, L), d in domain,
+      O = {x in cells(L) where not known(x)
+      and not (exists fill f of cells(L) from cand where f(x) = d: fits(f, L, R))},
+      c in O where index(c, stretch(L, c, O)) = 0`,
+  },
   // A line read as needing one tent more than its count.
   "tents.lineNeighbors": {
     for: "L in lines, k = need(L) + 1, O = open(L) where |O| > 0 and k > 0, N = set(z over y in O, z in adj8(y) where blank(z) and z not in cells(L)) where |N| > 0, U = set(z over fill f of O from cand where spread(f, O, k), z in N where (forall y in O where y in adj8(z): f(y) = 2)) where (exists z in N: z not in U)",

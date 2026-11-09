@@ -19,7 +19,13 @@ import {
 } from "../../engine/testing/absent-tiers.ts";
 import { dealRare } from "../../engine/testing/dealt.ts";
 import { patternGame } from "./index.ts";
-import { findMistakes, linesDecide, searchAnswers, solveState } from "./solver.ts";
+import {
+  findMistakes,
+  linesDecide,
+  searchAnswers,
+  solveState,
+  status,
+} from "./solver.ts";
 import {
   computeRuns,
   encodeClues,
@@ -30,7 +36,6 @@ import {
   newState,
   type PatternParams,
   type PatternState,
-  status,
 } from "./state.ts";
 
 /** The runs of shaded squares along `cells`, in order. */

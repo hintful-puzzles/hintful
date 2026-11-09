@@ -43,7 +43,7 @@ import {
   COL_FULL,
   fromCoord,
 } from "./render.ts";
-import { findMistakes, solveState } from "./solver.ts";
+import { findMistakes, isComplete, solveState, status } from "./solver.ts";
 import {
   computeRuns,
   decodeParams,
@@ -54,12 +54,10 @@ import {
   GRID_FULL,
   GRID_UNKNOWN,
   type GridVal,
-  isComplete,
   newState,
   type PatternMove,
   type PatternParams,
   type PatternState,
-  status,
 } from "./state.ts";
 
 const easy = (w: number, h: number): PatternParams => ({ w, h, diff: DIFF_EASY });

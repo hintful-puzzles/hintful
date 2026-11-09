@@ -75,6 +75,7 @@ import {
   PATTERN_RUNGS,
   type PatternHintMove,
   type PatternRung,
+  status,
 } from "./solver.ts";
 import {
   clickBlack,
@@ -95,7 +96,6 @@ import {
   type PatternState,
   type PatternUi,
   paramConfig,
-  status,
   textFormat,
   validateParams,
 } from "./state.ts";

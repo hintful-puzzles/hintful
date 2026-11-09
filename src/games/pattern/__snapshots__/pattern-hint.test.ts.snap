@@ -4,8 +4,8 @@ exports[`pattern: pinned hint positions > says, at each pin 1`] = `
 {
   "intersection": "Every way this row's outlined runs can fit covers the ringed cell, so that cell must be purple.",
   "lineEmpty": "This column has no clues, so these cells must be clear.",
-  "overlap": "This column's run of 6 has nowhere to slide, so these cells must be purple.",
-  "severalCells": "This column's run of 6 has nowhere to slide, so these cells must be purple.",
-  "unreachable": "No run of this column's outlined clue can reach the ringed cell, so that cell must be clear.",
+  "overlap": "This row's run of 6 can slide only 1 cell, so these cells must be purple.",
+  "severalCells": "This row's run of 6 can slide only 1 cell, so these cells must be purple.",
+  "unreachable": "No run of this row's outlined clue can reach the ringed cells, so those cells must be clear.",
 }
 `;

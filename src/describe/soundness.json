@@ -166,6 +166,7 @@
   "src/games/path/path.description.yaml#lineBreaks": "03e5b94937ea48f3",
   "src/games/path/path.description.yaml#pairBreaks": "c7e3af7795ad73a7 held",
   "src/games/path/path.description.yaml#weighed": "d43019ebd1443e4d held",
+  "src/games/pattern/pattern.description.yaml#line": "63b157899163ce59",
   "src/games/pearl/pearl.description.yaml#blackCannotRunOn": "74d75e72c7eae210",
   "src/games/pearl/pearl.description.yaml#blackPearl": "1a2afd2d31222e05",
   "src/games/pearl/pearl.description.yaml#blackRunsOn": "3b4107c2f4774e1e",

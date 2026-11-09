@@ -31,7 +31,6 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
-import type { GameStatus } from "../../engine/types.ts";
 
 // --- cell values (upstream #defines) -------------------------------------
 export const GRID_EMPTY = 0;
@@ -299,27 +298,6 @@ export function computeRuns(
   return out;
 }
 
-function arraysEqual(a: readonly number[], b: readonly number[]): boolean {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
-  return true;
-}
-
-/** Has the player's grid reproduced every clue exactly? */
-export function isComplete(state: PatternState): boolean {
-  const { w, h, clues } = state.common;
-  const { grid } = state;
-  for (let i = 0; i < w; i++) {
-    const runs = computeRuns(grid, i, h, w);
-    if (!runs || !arraysEqual(runs, clues[i])) return false;
-  }
-  for (let i = 0; i < h; i++) {
-    const runs = computeRuns(grid, i * w, w, 1);
-    if (!runs || !arraysEqual(runs, clues[w + i])) return false;
-  }
-  return true;
-}
-
 export function executeMove(state: PatternState, move: PatternMove): PatternState {
   const { w, h, immutable } = state.common;
   const s = w * h;
@@ -363,11 +341,7 @@ export function executeMove(state: PatternState, move: PatternMove): PatternStat
   return { ...state, grid };
 }
 
-// --- status / text -------------------------------------------------------
-
-export function status(state: PatternState): GameStatus {
-  return isComplete(state) ? "solved" : "ongoing";
-}
+// --- text ----------------------------------------------------------------
 
 /** A compact ASCII rendering: clue gutters plus the marked grid. */
 export function textFormat(state: PatternState): string {

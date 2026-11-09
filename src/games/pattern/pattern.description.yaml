@@ -45,3 +45,50 @@ help:
     settles another cell on its own, and the hint says that nothing further
     follows by deduction instead of choosing for you. Save your position,
     try a cell, and it carries on from whatever you mark.
+name: Pattern
+family: shading
+sizes:
+  # Unbounded but by the time a board takes to deal.
+  w: { min: 1, max: 99999 }
+  h: { min: 1, max: 99999 }
+space:
+  grid: { w: "w", h: "h" }
+  # A row or column keeps no value to itself: its numbers say how it runs.
+  units: []
+answer:
+  # 1 is shaded, 2 clear.
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  # The other value.
+  flip(d): "3 - d"
+  # The shaded squares of the filling f of line L run as R says.
+  fits(f, L, R): "run_lengths(L, {x in cells(L) where f(x) = 1}) = R"
+clues:
+  # A row's or column's numbers: the lengths of its runs of shaded squares,
+  # in order.
+  runs:
+    at: line
+    list: true
+    value: "range(1, |cells(at)|)"
+    means: "run_lengths(at, {c in cells(at) where value(c) = 1}) = v"
+    complete: true
+freedom: { kind: fill }
+deal:
+  answer: a picture, random noise smoothed and cut at its median, no row or column all one value
+  runs: every line's
+  tier: one of the tiers
+tiers: [Easy, Unreasonable]
+techniques:
+  # A line's squares that every way its runs can fit, round what the line
+  # holds, gives one value: each unbroken stretch of the open ones holds it.
+  # A line its runs cannot fit makes the marks inconsistent.
+  - id: line
+    tier: Easy
+    for: >-
+      L in lines, R = clue(runs, L), d in domain,
+      O = {x in cells(L) where not known(x)
+      and not (exists fill f of cells(L) from cand where f(x) = flip(d): fits(f, L, R))},
+      c in O where index(c, stretch(L, c, O)) = 0
+    conclude: >-
+      (exists fill f of cells(L) from cand where f(c) = d: fits(f, L, R))
+      and (forall x in stretch(L, c, O): place(x, d))

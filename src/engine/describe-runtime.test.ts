@@ -11,6 +11,9 @@ import {
   linkedOf,
   linkedSum,
   type Marks,
+  runFits,
+  runsOf,
+  sameList,
   through,
 } from "./describe-runtime.ts";
 import { CellMarks } from "./ladder-runtime.ts";
@@ -272,4 +275,61 @@ it("cut_edges reads its definition on every shape of set", () => {
   // show.
   expect(cut).toBeGreaterThan(1000);
   expect(kept).toBeGreaterThan(1000);
+});
+
+it("runFits answers as listing every filling would, and its projection too", () => {
+  // From scratch: every filling of the squares from their masks, the runs of
+  // value 1 in each, and the values each square takes in those that fit.
+  const rs = randomNew("run-fits");
+  let fitting = 0;
+  let failing = 0;
+  for (let n = 0; n <= 8; n++)
+    for (let k = 0; k < 300; k++) {
+      // Mostly both values open, sometimes one, now and then none.
+      const masks = Int32Array.from(
+        { length: n },
+        () => [6, 6, 6, 2, 4, 0][randomUpto(rs, randomUpto(rs, 8) === 0 ? 6 : 5)],
+      );
+      const line = Array.from({ length: n }, (_, i) => i);
+      const R = runsOf(
+        line,
+        line.filter(() => randomUpto(rs, 2) === 0),
+      );
+      const want = new Int32Array(n);
+      let fits = false;
+      for (let p = 0; p < 1 << n; p++) {
+        const vals = line.map((i) => ((p >> i) & 1 ? 1 : 2));
+        if (vals.some((d, i) => (masks[i] & (1 << d)) === 0)) continue;
+        if (
+          !sameList(
+            runsOf(
+              line,
+              line.filter((i) => vals[i] === 1),
+            ),
+            R,
+          )
+        )
+          continue;
+        fits = true;
+        vals.forEach((d, i) => {
+          want[i] |= 1 << d;
+        });
+      }
+      const out = new Int32Array(n).fill(-1);
+      expect(runFits(masks, n, 1, R, out)).toBe(fits);
+      expect(out).toEqual(want);
+      // Asked again, from the cache, and with no projection wanted.
+      expect(runFits(masks, n, 1, R, null)).toBe(fits);
+      if (fits) fitting++;
+      else failing++;
+    }
+  // Enough of each that a program answering one way throughout would show.
+  expect(fitting).toBeGreaterThan(500);
+  expect(failing).toBeGreaterThan(500);
+});
+
+it("run_lengths reads a line's runs in order", () => {
+  expect([...runsOf([3, 4, 5, 6, 7, 8], [3, 5, 6, 8])]).toEqual([1, 2, 1]);
+  expect([...runsOf([0, 1, 2], [])]).toEqual([]);
+  expect([...runsOf([0, 1, 2], [0, 1, 2])]).toEqual([3]);
 });

@@ -1,17 +1,23 @@
 /**
- * Pattern line solver, a port of `do_recurse` / `do_row` / `solve_puzzle` in
- * pattern.c. It reasons about one row or column at a time (upstream's
- * documented limitation), so it cannot crack puzzles needing cross-line
- * deductions. An Easy board is one this solver fully cracks, so its deductive
- * power decides which Easy boards exist, and the recursion stays close to the
- * original. Only the scheduling differs, a dirty-worklist fixpoint:
- * line-solving is monotone, so any schedule reaches the same fixpoint and the
- * same solved/stuck verdict.
+ * Pattern's solver: the ladder `pattern.description.yaml` states, compiled,
+ * on the engine's marks and runner (`engine/ladder-runtime.ts`), the answer
+ * check its rules compile to, and the search beneath the ladder.
  *
- * Beneath it, a search by trial and error over the same line deduction
- * (`searchAnswers`) counts a board's answers. It is what an Unreasonable
- * board is dealt by, and what Solve and the mistake check know the answer
- * from at either tier. The hint never runs it.
+ * The ladder is upstream's line solver (`do_row`): a line's squares that
+ * every way its runs can fit, round what the line holds, gives one value.
+ * It reasons about one row or column at a time, so it cannot crack a board
+ * that needs the lines read together; an Easy board is one it finishes, so
+ * its strength decides which Easy boards exist. Reaching a fixpoint, it
+ * decides what upstream's does, in whatever order the lines are read.
+ *
+ * Beneath it, a search by trial and error over the ladder
+ * ({@link searchAnswers}) counts a board's answers. It is what an
+ * Unreasonable board is dealt by, and what Solve and the mistake check know
+ * the answer from at either tier. The hint never runs it.
+ *
+ * The game keeps a square as `GRID_FULL`, `GRID_EMPTY` or `GRID_UNKNOWN`;
+ * the description keeps 1 for shaded and 2 for clear, and 0 where a square
+ * has neither yet.
  */
 import {
   type Answer,
@@ -19,8 +25,26 @@ import {
   type Deduced,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
-import { findingTechniques, singleFirings } from "../../engine/deduction-fixpoint.ts";
+import {
+  describedSpace,
+  type GridSpace,
+  listClues,
+  rangeMask,
+} from "../../engine/describe-runtime.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  ladderWalk,
+  runLadder,
+  type Taken,
+  TIERS,
+} from "../../engine/ladder-runtime.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
+import type { GameStatus } from "../../engine/types.ts";
+import * as pattern from "./pattern.compiled.ts";
 import {
   GRID_EMPTY,
   GRID_FULL,
@@ -31,261 +55,246 @@ import {
   type PatternState,
 } from "./state.ts";
 
-// Solver-internal cell states (distinct from the GRID_* game values).
-const S_UNKNOWN = 0;
-const S_BLOCK = 1;
-const S_DOT = 2;
-const S_STILL_UNKNOWN = 3;
+/** The description's values. */
+const SHADED = 1;
+const CLEAR = 2;
+
+// --- the board as the description reads it --------------------------------
+
+const spaces = new Map<string, GridSpace>();
+
+/** The space of a `w × h` board, built once a shape: its lines are its rows,
+ * top first, then its columns, left first. */
+function spaceOf(w: number, h: number): GridSpace {
+  const key = `${w}x${h}`;
+  let sp = spaces.get(key);
+  if (sp === undefined) {
+    sp = describedSpace(pattern.units, w, h);
+    spaces.set(key, sp);
+  }
+  return sp;
+}
+
+/** The game's index of a line, columns `0..w-1` then rows, from the space's,
+ * rows then columns. */
+const gameLine = (L: number, w: number, h: number): number => (L < h ? w + L : L - h);
+
+/** The board's numbers as the description deals them: every line's list. */
+function dealtOf(
+  w: number,
+  h: number,
+  clues: readonly (readonly number[])[],
+): pattern.Dealt {
+  const at: number[] = [];
+  const lists: (readonly number[])[] = [];
+  for (let L = 0; L < w + h; L++) {
+    at.push(L);
+    lists.push(clues[gameLine(L, w, h)]);
+  }
+  return { runs: listClues(at, lists, w + h) };
+}
+
+/** A square as the description holds it. */
+const described = (v: number): number =>
+  v === GRID_FULL ? SHADED : v === GRID_EMPTY ? CLEAR : 0;
+
+/** Whether the board is solved: every square shaded or clear, by the rules
+ * the description compiles to. */
+export function isComplete(state: PatternState): boolean {
+  const { w, h, clues } = state.common;
+  return pattern.isAnswer(
+    Uint8Array.from(state.grid, described),
+    spaceOf(w, h),
+    dealtOf(w, h, clues),
+  );
+}
+
+export function status(state: PatternState): GameStatus {
+  return isComplete(state) ? "solved" : "ongoing";
+}
+
+// --- the ladder ---------------------------------------------------------------
+
+/** Why a set of cells is forced, driving the hint's narration. The ladder's
+ * one technique, `line`, is told one of four ways, by what the firing's
+ * cells are on its line: a run's overlap, out of every run's reach, a line
+ * with no runs, or none of those, which is every fit agreeing. `line` is the
+ * space's line, which a hint plan continues along. */
+export type PatternHintReason = { line: number } & (
+  | { kind: "overlap"; run: number; slack: number; shaded: number[]; clear: number[] }
+  | { kind: "unreachable" } // clear: no run reaches these cells
+  | { kind: "lineEmpty" } // clear: the line has no clues at all
+  | { kind: "intersection"; black: boolean }
+); // forced in every arrangement of the line's runs
+
+/** The rungs a hint step can be: the reasons' kinds. */
+export const PATTERN_RUNGS = [
+  "overlap",
+  "unreachable",
+  "lineEmpty",
+  "intersection",
+] as const;
+export type PatternRung = (typeof PATTERN_RUNGS)[number];
 
 /**
- * Enumerate every legal placement of the remaining runs (`data` from
- * `ndone` on) into the tail of the line starting at `lowest`, OR-ing the
- * cells common to all legal placements into `deduced`. The `minpos/maxpos`
- * arrays memoize, per run index, the window of start positions already
- * explored (`*_done`) and those leading to a legal completion (`*_ok`), so
- * a tail that has already been fully analyzed short-circuits. Returns
- * whether a legal completion exists from this `(ndone, lowest)`.
+ * Each run's start packed as far towards the line's start as its marks
+ * allow, the least start it has in any fit; `null` where none fits. A run
+ * starts no earlier than the one before it ends, past a gap, nor on or after
+ * a clear square it would cover, nor so late it leaves a shaded square
+ * behind it uncovered.
  */
-function doRecurse(
-  known: Uint8Array,
-  deduced: Uint8Array,
-  row: Uint8Array,
-  minposDone: Int32Array,
-  maxposDone: Int32Array,
-  minposOk: Int32Array,
-  maxposOk: Int32Array,
-  data: readonly number[],
-  len: number,
-  freespace: number,
-  ndone: number,
-  lowest: number,
-): boolean {
-  const run = ndone < data.length ? data[ndone] : 0;
-
-  if (run) {
-    if (lowest >= minposDone[ndone] && lowest <= maxposDone[ndone]) {
-      const ok = lowest >= minposOk[ndone] && lowest <= maxposOk[ndone];
-      if (ok) {
-        for (let i = 0; i < lowest; i++) deduced[i] |= row[i];
-      }
-      return ok;
+function packLeft(runs: readonly number[], held: readonly number[]): number[] | null {
+  const len = held.length;
+  const starts = new Array<number>(runs.length);
+  const rec = (ndone: number, pos: number): boolean => {
+    if (ndone === runs.length) {
+      for (let i = pos; i < len; i++) if (held[i] === SHADED) return false;
+      return true;
     }
-    if (lowest < minposDone[ndone]) minposDone[ndone] = lowest;
-    if (lowest > maxposDone[ndone]) maxposDone[ndone] = lowest;
-
-    for (let i = 0; i <= freespace; i++) {
-      let j = lowest;
-      let bad = false;
-      for (let k = 0; k < i; k++) {
-        if (known[j] === S_BLOCK) {
-          bad = true;
-          break;
-        }
-        row[j++] = S_DOT;
+    const r = runs[ndone];
+    let firstShaded = len;
+    for (let i = pos; i < len; i++)
+      if (held[i] === SHADED) {
+        firstShaded = i;
+        break;
       }
-      if (!bad) {
-        for (let k = 0; k < run; k++) {
-          if (known[j] === S_DOT) {
-            bad = true;
-            break;
-          }
-          row[j++] = S_BLOCK;
-        }
+    for (let start = pos; start <= Math.min(len - r, firstShaded); start++) {
+      let fits = true;
+      for (let k = 0; k < r && fits; k++) if (held[start + k] === CLEAR) fits = false;
+      if (!fits || (start + r < len && held[start + r] === SHADED)) continue;
+      if (rec(ndone + 1, start + r + 1)) {
+        starts[ndone] = start;
+        return true;
       }
-      if (!bad && j < len) {
-        if (known[j] === S_BLOCK) bad = true;
-        else row[j++] = S_DOT;
-      }
-      if (!bad) {
-        if (
-          doRecurse(
-            known,
-            deduced,
-            row,
-            minposDone,
-            maxposDone,
-            minposOk,
-            maxposOk,
-            data,
-            len,
-            freespace - i,
-            ndone + 1,
-            j,
-          )
-        ) {
-          if (lowest < minposOk[ndone]) minposOk[ndone] = lowest;
-          if (lowest + i > maxposOk[ndone]) maxposOk[ndone] = lowest + i;
-          if (lowest + i > maxposDone[ndone]) maxposDone[ndone] = lowest + i;
-        }
-      }
-      // C's `next_iter: j++;` is a no-op — `j` is reset to `lowest` next
-      // iteration — so a bad placement just advances to the next `i`.
     }
-    return lowest >= minposOk[ndone] && lowest <= maxposOk[ndone];
-  }
+    return false;
+  };
+  return rec(0, 0) ? starts : null;
+}
 
-  // Terminator run (the implicit trailing 0): the rest of the line is DOTs.
-  for (let i = lowest; i < len; i++) {
-    if (known[i] === S_BLOCK) return false;
-    row[i] = S_DOT;
-  }
-  for (let i = 0; i < len; i++) deduced[i] |= row[i];
-  return true;
+/** Each run's greatest start in any fit: {@link packLeft} on the line
+ * read backwards. */
+function packRight(runs: readonly number[], held: readonly number[]): number[] | null {
+  const len = held.length;
+  const back = packLeft([...runs].reverse(), [...held].reverse());
+  if (back === null) return null;
+  const k = runs.length;
+  return runs.map((r, j) => len - back[k - 1 - j] - r);
 }
 
 /**
- * Deduce forced cells of one line of `matrix` (start/len/step) against its
- * clue `data`, writing newly-forced `S_BLOCK`/`S_DOT` cells back. Calls
- * `onChange(k)` for each line position `k` it fills. Returns whether it
- * changed anything, or `null` where no placement of the runs fits what the
- * line already holds.
+ * How a firing of `line` is told: the cells `cells` of line `L`, given the
+ * value `d` by every fit of its runs `R` on the marks `m` as the firing
+ * found them. A run covers the same squares in every fit between its
+ * least start and its greatest plus its length, so cells all in that span
+ * are its overlap; a clear cell is out of reach where it is outside every
+ * run's span from its least start to its greatest end.
  */
-function doRow(
-  matrix: Uint8Array,
-  start: number,
-  len: number,
-  step: number,
-  data: readonly number[],
-  onChange: (pos: number) => void,
-): boolean | null {
-  const rowlen = data.length;
-  const known = new Uint8Array(len);
-  const deduced = new Uint8Array(len);
-  const row = new Uint8Array(len);
-  const minposDone = new Int32Array(rowlen);
-  const maxposDone = new Int32Array(rowlen);
-  const minposOk = new Int32Array(rowlen);
-  const maxposOk = new Int32Array(rowlen);
-
-  let freespace = len + 1;
-  for (let r = 0; r < rowlen; r++) {
-    minposDone[r] = minposOk[r] = len - 1;
-    maxposDone[r] = maxposOk[r] = 0;
-    freespace -= data[r] + 1;
+function reasonOf(
+  m: CellMarks,
+  L: number,
+  R: ArrayLike<number>,
+  d: number,
+  cells: readonly number[],
+): PatternHintReason {
+  const line = m.sp.lineCells[L];
+  const runs = Array.from(R);
+  if (runs.length === 0) return { line: L, kind: "lineEmpty" };
+  const held = line.map((c) => m.grid[c]);
+  const at = cells.map((c) => line.indexOf(c));
+  const lo = packLeft(runs, held);
+  const hi = packRight(runs, held);
+  if (lo !== null && hi !== null) {
+    if (d === SHADED) {
+      for (let i = 0; i < runs.length; i++) {
+        const from = hi[i];
+        const to = lo[i] + runs[i];
+        if (!at.every((p) => p >= from && p < to)) continue;
+        // The marks that hold the run between its two packings.
+        const shaded: number[] = [];
+        const clear: number[] = [];
+        for (let p = lo[i]; p < hi[i] + runs[i]; p++)
+          if (held[p] === SHADED) shaded.push(line[p]);
+          else if (held[p] === CLEAR) clear.push(line[p]);
+        return {
+          line: L,
+          kind: "overlap",
+          run: runs[i],
+          slack: hi[i] - lo[i],
+          shaded,
+          clear,
+        };
+      }
+    } else if (at.every((p) => runs.every((r, i) => p < lo[i] || p >= hi[i] + r)))
+      return { line: L, kind: "unreachable" };
   }
-
-  for (let i = 0; i < len; i++) known[i] = matrix[start + i * step];
-  for (let i = len - 1; i >= 0 && known[i] === S_DOT; i--) freespace--;
-
-  if (rowlen === 0) {
-    if (known.includes(S_BLOCK)) return null;
-    deduced.fill(S_DOT);
-  } else if (rowlen === 1 && data[0] === len) {
-    if (known.includes(S_DOT)) return null;
-    deduced.fill(S_BLOCK);
-  } else if (
-    freespace < 0 ||
-    !doRecurse(
-      known,
-      deduced,
-      row,
-      minposDone,
-      maxposDone,
-      minposOk,
-      maxposOk,
-      data,
-      len,
-      freespace,
-      0,
-      0,
-    )
-  ) {
-    return null;
-  }
-
-  let changed = false;
-  for (let i = 0; i < len; i++) {
-    if (deduced[i] && deduced[i] !== S_STILL_UNKNOWN && !known[i]) {
-      matrix[start + i * step] = deduced[i];
-      onChange(i);
-      changed = true;
-    }
-  }
-  return changed;
+  return { line: L, kind: "intersection", black: d === SHADED };
 }
 
-/**
- * Run the line solver to a fixpoint. `clues` is per-line (cols `0..w-1`,
- * rows `w..w+h-1`). `seedGrid`/`immutable` optionally pre-fill clue
- * squares (faithful to upstream: a `GRID_FULL` immutable cell seeds
- * `S_BLOCK`; any other value seeds `S_UNKNOWN`, mirroring C's literal
- * `matrix[i] = grid[i]`). Returns the solver matrix and whether every cell
- * was decided.
- */
+/** The ladder over the dealt numbers. A firing's reason is made once, from
+ * the marks before any of its facts land. */
+function patternLadder(dl: pattern.Dealt): Ladder {
+  const made = new WeakMap<pattern.LineBinding, PatternHintReason>();
+  return describedLadder(pattern, {
+    line: compiledRung(pattern.line, dl, (binding, _c, _n, m): PatternHintReason => {
+      let reason = made.get(binding);
+      if (reason === undefined) {
+        const { L, R, d, O, c } = binding;
+        const line = m.sp.lineCells[L];
+        const from = line.indexOf(c);
+        const cells: number[] = [];
+        for (let p = from; p < line.length && O.includes(line[p]); p++)
+          cells.push(line[p]);
+        reason = reasonOf(m, L, R ?? [], d, cells);
+        made.set(binding, reason);
+      }
+      return reason;
+    }),
+  });
+}
+
+/** The marks over `grid`, a described value a square, each square holding
+ * one placed. */
+function marksOf(sp: GridSpace, grid: Uint8Array): CellMarks {
+  const m = new CellMarks(sp, rangeMask(SHADED, CLEAR), grid);
+  m.seed(grid);
+  return m;
+}
+
+/** A board's described squares from the squares a picture desc fixes, or
+ * none: only such a desc fixes any. */
+function startOf(
+  w: number,
+  h: number,
+  seedGrid?: Uint8Array,
+  immutable?: Uint8Array,
+): Uint8Array {
+  const grid = new Uint8Array(w * h);
+  if (seedGrid && immutable)
+    for (let i = 0; i < w * h; i++) if (immutable[i]) grid[i] = described(seedGrid[i]);
+  return grid;
+}
+
+/** Run the ladder on `m` to a fixpoint and say what it reached. */
+function deduce(m: CellMarks, ladder: Ladder, dl: pattern.Dealt): Deduced {
+  const techniques = ladderTechniques(m, ladder.entries, { [TIERS]: 0 }, {});
+  if (runLadder(m, techniques)) return "contradiction";
+  if (m.grid.includes(0)) return "stuck";
+  return pattern.isAnswer(m.grid, m.sp, dl) ? "solved" : "contradiction";
+}
+
+/** Run the lines from the squares a picture desc fixes, if any: whether they
+ * decide every square. */
 function solvePuzzle(
   w: number,
   h: number,
   clues: readonly (readonly number[])[],
   seedGrid?: Uint8Array,
   immutable?: Uint8Array,
-): { matrix: Uint8Array; ok: boolean } {
-  const matrix = seededMatrix(w, h, seedGrid, immutable);
-  const lines = allLines(w, h);
-  return { matrix, ok: deduceLines(matrix, w, h, clues, lines) === "solved" };
-}
-
-/** The solver's matrix before any deduction: unknown but for the squares a
- * picture desc fixes. */
-function seededMatrix(
-  w: number,
-  h: number,
-  seedGrid?: Uint8Array,
-  immutable?: Uint8Array,
-): Uint8Array {
-  const matrix = new Uint8Array(w * h); // all S_UNKNOWN
-  if (seedGrid && immutable) {
-    for (let i = 0; i < w * h; i++) {
-      if (immutable[i]) matrix[i] = seedGrid[i] === GRID_FULL ? S_BLOCK : S_UNKNOWN;
-    }
-  }
-  return matrix;
-}
-
-/** The lines still to be looked at: one flag a column, one a row. */
-interface DirtyLines {
-  col: Uint8Array;
-  row: Uint8Array;
-}
-
-function allLines(w: number, h: number): DirtyLines {
-  return { col: new Uint8Array(w).fill(1), row: new Uint8Array(h).fill(1) };
-}
-
-/** Deduce on `matrix` a line at a time, from the `dirty` lines, until no line
- * decides anything more: every square is decided, or some are left that no
- * single line decides, or a line has nothing that fits it. Every line a square
- * changed on is read again before this returns, so a board it calls solved
- * satisfies every clue. */
-function deduceLines(
-  matrix: Uint8Array,
-  w: number,
-  h: number,
-  clues: readonly (readonly number[])[],
-  dirty: DirtyLines,
-): Deduced {
-  let any = true;
-  while (any) {
-    any = false;
-    for (let i = 0; i < h; i++) {
-      if (!dirty.row[i]) continue;
-      dirty.row[i] = 0;
-      const changed = doRow(matrix, i * w, w, 1, clues[w + i], (col) => {
-        dirty.col[col] = 1;
-      });
-      if (changed === null) return "contradiction";
-      if (changed) any = true;
-    }
-    for (let i = 0; i < w; i++) {
-      if (!dirty.col[i]) continue;
-      dirty.col[i] = 0;
-      const changed = doRow(matrix, i, h, w, clues[i], (row) => {
-        dirty.row[row] = 1;
-      });
-      if (changed === null) return "contradiction";
-      if (changed) any = true;
-    }
-  }
-  return matrix.includes(S_UNKNOWN) ? "stuck" : "solved";
+): boolean {
+  const dl = dealtOf(w, h, clues);
+  const m = marksOf(spaceOf(w, h), startOf(w, h, seedGrid, immutable));
+  return deduce(m, patternLadder(dl), dl) === "solved";
 }
 
 /** Whether the clue set is fully line-solvable from a blank grid (the
@@ -295,7 +304,7 @@ export function isSoluble(
   h: number,
   clues: readonly (readonly number[])[],
 ): boolean {
-  return solvePuzzle(w, h, clues).ok;
+  return solvePuzzle(w, h, clues);
 }
 
 /** What a search established about a board's answers; the one answer is its
@@ -315,9 +324,9 @@ export type PatternAnswer = Answer<Uint8Array>;
 const SEARCH_BUDGET = 2_000;
 
 /**
- * Count a board's answers up to two, by trial and error over the line
- * deduction: where no line decides a square, assume it shaded, then clear,
- * and deduce on from the two lines through it.
+ * Count a board's answers up to two, by trial and error over the ladder:
+ * where no line decides a square, assume it shaded, then clear, and deduce
+ * on.
  */
 export function searchAnswers(
   w: number,
@@ -327,23 +336,22 @@ export function searchAnswers(
   immutable?: Uint8Array,
   budget: number = SEARCH_BUDGET,
 ): PatternAnswer {
-  // A position is a board with the lines its last change touched.
-  return searchBoard<{ matrix: Uint8Array; dirty: DirtyLines }, Uint8Array>({
-    start: { matrix: seededMatrix(w, h, seedGrid, immutable), dirty: allLines(w, h) },
-    deduce: ({ matrix, dirty }) => deduceLines(matrix, w, h, clues, dirty),
-    assume({ matrix }) {
-      const at = branchSquare(matrix, w, h);
-      return [S_BLOCK, S_DOT].map((value) => {
-        const next = Uint8Array.from(matrix);
-        next[at] = value;
-        const touched = { col: new Uint8Array(w), row: new Uint8Array(h) };
-        touched.col[at % w] = 1;
-        touched.row[(at / w) | 0] = 1;
-        return { matrix: next, dirty: touched };
+  const dl = dealtOf(w, h, clues);
+  const ladder = patternLadder(dl);
+  return searchBoard<CellMarks, Uint8Array>({
+    start: marksOf(spaceOf(w, h), startOf(w, h, seedGrid, immutable)),
+    deduce: (m) => deduce(m, ladder, dl),
+    assume(m) {
+      const at = branchSquare(m.grid, w, h);
+      return [SHADED, CLEAR].map((d) => {
+        const sub = new CellMarks(m.sp, m.domain, m.grid.slice());
+        sub.cands.set(m.cands);
+        sub.place(at, d);
+        return sub;
       });
     },
-    solution: ({ matrix }) =>
-      matrix.map((v) => (v === S_BLOCK ? GRID_FULL : GRID_EMPTY)),
+    solution: (m) =>
+      Uint8Array.from(m.grid, (v) => (v === SHADED ? GRID_FULL : GRID_EMPTY)),
     budget,
   });
 }
@@ -351,18 +359,18 @@ export function searchAnswers(
 /** The undecided square to assume next: the one with the most decided
  * squares or edges beside it, since its lines are the nearest to deciding
  * more. */
-function branchSquare(matrix: Uint8Array, w: number, h: number): number {
+function branchSquare(grid: ArrayLike<number>, w: number, h: number): number {
   let best = -1;
   let bestScore = -1;
-  for (let i = 0; i < matrix.length; i++) {
-    if (matrix[i] !== S_UNKNOWN) continue;
+  for (let i = 0; i < w * h; i++) {
+    if (grid[i] !== 0) continue;
     const x = i % w;
     const y = (i / w) | 0;
     let score = 0;
-    if (x === 0 || matrix[i - 1] !== S_UNKNOWN) score++;
-    if (x === w - 1 || matrix[i + 1] !== S_UNKNOWN) score++;
-    if (y === 0 || matrix[i - w] !== S_UNKNOWN) score++;
-    if (y === h - 1 || matrix[i + w] !== S_UNKNOWN) score++;
+    if (x === 0 || grid[i - 1] !== 0) score++;
+    if (x === w - 1 || grid[i + 1] !== 0) score++;
+    if (y === 0 || grid[i - w] !== 0) score++;
+    if (y === h - 1 || grid[i + w] !== 0) score++;
     if (score > bestScore) {
       bestScore = score;
       best = i;
@@ -375,7 +383,7 @@ function branchSquare(matrix: Uint8Array, w: number, h: number): number {
  * clues and any squares a picture desc fixes: what an Easy board is. */
 export function linesDecide(state: PatternState): boolean {
   const { w, h, clues, immutable } = state.common;
-  return solvePuzzle(w, h, clues, state.grid, immutable).ok;
+  return solvePuzzle(w, h, clues, state.grid, immutable);
 }
 
 /** Keyed on `common`, which every state of a game shares. */
@@ -464,46 +472,12 @@ export function lineHasError(state: PatternState, line: number): boolean {
   return false;
 }
 
-// =====================================================================
-// Hint deduction: named nonogram line techniques
-// =====================================================================
-//
-// The hint teaches *why* a cell is forced, so it splits each single-line
-// deduction into named techniques, each firing forcing one single-color
-// contiguous segment. Both come from the line's leftmost and rightmost
-// feasible run packings under the current marks: a cell in a run's
-// leftmost∩rightmost span is black in every placement (overlap), and a cell no
-// run can reach is white in every placement (unreachable).
-//
-// Both are subsets of what `doRow` forces. Any cell they miss falls to the
-// single-line intersection rung (`intersectionFiring`): the cells forced the
-// same way in every arrangement of the line's runs, which is overlap
-// generalized to the whole clue rather than a "just because". Every generated
-// board is line-solvable, so the plan always completes. All three are parallel
-// recorders (docs/hints-candidates.md § "A candidate game off the shared walk"): they
-// never touch `solvePuzzle`/`isSoluble`, so the generator differential is
-// unaffected by construction.
+// --- the hint -----------------------------------------------------------------
 
-/** Why a set of cells is forced, driving the hint's narration. */
-export type PatternHintReason =
-  | { kind: "overlap"; run: number; slack: number } // black
-  | { kind: "unreachable" } // white — no run reaches these cells
-  | { kind: "lineEmpty" } // white — the line has no clues at all
-  | { kind: "intersection"; black: boolean }; // forced in every arrangement of the line's runs
-
-/** The rungs a hint step can be: the reasons' kinds. */
-export const PATTERN_RUNGS = [
-  "overlap",
-  "unreachable",
-  "lineEmpty",
-  "intersection",
-] as const;
-export type PatternRung = (typeof PATTERN_RUNGS)[number];
-
-/** One hint step: a contiguous set of same-value cells one line deduction
- * forces, the line reasoned over (for the line-of-sight shade + clue), the
- * reason, and the already-placed marks the deduction leans on (ringed by their
- * own color). All indices are absolute grid positions. */
+/** One hint step: an unbroken stretch of same-value cells one line forces,
+ * the line reasoned over (for the line-of-sight shade and clue, the game's
+ * index), the reason, and the already-placed marks an overlap leans on
+ * (ringed by their own color). All indices are absolute grid positions. */
 export interface PatternHintMove {
   cells: number[];
   value: GridVal; // GRID_FULL (black) or GRID_EMPTY (white)
@@ -513,305 +487,41 @@ export interface PatternHintMove {
   whiteRefs: number[];
 }
 
-interface LineGeom {
-  start: number;
-  step: number;
-  len: number;
-}
-
-function lineGeom(line: number, w: number, h: number): LineGeom {
-  return line < w
-    ? { start: line, step: w, len: h }
-    : { start: (line - w) * w, step: 1, len: w };
-}
-
-/** The line's marks as solver states (S_BLOCK / S_DOT / S_UNKNOWN). */
-function readLine(grid: Uint8Array, geom: LineGeom): Uint8Array {
-  const out = new Uint8Array(geom.len);
-  for (let p = 0; p < geom.len; p++) {
-    const v = grid[geom.start + p * geom.step];
-    out[p] = v === GRID_FULL ? S_BLOCK : v === GRID_EMPTY ? S_DOT : S_UNKNOWN;
-  }
-  return out;
-}
-
 /**
- * Leftmost feasible run packing respecting the current marks: for each run,
- * the earliest start position such that the whole clue still fits, no run
- * covers a known-white cell, runs stay separated, and every known-black cell
- * is covered. Returns the per-run start positions, or null if the line's marks
- * are inconsistent with its clue (never happens on a mistake-free board).
- */
-function packLeft(
-  runs: readonly number[],
-  known: Uint8Array,
-  len: number,
-): number[] | null {
-  const starts = new Array<number>(runs.length);
-  const rec = (ndone: number, pos: number): boolean => {
-    if (ndone === runs.length) {
-      for (let i = pos; i < len; i++) if (known[i] === S_BLOCK) return false;
-      return true;
-    }
-    const r = runs[ndone];
-    // The first known-black at or after `pos` bounds this run: starting past it
-    // would strand that black (no later run reaches back for it).
-    let firstBlack = len;
-    for (let i = pos; i < len; i++) {
-      if (known[i] === S_BLOCK) {
-        firstBlack = i;
-        break;
-      }
-    }
-    const maxStart = Math.min(len - r, firstBlack);
-    for (let start = pos; start <= maxStart; start++) {
-      let ok = true;
-      for (let k = 0; k < r; k++) {
-        if (known[start + k] === S_DOT) {
-          ok = false;
-          break;
-        }
-      }
-      if (!ok) continue;
-      if (start + r < len && known[start + r] === S_BLOCK) continue; // separator
-      if (rec(ndone + 1, start + r + 1)) {
-        starts[ndone] = start;
-        return true;
-      }
-    }
-    return false;
-  };
-  return rec(0, 0) ? starts : null;
-}
-
-/** Rightmost feasible packing — `packLeft` on the mirrored line/clue. */
-function packRight(
-  runs: readonly number[],
-  known: Uint8Array,
-  len: number,
-): number[] | null {
-  const mknown = new Uint8Array(len);
-  for (let i = 0; i < len; i++) mknown[i] = known[len - 1 - i];
-  const mruns = [...runs].reverse();
-  const mleft = packLeft(mruns, mknown, len);
-  if (!mleft) return null;
-  const k = runs.length;
-  const out = new Array<number>(k);
-  for (let j = 0; j < k; j++) out[k - 1 - j] = len - mleft[j] - mruns[j];
-  return out;
-}
-
-/** Absolute grid indices of the line's already-placed marks, split by color,
- * within the line-local window `[from, to)`. */
-function collectRefs(
-  known: Uint8Array,
-  geom: LineGeom,
-  from: number,
-  to: number,
-): { blackRefs: number[]; whiteRefs: number[] } {
-  const blackRefs: number[] = [];
-  const whiteRefs: number[] = [];
-  for (let p = Math.max(0, from); p < Math.min(geom.len, to); p++) {
-    const abs = geom.start + p * geom.step;
-    if (known[p] === S_BLOCK) blackRefs.push(abs);
-    else if (known[p] === S_DOT) whiteRefs.push(abs);
-  }
-  return { blackRefs, whiteRefs };
-}
-
-/** The first named-technique firing on this line (one overlap run, or the
- * first unreachable-white segment), or null. Deterministic. */
-function analyzeLine(
-  known: Uint8Array,
-  runs: readonly number[],
-  line: number,
-  geom: LineGeom,
-): PatternHintMove | null {
-  const { len } = geom;
-
-  if (runs.length === 0) {
-    // A clueless line is all white; surface its first undecided segment.
-    const seg = firstSegment(0, len, (p) => known[p] === S_UNKNOWN);
-    if (!seg) return null;
-    return {
-      cells: rangeAbs(geom, seg.from, seg.to),
-      value: GRID_EMPTY,
-      line,
-      reason: { kind: "lineEmpty" },
-      blackRefs: [],
-      whiteRefs: [],
-    };
-  }
-
-  const left = packLeft(runs, known, len);
-  const right = packRight(runs, known, len);
-  if (!left || !right) return null; // inconsistent line — caller falls back
-
-  // Overlap: a run longer than its play pins its middle cells black.
-  for (let i = 0; i < runs.length; i++) {
-    const s = right[i];
-    const e = left[i] + runs[i];
-    if (s >= e) continue;
-    const seg = firstSegment(s, e, (p) => known[p] === S_UNKNOWN);
-    if (!seg) continue;
-    return {
-      cells: rangeAbs(geom, seg.from, seg.to),
-      value: GRID_FULL,
-      line,
-      reason: { kind: "overlap", run: runs[i], slack: right[i] - left[i] },
-      ...collectRefs(known, geom, left[i], right[i] + runs[i]),
-    };
-  }
-
-  // Unreachable white: a cell no run can cover in any placement stays white.
-  const coverable = new Uint8Array(len);
-  for (let i = 0; i < runs.length; i++) {
-    for (let p = left[i]; p < right[i] + runs[i]; p++) coverable[p] = 1;
-  }
-  const seg = firstSegment(0, len, (p) => known[p] === S_UNKNOWN && !coverable[p]);
-  if (seg) {
-    // No ring: a "no run reaches here" deduction leans on the whole line's
-    // packing, not one or two marks, so ringing individual cells would
-    // over-claim. The shaded line of sight and highlighted clue are the
-    // evidence.
-    return {
-      cells: rangeAbs(geom, seg.from, seg.to),
-      value: GRID_EMPTY,
-      line,
-      reason: { kind: "unreachable" },
-      blackRefs: [],
-      whiteRefs: [],
-    };
-  }
-  return null;
-}
-
-/** The first maximal run of positions in `[from, to)` all satisfying `pred`. */
-function firstSegment(
-  from: number,
-  to: number,
-  pred: (p: number) => boolean,
-): { from: number; to: number } | null {
-  let p = from;
-  while (p < to && !pred(p)) p++;
-  if (p >= to) return null;
-  let q = p;
-  while (q < to && pred(q)) q++;
-  return { from: p, to: q };
-}
-
-/** Absolute grid indices of line positions `[from, to)`. */
-function rangeAbs(geom: LineGeom, from: number, to: number): number[] {
-  const out: number[] = [];
-  for (let p = from; p < to; p++) out.push(geom.start + p * geom.step);
-  return out;
-}
-
-/** The single-line intersection bottom rung: run the complete single-line
- * solver on `line` and surface its first forced same-value contiguous
- * segment. Every cell `doRow` forces is black (or white) in *every* arrangement
- * of that line's runs consistent with its marks — the general intersection, the
- * same family as overlap generalized to the whole clue. Covers the gap-based
- * deductions the two elegant techniques don't name, keeping the plan complete
- * with an honest, named step (never a "just because"). */
-function intersectionFiring(
-  grid: Uint8Array,
-  w: number,
-  h: number,
-  clues: readonly (readonly number[])[],
-  line: number,
-): PatternHintMove | null {
-  const geom = lineGeom(line, w, h);
-  const known = readLine(grid, geom);
-  const mat = Uint8Array.from(known); // doRow reads/writes S_* states
-  const forced: { pos: number; value: GridVal }[] = [];
-  doRow(mat, 0, geom.len, 1, clues[line], (p) =>
-    forced.push({ pos: p, value: mat[p] === S_BLOCK ? GRID_FULL : GRID_EMPTY }),
-  );
-  if (forced.length === 0) return null;
-  forced.sort((a, b) => a.pos - b.pos);
-  const first = forced[0];
-  const cells = [geom.start + first.pos * geom.step];
-  let last = first.pos;
-  for (let k = 1; k < forced.length; k++) {
-    if (forced[k].pos === last + 1 && forced[k].value === first.value) {
-      cells.push(geom.start + forced[k].pos * geom.step);
-      last = forced[k].pos;
-    } else break;
-  }
-  return {
-    cells,
-    value: first.value,
-    line,
-    reason: { kind: "intersection", black: first.value === GRID_FULL },
-    blackRefs: [],
-    whiteRefs: [],
-  };
-}
-
-/**
- * A hint plan from the player's current marks: an ordered list of forced
- * single-line deductions that drives the board to its unique solution, each
- * preferring overlap or unreachable-white and falling to the intersection rung
- * for the rest. The plan is built on a working copy, each step applied before
- * the next is computed, so every step's narration and highlight reflect the
- * board as that step fires, and a fresh recompute resumes from any position
- * (docs/hints.md § "A hint must resume from any position").
+ * A hint plan from the player's current marks: the ladder's firings, one a
+ * step, each the one beside the plan's last where there is one
+ * (`ladderWalk`), so a plan works the lines through the cells it has just
+ * decided before it moves on. Each step is made before the next is found,
+ * so every step's narration and highlight reflect the board as that step
+ * fires, and a fresh plan resumes from any position (docs/hints.md § "A
+ * hint must resume from any position").
  */
 export function deduceHintPlan(state: PatternState): PatternHintMove[] {
   const { w, h, clues } = state.common;
-  const working = Uint8Array.from(state.grid);
+  const dl = dealtOf(w, h, clues);
+  const m = marksOf(spaceOf(w, h), Uint8Array.from(state.grid, described));
+  m.budget = stepBudget("pattern hint");
+  const reasonOfTaken = (f: Taken): PatternHintReason =>
+    f.reasons[0] as PatternHintReason;
+  // A firing reads its own line.
+  const walk = ladderWalk(m, patternLadder(dl).entries, { [TIERS]: 0 }, (f) => [
+    ...m.sp.lineCells[reasonOfTaken(f).line],
+  ]);
   const plan: PatternHintMove[] = [];
-  // Each line's first firing of a technique, in line order.
-  const eachLine = (
-    fire: (line: number) => PatternHintMove | null,
-  ): (() => Iterable<PatternHintMove>) =>
-    function* () {
-      for (let line = 0; line < w + h; line++) {
-        const firing = fire(line);
-        if (firing) yield firing;
-      }
-    };
-  // Each firing decides at least one cell; the step budget is the
-  // non-termination backstop. Both techniques sit on tier 0.
-  const pass = singleFirings({
-    techniques: findingTechniques(
-      [
-        {
-          id: "line-analysis",
-          tier: 0,
-          find: eachLine((line) => {
-            const geom = lineGeom(line, w, h);
-            return analyzeLine(readLine(working, geom), clues[line], line, geom);
-          }),
-        },
-        {
-          id: "line-intersection",
-          tier: 0,
-          find: eachLine((line) => intersectionFiring(working, w, h, clues, line)),
-        },
-      ],
-      (firing) => {
-        plan.push(firing);
-        for (const c of firing.cells) working[c] = firing.value;
-      },
-      // A firing reads its own line, and a line crossing a cell the last one
-      // decided continues from it.
-      {
-        reads: (firing) => {
-          const geom = lineGeom(firing.line, w, h);
-          return rangeAbs(geom, 0, geom.len);
-        },
-        writes: (firing) => firing.cells,
-      },
-    ),
-    budget: stepBudget("pattern hint"),
-    settled: () => !working.includes(GRID_UNKNOWN),
-    // A plan works the lines through the cells it has just decided before
-    // it moves on.
-    continuing: true,
-  });
-  while (pass.next());
+  for (let f = walk.next(); f !== null && f !== "contradiction"; f = walk.next()) {
+    const reason = reasonOfTaken(f);
+    const cells: number[] = [];
+    for (let i = 0; i < f.facts.length; i += 3) cells.push(f.facts[i + 1]);
+    const value = f.facts[2] === SHADED ? GRID_FULL : GRID_EMPTY;
+    plan.push({
+      cells,
+      value,
+      line: gameLine(reason.line, w, h),
+      reason,
+      blackRefs: reason.kind === "overlap" ? reason.shaded : [],
+      whiteRefs: reason.kind === "overlap" ? reason.clear : [],
+    });
+  }
   return plan;
 }
 

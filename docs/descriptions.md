@@ -139,6 +139,12 @@ research tools all read through it; the app never does.
   line) sits at its element once for each value of the domain, read
   `clue(count, L, d)`, and `per` in its meaning names the value. `Dealt`
   keeps it as one `ClueList`, each clue at `perPlace(x, d)`.
+- **A list clue** (`list: true`, Pattern's `runs`) is a list of numbers at
+  its element, each within `value`'s range, read `clue(runs, L)` and in its
+  meaning as `v`. Lists compare only whole, by `=` and `!=`, and
+  `run_lengths(L, S)` makes one: the lengths of the runs of `S`'s cells
+  along `L`, in order. `Dealt` keeps the kind as `ListClues`. The checker
+  deals one a line, up to as many members as the line has room for runs.
 - **The compiler reads a description with every variation applied.** One
   ladder runs on every board the game deals, and a name a board's variations
   leave out is empty there, so a technique over it binds nothing (Solo's
@@ -523,6 +529,13 @@ author writing for speed uses these:
 - **Ask a per-cell question as an `exists fill` whose only read of the loops
   around it is its pin** `f(x) = t`: it is then enumerated once, not once per
   cell and value.
+- **A filling of a line whose only test is its runs is not enumerated**:
+  `exists fill f of cells(L) [from cand]` whose `where`, definitions
+  expanded, is `run_lengths(L, {x in cells(L) where f(x) = v}) = R` and pins
+  compiles to `runFits`, a dynamic program over where each run starts, linear
+  in the line times its runs. The pinned form answers every square at once.
+  Enumerating was exponential: a line of 30 with seven runs of 1 has 346,104
+  fillings. Pattern's `line` is the shape.
 - **Pin a `subsets` binder's size first in its `where`** (`|T| = size`): the
   loop then counts only the subsets of that size, in the order it would
   have met them, and a bound (`<=`, `<`, `>=`, `>`) skips the others before
@@ -953,6 +966,9 @@ the check. What a small board cannot cover:
   `index(x, S)` counts the members before `x` under theirs.
 - **A clue per value** is dealt at every element for every value some
   cell's domain holds, each present or not.
+- **A list clue is a length and members**, each member read only below the
+  length, and `run_lengths(L, S)` is each way `S` may meet `L`'s cells
+  under its guard: 2^|`L`| ways, few on a line of a small board.
 - **`connected(S)` is read as reach**: the first member reaches a member
   beside one it reaches, as many steps as the board has cells, and every
   member must be reached; `cuts(S)` holds each member under the guard that

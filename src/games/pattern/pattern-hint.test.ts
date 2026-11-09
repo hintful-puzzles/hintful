@@ -42,12 +42,12 @@ const pinned = describeHintPins({
     severalCells: (step) => (step.highlights as PatternHint).cells.length > 1,
   },
   pins: {
-    /** Held on 593 of 1826 positions walked. */
+    /** Held on 545 of 1835 positions walked. */
     severalCells:
       "10x10:1.1.1.1/6.3/6.2/6.1/6.1/2.2/6/1.2/1/1/4/4/5/4/6.2/7/2/2.1/2.3/8",
-    /** Held on 1826 of 1826 positions walked. */
+    /** Held on 1832 of 1835 positions walked. */
     overlap: "10x10:1.1.1.1/6.3/6.2/6.1/6.1/2.2/6/1.2/1/1/4/4/5/4/6.2/7/2/2.1/2.3/8",
-    /** Held on 1821 of 1826 positions walked. */
+    /** Held on 1832 of 1835 positions walked. */
     unreachable: {
       id: "10x10:1.1.1.1/6.3/6.2/6.1/6.1/2.2/6/1.2/1/1/4/4/5/4/6.2/7/2/2.1/2.3/8",
       moves:
@@ -56,7 +56,7 @@ const pinned = describeHintPins({
     /** Built by hand: a 3x3 board whose first and last columns have no clue.
      * The scan's boards never had a clueless line. */
     lineEmpty: "3x3:/3//1/1/1",
-    /** Held on 26 of 1826 positions walked. */
+    /** Held on 1707 of 1835 positions walked. */
     intersection: {
       id: "30x30:4.3.5.3/2.3.3/4.4.1/4.2.4/9.4.2/8.3.5/1.3.2.3/2.1.1.2.1/5.1.5/5.1.3/3.3.3.8/3.1.1.8.3/3.8.2.5/4.11.2.5/5.5.3.3.3.1.1/8.1.1.8/2.3.3.2.1.1.5.4/2.3.1.2.9/4.4.7/4.7.5/16.1/11.1.1.1.1/7.3.2.1/7.1.1.1.2.4/2.3.1.2.2.2/2.1.4.3.3.4/2.1.7.5.3/4.3.2.6.6/2.4.8.4/1.3.2.1.3.3/5.4.5/11.4/1.4.9.1.1/6.2.4.5.2/10.4.5/1.4.9.1/2.1.4.12/1.3.1.13.4/1.4.5.1.12/1.5.5.4.2.2/1.4.2.2/1.2.8/6.5.1/4.8.1/1.1.4.3.1/2.1.1.2.4.1.1/6.2.4.2.5/7.2.1.1.3.5/1.5.2.3.1.6/2.6.3/2.1.6.3/4.4.2.3/3.4.4.2/3.5.3/1.1.4.3/1.3.3.2/2.1.2.4.1.1.4/2.2.4.4.1.1.3/3.3.3.5.4.3/4.4.1.3.3",
       moves:
@@ -193,6 +193,31 @@ describe("pattern hint — narration", () => {
       ),
     );
     expect(t).not.toMatch(/only one arrangement/i);
+  });
+
+  it("follows the cells it decides, from the first row an overlap reaches", () => {
+    const desc =
+      "8/6.1/4.1.1.1/4.1/4.3/2/2/2.2/2.1.2/1.2/3.2/3.2/5/5/2.2/5/1.2/3.1/6/8";
+    const res = doHint(patternGame.newState(P, desc));
+    if (!res.ok) throw new Error("no plan");
+    const at = (i: number) => ({
+      cells: (res.steps[i].highlights as PatternHint).cells,
+      says: res.steps[i].explanation,
+    });
+    // The ninth row; then the fifth column, through the shaded cell 84.
+    expect(at(0)).toEqual({
+      cells: [84, 85],
+      says: `This row's run of 6 can slide only 4 cells, so these cells must be ${SHADED_NAME}.`,
+    });
+    expect(at(1).cells).toEqual([24, 34]);
+    expect(at(6)).toEqual({
+      cells: [2, 12, 22, 32],
+      says: `This column's run of 4 has nowhere to slide, so these cells must be ${SHADED_NAME}.`,
+    });
+    expect(at(18)).toEqual({
+      cells: [5, 15, 25],
+      says: "No run of this column's outlined clue can reach the ringed cells, so those cells must be clear.",
+    });
   });
 });
 

@@ -214,6 +214,10 @@
             "enum": ["value"],
             "description": "A clue at the element for each value of the answer's domain, read `clue(kind, x, d)`; its meaning reads the value as `per`."
           },
+          "list": {
+            "const": true,
+            "description": "The clue at an element is a list of numbers, each one of `value`, in order: a line's run lengths. `clue(kind, x)` is the list, and its meaning reads it as `v`."
+          },
           "value": { "$ref": "#/$defs/formula" },
           "fields": {
             "type": "object",

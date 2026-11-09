@@ -31,11 +31,11 @@ const pinned = describeHintKindPins({
     citesBlack: (_, state) => (deduceHintPlan(state)[0]?.blackRefs.length ?? 0) > 0,
   },
   pins: {
-    /** Held on 215 of 736 positions walked. */
+    /** Held on 228 of 764 positions walked. */
     citesBlack: {
-      id: "10x10:3.4/3.3/3.3/1.1.1.1/7/3.2/3.1/4/3/3.1/3.3/3.4/4.5/4/3.1/1/5/3.1/6/1.3",
+      id: "10x10de:1.1.1.1/6.3/6.2/6.1/6.1/2.2/6/1.2/1/1/4/4/5/4/6.2/7/2/2.1/2.3/8",
       moves:
-        '[{"type":"fillCells","value":1,"cells":[20]},{"type":"fillCells","value":1,"cells":[60,70]},{"type":"fillCells","value":1,"cells":[34,44,54,64]},{"type":"fillCells","value":1,"cells":[12]}]',
+        '[{"type":"fillCells","value":1,"cells":[41,42,43,44,45]},{"type":"fillCells","value":1,"cells":[48]},{"type":"fillCells","value":1,"cells":[53,54,55,56]},{"type":"fillCells","value":1,"cells":[92,93,94,95,96,97]}]',
     },
   },
 });
