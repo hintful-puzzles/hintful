@@ -360,6 +360,38 @@ function findMistakes(state: SpokesState): readonly SpokesMistake[] {
   return out;
 }
 
+/** Each wrong line or mark taken back to undecided. */
+function clearMistakes(
+  _state: SpokesState,
+  mistakes: readonly SpokesMistake[],
+): SpokesMove[] {
+  return mistakes.map(({ index, dir }) => ({
+    kind: "set",
+    index,
+    dir,
+    state: SPOKE_EMPTY,
+  }));
+}
+
+/** The first line of the answer not yet drawn; once every line is, the first
+ * spoke it rules out left unmarked. */
+function revealOne(state: SpokesState, solved: SpokesState): SpokesMove | null {
+  for (const [want, from] of [
+    [SPOKE_LINE, null],
+    [SPOKE_MARKED, SPOKE_EMPTY],
+  ] as const) {
+    for (let index = 0; index < state.w * state.h; index++) {
+      for (let dir = 0; dir < 4; dir++) {
+        const now = getSpoke(state.spokes[index], dir);
+        if (getSpoke(solved.spokes[index], dir) !== want || now === want) continue;
+        if (from === null || now === from)
+          return { kind: "set", index, dir, state: want };
+      }
+    }
+  }
+  return null;
+}
+
 // --- hint (a second projection of the deductive solver) ---------------------
 
 /**
@@ -585,6 +617,8 @@ export const spokesGame: Game<
   hintKeepTrack,
   hintGesture,
   findMistakes,
+  clearMistakes,
+  revealOne,
   textFormat,
 
   colors,

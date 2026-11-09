@@ -15,7 +15,9 @@ import {
   BORDER,
   BORDER_MASK,
   borderGridVerbs,
+  clearBorderEdges,
   DISABLED,
+  revealBorderEdge,
 } from "../../engine/border-grid.ts";
 import {
   BORDER_RING_LEGEND,
@@ -275,6 +277,14 @@ export const separateGame: Game<
   }),
 
   findMistakes,
+  clearMistakes: (state, mistakes) => {
+    const edits = clearBorderEdges(state, mistakes);
+    return edits.length > 0 ? [{ type: "edges", edits }] : [];
+  },
+  revealOne: (state, solved) => {
+    const edits = revealBorderEdge(state, solved);
+    return edits === null ? null : { type: "edges", edits };
+  },
   hint,
   hintMarks: {
     roles: {

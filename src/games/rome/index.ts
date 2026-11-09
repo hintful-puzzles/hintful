@@ -25,7 +25,13 @@ import {
 } from "../../engine/candidate-hint.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import { type EntryMistakeKind, entryMistakes } from "../../engine/entry-mistakes.ts";
+import {
+  clearEntries,
+  type EntryMistakeKind,
+  type EntryMoves,
+  entryMistakes,
+  revealEntry,
+} from "../../engine/entry-mistakes.ts";
 import {
   type Game,
   type SolveResult,
@@ -634,12 +640,11 @@ function findMistakes(state: RomeState): readonly RomeMistake[] {
   const solution = solutionGrid(state);
   if (solution) {
     // The arrows are already note bits, so each value is its own bit.
-    const arrows = (cells: Int32Array) => cells.map((c) => c & FM_ARROWMASK);
     out.push(
       ...entryMistakes(
         {
-          answer: arrows(solution),
-          entry: arrows(grid),
+          answer: arrowsOf(solution),
+          entry: arrowsOf(grid),
           notes: state.pencil,
           enc: { bit: (arrow) => arrow },
           // A clue is never wrong, and a rule violation is already reported.
@@ -651,6 +656,31 @@ function findMistakes(state: RomeState): readonly RomeMistake[] {
   }
 
   return out;
+}
+
+/** Each square's arrow, `EMPTY` where it has none. */
+const arrowsOf = (cells: Int32Array) => cells.map((c) => c & FM_ARROWMASK);
+
+/** A square's value is its arrow bit. Placing an arrow leaves the square's
+ * marks, so a cleared square's are wiped too. */
+const romeEntryMoves: EntryMoves<RomeMove> = {
+  clear: (x, y) => [
+    { kind: "place", x, y, dir: null },
+    { kind: "pencil", x, y, dir: null },
+  ],
+  place: (x, y, n) => ({ kind: "place", x, y, dir: n as RomeDir }),
+};
+
+/** A clue caught in a rule violation is left alone: clearing the player's
+ * arrows beside it takes the violation away. */
+function clearMistakes(state: RomeState, mistakes: readonly RomeMistake[]): RomeMove[] {
+  const { w, grid } = state;
+  return clearEntries(
+    romeEntryMoves,
+    mistakes
+      .filter(({ index }) => !(grid[index] & FM_FIXED))
+      .map(({ index }) => ({ x: index % w, y: (index / w) | 0 })),
+  );
 }
 
 // --- the game ---------------------------------------------------------------
@@ -696,6 +726,9 @@ export const romeGame: Game<
   solve,
   difficulty,
   findMistakes,
+  clearMistakes,
+  revealOne: (state, solved) =>
+    revealEntry(romeEntryMoves, arrowsOf(state.grid), arrowsOf(solved.grid), state.w),
   requestKeys: () => ARROW_KEYS,
 
   // Rome has no auto-pencil preference, so a placement's area cull is always

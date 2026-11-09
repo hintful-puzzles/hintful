@@ -372,6 +372,13 @@ export const slantGame: Game<
   solve,
   difficulty,
   findMistakes,
+  clearMistakes: (_state, mistakes) =>
+    mistakes.map(
+      ({ x, y, dir }): SlantMove =>
+        dir === undefined
+          ? { type: "set", x, y, v: 0 }
+          : { type: "alike", x, y, dir, on: false },
+    ),
   hint: slantHint,
   hintMarks: {
     roles: {

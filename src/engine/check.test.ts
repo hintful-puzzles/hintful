@@ -9,6 +9,7 @@ import type { HintResult } from "./game.ts";
 import {
   CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
+  FIX_MISTAKES_FIRST,
   type MarkedDeadEnd,
   markedDeadEnd,
   SEARCH_OUT_OF_REACH,
@@ -198,6 +199,37 @@ describe("a position the game proves nothing finishes from", () => {
     expect(m.hint()).toBe(SENTENCE);
     expect(m.activeHintStep()).toBeNull();
     expect(hint).not.toHaveBeenCalled();
+  });
+
+  it("is applied by going back to where the board can still be won, which Redo undoes", () => {
+    const { m } = provingGame((s) => s.count < 0 && cutOff());
+    m.playMoves(["inc", "dec", "dec"]);
+    expect(m.hint()).toBe(SENTENCE);
+    expect(m.hintWayForward()).toBe("rewind");
+    expect(m.executeHint()).toBeNull();
+    // One move back, to count 0: the latest position not proved dead.
+    expect(m.hint()).toBeNull();
+    m.redo();
+    expect(m.hint()).toBe(SENTENCE);
+  });
+
+  it("clears a board's mistakes in one step of Undo when a refusal for them is applied", () => {
+    // Each step below zero is a mistake, and each "inc" takes one off.
+    const m = new Midend({
+      ...fakeGame,
+      findMistakes: (s: FakeState) =>
+        Array.from({ length: Math.max(0, -s.count) }, (_, i) => i),
+      clearMistakes: (s: FakeState) =>
+        Array.from({ length: -s.count }, () => "inc" as const),
+    });
+    expect(m.newGameFromId("t3:g3-0")).toBeNull();
+    m.playMoves(["dec", "dec"]);
+    expect(m.hint()).toBe(FIX_MISTAKES_FIRST);
+    expect(m.hintWayForward()).toBe("clear");
+    expect(m.executeHint()).toBeNull();
+    expect(m.findMistakes()).toBe(0);
+    m.undo();
+    expect(m.findMistakes()).toBe(2);
   });
 
   it("is a dead end to the check, which does not ask the hint either", () => {

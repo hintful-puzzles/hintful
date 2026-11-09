@@ -11,7 +11,13 @@
 import { assertNever } from "../assert-never.ts";
 import { adaptiveMarkAllMove, applyNoteMove } from "../candidate-hint.ts";
 import type { DifficultyContract } from "../difficulty.ts";
-import { entryMistakes, gridCell } from "../entry-mistakes.ts";
+import {
+  clearEntries,
+  entryMistakes,
+  gridCell,
+  revealEntry,
+  setMoves,
+} from "../entry-mistakes.ts";
 import { type SolveResult, UI_UPDATE, type UiUpdate } from "../game.ts";
 import { clearKey } from "../key-labels.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../latin.ts";
@@ -350,6 +356,20 @@ export function findMistakes(state: EdgeClueState): readonly EdgeClueMistake[] {
     },
     gridCell(o),
   );
+}
+
+export function clearMistakes(
+  _state: EdgeClueState,
+  mistakes: readonly EdgeClueMistake[],
+): EdgeClueMove[] {
+  return clearEntries(setMoves, mistakes);
+}
+
+export function revealOne(
+  state: EdgeClueState,
+  solved: EdgeClueState,
+): EdgeClueMove | null {
+  return revealEntry(setMoves, state.grid, solved.grid, state.order);
 }
 
 /**

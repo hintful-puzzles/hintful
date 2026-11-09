@@ -27,6 +27,7 @@ import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
 import { edgeClueVocab } from "../../engine/edge-clue-latin/hint-text.ts";
 import {
   changedState,
+  clearMistakes,
   type EdgeClueMistake,
   edgeClueDifficulty,
   edgeClueKeys,
@@ -34,6 +35,7 @@ import {
   findMistakes,
   interpretMove,
   markAll,
+  revealOne,
   solve,
   spentDrag,
 } from "../../engine/edge-clue-latin/play.ts";
@@ -271,6 +273,8 @@ export const adjacentGame: Game<
   },
   refreshHintStep,
   findMistakes,
+  clearMistakes,
+  revealOne,
   requestKeys: (p) => edgeClueKeys(p.order),
   textFormat,
 

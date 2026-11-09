@@ -26,7 +26,13 @@ import {
   valuesOf,
 } from "../../engine/candidate-plan.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
-import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
+import {
+  clearEntries,
+  entryMistakes,
+  gridCell,
+  revealEntry,
+  setMoves,
+} from "../../engine/entry-mistakes.ts";
 import {
   type Game,
   type HintResult,
@@ -808,6 +814,9 @@ export const soloGame: Game<
   },
   refreshHintStep,
   findMistakes,
+  clearMistakes: (_state, mistakes) => clearEntries(setMoves, mistakes),
+  revealOne: (state, solved) =>
+    revealEntry(setMoves, state.grid, solved.grid, state.cr),
   requestKeys: (p): KeyLabel[] => digitKeys(p.c * p.r),
 
   prefs: [

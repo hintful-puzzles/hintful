@@ -695,6 +695,16 @@ export const boatsGame: Game<
 
   solve,
   findMistakes,
+  clearMistakes: (_state, mistakes) =>
+    mistakes.map(({ x, y }) => ({
+      kind: "fill",
+      x0: x,
+      y0: y,
+      x1: x,
+      y1: y,
+      from: "*",
+      to: "-",
+    })),
   difficulty,
   hint,
   hintMarks: {

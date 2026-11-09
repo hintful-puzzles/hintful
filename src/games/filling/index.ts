@@ -10,6 +10,11 @@
 
 import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import {
+  clearEntries,
+  type EntryMoves,
+  revealEntry,
+} from "../../engine/entry-mistakes.ts";
+import {
   type Game,
   type HintResult,
   type HintStep,
@@ -223,6 +228,11 @@ function findMistakes(state: FillingState): readonly Point[] {
   return out;
 }
 
+const entryMoves = (w: number): EntryMoves<FillingMove> => ({
+  clear: (x, y) => [{ type: "set", cells: [y * w + x], value: 0 }],
+  place: (x, y, value) => ({ type: "set", cells: [y * w + x], value }),
+});
+
 // --- hint ------------------------------------------------------------------
 
 /** Plan data for a Filling hint step, read by `hintKeepTrack`. `cells` are the
@@ -397,6 +407,9 @@ export const fillingGame: Game<
   hintKeepTrack,
   hintGesture,
   findMistakes,
+  clearMistakes: (state, mistakes) => clearEntries(entryMoves(state.w), mistakes),
+  revealOne: (state, solved) =>
+    revealEntry(entryMoves(state.w), state.board, solved.board, state.w),
   // Upstream's keypad is a fixed 1..9 (region sizes never exceed 9).
   requestKeys: (): KeyLabel[] => digitKeys(9),
 

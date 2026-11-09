@@ -420,6 +420,24 @@ function findMistakes(state: UndeadState): readonly UndeadMistake[] {
   );
 }
 
+/** Each wrong square cleared, monster and notes, a move apiece. */
+function clearMistakes(
+  state: UndeadState,
+  mistakes: readonly UndeadMistake[],
+): UndeadMove[] {
+  const { xinfo, w } = state.common;
+  return mistakes.map(({ x, y }) => ({ type: "clear", cell: xinfo[x + y * (w + 2)] }));
+}
+
+/** The answer's first monster not yet placed. */
+function revealOne(state: UndeadState, solved: UndeadState): UndeadMove | null {
+  const cell = state.guess.findIndex(
+    (g, i) =>
+      state.common.fixed[i] === 0 && !isSingleton(g) && isSingleton(solved.guess[i]),
+  );
+  return cell < 0 ? null : { type: "set", cell, monster: solved.guess[cell] };
+}
+
 // --- hint ------------------------------------------------------------------
 
 /** A sightline path's traced cells (mirrors and monster cells) as interior
@@ -951,6 +969,8 @@ export const undeadGame: Game<
   hintGesture,
   refreshHintStep,
   findMistakes,
+  clearMistakes,
+  revealOne,
   // Upstream's four explicit keys: the three monsters plus clear.
   requestKeys: (): KeyLabel[] => [
     { button: KEY_G, label: "Ghost" },

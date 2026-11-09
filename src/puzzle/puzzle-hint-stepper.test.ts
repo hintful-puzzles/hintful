@@ -6,6 +6,12 @@
 // orchestration directly against a stub worker — the logic lives entirely in
 // Puzzle, no midend/worker needed.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  FIX_MISTAKES_FIRST,
+  PUZZLE_NOT_REASONABLE,
+  WAY_FORWARD,
+  type WayForward,
+} from "../engine/hint-refusal.ts";
 import { NOT_STARTED } from "../engine/solve-failure.ts";
 import type { HintSpan, PuzzleStaticAttributes } from "../engine/types.ts";
 import { HINT_PENDING_MESSAGE, HINT_PENDING_MS, Puzzle } from "./puzzle.ts";
@@ -37,15 +43,18 @@ function makePuzzle(
   dealBoard: () => void;
   setHintError: (e: string | null) => void;
   setExecuteError: (e: string | null) => void;
+  setWayForward: (w: WayForward | null) => void;
 } {
   const calls: string[] = [];
   let hintError: string | null = null;
   let executeError: string | null = null;
+  let wayForward: WayForward | null = null;
   const workerPuzzle = {
     hint: vi.fn(async () => {
       calls.push("show");
       return hintError;
     }),
+    hintWayForward: vi.fn(async () => (hintError === null ? null : wayForward)),
     executeHint: vi.fn(async () => {
       calls.push("apply");
       return executeError;
@@ -87,6 +96,9 @@ function makePuzzle(
     setExecuteError: (e) => {
       executeError = e;
     },
+    setWayForward: (w) => {
+      wayForward = w;
+    },
   };
 }
 
@@ -127,12 +139,33 @@ describe("Hint button stepper", () => {
     expect(calls).toEqual(["show", "key", "show"]);
   });
 
-  it("a refused hint does not arm the apply", async () => {
+  it("a refusal with no way forward does not arm the apply", async () => {
     const { puzzle, calls, setHintError } = makePuzzle();
-    setHintError("Fix the highlighted mistakes first");
+    setHintError(PUZZLE_NOT_REASONABLE);
     await puzzle.hint(); // refused show, not armed
     await puzzle.hint(); // still a show, not an apply
     expect(calls).toEqual(["show", "show"]);
+  });
+
+  it("a refusal with a way forward arms, says what applying does, and applies", async () => {
+    const { puzzle, calls, setHintError, setWayForward } = makePuzzle();
+    setHintError(FIX_MISTAKES_FIRST);
+    setWayForward("clear");
+    await puzzle.hint();
+    expect(puzzle.hintArmedToApply).toBe(true);
+    expect(puzzle.helpMessage).toBe(`${FIX_MISTAKES_FIRST} ${WAY_FORWARD.clear}`);
+    await puzzle.hint();
+    expect(calls).toEqual(["show", "apply"]);
+  });
+
+  it("an action between takes the way forward's banner down with the arming", async () => {
+    const { puzzle, setHintError, setWayForward } = makePuzzle();
+    setHintError(FIX_MISTAKES_FIRST);
+    setWayForward("clear");
+    await puzzle.hint();
+    await puzzle.processKey(65);
+    expect(puzzle.hintArmedToApply).toBe(false);
+    expect(puzzle.helpMessage).toBe("");
   });
 
   it("an executeHint error disarms so the next press shows", async () => {

@@ -332,6 +332,26 @@ function findMistakes(s: BlackboxState): readonly Point[] {
   return out;
 }
 
+/** A wrong guess is taken up; a square marked known that holds a ball is
+ * unmarked. */
+function clearMistakes(s: BlackboxState, mistakes: readonly Point[]): BlackboxMove[] {
+  return mistakes.map(({ x, y }) =>
+    gridGet(s, x, y) & BALL_CORRECT
+      ? { type: "toggleLock", x, y }
+      : { type: "toggleBall", x, y },
+  );
+}
+
+/** A guess on the first ball of the answer not yet guessed: `solve` guesses
+ * exactly the real balls. */
+function revealOne(s: BlackboxState, solved: BlackboxState): BlackboxMove | null {
+  for (let y = 1; y <= s.h; y++)
+    for (let x = 1; x <= s.w; x++)
+      if (gridGet(solved, x, y) & BALL_GUESS && !(gridGet(s, x, y) & BALL_GUESS))
+        return { type: "toggleBall", x, y };
+  return null;
+}
+
 // --- hint -------------------------------------------------------------
 
 /** A click on the square the step's move acts on: a box square, a laser's
@@ -437,6 +457,8 @@ export const blackboxGame: Game<
   finishesByDeduction: nothingToDeduce,
   status,
   findMistakes,
+  clearMistakes,
+  revealOne,
 
   solve(orig: BlackboxState) {
     // A board the lasers cannot pin down has no single answer to show, and

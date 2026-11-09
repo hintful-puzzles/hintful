@@ -511,6 +511,18 @@ function findMistakes(state: RectState): readonly RectMistake[] {
   return out;
 }
 
+/** The first line of the answer not yet drawn. */
+function revealOne(state: RectState, solved: RectState): RectMove | null {
+  for (const edge of ["v", "h"] as const) {
+    const lines = edge === "v" ? state.vedge : state.hedge;
+    const answer = edge === "v" ? solved.vedge : solved.hedge;
+    for (let i = 0; i < lines.length; i++)
+      if (answer[i] && !lines[i])
+        return { type: "edge", edge, x: i % state.w, y: Math.floor(i / state.w) };
+  }
+  return null;
+}
+
 /** The size of the rectangle being dragged, while one is. */
 function statusbarText(_s: RectState, ui: RectUi): string {
   if (ui.dragged && ui.x1 >= 0 && ui.y1 >= 0 && ui.x2 >= 0 && ui.y2 >= 0) {
@@ -591,6 +603,9 @@ export const rectGame: Game<
 
   solve,
   findMistakes,
+  clearMistakes: (_state, mistakes) =>
+    mistakes.map(({ edge, x, y }): RectMove => ({ type: "edge", edge, x, y })),
+  revealOne,
   // Easy and Normal are boards the ladder's techniques of the tier finish.
   // Each technique is checked sound, so a board they finish has one answer.
   difficulty: TIERS.contract<RectParams, RectState>({

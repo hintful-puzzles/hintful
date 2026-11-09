@@ -4,6 +4,7 @@
  * registry and the catalog are the same set of games in both directions.
  */
 
+import { offersSearch } from "./difficulty.ts";
 import type { Game } from "./game.ts";
 import { type EngineCore, Midend } from "./midend.ts";
 
@@ -42,6 +43,18 @@ export function registerGame<P, S, M, U, D>(game: Game<P, S, M, U, D>): void {
   if (game.hasNoSolution !== undefined && game.findMistakes !== undefined) {
     throw new Error(
       `${game.id}: a game with a mistake check says a board has no solution through solve, so it leaves hasNoSolution out`,
+    );
+  }
+  // Repeated hints finish any board: a board with mistakes is cleared, and a
+  // board deduction cannot finish is given one element of the answer.
+  if (game.findMistakes !== undefined && game.clearMistakes === undefined) {
+    throw new Error(
+      `${game.id}: a game with a mistake check says how a mistake is taken off (clearMistakes)`,
+    );
+  }
+  if (offersSearch(game) && game.revealOne === undefined) {
+    throw new Error(
+      `${game.id}: a game with a tier that allows trial and error says how one element of the answer is put on the board (revealOne)`,
     );
   }
   factories.set(game.id, () => new Midend(game));

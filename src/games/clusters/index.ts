@@ -334,6 +334,26 @@ function findMistakes(state: ClustersState): readonly ClustersMistake[] {
   );
 }
 
+function clearMistakes(
+  _state: ClustersState,
+  mistakes: readonly ClustersMistake[],
+): ClustersMove[] {
+  if (mistakes.length === 0) return [];
+  return [{ kind: "paint", cells: mistakes.map(({ index }) => ({ index, fill: 0 })) }];
+}
+
+/** The first empty tile, colored as the answer colors it. */
+function revealOne(state: ClustersState, solved: ClustersState): ClustersMove | null {
+  const index = state.grid.findIndex(
+    (tile, i) => (tile & COLMASK) === 0 && (solved.grid[i] & COLMASK) !== 0,
+  );
+  if (index < 0) return null;
+  return {
+    kind: "paint",
+    cells: [{ index, fill: (solved.grid[index] & COLMASK) as ClustersFill }],
+  };
+}
+
 // --- hint ------------------------------------------------------------------
 
 /** What a Clusters hint step's marks carry beyond the cells its words name
@@ -499,6 +519,8 @@ export const clustersGame: Game<
   hintKeepTrack,
   hintGesture,
   findMistakes,
+  clearMistakes,
+  revealOne,
   textFormat,
 
   colors,

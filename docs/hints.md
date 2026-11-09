@@ -1159,6 +1159,23 @@ overlay Check & Save uses, and says to fix the highlighted mistakes first, so
 a game with both hooks writes no line for this. `hint-resume.test.ts` asks
 `findMistakes` at every position its walk reaches and fails if it flags one.
 
+**Applying a refusal takes the board forward**, so that pressing Hint over and
+over finishes any board (`WAY_FORWARD` in `hint-refusal.ts` says what each
+kind does). The midend owns all of it; a game owes two hooks, and
+`registerGame` refuses a game that lacks one it needs:
+
+- **`clearMistakes`**, beside `findMistakes`: the moves that take what it found
+  off the board. Played as one step of Undo, and the midend throws if a
+  mistake is left. A shared input module builds it once for its games
+  (`line-drawing.ts`'s `clearEdges`).
+- **`revealOne`**, in a game with an Unreasonable tier: one move that puts one
+  element of the answer on the board, where deduction has run out. A game
+  without it shows the answer whole there instead, which is what a search
+  game past its reach does, having no element to give.
+
+A dead end and a lost game are taken back by the midend alone: it undoes to
+the latest position the hint, Solve and the mistake check all let stand.
+
 A refusal reaches the player in the transient banner on both the manual and
 the Auto-Hint path ([`src/puzzle/puzzle.ts`](../src/puzzle/puzzle.ts)), with
 or without a `statusbarText`; both are requirements of
@@ -1176,8 +1193,11 @@ plans whose every step changes the state and the frame, Latin naked-single
 honesty), [`hint-overlay.test.ts`](../src/engine/hint-overlay.test.ts) (the
 overlay reaches the render cache) and
 [`hint-quality.test.ts`](../src/engine/hint-quality.test.ts) (voice, length,
-binding, show-something). A game's own "the plan solves from empty" test is
-not a substitute for any of them.
+binding, show-something), and
+[`hint-finishes-any-board.test.ts`](../src/engine/hint-finishes-any-board.test.ts)
+(repeated presses finish a board random input has played, and an
+Unreasonable board, through every refusal's way forward). A game's own "the
+plan solves from empty" test is not a substitute for any of them.
 
 ### A hint must resume from any position
 

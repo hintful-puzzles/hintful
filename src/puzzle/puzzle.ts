@@ -5,7 +5,7 @@ import { assertNever } from "../engine/assert-never.ts";
 import { darkValue } from "../engine/color/color-token.ts";
 import type { Scheme } from "../engine/color/color-word.ts";
 import { HINT_REFERENCE_COLORS } from "../engine/color/colors.ts";
-import { ALREADY_SOLVED } from "../engine/hint-refusal.ts";
+import { ALREADY_SOLVED, WAY_FORWARD } from "../engine/hint-refusal.ts";
 import type { MarkRole } from "../engine/hint-words.ts";
 import { DEAL_DEADLINE_MS } from "../engine/retry-limit.ts";
 import { MARK_EDGE_PX } from "../engine/ring.ts";
@@ -461,7 +461,15 @@ export class Puzzle {
    * route through here. */
   private disarmHintApply(): void {
     this._hintArmedToApply.set(false);
+    if (this.armedRefusal !== null && this._helpMessage.get() === this.armedRefusal) {
+      this.setHelpMessage("");
+    }
+    this.armedRefusal = null;
   }
+
+  /** The banner of a refusal the stepper is armed to play the way forward of,
+   * which stays up while it is armed and goes when it is disarmed. */
+  private armedRefusal: string | null = null;
 
   private setHelpMessage(msg: string, temp = false): void {
     if (this._helpMessageTimeoutId !== undefined) {
@@ -915,9 +923,20 @@ export class Puzzle {
     // uses (the midend also lights up any mistakes behind the message) and
     // never arms.
     this.stopAutoHint("Canceled by manual move");
-    const err = await (await this.board()).hint();
+    const board = await this.board();
+    const err = await board.hint();
     if (err) {
-      this.setHelpMessage(err, true);
+      // A refusal with a way forward arms like a step: the next press plays
+      // it, and the banner says what it will do until then.
+      const way = await board.hintWayForward();
+      if (way === null || this._autoHintActive.get()) {
+        this.setHelpMessage(err, true);
+        return err;
+      }
+      const message = `${err} ${WAY_FORWARD[way]}`;
+      this.setHelpMessage(message);
+      this.armedRefusal = message;
+      this._hintArmedToApply.set(true);
       return err;
     }
     // Auto-Hint may have been started while the show was computing; it owns

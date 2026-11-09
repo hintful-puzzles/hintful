@@ -334,6 +334,11 @@ export interface LineDrawing<S, U, D, M> {
     ds: D,
     changes: readonly EdgeChange[],
   ): readonly PointerAction[];
+  /** `Game.clearMistakes` for the edges `edges`: each one opened, in one move. */
+  clearEdges(state: S, edges: readonly number[]): M[];
+  /** `Game.revealOne`: the first line of `solved` that `state` does not draw.
+   * The crosses are the player's notes, never an element of the answer. */
+  revealLine(state: S, solved: S): M | null;
 }
 
 /** The input of a game whose player draws lines along the edges of squares:
@@ -492,5 +497,21 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
       ),
     );
 
-  return { interpretMove, crossDrag, hintGesture };
+  const clearEdges = (state: S, cleared: readonly number[]): M[] => {
+    const move = moveOf(
+      state,
+      cleared.filter((e) => !fixed(state, e)).map((edge) => ({ edge, mark: OPEN })),
+    );
+    return move === null ? [] : [move];
+  };
+
+  const revealLine = (state: S, solved: S): M | null => {
+    for (let e = 0; e < edges(state).edgeCount; e++) {
+      if (rules.mark(solved, e) === LINE && rules.mark(state, e) !== LINE)
+        return moveOf(state, [{ edge: e, mark: LINE }]);
+    }
+    return null;
+  };
+
+  return { interpretMove, crossDrag, hintGesture, clearEdges, revealLine };
 }

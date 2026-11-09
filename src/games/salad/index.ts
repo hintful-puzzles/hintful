@@ -21,6 +21,11 @@ import {
 } from "../../engine/candidate-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
+  clearEntries,
+  type EntryMoves,
+  revealEntry,
+} from "../../engine/entry-mistakes.ts";
+import {
   type Game,
   type SolveResult,
   UI_UPDATE,
@@ -330,6 +335,18 @@ function solve(orig: SaladState): SolveResult<SaladMove> {
 
 // --- the Game --------------------------------------------------------------
 
+/** A clear empties the square, and on a square already empty and not crossed
+ * it wipes the notes, so the second takes away the notes the first left. A
+ * board needs no crosses to be solved, so the answer is revealed one symbol at
+ * a time. */
+const saladEntryMoves: EntryMoves<SaladMove> = {
+  clear: (x, y) => [
+    { type: "set", x, y, value: "clear" },
+    { type: "set", x, y, value: "clear" },
+  ],
+  place: (x, y, n) => ({ type: "set", x, y, value: n }),
+};
+
 /** Salad's difficulty contract (`engine/difficulty.ts`). `saladSolve` answers a
  * plain boolean — "did this come out a complete, valid board?" — and
  * `scratchBoard` seeds it with the clues only. */
@@ -397,6 +414,9 @@ export const saladGame: Game<
   },
   refreshHintStep,
   findMistakes,
+  clearMistakes: (_state, mistakes) => clearEntries(saladEntryMoves, mistakes),
+  revealOne: (state, solved) =>
+    revealEntry(saladEntryMoves, state.grid, solved.grid, state.order),
   requestKeys: (p): KeyLabel[] => {
     // Upstream `game_request_keys`: the symbol keys, then X, O and clear.
     const keys: KeyLabel[] = [];

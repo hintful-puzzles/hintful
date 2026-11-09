@@ -83,6 +83,7 @@ import {
   subsetsValidate,
 } from "./solver.ts";
 import {
+  ADJTHAN,
   CELL_HEIGHT,
   CELL_WIDTH,
   cloneState,
@@ -405,6 +406,41 @@ const targetVerbs: TargetVerbs<
     },
   ],
 };
+
+/** A letter decided against the answer is undecided again, and a rule-out of
+ * the answer's set taken off. A broken rule always holds one of those where
+ * the answer is known, so only where it is not are the letters of every cell
+ * a broken rule names undecided whole. */
+function clearMistakes(
+  state: SubsetsState,
+  mistakes: readonly SubsetsMistake[],
+): SubsetsMove[] {
+  const unknown = (pos: number, bit: number): SubsetsMove => ({
+    kind: "set",
+    type: "unknown",
+    pos,
+    bit,
+  });
+  const byAnswer = mistakes.flatMap((m): SubsetsMove[] => {
+    if (m.kind === "letter") return [unknown(m.pos, m.bit)];
+    if (m.kind === "ruled")
+      return [{ kind: "rule", pos: m.pos, value: m.value, on: false }];
+    return [];
+  });
+  if (byAnswer.length > 0) return byAnswer;
+  const cells = new Set<number>();
+  for (const m of mistakes) {
+    if (m.kind === "cell") cells.add(m.pos);
+    else if (m.kind === "edge") {
+      const { dx, dy } = ADJTHAN[m.dir];
+      cells.add(m.pos);
+      cells.add(m.pos + dy * state.w + dx);
+    }
+  }
+  return [...cells]
+    .filter((pos) => state.immutable[pos] === 0)
+    .flatMap((pos) => Array.from({ length: state.n }, (_, bit) => unknown(pos, bit)));
+}
 
 function executeMove(state: SubsetsState, move: SubsetsMove): SubsetsState {
   if (move.kind === "solve") {
@@ -751,6 +787,7 @@ export const subsetsGame: Game<
   hintKeepTrack,
   hintGesture,
   findMistakes,
+  clearMistakes,
   textFormat,
 
   colors,

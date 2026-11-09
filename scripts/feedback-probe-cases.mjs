@@ -179,8 +179,8 @@ export const MODULES = [
         // board it knows is wrong.
         within: "Midend.computeHintPlan",
         why: "a hint deduces from a board with known mistakes instead of refusing",
-        find: "    if (this.findMistakes() > 0) return FIX_MISTAKES_FIRST;",
-        replace: "    this.findMistakes();",
+        find: "    if (this.findMistakes() > 0) {",
+        replace: "    if (this.findMistakes() < 0) {",
       },
       {
         within: "Midend.computeHintPlan",

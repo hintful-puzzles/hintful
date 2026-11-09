@@ -11,7 +11,7 @@
  * the hint must refuse on rather than narrate from.
  */
 
-import { type NoteEncoding, noteBitOf } from "./candidate-hint.ts";
+import { type CandidateMove, type NoteEncoding, noteBitOf } from "./candidate-hint.ts";
 
 export type EntryMistakeKind = "cell" | "note";
 
@@ -60,3 +60,47 @@ export function entryMistakes<P extends object>(
 export function gridCell(w: number): (i: number) => { x: number; y: number } {
   return (i) => ({ x: i % w, y: (i / w) | 0 });
 }
+
+/** How a game spells the two moves its hint's way forward is made of. */
+export interface EntryMoves<M> {
+  /** The moves that empty cell `(x, y)`, its notes included. */
+  clear(x: number, y: number): readonly M[];
+  /** The move that writes value `n` into empty cell `(x, y)`. */
+  place(x: number, y: number, n: number): M;
+}
+
+/** `Game.clearMistakes` for a board of entries: each mistaken cell emptied. */
+export function clearEntries<M>(
+  moves: EntryMoves<M>,
+  mistakes: readonly { x: number; y: number }[],
+): M[] {
+  return mistakes.flatMap(({ x, y }) => moves.clear(x, y));
+}
+
+/** `Game.revealOne` for a board of entries, row-major of stride `w`: the
+ * answer's value written into the first cell whose entry is not `solved`'s.
+ * The board has no mistake on it, so that cell is empty. */
+export function revealEntry<M>(
+  moves: EntryMoves<M>,
+  entry: ArrayLike<number>,
+  solved: ArrayLike<number>,
+  w: number,
+): M | null {
+  for (let i = 0; i < entry.length; i++) {
+    if (entry[i] !== solved[i]) return moves.place(i % w, (i / w) | 0, solved[i]);
+  }
+  return null;
+}
+
+type SetMove = Extract<CandidateMove, { type: "set" }>;
+
+/** The Latin family's `set` move. Clearing is spelled twice because a game
+ * whose plain clear keeps the notes under an entry wipes them with the pencil
+ * clear; where the plain clear already wipes them, the second changes nothing. */
+export const setMoves: EntryMoves<SetMove> = {
+  clear: (x, y) => [
+    { type: "set", x, y, n: 0, pencil: false },
+    { type: "set", x, y, n: 0, pencil: true },
+  ],
+  place: (x, y, n) => ({ type: "set", x, y, n, pencil: false }),
+};

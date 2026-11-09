@@ -256,6 +256,23 @@ function findMistakes(state: MagnetsState): readonly MagnetsMistake[] {
   return out;
 }
 
+/** Each domino with a wrong cell emptied, its marks with it. A wrong domino
+ * is wrong in both its cells, so the partner's mistake is the same move. */
+function clearMistakes(
+  state: MagnetsState,
+  mistakes: readonly MagnetsMistake[],
+): MagnetsMove[] {
+  const cleared = new Set<number>();
+  const out: MagnetsMove[] = [];
+  for (const { x, y } of mistakes) {
+    const idx = y * state.w + x;
+    if (cleared.has(idx)) continue;
+    cleared.add(idx).add(state.common.dominoes[idx]);
+    out.push({ type: "flag", idx, mode: "empty" });
+  }
+  return out;
+}
+
 const difficulty: DifficultyContract<MagnetsParams> = {
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
@@ -297,6 +314,7 @@ export const magnetsGame: Game<
 
   solve,
   findMistakes,
+  clearMistakes,
   hint: magnetsHint,
   hintRungs: MAGNETS_RUNGS,
   hintMarks: {

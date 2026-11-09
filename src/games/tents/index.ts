@@ -386,6 +386,27 @@ function findMistakes(state: TentsState): readonly TentsMistake[] {
   return out;
 }
 
+/** Each wrong link let go of from its tent, and then each wrong tent or grass
+ * square emptied, which lets go of any link it held. */
+function clearMistakes(
+  state: TentsState,
+  mistakes: readonly TentsMistake[],
+): TentsMove[] {
+  const links: TentsMove[] = mistakes
+    .filter((m) => m.kind === "link")
+    .map(({ x, y }) => ({
+      type: "link",
+      x,
+      y,
+      d: state.links[y * state.w + x],
+      on: false,
+    }));
+  const cells = mistakes
+    .filter((m) => m.kind !== "link")
+    .map(({ x, y }) => ({ x, y, v: BLANK }));
+  return cells.length === 0 ? links : [...links, { type: "cells", cells }];
+}
+
 /**
  * The tents whose link no pairing of the solution `soln` can hold, in reading
  * order.
@@ -486,6 +507,7 @@ export const tentsGame: Game<
   solve,
   difficulty,
   findMistakes,
+  clearMistakes,
   hint: tentsHint,
   hintRungs: TENTS_RUNGS,
   hintMarks: {

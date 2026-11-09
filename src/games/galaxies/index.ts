@@ -977,6 +977,37 @@ function findMistakes(s: GalaxiesState): readonly GalaxiesMistake[] {
   return mistakes;
 }
 
+/** Each wrong wall taken down and each wrongly associated tile let go. Both
+ * tiles of a wrong pair are flagged, so each is let go alone (`solving`),
+ * not with its partner. */
+function clearMistakes(
+  _s: GalaxiesState,
+  mistakes: readonly GalaxiesMistake[],
+): GalaxiesMove[] {
+  if (mistakes.length === 0) return [];
+  const ops = mistakes.map(
+    ({ kind, x, y }): GalaxiesOp => ({
+      kind: kind === "tile" ? "unassoc" : "edge",
+      x,
+      y,
+    }),
+  );
+  return [{ ops, solving: true }];
+}
+
+/** The first wall of the answer not yet drawn: the answer is walls only. */
+function revealOne(s: GalaxiesState, solved: GalaxiesState): GalaxiesMove | null {
+  for (let y = 1; y < s.sy - 1; y++) {
+    for (let x = 1; x < s.sx - 1; x++) {
+      if (spaceTypeAt(x, y) !== SpaceType.Edge) continue;
+      const i = idx(s, x, y);
+      if (solved.flags[i] & F_EDGE_SET && !(s.flags[i] & F_EDGE_SET))
+        return { ops: [{ kind: "edge", x, y }], solving: false };
+    }
+  }
+  return null;
+}
+
 // --- the explained hint ---------------------------------------------
 
 /**
@@ -1209,6 +1240,8 @@ export const galaxiesGame: Game<
 
   solve: solveGalaxies,
   findMistakes,
+  clearMistakes,
+  revealOne,
   hint,
   hintRungs: GALAXIES_RUNGS,
   hintKeepTrack,

@@ -842,6 +842,21 @@ function findMistakes(state: LoopyState): readonly LoopyMistake[] {
   return out;
 }
 
+function clearMistakes(
+  _state: LoopyState,
+  mistakes: readonly LoopyMistake[],
+): LoopyMove[] {
+  const ops: LoopyOp[] = [];
+  const notes: LoopyMove[] = [];
+  for (const m of mistakes) {
+    if (m.kind === "edge") ops.push({ edge: m.edge, state: LINE_UNKNOWN });
+    else if (m.kind === "corner")
+      notes.push({ kind: "corner", dline: m.dline, bits: 0 });
+    else notes.push({ kind: "pair", a: m.a, b: m.b, relation: "none" });
+  }
+  return ops.length > 0 ? [{ kind: "set", ops }, ...notes] : notes;
+}
+
 /** Loopy's difficulty contract (`engine/difficulty.ts`). `solveGame` is used
  * directly rather than `gameHasUniqueSoln`, which throws on a contradiction
  * because the generator only ever asks it about boards derived from a real
@@ -889,6 +904,7 @@ export const loopyGame: Game<
   solve,
   difficulty,
   findMistakes,
+  clearMistakes,
   hint,
   hintMarks: {
     roles: {

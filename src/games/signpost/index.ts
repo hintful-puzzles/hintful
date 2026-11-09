@@ -58,6 +58,7 @@ import { answerOf, isAnswer, solverFinishes } from "./solver.ts";
 import {
   checkCompletion,
   FLAG_IMMUTABLE,
+  isValidMove,
   parseDesc,
   type SignpostDrawState,
   type SignpostMistake,
@@ -304,6 +305,49 @@ function findMistakes(state: SignpostState): readonly SignpostMistake[] {
   return mistakes;
 }
 
+/** A link from square `from` to square `to`. */
+const linkMove = (
+  s: SignpostState,
+  from: number,
+  to: number,
+): Extract<SignpostMove, { type: "link" }> => ({
+  type: "link",
+  fromX: from % s.w,
+  fromY: Math.floor(from / s.w),
+  toX: to % s.w,
+  toY: Math.floor(to / s.w),
+});
+
+/** Each wrong link taken off. The only move that does severs the square's
+ * link in as well, so a right link in is made again. */
+function clearMistakes(
+  state: SignpostState,
+  mistakes: readonly SignpostMistake[],
+): SignpostMove[] {
+  const wrong = new Set(mistakes.map((m) => m.index));
+  const moves: SignpostMove[] = [];
+  let s = state;
+  const play = (move: SignpostMove) => {
+    moves.push(move);
+    s = executeMove(s, move);
+  };
+  for (const i of wrong) {
+    if (s.next[i] === -1) continue;
+    const before = s.prev[i];
+    play({ type: "unlinkNext", x: i % s.w, y: Math.floor(i / s.w) });
+    if (before === -1 || wrong.has(before)) continue;
+    const back = linkMove(s, before, i);
+    if (isValidMove(s, false, back.fromX, back.fromY, back.toX, back.toY)) play(back);
+  }
+  return moves;
+}
+
+/** The first link of the answer not yet made. */
+function revealOne(state: SignpostState, solved: SignpostState): SignpostMove | null {
+  const i = solved.next.findIndex((to, j) => to !== -1 && state.next[j] !== to);
+  return i < 0 ? null : linkMove(state, i, solved.next[i]);
+}
+
 // --- status / text ---------------------------------------------------
 
 function status(s: SignpostState): GameStatus {
@@ -411,6 +455,8 @@ export const signpostGame: Game<
 
   solve,
   findMistakes,
+  clearMistakes,
+  revealOne,
   hint: signpostHint,
   hintMarks: {
     roles: {

@@ -1347,11 +1347,14 @@ describe("Midend: deduction runs out only on an Unreasonable tier", () => {
     return g as unknown as typeof fakeGame;
   }
 
-  it("an Unreasonable board gets the refusal", () => {
+  it("an Unreasonable board gets the refusal, and applying it shows the answer", () => {
     const h = harness(exhaustedGame());
     expect(h.m.newGameFromId("t3d1:g3-7")).toBeNull();
     expect(h.m.hint()).toBe(DEDUCTION_EXHAUSTED);
-    expect(h.m.executeHint()).toBe(DEDUCTION_EXHAUSTED);
+    // The fake game has no element to reveal, so the answer comes whole.
+    expect(h.m.hintWayForward()).toBe("solve");
+    expect(h.m.executeHint()).toBeNull();
+    expect(h.m.hint()).toBe(ALREADY_SOLVED);
   });
 
   it("a board on any other tier is a defect, thrown with the id to reopen it", () => {

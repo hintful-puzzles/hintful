@@ -509,15 +509,21 @@ export const minesGame: Game<
   },
 
   // A flag on a square with no mine under it. A mine the player opened is not
-  // a mark to fix: the hint's dead-board refusal answers that.
+  // a mark to fix: the hint's dead-board refusal answers that. A dead board
+  // takes no move, so no flag on it is one either until Undo revives it.
   findMistakes(s: MinesState): readonly Point[] {
     const mines = s.mines;
-    if (!mines) return [];
+    if (!mines || s.dead) return [];
     const out: Point[] = [];
     for (let i = 0; i < s.w * s.h; i++)
       if (s.grid[i] === FLAG && !mines[i])
         out.push({ x: i % s.w, y: Math.floor(i / s.w) });
     return out;
+  },
+
+  clearMistakes(_s: MinesState, mistakes: readonly Point[]): MinesMove[] {
+    if (mistakes.length === 0) return [];
+    return [{ type: "ops", ops: mistakes.map(({ x, y }) => ({ op: "F", x, y })) }];
   },
 
   // A death is not a loss (the player undoes and plays on), yet nobody is

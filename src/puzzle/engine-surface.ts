@@ -8,6 +8,7 @@
  * contract.
  */
 
+import type { WayForward } from "../engine/hint-refusal.ts";
 import type { MarkRole } from "../engine/hint-words.ts";
 import type {
   ChangeNotification,
@@ -56,6 +57,9 @@ export interface BoardSurface {
    * Hint-button stepper) hides the plan once the step settles instead of
    * previewing the next step; auto-play leaves it false. */
   executeHint(hideAfter?: boolean): string | null;
+  /** What applying the hint does after the refusal `hint` just gave, or `null`
+   * where it does nothing. */
+  hintWayForward(): WayForward | null;
   /** The marks of each of the first `count` references of the displayed
    * hint's words on the canvas (`markAlpha`), the canvas left as it was;
    * `null` with no canvas. */

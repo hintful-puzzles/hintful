@@ -436,6 +436,27 @@ function hintKeepTrack(
   return verdict;
 }
 
+/** Each wrong square made undecided again, in one move. */
+function clearMistakes(
+  state: PatternState,
+  mistakes: readonly PatternMistake[],
+): PatternMove[] {
+  const cells = mistakes.map(({ x, y }) => y * state.common.w + x);
+  return cells.length === 0 ? [] : [{ type: "fillCells", value: GRID_UNKNOWN, cells }];
+}
+
+/** The answer's first undecided square: a shaded one while any is left,
+ * before the clear ones, which are the ruling-out mark. */
+function revealOne(state: PatternState, solved: PatternState): PatternMove | null {
+  for (const value of [GRID_FULL, GRID_EMPTY] as const) {
+    const at = state.grid.findIndex(
+      (v, i) => v === GRID_UNKNOWN && solved.grid[i] === value,
+    );
+    if (at >= 0) return { type: "fillCells", value, cells: [at] };
+  }
+  return null;
+}
+
 function solve(orig: PatternState): SolveResult<PatternMove> {
   return solveFromAnswer(answerOf(orig), (grid) => ({
     type: "solve",
@@ -495,6 +516,8 @@ export const patternGame: Game<
   hintKeepTrack,
   hintGesture,
   findMistakes,
+  clearMistakes,
+  revealOne,
   textFormat,
 
   colors,

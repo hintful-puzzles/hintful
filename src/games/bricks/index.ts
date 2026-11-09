@@ -100,6 +100,7 @@ import {
   F_EMPTY,
   F_SHADE,
   F_UNSHADE,
+  FE_WRONG,
   menu,
   NUM_MASK,
   newState,
@@ -351,6 +352,33 @@ function status(s: BricksState): GameStatus {
   return isSolved(s) ? "solved" : "ongoing";
 }
 
+/** The cells painted against the answer are emptied. A broken rule always
+ * holds one of them on a board with one answer, so the rest of a rule's cells
+ * keep their paint; only a board without one has its broken rules emptied
+ * whole. */
+function clearMistakes(
+  _state: BricksState,
+  mistakes: readonly BricksMistake[],
+): BricksMove[] {
+  const wrong = mistakes.filter((m) => m.flags & FE_WRONG);
+  const cells = (wrong.length > 0 ? wrong : mistakes).map(({ index }) => ({
+    index,
+    to: "empty" as const,
+  }));
+  return cells.length > 0 ? [{ kind: "paint", cells }] : [];
+}
+
+/** The first empty cell the answer shades, else the first it leaves clear. */
+function revealOne(state: BricksState, solved: BricksState): BricksMove | null {
+  for (const want of [F_SHADE, F_UNSHADE]) {
+    const index = state.grid.findIndex(
+      (c, i) => (c & COL_MASK) === F_EMPTY && (solved.grid[i] & COL_MASK) === want,
+    );
+    if (index >= 0) return { kind: "paint", cells: [{ index, to: bitsColor(want) }] };
+  }
+  return null;
+}
+
 function solve(orig: BricksState): SolveResult<BricksMove> {
   return solveFromAnswer(answerOf(orig), (solution) => ({
     kind: "solve",
@@ -538,6 +566,8 @@ export const bricksGame: Game<
   hintKeepTrack,
   hintGesture,
   findMistakes,
+  clearMistakes,
+  revealOne,
   textFormat,
 
   colors,

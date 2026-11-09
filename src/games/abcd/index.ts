@@ -13,9 +13,12 @@ import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.
 import { assertNever } from "../../engine/assert-never.ts";
 import { adaptiveMarkAll, candidateHint } from "../../engine/candidate-hint.ts";
 import {
+  clearEntries,
   type EntryMistakeKind,
+  type EntryMoves,
   entryMistakes,
   gridCell,
+  revealEntry,
 } from "../../engine/entry-mistakes.ts";
 import {
   type Game,
@@ -307,6 +310,12 @@ function findMistakes(state: AbcdState): readonly AbcdMistake[] {
   );
 }
 
+/** A grid value is its letter's index plus one. */
+const abcdEntryMoves: EntryMoves<AbcdMove> = {
+  clear: (x, y) => [{ type: "enter", x, y, letter: null }],
+  place: (x, y, n) => ({ type: "enter", x, y, letter: n - 1 }),
+};
+
 function requestKeys(p: AbcdParams): KeyLabel[] {
   const keys: KeyLabel[] = [];
   for (let i = 0; i < p.n; i++)
@@ -349,6 +358,9 @@ export const abcdGame: Game<
   solve,
   difficulty,
   findMistakes,
+  clearMistakes: (_state, mistakes) => clearEntries(abcdEntryMoves, mistakes),
+  revealOne: (state, solved) =>
+    revealEntry(abcdEntryMoves, state.grid, solved.grid, state.params.w),
   hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
   hintRungs: ABCD_RUNGS,
   hintMarks: {

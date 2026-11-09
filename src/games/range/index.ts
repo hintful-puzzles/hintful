@@ -206,6 +206,34 @@ function findMistakes(state: RangeState): readonly RangeMistake[] {
   return out;
 }
 
+/** Each wrong square made undecided again, in one move. */
+function clearMistakes(
+  _state: RangeState,
+  mistakes: readonly RangeMistake[],
+): RangeMove[] {
+  const sets = mistakes.map(({ r, c }) => ({ r, c, value: "empty" as const }));
+  return sets.length === 0 ? [] : [{ sets }];
+}
+
+/** The answer's first undecided square: a shaded one while any is left,
+ * before the dotted ones, which are the ruling-out mark. */
+function revealOne(state: RangeState, solved: RangeState): RangeMove | null {
+  for (const value of [BLACK, WHITE]) {
+    const at = state.grid.findIndex((v, i) => v === EMPTY && solved.grid[i] === value);
+    if (at >= 0)
+      return {
+        sets: [
+          {
+            r: Math.floor(at / state.w),
+            c: at % state.w,
+            value: gridValueToCell(value),
+          },
+        ],
+      };
+  }
+  return null;
+}
+
 // --- hint ------------------------------------------------------------------
 
 /** Plan data for a Range hint step: the cell the deduction forces and the
@@ -464,6 +492,8 @@ export const rangeGame: Game<
     );
   },
   findMistakes,
+  clearMistakes,
+  revealOne,
 
   textFormat,
 

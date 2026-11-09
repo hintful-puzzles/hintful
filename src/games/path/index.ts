@@ -125,6 +125,12 @@ export const pathGame: Game<
   solve,
   difficulty,
   findMistakes,
+  clearMistakes: (state, mistakes) =>
+    input.clearEdges(
+      state,
+      mistakes.map((m) => m.edge),
+    ),
+  revealOne: input.revealLine,
   textFormat,
 
   hint: pathHint,

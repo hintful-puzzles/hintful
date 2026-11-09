@@ -19,6 +19,7 @@ import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
+  bitDirection,
   D,
   dirX,
   dirY,
@@ -242,6 +243,14 @@ export const pearlGame: Game<
   solve,
   difficulty,
   findMistakes,
+  clearMistakes: (state, mistakes) => {
+    const g = squareEdges(state.w, state.h);
+    // Both squares beside a wrong edge report it.
+    const edges = new Set(
+      mistakes.map((m) => g.around[(m.y * state.w + m.x) * 4 + bitDirection(m.dir)]),
+    );
+    return input.clearEdges(state, [...edges]);
+  },
   hint: pearlHint,
   hintMarks: {
     roles: {

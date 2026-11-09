@@ -222,6 +222,15 @@ function findMistakes(state: SinglesState): readonly SinglesMistake[] {
   return out;
 }
 
+/** Each wrong square emptied, in one move. */
+function clearMistakes(
+  _state: SinglesState,
+  mistakes: readonly SinglesMistake[],
+): SinglesMove[] {
+  const sets = mistakes.map(({ x, y }) => ({ x, y, value: "empty" as const }));
+  return sets.length === 0 ? [] : [{ sets }];
+}
+
 // --- hint ------------------------------------------------------------------
 
 /** Highlight data for a Singles hint step. `targets` are the cell(s) the
@@ -525,6 +534,7 @@ export const singlesGame: Game<
       ),
     ),
   findMistakes,
+  clearMistakes,
 
   textFormat,
 

@@ -52,7 +52,10 @@ import {
   menu,
   newState,
   paramConfig,
+  STATE_BLANK,
   STATE_MARK_MASK,
+  STATE_MARKED,
+  STATE_UNMARKED,
   statusbarText,
   TIERS,
   textFormat,
@@ -113,6 +116,31 @@ function interpretMove(
   return interpretTargetVerbs(targetVerbs, state, ui, ds, p, raw);
 }
 
+/** Each wrong square emptied, in one move. */
+function clearMistakes(
+  state: MosaicState,
+  mistakes: readonly MosaicMistake[],
+): MosaicMove[] {
+  const cells = mistakes.map(({ x, y }) => y * state.width + x);
+  return cells.length === 0 ? [] : [{ type: "fill", cells, mark: STATE_UNMARKED }];
+}
+
+/** The answer's first square still empty: a shaded one while any is left,
+ * before the clear ones, which are the ruling-out mark. */
+function revealOne(state: MosaicState, solved: MosaicState): MosaicMove | null {
+  const empty = (mark: number): number =>
+    state.cells.findIndex(
+      (c, i) =>
+        (c & STATE_MARK_MASK) === STATE_UNMARKED &&
+        (solved.cells[i] & STATE_MARK_MASK) === mark,
+    );
+  for (const mark of [STATE_MARKED, STATE_BLANK]) {
+    const at = empty(mark);
+    if (at >= 0) return { type: "fill", cells: [at], mark };
+  }
+  return null;
+}
+
 // --- Game object -----------------------------------------------------------
 
 export const mosaicGame: Game<
@@ -162,6 +190,8 @@ export const mosaicGame: Game<
   }),
 
   findMistakes,
+  clearMistakes,
+  revealOne,
 
   hint: mosaicHint,
   hintRungs: MOSAIC_RUNGS,

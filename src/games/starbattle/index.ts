@@ -187,6 +187,18 @@ function findMistakes(state: StarbattleState): readonly StarbattleMistake[] {
   return entryMistakes({ answer, entry: grid }, gridCell(size));
 }
 
+/** Each wrong square blanked, in one move. */
+function clearMistakes(
+  state: StarbattleState,
+  mistakes: readonly StarbattleMistake[],
+): StarbattleMove[] {
+  const cells: { index: number; mark: StarbattleMark }[] = mistakes.map(({ x, y }) => ({
+    index: y * state.size + x,
+    mark: BLANK,
+  }));
+  return cells.length === 0 ? [] : [{ kind: "mark", cells }];
+}
+
 const difficulty: DifficultyContract<StarbattleParams> = {
   solveAtCap: (p, desc, cap) => solveStarbattle(boardOf(newState(p, desc)), cap),
 };
@@ -248,6 +260,7 @@ export const starbattleGame: Game<
   solve,
   difficulty,
   findMistakes,
+  clearMistakes,
   textFormat,
 
   hint: starbattleHint,

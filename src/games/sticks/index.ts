@@ -359,6 +359,15 @@ function solve(orig: SticksState): SolveResult<SticksMove> {
   }));
 }
 
+/** The first white square of the answer whose line is not yet placed. */
+function revealOne(state: SticksState, solved: SticksState): SticksMove | null {
+  for (let index = 0; index < state.grid.length; index++) {
+    if (state.grid[index] & (F_BLOCK | F_HOR | F_VER)) continue;
+    return { kind: "set", changes: [{ index, line: bitsLine(solved.grid[index]) }] };
+  }
+  return null;
+}
+
 // --- hint (the ladder's firings, narrated) ----------------------------------
 
 /**
@@ -546,6 +555,16 @@ export const sticksGame: Game<
 
   solve,
   findMistakes,
+  clearMistakes: (_state, mistakes) =>
+    mistakes.length === 0
+      ? []
+      : [
+          {
+            kind: "set",
+            changes: mistakes.map(({ index }) => ({ index, line: "none" })),
+          },
+        ],
+  revealOne,
   hint,
   hintRungs: STICKS_RUNGS,
   hintMarks: {

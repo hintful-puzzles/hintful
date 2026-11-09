@@ -605,6 +605,8 @@ export const ascentGame: Game<
 
   solve,
   findMistakes,
+  clearMistakes: (_state, mistakes) =>
+    mistakes.map(({ cell }) => ({ kind: "clear", cell })),
   // `findMistakes` compares every entered number with the unique solution, so
   // a board it passes, the only kind the midend asks about, is one the hint may
   // deduce from.

@@ -203,6 +203,35 @@ export function markedDeadEnd(words: Narration): MarkedDeadEnd {
 }
 
 /**
+ * **What applying the hint does after a refusal**, so that pressing Hint over
+ * and over finishes any board (`engine-hints`, "Pressing Hint over and over
+ * finishes any board"). The midend says the sentence after the refusal's
+ * own, and the next press plays it:
+ *
+ * - `clear`: after {@link FIX_MISTAKES_FIRST}, the highlighted mistakes are
+ *   taken off (`Game.clearMistakes`).
+ * - `rewind`: after a dead end or a lost game, the moves since the last
+ *   position the hint does not call one are undone, and Redo puts them back.
+ * - `reveal`: where the hint has no reasoned step on a sound board, one
+ *   element of the answer is put on the board (`Game.revealOne`).
+ * - `solve`: the same, in a game with no element to reveal, where the answer
+ *   is shown whole.
+ *
+ * A refusal with none is an exception the requirement names: a board with no
+ * one answer ({@link PUZZLE_NOT_REASONABLE}, {@link SOLUTION_UNKNOWN}) has
+ * nothing to lead to, and a lost game opened at its first position has
+ * nothing to go back to.
+ */
+export const WAY_FORWARD = {
+  clear: "Apply the hint to take them off.",
+  rewind: "Apply the hint to go back to where the board can still be finished.",
+  reveal: "Or apply the hint to fill in one piece of the answer.",
+  solve: "Or apply the hint to show the answer.",
+} as const;
+
+export type WayForward = keyof typeof WAY_FORWARD;
+
+/**
  * Every reason a game's `hint` can give for not hinting. Two are Solve's
  * ({@link NO_SOLUTION_FROM_HERE}, {@link SOLUTION_UNKNOWN}), because a hint
  * meets the same facts: a position nothing finishes from, and a game ID that

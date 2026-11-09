@@ -184,6 +184,58 @@ export function edgeEdits(
   ];
 }
 
+/** The edits taking `state`'s borders to `next`. */
+function editsTo(state: BorderGridState, next: Uint8Array): BorderEdit[] {
+  const edits: BorderEdit[] = [];
+  for (let i = 0; i < next.length; i++) {
+    const flag = state.borders[i] ^ next[i];
+    if (flag) edits.push({ x: i % state.w, y: Math.floor(i / state.w), flag });
+  }
+  return edits;
+}
+
+/** `Game.clearMistakes`'s edits: each of `edges` undecided again, from both
+ * its cells. */
+export function clearBorderEdges(
+  state: BorderGridState,
+  edges: readonly BorderEdge[],
+): BorderEdit[] {
+  const next = Uint8Array.from(state.borders);
+  const both = (d: number) => BORDER(d) | DISABLED(BORDER(d));
+  for (const { x, y, dir } of edges) {
+    next[y * state.w + x] &= ~both(dir);
+    next[(y + DY[dir]) * state.w + x + DX[dir]] &= ~both(FLIP(dir));
+  }
+  return editsTo(state, next);
+}
+
+/** `Game.revealOne`'s edits: the first wall of `solved` not yet drawn, from
+ * both its cells; once every wall is, the first edge `solved` leaves open,
+ * marked as no wall. `null` once every edge is decided. */
+export function revealBorderEdge(
+  state: BorderGridState,
+  solved: BorderGridState,
+): BorderEdit[] | null {
+  const { w, h, borders } = state;
+  for (const wall of [true, false]) {
+    for (let i = 0; i < borders.length; i++) {
+      for (const dir of [1, 2]) {
+        const x = (i % w) + DX[dir];
+        const y = Math.floor(i / w) + DY[dir];
+        if (outOfBounds(x, y, w, h)) continue;
+        if (wall !== ((solved.borders[i] & BORDER(dir)) !== 0)) continue;
+        const mark = (d: number) => (wall ? BORDER(d) : DISABLED(BORDER(d)));
+        if (borders[i] & mark(dir)) continue;
+        const next = Uint8Array.from(borders);
+        next[i] |= mark(dir);
+        next[y * w + x] |= mark(FLIP(dir));
+        return editsTo(state, next);
+      }
+    }
+  }
+  return null;
+}
+
 /**
  * The mechanic's geometry for the target-verb model: a press addresses the
  * nearest interior edge, and the half-cell cursor (see {@link BorderGridUi})

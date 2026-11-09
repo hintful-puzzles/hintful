@@ -20,6 +20,11 @@ import {
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import {
+  clearEntries,
+  type EntryMoves,
+  revealEntry,
+} from "../../engine/entry-mistakes.ts";
+import {
   type Game,
   type HintResult,
   type HintStep,
@@ -279,6 +284,14 @@ function interpretMove(
 
   return null;
 }
+
+const entryMoves: EntryMoves<CrossingMove> = {
+  clear: (x, y) => [
+    { kind: "set", x, y, digit: null },
+    { kind: "pencil", x, y, digit: null },
+  ],
+  place: (x, y, digit) => ({ kind: "set", x, y, digit }),
+};
 
 function executeMove(state: CrossingState, move: CrossingMove): CrossingState {
   const { w, h, walls } = state.puzzle;
@@ -739,6 +752,9 @@ export const crossingGame: Game<
   solve,
   difficulty,
   findMistakes,
+  clearMistakes: (_state, mistakes) => clearEntries(entryMoves, mistakes),
+  revealOne: (state, solved) =>
+    revealEntry(entryMoves, state.grid, solved.grid, state.puzzle.w),
   hint,
   hintRungs: CROSSING_RUNGS,
   hintMarks: {

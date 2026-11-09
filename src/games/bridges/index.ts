@@ -503,6 +503,35 @@ function findMistakes(state: BridgesState): readonly BridgesMistake[] {
   return out;
 }
 
+/** Each wrong span emptied of its bridges, its cross and its limit; each
+ * island wrongly marked complete unmarked. */
+function clearMistakes(
+  state: BridgesState,
+  mistakes: readonly BridgesMistake[],
+): BridgesMove[] {
+  const ops: BridgesOp[] = [];
+  for (const m of mistakes) {
+    if (!("x1" in m)) {
+      ops.push({ op: "M", x: m.x, y: m.y });
+      continue;
+    }
+    const dx = Math.sign(m.x2 - m.x1);
+    const cx = m.x1 + dx;
+    const cy = m.y1 + Math.sign(m.y2 - m.y1);
+    ops.push({ ...m, op: "L", n: 0 });
+    if (state.gridAt(cx, cy) & (dx ? G_NOLINEH : G_NOLINEV))
+      ops.push({ ...m, op: "N" });
+    ops.push({ ...m, op: "C", n: state.maxb });
+  }
+  if (ops.length === 0) return [];
+  // A span emptied can leave an island marked complete short of its count.
+  const after = executeMove(state, { ops });
+  for (const is of after.islands)
+    if (after.gridAt(is.x, is.y) & G_MARK && after.islandCountbridges(is) < is.count)
+      ops.push({ op: "M", x: is.x, y: is.y });
+  return [{ ops }];
+}
+
 /** Bridges' difficulty contract (`engine/difficulty.ts`). `solveFromScratch`
  * clears the board first and returns 1 for fully solved, 0 otherwise, with no
  * contradiction signal to report. */
@@ -547,6 +576,7 @@ export const bridgesGame: Game<
   solve,
   difficulty,
   findMistakes,
+  clearMistakes,
 
   textFormat,
   prefs,

@@ -722,6 +722,24 @@ export interface Game<
    * it to `redraw`, exactly like a displayed hint step. */
   findMistakes?(state: State): readonly Mistake[];
 
+  /** The moves that take `mistakes`, what {@link findMistakes} just found on
+   * `state`, off the board: an entry emptied, a line or a mark taken up, so
+   * that each element is as the player found it. Applying the hint on a
+   * board with mistakes plays them, as one step of Undo, and the board after
+   * them must have none. Required of every game with `findMistakes`
+   * (`registerGame`). Pure. */
+  clearMistakes?(state: State, mistakes: readonly Mistake[]): readonly Move[];
+
+  /** One move that puts one element of `solved`, the board's answer as
+   * `solve` reaches it from `state`, onto `state`: an entry written in, a
+   * line drawn. Applying the hint plays it where the hint has no reasoned
+   * step on a board with nothing wrong on it, so `state` has no mistake and
+   * the move must make none. `null` only when `state` already holds every
+   * element (the midend then shows the answer whole). Required of a game
+   * with a tier that allows trial and error (`registerGame`); a game
+   * without it shows the answer whole there instead. Pure. */
+  revealOne?(state: State, solved: State): Move | null;
+
   /** Build the game's **reference aid**: a checklist of the puzzle's
    * fixed inventory of pieces with the player's found status, derived
    * purely from the current state (never the solution). Pure. Presence

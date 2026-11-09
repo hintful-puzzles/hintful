@@ -451,6 +451,22 @@ function findMistakes(state: MapState): readonly MapMistake[] {
   );
 }
 
+/** Each wrong region cleared, which takes its dots off with its color. */
+function clearMistakes(_state: MapState, mistakes: readonly MapMistake[]): MapMove[] {
+  const ops = mistakes.map(
+    ({ region }): MapOp => ({ op: "color", region, color: null }),
+  );
+  return ops.length === 0 ? [] : [{ ops }];
+}
+
+/** The first region the answer colors that the board leaves blank. */
+function revealOne(state: MapState, solved: MapState): MapMove | null {
+  for (let region = 0; region < state.params.n; region++)
+    if (state.coloring[region] !== solved.coloring[region])
+      return { ops: [{ op: "color", region, color: solved.coloring[region] }] };
+  return null;
+}
+
 function hint(
   state: MapState,
   _aux?: string,
@@ -526,6 +542,8 @@ export const mapGame: Game<
   solve,
   difficulty,
   findMistakes,
+  clearMistakes,
+  revealOne,
   hint,
   hintRungs: MAP_RUNGS,
   hintMarks: {

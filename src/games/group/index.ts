@@ -29,7 +29,13 @@ import {
   runLatinCandidatePlan,
 } from "../../engine/candidate-plan.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
-import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
+import {
+  clearEntries,
+  type EntryMoves,
+  entryMistakes,
+  gridCell,
+  revealEntry,
+} from "../../engine/entry-mistakes.ts";
 import {
   type Game,
   type HintResult,
@@ -672,6 +678,11 @@ const groupCandidateMoves: CandidateMoveAdapter<GroupMove> = {
   place: (x, y, n) => ({ type: "set", cells: [{ x, y }], n }),
 };
 
+const groupEntryMoves: EntryMoves<GroupMove> = {
+  clear: (x, y) => [{ type: "set", cells: [{ x, y }], n: 0 }],
+  place: (x, y, n) => ({ type: "set", cells: [{ x, y }], n }),
+};
+
 /** Classify a player move against the displayed hint step (the engine's
  * keep-track contract). `state` is the PRE-move board. */
 function hintKeepTrack(
@@ -805,6 +816,9 @@ export const groupGame: Game<
   hintGesture,
   refreshHintStep,
   findMistakes,
+  clearMistakes: (_state, mistakes) => clearEntries(groupEntryMoves, mistakes),
+  revealOne: (state, solved) =>
+    revealEntry(groupEntryMoves, state.grid, solved.grid, state.w),
   requestKeys,
   textFormat,
 

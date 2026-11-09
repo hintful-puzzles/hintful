@@ -42,9 +42,12 @@ import {
   DEDUCTION_EXHAUSTED,
   FIX_MISTAKES_FIRST,
   GAME_OVER,
+  type HintRefusal,
   isDeadEnd,
   type MarkedDeadEnd,
+  NO_MOVE_WORTH_MAKING,
   SEARCH_OUT_OF_REACH,
+  type WayForward,
 } from "./hint-refusal.ts";
 import type { MarkRole } from "./hint-words.ts";
 import { pencilModeKey, takesNotes } from "./key-labels.ts";
@@ -71,6 +74,7 @@ import { type RandomState, randomNew } from "./random/index.ts";
 import { RULES_OUT_PREF } from "./rules-out.ts";
 import { sameShown, sameValue } from "./same-value.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
+import { NO_SOLUTION_FROM_HERE } from "./solve-failure.ts";
 import { endSweep, sweepContinues, sweepPending } from "./target-verb.ts";
 import type {
   ChangeNotification,
@@ -233,6 +237,10 @@ export interface EngineCore {
   solve(): string | null;
   hint(): string | null;
   executeHint(hideAfter?: boolean): string | null;
+  /** What applying the hint does after the refusal `hint` just gave, or
+   * `null` where it does nothing (`WAY_FORWARD`). Dropped by any change to the
+   * board, as the refusal's highlight is. */
+  hintWayForward(): WayForward | null;
   /** Draw the displayed step without the marks of the reference of its words
    * at `index` (`Narration.refs`), or with all of them with `null`: the
    * frontend draws both to find that reference's marks on the canvas. */
@@ -472,6 +480,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /** The refusal whose words mark its cause, while it is the answer on
    * display; cleared with the mistake overlay, on the same transitions. */
   private activeDeadEnd: MarkedDeadEnd | null = null;
+  /** What applying the hint does after the refusal on display. */
+  private wayForward: WayForward | null = null;
   private timerElapsed = 0;
   /** The `show-timer` preference. Every game has it, and it starts on: the
    * readout is small enough that a player who does not want it can switch it
@@ -1431,6 +1441,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   private clearOverlays(): void {
     this.activeMistakes = null;
     this.activeDeadEnd = null;
+    this.wayForward = null;
   }
 
   findMistakes(): number {
@@ -1482,10 +1493,11 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    */
   private askHint(
     hint: (state: State, aux?: string, ui?: Ui) => HintResult<Move>,
+    state: State = this.state,
   ): HintResult<Move> {
-    const proof = this.game.hasNoSolution?.(this.state);
+    const proof = this.game.hasNoSolution?.(state);
     if (typeof proof === "object") return proof;
-    return hint(this.state, this.aux, this.ui);
+    return hint(state, this.aux, this.ui);
   }
 
   /** Take a refusal as the hint's word on this position: a dead end counts as
@@ -1554,6 +1566,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /** Compute and store a fresh plan at index 0. Returns the error
    * message when no plan is available. */
   private computeHintPlan(): string | null {
+    this.wayForward = null;
     if (!this.game.hint) {
       return "This game does not support hints";
     }
@@ -1561,7 +1574,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // because a finished board is not a wrong one. The second promises a
     // highlight, so it is said only once the mistakes are on the overlay.
     if (this.statusOf(this.state) === "solved") return ALREADY_SOLVED;
-    if (this.findMistakes() > 0) return FIX_MISTAKES_FIRST;
+    if (this.findMistakes() > 0) {
+      this.wayForward = "clear";
+      return FIX_MISTAKES_FIRST;
+    }
     const result = this.askHint(this.game.hint);
     if (!result.ok && result.error === DEDUCTION_EXHAUSTED) {
       // The refusal tells the player the tier allows positions that need trial
@@ -1582,6 +1598,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     }
     if (!result.ok) {
       this.showDeadEnd(result);
+      this.wayForward = this.wayForwardFrom(result.error);
       return result.error;
     }
     if (result.steps.length === 0) return "Game returned an empty hint plan";
@@ -1591,6 +1608,135 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // Every displayed step comes from a plan made here, so this is the one
     // place a board can first be helped by a hint's step.
     this.markHelped();
+    return null;
+  }
+
+  hintWayForward(): WayForward | null {
+    return this.wayForward;
+  }
+
+  /** What applying the hint does after a game's refusal (`WAY_FORWARD`): a
+   * dead end goes back to where the board can still be finished, and a sound
+   * board the hint has no reasoned step on is given a piece of the answer. A
+   * board with no one answer has nowhere to be led. */
+  private wayForwardFrom(refusal: HintRefusal): WayForward | null {
+    if (isDeadEnd(refusal)) return this.runStart() < this.pos ? "rewind" : null;
+    if (
+      refusal === DEDUCTION_EXHAUSTED ||
+      refusal === SEARCH_OUT_OF_REACH ||
+      refusal === NO_MOVE_WORTH_MAKING
+    ) {
+      if (!this.game.solve) return null;
+      return this.game.revealOne ? "reveal" : "solve";
+    }
+    return null;
+  }
+
+  /** Play the way forward the refusal on display named. */
+  private goForward(way: WayForward): string | null {
+    this.wayForward = null;
+    switch (way) {
+      case "clear":
+        return this.clearMistakes();
+      case "rewind":
+        return this.rewind();
+      case "reveal":
+        return this.reveal();
+      case "solve":
+        return this.solve();
+    }
+  }
+
+  /** Take every mistake off the board, as one step of Undo. */
+  private clearMistakes(): string | null {
+    const { findMistakes, clearMistakes } = this.game;
+    if (!findMistakes || !clearMistakes) {
+      throw new Error(`${this.game.id}: mistakes found with no clearMistakes`);
+    }
+    const moves = clearMistakes(this.state, findMistakes(this.state));
+    let joins = false;
+    for (const move of moves) {
+      const next = this.game.executeMove(this.state, move);
+      if (sameValue(this.state, next)) continue;
+      this.commitMove(next, move, joins);
+      joins = true;
+    }
+    const left = findMistakes(this.state).length;
+    if (left > 0) {
+      throw new Error(
+        `${this.game.id}: clearMistakes left ${left} mistakes on the board (${this.game.encodeParams(this.boardParams, true)}:${this.desc})`,
+      );
+    }
+    this.markHelped();
+    return null;
+  }
+
+  /**
+   * The latest earlier position of this board that Undo lands on and the
+   * board can still be won from, as far as the game can tell: not lost,
+   * nothing wrong on it, no dead end to the hint, and none to Solve. Solve's
+   * is asked as well because a hint may lead on where no win is left (Flood's
+   * plays on past its limit). Else the position the board was dealt or
+   * restarted at, which loaded only because it could be won.
+   */
+  private rewindTarget(): number {
+    const start = this.runStart();
+    const hint = this.game.hint;
+    if (!hint) return start;
+    for (let at = this.pos - 1; at > start; at--) {
+      // Undo stops only where an entry did not join the one before it.
+      if (this.joined[at]) continue;
+      const s = this.history[at];
+      const status = this.statusOf(s);
+      if (status === "lost") continue;
+      if (status === "solved") return at;
+      if ((this.game.findMistakes?.(s).length ?? 0) > 0) continue;
+      const result = this.askHint(hint, s);
+      if (!result.ok && isDeadEnd(result.error)) continue;
+      const solved = this.game.solve?.(this.history[0], s, this.aux);
+      if (solved && !solved.ok && solved.error === NO_SOLUTION_FROM_HERE) continue;
+      return at;
+    }
+    return start;
+  }
+
+  /** The position this run of the board began at: 0, or just after the last
+   * restart before the current position. */
+  private runStart(): number {
+    for (let at = this.pos - 1; at >= 0; at--)
+      if (this.moveLog[at] instanceof Restart) return at + 1;
+    return 0;
+  }
+
+  /** Undo back to {@link rewindTarget}; Redo puts the moves back. */
+  private rewind(): string | null {
+    const target = this.rewindTarget();
+    while (this.pos > target) this.undo();
+    this.markHelped();
+    return null;
+  }
+
+  /** Put one element of the answer on the board (`Game.revealOne`), or the
+   * whole answer where every element is already there. */
+  private reveal(): string | null {
+    const { solve, revealOne } = this.game;
+    if (!solve || !revealOne)
+      throw new Error(`${this.game.id}: reveal offered without revealOne`);
+    const answer = solve(this.history[0], this.state, this.aux);
+    if (!answer.ok) return answer.error;
+    const solved = this.game.executeMove(this.state, answer.move);
+    const move = revealOne(this.state, solved);
+    if (move === null) return this.solve();
+    const next = this.game.executeMove(this.state, move);
+    const fail = (why: string): never => {
+      throw new Error(
+        `${this.game.id}: revealOne's move ${why} (${JSON.stringify(move)}, ${this.game.encodeParams(this.boardParams, true)}:${this.desc})`,
+      );
+    };
+    if (sameValue(this.state, next)) fail("changes nothing");
+    if ((this.game.findMistakes?.(next).length ?? 0) > 0) fail("makes a mistake");
+    this.markHelped();
+    this.commitMove(next, move);
     return null;
   }
 
@@ -1665,7 +1811,11 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // replaying it.
     if (this.advanceHintOnAnimationEnd) this.settleHint();
     if (!this.activeHint) {
-      const err = this.computeHintPlan();
+      // The refusal the last press showed, if this board is the one it was
+      // about (any change drops it); else a plan, or a refusal, made now.
+      const err = this.wayForward === null ? this.computeHintPlan() : null;
+      const way = this.wayForward;
+      if (way !== null) return this.goForward(way);
       if (err) return err;
     }
     const step = this.currentHintStep;

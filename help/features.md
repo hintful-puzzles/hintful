@@ -165,33 +165,38 @@ so it's worth knowing which one you're looking at.
 * **There's a mistake on the board.** A hint won't reason from a position that
   already contradicts the clues, because everything it deduced from there would
   be wrong too. It refuses, and highlights the squares that clash — the same
-  highlighting [Checking your work](#checking) uses. Fix those, then ask again.
+  highlighting [Checking your work](#checking) uses. Fix those and ask again,
+  or apply the hint and it takes them off for you.
+
+* **There's no way to finish from here.** Some boards can go wrong without any
+  one square being wrong: entries that contradict each other, a peg cut off, a
+  game lost. The hint says so, and applying it goes back to the last position
+  the board can still be finished from. *Redo* brings your moves back.
 
 * **Deduction has run out.** Nothing further *follows* from what's on the board.
   The puzzle is still solvable; there just isn't a next step that can be
   explained, which is what an [Unreasonable](#difficulty) puzzle is for. Save
-  your position, try something, and come back if it doesn't work out — or take
-  the answer from ::show-solution:: *Show solution…*, at the foot of the
-  *Help me play* group.
+  your position, try something, and come back if it doesn't work out — or apply
+  the hint, and it fills in one piece of the answer and reasons on from there.
 
-* **The hint can't see that far.** In the two puzzles where a hint plans a route
-  home rather than teaching a technique — *Sixteen* and *Netslide* — it works by
-  searching ahead a limited number of moves. From a badly tangled position the
-  way home is longer than it can search, and the honest answer is that it didn't
-  find one. This is *not* a claim that no move would help: play a few moves of
-  your own and ask again, or take the answer from *Show solution…*.
+* **The hint can't see that far.** In the puzzles where a hint plans a route
+  home rather than teaching a technique, such as *Sixteen* and *Netslide*, it
+  works by searching ahead a limited number of moves. From a badly tangled
+  position the way home is longer than it can search, and the honest answer is
+  that it didn't find one. This is *not* a claim that no move would help: play a
+  few moves of your own and ask again, or apply the hint to be given the answer.
 
-The hint says which of these has happened. It never guesses on your behalf and
-then presents the guess as a deduction: a guess that happens to come off is not
-a technique, and teaching you one would be the point. *Guess*, where guessing is
-the game, is the one place a hint suggests one — after pointing out everything
-the rows prove, and saying what it counted about the guess rather than claiming
-it is forced.
+The hint says which of these has happened, and the Hint button then reads
+*Apply the hint* wherever applying it does something. So pressing Hint over and
+over finishes any board, wherever you've got to. The one exception is a board
+with more than one answer, which a pasted game ID can be: there is no answer to
+lead you to.
 
-Not every puzzle has a *Next hint* button. A puzzle has one where it's solved by
-reasoning *and* the game can put that reasoning into words. Where the challenge
-is dexterity, search or luck instead, there's no technique to teach and no
-button to press.
+A hint never guesses on your behalf and then presents the guess as a deduction:
+a guess that happens to come off is not a technique, and teaching you one would
+be the point. *Guess*, where guessing is the game, is the one place a hint
+suggests one — after pointing out everything the rows prove, and saying what it
+counted about the guess rather than claiming it is forced.
 
 ## Checking your work {#checking}
 

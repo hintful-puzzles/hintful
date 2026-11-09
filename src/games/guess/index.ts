@@ -584,6 +584,10 @@ export const guessGame: Game<
   finishesByDeduction: nothingToDeduce,
   status,
   findMistakes,
+  // Every color of a wrong slot comes back, so the clearing does not say
+  // which rule-out was the code's color, as the check does not.
+  clearMistakes: (state, mistakes) =>
+    mistakes.flatMap(({ pos }) => clearMarks(state, pos) ?? []),
   notApplicable: {
     transposeParams:
       "Your guesses run down the board in the order you made them, so there is no grid to turn.",

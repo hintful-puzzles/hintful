@@ -28,7 +28,13 @@ import {
 } from "../../engine/candidate-plan.ts";
 import { digitValue } from "../../engine/decimal.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
-import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
+import {
+  clearEntries,
+  entryMistakes,
+  gridCell,
+  revealEntry,
+  setMoves,
+} from "../../engine/entry-mistakes.ts";
 import {
   type Game,
   type HintStep,
@@ -479,6 +485,9 @@ export const keenGame: Game<
   refreshHintStep: (step, state) =>
     refreshCandidateHintStep(step, state.grid, state.pencil, state.params.w),
   findMistakes,
+  clearMistakes: (_state, mistakes) => clearEntries(setMoves, mistakes),
+  revealOne: (state, solved) =>
+    revealEntry(setMoves, state.grid, solved.grid, state.params.w),
   requestKeys: (p): KeyLabel[] => digitKeys(p.w),
 
   prefs: [

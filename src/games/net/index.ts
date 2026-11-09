@@ -685,24 +685,49 @@ function solve(_orig: NetState, curr: NetState, aux?: string): SolveResult<NetMo
 /** The ops that turn `curr` into `solution` with every tile locked: unlock,
  * rotate the shortest way, then lock, per tile that differs. */
 function opsToward(curr: NetState, solution: Uint8Array): NetOp[] {
-  const { w } = curr;
-  const ops: NetOp[] = [];
-  for (let i = 0; i < solution.length; i++) {
-    const from = curr.tiles[i];
-    const to = solution[i] | LOCKED;
-    if (from === to) continue;
-    const ft = from & 0xf;
-    const tt = to & 0xf;
-    const x = i % w;
-    const y = Math.floor(i / w);
+  return Array.from(solution, (_, i) => tileToward(curr, solution, i)).flat();
+}
 
-    if (from & LOCKED) ops.push({ op: "L", x, y });
-    if (tt === anticlockwise(ft)) ops.push({ op: "A", x, y });
-    else if (tt === clockwise(ft)) ops.push({ op: "C", x, y });
-    else if (tt === opposite(ft)) ops.push({ op: "F", x, y });
-    ops.push({ op: "L", x, y });
-  }
+/** {@link opsToward} for the tile at `i` alone. */
+function tileToward(curr: NetState, solution: Uint8Array, i: number): NetOp[] {
+  const from = curr.tiles[i];
+  const to = solution[i] | LOCKED;
+  if (from === to) return [];
+  const ft = from & 0xf;
+  const tt = to & 0xf;
+  const x = i % curr.w;
+  const y = Math.floor(i / curr.w);
+  const ops: NetOp[] = [];
+  if (from & LOCKED) ops.push({ op: "L", x, y });
+  if (tt === anticlockwise(ft)) ops.push({ op: "A", x, y });
+  else if (tt === clockwise(ft)) ops.push({ op: "C", x, y });
+  else if (tt === opposite(ft)) ops.push({ op: "F", x, y });
+  ops.push({ op: "L", x, y });
   return ops;
+}
+
+/** One tile of the answer turned to it and locked, as Solve does every tile:
+ * the first turned wrong, or once none is, the first left unlocked. */
+function revealOne(curr: NetState, solved: NetState): NetMove | null {
+  const solution = solved.tiles.map((t) => t & 0xf);
+  const unlocked = (i: number) => !(curr.tiles[i] & LOCKED);
+  const at =
+    [...curr.tiles.keys()].find(
+      (i) => unlocked(i) && (curr.tiles[i] & 0xf) !== solution[i],
+    ) ?? [...curr.tiles.keys()].find(unlocked);
+  return at === undefined
+    ? null
+    : { type: "solve", ops: tileToward(curr, solution, at) };
+}
+
+/** Each wrong lock undone, each wrong side note wiped. */
+function clearMistakes(_s: NetState, mistakes: readonly NetMistake[]): NetMove[] {
+  return mistakes.map(
+    (m): NetMove =>
+      m.kind === "tile"
+        ? { type: "lock", x: m.x, y: m.y }
+        : { type: "note", x: m.x, y: m.y, dir: m.dir, note: NOTE_UNKNOWN },
+  );
 }
 
 /* ----------------------------------------------------------------------
@@ -838,6 +863,8 @@ export const netGame: Game<
 
   solve,
   findMistakes,
+  clearMistakes,
+  revealOne,
   difficulty: searchTierContract<NetParams, NetState>({
     newState,
     deductionFinishes: finishes,

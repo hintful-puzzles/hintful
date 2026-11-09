@@ -261,6 +261,32 @@ function findMistakes(state: LightupState): readonly LightupMistake[] {
   return out;
 }
 
+/** Each wrong bulb or cross toggled off, in one move. */
+function clearMistakes(
+  _state: LightupState,
+  mistakes: readonly LightupMistake[],
+): LightupMove[] {
+  const ops = mistakes.map(
+    ({ x, y, kind }): LightupOp => ({
+      kind: kind === "light" ? "light" : "impossible",
+      x,
+      y,
+    }),
+  );
+  return ops.length === 0 ? [] : [{ ops }];
+}
+
+/** The first bulb of the answer not yet on the board. */
+function revealOne(state: LightupState, solved: LightupState): LightupMove | null {
+  for (let y = 0; y < state.h; y++)
+    for (let x = 0; x < state.w; x++) {
+      const i = idx(x, y, state.w);
+      if (solved.flags[i] & F_LIGHT && !(state.flags[i] & F_LIGHT))
+        return { ops: [{ kind: "light", x, y }] };
+    }
+  return null;
+}
+
 // --- hint --------------------------------------------------------------------
 //
 // The hint plan is the deductive solver's own script, run from the
@@ -559,6 +585,8 @@ export const lightupGame: Game<
 
   solve,
   findMistakes,
+  clearMistakes,
+  revealOne,
   difficulty,
 
   hint,

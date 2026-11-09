@@ -268,6 +268,14 @@ function animLength(oldState: UnrulyState, newState_: UnrulyState): number {
   return changed === 1 ? PLACE_ANIM_TIME : 0;
 }
 
+/** Each wrong square emptied, a move apiece. */
+function clearMistakes(
+  _state: UnrulyState,
+  mistakes: readonly UnrulyMistake[],
+): UnrulyMove[] {
+  return mistakes.map(({ x, y }) => ({ type: "place", x, y, value: EMPTY }));
+}
+
 /** Unruly's difficulty contract (`engine/difficulty.ts`). `solveGame` returns
  * the highest rung that fired, not a verdict, so solvability is read the way
  * the generator reads it, through the shared `solvableAt`. */
@@ -337,6 +345,7 @@ export const unrulyGame: Game<
     return verbGesture(targetVerbs, s, ds, ui, [at], reaches ? "primary" : "secondary");
   },
   findMistakes,
+  clearMistakes,
 
   textFormat,
 

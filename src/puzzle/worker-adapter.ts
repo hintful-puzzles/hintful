@@ -17,6 +17,7 @@
  */
 
 import { transfer } from "comlink";
+import type { WayForward } from "../engine/hint-refusal.ts";
 import type { EngineCore } from "../engine/midend.ts";
 import type {
   ChangeNotification,
@@ -114,6 +115,9 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   }
   executeHint(hideAfter = false): string | null {
     return this.engine.executeHint(hideAfter);
+  }
+  hintWayForward(): WayForward | null {
+    return this.engine.hintWayForward();
   }
   hintReferenceMarks(count: number): HintReferenceMarks | null {
     const drawing = this.drawing;

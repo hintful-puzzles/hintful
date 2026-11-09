@@ -375,6 +375,25 @@ function findMistakes(state: DominosaState): readonly DominosaMistake[] {
   return out;
 }
 
+/** Each wrong domino taken up: a mistake names both its squares, so the one
+ * whose partner lies after it names the move. */
+function clearMistakes(
+  state: DominosaState,
+  mistakes: readonly DominosaMistake[],
+): DominosaMove[] {
+  return mistakes
+    .filter(({ index }) => state.grid[index] > index)
+    .map(({ index }) => ({ type: "domino", d1: index, d2: state.grid[index] }));
+}
+
+/** The first domino of the answer not yet laid. */
+function revealOne(state: DominosaState, solved: DominosaState): DominosaMove | null {
+  const i = solved.grid.findIndex(
+    (partner, j) => partner > j && state.grid[j] !== partner,
+  );
+  return i < 0 ? null : { type: "domino", d1: i, d2: solved.grid[i] };
+}
+
 // --- hint ------------------------------------------------------------------
 
 /** What a dominosa hint step's ringed spot asks for, which the words do not
@@ -696,6 +715,8 @@ export const dominosaGame: Game<
   solve,
   difficulty,
   findMistakes,
+  clearMistakes,
+  revealOne,
   reference,
   selectReference,
   hint,

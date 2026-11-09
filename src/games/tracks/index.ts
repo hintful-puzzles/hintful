@@ -92,6 +92,7 @@ import {
   stateToBoard,
   status,
   type TracksMove,
+  type TracksOp,
   type TracksParams,
   type TracksState,
   type TracksUi,
@@ -538,23 +539,51 @@ function solve(
  * player mark (square or edge) that contradicts the unique solution. A
  * non-uniquely-solvable board degrades to "no detectable mistakes". */
 function findMistakes(state: TracksState): readonly Point[] {
+  return wrongMarks(state).map(({ x, y }) => ({ x, y }));
+}
+
+/** A square's marks that contradict the unique solution: its own flag
+ * (`S_TRACK` or `S_NOTRACK`, or 0) and the direction bits of its wrong track
+ * and no-track edges. */
+interface WrongMarks extends Point {
+  square: number;
+  track: number;
+  notrack: number;
+}
+
+function wrongMarks(state: TracksState): WrongMarks[] {
   const { w, h } = state;
   const board = stateToBoard(state);
   const strip = copyAndStrip(board, -1);
   if (tracksSolve(strip, DIFF_COUNT).ret < 1) return [];
-  const out: Point[] = [];
+  const out: WrongMarks[] = [];
   for (let i = 0; i < w * h; i++) {
     const x = i % w;
     const y = Math.floor(i / w);
     const solTrack = (strip.sflags[i] & S_TRACK) !== 0;
     const solEdges = sEDirs(strip, x, y, E_TRACK);
-    const wrong =
-      state.sflags[i] & (solTrack ? S_NOTRACK : S_TRACK) ||
-      sEDirs(board, x, y, E_TRACK) & ~solEdges || // a track edge that shouldn't be
-      sEDirs(board, x, y, E_NOTRACK) & solEdges; // a no-track edge that should be track
-    if (wrong) out.push({ x, y });
+    const square = state.sflags[i] & (solTrack ? S_NOTRACK : S_TRACK);
+    const track = sEDirs(board, x, y, E_TRACK) & ~solEdges;
+    const notrack = sEDirs(board, x, y, E_NOTRACK) & solEdges;
+    if (square || track || notrack) out.push({ x, y, square, track, notrack });
   }
   return out;
+}
+
+/** Every wrong mark taken off, each edge once though both its squares name it.
+ * Tracks' mistakes are squares, so the wrong marks on them are found again. */
+function clearMistakes(state: TracksState): TracksMove[] {
+  const ops: TracksOp[] = [];
+  for (const { x, y, square, track, notrack } of wrongMarks(state)) {
+    if (square)
+      ops.push({ kind: "square", x, y, track: square === S_TRACK, set: false });
+    for (const dir of [R, D]) {
+      if (track & dir) ops.push({ kind: "edge", x, y, dir, track: true, set: false });
+      if (notrack & dir)
+        ops.push({ kind: "edge", x, y, dir, track: false, set: false });
+    }
+  }
+  return ops.length > 0 ? [{ ops }] : [];
 }
 
 /** Tracks' difficulty contract (`engine/difficulty.ts`); `stateToBoard` on the
@@ -598,6 +627,7 @@ export const tracksGame: Game<
   solve,
   difficulty,
   findMistakes,
+  clearMistakes,
   hint: tracksHint,
   hintMarks: {
     roles: {

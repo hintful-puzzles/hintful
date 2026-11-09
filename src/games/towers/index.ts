@@ -26,7 +26,13 @@ import {
   runLatinCandidatePlan,
 } from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
+import {
+  clearEntries,
+  entryMistakes,
+  gridCell,
+  revealEntry,
+  setMoves,
+} from "../../engine/entry-mistakes.ts";
 import {
   type Game,
   type HintStep,
@@ -656,6 +662,8 @@ export const towersGame: Game<
   refreshHintStep: (step, state) =>
     refreshCandidateHintStep(step, state.grid, state.pencil, state.w),
   findMistakes,
+  clearMistakes: (_state, mistakes) => clearEntries(setMoves, mistakes),
+  revealOne: (state, solved) => revealEntry(setMoves, state.grid, solved.grid, state.w),
   requestKeys: (p) => digitKeys(p.w),
   textFormat,
 
