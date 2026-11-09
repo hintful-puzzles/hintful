@@ -48,15 +48,20 @@
         largest-board walk (`hint-resume`'s ledger names it), and
         warm-repaint's plan walk (Sixteen's 11 s is its random events' hint
         searches, not the walk).
-- [ ] 3. Give a game's own files a deep tier that CI does not run
+- [x] 3. Give a game's own files a deep tier that CI does not run
   - [x] `inDeepTier`, `itDeep` and `deepBudget` in
         `slow.ts`; the cost report's per-game line and `BUDGET.game`; the
         guide and the spec delta.
-  - [ ] The shared shapes first: `describeDealtTiers` deals one board a cell
-        in CI, and the nine "agrees with the count" sweeps a fifth of their
-        seeds. Then the games' own walks, dearest first.
+  - [x] The shared shapes first: `describeDealtTiers` deals one board a cell
+        in CI, the ladder census is deep, and the nine "agrees with the
+        count" sweeps keep a fifth of their seeds. Then the games' own walks,
+        dearest first (`3f5baf09`).
+  - [x] `BUDGET.game` set from the first reading: 15 s failed six games
+        (Sixteen 27 s, Bridges 26, Loopy 26, Sticks 22, Path 21, Solo 19;
+        Gate run 42709305769), so it is 25 s, which holds a game where it is.
 - [ ] 4. One CI gate run on `main` under 30 minutes (owner, 2026-11-09,
       replacing three consecutive runs under 40)
   - Readings so far: 36.3 (`37111ea7`), 40.1 (`6ffaca12`), 35.1
     (`1bc53fd2`), 41.2 (`8ead2f57`, documentation only, so the same tree as
-    35.1).
+    35.1), 30.5 (`3f5baf09`, the deep tier; the games' own files 8.2 of it).
+    The owner stopped the effort there for a debrief (2026-11-09).

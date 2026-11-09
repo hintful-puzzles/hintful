@@ -33,9 +33,11 @@ import { cpuUnit } from "./cpu-unit.ts";
  * no one file is a fifth of a worker's share of a ten-minute run, and the
  * suite is about ten minutes on four workers. A game's own files are held in
  * CI to seconds (owner, 2026-11-09: CI's time is the engine's, and dozens of
- * games are to come).
+ * games are to come): 25 s is the dearest game's on the first CI run with
+ * the deep tier (Sixteen's 27 s, within the margin; Gate run 42709305769),
+ * so that a game grows no further, and the rest averaged 8 s.
  */
-const BUDGET = { file: 120, suite: 2400, commit: 90, push: 300, game: 15 };
+const BUDGET = { file: 120, suite: 2400, commit: 90, push: 300, game: 25 };
 
 /** The workload's CPU seconds on the reference runner (Gate run 40553996591,
  * the least of three). */
