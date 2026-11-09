@@ -12,13 +12,13 @@ import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { edgeBetween, squareEdges } from "../../engine/square-edges.ts";
-import { SkeletonBoard, solveSkeleton } from "./solver.ts";
+import { solveSkeleton } from "./solver.ts";
 import { encodeDesc, type SkeletonParams } from "./state.ts";
 
 /** Whether the ladder, capped at `cap`, finishes the board `walls` give. */
 function solves(p: SkeletonParams, walls: Uint8Array, cap: number): boolean {
-  const board = new SkeletonBoard(p.w, p.h, walls, new Uint8Array(walls.length));
-  return solveSkeleton(board, cap) === "solved";
+  const edges = new Uint8Array(walls.length);
+  return solveSkeleton({ w: p.w, h: p.h, walls, edges }, cap) === "solved";
 }
 
 /**

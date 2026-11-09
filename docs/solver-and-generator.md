@@ -18,12 +18,12 @@ each shared helper named here has an entry in
 In this order, each step as the skeleton
 ([`src/skeleton/grid/`](../src/skeleton/grid/)) already does it:
 
-1. **Write the deductions once, as a ladder.** `solver.ts` builds an array of
-   `DeductionTechnique`s, each with an `id`, a `tier` and a `run`, easiest
-   first. `runDeductionFixpoint` runs it to a fixpoint for the generator, Solve
-   and the mistake check, and `singleFirings` runs the same rungs one firing at
-   a time for the hint. See § "One engine, two projections" and § "The
-   deduction fixpoint".
+1. **Write the deductions once, as techniques in the game's description**
+   ([`descriptions.md`](./descriptions.md)). `solver.ts` pairs each compiled
+   technique with its reason (`describedLadder`); `runLadder` runs the ladder
+   to a fixpoint for the generator, Solve and the mistake check, and
+   `ladderWalk` runs the same rungs one firing at a time for the hint. See
+   § "One engine, two projections" and § "The deduction fixpoint".
 2. **Return a `DifficultyVerdict` from the capped solve**, and declare
    `Game.difficulty` in `index.ts` with a `solveAtCap` that builds a fresh
    state and calls it. See § "The difficulty contract".
@@ -48,11 +48,10 @@ In this order, each step as the skeleton
 | Section | Read it when |
 | --- | --- |
 | One engine, two projections | you are about to write a solver, a generator or a hint for a logic game |
-| The deduction fixpoint | your solver applies techniques until none fires |
+| The deduction fixpoint | your solver or hint runs the game's ladder |
 | – A fixpoint is order-independent only if every rule is monotone | a board's grade changes with the order its parts are listed or visited in |
-| – Proving an adoption: the fixtures are not enough | you add, split, move or re-tier a rung, or move a solver onto the runner |
+| – Proving an adoption: the fixtures are not enough | you add, split, move or re-tier a rung |
 | – What the runner does not carry: the record | you want a technique to carry its own narration, or propose splitting one into find, apply and narrate |
-| – Where the fixpoint does not fit | your solver's loop looks unlike the runner's and you are deciding whether to hand-roll it |
 | Guess-free generation | your game has difficulty tiers, or you are deciding whether a board may need trial and error |
 | – No option switches the generator's checks off | upstream has a checkbox or a tier that deals unchecked boards, or you write what `loadDesc` accepts |
 | – The lowest tier asks the hint as well as the solver | the hint stops on a board the generator dealt at the lowest tier |
@@ -102,52 +101,43 @@ then the techniques the hint narrates, so no board is accepted on a technique
 the hint cannot explain. `solve()` and `findMistakes` reuse the same solver
 and do not grow a second opinion. Read
 [`skeleton/grid/solver.ts`](../src/skeleton/grid/solver.ts): `solveSkeleton`
-is the first projection and `skeletonRecordingPass` the second, over one
-`ladder`.
+is the first projection and `skeletonWalk` the second, over one `ladder`.
 
 ## The deduction fixpoint
 
-**Build a logic game's solver and hint loop on `runDeductionFixpoint`
-([`engine/deduction-fixpoint.ts`](../src/engine/deduction-fixpoint.ts)) and
-do not hand-roll it.** The loop is an ordered ladder, easiest first, that
-restarts from the top the moment a technique fires, so one firing is one hint
-group. `DeductionTechnique` and `DeductionFixpointOptions` document the
-contract and each option. What a game must get right:
+**A logic game's solver and hint run the ladder compiled from its
+description, through [`engine/ladder-runtime.ts`](../src/engine/ladder-runtime.ts)
+(`describedLadder`, `ladderTechniques`, `runLadder`, `ladderWalk`), on the
+one loop in [`engine/deduction-fixpoint.ts`](../src/engine/deduction-fixpoint.ts).**
+The loop is an ordered ladder, easiest first, that restarts from the top the
+moment a technique fires, so one firing is one hint group. It takes only a
+ladder the runtime built (`CompiledTechniques`), and the runtime pairs only a
+rung made from a compiled technique (`Rung`), so a technique written by hand
+does not typecheck; `compiled-ladder.test.ts` refuses a cast past either.
+What a game must get right:
 
-- **Declare both `id` and `tier`.** `run` applies the technique once and
-  returns `> 0` (fired), `0` (nothing to do) or `< 0` (contradiction proved).
-- **The grade is the highest `tier` that fired, never a position in the
-  array**, and several techniques may share a tier. `maxTier` excludes by
-  tier wherever the technique sits, so a ladder whose tiers do not increase
-  along the array is legal. Pass it while grading, so a tier does not pay for
-  techniques it cannot use.
+- **The grade is the highest tier that fired on each scale, and a cap
+  excludes by tier, never by position.** `ladderTechniques` does both from the
+  caps the game passes.
 - **Pass a step budget ([`step-budget.ts`](../src/engine/step-budget.ts)) on
   the hint call and omit it on the generator call.**
   A technique that reports progress without changing the board then fails
   loud on the hint path, and the error names the techniques by firing count.
-- **`settled` means "there is nothing left for the ladder to do"**, which is
-  broader than "solved": a contradiction, a complete-or-invalid board, or a
-  tier's own action budget.
-- **Observe firings through the `firings` tally**, for a census: forward one
-  optional parameter to it, and do not wrap the ladder in a closure.
-- **A technique that is only sometimes available guards itself in `run` and
-  returns `0`.** The runner takes no `when` predicate: it would be
-  indistinguishable from returning `0`.
+- **Observe firings through the `firings` tally**, for a census or a count
+  the game keeps: forward one optional parameter to it, and do not wrap a
+  rung in a closure.
+- **Where a technique runs is its description's**: a variation, or a tier's
+  `from` and `until`.
 
-Every call site is `git grep -l runDeductionFixpoint src`. The ones to read
-for a ladder that is not the plain shape:
+The shapes that are not the plain one:
 
 | Read this for | Where |
 | --- | --- |
-| a described game's ladder: one technique an entry, capped and graded per scale | [`engine/ladder-runtime.ts`](../src/engine/ladder-runtime.ts) `ladderTechniques` |
 | a technique that, restarted, visits only what a firing reached, so the restart costs little | `CellMarks.visit`, and [`descriptions.md`](./descriptions.md) § "What a technique compiles to" |
-| a verdict richer than a boolean, carried out through `settled` | [`clusters/solver.ts`](../src/games/clusters/solver.ts) `solveGame` |
-| a ladder that is not a tier prefix, a clamped cap, and a cost accumulated across firings through `settled` | [`spokes/solver.ts`](../src/games/spokes/solver.ts) `spokesSolve` |
-| a rung that runs at one tier and not at the tier above, so it guards itself | [`ascent/solver.ts`](../src/games/ascent/solver.ts) `ascentLadder` |
-| a rung that sweeps a whole population before reporting, which is legal: the restart after a firing is the ladder's, not the rung's | [`bridges/solver.ts`](../src/games/bridges/solver.ts) `Solver.ladder` |
-| a rung that exists only for the player's notation and touches nothing the generator reads | [`separate/solver.ts`](../src/games/separate/solver.ts) `separateLadder` |
-| two grades with a cap each, the scales its description declares, so the runner's grade and `maxTier` go unused | [`solo/solver.ts`](../src/games/solo/solver.ts) `SolverUsage.ladder` |
-| a hint-only recording ladder | [`pattern/solver.ts`](../src/games/pattern/solver.ts) |
+| two scales, each capped and graded apart | [`solo/solver.ts`](../src/games/solo/solver.ts) `SolverUsage.ladder` |
+| a Search no description states, after the compiled techniques | `withSearch`, in [`engine/latin.ts`](../src/engine/latin.ts) |
+| a hint rung offering a technique's firing only where it serves another | `keptRung`, in [`tents/solver.ts`](../src/games/tents/solver.ts) `linkFor` |
+| a count kept from the firings tally rather than a wrapped rung | [`undead/solver.ts`](../src/games/undead/solver.ts) `solveDeductive` |
 
 ### A fixpoint is order-independent only if every rule is monotone
 
@@ -177,10 +167,6 @@ which reads the runner's `firings` tally through one optional parameter of
 the game's solve. Exemplar:
 [`skeleton-generation.test.ts`](../src/skeleton/grid/skeleton-generation.test.ts).
 
-- **While moving a solver onto the runner, compare against the loop being
-  replaced**: verdict, grade and full board state, at every cap, over a corpus
-  the census shows reaches every rung. Then delete the old loop in the same
-  change.
 - **Record a rung the corpus cannot reach in the census's `unreached`, with
   its reason, and check it against the C first**: an unreachable deduction is
   the shape a porting bug takes. An entry may be structural, a rung foreclosed
@@ -222,38 +208,6 @@ Grade the premises together and narrate them apart. `hint-resume.test.ts`
 already walks each game's hints to a solved board on every preset, so a
 firing nothing can narrate fails that walk; a proposal for the split says
 what it buys beyond it.
-
-### Where the fixpoint does not fit
-
-**Hand-roll a solver loop only when you can name a promise the runner makes
-that the game must break.** A reason that describes a loop's syntax ("drains
-a queue", "three-valued early-out", "grades by a constant") is not one. A
-cost accumulated across firings, a flag standing in for a `-1` return, a
-pre-pass at the top of each iteration and a verdict richer than a boolean
-have each adopted, because a technique can hold state and guard itself; the
-table under § "The deduction fixpoint" names where. The solvers that break a
-promise, and the promise each breaks, are listed in
-[`engine/deduction-fixpoint.ts`](../src/engine/deduction-fixpoint.ts)'s
-header.
-
-- **Re-derive a recorded no-go when the runner's contract changes.** Read the
-  loop, not the reason somebody recorded for it, and when a `continue` looks
-  as if it decides the walk, check whether anything can reach it.
-- **A no-go has dissolved when the adoption needs no new option on the
-  runner and the game's byte-match differential passes untouched.**
-- **Do not move one of them onto the runner to tidy the tree.** A refactor
-  that changes a solver verdict changes which boards exist
-  (§ "Solver-gated generation").
-
-#### What a bespoke loop still owes
-
-A bespoke loop meets three obligations, stated for the game and not assumed
-(`engine-helpers`, "A bespoke loop carries three obligations"): every
-accepted board is walkable to completion by a hint that runs the solver's own
-rungs with a recorder; tiers bind to real technique differences and
-generation is capped at the requested tier; and the recording path ticks a
-`stepBudget`, so non-termination fails loud. Exemplar: `hintFirings` in
-[`palisade/solver.ts`](../src/games/palisade/solver.ts).
 
 ## Guess-free generation
 

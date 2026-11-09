@@ -34,6 +34,7 @@
  */
 import { vi } from "vitest";
 import type {
+  CompiledTechniques,
   DeductionTechnique,
   LadderCandidate,
   SingleFiringOptions,
@@ -88,9 +89,7 @@ function measured(
   opts: SingleFiringOptions,
   tally: LadderContinuity,
 ): fixpoint.SingleFirings {
-  const admitted = opts.techniques.filter(
-    (t) => opts.maxTier === undefined || t.tier <= opts.maxTier,
-  );
+  const admitted = opts.techniques;
   let wrote: Set<number> | null = null;
   let taken: { reads: readonly number[]; writes: readonly number[] } | null = null;
   const wrap = (t: DeductionTechnique): DeductionTechnique => {
@@ -142,12 +141,13 @@ function measured(
     }
     return false;
   };
-  const driver = real({ ...opts, techniques: opts.techniques.map(wrap) });
+  // Each technique wrapped is a compiled one, so the ladder stays compiled.
+  const wrapped = opts.techniques.map(wrap) as readonly DeductionTechnique[];
+  const driver = real({ ...opts, techniques: wrapped as CompiledTechniques });
   return {
     next() {
-      // Asked before the driver runs, of the board the choice is made on; a
-      // settled board offers nothing, and the driver will say so.
-      const could = wrote !== null && !opts.settled?.() && continuable(wrote);
+      // Asked before the driver runs, of the board the choice is made on.
+      const could = wrote !== null && continuable(wrote);
       taken = null;
       const fired = driver.next();
       // A firing whose take this wrapper did not see (none offered, or the

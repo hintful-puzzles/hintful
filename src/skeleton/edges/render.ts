@@ -25,6 +25,7 @@ import {
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawRectCorners } from "../../engine/draw.ts";
+import { Dsf } from "../../engine/dsf.ts";
 import { drawEdgeHints, edgeHintWords, stepEdgeHints } from "../../engine/edge-hint.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
@@ -52,7 +53,6 @@ import type { Color, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { SkeletonHighlights } from "./hint.ts";
 import { skeletonLines, withChanges } from "./moves.ts";
-import { SkeletonBoard } from "./solver.ts";
 import type {
   SkeletonMove,
   SkeletonParams,
@@ -423,9 +423,10 @@ export function redraw(
 /** 1 on each line of a loop closed short of every square, which no more
  * lines can mend. */
 function brokenEdges(state: SkeletonState, edges: Uint8Array): Uint8Array {
-  const board = new SkeletonBoard(state.w, state.h, state.walls, edges);
-  const { dsf } = board.pieces();
-  const { g } = board;
+  const g = squareEdges(state.w, state.h);
+  const dsf = new Dsf(g.cells);
+  for (let e = 0; e < g.edgeCount; e++)
+    if (edges[e] === LINE) dsf.merge(g.a[e], g.b[e]);
   // A piece is a loop where it has as many lines as squares.
   const lines = new Int32Array(g.cells);
   for (let e = 0; e < g.edgeCount; e++)

@@ -51,7 +51,91 @@ help:
     on each of them.
 
     On Normal boards a step sometimes looks at what a line would do, drawing it
-    thin. A line breaks the board if it leaves a square a dead end or cut off, or
-    closes a loop too soon. An edge whose line would break the board is crossed
-    out, and a square with three open edges left takes the third if lines on the
-    other two would break the board.
+    thin. A square with no line and three open edges left takes lines on two of
+    them, and takes the third if lines on the other two would break the board:
+    leave a square a dead end or cut off, or close a loop too soon.
+name: Skeleton
+family: lines
+sizes:
+  # At most 400 squares, each side even.
+  w: { min: 4, max: 100 }
+  h: { min: 4, max: 100 }
+space:
+  grid: { w: "w", h: "h" }
+  edges: true
+  units: []
+answer:
+  # The edge between two squares side by side: 1 a line, 2 none.
+  value:
+    sort: edge
+    domain: "range(1, 2)"
+define:
+  # The lines square c has.
+  lines(c): "count(y in adj4(c) where value(edge(c, y)) = 1)"
+  # The squares the lines join to square c.
+  piece(c): "through(c, {e in edges where value(e) = 1})"
+  # Whether the edge between a and b may still take a line: neither has its
+  # two lines, and a line there would not close a loop short of every
+  # square. A player sees each at a glance, so such an edge counts as
+  # closed, and no technique crosses it out.
+  live(a, b): >-
+    not known(edge(a, b)) and lines(a) < 2 and lines(b) < 2
+    and (b not in piece(a) or |piece(a)| = w * h)
+  # The edges square c may still take a line on.
+  ways(c): "{y in adj4(c) where live(c, y)}"
+  # Whether square c is left short of its two lines: too few edges left for
+  # them.
+  stuck(c): "lines(c) < 2 and lines(c) + |ways(c)| < 2"
+  # Whether a square near the piece through a, where lines were just tried
+  # on the edges of a, b and d, is left short: a square whose lines the
+  # trial changed, an end of the piece, or one beside either.
+  shortNear(a, b, d): >-
+    exists t in piece(a) where t = a or t = b or t = d or lines(t) < 2:
+    stuck(t) or (exists s in adj4(t): stuck(s))
+  # Whether lines on both edges between square c and squares i and j, two
+  # of its own, would break the board at once: close a loop short of every
+  # square, or leave a square short.
+  bothBreak(c, i, j): >-
+    (j in piece(i) and |piece(i)| + 1 < w * h)
+    or (with place(edge(c, i), 1): with place(edge(c, j), 1): shortNear(c, i, j))
+shape:
+  # Every square has two lines, one in and one out.
+  - "forall c in cells: lines(c) = 2"
+rules:
+  # The lines are one loop: every square reaches every other along them.
+  loop: >-
+    forall R = {e in edges where value(e) = 1}, a in cells, b in cells:
+    b in through(a, R)
+clues:
+  # A wall between two squares, which no line crosses.
+  wall: { at: edge, value: "range(1, 1)", means: "value(at) = 2" }
+freedom: { kind: fill }
+deal:
+  answer: a loop through every square, its 2 × 2 blocks joined along a random spanning tree
+  wall: >-
+    every edge off the loop, then walls taken away in a random order while
+    the ladder still finishes the board at the tier
+  tier: one of the tiers
+tiers: [Easy, Normal]
+techniques:
+  # A square with only as many edges left as it still needs lines takes a
+  # line on each. One with more lines than two, or fewer edges left than it
+  # needs, makes the marks inconsistent.
+  - id: forced
+    tier: Easy
+    for: >-
+      c in cells, n = 2 - lines(c), U = ways(c)
+      where n < 0 or (n > 0 and |U| <= n)
+    conclude: "n >= 0 and |U| = n and (forall y in U: place(edge(c, y), 1))"
+  # A square with no line and three edges left, where lines on two of them
+  # would break the board: the third takes a line. Each of the three is
+  # asked to be open still, since a solve places the line of one binding
+  # before it reads the next.
+  - id: pairBreaks
+    tier: Normal
+    for: >-
+      c in cells where lines(c) = 0, U = ways(c) where |U| = 3,
+      k in U, I = U - {k}, i = nth(I, 0), j = nth(I, 1)
+      where not known(edge(c, k)) and not known(edge(c, i))
+      and not known(edge(c, j)) and bothBreak(c, i, j)
+    conclude: "place(edge(c, k), 1)"

@@ -14,7 +14,7 @@
  */
 
 import type {
-  DeductionTechnique,
+  CompiledTechniques,
   FiringTally,
 } from "../../engine/deduction-fixpoint.ts";
 import { valuesOf } from "../../engine/describe-runtime.ts";
@@ -28,6 +28,7 @@ import {
   runLadder,
   TIERS,
   uncluedRung,
+  withSearch,
 } from "../../engine/ladder-runtime.ts";
 import { set as latinSet } from "../../engine/latin.compiled.ts";
 import {
@@ -575,24 +576,23 @@ class SolverUsage extends CellMarks {
    * each filled cell's value from the rest of its cage, as upstream did at
    * the start of each.
    */
-  techniques(dlev: Difficulty, grades: Record<string, number>): DeductionTechnique[] {
+  techniques(dlev: Difficulty, grades: Record<string, number>): CompiledTechniques {
     const killer = this.killer;
     const caps: Record<string, number> = { [TIERS]: dlev.maxdiff };
     if (killer !== null) caps["killer"] = dlev.maxkdiff;
     const rungs = ladderTechniques(this, this.rungs.entries, caps, grades, (entry) =>
       killer !== null && entry.scale === "killer" ? this.reduceCages(killer) : 0,
     );
-    if (dlev.maxdiff >= DIFF_RECURSIVE)
-      rungs.push({
-        id: "forcing-chain",
-        tier: DIFF_RECURSIVE,
-        run: () => {
-          const ret = this.forcing();
-          if (ret > 0 && DIFF_RECURSIVE > grades[TIERS]) grades[TIERS] = DIFF_RECURSIVE;
-          return ret;
-        },
-      });
-    return rungs;
+    if (dlev.maxdiff < DIFF_RECURSIVE) return rungs;
+    return withSearch(rungs, {
+      id: "forcing-chain",
+      tier: DIFF_RECURSIVE,
+      run: () => {
+        const ret = this.forcing();
+        if (ret > 0 && DIFF_RECURSIVE > grades[TIERS]) grades[TIERS] = DIFF_RECURSIVE;
+        return ret;
+      },
+    });
   }
 
   /** Place every given; false if two of them clash. */

@@ -9,7 +9,11 @@
  * recursion); a game whose whole solve is its ladder uses it as it is.
  */
 
-import type { DeductionTechnique, FiringTally } from "./deduction-fixpoint.ts";
+import type {
+  CompiledTechniques,
+  DeductionTechnique,
+  FiringTally,
+} from "./deduction-fixpoint.ts";
 import { runDeductionFixpoint, singleFirings } from "./deduction-fixpoint.ts";
 import type { DeductionRecorder } from "./deduction-record.ts";
 import {
@@ -517,15 +521,20 @@ export interface Firing {
   reasons: readonly object[];
 }
 
+declare const compiled: unique symbol;
+
 /**
  * One technique of a ladder, run on the marks: `-1`, `0` or `1`, as a rung.
- * A compiled technique also lists every firing it could make from the marks
- * as they stand, making none (`"contradiction"` where the run would return
- * `-1`), for a hint that chooses among them ({@link ladderWalk}).
+ * It also lists every firing it could make from the marks as they stand,
+ * making none (`"contradiction"` where the run would return `-1`), for a hint
+ * that chooses among them ({@link ladderWalk}). Only {@link compiledRung} and
+ * {@link uncluedRung} make one, from a compiled technique: the brand is a type
+ * alone, so a rung a game writes by hand does not pair.
  */
 export interface Rung<S extends CellMarks = CellMarks> {
   (m: S): number;
-  firings?: (m: S) => readonly Firing[] | "contradiction";
+  firings: (m: S) => readonly Firing[] | "contradiction";
+  readonly [compiled]: true;
 }
 
 /** How a firing's reason is built: from its binding and one of its facts,
@@ -572,7 +581,7 @@ export function compiledRung<B, C, S extends CellMarks = CellMarks>(
     });
     return ret < 0 ? "contradiction" : out;
   };
-  return rung;
+  return rung as Rung<S>;
 }
 
 /** {@link compiledRung} of a technique that reads nothing the board deals. */
@@ -585,6 +594,44 @@ export function uncluedRung<B, S extends CellMarks = CellMarks>(
     null,
     reason,
   );
+}
+
+/**
+ * A rung offering the firings of compiled `rungs` that `keep` keeps, each with
+ * the reasons `keep` gives it (one a fact), and run as its first: how a hint
+ * takes a technique's firing only where it serves another (Tents' links).
+ * Where `keep` keeps none and `anyway` is set, the first firing offered is
+ * kept as it came. Its facts are the compiled rungs' own, so it is one.
+ */
+export function keptRung<S extends CellMarks = CellMarks>(
+  rungs: readonly Rung<S>[],
+  keep: (m: S, firing: Firing) => readonly object[] | null,
+  anyway = false,
+): Rung<S> {
+  const firings = (m: S): readonly Firing[] | "contradiction" => {
+    const offered: Firing[] = [];
+    for (const r of rungs) {
+      const found = r.firings(m);
+      if (found === "contradiction") return found;
+      offered.push(...found);
+    }
+    const out: Firing[] = [];
+    for (const f of offered) {
+      const reasons = keep(m, f);
+      if (reasons !== null) out.push({ facts: f.facts, reasons });
+    }
+    return out.length > 0 || !anyway ? out : offered.slice(0, 1);
+  };
+  const rung = (m: S): number => {
+    const found = firings(m);
+    if (found === "contradiction") return -1;
+    if (found.length === 0) return 0;
+    const [{ facts, reasons }] = found;
+    m.applyFacts(facts, (i) => reasons[i / 3]);
+    return 1;
+  };
+  rung.firings = firings;
+  return rung as Rung<S>;
 }
 
 /**
@@ -778,7 +825,7 @@ export function ladderTechniques<S extends CellMarks>(
   caps: Caps,
   grades: Record<string, number>,
   before?: (entry: LadderEntry<S>) => number,
-): DeductionTechnique[] {
+): CompiledTechniques {
   const out: DeductionTechnique[] = [];
   for (const entry of entries) {
     const { id, tier, run } = entry;
@@ -796,7 +843,29 @@ export function ladderTechniques<S extends CellMarks>(
       },
     });
   }
-  return out;
+  return compiledTechniques(out);
+}
+
+/** The one place a ladder is branded as compiled: every caller hands it
+ * techniques made from a compiled module's entries. */
+function compiledTechniques(
+  techniques: readonly DeductionTechnique[],
+): CompiledTechniques {
+  return techniques as CompiledTechniques;
+}
+
+/**
+ * A compiled ladder with a Search after it, graded at `search.tier`: a
+ * supposition no description states, which runs only once every technique
+ * has nothing (the Latin and Sudoku forcing chain;
+ * docs/solver-and-generator.md § "Check, Tactic, Search"). The one way a
+ * technique the description does not hold joins a ladder.
+ */
+export function withSearch(
+  ladder: CompiledTechniques,
+  search: DeductionTechnique,
+): CompiledTechniques {
+  return compiledTechniques([...ladder, search]);
 }
 
 /**
@@ -805,7 +874,7 @@ export function ladderTechniques<S extends CellMarks>(
  */
 export function runLadder(
   m: CellMarks,
-  techniques: readonly DeductionTechnique[],
+  techniques: CompiledTechniques,
   opts: { firings?: FiringTally } = {},
 ): boolean {
   const { impossible } = runDeductionFixpoint({
@@ -925,7 +994,6 @@ export function ladderWalk<S extends CellMarks>(
     .filter((e) => admits(e, caps))
     .map((entry): DeductionTechnique => {
       const { firings } = entry.run;
-      if (!firings) throw new Error(`${entry.id}: its rung lists no firings`);
       return {
         id: entry.id,
         tier: entry.tier,
@@ -951,7 +1019,7 @@ export function ladderWalk<S extends CellMarks>(
       };
     });
   const driver = singleFirings({
-    techniques,
+    techniques: compiledTechniques(techniques),
     budget: m.budget ?? stepBudget("ladder walk"),
     continuing: true,
   });

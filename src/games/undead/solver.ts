@@ -31,7 +31,6 @@ import {
   describedLadder,
   type Ladder,
   ladderTechniques,
-  type Rung,
   runLadder,
   TIERS,
   uncluedRung,
@@ -217,9 +216,8 @@ export type UndeadReason =
   | { kind: "onlyCells"; monster: number; nCells: number }
   | { kind: "single" };
 
-/** The ladder over `board`, each technique with its reason; `passes` counts
- * the runs of the sightline rung that narrowed something. */
-function ladderOf(board: Board, passes: { n: number }): Ladder {
+/** The ladder over `board`, each technique with its reason. */
+function ladderOf(board: Board): Ladder {
   const { common, dl } = board;
   const { w, h } = common;
   // A sightline's path in the game's list, by the slot it is read from.
@@ -228,25 +226,16 @@ function ladderOf(board: Board, passes: { n: number }): Ladder {
     pathOf.set(p.gridStart, i);
     pathOf.set(p.gridEnd, i);
   });
-  const sightline = compiledRung(
-    undead.sightline,
-    dl,
-    ({ s }): UndeadReason => ({
-      kind: "sightline",
-      path: pathOf.get(rangeOfSlot(s, w, h)) ?? -1,
-    }),
-  );
-  const counted: Rung = Object.assign(
-    (m: CellMarks): number => {
-      const ret = sightline(m);
-      if (ret > 0) passes.n++;
-      return ret;
-    },
-    { firings: sightline.firings },
-  );
   return describedLadder(undead, {
     single: uncluedRung(undead.single, (): UndeadReason => ({ kind: "single" })),
-    sightline: counted,
+    sightline: compiledRung(
+      undead.sightline,
+      dl,
+      ({ s }): UndeadReason => ({
+        kind: "sightline",
+        path: pathOf.get(rangeOfSlot(s, w, h)) ?? -1,
+      }),
+    ),
     total: compiledRung(
       undead.total,
       dl,
@@ -368,8 +357,7 @@ export function solveDeductive(
   firings?: FiringTally,
 ): DeductiveResult {
   const board = boardOf(common);
-  const passes = { n: 0 };
-  const ladder = ladderOf(board, passes);
+  const ladder = ladderOf(board);
   const m = marksOf(board, start);
   // The passes are the Easy attempt's alone, as upstream counted them.
   let arcPasses = 0;
@@ -382,8 +370,11 @@ export function solveDeductive(
   });
   if (m === null) return result(RUNG_RECURSION, true);
 
-  const easy = runAt(ladder, m, DIFF_EASY, firings);
-  arcPasses = passes.n + 1;
+  // Each sightline firing is a pass that narrowed something.
+  const tally: FiringTally = firings ?? new Map();
+  const before = tally.get("sightline") ?? 0;
+  const easy = runAt(ladder, m, DIFF_EASY, tally);
+  arcPasses = (tally.get("sightline") ?? 0) - before + 1;
   if (easy.impossible) return result(RUNG_RECURSION, true);
   if (filled(m)) return result(RUNG_ARC);
   if (maxRung < RUNG_COUNTING) return result(RUNG_RECURSION);
@@ -452,7 +443,7 @@ export function gradeUndead(
   const m = marksOf(board, start);
   const guess = m === null ? new Uint8Array(common.numTotal) : guessOf(board, m);
   if (m !== null) {
-    runAt(ladderOf(board, { n: 0 }), m, DIFF_EASY);
+    runAt(ladderOf(board), m, DIFF_EASY);
     guess.set(guessOf(board, m));
   }
   const iterativeSolved = guess.every(isSingleton);
@@ -538,6 +529,6 @@ export function recordUndeadDeductions(
     });
   };
   m.budget = stepBudget("undead hint recorder");
-  runAt(ladderOf(board, { n: 0 }), m, DIFF_NORMAL);
+  runAt(ladderOf(board), m, DIFF_NORMAL);
   return ops;
 }

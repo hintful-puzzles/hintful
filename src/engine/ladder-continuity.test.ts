@@ -56,7 +56,9 @@ const CONTINUING: readonly string[] = DRIVING.filter((id) => {
  * with why. Asserted as an exact set, so a game that moves on fails here until
  * its entry goes, and a new one is not left out in silence.
  */
-const NOT_CONTINUING: Record<string, string> = {};
+const NOT_CONTINUING: Record<string, string> = {
+  ascent: "it takes the frontier itself, and hint-frontier.test.ts measures it",
+};
 
 /**
  * The share of the positions where a plan could continue that it left

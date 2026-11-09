@@ -1,95 +1,50 @@
 /**
- * The shared deduction-fixpoint runner: an ordered ladder of *declared*
- * techniques that several logic games' solvers and hints share. The followable
- * guide is `docs/solver-and-generator.md` § "The deduction fixpoint".
+ * The loop every compiled ladder runs on: an ordered ladder of techniques,
+ * easiest first, that restarts from the top the moment one fires ("return
+ * after first firing", which keeps one firing = one hint group) and stops when
+ * none does. A game's generator runs it to a fixpoint with no recorder, and
+ * its hint runs the same techniques one firing at a time with a recorder
+ * (docs/solver-and-generator.md § "One engine, two projections").
  *
- * A logic game's generator and its explained hint are two projections of **one
- * deduction engine**: the generator runs the techniques to a fixpoint with no
- * recorder (accepting a board only when they solve it), and the hint runs the
- * *same* techniques with a recorder that captures each firing to narrate.
- * Either way the *loop* is identical — an ordered ladder, easiest first, that
- * restarts from the top the moment any technique fires ("return after first
- * firing", which keeps one firing = one hint group), stops when nothing fires
- * (or the ladder has settled), caps the ladder by tier while grading, and — on
- * the recording path only — ticks a step budget so a technique that reports
- * progress without changing the board fails loud instead of hanging, **naming
- * itself as it does**. The **techniques stay per-game** (a nonogram overlap is
- * nothing like a sudoku hidden single); only the loop and its bookkeeping live
- * here.
+ * **It takes only a ladder `ladder-runtime.ts` built** from a game's compiled
+ * description ({@link CompiledTechniques}), so a ladder a game writes by hand
+ * does not typecheck. A game reaches it through `runLadder` and `ladderWalk`;
+ * which techniques run, at which caps and graded on which scale, is the
+ * runtime's, from the compiled module.
  *
- * **It does not fit every logic game, and must not be read as though it
- * should.** The ladder *shape* is near-universal, but the bookkeeping wrapped
- * around it is per-game and often decides which puzzles exist, so a solver whose
- * loop *looks* like this one is not evidence that it is this one; the
- * differential is. No solver breaks a promise this runner makes: Loopy's,
- * which skipped the rungs below the cheapest a firing could feed, runs its
- * compiled ladder here, and a compiled technique skips only the bindings no
- * fact reached, inside its own run (`CellMarks.visit`).
- *
- * That list is re-derived whenever this contract changes, never carried forward
- * (`docs/solver-and-generator.md` § "Where the fixpoint does not fit").
- *
- * **A conditionally-available technique guards itself in `run` and returns `0`**
- * (Unruly's `unique` variant; Spokes' look-ahead that runs at *exactly* Tricky).
- * This runner grows no `when` predicate, deliberately: it would be
- * indistinguishable from returning `0` and would exist only to document, which
- * is how a runner becomes a configuration language.
- *
- * The callers are `latinSolverTop` and a comment-stripped scan for
- * `runDeductionFixpoint` under `src/games/`. A game adopting this runner ships a
- * ladder census (`engine/testing/ladder-census.ts`), because a
- * fixture corpus certifies only the rungs it fires: deleting one of Tracks'
- * eight rungs entirely left every one of its tests green, since that rung fires
- * on no board its generator produces.
+ * On the recording path a step budget ticks once a firing, so a technique
+ * that reports progress without changing the board fails loud instead of
+ * hanging, **naming itself as it does**.
  */
 import { HintFrontier } from "./hint-frontier.ts";
 import { type StepBudget, StepBudgetExceeded } from "./step-budget.ts";
 
 /**
- * One rung of a game's deduction ladder, **declared rather than anonymous**.
- * Declaring `tier` decouples the grade from the rung's position, so techniques
- * need not map one-to-one onto tiers (Unruly has five across three); declaring
- * `id` gives the ladder names a reader can see and a runaway loop can be blamed
- * on.
+ * One technique of a ladder, as the runner runs it. `ladder-runtime.ts`
+ * makes one from each entry of a compiled module's ladder.
  */
 export interface DeductionTechnique {
-  /**
-   * Stable, greppable name — `"single-gap"`, `"wall-parity"`. Appears in the
-   * step-budget's non-termination error, so it should name the technique the
-   * way the game's own docs and narrations do.
-   */
+  /** The technique's id in its description. Appears in the step budget's
+   * non-termination error. */
   id: string;
-  /**
-   * The difficulty tier this technique belongs to, in the game's own tier
-   * numbering. Several techniques may share a tier; a tier need not be the
-   * technique's position in the ladder, and grading never uses that position.
-   */
+  /** Its tier, in the description's tiers or its scale's. A continuing plan
+   * takes no firing of a higher tier than the first the ladder's order would
+   * make. */
   tier: number;
   /**
-   * Apply the technique once from the current board and report the outcome as a
-   * signed number, mirroring the per-game solvers' `-1 / 0 / >0` convention:
-   * - `> 0` — fired (changed the board). The runner restarts the ladder from the
-   *   top and takes this technique's `tier` as a grade candidate.
+   * Apply the technique once from the current marks and report the outcome:
+   * - `> 0` — fired (changed the marks). The runner restarts the ladder from
+   *   the top.
    * - `0` — nothing to do; the runner falls through to the next technique.
-   * - `< 0` — proved the board inconsistent; the runner stops with
-   *   `impossible: true`.
-   *
-   * On the recording (hint) path a technique also records its firing as a side
-   * effect (through the game's own recorder / plan array); the runner is
-   * oblivious to it.
+   * - `< 0` — proved the marks inconsistent; the runner stops.
    */
   run: () => number;
   /**
-   * Every firing this technique could make from the current board, for a hint
-   * plan that continues where its latest steps were rather than taking the
-   * first firing a scan meets ({@link SingleFiringOptions.frontier}). Each
-   * says what it reads and writes, and `take` makes it as `run` would (writes
-   * the board, records the firing). `"contradiction"` where `run` would return
-   * `< 0`.
-   *
-   * Only the recording path reads it, and only with a frontier; the fixpoint
-   * and a plan without one run `run`. A technique whose search is dear may
-   * offer just the firing `run` would make.
+   * Every firing this technique could make from the current marks, for a
+   * hint plan that continues where its latest steps were rather than taking
+   * the first firing a scan meets ({@link SingleFiringOptions.continuing}).
+   * Each says what it reads and writes, and `take` makes it. `"contradiction"`
+   * where `run` would return `< 0`.
    */
   available?: () => readonly LadderCandidate[] | "contradiction";
   /**
@@ -111,148 +66,59 @@ export interface DeductionTechnique {
   prerequisite?: boolean;
 }
 
+declare const compiledLadder: unique symbol;
+
+/**
+ * A ladder the runner takes: one `ladder-runtime.ts` made from a compiled
+ * module's techniques, with a Search after them where a game has one no
+ * description states (`withSearch`). The brand is a type alone, given only
+ * there, so the runner refuses a list of techniques a game built itself.
+ */
+export type CompiledTechniques = readonly DeductionTechnique[] & {
+  readonly [compiledLadder]: true;
+};
+
 /** A firing a technique could make now, offered to a hint plan's frontier. */
 export interface LadderCandidate {
   /** The elements its premise reads, by the frontier's key. */
   reads(): readonly number[];
   /** The elements it writes, which a later step continues from. */
   writes(): readonly number[];
-  /** Make the firing: write the board and record it. */
+  /** Make the firing: write the marks and record it. */
   take(): void;
 }
 
 /**
- * A rung written as a finder: every firing it could make from the board as it
- * stands, in scan order, ending at a contradiction if it meets one. The rung
- * takes the first; a plan that continues chooses among them all. A generator
- * that yields where a first-firing finder would return is one.
- */
-export interface FindingRung<F> {
-  id: string;
-  tier: number;
-  find: () => Iterable<F | "contradiction">;
-  fallback?: boolean;
-  prerequisite?: boolean;
-}
-
-/**
- * The techniques a ladder of finders makes, each firing taken by `take`
- * (write the board, record the firing) and keyed for a plan's frontier by
- * `reads` and `writes`.
- */
-export function findingTechniques<F>(
-  rungs: readonly FindingRung<F>[],
-  take: (firing: F) => void,
-  key: { reads(firing: F): readonly number[]; writes(firing: F): readonly number[] },
-): DeductionTechnique[] {
-  return rungs.map(({ find, ...rung }) => ({
-    ...rung,
-    run: () => {
-      for (const found of find()) {
-        if (found === "contradiction") return -1;
-        take(found as F);
-        return 1;
-      }
-      return 0;
-    },
-    available: () => {
-      const out: LadderCandidate[] = [];
-      for (const found of find()) {
-        if (found === "contradiction") return "contradiction";
-        const firing = found as F;
-        out.push({
-          reads: () => key.reads(firing),
-          writes: () => key.writes(firing),
-          take: () => take(firing),
-        });
-      }
-      return out;
-    },
-  }));
-}
-
-/**
- * Per-rung firing counts, keyed by {@link DeductionTechnique.id}.
+ * Per-technique firing counts, keyed by {@link DeductionTechnique.id}.
  *
  * Counts rather than a set of ids, because the step budget's non-termination
  * attribution needs *how many* — "a runaway technique holds ~the whole budget
  * against its name" — and a census that only needs membership reads the keys.
- * One map serves both; two would be two things to keep in step.
  */
 export type FiringTally = Map<string, number>;
 
 export interface DeductionFixpointOptions {
-  /**
-   * The ladder, easiest first. A pass tries the techniques in order and
-   * restarts from the first the moment one fires.
-   */
-  techniques: readonly DeductionTechnique[];
-  /**
-   * Highest `tier` to attempt (inclusive). Caps the ladder while grading a tier
-   * a cheaper technique already decides — no point paying for the expensive top
-   * technique on a board a cheaper tier rejects anyway. Defaults to no cap.
-   *
-   * It **excludes by tier, not by position**: a cheap technique placed after an
-   * expensive one still runs under a low cap. That is the honest reading of
-   * "this technique belongs to Easy", and it is why a ladder whose tiers are not
-   * monotonically increasing is legal here.
-   */
-  maxTier?: number;
-  /**
-   * The grade returned when no technique ever fires (the floor / "simple"
-   * difficulty). Defaults to `0`.
-   */
-  baseGrade?: number;
+  /** The ladder, easiest first. A pass tries the techniques in order and
+   * restarts from the first the moment one fires. */
+  techniques: CompiledTechniques;
   /**
    * The recording-path step budget, ticked once per outer iteration. Present
-   * only on the hint/recording path; the generator/solve path omits it and runs
-   * unguarded (and byte-for-byte unchanged).
+   * only on the hint/recording path; the generator path omits it and runs
+   * unguarded.
    */
   budget?: StepBudget;
   /**
-   * A caller-supplied tally the runner writes each firing into, keyed by
-   * {@link DeductionTechnique.id} — **how a caller observes which rungs a board
-   * actually reached.** Nothing in a game's own results says which rungs are
-   * reachable, so a corpus that walks the ladder (`ladder-census.ts`)
-   * needs this census.
-   *
-   * **A sink rather than a returned value, deliberately.** This runner is called
-   * *inside* a game's solver, so a tally on {@link DeductionFixpointResult}
-   * would have to be threaded back out through each game's own return shape,
-   * each widened for a reader that is not the game. A sink passes straight
-   * through in one line.
-   *
-   * **Omit it and the runner allocates nothing**, which is the generator path's
-   * standing rule. When a `budget` is present the runner needs a tally anyway
-   * for non-termination attribution; supplying one here means both read the same
-   * map, so a budget trip on a recording path is attributed through the caller's
-   * own census.
+   * A caller-supplied tally the runner writes each firing into: **how a
+   * caller observes which techniques a board reached** (`ladder-census.ts`).
+   * Omit it and the runner allocates nothing, which is the generator path's
+   * standing rule. Where a `budget` is present the runner needs a tally anyway
+   * for non-termination attribution, and supplying one here means both read
+   * the same map.
    */
   firings?: FiringTally;
-  /**
-   * Run once before each technique attempt — e.g. `latinSolverTop` bumps its
-   * firing-group id here so every record of one firing shares a `group`. Not
-   * called for a technique the tier cap excludes.
-   */
+  /** Run once before each technique attempt: `runLadder` opens the firing's
+   * group there. */
   beforeTechnique?: (technique: DeductionTechnique) => void;
-  /**
-   * Optional early-out, checked at the top of every iteration (after the budget
-   * tick, before any technique): return `true` when **the ladder should stop
-   * because there is nothing left for it to do**. Deliberately broader than
-   * "solved": Undead stops on a *contradiction* (`anyEmpty`), and Clusters
-   * and Spokes on complete-or-invalid.
-   *
-   * Checking at the top (not after a firing) also means a technique is never run
-   * on an already-settled board, so it can't manufacture a spurious step.
-   */
-  settled?: () => boolean;
-}
-
-export interface DeductionFixpointResult {
-  /** The highest `tier` that fired, or `baseGrade` if none did. */
-  grade: number;
-  /** A technique reported a contradiction (returned `< 0`). */
-  impossible: boolean;
 }
 
 /**
@@ -279,7 +145,7 @@ function attributingBudget(
         const byCount = [...firings].sort((a, b) => b[1] - a[1]);
         const tally = byCount.length
           ? byCount.map(([id, n]) => `${id} ×${n}`).join(", ")
-          : "no technique fired (the early-out or the caller's tick, not a technique)";
+          : "no technique fired (the caller's tick, not a technique)";
         throw new StepBudgetExceeded(`${e.message} Techniques by firings: ${tally}.`, {
           cause: e,
         });
@@ -291,16 +157,15 @@ function attributingBudget(
 /**
  * One pass down the ladder, easiest first, stopping at the first technique that
  * fires: that technique, `null` when none does, or `"contradiction"` when one
- * proves the board inconsistent. Both the fixpoint and {@link singleFirings}
+ * proves the marks inconsistent. Both the fixpoint and {@link singleFirings}
  * are this pass repeated; they differ only in when they stop repeating it.
  */
 function firstFiring(
   opts: DeductionFixpointOptions,
   firings: FiringTally | null,
 ): DeductionTechnique | null | "contradiction" {
-  const { techniques, maxTier, beforeTechnique } = opts;
+  const { techniques, beforeTechnique } = opts;
   for (const technique of techniques) {
-    if (maxTier !== undefined && technique.tier > maxTier) continue;
     beforeTechnique?.(technique);
     const ret = technique.run();
     if (ret < 0) return "contradiction";
@@ -324,15 +189,14 @@ function continuingFiring(
   frontier: HintFrontier<number>,
   firings: FiringTally,
 ): DeductionTechnique | null | "contradiction" {
-  const { techniques, maxTier, beforeTechnique } = opts;
-  const admitted = techniques.filter((t) => maxTier === undefined || t.tier <= maxTier);
+  const { techniques, beforeTechnique } = opts;
   let contradiction = false;
   type Offered = LadderCandidate & { technique: DeductionTechnique };
   const asked = new Map<number, readonly Offered[]>();
   const ask = (k: number): readonly Offered[] => {
     const seen = asked.get(k);
     if (seen) return seen;
-    const technique = admitted[k];
+    const technique = techniques[k];
     const { available } = technique;
     if (!available)
       throw new Error(
@@ -343,7 +207,8 @@ function continuingFiring(
     // any rung only once each prerequisite before it has nothing.
     let stalled = true;
     for (let j = 0; j < k && stalled && !contradiction; j++)
-      if (technique.fallback || admitted[j].prerequisite) stalled = ask(j).length === 0;
+      if (technique.fallback || techniques[j].prerequisite)
+        stalled = ask(j).length === 0;
     if (stalled && !contradiction) {
       beforeTechnique?.(technique);
       const offered = available();
@@ -359,12 +224,12 @@ function continuingFiring(
   let ceiling: number | null = null;
   const tierNow = (): number => {
     if (ceiling === null) {
-      const k = admitted.findIndex((_, j) => contradiction || ask(j).length > 0);
-      ceiling = k < 0 ? Number.NEGATIVE_INFINITY : admitted[k].tier;
+      const k = techniques.findIndex((_, j) => contradiction || ask(j).length > 0);
+      ceiling = k < 0 ? Number.NEGATIVE_INFINITY : techniques[k].tier;
     }
     return ceiling;
   };
-  const rungs = admitted.map(
+  const rungs = techniques.map(
     (technique, k) => () => (technique.tier > tierNow() ? [] : ask(k)),
   );
   const taken = frontier.takeContinuing(rungs, () => contradiction);
@@ -375,52 +240,40 @@ function continuingFiring(
 }
 
 /**
- * Run the ordered techniques to a fixpoint (see the module doc). Returns the
- * reached grade and whether a technique proved the board inconsistent; callers
- * handle `impossible` first (the reported `grade` is meaningless then).
+ * Run the ordered techniques to a fixpoint, and say whether a technique
+ * proved the marks inconsistent.
  */
-export function runDeductionFixpoint(
-  opts: DeductionFixpointOptions,
-): DeductionFixpointResult {
-  const { baseGrade = 0, settled } = opts;
-  let grade = baseGrade;
+export function runDeductionFixpoint(opts: DeductionFixpointOptions): {
+  impossible: boolean;
+} {
   // A tally exists only where a caller asked for one or a budget needs one, so
-  // the generator path allocates nothing and runs the loop it always ran.
+  // the generator path allocates nothing.
   const firings = opts.firings ?? (opts.budget ? new Map<string, number>() : null);
   const budget =
     opts.budget && firings ? attributingBudget(opts.budget, firings) : undefined;
-
   for (;;) {
     budget?.tick();
-    if (settled?.()) break;
     const fired = firstFiring(opts, firings);
-    if (fired === "contradiction") return { grade, impossible: true };
-    if (fired === null) break;
-    if (fired.tier > grade) grade = fired.tier;
+    if (fired === "contradiction") return { impossible: true };
+    if (fired === null) return { impossible: false };
   }
-
-  return { grade, impossible: false };
 }
 
 /**
- * The recording path's options: the fixpoint's, less the grade floor a single
- * firing has no use for, and with the step budget required rather than
- * optional, because a hint is exactly the path that must fail loud on a
- * technique reporting progress without changing the board.
+ * The recording path's options: the fixpoint's, with the step budget required
+ * rather than optional, because a hint is exactly the path that must fail loud
+ * on a technique reporting progress without changing the board.
  */
-export type SingleFiringOptions = Omit<
-  DeductionFixpointOptions,
-  "baseGrade" | "budget"
-> & {
+export type SingleFiringOptions = Omit<DeductionFixpointOptions, "budget"> & {
   budget: StepBudget;
   /**
    * Whether the plan stays where its work is: each call takes the firing that
    * continues from what the plan's latest firings wrote, trying the rungs in
    * order, and only with nothing continuing the first firing of the first rung
-   * that has one (`hint-frontier.ts`, the owner's rule). Every technique the
-   * cap admits must then declare {@link DeductionTechnique.available}. The
-   * frontier is the driver's own, so each plan starts from none and two
-   * identical boards hint alike.
+   * that has one (`hint-frontier.ts`, the owner's rule). Every technique must
+   * then declare {@link DeductionTechnique.available}. The frontier is the
+   * driver's own, so each plan starts from none and two identical boards hint
+   * alike.
    */
   continuing?: boolean;
 };
@@ -429,12 +282,12 @@ export type SingleFiringOptions = Omit<
 export interface SingleFirings {
   /**
    * Run the ladder from the top until one technique fires, and return it;
-   * `null` when none fires, when `settled` says there is nothing left to do,
-   * or once a technique has proved the board inconsistent. What the firing
-   * changed is the caller's to read: its recorder, or the board itself.
+   * `null` when none fires, or once a technique has proved the marks
+   * inconsistent. What the firing changed is the caller's to read: its
+   * recorder, or the marks themselves.
    */
   next(): DeductionTechnique | null;
-  /** A technique proved the board inconsistent. Sticky: `next` returns `null`
+  /** A technique proved the marks inconsistent. Sticky: `next` returns `null`
    * from then on. */
   impossible(): boolean;
 }
@@ -448,8 +301,7 @@ export interface SingleFirings {
  * can see.** Whether a firing is worth a step is the plan loop's question
  * (`deduceHintPlan`'s `showable`), not the driver's: a firing hidden there
  * still advances the board and is counted in `hidden`, which is how a test
- * proves the hiding ran at all. A driver that skipped such firings itself
- * would hide them where nothing counts them.
+ * proves the hiding ran at all.
  *
  * The tally behind the budget's attribution lives as long as the driver, not
  * one call, so a technique that runs away across many calls is still named.
@@ -464,7 +316,6 @@ export function singleFirings(opts: SingleFiringOptions): SingleFirings {
     next(): DeductionTechnique | null {
       if (impossible) return null;
       budget.tick();
-      if (opts.settled?.()) return null;
       const fired = frontier
         ? continuingFiring(opts, frontier, firings)
         : firstFiring(opts, firings);

@@ -33,11 +33,12 @@ import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts"
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { SkeletonMistake } from "./index.ts";
-import { SkeletonBoard } from "./solver.ts";
 import {
+  BLANK,
   CROSSED,
   FILLED,
   NO_CLUE,
+  neighbors,
   type SkeletonMove,
   type SkeletonParams,
   type SkeletonState,
@@ -128,6 +129,19 @@ export function newDrawState(
     hint: new OverlaySidecar(squares),
     marks: new HintMarks(),
   };
+}
+
+/** Whether the number at square `i` can no longer be met: more shaded
+ * squares beside it than it counts, or too few left that may still be. A
+ * number still short is not one. */
+function unmeetable({ w, h, clues, grid }: SkeletonState, i: number): boolean {
+  let shaded = 0;
+  let open = 0;
+  for (const j of neighbors(w, h, i)) {
+    if (grid[j] === FILLED) shaded++;
+    else if (grid[j] === BLANK && clues[j] === NO_CLUE) open++;
+  }
+  return shaded > clues[i] || shaded + open < clues[i];
 }
 
 /** Where a hint mark sits around square `(x, y)`: on the grid line and a
@@ -249,7 +263,6 @@ export function redraw(
     ds.started = true;
   }
 
-  const board = new SkeletonBoard(w, h, clues, grid);
   const wrong = new Set(mistakes?.map((m) => m.y * w + m.x));
 
   // The displayed step's marks, read from its words and from nowhere else:
@@ -273,12 +286,10 @@ export function redraw(
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       const clue = clues[i];
-      const need = clue === NO_CLUE ? 0 : board.need(i);
       const tile: Tile = {
         mark: grid[i],
         clue,
-        // Only a number that can no longer be met, never one still short.
-        error: clue !== NO_CLUE && (need < 0 || need > board.open(i).length),
+        error: clue !== NO_CLUE && unmeetable(state, i),
         wrong: wrong.has(i),
         cursor: ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y,
         tone: flash.win(sweepStep(x, y)),

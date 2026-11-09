@@ -363,3 +363,29 @@ finds it too large.
 - The rules are written twice inside Pegs, Inertia and Sokoban, and Same
   Game's finish and last-of-a-color tests three times each. Folding them
   needs no description; it is a cleanup a session in those games makes.
+- § "The engine's code for the hand-written way", corrected by task 4
+  (2026-11-09):
+  - **The skeletons were not in the catalog.** `src/skeleton/grid` and
+    `edges`, which every new game is copied from, still ran hand-written
+    ladders. Both are now described. The edges skeleton's `lineBreaks`
+    rung never fired on a board its generator dealt, as the census showed
+    and a hint scan agreed, so it was dropped rather than described.
+  - **The census stays.** It caught that dead rung, which no soundness
+    check can: a sound technique that no board reaches is still dead. The
+    continuity guard stays too, since `ladderWalk` is `singleFirings`'
+    continuing driver. `available`, `continuing`, `prerequisite` and
+    `fallback` stay as well: compiled ladders use them, through
+    `ladderWalk`'s roles.
+  - **What went**: `findingTechniques`, `FindingRung`, and the runner's
+    grade, `baseGrade`, `maxTier` and `settled`. Grading and caps are
+    `ladderTechniques`', per scale.
+  - **The guard is two brands.** `CompiledTechniques` is what the runner
+    takes, and `Rung` is what `describedLadder` pairs. The runtime gives
+    both, `withSearch` being the one way a Search joins. Planting a
+    hand-written ladder, a hand-written rung and a hand-written list for
+    `runDeductionFixpoint` failed the typecheck all three times.
+    `compiled-ladder.test.ts` refuses a cast past either brand, and it
+    caught a planted one. The brand also found two rungs that were wrapped
+    by hand. Undead's counted its sightline firings, and now reads the
+    firing tally. Tents' link rung filtered compiled firings, and is now a
+    `keptRung`, which can only re-reason a compiled firing.

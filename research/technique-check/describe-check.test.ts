@@ -254,6 +254,27 @@ const PLANTS: Record<string, Plant> = {
     conclude:
       "(forall d in O: place(d, 1)) and (by > 0 or (forall d in only(b, c): place(d, 2)))",
   },
+  // The skeleton of a grid game: a number one short of its open squares
+  // read as needing them all.
+  "skeleton.count": {
+    for: "k in clues(count), c = at(k), n = need(c), O = open(c) where |O| > 0 and (n <= 0 or n >= |O| - 1)",
+    conclude:
+      "n >= 0 and (n = 0 implies (forall d in O: place(d, 2))) and (n = 0 or (forall d in O: place(d, 1)))",
+  },
+  // Two numbers whose open squares only overlap read as nested.
+  "skeleton.shared": {
+    for: "k in clues(count), c = at(k), O = open(c) where |O| >= 2, b in within(c, 2) where b != c and clue(count, b) != none, M = open(b) where |M| > 0 and |M| < |O| and (exists d in M: d in O), by = need(c) - need(b), R = O - M where by <= 0 or by >= |R|",
+  },
+  // The skeleton of an edge game: a square with one edge more than it
+  // needs read as forced.
+  "skeleton.forced": {
+    for: "c in cells, n = 2 - lines(c), U = ways(c) where n < 0 or (n > 0 and |U| <= n + 1)",
+    conclude: "n >= 0 and (forall y in U: place(edge(c, y), 1))",
+  },
+  // A square's third edge taken whatever the other two would do.
+  "skeleton.pairBreaks": {
+    for: "c in cells where lines(c) = 0, U = ways(c) where |U| = 3, k in U, I = U - {k}, i = nth(I, 0), j = nth(I, 1) where not known(edge(c, k)) and not known(edge(c, i)) and not known(edge(c, j))",
+  },
   // Star Battle: a star's neighbors two squares away emptied too.
   around: {
     conclude: "forall p in within(c, 2) where p != c and not known(p): place(p, 2)",

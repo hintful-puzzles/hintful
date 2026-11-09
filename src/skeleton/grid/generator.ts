@@ -8,7 +8,7 @@ import { type CappedSolve, solvableAtExactlyTier } from "../../engine/difficulty
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { SkeletonBoard, solveSkeleton } from "./solver.ts";
+import { solveSkeleton } from "./solver.ts";
 import { encodeDesc, NO_CLUE, neighbors, type SkeletonParams } from "./state.ts";
 
 /** One square in this many is filled in the answer. */
@@ -16,8 +16,8 @@ const FILL_ONE_IN = 3;
 
 /** Whether the ladder, capped at `cap`, finishes the board `clues` give. */
 function solves(p: SkeletonParams, clues: Int8Array, cap: number): boolean {
-  const board = new SkeletonBoard(p.w, p.h, clues, new Uint8Array(p.w * p.h));
-  return solveSkeleton(board, cap) === "solved";
+  const grid = new Uint8Array(p.w * p.h);
+  return solveSkeleton({ w: p.w, h: p.h, clues, grid }, cap) === "solved";
 }
 
 /** A random answer with a number on every empty square. */

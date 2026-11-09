@@ -1,5 +1,6 @@
 /**
- * The firing census every `runDeductionFixpoint` ladder is certified with.
+ * The firing census every compiled ladder is certified with: the soundness
+ * check says a technique is right, and only this says it is ever reached.
  *
  * **Why a ladder needs more than its differential.** A fixture corpus certifies
  * only the rungs it fires, and nothing in a fixture file says which those are:

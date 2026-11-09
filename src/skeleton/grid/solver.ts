@@ -1,31 +1,38 @@
 /**
- * Skeleton's deductions: one ladder, run two ways.
+ * Skeleton's solver: the ladder `skeleton.description.yaml` states, compiled,
+ * on the engine's marks and runner (`engine/ladder-runtime.ts`), with the
+ * reason each technique records for the hint, and the answer check its rules
+ * compile to.
  *
- * {@link solveSkeleton} runs it to a fixpoint, which is how the generator
- * grades a board and how Solve and the mistake check find the answer.
- * {@link skeletonRecordingPass} runs the same rungs one firing at a time, and
- * the hint narrates each (docs/solver-and-generator.md § "One engine,
- * two projections").
+ * {@link solveSkeleton} runs the ladder to a fixpoint, which is how the
+ * generator grades a board and how Solve and the mistake check find the
+ * answer. {@link skeletonWalk} takes it one firing at a time, and the hint
+ * narrates each (docs/solver-and-generator.md § "One engine, two
+ * projections").
  *
- * Both rungs only ever decide a square the numbers force, so a board the
- * ladder finishes has exactly one answer, and the order the rungs fire in
- * cannot change it.
+ * Both techniques only ever decide a square the numbers force, so a board the
+ * ladder finishes has exactly one answer.
  */
 
-import {
-  type DeductionTechnique,
-  type FiringTally,
-  type LadderCandidate,
-  runDeductionFixpoint,
-  type SingleFirings,
-  singleFirings,
-} from "../../engine/deduction-fixpoint.ts";
+import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+import { clueList, describedSpace } from "../../engine/describe-runtime.ts";
 import type { DifficultyVerdict } from "../../engine/difficulty.ts";
+import {
+  CellMarks,
+  compiledRung,
+  describedLadder,
+  type Ladder,
+  type LadderWalk,
+  ladderTechniques,
+  ladderWalk,
+  runLadder,
+  TIERS as SCALE,
+} from "../../engine/ladder-runtime.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
+import * as skeleton from "./skeleton.compiled.ts";
 import {
   BLANK,
   CROSSED,
-  DIFF_EASY,
   DIFF_NORMAL,
   FILLED,
   NO_CLUE,
@@ -33,11 +40,11 @@ import {
   type SkeletonMark,
 } from "./state.ts";
 
-/** Why a firing decides its squares. `need` is how many more filled squares a
- * number wanted, and `open` how many undecided squares it had beside it, both
- * before the firing. */
+/** Why a firing decides its squares. `need` is how many more shaded squares
+ * a number wanted, both before the firing. */
 export type SkeletonReason =
-  /** One number: it has its count, or needs every open square beside it. */
+  /** One number: it has its count, or needs every one of its `open`
+   * undecided squares. */
   | { kind: "count"; clue: number; need: number; open: number }
   /** Two numbers: every open square beside `inner` is also beside `clue`, so
    * what `clue` needs beyond `inner` falls on its other open squares. `meet`
@@ -48,15 +55,8 @@ export type SkeletonReason =
       need: number;
       inner: number;
       innerNeed: number;
-      meet: number[];
+      meet: readonly number[];
     };
-
-/** One deduction: `cells` all take `mark`. */
-export interface SkeletonFiring {
-  reason: SkeletonReason;
-  cells: number[];
-  mark: typeof FILLED | typeof CROSSED;
-}
 
 /** The rungs, easiest first, by the `kind` of the reason a firing carries. */
 export const SKELETON_RUNGS = [
@@ -65,160 +65,79 @@ export const SKELETON_RUNGS = [
 ] as const satisfies readonly SkeletonReason["kind"][];
 export type SkeletonRung = (typeof SKELETON_RUNGS)[number];
 
-/** The board the ladder works on: the clues, and a grid it writes as it goes. */
-export class SkeletonBoard {
-  constructor(
-    readonly w: number,
-    readonly h: number,
-    readonly clues: Int8Array,
-    readonly grid: Uint8Array,
-  ) {}
-
-  /** The squares with a number, in reading order. */
-  clueSquares(): number[] {
-    const out: number[] = [];
-    for (let i = 0; i < this.clues.length; i++)
-      if (this.clues[i] !== NO_CLUE) out.push(i);
-    return out;
-  }
-
-  /** The undecided squares beside `clue`. */
-  open(clue: number): number[] {
-    return neighbors(this.w, this.h, clue).filter(
-      (j) => this.clues[j] === NO_CLUE && this.grid[j] === BLANK,
-    );
-  }
-
-  /** How many more filled squares `clue` needs beside it. */
-  need(clue: number): number {
-    let filled = 0;
-    for (const j of neighbors(this.w, this.h, clue))
-      if (this.grid[j] === FILLED) filled++;
-    return this.clues[clue] - filled;
-  }
-
-  /** Whether a square is still undecided. */
-  unfinished(): boolean {
-    return this.grid.some((m, i) => m === BLANK && this.clues[i] === NO_CLUE);
-  }
+/** The board the ladder works on: the clues, and a grid of
+ * {@link SkeletonMark}s it writes as it goes. */
+export interface SkeletonBoard {
+  w: number;
+  h: number;
+  clues: Int8Array;
+  grid: Uint8Array;
 }
 
-/** Whether every number counts the filled squares beside it. A blank square
- * counts as empty, so a player need cross nothing out to finish. */
-export function isComplete(
-  w: number,
-  h: number,
-  clues: Int8Array,
-  grid: Uint8Array,
-): boolean {
-  const board = new SkeletonBoard(w, h, clues, grid);
-  return board.clueSquares().every((c) => board.need(c) === 0);
+/** The board's numbers as the description reads them. */
+function dealtOf({ clues }: SkeletonBoard): skeleton.Dealt {
+  const at: number[] = [];
+  const v: number[] = [];
+  clues.forEach((n, i) => {
+    if (n === NO_CLUE) return;
+    at.push(i);
+    v.push(n);
+  });
+  return { count: clueList(at, v, clues.length) };
 }
 
-/** Every number whose count decides its open squares, in reading order, or
- * `"contradiction"` when a number can no longer be met. */
-function allCounts(b: SkeletonBoard): SkeletonFiring[] | "contradiction" {
-  const out: SkeletonFiring[] = [];
-  for (const clue of b.clueSquares()) {
-    const open = b.open(clue);
-    const need = b.need(clue);
-    if (need < 0 || need > open.length) return "contradiction";
-    if (open.length === 0) continue;
-    const reason: SkeletonReason = { kind: "count", clue, need, open: open.length };
-    if (need === 0) out.push({ reason, cells: open, mark: CROSSED });
-    else if (need === open.length) out.push({ reason, cells: open, mark: FILLED });
-  }
-  return out;
-}
-
-/** Every pair of numbers where one's open squares all lie beside the other,
- * and the difference of their needs decides the other's remaining open
- * squares. */
-function allShared(b: SkeletonBoard): SkeletonFiring[] {
-  const out: SkeletonFiring[] = [];
-  const clues = b.clueSquares();
-  for (const clue of clues) {
-    const open = b.open(clue);
-    if (open.length < 2) continue;
-    for (const inner of clues) {
-      if (inner === clue) continue;
-      const within = b.open(inner);
-      if (within.length === 0 || within.length >= open.length) continue;
-      if (!within.every((j) => open.includes(j))) continue;
-      const rest = open.filter((j) => !within.includes(j));
-      const need = b.need(clue);
-      const innerNeed = b.need(inner);
-      const beyond = need - innerNeed;
-      const reason: SkeletonReason = {
+/** The ladder over the numbers `dealt` deals. */
+function skeletonLadder(dealt: skeleton.Dealt): Ladder {
+  return describedLadder(skeleton, {
+    count: compiledRung(
+      skeleton.count,
+      dealt,
+      ({ c, n, O }): SkeletonReason => ({
+        kind: "count",
+        clue: c,
+        need: n,
+        open: O.length,
+      }),
+    ),
+    shared: compiledRung(
+      skeleton.shared,
+      dealt,
+      ({ c, b, M }, _cell, _n, m): SkeletonReason => ({
         kind: "shared",
-        clue,
-        need,
-        inner,
-        innerNeed,
-        meet: within,
-      };
-      if (beyond === 0) out.push({ reason, cells: rest, mark: CROSSED });
-      else if (beyond === rest.length) out.push({ reason, cells: rest, mark: FILLED });
-    }
-  }
-  return out;
+        clue: c,
+        need: skeleton.need(m, m.sp, dealt, c),
+        inner: b,
+        innerNeed: skeleton.need(m, m.sp, dealt, b),
+        meet: M,
+      }),
+    ),
+  });
 }
 
-/** The squares a firing's premise reads, which a hint plan continues from:
- * its numbers and the squares around them. */
-function readsOf(b: SkeletonBoard, firing: SkeletonFiring): number[] {
-  const { reason } = firing;
-  const around = (clue: number): number[] => [clue, ...neighbors(b.w, b.h, clue)];
-  return reason.kind === "count"
-    ? around(reason.clue)
-    : [...around(reason.clue), ...around(reason.inner)];
+/** The values a square may hold: shaded or clear. */
+const DOMAIN = (1 << FILLED) | (1 << CROSSED);
+
+/** The marks the ladder reads, on `board.grid` itself. */
+function marksOf(board: SkeletonBoard): CellMarks {
+  const m = new CellMarks(
+    describedSpace(skeleton.units, board.w, board.h),
+    DOMAIN,
+    board.grid,
+  );
+  m.seed(board.grid);
+  return m;
 }
 
-/** The ladder over `board`. A rung that fires writes its squares, and hands
- * the firing to `record` where there is one. */
-function ladder(
-  board: SkeletonBoard,
-  record?: (firing: SkeletonFiring) => void,
-): DeductionTechnique[] {
-  const apply = (firing: SkeletonFiring): number => {
-    for (const i of firing.cells) board.grid[i] = firing.mark;
-    record?.(firing);
-    return 1;
-  };
-  // What a hint plan chooses among: each firing with what it reads and the
-  // squares it writes.
-  const offered = (found: readonly SkeletonFiring[]): LadderCandidate[] =>
-    found.map((firing) => ({
-      reads: () => readsOf(board, firing),
-      writes: () => firing.cells,
-      take: () => {
-        apply(firing);
-      },
-    }));
-  return [
-    {
-      id: "count" satisfies SkeletonRung,
-      tier: DIFF_EASY,
-      run: () => {
-        const found = allCounts(board);
-        if (found === "contradiction") return -1;
-        return found.length > 0 ? apply(found[0]) : 0;
-      },
-      available: () => {
-        const found = allCounts(board);
-        return found === "contradiction" ? found : offered(found);
-      },
-    },
-    {
-      id: "shared" satisfies SkeletonRung,
-      tier: DIFF_NORMAL,
-      run: () => {
-        const found = allShared(board);
-        return found.length > 0 ? apply(found[0]) : 0;
-      },
-      available: () => offered(allShared(board)),
-    },
-  ];
+/** Whether every number counts the shaded squares beside it, by the rules
+ * the description compiles to. A blank square counts as clear, so a player
+ * need cross nothing out to finish. */
+export function isComplete(board: SkeletonBoard): boolean {
+  const grid = board.grid.map((mark) => (mark === FILLED ? FILLED : CROSSED));
+  return skeleton.isAnswer(
+    grid,
+    describedSpace(skeleton.units, board.w, board.h),
+    dealtOf(board),
+  );
 }
 
 /**
@@ -230,17 +149,17 @@ export function solveSkeleton(
   cap: number,
   firings?: FiringTally,
 ): DifficultyVerdict {
-  const { impossible } = runDeductionFixpoint({
-    techniques: ladder(board),
-    maxTier: cap,
+  const m = marksOf(board);
+  const { entries } = skeletonLadder(dealtOf(board));
+  const impossible = runLadder(m, ladderTechniques(m, entries, { [SCALE]: cap }, {}), {
     firings,
-    settled: () => !board.unfinished(),
   });
   if (impossible) return "impossible";
-  if (board.unfinished()) return "unsolved";
-  return isComplete(board.w, board.h, board.clues, board.grid)
-    ? "solved"
-    : "impossible";
+  const unfinished = board.grid.some(
+    (mark, i) => mark === BLANK && board.clues[i] === NO_CLUE,
+  );
+  if (unfinished) return "unsolved";
+  return isComplete(board) ? "solved" : "impossible";
 }
 
 /** The answer to a board's clues, or `null` where the ladder does not reach
@@ -250,29 +169,30 @@ export function answerOf(
   h: number,
   clues: Int8Array,
 ): readonly SkeletonMark[] | null {
-  const board = new SkeletonBoard(w, h, clues, new Uint8Array(w * h));
+  const board: SkeletonBoard = { w, h, clues, grid: new Uint8Array(w * h) };
   if (solveSkeleton(board, DIFF_NORMAL) !== "solved") return null;
   return Array.from(board.grid, (m) => m as SkeletonMark);
 }
 
-/** The ladder one firing at a time, writing `board` as it goes: `next` gives
- * the firing just made, or `null` when no rung fires. */
-export function skeletonRecordingPass(
-  board: SkeletonBoard,
-  budget: StepBudget,
-): { next(): SkeletonFiring | null; impossible(): boolean } {
-  let last: SkeletonFiring | null = null;
-  const pass: SingleFirings = singleFirings({
-    techniques: ladder(board, (firing) => {
-      last = firing;
-    }),
-    budget,
-    settled: () => !board.unfinished(),
-    // A plan stays with the squares it is working on before it moves on.
-    continuing: true,
-  });
-  return {
-    next: () => (pass.next() ? last : null),
-    impossible: () => pass.impossible(),
+/**
+ * The hint's walk over the ladder from `board`, a copy of the player's
+ * marks, one firing a call: the one that carries on from the squares the
+ * last decided (`ladderWalk`). No tier cap: a board that arrives by its ID
+ * carries no tier, and the ladder tries the easy rung first, which is the
+ * order a hint wants anyway.
+ */
+export function skeletonWalk(board: SkeletonBoard, budget: StepBudget): LadderWalk {
+  const m = marksOf(board);
+  m.budget = budget;
+  const { w, h } = board;
+  // A number and the squares beside it.
+  const around = (clue: number): number[] => [clue, ...neighbors(w, h, clue)];
+  const reads = ({ reasons }: { reasons: readonly object[] }): number[] => {
+    const reason = reasons[0] as SkeletonReason;
+    return reason.kind === "count"
+      ? around(reason.clue)
+      : [...around(reason.clue), ...around(reason.inner)];
   };
+  const { entries } = skeletonLadder(dealtOf(board));
+  return ladderWalk(m, entries, { [SCALE]: DIFF_NORMAL }, reads);
 }

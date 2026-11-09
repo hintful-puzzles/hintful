@@ -19,11 +19,11 @@ ladder, whose hint is a search or a heuristic, opens
 Each step names the file of `src/skeleton/grid/` that already does it.
 
 1. **Run the solver's rungs one firing at a time.** `solver.ts` holds the
-   reason union, the rung list `SKELETON_RUNGS` and `skeletonRecordingPass`,
-   built on `singleFirings` (§ "Recording the deduction", § "Name the rung a
-   step speaks").
+   reason union, the rung list `SKELETON_RUNGS` and `skeletonWalk`, built on
+   `ladderWalk` (§ "Recording the deduction", § "Name the rung a step
+   speaks").
 2. **Build the plan from the player's own marks.** `hint.ts`'s `skeletonHint`
-   hands a copy of the board, the pass and a `stepBudget` to `deduceHintPlan`,
+   hands a copy of the board, the walk and a `stepBudget` to `deduceHintPlan`,
    and returns a `HintRefusal` where there is no step (§ "The shared plan
    loop: deduceHintPlan", § "The step budget", § "Refusal wording comes from
    one module").
@@ -955,40 +955,44 @@ themselves. Decide first where the record comes from:
   Clusters, which restarts its scan after each firing and takes the shortest
   chain.
 
-A ladder on `runDeductionFixpoint` still makes that choice: a technique's
-`run` returns a number and its `firings` tally counts by rung id, which is
-not a record. What the ladder gives is the driver and a certified rung list:
+A compiled ladder's `firings` tally counts by rung id, which is not a
+record. What the ladder gives is the walk and a certified rung list:
 
-- **Drive it with `singleFirings`**
-  ([`deduction-fixpoint.ts`](../src/engine/deduction-fixpoint.ts)), built
-  once over the working board, whose doc says what it takes and returns.
-  Wrap it in a `next()` that turns the recorder into a firing and hand that
-  to `deduceHintPlan`.
-  Exemplars: `skeletonRecordingPass`, and `minesWalk` in
-  [`mines/solver.ts`](../src/games/mines/solver.ts).
-- **Pass `continuing: true`, and give every rung `available()`**: every
-  firing it could make, each with what it reads and writes. The plan then
-  takes the firing that continues from its latest steps, rung order breaking
-  ties, at no harder a tier than the ladder's own order would fire, so it
-  finishes the work in front of the player before it starts elsewhere.
-  `ladder-continuity.test.ts` holds every game that sets it.
+- **Walk it with `ladderWalk`**
+  ([`ladder-runtime.ts`](../src/engine/ladder-runtime.ts)), built once over
+  the working marks, whose doc says what it takes and returns. Turn each
+  firing it takes into a step and hand that to `deduceHintPlan`. It takes
+  the firing that continues from the plan's latest steps, rung order
+  breaking ties, at no harder a tier than the ladder's own order would fire,
+  so it finishes the work in front of the player before it starts elsewhere.
+  `ladder-continuity.test.ts` holds every game that walks so.
+  Exemplars: `skeletonWalk` in
+  [`skeleton/grid/solver.ts`](../src/skeleton/grid/solver.ts), and
+  `minesWalk` in [`mines/solver.ts`](../src/games/mines/solver.ts), which
+  drives `singleFirings` itself.
+- **Say what each firing reads, and what it writes where that is more than
+  its facts' cells.**
   - **Key `reads` and `writes` on what the player follows**: a cell, a
     region, a line's number, an island. A firing that writes nothing keyed
     leaves the plan where it was. `reads` is everything its premise rests on,
     not only what it fills: a firing that reads only its own square never
     continues (Slant's equivalence reads its whole class).
-  - **A rung that presumes the rungs before it ran dry says so.** `fallback`
-    is asked only once every rung before it has nothing (Tents' links);
-    `prerequisite` holds back every rung after it until it has nothing
-    (Tracks' `oneWayIn` and `bothSidesLeft`, which every line count reads). The order of the first
-    firing made both true; a plan that weighs every rung at once does not.
-- **`beforeTechnique` starts each attempt afresh**: clear a standing reason
-  there, or open a new group (Mines' `m.group`), so a rung that declares
+  - **A rung that presumes the rungs before it ran dry says so**, in the
+    walk's roles. A `fallback` is asked only once every rung before it has
+    nothing (Tents' links); a `prerequisite` holds back every rung after it
+    until it has nothing (Tracks' `oneWayIn` and `bothSidesLeft`, which every
+    line count reads). The order of the first firing made both true; a plan
+    that weighs every rung at once does not.
+  - **A hint rung that takes a technique's firing only where it serves
+    another is a `keptRung`** (Tents' links): its facts are the compiled
+    technique's own.
+- **A driver of `singleFirings`' own starts each attempt afresh in
+  `beforeTechnique`**: clear a standing reason there, or open a new group
+  (Mines' `m.group`), so a rung that declares
   none does not borrow the last one's.
 - **Record every firing, including one that changed nothing the player
   sees**, and let the plan loop hide it (§ "Show only what the board does not
-  already say"). Do not bend `settled` to skip such firings: the `hidden`
-  count cannot see them.
+  already say"); the `hidden` count sees only what the plan loop hides.
 - **Read what the firing changed yourself**, from the recorder or by
   comparing the board before and after.
 - **A rung in the `unreached` ledger of `<game>-ladder.test.ts` needs no
@@ -1230,10 +1234,9 @@ and does not hang inside one `hint()` call.
   unguarded. Exemplars: `deduceHintPlan` in `range/solver.ts`, which sets
   the marks' budget that only a hint's walk carries (gated),
   `deduceForcedEdges` in `palisade/solver.ts` (hint-only, so unconditional).
-- **A rung ladder does not hand-roll the loop.**
-  [`runDeductionFixpoint`](../src/engine/deduction-fixpoint.ts) and
-  `singleFirings` tick the budget: pass `budget: stepBudget(...)` on the hint
-  call and omit it on the generator's.
+- **A compiled ladder's loop ticks the budget**
+  ([`deduction-fixpoint.ts`](../src/engine/deduction-fixpoint.ts)): set the
+  marks' `budget` on the hint's run and leave it unset on the generator's.
 - **A search bounded by its visited set needs no budget.**
 
 The limit is `DEFAULT_HINT_STEP_LIMIT`, well above what an honest fixpoint

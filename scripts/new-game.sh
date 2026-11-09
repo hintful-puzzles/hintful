@@ -116,6 +116,23 @@ cd "${REPO_ROOT}"
 # A longer name reflows lines, and the import above wants its sorted place.
 npx biome check --write "src/games/${GAME}" > /dev/null
 
+# The compiled module names the description it was compiled from, so the
+# copy's is compiled afresh. Its techniques are the skeleton's as written, so
+# the skeleton's soundness verdicts are the copy's: each is a fingerprint of
+# the technique, which src/describe/compile.test.ts checks against the copy.
+npm run -s describe > /dev/null
+node -e '
+  const fs = require("node:fs");
+  const [file, from, to] = process.argv.slice(1);
+  const verdicts = JSON.parse(fs.readFileSync(file, "utf8"));
+  for (const [key, print] of Object.entries(verdicts))
+    if (key.startsWith(from)) verdicts[to + key.slice(from.length)] = print;
+  const sorted = Object.fromEntries(Object.entries(verdicts).sort(([a], [b]) => (a < b ? -1 : 1)));
+  fs.writeFileSync(file, `${JSON.stringify(sorted, null, 2)}\n`);
+' src/describe/soundness.json \
+  "src/skeleton/${KIND}/skeleton.description.yaml#" \
+  "src/games/${GAME}/${GAME}.description.yaml#"
+
 # The copy's verdict, before a line of it is changed.
 echo "Checking the copy: typecheck, lint, tests."
 npm run -s tsc -- -b --noEmit

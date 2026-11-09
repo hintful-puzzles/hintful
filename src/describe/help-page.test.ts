@@ -23,7 +23,7 @@ const help: HelpJson = {
 describe("a help page rendered from its description", () => {
   it("writes the sections in the one order, under the renderer's headings", () => {
     expect(renderHelpPage(help, facts, "t.yaml")).toBe(
-      [
+      `${[
         "# Test",
         "Play it.",
         "## Controls",
@@ -39,7 +39,7 @@ describe("a help page rendered from its description", () => {
         "Before.",
         PARAMETERS_PLACEHOLDER,
         "After.",
-      ].join("\n\n") + "\n",
+      ].join("\n\n")}\n`,
     );
   });
 

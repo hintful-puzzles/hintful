@@ -84,9 +84,9 @@ export const say = {
   ): Sentence => {
     const left = outer.need - inner.need;
     const taken = left === 0 ? (inner.need === 1 ? "it" : "them all") : `${inner.need}`;
-    const where = mark.as("stripes", CELL, meet, "where they meet");
+    const shared = mark.as("stripes", CELL, meet, "the striped squares");
     return so({
-      look: phrase`${number(outer.at, outer.value, "the")} beside ${these(cells)} needs ${outer.need}, and ${number(inner.at, inner.value, "the other outlined")} puts ${taken} ${where}`,
+      look: phrase`${number(outer.at, outer.value, "the")} beside ${these(cells)} needs ${outer.need}; ${number(inner.at, inner.value, "the other outlined")} puts ${taken} in ${shared}`,
       move: mustBe(cells, mark_ === "shaded" ? SHADED_NAME : UNSHADED_NAME),
     });
   },

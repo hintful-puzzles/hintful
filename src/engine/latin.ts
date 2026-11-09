@@ -35,7 +35,7 @@
  * multiplicity is 1, and the techniques read as on a Latin square.
  */
 
-import type { DeductionTechnique } from "./deduction-fixpoint.ts";
+import type { CompiledTechniques } from "./deduction-fixpoint.ts";
 import type { DeductionRecorder } from "./deduction-record.ts";
 import { latinSpace, valuesOf } from "./describe-runtime.ts";
 import type { DifficultyVerdict } from "./difficulty.ts";
@@ -55,6 +55,7 @@ import {
   TIERS,
   uncluedPlacingRung,
   uncluedRung,
+  withSearch,
 } from "./ladder-runtime.ts";
 import * as compiled from "./latin.compiled.ts";
 import { type RandomState, randomUpto } from "./random/index.ts";
@@ -453,24 +454,23 @@ function latinTechniques(
   solver: LatinSolver,
   cfg: LatinSolverConfig,
   grades: Record<string, number>,
-): DeductionTechnique[] {
+): CompiledTechniques {
   const techniques = ladderTechniques(
     solver,
     cfg.ladder.entries,
     { [TIERS]: cfg.maxdiff },
     grades,
   );
-  if (cfg.maxdiff >= cfg.diffRecursive)
-    techniques.push({
-      id: FORCING,
-      tier: cfg.diffRecursive,
-      run: () => {
-        const ret = solver.forcing();
-        if (ret > 0) grades[TIERS] = Math.max(grades[TIERS], cfg.diffRecursive);
-        return ret;
-      },
-    });
-  return techniques;
+  if (cfg.maxdiff < cfg.diffRecursive) return techniques;
+  return withSearch(techniques, {
+    id: FORCING,
+    tier: cfg.diffRecursive,
+    run: () => {
+      const ret = solver.forcing();
+      if (ret > 0) grades[TIERS] = Math.max(grades[TIERS], cfg.diffRecursive);
+      return ret;
+    },
+  });
 }
 
 function latinSolverTop(solver: LatinSolver, cfg: LatinSolverConfig): number {

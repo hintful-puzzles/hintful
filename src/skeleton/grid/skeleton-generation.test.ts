@@ -10,7 +10,7 @@ import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { newSkeletonDesc } from "./generator.ts";
 import { skeletonGame } from "./index.ts";
-import { SKELETON_RUNGS, SkeletonBoard, solveSkeleton } from "./solver.ts";
+import { SKELETON_RUNGS, solveSkeleton } from "./solver.ts";
 import {
   DIFF_EASY,
   DIFF_NORMAL,
@@ -48,6 +48,6 @@ describeLadderCensus<SkeletonParams & { desc: string }>({
   ),
   solve: (p, cap, firings) => {
     const { w, h, clues, grid } = newState(p, p.desc);
-    return solveSkeleton(new SkeletonBoard(w, h, clues, grid), cap, firings);
+    return solveSkeleton({ w, h, clues, grid }, cap, firings);
   },
 });

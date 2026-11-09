@@ -27,6 +27,7 @@ import {
   compiledRung,
   describedLadder,
   type Firing,
+  keptRung,
   type Ladder,
   type LadderEntry,
   ladderTechniques,
@@ -452,7 +453,7 @@ export function seenBoard(
 export function firesOn(state: TentsState, id: tents.LadderId): boolean {
   const seen = seenMarks(state.w, state.h, state.grid, state.numbers, state.links);
   if (seen === null) throw new Error("tents: the board contradicts itself");
-  const found = seen.b.ladder.entries.find((e) => e.id === id)?.run.firings?.(seen.m);
+  const found = seen.b.ladder.entries.find((e) => e.id === id)?.run.firings(seen.m);
   return found !== undefined && found !== "contradiction" && found.length > 0;
 }
 
@@ -473,46 +474,32 @@ function linkFor(
   then: readonly string[],
   anyway: boolean,
 ): Rung {
-  const byId = new Map(b.ladder.entries.map((e) => [e.id, e]));
-  const links = ["tentLink", "treeLink"].map((id) => byId.get(id));
+  const byId = new Map(b.ladder.entries.map((e) => [e.id, e.run]));
+  const rungOf = (id: string): Rung => {
+    const r = byId.get(id);
+    if (r === undefined) throw new Error(`tents: no technique ${id}`);
+    return r;
+  };
   const fires = (trial: CellMarks): number[] | null => {
     for (const id of then) {
-      const found = byId.get(id)?.run.firings?.(trial) ?? [];
+      const found = rungOf(id).firings(trial);
       if (found === "contradiction" || found.length === 0) continue;
       return premise(b, trial, found[0].reasons[0] as TentsReason);
     }
     return null;
   };
-  const offers = (m: CellMarks): readonly Firing[] | "contradiction" => {
-    const pending: Firing[] = [];
-    for (const entry of links) {
-      const found = entry?.run.firings?.(m) ?? [];
-      if (found === "contradiction") return found;
-      pending.push(...found);
-    }
-    const out: Firing[] = [];
-    for (const p of pending) {
-      const [c, q] = [p.facts[1], p.facts[2]];
+  return keptRung(
+    [rungOf("tentLink"), rungOf("treeLink")],
+    (m, { facts, reasons }) => {
       const trial = copied(m);
       const trialDrawn = drawn.slice();
-      trialDrawn[c] = q;
-      if (!readLinks(trial, trialDrawn, b.ladder)) continue;
+      trialDrawn[facts[1]] = facts[2];
+      if (!readLinks(trial, trialDrawn, b.ladder)) return null;
       const serves = fires(trial);
-      if (serves === null) continue;
-      out.push({ facts: p.facts, reasons: [{ ...p.reasons[0], serves }] });
-    }
-    if (out.length > 0 || !anyway || pending.length === 0) return out;
-    return [pending[0]];
-  };
-  const rung = (m: CellMarks): number => {
-    const found = offers(m);
-    if (found === "contradiction") return -1;
-    if (found.length === 0) return 0;
-    m.applyFacts(found[0].facts, () => found[0].reasons[0]);
-    return 1;
-  };
-  rung.firings = offers;
-  return rung;
+      return serves === null ? null : [{ ...reasons[0], serves }];
+    },
+    anyway,
+  );
 }
 
 /** The techniques that place a square, easiest first: what a link is drawn

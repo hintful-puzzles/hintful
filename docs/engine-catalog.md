@@ -553,6 +553,8 @@ stated in a description: the engine's marks, the pairing of each technique
 with its reason, and `ladderTechniques` and `runLadder` to run it capped per
 scale. `ladderWalk` is a hint's walk over the same firings for a game with no
 notes, and `ladderReplay` the premise audit's replay of a recording run.
+`withSearch` puts a Search no description states after the ladder, and
+`keptRung` makes a hint rung of the compiled firings that serve another.
 Exemplars: `unruly/solver.ts`, `seismic/solver.ts`; the guide is
 [`descriptions.md`](./descriptions.md) § "The runtime a ladder runs on".
 
@@ -581,16 +583,12 @@ Read this part when you write a solver, a tier or a board's verdict.
 
 ### `deduction-fixpoint.ts` — the shared technique ladder
 
-Reach for `runDeductionFixpoint({ techniques, maxTier, budget, firings,
-settled })` when the solver is an ordered list of techniques run until none
-fires. Exemplar: `src/skeleton/grid/solver.ts`.
+The loop every compiled ladder runs on, ordered and restarted from the top on
+each firing. A game reaches it through `ladder-runtime.ts` (`runLadder`,
+`ladderWalk`); it takes only a ladder that file built from a compiled
+description (`CompiledTechniques`), so a hand-written one does not
+typecheck. Exemplar: `src/skeleton/grid/solver.ts`.
 
-- **A technique is a declaration, `{ id, tier, run }`**, `id` and `tier`
-  both required. The grade is the highest tier that fired, and the cap
-  excludes by tier, never by position in the array.
-- **`settled` means "nothing left for the ladder to do", not "solved".**
-- **A technique that is only sometimes available guards itself in `run`.**
-  There is no `when` predicate.
 - **`firings` is a tally the caller supplies**, counted by `id`, and it is
   how a rung's reachability is observed. Leave it out on the generator's
   path and the runner allocates nothing.
@@ -603,18 +601,11 @@ fires. Exemplar: `src/skeleton/grid/solver.ts`.
   declares `available()`, and the driver takes the firing that continues
   from the plan's latest steps (`hint-frontier.ts`, below). Without it a
   plan takes whichever firing the scan meets first, and wanders.
-- **Read the header's no-gos before adopting it or "fixing" a game that
-  does not use it**, and re-derive that list when the contract changes. The
-  bookkeeping around a ladder is the game's and often decides which boards
-  exist ([`solver-and-generator.md`](./solver-and-generator.md) § "Where
-  the fixpoint does not fit").
-- **Certify an adoption with a ladder census** (`testing/ladder-census.ts`),
-  not with the game's differential alone
+- **Certify a ladder with a census** (`testing/ladder-census.ts`): the
+  soundness check says a technique is right, and only the census says a
+  board reaches it
   ([`solver-and-generator.md`](./solver-and-generator.md) § "Proving an
   adoption: the fixtures are not enough").
-- **Find the callers with a comment-stripped scan for
-  `runDeductionFixpoint` under `src/games/`.** A header explaining why a
-  game does not use the runner matches the name.
 
 ### `step-budget.ts` — the fixpoint non-termination guard
 

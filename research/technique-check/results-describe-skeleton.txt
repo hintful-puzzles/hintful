@@ -1,0 +1,9 @@
+--  skeleton: no board of order 3 has an answer, so nothing is checked there
+ok  skeleton   forced                         4  sound    (want sound   )    16 queries    3.3s
+ok  skeleton   forced (planted)               4  unsound  (want unsound )     2 queries    0.5s   at cell 1
+ok  skeleton   pairBreaks                     4  sound    (want sound   )    16 queries   74.9s
+ok  skeleton   pairBreaks (planted)           4  unsound  (want unsound )     2 queries    0.5s   at cell 1
+ok  skeleton   count                          3  sound    (want sound   )     9 queries    0.1s
+ok  skeleton   count (planted)                3  unsound  (want unsound )     1 queries    0.0s   at clue count 0
+ok  skeleton   shared                         3  sound    (want sound   )     9 queries    0.2s
+ok  skeleton   shared (planted)               3  unsound  (want unsound )     2 queries    0.0s   at clue count 1

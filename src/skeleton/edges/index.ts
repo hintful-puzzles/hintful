@@ -34,7 +34,6 @@ import {
   answerOf,
   isComplete,
   SKELETON_RUNGS,
-  SkeletonBoard,
   type SkeletonRung,
   solveSkeleton,
 } from "./solver.ts";
@@ -75,7 +74,7 @@ export const crossDrag = input.crossDrag;
 // --- the answer -------------------------------------------------------------
 
 function status(s: SkeletonState): GameStatus {
-  return isComplete(s.w, s.h, s.walls, s.edges) ? "solved" : "ongoing";
+  return isComplete(s) ? "solved" : "ongoing";
 }
 
 function solve(orig: SkeletonState): SolveResult<SkeletonMove> {
@@ -94,7 +93,7 @@ function findMistakes(state: SkeletonState): readonly EdgeMistake[] {
 const difficulty: DifficultyContract<SkeletonParams> = {
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
-    return solveSkeleton(new SkeletonBoard(s.w, s.h, s.walls, s.edges), cap);
+    return solveSkeleton(s, cap);
   },
 };
 

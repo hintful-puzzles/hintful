@@ -2,7 +2,7 @@
 
 exports[`skeleton: pinned hint positions > says, at each pin 1`] = `
 {
-  "breaks": "Lines on both outlined edges would leave the outlined square a dead end, so this edge must be a line.",
   "forced": "The outlined square has only two edges left for its two lines, so these edges must be lines.",
+  "pairBreaks": "Lines on both outlined edges would leave the outlined square a dead end, so this edge must be a line.",
 }
 `;

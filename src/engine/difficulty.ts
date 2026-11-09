@@ -84,26 +84,6 @@ export interface DifficultyContract<Params> {
  * player actually sees, and it is reachable at module load with no board in
  * hand. A second copy on the contract could only be held equal to it by an
  * assertion.
- *
- * **Why not from the technique ladder.** Three independent reasons, each fatal
- * on its own:
- *
- * 1. **The ladder declares tier *indices*; a tier list is *names*.**
- *    `DeductionTechnique.tier` is a `number`. "Easy" and "Unreasonable" are
- *    strings a player reads, and no projection invents them from integers.
- * 2. **The projection runs the wrong way.** `runDeductionFixpoint` *receives*
- *    `maxTier`, derived from a tier index — it is downstream of the tier list.
- *    And every ladder in this repo is an array literal built *inside* a solve,
- *    closing over board state, so there is nothing to interrogate at module
- *    load, which is when `paramConfig` and the params codec need the list.
- *    `engine/latin.ts` makes this vivid: it synthesizes its rungs as
- *    `0..maxdiff`, so asking that ladder for its tiers returns the cap it was
- *    handed.
- * 3. **A tier is not always a rung.** Towers/Keen/Group/Unequal/Mathrax put
- *    their top tier on `latinSolverRecurse`, outside the fixpoint entirely;
- *    Undead's only ladder on the shared runner is its *hint recorder*, whose
- *    two techniques both sit on tier 0 while the game offers three tiers. A
- *    ladder-derived list would be short for all of them.
  */
 export function difficultyTiers<Params>(game: {
   paramConfig?: readonly ParamConfigItem<Params>[];

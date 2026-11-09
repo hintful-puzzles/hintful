@@ -24,6 +24,9 @@ import ts from "typescript";
  * use. `transpileModule` is the cheap way to drop comments without mangling a
  * string that contains `//`; at ~5 ms per file a whole-collection scan pays
  * ~1.5 s once per worker, and only the guards that scan pay it.
+ *
+ * Transpiling erases the types with the comments, so a scan for a type, a cast
+ * or an `import type` reads the text as written.
  */
 export const stripComments = (text: string): string =>
   ts.transpileModule(text, {

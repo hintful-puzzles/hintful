@@ -455,25 +455,12 @@ export const MODULES = [
     module: "src/engine/deduction-fixpoint.ts",
     cases: [
       {
-        within: "runDeductionFixpoint",
-        why: "the grade regresses when a hard technique unlocks an easier one",
-        find: "    if (fired.tier > grade) grade = fired.tier;",
-        replace: "    grade = fired.tier;",
-      },
-      {
-        within: "runDeductionFixpoint",
-        why: "the grade is the technique's position in the ladder, not its declared tier",
-        find: "    if (fired.tier > grade) grade = fired.tier;",
-        replace: "    grade = opts.techniques.indexOf(fired);",
-      },
-      {
         within: "firstFiring",
         why: "the ladder does not restart from the top after a rung fires",
         // The whole pass, because the plant needs a variable of its own: every
         // rung is tried after a firing, and the pass reports the last to fire.
         find: [
           "  for (const technique of techniques) {",
-          "    if (maxTier !== undefined && technique.tier > maxTier) continue;",
           "    beforeTechnique?.(technique);",
           "    const ret = technique.run();",
           '    if (ret < 0) return "contradiction";',
@@ -487,7 +474,6 @@ export const MODULES = [
         replace: [
           "  let last: DeductionTechnique | null = null;",
           "  for (const technique of techniques) {",
-          "    if (maxTier !== undefined && technique.tier > maxTier) continue;",
           "    beforeTechnique?.(technique);",
           "    const ret = technique.run();",
           '    if (ret < 0) return "contradiction";',
@@ -512,28 +498,34 @@ export const MODULES = [
         replace: "      void impossible;",
       },
       {
-        within: "firstFiring",
-        why: "the difficulty cap is ignored, so every board is graded at the top tier",
-        find: "    if (maxTier !== undefined && technique.tier > maxTier) continue;",
-        replace: "    if (false) continue;",
-      },
-      {
-        within: "runDeductionFixpoint",
-        why: "baseGrade is ignored, so an unfired ladder grades 0 instead of its floor",
-        find: "  let grade = baseGrade;",
-        replace: "  let grade = 0;",
-      },
-      {
-        within: "runDeductionFixpoint",
-        why: "the settled early-out never fires, so a technique runs on a settled board",
-        find: "    if (settled?.()) break;",
-        replace: "    void settled;",
-      },
-      {
         within: "runDeductionFixpoint",
         why: "the recording-path step budget is never ticked, so a runaway hangs",
         find: "    budget?.tick();",
         replace: "    void budget;",
+      },
+    ],
+  },
+
+  {
+    module: "src/engine/ladder-runtime.ts",
+    cases: [
+      {
+        within: "ladderTechniques",
+        why: "the grade regresses when a hard technique unlocks an easier one",
+        find: "        if (ret > 0 && tier > (grades[scale] ?? Number.NEGATIVE_INFINITY))",
+        replace: "        if (ret > 0)",
+      },
+      {
+        within: "admits",
+        why: "the difficulty cap is ignored, so every board is graded at the top tier",
+        find: "  if (cap === undefined || entry.tier > cap) return false;",
+        replace: "  if (cap === undefined) return false;",
+      },
+      {
+        within: "admits",
+        why: "a scale with no cap runs, so Solo's killer techniques run on a board with no cages",
+        find: "  if (cap === undefined || entry.tier > cap) return false;",
+        replace: "  if (cap !== undefined && entry.tier > cap) return false;",
       },
     ],
   },

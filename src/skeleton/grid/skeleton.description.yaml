@@ -18,3 +18,65 @@ help:
     A step reads one number at a time where that is enough: a number that already has its shaded squares leaves the rest beside it clear, and one that needs every open square beside it has them all shaded. On Normal boards a step sometimes reads two numbers together, where every open square beside one of them is also beside the other.
 
     If a square you marked is wrong, the hint asks you to fix the highlighted mistakes first.
+name: Skeleton
+family: shading
+sizes:
+  # At most 400 squares.
+  w: { min: 3, max: 133 }
+  h: { min: 3, max: 133 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is a shaded square, 2 a clear one.
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  # The shaded squares the number at c still needs beside it.
+  need(c): "clue(count, c) - count(d in adj4(c) where value(d) = 1)"
+  # The undecided squares beside c that have no number.
+  open(c): "{d in adj4(c) where not known(d) and clue(count, d) = none}"
+clues:
+  # A number is never shaded, and counts the shaded squares beside it.
+  count:
+    at: cell
+    value: "range(0, 4)"
+    means: "value(at) = 2 and count(d in adj4(at) where value(d) = 1) = v"
+freedom: { kind: fill }
+deal:
+  answer: one square in three shaded at random
+  count: >-
+    a number on every clear square, then numbers taken away in a random
+    order while the ladder still finishes the board at the tier
+  tier: one of the tiers
+tiers: [Easy, Normal]
+techniques:
+  # One number alone, n the shaded squares it still needs among its open
+  # squares O: with none, they are all clear; with as many as there are,
+  # they are all shaded. A number that needs fewer than none, or more than
+  # it has open squares, makes the marks inconsistent.
+  - id: count
+    tier: Easy
+    for: >-
+      k in clues(count), c = at(k), n = need(c), O = open(c)
+      where |O| > 0 and (n <= 0 or n >= |O|)
+    conclude: >-
+      n >= 0 and n <= |O|
+      and (n = 0 implies (forall d in O: place(d, 2)))
+      and (n = 0 or (forall d in O: place(d, 1)))
+  # Two numbers, every open square of b's also one of c's: those are where
+  # the two meet, M, and b gets exactly what it needs there, so c needs the
+  # difference, by, on the rest of its own, R. With none, they are clear;
+  # with all of them, they are shaded; with fewer than none or more than
+  # there are, the marks are inconsistent.
+  - id: shared
+    tier: Normal
+    for: >-
+      k in clues(count), c = at(k), O = open(c) where |O| >= 2,
+      b in within(c, 2) where b != c and clue(count, b) != none,
+      M = open(b) where |M| > 0 and |M| < |O| and M subset O,
+      by = need(c) - need(b), R = O - M
+      where by <= 0 or by >= |R|
+    conclude: >-
+      by >= 0 and by <= |R|
+      and (by = 0 implies (forall d in R: place(d, 2)))
+      and (by = 0 or (forall d in R: place(d, 1)))

@@ -35,13 +35,8 @@ const mustBe = (edges: readonly number[], what: "line" | "cross"): Narration =>
 const outlined = (at: Point): Narration =>
   mark.as("outline", CELL, [at], "the outlined square");
 
-/** A square's count of lines in words, so it does not read as a coordinate. */
-const COUNTS = ["no", "one", "two", "three", "four"] as const;
-
 /** What lines tried on the board would break at once. */
 export type Clash =
-  /** The square would have more lines than it takes. */
-  | { kind: "crowded"; at: Point; lines: number }
   /** The square would have too few edges left for its lines: `ways` is its
    * lines and its open edges together. */
   | { kind: "stuck"; at: Point; ways: number }
@@ -50,8 +45,6 @@ export type Clash =
 
 const clashWords = (c: Clash): Narration => {
   switch (c.kind) {
-    case "crowded":
-      return phrase`give ${outlined(c.at)} ${COUNTS[c.lines]} lines`;
     // A square with one way in and none out is a dead end; one with no way
     // at all is cut off.
     case "stuck":
@@ -74,15 +67,6 @@ export const say = {
           ? phrase`${outlined(at)} has only two edges left for its two lines`
           : phrase`${outlined(at)} has only one edge left for its second line`,
       move: mustBe(edges, "line"),
-    }),
-
-  /** A line on the edge would break the board at once. The edge is named
-   * where the sentence tries a line on it, never as a bare "here", and the
-   * move after says "it" of the same edge. */
-  lineBreaks: (edge: number, clash: Clash): Sentence =>
-    so({
-      look: phrase`a line on ${these([edge])} would ${clashWords(clash)}`,
-      move: phrase`it must be crossed out`,
     }),
 
   /** The square the three edges meet at takes two lines, and lines on the

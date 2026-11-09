@@ -20,12 +20,13 @@ import type { Point } from "../../engine/types.ts";
 import { type Counted, say } from "./hint-text.ts";
 import {
   isComplete,
-  SkeletonBoard,
-  type SkeletonFiring,
+  type SkeletonBoard,
+  type SkeletonReason,
   type SkeletonRung,
-  skeletonRecordingPass,
+  skeletonWalk,
 } from "./solver.ts";
 import {
+  type CROSSED,
   executeMove,
   FILLED,
   type SkeletonMark,
@@ -39,6 +40,13 @@ import {
 const PLAN_CAP = 24;
 
 type SkeletonStep = HintStep<SkeletonMove, unknown, SkeletonRung>;
+
+/** One deduction: `cells` all take `mark`, for `reason`. */
+interface SkeletonFiring {
+  reason: SkeletonReason;
+  cells: number[];
+  mark: typeof FILLED | typeof CROSSED;
+}
 
 /** What a firing says, with the squares it decides ringed. */
 function wordsOf(state: SkeletonState, firing: SkeletonFiring): Sentence {
@@ -90,19 +98,28 @@ function stepOf(state: SkeletonState, firing: SkeletonFiring): SkeletonStep {
 export function skeletonHint(
   state: SkeletonState,
 ): HintResult<SkeletonMove, unknown, SkeletonRung> {
-  const { w, h, clues } = state;
-  const board = new SkeletonBoard(w, h, clues, state.grid.slice());
-  const pass = skeletonRecordingPass(board, stepBudget("skeleton hint"));
+  const board: SkeletonBoard = { ...state, grid: state.grid.slice() };
+  const walk = skeletonWalk(board, stepBudget("skeleton hint"));
+  let impossible = false;
   const { plan } = deduceHintPlan<SkeletonBoard, SkeletonFiring, "open" | "done">({
     board,
-    status: (b) => (isComplete(w, h, clues, b.grid) ? "done" : "open"),
+    status: (b) => (isComplete(b) ? "done" : "open"),
     incomplete: "open",
-    next: () => pass.next(),
+    next: () => {
+      const taken = walk.next();
+      if (taken === "contradiction") impossible = true;
+      if (taken === null || taken === "contradiction") return null;
+      const cells: number[] = [];
+      for (let i = 0; i < taken.facts.length; i += 3) cells.push(taken.facts[i + 1]);
+      // Every fact of a firing places the one mark its technique concludes.
+      const mark = taken.facts[2] as typeof FILLED | typeof CROSSED;
+      return { reason: taken.reasons[0] as SkeletonReason, cells, mark };
+    },
     planCap: PLAN_CAP,
   });
   // The mistake check vouches for every mark, so a contradiction here means
   // the board itself has no answer.
-  if (pass.impossible()) return { ok: false, error: PUZZLE_NOT_REASONABLE };
+  if (impossible) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   return { ok: true, steps: plan.map((firing) => stepOf(state, firing)) };
 }

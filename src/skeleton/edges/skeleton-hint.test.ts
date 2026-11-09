@@ -33,10 +33,10 @@ const pinned = describeHintPins({
     /** Held on 312 of 312 positions walked. */
     forced: "6x6dn:if1jdkcj",
     /** Held on 188 of 312 positions walked. */
-    breaks: {
+    pairBreaks: {
       id: "6x6dn:lsgc1cah",
       moves:
-        '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":30,"mark":1}]},{"kind":"edges","changes":[{"edge":2,"mark":1},{"edge":1,"mark":1}]},{"kind":"edges","changes":[{"edge":4,"mark":1},{"edge":35,"mark":1}]},{"kind":"edges","changes":[{"edge":38,"mark":1},{"edge":11,"mark":1}]},{"kind":"edges","changes":[{"edge":13,"mark":1},{"edge":39,"mark":1}]},{"kind":"edges","changes":[{"edge":18,"mark":1},{"edge":17,"mark":1}]},{"kind":"edges","changes":[{"edge":25,"mark":1},{"edge":54,"mark":1}]},{"kind":"edges","changes":[{"edge":59,"mark":1},{"edge":29,"mark":1}]}]',
+        '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":30,"mark":1}]},{"kind":"edges","changes":[{"edge":2,"mark":1},{"edge":1,"mark":1}]},{"kind":"edges","changes":[{"edge":35,"mark":1},{"edge":4,"mark":1}]},{"kind":"edges","changes":[{"edge":38,"mark":1},{"edge":11,"mark":1}]},{"kind":"edges","changes":[{"edge":39,"mark":1},{"edge":13,"mark":1}]},{"kind":"edges","changes":[{"edge":18,"mark":1},{"edge":17,"mark":1}]},{"kind":"edges","changes":[{"edge":54,"mark":1},{"edge":25,"mark":1}]},{"kind":"edges","changes":[{"edge":59,"mark":1},{"edge":29,"mark":1}]}]',
     },
   },
 });
@@ -115,8 +115,8 @@ describe("skeleton hint plans", () => {
 });
 
 describe("skeleton hint frame", () => {
-  it("rings the edge a tried line settles and outlines where it breaks", () => {
-    const { recording, step } = renderPinnedHint(skeletonGame, pinned("breaks"));
+  it("rings the edge tried lines settle and outlines where they break", () => {
+    const { recording, step } = renderPinnedHint(skeletonGame, pinned("pairBreaks"));
     expect(stepMarks(step).of("ring", EDGE).length).toBeGreaterThan(0);
     // Each of an edge's two squares draws its half of the edge's one ring.
     expectRing(recording.ops, { rings: 2 * stepMarks(step).of("ring", EDGE).length });

@@ -126,23 +126,6 @@ condition) SHALL remain local to each game's generator.
 - **THEN** the result is `1`
 - **AND** a permutation with an even number of inversions yields `0`
 
-### Requirement: A shared deduction-fixpoint scaffold
-
-The engine SHALL provide `runDeductionFixpoint` in
-`src/engine/deduction-fixpoint.ts`, a reusable runner that a logic game's
-solver and its explained hint share, so that the ordered-technique loop, the
-difficulty cap, the step budget and its attribution are written once. The
-techniques SHALL remain per game. A game that hand-rolls this loop SHALL
-converge onto the shared runner without changing its techniques, their order
-or its verdicts.
-
-#### Scenario: The generation path is unchanged by the shared runner
-
-- **WHEN** a game's hand-rolled loop is moved onto the shared runner and its
-  solver runs with no budget
-- **THEN** it reaches the same solved or stuck verdict on every board, and
-  where it grades, the same difficulty
-
 ### Requirement: A technique is a declaration, not a closure
 
 The runner SHALL take an ordered list of techniques, each declaring a stable
@@ -160,11 +143,11 @@ them in array positions.
 
 ### Requirement: The grade and the cap are tiers, never positions
 
-The runner SHALL report as the grade the highest `tier` among the techniques
-that fired. It SHALL accept an optional maximum tier that excludes every
-technique above it wherever that technique sits in the ladder, so a cheap
-technique placed after an expensive one still runs under a low cap. Grading a
-board SHALL NOT depend on a technique's index.
+The engine's ladder runtime (`ladderTechniques`) SHALL grade each scale by
+the highest `tier` among its techniques that fired, and SHALL cap each scale
+by tier, excluding every technique above the cap wherever it sits in the
+ladder, so a cheap technique placed after an expensive one still runs under a
+low cap. Neither SHALL depend on a technique's position.
 
 #### Scenario: Two techniques sharing one tier grade alike
 
@@ -178,37 +161,6 @@ board SHALL NOT depend on a technique's index.
 - **WHEN** a ladder places a low-tier technique after a high-tier one and runs
   under a cap below the high tier
 - **THEN** the high-tier technique is skipped and the low-tier one still runs
-
-### Requirement: A conditionally available technique guards itself in run
-
-A technique that applies only under a board rule (a variant mode) or only at
-one exact tier SHALL express that inside its own `run` and return `0` when it
-does not apply. The runner SHALL NOT provide an availability predicate: it
-would have the same effect as returning `0`, and one option per game is how a
-runner becomes a configuration language.
-
-#### Scenario: A variant-only technique on a board without the variant
-
-- **WHEN** a ladder holds a technique for a variant rule and the board does not
-  play that variant
-- **THEN** the technique's `run` returns `0` and the runner goes on to the next
-  technique, with nothing declared to the runner about the variant
-
-### Requirement: The early-out means there is nothing left for the ladder to do
-
-The runner SHALL accept an optional early-out, `settled`, meaning that the
-ladder should stop because there is nothing left for it to do. It SHALL be
-checked at the top of every iteration, so no technique is attempted on a board
-that is already settled. It SHALL NOT be specified or named as "solved": a
-caller also uses it to stop on a contradiction, on a refuted board, or on an
-action budget the game itself imposes.
-
-#### Scenario: The early-out stops a refuted board, not only a solved one
-
-- **WHEN** a game's early-out reports that the board is refuted, or that a
-  budget the game imposes on itself is spent
-- **THEN** the ladder stops without attempting a further technique, exactly as
-  it does for a completed board
 
 ### Requirement: The record is the game's, and the generation path allocates nothing
 
@@ -246,36 +198,6 @@ count nothing.
 
 - **WHEN** a fixpoint on the hint path never stops firing
 - **THEN** it throws a labeled step-budget error and does not hang
-
-### Requirement: A game that does not fit the runner records the promise it breaks
-
-A game that does not fit SHALL have its reason recorded against this contract.
-The reason SHALL name a promise this runner makes that the game must break; a
-description of the shape of the game's loop is not such a reason. When the
-contract changes, the record SHALL be re-derived and not carried forward.
-Adoption SHALL require no new option on the runner: a game that would need one
-stays bespoke.
-
-#### Scenario: A recorded no-go is re-derived, not copied, when the contract moves
-
-- **WHEN** the runner's contract changes such that a previously recorded reason
-  no longer names a promise the game must break
-- **THEN** that game is re-derived against the new contract, and adopts it if
-  adoption needs no new option on the runner
-
-### Requirement: A bespoke loop carries three obligations
-
-A game whose solver keeps its own loop SHALL have three obligations recorded
-for it, per game and not assumed: every board it accepts remains walkable to
-completion by a hint projection, its tiers bind to real differences of
-technique, and a recording path that does not terminate fails loud. An
-obligation that is vacuous, and not satisfied, SHALL be recorded as unmet.
-
-#### Scenario: An obligation that holds of nothing
-
-- **WHEN** a game with a bespoke loop has no hint, so that no board can fail
-  to be walked by one
-- **THEN** its walkability obligation is recorded as unmet, not as met
 
 ### Requirement: The engine provides a shared loop-finding helper
 
@@ -527,9 +449,8 @@ screened the character SHALL say so at the write.
 
 The engine SHALL provide, beside the deduction-fixpoint runner, a driver that
 runs the same ladder one firing per call (`singleFirings`), and a hint that
-records a firing at a time SHALL use it and SHALL NOT bend the runner's
-early-out into a stop condition. The driver and the runner SHALL share one pass
-down the ladder, so the tier cap, the restart rule and the budget cannot differ
+records a firing at a time SHALL use it. The driver and the runner SHALL share
+one pass down the ladder, so the restart rule and the budget cannot differ
 between the solver's projection and the hint's.
 
 #### Scenario: One firing per call
@@ -543,11 +464,11 @@ between the solver's projection and the hint's.
 ### Requirement: A call of the driver returns one firing, and a contradiction is sticky
 
 Each call SHALL run the ladder from its first technique and return the technique
-that fired, or nothing when no technique fires or the early-out says there is
-nothing left to do. A contradiction SHALL be sticky: once a technique proves the
-board inconsistent, the driver SHALL report it and SHALL run no technique again.
-The step budget SHALL be required, and its attribution tally SHALL outlive a
-single call, so a technique that runs away across many calls is named.
+that fired, or nothing when no technique fires. A contradiction SHALL be sticky:
+once a technique proves the board inconsistent, the driver SHALL report it and
+SHALL run no technique again. The step budget SHALL be required, and its
+attribution tally SHALL outlive a single call, so a technique that runs away
+across many calls is named.
 
 #### Scenario: A contradiction stops the driver for good
 
@@ -774,3 +695,27 @@ The engine SHALL provide, in `src/engine/square-edges.ts`, a geometry of a `w ×
 
 - **WHEN** the edge between two squares that share a side is asked for
 - **THEN** it is the same number whichever square is asked first, and the square across it from either is the other
+
+### Requirement: Every deduction ladder is compiled from its game's description
+
+The engine SHALL provide `runDeductionFixpoint` in
+`src/engine/deduction-fixpoint.ts`, the one runner a logic game's solver and
+its explained hint share, so that the ordered-technique loop, the difficulty
+cap, the step budget and its attribution are written once. A game's
+techniques SHALL be stated in its description and run as the code
+`npm run describe` compiles from it, and the runner SHALL accept only a
+ladder built from a compiled module, so that a ladder written by hand does
+not typecheck.
+
+#### Scenario: A solve and a hint run one ladder
+
+- **WHEN** a described game's generator solves a board and its hint walks
+  the same board
+- **THEN** both run the ladder compiled from the game's description, the
+  hint recording each firing the solve makes
+
+#### Scenario: A hand-written ladder is refused
+
+- **WHEN** a game passes the runner a list of techniques it built itself,
+  not one a compiled module's ladder produced
+- **THEN** the typecheck fails

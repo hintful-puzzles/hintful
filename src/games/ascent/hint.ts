@@ -32,15 +32,11 @@
  *   began it.
  */
 
-import {
-  type DeductionTechnique,
-  singleFirings,
-} from "../../engine/deduction-fixpoint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
+import { type FrontierCandidate, HintFrontier } from "../../engine/hint-frontier.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import { DEDUCTION_EXHAUSTED, type HintRefusal } from "../../engine/hint-refusal.ts";
 import { type Sentence, StepMarks } from "../../engine/hint-words.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import { linesAt, linesCost, pointersAt, type RuledOut } from "./hint-edges.ts";
 import {
   type Arrowed,
@@ -213,6 +209,9 @@ type Focus = { lo: number; hi: number } | null;
 
 /** Find the next placement a technique makes, within `focus` when given. */
 type Finder = (state: AscentState, focus: Focus) => Found | null;
+
+/** A placement a plan could take now, with the numbers it reads and writes. */
+type Offer = FrontierCandidate<number> & { writes(): readonly number[] };
 
 /** The placements `placer` makes on a reading of the board, within `focus`
  * when given, in its scan's order. */
@@ -388,43 +387,52 @@ export function ascentPlan(start: AscentState): AscentFiring[] {
   const take = (f: Found): void => {
     found = { ...f, before: board.state, joins: false };
   };
-  const pass = singleFirings({
-    techniques: ladder.map(
-      ({ kind, tier, find }): DeductionTechnique => ({
-        id: kind,
-        tier,
-        run: () => {
-          const f = find(board.state, null);
-          if (!f) return 0;
-          take(f);
-          return 1;
-        },
-        // A technique's first firing in each run, the one its scan meets
-        // first leading: a player follows the path along its numbers, so a
-        // plan finishes a stretch of it, and goes on to the next stretch from
-        // the number that ends this one.
-        available: () => {
-          const first = find(board.state, null);
-          if (!first) return [];
-          const runs = runsOf(board.state);
-          const ofFirst = runs.find((r) => r.lo <= first.n && first.n <= r.hi);
-          return [ofFirst, ...runs.filter((r) => r !== ofFirst)].flatMap((run) => {
-            if (!run) return [];
-            const f =
-              run === ofFirst ? first : find(board.state, { lo: run.lo, hi: run.hi });
-            if (!f) return [];
-            const span = Array.from(
-              { length: run.hi - run.lo + 3 },
-              (_, k) => run.lo - 1 + k,
-            );
-            return [{ reads: () => span, writes: () => span, take: () => take(f) }];
-          });
-        },
-      }),
-    ),
-    budget: stepBudget("ascent hint"),
-    continuing: true,
-  });
+  // A technique's first firing in each run, the one its scan meets first
+  // leading: a player follows the path along its numbers, so a plan
+  // finishes a stretch of it, and goes on to the next stretch from the
+  // number that ends this one. Each reads and writes the run's numbers and
+  // the two beside it.
+  const offered = (find: Finder): Offer[] => {
+    const first = find(board.state, null);
+    if (!first) return [];
+    const runs = runsOf(board.state);
+    const ofFirst = runs.find((r) => r.lo <= first.n && first.n <= r.hi);
+    return [ofFirst, ...runs.filter((r) => r !== ofFirst)].flatMap((run) => {
+      if (!run) return [];
+      const f = run === ofFirst ? first : find(board.state, { lo: run.lo, hi: run.hi });
+      if (!f) return [];
+      const span = Array.from(
+        { length: run.hi - run.lo + 3 },
+        (_, k) => run.lo - 1 + k,
+      );
+      return [{ reads: () => span, writes: () => span, take: () => take(f) }];
+    });
+  };
+  // The plan continues from the numbers its latest steps placed, the
+  // ladder's order breaking ties (`hint-frontier.ts`), and never takes a
+  // firing of a higher tier than the first the ladder's order would, so it
+  // teaches no harder reasoning than the board needs where it stands.
+  const frontier = new HintFrontier<number>((n) => n);
+  const nextFiring = (): boolean => {
+    const asked = new Map<number, Offer[]>();
+    const ask = (k: number): Offer[] => {
+      let list = asked.get(k);
+      if (!list) {
+        list = offered(ladder[k].find);
+        asked.set(k, list);
+      }
+      return list;
+    };
+    const first = ladder.findIndex((_, k) => ask(k).length > 0);
+    if (first < 0) return false;
+    const ceiling = ladder[first].tier;
+    const rungs = ladder.map(
+      ({ tier }, k) =>
+        () =>
+          tier > ceiling ? [] : ask(k),
+    );
+    return frontier.takeContinuing(rungs) !== null;
+  };
 
   // The rest of a run, when the step that began it lets it be finished there
   // and then: the same techniques, asked about that run alone and none harder
@@ -464,7 +472,7 @@ export function ascentPlan(start: AscentState): AscentFiring[] {
       const queued = following.shift();
       if (queued) return { ...queued, before: board.state, joins: true };
       found = null;
-      if (!pass.next() || !found) return null;
+      if (!nextFiring() || !found) return null;
       // When the run has only one route that leaves no gap, it is one
       // deduction, and the player's (owner, 2026-09-27): say that, once.
       const whole = wholeRun(found, firingTier(found, start.mode));
