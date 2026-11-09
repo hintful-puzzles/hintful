@@ -29,12 +29,19 @@
         227, 420, 407 and 134).
   - [x] The cost report names each file's boards dealt elsewhere, so that a
         cut is chosen by the file's own work.
+  - [x] The next reading was 40.1 (Gate run 42694746398). Two walks cut:
+        `candidate-reading`'s walk under the other reading asks again at
+        `hint-resume`'s stride (`resumeStride`, now shared) instead of after
+        every move, 51 s to 30 s alone; `hint-quality`'s bound walk checks
+        150 steps a board, not 400 (126 s to 103 s), meeting every form and
+        every rung but one pinned Loopy rung.
   - [ ] If a reading goes over 40, cut from the files whose own work is
         largest in that run's report. Measured and declined (2026-11-09):
         `hint-resume` at 32 recomputes (24 s, and its comment's guarantee for
-        the searching hints and Solo is unmeasured there), `hint-quality`'s
-        bound walk at 150 steps (23 s, and one Loopy rung leaves the walk),
-        Loopy's Custom-only tilings smaller (36 s if dropped whole), the
-        near-miss sweep at fewer mutants (its own work is 19 s), and
-        SameGame's largest-board walk (`hint-resume`'s ledger names it).
+        the searching hints and Solo is unmeasured there), Loopy's
+        Custom-only tilings smaller (36 s if dropped whole), the near-miss
+        sweep at fewer mutants (its own work is 19 s), SameGame's
+        largest-board walk (`hint-resume`'s ledger names it), and
+        warm-repaint's plan walk (Sixteen's 11 s is its random events' hint
+        searches, not the walk).
 - [ ] 3. Three consecutive CI gate runs on `main` under 40 minutes

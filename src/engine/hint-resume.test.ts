@@ -17,7 +17,7 @@
  * The probe drives the importable scenario both bugs traveled: ask for a fresh
  * hint from a position the plan reached, as the app does after a self-played
  * move drops any stored plan, and follow it. It asks afresh at up to
- * {@link RECOMPUTES} evenly spaced moves of each board and follows the plan in
+ * `RESUME_RECOMPUTES` (`testing/hint-games.ts`) evenly spaced moves of each board and follows the plan in
  * between, which exercises resumption from many arbitrary partial positions; a
  * correct hint must never give up before solved.
  */
@@ -30,13 +30,14 @@ import {
   type AnyGame,
   gatePresets,
   HINT_GAMES,
+  resumeStride,
   SEARCH_REACH_GAMES,
 } from "./testing/hint-games.ts";
 import { preferredDrawState } from "./testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { sameState } from "./testing/same-state.ts";
-import { itOverWholeSweep, SLOW_TESTS_ENABLED } from "./testing/slow.ts";
+import { itOverWholeSweep } from "./testing/slow.ts";
 import { FIRST_SHARE, ofThisShare, shareFloor } from "./testing/sweep-share.ts";
 import { NO_FLASH } from "./win-wave.ts";
 
@@ -67,7 +68,7 @@ function solveByHints(
   const first = game.hint?.(state, aux);
   const planned = first?.ok ? first.steps.length : 0;
   const cap = Math.max(MOVE_CAP, 2 * planned);
-  const stride = Math.max(1, Math.ceil(planned / RECOMPUTES));
+  const stride = resumeStride(planned);
   for (let moves = 0; moves < cap; ) {
     if (game.status(state) === "solved") return moves;
     // The midend's own question before every hint. A board the hints led to
@@ -123,29 +124,6 @@ function solveByHints(
   }
   throw new Error(`${at}:did not converge within ${cap} moves (wandering?)`);
 }
-
-/**
- * How many times the walk asks for a fresh plan on one board, at most, where
- * the board's first plan is longer than that: it asks at evenly spaced moves
- * and follows the plan between them. The slow tier asks after every move.
- *
- * The walk is quadratic in a plan's length, a whole plan computed again for
- * each of its moves, which on a game of long plans such as Loopy is most of the
- * walk's cost: asked after every move up to 512, Loopy's boards were 512 of
- * the walk's 755 CI seconds (2026-10-27). At 64 a plan of 64 steps or fewer is
- * still walked one move at a time, which is every board of the searching hints
- * and every Solo board.
- *
- * **What the walk still catches, and what waits for the slow tier.** A hint
- * that cannot resume from a position the player reached fails at the first
- * such position it is asked from, and the walk asks from up to 64 of them on
- * every board, the opening included. A refusal is met wherever a plan runs
- * out. What the stride can step over is an instability between two
- * consecutive recomputes on a board whose plan is longer than 64 steps: a
- * planner that undoes its own last move only there. A planner that undoes its
- * last move at all shows on the short plans, which are walked move by move.
- */
-const RECOMPUTES = SLOW_TESTS_ENABLED ? Number.POSITIVE_INFINITY : 64;
 
 /** The moves a walk may take before it is called wandering, where its first
  * plan is shorter: each hint round must change the board, so a walk this

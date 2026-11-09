@@ -649,9 +649,11 @@ function journeyDefects(text: string, leg: number, legs: number): string[] {
  * are spoken by the rungs its earlier ones were, and the largest boards
  * (Mosaic's 50x50) run to many times this, at most of the walk's cost. A rung
  * the walk does not reach is held by its pinned position in the game's own
- * hint test, and the slow tier checks every step.
+ * hint test, and the slow tier checks every step. At 150 the walk checked
+ * 13,022 steps against 400's 16,185, and met every form 400 did and every rung
+ * but Loopy's `clueBlockedPair`, which its pin holds (2026-11-09).
  */
-const BOUND_STEPS = SLOW_TESTS_ENABLED ? Number.POSITIVE_INFINITY : 400;
+const BOUND_STEPS = SLOW_TESTS_ENABLED ? Number.POSITIVE_INFINITY : 150;
 
 /** A step of a journey of two or more legs, held to `journeyDefects`: what
  * {@link formsHeard} records for it. */

@@ -66,6 +66,37 @@ function membersMentioning(marker: string): string[] {
   return ids.filter((id) => !without.has(id));
 }
 
+/**
+ * How many times a walk that resumes a hint from the player's positions asks
+ * for a fresh plan on one board, at most, where the board's first plan is
+ * longer than that: it asks at evenly spaced moves and follows the plan
+ * between them. The slow tier asks after every move. `hint-resume.test.ts`
+ * walks the default reading so, and `candidate-reading.test.ts` the other.
+ *
+ * The walk is quadratic in a plan's length, a whole plan computed again for
+ * each of its moves, which on a game of long plans such as Loopy is most of the
+ * walk's cost: asked after every move up to 512, Loopy's boards were 512 of
+ * the walk's 755 CI seconds (2026-10-27). At 64 a plan of 64 steps or fewer is
+ * still walked one move at a time, which is every board of the searching hints
+ * and every Solo board on its default reading.
+ *
+ * **What the walk still catches, and what waits for the slow tier.** A hint
+ * that cannot resume from a position the player reached fails at the first
+ * such position it is asked from, and the walk asks from up to 64 of them on
+ * every board, the opening included. A refusal is met wherever a plan runs
+ * out. What the stride can step over is an instability between two
+ * consecutive recomputes on a board whose plan is longer than 64 steps: a
+ * planner that undoes its own last move only there. A planner that undoes its
+ * last move at all shows on the short plans, which are walked move by move.
+ */
+const RESUME_RECOMPUTES = SLOW_TESTS_ENABLED ? Number.POSITIVE_INFINITY : 64;
+
+/** How many of a plan's steps a resuming walk plays before asking again, for a
+ * board whose first plan is `planned` steps long. */
+export function resumeStride(planned: number): number {
+  return Math.max(1, Math.ceil(planned / RESUME_RECOMPUTES));
+}
+
 /** True when a step declares no board marks at all — `highlights` absent, or an
  * object whose every field is empty. The candidate-elimination games' populate
  * opener (`{ area: [], targets: [], marks: [] }`) is the canonical case: its

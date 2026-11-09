@@ -25,7 +25,7 @@ import { permitsSearch } from "./difficulty.ts";
 import type { Narration } from "./hint-words.ts";
 import { dealt } from "./testing/dealt.ts";
 import { enrolledIn } from "./testing/enrollment.ts";
-import { type AnyGame, HINT_GAMES } from "./testing/hint-games.ts";
+import { type AnyGame, HINT_GAMES, resumeStride } from "./testing/hint-games.ts";
 import { boardWidth, dealtBoards } from "./testing/presets.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
 
@@ -289,14 +289,16 @@ describe("the hint-notes preference", () => {
             if (!permitsSearch(game, params)) expect(game.status(state)).toBe("solved");
           });
         }
-        it(`${title}: resumes from every position under the other reading`, () => {
+        it(`${title}: resumes from the player's positions under the other reading`, () => {
           // The default reading is `hint-resume.test.ts`'s walk; this is its
           // twin for the reading the player may switch to.
           const { desc, aux } = dealt(game, params);
           let state = game.newState(params, desc);
           const other = READINGS.find((r) => r !== game.newUi(state).candidateReading);
           if (!other) throw new Error("two readings");
-          for (let moves = 0; moves < 800; moves++) {
+          const first = game.hint?.(state, aux, uiFor(game, state, other));
+          const stride = resumeStride(first?.ok ? first.steps.length : 0);
+          for (let moves = 0; moves < 800; ) {
             if (game.status(state) === "solved") return;
             const res = game.hint?.(state, aux, uiFor(game, state, other));
             if (!res?.ok) {
@@ -305,7 +307,21 @@ describe("the hint-notes preference", () => {
               );
               return;
             }
-            state = game.executeMove(state, res.steps[0].move);
+            // The plan's next `stride` steps, each refreshed against the board
+            // it meets, as `hint-resume.test.ts` plays them.
+            let played = 0;
+            for (const step of res.steps) {
+              if (played > 0 && game.status(state) === "solved") break;
+              const live =
+                played > 0 && game.refreshHintStep
+                  ? game.refreshHintStep(step, state)
+                  : step;
+              if (live === null) continue;
+              state = game.executeMove(state, live.move);
+              if (++played === stride) break;
+            }
+            if (played === 0) throw new Error(`${title}: a plan of resolved steps`);
+            moves += played;
           }
           throw new Error(`${title}: did not converge`);
         });
