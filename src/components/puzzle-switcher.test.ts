@@ -15,6 +15,8 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { puzzleDataMap, puzzleIds, puzzlesInFamily } from "../puzzle/catalog.ts";
+import { db } from "../store/db.ts";
+import { settings } from "../store/settings.ts";
 import { PuzzleSwitcher } from "./puzzle-switcher.ts";
 
 vi.stubGlobal(
@@ -123,5 +125,29 @@ describe("from a game, the empty switcher opens on that game's family", () => {
     const listed = await search("loop");
     expect(listed).not.toContain("keen");
     expect(switcher.shadowRoot?.querySelector("[part='group']")).toBeNull();
+  });
+
+  it("opens on the few other games played last, newest first, each listed once", async () => {
+    await db.settings.clear();
+    // Oldest first; Solo, the game being played, is the newest of all.
+    const played = ["net", "mines", "keen", "pearl", "solo"];
+    for (const [k, id] of played.entries()) await settings.setLastPlayed(id, 1000 + k);
+    switcher.open();
+    await vi.waitFor(() => {
+      expect(
+        switcher.shadowRoot?.querySelector("[part='group']")?.textContent,
+      ).toContain("Recently played");
+    });
+    const listed = await search("");
+    // Keen is Solo's family too, and is listed among the recent, not again.
+    expect(listed.slice(0, 3)).toEqual(["pearl", "keen", "mines"]);
+    expect([...listed].sort()).toEqual([...puzzleIds].sort());
+    const groups = switcher.shadowRoot?.querySelectorAll("[part='group']");
+    expect([...(groups ?? [])].map((g) => g.textContent?.trim())).toEqual([
+      "Recently played",
+      "More Latin squares",
+      "All puzzles",
+    ]);
+    await db.settings.clear();
   });
 });

@@ -124,6 +124,10 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
   savedFilename?: string;
   savedGameId: string | null = null;
 
+  /** Whether this visit to the puzzle has recorded it as played: once a
+   * visit, so a move does not cost a database write. */
+  private playRecorded = false;
+
   private _autoSaveFilename: string | null = null;
   private get autoSaveFilename(): string | null {
     return this._autoSaveFilename;
@@ -141,6 +145,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
 
   override connectedCallback() {
     super.connectedCallback();
+    this.playRecorded = false;
     document.addEventListener("click", preventDoubleTapZoomOnButtons);
     window.addEventListener("keydown", this.handleBubbledKeyDown);
     const { puzzleAutoSaveFilename, puzzleAutoSavePuzzleId } =
@@ -166,6 +171,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         throw new Error(`Unknown puzzleId ${this.puzzleId}`);
       }
       this.puzzleData = data;
+      this.playRecorded = false;
       this.autoSaveFilename = null;
       this.puzzleLoaded = false;
       this.referenceOpen = false; // a new puzzle type may have no reference
@@ -1358,6 +1364,10 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         // would put a DB round-trip behind every move to store a value that did
         // not change. Not an autosave — see `PuzzleSettings.lastGameId`.
         await settings.setLastGameId(puzzle.puzzleId, puzzle.currentGameId);
+      }
+      if (puzzle.played && !this.playRecorded) {
+        this.playRecorded = true;
+        await settings.setLastPlayed(puzzle.puzzleId, Date.now());
       }
       if (puzzle.played && !puzzle.isSolved) {
         // Wait to autosave until the user has made at least one actual move,

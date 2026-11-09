@@ -494,6 +494,29 @@ class Settings {
     });
   }
 
+  /** Record that this puzzle is being played now. */
+  async setLastPlayed(puzzleId: PuzzleId, at: number): Promise<void> {
+    const current = (await this.getPuzzleSettings(puzzleId)) ?? {};
+    await db.settings.put({
+      id: puzzleId,
+      type: "puzzle",
+      data: { ...current, lastPlayed: at },
+    });
+  }
+
+  /** The puzzles played here, the most recently played first. */
+  async recentlyPlayed(): Promise<PuzzleId[]> {
+    const records = await db.settings.where("type").equals("puzzle").toArray();
+    return records
+      .flatMap((r) =>
+        r.type === "puzzle" && r.data.lastPlayed !== undefined
+          ? [{ id: r.id, at: r.data.lastPlayed }]
+          : [],
+      )
+      .sort((a, b) => b.at - a.at)
+      .map((r) => r.id);
+  }
+
   // No `get`/`setLastUnfinishedAlert`. They throttled a warning about
   // unfinished puzzles to once a day, and no puzzle has ever been unfinished.
 

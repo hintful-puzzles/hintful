@@ -80,6 +80,13 @@ export interface PuzzleSettings {
    * 2026-10-30).
    */
   introduced?: true;
+
+  /**
+   * When this game was last played, in milliseconds since the epoch: a visit
+   * on which a board had a move on it. It orders the quick-switch's recently
+   * played games (owner, 2026-11-09), and is never shown or counted.
+   */
+  lastPlayed?: number;
 }
 
 export type SettingsRecord =

@@ -35,7 +35,12 @@ import {
 } from "../puzzle/catalog.ts";
 import { searchResults } from "../puzzle/catalog-search.ts";
 import { puzzlePageUrl } from "../routing.ts";
+import { settings } from "../store/settings.ts";
 import { closeOnBackdropClick } from "../utils/dialog.ts";
+
+/** How many recently played games head the list: a few, so the family's
+ * games are still in view on a phone. */
+const RECENT_SHOWN = 3;
 
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
 
@@ -71,32 +76,55 @@ export class PuzzleSwitcher extends LitElement {
    * No game is ever excluded: this is a jump, not a catalog, and refusing to go
    * somewhere the player named would just be baffling. */
   private get hits(): readonly string[] {
-    const related = this.related;
-    if (related.length > 0) {
-      return [...related, ...puzzleIds.filter((id) => !related.includes(id))];
-    }
-    return searchResults(puzzleIds, this.search);
+    return this.sections.flatMap((s) => s.ids);
   }
 
   /**
-   * **More like this**: the other games in the current one's family, which
-   * head the list until the player types. Opening the switcher from a game is
-   * the moment a player asks "what else is like this?", and an empty box
-   * otherwise spends that moment on an alphabetical list.
+   * The list in its groups, each under its heading, or one group with no
+   * heading once anything is typed, where a search answers a question the
+   * player has already asked.
    *
-   * Empty on the home screen (nothing is current) and once anything is typed,
-   * where a search answers a question the player has already asked.
+   * Before that, from a game: **Recently played**, the last few other games
+   * played here, since the game a player switches to is most often one they
+   * were just playing (owner, 2026-11-09); then **More like this**, the other
+   * games in the current one's family, since opening the switcher from a game
+   * is the moment a player asks "what else is like this?"; then the rest. A
+   * game is listed once, in the first group that has it. On the home screen
+   * nothing is current, and the list is the catalog.
    */
-  private get related(): readonly string[] {
+  private get sections(): readonly { label: string | null; ids: readonly string[] }[] {
     const family = puzzleDataMap[this.current]?.family;
-    if (this.search.trim() || !family) return [];
-    return puzzlesInFamily(family).filter((id) => id !== this.current);
+    if (this.search.trim() || !family) {
+      return [{ label: null, ids: searchResults(puzzleIds, this.search) }];
+    }
+    const recent = this.recent
+      .filter((id) => id !== this.current)
+      .slice(0, RECENT_SHOWN);
+    const related = puzzlesInFamily(family).filter(
+      (id) => id !== this.current && !recent.includes(id),
+    );
+    const rest = puzzleIds.filter(
+      (id) => !recent.includes(id) && !related.includes(id),
+    );
+    return [
+      { label: "Recently played", ids: recent },
+      { label: `More ${familyLabel(family)}`, ids: related },
+      { label: "All puzzles", ids: rest },
+    ].filter((s) => s.ids.length > 0);
   }
+
+  /** The puzzles played here, the most recently played first, as they stood
+   * when the switcher last opened. */
+  @state()
+  private recent: readonly string[] = [];
 
   /** Show the switcher, cleared and focused. */
   open() {
     this.search = "";
     this.active = 0;
+    void settings.recentlyPlayed().then((ids) => {
+      this.recent = ids.filter((id) => id in puzzleDataMap);
+    });
     this.dialog?.showModal();
     // After the update that renders the cleared value, or the caret lands in
     // the previous search.
@@ -108,9 +136,9 @@ export class PuzzleSwitcher extends LitElement {
   }
 
   protected override render() {
+    const sections = this.sections;
     const hits = this.hits;
-    const related = this.related;
-    const family = puzzleDataMap[this.current]?.family;
+    let index = 0;
     return html`
       <dialog
           @keydown=${this.handleKeyDown}
@@ -133,22 +161,17 @@ export class PuzzleSwitcher extends LitElement {
           ${
             hits.length > 0
               ? html`<ul part="list" role="listbox">
-                  ${
-                    related.length > 0 && family
-                      ? html`<li part="group" role="presentation">
-                          More ${familyLabel(family)}
-                        </li>`
-                      : nothing
-                  }
-                  ${repeat(
-                    hits,
-                    (id) => id,
-                    (id, i) =>
+                  ${sections.map(
+                    ({ label, ids }) =>
                       html`${
-                        related.length > 0 && i === related.length
-                          ? html`<li part="group" role="presentation">All puzzles</li>`
-                          : nothing
-                      }${this.renderMatch(id, i === this.active)}`,
+                        label === null
+                          ? nothing
+                          : html`<li part="group" role="presentation">${label}</li>`
+                      }${repeat(
+                        ids,
+                        (id) => id,
+                        (id) => this.renderMatch(id, index++ === this.active),
+                      )}`,
                   )}
                 </ul>`
               : html`<p part="empty">No puzzle matches “${this.search.trim()}”.</p>`
