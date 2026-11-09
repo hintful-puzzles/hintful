@@ -10,7 +10,7 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
-import { seedBudget } from "../../engine/testing/slow.ts";
+import { inDeepTier, seedBudget } from "../../engine/testing/slow.ts";
 import { hint } from "./hint.ts";
 import { executeMove, twiddleGame } from "./index.ts";
 import { COL_HINT_EVIDENCE, coord, PREFERRED_TILE_SIZE } from "./render.ts";
@@ -70,8 +70,15 @@ function walk(state: TwiddleState, whole: boolean): number {
  */
 const WALKED = ["a", "b", "c"].slice(0, seedBudget(1, 3));
 
+/** The shapes walked: the first preset in CI, which holds the planner to
+ * arriving, and in the game's deep tier every shape, since the shapes are
+ * what vary the turn library. */
+const WALKED_SHAPES = inDeepTier()
+  ? [...presetParams, ...customParams]
+  : presetParams.slice(0, 1);
+
 describe("a hint recomputed after every turn arrives", () => {
-  for (const p of [...presetParams, ...customParams]) {
+  for (const p of WALKED_SHAPES) {
     const name = G.encodeParams(p, true);
     const preset = presetParams.includes(p);
     it(`${name}: dealt boards, no refusal${preset ? ", and one plan whole solves" : ""}`, () => {

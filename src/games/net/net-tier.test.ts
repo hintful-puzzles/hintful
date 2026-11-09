@@ -21,7 +21,7 @@ import {
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
-import { itSlow } from "../../engine/testing/slow.ts";
+import { deepBudget, itSlow } from "../../engine/testing/slow.ts";
 import { encodeWireDesc, growSpanningTree } from "../../engine/wires.ts";
 import { netGame } from "./index.ts";
 import { answerOf, finishes, searchAnswers } from "./solver.ts";
@@ -205,12 +205,17 @@ describe("net's search for a board's answers", () => {
   // The search's "solved" is the ladder's verdict checked for one network
   // with no loop, and no grid has been found where the check says no. This is
   // the count behind that: every grid of dead ends, corners, straights and Ts
-  // on these shapes that the ladder settles.
-  it.each([
-    [2, 2, false, 4],
-    [2, 3, false, 15],
-    [3, 3, false, 176],
-  ])("every %ix%i grid the ladder settles is a network", (w, h, wrapping, settled) => {
+  // on these shapes that the ladder settles. The 3x3 grids, nearly all of the
+  // cost, are the game's deep tier.
+  it.each(
+    (
+      [
+        [2, 2, false, 4],
+        [2, 3, false, 15],
+        [3, 3, false, 176],
+      ] as const
+    ).slice(0, deepBudget(2, 3)),
+  )("every %ix%i grid the ladder settles is a network", (w, h, wrapping, settled) => {
     const p = sized(w, h, DIFF_EASY, wrapping);
     const kinds = "1357";
     let count = 0;
@@ -240,6 +245,7 @@ describe("net's search for a board's answers", () => {
   });
 
   it("agrees with the count on boards of every kind", () => {
+    const seeds = deepBudget(3, 12);
     // Dealt boards, which have one answer; the same with two tiles swapped,
     // which keeps the wire ends a network needs and often leaves several
     // answers or none; and with a wall taken away or put across a wire.
@@ -261,7 +267,7 @@ describe("net's search for a board's answers", () => {
       [5, 5, false, 0.3],
       [4, 6, false, 0],
     ] as const) {
-      for (let seed = 0; seed < 12; seed++) {
+      for (let seed = 0; seed < seeds; seed++) {
         const rng = randomNew(`agree-${w}x${h}-${wrapping}-${walls}-${seed}`);
         // Without wrapping a board this small is Unreasonable too seldom to
         // deal, so those are Easy, and the swaps below are what vary them.
@@ -305,9 +311,16 @@ describe("net's search for a board's answers", () => {
       }
     }
     expect(tally["out-of-reach"]).toBe(0);
-    expect(tally.one).toBeGreaterThan(150);
-    expect(tally.several).toBeGreaterThan(15);
-    expect(tally.none).toBeGreaterThan(50);
+    // The floors are the whole sweep's; CI's share of it is held to half its share of them.
+    expect(tally.one).toBeGreaterThan(
+      deepBudget(Math.floor((150 * seeds) / 12 / 2), 150),
+    );
+    expect(tally.several).toBeGreaterThan(
+      deepBudget(Math.floor((15 * seeds) / 12 / 2), 15),
+    );
+    expect(tally.none).toBeGreaterThan(
+      deepBudget(Math.floor((50 * seeds) / 12 / 2), 50),
+    );
   });
 });
 

@@ -20,6 +20,7 @@ import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
+import { itDeep } from "../../engine/testing/slow.ts";
 import { newSoloDesc } from "./generator.ts";
 import { noRepeatRegionNames, regionsOf, soloGame } from "./index.ts";
 import { COL_PENCIL, digitChar } from "./render.ts";
@@ -508,31 +509,34 @@ describe("solo hint", () => {
     }
   });
 
-  it("a deductive strike step's marks all lie in one cell or all share one digit", () => {
-    let checked = 0;
-    for (const p of [INTER, ADV, KILLER]) {
-      for (let s = 0; s < 6; s++) {
-        const { st } = gen(p, `bleed-${p.diff}-${p.killer}-${s}`);
-        const res = soloGame.hint?.(st);
-        if (!res?.ok) continue;
-        for (const step of res.steps as AnyStep[]) {
-          if (step.move.type !== "pencilStrike") continue;
-          // Skip the basic-region dup opening (one placed value across its groups)
-          // and the bulk obvious-candidate cleanup at populate (a setup step, not a
-          // deductive strike — multi-cell and multi-digit by design).
-          if (step.rung === "dup" || step.rung === "clean") continue;
-          const marks = step.move.marks as { x: number; y: number; n: number }[];
-          const cells = new Set(marks.map((m) => `${m.x},${m.y}`));
-          const digits = new Set(marks.map((m) => m.n));
-          // One firing's leg either acts on a single cell (cage/set split) or
-          // crosses a single digit (intersect) — never a mixed bag.
-          expect(cells.size === 1 || digits.size === 1).toBe(true);
-          checked++;
+  itDeep(
+    "a deductive strike step's marks all lie in one cell or all share one digit",
+    () => {
+      let checked = 0;
+      for (const p of [INTER, ADV, KILLER]) {
+        for (let s = 0; s < 6; s++) {
+          const { st } = gen(p, `bleed-${p.diff}-${p.killer}-${s}`);
+          const res = soloGame.hint?.(st);
+          if (!res?.ok) continue;
+          for (const step of res.steps as AnyStep[]) {
+            if (step.move.type !== "pencilStrike") continue;
+            // Skip the basic-region dup opening (one placed value across its groups)
+            // and the bulk obvious-candidate cleanup at populate (a setup step, not a
+            // deductive strike — multi-cell and multi-digit by design).
+            if (step.rung === "dup" || step.rung === "clean") continue;
+            const marks = step.move.marks as { x: number; y: number; n: number }[];
+            const cells = new Set(marks.map((m) => `${m.x},${m.y}`));
+            const digits = new Set(marks.map((m) => m.n));
+            // One firing's leg either acts on a single cell (cage/set split) or
+            // crosses a single digit (intersect) — never a mixed bag.
+            expect(cells.size === 1 || digits.size === 1).toBe(true);
+            checked++;
+          }
         }
       }
-    }
-    expect(checked).toBeGreaterThan(0);
-  });
+      expect(checked).toBeGreaterThan(0);
+    },
+  );
 
   it("auto-pencil off teaches more cleanup steps than on", () => {
     const { st } = gen(ADV, "autopencil");

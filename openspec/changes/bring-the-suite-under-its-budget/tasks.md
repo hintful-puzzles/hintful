@@ -8,7 +8,7 @@
     the files that walk the same boards (`hint-overlay`, `hint-ink`,
     `hint-mark`, `hint-gesture`, `mistake-invariant`) cost little of their
     own once the deal is paid.
-- [ ] 2. Share or cut the overlapping walks, then apply the guide's three treatments to what remains, heaviest first
+- [x] 2. Share or cut the overlapping walks, then apply the guide's three treatments to what remains, heaviest first
   - [x] A run's workers share their deals (`scripts/checks/dealt-store.ts`):
         the engine's dealing went from 6.5 to 2.1 CPU minutes, its total
         from 20.1 to 16.5.
@@ -40,8 +40,7 @@
         runs before, all of it in "a size that carries its tier" (8s1dt 13 s,
         9s2dt 19 s, 10s2dt 21 s), which nothing this change touched. Watch
         the next readings for it before cutting there.
-  - [ ] If a reading goes over 40, cut from the files whose own work is
-        largest in that run's report. Measured and declined (2026-11-09):
+  - [x] Cut from the files whose own work is largest in a run's report. Measured and declined (2026-11-09):
         `hint-resume` at 32 recomputes (24 s, and its comment's guarantee for
         the searching hints and Solo is unmeasured there), Loopy's
         Custom-only tilings smaller (36 s if dropped whole), the near-miss
@@ -49,6 +48,15 @@
         largest-board walk (`hint-resume`'s ledger names it), and
         warm-repaint's plan walk (Sixteen's 11 s is its random events' hint
         searches, not the walk).
-- [ ] 3. Three consecutive CI gate runs on `main` under 40 minutes
+- [ ] 3. Give a game's own files a deep tier that CI does not run
+  - [x] `inDeepTier`, `itDeep` and `deepBudget` in
+        `slow.ts`; the cost report's per-game line and `BUDGET.game`; the
+        guide and the spec delta.
+  - [ ] The shared shapes first: `describeDealtTiers` deals one board a cell
+        in CI, and the nine "agrees with the count" sweeps a fifth of their
+        seeds. Then the games' own walks, dearest first.
+- [ ] 4. One CI gate run on `main` under 30 minutes (owner, 2026-11-09,
+      replacing three consecutive runs under 40)
   - Readings so far: 36.3 (`37111ea7`), 40.1 (`6ffaca12`), 35.1
-    (`1bc53fd2`). The count starts again at 35.1.
+    (`1bc53fd2`), 41.2 (`8ead2f57`, documentation only, so the same tree as
+    35.1).

@@ -20,6 +20,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { deepBudget } from "../../engine/testing/slow.ts";
 import { fillingGame } from "./index.ts";
 import { answerOf, searchAnswers, solveFilling } from "./solver.ts";
 import {
@@ -155,6 +156,7 @@ describe("filling's search for a board's answers", () => {
   });
 
   it("agrees with the count on boards of every kind", () => {
+    const seeds = deepBudget(12, 60);
     // Dealt boards, which have one answer; the same with clues taken away,
     // which often have several; and with one clue changed, which mostly have
     // none.
@@ -174,7 +176,7 @@ describe("filling's search for a board's answers", () => {
       [5, 4],
       [5, 5],
     ] as const) {
-      for (let seed = 0; seed < 60; seed++) {
+      for (let seed = 0; seed < seeds; seed++) {
         const rng = randomNew(`agree-${w}x${h}-${seed}`);
         const p = sized(w, h, seed % 2 === 0 ? DIFF_EASY : DIFF_UNREASONABLE);
         const dealt = Array.from(newState(p, fillingGame.newDesc(p, rng).desc).clues);
@@ -195,9 +197,16 @@ describe("filling's search for a board's answers", () => {
       }
     }
     expect(tally["out-of-reach"]).toBe(0);
-    expect(tally.one).toBeGreaterThan(300);
-    expect(tally.several).toBeGreaterThan(100);
-    expect(tally.none).toBeGreaterThan(100);
+    // The floors are the whole sweep's; CI's share of it is held to half its share of them.
+    expect(tally.one).toBeGreaterThan(
+      deepBudget(Math.floor((300 * seeds) / 60 / 2), 300),
+    );
+    expect(tally.several).toBeGreaterThan(
+      deepBudget(Math.floor((100 * seeds) / 60 / 2), 100),
+    );
+    expect(tally.none).toBeGreaterThan(
+      deepBudget(Math.floor((100 * seeds) / 60 / 2), 100),
+    );
   });
 });
 

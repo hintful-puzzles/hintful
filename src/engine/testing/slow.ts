@@ -52,7 +52,7 @@
  * deferring the only fixture for a grid type silently removes that grid type
  * from every commit. State the remaining coverage when you mark something.
  */
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { scopeFromEnv } from "./game-scope.ts";
 
 /** True when the run was asked for the expensive tier (`npm run test:slow`).
@@ -96,6 +96,52 @@ export function inSweep(id: string): boolean {
  * with it, and skipping reports that it was.
  */
 export const itOverWholeSweep = it.skipIf(SWEEP_SCOPE !== null);
+
+/** Whether this run is CI's, which every runner GitHub hands out says by
+ * setting `CI`. */
+const IN_CI = Boolean(env?.["CI"]);
+
+/** The game whose directory holds the test file being collected, or `null`
+ * for a file outside the games. Vitest names the file while it collects it. */
+function collectingGame(): string | null {
+  const file = expect.getState().testPath ?? "";
+  return /\/src\/games\/([^/]+)\//.exec(file)?.[1] ?? null;
+}
+
+/**
+ * Whether the game whose test file is being collected gets its **deep tier**
+ * in this run: the property sweeps, larger boards and walks that only a change
+ * to that game can turn red, beyond the shallow form every run keeps.
+ *
+ * CI's time is the engine's (owner, 2026-11-09: with dozens of games to come,
+ * a game's depth is the work of the session that works on it). So a game's deep
+ * tier runs in a hook whose scope names the game, which is a commit that stages
+ * it or a push whose shared code reaches it, in a hook that runs the file
+ * whole, in any run by hand, and in the slow tier; never in CI.
+ *
+ * Call it while the file is collected or its tests run, as {@link itDeep} and
+ * {@link deepBudget} do: it reads the game from the file vitest is on.
+ */
+export function inDeepTier(): boolean {
+  if (SLOW_TESTS_ENABLED) return true;
+  if (SWEEP_SCOPE === null) return !IN_CI;
+  const game = collectingGame();
+  return game !== null && SWEEP_SCOPE.has(game);
+}
+
+/** The amount of work for this run: `deep` in the game's deep tier, `ci`
+ * otherwise. `ci` is what holds the game's rules on every run; `deep` is the
+ * confidence the session working on the game wants. */
+export function deepBudget(ci: number, deep: number): number {
+  return inDeepTier() ? deep : ci;
+}
+
+/** `it`, skipped outside the game's deep tier ({@link inDeepTier}). Name the
+ * shallow case that still holds the rule in CI where it is not obvious. */
+export const itDeep: typeof it = new Proxy(it, {
+  apply: (_target, self, args) => Reflect.apply(it.skipIf(!inDeepTier()), self, args),
+  get: (_target, key) => Reflect.get(it.skipIf(!inDeepTier()), key),
+});
 
 /** `describe`, skipped unless the slow tier was asked for. */
 export const describeSlow = describe.skipIf(!SLOW_TESTS_ENABLED);

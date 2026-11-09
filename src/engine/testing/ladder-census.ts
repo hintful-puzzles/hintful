@@ -21,6 +21,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { FiringTally } from "../deduction-fixpoint.ts";
+import { inDeepTier } from "./slow.ts";
 
 export interface LadderCensusSpec<Board> {
   /** The game, for test names. */
@@ -54,51 +55,56 @@ export interface LadderCensusSpec<Board> {
 export function describeLadderCensus<Board>(spec: LadderCensusSpec<Board>): void {
   const { game, rungs, unreached, caps, cases, solve } = spec;
 
-  describe(`${game}: every rung of the ladder fires on the corpus`, () => {
-    // One tally across every board and cap: the census asks which rungs the
-    // *corpus* reaches, not which a single board does.
-    const fired: FiringTally = new Map();
-    let solved = 0;
+  // The game's deep tier. In CI a hinted game's pins still hold each of its
+  // hint's rungs to firing on a written-down board (`describeHintPins`).
+  describe.skipIf(!inDeepTier())(
+    `${game}: every rung of the ladder fires on the corpus`,
+    () => {
+      // One tally across every board and cap: the census asks which rungs the
+      // *corpus* reaches, not which a single board does.
+      const fired: FiringTally = new Map();
+      let solved = 0;
 
-    for (const { label, board } of cases) {
-      it(`${label}: solves at every cap`, () => {
-        for (const cap of caps) {
-          solve(board(), cap, fired);
-          solved++;
-        }
+      for (const { label, board } of cases) {
+        it(`${label}: solves at every cap`, () => {
+          for (const cap of caps) {
+            solve(board(), cap, fired);
+            solved++;
+          }
+        });
+      }
+
+      it("walked a real corpus, and fired every rung it claims to", () => {
+        // Vacuity: a census over nothing reports every rung unreached, which the
+        // ledger check below would read as a mismatch, but say it plainly.
+        expect(solved, `${game}: no board was solved`).toBeGreaterThanOrEqual(
+          cases.length * caps.length,
+        );
+        expect(
+          rungs.length,
+          `${game}: a ladder with no rungs certifies nothing`,
+        ).toBeGreaterThan(0);
+
+        // A rung present with a zero count would be a rung that never fired, so
+        // membership alone is not the question the census asks.
+        const missing = rungs.filter((id) => (fired.get(id) ?? 0) === 0).sort();
+        expect(
+          missing,
+          `${game}: a rung this corpus never fires is a rung this file does not ` +
+            "certify: widen the cases until it does, or record it in `unreached` " +
+            "with the reason",
+        ).toEqual(Object.keys(unreached).sort());
+
+        // The ledger's own honesty check: an entry for a rung that is not in the
+        // ladder at all would be a permanent excuse nothing could retire.
+        expect(
+          Object.keys(unreached).filter((id) => !rungs.includes(id)),
+          `${game}: \`unreached\` names a rung the ladder does not have`,
+        ).toEqual([]);
+        // And every fired id is a declared rung, so a renamed rung cannot fire
+        // under a name the census does not know.
+        expect([...fired.keys()].filter((id) => !rungs.includes(id))).toEqual([]);
       });
-    }
-
-    it("walked a real corpus, and fired every rung it claims to", () => {
-      // Vacuity: a census over nothing reports every rung unreached, which the
-      // ledger check below would read as a mismatch, but say it plainly.
-      expect(solved, `${game}: no board was solved`).toBeGreaterThanOrEqual(
-        cases.length * caps.length,
-      );
-      expect(
-        rungs.length,
-        `${game}: a ladder with no rungs certifies nothing`,
-      ).toBeGreaterThan(0);
-
-      // A rung present with a zero count would be a rung that never fired, so
-      // membership alone is not the question the census asks.
-      const missing = rungs.filter((id) => (fired.get(id) ?? 0) === 0).sort();
-      expect(
-        missing,
-        `${game}: a rung this corpus never fires is a rung this file does not ` +
-          "certify: widen the cases until it does, or record it in `unreached` " +
-          "with the reason",
-      ).toEqual(Object.keys(unreached).sort());
-
-      // The ledger's own honesty check: an entry for a rung that is not in the
-      // ladder at all would be a permanent excuse nothing could retire.
-      expect(
-        Object.keys(unreached).filter((id) => !rungs.includes(id)),
-        `${game}: \`unreached\` names a rung the ladder does not have`,
-      ).toEqual([]);
-      // And every fired id is a declared rung, so a renamed rung cannot fire
-      // under a name the census does not know.
-      expect([...fired.keys()].filter((id) => !rungs.includes(id))).toEqual([]);
-    });
-  });
+    },
+  );
 }

@@ -18,6 +18,7 @@ import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
+import { deepBudget } from "../../engine/testing/slow.ts";
 import { mosaicGame } from "./index.ts";
 import {
   answerOf,
@@ -157,6 +158,7 @@ describe("mosaic's search for a board's answers", () => {
   });
 
   it("agrees with the count on boards of every kind", () => {
+    const seeds = deepBudget(12, 60);
     // Dealt boards, which have one answer; the same with clues taken away,
     // which often have several; and with one clue changed, which mostly have
     // none.
@@ -175,7 +177,7 @@ describe("mosaic's search for a board's answers", () => {
       [4, 4],
       [5, 5],
     ] as const) {
-      for (let seed = 0; seed < 60; seed++) {
+      for (let seed = 0; seed < seeds; seed++) {
         const rng = randomNew(`agree-${w}x${h}-${seed}`);
         const p = sized(w, h, seed % 2 === 0 ? DIFF_EASY : DIFF_UNREASONABLE);
         const dealt = newState(p, mosaicGame.newDesc(p, rng).desc).board;
@@ -197,9 +199,16 @@ describe("mosaic's search for a board's answers", () => {
       }
     }
     expect(tally["out-of-reach"]).toBe(0);
-    expect(tally.one).toBeGreaterThan(240);
-    expect(tally.several).toBeGreaterThan(80);
-    expect(tally.none).toBeGreaterThan(80);
+    // The floors are the whole sweep's; CI's share of it is held to half its share of them.
+    expect(tally.one).toBeGreaterThan(
+      deepBudget(Math.floor((240 * seeds) / 60 / 2), 240),
+    );
+    expect(tally.several).toBeGreaterThan(
+      deepBudget(Math.floor((80 * seeds) / 60 / 2), 80),
+    );
+    expect(tally.none).toBeGreaterThan(
+      deepBudget(Math.floor((80 * seeds) / 60 / 2), 80),
+    );
   });
 });
 

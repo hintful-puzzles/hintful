@@ -22,6 +22,7 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
+import { itDeep } from "../../engine/testing/slow.ts";
 import type { Point } from "../../engine/types.ts";
 import {
   hasNoSolution,
@@ -341,20 +342,23 @@ describe("samegame hint", () => {
     );
   });
 
-  it("walks the largest preset's board to cleared, asking again after every removal", () => {
-    // The ledger in hint-resume.test.ts names this walk as the one that covers
-    // the largest board on every commit.
-    const params = G.decodeParams("15x20c4s2");
-    let s = G.newState(params, G.newDesc(params, randomNew("walk")).desc);
-    let asked = 0;
-    while (!isCleared(s)) {
-      const r = hint(s);
-      if (!r.ok) throw new Error(`refused after ${asked}: ${r.error}`);
-      s = executeMove(s, r.steps[0].move);
-      asked++;
-    }
-    expect(asked).toBeGreaterThan(20);
-  });
+  itDeep(
+    "walks the largest preset's board to cleared, asking again after every removal",
+    () => {
+      // The ledger in hint-resume.test.ts names this walk as the one that covers
+      // the largest board, in the game's deep tier.
+      const params = G.decodeParams("15x20c4s2");
+      let s = G.newState(params, G.newDesc(params, randomNew("walk")).desc);
+      let asked = 0;
+      while (!isCleared(s)) {
+        const r = hint(s);
+        if (!r.ok) throw new Error(`refused after ${asked}: ${r.error}`);
+        s = executeMove(s, r.steps[0].move);
+        asked++;
+      }
+      expect(asked).toBeGreaterThan(20);
+    },
+  );
 
   it("draws a trap's ring, the victim's outline and the rival's stripes", () => {
     const pin = pinned("lastOfColor");

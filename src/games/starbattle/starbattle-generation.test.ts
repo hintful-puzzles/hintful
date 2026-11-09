@@ -8,6 +8,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
+import { deepBudget } from "../../engine/testing/slow.ts";
 import { newStarbattleDesc } from "./generator.ts";
 import { starbattleGame } from "./index.ts";
 import { StarbattleBoard, solveStarbattle } from "./solver.ts";
@@ -46,7 +47,9 @@ const SMALL: StarbattleParams[] = [
   { size: 9, stars: 2, diff: DIFF_NORMAL },
 ];
 
-const SEEDS = ["a", "b", "c"];
+/** Three boards a shape in the game's deep tier, which the census needs to
+ * fire every rung; one in CI, where the census does not run. */
+const SEEDS = ["a", "b", "c"].slice(0, deepBudget(1, 3));
 
 describeLadderCensus<StarbattleParams & { desc: string }>({
   game: "starbattle",

@@ -34,6 +34,16 @@ current figures from the newest CI run before acting on these
   hinted game's boards, and a walk two of them share could be dealt and
   played once.
 
+- **A game's own files get a deep tier** (owner, 2026-11-09: "we'll be
+  looking to add dozens more games, so I'd prefer that as little as possible
+  of the CI run time be game-specific"). CI runs each game's own files in a
+  shallow form. What only adds confidence about that one game runs where the
+  game is worked on: in the hook whose scope names it, in a push whose shared
+  code reaches it, and by hand. The cost report holds each game's own files
+  in CI to `BUDGET.game`.
+
 ## Acceptance
 
-- Three consecutive CI gate runs on `main` read under 40 minutes.
+- One CI gate run on `main` reads under 30 minutes (owner, 2026-11-09,
+  replacing three consecutive runs under 40, so that the next weeks' games
+  do not bring the suite back over).

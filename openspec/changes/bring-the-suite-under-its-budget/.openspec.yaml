@@ -1,4 +1,2 @@
-# Tooling only: the budget it meets is already a requirement of build-pipeline.
 schema: spec-driven
 created: 2026-11-09
-skip_specs: true

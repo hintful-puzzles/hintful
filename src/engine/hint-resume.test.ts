@@ -182,7 +182,8 @@ const SEARCH_REACH: Record<string, string> = {
     "the presets can outrun it. Every preset measured stays under a quarter " +
     "of it, and every hinted roll lowers a potential, so no walk has cycled " +
     "or refused. Largest board on every commit: this walk, and " +
-    "cube-hint.test.ts walks every preset to solved on recomputed hints.",
+    "cube-hint.test.ts walks every preset to solved on recomputed hints in " +
+    "the game's deep tier.",
   guess:
     "Enumerates the answers that still fit, and a huge custom board can exhaust " +
     "the enumeration budget before finding one. No preset reaches it. Largest " +
@@ -200,7 +201,8 @@ const SEARCH_REACH: Record<string, string> = {
     "lost when one restart searches everything. Every opening measured on " +
     "every preset clears far inside the budget, and of 4,000 positions random " +
     "play left, one outran it. Largest board on every commit: " +
-    "samegame-hint.test.ts, which walks a 15x20 board on recomputed hints.",
+    "samegame-hint.test.ts, which walks a 15x20 board on recomputed hints " +
+    "in the game's deep tier.",
   sokoban:
     "Finds a line of pushes by a best-first search from both ends, and every " +
     "dealt board is one it finishes from the opening; a position the player " +
@@ -227,7 +229,8 @@ const SEARCH_REACH: Record<string, string> = {
     "sequences built for the board's shape, and refuses only where that " +
     "library holds no way on, which no preset has met. Largest board on every " +
     "commit: twiddle-hint.test.ts walks every preset, and custom shapes " +
-    "beside them, to solved with a fresh hint per turn and no refusal allowed.",
+    "beside them, to solved with a fresh hint per turn and no refusal " +
+    "allowed, in the game's deep tier.",
   sixteen:
     "Plans by searching for the finished board. Its tangled endgames are a " +
     "dozen moves out with a branching factor of 40, which no arrangement of " +

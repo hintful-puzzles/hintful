@@ -37,7 +37,7 @@ import { paramsError } from "../params.ts";
 import { type RandomState, randomNew } from "../random/index.ts";
 import { RetryLimitExceeded, underDealTries } from "../retry-limit.ts";
 import { dealRare } from "./dealt.ts";
-import { itSlow } from "./slow.ts";
+import { deepBudget, itSlow } from "./slow.ts";
 
 interface DealingGame<Params> {
   paramConfig?: readonly ParamConfigItem<Params>[];
@@ -52,7 +52,9 @@ const ABSENT_TRIES = 50_000;
 /**
  * Hold each of `cells` to dealing a board that needs the tier it asks for:
  * the lowest cap that solves it is that tier. For the cells beside a refusal,
- * and for a tier rare at its size. `deals` boards a cell, from fixed seeds.
+ * and for a tier rare at its size. `deals` boards a cell, from fixed seeds, in
+ * the game's deep tier, and one in CI, whose first board holds the rule
+ * (`inDeepTier`).
  *
  * `seldom` is for the cells whose board takes seconds to find: one board
  * each, in the slow tier.
@@ -63,11 +65,11 @@ export function describeDealtTiers<Params>(
   opts: { readonly deals?: number; readonly seldom?: boolean } = {},
 ): void {
   const seldom = opts.seldom ?? false;
-  const deals = opts.deals ?? (seldom ? 1 : 3);
+  const deals = deepBudget(1, opts.deals ?? (seldom ? 1 : 3));
   const title = seldom ? "a tier found seldom" : "a size that carries its tier";
   describe(title, () => {
     (seldom ? itSlow : it).each(cells)(
-      `%s deals ${deals} boards that need it`,
+      `%s deals ${deals === 1 ? "a board" : `${deals} boards`} that need it`,
       (cell) => {
         const { difficulty } = game;
         if (!difficulty) throw new Error("expected a difficulty contract");

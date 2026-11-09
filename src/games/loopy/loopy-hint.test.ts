@@ -23,6 +23,7 @@ import {
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { itDeep } from "../../engine/testing/slow.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { dlineEnds } from "./dlines.ts";
 import {
@@ -373,32 +374,38 @@ function noteAgrees(state: LoopyState, move: LoopyMove, solution: Uint8Array): b
 }
 
 describe("Loopy hint: soundness on every tiling", () => {
-  it("every step agrees with the solution, notes included, and following the plan finishes the board", () => {
-    const tilings = new Set<string>();
-    let notes = 0;
-    for (const b of corpus()) {
-      const solution = uniqueSolution(b.state);
-      expect(solution, `${b.name}: no unique solution`).not.toBeNull();
-      if (solution === null) continue;
-      let state = b.state;
-      for (const [i, step] of stepsOf(b.state).entries()) {
-        const at = `${b.name} step ${i}: "${step.explanation}"`;
-        for (const op of opsOf(step.move)) expect(op.state, at).toBe(solution[op.edge]);
-        expect(noteAgrees(state, step.move, solution), at).toBe(true);
-        if (step.move.kind !== "set") notes++;
-        state = loopyGame.executeMove(state, step.move);
+  // The game's deep tier: in CI the engine's sweeps hold Loopy's hint to
+  // finishing its gate boards without a mistake.
+  itDeep(
+    "every step agrees with the solution, notes included, and following the plan finishes the board",
+    () => {
+      const tilings = new Set<string>();
+      let notes = 0;
+      for (const b of corpus()) {
+        const solution = uniqueSolution(b.state);
+        expect(solution, `${b.name}: no unique solution`).not.toBeNull();
+        if (solution === null) continue;
+        let state = b.state;
+        for (const [i, step] of stepsOf(b.state).entries()) {
+          const at = `${b.name} step ${i}: "${step.explanation}"`;
+          for (const op of opsOf(step.move))
+            expect(op.state, at).toBe(solution[op.edge]);
+          expect(noteAgrees(state, step.move, solution), at).toBe(true);
+          if (step.move.kind !== "set") notes++;
+          state = loopyGame.executeMove(state, step.move);
+        }
+        expect(loopyGame.status(state), `${b.name}: the plan stopped short`).toBe(
+          "solved",
+        );
+        expect(loopyGame.findMistakes?.(state), b.name).toEqual([]);
+        tilings.add(b.name.split("/")[0]);
       }
-      expect(loopyGame.status(state), `${b.name}: the plan stopped short`).toBe(
-        "solved",
-      );
-      expect(loopyGame.findMistakes?.(state), b.name).toEqual([]);
-      tilings.add(b.name.split("/")[0]);
-    }
-    // Every tiling was walked, not only the ones that generated.
-    for (const grid of LOOPY_GRIDS)
-      expect(tilings.has(grid.type), grid.type).toBe(true);
-    expect(notes, "the corpus placed no note").toBeGreaterThan(100);
-  });
+      // Every tiling was walked, not only the ones that generated.
+      for (const grid of LOOPY_GRIDS)
+        expect(tilings.has(grid.type), grid.type).toBe(true);
+      expect(notes, "the corpus placed no note").toBeGreaterThan(100);
+    },
+  );
 
   /**
    * The auto rule-out aid extends a player's line move with the exclusions that

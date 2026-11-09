@@ -13,7 +13,7 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { seedBudget } from "../../engine/testing/slow.ts";
+import { inDeepTier, seedBudget } from "../../engine/testing/slow.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { type NetslideHint, parseAux } from "./hint.ts";
 import { netslideGame } from "./index.ts";
@@ -515,7 +515,8 @@ describe("netslide hint convergence", () => {
 
   // These walk a board that came with the generator's answer. The same walk with
   // no answer to work from is `netslide-reconstruct.test.ts`'s, on every preset.
-  for (const params of [EASY_3X3, HARD_5X5]) {
+  // The 5x5 wrapping boards are the game's deep tier.
+  for (const params of inDeepTier() ? [EASY_3X3, HARD_5X5] : [EASY_3X3]) {
     const label = `${params.w}x${params.h}${params.wrapping ? " wrapping" : ""}`;
 
     it(`${label}: following the hint finishes the board, with the generator's answer`, () => {

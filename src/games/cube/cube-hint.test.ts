@@ -12,6 +12,7 @@ import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { itDeep } from "../../engine/testing/slow.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import { hint } from "./hint.ts";
@@ -68,7 +69,7 @@ describeHintPins({
 });
 
 describe("cube hint plan", () => {
-  it("finishes every preset from its opening, recomputed after every roll", () => {
+  itDeep("finishes every preset from its opening, recomputed after every roll", () => {
     for (const p of PRESETS) {
       for (const seed of ["w-a", "w-b", "w-c"]) {
         let s = newState(p, newDesc(p, randomNew(seed)).desc);

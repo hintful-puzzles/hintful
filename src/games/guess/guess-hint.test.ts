@@ -26,6 +26,7 @@ import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { itDeep } from "../../engine/testing/slow.ts";
 import {
   type GuessHighlights,
   guessHint,
@@ -248,8 +249,10 @@ function rowsByHints(p: GuessParams, answer: number[]): number {
   throw new Error("the hint did not converge");
 }
 
+// The game's deep tier: in CI the engine's sweeps hold Guess's hint to
+// winning its gate boards.
 describe("a player who follows the hint wins inside the row limit", () => {
-  it("on every Standard answer", () => {
+  itDeep("on every Standard answer", () => {
     // Measured when written (2026-09-21): at most 6 rows of the 10.
     const p = defaultParams();
     const worst = Math.max(...allAnswers(p).map((a) => rowsByHints(p, a)));
@@ -257,7 +260,7 @@ describe("a player who follows the hint wins inside the row limit", () => {
     expect(worst).toBeGreaterThan(3);
   });
 
-  it("on Super and without repeats, over a sample", () => {
+  itDeep("on Super and without repeats, over a sample", () => {
     for (const code of ["c8p5g12Bm", "c6p4g10BM"]) {
       const p = decodeParams(code);
       const space = allAnswers(p);

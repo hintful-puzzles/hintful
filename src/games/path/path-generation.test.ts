@@ -15,6 +15,7 @@ import {
 } from "../../engine/testing/absent-tiers.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
+import { deepBudget } from "../../engine/testing/slow.ts";
 import { countAnswers } from "./count-answers.ts";
 import { newPathDesc } from "./generator.ts";
 import { pathGame } from "./index.ts";
@@ -66,7 +67,9 @@ describeAbsentTiers(pathGame, [
   "4x4du",
 ]);
 
-const SEEDS = ["a", "b", "c"];
+/** Three boards a shape in the game's deep tier, which the census needs to
+ * fire every rung; one in CI, where the census does not run. */
+const SEEDS = ["a", "b", "c"].slice(0, deepBudget(1, 3));
 
 const dealt = SHAPES.flatMap((p) =>
   SEEDS.map((seed) => {

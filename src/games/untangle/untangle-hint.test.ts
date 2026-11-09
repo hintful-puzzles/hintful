@@ -13,7 +13,7 @@ import { NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { SLOW_TESTS_ENABLED } from "../../engine/testing/slow.ts";
+import { itDeep, SLOW_TESTS_ENABLED } from "../../engine/testing/slow.ts";
 import { deduceUntangleHintPlan, solvedPlaces } from "./hint.ts";
 import { CROSSING, SPOT, say, type UntangleMarks, VERTEX } from "./hint-text.ts";
 import { untangleGame } from "./index.ts";
@@ -213,7 +213,8 @@ describeHintPins({
 });
 
 describe("Untangle hint", () => {
-  it("narrates true counts and solves every board it is followed on", () => {
+  // The game's deep tier: CI's other Untangle walks are the engine's sweeps'.
+  itDeep("narrates true counts and solves every board it is followed on", () => {
     // What this alone catches is a sentence whose count is not the board's, on
     // any kind of step and from any kind of start: the walk in
     // `hint-resume.test.ts` reads no sentence, and starts only from a fresh

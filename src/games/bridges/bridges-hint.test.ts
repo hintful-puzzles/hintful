@@ -17,6 +17,7 @@ import { decodeSave, encodeSave } from "../../engine/save.ts";
 import { observeMidend } from "../../engine/testing/drive-midend.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
+import { itDeep } from "../../engine/testing/slow.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { type BridgesHighlights, narrate } from "./hint.ts";
 import { say } from "./hint-text.ts";
@@ -731,7 +732,7 @@ describe("the sentences at their extremes", () => {
 });
 
 describe("the marks", () => {
-  it("marks an island for every step, and never twice", () => {
+  itDeep("marks an island for every step, and never twice", () => {
     let recolored = 0;
     let outlined = 0;
     for (const { params } of SHAPES) {

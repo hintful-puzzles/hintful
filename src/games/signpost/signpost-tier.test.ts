@@ -19,7 +19,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
-import { itSlow } from "../../engine/testing/slow.ts";
+import { deepBudget, itDeep, itSlow } from "../../engine/testing/slow.ts";
 import { signpostGame } from "./index.ts";
 import { executeMove } from "./moves.ts";
 import { answerOf, searchAnswers, solverFinishes } from "./solver.ts";
@@ -158,6 +158,7 @@ describe("signpost's search for a board's answers", () => {
   });
 
   it("agrees with the count on boards of every kind", () => {
+    const seeds = deepBudget(10, 50);
     // Dealt boards, which have one answer; the same with given numbers taken
     // away, which often have several; and with one arrow turned, which mostly
     // have none.
@@ -178,7 +179,7 @@ describe("signpost's search for a board's answers", () => {
       [1, 8],
       [5, 5],
     ] as const) {
-      for (let seed = 0; seed < 50; seed++) {
+      for (let seed = 0; seed < seeds; seed++) {
         const rng = randomNew(`agree-${w}x${h}-${seed}`);
         const p = sized(w, h, seed % 2 === 0 ? DIFF_EASY : DIFF_UNREASONABLE, false);
         const { desc } = signpostGame.newDesc(p, rng);
@@ -205,9 +206,16 @@ describe("signpost's search for a board's answers", () => {
       }
     }
     expect(tally["out-of-reach"]).toBe(0);
-    expect(tally.one).toBeGreaterThan(250);
-    expect(tally.several).toBeGreaterThan(40);
-    expect(tally.none).toBeGreaterThan(80);
+    // The floors are the whole sweep's; CI's share of it is held to half its share of them.
+    expect(tally.one).toBeGreaterThan(
+      deepBudget(Math.floor((250 * seeds) / 50 / 2), 250),
+    );
+    expect(tally.several).toBeGreaterThan(
+      deepBudget(Math.floor((40 * seeds) / 50 / 2), 40),
+    );
+    expect(tally.none).toBeGreaterThan(
+      deepBudget(Math.floor((80 * seeds) / 50 / 2), 80),
+    );
   });
 });
 
@@ -327,7 +335,8 @@ describe("an Unreasonable Signpost board", () => {
     noneNeedsSearch(w, h, false);
   });
 
-  it("no 2x4 or 3x3 board with its ends in the corners does", () => {
+  // An enumeration only Signpost's solver can change the answer of.
+  itDeep("no 2x4 or 3x3 board with its ends in the corners does", () => {
     noneNeedsSearch(2, 4, true);
     noneNeedsSearch(4, 2, true);
     noneNeedsSearch(3, 3, true);

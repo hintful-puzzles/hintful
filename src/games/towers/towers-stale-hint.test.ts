@@ -24,6 +24,7 @@ import {
   CURSOR_UP,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { deepBudget } from "../../engine/testing/slow.ts";
 import { newTowersDesc } from "./generator.ts";
 import { towersGame } from "./index.ts";
 import type { TowersMove, TowersParams, TowersState, TowersUi } from "./state.ts";
@@ -163,7 +164,8 @@ describe("towers: a displayed hint step is never stale", () => {
   const diffs: TowersParams["diff"][] = ["easy", "hard", "extreme"];
   for (const diff of diffs) {
     it(`random ${diff} boards survive a mid-solve auto-pencil flip`, () => {
-      for (let s = 0; s < 8; s++) {
+      // Two boards a difficulty in CI, eight in the game's deep tier.
+      for (let s = 0; s < deepBudget(2, 8); s++) {
         const me = midendFromSeed(diff, `stale-${diff}-${s}`);
         expect(walkFollowingHints(me, (n) => n % 2 === 0)).toBe(true);
       }

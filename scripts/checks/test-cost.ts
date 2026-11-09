@@ -31,9 +31,11 @@ import { cpuUnit } from "./cpu-unit.ts";
 /**
  * The budgets in reference seconds (design D3 of `enforce-test-time-budgets`):
  * no one file is a fifth of a worker's share of a ten-minute run, and the
- * suite is about ten minutes on four workers.
+ * suite is about ten minutes on four workers. A game's own files are held in
+ * CI to seconds (owner, 2026-11-09: CI's time is the engine's, and dozens of
+ * games are to come).
  */
-const BUDGET = { file: 120, suite: 2400, commit: 90, push: 300 };
+const BUDGET = { file: 120, suite: 2400, commit: 90, push: 300, game: 15 };
 
 /** The workload's CPU seconds on the reference runner (Gate run 40553996591,
  * the least of three). */
@@ -140,6 +142,7 @@ function report(log: string, wholeSuite: boolean): boolean {
   }
   record(lines);
   let ok = true;
+  if (wholeSuite) ok = reportGames(lines) && ok;
   if (failed.length > 0) {
     console.log(
       `\n✗ over the budget of ${BUDGET.file} s a file by more than the runners differ:`,
@@ -162,6 +165,40 @@ function report(log: string, wholeSuite: boolean): boolean {
   }
   if (!ok) console.log(TREATMENTS);
   return ok;
+}
+
+/**
+ * Prints what the games' own files cost, and says whether each game's are
+ * within {@link BUDGET}'s `game`. Held only in CI, where a game's deep tier
+ * does not run (`inDeepTier` in `src/engine/testing/slow.ts`): everywhere
+ * else a game's own files are as deep as the session working on it wants.
+ */
+function reportGames(lines: readonly Line[]): boolean {
+  const byGame = new Map<string, number>();
+  for (const l of lines) {
+    const game = /^src\/games\/([^/]+)\//.exec(l.file)?.[1];
+    if (game !== undefined)
+      byGame.set(game, (byGame.get(game) ?? 0) + l.cpu - l.inherited);
+  }
+  const ranked = [...byGame].sort((a, b) => b[1] - a[1]);
+  const all = ranked.reduce((sum, [, s]) => sum + s, 0);
+  console.log(
+    `The games' own files: ${(all / 60).toFixed(1)} minutes over ${ranked.length} games; ` +
+      ranked
+        .slice(0, 8)
+        .map(([game, s]) => `${game} ${s.toFixed(0)} s`)
+        .join(", "),
+  );
+  if (!process.env["CI"]) return true;
+  const over = ranked.filter(([, s]) => s > MARGIN * BUDGET.game);
+  if (over.length === 0) return true;
+  console.log(
+    `\n✗ over the budget of ${BUDGET.game} s a game's own files cost CI, by more than the runners differ: ` +
+      `${over.map(([game, s]) => `${game} ${s.toFixed(0)} s`).join(", ")}. ` +
+      `Move what only adds confidence about that game to its deep tier ` +
+      `(docs/testing.md § "Narrowing a game's own sweep").`,
+  );
+  return false;
 }
 
 /** Where a cost that passes stands against its budget, in words. */

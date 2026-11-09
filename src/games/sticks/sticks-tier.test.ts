@@ -21,6 +21,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { deepBudget } from "../../engine/testing/slow.ts";
 import { sticksGame } from "./index.ts";
 import { answerOf, deductionFinishes, searchAnswers } from "./solver.ts";
 import {
@@ -169,6 +170,7 @@ describe("sticks' search for a board's answers", () => {
   });
 
   it("agrees with the count on boards of every kind", () => {
+    const seeds = deepBudget(8, 40);
     // Dealt boards, which have one answer; the same with numbers taken away,
     // which often have several; and with one number changed, which mostly
     // have none.
@@ -187,7 +189,7 @@ describe("sticks' search for a board's answers", () => {
       [4, 4],
       [3, 5],
     ] as const) {
-      for (let seed = 0; seed < 40; seed++) {
+      for (let seed = 0; seed < seeds; seed++) {
         const rng = randomNew(`agree-${w}x${h}-${seed}`);
         const p = sized(
           w,
@@ -215,9 +217,16 @@ describe("sticks' search for a board's answers", () => {
       }
     }
     expect(tally["out-of-reach"]).toBe(0);
-    expect(tally.one).toBeGreaterThan(160);
-    expect(tally.several).toBeGreaterThan(40);
-    expect(tally.none).toBeGreaterThan(40);
+    // The floors are the whole sweep's; CI's share of it is held to half its share of them.
+    expect(tally.one).toBeGreaterThan(
+      deepBudget(Math.floor((160 * seeds) / 40 / 2), 160),
+    );
+    expect(tally.several).toBeGreaterThan(
+      deepBudget(Math.floor((40 * seeds) / 40 / 2), 40),
+    );
+    expect(tally.none).toBeGreaterThan(
+      deepBudget(Math.floor((40 * seeds) / 40 / 2), 40),
+    );
   });
 });
 

@@ -20,7 +20,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
-import { itSlow } from "../../engine/testing/slow.ts";
+import { deepBudget, itSlow } from "../../engine/testing/slow.ts";
 import type { Rect } from "../../engine/types.ts";
 import { rectGame } from "./index.ts";
 import { executeMove, isSolved, newState } from "./moves.ts";
@@ -185,6 +185,7 @@ describe("rect's search for a board's answers", () => {
   });
 
   it("agrees with the count on boards of every kind", () => {
+    const seeds = deepBudget(6, 30);
     // Dealt boards, which have one answer; the same with a number moved to
     // the square beside it, which often have none or several; and with two
     // numbers swapped.
@@ -204,7 +205,7 @@ describe("rect's search for a board's answers", () => {
           count === 0 ? "none" : count === 1 ? "one" : "several",
         );
       };
-      for (let seed = 0; seed < 30; seed++) {
+      for (let seed = 0; seed < seeds; seed++) {
         const rng = randomNew(`agree-${w}x${h}-${seed}`);
         const p = sized(w, h, seed % 2 === 0 ? DIFF_EASY : DIFF_UNREASONABLE);
         const dealt = numbersOf(p, rectGame.newDesc(p, rng).desc);
@@ -233,9 +234,16 @@ describe("rect's search for a board's answers", () => {
       }
     }
     expect(tally["out-of-reach"]).toBe(0);
-    expect(tally.one).toBeGreaterThan(220);
-    expect(tally.several).toBeGreaterThan(15);
-    expect(tally.none).toBeGreaterThan(100);
+    // The floors are the whole sweep's; CI's share of it is held to half its share of them.
+    expect(tally.one).toBeGreaterThan(
+      deepBudget(Math.floor((220 * seeds) / 30 / 2), 220),
+    );
+    expect(tally.several).toBeGreaterThan(
+      deepBudget(Math.floor((15 * seeds) / 30 / 2), 15),
+    );
+    expect(tally.none).toBeGreaterThan(
+      deepBudget(Math.floor((100 * seeds) / 30 / 2), 100),
+    );
   });
 });
 

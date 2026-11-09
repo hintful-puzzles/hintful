@@ -20,6 +20,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { deepBudget } from "../../engine/testing/slow.ts";
 import { separateGame } from "./index.ts";
 import { answerOf, searchAnswers, solveToBorders } from "./solver.ts";
 import {
@@ -171,6 +172,7 @@ describe("separate's search for a board's answers", () => {
   });
 
   it("agrees with the count on boards of every kind", () => {
+    const seeds = deepBudget(10, 50);
     // Dealt boards, which have one answer; the same with two letters swapped
     // anywhere, which often have several or none.
     const tally = { one: 0, several: 0, none: 0, "out-of-reach": 0 };
@@ -189,7 +191,7 @@ describe("separate's search for a board's answers", () => {
       [3, 6, 6],
       [5, 5, 5],
     ] as const) {
-      for (let seed = 0; seed < 50; seed++) {
+      for (let seed = 0; seed < seeds; seed++) {
         const rng = randomNew(`agree-${w}x${h}-${seed}`);
         const p = sized(w, h, k, seed % 2 === 0 ? DIFF_EASY : DIFF_UNREASONABLE);
         const dealt = lettersOf(separateGame.newDesc(p, rng).desc);
@@ -208,9 +210,16 @@ describe("separate's search for a board's answers", () => {
       }
     }
     expect(tally["out-of-reach"]).toBe(0);
-    expect(tally.one).toBeGreaterThan(250);
-    expect(tally.several).toBeGreaterThan(40);
-    expect(tally.none).toBeGreaterThan(40);
+    // The floors are the whole sweep's; CI's share of it is held to half its share of them.
+    expect(tally.one).toBeGreaterThan(
+      deepBudget(Math.floor((250 * seeds) / 50 / 2), 250),
+    );
+    expect(tally.several).toBeGreaterThan(
+      deepBudget(Math.floor((40 * seeds) / 50 / 2), 40),
+    );
+    expect(tally.none).toBeGreaterThan(
+      deepBudget(Math.floor((40 * seeds) / 50 / 2), 40),
+    );
   });
 });
 

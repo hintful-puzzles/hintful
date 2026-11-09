@@ -22,6 +22,7 @@ import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
+import { itDeep } from "../../engine/testing/slow.ts";
 import { newMathraxDesc } from "./generator.ts";
 import { mathraxGame } from "./index.ts";
 import { COL_HINT_CELL, COL_PENCIL } from "./render.ts";
@@ -333,7 +334,7 @@ describe("mathrax hint", () => {
     expect(quads).toBeGreaterThan(0);
   });
 
-  it("names a digit across a clue only when one is there to see", () => {
+  itDeep("names a digit across a clue only when one is there to see", () => {
     // The two clue sentences are chosen by the *working board*, not by what the
     // solver's cube happened to know: "the 3 across it" is a claim about a digit
     // the player can see. Checked on the step the plan offers first, which is

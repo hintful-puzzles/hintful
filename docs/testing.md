@@ -394,6 +394,11 @@ sweep. That is `<game>-generation.test.ts`, through `describeDealtTiers`
 - A tier-2.5 scenario for anything the game renders beyond plain tiles.
 - A property test wherever a closed-form invariant exists.
 
+**Hold the game's own files to seconds in CI.** More boards, larger ones and
+longer walks go to the game's deep tier, which the game's own commits run
+(§ "Narrowing a game's own sweep"); the cost report fails CI on a game over
+`BUDGET.game`.
+
 **Play a move through `executeMove` to a completed board in a tier-1 test.**
 A generation check runs the solver's verdict-only completion. The
 interactive completion path (error marking, loop and path marking, flash
@@ -616,6 +621,11 @@ Three treatments for an expensive test, in order of how little they lose:
    the cost is board size and not configuration. Never defer the only fixture
    covering a configuration, and state what still covers it.
 
+**In a game's own files, the first lever is the game's deep tier**
+(`itDeep` and `deepBudget(ci, deep)` in `slow.ts`): CI's time
+is the engine's, and a game's depth is the session's that works on the game
+(§ "Narrowing a game's own sweep").
+
 ### What runs when
 
 Run the sweep that guards what you changed before committing, and push once,
@@ -627,7 +637,7 @@ and their reasons.
 | --- | --- | --- |
 | The commit hook | every commit | The tests that reach what the commit stages, with per-game work for the games it stages and no other, up to a ceiling of CPU time. |
 | The push hook | once, at a session's end | What the commits left out: the own tests and the cross-game cases of every game that reaches a path the push carries. Nothing, when every commit was a game's own or documentation. Up to its own ceiling. |
-| CI | every push | Everything. Never canceled by a newer push. |
+| CI | every push | Everything but the games' deep tiers. Never canceled by a newer push. |
 
 - **Each hook's run has a ceiling of CPU time** (`test-cost.ts`'s `BUDGET`).
   Before any test runs, the hook prices its plan from what the last runs
@@ -672,6 +682,17 @@ deferred cases are
 `git grep -n -e 'itSlow(' -e describeSlow -e 'slow: true' -- src`.
 
 ### Narrowing a game's own sweep
+
+**CI runs a game's own files shallow.** What only adds confidence about one
+game (more boards, larger ones, longer walks) is the game's deep tier:
+`itDeep` and `deepBudget(ci, deep)` in
+[`slow.ts`](../src/engine/testing/slow.ts), whose `inDeepTier` says which
+runs include it. CI keeps one board on which each of the game's rules
+decides something; the commit that stages the game runs the rest. Its
+deep tier also runs in a push whose shared code reaches the game, up to the
+push's ceiling. Run the game's directory by hand
+(`npx vitest run src/games/<id>`), which includes its deep tier, before
+calling game work done. A game's own files should cost CI a few seconds.
 
 Before choosing a treatment for a game's expensive property test, time the
 items inside one run and plant the defect the test is named for. Never settle
