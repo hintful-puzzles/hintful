@@ -665,9 +665,9 @@ game's. Exemplar: `mosaic/solver.ts`.
 - `answerCache()`, `solveFromAnswer(answer, move)` (Solve) and
   `searchTierContract({ newState, deductionFinishes, answerOf })` (the
   `difficulty` contract).
-- `DIFF_EASY`, `DIFF_UNREASONABLE`, `searchTierItem` and
+- `DIFF_EASY`, `DIFF_UNREASONABLE`, `searchTierItem(<game>.tiers, …)` and
   `searchTierSegment`: the tiers, their Custom field and their params
-  segment.
+  segment. The names are the description's, Unreasonable last.
 - **Write no retry loop for the tier.** `dealUnreasonable({ label, draw,
   strip?, deduced, answer })` owns the loop, its bound and the test that
   keeps a board, within `DEALING_BUDGET`. `difficulty-contract.test.ts`

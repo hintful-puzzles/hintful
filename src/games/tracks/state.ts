@@ -25,7 +25,7 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
@@ -43,13 +43,14 @@ import {
   U,
 } from "../../engine/square-edges.ts";
 import type { GameStatus } from "../../engine/types.ts";
+import * as tracks from "./tracks.compiled.ts";
 
-// --- difficulty (upstream's Easy, Tricky, Hard; shown as tierNames(3)) ------
+// --- difficulty (upstream's Easy, Tricky, Hard; named by the description) ---
 export const DIFF_EASY = 0;
 export const DIFF_TRICKY = 1;
 export const DIFF_HARD = 2;
 export const DIFF_COUNT = 3;
-const DIFF_NAMES: readonly string[] = tierNames(DIFF_COUNT);
+const DIFF_NAMES: readonly string[] = tracks.tiers;
 const DIFF_CHARS = "eth"; // ENCODE chars, indexed by difficulty
 
 // --- directions (`engine/square-edges.ts`'s bits, upstream's R/U/L/D) ------

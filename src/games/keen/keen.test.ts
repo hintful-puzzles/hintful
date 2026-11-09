@@ -260,7 +260,7 @@ describe("keen solver", () => {
       ladderTiers[DIFF_HARD],
       ladderTiers[DIFF_EXTREME],
       ladderTiers[DIFF_UNREASONABLE],
-    ]).toEqual(["Easy", "Normal", "Hard", "Extreme", "Unreasonable"]);
+    ]).toEqual(["Easy", "Normal", "Tricky", "Hard", "Unreasonable"]);
   });
 
   it("reads a cage's values amalgamated only at a cap of Easy", () => {

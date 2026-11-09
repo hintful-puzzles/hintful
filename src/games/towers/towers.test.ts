@@ -187,7 +187,7 @@ describe("towers solver", () => {
       ladderTiers[DIFF_HARD],
       ladderTiers[DIFF_EXTREME],
       ladderTiers[DIFF_UNREASONABLE],
-    ]).toEqual(["Easy", "Hard", "Extreme", "Unreasonable"]);
+    ]).toEqual(["Easy", "Normal", "Tricky", "Unreasonable"]);
   });
 
   it("places a tower once where a row's facing pair and a column's agree", () => {

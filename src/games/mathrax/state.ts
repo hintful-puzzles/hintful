@@ -27,7 +27,6 @@ import {
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { type ClueList, clueList, latinSpace } from "../../engine/describe-runtime.ts";
-import { tierNames } from "../../engine/difficulty.ts";
 import { endParams, paramsLetter } from "../../engine/params.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { Point } from "../../engine/types.ts";
@@ -47,7 +46,7 @@ const DIFF_CHARS = "entr";
 // The top tier reads `Unreasonable`, not upstream's `Recursive`: it is the tier
 // that may require guessing, and the collection has one word for that. Its
 // character stays `r`, so game IDs and saved games are unaffected.
-export const DIFF_NAMES = tierNames(4, { search: true });
+export const DIFF_NAMES = mathrax.tiers;
 const DIFFS: MathraxDiff[] = ["easy", "normal", "tricky", "recursive"];
 
 export function diffToLevel(d: MathraxDiff): number {

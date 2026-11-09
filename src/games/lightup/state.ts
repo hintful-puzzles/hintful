@@ -32,6 +32,7 @@ import {
   SYMM_ROT4,
 } from "../../engine/symmetric-blacks.ts";
 import type { Point } from "../../engine/types.ts";
+import * as lightup from "./lightup.compiled.ts";
 
 // --- cell flags (upstream values) -------------------------------------------
 
@@ -103,7 +104,7 @@ const BOARDS: LightupParams[] = [
 
 /** Easy and Normal, the ladder's tiers, and Unreasonable, the engine's
  * search. */
-export const TIERS = searchTiers(2);
+export const TIERS = searchTiers(lightup.tiers);
 export const DIFF_NAMES: readonly string[] = TIERS.names;
 
 export function defaultParams(): LightupParams {

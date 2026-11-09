@@ -31,7 +31,7 @@ import {
   latinSpace,
   partition,
 } from "../../engine/describe-runtime.ts";
-import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { endParams, paramsLetter } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -50,7 +50,7 @@ export const DIFF_UNREASONABLE = 4;
 
 // Upstream's keen_diffchars, indexed by level.
 const DIFF_CHARS = "enhxu";
-export const DIFF_NAMES = tierNames(5, { search: true });
+export const DIFF_NAMES = keen.tiers;
 const DIFFS: Difficulty[] = ["easy", "normal", "hard", "extreme", "unreasonable"];
 
 export function diffToLevel(d: Difficulty): number {

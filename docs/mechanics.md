@@ -22,7 +22,8 @@ the section that says more.
    transliteration", "Moves are discriminated unions" and "Entry state lives
    on the `Ui`".
 2. **`paramConfig`**, in `state.ts`: `dimensionParamConfig` for the size and
-   `difficultyItem(tierNames(n), field)` for the tier, each with its `doc`.
+   `difficultyItem(<game>.tiers, field)` for the tier, the names its
+   compiled description holds, each with its `doc`.
    See "Params are declared once, on `paramConfig`" and "Difficulty is a
    declared contract".
 3. **The boards**: at least three, smallest first. `defaultParams` returns
@@ -484,10 +485,13 @@ cap-monotonicity, which Check & Save depends on. Exemplar: the skeleton's
 - **A cross-game caller reads and moves a tier with `tierOf(game, p)` and
   `withTier(game, p, tier)`**, never `{ ...p, diff: cap }`: a game may type
   its tier as a string union or an enum.
-- **`TIERS` is `tierNames(n)`**, or `tierNames(n, { search: true })` where
-  the top tier's boards can require Search (`engine-difficulty`, "Tier names
-  come from one collection-wide scale" and "Unreasonable is declared and
-  never issued by position").
+- **`TIERS` is the compiled module's `tiers`**, named once in the
+  description's `tiers` from the scale, Unreasonable last where the top
+  tier's boards can require Search; a game without a description calls
+  `tierNames(n)` (`engine-difficulty`, "A described game names its tiers
+  once, in its description", "Tier names come from one collection-wide
+  scale" and "Unreasonable is declared and never issued by position"). A
+  menu passed any other list fails `difficulty-contract.test.ts`.
 - **A `DIFF_*` constant names a solver rung, not a tier.** A `DIFF_TRIVIAL`
   that is the first tier is shown as "Easy". At runtime the names come from
   `difficultyTiers(game)`, never from the constants or the technique ladder

@@ -14,7 +14,6 @@
 import {
   DIFF_EASY,
   DIFF_UNREASONABLE,
-  SEARCH_TIER_NAMES,
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
@@ -32,6 +31,7 @@ import {
   SYMM_ROT4,
   SYMMETRY_CHOICES,
 } from "../../engine/symmetric-blacks.ts";
+import * as sticks from "./sticks.compiled.ts";
 
 // --- cell flag bits (upstream values) ---------------------------------------
 
@@ -169,6 +169,7 @@ export const paramConfig: ParamConfigItem<SticksParams>[] = [
     },
   },
   searchTierItem(
+    sticks.tiers,
     "diff",
     "An Easy puzzle can be finished one forced square at a time: there is always a square where a line one way would break a number at once. An Unreasonable one has a single solution that those steps stop short of, so somewhere you have to try a line and see what follows. The Hint button stops where the forced squares do.",
   ),
@@ -210,7 +211,7 @@ export function validateParams(p: SticksParams, full: boolean): string | null {
 }
 
 function unreasonableRefusal(p: SticksParams): string | null {
-  const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
+  const tier = sticks.tiers[DIFF_UNREASONABLE] as string;
   const area = p.w * p.h;
   // Every 2x2 board was tried (`sticks-tier.test.ts`) and the solver finishes
   // each one that has a single answer. A 2x3 board can have the tier, though

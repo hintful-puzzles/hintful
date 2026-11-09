@@ -8,7 +8,6 @@
 import {
   DIFF_EASY,
   DIFF_UNREASONABLE,
-  SEARCH_TIER_NAMES,
   searchTierContract,
   searchTierItem,
   searchTierSegment,
@@ -54,6 +53,7 @@ import {
 } from "./hint.ts";
 import { dragReleaseMove, executeMove } from "./moves.ts";
 import { BORDER, buildPalette, redrawSignpost } from "./render.ts";
+import * as signpost from "./signpost.compiled.ts";
 import { answerOf, isAnswer, solverFinishes } from "./solver.ts";
 import {
   checkCompletion,
@@ -105,7 +105,7 @@ function defaultParams(): SignpostParams {
 function validateParams(p: SignpostParams, full: boolean): string | null {
   if (full && p.w === 1 && p.h === 1) return "Width and height cannot both be one.";
   if (!full || p.diff !== DIFF_UNREASONABLE) return null;
-  const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
+  const tier = signpost.tiers[DIFF_UNREASONABLE] as string;
   const area = p.w * p.h;
   const shorter = Math.min(p.w, p.h);
   // Every board of these with its first and last numbers showing was tried
@@ -143,6 +143,7 @@ const paramConfig: ParamConfigItem<SignpostParams>[] = [
     },
   },
   searchTierItem(
+    signpost.tiers,
     "diff",
     "An Easy puzzle can be finished one forced link at a time: there is always an arrow with only one square it can lead to, or a square only one arrow can lead into. An Unreasonable one has a single solution that those steps stop short of, so somewhere you have to try a link and see what follows. The Hint button stops where the forced links do.",
   ),

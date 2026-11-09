@@ -9,7 +9,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import {
   CROSS,
@@ -22,6 +22,7 @@ import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import { DOWN, RIGHT, squareEdges } from "../../engine/square-edges.ts";
 import { encodeWallRuns, readWallRuns } from "../../engine/wall-runs.ts";
+import * as skeleton from "./skeleton.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------
 
@@ -30,7 +31,7 @@ export const DIFF_EASY = 0;
 /** Needs a line, or a square's two lines, seen to break the board at once. */
 export const DIFF_NORMAL = 1;
 
-const DIFF_NAMES: readonly string[] = tierNames(2);
+const DIFF_NAMES: readonly string[] = skeleton.tiers;
 
 /** The `d<char>` params suffix, by tier. */
 const DIFF_CHARS = "en";

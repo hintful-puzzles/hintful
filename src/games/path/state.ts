@@ -38,6 +38,7 @@ import { choice, dims, letters, paramsCodec } from "../../engine/params-codec.ts
 import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import { DOWN, RIGHT, squareEdges } from "../../engine/square-edges.ts";
 import { encodeWallRuns, readWallRuns } from "../../engine/wall-runs.ts";
+import * as path from "./path.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------
 
@@ -45,7 +46,7 @@ import { encodeWallRuns, readWallRuns } from "../../engine/wall-runs.ts";
  * proves has one answer. Unreasonable came with the ladder's Checks
  * (2026-10-28), so that a board dealt before them, which may need the
  * lookahead they replaced, still opens. */
-export const TIERS = searchTiers(3);
+export const TIERS = searchTiers(path.tiers);
 
 /** Every line follows from one square, or from the numbers a line would join. */
 export const DIFF_EASY = 0;

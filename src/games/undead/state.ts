@@ -6,7 +6,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace, traceSight } from "../../engine/describe-runtime.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -45,7 +45,7 @@ const DIFF_CHARS = "ent";
 // contradiction, a solve-from-hypothesis only an Unreasonable tier may require.
 // No board needs a hypothesis nested inside that one (measured by
 // `strengthen-undead-deduction`), and Easy and Normal stop below rung 3.
-const DIFF_NAMES = tierNames(3, { search: true });
+const DIFF_NAMES = undead.tiers;
 const DIFFS: Difficulty[] = ["easy", "normal", "tricky"];
 
 export function diffToLevel(d: Difficulty): number {

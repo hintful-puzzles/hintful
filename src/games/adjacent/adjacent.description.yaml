@@ -91,16 +91,16 @@ freedom: { kind: fill }
 deal:
   givens: how many
   tier: one of the tiers
-tiers: [Trivial, Easy, Tricky, Extreme, Recursive]
+tiers: [Easy, Normal, Tricky, Hard, Unreasonable]
 techniques:
-  - { use: latin.placed, tier: Trivial, rung: dup }
-  - { use: latin.hiddenSingle, tier: Trivial, rung: hiddenSingle }
-  - { use: latin.single, tier: Trivial, rung: single }
+  - { use: latin.placed, tier: Easy, rung: dup }
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }
   # A placed number leaves its neighbor across an edge only the numbers the
   # edge's clue allows: column by column, each placed cell's neighbors up,
   # right, down, left.
   - id: adjacent
-    tier: Easy
+    tier: Normal
     rung: adjacent
     for: "L in cols, a in cells(L) where known(a), b in adj4(a), e = edge(a, b)"
     conclude: "forall d in cand(b) where not fits(e, value(a), d): strike(b, d)"
@@ -114,5 +114,5 @@ techniques:
       forall d in cand(b) where not (exists d2 in cand(a): d2 != d and fits(e, d2, d)):
       strike(b, d)
   - { use: latin.set, tier: Tricky, rung: set }
-  - { use: latin.fish, tier: Extreme, rung: set }
-  - { use: latin.wing, tier: Extreme, rung: wing }
+  - { use: latin.fish, tier: Hard, rung: set }
+  - { use: latin.wing, tier: Hard, rung: wing }

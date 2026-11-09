@@ -27,10 +27,10 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { tierNames } from "../../engine/difficulty.ts";
 import type { PresetBoards } from "../../engine/game.ts";
 import { endParams, paramsLetter } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import * as subsets from "./subsets.compiled.ts";
 
 // --- difficulty --------------------------------------------------------------
 
@@ -43,7 +43,7 @@ export const DIFF_EASY = 0;
 export const DIFF_NORMAL = 1;
 
 /** The collection's two-tier names; upstream offers no difficulty here. */
-export const DIFF_NAMES: readonly string[] = tierNames(2);
+export const DIFF_NAMES: readonly string[] = subsets.tiers;
 
 /** Difficulty encode chars for the `d<char>` param suffix, index = tier. */
 const DIFF_CHARS = "et";

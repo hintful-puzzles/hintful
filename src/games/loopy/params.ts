@@ -9,11 +9,12 @@
  * names, the encode char and the min-size error messages are *derived* from it.
  */
 
-import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { type GridType, gridValidateParams } from "../../engine/grid/index.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, num, paramsCodec } from "../../engine/params-codec.ts";
+import * as loopy from "./loopy.compiled.ts";
 
 /**
  * Loopy's grid types, in **Loopy's own ordering** — which is deliberately not
@@ -98,7 +99,7 @@ export const LOOPY_GRIDS = [
  * (`d<c>`), and its index the internal `diff` value the solver caps its rungs
  * by. */
 const LOOPY_DIFF_CHARS = "enth";
-export const LOOPY_DIFFS: readonly string[] = tierNames(LOOPY_DIFF_CHARS.length);
+export const LOOPY_DIFFS: readonly string[] = loopy.tiers;
 
 export const DIFF_EASY = 0;
 export const DIFF_NORMAL = 1;

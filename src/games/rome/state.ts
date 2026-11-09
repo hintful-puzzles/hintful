@@ -34,7 +34,7 @@ import type {
 } from "../../engine/candidate-hint.ts";
 import { DESC_TOO_LONG } from "../../engine/desc-error.ts";
 import type { DescReader } from "../../engine/desc-reader.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
@@ -46,6 +46,7 @@ import {
   gapLetters,
   readRegionWalls,
 } from "../../engine/wall-runs.ts";
+import * as rome from "./rome.compiled.ts";
 
 // --- cell bit-field (upstream values, verbatim) -----------------------------
 
@@ -218,7 +219,7 @@ export const DIFFCOUNT = 3;
 
 /** Difficulty encode chars (upstream `rome_diffchars`), index = tier. */
 const DIFF_CHARS = "ent";
-const DIFF_NAMES = tierNames(DIFFCOUNT);
+const DIFF_NAMES = rome.tiers;
 
 // --- validity verdicts ------------------------------------------------------
 

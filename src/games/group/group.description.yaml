@@ -132,11 +132,11 @@ freedom: { kind: fill }
 deal:
   givens: how many
   tier: one of the tiers
-tiers: [Trivial, Normal, Hard, Extreme, Unreasonable]
+tiers: [Easy, Normal, Tricky, Hard, Unreasonable]
 techniques:
-  - { use: latin.placed, tier: Trivial, rung: dup }
-  - { use: latin.hiddenSingle, tier: Trivial, rung: hiddenSingle }
-  - { use: latin.single, tier: Trivial, rung: single }
+  - { use: latin.placed, tier: Easy, rung: dup }
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }
   # Placed a·b, b·c and one of (a·b)·c and a·(b·c), the other is the same
   # element, where its cell can still hold it: a, b and c in order, the first
   # changing slowest. A cell that cannot is passed over, not a contradiction,
@@ -169,7 +169,7 @@ techniques:
   # A placed product of a with some j that is not j shows a is not the
   # identity, so no j·a or a·j can be j. The witness, o, is the least such j.
   - id: notIdentity
-    tier: Hard
+    tier: Tricky
     rung: identityElim
     for: >-
       a in domain,
@@ -177,6 +177,6 @@ techniques:
       or (known(mul(a, j)) and value(mul(a, j)) != j))
       where o != none
     conclude: "forall j in domain: strike(mul(j, a), j) and (j = a or strike(mul(a, j), j))"
-  - { use: latin.set, tier: Hard, rung: set }
-  - { use: latin.fish, tier: Extreme, rung: set }
-  - { use: latin.wing, tier: Extreme, rung: wing }
+  - { use: latin.set, tier: Tricky, rung: set }
+  - { use: latin.fish, tier: Hard, rung: set }
+  - { use: latin.wing, tier: Hard, rung: wing }

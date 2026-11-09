@@ -25,7 +25,7 @@ import { parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { latinSpace } from "../../engine/describe-runtime.ts";
-import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import type { PresetBoards } from "../../engine/game.ts";
 import { paramsLetter, unreadParams } from "../../engine/params.ts";
@@ -48,7 +48,7 @@ export const DIFF_UNREASONABLE = 4;
 /** `group_diffchars` — the per-level encode character. */
 const DIFF_CHARS = "tnhxu";
 /** The per-level display title. */
-export const DIFF_NAMES = tierNames(5, { search: true });
+export const DIFF_NAMES = group.tiers;
 
 /** The tiers a board that hides its identity has. Such a board always has two
  * entirely blank rows and columns, and no Latin-square deduction can tell them

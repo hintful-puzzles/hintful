@@ -460,6 +460,13 @@ converse: the ladder runs it only at a cap that high, and a firing grades at
 its own tier (Solo's readings of the partial cages its region rule works
 out).
 
+**A game's `tiers` are the names its menu shows**, and the only place it
+writes them: its difficulty field takes the compiled module's `tiers`
+(`searchTiers` or `searchTierItem` where its top tier is the search's),
+so a search tier is listed, Unreasonable last, though no technique runs
+at it. Name them from the collection's scale by position
+([`mechanics.md`](./mechanics.md) § "Difficulty is a declared contract").
+
 **A game that grades on more than one scale names the others**
 (`scales: { killer: [...] }`), and a technique's tier is a tier of one of
 them; the game caps and grades each ladder entry on its `scale`. A grade is

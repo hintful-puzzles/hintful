@@ -12,7 +12,6 @@
 import {
   DIFF_EASY,
   DIFF_UNREASONABLE,
-  SEARCH_TIER_NAMES,
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
@@ -25,6 +24,7 @@ import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import { SHADED_NAME } from "../../engine/piece.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import * as range from "./range.compiled.ts";
 
 // --- cells -----------------------------------------------------------------
 
@@ -116,7 +116,7 @@ export const paramConfig: ParamConfigItem<RangeParams>[] = [
     doc: "Size of the grid in squares. At least one of them must be 3 or more, and together they can come to at most 128.",
     bounds: { min: 1 },
   }),
-  searchTierItem("diff", TIER_DOC),
+  searchTierItem(range.tiers, "diff", TIER_DOC),
 ];
 
 /** `WxH`, with upstream's square fallback: a bare `W` is a W×W board. The
@@ -151,7 +151,7 @@ export function validateParams(p: RangeParams, full: boolean): string | null {
 }
 
 function unreasonableRefusal(p: RangeParams): string | null {
-  const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
+  const tier = range.tiers[DIFF_UNREASONABLE] as string;
   // On a strip a shaded square anywhere but an end cuts the clear squares in
   // two, so every number sees the same run and says how many ends are
   // shaded: the rules settle every strip that has one answer. A 3x3 board is

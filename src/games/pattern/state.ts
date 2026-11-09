@@ -13,7 +13,6 @@
 import {
   DIFF_EASY,
   DIFF_UNREASONABLE,
-  SEARCH_TIER_NAMES,
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
@@ -31,6 +30,7 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
+import * as pattern from "./pattern.compiled.ts";
 
 // --- cell values (upstream #defines) -------------------------------------
 export const GRID_EMPTY = 0;
@@ -144,6 +144,7 @@ export const paramConfig: ParamConfigItem<PatternParams>[] = [
     bounds: { min: 1 },
   }),
   searchTierItem(
+    pattern.tiers,
     "diff",
     "An Easy puzzle can be finished one row or column at a time: there is always a line whose numbers, with what is already marked, decide another square. An Unreasonable one has a single solution that no line on its own reaches, so somewhere you have to try a square and see what follows, and the Hint button stops where the lines do.",
   ),
@@ -172,7 +173,7 @@ export function validateParams(p: PatternParams, full: boolean): string | null {
     return AREA_TOO_LARGE;
   }
   if (full && p.diff === DIFF_UNREASONABLE && !carriesUnreasonable(p))
-    return noSuchTier(`${p.w}x${p.h} puzzle`, SEARCH_TIER_NAMES[p.diff]);
+    return noSuchTier(`${p.w}x${p.h} puzzle`, pattern.tiers[p.diff]);
   return null;
 }
 

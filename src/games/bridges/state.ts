@@ -14,13 +14,14 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
+import * as bridges from "./bridges.compiled.ts";
 
 // --- Grid flag bits (bridges.c lines 127-142) ---
 export const G_ISLAND = 0x0001;
@@ -70,7 +71,7 @@ export interface Island {
   nislands: number;
 }
 
-const DIFFICULTY_NAMES: readonly string[] = tierNames(3);
+const DIFFICULTY_NAMES: readonly string[] = bridges.tiers;
 
 const board = (w: number, h = w): BridgesParams => ({
   w,

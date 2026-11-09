@@ -30,7 +30,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
-import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { type RowColRegion, rowColRegions } from "../../engine/latin-hint.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
@@ -47,7 +47,7 @@ export const DIFF_EASY = 0;
 /** Upstream `DIFF_HARD`, shown as **Normal**. */
 export const DIFF_HARD = 1;
 
-const DIFF_NAMES: readonly string[] = tierNames(2);
+const DIFF_NAMES: readonly string[] = salad.tiers;
 /** The difficulty letters `encodeParams` writes and `decodeParams` reads. */
 const DIFF_CHARS = "ex";
 

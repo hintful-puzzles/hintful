@@ -12,7 +12,6 @@
 import {
   DIFF_EASY,
   DIFF_UNREASONABLE,
-  SEARCH_TIER_NAMES,
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
@@ -55,6 +54,7 @@ import {
   initBorders,
   outOfBounds,
 } from "../../engine/border-grid.ts";
+import * as palisade from "./palisade.compiled.ts";
 import { isSolved } from "./solver.ts";
 
 /** Clue sentinel: no clue shown in this cell. */
@@ -148,6 +148,7 @@ export const paramConfig: ParamConfigItem<PalisadeParams>[] = [
     label: { slot: "tail", words: (p) => `regions of size ${p.k}` },
   }),
   searchTierItem(
+    palisade.tiers,
     "diff",
     "An Easy puzzle can be finished one forced edge at a time: there is always a number, a region or a corner that settles an edge by itself. An Unreasonable one has a single solution that those steps stop short of, so somewhere you have to try an edge and see what follows. The Hint button stops where the forced edges do.",
   ),
@@ -179,7 +180,7 @@ export function validateParams(p: PalisadeParams, full: boolean): string | null 
   if (k === 2 && w !== 1 && h !== 1)
     return "Region size can't be two unless width or height is one.";
   if (p.diff !== DIFF_UNREASONABLE) return null;
-  const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
+  const tier = palisade.tiers[DIFF_UNREASONABLE] as string;
   // A strip, and a board in regions of one, divide one way whatever the
   // clues, and the solver finds that way with no clue at all
   // (`palisade-tier.test.ts`), so none of their boards needs a search.

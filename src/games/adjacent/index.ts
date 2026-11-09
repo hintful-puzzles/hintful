@@ -50,7 +50,6 @@ import {
 import { recordEdgeClueDeductions } from "../../engine/edge-clue-latin/solver.ts";
 import {
   DIFF_EXTREME,
-  DIFF_NAMES,
   diffFromLevel,
   diffToLevel,
   type EdgeClueMove,
@@ -84,6 +83,7 @@ import {
 } from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
+import * as adjacent from "./adjacent.compiled.ts";
 import { say } from "./hint-text.ts";
 import type { HintOp, HintReason } from "./solver.ts";
 import { BARS, decodeParams, defaultParams, menu, validateParams } from "./state.ts";
@@ -220,7 +220,7 @@ export const adjacentGame: Game<
       bounds: { min: 3, max: MAX_CANDIDATE_VALUE },
       label: { slot: "size", words: squareSize("order") },
     }),
-    difficultyItem(DIFF_NAMES, {
+    difficultyItem(adjacent.tiers, {
       get: (p: EdgeClueParams) => diffToLevel(p.diff),
       set: (p: EdgeClueParams, tier: number) => {
         p.diff = diffFromLevel(tier);

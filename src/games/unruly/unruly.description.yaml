@@ -90,7 +90,7 @@ variations:
         # has its remaining one would make the two the same, so that square is
         # the other piece.
         - id: unique
-          tier: Easy
+          tier: Normal
           for: >-
             A in lines, n = |cells(A)| / 2,
             d in domain where count(c in cells(A) where value(c) = d) = n,
@@ -99,12 +99,12 @@ variations:
             and (forall j in range(0, |cells(A)| - 1) where value(sq(B, j)) = d: value(sq(A, j)) = d),
             j in range(0, |cells(A)| - 1) where value(sq(A, j)) = d and not known(sq(B, j))
           conclude: "place(sq(B, j), flip(d))"
-tiers: [Trivial, Easy, Normal]
+tiers: [Easy, Normal, Tricky]
 techniques:
   # Two of three squares in a row of a line hold one piece, so the third holds
   # the other.
   - id: threes
-    tier: Trivial
+    tier: Easy
     for: >-
       L in lines, i in range(0, |cells(L)| - 3), W = window(L, i),
       x in W where not known(x),
@@ -113,7 +113,7 @@ techniques:
   # A line holding all its d and all but one of the other piece: its one empty
   # square holds the other piece.
   - id: lastGap
-    tier: Trivial
+    tier: Easy
     for: >-
       L in lines, n = |cells(L)| / 2,
       d in domain where count(c in cells(L) where value(c) = d) = n
@@ -121,7 +121,7 @@ techniques:
     conclude: "forall c in cells(L) where not known(c): place(c, flip(d))"
   # A line holding all its d: every empty square holds the other piece.
   - id: quota
-    tier: Easy
+    tier: Normal
     for: >-
       L in lines, n = |cells(L)| / 2,
       d in domain where count(c in cells(L) where value(c) = d) = n
@@ -132,7 +132,7 @@ techniques:
   # other piece unless the last d goes among them, so it does, and every
   # empty square of the line outside them holds the other piece.
   - id: lastOne
-    tier: Normal
+    tier: Tricky
     for: >-
       L in lines, n = |cells(L)| / 2,
       d in domain where count(c in cells(L) where value(c) = d) = n - 1

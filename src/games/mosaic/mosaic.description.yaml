@@ -91,7 +91,7 @@ freedom: { kind: fill }
 deal:
   clues: which squares show their number, fewer at higher tiers
   tier: one of the tiers
-tiers: [Easy, Normal]
+tiers: [Easy, Normal, Unreasonable]
 techniques:
   # One number alone, n the shaded squares it still needs: with none, the
   # rest of its block is clear; with only as many squares left that are not

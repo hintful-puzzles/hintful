@@ -568,8 +568,9 @@ Crossing's solver and hint.
 ### A middle tier below Unreasonable
 
 **Give a deduction its own tier where it is its own step for a player and
-the boards that need it are a large share.** `searchTiers(2)` gives
-`Easy · Normal · Unreasonable`
+the boards that need it are a large share.** A description's
+`tiers: [Easy, Normal, Unreasonable]`, passed to `searchTiers`, gives the
+three
 ([`engine/answer-search.ts`](../src/engine/answer-search.ts)); its contract
 asks `deductionFinishes(state, cap)` below Unreasonable, and the game grades
 a rung a tier there (§ "A tier means exactly its rung"). Exemplar: Mosaic.

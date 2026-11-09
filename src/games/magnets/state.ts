@@ -22,11 +22,12 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import * as magnets from "./magnets.compiled.ts";
 
 // --- cell values (upstream: EMPTY == NEUTRAL) -----------------------------
 export const EMPTY = 0;
@@ -59,7 +60,7 @@ export const notFlag = (which: number): number =>
 export const DIFF_EASY = 0;
 export const DIFF_TRICKY = 1;
 export const DIFF_COUNT = 2;
-const DIFF_NAMES: readonly string[] = tierNames(DIFF_COUNT);
+const DIFF_NAMES: readonly string[] = magnets.tiers;
 const DIFF_CHARS = "et"; // ENCODE chars, indexed by difficulty
 
 // --- roworcol ------------------------------------------------------------

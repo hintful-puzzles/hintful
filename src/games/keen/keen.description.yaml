@@ -109,7 +109,7 @@ freedom: { kind: fill }
 deal:
   cages: the partition, connected cages of at most six cells, and each cage's sign and value
   tier: one of the tiers
-tiers: [Easy, Normal, Hard, Extreme, Unreasonable]
+tiers: [Easy, Normal, Tricky, Hard, Unreasonable]
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
   # Cage by cage: a value no filling of the cage from its candidates that
@@ -139,13 +139,13 @@ techniques:
   # every filling of the cage that makes its clue puts in its part of the
   # line is struck from the rest of the line. One line a firing.
   - id: cageLine
-    tier: Hard
+    tier: Tricky
     rung: cageLine
     for: "r in cage, K = cells(r), L in cols + rows"
     conclude: >-
       forall d in domain where (forall fill f of K from cand
       where apart(f, K) and makes(f, r): exists x in cells(L): x in K and f(x) = d),
       c in cells(L) where c not in K: strike(c, d)
-  - { use: latin.set, tier: Hard, rung: set }
-  - { use: latin.fish, tier: Extreme, rung: set }
-  - { use: latin.wing, tier: Extreme, rung: wing }
+  - { use: latin.set, tier: Tricky, rung: set }
+  - { use: latin.fish, tier: Hard, rung: set }
+  - { use: latin.wing, tier: Hard, rung: wing }

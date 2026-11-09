@@ -48,7 +48,6 @@ import {
 import { recordEdgeClueDeductions } from "../../engine/edge-clue-latin/solver.ts";
 import {
   DIFF_EXTREME,
-  DIFF_NAMES,
   diffFromLevel,
   diffToLevel,
   type EdgeClueMove,
@@ -85,6 +84,7 @@ import { SQUARE_GRID } from "../../engine/sections.ts";
 import { say } from "./hint-text.ts";
 import type { HintOp, HintReason } from "./solver.ts";
 import { decodeParams, defaultParams, menu, SIGNS, validateParams } from "./state.ts";
+import * as unequal from "./unequal.compiled.ts";
 
 // --- hint ------------------------------------------------------------------
 
@@ -217,7 +217,7 @@ export const unequalGame: Game<
       bounds: { min: 3, max: MAX_CANDIDATE_VALUE },
       label: { slot: "size", words: squareSize("order") },
     }),
-    difficultyItem(DIFF_NAMES, {
+    difficultyItem(unequal.tiers, {
       get: (p: EdgeClueParams) => diffToLevel(p.diff),
       set: (p: EdgeClueParams, tier: number) => {
         p.diff = diffFromLevel(tier);

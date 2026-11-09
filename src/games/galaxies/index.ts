@@ -23,7 +23,6 @@ import {
   type DifficultyContract,
   difficultyItem,
   noSuchTier,
-  tierNames,
 } from "../../engine/difficulty.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
@@ -73,6 +72,7 @@ import {
   verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import * as galaxies from "./galaxies.compiled.ts";
 import { newGameDesc } from "./generator.ts";
 import {
   GALAXIES_RUNGS,
@@ -1076,7 +1076,7 @@ function textFormat(s: GalaxiesState): string {
  * `DIFF_NAMES` below, which is the solver's *verdict* vocabulary — five members
  * for two tiers, which is why the cross-game guard reads the params form and
  * never counts `GalaxiesDiff`. */
-const GALAXIES_TIERS = tierNames(2, { search: true });
+const GALAXIES_TIERS = galaxies.tiers;
 
 const DIFF_NAMES = [...GALAXIES_TIERS, "Impossible", "Ambiguous", "Unfinished"];
 

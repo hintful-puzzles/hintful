@@ -34,7 +34,7 @@ import {
   type GridSpace,
   partition,
 } from "../../engine/describe-runtime.ts";
-import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -52,9 +52,7 @@ export const DIFF_EXTREME = 4; // "Extreme"
 export const DIFF_RECURSIVE = 5; // "Unreasonable"
 export const DIFF_AMBIGUOUS = 6;
 export const DIFF_IMPOSSIBLE = 7;
-const DIFFCOUNT = 6; // number of selectable difficulties
-
-export const DIFF_NAMES = tierNames(DIFFCOUNT, { search: true });
+export const DIFF_NAMES = solo.tiers;
 
 /** `solo_diffchars`: the public encoding writes a tier as `d<char>`. */
 const DIFF_CHARS = "tbiaeu";

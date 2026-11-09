@@ -231,7 +231,7 @@ export function difficultyChoiceItem<Params>(game: {
 const TIER_SCALE = ["Easy", "Normal", "Tricky", "Hard", "Extreme"] as const;
 
 /** The one tier name that promises a board may need Search. */
-const SEARCH_TIER = "Unreasonable";
+export const SEARCH_TIER = "Unreasonable";
 
 /**
  * The conventional names for a game with `count` tiers: the first `count` of
@@ -258,8 +258,10 @@ const SEARCH_TIER = "Unreasonable";
  * would publish the promise `features.md` § "Difficulty" makes to players and
  * break it.
  *
- * **Override by writing the array instead**, and say why in the change. No game
- * does, and `difficulty-contract.test.ts` holds every tier list to this scale.
+ * A described game names its tiers in its description, and its menu reads
+ * them from its compiled module's `tiers`; this is for a game without them.
+ * `difficulty-contract.test.ts` holds every tier list to this scale, and a
+ * described game's menu to its description's.
  */
 export function tierNames(count: number, opts?: { search?: boolean }): string[] {
   const room = TIER_SCALE.length + (opts?.search ? 1 : 0);

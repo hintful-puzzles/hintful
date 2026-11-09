@@ -13,11 +13,12 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
+import * as tents from "./tents.compiled.ts";
 
 // --- cell values (upstream enum BLANK, TREE, TENT, NONTENT) ----------------
 export const BLANK = 0;
@@ -37,7 +38,7 @@ export const clickGrass = (v: number): number => (v === BLANK ? NONTENT : BLANK)
 export const DIFF_EASY = 0;
 export const DIFF_TRICKY = 1;
 export const DIFF_COUNT = 2;
-const DIFF_NAMES: readonly string[] = tierNames(2);
+const DIFF_NAMES: readonly string[] = tents.tiers;
 const DIFF_CHARS = "et"; // ENCODE chars, indexed by difficulty
 
 // --- link directions (upstream N,U,L,R,D; N is "no link") ------------------

@@ -14,11 +14,12 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import * as skeleton from "./skeleton.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------
 
@@ -27,7 +28,7 @@ export const DIFF_EASY = 0;
 /** Needs two numbers read together at least once. */
 export const DIFF_NORMAL = 1;
 
-const DIFF_NAMES: readonly string[] = tierNames(2);
+const DIFF_NAMES: readonly string[] = skeleton.tiers;
 
 /** The `d<char>` params suffix, by tier. */
 const DIFF_CHARS = "en";

@@ -29,8 +29,8 @@ import {
   type DifficultyContract,
   difficultyItem,
   difficultyTiers,
+  SEARCH_TIER,
   type TierField,
-  tierNames,
 } from "./difficulty.ts";
 import type { ParamConfigItem, SolveResult } from "./game.ts";
 import { PUZZLE_NOT_REASONABLE } from "./hint-refusal.ts";
@@ -71,54 +71,58 @@ export interface SearchTiers {
 }
 
 /**
- * The tiers of a game with `deductions` tiers its deduction finishes, in the
- * collection's names: `Easy · Unreasonable` at one, `Easy · Normal ·
- * Unreasonable` at two. A game takes a second where it has a deduction that
- * is its own step for a player and deals boards that need it.
+ * The tiers of a game that searches, named by its description: `names` is
+ * the compiled module's `tiers`, one for each deduction a player is asked
+ * for and Unreasonable last (`Easy · Unreasonable`, or `Easy · Normal ·
+ * Unreasonable` for a game with a deduction that is its own step for a
+ * player and deals boards that need it).
  */
-export function searchTiers(deductions: number): SearchTiers {
-  const names = tierNames(deductions + 1, { search: true });
-  const unreasonable = deductions;
+export function searchTiers(names: readonly string[]): SearchTiers {
+  if (names.length < 2 || names.at(-1) !== SEARCH_TIER)
+    throw new Error(`searchTiers: ${names} does not end in ${SEARCH_TIER}`);
+  const unreasonable = names.length - 1;
   return {
     names,
     unreasonable,
     item: (field, doc) => difficultyItem(names, field, { doc }),
-    contract<Params, State>(game: SearchTierGame<Params, State>) {
-      const contract: DifficultyContract<Params> = {
-        solveAtCap(p, desc, cap) {
-          const state = game.newState(p, desc);
-          if (cap < unreasonable)
-            return game.deductionFinishes(state, cap) ? "solved" : "unsolved";
-          const answer = game.answerOf(state);
-          if (answer.kind === "one") return "solved";
-          return answer.kind === "none" ? "impossible" : "unsolved";
-        },
-      };
-      searchTierContracts.add(contract);
-      return contract;
-    },
+    contract: (game) => searchContract(game, unreasonable),
   };
 }
 
-const TWO_TIERS = searchTiers(1);
+function searchContract<Params, State>(
+  game: SearchTierGame<Params, State>,
+  unreasonable: number,
+): DifficultyContract<Params> {
+  const contract: DifficultyContract<Params> = {
+    solveAtCap(p, desc, cap) {
+      const state = game.newState(p, desc);
+      if (cap < unreasonable)
+        return game.deductionFinishes(state, cap) ? "solved" : "unsolved";
+      const answer = game.answerOf(state);
+      if (answer.kind === "one") return "solved";
+      return answer.kind === "none" ? "impossible" : "unsolved";
+    },
+  };
+  searchTierContracts.add(contract);
+  return contract;
+}
 
 /** A board the game's deductions, and its hint, finish. */
 export const DIFF_EASY = 0;
 /** A board with one answer that the deductions do not reach, in a game with
  * two tiers. A game with more reads {@link SearchTiers.unreasonable}. */
-export const DIFF_UNREASONABLE = TWO_TIERS.unreasonable;
+export const DIFF_UNREASONABLE = 1;
 
-/** The two tiers' names, indexed by {@link DIFF_EASY} and
- * {@link DIFF_UNREASONABLE}. */
-export const SEARCH_TIER_NAMES = TWO_TIERS.names;
-
-/** The Custom dialog's difficulty field for the two tiers. `doc` says what
- * each asks of a player in this game. */
+/** The Custom dialog's difficulty field for a game's two tiers, `tiers` its
+ * compiled module's. `doc` says what each asks of a player in this game. */
 export function searchTierItem<P>(
+  tiers: readonly string[],
   field: TierField<P>,
   doc: string,
 ): ParamConfigItem<P> {
-  return TWO_TIERS.item(field, doc);
+  if (tiers.length !== 2)
+    throw new Error(`searchTierItem: ${tiers} is not two tiers; use searchTiers`);
+  return searchTiers(tiers).item(field, doc);
 }
 
 /**
@@ -343,7 +347,7 @@ export function searchTierContract<Params, State>(game: {
   deductionFinishes(state: State): boolean;
   answerOf(state: State): Answer<unknown>;
 }): DifficultyContract<Params> {
-  return TWO_TIERS.contract(game);
+  return searchContract(game, DIFF_UNREASONABLE);
 }
 
 const searchTierContracts = new WeakSet<object>();

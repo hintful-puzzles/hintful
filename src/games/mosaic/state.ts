@@ -25,6 +25,7 @@ import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import type { Point } from "../../engine/types.ts";
+import * as mosaic from "./mosaic.compiled.ts";
 
 // --- cell-state flags (upstream `enum cell_state`) ----------------------
 
@@ -47,7 +48,7 @@ const DEFAULT_AGGRESSIVENESS = true;
 
 /** A tier for each of the deduction's two ideas (`deduce.ts`), and the
  * search's above them. */
-export const TIERS = searchTiers(2);
+export const TIERS = searchTiers(mosaic.tiers);
 /** A board two numbers compared finish and one number at a time does not. */
 export const DIFF_NORMAL = 1;
 /** A board with a single answer that the deduction does not reach. */

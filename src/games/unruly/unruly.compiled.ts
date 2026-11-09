@@ -40,7 +40,7 @@ export const ladder: readonly { id: LadderId; tier: number; scale?: string; from
 ];
 
 /** The description's tiers, by name. */
-export const tiers: readonly string[] = ["Trivial","Easy","Normal"];
+export const tiers: readonly string[] = ["Easy","Normal","Tricky"];
 
 /** Whether `g`, a value a cell and 0 where it has none, is an answer to the
  * board: every cell a value of its domain, and every rule and dealt clue

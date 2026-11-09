@@ -28,7 +28,7 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -41,6 +41,7 @@ import {
   gapLetters,
   readRegionWalls,
 } from "../../engine/wall-runs.ts";
+import * as seismic from "./seismic.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
 
@@ -50,7 +51,7 @@ export const DIFF_EASY = 0;
 export const DIFF_NORMAL = 1;
 export const DIFFCOUNT = 2;
 
-export const DIFF_NAMES: readonly string[] = tierNames(2);
+export const DIFF_NAMES: readonly string[] = seismic.tiers;
 /** The difficulty letters `encodeParams` writes and `decodeParams` reads. */
 const DIFF_CHARS = "eh";
 

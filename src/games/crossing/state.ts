@@ -36,6 +36,7 @@ import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { Point } from "../../engine/types.ts";
+import * as crossing from "./crossing.compiled.ts";
 
 // --- params ----------------------------------------------------------------
 
@@ -98,6 +99,7 @@ export const paramConfig: ParamConfigItem<CrossingParams>[] = [
     bounds: { min: 2 },
   }),
   searchTierItem(
+    crossing.tiers,
     "diff",
     "An Easy puzzle can be finished one step at a time: there is always a run whose remaining numbers agree on a digit, a square with one digit left, or a number that only one run can still take. An Unreasonable one has a single solution that none of these leads to, so somewhere you have to try a digit and see what follows. The Hint button stops where they do.",
   ),

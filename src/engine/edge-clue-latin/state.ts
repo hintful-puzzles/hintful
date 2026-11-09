@@ -20,7 +20,6 @@ import {
   descValue,
 } from "../desc-error.ts";
 import { readDesc } from "../desc-reader.ts";
-import { tierNames } from "../difficulty.ts";
 import type { GameDrawing } from "../game.ts";
 import type { Ladder } from "../ladder-runtime.ts";
 import type { LatinSolver } from "../latin.ts";
@@ -80,11 +79,9 @@ export const DIFF_SET = 2;
 export const DIFF_EXTREME = 3;
 export const DIFF_RECURSIVE = 4;
 
-// unequal_diffchars, indexed by level.
+// unequal_diffchars, indexed by level. The top tier is named Unreasonable, as
+// the tier that may require guessing, and its character stays upstream's `r`.
 const DIFF_CHARS = "tekxr";
-// The top tier is `Unreasonable`, not upstream's `Recursive`: it is the tier
-// that may require guessing. Its character stays `r`.
-export const DIFF_NAMES = tierNames(5, { search: true });
 const DIFFS: Difficulty[] = ["trivial", "easy", "tricky", "extreme", "recursive"];
 
 export function diffToLevel(d: Difficulty): number {

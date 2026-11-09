@@ -16,7 +16,6 @@
 import {
   DIFF_EASY,
   DIFF_UNREASONABLE,
-  SEARCH_TIER_NAMES,
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
@@ -32,6 +31,7 @@ import { modifierItem } from "../../engine/modifier.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
+import * as abcd from "./abcd.compiled.ts";
 
 // --- constants -------------------------------------------------------------
 
@@ -128,6 +128,7 @@ export const paramConfig: ParamConfigItem<AbcdParams>[] = [
     label: { slot: "tail", words: (p) => `${p.n} letters` },
   }),
   searchTierItem(
+    abcd.tiers,
     "diff",
     "An Easy puzzle can be finished by the rules alone: there is always a number that settles a letter or rules one out. An Unreasonable one has a single solution that the numbers do not lead to step by step, so somewhere you have to try a letter and see what follows, and the Hint button stops where the rules do.",
   ),
@@ -182,7 +183,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
  */
 function unreasonableRefusal(p: AbcdParams): string | null {
   if (p.removenums || p.w * p.h > 9) return null;
-  const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
+  const tier = abcd.tiers[DIFF_UNREASONABLE] as string;
   return noSuchTier(`${p.w}x${p.h} puzzle with every clue showing`, tier);
 }
 

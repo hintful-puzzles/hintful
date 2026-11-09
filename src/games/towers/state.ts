@@ -6,7 +6,7 @@ import { isDigit } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
-import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
 import { choice, paramsCodec, size } from "../../engine/params-codec.ts";
@@ -39,7 +39,7 @@ export const DIFF_EXTREME = 2;
 export const DIFF_UNREASONABLE = 3;
 
 const DIFF_CHARS = "ehxu"; // towers_diffchars, indexed by level
-const DIFF_NAMES = tierNames(4, { search: true });
+const DIFF_NAMES = towers.tiers;
 
 export function diffToLevel(d: Difficulty): number {
   return Math.max(DIFF_EASY, DIFFS.indexOf(d));

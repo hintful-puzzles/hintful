@@ -107,7 +107,7 @@ deal:
   clues: which slots show
   givens: how many
   tier: one of the tiers
-tiers: [Easy, Hard, Extreme, Unreasonable]
+tiers: [Easy, Normal, Tricky, Unreasonable]
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
   # Facing clues that sum to w + 1 see a line climbing to its tallest tower
@@ -159,13 +159,13 @@ techniques:
   # line from its candidates, every height once, that shows the clue's count
   # puts in the cell, is struck from it. One cell a firing.
   - id: arrangement
-    tier: Hard
+    tier: Normal
     rung: arrangement
     for: "k in clues(sees), s = at(k), v = v(k), L = sight(s), c in L"
     conclude: >-
       forall d in cand(c) where not (exists fill f of L from cand
       where distinct(f(x) over x in L) and f(c) = d: seen(f, L) = v):
       strike(c, d)
-  - { use: latin.set, tier: Hard, rung: set }
-  - { use: latin.fish, tier: Extreme, rung: set }
-  - { use: latin.wing, tier: Extreme, rung: wing }
+  - { use: latin.set, tier: Normal, rung: set }
+  - { use: latin.fish, tier: Tricky, rung: set }
+  - { use: latin.wing, tier: Tricky, rung: wing }

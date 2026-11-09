@@ -30,11 +30,12 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
+import * as spokes from "./spokes.compiled.ts";
 
 // --- spoke states -----------------------------------------------------------
 
@@ -93,7 +94,7 @@ const DIFFS: readonly SpokesDiff[] = ["easy", "tricky", "hard"];
 // The top tier is `Unreasonable` where upstream says `Hard`: its look-ahead has
 // no bound on the sub-solve, which is a search (see `solver.ts`). The key
 // `"hard"` and the character `h` are upstream's, so game IDs and saves agree.
-export const DIFF_NAMES: readonly string[] = tierNames(3, { search: true });
+export const DIFF_NAMES: readonly string[] = spokes.tiers;
 const DIFF_CHARS = "eth";
 
 export function diffToLevel(d: SpokesDiff): number {

@@ -21,7 +21,7 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
@@ -30,11 +30,12 @@ import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
+import * as slant from "./slant.compiled.ts";
 
-// --- difficulty (upstream's DIFFLIST: Easy, Hard; shown as tierNames(2)) ---
+// --- difficulty (upstream's DIFFLIST: Easy, Hard; named by the description) ---
 export const DIFF_EASY = 0;
 export const DIFF_HARD = 1;
-const DIFF_NAMES: readonly string[] = tierNames(2);
+const DIFF_NAMES: readonly string[] = slant.tiers;
 const DIFF_CHARS = "eh"; // ENCODE chars, indexed by difficulty
 
 // --- types ---------------------------------------------------------------

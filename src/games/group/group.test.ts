@@ -146,7 +146,7 @@ describe("the description's tiers", () => {
       ladderTiers[DIFF_HARD],
       ladderTiers[DIFF_EXTREME],
       ladderTiers[DIFF_UNREASONABLE],
-    ]).toEqual(["Trivial", "Normal", "Hard", "Extreme", "Unreasonable"]);
+    ]).toEqual(["Easy", "Normal", "Tricky", "Hard", "Unreasonable"]);
   });
 });
 

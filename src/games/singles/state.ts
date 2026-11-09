@@ -5,11 +5,12 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import * as singles from "./singles.compiled.ts";
 /**
  * Types and pure state helpers for Singles (Hitori), from the state/codec
  * parts of `singles.c`.
@@ -29,7 +30,7 @@ export const DIFF_TRICKY = 1;
 export const DIFF_ANY = 3;
 
 const DIFF_CHARS = "ek"; // singles_diffchars, indexed by level
-const DIFF_NAMES = tierNames(2);
+const DIFF_NAMES = singles.tiers;
 
 export function diffToLevel(d: Difficulty): number {
   return d === "tricky" ? DIFF_TRICKY : DIFF_EASY;

@@ -13,12 +13,13 @@
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import type { PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, endParams, paramsLetter } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
+import * as map from "./map.compiled.ts";
 import type { MapData } from "./map-data.ts";
 
 // --- difficulty ------------------------------------------------------
@@ -29,7 +30,7 @@ export const DIFF_HARD = 2;
 export const DIFF_RECURSE = 3;
 export const DIFFCOUNT = 4;
 
-export const DIFF_NAMES: readonly string[] = tierNames(DIFFCOUNT, { search: true });
+export const DIFF_NAMES: readonly string[] = map.tiers;
 /** Upstream `map_diffchars`. */
 const DIFF_CHARS = "enhu";
 

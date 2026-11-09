@@ -3,7 +3,6 @@
 import {
   DIFF_EASY,
   DIFF_UNREASONABLE,
-  SEARCH_TIER_NAMES,
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
@@ -26,6 +25,7 @@ import {
   offset,
   parseWireDesc,
 } from "../../engine/wires.ts";
+import * as net from "./net.compiled.ts";
 
 /* ----------------------------------------------------------------------
  * Bit vocabulary.
@@ -64,6 +64,7 @@ export function defaultParams(): NetParams {
 
 /** The Custom dialog's difficulty field, which the codec writes as well. */
 export const tierItem = searchTierItem<NetParams>(
+  net.tiers,
   "diff",
   "An Easy puzzle can be finished one forced square at a time: there is always a square with only one way left to turn, or a side every way left agrees about. An Unreasonable one has a single solution that those steps stop short of, so somewhere you have to try a square one way and see what follows. The Hint button stops where the forced squares do.",
 );
@@ -139,7 +140,7 @@ export function validateParams(p: NetParams, full: boolean): string | null {
  * up.
  */
 function unreasonableRefusal(p: NetParams): string | null {
-  const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
+  const tier = net.tiers[DIFF_UNREASONABLE] as string;
   const short = Math.min(p.w, p.h);
   const long = Math.max(p.w, p.h);
   const size = `${p.w}x${p.h}`;

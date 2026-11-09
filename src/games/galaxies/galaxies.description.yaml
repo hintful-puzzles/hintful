@@ -149,21 +149,21 @@ deal:
   answer: the grid divided at random into galaxies, the wiggliest of ten
   dot: one at the center of each galaxy
   tier: one of the tiers
-tiers: [Normal, Unreasonable]
+tiers: [Easy, Unreasonable]
 techniques:
   # The squares under a dot are its galaxy's.
   - id: dotTile
-    tier: Normal
+    tier: Easy
     for: "q in clues(dot) where exists c in cells(at(q)): arrow(c) != q"
     conclude: "forall c in cells(at(q)): mark(c, q)"
   # A line between two squares of one galaxy leaves the marks no answer.
   - id: split
-    tier: Normal
+    tier: Easy
     for: "e in edges where value(e) = 1, q = arrow(end1(e)) where q != none"
     conclude: "arrow(end2(e)) != q"
   # Two squares side by side in different galaxies have a line between them.
   - id: separate
-    tier: Normal
+    tier: Easy
     for: >-
       e in edges where not known(e), p = arrow(end1(e)) where p != none,
       q = arrow(end2(e)) where q != none and q != p
@@ -172,7 +172,7 @@ techniques:
   # in it, and so is the square opposite it about q. A square under a dot of
   # its own may be a galaxy alone, so it is passed over.
   - id: enclosed
-    tier: Normal
+    tier: Easy
     for: >-
       c in cells where arrow(c) = none,
       N = {n in adj4(c) where value(edge(c, n)) != 1} where |N| > 0,
@@ -182,7 +182,7 @@ techniques:
   # A square only one dot's galaxy could hold, by the dots and the finished
   # galaxies, is that dot's: the one dot a drag from it rings.
   - id: soleOwner
-    tier: Normal
+    tier: Easy
     for: >-
       O = {e in edges where value(e) != 1},
       c in cells where arrow(c) = none and not finished(c, O),
@@ -190,7 +190,7 @@ techniques:
     conclude: "|K| > 0 and (forall q in K: mark(c, q) and mark(opp(c, at(q)), q))"
   # A square only one dot's galaxy can still stretch to is that dot's.
   - id: onlyReach
-    tier: Normal
+    tier: Easy
     for: >-
       c in cells where arrow(c) = none,
       K = {q in near(c) where c in reach(q)} where |K| < 2
@@ -199,7 +199,7 @@ techniques:
   # it: where only one free square lies beside it across no line, that
   # square is q's. G is the piece, by its first square.
   - id: exclave
-    tier: Normal
+    tier: Easy
     for: >-
       c in cells, q = arrow(c) where q != none,
       G = through(c, {e in edges where value(e) != 1 and arrow(end1(e)) = q and arrow(end2(e)) = q})
@@ -210,7 +210,7 @@ techniques:
   # A galaxy is the same turned about its dot, so a line beside one of its
   # squares, or the grid's edge, stands beside the square opposite too.
   - id: mirrorWall
-    tier: Normal
+    tier: Easy
     for: >-
       e in edges where not known(e), a in {end1(e), end2(e)},
       q = arrow(a) where q != none, b = other(e, a),

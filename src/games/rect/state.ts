@@ -30,6 +30,7 @@ import {
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import type { Rect } from "../../engine/types.ts";
+import * as rect from "./rect.compiled.ts";
 
 /** The two puzzles, indexed by `mode`. */
 export const MODE_RECT = 0;
@@ -48,7 +49,7 @@ const RULESETS: readonly Ruleset[] = [
 
 /** Easy and Normal, the tiers of `rect.description.yaml`'s ladder, and the
  * search's above them. */
-export const TIERS = searchTiers(2);
+export const TIERS = searchTiers(rect.tiers);
 /** A board the hint finishes once it may leave out a placement for what that
  * does to another clue, or draw a line. */
 export const DIFF_NORMAL = 1;

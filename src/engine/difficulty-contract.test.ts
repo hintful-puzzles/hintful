@@ -59,6 +59,13 @@ const registered = registeredGameIds()
   .sort()
   .map((id) => ({ id, game: getTsGame(id) as AnyGame }));
 
+/** Each game's compiled module, by its path; a planning game's has no
+ * `tiers`. */
+const compiledModules = import.meta.glob<{ tiers?: readonly string[] }>(
+  "../games/*/*.compiled.ts",
+  { eager: true },
+);
+
 const tiered: TieredGame[] = [];
 const missingContract: string[] = [];
 const contractWithoutChoice: string[] = [];
@@ -121,6 +128,27 @@ describe("the tiered-game set is derived from the registry", () => {
     expect(missingContract).toEqual([]);
   });
 
+  it("names a described game's tiers as its description does", () => {
+    // The description's `tiers` are what its techniques, a soundness listing
+    // and the grading name, and the menu is what the player reads: one list,
+    // read by the menu from the compiled module. This holds a game that
+    // passes its menu a list of its own, which nothing else would notice.
+    let looked = 0;
+    for (const [path, { tiers }] of Object.entries(compiledModules)) {
+      if (tiers === undefined) continue; // a planning game grades nothing
+      const id = path.split("/").at(-2) ?? "";
+      const game = getTsGame(id);
+      expect(game, `${path}: no game registered as ${id}`).not.toBeNull();
+      const menu = game === null ? null : difficultyTiers(game);
+      // One tier is nothing to choose, so it has no menu.
+      expect(menu, `${id}: menu against ${path}`).toEqual(
+        tiers.length > 1 ? tiers : null,
+      );
+      looked++;
+    }
+    expect(looked).toBeGreaterThan(30);
+  });
+
   it("every game declaring the contract offers a difficulty choice", () => {
     // The other direction, and it is **load-bearing**: the form is the tier
     // list's only definition, so a contract on a game with no difficulty choice
@@ -168,7 +196,7 @@ for (const { id, game, contract, tiers } of tiered) {
       expect(
         tiers,
         `${id}: tier names are not the conventional ${tiers.length}-tier list. ` +
-          "Use tierNames(n) — or declare an override in the change that needs one.",
+          "Name them so in the description's `tiers` (a game without one: tierNames(n)).",
       ).toEqual(tierNames(tiers.length, { search }));
     });
 
@@ -417,11 +445,9 @@ describe("a game with the search's tiers deals its Unreasonable boards through t
     answerSearch.isSearchTierContract(contract),
   );
 
-  it("found the games with the search's tiers, named as it names them", () => {
+  it("found the games with the search's tiers", () => {
     // A floor and not a count: it fails only where the filter matches nothing.
     expect(searchTiered.length).toBeGreaterThan(5);
-    for (const { id, tiers } of searchTiered)
-      expect(tiers, id).toEqual(answerSearch.searchTiers(tiers.length - 1).names);
     // One of them has a second deduction, or the count is not exercised.
     expect(searchTiered.some(({ tiers }) => tiers.length > 2)).toBe(true);
   });

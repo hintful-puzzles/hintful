@@ -88,16 +88,16 @@ deal:
   clues: which true inequalities show, fewer at higher tiers
   givens: how many
   tier: one of the tiers
-tiers: [Trivial, Easy, Tricky, Extreme, Recursive]
+tiers: [Easy, Normal, Tricky, Hard, Unreasonable]
 techniques:
-  - { use: latin.placed, tier: Trivial, rung: dup }
-  - { use: latin.hiddenSingle, tier: Trivial, rung: hiddenSingle }
-  - { use: latin.single, tier: Trivial, rung: single }
+  - { use: latin.placed, tier: Easy, rung: dup }
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }
   # One sign, both its ends, value by value: the larger end is larger than the
   # smaller end's least candidate, and the smaller end smaller than the larger
   # end's greatest.
   - id: sign
-    tier: Easy
+    tier: Normal
     rung: [greater, lesser]
     for: "k in clues(greater), big = v(k), small = lesser(k)"
     conclude: >-
@@ -105,5 +105,5 @@ techniques:
       ((forall d2 in cand(small): d <= d2) implies strike(big, d))
       and ((forall d2 in cand(big): d >= d2) implies strike(small, d))
   - { use: latin.set, tier: Tricky, rung: set }
-  - { use: latin.fish, tier: Extreme, rung: set }
-  - { use: latin.wing, tier: Extreme, rung: wing }
+  - { use: latin.fish, tier: Hard, rung: set }
+  - { use: latin.wing, tier: Hard, rung: wing }

@@ -7,7 +7,6 @@
 import { noSuchTier } from "../../engine/difficulty.ts";
 import {
   type ClueKind,
-  DIFF_NAMES,
   DIFF_RECURSIVE,
   DIFF_SET,
   type Difficulty,
@@ -22,6 +21,7 @@ import {
 import type { PresetBoards } from "../../engine/game.ts";
 import { drawSigns } from "./render.ts";
 import { signAnswer, signLadder } from "./solver.ts";
+import * as unequal from "./unequal.compiled.ts";
 
 /** A sign: the cell it is flagged at holds the greater number. */
 export const SIGNS: ClueKind = {
@@ -77,6 +77,6 @@ export function validateParams(p: EdgeClueParams, full: boolean): string | null 
   // tier below solved every one. A 3x3 at Hard needs a wing, and of 400,000
   // built at Unreasonable the wing solved every one (2026-10-28).
   if (full && p.order === 3 && (level === DIFF_SET || level === DIFF_RECURSIVE))
-    return noSuchTier("3x3 puzzle", DIFF_NAMES[level]);
+    return noSuchTier("3x3 puzzle", unequal.tiers[level]);
   return null;
 }

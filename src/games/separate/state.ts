@@ -12,7 +12,6 @@
 import {
   DIFF_EASY,
   DIFF_UNREASONABLE,
-  SEARCH_TIER_NAMES,
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
@@ -40,6 +39,7 @@ import {
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
+import * as separate from "./separate.compiled.ts";
 import { isSolved } from "./solver.ts";
 
 // --- types ----------------------------------------------------------------
@@ -120,6 +120,7 @@ export const paramConfig: ParamConfigItem<SeparateParams>[] = [
     label: { slot: "tail", words: (p) => `${p.k} letters` },
   }),
   searchTierItem(
+    separate.tiers,
     "diff",
     "An Easy puzzle can be finished one forced edge at a time: there are always two neighbors that share a letter, or a region with only one square left to take. An Unreasonable one has a single solution that those steps stop short of, so somewhere you have to try joining two squares and see what follows. The Hint button stops where the forced edges do.",
   ),
@@ -162,7 +163,7 @@ export function validateParams(p: SeparateParams, full: boolean): string | null 
   if (w === 1 || h === 1 || k === 2 || tooSmall)
     return noSuchTier(
       `${w}x${h} puzzle with ${k} letters`,
-      SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string,
+      separate.tiers[DIFF_UNREASONABLE] as string,
     );
   return null;
 }

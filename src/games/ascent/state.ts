@@ -6,7 +6,7 @@
  */
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import * as ascent from "./ascent.compiled.ts";
 
 // --- number sentinels (upstream `NUMBER_*`) ------------------------
 
@@ -64,7 +64,7 @@ export const DIFF_NORMAL = 1;
 export const DIFF_TRICKY = 2;
 export const DIFF_HARD = 3;
 export const DIFFCOUNT = 4;
-export const ASCENT_DIFFNAMES = tierNames(DIFFCOUNT);
+export const ASCENT_DIFFNAMES = ascent.tiers;
 export const ASCENT_DIFFCHARS = "enth";
 
 export const MODE_ORTHOGONAL = 0;

@@ -67,7 +67,7 @@ freedom: { kind: fill }
 deal:
   dot: which squares carry a dot, and their colors
   tier: one of the tiers
-tiers: [Easy, Normal]
+tiers: [Easy, Normal, Unreasonable]
 techniques:
   # A tile that can no longer have its own color beside it as its rule says
   # makes the marks inconsistent: one with no room left for it, one without a

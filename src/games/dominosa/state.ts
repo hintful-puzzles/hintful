@@ -26,7 +26,7 @@ import {
   describedSpace,
   type GridSpace,
 } from "../../engine/describe-runtime.ts";
-import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import type { PresetBoards } from "../../engine/game.ts";
 import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -67,7 +67,7 @@ export const DIFFCOUNT = 4;
  *
  * Only the names differ from upstream; the encoding chars are upstream's.
  */
-export const DIFF_NAMES = tierNames(4, { search: true });
+export const DIFF_NAMES = dominosa.tiers;
 /** Encoding chars in enum order (upstream `dominosa_diffchars`, less its `a`). */
 const DIFF_CHARS = "tbhe";
 

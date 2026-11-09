@@ -19,11 +19,11 @@
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { tierNames } from "../../engine/difficulty.ts";
 import type { PresetBoards } from "../../engine/game.ts";
 import { endParams, paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { newCursor, newDrag } from "../../engine/pointer.ts";
+import * as boats from "./boats.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
 
@@ -33,7 +33,7 @@ export const DIFF_TRICKY = 2;
 export const DIFF_HARD = 3;
 export const DIFFCOUNT = 4;
 
-export const DIFF_NAMES: readonly string[] = tierNames(4);
+export const DIFF_NAMES: readonly string[] = boats.tiers;
 /** The difficulty letters `encodeParams` writes and `decodeParams` reads. */
 const DIFF_CHARS = "enth";
 

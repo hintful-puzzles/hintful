@@ -12,7 +12,6 @@ import {
   DIFF_UNREASONABLE,
   dealUnreasonable,
   isSearchTierContract,
-  SEARCH_TIER_NAMES,
   searchAnswers,
   searchTierContract,
   searchTierItem,
@@ -21,6 +20,7 @@ import {
   solvedPositions,
   solveFromAnswer,
 } from "./answer-search.ts";
+import { difficultyTiers } from "./difficulty.ts";
 import { PUZZLE_NOT_REASONABLE } from "./hint-refusal.ts";
 import { paramsCodec } from "./params-codec.ts";
 import { RetryLimitExceeded, underDealTries } from "./retry-limit.ts";
@@ -279,15 +279,19 @@ describe("the two tiers", () => {
   interface P {
     diff: number;
   }
-  const config = [searchTierItem<P>("diff", "What each asks.")];
+  const names = ["Easy", "Unreasonable"];
+  const config = [searchTierItem<P>(names, "diff", "What each asks.")];
   const codec = paramsCodec<P>(
     () => ({ diff: DIFF_EASY }),
     [searchTierSegment(config)],
   );
 
-  it("are Easy and Unreasonable, in that order", () => {
-    expect(SEARCH_TIER_NAMES).toEqual(["Easy", "Unreasonable"]);
-    expect(SEARCH_TIER_NAMES[DIFF_UNREASONABLE]).toBe("Unreasonable");
+  it("are the description's two, Unreasonable last", () => {
+    expect(difficultyTiers({ paramConfig: config })).toEqual(names);
+    expect(names[DIFF_UNREASONABLE]).toBe("Unreasonable");
+    expect(() =>
+      searchTierItem<P>(["Easy", "Normal", "Unreasonable"], "diff", ""),
+    ).toThrow();
   });
 
   it("are written in the full params only, and absent reads as Easy", () => {
@@ -323,7 +327,7 @@ describe("a game with a second deduction", () => {
   interface P {
     diff: number;
   }
-  const tiers = searchTiers(2);
+  const tiers = searchTiers(["Easy", "Normal", "Unreasonable"]);
   const config = [tiers.item<P>("diff", "What each asks.")];
   const codec = paramsCodec<P>(
     () => ({ diff: DIFF_EASY }),
@@ -331,9 +335,12 @@ describe("a game with a second deduction", () => {
   );
 
   it("has Normal between Easy and Unreasonable", () => {
-    expect(tiers.names).toEqual(["Easy", "Normal", "Unreasonable"]);
     expect(tiers.unreasonable).toBe(2);
-    expect(searchTiers(1).names).toEqual(SEARCH_TIER_NAMES);
+  });
+
+  it("refuses names that do not end in Unreasonable", () => {
+    expect(() => searchTiers(["Easy", "Normal"])).toThrow(/Unreasonable/);
+    expect(() => searchTiers(["Unreasonable"])).toThrow(/Unreasonable/);
   });
 
   it("writes each tier by its first letter, and Unreasonable as it was", () => {

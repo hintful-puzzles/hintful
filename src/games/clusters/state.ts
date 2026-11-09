@@ -17,6 +17,7 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import * as clusters from "./clusters.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------
 
@@ -29,7 +30,7 @@ export const DIFF_TRICKY = 1;
  * proves has one answer. Unreasonable came with Normal's count (2026-10-28),
  * so that a board dealt before it, which may need the supposition Normal had
  * until then, still opens. */
-export const TIERS = searchTiers(2);
+export const TIERS = searchTiers(clusters.tiers);
 
 /** Has one answer the ladder does not reach. */
 export const DIFF_UNREASONABLE = TIERS.unreasonable;

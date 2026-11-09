@@ -6,7 +6,7 @@
  * vocabulary. `solver.ts`'s remaining import from `state.ts` is types only,
  * which `verbatimModuleSyntax` erases.
  */
-import { tierNames } from "../../engine/difficulty.ts";
+import * as unruly from "./unruly.compiled.ts";
 
 // --- cell values (upstream `enum { EMPTY, N_ONE, N_ZERO, BOGUS }`) -------
 // BOGUS was upstream's solver-internal temporary fill, which the described
@@ -22,11 +22,10 @@ export const pairIndex = (filled: number): 0 | 1 => (filled === ONE ? 0 : 1);
 
 // --- difficulty (upstream DIFFLIST: Trivial, Easy, Normal) ---------------
 // The `DIFF_*` identifiers are upstream's rung labels, which the solver and the
-// differential are written in. The menu shows the collection's tier names by
+// differential are written in. The menu shows the description's tier names by
 // position, so `DIFF_TRIVIAL` reads as "Easy".
 export const DIFF_TRIVIAL = 0;
 export const DIFF_EASY = 1;
 export const DIFF_NORMAL = 2;
-const DIFF_COUNT = 3;
-export const DIFF_NAMES: readonly string[] = tierNames(DIFF_COUNT);
+export const DIFF_NAMES: readonly string[] = unruly.tiers;
 export const DIFF_CHARS = "ten"; // ENCODE chars, indexed by difficulty

@@ -9,7 +9,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import { DESC_MALFORMED, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem } from "../../engine/difficulty.ts";
 import { regionNumbers } from "../../engine/divide.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
@@ -18,6 +18,7 @@ import { choice, num, paramsCodec, size } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import { encodeRegionWalls, readRegionWalls } from "../../engine/wall-runs.ts";
+import * as starbattle from "./starbattle.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------
 
@@ -30,7 +31,7 @@ export const DIFF_NORMAL = 1;
  * region and leave another without room. */
 export const DIFF_TRICKY = 2;
 
-const DIFF_NAMES: readonly string[] = tierNames(3);
+const DIFF_NAMES: readonly string[] = starbattle.tiers;
 
 /** The `d<char>` params suffix, by tier. */
 const DIFF_CHARS = "ent";

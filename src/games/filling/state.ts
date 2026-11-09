@@ -11,7 +11,6 @@
 import {
   DIFF_EASY,
   DIFF_UNREASONABLE,
-  SEARCH_TIER_NAMES,
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
@@ -98,6 +97,7 @@ export const paramConfig: ParamConfigItem<FillingParams>[] = [
     bounds: { min: 1 },
   }),
   searchTierItem(
+    filling.tiers,
     "diff",
     "An Easy puzzle can be finished one forced square at a time: some region can only grow one way, or some square has one number left. An Unreasonable one has a single solution that those steps stop short of, so somewhere you have to try a number in a square and see what follows. The Hint button stops where the forced squares do.",
   ),
@@ -140,7 +140,7 @@ export function validateParams(p: FillingParams, full: boolean): string | null {
     Math.min(p.w, p.h) === 1 &&
     noUnreasonableStrip(Math.max(p.w, p.h))
   )
-    return noSuchTier(`${p.w}x${p.h} puzzle`, SEARCH_TIER_NAMES[DIFF_UNREASONABLE]);
+    return noSuchTier(`${p.w}x${p.h} puzzle`, filling.tiers[DIFF_UNREASONABLE]);
   return null;
 }
 

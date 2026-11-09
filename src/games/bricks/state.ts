@@ -19,11 +19,12 @@
 
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import * as bricks from "./bricks.compiled.ts";
 
 // --- cell bit-field (upstream values) ---------------------------------------
 
@@ -188,7 +189,7 @@ const BOARDS: BricksParams[] = [
  *   game carrying `dt` still loads, and generation refuses it: it is the
  *   difficulty item's retired choice.
  */
-const DIFF_NAMES = tierNames(2, { search: true });
+const DIFF_NAMES = bricks.tiers;
 
 export function defaultParams(): BricksParams {
   return { ...BOARDS[0] };

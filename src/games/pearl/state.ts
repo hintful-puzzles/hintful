@@ -13,13 +13,14 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import type { LineDrawingUi } from "../../engine/line-drawing.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec, unusedLetter } from "../../engine/params-codec.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import { D, L, R, U } from "../../engine/square-edges.ts";
+import * as pearl from "./pearl.compiled.ts";
 
 // --- clue kinds (upstream NOCLUE / CORNER=black / STRAIGHT=white) ----------
 export const NOCLUE = 0;
@@ -45,7 +46,7 @@ export const ERROR_CLUE = 16;
 export const DIFF_EASY = 0;
 export const DIFF_TRICKY = 1;
 export const DIFF_COUNT = 2;
-export const DIFF_NAMES: readonly string[] = tierNames(DIFF_COUNT);
+export const DIFF_NAMES: readonly string[] = pearl.tiers;
 /** Encoding chars for the `d<char>` param suffix (upstream `pearl_diffchars`). */
 const DIFF_CHARS = "et";
 
