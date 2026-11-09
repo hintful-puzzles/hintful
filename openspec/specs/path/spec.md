@@ -200,7 +200,7 @@ The ladder SHALL be the description's compiled ladder, each technique checked so
 
 ### Requirement: Controls: A drag draws a line through the squares it passes
 
-A press and drag with the left button SHALL draw a line along each edge between the squares it passes, a rook move at a time, keeping the lines already there, as the engine's line drag does, and taking back the steps it retraces over its end. A drag that passes only edges holding lines SHALL take them up. It SHALL stop where an edge is crossed or where its line would give a square more lines than it takes. A left click near an edge SHALL draw or remove its line.
+A press and drag with the left button SHALL draw a line along each edge between the squares it passes, a rook move at a time, keeping the lines already there, as the engine's line drag does, and taking back the steps it retraces over its end. A drag from a line's loose end that passes only edges holding lines SHALL take them up. It SHALL stop where an edge is crossed or where its line would give a square more lines than it takes. A left click near an edge SHALL draw or remove its line.
 
 #### Scenario: A drag draws a line
 
@@ -239,9 +239,9 @@ No click, key or drag SHALL change a wall's edge, and a drag SHALL stop at a wal
 - **WHEN** a wall's edge is clicked with either button
 - **THEN** no move is made
 
-### Requirement: Controls: A stroke from a number draws its line ahead again
+### Requirement: Controls: A stroke from a number or along a line draws the line ahead again
 
-A drag that begins on a number SHALL replace the line that runs on from it, to that line's end, once it leaves that line: on release, each of those lines the drag does not lay again SHALL be taken up. A drag that only retraces it SHALL change nothing. Under Path, a side whose first number is lower SHALL stay, and a side reaching no number SHALL be replaced only where it must run on. Under Pairs the whole line is replaced.
+A drag that begins on a number, or on a square in the middle of a line, SHALL replace the line ahead of it, to that line's end, once it lays a line: on release, each of those lines it does not lay again SHALL be taken up. Until then it SHALL change nothing. Under Path, ahead SHALL be the side the numbers rise along; under Pairs, a number's whole line, or the side away from the one number the line meets. Where that does not decide, ahead SHALL be the side the drag sets off along.
 
 #### Scenario: A stroke from the 2 keeps the line from the 1
 
@@ -257,6 +257,11 @@ A drag that begins on a number SHALL replace the line that runs on from it, to t
 
 - **WHEN** on `4x3zde:1f2_3b4` a line is drawn from the 3 up toward the 2, reaching no number, and a drag from the 3 runs right to the 4
 - **THEN** the line from the 3 up stays, and the drag's lines are drawn
+
+#### Scenario: A stroke from between the 2 and the 3 redraws on through the 3
+
+- **WHEN** on `4x3zde:1f2_3b4` the whole answer is drawn, and a drag from the middle row's second square runs down one square
+- **THEN** the line from there on through the 3 to the 4 is taken up, the line back to the 2 stays, and the edge down is drawn
 
 ### Requirement: Hint: A step rings the edges it decides and outlines what it reads
 
@@ -289,3 +294,17 @@ Under Path, a stretch of line SHALL take the color of the number it leaves, the 
 
 - **WHEN** on `4x3zde:1f2_3b4` the whole answer is drawn
 - **THEN** the lines are drawn in three colors, one for each stretch between two numbers
+
+### Requirement: Look: The win travels the lines in the numbers' order
+
+The win flash SHALL travel the board's lines: under Path, the one line from the 1 to the highest number; under Pairs, each pair's line in turn from the 1s up, starting from the pair's first square in reading order.
+
+#### Scenario: Path's win runs from the 1
+
+- **WHEN** on `4x3zde:1f2_3b4` the whole answer is drawn and the win flash runs
+- **THEN** it reaches the squares in the line's order: along the top row, down to the 2, back along the middle row, down to the 3 and on to the 4
+
+#### Scenario: Pairs' win runs the 1s' line, then the 2s'
+
+- **WHEN** on `4x3de:1_2_1c2e` the whole answer is drawn and the win flash runs
+- **THEN** it runs from the top-left 1 round to the other 1, and then from the top 2 to the other 2

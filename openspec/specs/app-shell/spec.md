@@ -420,13 +420,14 @@ list. Where code can vouch for a family, a test SHALL hold the tag to the code.
 ### Requirement: From a puzzle, the quick-switch opens on the rest of that puzzle's family
 
 When the quick-switch is opened from a puzzle and nothing has been typed, it
-SHALL list the other puzzles of the current puzzle's family first, under a
-heading naming the family, followed by every puzzle. Once anything is typed,
-the search SHALL answer instead, and the grouping SHALL be dropped.
+SHALL list the other puzzles of the current puzzle's family, under a heading
+naming the family, after any recently played puzzles and followed by every
+other puzzle. Once anything is typed, the search SHALL answer instead, and the
+grouping SHALL be dropped.
 
 #### Scenario: Opening the switcher on a Latin square
-- **WHEN** a player opens the quick-switch while playing Solo, with nothing
-  typed
+- **WHEN** a player who has played nothing else opens the quick-switch while
+  playing Solo, with nothing typed
 - **THEN** the list begins with the other Latin squares under "More Latin
   squares", followed by every puzzle under "All puzzles", each puzzle listed
   once
@@ -1519,3 +1520,15 @@ to the help, SHALL leave one Back to close the second.
 
 - **WHEN** a player closes the first-open card with Play and presses Back
 - **THEN** the page before the game is shown, with no Back press spent first
+
+### Requirement: From a puzzle, the quick-switch opens on the games played last
+
+A puzzle SHALL count as played on a visit once its board holds a move, and the app SHALL remember when, never showing or counting it. When the quick-switch is opened from a puzzle and nothing has been typed, it SHALL begin with the three other puzzles played most recently, the latest first, under "Recently played". A puzzle listed there SHALL NOT be listed again.
+
+#### Scenario: The games played last head the list
+- **WHEN** a player who played Net, Mines, Keen and Pearl, in that order, opens the quick-switch while playing Solo
+- **THEN** the list begins with Pearl, Keen and Mines under "Recently played", then the other Latin squares without Keen, then every other puzzle
+
+#### Scenario: A game only looked at is not played
+- **WHEN** a player opens a puzzle and leaves it without a move
+- **THEN** it is not counted as played on that visit
