@@ -59,8 +59,9 @@
   - [x] `BUDGET.game` set from the first reading: 15 s failed six games
         (Sixteen 27 s, Bridges 26, Loopy 26, Sticks 22, Path 21, Solo 19;
         Gate run 42709305769), so it is 25 s, which holds a game where it is.
-- [ ] 4. One CI gate run on `main` under 30 minutes (owner, 2026-11-09,
-      replacing three consecutive runs under 40)
+- [x] 4. One CI gate run on `main` under 30 minutes (owner, 2026-11-09,
+      replacing three consecutive runs under 40). The owner accepted 30.5
+      the same day.
   - Readings so far: 36.3 (`37111ea7`), 40.1 (`6ffaca12`), 35.1
     (`1bc53fd2`), 41.2 (`8ead2f57`, documentation only, so the same tree as
     35.1), 30.5 (`3f5baf09`, the deep tier; the games' own files 8.2 of it).
