@@ -634,6 +634,16 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
     anchor: "checking",
     why: "the mistake overlay, and the save it gates",
   },
+  clearMistakes: {
+    kind: "features",
+    anchor: "hint-refusals",
+    why: "applying the hint on a wrong board takes the mistakes off",
+  },
+  revealOne: {
+    kind: "features",
+    anchor: "hint-refusals",
+    why: "applying the hint where deduction runs out fills in one piece of the answer",
+  },
   difficulty: {
     kind: "features",
     anchor: "difficulty",

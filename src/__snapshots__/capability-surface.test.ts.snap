@@ -17,6 +17,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -30,6 +31,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "refreshHintStep",
       "requestKeys",
+      "revealOne",
       "solve",
       "textFormat",
       "transposeParams",
@@ -65,6 +67,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "clearMistakes",
       "difficulty",
       "doneClues",
       "findMistakes",
@@ -80,6 +83,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "refreshHintStep",
       "requestKeys",
+      "revealOne",
       "solve",
       "textFormat",
       "validateParams",
@@ -123,6 +127,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "ascent",
     "members": [
       "changedState",
+      "clearMistakes",
       "decodeUi",
       "difficulty",
       "encodeUi",
@@ -180,6 +185,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "clearMistakes",
       "findMistakes",
       "finishesByDeduction",
       "hint",
@@ -189,6 +195,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hintRungs",
       "paramConfig",
       "preferredTileSize",
+      "revealOne",
       "solve",
       "statusbarText",
       "targetVerbs",
@@ -218,6 +225,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "boats",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -249,6 +257,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "bricks",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -259,6 +268,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "notApplicable",
       "paramConfig",
       "preferredTileSize",
+      "revealOne",
       "solve",
       "targetVerbs",
       "textFormat",
@@ -282,6 +292,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "bridges",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -319,6 +330,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "clusters",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -328,6 +340,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hintRungs",
       "paramConfig",
       "preferredTileSize",
+      "revealOne",
       "solve",
       "targetVerbs",
       "textFormat",
@@ -354,6 +367,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -366,6 +380,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "refreshHintStep",
       "requestKeys",
+      "revealOne",
       "solve",
       "textFormat",
       "transposeParams",
@@ -426,6 +441,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "dominosa",
     "members": [
       "changedState",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -436,6 +452,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "paramConfig",
       "preferredTileSize",
       "reference",
+      "revealOne",
       "selectReference",
       "solve",
       "targetVerbs",
@@ -494,6 +511,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "filling",
     "members": [
       "changedState",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -505,6 +523,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "paramConfig",
       "preferredTileSize",
       "requestKeys",
+      "revealOne",
       "solve",
       "textFormat",
       "transposeParams",
@@ -596,6 +615,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "galaxies",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -607,6 +627,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "preferredTileSize",
       "prefs",
       "refreshHintStep",
+      "revealOne",
       "solve",
       "statusbarText",
       "targetVerbs",
@@ -651,6 +672,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -665,6 +687,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "refreshHintStep",
       "requestKeys",
+      "revealOne",
       "solve",
       "textFormat",
       "validateParams",
@@ -716,6 +739,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "guess",
     "members": [
       "changedState",
+      "clearMistakes",
       "decodeUi",
       "encodeUi",
       "findMistakes",
@@ -802,6 +826,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -816,6 +841,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "refreshHintStep",
       "requestKeys",
+      "revealOne",
       "solve",
       "validateParams",
     ],
@@ -840,6 +866,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -851,6 +878,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "preferredTileSize",
       "prefs",
       "refreshHintStep",
+      "revealOne",
       "rulesOut",
       "solve",
       "targetVerbs",
@@ -871,6 +899,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "loopy",
     "members": [
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -914,6 +943,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "magnets",
     "members": [
       "changedState",
+      "clearMistakes",
       "difficulty",
       "doneClues",
       "findMistakes",
@@ -951,6 +981,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "map",
     "members": [
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -964,6 +995,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "refreshHintStep",
       "requestKeys",
+      "revealOne",
       "solve",
       "transposeParams",
       "validateParams",
@@ -998,6 +1030,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "mathrax",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1012,6 +1045,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "refreshHintStep",
       "requestKeys",
+      "revealOne",
       "solve",
       "validateParams",
     ],
@@ -1037,6 +1071,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "mines",
     "members": [
+      "clearMistakes",
       "decodeUi",
       "encodeUi",
       "findMistakes",
@@ -1077,6 +1112,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "mosaic",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1086,6 +1122,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hintRungs",
       "paramConfig",
       "preferredTileSize",
+      "revealOne",
       "solve",
       "statusbarText",
       "targetVerbs",
@@ -1112,6 +1149,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "net",
     "members": [
       "animLength",
+      "clearMistakes",
       "decodeUi",
       "difficulty",
       "encodeUi",
@@ -1125,6 +1163,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "preferredTileSize",
       "prefs",
       "requestKeys",
+      "revealOne",
       "solve",
       "statusbarText",
       "targetVerbs",
@@ -1223,6 +1262,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "palisade",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1232,6 +1272,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hintRungs",
       "paramConfig",
       "preferredTileSize",
+      "revealOne",
       "solve",
       "statusbarText",
       "targetVerbs",
@@ -1253,6 +1294,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "path",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1262,6 +1304,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hintRungs",
       "paramConfig",
       "preferredTileSize",
+      "revealOne",
       "solve",
       "textFormat",
       "transposeParams",
@@ -1283,6 +1326,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "pattern",
     "members": [
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1292,6 +1336,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hintRungs",
       "paramConfig",
       "preferredTileSize",
+      "revealOne",
       "solve",
       "targetVerbs",
       "textFormat",
@@ -1317,6 +1362,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "pearl",
     "members": [
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1389,6 +1435,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "range",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1398,6 +1445,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hintRungs",
       "paramConfig",
       "preferredTileSize",
+      "revealOne",
       "solve",
       "targetVerbs",
       "textFormat",
@@ -1421,6 +1469,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "rect",
     "members": [
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1431,6 +1480,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "paramConfig",
       "preferredTileSize",
       "refreshHintStep",
+      "revealOne",
       "solve",
       "statusbarText",
       "textFormat",
@@ -1463,6 +1513,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "rome",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1476,6 +1527,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "refreshHintStep",
       "requestKeys",
+      "revealOne",
       "solve",
       "transposeParams",
     ],
@@ -1513,6 +1565,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "salad",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1527,6 +1580,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "refreshHintStep",
       "requestKeys",
+      "revealOne",
       "solve",
       "statusbarText",
       "textFormat",
@@ -1590,6 +1644,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "seismic",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1603,6 +1658,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "refreshHintStep",
       "requestKeys",
+      "revealOne",
       "solve",
       "textFormat",
       "transposeParams",
@@ -1628,6 +1684,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "separate",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1637,6 +1694,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hintRungs",
       "paramConfig",
       "preferredTileSize",
+      "revealOne",
       "solve",
       "statusbarText",
       "targetVerbs",
@@ -1667,6 +1725,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1676,6 +1735,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hintRungs",
       "paramConfig",
       "preferredTileSize",
+      "revealOne",
       "solve",
       "textFormat",
       "transposeParams",
@@ -1703,6 +1763,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1775,6 +1836,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "slant",
     "members": [
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1881,6 +1943,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "solo",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1895,6 +1958,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "refreshHintStep",
       "requestKeys",
+      "revealOne",
       "solve",
       "validateParams",
     ],
@@ -1929,6 +1993,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "spokes",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1939,6 +2004,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "paramConfig",
       "preferredTileSize",
       "prefs",
+      "revealOne",
       "solve",
       "targetVerbs",
       "textFormat",
@@ -1966,6 +2032,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "starbattle",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -1996,6 +2063,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "sticks",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -2005,6 +2073,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hintRungs",
       "paramConfig",
       "preferredTileSize",
+      "revealOne",
       "solve",
       "targetVerbs",
       "textFormat",
@@ -2037,6 +2106,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "subsets",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -2071,6 +2141,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "tents",
     "members": [
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -2111,6 +2182,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "clearMistakes",
       "difficulty",
       "doneClues",
       "findMistakes",
@@ -2126,6 +2198,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "refreshHintStep",
       "requestKeys",
+      "revealOne",
       "solve",
       "textFormat",
       "validateParams",
@@ -2155,6 +2228,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "tracks",
     "members": [
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
@@ -2246,6 +2320,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "clearMistakes",
       "difficulty",
       "doneClues",
       "findMistakes",
@@ -2260,6 +2335,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "refreshHintStep",
       "requestKeys",
+      "revealOne",
       "solve",
       "textFormat",
       "transposeParams",
@@ -2296,6 +2372,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "clearMistakes",
       "difficulty",
       "doneClues",
       "findMistakes",
@@ -2311,6 +2388,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "refreshHintStep",
       "requestKeys",
+      "revealOne",
       "solve",
       "textFormat",
       "validateParams",
@@ -2334,6 +2412,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "unruly",
     "members": [
       "animLength",
+      "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
