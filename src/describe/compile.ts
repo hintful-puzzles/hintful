@@ -12,6 +12,7 @@
  * is refused here, so a description that compiles is well-sorted.
  */
 
+import { MADE } from "../engine/marks-made.ts";
 import {
   cellMarkOf,
   type Definition,
@@ -126,6 +127,8 @@ interface Line {
 interface Block {
   id: number;
   loop: boolean;
+  /** The statement that opened it. */
+  line: Line;
 }
 
 /**
@@ -212,7 +215,11 @@ class Out {
   open(line: string): void {
     this.emit(line);
     this.depth++;
-    this.blocks.push({ id: ++Out.blockIds, loop: /^(for|while|do)\b/.test(line) });
+    this.blocks.push({
+      id: ++Out.blockIds,
+      loop: /^(for|while|do)\b/.test(line),
+      line: this.entries.at(-1) as Line,
+    });
   }
   close(line = "}"): void {
     this.depth--;
@@ -374,6 +381,9 @@ interface Env {
    * after the groups of the sets bound before it are made; and those groups,
    * by the code of the set, as `through` joins them. */
   visitAt?: { slot: Slot | null; groups: Map<string, string> };
+  /** Where a technique's bindings take a count of the facts made and check
+   * it before they fire (`rechecked`); absent elsewhere. */
+  recheck?: Recheck;
   defs: ReadonlyMap<string, Definition>;
   clues: ReadonlyMap<string, ClueKind>;
   /** The partitions the board deals, by name. */
@@ -1504,6 +1514,11 @@ function bindingLoops(
     let where = bnd.where;
     if (bnd === env.visitBinder && env.visitAt !== undefined)
       env.visitAt.slot = out.slot(env.hoist?.loops ?? 0);
+    // A count may be taken ahead of the binder's set, and again once its
+    // name is bound, ahead of its filter.
+    const recheck = env.recheck?.binders === binders ? env.recheck : null;
+    if (recheck !== null)
+      recheck.chain.push({ slot: out.slot(0), loops: recheck.loops.length });
     if (bnd.kind === "fill") {
       if (env.wide) throw new CompileError(`${bnd.name}: ${NOT_WIDE}`);
       const f = fillLoop(bnd, sc, env, out);
@@ -1758,6 +1773,7 @@ function bindingLoops(
     const h = env.hoist;
     if (h !== null && loop) h.loops++;
     const inner = new Map(sc);
+    binderOpened(recheck, out, loop);
     const bound: Val = {
       code: v,
       sort,
@@ -1789,6 +1805,7 @@ function bindingLoops(
       }
     }
     walk(i + 1, inner);
+    binderClosed(recheck, loop);
     if (h !== null && loop) h.loops--;
     if (loop || closeBlock) out.close();
   };
@@ -5446,6 +5463,271 @@ function binderSorts(t: Technique, env: Env): { name: string; sort: Sort }[] {
   return sorts;
 }
 
+/**
+ * A technique's bindings, each checked before it fires that what it read of
+ * the marks still holds: a solve makes each fact as it concludes it, so a
+ * binding that read a set before an earlier binding's fact reads it stale,
+ * and would conclude from marks no longer there (§ "What a technique
+ * compiles to"). Where a count of the facts made has moved since the
+ * binding first read the marks, its binders' reads are made again.
+ */
+interface Recheck {
+  /** The binders whose loops the counts are taken in: the technique's own. */
+  binders: readonly Binder[];
+  /** The slots a count may be taken in, outermost first: the function's
+   * start, and ahead of each binder in scope and of its filter, each with
+   * how many of the binders' loops are open there. */
+  chain: { slot: Slot; loops: number }[];
+  /** The statements opening the binders' loops open where the code is
+   * written, outermost first. */
+  loops: Line[];
+  /** Where a binding is checked, ahead of its premise, with the slots in
+   * scope there, the loops open, the visited binder's element, which a
+   * binding passed over is visited again at, and its reads made again. */
+  checks: {
+    at: Slot;
+    chain: readonly { slot: Slot; loops: number }[];
+    loops: readonly Line[];
+    visit: string | null;
+    reads: readonly Reread[];
+  }[];
+}
+
+/** A binder's loop, if it opens one, is open: a count may be taken inside. */
+function binderOpened(r: Recheck | null, out: Out, loop: boolean): void {
+  if (r === null) return;
+  if (loop) r.loops.push((out.blocks.at(-1) as Block).line);
+  r.chain.push({ slot: out.slot(0), loops: r.loops.length });
+}
+
+/** A binder's scope is closed, with the slots its own and its loop's. */
+function binderClosed(r: Recheck | null, loop: boolean): void {
+  if (r === null) return;
+  r.chain.splice(-2);
+  if (loop) r.loops.pop();
+}
+
+/** One of a binding's reads of the marks made again: the statements that
+ * make it, its truth, and how many of the binders' loops are open where a
+ * binding it fails is left, so that the bindings it governs are passed over
+ * with it. */
+interface Reread {
+  lines: readonly Line[];
+  code: string;
+  leave: number;
+}
+
+/**
+ * A binding's reads of the marks that a fact made since could have changed:
+ * whether each binder's element is still in its set, each `=` names what its
+ * term reads now, and each `where` holds, compiled at the binding, outermost
+ * first. A read is made again only where another binding's facts can come
+ * between it and the binding, a loop opened since; and only where it reads
+ * the marks, since the board's deal and the binders' names do not change. A
+ * read the language cannot state again (a subset's membership) is false, so
+ * its bindings are passed over whenever a count moves.
+ */
+function rereads(binders: readonly Binder[], scope: Scope, env: Env): Reread[] {
+  const out: { expr: Expr; read: number; leave: number }[] = [];
+  let loops = 0;
+  for (const bnd of binders) {
+    const name: Expr = { k: "name", name: bnd.name };
+    if (bnd.kind === "let") {
+      if (readsMarks(bnd.of, env))
+        out.push({
+          expr: { k: "bin", op: "=", a: name, b: bnd.of },
+          read: loops,
+          leave: loops,
+        });
+    } else {
+      loops++;
+      // The set is read ahead of the binder's own loop, an element of it at
+      // a time in it.
+      if (readsMarks(bnd.of, env))
+        out.push({ expr: memberOf(name, bnd.of), read: loops - 1, leave: loops });
+    }
+    if (bnd.where !== null && readsMarks(bnd.where, env))
+      out.push({ expr: bnd.where, read: loops, leave: loops });
+  }
+  return out
+    .filter((r) => r.read < loops)
+    .map(({ expr, leave }) => {
+      const o = new Out(0);
+      const mark = Out.mark();
+      const used = new Set(env.used);
+      const scratch: string[] = [];
+      try {
+        const v = compileExpr(expr, scope, { ...env, scratch }, o);
+        expect(v, "bool", "a read made again");
+        env.scratch?.push(...scratch);
+        return { lines: flatLines(o), code: v.code, leave };
+      } catch (e) {
+        if (!(e instanceof CompileError)) throw e;
+        Out.rewind(mark);
+        env.used.clear();
+        for (const u of used) env.used.add(u);
+        return { lines: [], code: "false", leave };
+      }
+    });
+}
+
+/** `x in of`, where `of` is a range or a set stated member by member, which
+ * a binder ranges over but no `in` reads, as the comparisons they are. */
+function memberOf(x: Expr, of: Expr): Expr {
+  if (of.k === "call" && of.fn === "range" && of.args.length === 2) {
+    const [lo, hi] = of.args;
+    return {
+      k: "bin",
+      op: "and",
+      a: { k: "bin", op: "<=", a: lo, b: x },
+      b: { k: "bin", op: "<=", a: x, b: hi },
+    };
+  }
+  if (of.k === "set" && of.elems.length > 0)
+    return of.elems
+      .map((e): Expr => ({ k: "bin", op: "=", a: x, b: e }))
+      .reduce((a, b) => ({ k: "bin", op: "or", a, b }));
+  return { k: "bin", op: "in", a: x, b: of };
+}
+
+/** `o`'s statements, its slots' among them, each at its indent in `o`. */
+function flatLines(o: Out): Line[] {
+  return o.entries.flatMap((e) =>
+    "text" in e
+      ? [{ indent: e.indent, text: e.text }]
+      : e.lines.map((l) => ({ indent: e.indent + l.indent, text: l.text })),
+  );
+}
+
+/** The kinds of mark ({@link MADE}) each of the marks' members a compiled
+ * line names reads; a write, what to visit, or a size the marks hold, reads
+ * none a binding rests on. Any other mention of the marks, `b` passed to a function of the
+ * runtime, reads every kind. */
+const READS = new Map<string, number>([
+  ...["grid", "known", "value"].map((m): [string, number] => [m, 1 << MADE.value]),
+  ...["cands", "cand", "has", "candCount", "candFirst", "candList"].map(
+    (m): [string, number] => [m, 1 << MADE.cand],
+  ),
+  ["edgeCand", 1 << MADE.edgeMark],
+  ["markOf", 1 << MADE.cellMark],
+  ...["pairOf", "relatedOf"].map((m): [string, number] => [m, 1 << MADE.relation]),
+  // The count of placements and cell marks, by which a kept term is kept.
+  ["placed", (1 << MADE.value) | (1 << MADE.cellMark)],
+  ...[
+    "placeAt",
+    "strikeAt",
+    "edgeStrikeAt",
+    "markAt",
+    "relateAt",
+    "visit",
+    "domain",
+    "repeat",
+    "times",
+  ].map((m): [string, number] => [m, 0]),
+]);
+const EVERY_KIND = (1 << Object.keys(MADE).length) - 1;
+
+/** The kinds of mark a line of compiled code reads: the code names the
+ * marks `b` and nothing else so (`compileTechnique`'s signature). */
+function kindsRead(line: string): number {
+  let kinds = 0;
+  for (const m of line.matchAll(/\bb\b(?:\.(\w+))?/g))
+    kinds |= m[1] === undefined ? EVERY_KIND : (READS.get(m[1]) ?? EVERY_KIND);
+  return kinds;
+}
+
+/**
+ * Write each binding's check: for each kind of mark read ahead of it, the
+ * count of facts that changed that kind is taken in the latest slot in scope
+ * that no read of the kind precedes, and a binding whose counts moved reads
+ * its binders again; one whose reads no longer hold leaves their scope, its
+ * element left to visit again. A technique run on placing is run again, by
+ * `rerun`. Whether a left loop marked the run to be run again.
+ */
+function rechecked(r: Recheck, body: Out, rerun: string | null, env: Env): boolean {
+  // A kind of mark the description keeps none of no fact changes.
+  const kept =
+    (1 << MADE.value) |
+    (1 << MADE.cand) |
+    (env.edgeMark === null ? 0 : 1 << MADE.edgeMark) |
+    (env.cellMark === null ? 0 : 1 << MADE.cellMark) |
+    (env.relation === null ? 0 : 1 << MADE.relation);
+  const before = new Map<Slot, number>();
+  let read = 0;
+  for (const e of body.entries) {
+    if ("text" in e) {
+      read |= kindsRead(e.text);
+      continue;
+    }
+    before.set(e, read);
+    for (const l of e.lines) read |= kindsRead(l.text);
+  }
+  const taken = new Map<string, string>();
+  const labels = new Map<Line, string>();
+  let stale = false;
+  for (const check of r.checks) {
+    if (check.reads.length === 0) continue;
+    const kinds = (before.get(check.at) ?? EVERY_KIND) & kept;
+    const moved: string[] = [];
+    for (const k of Object.values(MADE)) {
+      if ((kinds & (1 << k)) === 0) continue;
+      let place = check.chain[0];
+      for (let i = check.chain.length - 1; i >= 0; i--)
+        if (((before.get(check.chain[i].slot) ?? EVERY_KIND) & (1 << k)) === 0) {
+          place = check.chain[i];
+          break;
+        }
+      // Only a loop opened since the count runs another binding, whose
+      // facts could move it.
+      if (place.loops === check.loops.length) continue;
+      const at = place.slot;
+      const key = `${at.seq}_${k}`;
+      let name = taken.get(key);
+      if (name === undefined) {
+        name = `_m${key}`;
+        taken.set(key, name);
+        at.lines.push({ indent: 0, text: `const ${name} = b.made[${k}];` });
+      }
+      moved.push(`b.made[${k}] !== ${name}`);
+    }
+    if (moved.length === 0) continue;
+    const again =
+      check.visit === null ? "" : `if (_visit !== null) _visit[${check.visit}] = 1; `;
+    const lines: Line[] = [{ indent: 0, text: `if (${moved.join(" || ")}) {` }];
+    // A read that fails fails for every binding it governs, so its scope is
+    // left: its loop goes on to the next, and the function's start is left
+    // by returning.
+    for (const read of check.reads) {
+      let leave: string;
+      if (read.leave === 0)
+        leave = rerun === null ? "return fired;" : `return ${rerun} | fired;`;
+      else {
+        const loop = check.loops[read.leave - 1];
+        let label = labels.get(loop);
+        if (label === undefined) {
+          // A technique's binders' loops nest in one chain, so the depth
+          // names one in the function; a fresh name would renumber the
+          // module's others.
+          label = `R${read.leave}`;
+          labels.set(loop, label);
+          const i = body.entries.indexOf(loop);
+          if (i < 0)
+            throw new CompileError("a binder's loop is not the technique's own");
+          body.entries.splice(i, 0, { indent: loop.indent, text: `${label}:` });
+        }
+        if (rerun !== null) stale = true;
+        leave = `${rerun === null ? "" : "_stale = true; "}continue ${label};`;
+      }
+      for (const l of read.lines) lines.push({ indent: l.indent + 1, text: l.text });
+      lines.push({ indent: 1, text: `if (!(${read.code})) { ${again}${leave} }` });
+    }
+    lines.push({ indent: 0, text: "}" });
+    check.at.lines.push(...lines);
+  }
+  if (stale) r.chain[0].slot.lines.push({ indent: 0, text: "let _stale = false;" });
+  return stale;
+}
+
 function compileTechnique(t: Technique, env: Env): { code: string; clues: boolean } {
   const fnName = t.id.includes(".") ? t.id.slice(t.id.indexOf(".") + 1) : t.id;
   const bindingType = `${capitalized(fnName)}Binding`;
@@ -5483,6 +5765,12 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   body.emit(`const facts = ${fnName}Facts;`);
   body.emit("let fired = 0;");
   body.emit("let changed = false;");
+  const recheck: Recheck = {
+    binders: [],
+    chain: [{ slot: body.slot(0), loops: 0 }],
+    loops: [],
+    checks: [],
+  };
   // A solve makes each fact as it concludes it, so a placement would change
   // a `value` or `known` read before it; a strike changes neither.
   tenv.hoist = { root: body.slot(0), loops: 0, marks: !places(t.conclude, env) };
@@ -5499,6 +5787,25 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   const refills: Slot[] = [];
   const fire = (sc: Scope): void => {
     const shared: Shared = { made: new Map() };
+    const visited =
+      benv.visitBinder === undefined ? undefined : sc.get(benv.visitBinder.name);
+    recheck.checks.push({
+      at: body.slot(0),
+      chain: [...recheck.chain],
+      loops: [...recheck.loops],
+      visit: visited?.code ?? null,
+      // Nothing is moved out of the binding, nor shared with what was
+      // computed before the facts that made the read stale.
+      reads: rereads(recheck.binders, sc, {
+        ...benv,
+        hoist: null,
+        boardRoot: null,
+        shared: { made: new Map() },
+        recheck: undefined,
+        visitBinder: undefined,
+        visitAt: undefined,
+      }),
+    });
     if (t.premise !== null) {
       const p = compileExpr(t.premise, sc, { ...tenv, shared }, body);
       expect(p, "bool", "premise");
@@ -5531,7 +5838,7 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   // The binders' statements share their terms as a premise's do: no fact is
   // made among them, and one is read again only where `sharedReach` allows.
   // Bridges' `cap(c, y)` reads `has(c, y)` three times in one `where`.
-  const benv: Env = { ...tenv, shared: { made: new Map() } };
+  const benv: Env = { ...tenv, shared: { made: new Map() }, recheck };
   const foot = footprintOf(t, env);
   const footName = `${fnName}Footprint`;
   const visitAt = { slot: null as Slot | null, groups: new Map<string, string>() };
@@ -5564,13 +5871,27 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
       expect(w, "bool", `where of ${first.name}`);
       body.emit(`if (!(${w.code})) return 0;`);
     }
+    recheck.binders = rest;
     bindingLoops(rest, sc, benv, body, fire);
     params = `v_${first.name}: number, `;
   } else {
+    recheck.binders = t.binders;
     bindingLoops(t.binders, new Map(), benv, body, fire);
     params = "";
   }
+  const end = body.slot(0);
   body.emit("return fired;");
+  // A read made again runs only once a fact has moved a count, so it is no
+  // part of what a run costs.
+  const growth = techniqueGrowth(body.text());
+  // Before the `_visit` line, which reads what to visit and no mark.
+  // A technique run on placing is not run again by a fixpoint, so where it
+  // passed a binding over it runs again on the cell.
+  const rerun = onPlace
+    ? `${fnName}(b, sp, ${readsClues.yes ? "cl, " : ""}v_${t.binders[0].name}, fire)`
+    : null;
+  if (rechecked(recheck, body, rerun, env))
+    end.lines.push({ indent: 0, text: `if (_stale) return ${rerun} | fired;` });
   if (foot !== null) {
     if (visitAt.slot === null)
       throw new CompileError(`${t.id}: its visited binder was not met`);
@@ -5610,7 +5931,6 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   // The generated code names nothing else `sp`, so a body that never says it
   // reads no geometry, and the parameter is marked unread.
   const spParam = text.some((l) => /\bsp\b/.test(l)) ? "sp" : "_sp";
-  const growth = techniqueGrowth(text);
   if (growth > MAX_GROWTH)
     throw new CompileError(
       `${t.id}: its dearest read grows with the board as ${power(growth)}, past ${power(MAX_GROWTH)}: bind a set once outside the loops that read it, or keep what it reads (docs/descriptions.md § "What a technique compiles to")`,

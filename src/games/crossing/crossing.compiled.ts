@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/crossing/crossing.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, cellsValued, clueAt, keptStore, least, listLength, nth, popcount, sameList, stretch, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, cellsValued, clueAt, keptStore, least, listLength, nth, popcount, sameList, sameSet, stretch, type Kept } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -72,104 +72,104 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const held = g[cell];
     if (!(held > 0 && (domainOf(sp, cl, cell) >> held) & 1)) return false;
   }
-  let _q419 = true;
-  Q420: {
-    const _a421 = sp.lines;
-    for (let _i422 = 0; _i422 < _a421.length; _i422++) {
-      const v_L = _a421[_i422];
-      const _a423 = sp.lineCells[v_L];
-      for (let _i424 = 0; _i424 < _a423.length; _i424++) {
-        const v_c = _a423[_i424];
+  let _q465 = true;
+  Q466: {
+    const _a467 = sp.lines;
+    for (let _i468 = 0; _i468 < _a467.length; _i468++) {
+      const v_L = _a467[_i468];
+      const _a469 = sp.lineCells[v_L];
+      for (let _i470 = 0; _i470 < _a469.length; _i470++) {
+        const v_c = _a469[_i470];
         if (!(head(sp, cl, v_L, v_c))) continue;
-        let _q425 = false;
-        Q426: {
+        let _q471 = false;
+        Q472: {
           for (let v_k = 0; v_k < cl.numbers.n; v_k++) {
-            const _t427 = run(sp, cl, v_L, v_c);
-            const _h428 = _t427.length;
-            let _c434: boolean = (listLength(cl.numbers.digits[v_k]) === _h428);
-            if (_c434) {
-              let _q429 = true;
-              Q430: {
-                const _a431 = _t427;
-                for (let _i432 = 0; _i432 < _a431.length; _i432++) {
-                  const v_x = _a431[_i432];
-                  const _h433 = (g[v_x] || -1);
-                  if (!((_h433 === nth(cl.numbers.digits[v_k], _i432)))) {
-                    _q429 = false;
-                    break Q430;
+            const _t473 = run(sp, cl, v_L, v_c);
+            const _h474 = _t473.length;
+            let _c480: boolean = (listLength(cl.numbers.digits[v_k]) === _h474);
+            if (_c480) {
+              let _q475 = true;
+              Q476: {
+                const _a477 = _t473;
+                for (let _i478 = 0; _i478 < _a477.length; _i478++) {
+                  const v_x = _a477[_i478];
+                  const _h479 = (g[v_x] || -1);
+                  if (!((_h479 === nth(cl.numbers.digits[v_k], _i478)))) {
+                    _q475 = false;
+                    break Q476;
                   }
                 }
               }
-              _c434 = _q429;
+              _c480 = _q475;
             }
-            if (_c434) {
-              _q425 = true;
-              break Q426;
+            if (_c480) {
+              _q471 = true;
+              break Q472;
             }
           }
         }
-        if (!(_q425)) {
-          _q419 = false;
-          break Q420;
+        if (!(_q471)) {
+          _q465 = false;
+          break Q466;
         }
       }
     }
   }
-  if (!(_q419)) return false;
-  let _q435 = true;
-  Q436: {
+  if (!(_q465)) return false;
+  let _q481 = true;
+  Q482: {
     for (let v_k = 0; v_k < cl.numbers.n; v_k++) {
       for (let v_j = 0; v_j < cl.numbers.n; v_j++) {
         if (!((v_j !== v_k))) continue;
         if (!(!sameList(cl.numbers.digits[v_j], cl.numbers.digits[v_k]))) {
-          _q435 = false;
-          break Q436;
+          _q481 = false;
+          break Q482;
         }
       }
     }
   }
-  if (!(_q435)) return false;
-  for (let _k437 = 0; _k437 < cl.blank.at.length; _k437++) {
-    const _at438 = cl.blank.at[_k437];
-    if (!(((g[_at438] || -1) === 10))) return false;
+  if (!(_q481)) return false;
+  for (let _k483 = 0; _k483 < cl.blank.at.length; _k483++) {
+    const _at484 = cl.blank.at[_k483];
+    if (!(((g[_at484] || -1) === 10))) return false;
   }
-  for (let _k440 = 0; _k440 < cl.numbers.n; _k440++) {
-    let _g443 = 0;
-    G444: {
-      const _a445 = sp.lines;
-      for (let _i446 = 0; _i446 < _a445.length; _i446++) {
-        const v_L = _a445[_i446];
-        const _a447 = sp.lineCells[v_L];
-        for (let _i448 = 0; _i448 < _a447.length; _i448++) {
-          const v_c = _a447[_i448];
-          let _c457: boolean = head(sp, cl, v_L, v_c);
-          if (_c457) {
-            const _t449 = run(sp, cl, v_L, v_c);
-            const _h450 = _t449.length;
-            let _c456: boolean = (listLength(cl.numbers.digits[_k440]) === _h450);
-            if (_c456) {
-              let _q451 = true;
-              Q452: {
-                const _a453 = _t449;
-                for (let _i454 = 0; _i454 < _a453.length; _i454++) {
-                  const v_x = _a453[_i454];
-                  const _h455 = (g[v_x] || -1);
-                  if (!((_h455 === nth(cl.numbers.digits[_k440], _i454)))) {
-                    _q451 = false;
-                    break Q452;
+  for (let _k486 = 0; _k486 < cl.numbers.n; _k486++) {
+    let _g489 = 0;
+    G490: {
+      const _a491 = sp.lines;
+      for (let _i492 = 0; _i492 < _a491.length; _i492++) {
+        const v_L = _a491[_i492];
+        const _a493 = sp.lineCells[v_L];
+        for (let _i494 = 0; _i494 < _a493.length; _i494++) {
+          const v_c = _a493[_i494];
+          let _c503: boolean = head(sp, cl, v_L, v_c);
+          if (_c503) {
+            const _t495 = run(sp, cl, v_L, v_c);
+            const _h496 = _t495.length;
+            let _c502: boolean = (listLength(cl.numbers.digits[_k486]) === _h496);
+            if (_c502) {
+              let _q497 = true;
+              Q498: {
+                const _a499 = _t495;
+                for (let _i500 = 0; _i500 < _a499.length; _i500++) {
+                  const v_x = _a499[_i500];
+                  const _h501 = (g[v_x] || -1);
+                  if (!((_h501 === nth(cl.numbers.digits[_k486], _i500)))) {
+                    _q497 = false;
+                    break Q498;
                   }
                 }
               }
-              _c456 = _q451;
+              _c502 = _q497;
             }
-            _c457 = _c456;
+            _c503 = _c502;
           }
-          if (!(_c457)) continue;
-          _g443++;
+          if (!(_c503)) continue;
+          _g489++;
         }
       }
     }
-    if (!((_g443 === 1))) return false;
+    if (!((_g489 === 1))) return false;
   }
   return true;
 }
@@ -284,7 +284,10 @@ export function onlyRun(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRunBi
   const facts = onlyRunFacts;
   let fired = 0;
   let changed = false;
+  R1:
   for (let v_k = 0; v_k < cl.numbers.n; v_k++) {
+    const _m33_0 = b.made[0];
+    const _m33_1 = b.made[1];
     let _c117: boolean = !(written(b, sp, cl, v_k));
     if (_c117) {
       let _g103 = 0;
@@ -353,23 +356,63 @@ export function onlyRun(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRunBi
         }
         if (!(_c129)) continue;
         const v_R = run(sp, cl, v_L, v_c);
+        if (b.made[0] !== _m33_0 || b.made[1] !== _m33_1) {
+          let _c143: boolean = !(written(b, sp, cl, v_k));
+          if (_c143) {
+            let _g130 = 0;
+            G131: {
+              const _a132 = sp.lines;
+              for (let _i133 = 0; _i133 < _a132.length; _i133++) {
+                const v_M = _a132[_i133];
+                const _a134 = sp.lineCells[v_M];
+                for (let _i135 = 0; _i135 < _a134.length; _i135++) {
+                  const v_b = _a134[_i135];
+                  let _c142: boolean = head(sp, cl, v_M, v_b);
+                  if (_c142) {
+                    const _t136 = run(sp, cl, v_M, v_b);
+                    let _c141: boolean = (listLength(cl.numbers.digits[v_k]) === _t136.length);
+                    if (_c141) {
+                      let _q137 = true;
+                      Q138: {
+                        const _a139 = _t136;
+                        for (let _i140 = 0; _i140 < _a139.length; _i140++) {
+                          const v_x = _a139[_i140];
+                          if (!((((b.cands[v_x] >> nth(cl.numbers.digits[v_k], _i140)) & 1) !== 0))) {
+                            _q137 = false;
+                            break Q138;
+                          }
+                        }
+                      }
+                      _c141 = _q137;
+                    }
+                    _c142 = _c141;
+                  }
+                  if (!(_c142)) continue;
+                  _g130++;
+                }
+              }
+            }
+            _c143 = (_g130 === 1);
+          }
+          if (!(_c143)) { continue R1; }
+        }
         facts.length = 0;
         changed = false;
-        let _q130 = true;
-        Q131: {
-          const _a132 = v_R;
-          for (let _i133 = 0; _i133 < _a132.length; _i133++) {
-            const v_x = _a132[_i133];
+        let _q144 = true;
+        Q145: {
+          const _a146 = v_R;
+          for (let _i147 = 0; _i147 < _a146.length; _i147++) {
+            const v_x = _a146[_i147];
             if (!(!((b.grid[v_x] !== 0)))) continue;
-            const _t134 = nth(cl.numbers.digits[v_k], _i133);
-            if (!(b.grid[v_x] !== 0)) { if (fire === null) { b.placeAt(v_x, _t134); changed = true; } else facts.push(PLACE, v_x, _t134); }
+            const _t148 = nth(cl.numbers.digits[v_k], _i147);
+            if (!(b.grid[v_x] !== 0)) { if (fire === null) { b.placeAt(v_x, _t148); changed = true; } else facts.push(PLACE, v_x, _t148); }
             if (!(true)) {
-              _q130 = false;
-              break Q131;
+              _q144 = false;
+              break Q145;
             }
           }
         }
-        if (!(_q130)) return -1;
+        if (!(_q144)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ k: v_k, L: v_L, c: v_c, R: v_R.slice() }, facts)) return 1;
@@ -393,80 +436,121 @@ const sharedDigitFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function sharedDigit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedDigitBinding> | null): number {
-  const _g176: number[] = [];
+  const _g190: number[] = [];
+  const _g221: number[] = [];
   const facts = sharedDigitFacts;
   let fired = 0;
   let changed = false;
-  const _a167 = sp.lines;
-  for (let _i168 = 0; _i168 < _a167.length; _i168++) {
-    const v_L = _a167[_i168];
-    const _a169 = sp.lineCells[v_L];
-    for (let _i170 = 0; _i170 < _a169.length; _i170++) {
-      const v_c = _a169[_i170];
+  const _a181 = sp.lines;
+  for (let _i182 = 0; _i182 < _a181.length; _i182++) {
+    const v_L = _a181[_i182];
+    const _a183 = sp.lineCells[v_L];
+    R2:
+    for (let _i184 = 0; _i184 < _a183.length; _i184++) {
+      const v_c = _a183[_i184];
       if (!(head(sp, cl, v_L, v_c))) continue;
-      L171: {
+      L185: {
         const v_R = run(sp, cl, v_L, v_c);
-        let _q172 = false;
-        Q173: {
-          const _a174 = v_R;
-          for (let _i175 = 0; _i175 < _a174.length; _i175++) {
-            const v_x = _a174[_i175];
+        const _m69_0 = b.made[0];
+        let _q186 = false;
+        Q187: {
+          const _a188 = v_R;
+          for (let _i189 = 0; _i189 < _a188.length; _i189++) {
+            const v_x = _a188[_i189];
             if (!((b.grid[v_x] !== 0))) {
-              _q172 = true;
-              break Q173;
+              _q186 = true;
+              break Q187;
             }
           }
         }
-        if (!(_q172)) break L171;
-        const _h183 = v_R.length;
-        _g176.length = 0;
-        G177: {
+        if (!(_q186)) break L185;
+        const _h197 = v_R.length;
+        const _m73_1 = b.made[1];
+        _g190.length = 0;
+        G191: {
           for (let v_k = 0; v_k < cl.numbers.n; v_k++) {
-            let _c188: boolean = (listLength(cl.numbers.digits[v_k]) === _h183);
-            if (_c188) {
-              let _q184 = true;
-              Q185: {
-                const _a186 = v_R;
-                for (let _i187 = 0; _i187 < _a186.length; _i187++) {
-                  const v_x = _a186[_i187];
-                  if (!((((b.cands[v_x] >> nth(cl.numbers.digits[v_k], _i187)) & 1) !== 0))) {
-                    _q184 = false;
-                    break Q185;
+            let _c202: boolean = (listLength(cl.numbers.digits[v_k]) === _h197);
+            if (_c202) {
+              let _q198 = true;
+              Q199: {
+                const _a200 = v_R;
+                for (let _i201 = 0; _i201 < _a200.length; _i201++) {
+                  const v_x = _a200[_i201];
+                  if (!((((b.cands[v_x] >> nth(cl.numbers.digits[v_k], _i201)) & 1) !== 0))) {
+                    _q198 = false;
+                    break Q199;
                   }
                 }
               }
-              _c188 = _q184;
+              _c202 = _q198;
             }
-            if (!((_c188 && !(written(b, sp, cl, v_k))))) continue;
-            _g176.push(v_k);
+            if (!((_c202 && !(written(b, sp, cl, v_k))))) continue;
+            _g190.push(v_k);
           }
         }
-        L189: {
-          const v_K = _g176;
-          const _h190 = v_K.length;
-          if (!((_h190 > 0))) break L189;
-          const _a191 = v_R;
-          for (let _i192 = 0; _i192 < _a191.length; _i192++) {
-            const v_x = _a191[_i192];
+        L203: {
+          const v_K = _g190;
+          const _h204 = v_K.length;
+          if (!((_h204 > 0))) break L203;
+          const _a205 = v_R;
+          for (let _i206 = 0; _i206 < _a205.length; _i206++) {
+            const v_x = _a205[_i206];
             if (!(!((b.grid[v_x] !== 0)))) continue;
-            const _h199 = _i192;
-            let _g193 = 0;
-            G194: {
-              const _a197 = v_K;
-              for (let _i198 = 0; _i198 < _a197.length; _i198++) {
-                const v_k = _a197[_i198];
-                const _t200 = nth(cl.numbers.digits[v_k], _h199);
-                _g193 |= 1 << _t200;
+            const _h213 = _i206;
+            let _g207 = 0;
+            G208: {
+              const _a211 = v_K;
+              for (let _i212 = 0; _i212 < _a211.length; _i212++) {
+                const v_k = _a211[_i212];
+                const _t214 = nth(cl.numbers.digits[v_k], _h213);
+                _g207 |= 1 << _t214;
               }
             }
-            L201: {
-              const v_D = _g193;
-              const _h202 = popcount(v_D);
-              if (!((_h202 === 1))) break L201;
+            L215: {
+              const v_D = _g207;
+              const _h216 = popcount(v_D);
+              if (!((_h216 === 1))) break L215;
+              if (b.made[0] !== _m69_0 || b.made[1] !== _m73_1) {
+                let _q217 = false;
+                Q218: {
+                  const _a219 = v_R;
+                  for (let _i220 = 0; _i220 < _a219.length; _i220++) {
+                    const v_x = _a219[_i220];
+                    if (!((b.grid[v_x] !== 0))) {
+                      _q217 = true;
+                      break Q218;
+                    }
+                  }
+                }
+                if (!(_q217)) { continue R2; }
+                _g221.length = 0;
+                G222: {
+                  for (let v_k = 0; v_k < cl.numbers.n; v_k++) {
+                    let _c232: boolean = (listLength(cl.numbers.digits[v_k]) === v_R.length);
+                    if (_c232) {
+                      let _q228 = true;
+                      Q229: {
+                        const _a230 = v_R;
+                        for (let _i231 = 0; _i231 < _a230.length; _i231++) {
+                          const v_x = _a230[_i231];
+                          if (!((((b.cands[v_x] >> nth(cl.numbers.digits[v_k], _i231)) & 1) !== 0))) {
+                            _q228 = false;
+                            break Q229;
+                          }
+                        }
+                      }
+                      _c232 = _q228;
+                    }
+                    if (!((_c232 && !(written(b, sp, cl, v_k))))) continue;
+                    _g221.push(v_k);
+                  }
+                }
+                if (!(sameSet(v_K, _g221))) { continue R2; }
+              }
               facts.length = 0;
               changed = false;
-              const _t203 = least(v_D);
-              if (!(b.grid[v_x] !== 0)) { if (fire === null) { b.placeAt(v_x, _t203); changed = true; } else facts.push(PLACE, v_x, _t203); }
+              const _t233 = least(v_D);
+              if (!(b.grid[v_x] !== 0)) { if (fire === null) { b.placeAt(v_x, _t233); changed = true; } else facts.push(PLACE, v_x, _t233); }
               if (!(true)) return -1;
               if (changed || facts.length > 0) {
                 fired = 1;
@@ -494,106 +578,106 @@ const crossRunsFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function crossRuns(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CrossRunsBinding> | null): number {
-  const _g264: number[] = [];
-  const _g276: number[] = [];
+  const _g294: number[] = [];
+  const _g306: number[] = [];
   const facts = crossRunsFacts;
   let fired = 0;
   let changed = false;
-  const _a258 = sp.cells;
-  for (let _i259 = 0; _i259 < _a258.length; _i259++) {
-    const v_x = _a258[_i259];
-    const _h260 = clueAt(cl.blank, v_x);
-    if (!(((_h260 < 0) && !((b.grid[v_x] !== 0))))) continue;
+  const _a288 = sp.cells;
+  for (let _i289 = 0; _i289 < _a288.length; _i289++) {
+    const v_x = _a288[_i289];
+    const _h290 = clueAt(cl.blank, v_x);
+    if (!(((_h290 < 0) && !((b.grid[v_x] !== 0))))) continue;
     const v_A = run(sp, cl, sp.rowOf[v_x], v_x);
-    const _h262 = v_A.length;
-    const _h308 = v_A.indexOf(v_x);
-    L261: {
+    const _h292 = v_A.length;
+    const _h338 = v_A.indexOf(v_x);
+    L291: {
       const v_B = run(sp, cl, sp.colOf[v_x], v_x);
-      const _h263 = v_B.length;
-      if (!(((_h262 >= 2) && (_h263 >= 2)))) break L261;
-      const _h315 = v_B.indexOf(v_x);
-      _g264.length = 0;
-      G265: {
+      const _h293 = v_B.length;
+      if (!(((_h292 >= 2) && (_h293 >= 2)))) break L291;
+      const _h345 = v_B.indexOf(v_x);
+      _g294.length = 0;
+      G295: {
         for (let v_k = 0; v_k < cl.numbers.n; v_k++) {
-          let _c275: boolean = (listLength(cl.numbers.digits[v_k]) === _h262);
-          if (_c275) {
-            let _q271 = true;
-            Q272: {
-              const _a273 = v_A;
-              for (let _i274 = 0; _i274 < _a273.length; _i274++) {
-                const v_x = _a273[_i274];
-                if (!((((b.cands[v_x] >> nth(cl.numbers.digits[v_k], _i274)) & 1) !== 0))) {
-                  _q271 = false;
-                  break Q272;
+          let _c305: boolean = (listLength(cl.numbers.digits[v_k]) === _h292);
+          if (_c305) {
+            let _q301 = true;
+            Q302: {
+              const _a303 = v_A;
+              for (let _i304 = 0; _i304 < _a303.length; _i304++) {
+                const v_x = _a303[_i304];
+                if (!((((b.cands[v_x] >> nth(cl.numbers.digits[v_k], _i304)) & 1) !== 0))) {
+                  _q301 = false;
+                  break Q302;
                 }
               }
             }
-            _c275 = _q271;
+            _c305 = _q301;
           }
-          if (!((_c275 && !(written(b, sp, cl, v_k))))) continue;
-          _g264.push(v_k);
+          if (!((_c305 && !(written(b, sp, cl, v_k))))) continue;
+          _g294.push(v_k);
         }
       }
-      const v_KA = _g264;
-      _g276.length = 0;
-      G277: {
+      const v_KA = _g294;
+      _g306.length = 0;
+      G307: {
         for (let v_k = 0; v_k < cl.numbers.n; v_k++) {
-          let _c287: boolean = (listLength(cl.numbers.digits[v_k]) === _h263);
-          if (_c287) {
-            let _q283 = true;
-            Q284: {
-              const _a285 = v_B;
-              for (let _i286 = 0; _i286 < _a285.length; _i286++) {
-                const v_x = _a285[_i286];
-                if (!((((b.cands[v_x] >> nth(cl.numbers.digits[v_k], _i286)) & 1) !== 0))) {
-                  _q283 = false;
-                  break Q284;
+          let _c317: boolean = (listLength(cl.numbers.digits[v_k]) === _h293);
+          if (_c317) {
+            let _q313 = true;
+            Q314: {
+              const _a315 = v_B;
+              for (let _i316 = 0; _i316 < _a315.length; _i316++) {
+                const v_x = _a315[_i316];
+                if (!((((b.cands[v_x] >> nth(cl.numbers.digits[v_k], _i316)) & 1) !== 0))) {
+                  _q313 = false;
+                  break Q314;
                 }
               }
             }
-            _c287 = _q283;
+            _c317 = _q313;
           }
-          if (!((_c287 && !(written(b, sp, cl, v_k))))) continue;
-          _g276.push(v_k);
+          if (!((_c317 && !(written(b, sp, cl, v_k))))) continue;
+          _g306.push(v_k);
         }
       }
-      const v_KB = _g276;
-      let _g288 = 0;
-      G289: {
-        let _g302 = 0;
-        G303: {
-          const _a306 = v_KA;
-          for (let _i307 = 0; _i307 < _a306.length; _i307++) {
-            const v_k = _a306[_i307];
-            const _t309 = nth(cl.numbers.digits[v_k], _h308);
-            _g302 |= 1 << _t309;
+      const v_KB = _g306;
+      let _g318 = 0;
+      G319: {
+        let _g332 = 0;
+        G333: {
+          const _a336 = v_KA;
+          for (let _i337 = 0; _i337 < _a336.length; _i337++) {
+            const v_k = _a336[_i337];
+            const _t339 = nth(cl.numbers.digits[v_k], _h338);
+            _g332 |= 1 << _t339;
           }
         }
-        for (let _m310 = _g302; _m310 !== 0; _m310 &= _m310 - 1) {
-          const v_d = 31 - Math.clz32(_m310 & -_m310);
-          let _q311 = false;
-          Q312: {
-            const _a313 = v_KB;
-            for (let _i314 = 0; _i314 < _a313.length; _i314++) {
-              const v_k = _a313[_i314];
-              if ((nth(cl.numbers.digits[v_k], _h315) === v_d)) {
-                _q311 = true;
-                break Q312;
+        for (let _m340 = _g332; _m340 !== 0; _m340 &= _m340 - 1) {
+          const v_d = 31 - Math.clz32(_m340 & -_m340);
+          let _q341 = false;
+          Q342: {
+            const _a343 = v_KB;
+            for (let _i344 = 0; _i344 < _a343.length; _i344++) {
+              const v_k = _a343[_i344];
+              if ((nth(cl.numbers.digits[v_k], _h345) === v_d)) {
+                _q341 = true;
+                break Q342;
               }
             }
           }
-          if (!(_q311)) continue;
-          _g288 |= 1 << v_d;
+          if (!(_q341)) continue;
+          _g318 |= 1 << v_d;
         }
       }
-      L316: {
-        const v_D = _g288;
-        const _h317 = popcount(v_D);
-        if (!((_h317 === 1))) break L316;
+      L346: {
+        const v_D = _g318;
+        const _h347 = popcount(v_D);
+        if (!((_h347 === 1))) break L346;
         facts.length = 0;
         changed = false;
-        const _t318 = least(v_D);
-        if (!(b.grid[v_x] !== 0)) { if (fire === null) { b.placeAt(v_x, _t318); changed = true; } else facts.push(PLACE, v_x, _t318); }
+        const _t348 = least(v_D);
+        if (!(b.grid[v_x] !== 0)) { if (fire === null) { b.placeAt(v_x, _t348); changed = true; } else facts.push(PLACE, v_x, _t348); }
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
@@ -618,91 +702,132 @@ let narrowCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
 export function narrow(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NarrowBinding> | null): number {
-  const _g352: number[] = [];
+  const _g382: number[] = [];
+  const _g402: number[] = [];
   const facts = narrowFacts;
   let fired = 0;
   let changed = false;
   if (narrowCands.length < sp.cells.length) narrowCands = new Int32Array(sp.cells.length);
   const cands = narrowCands;
   cands.fill(-1);
-  const _a342 = sp.lines;
-  for (let _i343 = 0; _i343 < _a342.length; _i343++) {
-    const v_L = _a342[_i343];
-    const _a344 = sp.lineCells[v_L];
-    for (let _i345 = 0; _i345 < _a344.length; _i345++) {
-      const v_c = _a344[_i345];
+  const _a372 = sp.lines;
+  for (let _i373 = 0; _i373 < _a372.length; _i373++) {
+    const v_L = _a372[_i373];
+    const _a374 = sp.lineCells[v_L];
+    R2:
+    for (let _i375 = 0; _i375 < _a374.length; _i375++) {
+      const v_c = _a374[_i375];
       if (!(head(sp, cl, v_L, v_c))) continue;
-      L346: {
+      L376: {
         const v_R = run(sp, cl, v_L, v_c);
-        let _q347 = false;
-        Q348: {
-          const _a349 = v_R;
-          for (let _i350 = 0; _i350 < _a349.length; _i350++) {
-            const v_x = _a349[_i350];
-            const _h351 = (b.grid[v_x] !== 0);
-            if (!(_h351)) {
-              _q347 = true;
-              break Q348;
+        const _m140_0 = b.made[0];
+        let _q377 = false;
+        Q378: {
+          const _a379 = v_R;
+          for (let _i380 = 0; _i380 < _a379.length; _i380++) {
+            const v_x = _a379[_i380];
+            const _h381 = (b.grid[v_x] !== 0);
+            if (!(_h381)) {
+              _q377 = true;
+              break Q378;
             }
           }
         }
-        if (!(_q347)) break L346;
-        const _h359 = v_R.length;
-        _g352.length = 0;
-        G353: {
+        if (!(_q377)) break L376;
+        const _h389 = v_R.length;
+        const _m144_1 = b.made[1];
+        _g382.length = 0;
+        G383: {
           for (let v_k = 0; v_k < cl.numbers.n; v_k++) {
-            let _c364: boolean = (listLength(cl.numbers.digits[v_k]) === _h359);
-            if (_c364) {
-              let _q360 = true;
-              Q361: {
-                const _a362 = v_R;
-                for (let _i363 = 0; _i363 < _a362.length; _i363++) {
-                  const v_x = _a362[_i363];
-                  if (!((((b.cands[v_x] >> nth(cl.numbers.digits[v_k], _i363)) & 1) !== 0))) {
-                    _q360 = false;
-                    break Q361;
+            let _c394: boolean = (listLength(cl.numbers.digits[v_k]) === _h389);
+            if (_c394) {
+              let _q390 = true;
+              Q391: {
+                const _a392 = v_R;
+                for (let _i393 = 0; _i393 < _a392.length; _i393++) {
+                  const v_x = _a392[_i393];
+                  if (!((((b.cands[v_x] >> nth(cl.numbers.digits[v_k], _i393)) & 1) !== 0))) {
+                    _q390 = false;
+                    break Q391;
                   }
                 }
               }
-              _c364 = _q360;
+              _c394 = _q390;
             }
-            if (!((_c364 && !(written(b, sp, cl, v_k))))) continue;
-            _g352.push(v_k);
+            if (!((_c394 && !(written(b, sp, cl, v_k))))) continue;
+            _g382.push(v_k);
           }
         }
-        const v_K = _g352;
-        const _a365 = v_R;
-        for (let _i366 = 0; _i366 < _a365.length; _i366++) {
-          const v_x = _a365[_i366];
-          const _h367 = (b.grid[v_x] !== 0);
-          if (!(!(_h367))) continue;
-          const _h375 = _i366;
+        const v_K = _g382;
+        const _a395 = v_R;
+        for (let _i396 = 0; _i396 < _a395.length; _i396++) {
+          const v_x = _a395[_i396];
+          const _h397 = (b.grid[v_x] !== 0);
+          if (!(!(_h397))) continue;
+          const _h421 = _i396;
+          if (b.made[0] !== _m140_0 || b.made[1] !== _m144_1) {
+            let _q398 = false;
+            Q399: {
+              const _a400 = v_R;
+              for (let _i401 = 0; _i401 < _a400.length; _i401++) {
+                const v_x = _a400[_i401];
+                if (!((b.grid[v_x] !== 0))) {
+                  _q398 = true;
+                  break Q399;
+                }
+              }
+            }
+            if (!(_q398)) { continue R2; }
+            _g402.length = 0;
+            G403: {
+              for (let v_k = 0; v_k < cl.numbers.n; v_k++) {
+                let _c413: boolean = (listLength(cl.numbers.digits[v_k]) === v_R.length);
+                if (_c413) {
+                  let _q409 = true;
+                  Q410: {
+                    const _a411 = v_R;
+                    for (let _i412 = 0; _i412 < _a411.length; _i412++) {
+                      const v_x = _a411[_i412];
+                      if (!((((b.cands[v_x] >> nth(cl.numbers.digits[v_k], _i412)) & 1) !== 0))) {
+                        _q409 = false;
+                        break Q410;
+                      }
+                    }
+                  }
+                  _c413 = _q409;
+                }
+                if (!((_c413 && !(written(b, sp, cl, v_k))))) continue;
+                _g402.push(v_k);
+              }
+            }
+            if (!(sameSet(v_K, _g402))) { continue R2; }
+          }
           facts.length = 0;
           changed = false;
-          let _q368 = true;
-          Q369: {
-            for (let _m370 = (cands[v_x] >= 0 ? cands[v_x] : (cands[v_x] = b.cands[v_x])); _m370 !== 0; _m370 &= _m370 - 1) {
-              const v_d = 31 - Math.clz32(_m370 & -_m370);
-              let _q371 = false;
-              Q372: {
-                const _a373 = v_K;
-                for (let _i374 = 0; _i374 < _a373.length; _i374++) {
-                  const v_k = _a373[_i374];
-                  if ((nth(cl.numbers.digits[v_k], _h375) === v_d)) {
-                    _q371 = true;
-                    break Q372;
+          let _q414 = true;
+          Q415: {
+            for (let _m416 = (cands[v_x] >= 0 ? cands[v_x] : (cands[v_x] = b.cands[v_x])); _m416 !== 0; _m416 &= _m416 - 1) {
+              const v_d = 31 - Math.clz32(_m416 & -_m416);
+              let _q417 = false;
+              Q418: {
+                const _a419 = v_K;
+                for (let _i420 = 0; _i420 < _a419.length; _i420++) {
+                  const v_k = _a419[_i420];
+                  if ((nth(cl.numbers.digits[v_k], _h421) === v_d)) {
+                    _q417 = true;
+                    break Q418;
                   }
                 }
               }
-              if (!(!(_q371))) continue;
+              if (!(!(_q417))) continue;
               if ((((b.cands[v_x] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_x, v_d); changed = true; } else facts.push(STRIKE, v_x, v_d); }
               if (!(true)) {
-                _q368 = false;
-                break Q369;
+                _q414 = false;
+                break Q415;
               }
             }
           }
-          if (!(_q368)) return -1;
+          if (!(_q414)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null && !fire({ L: v_L, c: v_c, R: v_R.slice(), K: v_K.slice(), x: v_x }, facts)) return 1;
@@ -728,57 +853,57 @@ export function misread(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MisreadBi
   const facts = misreadFacts;
   let fired = 0;
   let changed = false;
-  const _a385 = sp.lines;
-  for (let _i386 = 0; _i386 < _a385.length; _i386++) {
-    const v_L = _a385[_i386];
-    const _a387 = sp.lineCells[v_L];
-    for (let _i388 = 0; _i388 < _a387.length; _i388++) {
-      const v_c = _a387[_i388];
+  const _a431 = sp.lines;
+  for (let _i432 = 0; _i432 < _a431.length; _i432++) {
+    const v_L = _a431[_i432];
+    const _a433 = sp.lineCells[v_L];
+    for (let _i434 = 0; _i434 < _a433.length; _i434++) {
+      const v_c = _a433[_i434];
       if (!(head(sp, cl, v_L, v_c))) continue;
-      L389: {
+      L435: {
         const v_R = run(sp, cl, v_L, v_c);
-        let _q390 = true;
-        Q391: {
-          const _a392 = v_R;
-          for (let _i393 = 0; _i393 < _a392.length; _i393++) {
-            const v_x = _a392[_i393];
-            const _h394 = (b.grid[v_x] !== 0);
-            if (!(_h394)) {
-              _q390 = false;
-              break Q391;
+        let _q436 = true;
+        Q437: {
+          const _a438 = v_R;
+          for (let _i439 = 0; _i439 < _a438.length; _i439++) {
+            const v_x = _a438[_i439];
+            const _h440 = (b.grid[v_x] !== 0);
+            if (!(_h440)) {
+              _q436 = false;
+              break Q437;
             }
           }
         }
-        if (!(_q390)) break L389;
-        const _h397 = v_R.length;
+        if (!(_q436)) break L435;
+        const _h443 = v_R.length;
         facts.length = 0;
         changed = false;
-        let _q395 = false;
-        Q396: {
+        let _q441 = false;
+        Q442: {
           for (let v_k = 0; v_k < cl.numbers.n; v_k++) {
-            let _c403: boolean = (listLength(cl.numbers.digits[v_k]) === _h397);
-            if (_c403) {
-              let _q398 = true;
-              Q399: {
-                const _a400 = v_R;
-                for (let _i401 = 0; _i401 < _a400.length; _i401++) {
-                  const v_x = _a400[_i401];
-                  const _h402 = (b.grid[v_x] || -1);
-                  if (!((_h402 === nth(cl.numbers.digits[v_k], _i401)))) {
-                    _q398 = false;
-                    break Q399;
+            let _c449: boolean = (listLength(cl.numbers.digits[v_k]) === _h443);
+            if (_c449) {
+              let _q444 = true;
+              Q445: {
+                const _a446 = v_R;
+                for (let _i447 = 0; _i447 < _a446.length; _i447++) {
+                  const v_x = _a446[_i447];
+                  const _h448 = (b.grid[v_x] || -1);
+                  if (!((_h448 === nth(cl.numbers.digits[v_k], _i447)))) {
+                    _q444 = false;
+                    break Q445;
                   }
                 }
               }
-              _c403 = _q398;
+              _c449 = _q444;
             }
-            if (_c403) {
-              _q395 = true;
-              break Q396;
+            if (_c449) {
+              _q441 = true;
+              break Q442;
             }
           }
         }
-        if (!(_q395)) return -1;
+        if (!(_q441)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ L: v_L, c: v_c, R: v_R.slice() }, facts)) return 1;
@@ -803,42 +928,42 @@ export function twice(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TwiceBindin
   for (let v_k = 0; v_k < cl.numbers.n; v_k++) {
     facts.length = 0;
     changed = false;
-    let _g404 = 0;
-    G405: {
-      const _a406 = sp.lines;
-      for (let _i407 = 0; _i407 < _a406.length; _i407++) {
-        const v_L = _a406[_i407];
-        const _a408 = sp.lineCells[v_L];
-        for (let _i409 = 0; _i409 < _a408.length; _i409++) {
-          const v_c = _a408[_i409];
-          let _c418: boolean = head(sp, cl, v_L, v_c);
-          if (_c418) {
-            const _t410 = run(sp, cl, v_L, v_c);
-            const _h411 = _t410.length;
-            let _c417: boolean = (listLength(cl.numbers.digits[v_k]) === _h411);
-            if (_c417) {
-              let _q412 = true;
-              Q413: {
-                const _a414 = _t410;
-                for (let _i415 = 0; _i415 < _a414.length; _i415++) {
-                  const v_x = _a414[_i415];
-                  const _h416 = (b.grid[v_x] || -1);
-                  if (!((_h416 === nth(cl.numbers.digits[v_k], _i415)))) {
-                    _q412 = false;
-                    break Q413;
+    let _g450 = 0;
+    G451: {
+      const _a452 = sp.lines;
+      for (let _i453 = 0; _i453 < _a452.length; _i453++) {
+        const v_L = _a452[_i453];
+        const _a454 = sp.lineCells[v_L];
+        for (let _i455 = 0; _i455 < _a454.length; _i455++) {
+          const v_c = _a454[_i455];
+          let _c464: boolean = head(sp, cl, v_L, v_c);
+          if (_c464) {
+            const _t456 = run(sp, cl, v_L, v_c);
+            const _h457 = _t456.length;
+            let _c463: boolean = (listLength(cl.numbers.digits[v_k]) === _h457);
+            if (_c463) {
+              let _q458 = true;
+              Q459: {
+                const _a460 = _t456;
+                for (let _i461 = 0; _i461 < _a460.length; _i461++) {
+                  const v_x = _a460[_i461];
+                  const _h462 = (b.grid[v_x] || -1);
+                  if (!((_h462 === nth(cl.numbers.digits[v_k], _i461)))) {
+                    _q458 = false;
+                    break Q459;
                   }
                 }
               }
-              _c417 = _q412;
+              _c463 = _q458;
             }
-            _c418 = _c417;
+            _c464 = _c463;
           }
-          if (!(_c418)) continue;
-          _g404++;
+          if (!(_c464)) continue;
+          _g450++;
         }
       }
     }
-    if (!((_g404 < 2))) return -1;
+    if (!((_g450 < 2))) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null && !fire({ k: v_k }, facts)) return 1;

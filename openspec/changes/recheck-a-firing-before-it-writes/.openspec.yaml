@@ -1,4 +1,0 @@
-# An engine correctness change: no requirement changes.
-schema: spec-driven
-created: 2026-11-07
-skip_specs: true

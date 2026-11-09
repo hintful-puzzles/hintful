@@ -544,7 +544,8 @@ its reason, and a described game's own through `compiledRung`
 ([`descriptions.md`](./descriptions.md); exemplar `unequal/solver.ts`).
 `describe-runtime.ts` is what compiled code reads: the marks' interface, the
 numbered grid (`describedSpace`, `latinSpace`) and a game's `ClueList`s and
-`ListClues`.
+`ListClues`. `marks-made.ts` numbers the kinds of fact `Marks.made` counts,
+which the compiler reads to check a binding again before it fires.
 
 ### `ladder-runtime.ts` — what a compiled ladder runs on
 

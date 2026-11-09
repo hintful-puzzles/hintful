@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/rect/rect.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, edgeGroups, keptStore, rangeMask, rectCells, rectHeight, rectHolds, rectInner, rectMeets, rectRim, rectWidth, rectsOf, stamps, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, edgeGroups, keptStore, rangeMask, rectCells, rectHeight, rectHolds, rectInner, rectMeets, rectRim, rectWidth, rectsOf, sameSet, stamps, type Kept } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -332,7 +332,10 @@ export function boxed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoxedBindin
   const facts = boxedFacts;
   let fired = 0;
   let changed = false;
+  R1:
   for (let v_q = 0; v_q < cl.number.at.length; v_q++) {
+    const _m31_0 = b.made[0];
+    const _m31_1 = b.made[1];
     L96: {
       const v_F = fits(b, sp, cl, v_q);
       const _h97 = v_F.length;
@@ -352,6 +355,9 @@ export function boxed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoxedBindin
           }
         }
         if (!(_q100)) continue;
+        if (b.made[0] !== _m31_0 || b.made[1] !== _m31_1) {
+          if (!(sameSet(v_F, fits(b, sp, cl, v_q)))) { continue R1; }
+        }
         facts.length = 0;
         changed = false;
         let _q104 = true;
@@ -489,7 +495,10 @@ export function overlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OverlapBi
   const facts = overlapFacts;
   let fired = 0;
   let changed = false;
+  R1:
   for (let v_p = 0; v_p < cl.number.at.length; v_p++) {
+    const _m78_0 = b.made[0];
+    const _m78_1 = b.made[1];
     let _q177 = false;
     Q178: {
       for (let v_q = 0; v_q < cl.number.at.length; v_q++) {
@@ -536,6 +545,9 @@ export function overlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OverlapBi
             const _h198 = v_G.length;
             if (!(((_h198 === 1) && (_h198 < _h182)))) break L197;
             const v_r = (v_G[0] ?? -1);
+            if (b.made[0] !== _m78_0 || b.made[1] !== _m78_1) {
+              if (!(sameSet(v_K, core(b, sp, cl, v_p)))) { continue R1; }
+            }
             facts.length = 0;
             changed = false;
             let _q199 = true;

@@ -136,13 +136,12 @@ techniques:
       and (left = |O| implies forall c in O: place(c, slash(c, k)))
   # A diagonal joining two points already joined would close a loop, so the
   # square takes the other. One whose diagonals both would makes the marks
-  # inconsistent. A solve places as it goes, so the square is asked again
-  # for each diagonal: once placed, its own diagonal joins its points.
+  # inconsistent.
   - id: loop
     tier: Easy
     for: >-
       c in cells where not known(c),
-      d in range(1, 2) where not known(c) and closes(c, d)
+      d in range(1, 2) where closes(c, d)
     conclude: "not closes(c, 3 - d) and place(c, 3 - d)"
   # Two open squares side by side round a number that slant alike give it
   # one line between them whichever way they slant, so the rest of its open
@@ -151,9 +150,7 @@ techniques:
     tier: Normal
     for: >-
       A = alike, k in points where clue(n, k) >= 0, P = open(k) where |P| > 2,
-      a in P where not known(a),
-      b in before(a, P) where not known(b) and b in adj4(a)
-      and b in through(a, A),
+      a in P, b in before(a, P) where b in adj4(a) and b in through(a, A),
       O = {c in open(k) where c != a and c != b},
       left = clue(n, k) - lines(k) - 1
     conclude: >-
@@ -168,8 +165,7 @@ techniques:
     for: >-
       A = alike, k in points where clue(n, k) >= 0,
       P = open(k) where |P| = 2 or |P| = 4,
-      a in P where not known(a),
-      b in before(a, P) where not known(b) and b in adj4(a),
+      a in P, b in before(a, P) where b in adj4(a),
       R = {c in open(k) where c != a and c != b}
       where |R| = 0 or (|R| = 2 and nth(R, 1) in adj4(nth(R, 0))
       and nth(R, 1) in through(nth(R, 0), A)),

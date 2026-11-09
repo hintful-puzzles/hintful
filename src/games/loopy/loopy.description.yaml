@@ -397,8 +397,7 @@ techniques:
       e = nth(O, 0), g = nth(O, 1) where pair(e, g) = {1, 2}
     conclude: "relate(e, g, 1 + need(f) mod 2)"
   # A clue with three edges open, two of them related: what they hold
-  # together decides the third. All three are asked open again, since a
-  # line this placed for one pair leaves `O` stale for the next.
+  # together decides the third.
   - id: parityClue
     tier: Hard
     for: >-
@@ -406,7 +405,6 @@ techniques:
       O = {e in edges(f) where not known(e)} where |O| = 3,
       e in O, g in O where index(g, O) > index(e, O) and |pair(e, g)| = 1,
       k = first(O - {e, g})
-      where not known(e) and not known(g) and not known(k)
     conclude: "place(k, 2 - (need(f) + first(pair(e, g)) - 1) mod 2)"
   # A clue with four edges open, two of them related: the other two are
   # related too.
@@ -441,15 +439,13 @@ techniques:
       e = nth(O, 0), g = nth(O, 1) where pair(e, g) = {1, 2}
     conclude: "relate(e, g, 1 + dotLines(c) mod 2)"
   # A dot with three edges open, two of them related: what they hold
-  # together decides the third. All three are asked open again, as at a
-  # clue.
+  # together decides the third.
   - id: parityDot
     tier: Hard
     for: >-
       c in cells, O = {e in edges(c) where not known(e)} where |O| = 3,
       e in O, g in O where index(g, O) > index(e, O) and |pair(e, g)| = 1,
       k = first(O - {e, g})
-      where not known(e) and not known(g) and not known(k)
     conclude: "place(k, 2 - (dotLines(c) + first(pair(e, g)) - 1) mod 2)"
   # A dot with four edges open, two of them related: the other two are
   # related too.

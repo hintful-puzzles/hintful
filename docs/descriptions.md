@@ -494,15 +494,37 @@ the next, is two firings on a hint's walk: Magnets' upstream placed a tile
 that an earlier tile's pole had just forced in the same sweep, and its
 compiled `onlyEnd` leaves that tile to the next firing.
 
-**So a name bound before a loop holds the marks of that moment.** On the
-solve path the bindings inside the loop make facts as they go, so a name
-bound outside it, read beside a fresh read of the marks inside it, reads two
-moments, and the conclusion can be false of both. Bind a name that reads the
-marks after the binder it is compared across: Mosaic's `compared` binds the
-first number's need after the loop over its partners, and bound before it,
-the checker found boards it gave two answers. A name that reads only what
-the board deals, or that nothing later compares with a fresh read, may be
-bound outside (Star Battle's `neededLine`).
+**So a binding fires only on the marks it read.** On the solve path a
+binding can read marks an earlier binding of the same run has since changed:
+a name bound before a loop, or a set read before a placement in it. Read
+beside a fresh read, it would conclude from two moments, and the conclusion
+can be false of both. The compiled code prevents this, never the statement.
+Before a binding's premise, it reads again what its binders read of the
+marks: that its element is still in its set, that a `=` still names what
+its term reads, that a `where` still holds (`rereads` in
+[`compile.ts`](../src/describe/compile.ts)). A read is made again only where
+a loop opened since lets another binding's facts come between, and only
+where it reads the marks. A binding whose read fails is passed over with
+every binding that read fails for. The run goes on with the next element
+of the failing binder, or returns where a `=` bound before every loop
+failed. The binding's element stays to visit (`CellMarks.visit`, below). A
+technique run on placing, which no fixpoint runs again, runs again on its
+cell.
+
+The reads are made again only where a fact has been made since. The marks
+count the facts that change each kind of mark (`Marks.made`, its kinds
+`MADE`), and the count is taken where the binding first reads that kind.
+What a line reads is taken from the members of the marks `b` it names
+(`READS` in `compile.ts`). Any other mention of `b`, as when a function of
+the runtime is given the marks, reads every kind. A new member of the marks
+is added there, or it is read as every kind, which is safe and costs only
+reads made again.
+
+What a binder's place still decides is cost. A set read whole at the top
+(Slant's `alike`, Net's `L`) is read whole again at each binding after a fact
+of its kinds, and where it changed, the run ends. So a name compared across
+a loop is bound inside it: Mosaic's `compared` binds the first number's need
+after the loop over its partners.
 
 **A solve visits again only the elements a fact reached.** The fixpoint
 runs every technique again from the top after each firing, and most find
@@ -897,25 +919,17 @@ then the next clue's) are one technique bound by the clue, its conclusion
 the first reading where that changes the marks and the second otherwise. A
 let binder says which, for the reason: Towers' `bounds` and its `near`.
 
-**A solve makes each fact as it concludes it**, so a set a binder computed
-before a placement in the same run reads as it was: a second binding of a
-square just placed, or a member of `open(k)` placed since `open(k)` was
-read. A technique that places says `not known(x)` again in the binder that
-reads `x` (Slant's `loop`, `pair` and `share`, Path's `pairBreaks`, Loopy's
-`parityClue` and `parityDot`), or its
-solve concludes from marks that are no longer there and calls a sound board
-inconsistent. The soundness check judges one binding on one position, never a
-run, so it passes such a technique; and the generator drops the boards it
-misgrades, so its own deals pass too. Grade boards the old solver dealt: Path's
-`pairBreaks` without the check called 21 of 260 of them impossible. Or run
-the ladder in place on boards dealt from a known answer and compare the
-marks with it after every technique's run: a hint's walk, one firing at a
-time, never shows it. Loopy's `parityDot` misplaced a line on two of 18
-tilings' first deals, and on none of 30,788 runs once it asked again. A group
-`through(c, O)` is the same: a technique that opens edges reads a group only
-while no open edge leads out of it, or a square its own earlier binding
-joined to a group grows that group again as if alone (Palisade's
-`notTooSmall` opened a 1×4 strip end to end).
+**A statement never asks again what its own run may have changed.** A
+solve makes each fact as it concludes it, and a binding that read a mark a
+fact has changed since does not fire (§ "What a technique compiles to"). So
+a set read before a placement, `open(k)` or a group `through(c, O)`, is read
+as it stands, with no `not known(x)` repeated for a fact the run made. Only
+the compiled check guards this, and the other nets miss it. The soundness
+check judges one binding on one position, never a run. The generator drops
+the boards a stale read misgrades, so its own deals pass. Path's
+`pairBreaks` read its three edges as open after it had drawn one, and
+called 21 of 260 boards the old solver dealt impossible. `path.test.ts`
+grades three of them, and fails where the check is not compiled.
 
 ## A conclusion that is false is a contradiction
 

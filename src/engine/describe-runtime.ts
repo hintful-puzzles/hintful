@@ -39,6 +39,10 @@ export interface Marks {
    * catches up from, a placement at a time, as long as the epoch holds. */
   readonly log: readonly number[];
   readonly epoch: number;
+  /** How many facts have changed each kind of mark, indexed by `MADE`
+   * (`marks-made.ts`): a compiled binding compares them before it fires, so one
+   * that read a mark a fact has changed since does not fire on what it read. */
+  readonly made: Int32Array;
   /** The structures kept over these marks, by what each keeps
    * ({@link keptEdgeGroups}). */
   readonly kept: Map<unknown, unknown>;

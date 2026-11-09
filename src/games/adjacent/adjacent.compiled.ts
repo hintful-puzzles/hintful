@@ -104,8 +104,10 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjacent
   for (let _i8 = 0; _i8 < _a7.length; _i8++) {
     const v_L = _a7[_i8];
     const _a9 = sp.lineCells[v_L];
+    R2:
     for (let _i10 = 0; _i10 < _a9.length; _i10++) {
       const v_a = _a9[_i10];
+      const _m8_0 = b.made[0];
       const _h11 = (b.grid[v_a] !== 0);
       if (!(_h11)) continue;
       const _h17 = (b.grid[v_a] || -1);
@@ -115,6 +117,9 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjacent
         const v_e = sp.adj4Edges[v_a][_i13];
         const _h18 = clueAt(cl.bar, v_e);
         const _h19 = (_h18 === 1);
+        if (b.made[0] !== _m8_0) {
+          if (!((b.grid[v_a] !== 0))) { continue R2; }
+        }
         facts.length = 0;
         changed = false;
         let _q14 = true;

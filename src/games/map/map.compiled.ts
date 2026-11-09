@@ -57,24 +57,24 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  let _q122 = true;
-  Q123: {
-    const _a124 = sp.cells;
-    for (let _i125 = 0; _i125 < _a124.length; _i125++) {
-      const v_a = _a124[_i125];
-      const _h129 = (g[v_a] || -1);
-      const _a126 = cl.borders[v_a];
-      for (let _i127 = 0; _i127 < _a126.length; _i127++) {
-        const v_b = _a126[_i127];
-        const _h128 = (g[v_b] || -1);
-        if (!((_h128 !== _h129))) {
-          _q122 = false;
-          break Q123;
+  let _q130 = true;
+  Q131: {
+    const _a132 = sp.cells;
+    for (let _i133 = 0; _i133 < _a132.length; _i133++) {
+      const v_a = _a132[_i133];
+      const _h137 = (g[v_a] || -1);
+      const _a134 = cl.borders[v_a];
+      for (let _i135 = 0; _i135 < _a134.length; _i135++) {
+        const v_b = _a134[_i135];
+        const _h136 = (g[v_b] || -1);
+        if (!((_h136 !== _h137))) {
+          _q130 = false;
+          break Q131;
         }
       }
     }
   }
-  if (!(_q122)) return false;
+  if (!(_q130)) return false;
   return true;
 }
 
@@ -164,8 +164,11 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
   const cands = pairCands;
   cands.fill(-1);
   const _a20 = sp.cells;
+  R1:
   for (let _i21 = 0; _i21 < _a20.length; _i21++) {
     const v_a = _a20[_i21];
+    const _m24_0 = b.made[0];
+    const _m24_1 = b.made[1];
     const _h22 = (b.grid[v_a] !== 0);
     if (!((!(_h22) && (popcount((cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a]))) === 2)))) continue;
     const _h25 = _i21;
@@ -174,6 +177,9 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
       const v_b = _a23[_i24];
       const _h26 = (b.grid[v_b] !== 0);
       if (!((((v_b > _h25) && !(_h26)) && ((cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])) === (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])))))) continue;
+      if (b.made[0] !== _m24_0 || b.made[1] !== _m24_1) {
+        if (!((!((b.grid[v_a] !== 0)) && (popcount((cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a]))) === 2)))) { continue R1; }
+      }
       facts.length = 0;
       changed = false;
       let _q27 = true;
@@ -227,12 +233,16 @@ export function weigh(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighBindin
   const cands = weighCands;
   cands.fill(-1);
   const _a72 = sp.cells;
+  R1:
   for (let _i73 = 0; _i73 < _a72.length; _i73++) {
     const v_m = _a72[_i73];
+    const _m41_0 = b.made[0];
     const _h74 = (b.grid[v_m] !== 0);
     if (!(!(_h74))) continue;
+    R2:
     for (let _m75 = b.domain; _m75 !== 0; _m75 &= _m75 - 1) {
       const v_x = 31 - Math.clz32(_m75 & -_m75);
+      const _m47_1 = b.made[1];
       L76: {
         const v_R = ((cands[v_m] >= 0 ? cands[v_m] : (cands[v_m] = b.cands[v_m])) & ~((1 << v_x)));
         const _h77 = popcount(v_R);
@@ -318,6 +328,36 @@ export function weigh(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighBindin
             }
           }
           const v_E = _g101;
+          if (b.made[0] !== _m41_0 || b.made[1] !== _m47_1) {
+            if (!(!((b.grid[v_m] !== 0)))) { continue R1; }
+            if (!((v_R === ((cands[v_m] >= 0 ? cands[v_m] : (cands[v_m] = b.cands[v_m])) & ~((1 << v_x)))))) { continue R2; }
+            let _c129: boolean = (popcount(v_R) >= 1);
+            if (_c129) {
+              let _q122 = true;
+              Q123: {
+                for (let _m124 = v_R; _m124 !== 0; _m124 &= _m124 - 1) {
+                  const v_a = 31 - Math.clz32(_m124 & -_m124);
+                  let _q125 = false;
+                  Q126: {
+                    const _a127 = cl.borders[v_m];
+                    for (let _i128 = 0; _i128 < _a127.length; _i128++) {
+                      const v_k = _a127[_i128];
+                      if ((!((b.grid[v_k] !== 0)) && ((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k])) === ((1 << v_a) | (1 << v_x))))) {
+                        _q125 = true;
+                        break Q126;
+                      }
+                    }
+                  }
+                  if (!(_q125)) {
+                    _q122 = false;
+                    break Q123;
+                  }
+                }
+              }
+              _c129 = _q122;
+            }
+            if (!(_c129)) { continue R2; }
+          }
           facts.length = 0;
           changed = false;
           if ((((b.cands[v_t] >> v_x) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_t, v_x); changed = true; } else facts.push(STRIKE, v_t, v_x); }

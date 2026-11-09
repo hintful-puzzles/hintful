@@ -225,16 +225,13 @@ techniques:
       and (b in piece(a) or (with place(e, 1): shortNear(a, b, b)))
     conclude: "place(e, 2)"
   # A square that takes two more lines from three edges left, where lines
-  # on two of them would break the board: the third takes a line. Each of
-  # the three is asked to be open still, since a solve places the line of
-  # one binding before it reads the next.
+  # on two of them would break the board: the third takes a line.
   - id: pairBreaks
     tier: Normal
     for: >-
       c in cells where takes(c) - lines(c) = 2, U = ways(c) where |U| = 3,
       k in U, I = U - {k}, i = nth(I, 0), j = nth(I, 1)
-      where not known(edge(c, k)) and not known(edge(c, i))
-      and not known(edge(c, j)) and bothBreak(c, i, j)
+      where bothBreak(c, i, j)
     conclude: "place(edge(c, k), 1)"
   # A square that takes two more lines from four edges left, weighed whole:
   # of its six pairs of edges, those that would not break the board are

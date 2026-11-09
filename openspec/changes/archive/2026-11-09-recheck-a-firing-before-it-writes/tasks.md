@@ -1,0 +1,12 @@
+# Tasks
+
+- [x] 1. The compiler names what a binding read; the runtime checks it again before writing the binding's conclusion
+  - The marks count the facts that change each kind of mark (`Marks.made`, `engine/marks-made.ts`); the compiler takes a count before a binding's first read of each kind, and where one has moved by the binding, reads again what its binders read of the marks (`rereads`, `rechecked` in `describe/compile.ts`)
+  - A first cut passed over every binding once a count moved. It changed the order of firings where nothing was stale, and Rome's generator, which reads the candidates a contradiction leaves, gave up on every deal. Reading the binders again keeps every firing whose reads still hold.
+- [x] 2. Path's `pairBreaks` re-checks removed, and the three boards in `path.test.ts` still grade at their tiers; every described game's boards dealt unchanged
+  - Removed with them: Slant's `loop`, `pair` and `share`, Loopy's `parityClue` and `parityDot`, and Palisade's `notTooSmall` guard on an open edge out of a group, the same stale read of a group
+  - `path.test.ts`'s three boards fail with the checks off, and pass with them
+  - Deal-compare against `ed7d842e` (2026-11-09, 3 seeds, every described game): no board dealt by either tree grades differently under the two ladders, and 7 deals moved: Separate 6, Net 1. They moved in the generators' trial boards. On 2,560 scrambled Separate boards, 5 end differently, all with no answer: HEAD's ladder stopped stuck where the stale read had kept a group from joining, and the new one reaches the contradiction.
+- [x] 3. Timed against `make-descriptions-zero-cost`'s census; the guide's paragraph replaced by the rule
+  - Guide: `docs/descriptions.md` § "What a technique compiles to" and § "A statement's order is behavior"
+  - Deal time, new over HEAD: most games 0.94–1.25×; Slant 1.85× (10x12dh 212 ms mean), Palisade 1.26× (12x15 958 ms at most), Filling 1.38×, Spokes 1.33×. Over the 1 s ceiling: Filling 13x17du (1.39 → 1.86 s at most, over before) and Spokes 5x7dh (870 → 1162 ms at most, 986 ms mean). Filling's comes from a set read whole being re-read whole, which ends `mustGrow`'s run at its first placement: filed as `recheck-only-what-a-binding-used`. Spokes' is the check working: `spareBreaks`' first line at a cell shrinks the cell's `ways`, so its other lines wait for the ladder's next pass, where HEAD drew them on a stale read.

@@ -34,6 +34,7 @@ import {
   STRIKE_EDGE,
 } from "./describe-runtime.ts";
 import { type CellBoard, FiringReplay } from "./firing-replay.ts";
+import { MADE } from "./marks-made.ts";
 import { type StepBudget, stepBudget } from "./step-budget.ts";
 
 /** Why a placement struck a value from a cell: the value just placed at
@@ -102,6 +103,7 @@ export class CellMarks implements Marks {
   placed = 0;
   readonly log: number[] = [];
   epoch = 0;
+  readonly made = new Int32Array(Object.keys(MADE).length);
   readonly kept = new Map<unknown, unknown>();
   readonly domain: number;
   readonly repeat: number;
@@ -215,6 +217,7 @@ export class CellMarks implements Marks {
   strikeAt(c: number, d: number): void {
     if (!this.has(c, d)) return;
     this.drop(c, d);
+    this.made[MADE.cand]++;
     if (this.visits.size > 0) this.reached("answer", c);
     for (const run of this.striking) run(this, c);
   }
@@ -275,6 +278,7 @@ export class CellMarks implements Marks {
   edgeStrikeAt(e: number, d: number): void {
     if ((this.edgeCands[e] & (1 << d)) === 0) return;
     this.edgeCands[e] &= ~(1 << d);
+    this.made[MADE.edgeMark]++;
     if (this.visits.size > 0) this.reached("edgeMark", e);
   }
   markOf(c: number): number {
@@ -285,6 +289,7 @@ export class CellMarks implements Marks {
   markAt(c: number, q: number): void {
     this.marked[c] = q;
     this.placed++;
+    this.made[MADE.cellMark]++;
   }
   /** The relation over the edges, made empty at its first use. */
   get pairs(): EdgeRelation {
@@ -298,7 +303,9 @@ export class CellMarks implements Marks {
     return this.pairs.related(e);
   }
   relateAt(e: number, f: number, d: number): void {
-    if (this.pairs.relate(e, f, d) && this.visits.size > 0) this.reachedAll(true);
+    if (!this.pairs.relate(e, f, d)) return;
+    this.made[MADE.relation]++;
+    if (this.visits.size > 0) this.reachedAll(true);
   }
   /** Forget every relation, as a game does before it seeds the player's
    * own. */
@@ -361,6 +368,8 @@ export class CellMarks implements Marks {
     this.keepOnly(c, d);
     this.grid[c] = d;
     this.placed++;
+    this.made[MADE.value]++;
+    this.made[MADE.cand]++;
     this.log.push(c);
     if (this.visits.size > 0) this.reached("answer", c);
     for (const run of this.placing) run(this, c);

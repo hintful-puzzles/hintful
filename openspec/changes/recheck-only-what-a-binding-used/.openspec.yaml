@@ -1,0 +1,4 @@
+# What a binding fires on is unchanged; only what its re-read costs.
+schema: spec-driven
+created: 2026-11-09
+skip_specs: true

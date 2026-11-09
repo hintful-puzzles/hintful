@@ -144,13 +144,11 @@ techniques:
   # A group short of k squares grows across an edge still to decide. Where
   # every such edge leads into one other group, it joins that group: every
   # edge between them is open. With no edge to grow across, or past k
-  # squares, the marks are inconsistent. A solve opens edges as it goes, so
-  # a group is read only while no open edge leads out of it.
+  # squares, the marks are inconsistent.
   - id: notTooSmall
     tier: Easy
     for: >-
-      O = joined, c in cells, A = through(c, O) where c = nth(A, 0) and |A| != k
-      and not (exists x in A, y in adj4(x) where y not in A: value(edge(x, y)) = 2),
+      O = joined, c in cells, A = through(c, O) where c = nth(A, 0) and |A| != k,
       S = set(s over x in A, s in open(x))
     conclude: >-
       |A| < k and |S| > 0

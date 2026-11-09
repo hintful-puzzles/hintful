@@ -504,11 +504,18 @@ export function noRepeats(b: Marks, sp: GridSpace, fire: Fire<NoRepeatsBinding> 
   const cands = noRepeatsCands;
   cands.fill(-1);
   const _a186 = sp.cells;
+  R1:
   for (let _i187 = 0; _i187 < _a186.length; _i187++) {
     const v_s = _a186[_i187];
+    const _m107_1 = b.made[1];
     if (!((popcount((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s]))) === 1))) continue;
+    R2:
     for (let _m188 = (cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])); _m188 !== 0; _m188 &= _m188 - 1) {
       const v_d = 31 - Math.clz32(_m188 & -_m188);
+      if (b.made[1] !== _m107_1) {
+        if (!((popcount((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s]))) === 1))) { continue R1; }
+        if (!((((b.cands[v_s] >> v_d) & 1) !== 0))) { continue R2; }
+      }
       facts.length = 0;
       changed = false;
       let _q189 = true;

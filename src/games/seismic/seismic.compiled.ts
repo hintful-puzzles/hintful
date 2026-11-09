@@ -127,6 +127,7 @@ export function cull(b: Marks, sp: GridSpace, cl: Dealt, v_c: number, fire: Fire
   const facts = cullFacts;
   let fired = 0;
   let changed = false;
+  const _m1_0 = b.made[0];
   const _h5 = (b.grid[v_c] !== 0);
   const _h6 = (b.grid[v_c] || -1);
   const _h9 = cl.area.of[v_c];
@@ -140,6 +141,9 @@ export function cull(b: Marks, sp: GridSpace, cl: Dealt, v_c: number, fire: Fire
   for (let _i8 = 0; _i8 < _a7.length; _i8++) {
     const v_p = _a7[_i8];
     if (!(((v_p !== v_c) && ((cl.area.of[v_p] === _h9) || ((v_c !== v_p) && ((_h10 && (((_h11 === ((v_p / sp.w) | 0)) && (Math.abs((_h12 - (v_p % sp.w))) <= v_n)) || ((_h12 === (v_p % sp.w)) && (Math.abs((_h11 - ((v_p / sp.w) | 0))) <= v_n)))) || ((_h13 && (Math.abs((_h12 - (v_p % sp.w))) <= 1)) && (Math.abs((_h11 - ((v_p / sp.w) | 0))) <= 1)))))))) continue;
+    if (b.made[0] !== _m1_0) {
+      if (!((v_n === (b.grid[v_c] || -1)))) { return cull(b, sp, cl, v_c, fire) | fired; }
+    }
     facts.length = 0;
     changed = false;
     if ((((b.cands[v_p] >> v_n) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_p, v_n); changed = true; } else facts.push(STRIKE, v_p, v_n); }

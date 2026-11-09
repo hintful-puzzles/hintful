@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/spokes/spokes.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, edgeGroups, keptStore, rangeMask, setOf, stamps, throughWhere, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, edgeGroups, keptStore, rangeMask, sameSet, setOf, stamps, throughWhere, type Kept } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -58,114 +58,114 @@ export const tiers: readonly string[] = ["Easy","Normal","Unreasonable"];
  * board: every cell a value of its domain, and every rule and dealt clue
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
-  const _g898: number[] = [];
+  const _g902: number[] = [];
   const _domain = rangeMask(1, 2);
   for (const cell of sp.edges) {
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  let _q881 = true;
-  Q882: {
-    const _a883 = sp.cells;
-    for (let _i884 = 0; _i884 < _a883.length; _i884++) {
-      const v_c = _a883[_i884];
-      const _h885 = clueAt(cl.number, v_c);
-      if (!(!((_h885 !== -1)))) continue;
-      let _g886 = 0;
-      G887: {
-        const _a888 = sp.adj8[v_c];
-        for (let _i889 = 0; _i889 < _a888.length; _i889++) {
-          const _h890 = (g[sp.adj8Edges[v_c][_i889]] || -1);
-          if (!((_h890 === 1))) continue;
-          _g886++;
+  let _q885 = true;
+  Q886: {
+    const _a887 = sp.cells;
+    for (let _i888 = 0; _i888 < _a887.length; _i888++) {
+      const v_c = _a887[_i888];
+      const _h889 = clueAt(cl.number, v_c);
+      if (!(!((_h889 !== -1)))) continue;
+      let _g890 = 0;
+      G891: {
+        const _a892 = sp.adj8[v_c];
+        for (let _i893 = 0; _i893 < _a892.length; _i893++) {
+          const _h894 = (g[sp.adj8Edges[v_c][_i893]] || -1);
+          if (!((_h894 === 1))) continue;
+          _g890++;
         }
       }
-      if (!((_g886 === 0))) {
-        _q881 = false;
-        break Q882;
+      if (!((_g890 === 0))) {
+        _q885 = false;
+        break Q886;
       }
     }
   }
-  if (!(_q881)) return false;
-  let _q891 = true;
-  Q892: {
-    const _a893 = sp.edges;
-    for (let _i894 = 0; _i894 < _a893.length; _i894++) {
-      const v_e = _a893[_i894];
+  if (!(_q885)) return false;
+  let _q895 = true;
+  Q896: {
+    const _a897 = sp.edges;
+    for (let _i898 = 0; _i898 < _a897.length; _i898++) {
+      const v_e = _a897[_i898];
       if (!((sp.crossing[v_e] !== -1))) continue;
-      const _h895 = (g[v_e] || -1);
-      if (!(((_h895 === 2) || ((g[sp.crossing[v_e]] || -1) === 2)))) {
-        _q891 = false;
-        break Q892;
+      const _h899 = (g[v_e] || -1);
+      if (!(((_h899 === 2) || ((g[sp.crossing[v_e]] || -1) === 2)))) {
+        _q895 = false;
+        break Q896;
       }
     }
   }
-  if (!(_q891)) return false;
-  let _q896 = true;
-  Q897: {
-    _g898.length = 0;
-    G899: {
-      const _a902 = sp.edges;
-      for (let _i903 = 0; _i903 < _a902.length; _i903++) {
-        const v_e = _a902[_i903];
-        const _h904 = (g[v_e] || -1);
-        if (!((_h904 === 1))) continue;
-        _g898.push(v_e);
+  if (!(_q895)) return false;
+  let _q900 = true;
+  Q901: {
+    _g902.length = 0;
+    G903: {
+      const _a906 = sp.edges;
+      for (let _i907 = 0; _i907 < _a906.length; _i907++) {
+        const v_e = _a906[_i907];
+        const _h908 = (g[v_e] || -1);
+        if (!((_h908 === 1))) continue;
+        _g902.push(v_e);
       }
     }
-    const v_L = _g898;
-    const _eg911 = edgeGroups(sp, v_L);
-    const _a905 = sp.cells;
-    for (let _i906 = 0; _i906 < _a905.length; _i906++) {
-      const v_a = _a905[_i906];
-      const _h907 = clueAt(cl.number, v_a);
-      if (!((_h907 !== -1))) continue;
-      const _a908 = sp.cells;
-      for (let _i909 = 0; _i909 < _a908.length; _i909++) {
-        const v_b = _a908[_i909];
-        const _h910 = clueAt(cl.number, v_b);
-        if (!((_h910 !== -1))) continue;
-        if (!((_eg911.of(v_b) === _eg911.of(v_a)))) {
-          _q896 = false;
-          break Q897;
+    const v_L = _g902;
+    const _eg915 = edgeGroups(sp, v_L);
+    const _a909 = sp.cells;
+    for (let _i910 = 0; _i910 < _a909.length; _i910++) {
+      const v_a = _a909[_i910];
+      const _h911 = clueAt(cl.number, v_a);
+      if (!((_h911 !== -1))) continue;
+      const _a912 = sp.cells;
+      for (let _i913 = 0; _i913 < _a912.length; _i913++) {
+        const v_b = _a912[_i913];
+        const _h914 = clueAt(cl.number, v_b);
+        if (!((_h914 !== -1))) continue;
+        if (!((_eg915.of(v_b) === _eg915.of(v_a)))) {
+          _q900 = false;
+          break Q901;
         }
       }
     }
   }
-  if (!(_q896)) return false;
-  for (let _k912 = 0; _k912 < cl.number.at.length; _k912++) {
-    const _at913 = cl.number.at[_k912];
-    let _g915 = 0;
-    G916: {
-      const _a917 = sp.adj8[_at913];
-      for (let _i918 = 0; _i918 < _a917.length; _i918++) {
-        const _h919 = (g[sp.adj8Edges[_at913][_i918]] || -1);
-        if (!((_h919 === 1))) continue;
-        _g915++;
+  if (!(_q900)) return false;
+  for (let _k916 = 0; _k916 < cl.number.at.length; _k916++) {
+    const _at917 = cl.number.at[_k916];
+    let _g919 = 0;
+    G920: {
+      const _a921 = sp.adj8[_at917];
+      for (let _i922 = 0; _i922 < _a921.length; _i922++) {
+        const _h923 = (g[sp.adj8Edges[_at917][_i922]] || -1);
+        if (!((_h923 === 1))) continue;
+        _g919++;
       }
     }
-    if (!((_g915 === clueAt(cl.number, _at913)))) return false;
+    if (!((_g919 === clueAt(cl.number, _at917)))) return false;
   }
-  for (let _k920 = 0; _k920 < cl.block.at.length; _k920++) {
-    const _at921 = cl.block.at[_k920];
-    let _q923 = true;
-    Q924: {
-      const _a925 = sp.adj4[_at921];
-      for (let _i926 = 0; _i926 < _a925.length; _i926++) {
-        const v_a = _a925[_i926];
-        const _a927 = sp.adj4[_at921];
-        for (let _i928 = 0; _i928 < _a927.length; _i928++) {
-          const v_b = _a927[_i928];
+  for (let _k924 = 0; _k924 < cl.block.at.length; _k924++) {
+    const _at925 = cl.block.at[_k924];
+    let _q927 = true;
+    Q928: {
+      const _a929 = sp.adj4[_at925];
+      for (let _i930 = 0; _i930 < _a929.length; _i930++) {
+        const v_a = _a929[_i930];
+        const _a931 = sp.adj4[_at925];
+        for (let _i932 = 0; _i932 < _a931.length; _i932++) {
+          const v_b = _a931[_i932];
           if (!((sp.edgeOf(v_a, v_b) !== -1))) continue;
-          const _h929 = (g[sp.edgeOf(v_a, v_b)] || -1);
-          if (!((_h929 === 2))) {
-            _q923 = false;
-            break Q924;
+          const _h933 = (g[sp.edgeOf(v_a, v_b)] || -1);
+          if (!((_h933 === 2))) {
+            _q927 = false;
+            break Q928;
           }
         }
       }
     }
-    if (!(_q923)) return false;
+    if (!(_q927)) return false;
   }
   return true;
 }
@@ -844,8 +844,11 @@ export function spareBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Spare
   let changed = false;
   const _k702 = takesKept.board(cl);
   const _a695 = sp.cells;
+  R1:
   for (let _i696 = 0; _i696 < _a695.length; _i696++) {
     const v_c = _a695[_i696];
+    const _m167_0 = b.made[0];
+    const _m167_1 = b.made[1];
     L697: {
       const v_U = ways(b, sp, cl, v_c);
       const _h703 = v_U.length;
@@ -1252,10 +1255,22 @@ export function spareBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Spare
             _c879 = _c878;
           }
           if (!(_c879)) break L715;
+          if (b.made[0] !== _m167_0 || b.made[1] !== _m167_1) {
+            if (!(sameSet(v_U, ways(b, sp, cl, v_c)))) { continue R1; }
+            let _g880 = 0;
+            G881: {
+              const _a882 = sp.adj8[v_c];
+              for (let _i883 = 0; _i883 < _a882.length; _i883++) {
+                if (!(((b.grid[sp.adj8Edges[v_c][_i883]] || -1) === 1))) continue;
+                _g880++;
+              }
+            }
+            if (!(((_g880 < takes(sp, cl, v_c)) && (v_U.length === ((takes(sp, cl, v_c) - _g880) + 1))))) { continue R1; }
+          }
           facts.length = 0;
           changed = false;
-          const _t880 = sp.edgeOf(v_c, v_y);
-          if (!(b.grid[_t880] !== 0)) { if (fire === null) { b.placeAt(_t880, 1); changed = true; } else facts.push(PLACE, _t880, 1); }
+          const _t884 = sp.edgeOf(v_c, v_y);
+          if (!(b.grid[_t884] !== 0)) { if (fire === null) { b.placeAt(_t884, 1); changed = true; } else facts.push(PLACE, _t884, 1); }
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;

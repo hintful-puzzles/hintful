@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/skeleton/grid/skeleton.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, keptStore, minus, rangeMask, subsetOf, type Kept, within } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, keptStore, minus, rangeMask, sameSet, subsetOf, type Kept, within } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -55,24 +55,24 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  for (let _k106 = 0; _k106 < cl.count.at.length; _k106++) {
-    const _at107 = cl.count.at[_k106];
-    const _v108 = cl.count.v[_k106];
-    let _c114: boolean = ((g[_at107] || -1) === 2);
-    if (_c114) {
-      let _g109 = 0;
-      G110: {
-        const _a111 = sp.adj4[_at107];
-        for (let _i112 = 0; _i112 < _a111.length; _i112++) {
-          const v_d = _a111[_i112];
-          const _h113 = (g[v_d] || -1);
-          if (!((_h113 === 1))) continue;
-          _g109++;
+  for (let _k112 = 0; _k112 < cl.count.at.length; _k112++) {
+    const _at113 = cl.count.at[_k112];
+    const _v114 = cl.count.v[_k112];
+    let _c120: boolean = ((g[_at113] || -1) === 2);
+    if (_c120) {
+      let _g115 = 0;
+      G116: {
+        const _a117 = sp.adj4[_at113];
+        for (let _i118 = 0; _i118 < _a117.length; _i118++) {
+          const v_d = _a117[_i118];
+          const _h119 = (g[v_d] || -1);
+          if (!((_h119 === 1))) continue;
+          _g115++;
         }
       }
-      _c114 = (_g109 === _v108);
+      _c120 = (_g115 === _v114);
     }
-    if (!(_c114)) return false;
+    if (!(_c120)) return false;
   }
   return true;
 }
@@ -187,11 +187,14 @@ const sharedFacts: number[] = [];
 export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBinding> | null): number {
   const _g63: number[] = [];
   const _g75: number[] = [];
+  const _g94: number[] = [];
   const facts = sharedFacts;
   let fired = 0;
   let changed = false;
+  R1:
   for (let v_k = 0; v_k < cl.count.at.length; v_k++) {
     const v_c = cl.count.at[v_k];
+    const _m35_0 = b.made[0];
     _g63.length = 0;
     G64: {
       const _a67 = sp.adj4[v_c];
@@ -239,38 +242,30 @@ export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBind
             const v_R = minus(v_O, v_M);
             const _h93 = v_R.length;
             if (!(((v_by <= 0) || (v_by >= _h93)))) break L92;
+            if (b.made[0] !== _m35_0) {
+              _g94.length = 0;
+              G95: {
+                const _a98 = sp.adj4[v_c];
+                for (let _i99 = 0; _i99 < _a98.length; _i99++) {
+                  const v_d = _a98[_i99];
+                  if (!((!((b.grid[v_d] !== 0)) && (clueAt(cl.count, v_d) === -1)))) continue;
+                  _g94.push(v_d);
+                }
+              }
+              if (!(sameSet(v_O, _g94))) { continue R1; }
+            }
             facts.length = 0;
             changed = false;
-            let _c99: boolean = ((v_by >= 0) && (v_by <= _h93));
-            if (_c99) {
-              let _c98: boolean = !((v_by === 0));
-              if (!_c98) {
-                let _q94 = true;
-                Q95: {
-                  const _a96 = v_R;
-                  for (let _i97 = 0; _i97 < _a96.length; _i97++) {
-                    const v_d = _a96[_i97];
-                    if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
-                    if (!(true)) {
-                      _q94 = false;
-                      break Q95;
-                    }
-                  }
-                }
-                _c98 = _q94;
-              }
-              _c99 = _c98;
-            }
-            let _c105: boolean = _c99;
+            let _c105: boolean = ((v_by >= 0) && (v_by <= _h93));
             if (_c105) {
-              let _c104: boolean = (v_by === 0);
+              let _c104: boolean = !((v_by === 0));
               if (!_c104) {
                 let _q100 = true;
                 Q101: {
                   const _a102 = v_R;
                   for (let _i103 = 0; _i103 < _a102.length; _i103++) {
                     const v_d = _a102[_i103];
-                    if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
+                    if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 2); changed = true; } else facts.push(PLACE, v_d, 2); }
                     if (!(true)) {
                       _q100 = false;
                       break Q101;
@@ -281,7 +276,27 @@ export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBind
               }
               _c105 = _c104;
             }
-            if (!(_c105)) return -1;
+            let _c111: boolean = _c105;
+            if (_c111) {
+              let _c110: boolean = (v_by === 0);
+              if (!_c110) {
+                let _q106 = true;
+                Q107: {
+                  const _a108 = v_R;
+                  for (let _i109 = 0; _i109 < _a108.length; _i109++) {
+                    const v_d = _a108[_i109];
+                    if (!(b.grid[v_d] !== 0)) { if (fire === null) { b.placeAt(v_d, 1); changed = true; } else facts.push(PLACE, v_d, 1); }
+                    if (!(true)) {
+                      _q106 = false;
+                      break Q107;
+                    }
+                  }
+                }
+                _c110 = _q106;
+              }
+              _c111 = _c110;
+            }
+            if (!(_c111)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
               if (fire !== null && !fire({ k: v_k, c: v_c, O: v_O.slice(), b: v_b, M: v_M.slice(), by: v_by, R: v_R.slice() }, facts)) return 1;

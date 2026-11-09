@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/singles/singles.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, cellsValued, clueAt, connected, cuts, rangeMask } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, cellsValued, clueAt, connected, cuts, rangeMask, sameSet } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -56,77 +56,77 @@ export const tiers: readonly string[] = ["Easy","Normal"];
  * board: every cell a value of its domain, and every rule and dealt clue
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
-  const _g172: number[] = [];
+  const _g178: number[] = [];
   const _domain = rangeMask(1, 2);
   for (const cell of sp.cells) {
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  let _q162 = true;
-  Q163: {
-    const _a164 = sp.cells;
-    for (let _i165 = 0; _i165 < _a164.length; _i165++) {
-      const v_c = _a164[_i165];
-      const _h166 = (g[v_c] || -1);
-      if (!((_h166 === 1))) continue;
-      let _q167 = true;
-      Q168: {
-        const _a169 = sp.adj4[v_c];
-        for (let _i170 = 0; _i170 < _a169.length; _i170++) {
-          const v_p = _a169[_i170];
-          const _h171 = (g[v_p] || -1);
-          if (!((_h171 === 2))) {
-            _q167 = false;
-            break Q168;
+  let _q168 = true;
+  Q169: {
+    const _a170 = sp.cells;
+    for (let _i171 = 0; _i171 < _a170.length; _i171++) {
+      const v_c = _a170[_i171];
+      const _h172 = (g[v_c] || -1);
+      if (!((_h172 === 1))) continue;
+      let _q173 = true;
+      Q174: {
+        const _a175 = sp.adj4[v_c];
+        for (let _i176 = 0; _i176 < _a175.length; _i176++) {
+          const v_p = _a175[_i176];
+          const _h177 = (g[v_p] || -1);
+          if (!((_h177 === 2))) {
+            _q173 = false;
+            break Q174;
           }
         }
       }
-      if (!(_q167)) {
-        _q162 = false;
-        break Q163;
+      if (!(_q173)) {
+        _q168 = false;
+        break Q169;
       }
     }
   }
-  if (!(_q162)) return false;
-  _g172.length = 0;
-  G173: {
-    const _a176 = sp.cells;
-    for (let _i177 = 0; _i177 < _a176.length; _i177++) {
-      const v_c = _a176[_i177];
-      const _h178 = (g[v_c] || -1);
-      if (!((_h178 === 2))) continue;
-      _g172.push(v_c);
+  if (!(_q168)) return false;
+  _g178.length = 0;
+  G179: {
+    const _a182 = sp.cells;
+    for (let _i183 = 0; _i183 < _a182.length; _i183++) {
+      const v_c = _a182[_i183];
+      const _h184 = (g[v_c] || -1);
+      if (!((_h184 === 2))) continue;
+      _g178.push(v_c);
     }
   }
-  if (!(connected(sp, _g172))) return false;
-  for (let _k179 = 0; _k179 < cl.number.at.length; _k179++) {
-    const _at180 = cl.number.at[_k179];
-    const _v181 = cl.number.v[_k179];
-    let _c191: boolean = ((g[_at180] || -1) === 1);
-    if (!_c191) {
-      let _q182 = true;
-      Q183: {
-        const _t184 = sp.rowOf[_at180];
-        const _t185 = sp.colOf[_at180];
-        for (let _i186 = 0; _i186 < 2; _i186++) {
-          const v_L = _i186 === 0 ? _t184 : _t185;
-          if (_i186 === 1 && (v_L === _t184)) continue;
-          const _a187 = sp.lineCells[v_L];
-          for (let _i188 = 0; _i188 < _a187.length; _i188++) {
-            const v_p = _a187[_i188];
-            const _h189 = clueAt(cl.number, v_p);
-            if (!(((v_p !== _at180) && (_h189 === _v181)))) continue;
-            const _h190 = (g[v_p] || -1);
-            if (!((_h190 === 1))) {
-              _q182 = false;
-              break Q183;
+  if (!(connected(sp, _g178))) return false;
+  for (let _k185 = 0; _k185 < cl.number.at.length; _k185++) {
+    const _at186 = cl.number.at[_k185];
+    const _v187 = cl.number.v[_k185];
+    let _c197: boolean = ((g[_at186] || -1) === 1);
+    if (!_c197) {
+      let _q188 = true;
+      Q189: {
+        const _t190 = sp.rowOf[_at186];
+        const _t191 = sp.colOf[_at186];
+        for (let _i192 = 0; _i192 < 2; _i192++) {
+          const v_L = _i192 === 0 ? _t190 : _t191;
+          if (_i192 === 1 && (v_L === _t190)) continue;
+          const _a193 = sp.lineCells[v_L];
+          for (let _i194 = 0; _i194 < _a193.length; _i194++) {
+            const v_p = _a193[_i194];
+            const _h195 = clueAt(cl.number, v_p);
+            if (!(((v_p !== _at186) && (_h195 === _v187)))) continue;
+            const _h196 = (g[v_p] || -1);
+            if (!((_h196 === 1))) {
+              _q188 = false;
+              break Q189;
             }
           }
         }
       }
-      _c191 = _q182;
+      _c197 = _q188;
     }
-    if (!(_c191)) return false;
+    if (!(_c197)) return false;
   }
   return true;
 }
@@ -548,9 +548,11 @@ const splitFacts: number[] = [];
 /** Its dearest read grows with the board as n. */
 export function split(b: Marks, sp: GridSpace, fire: Fire<SplitBinding> | null): number {
   const _g154: number[] = [];
+  const _g162: number[] = [];
   const facts = splitFacts;
   let fired = 0;
   let changed = false;
+  const _m147_0 = b.made[0];
   _g154.length = 0;
   G155: {
     const _a158 = sp.cells;
@@ -565,6 +567,18 @@ export function split(b: Marks, sp: GridSpace, fire: Fire<SplitBinding> | null):
   for (let _i161 = 0; _i161 < _a160.length; _i161++) {
     const v_c = _a160[_i161];
     if (!(!((b.grid[v_c] !== 0)))) continue;
+    if (b.made[0] !== _m147_0) {
+      _g162.length = 0;
+      G163: {
+        const _a166 = sp.cells;
+        for (let _i167 = 0; _i167 < _a166.length; _i167++) {
+          const v_c = _a166[_i167];
+          if (!(((b.grid[v_c] || -1) !== 1))) continue;
+          _g162.push(v_c);
+        }
+      }
+      if (!(sameSet(v_K, cuts(sp, _g162)))) { return fired; }
+    }
     facts.length = 0;
     changed = false;
     if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
