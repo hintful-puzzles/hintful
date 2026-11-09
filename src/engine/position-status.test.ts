@@ -70,6 +70,7 @@ const UNBREAKABLE: Record<string, string> = {
   mines: "the probe board has no first click yet, so there is nothing to solve",
   // A solved board whose rules take no move that could break it.
   blackbox: "a revealed arena takes no move",
+  cube: "a solid with every face painted rolls freely, and moves no paint",
   flood: "a flooded board accepts no fill",
   guess: "a won game takes no more guesses, and a mark on the answer row is a note",
   inertia: "a collected gem stays collected, and the gems are all that solved counts",
