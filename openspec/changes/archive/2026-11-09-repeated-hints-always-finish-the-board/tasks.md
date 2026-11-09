@@ -7,4 +7,4 @@
 - [x] 5. The guard: `hint-finishes-any-board.test.ts`, every game with a hint, a randomly played board and a trial-and-error board. With each way forward planted away it failed: the clear in 44 games, the reveal in 28, the rewind in 4 (Flood, Inertia, Mines, Sokoban). Signpost's and Net's random play makes no mistake; their clearing was checked by hand.
 - [x] 6. The help's hints page (`help/features.md` §"When there's no hint to give")
 - [x] 7. Played in Chrome: Path 6x6 Easy with a line from the 4 into the 6 (cleared, one Undo restores it, the next press is a step); Light Up 7x7 Unreasonable (a bulb revealed, then reasoning resumes); Mines 9x9 after opening a mine (rewound, Redo lit)
-- [ ] 8. The owner tries it on their phone
+- [x] 8. The owner tries it on their phone (accepted 2026-11-09)
