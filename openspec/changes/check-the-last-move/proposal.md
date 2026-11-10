@@ -6,6 +6,30 @@ it waits until the description work (`describe-the-whole-catalog`) is
 done.** The session that takes it up brings them what it measured and the
 answers it proposes to the questions below, before writing a design.
 
+**It waits for the explained verdict (the owner, 2026-11-10)**: a verdict
+with no reason was weighed and not wanted first. The explanation is the
+engine's answer to "what does this fact rest on?", which
+`explain-a-firing-by-its-witness-and-parents` builds, spoken in the words
+`state-hint-sentences-in-the-description` gives a technique. This is the
+last of the plan in
+[`derive-hint-steps-from-the-description/report.md`](../archive/2026-11-10-derive-hint-steps-from-the-description/report.md).
+
+**What that plan already answers** (2026-11-10), for the session to check
+and bring to the owner as proposed answers:
+
+- *Uniqueness*: a described technique is checked sound against the rules
+  alone, so a known deduction never assumes the board has one answer, and
+  the search that says "forced" need not either.
+- *Which marks count*: a mark whose description gives it a meaning can be
+  judged as a placed value is; a play aid with none (Unequal's `done`)
+  cannot.
+- *What the last move is*: the facts by which the marks differ before and
+  after it, read through the adapter `build-hint-steps-in-the-engine`
+  gives each game, each fact judged.
+- *A caution*: where a game's candidates cannot be written (Magnets,
+  Ascent, Filling), a move can be a known deduction that rests on facts the
+  player never saw. The verdict holds; its explanation has to say them.
+
 ## Why
 
 Check & save says whether the board is right (`quick-save`, "Check & save

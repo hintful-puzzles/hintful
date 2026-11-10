@@ -1,0 +1,5 @@
+# Scaffolded without a delta: the owner accepts the lexicon first, then the
+# session writes the requirements and removes skip_specs.
+schema: spec-driven
+created: 2026-11-10
+skip_specs: true

@@ -44,8 +44,13 @@ obvious way, and the porter makes no decision that is not about the puzzle.
   parameter, a variant, a family of shapes). Only when it cannot does the game
   take the override, which is first-class: the game writes the explicit form
   and its change says why.
-- **Game-specific logic is never bent to fit a contract**, and an exemplar
-  hint never loses a word to an abstraction.
+- **Game-specific logic is never bent to fit a contract.**
+- **A hint's words are standardized**: the same deduction reads the same in
+  every game, and a game keeps wording of its own only where it needs it. A
+  hint may be reworded for that and is never made significantly less clear,
+  judged in the running app: a little clarity in one game is a fair price
+  for consistency across the catalog, which itself lowers what a player has
+  to hold (owner, 2026-11-10).
 - **Swap a guard for the exception; do not skip it.** A skipped game is an
   untested game wearing a comment.
 - **Derive the exception from a declaration the game already makes.** An

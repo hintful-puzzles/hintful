@@ -1,6 +1,11 @@
 # derive-hint-steps-from-the-description
 
-**Status: draft, filed on the owner's word (2026-11-08), for later.** It
+**Concluded 2026-11-10 by its measurement, [`report.md`](./report.md).** The
+measurement changed the plan: the sentence is the smallest part of what a
+hint costs, so the work is five changes, listed in the report's § "The
+plan", and this one builds nothing. What follows is the proposal as filed.
+
+**Status as filed: draft, on the owner's word (2026-11-08), for later.** It
 waits for `describe-the-whole-catalog` to end, so that it is weighed on
 every described game and not on the first few. It reopens a candidate
 `describe-the-whole-catalog/design.md` § "Further refactoring a description
