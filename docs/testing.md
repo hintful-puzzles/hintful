@@ -599,6 +599,9 @@ file.
 - **CPU time is the work, not the clock.** A loaded machine does not fail a
   good file, though heavy oversubscription can raise one by a fifth, which the
   margin above "near the budget" absorbs.
+- **The CPU is the main thread's.** V8's helper threads collect a heap that
+  earlier files in the worker filled, and the process's time charged that to
+  whichever file was running: up to twice its own.
 - **A file is charged for every shared board it used** (`dealt`), whichever
   file or worker dealt it, and the suite for each board once. The gate prints
   each file's cost after the suite.

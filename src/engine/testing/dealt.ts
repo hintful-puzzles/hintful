@@ -107,15 +107,18 @@ const deals = new WeakMap<object, Map<string, Deal>>();
  * file in the worker dealt it first, so that a file's cost does not depend on
  * what its worker ran before it (`scripts/checks/test-cost-setup.ts`). Read
  * off `globalThis`, as `slow.ts` reads the environment, since the app's
- * tsconfig has no Node types.
+ * tsconfig has no Node types. The main thread's time, as the setup file
+ * charges.
  */
 const host = (
-  globalThis as { process?: { cpuUsage(): { user: number; system: number } } }
+  globalThis as {
+    process?: { threadCpuUsage(): { user: number; system: number } };
+  }
 ).process;
 
 function cpuNow(): number {
   if (host === undefined) return 0;
-  const { user, system } = host.cpuUsage();
+  const { user, system } = host.threadCpuUsage();
   return user + system;
 }
 

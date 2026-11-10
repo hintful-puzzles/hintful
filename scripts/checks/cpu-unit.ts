@@ -28,11 +28,12 @@ export function cpuUnit(): number {
  * change to a game cannot change it.
  */
 function calibrate(): number {
-  const start = process.cpuUsage();
+  // The main thread's time, as a test file is charged (`test-cost-setup.ts`).
+  const start = process.threadCpuUsage();
   let checksum = 0;
   for (let round = 0; round < 6; round++) checksum += slidingSearch(round);
   for (let round = 0; round < 40; round++) checksum += latinFill(9, round);
-  const { user, system } = process.cpuUsage(start);
+  const { user, system } = process.threadCpuUsage(start);
   // Read, so the work cannot be optimized away.
   if (checksum === -1) throw new Error("unreachable");
   return (user + system) / 1e6;

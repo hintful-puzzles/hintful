@@ -4,10 +4,14 @@
  * `TEST_COST_RUN`. A run outside the gate names no log and records nothing.
  *
  * A vitest setup file runs before each test file's imports, and a forks-pool
- * worker runs one file at a time, so the process's CPU time between here and
- * the file's last `afterAll` is that file's work whatever else the machine is
- * doing. Wall time is no measure of it: contention inflates wall several-fold
- * and unevenly (`docs/testing.md` § "Timing anything under vitest").
+ * worker runs one file at a time, so the main thread's CPU time between here
+ * and the file's last `afterAll` is that file's work whatever else the machine
+ * is doing. Wall time is no measure of it: contention inflates wall
+ * several-fold and unevenly (`docs/testing.md` § "Timing anything under
+ * vitest"). Nor is the process's CPU time, which counts V8's helper threads:
+ * collecting the heap earlier files left, a gigabyte after the engine's
+ * sweeps, they doubled what a game's file was charged (seismic-hint 10.5 s
+ * after them, 5.1 s alone; its main thread 5.5 and 4.1, 2026-11-10).
  *
  * With `isolate: false` a worker's files share what one of them computed, so
  * a file's own CPU time depends on what its worker ran before it. The boards
@@ -34,7 +38,7 @@ const recording = log !== undefined && log !== "";
 
 /** User and system CPU microseconds, with the deals this file inherited. */
 function cost(): number {
-  const { user, system } = process.cpuUsage();
+  const { user, system } = process.threadCpuUsage();
   return user + system + inheritedDealCost();
 }
 

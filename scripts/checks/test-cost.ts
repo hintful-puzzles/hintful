@@ -39,9 +39,11 @@ import { cpuUnit } from "./cpu-unit.ts";
  */
 const BUDGET = { file: 120, suite: 2400, commit: 90, push: 300, game: 25 };
 
-/** The workload's CPU seconds on the reference runner (Gate run 40553996591,
- * the least of three). */
-const REFERENCE_UNIT = 1.458;
+/** The workload's main-thread CPU seconds on the reference runner: its
+ * process CPU there (Gate run 40553996591, the least of three, 1.458 s) times
+ * the share of it the main thread spends (0.83 here, three rounds of three,
+ * 2026-11-10). */
+const REFERENCE_UNIT = 1.21;
 
 /**
  * How far past its budget a cost is named, and still passes: the scaling's
