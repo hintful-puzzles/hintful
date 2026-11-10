@@ -33,6 +33,7 @@ import { withNoteControls } from "./vite-plugins/note-controls.ts";
 import { withPair } from "./vite-plugins/pair.ts";
 import { withParameters } from "./vite-plugins/parameters.ts";
 import { precacheCoverage } from "./vite-plugins/precache-coverage.ts";
+import { precacheSizes } from "./vite-plugins/precache-size.ts";
 import { releaseClosedServer } from "./vite-plugins/release-closed-server.ts";
 
 /**
@@ -645,6 +646,7 @@ export default defineConfig(async ({ command, mode }) => {
           // default (2026-11-02); past the cap it would build without it and
           // fail offline. Splitting it is `shrink-the-download`'s.
           maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+          manifestTransforms: [precacheSizes("dist")],
         },
       }),
       // After VitePWA, because it reads the sw.js that plugin writes. It is

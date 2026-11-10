@@ -14,7 +14,7 @@ import { audioClick } from "../utils/audio.ts";
 import { autoBind } from "../utils/autobind.ts";
 import { cssNative, cssWATweaks } from "../utils/css.ts";
 import { clamp } from "../utils/math.ts";
-import { isRunningAsApp, pwaManager } from "../utils/pwa.ts";
+import { formatBytes, isRunningAsApp, pwaManager } from "../utils/pwa.ts";
 import { sleep } from "../utils/timing.ts";
 import { windowSize } from "../utils/window-size.ts";
 import { showAlert } from "./alert-dialog.ts";
@@ -360,8 +360,12 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
         return html`<wa-spinner></wa-spinner> initializing&hellip;`;
       case "registering":
         return html`<wa-spinner></wa-spinner> registering&hellip;`;
-      case "unregistered":
-        return "not downloaded";
+      case "unregistered": {
+        const size = pwaManager.fullDownloadBytes;
+        return size === null
+          ? "not downloaded"
+          : `not downloaded (about ${formatBytes(size)})`;
+      }
       case "registered":
         return html`
           ${(pwaManager.lastChecked ?? -1) >= this.openedAt ? "up to date" : "not checked yet"}
@@ -379,12 +383,19 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
         const statusLabel =
           pwaManager.status === "downloading" ? "downloading" : "downloading update";
         const progress = pwaManager.downloadProgress;
+        const bytes = pwaManager.downloadBytes;
+        // Before the worker reports what it will fetch, a first install is the
+        // whole download.
+        const total =
+          bytes?.total ??
+          (pwaManager.status === "downloading" ? pwaManager.fullDownloadBytes : null);
         const spinner =
           progress === null
             ? html`<wa-spinner></wa-spinner>`
             : html`<wa-progress-ring value=${progress}></wa-progress-ring>`;
         const progressLabel = progress === null ? nothing : ` ${progress}%`;
-        return html`${spinner} ${statusLabel}${progressLabel}&hellip;`;
+        const sizeLabel = total === null ? nothing : ` of ${formatBytes(total)}`;
+        return html`${spinner} ${statusLabel}${progressLabel}${sizeLabel}&hellip;`;
       }
       case "download-ready":
         return html`

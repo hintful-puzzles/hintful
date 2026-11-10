@@ -28,6 +28,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { globSync } from "tinyglobby";
 import type { Plugin } from "vite";
+import { PRECACHE_SIZE_FILE } from "./precache-size.ts";
 
 /**
  * Build machinery rather than things a page loads: the service worker itself
@@ -41,6 +42,9 @@ import type { Plugin } from "vite";
 const NOT_PRECACHEABLE: Record<string, { why: string; conditional?: true }> = {
   "sw.js": { why: "the service worker is registered, not fetched from its own cache" },
   "manifest.webmanifest": { why: "read by the browser before the worker exists" },
+  [PRECACHE_SIZE_FILE]: {
+    why: "the settings dialog fetches it to show the download's size before a worker exists",
+  },
   _headers: { why: "a Cloudflare deploy directive; not served to the page" },
   "**/*.map": {
     why: "source maps are a debugging aid; caching them doubles the store",

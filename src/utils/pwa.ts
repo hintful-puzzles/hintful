@@ -18,6 +18,12 @@ if (typeof window === "undefined") {
  */
 export const isRunningAsApp = !window.matchMedia("(display-mode: browser)").matches;
 
+/** "1.7 MB", "120 KB": the unit a player's device reports downloads in. */
+export function formatBytes(bytes: number): string {
+  if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(bytes / 1000))} KB`;
+}
+
 /**
  * Offline status, condensed to a single state for communicating to the user:
  * see the lifecycle below.
@@ -101,6 +107,8 @@ class PWAManager {
   private _autoUpdate = computed(() => settings.autoUpdate ?? this.allowOfflineUse);
   private _status = signal<PWAManagerStatus>("uninitialized");
   private _downloadProgress = signal<number | null>(null);
+  private _downloadBytes = signal<{ done: number; total: number } | null>(null);
+  private _fullDownloadBytes = signal<number | null>(null);
   private _lastChecked = signal<number | null>(null);
 
   private wb?: Workbox;
@@ -126,6 +134,7 @@ class PWAManager {
       await this.registerSW();
     } else {
       this._status.set("unregistered");
+      void this.loadFullDownloadSize();
     }
   }
 
@@ -179,8 +188,38 @@ class PWAManager {
     return this._status.get();
   }
 
+  /** Percent of the download's bytes fetched, while one is running. */
   get downloadProgress(): number | null {
     return this._downloadProgress.get();
+  }
+
+  /**
+   * Bytes fetched of those this download will fetch, while one is running: an
+   * update's total is only what changed. Gzipped sizes, so an estimate of what
+   * crosses the network.
+   */
+  get downloadBytes(): { done: number; total: number } | null {
+    return this._downloadBytes.get();
+  }
+
+  /**
+   * Bytes of the whole offline install, or null until known (and in a build
+   * with no precache list). Call `loadFullDownloadSize()` to fetch it.
+   */
+  get fullDownloadBytes(): number | null {
+    return this._fullDownloadBytes.get();
+  }
+
+  async loadFullDownloadSize() {
+    if (this._fullDownloadBytes.get() !== null) return;
+    try {
+      const response = await fetch(`${import.meta.env.BASE_URL}precache-size.json`);
+      if (!response.ok) return;
+      const { bytes } = (await response.json()) as { bytes?: unknown };
+      if (typeof bytes === "number" && bytes > 0) this._fullDownloadBytes.set(bytes);
+    } catch {
+      // Offline, or a dev server with no build: the size is simply not shown.
+    }
   }
 
   /**
@@ -291,6 +330,7 @@ class PWAManager {
       if (newWorker) {
         const isUpdate = Boolean(registration.active);
         this._status.set(isUpdate ? "update-downloading" : "downloading");
+        if (!isUpdate) void this.loadFullDownloadSize();
         this.observeWorker(newWorker, isUpdate);
       }
     });
@@ -371,14 +411,27 @@ class PWAManager {
 
   private handleSWMessage = (event: WorkboxMessageEvent) => {
     switch (event.data?.type) {
+      case "PRECACHE_START": {
+        // What this install will fetch: all of it on a first install, only the
+        // changed files on an update.
+        const { totalBytes } = event.data;
+        this._downloadBytes.set(totalBytes > 0 ? { done: 0, total: totalBytes } : null);
+        this._downloadProgress.set(totalBytes > 0 ? 0 : null);
+        break;
+      }
       case "PRECACHE_PROGRESS": {
-        const { count, total } = event.data;
-        const progress = total > 0 ? Math.round((count / total) * 100) : 50;
-        this._downloadProgress.set(progress);
+        const { count, total, bytes, totalBytes } = event.data;
+        const fraction =
+          totalBytes > 0 ? bytes / totalBytes : total > 0 ? count / total : 0.5;
+        this._downloadProgress.set(Math.round(fraction * 100));
+        this._downloadBytes.set(
+          totalBytes > 0 ? { done: bytes, total: totalBytes } : null,
+        );
         break;
       }
       case "PRECACHE_COMPLETE":
         this._downloadProgress.set(null);
+        this._downloadBytes.set(null);
         break;
     }
   };
