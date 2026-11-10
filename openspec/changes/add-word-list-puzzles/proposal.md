@@ -46,6 +46,14 @@ library table (`corpus.md`).
   keep six, or make the bound a setting, is player-visible: the owner's.
 - The hints: Wordle's is a query game's (which guess serves the subgoal);
   Wend's can deduce (a letter with one way to continue).
+- **Each ladder starts from its family's.** With its rules stated, run the
+  inheritance report on each (`docs/descriptions.md` § "What a candidate
+  inherits"): Wordle's family is Guess's (`code`), whose techniques read a
+  guess's score, and Wend's is the regions family's (Filling, Palisade,
+  Rect). Which of their techniques are sound under the new rules is the hint
+  work the game is spared, and a rule none reads is the work it is not. Name
+  Wordle's clue as Guess names its score where they mean the same, or the
+  report counts Guess's techniques out of its words.
 
 ## What Changes
 
