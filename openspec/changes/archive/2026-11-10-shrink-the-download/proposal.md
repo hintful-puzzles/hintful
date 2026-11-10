@@ -128,8 +128,8 @@ a lossless PNG pass over everything the build emits.
 - **Precompressed brotli.** The host re-encodes; measured above.
 - **oxipng or pngquant.** oxipng saves 41 KB more than sharp but is an external
   binary, not a dependency. pngquant and sharp's palette mode change pixels.
-  **The owner's call if wanted**: setting `palette: true` in
-  `optimizePng` saves another 85 KB, and changes 46 icons by up to 10/255.
+  **Abandoned by the owner (2026-11-10) as negligible**: `palette: true` in
+  `optimizePng` would save another 85 KB and change 46 icons by up to 10/255.
 - **One icon size in the precache.** A 2x screen offline would show blurry or
   missing icons.
 
