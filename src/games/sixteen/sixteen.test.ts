@@ -19,7 +19,7 @@ import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
-import { itSlow } from "../../engine/testing/slow.ts";
+import { deepBudget, itSlow } from "../../engine/testing/slow.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { netslideGame } from "../netslide/index.ts";
@@ -417,11 +417,24 @@ describe("Sixteen colors", () => {
 // --- hint heuristic -------------------------------------------------------
 
 describe("Sixteen hint", () => {
+  // One dealt board's hint, read by each test below that holds a property of
+  // any hint: a hint on a dealt board is the exact search's whole 0.5 s, and
+  // a board apiece made these four a fifth of this file's cost in CI.
+  let dealtHint: {
+    s: SixteenState;
+    result: ReturnType<NonNullable<typeof sixteenGame.hint>> | null;
+  } | null = null;
+  const hintOfDealt = () => {
+    if (dealtHint === null) {
+      const { desc } = newDesc(defaultParams(), randomNew("hint-test"));
+      const s = newState(defaultParams(), desc);
+      dealtHint = { s, result: sixteenGame.hint?.(s) ?? null };
+    }
+    return dealtHint;
+  };
+
   it("returns a non-empty plan of slide moves for an unsolved state", () => {
-    const rng = randomNew("hint-test");
-    const { desc } = newDesc(defaultParams(), rng);
-    const s = newState(defaultParams(), desc);
-    const result = sixteenGame.hint?.(s);
+    const { result } = hintOfDealt();
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     expect(result.steps.length).toBeGreaterThan(0);
@@ -432,10 +445,7 @@ describe("Sixteen hint", () => {
   });
 
   it("the hinted move is a legal move that changes the state", () => {
-    const rng = randomNew("hint-legal");
-    const { desc } = newDesc(defaultParams(), rng);
-    const s = newState(defaultParams(), desc);
-    const result = sixteenGame.hint?.(s);
+    const { s, result } = hintOfDealt();
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     const next = executeMove(s, result.steps[0].move);
@@ -443,10 +453,7 @@ describe("Sixteen hint", () => {
   });
 
   it("the explanation mentions the tile and target location", () => {
-    const rng = randomNew("hint-explanation");
-    const { desc } = newDesc(defaultParams(), rng);
-    const s = newState(defaultParams(), desc);
-    const result = sixteenGame.hint?.(s);
+    const { result } = hintOfDealt();
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     // Format: "Working on tile T: move it to the ringed square" (the nearer of
@@ -484,10 +491,7 @@ describe("Sixteen hint", () => {
   });
 
   it("returns highlights with the tile number and target position", () => {
-    const rng = randomNew("hint-highlights");
-    const { desc } = newDesc(defaultParams(), rng);
-    const s = newState(defaultParams(), desc);
-    const result = sixteenGame.hint?.(s);
+    const { s, result } = hintOfDealt();
     expect(result?.ok).toBe(true);
     if (result?.ok) {
       const step = result.steps[0];
@@ -559,10 +563,11 @@ describe("Sixteen hint", () => {
     // each of the rest reads one plan on a board of its own, for one search
     // of 0.5 to 1 s apiece, so this file has no sweep to narrow (measured
     // 2026-10-07). Planted the same day, a tile leaving one edge given a
-    // target short of the other, this was one of twelve tests to go red.
+    // target short of the other, this was one of twelve tests to go red. A
+    // second 4x4 playthrough is the game's deep tier's: more of the same.
     for (const [w, h, seeds] of [
       [3, 3, ["hint-geom-a", "hint-geom-b"]],
-      [4, 4, ["hint-geom-c", "hint-geom-d"]],
+      [4, 4, ["hint-geom-c", "hint-geom-d"].slice(0, deepBudget(1, 2))],
     ] as const) {
       for (const seed of seeds) {
         const p = { w, h, movetarget: 0 };
