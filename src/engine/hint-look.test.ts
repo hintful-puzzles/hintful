@@ -14,13 +14,12 @@
 import { describe, expect, it } from "vitest";
 import type { MarkRef } from "./hint-words.ts";
 import { LOOK_HERE } from "./midend.ts";
-import { presetMenu } from "./param-label.ts";
 import { beginDealt } from "./testing/dealt.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
-import { HINT_GAMES } from "./testing/hint-games.ts";
-import { firstLeaf } from "./testing/presets.ts";
+import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
+import { itOverWholeSweep } from "./testing/slow.ts";
 
 /** Steps walked on each game's first board: deep enough to pass a journey's
  * first leg into its next, which is where the look beat is skipped. */
@@ -48,7 +47,9 @@ describe("a hint's first beat shows where to look", () => {
     it(`${id}: one mark, then the whole step`, () => {
       const observed = driveMidend(game);
       const midend = observed.midend;
-      if (beginDealt(midend, game, firstLeaf(presetMenu(game)))) return;
+      const [first] = gatePresets(game);
+      expect(first, `${id} has a board to deal`).toBeDefined();
+      if (beginDealt(midend, game, first.params)) return;
       const status = () => observed.last("status-bar-change");
       midend.size({ w: 600, h: 600 });
       const palette = game.colors(DEFAULT_BACKGROUND);
@@ -92,7 +93,7 @@ describe("a hint's first beat shows where to look", () => {
     });
   }
 
-  it("looked at a step in most games", () => {
+  itOverWholeSweep("looked at a step in most games", () => {
     // The "how many did I look at?" floor: a walk that stopped reaching a
     // look beat would pass every game above vacuously.
     expect(walked).toBeGreaterThanOrEqual(HINT_GAMES.length);
