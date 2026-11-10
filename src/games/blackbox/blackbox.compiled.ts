@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/blackbox/blackbox.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, ahead, beam, beamOf, clueAt, rangeMask } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, ahead, beam, beamOf, clueAt, freshBinding, rangeMask, staleChecking } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -105,9 +105,12 @@ export function ray(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RayBinding> |
   let fired = 0;
   let changed = false;
   const _h5 = ((1 << 1) | (1 << 2));
+  R1:
   for (let v_k = 0; v_k < cl.laser.at.length; v_k++) {
     const v_s = cl.laser.at[v_k];
     const _h8 = clueAt(cl.laser, v_s);
+    const _m10_0 = b.made[0];
+    const _m10_1 = b.made[1];
     L4: {
       const v_u = ahead(sp, b, v_s);
       if (!((v_u !== -1))) break L4;
@@ -116,6 +119,12 @@ export function ray(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RayBinding> |
         L7: {
           const v_r = beam(sp, b, v_s, v_u, v_d);
           if (!(((v_r !== -1) && (v_r !== _h8)))) break L7;
+          if (b.made[0] !== _m10_0 || b.made[1] !== _m10_1) {
+            if (!((v_u === ahead(sp, b, v_s)))) { continue R1; }
+          }
+          if (import.meta.env.DEV && staleChecking) {
+            freshBinding("ray", [(v_s === cl.laser.at[v_k]), (v_u === ahead(sp, b, v_s)), (v_u !== -1), ((v_d === 1) || (v_d === 2)), (v_r === beam(sp, b, v_s, v_u, v_d)), ((v_r !== -1) && (v_r !== clueAt(cl.laser, v_s)))], ["s =", "u =", "where of u", "d in", "r =", "where of r"]);
+          }
           facts.length = 0;
           changed = false;
           const _t9 = (3 - v_d);

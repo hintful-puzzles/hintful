@@ -98,8 +98,6 @@ const KEPT_UNUSED = {
   // The compiler (src/describe/compile.ts) writes calls to these into a
   // compiled module, by name, for a statement that uses the form; no module
   // compiled today does.
-  "src/engine/describe-runtime.ts::before":
-    "called by compiled code for before(x, L) read as a set, not bound over",
   "src/engine/describe-runtime.ts::linked":
     "called by compiled code for linked(k) read with a square supposed",
   "src/engine/describe-runtime.ts::rectWithin":

@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/pattern/pattern.description.yaml: edit that, not this.
 
-import { type ListClues, type Fire, type GridSpace, type Marks, PLACE, listAt, rangeMask, runFits, runsOf, sameList, sameSet, stretch } from "../../engine/describe-runtime.ts";
+import { type ListClues, type Fire, type GridSpace, type Marks, PLACE, freshBinding, listAt, rangeMask, runFits, runsOf, sameList, sameSet, staleChecking, stretch } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -49,26 +49,26 @@ export const tiers: readonly string[] = ["Easy","Unreasonable"];
  * board: every cell a value of its domain, and every rule and dealt clue
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
-  const _g108: number[] = [];
+  const _g132: number[] = [];
   const _domain = rangeMask(1, 2);
   for (const cell of sp.cells) {
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  for (let _k105 = 0; _k105 < cl.runs.at.length; _k105++) {
-    const _at106 = cl.runs.at[_k105];
-    const _v107 = cl.runs.lists[_k105];
-    _g108.length = 0;
-    G109: {
-      const _a112 = sp.lineCells[_at106];
-      for (let _i113 = 0; _i113 < _a112.length; _i113++) {
-        const v_c = _a112[_i113];
-        const _h114 = (g[v_c] || -1);
-        if (!((_h114 === 1))) continue;
-        _g108.push(v_c);
+  for (let _k129 = 0; _k129 < cl.runs.at.length; _k129++) {
+    const _at130 = cl.runs.at[_k129];
+    const _v131 = cl.runs.lists[_k129];
+    _g132.length = 0;
+    G133: {
+      const _a136 = sp.lineCells[_at130];
+      for (let _i137 = 0; _i137 < _a136.length; _i137++) {
+        const v_c = _a136[_i137];
+        const _h138 = (g[v_c] || -1);
+        if (!((_h138 === 1))) continue;
+        _g132.push(v_c);
       }
     }
-    if (!(sameList(runsOf(sp.lineCells[_at106], _g108), _v107))) return false;
+    if (!(sameList(runsOf(sp.lineCells[_at130], _g132), _v131))) return false;
   }
   return true;
 }
@@ -85,8 +85,8 @@ const lineFacts: number[] = [];
 let lineCands = new Int32Array(0);
 let _p49 = new Int32Array(0);
 let _l50: readonly number[] = [];
-let _p89 = new Int32Array(0);
-let _l90: readonly number[] = [];
+let _p113 = new Int32Array(0);
+let _l114: readonly number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding> | null): number {
@@ -100,12 +100,12 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
   const _g65: number[] = [];
   const _m82 = new Int32Array(sp.cells.length);
   const _o81 = new Int32Array(sp.cells.length);
-  if (_p89.length < sp.cells.length) _p89 = new Int32Array(sp.cells.length);
-  else _p89.fill(0);
-  _l90 = [];
-  let _y91 = false;
-  const _m96 = new Int32Array(sp.cells.length);
-  const _o95 = new Int32Array(sp.cells.length);
+  if (_p113.length < sp.cells.length) _p113 = new Int32Array(sp.cells.length);
+  else _p113.fill(0);
+  _l114 = [];
+  let _y115 = false;
+  const _m120 = new Int32Array(sp.cells.length);
+  const _o119 = new Int32Array(sp.cells.length);
   const facts = lineFacts;
   let fired = 0;
   let changed = false;
@@ -119,7 +119,7 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
     const _h32 = listAt(cl.runs, v_L);
     const v_R = _h32;
     let _g52 = -1;
-    let _g92 = -1;
+    let _g116 = -1;
     R2:
     for (let _m33 = b.domain; _m33 !== 0; _m33 &= _m33 - 1) {
       const v_d = 31 - Math.clz32(_m33 & -_m33);
@@ -185,41 +185,67 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
           }
           if (!(sameSet(v_O, _g65))) { continue R2; }
         }
-        facts.length = 0;
-        changed = false;
-        if (_g92 !== _epoch) {
-          _g92 = _epoch;
-          for (const _e93 of _l90) _p89[_e93] = 0;
-          _y91 = false;
-          const _t94 = sp.lineCells[v_L];
-          for (let _i97 = 0; _i97 < _t94.length; _i97++) {
-            const _e98 = _t94[_i97];
-            _m96[_i97] = (cands[_e98] >= 0 ? cands[_e98] : (cands[_e98] = b.cands[_e98]));
-          }
-          const _y99 = runFits(_m96, _t94.length, 1, v_R, _o95);
-          if (_y99) {
-            _l90 = _t94;
-            _y91 = true;
-            for (let _e93 = 0; _e93 < _t94.length; _e93++) _p89[_t94[_e93]] = _o95[_e93];
-          }
-        }
-        let _c104: boolean = ((((_p89[v_c] >> v_d) & 1) !== 0) || ((v_d as number) === -1 && _y91 && !sp.lineCells[v_L].includes(v_c)));
-        if (_c104) {
-          let _q100 = true;
-          Q101: {
-            const _a102 = stretch(sp.lineCells[v_L], v_c, v_O);
+        if (import.meta.env.DEV && staleChecking) {
+          const _g89: number[] = [];
+          G90: {
+            const _a102 = sp.lineCells[v_L];
             for (let _i103 = 0; _i103 < _a102.length; _i103++) {
               const v_x = _a102[_i103];
+              let _c112: boolean = !((b.grid[v_x] !== 0));
+              if (_c112) {
+                const _t104 = sp.lineCells[v_L];
+                const _m106 = new Int32Array(sp.cells.length);
+                const _o105 = new Int32Array(sp.cells.length);
+                for (let _i107 = 0; _i107 < _t104.length; _i107++) {
+                  const _e108 = _t104[_i107];
+                  _m106[_i107] = (cands[_e108] >= 0 ? cands[_e108] : (cands[_e108] = b.cands[_e108]));
+                }
+                const _y109 = runFits(_m106, _t104.length, 1, v_R, _o105);
+                const _t110 = (3 - v_d);
+                const _p111 = _t104.indexOf(v_x);
+                _c112 = !((_y109 && (_p111 < 0 ? (_t110 as number) === -1 : ((_o105[_p111] >> _t110) & 1) !== 0)));
+              }
+              if (!(_c112)) continue;
+              _g89.push(v_x);
+            }
+          }
+          freshBinding("line", [(sp.lines.includes(v_L)), sameList(v_R, listAt(cl.runs, v_L)), (((b.domain >> v_d) & 1) !== 0), sameSet(v_O, _g89), (v_O.includes(v_c)), (stretch(sp.lineCells[v_L], v_c, v_O).indexOf(v_c) === 0)], ["L in", "R =", "d in", "O =", "c in", "where of c"]);
+        }
+        facts.length = 0;
+        changed = false;
+        if (_g116 !== _epoch) {
+          _g116 = _epoch;
+          for (const _e117 of _l114) _p113[_e117] = 0;
+          _y115 = false;
+          const _t118 = sp.lineCells[v_L];
+          for (let _i121 = 0; _i121 < _t118.length; _i121++) {
+            const _e122 = _t118[_i121];
+            _m120[_i121] = (cands[_e122] >= 0 ? cands[_e122] : (cands[_e122] = b.cands[_e122]));
+          }
+          const _y123 = runFits(_m120, _t118.length, 1, v_R, _o119);
+          if (_y123) {
+            _l114 = _t118;
+            _y115 = true;
+            for (let _e117 = 0; _e117 < _t118.length; _e117++) _p113[_t118[_e117]] = _o119[_e117];
+          }
+        }
+        let _c128: boolean = ((((_p113[v_c] >> v_d) & 1) !== 0) || ((v_d as number) === -1 && _y115 && !sp.lineCells[v_L].includes(v_c)));
+        if (_c128) {
+          let _q124 = true;
+          Q125: {
+            const _a126 = stretch(sp.lineCells[v_L], v_c, v_O);
+            for (let _i127 = 0; _i127 < _a126.length; _i127++) {
+              const v_x = _a126[_i127];
               if (!(b.grid[v_x] !== 0)) { if (fire === null) { b.placeAt(v_x, v_d); changed = true; } else facts.push(PLACE, v_x, v_d); }
               if (!(true)) {
-                _q100 = false;
-                break Q101;
+                _q124 = false;
+                break Q125;
               }
             }
           }
-          _c104 = _q100;
+          _c128 = _q124;
         }
-        if (!(_c104)) return -1;
+        if (!(_c128)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ L: v_L, R: v_R, d: v_d, O: v_O.slice(), c: v_c }, facts)) return 1;

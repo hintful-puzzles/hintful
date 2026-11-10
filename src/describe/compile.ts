@@ -5223,6 +5223,8 @@ const MARK_READS = new Set([
   "linked",
   "place",
   "strike",
+  "beam",
+  "ahead",
 ]);
 
 /** Whether `e` reads the marks, itself or through a definition, a supposition
@@ -5490,6 +5492,7 @@ interface Recheck {
     loops: readonly Line[];
     visit: string | null;
     reads: readonly Reread[];
+    fresh: readonly FreshRead[];
   }[];
 }
 
@@ -5642,6 +5645,96 @@ function groupRereads(
   env.used.add("keptEdgeGroups");
   env.used.add("sameSet");
   return reads;
+}
+
+/** One of a binding's reads made afresh for the stale-read guard: the
+ * statements that make it, its truth, and what it reads, for the error. */
+interface FreshRead {
+  lines: readonly Line[];
+  code: string;
+  what: string;
+}
+
+/**
+ * Every read a binding makes of its binders, made afresh at the binding for
+ * the stale-read guard (`staleChecking` in the runtime): each element still
+ * in its set, each `=` naming what its term reads, each `where` holding. It
+ * is written apart from `rereads` and narrows nothing: every binder, whether
+ * or not a fact could have come between, read from the marks with no count.
+ * A set the binding reads only by its groups is compared at those groups,
+ * joined afresh from the set read now, not the kept ones. A read the
+ * language cannot state again is not made.
+ */
+function freshReads(
+  binders: readonly Binder[],
+  rest: readonly (Expr | null)[],
+  scope: Scope,
+  env: Env,
+): FreshRead[] {
+  const out: FreshRead[] = [];
+  const attempt = (what: string, make: (o: Out, e: Env) => string): void => {
+    const o = new Out(0);
+    const mark = Out.mark();
+    const used = new Set(env.used);
+    try {
+      // No buffer is kept for the function: a build drops the guard, and a
+      // buffer declared outside it would be made on every call.
+      const code = make(o, { ...env, scratch: null });
+      out.push({ lines: flatLines(o), code, what });
+    } catch (e) {
+      if (!(e instanceof CompileError)) throw e;
+      Out.rewind(mark);
+      env.used.clear();
+      for (const u of used) env.used.add(u);
+    }
+  };
+  const truth = (expr: Expr) => (o: Out, e: Env) => {
+    const v = compileExpr(expr, scope, e, o);
+    expect(v, "bool", "a read made afresh");
+    return v.code;
+  };
+  for (const [i, bnd] of binders.entries()) {
+    const name: Expr = { k: "name", name: bnd.name };
+    if (bnd.kind === "let") {
+      const after = [
+        bnd.where,
+        ...binders.slice(i + 1).flatMap((b) => [b.of, b.where]),
+        ...rest,
+      ].filter((e): e is Expr => e !== null);
+      const terms = new Map<string, Expr>();
+      const S = scope.get(bnd.name);
+      // Asking for a set's kept groups declares what keeps them, so only a
+      // set read by its groups alone asks.
+      const kept = after.every((e) => throughOnly(e, bnd.name, new Set(), terms))
+        ? (S?.edgeSet?.() ?? null)
+        : null;
+      const then =
+        kept === null || S?.at === undefined
+          ? undefined
+          : S.at.made.get(
+              `keptEdgeGroups(sp, b, ${kept.clues ? "cl" : "null"}, ${kept.fn}, ${kept.arg}, ${env.answerSort === "edge"})`,
+            );
+      if (then !== undefined)
+        attempt(`${bnd.name}'s groups`, (o, e) => {
+          const now = compileExpr(bnd.of, scope, e, o);
+          const groups = Out.fresh("_fg");
+          o.emit(`const ${groups} = edgeGroups(sp, ${now.code});`);
+          e.used.add("edgeGroups");
+          e.used.add("sameSet");
+          return [...terms.values()]
+            .map((t) => {
+              const x = compileExpr(t, scope, e, o);
+              expectElem(x, "cell", "through");
+              return `sameSet(${groups}.of(${x.code}), ${then.code}.of(${x.code}))`;
+            })
+            .join(" && ");
+        });
+      else attempt(`${bnd.name} =`, truth({ k: "bin", op: "=", a: name, b: bnd.of }));
+    } else if (bnd.kind === "in")
+      attempt(`${bnd.name} in`, truth(memberOf(name, bnd.of)));
+    if (bnd.where !== null) attempt(`where of ${bnd.name}`, truth(bnd.where));
+  }
+  return out;
 }
 
 /** Whether `e` reads the set named `s` only as `through(t, s)`, each `t`
@@ -5825,6 +5918,33 @@ function rechecked(r: Recheck, body: Out, rerun: string | null, env: Env): boole
   return stale;
 }
 
+/** Write each binding's stale-read guard, after its reads made again: under
+ * the runtime's switch, every read of its binders made afresh, each that no
+ * longer holds an error. */
+function freshChecked(r: Recheck, id: string, env: Env): void {
+  for (const check of r.checks) {
+    if (check.fresh.length === 0) continue;
+    env.used.add("staleChecking");
+    env.used.add("freshBinding");
+    // The guard is half again the module's size: a build drops it.
+    const lines: Line[] = [
+      { indent: 0, text: "if (import.meta.env.DEV && staleChecking) {" },
+    ];
+    for (const read of check.fresh)
+      for (const l of read.lines) lines.push({ indent: l.indent + 1, text: l.text });
+    const holds = check.fresh.map((read) => read.code).join(", ");
+    const what = check.fresh.map((read) => JSON.stringify(read.what)).join(", ");
+    lines.push(
+      {
+        indent: 1,
+        text: `freshBinding(${JSON.stringify(id)}, [${holds}], [${what}]);`,
+      },
+      { indent: 0, text: "}" },
+    );
+    check.at.lines.push(...lines);
+  }
+}
+
 function compileTechnique(t: Technique, env: Env): { code: string; clues: boolean } {
   const fnName = t.id.includes(".") ? t.id.slice(t.id.indexOf(".") + 1) : t.id;
   const bindingType = `${capitalized(fnName)}Binding`;
@@ -5882,6 +6002,17 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
   const buffer = `${fnName}Cands`;
   const keep = body.slot(0);
   const refills: Slot[] = [];
+  // Nothing is moved out of a binding's reads made again, nor shared with
+  // what was computed before the facts that made a read stale.
+  const readEnv = (): Env => ({
+    ...benv,
+    hoist: null,
+    boardRoot: null,
+    shared: { made: new Map() },
+    recheck: undefined,
+    visitBinder: undefined,
+    visitAt: undefined,
+  });
   const fire = (sc: Scope): void => {
     const shared: Shared = { made: new Map() };
     const visited =
@@ -5891,17 +6022,8 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
       chain: [...recheck.chain],
       loops: [...recheck.loops],
       visit: visited?.code ?? null,
-      // Nothing is moved out of the binding, nor shared with what was
-      // computed before the facts that made the read stale.
-      reads: rereads(recheck.binders, [t.premise, t.conclude], sc, {
-        ...benv,
-        hoist: null,
-        boardRoot: null,
-        shared: { made: new Map() },
-        recheck: undefined,
-        visitBinder: undefined,
-        visitAt: undefined,
-      }),
+      reads: rereads(recheck.binders, [t.premise, t.conclude], sc, readEnv()),
+      fresh: freshReads(t.binders, [t.premise, t.conclude], sc, readEnv()),
     });
     if (t.premise !== null) {
       const p = compileExpr(t.premise, sc, { ...tenv, shared }, body);
@@ -5989,6 +6111,7 @@ function compileTechnique(t: Technique, env: Env): { code: string; clues: boolea
     : null;
   if (rechecked(recheck, body, rerun, env))
     end.lines.push({ indent: 0, text: `if (_stale) return ${rerun} | fired;` });
+  freshChecked(recheck, t.id, env);
   if (foot !== null) {
     if (visitAt.slot === null)
       throw new CompileError(`${t.id}: its visited binder was not met`);

@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/adjacent/adjacent.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, clueAt, rangeMask } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, clueAt, freshBinding, rangeMask, staleChecking } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -120,6 +120,9 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjacent
         if (b.made[0] !== _m8_0) {
           if (!((b.grid[v_a] !== 0))) { continue R2; }
         }
+        if (import.meta.env.DEV && staleChecking) {
+          freshBinding("adjacent", [(sp.cols.includes(v_L)), (sp.lineCells[v_L].includes(v_a)), (b.grid[v_a] !== 0), (sp.adj4[v_a].includes(v_b)), (v_e === sp.adj4Edges[v_a][_i13])], ["L in", "a in", "where of a", "b in", "e ="]);
+        }
         facts.length = 0;
         changed = false;
         let _q14 = true;
@@ -176,6 +179,9 @@ export function adjacentSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjac
         const v_e = sp.adj4Edges[v_a][_i31];
         const _h38 = clueAt(cl.bar, v_e);
         const _h39 = (_h38 === 1);
+        if (import.meta.env.DEV && staleChecking) {
+          freshBinding("adjacentSet", [(sp.cols.includes(v_L)), (sp.lineCells[v_L].includes(v_a)), (sp.adj4[v_a].includes(v_b)), (v_e === sp.adj4Edges[v_a][_i31])], ["L in", "a in", "b in", "e ="]);
+        }
         facts.length = 0;
         changed = false;
         let _q32 = true;

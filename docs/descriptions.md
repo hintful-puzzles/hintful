@@ -520,6 +520,22 @@ the runtime is given the marks, reads every kind. A new member of the marks
 is added there, or it is read as every kind, which is safe and costs only
 reads made again.
 
+Whether a binder's term reads the marks at all is `readsMarks`, from the
+functions in `MARK_READS` and the description's own definitions. A function
+of the language that hands the marks to the runtime is listed there, or its
+read is taken for one of the board and never made again: Blackbox's `ray`
+fired on a stale `ahead(s)` until `beam` and `ahead` were listed
+(2026-11-10).
+
+**Every binding is checked afresh in the suite.** The compiler emits, after
+each binding's reads made again, every read of its binders made afresh with
+no count or narrowing (`freshReads`), behind `staleChecking` and
+`import.meta.env.DEV`, so a build drops it.
+[`stale-reads.test.ts`](../src/engine/stale-reads.test.ts) turns it on and
+solves every described game's shared boards. A defect in the reads made
+again fails there in every game whose boards make that read fail. A game
+whose boards never do cannot fail, since the defect changes nothing it does.
+
 A set named by `=` before the loops, whose groups are kept on the marks, and
 which the binding reads only as `through(t, S)` with `t` a term of its
 binders, is read again only at those groups (`groupRereads`). A changed group

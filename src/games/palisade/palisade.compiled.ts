@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/palisade/palisade.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, edgeGroups, keptEdgeGroups, keptStore, rangeMask, sameSet, stamps, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, before, clueAt, edgeGroups, freshBinding, keptEdgeGroups, keptStore, rangeMask, sameSet, staleChecking, stamps, through, type Kept } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -56,76 +56,76 @@ export const tiers: readonly string[] = ["Easy","Unreasonable"];
  * board: every cell a value of its domain, and every rule and dealt clue
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
-  const _g295: number[] = [];
-  const _g308: number[] = [];
+  const _g382: number[] = [];
+  const _g395: number[] = [];
   const _domain = rangeMask(1, 2);
   for (const cell of sp.edges) {
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  let _q293 = true;
-  Q294: {
-    _g295.length = 0;
-    G296: {
-      const _a299 = sp.edges;
-      for (let _i300 = 0; _i300 < _a299.length; _i300++) {
-        const v_e = _a299[_i300];
-        const _h301 = (g[v_e] || -1);
-        if (!((_h301 === 2))) continue;
-        _g295.push(v_e);
+  let _q380 = true;
+  Q381: {
+    _g382.length = 0;
+    G383: {
+      const _a386 = sp.edges;
+      for (let _i387 = 0; _i387 < _a386.length; _i387++) {
+        const v_e = _a386[_i387];
+        const _h388 = (g[v_e] || -1);
+        if (!((_h388 === 2))) continue;
+        _g382.push(v_e);
       }
     }
-    const v_O = _g295;
-    const _eg305 = edgeGroups(sp, v_O);
-    const _a302 = sp.edges;
-    for (let _i303 = 0; _i303 < _a302.length; _i303++) {
-      const v_e = _a302[_i303];
-      const _h304 = (g[v_e] || -1);
-      if (!(((_h304 === 1) === !(_eg305.of(sp.edgeEnds[2 * v_e + 1]) === _eg305.of(sp.edgeEnds[2 * v_e]))))) {
-        _q293 = false;
-        break Q294;
-      }
-    }
-  }
-  if (!(_q293)) return false;
-  let _q306 = true;
-  Q307: {
-    _g308.length = 0;
-    G309: {
-      const _a312 = sp.edges;
-      for (let _i313 = 0; _i313 < _a312.length; _i313++) {
-        const v_e = _a312[_i313];
-        const _h314 = (g[v_e] || -1);
-        if (!((_h314 === 2))) continue;
-        _g308.push(v_e);
-      }
-    }
-    const v_O = _g308;
-    const _eg317 = edgeGroups(sp, v_O);
-    const _a315 = sp.cells;
-    for (let _i316 = 0; _i316 < _a315.length; _i316++) {
-      const v_c = _a315[_i316];
-      const _h318 = _eg317.of(v_c).length;
-      if (!((_h318 === cl.k))) {
-        _q306 = false;
-        break Q307;
+    const v_O = _g382;
+    const _eg392 = edgeGroups(sp, v_O);
+    const _a389 = sp.edges;
+    for (let _i390 = 0; _i390 < _a389.length; _i390++) {
+      const v_e = _a389[_i390];
+      const _h391 = (g[v_e] || -1);
+      if (!(((_h391 === 1) === !(_eg392.of(sp.edgeEnds[2 * v_e + 1]) === _eg392.of(sp.edgeEnds[2 * v_e]))))) {
+        _q380 = false;
+        break Q381;
       }
     }
   }
-  if (!(_q306)) return false;
-  for (let _k319 = 0; _k319 < cl.number.at.length; _k319++) {
-    const _at320 = cl.number.at[_k319];
-    const _v321 = cl.number.v[_k319];
-    let _g322 = 0;
-    G323: {
-      const _a324 = sp.adj4[_at320];
-      for (let _i325 = 0; _i325 < _a324.length; _i325++) {
-        const _h326 = (g[sp.adj4Edges[_at320][_i325]] || -1);
-        if (!((_h326 === 1))) continue;
-        _g322++;
+  if (!(_q380)) return false;
+  let _q393 = true;
+  Q394: {
+    _g395.length = 0;
+    G396: {
+      const _a399 = sp.edges;
+      for (let _i400 = 0; _i400 < _a399.length; _i400++) {
+        const v_e = _a399[_i400];
+        const _h401 = (g[v_e] || -1);
+        if (!((_h401 === 2))) continue;
+        _g395.push(v_e);
       }
     }
-    if (!((((4 - sp.adj4[_at320].length) + _g322) === _v321))) return false;
+    const v_O = _g395;
+    const _eg404 = edgeGroups(sp, v_O);
+    const _a402 = sp.cells;
+    for (let _i403 = 0; _i403 < _a402.length; _i403++) {
+      const v_c = _a402[_i403];
+      const _h405 = _eg404.of(v_c).length;
+      if (!((_h405 === cl.k))) {
+        _q393 = false;
+        break Q394;
+      }
+    }
+  }
+  if (!(_q393)) return false;
+  for (let _k406 = 0; _k406 < cl.number.at.length; _k406++) {
+    const _at407 = cl.number.at[_k406];
+    const _v408 = cl.number.v[_k406];
+    let _g409 = 0;
+    G410: {
+      const _a411 = sp.adj4[_at407];
+      for (let _i412 = 0; _i412 < _a411.length; _i412++) {
+        const _h413 = (g[sp.adj4Edges[_at407][_i412]] || -1);
+        if (!((_h413 === 1))) continue;
+        _g409++;
+      }
+    }
+    if (!((((4 - sp.adj4[_at407].length) + _g409) === _v408))) return false;
   }
   return true;
 }
@@ -158,6 +158,9 @@ export function cluesVersusRegionSize(b: Marks, sp: GridSpace, cl: Dealt, fire: 
       L7: {
         const v_d = _h6;
         if (!(((v_d !== -1) && (((_h9 - v_d) > cl.k) || ((_h10 && (v_d === 3)) && _h11))))) break L7;
+        if (import.meta.env.DEV && staleChecking) {
+          freshBinding("cluesVersusRegionSize", [(v_a === cl.number.at[v_q]), (sp.adj4[v_a].includes(v_b)), !((b.grid[sp.adj4Edges[v_a][_i5]] !== 0)), (v_d === clueAt(cl.number, v_b)), ((v_d !== -1) && ((((8 - cl.number.v[v_q]) - v_d) > cl.k) || (((cl.number.v[v_q] === 3) && (v_d === 3)) && (cl.k !== 2))))], ["a =", "b in", "where of b", "d =", "where of d"]);
+        }
         facts.length = 0;
         changed = false;
         const _t12 = sp.adj4Edges[v_a][_i5];
@@ -212,51 +215,71 @@ export function numberExhausted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<N
     L34: {
       const v_n = ((4 - sp.adj4[v_c].length) + _g30);
       if (!((((_h35 > 0) || (v_n !== cl.number.v[v_q])) && ((v_n >= cl.number.v[v_q]) || ((v_n + _h35) <= cl.number.v[v_q]))))) break L34;
+      if (import.meta.env.DEV && staleChecking) {
+        const _g36: number[] = [];
+        G37: {
+          const _a40 = sp.adj4[v_c];
+          for (let _i41 = 0; _i41 < _a40.length; _i41++) {
+            const v_y = _a40[_i41];
+            if (!(!((b.grid[sp.adj4Edges[v_c][_i41]] !== 0)))) continue;
+            _g36.push(v_y);
+          }
+        }
+        let _g42 = 0;
+        G43: {
+          const _a44 = sp.adj4[v_c];
+          for (let _i45 = 0; _i45 < _a44.length; _i45++) {
+            if (!(((b.grid[sp.adj4Edges[v_c][_i45]] || -1) === 1))) continue;
+            _g42++;
+          }
+        }
+        freshBinding("numberExhausted", [(v_c === cl.number.at[v_q]), sameSet(v_U, _g36), (v_n === ((4 - sp.adj4[v_c].length) + _g42)), (((v_U.length > 0) || (v_n !== cl.number.v[v_q])) && ((v_n >= cl.number.v[v_q]) || ((v_n + v_U.length) <= cl.number.v[v_q])))], ["c =", "U =", "n =", "where of n"]);
+      }
       facts.length = 0;
       changed = false;
-      let _c42: boolean = ((v_n <= cl.number.v[v_q]) && ((v_n + _h35) >= cl.number.v[v_q]));
-      if (_c42) {
-        let _c41: boolean = !((v_n === cl.number.v[v_q]));
-        if (!_c41) {
-          let _q36 = true;
-          Q37: {
-            const _a38 = v_U;
-            for (let _i39 = 0; _i39 < _a38.length; _i39++) {
-              const v_y = _a38[_i39];
-              const _t40 = sp.edgeOf(v_c, v_y);
-              if (!(b.grid[_t40] !== 0)) { if (fire === null) { b.placeAt(_t40, 2); changed = true; } else facts.push(PLACE, _t40, 2); }
+      let _c52: boolean = ((v_n <= cl.number.v[v_q]) && ((v_n + _h35) >= cl.number.v[v_q]));
+      if (_c52) {
+        let _c51: boolean = !((v_n === cl.number.v[v_q]));
+        if (!_c51) {
+          let _q46 = true;
+          Q47: {
+            const _a48 = v_U;
+            for (let _i49 = 0; _i49 < _a48.length; _i49++) {
+              const v_y = _a48[_i49];
+              const _t50 = sp.edgeOf(v_c, v_y);
+              if (!(b.grid[_t50] !== 0)) { if (fire === null) { b.placeAt(_t50, 2); changed = true; } else facts.push(PLACE, _t50, 2); }
               if (!(true)) {
-                _q36 = false;
-                break Q37;
+                _q46 = false;
+                break Q47;
               }
             }
           }
-          _c41 = _q36;
+          _c51 = _q46;
         }
-        _c42 = _c41;
+        _c52 = _c51;
       }
-      let _c49: boolean = _c42;
-      if (_c49) {
-        let _c48: boolean = !((v_n < cl.number.v[v_q]));
-        if (!_c48) {
-          let _q43 = true;
-          Q44: {
-            const _a45 = v_U;
-            for (let _i46 = 0; _i46 < _a45.length; _i46++) {
-              const v_y = _a45[_i46];
-              const _t47 = sp.edgeOf(v_c, v_y);
-              if (!(b.grid[_t47] !== 0)) { if (fire === null) { b.placeAt(_t47, 1); changed = true; } else facts.push(PLACE, _t47, 1); }
+      let _c59: boolean = _c52;
+      if (_c59) {
+        let _c58: boolean = !((v_n < cl.number.v[v_q]));
+        if (!_c58) {
+          let _q53 = true;
+          Q54: {
+            const _a55 = v_U;
+            for (let _i56 = 0; _i56 < _a55.length; _i56++) {
+              const v_y = _a55[_i56];
+              const _t57 = sp.edgeOf(v_c, v_y);
+              if (!(b.grid[_t57] !== 0)) { if (fire === null) { b.placeAt(_t57, 1); changed = true; } else facts.push(PLACE, _t57, 1); }
               if (!(true)) {
-                _q43 = false;
-                break Q44;
+                _q53 = false;
+                break Q54;
               }
             }
           }
-          _c48 = _q43;
+          _c58 = _q53;
         }
-        _c49 = _c48;
+        _c59 = _c58;
       }
-      if (!(_c49)) return -1;
+      if (!(_c59)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ q: v_q, c: v_c, U: v_U.slice(), n: v_n }, facts)) return 1;
@@ -278,42 +301,55 @@ const notTooBigFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function notTooBig(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTooBigBinding> | null): number {
-  const _g60: number[] = [];
+  const _g70: number[] = [];
   const facts = notTooBigFacts;
   let fired = 0;
   let changed = false;
   const _m49_0 = b.made[0];
-  _g60.length = 0;
-  G61: {
-    const _a64 = sp.edges;
-    for (let _i65 = 0; _i65 < _a64.length; _i65++) {
-      const v_e = _a64[_i65];
+  _g70.length = 0;
+  G71: {
+    const _a74 = sp.edges;
+    for (let _i75 = 0; _i75 < _a74.length; _i75++) {
+      const v_e = _a74[_i75];
       if (!(((b.grid[v_e] || -1) === 2))) continue;
-      _g60.push(v_e);
+      _g70.push(v_e);
     }
   }
-  const v_O = _g60;
+  const v_O = _g70;
   const _m52_1 = b.made[1];
-  const _eg68 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
-  const _a66 = sp.edges;
+  const _eg78 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
+  const _a76 = sp.edges;
   R1:
-  for (let _i67 = 0; _i67 < _a66.length; _i67++) {
-    const v_e = _a66[_i67];
+  for (let _i77 = 0; _i77 < _a76.length; _i77++) {
+    const v_e = _a76[_i77];
     if (!(!((b.grid[v_e] !== 0)))) continue;
-    const v_A = _eg68.of(sp.edgeEnds[2 * v_e]);
-    const _h71 = v_A.length;
-    L69: {
+    const v_A = _eg78.of(sp.edgeEnds[2 * v_e]);
+    const _h81 = v_A.length;
+    L79: {
       const v_b = sp.edgeEnds[2 * v_e + 1];
-      if (!(!(_eg68.of(v_b) === v_A))) break L69;
-      L70: {
-        const v_B = _eg68.of(v_b);
-        const _h72 = v_B.length;
-        if (!(((_h71 + _h72) > cl.k))) break L70;
+      if (!(!(_eg78.of(v_b) === v_A))) break L79;
+      L80: {
+        const v_B = _eg78.of(v_b);
+        const _h82 = v_B.length;
+        if (!(((_h81 + _h82) > cl.k))) break L80;
         if (b.made[0] !== _m49_0 || b.made[1] !== _m52_1) {
-          const _now73 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e]);
-          if (!(_now73 === _eg68.of(sp.edgeEnds[2 * v_e]) || sameSet(_now73, _eg68.of(sp.edgeEnds[2 * v_e])))) { continue R1; }
-          const _now74 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_b);
-          if (!(_now74 === _eg68.of(v_b) || sameSet(_now74, _eg68.of(v_b)))) { continue R1; }
+          const _now83 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e]);
+          if (!(_now83 === _eg78.of(sp.edgeEnds[2 * v_e]) || sameSet(_now83, _eg78.of(sp.edgeEnds[2 * v_e])))) { continue R1; }
+          const _now84 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_b);
+          if (!(_now84 === _eg78.of(v_b) || sameSet(_now84, _eg78.of(v_b)))) { continue R1; }
+        }
+        if (import.meta.env.DEV && staleChecking) {
+          const _g85: number[] = [];
+          G86: {
+            const _a89 = sp.edges;
+            for (let _i90 = 0; _i90 < _a89.length; _i90++) {
+              const v_e = _a89[_i90];
+              if (!(((b.grid[v_e] || -1) === 2))) continue;
+              _g85.push(v_e);
+            }
+          }
+          const _fg91 = edgeGroups(sp, _g85);
+          freshBinding("notTooBig", [sameSet(_fg91.of(sp.edgeEnds[2 * v_e]), _eg78.of(sp.edgeEnds[2 * v_e])) && sameSet(_fg91.of(v_b), _eg78.of(v_b)), (sp.edges.includes(v_e)), !((b.grid[v_e] !== 0)), sameSet(v_A, through(sp, sp.edgeEnds[2 * v_e], v_O)), (v_b === sp.edgeEnds[2 * v_e + 1]), !(_eg78.of(v_b) === v_A), sameSet(v_B, through(sp, v_b, v_O)), ((v_A.length + v_B.length) > cl.k)], ["O's groups", "e in", "where of e", "A =", "b =", "where of b", "B =", "where of B"]);
         }
         facts.length = 0;
         changed = false;
@@ -337,116 +373,150 @@ export interface NotTooSmallBinding {
 }
 
 const notTooSmallFacts: number[] = [];
-const _st129 = stamps();
+const _st146 = stamps();
 
 /** Its dearest read grows with the board as n. */
 export function notTooSmall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTooSmallBinding> | null): number {
-  const _g106: number[] = [];
-  const _g117: number[] = [];
-  const _g132: number[] = [];
+  const _g123: number[] = [];
+  const _g134: number[] = [];
+  const _g149: number[] = [];
   const facts = notTooSmallFacts;
   let fired = 0;
   let changed = false;
   const _m75_0 = b.made[0];
-  _g106.length = 0;
-  G107: {
-    const _a110 = sp.edges;
-    for (let _i111 = 0; _i111 < _a110.length; _i111++) {
-      const v_e = _a110[_i111];
+  _g123.length = 0;
+  G124: {
+    const _a127 = sp.edges;
+    for (let _i128 = 0; _i128 < _a127.length; _i128++) {
+      const v_e = _a127[_i128];
       if (!(((b.grid[v_e] || -1) === 2))) continue;
-      _g106.push(v_e);
+      _g123.push(v_e);
     }
   }
-  const v_O = _g106;
+  const v_O = _g123;
   const _m78_1 = b.made[1];
-  const _eg114 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
-  const _a112 = sp.cells;
+  const _eg131 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
+  const _a129 = sp.cells;
   R1:
-  for (let _i113 = 0; _i113 < _a112.length; _i113++) {
-    const v_c = _a112[_i113];
-    L115: {
-      const v_A = _eg114.of(v_c);
-      const _h116 = v_A.length;
-      if (!(((v_c === (v_A[0] ?? -1)) && (_h116 !== cl.k)))) break L115;
-      _g117.length = 0;
-      _st129.pass++;
-      G118: {
-        const _a130 = v_A;
-        for (let _i131 = 0; _i131 < _a130.length; _i131++) {
-          const v_x = _a130[_i131];
-          _g132.length = 0;
-          G133: {
-            const _a136 = sp.adj4[v_x];
-            for (let _i137 = 0; _i137 < _a136.length; _i137++) {
-              const v_y = _a136[_i137];
-              if (!(!((b.grid[sp.adj4Edges[v_x][_i137]] !== 0)))) continue;
-              _g132.push(v_y);
+  for (let _i130 = 0; _i130 < _a129.length; _i130++) {
+    const v_c = _a129[_i130];
+    L132: {
+      const v_A = _eg131.of(v_c);
+      const _h133 = v_A.length;
+      if (!(((v_c === (v_A[0] ?? -1)) && (_h133 !== cl.k)))) break L132;
+      _g134.length = 0;
+      _st146.pass++;
+      G135: {
+        const _a147 = v_A;
+        for (let _i148 = 0; _i148 < _a147.length; _i148++) {
+          const v_x = _a147[_i148];
+          _g149.length = 0;
+          G150: {
+            const _a153 = sp.adj4[v_x];
+            for (let _i154 = 0; _i154 < _a153.length; _i154++) {
+              const v_y = _a153[_i154];
+              if (!(!((b.grid[sp.adj4Edges[v_x][_i154]] !== 0)))) continue;
+              _g149.push(v_y);
             }
           }
-          const _a138 = _g132;
-          for (let _i139 = 0; _i139 < _a138.length; _i139++) {
-            const v_s = _a138[_i139];
-            const _t140 = v_s;
-            if (_g117.length < 16) { if (!_g117.includes(_t140)) _g117.push(_t140); } else addOnce(_g117, _st129, _t140);
+          const _a155 = _g149;
+          for (let _i156 = 0; _i156 < _a155.length; _i156++) {
+            const v_s = _a155[_i156];
+            const _t157 = v_s;
+            if (_g134.length < 16) { if (!_g134.includes(_t157)) _g134.push(_t157); } else addOnce(_g134, _st146, _t157);
           }
         }
       }
-      const v_S = _g117;
-      const _h143 = v_S.length;
+      const v_S = _g134;
+      const _h189 = v_S.length;
       if (b.made[0] !== _m75_0 || b.made[1] !== _m78_1) {
-        const _now141 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_c);
-        if (!(_now141 === _eg114.of(v_c) || sameSet(_now141, _eg114.of(v_c)))) { continue R1; }
-        const _now142 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of((v_S[0] ?? -1));
-        if (!(_now142 === _eg114.of((v_S[0] ?? -1)) || sameSet(_now142, _eg114.of((v_S[0] ?? -1))))) { continue R1; }
+        const _now158 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_c);
+        if (!(_now158 === _eg131.of(v_c) || sameSet(_now158, _eg131.of(v_c)))) { continue R1; }
+        const _now159 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of((v_S[0] ?? -1));
+        if (!(_now159 === _eg131.of((v_S[0] ?? -1)) || sameSet(_now159, _eg131.of((v_S[0] ?? -1))))) { continue R1; }
+      }
+      if (import.meta.env.DEV && staleChecking) {
+        const _g160: number[] = [];
+        G161: {
+          const _a164 = sp.edges;
+          for (let _i165 = 0; _i165 < _a164.length; _i165++) {
+            const v_e = _a164[_i165];
+            if (!(((b.grid[v_e] || -1) === 2))) continue;
+            _g160.push(v_e);
+          }
+        }
+        const _fg166 = edgeGroups(sp, _g160);
+        const _g167: number[] = [];
+        G168: {
+          const _a179 = v_A;
+          for (let _i180 = 0; _i180 < _a179.length; _i180++) {
+            const v_x = _a179[_i180];
+            const _g181: number[] = [];
+            G182: {
+              const _a185 = sp.adj4[v_x];
+              for (let _i186 = 0; _i186 < _a185.length; _i186++) {
+                const v_y = _a185[_i186];
+                if (!(!((b.grid[sp.adj4Edges[v_x][_i186]] !== 0)))) continue;
+                _g181.push(v_y);
+              }
+            }
+            const _a187 = _g181;
+            for (let _i188 = 0; _i188 < _a187.length; _i188++) {
+              const v_s = _a187[_i188];
+              if (!_g167.includes(v_s)) _g167.push(v_s);
+            }
+          }
+        }
+        freshBinding("notTooSmall", [sameSet(_fg166.of(v_c), _eg131.of(v_c)) && sameSet(_fg166.of((v_S[0] ?? -1)), _eg131.of((v_S[0] ?? -1))), (sp.cells.includes(v_c)), sameSet(v_A, through(sp, v_c, v_O)), ((v_c === (v_A[0] ?? -1)) && (v_A.length !== cl.k)), sameSet(v_S, _g167)], ["O's groups", "c in", "A =", "where of A", "S ="]);
       }
       facts.length = 0;
       changed = false;
-      let _c158: boolean = ((_h116 < cl.k) && (_h143 > 0));
-      if (_c158) {
-        let _q144 = true;
-        Q145: {
-          const v_B = _eg114.of((v_S[0] ?? -1));
-          let _q146 = true;
-          Q147: {
-            const _a148 = v_S;
-            for (let _i149 = 0; _i149 < _a148.length; _i149++) {
-              const v_s = _a148[_i149];
-              if (!((_eg114.of(v_s) === v_B))) {
-                _q146 = false;
-                break Q147;
+      let _c204: boolean = ((_h133 < cl.k) && (_h189 > 0));
+      if (_c204) {
+        let _q190 = true;
+        Q191: {
+          const v_B = _eg131.of((v_S[0] ?? -1));
+          let _q192 = true;
+          Q193: {
+            const _a194 = v_S;
+            for (let _i195 = 0; _i195 < _a194.length; _i195++) {
+              const v_s = _a194[_i195];
+              if (!((_eg131.of(v_s) === v_B))) {
+                _q192 = false;
+                break Q193;
               }
             }
           }
-          let _c157: boolean = !(_q146);
-          if (!_c157) {
-            let _q150 = true;
-            Q151: {
-              const _a152 = v_A;
-              for (let _i153 = 0; _i153 < _a152.length; _i153++) {
-                const v_x = _a152[_i153];
-                const _a154 = sp.adj4[v_x];
-                for (let _i155 = 0; _i155 < _a154.length; _i155++) {
-                  const v_y = _a154[_i155];
-                  if (!((_eg114.of(v_y) === v_B))) continue;
-                  const _t156 = sp.adj4Edges[v_x][_i155];
-                  if (!(b.grid[_t156] !== 0)) { if (fire === null) { b.placeAt(_t156, 2); changed = true; } else facts.push(PLACE, _t156, 2); }
+          let _c203: boolean = !(_q192);
+          if (!_c203) {
+            let _q196 = true;
+            Q197: {
+              const _a198 = v_A;
+              for (let _i199 = 0; _i199 < _a198.length; _i199++) {
+                const v_x = _a198[_i199];
+                const _a200 = sp.adj4[v_x];
+                for (let _i201 = 0; _i201 < _a200.length; _i201++) {
+                  const v_y = _a200[_i201];
+                  if (!((_eg131.of(v_y) === v_B))) continue;
+                  const _t202 = sp.adj4Edges[v_x][_i201];
+                  if (!(b.grid[_t202] !== 0)) { if (fire === null) { b.placeAt(_t202, 2); changed = true; } else facts.push(PLACE, _t202, 2); }
                   if (!(true)) {
-                    _q150 = false;
-                    break Q151;
+                    _q196 = false;
+                    break Q197;
                   }
                 }
               }
             }
-            _c157 = _q150;
+            _c203 = _q196;
           }
-          if (!(_c157)) {
-            _q144 = false;
-            break Q145;
+          if (!(_c203)) {
+            _q190 = false;
+            break Q191;
           }
         }
-        _c158 = _q144;
+        _c204 = _q190;
       }
-      if (!(_c158)) return -1;
+      if (!(_c204)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ O: v_O.slice(), c: v_c, A: v_A.slice(), S: v_S.slice() }, facts)) return 1;
@@ -464,65 +534,108 @@ export interface NoDanglingEdgesBinding {
 }
 
 const noDanglingEdgesFacts: number[] = [];
-const _st192 = stamps();
+const _st238 = stamps();
 
 /** Its dearest read grows with the board as n. */
 export function noDanglingEdges(b: Marks, sp: GridSpace, fire: Fire<NoDanglingEdgesBinding> | null): number {
-  const _g186: number[] = [];
+  const _g232: number[] = [];
   const facts = noDanglingEdgesFacts;
   let fired = 0;
   let changed = false;
-  const _a184 = sp.corners;
-  for (let _i185 = 0; _i185 < _a184.length; _i185++) {
-    const v_p = _a184[_i185];
+  const _a230 = sp.corners;
+  for (let _i231 = 0; _i231 < _a230.length; _i231++) {
+    const v_p = _a230[_i231];
     const v_C = sp.cornerCells[v_p];
-    _g186.length = 0;
-    _st192.pass++;
-    G187: {
-      const _a193 = v_C;
-      for (let _i194 = 0; _i194 < _a193.length; _i194++) {
-        const v_x = _a193[_i194];
-        const _a195 = sp.adj4[v_x];
-        for (let _i196 = 0; _i196 < _a195.length; _i196++) {
-          const v_y = _a195[_i196];
+    _g232.length = 0;
+    _st238.pass++;
+    G233: {
+      const _a239 = v_C;
+      for (let _i240 = 0; _i240 < _a239.length; _i240++) {
+        const v_x = _a239[_i240];
+        const _a241 = sp.adj4[v_x];
+        for (let _i242 = 0; _i242 < _a241.length; _i242++) {
+          const v_y = _a241[_i242];
           if (!((v_C.includes(v_y)))) continue;
-          const _t197 = sp.adj4Edges[v_x][_i196];
-          const _t198 = _t197;
-          if (_g186.length < 16) { if (!_g186.includes(_t198)) _g186.push(_t198); } else addOnce(_g186, _st192, _t198);
+          const _t243 = sp.adj4Edges[v_x][_i242];
+          const _t244 = _t243;
+          if (_g232.length < 16) { if (!_g232.includes(_t244)) _g232.push(_t244); } else addOnce(_g232, _st238, _t244);
         }
       }
     }
-    const v_F = _g186;
-    const _a199 = v_F;
-    for (let _i200 = 0; _i200 < _a199.length; _i200++) {
-      const v_f = _a199[_i200];
-      let _c205: boolean = !((b.grid[v_f] !== 0));
-      if (_c205) {
-        let _g201 = 0;
-        G202: {
-          const _a203 = v_F;
-          for (let _i204 = 0; _i204 < _a203.length; _i204++) {
-            const v_e = _a203[_i204];
+    const v_F = _g232;
+    const _a245 = v_F;
+    for (let _i246 = 0; _i246 < _a245.length; _i246++) {
+      const v_f = _a245[_i246];
+      let _c251: boolean = !((b.grid[v_f] !== 0));
+      if (_c251) {
+        let _g247 = 0;
+        G248: {
+          const _a249 = v_F;
+          for (let _i250 = 0; _i250 < _a249.length; _i250++) {
+            const v_e = _a249[_i250];
             if (!(((b.grid[v_e] || -1) === 1))) continue;
-            _g201++;
+            _g247++;
           }
         }
-        _c205 = (_g201 === 1);
+        _c251 = (_g247 === 1);
       }
-      let _c210: boolean = _c205;
-      if (_c210) {
-        let _g206 = 0;
-        G207: {
-          const _a208 = v_F;
-          for (let _i209 = 0; _i209 < _a208.length; _i209++) {
-            const v_e = _a208[_i209];
+      let _c256: boolean = _c251;
+      if (_c256) {
+        let _g252 = 0;
+        G253: {
+          const _a254 = v_F;
+          for (let _i255 = 0; _i255 < _a254.length; _i255++) {
+            const v_e = _a254[_i255];
             if (!(!((b.grid[v_e] !== 0)))) continue;
-            _g206++;
+            _g252++;
           }
         }
-        _c210 = (_g206 === 1);
+        _c256 = (_g252 === 1);
       }
-      if (!(_c210)) continue;
+      if (!(_c256)) continue;
+      if (import.meta.env.DEV && staleChecking) {
+        const _g257: number[] = [];
+        G258: {
+          const _a263 = v_C;
+          for (let _i264 = 0; _i264 < _a263.length; _i264++) {
+            const v_x = _a263[_i264];
+            const _a265 = sp.adj4[v_x];
+            for (let _i266 = 0; _i266 < _a265.length; _i266++) {
+              const v_y = _a265[_i266];
+              if (!((v_C.includes(v_y)))) continue;
+              const _t267 = sp.adj4Edges[v_x][_i266];
+              if (!_g257.includes(_t267)) _g257.push(_t267);
+            }
+          }
+        }
+        let _c272: boolean = !((b.grid[v_f] !== 0));
+        if (_c272) {
+          let _g268 = 0;
+          G269: {
+            const _a270 = v_F;
+            for (let _i271 = 0; _i271 < _a270.length; _i271++) {
+              const v_e = _a270[_i271];
+              if (!(((b.grid[v_e] || -1) === 1))) continue;
+              _g268++;
+            }
+          }
+          _c272 = (_g268 === 1);
+        }
+        let _c277: boolean = _c272;
+        if (_c277) {
+          let _g273 = 0;
+          G274: {
+            const _a275 = v_F;
+            for (let _i276 = 0; _i276 < _a275.length; _i276++) {
+              const v_e = _a275[_i276];
+              if (!(!((b.grid[v_e] !== 0)))) continue;
+              _g273++;
+            }
+          }
+          _c277 = (_g273 === 1);
+        }
+        freshBinding("noDanglingEdges", [(sp.corners.includes(v_p)), sameSet(v_C, sp.cornerCells[v_p]), sameSet(v_F, _g257), (v_F.includes(v_f)), _c277], ["p in", "C =", "F =", "f in", "where of f"]);
+      }
       facts.length = 0;
       changed = false;
       if (!(b.grid[v_f] !== 0)) { if (fire === null) { b.placeAt(v_f, 1); changed = true; } else facts.push(PLACE, v_f, 1); }
@@ -549,98 +662,120 @@ const equivalentEdgesFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EquivalentEdgesBinding> | null): number {
-  const _g230: number[] = [];
-  const _g237: number[] = [];
-  const _g251: number[] = [];
+  const _g297: number[] = [];
+  const _g304: number[] = [];
+  const _g318: number[] = [];
   const facts = equivalentEdgesFacts;
   let fired = 0;
   let changed = false;
   const _m131_0 = b.made[0];
-  _g230.length = 0;
-  G231: {
-    const _a234 = sp.edges;
-    for (let _i235 = 0; _i235 < _a234.length; _i235++) {
-      const v_e = _a234[_i235];
+  _g297.length = 0;
+  G298: {
+    const _a301 = sp.edges;
+    for (let _i302 = 0; _i302 < _a301.length; _i302++) {
+      const v_e = _a301[_i302];
       if (!(((b.grid[v_e] || -1) === 2))) continue;
-      _g230.push(v_e);
+      _g297.push(v_e);
     }
   }
-  const v_O = _g230;
+  const v_O = _g297;
   const _m134_1 = b.made[1];
-  const _eg245 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
+  const _eg312 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   for (let v_q = 0; v_q < cl.number.at.length; v_q++) {
-    const _h261 = cl.number.v[v_q];
-    const _h270 = (4 - _h261);
-    L236: {
+    const _h341 = cl.number.v[v_q];
+    const _h350 = (4 - _h341);
+    L303: {
       const v_c = cl.number.at[v_q];
-      if (!(((cl.number.v[v_q] >= 1) && (cl.number.v[v_q] <= 3)))) break L236;
-      _g237.length = 0;
-      G238: {
-        const _a241 = sp.adj4[v_c];
-        for (let _i242 = 0; _i242 < _a241.length; _i242++) {
-          const v_y = _a241[_i242];
-          if (!(!((b.grid[sp.adj4Edges[v_c][_i242]] !== 0)))) continue;
-          _g237.push(v_y);
+      if (!(((cl.number.v[v_q] >= 1) && (cl.number.v[v_q] <= 3)))) break L303;
+      _g304.length = 0;
+      G305: {
+        const _a308 = sp.adj4[v_c];
+        for (let _i309 = 0; _i309 < _a308.length; _i309++) {
+          const v_y = _a308[_i309];
+          if (!(!((b.grid[sp.adj4Edges[v_c][_i309]] !== 0)))) continue;
+          _g304.push(v_y);
         }
       }
-      const _a243 = _g237;
+      const _a310 = _g304;
       R2:
-      for (let _i244 = 0; _i244 < _a243.length; _i244++) {
-        const v_y = _a243[_i244];
+      for (let _i311 = 0; _i311 < _a310.length; _i311++) {
+        const v_y = _a310[_i311];
         if (!(!((b.grid[sp.edgeOf(v_c, v_y)] !== 0)))) continue;
-        const _h262 = sp.edgeOf(v_c, v_y);
-        L246: {
-          const v_R = _eg245.of(v_y);
-          if (!(!(_eg245.of(v_c) === v_R))) break L246;
-          const _a247 = sp.adj4[v_c];
-          const _n248 = _a247.indexOf(v_y);
-          for (let _i249 = 0; _i249 < _n248; _i249++) {
-            const v_z = _a247[_i249];
-            if (!((!((b.grid[sp.adj4Edges[v_c][_i249]] !== 0)) && (_eg245.of(v_z) === v_R)))) continue;
+        const _h342 = sp.edgeOf(v_c, v_y);
+        L313: {
+          const v_R = _eg312.of(v_y);
+          if (!(!(_eg312.of(v_c) === v_R))) break L313;
+          const _a314 = sp.adj4[v_c];
+          const _n315 = _a314.indexOf(v_y);
+          for (let _i316 = 0; _i316 < _n315; _i316++) {
+            const v_z = _a314[_i316];
+            if (!((!((b.grid[sp.adj4Edges[v_c][_i316]] !== 0)) && (_eg312.of(v_z) === v_R)))) continue;
             if (b.made[0] !== _m131_0 || b.made[1] !== _m134_1) {
-              const _now250 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_y);
-              if (!(_now250 === _eg245.of(v_y) || sameSet(_now250, _eg245.of(v_y)))) { continue R2; }
-              _g251.length = 0;
-              G252: {
-                const _a255 = sp.adj4[v_c];
-                for (let _i256 = 0; _i256 < _a255.length; _i256++) {
-                  const v_y = _a255[_i256];
-                  if (!(!((b.grid[sp.adj4Edges[v_c][_i256]] !== 0)))) continue;
-                  _g251.push(v_y);
+              const _now317 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_y);
+              if (!(_now317 === _eg312.of(v_y) || sameSet(_now317, _eg312.of(v_y)))) { continue R2; }
+              _g318.length = 0;
+              G319: {
+                const _a322 = sp.adj4[v_c];
+                for (let _i323 = 0; _i323 < _a322.length; _i323++) {
+                  const v_y = _a322[_i323];
+                  if (!(!((b.grid[sp.adj4Edges[v_c][_i323]] !== 0)))) continue;
+                  _g318.push(v_y);
                 }
               }
-              if (!((_g251.includes(v_y)))) { continue R2; }
+              if (!((_g318.includes(v_y)))) { continue R2; }
               if (!(!((b.grid[sp.edgeOf(v_c, v_y)] !== 0)))) { continue R2; }
+            }
+            if (import.meta.env.DEV && staleChecking) {
+              const _g324: number[] = [];
+              G325: {
+                const _a328 = sp.edges;
+                for (let _i329 = 0; _i329 < _a328.length; _i329++) {
+                  const v_e = _a328[_i329];
+                  if (!(((b.grid[v_e] || -1) === 2))) continue;
+                  _g324.push(v_e);
+                }
+              }
+              const _fg330 = edgeGroups(sp, _g324);
+              const _g331: number[] = [];
+              G332: {
+                const _a335 = sp.adj4[v_c];
+                for (let _i336 = 0; _i336 < _a335.length; _i336++) {
+                  const v_y = _a335[_i336];
+                  if (!(!((b.grid[sp.adj4Edges[v_c][_i336]] !== 0)))) continue;
+                  _g331.push(v_y);
+                }
+              }
+              freshBinding("equivalentEdges", [sameSet(_fg330.of(v_y), _eg312.of(v_y)), (v_c === cl.number.at[v_q]), ((cl.number.v[v_q] >= 1) && (cl.number.v[v_q] <= 3)), (_g331.includes(v_y)), !((b.grid[sp.edgeOf(v_c, v_y)] !== 0)), sameSet(v_R, through(sp, v_y, v_O)), !(_eg312.of(v_c) === v_R), (before(v_y, sp.adj4[v_c]).includes(v_z)), (!((b.grid[sp.adj4Edges[v_c][_i316]] !== 0)) && (_eg312.of(v_z) === v_R))], ["O's groups", "c =", "where of c", "y in", "where of y", "R =", "where of R", "z in", "where of z"]);
             }
             facts.length = 0;
             changed = false;
-            let _c265: boolean = !(((walls(b, sp, v_c) + 2) > _h261));
-            if (!_c265) {
-              if (!(b.grid[_h262] !== 0)) { if (fire === null) { b.placeAt(_h262, 2); changed = true; } else facts.push(PLACE, _h262, 2); }
-              let _c264: boolean = true;
-              if (_c264) {
-                const _t263 = sp.adj4Edges[v_c][_i249];
-                if (!(b.grid[_t263] !== 0)) { if (fire === null) { b.placeAt(_t263, 2); changed = true; } else facts.push(PLACE, _t263, 2); }
-                _c264 = true;
+            let _c345: boolean = !(((walls(b, sp, v_c) + 2) > _h341));
+            if (!_c345) {
+              if (!(b.grid[_h342] !== 0)) { if (fire === null) { b.placeAt(_h342, 2); changed = true; } else facts.push(PLACE, _h342, 2); }
+              let _c344: boolean = true;
+              if (_c344) {
+                const _t343 = sp.adj4Edges[v_c][_i316];
+                if (!(b.grid[_t343] !== 0)) { if (fire === null) { b.placeAt(_t343, 2); changed = true; } else facts.push(PLACE, _t343, 2); }
+                _c344 = true;
               }
-              _c265 = _c264;
+              _c345 = _c344;
             }
-            let _c274: boolean = _c265;
-            if (_c274) {
-              let _c273: boolean = !((((walls(b, sp, v_c) + 2) <= _h261) && ((opens(b, sp, v_c) + 2) > _h270)));
-              if (!_c273) {
-                if (!(b.grid[_h262] !== 0)) { if (fire === null) { b.placeAt(_h262, 1); changed = true; } else facts.push(PLACE, _h262, 1); }
-                let _c272: boolean = true;
-                if (_c272) {
-                  const _t271 = sp.adj4Edges[v_c][_i249];
-                  if (!(b.grid[_t271] !== 0)) { if (fire === null) { b.placeAt(_t271, 1); changed = true; } else facts.push(PLACE, _t271, 1); }
-                  _c272 = true;
+            let _c354: boolean = _c345;
+            if (_c354) {
+              let _c353: boolean = !((((walls(b, sp, v_c) + 2) <= _h341) && ((opens(b, sp, v_c) + 2) > _h350)));
+              if (!_c353) {
+                if (!(b.grid[_h342] !== 0)) { if (fire === null) { b.placeAt(_h342, 1); changed = true; } else facts.push(PLACE, _h342, 1); }
+                let _c352: boolean = true;
+                if (_c352) {
+                  const _t351 = sp.adj4Edges[v_c][_i316];
+                  if (!(b.grid[_t351] !== 0)) { if (fire === null) { b.placeAt(_t351, 1); changed = true; } else facts.push(PLACE, _t351, 1); }
+                  _c352 = true;
                 }
-                _c273 = _c272;
+                _c353 = _c352;
               }
-              _c274 = _c273;
+              _c354 = _c353;
             }
-            if (!(_c274)) return -1;
+            if (!(_c354)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
               if (fire !== null && !fire({ O: v_O.slice(), q: v_q, c: v_c, y: v_y, R: v_R.slice(), z: v_z }, facts)) return 1;
@@ -662,31 +797,44 @@ const insideFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function inside(b: Marks, sp: GridSpace, fire: Fire<InsideBinding> | null): number {
-  const _g283: number[] = [];
+  const _g363: number[] = [];
   const facts = insideFacts;
   let fired = 0;
   let changed = false;
   const _m163_0 = b.made[0];
-  _g283.length = 0;
-  G284: {
-    const _a287 = sp.edges;
-    for (let _i288 = 0; _i288 < _a287.length; _i288++) {
-      const v_e = _a287[_i288];
+  _g363.length = 0;
+  G364: {
+    const _a367 = sp.edges;
+    for (let _i368 = 0; _i368 < _a367.length; _i368++) {
+      const v_e = _a367[_i368];
       if (!(((b.grid[v_e] || -1) === 2))) continue;
-      _g283.push(v_e);
+      _g363.push(v_e);
     }
   }
-  const v_O = _g283;
+  const v_O = _g363;
   const _m166_1 = b.made[1];
-  const _eg291 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
-  const _a289 = sp.edges;
+  const _eg371 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
+  const _a369 = sp.edges;
   R1:
-  for (let _i290 = 0; _i290 < _a289.length; _i290++) {
-    const v_e = _a289[_i290];
-    if (!((((b.grid[v_e] || -1) !== 2) && (_eg291.of(sp.edgeEnds[2 * v_e + 1]) === _eg291.of(sp.edgeEnds[2 * v_e]))))) continue;
+  for (let _i370 = 0; _i370 < _a369.length; _i370++) {
+    const v_e = _a369[_i370];
+    if (!((((b.grid[v_e] || -1) !== 2) && (_eg371.of(sp.edgeEnds[2 * v_e + 1]) === _eg371.of(sp.edgeEnds[2 * v_e]))))) continue;
     if (b.made[0] !== _m163_0 || b.made[1] !== _m166_1) {
-      const _now292 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e]);
-      if (!(_now292 === _eg291.of(sp.edgeEnds[2 * v_e]) || sameSet(_now292, _eg291.of(sp.edgeEnds[2 * v_e])))) { continue R1; }
+      const _now372 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e]);
+      if (!(_now372 === _eg371.of(sp.edgeEnds[2 * v_e]) || sameSet(_now372, _eg371.of(sp.edgeEnds[2 * v_e])))) { continue R1; }
+    }
+    if (import.meta.env.DEV && staleChecking) {
+      const _g373: number[] = [];
+      G374: {
+        const _a377 = sp.edges;
+        for (let _i378 = 0; _i378 < _a377.length; _i378++) {
+          const v_e = _a377[_i378];
+          if (!(((b.grid[v_e] || -1) === 2))) continue;
+          _g373.push(v_e);
+        }
+      }
+      const _fg379 = edgeGroups(sp, _g373);
+      freshBinding("inside", [sameSet(_fg379.of(sp.edgeEnds[2 * v_e]), _eg371.of(sp.edgeEnds[2 * v_e])), (sp.edges.includes(v_e)), (((b.grid[v_e] || -1) !== 2) && (through(sp, sp.edgeEnds[2 * v_e], v_O).includes(sp.edgeEnds[2 * v_e + 1])))], ["O's groups", "e in", "where of e"]);
     }
     facts.length = 0;
     changed = false;
@@ -712,15 +860,15 @@ const wallsKept = keptStore<number>();
 export function walls(b: Marks, sp: GridSpace, v_c: number): number {
   const _kept: Kept<number> = wallsKept.marks(b);
   if (_kept[v_c] !== undefined) return _kept[v_c];
-  let _g257 = 0;
-  G258: {
-    const _a259 = sp.adj4[v_c];
-    for (let _i260 = 0; _i260 < _a259.length; _i260++) {
-      if (!(((b.grid[sp.adj4Edges[v_c][_i260]] || -1) === 1))) continue;
-      _g257++;
+  let _g337 = 0;
+  G338: {
+    const _a339 = sp.adj4[v_c];
+    for (let _i340 = 0; _i340 < _a339.length; _i340++) {
+      if (!(((b.grid[sp.adj4Edges[v_c][_i340]] || -1) === 1))) continue;
+      _g337++;
     }
   }
-  const _made = ((4 - sp.adj4[v_c].length) + _g257);
+  const _made = ((4 - sp.adj4[v_c].length) + _g337);
   _kept[v_c] = _made;
   return _made;
 }
@@ -732,15 +880,15 @@ const opensKept = keptStore<number>();
 export function opens(b: Marks, sp: GridSpace, v_c: number): number {
   const _kept: Kept<number> = opensKept.marks(b);
   if (_kept[v_c] !== undefined) return _kept[v_c];
-  let _g266 = 0;
-  G267: {
-    const _a268 = sp.adj4[v_c];
-    for (let _i269 = 0; _i269 < _a268.length; _i269++) {
-      if (!(((b.grid[sp.adj4Edges[v_c][_i269]] || -1) === 2))) continue;
-      _g266++;
+  let _g346 = 0;
+  G347: {
+    const _a348 = sp.adj4[v_c];
+    for (let _i349 = 0; _i349 < _a348.length; _i349++) {
+      if (!(((b.grid[sp.adj4Edges[v_c][_i349]] || -1) === 2))) continue;
+      _g346++;
     }
   }
-  const _made = _g266;
+  const _made = _g346;
   _kept[v_c] = _made;
   return _made;
 }

@@ -314,3 +314,13 @@ A compiled technique's solve SHALL NOT fire a binding whose binders' reads of th
 
 - **WHEN** Rome's `loop` strikes one arrow from a square, and the square's next arrow, read before that strike, is still among its candidates
 - **THEN** the next arrow's binding fires in the same run, as it did before the reads were made again
+
+#### Scenario: A laser's square read before a placement is read again
+
+- **WHEN** Blackbox's `ray` places at the first unknown square along a laser for one value, and the same laser's next value read that square before the placement
+- **THEN** the next value's binding is passed over and the laser is tried again on the marks as they then stand
+
+#### Scenario: Every described game's bindings are read afresh in the suite
+
+- **WHEN** the suite solves each described game's shared boards with the stale-read guard on
+- **THEN** every binding about to fire reads all its binders afresh from the marks, with no count and no narrowing, and one whose read no longer holds fails that game's case

@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/signpost/signpost.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, chain, chainEnd, chainHas, chainHolders, chainLength, clueAt, compass, keptStore, least, popcount, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, chain, chainEnd, chainHas, chainHolders, chainLength, clueAt, compass, freshBinding, keptStore, least, popcount, sameSet, staleChecking, type Kept } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -64,73 +64,73 @@ export function domainOf(sp: GridSpace, cl: Dealt, v_c: number): number {
  * board: every cell a value of its domain, and every rule and dealt clue
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
-  const _h125 = sp.cells.length;
+  const _h137 = sp.cells.length;
   for (const cell of sp.cells) {
     const held = g[cell];
     if (!(held > 0 && (domainOf(sp, cl, cell) >> held) & 1)) return false;
   }
-  let _q118 = false;
-  Q119: {
-    const _a120 = sp.cells;
-    for (let _i121 = 0; _i121 < _a120.length; _i121++) {
-      const v_c = _a120[_i121];
-      const _h124 = chain(sp, (_x122: number): number => { if (_x122 < 0) return -1; const _d123 = (g[_x122] || -1); if (_d123 < 0) return -1; return compass(sp, _x122, clueAt(cl.arrow, _x122), (_d123 - 1)); }, v_c).length;
-      if ((_h124 === _h125)) {
-        _q118 = true;
-        break Q119;
+  let _q130 = false;
+  Q131: {
+    const _a132 = sp.cells;
+    for (let _i133 = 0; _i133 < _a132.length; _i133++) {
+      const v_c = _a132[_i133];
+      const _h136 = chain(sp, (_x134: number): number => { if (_x134 < 0) return -1; const _d135 = (g[_x134] || -1); if (_d135 < 0) return -1; return compass(sp, _x134, clueAt(cl.arrow, _x134), (_d135 - 1)); }, v_c).length;
+      if ((_h136 === _h137)) {
+        _q130 = true;
+        break Q131;
       }
     }
   }
-  if (!(_q118)) return false;
-  let _q126 = true;
-  Q127: {
-    const _a128 = sp.cells;
-    for (let _i129 = 0; _i129 < _a128.length; _i129++) {
-      const v_c = _a128[_i129];
-      const _h130 = clueAt(cl.arrow, v_c);
-      if (!((_h130 !== -1))) {
-        _q126 = false;
-        break Q127;
+  if (!(_q130)) return false;
+  let _q138 = true;
+  Q139: {
+    const _a140 = sp.cells;
+    for (let _i141 = 0; _i141 < _a140.length; _i141++) {
+      const v_c = _a140[_i141];
+      const _h142 = clueAt(cl.arrow, v_c);
+      if (!((_h142 !== -1))) {
+        _q138 = false;
+        break Q139;
       }
     }
   }
-  let _c136: boolean = _q126;
-  if (_c136) {
-    let _q131 = false;
-    Q132: {
-      const _a133 = sp.cells;
-      for (let _i134 = 0; _i134 < _a133.length; _i134++) {
-        const v_c = _a133[_i134];
-        const _h135 = clueAt(cl.number, v_c);
-        if ((_h135 === 1)) {
-          _q131 = true;
-          break Q132;
+  let _c148: boolean = _q138;
+  if (_c148) {
+    let _q143 = false;
+    Q144: {
+      const _a145 = sp.cells;
+      for (let _i146 = 0; _i146 < _a145.length; _i146++) {
+        const v_c = _a145[_i146];
+        const _h147 = clueAt(cl.number, v_c);
+        if ((_h147 === 1)) {
+          _q143 = true;
+          break Q144;
         }
       }
     }
-    _c136 = _q131;
+    _c148 = _q143;
   }
-  let _c142: boolean = _c136;
-  if (_c142) {
-    let _q137 = false;
-    Q138: {
-      const _a139 = sp.cells;
-      for (let _i140 = 0; _i140 < _a139.length; _i140++) {
-        const v_c = _a139[_i140];
-        const _h141 = clueAt(cl.number, v_c);
-        if ((_h141 === _h125)) {
-          _q137 = true;
-          break Q138;
+  let _c154: boolean = _c148;
+  if (_c154) {
+    let _q149 = false;
+    Q150: {
+      const _a151 = sp.cells;
+      for (let _i152 = 0; _i152 < _a151.length; _i152++) {
+        const v_c = _a151[_i152];
+        const _h153 = clueAt(cl.number, v_c);
+        if ((_h153 === _h137)) {
+          _q149 = true;
+          break Q150;
         }
       }
     }
-    _c142 = _q137;
+    _c154 = _q149;
   }
-  if (!(_c142)) return false;
-  for (let _k143 = 0; _k143 < cl.number.at.length; _k143++) {
-    const _at144 = cl.number.at[_k143];
-    const _v145 = cl.number.v[_k143];
-    if (!((chain(sp, (_x146: number): number => { if (_x146 < 0) return -1; const _d147 = (g[_x146] || -1); if (_d147 < 0) return -1; return compass(sp, _x146, clueAt(cl.arrow, _x146), (_d147 - 1)); }, _at144).length === ((_h125 + 1) - _v145)))) return false;
+  if (!(_c154)) return false;
+  for (let _k155 = 0; _k155 < cl.number.at.length; _k155++) {
+    const _at156 = cl.number.at[_k155];
+    const _v157 = cl.number.v[_k155];
+    if (!((chain(sp, (_x158: number): number => { if (_x158 < 0) return -1; const _d159 = (g[_x158] || -1); if (_d159 < 0) return -1; return compass(sp, _x158, clueAt(cl.arrow, _x158), (_d159 - 1)); }, _at156).length === ((_h137 + 1) - _v157)))) return false;
   }
   return true;
 }
@@ -171,15 +171,27 @@ export function onlyNext(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyNext
       const v_U = _g79;
       const _h87 = popcount(v_U);
       if (!((_h87 < 2))) break L86;
+      if (import.meta.env.DEV && staleChecking) {
+        let _g88 = 0;
+        G89: {
+          for (let _m92 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m92 !== 0; _m92 &= _m92 - 1) {
+            const v_d = 31 - Math.clz32(_m92 & -_m92);
+            const _t93 = compass(sp, v_c, clueAt(cl.arrow, v_c), (v_d - 1));
+            if (!(mayMarked(b, sp, cl, cands, v_c, _t93))) continue;
+            _g88 |= 1 << v_d;
+          }
+        }
+        freshBinding("onlyNext", [(sp.cells.includes(v_c)), (!((b.grid[v_c] !== 0)) && !(((b.cands[v_c] >> 1) & 1) !== 0)), (v_U === _g88), (popcount(v_U) < 2)], ["c in", "where of c", "U =", "where of U"]);
+      }
       facts.length = 0;
       changed = false;
-      let _c89: boolean = (_h87 === 1);
-      if (_c89) {
-        const _t88 = least(v_U);
-        if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, _t88); changed = true; } else facts.push(PLACE, v_c, _t88); }
-        _c89 = true;
+      let _c95: boolean = (_h87 === 1);
+      if (_c95) {
+        const _t94 = least(v_U);
+        if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, _t94); changed = true; } else facts.push(PLACE, v_c, _t94); }
+        _c95 = true;
       }
-      if (!(_c89)) return -1;
+      if (!(_c95)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ c: v_c, U: v_U }, facts)) return 1;
@@ -202,58 +214,70 @@ let onlyBeforeCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
 export function onlyBefore(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyBeforeBinding> | null): number {
-  const _g102: number[] = [];
+  const _g108: number[] = [];
   const facts = onlyBeforeFacts;
   let fired = 0;
   let changed = false;
-  const _k106 = aimsKept.board(cl);
+  const _k112 = aimsKept.board(cl);
   if (onlyBeforeCands.length < sp.cells.length) onlyBeforeCands = new Int32Array(sp.cells.length);
   const cands = onlyBeforeCands;
   cands.fill(-1);
   mayMarkedKept.clear();
   fitsMarkedKept.clear();
-  const _a99 = sp.cells;
-  for (let _i100 = 0; _i100 < _a99.length; _i100++) {
-    const v_j = _a99[_i100];
-    const _h101 = clueAt(cl.number, v_j);
-    if (!(((_h101 !== 1) && !(entered(b, sp, cl, v_j))))) continue;
-    _g102.length = 0;
-    G103: {
-      const _a107 = (_k106[v_j] ?? aims(sp, cl, v_j));
-      for (let _i108 = 0; _i108 < _a107.length; _i108++) {
-        const v_p = _a107[_i108];
+  const _a105 = sp.cells;
+  for (let _i106 = 0; _i106 < _a105.length; _i106++) {
+    const v_j = _a105[_i106];
+    const _h107 = clueAt(cl.number, v_j);
+    if (!(((_h107 !== 1) && !(entered(b, sp, cl, v_j))))) continue;
+    _g108.length = 0;
+    G109: {
+      const _a113 = (_k112[v_j] ?? aims(sp, cl, v_j));
+      for (let _i114 = 0; _i114 < _a113.length; _i114++) {
+        const v_p = _a113[_i114];
         if (!(((!((b.grid[v_p] !== 0)) && !(((b.cands[v_p] >> 1) & 1) !== 0)) && mayMarked(b, sp, cl, cands, v_p, v_j)))) continue;
-        _g102.push(v_p);
+        _g108.push(v_p);
       }
     }
-    L109: {
-      const v_P = _g102;
-      const _h110 = v_P.length;
-      if (!((_h110 < 2))) break L109;
+    L115: {
+      const v_P = _g108;
+      const _h116 = v_P.length;
+      if (!((_h116 < 2))) break L115;
+      if (import.meta.env.DEV && staleChecking) {
+        const _g117: number[] = [];
+        G118: {
+          const _a121 = aims(sp, cl, v_j);
+          for (let _i122 = 0; _i122 < _a121.length; _i122++) {
+            const v_p = _a121[_i122];
+            if (!(((!((b.grid[v_p] !== 0)) && !(((b.cands[v_p] >> 1) & 1) !== 0)) && mayMarked(b, sp, cl, cands, v_p, v_j)))) continue;
+            _g117.push(v_p);
+          }
+        }
+        freshBinding("onlyBefore", [(sp.cells.includes(v_j)), ((clueAt(cl.number, v_j) !== 1) && !(entered(b, sp, cl, v_j))), sameSet(v_P, _g117), (v_P.length < 2)], ["j in", "where of j", "P =", "where of P"]);
+      }
       facts.length = 0;
       changed = false;
-      let _c117: boolean = (_h110 === 1);
-      if (_c117) {
-        let _q111 = true;
-        Q112: {
-          const _a113 = v_P;
-          for (let _i114 = 0; _i114 < _a113.length; _i114++) {
-            const v_p = _a113[_i114];
-            const _h116 = clueAt(cl.arrow, v_p);
-            for (let _m115 = (cands[v_p] >= 0 ? cands[v_p] : (cands[v_p] = b.cands[v_p])); _m115 !== 0; _m115 &= _m115 - 1) {
-              const v_d = 31 - Math.clz32(_m115 & -_m115);
-              if (!((compass(sp, v_p, _h116, (v_d - 1)) === v_j))) continue;
+      let _c129: boolean = (_h116 === 1);
+      if (_c129) {
+        let _q123 = true;
+        Q124: {
+          const _a125 = v_P;
+          for (let _i126 = 0; _i126 < _a125.length; _i126++) {
+            const v_p = _a125[_i126];
+            const _h128 = clueAt(cl.arrow, v_p);
+            for (let _m127 = (cands[v_p] >= 0 ? cands[v_p] : (cands[v_p] = b.cands[v_p])); _m127 !== 0; _m127 &= _m127 - 1) {
+              const v_d = 31 - Math.clz32(_m127 & -_m127);
+              if (!((compass(sp, v_p, _h128, (v_d - 1)) === v_j))) continue;
               if (!(b.grid[v_p] !== 0)) { if (fire === null) { b.placeAt(v_p, v_d); changed = true; } else facts.push(PLACE, v_p, v_d); }
               if (!(true)) {
-                _q111 = false;
-                break Q112;
+                _q123 = false;
+                break Q124;
               }
             }
           }
         }
-        _c117 = _q111;
+        _c129 = _q123;
       }
-      if (!(_c117)) return -1;
+      if (!(_c129)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ j: v_j, P: v_P.slice() }, facts)) return 1;

@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/sticks/sticks.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, keptStore, stretch, type Kept, union } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, freshBinding, keptStore, staleChecking, stretch, type Kept, union } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -189,6 +189,9 @@ export function overConnected(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Ove
     L15: {
       const v_n = _h14;
       if (!((v_n >= 0))) break L15;
+      if (import.meta.env.DEV && staleChecking) {
+        freshBinding("overConnected", [(sp.cells.includes(v_b)), (v_n === clueAt(cl.joins, v_b)), (v_n >= 0)], ["b in", "n =", "where of n"]);
+      }
       facts.length = 0;
       changed = false;
       let _g16 = 0;
@@ -271,6 +274,9 @@ export function twoClues(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TwoClues
     if (!((_h40 >= 0))) continue;
     const _h68 = sp.rowOf[v_k];
     const _h75 = sp.colOf[v_k];
+    if (import.meta.env.DEV && staleChecking) {
+      freshBinding("twoClues", [(sp.cells.includes(v_k)), (clueAt(cl.length, v_k) >= 0)], ["k in", "where of k"]);
+    }
     facts.length = 0;
     changed = false;
     let _g41 = 0;
@@ -393,6 +399,9 @@ export function tooLong(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooLongBi
     L93: {
       const v_v = _h92;
       if (!((v_v >= 0))) break L93;
+      if (import.meta.env.DEV && staleChecking) {
+        freshBinding("tooLong", [(sp.cells.includes(v_k)), (v_v === clueAt(cl.length, v_k)), (v_v >= 0)], ["k in", "v =", "where of v"]);
+      }
       facts.length = 0;
       changed = false;
       _g94.length = 0;
@@ -492,6 +501,9 @@ export function starved(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarvedBi
     L136: {
       const v_n = _h135;
       if (!((v_n >= 0))) break L136;
+      if (import.meta.env.DEV && staleChecking) {
+        freshBinding("starved", [(sp.cells.includes(v_b)), (v_n === clueAt(cl.joins, v_b)), (v_n >= 0)], ["b in", "n =", "where of n"]);
+      }
       facts.length = 0;
       changed = false;
       let _g137 = 0;
@@ -579,6 +591,9 @@ export function unreachable(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Unrea
     L165: {
       const v_v = _h164;
       if (!((v_v >= 0))) break L165;
+      if (import.meta.env.DEV && staleChecking) {
+        freshBinding("unreachable", [(sp.cells.includes(v_k)), (v_v === clueAt(cl.length, v_k)), (v_v >= 0)], ["k in", "v =", "where of v"]);
+      }
       facts.length = 0;
       changed = false;
       let _c300: boolean = (!((b.grid[v_k] !== 0)) || (reach(b, sp, cl, v_k) >= v_v));

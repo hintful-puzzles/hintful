@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/guess/guess.description.yaml: edit that, not this.
 
-import { type Fire, type GridSpace, type Marks, STRIKE, keptStore, popcount, rangeMask, type Kept } from "../../engine/describe-runtime.ts";
+import { type Fire, type GridSpace, type Marks, STRIKE, freshBinding, keptStore, popcount, rangeMask, sameSet, staleChecking, type Kept } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -62,62 +62,62 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt, variati
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
   if (variations.includes("no duplicates")) {
-    let _g193 = true;
-    const _s195: number[] = [];
-    G194: {
-      const _a196 = sp.cells;
-      for (let _i197 = 0; _i197 < _a196.length; _i197++) {
-        const v_s = _a196[_i197];
-        const _h198 = (g[v_s] || -1);
-        if (_s195.includes(_h198)) {
-          _g193 = false;
-          break G194;
+    let _g236 = true;
+    const _s238: number[] = [];
+    G237: {
+      const _a239 = sp.cells;
+      for (let _i240 = 0; _i240 < _a239.length; _i240++) {
+        const v_s = _a239[_i240];
+        const _h241 = (g[v_s] || -1);
+        if (_s238.includes(_h241)) {
+          _g236 = false;
+          break G237;
         }
-        _s195.push(_h198);
+        _s238.push(_h241);
       }
     }
-    if (!(_g193)) return false;
+    if (!(_g236)) return false;
   }
-  for (let _k199 = 0; _k199 < cl.score.n; _k199++) {
-    let _g202 = 0;
-    G203: {
-      const _a204 = sp.cells;
-      for (let _i205 = 0; _i205 < _a204.length; _i205++) {
-        const v_s = _a204[_i205];
-        const _h206 = (g[v_s] || -1);
-        if (!((_h206 === cl.score.peg[_k199][v_s]))) continue;
-        _g202++;
+  for (let _k242 = 0; _k242 < cl.score.n; _k242++) {
+    let _g245 = 0;
+    G246: {
+      const _a247 = sp.cells;
+      for (let _i248 = 0; _i248 < _a247.length; _i248++) {
+        const v_s = _a247[_i248];
+        const _h249 = (g[v_s] || -1);
+        if (!((_h249 === cl.score.peg[_k242][v_s]))) continue;
+        _g245++;
       }
     }
-    let _c222: boolean = (cl.score.black[_k199] === _g202);
-    if (_c222) {
-      let _g207 = 0;
-      G208: {
-        for (let _m209 = _domain; _m209 !== 0; _m209 &= _m209 - 1) {
-          const v_d = 31 - Math.clz32(_m209 & -_m209);
-          let _g210 = -1;
-          G211: {
-            let _g216 = 0;
-            G217: {
-              const _a218 = sp.cells;
-              for (let _i219 = 0; _i219 < _a218.length; _i219++) {
-                const v_s = _a218[_i219];
-                const _h220 = (g[v_s] || -1);
-                if (!((_h220 === v_d))) continue;
-                _g216++;
+    let _c265: boolean = (cl.score.black[_k242] === _g245);
+    if (_c265) {
+      let _g250 = 0;
+      G251: {
+        for (let _m252 = _domain; _m252 !== 0; _m252 &= _m252 - 1) {
+          const v_d = 31 - Math.clz32(_m252 & -_m252);
+          let _g253 = -1;
+          G254: {
+            let _g259 = 0;
+            G260: {
+              const _a261 = sp.cells;
+              for (let _i262 = 0; _i262 < _a261.length; _i262++) {
+                const v_s = _a261[_i262];
+                const _h263 = (g[v_s] || -1);
+                if (!((_h263 === v_d))) continue;
+                _g259++;
               }
             }
-            for (let _m221 = ((1 << pegs(sp, cl, _k199, v_d)) | (1 << _g216)); _m221 !== 0; _m221 &= _m221 - 1) {
-              const v_n = 31 - Math.clz32(_m221 & -_m221);
-              if (_g210 === -1 || v_n < _g210) _g210 = v_n;
+            for (let _m264 = ((1 << pegs(sp, cl, _k242, v_d)) | (1 << _g259)); _m264 !== 0; _m264 &= _m264 - 1) {
+              const v_n = 31 - Math.clz32(_m264 & -_m264);
+              if (_g253 === -1 || v_n < _g253) _g253 = v_n;
             }
           }
-          _g207 += _g210;
+          _g250 += _g253;
         }
       }
-      _c222 = (cl.score.total[_k199] === _g207);
+      _c265 = (cl.score.total[_k242] === _g250);
     }
-    if (!(_c222)) return false;
+    if (!(_c265)) return false;
   }
   return true;
 }
@@ -135,6 +135,9 @@ export function scoredNothing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sco
   let changed = false;
   for (let v_k = 0; v_k < cl.score.n; v_k++) {
     if (!((cl.score.total[v_k] === 0))) continue;
+    if (import.meta.env.DEV && staleChecking) {
+      freshBinding("scoredNothing", [(cl.score.total[v_k] === 0)], ["where of k"]);
+    }
     facts.length = 0;
     changed = false;
     let _q1 = true;
@@ -184,6 +187,9 @@ export function noBlack(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NoBlackBi
   let changed = false;
   for (let v_k = 0; v_k < cl.score.n; v_k++) {
     if (!((cl.score.black[v_k] === 0))) continue;
+    if (import.meta.env.DEV && staleChecking) {
+      freshBinding("noBlack", [(cl.score.black[v_k] === 0)], ["where of k"]);
+    }
     facts.length = 0;
     changed = false;
     let _q20 = true;
@@ -223,6 +229,9 @@ export function everyPegScored(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Ev
   const _h25 = sp.cells.length;
   for (let v_k = 0; v_k < cl.score.n; v_k++) {
     if (!((cl.score.total[v_k] === _h25))) continue;
+    if (import.meta.env.DEV && staleChecking) {
+      freshBinding("everyPegScored", [(cl.score.total[v_k] === sp.cells.length)], ["where of k"]);
+    }
     facts.length = 0;
     changed = false;
     let _q26 = true;
@@ -285,26 +294,42 @@ export function blacksForced(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Blac
       _c54 = (_g50 === cl.score.black[v_k]);
     }
     if (!(_c54)) continue;
+    if (import.meta.env.DEV && staleChecking) {
+      let _c59: boolean = (cl.score.black[v_k] > 0);
+      if (_c59) {
+        let _g55 = 0;
+        G56: {
+          const _a57 = sp.cells;
+          for (let _i58 = 0; _i58 < _a57.length; _i58++) {
+            const v_s = _a57[_i58];
+            if (!(((cl.score.peg[v_k][v_s] > 0) && (((b.cands[v_s] >> cl.score.peg[v_k][v_s]) & 1) !== 0)))) continue;
+            _g55++;
+          }
+        }
+        _c59 = (_g55 === cl.score.black[v_k]);
+      }
+      freshBinding("blacksForced", [_c59], ["where of k"]);
+    }
     facts.length = 0;
     changed = false;
-    let _q55 = true;
-    Q56: {
-      const _a57 = sp.cells;
-      for (let _i58 = 0; _i58 < _a57.length; _i58++) {
-        const v_s = _a57[_i58];
+    let _q60 = true;
+    Q61: {
+      const _a62 = sp.cells;
+      for (let _i63 = 0; _i63 < _a62.length; _i63++) {
+        const v_s = _a62[_i63];
         if (!(((cl.score.peg[v_k][v_s] > 0) && (((b.cands[v_s] >> cl.score.peg[v_k][v_s]) & 1) !== 0)))) continue;
-        for (let _m59 = b.domain; _m59 !== 0; _m59 &= _m59 - 1) {
-          const v_d = 31 - Math.clz32(_m59 & -_m59);
+        for (let _m64 = b.domain; _m64 !== 0; _m64 &= _m64 - 1) {
+          const v_d = 31 - Math.clz32(_m64 & -_m64);
           if (!((v_d !== cl.score.peg[v_k][v_s]))) continue;
           if ((((b.cands[v_s] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_s, v_d); changed = true; } else facts.push(STRIKE, v_s, v_d); }
           if (!(true)) {
-            _q55 = false;
-            break Q56;
+            _q60 = false;
+            break Q61;
           }
         }
       }
     }
-    if (!(_q55)) return -1;
+    if (!(_q60)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null && !fire({ k: v_k }, facts)) return 1;
@@ -323,7 +348,7 @@ let blacksAccountedCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
 export function blacksAccounted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BlacksAccountedBinding> | null): number {
-  const _g67: number[] = [];
+  const _g72: number[] = [];
   const facts = blacksAccountedFacts;
   let fired = 0;
   let changed = false;
@@ -331,36 +356,48 @@ export function blacksAccounted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<B
   const cands = blacksAccountedCands;
   cands.fill(-1);
   for (let v_k = 0; v_k < cl.score.n; v_k++) {
-    _g67.length = 0;
-    G68: {
-      const _a71 = sp.cells;
-      for (let _i72 = 0; _i72 < _a71.length; _i72++) {
-        const v_s = _a71[_i72];
+    _g72.length = 0;
+    G73: {
+      const _a76 = sp.cells;
+      for (let _i77 = 0; _i77 < _a76.length; _i77++) {
+        const v_s = _a76[_i77];
         if (!(((cl.score.peg[v_k][v_s] > 0) && ((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])) === ((1 << cl.score.peg[v_k][v_s])))))) continue;
-        _g67.push(v_s);
+        _g72.push(v_s);
       }
     }
-    L73: {
-      const v_P = _g67;
-      const _h74 = v_P.length;
-      if (!(((_h74 > 0) && (_h74 === cl.score.black[v_k])))) break L73;
+    L78: {
+      const v_P = _g72;
+      const _h79 = v_P.length;
+      if (!(((_h79 > 0) && (_h79 === cl.score.black[v_k])))) break L78;
+      if (import.meta.env.DEV && staleChecking) {
+        const _g80: number[] = [];
+        G81: {
+          const _a84 = sp.cells;
+          for (let _i85 = 0; _i85 < _a84.length; _i85++) {
+            const v_s = _a84[_i85];
+            if (!(((cl.score.peg[v_k][v_s] > 0) && ((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])) === ((1 << cl.score.peg[v_k][v_s])))))) continue;
+            _g80.push(v_s);
+          }
+        }
+        freshBinding("blacksAccounted", [sameSet(v_P, _g80), ((v_P.length > 0) && (v_P.length === cl.score.black[v_k]))], ["P =", "where of P"]);
+      }
       facts.length = 0;
       changed = false;
-      let _q75 = true;
-      Q76: {
-        const _a77 = sp.cells;
-        for (let _i78 = 0; _i78 < _a77.length; _i78++) {
-          const v_s = _a77[_i78];
+      let _q86 = true;
+      Q87: {
+        const _a88 = sp.cells;
+        for (let _i89 = 0; _i89 < _a88.length; _i89++) {
+          const v_s = _a88[_i89];
           if (!((!(v_P.includes(v_s)) && ((cl.score.peg[v_k][v_s] > 0) && (((b.cands[v_s] >> cl.score.peg[v_k][v_s]) & 1) !== 0))))) continue;
-          const _t79 = cl.score.peg[v_k][v_s];
-          if ((((b.cands[v_s] >> _t79) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_s, _t79); changed = true; } else facts.push(STRIKE, v_s, _t79); }
+          const _t90 = cl.score.peg[v_k][v_s];
+          if ((((b.cands[v_s] >> _t90) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_s, _t90); changed = true; } else facts.push(STRIKE, v_s, _t90); }
           if (!(true)) {
-            _q75 = false;
-            break Q76;
+            _q86 = false;
+            break Q87;
           }
         }
       }
-      if (!(_q75)) return -1;
+      if (!(_q86)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ k: v_k, P: v_P.slice() }, facts)) return 1;
@@ -381,9 +418,9 @@ let totalAccountedCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n^2. */
 export function totalAccounted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TotalAccountedBinding> | null): number {
-  const _g142: number[] = [];
-  const _g168: number[] = [];
-  const _g177: number[] = [];
+  const _g153: number[] = [];
+  const _g211: number[] = [];
+  const _g220: number[] = [];
   const facts = totalAccountedFacts;
   let fired = 0;
   let changed = false;
@@ -391,92 +428,128 @@ export function totalAccounted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<To
   const cands = totalAccountedCands;
   cands.fill(-1);
   for (let v_k = 0; v_k < cl.score.n; v_k++) {
-    let _g117 = 0;
-    G118: {
-      let _g126 = 0;
-      G127: {
-        const _a130 = sp.cells;
-        for (let _i131 = 0; _i131 < _a130.length; _i131++) {
-          const v_s = _a130[_i131];
+    let _g128 = 0;
+    G129: {
+      let _g137 = 0;
+      G138: {
+        const _a141 = sp.cells;
+        for (let _i142 = 0; _i142 < _a141.length; _i142++) {
+          const v_s = _a141[_i142];
           if (!((cl.score.peg[v_k][v_s] > 0))) continue;
-          const _t132 = cl.score.peg[v_k][v_s];
-          _g126 |= 1 << _t132;
+          const _t143 = cl.score.peg[v_k][v_s];
+          _g137 |= 1 << _t143;
         }
       }
-      for (let _m133 = _g126; _m133 !== 0; _m133 &= _m133 - 1) {
-        const v_d = 31 - Math.clz32(_m133 & -_m133);
-        const _h148 = ((1 << v_d));
-        let _g134 = -1;
-        G135: {
-          _g142.length = 0;
-          G143: {
-            const _a146 = sp.cells;
-            for (let _i147 = 0; _i147 < _a146.length; _i147++) {
-              const v_s = _a146[_i147];
-              if (!(((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])) === _h148))) continue;
-              _g142.push(v_s);
+      for (let _m144 = _g137; _m144 !== 0; _m144 &= _m144 - 1) {
+        const v_d = 31 - Math.clz32(_m144 & -_m144);
+        const _h159 = ((1 << v_d));
+        let _g145 = -1;
+        G146: {
+          _g153.length = 0;
+          G154: {
+            const _a157 = sp.cells;
+            for (let _i158 = 0; _i158 < _a157.length; _i158++) {
+              const v_s = _a157[_i158];
+              if (!(((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])) === _h159))) continue;
+              _g153.push(v_s);
             }
           }
-          for (let _m149 = ((1 << pegs(sp, cl, v_k, v_d)) | (1 << _g142.length)); _m149 !== 0; _m149 &= _m149 - 1) {
-            const v_n = 31 - Math.clz32(_m149 & -_m149);
-            if (_g134 === -1 || v_n < _g134) _g134 = v_n;
+          for (let _m160 = ((1 << pegs(sp, cl, v_k, v_d)) | (1 << _g153.length)); _m160 !== 0; _m160 &= _m160 - 1) {
+            const v_n = 31 - Math.clz32(_m160 & -_m160);
+            if (_g145 === -1 || v_n < _g145) _g145 = v_n;
           }
         }
-        _g117 += _g134;
+        _g128 += _g145;
       }
     }
-    L150: {
-      const v_e = _g117;
-      if (!(((v_e > 0) && (v_e === cl.score.total[v_k])))) break L150;
-      facts.length = 0;
-      changed = false;
-      let _q151 = true;
-      Q152: {
-        let _g160 = 0;
-        G161: {
-          const _a164 = sp.cells;
-          for (let _i165 = 0; _i165 < _a164.length; _i165++) {
-            const v_s = _a164[_i165];
-            if (!((cl.score.peg[v_k][v_s] > 0))) continue;
-            const _t166 = cl.score.peg[v_k][v_s];
-            _g160 |= 1 << _t166;
-          }
-        }
-        for (let _m167 = _g160; _m167 !== 0; _m167 &= _m167 - 1) {
-          const v_d = 31 - Math.clz32(_m167 & -_m167);
-          const _h174 = ((1 << v_d));
-          _g168.length = 0;
-          G169: {
-            const _a172 = sp.cells;
-            for (let _i173 = 0; _i173 < _a172.length; _i173++) {
-              const v_s = _a172[_i173];
-              if (!(((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])) === _h174))) continue;
-              _g168.push(v_s);
+    L161: {
+      const v_e = _g128;
+      if (!(((v_e > 0) && (v_e === cl.score.total[v_k])))) break L161;
+      if (import.meta.env.DEV && staleChecking) {
+        let _g162 = 0;
+        G163: {
+          let _g171 = 0;
+          G172: {
+            const _a175 = sp.cells;
+            for (let _i176 = 0; _i176 < _a175.length; _i176++) {
+              const v_s = _a175[_i176];
+              if (!((cl.score.peg[v_k][v_s] > 0))) continue;
+              const _t177 = cl.score.peg[v_k][v_s];
+              _g171 |= 1 << _t177;
             }
           }
-          if (!((pegs(sp, cl, v_k, v_d) > _g168.length))) continue;
-          const _a175 = sp.cells;
-          for (let _i176 = 0; _i176 < _a175.length; _i176++) {
-            const v_s = _a175[_i176];
-            _g177.length = 0;
-            G178: {
-              const _a181 = sp.cells;
-              for (let _i182 = 0; _i182 < _a181.length; _i182++) {
-                const v_s = _a181[_i182];
-                if (!(((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])) === _h174))) continue;
-                _g177.push(v_s);
+          for (let _m178 = _g171; _m178 !== 0; _m178 &= _m178 - 1) {
+            const v_d = 31 - Math.clz32(_m178 & -_m178);
+            let _g179 = -1;
+            G180: {
+              const _g187: number[] = [];
+              G188: {
+                const _a191 = sp.cells;
+                for (let _i192 = 0; _i192 < _a191.length; _i192++) {
+                  const v_s = _a191[_i192];
+                  if (!(((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])) === ((1 << v_d))))) continue;
+                  _g187.push(v_s);
+                }
+              }
+              for (let _m193 = ((1 << pegs(sp, cl, v_k, v_d)) | (1 << _g187.length)); _m193 !== 0; _m193 &= _m193 - 1) {
+                const v_n = 31 - Math.clz32(_m193 & -_m193);
+                if (_g179 === -1 || v_n < _g179) _g179 = v_n;
               }
             }
-            if (!(!(_g177.includes(v_s)))) continue;
+            _g162 += _g179;
+          }
+        }
+        freshBinding("totalAccounted", [(v_e === _g162), ((v_e > 0) && (v_e === cl.score.total[v_k]))], ["e =", "where of e"]);
+      }
+      facts.length = 0;
+      changed = false;
+      let _q194 = true;
+      Q195: {
+        let _g203 = 0;
+        G204: {
+          const _a207 = sp.cells;
+          for (let _i208 = 0; _i208 < _a207.length; _i208++) {
+            const v_s = _a207[_i208];
+            if (!((cl.score.peg[v_k][v_s] > 0))) continue;
+            const _t209 = cl.score.peg[v_k][v_s];
+            _g203 |= 1 << _t209;
+          }
+        }
+        for (let _m210 = _g203; _m210 !== 0; _m210 &= _m210 - 1) {
+          const v_d = 31 - Math.clz32(_m210 & -_m210);
+          const _h217 = ((1 << v_d));
+          _g211.length = 0;
+          G212: {
+            const _a215 = sp.cells;
+            for (let _i216 = 0; _i216 < _a215.length; _i216++) {
+              const v_s = _a215[_i216];
+              if (!(((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])) === _h217))) continue;
+              _g211.push(v_s);
+            }
+          }
+          if (!((pegs(sp, cl, v_k, v_d) > _g211.length))) continue;
+          const _a218 = sp.cells;
+          for (let _i219 = 0; _i219 < _a218.length; _i219++) {
+            const v_s = _a218[_i219];
+            _g220.length = 0;
+            G221: {
+              const _a224 = sp.cells;
+              for (let _i225 = 0; _i225 < _a224.length; _i225++) {
+                const v_s = _a224[_i225];
+                if (!(((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])) === _h217))) continue;
+                _g220.push(v_s);
+              }
+            }
+            if (!(!(_g220.includes(v_s)))) continue;
             if ((((b.cands[v_s] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_s, v_d); changed = true; } else facts.push(STRIKE, v_s, v_d); }
             if (!(true)) {
-              _q151 = false;
-              break Q152;
+              _q194 = false;
+              break Q195;
             }
           }
         }
       }
-      if (!(_q151)) return -1;
+      if (!(_q194)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ k: v_k, e: v_e }, facts)) return 1;
@@ -503,35 +576,38 @@ export function noRepeats(b: Marks, sp: GridSpace, fire: Fire<NoRepeatsBinding> 
   if (noRepeatsCands.length < sp.cells.length) noRepeatsCands = new Int32Array(sp.cells.length);
   const cands = noRepeatsCands;
   cands.fill(-1);
-  const _a186 = sp.cells;
+  const _a229 = sp.cells;
   R1:
-  for (let _i187 = 0; _i187 < _a186.length; _i187++) {
-    const v_s = _a186[_i187];
+  for (let _i230 = 0; _i230 < _a229.length; _i230++) {
+    const v_s = _a229[_i230];
     const _m107_1 = b.made[1];
     if (!((popcount((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s]))) === 1))) continue;
     R2:
-    for (let _m188 = (cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])); _m188 !== 0; _m188 &= _m188 - 1) {
-      const v_d = 31 - Math.clz32(_m188 & -_m188);
+    for (let _m231 = (cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s])); _m231 !== 0; _m231 &= _m231 - 1) {
+      const v_d = 31 - Math.clz32(_m231 & -_m231);
       if (b.made[1] !== _m107_1) {
         if (!((popcount((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s]))) === 1))) { continue R1; }
         if (!((((b.cands[v_s] >> v_d) & 1) !== 0))) { continue R2; }
       }
+      if (import.meta.env.DEV && staleChecking) {
+        freshBinding("noRepeats", [(sp.cells.includes(v_s)), (popcount((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s]))) === 1), (((b.cands[v_s] >> v_d) & 1) !== 0)], ["s in", "where of s", "d in"]);
+      }
       facts.length = 0;
       changed = false;
-      let _q189 = true;
-      Q190: {
-        const _a191 = sp.cells;
-        for (let _i192 = 0; _i192 < _a191.length; _i192++) {
-          const v_t = _a191[_i192];
+      let _q232 = true;
+      Q233: {
+        const _a234 = sp.cells;
+        for (let _i235 = 0; _i235 < _a234.length; _i235++) {
+          const v_t = _a234[_i235];
           if (!((v_t !== v_s))) continue;
           if ((((b.cands[v_t] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_t, v_d); changed = true; } else facts.push(STRIKE, v_t, v_d); }
           if (!(true)) {
-            _q189 = false;
-            break Q190;
+            _q232 = false;
+            break Q233;
           }
         }
       }
-      if (!(_q189)) return -1;
+      if (!(_q232)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ s: v_s, d: v_d }, facts)) return 1;
@@ -556,16 +632,16 @@ export function pegs(sp: GridSpace, cl: Dealt, v_k: number, v_d: number): number
   const _kept: Kept<Kept<number>> = pegsAt;
   const _kept1 = (_kept[v_k] ??= []);
   if (_kept1[v_d] !== undefined) return _kept1[v_d];
-  let _g99 = 0;
-  G100: {
-    const _a101 = sp.cells;
-    for (let _i102 = 0; _i102 < _a101.length; _i102++) {
-      const v_s = _a101[_i102];
+  let _g110 = 0;
+  G111: {
+    const _a112 = sp.cells;
+    for (let _i113 = 0; _i113 < _a112.length; _i113++) {
+      const v_s = _a112[_i113];
       if (!((cl.score.peg[v_k][v_s] === v_d))) continue;
-      _g99++;
+      _g110++;
     }
   }
-  const _made = _g99;
+  const _made = _g110;
   _kept1[v_d] = _made;
   return _made;
 }

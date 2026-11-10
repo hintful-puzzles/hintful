@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/map/map.description.yaml: edit that, not this.
 
-import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, addOnce, least, popcount, rangeMask, stamps } from "../../engine/describe-runtime.ts";
+import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, addOnce, freshBinding, least, popcount, rangeMask, sameSet, staleChecking, stamps } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -57,24 +57,24 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  let _q130 = true;
-  Q131: {
-    const _a132 = sp.cells;
-    for (let _i133 = 0; _i133 < _a132.length; _i133++) {
-      const v_a = _a132[_i133];
-      const _h137 = (g[v_a] || -1);
-      const _a134 = cl.borders[v_a];
-      for (let _i135 = 0; _i135 < _a134.length; _i135++) {
-        const v_b = _a134[_i135];
-        const _h136 = (g[v_b] || -1);
-        if (!((_h136 !== _h137))) {
-          _q130 = false;
-          break Q131;
+  let _q163 = true;
+  Q164: {
+    const _a165 = sp.cells;
+    for (let _i166 = 0; _i166 < _a165.length; _i166++) {
+      const v_a = _a165[_i166];
+      const _h170 = (g[v_a] || -1);
+      const _a167 = cl.borders[v_a];
+      for (let _i168 = 0; _i168 < _a167.length; _i168++) {
+        const v_b = _a167[_i168];
+        const _h169 = (g[v_b] || -1);
+        if (!((_h169 !== _h170))) {
+          _q163 = false;
+          break Q164;
         }
       }
     }
   }
-  if (!(_q130)) return false;
+  if (!(_q163)) return false;
   return true;
 }
 
@@ -86,7 +86,7 @@ export interface PlacedBinding {
 const placedFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function placed(b: Marks, _sp: GridSpace, cl: Dealt, v_c: number, fire: Fire<PlacedBinding> | null): number {
+export function placed(b: Marks, sp: GridSpace, cl: Dealt, v_c: number, fire: Fire<PlacedBinding> | null): number {
   const facts = placedFacts;
   let fired = 0;
   let changed = false;
@@ -98,6 +98,9 @@ export function placed(b: Marks, _sp: GridSpace, cl: Dealt, v_c: number, fire: F
     const v_k = _a6[_i7];
     const _h8 = (b.grid[v_k] !== 0);
     if (!(!(_h8))) continue;
+    if (import.meta.env.DEV && staleChecking) {
+      freshBinding("placed", [(sp.cells.includes(v_c)), (b.grid[v_c] !== 0), (cl.borders[v_c].includes(v_k)), !((b.grid[v_k] !== 0))], ["c in", "where of c", "k in", "where of k"]);
+    }
     facts.length = 0;
     changed = false;
     if ((((b.cands[v_k] >> _h9) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_k, _h9); changed = true; } else facts.push(STRIKE, v_k, _h9); }
@@ -129,6 +132,9 @@ export function lone(b: Marks, sp: GridSpace, fire: Fire<LoneBinding> | null): n
   for (let _i13 = 0; _i13 < _a12.length; _i13++) {
     const v_c = _a12[_i13];
     if (!((!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2)))) continue;
+    if (import.meta.env.DEV && staleChecking) {
+      freshBinding("lone", [(sp.cells.includes(v_c)), (!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2))], ["c in", "where of c"]);
+    }
     facts.length = 0;
     changed = false;
     let _c15: boolean = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) === 1);
@@ -179,6 +185,9 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
       if (!((((v_b > _h25) && !(_h26)) && ((cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])) === (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])))))) continue;
       if (b.made[0] !== _m24_0 || b.made[1] !== _m24_1) {
         if (!((!((b.grid[v_a] !== 0)) && (popcount((cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a]))) === 2)))) { continue R1; }
+      }
+      if (import.meta.env.DEV && staleChecking) {
+        freshBinding("pair", [(sp.cells.includes(v_a)), (!((b.grid[v_a] !== 0)) && (popcount((cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a]))) === 2)), (cl.borders[v_a].includes(v_b)), (((v_b > _i21) && !((b.grid[v_b] !== 0))) && ((cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])) === (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a]))))], ["a in", "where of a", "b in", "where of b"]);
       }
       facts.length = 0;
       changed = false;
@@ -357,6 +366,76 @@ export function weigh(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighBindin
               _c129 = _q122;
             }
             if (!(_c129)) { continue R2; }
+          }
+          if (import.meta.env.DEV && staleChecking) {
+            let _c137: boolean = (popcount(v_R) >= 1);
+            if (_c137) {
+              let _q130 = true;
+              Q131: {
+                for (let _m132 = v_R; _m132 !== 0; _m132 &= _m132 - 1) {
+                  const v_a = 31 - Math.clz32(_m132 & -_m132);
+                  let _q133 = false;
+                  Q134: {
+                    const _a135 = cl.borders[v_m];
+                    for (let _i136 = 0; _i136 < _a135.length; _i136++) {
+                      const v_k = _a135[_i136];
+                      if ((!((b.grid[v_k] !== 0)) && ((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k])) === ((1 << v_a) | (1 << v_x))))) {
+                        _q133 = true;
+                        break Q134;
+                      }
+                    }
+                  }
+                  if (!(_q133)) {
+                    _q130 = false;
+                    break Q131;
+                  }
+                }
+              }
+              _c137 = _q130;
+            }
+            let _c145: boolean = ((((v_t !== v_m) && !((b.grid[v_t] !== 0))) && (((b.cands[v_t] >> v_x) & 1) !== 0)) && (!(((b.cands[v_m] >> v_x) & 1) !== 0) || (cl.borders[v_m].includes(v_t))));
+            if (_c145) {
+              let _q138 = true;
+              Q139: {
+                for (let _m140 = v_R; _m140 !== 0; _m140 &= _m140 - 1) {
+                  const v_a = 31 - Math.clz32(_m140 & -_m140);
+                  let _q141 = false;
+                  Q142: {
+                    const _a143 = cl.borders[v_m];
+                    for (let _i144 = 0; _i144 < _a143.length; _i144++) {
+                      const v_k = _a143[_i144];
+                      if ((((!((b.grid[v_k] !== 0)) && ((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k])) === ((1 << v_a) | (1 << v_x)))) && (v_k !== v_t)) && (cl.borders[v_t].includes(v_k)))) {
+                        _q141 = true;
+                        break Q142;
+                      }
+                    }
+                  }
+                  if (!(_q141)) {
+                    _q138 = false;
+                    break Q139;
+                  }
+                }
+              }
+              _c145 = _q138;
+            }
+            const _g146: number[] = [];
+            G147: {
+              for (let _m155 = v_R; _m155 !== 0; _m155 &= _m155 - 1) {
+                const v_a = 31 - Math.clz32(_m155 & -_m155);
+                const _g156: number[] = [];
+                G157: {
+                  const _a160 = cl.borders[v_m];
+                  for (let _i161 = 0; _i161 < _a160.length; _i161++) {
+                    const v_k = _a160[_i161];
+                    if (!((((!((b.grid[v_k] !== 0)) && ((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k])) === ((1 << v_a) | (1 << v_x)))) && (v_k !== v_t)) && (cl.borders[v_t].includes(v_k))))) continue;
+                    _g156.push(v_k);
+                  }
+                }
+                const _t162 = (_g156.length > 0 ? _g156[0] : -1);
+                if (!_g146.includes(_t162)) _g146.push(_t162);
+              }
+            }
+            freshBinding("weigh", [(sp.cells.includes(v_m)), !((b.grid[v_m] !== 0)), (((b.domain >> v_x) & 1) !== 0), (v_R === ((cands[v_m] >= 0 ? cands[v_m] : (cands[v_m] = b.cands[v_m])) & ~((1 << v_x)))), _c137, (sp.cells.includes(v_t)), _c145, sameSet(v_E, _g146)], ["m in", "where of m", "x in", "R =", "where of R", "t in", "where of t", "E ="]);
           }
           facts.length = 0;
           changed = false;

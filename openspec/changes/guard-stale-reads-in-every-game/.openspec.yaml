@@ -1,4 +1,0 @@
-# A guard over what a binding fires on; no player-visible behavior moves.
-schema: spec-driven
-created: 2026-11-09
-skip_specs: true

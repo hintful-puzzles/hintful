@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/subsets/subsets.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, clueAt, least, popcount, rangeMask } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, clueAt, freshBinding, least, popcount, rangeMask, sameSet, staleChecking } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -62,33 +62,33 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  let _g188 = true;
-  const _s190: number[] = [];
-  G189: {
-    const _a191 = sp.cells;
-    for (let _i192 = 0; _i192 < _a191.length; _i192++) {
-      const v_c = _a191[_i192];
-      const _h193 = (g[v_c] || -1);
-      if (_s190.includes(_h193)) {
-        _g188 = false;
-        break G189;
+  let _g214 = true;
+  const _s216: number[] = [];
+  G215: {
+    const _a217 = sp.cells;
+    for (let _i218 = 0; _i218 < _a217.length; _i218++) {
+      const v_c = _a217[_i218];
+      const _h219 = (g[v_c] || -1);
+      if (_s216.includes(_h219)) {
+        _g214 = false;
+        break G215;
       }
-      _s190.push(_h193);
+      _s216.push(_h219);
     }
   }
-  if (!(_g188)) return false;
-  for (let _k194 = 0; _k194 < cl.shoe.at.length; _k194++) {
-    const _at195 = cl.shoe.at[_k194];
-    const _v196 = cl.shoe.v[_k194];
-    const _t197 = (g[sp.edgeEnds[2 * _at195]] || -1);
-    const _t198 = (g[sp.edgeEnds[2 * _at195 + 1]] || -1);
-    let _c201: boolean = ((_v196 === 1) === ((_t197 !== _t198) && ((Math.max(0, (_t198 - 1)) & ~Math.max(0, (_t197 - 1))) === 0)));
-    if (_c201) {
-      const _t199 = (g[sp.edgeEnds[2 * _at195 + 1]] || -1);
-      const _t200 = (g[sp.edgeEnds[2 * _at195]] || -1);
-      _c201 = ((_v196 === 2) === ((_t199 !== _t200) && ((Math.max(0, (_t200 - 1)) & ~Math.max(0, (_t199 - 1))) === 0)));
+  if (!(_g214)) return false;
+  for (let _k220 = 0; _k220 < cl.shoe.at.length; _k220++) {
+    const _at221 = cl.shoe.at[_k220];
+    const _v222 = cl.shoe.v[_k220];
+    const _t223 = (g[sp.edgeEnds[2 * _at221]] || -1);
+    const _t224 = (g[sp.edgeEnds[2 * _at221 + 1]] || -1);
+    let _c227: boolean = ((_v222 === 1) === ((_t223 !== _t224) && ((Math.max(0, (_t224 - 1)) & ~Math.max(0, (_t223 - 1))) === 0)));
+    if (_c227) {
+      const _t225 = (g[sp.edgeEnds[2 * _at221 + 1]] || -1);
+      const _t226 = (g[sp.edgeEnds[2 * _at221]] || -1);
+      _c227 = ((_v222 === 2) === ((_t225 !== _t226) && ((Math.max(0, (_t226 - 1)) & ~Math.max(0, (_t225 - 1))) === 0)));
     }
-    if (!(_c201)) return false;
+    if (!(_c227)) return false;
   }
   return true;
 }
@@ -113,6 +113,9 @@ export function placed(b: Marks, sp: GridSpace, v_c: number, fire: Fire<PlacedBi
     const v_k = _a6[_i7];
     const _h8 = (b.grid[v_k] !== 0);
     if (!(((v_k !== v_c) && !(_h8)))) continue;
+    if (import.meta.env.DEV && staleChecking) {
+      freshBinding("placed", [(sp.cells.includes(v_c)), (b.grid[v_c] !== 0), (sp.cells.includes(v_k)), ((v_k !== v_c) && !((b.grid[v_k] !== 0)))], ["c in", "where of c", "k in", "where of k"]);
+    }
     facts.length = 0;
     changed = false;
     if ((((b.cands[v_k] >> _h9) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_k, _h9); changed = true; } else facts.push(STRIKE, v_k, _h9); }
@@ -178,21 +181,42 @@ export function carryIn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CarryInBi
         }
       }
       const v_K = _g33;
+      if (import.meta.env.DEV && staleChecking) {
+        let _g46 = 0;
+        G47: {
+          for (let _m52 = Math.max(0, (16 - 1)); _m52 !== 0; _m52 &= _m52 - 1) {
+            const v_l = 31 - Math.clz32(_m52 & -_m52);
+            let _q53 = true;
+            Q54: {
+              for (let _m55 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])); _m55 !== 0; _m55 &= _m55 - 1) {
+                const v_u = 31 - Math.clz32(_m55 & -_m55);
+                if (!((((Math.max(0, (v_u - 1)) >> v_l) & 1) !== 0))) {
+                  _q53 = false;
+                  break Q54;
+                }
+              }
+            }
+            if (!(_q53)) continue;
+            _g46 |= 1 << v_l;
+          }
+        }
+        freshBinding("carryIn", [(sp.edges.includes(v_e)), ([sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]].includes(v_a)), (((clueAt(cl.shoe, v_e) === 1) && (v_a === sp.edgeEnds[2 * v_e])) || ((clueAt(cl.shoe, v_e) === 2) && (v_a === sp.edgeEnds[2 * v_e + 1]))), (v_b === (sp.edgeEnds[2 * v_e] === v_a ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e])), (v_K === _g46)], ["e in", "a in", "where of a", "b =", "K ="]);
+      }
       facts.length = 0;
       changed = false;
-      let _q46 = true;
-      Q47: {
-        for (let _m48 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])); _m48 !== 0; _m48 &= _m48 - 1) {
-          const v_d = 31 - Math.clz32(_m48 & -_m48);
+      let _q56 = true;
+      Q57: {
+        for (let _m58 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])); _m58 !== 0; _m58 &= _m58 - 1) {
+          const v_d = 31 - Math.clz32(_m58 & -_m58);
           if (!(!(((v_K & ~Math.max(0, (v_d - 1))) === 0)))) continue;
           if ((((b.cands[v_a] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_a, v_d); changed = true; } else facts.push(STRIKE, v_a, v_d); }
           if (!(true)) {
-            _q46 = false;
-            break Q47;
+            _q56 = false;
+            break Q57;
           }
         }
       }
-      if (!(_q46)) return -1;
+      if (!(_q56)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ e: v_e, a: v_a, b: v_b, K: v_K }, facts)) return 1;
@@ -218,59 +242,80 @@ export function carryOut(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CarryOut
   const facts = carryOutFacts;
   let fired = 0;
   let changed = false;
-  const _h78 = (16 - 1);
-  const _h79 = Math.max(0, _h78);
-  const _h80 = _h79;
+  const _h88 = (16 - 1);
+  const _h89 = Math.max(0, _h88);
+  const _h90 = _h89;
   if (carryOutCands.length < sp.cells.length) carryOutCands = new Int32Array(sp.cells.length);
   const cands = carryOutCands;
   cands.fill(-1);
-  const _a63 = sp.edges;
-  for (let _i64 = 0; _i64 < _a63.length; _i64++) {
-    const v_e = _a63[_i64];
-    const _h67 = clueAt(cl.shoe, v_e);
-    const _h68 = (_h67 === 1);
-    const _h69 = sp.edgeEnds[2 * v_e];
-    const _h70 = (_h67 === 2);
-    const _h71 = sp.edgeEnds[2 * v_e + 1];
-    const _a65 = [sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]];
-    for (let _i66 = 0; _i66 < _a65.length; _i66++) {
-      const v_a = _a65[_i66];
-      if (!(((_h68 && (v_a === _h69)) || (_h70 && (v_a === _h71))))) continue;
+  const _a73 = sp.edges;
+  for (let _i74 = 0; _i74 < _a73.length; _i74++) {
+    const v_e = _a73[_i74];
+    const _h77 = clueAt(cl.shoe, v_e);
+    const _h78 = (_h77 === 1);
+    const _h79 = sp.edgeEnds[2 * v_e];
+    const _h80 = (_h77 === 2);
+    const _h81 = sp.edgeEnds[2 * v_e + 1];
+    const _a75 = [sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]];
+    for (let _i76 = 0; _i76 < _a75.length; _i76++) {
+      const v_a = _a75[_i76];
+      if (!(((_h78 && (v_a === _h79)) || (_h80 && (v_a === _h81))))) continue;
       const v_b = (sp.edgeEnds[2 * v_e] === v_a ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e]);
-      let _g72 = 0;
-      G73: {
-        for (let _m81 = _h80; _m81 !== 0; _m81 &= _m81 - 1) {
-          const v_l = 31 - Math.clz32(_m81 & -_m81);
-          let _q82 = true;
-          Q83: {
-            for (let _m84 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])); _m84 !== 0; _m84 &= _m84 - 1) {
-              const v_u = 31 - Math.clz32(_m84 & -_m84);
+      let _g82 = 0;
+      G83: {
+        for (let _m91 = _h90; _m91 !== 0; _m91 &= _m91 - 1) {
+          const v_l = 31 - Math.clz32(_m91 & -_m91);
+          let _q92 = true;
+          Q93: {
+            for (let _m94 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])); _m94 !== 0; _m94 &= _m94 - 1) {
+              const v_u = 31 - Math.clz32(_m94 & -_m94);
               if (!(!(((Math.max(0, (v_u - 1)) >> v_l) & 1) !== 0))) {
-                _q82 = false;
-                break Q83;
+                _q92 = false;
+                break Q93;
               }
             }
           }
-          if (!(_q82)) continue;
-          _g72 |= 1 << v_l;
+          if (!(_q92)) continue;
+          _g82 |= 1 << v_l;
         }
       }
-      const v_L = _g72;
+      const v_L = _g82;
+      if (import.meta.env.DEV && staleChecking) {
+        let _g95 = 0;
+        G96: {
+          for (let _m101 = Math.max(0, (16 - 1)); _m101 !== 0; _m101 &= _m101 - 1) {
+            const v_l = 31 - Math.clz32(_m101 & -_m101);
+            let _q102 = true;
+            Q103: {
+              for (let _m104 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])); _m104 !== 0; _m104 &= _m104 - 1) {
+                const v_u = 31 - Math.clz32(_m104 & -_m104);
+                if (!(!(((Math.max(0, (v_u - 1)) >> v_l) & 1) !== 0))) {
+                  _q102 = false;
+                  break Q103;
+                }
+              }
+            }
+            if (!(_q102)) continue;
+            _g95 |= 1 << v_l;
+          }
+        }
+        freshBinding("carryOut", [(sp.edges.includes(v_e)), ([sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]].includes(v_a)), (((clueAt(cl.shoe, v_e) === 1) && (v_a === sp.edgeEnds[2 * v_e])) || ((clueAt(cl.shoe, v_e) === 2) && (v_a === sp.edgeEnds[2 * v_e + 1]))), (v_b === (sp.edgeEnds[2 * v_e] === v_a ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e])), (v_L === _g95)], ["e in", "a in", "where of a", "b =", "L ="]);
+      }
       facts.length = 0;
       changed = false;
-      let _q85 = true;
-      Q86: {
-        for (let _m87 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])); _m87 !== 0; _m87 &= _m87 - 1) {
-          const v_d = 31 - Math.clz32(_m87 & -_m87);
+      let _q105 = true;
+      Q106: {
+        for (let _m107 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])); _m107 !== 0; _m107 &= _m107 - 1) {
+          const v_d = 31 - Math.clz32(_m107 & -_m107);
           if (!(((v_L & Math.max(0, (v_d - 1))) !== 0))) continue;
           if ((((b.cands[v_b] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_b, v_d); changed = true; } else facts.push(STRIKE, v_b, v_d); }
           if (!(true)) {
-            _q85 = false;
-            break Q86;
+            _q105 = false;
+            break Q106;
           }
         }
       }
-      if (!(_q85)) return -1;
+      if (!(_q105)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ e: v_e, a: v_a, b: v_b, L: v_L }, facts)) return 1;
@@ -294,36 +339,39 @@ export function noShoe(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NoShoeBind
   const facts = noShoeFacts;
   let fired = 0;
   let changed = false;
-  const _h101 = (16 - 1);
-  const _h102 = Math.max(0, _h101);
-  const _h103 = _h102;
+  const _h121 = (16 - 1);
+  const _h122 = Math.max(0, _h121);
+  const _h123 = _h122;
   if (noShoeCands.length < sp.cells.length) noShoeCands = new Int32Array(sp.cells.length);
   const cands = noShoeCands;
   cands.fill(-1);
-  const _a92 = sp.edges;
-  for (let _i93 = 0; _i93 < _a92.length; _i93++) {
-    const v_e = _a92[_i93];
-    const _h94 = clueAt(cl.shoe, v_e);
-    if (!((_h94 === 0))) continue;
-    const _a95 = [sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]];
-    for (let _i96 = 0; _i96 < _a95.length; _i96++) {
-      const v_c = _a95[_i96];
+  const _a112 = sp.edges;
+  for (let _i113 = 0; _i113 < _a112.length; _i113++) {
+    const v_e = _a112[_i113];
+    const _h114 = clueAt(cl.shoe, v_e);
+    if (!((_h114 === 0))) continue;
+    const _a115 = [sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]];
+    for (let _i116 = 0; _i116 < _a115.length; _i116++) {
+      const v_c = _a115[_i116];
+      if (import.meta.env.DEV && staleChecking) {
+        freshBinding("noShoe", [(sp.edges.includes(v_e)), (clueAt(cl.shoe, v_e) === 0), ([sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]].includes(v_c))], ["e in", "where of e", "c in"]);
+      }
       facts.length = 0;
       changed = false;
-      let _q97 = true;
-      Q98: {
-        for (let _m99 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m99 !== 0; _m99 &= _m99 - 1) {
-          const v_d = 31 - Math.clz32(_m99 & -_m99);
-          const _h100 = popcount(Math.max(0, (v_d - 1)));
-          if (!(((_h100 === 0) || (Math.max(0, (v_d - 1)) === _h103)))) continue;
+      let _q117 = true;
+      Q118: {
+        for (let _m119 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m119 !== 0; _m119 &= _m119 - 1) {
+          const v_d = 31 - Math.clz32(_m119 & -_m119);
+          const _h120 = popcount(Math.max(0, (v_d - 1)));
+          if (!(((_h120 === 0) || (Math.max(0, (v_d - 1)) === _h123)))) continue;
           if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
           if (!(true)) {
-            _q97 = false;
-            break Q98;
+            _q117 = false;
+            break Q118;
           }
         }
       }
-      if (!(_q97)) return -1;
+      if (!(_q117)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ e: v_e, c: v_c }, facts)) return 1;
@@ -352,35 +400,38 @@ export function noShoeBeside(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NoSh
   if (noShoeBesideCands.length < sp.cells.length) noShoeBesideCands = new Int32Array(sp.cells.length);
   const cands = noShoeBesideCands;
   cands.fill(-1);
-  const _a108 = sp.edges;
-  for (let _i109 = 0; _i109 < _a108.length; _i109++) {
-    const v_e = _a108[_i109];
-    const _h110 = clueAt(cl.shoe, v_e);
-    if (!((_h110 === 0))) continue;
-    const _a111 = [sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]];
-    for (let _i112 = 0; _i112 < _a111.length; _i112++) {
-      const v_k = _a111[_i112];
+  const _a128 = sp.edges;
+  for (let _i129 = 0; _i129 < _a128.length; _i129++) {
+    const v_e = _a128[_i129];
+    const _h130 = clueAt(cl.shoe, v_e);
+    if (!((_h130 === 0))) continue;
+    const _a131 = [sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]];
+    for (let _i132 = 0; _i132 < _a131.length; _i132++) {
+      const v_k = _a131[_i132];
       if (!((popcount((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k]))) === 1))) continue;
       const v_c = (sp.edgeEnds[2 * v_e] === v_k ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e]);
       const v_x = least((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k])));
-      const _h116 = (v_x - 1);
-      const _h117 = Math.max(0, _h116);
-      const _h118 = _h117;
+      const _h136 = (v_x - 1);
+      const _h137 = Math.max(0, _h136);
+      const _h138 = _h137;
+      if (import.meta.env.DEV && staleChecking) {
+        freshBinding("noShoeBeside", [(sp.edges.includes(v_e)), (clueAt(cl.shoe, v_e) === 0), ([sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]].includes(v_k)), (popcount((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k]))) === 1), (v_c === (sp.edgeEnds[2 * v_e] === v_k ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e])), (v_x === least((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k]))))], ["e in", "where of e", "k in", "where of k", "c =", "x ="]);
+      }
       facts.length = 0;
       changed = false;
-      let _q113 = true;
-      Q114: {
-        for (let _m115 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m115 !== 0; _m115 &= _m115 - 1) {
-          const v_d = 31 - Math.clz32(_m115 & -_m115);
-          if (!((((Math.max(0, (v_d - 1)) & ~_h118) === 0) || ((_h118 & ~Math.max(0, (v_d - 1))) === 0)))) continue;
+      let _q133 = true;
+      Q134: {
+        for (let _m135 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m135 !== 0; _m135 &= _m135 - 1) {
+          const v_d = 31 - Math.clz32(_m135 & -_m135);
+          if (!((((Math.max(0, (v_d - 1)) & ~_h138) === 0) || ((_h138 & ~Math.max(0, (v_d - 1))) === 0)))) continue;
           if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
           if (!(true)) {
-            _q113 = false;
-            break Q114;
+            _q133 = false;
+            break Q134;
           }
         }
       }
-      if (!(_q113)) return -1;
+      if (!(_q133)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ e: v_e, k: v_k, c: v_c, x: v_x }, facts)) return 1;
@@ -406,19 +457,22 @@ export function lone(b: Marks, sp: GridSpace, fire: Fire<LoneBinding> | null): n
   if (loneCands.length < sp.cells.length) loneCands = new Int32Array(sp.cells.length);
   const cands = loneCands;
   cands.fill(-1);
-  const _a121 = sp.cells;
-  for (let _i122 = 0; _i122 < _a121.length; _i122++) {
-    const v_c = _a121[_i122];
+  const _a141 = sp.cells;
+  for (let _i142 = 0; _i142 < _a141.length; _i142++) {
+    const v_c = _a141[_i142];
     if (!((!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2)))) continue;
+    if (import.meta.env.DEV && staleChecking) {
+      freshBinding("lone", [(sp.cells.includes(v_c)), (!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2))], ["c in", "where of c"]);
+    }
     facts.length = 0;
     changed = false;
-    let _c124: boolean = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) === 1);
-    if (_c124) {
-      const _t123 = least((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])));
-      if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, _t123); changed = true; } else facts.push(PLACE, v_c, _t123); }
-      _c124 = true;
+    let _c144: boolean = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) === 1);
+    if (_c144) {
+      const _t143 = least((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])));
+      if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, _t143); changed = true; } else facts.push(PLACE, v_c, _t143); }
+      _c144 = true;
     }
-    if (!(_c124)) return -1;
+    if (!(_c144)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null && !fire({ c: v_c }, facts)) return 1;
@@ -437,34 +491,46 @@ const onlyCellFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function onlyCell(b: Marks, sp: GridSpace, fire: Fire<OnlyCellBinding> | null): number {
-  const _g134: number[] = [];
+  const _g154: number[] = [];
   const facts = onlyCellFacts;
   let fired = 0;
   let changed = false;
-  for (let _m133 = b.domain; _m133 !== 0; _m133 &= _m133 - 1) {
-    const v_d = 31 - Math.clz32(_m133 & -_m133);
-    _g134.length = 0;
-    G135: {
-      const _a138 = sp.cells;
-      for (let _i139 = 0; _i139 < _a138.length; _i139++) {
-        const v_c = _a138[_i139];
+  for (let _m153 = b.domain; _m153 !== 0; _m153 &= _m153 - 1) {
+    const v_d = 31 - Math.clz32(_m153 & -_m153);
+    _g154.length = 0;
+    G155: {
+      const _a158 = sp.cells;
+      for (let _i159 = 0; _i159 < _a158.length; _i159++) {
+        const v_c = _a158[_i159];
         if (!((((b.cands[v_c] >> v_d) & 1) !== 0))) continue;
-        _g134.push(v_c);
+        _g154.push(v_c);
       }
     }
-    L140: {
-      const v_C = _g134;
-      const _h141 = v_C.length;
-      if (!(((_h141 < 2) && ((_h141 === 0) || !((b.grid[(v_C.length > 0 ? v_C[0] : -1)] !== 0)))))) break L140;
+    L160: {
+      const v_C = _g154;
+      const _h161 = v_C.length;
+      if (!(((_h161 < 2) && ((_h161 === 0) || !((b.grid[(v_C.length > 0 ? v_C[0] : -1)] !== 0)))))) break L160;
+      if (import.meta.env.DEV && staleChecking) {
+        const _g162: number[] = [];
+        G163: {
+          const _a166 = sp.cells;
+          for (let _i167 = 0; _i167 < _a166.length; _i167++) {
+            const v_c = _a166[_i167];
+            if (!((((b.cands[v_c] >> v_d) & 1) !== 0))) continue;
+            _g162.push(v_c);
+          }
+        }
+        freshBinding("onlyCell", [(((b.domain >> v_d) & 1) !== 0), sameSet(v_C, _g162), ((v_C.length < 2) && ((v_C.length === 0) || !((b.grid[(v_C.length > 0 ? v_C[0] : -1)] !== 0))))], ["d in", "C =", "where of C"]);
+      }
       facts.length = 0;
       changed = false;
-      let _c143: boolean = (_h141 === 1);
-      if (_c143) {
-        const _t142 = (v_C.length > 0 ? v_C[0] : -1);
-        if (!(b.grid[_t142] !== 0)) { if (fire === null) { b.placeAt(_t142, v_d); changed = true; } else facts.push(PLACE, _t142, v_d); }
-        _c143 = true;
+      let _c169: boolean = (_h161 === 1);
+      if (_c169) {
+        const _t168 = (v_C.length > 0 ? v_C[0] : -1);
+        if (!(b.grid[_t168] !== 0)) { if (fire === null) { b.placeAt(_t168, v_d); changed = true; } else facts.push(PLACE, _t168, v_d); }
+        _c169 = true;
       }
-      if (!(_c143)) return -1;
+      if (!(_c169)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ d: v_d, C: v_C.slice() }, facts)) return 1;
@@ -491,47 +557,50 @@ export function smaller(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SmallerBi
   if (smallerCands.length < sp.cells.length) smallerCands = new Int32Array(sp.cells.length);
   const cands = smallerCands;
   cands.fill(-1);
-  const _a148 = sp.edges;
-  for (let _i149 = 0; _i149 < _a148.length; _i149++) {
-    const v_e = _a148[_i149];
-    const _h152 = clueAt(cl.shoe, v_e);
-    const _h153 = (_h152 === 1);
-    const _h154 = sp.edgeEnds[2 * v_e];
-    const _h155 = (_h152 === 2);
-    const _h156 = sp.edgeEnds[2 * v_e + 1];
-    const _a150 = [sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]];
-    for (let _i151 = 0; _i151 < _a150.length; _i151++) {
-      const v_a = _a150[_i151];
-      if (!(((_h153 && (v_a === _h154)) || (_h155 && (v_a === _h156))))) continue;
+  const _a174 = sp.edges;
+  for (let _i175 = 0; _i175 < _a174.length; _i175++) {
+    const v_e = _a174[_i175];
+    const _h178 = clueAt(cl.shoe, v_e);
+    const _h179 = (_h178 === 1);
+    const _h180 = sp.edgeEnds[2 * v_e];
+    const _h181 = (_h178 === 2);
+    const _h182 = sp.edgeEnds[2 * v_e + 1];
+    const _a176 = [sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]];
+    for (let _i177 = 0; _i177 < _a176.length; _i177++) {
+      const v_a = _a176[_i177];
+      if (!(((_h179 && (v_a === _h180)) || (_h181 && (v_a === _h182))))) continue;
       const v_b = (sp.edgeEnds[2 * v_e] === v_a ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e]);
+      if (import.meta.env.DEV && staleChecking) {
+        freshBinding("smaller", [(sp.edges.includes(v_e)), ([sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]].includes(v_a)), (((clueAt(cl.shoe, v_e) === 1) && (v_a === sp.edgeEnds[2 * v_e])) || ((clueAt(cl.shoe, v_e) === 2) && (v_a === sp.edgeEnds[2 * v_e + 1]))), (v_b === (sp.edgeEnds[2 * v_e] === v_a ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e]))], ["e in", "a in", "where of a", "b ="]);
+      }
       facts.length = 0;
       changed = false;
-      let _q157 = true;
-      Q158: {
-        for (let _m159 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])); _m159 !== 0; _m159 &= _m159 - 1) {
-          const v_d = 31 - Math.clz32(_m159 & -_m159);
-          const _h163 = (v_d - 1);
-          const _h164 = Math.max(0, _h163);
-          const _h165 = _h164;
-          let _q160 = false;
-          Q161: {
-            for (let _m162 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])); _m162 !== 0; _m162 &= _m162 - 1) {
-              const v_u = 31 - Math.clz32(_m162 & -_m162);
-              if (((v_d !== v_u) && ((Math.max(0, (v_u - 1)) & ~_h165) === 0))) {
-                _q160 = true;
-                break Q161;
+      let _q183 = true;
+      Q184: {
+        for (let _m185 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])); _m185 !== 0; _m185 &= _m185 - 1) {
+          const v_d = 31 - Math.clz32(_m185 & -_m185);
+          const _h189 = (v_d - 1);
+          const _h190 = Math.max(0, _h189);
+          const _h191 = _h190;
+          let _q186 = false;
+          Q187: {
+            for (let _m188 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])); _m188 !== 0; _m188 &= _m188 - 1) {
+              const v_u = 31 - Math.clz32(_m188 & -_m188);
+              if (((v_d !== v_u) && ((Math.max(0, (v_u - 1)) & ~_h191) === 0))) {
+                _q186 = true;
+                break Q187;
               }
             }
           }
-          if (!(!(_q160))) continue;
+          if (!(!(_q186))) continue;
           if ((((b.cands[v_a] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_a, v_d); changed = true; } else facts.push(STRIKE, v_a, v_d); }
           if (!(true)) {
-            _q157 = false;
-            break Q158;
+            _q183 = false;
+            break Q184;
           }
         }
       }
-      if (!(_q157)) return -1;
+      if (!(_q183)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ e: v_e, a: v_a, b: v_b }, facts)) return 1;
@@ -559,47 +628,50 @@ export function bigger(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BiggerBind
   if (biggerCands.length < sp.cells.length) biggerCands = new Int32Array(sp.cells.length);
   const cands = biggerCands;
   cands.fill(-1);
-  const _a170 = sp.edges;
-  for (let _i171 = 0; _i171 < _a170.length; _i171++) {
-    const v_e = _a170[_i171];
-    const _h174 = clueAt(cl.shoe, v_e);
-    const _h175 = (_h174 === 1);
-    const _h176 = sp.edgeEnds[2 * v_e];
-    const _h177 = (_h174 === 2);
-    const _h178 = sp.edgeEnds[2 * v_e + 1];
-    const _a172 = [sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]];
-    for (let _i173 = 0; _i173 < _a172.length; _i173++) {
-      const v_a = _a172[_i173];
-      if (!(((_h175 && (v_a === _h176)) || (_h177 && (v_a === _h178))))) continue;
+  const _a196 = sp.edges;
+  for (let _i197 = 0; _i197 < _a196.length; _i197++) {
+    const v_e = _a196[_i197];
+    const _h200 = clueAt(cl.shoe, v_e);
+    const _h201 = (_h200 === 1);
+    const _h202 = sp.edgeEnds[2 * v_e];
+    const _h203 = (_h200 === 2);
+    const _h204 = sp.edgeEnds[2 * v_e + 1];
+    const _a198 = [sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]];
+    for (let _i199 = 0; _i199 < _a198.length; _i199++) {
+      const v_a = _a198[_i199];
+      if (!(((_h201 && (v_a === _h202)) || (_h203 && (v_a === _h204))))) continue;
       const v_b = (sp.edgeEnds[2 * v_e] === v_a ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e]);
+      if (import.meta.env.DEV && staleChecking) {
+        freshBinding("bigger", [(sp.edges.includes(v_e)), ([sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]].includes(v_a)), (((clueAt(cl.shoe, v_e) === 1) && (v_a === sp.edgeEnds[2 * v_e])) || ((clueAt(cl.shoe, v_e) === 2) && (v_a === sp.edgeEnds[2 * v_e + 1]))), (v_b === (sp.edgeEnds[2 * v_e] === v_a ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e]))], ["e in", "a in", "where of a", "b ="]);
+      }
       facts.length = 0;
       changed = false;
-      let _q179 = true;
-      Q180: {
-        for (let _m181 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])); _m181 !== 0; _m181 &= _m181 - 1) {
-          const v_d = 31 - Math.clz32(_m181 & -_m181);
-          const _h185 = (v_d - 1);
-          const _h186 = Math.max(0, _h185);
-          const _h187 = _h186;
-          let _q182 = false;
-          Q183: {
-            for (let _m184 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])); _m184 !== 0; _m184 &= _m184 - 1) {
-              const v_u = 31 - Math.clz32(_m184 & -_m184);
-              if (((v_u !== v_d) && ((_h187 & ~Math.max(0, (v_u - 1))) === 0))) {
-                _q182 = true;
-                break Q183;
+      let _q205 = true;
+      Q206: {
+        for (let _m207 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])); _m207 !== 0; _m207 &= _m207 - 1) {
+          const v_d = 31 - Math.clz32(_m207 & -_m207);
+          const _h211 = (v_d - 1);
+          const _h212 = Math.max(0, _h211);
+          const _h213 = _h212;
+          let _q208 = false;
+          Q209: {
+            for (let _m210 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])); _m210 !== 0; _m210 &= _m210 - 1) {
+              const v_u = 31 - Math.clz32(_m210 & -_m210);
+              if (((v_u !== v_d) && ((_h213 & ~Math.max(0, (v_u - 1))) === 0))) {
+                _q208 = true;
+                break Q209;
               }
             }
           }
-          if (!(!(_q182))) continue;
+          if (!(!(_q208))) continue;
           if ((((b.cands[v_b] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_b, v_d); changed = true; } else facts.push(STRIKE, v_b, v_d); }
           if (!(true)) {
-            _q179 = false;
-            break Q180;
+            _q205 = false;
+            break Q206;
           }
         }
       }
-      if (!(_q179)) return -1;
+      if (!(_q205)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ e: v_e, a: v_a, b: v_b }, facts)) return 1;

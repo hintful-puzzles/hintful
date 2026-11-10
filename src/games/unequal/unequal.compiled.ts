@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/unequal/unequal.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, rangeMask } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, freshBinding, rangeMask, staleChecking } from "../../engine/describe-runtime.ts";
 
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
@@ -60,23 +60,23 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  let _q17 = true;
-  const _n21 = new Int32Array(32);
-  Q18: for (const _u19 of sp.lines) {
-    _n21.fill(0);
-    for (const _c20 of sp.lineCells[_u19]) {
-      const _t22 = (g[_c20] || -1);
-      if (++_n21[_t22] > 1) {
-        _q17 = false;
-        break Q18;
+  let _q19 = true;
+  const _n23 = new Int32Array(32);
+  Q20: for (const _u21 of sp.lines) {
+    _n23.fill(0);
+    for (const _c22 of sp.lineCells[_u21]) {
+      const _t24 = (g[_c22] || -1);
+      if (++_n23[_t24] > 1) {
+        _q19 = false;
+        break Q20;
       }
     }
   }
-  if (!(_q17)) return false;
-  for (let _k23 = 0; _k23 < cl.greater.at.length; _k23++) {
-    const _at24 = cl.greater.at[_k23];
-    const _v25 = cl.greater.v[_k23];
-    if (!(((g[_v25] || -1) > (g[(sp.edgeEnds[2 * _at24] === _v25 ? sp.edgeEnds[2 * _at24 + 1] : sp.edgeEnds[2 * _at24])] || -1)))) return false;
+  if (!(_q19)) return false;
+  for (let _k25 = 0; _k25 < cl.greater.at.length; _k25++) {
+    const _at26 = cl.greater.at[_k25];
+    const _v27 = cl.greater.v[_k25];
+    if (!(((g[_v27] || -1) > (g[(sp.edgeEnds[2 * _at26] === _v27 ? sp.edgeEnds[2 * _at26 + 1] : sp.edgeEnds[2 * _at26])] || -1)))) return false;
   }
   return true;
 }
@@ -103,53 +103,58 @@ export function sign(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SignBinding>
     const _t3 = cl.greater.at[v_k];
     const _t4 = cl.greater.v[v_k];
     const v_small = (sp.edgeEnds[2 * _t3] === _t4 ? sp.edgeEnds[2 * _t3 + 1] : sp.edgeEnds[2 * _t3]);
+    if (import.meta.env.DEV && staleChecking) {
+      const _t5 = cl.greater.at[v_k];
+      const _t6 = cl.greater.v[v_k];
+      freshBinding("sign", [(v_big === cl.greater.v[v_k]), (v_small === (sp.edgeEnds[2 * _t5] === _t6 ? sp.edgeEnds[2 * _t5 + 1] : sp.edgeEnds[2 * _t5]))], ["big =", "small ="]);
+    }
     facts.length = 0;
     changed = false;
-    let _q5 = true;
-    Q6: {
-      for (let _m7 = b.domain; _m7 !== 0; _m7 &= _m7 - 1) {
-        const v_d = 31 - Math.clz32(_m7 & -_m7);
-        let _q8 = true;
-        Q9: {
-          for (let _m10 = (cands[v_small] >= 0 ? cands[v_small] : (cands[v_small] = b.cands[v_small])); _m10 !== 0; _m10 &= _m10 - 1) {
-            const v_d2 = 31 - Math.clz32(_m10 & -_m10);
+    let _q7 = true;
+    Q8: {
+      for (let _m9 = b.domain; _m9 !== 0; _m9 &= _m9 - 1) {
+        const v_d = 31 - Math.clz32(_m9 & -_m9);
+        let _q10 = true;
+        Q11: {
+          for (let _m12 = (cands[v_small] >= 0 ? cands[v_small] : (cands[v_small] = b.cands[v_small])); _m12 !== 0; _m12 &= _m12 - 1) {
+            const v_d2 = 31 - Math.clz32(_m12 & -_m12);
             if (!((v_d <= v_d2))) {
-              _q8 = false;
-              break Q9;
+              _q10 = false;
+              break Q11;
             }
           }
         }
-        let _c11: boolean = !(_q8);
-        if (!_c11) {
+        let _c13: boolean = !(_q10);
+        if (!_c13) {
           if ((((b.cands[v_big] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_big, v_d); changed = true; } else facts.push(STRIKE, v_big, v_d); }
-          _c11 = true;
+          _c13 = true;
         }
-        let _c16: boolean = _c11;
-        if (_c16) {
-          let _q12 = true;
-          Q13: {
-            for (let _m14 = (cands[v_big] >= 0 ? cands[v_big] : (cands[v_big] = b.cands[v_big])); _m14 !== 0; _m14 &= _m14 - 1) {
-              const v_d2 = 31 - Math.clz32(_m14 & -_m14);
+        let _c18: boolean = _c13;
+        if (_c18) {
+          let _q14 = true;
+          Q15: {
+            for (let _m16 = (cands[v_big] >= 0 ? cands[v_big] : (cands[v_big] = b.cands[v_big])); _m16 !== 0; _m16 &= _m16 - 1) {
+              const v_d2 = 31 - Math.clz32(_m16 & -_m16);
               if (!((v_d >= v_d2))) {
-                _q12 = false;
-                break Q13;
+                _q14 = false;
+                break Q15;
               }
             }
           }
-          let _c15: boolean = !(_q12);
-          if (!_c15) {
+          let _c17: boolean = !(_q14);
+          if (!_c17) {
             if ((((b.cands[v_small] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_small, v_d); changed = true; } else facts.push(STRIKE, v_small, v_d); }
-            _c15 = true;
+            _c17 = true;
           }
-          _c16 = _c15;
+          _c18 = _c17;
         }
-        if (!(_c16)) {
-          _q5 = false;
-          break Q6;
+        if (!(_c18)) {
+          _q7 = false;
+          break Q8;
         }
       }
     }
-    if (!(_q5)) return -1;
+    if (!(_q7)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null && !fire({ k: v_k, big: v_big, small: v_small }, facts)) return 1;
