@@ -44,13 +44,16 @@ function passFiles(): { include: string[]; exclude: string[] } {
  * run (Gate run 40517483254, 2026-10-27). And a share is held to a file's cost
  * budget (`scripts/checks/test-cost.ts`), which the warm-repaint sweep, one
  * case per game, was over whole, and so was the near-miss sweep, charged for
- * a board of every game (Gate run 42690070962, 2026-11-09).
+ * a board of every game (Gate run 42690070962, 2026-11-09), and so was the
+ * skip comparison, which deals Loopy's boards twice (Gate run 42732884245,
+ * 2026-11-10).
  */
 const SPREAD = [
   "src/engine/hint-resume.test.ts",
   "src/engine/hint-quality.test.ts",
   "src/engine/warm-repaint.test.ts",
   "src/engine/desc-error-games.test.ts",
+  "src/engine/ladder-skip.test.ts",
 ];
 
 /** How many shares a spread file is walked in: CI's core count, so each file

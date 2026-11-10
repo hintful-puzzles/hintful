@@ -12,6 +12,7 @@ import { CellMarks } from "./ladder-runtime.ts";
 import { getTsGame } from "./registry.ts";
 import { dealt, dealtAgain } from "./testing/dealt.ts";
 import { type AnyGame, gatePresets } from "./testing/hint-games.ts";
+import { FIRST_SHARE, ofThisShare } from "./testing/sweep-share.ts";
 
 const modules = import.meta.glob<string>("../games/*/*.compiled.ts", {
   eager: true,
@@ -41,17 +42,31 @@ function unskipped(game: AnyGame, params: unknown): string {
   }
 }
 
-describe("a solve that skips deals the boards one that does not deals", () => {
-  it("has games to compare", () => {
-    expect(SKIPPING.length).toBeGreaterThan(0);
-  });
-
-  it.each(SKIPPING)("%s", (id) => {
+/** Each board of each skipping game, shared out by board: one game, Loopy,
+ * holds most of the cost (`docs/testing.md` § "A sweep too long for one
+ * worker"). */
+const CASES = ofThisShare(
+  SKIPPING.flatMap((id) => {
     const game = getTsGame(id) as AnyGame;
-    const presets = gatePresets(game);
-    expect(presets.length).toBeGreaterThan(0);
-    expect(CellMarks.skipping).toBe(true);
-    for (const { title, params } of presets)
-      expect(unskipped(game, params), title).toBe(dealt(game, params).desc);
-  });
-});
+    return gatePresets(game).map(({ title, params }) => ({ id, game, title, params }));
+  }),
+);
+
+// A suite with no case fails, and a share may hold no board.
+describe.runIf(FIRST_SHARE || CASES.length > 0)(
+  "a solve that skips deals the boards one that does not deals",
+  () => {
+    if (FIRST_SHARE)
+      it("has games to compare, each with a board", () => {
+        expect(SKIPPING.length).toBeGreaterThan(0);
+        for (const id of SKIPPING)
+          expect(gatePresets(getTsGame(id) as AnyGame).length, id).toBeGreaterThan(0);
+      });
+
+    for (const { id, game, title, params } of CASES)
+      it(`${id}: ${title}`, () => {
+        expect(CellMarks.skipping).toBe(true);
+        expect(unskipped(game, params)).toBe(dealt(game, params).desc);
+      });
+  },
+);
