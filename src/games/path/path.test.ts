@@ -38,7 +38,14 @@ import type { Point } from "../../engine/types.ts";
 import { type Flash, WIN_NONE } from "../../engine/win-wave.ts";
 import { countAnswers } from "./count-answers.ts";
 import { pathGame } from "./index.ts";
-import { COL_ERROR, COL_WALL, centerOf, layout, newDrawState } from "./render.ts";
+import {
+  COL_ERROR,
+  COL_WALL,
+  centerOf,
+  layout,
+  newDrawState,
+  rampColors,
+} from "./render.ts";
 import { answerOf, solvePath } from "./solver.ts";
 import {
   DIFF_EASY,
@@ -679,6 +686,14 @@ describe("path, the one-line ruleset", () => {
     const colors = new Set(solved.flatMap((op) => (op.op === "line" ? [op.rgb] : [])));
     colors.delete("rgb(0, 0, 0)");
     expect(colors.size).toBe(3);
+  });
+
+  it("never gives two consecutive numbers one color, at any length", () => {
+    for (let last = 2; last <= 40; last++) {
+      const ends = Uint8Array.from({ length: last }, (_, i) => i + 1);
+      const color = rampColors({ ends });
+      for (let n = 1; n < last; n++) expect(color[n + 1]).not.toBe(color[n]);
+    }
   });
 
   it("draws a line red where it passes two numbers out of order", () => {

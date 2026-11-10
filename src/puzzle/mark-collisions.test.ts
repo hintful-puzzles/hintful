@@ -45,10 +45,11 @@ const DECLARED: Record<string, Declared[]> = {
     { pair: [mosaic.COL_TEXT, mosaic.COL_TEXT_ON_PIECE], why: NUMBER_ON_A_PIECE },
   ],
   path: [
-    // The seventh pair's color is pale enough that its number takes ink.
+    // Yellow, the second number's color on the board dealt here, is pale
+    // enough that its number takes ink.
     {
-      pair: [path.COL_TEXT, path.COL_PAIR_TEXT + 6],
-      why: "one number, in ink on an open disc and in ink on the seventh pair's pale filled one",
+      pair: [path.COL_TEXT, path.COL_PAIR_TEXT],
+      why: "one number, in ink on an open disc and in ink on a pale yellow filled one",
     },
   ],
   sticks: [{ pair: [sticks.COL_NUMBER, sticks.COL_TEXT], why: NUMBER_ON_A_PIECE }],

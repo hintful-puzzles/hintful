@@ -202,22 +202,15 @@ export function newDrawState(state: PathState, tileSize: number): PathDrawState 
   };
 }
 
-/** A color for each number along {@link FREE_RAMP}, the line from the 1 to
- * the 2 the first and the line into the highest number the last, spread
- * evenly so that each color covers a run of numbers the same length. The
- * highest number takes the color of the line into it. */
-function rampColors({ ends }: PathState): Int32Array {
+/** A color for each number along {@link FREE_RAMP}, so that two consecutive
+ * numbers never share one: a color a number, round the hue wheel again when
+ * the numbers outrun the ramp. */
+export function rampColors({ ends }: Pick<PathState, "ends">): Int32Array {
   const last = Math.max(...ends);
-  const steps = Math.max(1, last - 1);
-  const out = new Int32Array(last + 1);
-  for (let n = 1; n <= last; n++) {
-    const along = Math.min(n, last - 1) - 1;
-    out[n] =
-      FREE_RAMP[
-        Math.min(FREE_RAMP.length - 1, Math.floor((along * FREE_RAMP.length) / steps))
-      ];
-  }
-  return out;
+  return Int32Array.from(
+    { length: last + 1 },
+    (_, n) => FREE_RAMP[(n - 1 + FREE_RAMP.length) % FREE_RAMP.length],
+  );
 }
 
 /** A color for each number, its two squares' box spread over the set
