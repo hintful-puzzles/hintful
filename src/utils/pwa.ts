@@ -7,6 +7,7 @@ import {
   type WorkboxMessageEvent,
 } from "workbox-window";
 import { settings } from "../store/settings.ts";
+import { percentOf } from "./precache-plan.ts";
 import { sleep } from "./timing.ts";
 
 if (typeof window === "undefined") {
@@ -109,6 +110,7 @@ class PWAManager {
   private _downloadProgress = signal<number | null>(null);
   private _downloadBytes = signal<{ done: number; total: number } | null>(null);
   private _fullDownloadBytes = signal<number | null>(null);
+  private _downloadedBytes = signal<number | null>(null);
   private _lastChecked = signal<number | null>(null);
 
   private wb?: Workbox;
@@ -200,6 +202,11 @@ class PWAManager {
    */
   get downloadBytes(): { done: number; total: number } | null {
     return this._downloadBytes.get();
+  }
+
+  /** Bytes the download that just finished fetched, if it is known. */
+  get downloadedBytes(): number | null {
+    return this._downloadedBytes.get();
   }
 
   /**
@@ -420,16 +427,15 @@ class PWAManager {
         break;
       }
       case "PRECACHE_PROGRESS": {
-        const { count, total, bytes, totalBytes } = event.data;
-        const fraction =
-          totalBytes > 0 ? bytes / totalBytes : total > 0 ? count / total : 0.5;
-        this._downloadProgress.set(Math.round(fraction * 100));
+        const { bytes, totalBytes } = event.data;
+        this._downloadProgress.set(percentOf(event.data));
         this._downloadBytes.set(
           totalBytes > 0 ? { done: bytes, total: totalBytes } : null,
         );
         break;
       }
       case "PRECACHE_COMPLETE":
+        this._downloadedBytes.set(this._downloadBytes.get()?.total ?? null);
         this._downloadProgress.set(null);
         this._downloadBytes.set(null);
         break;

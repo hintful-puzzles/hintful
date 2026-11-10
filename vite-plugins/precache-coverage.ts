@@ -28,7 +28,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { globSync } from "tinyglobby";
 import type { Plugin } from "vite";
-import { PRECACHE_SIZE_FILE } from "./precache-size.ts";
+import { PRECACHE_SIZE_FILE, type PrecacheSizes } from "./precache-size.ts";
 
 /**
  * Build machinery rather than things a page loads: the service worker itself
@@ -149,6 +149,28 @@ export function precacheCoverage(options: PrecacheCoverageOptions = {}): Plugin 
           throw new Error(
             "precache-coverage: NOT_PRECACHEABLE excuses files the build no " +
               `longer emits: ${staleExcuses.join(", ")}`,
+          );
+        }
+
+        // The download's progress and size come from `precache-size.json`; a
+        // file it does not list weighs nothing. A few misses are expected (the
+        // web manifest is added to the precache after the sizes are taken), a
+        // mostly-empty map is the transform having stopped running.
+        const sizeFile = path.join(outDir, PRECACHE_SIZE_FILE);
+        if (!fs.existsSync(sizeFile)) {
+          throw new Error(`precache-coverage: ${PRECACHE_SIZE_FILE} was not written`);
+        }
+        const { sizes } = JSON.parse(
+          fs.readFileSync(sizeFile, "utf8"),
+        ) as PrecacheSizes;
+        const manifestUrls = [...sw.matchAll(/"url":"([^"]+)"/g)].map((m) => m[1]);
+        const unsized = manifestUrls.filter((url) => !(url in sizes));
+        if (manifestUrls.length === 0 || unsized.length > manifestUrls.length / 20) {
+          throw new Error(
+            `precache-coverage: ${PRECACHE_SIZE_FILE} lists no size for ` +
+              `${unsized.length} of ${manifestUrls.length} precached files ` +
+              `(e.g. ${unsized.slice(0, 3).join(", ")}), so the download's ` +
+              "progress and size would be wrong",
           );
         }
       },

@@ -90,3 +90,51 @@ percentage by bytes, and the same status from either entry point.
    from eroding.
 2. **What budget**: a fixed ceiling, or "no commit grows it by more than N
    KiB without saying why in its message".
+
+## Decisions (2026-11-10)
+
+The owner asked for low-hanging fruit only, and for a downloader that needs no
+upkeep as the codebase changes: it reads the build's manifest and sizes as
+data and names no file, game or chunk.
+
+**Measured** (against the live host, `https://hintful.click`, and the build):
+
+- Wire size equals gzip level 9 within 0.3%: the 2.5 MB worker is 787,653
+  bytes brotli and 801,655 gzip on the wire against an estimate of 800,815.
+  Cloudflare's brotli is no better than gzip, so the estimate is gzip -9.
+- Icons: 458,079 bytes. Lossless sharp 294,590 (pixel-identical), lossless
+  oxipng 252,970, sharp palette 209,426 (changes pixels, worst channel 10 of
+  255, in 46 of 124 icons), pngquant 199,761.
+- Precache total, gzipped: 1,946,639 before, 1,777,519 after the icon pass.
+
+**Done**: the size in every offline status; progress by bytes; an update
+counts only the files it fetches (Workbox runs every manifest entry through
+its plugins, a cache hit included, so the plan names the files to wait for);
+a lossless PNG pass over everything the build emits.
+
+**Let go, and why**:
+
+- **A delta inside a file** (bsdiff, rsync-like). Needs a server that answers
+  deltas, which the static host cannot, and a component to keep. Updates
+  already skip every unchanged file.
+- **Splitting the game worker per game.** It helps the first online open of
+  one game, not the offline install, which fetches every game anyway. It
+  touches the registry and every guard that reaches games through it. The
+  3 MiB cap in `vite.config.ts` stays and fails the build loudly when the
+  worker nears it (2.5 MB raw on 2026-11-10).
+- **A size budget in the gate.** A ceiling or a baseline is a number someone
+  keeps current. The size is now shown and the table above can be re-measured;
+  that is enough for now.
+- **Precompressed brotli.** The host re-encodes; measured above.
+- **oxipng or pngquant.** oxipng saves 41 KB more than sharp but is an external
+  binary, not a dependency. pngquant and sharp's palette mode change pixels.
+  **The owner's call if wanted**: setting `palette: true` in
+  `optimizePng` saves another 85 KB, and changes 46 icons by up to 10/255.
+- **One icon size in the precache.** A 2x screen offline would show blurry or
+  missing icons.
+
+**Known limits**: sizes are estimates ("about"). An update already waiting when
+a page loads (downloaded in an earlier visit) shows no size, since nothing told
+this page how big it was. A deploy in flight can mismatch the size file and the
+worker; a file the size file lacks weighs nothing, and the build fails if it
+lacks more than 5% of them.

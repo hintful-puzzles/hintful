@@ -354,6 +354,11 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
     `;
   }
 
+  /** ", 1.9 MB" after a status, or nothing when the size is not known. */
+  private sizeSuffix(bytes: number | null) {
+    return bytes === null ? "" : `, ${formatBytes(bytes)}`;
+  }
+
   private renderOfflineStatus() {
     switch (pwaManager.status) {
       case "uninitialized":
@@ -368,7 +373,7 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
       }
       case "registered":
         return html`
-          ${(pwaManager.lastChecked ?? -1) >= this.openedAt ? "up to date" : "not checked yet"}
+          ${(pwaManager.lastChecked ?? -1) >= this.openedAt ? "up to date" : "not checked yet"}${this.sizeSuffix(pwaManager.fullDownloadBytes)}
           (<button @click=${this.handleCheckForUpdate}>check for updates</button>)
         `;
       case "checking-for-updates":
@@ -399,12 +404,12 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
       }
       case "download-ready":
         return html`
-          downloaded
+          downloaded${this.sizeSuffix(pwaManager.downloadedBytes ?? pwaManager.fullDownloadBytes)}
           (<button @click=${this.handleReloadApp}>reload</button> to activate)
         `;
       case "update-ready":
         return html`
-          update downloaded
+          update downloaded${this.sizeSuffix(pwaManager.downloadedBytes)}
           (<button @click=${this.handleInstallUpdate}>install now</button>)
         `;
       case "installing":
@@ -436,6 +441,7 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
     // The offline status is only seen here, so check as it comes into view
     // rather than show a claim nothing has verified.
     if (event.target === event.currentTarget) {
+      void pwaManager.loadFullDownloadSize();
       await pwaManager.checkForUpdate();
     }
   }
@@ -575,6 +581,7 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
       // An Advanced panel left expanded fires no wa-show, so check here too
       if (this.advancedPanel?.open) {
         void pwaManager.checkForUpdate();
+        void pwaManager.loadFullDownloadSize();
       }
       // Make sure puzzle-preferences-form is displaying current values
       await this.reload();
