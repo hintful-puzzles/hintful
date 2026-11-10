@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, before, clueAt, edgeGroups, freshBinding, keptEdgeGroups, keptStore, rangeMask, sameSet, staleChecking, stamps, through, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -158,7 +160,7 @@ export function cluesVersusRegionSize(b: Marks, sp: GridSpace, cl: Dealt, fire: 
       L7: {
         const v_d = _h6;
         if (!(((v_d !== -1) && (((_h9 - v_d) > cl.k) || ((_h10 && (v_d === 3)) && _h11))))) break L7;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           freshBinding("cluesVersusRegionSize", [(v_a === cl.number.at[v_q]), (sp.adj4[v_a].includes(v_b)), !((b.grid[sp.adj4Edges[v_a][_i5]] !== 0)), (v_d === clueAt(cl.number, v_b)), ((v_d !== -1) && ((((8 - cl.number.v[v_q]) - v_d) > cl.k) || (((cl.number.v[v_q] === 3) && (v_d === 3)) && (cl.k !== 2))))], ["a =", "b in", "where of b", "d =", "where of d"]);
         }
         facts.length = 0;
@@ -215,7 +217,7 @@ export function numberExhausted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<N
     L22: {
       const v_n = ((4 - sp.adj4[v_c].length) + _g18);
       if (!((((_h23 > 0) || (v_n !== cl.number.v[v_q])) && ((v_n >= cl.number.v[v_q]) || ((v_n + _h23) <= cl.number.v[v_q]))))) break L22;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g24: number[] = [];
         G25: {
           const _a28 = sp.adj4[v_c];
@@ -338,7 +340,7 @@ export function notTooBig(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTooB
           const _now25 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_b);
           if (!(_now25 === _eg19.of(v_b) || sameSet(_now25, _eg19.of(v_b)))) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g26: number[] = [];
           G27: {
             const _a30 = sp.edges;
@@ -435,7 +437,7 @@ export function notTooSmall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTo
         const _now68 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of((v_S[0] ?? -1));
         if (!(_now68 === _eg40.of((v_S[0] ?? -1)) || sameSet(_now68, _eg40.of((v_S[0] ?? -1))))) { continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g69: number[] = [];
         G70: {
           const _a73 = sp.edges;
@@ -593,7 +595,7 @@ export function noDanglingEdges(b: Marks, sp: GridSpace, fire: Fire<NoDanglingEd
         _c52 = (_g48 === 1);
       }
       if (!(_c52)) continue;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g53: number[] = [];
         G54: {
           const _a59 = v_C;
@@ -725,7 +727,7 @@ export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<E
               if (!((_g41.includes(v_y)))) { continue R2; }
               if (!(!((b.grid[sp.edgeOf(v_c, v_y)] !== 0)))) { continue R2; }
             }
-            if (import.meta.env.DEV && staleChecking) {
+            if (DEV && staleChecking) {
               const _g47: number[] = [];
               G48: {
                 const _a51 = sp.edges;
@@ -823,7 +825,7 @@ export function inside(b: Marks, sp: GridSpace, fire: Fire<InsideBinding> | null
       const _now18 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e]);
       if (!(_now18 === _eg17.of(sp.edgeEnds[2 * v_e]) || sameSet(_now18, _eg17.of(sp.edgeEnds[2 * v_e])))) { continue R1; }
     }
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       const _g19: number[] = [];
       G20: {
         const _a23 = sp.edges;

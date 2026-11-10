@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, clueAt, freshBinding, keptStore, least, minus, popcount, sameSet, sights, staleChecking, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -153,7 +155,7 @@ export function single(b: Marks, sp: GridSpace, fire: Fire<SingleBinding> | null
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_c = _a3[_i4];
     if (!((popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("single", [(sp.cells.includes(v_c)), (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2)], ["c in", "where of c"]);
     }
     facts.length = 0;
@@ -224,7 +226,7 @@ export function total(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TotalBindin
     }
     const v_O = _g21;
     const _h40 = v_O.length;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       const _g27: number[] = [];
       G28: {
         const _a31 = sp.cells;
@@ -388,7 +390,7 @@ export function sightline(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sightli
         }
         const v_z = ((_k25[3] ?? holds(sp, cl, 3)) - _g36);
         let _g61 = -1;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _g41 = 0;
           G42: {
             const _a43 = sp.cells;

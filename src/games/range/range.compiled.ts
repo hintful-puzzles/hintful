@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, cellsValued, clueAt, connected, cuts, freshBinding, keptStore, ray, sameSet, staleChecking, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -148,7 +150,7 @@ export function besideShaded(b: Marks, sp: GridSpace, fire: Fire<BesideShadedBin
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_c = _a3[_i4];
     if (!(((b.grid[v_c] || -1) === 1))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("besideShaded", [(sp.cells.includes(v_c)), ((b.grid[v_c] || -1) === 1)], ["c in", "where of c"]);
     }
     facts.length = 0;
@@ -243,7 +245,7 @@ export function capped(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CappedBind
           if (b.made[0] !== _m47_0 || b.made[1] !== _m48_1) {
             if (!((v_W === sees(b, sp, v_k)))) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _g33 = -1;
             G34: {
               const _t35 = v_R.length;
@@ -442,7 +444,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
           }
           if (!((v_M === (1 + _g57)))) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _g71 = 0;
           G72: {
             const _a73 = sp.adj4[v_k];
@@ -585,7 +587,7 @@ export function cut(b: Marks, sp: GridSpace, fire: Fire<CutBinding> | null): num
       }
       if (!(sameSet(v_U, _g17))) { return fired; }
     }
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       const _g23: number[] = [];
       G24: {
         const _a27 = sp.cells;

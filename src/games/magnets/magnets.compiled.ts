@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, type Partition, PLACE, STRIKE, addOnce, clueAt, freshBinding, keptStore, least, perElement, perPlace, perValue, popcount, sameSet, staleChecking, stamps, stretch, type Kept, union } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -163,7 +165,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, v_c: number, fire: Fire
   for (let _i7 = 0; _i7 < _a6.length; _i7++) {
     const v_p = _a6[_i7];
     if (!(!((b.grid[v_p] !== 0)))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("pair", [(sp.cells.includes(v_c)), (b.grid[v_c] !== 0), (others(sp, cl, v_c).includes(v_p)), !((b.grid[v_p] !== 0))], ["c in", "where of c", "p in", "where of p"]);
     }
     facts.length = 0;
@@ -197,7 +199,7 @@ export function repel(b: Marks, sp: GridSpace, v_c: number, fire: Fire<RepelBind
   const _a7 = sp.adj4[v_c];
   for (let _i8 = 0; _i8 < _a7.length; _i8++) {
     const v_p = _a7[_i8];
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("repel", [(sp.cells.includes(v_c)), ((b.grid[v_c] !== 0) && ((b.grid[v_c] || -1) !== 2)), (sp.adj4[v_c].includes(v_p))], ["c in", "where of c", "p in"]);
     }
     facts.length = 0;
@@ -228,7 +230,7 @@ export function tile(b: Marks, sp: GridSpace, cl: Dealt, v_c: number, fire: Fire
   const _a6 = (_k5[v_c] ?? others(sp, cl, v_c));
   for (let _i7 = 0; _i7 < _a6.length; _i7++) {
     const v_p = _a6[_i7];
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("tile", [(sp.cells.includes(v_c)), (others(sp, cl, v_c).includes(v_p))], ["c in", "p in"]);
     }
     facts.length = 0;
@@ -273,7 +275,7 @@ export function single(b: Marks, sp: GridSpace, fire: Fire<SingleBinding> | null
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_c = _a3[_i4];
     if (!((popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("single", [(sp.cells.includes(v_c)), (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2)], ["c in", "where of c"]);
     }
     facts.length = 0;
@@ -332,7 +334,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
         }
         const v_O = _g14;
         const _h30 = v_O.length;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g20: number[] = [];
           G21: {
             const _a24 = sp.lineCells[v_L];
@@ -521,7 +523,7 @@ export function oddGap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OddGapBind
             }
             if (!(_c72)) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _c77: boolean = (v_n >= 0);
             if (_c77) {
               let _g73 = 0;
@@ -677,7 +679,7 @@ export function marked(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MarkedBind
             }
             if (!(sameSet(v_M, _g38))) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _g44: number[] = [];
             G45: {
               const _a48 = sp.lineCells[v_L];
@@ -766,7 +768,7 @@ export function oneNeutral(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneNeu
         _c18 = ((_g13 + 1) === v_n);
       }
       if (!(_c18)) break L12;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c23: boolean = (v_n >= 0);
         if (_c23) {
           let _g19 = 0;
@@ -870,7 +872,7 @@ export function everyTile(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EveryTi
             _c38 = ((v_v - _g33) === _h32);
           }
           if (!(_c38)) break L31;
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _g39: number[] = [];
             G40: {
               const _a43 = sp.lineCells[v_L];
@@ -990,7 +992,7 @@ export function onlyEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyEndBi
             _c48 = ((v_v - _g44) === _h43);
           }
           if (!(_c48)) break L42;
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _g49: number[] = [];
             G50: {
               const _a53 = sp.lineCells[v_L];

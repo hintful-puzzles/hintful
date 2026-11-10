@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, clueAt, freshBinding, least, perElement, perPlace, perValue, popcount, rangeMask, sameSet, staleChecking, stretch } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -136,7 +138,7 @@ export function placed(b: Marks, sp: GridSpace, v_c: number, fire: Fire<PlacedBi
     const v_p = _a6[_i7];
     const _h8 = (b.grid[v_p] !== 0);
     if (!(!(_h8))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("placed", [(sp.cells.includes(v_c)), (b.grid[v_c] !== 0), (sp.adj4[v_c].includes(v_p)), !((b.grid[v_p] !== 0))], ["c in", "where of c", "p in", "where of p"]);
     }
     facts.length = 0;
@@ -187,7 +189,7 @@ export function satisfied(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Satisfi
           _c20 = (_g15 >= v_v);
         }
         if (!(_c20)) break L14;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _c25: boolean = (v_v >= 0);
           if (_c25) {
             let _g21 = 0;
@@ -263,7 +265,7 @@ export function single(b: Marks, sp: GridSpace, fire: Fire<SingleBinding> | null
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_c = _a3[_i4];
     if (!((!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2)))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("single", [(sp.cells.includes(v_c)), (!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2))], ["c in", "where of c"]);
     }
     facts.length = 0;
@@ -338,7 +340,7 @@ export function runs(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RunsBinding>
             }
           }
           if (!((_g40 === (v_v - _g29)))) break L39;
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _g44 = 0;
             G45: {
               const _a46 = sp.lineCells[v_L];
@@ -425,7 +427,7 @@ export function placedDiagonal(b: Marks, sp: GridSpace, v_c: number, fire: Fire<
     const v_p = _a6[_i7];
     const _h8 = (b.grid[v_p] !== 0);
     if (!((!(sp.adj4[v_c].includes(v_p)) && !(_h8)))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("placedDiagonal", [(sp.cells.includes(v_c)), (b.grid[v_c] !== 0), (sp.adj8[v_c].includes(v_p)), (!(sp.adj4[v_c].includes(v_p)) && !((b.grid[v_p] !== 0)))], ["c in", "where of c", "p in", "where of p"]);
     }
     facts.length = 0;

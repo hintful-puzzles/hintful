@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, ahead, beam, beamOf, clueAt, freshBinding, rangeMask, staleChecking } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -122,7 +124,7 @@ export function ray(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RayBinding> |
           if (b.made[0] !== _m10_0 || b.made[1] !== _m11_1) {
             if (!((v_u === ahead(sp, b, v_s)))) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             freshBinding("ray", [(v_s === cl.laser.at[v_k]), (v_u === ahead(sp, b, v_s)), (v_u !== -1), ((v_d === 1) || (v_d === 2)), (v_r === beam(sp, b, v_s, v_u, v_d)), ((v_r !== -1) && (v_r !== clueAt(cl.laser, v_s)))], ["s =", "u =", "where of u", "d in", "r =", "where of r"]);
           }
           facts.length = 0;

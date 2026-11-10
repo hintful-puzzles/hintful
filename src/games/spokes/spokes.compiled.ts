@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, edgeGroups, freshBinding, keptStore, rangeMask, sameSet, setOf, staleChecking, stamps, throughWhere, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -200,7 +202,7 @@ export function saturation(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Satura
       const v_U = ways(b, sp, cl, v_c);
       const _h16 = v_U.length;
       if (!(((v_n < 0) || ((v_n > 0) && (_h16 <= v_n))))) break L15;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g17 = 0;
         G18: {
           const _a19 = sp.adj8[v_c];
@@ -308,7 +310,7 @@ export function twoOnes(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TwoOnesBi
           _c44 = _c43;
         }
         if (!(_c44)) break L30;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _g45 = 0;
           G46: {
             const _a47 = sp.cells;
@@ -428,7 +430,7 @@ export function exhaustion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Exhaus
       const v_U = _g40;
       const _h63 = v_U.length;
       if (!((_h63 > 0))) break L62;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c68: boolean = (clueAt(cl.number, v_c) !== -1);
         if (_c68) {
           let _g64 = 0;
@@ -910,7 +912,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
         _c343 = _c342;
       }
       if (!(_c343)) break L172;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c348: boolean = !((b.grid[sp.edgeOf(v_a, v_b)] !== 0));
         if (_c348) {
           let _g344 = 0;
@@ -1756,7 +1758,7 @@ export function spareBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Spare
             }
             if (!(((_g368 < takes(sp, cl, v_c)) && (v_U.length === ((takes(sp, cl, v_c) - _g368) + 1))))) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _g372 = 0;
             G373: {
               const _a374 = sp.adj8[v_c];

@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE_EDGE, before, clueAt, edgeGroups, freshBinding, keptStore, linkedSum, linkedWith, pointGroups, rangeMask, sameSet, slash, staleChecking, through, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -145,7 +147,7 @@ export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding>
       }
     }
     const v_left = (_h15 - _g22);
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       const _g26: number[] = [];
       G27: {
         const _a30 = sp.pointCells[v_k];
@@ -260,7 +262,7 @@ export function loop(b: Marks, sp: GridSpace, fire: Fire<LoopBinding> | null): n
       if (b.made[0] !== _m36_0) {
         if (!(!((b.grid[v_c] !== 0)))) { continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _q19 = false;
         Q20: {
           const _a21 = sp.cellPoints[v_c];
@@ -415,7 +417,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
             }
             if (!(sameSet(v_P, _g85))) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _g91: number[] = [];
             G92: {
               const _a95 = sp.edges;
@@ -621,7 +623,7 @@ export function share(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ShareBindin
                 }
                 if (!(sameSet(v_P, _g91))) { continue R1; }
               }
-              if (import.meta.env.DEV && staleChecking) {
+              if (DEV && staleChecking) {
                 const _g97: number[] = [];
                 G98: {
                   const _a101 = sp.edges;
@@ -742,7 +744,7 @@ export function deadEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DeadEndBi
       if (b.made[0] !== _m50_0) {
         if (!(!((b.grid[v_c] !== 0)))) { continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c29: boolean = !((b.grid[v_c] !== 0));
         if (_c29) {
           let _q22 = false;
@@ -882,7 +884,7 @@ export function same(b: Marks, sp: GridSpace, fire: Fire<SameBinding> | null): n
         if (!(sameSet(v_A, _g23))) { return fired; }
         if (!(!((b.grid[v_c] !== 0)))) { continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g29: number[] = [];
         G30: {
           const _a33 = sp.edges;
@@ -934,7 +936,7 @@ export function drawn(b: Marks, sp: GridSpace, v_c: number, fire: Fire<DrawnBind
     const v_S = (_k8[v_e] ?? side(sp, v_e));
     for (let v_i = 1; v_i <= 2; v_i++) {
       if (!((_h9 !== slash(sp, v_c, (v_S[(v_i - 1)] ?? -1))))) continue;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("drawn", [(sp.cells.includes(v_c)), (b.grid[v_c] !== 0), (sp.adj4[v_c].includes(v_a)), (v_e === sp.adj4Edges[v_c][_i7]), sameSet(v_S, side(sp, v_e)), ((1 <= v_i) && (v_i <= 2)), ((b.grid[v_c] || -1) !== slash(sp, v_c, (v_S[(v_i - 1)] ?? -1)))], ["c in", "where of c", "a in", "e =", "S =", "i in", "where of i"]);
       }
       facts.length = 0;
@@ -982,7 +984,7 @@ export function one(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneBinding> |
         const v_e = sp.edgeOf(v_b, v_a);
         for (let v_i = 1; v_i <= 2; v_i++) {
           if (!((((_k16[v_e] ?? side(sp, v_e))[(v_i - 1)] ?? -1) === v_k))) continue;
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             freshBinding("one", [(sp.points.includes(v_k)), (clueAt(cl.n, v_k) === 1), (sp.pointCells[v_k].includes(v_a)), (before(v_a, sp.pointCells[v_k]).includes(v_b)), (sp.adj4[v_a].includes(v_b)), (v_e === sp.edgeOf(v_b, v_a)), ((1 <= v_i) && (v_i <= 2)), ((side(sp, v_e)[(v_i - 1)] ?? -1) === v_k)], ["k in", "where of k", "a in", "b in", "where of b", "e =", "i in", "where of i"]);
           }
           facts.length = 0;
@@ -1032,7 +1034,7 @@ export function three(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ThreeBindin
         const v_e = sp.edgeOf(v_b, v_a);
         for (let v_i = 1; v_i <= 2; v_i++) {
           if (!((((_k16[v_e] ?? side(sp, v_e))[(v_i - 1)] ?? -1) !== v_k))) continue;
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             freshBinding("three", [(sp.points.includes(v_k)), (clueAt(cl.n, v_k) === 3), (sp.pointCells[v_k].includes(v_a)), (before(v_a, sp.pointCells[v_k]).includes(v_b)), (sp.adj4[v_a].includes(v_b)), (v_e === sp.edgeOf(v_b, v_a)), ((1 <= v_i) && (v_i <= 2)), ((side(sp, v_e)[(v_i - 1)] ?? -1) !== v_k)], ["k in", "where of k", "a in", "b in", "where of b", "e =", "i in", "where of i"]);
           }
           facts.length = 0;
@@ -1112,7 +1114,7 @@ export function two(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TwoBinding> |
                   if (!((b.edgeCand(v_e) !== ((1 << 3))))) { continue R3; }
                   if (!((b.edgeCand(v_f) !== ((1 << 1) | (1 << 2) | (1 << 3))))) { continue R3; }
                 }
-                if (import.meta.env.DEV && staleChecking) {
+                if (DEV && staleChecking) {
                   const _g35: number[] = [];
                   G36: {
                     const _a39 = sp.pointCells[v_k];

@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, edgeGroups, freshBinding, keptEdgeGroups, rangeMask, sameSet, staleChecking, stamps, through } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -266,7 +268,7 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
               }
               if (!(_c82)) { continue R2; }
             }
-            if (import.meta.env.DEV && staleChecking) {
+            if (DEV && staleChecking) {
               const _g83: number[] = [];
               G84: {
                 const _a87 = sp.edges;
@@ -417,7 +419,7 @@ export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBindi
           const _now35 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_b);
           if (!(_now35 === _eg25.of(v_b) || sameSet(_now35, _eg25.of(v_b)))) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g36: number[] = [];
           G37: {
             const _a40 = sp.edges;
@@ -539,7 +541,7 @@ export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBi
         const _now43 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_c);
         if (!(_now43 === _eg28.of(v_c) || sameSet(_now43, _eg28.of(v_c)))) { continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g44: number[] = [];
         G45: {
           const _a48 = sp.edges;

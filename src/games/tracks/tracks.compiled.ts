@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE_EDGE, clueAt, cutEdges, edgeGroups, freshBinding, keptEdgeGroups, keptStore, minus, rangeMask, sameSet, setOf, staleChecking, step, through, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -261,7 +263,7 @@ export function oneWayIn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneWayIn
       _c78 = ((_g42.length + (_g73 + (_k68[v_c] ?? exits(sp, cl, v_c)))) < 2);
     }
     if (!(_c78)) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       let _c115: boolean = !(!(((b.edgeCand(v_c) >> 1) & 1) !== 0));
       if (_c115) {
         const _g79: number[] = [];
@@ -437,7 +439,7 @@ export function bothSidesLeft(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Bot
         _c98 = ((_h93 + (_g94 + (_k57[v_c] ?? exits(sp, cl, v_c)))) <= 2);
       }
       if (!(_c98)) break L92;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c103: boolean = !(((b.edgeCand(v_c) >> 2) & 1) !== 0);
         if (!_c103) {
           let _g99 = 0;
@@ -603,7 +605,7 @@ export function clueFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueFull
       const v_O = _g22;
       const _h41 = v_O.length;
       if (!(((_h41 > 0) && (laidMarked(b, sp, cl, cands, v_L) >= _h42)))) break L40;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g43: number[] = [];
         G44: {
           const _a52 = sp.lineCells[v_L];
@@ -714,7 +716,7 @@ export function clueExact(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueExa
         _c52 = ((sp.lineCells[v_L].length - _g47) <= _h51);
       }
       if (!(_c52)) break L45;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g53: number[] = [];
         G54: {
           const _a62 = sp.lineCells[v_L];
@@ -897,7 +899,7 @@ export function closeLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CloseLo
         const _now77 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e]);
         if (!(_now77 === _eg75.of(sp.edgeEnds[2 * v_e]) || sameSet(_now77, _eg75.of(sp.edgeEnds[2 * v_e])))) { continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g78: number[] = [];
         G79: {
           const _a82 = sp.edges;
@@ -1157,7 +1159,7 @@ export function strand(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StrandBind
         const _now110 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e + 1]);
         if (!(_now110 === _eg91.of(sp.edgeEnds[2 * v_e + 1]) || sameSet(_now110, _eg91.of(sp.edgeEnds[2 * v_e + 1])))) { continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g111: number[] = [];
         G112: {
           const _a115 = sp.edges;
@@ -1468,7 +1470,7 @@ export function finishEarly(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Finis
         const _now109 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e + 1]);
         if (!(_now109 === _eg90.of(sp.edgeEnds[2 * v_e + 1]) || sameSet(_now109, _eg90.of(sp.edgeEnds[2 * v_e + 1])))) { continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g110: number[] = [];
         G111: {
           const _a114 = sp.edges;
@@ -1740,7 +1742,7 @@ export function looseEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LooseEnd
         }
         const v_Q = _g119;
         const _h180 = v_Q.length;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g125: number[] = [];
           G126: {
             const _a133 = sp.lineCells[v_L];
@@ -2009,7 +2011,7 @@ export function sharedFate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shared
           }
           if (!((_g115.includes(v_p)))) { continue R2; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g131: number[] = [];
           G132: {
             const _a140 = sp.lineCells[v_L];
@@ -2274,7 +2276,7 @@ export function sharedFateEmpties(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire
           }
           if (!((_g127.includes(v_p)))) { continue R2; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _g143 = 0;
           G144: {
             const _a145 = sp.lineCells[v_L];
@@ -2518,7 +2520,7 @@ export function parity(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ParityBind
       }
       if (!(sameSet(v_O, _g90))) { return fired; }
     }
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       const _g124: number[] = [];
       G125: {
         const _a142 = sp.edges;

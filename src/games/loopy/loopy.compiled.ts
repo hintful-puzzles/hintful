@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, RELATE, STRIKE_EDGE, clueAt, edgeGroups, freshBinding, keptEdgeGroups, keptStore, least, minus, popcount, rangeMask, sameSet, setOf, staleChecking, through, type Footprint, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -242,7 +244,7 @@ export function deadEnd(b: Marks, sp: GridSpace, fire: Fire<DeadEndBinding> | nu
       _c22 = (_g18 === 1);
     }
     if (!(_c22)) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       let _g23 = 0;
       G24: {
         const _a25 = sp.cellEdges[v_c];
@@ -332,7 +334,7 @@ export function lineContinues(b: Marks, sp: GridSpace, fire: Fire<LineContinuesB
         }
       }
       if (!(((_g19 === 1) && (v_o <= 1)))) break L18;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g23 = 0;
         G24: {
           const _a25 = sp.cellEdges[v_c];
@@ -431,7 +433,7 @@ export function dotFull(b: Marks, sp: GridSpace, fire: Fire<DotFullBinding> | nu
         _c26 = _c25;
       }
       if (!(_c26)) break L20;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g27 = 0;
         G28: {
           const _a29 = sp.cellEdges[v_c];
@@ -540,7 +542,7 @@ export function clueFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueFull
         _c27 = _c26;
       }
       if (!(_c27)) break L21;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g28 = 0;
         G29: {
           const _a30 = sp.faceEdges[v_f];
@@ -643,7 +645,7 @@ export function clueStarved(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueS
     L23: {
       const v_o = _g19;
       if (!(((v_n > 0) && (v_o <= v_n)))) break L23;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g24 = 0;
         G25: {
           const _a26 = sp.faceEdges[v_f];
@@ -834,7 +836,7 @@ export function clueBlockedPair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<C
         }
         if (!(_c79)) { if (_visit !== null) _visit[v_f] = 1; continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c88: boolean = (clueAt(cl.number, v_f) !== -1);
         if (_c88) {
           let _g80 = 0;
@@ -1068,7 +1070,7 @@ export function clueOneShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Clue
         }
         if (!(_c71)) { if (_visit !== null) _visit[v_f] = 1; continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c80: boolean = (clueAt(cl.number, v_f) !== -1);
         if (_c80) {
           let _g72 = 0;
@@ -1255,7 +1257,7 @@ export function earlyLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyLo
         }
         if (!(sameSet(v_L, _g57))) { return fired; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g63: number[] = [];
         G64: {
           const _a67 = sp.edges;
@@ -1411,7 +1413,7 @@ export function closed(b: Marks, sp: GridSpace, fire: Fire<ClosedBinding> | null
       _c54 = _q48;
     }
     if (!(_c54)) break L33;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       const _g55: number[] = [];
       G56: {
         const _a59 = sp.edges;
@@ -1531,7 +1533,7 @@ export function related(b: Marks, sp: GridSpace, fire: Fire<RelatedBinding> | nu
         if (!(!((b.grid[v_e] !== 0)))) { continue R1; }
         if (!((b.relatedOf(v_e).includes(v_g)))) { continue R2; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("related", [(sp.edges.includes(v_e)), !((b.grid[v_e] !== 0)), (b.relatedOf(v_e).includes(v_g)), (b.grid[v_g] !== 0)], ["e in", "where of e", "g in", "where of g"]);
       }
       facts.length = 0;
@@ -1623,7 +1625,7 @@ export function cornerAtDot(b: Marks, sp: GridSpace, fire: Fire<CornerAtDotBindi
         }
         if (!((_g27 === 1))) { if (_visit !== null) _visit[v_c] = 1; continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g31 = 0;
         G32: {
           const _a33 = sp.cellEdges[v_c];
@@ -1703,7 +1705,7 @@ export function cornerOther(b: Marks, sp: GridSpace, fire: Fire<CornerOtherBindi
         if (b.made[2] !== _m15_2) {
           if (!((b.edgeCand(v_a) !== ((1 << 0) | (1 << 1) | (1 << 2))))) { if (_visit !== null) _visit[v_a] = 1; continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           freshBinding("cornerOther", [(sp.angles.includes(v_a)), (b.edgeCand(v_a) !== ((1 << 0) | (1 << 1) | (1 << 2))), (sp.angleEdges[v_a].includes(v_e)), (sp.angleEdges[v_a].includes(v_g)), ((((v_g !== v_e) && (b.grid[v_e] !== 0)) && !((b.grid[v_g] !== 0))) && ((((b.grid[v_e] || -1) === 1) && !(((b.edgeCand(v_a) >> 2) & 1) !== 0)) || (((b.grid[v_e] || -1) === 2) && !(((b.edgeCand(v_a) >> 0) & 1) !== 0))))], ["a in", "where of a", "e in", "g in", "where of g"]);
         }
         facts.length = 0;
@@ -1783,7 +1785,7 @@ export function cornerBoth(b: Marks, sp: GridSpace, fire: Fire<CornerBothBinding
         _c35 = (_g31 === 2);
       }
       if (!(_c35)) break L26;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c40: boolean = (b.edgeCand(v_a) !== ((1 << 0) | (1 << 1) | (1 << 2)));
         if (_c40) {
           let _q36 = true;
@@ -2139,7 +2141,7 @@ export function clueBound(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBou
           }
           if (!(_c149)) { if (_visit !== null) _visit[v_f] = 1; continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _c158: boolean = (clueAt(cl.number, v_f) !== -1);
           if (_c158) {
             let _q150 = false;
@@ -2655,7 +2657,7 @@ export function cornerFromClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Co
             }
             if (!(_c174)) { if (_visit !== null) _visit[v_f] = 1; continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _g175 = 0;
             G176: {
               const _a177 = sp.faceEdges[v_f];
@@ -2963,7 +2965,7 @@ export function cornerAcross(b: Marks, sp: GridSpace, fire: Fire<CornerAcrossBin
         }
         if (!(_c34)) { if (_visit !== null) _visit[v_a] = 1; continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c39: boolean = !(((b.edgeCand(v_a) >> 0) & 1) !== 0);
         if (_c39) {
           let _q35 = true;
@@ -3071,7 +3073,7 @@ export function cornerExit(b: Marks, sp: GridSpace, fire: Fire<CornerExitBinding
         _c35 = (_g31 === 3);
       }
       if (!(_c35)) break L26;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c40: boolean = (b.edgeCand(v_a) === ((1 << 1)));
         if (_c40) {
           let _q36 = true;
@@ -3277,7 +3279,7 @@ export function cornerOppositeExit(b: Marks, sp: GridSpace, fire: Fire<CornerOpp
           }
           if (!(_c75)) { if (_visit !== null) _visit[v_a] = 1; continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _c80: boolean = (b.edgeCand(v_a) === ((1 << 1)));
           if (_c80) {
             let _q76 = true;
@@ -3460,7 +3462,7 @@ export function matchingPair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Matc
             if (!((v_o === _g46))) { if (_visit !== null) _visit[v_f] = 1; continue R1; }
             if (!(!((b.grid[v_e] !== 0)))) { if (_visit !== null) _visit[v_f] = 1; continue R2; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _g50 = 0;
             G51: {
               const _a52 = sp.faceEdges[v_f];
@@ -3577,7 +3579,7 @@ export function pairAtClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairAt
       L34: {
         const v_g = (v_O[1] ?? -1);
         if (!((b.pairOf(v_e, v_g) === _h35))) break L34;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _c40: boolean = (clueAt(cl.number, v_f) !== -1);
           if (_c40) {
             let _g36 = 0;
@@ -3718,7 +3720,7 @@ export function parityClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Parity
             }
             if (!(sameSet(v_O, _g47))) { if (_visit !== null) _visit[v_f] = 1; continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _c57: boolean = (clueAt(cl.number, v_f) !== -1);
             if (_c57) {
               let _g53 = 0;
@@ -3859,7 +3861,7 @@ export function linkClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LinkClue
               }
               if (!(sameSet(v_O, _g50))) { if (_visit !== null) _visit[v_f] = 1; continue R1; }
             }
-            if (import.meta.env.DEV && staleChecking) {
+            if (DEV && staleChecking) {
               let _c60: boolean = (clueAt(cl.number, v_f) !== -1);
               if (_c60) {
                 let _g56 = 0;
@@ -3945,7 +3947,7 @@ export function pairFromCorner(b: Marks, sp: GridSpace, fire: Fire<PairFromCorne
     L18: {
       const v_g = (sp.angleEdges[v_a][1] ?? -1);
       if (!((b.pairOf(v_e, v_g) === _h19))) break L18;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c24: boolean = (b.edgeCand(v_a) === ((1 << 1)));
         if (_c24) {
           let _q20 = true;
@@ -4020,7 +4022,7 @@ export function cornerFromPair(b: Marks, sp: GridSpace, fire: Fire<CornerFromPai
     L18: {
       const v_g = (sp.angleEdges[v_a][1] ?? -1);
       if (!((b.pairOf(v_e, v_g) === _h19))) break L18;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c24: boolean = (b.edgeCand(v_a) !== ((1 << 1)));
         if (_c24) {
           let _q20 = true;
@@ -4098,7 +4100,7 @@ export function pairAtDot(b: Marks, sp: GridSpace, fire: Fire<PairAtDotBinding> 
       L22: {
         const v_g = (v_O[1] ?? -1);
         if (!((b.pairOf(v_e, v_g) === _h23))) break L22;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g24: number[] = [];
           G25: {
             const _a28 = sp.cellEdges[v_c];
@@ -4197,7 +4199,7 @@ export function parityDot(b: Marks, sp: GridSpace, fire: Fire<ParityDotBinding> 
             }
             if (!(sameSet(v_O, _g31))) { if (_visit !== null) _visit[v_c] = 1; continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _g37: number[] = [];
             G38: {
               const _a41 = sp.cellEdges[v_c];
@@ -4295,7 +4297,7 @@ export function linkDot(b: Marks, sp: GridSpace, fire: Fire<LinkDotBinding> | nu
               }
               if (!(sameSet(v_O, _g33))) { if (_visit !== null) _visit[v_c] = 1; continue R1; }
             }
-            if (import.meta.env.DEV && staleChecking) {
+            if (DEV && staleChecking) {
               const _g39: number[] = [];
               G40: {
                 const _a43 = sp.cellEdges[v_c];

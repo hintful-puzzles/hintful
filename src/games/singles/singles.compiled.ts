@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, cellsValued, clueAt, connected, cuts, freshBinding, rangeMask, sameSet, staleChecking } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -146,7 +148,7 @@ export function besideCovered(b: Marks, sp: GridSpace, fire: Fire<BesideCoveredB
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_c = _a3[_i4];
     if (!(((b.grid[v_c] || -1) === 1))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("besideCovered", [(sp.cells.includes(v_c)), ((b.grid[v_c] || -1) === 1)], ["c in", "where of c"]);
     }
     facts.length = 0;
@@ -190,7 +192,7 @@ export function sameLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SameLine
     if (!(((b.grid[v_c] || -1) === 2))) continue;
     const _h5 = clueAt(cl.number, v_c);
     const v_n = _h5;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("sameLine", [(sp.cells.includes(v_c)), ((b.grid[v_c] || -1) === 2), (v_n === clueAt(cl.number, v_c))], ["c in", "where of c", "n ="]);
     }
     facts.length = 0;
@@ -248,7 +250,7 @@ export function sandwich(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sandwich
         const v_e = (sp.lineCells[v_L][(_i9 + 2)] ?? -1);
         const _h11 = clueAt(cl.number, v_e);
         if (!(((v_e !== -1) && (_h11 === _h12)))) break L10;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           freshBinding("sandwich", [(sp.lines.includes(v_L)), (sp.lineCells[v_L].includes(v_c)), (v_e === (sp.lineCells[v_L][(_i9 + 2)] ?? -1)), ((v_e !== -1) && (clueAt(cl.number, v_e) === clueAt(cl.number, v_c)))], ["L in", "c in", "e =", "where of e"]);
         }
         facts.length = 0;
@@ -290,7 +292,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
         const v_q = (sp.lineCells[v_L][(_i9 + 1)] ?? -1);
         const _h11 = clueAt(cl.number, v_q);
         if (!(((v_q !== -1) && (_h11 === _h12)))) break L10;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           freshBinding("pair", [(sp.lines.includes(v_L)), (sp.lineCells[v_L].includes(v_c)), (v_q === (sp.lineCells[v_L][(_i9 + 1)] ?? -1)), ((v_q !== -1) && (clueAt(cl.number, v_q) === clueAt(cl.number, v_c)))], ["L in", "c in", "q =", "where of q"]);
         }
         facts.length = 0;
@@ -368,7 +370,7 @@ export function corner(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CornerBind
     const v_ns = _h18;
     const v_nt = _h19;
     const v_ni = _h20;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       const _t21 = sp.adj4[v_c];
       let _g22 = -1;
       let _n24 = 0;
@@ -461,7 +463,7 @@ export function boxedIn(b: Marks, sp: GridSpace, fire: Fire<BoxedInBinding> | nu
     }
     const v_F = _g11;
     const _h23 = v_F.length;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       const _g17: number[] = [];
       G18: {
         const _a21 = sp.adj4[v_c];
@@ -552,7 +554,7 @@ export function offset(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OffsetBind
             const v_b1 = _g28;
             const _h36 = clueAt(cl.number, v_b1);
             if (!((_h36 === v_m))) break L35;
-            if (import.meta.env.DEV && staleChecking) {
+            if (DEV && staleChecking) {
               let _g37 = -1;
               let _n39 = 0;
               G38: {
@@ -638,7 +640,7 @@ export function split(b: Marks, sp: GridSpace, fire: Fire<SplitBinding> | null):
       }
       if (!(sameSet(v_K, cuts(sp, _g17)))) { return fired; }
     }
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       const _g23: number[] = [];
       G24: {
         const _a27 = sp.cells;

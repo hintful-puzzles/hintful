@@ -2,6 +2,8 @@
 
 import { type ListClues, type Fire, type GridSpace, type Marks, PLACE, freshBinding, listAt, rangeMask, runFits, runsOf, sameList, sameSet, staleChecking, stretch } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -185,7 +187,7 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
           }
           if (!(sameSet(v_O, _g65))) { continue R2; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g89: number[] = [];
           G90: {
             const _a102 = sp.lineCells[v_L];

@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, type Partition, STRIKE, clueAt, freshBinding, rangeMask, sameSet, staleChecking, union } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -335,7 +337,7 @@ export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasy
       }
     }
     const v_D = _g126;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       let _g253 = 0;
       G254: {
         const _f315 = new Int32Array(sp.cells.length).fill(-1);
@@ -556,7 +558,7 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
     const _h63 = (_h62 === -1);
     const v_K = cl.cage.cells[v_r];
     let _g13 = -1;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("cage", [(cl.cage.parts.includes(v_r)), sameSet(v_K, cl.cage.cells[v_r])], ["r in", "K ="]);
     }
     facts.length = 0;
@@ -768,7 +770,7 @@ export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLine
     const _a8 = _h7;
     for (let _i9 = 0; _i9 < _a8.length; _i9++) {
       const v_L = _a8[_i9];
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("cageLine", [(cl.cage.parts.includes(v_r)), sameSet(v_K, cl.cage.cells[v_r]), (union(sp.cols, sp.rows).includes(v_L))], ["r in", "K =", "L in"]);
       }
       facts.length = 0;

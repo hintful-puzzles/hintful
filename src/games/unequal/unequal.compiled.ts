@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, freshBinding, rangeMask, staleChecking } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -103,7 +105,7 @@ export function sign(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SignBinding>
     const _t3 = cl.greater.at[v_k];
     const _t4 = cl.greater.v[v_k];
     const v_small = (sp.edgeEnds[2 * _t3] === _t4 ? sp.edgeEnds[2 * _t3 + 1] : sp.edgeEnds[2 * _t3]);
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       const _t5 = cl.greater.at[v_k];
       const _t6 = cl.greater.v[v_k];
       freshBinding("sign", [(v_big === cl.greater.v[v_k]), (v_small === (sp.edgeEnds[2 * _t5] === _t6 ? sp.edgeEnds[2 * _t5 + 1] : sp.edgeEnds[2 * _t5]))], ["big =", "small ="]);

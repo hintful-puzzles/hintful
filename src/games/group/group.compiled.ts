@@ -2,6 +2,8 @@
 
 import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, freshBinding, rangeMask, staleChecking } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** The units no value repeats in, in the description's order: the
  * engine builds the space from them. */
 export const units: readonly string[] = ["rows","cols"];
@@ -139,7 +141,7 @@ export function associativity(b: Marks, sp: GridSpace, fire: Fire<AssociativityB
               if (b.made[0] !== _m26_0) {
                 if (!((b.grid[v_p] !== 0))) { continue R2; }
               }
-              if (import.meta.env.DEV && staleChecking) {
+              if (DEV && staleChecking) {
                 const _t19 = (b.grid[v_p] || -1);
                 const _t20 = (b.grid[v_q] || -1);
                 freshBinding("associativity", [(((b.domain >> v_a) & 1) !== 0), (((b.domain >> v_b) & 1) !== 0), (v_p === ((v_a - 1) * sp.w + (v_b - 1))), (b.grid[v_p] !== 0), (((b.domain >> v_c) & 1) !== 0), (v_q === ((v_b - 1) * sp.w + (v_c - 1))), (b.grid[v_q] !== 0), (v_l === ((_t19 - 1) * sp.w + (v_c - 1))), (v_r === ((v_a - 1) * sp.w + (_t20 - 1))), ((b.grid[v_l] !== 0) !== (b.grid[v_r] !== 0))], ["a in", "b in", "p =", "where of p", "c in", "q =", "where of q", "l =", "r =", "where of r"]);
@@ -225,7 +227,7 @@ export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding> | 
         }
         if (!((v_w0 === (_g23.length > 0 ? _g23[0] : -1)))) { return fired; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g29: number[] = [];
         G30: {
           const _a33 = sp.cells;
@@ -301,7 +303,7 @@ export function notIdentity(b: Marks, sp: GridSpace, fire: Fire<NotIdentityBindi
     L15: {
       const v_o = _g7;
       if (!((v_o !== -1))) break L15;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g16 = -1;
         G17: {
           for (let _m18 = b.domain; _m18 !== 0; _m18 &= _m18 - 1) {

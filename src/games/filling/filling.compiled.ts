@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, addOnce, cellsValued, edgeGroups, freshBinding, keptEdgeGroups, keptStore, popcount, rangeMask, reaches, sameSet, staleChecking, stamps, through, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -202,7 +204,7 @@ export function mustGrow(b: Marks, sp: GridSpace, fire: Fire<MustGrowBinding> | 
           const _now71 = keptEdgeGroups(sp, b, null, edgeHolds1, v_d, false).of(v_c);
           if (!(_now71 === _eg63.of(v_c) || sameSet(_now71, _eg63.of(v_c)))) { continue R2; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g72: number[] = [];
           G73: {
             const _a76 = sp.edges;
@@ -396,7 +398,7 @@ export function onlyWay(b: Marks, sp: GridSpace, fire: Fire<OnlyWayBinding> | nu
           }
           if (!(sameSet(v_O, _g106))) { return fired; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g112: number[] = [];
           G113: {
             const _a116 = sp.edges;
@@ -554,7 +556,7 @@ export function tooBig(b: Marks, sp: GridSpace, fire: Fire<TooBigBinding> | null
         if (!(!((b.grid[v_c] !== 0)))) { continue R1; }
         if (!((((b.cands[v_c] >> v_d) & 1) !== 0))) { continue R2; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g53: number[] = [];
         G54: {
           const _a57 = sp.edges;
@@ -637,7 +639,7 @@ export function noRoom(b: Marks, sp: GridSpace, fire: Fire<NoRoomBinding> | null
         const _now26 = keptEdgeGroups(sp, b, null, edgeHolds1, v_d, false).of(v_c);
         if (!(_now26 === _eg24.of(v_c) || sameSet(_now26, _eg24.of(v_c)))) { continue R2; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g27: number[] = [];
         G28: {
           const _a31 = sp.edges;
@@ -739,7 +741,7 @@ export function tooFar(b: Marks, sp: GridSpace, fire: Fire<TooFarBinding> | null
         if (!(sameSet(v_O, _g40))) { return fired; }
         if (!(sameSet(v_F, fresh(b, sp, v_d)))) { continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g46: number[] = [];
         G47: {
           const _a50 = sp.edges;
@@ -799,7 +801,7 @@ export function onlyNumber(b: Marks, sp: GridSpace, fire: Fire<OnlyNumberBinding
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_c = _a3[_i4];
     if (!((!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) <= 1)))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("onlyNumber", [(sp.cells.includes(v_c)), (!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) <= 1))], ["c in", "where of c"]);
     }
     facts.length = 0;

@@ -2,6 +2,8 @@
 
 import { type Fire, type GridSpace, type Marks, type Partition, PLACE, STRIKE, freshBinding, least, popcount, rangeMask, sameSet, staleChecking } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -144,7 +146,7 @@ export function cull(b: Marks, sp: GridSpace, cl: Dealt, v_c: number, fire: Fire
     if (b.made[0] !== _m14_0) {
       if (!((v_n === (b.grid[v_c] || -1)))) { return cull(b, sp, cl, v_c, fire) | fired; }
     }
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("cull", [(sp.cells.includes(v_c)), (b.grid[v_c] !== 0), (v_n === (b.grid[v_c] || -1)), (sp.cells.includes(v_p)), ((v_p !== v_c) && ((cl.area.of[v_p] === cl.area.of[v_c]) || ((v_c !== v_p) && (((cl.mode === 0) && (((((v_c / sp.w) | 0) === ((v_p / sp.w) | 0)) && (Math.abs(((v_c % sp.w) - (v_p % sp.w))) <= v_n)) || (((v_c % sp.w) === (v_p % sp.w)) && (Math.abs((((v_c / sp.w) | 0) - ((v_p / sp.w) | 0))) <= v_n)))) || (((cl.mode === 1) && (Math.abs(((v_c % sp.w) - (v_p % sp.w))) <= 1)) && (Math.abs((((v_c / sp.w) | 0) - ((v_p / sp.w) | 0))) <= 1))))))], ["c in", "where of c", "n =", "p in", "where of p"]);
     }
     facts.length = 0;
@@ -178,7 +180,7 @@ export function lone(b: Marks, sp: GridSpace, fire: Fire<LoneBinding> | null): n
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_c = _a3[_i4];
     if (!((!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2)))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("lone", [(sp.cells.includes(v_c)), (!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2))], ["c in", "where of c"]);
     }
     facts.length = 0;
@@ -241,7 +243,7 @@ export function areaSingle(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<AreaS
       L24: {
         const v_k = _g20;
         if (!((v_k < 2))) break L24;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _q25 = false;
           Q26: {
             const _a27 = cl.area.cells[v_r];
@@ -344,7 +346,7 @@ export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBind
         const v_H = _g23;
         const _h31 = v_H.length;
         if (!((_h31 > 0))) break L30;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _q32 = false;
           Q33: {
             const _a34 = cl.area.cells[v_r];

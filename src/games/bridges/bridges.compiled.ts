@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, addOnce, clueAt, edgeGroups, freshBinding, keptStore, least, minus, rangeMask, ray, sameSet, setOf, staleChecking, stamps, through, throughWhere, type Kept, union } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -277,7 +279,7 @@ export function exactSpace(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExactS
       L17: {
         const v_R = _g13;
         if (!(((v_n < 0) || (v_R <= v_n)))) break L17;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _g18 = 0;
           G19: {
             const _a20 = sp.adj4[v_c];
@@ -382,7 +384,7 @@ export function everyNeighbor(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Eve
       const v_A = _g13;
       const _h20 = v_A.length;
       if (!((_h12 > ((_h20 - 1) * cl.maxb)))) break L19;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g21: number[] = [];
         G22: {
           const _a25 = sp.adj4[v_c];
@@ -494,7 +496,7 @@ export function needsThisWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Need
         }
         if (!((v_V === _g18))) { continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g22 = 0;
         G23: {
           const _a24 = sp.adj4[v_c];
@@ -648,7 +650,7 @@ export function sealing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SealingBi
           if (b.made[0] !== _m89_0 || b.made[1] !== _m90_1) {
             if (!(((clueAt(cl.number, v_c) !== -1) && (needMarked(b, sp, cl, cands, v_c) === 1)))) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _g62 = 0;
             G63: {
               const _a64 = sp.cells;
@@ -1007,7 +1009,7 @@ export function tooMany(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooManyBi
           if (b.made[0] !== _m268_0 || b.made[1] !== _m269_1) {
             if (!(((clueAt(cl.number, v_c) !== -1) && (needMarked(b, sp, cl, cands, v_c) > 0)))) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _g186 = 0;
             G187: {
               const _a188 = sp.cells;
@@ -1391,7 +1393,7 @@ export function mustReachOut(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Must
         if (b.made[0] !== _m142_0 || b.made[1] !== _m143_1) {
           if (!(((clueAt(cl.number, v_c) !== -1) && (needMarked(b, sp, cl, cands, v_c) > 0)))) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _g98 = 0;
           G99: {
             const _a100 = sp.cells;
@@ -1582,7 +1584,7 @@ export function loop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LoopBinding>
           }
           if (!(sameSet(v_L, _g25))) { return fired; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g31: number[] = [];
           G32: {
             const _a35 = sp.edges;

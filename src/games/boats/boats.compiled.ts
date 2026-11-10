@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, cellsValued, clueAt, cluesValued, freshBinding, keptStore, rangeMask, sameSet, setOf, staleChecking, stamps, step, stretch, type Kept, union } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -407,7 +409,7 @@ export function given(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<GivenBindin
     L7: {
       const v_v = _h6;
       if (!((v_v >= 2))) break L7;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("given", [(sp.cells.includes(v_c)), (v_v === clueAt(cl.seg, v_c)), (v_v >= 2)], ["c in", "v =", "where of v"]);
       }
       facts.length = 0;
@@ -642,7 +644,7 @@ export function near(b: Marks, sp: GridSpace, fire: Fire<NearBinding> | null): n
       const v_D = _g12;
       const _h19 = v_D.length;
       if (!((_h19 > 0))) break L18;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g20: number[] = [];
         G21: {
           const _a24 = sp.adj8[v_c];
@@ -695,7 +697,7 @@ export function touch(b: Marks, sp: GridSpace, v_c: number, fire: Fire<TouchBind
   for (let _i6 = 0; _i6 < _a5.length; _i6++) {
     const v_d = _a5[_i6];
     if (!((!(sp.adj4[v_c].includes(v_d)) && !((b.grid[v_d] !== 0))))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("touch", [(sp.cells.includes(v_c)), ((b.grid[v_c] || -1) === 1), (sp.adj8[v_c].includes(v_d)), (!(sp.adj4[v_c].includes(v_d)) && !((b.grid[v_d] !== 0)))], ["c in", "where of c", "d in", "where of d"]);
     }
     facts.length = 0;
@@ -757,7 +759,7 @@ export function lineShips(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineShi
           }
         }
         const v_left = (v_v - _g31);
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _t35 = sp.lineCells[v_L];
           const _g36: number[] = [];
           G37: {
@@ -857,7 +859,7 @@ export function total(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TotalBindin
       }
     }
     const v_left = (_g25 - _g28);
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       const _t32 = sp.cells;
       const _g33: number[] = [];
       G34: {
@@ -951,7 +953,7 @@ export function center(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CenterBind
           _c16 = ((_t15 === -1) || ((b.grid[_t15] || -1) === 2));
         }
         if (!(_c16)) break L13;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _t17 = step(sp, v_c, v_a);
           let _c19: boolean = ((_t17 === -1) || ((b.grid[_t17] || -1) === 2));
           if (!_c19) {
@@ -1043,7 +1045,7 @@ export function extend(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExtendBind
       if (b.made[0] !== _m45_0 || b.made[1] !== _m46_1) {
         if (!((v_F === full(b, sp, cl, 1)))) { return fired; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c34: boolean = (v_F && ((b.grid[v_c] || -1) === 1));
         if (_c34) {
           let _q30 = false;
@@ -1141,7 +1143,7 @@ export function lineWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineWat
           }
         }
         const v_left = (v_v - _g31);
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _t35 = sp.lineCells[v_L];
           const _g36: number[] = [];
           G37: {
@@ -1234,7 +1236,7 @@ export function isolated(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Isolated
     if (b.made[0] !== _m20_0 || b.made[1] !== _m21_1) {
       if (!((v_F === full(b, sp, cl, 1)))) { return fired; }
     }
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       let _c19: boolean = (v_F && !((b.grid[v_c] !== 0)));
       if (_c19) {
         let _q15 = true;
@@ -1336,7 +1338,7 @@ export function grow(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<GrowBinding>
           if (b.made[0] !== _m87_0 || b.made[1] !== _m88_1) {
             if (!(((b.grid[v_c] || -1) === 1))) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _g61: number[] = [];
             G62: {
               const _a65 = sp.lineCells[v_L];
@@ -1515,7 +1517,7 @@ export function onlyFit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyFitBi
             }
             if (!((v_M === _g76))) { return fired; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _g79 = -1;
             G80: {
               for (let v_k = 0; v_k < cl.fleet.n; v_k++) {
@@ -1694,7 +1696,7 @@ export function centerRoom(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Center
             _c49 = ((v_v - _g41) < _g45);
           }
           if (!(_c49)) break L38;
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _g50: number[] = [];
             G51: {
               const _a54 = sp.adj4[v_c];
@@ -1828,7 +1830,7 @@ export function tooLong(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooLongBi
       }
       if (!((v_M === _g49))) { return fired; }
     }
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       let _g52 = -1;
       G53: {
         for (let v_k = 0; v_k < cl.fleet.n; v_k++) {
@@ -1932,7 +1934,7 @@ export function shortRun(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ShortRun
           const v_O = _g31;
           const _h38 = v_O.length;
           if (!(((_h38 === 1) && full(b, sp, cl, _h30)))) break L37;
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _g39: number[] = [];
             G40: {
               const _a43 = sp.lineCells[v_L];
@@ -2027,7 +2029,7 @@ export function hidden(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<HiddenBind
           }
         }
         const v_left = (v_v - _g31);
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _t35 = sp.lineCells[v_L];
           const _g36: number[] = [];
           G37: {
@@ -2239,7 +2241,7 @@ export function onlyRuns(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRuns
                 }
                 if (!((v_m === _g99))) { return fired; }
               }
-              if (import.meta.env.DEV && staleChecking) {
+              if (DEV && staleChecking) {
                 let _g102 = -1;
                 G103: {
                   for (let v_k = 0; v_k < cl.fleet.n; v_k++) {
@@ -2460,7 +2462,7 @@ export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBind
               }
               if (!((v_t === ((sp.lineCells[v_L].length - v_v) - _g50)))) { continue R1; }
             }
-            if (import.meta.env.DEV && staleChecking) {
+            if (DEV && staleChecking) {
               let _g54 = 0;
               G55: {
                 const _a56 = sp.lineCells[v_L];
@@ -2986,7 +2988,7 @@ export function lastWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastWat
             }
             if (!(_c613)) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _g614 = -1;
             G615: {
               for (let v_k = 0; v_k < cl.fleet.n; v_k++) {
@@ -3803,7 +3805,7 @@ export function lastShip(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastShip
             }
             if (!(_c618)) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _g619 = -1;
             G620: {
               for (let v_k = 0; v_k < cl.fleet.n; v_k++) {
@@ -4563,7 +4565,7 @@ export function centerTrial(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Cente
           _c567 = _c566;
         }
         if (!(_c567)) break L290;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _g568 = -1;
           G569: {
             for (let v_k = 0; v_k < cl.fleet.n; v_k++) {

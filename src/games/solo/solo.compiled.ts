@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, type Partition, PLACE, STRIKE, addOnce, cellsValued, clueAt, freshBinding, minus, nextOfSize, popcount, rangeMask, sameSet, staleChecking, stamps, union, valuesOf } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -176,7 +178,7 @@ export function boxSingle(b: Marks, sp: GridSpace, fire: Fire<BoxSingleBinding> 
           }
           if (!((v_placed === _g31))) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _g38 = 0;
           G39: {
             const _a42 = sp.lineCells[v_u];
@@ -273,7 +275,7 @@ export function cageSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSi
         }
       }
       const v_t = (_h24 - _g25);
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g29: number[] = [];
         G30: {
           const _a33 = cl.cage.cells[v_r];
@@ -449,7 +451,7 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
         }
       }
       const v_t = ((_h127 - _g128) - v_s);
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g132: number[] = [];
         G133: {
           const _a145 = cl.cage.parts;
@@ -656,7 +658,7 @@ export function cageMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageMi
     L30: {
       const v_t = (_h23 - _g24);
       if (!((v_t !== 0))) break L30;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g31: number[] = [];
         G32: {
           const _a35 = cl.cage.cells[v_r];
@@ -1052,7 +1054,7 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
               }
               if (!((v_t === ((clueAt(cl.total, _t230) - _g231) - v_s)))) { continue R1; }
             }
-            if (import.meta.env.DEV && staleChecking) {
+            if (DEV && staleChecking) {
               const _g235: number[] = [];
               G236: {
                 const _a248 = cl.cage.parts;
@@ -1301,7 +1303,7 @@ export function cageSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSums
     L30: {
       const v_t = (_h23 - _g24);
       if (!((v_t !== 0))) break L30;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g31: number[] = [];
         G32: {
           const _a35 = cl.cage.cells[v_r];
@@ -1723,7 +1725,7 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
               }
               if (!((v_t === ((clueAt(cl.total, _t230) - _g231) - v_s)))) { continue R1; }
             }
-            if (import.meta.env.DEV && staleChecking) {
+            if (DEV && staleChecking) {
               const _g235: number[] = [];
               G236: {
                 const _a248 = cl.cage.parts;
@@ -2034,7 +2036,7 @@ export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> 
           _c56 = _q52;
         }
         const v_first = _c56;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _q57 = false;
           Q58: {
             const _a59 = sp.lineCells[v_L];
@@ -2295,7 +2297,7 @@ export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | 
           }
           if (!((v_X0 === (rangeMask(0, (sp.w - 1)) & ~_g103)))) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g110: number[] = [];
           G111: {
             const _a118 = sp.rows;

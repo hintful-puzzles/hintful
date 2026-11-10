@@ -2,6 +2,8 @@
 
 import { type Fire, type GridSpace, type Marks, type Partition, PLACE, cellsValued, freshBinding, keptStore, minus, rangeMask, sameSet, setOf, staleChecking, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -155,7 +157,7 @@ export function around(b: Marks, sp: GridSpace, fire: Fire<AroundBinding> | null
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_c = _a3[_i4];
     if (!(((b.grid[v_c] || -1) === 1))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("around", [(sp.cells.includes(v_c)), ((b.grid[v_c] || -1) === 1)], ["c in", "where of c"]);
     }
     facts.length = 0;
@@ -226,7 +228,7 @@ export function fullLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FullLine
     L16: {
       const v_n = (cl.stars - _g12);
       if (!((v_n <= 0))) break L16;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _t17 = sp.lineCells[v_L];
         let _g18 = 0;
         G19: {
@@ -306,7 +308,7 @@ export function fullRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<FullR
     L16: {
       const v_n = (cl.stars - _g12);
       if (!((v_n <= 0))) break L16;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _t17 = cl.region.cells[v_r];
         let _g18 = 0;
         G19: {
@@ -399,7 +401,7 @@ export function exactLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExactLi
       const v_O = _g24;
       const _h31 = v_O.length;
       if (!(((v_n > 0) && (v_n >= _h31)))) break L30;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _t32 = sp.lineCells[v_L];
         let _g33 = 0;
         G34: {
@@ -492,7 +494,7 @@ export function exactRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<Exac
       const v_O = _g24;
       const _h31 = v_O.length;
       if (!(((v_n > 0) && (v_n >= _h31)))) break L30;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _t32 = cl.region.cells[v_r];
         let _g33 = 0;
         G34: {
@@ -740,7 +742,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
         L288: {
           const v_lines = _c287;
           if (!(((v_mi >= v_n) || (v_mr <= v_n)))) break L288;
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _g289 = 0;
             G290: {
               const _a291 = v_B;
@@ -1205,7 +1207,7 @@ export function neededLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Needed
             }
             if (!(sameSet(v_O, _g139))) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _t145 = sp.lineCells[v_L];
             let _g146 = 0;
             G147: {
@@ -1607,7 +1609,7 @@ export function neededRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Need
             }
             if (!(sameSet(v_O, _g139))) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _t145 = cl.region.cells[v_r];
             let _g146 = 0;
             G147: {
@@ -2069,7 +2071,7 @@ export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Crowd
           }
           if (!(sameSet(v_R, _g219))) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g225: number[] = [];
           G226: {
             const _a229 = sp.adj8[v_x];
@@ -2590,7 +2592,7 @@ export function crowdedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Cro
           }
           if (!(sameSet(v_R, _g218))) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g224: number[] = [];
           G225: {
             const _a228 = sp.adj8[v_x];
@@ -3028,7 +3030,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
           L292: {
             const v_lines = _c291;
             if (!(((v_mi >= v_n) || (v_mr <= v_n)))) break L292;
-            if (import.meta.env.DEV && staleChecking) {
+            if (DEV && staleChecking) {
               let _g293 = 0;
               G294: {
                 const _a295 = v_B;
@@ -3535,7 +3537,7 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
           if (!(!((b.grid[v_x] !== 0)))) { continue R1; }
           if (!(sameSet(v_R, ruled(b, sp, cl, v_x)))) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _c211: boolean = ((v_L === sp.rowOf[v_x]) || (v_L === sp.colOf[v_x]));
           if (!_c211) {
             let _q207 = false;
@@ -4028,7 +4030,7 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
           if (!(!((b.grid[v_x] !== 0)))) { continue R1; }
           if (!(sameSet(v_R, ruled(b, sp, cl, v_x)))) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _c210: boolean = (v_g === cl.region.of[v_x]);
           if (!_c210) {
             let _q206 = false;

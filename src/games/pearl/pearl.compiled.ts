@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, cluesValued, edgeGroups, freshBinding, keptEdgeGroups, keptStore, minus, rangeMask, sameSet, setOf, staleChecking, through, type Footprint, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -492,7 +494,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
           }
         }
         if (!(_q222)) break L221;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g226: number[] = [];
           G227: {
             const _a230 = sp.cellEdges[v_c];
@@ -872,7 +874,7 @@ export function blackPearl(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BlackP
       L89: {
         const v_B = ((((blackPearl_p68[v_e] >> 2) & 1) !== 0) || ((2 as number) === -1 && _y70 && !sp.cellEdges[v_c].includes(v_e)));
         if (!((!(v_A) || !(v_B)))) break L89;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _q90 = false;
           Q91: {
             const _f93 = new Int32Array(sp.edges.length).fill(-1);
@@ -1067,7 +1069,7 @@ export function blackRunsOn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Black
           }
         }
         if (!(!(_q16))) break L15;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _q20 = false;
           Q21: {
             const _a22 = sp.cellEdges[v_j];
@@ -1248,7 +1250,7 @@ export function blackCannotRunOn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<
           }
         }
         if (!(!(_q35))) break L34;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _q60 = false;
           Q61: {
             const _f63 = new Int32Array(sp.edges.length).fill(-1);
@@ -1603,7 +1605,7 @@ export function whiteCannotTurn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<W
           if (!(_c148)) { if (_visit !== null) _visit[v_c] = 1; continue R1; }
           if (!(((b.grid[v_e] || -1) !== 2))) { if (_visit !== null) _visit[v_c] = 1; continue R2; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _c153: boolean = (clueAt(cl.pearl, v_c) === 2);
           if (_c153) {
             let _q149 = false;
@@ -2250,7 +2252,7 @@ export function whiteTurnsOpposite(b: Marks, sp: GridSpace, cl: Dealt, fire: Fir
               if (b.made[0] !== _m523_0) {
                 if (!(((b.grid[v_e] || -1) === 1))) { if (_visit !== null) _visit[v_c] = 1; continue R2; }
               }
-              if (import.meta.env.DEV && staleChecking) {
+              if (DEV && staleChecking) {
                 let _c377: boolean = (((v_f !== v_e) && ((b.grid[v_f] || -1) === 1)) && !(bent(sp, v_e, v_f)));
                 if (_c377) {
                   const _t353 = (sp.edgeEnds[2 * v_e] === v_c ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e]);
@@ -2709,7 +2711,7 @@ export function closed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClosedBind
     }
     if (!(_c42)) break L28;
     const v_G = _eg43.of(sp.edgeEnds[2 * v_g]);
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       const _g44: number[] = [];
       G45: {
         const _a48 = sp.edges;
@@ -2888,7 +2890,7 @@ export function earlyLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyLo
         const _now43 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e]);
         if (!(_now43 === _eg29.of(sp.edgeEnds[2 * v_e]) || sameSet(_now43, _eg29.of(sp.edgeEnds[2 * v_e])))) { continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g44: number[] = [];
         G45: {
           const _a48 = sp.edges;
@@ -3247,7 +3249,7 @@ export function earlyThrough(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Earl
           }
           if (!(sameSet(v_Q, _g286))) { return fired; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g302: number[] = [];
           G303: {
             const _a306 = sp.edges;

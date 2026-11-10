@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, cluesValued, freshBinding, keptStore, minus, rangeMask, sameSet, setOf, staleChecking, stamps, throughWhere, type Kept, union } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -295,7 +297,7 @@ export function forced(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ForcedBind
       const v_U = ways(b, sp, cl, v_c);
       const _h16 = v_U.length;
       if (!(((v_n < 0) || ((v_n > 0) && (_h16 <= v_n))))) break L15;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g17 = 0;
         G18: {
           const _a19 = sp.adj4[v_c];
@@ -1399,7 +1401,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
         _c1132 = _c1131;
       }
       if (!(_c1132)) break L513;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c1639: boolean = liveMarked(b, sp, cl, cands, v_a, v_b);
         if (_c1639) {
           let _c1638: boolean = (throughWhere(sp, v_a, (_te1133: number): boolean => {  return ((b.grid[_te1133] || -1) === 1); }).includes(v_b));
@@ -3377,7 +3379,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
             if (!(((takes(sp, cl, v_c) - _g1155) === 2))) { continue R1; }
             if (!(sameSet(v_U, ways(b, sp, cl, v_c)))) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _g1159 = 0;
             G1160: {
               const _a1161 = sp.adj4[v_c];
@@ -6483,7 +6485,7 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
         const v_X = minus(v_U, v_N);
         const _h4455 = v_X.length;
         if (!((((_h4453 === 0) || (_h4454 > 0)) || (_h4455 > 0)))) break L4452;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _g4456 = 0;
           G4457: {
             const _a4458 = sp.adj4[v_c];

@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, freshBinding, keptStore, rangeMask, sameSet, staleChecking, type Kept, within } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -112,7 +114,7 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
     L19: {
       const v_r = _g15;
       if (!((((v_n <= 0) || (v_r <= cl.count.v[v_k])) && ((v_n !== 0) || (v_r !== cl.count.v[v_k]))))) break L19;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g20 = 0;
         G21: {
           const _a22 = within(sp, v_c, 1);
@@ -302,7 +304,7 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
             }
             if (!(_q73)) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _q77 = false;
             Q78: {
               const _a79 = within(sp, v_c, 1);

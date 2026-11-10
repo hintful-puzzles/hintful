@@ -2,6 +2,8 @@
 
 import { type Fire, type GridSpace, type Marks, STRIKE, freshBinding, keptStore, popcount, rangeMask, sameSet, staleChecking, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -135,7 +137,7 @@ export function scoredNothing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sco
   let changed = false;
   for (let v_k = 0; v_k < cl.score.n; v_k++) {
     if (!((cl.score.total[v_k] === 0))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("scoredNothing", [(cl.score.total[v_k] === 0)], ["where of k"]);
     }
     facts.length = 0;
@@ -187,7 +189,7 @@ export function noBlack(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NoBlackBi
   let changed = false;
   for (let v_k = 0; v_k < cl.score.n; v_k++) {
     if (!((cl.score.black[v_k] === 0))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("noBlack", [(cl.score.black[v_k] === 0)], ["where of k"]);
     }
     facts.length = 0;
@@ -229,7 +231,7 @@ export function everyPegScored(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Ev
   const _h1 = sp.cells.length;
   for (let v_k = 0; v_k < cl.score.n; v_k++) {
     if (!((cl.score.total[v_k] === _h1))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("everyPegScored", [(cl.score.total[v_k] === sp.cells.length)], ["where of k"]);
     }
     facts.length = 0;
@@ -294,7 +296,7 @@ export function blacksForced(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Blac
       _c10 = (_g6 === cl.score.black[v_k]);
     }
     if (!(_c10)) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       let _c15: boolean = (cl.score.black[v_k] > 0);
       if (_c15) {
         let _g11 = 0;
@@ -369,7 +371,7 @@ export function blacksAccounted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<B
       const v_P = _g8;
       const _h15 = v_P.length;
       if (!(((_h15 > 0) && (_h15 === cl.score.black[v_k])))) break L14;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g16: number[] = [];
         G17: {
           const _a20 = sp.cells;
@@ -465,7 +467,7 @@ export function totalAccounted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<To
     L53: {
       const v_e = _g27;
       if (!(((v_e > 0) && (v_e === cl.score.total[v_k])))) break L53;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g54 = 0;
         G55: {
           let _g56 = 0;
@@ -589,7 +591,7 @@ export function noRepeats(b: Marks, sp: GridSpace, fire: Fire<NoRepeatsBinding> 
         if (!((popcount((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s]))) === 1))) { continue R1; }
         if (!((((b.cands[v_s] >> v_d) & 1) !== 0))) { continue R2; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("noRepeats", [(sp.cells.includes(v_s)), (popcount((cands[v_s] >= 0 ? cands[v_s] : (cands[v_s] = b.cands[v_s]))) === 1), (((b.cands[v_s] >> v_d) & 1) !== 0)], ["s in", "where of s", "d in"]);
       }
       facts.length = 0;

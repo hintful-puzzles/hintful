@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, clueAt, freshBinding, popcount, rangeMask, staleChecking } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -327,7 +329,7 @@ export function clueEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueEasy
           }
           if (!((v_M === ((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])) & ~_g90)))) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _g120 = 0;
           G121: {
             const _a136 = sp.cellCorners[v_c];
@@ -562,7 +564,7 @@ export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding>
           }
           if (!((v_M === ((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])) & ~_g72)))) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _g92 = 0;
           G93: {
             const _a103 = sp.cellCorners[v_c];
@@ -781,7 +783,7 @@ export function clueTricky(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueTr
         }
         if (!((v_M === ((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])) & ~_g69)))) { continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g89 = 0;
         G90: {
           const _a100 = sp.cellCorners[v_c];

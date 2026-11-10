@@ -2,6 +2,8 @@
 
 import { type Fire, type GridSpace, type Marks, PLACE, freshBinding, rangeMask, sameSet, setOf, staleChecking } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** The units no value repeats in, in the description's order: the
  * engine builds the space from them. */
 export const units: readonly string[] = [];
@@ -178,7 +180,7 @@ export function threes(b: Marks, sp: GridSpace, fire: Fire<ThreesBinding> | null
           if (b.made[0] !== _m32_0) {
             if (!(!((b.grid[v_x] !== 0)))) { continue R3; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _t25 = (v_i + 1);
             const _t26 = (v_i + 2);
             let _q27 = true;
@@ -256,7 +258,7 @@ export function lastGap(b: Marks, sp: GridSpace, fire: Fire<LastGapBinding> | nu
         _c27 = (_g20 === _h26);
       }
       if (!(_c27)) continue;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g28 = 0;
         G29: {
           const _a30 = sp.lineCells[v_L];
@@ -350,7 +352,7 @@ export function quota(b: Marks, sp: GridSpace, fire: Fire<QuotaBinding> | null):
         _c26 = (_g20 < v_n);
       }
       if (!(_c26)) continue;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g27 = 0;
         G28: {
           const _a29 = sp.lineCells[v_L];
@@ -506,7 +508,7 @@ export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding> | nu
             }
             if (!(_c63)) { continue R2; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _g64 = 0;
             G65: {
               const _a66 = sp.lineCells[v_L];
@@ -698,7 +700,7 @@ export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding> | null
             }
             if (!(_c53)) { continue R3; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _g54 = 0;
             G55: {
               const _a56 = sp.lineCells[v_A];

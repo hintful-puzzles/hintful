@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, freshBinding, rangeMask, sameSet, staleChecking } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -180,7 +182,7 @@ export function border(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BorderBind
     }
     const v_stop = v_L.indexOf((_g33.length > 0 ? _g33[0] : -1));
     const _h65 = (v_stop >= 0);
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       const _g39: number[] = [];
       G40: {
         const _a43 = v_L;

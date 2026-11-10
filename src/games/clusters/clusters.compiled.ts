@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, cluesValued, freshBinding, keptStore, rangeMask, sameSet, setOf, staleChecking, type Kept, union, within } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -135,7 +137,7 @@ export function broken(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BrokenBind
       }
     }
     const v_r = _g12;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       const _t18 = (b.grid[v_c] || -1);
       let _g19 = 0;
       G20: {
@@ -229,7 +231,7 @@ export function refute(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RefuteBind
               if (!(!((b.grid[v_x] !== 0)))) { continue R1; }
               if (!(((v_n === v_x) || (b.grid[v_n] !== 0)))) { continue R3; }
             }
-            if (import.meta.env.DEV && staleChecking) {
+            if (DEV && staleChecking) {
               let _g32 = 0;
               G33: {
                 const _a34 = sp.adj4[v_n];
@@ -439,7 +441,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
           }
           if (!(_c182)) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _c193: boolean = (b.grid[v_a] !== 0);
           if (_c193) {
             let _g183 = 0;
@@ -756,7 +758,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
           }
           if (!(_c143)) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _c148: boolean = (b.grid[v_a] !== 0);
           if (_c148) {
             let _g144 = 0;

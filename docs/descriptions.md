@@ -534,7 +534,9 @@ fired on a stale `ahead(s)` until `beam` and `ahead` were listed
 **Every binding is checked afresh in the suite.** The compiler emits, after
 each binding's reads made again, every read of its binders made afresh with
 no count or narrowing (`freshReads`), behind `staleChecking` and
-`import.meta.env.DEV`, so a build drops it.
+`import.meta.env.DEV`, so a build drops it. The module reads
+`import.meta.env.DEV` once, into a constant: Vitest makes each read of it
+a lookup, and read in every binding it doubled the suite's solves.
 [`stale-reads.test.ts`](../src/engine/stale-reads.test.ts) turns it on and
 solves every described game's shared boards. A defect in the reads made
 again fails there in every game whose boards make that read fail. A game

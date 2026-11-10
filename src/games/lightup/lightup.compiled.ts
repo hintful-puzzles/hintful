@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, freshBinding, keptStore, nextOfSize, sameSet, staleChecking, stretch, type Kept, union } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -168,7 +170,7 @@ export function shine(b: Marks, sp: GridSpace, cl: Dealt, v_c: number, fire: Fir
   for (let _i7 = 0; _i7 < _a6.length; _i7++) {
     const v_p = _a6[_i7];
     if (!(((v_p !== v_c) && !((b.grid[v_p] !== 0))))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("shine", [(sp.cells.includes(v_c)), ((b.grid[v_c] || -1) === 1), (lights(sp, cl, v_c).includes(v_p)), ((v_p !== v_c) && !((b.grid[v_p] !== 0)))], ["c in", "where of c", "p in", "where of p"]);
     }
     facts.length = 0;
@@ -208,7 +210,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
       const _h11 = clueAt(cl.wall, v_c);
       const v_n = _h9;
       const v_L = (_k10[v_c] ?? lights(sp, cl, v_c));
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("square", [(sp.cols.includes(v_X)), (sp.lineCells[v_X].includes(v_c)), (v_n === clueAt(cl.number, v_c)), sameSet(v_L, lights(sp, cl, v_c))], ["X in", "c in", "n =", "L ="]);
       }
       facts.length = 0;
@@ -433,7 +435,7 @@ export function darkSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DarkSetBi
         }
         const v_S = _g28;
         const _h44 = v_S.length;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _q34 = false;
           Q35: {
             const _a36 = v_L;
@@ -630,7 +632,7 @@ export function clueSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueSetBi
               }
               if (!((v_m === (v_n - _g63)))) { continue R2; }
             }
-            if (import.meta.env.DEV && staleChecking) {
+            if (DEV && staleChecking) {
               let _g67 = 0;
               G68: {
                 const _a69 = sp.adj4[v_k];

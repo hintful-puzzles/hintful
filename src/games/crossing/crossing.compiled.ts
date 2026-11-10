@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, cellsValued, clueAt, freshBinding, keptStore, least, listLength, nth, popcount, sameList, sameSet, staleChecking, stretch, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -237,7 +239,7 @@ export function onlyNumber(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyNu
           const v_K = _g32;
           const _h46 = v_K.length;
           if (!((_h46 < 2))) break L45;
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _q47 = false;
             Q48: {
               const _a49 = v_R;
@@ -432,7 +434,7 @@ export function onlyRun(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRunBi
           }
           if (!(_c66)) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _c80: boolean = !(written(b, sp, cl, v_k));
           if (_c80) {
             let _g67 = 0;
@@ -643,7 +645,7 @@ export function sharedDigit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Share
                 }
                 if (!(sameSet(v_K, _g73))) { continue R2; }
               }
-              if (import.meta.env.DEV && staleChecking) {
+              if (DEV && staleChecking) {
                 let _q85 = false;
                 Q86: {
                   const _a87 = v_R;
@@ -815,7 +817,7 @@ export function crossRuns(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CrossRu
         const v_D = _g85;
         const _h114 = popcount(v_D);
         if (!((_h114 === 1))) break L113;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g115: number[] = [];
           G116: {
             for (let v_k = 0; v_k < cl.numbers.n; v_k++) {
@@ -1018,7 +1020,7 @@ export function narrow(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NarrowBind
             }
             if (!(sameSet(v_K, _g54))) { continue R2; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _q66 = false;
             Q67: {
               const _a68 = v_R;
@@ -1128,7 +1130,7 @@ export function misread(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MisreadBi
         }
         if (!(_q15)) break L14;
         const _h26 = v_R.length;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _q20 = true;
           Q21: {
             const _a22 = v_R;

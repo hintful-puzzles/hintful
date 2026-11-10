@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, cellsValued, clueAt, freshBinding, keptStore, minus, nextOfSize, rangeMask, sameSet, staleChecking, stamps, subsetOf, type Kept, within } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -133,7 +135,7 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
     L23: {
       const v_n = (_h18 - _g19);
       if (!(((_h24 > 0) && ((v_n <= 0) || (v_n >= _h24))))) break L23;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g25: number[] = [];
         G26: {
           const _a29 = sp.adj8[v_c];
@@ -297,7 +299,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
             }
             if (!((_g72.length > 0))) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _g78: number[] = [];
             G79: {
               const _a82 = sp.adj8[v_a];
@@ -617,7 +619,7 @@ export function region(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionBind
                 }
                 if (!(_c171)) { continue R2; }
               }
-              if (import.meta.env.DEV && staleChecking) {
+              if (DEV && staleChecking) {
                 const _g172: number[] = [];
                 G173: {
                   const _a176 = sp.adj8[v_o];
@@ -1184,7 +1186,7 @@ export function regions(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionsBi
                   }
                   if (!(_c291)) { continue R3; }
                 }
-                if (import.meta.env.DEV && staleChecking) {
+                if (DEV && staleChecking) {
                   const _g292: number[] = [];
                   G293: {
                     const _a296 = sp.adj8[v_o];
@@ -1650,7 +1652,7 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
             }
             if (!((v_u === _g154))) { return fired; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _g158: number[] = [];
             G159: {
               for (let v_k = 0; v_k < cl.count.at.length; v_k++) {

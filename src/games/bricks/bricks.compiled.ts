@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, cellsValued, clueAt, freshBinding, keptStore, staleChecking, stretch, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -169,7 +171,7 @@ export function strandSupport(b: Marks, sp: GridSpace, fire: Fire<StrandSupportB
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_a = _a3[_i4];
     if (!((((b.grid[v_a] || -1) === 1) && (((v_a / sp.w) | 0) < _h5)))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("strandSupport", [(sp.cells.includes(v_a)), (((b.grid[v_a] || -1) === 1) && (((v_a / sp.w) | 0) < (sp.h - 1)))], ["a in", "where of a"]);
     }
     facts.length = 0;
@@ -236,7 +238,7 @@ export function undercount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Underc
     L7: {
       const v_n = _h6;
       if (!((v_n >= 0))) break L7;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("undercount", [(sp.cells.includes(v_k)), (v_n === clueAt(cl.number, v_k)), (v_n >= 0)], ["k in", "n =", "where of n"]);
       }
       facts.length = 0;
@@ -288,7 +290,7 @@ export function three(b: Marks, sp: GridSpace, fire: Fire<ThreeBinding> | null):
   const _a3 = sp.rows;
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_L = _a3[_i4];
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("three", [(sp.rows.includes(v_L))], ["L in"]);
     }
     facts.length = 0;
@@ -371,7 +373,7 @@ export function unsupported(b: Marks, sp: GridSpace, fire: Fire<UnsupportedBindi
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_c = _a3[_i4];
     if (!(((!((b.grid[v_c] !== 0)) && (((v_c / sp.w) | 0) < _h5)) && !(supportable(b, sp, v_c))))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("unsupported", [(sp.cells.includes(v_c)), ((!((b.grid[v_c] !== 0)) && (((v_c / sp.w) | 0) < (sp.h - 1))) && !(supportable(b, sp, v_c)))], ["c in", "where of c"]);
     }
     facts.length = 0;
@@ -406,7 +408,7 @@ export function overcount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Overcou
     L7: {
       const v_n = _h6;
       if (!((v_n >= 0))) break L7;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("overcount", [(sp.cells.includes(v_k)), (v_n === clueAt(cl.number, v_k)), (v_n >= 0)], ["k in", "n =", "where of n"]);
       }
       facts.length = 0;

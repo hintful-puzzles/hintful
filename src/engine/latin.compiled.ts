@@ -2,6 +2,8 @@
 
 import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, addOnce, cellsValued, freshBinding, least, minus, popcount, rangeMask, sameSet, staleChecking, stamps, valuesOf } from "./describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 export interface PlacedBinding {
   c: number;
   d: number;
@@ -29,7 +31,7 @@ export function placed(b: Marks, sp: GridSpace, v_c: number, fire: Fire<PlacedBi
     if (b.made[0] !== _m22_0) {
       if (!((v_d === (b.grid[v_c] || -1)))) { return placed(b, sp, v_c, fire) | fired; }
     }
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("placed", [(sp.cells.includes(v_c)), (b.grid[v_c] !== 0), (v_d === (b.grid[v_c] || -1)), (v_k === (v_d === b.repeat ? b.times : 1)), (sp.unitsOf[v_c].includes(v_u))], ["c in", "where of c", "d =", "k =", "u in"]);
     }
     facts.length = 0;
@@ -132,7 +134,7 @@ export function hiddenSingle(b: Marks, sp: GridSpace, fire: Fire<HiddenSingleBin
           }
           if (!((v_placed === _g31))) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _g38 = 0;
           G39: {
             const _a42 = sp.lineCells[v_u];
@@ -207,7 +209,7 @@ export function single(b: Marks, sp: GridSpace, fire: Fire<SingleBinding> | null
     for (let _i8 = 0; _i8 < _a7.length; _i8++) {
       const v_c = _a7[_i8];
       if (!((!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2)))) continue;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("single", [(sp.cols.includes(v_L)), (sp.lineCells[v_L].includes(v_c)), (!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2))], ["L in", "c in", "where of c"]);
       }
       facts.length = 0;
@@ -338,7 +340,7 @@ export function set(b: Marks, sp: GridSpace, fire: Fire<SetBinding> | null): num
           }
           if (!(sameSet(v_open, _g74))) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _g80 = 0;
           G81: {
             const _a84 = sp.lineCells[v_u];
@@ -671,7 +673,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
           }
           if (!((v_Y0 === (rangeMask(0, (sp.h - 1)) & ~_g204)))) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g223: number[] = [];
           G224: {
             const _a237 = sp.cols;
@@ -1094,7 +1096,7 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): n
               }
               if (!(_c117)) { continue R3; }
             }
-            if (import.meta.env.DEV && staleChecking) {
+            if (DEV && staleChecking) {
               let _c126: boolean = (popcount(v_R) >= 1);
               if (_c126) {
                 let _q118 = true;

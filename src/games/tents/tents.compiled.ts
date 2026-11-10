@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, MARK, PLACE, addOnce, cellsValued, clueAt, freshBinding, keptStore, matched, sameSet, staleChecking, stamps, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -166,7 +168,7 @@ export function tentLink(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TentLink
       const v_K = free(b, sp, cl, v_c);
       const _h8 = v_K.length;
       if (!((_h8 < 2))) break L7;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("tentLink", [(sp.cells.includes(v_c)), (((b.grid[v_c] || -1) === 1) && (b.markOf(v_c) === -1)), sameSet(v_K, free(b, sp, cl, v_c)), (v_K.length < 2)], ["c in", "where of c", "K =", "where of K"]);
       }
       facts.length = 0;
@@ -225,7 +227,7 @@ export function noTree(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NoTreeBind
     const v_S = _g8;
     const _h17 = v_S.length;
     if (!((_h17 > 0))) break L16;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       const _g18: number[] = [];
       G19: {
         const _a22 = sp.cells;
@@ -300,7 +302,7 @@ export function treesDone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TreesDo
       const v_S = _g16;
       const _h24 = v_S.length;
       if (!((_h24 > 0))) break L23;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _q25 = false;
         Q26: {
           const _a27 = sp.adj4[cl.tree.at[v_q]];
@@ -378,7 +380,7 @@ export function nextToTent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NextTo
       const v_S = _g12;
       const _h20 = v_S.length;
       if (!((_h20 > 0))) break L19;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g21: number[] = [];
         G22: {
           const _a25 = sp.adj8[v_t];
@@ -485,7 +487,7 @@ export function treeSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TreeSi
         _c35 = _q30;
       }
       if (!(_c35)) break L28;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _q36 = false;
         Q37: {
           const _a38 = sp.adj4[cl.tree.at[v_q]];
@@ -605,7 +607,7 @@ export function treeLink(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TreeLink
         const v_x = (v_R[0] ?? -1);
         const _h30 = (b.grid[v_x] || -1);
         if (!((_h30 === 1))) break L29;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _q31 = false;
           Q32: {
             const _a33 = sp.adj4[cl.tree.at[v_q]];
@@ -694,7 +696,7 @@ export function treeDiagonal(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Tree
           const v_z = (((((v_a / sp.w) | 0) + ((v_b / sp.w) | 0)) - ((cl.tree.at[v_q] / sp.w) | 0)) * sp.w + (((v_a % sp.w) + (v_b % sp.w)) - (cl.tree.at[v_q] % sp.w)));
           const _h29 = clueAt(cl.tree, v_z);
           if (!((!((b.grid[v_z] !== 0)) && (_h29 < 0)))) break L28;
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _q30 = false;
             Q31: {
               const _a32 = sp.adj4[cl.tree.at[v_q]];
@@ -970,7 +972,7 @@ export function lineCount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineCou
           }
         }
         if (!(_q242)) break L241;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _g246 = 0;
           G247: {
             const _a248 = sp.lineCells[v_L];
@@ -1368,7 +1370,7 @@ export function lineNeighbors(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Lin
             }
           }
           if (!(_q174)) break L173;
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _g178 = 0;
             G179: {
               const _a180 = sp.lineCells[v_L];

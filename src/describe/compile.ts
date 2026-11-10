@@ -5976,10 +5976,9 @@ function freshChecked(r: Recheck, id: string, env: Env): void {
     if (check.fresh.length === 0) continue;
     env.used.add("staleChecking");
     env.used.add("freshBinding");
-    // The guard is half again the module's size: a build drops it.
-    const lines: Line[] = [
-      { indent: 0, text: "if (import.meta.env.DEV && staleChecking) {" },
-    ];
+    // The guard is half again the module's size: a build drops it. `DEV` is
+    // the module's (`runtimeImport`).
+    const lines: Line[] = [{ indent: 0, text: "if (DEV && staleChecking) {" }];
     for (const read of check.fresh)
       for (const l of read.lines) lines.push({ indent: l.indent + 1, text: l.text });
     const holds = check.fresh.map((read) => read.code).join(", ");
@@ -6297,7 +6296,14 @@ function runtimeImport(
     ...(regions ? ["type Partition"] : []),
     ...[...used].filter(named).sort(),
   ];
-  return `import { ${names.join(", ")} } from "${runtime}";`;
+  const line = `import { ${names.join(", ")} } from "${runtime}";`;
+  // Read once a module: under Vitest each read of `import.meta.env` is a
+  // lookup, and in the stale-read guard's condition, in every binding, it
+  // doubled the cost of a solve (2026-11-10). A build folds it to `false`
+  // and drops the guard all the same.
+  return names.includes("staleChecking")
+    ? `${line}\n\nconst DEV = import.meta.env.DEV;`
+    : line;
 }
 
 const HEADER = (source: string): string =>

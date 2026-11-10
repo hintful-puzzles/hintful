@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, cellsValued, clueAt, cluesValued, freshBinding, keptStore, sameSet, staleChecking, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -201,7 +203,7 @@ export function once(b: Marks, sp: GridSpace, cl: Dealt, v_c: number, fire: Fire
     const v_p = _a8[_i9];
     const _h10 = (b.grid[v_p] !== 0);
     if (!(((v_p !== v_c) && !(_h10)))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("once", [(sp.cells.includes(v_c)), ((b.grid[v_c] !== 0) && ((clueAt(cl.wall, v_c) === -1) && (clueAt(cl.arrow, v_c) === -1))), (sp.cells.includes(v_p)), ((v_p !== v_c) && !((b.grid[v_p] !== 0)))], ["c in", "where of c", "p in", "where of p"]);
     }
     facts.length = 0;
@@ -254,7 +256,7 @@ export function onlySquare(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlySq
       const v_S = _g18;
       const _h25 = v_S.length;
       if (!((_h25 < 2))) break L24;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g26 = 0;
         G27: {
           const _a28 = cellsValued(b, sp.cells, v_n);
@@ -344,7 +346,7 @@ export function nextTo(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NextToBind
         if (!(((b.grid[v_c] !== 0) && ((clueAt(cl.wall, v_c) === -1) && (clueAt(cl.arrow, v_c) === -1))))) { continue R1; }
         if (!(((v_m === ((b.grid[v_c] || -1) - 1)) || (v_m === ((b.grid[v_c] || -1) + 1))))) { continue R2; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c30: boolean = ((v_m >= 1) && (v_m <= cl.top));
         if (_c30) {
           let _g26 = 0;
@@ -426,7 +428,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
         if (!((v_n === (b.grid[v_c] || -1)))) { continue R1; }
         if (!(((((v_n - gapBelow(b, sp, v_n)) + 1) <= v_m) && (v_m <= ((v_n + gapAbove(b, sp, cl, v_n)) - 1))))) { continue R2; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("reach", [(sp.cells.includes(v_c)), ((b.grid[v_c] !== 0) && ((clueAt(cl.wall, v_c) === -1) && (clueAt(cl.arrow, v_c) === -1))), (v_n === (b.grid[v_c] || -1)), ((((v_n - gapBelow(b, sp, v_n)) + 1) <= v_m) && (v_m <= ((v_n + gapAbove(b, sp, cl, v_n)) - 1))), (v_m !== v_n)], ["c in", "where of c", "n =", "m in", "where of m"]);
       }
       facts.length = 0;
@@ -631,7 +633,7 @@ export function deadEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DeadEndBi
         }
         if (!(_c101)) { continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c121: boolean = (!((b.grid[v_c] !== 0)) && ((clueAt(cl.wall, v_c) === -1) && (clueAt(cl.arrow, v_c) === -1)));
         if (_c121) {
           let _g102 = 0;
@@ -768,7 +770,7 @@ export function overlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OverlapBi
     const _h26 = (v_n - 1);
     const _h28 = (v_n < cl.top);
     const _h33 = (v_n + 1);
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       let _g12 = 0;
       G13: {
         const _a14 = cellsValued(b, sp.cells, v_n);
@@ -895,7 +897,7 @@ export function onlyNumberNear(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<On
         _c34 = _c33;
       }
       if (!(_c34)) break L21;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _c40: boolean = (v_n > 1);
         if (_c40) {
           const _t35 = (v_n - 1);
@@ -960,7 +962,7 @@ export function onlyNumber(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyNu
     const _h5 = clueAt(cl.wall, v_c);
     const _h6 = clueAt(cl.arrow, v_c);
     if (!(((!((b.grid[v_c] !== 0)) && ((_h5 === -1) && (_h6 === -1))) && (b.candCount(v_c) < 2)))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("onlyNumber", [(sp.cells.includes(v_c)), ((!((b.grid[v_c] !== 0)) && ((clueAt(cl.wall, v_c) === -1) && (clueAt(cl.arrow, v_c) === -1))) && (b.candCount(v_c) < 2))], ["c in", "where of c"]);
     }
     facts.length = 0;
@@ -1017,7 +1019,7 @@ export function onLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnLineBind
     L7: {
       const v_n = _h6;
       if (!((v_n !== -1))) break L7;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("onLine", [(sp.cells.includes(v_a)), (v_n === clueAt(cl.arrow, v_a)), (v_n !== -1)], ["a in", "n =", "where of n"]);
       }
       facts.length = 0;
@@ -1074,7 +1076,7 @@ export function overlapEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Over
     const _h26 = (v_n - 1);
     const _h28 = (v_n < cl.top);
     const _h33 = (v_n + 1);
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       let _g12 = 0;
       G13: {
         const _a14 = cellsValued(b, sp.cells, v_n);

@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, edgeGroups, freshBinding, keptStore, rangeMask, rectCells, rectHeight, rectHolds, rectInner, rectMeets, rectRim, rectWidth, rectsOf, sameSet, staleChecking, stamps, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -236,7 +238,7 @@ export function fit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FitBinding> |
   for (let v_q = 0; v_q < cl.number.at.length; v_q++) {
     const v_F = fits(b, sp, cl, v_q);
     const _h1 = v_F.length;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("fit", [sameSet(v_F, fits(b, sp, cl, v_q))], ["F ="]);
     }
     facts.length = 0;
@@ -311,7 +313,7 @@ export function uncovered(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Uncover
   const _a3 = sp.cells;
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_c = _a3[_i4];
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("uncovered", [(sp.cells.includes(v_c))], ["c in"]);
     }
     facts.length = 0;
@@ -364,7 +366,7 @@ export function boxed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoxedBindin
         if (b.made[0] !== _m29_0 || b.made[1] !== _m30_1) {
           if (!(sameSet(v_F, fits(b, sp, cl, v_q)))) { continue R1; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _q16 = true;
           Q17: {
             const _a18 = rectRim(sp, v_r);
@@ -457,7 +459,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
         const _h22 = v_F.length;
         if (!((_h22 === 1))) break L21;
         const v_r = (v_F[0] ?? -1);
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g23: number[] = [];
           G24: {
             const _a27 = fits(b, sp, cl, v_q);
@@ -580,7 +582,7 @@ export function overlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OverlapBi
             if (b.made[0] !== _m65_0 || b.made[1] !== _m66_1) {
               if (!(sameSet(v_K, core(b, sp, cl, v_p)))) { continue R1; }
             }
-            if (import.meta.env.DEV && staleChecking) {
+            if (DEV && staleChecking) {
               const _g42: number[] = [];
               G43: {
                 const _a50 = v_F;
@@ -763,7 +765,7 @@ export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBind
           }
         }
         const v_U = _g85;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g111: number[] = [];
           G112: {
             const _a115 = v_F;
@@ -1072,7 +1074,7 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
         }
       }
       const v_M = _g165;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g189: number[] = [];
         G190: {
           const _a197 = reachers(b, sp, cl, v_a);

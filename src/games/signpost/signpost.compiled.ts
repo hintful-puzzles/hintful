@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, chain, chainEnd, chainHas, chainHolders, chainLength, clueAt, compass, freshBinding, keptStore, least, popcount, sameSet, staleChecking, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -171,7 +173,7 @@ export function onlyNext(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyNext
       const v_U = _g12;
       const _h20 = popcount(v_U);
       if (!((_h20 < 2))) break L19;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g21 = 0;
         G22: {
           for (let _m25 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m25 !== 0; _m25 &= _m25 - 1) {
@@ -242,7 +244,7 @@ export function onlyBefore(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyBe
       const v_P = _g13;
       const _h21 = v_P.length;
       if (!((_h21 < 2))) break L20;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g22: number[] = [];
         G23: {
           const _a26 = aims(sp, cl, v_j);

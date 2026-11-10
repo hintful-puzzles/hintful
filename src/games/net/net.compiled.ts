@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, edgeGroups, freshBinding, keptEdgeGroups, keptStore, memberMarks, minus, rangeMask, sameSet, setOf, staleChecking, stamps, through, type Footprint, type Kept, union } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -379,7 +381,7 @@ export function fitLock(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FitLockBi
           }
         }
         if (!(_q201)) break L200;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g205: number[] = [];
           G206: {
             const _a209 = sp.cellEdges[v_c];
@@ -758,7 +760,7 @@ export function fitNote(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FitNoteBi
       L89: {
         const v_B = ((((fitNote_p68[v_e] >> 2) & 1) !== 0) || ((2 as number) === -1 && _y70 && !sp.cellEdges[v_c].includes(v_e)));
         if (!((!(v_A) || !(v_B)))) break L89;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _q90 = false;
           Q91: {
             const _f93 = new Int32Array(sp.edges.length).fill(-1);
@@ -1201,7 +1203,7 @@ export function loopLock(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LoopLock
           }
           if (!(sameSet(v_L, _g266))) { if (_visit !== null) _visit[v_c] = 1; return fired; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g272: number[] = [];
           G273: {
             const _a276 = sp.edges;
@@ -1716,7 +1718,7 @@ export function loopNote(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LoopNote
           }
           if (!(sameSet(v_L, _g135))) { if (_visit !== null) _visit[v_c] = 1; return fired; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g141: number[] = [];
           G142: {
             const _a145 = sp.edges;
@@ -2796,7 +2798,7 @@ export function sealLock(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SealLock
           }
           if (!(sameSet(v_L, _g2160))) { return fired; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g2166: number[] = [];
           G2167: {
             const _a2170 = sp.edges;
@@ -4405,7 +4407,7 @@ export function sealNote(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SealNote
           }
           if (!(sameSet(v_L, _g1349))) { return fired; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g1355: number[] = [];
           G1356: {
             const _a1359 = sp.edges;
@@ -6281,7 +6283,7 @@ export function strandLock(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Strand
           }
           if (!(sameSet(v_L, _g2530))) { return fired; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g2536: number[] = [];
           G2537: {
             const _a2540 = sp.edges;
@@ -8456,7 +8458,7 @@ export function strandNote(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Strand
           }
           if (!(sameSet(v_L, _g1535))) { return fired; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g1541: number[] = [];
           G1542: {
             const _a1545 = sp.edges;

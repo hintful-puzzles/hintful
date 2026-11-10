@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, clueAt, freshBinding, rangeMask, staleChecking } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -120,7 +122,7 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjacent
         if (b.made[0] !== _m20_0) {
           if (!((b.grid[v_a] !== 0))) { continue R2; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           freshBinding("adjacent", [(sp.cols.includes(v_L)), (sp.lineCells[v_L].includes(v_a)), (b.grid[v_a] !== 0), (sp.adj4[v_a].includes(v_b)), (v_e === sp.adj4Edges[v_a][_i13])], ["L in", "a in", "where of a", "b in", "e ="]);
         }
         facts.length = 0;
@@ -179,7 +181,7 @@ export function adjacentSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjac
         const v_e = sp.adj4Edges[v_a][_i12];
         const _h19 = clueAt(cl.bar, v_e);
         const _h20 = (_h19 === 1);
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           freshBinding("adjacentSet", [(sp.cols.includes(v_L)), (sp.lineCells[v_L].includes(v_a)), (sp.adj4[v_a].includes(v_b)), (v_e === sp.adj4Edges[v_a][_i12])], ["L in", "a in", "b in", "e ="]);
         }
         facts.length = 0;

@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, type Partition, PLACE, STRIKE, before, chain, chainHas, clueAt, freshBinding, least, memberMarks, popcount, sameSet, staleChecking, step } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -154,7 +156,7 @@ export function cull(b: Marks, sp: GridSpace, cl: Dealt, v_c: number, fire: Fire
     if (b.made[0] !== _m9_0) {
       if (!((v_d === (b.grid[v_c] || -1)))) { return cull(b, sp, cl, v_c, fire) | fired; }
     }
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("cull", [(sp.cells.includes(v_c)), (b.grid[v_c] !== 0), (v_d === (b.grid[v_c] || -1)), (cl.area.cells[cl.area.of[v_c]].includes(v_p)), (v_p !== v_c)], ["c in", "where of c", "d =", "p in", "where of p"]);
     }
     facts.length = 0;
@@ -188,7 +190,7 @@ export function lone(b: Marks, sp: GridSpace, fire: Fire<LoneBinding> | null): n
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_c = _a3[_i4];
     if (!((!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2)))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("lone", [(sp.cells.includes(v_c)), (!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2))], ["c in", "where of c"]);
     }
     facts.length = 0;
@@ -244,7 +246,7 @@ export function loop(b: Marks, sp: GridSpace, fire: Fire<LoopBinding> | null): n
           if (!(!((b.grid[v_c] !== 0)))) { continue R1; }
           if (!((((b.cands[v_c] >> v_d) & 1) !== 0))) { continue R2; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           freshBinding("loop", [(sp.cells.includes(v_c)), !((b.grid[v_c] !== 0)), (((b.cands[v_c] >> v_d) & 1) !== 0), (v_q === step(sp, v_c, v_d)), ((v_q !== -1) && chainHas(sp, b, (_x14: number): number => { if (_x14 < 0) return -1; const _d15 = (b.grid[_x14] || -1); if (_d15 < 0) return -1; return step(sp, _x14, _d15); }, v_c, v_q))], ["c in", "where of c", "d in", "q =", "where of q"]);
         }
         facts.length = 0;
@@ -309,7 +311,7 @@ export function onlyHome(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyHome
       L23: {
         const v_k = _g19;
         if (!((v_k < 2))) break L23;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           let _q24 = false;
           Q25: {
             const _a26 = cl.area.cells[v_r];
@@ -404,7 +406,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
         if (b.made[0] !== _m22_0 || b.made[1] !== _m23_1) {
           if (!((!((b.grid[v_a] !== 0)) && (popcount((cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a]))) === 2)))) { continue R2; }
         }
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           freshBinding("pair", [(cl.area.parts.includes(v_r)), (cl.area.cells[v_r].includes(v_a)), (!((b.grid[v_a] !== 0)) && (popcount((cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a]))) === 2)), (before(v_a, cl.area.cells[v_r]).includes(v_b)), (!((b.grid[v_b] !== 0)) && ((cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])) === (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a]))))], ["r in", "a in", "where of a", "b in", "where of b"]);
         }
         facts.length = 0;
@@ -538,7 +540,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
         if (!(!((b.grid[v_p] !== 0)))) { continue R1; }
         if (!((((b.cands[v_p] >> v_d) & 1) !== 0))) { continue R2; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g78: number[] = [];
         G79: {
           const _a88 = sp.cells;
@@ -627,7 +629,7 @@ export function opposite(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Opposite
     const _h5 = (b.grid[v_c] !== 0);
     if (!((!(_h5) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) === 2)))) continue;
     const _h10 = cl.area.of[v_c];
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("opposite", [(sp.cells.includes(v_c)), (!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) === 2))], ["c in", "where of c"]);
     }
     facts.length = 0;

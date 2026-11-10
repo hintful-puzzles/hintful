@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, edgeGroups, freshBinding, keptStore, minus, rangeMask, sameSet, setOf, staleChecking, throughWhere, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -141,7 +143,7 @@ export function forced(b: Marks, sp: GridSpace, fire: Fire<ForcedBinding> | null
       const v_U = ways(b, sp, v_c);
       const _h15 = v_U.length;
       if (!(((v_n < 0) || ((v_n > 0) && (_h15 <= v_n))))) break L14;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g16 = 0;
         G17: {
           const _a18 = sp.adj4[v_c];
@@ -389,7 +391,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, fire: Fire<PairBreaksBinding
             if (!((_g257 === 0))) { continue R1; }
             if (!(sameSet(v_U, ways(b, sp, v_c)))) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _g261 = 0;
             G262: {
               const _a263 = sp.adj4[v_c];

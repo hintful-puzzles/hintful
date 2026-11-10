@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, cluesValued, edgeGroups, freshBinding, keptStore, minus, popcount, rangeMask, sameSet, setOf, staleChecking, stamps, through, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -208,7 +210,7 @@ export function placed(b: Marks, sp: GridSpace, cl: Dealt, v_e: number, fire: Fi
   const _h21 = clueAt(cl.number, _h20);
   const _h22 = _h21;
   if (!(((b.grid[v_e] || -1) === 1))) return 0;
-  if (import.meta.env.DEV && staleChecking) {
+  if (DEV && staleChecking) {
     freshBinding("placed", [(sp.edges.includes(v_e)), ((b.grid[v_e] || -1) === 1)], ["e in", "where of e"]);
   }
   facts.length = 0;
@@ -326,7 +328,7 @@ export function onlySpot(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlySpot
         L35: {
           const v_e = (v_P[0] ?? -1);
           if (!(!((b.grid[v_e] !== 0)))) break L35;
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _g36: number[] = [];
             G37: {
               const _a42 = showing(sp, cl, v_a);
@@ -405,7 +407,7 @@ export function squareOnly(b: Marks, sp: GridSpace, fire: Fire<SquareOnlyBinding
         _c33 = !(_q29);
       }
       if (!(_c33)) break L27;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g34: number[] = [];
         G35: {
           const _a38 = sp.adj4[v_c];
@@ -523,7 +525,7 @@ export function squareSingleDomino(b: Marks, sp: GridSpace, cl: Dealt, fire: Fir
           }
         }
         if (!(_q41)) break L40;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g62: number[] = [];
           G63: {
             const _a66 = sp.adj4[v_c];
@@ -659,7 +661,7 @@ export function mustOverlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MustO
         const _h33 = v_P.length;
         if (!((_h33 >= 2))) break L32;
         const v_e = (v_P[0] ?? -1);
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g34: number[] = [];
           G35: {
             const _a40 = showing(sp, cl, v_a);
@@ -815,7 +817,7 @@ export function localDuplicate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Lo
           if (b.made[0] !== _m100_0) {
             if (!(!((b.grid[v_p] !== 0)))) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _c99: boolean = ((v_q !== v_p) && ((b.grid[v_q] || -1) !== 2));
             if (_c99) {
               let _q75 = true;
@@ -1086,7 +1088,7 @@ export function localDuplicate2(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<L
                         }
                         if (!(sameSet(v_R, _g199))) { continue R3; }
                       }
-                      if (import.meta.env.DEV && staleChecking) {
+                      if (DEV && staleChecking) {
                         const _g225: number[] = [];
                         G226: {
                           const _g238: number[] = [];
@@ -1286,7 +1288,7 @@ export function parity(b: Marks, sp: GridSpace, fire: Fire<ParityBinding> | null
         }
         if (!(sameSet(v_P, _g40))) { return fired; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g46: number[] = [];
         G47: {
           const _a50 = sp.edges;
@@ -1454,7 +1456,7 @@ export function set(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetBinding> |
             }
             if (!(sameSet(v_U, _g89))) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _g103: number[] = [];
             G104: {
               const _a111 = v_S;
@@ -1669,7 +1671,7 @@ export function setDoubles(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetDou
             }
             if (!(sameSet(v_U, _g89))) { continue R1; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _g103: number[] = [];
             G104: {
               const _a111 = v_S;

@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, clueAt, freshBinding, least, popcount, rangeMask, sameSet, staleChecking } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -113,7 +115,7 @@ export function placed(b: Marks, sp: GridSpace, v_c: number, fire: Fire<PlacedBi
     const v_k = _a6[_i7];
     const _h8 = (b.grid[v_k] !== 0);
     if (!(((v_k !== v_c) && !(_h8)))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("placed", [(sp.cells.includes(v_c)), (b.grid[v_c] !== 0), (sp.cells.includes(v_k)), ((v_k !== v_c) && !((b.grid[v_k] !== 0)))], ["c in", "where of c", "k in", "where of k"]);
     }
     facts.length = 0;
@@ -181,7 +183,7 @@ export function carryIn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CarryInBi
         }
       }
       const v_K = _g24;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g37 = 0;
         G38: {
           for (let _m43 = Math.max(0, (16 - 1)); _m43 !== 0; _m43 &= _m43 - 1) {
@@ -280,7 +282,7 @@ export function carryOut(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CarryOut
         }
       }
       const v_L = _g24;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         let _g37 = 0;
         G38: {
           for (let _m43 = Math.max(0, (16 - 1)); _m43 !== 0; _m43 &= _m43 - 1) {
@@ -353,7 +355,7 @@ export function noShoe(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NoShoeBind
     const _a8 = [sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]];
     for (let _i9 = 0; _i9 < _a8.length; _i9++) {
       const v_c = _a8[_i9];
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("noShoe", [(sp.edges.includes(v_e)), (clueAt(cl.shoe, v_e) === 0), ([sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]].includes(v_c))], ["e in", "where of e", "c in"]);
       }
       facts.length = 0;
@@ -414,7 +416,7 @@ export function noShoeBeside(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NoSh
       const _h13 = (v_x - 1);
       const _h14 = Math.max(0, _h13);
       const _h15 = _h14;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("noShoeBeside", [(sp.edges.includes(v_e)), (clueAt(cl.shoe, v_e) === 0), ([sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]].includes(v_k)), (popcount((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k]))) === 1), (v_c === (sp.edgeEnds[2 * v_e] === v_k ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e])), (v_x === least((cands[v_k] >= 0 ? cands[v_k] : (cands[v_k] = b.cands[v_k]))))], ["e in", "where of e", "k in", "where of k", "c =", "x ="]);
       }
       facts.length = 0;
@@ -461,7 +463,7 @@ export function lone(b: Marks, sp: GridSpace, fire: Fire<LoneBinding> | null): n
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_c = _a3[_i4];
     if (!((!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2)))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("lone", [(sp.cells.includes(v_c)), (!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2))], ["c in", "where of c"]);
     }
     facts.length = 0;
@@ -510,7 +512,7 @@ export function onlyCell(b: Marks, sp: GridSpace, fire: Fire<OnlyCellBinding> | 
       const v_C = _g10;
       const _h17 = v_C.length;
       if (!(((_h17 < 2) && ((_h17 === 0) || !((b.grid[(v_C.length > 0 ? v_C[0] : -1)] !== 0)))))) break L16;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g18: number[] = [];
         G19: {
           const _a22 = sp.cells;
@@ -570,7 +572,7 @@ export function smaller(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SmallerBi
       const v_a = _a7[_i8];
       if (!(((_h10 && (v_a === _h11)) || (_h12 && (v_a === _h13))))) continue;
       const v_b = (sp.edgeEnds[2 * v_e] === v_a ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e]);
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("smaller", [(sp.edges.includes(v_e)), ([sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]].includes(v_a)), (((clueAt(cl.shoe, v_e) === 1) && (v_a === sp.edgeEnds[2 * v_e])) || ((clueAt(cl.shoe, v_e) === 2) && (v_a === sp.edgeEnds[2 * v_e + 1]))), (v_b === (sp.edgeEnds[2 * v_e] === v_a ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e]))], ["e in", "a in", "where of a", "b ="]);
       }
       facts.length = 0;
@@ -641,7 +643,7 @@ export function bigger(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BiggerBind
       const v_a = _a7[_i8];
       if (!(((_h10 && (v_a === _h11)) || (_h12 && (v_a === _h13))))) continue;
       const v_b = (sp.edgeEnds[2 * v_e] === v_a ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e]);
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("bigger", [(sp.edges.includes(v_e)), ([sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]].includes(v_a)), (((clueAt(cl.shoe, v_e) === 1) && (v_a === sp.edgeEnds[2 * v_e])) || ((clueAt(cl.shoe, v_e) === 2) && (v_a === sp.edgeEnds[2 * v_e + 1]))), (v_b === (sp.edgeEnds[2 * v_e] === v_a ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e]))], ["e in", "a in", "where of a", "b ="]);
       }
       facts.length = 0;

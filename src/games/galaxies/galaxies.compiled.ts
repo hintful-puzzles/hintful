@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, MARK, PLACE, addOnce, clueAt, edgeGroups, freshBinding, keptEdgeGroups, keptStore, opp, rangeMask, sameSet, staleChecking, stamps, through, throughWhere, type Kept } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -200,7 +202,7 @@ export function dotTile(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DotTileBi
       }
     }
     if (!(_q5)) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       let _q9 = false;
       Q10: {
         const _a11 = sp.centerCells[cl.dot.at[v_q]];
@@ -258,7 +260,7 @@ export function split(b: Marks, sp: GridSpace, fire: Fire<SplitBinding> | null):
     L7: {
       const v_q = b.markOf(sp.edgeEnds[2 * v_e]);
       if (!((v_q !== -1))) break L7;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("split", [(sp.edges.includes(v_e)), ((b.grid[v_e] || -1) === 1), (v_q === b.markOf(sp.edgeEnds[2 * v_e])), (v_q !== -1)], ["e in", "where of e", "q =", "where of q"]);
       }
       facts.length = 0;
@@ -296,7 +298,7 @@ export function separate(b: Marks, sp: GridSpace, fire: Fire<SeparateBinding> | 
       L8: {
         const v_q = b.markOf(sp.edgeEnds[2 * v_e + 1]);
         if (!(((v_q !== -1) && (v_q !== v_p)))) break L8;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           freshBinding("separate", [(sp.edges.includes(v_e)), !((b.grid[v_e] !== 0)), (v_p === b.markOf(sp.edgeEnds[2 * v_e])), (v_p !== -1), (v_q === b.markOf(sp.edgeEnds[2 * v_e + 1])), ((v_q !== -1) && (v_q !== v_p))], ["e in", "where of e", "p =", "where of p", "q =", "where of q"]);
         }
         facts.length = 0;
@@ -376,7 +378,7 @@ export function enclosed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Enclosed
           _c38 = !(_q36);
         }
         if (!(_c38)) break L30;
-        if (import.meta.env.DEV && staleChecking) {
+        if (DEV && staleChecking) {
           const _g39: number[] = [];
           G40: {
             const _a43 = sp.adj4[v_c];
@@ -653,7 +655,7 @@ export function soleOwner(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SoleOwn
         }
         if (!(sameSet(v_O, _g180))) { return fired; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g186: number[] = [];
         G187: {
           const _a190 = sp.edges;
@@ -896,7 +898,7 @@ export function onlyReach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRea
       const v_K = _g12;
       const _h20 = v_K.length;
       if (!((_h20 < 2))) break L19;
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         const _g21: number[] = [];
         G22: {
           const _a25 = near(sp, cl, v_c);
@@ -990,7 +992,7 @@ export function exclave(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExclaveBi
           const v_L = _g22;
           const _h36 = v_L.length;
           if (!((_h36 < 2))) break L35;
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             const _g38: number[] = [];
             G39: {
               const _a44 = v_G;
@@ -1084,7 +1086,7 @@ export function mirrorWall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Mirror
             if (b.made[0] !== _m17_0) {
               if (!(!((b.grid[v_e] !== 0)))) { continue R1; }
             }
-            if (import.meta.env.DEV && staleChecking) {
+            if (DEV && staleChecking) {
               freshBinding("mirrorWall", [(sp.edges.includes(v_e)), !((b.grid[v_e] !== 0)), ((v_a === sp.edgeEnds[2 * v_e]) || (v_a === sp.edgeEnds[2 * v_e + 1])), (v_q === b.markOf(v_a)), (v_q !== -1), (v_b === (sp.edgeEnds[2 * v_e] === v_a ? sp.edgeEnds[2 * v_e + 1] : sp.edgeEnds[2 * v_e])), (v_a2 === opp(sp, v_a, cl.dot.at[v_q])), (v_a2 !== -1), (v_b2 === opp(sp, v_b, cl.dot.at[v_q])), ((v_b2 === -1) || ((b.grid[sp.edgeOf(v_a2, v_b2)] || -1) === 1))], ["e in", "where of e", "a in", "q =", "where of q", "b =", "a2 =", "where of a2", "b2 =", "where of b2"]);
             }
             facts.length = 0;

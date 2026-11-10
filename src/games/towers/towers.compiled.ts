@@ -2,6 +2,8 @@
 
 import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE, clueAt, freshBinding, popcount, rangeMask, sameSet, staleChecking } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -134,7 +136,7 @@ export function facing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FacingBind
     const v_P = _g8;
     const _h18 = v_P.length;
     if (!((_h18 > 0))) break L17;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       const _g19: number[] = [];
       G20: {
         const _a23 = sp.slots;
@@ -303,7 +305,7 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
       _c123 = ((_g118 & (cands[v_c0] >= 0 ? cands[v_c0] : (cands[v_c0] = b.cands[v_c0]))) !== 0);
     }
     const v_near = _c123;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       let _g124 = 0;
       G125: {
         const _a128 = v_L;
@@ -552,7 +554,7 @@ export function arrangement(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Arran
     const _a3 = v_L;
     for (let _i4 = 0; _i4 < _a3.length; _i4++) {
       const v_c = _a3[_i4];
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("arrangement", [(v_s === cl.sees.at[v_k]), (v_v === cl.sees.v[v_k]), sameSet(v_L, sp.sight[v_s]), (v_L.includes(v_c))], ["s =", "v =", "L =", "c in"]);
       }
       facts.length = 0;

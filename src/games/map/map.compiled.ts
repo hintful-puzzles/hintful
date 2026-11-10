@@ -2,6 +2,8 @@
 
 import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, addOnce, freshBinding, least, popcount, rangeMask, sameSet, staleChecking, stamps } from "../../engine/describe-runtime.ts";
 
+const DEV = import.meta.env.DEV;
+
 /** What the board deals: its partitions by name, its relations, a set of
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
@@ -98,7 +100,7 @@ export function placed(b: Marks, sp: GridSpace, cl: Dealt, v_c: number, fire: Fi
     const v_k = _a6[_i7];
     const _h8 = (b.grid[v_k] !== 0);
     if (!(!(_h8))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("placed", [(sp.cells.includes(v_c)), (b.grid[v_c] !== 0), (cl.borders[v_c].includes(v_k)), !((b.grid[v_k] !== 0))], ["c in", "where of c", "k in", "where of k"]);
     }
     facts.length = 0;
@@ -132,7 +134,7 @@ export function lone(b: Marks, sp: GridSpace, fire: Fire<LoneBinding> | null): n
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_c = _a3[_i4];
     if (!((!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2)))) continue;
-    if (import.meta.env.DEV && staleChecking) {
+    if (DEV && staleChecking) {
       freshBinding("lone", [(sp.cells.includes(v_c)), (!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2))], ["c in", "where of c"]);
     }
     facts.length = 0;
@@ -186,7 +188,7 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
       if (b.made[0] !== _m18_0 || b.made[1] !== _m19_1) {
         if (!((!((b.grid[v_a] !== 0)) && (popcount((cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a]))) === 2)))) { continue R1; }
       }
-      if (import.meta.env.DEV && staleChecking) {
+      if (DEV && staleChecking) {
         freshBinding("pair", [(sp.cells.includes(v_a)), (!((b.grid[v_a] !== 0)) && (popcount((cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a]))) === 2)), (cl.borders[v_a].includes(v_b)), (((v_b > _i6) && !((b.grid[v_b] !== 0))) && ((cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])) === (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a]))))], ["a in", "where of a", "b in", "where of b"]);
       }
       facts.length = 0;
@@ -367,7 +369,7 @@ export function weigh(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighBindin
             }
             if (!(_c97)) { continue R2; }
           }
-          if (import.meta.env.DEV && staleChecking) {
+          if (DEV && staleChecking) {
             let _c105: boolean = (popcount(v_R) >= 1);
             if (_c105) {
               let _q98 = true;
