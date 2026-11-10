@@ -2450,7 +2450,9 @@ function sizeTest(name: string, where: Expr | null): { op: string; of: Expr } | 
 function clueKindArg(args: readonly Expr[], env: Env): string {
   const a = args[0];
   if (args.length !== 1 || a.k !== "name" || !env.clues.has(a.name))
-    throw new CompileError("clues(kind) names a clue kind of the description");
+    throw new CompileError(
+      `clues(kind) names a clue kind of the description${a?.k === "name" ? `, and ${a.name} is none` : ""}`,
+    );
   return a.name;
 }
 
@@ -4259,7 +4261,9 @@ function bentSight(
   if (args.length !== 2) throw new CompileError(`${fn}(s, mirrors) takes 2`);
   const m = args[1];
   if (m.k !== "name" || !env.clues.has(m.name))
-    throw new CompileError(`${fn}(s, M): M names a clue kind of the description`);
+    throw new CompileError(
+      `${fn}(s, M): M names a clue kind of the description${m.k === "name" ? `, and ${m.name} is none` : ""}`,
+    );
   const kind = env.clues.get(m.name) as ClueKind;
   if (!sameSort(kind.at, elem("cell")) || kind.per)
     throw new CompileError(`${fn}(s, ${m.name}): the mirrors sit one a cell`);
@@ -4294,7 +4298,9 @@ function ownForm(
 function clueCall(args: readonly Expr[], scope: Scope, env: Env, out: Out): Val {
   const a = args[0];
   if (a.k !== "name" || !env.clues.has(a.name))
-    throw new CompileError("clue(kind, x) names a clue kind of the description");
+    throw new CompileError(
+      `clue(kind, x) names a clue kind of the description${a.k === "name" ? `, and ${a.name} is none` : ""}`,
+    );
   const kind = env.clues.get(a.name) as ClueKind;
   if (kind.fields)
     throw new CompileError(`clue(${a.name}, x): a clue at the board sits at nothing`);

@@ -1,8 +1,7 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
-# Solo's help page, and its rules, which the interpreter under
-# research/describe/ reads. Nothing compiles it yet: it states no techniques.
-# A block is c rows tall and r columns wide, as the game's rectangularBlocks
+# Solo's help page, its rules and its techniques, which `npm run describe`
+# compiles to solo.compiled.ts. A block is c rows tall and r columns wide, as the game's rectangularBlocks
 # builds it; the sizes are the game's c and r.
 game: solo
 help:

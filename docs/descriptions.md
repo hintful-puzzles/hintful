@@ -100,6 +100,7 @@ and techniques, and:
 | Checking a technique sound | you state or edit a technique, or the gate reports one unchecked |
 | A planning game's position and moves | you describe a planning game, or its moves or finish change |
 | Checking a dead-end claim sound | you state or edit a dead-end claim, a move or a finish, or the gate reports a claim unchecked |
+| What a candidate inherits | you plan a new game's ladder, or ask what another game's techniques would do under a game's rules |
 | What this builds on | you design a new part of the language or the engine, or write about the approach |
 
 ## The file
@@ -1378,6 +1379,48 @@ whose positions number at most `CHECKED_POSITIONS`
 The verdict is recorded in `src/describe/soundness.json` under a fingerprint
 of the claim and every part of the rules the search reads, and the gate
 fails on a compiled claim with none.
+
+## What a candidate inherits
+
+A new game in a family costs what its family's ladders do not already
+give it. [`research/technique-check/inherit.ts`](../research/technique-check/inherit.ts)
+computes that from the candidate's description, its rules stated and its
+techniques not yet: each technique of each library its family places and of
+each other game of its family is
+
+- **not in its words** where the compiler cannot build it from the
+  candidate's description: it reads a clue kind, partition or term the
+  candidate does not have, which the line names. A term the source defines
+  and the candidate does not travels with the technique; one both define is
+  read as the candidate's.
+- **sound**, **unsound** with the board that shows it, or **undecided**,
+  checked against the candidate's rules as § "Checking a technique sound"
+  checks a game's own, on the same boards and in the same time, but with no
+  planted defect and on every order.
+
+Beside the table, each clue kind, partition and unit of the candidate is
+marked by whether some technique found sound reads it: a rule none reads is
+one the port writes techniques for. Run it by hand:
+
+```sh
+CANDIDATE=<game> [FROM=<game or library>,...] npx vitest run -c research/technique-check/vitest.config.ts inherit
+```
+
+It writes `results-inherit-<game>.txt`. **What it does not see**:
+
+- **A technique for two rules together.** A rule an inherited technique
+  reads is marked read, though the port may still need a technique for its
+  interplay with another: tried on Solo (2026-11-10), every technique the
+  report named was one the port has, but Solo's `intersect`, a box against a
+  line, reads two units the Latin library reads one at a time.
+- **A technique stated in other words.** A source whose clue means the same
+  as the candidate's under another name, or the same deduction over other
+  units, comes out not in its words; Solo's `digitSet` is the library's
+  `fish` with rows and columns swapped.
+- **Where a technique belongs.** That a technique is sound says nothing of
+  its tier, or of whether the ladder should run it. And a technique that
+  reads only the grid is in every grid game's words: Group's read the
+  answer as a multiplication table, and come out unsound in Solo, rightly.
 
 ## What this builds on
 

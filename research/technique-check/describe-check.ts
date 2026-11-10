@@ -34,6 +34,9 @@ import {
   relationMarkOf,
   type Technique,
   UNPLACED,
+  type VariationJson,
+  variationWord,
+  withVariations,
 } from "../../src/describe/description.ts";
 import type { Binder, Expr } from "../../src/describe/expr.ts";
 import { parse } from "../../src/describe/expr.ts";
@@ -3120,6 +3123,9 @@ export interface Verdict {
   at?: string;
   /** Set where the check's deadline passed before it reached a verdict. */
   outOfTime?: boolean;
+  /** The board an unsound verdict was found on, where the run asked for it
+   * and the solver that settled it kept one. */
+  model?: string[];
 }
 
 /**
@@ -3313,6 +3319,117 @@ export async function sampleAnswers(
   return { samples: out, every: false };
 }
 
+/** The boards a technique not proved in time is asked on, a batch. */
+const SAMPLES = 8;
+
+/** The boards sampled on one size of one world, shared by every technique
+ * asked there, so that a technique and its plants are asked on the same. */
+export class SampledBoards {
+  private readonly pool: Sample[] = [];
+  private exhausted = false;
+
+  constructor(
+    private readonly d: Description,
+    private readonly order: number,
+    private readonly sizes: ReadonlyMap<string, number>,
+    private readonly cells: number,
+  ) {}
+
+  /**
+   * `t` asked on {@link SAMPLES} boards at a time, fresh ones drawn as each
+   * batch passes, until a defect, the last answer or `by`. Out of time after
+   * a batch with no defect is no defect found, `sound`; `every` says every
+   * answer the board has was asked.
+   */
+  async ask(
+    t: Technique,
+    split: number,
+    by: number,
+    run: { shard?: { index: number; of: number }; model?: boolean } = {},
+  ): Promise<{ v: Verdict; asked: number; every: boolean }> {
+    const d = this.d;
+    const order = this.order;
+    const sizes = this.sizes;
+    const cells = this.cells;
+    const pool = this.pool;
+    const t0 = performance.now();
+    let asked = 0;
+    let queries = 0;
+    let v: Verdict = {
+      technique: t.id,
+      order,
+      verdict: "sound",
+      queries: 0,
+      seconds: 0,
+    };
+    while (performance.now() < by) {
+      if (asked === pool.length && !this.exhausted) {
+        const more = await sampleAnswers(d, order, sizes, cells, SAMPLES, by, pool);
+        this.exhausted = more.every;
+        pool.push(...more.samples);
+      }
+      // Every answer asked, or none found in the time left.
+      if (asked === pool.length) break;
+      const batch = pool.slice(asked, asked + SAMPLES);
+      v = await checkTechnique(d, t, order, sizes, split, cells, {
+        ...run,
+        deadline: by,
+        pin: batch,
+      });
+      queries += v.queries;
+      if (v.outOfTime) break;
+      asked += batch.length;
+      if (v.verdict !== "sound") break;
+    }
+    v = { ...v, queries, seconds: (performance.now() - t0) / 1000 };
+    if (v.outOfTime) v = { ...v, verdict: "sound", outOfTime: undefined };
+    return { v, asked, every: this.exhausted && asked === pool.length };
+  }
+}
+
+/** A description under one set of its variations. */
+export interface World {
+  where: string;
+  d: Description;
+}
+
+/**
+ * The worlds a description's techniques are checked in: every modifier that
+ * deals a partition or a clue always applied, since a partition into single
+ * cells and clues that say nothing are among what it deals; each other
+ * modifier on and off; and all of it on the description's own board and
+ * each ruleset's, so that a ruleset's techniques and the plain game's are
+ * each checked on the other's boards. A world the checker cannot build is
+ * left out, and `note` says why.
+ */
+export function worldsOf(
+  file: DescriptionJson,
+  libraries: readonly LibraryJson[],
+  note: (line: string) => void,
+): World[] {
+  const variations = Object.entries(file.variations ?? {});
+  const modifiers = variations.filter(([, v]) => variationWord(v) === "modifier");
+  const rulesets = variations
+    .filter(([, v]) => variationWord(v) === "ruleset")
+    .map(([n]) => [n]);
+  const dealing = (v: VariationJson): boolean =>
+    Object.values(v.add?.space?.regions ?? {}).includes("dealt") ||
+    Object.keys(v.add?.clues ?? {}).length > 0;
+  const always = modifiers.filter(([, v]) => dealing(v)).map(([n]) => n);
+  const toggled = modifiers.filter(([, v]) => !dealing(v)).map(([n]) => n);
+  return [[], ...rulesets].flatMap((ruleset) =>
+    Array.from({ length: 1 << toggled.length }, (_, mask) => {
+      const on = [...ruleset, ...always, ...toggled.filter((_, i) => mask & (1 << i))];
+      const where = [file.game, ...on.map((n) => `+${n}`)].join(" ");
+      const d = loadDescription(withVariations(file, on), libraries);
+      const why = unbuilt(d);
+      if (why === null) return [{ where, d }];
+      note(`--  ${where}: not checked, since ${why}`);
+      return [];
+    }).flat(),
+  );
+}
+
 /** `board`'s answer held to `s`'s, and its clues dealt as `s`'s constants. */
 function pinBoard(board: Board, s: Sample): Bx[] {
   for (const [kind, list] of board.clues) {
@@ -3351,6 +3468,8 @@ export async function checkTechnique(
      * counterexample on one is a counterexample, and `sound` then says only
      * that none was found on them. */
     pin?: readonly Sample[];
+    /** Keep the board an unsound verdict was found on, as `model`. */
+    model?: boolean;
   } = {},
 ): Promise<Verdict> {
   const t0 = performance.now();
@@ -3395,6 +3514,7 @@ async function checkWithin(
     shard?: { index: number; of: number };
     progress?: (done: number, of: number, at: string) => void;
     deadline?: number;
+    model?: boolean;
   },
   sample: Sample | null,
 ): Promise<Verdict> {
@@ -3474,6 +3594,7 @@ async function checkWithin(
     if (ms === 0) throw new OutOfTime();
     solver.set("timeout", ms);
     let r = await solver.check();
+    let blastedSettled = false;
     if (r === "unknown") {
       ms = timeLeft(NO_LIMIT, deadline);
       if (ms === 0) throw new OutOfTime();
@@ -3481,6 +3602,7 @@ async function checkWithin(
       blasted.add(asZ3(bad));
       blasted.set("timeout", ms);
       r = await blasted.check();
+      blastedSettled = r !== "unknown";
       blasted.pop();
     }
     if (r === "unknown") {
@@ -3491,9 +3613,15 @@ async function checkWithin(
     }
     // `CHECK_MODEL=1` prints the board an unsound verdict was found on, which
     // the result line names only by its first binder. The bit-blasted solver
-    // keeps no model once popped, so a verdict it settled prints none.
-    if (r === "sat" && process.env["CHECK_MODEL"])
-      printModel(solver, board, `${t.id} at ${key}`);
+    // keeps no model once popped, so a verdict it settled has none.
+    const model =
+      r === "sat" &&
+      !blastedSettled &&
+      (run.model === true || process.env["CHECK_MODEL"])
+        ? modelLines(solver, board, `${t.id} at ${key}`)
+        : undefined;
+    if (model !== undefined && process.env["CHECK_MODEL"])
+      console.log(model.join("\n"));
     solver.pop();
     if (r === "unknown") stop();
     if (r !== "unsat")
@@ -3504,6 +3632,7 @@ async function checkWithin(
         queries,
         seconds: (performance.now() - t0) / 1000,
         at: key,
+        model,
       };
   }
   return {
@@ -3516,13 +3645,12 @@ async function checkWithin(
 }
 
 /** A counterexample: the answer on each cell or edge, which of them the
- * marks know, each clue dealt (where it sits, whether it is there, its
- * value) and the sizes. */
-function printModel(
+ * marks know, each clue dealt (where it sits and its value) and the sizes. */
+function modelLines(
   solver: InstanceType<typeof Z3.Solver>,
   board: Board,
   what: string,
-): void {
+): string[] {
   const model = solver.model();
   const ev = (x: Nx | Bx): string =>
     typeof x === "number" || typeof x === "boolean"
@@ -3534,7 +3662,10 @@ function printModel(
     `known  ${board.known.map((k) => (ev(k) === "true" ? "K" : ".")).join(" ")}`,
     ...[...board.clues].map(
       ([kind, cs]) =>
-        `clue ${kind}: ${cs.map((c) => `${c.at}:${ev(c.present)}:${c.v.k === "num" ? ev(c.v.v) : c.v.k}`).join(" ")}`,
+        `clue ${kind}: ${cs
+          .filter((c) => ev(c.present) === "true")
+          .map((c) => `${c.at}:${c.v.k === "num" ? ev(c.v.v) : c.v.k}`)
+          .join(" ")}`,
     ),
     ...[...board.sizes].map(([n, v]) => `size ${n} = ${ev(v)}`),
     ...(board.cellMark === null
@@ -3546,7 +3677,7 @@ function printModel(
             .join(" ")}`,
         ]),
   ];
-  console.log(rows.join("\n"));
+  return rows;
 }
 
 function show(v: V | null): string {

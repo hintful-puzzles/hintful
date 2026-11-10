@@ -376,6 +376,11 @@ Its change says what stands in for one, normally "every generated board is
 uniquely solvable at exactly its stated difficulty" as a property test
 ([`testing.md`](./testing.md) § "What a new game ships").
 
+- **Plan its ladder from its family's.** State its rules in its description
+  first and run the inheritance report on it
+  ([`descriptions.md`](./descriptions.md) § "What a candidate inherits"):
+  which of the family's techniques stay sound under its rules, and which of
+  its rules none of them reads.
 - **Reuse the frontend of a shipped game whose task matches.** Take its data
   model, input and render shape, and change only the cell content and the win
   rule. Separate on Palisade's wall model is the exemplar.

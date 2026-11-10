@@ -1,0 +1,141 @@
+# What solo inherits
+
+| Source | Technique | In the candidate |
+| --- | --- | --- |
+| latin | placed | sound on solo +Killer 3, solo +Killer 4, solo +Killer +X 4 |
+| latin | hiddenSingle | sound on solo +Killer 3, solo +Killer 4, solo +Killer +X 4 |
+| latin | single | sound on solo +Killer 3, solo +Killer 4, solo +Killer +X 4 |
+| latin | set | sound on solo +Killer 3, solo +Killer 4, solo +Killer +X 4 |
+| latin | fish | sound on solo +Killer 3, solo +Killer 4, solo +Killer +X 4 |
+| latin | wing | sound on solo +Killer 3, solo +Killer 4, solo +Killer +X 4 |
+| adjacent | adjacent | not in its words: clue(kind, x) names a clue kind of the description, and bar is none |
+| adjacent | adjacentSet | not in its words: clue(kind, x) names a clue kind of the description, and bar is none |
+| group | associativity | UNSOUND in solo +Killer 3 at 1 |
+| group | identity | UNSOUND in solo +Killer 3 at ? |
+| group | notIdentity | UNSOUND in solo +Killer 3 at 1 |
+| keen | cageEasy | not in its words: clue(kind, x) names a clue kind of the description, and sum is none |
+| keen | cage | not in its words: clue(kind, x) names a clue kind of the description, and sum is none |
+| keen | cageLine | not in its words: clue(kind, x) names a clue kind of the description, and sum is none |
+| mathrax | clueEasy | not in its words: clue(kind, x) names a clue kind of the description, and parity is none |
+| mathrax | clue | not in its words: clue(kind, x) names a clue kind of the description, and parity is none |
+| mathrax | clueTricky | not in its words: clue(kind, x) names a clue kind of the description, and parity is none |
+| salad | border | not in its words: clues(kind) names a clue kind of the description, and border is none |
+| towers | facing | not in its words: clue(kind, x) names a clue kind of the description, and sees is none |
+| towers | bounds | not in its words: clues(kind) names a clue kind of the description, and sees is none |
+| towers | arrangement | not in its words: clues(kind) names a clue kind of the description, and sees is none |
+| unequal | sign | not in its words: clues(kind) names a clue kind of the description, and greater is none |
+
+| The candidate's rules | By what it inherits |
+| --- | --- |
+| clue total | **no technique inherited reads it** |
+| partition box | read |
+| partition cage | **no technique inherited reads it** |
+| unit rows | read |
+| unit cols | read |
+| unit diagonals | read |
+
+## The run
+
+```
+=== latin.placed
+--  solo +Jigsaw +Killer: not checked, since its box partition is dealt, and only blocks(a, b) is built
+--  solo +Jigsaw +Killer +X: not checked, since its box partition is dealt, and only blocks(a, b) is built
+sound    solo +Killer             placed                   3     9 queries     0.1s
+sound    solo +Killer             placed                   4    16 queries     0.2s
+sound    solo +Killer +X          placed                   4    16 queries     0.2s
+    sound on solo +Killer 3, solo +Killer 4, solo +Killer +X 4
+=== latin.hiddenSingle
+--  solo +Jigsaw +Killer: not checked, since its box partition is dealt, and only blocks(a, b) is built
+--  solo +Jigsaw +Killer +X: not checked, since its box partition is dealt, and only blocks(a, b) is built
+sound    solo +Killer             hiddenSingle             3     9 queries     0.2s
+sound    solo +Killer             hiddenSingle             4    12 queries     0.5s
+sound    solo +Killer +X          hiddenSingle             4    14 queries     0.6s
+    sound on solo +Killer 3, solo +Killer 4, solo +Killer +X 4
+=== latin.single
+--  solo +Jigsaw +Killer: not checked, since its box partition is dealt, and only blocks(a, b) is built
+--  solo +Jigsaw +Killer +X: not checked, since its box partition is dealt, and only blocks(a, b) is built
+sound    solo +Killer             single                   3     3 queries     0.1s
+sound    solo +Killer             single                   4     4 queries     0.2s
+sound    solo +Killer +X          single                   4     4 queries     0.2s
+    sound on solo +Killer 3, solo +Killer 4, solo +Killer +X 4
+=== latin.set
+--  solo +Jigsaw +Killer: not checked, since its box partition is dealt, and only blocks(a, b) is built
+--  solo +Jigsaw +Killer +X: not checked, since its box partition is dealt, and only blocks(a, b) is built
+sound    solo +Killer             set                      3     9 queries     0.3s
+sound    solo +Killer             set                      4    12 queries     1.1s
+sound    solo +Killer +X          set                      4    14 queries     1.3s
+    sound on solo +Killer 3, solo +Killer 4, solo +Killer +X 4
+=== latin.fish
+--  solo +Jigsaw +Killer: not checked, since its box partition is dealt, and only blocks(a, b) is built
+--  solo +Jigsaw +Killer +X: not checked, since its box partition is dealt, and only blocks(a, b) is built
+sound    solo +Killer             fish                     3     3 queries     0.1s
+sound    solo +Killer             fish                     4     4 queries     0.6s
+sound    solo +Killer +X          fish                     4     4 queries     0.5s
+    sound on solo +Killer 3, solo +Killer 4, solo +Killer +X 4
+=== latin.wing
+--  solo +Jigsaw +Killer: not checked, since its box partition is dealt, and only blocks(a, b) is built
+--  solo +Jigsaw +Killer +X: not checked, since its box partition is dealt, and only blocks(a, b) is built
+sound    solo +Killer             wing                     3     9 queries     0.3s
+sound    solo +Killer             wing                     4    16 queries     3.2s
+sound    solo +Killer +X          wing                     4    16 queries     2.9s
+    sound on solo +Killer 3, solo +Killer 4, solo +Killer +X 4
+=== adjacent.adjacent
+    not in its words: clue(kind, x) names a clue kind of the description, and bar is none
+=== adjacent.adjacentSet
+    not in its words: clue(kind, x) names a clue kind of the description, and bar is none
+=== group.associativity
+--  solo +Jigsaw +Killer: not checked, since its box partition is dealt, and only blocks(a, b) is built
+--  solo +Jigsaw +Killer +X: not checked, since its box partition is dealt, and only blocks(a, b) is built
+unsound  solo +Killer             associativity            3     1 queries     0.1s   at 1
+    model of associativity at 1
+    answer 3 1 2 2 3 1 1 2 3
+    known  . K . K . . . . .
+    clue total: 0:3 1:1 2:2 3:2 4:3 5:1 6:1 7:2 8:3
+    size r = 1
+    size c = 3
+    UNSOUND in solo +Killer 3 at 1
+=== group.identity
+--  solo +Jigsaw +Killer: not checked, since its box partition is dealt, and only blocks(a, b) is built
+--  solo +Jigsaw +Killer +X: not checked, since its box partition is dealt, and only blocks(a, b) is built
+unsound  solo +Killer             identity                 3     1 queries     0.1s   at ?
+    model of identity at ?
+    answer 1 3 2 3 2 1 2 1 3
+    known  K . . . . . . . .
+    clue total: 0:1 1:3 2:2 3:3 4:2 5:1 6:2 7:1 8:3
+    size r = 1
+    size c = 3
+    UNSOUND in solo +Killer 3 at ?
+=== group.notIdentity
+--  solo +Jigsaw +Killer: not checked, since its box partition is dealt, and only blocks(a, b) is built
+--  solo +Jigsaw +Killer +X: not checked, since its box partition is dealt, and only blocks(a, b) is built
+unsound  solo +Killer             notIdentity              3     1 queries     0.1s   at 1
+    model of notIdentity at 1
+    answer 3 2 1 2 1 3 1 3 2
+    known  . K . K . . K . .
+    clue total: 0:3 1:2 2:1 3:2 4:1 5:3 6:1 7:3 8:2
+    size r = 1
+    size c = 3
+    UNSOUND in solo +Killer 3 at 1
+=== keen.cageEasy
+    not in its words: clue(kind, x) names a clue kind of the description, and sum is none
+=== keen.cage
+    not in its words: clue(kind, x) names a clue kind of the description, and sum is none
+=== keen.cageLine
+    not in its words: clue(kind, x) names a clue kind of the description, and sum is none
+=== mathrax.clueEasy
+    not in its words: clue(kind, x) names a clue kind of the description, and parity is none
+=== mathrax.clue
+    not in its words: clue(kind, x) names a clue kind of the description, and parity is none
+=== mathrax.clueTricky
+    not in its words: clue(kind, x) names a clue kind of the description, and parity is none
+=== salad.border
+    not in its words: clues(kind) names a clue kind of the description, and border is none
+=== towers.facing
+    not in its words: clue(kind, x) names a clue kind of the description, and sees is none
+=== towers.bounds
+    not in its words: clues(kind) names a clue kind of the description, and sees is none
+=== towers.arrangement
+    not in its words: clues(kind) names a clue kind of the description, and sees is none
+=== unequal.sign
+    not in its words: clues(kind) names a clue kind of the description, and greater is none
+```

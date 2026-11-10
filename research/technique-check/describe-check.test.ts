@@ -8,16 +8,10 @@ import { fileURLToPath } from "node:url";
 import { globSync } from "tinyglobby";
 import { expect, it } from "vitest";
 import {
-  type DescriptionJson,
   isFormal,
   isLibrary,
-  type LibraryJson,
-  loadDescription,
   type Technique,
-  type VariationJson,
-  variationWord,
   withEveryVariation,
-  withVariations,
 } from "../../src/describe/description.ts";
 import { loadDescriptionFile } from "../../src/describe/load.ts";
 import {
@@ -37,12 +31,12 @@ import {
   libraryDescription,
   planted,
   regionCells,
-  type Sample,
-  sampleAnswers,
+  SampledBoards,
   sizeLabel,
   sizings,
-  unbuilt,
   type Verdict,
+  type World,
+  worldsOf,
 } from "./describe-check.ts";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
@@ -1436,12 +1430,6 @@ const line = (where: string, v: Verdict, want: string): void => {
   );
 };
 
-/** A description under one set of its variations. */
-interface World {
-  where: string;
-  d: ReturnType<typeof loadDescription>;
-}
-
 /**
  * Each technique sound in every world where the world has an answer, from the
  * least order up to the first where each of its planted defects comes out
@@ -1490,50 +1478,19 @@ async function checkAll(
       const cells = await regionCells(d, order, sizes);
       if (t === undefined || !(await hasAnswer(d, order, sizes, cells))) continue;
       // The boards sampled so far, shared by the technique and its plants.
-      const pool: Sample[] = [];
-      let exhausted = false;
-      // Asked on SAMPLES boards at a time, fresh ones drawn as each batch
-      // passes, until a defect, the last answer or `by`.
+      const sampled = new SampledBoards(d, order, sizes, cells);
       const pinned = async (
         tp: Technique,
         split: number,
         by: number,
       ): Promise<Verdict> => {
-        const t0 = performance.now();
-        let asked = 0;
-        let queries = 0;
-        let v: Verdict = {
-          technique: tp.id,
-          order,
-          verdict: "sound",
-          queries: 0,
-          seconds: 0,
-        };
-        while (performance.now() < by) {
-          if (asked === pool.length && !exhausted) {
-            const more = await sampleAnswers(d, order, sizes, cells, SAMPLES, by, pool);
-            exhausted = more.every;
-            pool.push(...more.samples);
-          }
-          // Every answer asked, or none found in the time left.
-          if (asked === pool.length) break;
-          const batch = pool.slice(asked, asked + SAMPLES);
-          v = await checkTechnique(d, tp, order, sizes, split, cells, {
-            shard: SHARD ?? undefined,
-            deadline: by,
-            pin: batch,
-          });
-          queries += v.queries;
-          if (v.outOfTime) break;
-          asked += batch.length;
-          if (v.verdict !== "sound") break;
-        }
-        v = { ...v, queries, seconds: (performance.now() - t0) / 1000 };
+        const { v, asked, every } = await sampled.ask(tp, split, by, {
+          shard: SHARD ?? undefined,
+        });
         say(
-          `..  ${where.padEnd(10)} ${tp.id}: not proved whole in time, asked on ${asked} boards${exhausted && asked === pool.length ? ", one an answer, every answer" : ""}: ${v.verdict === "sound" || v.outOfTime ? "no defect" : v.verdict}`,
+          `..  ${where.padEnd(10)} ${tp.id}: not proved whole in time, asked on ${asked} boards${every ? ", one an answer, every answer" : ""}: ${v.verdict === "sound" ? "no defect" : v.verdict}`,
         );
-        // Out of time after a batch with no defect is no defect found.
-        return v.outOfTime ? { ...v, verdict: "sound", outOfTime: undefined } : v;
+        return v;
       };
       let v = await checkTechnique(d, t, order, sizes, SPLIT, cells, {
         shard: SHARD ?? undefined,
@@ -1582,45 +1539,10 @@ async function checkAll(
   return { failed: bad, held };
 }
 
-/** The boards a technique not proved in time is asked on, a batch. */
-const SAMPLES = 8;
-
 /** The shares of {@link CHECK_BUDGET_MS} by which a technique's whole proof,
  * and then its asking on sampled boards, stop: the rest is its plants'. */
 const WHOLE = 0.4;
 const SAMPLED = 0.6;
-
-/**
- * The worlds a description's techniques are checked in: every modifier that
- * deals a partition or a clue always applied, since a partition into single
- * cells and clues that say nothing are among what it deals; each other
- * modifier on and off; and all of it on the description's own board and
- * each ruleset's, so that a ruleset's techniques and the plain game's are
- * each checked on the other's boards.
- */
-function worldsOf(file: DescriptionJson, libraries: readonly LibraryJson[]): World[] {
-  const variations = Object.entries(file.variations ?? {});
-  const modifiers = variations.filter(([, v]) => variationWord(v) === "modifier");
-  const rulesets = variations
-    .filter(([, v]) => variationWord(v) === "ruleset")
-    .map(([n]) => [n]);
-  const dealing = (v: VariationJson): boolean =>
-    Object.values(v.add?.space?.regions ?? {}).includes("dealt") ||
-    Object.keys(v.add?.clues ?? {}).length > 0;
-  const always = modifiers.filter(([, v]) => dealing(v)).map(([n]) => n);
-  const toggled = modifiers.filter(([, v]) => !dealing(v)).map(([n]) => n);
-  return [[], ...rulesets].flatMap((ruleset) =>
-    Array.from({ length: 1 << toggled.length }, (_, mask) => {
-      const on = [...ruleset, ...always, ...toggled.filter((_, i) => mask & (1 << i))];
-      const where = [file.game, ...on.map((n) => `+${n}`)].join(" ");
-      const d = loadDescription(withVariations(file, on), libraries);
-      const why = unbuilt(d);
-      if (why === null) return [{ where, d }];
-      say(`--  ${where}: not checked, since ${why}`);
-      return [];
-    }).flat(),
-  );
-}
 
 it("the techniques the app compiles are sound, and each planted defect is not", async () => {
   const bad: string[] = [];
@@ -1715,7 +1637,7 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
       continue;
     }
     if (!isFormal(file) || file.techniques === undefined) continue;
-    const worlds = worldsOf(file, libraries);
+    const worlds = worldsOf(file, libraries, say);
     // A world or a clue kind no board of an order can hold goes unchecked
     // there, which the verdicts alone would not say.
     const note = say;
