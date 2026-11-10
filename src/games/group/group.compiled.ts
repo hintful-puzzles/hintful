@@ -55,45 +55,45 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace): boolean {
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  let _q93 = true;
-  const _n97 = new Int32Array(32);
-  Q94: for (const _u95 of sp.lines) {
-    _n97.fill(0);
-    for (const _c96 of sp.lineCells[_u95]) {
-      const _t98 = (g[_c96] || -1);
-      if (++_n97[_t98] > 1) {
-        _q93 = false;
-        break Q94;
+  let _q1 = true;
+  const _n5 = new Int32Array(32);
+  Q2: for (const _u3 of sp.lines) {
+    _n5.fill(0);
+    for (const _c4 of sp.lineCells[_u3]) {
+      const _t6 = (g[_c4] || -1);
+      if (++_n5[_t6] > 1) {
+        _q1 = false;
+        break Q2;
       }
     }
   }
-  if (!(_q93)) return false;
-  let _q99 = true;
-  Q100: {
-    for (let _m101 = _domain; _m101 !== 0; _m101 &= _m101 - 1) {
-      const v_a = 31 - Math.clz32(_m101 & -_m101);
-      const _h105 = (v_a - 1);
-      for (let _m102 = _domain; _m102 !== 0; _m102 &= _m102 - 1) {
-        const v_b = 31 - Math.clz32(_m102 & -_m102);
-        const _h104 = (v_b - 1);
-        const _h106 = (_h105 * sp.w + _h104);
-        const _h107 = _h106;
-        const _h108 = (g[_h107] || -1);
-        const _h109 = (_h108 - 1);
-        for (let _m103 = _domain; _m103 !== 0; _m103 &= _m103 - 1) {
-          const v_c = 31 - Math.clz32(_m103 & -_m103);
-          const _h110 = (g[(_h109 * sp.w + (v_c - 1))] || -1);
-          const _h111 = (g[(_h104 * sp.w + (v_c - 1))] || -1);
-          const _h112 = (g[(_h105 * sp.w + (_h111 - 1))] || -1);
-          if (!((_h110 === _h112))) {
-            _q99 = false;
-            break Q100;
+  if (!(_q1)) return false;
+  let _q7 = true;
+  Q8: {
+    for (let _m9 = _domain; _m9 !== 0; _m9 &= _m9 - 1) {
+      const v_a = 31 - Math.clz32(_m9 & -_m9);
+      const _h13 = (v_a - 1);
+      for (let _m10 = _domain; _m10 !== 0; _m10 &= _m10 - 1) {
+        const v_b = 31 - Math.clz32(_m10 & -_m10);
+        const _h12 = (v_b - 1);
+        const _h14 = (_h13 * sp.w + _h12);
+        const _h15 = _h14;
+        const _h16 = (g[_h15] || -1);
+        const _h17 = (_h16 - 1);
+        for (let _m11 = _domain; _m11 !== 0; _m11 &= _m11 - 1) {
+          const v_c = 31 - Math.clz32(_m11 & -_m11);
+          const _h18 = (g[(_h17 * sp.w + (v_c - 1))] || -1);
+          const _h19 = (g[(_h12 * sp.w + (v_c - 1))] || -1);
+          const _h20 = (g[(_h13 * sp.w + (_h19 - 1))] || -1);
+          if (!((_h18 === _h20))) {
+            _q7 = false;
+            break Q8;
           }
         }
       }
     }
   }
-  if (!(_q99)) return false;
+  if (!(_q7)) return false;
   return true;
 }
 
@@ -123,7 +123,7 @@ export function associativity(b: Marks, sp: GridSpace, fire: Fire<AssociativityB
       const _h14 = (v_b - 1);
       L12: {
         const v_p = (_h11 * sp.w + (v_b - 1));
-        const _m11_0 = b.made[0];
+        const _m26_0 = b.made[0];
         if (!((b.grid[v_p] !== 0))) break L12;
         for (let _m13 = b.domain; _m13 !== 0; _m13 &= _m13 - 1) {
           const v_c = 31 - Math.clz32(_m13 & -_m13);
@@ -136,7 +136,7 @@ export function associativity(b: Marks, sp: GridSpace, fire: Fire<AssociativityB
             L18: {
               const v_r = (_h11 * sp.w + (_t17 - 1));
               if (!(((b.grid[v_l] !== 0) !== (b.grid[v_r] !== 0)))) break L18;
-              if (b.made[0] !== _m11_0) {
+              if (b.made[0] !== _m26_0) {
                 if (!((b.grid[v_p] !== 0))) { continue R2; }
               }
               if (import.meta.env.DEV && staleChecking) {
@@ -185,83 +185,83 @@ const identityFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding> | null): number {
-  const _g34: number[] = [];
-  const _g48: number[] = [];
+  const _g9: number[] = [];
+  const _g23: number[] = [];
   const facts = identityFacts;
   let fired = 0;
   let changed = false;
-  const _m36_0 = b.made[0];
-  _g34.length = 0;
-  G35: {
-    const _a38 = sp.cells;
-    for (let _i39 = 0; _i39 < _a38.length; _i39++) {
-      const v_c = _a38[_i39];
+  const _m43_0 = b.made[0];
+  _g9.length = 0;
+  G10: {
+    const _a13 = sp.cells;
+    for (let _i14 = 0; _i14 < _a13.length; _i14++) {
+      const v_c = _a13[_i14];
       if (!(((b.grid[v_c] !== 0) && (((b.grid[v_c] || -1) === (((v_c / sp.w) | 0) + 1)) || ((b.grid[v_c] || -1) === ((v_c % sp.w) + 1)))))) continue;
-      _g34.push(v_c);
+      _g9.push(v_c);
     }
   }
-  L40: {
-    const v_w0 = (_g34.length > 0 ? _g34[0] : -1);
-    if (!((v_w0 !== -1))) break L40;
-    const _h42 = ((v_w0 / sp.w) | 0);
-    const _h43 = (_h42 + 1);
-    const _h44 = _h43;
-    const _h45 = (v_w0 % sp.w);
-    const _h46 = (_h45 + 1);
-    const _h47 = _h46;
-    for (let _m41 = b.domain; _m41 !== 0; _m41 &= _m41 - 1) {
-      const v_e = 31 - Math.clz32(_m41 & -_m41);
-      if (!(((((b.grid[v_w0] || -1) === _h44) && (v_e === _h47)) || (((b.grid[v_w0] || -1) !== _h44) && (v_e === _h44))))) continue;
-      const _h63 = (v_e - 1);
-      if (b.made[0] !== _m36_0) {
-        _g48.length = 0;
-        G49: {
-          const _a52 = sp.cells;
-          for (let _i53 = 0; _i53 < _a52.length; _i53++) {
-            const v_c = _a52[_i53];
+  L15: {
+    const v_w0 = (_g9.length > 0 ? _g9[0] : -1);
+    if (!((v_w0 !== -1))) break L15;
+    const _h17 = ((v_w0 / sp.w) | 0);
+    const _h18 = (_h17 + 1);
+    const _h19 = _h18;
+    const _h20 = (v_w0 % sp.w);
+    const _h21 = (_h20 + 1);
+    const _h22 = _h21;
+    for (let _m16 = b.domain; _m16 !== 0; _m16 &= _m16 - 1) {
+      const v_e = 31 - Math.clz32(_m16 & -_m16);
+      if (!(((((b.grid[v_w0] || -1) === _h19) && (v_e === _h22)) || (((b.grid[v_w0] || -1) !== _h19) && (v_e === _h19))))) continue;
+      const _h38 = (v_e - 1);
+      if (b.made[0] !== _m43_0) {
+        _g23.length = 0;
+        G24: {
+          const _a27 = sp.cells;
+          for (let _i28 = 0; _i28 < _a27.length; _i28++) {
+            const v_c = _a27[_i28];
             if (!(((b.grid[v_c] !== 0) && (((b.grid[v_c] || -1) === (((v_c / sp.w) | 0) + 1)) || ((b.grid[v_c] || -1) === ((v_c % sp.w) + 1)))))) continue;
-            _g48.push(v_c);
+            _g23.push(v_c);
           }
         }
-        if (!((v_w0 === (_g48.length > 0 ? _g48[0] : -1)))) { return fired; }
+        if (!((v_w0 === (_g23.length > 0 ? _g23[0] : -1)))) { return fired; }
       }
       if (import.meta.env.DEV && staleChecking) {
-        const _g54: number[] = [];
-        G55: {
-          const _a58 = sp.cells;
-          for (let _i59 = 0; _i59 < _a58.length; _i59++) {
-            const v_c = _a58[_i59];
+        const _g29: number[] = [];
+        G30: {
+          const _a33 = sp.cells;
+          for (let _i34 = 0; _i34 < _a33.length; _i34++) {
+            const v_c = _a33[_i34];
             if (!(((b.grid[v_c] !== 0) && (((b.grid[v_c] || -1) === (((v_c / sp.w) | 0) + 1)) || ((b.grid[v_c] || -1) === ((v_c % sp.w) + 1)))))) continue;
-            _g54.push(v_c);
+            _g29.push(v_c);
           }
         }
-        freshBinding("identity", [(v_w0 === (_g54.length > 0 ? _g54[0] : -1)), (v_w0 !== -1), (((b.domain >> v_e) & 1) !== 0), ((((b.grid[v_w0] || -1) === (((v_w0 / sp.w) | 0) + 1)) && (v_e === ((v_w0 % sp.w) + 1))) || (((b.grid[v_w0] || -1) !== (((v_w0 / sp.w) | 0) + 1)) && (v_e === (((v_w0 / sp.w) | 0) + 1))))], ["w0 =", "where of w0", "e in", "where of e"]);
+        freshBinding("identity", [(v_w0 === (_g29.length > 0 ? _g29[0] : -1)), (v_w0 !== -1), (((b.domain >> v_e) & 1) !== 0), ((((b.grid[v_w0] || -1) === (((v_w0 / sp.w) | 0) + 1)) && (v_e === ((v_w0 % sp.w) + 1))) || (((b.grid[v_w0] || -1) !== (((v_w0 / sp.w) | 0) + 1)) && (v_e === (((v_w0 / sp.w) | 0) + 1))))], ["w0 =", "where of w0", "e in", "where of e"]);
       }
       facts.length = 0;
       changed = false;
-      let _q60 = true;
-      Q61: {
-        for (let _m62 = b.domain; _m62 !== 0; _m62 &= _m62 - 1) {
-          const v_j = 31 - Math.clz32(_m62 & -_m62);
-          const _t64 = ((v_j - 1) * sp.w + _h63);
-          const _t65 = (_h63 * sp.w + (v_j - 1));
-          for (let _i66 = 0; _i66 < 2; _i66++) {
-            const v_c = _i66 === 0 ? _t64 : _t65;
-            if (_i66 === 1 && (v_c === _t64)) continue;
+      let _q35 = true;
+      Q36: {
+        for (let _m37 = b.domain; _m37 !== 0; _m37 &= _m37 - 1) {
+          const v_j = 31 - Math.clz32(_m37 & -_m37);
+          const _t39 = ((v_j - 1) * sp.w + _h38);
+          const _t40 = (_h38 * sp.w + (v_j - 1));
+          for (let _i41 = 0; _i41 < 2; _i41++) {
+            const v_c = _i41 === 0 ? _t39 : _t40;
+            if (_i41 === 1 && (v_c === _t39)) continue;
             if (!(!((b.grid[v_c] !== 0)))) continue;
-            let _c67: boolean = (((b.cands[v_c] >> v_j) & 1) !== 0);
-            if (_c67) {
+            let _c42: boolean = (((b.cands[v_c] >> v_j) & 1) !== 0);
+            if (_c42) {
               if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, v_j); changed = true; } else facts.push(PLACE, v_c, v_j); }
-              _c67 = true;
+              _c42 = true;
             }
-            if (!(_c67)) {
-              _q60 = false;
-              break Q61;
+            if (!(_c42)) {
+              _q35 = false;
+              break Q36;
             }
           }
         }
       }
-      if (!(_q60)) return -1;
+      if (!(_q35)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ w0: v_w0, e: v_e }, facts)) return 1;
@@ -283,60 +283,60 @@ export function notIdentity(b: Marks, sp: GridSpace, fire: Fire<NotIdentityBindi
   const facts = notIdentityFacts;
   let fired = 0;
   let changed = false;
-  for (let _m73 = b.domain; _m73 !== 0; _m73 &= _m73 - 1) {
-    const v_a = 31 - Math.clz32(_m73 & -_m73);
-    const _h77 = (v_a - 1);
-    let _g74 = -1;
-    G75: {
-      for (let _m76 = b.domain; _m76 !== 0; _m76 &= _m76 - 1) {
-        const v_j = 31 - Math.clz32(_m76 & -_m76);
-        const _h78 = (b.grid[((v_j - 1) * sp.w + _h77)] !== 0);
-        const _h79 = (b.grid[((v_j - 1) * sp.w + _h77)] || -1);
-        const _h80 = (b.grid[(_h77 * sp.w + (v_j - 1))] !== 0);
-        const _h81 = (b.grid[(_h77 * sp.w + (v_j - 1))] || -1);
-        if (!(((_h78 && (_h79 !== v_j)) || (_h80 && (_h81 !== v_j))))) continue;
-        if (_g74 === -1 || v_j < _g74) _g74 = v_j;
+  for (let _m6 = b.domain; _m6 !== 0; _m6 &= _m6 - 1) {
+    const v_a = 31 - Math.clz32(_m6 & -_m6);
+    const _h10 = (v_a - 1);
+    let _g7 = -1;
+    G8: {
+      for (let _m9 = b.domain; _m9 !== 0; _m9 &= _m9 - 1) {
+        const v_j = 31 - Math.clz32(_m9 & -_m9);
+        const _h11 = (b.grid[((v_j - 1) * sp.w + _h10)] !== 0);
+        const _h12 = (b.grid[((v_j - 1) * sp.w + _h10)] || -1);
+        const _h13 = (b.grid[(_h10 * sp.w + (v_j - 1))] !== 0);
+        const _h14 = (b.grid[(_h10 * sp.w + (v_j - 1))] || -1);
+        if (!(((_h11 && (_h12 !== v_j)) || (_h13 && (_h14 !== v_j))))) continue;
+        if (_g7 === -1 || v_j < _g7) _g7 = v_j;
       }
     }
-    L82: {
-      const v_o = _g74;
-      if (!((v_o !== -1))) break L82;
+    L15: {
+      const v_o = _g7;
+      if (!((v_o !== -1))) break L15;
       if (import.meta.env.DEV && staleChecking) {
-        let _g83 = -1;
-        G84: {
-          for (let _m85 = b.domain; _m85 !== 0; _m85 &= _m85 - 1) {
-            const v_j = 31 - Math.clz32(_m85 & -_m85);
+        let _g16 = -1;
+        G17: {
+          for (let _m18 = b.domain; _m18 !== 0; _m18 &= _m18 - 1) {
+            const v_j = 31 - Math.clz32(_m18 & -_m18);
             if (!((((b.grid[((v_j - 1) * sp.w + (v_a - 1))] !== 0) && ((b.grid[((v_j - 1) * sp.w + (v_a - 1))] || -1) !== v_j)) || ((b.grid[((v_a - 1) * sp.w + (v_j - 1))] !== 0) && ((b.grid[((v_a - 1) * sp.w + (v_j - 1))] || -1) !== v_j))))) continue;
-            if (_g83 === -1 || v_j < _g83) _g83 = v_j;
+            if (_g16 === -1 || v_j < _g16) _g16 = v_j;
           }
         }
-        freshBinding("notIdentity", [(((b.domain >> v_a) & 1) !== 0), (v_o === _g83), (v_o !== -1)], ["a in", "o =", "where of o"]);
+        freshBinding("notIdentity", [(((b.domain >> v_a) & 1) !== 0), (v_o === _g16), (v_o !== -1)], ["a in", "o =", "where of o"]);
       }
       facts.length = 0;
       changed = false;
-      let _q86 = true;
-      Q87: {
-        for (let _m88 = b.domain; _m88 !== 0; _m88 &= _m88 - 1) {
-          const v_j = 31 - Math.clz32(_m88 & -_m88);
-          const _t89 = ((v_j - 1) * sp.w + _h77);
-          if ((((b.cands[_t89] >> v_j) & 1) !== 0)) { if (fire === null) { b.strikeAt(_t89, v_j); changed = true; } else facts.push(STRIKE, _t89, v_j); }
-          let _c92: boolean = true;
-          if (_c92) {
-            let _c91: boolean = (v_j === v_a);
-            if (!_c91) {
-              const _t90 = (_h77 * sp.w + (v_j - 1));
-              if ((((b.cands[_t90] >> v_j) & 1) !== 0)) { if (fire === null) { b.strikeAt(_t90, v_j); changed = true; } else facts.push(STRIKE, _t90, v_j); }
-              _c91 = true;
+      let _q19 = true;
+      Q20: {
+        for (let _m21 = b.domain; _m21 !== 0; _m21 &= _m21 - 1) {
+          const v_j = 31 - Math.clz32(_m21 & -_m21);
+          const _t22 = ((v_j - 1) * sp.w + _h10);
+          if ((((b.cands[_t22] >> v_j) & 1) !== 0)) { if (fire === null) { b.strikeAt(_t22, v_j); changed = true; } else facts.push(STRIKE, _t22, v_j); }
+          let _c25: boolean = true;
+          if (_c25) {
+            let _c24: boolean = (v_j === v_a);
+            if (!_c24) {
+              const _t23 = (_h10 * sp.w + (v_j - 1));
+              if ((((b.cands[_t23] >> v_j) & 1) !== 0)) { if (fire === null) { b.strikeAt(_t23, v_j); changed = true; } else facts.push(STRIKE, _t23, v_j); }
+              _c24 = true;
             }
-            _c92 = _c91;
+            _c25 = _c24;
           }
-          if (!(_c92)) {
-            _q86 = false;
-            break Q87;
+          if (!(_c25)) {
+            _q19 = false;
+            break Q20;
           }
         }
       }
-      if (!(_q86)) return -1;
+      if (!(_q19)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ a: v_a, o: v_o }, facts)) return 1;

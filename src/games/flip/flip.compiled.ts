@@ -53,9 +53,9 @@ export function claimWitnesses(_sp: GridSpace, _cl: Dealt, _variations: readonly
  * has on. */
 export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]): PositionRules<Position, Move, DeadEndId> {
   function pressMoves(_p: Position, into: Move[]): void {
-    const _a3 = sp.cells;
-    for (let _i4 = 0; _i4 < _a3.length; _i4++) {
-      const v_c = _a3[_i4];
+    const _a1 = sp.cells;
+    for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+      const v_c = _a1[_i2];
       if (!((cl.flips[v_c].length > 0))) continue;
       into.push({ move: "press", c: v_c });
     }
@@ -72,9 +72,9 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
     const v_c = m.c;
     const q: Position = { ...p, grid: p.grid.slice() };
     {
-      const _a5 = cl.flips[v_c];
-      for (let _i6 = 0; _i6 < _a5.length; _i6++) {
-        const v_d = _a5[_i6];
+      const _a1 = cl.flips[v_c];
+      for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+        const v_d = _a1[_i2];
         q.grid[v_d] = (1 - p.grid[v_d]);
       }
     }
@@ -83,18 +83,18 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
 
   function finished(p: Position): boolean {
     {
-      let _q7 = true;
-      Q8: {
-        const _a9 = sp.cells;
-        for (let _i10 = 0; _i10 < _a9.length; _i10++) {
-          const v_c = _a9[_i10];
+      let _q1 = true;
+      Q2: {
+        const _a3 = sp.cells;
+        for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+          const v_c = _a3[_i4];
           if (!((p.grid[v_c] === 0))) {
-            _q7 = false;
-            break Q8;
+            _q1 = false;
+            break Q2;
           }
         }
       }
-      if (!(_q7)) return false;
+      if (!(_q1)) return false;
     }
     return true;
   }

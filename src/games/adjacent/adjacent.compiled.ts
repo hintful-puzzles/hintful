@@ -61,23 +61,23 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  let _q40 = true;
-  const _n44 = new Int32Array(32);
-  Q41: for (const _u42 of sp.lines) {
-    _n44.fill(0);
-    for (const _c43 of sp.lineCells[_u42]) {
-      const _t45 = (g[_c43] || -1);
-      if (++_n44[_t45] > 1) {
-        _q40 = false;
-        break Q41;
+  let _q1 = true;
+  const _n5 = new Int32Array(32);
+  Q2: for (const _u3 of sp.lines) {
+    _n5.fill(0);
+    for (const _c4 of sp.lineCells[_u3]) {
+      const _t6 = (g[_c4] || -1);
+      if (++_n5[_t6] > 1) {
+        _q1 = false;
+        break Q2;
       }
     }
   }
-  if (!(_q40)) return false;
-  for (let _k46 = 0; _k46 < cl.bar.at.length; _k46++) {
-    const _at47 = cl.bar.at[_k46];
-    const _v48 = cl.bar.v[_k46];
-    if (!(((_v48 === 1) === (Math.abs(((g[sp.edgeEnds[2 * _at47]] || -1) - (g[sp.edgeEnds[2 * _at47 + 1]] || -1))) === 1)))) return false;
+  if (!(_q1)) return false;
+  for (let _k7 = 0; _k7 < cl.bar.at.length; _k7++) {
+    const _at8 = cl.bar.at[_k7];
+    const _v9 = cl.bar.v[_k7];
+    if (!(((_v9 === 1) === (Math.abs(((g[sp.edgeEnds[2 * _at8]] || -1) - (g[sp.edgeEnds[2 * _at8 + 1]] || -1))) === 1)))) return false;
   }
   return true;
 }
@@ -107,7 +107,7 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjacent
     R2:
     for (let _i10 = 0; _i10 < _a9.length; _i10++) {
       const v_a = _a9[_i10];
-      const _m8_0 = b.made[0];
+      const _m20_0 = b.made[0];
       const _h11 = (b.grid[v_a] !== 0);
       if (!(_h11)) continue;
       const _h17 = (b.grid[v_a] || -1);
@@ -117,7 +117,7 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjacent
         const v_e = sp.adj4Edges[v_a][_i13];
         const _h18 = clueAt(cl.bar, v_e);
         const _h19 = (_h18 === 1);
-        if (b.made[0] !== _m8_0) {
+        if (b.made[0] !== _m20_0) {
           if (!((b.grid[v_a] !== 0))) { continue R2; }
         }
         if (import.meta.env.DEV && staleChecking) {
@@ -167,46 +167,46 @@ export function adjacentSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjac
   if (adjacentSetCands.length < sp.cells.length) adjacentSetCands = new Int32Array(sp.cells.length);
   const cands = adjacentSetCands;
   cands.fill(-1);
-  const _a26 = sp.cols;
-  for (let _i27 = 0; _i27 < _a26.length; _i27++) {
-    const v_L = _a26[_i27];
-    const _a28 = sp.lineCells[v_L];
-    for (let _i29 = 0; _i29 < _a28.length; _i29++) {
-      const v_a = _a28[_i29];
-      const _a30 = sp.adj4[v_a];
-      for (let _i31 = 0; _i31 < _a30.length; _i31++) {
-        const v_b = _a30[_i31];
-        const v_e = sp.adj4Edges[v_a][_i31];
-        const _h38 = clueAt(cl.bar, v_e);
-        const _h39 = (_h38 === 1);
+  const _a7 = sp.cols;
+  for (let _i8 = 0; _i8 < _a7.length; _i8++) {
+    const v_L = _a7[_i8];
+    const _a9 = sp.lineCells[v_L];
+    for (let _i10 = 0; _i10 < _a9.length; _i10++) {
+      const v_a = _a9[_i10];
+      const _a11 = sp.adj4[v_a];
+      for (let _i12 = 0; _i12 < _a11.length; _i12++) {
+        const v_b = _a11[_i12];
+        const v_e = sp.adj4Edges[v_a][_i12];
+        const _h19 = clueAt(cl.bar, v_e);
+        const _h20 = (_h19 === 1);
         if (import.meta.env.DEV && staleChecking) {
-          freshBinding("adjacentSet", [(sp.cols.includes(v_L)), (sp.lineCells[v_L].includes(v_a)), (sp.adj4[v_a].includes(v_b)), (v_e === sp.adj4Edges[v_a][_i31])], ["L in", "a in", "b in", "e ="]);
+          freshBinding("adjacentSet", [(sp.cols.includes(v_L)), (sp.lineCells[v_L].includes(v_a)), (sp.adj4[v_a].includes(v_b)), (v_e === sp.adj4Edges[v_a][_i12])], ["L in", "a in", "b in", "e ="]);
         }
         facts.length = 0;
         changed = false;
-        let _q32 = true;
-        Q33: {
-          for (let _m34 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])); _m34 !== 0; _m34 &= _m34 - 1) {
-            const v_d = 31 - Math.clz32(_m34 & -_m34);
-            let _q35 = false;
-            Q36: {
-              for (let _m37 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])); _m37 !== 0; _m37 &= _m37 - 1) {
-                const v_d2 = 31 - Math.clz32(_m37 & -_m37);
-                if (((v_d2 !== v_d) && (_h39 === (Math.abs((v_d2 - v_d)) === 1)))) {
-                  _q35 = true;
-                  break Q36;
+        let _q13 = true;
+        Q14: {
+          for (let _m15 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])); _m15 !== 0; _m15 &= _m15 - 1) {
+            const v_d = 31 - Math.clz32(_m15 & -_m15);
+            let _q16 = false;
+            Q17: {
+              for (let _m18 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])); _m18 !== 0; _m18 &= _m18 - 1) {
+                const v_d2 = 31 - Math.clz32(_m18 & -_m18);
+                if (((v_d2 !== v_d) && (_h20 === (Math.abs((v_d2 - v_d)) === 1)))) {
+                  _q16 = true;
+                  break Q17;
                 }
               }
             }
-            if (!(!(_q35))) continue;
+            if (!(!(_q16))) continue;
             if ((((b.cands[v_b] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_b, v_d); changed = true; } else facts.push(STRIKE, v_b, v_d); }
             if (!(true)) {
-              _q32 = false;
-              break Q33;
+              _q13 = false;
+              break Q14;
             }
           }
         }
-        if (!(_q32)) return -1;
+        if (!(_q13)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ L: v_L, a: v_a, b: v_b, e: v_e }, facts)) return 1;

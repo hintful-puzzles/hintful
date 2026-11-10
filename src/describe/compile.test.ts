@@ -138,6 +138,35 @@ describe("the compiler refuses an ill-sorted technique", () => {
   });
 });
 
+describe("a function's fresh names are its own", () => {
+  // A name taken in one function renumbered every function after it, so a
+  // compiled diff could not show which functions a change touched.
+  it("an edit to one technique changes that technique's code alone", () => {
+    const source = "src/games/filling/filling.description.yaml";
+    const filling = sources.get(source);
+    if (filling === undefined || !isFormal(filling)) throw new Error(`${source} moved`);
+    const first = (filling.techniques ?? [])[0];
+    if (first === undefined || !("id" in first)) throw new Error(`${source} changed`);
+    const all = new Map(sources);
+    all.set(source, {
+      ...filling,
+      techniques: (filling.techniques ?? []).map((t) =>
+        t === first
+          ? {
+              ...first,
+              conclude: `count(c in cells where not known(c)) >= 0 and ${first.conclude}`,
+            }
+          : t,
+      ),
+    });
+    const blocks = (code: string): Set<string> => new Set(code.split("\n\n"));
+    const before = blocks(compileSource(source, sources));
+    const moved = [...blocks(compileSource(source, all))].filter((b) => !before.has(b));
+    expect(moved.length).toBeGreaterThan(0);
+    expect(moved.filter((b) => !b.includes(`function ${first.id}(`))).toEqual([]);
+  });
+});
+
 describe("a wide domain's numbers are never a mask", () => {
   // Ascent's numbers run past 31, so a set of them built as 32 bits wraps.
   const source = "src/games/ascent/ascent.description.yaml";

@@ -38,24 +38,24 @@ export const deadEnds: readonly DeadEndId[] = ["parity"];
 export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]): Readonly<Record<DeadEndId, (p: Position) => boolean>> {
   return {
     parity: (p) => {
-      let _c21: boolean = (((sp.w % 2) === 1) && ((sp.h % 2) === 1));
-      if (_c21) {
-        let _g15 = 0;
-        G16: {
-          const _a17 = sp.cells;
-          for (let _i18 = 0; _i18 < _a17.length; _i18++) {
-            const v_a = _a17[_i18];
-            const _a19 = sp.cells;
-            for (let _i20 = 0; _i20 < _a19.length; _i20++) {
-              const v_b = _a19[_i20];
-              if (!(((_i18 < _i20) && (p.value[v_a] > p.value[v_b])))) continue;
-              _g15++;
+      let _c7: boolean = (((sp.w % 2) === 1) && ((sp.h % 2) === 1));
+      if (_c7) {
+        let _g1 = 0;
+        G2: {
+          const _a3 = sp.cells;
+          for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+            const v_a = _a3[_i4];
+            const _a5 = sp.cells;
+            for (let _i6 = 0; _i6 < _a5.length; _i6++) {
+              const v_b = _a5[_i6];
+              if (!(((_i4 < _i6) && (p.value[v_a] > p.value[v_b])))) continue;
+              _g1++;
             }
           }
         }
-        _c21 = ((_g15 % 2) === 1);
+        _c7 = ((_g1 % 2) === 1);
       }
-      return _c21;
+      return _c7;
     },
   };
 }
@@ -75,14 +75,14 @@ export function claimWitnesses(_sp: GridSpace, _cl: Dealt, _variations: readonly
  * has on. */
 export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): PositionRules<Position, Move, DeadEndId> {
   function slideMoves(_p: Position, into: Move[]): void {
-    const _a5 = sp.lines;
-    for (let _i6 = 0; _i6 < _a5.length; _i6++) {
-      const v_L = _a5[_i6];
-      const _a7 = sp.lineCells[v_L];
-      for (let _i8 = 0; _i8 < _a7.length; _i8++) {
-        const v_t = _a7[_i8];
-        if (!((_i8 > 0))) continue;
-        const v_k = _i8;
+    const _a1 = sp.lines;
+    for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+      const v_L = _a1[_i2];
+      const _a3 = sp.lineCells[v_L];
+      for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+        const v_t = _a3[_i4];
+        if (!((_i4 > 0))) continue;
+        const v_k = _i4;
         into.push({ move: "slide", L: v_L, t: v_t, k: v_k });
       }
     }
@@ -104,10 +104,10 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
     const v_k = m.k;
     const q: Position = { ...p, value: p.value.slice() };
     {
-      const _a9 = sp.lineCells[v_L];
-      for (let _i10 = 0; _i10 < _a9.length; _i10++) {
-        const v_c = _a9[_i10];
-        q.value[v_c] = p.value[(sp.lineCells[v_L][(((_i10 - v_k) + sp.lineCells[v_L].length) % sp.lineCells[v_L].length)] ?? -1)];
+      const _a1 = sp.lineCells[v_L];
+      for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+        const v_c = _a1[_i2];
+        q.value[v_c] = p.value[(sp.lineCells[v_L][(((_i2 - v_k) + sp.lineCells[v_L].length) % sp.lineCells[v_L].length)] ?? -1)];
       }
     }
     return q;
@@ -115,18 +115,18 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
 
   function finished(p: Position): boolean {
     {
-      let _q11 = true;
-      Q12: {
-        const _a13 = sp.cells;
-        for (let _i14 = 0; _i14 < _a13.length; _i14++) {
-          const v_c = _a13[_i14];
-          if (!((p.value[v_c] === (_i14 + 1)))) {
-            _q11 = false;
-            break Q12;
+      let _q1 = true;
+      Q2: {
+        const _a3 = sp.cells;
+        for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+          const v_c = _a3[_i4];
+          if (!((p.value[v_c] === (_i4 + 1)))) {
+            _q1 = false;
+            break Q2;
           }
         }
       }
-      if (!(_q11)) return false;
+      if (!(_q1)) return false;
     }
     return true;
   }

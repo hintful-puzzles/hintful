@@ -103,7 +103,7 @@ function body(env: Env, depth: number, write: (out: Out) => void): string[] {
   env.prelude = prelude;
   const out = new Out(depth);
   try {
-    write(out);
+    Out.own("", () => write(out));
   } finally {
     env.prelude = outer;
   }
@@ -132,12 +132,14 @@ function bindingSorts(bs: readonly Binder[], env: Env): Map<string, Sort> {
     hoist: null,
     prelude: { out: new Out(0), fixed: new Map(), fixing: null },
   };
-  bindingLoops(bs, new Map(), probe, new Out(0), (sc) => {
-    for (const b of bs) {
-      const v = sc.get(b.name);
-      if (v !== undefined) sorts.set(b.name, v.sort);
-    }
-  });
+  Out.own("", () =>
+    bindingLoops(bs, new Map(), probe, new Out(0), (sc) => {
+      for (const b of bs) {
+        const v = sc.get(b.name);
+        if (v !== undefined) sorts.set(b.name, v.sort);
+      }
+    }),
+  );
   for (const [name, s] of sorts) {
     if (name === "move") throw new CompileError("a move binds no name `move`, its tag");
     if (s.k !== "num" && s.k !== "elem")

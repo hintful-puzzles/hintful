@@ -66,103 +66,103 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  let _q463 = true;
-  const _n467 = new Int32Array(32);
-  Q464: for (const _u465 of sp.lines) {
-    _n467.fill(0);
-    for (const _c466 of sp.lineCells[_u465]) {
-      const _t468 = (g[_c466] || -1);
-      if (++_n467[_t468] > 1) {
-        _q463 = false;
-        break Q464;
+  let _q1 = true;
+  const _n5 = new Int32Array(32);
+  Q2: for (const _u3 of sp.lines) {
+    _n5.fill(0);
+    for (const _c4 of sp.lineCells[_u3]) {
+      const _t6 = (g[_c4] || -1);
+      if (++_n5[_t6] > 1) {
+        _q1 = false;
+        break Q2;
       }
     }
   }
-  if (!(_q463)) return false;
-  for (let _k469 = 0; _k469 < cl.sum.at.length; _k469++) {
-    const _at470 = cl.sum.at[_k469];
-    const _v471 = cl.sum.v[_k469];
-    let _q472 = true;
-    Q473: {
-      const _a474 = sp.cornerCells[_at470];
-      for (let _i475 = 0; _i475 < _a474.length; _i475++) {
-        const v_c = _a474[_i475];
-        const _h476 = (g[v_c] || -1);
-        if (!(((_h476 + (g[(sp.cornerCells[_at470][0] + sp.cornerCells[_at470][3] - v_c)] || -1)) === _v471))) {
-          _q472 = false;
-          break Q473;
+  if (!(_q1)) return false;
+  for (let _k7 = 0; _k7 < cl.sum.at.length; _k7++) {
+    const _at8 = cl.sum.at[_k7];
+    const _v9 = cl.sum.v[_k7];
+    let _q10 = true;
+    Q11: {
+      const _a12 = sp.cornerCells[_at8];
+      for (let _i13 = 0; _i13 < _a12.length; _i13++) {
+        const v_c = _a12[_i13];
+        const _h14 = (g[v_c] || -1);
+        if (!(((_h14 + (g[(sp.cornerCells[_at8][0] + sp.cornerCells[_at8][3] - v_c)] || -1)) === _v9))) {
+          _q10 = false;
+          break Q11;
         }
       }
     }
-    if (!(_q472)) return false;
+    if (!(_q10)) return false;
   }
-  for (let _k477 = 0; _k477 < cl.difference.at.length; _k477++) {
-    const _at478 = cl.difference.at[_k477];
-    const _v479 = cl.difference.v[_k477];
-    let _q480 = true;
-    Q481: {
-      const _a482 = sp.cornerCells[_at478];
-      for (let _i483 = 0; _i483 < _a482.length; _i483++) {
-        const v_c = _a482[_i483];
-        const _h484 = (g[v_c] || -1);
-        if (!((Math.abs((_h484 - (g[(sp.cornerCells[_at478][0] + sp.cornerCells[_at478][3] - v_c)] || -1))) === _v479))) {
-          _q480 = false;
-          break Q481;
+  for (let _k15 = 0; _k15 < cl.difference.at.length; _k15++) {
+    const _at16 = cl.difference.at[_k15];
+    const _v17 = cl.difference.v[_k15];
+    let _q18 = true;
+    Q19: {
+      const _a20 = sp.cornerCells[_at16];
+      for (let _i21 = 0; _i21 < _a20.length; _i21++) {
+        const v_c = _a20[_i21];
+        const _h22 = (g[v_c] || -1);
+        if (!((Math.abs((_h22 - (g[(sp.cornerCells[_at16][0] + sp.cornerCells[_at16][3] - v_c)] || -1))) === _v17))) {
+          _q18 = false;
+          break Q19;
         }
       }
     }
-    if (!(_q480)) return false;
+    if (!(_q18)) return false;
   }
-  for (let _k485 = 0; _k485 < cl.product.at.length; _k485++) {
-    const _at486 = cl.product.at[_k485];
-    const _v487 = cl.product.v[_k485];
-    let _q488 = true;
-    Q489: {
-      const _a490 = sp.cornerCells[_at486];
-      for (let _i491 = 0; _i491 < _a490.length; _i491++) {
-        const v_c = _a490[_i491];
-        const _h492 = (g[v_c] || -1);
-        if (!(((_h492 * (g[(sp.cornerCells[_at486][0] + sp.cornerCells[_at486][3] - v_c)] || -1)) === _v487))) {
-          _q488 = false;
-          break Q489;
+  for (let _k23 = 0; _k23 < cl.product.at.length; _k23++) {
+    const _at24 = cl.product.at[_k23];
+    const _v25 = cl.product.v[_k23];
+    let _q26 = true;
+    Q27: {
+      const _a28 = sp.cornerCells[_at24];
+      for (let _i29 = 0; _i29 < _a28.length; _i29++) {
+        const v_c = _a28[_i29];
+        const _h30 = (g[v_c] || -1);
+        if (!(((_h30 * (g[(sp.cornerCells[_at24][0] + sp.cornerCells[_at24][3] - v_c)] || -1)) === _v25))) {
+          _q26 = false;
+          break Q27;
         }
       }
     }
-    if (!(_q488)) return false;
+    if (!(_q26)) return false;
   }
-  for (let _k493 = 0; _k493 < cl.quotient.at.length; _k493++) {
-    const _at494 = cl.quotient.at[_k493];
-    const _v495 = cl.quotient.v[_k493];
-    let _q496 = true;
-    Q497: {
-      const _a498 = sp.cornerCells[_at494];
-      for (let _i499 = 0; _i499 < _a498.length; _i499++) {
-        const v_c = _a498[_i499];
-        const _h500 = (g[v_c] || -1);
-        if (!(((_h500 === (_v495 * (g[(sp.cornerCells[_at494][0] + sp.cornerCells[_at494][3] - v_c)] || -1))) || ((g[(sp.cornerCells[_at494][0] + sp.cornerCells[_at494][3] - v_c)] || -1) === (_v495 * _h500))))) {
-          _q496 = false;
-          break Q497;
+  for (let _k31 = 0; _k31 < cl.quotient.at.length; _k31++) {
+    const _at32 = cl.quotient.at[_k31];
+    const _v33 = cl.quotient.v[_k31];
+    let _q34 = true;
+    Q35: {
+      const _a36 = sp.cornerCells[_at32];
+      for (let _i37 = 0; _i37 < _a36.length; _i37++) {
+        const v_c = _a36[_i37];
+        const _h38 = (g[v_c] || -1);
+        if (!(((_h38 === (_v33 * (g[(sp.cornerCells[_at32][0] + sp.cornerCells[_at32][3] - v_c)] || -1))) || ((g[(sp.cornerCells[_at32][0] + sp.cornerCells[_at32][3] - v_c)] || -1) === (_v33 * _h38))))) {
+          _q34 = false;
+          break Q35;
         }
       }
     }
-    if (!(_q496)) return false;
+    if (!(_q34)) return false;
   }
-  for (let _k501 = 0; _k501 < cl.parity.at.length; _k501++) {
-    const _at502 = cl.parity.at[_k501];
-    const _v503 = cl.parity.v[_k501];
-    let _q504 = true;
-    Q505: {
-      const _a506 = sp.cornerCells[_at502];
-      for (let _i507 = 0; _i507 < _a506.length; _i507++) {
-        const v_c = _a506[_i507];
-        const _h508 = (g[v_c] || -1);
-        if (!(((_h508 % 2) === _v503))) {
-          _q504 = false;
-          break Q505;
+  for (let _k39 = 0; _k39 < cl.parity.at.length; _k39++) {
+    const _at40 = cl.parity.at[_k39];
+    const _v41 = cl.parity.v[_k39];
+    let _q42 = true;
+    Q43: {
+      const _a44 = sp.cornerCells[_at40];
+      for (let _i45 = 0; _i45 < _a44.length; _i45++) {
+        const v_c = _a44[_i45];
+        const _h46 = (g[v_c] || -1);
+        if (!(((_h46 % 2) === _v41))) {
+          _q42 = false;
+          break Q43;
         }
       }
     }
-    if (!(_q504)) return false;
+    if (!(_q42)) return false;
   }
   return true;
 }
@@ -188,7 +188,7 @@ export function clueEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueEasy
   R1:
   for (let _i37 = 0; _i37 < _a36.length; _i37++) {
     const v_c = _a36[_i37];
-    const _m7_1 = b.made[1];
+    const _m181_1 = b.made[1];
     let _g38 = 0;
     G39: {
       const _a54 = sp.cellCorners[v_c];
@@ -278,7 +278,7 @@ export function clueEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueEasy
         const _h174 = (_h158 === -1);
         const _h175 = (_h161 === -1);
         const _h176 = (_h164 === -1);
-        if (b.made[1] !== _m7_1) {
+        if (b.made[1] !== _m181_1) {
           let _g90 = 0;
           G91: {
             const _a106 = sp.cellCorners[v_c];
@@ -442,199 +442,199 @@ export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding>
   if (clueCands.length < sp.cells.length) clueCands = new Int32Array(sp.cells.length);
   const cands = clueCands;
   cands.fill(-1);
-  const _a206 = sp.cells;
+  const _a26 = sp.cells;
   R1:
-  for (let _i207 = 0; _i207 < _a206.length; _i207++) {
-    const v_c = _a206[_i207];
-    const _m31_1 = b.made[1];
-    let _g208 = 0;
-    G209: {
-      const _a219 = sp.cellCorners[v_c];
-      for (let _i220 = 0; _i220 < _a219.length; _i220++) {
-        const v_j = _a219[_i220];
-        const _h221 = clueAt(cl.parity, v_j);
-        const _h222 = clueAt(cl.sum, v_j);
-        const _h223 = clueAt(cl.difference, v_j);
-        const _h224 = clueAt(cl.product, v_j);
-        const _h225 = clueAt(cl.quotient, v_j);
-        if (!(((_h221 !== -1) || ((((_h222 !== -1) || (_h223 !== -1)) || (_h224 !== -1)) || (_h225 !== -1))))) continue;
-        const _h227 = (_h221 === -1);
-        const _h228 = (_h222 !== -1);
-        const _h229 = (_h223 !== -1);
-        const _h230 = (_h228 || _h229);
-        const _h231 = (_h224 !== -1);
-        const _h232 = (_h230 || _h231);
-        const _h233 = (_h225 !== -1);
-        const _h234 = (_h232 || _h233);
-        const _h235 = _h234;
-        const _h236 = !(_h235);
-        const _h239 = (sp.cornerCells[v_j][0] + sp.cornerCells[v_j][3] - v_c);
-        const _h241 = (_h222 === -1);
-        const _h242 = (_h223 === -1);
-        const _h243 = (_h224 === -1);
-        const _h244 = (_h225 === -1);
-        for (let _m226 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m226 !== 0; _m226 &= _m226 - 1) {
-          const v_d = 31 - Math.clz32(_m226 & -_m226);
-          const _h245 = (_h225 * v_d);
-          let _c247: boolean = (_h227 || ((v_d % 2) === _h221));
-          if (_c247) {
-            let _c246: boolean = _h236;
-            if (!_c246) {
-              let _q237 = false;
-              Q238: {
-                for (let _m240 = (cands[_h239] >= 0 ? cands[_h239] : (cands[_h239] = b.cands[_h239])); _m240 !== 0; _m240 &= _m240 - 1) {
-                  const v_e = 31 - Math.clz32(_m240 & -_m240);
-                  if (((((_h241 || ((v_d + v_e) === _h222)) && (_h242 || (Math.abs((v_d - v_e)) === _h223))) && (_h243 || ((v_d * v_e) === _h224))) && ((_h244 || (v_d === (_h225 * v_e))) || (v_e === _h245)))) {
-                    _q237 = true;
-                    break Q238;
+  for (let _i27 = 0; _i27 < _a26.length; _i27++) {
+    const v_c = _a26[_i27];
+    const _m143_1 = b.made[1];
+    let _g28 = 0;
+    G29: {
+      const _a39 = sp.cellCorners[v_c];
+      for (let _i40 = 0; _i40 < _a39.length; _i40++) {
+        const v_j = _a39[_i40];
+        const _h41 = clueAt(cl.parity, v_j);
+        const _h42 = clueAt(cl.sum, v_j);
+        const _h43 = clueAt(cl.difference, v_j);
+        const _h44 = clueAt(cl.product, v_j);
+        const _h45 = clueAt(cl.quotient, v_j);
+        if (!(((_h41 !== -1) || ((((_h42 !== -1) || (_h43 !== -1)) || (_h44 !== -1)) || (_h45 !== -1))))) continue;
+        const _h47 = (_h41 === -1);
+        const _h48 = (_h42 !== -1);
+        const _h49 = (_h43 !== -1);
+        const _h50 = (_h48 || _h49);
+        const _h51 = (_h44 !== -1);
+        const _h52 = (_h50 || _h51);
+        const _h53 = (_h45 !== -1);
+        const _h54 = (_h52 || _h53);
+        const _h55 = _h54;
+        const _h56 = !(_h55);
+        const _h59 = (sp.cornerCells[v_j][0] + sp.cornerCells[v_j][3] - v_c);
+        const _h61 = (_h42 === -1);
+        const _h62 = (_h43 === -1);
+        const _h63 = (_h44 === -1);
+        const _h64 = (_h45 === -1);
+        for (let _m46 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m46 !== 0; _m46 &= _m46 - 1) {
+          const v_d = 31 - Math.clz32(_m46 & -_m46);
+          const _h65 = (_h45 * v_d);
+          let _c67: boolean = (_h47 || ((v_d % 2) === _h41));
+          if (_c67) {
+            let _c66: boolean = _h56;
+            if (!_c66) {
+              let _q57 = false;
+              Q58: {
+                for (let _m60 = (cands[_h59] >= 0 ? cands[_h59] : (cands[_h59] = b.cands[_h59])); _m60 !== 0; _m60 &= _m60 - 1) {
+                  const v_e = 31 - Math.clz32(_m60 & -_m60);
+                  if (((((_h61 || ((v_d + v_e) === _h42)) && (_h62 || (Math.abs((v_d - v_e)) === _h43))) && (_h63 || ((v_d * v_e) === _h44))) && ((_h64 || (v_d === (_h45 * v_e))) || (v_e === _h65)))) {
+                    _q57 = true;
+                    break Q58;
                   }
                 }
               }
-              _c246 = _q237;
+              _c66 = _q57;
             }
-            _c247 = _c246;
+            _c67 = _c66;
           }
-          if (!(!(_c247))) continue;
-          _g208 |= 1 << v_d;
+          if (!(!(_c67))) continue;
+          _g28 |= 1 << v_d;
         }
       }
     }
-    L248: {
-      const v_M = ((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])) & ~_g208);
-      const _h249 = popcount(v_M);
-      if (!((_h249 < 2))) break L248;
-      const _h292 = (_h249 > 0);
-      const _a250 = sp.cellCorners[v_c];
-      for (let _i251 = 0; _i251 < _a250.length; _i251++) {
-        const v_k = _a250[_i251];
-        const _h296 = clueAt(cl.parity, v_k);
-        const _h297 = (_h296 === -1);
-        const _h298 = clueAt(cl.sum, v_k);
-        const _h299 = (_h298 !== -1);
-        const _h300 = clueAt(cl.difference, v_k);
-        const _h301 = (_h300 !== -1);
-        const _h302 = (_h299 || _h301);
-        const _h303 = clueAt(cl.product, v_k);
-        const _h304 = (_h303 !== -1);
-        const _h305 = (_h302 || _h304);
-        const _h306 = clueAt(cl.quotient, v_k);
-        const _h307 = (_h306 !== -1);
-        const _h308 = (_h305 || _h307);
-        const _h309 = _h308;
-        const _h310 = !(_h309);
-        const _h313 = (sp.cornerCells[v_k][0] + sp.cornerCells[v_k][3] - v_c);
-        const _h315 = (_h298 === -1);
-        const _h316 = (_h300 === -1);
-        const _h317 = (_h303 === -1);
-        const _h318 = (_h306 === -1);
-        if (b.made[1] !== _m31_1) {
-          let _g252 = 0;
-          G253: {
-            const _a263 = sp.cellCorners[v_c];
-            for (let _i264 = 0; _i264 < _a263.length; _i264++) {
-              const v_j = _a263[_i264];
+    L68: {
+      const v_M = ((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])) & ~_g28);
+      const _h69 = popcount(v_M);
+      if (!((_h69 < 2))) break L68;
+      const _h112 = (_h69 > 0);
+      const _a70 = sp.cellCorners[v_c];
+      for (let _i71 = 0; _i71 < _a70.length; _i71++) {
+        const v_k = _a70[_i71];
+        const _h116 = clueAt(cl.parity, v_k);
+        const _h117 = (_h116 === -1);
+        const _h118 = clueAt(cl.sum, v_k);
+        const _h119 = (_h118 !== -1);
+        const _h120 = clueAt(cl.difference, v_k);
+        const _h121 = (_h120 !== -1);
+        const _h122 = (_h119 || _h121);
+        const _h123 = clueAt(cl.product, v_k);
+        const _h124 = (_h123 !== -1);
+        const _h125 = (_h122 || _h124);
+        const _h126 = clueAt(cl.quotient, v_k);
+        const _h127 = (_h126 !== -1);
+        const _h128 = (_h125 || _h127);
+        const _h129 = _h128;
+        const _h130 = !(_h129);
+        const _h133 = (sp.cornerCells[v_k][0] + sp.cornerCells[v_k][3] - v_c);
+        const _h135 = (_h118 === -1);
+        const _h136 = (_h120 === -1);
+        const _h137 = (_h123 === -1);
+        const _h138 = (_h126 === -1);
+        if (b.made[1] !== _m143_1) {
+          let _g72 = 0;
+          G73: {
+            const _a83 = sp.cellCorners[v_c];
+            for (let _i84 = 0; _i84 < _a83.length; _i84++) {
+              const v_j = _a83[_i84];
               if (!(((clueAt(cl.parity, v_j) !== -1) || ((((clueAt(cl.sum, v_j) !== -1) || (clueAt(cl.difference, v_j) !== -1)) || (clueAt(cl.product, v_j) !== -1)) || (clueAt(cl.quotient, v_j) !== -1))))) continue;
-              for (let _m265 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m265 !== 0; _m265 &= _m265 - 1) {
-                const v_d = 31 - Math.clz32(_m265 & -_m265);
-                let _c271: boolean = ((clueAt(cl.parity, v_j) === -1) || ((v_d % 2) === clueAt(cl.parity, v_j)));
-                if (_c271) {
-                  let _c270: boolean = !(((((clueAt(cl.sum, v_j) !== -1) || (clueAt(cl.difference, v_j) !== -1)) || (clueAt(cl.product, v_j) !== -1)) || (clueAt(cl.quotient, v_j) !== -1)));
-                  if (!_c270) {
-                    let _q266 = false;
-                    Q267: {
-                      const _t268 = (sp.cornerCells[v_j][0] + sp.cornerCells[v_j][3] - v_c);
-                      for (let _m269 = (cands[_t268] >= 0 ? cands[_t268] : (cands[_t268] = b.cands[_t268])); _m269 !== 0; _m269 &= _m269 - 1) {
-                        const v_e = 31 - Math.clz32(_m269 & -_m269);
+              for (let _m85 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m85 !== 0; _m85 &= _m85 - 1) {
+                const v_d = 31 - Math.clz32(_m85 & -_m85);
+                let _c91: boolean = ((clueAt(cl.parity, v_j) === -1) || ((v_d % 2) === clueAt(cl.parity, v_j)));
+                if (_c91) {
+                  let _c90: boolean = !(((((clueAt(cl.sum, v_j) !== -1) || (clueAt(cl.difference, v_j) !== -1)) || (clueAt(cl.product, v_j) !== -1)) || (clueAt(cl.quotient, v_j) !== -1)));
+                  if (!_c90) {
+                    let _q86 = false;
+                    Q87: {
+                      const _t88 = (sp.cornerCells[v_j][0] + sp.cornerCells[v_j][3] - v_c);
+                      for (let _m89 = (cands[_t88] >= 0 ? cands[_t88] : (cands[_t88] = b.cands[_t88])); _m89 !== 0; _m89 &= _m89 - 1) {
+                        const v_e = 31 - Math.clz32(_m89 & -_m89);
                         if ((((((clueAt(cl.sum, v_j) === -1) || ((v_d + v_e) === clueAt(cl.sum, v_j))) && ((clueAt(cl.difference, v_j) === -1) || (Math.abs((v_d - v_e)) === clueAt(cl.difference, v_j)))) && ((clueAt(cl.product, v_j) === -1) || ((v_d * v_e) === clueAt(cl.product, v_j)))) && (((clueAt(cl.quotient, v_j) === -1) || (v_d === (clueAt(cl.quotient, v_j) * v_e))) || (v_e === (clueAt(cl.quotient, v_j) * v_d))))) {
-                          _q266 = true;
-                          break Q267;
+                          _q86 = true;
+                          break Q87;
                         }
                       }
                     }
-                    _c270 = _q266;
+                    _c90 = _q86;
                   }
-                  _c271 = _c270;
+                  _c91 = _c90;
                 }
-                if (!(!(_c271))) continue;
-                _g252 |= 1 << v_d;
+                if (!(!(_c91))) continue;
+                _g72 |= 1 << v_d;
               }
             }
           }
-          if (!((v_M === ((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])) & ~_g252)))) { continue R1; }
+          if (!((v_M === ((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])) & ~_g72)))) { continue R1; }
         }
         if (import.meta.env.DEV && staleChecking) {
-          let _g272 = 0;
-          G273: {
-            const _a283 = sp.cellCorners[v_c];
-            for (let _i284 = 0; _i284 < _a283.length; _i284++) {
-              const v_j = _a283[_i284];
+          let _g92 = 0;
+          G93: {
+            const _a103 = sp.cellCorners[v_c];
+            for (let _i104 = 0; _i104 < _a103.length; _i104++) {
+              const v_j = _a103[_i104];
               if (!(((clueAt(cl.parity, v_j) !== -1) || ((((clueAt(cl.sum, v_j) !== -1) || (clueAt(cl.difference, v_j) !== -1)) || (clueAt(cl.product, v_j) !== -1)) || (clueAt(cl.quotient, v_j) !== -1))))) continue;
-              for (let _m285 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m285 !== 0; _m285 &= _m285 - 1) {
-                const v_d = 31 - Math.clz32(_m285 & -_m285);
-                let _c291: boolean = ((clueAt(cl.parity, v_j) === -1) || ((v_d % 2) === clueAt(cl.parity, v_j)));
-                if (_c291) {
-                  let _c290: boolean = !(((((clueAt(cl.sum, v_j) !== -1) || (clueAt(cl.difference, v_j) !== -1)) || (clueAt(cl.product, v_j) !== -1)) || (clueAt(cl.quotient, v_j) !== -1)));
-                  if (!_c290) {
-                    let _q286 = false;
-                    Q287: {
-                      const _t288 = (sp.cornerCells[v_j][0] + sp.cornerCells[v_j][3] - v_c);
-                      for (let _m289 = (cands[_t288] >= 0 ? cands[_t288] : (cands[_t288] = b.cands[_t288])); _m289 !== 0; _m289 &= _m289 - 1) {
-                        const v_e = 31 - Math.clz32(_m289 & -_m289);
+              for (let _m105 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m105 !== 0; _m105 &= _m105 - 1) {
+                const v_d = 31 - Math.clz32(_m105 & -_m105);
+                let _c111: boolean = ((clueAt(cl.parity, v_j) === -1) || ((v_d % 2) === clueAt(cl.parity, v_j)));
+                if (_c111) {
+                  let _c110: boolean = !(((((clueAt(cl.sum, v_j) !== -1) || (clueAt(cl.difference, v_j) !== -1)) || (clueAt(cl.product, v_j) !== -1)) || (clueAt(cl.quotient, v_j) !== -1)));
+                  if (!_c110) {
+                    let _q106 = false;
+                    Q107: {
+                      const _t108 = (sp.cornerCells[v_j][0] + sp.cornerCells[v_j][3] - v_c);
+                      for (let _m109 = (cands[_t108] >= 0 ? cands[_t108] : (cands[_t108] = b.cands[_t108])); _m109 !== 0; _m109 &= _m109 - 1) {
+                        const v_e = 31 - Math.clz32(_m109 & -_m109);
                         if ((((((clueAt(cl.sum, v_j) === -1) || ((v_d + v_e) === clueAt(cl.sum, v_j))) && ((clueAt(cl.difference, v_j) === -1) || (Math.abs((v_d - v_e)) === clueAt(cl.difference, v_j)))) && ((clueAt(cl.product, v_j) === -1) || ((v_d * v_e) === clueAt(cl.product, v_j)))) && (((clueAt(cl.quotient, v_j) === -1) || (v_d === (clueAt(cl.quotient, v_j) * v_e))) || (v_e === (clueAt(cl.quotient, v_j) * v_d))))) {
-                          _q286 = true;
-                          break Q287;
+                          _q106 = true;
+                          break Q107;
                         }
                       }
                     }
-                    _c290 = _q286;
+                    _c110 = _q106;
                   }
-                  _c291 = _c290;
+                  _c111 = _c110;
                 }
-                if (!(!(_c291))) continue;
-                _g272 |= 1 << v_d;
+                if (!(!(_c111))) continue;
+                _g92 |= 1 << v_d;
               }
             }
           }
-          freshBinding("clue", [(sp.cells.includes(v_c)), (v_M === ((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])) & ~_g272)), (popcount(v_M) < 2), (sp.cellCorners[v_c].includes(v_k))], ["c in", "M =", "where of M", "k in"]);
+          freshBinding("clue", [(sp.cells.includes(v_c)), (v_M === ((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])) & ~_g92)), (popcount(v_M) < 2), (sp.cellCorners[v_c].includes(v_k))], ["c in", "M =", "where of M", "k in"]);
         }
         facts.length = 0;
         changed = false;
-        let _c322: boolean = _h292;
-        if (_c322) {
-          let _q293 = true;
-          Q294: {
-            for (let _m295 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m295 !== 0; _m295 &= _m295 - 1) {
-              const v_d = 31 - Math.clz32(_m295 & -_m295);
-              const _h319 = (_h306 * v_d);
-              let _c321: boolean = (_h297 || ((v_d % 2) === _h296));
-              if (_c321) {
-                let _c320: boolean = _h310;
-                if (!_c320) {
-                  let _q311 = false;
-                  Q312: {
-                    for (let _m314 = (cands[_h313] >= 0 ? cands[_h313] : (cands[_h313] = b.cands[_h313])); _m314 !== 0; _m314 &= _m314 - 1) {
-                      const v_e = 31 - Math.clz32(_m314 & -_m314);
-                      if (((((_h315 || ((v_d + v_e) === _h298)) && (_h316 || (Math.abs((v_d - v_e)) === _h300))) && (_h317 || ((v_d * v_e) === _h303))) && ((_h318 || (v_d === (_h306 * v_e))) || (v_e === _h319)))) {
-                        _q311 = true;
-                        break Q312;
+        let _c142: boolean = _h112;
+        if (_c142) {
+          let _q113 = true;
+          Q114: {
+            for (let _m115 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m115 !== 0; _m115 &= _m115 - 1) {
+              const v_d = 31 - Math.clz32(_m115 & -_m115);
+              const _h139 = (_h126 * v_d);
+              let _c141: boolean = (_h117 || ((v_d % 2) === _h116));
+              if (_c141) {
+                let _c140: boolean = _h130;
+                if (!_c140) {
+                  let _q131 = false;
+                  Q132: {
+                    for (let _m134 = (cands[_h133] >= 0 ? cands[_h133] : (cands[_h133] = b.cands[_h133])); _m134 !== 0; _m134 &= _m134 - 1) {
+                      const v_e = 31 - Math.clz32(_m134 & -_m134);
+                      if (((((_h135 || ((v_d + v_e) === _h118)) && (_h136 || (Math.abs((v_d - v_e)) === _h120))) && (_h137 || ((v_d * v_e) === _h123))) && ((_h138 || (v_d === (_h126 * v_e))) || (v_e === _h139)))) {
+                        _q131 = true;
+                        break Q132;
                       }
                     }
                   }
-                  _c320 = _q311;
+                  _c140 = _q131;
                 }
-                _c321 = _c320;
+                _c141 = _c140;
               }
-              if (!(!(_c321))) continue;
+              if (!(!(_c141))) continue;
               if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
               if (!(true)) {
-                _q293 = false;
-                break Q294;
+                _q113 = false;
+                break Q114;
               }
             }
           }
-          _c322 = _q293;
+          _c142 = _q113;
         }
-        if (!(_c322)) return -1;
+        if (!(_c142)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ c: v_c, M: v_M, k: v_k }, facts)) return 1;
@@ -663,197 +663,197 @@ export function clueTricky(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueTr
   if (clueTrickyCands.length < sp.cells.length) clueTrickyCands = new Int32Array(sp.cells.length);
   const cands = clueTrickyCands;
   cands.fill(-1);
-  const _a347 = sp.cells;
+  const _a25 = sp.cells;
   R1:
-  for (let _i348 = 0; _i348 < _a347.length; _i348++) {
-    const v_c = _a347[_i348];
-    const _m55_1 = b.made[1];
-    let _g349 = 0;
-    G350: {
-      const _a360 = sp.cellCorners[v_c];
-      for (let _i361 = 0; _i361 < _a360.length; _i361++) {
-        const v_j = _a360[_i361];
-        const _h362 = clueAt(cl.parity, v_j);
-        const _h363 = clueAt(cl.sum, v_j);
-        const _h364 = clueAt(cl.difference, v_j);
-        const _h365 = clueAt(cl.product, v_j);
-        const _h366 = clueAt(cl.quotient, v_j);
-        if (!(((_h362 !== -1) || ((((_h363 !== -1) || (_h364 !== -1)) || (_h365 !== -1)) || (_h366 !== -1))))) continue;
-        const _h368 = (_h362 === -1);
-        const _h369 = (_h363 !== -1);
-        const _h370 = (_h364 !== -1);
-        const _h371 = (_h369 || _h370);
-        const _h372 = (_h365 !== -1);
-        const _h373 = (_h371 || _h372);
-        const _h374 = (_h366 !== -1);
-        const _h375 = (_h373 || _h374);
-        const _h376 = _h375;
-        const _h377 = !(_h376);
-        const _h380 = (sp.cornerCells[v_j][0] + sp.cornerCells[v_j][3] - v_c);
-        const _h382 = (_h363 === -1);
-        const _h383 = (_h364 === -1);
-        const _h384 = (_h365 === -1);
-        const _h385 = (_h366 === -1);
-        for (let _m367 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m367 !== 0; _m367 &= _m367 - 1) {
-          const v_d = 31 - Math.clz32(_m367 & -_m367);
-          const _h386 = (_h366 * v_d);
-          let _c388: boolean = (_h368 || ((v_d % 2) === _h362));
-          if (_c388) {
-            let _c387: boolean = _h377;
-            if (!_c387) {
-              let _q378 = false;
-              Q379: {
-                for (let _m381 = (cands[_h380] >= 0 ? cands[_h380] : (cands[_h380] = b.cands[_h380])); _m381 !== 0; _m381 &= _m381 - 1) {
-                  const v_e = 31 - Math.clz32(_m381 & -_m381);
-                  if (((((_h382 || ((v_d + v_e) === _h363)) && (_h383 || (Math.abs((v_d - v_e)) === _h364))) && (_h384 || ((v_d * v_e) === _h365))) && ((_h385 || (v_d === (_h366 * v_e))) || (v_e === _h386)))) {
-                    _q378 = true;
-                    break Q379;
+  for (let _i26 = 0; _i26 < _a25.length; _i26++) {
+    const v_c = _a25[_i26];
+    const _m141_1 = b.made[1];
+    let _g27 = 0;
+    G28: {
+      const _a38 = sp.cellCorners[v_c];
+      for (let _i39 = 0; _i39 < _a38.length; _i39++) {
+        const v_j = _a38[_i39];
+        const _h40 = clueAt(cl.parity, v_j);
+        const _h41 = clueAt(cl.sum, v_j);
+        const _h42 = clueAt(cl.difference, v_j);
+        const _h43 = clueAt(cl.product, v_j);
+        const _h44 = clueAt(cl.quotient, v_j);
+        if (!(((_h40 !== -1) || ((((_h41 !== -1) || (_h42 !== -1)) || (_h43 !== -1)) || (_h44 !== -1))))) continue;
+        const _h46 = (_h40 === -1);
+        const _h47 = (_h41 !== -1);
+        const _h48 = (_h42 !== -1);
+        const _h49 = (_h47 || _h48);
+        const _h50 = (_h43 !== -1);
+        const _h51 = (_h49 || _h50);
+        const _h52 = (_h44 !== -1);
+        const _h53 = (_h51 || _h52);
+        const _h54 = _h53;
+        const _h55 = !(_h54);
+        const _h58 = (sp.cornerCells[v_j][0] + sp.cornerCells[v_j][3] - v_c);
+        const _h60 = (_h41 === -1);
+        const _h61 = (_h42 === -1);
+        const _h62 = (_h43 === -1);
+        const _h63 = (_h44 === -1);
+        for (let _m45 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m45 !== 0; _m45 &= _m45 - 1) {
+          const v_d = 31 - Math.clz32(_m45 & -_m45);
+          const _h64 = (_h44 * v_d);
+          let _c66: boolean = (_h46 || ((v_d % 2) === _h40));
+          if (_c66) {
+            let _c65: boolean = _h55;
+            if (!_c65) {
+              let _q56 = false;
+              Q57: {
+                for (let _m59 = (cands[_h58] >= 0 ? cands[_h58] : (cands[_h58] = b.cands[_h58])); _m59 !== 0; _m59 &= _m59 - 1) {
+                  const v_e = 31 - Math.clz32(_m59 & -_m59);
+                  if (((((_h60 || ((v_d + v_e) === _h41)) && (_h61 || (Math.abs((v_d - v_e)) === _h42))) && (_h62 || ((v_d * v_e) === _h43))) && ((_h63 || (v_d === (_h44 * v_e))) || (v_e === _h64)))) {
+                    _q56 = true;
+                    break Q57;
                   }
                 }
               }
-              _c387 = _q378;
+              _c65 = _q56;
             }
-            _c388 = _c387;
+            _c66 = _c65;
           }
-          if (!(!(_c388))) continue;
-          _g349 |= 1 << v_d;
+          if (!(!(_c66))) continue;
+          _g27 |= 1 << v_d;
         }
       }
     }
-    const v_M = ((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])) & ~_g349);
-    const _h431 = popcount(v_M);
-    const _h432 = (_h431 > 0);
-    const _a389 = sp.cellCorners[v_c];
-    for (let _i390 = 0; _i390 < _a389.length; _i390++) {
-      const v_k = _a389[_i390];
-      const _h436 = clueAt(cl.parity, v_k);
-      const _h437 = (_h436 === -1);
-      const _h438 = clueAt(cl.sum, v_k);
-      const _h439 = (_h438 !== -1);
-      const _h440 = clueAt(cl.difference, v_k);
-      const _h441 = (_h440 !== -1);
-      const _h442 = (_h439 || _h441);
-      const _h443 = clueAt(cl.product, v_k);
-      const _h444 = (_h443 !== -1);
-      const _h445 = (_h442 || _h444);
-      const _h446 = clueAt(cl.quotient, v_k);
-      const _h447 = (_h446 !== -1);
-      const _h448 = (_h445 || _h447);
-      const _h449 = _h448;
-      const _h450 = !(_h449);
-      const _h453 = (sp.cornerCells[v_k][0] + sp.cornerCells[v_k][3] - v_c);
-      const _h455 = (_h438 === -1);
-      const _h456 = (_h440 === -1);
-      const _h457 = (_h443 === -1);
-      const _h458 = (_h446 === -1);
-      if (b.made[1] !== _m55_1) {
-        let _g391 = 0;
-        G392: {
-          const _a402 = sp.cellCorners[v_c];
-          for (let _i403 = 0; _i403 < _a402.length; _i403++) {
-            const v_j = _a402[_i403];
+    const v_M = ((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])) & ~_g27);
+    const _h109 = popcount(v_M);
+    const _h110 = (_h109 > 0);
+    const _a67 = sp.cellCorners[v_c];
+    for (let _i68 = 0; _i68 < _a67.length; _i68++) {
+      const v_k = _a67[_i68];
+      const _h114 = clueAt(cl.parity, v_k);
+      const _h115 = (_h114 === -1);
+      const _h116 = clueAt(cl.sum, v_k);
+      const _h117 = (_h116 !== -1);
+      const _h118 = clueAt(cl.difference, v_k);
+      const _h119 = (_h118 !== -1);
+      const _h120 = (_h117 || _h119);
+      const _h121 = clueAt(cl.product, v_k);
+      const _h122 = (_h121 !== -1);
+      const _h123 = (_h120 || _h122);
+      const _h124 = clueAt(cl.quotient, v_k);
+      const _h125 = (_h124 !== -1);
+      const _h126 = (_h123 || _h125);
+      const _h127 = _h126;
+      const _h128 = !(_h127);
+      const _h131 = (sp.cornerCells[v_k][0] + sp.cornerCells[v_k][3] - v_c);
+      const _h133 = (_h116 === -1);
+      const _h134 = (_h118 === -1);
+      const _h135 = (_h121 === -1);
+      const _h136 = (_h124 === -1);
+      if (b.made[1] !== _m141_1) {
+        let _g69 = 0;
+        G70: {
+          const _a80 = sp.cellCorners[v_c];
+          for (let _i81 = 0; _i81 < _a80.length; _i81++) {
+            const v_j = _a80[_i81];
             if (!(((clueAt(cl.parity, v_j) !== -1) || ((((clueAt(cl.sum, v_j) !== -1) || (clueAt(cl.difference, v_j) !== -1)) || (clueAt(cl.product, v_j) !== -1)) || (clueAt(cl.quotient, v_j) !== -1))))) continue;
-            for (let _m404 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m404 !== 0; _m404 &= _m404 - 1) {
-              const v_d = 31 - Math.clz32(_m404 & -_m404);
-              let _c410: boolean = ((clueAt(cl.parity, v_j) === -1) || ((v_d % 2) === clueAt(cl.parity, v_j)));
-              if (_c410) {
-                let _c409: boolean = !(((((clueAt(cl.sum, v_j) !== -1) || (clueAt(cl.difference, v_j) !== -1)) || (clueAt(cl.product, v_j) !== -1)) || (clueAt(cl.quotient, v_j) !== -1)));
-                if (!_c409) {
-                  let _q405 = false;
-                  Q406: {
-                    const _t407 = (sp.cornerCells[v_j][0] + sp.cornerCells[v_j][3] - v_c);
-                    for (let _m408 = (cands[_t407] >= 0 ? cands[_t407] : (cands[_t407] = b.cands[_t407])); _m408 !== 0; _m408 &= _m408 - 1) {
-                      const v_e = 31 - Math.clz32(_m408 & -_m408);
+            for (let _m82 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m82 !== 0; _m82 &= _m82 - 1) {
+              const v_d = 31 - Math.clz32(_m82 & -_m82);
+              let _c88: boolean = ((clueAt(cl.parity, v_j) === -1) || ((v_d % 2) === clueAt(cl.parity, v_j)));
+              if (_c88) {
+                let _c87: boolean = !(((((clueAt(cl.sum, v_j) !== -1) || (clueAt(cl.difference, v_j) !== -1)) || (clueAt(cl.product, v_j) !== -1)) || (clueAt(cl.quotient, v_j) !== -1)));
+                if (!_c87) {
+                  let _q83 = false;
+                  Q84: {
+                    const _t85 = (sp.cornerCells[v_j][0] + sp.cornerCells[v_j][3] - v_c);
+                    for (let _m86 = (cands[_t85] >= 0 ? cands[_t85] : (cands[_t85] = b.cands[_t85])); _m86 !== 0; _m86 &= _m86 - 1) {
+                      const v_e = 31 - Math.clz32(_m86 & -_m86);
                       if ((((((clueAt(cl.sum, v_j) === -1) || ((v_d + v_e) === clueAt(cl.sum, v_j))) && ((clueAt(cl.difference, v_j) === -1) || (Math.abs((v_d - v_e)) === clueAt(cl.difference, v_j)))) && ((clueAt(cl.product, v_j) === -1) || ((v_d * v_e) === clueAt(cl.product, v_j)))) && (((clueAt(cl.quotient, v_j) === -1) || (v_d === (clueAt(cl.quotient, v_j) * v_e))) || (v_e === (clueAt(cl.quotient, v_j) * v_d))))) {
-                        _q405 = true;
-                        break Q406;
+                        _q83 = true;
+                        break Q84;
                       }
                     }
                   }
-                  _c409 = _q405;
+                  _c87 = _q83;
                 }
-                _c410 = _c409;
+                _c88 = _c87;
               }
-              if (!(!(_c410))) continue;
-              _g391 |= 1 << v_d;
+              if (!(!(_c88))) continue;
+              _g69 |= 1 << v_d;
             }
           }
         }
-        if (!((v_M === ((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])) & ~_g391)))) { continue R1; }
+        if (!((v_M === ((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])) & ~_g69)))) { continue R1; }
       }
       if (import.meta.env.DEV && staleChecking) {
-        let _g411 = 0;
-        G412: {
-          const _a422 = sp.cellCorners[v_c];
-          for (let _i423 = 0; _i423 < _a422.length; _i423++) {
-            const v_j = _a422[_i423];
+        let _g89 = 0;
+        G90: {
+          const _a100 = sp.cellCorners[v_c];
+          for (let _i101 = 0; _i101 < _a100.length; _i101++) {
+            const v_j = _a100[_i101];
             if (!(((clueAt(cl.parity, v_j) !== -1) || ((((clueAt(cl.sum, v_j) !== -1) || (clueAt(cl.difference, v_j) !== -1)) || (clueAt(cl.product, v_j) !== -1)) || (clueAt(cl.quotient, v_j) !== -1))))) continue;
-            for (let _m424 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m424 !== 0; _m424 &= _m424 - 1) {
-              const v_d = 31 - Math.clz32(_m424 & -_m424);
-              let _c430: boolean = ((clueAt(cl.parity, v_j) === -1) || ((v_d % 2) === clueAt(cl.parity, v_j)));
-              if (_c430) {
-                let _c429: boolean = !(((((clueAt(cl.sum, v_j) !== -1) || (clueAt(cl.difference, v_j) !== -1)) || (clueAt(cl.product, v_j) !== -1)) || (clueAt(cl.quotient, v_j) !== -1)));
-                if (!_c429) {
-                  let _q425 = false;
-                  Q426: {
-                    const _t427 = (sp.cornerCells[v_j][0] + sp.cornerCells[v_j][3] - v_c);
-                    for (let _m428 = (cands[_t427] >= 0 ? cands[_t427] : (cands[_t427] = b.cands[_t427])); _m428 !== 0; _m428 &= _m428 - 1) {
-                      const v_e = 31 - Math.clz32(_m428 & -_m428);
+            for (let _m102 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m102 !== 0; _m102 &= _m102 - 1) {
+              const v_d = 31 - Math.clz32(_m102 & -_m102);
+              let _c108: boolean = ((clueAt(cl.parity, v_j) === -1) || ((v_d % 2) === clueAt(cl.parity, v_j)));
+              if (_c108) {
+                let _c107: boolean = !(((((clueAt(cl.sum, v_j) !== -1) || (clueAt(cl.difference, v_j) !== -1)) || (clueAt(cl.product, v_j) !== -1)) || (clueAt(cl.quotient, v_j) !== -1)));
+                if (!_c107) {
+                  let _q103 = false;
+                  Q104: {
+                    const _t105 = (sp.cornerCells[v_j][0] + sp.cornerCells[v_j][3] - v_c);
+                    for (let _m106 = (cands[_t105] >= 0 ? cands[_t105] : (cands[_t105] = b.cands[_t105])); _m106 !== 0; _m106 &= _m106 - 1) {
+                      const v_e = 31 - Math.clz32(_m106 & -_m106);
                       if ((((((clueAt(cl.sum, v_j) === -1) || ((v_d + v_e) === clueAt(cl.sum, v_j))) && ((clueAt(cl.difference, v_j) === -1) || (Math.abs((v_d - v_e)) === clueAt(cl.difference, v_j)))) && ((clueAt(cl.product, v_j) === -1) || ((v_d * v_e) === clueAt(cl.product, v_j)))) && (((clueAt(cl.quotient, v_j) === -1) || (v_d === (clueAt(cl.quotient, v_j) * v_e))) || (v_e === (clueAt(cl.quotient, v_j) * v_d))))) {
-                        _q425 = true;
-                        break Q426;
+                        _q103 = true;
+                        break Q104;
                       }
                     }
                   }
-                  _c429 = _q425;
+                  _c107 = _q103;
                 }
-                _c430 = _c429;
+                _c108 = _c107;
               }
-              if (!(!(_c430))) continue;
-              _g411 |= 1 << v_d;
+              if (!(!(_c108))) continue;
+              _g89 |= 1 << v_d;
             }
           }
         }
-        freshBinding("clueTricky", [(sp.cells.includes(v_c)), (v_M === ((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])) & ~_g411)), (sp.cellCorners[v_c].includes(v_k))], ["c in", "M =", "k in"]);
+        freshBinding("clueTricky", [(sp.cells.includes(v_c)), (v_M === ((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])) & ~_g89)), (sp.cellCorners[v_c].includes(v_k))], ["c in", "M =", "k in"]);
       }
       facts.length = 0;
       changed = false;
-      let _c462: boolean = _h432;
-      if (_c462) {
-        let _q433 = true;
-        Q434: {
-          for (let _m435 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m435 !== 0; _m435 &= _m435 - 1) {
-            const v_d = 31 - Math.clz32(_m435 & -_m435);
-            const _h459 = (_h446 * v_d);
-            let _c461: boolean = (_h437 || ((v_d % 2) === _h436));
-            if (_c461) {
-              let _c460: boolean = _h450;
-              if (!_c460) {
-                let _q451 = false;
-                Q452: {
-                  for (let _m454 = (cands[_h453] >= 0 ? cands[_h453] : (cands[_h453] = b.cands[_h453])); _m454 !== 0; _m454 &= _m454 - 1) {
-                    const v_e = 31 - Math.clz32(_m454 & -_m454);
-                    if (((((_h455 || ((v_d + v_e) === _h438)) && (_h456 || (Math.abs((v_d - v_e)) === _h440))) && (_h457 || ((v_d * v_e) === _h443))) && ((_h458 || (v_d === (_h446 * v_e))) || (v_e === _h459)))) {
-                      _q451 = true;
-                      break Q452;
+      let _c140: boolean = _h110;
+      if (_c140) {
+        let _q111 = true;
+        Q112: {
+          for (let _m113 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m113 !== 0; _m113 &= _m113 - 1) {
+            const v_d = 31 - Math.clz32(_m113 & -_m113);
+            const _h137 = (_h124 * v_d);
+            let _c139: boolean = (_h115 || ((v_d % 2) === _h114));
+            if (_c139) {
+              let _c138: boolean = _h128;
+              if (!_c138) {
+                let _q129 = false;
+                Q130: {
+                  for (let _m132 = (cands[_h131] >= 0 ? cands[_h131] : (cands[_h131] = b.cands[_h131])); _m132 !== 0; _m132 &= _m132 - 1) {
+                    const v_e = 31 - Math.clz32(_m132 & -_m132);
+                    if (((((_h133 || ((v_d + v_e) === _h116)) && (_h134 || (Math.abs((v_d - v_e)) === _h118))) && (_h135 || ((v_d * v_e) === _h121))) && ((_h136 || (v_d === (_h124 * v_e))) || (v_e === _h137)))) {
+                      _q129 = true;
+                      break Q130;
                     }
                   }
                 }
-                _c460 = _q451;
+                _c138 = _q129;
               }
-              _c461 = _c460;
+              _c139 = _c138;
             }
-            if (!(!(_c461))) continue;
+            if (!(!(_c139))) continue;
             if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
             if (!(true)) {
-              _q433 = false;
-              break Q434;
+              _q111 = false;
+              break Q112;
             }
           }
         }
-        _c462 = _q433;
+        _c140 = _q111;
       }
-      if (!(_c462)) return -1;
+      if (!(_c140)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ c: v_c, M: v_M, k: v_k }, facts)) return 1;

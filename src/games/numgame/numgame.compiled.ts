@@ -72,13 +72,13 @@ export function claimWitnesses(_sp: GridSpace, _cl: Dealt, _variations: readonly
  * has on. */
 export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]): PositionRules<Position, Move, DeadEndId> {
   function addMoves(p: Position, into: Move[]): void {
-    const _a5 = sp.cells;
-    for (let _i6 = 0; _i6 < _a5.length; _i6++) {
-      const v_a = _a5[_i6];
-      const _a7 = sp.cells;
-      for (let _i8 = 0; _i8 < _a7.length; _i8++) {
-        const v_b = _a7[_i8];
-        if (!(((((v_a !== v_b) && (p.value[v_a] > 0)) && (p.value[v_b] > 0)) && ((p.value[v_a] > p.value[v_b]) || ((p.value[v_a] === p.value[v_b]) && (_i6 < _i8)))))) continue;
+    const _a1 = sp.cells;
+    for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+      const v_a = _a1[_i2];
+      const _a3 = sp.cells;
+      for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+        const v_b = _a3[_i4];
+        if (!(((((v_a !== v_b) && (p.value[v_a] > 0)) && (p.value[v_b] > 0)) && ((p.value[v_a] > p.value[v_b]) || ((p.value[v_a] === p.value[v_b]) && (_i2 < _i4)))))) continue;
         into.push({ move: "add", a: v_a, b: v_b });
       }
     }
@@ -109,13 +109,13 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
   }
 
   function subtractMoves(p: Position, into: Move[]): void {
-    const _a13 = sp.cells;
-    for (let _i14 = 0; _i14 < _a13.length; _i14++) {
-      const v_a = _a13[_i14];
-      const _a15 = sp.cells;
-      for (let _i16 = 0; _i16 < _a15.length; _i16++) {
-        const v_b = _a15[_i16];
-        if (!((((((v_a !== v_b) && (p.value[v_a] > 0)) && (p.value[v_b] > 0)) && ((p.value[v_a] > p.value[v_b]) || ((p.value[v_a] === p.value[v_b]) && (_i14 < _i16)))) && (p.value[v_a] > p.value[v_b])))) continue;
+    const _a1 = sp.cells;
+    for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+      const v_a = _a1[_i2];
+      const _a3 = sp.cells;
+      for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+        const v_b = _a3[_i4];
+        if (!((((((v_a !== v_b) && (p.value[v_a] > 0)) && (p.value[v_b] > 0)) && ((p.value[v_a] > p.value[v_b]) || ((p.value[v_a] === p.value[v_b]) && (_i2 < _i4)))) && (p.value[v_a] > p.value[v_b])))) continue;
         into.push({ move: "subtract", a: v_a, b: v_b });
       }
     }
@@ -146,13 +146,13 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
   }
 
   function multiplyMoves(p: Position, into: Move[]): void {
-    const _a21 = sp.cells;
-    for (let _i22 = 0; _i22 < _a21.length; _i22++) {
-      const v_a = _a21[_i22];
-      const _a23 = sp.cells;
-      for (let _i24 = 0; _i24 < _a23.length; _i24++) {
-        const v_b = _a23[_i24];
-        if (!(((((v_a !== v_b) && (p.value[v_a] > 0)) && (p.value[v_b] > 0)) && ((p.value[v_a] > p.value[v_b]) || ((p.value[v_a] === p.value[v_b]) && (_i22 < _i24)))))) continue;
+    const _a1 = sp.cells;
+    for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+      const v_a = _a1[_i2];
+      const _a3 = sp.cells;
+      for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+        const v_b = _a3[_i4];
+        if (!(((((v_a !== v_b) && (p.value[v_a] > 0)) && (p.value[v_b] > 0)) && ((p.value[v_a] > p.value[v_b]) || ((p.value[v_a] === p.value[v_b]) && (_i2 < _i4)))))) continue;
         into.push({ move: "multiply", a: v_a, b: v_b });
       }
     }
@@ -183,13 +183,13 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
   }
 
   function divideMoves(p: Position, into: Move[]): void {
-    const _a29 = sp.cells;
-    for (let _i30 = 0; _i30 < _a29.length; _i30++) {
-      const v_a = _a29[_i30];
-      const _a31 = sp.cells;
-      for (let _i32 = 0; _i32 < _a31.length; _i32++) {
-        const v_b = _a31[_i32];
-        if (!((((((v_a !== v_b) && (p.value[v_a] > 0)) && (p.value[v_b] > 0)) && ((p.value[v_a] > p.value[v_b]) || ((p.value[v_a] === p.value[v_b]) && (_i30 < _i32)))) && (imod(p.value[v_a], p.value[v_b]) === 0)))) continue;
+    const _a1 = sp.cells;
+    for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+      const v_a = _a1[_i2];
+      const _a3 = sp.cells;
+      for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+        const v_b = _a3[_i4];
+        if (!((((((v_a !== v_b) && (p.value[v_a] > 0)) && (p.value[v_b] > 0)) && ((p.value[v_a] > p.value[v_b]) || ((p.value[v_a] === p.value[v_b]) && (_i2 < _i4)))) && (imod(p.value[v_a], p.value[v_b]) === 0)))) continue;
         into.push({ move: "divide", a: v_a, b: v_b });
       }
     }
@@ -221,18 +221,18 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
 
   function finished(p: Position): boolean {
     {
-      let _q33 = false;
-      Q34: {
-        const _a35 = sp.cells;
-        for (let _i36 = 0; _i36 < _a35.length; _i36++) {
-          const v_c = _a35[_i36];
+      let _q1 = false;
+      Q2: {
+        const _a3 = sp.cells;
+        for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+          const v_c = _a3[_i4];
           if ((p.value[v_c] === cl.target)) {
-            _q33 = true;
-            break Q34;
+            _q1 = true;
+            break Q2;
           }
         }
       }
-      if (!(_q33)) return false;
+      if (!(_q1)) return false;
     }
     return true;
   }

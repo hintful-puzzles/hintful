@@ -56,35 +56,35 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  let _g10 = 0;
-  G11: {
-    const _a12 = sp.cells;
-    for (let _i13 = 0; _i13 < _a12.length; _i13++) {
-      const v_c = _a12[_i13];
-      const _h14 = (g[v_c] || -1);
-      if (!((_h14 === 1))) continue;
-      _g10++;
+  let _g1 = 0;
+  G2: {
+    const _a3 = sp.cells;
+    for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+      const v_c = _a3[_i4];
+      const _h5 = (g[v_c] || -1);
+      if (!((_h5 === 1))) continue;
+      _g1++;
     }
   }
-  let _c20: boolean = (_g10 >= cl.minballs);
-  if (_c20) {
-    let _g15 = 0;
-    G16: {
-      const _a17 = sp.cells;
-      for (let _i18 = 0; _i18 < _a17.length; _i18++) {
-        const v_c = _a17[_i18];
-        const _h19 = (g[v_c] || -1);
-        if (!((_h19 === 1))) continue;
-        _g15++;
+  let _c11: boolean = (_g1 >= cl.minballs);
+  if (_c11) {
+    let _g6 = 0;
+    G7: {
+      const _a8 = sp.cells;
+      for (let _i9 = 0; _i9 < _a8.length; _i9++) {
+        const v_c = _a8[_i9];
+        const _h10 = (g[v_c] || -1);
+        if (!((_h10 === 1))) continue;
+        _g6++;
       }
     }
-    _c20 = (_g15 <= cl.maxballs);
+    _c11 = (_g6 <= cl.maxballs);
   }
-  if (!(_c20)) return false;
-  for (let _k21 = 0; _k21 < cl.laser.at.length; _k21++) {
-    const _at22 = cl.laser.at[_k21];
-    const _v23 = cl.laser.v[_k21];
-    if (!((beamOf(sp, g, _at22) === _v23))) return false;
+  if (!(_c11)) return false;
+  for (let _k12 = 0; _k12 < cl.laser.at.length; _k12++) {
+    const _at13 = cl.laser.at[_k12];
+    const _v14 = cl.laser.v[_k12];
+    if (!((beamOf(sp, g, _at13) === _v14))) return false;
   }
   return true;
 }
@@ -110,7 +110,7 @@ export function ray(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RayBinding> |
     const v_s = cl.laser.at[v_k];
     const _h8 = clueAt(cl.laser, v_s);
     const _m10_0 = b.made[0];
-    const _m10_1 = b.made[1];
+    const _m11_1 = b.made[1];
     L4: {
       const v_u = ahead(sp, b, v_s);
       if (!((v_u !== -1))) break L4;
@@ -119,7 +119,7 @@ export function ray(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RayBinding> |
         L7: {
           const v_r = beam(sp, b, v_s, v_u, v_d);
           if (!(((v_r !== -1) && (v_r !== _h8)))) break L7;
-          if (b.made[0] !== _m10_0 || b.made[1] !== _m10_1) {
+          if (b.made[0] !== _m10_0 || b.made[1] !== _m11_1) {
             if (!((v_u === ahead(sp, b, v_s)))) { continue R1; }
           }
           if (import.meta.env.DEV && staleChecking) {

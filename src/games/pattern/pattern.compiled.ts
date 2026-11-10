@@ -49,26 +49,26 @@ export const tiers: readonly string[] = ["Easy","Unreasonable"];
  * board: every cell a value of its domain, and every rule and dealt clue
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
-  const _g132: number[] = [];
+  const _g4: number[] = [];
   const _domain = rangeMask(1, 2);
   for (const cell of sp.cells) {
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  for (let _k129 = 0; _k129 < cl.runs.at.length; _k129++) {
-    const _at130 = cl.runs.at[_k129];
-    const _v131 = cl.runs.lists[_k129];
-    _g132.length = 0;
-    G133: {
-      const _a136 = sp.lineCells[_at130];
-      for (let _i137 = 0; _i137 < _a136.length; _i137++) {
-        const v_c = _a136[_i137];
-        const _h138 = (g[v_c] || -1);
-        if (!((_h138 === 1))) continue;
-        _g132.push(v_c);
+  for (let _k1 = 0; _k1 < cl.runs.at.length; _k1++) {
+    const _at2 = cl.runs.at[_k1];
+    const _v3 = cl.runs.lists[_k1];
+    _g4.length = 0;
+    G5: {
+      const _a8 = sp.lineCells[_at2];
+      for (let _i9 = 0; _i9 < _a8.length; _i9++) {
+        const v_c = _a8[_i9];
+        const _h10 = (g[v_c] || -1);
+        if (!((_h10 === 1))) continue;
+        _g4.push(v_c);
       }
     }
-    if (!(sameList(runsOf(sp.lineCells[_at130], _g132), _v131))) return false;
+    if (!(sameList(runsOf(sp.lineCells[_at2], _g4), _v3))) return false;
   }
   return true;
 }
@@ -83,26 +83,26 @@ export interface LineBinding {
 
 const lineFacts: number[] = [];
 let lineCands = new Int32Array(0);
-let _p49 = new Int32Array(0);
-let _l50: readonly number[] = [];
-let _p113 = new Int32Array(0);
-let _l114: readonly number[] = [];
+let line_p49 = new Int32Array(0);
+let line_l50: readonly number[] = [];
+let line_p113 = new Int32Array(0);
+let line_l114: readonly number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding> | null): number {
   const _g34: number[] = [];
-  if (_p49.length < sp.cells.length) _p49 = new Int32Array(sp.cells.length);
-  else _p49.fill(0);
-  _l50 = [];
+  if (line_p49.length < sp.cells.length) line_p49 = new Int32Array(sp.cells.length);
+  else line_p49.fill(0);
+  line_l50 = [];
   let _y51 = false;
   const _m56 = new Int32Array(sp.cells.length);
   const _o55 = new Int32Array(sp.cells.length);
   const _g65: number[] = [];
   const _m82 = new Int32Array(sp.cells.length);
   const _o81 = new Int32Array(sp.cells.length);
-  if (_p113.length < sp.cells.length) _p113 = new Int32Array(sp.cells.length);
-  else _p113.fill(0);
-  _l114 = [];
+  if (line_p113.length < sp.cells.length) line_p113 = new Int32Array(sp.cells.length);
+  else line_p113.fill(0);
+  line_l114 = [];
   let _y115 = false;
   const _m120 = new Int32Array(sp.cells.length);
   const _o119 = new Int32Array(sp.cells.length);
@@ -125,8 +125,8 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
       const v_d = 31 - Math.clz32(_m33 & -_m33);
       const _h60 = (3 - v_d);
       const _h61 = _h60;
-      const _m13_0 = b.made[0];
-      const _m13_1 = b.made[1];
+      const _m129_0 = b.made[0];
+      const _m130_1 = b.made[1];
       _g34.length = 0;
       G35: {
         const _a47 = sp.lineCells[v_L];
@@ -136,7 +136,7 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
           if (_c62) {
             if (_g52 !== _epoch) {
               _g52 = _epoch;
-              for (const _e53 of _l50) _p49[_e53] = 0;
+              for (const _e53 of line_l50) line_p49[_e53] = 0;
               _y51 = false;
               const _t54 = sp.lineCells[v_L];
               for (let _i57 = 0; _i57 < _t54.length; _i57++) {
@@ -145,12 +145,12 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
               }
               const _y59 = runFits(_m56, _t54.length, 1, v_R, _o55);
               if (_y59) {
-                _l50 = _t54;
+                line_l50 = _t54;
                 _y51 = true;
-                for (let _e53 = 0; _e53 < _t54.length; _e53++) _p49[_t54[_e53]] = _o55[_e53];
+                for (let _e53 = 0; _e53 < _t54.length; _e53++) line_p49[_t54[_e53]] = _o55[_e53];
               }
             }
-            _c62 = !(((((_p49[v_x] >> _h61) & 1) !== 0) || ((_h61 as number) === -1 && _y51 && !sp.lineCells[v_L].includes(v_x))));
+            _c62 = !(((((line_p49[v_x] >> _h61) & 1) !== 0) || ((_h61 as number) === -1 && _y51 && !sp.lineCells[v_L].includes(v_x))));
           }
           if (!(_c62)) continue;
           _g34.push(v_x);
@@ -161,7 +161,7 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
       for (let _i64 = 0; _i64 < _a63.length; _i64++) {
         const v_c = _a63[_i64];
         if (!((stretch(sp.lineCells[v_L], v_c, v_O).indexOf(v_c) === 0))) continue;
-        if (b.made[0] !== _m13_0 || b.made[1] !== _m13_1) {
+        if (b.made[0] !== _m129_0 || b.made[1] !== _m130_1) {
           _g65.length = 0;
           G66: {
             const _a78 = sp.lineCells[v_L];
@@ -215,7 +215,7 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
         changed = false;
         if (_g116 !== _epoch) {
           _g116 = _epoch;
-          for (const _e117 of _l114) _p113[_e117] = 0;
+          for (const _e117 of line_l114) line_p113[_e117] = 0;
           _y115 = false;
           const _t118 = sp.lineCells[v_L];
           for (let _i121 = 0; _i121 < _t118.length; _i121++) {
@@ -224,12 +224,12 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
           }
           const _y123 = runFits(_m120, _t118.length, 1, v_R, _o119);
           if (_y123) {
-            _l114 = _t118;
+            line_l114 = _t118;
             _y115 = true;
-            for (let _e117 = 0; _e117 < _t118.length; _e117++) _p113[_t118[_e117]] = _o119[_e117];
+            for (let _e117 = 0; _e117 < _t118.length; _e117++) line_p113[_t118[_e117]] = _o119[_e117];
           }
         }
-        let _c128: boolean = ((((_p113[v_c] >> v_d) & 1) !== 0) || ((v_d as number) === -1 && _y115 && !sp.lineCells[v_L].includes(v_c)));
+        let _c128: boolean = ((((line_p113[v_c] >> v_d) & 1) !== 0) || ((v_d as number) === -1 && _y115 && !sp.lineCells[v_L].includes(v_c)));
         if (_c128) {
           let _q124 = true;
           Q125: {

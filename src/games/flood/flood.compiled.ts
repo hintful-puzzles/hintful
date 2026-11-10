@@ -42,57 +42,57 @@ export const deadEnds: readonly DeadEndId[] = ["short"];
 export function claims(sp: GridSpace, cl: Dealt, _variations: readonly string[]): Readonly<Record<DeadEndId, (p: Position) => boolean>> {
   return {
     short: (p) => {
-      const _fix33 = new Uint8Array(sp.cells.length);
-      for (let _grew35 = true; _grew35; ) {
-        _grew35 = false;
-        for (let _c34 = 0; _c34 < sp.cells.length; _c34++) {
-          if (_fix33[_c34] === 1) continue;
-          let _c41: boolean = (_c34 === (0 * sp.w + 0));
-          if (!_c41) {
-            let _c40: boolean = (p.color[_c34] === p.color[(0 * sp.w + 0)]);
-            if (_c40) {
-              let _q36 = false;
-              Q37: {
-                const _a38 = sp.adj4[_c34];
-                for (let _i39 = 0; _i39 < _a38.length; _i39++) {
-                  const v_n = _a38[_i39];
-                  if ((_fix33[v_n] === 1)) {
-                    _q36 = true;
-                    break Q37;
+      const _fix8 = new Uint8Array(sp.cells.length);
+      for (let _grew10 = true; _grew10; ) {
+        _grew10 = false;
+        for (let _c9 = 0; _c9 < sp.cells.length; _c9++) {
+          if (_fix8[_c9] === 1) continue;
+          let _c16: boolean = (_c9 === (0 * sp.w + 0));
+          if (!_c16) {
+            let _c15: boolean = (p.color[_c9] === p.color[(0 * sp.w + 0)]);
+            if (_c15) {
+              let _q11 = false;
+              Q12: {
+                const _a13 = sp.adj4[_c9];
+                for (let _i14 = 0; _i14 < _a13.length; _i14++) {
+                  const v_n = _a13[_i14];
+                  if ((_fix8[v_n] === 1)) {
+                    _q11 = true;
+                    break Q12;
                   }
                 }
               }
-              _c40 = _q36;
+              _c15 = _q11;
             }
-            _c41 = _c40;
+            _c16 = _c15;
           }
-          if (_c41) {
-            _fix33[_c34] = 1;
-            _grew35 = true;
+          if (_c16) {
+            _fix8[_c9] = 1;
+            _grew10 = true;
           }
         }
       }
-      let _g26 = 0;
-      G27: {
-        const _t28 = (cl.colors - 1);
-        for (let v_k = 0; v_k <= _t28; v_k++) {
-          let _q29 = false;
-          Q30: {
-            const _a31 = sp.cells;
-            for (let _i32 = 0; _i32 < _a31.length; _i32++) {
-              const v_c = _a31[_i32];
-              if (!(!((_fix33[v_c] === 1)))) continue;
+      let _g1 = 0;
+      G2: {
+        const _t3 = (cl.colors - 1);
+        for (let v_k = 0; v_k <= _t3; v_k++) {
+          let _q4 = false;
+          Q5: {
+            const _a6 = sp.cells;
+            for (let _i7 = 0; _i7 < _a6.length; _i7++) {
+              const v_c = _a6[_i7];
+              if (!(!((_fix8[v_c] === 1)))) continue;
               if ((p.color[v_c] === v_k)) {
-                _q29 = true;
-                break Q30;
+                _q4 = true;
+                break Q5;
               }
             }
           }
-          if (!(_q29)) continue;
-          _g26++;
+          if (!(_q4)) continue;
+          _g1++;
         }
       }
-      return (iadd(p.moves[0], _g26) > cl.limit);
+      return (iadd(p.moves[0], _g1) > cl.limit);
     },
   };
 }
@@ -112,21 +112,21 @@ export function claimWitnesses(_sp: GridSpace, _cl: Dealt, _variations: readonly
  * has on. */
 export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): PositionRules<Position, Move, DeadEndId> {
   function fillMoves(p: Position, into: Move[]): void {
-    const _t2 = (cl.colors - 1);
-    for (let v_k = 0; v_k <= _t2; v_k++) {
+    const _t1 = (cl.colors - 1);
+    for (let v_k = 0; v_k <= _t1; v_k++) {
       if (!((v_k !== p.color[(0 * sp.w + 0)]))) continue;
-      let _q3 = true;
-      Q4: {
-        const _a5 = sp.cells;
-        for (let _i6 = 0; _i6 < _a5.length; _i6++) {
-          const v_c = _a5[_i6];
+      let _q2 = true;
+      Q3: {
+        const _a4 = sp.cells;
+        for (let _i5 = 0; _i5 < _a4.length; _i5++) {
+          const v_c = _a4[_i5];
           if (!((p.color[v_c] === p.color[(0 * sp.w + 0)]))) {
-            _q3 = false;
-            break Q4;
+            _q2 = false;
+            break Q3;
           }
         }
       }
-      if (!(_q3)) into.push({ move: "fill", k: v_k });
+      if (!(_q2)) into.push({ move: "fill", k: v_k });
     }
   }
 
@@ -134,58 +134,58 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
     const v_k = m.k;
     if (!(Number.isInteger(v_k) && v_k >= 0 && v_k < 31 && ((rangeMask(0, (cl.colors - 1)) >> v_k) & 1) !== 0)) return false;
     if (!((v_k !== p.color[(0 * sp.w + 0)]))) return false;
-    let _q7 = true;
-    Q8: {
-      const _a9 = sp.cells;
-      for (let _i10 = 0; _i10 < _a9.length; _i10++) {
-        const v_c = _a9[_i10];
+    let _q1 = true;
+    Q2: {
+      const _a3 = sp.cells;
+      for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+        const v_c = _a3[_i4];
         if (!((p.color[v_c] === p.color[(0 * sp.w + 0)]))) {
-          _q7 = false;
-          break Q8;
+          _q1 = false;
+          break Q2;
         }
       }
     }
-    return !(_q7);
+    return !(_q1);
   }
 
   function fillPlay(p: Position, m: FillMove): Position {
     const v_k = m.k;
-    const _fix13 = new Uint8Array(sp.cells.length);
-    for (let _grew15 = true; _grew15; ) {
-      _grew15 = false;
-      for (let _c14 = 0; _c14 < sp.cells.length; _c14++) {
-        if (_fix13[_c14] === 1) continue;
-        let _c21: boolean = (_c14 === (0 * sp.w + 0));
-        if (!_c21) {
-          let _c20: boolean = (p.color[_c14] === p.color[(0 * sp.w + 0)]);
-          if (_c20) {
-            let _q16 = false;
-            Q17: {
-              const _a18 = sp.adj4[_c14];
-              for (let _i19 = 0; _i19 < _a18.length; _i19++) {
-                const v_n = _a18[_i19];
-                if ((_fix13[v_n] === 1)) {
-                  _q16 = true;
-                  break Q17;
+    const _fix3 = new Uint8Array(sp.cells.length);
+    for (let _grew5 = true; _grew5; ) {
+      _grew5 = false;
+      for (let _c4 = 0; _c4 < sp.cells.length; _c4++) {
+        if (_fix3[_c4] === 1) continue;
+        let _c11: boolean = (_c4 === (0 * sp.w + 0));
+        if (!_c11) {
+          let _c10: boolean = (p.color[_c4] === p.color[(0 * sp.w + 0)]);
+          if (_c10) {
+            let _q6 = false;
+            Q7: {
+              const _a8 = sp.adj4[_c4];
+              for (let _i9 = 0; _i9 < _a8.length; _i9++) {
+                const v_n = _a8[_i9];
+                if ((_fix3[v_n] === 1)) {
+                  _q6 = true;
+                  break Q7;
                 }
               }
             }
-            _c20 = _q16;
+            _c10 = _q6;
           }
-          _c21 = _c20;
+          _c11 = _c10;
         }
-        if (_c21) {
-          _fix13[_c14] = 1;
-          _grew15 = true;
+        if (_c11) {
+          _fix3[_c4] = 1;
+          _grew5 = true;
         }
       }
     }
     const q: Position = { ...p, color: p.color.slice(), moves: p.moves.slice() };
     {
-      const _a11 = sp.cells;
-      for (let _i12 = 0; _i12 < _a11.length; _i12++) {
-        const v_c = _a11[_i12];
-        if (!((_fix13[v_c] === 1))) continue;
+      const _a1 = sp.cells;
+      for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+        const v_c = _a1[_i2];
+        if (!((_fix3[v_c] === 1))) continue;
         q.color[v_c] = v_k;
       }
     }
@@ -197,18 +197,18 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
 
   function finished(p: Position): boolean {
     {
-      let _q22 = true;
-      Q23: {
-        const _a24 = sp.cells;
-        for (let _i25 = 0; _i25 < _a24.length; _i25++) {
-          const v_c = _a24[_i25];
+      let _q1 = true;
+      Q2: {
+        const _a3 = sp.cells;
+        for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+          const v_c = _a3[_i4];
           if (!((p.color[v_c] === p.color[(0 * sp.w + 0)]))) {
-            _q22 = false;
-            break Q23;
+            _q1 = false;
+            break Q2;
           }
         }
       }
-      if (!(_q22)) return false;
+      if (!(_q1)) return false;
     }
     {
       if (!((p.moves[0] <= cl.limit))) return false;

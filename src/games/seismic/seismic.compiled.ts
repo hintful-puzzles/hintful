@@ -58,59 +58,59 @@ export function domainOf(_sp: GridSpace, cl: Dealt, v_c: number): number {
  * board: every cell a value of its domain, and every rule and dealt clue
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
-  const _h130 = (cl.mode === 0);
-  const _h133 = (cl.mode === 1);
+  const _h18 = (cl.mode === 0);
+  const _h21 = (cl.mode === 1);
   for (const cell of sp.cells) {
     const held = g[cell];
     if (!(held > 0 && (domainOf(sp, cl, cell) >> held) & 1)) return false;
   }
-  let _q113 = true;
-  Q114: {
-    const _a115 = cl.area.parts;
-    for (let _i116 = 0; _i116 < _a115.length; _i116++) {
-      const v_r = _a115[_i116];
-      let _g117 = true;
-      const _s119: number[] = [];
-      G118: {
-        const _a120 = cl.area.cells[v_r];
-        for (let _i121 = 0; _i121 < _a120.length; _i121++) {
-          const v_c = _a120[_i121];
-          const _h122 = (g[v_c] || -1);
-          if (_s119.includes(_h122)) {
-            _g117 = false;
-            break G118;
+  let _q1 = true;
+  Q2: {
+    const _a3 = cl.area.parts;
+    for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+      const v_r = _a3[_i4];
+      let _g5 = true;
+      const _s7: number[] = [];
+      G6: {
+        const _a8 = cl.area.cells[v_r];
+        for (let _i9 = 0; _i9 < _a8.length; _i9++) {
+          const v_c = _a8[_i9];
+          const _h10 = (g[v_c] || -1);
+          if (_s7.includes(_h10)) {
+            _g5 = false;
+            break G6;
           }
-          _s119.push(_h122);
+          _s7.push(_h10);
         }
       }
-      if (!(_g117)) {
-        _q113 = false;
-        break Q114;
+      if (!(_g5)) {
+        _q1 = false;
+        break Q2;
       }
     }
   }
-  if (!(_q113)) return false;
-  let _q123 = true;
-  Q124: {
-    const _a125 = sp.cells;
-    for (let _i126 = 0; _i126 < _a125.length; _i126++) {
-      const v_a = _a125[_i126];
-      const _h129 = (g[v_a] || -1);
-      const _h131 = ((v_a / sp.w) | 0);
-      const _h132 = (v_a % sp.w);
-      const _a127 = sp.cells;
-      for (let _i128 = 0; _i128 < _a127.length; _i128++) {
-        const v_b = _a127[_i128];
-        if (!(((v_a !== v_b) && ((_h130 && (((_h131 === ((v_b / sp.w) | 0)) && (Math.abs((_h132 - (v_b % sp.w))) <= _h129)) || ((_h132 === (v_b % sp.w)) && (Math.abs((_h131 - ((v_b / sp.w) | 0))) <= _h129)))) || ((_h133 && (Math.abs((_h132 - (v_b % sp.w))) <= 1)) && (Math.abs((_h131 - ((v_b / sp.w) | 0))) <= 1)))))) continue;
-        const _h134 = (g[v_b] || -1);
-        if (!((_h134 !== _h129))) {
-          _q123 = false;
-          break Q124;
+  if (!(_q1)) return false;
+  let _q11 = true;
+  Q12: {
+    const _a13 = sp.cells;
+    for (let _i14 = 0; _i14 < _a13.length; _i14++) {
+      const v_a = _a13[_i14];
+      const _h17 = (g[v_a] || -1);
+      const _h19 = ((v_a / sp.w) | 0);
+      const _h20 = (v_a % sp.w);
+      const _a15 = sp.cells;
+      for (let _i16 = 0; _i16 < _a15.length; _i16++) {
+        const v_b = _a15[_i16];
+        if (!(((v_a !== v_b) && ((_h18 && (((_h19 === ((v_b / sp.w) | 0)) && (Math.abs((_h20 - (v_b % sp.w))) <= _h17)) || ((_h20 === (v_b % sp.w)) && (Math.abs((_h19 - ((v_b / sp.w) | 0))) <= _h17)))) || ((_h21 && (Math.abs((_h20 - (v_b % sp.w))) <= 1)) && (Math.abs((_h19 - ((v_b / sp.w) | 0))) <= 1)))))) continue;
+        const _h22 = (g[v_b] || -1);
+        if (!((_h22 !== _h17))) {
+          _q11 = false;
+          break Q12;
         }
       }
     }
   }
-  if (!(_q123)) return false;
+  if (!(_q11)) return false;
   return true;
 }
 
@@ -127,7 +127,7 @@ export function cull(b: Marks, sp: GridSpace, cl: Dealt, v_c: number, fire: Fire
   const facts = cullFacts;
   let fired = 0;
   let changed = false;
-  const _m1_0 = b.made[0];
+  const _m14_0 = b.made[0];
   const _h5 = (b.grid[v_c] !== 0);
   const _h6 = (b.grid[v_c] || -1);
   const _h9 = cl.area.of[v_c];
@@ -141,7 +141,7 @@ export function cull(b: Marks, sp: GridSpace, cl: Dealt, v_c: number, fire: Fire
   for (let _i8 = 0; _i8 < _a7.length; _i8++) {
     const v_p = _a7[_i8];
     if (!(((v_p !== v_c) && ((cl.area.of[v_p] === _h9) || ((v_c !== v_p) && ((_h10 && (((_h11 === ((v_p / sp.w) | 0)) && (Math.abs((_h12 - (v_p % sp.w))) <= v_n)) || ((_h12 === (v_p % sp.w)) && (Math.abs((_h11 - ((v_p / sp.w) | 0))) <= v_n)))) || ((_h13 && (Math.abs((_h12 - (v_p % sp.w))) <= 1)) && (Math.abs((_h11 - ((v_p / sp.w) | 0))) <= 1)))))))) continue;
-    if (b.made[0] !== _m1_0) {
+    if (b.made[0] !== _m14_0) {
       if (!((v_n === (b.grid[v_c] || -1)))) { return cull(b, sp, cl, v_c, fire) | fired; }
     }
     if (import.meta.env.DEV && staleChecking) {
@@ -174,22 +174,22 @@ export function lone(b: Marks, sp: GridSpace, fire: Fire<LoneBinding> | null): n
   if (loneCands.length < sp.cells.length) loneCands = new Int32Array(sp.cells.length);
   const cands = loneCands;
   cands.fill(-1);
-  const _a16 = sp.cells;
-  for (let _i17 = 0; _i17 < _a16.length; _i17++) {
-    const v_c = _a16[_i17];
+  const _a3 = sp.cells;
+  for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+    const v_c = _a3[_i4];
     if (!((!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2)))) continue;
     if (import.meta.env.DEV && staleChecking) {
       freshBinding("lone", [(sp.cells.includes(v_c)), (!((b.grid[v_c] !== 0)) && (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) < 2))], ["c in", "where of c"]);
     }
     facts.length = 0;
     changed = false;
-    let _c19: boolean = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) === 1);
-    if (_c19) {
-      const _t18 = least((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])));
-      if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, _t18); changed = true; } else facts.push(PLACE, v_c, _t18); }
-      _c19 = true;
+    let _c6: boolean = (popcount((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c]))) === 1);
+    if (_c6) {
+      const _t5 = least((cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])));
+      if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, _t5); changed = true; } else facts.push(PLACE, v_c, _t5); }
+      _c6 = true;
     }
-    if (!(_c19)) return -1;
+    if (!(_c6)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null && !fire({ c: v_c }, facts)) return 1;
@@ -212,80 +212,80 @@ export function areaSingle(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<AreaS
   const facts = areaSingleFacts;
   let fired = 0;
   let changed = false;
-  const _a32 = cl.area.parts;
-  for (let _i33 = 0; _i33 < _a32.length; _i33++) {
-    const v_r = _a32[_i33];
-    const _t34 = cl.area.cells[v_r].length;
-    for (let v_n = 1; v_n <= _t34; v_n++) {
-      let _q35 = false;
-      Q36: {
-        const _a37 = cl.area.cells[v_r];
-        for (let _i38 = 0; _i38 < _a37.length; _i38++) {
-          const v_c = _a37[_i38];
+  const _a13 = cl.area.parts;
+  for (let _i14 = 0; _i14 < _a13.length; _i14++) {
+    const v_r = _a13[_i14];
+    const _t15 = cl.area.cells[v_r].length;
+    for (let v_n = 1; v_n <= _t15; v_n++) {
+      let _q16 = false;
+      Q17: {
+        const _a18 = cl.area.cells[v_r];
+        for (let _i19 = 0; _i19 < _a18.length; _i19++) {
+          const v_c = _a18[_i19];
           if (((b.grid[v_c] || -1) === v_n)) {
-            _q35 = true;
-            break Q36;
+            _q16 = true;
+            break Q17;
           }
         }
       }
-      if (!(!(_q35))) continue;
-      let _g39 = 0;
-      G40: {
-        const _a41 = cl.area.cells[v_r];
-        for (let _i42 = 0; _i42 < _a41.length; _i42++) {
-          const v_c = _a41[_i42];
+      if (!(!(_q16))) continue;
+      let _g20 = 0;
+      G21: {
+        const _a22 = cl.area.cells[v_r];
+        for (let _i23 = 0; _i23 < _a22.length; _i23++) {
+          const v_c = _a22[_i23];
           if (!((((b.cands[v_c] >> v_n) & 1) !== 0))) continue;
-          _g39++;
+          _g20++;
         }
       }
-      L43: {
-        const v_k = _g39;
-        if (!((v_k < 2))) break L43;
+      L24: {
+        const v_k = _g20;
+        if (!((v_k < 2))) break L24;
         if (import.meta.env.DEV && staleChecking) {
-          let _q44 = false;
-          Q45: {
-            const _a46 = cl.area.cells[v_r];
-            for (let _i47 = 0; _i47 < _a46.length; _i47++) {
-              const v_c = _a46[_i47];
+          let _q25 = false;
+          Q26: {
+            const _a27 = cl.area.cells[v_r];
+            for (let _i28 = 0; _i28 < _a27.length; _i28++) {
+              const v_c = _a27[_i28];
               if (((b.grid[v_c] || -1) === v_n)) {
-                _q44 = true;
-                break Q45;
+                _q25 = true;
+                break Q26;
               }
             }
           }
-          let _g48 = 0;
-          G49: {
-            const _a50 = cl.area.cells[v_r];
-            for (let _i51 = 0; _i51 < _a50.length; _i51++) {
-              const v_c = _a50[_i51];
+          let _g29 = 0;
+          G30: {
+            const _a31 = cl.area.cells[v_r];
+            for (let _i32 = 0; _i32 < _a31.length; _i32++) {
+              const v_c = _a31[_i32];
               if (!((((b.cands[v_c] >> v_n) & 1) !== 0))) continue;
-              _g48++;
+              _g29++;
             }
           }
-          freshBinding("areaSingle", [(cl.area.parts.includes(v_r)), ((1 <= v_n) && (v_n <= cl.area.cells[v_r].length)), !(_q44), (v_k === _g48), (v_k < 2)], ["r in", "n in", "where of n", "k =", "where of k"]);
+          freshBinding("areaSingle", [(cl.area.parts.includes(v_r)), ((1 <= v_n) && (v_n <= cl.area.cells[v_r].length)), !(_q25), (v_k === _g29), (v_k < 2)], ["r in", "n in", "where of n", "k =", "where of k"]);
         }
         facts.length = 0;
         changed = false;
-        let _c57: boolean = (v_k === 1);
-        if (_c57) {
-          let _g52 = -1;
-          let _n54 = 0;
-          G53: {
-            const _a55 = cl.area.cells[v_r];
-            for (let _i56 = 0; _i56 < _a55.length; _i56++) {
-              const v_c = _a55[_i56];
+        let _c38: boolean = (v_k === 1);
+        if (_c38) {
+          let _g33 = -1;
+          let _n35 = 0;
+          G34: {
+            const _a36 = cl.area.cells[v_r];
+            for (let _i37 = 0; _i37 < _a36.length; _i37++) {
+              const v_c = _a36[_i37];
               if (!((((b.cands[v_c] >> v_n) & 1) !== 0))) continue;
-              if (++_n54 === 2) {
-                _g52 = -1;
-                break G53;
+              if (++_n35 === 2) {
+                _g33 = -1;
+                break G34;
               }
-              _g52 = v_c;
+              _g33 = v_c;
             }
           }
-          if (!(b.grid[_g52] !== 0)) { if (fire === null) { b.placeAt(_g52, v_n); changed = true; } else facts.push(PLACE, _g52, v_n); }
-          _c57 = true;
+          if (!(b.grid[_g33] !== 0)) { if (fire === null) { b.placeAt(_g33, v_n); changed = true; } else facts.push(PLACE, _g33, v_n); }
+          _c38 = true;
         }
-        if (!(_c57)) return -1;
+        if (!(_c38)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ r: v_r, n: v_n, k: v_k }, facts)) return 1;
@@ -306,101 +306,101 @@ const starveFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBinding> | null): number {
-  const _g80: number[] = [];
+  const _g23: number[] = [];
   const facts = starveFacts;
   let fired = 0;
   let changed = false;
-  const _h108 = (cl.mode === 0);
-  const _h111 = (cl.mode === 1);
-  const _a72 = cl.area.parts;
-  for (let _i73 = 0; _i73 < _a72.length; _i73++) {
-    const v_r = _a72[_i73];
-    const _t74 = cl.area.cells[v_r].length;
-    for (let v_n = 1; v_n <= _t74; v_n++) {
-      let _q75 = false;
-      Q76: {
-        const _a77 = cl.area.cells[v_r];
-        for (let _i78 = 0; _i78 < _a77.length; _i78++) {
-          const v_c = _a77[_i78];
-          const _h79 = (b.grid[v_c] || -1);
-          if ((_h79 === v_n)) {
-            _q75 = true;
-            break Q76;
+  const _h51 = (cl.mode === 0);
+  const _h54 = (cl.mode === 1);
+  const _a15 = cl.area.parts;
+  for (let _i16 = 0; _i16 < _a15.length; _i16++) {
+    const v_r = _a15[_i16];
+    const _t17 = cl.area.cells[v_r].length;
+    for (let v_n = 1; v_n <= _t17; v_n++) {
+      let _q18 = false;
+      Q19: {
+        const _a20 = cl.area.cells[v_r];
+        for (let _i21 = 0; _i21 < _a20.length; _i21++) {
+          const v_c = _a20[_i21];
+          const _h22 = (b.grid[v_c] || -1);
+          if ((_h22 === v_n)) {
+            _q18 = true;
+            break Q19;
           }
         }
       }
-      if (!(!(_q75))) continue;
-      _g80.length = 0;
-      G81: {
-        const _a84 = cl.area.cells[v_r];
-        for (let _i85 = 0; _i85 < _a84.length; _i85++) {
-          const v_h = _a84[_i85];
-          const _h86 = (b.grid[v_h] !== 0);
-          if (!((!(_h86) && (((b.cands[v_h] >> v_n) & 1) !== 0)))) continue;
-          _g80.push(v_h);
+      if (!(!(_q18))) continue;
+      _g23.length = 0;
+      G24: {
+        const _a27 = cl.area.cells[v_r];
+        for (let _i28 = 0; _i28 < _a27.length; _i28++) {
+          const v_h = _a27[_i28];
+          const _h29 = (b.grid[v_h] !== 0);
+          if (!((!(_h29) && (((b.cands[v_h] >> v_n) & 1) !== 0)))) continue;
+          _g23.push(v_h);
         }
       }
-      L87: {
-        const v_H = _g80;
-        const _h88 = v_H.length;
-        if (!((_h88 > 0))) break L87;
+      L30: {
+        const v_H = _g23;
+        const _h31 = v_H.length;
+        if (!((_h31 > 0))) break L30;
         if (import.meta.env.DEV && staleChecking) {
-          let _q89 = false;
-          Q90: {
-            const _a91 = cl.area.cells[v_r];
-            for (let _i92 = 0; _i92 < _a91.length; _i92++) {
-              const v_c = _a91[_i92];
+          let _q32 = false;
+          Q33: {
+            const _a34 = cl.area.cells[v_r];
+            for (let _i35 = 0; _i35 < _a34.length; _i35++) {
+              const v_c = _a34[_i35];
               if (((b.grid[v_c] || -1) === v_n)) {
-                _q89 = true;
-                break Q90;
+                _q32 = true;
+                break Q33;
               }
             }
           }
-          const _g93: number[] = [];
-          G94: {
-            const _a97 = cl.area.cells[v_r];
-            for (let _i98 = 0; _i98 < _a97.length; _i98++) {
-              const v_h = _a97[_i98];
+          const _g36: number[] = [];
+          G37: {
+            const _a40 = cl.area.cells[v_r];
+            for (let _i41 = 0; _i41 < _a40.length; _i41++) {
+              const v_h = _a40[_i41];
               if (!((!((b.grid[v_h] !== 0)) && (((b.cands[v_h] >> v_n) & 1) !== 0)))) continue;
-              _g93.push(v_h);
+              _g36.push(v_h);
             }
           }
-          freshBinding("starve", [(cl.area.parts.includes(v_r)), ((1 <= v_n) && (v_n <= cl.area.cells[v_r].length)), !(_q89), sameSet(v_H, _g93), (v_H.length > 0)], ["r in", "n in", "where of n", "H =", "where of H"]);
+          freshBinding("starve", [(cl.area.parts.includes(v_r)), ((1 <= v_n) && (v_n <= cl.area.cells[v_r].length)), !(_q32), sameSet(v_H, _g36), (v_H.length > 0)], ["r in", "n in", "where of n", "H =", "where of H"]);
         }
         facts.length = 0;
         changed = false;
-        let _q99 = true;
-        Q100: {
-          const _a101 = sp.cells;
-          for (let _i102 = 0; _i102 < _a101.length; _i102++) {
-            const v_c = _a101[_i102];
-            const _h103 = (b.grid[v_c] !== 0);
-            const _h109 = ((v_c / sp.w) | 0);
-            const _h110 = (v_c % sp.w);
-            let _c112: boolean = (((cl.area.of[v_c] !== v_r) && !(_h103)) && (((b.cands[v_c] >> v_n) & 1) !== 0));
-            if (_c112) {
-              let _q104 = true;
-              Q105: {
-                const _a106 = v_H;
-                for (let _i107 = 0; _i107 < _a106.length; _i107++) {
-                  const v_h = _a106[_i107];
-                  if (!(((v_c !== v_h) && ((_h108 && (((_h109 === ((v_h / sp.w) | 0)) && (Math.abs((_h110 - (v_h % sp.w))) <= v_n)) || ((_h110 === (v_h % sp.w)) && (Math.abs((_h109 - ((v_h / sp.w) | 0))) <= v_n)))) || ((_h111 && (Math.abs((_h110 - (v_h % sp.w))) <= 1)) && (Math.abs((_h109 - ((v_h / sp.w) | 0))) <= 1)))))) {
-                    _q104 = false;
-                    break Q105;
+        let _q42 = true;
+        Q43: {
+          const _a44 = sp.cells;
+          for (let _i45 = 0; _i45 < _a44.length; _i45++) {
+            const v_c = _a44[_i45];
+            const _h46 = (b.grid[v_c] !== 0);
+            const _h52 = ((v_c / sp.w) | 0);
+            const _h53 = (v_c % sp.w);
+            let _c55: boolean = (((cl.area.of[v_c] !== v_r) && !(_h46)) && (((b.cands[v_c] >> v_n) & 1) !== 0));
+            if (_c55) {
+              let _q47 = true;
+              Q48: {
+                const _a49 = v_H;
+                for (let _i50 = 0; _i50 < _a49.length; _i50++) {
+                  const v_h = _a49[_i50];
+                  if (!(((v_c !== v_h) && ((_h51 && (((_h52 === ((v_h / sp.w) | 0)) && (Math.abs((_h53 - (v_h % sp.w))) <= v_n)) || ((_h53 === (v_h % sp.w)) && (Math.abs((_h52 - ((v_h / sp.w) | 0))) <= v_n)))) || ((_h54 && (Math.abs((_h53 - (v_h % sp.w))) <= 1)) && (Math.abs((_h52 - ((v_h / sp.w) | 0))) <= 1)))))) {
+                    _q47 = false;
+                    break Q48;
                   }
                 }
               }
-              _c112 = _q104;
+              _c55 = _q47;
             }
-            if (!(_c112)) continue;
+            if (!(_c55)) continue;
             if ((((b.cands[v_c] >> v_n) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_n); changed = true; } else facts.push(STRIKE, v_c, v_n); }
             if (!(true)) {
-              _q99 = false;
-              break Q100;
+              _q42 = false;
+              break Q43;
             }
           }
         }
-        if (!(_q99)) return -1;
+        if (!(_q42)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null && !fire({ r: v_r, n: v_n, H: v_H.slice() }, facts)) return 1;

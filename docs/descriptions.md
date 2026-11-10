@@ -32,7 +32,10 @@ itself is § "The file". A game whose techniques are stated:
 2. **Runs `npm run describe`**, which writes `<name>.compiled.ts` beside each
    description. Edit the description, never the compiled module:
    `src/describe/compile.test.ts` compiles every description again in the
-   gate and fails where a module differs. A module new to the tree reads
+   gate and fails where a module differs. The module's diff is read by
+   function: each numbers its own fresh names, and what a rung keeps at the
+   module's scope is named after it (`Out.own`), so a function moves only
+   when its own code does. A module new to the tree reads
    there as missing until `npx vitest --clearCache`: Vitest's module
    cache keeps the test's glob as it was first expanded.
 3. **Checks every technique it states sound** with

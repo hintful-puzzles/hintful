@@ -58,64 +58,64 @@ export const tiers: readonly string[] = ["Easy","Normal"];
  * true of it, a variation's rules where `variations` has it on. */
 export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolean {
   const _domain = rangeMask(1, (cl.nums + 1));
-  const _h88 = (cl.nums + 1);
+  const _h21 = (cl.nums + 1);
   for (const cell of sp.cells) {
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
   const _repeat = (cl.nums + 1);
   const _times = (sp.w - cl.nums);
-  let _q68 = true;
-  const _n72 = new Int32Array(32);
-  Q69: for (const _u70 of sp.lines) {
-    _n72.fill(0);
-    for (const _c71 of sp.lineCells[_u70]) {
-      const _t73 = (g[_c71] || -1);
-      if (++_n72[_t73] > (_t73 === _repeat ? _times : 1)) {
-        _q68 = false;
-        break Q69;
+  let _q1 = true;
+  const _n5 = new Int32Array(32);
+  Q2: for (const _u3 of sp.lines) {
+    _n5.fill(0);
+    for (const _c4 of sp.lineCells[_u3]) {
+      const _t6 = (g[_c4] || -1);
+      if (++_n5[_t6] > (_t6 === _repeat ? _times : 1)) {
+        _q1 = false;
+        break Q2;
       }
     }
   }
-  if (!(_q68)) return false;
-  for (let _k74 = 0; _k74 < cl.border.at.length; _k74++) {
-    const _at75 = cl.border.at[_k74];
-    const _v76 = cl.border.v[_k74];
-    let _q77 = false;
-    Q78: {
-      const _a79 = sp.sight[_at75];
-      for (let _i80 = 0; _i80 < _a79.length; _i80++) {
-        const v_c = _a79[_i80];
-        const _h81 = (g[v_c] || -1);
-        let _c89: boolean = (_h81 === _v76);
-        if (_c89) {
-          let _q82 = true;
-          Q83: {
-            const _a84 = sp.sight[_at75];
-            const _n85 = _i80;
-            for (let _i86 = 0; _i86 < _n85; _i86++) {
-              const v_c2 = _a84[_i86];
-              const _h87 = (g[v_c2] || -1);
-              if (!((_h87 === _h88))) {
-                _q82 = false;
-                break Q83;
+  if (!(_q1)) return false;
+  for (let _k7 = 0; _k7 < cl.border.at.length; _k7++) {
+    const _at8 = cl.border.at[_k7];
+    const _v9 = cl.border.v[_k7];
+    let _q10 = false;
+    Q11: {
+      const _a12 = sp.sight[_at8];
+      for (let _i13 = 0; _i13 < _a12.length; _i13++) {
+        const v_c = _a12[_i13];
+        const _h14 = (g[v_c] || -1);
+        let _c22: boolean = (_h14 === _v9);
+        if (_c22) {
+          let _q15 = true;
+          Q16: {
+            const _a17 = sp.sight[_at8];
+            const _n18 = _i13;
+            for (let _i19 = 0; _i19 < _n18; _i19++) {
+              const v_c2 = _a17[_i19];
+              const _h20 = (g[v_c2] || -1);
+              if (!((_h20 === _h21))) {
+                _q15 = false;
+                break Q16;
               }
             }
           }
-          _c89 = _q82;
+          _c22 = _q15;
         }
-        if (_c89) {
-          _q77 = true;
-          break Q78;
+        if (_c22) {
+          _q10 = true;
+          break Q11;
         }
       }
     }
-    if (!(_q77)) return false;
+    if (!(_q10)) return false;
   }
-  for (let _k90 = 0; _k90 < cl.ball.at.length; _k90++) {
-    const _at91 = cl.ball.at[_k90];
-    const _v92 = cl.ball.v[_k90];
-    if (!(((g[_at91] || -1) !== _v92))) return false;
+  for (let _k23 = 0; _k23 < cl.ball.at.length; _k23++) {
+    const _at24 = cl.ball.at[_k23];
+    const _v25 = cl.ball.v[_k23];
+    if (!(((g[_at24] || -1) !== _v25))) return false;
   }
   return true;
 }

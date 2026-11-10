@@ -42,41 +42,41 @@ export const deadEnds: readonly DeadEndId[] = ["bare", "short"];
 export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]): Readonly<Record<DeadEndId, (p: Position) => boolean>> {
   return {
     bare: (p) => {
-      let _c29: boolean = (sp.cells.length > 1);
-      if (_c29) {
-        let _q25 = false;
-        Q26: {
-          const _a27 = sp.cells;
-          for (let _i28 = 0; _i28 < _a27.length; _i28++) {
-            const v_c = _a27[_i28];
+      let _c5: boolean = (sp.cells.length > 1);
+      if (_c5) {
+        let _q1 = false;
+        Q2: {
+          const _a3 = sp.cells;
+          for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+            const v_c = _a3[_i4];
             if ((p.tile[v_c] === 0)) {
-              _q25 = true;
-              break Q26;
+              _q1 = true;
+              break Q2;
             }
           }
         }
-        _c29 = _q25;
+        _c5 = _q1;
       }
-      return _c29;
+      return _c5;
     },
     short: (p) => {
-      let _g30 = 0;
-      G31: {
-        const _a32 = sp.cells;
-        for (let _i33 = 0; _i33 < _a32.length; _i33++) {
-          const v_c = _a32[_i33];
-          let _g34 = 0;
-          G35: {
-            for (let _m36 = ((1 << 1) | (1 << 2) | (1 << 4) | (1 << 8)); _m36 !== 0; _m36 &= _m36 - 1) {
-              const v_k = 31 - Math.clz32(_m36 & -_m36);
+      let _g1 = 0;
+      G2: {
+        const _a3 = sp.cells;
+        for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+          const v_c = _a3[_i4];
+          let _g5 = 0;
+          G6: {
+            for (let _m7 = ((1 << 1) | (1 << 2) | (1 << 4) | (1 << 8)); _m7 !== 0; _m7 &= _m7 - 1) {
+              const v_k = 31 - Math.clz32(_m7 & -_m7);
               if (!(((Math.trunc(p.tile[v_c] / v_k) % 2) === 1))) continue;
-              _g34++;
+              _g5++;
             }
           }
-          _g30 += _g34;
+          _g1 += _g5;
         }
       }
-      return (_g30 < (2 * (sp.cells.length - 1)));
+      return (_g1 < (2 * (sp.cells.length - 1)));
     },
   };
 }
@@ -88,9 +88,9 @@ export function claimWitnesses(sp: GridSpace, _cl: Dealt, _variations: readonly 
     bare: (p) => {
       const at: number[] = [];
       if (!((sp.cells.length > 1))) return at;
-      const _a37 = sp.cells;
-      for (let _i38 = 0; _i38 < _a37.length; _i38++) {
-        const v_c = _a37[_i38];
+      const _a1 = sp.cells;
+      for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+        const v_c = _a1[_i2];
         if ((p.tile[v_c] === 0)) at.push(v_c);
       }
       return at;
@@ -109,43 +109,43 @@ export function views(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
 } {
   return {
     powered: (p) => {
-      const _fix40 = new Uint8Array(sp.cells.length);
-      for (let _grew42 = true; _grew42; ) {
-        _grew42 = false;
-        for (let _c41 = 0; _c41 < sp.cells.length; _c41++) {
-          if (_fix40[_c41] === 1) continue;
-          let _c49: boolean = (_c41 === (Math.trunc(sp.h / 2) * sp.w + Math.trunc(sp.w / 2)));
-          if (!_c49) {
-            let _q43 = false;
-            Q44: {
-              for (let _m45 = ((1 << 1) | (1 << 2) | (1 << 4) | (1 << 8)); _m45 !== 0; _m45 &= _m45 - 1) {
-                const v_k = 31 - Math.clz32(_m45 & -_m45);
-                L46: {
-                  const v_n = cl.beyond[_c41][v_k];
-                  let _c48: boolean = ((v_n !== -1) && ((Math.trunc(p.tile[_c41] / v_k) % 2) === 1));
-                  if (_c48) {
-                    const _t47 = ((4 * v_k) % 15);
-                    _c48 = ((Math.trunc(p.tile[v_n] / _t47) % 2) === 1);
+      const _fix2 = new Uint8Array(sp.cells.length);
+      for (let _grew4 = true; _grew4; ) {
+        _grew4 = false;
+        for (let _c3 = 0; _c3 < sp.cells.length; _c3++) {
+          if (_fix2[_c3] === 1) continue;
+          let _c11: boolean = (_c3 === (Math.trunc(sp.h / 2) * sp.w + Math.trunc(sp.w / 2)));
+          if (!_c11) {
+            let _q5 = false;
+            Q6: {
+              for (let _m7 = ((1 << 1) | (1 << 2) | (1 << 4) | (1 << 8)); _m7 !== 0; _m7 &= _m7 - 1) {
+                const v_k = 31 - Math.clz32(_m7 & -_m7);
+                L8: {
+                  const v_n = cl.beyond[_c3][v_k];
+                  let _c10: boolean = ((v_n !== -1) && ((Math.trunc(p.tile[_c3] / v_k) % 2) === 1));
+                  if (_c10) {
+                    const _t9 = ((4 * v_k) % 15);
+                    _c10 = ((Math.trunc(p.tile[v_n] / _t9) % 2) === 1);
                   }
-                  if (!(_c48)) break L46;
-                  if ((_fix40[v_n] === 1)) {
-                    _q43 = true;
-                    break Q44;
+                  if (!(_c10)) break L8;
+                  if ((_fix2[v_n] === 1)) {
+                    _q5 = true;
+                    break Q6;
                   }
                 }
               }
             }
-            _c49 = _q43;
+            _c11 = _q5;
           }
-          if (_c49) {
-            _fix40[_c41] = 1;
-            _grew42 = true;
+          if (_c11) {
+            _fix2[_c3] = 1;
+            _grew4 = true;
           }
         }
       }
       const at: number[] = [];
-      for (let _c39 = 0; _c39 < sp.cells.length; _c39++) {
-        if ((_fix40[_c39] === 1)) at.push(_c39);
+      for (let _c1 = 0; _c1 < sp.cells.length; _c1++) {
+        if ((_fix2[_c1] === 1)) at.push(_c1);
       }
       return at;
     },
@@ -156,15 +156,15 @@ export function views(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
  * has on. */
 export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): PositionRules<Position, Move, DeadEndId> {
   function slideMoves(_p: Position, into: Move[]): void {
-    const _a5 = sp.lines;
-    for (let _i6 = 0; _i6 < _a5.length; _i6++) {
-      const v_L = _a5[_i6];
+    const _a1 = sp.lines;
+    for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+      const v_L = _a1[_i2];
       if (!(!(sp.lineCells[v_L].includes((Math.trunc(sp.h / 2) * sp.w + Math.trunc(sp.w / 2)))))) continue;
-      const _a7 = sp.lineCells[v_L];
-      for (let _i8 = 0; _i8 < _a7.length; _i8++) {
-        const v_t = _a7[_i8];
-        if (!(((_i8 === 1) || (_i8 === (sp.lineCells[v_L].length - 1))))) continue;
-        const v_k = _i8;
+      const _a3 = sp.lineCells[v_L];
+      for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+        const v_t = _a3[_i4];
+        if (!(((_i4 === 1) || (_i4 === (sp.lineCells[v_L].length - 1))))) continue;
+        const v_k = _i4;
         into.push({ move: "slide", L: v_L, t: v_t, k: v_k });
       }
     }
@@ -187,63 +187,63 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
     const v_k = m.k;
     const q: Position = { ...p, tile: p.tile.slice() };
     {
-      const _a9 = sp.lineCells[v_L];
-      for (let _i10 = 0; _i10 < _a9.length; _i10++) {
-        const v_c = _a9[_i10];
-        q.tile[v_c] = p.tile[(sp.lineCells[v_L][(((_i10 - v_k) + sp.lineCells[v_L].length) % sp.lineCells[v_L].length)] ?? -1)];
+      const _a1 = sp.lineCells[v_L];
+      for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+        const v_c = _a1[_i2];
+        q.tile[v_c] = p.tile[(sp.lineCells[v_L][(((_i2 - v_k) + sp.lineCells[v_L].length) % sp.lineCells[v_L].length)] ?? -1)];
       }
     }
     return q;
   }
 
   function finished(p: Position): boolean {
-    const _fix15 = new Uint8Array(sp.cells.length);
-    for (let _grew17 = true; _grew17; ) {
-      _grew17 = false;
-      for (let _c16 = 0; _c16 < sp.cells.length; _c16++) {
-        if (_fix15[_c16] === 1) continue;
-        let _c24: boolean = (_c16 === (Math.trunc(sp.h / 2) * sp.w + Math.trunc(sp.w / 2)));
-        if (!_c24) {
-          let _q18 = false;
-          Q19: {
-            for (let _m20 = ((1 << 1) | (1 << 2) | (1 << 4) | (1 << 8)); _m20 !== 0; _m20 &= _m20 - 1) {
-              const v_k = 31 - Math.clz32(_m20 & -_m20);
-              L21: {
-                const v_n = cl.beyond[_c16][v_k];
-                let _c23: boolean = ((v_n !== -1) && ((Math.trunc(p.tile[_c16] / v_k) % 2) === 1));
-                if (_c23) {
-                  const _t22 = ((4 * v_k) % 15);
-                  _c23 = ((Math.trunc(p.tile[v_n] / _t22) % 2) === 1);
+    const _fix5 = new Uint8Array(sp.cells.length);
+    for (let _grew7 = true; _grew7; ) {
+      _grew7 = false;
+      for (let _c6 = 0; _c6 < sp.cells.length; _c6++) {
+        if (_fix5[_c6] === 1) continue;
+        let _c14: boolean = (_c6 === (Math.trunc(sp.h / 2) * sp.w + Math.trunc(sp.w / 2)));
+        if (!_c14) {
+          let _q8 = false;
+          Q9: {
+            for (let _m10 = ((1 << 1) | (1 << 2) | (1 << 4) | (1 << 8)); _m10 !== 0; _m10 &= _m10 - 1) {
+              const v_k = 31 - Math.clz32(_m10 & -_m10);
+              L11: {
+                const v_n = cl.beyond[_c6][v_k];
+                let _c13: boolean = ((v_n !== -1) && ((Math.trunc(p.tile[_c6] / v_k) % 2) === 1));
+                if (_c13) {
+                  const _t12 = ((4 * v_k) % 15);
+                  _c13 = ((Math.trunc(p.tile[v_n] / _t12) % 2) === 1);
                 }
-                if (!(_c23)) break L21;
-                if ((_fix15[v_n] === 1)) {
-                  _q18 = true;
-                  break Q19;
+                if (!(_c13)) break L11;
+                if ((_fix5[v_n] === 1)) {
+                  _q8 = true;
+                  break Q9;
                 }
               }
             }
           }
-          _c24 = _q18;
+          _c14 = _q8;
         }
-        if (_c24) {
-          _fix15[_c16] = 1;
-          _grew17 = true;
+        if (_c14) {
+          _fix5[_c6] = 1;
+          _grew7 = true;
         }
       }
     }
     {
-      let _q11 = true;
-      Q12: {
-        const _a13 = sp.cells;
-        for (let _i14 = 0; _i14 < _a13.length; _i14++) {
-          const v_c = _a13[_i14];
-          if (!((_fix15[v_c] === 1))) {
-            _q11 = false;
-            break Q12;
+      let _q1 = true;
+      Q2: {
+        const _a3 = sp.cells;
+        for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+          const v_c = _a3[_i4];
+          if (!((_fix5[v_c] === 1))) {
+            _q1 = false;
+            break Q2;
           }
         }
       }
-      if (!(_q11)) return false;
+      if (!(_q1)) return false;
     }
     return true;
   }

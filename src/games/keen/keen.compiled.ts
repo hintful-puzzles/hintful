@@ -66,92 +66,92 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  let _q539 = true;
-  const _n543 = new Int32Array(32);
-  Q540: for (const _u541 of sp.lines) {
-    _n543.fill(0);
-    for (const _c542 of sp.lineCells[_u541]) {
-      const _t544 = (g[_c542] || -1);
-      if (++_n543[_t544] > 1) {
-        _q539 = false;
-        break Q540;
+  let _q1 = true;
+  const _n5 = new Int32Array(32);
+  Q2: for (const _u3 of sp.lines) {
+    _n5.fill(0);
+    for (const _c4 of sp.lineCells[_u3]) {
+      const _t6 = (g[_c4] || -1);
+      if (++_n5[_t6] > 1) {
+        _q1 = false;
+        break Q2;
       }
     }
   }
-  if (!(_q539)) return false;
-  for (let _k545 = 0; _k545 < cl.sum.at.length; _k545++) {
-    const _at546 = cl.sum.at[_k545];
-    const _v547 = cl.sum.v[_k545];
-    let _g548 = 0;
-    G549: {
-      const _a550 = cl.cage.cells[_at546];
-      for (let _i551 = 0; _i551 < _a550.length; _i551++) {
-        const v_c = _a550[_i551];
-        const _h552 = (g[v_c] || -1);
-        _g548 += _h552;
+  if (!(_q1)) return false;
+  for (let _k7 = 0; _k7 < cl.sum.at.length; _k7++) {
+    const _at8 = cl.sum.at[_k7];
+    const _v9 = cl.sum.v[_k7];
+    let _g10 = 0;
+    G11: {
+      const _a12 = cl.cage.cells[_at8];
+      for (let _i13 = 0; _i13 < _a12.length; _i13++) {
+        const v_c = _a12[_i13];
+        const _h14 = (g[v_c] || -1);
+        _g10 += _h14;
       }
     }
-    if (!((_g548 === _v547))) return false;
+    if (!((_g10 === _v9))) return false;
   }
-  for (let _k553 = 0; _k553 < cl.product.at.length; _k553++) {
-    const _at554 = cl.product.at[_k553];
-    const _v555 = cl.product.v[_k553];
-    let _g556 = 1;
-    G557: {
-      const _a558 = cl.cage.cells[_at554];
-      for (let _i559 = 0; _i559 < _a558.length; _i559++) {
-        const v_c = _a558[_i559];
-        const _h560 = (g[v_c] || -1);
-        _g556 *= _h560;
+  for (let _k15 = 0; _k15 < cl.product.at.length; _k15++) {
+    const _at16 = cl.product.at[_k15];
+    const _v17 = cl.product.v[_k15];
+    let _g18 = 1;
+    G19: {
+      const _a20 = cl.cage.cells[_at16];
+      for (let _i21 = 0; _i21 < _a20.length; _i21++) {
+        const v_c = _a20[_i21];
+        const _h22 = (g[v_c] || -1);
+        _g18 *= _h22;
       }
     }
-    if (!((_g556 === _v555))) return false;
+    if (!((_g18 === _v17))) return false;
   }
-  for (let _k561 = 0; _k561 < cl.difference.at.length; _k561++) {
-    const _at562 = cl.difference.at[_k561];
-    const _v563 = cl.difference.v[_k561];
-    let _g564 = -1;
-    G565: {
-      const _a566 = cl.cage.cells[_at562];
-      for (let _i567 = 0; _i567 < _a566.length; _i567++) {
-        const v_c = _a566[_i567];
-        const _h568 = (g[v_c] || -1);
-        if (_g564 === -1 || _h568 > _g564) _g564 = _h568;
+  for (let _k23 = 0; _k23 < cl.difference.at.length; _k23++) {
+    const _at24 = cl.difference.at[_k23];
+    const _v25 = cl.difference.v[_k23];
+    let _g26 = -1;
+    G27: {
+      const _a28 = cl.cage.cells[_at24];
+      for (let _i29 = 0; _i29 < _a28.length; _i29++) {
+        const v_c = _a28[_i29];
+        const _h30 = (g[v_c] || -1);
+        if (_g26 === -1 || _h30 > _g26) _g26 = _h30;
       }
     }
-    let _g569 = -1;
-    G570: {
-      const _a571 = cl.cage.cells[_at562];
-      for (let _i572 = 0; _i572 < _a571.length; _i572++) {
-        const v_c = _a571[_i572];
-        const _h573 = (g[v_c] || -1);
-        if (_g569 === -1 || _h573 < _g569) _g569 = _h573;
+    let _g31 = -1;
+    G32: {
+      const _a33 = cl.cage.cells[_at24];
+      for (let _i34 = 0; _i34 < _a33.length; _i34++) {
+        const v_c = _a33[_i34];
+        const _h35 = (g[v_c] || -1);
+        if (_g31 === -1 || _h35 < _g31) _g31 = _h35;
       }
     }
-    if (!(((_g564 - _g569) === _v563))) return false;
+    if (!(((_g26 - _g31) === _v25))) return false;
   }
-  for (let _k574 = 0; _k574 < cl.quotient.at.length; _k574++) {
-    const _at575 = cl.quotient.at[_k574];
-    const _v576 = cl.quotient.v[_k574];
-    let _g577 = -1;
-    G578: {
-      const _a579 = cl.cage.cells[_at575];
-      for (let _i580 = 0; _i580 < _a579.length; _i580++) {
-        const v_c = _a579[_i580];
-        const _h581 = (g[v_c] || -1);
-        if (_g577 === -1 || _h581 > _g577) _g577 = _h581;
+  for (let _k36 = 0; _k36 < cl.quotient.at.length; _k36++) {
+    const _at37 = cl.quotient.at[_k36];
+    const _v38 = cl.quotient.v[_k36];
+    let _g39 = -1;
+    G40: {
+      const _a41 = cl.cage.cells[_at37];
+      for (let _i42 = 0; _i42 < _a41.length; _i42++) {
+        const v_c = _a41[_i42];
+        const _h43 = (g[v_c] || -1);
+        if (_g39 === -1 || _h43 > _g39) _g39 = _h43;
       }
     }
-    let _g582 = -1;
-    G583: {
-      const _a584 = cl.cage.cells[_at575];
-      for (let _i585 = 0; _i585 < _a584.length; _i585++) {
-        const v_c = _a584[_i585];
-        const _h586 = (g[v_c] || -1);
-        if (_g582 === -1 || _h586 < _g582) _g582 = _h586;
+    let _g44 = -1;
+    G45: {
+      const _a46 = cl.cage.cells[_at37];
+      for (let _i47 = 0; _i47 < _a46.length; _i47++) {
+        const v_c = _a46[_i47];
+        const _h48 = (g[v_c] || -1);
+        if (_g44 === -1 || _h48 < _g44) _g44 = _h48;
       }
     }
-    if (!((_g577 === (_v576 * _g582)))) return false;
+    if (!((_g39 === (_v38 * _g44)))) return false;
   }
   return true;
 }
@@ -164,347 +164,347 @@ export interface CageEasyBinding {
 
 const cageEasyFacts: number[] = [];
 let cageEasyCands = new Int32Array(0);
-let _f192 = new Int32Array(0);
-let _l193: readonly number[] = [];
+let cageEasy_f188 = new Int32Array(0);
+let cageEasy_l189: readonly number[] = [];
 
 /** Its dearest read grows with the board as 1. */
 export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasyBinding> | null): number {
-  if (_f192.length < sp.cells.length) _f192 = new Int32Array(sp.cells.length).fill(-1);
-  else _f192.fill(-1);
-  _l193 = [];
-  const _s194: number[] = [];
+  if (cageEasy_f188.length < sp.cells.length) cageEasy_f188 = new Int32Array(sp.cells.length).fill(-1);
+  else cageEasy_f188.fill(-1);
+  cageEasy_l189 = [];
+  const _s190: number[] = [];
   const facts = cageEasyFacts;
   let fired = 0;
   let changed = false;
   if (cageEasyCands.length < sp.cells.length) cageEasyCands = new Int32Array(sp.cells.length);
   const cands = cageEasyCands;
   cands.fill(-1);
-  const _a128 = cl.cage.parts;
-  for (let _i129 = 0; _i129 < _a128.length; _i129++) {
-    const v_r = _a128[_i129];
-    const _h200 = clueAt(cl.sum, v_r);
-    const _h204 = clueAt(cl.product, v_r);
-    const _h213 = (_h200 === -1);
-    const _h219 = (_h204 === -1);
-    const _h226 = clueAt(cl.difference, v_r);
-    const _h227 = (_h226 === -1);
-    const _h240 = clueAt(cl.quotient, v_r);
-    const _h241 = (_h240 === -1);
+  const _a124 = cl.cage.parts;
+  for (let _i125 = 0; _i125 < _a124.length; _i125++) {
+    const v_r = _a124[_i125];
+    const _h196 = clueAt(cl.sum, v_r);
+    const _h200 = clueAt(cl.product, v_r);
+    const _h209 = (_h196 === -1);
+    const _h215 = (_h200 === -1);
+    const _h222 = clueAt(cl.difference, v_r);
+    const _h223 = (_h222 === -1);
+    const _h236 = clueAt(cl.quotient, v_r);
+    const _h237 = (_h236 === -1);
     const v_K = cl.cage.cells[v_r];
-    let _g130 = 0;
-    G131: {
-      const _a191 = v_K;
+    let _g126 = 0;
+    G127: {
+      const _a187 = v_K;
+      const _t197 = (_h196 === -1);
+      const _lo198 = 31 - Math.clz32(b.domain & -b.domain);
+      const _hi199 = 31 - Math.clz32(b.domain);
       const _t201 = (_h200 === -1);
-      const _lo202 = 31 - Math.clz32(b.domain & -b.domain);
-      const _hi203 = 31 - Math.clz32(b.domain);
-      const _t205 = (_h204 === -1);
-      for (const _e195 of _l193) _f192[_e195] = -1;
-      _l193 = _a191;
-      let _i197 = 0;
-      _s194[0] = 0;
-      let _o209 = _a191.length === 0;
+      for (const _e191 of cageEasy_l189) cageEasy_f188[_e191] = -1;
+      cageEasy_l189 = _a187;
+      let _i193 = 0;
+      _s190[0] = 0;
+      let _o205 = _a187.length === 0;
       for (;;) {
-        if (_a191.length === 0) {
-          if (!_o209) break;
-          _o209 = false;
+        if (_a187.length === 0) {
+          if (!_o205) break;
+          _o205 = false;
         }
-        while (_a191.length > 0 && _i197 >= 0) {
-          const _e195 = _a191[_i197];
-          if (_s194[_i197] > 0) _f192[_e195] = -1;
-          let _r208 = (cands[_e195] >= 0 ? cands[_e195] : (cands[_e195] = b.cands[_e195])) & ~((2 << _s194[_i197]) - 1);
-          let _d196 = 0;
-          V199: for (; _r208 !== 0; _r208 &= _r208 - 1) {
-            _d196 = 31 - Math.clz32(_r208 & -_r208);
-            _f192[_e195] = _d196;
-            for (let _j198 = 0; _j198 < _i197; _j198++) {
-              const _y210 = _a191[_j198];
-              if (!(((sp.rowOf[_e195] === sp.rowOf[_y210]) || (sp.colOf[_e195] === sp.colOf[_y210])))) continue;
-              if (!((_f192[_e195] !== _f192[_y210]))) continue V199;
+        while (_a187.length > 0 && _i193 >= 0) {
+          const _e191 = _a187[_i193];
+          if (_s190[_i193] > 0) cageEasy_f188[_e191] = -1;
+          let _r204 = (cands[_e191] >= 0 ? cands[_e191] : (cands[_e191] = b.cands[_e191])) & ~((2 << _s190[_i193]) - 1);
+          let _d192 = 0;
+          V195: for (; _r204 !== 0; _r204 &= _r204 - 1) {
+            _d192 = 31 - Math.clz32(_r204 & -_r204);
+            cageEasy_f188[_e191] = _d192;
+            for (let _j194 = 0; _j194 < _i193; _j194++) {
+              const _y206 = _a187[_j194];
+              if (!(((sp.rowOf[_e191] === sp.rowOf[_y206]) || (sp.colOf[_e191] === sp.colOf[_y206])))) continue;
+              if (!((cageEasy_f188[_e191] !== cageEasy_f188[_y206]))) continue V195;
+            }
+            if (!_t197) {
+              let _t207 = _d192;
+              for (let _j194 = 0; _j194 < _i193; _j194++) _t207 += cageEasy_f188[_a187[_j194]];
+              if (_t207 + (_a187.length - _i193 - 1) * _lo198 > _h196) continue;
+              if (_t207 + (_a187.length - _i193 - 1) * _hi199 < _h196) continue;
             }
             if (!_t201) {
-              let _t211 = _d196;
-              for (let _j198 = 0; _j198 < _i197; _j198++) _t211 += _f192[_a191[_j198]];
-              if (_t211 + (_a191.length - _i197 - 1) * _lo202 > _h200) continue;
-              if (_t211 + (_a191.length - _i197 - 1) * _hi203 < _h200) continue;
-            }
-            if (!_t205) {
-              let _t212 = _d196;
-              for (let _j198 = 0; _j198 < _i197; _j198++) _t212 *= _f192[_a191[_j198]];
-              if (_t212 > 0 && _h204 % _t212 !== 0) continue;
+              let _t208 = _d192;
+              for (let _j194 = 0; _j194 < _i193; _j194++) _t208 *= cageEasy_f188[_a187[_j194]];
+              if (_t208 > 0 && _h200 % _t208 !== 0) continue;
             }
             break;
           }
-          if (_r208 === 0) {
-            _s194[_i197] = 0;
-            _i197--;
+          if (_r204 === 0) {
+            _s190[_i193] = 0;
+            _i193--;
             continue;
           }
-          _s194[_i197] = _d196;
-          if (_i197 === _a191.length - 1) break;
-          _i197++;
-          _s194[_i197] = 0;
+          _s190[_i193] = _d192;
+          if (_i193 === _a187.length - 1) break;
+          _i193++;
+          _s190[_i193] = 0;
         }
-        if (_i197 < 0) break;
-        let _c218: boolean = _h213;
-        if (!_c218) {
-          let _g214 = 0;
-          G215: {
-            const _a216 = cl.cage.cells[v_r];
-            for (let _i217 = 0; _i217 < _a216.length; _i217++) {
-              const v_x = _a216[_i217];
-              _g214 += _f192[v_x];
+        if (_i193 < 0) break;
+        let _c214: boolean = _h209;
+        if (!_c214) {
+          let _g210 = 0;
+          G211: {
+            const _a212 = cl.cage.cells[v_r];
+            for (let _i213 = 0; _i213 < _a212.length; _i213++) {
+              const v_x = _a212[_i213];
+              _g210 += cageEasy_f188[v_x];
             }
           }
-          _c218 = (_g214 === _h200);
+          _c214 = (_g210 === _h196);
         }
-        let _c225: boolean = _c218;
-        if (_c225) {
-          let _c224: boolean = _h219;
-          if (!_c224) {
-            let _g220 = 1;
-            G221: {
-              const _a222 = cl.cage.cells[v_r];
-              for (let _i223 = 0; _i223 < _a222.length; _i223++) {
-                const v_x = _a222[_i223];
-                _g220 *= _f192[v_x];
+        let _c221: boolean = _c214;
+        if (_c221) {
+          let _c220: boolean = _h215;
+          if (!_c220) {
+            let _g216 = 1;
+            G217: {
+              const _a218 = cl.cage.cells[v_r];
+              for (let _i219 = 0; _i219 < _a218.length; _i219++) {
+                const v_x = _a218[_i219];
+                _g216 *= cageEasy_f188[v_x];
               }
             }
-            _c224 = (_g220 === _h204);
+            _c220 = (_g216 === _h200);
           }
-          _c225 = _c224;
+          _c221 = _c220;
         }
-        let _c239: boolean = _c225;
-        if (_c239) {
-          let _c238: boolean = _h227;
-          if (!_c238) {
-            let _g228 = -1;
-            G229: {
-              const _a230 = cl.cage.cells[v_r];
-              for (let _i231 = 0; _i231 < _a230.length; _i231++) {
-                const v_x = _a230[_i231];
-                const _t232 = _f192[v_x];
-                if (_g228 === -1 || _t232 > _g228) _g228 = _t232;
+        let _c235: boolean = _c221;
+        if (_c235) {
+          let _c234: boolean = _h223;
+          if (!_c234) {
+            let _g224 = -1;
+            G225: {
+              const _a226 = cl.cage.cells[v_r];
+              for (let _i227 = 0; _i227 < _a226.length; _i227++) {
+                const v_x = _a226[_i227];
+                const _t228 = cageEasy_f188[v_x];
+                if (_g224 === -1 || _t228 > _g224) _g224 = _t228;
               }
             }
-            let _g233 = -1;
-            G234: {
-              const _a235 = cl.cage.cells[v_r];
-              for (let _i236 = 0; _i236 < _a235.length; _i236++) {
-                const v_x = _a235[_i236];
-                const _t237 = _f192[v_x];
-                if (_g233 === -1 || _t237 < _g233) _g233 = _t237;
+            let _g229 = -1;
+            G230: {
+              const _a231 = cl.cage.cells[v_r];
+              for (let _i232 = 0; _i232 < _a231.length; _i232++) {
+                const v_x = _a231[_i232];
+                const _t233 = cageEasy_f188[v_x];
+                if (_g229 === -1 || _t233 < _g229) _g229 = _t233;
               }
             }
-            _c238 = ((_g228 - _g233) === _h226);
+            _c234 = ((_g224 - _g229) === _h222);
           }
-          _c239 = _c238;
+          _c235 = _c234;
         }
-        let _c253: boolean = _c239;
-        if (_c253) {
-          let _c252: boolean = _h241;
-          if (!_c252) {
-            let _g242 = -1;
-            G243: {
-              const _a244 = cl.cage.cells[v_r];
-              for (let _i245 = 0; _i245 < _a244.length; _i245++) {
-                const v_x = _a244[_i245];
-                const _t246 = _f192[v_x];
-                if (_g242 === -1 || _t246 > _g242) _g242 = _t246;
+        let _c249: boolean = _c235;
+        if (_c249) {
+          let _c248: boolean = _h237;
+          if (!_c248) {
+            let _g238 = -1;
+            G239: {
+              const _a240 = cl.cage.cells[v_r];
+              for (let _i241 = 0; _i241 < _a240.length; _i241++) {
+                const v_x = _a240[_i241];
+                const _t242 = cageEasy_f188[v_x];
+                if (_g238 === -1 || _t242 > _g238) _g238 = _t242;
               }
             }
-            let _g247 = -1;
-            G248: {
-              const _a249 = cl.cage.cells[v_r];
-              for (let _i250 = 0; _i250 < _a249.length; _i250++) {
-                const v_x = _a249[_i250];
-                const _t251 = _f192[v_x];
-                if (_g247 === -1 || _t251 < _g247) _g247 = _t251;
+            let _g243 = -1;
+            G244: {
+              const _a245 = cl.cage.cells[v_r];
+              for (let _i246 = 0; _i246 < _a245.length; _i246++) {
+                const v_x = _a245[_i246];
+                const _t247 = cageEasy_f188[v_x];
+                if (_g243 === -1 || _t247 < _g243) _g243 = _t247;
               }
             }
-            _c252 = (_g242 === (_h240 * _g247));
+            _c248 = (_g238 === (_h236 * _g243));
           }
-          _c253 = _c252;
+          _c249 = _c248;
         }
-        if (!(_c253)) continue;
-        const _a254 = v_K;
-        for (let _i255 = 0; _i255 < _a254.length; _i255++) {
-          const v_x = _a254[_i255];
-          const _t256 = _f192[v_x];
-          _g130 |= 1 << _t256;
+        if (!(_c249)) continue;
+        const _a250 = v_K;
+        for (let _i251 = 0; _i251 < _a250.length; _i251++) {
+          const v_x = _a250[_i251];
+          const _t252 = cageEasy_f188[v_x];
+          _g126 |= 1 << _t252;
         }
       }
     }
-    const v_D = _g130;
+    const v_D = _g126;
     if (import.meta.env.DEV && staleChecking) {
-      let _g257 = 0;
-      G258: {
-        const _f319 = new Int32Array(sp.cells.length).fill(-1);
-        let _l320: readonly number[] = [];
-        const _s321: number[] = [];
-        const _a318 = v_K;
-        const _t327 = (clueAt(cl.sum, v_r) === -1);
-        const _t328 = clueAt(cl.sum, v_r);
-        const _lo329 = 31 - Math.clz32(b.domain & -b.domain);
-        const _hi330 = 31 - Math.clz32(b.domain);
-        const _t331 = (clueAt(cl.product, v_r) === -1);
-        const _t332 = clueAt(cl.product, v_r);
-        for (const _e322 of _l320) _f319[_e322] = -1;
-        _l320 = _a318;
-        let _i324 = 0;
-        _s321[0] = 0;
-        let _o336 = _a318.length === 0;
+      let _g253 = 0;
+      G254: {
+        const _f315 = new Int32Array(sp.cells.length).fill(-1);
+        let _l316: readonly number[] = [];
+        const _s317: number[] = [];
+        const _a314 = v_K;
+        const _t323 = (clueAt(cl.sum, v_r) === -1);
+        const _t324 = clueAt(cl.sum, v_r);
+        const _lo325 = 31 - Math.clz32(b.domain & -b.domain);
+        const _hi326 = 31 - Math.clz32(b.domain);
+        const _t327 = (clueAt(cl.product, v_r) === -1);
+        const _t328 = clueAt(cl.product, v_r);
+        for (const _e318 of _l316) _f315[_e318] = -1;
+        _l316 = _a314;
+        let _i320 = 0;
+        _s317[0] = 0;
+        let _o332 = _a314.length === 0;
         for (;;) {
-          if (_a318.length === 0) {
-            if (!_o336) break;
-            _o336 = false;
+          if (_a314.length === 0) {
+            if (!_o332) break;
+            _o332 = false;
           }
-          while (_a318.length > 0 && _i324 >= 0) {
-            const _e322 = _a318[_i324];
-            if (_s321[_i324] > 0) _f319[_e322] = -1;
-            let _r335 = (cands[_e322] >= 0 ? cands[_e322] : (cands[_e322] = b.cands[_e322])) & ~((2 << _s321[_i324]) - 1);
-            let _d323 = 0;
-            V326: for (; _r335 !== 0; _r335 &= _r335 - 1) {
-              _d323 = 31 - Math.clz32(_r335 & -_r335);
-              _f319[_e322] = _d323;
-              for (let _j325 = 0; _j325 < _i324; _j325++) {
-                const _y337 = _a318[_j325];
-                if (!(((sp.rowOf[_e322] === sp.rowOf[_y337]) || (sp.colOf[_e322] === sp.colOf[_y337])))) continue;
-                if (!((_f319[_e322] !== _f319[_y337]))) continue V326;
+          while (_a314.length > 0 && _i320 >= 0) {
+            const _e318 = _a314[_i320];
+            if (_s317[_i320] > 0) _f315[_e318] = -1;
+            let _r331 = (cands[_e318] >= 0 ? cands[_e318] : (cands[_e318] = b.cands[_e318])) & ~((2 << _s317[_i320]) - 1);
+            let _d319 = 0;
+            V322: for (; _r331 !== 0; _r331 &= _r331 - 1) {
+              _d319 = 31 - Math.clz32(_r331 & -_r331);
+              _f315[_e318] = _d319;
+              for (let _j321 = 0; _j321 < _i320; _j321++) {
+                const _y333 = _a314[_j321];
+                if (!(((sp.rowOf[_e318] === sp.rowOf[_y333]) || (sp.colOf[_e318] === sp.colOf[_y333])))) continue;
+                if (!((_f315[_e318] !== _f315[_y333]))) continue V322;
+              }
+              if (!_t323) {
+                let _t334 = _d319;
+                for (let _j321 = 0; _j321 < _i320; _j321++) _t334 += _f315[_a314[_j321]];
+                if (_t334 + (_a314.length - _i320 - 1) * _lo325 > _t324) continue;
+                if (_t334 + (_a314.length - _i320 - 1) * _hi326 < _t324) continue;
               }
               if (!_t327) {
-                let _t338 = _d323;
-                for (let _j325 = 0; _j325 < _i324; _j325++) _t338 += _f319[_a318[_j325]];
-                if (_t338 + (_a318.length - _i324 - 1) * _lo329 > _t328) continue;
-                if (_t338 + (_a318.length - _i324 - 1) * _hi330 < _t328) continue;
-              }
-              if (!_t331) {
-                let _t339 = _d323;
-                for (let _j325 = 0; _j325 < _i324; _j325++) _t339 *= _f319[_a318[_j325]];
-                if (_t339 > 0 && _t332 % _t339 !== 0) continue;
+                let _t335 = _d319;
+                for (let _j321 = 0; _j321 < _i320; _j321++) _t335 *= _f315[_a314[_j321]];
+                if (_t335 > 0 && _t328 % _t335 !== 0) continue;
               }
               break;
             }
-            if (_r335 === 0) {
-              _s321[_i324] = 0;
-              _i324--;
+            if (_r331 === 0) {
+              _s317[_i320] = 0;
+              _i320--;
               continue;
             }
-            _s321[_i324] = _d323;
-            if (_i324 === _a318.length - 1) break;
-            _i324++;
-            _s321[_i324] = 0;
+            _s317[_i320] = _d319;
+            if (_i320 === _a314.length - 1) break;
+            _i320++;
+            _s317[_i320] = 0;
           }
-          if (_i324 < 0) break;
-          let _c344: boolean = (clueAt(cl.sum, v_r) === -1);
-          if (!_c344) {
-            let _g340 = 0;
-            G341: {
-              const _a342 = cl.cage.cells[v_r];
-              for (let _i343 = 0; _i343 < _a342.length; _i343++) {
-                const v_x = _a342[_i343];
-                _g340 += _f319[v_x];
+          if (_i320 < 0) break;
+          let _c340: boolean = (clueAt(cl.sum, v_r) === -1);
+          if (!_c340) {
+            let _g336 = 0;
+            G337: {
+              const _a338 = cl.cage.cells[v_r];
+              for (let _i339 = 0; _i339 < _a338.length; _i339++) {
+                const v_x = _a338[_i339];
+                _g336 += _f315[v_x];
               }
             }
-            _c344 = (_g340 === clueAt(cl.sum, v_r));
+            _c340 = (_g336 === clueAt(cl.sum, v_r));
           }
-          let _c350: boolean = _c344;
-          if (_c350) {
-            let _c349: boolean = (clueAt(cl.product, v_r) === -1);
-            if (!_c349) {
-              let _g345 = 1;
-              G346: {
-                const _a347 = cl.cage.cells[v_r];
-                for (let _i348 = 0; _i348 < _a347.length; _i348++) {
-                  const v_x = _a347[_i348];
-                  _g345 *= _f319[v_x];
+          let _c346: boolean = _c340;
+          if (_c346) {
+            let _c345: boolean = (clueAt(cl.product, v_r) === -1);
+            if (!_c345) {
+              let _g341 = 1;
+              G342: {
+                const _a343 = cl.cage.cells[v_r];
+                for (let _i344 = 0; _i344 < _a343.length; _i344++) {
+                  const v_x = _a343[_i344];
+                  _g341 *= _f315[v_x];
                 }
               }
-              _c349 = (_g345 === clueAt(cl.product, v_r));
+              _c345 = (_g341 === clueAt(cl.product, v_r));
             }
-            _c350 = _c349;
+            _c346 = _c345;
           }
-          let _c362: boolean = _c350;
-          if (_c362) {
-            let _c361: boolean = (clueAt(cl.difference, v_r) === -1);
-            if (!_c361) {
-              let _g351 = -1;
-              G352: {
-                const _a353 = cl.cage.cells[v_r];
-                for (let _i354 = 0; _i354 < _a353.length; _i354++) {
-                  const v_x = _a353[_i354];
-                  const _t355 = _f319[v_x];
-                  if (_g351 === -1 || _t355 > _g351) _g351 = _t355;
+          let _c358: boolean = _c346;
+          if (_c358) {
+            let _c357: boolean = (clueAt(cl.difference, v_r) === -1);
+            if (!_c357) {
+              let _g347 = -1;
+              G348: {
+                const _a349 = cl.cage.cells[v_r];
+                for (let _i350 = 0; _i350 < _a349.length; _i350++) {
+                  const v_x = _a349[_i350];
+                  const _t351 = _f315[v_x];
+                  if (_g347 === -1 || _t351 > _g347) _g347 = _t351;
                 }
               }
-              let _g356 = -1;
-              G357: {
-                const _a358 = cl.cage.cells[v_r];
-                for (let _i359 = 0; _i359 < _a358.length; _i359++) {
-                  const v_x = _a358[_i359];
-                  const _t360 = _f319[v_x];
-                  if (_g356 === -1 || _t360 < _g356) _g356 = _t360;
+              let _g352 = -1;
+              G353: {
+                const _a354 = cl.cage.cells[v_r];
+                for (let _i355 = 0; _i355 < _a354.length; _i355++) {
+                  const v_x = _a354[_i355];
+                  const _t356 = _f315[v_x];
+                  if (_g352 === -1 || _t356 < _g352) _g352 = _t356;
                 }
               }
-              _c361 = ((_g351 - _g356) === clueAt(cl.difference, v_r));
+              _c357 = ((_g347 - _g352) === clueAt(cl.difference, v_r));
             }
-            _c362 = _c361;
+            _c358 = _c357;
           }
-          let _c374: boolean = _c362;
-          if (_c374) {
-            let _c373: boolean = (clueAt(cl.quotient, v_r) === -1);
-            if (!_c373) {
-              let _g363 = -1;
-              G364: {
-                const _a365 = cl.cage.cells[v_r];
-                for (let _i366 = 0; _i366 < _a365.length; _i366++) {
-                  const v_x = _a365[_i366];
-                  const _t367 = _f319[v_x];
-                  if (_g363 === -1 || _t367 > _g363) _g363 = _t367;
+          let _c370: boolean = _c358;
+          if (_c370) {
+            let _c369: boolean = (clueAt(cl.quotient, v_r) === -1);
+            if (!_c369) {
+              let _g359 = -1;
+              G360: {
+                const _a361 = cl.cage.cells[v_r];
+                for (let _i362 = 0; _i362 < _a361.length; _i362++) {
+                  const v_x = _a361[_i362];
+                  const _t363 = _f315[v_x];
+                  if (_g359 === -1 || _t363 > _g359) _g359 = _t363;
                 }
               }
-              let _g368 = -1;
-              G369: {
-                const _a370 = cl.cage.cells[v_r];
-                for (let _i371 = 0; _i371 < _a370.length; _i371++) {
-                  const v_x = _a370[_i371];
-                  const _t372 = _f319[v_x];
-                  if (_g368 === -1 || _t372 < _g368) _g368 = _t372;
+              let _g364 = -1;
+              G365: {
+                const _a366 = cl.cage.cells[v_r];
+                for (let _i367 = 0; _i367 < _a366.length; _i367++) {
+                  const v_x = _a366[_i367];
+                  const _t368 = _f315[v_x];
+                  if (_g364 === -1 || _t368 < _g364) _g364 = _t368;
                 }
               }
-              _c373 = (_g363 === (clueAt(cl.quotient, v_r) * _g368));
+              _c369 = (_g359 === (clueAt(cl.quotient, v_r) * _g364));
             }
-            _c374 = _c373;
+            _c370 = _c369;
           }
-          if (!(_c374)) continue;
-          const _a375 = v_K;
-          for (let _i376 = 0; _i376 < _a375.length; _i376++) {
-            const v_x = _a375[_i376];
-            const _t377 = _f319[v_x];
-            _g257 |= 1 << _t377;
+          if (!(_c370)) continue;
+          const _a371 = v_K;
+          for (let _i372 = 0; _i372 < _a371.length; _i372++) {
+            const v_x = _a371[_i372];
+            const _t373 = _f315[v_x];
+            _g253 |= 1 << _t373;
           }
         }
       }
-      freshBinding("cageEasy", [(cl.cage.parts.includes(v_r)), sameSet(v_K, cl.cage.cells[v_r]), (v_D === _g257)], ["r in", "K =", "D ="]);
+      freshBinding("cageEasy", [(cl.cage.parts.includes(v_r)), sameSet(v_K, cl.cage.cells[v_r]), (v_D === _g253)], ["r in", "K =", "D ="]);
     }
     facts.length = 0;
     changed = false;
-    let _q378 = true;
-    Q379: {
-      const _a380 = v_K;
-      for (let _i381 = 0; _i381 < _a380.length; _i381++) {
-        const v_c = _a380[_i381];
-        for (let _m382 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m382 !== 0; _m382 &= _m382 - 1) {
-          const v_d = 31 - Math.clz32(_m382 & -_m382);
+    let _q374 = true;
+    Q375: {
+      const _a376 = v_K;
+      for (let _i377 = 0; _i377 < _a376.length; _i377++) {
+        const v_c = _a376[_i377];
+        for (let _m378 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m378 !== 0; _m378 &= _m378 - 1) {
+          const v_d = 31 - Math.clz32(_m378 & -_m378);
           if (!(!(((v_D >> v_d) & 1) !== 0))) continue;
           if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
           if (!(true)) {
-            _q378 = false;
-            break Q379;
+            _q374 = false;
+            break Q375;
           }
         }
       }
     }
-    if (!(_q378)) return -1;
+    if (!(_q374)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null && !fire({ r: v_r, K: v_K.slice(), D: v_D }, facts)) return 1;
@@ -521,21 +521,21 @@ export interface CageBinding {
 
 const cageFacts: number[] = [];
 let cageCands = new Int32Array(0);
-let _p392 = new Int32Array(0);
-let _l393: readonly number[] = [];
-let _f398 = new Int32Array(0);
-let _l399: readonly number[] = [];
+let cage_p10 = new Int32Array(0);
+let cage_l11: readonly number[] = [];
+let cage_f16 = new Int32Array(0);
+let cage_l17: readonly number[] = [];
 
 /** Its dearest read grows with the board as 1. */
 export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding> | null): number {
-  if (_p392.length < sp.cells.length) _p392 = new Int32Array(sp.cells.length);
-  else _p392.fill(0);
-  _l393 = [];
-  let _y394 = false;
-  if (_f398.length < sp.cells.length) _f398 = new Int32Array(sp.cells.length).fill(-1);
-  else _f398.fill(-1);
-  _l399 = [];
-  const _s400: number[] = [];
+  if (cage_p10.length < sp.cells.length) cage_p10 = new Int32Array(sp.cells.length);
+  else cage_p10.fill(0);
+  cage_l11 = [];
+  let _y12 = false;
+  if (cage_f16.length < sp.cells.length) cage_f16 = new Int32Array(sp.cells.length).fill(-1);
+  else cage_f16.fill(-1);
+  cage_l17 = [];
+  const _s18: number[] = [];
   const facts = cageFacts;
   let fired = 0;
   let changed = false;
@@ -543,182 +543,182 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
   if (cageCands.length < sp.cells.length) cageCands = new Int32Array(sp.cells.length);
   const cands = cageCands;
   cands.fill(-1);
-  const _a385 = cl.cage.parts;
-  for (let _i386 = 0; _i386 < _a385.length; _i386++) {
-    const v_r = _a385[_i386];
-    const _h406 = clueAt(cl.sum, v_r);
-    const _h407 = (_h406 === -1);
-    const _h410 = clueAt(cl.product, v_r);
-    const _h411 = (_h410 === -1);
-    const _h430 = clueAt(cl.difference, v_r);
-    const _h431 = (_h430 === -1);
-    const _h444 = clueAt(cl.quotient, v_r);
-    const _h445 = (_h444 === -1);
+  const _a3 = cl.cage.parts;
+  for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+    const v_r = _a3[_i4];
+    const _h24 = clueAt(cl.sum, v_r);
+    const _h25 = (_h24 === -1);
+    const _h28 = clueAt(cl.product, v_r);
+    const _h29 = (_h28 === -1);
+    const _h48 = clueAt(cl.difference, v_r);
+    const _h49 = (_h48 === -1);
+    const _h62 = clueAt(cl.quotient, v_r);
+    const _h63 = (_h62 === -1);
     const v_K = cl.cage.cells[v_r];
-    let _g395 = -1;
+    let _g13 = -1;
     if (import.meta.env.DEV && staleChecking) {
       freshBinding("cage", [(cl.cage.parts.includes(v_r)), sameSet(v_K, cl.cage.cells[v_r])], ["r in", "K ="]);
     }
     facts.length = 0;
     changed = false;
-    let _q387 = true;
-    Q388: {
-      const _a389 = v_K;
-      for (let _i390 = 0; _i390 < _a389.length; _i390++) {
-        const v_c = _a389[_i390];
-        for (let _m391 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m391 !== 0; _m391 &= _m391 - 1) {
-          const v_d = 31 - Math.clz32(_m391 & -_m391);
-          if (_g395 !== _epoch) {
-            _g395 = _epoch;
-            for (const _e396 of _l393) _p392[_e396] = 0;
-            _y394 = false;
-            const _a397 = v_K;
-            const _lo408 = 31 - Math.clz32(b.domain & -b.domain);
-            const _hi409 = 31 - Math.clz32(b.domain);
-            for (const _e401 of _l399) _f398[_e401] = -1;
-            _l399 = _a397;
-            let _i403 = 0;
-            _s400[0] = 0;
-            let _o415 = _a397.length === 0;
+    let _q5 = true;
+    Q6: {
+      const _a7 = v_K;
+      for (let _i8 = 0; _i8 < _a7.length; _i8++) {
+        const v_c = _a7[_i8];
+        for (let _m9 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m9 !== 0; _m9 &= _m9 - 1) {
+          const v_d = 31 - Math.clz32(_m9 & -_m9);
+          if (_g13 !== _epoch) {
+            _g13 = _epoch;
+            for (const _e14 of cage_l11) cage_p10[_e14] = 0;
+            _y12 = false;
+            const _a15 = v_K;
+            const _lo26 = 31 - Math.clz32(b.domain & -b.domain);
+            const _hi27 = 31 - Math.clz32(b.domain);
+            for (const _e19 of cage_l17) cage_f16[_e19] = -1;
+            cage_l17 = _a15;
+            let _i21 = 0;
+            _s18[0] = 0;
+            let _o33 = _a15.length === 0;
             for (;;) {
-              if (_a397.length === 0) {
-                if (!_o415) break;
-                _o415 = false;
+              if (_a15.length === 0) {
+                if (!_o33) break;
+                _o33 = false;
               }
-              while (_a397.length > 0 && _i403 >= 0) {
-                const _e401 = _a397[_i403];
-                if (_s400[_i403] > 0) _f398[_e401] = -1;
-                let _r414 = (cands[_e401] >= 0 ? cands[_e401] : (cands[_e401] = b.cands[_e401])) & ~((2 << _s400[_i403]) - 1);
-                let _d402 = 0;
-                V405: for (; _r414 !== 0; _r414 &= _r414 - 1) {
-                  _d402 = 31 - Math.clz32(_r414 & -_r414);
-                  _f398[_e401] = _d402;
-                  for (let _j404 = 0; _j404 < _i403; _j404++) {
-                    const _y416 = _a397[_j404];
-                    if (!(((sp.rowOf[_e401] === sp.rowOf[_y416]) || (sp.colOf[_e401] === sp.colOf[_y416])))) continue;
-                    if (!((_f398[_e401] !== _f398[_y416]))) continue V405;
+              while (_a15.length > 0 && _i21 >= 0) {
+                const _e19 = _a15[_i21];
+                if (_s18[_i21] > 0) cage_f16[_e19] = -1;
+                let _r32 = (cands[_e19] >= 0 ? cands[_e19] : (cands[_e19] = b.cands[_e19])) & ~((2 << _s18[_i21]) - 1);
+                let _d20 = 0;
+                V23: for (; _r32 !== 0; _r32 &= _r32 - 1) {
+                  _d20 = 31 - Math.clz32(_r32 & -_r32);
+                  cage_f16[_e19] = _d20;
+                  for (let _j22 = 0; _j22 < _i21; _j22++) {
+                    const _y34 = _a15[_j22];
+                    if (!(((sp.rowOf[_e19] === sp.rowOf[_y34]) || (sp.colOf[_e19] === sp.colOf[_y34])))) continue;
+                    if (!((cage_f16[_e19] !== cage_f16[_y34]))) continue V23;
                   }
-                  if (!_h407) {
-                    let _t417 = _d402;
-                    for (let _j404 = 0; _j404 < _i403; _j404++) _t417 += _f398[_a397[_j404]];
-                    if (_t417 + (_a397.length - _i403 - 1) * _lo408 > _h406) continue;
-                    if (_t417 + (_a397.length - _i403 - 1) * _hi409 < _h406) continue;
+                  if (!_h25) {
+                    let _t35 = _d20;
+                    for (let _j22 = 0; _j22 < _i21; _j22++) _t35 += cage_f16[_a15[_j22]];
+                    if (_t35 + (_a15.length - _i21 - 1) * _lo26 > _h24) continue;
+                    if (_t35 + (_a15.length - _i21 - 1) * _hi27 < _h24) continue;
                   }
-                  if (!_h411) {
-                    let _t418 = _d402;
-                    for (let _j404 = 0; _j404 < _i403; _j404++) _t418 *= _f398[_a397[_j404]];
-                    if (_t418 > 0 && _h410 % _t418 !== 0) continue;
+                  if (!_h29) {
+                    let _t36 = _d20;
+                    for (let _j22 = 0; _j22 < _i21; _j22++) _t36 *= cage_f16[_a15[_j22]];
+                    if (_t36 > 0 && _h28 % _t36 !== 0) continue;
                   }
                   break;
                 }
-                if (_r414 === 0) {
-                  _s400[_i403] = 0;
-                  _i403--;
+                if (_r32 === 0) {
+                  _s18[_i21] = 0;
+                  _i21--;
                   continue;
                 }
-                _s400[_i403] = _d402;
-                if (_i403 === _a397.length - 1) break;
-                _i403++;
-                _s400[_i403] = 0;
+                _s18[_i21] = _d20;
+                if (_i21 === _a15.length - 1) break;
+                _i21++;
+                _s18[_i21] = 0;
               }
-              if (_i403 < 0) break;
-              let _c423: boolean = _h407;
-              if (!_c423) {
-                let _g419 = 0;
-                G420: {
-                  const _a421 = cl.cage.cells[v_r];
-                  for (let _i422 = 0; _i422 < _a421.length; _i422++) {
-                    const v_x = _a421[_i422];
-                    _g419 += _f398[v_x];
+              if (_i21 < 0) break;
+              let _c41: boolean = _h25;
+              if (!_c41) {
+                let _g37 = 0;
+                G38: {
+                  const _a39 = cl.cage.cells[v_r];
+                  for (let _i40 = 0; _i40 < _a39.length; _i40++) {
+                    const v_x = _a39[_i40];
+                    _g37 += cage_f16[v_x];
                   }
                 }
-                _c423 = (_g419 === _h406);
+                _c41 = (_g37 === _h24);
               }
-              let _c429: boolean = _c423;
-              if (_c429) {
-                let _c428: boolean = _h411;
-                if (!_c428) {
-                  let _g424 = 1;
-                  G425: {
-                    const _a426 = cl.cage.cells[v_r];
-                    for (let _i427 = 0; _i427 < _a426.length; _i427++) {
-                      const v_x = _a426[_i427];
-                      _g424 *= _f398[v_x];
+              let _c47: boolean = _c41;
+              if (_c47) {
+                let _c46: boolean = _h29;
+                if (!_c46) {
+                  let _g42 = 1;
+                  G43: {
+                    const _a44 = cl.cage.cells[v_r];
+                    for (let _i45 = 0; _i45 < _a44.length; _i45++) {
+                      const v_x = _a44[_i45];
+                      _g42 *= cage_f16[v_x];
                     }
                   }
-                  _c428 = (_g424 === _h410);
+                  _c46 = (_g42 === _h28);
                 }
-                _c429 = _c428;
+                _c47 = _c46;
               }
-              let _c443: boolean = _c429;
-              if (_c443) {
-                let _c442: boolean = _h431;
-                if (!_c442) {
-                  let _g432 = -1;
-                  G433: {
-                    const _a434 = cl.cage.cells[v_r];
-                    for (let _i435 = 0; _i435 < _a434.length; _i435++) {
-                      const v_x = _a434[_i435];
-                      const _t436 = _f398[v_x];
-                      if (_g432 === -1 || _t436 > _g432) _g432 = _t436;
+              let _c61: boolean = _c47;
+              if (_c61) {
+                let _c60: boolean = _h49;
+                if (!_c60) {
+                  let _g50 = -1;
+                  G51: {
+                    const _a52 = cl.cage.cells[v_r];
+                    for (let _i53 = 0; _i53 < _a52.length; _i53++) {
+                      const v_x = _a52[_i53];
+                      const _t54 = cage_f16[v_x];
+                      if (_g50 === -1 || _t54 > _g50) _g50 = _t54;
                     }
                   }
-                  let _g437 = -1;
-                  G438: {
-                    const _a439 = cl.cage.cells[v_r];
-                    for (let _i440 = 0; _i440 < _a439.length; _i440++) {
-                      const v_x = _a439[_i440];
-                      const _t441 = _f398[v_x];
-                      if (_g437 === -1 || _t441 < _g437) _g437 = _t441;
+                  let _g55 = -1;
+                  G56: {
+                    const _a57 = cl.cage.cells[v_r];
+                    for (let _i58 = 0; _i58 < _a57.length; _i58++) {
+                      const v_x = _a57[_i58];
+                      const _t59 = cage_f16[v_x];
+                      if (_g55 === -1 || _t59 < _g55) _g55 = _t59;
                     }
                   }
-                  _c442 = ((_g432 - _g437) === _h430);
+                  _c60 = ((_g50 - _g55) === _h48);
                 }
-                _c443 = _c442;
+                _c61 = _c60;
               }
-              let _c457: boolean = _c443;
-              if (_c457) {
-                let _c456: boolean = _h445;
-                if (!_c456) {
-                  let _g446 = -1;
-                  G447: {
-                    const _a448 = cl.cage.cells[v_r];
-                    for (let _i449 = 0; _i449 < _a448.length; _i449++) {
-                      const v_x = _a448[_i449];
-                      const _t450 = _f398[v_x];
-                      if (_g446 === -1 || _t450 > _g446) _g446 = _t450;
+              let _c75: boolean = _c61;
+              if (_c75) {
+                let _c74: boolean = _h63;
+                if (!_c74) {
+                  let _g64 = -1;
+                  G65: {
+                    const _a66 = cl.cage.cells[v_r];
+                    for (let _i67 = 0; _i67 < _a66.length; _i67++) {
+                      const v_x = _a66[_i67];
+                      const _t68 = cage_f16[v_x];
+                      if (_g64 === -1 || _t68 > _g64) _g64 = _t68;
                     }
                   }
-                  let _g451 = -1;
-                  G452: {
-                    const _a453 = cl.cage.cells[v_r];
-                    for (let _i454 = 0; _i454 < _a453.length; _i454++) {
-                      const v_x = _a453[_i454];
-                      const _t455 = _f398[v_x];
-                      if (_g451 === -1 || _t455 < _g451) _g451 = _t455;
+                  let _g69 = -1;
+                  G70: {
+                    const _a71 = cl.cage.cells[v_r];
+                    for (let _i72 = 0; _i72 < _a71.length; _i72++) {
+                      const v_x = _a71[_i72];
+                      const _t73 = cage_f16[v_x];
+                      if (_g69 === -1 || _t73 < _g69) _g69 = _t73;
                     }
                   }
-                  _c456 = (_g446 === (_h444 * _g451));
+                  _c74 = (_g64 === (_h62 * _g69));
                 }
-                _c457 = _c456;
+                _c75 = _c74;
               }
-              if (!(_c457)) continue;
+              if (!(_c75)) continue;
               if (!(true)) continue;
-              _l393 = _a397;
-              _y394 = true;
-              for (const _e396 of _a397) _p392[_e396] |= 1 << _f398[_e396];
+              cage_l11 = _a15;
+              _y12 = true;
+              for (const _e14 of _a15) cage_p10[_e14] |= 1 << cage_f16[_e14];
             }
           }
-          if (!(!(((((_p392[v_c] >> v_d) & 1) !== 0) || ((v_d as number) === -1 && _y394 && !v_K.includes(v_c)))))) continue;
+          if (!(!(((((cage_p10[v_c] >> v_d) & 1) !== 0) || ((v_d as number) === -1 && _y12 && !v_K.includes(v_c)))))) continue;
           if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
           if (!(true)) {
-            _q387 = false;
-            break Q388;
+            _q5 = false;
+            break Q6;
           }
         }
       }
     }
-    if (!(_q387)) return -1;
+    if (!(_q5)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null && !fire({ r: v_r, K: v_K.slice() }, facts)) return 1;
@@ -737,210 +737,210 @@ export interface CageLineBinding {
 
 const cageLineFacts: number[] = [];
 let cageLineCands = new Int32Array(0);
-let _f473 = new Int32Array(0);
-let _l474: readonly number[] = [];
+let cageLine_f16 = new Int32Array(0);
+let cageLine_l17: readonly number[] = [];
 
 /** Its dearest read grows with the board as n^0.5. */
 export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLineBinding> | null): number {
-  if (_f473.length < sp.cells.length) _f473 = new Int32Array(sp.cells.length).fill(-1);
-  else _f473.fill(-1);
-  _l474 = [];
-  const _s475: number[] = [];
+  if (cageLine_f16.length < sp.cells.length) cageLine_f16 = new Int32Array(sp.cells.length).fill(-1);
+  else cageLine_f16.fill(-1);
+  cageLine_l17 = [];
+  const _s18: number[] = [];
   const facts = cageLineFacts;
   let fired = 0;
   let changed = false;
-  const _h464 = union(sp.cols, sp.rows);
+  const _h7 = union(sp.cols, sp.rows);
   if (cageLineCands.length < sp.cells.length) cageLineCands = new Int32Array(sp.cells.length);
   const cands = cageLineCands;
   cands.fill(-1);
-  const _a462 = cl.cage.parts;
-  for (let _i463 = 0; _i463 < _a462.length; _i463++) {
-    const v_r = _a462[_i463];
-    const _h481 = clueAt(cl.sum, v_r);
-    const _h482 = (_h481 === -1);
-    const _h485 = clueAt(cl.product, v_r);
-    const _h486 = (_h485 === -1);
-    const _h505 = clueAt(cl.difference, v_r);
-    const _h506 = (_h505 === -1);
-    const _h519 = clueAt(cl.quotient, v_r);
-    const _h520 = (_h519 === -1);
+  const _a5 = cl.cage.parts;
+  for (let _i6 = 0; _i6 < _a5.length; _i6++) {
+    const v_r = _a5[_i6];
+    const _h24 = clueAt(cl.sum, v_r);
+    const _h25 = (_h24 === -1);
+    const _h28 = clueAt(cl.product, v_r);
+    const _h29 = (_h28 === -1);
+    const _h48 = clueAt(cl.difference, v_r);
+    const _h49 = (_h48 === -1);
+    const _h62 = clueAt(cl.quotient, v_r);
+    const _h63 = (_h62 === -1);
     const v_K = cl.cage.cells[v_r];
-    const _a465 = _h464;
-    for (let _i466 = 0; _i466 < _a465.length; _i466++) {
-      const v_L = _a465[_i466];
+    const _a8 = _h7;
+    for (let _i9 = 0; _i9 < _a8.length; _i9++) {
+      const v_L = _a8[_i9];
       if (import.meta.env.DEV && staleChecking) {
         freshBinding("cageLine", [(cl.cage.parts.includes(v_r)), sameSet(v_K, cl.cage.cells[v_r]), (union(sp.cols, sp.rows).includes(v_L))], ["r in", "K =", "L in"]);
       }
       facts.length = 0;
       changed = false;
-      let _q467 = true;
-      Q468: {
-        for (let _m469 = b.domain; _m469 !== 0; _m469 &= _m469 - 1) {
-          const v_d = 31 - Math.clz32(_m469 & -_m469);
-          let _q470 = true;
-          Q471: {
-            const _a472 = v_K;
-            const _lo483 = 31 - Math.clz32(b.domain & -b.domain);
-            const _hi484 = 31 - Math.clz32(b.domain);
-            for (const _e476 of _l474) _f473[_e476] = -1;
-            _l474 = _a472;
-            let _i478 = 0;
-            _s475[0] = 0;
-            let _o490 = _a472.length === 0;
+      let _q10 = true;
+      Q11: {
+        for (let _m12 = b.domain; _m12 !== 0; _m12 &= _m12 - 1) {
+          const v_d = 31 - Math.clz32(_m12 & -_m12);
+          let _q13 = true;
+          Q14: {
+            const _a15 = v_K;
+            const _lo26 = 31 - Math.clz32(b.domain & -b.domain);
+            const _hi27 = 31 - Math.clz32(b.domain);
+            for (const _e19 of cageLine_l17) cageLine_f16[_e19] = -1;
+            cageLine_l17 = _a15;
+            let _i21 = 0;
+            _s18[0] = 0;
+            let _o33 = _a15.length === 0;
             for (;;) {
-              if (_a472.length === 0) {
-                if (!_o490) break;
-                _o490 = false;
+              if (_a15.length === 0) {
+                if (!_o33) break;
+                _o33 = false;
               }
-              while (_a472.length > 0 && _i478 >= 0) {
-                const _e476 = _a472[_i478];
-                if (_s475[_i478] > 0) _f473[_e476] = -1;
-                let _r489 = (cands[_e476] >= 0 ? cands[_e476] : (cands[_e476] = b.cands[_e476])) & ~((2 << _s475[_i478]) - 1);
-                let _d477 = 0;
-                V480: for (; _r489 !== 0; _r489 &= _r489 - 1) {
-                  _d477 = 31 - Math.clz32(_r489 & -_r489);
-                  _f473[_e476] = _d477;
-                  for (let _j479 = 0; _j479 < _i478; _j479++) {
-                    const _y491 = _a472[_j479];
-                    if (!(((sp.rowOf[_e476] === sp.rowOf[_y491]) || (sp.colOf[_e476] === sp.colOf[_y491])))) continue;
-                    if (!((_f473[_e476] !== _f473[_y491]))) continue V480;
+              while (_a15.length > 0 && _i21 >= 0) {
+                const _e19 = _a15[_i21];
+                if (_s18[_i21] > 0) cageLine_f16[_e19] = -1;
+                let _r32 = (cands[_e19] >= 0 ? cands[_e19] : (cands[_e19] = b.cands[_e19])) & ~((2 << _s18[_i21]) - 1);
+                let _d20 = 0;
+                V23: for (; _r32 !== 0; _r32 &= _r32 - 1) {
+                  _d20 = 31 - Math.clz32(_r32 & -_r32);
+                  cageLine_f16[_e19] = _d20;
+                  for (let _j22 = 0; _j22 < _i21; _j22++) {
+                    const _y34 = _a15[_j22];
+                    if (!(((sp.rowOf[_e19] === sp.rowOf[_y34]) || (sp.colOf[_e19] === sp.colOf[_y34])))) continue;
+                    if (!((cageLine_f16[_e19] !== cageLine_f16[_y34]))) continue V23;
                   }
-                  if (!_h482) {
-                    let _t492 = _d477;
-                    for (let _j479 = 0; _j479 < _i478; _j479++) _t492 += _f473[_a472[_j479]];
-                    if (_t492 + (_a472.length - _i478 - 1) * _lo483 > _h481) continue;
-                    if (_t492 + (_a472.length - _i478 - 1) * _hi484 < _h481) continue;
+                  if (!_h25) {
+                    let _t35 = _d20;
+                    for (let _j22 = 0; _j22 < _i21; _j22++) _t35 += cageLine_f16[_a15[_j22]];
+                    if (_t35 + (_a15.length - _i21 - 1) * _lo26 > _h24) continue;
+                    if (_t35 + (_a15.length - _i21 - 1) * _hi27 < _h24) continue;
                   }
-                  if (!_h486) {
-                    let _t493 = _d477;
-                    for (let _j479 = 0; _j479 < _i478; _j479++) _t493 *= _f473[_a472[_j479]];
-                    if (_t493 > 0 && _h485 % _t493 !== 0) continue;
+                  if (!_h29) {
+                    let _t36 = _d20;
+                    for (let _j22 = 0; _j22 < _i21; _j22++) _t36 *= cageLine_f16[_a15[_j22]];
+                    if (_t36 > 0 && _h28 % _t36 !== 0) continue;
                   }
                   break;
                 }
-                if (_r489 === 0) {
-                  _s475[_i478] = 0;
-                  _i478--;
+                if (_r32 === 0) {
+                  _s18[_i21] = 0;
+                  _i21--;
                   continue;
                 }
-                _s475[_i478] = _d477;
-                if (_i478 === _a472.length - 1) break;
-                _i478++;
-                _s475[_i478] = 0;
+                _s18[_i21] = _d20;
+                if (_i21 === _a15.length - 1) break;
+                _i21++;
+                _s18[_i21] = 0;
               }
-              if (_i478 < 0) break;
-              let _c498: boolean = _h482;
-              if (!_c498) {
-                let _g494 = 0;
-                G495: {
-                  const _a496 = cl.cage.cells[v_r];
-                  for (let _i497 = 0; _i497 < _a496.length; _i497++) {
-                    const v_x = _a496[_i497];
-                    _g494 += _f473[v_x];
+              if (_i21 < 0) break;
+              let _c41: boolean = _h25;
+              if (!_c41) {
+                let _g37 = 0;
+                G38: {
+                  const _a39 = cl.cage.cells[v_r];
+                  for (let _i40 = 0; _i40 < _a39.length; _i40++) {
+                    const v_x = _a39[_i40];
+                    _g37 += cageLine_f16[v_x];
                   }
                 }
-                _c498 = (_g494 === _h481);
+                _c41 = (_g37 === _h24);
               }
-              let _c504: boolean = _c498;
-              if (_c504) {
-                let _c503: boolean = _h486;
-                if (!_c503) {
-                  let _g499 = 1;
-                  G500: {
-                    const _a501 = cl.cage.cells[v_r];
-                    for (let _i502 = 0; _i502 < _a501.length; _i502++) {
-                      const v_x = _a501[_i502];
-                      _g499 *= _f473[v_x];
+              let _c47: boolean = _c41;
+              if (_c47) {
+                let _c46: boolean = _h29;
+                if (!_c46) {
+                  let _g42 = 1;
+                  G43: {
+                    const _a44 = cl.cage.cells[v_r];
+                    for (let _i45 = 0; _i45 < _a44.length; _i45++) {
+                      const v_x = _a44[_i45];
+                      _g42 *= cageLine_f16[v_x];
                     }
                   }
-                  _c503 = (_g499 === _h485);
+                  _c46 = (_g42 === _h28);
                 }
-                _c504 = _c503;
+                _c47 = _c46;
               }
-              let _c518: boolean = _c504;
-              if (_c518) {
-                let _c517: boolean = _h506;
-                if (!_c517) {
-                  let _g507 = -1;
-                  G508: {
-                    const _a509 = cl.cage.cells[v_r];
-                    for (let _i510 = 0; _i510 < _a509.length; _i510++) {
-                      const v_x = _a509[_i510];
-                      const _t511 = _f473[v_x];
-                      if (_g507 === -1 || _t511 > _g507) _g507 = _t511;
+              let _c61: boolean = _c47;
+              if (_c61) {
+                let _c60: boolean = _h49;
+                if (!_c60) {
+                  let _g50 = -1;
+                  G51: {
+                    const _a52 = cl.cage.cells[v_r];
+                    for (let _i53 = 0; _i53 < _a52.length; _i53++) {
+                      const v_x = _a52[_i53];
+                      const _t54 = cageLine_f16[v_x];
+                      if (_g50 === -1 || _t54 > _g50) _g50 = _t54;
                     }
                   }
-                  let _g512 = -1;
-                  G513: {
-                    const _a514 = cl.cage.cells[v_r];
-                    for (let _i515 = 0; _i515 < _a514.length; _i515++) {
-                      const v_x = _a514[_i515];
-                      const _t516 = _f473[v_x];
-                      if (_g512 === -1 || _t516 < _g512) _g512 = _t516;
+                  let _g55 = -1;
+                  G56: {
+                    const _a57 = cl.cage.cells[v_r];
+                    for (let _i58 = 0; _i58 < _a57.length; _i58++) {
+                      const v_x = _a57[_i58];
+                      const _t59 = cageLine_f16[v_x];
+                      if (_g55 === -1 || _t59 < _g55) _g55 = _t59;
                     }
                   }
-                  _c517 = ((_g507 - _g512) === _h505);
+                  _c60 = ((_g50 - _g55) === _h48);
                 }
-                _c518 = _c517;
+                _c61 = _c60;
               }
-              let _c532: boolean = _c518;
-              if (_c532) {
-                let _c531: boolean = _h520;
-                if (!_c531) {
-                  let _g521 = -1;
-                  G522: {
-                    const _a523 = cl.cage.cells[v_r];
-                    for (let _i524 = 0; _i524 < _a523.length; _i524++) {
-                      const v_x = _a523[_i524];
-                      const _t525 = _f473[v_x];
-                      if (_g521 === -1 || _t525 > _g521) _g521 = _t525;
+              let _c75: boolean = _c61;
+              if (_c75) {
+                let _c74: boolean = _h63;
+                if (!_c74) {
+                  let _g64 = -1;
+                  G65: {
+                    const _a66 = cl.cage.cells[v_r];
+                    for (let _i67 = 0; _i67 < _a66.length; _i67++) {
+                      const v_x = _a66[_i67];
+                      const _t68 = cageLine_f16[v_x];
+                      if (_g64 === -1 || _t68 > _g64) _g64 = _t68;
                     }
                   }
-                  let _g526 = -1;
-                  G527: {
-                    const _a528 = cl.cage.cells[v_r];
-                    for (let _i529 = 0; _i529 < _a528.length; _i529++) {
-                      const v_x = _a528[_i529];
-                      const _t530 = _f473[v_x];
-                      if (_g526 === -1 || _t530 < _g526) _g526 = _t530;
+                  let _g69 = -1;
+                  G70: {
+                    const _a71 = cl.cage.cells[v_r];
+                    for (let _i72 = 0; _i72 < _a71.length; _i72++) {
+                      const v_x = _a71[_i72];
+                      const _t73 = cageLine_f16[v_x];
+                      if (_g69 === -1 || _t73 < _g69) _g69 = _t73;
                     }
                   }
-                  _c531 = (_g521 === (_h519 * _g526));
+                  _c74 = (_g64 === (_h62 * _g69));
                 }
-                _c532 = _c531;
+                _c75 = _c74;
               }
-              if (!(_c532)) continue;
-              let _q533 = false;
-              Q534: {
-                const _a535 = sp.lineCells[v_L];
-                for (let _i536 = 0; _i536 < _a535.length; _i536++) {
-                  const v_x = _a535[_i536];
-                  if (((v_K.includes(v_x)) && (_f473[v_x] === v_d))) {
-                    _q533 = true;
-                    break Q534;
+              if (!(_c75)) continue;
+              let _q76 = false;
+              Q77: {
+                const _a78 = sp.lineCells[v_L];
+                for (let _i79 = 0; _i79 < _a78.length; _i79++) {
+                  const v_x = _a78[_i79];
+                  if (((v_K.includes(v_x)) && (cageLine_f16[v_x] === v_d))) {
+                    _q76 = true;
+                    break Q77;
                   }
                 }
               }
-              if (!(_q533)) {
-                _q470 = false;
-                break Q471;
+              if (!(_q76)) {
+                _q13 = false;
+                break Q14;
               }
             }
           }
-          if (!(_q470)) continue;
-          const _a537 = sp.lineCells[v_L];
-          for (let _i538 = 0; _i538 < _a537.length; _i538++) {
-            const v_c = _a537[_i538];
+          if (!(_q13)) continue;
+          const _a80 = sp.lineCells[v_L];
+          for (let _i81 = 0; _i81 < _a80.length; _i81++) {
+            const v_c = _a80[_i81];
             if (!(!(v_K.includes(v_c)))) continue;
             if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
             if (!(true)) {
-              _q467 = false;
-              break Q468;
+              _q10 = false;
+              break Q11;
             }
           }
         }
       }
-      if (!(_q467)) return -1;
+      if (!(_q10)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null && !fire({ r: v_r, K: v_K.slice(), L: v_L }, facts)) return 1;

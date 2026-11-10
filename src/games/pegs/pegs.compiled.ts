@@ -38,77 +38,77 @@ export const deadEnds: readonly DeadEndId[] = ["frozen"];
 export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]): Readonly<Record<DeadEndId, (p: Position) => boolean>> {
   return {
     frozen: (p) => {
-      const _fix36 = new Uint8Array(sp.cells.length);
-      for (let _grew38 = true; _grew38; ) {
-        _grew38 = false;
-        for (let _c37 = 0; _c37 < sp.cells.length; _c37++) {
-          if (_fix36[_c37] === 1) continue;
-          let _c46: boolean = (p.grid[_c37] === 1);
-          if (!_c46) {
-            let _c45: boolean = (p.grid[_c37] === 0);
-            if (_c45) {
-              let _q39 = false;
-              Q40: {
-                const _a41 = sp.adj4[_c37];
-                for (let _i42 = 0; _i42 < _a41.length; _i42++) {
-                  const v_b = _a41[_i42];
-                  const _t43 = ((2 * (v_b % sp.w)) - (_c37 % sp.w));
-                  const _t44 = ((2 * ((v_b / sp.w) | 0)) - ((_c37 / sp.w) | 0));
-                  if (!((_t43 >= 0 && _t43 < sp.w && _t44 >= 0 && _t44 < sp.h))) continue;
-                  const v_a = (((2 * ((v_b / sp.w) | 0)) - ((_c37 / sp.w) | 0)) * sp.w + ((2 * (v_b % sp.w)) - (_c37 % sp.w)));
-                  if (((_fix36[v_a] === 1) && (_fix36[v_b] === 1))) {
-                    _q39 = true;
-                    break Q40;
+      const _fix13 = new Uint8Array(sp.cells.length);
+      for (let _grew15 = true; _grew15; ) {
+        _grew15 = false;
+        for (let _c14 = 0; _c14 < sp.cells.length; _c14++) {
+          if (_fix13[_c14] === 1) continue;
+          let _c23: boolean = (p.grid[_c14] === 1);
+          if (!_c23) {
+            let _c22: boolean = (p.grid[_c14] === 0);
+            if (_c22) {
+              let _q16 = false;
+              Q17: {
+                const _a18 = sp.adj4[_c14];
+                for (let _i19 = 0; _i19 < _a18.length; _i19++) {
+                  const v_b = _a18[_i19];
+                  const _t20 = ((2 * (v_b % sp.w)) - (_c14 % sp.w));
+                  const _t21 = ((2 * ((v_b / sp.w) | 0)) - ((_c14 / sp.w) | 0));
+                  if (!((_t20 >= 0 && _t20 < sp.w && _t21 >= 0 && _t21 < sp.h))) continue;
+                  const v_a = (((2 * ((v_b / sp.w) | 0)) - ((_c14 / sp.w) | 0)) * sp.w + ((2 * (v_b % sp.w)) - (_c14 % sp.w)));
+                  if (((_fix13[v_a] === 1) && (_fix13[v_b] === 1))) {
+                    _q16 = true;
+                    break Q17;
                   }
                 }
               }
-              _c45 = _q39;
+              _c22 = _q16;
             }
-            _c46 = _c45;
+            _c23 = _c22;
           }
-          if (_c46) {
-            _fix36[_c37] = 1;
-            _grew38 = true;
+          if (_c23) {
+            _fix13[_c14] = 1;
+            _grew15 = true;
           }
         }
       }
-      let _g24 = 0;
-      G25: {
-        const _a26 = sp.cells;
-        for (let _i27 = 0; _i27 < _a26.length; _i27++) {
-          const v_c = _a26[_i27];
+      let _g1 = 0;
+      G2: {
+        const _a3 = sp.cells;
+        for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+          const v_c = _a3[_i4];
           if (!((p.grid[v_c] === 1))) continue;
-          _g24++;
+          _g1++;
         }
       }
-      let _c47: boolean = (_g24 > 1);
-      if (_c47) {
-        let _q28 = false;
-        Q29: {
-          const _a30 = sp.cells;
-          for (let _i31 = 0; _i31 < _a30.length; _i31++) {
-            const v_p = _a30[_i31];
+      let _c24: boolean = (_g1 > 1);
+      if (_c24) {
+        let _q5 = false;
+        Q6: {
+          const _a7 = sp.cells;
+          for (let _i8 = 0; _i8 < _a7.length; _i8++) {
+            const v_p = _a7[_i8];
             if (!((p.grid[v_p] === 1))) continue;
-            let _q32 = true;
-            Q33: {
-              const _a34 = sp.adj4[v_p];
-              for (let _i35 = 0; _i35 < _a34.length; _i35++) {
-                const v_q = _a34[_i35];
-                if (!(!((_fix36[v_q] === 1)))) {
-                  _q32 = false;
-                  break Q33;
+            let _q9 = true;
+            Q10: {
+              const _a11 = sp.adj4[v_p];
+              for (let _i12 = 0; _i12 < _a11.length; _i12++) {
+                const v_q = _a11[_i12];
+                if (!(!((_fix13[v_q] === 1)))) {
+                  _q9 = false;
+                  break Q10;
                 }
               }
             }
-            if (_q32) {
-              _q28 = true;
-              break Q29;
+            if (_q9) {
+              _q5 = true;
+              break Q6;
             }
           }
         }
-        _c47 = _q28;
+        _c24 = _q5;
       }
-      return _c47;
+      return _c24;
     },
   };
 }
@@ -118,67 +118,67 @@ export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]
 export function claimWitnesses(sp: GridSpace, _cl: Dealt, _variations: readonly string[]): Readonly<Record<DeadEndId, (p: Position) => number[]>> {
   return {
     frozen: (p) => {
-      const _fix58 = new Uint8Array(sp.cells.length);
-      for (let _grew60 = true; _grew60; ) {
-        _grew60 = false;
-        for (let _c59 = 0; _c59 < sp.cells.length; _c59++) {
-          if (_fix58[_c59] === 1) continue;
-          let _c68: boolean = (p.grid[_c59] === 1);
-          if (!_c68) {
-            let _c67: boolean = (p.grid[_c59] === 0);
-            if (_c67) {
-              let _q61 = false;
-              Q62: {
-                const _a63 = sp.adj4[_c59];
-                for (let _i64 = 0; _i64 < _a63.length; _i64++) {
-                  const v_b = _a63[_i64];
-                  const _t65 = ((2 * (v_b % sp.w)) - (_c59 % sp.w));
-                  const _t66 = ((2 * ((v_b / sp.w) | 0)) - ((_c59 / sp.w) | 0));
-                  if (!((_t65 >= 0 && _t65 < sp.w && _t66 >= 0 && _t66 < sp.h))) continue;
-                  const v_a = (((2 * ((v_b / sp.w) | 0)) - ((_c59 / sp.w) | 0)) * sp.w + ((2 * (v_b % sp.w)) - (_c59 % sp.w)));
-                  if (((_fix58[v_a] === 1) && (_fix58[v_b] === 1))) {
-                    _q61 = true;
-                    break Q62;
+      const _fix11 = new Uint8Array(sp.cells.length);
+      for (let _grew13 = true; _grew13; ) {
+        _grew13 = false;
+        for (let _c12 = 0; _c12 < sp.cells.length; _c12++) {
+          if (_fix11[_c12] === 1) continue;
+          let _c21: boolean = (p.grid[_c12] === 1);
+          if (!_c21) {
+            let _c20: boolean = (p.grid[_c12] === 0);
+            if (_c20) {
+              let _q14 = false;
+              Q15: {
+                const _a16 = sp.adj4[_c12];
+                for (let _i17 = 0; _i17 < _a16.length; _i17++) {
+                  const v_b = _a16[_i17];
+                  const _t18 = ((2 * (v_b % sp.w)) - (_c12 % sp.w));
+                  const _t19 = ((2 * ((v_b / sp.w) | 0)) - ((_c12 / sp.w) | 0));
+                  if (!((_t18 >= 0 && _t18 < sp.w && _t19 >= 0 && _t19 < sp.h))) continue;
+                  const v_a = (((2 * ((v_b / sp.w) | 0)) - ((_c12 / sp.w) | 0)) * sp.w + ((2 * (v_b % sp.w)) - (_c12 % sp.w)));
+                  if (((_fix11[v_a] === 1) && (_fix11[v_b] === 1))) {
+                    _q14 = true;
+                    break Q15;
                   }
                 }
               }
-              _c67 = _q61;
+              _c20 = _q14;
             }
-            _c68 = _c67;
+            _c21 = _c20;
           }
-          if (_c68) {
-            _fix58[_c59] = 1;
-            _grew60 = true;
+          if (_c21) {
+            _fix11[_c12] = 1;
+            _grew13 = true;
           }
         }
       }
       const at: number[] = [];
-      let _g48 = 0;
-      G49: {
-        const _a50 = sp.cells;
-        for (let _i51 = 0; _i51 < _a50.length; _i51++) {
-          const v_c = _a50[_i51];
+      let _g1 = 0;
+      G2: {
+        const _a3 = sp.cells;
+        for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+          const v_c = _a3[_i4];
           if (!((p.grid[v_c] === 1))) continue;
-          _g48++;
+          _g1++;
         }
       }
-      if (!((_g48 > 1))) return at;
-      const _a52 = sp.cells;
-      for (let _i53 = 0; _i53 < _a52.length; _i53++) {
-        const v_p = _a52[_i53];
+      if (!((_g1 > 1))) return at;
+      const _a5 = sp.cells;
+      for (let _i6 = 0; _i6 < _a5.length; _i6++) {
+        const v_p = _a5[_i6];
         if (!((p.grid[v_p] === 1))) continue;
-        let _q54 = true;
-        Q55: {
-          const _a56 = sp.adj4[v_p];
-          for (let _i57 = 0; _i57 < _a56.length; _i57++) {
-            const v_q = _a56[_i57];
-            if (!(!((_fix58[v_q] === 1)))) {
-              _q54 = false;
-              break Q55;
+        let _q7 = true;
+        Q8: {
+          const _a9 = sp.adj4[v_p];
+          for (let _i10 = 0; _i10 < _a9.length; _i10++) {
+            const v_q = _a9[_i10];
+            if (!(!((_fix11[v_q] === 1)))) {
+              _q7 = false;
+              break Q8;
             }
           }
         }
-        if (_q54) at.push(v_p);
+        if (_q7) at.push(v_p);
       }
       return at;
     },
@@ -189,23 +189,23 @@ export function claimWitnesses(sp: GridSpace, _cl: Dealt, _variations: readonly 
  * has on. */
 export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): PositionRules<Position, Move, DeadEndId> {
   function jumpMoves(p: Position, into: Move[]): void {
-    const _a9 = sp.cells;
-    for (let _i10 = 0; _i10 < _a9.length; _i10++) {
-      const v_f = _a9[_i10];
+    const _a1 = sp.cells;
+    for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+      const v_f = _a1[_i2];
       if (!((p.grid[v_f] === 1))) continue;
-      const _a11 = sp.adj4[v_f];
-      for (let _i12 = 0; _i12 < _a11.length; _i12++) {
-        const v_o = _a11[_i12];
-        let _c15: boolean = (p.grid[v_o] === 1);
-        if (_c15) {
-          const _t13 = ((2 * (v_o % sp.w)) - (v_f % sp.w));
-          const _t14 = ((2 * ((v_o / sp.w) | 0)) - ((v_f / sp.w) | 0));
-          _c15 = (_t13 >= 0 && _t13 < sp.w && _t14 >= 0 && _t14 < sp.h);
+      const _a3 = sp.adj4[v_f];
+      for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+        const v_o = _a3[_i4];
+        let _c7: boolean = (p.grid[v_o] === 1);
+        if (_c7) {
+          const _t5 = ((2 * (v_o % sp.w)) - (v_f % sp.w));
+          const _t6 = ((2 * ((v_o / sp.w) | 0)) - ((v_f / sp.w) | 0));
+          _c7 = (_t5 >= 0 && _t5 < sp.w && _t6 >= 0 && _t6 < sp.h);
         }
-        if (!(_c15)) continue;
-        L16: {
+        if (!(_c7)) continue;
+        L8: {
           const v_t = (((2 * ((v_o / sp.w) | 0)) - ((v_f / sp.w) | 0)) * sp.w + ((2 * (v_o % sp.w)) - (v_f % sp.w)));
-          if (!((p.grid[v_t] === 0))) break L16;
+          if (!((p.grid[v_t] === 0))) break L8;
           into.push({ move: "jump", f: v_f, o: v_o, t: v_t });
         }
       }
@@ -219,13 +219,13 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
     if (!(Number.isInteger(v_f) && v_f >= 0 && v_f < sp.cells.length)) return false;
     if (!((p.grid[v_f] === 1))) return false;
     if (!sp.adj4[v_f].includes(v_o)) return false;
-    let _c19: boolean = (p.grid[v_o] === 1);
-    if (_c19) {
-      const _t17 = ((2 * (v_o % sp.w)) - (v_f % sp.w));
-      const _t18 = ((2 * ((v_o / sp.w) | 0)) - ((v_f / sp.w) | 0));
-      _c19 = (_t17 >= 0 && _t17 < sp.w && _t18 >= 0 && _t18 < sp.h);
+    let _c3: boolean = (p.grid[v_o] === 1);
+    if (_c3) {
+      const _t1 = ((2 * (v_o % sp.w)) - (v_f % sp.w));
+      const _t2 = ((2 * ((v_o / sp.w) | 0)) - ((v_f / sp.w) | 0));
+      _c3 = (_t1 >= 0 && _t1 < sp.w && _t2 >= 0 && _t2 < sp.h);
     }
-    if (!(_c19)) return false;
+    if (!(_c3)) return false;
     if (v_t !== (((2 * ((v_o / sp.w) | 0)) - ((v_f / sp.w) | 0)) * sp.w + ((2 * (v_o % sp.w)) - (v_f % sp.w)))) return false;
     if (!((p.grid[v_t] === 0))) return false;
     return true;
@@ -253,16 +253,16 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
 
   function finished(p: Position): boolean {
     {
-      let _g20 = 0;
-      G21: {
-        const _a22 = sp.cells;
-        for (let _i23 = 0; _i23 < _a22.length; _i23++) {
-          const v_c = _a22[_i23];
+      let _g1 = 0;
+      G2: {
+        const _a3 = sp.cells;
+        for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+          const v_c = _a3[_i4];
           if (!((p.grid[v_c] === 1))) continue;
-          _g20++;
+          _g1++;
         }
       }
-      if (!((_g20 === 1))) return false;
+      if (!((_g1 === 1))) return false;
     }
     return true;
   }

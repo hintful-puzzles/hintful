@@ -37,32 +37,32 @@ export const deadEnds: readonly DeadEndId[] = ["parity"];
 export function claims(sp: GridSpace, _cl: Dealt, _variations: readonly string[]): Readonly<Record<DeadEndId, (p: Position) => boolean>> {
   return {
     parity: (p) => {
-      let _q20 = false;
-      Q21: {
-        const _a22 = sp.cells;
-        for (let _i23 = 0; _i23 < _a22.length; _i23++) {
-          const v_g = _a22[_i23];
+      let _q1 = false;
+      Q2: {
+        const _a3 = sp.cells;
+        for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+          const v_g = _a3[_i4];
           if (!((p.value[v_g] === 0))) continue;
-          let _g24 = 0;
-          G25: {
-            const _a26 = sp.cells;
-            for (let _i27 = 0; _i27 < _a26.length; _i27++) {
-              const v_a = _a26[_i27];
-              const _a28 = sp.cells;
-              for (let _i29 = 0; _i29 < _a28.length; _i29++) {
-                const v_b = _a28[_i29];
-                if (!(((_i27 < _i29) && (p.value[v_a] > p.value[v_b])))) continue;
-                _g24++;
+          let _g5 = 0;
+          G6: {
+            const _a7 = sp.cells;
+            for (let _i8 = 0; _i8 < _a7.length; _i8++) {
+              const v_a = _a7[_i8];
+              const _a9 = sp.cells;
+              for (let _i10 = 0; _i10 < _a9.length; _i10++) {
+                const v_b = _a9[_i10];
+                if (!(((_i8 < _i10) && (p.value[v_a] > p.value[v_b])))) continue;
+                _g5++;
               }
             }
           }
-          if (((((_g24 + ((sp.w - 1) - (v_g % sp.w))) + ((sp.h - 1) - ((v_g / sp.w) | 0))) % 2) !== ((sp.cells.length - 1) % 2))) {
-            _q20 = true;
-            break Q21;
+          if (((((_g5 + ((sp.w - 1) - (v_g % sp.w))) + ((sp.h - 1) - ((v_g / sp.w) | 0))) % 2) !== ((sp.cells.length - 1) % 2))) {
+            _q1 = true;
+            break Q2;
           }
         }
       }
-      return _q20;
+      return _q1;
     },
   };
 }
@@ -73,24 +73,24 @@ export function claimWitnesses(sp: GridSpace, _cl: Dealt, _variations: readonly 
   return {
     parity: (p) => {
       const at: number[] = [];
-      const _a30 = sp.cells;
-      for (let _i31 = 0; _i31 < _a30.length; _i31++) {
-        const v_g = _a30[_i31];
+      const _a1 = sp.cells;
+      for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+        const v_g = _a1[_i2];
         if (!((p.value[v_g] === 0))) continue;
-        let _g32 = 0;
-        G33: {
-          const _a34 = sp.cells;
-          for (let _i35 = 0; _i35 < _a34.length; _i35++) {
-            const v_a = _a34[_i35];
-            const _a36 = sp.cells;
-            for (let _i37 = 0; _i37 < _a36.length; _i37++) {
-              const v_b = _a36[_i37];
-              if (!(((_i35 < _i37) && (p.value[v_a] > p.value[v_b])))) continue;
-              _g32++;
+        let _g3 = 0;
+        G4: {
+          const _a5 = sp.cells;
+          for (let _i6 = 0; _i6 < _a5.length; _i6++) {
+            const v_a = _a5[_i6];
+            const _a7 = sp.cells;
+            for (let _i8 = 0; _i8 < _a7.length; _i8++) {
+              const v_b = _a7[_i8];
+              if (!(((_i6 < _i8) && (p.value[v_a] > p.value[v_b])))) continue;
+              _g3++;
             }
           }
         }
-        if (((((_g32 + ((sp.w - 1) - (v_g % sp.w))) + ((sp.h - 1) - ((v_g / sp.w) | 0))) % 2) !== ((sp.cells.length - 1) % 2))) at.push(v_g);
+        if (((((_g3 + ((sp.w - 1) - (v_g % sp.w))) + ((sp.h - 1) - ((v_g / sp.w) | 0))) % 2) !== ((sp.cells.length - 1) % 2))) at.push(v_g);
       }
       return at;
     },
@@ -101,13 +101,13 @@ export function claimWitnesses(sp: GridSpace, _cl: Dealt, _variations: readonly 
  * has on. */
 export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): PositionRules<Position, Move, DeadEndId> {
   function slideMoves(p: Position, into: Move[]): void {
-    const _a5 = sp.cells;
-    for (let _i6 = 0; _i6 < _a5.length; _i6++) {
-      const v_g = _a5[_i6];
+    const _a1 = sp.cells;
+    for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+      const v_g = _a1[_i2];
       if (!((p.value[v_g] === 0))) continue;
-      const _a7 = sp.cells;
-      for (let _i8 = 0; _i8 < _a7.length; _i8++) {
-        const v_t = _a7[_i8];
+      const _a3 = sp.cells;
+      for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+        const v_t = _a3[_i4];
         if (!(((v_t !== v_g) && (((v_t % sp.w) === (v_g % sp.w)) || (((v_t / sp.w) | 0) === ((v_g / sp.w) | 0)))))) continue;
         into.push({ move: "slide", g: v_g, t: v_t });
       }
@@ -133,25 +133,25 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       q.value[v_c] = 0;
     }
     {
-      const _a9 = sp.cells;
-      for (let _i10 = 0; _i10 < _a9.length; _i10++) {
-        const v_c = _a9[_i10];
+      const _a1 = sp.cells;
+      for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+        const v_c = _a1[_i2];
         if (!(((v_c !== v_t) && (((Math.abs(((v_g % sp.w) - (v_c % sp.w))) + Math.abs((((v_g / sp.w) | 0) - ((v_c / sp.w) | 0)))) + (Math.abs(((v_c % sp.w) - (v_t % sp.w))) + Math.abs((((v_c / sp.w) | 0) - ((v_t / sp.w) | 0))))) === (Math.abs(((v_g % sp.w) - (v_t % sp.w))) + Math.abs((((v_g / sp.w) | 0) - ((v_t / sp.w) | 0)))))))) continue;
-        let _g11 = -1;
-        let _n13 = 0;
-        G12: {
-          const _a14 = sp.adj4[v_c];
-          for (let _i15 = 0; _i15 < _a14.length; _i15++) {
-            const v_d = _a14[_i15];
+        let _g3 = -1;
+        let _n5 = 0;
+        G4: {
+          const _a6 = sp.adj4[v_c];
+          for (let _i7 = 0; _i7 < _a6.length; _i7++) {
+            const v_d = _a6[_i7];
             if (!(((Math.abs(((v_d % sp.w) - (v_t % sp.w))) + Math.abs((((v_d / sp.w) | 0) - ((v_t / sp.w) | 0)))) < (Math.abs(((v_c % sp.w) - (v_t % sp.w))) + Math.abs((((v_c / sp.w) | 0) - ((v_t / sp.w) | 0))))))) continue;
-            if (++_n13 === 2) {
-              _g11 = -1;
-              break G12;
+            if (++_n5 === 2) {
+              _g3 = -1;
+              break G4;
             }
-            _g11 = v_d;
+            _g3 = v_d;
           }
         }
-        q.value[v_c] = p.value[_g11];
+        q.value[v_c] = p.value[_g3];
       }
     }
     return q;
@@ -159,18 +159,18 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
 
   function finished(p: Position): boolean {
     {
-      let _q16 = true;
-      Q17: {
-        const _a18 = sp.cells;
-        for (let _i19 = 0; _i19 < _a18.length; _i19++) {
-          const v_c = _a18[_i19];
-          if (!((p.value[v_c] === ((_i19 + 1) % sp.cells.length)))) {
-            _q16 = false;
-            break Q17;
+      let _q1 = true;
+      Q2: {
+        const _a3 = sp.cells;
+        for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+          const v_c = _a3[_i4];
+          if (!((p.value[v_c] === ((_i4 + 1) % sp.cells.length)))) {
+            _q1 = false;
+            break Q2;
           }
         }
       }
-      if (!(_q16)) return false;
+      if (!(_q1)) return false;
     }
     return true;
   }

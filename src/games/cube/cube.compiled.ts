@@ -46,25 +46,25 @@ export const deadEnds: readonly DeadEndId[] = ["short"];
 export function claims(sp: GridSpace, cl: Dealt, _variations: readonly string[]): Readonly<Record<DeadEndId, (p: Position) => boolean>> {
   return {
     short: (p) => {
-      let _g28 = 0;
-      G29: {
-        const _a30 = sp.cells;
-        for (let _i31 = 0; _i31 < _a30.length; _i31++) {
-          const v_c = _a30[_i31];
+      let _g1 = 0;
+      G2: {
+        const _a3 = sp.cells;
+        for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+          const v_c = _a3[_i4];
           if (!((p.blue[v_c] === 1))) continue;
-          _g28++;
+          _g1++;
         }
       }
-      let _g32 = 0;
-      G33: {
-        const _a34 = facesOf(cl.nfaces);
-        for (let _i35 = 0; _i35 < _a34.length; _i35++) {
-          const v_f = _a34[_i35];
+      let _g5 = 0;
+      G6: {
+        const _a7 = facesOf(cl.nfaces);
+        for (let _i8 = 0; _i8 < _a7.length; _i8++) {
+          const v_f = _a7[_i8];
           if (!((p.paint[v_f] === 1))) continue;
-          _g32++;
+          _g5++;
         }
       }
-      return ((_g28 + _g32) < facesOf(cl.nfaces).length);
+      return ((_g1 + _g5) < facesOf(cl.nfaces).length);
     },
   };
 }
@@ -84,12 +84,12 @@ export function claimWitnesses(_sp: GridSpace, _cl: Dealt, _variations: readonly
  * has on. */
 export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): PositionRules<Position, Move, DeadEndId> {
   function rollMoves(p: Position, into: Move[]): void {
-    const _a4 = sp.cells;
-    for (let _i5 = 0; _i5 < _a4.length; _i5++) {
-      const v_s = _a4[_i5];
+    const _a1 = sp.cells;
+    for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+      const v_s = _a1[_i2];
       if (!((p.at[v_s] === 1))) continue;
-      for (let _m6 = ((1 << 0) | (1 << 1) | (1 << 2) | (1 << 3)); _m6 !== 0; _m6 &= _m6 - 1) {
-        const v_r = 31 - Math.clz32(_m6 & -_m6);
+      for (let _m3 = ((1 << 0) | (1 << 1) | (1 << 2) | (1 << 3)); _m3 !== 0; _m3 &= _m3 - 1) {
+        const v_r = 31 - Math.clz32(_m3 & -_m3);
         if (!((cl.dest[v_s][v_r] !== -1))) continue;
         into.push({ move: "roll", s: v_s, r: v_r });
       }
@@ -119,61 +119,61 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
       q.at[v_c] = 1;
     }
     {
-      const _a7 = facesOf(cl.nfaces);
-      for (let _i8 = 0; _i8 < _a7.length; _i8++) {
-        const v_f = _a7[_i8];
-        let _c13: boolean = (v_f !== cl.down);
-        if (!_c13) {
-          let _q9 = true;
-          Q10: {
-            const _a11 = facesOf(cl.nfaces);
-            for (let _i12 = 0; _i12 < _a11.length; _i12++) {
-              const v_f = _a11[_i12];
+      const _a1 = facesOf(cl.nfaces);
+      for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+        const v_f = _a1[_i2];
+        let _c7: boolean = (v_f !== cl.down);
+        if (!_c7) {
+          let _q3 = true;
+          Q4: {
+            const _a5 = facesOf(cl.nfaces);
+            for (let _i6 = 0; _i6 < _a5.length; _i6++) {
+              const v_f = _a5[_i6];
               if (!((p.paint[v_f] === 1))) {
-                _q9 = false;
-                break Q10;
+                _q3 = false;
+                break Q4;
               }
             }
           }
-          _c13 = _q9;
+          _c7 = _q3;
         }
-        if (!(_c13)) continue;
+        if (!(_c7)) continue;
         q.paint[v_f] = p.paint[cl.source[v_s][v_r][v_f]];
       }
     }
     {
-      L14: {
+      L8: {
         const v_f = cl.down;
-        let _q15 = true;
-        Q16: {
-          const _a17 = facesOf(cl.nfaces);
-          for (let _i18 = 0; _i18 < _a17.length; _i18++) {
-            const v_f = _a17[_i18];
+        let _q9 = true;
+        Q10: {
+          const _a11 = facesOf(cl.nfaces);
+          for (let _i12 = 0; _i12 < _a11.length; _i12++) {
+            const v_f = _a11[_i12];
             if (!((p.paint[v_f] === 1))) {
-              _q15 = false;
-              break Q16;
+              _q9 = false;
+              break Q10;
             }
           }
         }
-        if (!(!(_q15))) break L14;
+        if (!(!(_q9))) break L8;
         q.paint[v_f] = p.blue[cl.dest[v_s][v_r]];
       }
     }
     {
-      L19: {
+      L13: {
         const v_c = cl.dest[v_s][v_r];
-        let _q20 = true;
-        Q21: {
-          const _a22 = facesOf(cl.nfaces);
-          for (let _i23 = 0; _i23 < _a22.length; _i23++) {
-            const v_f = _a22[_i23];
+        let _q14 = true;
+        Q15: {
+          const _a16 = facesOf(cl.nfaces);
+          for (let _i17 = 0; _i17 < _a16.length; _i17++) {
+            const v_f = _a16[_i17];
             if (!((p.paint[v_f] === 1))) {
-              _q20 = false;
-              break Q21;
+              _q14 = false;
+              break Q15;
             }
           }
         }
-        if (!(!(_q20))) break L19;
+        if (!(!(_q14))) break L13;
         q.blue[v_c] = p.paint[cl.source[v_s][v_r][cl.down]];
       }
     }
@@ -182,18 +182,18 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
 
   function finished(p: Position): boolean {
     {
-      let _q24 = true;
-      Q25: {
-        const _a26 = facesOf(cl.nfaces);
-        for (let _i27 = 0; _i27 < _a26.length; _i27++) {
-          const v_f = _a26[_i27];
+      let _q1 = true;
+      Q2: {
+        const _a3 = facesOf(cl.nfaces);
+        for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+          const v_f = _a3[_i4];
           if (!((p.paint[v_f] === 1))) {
-            _q24 = false;
-            break Q25;
+            _q1 = false;
+            break Q2;
           }
         }
       }
-      if (!(_q24)) return false;
+      if (!(_q1)) return false;
     }
     return true;
   }

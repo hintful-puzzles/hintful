@@ -203,6 +203,7 @@ class Out {
    * whose place is not known as it is written. */
   readonly within: Out | null;
   private static n = 0;
+  private static owner: string | null = null;
   private static slots = 0;
   private static blockIds = 0;
   constructor(depth: number, within: Out | null = null) {
@@ -255,8 +256,34 @@ class Out {
       ),
     );
   }
+  /** A name of the function being written (`own`). */
   static fresh(prefix: string): string {
+    if (Out.owner === null)
+      throw new CompileError(`${prefix}: a fresh name outside any function`);
     return `${prefix}${++Out.n}`;
+  }
+  /** A name at the module's scope that the function being written keeps,
+   * so its own name tells it from another function's. */
+  static held(prefix: string): string {
+    if (Out.owner === null || Out.owner === "")
+      throw new CompileError(`${prefix}: a kept name outside a named function`);
+    return `${Out.owner}${prefix}${Out.fresh("")}`;
+  }
+  /** `write`, which writes the function `owner`, its fresh names numbered
+   * from the first: a function's text moves only when its own code does,
+   * not when a function written before it takes a name more. A function
+   * written while another is, as a kept definition is at its first call,
+   * hands the other back its count. `""` owns code that is thrown away. */
+  static own<T>(owner: string, write: () => T): T {
+    const [n, outer] = [Out.n, Out.owner];
+    Out.n = 0;
+    Out.owner = owner;
+    try {
+      return write();
+    } finally {
+      Out.n = n;
+      Out.owner = outer;
+    }
   }
   /** Where the fresh names have reached, so a probe whose code is thrown
    * away can give back those it took (`rewind`): what another description
@@ -269,8 +296,17 @@ class Out {
   }
   static reset(): void {
     Out.n = 0;
+    Out.owner = null;
     Out.slots = 0;
   }
+}
+
+/** A name for what a rung keeps across its calls where it does (`held`),
+ * declared at the module's scope, or else one of its own. */
+function heldName(prefix: string, env: Env): string {
+  return env.scratch !== null && env.held !== undefined
+    ? Out.held(prefix)
+    : Out.fresh(prefix);
 }
 
 /**
@@ -2205,8 +2241,8 @@ function fillLoop(
   if (bnd.from !== undefined && bnd.from !== "cand")
     throw new CompileError(`fill ${f} from ${bnd.from}: only from cand`);
   const a = Out.fresh("_a");
-  const fv = Out.fresh("_f");
-  const last = Out.fresh("_l");
+  const fv = heldName("_f", env);
+  const last = heldName("_l", env);
   const st = Out.fresh("_s");
   // Each a call: the values by cell, the set they were last given over, so
   // the next enumeration clears it, and each depth's last value tried.
@@ -2638,8 +2674,8 @@ function projection(
     env.epoch.used = true;
     h.root.lines.push({ indent: 0, text: "let _epoch = 0;" });
   }
-  const pj = Out.fresh("_p");
-  const last = Out.fresh("_l");
+  const pj = heldName("_p", env);
+  const last = heldName("_l", env);
   const any = Out.fresh("_y");
   const made = Out.fresh("_g");
   const decls = [
@@ -3022,21 +3058,24 @@ function linkedAggregate(
       memo: false,
       epoch: null,
     };
-    if (filter !== null) {
-      const w = compileExpr(filter, sc, own, body);
-      expect(w, "bool", how);
-      body.emit(`if (!(${w.code})) return 0;`);
-    }
-    if (how === "count") body.emit("return 1;");
-    else if (term !== null) {
-      const t = compileExpr(term, sc, own, body);
-      expect(t, how === "sum" ? "num" : "bool", how);
-      body.emit(
-        how === "sum"
-          ? `return ${t.code};`
-          : `return (${t.code}) ? ${how === "forall" ? "0 : 1" : "1 : 0"};`,
-      );
-    } else return null;
+    if (how !== "count" && term === null) return null;
+    Out.own("", () => {
+      if (filter !== null) {
+        const w = compileExpr(filter, sc, own, body);
+        expect(w, "bool", how);
+        body.emit(`if (!(${w.code})) return 0;`);
+      }
+      if (term === null || how === "count") body.emit("return 1;");
+      else {
+        const t = compileExpr(term, sc, own, body);
+        expect(t, how === "sum" ? "num" : "bool", how);
+        body.emit(
+          how === "sum"
+            ? `return ${t.code};`
+            : `return (${t.code}) ? ${how === "forall" ? "0 : 1" : "1 : 0"};`,
+        );
+      }
+    });
     const fn = `linkTerm${kept.terms.size}`;
     const text = body.text();
     // A term that reads no marks, or no geometry, leaves its parameter unread.
@@ -3202,7 +3241,8 @@ function keptEdgeSet(
       memo: false,
       epoch: null,
     };
-    const w = compileExpr(bnd.where, sc, own, body);
+    const where = bnd.where;
+    const w = Out.own("", () => compileExpr(where, sc, own, body));
     expect(w, "bool", `{${bnd.name} in edges where …}`);
     body.emit(`return ${w.code};`);
     const fn = `edgeHolds${kept.terms.size}`;
@@ -3566,7 +3606,7 @@ function aggregate(
       // what it has kept, which grows quadratic over a reach across the
       // board (Net's `run`).
       const marks =
-        !plain && !isMask(sort) && env.scratch !== null ? Out.fresh("_st") : null;
+        !plain && !isMask(sort) && env.scratch !== null ? heldName("_st", env) : null;
       if (isMask(sort)) {
         out.emit(`let ${r} = 0;`);
         if (memberUnion(e, r, scope, env, out)) break;
@@ -4895,23 +4935,25 @@ function rungKept(
     const readsClues = { yes: false };
     const nested = new Map<string, readonly string[]>();
     const body = new Out(1);
-    const val = compileExpr(
-      def.body,
-      new Map(def.params.map((p, i) => [p, { code: ps[i], sort: vs[i].sort }])),
-      {
-        ...env,
-        used: kept.used,
-        readsClues,
-        readsCands: { yes: false },
-        memos: nested,
-        scratch: null,
-        hoist: null,
-        boardRoot: null,
-        shared: undefined,
-        epoch: null,
-        concluding: false,
-      },
-      body,
+    const val = Out.own(name, () =>
+      compileExpr(
+        def.body,
+        new Map(def.params.map((p, i) => [p, { code: ps[i], sort: vs[i].sort }])),
+        {
+          ...env,
+          used: kept.used,
+          readsClues,
+          readsCands: { yes: false },
+          memos: nested,
+          scratch: null,
+          hoist: null,
+          boardRoot: null,
+          shared: undefined,
+          epoch: null,
+          concluding: false,
+        },
+        body,
+      ),
     );
     if (val.sort.k !== "num" && val.sort.k !== "bool") return null;
     const type = tsType(val.sort);
@@ -5012,22 +5054,24 @@ function keptDefinition(
     const ps = def.params.map((p) => `v_${p}`);
     const readsClues = { yes: false };
     const body = new Out(1);
-    const val = compileExpr(
-      def.body,
-      new Map(def.params.map((p, i) => [p, { code: ps[i], sort: vs[i].sort }])),
-      // Its own arrays, not a technique's reused ones: each is kept.
-      {
-        ...env,
-        used: kept.used,
-        readsClues,
-        scratch: null,
-        hoist: null,
-        boardRoot: null,
-        concluding: false,
-        memo: false,
-        epoch: null,
-      },
-      body,
+    const val = Out.own(fn, () =>
+      compileExpr(
+        def.body,
+        new Map(def.params.map((p, i) => [p, { code: ps[i], sort: vs[i].sort }])),
+        // Its own arrays, not a technique's reused ones: each is kept.
+        {
+          ...env,
+          used: kept.used,
+          readsClues,
+          scratch: null,
+          hoist: null,
+          boardRoot: null,
+          concluding: false,
+          memo: false,
+          epoch: null,
+        },
+        body,
+      ),
     );
     // An element is kept as its index: Bridges' `far(c, y)`, the island a
     // ray from an island reaches, is read for every line at every rung.
@@ -5874,7 +5918,7 @@ function rechecked(r: Recheck, body: Out, rerun: string | null, env: Env): boole
       const key = `${at.seq}_${k}`;
       let name = taken.get(key);
       if (name === undefined) {
-        name = `_m${key}`;
+        name = `${Out.fresh("_m")}_${k}`;
         taken.set(key, name);
         at.lines.push({ indent: 0, text: `const ${name} = b.made[${k}];` });
       }
@@ -5947,6 +5991,14 @@ function freshChecked(r: Recheck, id: string, env: Env): void {
 
 function compileTechnique(t: Technique, env: Env): { code: string; clues: boolean } {
   const fnName = t.id.includes(".") ? t.id.slice(t.id.indexOf(".") + 1) : t.id;
+  return Out.own(fnName, () => techniqueFunction(t, fnName, env));
+}
+
+function techniqueFunction(
+  t: Technique,
+  fnName: string,
+  env: Env,
+): { code: string; clues: boolean } {
   const bindingType = `${capitalized(fnName)}Binding`;
   const readsClues = { yes: false };
   const onPlace = t.on !== null;
@@ -6472,8 +6524,12 @@ export function compileGame(
     supposed: [],
     kept: { defs: new Map(), used, terms: new Map() },
   };
-  for (const [kind, c] of d.clueKinds) clues.set(kind, clueSorts(kind, c, env));
-  const domainLines = cellDomain(d.domain, env, d.json.sizes);
+  Out.own("", () => {
+    for (const [kind, c] of d.clueKinds) clues.set(kind, clueSorts(kind, c, env));
+  });
+  const domainLines = Out.own("domainOf", () =>
+    cellDomain(d.domain, env, d.json.sizes),
+  );
   const own = d.techniques.filter((t) => !t.id.includes("."));
   const code = own.map((t) => compileTechnique(t, env).code);
   const kept = env.kept?.defs ?? new Map();
@@ -6481,7 +6537,7 @@ export function compileGame(
     if (own.some((t) => t.id === fn))
       throw new CompileError(`${fn}: a kept definition and a technique share the name`);
   code.push(...[...kept.values()].map((k) => k.code));
-  const check = answerCheck(json, d, env);
+  const check = Out.own("isAnswer", () => answerCheck(json, d, env));
   const scales = Object.entries(d.json.scales ?? {});
   const sizes = [...env.sizes.read].sort();
   const clueLines =

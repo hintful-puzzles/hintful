@@ -46,179 +46,179 @@ export const deadEnds: readonly DeadEndId[] = ["colorOdd", "parity", "colorTurne
 export function claims(sp: GridSpace, cl: Dealt, variations: readonly string[]): Readonly<Record<DeadEndId, (p: Position) => boolean>> {
   return {
     colorOdd: (p) => {
-      let _c46: boolean = ((cl.n % 2) === 1);
-      if (_c46) {
-        let _q25 = false;
-        Q26: {
-          const _a27 = sp.cells;
-          for (let _i28 = 0; _i28 < _a27.length; _i28++) {
-            const v_c = _a27[_i28];
+      let _c22: boolean = ((cl.n % 2) === 1);
+      if (_c22) {
+        let _q1 = false;
+        Q2: {
+          const _a3 = sp.cells;
+          for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+            const v_c = _a3[_i4];
             const v_v = p.value[v_c];
-            let _g29 = 0;
-            G30: {
-              const _a31 = sp.cells;
-              for (let _i32 = 0; _i32 < _a31.length; _i32++) {
-                const v_d = _a31[_i32];
+            let _g5 = 0;
+            G6: {
+              const _a7 = sp.cells;
+              for (let _i8 = 0; _i8 < _a7.length; _i8++) {
+                const v_d = _a7[_i8];
                 if (!((p.value[v_d] < v_v))) continue;
-                _g29++;
+                _g5++;
               }
             }
-            const v_lo = _g29;
-            let _g33 = 0;
-            G34: {
-              const _a35 = sp.cells;
-              for (let _i36 = 0; _i36 < _a35.length; _i36++) {
-                const v_d = _a35[_i36];
+            const v_lo = _g5;
+            let _g9 = 0;
+            G10: {
+              const _a11 = sp.cells;
+              for (let _i12 = 0; _i12 < _a11.length; _i12++) {
+                const v_d = _a11[_i12];
                 if (!((p.value[v_d] <= v_v))) continue;
-                _g33++;
+                _g9++;
               }
             }
-            const v_hi = _g33;
-            for (let _m37 = ((1 << 0) | (1 << 1)); _m37 !== 0; _m37 &= _m37 - 1) {
-              const v_k = 31 - Math.clz32(_m37 & -_m37);
-              let _g38 = 0;
-              G39: {
-                const _a40 = sp.cells;
-                for (let _i41 = 0; _i41 < _a40.length; _i41++) {
-                  const v_d = _a40[_i41];
+            const v_hi = _g9;
+            for (let _m13 = ((1 << 0) | (1 << 1)); _m13 !== 0; _m13 &= _m13 - 1) {
+              const v_k = 31 - Math.clz32(_m13 & -_m13);
+              let _g14 = 0;
+              G15: {
+                const _a16 = sp.cells;
+                for (let _i17 = 0; _i17 < _a16.length; _i17++) {
+                  const v_d = _a16[_i17];
                   if (!(((p.value[v_d] === v_v) && ((((v_d % sp.w) + ((v_d / sp.w) | 0)) % 2) === v_k)))) continue;
-                  _g38++;
+                  _g14++;
                 }
               }
-              let _g42 = 0;
-              G43: {
-                const _a44 = sp.cells;
-                for (let _i45 = 0; _i45 < _a44.length; _i45++) {
-                  const v_i = _a44[_i45];
-                  if (!((((_i45 >= v_lo) && (_i45 < v_hi)) && ((((v_i % sp.w) + ((v_i / sp.w) | 0)) % 2) === v_k)))) continue;
-                  _g42++;
+              let _g18 = 0;
+              G19: {
+                const _a20 = sp.cells;
+                for (let _i21 = 0; _i21 < _a20.length; _i21++) {
+                  const v_i = _a20[_i21];
+                  if (!((((_i21 >= v_lo) && (_i21 < v_hi)) && ((((v_i % sp.w) + ((v_i / sp.w) | 0)) % 2) === v_k)))) continue;
+                  _g18++;
                 }
               }
-              if ((_g38 !== _g42)) {
-                _q25 = true;
-                break Q26;
+              if ((_g14 !== _g18)) {
+                _q1 = true;
+                break Q2;
               }
             }
           }
         }
-        _c46 = _q25;
+        _c22 = _q1;
       }
-      return _c46;
+      return _c22;
     },
     parity: (p) => {
-      let _c53: boolean = ((cl.n % 4) !== 2);
-      if (_c53) {
-        let _g47 = true;
-        const _s49: number[] = [];
-        G48: {
-          const _a50 = sp.cells;
-          for (let _i51 = 0; _i51 < _a50.length; _i51++) {
-            const v_c = _a50[_i51];
-            const _t52 = p.value[v_c];
-            if (_s49.includes(_t52)) {
-              _g47 = false;
-              break G48;
+      let _c7: boolean = ((cl.n % 4) !== 2);
+      if (_c7) {
+        let _g1 = true;
+        const _s3: number[] = [];
+        G2: {
+          const _a4 = sp.cells;
+          for (let _i5 = 0; _i5 < _a4.length; _i5++) {
+            const v_c = _a4[_i5];
+            const _t6 = p.value[v_c];
+            if (_s3.includes(_t6)) {
+              _g1 = false;
+              break G2;
             }
-            _s49.push(_t52);
+            _s3.push(_t6);
           }
         }
-        _c53 = _g47;
+        _c7 = _g1;
       }
-      let _c60: boolean = _c53;
-      if (_c60) {
-        let _g54 = 0;
-        G55: {
-          const _a56 = sp.cells;
-          for (let _i57 = 0; _i57 < _a56.length; _i57++) {
-            const v_a = _a56[_i57];
-            const _a58 = sp.cells;
-            for (let _i59 = 0; _i59 < _a58.length; _i59++) {
-              const v_b = _a58[_i59];
-              if (!(((_i57 < _i59) && (p.value[v_a] > p.value[v_b])))) continue;
-              _g54++;
+      let _c14: boolean = _c7;
+      if (_c14) {
+        let _g8 = 0;
+        G9: {
+          const _a10 = sp.cells;
+          for (let _i11 = 0; _i11 < _a10.length; _i11++) {
+            const v_a = _a10[_i11];
+            const _a12 = sp.cells;
+            for (let _i13 = 0; _i13 < _a12.length; _i13++) {
+              const v_b = _a12[_i13];
+              if (!(((_i11 < _i13) && (p.value[v_a] > p.value[v_b])))) continue;
+              _g8++;
             }
           }
         }
-        _c60 = ((_g54 % 2) === 1);
+        _c14 = ((_g8 % 2) === 1);
       }
-      return _c60;
+      return _c14;
     },
     colorTurned: (p) => {
       if (!variations.includes("orientable")) return false;
-      let _c82: boolean = ((cl.n % 2) === 0);
-      if (_c82) {
-        let _q61 = false;
-        Q62: {
-          const _a63 = sp.cells;
-          for (let _i64 = 0; _i64 < _a63.length; _i64++) {
-            const v_c = _a63[_i64];
+      let _c22: boolean = ((cl.n % 2) === 0);
+      if (_c22) {
+        let _q1 = false;
+        Q2: {
+          const _a3 = sp.cells;
+          for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+            const v_c = _a3[_i4];
             const v_v = p.value[v_c];
-            let _g65 = 0;
-            G66: {
-              const _a67 = sp.cells;
-              for (let _i68 = 0; _i68 < _a67.length; _i68++) {
-                const v_d = _a67[_i68];
+            let _g5 = 0;
+            G6: {
+              const _a7 = sp.cells;
+              for (let _i8 = 0; _i8 < _a7.length; _i8++) {
+                const v_d = _a7[_i8];
                 if (!((p.value[v_d] < v_v))) continue;
-                _g65++;
+                _g5++;
               }
             }
-            const v_lo = _g65;
-            let _g69 = 0;
-            G70: {
-              const _a71 = sp.cells;
-              for (let _i72 = 0; _i72 < _a71.length; _i72++) {
-                const v_d = _a71[_i72];
+            const v_lo = _g5;
+            let _g9 = 0;
+            G10: {
+              const _a11 = sp.cells;
+              for (let _i12 = 0; _i12 < _a11.length; _i12++) {
+                const v_d = _a11[_i12];
                 if (!((p.value[v_d] <= v_v))) continue;
-                _g69++;
+                _g9++;
               }
             }
-            const v_hi = _g69;
-            for (let _m73 = ((1 << 0) | (1 << 1)); _m73 !== 0; _m73 &= _m73 - 1) {
-              const v_k = 31 - Math.clz32(_m73 & -_m73);
-              let _g74 = 0;
-              G75: {
-                const _a76 = sp.cells;
-                for (let _i77 = 0; _i77 < _a76.length; _i77++) {
-                  const v_d = _a76[_i77];
+            const v_hi = _g9;
+            for (let _m13 = ((1 << 0) | (1 << 1)); _m13 !== 0; _m13 &= _m13 - 1) {
+              const v_k = 31 - Math.clz32(_m13 & -_m13);
+              let _g14 = 0;
+              G15: {
+                const _a16 = sp.cells;
+                for (let _i17 = 0; _i17 < _a16.length; _i17++) {
+                  const v_d = _a16[_i17];
                   if (!(((p.value[v_d] === v_v) && ((((((v_d % sp.w) + ((v_d / sp.w) | 0)) % 2) + p.turn[v_d]) % 2) === v_k)))) continue;
-                  _g74++;
+                  _g14++;
                 }
               }
-              let _g78 = 0;
-              G79: {
-                const _a80 = sp.cells;
-                for (let _i81 = 0; _i81 < _a80.length; _i81++) {
-                  const v_i = _a80[_i81];
-                  if (!((((_i81 >= v_lo) && (_i81 < v_hi)) && ((((v_i % sp.w) + ((v_i / sp.w) | 0)) % 2) === v_k)))) continue;
-                  _g78++;
+              let _g18 = 0;
+              G19: {
+                const _a20 = sp.cells;
+                for (let _i21 = 0; _i21 < _a20.length; _i21++) {
+                  const v_i = _a20[_i21];
+                  if (!((((_i21 >= v_lo) && (_i21 < v_hi)) && ((((v_i % sp.w) + ((v_i / sp.w) | 0)) % 2) === v_k)))) continue;
+                  _g18++;
                 }
               }
-              if ((_g74 !== _g78)) {
-                _q61 = true;
-                break Q62;
+              if ((_g14 !== _g18)) {
+                _q1 = true;
+                break Q2;
               }
             }
           }
         }
-        _c82 = _q61;
+        _c22 = _q1;
       }
-      return _c82;
+      return _c22;
     },
     turnSum: (p) => {
       if (!variations.includes("orientable")) return false;
-      let _c87: boolean = ((cl.n % 2) === 0);
-      if (_c87) {
-        let _g83 = 0;
-        G84: {
-          const _a85 = sp.cells;
-          for (let _i86 = 0; _i86 < _a85.length; _i86++) {
-            const v_c = _a85[_i86];
-            _g83 += p.turn[v_c];
+      let _c5: boolean = ((cl.n % 2) === 0);
+      if (_c5) {
+        let _g1 = 0;
+        G2: {
+          const _a3 = sp.cells;
+          for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+            const v_c = _a3[_i4];
+            _g1 += p.turn[v_c];
           }
         }
-        _c87 = ((_g83 % 4) !== 0);
+        _c5 = ((_g1 % 4) !== 0);
       }
-      return _c87;
+      return _c5;
     },
   };
 }
@@ -252,9 +252,9 @@ export function claimWitnesses(_sp: GridSpace, _cl: Dealt, variations: readonly 
  * has on. */
 export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): PositionRules<Position, Move, DeadEndId> {
   function anticlockwiseMoves(_p: Position, into: Move[]): void {
-    const _a3 = sp.cells;
-    for (let _i4 = 0; _i4 < _a3.length; _i4++) {
-      const v_b = _a3[_i4];
+    const _a1 = sp.cells;
+    for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+      const v_b = _a1[_i2];
       if (!((((v_b % sp.w) <= (sp.w - cl.n)) && (((v_b / sp.w) | 0) <= (sp.h - cl.n))))) continue;
       into.push({ move: "anticlockwise", b: v_b });
     }
@@ -271,17 +271,17 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
     const v_b = m.b;
     const q: Position = { ...p, value: p.value.slice(), turn: p.turn.slice() };
     {
-      const _a5 = sp.cells;
-      for (let _i6 = 0; _i6 < _a5.length; _i6++) {
-        const v_c = _a5[_i6];
+      const _a1 = sp.cells;
+      for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+        const v_c = _a1[_i2];
         if (!((((((v_c % sp.w) >= (v_b % sp.w)) && ((v_c % sp.w) < ((v_b % sp.w) + cl.n))) && (((v_c / sp.w) | 0) >= ((v_b / sp.w) | 0))) && (((v_c / sp.w) | 0) < (((v_b / sp.w) | 0) + cl.n))))) continue;
         q.value[v_c] = p.value[(((((v_b / sp.w) | 0) + (v_c % sp.w)) - (v_b % sp.w)) * sp.w + ((((v_b % sp.w) + cl.n) - 1) - (((v_c / sp.w) | 0) - ((v_b / sp.w) | 0))))];
       }
     }
     if (variations.includes("orientable")) {
-      const _a7 = sp.cells;
-      for (let _i8 = 0; _i8 < _a7.length; _i8++) {
-        const v_c = _a7[_i8];
+      const _a3 = sp.cells;
+      for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+        const v_c = _a3[_i4];
         if (!((((((v_c % sp.w) >= (v_b % sp.w)) && ((v_c % sp.w) < ((v_b % sp.w) + cl.n))) && (((v_c / sp.w) | 0) >= ((v_b / sp.w) | 0))) && (((v_c / sp.w) | 0) < (((v_b / sp.w) | 0) + cl.n))))) continue;
         q.turn[v_c] = ((p.turn[(((((v_b / sp.w) | 0) + (v_c % sp.w)) - (v_b % sp.w)) * sp.w + ((((v_b % sp.w) + cl.n) - 1) - (((v_c / sp.w) | 0) - ((v_b / sp.w) | 0))))] + 1) % 4);
       }
@@ -290,9 +290,9 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
   }
 
   function clockwiseMoves(_p: Position, into: Move[]): void {
-    const _a11 = sp.cells;
-    for (let _i12 = 0; _i12 < _a11.length; _i12++) {
-      const v_b = _a11[_i12];
+    const _a1 = sp.cells;
+    for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+      const v_b = _a1[_i2];
       if (!((((v_b % sp.w) <= (sp.w - cl.n)) && (((v_b / sp.w) | 0) <= (sp.h - cl.n))))) continue;
       into.push({ move: "clockwise", b: v_b });
     }
@@ -309,17 +309,17 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
     const v_b = m.b;
     const q: Position = { ...p, value: p.value.slice(), turn: p.turn.slice() };
     {
-      const _a13 = sp.cells;
-      for (let _i14 = 0; _i14 < _a13.length; _i14++) {
-        const v_c = _a13[_i14];
+      const _a1 = sp.cells;
+      for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+        const v_c = _a1[_i2];
         if (!((((((v_c % sp.w) >= (v_b % sp.w)) && ((v_c % sp.w) < ((v_b % sp.w) + cl.n))) && (((v_c / sp.w) | 0) >= ((v_b / sp.w) | 0))) && (((v_c / sp.w) | 0) < (((v_b / sp.w) | 0) + cl.n))))) continue;
         q.value[v_c] = p.value[((((((v_b / sp.w) | 0) + cl.n) - 1) - ((v_c % sp.w) - (v_b % sp.w))) * sp.w + (((v_b % sp.w) + ((v_c / sp.w) | 0)) - ((v_b / sp.w) | 0)))];
       }
     }
     if (variations.includes("orientable")) {
-      const _a15 = sp.cells;
-      for (let _i16 = 0; _i16 < _a15.length; _i16++) {
-        const v_c = _a15[_i16];
+      const _a3 = sp.cells;
+      for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+        const v_c = _a3[_i4];
         if (!((((((v_c % sp.w) >= (v_b % sp.w)) && ((v_c % sp.w) < ((v_b % sp.w) + cl.n))) && (((v_c / sp.w) | 0) >= ((v_b / sp.w) | 0))) && (((v_c / sp.w) | 0) < (((v_b / sp.w) | 0) + cl.n))))) continue;
         q.turn[v_c] = ((p.turn[((((((v_b / sp.w) | 0) + cl.n) - 1) - ((v_c % sp.w) - (v_b % sp.w))) * sp.w + (((v_b % sp.w) + ((v_c / sp.w) | 0)) - ((v_b / sp.w) | 0)))] + 3) % 4);
       }
@@ -329,33 +329,33 @@ export function rules(sp: GridSpace, cl: Dealt, variations: readonly string[]): 
 
   function finished(p: Position): boolean {
     {
-      let _q17 = true;
-      Q18: {
-        const _a19 = sp.cells;
-        for (let _i20 = 0; _i20 < _a19.length; _i20++) {
-          const v_c = _a19[_i20];
-          if (!((_i20 > 0))) continue;
-          if (!((p.value[(sp.cells[(_i20 - 1)] ?? -1)] <= p.value[v_c]))) {
-            _q17 = false;
-            break Q18;
+      let _q1 = true;
+      Q2: {
+        const _a3 = sp.cells;
+        for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+          const v_c = _a3[_i4];
+          if (!((_i4 > 0))) continue;
+          if (!((p.value[(sp.cells[(_i4 - 1)] ?? -1)] <= p.value[v_c]))) {
+            _q1 = false;
+            break Q2;
           }
         }
       }
-      if (!(_q17)) return false;
+      if (!(_q1)) return false;
     }
     if (variations.includes("orientable")) {
-      let _q21 = true;
-      Q22: {
-        const _a23 = sp.cells;
-        for (let _i24 = 0; _i24 < _a23.length; _i24++) {
-          const v_c = _a23[_i24];
+      let _q5 = true;
+      Q6: {
+        const _a7 = sp.cells;
+        for (let _i8 = 0; _i8 < _a7.length; _i8++) {
+          const v_c = _a7[_i8];
           if (!((p.turn[v_c] === 0))) {
-            _q21 = false;
-            break Q22;
+            _q5 = false;
+            break Q6;
           }
         }
       }
-      if (!(_q21)) return false;
+      if (!(_q5)) return false;
     }
     return true;
   }

@@ -62,56 +62,56 @@ export function views(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
   return {
     crossed: (p, a0) => {
       const at: number[] = [];
-      for (let _c20 = 0; _c20 < sp.cells.length; _c20++) {
-        let _c40: boolean = (cl.joined[a0].includes(_c20));
-        if (_c40) {
-          let _q21 = false;
-          Q22: {
-            const _a23 = sp.cells;
-            for (let _i24 = 0; _i24 < _a23.length; _i24++) {
-              const v_p = _a23[_i24];
-              const _a25 = cl.joined[v_p];
-              for (let _i26 = 0; _i26 < _a25.length; _i26++) {
-                const v_q = _a25[_i26];
-                if (!((((((_i24 < v_q) && (v_p !== a0)) && (v_p !== _c20)) && (v_q !== a0)) && (v_q !== _c20)))) continue;
-                let _c32: boolean = (a0 < _i24);
-                if (_c32) {
-                  const _t27 = isub(imul(isub(imul(p.ynum[a0], p.denom[v_p]), imul(p.ynum[v_p], p.denom[a0])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[a0], p.denom[v_p]), imul(p.xnum[v_p], p.denom[a0])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))));
-                  const _t28 = isub(imul(isub(imul(p.ynum[_c20], p.denom[v_p]), imul(p.ynum[v_p], p.denom[_c20])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[_c20], p.denom[v_p]), imul(p.xnum[v_p], p.denom[_c20])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))));
-                  let _c31: boolean = (!((((_t27 > 0) && (_t28 > 0)) || ((_t27 < 0) && (_t28 < 0)))) && !((((isub(imul(isub(imul(p.ynum[a0], p.denom[v_p]), imul(p.ynum[v_p], p.denom[a0])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[a0], p.denom[v_p]), imul(p.xnum[v_p], p.denom[a0])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) === 0) && (isub(imul(isub(imul(p.ynum[_c20], p.denom[v_p]), imul(p.ynum[v_p], p.denom[_c20])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[_c20], p.denom[v_p]), imul(p.xnum[v_p], p.denom[_c20])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) === 0)) && (((iadd(imul(isub(imul(p.xnum[a0], p.denom[v_p]), imul(p.xnum[v_p], p.denom[a0])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[a0], p.denom[v_p]), imul(p.ynum[v_p], p.denom[a0])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) < 0) && (iadd(imul(isub(imul(p.xnum[_c20], p.denom[v_p]), imul(p.xnum[v_p], p.denom[_c20])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[_c20], p.denom[v_p]), imul(p.ynum[v_p], p.denom[_c20])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) < 0)) || ((iadd(imul(isub(imul(p.xnum[a0], p.denom[v_p]), imul(p.xnum[v_p], p.denom[a0])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[a0], p.denom[v_p]), imul(p.ynum[v_p], p.denom[a0])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) > iadd(imul(isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))))) && (iadd(imul(isub(imul(p.xnum[_c20], p.denom[v_p]), imul(p.xnum[v_p], p.denom[_c20])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[_c20], p.denom[v_p]), imul(p.ynum[v_p], p.denom[_c20])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) > iadd(imul(isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))))))))));
-                  if (_c31) {
-                    const _t29 = isub(imul(isub(imul(p.ynum[v_p], p.denom[a0]), imul(p.ynum[a0], p.denom[v_p])), isub(imul(p.xnum[_c20], p.denom[a0]), imul(p.xnum[a0], p.denom[_c20]))), imul(isub(imul(p.xnum[v_p], p.denom[a0]), imul(p.xnum[a0], p.denom[v_p])), isub(imul(p.ynum[_c20], p.denom[a0]), imul(p.ynum[a0], p.denom[_c20]))));
-                    const _t30 = isub(imul(isub(imul(p.ynum[v_q], p.denom[a0]), imul(p.ynum[a0], p.denom[v_q])), isub(imul(p.xnum[_c20], p.denom[a0]), imul(p.xnum[a0], p.denom[_c20]))), imul(isub(imul(p.xnum[v_q], p.denom[a0]), imul(p.xnum[a0], p.denom[v_q])), isub(imul(p.ynum[_c20], p.denom[a0]), imul(p.ynum[a0], p.denom[_c20]))));
-                    _c31 = !((((_t29 > 0) && (_t30 > 0)) || ((_t29 < 0) && (_t30 < 0))));
+      for (let _c1 = 0; _c1 < sp.cells.length; _c1++) {
+        let _c21: boolean = (cl.joined[a0].includes(_c1));
+        if (_c21) {
+          let _q2 = false;
+          Q3: {
+            const _a4 = sp.cells;
+            for (let _i5 = 0; _i5 < _a4.length; _i5++) {
+              const v_p = _a4[_i5];
+              const _a6 = cl.joined[v_p];
+              for (let _i7 = 0; _i7 < _a6.length; _i7++) {
+                const v_q = _a6[_i7];
+                if (!((((((_i5 < v_q) && (v_p !== a0)) && (v_p !== _c1)) && (v_q !== a0)) && (v_q !== _c1)))) continue;
+                let _c13: boolean = (a0 < _i5);
+                if (_c13) {
+                  const _t8 = isub(imul(isub(imul(p.ynum[a0], p.denom[v_p]), imul(p.ynum[v_p], p.denom[a0])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[a0], p.denom[v_p]), imul(p.xnum[v_p], p.denom[a0])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))));
+                  const _t9 = isub(imul(isub(imul(p.ynum[_c1], p.denom[v_p]), imul(p.ynum[v_p], p.denom[_c1])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[_c1], p.denom[v_p]), imul(p.xnum[v_p], p.denom[_c1])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))));
+                  let _c12: boolean = (!((((_t8 > 0) && (_t9 > 0)) || ((_t8 < 0) && (_t9 < 0)))) && !((((isub(imul(isub(imul(p.ynum[a0], p.denom[v_p]), imul(p.ynum[v_p], p.denom[a0])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[a0], p.denom[v_p]), imul(p.xnum[v_p], p.denom[a0])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) === 0) && (isub(imul(isub(imul(p.ynum[_c1], p.denom[v_p]), imul(p.ynum[v_p], p.denom[_c1])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[_c1], p.denom[v_p]), imul(p.xnum[v_p], p.denom[_c1])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) === 0)) && (((iadd(imul(isub(imul(p.xnum[a0], p.denom[v_p]), imul(p.xnum[v_p], p.denom[a0])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[a0], p.denom[v_p]), imul(p.ynum[v_p], p.denom[a0])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) < 0) && (iadd(imul(isub(imul(p.xnum[_c1], p.denom[v_p]), imul(p.xnum[v_p], p.denom[_c1])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[_c1], p.denom[v_p]), imul(p.ynum[v_p], p.denom[_c1])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) < 0)) || ((iadd(imul(isub(imul(p.xnum[a0], p.denom[v_p]), imul(p.xnum[v_p], p.denom[a0])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[a0], p.denom[v_p]), imul(p.ynum[v_p], p.denom[a0])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) > iadd(imul(isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))))) && (iadd(imul(isub(imul(p.xnum[_c1], p.denom[v_p]), imul(p.xnum[v_p], p.denom[_c1])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[_c1], p.denom[v_p]), imul(p.ynum[v_p], p.denom[_c1])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) > iadd(imul(isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))))))))));
+                  if (_c12) {
+                    const _t10 = isub(imul(isub(imul(p.ynum[v_p], p.denom[a0]), imul(p.ynum[a0], p.denom[v_p])), isub(imul(p.xnum[_c1], p.denom[a0]), imul(p.xnum[a0], p.denom[_c1]))), imul(isub(imul(p.xnum[v_p], p.denom[a0]), imul(p.xnum[a0], p.denom[v_p])), isub(imul(p.ynum[_c1], p.denom[a0]), imul(p.ynum[a0], p.denom[_c1]))));
+                    const _t11 = isub(imul(isub(imul(p.ynum[v_q], p.denom[a0]), imul(p.ynum[a0], p.denom[v_q])), isub(imul(p.xnum[_c1], p.denom[a0]), imul(p.xnum[a0], p.denom[_c1]))), imul(isub(imul(p.xnum[v_q], p.denom[a0]), imul(p.xnum[a0], p.denom[v_q])), isub(imul(p.ynum[_c1], p.denom[a0]), imul(p.ynum[a0], p.denom[_c1]))));
+                    _c12 = !((((_t10 > 0) && (_t11 > 0)) || ((_t10 < 0) && (_t11 < 0))));
                   }
-                  _c32 = _c31;
+                  _c13 = _c12;
                 }
-                let _c39: boolean = _c32;
-                if (!_c39) {
-                  let _c38: boolean = (_i24 < a0);
-                  if (_c38) {
-                    const _t33 = isub(imul(isub(imul(p.ynum[v_p], p.denom[a0]), imul(p.ynum[a0], p.denom[v_p])), isub(imul(p.xnum[_c20], p.denom[a0]), imul(p.xnum[a0], p.denom[_c20]))), imul(isub(imul(p.xnum[v_p], p.denom[a0]), imul(p.xnum[a0], p.denom[v_p])), isub(imul(p.ynum[_c20], p.denom[a0]), imul(p.ynum[a0], p.denom[_c20]))));
-                    const _t34 = isub(imul(isub(imul(p.ynum[v_q], p.denom[a0]), imul(p.ynum[a0], p.denom[v_q])), isub(imul(p.xnum[_c20], p.denom[a0]), imul(p.xnum[a0], p.denom[_c20]))), imul(isub(imul(p.xnum[v_q], p.denom[a0]), imul(p.xnum[a0], p.denom[v_q])), isub(imul(p.ynum[_c20], p.denom[a0]), imul(p.ynum[a0], p.denom[_c20]))));
-                    let _c37: boolean = (!((((_t33 > 0) && (_t34 > 0)) || ((_t33 < 0) && (_t34 < 0)))) && !((((isub(imul(isub(imul(p.ynum[v_p], p.denom[a0]), imul(p.ynum[a0], p.denom[v_p])), isub(imul(p.xnum[_c20], p.denom[a0]), imul(p.xnum[a0], p.denom[_c20]))), imul(isub(imul(p.xnum[v_p], p.denom[a0]), imul(p.xnum[a0], p.denom[v_p])), isub(imul(p.ynum[_c20], p.denom[a0]), imul(p.ynum[a0], p.denom[_c20])))) === 0) && (isub(imul(isub(imul(p.ynum[v_q], p.denom[a0]), imul(p.ynum[a0], p.denom[v_q])), isub(imul(p.xnum[_c20], p.denom[a0]), imul(p.xnum[a0], p.denom[_c20]))), imul(isub(imul(p.xnum[v_q], p.denom[a0]), imul(p.xnum[a0], p.denom[v_q])), isub(imul(p.ynum[_c20], p.denom[a0]), imul(p.ynum[a0], p.denom[_c20])))) === 0)) && (((iadd(imul(isub(imul(p.xnum[v_p], p.denom[a0]), imul(p.xnum[a0], p.denom[v_p])), isub(imul(p.xnum[_c20], p.denom[a0]), imul(p.xnum[a0], p.denom[_c20]))), imul(isub(imul(p.ynum[v_p], p.denom[a0]), imul(p.ynum[a0], p.denom[v_p])), isub(imul(p.ynum[_c20], p.denom[a0]), imul(p.ynum[a0], p.denom[_c20])))) < 0) && (iadd(imul(isub(imul(p.xnum[v_q], p.denom[a0]), imul(p.xnum[a0], p.denom[v_q])), isub(imul(p.xnum[_c20], p.denom[a0]), imul(p.xnum[a0], p.denom[_c20]))), imul(isub(imul(p.ynum[v_q], p.denom[a0]), imul(p.ynum[a0], p.denom[v_q])), isub(imul(p.ynum[_c20], p.denom[a0]), imul(p.ynum[a0], p.denom[_c20])))) < 0)) || ((iadd(imul(isub(imul(p.xnum[v_p], p.denom[a0]), imul(p.xnum[a0], p.denom[v_p])), isub(imul(p.xnum[_c20], p.denom[a0]), imul(p.xnum[a0], p.denom[_c20]))), imul(isub(imul(p.ynum[v_p], p.denom[a0]), imul(p.ynum[a0], p.denom[v_p])), isub(imul(p.ynum[_c20], p.denom[a0]), imul(p.ynum[a0], p.denom[_c20])))) > iadd(imul(isub(imul(p.xnum[_c20], p.denom[a0]), imul(p.xnum[a0], p.denom[_c20])), isub(imul(p.xnum[_c20], p.denom[a0]), imul(p.xnum[a0], p.denom[_c20]))), imul(isub(imul(p.ynum[_c20], p.denom[a0]), imul(p.ynum[a0], p.denom[_c20])), isub(imul(p.ynum[_c20], p.denom[a0]), imul(p.ynum[a0], p.denom[_c20]))))) && (iadd(imul(isub(imul(p.xnum[v_q], p.denom[a0]), imul(p.xnum[a0], p.denom[v_q])), isub(imul(p.xnum[_c20], p.denom[a0]), imul(p.xnum[a0], p.denom[_c20]))), imul(isub(imul(p.ynum[v_q], p.denom[a0]), imul(p.ynum[a0], p.denom[v_q])), isub(imul(p.ynum[_c20], p.denom[a0]), imul(p.ynum[a0], p.denom[_c20])))) > iadd(imul(isub(imul(p.xnum[_c20], p.denom[a0]), imul(p.xnum[a0], p.denom[_c20])), isub(imul(p.xnum[_c20], p.denom[a0]), imul(p.xnum[a0], p.denom[_c20]))), imul(isub(imul(p.ynum[_c20], p.denom[a0]), imul(p.ynum[a0], p.denom[_c20])), isub(imul(p.ynum[_c20], p.denom[a0]), imul(p.ynum[a0], p.denom[_c20]))))))))));
-                    if (_c37) {
-                      const _t35 = isub(imul(isub(imul(p.ynum[a0], p.denom[v_p]), imul(p.ynum[v_p], p.denom[a0])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[a0], p.denom[v_p]), imul(p.xnum[v_p], p.denom[a0])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))));
-                      const _t36 = isub(imul(isub(imul(p.ynum[_c20], p.denom[v_p]), imul(p.ynum[v_p], p.denom[_c20])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[_c20], p.denom[v_p]), imul(p.xnum[v_p], p.denom[_c20])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))));
-                      _c37 = !((((_t35 > 0) && (_t36 > 0)) || ((_t35 < 0) && (_t36 < 0))));
+                let _c20: boolean = _c13;
+                if (!_c20) {
+                  let _c19: boolean = (_i5 < a0);
+                  if (_c19) {
+                    const _t14 = isub(imul(isub(imul(p.ynum[v_p], p.denom[a0]), imul(p.ynum[a0], p.denom[v_p])), isub(imul(p.xnum[_c1], p.denom[a0]), imul(p.xnum[a0], p.denom[_c1]))), imul(isub(imul(p.xnum[v_p], p.denom[a0]), imul(p.xnum[a0], p.denom[v_p])), isub(imul(p.ynum[_c1], p.denom[a0]), imul(p.ynum[a0], p.denom[_c1]))));
+                    const _t15 = isub(imul(isub(imul(p.ynum[v_q], p.denom[a0]), imul(p.ynum[a0], p.denom[v_q])), isub(imul(p.xnum[_c1], p.denom[a0]), imul(p.xnum[a0], p.denom[_c1]))), imul(isub(imul(p.xnum[v_q], p.denom[a0]), imul(p.xnum[a0], p.denom[v_q])), isub(imul(p.ynum[_c1], p.denom[a0]), imul(p.ynum[a0], p.denom[_c1]))));
+                    let _c18: boolean = (!((((_t14 > 0) && (_t15 > 0)) || ((_t14 < 0) && (_t15 < 0)))) && !((((isub(imul(isub(imul(p.ynum[v_p], p.denom[a0]), imul(p.ynum[a0], p.denom[v_p])), isub(imul(p.xnum[_c1], p.denom[a0]), imul(p.xnum[a0], p.denom[_c1]))), imul(isub(imul(p.xnum[v_p], p.denom[a0]), imul(p.xnum[a0], p.denom[v_p])), isub(imul(p.ynum[_c1], p.denom[a0]), imul(p.ynum[a0], p.denom[_c1])))) === 0) && (isub(imul(isub(imul(p.ynum[v_q], p.denom[a0]), imul(p.ynum[a0], p.denom[v_q])), isub(imul(p.xnum[_c1], p.denom[a0]), imul(p.xnum[a0], p.denom[_c1]))), imul(isub(imul(p.xnum[v_q], p.denom[a0]), imul(p.xnum[a0], p.denom[v_q])), isub(imul(p.ynum[_c1], p.denom[a0]), imul(p.ynum[a0], p.denom[_c1])))) === 0)) && (((iadd(imul(isub(imul(p.xnum[v_p], p.denom[a0]), imul(p.xnum[a0], p.denom[v_p])), isub(imul(p.xnum[_c1], p.denom[a0]), imul(p.xnum[a0], p.denom[_c1]))), imul(isub(imul(p.ynum[v_p], p.denom[a0]), imul(p.ynum[a0], p.denom[v_p])), isub(imul(p.ynum[_c1], p.denom[a0]), imul(p.ynum[a0], p.denom[_c1])))) < 0) && (iadd(imul(isub(imul(p.xnum[v_q], p.denom[a0]), imul(p.xnum[a0], p.denom[v_q])), isub(imul(p.xnum[_c1], p.denom[a0]), imul(p.xnum[a0], p.denom[_c1]))), imul(isub(imul(p.ynum[v_q], p.denom[a0]), imul(p.ynum[a0], p.denom[v_q])), isub(imul(p.ynum[_c1], p.denom[a0]), imul(p.ynum[a0], p.denom[_c1])))) < 0)) || ((iadd(imul(isub(imul(p.xnum[v_p], p.denom[a0]), imul(p.xnum[a0], p.denom[v_p])), isub(imul(p.xnum[_c1], p.denom[a0]), imul(p.xnum[a0], p.denom[_c1]))), imul(isub(imul(p.ynum[v_p], p.denom[a0]), imul(p.ynum[a0], p.denom[v_p])), isub(imul(p.ynum[_c1], p.denom[a0]), imul(p.ynum[a0], p.denom[_c1])))) > iadd(imul(isub(imul(p.xnum[_c1], p.denom[a0]), imul(p.xnum[a0], p.denom[_c1])), isub(imul(p.xnum[_c1], p.denom[a0]), imul(p.xnum[a0], p.denom[_c1]))), imul(isub(imul(p.ynum[_c1], p.denom[a0]), imul(p.ynum[a0], p.denom[_c1])), isub(imul(p.ynum[_c1], p.denom[a0]), imul(p.ynum[a0], p.denom[_c1]))))) && (iadd(imul(isub(imul(p.xnum[v_q], p.denom[a0]), imul(p.xnum[a0], p.denom[v_q])), isub(imul(p.xnum[_c1], p.denom[a0]), imul(p.xnum[a0], p.denom[_c1]))), imul(isub(imul(p.ynum[v_q], p.denom[a0]), imul(p.ynum[a0], p.denom[v_q])), isub(imul(p.ynum[_c1], p.denom[a0]), imul(p.ynum[a0], p.denom[_c1])))) > iadd(imul(isub(imul(p.xnum[_c1], p.denom[a0]), imul(p.xnum[a0], p.denom[_c1])), isub(imul(p.xnum[_c1], p.denom[a0]), imul(p.xnum[a0], p.denom[_c1]))), imul(isub(imul(p.ynum[_c1], p.denom[a0]), imul(p.ynum[a0], p.denom[_c1])), isub(imul(p.ynum[_c1], p.denom[a0]), imul(p.ynum[a0], p.denom[_c1]))))))))));
+                    if (_c18) {
+                      const _t16 = isub(imul(isub(imul(p.ynum[a0], p.denom[v_p]), imul(p.ynum[v_p], p.denom[a0])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[a0], p.denom[v_p]), imul(p.xnum[v_p], p.denom[a0])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))));
+                      const _t17 = isub(imul(isub(imul(p.ynum[_c1], p.denom[v_p]), imul(p.ynum[v_p], p.denom[_c1])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[_c1], p.denom[v_p]), imul(p.xnum[v_p], p.denom[_c1])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))));
+                      _c18 = !((((_t16 > 0) && (_t17 > 0)) || ((_t16 < 0) && (_t17 < 0))));
                     }
-                    _c38 = _c37;
+                    _c19 = _c18;
                   }
-                  _c39 = _c38;
+                  _c20 = _c19;
                 }
-                if (_c39) {
-                  _q21 = true;
-                  break Q22;
+                if (_c20) {
+                  _q2 = true;
+                  break Q3;
                 }
               }
             }
           }
-          _c40 = _q21;
+          _c21 = _q2;
         }
-        if (_c40) at.push(_c20);
+        if (_c21) at.push(_c1);
       }
       return at;
     },
@@ -155,47 +155,47 @@ export function rules(sp: GridSpace, cl: Dealt, _variations: readonly string[]):
 
   function finished(p: Position): boolean {
     {
-      let _q3 = true;
-      Q4: {
-        const _a5 = sp.cells;
-        for (let _i6 = 0; _i6 < _a5.length; _i6++) {
-          const v_a = _a5[_i6];
-          const _a7 = cl.joined[v_a];
-          for (let _i8 = 0; _i8 < _a7.length; _i8++) {
-            const v_b = _a7[_i8];
-            if (!((_i6 < v_b))) continue;
-            let _q9 = true;
-            Q10: {
-              const _a11 = sp.cells;
-              for (let _i12 = 0; _i12 < _a11.length; _i12++) {
-                const v_p = _a11[_i12];
-                const _a13 = cl.joined[v_p];
-                for (let _i14 = 0; _i14 < _a13.length; _i14++) {
-                  const v_q = _a13[_i14];
-                  if (!(((((_i6 < _i12) && (_i12 < v_q)) && (v_q !== v_b)) && (v_p !== v_b)))) continue;
-                  const _t15 = isub(imul(isub(imul(p.ynum[v_a], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_a])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[v_a], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_a])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))));
-                  const _t16 = isub(imul(isub(imul(p.ynum[v_b], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_b])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[v_b], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_b])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))));
-                  let _c19: boolean = (!((((_t15 > 0) && (_t16 > 0)) || ((_t15 < 0) && (_t16 < 0)))) && !((((isub(imul(isub(imul(p.ynum[v_a], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_a])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[v_a], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_a])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) === 0) && (isub(imul(isub(imul(p.ynum[v_b], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_b])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[v_b], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_b])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) === 0)) && (((iadd(imul(isub(imul(p.xnum[v_a], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_a])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[v_a], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_a])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) < 0) && (iadd(imul(isub(imul(p.xnum[v_b], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_b])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[v_b], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_b])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) < 0)) || ((iadd(imul(isub(imul(p.xnum[v_a], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_a])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[v_a], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_a])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) > iadd(imul(isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))))) && (iadd(imul(isub(imul(p.xnum[v_b], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_b])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[v_b], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_b])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) > iadd(imul(isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))))))))));
-                  if (_c19) {
-                    const _t17 = isub(imul(isub(imul(p.ynum[v_p], p.denom[v_a]), imul(p.ynum[v_a], p.denom[v_p])), isub(imul(p.xnum[v_b], p.denom[v_a]), imul(p.xnum[v_a], p.denom[v_b]))), imul(isub(imul(p.xnum[v_p], p.denom[v_a]), imul(p.xnum[v_a], p.denom[v_p])), isub(imul(p.ynum[v_b], p.denom[v_a]), imul(p.ynum[v_a], p.denom[v_b]))));
-                    const _t18 = isub(imul(isub(imul(p.ynum[v_q], p.denom[v_a]), imul(p.ynum[v_a], p.denom[v_q])), isub(imul(p.xnum[v_b], p.denom[v_a]), imul(p.xnum[v_a], p.denom[v_b]))), imul(isub(imul(p.xnum[v_q], p.denom[v_a]), imul(p.xnum[v_a], p.denom[v_q])), isub(imul(p.ynum[v_b], p.denom[v_a]), imul(p.ynum[v_a], p.denom[v_b]))));
-                    _c19 = !((((_t17 > 0) && (_t18 > 0)) || ((_t17 < 0) && (_t18 < 0))));
+      let _q1 = true;
+      Q2: {
+        const _a3 = sp.cells;
+        for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+          const v_a = _a3[_i4];
+          const _a5 = cl.joined[v_a];
+          for (let _i6 = 0; _i6 < _a5.length; _i6++) {
+            const v_b = _a5[_i6];
+            if (!((_i4 < v_b))) continue;
+            let _q7 = true;
+            Q8: {
+              const _a9 = sp.cells;
+              for (let _i10 = 0; _i10 < _a9.length; _i10++) {
+                const v_p = _a9[_i10];
+                const _a11 = cl.joined[v_p];
+                for (let _i12 = 0; _i12 < _a11.length; _i12++) {
+                  const v_q = _a11[_i12];
+                  if (!(((((_i4 < _i10) && (_i10 < v_q)) && (v_q !== v_b)) && (v_p !== v_b)))) continue;
+                  const _t13 = isub(imul(isub(imul(p.ynum[v_a], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_a])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[v_a], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_a])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))));
+                  const _t14 = isub(imul(isub(imul(p.ynum[v_b], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_b])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[v_b], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_b])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))));
+                  let _c17: boolean = (!((((_t13 > 0) && (_t14 > 0)) || ((_t13 < 0) && (_t14 < 0)))) && !((((isub(imul(isub(imul(p.ynum[v_a], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_a])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[v_a], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_a])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) === 0) && (isub(imul(isub(imul(p.ynum[v_b], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_b])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.xnum[v_b], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_b])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) === 0)) && (((iadd(imul(isub(imul(p.xnum[v_a], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_a])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[v_a], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_a])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) < 0) && (iadd(imul(isub(imul(p.xnum[v_b], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_b])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[v_b], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_b])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) < 0)) || ((iadd(imul(isub(imul(p.xnum[v_a], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_a])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[v_a], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_a])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) > iadd(imul(isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))))) && (iadd(imul(isub(imul(p.xnum[v_b], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_b])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[v_b], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_b])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])))) > iadd(imul(isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q])), isub(imul(p.xnum[v_q], p.denom[v_p]), imul(p.xnum[v_p], p.denom[v_q]))), imul(isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q])), isub(imul(p.ynum[v_q], p.denom[v_p]), imul(p.ynum[v_p], p.denom[v_q]))))))))));
+                  if (_c17) {
+                    const _t15 = isub(imul(isub(imul(p.ynum[v_p], p.denom[v_a]), imul(p.ynum[v_a], p.denom[v_p])), isub(imul(p.xnum[v_b], p.denom[v_a]), imul(p.xnum[v_a], p.denom[v_b]))), imul(isub(imul(p.xnum[v_p], p.denom[v_a]), imul(p.xnum[v_a], p.denom[v_p])), isub(imul(p.ynum[v_b], p.denom[v_a]), imul(p.ynum[v_a], p.denom[v_b]))));
+                    const _t16 = isub(imul(isub(imul(p.ynum[v_q], p.denom[v_a]), imul(p.ynum[v_a], p.denom[v_q])), isub(imul(p.xnum[v_b], p.denom[v_a]), imul(p.xnum[v_a], p.denom[v_b]))), imul(isub(imul(p.xnum[v_q], p.denom[v_a]), imul(p.xnum[v_a], p.denom[v_q])), isub(imul(p.ynum[v_b], p.denom[v_a]), imul(p.ynum[v_a], p.denom[v_b]))));
+                    _c17 = !((((_t15 > 0) && (_t16 > 0)) || ((_t15 < 0) && (_t16 < 0))));
                   }
-                  if (!(!(_c19))) {
-                    _q9 = false;
-                    break Q10;
+                  if (!(!(_c17))) {
+                    _q7 = false;
+                    break Q8;
                   }
                 }
               }
             }
-            if (!(_q9)) {
-              _q3 = false;
-              break Q4;
+            if (!(_q7)) {
+              _q1 = false;
+              break Q2;
             }
           }
         }
       }
-      if (!(_q3)) return false;
+      if (!(_q1)) return false;
     }
     return true;
   }

@@ -60,23 +60,23 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     const held = g[cell];
     if (!(held > 0 && (_domain >> held) & 1)) return false;
   }
-  let _q19 = true;
-  const _n23 = new Int32Array(32);
-  Q20: for (const _u21 of sp.lines) {
-    _n23.fill(0);
-    for (const _c22 of sp.lineCells[_u21]) {
-      const _t24 = (g[_c22] || -1);
-      if (++_n23[_t24] > 1) {
-        _q19 = false;
-        break Q20;
+  let _q1 = true;
+  const _n5 = new Int32Array(32);
+  Q2: for (const _u3 of sp.lines) {
+    _n5.fill(0);
+    for (const _c4 of sp.lineCells[_u3]) {
+      const _t6 = (g[_c4] || -1);
+      if (++_n5[_t6] > 1) {
+        _q1 = false;
+        break Q2;
       }
     }
   }
-  if (!(_q19)) return false;
-  for (let _k25 = 0; _k25 < cl.greater.at.length; _k25++) {
-    const _at26 = cl.greater.at[_k25];
-    const _v27 = cl.greater.v[_k25];
-    if (!(((g[_v27] || -1) > (g[(sp.edgeEnds[2 * _at26] === _v27 ? sp.edgeEnds[2 * _at26 + 1] : sp.edgeEnds[2 * _at26])] || -1)))) return false;
+  if (!(_q1)) return false;
+  for (let _k7 = 0; _k7 < cl.greater.at.length; _k7++) {
+    const _at8 = cl.greater.at[_k7];
+    const _v9 = cl.greater.v[_k7];
+    if (!(((g[_v9] || -1) > (g[(sp.edgeEnds[2 * _at8] === _v9 ? sp.edgeEnds[2 * _at8 + 1] : sp.edgeEnds[2 * _at8])] || -1)))) return false;
   }
   return true;
 }
