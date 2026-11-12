@@ -1006,6 +1006,18 @@ Its comparison with the checks it replaced is in the `report.md` of
 
 ## A firing's reason is built from its binding
 
+**A technique that `says` needs no reason callback.** Its `says` block names
+the `terms` its step's sentence reads and the `marks` (`outline`, `stripes`,
+`strike`) it shows, each a formula over the binding; the compiler reads them
+at the firing, on the marks before its facts are made and under the
+technique's own `with`, and only where a hint asks (a solve passes no `fire`).
+`compiledRung(run, clues)` then records `{ binding, says }` for each fact, and
+`describedHint` (`engine/described-hint.ts`) builds the steps from it: the
+firing's facts are the ringed targets, evidence is the outline less them, and
+what the walk reads is the marks and the facts. A step's kind is the
+technique's id, and the module's `SaysById` types each technique's terms for
+its sentence. Exemplar: `unruly/unruly.description.yaml`.
+
 `compiledRung(run, clues, reason)` pairs a compiled technique with the
 function that turns its binding and one fact into the reason the record
 carries, read off the marks before any of the firing's facts is made. A set

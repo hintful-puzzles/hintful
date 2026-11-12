@@ -75,6 +75,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `firing-replay.ts` — the premise audit |
 | Hint machinery |
 | – `hint-plan.ts` — the plan-accumulation loop |
+| – `described-hint.ts` — a described game's hint, built from its firings |
 | – `hint-track.ts` — following a step that asks for several things |
 | – `hint-gesture.ts` — how the pointer makes a hint step |
 | – `apart-by-position.ts` — two things of one name, told apart |
@@ -739,6 +740,17 @@ counts shown steps. Hide only what the player can already see, because a
 later step may cite it. A test reads the result's `hidden` count to prove
 it saw one. See [`hints.md`](./hints.md) § "Show only what the board does
 not already say".
+
+### `described-hint.ts` — a described game's hint, built from its firings
+
+Reach for `describedHint` when a game's techniques are stated in a
+description and a placement is a fact: give it the state as the
+description's marks, the ladder, the move a fact makes, and a sentence for
+each technique as a function of its `says` terms and the cells it marks. It
+returns `hint`, `hintKeepTrack` and `hintRungs`; a step's kind is the
+technique's id, its marks are the `says` marks, and a firing that fills
+several cells is a journey. Exemplar: `unruly/index.ts`. The `says` block is
+in [`descriptions.md`](./descriptions.md).
 
 ### `hint-track.ts` — following a step that asks for several things
 

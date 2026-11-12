@@ -8,20 +8,16 @@
  * per board during generation, where a clone per fill would be wasteful. The
  * `Game`'s `executeMove` stays pure.
  */
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,
-  ladderWalk,
   runLadder,
-  type Taken,
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import { EMPTY, ONE, ZERO } from "./constants.ts";
 import type { UnrulyMistake, UnrulyState } from "./state.ts";
 import * as unruly from "./unruly.compiled.ts";
@@ -35,43 +31,6 @@ export interface GridView {
   grid: Uint8Array;
 }
 
-// --- hint recording (the explained-deduction path) ----------------------
-
-/** Why a cell is forced — the premise the hint narrates and highlights. */
-export type HintReason =
-  // Two of three consecutive cells are `color`; a third would be three in
-  // a row, so the empty one is the opposite. `refs` are the two filled cells.
-  | { kind: "threes"; horizontal: boolean; refs: [number, number]; color: number }
-  // A row/column already holds its full count of `full`, so every remaining
-  // empty cell is `fill`. `line` is the row (horizontal) or column index.
-  | { kind: "complete"; line: number; horizontal: boolean; fill: number; full: number }
-  // Unique-rows: row/col `rowA` is full and `rowB` matches it everywhere it is
-  // filled except here; making this cell `fill`'s opposite would duplicate it.
-  | { kind: "unique"; rowA: number; rowB: number; horizontal: boolean; fill: number }
-  // A row/column with one `full` cell left: it is pinned to the `window`
-  // cells (anywhere else forces three `fill` in a row next to `anchor`), so
-  // every other empty cell is `fill`. `anchor` is the abutting fill, or -1.
-  | {
-      kind: "nearcomplete";
-      line: number;
-      horizontal: boolean;
-      fill: number;
-      window: number[];
-      anchor: number;
-    };
-
-/** One forced cell of a hint plan, in deduction order. `continuesPrevious`
- * marks the 2nd+ legs of a single firing (a whole-line fill) so the midend
- * presents them as one journey. */
-export interface HintMove {
-  index: number;
-  value: number;
-  reason: HintReason;
-  continuesPrevious: boolean;
-}
-
-const otherColor = (c: number): number => (c === ONE ? ZERO : ONE);
-
 // --- error-overlay flags (set by markRows, read by render.ts) -------
 export const FE_HOR_ROW_LEFT = 0x0001;
 const FE_HOR_ROW_MID = 0x0003;
@@ -84,65 +43,27 @@ export const FE_COL_MATCH = 0x0040;
 
 // --- the described ladder -----------------------------------------------
 
-/** A line as a reason names it: a row's index, or a column's. */
-function lineOf(m: CellMarks, L: number): { line: number; horizontal: boolean } {
-  return L < m.sp.h
-    ? { line: L, horizontal: true }
-    : { line: L - m.sp.h, horizontal: false };
-}
-
-/** The line `L` has all its `full`, so its empty squares take the other. */
-function complete(m: CellMarks, L: number, full: number): HintReason {
-  return { kind: "complete", ...lineOf(m, L), fill: otherColor(full), full };
-}
-
 /** The ladder, with the technique the unique-rows rule adds where it is on. */
 function unrulyLadder(unique: boolean): Ladder {
   return describedLadder(
     unruly,
     {
-      threes: uncluedRung(
-        unruly.threes,
-        ({ L, W, x, d }, _c, _n, m): HintReason => ({
-          kind: "threes",
-          horizontal: L < m.sp.h,
-          refs: W.filter((c) => c !== x) as [number, number],
-          color: d,
-        }),
-      ),
-      lastGap: uncluedRung(unruly.lastGap, ({ L, d }, _c, _n, m) => complete(m, L, d)),
-      quota: uncluedRung(unruly.quota, ({ L, d }, _c, _n, m) => complete(m, L, d)),
-      unique: uncluedRung(
-        unruly.unique,
-        ({ A, B, d }, _c, _n, m): HintReason => ({
-          kind: "unique",
-          rowA: lineOf(m, A).line,
-          rowB: lineOf(m, B).line,
-          horizontal: A < m.sp.h,
-          fill: otherColor(d),
-        }),
-      ),
-      lastOne: uncluedRung(
-        unruly.lastOne,
-        ({ L, d, W }, _c, _n, m): HintReason => ({
-          kind: "nearcomplete",
-          ...lineOf(m, L),
-          fill: otherColor(d),
-          window: W.filter((c) => !m.known(c)),
-          anchor: W.find((c) => m.known(c)) ?? -1,
-        }),
-      ),
+      threes: uncluedRung(unruly.threes),
+      lastGap: uncluedRung(unruly.lastGap),
+      quota: uncluedRung(unruly.quota),
+      unique: uncluedRung(unruly.unique),
+      lastOne: uncluedRung(unruly.lastOne),
     },
     undefined,
     unique ? ["unique"] : [],
   );
 }
 
-const LADDERS = { plain: unrulyLadder(false), unique: unrulyLadder(true) };
+export const LADDERS = { plain: unrulyLadder(false), unique: unrulyLadder(true) };
 
 /** The view's pieces as the ladder reads them, on the view's own grid: each
  * empty square may hold either piece. */
-function marksOf(view: GridView): CellMarks {
+export function marksOf(view: GridView): CellMarks {
   const m = new CellMarks(
     describedSpace(unruly.units, view.w2, view.h2),
     (1 << ONE) | (1 << ZERO),
@@ -174,65 +95,6 @@ export function solveCopy(view: GridView, grid: Uint8Array, diff: number): GridV
   const work: GridView = { w2, h2, unique, grid: Uint8Array.from(grid) };
   solveGame(work, diff);
   return work;
-}
-
-/** The cells of line `line`, a row or a column. */
-function cellsOfLine(view: GridView, line: number, horizontal: boolean): number[] {
-  const { w2, h2 } = view;
-  return horizontal
-    ? Array.from({ length: w2 }, (_, x) => line * w2 + x)
-    : Array.from({ length: h2 }, (_, y) => y * w2 + line);
-}
-
-/**
- * Run the deduction from the player's current marks at full strength,
- * recording every forced cell in order — the explained-hint plan. Returns the
- * ordered forced moves; the first is the move to surface next.
- *
- * One firing at a time, each the one beside the plan's last where there is
- * one (`ladderWalk`): a player works the rows and columns through the cells
- * just filled.
- */
-export function deduceHintPlan(state: UnrulyState): HintMove[] {
-  const { w2, h2, unique } = state;
-  const view: GridView = { w2, h2, unique, grid: Uint8Array.from(state.grid) };
-  const m = marksOf(view);
-  const plan: HintMove[] = [];
-  let group = -1;
-  m.recorder = (rec: DeductionRecord) => {
-    if (rec.kind !== "place") return;
-    plan.push({
-      index: rec.y * w2 + rec.x,
-      value: rec.n,
-      reason: rec.reason as HintReason,
-      continuesPrevious: rec.group === group,
-    });
-    group = rec.group;
-  };
-  m.budget = stepBudget("unruly hint");
-  // The pair that forces a cell, the row or rows a count reads, and the cells
-  // it fills.
-  const reads = ({ facts, reasons }: Taken): number[] => {
-    const own: number[] = [];
-    for (let i = 0; i < facts.length; i += 3) own.push(facts[i + 1]);
-    const reason = reasons[0] as HintReason;
-    switch (reason.kind) {
-      case "threes":
-        return [...reason.refs, ...own];
-      case "complete":
-      case "nearcomplete":
-        return [...cellsOfLine(view, reason.line, reason.horizontal), ...own];
-      case "unique":
-        return [
-          ...cellsOfLine(view, reason.rowA, reason.horizontal),
-          ...cellsOfLine(view, reason.rowB, reason.horizontal),
-        ];
-    }
-  };
-  const { entries } = unique ? LADDERS.unique : LADDERS.plain;
-  const walk = ladderWalk(m, entries, { [TIERS]: Number.MAX_SAFE_INTEGER }, reads);
-  for (let f = walk.next(); f !== null && f !== "contradiction"; f = walk.next());
-  return plan;
 }
 
 // --- the error overlay and the answer check ---------------------------------

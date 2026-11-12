@@ -99,6 +99,9 @@ variations:
             and (forall j in range(0, |cells(A)| - 1) where value(sq(B, j)) = d: value(sq(A, j)) = d),
             j in range(0, |cells(A)| - 1) where value(sq(A, j)) = d and not known(sq(B, j))
           conclude: "place(sq(B, j), flip(d))"
+          says:
+            terms: { horizontal: "A in rows", fill: flip(d) }
+            marks: { stripes: "cells(B)", outline: "cells(A)" }
 tiers: [Easy, Normal, Tricky]
 techniques:
   # Two of three squares in a row of a line hold one piece, so the third holds
@@ -110,6 +113,9 @@ techniques:
       x in W where not known(x),
       d in domain where (forall c in W where c != x: value(c) = d)
     conclude: "place(x, flip(d))"
+    says:
+      terms: { color: d }
+      marks: { outline: "{c in W where c != x}" }
   # A line holding all its d and all but one of the other piece: its one empty
   # square holds the other piece.
   - id: lastGap
@@ -119,6 +125,11 @@ techniques:
       d in domain where count(c in cells(L) where value(c) = d) = n
       and count(c in cells(L) where value(c) = flip(d)) = n - 1
     conclude: "forall c in cells(L) where not known(c): place(c, flip(d))"
+    says:
+      terms: { horizontal: "L in rows", full: d, fill: flip(d) }
+      marks:
+        stripes: "cells(L)"
+        outline: "{c in cells(L) where value(c) = d}"
   # A line holding all its d: every empty square holds the other piece.
   - id: quota
     tier: Normal
@@ -127,6 +138,11 @@ techniques:
       d in domain where count(c in cells(L) where value(c) = d) = n
       and count(c in cells(L) where value(c) = flip(d)) < n
     conclude: "forall c in cells(L) where not known(c): place(c, flip(d))"
+    says:
+      terms: { horizontal: "L in rows", full: d, fill: flip(d) }
+      marks:
+        stripes: "cells(L)"
+        outline: "{c in cells(L) where value(c) = d}"
   # A line with one d left to place and at least two of the other piece: three
   # squares in a row holding no d, two of them empty, would be three of the
   # other piece unless the last d goes among them, so it does, and every
@@ -140,3 +156,6 @@ techniques:
       i in range(0, |cells(L)| - 3), W = window(L, i)
       where (forall c in W: value(c) != d) and count(c in W where not known(c)) >= 2
     conclude: "forall c in cells(L) where not known(c) and c not in W: place(c, flip(d))"
+    says:
+      terms: { horizontal: "L in rows", fill: flip(d) }
+      marks: { stripes: "cells(L)", outline: "W" }

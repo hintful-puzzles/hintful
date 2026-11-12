@@ -11,6 +11,15 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "threes" | "lastGap" | "quota" | "lastOne" | "unique";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  threes: ThreesSays;
+  lastGap: LastGapSays;
+  quota: QuotaSays;
+  lastOne: LastOneSays;
+  unique: UniqueSays;
+}
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -141,10 +150,17 @@ export interface ThreesBinding {
   d: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ThreesSays {
+  terms: { color: number; };
+  marks: { outline: readonly number[]; };
+}
+
 const threesFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^0.5. */
-export function threes(b: Marks, sp: GridSpace, fire: Fire<ThreesBinding> | null): number {
+export function threes(b: Marks, sp: GridSpace, fire: Fire<ThreesBinding, ThreesSays> | null): number {
+  const _g32: number[] = [];
   const facts = threesFacts;
   let fired = 0;
   let changed = false;
@@ -160,7 +176,7 @@ export function threes(b: Marks, sp: GridSpace, fire: Fire<ThreesBinding> | null
       R3:
       for (let _i19 = 0; _i19 < _a18.length; _i19++) {
         const v_x = _a18[_i19];
-        const _m32_0 = b.made[0];
+        const _m38_0 = b.made[0];
         if (!(!((b.grid[v_x] !== 0)))) continue;
         for (let _m20 = b.domain; _m20 !== 0; _m20 &= _m20 - 1) {
           const v_d = 31 - Math.clz32(_m20 & -_m20);
@@ -177,7 +193,7 @@ export function threes(b: Marks, sp: GridSpace, fire: Fire<ThreesBinding> | null
             }
           }
           if (!(_q21)) continue;
-          if (b.made[0] !== _m32_0) {
+          if (b.made[0] !== _m38_0) {
             if (!(!((b.grid[v_x] !== 0)))) { continue R3; }
           }
           if (DEV && staleChecking) {
@@ -204,7 +220,19 @@ export function threes(b: Marks, sp: GridSpace, fire: Fire<ThreesBinding> | null
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, i: v_i, W: v_W.slice(), x: v_x, d: v_d }, facts)) return 1;
+            if (fire !== null) {
+              _g32.length = 0;
+              G33: {
+                const _a36 = v_W;
+                for (let _i37 = 0; _i37 < _a36.length; _i37++) {
+                  const v_c = _a36[_i37];
+                  if (!((v_c !== v_x))) continue;
+                  _g32.push(v_c);
+                }
+              }
+              const _says = { terms: { color: v_d }, marks: { outline: _g32.slice() } };
+              if (!fire({ L: v_L, i: v_i, W: v_W.slice(), x: v_x, d: v_d }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -219,16 +247,24 @@ export interface LastGapBinding {
   d: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LastGapSays {
+  terms: { horizontal: boolean; full: number; fill: number; };
+  marks: { stripes: readonly number[]; outline: readonly number[]; };
+}
+
 const lastGapFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function lastGap(b: Marks, sp: GridSpace, fire: Fire<LastGapBinding> | null): number {
+export function lastGap(b: Marks, sp: GridSpace, fire: Fire<LastGapBinding, LastGapSays> | null): number {
+  const _g42: number[] = [];
   const facts = lastGapFacts;
   let fired = 0;
   let changed = false;
   const _a13 = sp.lines;
   for (let _i14 = 0; _i14 < _a13.length; _i14++) {
     const v_L = _a13[_i14];
+    const _h41 = (sp.rows.includes(v_L));
     const v_n = Math.trunc(sp.lineCells[v_L].length / 2);
     const _h26 = (v_n - 1);
     for (let _m15 = b.domain; _m15 !== 0; _m15 &= _m15 - 1) {
@@ -301,7 +337,19 @@ export function lastGap(b: Marks, sp: GridSpace, fire: Fire<LastGapBinding> | nu
       if (!(_q37)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ L: v_L, n: v_n, d: v_d }, facts)) return 1;
+        if (fire !== null) {
+          _g42.length = 0;
+          G43: {
+            const _a46 = sp.lineCells[v_L];
+            for (let _i47 = 0; _i47 < _a46.length; _i47++) {
+              const v_c = _a46[_i47];
+              if (!(((b.grid[v_c] || -1) === v_d))) continue;
+              _g42.push(v_c);
+            }
+          }
+          const _says = { terms: { horizontal: _h41, full: v_d, fill: (3 - v_d) }, marks: { stripes: sp.lineCells[v_L].slice(), outline: _g42.slice() } };
+          if (!fire({ L: v_L, n: v_n, d: v_d }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -314,16 +362,24 @@ export interface QuotaBinding {
   d: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface QuotaSays {
+  terms: { horizontal: boolean; full: number; fill: number; };
+  marks: { stripes: readonly number[]; outline: readonly number[]; };
+}
+
 const quotaFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function quota(b: Marks, sp: GridSpace, fire: Fire<QuotaBinding> | null): number {
+export function quota(b: Marks, sp: GridSpace, fire: Fire<QuotaBinding, QuotaSays> | null): number {
+  const _g41: number[] = [];
   const facts = quotaFacts;
   let fired = 0;
   let changed = false;
   const _a13 = sp.lines;
   for (let _i14 = 0; _i14 < _a13.length; _i14++) {
     const v_L = _a13[_i14];
+    const _h40 = (sp.rows.includes(v_L));
     const v_n = Math.trunc(sp.lineCells[v_L].length / 2);
     for (let _m15 = b.domain; _m15 !== 0; _m15 &= _m15 - 1) {
       const v_d = 31 - Math.clz32(_m15 & -_m15);
@@ -395,7 +451,19 @@ export function quota(b: Marks, sp: GridSpace, fire: Fire<QuotaBinding> | null):
       if (!(_q36)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ L: v_L, n: v_n, d: v_d }, facts)) return 1;
+        if (fire !== null) {
+          _g41.length = 0;
+          G42: {
+            const _a45 = sp.lineCells[v_L];
+            for (let _i46 = 0; _i46 < _a45.length; _i46++) {
+              const v_c = _a45[_i46];
+              if (!(((b.grid[v_c] || -1) === v_d))) continue;
+              _g41.push(v_c);
+            }
+          }
+          const _says = { terms: { horizontal: _h40, full: v_d, fill: (3 - v_d) }, marks: { stripes: sp.lineCells[v_L].slice(), outline: _g41.slice() } };
+          if (!fire({ L: v_L, n: v_n, d: v_d }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -410,23 +478,30 @@ export interface LastOneBinding {
   W: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LastOneSays {
+  terms: { horizontal: boolean; fill: number; };
+  marks: { stripes: readonly number[]; outline: readonly number[]; };
+}
+
 const lastOneFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding> | null): number {
+export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding, LastOneSays> | null): number {
   const facts = lastOneFacts;
   let fired = 0;
   let changed = false;
   const _a26 = sp.lines;
   for (let _i27 = 0; _i27 < _a26.length; _i27++) {
     const v_L = _a26[_i27];
+    const _h88 = (sp.rows.includes(v_L));
     const v_n = Math.trunc(sp.lineCells[v_L].length / 2);
     const _h33 = (v_n - 1);
     const _h40 = (v_n - 2);
     R2:
     for (let _m28 = b.domain; _m28 !== 0; _m28 &= _m28 - 1) {
       const v_d = 31 - Math.clz32(_m28 & -_m28);
-      const _m88_0 = b.made[0];
+      const _m89_0 = b.made[0];
       const _h38 = (3 - v_d);
       const _h39 = _h38;
       let _g29 = 0;
@@ -483,7 +558,7 @@ export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding> | nu
             _c54 = (_g50 >= 2);
           }
           if (!(_c54)) break L45;
-          if (b.made[0] !== _m88_0) {
+          if (b.made[0] !== _m89_0) {
             let _g55 = 0;
             G56: {
               const _a57 = sp.lineCells[v_L];
@@ -577,7 +652,10 @@ export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding> | nu
           if (!(_q84)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, n: v_n, d: v_d, i: v_i, W: v_W.slice() }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { horizontal: _h88, fill: _h39 }, marks: { stripes: sp.lineCells[v_L].slice(), outline: v_W.slice() } };
+              if (!fire({ L: v_L, n: v_n, d: v_d, i: v_i, W: v_W.slice() }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -594,10 +672,16 @@ export interface UniqueBinding {
   j: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface UniqueSays {
+  terms: { horizontal: boolean; fill: number; };
+  marks: { stripes: readonly number[]; outline: readonly number[]; };
+}
+
 const uniqueFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^1.5. */
-export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding> | null): number {
+export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding, UniqueSays> | null): number {
   const facts = uniqueFacts;
   let fired = 0;
   let changed = false;
@@ -747,7 +831,10 @@ export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding> | null
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ A: v_A, n: v_n, d: v_d, B: v_B, j: v_j }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { horizontal: _h29, fill: _h68 }, marks: { stripes: sp.lineCells[v_B].slice(), outline: sp.lineCells[v_A].slice() } };
+              if (!fire({ A: v_A, n: v_n, d: v_d, B: v_B, j: v_j }, facts, _says)) return 1;
+            }
           }
         }
       }

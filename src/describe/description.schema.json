@@ -44,6 +44,28 @@
         "conclude": {
           "$ref": "#/$defs/formula",
           "description": "`strike(c, d)` and `place(c, d)` facts, joined by `and`, under `forall` where it ranges."
+        },
+        "says": {
+          "type": "object",
+          "description": "What a hint step for a firing of this speaks of, each a formula over the technique's binding, read on the marks before the firing's facts are made (under the technique's own `with`).",
+          "additionalProperties": false,
+          "properties": {
+            "terms": {
+              "type": "object",
+              "description": "Named values the step's sentence reads, by name.",
+              "additionalProperties": { "$ref": "#/$defs/formula" }
+            },
+            "marks": {
+              "type": "object",
+              "description": "The elements a step marks, by the role they are marked in: a set of cells. The firing's own facts are ringed without being said; evidence is the outline's set less them.",
+              "additionalProperties": false,
+              "properties": {
+                "outline": { "$ref": "#/$defs/formula" },
+                "stripes": { "$ref": "#/$defs/formula" },
+                "strike": { "$ref": "#/$defs/formula" }
+              }
+            }
+          }
         }
       }
     },

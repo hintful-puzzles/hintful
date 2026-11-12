@@ -632,58 +632,80 @@ export interface Rung<S extends CellMarks = CellMarks> {
 
 /** How a firing's reason is built: from its binding and one of its facts,
  * on the marks before any of the firing's facts is made. */
-export type ReasonOf<B, S extends CellMarks = CellMarks> = (
+export type ReasonOf<B, S extends CellMarks = CellMarks, Y = undefined> = (
   binding: B,
   cell: number,
   n: number,
   m: S,
+  says: Y,
 ) => object;
+
+/** What a firing of a technique that `says` records for each of its facts,
+ * where the game builds no reason of its own: the binding, and what the step
+ * speaks of, read on the marks before the firing's facts were made. */
+export interface Said<B, Y> {
+  readonly binding: B;
+  readonly says: Y;
+}
 
 /**
  * A compiled technique as a rung: on the solve path it makes its facts as it
  * concludes them, and on the hint path each firing's facts are recorded with
- * the reason `reason` builds, one firing a call being one step.
+ * the reason `reason` builds, one firing a call being one step. Where it
+ * builds none, a technique that `says` records {@link Said}.
  */
-export function compiledRung<B, C, S extends CellMarks = CellMarks>(
-  run: (b: Marks, sp: GridSpace, cl: C, fire: Fire<B> | null) => number,
+export function compiledRung<B, C, S extends CellMarks = CellMarks, Y = undefined>(
+  run: (b: Marks, sp: GridSpace, cl: C, fire: Fire<B, Y> | null) => number,
   cl: C,
-  reason: ReasonOf<B, S>,
+  reason?: ReasonOf<B, S, Y>,
 ): Rung<S> {
+  const reasonOf: ReasonOf<B, S, Y> =
+    reason ?? ((binding, _c, _n, _m, says) => ({ binding, says }) satisfies Said<B, Y>);
+  // The compiled technique passes what it says only where it says anything.
+  const hear = (f: (binding: B, facts: Facts, says: Y) => boolean): Fire<B, Y> =>
+    f as Fire<B, Y>;
   const rung = (m: S): number =>
     run(
       m,
       m.sp,
       cl,
       m.recorder
-        ? (binding, facts) => {
-            m.applyFacts(facts, (i) => reason(binding, facts[i + 1], facts[i + 2], m));
+        ? hear((binding, facts, says) => {
+            m.applyFacts(facts, (i) =>
+              reasonOf(binding, facts[i + 1], facts[i + 2], m, says),
+            );
             return m.wholePasses;
-          }
+          })
         : null,
     );
   // Given a `fire`, a technique makes no fact itself, so telling it to go on
   // reads every later binding on the same marks.
   rung.firings = (m: S): readonly Firing[] | "contradiction" => {
     const out: Firing[] = [];
-    const ret = run(m, m.sp, cl, (binding, facts) => {
-      const reasons: object[] = [];
-      for (let i = 0; i < facts.length; i += 3)
-        reasons.push(reason(binding, facts[i + 1], facts[i + 2], m));
-      out.push({ facts: facts.slice(), reasons });
-      return true;
-    });
+    const ret = run(
+      m,
+      m.sp,
+      cl,
+      hear((binding, facts, says) => {
+        const reasons: object[] = [];
+        for (let i = 0; i < facts.length; i += 3)
+          reasons.push(reasonOf(binding, facts[i + 1], facts[i + 2], m, says));
+        out.push({ facts: facts.slice(), reasons });
+        return true;
+      }),
+    );
     return ret < 0 ? "contradiction" : out;
   };
   return rung as Rung<S>;
 }
 
 /** {@link compiledRung} of a technique that reads nothing the board deals. */
-export function uncluedRung<B, S extends CellMarks = CellMarks>(
-  run: (b: Marks, sp: GridSpace, fire: Fire<B> | null) => number,
-  reason: ReasonOf<B, S>,
+export function uncluedRung<B, S extends CellMarks = CellMarks, Y = undefined>(
+  run: (b: Marks, sp: GridSpace, fire: Fire<B, Y> | null) => number,
+  reason?: ReasonOf<B, S, Y>,
 ): Rung<S> {
   return compiledRung(
-    (b, sp, _: null, fire: Fire<B> | null) => run(b, sp, fire),
+    (b, sp, _: null, fire: Fire<B, Y> | null) => run(b, sp, fire),
     null,
     reason,
   );

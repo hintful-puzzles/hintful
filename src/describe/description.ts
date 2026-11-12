@@ -200,7 +200,15 @@ export interface StatedTechnique {
   for: string;
   premise?: string;
   conclude: string;
+  says?: {
+    terms?: Record<string, string>;
+    marks?: Partial<Record<SaidRole, string>>;
+  };
 }
+
+/** The roles a technique's `says` marks elements in; the firing's facts are
+ * ringed without being said. */
+export type SaidRole = "outline" | "stripes" | "strike";
 
 /** Techniques stated once, for every game that places them. */
 export interface LibraryJson {
@@ -483,6 +491,12 @@ export interface Technique {
   binders: Binder[];
   premise: Expr | null;
   conclude: Expr;
+  /** What a hint step for a firing speaks of: named terms, and the sets of
+   * elements marked by role; `null` where it says nothing. */
+  says: {
+    terms: { name: string; expr: Expr }[];
+    marks: { role: SaidRole; expr: Expr }[];
+  } | null;
 }
 
 export interface Definition {
@@ -603,6 +617,18 @@ export function parseTechnique(
     binders,
     premise: stated.premise === undefined ? null : at("premise", stated.premise),
     conclude: at("conclude", stated.conclude),
+    says:
+      stated.says === undefined
+        ? null
+        : {
+            terms: Object.entries(stated.says.terms ?? {}).map(([name, src]) => ({
+              name,
+              expr: at(`says ${name}`, src),
+            })),
+            marks: (
+              Object.entries(stated.says.marks ?? {}) as [SaidRole, string][]
+            ).map(([role, src]) => ({ role, expr: at(`says ${role}`, src) })),
+          },
   };
 }
 

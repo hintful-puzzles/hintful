@@ -138,6 +138,24 @@ byte for byte. It is seen to fail by planting a role swap (outline for
 stripes) and a dropped term. A difference is a defect of the change, or a
 defect found in the game, said which.
 
+## What the trial found (task 1.3, 2026-11-12)
+
+- **Unruly, built.** `says` on five techniques; `describedHint`
+  (`engine/described-hint.ts`) builds `hint`, `hintKeepTrack` and `hintRungs`.
+  The step's kind is the technique's id, so `complete` is `lastGap` and
+  `quota`, and `nearcomplete` is `lastOne`; the fingerprint holds words and
+  marks and not the rung's name for that reason.
+- **A defect in the old game, found by the comparison.** A whole-line fill's
+  sentence says "all its yellow cells (outlined)", and the old marks outlined
+  the cells filled *on the board when the hint was asked*, not the ones earlier
+  steps of the same plan fill. A step shown after the player made those steps
+  outlined a subset. The engine reads the marks as the firing meets them, so it
+  outlines them all. 162 of 617 steps differ so, and nothing else does:
+  with the outline cut back to the cells known at the ask, every board's hash
+  equals the old one. The snapshot holds the corrected marks.
+- **What the walk reads** is the union of the mark sets and the cells the
+  firing fills. It equals Unruly's hand-written `reads` on every technique.
+
 ## Risks
 
 - `terms` over a technique's `with` need the supposition's marks, which the

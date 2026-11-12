@@ -8,19 +8,10 @@
  * right-click cycles the other way; number keys place directly.
  */
 
+import { type CellHint, describedHint } from "../../engine/described-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import type {
-  Game,
-  HintResult,
-  HintStep,
-  HintTrackVerdict,
-  UiUpdate,
-} from "../../engine/game.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
+import type { Game, UiUpdate } from "../../engine/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { digitOf, newCursor, stripModifiers } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -34,7 +25,7 @@ import {
 import type { Point } from "../../engine/types.ts";
 import { type Cell, EMPTY, ONE, ZERO } from "./constants.ts";
 import { newDesc, solvableAt } from "./generator.ts";
-import { colorName, type Marked, say } from "./hint-text.ts";
+import { colorName, say } from "./hint-text.ts";
 import {
   border,
   colors,
@@ -45,12 +36,7 @@ import {
   redraw,
   type UnrulyDrawState,
 } from "./render.ts";
-import {
-  deduceHintPlan,
-  findMistakes,
-  type HintReason,
-  solveToString,
-} from "./solver.ts";
+import { findMistakes, LADDERS, marksOf, solveToString } from "./solver.ts";
 import {
   decodeParams,
   defaultParams,
@@ -68,6 +54,7 @@ import {
   type UnrulyUi,
   validateParams,
 } from "./state.ts";
+import type { SaysById } from "./unruly.compiled.ts";
 
 function newUi(_state: UnrulyState): UnrulyUi {
   return { cursor: newCursor() };
@@ -133,127 +120,20 @@ function interpretMove(
 
 // --- hint -----------------------------------------------------------------
 
-/** Plan data for an Unruly hint step: the cell the deduction forces and the
- * color it forces, which keep-track compares a move against. The marks are
- * the step's words'. */
-export interface UnrulyHint {
-  target: Point & { value: Cell };
-}
-
-/** Every cell index of a row (`horizontal`) or column. */
-function lineCells(
-  line: number,
-  horizontal: boolean,
-  w2: number,
-  h2: number,
-): number[] {
-  const n = horizontal ? w2 : h2;
-  const out: number[] = [];
-  for (let j = 0; j < n; j++) out.push(horizontal ? line * w2 + j : j * w2 + line);
-  return out;
-}
-
-const pointOf = (i: number, w2: number): Point => ({
-  x: i % w2,
-  y: Math.floor(i / w2),
+/** The hint's steps, kinds and track-keeping, built by the engine from the
+ * description's firings (`engine/described-hint.ts`) with Unruly's sentences. */
+const described = describedHint<UnrulyState, UnrulyMove, SaysById>({
+  name: "unruly hint",
+  marks: ({ w2, h2, unique, grid }) =>
+    marksOf({ w2, h2, unique, grid: Uint8Array.from(grid) }),
+  entries: ({ unique }) => (unique ? LADDERS.unique : LADDERS.plain).entries,
+  width: ({ w2 }) => w2,
+  move: ({ x, y }, value) => ({ type: "place", x, y, value: value as Cell }),
+  say,
 });
 
-/** Narrate *why* the move is forced, per the deduction technique, naming the
- * cells `m` marks. The words are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: HintReason, m: Marked): Sentence {
-  switch (reason.kind) {
-    case "threes":
-      return say.threes(reason, m);
-    case "complete":
-      return say.complete(reason, m);
-    case "unique":
-      return say.unique(reason, m);
-    case "nearcomplete":
-      return say.nearcomplete(reason, m);
-  }
-}
-
-/** What a forced move's words mark, from its reason: the row or column the
- * sentence calls "this row", hatched whatever its cells hold
- * (docs/hints-marks.md § "Hatch the line the sentence names"), and the
- * premise cells whose color is the evidence (the same-color pair, the
- * completed quota, the near-complete reserved window, the reference row),
- * outlined so the color that *is* the reason stays visible. */
-function markedOf(reason: HintReason, target: Point, state: UnrulyState): Marked {
-  const { w2, h2, grid } = state;
-  const marked = (line: number[], evidence: number[]): Marked => ({
-    target,
-    line: line.map((i) => pointOf(i, w2)),
-    evidence: evidence.map((i) => pointOf(i, w2)),
-  });
-
-  switch (reason.kind) {
-    case "threes":
-      return marked([], [...reason.refs]);
-    case "complete": {
-      const cells = lineCells(reason.line, reason.horizontal, w2, h2);
-      // The already-placed `full` cells are the quota the sentence counts.
-      return marked(
-        cells,
-        cells.filter((i) => grid[i] === reason.full),
-      );
-    }
-    case "unique":
-      // "This row" is the one being completed; the reference row it would copy
-      // is "the outlined row", named by its mark.
-      return marked(
-        lineCells(reason.rowB, reason.horizontal, w2, h2),
-        lineCells(reason.rowA, reason.horizontal, w2, h2),
-      );
-    case "nearcomplete":
-      return marked(
-        lineCells(reason.line, reason.horizontal, w2, h2),
-        reason.anchor >= 0 ? [...reason.window, reason.anchor] : [...reason.window],
-      );
-  }
-}
-
-/** The solver's techniques, by the `kind` of the reason each records. */
-export const UNRULY_RUNGS = [
-  "threes",
-  "complete",
-  "unique",
-  "nearcomplete",
-] as const satisfies readonly HintReason["kind"][];
-export type UnrulyRung = (typeof UNRULY_RUNGS)[number];
-
-function hint(state: UnrulyState): HintResult<UnrulyMove, UnrulyHint, UnrulyRung> {
-  const plan = deduceHintPlan(state);
-  if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  const steps: HintStep<UnrulyMove, UnrulyHint, UnrulyRung>[] = plan.map((m) => {
-    const value = m.value as Cell;
-    const x = m.index % state.w2;
-    const y = Math.floor(m.index / state.w2);
-    const target = { x, y, value };
-    const words = narrate(m.reason, markedOf(m.reason, { x, y }, state));
-    return {
-      move: { type: "place", x, y, value },
-      rung: m.reason.kind,
-      explanation: words.text,
-      words,
-      highlights: { target },
-      continuesPrevious: m.continuesPrevious,
-    };
-  });
-  return { ok: true, steps };
-}
-
-/** A move completes the hint step iff it sets the hinted cell to the hinted
- * value; anything else drops the plan to recompute. */
-function hintKeepTrack(
-  m: UnrulyMove,
-  step: HintStep<UnrulyMove, UnrulyHint>,
-): HintTrackVerdict {
-  const t = step.highlights?.target;
-  const hit =
-    m.type === "place" && t && m.x === t.x && m.y === t.y && m.value === t.value;
-  return hit ? "completed" : "off";
-}
+export type UnrulyRung = keyof SaysById;
+export type UnrulyHint = CellHint;
 
 /** Animate a placement that changes exactly one cell (so `solve`'s bulk fill
  * and no-ops stay instant); the midend stretches this to the uniform
@@ -323,8 +203,8 @@ export const unrulyGame: Game<
     return { ok: true, move: { type: "solve", grid } };
   },
 
-  hint,
-  hintRungs: UNRULY_RUNGS,
+  hint: described.hint,
+  hintRungs: described.hintRungs,
   hintMarks: {
     roles: {
       ring: `the square to color. It is drawn empty: the sentence says whether it must be ${colorName(ONE).only} or ${colorName(ZERO).only}.`,
@@ -333,7 +213,7 @@ export const unrulyGame: Game<
       stripes: 'the row or column the sentence calls "this row" or "this column".',
     },
   },
-  hintKeepTrack,
+  hintKeepTrack: described.hintKeepTrack,
   hintGesture: (s, ui, ds, m) => {
     if (m.type !== "place") throw new Error("unruly: a hint only places");
     const at = { x: m.x, y: m.y };

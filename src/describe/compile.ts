@@ -6005,6 +6005,7 @@ function techniqueFunction(
   env: Env,
 ): { code: string; clues: boolean } {
   const bindingType = `${capitalized(fnName)}Binding`;
+  const saysType = `${capitalized(fnName)}Says`;
   const readsClues = { yes: false };
   const onPlace = t.on !== null;
   // A strike runs no placing technique, so a rung's reads of `value` and
@@ -6070,6 +6071,8 @@ function techniqueFunction(
     visitBinder: undefined,
     visitAt: undefined,
   });
+  // The fields of what a firing says, by group, as the module's type for it.
+  const saysFields = { terms: [] as string[], marks: [] as string[] };
   const fire = (sc: Scope): void => {
     const shared: Shared = { made: new Map() };
     const visited =
@@ -6100,11 +6103,44 @@ function techniqueFunction(
     body.emit(`if (!(${c.code})) return -1;`);
     body.open("if (changed || facts.length > 0) {");
     body.emit("fired = 1;");
+    // What the step speaks of is read here, on the marks before the facts are
+    // made, and only on a hint's path: a solve passes no `fire`.
+    let said = "";
+    if (t.says !== null) {
+      said = ", _says";
+      body.open("if (fire !== null) {");
+      saysFields.terms.length = 0;
+      saysFields.marks.length = 0;
+      const read = (e: Expr, group: "terms" | "marks", name: string): string => {
+        const v = compileExpr(e, sc, { ...tenv, shared }, body);
+        if (group === "marks" && !isArray(v.sort))
+          throw new CompileError(
+            `${t.id}: says marks ${name} is not a set of elements`,
+          );
+        saysFields[group].push(`${name}: ${tsType(v.sort)};`);
+        // A set is a buffer the next binding refills.
+        return `${name}: ${isArray(v.sort) ? `${v.code}.slice()` : v.code}`;
+      };
+      const terms = t.says.terms.map((x) => read(x.expr, "terms", x.name));
+      const marks = t.says.marks.map((x) => read(x.expr, "marks", x.role));
+      body.emit(
+        `const _says = { terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} } };`,
+      );
+    }
     // A technique run on placing makes every firing; a rung stops at the
     // first unless `fire` asks for the rest.
-    if (onPlace) body.emit(`if (fire !== null) fire(${binding}, facts);`);
-    else {
-      body.emit(`if (fire !== null && !fire(${binding}, facts)) return 1;`);
+    if (onPlace) {
+      body.emit(
+        `${t.says === null ? "if (fire !== null) " : ""}fire(${binding}, facts${said});`,
+      );
+      if (t.says !== null) body.close();
+    } else {
+      body.emit(
+        t.says === null
+          ? `if (fire !== null && !fire(${binding}, facts)) return 1;`
+          : `if (!fire(${binding}, facts${said})) return 1;`,
+      );
+      if (t.says !== null) body.close();
       // The firing changed the marks the kept candidates were read from.
       refills.push(body.slot(0));
       if (epoch.used) body.emit("_epoch++;");
@@ -6217,6 +6253,16 @@ function techniqueFunction(
     ...fields,
     "}",
     "",
+    ...(t.says === null
+      ? []
+      : [
+          `/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */`,
+          `export interface ${saysType} {`,
+          `  terms: { ${saysFields.terms.join(" ")} };`,
+          `  marks: { ${saysFields.marks.join(" ")} };`,
+          "}",
+          "",
+        ]),
     `const ${fnName}Facts: number[] = [];`,
     ...(readsCands.yes ? [`let ${buffer} = new Int32Array(0);`] : []),
     ...held,
@@ -6229,7 +6275,7 @@ function techniqueFunction(
         ]),
     "",
     `/** Its dearest read grows with the board as ${power(growth)}. */`,
-    `export function ${fnName}(b: Marks, ${spParam}: GridSpace, ${clueParam}${params}fire: Fire<${bindingType}> | null): number {`,
+    `export function ${fnName}(b: Marks, ${spParam}: GridSpace, ${clueParam}${params}fire: Fire<${bindingType}${t.says === null ? "" : `, ${saysType}`}> | null): number {`,
     ...text,
     "}",
   ];
@@ -6604,6 +6650,17 @@ export function compileGame(
     "/** Every technique a rung runs, by id: the description's, in its order. */",
     `export type LadderId = ${quoted(ids)};`,
     "",
+    ...(own.some((t) => t.says !== null)
+      ? [
+          "/** What a firing of each technique that says anything says, by id. */",
+          "export interface SaysById {",
+          ...own
+            .filter((t) => t.says !== null)
+            .map((t) => `  ${t.id}: ${capitalized(t.id)}Says;`),
+          "}",
+          "",
+        ]
+      : []),
     "/** Every technique run as each value is placed, by id. */",
     `export type PlacingId = ${quoted(placing)};`,
     "",

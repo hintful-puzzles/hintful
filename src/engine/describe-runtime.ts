@@ -307,7 +307,11 @@ export class EdgeRelation {
  * firing has narrowed still holds, and a solve reaches the same fixpoint
  * whichever order its facts come in.
  */
-export type Fire<B> = (binding: B, facts: Facts) => boolean;
+export type Fire<B, S = undefined> = (
+  binding: B,
+  facts: Facts,
+  ...says: S extends undefined ? [] : [S]
+) => boolean;
 
 /** A clue kind as dealt: the element each clue sits at and its value, by
  * clue index; and at each element, the clue there and its value (`-1` where

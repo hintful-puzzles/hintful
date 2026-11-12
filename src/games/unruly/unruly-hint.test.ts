@@ -1,18 +1,19 @@
-// Tier-1 hint logic for Unruly: the recording deduction (`deduceHintPlan`)
-// names each technique with its premise, the `hint` plan is legal + solves
+// Tier-1 hint logic for Unruly: each step names its technique and marks its
+// premise, the `hint` plan is legal + solves
 // the board, refuses on solved / mistaken boards, groups one firing into one
 // journey, and every step carries visible evidence. Plus `animLength` for the
 // placement animation.
 import { describe, expect, it } from "vitest";
+import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { type Cell, EMPTY as E, ONE as O, ZERO as Z } from "./constants.ts";
 import { newDesc } from "./generator.ts";
-import { type UnrulyHint, unrulyGame } from "./index.ts";
+import { type UnrulyHint, type UnrulyRung, unrulyGame } from "./index.ts";
 import { PLACE_ANIM_TIME } from "./render.ts";
-import { deduceHintPlan, isComplete } from "./solver.ts";
+import { isComplete } from "./solver.ts";
 import {
   encodeGrid,
   newState,
@@ -55,32 +56,48 @@ const pinned = describeHintPins({
   descOf: (s) => encodeGrid(s.grid, s.w2 * s.h2),
   kinds: {
     // A board whose plan holds a firing that forces several cells.
-    groupedPlan: (_step, state) =>
-      deduceHintPlan(state).some((m) => m.continuesPrevious),
+    groupedPlan: (_step, state) => plan(state).some((s) => s.continuesPrevious),
   },
   pins: {
-    /** Held on 1920 of 2390 positions walked. */
+    /** Held on 1970 of 2399 positions walked. */
     groupedPlan: "14x14dn:bbadAfCAcDmfcccDFCceFEBDdBbOBbabamabGAJjbgbACJAc",
-    /** Held on 2340 of 2390 positions walked. */
+    /** Held on 2377 of 2399 positions walked. */
     threes: "14x14dn:bbadAfCAcDmfcccDFCceFEBDdBbOBbabamabGAJjbgbACJAc",
-    /** Held on 2376 of 2390 positions walked. */
-    complete: "8x8udn:mAaaAaiHaAAaAcAbAfAaDCaAa",
-    /** Held on 437 of 2390 positions walked. */
+    /** Held on 2382 of 2399 positions walked. */
+    lastGap: "8x8udn:mAaaAaifBaAAaAcAbAfAaDCaAa",
+    /** Held on 1943 of 2399 positions walked. */
+    quota: "8x8udn:mAaaAaiHaAAaAcAbAfAaDCaAa",
+    /** Held on 431 of 2399 positions walked. */
     unique: "8x8udn:CCaAbdAaBDaADaaAbDaAccAaGaACaAaAb",
-    /** Held on 2047 of 2390 positions walked. */
-    nearcomplete: "8x8udn:aAaAAaAabAdBAaMFbbAAacdDACcb",
+    /** Held on 2074 of 2399 positions walked. */
+    lastOne: "8x8udn:aAaAAaAabAdBAaMFbbAAacdDACcb",
   },
 });
 
-describe("deduceHintPlan — per-technique reasons", () => {
+/** The hint's steps from `state`: the plan, in the order a player meets it. */
+function plan(state: UnrulyState): HintStep<UnrulyMove, UnrulyHint, UnrulyRung>[] {
+  const res = unrulyGame.hint?.(state);
+  if (!res?.ok) throw new Error("expected a plan");
+  return res.steps;
+}
+
+/** The cells a step marks in `role`, as `x,y`, sorted. */
+const markedAt = (
+  step: HintStep<UnrulyMove, UnrulyHint, UnrulyRung>,
+  role: "outline" | "stripes",
+): string[] =>
+  stepMarks(step)
+    .of(role, CELL)
+    .map((p) => `${p.x},${p.y}`)
+    .sort();
+
+describe("hint — per-technique steps", () => {
   it("threes: two same-color cells force the third opposite", () => {
-    const plan = deduceHintPlan(craft(padTo6([[O, O, E, E, E, E]])));
-    expect(plan[0].reason.kind).toBe("threes");
-    expect(plan[0].value).toBe(Z);
-    expect(plan[0].index).toBe(2);
-    if (plan[0].reason.kind === "threes") {
-      expect([...plan[0].reason.refs].sort((a, b) => a - b)).toEqual([0, 1]);
-    }
+    const [step] = plan(craft(padTo6([[O, O, E, E, E, E]])));
+    expect(step.rung).toBe("threes");
+    expect(step.highlights?.target).toEqual({ x: 2, y: 0, value: Z });
+    expect(markedAt(step, "outline")).toEqual(["0,0", "1,0"]);
+    expect(markedAt(step, "stripes")).toEqual([]);
   });
 
   it("groups one firing (a line-fill) into one journey, per-cell techniques apart", () => {
@@ -88,51 +105,38 @@ describe("deduceHintPlan — per-technique reasons", () => {
     // or a near-complete remainder); they must read as one journey. In a
     // grouped plan every continuation shares its predecessor's firing (same
     // technique + line); the per-cell techniques never continue.
-    const plan = deduceHintPlan(pinned("groupedPlan").state);
+    const steps = plan(pinned("groupedPlan").state);
     let found = false;
-    for (let i = 1; i < plan.length; i++) {
-      if (!plan[i].continuesPrevious) continue;
+    for (let i = 1; i < steps.length; i++) {
+      if (!steps[i].continuesPrevious) continue;
       found = true;
-      const a = plan[i - 1].reason;
-      const b = plan[i].reason;
-      expect(b.kind).toBe(a.kind);
-      expect(b.kind === "complete" || b.kind === "nearcomplete").toBe(true);
-      if (
-        (a.kind === "complete" || a.kind === "nearcomplete") &&
-        (b.kind === "complete" || b.kind === "nearcomplete")
-      ) {
-        expect(b.line).toBe(a.line);
-        expect(b.horizontal).toBe(a.horizontal);
-      }
+      expect(steps[i].rung).toBe(steps[i - 1].rung);
+      expect(["lastGap", "quota", "lastOne"]).toContain(steps[i].rung);
+      expect(markedAt(steps[i], "stripes")).toEqual(markedAt(steps[i - 1], "stripes"));
     }
     // A threes/unique move (per-cell) is never a continuation.
-    for (let i = 0; i < plan.length; i++) {
-      if (plan[i].reason.kind === "threes" || plan[i].reason.kind === "unique") {
-        expect(plan[i].continuesPrevious).toBe(false);
-      }
+    for (const step of steps) {
+      if (step.rung === "threes" || step.rung === "unique")
+        expect(step.continuesPrevious).toBe(false);
     }
     expect(found).toBe(true);
   });
 
-  it("single gap: the lone empty in a count-complete line (a 'complete' reason)", () => {
-    const plan = deduceHintPlan(craft(padTo6([[O, Z, O, Z, O, E]])));
-    expect(plan[0].reason.kind).toBe("complete");
-    expect(plan[0].index).toBe(5);
-    expect(plan[0].value).toBe(Z);
-    expect(plan[0].continuesPrevious).toBe(false);
+  it("single gap: the lone empty in a count-complete line", () => {
+    const [step] = plan(craft(padTo6([[O, Z, O, Z, O, E]])));
+    expect(step.rung).toBe("lastGap");
+    expect(step.highlights?.target).toEqual({ x: 5, y: 0, value: Z });
+    expect(step.continuesPrevious).toBe(false);
   });
 
   it("near-complete: the worked example pins the last odd cell to a window", () => {
     // `1 1 0 . . .`: the last 1 can't go in the final cell (would make 0 0 0),
     // so the remaining cells are forced 0.
-    const plan = deduceHintPlan(craft(padTo6([[O, O, Z, E, E, E]])));
-    expect(plan[0].reason.kind).toBe("nearcomplete");
-    expect(plan[0].value).toBe(Z);
-    expect(plan[0].index).toBe(5);
-    if (plan[0].reason.kind === "nearcomplete") {
-      expect([...plan[0].reason.window].sort((a, b) => a - b)).toEqual([3, 4]);
-      expect(plan[0].reason.anchor).toBe(2);
-    }
+    const [step] = plan(craft(padTo6([[O, O, Z, E, E, E]])));
+    expect(step.rung).toBe("lastOne");
+    expect(step.highlights?.target).toEqual({ x: 5, y: 0, value: Z });
+    // The window and the abutting piece it rests on.
+    expect(markedAt(step, "outline")).toEqual(["2,0", "3,0", "4,0"]);
   });
 
   it("unique: a cell that would duplicate a full row is forbidden", () => {
@@ -140,12 +144,25 @@ describe("deduceHintPlan — per-technique reasons", () => {
     // forces those cells away from duplicating row 0.
     const rows = padTo6([[O, Z, O, Z, O, Z]]);
     rows[5] = [O, Z, O, E, E, Z];
-    const plan = deduceHintPlan(craft(rows, true));
-    expect(plan[0].reason.kind).toBe("unique");
-    if (plan[0].reason.kind === "unique") {
-      expect(plan[0].reason.rowA).toBe(0);
-      expect(plan[0].reason.rowB).toBe(5);
-    }
+    const [step] = plan(craft(rows, true));
+    expect(step.rung).toBe("unique");
+    // The row being completed is striped, the row it would copy outlined.
+    expect(markedAt(step, "stripes")).toEqual([
+      "0,5",
+      "1,5",
+      "2,5",
+      "3,5",
+      "4,5",
+      "5,5",
+    ]);
+    expect(markedAt(step, "outline")).toEqual([
+      "0,0",
+      "1,0",
+      "2,0",
+      "3,0",
+      "4,0",
+      "5,0",
+    ]);
   });
 });
 
@@ -228,7 +245,12 @@ describe("hintKeepTrack", () => {
     const step = res.steps[0];
     const t = (step.highlights as UnrulyHint).target;
 
-    const right: UnrulyMove = { type: "place", x: t.x, y: t.y, value: t.value };
+    const right: UnrulyMove = {
+      type: "place",
+      x: t.x,
+      y: t.y,
+      value: t.value as Cell,
+    };
     expect(unrulyGame.hintKeepTrack?.(right, step, st)).toBe("completed");
 
     const wrongVal: UnrulyMove = {
@@ -243,7 +265,7 @@ describe("hintKeepTrack", () => {
       type: "place",
       x: (t.x + 1) % st.w2,
       y: t.y,
-      value: t.value,
+      value: t.value as Cell,
     };
     expect(unrulyGame.hintKeepTrack?.(elsewhere, step, st)).toBe("off");
   });
