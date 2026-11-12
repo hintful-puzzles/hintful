@@ -111,6 +111,26 @@ techniques:
       or (bulbs(c) <= n and bulbs(c) + free(c) >= n
       and (bulbs(c) < n or (forall p in adj4(c) where not known(p): place(p, 2)))
       and (bulbs(c) + free(c) > n or (forall p in adj4(c) where not known(p): place(p, 1)))))
+    # The strand is the square or the number the step is about, drawn apart
+    # from the squares it reasons from. A step reads the squares beside a
+    # number whether or not it outlines them.
+    says:
+      marks: { strand: "{c}" }
+      arms:
+        # A dark square with one way left to light it.
+        forcedLight:
+          when: "n < 0"
+          terms: { dark: c }
+          marks: { outline: L }
+        # A number whose bulbs are all placed.
+        clueSatisfied:
+          when: "bulbs(c) = n"
+          terms: { n: n }
+          marks: { outline: "{p in adj4(c) where value(p) = 1}", reads: "adj4(c)" }
+        # A number with a bulb for each free square beside it.
+        clueSaturated:
+          when: "n >= 0"
+          marks: { reads: "adj4(c)" }
   # A dark square is lit from one of the free squares that see it, so a
   # square whose bulb would spoil every one of them holds none.
   - id: darkSet
@@ -124,6 +144,9 @@ techniques:
       and (forall d in rivals(first(S)) where not known(d), D = lights(d)
       where (forall s in S: spoils(d, D, s)):
       place(d, 2))
+    says:
+      shown: each
+      marks: { outline: S, strand: "{u}" }
   # A number short of m bulbs among f free squares has one in every f - m + 1
   # of them, so a square whose bulb would spoil all of some such set holds
   # none.
@@ -137,3 +160,6 @@ techniques:
       forall d in rivals(first(T)) where not known(d), D = lights(d)
       where (forall s in T: spoils(d, D, s)):
       place(d, 2)
+    says:
+      shown: each
+      marks: { outline: T, strand: "{k}" }

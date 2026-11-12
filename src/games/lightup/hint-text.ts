@@ -1,9 +1,9 @@
 /**
  * Every sentence Light Up's hint speaks, and the words inside them.
  *
- * The deduction decides which sentence and with what values (`index.ts`'s
- * `narrate`, which reads the frame the player is looking at); this file decides
- * only how it reads: the indication first, the conclusion in the necessity
+ * The deduction decides which sentence and with what values (`sentences`
+ * below, from what `lightup.description.yaml` says of a firing); the rest of
+ * this file decides only how it reads: the indication first, the conclusion in the necessity
  * voice (docs/hints.md § "Necessity for deductions, imperative for
  * moves"). Where a second mark is on the board, "this square" is never left
  * bare.
@@ -16,6 +16,7 @@
  * square", and "the other outlined squares" for the set.
  */
 
+import type { FiringSpoken } from "../../engine/described-firing-hint.ts";
 import {
   CELL,
   mark,
@@ -26,6 +27,7 @@ import {
   so,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
+import type { SaysById } from "./lightup.compiled.ts";
 
 /** The cells a step marks: the ones it decides, the evidence set, the dark
  * square it is about and the driving clue (null when absent). */
@@ -140,4 +142,38 @@ export const say = {
       look: phrase`A bulb on ${these(m, "square")} rules out ${mark.the("outline", CELL, m.area, "square", "every")} left for ${mark.the("outline", CELL, m.clue ? [m.clue] : [], "clue")}'s bulb`,
       move: phrase`it can't hold a bulb`,
     }),
+};
+
+type Spoken<K extends keyof SaysById> = FiringSpoken<SaysById[K]>;
+
+/** What a step marks: the squares it decides, the evidence, and the one square
+ * or number it is about, which is drawn apart (the dark square or the clue,
+ * by the technique, and none where it is a square the step decides). */
+const marked = (s: Spoken<keyof SaysById>, about: "dark" | "clue"): Marked => ({
+  targets: s.targets,
+  area: s.outline,
+  dark: about === "dark" ? (s.strand[0] ?? null) : null,
+  clue: about === "clue" ? (s.strand[0] ?? null) : null,
+});
+
+/** Each technique's sentence, from what its description says of a firing
+ * (`engine/described-firing-hint.ts`). */
+export const sentences = {
+  square: (s: Spoken<"square">): Sentence => {
+    switch (s.arm) {
+      case "forcedLight": {
+        const dark = s.at(s.terms.dark);
+        const m = marked(s, "dark");
+        return s.targets.some((t) => t.x === dark.x && t.y === dark.y)
+          ? say.forcedLightSelf(m)
+          : say.forcedLightOther(m);
+      }
+      case "clueSatisfied":
+        return say.clueSatisfied(s.terms.n, marked(s, "clue"));
+      case "clueSaturated":
+        return say.clueSaturated(marked(s, "clue"));
+    }
+  },
+  darkSet: (s: Spoken<"darkSet">): Sentence => say.discountUnlit(marked(s, "dark")),
+  clueSet: (s: Spoken<"clueSet">): Sentence => say.discountClue(marked(s, "clue")),
 };

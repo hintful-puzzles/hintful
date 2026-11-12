@@ -16,5 +16,8 @@
 ## 2. The catalog
 
 - [ ] 2.1 Move the rest of the described games, a family at a time, each compared
+  - [x] Light Up (design § "Light Up, built"): `says.shown: each`, `consequences: false`, the engine's `refreshHintStep`
+  - [ ] The other cell games that place or strike a firing's squares (`describedFiringHint`): Mosaic, Tents, Star Battle, Range, Bricks, Clusters, Separate, Abcd, Sticks, Dominosa, Pearl, Slant, Magnets, Net, Tracks, Palisade, Path, Spokes, Undead, Seismic, Map, Galaxies, Rect, Crossing, Signpost
+  - [ ] The candidate games (a Latin family's `latinPremise` and `runLatinCandidatePlan`: Unequal, Adjacent, Keen, Towers, Group, Solo, Mathrax, Rome, Salad): the engine's candidate-elimination shape is a design of its own, read first
 - [ ] 2.2 Remove what no game uses, and update `docs/descriptions.md`, `docs/hints.md` and the skeletons
 - [x] 2.3 Check and fix the two defects named under "Fixed in passing" (Mines' dead region arm removed in `1118d723`; Loopy's `closed` throw is unreachable, since a closed loop with every clue met is solved and one with a clue unmet is a mistake, so it stays as the invariant's guard)

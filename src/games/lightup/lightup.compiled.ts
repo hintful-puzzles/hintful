@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/lightup/lightup.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, freshBinding, keptStore, nextOfSize, sameSet, staleChecking, stretch, type Kept, union } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, freshBinding, keptStore, nextOfSize, sameSet, setOf, staleChecking, stretch, type Kept, union } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -18,6 +18,20 @@ export const units: readonly string[] = [];
 
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "square" | "darkSet" | "clueSet";
+
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  square: SquareSays;
+  darkSet: DarkSetSays;
+  clueSet: ClueSetSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["square.forcedLight","square.clueSatisfied","square.clueSaturated","darkSet","clueSet"] as const;
+
+/** The techniques whose step is made for each square the firing decides. */
+export const SAYS_EACH: readonly (keyof SaysById)[] = ["darkSet","clueSet"];
 
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "shine";
@@ -192,10 +206,18 @@ export interface SquareBinding {
   L: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
+export type SquareSays =
+  | { arm: "forcedLight"; terms: { dark: number; }; marks: { strand: readonly number[]; outline: readonly number[]; } }
+  | { arm: "clueSatisfied"; terms: { n: number; }; marks: { strand: readonly number[]; outline: readonly number[]; reads: readonly number[]; } }
+  | { arm: "clueSaturated"; terms: {  }; marks: { strand: readonly number[]; reads: readonly number[]; } }
+;
+
 const squareFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBinding> | null): number {
+export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBinding, SquareSays> | null): number {
+  const _g69: number[] = [];
   const facts = squareFacts;
   let fired = 0;
   let changed = false;
@@ -377,7 +399,40 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
       if (!(_c64)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ X: v_X, c: v_c, n: v_n, L: v_L.slice() }, facts)) return 1;
+        if (fire !== null) {
+          let _g65 = 0;
+          G66: {
+            const _a67 = sp.adj4[v_c];
+            for (let _i68 = 0; _i68 < _a67.length; _i68++) {
+              const v_p = _a67[_i68];
+              if (!(((b.grid[v_p] || -1) === 1))) continue;
+              _g65++;
+            }
+          }
+          let _arm = -1;
+          if ((v_n < 0)) _arm = 0; else if ((_g65 === v_n)) _arm = 1; else if ((v_n >= 0)) _arm = 2;
+          let _says: SquareSays | null = null;
+          if (_arm === 0) {
+            _says = { arm: "forcedLight", terms: { dark: v_c }, marks: { strand: setOf(v_c).slice(), outline: v_L.slice() } };
+          }
+          if (_arm === 1) {
+            _g69.length = 0;
+            G70: {
+              const _a73 = sp.adj4[v_c];
+              for (let _i74 = 0; _i74 < _a73.length; _i74++) {
+                const v_p = _a73[_i74];
+                if (!(((b.grid[v_p] || -1) === 1))) continue;
+                _g69.push(v_p);
+              }
+            }
+            _says = { arm: "clueSatisfied", terms: { n: v_n }, marks: { strand: setOf(v_c).slice(), outline: _g69.slice(), reads: sp.adj4[v_c].slice() } };
+          }
+          if (_arm === 2) {
+            _says = { arm: "clueSaturated", terms: {  }, marks: { strand: setOf(v_c).slice(), reads: sp.adj4[v_c].slice() } };
+          }
+          if (_says === null) throw new Error("square: no arm of says holds");
+          if (!fire({ X: v_X, c: v_c, n: v_n, L: v_L.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -391,10 +446,16 @@ export interface DarkSetBinding {
   S: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface DarkSetSays {
+  terms: {  };
+  marks: { outline: readonly number[]; strand: readonly number[]; };
+}
+
 const darkSetFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function darkSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DarkSetBinding> | null): number {
+export function darkSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DarkSetBinding, DarkSetSays> | null): number {
   const _g28: number[] = [];
   const facts = darkSetFacts;
   let fired = 0;
@@ -525,7 +586,10 @@ export function darkSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DarkSetBi
         if (!(_c66)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ X: v_X, u: v_u, L: v_L.slice(), S: v_S.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: {  }, marks: { outline: v_S.slice(), strand: setOf(v_u).slice() } };
+            if (!fire({ X: v_X, u: v_u, L: v_L.slice(), S: v_S.slice() }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -542,10 +606,16 @@ export interface ClueSetBinding {
   T: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ClueSetSays {
+  terms: {  };
+  marks: { outline: readonly number[]; strand: readonly number[]; };
+}
+
 const clueSetFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function clueSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueSetBinding> | null): number {
+export function clueSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueSetBinding, ClueSetSays> | null): number {
   const _g36: number[] = [];
   const _g49: number[] = [];
   const _g57: number[] = [];
@@ -725,7 +795,10 @@ export function clueSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueSetBi
             if (!(_q81)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ X: v_X, k: v_k, n: v_n, F: v_F.slice(), m: v_m, T: v_T.slice() }, facts)) return 1;
+              if (fire !== null) {
+                const _says = { terms: {  }, marks: { outline: v_T.slice(), strand: setOf(v_k).slice() } };
+                if (!fire({ X: v_X, k: v_k, n: v_n, F: v_F.slice(), m: v_m, T: v_T.slice() }, facts, _says)) return 1;
+              }
             }
           }
         }

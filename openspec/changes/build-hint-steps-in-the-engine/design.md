@@ -278,6 +278,37 @@ defect found in the game, said which.
   gone), the description +47 of `says`; `described-edge-hint.ts` (189) is the
   engine's.
 
+### Light Up, built (2026-11-12)
+
+- **The first game that mixes the two shapes**: `square`'s three arms
+  (`forcedLight`, `clueSatisfied`, `clueSaturated`; `when` is `n < 0`,
+  `bulbs(c) = n`, `n >= 0`, so the arm is read off the binding where the old
+  reason read the fact's value) are a step a firing, and the two discount sets
+  are a step a square. The engine took `says.shown: each` (`SAYS_EACH` in the
+  compiled module, `each` on `describedFiringHint`), where the evidence is the
+  outline less that square alone, which is what the old plan did.
+- **`consequences: false`**: `shine` is a placing technique, so the engine read
+  every square a bulb lights as a consequence to cross. The old step made only
+  the firing's squares, since the lit squares show it already.
+- **The dark square or the clue is the `strand`**, one square drawn apart, which
+  the game's `highlights` tells by the square being a wall. A step whose target
+  is the dark square has no strand left, the engine having taken the fills out,
+  as the old `dark: undefined` did.
+- **`refreshHintStep` moved into the engine** (it was Light Up's own, a copy of
+  `keepTrack`'s narrowing); Singles takes it too, which it lacked.
+- **The comparison.** 216 boards (5x5 to 14x14, all three tiers, 15 to 30%
+  walls, two symmetries, two boards each; 3,803 steps) are the same line for
+  line at `HEAD` in words, marks, move and highlights, but for the `value` each
+  highlighted target now carries (the target's own kind; the lines were compared
+  with it cut). All five old kinds were met.
+- **Lines.** `solver.ts` 413 to 268 (`LightupHintReason`, `LightupFiring`,
+  `premiseOf`, `stepsOf`, `deduceHintPlan` and four reasons gone), `index.ts`
+  -127 (`buildHighlights`, `narrate`, the walk's glue, keep-track and refresh
+  gone, the spec in), the description +26 of `says`, `hint-text.ts` +36 of
+  sentence glue. A test that read the reasons (`deduceHintPlan`'s bleed rule)
+  reads steps; one assertion that the discount set holds two squares went, the
+  sentences no longer saying "one of them".
+
 ### Read off Boats (2026-11-12, `boats/solver.ts` and `index.ts`), before it was built
 
 Sixteen of its nineteen techniques are what `says` already carries (terms,

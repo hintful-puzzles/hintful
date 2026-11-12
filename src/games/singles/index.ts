@@ -323,6 +323,7 @@ export const singlesGame: Game<
     },
   },
   hintKeepTrack: described.hintKeepTrack,
+  refreshHintStep: described.refreshHintStep,
   hintGesture: (s, ui, ds, m) =>
     m.sets.flatMap((t) =>
       verbGesture(

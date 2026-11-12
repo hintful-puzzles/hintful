@@ -33,15 +33,14 @@ import {
   compiledRung,
   describedLadder,
   type Ladder,
+  type LadderEntry,
   ladderTechniques,
-  ladderWalk,
   placingRung,
   runLadder,
-  type Taken,
+  type Said,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import type { Point } from "../../engine/types.ts";
 import * as lightup from "./lightup.compiled.ts";
 import {
   F_BLACK,
@@ -53,60 +52,11 @@ import {
 
 /** What the description reads a square as holding: a bulb, or none, which a
  * wall holds too. */
-const BULB = 1;
-const NONE = 2;
+export const BULB = 1;
+export const NONE = 2;
 
 /** The highest tier the ladder grades: Normal. */
 const NORMAL = 1;
-
-/** The premise of one deduction firing — what the hint narrates/highlights. */
-export type LightupHintReason =
-  | {
-      /** An unlit square with exactly one remaining way to be lit. */
-      kind: "forcedLight";
-      /** The square in the dark. */
-      dark: Point;
-      /** Its whole line of sight (every square that could light it). */
-      corridor: Point[];
-    }
-  | {
-      /** A clue with all its bulbs placed rules out its free neighbors. */
-      kind: "clueSatisfied";
-      clue: Point;
-      n: number;
-      /** The clue's placed bulbs (the premise). */
-      bulbs: Point[];
-    }
-  | {
-      /** A clue with as many bulbs left to place as free neighbors. */
-      kind: "clueSaturated";
-      clue: Point;
-      n: number;
-      /** Bulbs still to place (= the number of free neighbors). */
-      need: number;
-    }
-  | {
-      /** A dark square's free squares, one of which must light it: a bulb at
-       * the target would spoil every one. */
-      kind: "discountUnlit";
-      dark: Point;
-      set: Point[];
-    }
-  | {
-      /** Squares beside a clue, at least one of which must hold a bulb: a
-       * bulb at the target would spoil them all. */
-      kind: "discountClue";
-      clue: Point;
-      n: number;
-      set: Point[];
-    };
-
-/** One step of the plan: the mark it places and every cell it places it on. */
-export interface LightupFiring {
-  kind: "light" | "impossible";
-  cells: Point[];
-  reason: LightupHintReason;
-}
 
 /** The values the description reads off a state: a wall holds none, and so
  * does a square the player has crossed; a bulb is a bulb. With `marks`
@@ -142,11 +92,6 @@ function lightupSpace(w: number, h: number): GridSpace {
   return describedSpace(lightup.units, w, h);
 }
 
-const pointOf = (sp: GridSpace, c: number): Point => ({
-  x: c % sp.w,
-  y: (c / sp.w) | 0,
-});
-
 /** The squares a bulb in `c` lights, `c` among them: the description's
  * `lights(c)`. */
 function lightsOf(sp: GridSpace, dl: lightup.Dealt, c: number): number[] {
@@ -160,57 +105,14 @@ function lightsOf(sp: GridSpace, dl: lightup.Dealt, c: number): number[] {
   ];
 }
 
-/** The ladder over the dealt board, each technique with its reason: built
- * from the binding and the square placed, on the marks before the firing. */
+/** The ladder over the dealt board. A technique that says builds its own steps
+ * (`lightup.description.yaml`'s `says`), so no rung builds a reason. */
 function lightupLadder(dl: lightup.Dealt): Ladder {
   return describedLadder(lightup, {
     shine: placingRung(lightup.shine, dl),
-    square: compiledRung(
-      lightup.square,
-      dl,
-      ({ c, n }, _p, to, m): LightupHintReason => {
-        const { sp } = m;
-        if (n < 0)
-          return {
-            kind: "forcedLight",
-            dark: pointOf(sp, c),
-            corridor: lightsOf(sp, dl, c).map((p) => pointOf(sp, p)),
-          };
-        const around = sp.adj4[c];
-        if (to === NONE)
-          return {
-            kind: "clueSatisfied",
-            clue: pointOf(sp, c),
-            n,
-            bulbs: around.filter((p) => m.value(p) === BULB).map((p) => pointOf(sp, p)),
-          };
-        return {
-          kind: "clueSaturated",
-          clue: pointOf(sp, c),
-          n,
-          need: around.filter((p) => !m.known(p)).length,
-        };
-      },
-    ),
-    darkSet: compiledRung(
-      lightup.darkSet,
-      dl,
-      ({ u, S }, _p, _to, m): LightupHintReason => ({
-        kind: "discountUnlit",
-        dark: pointOf(m.sp, u),
-        set: S.map((s) => pointOf(m.sp, s)),
-      }),
-    ),
-    clueSet: compiledRung(
-      lightup.clueSet,
-      dl,
-      ({ k, n, T }, _p, _to, m): LightupHintReason => ({
-        kind: "discountClue",
-        clue: pointOf(m.sp, k),
-        n,
-        set: T.map((s) => pointOf(m.sp, s)),
-      }),
-    ),
+    square: compiledRung(lightup.square, dl),
+    darkSet: compiledRung(lightup.darkSet, dl),
+    clueSet: compiledRung(lightup.clueSet, dl),
   });
 }
 
@@ -254,9 +156,10 @@ export function deductionFinishes(
   if (m === null) return false;
   if (used) {
     m.recorder = (rec) => {
-      const r = rec.reason as LightupHintReason | null;
-      if (r && (r.kind === "clueSatisfied" || r.kind === "clueSaturated"))
-        used(r.clue.y * state.w + r.clue.x);
+      // A number's reading is the arm of `square` that is about a number.
+      const r = rec.reason as Said<lightup.SquareBinding, lightup.SquareSays> | null;
+      if (r?.says?.arm === "clueSatisfied" || r?.says?.arm === "clueSaturated")
+        used(r.binding.c);
     };
     m.budget = stepBudget("lightup deduction");
     m.wholePasses = true;
@@ -350,64 +253,20 @@ export const holdsBulb = (solution: Uint8Array, c: number): boolean =>
 
 // --- the hint's walk ---------------------------------------------------------
 
-/** The squares a firing's premise reads, which a hint plan continues from:
- * the dark square and its line of sight, or the clue and the squares round
- * it. */
-function premiseOf(r: LightupHintReason, sp: GridSpace): number[] {
-  const cell = (p: Point): number => p.y * sp.w + p.x;
-  switch (r.kind) {
-    case "forcedLight":
-      return [cell(r.dark), ...r.corridor.map(cell)];
-    case "clueSatisfied":
-    case "clueSaturated":
-      return [cell(r.clue), ...sp.adj4[cell(r.clue)]];
-    case "discountUnlit":
-      return [cell(r.dark), ...r.set.map(cell)];
-    case "discountClue":
-      return [cell(r.clue), ...r.set.map(cell)];
-  }
-}
-
-/** A firing as plan steps: a count's or a dark square's reading is one step,
- * and a discount one step a square, since each square is its own argument. */
-function stepsOf({ facts, reasons }: Taken, w: number): LightupFiring[] {
-  const reason = reasons[0] as LightupHintReason;
-  const cells: Point[] = [];
-  for (let i = 0; i < facts.length; i += 3)
-    cells.push({ x: facts[i + 1] % w, y: (facts[i + 1] / w) | 0 });
-  const kind = facts[2] === BULB ? "light" : "impossible";
-  if (reason.kind === "discountUnlit" || reason.kind === "discountClue")
-    return cells.map((c) => ({ kind, cells: [c], reason }));
-  return [{ kind, cells, reason }];
-}
-
-/** Runaway/UX cap on plan length — the player rarely follows more than a few
- * before diverging, and a recompute yields the next batch. */
-const HINT_PLAN_MAX = 60;
-
-/**
- * The ordered plan of forced marks from the player's own board, honoring
- * their bulbs and crosses: the firing that carries on from what the last
- * decided first (`ladderWalk`), at every tier the ladder grades. It ends with
- * the board solved, or where deduction runs dry (only on an Unreasonable
- * board, or after the player's own crosses starve a line of deduction).
- */
-export function deduceHintPlan(state: LightupState): LightupFiring[] {
+/** What a hint walks: the marks over a state's walls, numbers and the
+ * player's bulbs and crosses, and the ladder's techniques; `null` where the
+ * marks break the rules. */
+export function hintWalk(state: LightupState): {
+  marks: CellMarks;
+  entries: readonly LadderEntry[];
+} | null {
   const dl = dealtOf(state);
   const ladder = lightupLadder(dl);
-  const sp = lightupSpace(state.w, state.h);
-  const m = lightupMarks(sp, dl, ladder, valuesOf(state, true));
-  if (m === null) return [];
-  m.budget = stepBudget("lightup hint");
-  const walk = ladderWalk(m, ladder.entries, { [TIERS]: NORMAL }, (f) => [
-    ...premiseOf(f.reasons[0] as LightupHintReason, sp),
-    ...f.facts.filter((_, i) => i % 3 === 1),
-  ]);
-  const plan: LightupFiring[] = [];
-  while (plan.length < HINT_PLAN_MAX) {
-    const taken = walk.next();
-    if (taken === null || taken === "contradiction") break;
-    plan.push(...stepsOf(taken, state.w));
-  }
-  return plan;
+  const m = lightupMarks(
+    lightupSpace(state.w, state.h),
+    dl,
+    ladder,
+    valuesOf(state, true),
+  );
+  return m === null ? null : { marks: m, entries: ladder.entries };
 }

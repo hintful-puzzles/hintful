@@ -13,18 +13,9 @@
 
 import { solveFromAnswer } from "../../engine/answer-search.ts";
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
+import { describedFiringHint } from "../../engine/described-firing-hint.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
-import type {
-  Game,
-  HintResult,
-  HintStep,
-  HintTrackVerdict,
-  SolveResult,
-  UiUpdate,
-} from "../../engine/game.ts";
-import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { changedCells, trackTargets } from "../../engine/hint-track.ts";
-import { CELL, type Sentence } from "../../engine/hint-words.ts";
+import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import {
   dimensionParamConfig,
   numberItem,
@@ -48,7 +39,8 @@ import {
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newLightupDesc } from "./generator.ts";
-import { type Marked, say } from "./hint-text.ts";
+import { sentences } from "./hint-text.ts";
+import { SAYS_EACH, SAYS_KINDS, type SaysById } from "./lightup.compiled.ts";
 import {
   border,
   colors,
@@ -60,11 +52,12 @@ import {
 } from "./render.ts";
 import {
   answerOf,
-  deduceHintPlan,
+  BULB,
   deductionFinishes,
+  hintWalk,
   holdsBulb,
   isSolved,
-  type LightupFiring,
+  NONE,
 } from "./solver.ts";
 import {
   cloneState,
@@ -290,12 +283,19 @@ function revealOne(state: LightupState, solved: LightupState): LightupMove | nul
 // --- hint --------------------------------------------------------------------
 //
 // The hint plan is the deductive solver's own script, run from the
-// player's position (bulbs and impossible-marks honored as constraints)
-// with the recorder on. One firing = one (possibly multi-cell) step, and
-// an elimination step's move is the game's own impossible-mark, so
-// following the plan leaves on the board exactly the trail the solver
-// reasons over — a later "every other way to light this square is crossed
-// out" narration is then *visible*.
+// player's position (bulbs and impossible-marks honored as constraints):
+// the ladder's firings, a step each (a discount, a step a square), built by
+// the engine from what `lightup.description.yaml` says of them. An
+// elimination step's move is the game's own impossible-mark, so following
+// the plan leaves on the board exactly the trail the solver reasons over: a
+// later "every other way to light this square is crossed out" narration is
+// then *visible*.
+
+/** What a step asks of a square: a bulb (`1`) or a cross (`2`), as the
+ * description reads a square. */
+export interface LightupTarget extends Point {
+  value: number;
+}
 
 /** Plan data for a Light Up hint step. `kind` is the mark the step places on
  * its `targets`, which `hintKeepTrack` and `refreshHintStep` read. `dark` is
@@ -304,203 +304,71 @@ function revealOne(state: LightupState, solved: LightupState): LightupMove | nul
  * reads them here to tell the clue's ring on its wall from a square's. */
 export interface LightupHint {
   kind: "light" | "impossible";
-  targets: Point[];
+  targets: LightupTarget[];
   dark?: Point;
   clue?: Point;
 }
 
-/** A step's highlights, and its `area`: the deduction's evidence besides the
- * dark square and the clue, ringed so that its fill, lit or not, stays its
- * premise. */
-type Marks = LightupHint & { area: Point[] };
-
-const sameCell = (a: Point, b: Point): boolean => a.x === b.x && a.y === b.y;
-
-function buildHighlights(f: LightupFiring): Marks {
-  const notTarget = (c: Point): boolean => !f.cells.some((t) => sameCell(t, c));
-  switch (f.reason.kind) {
-    case "forcedLight": {
-      const dark = f.reason.dark;
-      const isTargetItself = f.cells.some((t) => sameCell(t, dark));
-      return {
-        kind: f.kind,
-        targets: f.cells,
-        area: f.reason.corridor.filter((c) => notTarget(c) && !sameCell(c, dark)),
-        dark: isTargetItself ? undefined : dark,
-      };
-    }
-    case "clueSatisfied":
-      // The placed bulbs are the premise; they are lit, so the renderer
-      // rings them. The clue itself is cued by its recolored digit.
-      return {
-        kind: f.kind,
-        targets: f.cells,
-        area: f.reason.bulbs,
-        clue: f.reason.clue,
-      };
-    case "clueSaturated":
-      // The premise is just the clue's count against its free neighbors,
-      // and the free neighbors are all targets — no separate evidence.
-      return { kind: f.kind, targets: f.cells, area: [], clue: f.reason.clue };
-    case "discountUnlit": {
-      const dark = f.reason.dark;
-      return {
-        kind: f.kind,
-        targets: f.cells,
-        area: f.reason.set.filter((c) => notTarget(c) && !sameCell(c, dark)),
-        dark,
-      };
-    }
-    case "discountClue":
-      return {
-        kind: f.kind,
-        targets: f.cells,
-        area: f.reason.set.filter(notTarget),
-        clue: f.reason.clue,
-      };
-  }
+/** What the description reads a square as holding: a bulb, a cross, or
+ * nothing. */
+function valueAt(state: LightupState, c: number): number {
+  const f = state.flags[c];
+  return f & F_LIGHT ? BULB : f & F_IMPOSSIBLE ? NONE : 0;
 }
 
-/** Narrate *why* the firing's marks are forced. **`hl` is the frame the
- * player is looking at**, so a branch can tell whether a second mark is even
- * on the board before deciding how much to say. The words, and the deixis
- * ties they carry, are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(f: LightupFiring, hl: Marks): Sentence {
-  const m: Marked = {
-    targets: hl.targets,
-    area: hl.area,
-    dark: hl.dark ?? null,
-    clue: hl.clue ?? null,
-  };
-  switch (f.reason.kind) {
-    case "forcedLight": {
-      const dark = f.reason.dark;
-      return f.cells.some((t) => sameCell(t, dark))
-        ? say.forcedLightSelf(m)
-        : say.forcedLightOther(m);
-    }
-    case "clueSatisfied":
-      return say.clueSatisfied(f.reason.n, m);
-    case "clueSaturated":
-      return say.clueSaturated(m);
-    case "discountUnlit":
-      return say.discountUnlit(m);
-    case "discountClue":
-      return say.discountClue(m);
-  }
-}
+const opKind = (t: LightupTarget): LightupOp["kind"] =>
+  t.value === BULB ? "light" : "impossible";
 
-/** `step`'s words narrowed to the targets `left`, as its highlights are. */
-function narrowWords(
-  step: HintStep<LightupMove, LightupHint>,
-  left: readonly Point[],
-): Pick<HintStep<LightupMove, LightupHint>, "words" | "explanation"> {
-  if (!step.words) return { explanation: step.explanation };
-  const kept = new Set(left.map((c) => CELL.key(c)));
-  const words = step.words.narrow(
-    (role, _kind, key) => role !== "ring" || kept.has(key),
-  );
-  return { words, explanation: words.text };
-}
+/** The hint: the ladder's firings, built by the engine from what the
+ * description says of them. */
+const described = describedFiringHint<
+  LightupState,
+  LightupMove,
+  LightupTarget,
+  SaysById,
+  LightupRung,
+  LightupHint
+>({
+  name: "lightup hint",
+  walk: hintWalk,
+  // The player rarely follows more than a few firings before diverging, and a
+  // recompute yields the next batch.
+  plan: 60,
+  each: SAYS_EACH,
+  // A bulb lights its lines and a player does not cross each: the squares the
+  // solver's `shine` rules out are what the board already shows.
+  consequences: false,
+  width: (s) => s.w,
+  size: (s) => s.w * s.h,
+  valueAt,
+  execute: executeMove,
+  foreign: (m) => m.solve === true,
+  target: (at, n) => ({ ...at, value: n }),
+  want: (t) => t.value,
+  move: (targets) => ({
+    ops: targets.map((t) => ({ kind: opKind(t), x: t.x, y: t.y })),
+  }),
+  // The one square or number a step is about is drawn apart: a number is a
+  // wall, and a dark square is not.
+  highlights: ({ targets, strand }, state) => {
+    const about = strand[0];
+    const wall = about && state.flags[idx(about.x, about.y, state.w)] & F_BLACK;
+    return {
+      kind: opKind(targets[0]),
+      targets,
+      ...(about && !wall ? { dark: about } : {}),
+      ...(about && wall ? { clue: about } : {}),
+    };
+  },
+  say: sentences,
+});
 
-/** The solver's rules, by the `kind` of the reason each firing carries. */
-export const LIGHTUP_RUNGS = [
-  "forcedLight",
-  "clueSatisfied",
-  "clueSaturated",
-  "discountUnlit",
-  "discountClue",
-] as const satisfies readonly LightupFiring["reason"]["kind"][];
+const { hint, hintKeepTrack, refreshHintStep } = described;
+
+/** The solver's rules, by the kind of step each makes: a technique's id, and
+ * for `square` the arm of it that held. */
+export const LIGHTUP_RUNGS = SAYS_KINDS;
 export type LightupRung = (typeof LIGHTUP_RUNGS)[number];
-
-function buildStep(f: LightupFiring): HintStep<LightupMove, LightupHint, LightupRung> {
-  // The sentence is given the marks, since a narration can only be held to
-  // "say which mark you mean" if it knows which marks there are.
-  const marks = buildHighlights(f);
-  const words = narrate(f, marks);
-  const { area: _, ...highlights } = marks;
-  return {
-    move: { ops: f.cells.map((c) => ({ kind: f.kind, x: c.x, y: c.y })) },
-    rung: f.reason.kind,
-    explanation: words.text,
-    words,
-    highlights,
-  };
-}
-
-function hint(state: LightupState): HintResult<LightupMove, LightupHint, LightupRung> {
-  const plan = deduceHintPlan(state);
-  // Only reachable on an Unreasonable board (Easy/Normal boards are
-  // deduction-complete by generation): refuse honestly at the guess point.
-  if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  return { ok: true, steps: plan.map(buildStep) };
-}
-
-/** The player's mark on cell `i`: `F_LIGHT`, `F_IMPOSSIBLE` or 0. */
-const markAt = (state: LightupState, i: number): number =>
-  state.flags[i] & (F_LIGHT | F_IMPOSSIBLE);
-
-const markFlag = (kind: "light" | "impossible"): number =>
-  kind === "light" ? F_LIGHT : F_IMPOSSIBLE;
-
-/** Does the cell already carry the step's mark? */
-function hasMark(
-  state: LightupState,
-  cell: Point,
-  kind: "light" | "impossible",
-): boolean {
-  return markAt(state, idx(cell.x, cell.y, state.w)) === markFlag(kind);
-}
-
-/** Classify a player move by what it did to the board
- * (`engine/hint-track.ts`), so a toggle that takes a mark back off is a change
- * the step never asked for; a multi-cell step shrinks in place. */
-function hintKeepTrack(
-  m: LightupMove,
-  step: HintStep<LightupMove, LightupHint>,
-  state: LightupState,
-): HintTrackVerdict {
-  if (m.solve) return "off";
-  const hl = step.highlights;
-  if (!hl) return "off";
-  const after = executeMove(state, m);
-  const { verdict, left } = trackTargets({
-    targets: hl.targets,
-    changes: changedCells(
-      state.flags.length,
-      (i) => markAt(state, i),
-      (i) => markAt(after, i),
-    ),
-    key: (c) => idx(c.x, c.y, state.w),
-    want: () => markFlag(hl.kind),
-    holds: (c) => hasMark(after, c, hl.kind),
-  });
-  if (verdict === "onTrack") {
-    step.move = { ops: left.map((c) => ({ kind: hl.kind, x: c.x, y: c.y })) };
-    step.highlights = { ...hl, targets: left };
-    Object.assign(step, narrowWords(step, left));
-  }
-  return verdict;
-}
-
-/** Validate-at-display: drop targets that already carry the step's mark
- * (e.g. after undo/redo shuffles), `null` once every one does. */
-function refreshHintStep(
-  step: HintStep<LightupMove, LightupHint>,
-  state: LightupState,
-): HintStep<LightupMove, LightupHint> | null {
-  const hl = step.highlights;
-  if (!hl) return step;
-  const left = hl.targets.filter((t) => !hasMark(state, t, hl.kind));
-  if (left.length === 0) return null;
-  if (left.length === hl.targets.length) return step;
-  return {
-    ...step,
-    ...narrowWords(step, left),
-    move: { ops: left.map((c) => ({ kind: hl.kind, x: c.x, y: c.y })) },
-    highlights: { ...hl, targets: left },
-  };
-}
 
 /** Light Up's difficulty contract: the ladder at Easy and Normal, the
  * search at Unreasonable. */

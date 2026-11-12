@@ -1036,6 +1036,16 @@ corner reads as four, apex, across or a pair by which of its numbers match.
 A mark that depends on the facts (Singles' hatch, the one line holding every
 cell it covers) is a set expression over the cells' own state, as `sameLine`'s.
 
+**A technique whose squares are each their own argument says `shown: each`**:
+`describedFiringHint` then makes a step for every square the firing decides,
+the evidence of each being the outline less that square alone (Light Up's two
+discount sets, which rule out a square for a reason that is its own). The
+compiled module's `SAYS_EACH` lists them. **A game whose placing techniques
+decide what the board already shows** (a bulb lights its lines, and a player
+crosses none) passes `consequences: false`, so a step asks only for its
+firing's squares. `describedFiringHint` also owns `refreshHintStep` (a step the
+player has partly made, shown for what is left).
+
 **A step that is a journey** (Boats: one firing, a fill a leg, each judged by
 the squares it makes) gives `describedFiringHint` a `journey`; the squares its
 placing techniques decide on their own are read off the marks across the firing

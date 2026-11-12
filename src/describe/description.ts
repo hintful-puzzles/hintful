@@ -207,6 +207,9 @@ export interface StatedTechnique {
  * condition holds, first true winning, each arm adding its own terms and marks
  * to the shared ones (an arm's names win). */
 export interface StatedSays {
+  /** `each`: a step for every square the firing decides, each its own argument
+   * (Light Up's discounts); absent, one step for the firing. */
+  shown?: "each";
   terms?: Record<string, string>;
   marks?: Partial<Record<SaidRole, string>>;
   arms?: Record<
@@ -516,6 +519,8 @@ export interface Technique {
  * reads differently by condition, one variant an arm (`name`, `when`), in the
  * order the arms are tried. A technique without arms has one variant. */
 export interface Says {
+  /** Whether a step is made for each square the firing decides. */
+  each: boolean;
   variants: {
     name: string | null;
     when: Expr | null;
@@ -666,8 +671,10 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
       ).map(([role, src]) => ({ role, expr: at(`${label} ${role}`, src) })),
     };
   };
-  if (stated.arms === undefined) return { variants: [variant(null, null, {})] };
+  const each = stated.shown === "each";
+  if (stated.arms === undefined) return { each, variants: [variant(null, null, {})] };
   return {
+    each,
     variants: Object.entries(stated.arms).map(([name, arm]) =>
       variant(name, at(`says ${name} when`, arm.when), arm),
     ),

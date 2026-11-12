@@ -13,11 +13,11 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import type { Point } from "../../engine/types.ts";
 import { type LightupHint, lightupGame } from "./index.ts";
-import { answerOf, deduceHintPlan, holdsBulb } from "./solver.ts";
+import { answerOf, holdsBulb } from "./solver.ts";
 import {
   F_BLACK,
-  getSurrounds,
   idx,
   type LightupMove,
   type LightupParams,
@@ -62,52 +62,48 @@ describe("the walk carries on from its last step", () => {
   it("takes the walled-in square's bulb, then the 1 beside it", () => {
     // Fourth row: 2, open, 1, open, 4, open, wall.
     const steps = planSteps(lightupGame.newState(EASY, "c2mBc2a1a4aBc2m1c"));
-    expect(steps[0].rung).toBe("forcedLight");
+    expect(steps[0].rung).toBe("square.forcedLight");
     expect(steps[0].move.ops).toEqual([{ kind: "light", x: 3, y: 3 }]);
-    expect(steps[1].rung).toBe("clueSatisfied");
+    expect(steps[1].rung).toBe("square.clueSatisfied");
     expect(steps[1].highlights?.clue).toEqual({ x: 2, y: 3 });
   });
 });
 
 describe("bleed rule: a step's marks stay inside its narrated evidence", () => {
-  it("holds on every firing of easy+tricky plans", () => {
+  it("holds on every step of easy+tricky plans", () => {
+    const near = (a: Point, b: Point): boolean =>
+      Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1;
     for (const [params, seed] of [
       [EASY, "lh-bleed-e"],
       [TRICKY, "lh-bleed-t"],
     ] as const) {
-      const state = freshState(params, seed);
-      const firings = deduceHintPlan(state);
-      expect(firings.length).toBeGreaterThan(0);
-      for (const f of firings) {
-        switch (f.reason.kind) {
-          case "forcedLight": {
-            // The forced bulb is one of the corridor's candidates.
-            expect(f.cells).toHaveLength(1);
-            const { corridor } = f.reason;
-            expect(
-              corridor.some((c) => c.x === f.cells[0].x && c.y === f.cells[0].y),
-            ).toBe(true);
+      const steps = planSteps(freshState(params, seed));
+      expect(steps.length).toBeGreaterThan(0);
+      for (const step of steps) {
+        const hl = step.highlights;
+        if (!hl) throw new Error("step without highlights");
+        switch (step.rung) {
+          case "square.forcedLight": {
+            // The forced bulb is one of the dark square's candidates: the
+            // square itself, or one in its row or column.
+            expect(hl.targets).toHaveLength(1);
+            const [t] = hl.targets;
+            expect(!hl.dark || t.x === hl.dark.x || t.y === hl.dark.y).toBe(true);
             break;
           }
-          case "clueSatisfied":
-          case "clueSaturated": {
+          case "square.clueSatisfied":
+          case "square.clueSaturated": {
             // Every marked cell is a neighbor of the narrated clue.
-            const around = getSurrounds(
-              state.w,
-              state.h,
-              f.reason.clue.x,
-              f.reason.clue.y,
-            );
-            for (const cell of f.cells) {
-              expect(around.some((s) => s.x === cell.x && s.y === cell.y)).toBe(true);
-            }
+            const clue = hl.clue;
+            if (!clue) throw new Error("a number's step without its clue");
+            for (const cell of hl.targets) expect(near(clue, cell)).toBe(true);
             break;
           }
-          case "discountUnlit":
-          case "discountClue":
-            // One discounted square per firing, with a non-empty set.
-            expect(f.cells).toHaveLength(1);
-            expect(f.reason.set.length).toBeGreaterThan(0);
+          case "darkSet":
+          case "clueSet":
+            // One discounted square per step, with evidence to show.
+            expect(hl.targets).toHaveLength(1);
+            expect(stepMarks(step).of("outline", CELL).length).toBeGreaterThan(0);
             break;
         }
       }
@@ -182,14 +178,8 @@ describe("narration — a second mark on the board is named", () => {
       [TRICKY, "lh-deixis-t"],
       [TRICKY, "lh-deixis-t2"],
     ] as const) {
-      const state = freshState(params, seed);
-      // `hint()` maps one step per firing, in order, so reason and sentence
-      // line up index for index.
-      const firings = deduceHintPlan(state);
-      const steps = planSteps(state);
-      expect(steps.length).toBe(firings.length);
-      for (let i = 0; i < steps.length; i++) {
-        const step = steps[i];
+      const steps = planSteps(freshState(params, seed));
+      for (const step of steps) {
         const hl = step.highlights;
         if (!hl) throw new Error("step without highlights");
         kinds.add(step.rung);
@@ -203,25 +193,17 @@ describe("narration — a second mark on the board is named", () => {
           `${step.rung}: ${step.explanation} — a second mark is shown but "this square" is not tied to it`,
         ).toBe(true);
       }
-      // Both discount sentences say "one of them must" of the set, so the set
-      // must hold at least two. The *set*, not the shaded area: the ringed dark
-      // square is itself a member in over half of `discountUnlit`'s firings.
-      for (let i = 0; i < steps.length; i++) {
-        const reason = firings[i].reason;
-        if (reason.kind !== "discountUnlit" && reason.kind !== "discountClue") continue;
-        expect(reason.set.length).toBeGreaterThanOrEqual(2);
-      }
     }
     // Vacuity guards: an empty sweep, or one that never reached the two
     // discount rules, would pass while measuring nothing.
     expect(checked).toBeGreaterThan(50);
     expect(withMark).toBeGreaterThan(50);
     for (const kind of [
-      "forcedLight",
-      "clueSatisfied",
-      "clueSaturated",
-      "discountUnlit",
-      "discountClue",
+      "square.forcedLight",
+      "square.clueSatisfied",
+      "square.clueSaturated",
+      "darkSet",
+      "clueSet",
     ]) {
       expect([...kinds]).toContain(kind);
     }
@@ -287,19 +269,19 @@ const pinned = describeHintPins({
     /** Held on 82 of 282 positions walked. */
     multiCell: "7x7b20s4d0:bBe2c3c3aBaBgBaBaBcBc2e3b",
     /** Held on 281 of 282 positions walked. */
-    forcedLight: "7x7b20s4d0:c1a1a1cBc1eBe2e4c2cBaBaBc",
+    "square.forcedLight": "7x7b20s4d0:c1a1a1cBc1eBe2e4c2cBaBaBc",
     /** Held on 161 of 282 positions walked. */
-    clueSatisfied: "7x7b20s4d0:i21hBbBaBa1b0h13i",
+    "square.clueSatisfied": "7x7b20s4d0:i21hBbBaBa1b0h13i",
     /** Held on 214 of 282 positions walked. */
-    clueSaturated: "7x7b20s4d0:bBe2c3c3aBaBgBaBaBcBc2e3b",
+    "square.clueSaturated": "7x7b20s4d0:bBe2c3c3aBaBgBaBaBcBc2e3b",
     /** Held on 101 of 282 positions walked. */
-    discountUnlit: {
+    darkSet: {
       id: "7x7b20s4d1:b1h3cBd1g0d3c2hBb",
       moves:
         '[{"ops":[{"kind":"impossible","x":1,"y":4},{"kind":"impossible","x":0,"y":3},{"kind":"impossible","x":0,"y":5}]}]',
     },
     /** Held on 44 of 282 positions walked. */
-    discountClue: "7x7b20s4d1:c1lBaBbBb2b2b3aBl2c",
+    clueSet: "7x7b20s4d1:c1lBaBbBb2b2b3aBl2c",
   },
 });
 

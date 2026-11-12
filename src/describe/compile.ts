@@ -6728,6 +6728,15 @@ export function compileGame(
             ),
           )} as const;`,
           "",
+          ...(own.some((t) => t.says?.each)
+            ? [
+                "/** The techniques whose step is made for each square the firing decides. */",
+                `export const SAYS_EACH: readonly (keyof SaysById)[] = ${JSON.stringify(
+                  own.filter((t) => t.says?.each).map((t) => t.id),
+                )};`,
+                "",
+              ]
+            : []),
         ]
       : []),
     "/** Every technique run as each value is placed, by id. */",

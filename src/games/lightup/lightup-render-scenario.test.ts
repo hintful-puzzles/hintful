@@ -33,7 +33,7 @@ const pinned = describeHintKindPins({
       step.highlights.targets.length > 1 &&
       step.highlights.clue !== undefined,
     forcedLight: (step) =>
-      step.rung === "forcedLight" &&
+      step.rung === "square.forcedLight" &&
       step.highlights?.dark !== undefined &&
       // an outlined square beside the dark one: the corridor
       stepMarks(step).of("outline", CELL).length > 1,

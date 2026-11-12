@@ -50,6 +50,10 @@
           "description": "What a hint step for a firing of this speaks of, each a formula over the technique's binding, read on the marks before the firing's facts are made (under the technique's own `with`).",
           "additionalProperties": false,
           "properties": {
+            "shown": {
+              "enum": ["each"],
+              "description": "`each`: a step for every square the firing decides, each its own argument (its evidence is the outline less that square alone). Absent, one step for the firing."
+            },
             "terms": {
               "type": "object",
               "description": "Named values the step's sentence reads, by name.",

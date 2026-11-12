@@ -122,6 +122,13 @@ interface FiringShape<
   /** The most firings a plan holds: a player rarely follows more, and a
    * recompute yields the next batch. */
   plan?: number;
+  /** The techniques whose step is made for each square the firing decides
+   * (`says.shown: each`): the compiled module's `SAYS_EACH`. */
+  each?: readonly string[];
+  /** Whether the squares a firing's placing techniques decide are shown and
+   * made with it. `false` where they are what the board already shows: a bulb
+   * lights its lines, and a player does not cross each. Default `true`. */
+  consequences?: boolean;
   /** What a step's highlights hold, where it is more than the targets and the
    * strand. */
   highlights?(marked: Marked<Target>, state: State): H;
@@ -177,6 +184,9 @@ export interface DescribedFiringHint<
   hint(state: State): HintResult<Move, H, Kind>;
   /** Judges a move against a step of any kind: the kind is no part of it. */
   hintKeepTrack(m: Move, step: HintStep<Move, H>, state: State): HintTrackVerdict;
+  /** A step the player has already made some of (undo and redo move the board
+   * under a shown step) is shown for what is left, or `null` where nothing is. */
+  refreshHintStep(step: HintStep<Move, H>, state: State): HintStep<Move, H> | null;
 }
 
 /** The hooks of a game whose hint is its ladder's firings, a step each. */
@@ -239,57 +249,63 @@ export function describedFiringHint<
       }
       // The squares its placing techniques went on to decide.
       const followed: Target[] = [];
-      for (let c = 0; c < m.grid.length; c++)
-        if (before[c] === 0 && m.grid[c] !== 0 && !seen.has(c))
-          followed.push(spec.target(pointOf(c), m.grid[c]));
-      const targets = [...decided, ...followed];
-      const fills = new Set(filledBy(f));
-      const strand = (says.marks.strand ?? []).filter((c) => !fills.has(c));
-      const outline = (says.marks.outline ?? []).filter(
-        (c) => !fills.has(c) && !strand.includes(c),
-      );
-      const bare = (t: Point): Point => ({ x: t.x, y: t.y });
-      const words = say[f.entry.id](
-        {
-          terms: says.terms,
-          arm: says.arm,
-          targets: decided.map(bare),
+      if (spec.consequences !== false)
+        for (let c = 0; c < m.grid.length; c++)
+          if (before[c] === 0 && m.grid[c] !== 0 && !seen.has(c))
+            followed.push(spec.target(pointOf(c), m.grid[c]));
+      // A step for the firing, or one for each square it decides, which is then
+      // the only square the evidence is taken less.
+      const each = spec.each?.includes(f.entry.id) === true;
+      for (const group of each ? decided.map((t) => [t]) : [decided]) {
+        const targets = [...group, ...followed];
+        const fills = new Set(each ? group.map((t) => t.y * w + t.x) : filledBy(f));
+        const strand = (says.marks.strand ?? []).filter((c) => !fills.has(c));
+        const outline = (says.marks.outline ?? []).filter(
+          (c) => !fills.has(c) && !strand.includes(c),
+        );
+        const bare = (t: Point): Point => ({ x: t.x, y: t.y });
+        const words = say[f.entry.id](
+          {
+            terms: says.terms,
+            arm: says.arm,
+            targets: group.map(bare),
+            outline: outline.map(pointOf),
+            stripes: (says.marks.stripes ?? []).map(pointOf),
+            strand: strand.map(pointOf),
+            at: pointOf,
+            consequences: followed.map(bare),
+            placing: (n: number) => group.filter((t) => spec.want(t) === n).map(bare),
+          },
+          state,
+        );
+        const marked: Marked<Target> = {
+          targets,
           outline: outline.map(pointOf),
           stripes: (says.marks.stripes ?? []).map(pointOf),
           strand: strand.map(pointOf),
-          at: pointOf,
-          consequences: followed.map(bare),
-          placing: (n: number) => decided.filter((t) => spec.want(t) === n).map(bare),
-        },
-        state,
-      );
-      const marked: Marked<Target> = {
-        targets,
-        outline: outline.map(pointOf),
-        stripes: (says.marks.stripes ?? []).map(pointOf),
-        strand: strand.map(pointOf),
-      };
-      const highlights = (
-        spec.highlights
-          ? spec.highlights(marked, state)
-          : { targets, strand: marked.strand }
-      ) as H;
-      const step = { rung: kind, explanation: words.text, words, highlights };
-      if (spec.journey === undefined) {
-        steps.push({ ...step, move: spec.move(targets) });
-        continue;
+        };
+        const highlights = (
+          spec.highlights
+            ? spec.highlights(marked, state)
+            : { targets, strand: marked.strand }
+        ) as H;
+        const step = { rung: kind, explanation: words.text, words, highlights };
+        if (spec.journey === undefined) {
+          steps.push({ ...step, move: spec.move(targets) });
+          continue;
+        }
+        const { journey } = spec;
+        const values = [...new Set(targets.map(spec.want))].sort((a, b) => a - b);
+        const legs = values.flatMap((n) =>
+          journey.legs(
+            targets.filter((t) => spec.want(t) === n),
+            before,
+            state,
+          ),
+        );
+        for (const [i, move] of legs.entries())
+          steps.push({ ...step, move, continuesPrevious: i > 0 });
       }
-      const { journey } = spec;
-      const values = [...new Set(targets.map(spec.want))].sort((a, b) => a - b);
-      const legs = values.flatMap((n) =>
-        journey.legs(
-          targets.filter((t) => spec.want(t) === n),
-          before,
-          state,
-        ),
-      );
-      for (const [i, move] of legs.entries())
-        steps.push({ ...step, move, continuesPrevious: i > 0 });
     }
     return steps;
   };
@@ -335,17 +351,39 @@ export function describedFiringHint<
         holds: (t) => spec.valueAt(after, index(t)) === spec.want(t),
       });
       if (verdict === "onTrack") {
-        step.move = spec.move(left);
-        step.highlights = { ...hl, targets: left };
-        if (step.words) {
-          const kept = new Set(left.map((t) => CELL.key(t)));
-          step.words = step.words.narrow(
-            (role, kind, key) => role !== "ring" || kind !== CELL.name || kept.has(key),
-          );
-          step.explanation = step.words.text;
-        }
+        Object.assign(step, narrowedTo(step, left));
       }
       return verdict;
     },
+    refreshHintStep: (step, state) => {
+      const hl = step.highlights;
+      if (!hl || spec.journey !== undefined) return step;
+      const w = spec.width(state);
+      const left = hl.targets.filter(
+        (t) => spec.valueAt(state, t.y * w + t.x) !== spec.want(t),
+      );
+      if (left.length === 0) return null;
+      return left.length === hl.targets.length
+        ? step
+        : { ...step, ...narrowedTo(step, left) };
+    },
   };
+
+  /** What `step` becomes where only the targets `left` are still to make: its
+   * move, its highlights and its words, which count their ringed squares. */
+  function narrowedTo(
+    step: HintStep<Move, H>,
+    left: Target[],
+  ): Pick<HintStep<Move, H>, "move" | "highlights" | "words" | "explanation"> {
+    const narrowed = {
+      move: spec.move?.(left) ?? step.move,
+      highlights: { ...(step.highlights as H), targets: left },
+    };
+    if (!step.words) return { ...narrowed, explanation: step.explanation };
+    const kept = new Set(left.map((t) => CELL.key(t)));
+    const words = step.words.narrow(
+      (role, kind, key) => role !== "ring" || kind !== CELL.name || kept.has(key),
+    );
+    return { ...narrowed, words, explanation: words.text };
+  }
 }
