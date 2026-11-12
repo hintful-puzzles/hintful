@@ -720,15 +720,34 @@ describe("netslide rendering", () => {
       netslideGame.redraw(rec, ds, null, won, 1, newUi(won), 0, flash);
       return rec;
     };
-    /** The tiles whose face a frame fills in the flash color, by cell. */
-    const lit = (rec: RecordingDrawing): number[] =>
-      opsOfKind(rec.ops, "rect")
-        .filter((o) => litSlot(o.color))
-        .map(
-          (o) =>
-            Math.floor((o.y - b) / PREFERRED_TILE_SIZE) * w +
-            Math.floor((o.x - b) / PREFERRED_TILE_SIZE),
-        );
+    /** The tiles whose wires a frame draws in the flash color, by cell: each
+     * arm and box sits inside its tile, so its middle names the tile. */
+    const lit = (rec: RecordingDrawing): number[] => {
+      const tileAt = (x: number, y: number) =>
+        Math.floor((y - b) / PREFERRED_TILE_SIZE) * w +
+        Math.floor((x - b) / PREFERRED_TILE_SIZE);
+      const arms = opsOfKind(rec.ops, "rect").filter((o) => litSlot(o.color));
+      // A tile's face is never lit: the tiles stay as they are.
+      expect(
+        arms.filter(
+          (o) => o.w > PREFERRED_TILE_SIZE / 2 && o.h > PREFERRED_TILE_SIZE / 2,
+        ),
+      ).toEqual([]);
+      const boxes = opsOfKind(rec.ops, "polygon").filter((o) => litSlot(o.fill));
+      return [
+        ...new Set([
+          ...arms.map((o) => tileAt(o.x + o.w / 2, o.y + o.h / 2)),
+          ...boxes.map((o) => {
+            const xs = o.points.map(([x]) => x);
+            const ys = o.points.map(([, y]) => y);
+            return tileAt(
+              (Math.min(...xs) + Math.max(...xs)) / 2,
+              (Math.min(...ys) + Math.max(...ys)) / 2,
+            );
+          }),
+        ]),
+      ];
+    };
     /** Whether a wire runs from tile `a` into a neighbor in `among`. */
     const wired = (a: number, among: ReadonlySet<number>): boolean =>
       DIRECTIONS.some((d) => {

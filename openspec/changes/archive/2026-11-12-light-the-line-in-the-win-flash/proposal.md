@@ -24,8 +24,19 @@ block of yellow. Tracks, Pearl and Loopy light the line itself.
   exactly, so on that stretch the body changes an index and no pixel, and
   only the lead shows it. That is the case the engine's two tones exist for
   (`win-wave.ts`, `WinTone`), and the check's own comment allows it.
+- Net and Netslide light their powered wires and leave the tiles (owner,
+  2026-11-12: "I don't like the win animation in Net and Netslide"). Their
+  powered wire is the body's yellow (`TWO[1]`, which is `FLASH`), so a lit
+  tile's ground took the wires' own color and they vanished into it. A lit
+  wire is now drawn in the tone and wider, so the white front runs out from
+  the source and the yellow body shows as a swell behind it. The owner chose
+  this over moving the powered color off yellow, which would change the
+  board in play and leave the shared pair.
+- The cross-game check asks that a lit element paint something in the
+  tone's color the resting frame lacks, rather than count shapes in it: a
+  wider wire in a color it rests in is the same count of shapes.
 
-## Which games, and why only Path
+## Which games
 
 Surveyed 2026-11-12, every game whose flash position is a route
 (`rendering.md` § "The win flash"):
@@ -37,7 +48,7 @@ Surveyed 2026-11-12, every game whose flash position is a route
 | Path | path | the squares | **the line** |
 | Ascent | path | the squares | unchanged: the line between numbers is short dashes between number discs; lit alone, the flash barely shows (seen in the app) |
 | Signpost | path | the squares | unchanged: the route is arrows, not a drawn line |
-| Net, Netslide | network | the tiles | unchanged, pending the owner: the tile is the piece the player turns or slides, and its wires are thin |
+| Net, Netslide | network | the tiles | **the powered wires, wider** |
 | Flood | network | the cells | unchanged: regions, no line |
 
 ## Engine level

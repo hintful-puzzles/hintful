@@ -64,7 +64,7 @@ export function border(tileSize: number): number {
 
 // --- palette ---------------------------------------------------------------
 const COL_BACKGROUND = 0; // the board around the grid, where the arrows are
-/** A tile's face while the win flash is on it. */
+/** A tile's powered wires while the win flash is on it. */
 export const COL_FLASHING = 1;
 export const COL_BORDER = 2; // the line between two tiles, and the frame
 export const COL_WIRE = 3;
@@ -78,7 +78,7 @@ const COL_TEXT = 8;
  * powered-wire color. */
 const COL_CURSOR = 9;
 const COL_CELL = 10; // a tile's face
-/** A tile's face under the win flash's leading edge. */
+/** A tile's powered wires under the win flash's leading edge. */
 export const COL_FLASHING_LEAD = 11;
 
 export function colors(defaultBackground: Color): Color[] {
@@ -235,11 +235,6 @@ function drawTile(
   // tile border. The tile the hint is placing takes no fill — it is ringed at
   // the end of this function instead, so the wires that say *which piece* this
   // is keep their own color.
-  const background = !(tile & FLASHING)
-    ? COL_CELL
-    : tile & FLASHING_LEAD
-      ? COL_FLASHING_LEAD
-      : COL_FLASHING;
   dr.drawRect({ x: bx, y: by, w: ts + TILE_BORDER, h: ts + TILE_BORDER }, COL_BORDER);
   const face = {
     x: bx + TILE_BORDER,
@@ -247,13 +242,23 @@ function drawTile(
     w: ts - TILE_BORDER,
     h: ts - TILE_BORDER,
   };
-  dr.drawRect(face, background);
+  dr.drawRect(face, COL_CELL);
   if (tile & HINT_LINE) dr.drawHatch(face, hatchPeriod(ts));
 
   const cx = TILE_BORDER + (ts - TILE_BORDER) / 2 - 0.5;
   const cy = cx;
   const arm = (ts - TILE_BORDER - 1) / 2;
-  const wireColor = tile & ACTIVE ? COL_POWERED : COL_WIRE;
+  // The win flash lights the powered wires and leaves the tile, as Tracks
+  // lights its track (owner, 2026-11-12). A powered wire is the body's yellow
+  // already, so a lit one is wider as well, and the band shows under either
+  // tone.
+  const lit = !(tile & FLASHING)
+    ? -1
+    : tile & FLASHING_LEAD
+      ? COL_FLASHING_LEAD
+      : COL_FLASHING;
+  const powered = lit < 0 ? COL_POWERED : lit;
+  const wireColor = tile & ACTIVE ? powered : COL_WIRE;
 
   // Black outlines first, then the colored cores over them, so a wire's
   // outline never paints over a neighboring wire's core.
@@ -267,7 +272,8 @@ function drawTile(
   // inside the thinnest rim that closes it: the state is the wire, and a core
   // between two heavy borders left a pixel of it on a small board.
   const core = 2 * lt - 1;
-  const outer = tile & ACTIVE ? core + 1 : core;
+  const swell = lit >= 0 && tile & ACTIVE ? lt : 0;
+  const outer = tile & ACTIVE ? core + 1 + swell : core;
   // The ink runs one pixel past the arm, onto the border this tile shares with
   // its neighbor: the same pixels the neighbor paints there for a wire that
   // reaches it, so whichever of the two repaints last leaves the border alike.
@@ -282,14 +288,14 @@ function drawTile(
     wireArm(dr, center, end, outer, COL_WIRE);
   }
   if (wireColor !== COL_WIRE)
-    for (const end of ends) wireArm(dr, center, end, core, wireColor);
+    for (const end of ends) wireArm(dr, center, end, core + swell, wireColor);
 
   // The box in the middle: ink at the centerpiece, and at a dead end either
   // `COL_POWERED` or `COL_ENDPOINT`. Nothing at all on a through-tile.
   let boxColor = -1;
   if (x === s.cx && y === s.cy) boxColor = COL_WIRE;
   else if (dirCount(tile) === 1) {
-    boxColor = tile & ACTIVE ? COL_POWERED : COL_ENDPOINT;
+    boxColor = tile & ACTIVE ? powered : COL_ENDPOINT;
   }
   if (boxColor >= 0) {
     const corners: [number, number][] = [

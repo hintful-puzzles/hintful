@@ -92,7 +92,7 @@ const COL_PENCIL_BODY = 10;
 /** A hint's outlines: what the step reasons from. */
 const COL_HINT_CELL = 11;
 const COL_CELL = 12; // the surface of a tile the player may still turn
-/** The ground of a tile the win flash is on. */
+/** The powered wires of a tile the win flash is on. */
 export const COL_FLASH = 13;
 /** And under the flash's leading edge. */
 export const COL_FLASH_LEAD = 14;
@@ -279,6 +279,16 @@ function drawTile(
   // ink, inside the thinnest rim that closes it: the state is the wire, and a
   // core between two heavy borders left a pixel of it on a small board.
   const wireHalf = 2 * lt - 1;
+  // The win flash lights the powered wires and leaves the tile, as Tracks
+  // lights its track (owner, 2026-11-12). A powered wire is the body's yellow
+  // already, so a lit one is wider as well, and the band shows under either
+  // tone.
+  const lit = !(tile & TILE_FLASH)
+    ? -1
+    : tile & TILE_FLASH_LEAD
+      ? COL_FLASH_LEAD
+      : COL_FLASH;
+  const swell = lit < 0 ? 0 : lt;
   const liveRim = wireHalf + 1;
 
   const m = boardMargin(ts);
@@ -300,15 +310,7 @@ function drawTile(
 
   // The ring outside the grid is board: only a barrier's outline lands on it.
   const onBoard = x >= 0 && x < ds.w && y >= 0 && y < ds.h;
-  const bg = !onBoard
-    ? COL_BACKGROUND
-    : tile & TILE_FLASH
-      ? tile & TILE_FLASH_LEAD
-        ? COL_FLASH_LEAD
-        : COL_FLASH
-      : tile & TILE_LOCKED
-        ? COL_LOCKED
-        : COL_CELL;
+  const bg = !onBoard ? COL_BACKGROUND : tile & TILE_LOCKED ? COL_LOCKED : COL_CELL;
   dr.drawRect({ x: clipx, y: clipy, w: clipw, h: cliph }, bg);
 
   // Grid lines.
@@ -451,8 +453,18 @@ function drawTile(
   // Wires: the ink of a plain wire and the rim of a powered or looped one,
   // then those two in their colors.
   drawWires(dr, cx, cy, radius, tile, 0x2, COL_WIRE, wireHalf, matrix);
-  drawWires(dr, cx, cy, radius, tile, 0xc, COL_WIRE, liveRim, matrix);
-  drawWires(dr, cx, cy, radius, tile, 0x4, COL_POWERED, wireHalf, matrix);
+  drawWires(dr, cx, cy, radius, tile, 0xc, COL_WIRE, liveRim + swell, matrix);
+  drawWires(
+    dr,
+    cx,
+    cy,
+    radius,
+    tile,
+    0x4,
+    lit < 0 ? COL_POWERED : lit,
+    wireHalf + swell,
+    matrix,
+  );
   drawWires(dr, cx, cy, radius, tile, 0x8, COL_ERR, wireHalf, matrix);
 
   // Central box (endpoint / source): an outline pass, then the fill.
@@ -464,7 +476,9 @@ function drawTile(
         pass === 0 || endtype === 3
           ? COL_WIRE
           : endtype === 2
-            ? COL_POWERED
+            ? lit < 0
+              ? COL_POWERED
+              : lit
             : COL_ENDPOINT;
       const corners = [
         [+1, +1],

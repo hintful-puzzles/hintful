@@ -97,17 +97,22 @@ describe("the win flash, in every game", () => {
     // The band test above passes a game whose highlight shows on some
     // elements and is invisible on others, and one that lights in a color of
     // its own. So each element is lit alone, in each tone. A tone that
-    // changes the frame at all must paint more of its own color than the
-    // settled board has; the two tones must paint differently, which is what
-    // shows an element where one of them is the color it rests in. A game
-    // asks once per element, in one order every frame, which makes the nth
-    // question of a frame the nth element.
+    // changes the frame at all must paint something in its own color that
+    // the settled board does not: a new shape, or one in that color wider
+    // (Net's powered wire is the body's color, and a lit one swells). The two
+    // tones must paint differently, which is what shows an element where one
+    // of them is the color it rests in. A game asks once per element, in one
+    // order every frame, which makes the nth question of a frame the nth
+    // element.
     it("lights every element it asks about in the flash's two colors", () => {
-      const count = (color: Color) => (frame: string) =>
-        frame.split(rgbLabel(color)).length;
+      const opsOf = (frame: string): string[] =>
+        (JSON.parse(frame) as unknown[]).map((op) => JSON.stringify(op));
+      const settledOps = new Set(opsOf(settled));
+      const anew = (color: Color) => (frame: string) =>
+        opsOf(frame).some((op) => op.includes(rgbLabel(color)) && !settledOps.has(op));
       const tones = [
-        { tone: WIN_BODY, inColor: count(FLASH) },
-        { tone: WIN_LEAD, inColor: count(FLASH_LEAD) },
+        { tone: WIN_BODY, inColor: anew(FLASH) },
+        { tone: WIN_LEAD, inColor: anew(FLASH_LEAD) },
       ] as const;
       let asked = 0;
       paint({
@@ -128,7 +133,7 @@ describe("the win flash, in every game", () => {
             winning: true,
             win: () => (n++ === only ? tone : WIN_NONE),
           });
-          if (lit !== settled && inColor(lit) <= inColor(settled))
+          if (lit !== settled && !inColor(lit))
             unseen.push(`${only}: tone ${tone} paints another color`);
           return lit;
         });

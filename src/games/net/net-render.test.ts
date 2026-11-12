@@ -120,19 +120,27 @@ describe("Net: the win flash spreads from the source along the wires", () => {
   const { w, h } = solved;
   const ui = newUi(solved);
 
-  /** The tiles whose ground a frame drawn from nothing fills in the flash
-   * color, by cell. */
+  /** The tiles whose wires a frame drawn from nothing fills in the flash
+   * color, by cell: a tile's wires and its box are centered on it. */
   function lit(flash: Flash): number[] {
     const ds = preferredDrawState(netGame, solved);
     const m = boardMargin(ds.tileSize);
     const dr = new RecordingDrawing(netGame.colors(DEFAULT_BACKGROUND));
     netGame.redraw(dr, ds, null, solved, 1, ui, 0, flash);
-    return opsOfKind(dr.ops, "rect")
-      .filter((o) => litSlot(o.color))
-      .map(
-        (o) =>
-          Math.floor((o.y - m) / ds.tileSize) * w + Math.floor((o.x - m) / ds.tileSize),
-      );
+    // A tile's ground is never lit: the tiles stay as they are.
+    expect(opsOfKind(dr.ops, "rect").filter((o) => litSlot(o.color))).toEqual([]);
+    const tiles = opsOfKind(dr.ops, "polygon")
+      .filter((o) => litSlot(o.fill))
+      .map((o) => {
+        const xs = o.points.map(([x]) => x);
+        const ys = o.points.map(([, y]) => y);
+        const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+        const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+        return (
+          Math.floor((cy - m) / ds.tileSize) * w + Math.floor((cx - m) / ds.tileSize)
+        );
+      });
+    return [...new Set(tiles)];
   }
   /** Whether a wire runs from tile `a` into a neighbor in `among`. */
   function wired(a: number, among: ReadonlySet<number>): boolean {
