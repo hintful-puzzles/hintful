@@ -650,6 +650,15 @@ describe("path, the one-line ruleset", () => {
     expect(stroke(lines(start, [5, 4]), [7, 6, 2])).toEqual(["4-", "11+"]);
   });
 
+  it("a stroke from a number with room for a line, a new way, adds one and replaces nothing", () => {
+    // The 3's one line runs along the bottom row to the 4. A stroke up from
+    // the 3, toward the 2, draws the line behind it and keeps the line ahead
+    // (owner, 2026-11-12: the line on through the 4 was lost).
+    expect(stroke(lines(start, [6, 7, 8]), [8, 4])).toEqual(["13+"]);
+    // Set off along it, the stroke still redraws it.
+    expect(stroke(lines(start, [6, 7, 8]), [8, 9, 5])).toEqual(["7-", "8-", "14+"]);
+  });
+
   it("a stroke from the middle of a line redraws it from there on", () => {
     const drawn = lines(start, ONE_PATH_ANSWER);
     // From the middle row's second square, between the 2 and the 3, down: the

@@ -263,6 +263,18 @@ A drag that begins on a number, or on a square in the middle of a line, SHALL re
 - **WHEN** on `4x3zde:1f2_3b4` the whole answer is drawn, and a drag from the middle row's second square runs down one square
 - **THEN** the line from there on through the 3 to the 4 is taken up, the line back to the 2 stays, and the edge down is drawn
 
+### Requirement: Controls: A stroke a new way from a number with room adds its line
+
+A drag that begins on a number with fewer lines than it takes, and sets off
+along none of them, SHALL replace nothing: it draws the number's missing
+line, and the number's other lines stay.
+
+#### Scenario: A stroke from the 3 toward the 2 keeps the line to the 4
+
+- **WHEN** on `4x3zde:1f2_3b4` the line from the 3 along the bottom row to
+  the 4 is drawn, and a drag from the 3 runs up one square
+- **THEN** the edge up is drawn and the line to the 4 stays
+
 ### Requirement: Hint: A step rings the edges it decides and outlines what it reads
 
 A step SHALL ring the edges it decides, drawn as the line or cross it asks for, and outline what it reads: the square of a forced step; the edges a Check tries lines on, drawn thin as lines, and where they break. A weighed step SHALL outline the edges it weighs or the square, and say what the ruled-out pairs would do. No step SHALL ask for a cross on an edge the ladder counts as closed.

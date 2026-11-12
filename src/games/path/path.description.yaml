@@ -27,7 +27,9 @@ help:
     changes nothing. In {{choice:ruleset:0}} the line ahead runs toward the
     higher numbers, so a stroke from the 2, or from between the 2 and the 3,
     keeps the line back to the 1. Where the numbers do not say which way is
-    ahead, it is the way your stroke sets off along the line. In
+    ahead, it is the way your stroke sets off along the line. A number that
+    still has room for a line keeps the one it has when your stroke sets off
+    a new way: the stroke is its other line. In
     {{choice:ruleset:1}} a stroke from a number replaces the number's whole
     line, and one from the middle of a line replaces the side away from the
     number it reaches.

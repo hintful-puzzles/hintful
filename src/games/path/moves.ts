@@ -40,6 +40,10 @@ interface Side {
  * 2026-11-09 for the middle of a line). A line's loose end has none, so a
  * stroke from it pulls the line back. The stroke steps first to `toward`.
  *
+ * A number with room for another line, stroked a new way, replaces nothing:
+ * the stroke is that line. A 3 with only its line on to the 4 lost the 4, 5
+ * and 6 to a stroke toward the 2 (owner, 2026-11-12).
+ *
  * In Path, the side ahead is the one the numbers rise along. Where they do
  * not say, as on a fragment that meets no number, it is the side the stroke
  * sets off along, and a stroke that sets off a new way replaces nothing. A
@@ -76,6 +80,7 @@ function lineAhead(state: PathState, i: number, toward: number): number[] {
     if (across(g, first, i) === toward) along = side;
   }
   if (n === NO_END && sides.length < 2) return [];
+  if (n !== NO_END && along === null && sides.length < state.takes[i]) return [];
   if (state.mode !== MODE_PATH && n !== NO_END) return sides.flatMap((s) => s.run);
   const rises =
     state.mode === MODE_PATH ? pathRises(state, n, sides) : pairsRises(sides);
