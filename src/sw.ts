@@ -7,6 +7,7 @@ import {
   getCacheKeyForURL,
   precacheAndRoute,
 } from "workbox-precaching";
+import { APP_VERSION } from "./utils/app-version.ts";
 import {
   type InstallPlan,
   InstallProgress,
@@ -25,6 +26,20 @@ self.addEventListener("message", (event) => {
   switch (event.data?.type) {
     case "SKIP_WAITING":
       event.waitUntil(self.skipWaiting());
+      break;
+    case "PRECACHE_QUERY":
+      // A page that opened mid-install missed the start: tell it where we are.
+      event.waitUntil(
+        (async () => {
+          await planned;
+          if (!progress || progress.complete) return;
+          event.source?.postMessage({
+            type: "PRECACHE_PROGRESS",
+            version: APP_VERSION,
+            ...progress.snapshot(),
+          });
+        })(),
+      );
       break;
   }
 });
@@ -102,7 +117,7 @@ self.addEventListener("install", (event) => {
     });
     progress = new InstallProgress(plan);
     await sendMessageToClients(
-      { type: "PRECACHE_START", total: plan.pending.size, totalBytes: plan.totalBytes },
+      { type: "PRECACHE_START", version: APP_VERSION, ...progress.snapshot() },
       event,
     );
   })();
@@ -121,7 +136,13 @@ const progressPlugin: WorkboxPlugin = {
     if (!message) return;
 
     await sendMessageToClients(
-      { type: "PRECACHE_PROGRESS", url: request.url, ...message, success: !error },
+      {
+        type: "PRECACHE_PROGRESS",
+        version: APP_VERSION,
+        url: request.url,
+        ...message,
+        success: !error,
+      },
       event,
     );
     if (progress?.complete) {

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { InstallProgress, percentOf, planInstall } from "./precache-plan.ts";
+import {
+  applyPrecacheMessage,
+  InstallProgress,
+  NO_DOWNLOAD,
+  percentOf,
+  planInstall,
+} from "./precache-plan.ts";
 
 const urls = ["https://x/a.js", "https://x/b.png", "https://x/c.html"];
 const sizes = new Map([
@@ -96,6 +102,74 @@ describe("InstallProgress", () => {
       planInstall({ urls, sizes, isCached: () => true }),
     );
     expect(progress.complete).toBe(true);
+  });
+});
+
+describe("a page that joins mid-install", () => {
+  const plan = planInstall({ urls, sizes, isCached: (u) => u === "https://x/c.html" });
+
+  it("is told the whole plan by a snapshot taken before any file lands", () => {
+    expect(new InstallProgress(plan).snapshot()).toEqual({
+      count: 0,
+      total: 2,
+      bytes: 0,
+      totalBytes: 950,
+    });
+  });
+
+  it("learns the total, percent and version from one progress message, no start needed", () => {
+    // What the worker answers a PRECACHE_QUERY with, after one file landed.
+    const progress = new InstallProgress(plan);
+    progress.finish("https://x/a.js");
+    const state = applyPrecacheMessage(NO_DOWNLOAD, {
+      type: "PRECACHE_PROGRESS",
+      version: "20261112.abc1234",
+      ...progress.snapshot(),
+    });
+    expect(state).toMatchObject({
+      progress: 84,
+      bytes: { done: 800, total: 950 },
+      pendingVersion: "20261112.abc1234",
+    });
+  });
+
+  it("shows no size, only a file-count percent, when the sizes were unreadable", () => {
+    const unsized = new InstallProgress(
+      planInstall({ urls, sizes: null, isCached: () => false }),
+    );
+    unsized.finish("https://x/a.js");
+    expect(
+      applyPrecacheMessage(NO_DOWNLOAD, {
+        type: "PRECACHE_PROGRESS",
+        version: null,
+        ...unsized.snapshot(),
+      }),
+    ).toMatchObject({ progress: 33, bytes: null });
+  });
+
+  it("keeps the version and reports the bytes fetched once the download completes", () => {
+    const started = applyPrecacheMessage(NO_DOWNLOAD, {
+      type: "PRECACHE_START",
+      version: "v2",
+      ...new InstallProgress(plan).snapshot(),
+    });
+    expect(applyPrecacheMessage(started, { type: "PRECACHE_COMPLETE" })).toEqual({
+      progress: null,
+      bytes: null,
+      pendingVersion: "v2",
+      downloadedBytes: 950,
+    });
+  });
+
+  it("forgets the last download's total when the next one starts", () => {
+    const done = { ...NO_DOWNLOAD, downloadedBytes: 950, pendingVersion: "v1" };
+    expect(
+      applyPrecacheMessage(done, {
+        type: "PRECACHE_START",
+        version: "v2",
+        ...new InstallProgress(plan).snapshot(),
+      }),
+    ).toMatchObject({ downloadedBytes: null, pendingVersion: "v2" });
   });
 });
 

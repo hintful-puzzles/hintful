@@ -10,6 +10,7 @@ import { query } from "lit/decorators/query.js";
 import { customElement, state } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { APP_NAME, ISSUES_URL, REPO_URL } from "../project-identity.ts";
+import { APP_VERSION } from "../utils/app-version.ts";
 import { cssNative, cssWATweaks } from "../utils/css.ts";
 
 // Register components
@@ -29,7 +30,7 @@ import privacyHtml from "../assets/privacy.html?raw";
 // A deployment may brand the PWA differently from the project (the name the
 // LICENSE covers); the project name is what the license panel labels.
 const appName = import.meta.env.VITE_APP_NAME || APP_NAME;
-const appVersion = import.meta.env.VITE_APP_VERSION || "(development build)";
+const appVersion = APP_VERSION;
 
 // Attribution links: each points at the project it credits, by design.
 const sgtPuzzlesLink = "https://www.chiark.greenend.org.uk/~sgtatham/puzzles/";

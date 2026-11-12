@@ -72,9 +72,77 @@ export class InstallProgress {
     };
   }
 
+  /** Where the install stands now, for a page that joined partway through. */
+  snapshot(): ProgressMessage {
+    return {
+      count: this.done.size,
+      total: this.plan.pending.size,
+      bytes: this.bytes,
+      totalBytes: this.plan.totalBytes,
+    };
+  }
+
   get complete(): boolean {
     return this.done.size >= this.plan.pending.size;
   }
+}
+
+/**
+ * What the worker tells pages about an install: `PRECACHE_START` when it
+ * begins, `PRECACHE_PROGRESS` as each file lands, and the same progress shape
+ * in answer to a `PRECACHE_QUERY`, which a page sends when it finds a worker
+ * already installing. The worker announces once, so a page that opens (a game,
+ * say) after the start has only a query to learn the total from.
+ */
+export type PrecacheMessage =
+  | ({
+      type: "PRECACHE_START" | "PRECACHE_PROGRESS";
+      /** The version of the build the installing worker carries. */
+      version: string | null;
+    } & ProgressMessage)
+  | { type: "PRECACHE_COMPLETE" };
+
+/** What a page knows of the download, built up from the worker's messages. */
+export interface DownloadState {
+  progress: number | null;
+  bytes: { done: number; total: number } | null;
+  pendingVersion: string | null;
+  /** Bytes the download that just finished fetched. */
+  downloadedBytes: number | null;
+}
+
+export const NO_DOWNLOAD: DownloadState = {
+  progress: null,
+  bytes: null,
+  pendingVersion: null,
+  downloadedBytes: null,
+};
+
+/**
+ * The state after a message. Every progress message carries the total, so any
+ * one is enough to show "x% of y MB", whether or not the start was seen. The
+ * pending version outlives the download so "update downloaded" can name it.
+ */
+export function applyPrecacheMessage(
+  state: DownloadState,
+  message: PrecacheMessage,
+): DownloadState {
+  if (message.type === "PRECACHE_COMPLETE") {
+    return {
+      ...state,
+      progress: null,
+      bytes: null,
+      downloadedBytes: state.bytes?.total ?? null,
+    };
+  }
+  // Without sizes the percent is by file count and no byte figure is known.
+  const sized = message.totalBytes > 0;
+  return {
+    progress: message.total > 0 ? percentOf(message) : null,
+    bytes: sized ? { done: message.bytes, total: message.totalBytes } : null,
+    pendingVersion: message.version,
+    downloadedBytes: null,
+  };
 }
 
 /** The whole-number percent a message stands for, never past 100. */

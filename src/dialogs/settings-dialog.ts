@@ -10,6 +10,7 @@ import { type ShapeLayout, type WindowShape, windowShape } from "../puzzle/layou
 import type { Puzzle } from "../puzzle/puzzle.ts";
 import { savedGames } from "../store/saved-games.ts";
 import { settings } from "../store/settings.ts";
+import { APP_VERSION } from "../utils/app-version.ts";
 import { audioClick } from "../utils/audio.ts";
 import { autoBind } from "../utils/autobind.ts";
 import { cssNative, cssWATweaks } from "../utils/css.ts";
@@ -350,8 +351,21 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
         <div class="offline-status" role="status" aria-atomic="true">
           Offline content: ${this.renderOfflineStatus()}
         </div>
+        <div class="app-version">${this.renderVersions()}</div>
       </wa-details>
     `;
+  }
+
+  /** The running build, and during an update the build it is replacing itself with. */
+  private renderVersions() {
+    const updating =
+      pwaManager.status === "update-downloading" ||
+      pwaManager.status === "update-ready";
+    const pending = updating ? pwaManager.pendingVersion : null;
+    return pending === null
+      ? html`Version <span translate="no">${APP_VERSION}</span>`
+      : html`Version <span translate="no">${APP_VERSION}</span>, updating to
+          <span translate="no">${pending}</span>`;
   }
 
   /** ", 1.9 MB" after a status, or nothing when the size is not known. */

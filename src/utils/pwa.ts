@@ -7,7 +7,12 @@ import {
   type WorkboxMessageEvent,
 } from "workbox-window";
 import { settings } from "../store/settings.ts";
-import { percentOf } from "./precache-plan.ts";
+import {
+  applyPrecacheMessage,
+  type DownloadState,
+  NO_DOWNLOAD,
+  type PrecacheMessage,
+} from "./precache-plan.ts";
 import { sleep } from "./timing.ts";
 
 if (typeof window === "undefined") {
@@ -107,10 +112,8 @@ class PWAManager {
   private _allowOfflineUse = computed(() => settings.allowOfflineUse ?? isRunningAsApp);
   private _autoUpdate = computed(() => settings.autoUpdate ?? this.allowOfflineUse);
   private _status = signal<PWAManagerStatus>("uninitialized");
-  private _downloadProgress = signal<number | null>(null);
-  private _downloadBytes = signal<{ done: number; total: number } | null>(null);
+  private _download = signal<DownloadState>(NO_DOWNLOAD);
   private _fullDownloadBytes = signal<number | null>(null);
-  private _downloadedBytes = signal<number | null>(null);
   private _lastChecked = signal<number | null>(null);
 
   private wb?: Workbox;
@@ -192,7 +195,7 @@ class PWAManager {
 
   /** Percent of the download's bytes fetched, while one is running. */
   get downloadProgress(): number | null {
-    return this._downloadProgress.get();
+    return this._download.get().progress;
   }
 
   /**
@@ -201,12 +204,21 @@ class PWAManager {
    * crosses the network.
    */
   get downloadBytes(): { done: number; total: number } | null {
-    return this._downloadBytes.get();
+    return this._download.get().bytes;
   }
 
   /** Bytes the download that just finished fetched, if it is known. */
   get downloadedBytes(): number | null {
-    return this._downloadedBytes.get();
+    return this._download.get().downloadedBytes;
+  }
+
+  /**
+   * The build the downloading (or just downloaded) worker carries, or null
+   * until it has said. Meaningful for an update; on a first install it is the
+   * build being installed.
+   */
+  get pendingVersion(): string | null {
+    return this._download.get().pendingVersion;
   }
 
   /**
@@ -368,6 +380,9 @@ class PWAManager {
       switch (worker.state) {
         case "installing":
           this._status.set(isUpdate ? "update-downloading" : "downloading");
+          // The worker announces its plan once, perhaps before this page
+          // opened: ask for where it stands.
+          worker.postMessage({ type: "PRECACHE_QUERY" });
           break;
         case "installed":
           if (isUpdate) {
@@ -418,26 +433,14 @@ class PWAManager {
 
   private handleSWMessage = (event: WorkboxMessageEvent) => {
     switch (event.data?.type) {
-      case "PRECACHE_START": {
-        // What this install will fetch: all of it on a first install, only the
-        // changed files on an update.
-        const { totalBytes } = event.data;
-        this._downloadBytes.set(totalBytes > 0 ? { done: 0, total: totalBytes } : null);
-        this._downloadProgress.set(totalBytes > 0 ? 0 : null);
-        break;
-      }
-      case "PRECACHE_PROGRESS": {
-        const { bytes, totalBytes } = event.data;
-        this._downloadProgress.set(percentOf(event.data));
-        this._downloadBytes.set(
-          totalBytes > 0 ? { done: bytes, total: totalBytes } : null,
-        );
-        break;
-      }
+      case "PRECACHE_START":
+      case "PRECACHE_PROGRESS":
       case "PRECACHE_COMPLETE":
-        this._downloadedBytes.set(this._downloadBytes.get()?.total ?? null);
-        this._downloadProgress.set(null);
-        this._downloadBytes.set(null);
+        // The total is what this install will fetch: all of it on a first
+        // install, only the changed files on an update.
+        this._download.set(
+          applyPrecacheMessage(this._download.get(), event.data as PrecacheMessage),
+        );
         break;
     }
   };
