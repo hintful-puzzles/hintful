@@ -83,7 +83,7 @@ export type Firing =
       readonly found: number;
       readonly left: number;
       /** The numbers counted, whose squares do not meet. */
-      readonly members: readonly Side[];
+      readonly members: readonly { readonly group: Group }[];
       readonly counted: number[];
       readonly mines: number[];
       readonly safes: number[];

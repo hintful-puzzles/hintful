@@ -243,39 +243,18 @@ function narrate(board: MinesState, f: Firing, legs: readonly Leg[]): Sentence[]
           f.safes.length > 0 ? sayCount.allFound(f.total) : sayCount.allMines(f.left);
         break;
       }
-      const prefix: Narration[] = [];
-      const numberCells: Point[] = [];
-      let need = 0;
-      for (const m of f.members) {
-        if ("group" in m) {
-          numberCells.push(pt(m.group.clue));
-          need += m.group.need;
-        } else {
-          prefix.push(
-            sayRegion(
-              words,
-              clueOf(m.region.outer.clue),
-              clueOf(m.region.inner.clue),
-              null,
-              m.region.need,
-            ),
-          );
-          numberCells.push(pt(m.region.outer.clue));
-          need += m.region.need;
-        }
-      }
+      const numberCells = f.members.map((m) => pt(m.group.clue));
+      const need = f.members.reduce((sum, m) => sum + m.group.need, 0);
       const numbers = mark.as("outline", CELL, numberCells, (els) =>
         els.length === 1 ? "the outlined number" : "the outlined numbers",
       );
       const counted = mark.as("stripes", CELL, pts(f.counted), (els) =>
         els.length === 1 ? "the striped square" : "the striped squares",
       );
-      lead = after(
-        prefix,
+      lead =
         f.safes.length > 0
           ? sayCount.outsideSafe(f.left, numberCells.length, numbers, counted)
-          : sayCount.outsideMines(f.left, need, numberCells.length, numbers, counted),
-      );
+          : sayCount.outsideMines(f.left, need, numberCells.length, numbers, counted);
       break;
     }
   }
