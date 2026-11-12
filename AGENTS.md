@@ -49,9 +49,7 @@ incident only what a later session acts on: the rule, and the shape to look for.
   internal design decision is yours: change it and record the reason.
 - **Own everything in the repo.** Never call a problem "pre-existing",
   "unrelated" or "out of scope". Fix it, or raise it with a recommendation.
-- **Continue by default.** Do not ask whether to continue, commit or move on.
-  Ask only for a real decision: a trade-off with no clear winner, two readings
-  that produce different work, or something irreversible.
+- **Continue by default; never halt on size.** A large change is no reason to stop: wrap up a part and hand the rest to a new session, which is yours to do. Stop only when the owner asks, or for a real decision (a trade-off with no clear winner, two readings, something irreversible).
 - **Finish your own work: implement, verify, commit, push to `main` and
   archive, without asking.** There is no approval step after proposing a
   change. A push deploys, and the deployment is how the owner sees the work, so
