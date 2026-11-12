@@ -232,7 +232,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["boats"],
-    rungs: ["sharedDiagonal"],
+    rungs: ["shared"],
     why:
       "Where the middle of the three squares could be the boat, the step rests " +
       "on a second premise: that boat would fill the line crossing there. " +

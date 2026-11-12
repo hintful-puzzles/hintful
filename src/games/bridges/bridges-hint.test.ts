@@ -399,7 +399,7 @@ describe("what the plan shows, and what it keeps to itself", () => {
 
 const pinned = describeHintPins({
   game: bridgesGame,
-  // The second shape forbids loops, which no preset does and `wouldCloseLoop`
+  // The second shape forbids loops, which no preset does and `loop`
   // needs.
   params: [BRIDGES_PRESETS[2], { ...BRIDGES_PRESETS[2], allowloops: false }],
   kinds: {
