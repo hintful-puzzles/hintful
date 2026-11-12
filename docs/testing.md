@@ -58,6 +58,7 @@ runs, and what a commit may leave to the push and to CI).
 | A game's verdict in one command | you are writing or changing a game and want everything the collection asks of it, in a minute |
 | Render scenarios | your game draws a highlight, an overlay, a cursor or an animation frame |
 | – A frame that needs the browser | a check has to be made in the running app and the frame is deep in a game |
+| – Watching an offline update | a change touches the service worker, `pwa.ts` or the offline status in Preferences |
 | – A snapshot cannot see a hole | a change moves the canvas geometry: a margin, an origin, `computeSize` |
 | Observing a midend | a test asks what the midend told the app: status bar, timer, repaint requests |
 | Render-op vocabulary | an op assertion never matches, or you are matching a ring, a circle or a color |
@@ -325,6 +326,27 @@ press deep, and do not walk in from a default board. Scan seeds in a
 throwaway vitest file for a board whose first press is the frame under test,
 print its game ID, and open `/<game>.html?id=<id>` (`routing.ts` reads `type`
 and `id` off the query string).
+
+### Watching an offline update
+
+The offline download only shows in a service worker's lifetime, so it is
+checked in the running app: build twice, serve both from one static server
+that can switch which build it serves and delay every asset (not `sw.js` or
+`precache-size.json`), and watch Preferences > Advanced while the second
+build installs over the first.
+
+- Label the builds apart with `VITE_APP_VERSION=<YYYYMMDD.sevenchars>`; with
+  none, both carry the same default and no update is seen. Build into `dist`:
+  `precacheSizes("dist")` writes there whatever `--outDir` says, and the build
+  fails after the bundle.
+- Leave the page open more than a minute before the second build is served.
+  Workbox counts only the first update in 60 seconds of a page as its own and
+  drops the worker's messages from any other, so a quick run passes where a
+  phone, with a game open, does not. `pwa.ts` therefore listens to
+  `navigator.serviceWorker` itself.
+- A navigation starts the browser's own update check, so to watch the click
+  path switch the build after the page has loaded, then click "check for
+  updates".
 
 ### A snapshot cannot see a hole
 
