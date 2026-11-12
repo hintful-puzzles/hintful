@@ -399,8 +399,13 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
         `;
       case "downloading":
       case "update-downloading": {
+        const pending = pwaManager.pendingVersion;
         const statusLabel =
-          pwaManager.status === "downloading" ? "downloading" : "downloading update";
+          pwaManager.status === "downloading"
+            ? "downloading"
+            : pending === null
+              ? "downloading update"
+              : html`downloading update to <span translate="no">${pending}</span>`;
         const progress = pwaManager.downloadProgress;
         const bytes = pwaManager.downloadBytes;
         // Before the worker reports what it will fetch, a first install is the
@@ -423,7 +428,8 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
         `;
       case "update-ready":
         return html`
-          update downloaded${this.sizeSuffix(pwaManager.downloadedBytes)}
+          update${pwaManager.pendingVersion === null ? "" : html` <span translate="no">${pwaManager.pendingVersion}</span>`}
+          downloaded${this.sizeSuffix(pwaManager.downloadedBytes)}
           (<button @click=${this.handleInstallUpdate}>install now</button>)
         `;
       case "installing":
