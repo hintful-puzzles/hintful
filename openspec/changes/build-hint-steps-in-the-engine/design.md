@@ -200,10 +200,44 @@ defect found in the game, said which.
   ~437 lines out of `index.ts` and `solver.ts` (141 + 145, 21 + 7 in) and 36 of
   `hint-text.ts` to 19 of `says`.
 
-### Read off Boats, not yet built
+### Read off Boats (2026-11-12, `boats/solver.ts` and `index.ts`), not yet built
 
-- **`with` and restated definitions** are Boats' (and Bridges') question: a
-  term over a technique's `with` needs the supposition's marks (see Risks).
+Sixteen of its nineteen techniques are what `says` already carries (terms,
+an evidence set, a hatched line). Four things in Boats are not, and each is a
+decision for the engine, not for Boats:
+
+- **A step is a journey of fill legs, with consequences.** One firing is one
+  journey: its legs are `fill` rectangles (`legMoves`), and its highlights hold
+  the facts' squares *and* the water the never-touch rule drags along
+  (`consequences`: the cells the walk's `placing` techniques changed that the
+  firing's facts did not name). The engine can compute both generally: the
+  consequences are the grid diff across the firing, less the facts, and the
+  legs are the game's `move` over the targets. So `describedHint`'s shape wants
+  a third mode, a journey of legs over a firing's targets plus consequences, or
+  `describedFiringHint` wants `legs`. Per-leg keep-track (`"completed"` per leg,
+  no shrink) is Boats' own and stays an override or becomes a `keepTrack: "leg"`.
+- **A target's value is a boolean, not a number**: a boat segment or water, and
+  `step.rung` for a trial is `refuted`. Both fit `target(at, n)`.
+- **Three techniques (`lastWater`, `lastShip`, `centerTrial`) are trials**
+  whose sentence names the rule the supposition breaks, found by running the
+  validator on a cloned board (`classifyBreach`, "Read the reason off the
+  validator"). No formula says that. Choices: those three keep a `compiledRung`
+  reason callback beside the other sixteen's `says` (the adapter reads whichever
+  the firing recorded), or the breach is a term the *game* supplies, computed
+  from the firing's supposed squares (`says.terms` of a `game:` function). The
+  first is smaller and honest; the second is the engine's `with` question
+  (Risks) and waits for Bridges' `with`.
+- **The plan is a cap walk.** `deduceBoatsPlan` starts at the board's own
+  tier and escalates while a tier has no firing, and caps the plan at forty
+  firings. Escalation is every tiered game's, so it belongs in `describedHint`
+  (`tiers: "lowest"`), not in Boats.
+
+`numOf` (a line's number deduced from the fleet where it is not shown) is a
+restated definition the description already states as a definition; its terms
+should read that, not the game's function.
+
+Bridges is a step further: its facts are edges, and `describedHint` and
+`describedFiringHint` are cell games.
 
 ## Risks
 

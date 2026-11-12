@@ -7,7 +7,11 @@
 - [ ] 1.3 Move Unruly, Singles and one of Boats or Bridges onto it, and measure the lines that went against the report's prediction
   - [x] Unruly (`a6ccdf4b`): `says` in the schema, compiler and runtime; `engine/described-hint.ts`; hint, keep-track and kinds engine-built. Comparison: the same words, and marks differ only where the old ones were defective (design § "What the trial found"). **Lines**: measure `git show --stat a6ccdf4b` for `unruly/` against the report's ~90 + 71 + 72 + 123 (A, B, C, D) for it
   - [x] Singles: `says.arms`, `says.marks.strand` and `reads`, and `engine/described-firing-hint.ts`; every walk's hash equals `HEAD`'s on the snapshot's boards and on 40 boards a preset (design § "Singles, built"). **Lines**: 400 of hint glue out of `index.ts` and `solver.ts`, 138 in (66 of them yaml)
-  - [ ] Boats (or Bridges): terms that replace restated definitions, and `with`
+  - [ ] Boats (design § "Read off Boats"): in this order, each its own commit, each compared by the fingerprint
+    - [ ] The engine: tier escalation and the plan cap in `describedHint`; consequences from the grid diff; a journey of legs over a firing's targets; per-leg keep-track
+    - [ ] The sixteen techniques that `says` carries, the three trials keeping a reason callback beside them
+    - [ ] The trials' breach as a term, once `with` terms are read (Risks), or leave them and say why
+  - [ ] Bridges: edge facts, after Boats
 
 ## 2. The catalog
 
