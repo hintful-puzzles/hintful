@@ -54,7 +54,12 @@ function solvedBoard(id: string): (flash: Flash) => string {
   return (flash) => {
     const dr = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
     game.redraw(dr, game.newDrawState(state, tileSize), null, state, 1, ui, 0, flash);
-    return JSON.stringify(dr.ops);
+    // What is seen, so without the palette indices: an element lit in a
+    // color it already rests in (Path's yellow pair under the body) has not
+    // changed, and only its other tone shows it.
+    return JSON.stringify(dr.ops, (key, value: unknown) =>
+      key === "color" || key === "fill" || key === "outline" ? undefined : value,
+    );
   };
 }
 

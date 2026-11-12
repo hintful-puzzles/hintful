@@ -274,10 +274,7 @@ function drawTile(
   // beyond draws the rest.
   dr.clip({ x: px, y: py, w: ts, h: ts });
   dr.drawRect({ x: px, y: py, w: ts, h: ts }, COL_GRID);
-  dr.drawRect(
-    { x: px + 1, y: py + 1, w: ts - 1, h: ts - 1 },
-    tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : COL_CELL,
-  );
+  dr.drawRect({ x: px + 1, y: py + 1, w: ts - 1, h: ts - 1 }, COL_CELL);
   // The hint's outline, inside the square and under everything it holds, so
   // the lines and crosses on its sides stay on top of it (as Pearl's).
   drawMarkSides(
@@ -403,12 +400,19 @@ function drawTile(
       cross(k, s & S_WRONG ? COL_ERROR : COL_RULED_OUT, small, 1);
   }
 
+  // The win flash lights the line and leaves the square as it is, as Tracks
+  // lights its track (owner, 2026-11-12). A lit line is edged as a pair's is,
+  // so the lead's pale tone reads on the square.
   const piece = (square >> K_PIECE) & 0xf;
-  const lineColor = piece ? COL_PAIR + piece - 1 : COL_LINE;
+  const lit = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : -1;
+  const lineColor = lit >= 0 ? lit : piece ? COL_PAIR + piece - 1 : COL_LINE;
   const arrives = ((square >> K_ARRIVES) & 7) - 1;
-  const arrivingColor = COL_PAIR + ((square >> K_ARRIVES_COLOR) & 0xf) - 1;
+  const arrivingColor =
+    lit >= 0 ? lit : COL_PAIR + ((square >> K_ARRIVES_COLOR) & 0xf) - 1;
   const colored = (color: number): boolean =>
-    color >= COL_PAIR && color < COL_PAIR + PAIRS;
+    (color >= COL_PAIR && color < COL_PAIR + PAIRS) ||
+    color === COL_FLASH ||
+    color === COL_FLASH_LEAD;
   const strokes: Stroke[] = [];
   for (let k = 0; k < 4; k++) {
     const s = (sides >> (k * SIDE_BITS)) & ((1 << SIDE_BITS) - 1);

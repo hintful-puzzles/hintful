@@ -651,6 +651,11 @@ color"). `flash.win` answers `WIN_LEAD` or `WIN_BODY`: give `FLASH_LEAD`
 and `FLASH` a palette slot each and pick with `winSlot(tone, body, lead)`.
 An element with a ground has the ground filled and keeps what it holds on
 top; a line is drawn in the color, and a thin one wider than at rest.
+**Where the route is a line the player draws through the cells, light the
+line and leave the cells** (`engine-colors` § "A route drawn as a line
+lights the line"; exemplars Tracks, Path). A line mostly hidden under what
+the cells hold, as Ascent's dashes between its number discs, is not that
+route: its cells are.
 
 **A game writes nothing for when the flash plays** (`ts-engine` § "The win
 flash plays on a forward move that solves the board"). The midend starts it
