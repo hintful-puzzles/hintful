@@ -101,7 +101,7 @@ variations:
           conclude: "place(sq(B, j), flip(d))"
           says:
             terms: { horizontal: "A in rows", fill: flip(d) }
-            marks: { stripes: "cells(B)", outline: "cells(A)" }
+            marks: { stripes: "cells(B)", reads: "cells(B)", outline: "cells(A)" }
 tiers: [Easy, Normal, Tricky]
 techniques:
   # Two of three squares in a row of a line hold one piece, so the third holds
@@ -129,6 +129,7 @@ techniques:
       terms: { horizontal: "L in rows", full: d, fill: flip(d) }
       marks:
         stripes: "cells(L)"
+        reads: "cells(L)"
         outline: "{c in cells(L) where value(c) = d}"
   # A line holding all its d: every empty square holds the other piece.
   - id: quota
@@ -142,6 +143,7 @@ techniques:
       terms: { horizontal: "L in rows", full: d, fill: flip(d) }
       marks:
         stripes: "cells(L)"
+        reads: "cells(L)"
         outline: "{c in cells(L) where value(c) = d}"
   # A line with one d left to place and at least two of the other piece: three
   # squares in a row holding no d, two of them empty, would be three of the
@@ -158,4 +160,4 @@ techniques:
     conclude: "forall c in cells(L) where not known(c) and c not in W: place(c, flip(d))"
     says:
       terms: { horizontal: "L in rows", fill: flip(d) }
-      marks: { stripes: "cells(L)", outline: "W" }
+      marks: { stripes: "cells(L)", reads: "cells(L)", outline: "W" }

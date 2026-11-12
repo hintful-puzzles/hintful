@@ -6072,7 +6072,9 @@ function techniqueFunction(
     visitAt: undefined,
   });
   // The fields of what a firing says, by group, as the module's type for it.
-  const saysFields = { terms: [] as string[], marks: [] as string[] };
+  const saysFields = {
+    variants: [] as { name: string | null; terms: string[]; marks: string[] }[],
+  };
   const fire = (sc: Scope): void => {
     const shared: Shared = { made: new Map() };
     const visited =
@@ -6109,23 +6111,56 @@ function techniqueFunction(
     if (t.says !== null) {
       said = ", _says";
       body.open("if (fire !== null) {");
-      saysFields.terms.length = 0;
-      saysFields.marks.length = 0;
-      const read = (e: Expr, group: "terms" | "marks", name: string): string => {
-        const v = compileExpr(e, sc, { ...tenv, shared }, body);
-        if (group === "marks" && !isArray(v.sort))
-          throw new CompileError(
-            `${t.id}: says marks ${name} is not a set of elements`,
-          );
-        saysFields[group].push(`${name}: ${tsType(v.sort)};`);
-        // A set is a buffer the next binding refills.
-        return `${name}: ${isArray(v.sort) ? `${v.code}.slice()` : v.code}`;
-      };
-      const terms = t.says.terms.map((x) => read(x.expr, "terms", x.name));
-      const marks = t.says.marks.map((x) => read(x.expr, "marks", x.role));
-      body.emit(
-        `const _says = { terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} } };`,
-      );
+      saysFields.variants.length = 0;
+      const { variants } = t.says;
+      const arms = variants[0].name !== null;
+      // The arm that holds, the first true one: every condition is read where
+      // the others are, on the marks before the facts are made.
+      if (arms) {
+        const holds = variants.map((v) => {
+          const w = compileExpr(v.when as Expr, sc, { ...tenv, shared }, body);
+          expect(w, "bool", `says ${v.name} when`);
+          return w.code;
+        });
+        body.emit(`let _arm = -1;`);
+        body.emit(
+          holds
+            .map((h, i) => `if (${h}) _arm = ${i};`)
+            .reduceRight(
+              (rest, line, i) =>
+                i === holds.length - 1 ? line : `${line} else ${rest}`,
+              "",
+            ),
+        );
+      }
+      if (arms) body.emit(`let _says: ${saysType} | null = null;`);
+      for (const [i, v] of variants.entries()) {
+        const fields = { terms: [] as string[], marks: [] as string[] };
+        // A term read inside an arm is not in scope in another.
+        const inArm: Shared = { made: new Map(shared.made) };
+        if (arms) body.open(`if (_arm === ${i}) {`);
+        const read = (e: Expr, group: "terms" | "marks", name: string): string => {
+          const r = compileExpr(e, sc, { ...tenv, shared: inArm }, body);
+          if (group === "marks" && !isArray(r.sort))
+            throw new CompileError(
+              `${t.id}: says marks ${name} is not a set of elements`,
+            );
+          fields[group].push(`${name}: ${tsType(r.sort)};`);
+          // A set is a buffer the next binding refills.
+          return `${name}: ${isArray(r.sort) ? `${r.code}.slice()` : r.code}`;
+        };
+        const terms = v.terms.map((x) => read(x.expr, "terms", x.name));
+        const marks = v.marks.map((x) => read(x.expr, "marks", x.role));
+        body.emit(
+          `${arms ? "" : "const "}_says = { ${arms ? `arm: ${JSON.stringify(v.name)}, ` : ""}terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} } };`,
+        );
+        if (arms) body.close();
+        saysFields.variants.push({ name: v.name, ...fields });
+      }
+      if (arms)
+        body.emit(
+          `if (_says === null) throw new Error(${JSON.stringify(`${t.id}: no arm of says holds`)});`,
+        );
     }
     // A technique run on placing makes every firing; a rung stops at the
     // first unless `fire` asks for the rest.
@@ -6256,11 +6291,22 @@ function techniqueFunction(
     ...(t.says === null
       ? []
       : [
-          `/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */`,
-          `export interface ${saysType} {`,
-          `  terms: { ${saysFields.terms.join(" ")} };`,
-          `  marks: { ${saysFields.marks.join(" ")} };`,
-          "}",
+          `/** What a step for a firing of it speaks of: its terms, and the elements it marks by role${saysFields.variants[0].name === null ? "" : "; the arm that holds says which way it reads"}. */`,
+          ...(saysFields.variants[0].name === null
+            ? [
+                `export interface ${saysType} {`,
+                `  terms: { ${saysFields.variants[0].terms.join(" ")} };`,
+                `  marks: { ${saysFields.variants[0].marks.join(" ")} };`,
+                "}",
+              ]
+            : [
+                `export type ${saysType} =`,
+                ...saysFields.variants.map(
+                  (v) =>
+                    `  | { arm: ${JSON.stringify(v.name)}; terms: { ${v.terms.join(" ")} }; marks: { ${v.marks.join(" ")} } }`,
+                ),
+                ";",
+              ]),
           "",
         ]),
     `const ${fnName}Facts: number[] = [];`,
@@ -6658,6 +6704,18 @@ export function compileGame(
             .filter((t) => t.says !== null)
             .map((t) => `  ${t.id}: ${capitalized(t.id)}Says;`),
           "}",
+          "",
+          "/** The kinds of step a firing can be: a technique's id, and for one whose",
+          " * `says` has arms, `<id>.<arm>` for each. */",
+          `export const SAYS_KINDS = ${JSON.stringify(
+            own.flatMap((t) =>
+              t.says === null
+                ? []
+                : t.says.variants.map((v) =>
+                    v.name === null ? t.id : `${t.id}.${v.name}`,
+                  ),
+            ),
+          )} as const;`,
           "",
         ]
       : []),

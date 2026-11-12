@@ -18,6 +18,7 @@
  * reads right for what is left (`Narration.narrow`).
  */
 
+import type { FiringSpoken } from "../../engine/described-firing-hint.ts";
 import { joinNums } from "../../engine/hint-text.ts";
 import {
   CELL,
@@ -30,6 +31,8 @@ import {
 } from "../../engine/hint-words.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import type { Point } from "../../engine/types.ts";
+import type { SaysById } from "./singles.compiled.ts";
+import type { SinglesState } from "./state.ts";
 
 /** The word for a blacked-out square: the color its piece is drawn in. */
 const B = SHADED_NAME;
@@ -241,4 +244,65 @@ export const say = {
       look: phrase`Shading ${mark.this("ring", CELL, m.targets, String(v))} would cut some of ${mark.the("outline", CELL, m.evidence, "square")} off from the rest of the ${C} region`,
       move: phrase`it must be ${C}`,
     }),
+};
+
+type Spoken<K extends keyof SaysById> = FiringSpoken<SaysById[K]>;
+
+/** What a step marks, with the number each square shows. */
+const marked = (s: Spoken<keyof SaysById>, state: SinglesState): Marked => ({
+  targets: s.targets,
+  evidence: s.outline,
+  strand: s.strand,
+  line: s.stripes,
+  num: ({ x, y }) => state.nums[y * state.w + x],
+});
+
+/** Each technique's sentence, from what its description says of a firing
+ * (`engine/described-firing-hint.ts`). */
+export const sentences = {
+  besideCovered: (s: Spoken<"besideCovered">, state: SinglesState): Sentence =>
+    say.adjBlack(marked(s, state)),
+  sameLine: (s: Spoken<"sameLine">, state: SinglesState): Sentence =>
+    say.sameLine(marked(s, state), s.terms.n),
+  sandwich: (s: Spoken<"sandwich">, state: SinglesState): Sentence =>
+    say.sandwich(marked(s, state), s.terms.n),
+  pair: (s: Spoken<"pair">, state: SinglesState): Sentence =>
+    say.pair(marked(s, state), s.terms.n),
+  corner: (s: Spoken<"corner">, state: SinglesState): Sentence => {
+    const m = marked(s, state);
+    switch (s.arm) {
+      case "four":
+        return say.corner4(
+          m,
+          s.terms.n,
+          s.at(s.terms.corner),
+          s.terms.sides.map(s.at),
+          s.at(s.terms.inner),
+        );
+      case "apex":
+        return say.corner3Corner(m, s.terms.corner, s.terms.beside);
+      case "across":
+        return say.corner3Inner(m, s.terms.inner, s.terms.beside, s.terms.corner);
+      case "pairAtS":
+      case "pairAtT":
+        return say.corner2(
+          m,
+          s.terms.pair.map(s.at),
+          s.at(s.terms.side),
+          s.terms.number,
+        );
+    }
+  },
+  boxedIn: (s: Spoken<"boxedIn">, state: SinglesState): Sentence =>
+    say.boxedIn(marked(s, state), s.terms.number),
+  offset: (s: Spoken<"offset">, state: SinglesState): Sentence =>
+    say.offset(
+      marked(s, state),
+      s.terms.along.map(s.at),
+      s.terms.beside.map(s.at),
+      s.terms.first,
+      s.terms.second,
+    ),
+  split: (s: Spoken<"split">, state: SinglesState): Sentence =>
+    say.split(marked(s, state), s.terms.number),
 };

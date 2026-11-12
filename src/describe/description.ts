@@ -200,15 +200,31 @@ export interface StatedTechnique {
   for: string;
   premise?: string;
   conclude: string;
-  says?: {
-    terms?: Record<string, string>;
-    marks?: Partial<Record<SaidRole, string>>;
-  };
+  says?: StatedSays;
+}
+
+/** What a technique's hint step speaks of. `arms` splits the step by which
+ * condition holds, first true winning, each arm adding its own terms and marks
+ * to the shared ones (an arm's names win). */
+export interface StatedSays {
+  terms?: Record<string, string>;
+  marks?: Partial<Record<SaidRole, string>>;
+  arms?: Record<
+    string,
+    {
+      when: string;
+      terms?: Record<string, string>;
+      marks?: Partial<Record<SaidRole, string>>;
+    }
+  >;
 }
 
 /** The roles a technique's `says` marks elements in; the firing's facts are
- * ringed without being said. */
-export type SaidRole = "outline" | "stripes" | "strike";
+ * ringed without being said. `strand` is a set drawn apart from the outline
+ * (Singles' corner kept from being boxed in). `reads` is drawn in no role: the
+ * cells the premise reads that no other mark shows, which the hint's walk
+ * counts as read (a line a firing fills whole, as against one it only hatches). */
+export type SaidRole = "outline" | "stripes" | "strike" | "strand" | "reads";
 
 /** Techniques stated once, for every game that places them. */
 export interface LibraryJson {
@@ -493,10 +509,19 @@ export interface Technique {
   conclude: Expr;
   /** What a hint step for a firing speaks of: named terms, and the sets of
    * elements marked by role; `null` where it says nothing. */
-  says: {
+  says: Says | null;
+}
+
+/** What a firing speaks of: the terms and marks a step has, and where the step
+ * reads differently by condition, one variant an arm (`name`, `when`), in the
+ * order the arms are tried. A technique without arms has one variant. */
+export interface Says {
+  variants: {
+    name: string | null;
+    when: Expr | null;
     terms: { name: string; expr: Expr }[];
     marks: { role: SaidRole; expr: Expr }[];
-  } | null;
+  }[];
 }
 
 export interface Definition {
@@ -617,18 +642,35 @@ export function parseTechnique(
     binders,
     premise: stated.premise === undefined ? null : at("premise", stated.premise),
     conclude: at("conclude", stated.conclude),
-    says:
-      stated.says === undefined
-        ? null
-        : {
-            terms: Object.entries(stated.says.terms ?? {}).map(([name, src]) => ({
-              name,
-              expr: at(`says ${name}`, src),
-            })),
-            marks: (
-              Object.entries(stated.says.marks ?? {}) as [SaidRole, string][]
-            ).map(([role, src]) => ({ role, expr: at(`says ${role}`, src) })),
-          },
+    says: stated.says === undefined ? null : parseSays(stated.says, at),
+  };
+}
+
+function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr): Says {
+  const variant = (
+    name: string | null,
+    when: Expr | null,
+    own: Pick<StatedSays, "terms" | "marks">,
+  ): Says["variants"][number] => {
+    const { terms, marks } = own;
+    const label = `says${name === null ? "" : ` ${name}`}`;
+    return {
+      name,
+      when,
+      terms: Object.entries({ ...stated.terms, ...terms }).map(([n, src]) => ({
+        name: n,
+        expr: at(`${label} ${n}`, src),
+      })),
+      marks: (
+        Object.entries({ ...stated.marks, ...marks }) as [SaidRole, string][]
+      ).map(([role, src]) => ({ role, expr: at(`${label} ${role}`, src) })),
+    };
+  };
+  if (stated.arms === undefined) return { variants: [variant(null, null, {})] };
+  return {
+    variants: Object.entries(stated.arms).map(([name, arm]) =>
+      variant(name, at(`says ${name} when`, arm.when), arm),
+    ),
   };
 }
 

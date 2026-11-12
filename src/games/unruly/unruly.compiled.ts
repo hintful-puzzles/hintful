@@ -20,6 +20,10 @@ export interface SaysById {
   unique: UniqueSays;
 }
 
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["threes","lastGap","quota","lastOne","unique"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -250,7 +254,7 @@ export interface LastGapBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface LastGapSays {
   terms: { horizontal: boolean; full: number; fill: number; };
-  marks: { stripes: readonly number[]; outline: readonly number[]; };
+  marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; };
 }
 
 const lastGapFacts: number[] = [];
@@ -347,7 +351,7 @@ export function lastGap(b: Marks, sp: GridSpace, fire: Fire<LastGapBinding, Last
               _g42.push(v_c);
             }
           }
-          const _says = { terms: { horizontal: _h41, full: v_d, fill: (3 - v_d) }, marks: { stripes: sp.lineCells[v_L].slice(), outline: _g42.slice() } };
+          const _says = { terms: { horizontal: _h41, full: v_d, fill: (3 - v_d) }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice(), outline: _g42.slice() } };
           if (!fire({ L: v_L, n: v_n, d: v_d }, facts, _says)) return 1;
         }
       }
@@ -365,7 +369,7 @@ export interface QuotaBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface QuotaSays {
   terms: { horizontal: boolean; full: number; fill: number; };
-  marks: { stripes: readonly number[]; outline: readonly number[]; };
+  marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; };
 }
 
 const quotaFacts: number[] = [];
@@ -461,7 +465,7 @@ export function quota(b: Marks, sp: GridSpace, fire: Fire<QuotaBinding, QuotaSay
               _g41.push(v_c);
             }
           }
-          const _says = { terms: { horizontal: _h40, full: v_d, fill: (3 - v_d) }, marks: { stripes: sp.lineCells[v_L].slice(), outline: _g41.slice() } };
+          const _says = { terms: { horizontal: _h40, full: v_d, fill: (3 - v_d) }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice(), outline: _g41.slice() } };
           if (!fire({ L: v_L, n: v_n, d: v_d }, facts, _says)) return 1;
         }
       }
@@ -481,7 +485,7 @@ export interface LastOneBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface LastOneSays {
   terms: { horizontal: boolean; fill: number; };
-  marks: { stripes: readonly number[]; outline: readonly number[]; };
+  marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; };
 }
 
 const lastOneFacts: number[] = [];
@@ -653,7 +657,7 @@ export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding, Last
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null) {
-              const _says = { terms: { horizontal: _h88, fill: _h39 }, marks: { stripes: sp.lineCells[v_L].slice(), outline: v_W.slice() } };
+              const _says = { terms: { horizontal: _h88, fill: _h39 }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice(), outline: v_W.slice() } };
               if (!fire({ L: v_L, n: v_n, d: v_d, i: v_i, W: v_W.slice() }, facts, _says)) return 1;
             }
           }
@@ -675,7 +679,7 @@ export interface UniqueBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface UniqueSays {
   terms: { horizontal: boolean; fill: number; };
-  marks: { stripes: readonly number[]; outline: readonly number[]; };
+  marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; };
 }
 
 const uniqueFacts: number[] = [];
@@ -832,7 +836,7 @@ export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding, Unique
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null) {
-              const _says = { terms: { horizontal: _h29, fill: _h68 }, marks: { stripes: sp.lineCells[v_B].slice(), outline: sp.lineCells[v_A].slice() } };
+              const _says = { terms: { horizontal: _h29, fill: _h68 }, marks: { stripes: sp.lineCells[v_B].slice(), reads: sp.lineCells[v_B].slice(), outline: sp.lineCells[v_A].slice() } };
               if (!fire({ A: v_A, n: v_n, d: v_d, B: v_B, j: v_j }, facts, _says)) return 1;
             }
           }

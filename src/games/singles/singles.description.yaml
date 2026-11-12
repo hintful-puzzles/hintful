@@ -97,6 +97,8 @@ techniques:
     tier: Easy
     for: "c in cells where value(c) = 1"
     conclude: "forall p in adj4(c): place(p, 2)"
+    says:
+      marks: { outline: "{c}" }
   # A clear square's number is covered everywhere else in its row and column.
   - id: sameLine
     tier: Easy
@@ -104,6 +106,16 @@ techniques:
     conclude: >-
       forall L in {row(c), col(c)}, p in cells(L) where p != c and clue(number, p) = n:
       place(p, 1)
+    says:
+      terms: { n: n }
+      marks:
+        outline: "{c}"
+        # The line holding every square it covers, where one does: the row,
+        # unless a copy in the column is still open too.
+        stripes: >-
+          {p in cells(row(c)) + cells(col(c)) where
+          (p in cells(row(c)) and count(q in cells(col(c)) where q != c and clue(number, q) = n and not known(q)) = 0)
+          or (p in cells(col(c)) and count(q in cells(row(c)) where q != c and clue(number, q) = n and not known(q)) = 0)}
   # Two equal numbers with one square between them: covering that square
   # would leave both clear, so it is clear.
   - id: sandwich
@@ -112,6 +124,9 @@ techniques:
       L in lines, c in cells(L), e = nth(cells(L), index(c, cells(L)) + 2)
       where e != none and clue(number, e) = clue(number, c)
     conclude: "place(nth(cells(L), index(c, cells(L)) + 1), 2)"
+    says:
+      terms: { n: "clue(number, c)" }
+      marks: { outline: "{c, e}" }
   # Two equal numbers side by side cannot both be covered, so every other
   # copy of their number in the line is.
   - id: pair
@@ -122,6 +137,9 @@ techniques:
     conclude: >-
       forall p in cells(L) where p != c and p != q and clue(number, p) = clue(number, c):
       place(p, 1)
+    says:
+      terms: { n: "clue(number, c)" }
+      marks: { outline: "{c, q}", stripes: "cells(L)" }
   # Matching numbers in a corner's two by two, upstream's chain: where the
   # corner square or the one across from it matches both squares beside the
   # corner, it is covered, since clear it would leave both beside it
@@ -139,12 +157,54 @@ techniques:
       and ((ns = n and nt = n) or (ns = nt and ni = nt)
       or ((ns != n and ns != ni) or place(t, 2))
       and (ns = n or ns = ni or (nt != n and nt != ni) or place(s, 2)))
+    says:
+      arms:
+        # All four match: the corner and the square across from it are covered.
+        four:
+          when: "ns = n and nt = n and ni = nt"
+          terms: { n: n, corner: c, sides: "{s, t}", inner: i }
+          marks: { outline: "{c, s, t, i}" }
+        # The corner matches both squares beside it, and is covered itself.
+        apex:
+          when: "ns = n and nt = n"
+          terms: { corner: n, beside: ns }
+          marks: { outline: "{c, s, t}" }
+        # The square across matches both beside it, and is covered; the corner
+        # it saves is drawn apart.
+        across:
+          when: "ns = nt and ni = nt"
+          terms: { inner: ni, beside: ns, corner: n }
+          marks: { outline: "{s, t, i}", strand: "{c}" }
+        # One of the squares beside the corner is shaded, and the pair beside
+        # the other would box the corner in: the pair is the corner and the
+        # other square where they match, else that square and the one across.
+        pairAtS:
+          when: "ns = n or ns = ni"
+          terms:
+            side: s
+            number: ns
+            pair: "{x in {c, s, i} where x = s or (ns = n and x = c) or (ns != n and x = i)}"
+          marks:
+            outline: "{x in {c, s, i} where x = s or (ns = n and x = c) or (ns != n and x = i)}"
+            strand: "{c}"
+        pairAtT:
+          when: "ns != n and ns != ni"
+          terms:
+            side: t
+            number: nt
+            pair: "{x in {c, t, i} where x = t or (nt = n and x = c) or (nt != n and x = i)}"
+          marks:
+            outline: "{x in {c, t, i} where x = t or (nt = n and x = c) or (nt != n and x = i)}"
+            strand: "{c}"
   # A square with one neighbor not covered has that neighbor clear: covered
   # or clear, it needs one.
   - id: boxedIn
     tier: Easy
     for: "c in cells where value(c) != 1, F = {p in adj4(c) where value(p) != 1}"
     conclude: "|F| > 0 and (|F| > 1 or place(first(F), 2))"
+    says:
+      terms: { number: "clue(number, first(F))" }
+      marks: { outline: "{c}" }
   # Two pairs of equal numbers in neighboring lines, one pair level with the
   # other at one end and a square off it at the other: covering either
   # square of the two by two they make there sets off a chain of covered
@@ -158,6 +218,9 @@ techniques:
       b1 = the(p in adj4(a1) where p not in cells(L) and (x(p) = x(b) or y(p) = y(b)))
       where clue(number, b1) = m
     conclude: "forall p in adj4(a) where p in adj4(b): place(p, 2)"
+    says:
+      terms: { first: n, second: m, along: "{a1, a}", beside: "{b1, b}" }
+      marks: { outline: "{a1, b1, a, b}" }
   # A square without which the squares not covered would not be one group
   # is clear: covered, it would leave a group of them with no clear square
   # to join the rest by.
@@ -165,3 +228,6 @@ techniques:
     tier: Normal
     for: "K = cuts(uncovered), c in K where not known(c)"
     conclude: "place(c, 2)"
+    says:
+      terms: { number: "clue(number, c)" }
+      marks: { outline: "{q in adj4(c) where value(q) != 1}" }

@@ -61,6 +61,9 @@ On a technique, one optional block, `says`:
 
 ### Named arms
 
+*Withdrawn 2026-11-12: arms are conditions on the binding (§ "Singles,
+built"), not names of a conclusion's parts.*
+
 `conclude` stays a formula. Where a technique concludes several things that
 read differently, it may be a map from an arm's name to a formula, and means
 their `and`:
@@ -156,32 +159,51 @@ defect found in the game, said which.
 - **What the walk reads** is the union of the mark sets and the cells the
   firing fills. It equals Unruly's hand-written `reads` on every technique.
 
-### Read off Singles and Boats, not yet built
+### Singles, built (2026-11-12)
 
 - **A step is one fact or one firing.** Unruly's step is a fact (a journey
-  of one move each). Singles' is a firing: one step, `{ sets: [...] }` as its
-  move, `targets` in its highlights, and `hintKeepTrack` shrinking the step in
-  place as the player makes some of them (`trackTargets`, `step.words.narrow`).
-  `describedHint` needs a second shape for it, chosen by the game (every
-  technique of Singles is one; `says.shown` per technique waits for a game
-  that mixes). The shrink is the engine's: it is the same for every game
-  whose step holds several facts.
-- **Arms are conditions, not parts of the conclusion.** Singles' `corner`
-  reads as `corner4`, `corner3` or `corner2` by which of `ns = n and nt = n`
-  and `ns = nt and ni = nt` hold, and one firing of two facts is one arm, so
-  the arm cannot be "the conjunct that made the fact". The design above is
-  wrong there. What fits: `says.arms`, an ordered map from a name to a
-  condition over the binding, first true wins, each arm with its own
-  `terms` and `marks` over the shared ones, and the kind `<id>.<arm>`.
-  Whether Unequal's `sign` and Light Up's `square` fit it is to be read
-  before it is built.
-- **A mark can depend on the facts** (Singles' evidence less the targets;
-  its `strand` corner is a fourth role, drawn apart). The engine already
-  takes evidence less the facts; a role beyond `outline`, `stripes` and
-  `strike` is a new `MarkRole` and wants the renderer's say first.
-- **The walk's `reads` for Singles** names cells by every `Point` in the
-  reason (`pointsOf`): `says.marks` covers it only where each reason's cells
-  are marks.
+  of one move each); Singles' is a firing: one step, `{ sets: [...] }` as its
+  move, targets in its highlights, `hintKeepTrack` shrinking it in place as the
+  player makes some. `engine/described-firing-hint.ts` is that shape, chosen by
+  the game (`describedHint` is the other); the shrink (`trackTargets`,
+  `words.narrow`) is the engine's. The game gives `target`, `want`, `move`,
+  `valueAt`, `execute` and `foreign`. `says.shown` per technique still waits
+  for a game that mixes the two.
+- **Arms are conditions, not parts of the conclusion**, so the earlier
+  "named arms of `conclude`" is withdrawn. Built as `says.arms`: an ordered map
+  from a name to `when`, each arm adding `terms` and `marks` to the shared ones.
+  The kind is `<id>.<arm>`; `SAYS_KINDS` in the compiled module lists them
+  (every game's, so `describedHint` can take it as well), and the sentence of a
+  technique narrows on `spoken.arm`. Corner has five (`four`, `apex`, `across`,
+  `pairAtS`, `pairAtT`). Whether Unequal's `sign` and Light Up's `square` fit
+  is still to be read, when each moves.
+- **A mark can depend on the facts**: Singles' hatch is the one line holding
+  every cell `sameLine` covers, written as a set expression over the cells'
+  state (no `if` needed). The engine subtracts the facts and the strand from the
+  outline. `strand` is a fourth `says` role, handed to the sentence and to the
+  highlights; it needed no new `MarkRole`, since the words still say `outline`
+  and only the highlights draw it apart.
+- **What the walk reads is a decision per technique, not per game.** Unruly's
+  fills read the whole line they fill, and Singles' `pair` and `sameLine` only
+  hatch a line: including stripes in the reads moved two of Singles' walks
+  (and excluding it moved Unruly's). So the reads are the outline, the strand
+  and the facts, and `says.marks.reads` adds a set where a technique reads
+  more (Unruly's four stripes). The earlier "the union of the mark sets" is
+  withdrawn.
+- **The comparison.** Every hash of Singles' walk is the same as at `HEAD`:
+  the four boards a preset the snapshot holds, and a widened run of forty boards
+  a preset (80 walks, every corner arm met, `apex` 8 times and `across` twice),
+  run against a worktree of `HEAD`. Only the census names changed.
+- **Lines.** Singles' hand-written hint went from 400 lines (`index.ts` 248
+  out, 49 in; `solver.ts` 152 out, 25 in) to 49 + 25 + 64 of sentence glue
+  (`hint-text.ts` is the game's words) and 66 of `says`. Unruly's went from
+  ~437 lines out of `index.ts` and `solver.ts` (141 + 145, 21 + 7 in) and 36 of
+  `hint-text.ts` to 19 of `says`.
+
+### Read off Boats, not yet built
+
+- **`with` and restated definitions** are Boats' (and Bridges') question: a
+  term over a technique's `with` needs the supposition's marks (see Risks).
 
 ## Risks
 

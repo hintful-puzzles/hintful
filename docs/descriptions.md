@@ -1008,15 +1008,31 @@ Its comparison with the checks it replaced is in the `report.md` of
 
 **A technique that `says` needs no reason callback.** Its `says` block names
 the `terms` its step's sentence reads and the `marks` (`outline`, `stripes`,
-`strike`) it shows, each a formula over the binding; the compiler reads them
+`strike`, `strand`) it shows, each a formula over the binding; the compiler reads them
 at the firing, on the marks before its facts are made and under the
 technique's own `with`, and only where a hint asks (a solve passes no `fire`).
 `compiledRung(run, clues)` then records `{ binding, says }` for each fact, and
-`describedHint` (`engine/described-hint.ts`) builds the steps from it: the
-firing's facts are the ringed targets, evidence is the outline less them, and
-what the walk reads is the marks and the facts. A step's kind is the
-technique's id, and the module's `SaysById` types each technique's terms for
-its sentence. Exemplar: `unruly/unruly.description.yaml`.
+`describedHint` (`engine/described-hint.ts`, a step a fact) or
+`describedFiringHint` (`engine/described-firing-hint.ts`, a step a firing)
+builds the steps from it: the firing's facts are the ringed targets, evidence
+is the outline less them and less the `strand`, drawn apart. **What the walk
+reads is the outline, the strand, the facts and a `reads` set where a
+technique says one**: a line it only hatches is not read, a line it fills whole
+is, so the second says `reads: "cells(L)"` (Unruly's fills) and the first
+nothing (Singles' pair). A step's kind is the technique's id, and the module's
+`SaysById` types each technique's terms for its sentence. Exemplars:
+`unruly/unruly.description.yaml`, `singles/singles.description.yaml`.
+
+**A technique that reads differently by what holds says `arms`**: an ordered
+map from a name to a `when` condition over the binding, each arm adding its
+own `terms` and `marks` to the shared ones, the first true arm winning (an
+arm that holds none throws). The kind is `<id>.<arm>` and `SAYS_KINDS` in the
+compiled module lists them, which a game hands to `Game.hintRungs`; the
+terms are a union keyed by `arm`, so a sentence narrows on `spoken.arm`.
+Arms are conditions on the binding and not parts of the conclusion: Singles'
+corner reads as four, apex, across or a pair by which of its numbers match.
+A mark that depends on the facts (Singles' hatch, the one line holding every
+cell it covers) is a set expression over the cells' own state, as `sameLine`'s.
 
 `compiledRung(run, clues, reason)` pairs a compiled technique with the
 function that turns its binding and one fact into the reason the record

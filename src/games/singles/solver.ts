@@ -19,15 +19,12 @@ import {
   compiledRung,
   describedLadder,
   type Ladder,
+  type LadderEntry,
   ladderTechniques,
-  ladderWalk,
   runLadder,
-  type Taken,
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
-import type { Point } from "../../engine/types.ts";
 import * as singles from "./singles.compiled.ts";
 import { F_BLACK, F_CIRCLE, F_ERROR, type SinglesState } from "./state.ts";
 
@@ -39,55 +36,11 @@ export function inGrid(s: SinglesState, x: number, y: number): boolean {
 }
 
 /** What the description reads a square as holding. */
-const COVERED = 1;
-const CLEAR = 2;
+export const COVERED = 1;
+export const CLEAR = 2;
 
 /** The highest tier the ladder grades: Normal. */
 const NORMAL = 1;
-
-/**
- * Why a cell is forced — the premise a hint narrates and highlights, one
- * variant a reading of the ladder's techniques. The captured cells are the
- * deduction's evidence.
- */
-export type SinglesReason =
-  /** Two equal numbers one cell apart force the middle white. */
-  | { kind: "sandwich"; ends: [Point, Point] }
-  /** An adjacent equal pair blackens the other copies in its line. */
-  | { kind: "pair"; pair: [Point, Point] }
-  /** A 2×2 corner of four equal numbers blackens this diagonal. */
-  | { kind: "corner4"; block: Point[] }
-  /** Three equal numbers in a 2×2 corner blacken the apex. `corner` is the
-   * board-corner cell that would be stranded; `matched` are the three cells
-   * sharing the number. */
-  | { kind: "corner3"; corner: Point; matched: Point[] }
-  /** Two equal numbers in a 2×2 corner force the other neighbor white.
-   * `corner` is the board-corner cell at risk of being sealed off; `pair`
-   * are the two cells sharing the number. */
-  | { kind: "corner2"; corner: Point; pair: [Point, Point] }
-  /** An offset pair of equal numbers forces two whites. */
-  | { kind: "offset"; quad: Point[] }
-  /** A cell next to a black must be white. */
-  | { kind: "adjBlack"; black: Point }
-  /** A number sharing a line with a circle must be black. */
-  | { kind: "sameLine"; circled: Point }
-  /** A white cell with one non-black neighbor forces it white. */
-  | { kind: "boxedIn"; cell: Point }
-  /** A cell whose shading would split the white region must be white. */
-  | { kind: "split"; neighbors: Point[] };
-
-/** One forced cell recorded for a hint, in deduction order. `group` ties
- * together the cells forced by one firing. */
-export interface HintRecord extends Point {
-  value: "black" | "circle";
-  reason: SinglesReason;
-  group: number;
-}
-
-const pointOf = (sp: GridSpace, c: number): Point => ({
-  x: c % sp.w,
-  y: (c / sp.w) | 0,
-});
 
 /** The last board size's space, which every move's `status` reads again. */
 let lastSpace: GridSpace | null = null;
@@ -103,58 +56,18 @@ function dealtOf({ n, nums }: SinglesState): singles.Dealt {
   return { number: clueList(at, Array.from(nums), n) };
 }
 
-/** The ladder over the dealt board, each technique with its reason: built
- * from the binding and the square decided, on the marks before the firing. */
-function singlesLadder(dl: singles.Dealt, nums: Int8Array): Ladder {
+/** The ladder over the dealt board. A technique that says builds its own steps
+ * (`singles.description.yaml`'s `says`), so no rung builds a reason. */
+function singlesLadder(dl: singles.Dealt): Ladder {
   return describedLadder(singles, {
-    besideCovered: uncluedRung(singles.besideCovered, ({ c }, _p, _to, m) => ({
-      kind: "adjBlack",
-      black: pointOf(m.sp, c),
-    })),
-    sameLine: compiledRung(singles.sameLine, dl, ({ c }, _p, _to, m) => ({
-      kind: "sameLine",
-      circled: pointOf(m.sp, c),
-    })),
-    sandwich: compiledRung(singles.sandwich, dl, ({ c, e }, _p, _to, m) => ({
-      kind: "sandwich",
-      ends: [pointOf(m.sp, c), pointOf(m.sp, e)],
-    })),
-    pair: compiledRung(singles.pair, dl, ({ c, q }, _p, _to, m) => ({
-      kind: "pair",
-      pair: [pointOf(m.sp, c), pointOf(m.sp, q)],
-    })),
-    corner: compiledRung(
-      singles.corner,
-      dl,
-      ({ c, s, t, i, n, ns, nt, ni }, p, _to, m): SinglesReason => {
-        const at = (x: number): Point => pointOf(m.sp, x);
-        const corner = at(c);
-        const apex = ns === n && nt === n;
-        const across = ns === nt && ni === nt;
-        if (apex && across) return { kind: "corner4", block: [c, s, t, i].map(at) };
-        if (apex) return { kind: "corner3", corner, matched: [c, s, t].map(at) };
-        if (across) return { kind: "corner3", corner, matched: [s, t, i].map(at) };
-        // The pair beside the square beside the corner that is not decided.
-        const side = p === t ? s : t;
-        const pair: [Point, Point] =
-          nums[c] === nums[side] ? [corner, at(side)] : [at(side), at(i)];
-        return { kind: "corner2", corner, pair };
-      },
-    ),
-    boxedIn: uncluedRung(singles.boxedIn, ({ c }, _p, _to, m) => ({
-      kind: "boxedIn",
-      cell: pointOf(m.sp, c),
-    })),
-    offset: compiledRung(singles.offset, dl, ({ a, b, a1, b1 }, _p, _to, m) => ({
-      kind: "offset",
-      quad: [a1, b1, a, b].map((x) => pointOf(m.sp, x)),
-    })),
-    split: uncluedRung(singles.split, (_b, p, _to, m) => ({
-      kind: "split",
-      neighbors: m.sp.adj4[p]
-        .filter((q) => m.value(q) !== COVERED)
-        .map((q) => pointOf(m.sp, q)),
-    })),
+    besideCovered: uncluedRung(singles.besideCovered),
+    sameLine: compiledRung(singles.sameLine, dl),
+    sandwich: compiledRung(singles.sandwich, dl),
+    pair: compiledRung(singles.pair, dl),
+    corner: compiledRung(singles.corner, dl),
+    boxedIn: compiledRung(singles.boxedIn, dl),
+    offset: compiledRung(singles.offset, dl),
+    split: compiledRung(singles.split, dl),
   });
 }
 
@@ -188,7 +101,17 @@ function deduction(state: SinglesState): {
     valuesOf(state),
   );
   m.seed(m.grid);
-  return { m, ladder: singlesLadder(dl, state.nums), dl };
+  return { m, ladder: singlesLadder(dl), dl };
+}
+
+/** What a hint walks: the marks over a state's numbers and marks, and the
+ * ladder's techniques. */
+export function hintWalk(state: SinglesState): {
+  marks: CellMarks;
+  entries: readonly LadderEntry[];
+} {
+  const { m, ladder } = deduction(state);
+  return { marks: m, entries: ladder.entries };
 }
 
 /**
@@ -290,54 +213,4 @@ export function markErrors(s: SinglesState): void {
   const largest = size.indexOf(Math.max(...size));
   for (let i = 0; i < n; i++)
     if (!black(i) && group[i] !== largest) s.flags[i] |= F_ERROR;
-}
-
-// --- the hint's walk ---------------------------------------------------------
-
-/** Every cell a reason names. */
-function pointsOf(w: number, reason: SinglesReason): number[] {
-  const out: number[] = [];
-  const walk = (v: unknown): void => {
-    if (Array.isArray(v)) v.forEach(walk);
-    else if (v && typeof v === "object" && "x" in v && "y" in v) {
-      const p = v as Point;
-      out.push(p.y * w + p.x);
-    }
-  };
-  Object.values(reason).forEach(walk);
-  return out;
-}
-
-/**
- * The ladder's firings from the player's current marks, each forced cell
- * recorded in order with the reason that forces it — the data a hint plan
- * narrates — at every tier, so a board the ladder finishes yields its whole
- * remaining solution.
- *
- * One firing at a time, each the one that carries on from the cells the
- * plan has just decided (`ladderWalk`): a player works outward from them.
- */
-export function deduceHintPlan(state: SinglesState): HintRecord[] {
-  const { m, ladder } = deduction(state);
-  m.budget = stepBudget("singles hint");
-  // The cells a firing's premise names, and its own.
-  const reads = ({ facts, reasons }: Taken): number[] => [
-    ...facts.filter((_, i) => i % 3 === 1),
-    ...pointsOf(state.w, reasons[0] as SinglesReason),
-  ];
-  const walk = ladderWalk(m, ladder.entries, { [TIERS]: NORMAL }, reads);
-  const records: HintRecord[] = [];
-  for (let group = 0; ; group++) {
-    const taken = walk.next();
-    if (taken === null || taken === "contradiction") break;
-    const { facts, reasons } = taken;
-    for (let i = 0; i < facts.length; i += 3)
-      records.push({
-        ...pointOf(m.sp, facts[i + 1]),
-        value: facts[i + 2] === COVERED ? "black" : "circle",
-        reason: reasons[i / 3] as SinglesReason,
-        group,
-      });
-  }
-  return records;
 }

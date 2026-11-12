@@ -1,7 +1,7 @@
 /**
  * Tests for the Singles (Hitori) explained deduction hint.
  *
- * Tier 1: `deduceHintPlan` records the right reason per deduction (crafted
+ * Tier 1: a hint step names the right deduction (crafted
  * boards for the rarer once-only rules, generated boards for the cascade /
  * connectivity / offset rules); `hint()` returns a plan that solves the
  * board, groups a two-cell firing into one step, gives every step visible
@@ -21,7 +21,7 @@ import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
 import { type SinglesHint, type SinglesRung, singlesGame } from "./index.ts";
 import { COL_HINT_CELL } from "./render.ts";
-import { deduceHintPlan, solveSpecific } from "./solver.ts";
+import { solveSpecific } from "./solver.ts";
 import {
   DIFF_ANY,
   F_BLACK,
@@ -48,7 +48,7 @@ const stripes = (step: Step): number => stepMarks(step).of("stripes", CELL).leng
 /** The rules a crafted board does not reach: each one's pin is a generated
  * board whose plan opens with it. */
 const GENERATED_RULES = [
-  "adjBlack",
+  "besideCovered",
   "sameLine",
   "boxedIn",
   "split",
@@ -71,67 +71,78 @@ const pinned = describeHintPins({
     sharedLine: (step: Step) => step.rung === "sameLine" && stripes(step) > 0,
   },
   pins: {
-    /** Held on 3633 of 5429 positions walked. */
+    /** Held on 3635 of 5486 positions walked. */
     oneCell: "6x6dk:146214162623436526534361613462465334",
-    /** Held on 1135 of 5429 positions walked. */
+    /** Held on 1162 of 5486 positions walked. */
     twoCells: {
       id: "6x6dk:614262562311433246423351441133651123",
       moves: [{ sets: [{ x: 0, y: 3, value: "circle" }] }],
     },
-    /** Held on 1847 of 5429 positions walked. */
+    /** Held on 1845 of 5486 positions walked. */
     sharedLine: {
       id: "6x6dk:146214162623436526534361613462465334",
       moves: [{ sets: [{ x: 2, y: 1, value: "circle" }] }],
     },
-    /** Held on 2258 of 5429 positions walked. */
-    sandwich: "6x6dk:146214162623436526534361613462465334",
-    /** Held on 955 of 5429 positions walked. */
-    pair: {
-      id: "6x6dk:445642432165334561225311213556453244",
-      moves: [{ sets: [{ x: 3, y: 3, value: "circle" }] }],
-    },
-    /** Held on 52 of 5429 positions walked. */
-    corner4: {
-      id: "6x6dk:663255261455611642532264154346416613",
-      moves:
-        '[{"sets":[{"x":0,"y":1,"value":"circle"}]},{"sets":[{"x":3,"y":4,"value":"circle"}]},{"sets":[{"x":4,"y":3,"value":"circle"}]}]',
-    },
-    /** Held on 490 of 5429 positions walked. */
-    corner3: {
-      id: "6x6dk:125136446533344162432351161354613145",
-      moves:
-        '[{"sets":[{"x":0,"y":2,"value":"circle"}]},{"sets":[{"x":1,"y":4,"value":"circle"}]},{"sets":[{"x":2,"y":3,"value":"circle"}]},{"sets":[{"x":2,"y":5,"value":"circle"}]},{"sets":[{"x":3,"y":1,"value":"circle"}]},{"sets":[{"x":1,"y":0,"value":"circle"}]}]',
-    },
-    /** Held on 2694 of 5429 positions walked. */
-    corner2: {
-      id: "6x6dk:125136446533344162432351161354613145",
-      moves:
-        '[{"sets":[{"x":0,"y":2,"value":"circle"}]},{"sets":[{"x":1,"y":4,"value":"circle"}]},{"sets":[{"x":2,"y":3,"value":"circle"}]},{"sets":[{"x":2,"y":5,"value":"circle"}]},{"sets":[{"x":3,"y":1,"value":"circle"}]}]',
-    },
-    /** Held on 2635 of 5429 positions walked. */
-    offset: {
-      id: "6x6dk:122513631454336424114662242615325532",
-      moves:
-        '[{"sets":[{"x":1,"y":4,"value":"circle"}]},{"sets":[{"x":4,"y":1,"value":"circle"}]},{"sets":[{"x":4,"y":2,"value":"circle"}]},{"sets":[{"x":5,"y":4,"value":"circle"}]}]',
-    },
-    /** Held on 5203 of 5429 positions walked. */
-    adjBlack: {
+    /** Held on 5283 of 5486 positions walked. */
+    besideCovered: {
       id: "6x6dk:146214162623436526534361613462465334",
       moves:
         '[{"sets":[{"x":2,"y":1,"value":"circle"}]},{"sets":[{"x":4,"y":1,"value":"black"}]}]',
     },
-    /** Held on 5401 of 5429 positions walked. */
+    /** Held on 5474 of 5486 positions walked. */
     sameLine: {
       id: "6x6dk:146214162623436526534361613462465334",
       moves: [{ sets: [{ x: 2, y: 1, value: "circle" }] }],
     },
-    /** Held on 4960 of 5429 positions walked. */
+    /** Held on 1057 of 5486 positions walked. */
+    sandwich: "6x6dk:146214162623436526534361613462465334",
+    /** Held on 259 of 5486 positions walked. */
+    pair: {
+      id: "6x6dk:445642432165334561225311213556453244",
+      moves: [{ sets: [{ x: 3, y: 3, value: "circle" }] }],
+    },
+    /** Held on 51 of 5486 positions walked. */
+    "corner.four": {
+      id: "6x6dk:663255261455611642532264154346416613",
+      moves:
+        '[{"sets":[{"x":0,"y":1,"value":"circle"}]},{"sets":[{"x":3,"y":4,"value":"circle"}]},{"sets":[{"x":4,"y":3,"value":"circle"}]}]',
+    },
+    /** Held on 106 of 5486 positions walked. */
+    "corner.apex": {
+      id: "5x5de:1154415435251455411244252",
+      moves:
+        '[{"sets":[{"x":3,"y":4,"value":"circle"}]},{"sets":[{"x":3,"y":1,"value":"circle"}]}]',
+    },
+    /** Held on 29 of 5486 positions walked. */
+    "corner.across": {
+      id: "6x6dk:455613345534323165563453556344231546",
+      moves:
+        '[{"sets":[{"x":1,"y":2,"value":"circle"}]},{"sets":[{"x":1,"y":5,"value":"circle"}]}]',
+    },
+    /** Held on 1055 of 5486 positions walked. */
+    "corner.pairAtS": {
+      id: "6x6dk:455613345534323165563453556344231546",
+      moves: [{ sets: [{ x: 1, y: 2, value: "circle" }] }],
+    },
+    /** Held on 852 of 5486 positions walked. */
+    "corner.pairAtT": {
+      id: "6x6dk:125136446533344162432351161354613145",
+      moves:
+        '[{"sets":[{"x":0,"y":2,"value":"circle"}]},{"sets":[{"x":1,"y":4,"value":"circle"}]},{"sets":[{"x":2,"y":3,"value":"circle"}]},{"sets":[{"x":2,"y":5,"value":"circle"}]},{"sets":[{"x":3,"y":1,"value":"circle"}]}]',
+    },
+    /** Held on 5038 of 5486 positions walked. */
     boxedIn: {
       id: "6x6dk:146214162623436526534361613462465334",
       moves:
         '[{"sets":[{"x":2,"y":1,"value":"circle"}]},{"sets":[{"x":4,"y":1,"value":"black"}]},{"sets":[{"x":3,"y":1,"value":"circle"},{"x":5,"y":1,"value":"circle"},{"x":4,"y":0,"value":"circle"},{"x":4,"y":2,"value":"circle"}]},{"sets":[{"x":0,"y":0,"value":"black"}]},{"sets":[{"x":1,"y":0,"value":"circle"},{"x":0,"y":1,"value":"circle"}]},{"sets":[{"x":5,"y":0,"value":"black"}]},{"sets":[{"x":1,"y":1,"value":"black"}]},{"sets":[{"x":1,"y":2,"value":"circle"}]},{"sets":[{"x":1,"y":3,"value":"black"}]},{"sets":[{"x":0,"y":3,"value":"circle"},{"x":2,"y":3,"value":"circle"},{"x":1,"y":4,"value":"circle"}]},{"sets":[{"x":3,"y":4,"value":"circle"}]},{"sets":[{"x":4,"y":5,"value":"circle"}]},{"sets":[{"x":3,"y":5,"value":"black"}]},{"sets":[{"x":2,"y":5,"value":"circle"}]},{"sets":[{"x":5,"y":4,"value":"circle"}]}]',
     },
-    /** Held on 3127 of 5429 positions walked. */
+    /** Held on 74 of 5486 positions walked. */
+    offset: {
+      id: "6x6dk:122513631454336424114662242615325532",
+      moves:
+        '[{"sets":[{"x":1,"y":4,"value":"circle"}]},{"sets":[{"x":4,"y":1,"value":"circle"}]},{"sets":[{"x":4,"y":2,"value":"circle"}]},{"sets":[{"x":5,"y":4,"value":"circle"}]}]',
+    },
+    /** Held on 3129 of 5486 positions walked. */
     split: {
       id: "6x6dk:231635324553435412511344463361362544",
       moves:
@@ -140,58 +151,57 @@ const pinned = describeHintPins({
   },
 });
 
-describe("deduceHintPlan records the deduction reason", () => {
+/** The steps a hint gives on a board. */
+function plan(s: SinglesState): Step[] {
+  const res = singlesGame.hint?.(s);
+  if (!res?.ok) throw new Error("expected a plan");
+  return res.steps;
+}
+
+describe("a hint step names the deduction that forces its cells", () => {
   it("sandwich: two equal numbers one apart force the middle white", () => {
     // Row 0: 1 2 1  → the '2' between the two '1's must stay white.
-    const s = craft(3, 2, [1, 2, 1, 3, 1, 2]);
-    const plan = deduceHintPlan(s);
-    const r = plan.find((m) => m.reason.kind === "sandwich");
-    expect(r).toBeDefined();
-    expect(r?.value).toBe("circle");
-    expect(r).toMatchObject({ x: 1, y: 0 });
-    if (r?.reason.kind === "sandwich") {
-      expect(r.reason.ends).toEqual([
+    const step = plan(craft(3, 2, [1, 2, 1, 3, 1, 2])).find(
+      (s) => s.rung === "sandwich",
+    );
+    expect(step?.move).toEqual({ sets: [{ x: 1, y: 0, value: "circle" }] });
+    if (!step) return;
+    expect(stepMarks(step).of("outline", CELL)).toEqual(
+      expect.arrayContaining([
         { x: 0, y: 0 },
         { x: 2, y: 0 },
-      ]);
-    }
+      ]),
+    );
   });
 
   it("pair: an adjacent equal pair shades the other copies in the line", () => {
     // Row 0: 1 1 2 2 1 → the lone '1' at x=4 must be shaded. No two equal
     // numbers sit a cell apart, so the pair is what a plan opens with: a
     // plan that continues may decide a cell by another rule first.
-    const s = craft(5, 2, [1, 1, 2, 2, 1, 3, 4, 5, 6, 7]);
-    const [r] = deduceHintPlan(s);
-    expect(r?.reason.kind).toBe("pair");
-    expect(r?.value).toBe("black");
-    expect(r).toMatchObject({ x: 4, y: 0 });
+    const [step] = plan(craft(5, 2, [1, 1, 2, 2, 1, 3, 4, 5, 6, 7]));
+    expect(step.rung).toBe("pair");
+    expect(step.move).toEqual({ sets: [{ x: 4, y: 0, value: "black" }] });
   });
 
-  it("corner3: three matching numbers in a 2x2 corner force the apex black", () => {
-    const s = craft(2, 2, [1, 1, 1, 2]);
-    const plan = deduceHintPlan(s);
-    expect(plan.some((m) => m.reason.kind === "corner3")).toBe(true);
+  it("corner: three matching numbers in a 2x2 corner force the apex black", () => {
+    const kinds = plan(craft(2, 2, [1, 1, 1, 2])).map((s) => s.rung);
+    expect(kinds.some((k) => k === "corner.apex" || k === "corner.across")).toBe(true);
   });
 
-  it("corner2: two matching numbers in a 2x2 corner force a neighbor white", () => {
-    const s = craft(2, 2, [1, 1, 2, 3]);
-    const plan = deduceHintPlan(s);
-    expect(plan.some((m) => m.reason.kind === "corner2")).toBe(true);
+  it("corner: two matching numbers in a 2x2 corner force a neighbor white", () => {
+    const kinds = plan(craft(2, 2, [1, 1, 2, 3])).map((s) => s.rung);
+    expect(kinds.some((k) => k === "corner.pairAtS" || k === "corner.pairAtT")).toBe(
+      true,
+    );
   });
 
-  it("corner4: all four matching shade the diagonal via the box-in argument", () => {
+  it("corner: all four matching shade the diagonal via the box-in argument", () => {
     // Whole 2x2 board all equal — only the corner+inner diagonal can be
     // shaded without stranding the grid-corner white. Narration names the
-    // value and uses the same box-in language as corner3, never the false
+    // value and uses the same box-in language as the apex, never the false
     // "only pair that leaves one white per line" premise.
-    const s = craft(2, 2, [4, 4, 4, 4]);
-    const plan = deduceHintPlan(s);
-    expect(plan.some((m) => m.reason.kind === "corner4")).toBe(true);
-    const res = singlesGame.hint?.(s);
-    expect(res?.ok).toBe(true);
-    if (!res?.ok) return;
-    const step = res.steps[0];
+    const [step] = plan(craft(2, 2, [4, 4, 4, 4]));
+    expect(step.rung).toBe("corner.four");
     expect(step.explanation).toContain("box itself in");
     expect(step.explanation).toContain("4");
     expect(step.explanation).not.toContain("one white per line");
@@ -202,10 +212,7 @@ describe("deduceHintPlan records the deduction reason", () => {
   });
 
   it("covers the cascade / connectivity / offset rules on generated boards", () => {
-    for (const k of GENERATED_RULES) {
-      // The step a hint opens with is the recorder's first firing.
-      expect(deduceHintPlan(pinned(k).state)[0].reason.kind).toBe(k);
-    }
+    for (const k of GENERATED_RULES) expect(pinned(k).step.rung).toBe(k);
   });
 });
 
@@ -234,7 +241,7 @@ describe("hint", () => {
     // propagates from cells it changes this run, so resumed from the player's
     // marks it stalls unless they are primed. Walk each board to completion one
     // hinted move at a time, recomputing the plan after every move so
-    // deduceHintPlan runs from many partial positions; it must never give up
+    // the walk runs from many partial positions; it must never give up
     // before solved.
     for (const seed of ["sh-1", "sh-2", "sh-3", "hint-plan"]) {
       let s = fromSeed({ w: 6, h: 6, diff: "tricky" }, seed);
@@ -434,8 +441,8 @@ describe("singles hint render", () => {
   });
 
   it("outlines a cited shaded square, apart from the ringed target", () => {
-    // An adjBlack frame: a decided black square forces a neighbor white.
-    const { recording } = hintFrame("adjBlack");
+    // A besideCovered frame: a decided black square forces a neighbor white.
+    const { recording } = hintFrame("besideCovered");
     const ops = recording.ops;
     expect(markSides(ops, COL_HINT_CELL).length).toBeGreaterThan(0);
     expect(ringsOf(ops).length).toBeGreaterThan(0);

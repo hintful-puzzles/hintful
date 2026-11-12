@@ -11,23 +11,19 @@
  */
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
+import {
+  describedFiringHint,
+  type FiringHint,
+} from "../../engine/described-firing-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
   type Game,
-  type HintResult,
-  type HintStep,
-  type HintTrackVerdict,
   type PresetBoards,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
-import { changedCells, trackTargets } from "../../engine/hint-track.ts";
-import { CELL, type Sentence } from "../../engine/hint-words.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import { isMouseDown, newCursor, stripModifiers } from "../../engine/pointer.ts";
@@ -41,7 +37,7 @@ import {
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSinglesDesc } from "./generator.ts";
-import { type Marked, say } from "./hint-text.ts";
+import { sentences } from "./hint-text.ts";
 import {
   border,
   colors,
@@ -51,12 +47,13 @@ import {
   redraw,
   type SinglesDrawState,
 } from "./render.ts";
+import { SAYS_KINDS, type SaysById } from "./singles.compiled.ts";
 import {
-  deduceHintPlan,
-  type HintRecord,
+  CLEAR,
+  COVERED,
+  hintWalk,
   inGrid,
   markErrors,
-  type SinglesReason,
   solveSpecific,
   status,
 } from "./solver.ts";
@@ -233,243 +230,47 @@ function clearMistakes(
 
 // --- hint ------------------------------------------------------------------
 
-/** Highlight data for a Singles hint step. `targets` are the cell(s) the
- * displayed deduction forces, each with the mark it forces; a firing that
- * forces several cells at once carries them all. `strand` is the distinct
- * corner cell a 2×2-corner deduction is protecting from being sealed off —
- * among the outlined cells, `redraw` draws it in its own color so the player
- * can tell the corner at risk apart from the matching numbers that share a
- * value. */
-export interface SinglesHint {
-  targets: { x: number; y: number; value: "black" | "circle" }[];
-  strand: Point[];
+/** A square a hint step decides, with the mark it asks for. */
+export interface SinglesTarget extends Point {
+  value: "black" | "circle";
 }
 
-/** What a step's sentence names. `evidence` are the deduction's premise
- * cells, which `redraw` outlines, decided or not. `line` is the row or column the sentence names ("in the line",
- * "shares a line with"), hatched; empty when it names none
- * (docs/hints-marks.md § "Hatch the line the sentence names"). */
-interface Named {
-  targets: readonly Point[];
-  evidence: Point[];
-  strand: Point[];
-  line: Point[];
-}
+/** Highlight data for a Singles hint step. `targets` are the squares the
+ * firing decides, each with the mark it asks for; a firing that decides
+ * several at once carries them all. `strand` is the distinct corner a
+ * corner deduction keeps from being sealed off, which `redraw` draws in its
+ * own color so the player can tell it from the matching numbers. */
+export type SinglesHint = FiringHint<SinglesTarget>;
 
-/** The line two distinct cells share: a row when they share `y`, else a
- * column. */
-function sharedLine(a: Point, b: Point, w: number, h: number): Point[] {
-  if (a.y === b.y) return Array.from({ length: w }, (_, x) => ({ x, y: a.y }));
-  return Array.from({ length: h }, (_, y) => ({ x: a.x, y }));
-}
+export type SinglesRung = (typeof SAYS_KINDS)[number];
 
-/** The one line a reason's sentence names, from the cells it names together. */
-function namedLine(
-  reason: SinglesReason,
-  targets: readonly Point[],
-  w: number,
-  h: number,
-): Point[] {
-  if (reason.kind === "pair") return sharedLine(reason.pair[0], reason.pair[1], w, h);
-  if (reason.kind === "sameLine") {
-    // The circled cell rules its number out along its row and its column, so a
-    // step's targets can lie in both: then the sentence names two lines, and a
-    // hatch means one.
-    const { circled } = reason;
-    if (targets.every((t) => t.y === circled.y))
-      return sharedLine(circled, targets[0], w, h);
-    if (targets.every((t) => t.x === circled.x))
-      return sharedLine(circled, targets[0], w, h);
-  }
-  return [];
-}
+/** What a cell holds as the description reads it. */
+const valueAt = (s: SinglesState, i: number): number => {
+  const v = cellValue(s, i);
+  return v === "black" ? COVERED : v === "circle" ? CLEAR : 0;
+};
 
-const sameCell = (a: Point, b: Point): boolean => a.x === b.x && a.y === b.y;
-
-/** Narrate *why* the grouped firing forces its cell(s), naming the marks in
- * `named` and reading each number the sentence names off the board. The words
- * are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: SinglesReason, named: Named, state: SinglesState): Sentence {
-  const numAt = (c: Point): number => state.nums[c.y * state.w + c.x];
-  const m: Marked = {
-    targets: named.targets.map(({ x, y }) => ({ x, y })),
-    evidence: named.evidence,
-    strand: named.strand,
-    line: named.line,
-    num: numAt,
-  };
-  const targets = m.targets;
-  switch (reason.kind) {
-    case "sandwich":
-      return say.sandwich(m, numAt(reason.ends[0]));
-    case "pair":
-      return say.pair(m, numAt(reason.pair[0]));
-    case "corner4": {
-      const [corner, side1, side2, inner] = reason.block;
-      return say.corner4(m, numAt(corner), corner, [side1, side2], inner);
-    }
-    case "corner3": {
-      // Branch A shades the corner itself; branch B the inner cell, to save
-      // the (separately outlined) corner.
-      const n = numAt(reason.matched[1]);
-      const t = numAt(targets[0]);
-      return targets.some((tg) => sameCell(tg, reason.corner))
-        ? say.corner3Corner(m, t, n)
-        : say.corner3Inner(m, t, n, numAt(reason.corner));
-    }
-    case "corner2": {
-      const { corner, pair } = reason;
-      const side = pair.find(
-        (p) => Math.abs(p.x - corner.x) + Math.abs(p.y - corner.y) === 1,
-      );
-      if (!side) throw new Error("corner2: the pair has no square beside the corner");
-      return say.corner2(m, pair, side, numAt(pair[0]));
-    }
-    case "offset": {
-      // quad = [A1, B1, A2, B2]: the A-pair shares one line, the B-pair the next.
-      const [a1, b1, a2, b2] = reason.quad;
-      return say.offset(m, [a1, a2], [b1, b2], numAt(a1), numAt(b1));
-    }
-    case "adjBlack":
-      return say.adjBlack(m);
-    case "sameLine":
-      return say.sameLine(m, numAt(targets[0]));
-    case "boxedIn":
-      return say.boxedIn(m, numAt(targets[0]));
-    case "split":
-      return say.split(m, numAt(targets[0]));
-  }
-}
-
-/** The premise cells a reason reasons over (its visible evidence — the
- * cells that share a number, or the decided cell whose state is the
- * reason). The `strand` corner, when present, is surfaced separately. */
-function evidenceOf(reason: SinglesReason): Point[] {
-  switch (reason.kind) {
-    case "sandwich":
-      return reason.ends;
-    case "pair":
-      return reason.pair;
-    case "corner4":
-      return reason.block;
-    case "corner3":
-      return reason.matched;
-    case "corner2":
-      return reason.pair;
-    case "offset":
-      return reason.quad;
-    case "adjBlack":
-      return [reason.black];
-    case "sameLine":
-      return [reason.circled];
-    case "boxedIn":
-      return [reason.cell];
-    case "split":
-      return reason.neighbors;
-  }
-}
-
-/** The corner cell a 2×2-corner deduction is protecting (drawn in the
- * distinct strand color), if any. */
-function strandOf(reason: SinglesReason): Point[] {
-  return reason.kind === "corner2" || reason.kind === "corner3" ? [reason.corner] : [];
-}
-
-/** Group the ordered records by firing (`group`) into one step each. A
- * firing's records are contiguous, so first-seen order keeps the plan's. */
-function groupRecords(records: HintRecord[]): HintRecord[][] {
-  const groups = new Map<number, HintRecord[]>();
-  for (const r of records) {
-    const g = groups.get(r.group);
-    if (g) g.push(r);
-    else groups.set(r.group, [r]);
-  }
-  return [...groups.values()];
-}
-
-/** The solver's rules, by the `kind` of the reason each records. */
-export const SINGLES_RUNGS = [
-  "sandwich",
-  "pair",
-  "corner4",
-  "corner3",
-  "corner2",
-  "offset",
-  "adjBlack",
-  "sameLine",
-  "boxedIn",
-  "split",
-] as const satisfies readonly SinglesReason["kind"][];
-export type SinglesRung = (typeof SINGLES_RUNGS)[number];
-
-function hint(state: SinglesState): HintResult<SinglesMove, SinglesHint, SinglesRung> {
-  const records = deduceHintPlan(state);
-  if (records.length === 0) {
-    return { ok: false, error: DEDUCTION_EXHAUSTED };
-  }
-  const key = (c: Point): number => c.y * state.w + c.x;
-  const steps: HintStep<SinglesMove, SinglesHint, SinglesRung>[] = groupRecords(
-    records,
-  ).map((group) => {
-    const reason = group[0].reason;
-    const targets = group.map((r) => ({ x: r.x, y: r.y, value: r.value }));
-    const targetKey = new Set(targets.map(key));
-    // The protected corner is drawn in its own color; keep it out of
-    // both the targets and the matching-number evidence.
-    const strand = strandOf(reason).filter((c) => !targetKey.has(key(c)));
-    const strandKey = new Set(strand.map(key));
-    const evidence = evidenceOf(reason).filter(
-      (c) => !targetKey.has(key(c)) && !strandKey.has(key(c)),
-    );
-    const line = namedLine(reason, targets, state.w, state.h);
-    const words = narrate(reason, { targets, evidence, strand, line }, state);
-    return {
-      move: { sets: targets.map((t) => ({ ...t })) },
-      rung: reason.kind,
-      explanation: words.text,
-      words,
-      highlights: { targets, strand },
-    };
-  });
-  return { ok: true, steps };
-}
-
-/** Classify a player move by what it did to the board
- * (`engine/hint-track.ts`); a multi-cell step shrinks in place to the cells
- * still outstanding. */
-function hintKeepTrack(
-  m: SinglesMove,
-  step: HintStep<SinglesMove, SinglesHint>,
-  state: SinglesState,
-): HintTrackVerdict {
-  const hl = step.highlights;
-  if (m.solve || !hl) return "off";
-  const after = executeMove(state, m);
-  const index = (c: Point): number => c.y * state.w + c.x;
-  const { verdict, left } = trackTargets({
-    targets: hl.targets,
-    changes: changedCells(
-      state.flags.length,
-      (i) => cellValue(state, i),
-      (i) => cellValue(after, i),
-    ),
-    key: (t) => index(t),
-    want: (t): CellValue => t.value,
-    holds: (t) => cellValue(after, index(t)) === t.value,
-  });
-  if (verdict === "onTrack") {
-    step.move = { sets: left.map((t) => ({ ...t })) };
-    step.highlights = { ...hl, targets: left };
-    if (step.words) {
-      const kept = new Set(left.map((t) => CELL.key(t)));
-      step.words = step.words.narrow(
-        (role, kind, key) => role !== "ring" || kind !== CELL.name || kept.has(key),
-      );
-      step.explanation = step.words.text;
-    }
-  }
-  return verdict;
-}
+/** The hint: the ladder's firings, a step each, built by the engine from what
+ * the description says of them (`singles.description.yaml`). */
+const described = describedFiringHint<
+  SinglesState,
+  SinglesMove,
+  SinglesTarget,
+  SaysById,
+  SinglesRung
+>({
+  name: "singles hint",
+  walk: hintWalk,
+  width: (s) => s.w,
+  size: (s) => s.n,
+  valueAt,
+  execute: executeMove,
+  foreign: (m) => m.solve === true,
+  target: (at, n) => ({ ...at, value: n === COVERED ? "black" : "circle" }),
+  want: (t) => (t.value === "black" ? COVERED : CLEAR),
+  move: (targets) => ({ sets: targets.map((t) => ({ ...t })) }),
+  say: sentences,
+});
 
 /** Singles' difficulty contract (`engine/difficulty.ts`). `solveSpecific`
  * returns > 0 when it solves; `newState` builds the board from the desc
@@ -511,8 +312,8 @@ export const singlesGame: Game<
 
   solve,
   difficulty,
-  hint,
-  hintRungs: SINGLES_RUNGS,
+  hint: described.hint,
+  hintRungs: SAYS_KINDS,
   hintMarks: {
     roles: {
       ring: "the square the step decides. It is drawn empty: the sentence says whether to shade it or circle it.",
@@ -521,7 +322,7 @@ export const singlesGame: Game<
       stripes: 'the row or column the sentence calls "this row" or "this column".',
     },
   },
-  hintKeepTrack,
+  hintKeepTrack: described.hintKeepTrack,
   hintGesture: (s, ui, ds, m) =>
     m.sets.flatMap((t) =>
       verbGesture(

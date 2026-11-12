@@ -1197,11 +1197,13 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
 
 exports[`singles: pinned hint positions > says, at each pin 1`] = `
 {
-  "adjBlack": "A purple square (outlined) touches these squares (1, 3, 2 and 6), so those squares must be clear.",
+  "besideCovered": "A purple square (outlined) touches these squares (1, 3, 2 and 6), so those squares must be clear.",
   "boxedIn": "This 6 is the outlined clear square's last neighbor that isn't purple, so it must be clear to keep that square joined.",
-  "corner2": "The corner's 4s need a purple; shading this 2 forces the side 4, boxing the corner in, so it must stay clear.",
-  "corner3": "Left clear, this inner 3 would make both 3s flanking corner 6 purple and box the corner in, so it must be purple.",
-  "corner4": "Left clear, this corner 5 would box itself in with its two 5s purple, so it and the 5 diagonally inside must be purple.",
+  "corner.across": "Left clear, this inner 4 would make both 4s flanking corner 6 purple and box the corner in, so it must be purple.",
+  "corner.apex": "Left clear, this corner 1 would box itself in with both 1s beside it purple, so it must be purple.",
+  "corner.four": "Left clear, this corner 5 would box itself in with its two 5s purple, so it and the 5 diagonally inside must be purple.",
+  "corner.pairAtS": "The corner's 5s need a purple; shading this 3 forces the side 5, boxing the corner in, so it must stay clear.",
+  "corner.pairAtT": "The corner's 4s need a purple; shading this 2 forces the side 4, boxing the corner in, so it must stay clear.",
   "offset": "The outlined 4s and 6s mean shading the ringed 2 makes two purple squares touch, so that 2 must be clear.",
   "oneCell": "The outlined 6s sit one square apart, so one of them must be purple: the 2 between them must be clear.",
   "pair": "The outlined 4s touch, so one of them stays clear and uses up the 4 in this row: the ringed 4 must be purple.",

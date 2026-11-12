@@ -44,7 +44,11 @@ export interface Spoken<T> {
 /** What a technique says, as the compiled module types it. */
 interface SaysOf {
   terms: object;
-  marks: { outline?: readonly number[]; stripes?: readonly number[] };
+  marks: {
+    outline?: readonly number[];
+    stripes?: readonly number[];
+    reads?: readonly number[];
+  };
 }
 
 /** What a game supplies for its hint. */
@@ -79,6 +83,18 @@ export interface DescribedHint<State, Move, Kind extends string> {
 const sameMove = (a: unknown, b: unknown): boolean =>
   JSON.stringify(a) === JSON.stringify(b);
 
+/** What a firing says: recorded for each of its facts by a technique that
+ * `says`; the first fact's is the firing's. */
+export const spokenOf = <Y>(taken: Taken): Said<unknown, Y> =>
+  taken.reasons[0] as Said<unknown, Y>;
+
+/** The cells of the facts a firing makes. */
+export const filledBy = (taken: Taken): number[] => {
+  const out: number[] = [];
+  for (let i = 0; i < taken.facts.length; i += 3) out.push(taken.facts[i + 1]);
+  return out;
+};
+
 /** The hooks of a game whose hint is its ladder's firings. */
 export function describedHint<
   State,
@@ -87,15 +103,8 @@ export function describedHint<
   Kind extends keyof Says & string = keyof Says & string,
 >(spec: DescribedHintSpec<State, Move, Says>): DescribedHint<State, Move, Kind> {
   const kinds = Object.keys(spec.say) as Kind[];
-  const spoken = (taken: Taken): Said<unknown, SaysOf> =>
-    taken.reasons[0] as Said<unknown, SaysOf>;
-
-  /** The cells of the facts a firing makes. */
-  const filled = (taken: Taken): number[] => {
-    const out: number[] = [];
-    for (let i = 0; i < taken.facts.length; i += 3) out.push(taken.facts[i + 1]);
-    return out;
-  };
+  const spoken = spokenOf<SaysOf>;
+  const filled = filledBy;
 
   const hint = (state: State): HintResult<Move, CellHint, Kind> => {
     const m = spec.marks(state);
@@ -105,7 +114,7 @@ export function describedHint<
     // What a firing's premise reads: the cells it marks and the cells it fills.
     const reads = (taken: Taken): number[] => {
       const { marks } = spoken(taken).says;
-      return [...(marks.stripes ?? []), ...(marks.outline ?? []), ...filled(taken)];
+      return [...(marks.reads ?? []), ...(marks.outline ?? []), ...filled(taken)];
     };
     const walk = ladderWalk(
       m,

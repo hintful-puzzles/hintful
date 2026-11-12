@@ -76,6 +76,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | Hint machinery |
 | – `hint-plan.ts` — the plan-accumulation loop |
 | – `described-hint.ts` — a described game's hint, built from its firings |
+| – `described-firing-hint.ts` — the same, a step a firing |
 | – `hint-track.ts` — following a step that asks for several things |
 | – `hint-gesture.ts` — how the pointer makes a hint step |
 | – `apart-by-position.ts` — two things of one name, told apart |
@@ -751,6 +752,15 @@ returns `hint`, `hintKeepTrack` and `hintRungs`; a step's kind is the
 technique's id, its marks are the `says` marks, and a firing that fills
 several cells is a journey. Exemplar: `unruly/index.ts`. The `says` block is
 in [`descriptions.md`](./descriptions.md).
+
+### `described-firing-hint.ts` — the same, a step a firing
+
+`describedFiringHint` is the other shape, for a
+game whose step is a firing: one step decides every cell the firing does, and
+`hintKeepTrack` shrinks it as the player makes some (`hint-track.ts`). The
+game gives the walk, how a fact is its highlights' target and the move that
+makes some, and a sentence a technique, which an `arms` technique reads by
+`spoken.arm`. Exemplar: `singles/index.ts`.
 
 ### `hint-track.ts` — following a step that asks for several things
 

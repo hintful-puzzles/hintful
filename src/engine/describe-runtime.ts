@@ -310,7 +310,7 @@ export class EdgeRelation {
 export type Fire<B, S = undefined> = (
   binding: B,
   facts: Facts,
-  ...says: S extends undefined ? [] : [S]
+  ...says: [S] extends [undefined] ? [] : [S]
 ) => boolean;
 
 /** A clue kind as dealt: the element each clue sits at and its value, by
