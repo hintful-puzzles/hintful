@@ -351,21 +351,12 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
         <div class="offline-status" role="status" aria-atomic="true">
           Offline content: ${this.renderOfflineStatus()}
         </div>
-        <div class="app-version">${this.renderVersions()}</div>
+        <!-- The new build is named in the status line above while one downloads. -->
+        <div class="app-version">
+          Version <span translate="no">${APP_VERSION}</span>
+        </div>
       </wa-details>
     `;
-  }
-
-  /** The running build, and during an update the build it is replacing itself with. */
-  private renderVersions() {
-    const updating =
-      pwaManager.status === "update-downloading" ||
-      pwaManager.status === "update-ready";
-    const pending = updating ? pwaManager.pendingVersion : null;
-    return pending === null
-      ? html`Version <span translate="no">${APP_VERSION}</span>`
-      : html`Version <span translate="no">${APP_VERSION}</span>, updating to
-          <span translate="no">${pending}</span>`;
   }
 
   /** ", 1.9 MB" after a status, or nothing when the size is not known. */
