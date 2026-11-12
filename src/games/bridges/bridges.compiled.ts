@@ -19,6 +19,21 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "exactSpace" | "everyNeighbor" | "needsThisWay" | "sealing" | "tooMany" | "mustReachOut" | "loop";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  exactSpace: ExactSpaceSays;
+  everyNeighbor: EveryNeighborSays;
+  needsThisWay: NeedsThisWaySays;
+  sealing: SealingSays;
+  tooMany: TooManySays;
+  mustReachOut: MustReachOutSays;
+  loop: LoopSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["exactSpace","everyNeighbor","needsThisWay","sealing","tooMany.sealed","tooMany.starved","mustReachOut","loop"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -239,11 +254,17 @@ export interface ExactSpaceBinding {
   R: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ExactSpaceSays {
+  terms: { at: number; clue: number; missing: number; };
+  marks: { reads: readonly number[]; };
+}
+
 const exactSpaceFacts: number[] = [];
 let exactSpaceCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function exactSpace(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExactSpaceBinding> | null): number {
+export function exactSpace(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExactSpaceBinding, ExactSpaceSays> | null): number {
   const facts = exactSpaceFacts;
   let fired = 0;
   let changed = false;
@@ -322,7 +343,10 @@ export function exactSpace(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExactS
         if (!(_c29)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, n: v_n, R: v_R }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { at: v_c, clue: _h11, missing: v_n }, marks: { reads: setOf(v_c).slice() } };
+            if (!fire({ c: v_c, n: v_n, R: v_R }, facts, _says)) return 1;
+          }
           cands.fill(-1);
           needMarkedKept.clear();
           bridgesMarkedKept.clear();
@@ -345,12 +369,20 @@ export interface EveryNeighborBinding {
   A: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface EveryNeighborSays {
+  terms: { at: number; clue: number; neighbors: number; };
+  marks: { reads: readonly number[]; outline: readonly number[]; };
+}
+
 const everyNeighborFacts: number[] = [];
 let everyNeighborCands = new Int32Array(0);
+const everyNeighbor_st37 = stamps();
 
 /** Its dearest read grows with the board as n. */
-export function everyNeighbor(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EveryNeighborBinding> | null): number {
+export function everyNeighbor(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EveryNeighborBinding, EveryNeighborSays> | null): number {
   const _g13: number[] = [];
+  const _g33: number[] = [];
   const facts = everyNeighborFacts;
   let fired = 0;
   let changed = false;
@@ -418,7 +450,21 @@ export function everyNeighbor(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Eve
       if (!(_q27)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, A: v_A.slice() }, facts)) return 1;
+        if (fire !== null) {
+          _g33.length = 0;
+          everyNeighbor_st37.pass++;
+          G34: {
+            const _a38 = v_A;
+            for (let _i39 = 0; _i39 < _a38.length; _i39++) {
+              const v_y = _a38[_i39];
+              const _t40 = far(sp, cl, v_c, v_y);
+              const _t41 = _t40;
+              if (_g33.length < 16) { if (!_g33.includes(_t41)) _g33.push(_t41); } else addOnce(_g33, everyNeighbor_st37, _t41);
+            }
+          }
+          const _says = { terms: { at: v_c, clue: _h12, neighbors: _h20 }, marks: { reads: setOf(v_c).slice(), outline: _g33.slice() } };
+          if (!fire({ c: v_c, A: v_A.slice() }, facts, _says)) return 1;
+        }
         cands.fill(-1);
         needMarkedKept.clear();
         bridgesMarkedKept.clear();
@@ -441,11 +487,19 @@ export interface NeedsThisWayBinding {
   y: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface NeedsThisWaySays {
+  terms: { at: number; clue: number; elsewhere: number; };
+  marks: { reads: readonly number[]; outline: readonly number[]; };
+}
+
 const needsThisWayFacts: number[] = [];
 let needsThisWayCands = new Int32Array(0);
+const needsThisWay_st34 = stamps();
 
 /** Its dearest read grows with the board as n. */
-export function needsThisWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NeedsThisWayBinding> | null): number {
+export function needsThisWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NeedsThisWayBinding, NeedsThisWaySays> | null): number {
+  const _g30: number[] = [];
   const facts = needsThisWayFacts;
   let fired = 0;
   let changed = false;
@@ -465,8 +519,8 @@ export function needsThisWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Need
   R1:
   for (let _i10 = 0; _i10 < _a9.length; _i10++) {
     const v_c = _a9[_i10];
-    const _m30_0 = b.made[0];
-    const _m31_1 = b.made[1];
+    const _m39_0 = b.made[0];
+    const _m40_1 = b.made[1];
     const _h11 = clueAt(cl.number, v_c);
     if (!(((_h11 !== -1) && (needMarked(b, sp, cl, cands, v_c) > 0)))) continue;
     let _g12 = 0;
@@ -483,7 +537,7 @@ export function needsThisWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Need
     for (let _i17 = 0; _i17 < _a16.length; _i17++) {
       const v_y = _a16[_i17];
       if (!(((((far(sp, cl, v_c, v_y) !== -1) && (hasMarked(b, sp, cl, cands, v_c, v_y) === 0)) && (moreMarked(b, sp, cl, cands, v_c, v_y) > 0)) && ((v_V - moreMarked(b, sp, cl, cands, v_c, v_y)) < _h11)))) continue;
-      if (b.made[0] !== _m30_0 || b.made[1] !== _m31_1) {
+      if (b.made[0] !== _m39_0 || b.made[1] !== _m40_1) {
         if (!(((clueAt(cl.number, v_c) !== -1) && (needMarked(b, sp, cl, cands, v_c) > 0)))) { continue R1; }
         let _g18 = 0;
         G19: {
@@ -525,7 +579,22 @@ export function needsThisWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Need
       if (!(_q26)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, V: v_V, y: v_y }, facts)) return 1;
+        if (fire !== null) {
+          _g30.length = 0;
+          needsThisWay_st34.pass++;
+          G31: {
+            const _a35 = sp.adj4[v_c];
+            for (let _i36 = 0; _i36 < _a35.length; _i36++) {
+              const v_z = _a35[_i36];
+              if (!((((far(sp, cl, v_c, v_z) !== -1) && (v_z !== v_y)) && (mostMarked(b, sp, cl, cands, v_c, v_z) > 0)))) continue;
+              const _t37 = far(sp, cl, v_c, v_z);
+              const _t38 = _t37;
+              if (_g30.length < 16) { if (!_g30.includes(_t38)) _g30.push(_t38); } else addOnce(_g30, needsThisWay_st34, _t38);
+            }
+          }
+          const _says = { terms: { at: v_c, clue: _h11, elsewhere: (v_V - moreMarked(b, sp, cl, cands, v_c, v_y)) }, marks: { reads: setOf(v_c).slice(), outline: _g30.slice() } };
+          if (!fire({ c: v_c, V: v_V, y: v_y }, facts, _says)) return 1;
+        }
         cands.fill(-1);
         needMarkedKept.clear();
         bridgesMarkedKept.clear();
@@ -550,11 +619,20 @@ export interface SealingBinding {
   G: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SealingSays {
+  terms: { at: number; links: readonly number[]; };
+  marks: { reads: readonly number[]; outline: readonly number[]; };
+}
+
 const sealingFacts: number[] = [];
 let sealingCands = new Int32Array(0);
+const sealing_st95 = stamps();
 
 /** Its dearest read grows with the board as n^2. */
-export function sealing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SealingBinding> | null): number {
+export function sealing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SealingBinding, SealingSays> | null): number {
+  const _g89: number[] = [];
+  const _g103: number[] = [];
   const facts = sealingFacts;
   let fired = 0;
   let changed = false;
@@ -584,8 +662,8 @@ export function sealing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SealingBi
   R1:
   for (let _i35 = 0; _i35 < _a34.length; _i35++) {
     const v_c = _a34[_i35];
-    const _m89_0 = b.made[0];
-    const _m90_1 = b.made[1];
+    const _m110_0 = b.made[0];
+    const _m111_1 = b.made[1];
     const _h36 = clueAt(cl.number, v_c);
     if (!(((_h36 !== -1) && (needMarked(b, sp, cl, cands, v_c) === 1)))) continue;
     const _a37 = sp.adj4[v_c];
@@ -647,7 +725,7 @@ export function sealing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SealingBi
             _c61 = (_g56 < v_N);
           }
           if (!(_c61)) break L42;
-          if (b.made[0] !== _m89_0 || b.made[1] !== _m90_1) {
+          if (b.made[0] !== _m110_0 || b.made[1] !== _m111_1) {
             if (!(((clueAt(cl.number, v_c) !== -1) && (needMarked(b, sp, cl, cands, v_c) === 1)))) { continue R1; }
           }
           if (DEV && staleChecking) {
@@ -730,7 +808,38 @@ export function sealing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SealingBi
           if (!(_q84)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ N: v_N, c: v_c, y: v_y, f: v_f, G: v_G.slice() }, facts)) return 1;
+            if (fire !== null) {
+              _g89.length = 0;
+              sealing_st95.pass++;
+              G90: {
+                const _a96 = v_G;
+                for (let _i97 = 0; _i97 < _a96.length; _i97++) {
+                  const v_c = _a96[_i97];
+                  const _h98 = clueAt(cl.number, v_c);
+                  if (!((_h98 !== -1))) continue;
+                  const _a99 = sp.adj4[v_c];
+                  for (let _i100 = 0; _i100 < _a99.length; _i100++) {
+                    const v_y = _a99[_i100];
+                    if (!((((far(sp, cl, v_c, v_y) !== -1) && (v_G.includes(far(sp, cl, v_c, v_y)))) && (hasMarked(b, sp, cl, cands, v_c, v_y) > 0)))) continue;
+                    const _t101 = sp.adj4Edges[v_c][_i100];
+                    const _t102 = _t101;
+                    if (_g89.length < 16) { if (!_g89.includes(_t102)) _g89.push(_t102); } else addOnce(_g89, sealing_st95, _t102);
+                  }
+                }
+              }
+              _g103.length = 0;
+              G104: {
+                const _a107 = v_G;
+                for (let _i108 = 0; _i108 < _a107.length; _i108++) {
+                  const v_x = _a107[_i108];
+                  const _h109 = clueAt(cl.number, v_x);
+                  if (!((_h109 !== -1))) continue;
+                  _g103.push(v_x);
+                }
+              }
+              const _says = { terms: { at: v_c, links: _g89.slice() }, marks: { reads: setOf(v_c).slice(), outline: _g103.slice() } };
+              if (!fire({ N: v_N, c: v_c, y: v_y, f: v_f, G: v_G.slice() }, facts, _says)) return 1;
+            }
             cands.fill(-1);
             needMarkedKept.clear();
             bridgesMarkedKept.clear();
@@ -759,11 +868,22 @@ export interface TooManyBinding {
   k: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
+export type TooManySays =
+  | { arm: "sealed"; terms: { at: number; clue: number; limit: number; links: readonly number[]; }; marks: { reads: readonly number[]; outline: readonly number[]; } }
+  | { arm: "starved"; terms: { at: number; clue: number; limit: number; starved: number; }; marks: { reads: readonly number[]; outline: readonly number[]; } }
+;
+
 const tooManyFacts: number[] = [];
 let tooManyCands = new Int32Array(0);
+const tooMany_st301 = stamps();
 
 /** Its dearest read grows with the board as n^2. */
-export function tooMany(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooManyBinding> | null): number {
+export function tooMany(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooManyBinding, TooManySays> | null): number {
+  const _g295: number[] = [];
+  const _g309: number[] = [];
+  const _g316: number[] = [];
+  const _g408: number[] = [];
   const facts = tooManyFacts;
   let fired = 0;
   let changed = false;
@@ -794,8 +914,8 @@ export function tooMany(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooManyBi
   R1:
   for (let _i98 = 0; _i98 < _a97.length; _i98++) {
     const v_c = _a97[_i98];
-    const _m268_0 = b.made[0];
-    const _m269_1 = b.made[1];
+    const _m500_0 = b.made[0];
+    const _m501_1 = b.made[1];
     const _h99 = clueAt(cl.number, v_c);
     if (!(((_h99 !== -1) && (needMarked(b, sp, cl, cands, v_c) > 0)))) continue;
     const _a100 = sp.adj4[v_c];
@@ -1006,7 +1126,7 @@ export function tooMany(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooManyBi
         L185: {
           const v_k = _g104;
           if (!((v_k > 0))) break L185;
-          if (b.made[0] !== _m268_0 || b.made[1] !== _m269_1) {
+          if (b.made[0] !== _m500_0 || b.made[1] !== _m501_1) {
             if (!(((clueAt(cl.number, v_c) !== -1) && (needMarked(b, sp, cl, cands, v_c) > 0)))) { continue R1; }
           }
           if (DEV && staleChecking) {
@@ -1228,7 +1348,338 @@ export function tooMany(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooManyBi
           if (!(_q263)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ N: v_N, c: v_c, y: v_y, r: v_r, H: v_H.slice(), G: v_G.slice(), t: v_t, k: v_k }, facts)) return 1;
+            if (fire !== null) {
+              let _q268 = true;
+              Q269: {
+                const _a270 = v_G;
+                for (let _i271 = 0; _i271 < _a270.length; _i271++) {
+                  const v_x = _a270[_i271];
+                  const _h272 = clueAt(cl.number, v_x);
+                  if (!((_h272 !== -1))) continue;
+                  const _a273 = sp.adj4[v_x];
+                  for (let _i274 = 0; _i274 < _a273.length; _i274++) {
+                    const v_z = _a273[_i274];
+                    if (!(((far(sp, cl, v_x, v_z) !== -1) && (hasMarked(b, sp, cl, cands, v_x, v_z) > 0)))) continue;
+                    if (!((v_G.includes(far(sp, cl, v_x, v_z))))) {
+                      _q268 = false;
+                      break Q269;
+                    }
+                  }
+                }
+              }
+              let _c288: boolean = _q268;
+              if (_c288) {
+                let _q275 = true;
+                Q276: {
+                  const _a277 = v_G;
+                  for (let _i278 = 0; _i278 < _a277.length; _i278++) {
+                    const v_x = _a277[_i278];
+                    const _h279 = clueAt(cl.number, v_x);
+                    if (!((_h279 !== -1))) continue;
+                    let _g280 = 0;
+                    G281: {
+                      const _a282 = sp.adj4[v_x];
+                      for (let _i283 = 0; _i283 < _a282.length; _i283++) {
+                        const v_y = _a282[_i283];
+                        if (!((far(sp, cl, v_x, v_y) !== -1))) continue;
+                        let _g284 = 0;
+                        G285: {
+                          const _t286 = sp.adj4Edges[v_x][_i283];
+                          for (let _i287 = 0; _i287 < 1; _i287++) {
+                            const v_z = _t286;
+                            if (!((v_H.includes(v_z)))) continue;
+                            _g284 += (v_k - hasMarked(b, sp, cl, cands, v_x, v_y));
+                          }
+                        }
+                        _g280 += (hasMarked(b, sp, cl, cands, v_x, v_y) + _g284);
+                      }
+                    }
+                    if (!(((_h279 - _g280) === 0))) {
+                      _q275 = false;
+                      break Q276;
+                    }
+                  }
+                }
+                _c288 = _q275;
+              }
+              let _c294: boolean = _c288;
+              if (_c294) {
+                let _g289 = 0;
+                G290: {
+                  const _a291 = v_G;
+                  for (let _i292 = 0; _i292 < _a291.length; _i292++) {
+                    const v_x = _a291[_i292];
+                    const _h293 = clueAt(cl.number, v_x);
+                    if (!((_h293 !== -1))) continue;
+                    _g289++;
+                  }
+                }
+                _c294 = (_g289 < v_N);
+              }
+              let _arm = -1;
+              if (_c294) _arm = 0; else if (true) _arm = 1;
+              let _says: TooManySays | null = null;
+              if (_arm === 0) {
+                _g295.length = 0;
+                tooMany_st301.pass++;
+                G296: {
+                  const _a302 = v_G;
+                  for (let _i303 = 0; _i303 < _a302.length; _i303++) {
+                    const v_c = _a302[_i303];
+                    const _h304 = clueAt(cl.number, v_c);
+                    if (!((_h304 !== -1))) continue;
+                    const _a305 = sp.adj4[v_c];
+                    for (let _i306 = 0; _i306 < _a305.length; _i306++) {
+                      const v_y = _a305[_i306];
+                      if (!((((far(sp, cl, v_c, v_y) !== -1) && (v_G.includes(far(sp, cl, v_c, v_y)))) && (hasMarked(b, sp, cl, cands, v_c, v_y) > 0)))) continue;
+                      const _t307 = sp.adj4Edges[v_c][_i306];
+                      const _t308 = _t307;
+                      if (_g295.length < 16) { if (!_g295.includes(_t308)) _g295.push(_t308); } else addOnce(_g295, tooMany_st301, _t308);
+                    }
+                  }
+                }
+                _g309.length = 0;
+                G310: {
+                  const _a313 = v_G;
+                  for (let _i314 = 0; _i314 < _a313.length; _i314++) {
+                    const v_x = _a313[_i314];
+                    const _h315 = clueAt(cl.number, v_x);
+                    if (!((_h315 !== -1))) continue;
+                    _g309.push(v_x);
+                  }
+                }
+                _says = { arm: "sealed", terms: { at: v_c, clue: _h99, limit: (v_k - 1), links: _g295.slice() }, marks: { reads: setOf(v_c).slice(), outline: _g309.slice() } };
+              }
+              if (_arm === 1) {
+                _g316.length = 0;
+                G317: {
+                  const _a360 = near(sp, cl, v_c, v_y);
+                  for (let _i361 = 0; _i361 < _a360.length; _i361++) {
+                    const v_x = _a360[_i361];
+                    const _h362 = clueAt(cl.number, v_x);
+                    const _h387 = (v_x % sp.w);
+                    let _g363 = 0;
+                    G364: {
+                      const _a365 = sp.adj4[v_x];
+                      for (let _i366 = 0; _i366 < _a365.length; _i366++) {
+                        const v_y = _a365[_i366];
+                        if (!((far(sp, cl, v_x, v_y) !== -1))) continue;
+                        let _g367 = 0;
+                        G368: {
+                          const _t369 = sp.adj4Edges[v_x][_i366];
+                          for (let _i370 = 0; _i370 < 1; _i370++) {
+                            const v_z = _t369;
+                            if (!((v_H.includes(v_z)))) continue;
+                            _g367 += (v_k - hasMarked(b, sp, cl, cands, v_x, v_y));
+                          }
+                        }
+                        _g363 += (hasMarked(b, sp, cl, cands, v_x, v_y) + _g367);
+                      }
+                    }
+                    let _c407: boolean = ((_h362 - _g363) < 0);
+                    if (!_c407) {
+                      let _g371 = 0;
+                      G372: {
+                        const _a373 = sp.adj4[v_x];
+                        for (let _i374 = 0; _i374 < _a373.length; _i374++) {
+                          const v_y = _a373[_i374];
+                          if (!((far(sp, cl, v_x, v_y) !== -1))) continue;
+                          const _h386 = (v_y % sp.w);
+                          const _h388 = (_h386 === _h387);
+                          const _h403 = sp.adj4Edges[v_x][_i374];
+                          let _g375 = -1;
+                          G376: {
+                            const _t378 = cl.maxb;
+                            for (let v_k_377 = _t378; v_k_377 >= 0; v_k_377--) {
+                              let _c406: boolean = (v_k_377 === 0);
+                              if (!_c406) {
+                                let _q379 = false;
+                                Q380: {
+                                  const _a381 = mid(sp, cl, v_x, v_y);
+                                  for (let _i382 = 0; _i382 < _a381.length; _i382++) {
+                                    const v_m = _a381[_i382];
+                                    const _h385 = (v_m % sp.w);
+                                    const _a383 = sp.adj4[v_m];
+                                    for (let _i384 = 0; _i384 < _a383.length; _i384++) {
+                                      const v_p = _a383[_i384];
+                                      if (!((((v_p % sp.w) === _h385) !== _h388))) continue;
+                                      const _t389 = sp.adj4Edges[v_m][_i384];
+                                      if ((((least((cands[_t389] >= 0 ? cands[_t389] : (cands[_t389] = b.cands[_t389]))) - 1) > 0) || (v_H.includes(sp.adj4Edges[v_m][_i384])))) {
+                                        _q379 = true;
+                                        break Q380;
+                                      }
+                                    }
+                                  }
+                                }
+                                let _c400: boolean = !(_q379);
+                                if (_c400) {
+                                  const _t390 = far(sp, cl, v_x, v_y);
+                                  const _h391 = clueAt(cl.number, _t390);
+                                  let _g392 = 0;
+                                  G393: {
+                                    const _a394 = sp.adj4[_t390];
+                                    for (let _i395 = 0; _i395 < _a394.length; _i395++) {
+                                      const v_y = _a394[_i395];
+                                      if (!((far(sp, cl, _t390, v_y) !== -1))) continue;
+                                      let _g396 = 0;
+                                      G397: {
+                                        const _t398 = sp.adj4Edges[_t390][_i395];
+                                        for (let _i399 = 0; _i399 < 1; _i399++) {
+                                          const v_z = _t398;
+                                          if (!((v_H.includes(v_z)))) continue;
+                                          _g396 += (v_k - hasMarked(b, sp, cl, cands, _t390, v_y));
+                                        }
+                                      }
+                                      _g392 += (hasMarked(b, sp, cl, cands, _t390, v_y) + _g396);
+                                    }
+                                  }
+                                  _c400 = (v_k_377 <= (_h391 - _g392));
+                                }
+                                let _c405: boolean = _c400;
+                                if (_c405) {
+                                  let _g401 = 0;
+                                  G402: {
+                                    for (let _i404 = 0; _i404 < 1; _i404++) {
+                                      const v_z = _h403;
+                                      if (!((v_H.includes(v_z)))) continue;
+                                      _g401 += (v_k - hasMarked(b, sp, cl, cands, v_x, v_y));
+                                    }
+                                  }
+                                  _c405 = (((hasMarked(b, sp, cl, cands, v_x, v_y) + _g401) + v_k_377) <= allowsMarked(b, sp, cl, cands, v_x, v_y));
+                                }
+                                _c406 = _c405;
+                              }
+                              if (!(_c406)) continue;
+                              _g375 = v_k_377;
+                              break G376;
+                            }
+                          }
+                          _g371 += _g375;
+                        }
+                      }
+                      _c407 = (_g371 < (_h362 - _g363));
+                    }
+                    if (!(_c407)) continue;
+                    _g316.push(v_x);
+                  }
+                }
+                _g408.length = 0;
+                G409: {
+                  const _a452 = near(sp, cl, v_c, v_y);
+                  for (let _i453 = 0; _i453 < _a452.length; _i453++) {
+                    const v_x = _a452[_i453];
+                    const _h454 = clueAt(cl.number, v_x);
+                    const _h479 = (v_x % sp.w);
+                    let _g455 = 0;
+                    G456: {
+                      const _a457 = sp.adj4[v_x];
+                      for (let _i458 = 0; _i458 < _a457.length; _i458++) {
+                        const v_y = _a457[_i458];
+                        if (!((far(sp, cl, v_x, v_y) !== -1))) continue;
+                        let _g459 = 0;
+                        G460: {
+                          const _t461 = sp.adj4Edges[v_x][_i458];
+                          for (let _i462 = 0; _i462 < 1; _i462++) {
+                            const v_z = _t461;
+                            if (!((v_H.includes(v_z)))) continue;
+                            _g459 += (v_k - hasMarked(b, sp, cl, cands, v_x, v_y));
+                          }
+                        }
+                        _g455 += (hasMarked(b, sp, cl, cands, v_x, v_y) + _g459);
+                      }
+                    }
+                    let _c499: boolean = ((_h454 - _g455) < 0);
+                    if (!_c499) {
+                      let _g463 = 0;
+                      G464: {
+                        const _a465 = sp.adj4[v_x];
+                        for (let _i466 = 0; _i466 < _a465.length; _i466++) {
+                          const v_y = _a465[_i466];
+                          if (!((far(sp, cl, v_x, v_y) !== -1))) continue;
+                          const _h478 = (v_y % sp.w);
+                          const _h480 = (_h478 === _h479);
+                          const _h495 = sp.adj4Edges[v_x][_i466];
+                          let _g467 = -1;
+                          G468: {
+                            const _t470 = cl.maxb;
+                            for (let v_k_469 = _t470; v_k_469 >= 0; v_k_469--) {
+                              let _c498: boolean = (v_k_469 === 0);
+                              if (!_c498) {
+                                let _q471 = false;
+                                Q472: {
+                                  const _a473 = mid(sp, cl, v_x, v_y);
+                                  for (let _i474 = 0; _i474 < _a473.length; _i474++) {
+                                    const v_m = _a473[_i474];
+                                    const _h477 = (v_m % sp.w);
+                                    const _a475 = sp.adj4[v_m];
+                                    for (let _i476 = 0; _i476 < _a475.length; _i476++) {
+                                      const v_p = _a475[_i476];
+                                      if (!((((v_p % sp.w) === _h477) !== _h480))) continue;
+                                      const _t481 = sp.adj4Edges[v_m][_i476];
+                                      if ((((least((cands[_t481] >= 0 ? cands[_t481] : (cands[_t481] = b.cands[_t481]))) - 1) > 0) || (v_H.includes(sp.adj4Edges[v_m][_i476])))) {
+                                        _q471 = true;
+                                        break Q472;
+                                      }
+                                    }
+                                  }
+                                }
+                                let _c492: boolean = !(_q471);
+                                if (_c492) {
+                                  const _t482 = far(sp, cl, v_x, v_y);
+                                  const _h483 = clueAt(cl.number, _t482);
+                                  let _g484 = 0;
+                                  G485: {
+                                    const _a486 = sp.adj4[_t482];
+                                    for (let _i487 = 0; _i487 < _a486.length; _i487++) {
+                                      const v_y = _a486[_i487];
+                                      if (!((far(sp, cl, _t482, v_y) !== -1))) continue;
+                                      let _g488 = 0;
+                                      G489: {
+                                        const _t490 = sp.adj4Edges[_t482][_i487];
+                                        for (let _i491 = 0; _i491 < 1; _i491++) {
+                                          const v_z = _t490;
+                                          if (!((v_H.includes(v_z)))) continue;
+                                          _g488 += (v_k - hasMarked(b, sp, cl, cands, _t482, v_y));
+                                        }
+                                      }
+                                      _g484 += (hasMarked(b, sp, cl, cands, _t482, v_y) + _g488);
+                                    }
+                                  }
+                                  _c492 = (v_k_469 <= (_h483 - _g484));
+                                }
+                                let _c497: boolean = _c492;
+                                if (_c497) {
+                                  let _g493 = 0;
+                                  G494: {
+                                    for (let _i496 = 0; _i496 < 1; _i496++) {
+                                      const v_z = _h495;
+                                      if (!((v_H.includes(v_z)))) continue;
+                                      _g493 += (v_k - hasMarked(b, sp, cl, cands, v_x, v_y));
+                                    }
+                                  }
+                                  _c497 = (((hasMarked(b, sp, cl, cands, v_x, v_y) + _g493) + v_k_469) <= allowsMarked(b, sp, cl, cands, v_x, v_y));
+                                }
+                                _c498 = _c497;
+                              }
+                              if (!(_c498)) continue;
+                              _g467 = v_k_469;
+                              break G468;
+                            }
+                          }
+                          _g463 += _g467;
+                        }
+                      }
+                      _c499 = (_g463 < (_h454 - _g455));
+                    }
+                    if (!(_c499)) continue;
+                    _g408.push(v_x);
+                  }
+                }
+                _says = { arm: "starved", terms: { at: v_c, clue: _h99, limit: (v_k - 1), starved: (_g316.length > 0 ? _g316[0] : -1) }, marks: { reads: setOf(v_c).slice(), outline: setOf((_g408.length > 0 ? _g408[0] : -1)).slice() } };
+              }
+              if (_says === null) throw new Error("tooMany: no arm of says holds");
+              if (!fire({ N: v_N, c: v_c, y: v_y, r: v_r, H: v_H.slice(), G: v_G.slice(), t: v_t, k: v_k }, facts, _says)) return 1;
+            }
             cands.fill(-1);
             needMarkedKept.clear();
             bridgesMarkedKept.clear();
@@ -1255,13 +1706,22 @@ export interface MustReachOutBinding {
   G: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface MustReachOutSays {
+  terms: { at: number; clue: number; links: readonly number[]; };
+  marks: { reads: readonly number[]; outline: readonly number[]; };
+}
+
 const mustReachOutFacts: number[] = [];
 let mustReachOutCands = new Int32Array(0);
 const mustReachOut_st67 = stamps();
+const mustReachOut_st148 = stamps();
 
 /** Its dearest read grows with the board as n^2. */
-export function mustReachOut(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MustReachOutBinding> | null): number {
+export function mustReachOut(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MustReachOutBinding, MustReachOutSays> | null): number {
   const _g61: number[] = [];
+  const _g142: number[] = [];
+  const _g156: number[] = [];
   const facts = mustReachOutFacts;
   let fired = 0;
   let changed = false;
@@ -1292,8 +1752,8 @@ export function mustReachOut(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Must
   R1:
   for (let _i52 = 0; _i52 < _a51.length; _i52++) {
     const v_c = _a51[_i52];
-    const _m142_0 = b.made[0];
-    const _m143_1 = b.made[1];
+    const _m163_0 = b.made[0];
+    const _m164_1 = b.made[1];
     const _h53 = clueAt(cl.number, v_c);
     if (!(((_h53 !== -1) && (needMarked(b, sp, cl, cands, v_c) > 0)))) continue;
     const _a54 = sp.adj4[v_c];
@@ -1390,7 +1850,7 @@ export function mustReachOut(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Must
           _c97 = (_g92 < v_N);
         }
         if (!(_c97)) break L74;
-        if (b.made[0] !== _m142_0 || b.made[1] !== _m143_1) {
+        if (b.made[0] !== _m163_0 || b.made[1] !== _m164_1) {
           if (!(((clueAt(cl.number, v_c) !== -1) && (needMarked(b, sp, cl, cands, v_c) > 0)))) { continue R1; }
         }
         if (DEV && staleChecking) {
@@ -1503,7 +1963,38 @@ export function mustReachOut(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Must
         if (!(_q138)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ N: v_N, c: v_c, y: v_y, F: v_F.slice(), G: v_G.slice() }, facts)) return 1;
+          if (fire !== null) {
+            _g142.length = 0;
+            mustReachOut_st148.pass++;
+            G143: {
+              const _a149 = v_G;
+              for (let _i150 = 0; _i150 < _a149.length; _i150++) {
+                const v_c = _a149[_i150];
+                const _h151 = clueAt(cl.number, v_c);
+                if (!((_h151 !== -1))) continue;
+                const _a152 = sp.adj4[v_c];
+                for (let _i153 = 0; _i153 < _a152.length; _i153++) {
+                  const v_y = _a152[_i153];
+                  if (!((((far(sp, cl, v_c, v_y) !== -1) && (v_G.includes(far(sp, cl, v_c, v_y)))) && (hasMarked(b, sp, cl, cands, v_c, v_y) > 0)))) continue;
+                  const _t154 = sp.adj4Edges[v_c][_i153];
+                  const _t155 = _t154;
+                  if (_g142.length < 16) { if (!_g142.includes(_t155)) _g142.push(_t155); } else addOnce(_g142, mustReachOut_st148, _t155);
+                }
+              }
+            }
+            _g156.length = 0;
+            G157: {
+              const _a160 = v_G;
+              for (let _i161 = 0; _i161 < _a160.length; _i161++) {
+                const v_x = _a160[_i161];
+                const _h162 = clueAt(cl.number, v_x);
+                if (!((_h162 !== -1))) continue;
+                _g156.push(v_x);
+              }
+            }
+            const _says = { terms: { at: v_c, clue: _h53, links: _g142.slice() }, marks: { reads: setOf(v_c).slice(), outline: _g156.slice() } };
+            if (!fire({ N: v_N, c: v_c, y: v_y, F: v_F.slice(), G: v_G.slice() }, facts, _says)) return 1;
+          }
           cands.fill(-1);
           needMarkedKept.clear();
           bridgesMarkedKept.clear();
@@ -1528,13 +2019,22 @@ export interface LoopBinding {
   f: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LoopSays {
+  terms: { at: number; links: readonly number[]; };
+  marks: { reads: readonly number[]; outline: readonly number[]; };
+}
+
 const loopFacts: number[] = [];
 let loopCands = new Int32Array(0);
+const loop_st49 = stamps();
 
 /** Its dearest read grows with the board as n. */
-export function loop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LoopBinding> | null): number {
+export function loop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LoopBinding, LoopSays> | null): number {
   const _g12: number[] = [];
   const _g25: number[] = [];
+  const _g43: number[] = [];
+  const _g58: number[] = [];
   const facts = loopFacts;
   let fired = 0;
   let changed = false;
@@ -1549,7 +2049,7 @@ export function loop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LoopBinding>
   crossedMarkedKept.clear();
   capMarkedKept.clear();
   allowsMarkedKept.clear();
-  const _m42_1 = b.made[1];
+  const _m65_1 = b.made[1];
   _g12.length = 0;
   G13: {
     const _a16 = sp.edges;
@@ -1572,7 +2072,7 @@ export function loop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LoopBinding>
       L23: {
         const v_f = far(sp, cl, v_c, v_y);
         if (!(((((v_f !== -1) && (hasMarked(b, sp, cl, cands, v_c, v_y) === 0)) && (moreMarked(b, sp, cl, cands, v_c, v_y) > 0)) && (_eg24.of(v_f) === _eg24.of(v_c))))) break L23;
-        if (b.made[1] !== _m42_1) {
+        if (b.made[1] !== _m65_1) {
           _g25.length = 0;
           G26: {
             const _a29 = sp.edges;
@@ -1617,7 +2117,40 @@ export function loop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LoopBinding>
         if (!(_q37)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L.slice(), c: v_c, y: v_y, f: v_f }, facts)) return 1;
+          if (fire !== null) {
+            const _t42 = _eg24.of(v_c);
+            _g43.length = 0;
+            loop_st49.pass++;
+            G44: {
+              const _a50 = _t42;
+              for (let _i51 = 0; _i51 < _a50.length; _i51++) {
+                const v_c = _a50[_i51];
+                const _h52 = clueAt(cl.number, v_c);
+                if (!((_h52 !== -1))) continue;
+                const _a53 = sp.adj4[v_c];
+                for (let _i54 = 0; _i54 < _a53.length; _i54++) {
+                  const v_y = _a53[_i54];
+                  if (!((((far(sp, cl, v_c, v_y) !== -1) && (_t42.includes(far(sp, cl, v_c, v_y)))) && (hasMarked(b, sp, cl, cands, v_c, v_y) > 0)))) continue;
+                  const _t55 = sp.adj4Edges[v_c][_i54];
+                  const _t56 = _t55;
+                  if (_g43.length < 16) { if (!_g43.includes(_t56)) _g43.push(_t56); } else addOnce(_g43, loop_st49, _t56);
+                }
+              }
+            }
+            const _t57 = _eg24.of(v_c);
+            _g58.length = 0;
+            G59: {
+              const _a62 = _t57;
+              for (let _i63 = 0; _i63 < _a62.length; _i63++) {
+                const v_x = _a62[_i63];
+                const _h64 = clueAt(cl.number, v_x);
+                if (!((_h64 !== -1))) continue;
+                _g58.push(v_x);
+              }
+            }
+            const _says = { terms: { at: v_c, links: _g43.slice() }, marks: { reads: setOf(v_c).slice(), outline: _g58.slice() } };
+            if (!fire({ L: v_L.slice(), c: v_c, y: v_y, f: v_f }, facts, _says)) return 1;
+          }
           cands.fill(-1);
           hasMarkedKept.clear();
           moreMarkedKept.clear();

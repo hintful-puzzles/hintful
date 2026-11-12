@@ -1,8 +1,9 @@
 /**
- * Bridges' explained hint: the narration of the firings `bridgesWalk` in
- * [`solver.ts`](./solver.ts) takes, one at a time, from the compiled ladder
- * the description states (`bridges.description.yaml`). This file turns each
- * firing into the sentence and the picture.
+ * Bridges' explained hint: the narration of the firings the ladder
+ * [`bridges.description.yaml`](./bridges.description.yaml) states makes, one at
+ * a time, which `engine/described-edge-hint.ts` walks. This file turns each
+ * firing into the move and the picture, and its words are
+ * [`hint-text.ts`](./hint-text.ts)'s.
  *
  * **An island is named by its clue, and a bridge is named by nothing.** Bridges
  * draws no coordinates, so an island's digit is the only handle a sentence can
@@ -12,20 +13,25 @@
  * bridge, or the cross, that the move would make.
  */
 
-import type { HintStep } from "../../engine/game.ts";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
-  CONTRADICTION_UNLOCALIZED,
-  DEDUCTION_EXHAUSTED,
-  type HintRefusal,
-} from "../../engine/hint-refusal.ts";
+  describedEdgeHint,
+  type EdgeSpoken,
+  type Fired,
+} from "../../engine/described-edge-hint.ts";
+import type { HintStep } from "../../engine/game.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import { SAYS_KINDS } from "./bridges.compiled.ts";
 import { SPAN, say } from "./hint-text.ts";
 import {
-  type BridgesFiring,
-  type BridgesReason,
+  type BridgesSays,
   type BridgesSpan,
+  type BridgesWalkContext,
   bridgesWalk,
+  firingOps,
+  linesJoined,
+  spansOf,
+  TIER_COUNT,
+  walkTier,
 } from "./solver.ts";
 import {
   type BridgesMove,
@@ -79,37 +85,29 @@ export interface BridgesHighlights {
 
 // --- narration ------------------------------------------------------------
 
-/**
- * Which sentence a firing speaks, and with what values, naming what `hl`
- * marks. The words are [`hint-text.ts`](./hint-text.ts)'s.
- */
-export function narrate(
-  state: BridgesState,
-  reason: BridgesReason,
-  hl: BridgesHighlights,
-): Sentence {
-  const clue = state.islands[reason.island].count;
-  switch (reason.kind) {
-    case "exactSpace":
-      return say.exactSpace(clue, reason.missing, hl);
-    case "everyNeighbor":
-      return say.everyNeighbor(clue, reason.neighbors, hl);
-    case "wouldCloseLoop":
-      return say.wouldCloseLoop(hl);
-    case "needsThisWay":
-      return say.needsThisWay(clue, reason.elsewhere, hl);
-    case "wouldSealGroup":
-      return say.wouldSealGroup(reason.group, reason.limit, hl);
-    case "wouldStarve":
-      // "The outlined island" is a lie when the starved island *is* the one the
-      // bridge starts from, because nothing else is then left to outline. The
-      // sentence and the picture ask `namesFocus` the same question, so they
-      // cannot disagree about which arm this is.
-      return say.wouldStarve(clue, namesFocus(reason), reason.limit, hl);
-    case "mustReachOut":
-      return say.mustReachOut(clue, hl);
-  }
-}
+/** Each technique's sentence, from what the firing says. The words are
+ * [`hint-text.ts`](./hint-text.ts)'s. */
+export const sentences: {
+  [K in keyof BridgesSays]: (
+    spoken: EdgeSpoken<BridgesSays[K]>,
+    marked: BridgesHighlights,
+  ) => Sentence;
+} = {
+  exactSpace: (s, m) => say.exactSpace(s.terms.clue, s.terms.missing, m),
+  everyNeighbor: (s, m) => say.everyNeighbor(s.terms.clue, s.terms.neighbors, m),
+  needsThisWay: (s, m) => say.needsThisWay(s.terms.clue, s.terms.elsewhere, m),
+  sealing: (s, m) => say.wouldSealGroup(s.outline.length, 0, m),
+  loop: (_s, m) => say.wouldCloseLoop(m),
+  mustReachOut: (s, m) => say.mustReachOut(s.terms.clue, m),
+  tooMany: (s, m) =>
+    s.arm === "sealed"
+      ? say.wouldSealGroup(s.outline.length, s.terms.limit, m)
+      : // "The outlined island" is a lie when the starved island *is* the one
+        // the bridge starts from, because nothing else is then left to outline.
+        // The sentence and the picture ask `namesFocus` the same question, so
+        // they cannot disagree about which arm this is.
+        say.wouldStarve(s.terms.clue, s.terms.starved === s.terms.at, s.terms.limit, m),
+};
 
 // --- highlights from a firing ---------------------------------------------
 
@@ -125,33 +123,39 @@ export function narrate(
  * that treats them the same, and "these 2 islands" would point at one mark of
  * each color (docs/hints-marks.md § "The engine colors the marks").
  */
-function namesFocus(reason: BridgesReason): boolean {
-  switch (reason.kind) {
+function namesFocus(id: string, terms: { at: number }): boolean {
+  switch (id) {
     case "exactSpace":
     case "everyNeighbor":
     case "needsThisWay":
     case "mustReachOut":
       return true;
-    case "wouldStarve":
+    case "tooMany":
       // Only the arm that says "this 5 itself", which is exactly the one where
       // nothing else is left to outline.
-      return reason.ev.islands.every((i) => i === reason.island);
-    case "wouldSealGroup":
-    case "wouldCloseLoop":
+      return "starved" in terms && terms.starved === terms.at;
+    default:
       return false;
   }
 }
 
-function highlightsOf(
+/** The move a firing makes and what it marks, read off the marks it found and
+ * the ones it left. */
+function stepOf(
+  fired: Fired<BridgesSays[keyof BridgesSays], BridgesWalkContext>,
   state: BridgesState,
-  reason: BridgesReason,
-  firing: BridgesFiring,
-): BridgesHighlights {
-  const focused = namesFocus(reason);
-  const focus = state.islands[reason.island];
-  const at = (i: number) => ({ x: state.islands[i].x, y: state.islands[i].y });
-  return {
-    targets: firing.ops.flatMap((op) =>
+): { move: BridgesMove; highlights: BridgesHighlights; marked: BridgesHighlights } {
+  const { taken, says, ctx, before, marks } = fired;
+  const { terms } = says;
+  const { geo } = ctx;
+  const at = (c: number): { x: number; y: number } => ({
+    x: c % state.w,
+    y: (c / state.w) | 0,
+  });
+  const ops = firingOps(state, geo, marks, before, taken, terms.at);
+  const focused = namesFocus(taken.entry.id, terms);
+  const highlights: BridgesHighlights = {
+    targets: ops.flatMap((op) =>
       op.op === "L" || op.op === "N" || op.op === "C"
         ? [
             {
@@ -166,90 +170,59 @@ function highlightsOf(
           ]
         : [],
     ),
-    focus: focused ? { x: focus.x, y: focus.y } : null,
+    focus: focused ? at(terms.at) : null,
     // Only the island the words are *about* is filtered out of its own
     // evidence: a demotion that removes context makes the remaining mark
     // louder, not quieter (docs/hints.md, the Galaxies partner). Where
     // the sentence does not name it, it stays in the group it belongs to.
-    islands: reason.ev.islands.filter((i) => !focused || i !== reason.island).map(at),
-    spans: reason.ev.spans,
+    islands: ("outline" in says.marks ? says.marks.outline : [])
+      .filter((c) => !focused || c !== terms.at)
+      .map(at),
+    spans: "links" in terms ? spansOf(geo, terms.links) : [],
   };
+  return { move: { ops }, highlights, marked: highlights };
 }
 
 // --- the plan -------------------------------------------------------------
 
-/** The hint's rungs: the kinds of the solver's premises. */
-export const BRIDGES_RUNGS = [
-  "exactSpace",
-  "everyNeighbor",
-  "wouldCloseLoop",
-  "needsThisWay",
-  "wouldSealGroup",
-  "wouldStarve",
-  "mustReachOut",
-] as const;
+/** The hint's rungs: the kinds of the ladder's techniques. */
+export const BRIDGES_RUNGS = SAYS_KINDS;
 export type BridgesRung = (typeof BRIDGES_RUNGS)[number];
 
 /**
- * Deduce the plan from the player's own bridges.
+ * The hint: the plan from the player's own bridges.
  *
- * `deduceHintPlan` supplies no `apply`: the walk makes each firing's facts on
- * its own marks, so re-applying one would be wrong rather than merely
- * redundant. The tier cap is the board's own difficulty rather than the top
- * rung: that is the tier the generator certified it soluble at, and it is what
- * stops an Easy board being handed a connectivity argument it never needed.
- * The plan stops where the ladder does: a line the player can see is closed
- * may be left unmarked.
+ * The tier is the board's own difficulty rather than the top rung: that is the
+ * tier the generator certified it soluble at, and it is what stops an Easy
+ * board being handed a connectivity argument it never needed. The plan stops
+ * where the ladder does: a line the player can see is closed may be left
+ * unmarked.
  *
  * **Every fact a step leans on is one the player can see**, because the
  * per-direction limit is a mark the player writes too, and a step writes
- * what its firing concluded as bridges, crosses and limits. `bridgesWalk`
- * throws on a firing that leaves a line its marks cannot show, and
+ * what its firing concluded as bridges, crosses and limits. `firingOps` throws
+ * on a firing that leaves a line its marks cannot show, and
  * `bridges-hint.test.ts` holds each step to moving the board.
  */
-export function bridgesHint(
-  state: BridgesState,
-):
-  | { ok: true; steps: HintStep<BridgesMove, BridgesHighlights, BridgesRung>[] }
-  | { ok: false; error: HintRefusal } {
-  const walk = bridgesWalk(state, state.params.difficulty);
-  let broken = false;
-  const { plan } = deduceHintPlan<null, BridgesFiring, string>({
-    board: null,
-    status: () => (broken ? "broken" : walk.unfinished() ? "open" : "done"),
-    incomplete: "open",
-    next: () => {
-      const firing = walk.next();
-      if (firing !== "contradiction") return firing;
-      broken = true;
-      return null;
-    },
-    planCap: PLAN_CAP,
-  });
-
-  // `findMistakes` re-solves from the clues and compares every span and every
-  // island's mark, so the deduction contradicts itself here only on a board
-  // that solve cannot finish, where there is no answer to say which entry is
-  // wrong.
-  if (broken) return { ok: false, error: CONTRADICTION_UNLOCALIZED };
-  if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-
-  return {
-    ok: true,
-    steps: plan.map((firing) => {
-      const { reason } = firing;
-      const highlights = highlightsOf(state, reason, firing);
-      const words = narrate(state, reason, highlights);
-      return {
-        move: { ops: firing.ops },
-        rung: reason.kind,
-        explanation: words.text,
-        words,
-        highlights,
-      };
-    }),
-  };
-}
+export const bridgesHint = describedEdgeHint<
+  BridgesState,
+  BridgesMove,
+  BridgesHighlights,
+  BridgesHighlights,
+  BridgesWalkContext,
+  BridgesSays,
+  BridgesRung
+>({
+  name: "bridges hint",
+  walk: (state, _cap) => bridgesWalk(state),
+  tiers: { lowest: walkTier, count: TIER_COUNT },
+  plan: PLAN_CAP,
+  // A player follows the islands: a firing reads the island it is about and
+  // those it counts, and writes the islands its lines join.
+  writes: (taken, ctx) => linesJoined(ctx.geo, taken),
+  step: stepOf,
+  say: sentences,
+});
 
 // --- following the plan ---------------------------------------------------
 

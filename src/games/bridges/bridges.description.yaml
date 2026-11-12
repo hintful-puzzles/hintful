@@ -123,6 +123,12 @@ define:
     far(x, z) in G
   # How many islands the board has.
   islands: "count(x in cells where island(x))"
+  # The islands among some squares, and the first edge of every line between
+  # two of them that has a bridge: what a hint outlines of a group.
+  isles(G): "{x in G where island(x)}"
+  links(G): >-
+    set(edge(c, y) over c in G where island(c), y in adj4(c)
+    where far(c, y) != none and far(c, y) in G and has(c, y) > 0)
   # The same reads, with at least j bridges supposed on the line whose
   # edges are H.
   hasAt(c, y, H, j): "has(c, y) + sum(z in {edge(c, y)} where z in H of j - has(c, y))"
@@ -149,6 +155,8 @@ define:
     {c} + set(far(x, z) over x in {c, far(c, y)}, z in adj4(x) where far(x, z) != none)
     + set(far(m, p) over m in mid(c, y), p in adj4(m)
     where (x(p) = x(m)) != (x(y) = x(c)) and far(m, p) != none)
+  # The first island a bridge from c by y could leave short.
+  starved(c, y, H, j): "first({x in near(c, y) where starvedAt(x, H, j)})"
   # Whether at least j bridges on the line from c by y, its edges H, would
   # break the board at once: an island near it left short, or its group G
   # finished, every island in it with all its bridges, while some island
@@ -210,6 +218,9 @@ techniques:
       and (forall y in adj4(c) where far(c, y) != none,
       t = has(c, y) + room(c, y), e in run(c, y), d in cand(e)
       where d <= t: strike(e, d))
+    says:
+      terms: { at: c, clue: "clue(number, c)", missing: n }
+      marks: { reads: "{c}" }
   # An island whose number is more than all but one of the lines it may
   # still use could carry takes a bridge on each.
   - id: everyNeighbor
@@ -220,6 +231,9 @@ techniques:
       where clue(number, c) > (|A| - 1) * maxb
     conclude: >-
       forall y in A where has(c, y) = 0, e in run(c, y): strike(e, 1)
+    says:
+      terms: { at: c, clue: "clue(number, c)", neighbors: "|A|" }
+      marks: { reads: "{c}", outline: "set(far(c, y) over y in A)" }
   # An island whose other lines could carry fewer bridges than its number
   # takes one on this line.
   - id: needsThisWay
@@ -230,6 +244,13 @@ techniques:
       y in adj4(c) where far(c, y) != none and has(c, y) = 0
       and more(c, y) > 0 and V - more(c, y) < clue(number, c)
     conclude: "forall e in run(c, y): strike(e, 1)"
+    says:
+      terms: { at: c, clue: "clue(number, c)", elsewhere: "V - more(c, y)" }
+      marks:
+        reads: "{c}"
+        outline: >-
+          set(far(c, z) over z in adj4(c)
+          where far(c, z) != none and z != y and most(c, z) > 0)
   # A bridge on a line between two islands that each need one more would
   # finish a group shut off from the rest: the line is blocked.
   - id: sealing
@@ -242,6 +263,9 @@ techniques:
       where closed(G) and (forall x in G where island(x) and x != c and x != f: need(x) = 0)
       and count(x in G where island(x)) < N
     conclude: "forall e in run(c, y), d in cand(e) where d > 1: strike(e, d)"
+    says:
+      terms: { at: c, links: "links(G)" }
+      marks: { reads: "{c}", outline: "isles(G)" }
   # The fewest bridges past those a line has that would break the board at
   # once, leaving an island short or a finished group shut off: the line
   # takes fewer.
@@ -255,6 +279,23 @@ techniques:
       k = min(j in range(t + 1, t + r) where breaksAt(c, y, G, H, j, N))
       where k > 0
     conclude: "forall e in H, d in cand(e) where d > k: strike(e, d)"
+    says:
+      terms: { at: c, clue: "clue(number, c)", limit: "k - 1" }
+      marks: { reads: "{c}" }
+      arms:
+        # The bridge would finish a group, every island of it with all its
+        # bridges, shut off from the rest.
+        sealed:
+          when: >-
+            closed(G) and (forall x in G where island(x): needAt(x, H, k) = 0)
+            and count(x in G where island(x)) < N
+          terms: { links: "links(G)" }
+          marks: { outline: "isles(G)" }
+        # Or it would leave an island short.
+        starved:
+          when: "true"
+          terms: { starved: "starved(c, y, H, k)" }
+          marks: { outline: "{starved(c, y, H, k)}" }
   # An island that would fill its other lines to the most each allows, and
   # so finish a group shut off from the rest: this line takes a bridge.
   - id: mustReachOut
@@ -271,6 +312,9 @@ techniques:
       need(x) = sum(z in adj4(c) where z != y and far(c, z) = x of room(c, z)))
       and count(x in G where island(x)) < N
     conclude: "forall e in run(c, y): strike(e, 1)"
+    says:
+      terms: { at: c, clue: "clue(number, c)", links: "links(G)" }
+      marks: { reads: "{c}", outline: "isles(G)" }
 variations:
   no loops:
     add:
@@ -291,3 +335,6 @@ variations:
             where f != none and has(c, y) = 0 and more(c, y) > 0
             and f in through(c, L)
           conclude: "forall e in run(c, y), d in cand(e) where d > 1: strike(e, d)"
+          says:
+            terms: { at: c, links: "links(through(c, L))" }
+            marks: { reads: "{c}", outline: "isles(through(c, L))" }

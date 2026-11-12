@@ -1040,7 +1040,17 @@ cell it covers) is a set expression over the cells' own state, as `sameLine`'s.
 the squares it makes) gives `describedFiringHint` a `journey`; the squares its
 placing techniques decide on their own are read off the marks across the firing
 and shown and made with it, and `tiers` and `plan` start a walk at the board's
-own tier and cap its length. A rule that only a run of the validator can name
+own tier and cap its length. **A game whose answer is on the edges** (Bridges: the facts strike values from
+an edge, and a step's move is the bridges, crosses and limits a line ended up
+with) gives `describedEdgeHint` (`engine/described-edge-hint.ts`) the walk,
+`writes` (the elements a player's attention follows: Bridges' islands) and a
+`step` that makes the move and the highlights from the marks as the firing found
+them and left them. Its `says` marks are cells (the islands outlined and the
+island read, `reads`), and what is an edge or a line (a group's bridges) is a
+term, which the game reads off its geometry. The game's own `hintKeepTrack`
+stays: a bridge is drawn a drag at a time, which no fact is.
+
+A rule that only a run of the validator can name
 (Boats' three trials) stays a reason callback, which receives what the
 technique says and returns it with the rule added: the description cannot
 state it.

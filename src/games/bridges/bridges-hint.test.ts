@@ -10,7 +10,6 @@
  * through the real `executeMove`.
  */
 import { describe, expect, it } from "vitest";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { decodeSave, encodeSave } from "../../engine/save.ts";
@@ -19,44 +18,45 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { itDeep } from "../../engine/testing/slow.ts";
 import { newBridgesDesc } from "./generator.ts";
-import { type BridgesHighlights, narrate } from "./hint.ts";
+import {
+  type BridgesHighlights,
+  type BridgesRung,
+  bridgesHint,
+  sentences,
+} from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { bridgesGame } from "./index.ts";
-import {
-  type BridgesFiring,
-  type BridgesReason,
-  type BridgesSpan,
-  bridgesWalk,
-} from "./solver.ts";
+import type { BridgesSpan } from "./solver.ts";
 import {
   type BridgesMove,
+  type BridgesOp,
   type BridgesParams,
   type BridgesState,
   decodeParams,
   G_LINEH,
   G_LINEV,
-  type Island,
   newStateFromDesc,
 } from "./state.ts";
 
 /** Every line of the menu, in order. */
 const BRIDGES_PRESETS = leafPresets(bridgesGame).map((l) => l.params);
 
-type Kind = BridgesReason["kind"];
+type Kind = BridgesRung;
 
 /**
- * Every premise the ladder's reasons can speak, as a total record: adding
- * a variant fails to compile until the census below lists it, which is what
+ * Every kind of step the hint can speak, as a total record: adding a technique
+ * or an arm fails to compile until the census below lists it, which is what
  * stops a new arm shipping unreached and unread
  * (docs/hints.md § "Census the reasons, not only the rungs").
  */
 const REASON_KINDS: Record<Kind, true> = {
   exactSpace: true,
   everyNeighbor: true,
-  wouldCloseLoop: true,
+  loop: true,
   needsThisWay: true,
-  wouldSealGroup: true,
-  wouldStarve: true,
+  sealing: true,
+  "tooMany.sealed": true,
+  "tooMany.starved": true,
   mustReachOut: true,
 };
 
@@ -110,34 +110,44 @@ function makeBoard(params: BridgesParams, seed: string): BridgesState {
   return newStateFromDesc(params, desc);
 }
 
-/** Every firing the hint's walk makes on this board, plus
- * the island list a reason's `island` index names. */
+/** A step the hint showed, as the tests read it. */
+interface Firing {
+  kind: Kind;
+  ops: BridgesOp[];
+  hl: BridgesHighlights;
+  words: string;
+}
+
+/** Every step the hint shows on this board, played through the real
+ * `executeMove` and asked again, as a player following it does. */
 function allFirings(
   params: BridgesParams,
   seed: string,
-): { firings: BridgesFiring[]; status: string; islands: Island[] } {
+): { firings: Firing[]; status: string } {
   return firingsFrom(params, makeBoard(params, seed));
 }
 
 /** {@link allFirings} from a board already made. */
 function firingsFrom(
-  params: BridgesParams,
+  _params: BridgesParams,
   start: BridgesState,
-): { firings: BridgesFiring[]; status: string; islands: Island[] } {
-  const walk = bridgesWalk(start, params.difficulty);
-  let broken = false;
-  const r = deduceHintPlan<null, BridgesFiring, string>({
-    board: null,
-    status: () => (broken ? "broken" : walk.unfinished() ? "open" : "done"),
-    incomplete: "open",
-    next: () => {
-      const f = walk.next();
-      if (f !== "contradiction") return f;
-      broken = true;
-      return null;
-    },
-  });
-  return { firings: r.plan, status: r.status, islands: start.islands };
+): { firings: Firing[]; status: string } {
+  const firings: Firing[] = [];
+  let player = start;
+  for (let round = 0; round < 400; round++) {
+    const res = bridgesHint(player);
+    if (!res.ok) break;
+    for (const step of res.steps) {
+      firings.push({
+        kind: step.rung,
+        ops: step.move.ops,
+        hl: step.highlights as BridgesHighlights,
+        words: step.explanation,
+      });
+      player = bridgesGame.executeMove(player, step.move);
+    }
+  }
+  return { firings, status: bridgesGame.status(player) === "solved" ? "done" : "open" };
 }
 
 /** How many bridges run along this span on `state`. */
@@ -159,9 +169,8 @@ describe("the corpus reaches every premise, and the ledger says which it cannot"
     if (status !== "done") stalled++;
     for (const f of firings) {
       firingCount++;
-      if (!f.reason) continue;
-      all.set(f.reason.kind, (all.get(f.reason.kind) ?? 0) + 1);
-      if (isShipped) shipped.set(f.reason.kind, (shipped.get(f.reason.kind) ?? 0) + 1);
+      all.set(f.kind, (all.get(f.kind) ?? 0) + 1);
+      if (isShipped) shipped.set(f.kind, (shipped.get(f.kind) ?? 0) + 1);
     }
   };
   for (const { params, shipped: isShipped } of SHAPES)
@@ -230,7 +239,7 @@ describe("every step stands on the board the player can see", () => {
         same(next.maxh, player.maxh) &&
         same(next.maxv, player.maxv)
       )
-        out.idle = `step ${out.shown} (${f.reason.kind}) moved nothing`;
+        out.idle = `step ${out.shown} (${f.kind}) moved nothing`;
       player = next;
     }
     return out;
@@ -269,18 +278,22 @@ describe("what the plan shows, and what it keeps to itself", () => {
     let steps = 0;
     for (const { params } of SHAPES) {
       for (const seed of SEEDS) {
-        const { firings, islands } = allFirings(params, seed);
+        const { firings } = allFirings(params, seed);
         for (const f of firings) {
-          if (!f.reason) continue;
           steps++;
-          const focus = islands[f.reason.island];
           const spans = f.ops.filter((op) => op.op === "L" || op.op === "N");
           if (spans.length > 1) multi++;
+          // The island the premise is about, where the sentence names it.
           for (const op of spans) {
             expect(
-              op.x1 === focus.x && op.y1 === focus.y,
-              "a step carries a move from an island its premise is not about",
+              op.x1 === spans[0].x1 && op.y1 === spans[0].y1,
+              "a step carries moves from more than one island",
             ).toBe(true);
+            if (f.hl.focus)
+              expect(
+                op.x1 === f.hl.focus.x && op.y1 === f.hl.focus.y,
+                "a step carries a move from an island its premise is not about",
+              ).toBe(true);
           }
         }
       }
@@ -300,30 +313,36 @@ describe("what the plan shows, and what it keeps to itself", () => {
         // off the board as it was when the firing spoke.
         let player = makeBoard(params, seed);
         for (const f of allFirings(params, seed).firings) {
-          const r = f.reason;
-          if (r) {
-            seen.add(r.kind);
-            if (r.kind === "exactSpace") {
-              const added = f.ops.reduce(
-                (n, op) => (op.op === "L" ? n + op.n - spanBridges(player, op) : n),
-                0,
-              );
-              expect(added, "the bridges drawn are not the ones counted").toBe(
-                r.missing,
-              );
-            }
-            if (r.kind === "everyNeighbor") {
-              expect(r.ev.islands.length).toBe(r.neighbors);
-            }
-            if (r.kind === "wouldSealGroup" || r.kind === "mustReachOut") {
-              expect(r.ev.islands.length).toBe(r.group);
-            }
+          seen.add(f.kind);
+          const count = (word: string | null): number =>
+            word === "one" ? 1 : Number(word);
+          if (f.kind === "exactSpace") {
+            const added = f.ops.reduce(
+              (n, op) => (op.op === "L" ? n + op.n - spanBridges(player, op) : n),
+              0,
+            );
+            expect(added, "the bridges drawn are not the ones counted").toBe(
+              count(/still needs (\w+) more bridge/.exec(f.words)?.[1] ?? null),
+            );
+          }
+          if (f.kind === "everyNeighbor") {
+            const said = /its (\d+) neighbors/.exec(f.words)?.[1];
+            expect(f.hl.islands.length, f.words).toBe(
+              said ? Number(said) : /either/.test(f.words) ? 2 : 1,
+            );
+          }
+          if (f.kind === "sealing" || f.kind === "tooMany.sealed") {
+            // The group is what the picture outlines, which is the island the
+            // premise starts from too, where the sentence does not recolor it.
+            expect(f.hl.islands.length, f.words).toBe(
+              count(/these (\d+) islands/.exec(f.words)?.[1] ?? null),
+            );
           }
           player = bridgesGame.executeMove(player, { ops: f.ops });
         }
       }
     }
-    expect(seen.size, "no firing carried a reason").toBe(
+    expect(seen.size, "a kind of step went unread").toBe(
       Object.keys(REASON_KINDS).length,
     );
   });
@@ -387,40 +406,46 @@ const pinned = describeHintPins({
     severalBridges: (step) => step.move.ops.filter((op) => op.op === "L").length > 1,
   },
   pins: {
-    /** Held on 52 of 294 positions walked. */
+    /** Held on 48 of 291 positions walked. */
     severalBridges: "7x7i30e10m2d2:3a3a2a2n2l3g2a4a5a4",
-    /** Held on 294 of 294 positions walked. */
+    /** Held on 291 of 291 positions walked. */
     exactSpace: "7x7i30e10m2d2:4a4c2d1b4l2d3i3a4a5a2",
-    /** Held on 82 of 294 positions walked. */
+    /** Held on 109 of 291 positions walked. */
     everyNeighbor: "7x7i30e10m2d2:3a3a2a2n2l3g2a4a5a4",
-    /** Held on 29 of 294 positions walked. */
-    wouldCloseLoop: {
-      id: "7x7i30e10m2Ld2:3e2g4e4b3a4k1d3c4a2",
-      moves:
-        '[{"ops":[{"op":"L","x1":0,"y1":0,"x2":6,"y2":0,"n":1},{"op":"L","x1":0,"y1":0,"x2":0,"y2":2,"n":1}]},{"ops":[{"op":"L","x1":2,"y1":3,"x2":4,"y2":3,"n":2},{"op":"L","x1":2,"y1":3,"x2":2,"y2":5,"n":1}]},{"ops":[{"op":"L","x1":4,"y1":3,"x2":4,"y2":6,"n":2}]},{"ops":[{"op":"L","x1":0,"y1":6,"x2":4,"y2":6,"n":1},{"op":"L","x1":0,"y1":6,"x2":0,"y2":2,"n":1}]},{"ops":[{"op":"C","x1":6,"y1":2,"x2":6,"y2":0,"n":1}]},{"ops":[{"op":"L","x1":6,"y1":2,"x2":0,"y2":2,"n":1}]}]',
-    },
-    /** Held on 146 of 294 positions walked. */
+    /** Held on 160 of 291 positions walked. */
     needsThisWay: {
       id: "7x7i30e10m2Ld2:1a2a1a1i3c3j2b3g2a4c2",
       moves: [{ ops: [{ op: "L", x1: 3, y1: 4, x2: 6, y2: 4, n: 2 }] }],
     },
-    /** Held on 128 of 294 positions walked. */
-    wouldSealGroup: {
+    /** Held on 30 of 291 positions walked. */
+    sealing: {
       id: "7x7i30e10m2Ld2:1a2a1a1i3c3j2b3g2a4c2",
       moves:
         '[{"ops":[{"op":"L","x1":3,"y1":4,"x2":6,"y2":4,"n":2}]},{"ops":[{"op":"L","x1":0,"y1":6,"x2":2,"y2":6,"n":1}]}]',
     },
-    /** Held on 130 of 294 positions walked. */
-    wouldStarve: {
+    /** Held on 104 of 291 positions walked. */
+    "tooMany.sealed": {
+      id: "7x7i30e10m2Ld2:1b2b3h1b3w2c4a2",
+      moves:
+        '[{"ops":[{"op":"L","x1":1,"y1":2,"x2":4,"y2":2,"n":1}]},{"ops":[{"op":"L","x1":4,"y1":2,"x2":4,"y2":6,"n":2}]},{"ops":[{"op":"L","x1":6,"y1":0,"x2":6,"y2":6,"n":1},{"op":"L","x1":6,"y1":0,"x2":3,"y2":0,"n":1}]},{"ops":[{"op":"L","x1":0,"y1":6,"x2":4,"y2":6,"n":1}]}]',
+    },
+    /** Held on 113 of 291 positions walked. */
+    "tooMany.starved": {
       id: "7x7i30e10m2d2:3c4a2o3b3j1e2c2a2",
       moves:
         '[{"ops":[{"op":"L","x1":0,"y1":0,"x2":4,"y2":0,"n":1},{"op":"L","x1":0,"y1":0,"x2":0,"y2":6,"n":1}]},{"ops":[{"op":"L","x1":1,"y1":3,"x2":4,"y2":3,"n":2},{"op":"L","x1":1,"y1":3,"x2":1,"y2":5,"n":1}]}]',
     },
-    /** Held on 6 of 294 positions walked. */
+    /** Held on 9 of 291 positions walked. */
     mustReachOut: {
       id: "7x7i30e10m2Ld2:1b3b2g2b5b4e2h1b3a3c2c4",
       moves:
         '[{"ops":[{"op":"L","x1":5,"y1":3,"x2":5,"y2":5,"n":2}]},{"ops":[{"op":"L","x1":5,"y1":5,"x2":3,"y2":5,"n":1}]},{"ops":[{"op":"L","x1":2,"y1":6,"x2":6,"y2":6,"n":2}]},{"ops":[{"op":"L","x1":6,"y1":6,"x2":6,"y2":2,"n":2}]},{"ops":[{"op":"L","x1":3,"y1":5,"x2":3,"y2":2,"n":1}]}]',
+    },
+    /** Held on 29 of 291 positions walked. */
+    loop: {
+      id: "7x7i30e10m2Ld2:3e2g4e4b3a4k1d3c4a2",
+      moves:
+        '[{"ops":[{"op":"L","x1":0,"y1":0,"x2":6,"y2":0,"n":1},{"op":"L","x1":0,"y1":0,"x2":0,"y2":2,"n":1}]},{"ops":[{"op":"L","x1":2,"y1":3,"x2":4,"y2":3,"n":2},{"op":"L","x1":2,"y1":3,"x2":2,"y2":5,"n":1}]},{"ops":[{"op":"L","x1":4,"y1":3,"x2":4,"y2":6,"n":2}]},{"ops":[{"op":"L","x1":0,"y1":6,"x2":4,"y2":6,"n":1},{"op":"L","x1":0,"y1":6,"x2":0,"y2":2,"n":1}]},{"ops":[{"op":"C","x1":6,"y1":2,"x2":6,"y2":0,"n":1}]},{"ops":[{"op":"L","x1":6,"y1":2,"x2":0,"y2":2,"n":1}]}]',
     },
   },
 });
@@ -506,7 +531,7 @@ describe("following a step", () => {
     const span = { x1: 0, y1: 0, x2: 6, y2: 0 };
     const stepTo = (op: BridgesMove["ops"][number]) => ({
       move: { ops: [op] },
-      rung: "wouldStarve" as const,
+      rung: "tooMany.starved" as const,
       explanation: "",
       highlights: { targets: [], focus: null, islands: [], spans: [] },
     });
@@ -712,22 +737,19 @@ describe("the sentences at their extremes", () => {
   it("names the starved island only when one is outlined", () => {
     // The sentence's self arm and the picture's filter run the same test, so
     // "the outlined island" is never spoken over an empty outline.
-    const state = makeBoard(BRIDGES_PRESETS[2], "bh-a");
     const hl: BridgesHighlights = { targets: [], focus: null, islands: [], spans: [] };
-    expect(
-      narrate(
-        state,
-        { kind: "wouldStarve", island: 0, limit: 0, ev: { islands: [0], spans: [] } },
+    const starved = (starvedCell: number): string =>
+      sentences.tooMany(
+        {
+          arm: "starved",
+          terms: { at: 0, clue: 5, limit: 0, starved: starvedCell },
+          outline: [starvedCell],
+          stripes: [],
+        },
         hl,
-      ).text,
-    ).toContain("itself");
-    expect(
-      narrate(
-        state,
-        { kind: "wouldStarve", island: 0, limit: 0, ev: { islands: [1], spans: [] } },
-        hl,
-      ).text,
-    ).toContain("the outlined island");
+      ).text;
+    expect(starved(0)).toContain("itself");
+    expect(starved(1)).toContain("the outlined island");
   });
 });
 
@@ -771,13 +793,12 @@ describe("the marks", () => {
       for (const seed of SEEDS) {
         const { firings } = allFirings(params, seed);
         for (const f of firings) {
-          const r = f.reason;
-          if (r?.kind !== "mustReachOut") continue;
+          if (f.kind !== "mustReachOut") continue;
           seen++;
           // "the outlined group" has to be something: the source island is
           // recolored rather than outlined here, so the group must hold more
           // than it.
-          if (r.ev.islands.filter((i) => i !== r.island).length === 0) empty++;
+          if (f.hl.islands.length === 0) empty++;
         }
       }
     }

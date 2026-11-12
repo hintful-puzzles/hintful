@@ -77,6 +77,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `hint-plan.ts` — the plan-accumulation loop |
 | – `described-hint.ts` — a described game's hint, built from its firings |
 | – `described-firing-hint.ts` — the same, a step a firing |
+| – `described-edge-hint.ts` — the same, where the answer is on the edges |
 | – `hint-track.ts` — following a step that asks for several things |
 | – `hint-gesture.ts` — how the pointer makes a hint step |
 | – `apart-by-position.ts` — two things of one name, told apart |
@@ -761,6 +762,14 @@ game whose step is a firing: one step decides every cell the firing does, and
 game gives the walk, how a fact is its highlights' target and the move that
 makes some, and a sentence a technique, which an `arms` technique reads by
 `spoken.arm`. Exemplar: `singles/index.ts`.
+
+### `described-edge-hint.ts` — the same, where the answer is on the edges
+
+`describedEdgeHint` is the shape for a game whose facts are on edges, a step a
+firing: it walks from the board's own tier, caps the plan, names the kind from
+the technique and arm, and calls the game's `step` with the marks before and
+after the firing, to make the move and highlights from. Keep-track is the
+game's. Exemplar: `bridges/hint.ts`.
 
 ### `hint-track.ts` — following a step that asks for several things
 

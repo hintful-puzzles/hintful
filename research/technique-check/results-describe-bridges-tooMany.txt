@@ -1,0 +1,14 @@
+ok  bridges maxb=1 tooMany                        3  sound    (want sound   )     1 queries    8.8s
+ok  bridges maxb=1 tooMany (planted)              3  unsound  (want unsound )     1 queries    8.5s   at ?
+ok  bridges maxb=2 tooMany                        3  sound    (want sound   )     1 queries   28.7s
+ok  bridges maxb=3 tooMany                        3  sound    (want sound   )     1 queries  115.2s
+..  bridges maxb=4 tooMany: not proved whole in time, asked on 128 boards: no defect
+ok  bridges maxb=4 tooMany                        3  sound    (want sound   )   127 queries  113.0s
+..  bridges +no loops maxb=1 tooMany: not proved whole in time, asked on 0 boards: no defect
+ok  bridges +no loops maxb=1 tooMany                        3  sound    (want sound   )     0 queries    0.0s
+..  bridges +no loops maxb=2 tooMany: not proved whole in time, asked on 0 boards: no defect
+ok  bridges +no loops maxb=2 tooMany                        3  sound    (want sound   )     0 queries    0.0s
+..  bridges +no loops maxb=3 tooMany: not proved whole in time, asked on 0 boards: no defect
+ok  bridges +no loops maxb=3 tooMany                        3  sound    (want sound   )     0 queries    0.0s
+..  bridges +no loops maxb=4 tooMany: not proved whole in time, asked on 0 boards: no defect
+ok  bridges +no loops maxb=4 tooMany                        3  sound    (want sound   )     0 queries    0.0s

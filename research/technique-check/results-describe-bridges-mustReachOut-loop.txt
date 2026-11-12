@@ -1,0 +1,15 @@
+ok  bridges maxb=1 mustReachOut                   3  sound    (want sound   )     1 queries    0.3s
+ok  bridges maxb=1 mustReachOut (planted)         3  sound    (want either  )     1 queries    0.3s
+ok  bridges maxb=2 mustReachOut                   3  sound    (want sound   )     1 queries    0.4s
+ok  bridges maxb=2 mustReachOut (planted)         3  unsound  (want unsound )     1 queries    0.3s   at ?
+ok  bridges maxb=3 mustReachOut                   3  sound    (want sound   )     1 queries    0.4s
+ok  bridges maxb=4 mustReachOut                   3  sound    (want sound   )     1 queries    0.3s
+ok  bridges +no loops maxb=1 mustReachOut                   3  sound    (want sound   )     1 queries    0.3s
+ok  bridges +no loops maxb=2 mustReachOut                   3  sound    (want sound   )     1 queries    0.3s
+ok  bridges +no loops maxb=3 mustReachOut                   3  sound    (want sound   )     1 queries    0.3s
+ok  bridges +no loops maxb=4 mustReachOut                   3  sound    (want sound   )     1 queries    0.4s
+ok  bridges +no loops maxb=1 loop                           3  sound    (want sound   )     1 queries    0.2s
+ok  bridges +no loops maxb=1 loop (planted)                 3  unsound  (want unsound )     1 queries    0.2s   at eset
+ok  bridges +no loops maxb=2 loop                           3  sound    (want sound   )     1 queries    0.2s
+ok  bridges +no loops maxb=3 loop                           3  sound    (want sound   )     1 queries    0.2s
+ok  bridges +no loops maxb=4 loop                           3  sound    (want sound   )     1 queries    0.2s

@@ -36,6 +36,7 @@ const UNTIERED = REGISTERED_GAMES.filter(([, game]) => game.difficulty === undef
  */
 const RELAYS: Record<string, string> = {
   "candidate-hint.ts": "candidateHint(",
+  "described-edge-hint.ts": "describedEdgeHint<",
   "described-firing-hint.ts": "describedFiringHint<",
   "described-hint.ts": "describedHint<",
 };

@@ -241,6 +241,43 @@ defect found in the game, said which.
   were scanned again (`centerTrial`, met once in some 4,000 steps, is pinned by
   hand).
 
+### Bridges, built (2026-11-12)
+
+- **An edge flavor, `describedEdgeHint`.** A fact strikes values from an edge,
+  and what a firing decided is read off the marks across it: the engine hands
+  the game the candidates as the firing found them (`before`) and the marks as
+  it left them, and the game makes the move (a line's bridges, cross or limit)
+  and the highlights. It owns the walk, the tier it starts at, the plan cap,
+  the kind (`<id>` or `<id>.<arm>`) and the call to the technique's sentence; a
+  contradiction is the unlocalized refusal. The cell shapes' per-fact target,
+  shrink and journey have no edge counterpart: a bridge is drawn a drag at a
+  time, so Bridges keeps its own `hintKeepTrack`.
+- **`says` over islands, with lines as terms.** `marks` are cells (`outline`
+  the islands the argument counts, `reads` the one it is about), and the
+  bridges between a group's islands are a term, `links`, the first edge of each
+  line, which the game maps to a span through its geometry. The island the
+  sentence names is a term, `at`; whether the sentence recolors it, and the
+  `self` reading of `tooMany.starved`, are the game's, from the kind and the
+  terms. `tooMany` has two arms (`sealed`, `starved`), which the old reasons
+  tested in code in the same order, and `starved` is a define.
+- **Kinds are the techniques'**: `wouldSealGroup` is `sealing` and
+  `tooMany.sealed`, `wouldStarve` is `tooMany.starved`, `wouldCloseLoop` is
+  `loop`. The old hint ended a plan where no island needed a bridge, and the
+  engine ends it where the ladder has no firing; no technique fires once every
+  island is met.
+- **A change of behavior**: the walk goes up a tier where the board's own has
+  nothing to say, as Singles' and Boats' do, where Bridges' refused.
+- **The comparison.** Every step of the snapshot's boards and of widened runs
+  is the same as at `HEAD` in its words, marks, move and highlights, but the
+  order of a highlight's `islands`, which the engine reads as a set: 30 boards a
+  preset (6,522 lines) and 72 parameter sets of 3 boards, 8x8 to 12x12 at every
+  tier, loops on and off, `maxb` 1 to 4 (4,644 lines), compared with the
+  islands sorted, against a worktree of `HEAD`. Zero lines differ.
+- **Lines.** `solver.ts` 679 to 483 (the reasons, `BridgesFiring` and the walk
+  gone), `hint.ts` 375 to 348 (`narrate`, `highlightsOf` and the plan loop
+  gone), the description +47 of `says`; `described-edge-hint.ts` (189) is the
+  engine's.
+
 ### Read off Boats (2026-11-12, `boats/solver.ts` and `index.ts`), before it was built
 
 Sixteen of its nineteen techniques are what `says` already carries (terms,

@@ -11,7 +11,7 @@
     - [x] The engine (`95bf98c3`): tier escalation and the plan cap, consequences from the marks' diff, a journey of legs over a firing's targets, per-leg keep-track, in `describedFiringHint`
     - [x] The sixteen techniques that `says` carries, the three trials keeping a reason callback beside them; every step of 216 boards equals `HEAD`'s modulo the order of a highlight's evidence
     - [x] The trials' breach stays a reason callback: it needs the validator, and no `with` term reaches that
-  - [ ] Bridges: edge facts, after Boats
+  - [x] Bridges (design § "Bridges, built"): `engine/described-edge-hint.ts` for edge facts, seven techniques (eight kinds) that `say`, the game's own keep-track
 
 ## 2. The catalog
 

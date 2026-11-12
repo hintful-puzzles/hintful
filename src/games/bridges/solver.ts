@@ -27,13 +27,10 @@ import {
   describedLadder,
   type Ladder,
   ladderTechniques,
-  ladderWalk,
-  type ReasonOf,
   runLadder,
   type Taken,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import * as bridges from "./bridges.compiled.ts";
 import {
   type BridgesOp,
@@ -54,35 +51,8 @@ export interface BridgesSpan {
   y2: number;
 }
 
-/** The board one firing reasons from, read before it changes anything. */
-export interface BridgesEvidence {
-  /** Island indices the argument counts. */
-  islands: number[];
-  /** Existing bridges it counts. */
-  spans: BridgesSpan[];
-}
-
-/**
- * Why one firing is forced. One variant per narratable premise: a technique
- * can fire for more than one reason, and the sentence follows the reason.
- * `island` is the island whose arithmetic forces the move, and is the one the
- * narration is about.
- */
-export type BridgesReason = { ev: BridgesEvidence; island: number } & (
-  | { kind: "exactSpace"; missing: number }
-  | { kind: "everyNeighbor"; neighbors: number }
-  | { kind: "wouldCloseLoop" }
-  | { kind: "needsThisWay"; elsewhere: number }
-  | { kind: "wouldSealGroup"; group: number; limit: number }
-  | { kind: "wouldStarve"; limit: number }
-  | { kind: "mustReachOut"; group: number }
-);
-
-/** One firing: the moves it makes, and the premise that forced them. */
-export interface BridgesFiring {
-  reason: BridgesReason;
-  ops: BridgesOp[];
-}
+/** What each technique says, as the hint's sentences read it. */
+export type BridgesSays = bridges.SaysById;
 
 // --- the board as the description reads it -----------------------------------
 
@@ -103,7 +73,7 @@ interface Line {
 }
 
 /** A board's lines and what the description reads it as. */
-interface Geometry {
+export interface Geometry {
   sp: GridSpace;
   dealt: bridges.Dealt;
   lines: Line[];
@@ -201,7 +171,7 @@ function deduction(state: BridgesState, cleared: boolean): Deduction {
   known.forEach(({ lo, hi }, n) => {
     for (const e of geo.lines[n].edges) m.cands[e] &= between(lo, hi);
   });
-  return { state, geo, m, ladder: bridgesLadder(state, geo) };
+  return { state, geo, m, ladder: bridgesLadder(geo) };
 }
 
 /** The marks' reads the description makes, for a firing's reason and the
@@ -210,7 +180,7 @@ class Reads {
   constructor(
     readonly state: BridgesState,
     readonly geo: Geometry,
-    readonly m: CellMarks,
+    readonly m: Pick<CellMarks, "cands">,
   ) {}
 
   private drawn(e: number): number {
@@ -324,186 +294,24 @@ class Reads {
   }
 }
 
-/** The line from island cell `c` leaving by its neighbor `y`. */
-function lineFrom(geo: Geometry, c: number, y: number): Line {
-  const n = geo.lineOf[geo.sp.edgeOf(c, y)];
-  if (n < 0) throw new Error("bridges: a firing names no line");
-  return geo.lines[n];
-}
-
-/** The islands among `cells`, as cells. */
-function islandsIn(state: BridgesState, cells: readonly number[]): number[] {
-  return cells.filter((c) => state.gridi[c] >= 0);
-}
-
-/** A reason built once a firing, from its binding, and shared by its facts. */
-function perFiring<B extends object>(
-  build: (binding: B, m: CellMarks) => BridgesReason,
-): ReasonOf<B> {
-  let last: B | null = null;
-  let reason: BridgesReason | null = null;
-  return (binding, _at, _n, m) => {
-    if (binding !== last || reason === null) {
-      last = binding;
-      reason = build(binding, m);
-    }
-    return reason;
-  };
-}
-
-/** The ladder over the dealt board, each technique with its reason. */
-function bridgesLadder(state: BridgesState, geo: Geometry): Ladder {
+/** The ladder over the dealt board: each technique as the description states
+ * it, a firing recording what it says. */
+function bridgesLadder(geo: Geometry): Ladder {
   const dl = geo.dealt;
-  const reads = (m: CellMarks): Reads => new Reads(state, geo, m);
-  /** A group's islands and the bridges between them, as an argument counts
-   * them. */
-  const groupEvidence = (r: Reads, cells: readonly number[]): BridgesEvidence => {
-    const isl = islandsIn(state, cells);
-    return { islands: isl.map((c) => r.index(c)), spans: r.spansAmong(isl) };
-  };
   return describedLadder(
     bridges,
     {
-      exactSpace: compiledRung(
-        bridges.exactSpace,
-        dl,
-        perFiring(({ c, n }, m) => ({
-          kind: "exactSpace",
-          island: reads(m).index(c),
-          missing: n,
-          ev: { islands: [], spans: [] },
-        })),
-      ),
-      everyNeighbor: compiledRung(
-        bridges.everyNeighbor,
-        dl,
-        perFiring(({ c, A }, m) => {
-          const r = reads(m);
-          return {
-            kind: "everyNeighbor",
-            island: r.index(c),
-            neighbors: A.length,
-            ev: {
-              islands: A.map((y) => r.index(r.other(lineFrom(geo, c, y), c))),
-              spans: [],
-            },
-          };
-        }),
-      ),
-      needsThisWay: compiledRung(
-        bridges.needsThisWay,
-        dl,
-        perFiring(({ c, V, y }, m) => {
-          const r = reads(m);
-          const line = lineFrom(geo, c, y);
-          return {
-            kind: "needsThisWay",
-            island: r.index(c),
-            elsewhere: V - r.most(line, c),
-            ev: {
-              islands: r
-                .lines(c)
-                .filter((l) => l !== line && r.most(l, c) > 0)
-                .map((l) => r.index(r.other(l, c))),
-              spans: [],
-            },
-          };
-        }),
-      ),
-      sealing: compiledRung(
-        bridges.sealing,
-        dl,
-        perFiring(({ c, G }, m) => {
-          const r = reads(m);
-          const ev = groupEvidence(r, G);
-          return {
-            kind: "wouldSealGroup",
-            island: r.index(c),
-            group: ev.islands.length,
-            limit: 0,
-            ev,
-          };
-        }),
-      ),
-      loop: compiledRung(
-        bridges.loop,
-        dl,
-        perFiring(({ c, L }, m) => {
-          const r = reads(m);
-          return {
-            kind: "wouldCloseLoop",
-            island: r.index(c),
-            ev: groupEvidence(r, joined(geo.sp, c, L)),
-          };
-        }),
-      ),
-      tooMany: compiledRung(
-        bridges.tooMany,
-        dl,
-        perFiring(({ c, y, G, k, N }, m) => {
-          const r = reads(m);
-          const line = lineFrom(geo, c, y);
-          const isl = islandsIn(state, G);
-          const sealed =
-            isl.length < N &&
-            isl.every((x) => r.needAt(x, line, k) === 0) &&
-            isl.every((x) =>
-              r.lines(x).every((l) => r.has(l) === 0 || G.includes(r.other(l, x))),
-            );
-          if (sealed) {
-            const ev = groupEvidence(r, G);
-            return {
-              kind: "wouldSealGroup",
-              island: r.index(c),
-              group: ev.islands.length,
-              limit: k - 1,
-              ev,
-            };
-          }
-          const starved = bridges
-            .near(geo.sp, dl, c, y)
-            .find((x) => r.starvedAt(x, line, k));
-          if (starved === undefined)
-            throw new Error("bridges: tooMany fired where its trial breaks nothing");
-          return {
-            kind: "wouldStarve",
-            island: r.index(c),
-            limit: k - 1,
-            ev: { islands: [r.index(starved)], spans: [] },
-          };
-        }),
-      ),
-      mustReachOut: compiledRung(
-        bridges.mustReachOut,
-        dl,
-        perFiring(({ c, G }, m) => {
-          const r = reads(m);
-          const ev = groupEvidence(r, G);
-          return {
-            kind: "mustReachOut",
-            island: r.index(c),
-            group: ev.islands.length,
-            ev,
-          };
-        }),
-      ),
+      exactSpace: compiledRung(bridges.exactSpace, dl),
+      everyNeighbor: compiledRung(bridges.everyNeighbor, dl),
+      needsThisWay: compiledRung(bridges.needsThisWay, dl),
+      sealing: compiledRung(bridges.sealing, dl),
+      loop: compiledRung(bridges.loop, dl),
+      tooMany: compiledRung(bridges.tooMany, dl),
+      mustReachOut: compiledRung(bridges.mustReachOut, dl),
     },
     undefined,
     geo.variations,
   );
-}
-
-/** Square `c` and the squares the edges `E` join to it. */
-function joined(sp: GridSpace, c: number, E: readonly number[]): number[] {
-  const on = new Set(E);
-  const out = [c];
-  for (let i = 0; i < out.length; i++) {
-    const x = out[i];
-    sp.adj4[x].forEach((y) => {
-      if (!out.includes(y) && on.has(sp.edgeOf(x, y))) out.push(y);
-    });
-  }
-  return out;
 }
 
 // --- solving -----------------------------------------------------------------
@@ -588,92 +396,88 @@ export function bridgesSolved(state: BridgesState): boolean {
 
 // --- the hint's walk ---------------------------------------------------------
 
-/** What a hint asks the ladder for, from the player's own bridges and marks. */
-export interface BridgesWalk {
-  /** The next firing, `null` once the ladder has none, or `"contradiction"`
-   * where the marks are inconsistent. */
-  next(): BridgesFiring | null | "contradiction";
-  /** Whether some island still needs a bridge. */
-  unfinished(): boolean;
+/** What a hint reads a firing by, beside the marks. */
+export interface BridgesWalkContext {
+  geo: Geometry;
+}
+
+/**
+ * What a hint walks: the ladder on the player's own bridges and marks, which
+ * the engine's walk takes a firing at a time (`engine/described-edge-hint.ts`).
+ * `state` is read, never written.
+ */
+export function bridgesWalk(state: BridgesState): {
+  marks: CellMarks;
+  entries: Ladder["entries"];
+  ctx: BridgesWalkContext;
+} {
+  const d = deduction(state, false);
+  return { marks: d.m, entries: d.ladder.entries, ctx: { geo: d.geo } };
+}
+
+/** The cap a hint's walk starts at: the board's own tier. */
+export const walkTier = (state: BridgesState): number =>
+  Math.min(state.params.difficulty, TOP);
+
+/** How many tiers the ladder has. */
+export const TIER_COUNT = TOP + 1;
+
+/** The island cells a firing's lines join, which a player's attention moves to. */
+export function linesJoined(geo: Geometry, taken: Taken): number[] {
+  const out = new Set<number>();
+  for (let i = 0; i < taken.facts.length; i += 3) {
+    const n = geo.lineOf[taken.facts[i + 1]];
+    if (n >= 0) out.add(n);
+  }
+  return [...out].flatMap((n) => [geo.lines[n].a, geo.lines[n].b]);
 }
 
 /**
  * The moves a firing made, from what each line it decided had and allowed
- * before (`before`, by line) to what the marks hold now: a count of bridges,
- * a cross, or a limit, each from the island cell `from` where that is an end
- * of the line, since a sentence reasons from it.
+ * before (`before`, the marks' candidates as the firing found them) to what
+ * the marks hold now: a count of bridges, a cross, or a limit, each from the
+ * island cell `from` where that is an end of the line, since a sentence reasons
+ * from it.
  */
-function opsOf(
-  d: Deduction,
+export function firingOps(
+  state: BridgesState,
+  geo: Geometry,
+  marks: CellMarks,
+  before: Int32Array,
   taken: Taken,
-  before: readonly { has: number; allows: number }[],
   from: number,
 ): BridgesOp[] {
-  const r = new Reads(d.state, d.geo, d.m);
+  const now = new Reads(state, geo, marks);
+  const was = new Reads(state, geo, { cands: before });
   const touched = new Set<number>();
   for (let i = 0; i < taken.facts.length; i += 3) {
-    const n = d.geo.lineOf[taken.facts[i + 1]];
+    const n = geo.lineOf[taken.facts[i + 1]];
     if (n >= 0) touched.add(n);
   }
   const ops: BridgesOp[] = [];
   for (const n of touched) {
-    const line = d.geo.lines[n];
+    const line = geo.lines[n];
     const s = line.span;
     const ends =
       line.b === from ? { x1: s.x2, y1: s.y2, x2: s.x1, y2: s.y1 } : { ...s };
-    const has = r.has(line);
-    const allows = r.allows(line);
+    const has = now.has(line);
+    const allows = now.allows(line);
     // A step's moves are all the player is shown, so the line must hold no
     // more than a count of bridges and a limit can say, at both ends.
-    const first = d.m.cands[line.edges[0]];
-    if (first !== between(has, allows) || d.m.cands[line.edges.at(-1) ?? 0] !== first)
+    const first = marks.cands[line.edges[0]];
+    if (first !== between(has, allows) || marks.cands[line.edges.at(-1) ?? 0] !== first)
       throw new Error("bridges: a firing leaves a line its marks cannot show");
-    if (has > before[n].has) ops.push({ op: "L", ...ends, n: has });
-    if (allows < before[n].allows)
+    if (has > was.has(line)) ops.push({ op: "L", ...ends, n: has });
+    if (allows < was.allows(line))
       ops.push(allows === 0 ? { op: "N", ...ends } : { op: "C", ...ends, n: allows });
   }
   return ops;
 }
 
-/**
- * The ladder's firings from the player's board, one at a time, each the one
- * that carries on from the islands the plan is working round (`ladderWalk`),
- * up to `cap`. `state` is read, never written.
- */
-export function bridgesWalk(state: BridgesState, cap: number): BridgesWalk {
-  const d = deduction(state, false);
-  d.m.budget = stepBudget("bridges hint");
-  const { geo } = d;
-  const linesOf = (f: Taken): Line[] => {
-    const out = new Set<number>();
-    for (let i = 0; i < f.facts.length; i += 3) {
-      const n = geo.lineOf[f.facts[i + 1]];
-      if (n >= 0) out.add(n);
-    }
-    return [...out].map((n) => geo.lines[n]);
-  };
-  const reasonOf = (f: Taken): BridgesReason => f.reasons[0] as BridgesReason;
-  const islandCell = (i: number): number =>
-    state.idx(state.islands[i].x, state.islands[i].y);
-  // A player follows the islands: a firing reads the island it is about and
-  // those it counts, and writes the islands its lines join.
-  const walk = ladderWalk(
-    d.m,
-    d.ladder.entries,
-    { [TIERS]: Math.min(cap, TOP) },
-    (f) => [islandCell(reasonOf(f).island), ...reasonOf(f).ev.islands.map(islandCell)],
-    { writes: (f) => linesOf(f).flatMap((l) => [l.a, l.b]) },
-  );
-  return {
-    next() {
-      // The walk makes the firing it takes, so each line is read before.
-      const r = new Reads(state, geo, d.m);
-      const before = geo.lines.map((l) => ({ has: r.has(l), allows: r.allows(l) }));
-      const taken = walk.next();
-      if (taken === null || taken === "contradiction") return taken;
-      const reason = reasonOf(taken);
-      return { reason, ops: opsOf(d, taken, before, islandCell(reason.island)) };
-    },
-    unfinished: () => unfinished(d),
-  };
+/** The spans of the lines whose first edges are `edges`, once each, in the
+ * order the board's lines run. */
+export function spansOf(geo: Geometry, edges: readonly number[]): BridgesSpan[] {
+  return [...new Set(edges.map((e) => geo.lineOf[e]))]
+    .sort((a, b) => a - b)
+    .map((n) => geo.lines[n].span);
 }
