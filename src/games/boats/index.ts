@@ -28,19 +28,16 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { describedFiringHint } from "../../engine/described-firing-hint.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import {
   type Game,
-  type HintResult,
   type HintStep,
-  type HintTrackVerdict,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
-import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import {
   dimensionParamConfig,
   parseConfigInt,
@@ -74,8 +71,9 @@ import {
   verbClicks,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
+import { SAYS_KINDS } from "./boats.compiled.ts";
 import { newBoatsDesc, validateParams } from "./generator.ts";
-import { type BoatsMarks, say } from "./hint-text.ts";
+import { sentences } from "./hint-text.ts";
 import {
   BORDER,
   type BoatsDrawState,
@@ -88,14 +86,15 @@ import {
   redraw,
 } from "./render.ts";
 import {
-  BOATS_RUNGS,
-  type BoatsFiring,
   type BoatsMistake,
-  type BoatsRung,
+  type BoatsSays,
   type BoatsSquare,
-  deduceBoatsPlan,
   findMistakes,
+  hintWalk,
   isBoatsAnswer,
+  lowestSolvingDiff,
+  SEA,
+  SHIP,
   solveBoats,
   solveToGrid,
 } from "./solver.ts";
@@ -108,6 +107,7 @@ import {
   type BoatsUi,
   boardOf,
   DIFF_NAMES,
+  DIFFCOUNT,
   decodeFleet,
   decodeParams,
   defaultFleet,
@@ -344,6 +344,9 @@ function status(s: BoatsState): GameStatus {
 
 // --- hint (a second projection of the deduction engine) ---------------------
 
+/** What a hint step can speak: its technique's kind (`boats.description.yaml`). */
+type BoatsRung = (typeof SAYS_KINDS)[number];
+
 /**
  * What a Boats hint step is about; its marks are the ones its words name.
  * `targets` are the squares to decide, each with what goes there: a ringed
@@ -362,199 +365,125 @@ export interface BoatsHint {
   h: number;
 }
 
-/** The squares of `hl` a step's words may name on a `w` by `h` board: the
- * renderer skips any off the board, and draws a decided square's mark over an
- * outline. */
-function drawnSquares(hl: BoatsHint, w: number, h: number) {
-  const on = (c: Point): boolean => c.x >= 0 && c.y >= 0 && c.x < w && c.y < h;
-  const decided = new Set(hl.targets.filter(on).map((t) => t.y * w + t.x));
-  return {
-    evidence: hl.evidence.filter((c) => on(c) && !decided.has(c.y * w + c.x)),
-    line: hl.line.filter(on),
-  };
-}
-
-/** Which sentence a firing speaks, and with what values, naming the squares
- * `hl` marks. The words are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(f: BoatsFiring, hl: BoatsHint): Sentence {
-  const t = f.technique;
-  const { evidence, line } = drawnSquares(hl, hl.w, hl.h);
-  const pt = ({ x, y }: Point): Point => ({ x, y });
-  const m: BoatsMarks = {
-    ships: f.squares.filter((s) => s.ship).map(pt),
-    waters: f.squares.filter((s) => !s.ship).map(pt),
-    follows: f.consequences.map(pt),
-    evidence,
-    line,
-  };
-
-  switch (t.kind) {
-    case "givenClue":
-      return say.givenClue(t, m);
-    case "neverTouch":
-      return say.neverTouch(m);
-    case "lineSatisfied":
-      return say.lineSatisfied(t, m);
-    case "lineForced":
-      return say.lineForced(t, m);
-    case "allWaterPlaced":
-      return say.allWaterPlaced(m);
-    case "centerForced":
-      return say.centerForced(t, m);
-    case "isolated":
-      return say.isolated(m);
-    case "mustExtend":
-      return say.mustExtend(m);
-    case "centerCount":
-      return say.centerCount(t, m);
-    case "growTooLong":
-      return say.growTooLong(t, m);
-    case "mustGrow":
-      return say.mustGrow(t, m);
-    case "runTooShort":
-      return say.runTooShort(t, m);
-    case "onlyRunsLeft":
-      return say.onlyRunsLeft(t, m);
-    case "sharedDiagonal":
-      return say.sharedDiagonal(t, m);
-    case "refuted":
-      return say.refuted(t, m);
-  }
+/** A square's value as the hint's marks number it: a boat segment, water, or
+ * 0 for none. */
+function valueAt(state: BoatsState, cell: number): number {
+  const fill = fillOf(state.grid[cell]);
+  return fill === "B" ? SHIP : fill === "W" ? SEA : 0;
 }
 
 /**
- * The moves one firing asks for, in reading order with boats before water.
+ * The moves that make `group`, squares that all take the same fill: in reading
+ * order, boats before water (the engine hands the values over in that order).
  *
  * A `fill` move is a rectangle with `from: "-"`, so it sets every *still-empty*
- * square in its span — which makes a whole-line deduction one move rather than
+ * square in its span, which makes a whole-line deduction one move rather than
  * eight. The span is therefore only widened when every square in it is either a
- * target or already decided **on the board as this firing fired**; anything else
- * would quietly decide a square the step never claimed.
+ * target or already decided **on the board as the firing found it**; anything
+ * else would quietly decide a square the step never claimed.
  */
-function legMoves(f: BoatsFiring, w: number, squares: BoatsSquare[]): BoatsMove[] {
-  const out: BoatsMove[] = [];
-  const fill = (x0: number, y0: number, x1: number, y1: number, ship: boolean) =>
-    ({ kind: "fill", x0, y0, x1, y1, from: "-", to: ship ? "B" : "W" }) as BoatsMove;
-
-  for (const ship of [true, false]) {
-    const group = squares.filter((s) => s.ship === ship);
-    if (group.length === 0) continue;
-
-    const x0 = Math.min(...group.map((s) => s.x));
-    const x1 = Math.max(...group.map((s) => s.x));
-    const y0 = Math.min(...group.map((s) => s.y));
-    const y1 = Math.max(...group.map((s) => s.y));
-
-    let spanIsOurs = x0 === x1 || y0 === y1;
-    for (let x = x0; spanIsOurs && x <= x1; x++)
-      for (let y = y0; spanIsOurs && y <= y1; y++) {
-        if (f.grid[y * w + x] !== EMPTY) continue; // untouched by a `from: "-"` fill
-        if (!group.some((s) => s.x === x && s.y === y)) spanIsOurs = false;
-      }
-
-    if (spanIsOurs) out.push(fill(x0, y0, x1, y1, ship));
-    else for (const s of group) out.push(fill(s.x, s.y, s.x, s.y, ship));
-  }
-  return out;
-}
-
-/**
- * One firing is **one journey**: a deduction that forces several squares is a
- * single hint whose continuation legs are flagged `continuesPrevious`, so the
- * midend counts the legs as one and auto-play walks them as one
- * (docs/hints-marks.md § "Group one firing into one step"). The narration
- * rides on the opening leg; the rest carry the same highlight so the picture
- * never shrinks mid-journey.
- */
-function stepsFor(
-  f: BoatsFiring,
-  w: number,
-  h: number,
-): HintStep<BoatsMove, BoatsHint, BoatsRung>[] {
-  // The never-touch water a placement drags along is part of *this* step — it
-  // is the rule doing its work, not a further deduction — so it is highlighted
-  // and moved with the firing, and named only in a closing clause.
-  const targets = [...f.squares, ...f.consequences];
-  const highlights: BoatsHint = { targets, evidence: f.evidence, line: f.line, w, h };
-  const words = narrate(f, highlights);
-
-  return legMoves(f, w, targets).map((move, i) => ({
-    move,
-    rung: f.technique.kind,
-    explanation: words.text,
-    words,
-    highlights,
-    continuesPrevious: i > 0,
-  }));
-}
-
-function hint(state: BoatsState): HintResult<BoatsMove, BoatsHint, BoatsRung> {
-  // The midend asks only about a board `findMistakes` passes, and that is a
-  // re-solve, so a placement that breaks no rule *yet* but appears in no
-  // solution never reaches this: deducing onward from a doomed board would
-  // produce confident nonsense (docs/hints.md § "Refusal couples to the
-  // mistake overlay").
-  const plan = deduceBoatsPlan(state);
-  const steps = plan.firings.flatMap((f) =>
-    stepsFor(f, state.params.w, state.params.h),
-  );
-  if (steps.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  return { ok: true, steps };
-}
-
-/**
- * A move completes the step when every square **this leg** asks for ends up as
- * asked.
- *
- * The judgment is per *leg*, not per journey, and that distinction is
- * load-bearing: the midend advances the plan on `"completed"` and holds the
- * same step on `"onTrack"`, so a journey whose legs could only complete
- * together would stall on its first leg for ever (and `executeHint` would
- * re-apply that leg on every tick). A leg's own squares are the journey's
- * targets that fall inside its move's rectangle and match its fill, so the
- * split needs nothing stored beyond `step.move`.
- *
- * No shrink-in-place is needed on `"onTrack"` (contrast Filling): a Boats fill
- * carries `from: "-"`, so re-applying a partly-done leg touches only what is
- * still empty.
- */
-function hintKeepTrack(
-  m: BoatsMove,
-  step: HintStep<BoatsMove, BoatsHint>,
+function legs(
+  group: readonly BoatsSquare[],
+  before: ArrayLike<number>,
   state: BoatsState,
-): HintTrackVerdict {
-  if (m.kind !== "fill" || step.move.kind !== "fill") return "off";
-  const hl = step.highlights;
-  if (!hl) return "off";
-
-  const leg = step.move;
-  const legTargets = hl.targets.filter(
-    (t) =>
-      t.x >= leg.x0 &&
-      t.x <= leg.x1 &&
-      t.y >= leg.y0 &&
-      t.y <= leg.y1 &&
-      t.ship === (leg.to === "B"),
-  );
-  if (legTargets.length === 0) return "off";
-
+): BoatsMove[] {
   const { w } = state.params;
-  const after = executeMove(state, m);
-  let done = 0;
-  for (const t of legTargets) {
-    const i = t.y * w + t.x;
-    const want: BoatsFill = t.ship ? "B" : "W";
-    if (fillOf(after.grid[i]) === want) {
-      done++;
-      continue;
-    }
-    // Touched one of this leg's squares and set it to something else.
-    if (fillOf(after.grid[i]) !== fillOf(state.grid[i])) return "off";
-  }
+  const ship = group[0]?.ship === true;
+  const fill = (x0: number, y0: number, x1: number, y1: number): BoatsMove => ({
+    kind: "fill",
+    x0,
+    y0,
+    x1,
+    y1,
+    from: "-",
+    to: ship ? "B" : "W",
+  });
+  if (group.length === 0) return [];
+  const x0 = Math.min(...group.map((s) => s.x));
+  const x1 = Math.max(...group.map((s) => s.x));
+  const y0 = Math.min(...group.map((s) => s.y));
+  const y1 = Math.max(...group.map((s) => s.y));
 
-  if (done === legTargets.length) return "completed";
-  return done > 0 ? "onTrack" : "off";
+  let spanIsOurs = x0 === x1 || y0 === y1;
+  for (let x = x0; spanIsOurs && x <= x1; x++)
+    for (let y = y0; spanIsOurs && y <= y1; y++) {
+      if (before[y * w + x] !== 0) continue; // untouched by a `from: "-"` fill
+      if (!group.some((s) => s.x === x && s.y === y)) spanIsOurs = false;
+    }
+  return spanIsOurs
+    ? [fill(x0, y0, x1, y1)]
+    : group.map((s) => fill(s.x, s.y, s.x, s.y));
 }
+
+/**
+ * The hint: one firing is **one journey**, a deduction that forces several
+ * squares being a single hint whose continuation legs are flagged
+ * `continuesPrevious`, so the midend counts the legs as one and auto-play
+ * walks them as one (docs/hints-marks.md § "Group one firing into one step").
+ * The narration rides on every leg, with the same highlight, so the picture
+ * never shrinks mid-journey. The never-touch water a placement drags along is
+ * part of *this* step, the rule doing its work and not a further deduction, so
+ * it is highlighted and moved with the firing, and named only in a closing
+ * clause.
+ *
+ * A leg is judged by its own squares, not the journey's: the midend advances
+ * the plan on `"completed"` and holds the same step on `"onTrack"`, so a
+ * journey whose legs could only complete together would stall on its first leg
+ * for ever. A leg's squares are the journey's targets inside its move's
+ * rectangle that match its fill, so the split needs nothing stored beyond
+ * `step.move`; and no shrink is needed, since a fill carries `from: "-"` and
+ * re-applying a partly-done leg touches only what is still empty.
+ *
+ * The midend asks only about a board `findMistakes` passes, and that is a
+ * re-solve, so a placement that breaks no rule *yet* but appears in no
+ * solution never reaches this (docs/hints.md § "Refusal couples to the
+ * mistake overlay").
+ */
+const described = describedFiringHint<
+  BoatsState,
+  BoatsMove,
+  BoatsSquare,
+  BoatsSays,
+  BoatsRung,
+  BoatsHint
+>({
+  name: "boats hint",
+  walk: hintWalk,
+  tiers: { lowest: lowestSolvingDiff, count: DIFFCOUNT },
+  // A player rarely follows more than a few steps before diverging, and a
+  // recompute yields the next batch.
+  plan: 40,
+  width: (s) => s.params.w,
+  size: (s) => s.params.w * s.params.h,
+  valueAt,
+  execute: executeMove,
+  foreign: (m) => m.kind !== "fill",
+  target: (at, n) => ({ ...at, ship: n === SHIP }),
+  want: (t) => (t.ship ? SHIP : SEA),
+  journey: {
+    legs,
+    legTargets: (move, targets) =>
+      move.kind !== "fill"
+        ? []
+        : targets.filter(
+            (t) =>
+              t.x >= move.x0 &&
+              t.x <= move.x1 &&
+              t.y >= move.y0 &&
+              t.y <= move.y1 &&
+              t.ship === (move.to === "B"),
+          ),
+  },
+  highlights: ({ targets, outline, stripes }, state) => ({
+    targets,
+    evidence: outline,
+    line: stripes,
+    w: state.params.w,
+    h: state.params.h,
+  }),
+  say: sentences,
+});
+const { hint, hintKeepTrack } = described;
 
 /**
  * A leg of one still-empty square is a click, found from the verbs. A longer
@@ -716,7 +645,7 @@ export const boatsGame: Game<
         "the row or column whose number it counts with, and the stripes run on through that number.",
     },
   },
-  hintRungs: BOATS_RUNGS,
+  hintRungs: SAYS_KINDS,
   hintKeepTrack,
   hintGesture,
   textFormat,

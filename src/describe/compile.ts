@@ -352,8 +352,19 @@ function techniqueGrowth(lines: readonly string[]): number {
   const arrays = new Map<string, string>();
   const open: { indent: number; cost: number }[] = [];
   let worst = 0;
+  // What a step says is read once a firing and only where a hint asks, so the
+  // block that reads it is no part of what a run costs.
+  let saying: number | null = null;
   for (const line of lines) {
     const indent = line.length - line.trimStart().length;
+    if (saying !== null) {
+      if (indent > saying) continue;
+      saying = null;
+    }
+    if (line.trim() === "if (fire !== null) {") {
+      saying = indent;
+      continue;
+    }
     while (open.length > 0 && (open.at(-1) as { indent: number }).indent >= indent)
       open.pop();
     const t = line.trim();

@@ -1020,7 +1020,9 @@ reads is the outline, the strand, the facts and a `reads` set where a
 technique says one**: a line it only hatches is not read, a line it fills whole
 is, so the second says `reads: "cells(L)"` (Unruly's fills) and the first
 nothing (Singles' pair). A step's kind is the technique's id, and the module's
-`SaysById` types each technique's terms for its sentence. Exemplars:
+`SaysById` types each technique's terms for its sentence. What a technique says
+is read once a firing and only on a hint's path, so it is no part of the
+technique's reported growth. Exemplars:
 `unruly/unruly.description.yaml`, `singles/singles.description.yaml`.
 
 **A technique that reads differently by what holds says `arms`**: an ordered
@@ -1033,6 +1035,15 @@ Arms are conditions on the binding and not parts of the conclusion: Singles'
 corner reads as four, apex, across or a pair by which of its numbers match.
 A mark that depends on the facts (Singles' hatch, the one line holding every
 cell it covers) is a set expression over the cells' own state, as `sameLine`'s.
+
+**A step that is a journey** (Boats: one firing, a fill a leg, each judged by
+the squares it makes) gives `describedFiringHint` a `journey`; the squares its
+placing techniques decide on their own are read off the marks across the firing
+and shown and made with it, and `tiers` and `plan` start a walk at the board's
+own tier and cap its length. A rule that only a run of the validator can name
+(Boats' three trials) stays a reason callback, which receives what the
+technique says and returns it with the rule added: the description cannot
+state it.
 
 `compiledRung(run, clues, reason)` pairs a compiled technique with the
 function that turns its binding and one fact into the reason the record

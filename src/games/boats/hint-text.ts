@@ -16,6 +16,7 @@
  * help").
  */
 
+import type { FiringSpoken } from "../../engine/described-firing-hint.ts";
 import {
   CELL,
   mark,
@@ -27,10 +28,38 @@ import {
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import type { BoatsBreach, BoatsLine, BoatsTechnique } from "./solver.ts";
-import { SHIP_BOTTOM, SHIP_LEFT, SHIP_SINGLE, SHIP_TOP } from "./state.ts";
+import {
+  type BoatsBreach,
+  type BoatsLine,
+  type BoatsSays,
+  SEA,
+  SHIP,
+} from "./solver.ts";
+import type { BoatsState } from "./state.ts";
+import { NO_CLUE, SHIP_BOTTOM, SHIP_LEFT, SHIP_SINGLE, SHIP_TOP } from "./state.ts";
 
-type T<K extends BoatsTechnique["kind"]> = Extract<BoatsTechnique, { kind: K }>;
+/** What each sentence below reads of its technique. */
+interface Techniques {
+  givenClue: { shape: number };
+  neverTouch: Record<never, never>;
+  lineSatisfied: { line: BoatsLine };
+  lineForced: { line: BoatsLine };
+  centerForced: { vertical: boolean; center: Point; water: Point };
+  centerCount: { line: BoatsLine; vertical: boolean };
+  growTooLong: { joined: number; largest: number };
+  mustGrow: { length: number };
+  runTooShort: { length: number };
+  onlyRunsLeft: { size: number; runs: number };
+  sharedDiagonal: { line: BoatsLine; room: number; middle: boolean };
+  refuted: {
+    trialShip: boolean;
+    breach: BoatsBreach;
+    center: { at: Point; vertical: boolean } | null;
+    filled: { horizontal: boolean; crossing: boolean } | null;
+  };
+}
+
+type T<K extends keyof Techniques> = Techniques[K];
 
 const plural = (n: number): string => (n === 1 ? "" : "s");
 
@@ -362,4 +391,141 @@ export const say = {
     }
     return told(0);
   },
+};
+
+// --- the sentences as the engine hands a firing over -------------------------
+
+/** What every firing's step marks, whatever its technique. */
+interface Basics {
+  placing(n: number): readonly Point[];
+  consequences: readonly Point[];
+  outline: readonly Point[];
+  stripes: readonly Point[];
+}
+
+/** What one step marks, as the sentences above name it. */
+const marksOf = (s: Basics): BoatsMarks => {
+  const follows = new Set(s.consequences.map(({ x, y }) => `${x},${y}`));
+  return {
+    ships: s.placing(SHIP),
+    waters: s.placing(SEA),
+    follows: s.consequences,
+    // What the step outlines is what it reasons from, not the water it drags.
+    evidence: s.outline.filter(({ x, y }) => !follows.has(`${x},${y}`)),
+    line: s.stripes,
+  };
+};
+
+/** The line `L` as the player reads it, with the number the step used. */
+function lineAt(state: BoatsState, L: number, number: number): BoatsLine {
+  const { w, h } = state.params;
+  const horizontal = L < h;
+  return {
+    horizontal,
+    index: horizontal ? L : L - h,
+    clue: number,
+    deduced: state.borderClues[horizontal ? w + L : L - h] === NO_CLUE,
+  };
+}
+
+/** The square beside `p` in direction `d` (1 up, 2 down, 3 left, 4 right), which
+ * is off the board where the board's edge is there; the sentence names the edge. */
+const beside = ({ x, y }: Point, d: number): Point =>
+  d === 1
+    ? { x, y: y - 1 }
+    : d === 2
+      ? { x, y: y + 1 }
+      : d === 3
+        ? { x: x - 1, y }
+        : { x: x + 1, y };
+
+/** Each technique's sentence, read from what the firing says. */
+export const sentences: {
+  [K in keyof BoatsSays]: (
+    spoken: FiringSpoken<BoatsSays[K]>,
+    state: BoatsState,
+  ) => Sentence;
+} = {
+  given: (s) => say.givenClue({ shape: s.terms.shape }, marksOf(s)),
+  near: (s) => say.neverTouch(marksOf(s)),
+  lineShips: (s, st) =>
+    say.lineForced({ line: lineAt(st, s.terms.line, s.terms.number) }, marksOf(s)),
+  total: (s) => say.allWaterPlaced(marksOf(s)),
+  center: (s) =>
+    say.centerForced(
+      {
+        vertical: s.terms.vertical,
+        center: s.at(s.terms.center),
+        water: beside(s.at(s.terms.center), s.terms.side),
+      },
+      marksOf(s),
+    ),
+  extend: (s) => say.mustExtend(marksOf(s)),
+  lineWater: (s, st) =>
+    say.lineSatisfied({ line: lineAt(st, s.terms.line, s.terms.number) }, marksOf(s)),
+  isolated: (s) => say.isolated(marksOf(s)),
+  grow: (s) => say.mustGrow({ length: s.terms.length }, marksOf(s)),
+  onlyFit: (s) => say.onlyRunsLeft({ size: s.terms.size, runs: 1 }, marksOf(s)),
+  centerRoom: (s, st) =>
+    say.centerCount(
+      {
+        line: lineAt(st, s.terms.line, s.terms.number),
+        // A row's boat runs up and down.
+        vertical: s.terms.line < st.params.h,
+      },
+      marksOf(s),
+    ),
+  tooLong: (s) =>
+    say.growTooLong(
+      { joined: s.terms.joined, largest: Math.max(s.terms.largest, 0) },
+      marksOf(s),
+    ),
+  shortRun: (s) => say.runTooShort({ length: s.terms.length }, marksOf(s)),
+  hidden: (s, st) => {
+    const line = { line: lineAt(st, s.terms.line, s.terms.number) };
+    return s.arm === "forced"
+      ? say.lineForced(line, marksOf(s))
+      : say.lineSatisfied(line, marksOf(s));
+  },
+  onlyRuns: (s) =>
+    say.onlyRunsLeft({ size: s.terms.size, runs: s.terms.runs }, marksOf(s)),
+  shared: (s, st) =>
+    say.sharedDiagonal(
+      {
+        line: lineAt(st, s.terms.line, s.terms.number),
+        room: s.terms.room,
+        middle: s.terms.middle,
+      },
+      marksOf(s),
+    ),
+  lastWater: (s) =>
+    say.refuted(
+      {
+        trialShip: false,
+        breach: s.terms.breach,
+        center: null,
+        filled: { horizontal: s.terms.horizontal, crossing: s.terms.crossing },
+      },
+      marksOf(s),
+    ),
+  lastShip: (s) =>
+    say.refuted(
+      {
+        trialShip: true,
+        breach: s.terms.breach,
+        center: null,
+        filled: { horizontal: s.terms.horizontal, crossing: s.terms.crossing },
+      },
+      marksOf(s),
+    ),
+  centerTrial: (s) =>
+    say.refuted(
+      {
+        trialShip: true,
+        breach: s.terms.breach,
+        center: { at: s.at(s.terms.center), vertical: s.terms.vertical },
+        filled: null,
+      },
+      marksOf(s),
+    ),
 };

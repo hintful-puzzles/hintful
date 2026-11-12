@@ -211,6 +211,9 @@ techniques:
   # squares round it: an end's boat continues away from the side it ends.
   - id: given
     tier: Easy
+    says:
+      terms: { shape: v }
+      marks: { outline: "{c}" }
     for: "c in cells, v = clue(seg, c) where v >= 2"
     conclude: >-
       (v = 2 implies place(c, 2)) and (v > 2 implies place(c, 1))
@@ -232,6 +235,8 @@ techniques:
   # next, decides them for each segment as it is placed.
   - id: near
     tier: Easy
+    says:
+      marks: { outline: "{c}" }
     for: >-
       c in cells where value(c) = 1,
       D = {d in adj8(c) where d not in adj4(c) and not known(d)} where |D| > 0
@@ -245,6 +250,9 @@ techniques:
   # has a segment in each. One that needs more makes the marks inconsistent.
   - id: lineShips
     tier: Easy
+    says:
+      terms: { line: L, number: v }
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
     for: >-
       L in lines, v = clue(n, L) where v >= 0, O = open(cells(L)) where |O| > 0,
       left = v - ships(cells(L))
@@ -253,12 +261,20 @@ techniques:
   # needs: each holds one.
   - id: total
     tier: Easy
+    says: {}
     for: "O = open(cells) where |O| > 0, left = total - ships(cells)"
     conclude: "left <= |O| and (left = |O| implies forall c in O: place(c, 1))"
   # A middle segment with water or the edge beside it runs up and down, and
   # with it above or below runs across.
   - id: center
     tier: Easy
+    says:
+      terms:
+        vertical: "a = 3"
+        center: c
+        # The side with water, or the board's edge, that the sentence names.
+        side: "first({e in {a, b} where wet(step(c, e))})"
+      marks: { outline: "{x in {c, step(c, first({e in {a, b} where wet(step(c, e))}))} where x != none}" }
     for: "c in cells where clue(seg, c) = 6, a in {1, 3}, b = a + 1, p = 4 - a, q = 5 - a where wet(step(c, a)) or wet(step(c, b))"
     conclude: >-
       not wet(step(c, p)) and not wet(step(c, q))
@@ -267,6 +283,8 @@ techniques:
   # square beside it continues into that square.
   - id: extend
     tier: Easy
+    says:
+      marks: { outline: "{c}" }
     for: >-
       F = full(1), c in cells where F and value(c) = 1
       and not (exists x in adj4(c): value(x) = 1),
@@ -276,6 +294,9 @@ techniques:
   # squares. One with more makes the marks inconsistent.
   - id: lineWater
     tier: Easy
+    says:
+      terms: { line: L, number: v }
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
     for: >-
       L in lines, v = clue(n, L) where v >= 0, O = open(cells(L)) where |O| > 0,
       left = v - ships(cells(L))
@@ -284,12 +305,17 @@ techniques:
   # and the edge is water.
   - id: isolated
     tier: Easy
+    says:
+      marks: { outline: "adj4(c)" }
     for: "F = full(1), c in cells where F and not known(c) and (forall x in adj4(c): value(x) = 2)"
     conclude: "place(c, 2)"
   # A boat of m squares, not closed, with every boat of m squares closed,
   # must grow, into its one open end.
   - id: grow
     tier: Normal
+    says:
+      terms: { length: "|G|" }
+      marks: { outline: "set(x over x in G)" }
     for: >-
       c in cells where value(c) = 1, L in {row(c), col(c)},
       G = stretch(L, c, shipsOf(L)) where |G| >= 2 and nth(G, 0) = c,
@@ -301,6 +327,10 @@ techniques:
   # One run that fits the boat exactly is filled.
   - id: onlyFit
     tier: Normal
+    says:
+      terms: { size: m }
+      # Every run that could take a boat of that size.
+      marks: { outline: "set(x over K in lines, d in cells(K) where starts(K, d) and fits(K, run(K, d), m), x in run(K, d))" }
     for: >-
       M = top, L in lines, c in cells(L) where starts(L, c), R = run(L, c),
       m = |R| where m = M and fits(L, R, m),
@@ -311,6 +341,9 @@ techniques:
   # its number left for the squares beside it there runs the other way.
   - id: centerRoom
     tier: Normal
+    says:
+      terms: { line: L, number: v }
+      marks: { outline: "{c}", stripes: "cells(L)", reads: "cells(L)" }
     for: >-
       c in cells where clue(seg, c) = 6, L in {row(c), col(c)}, v = clue(n, L)
       where v >= 0, S = {x in adj4(c) where x in cells(L)} where |S| = 2
@@ -320,6 +353,11 @@ techniques:
   # longer than any still to close is water.
   - id: tooLong
     tier: Normal
+    says:
+      terms:
+        joined: "1 + sum(a in adj4(c) where value(a) = 1 of |boat(a)|)"
+        largest: M
+      marks: { outline: "set(x over a in adj4(c) where value(a) = 1, x in boat(a))" }
     for: >-
       M = top, c in cells where not known(c)
       and 1 + sum(a in adj4(c) where value(a) = 1 of |boat(a)|) > M
@@ -328,6 +366,9 @@ techniques:
   # would be one boat too many filled: the square is water.
   - id: shortRun
     tier: Normal
+    says:
+      terms: { length: "|R|" }
+      marks: { outline: "set(x over x in R)" }
     for: >-
       L in lines, c in cells(L), R = run(L, c) where |R| >= 2
       and nth(R, 0) = c, O = open(R) where |O| = 1 and full(|R|)
@@ -335,6 +376,12 @@ techniques:
   # A hidden number read from the fleet decides its line as a number does.
   - id: hidden
     tier: Tricky
+    says:
+      terms: { line: L, number: v }
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
+      arms:
+        satisfied: { when: "left = 0" }
+        forced: { when: "left = |O|" }
     for: >-
       L in lines where clue(n, L) < 0, O = open(cells(L)) where |O| > 0,
       v = rec(L) where v >= 0, left = v - ships(cells(L))
@@ -345,6 +392,9 @@ techniques:
   # As onlyFit, the squares every placing of the boat in each run covers.
   - id: onlyRuns
     tier: Tricky
+    says:
+      terms: { size: m, runs: r }
+      marks: { outline: "set(x over K in lines, d in cells(K) where starts(K, d) and fits(K, run(K, d), m), x in run(K, d))" }
     for: >-
       m = top where m > 0, L in lines, c in cells(L) where starts(L, c),
       R = run(L, c) where ships(R) < |R| and fits(L, R, m) and |R| < 2 * m,
@@ -358,6 +408,19 @@ techniques:
   # outer one, or filling the middle one's crossing line.
   - id: shared
     tier: Tricky
+    says:
+      terms:
+        line: L
+        number: v
+        room: t
+        # Whether the middle square could be the boat, which fills its crossing line.
+        middle: "not known(k) and j >= 0 and j - ships(cells(K)) = 1"
+      marks:
+        outline: >-
+          {x in adj4(k) where x in cells(L) and not known(x)}
+          + {x in {k} where not known(k) and j >= 0 and j - ships(cells(K)) = 1}
+        stripes: "cells(L)"
+        reads: "cells(L)"
     for: >-
       L in lines, v = num(L) where v >= 0, t = room(L, v) where t = 1 or t = 2,
       k in cells(L), K = crossing(L, k), j = num(K),
@@ -368,8 +431,13 @@ techniques:
   # Supposing an open square the last water its line needs, the rest of the
   # line and of its crossing line, where that needs one more water too, are
   # boat segments; where that breaks a rule, the square is one.
+  # The three trials say the rule the supposition breaks, which only the
+  # validator names (`classifyBreach`), so each keeps a reason callback in
+  # `solver.ts` that adds it to what is said here.
   - id: lastWater
     tier: Hard
+    says:
+      terms: { horizontal: "not vert(L)", crossing: "count(x in H where x not in cells(L)) > 0" }
     for: >-
       T = longest, L in lines, v = num(L) where v >= 0 and room(L, v) = 1,
       c in cells(L) where not known(c), K = crossing(L, c), j = num(K),
@@ -379,6 +447,8 @@ techniques:
   # The mirror: supposing an open square the last segment its line needs.
   - id: lastShip
     tier: Hard
+    says:
+      terms: { horizontal: "not vert(L)", crossing: "count(x in W where x not in cells(L)) > 0" }
     for: >-
       T = longest, L in lines, v = num(L) where v >= 0
       and v - ships(cells(L)) = 1, c in cells(L) where not known(c),
@@ -390,6 +460,9 @@ techniques:
   # a rule, the squares beside it there are water.
   - id: centerTrial
     tier: Hard
+    says:
+      terms: { center: c, vertical: "vert(L)" }
+      marks: { outline: "{c}" }
     for: >-
       T = longest, c in cells where clue(seg, c) = 6,
       L in {row(c), col(c)}, S = {x in adj4(c) where x in cells(L)}

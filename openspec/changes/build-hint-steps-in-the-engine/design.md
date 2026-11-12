@@ -200,7 +200,48 @@ defect found in the game, said which.
   ~437 lines out of `index.ts` and `solver.ts` (141 + 145, 21 + 7 in) and 36 of
   `hint-text.ts` to 19 of `says`.
 
-### Read off Boats (2026-11-12, `boats/solver.ts` and `index.ts`), not yet built
+### Boats, built (2026-11-12)
+
+- **The engine took the four things Boats needed**, in `describedFiringHint`:
+  `tiers` (start at the board's lowest solving tier, go up only where one has
+  nothing to say) and `plan` (a cap on firings); the squares a firing's placing
+  techniques decide, read as the marks' diff across the firing and handed on as
+  `consequences` (shown and made, not said); `journey` (`legs` over a firing's
+  targets one value at a time, `legTargets` of a leg), whose keep-track is
+  `trackLeg`, the leg's own squares and no shrink; and `highlights`, for a game
+  whose step marks are not `{ targets, strand }` (Boats keeps `evidence`,
+  `line`, `w`, `h`, which its renderer reads).
+- **The kind is the technique's id**, so Boats' fifteen rungs became its
+  techniques': `lineShips` and `lineWater` (and `hidden.forced` and
+  `hidden.satisfied`, the arms of one technique, which spoke those two
+  sentences), `onlyFit` and `onlyRuns`, and the three trials as themselves.
+  Sixteen techniques `say` and three keep a reason callback; the callback
+  receives the technique's `says` and returns it with the breach term and the
+  cells the breach flags. The trials' breach is not a term: it needs the
+  validator, which no formula reaches, and Bridges' `with` would not change that.
+- **A defect found in the compiler's cost**: `techniqueGrowth` counted the
+  block that reads what a technique says, which runs once a firing on a hint's
+  path only, so `onlyFit` and `onlyRuns` read as `n^2.5` for a set no solve
+  builds. It no longer counts that block.
+- **The comparison.** Every step of 216 boards (the snapshot's 20, and 192
+  from 8x8 to 10x12 at Tricky and Hard, hidden numbers on and off; 6,225 steps)
+  is the same as at `HEAD` in its words, marks, move and `continuesPrevious`,
+  all nineteen kinds met, once each arm of `hidden` and `centerTrial` once.
+  What differs is a highlight's `evidence`, which the engine reads as a set
+  in board order where the old reason listed squares in the order it found
+  them, and with the same square twice (`onlyRunsLeft` over a square in a row's
+  run and a column's): 101 of 2,382 steps in the first run. The snapshot holds
+  the new order.
+- **Lines.** `solver.ts` 1005 to 590, with `BoatsFiring`, `BoatsTechnique`,
+  `deduceBoatsPlan` and sixteen reasons gone; `index.ts` 733 to 662 (its
+  dispatch, plan and keep-track gone, `legs`, the spec and its comments in);
+  `hint-text.ts` +172 (a map from what a firing says to its sentences); the
+  description +73 of `says`.
+- **A test of the old shape went**: the pins were keyed by the old rungs and
+  were scanned again (`centerTrial`, met once in some 4,000 steps, is pinned by
+  hand).
+
+### Read off Boats (2026-11-12, `boats/solver.ts` and `index.ts`), before it was built
 
 Sixteen of its nineteen techniques are what `says` already carries (terms,
 an evidence set, a hatched line). Four things in Boats are not, and each is a

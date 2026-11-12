@@ -54,10 +54,10 @@ interface Marked<Target extends Point> {
 
 /** A firing as a journey: its legs are moves of the game's own, and a leg is
  * judged by the squares it makes. */
-export interface Journey<Move, Target extends Point> {
+interface Journey<Move, Target extends Point, State> {
   /** The moves that make these targets, all of one value, in the order the
    * player makes them; `before` is the marks as the firing found them. */
-  legs(group: readonly Target[], before: ArrayLike<number>): Move[];
+  legs(group: readonly Target[], before: ArrayLike<number>, state: State): Move[];
   /** The targets a leg's move makes. */
   legTargets(move: Move, targets: readonly Target[]): readonly Target[];
 }
@@ -163,7 +163,7 @@ export type FiringHintSpec<
         move(targets: readonly Target[]): Move;
         journey?: never;
       }
-    | { journey: Journey<Move, Target>; move?: never }
+    | { journey: Journey<Move, Target, State>; move?: never }
   );
 
 /** The hooks a game takes from its description. */
@@ -175,7 +175,8 @@ export interface DescribedFiringHint<
   H extends { targets: Target[] } = FiringHint<Target>,
 > {
   hint(state: State): HintResult<Move, H, Kind>;
-  hintKeepTrack(m: Move, step: HintStep<Move, H, Kind>, state: State): HintTrackVerdict;
+  /** Judges a move against a step of any kind: the kind is no part of it. */
+  hintKeepTrack(m: Move, step: HintStep<Move, H>, state: State): HintTrackVerdict;
 }
 
 /** The hooks of a game whose hint is its ladder's firings, a step each. */
@@ -284,6 +285,7 @@ export function describedFiringHint<
         journey.legs(
           targets.filter((t) => spec.want(t) === n),
           before,
+          state,
         ),
       );
       for (const [i, move] of legs.entries())

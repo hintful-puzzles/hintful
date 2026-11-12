@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/boats/boats.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, cellsValued, clueAt, cluesValued, freshBinding, keptStore, rangeMask, sameSet, setOf, staleChecking, stamps, step, stretch, type Kept, union } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, cellsValued, clueAt, cluesValued, freshBinding, keptStore, least, rangeMask, sameSet, setOf, staleChecking, stamps, step, stretch, type Kept, union } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -19,6 +19,33 @@ export const units: readonly string[] = [];
 
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "given" | "near" | "lineShips" | "total" | "center" | "extend" | "lineWater" | "isolated" | "grow" | "onlyFit" | "centerRoom" | "tooLong" | "shortRun" | "hidden" | "onlyRuns" | "shared" | "lastWater" | "lastShip" | "centerTrial";
+
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  given: GivenSays;
+  near: NearSays;
+  lineShips: LineShipsSays;
+  total: TotalSays;
+  center: CenterSays;
+  extend: ExtendSays;
+  lineWater: LineWaterSays;
+  isolated: IsolatedSays;
+  grow: GrowSays;
+  onlyFit: OnlyFitSays;
+  centerRoom: CenterRoomSays;
+  tooLong: TooLongSays;
+  shortRun: ShortRunSays;
+  hidden: HiddenSays;
+  onlyRuns: OnlyRunsSays;
+  shared: SharedSays;
+  lastWater: LastWaterSays;
+  lastShip: LastShipSays;
+  centerTrial: CenterTrialSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["given","near","lineShips","total","center","extend","lineWater","isolated","grow","onlyFit","centerRoom","tooLong","shortRun","hidden.satisfied","hidden.forced","onlyRuns","shared","lastWater","lastShip","centerTrial"] as const;
 
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "touch";
@@ -395,10 +422,16 @@ export interface GivenBinding {
   v: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface GivenSays {
+  terms: { shape: number; };
+  marks: { outline: readonly number[]; };
+}
+
 const givenFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function given(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<GivenBinding> | null): number {
+export function given(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<GivenBinding, GivenSays> | null): number {
   const facts = givenFacts;
   let fired = 0;
   let changed = false;
@@ -607,7 +640,10 @@ export function given(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<GivenBindin
       if (!(_c65)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, v: v_v }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { shape: v_v }, marks: { outline: setOf(v_c).slice() } };
+          if (!fire({ c: v_c, v: v_v }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -619,10 +655,16 @@ export interface NearBinding {
   D: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface NearSays {
+  terms: {  };
+  marks: { outline: readonly number[]; };
+}
+
 const nearFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function near(b: Marks, sp: GridSpace, fire: Fire<NearBinding> | null): number {
+export function near(b: Marks, sp: GridSpace, fire: Fire<NearBinding, NearSays> | null): number {
   const _g12: number[] = [];
   const facts = nearFacts;
   let fired = 0;
@@ -673,7 +715,10 @@ export function near(b: Marks, sp: GridSpace, fire: Fire<NearBinding> | null): n
       if (!(_q26)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, D: v_D.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: {  }, marks: { outline: setOf(v_c).slice() } };
+          if (!fire({ c: v_c, D: v_D.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -719,10 +764,16 @@ export interface LineShipsBinding {
   left: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LineShipsSays {
+  terms: { line: number; number: number; };
+  marks: { stripes: readonly number[]; reads: readonly number[]; };
+}
+
 const lineShipsFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^0.5. */
-export function lineShips(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineShipsBinding> | null): number {
+export function lineShips(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineShipsBinding, LineShipsSays> | null): number {
   const _g22: number[] = [];
   const facts = lineShipsFacts;
   let fired = 0;
@@ -807,7 +858,10 @@ export function lineShips(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineShi
         if (!(_c52)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, v: v_v, O: v_O.slice(), left: v_left }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { line: v_L, number: v_v }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+            if (!fire({ L: v_L, v: v_v, O: v_O.slice(), left: v_left }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -820,10 +874,16 @@ export interface TotalBinding {
   left: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface TotalSays {
+  terms: {  };
+  marks: {  };
+}
+
 const totalFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function total(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TotalBinding> | null): number {
+export function total(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TotalBinding, TotalSays> | null): number {
   const _g17: number[] = [];
   const facts = totalFacts;
   let fired = 0;
@@ -913,7 +973,10 @@ export function total(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TotalBindin
     if (!(_c51)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ O: v_O.slice(), left: v_left }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: {  }, marks: {  } };
+        if (!fire({ O: v_O.slice(), left: v_left }, facts, _says)) return 1;
+      }
     }
   }
   return fired;
@@ -927,10 +990,17 @@ export interface CenterBinding {
   q: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CenterSays {
+  terms: { vertical: boolean; center: number; side: number; };
+  marks: { outline: readonly number[]; };
+}
+
 const centerFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function center(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CenterBinding> | null): number {
+export function center(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CenterBinding, CenterSays> | null): number {
+  const _g33: number[] = [];
   const facts = centerFacts;
   let fired = 0;
   let changed = false;
@@ -985,7 +1055,38 @@ export function center(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CenterBind
         if (!(_c26)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, a: v_a, b: v_b, p: v_p, q: v_q }, facts)) return 1;
+          if (fire !== null) {
+            let _g27 = 0;
+            G28: {
+              for (let _m31 = ((1 << v_a) | (1 << v_b)); _m31 !== 0; _m31 &= _m31 - 1) {
+                const v_e = 31 - Math.clz32(_m31 & -_m31);
+                const _t32 = step(sp, v_c, v_e);
+                if (!(((_t32 === -1) || ((b.grid[_t32] || -1) === 2)))) continue;
+                _g27 |= 1 << v_e;
+              }
+            }
+            _g33.length = 0;
+            G34: {
+              let _g55 = 0;
+              G56: {
+                for (let _m59 = ((1 << v_a) | (1 << v_b)); _m59 !== 0; _m59 &= _m59 - 1) {
+                  const v_e = 31 - Math.clz32(_m59 & -_m59);
+                  const _t60 = step(sp, v_c, v_e);
+                  if (!(((_t60 === -1) || ((b.grid[_t60] || -1) === 2)))) continue;
+                  _g55 |= 1 << v_e;
+                }
+              }
+              const _t61 = step(sp, v_c, least(_g55));
+              for (let _i62 = 0; _i62 < 2; _i62++) {
+                const v_x = _i62 === 0 ? v_c : _t61;
+                if (_i62 === 1 && (v_x === v_c)) continue;
+                if (!((v_x !== -1))) continue;
+                _g33.push(v_x);
+              }
+            }
+            const _says = { terms: { vertical: (v_a === 3), center: v_c, side: least(_g27) }, marks: { outline: _g33.slice() } };
+            if (!fire({ c: v_c, a: v_a, b: v_b, p: v_p, q: v_q }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -999,10 +1100,16 @@ export interface ExtendBinding {
   O: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ExtendSays {
+  terms: {  };
+  marks: { outline: readonly number[]; };
+}
+
 const extendFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function extend(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExtendBinding> | null): number {
+export function extend(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExtendBinding, ExtendSays> | null): number {
   const _g22: number[] = [];
   const facts = extendFacts;
   let fired = 0;
@@ -1089,7 +1196,10 @@ export function extend(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExtendBind
       if (!(_q41)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ F: v_F, c: v_c, O: v_O.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: {  }, marks: { outline: setOf(v_c).slice() } };
+          if (!fire({ F: v_F, c: v_c, O: v_O.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -1103,10 +1213,16 @@ export interface LineWaterBinding {
   left: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LineWaterSays {
+  terms: { line: number; number: number; };
+  marks: { stripes: readonly number[]; reads: readonly number[]; };
+}
+
 const lineWaterFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^0.5. */
-export function lineWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineWaterBinding> | null): number {
+export function lineWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineWaterBinding, LineWaterSays> | null): number {
   const _g22: number[] = [];
   const facts = lineWaterFacts;
   let fired = 0;
@@ -1191,7 +1307,10 @@ export function lineWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineWat
         if (!(_c52)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, v: v_v, O: v_O.slice(), left: v_left }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { line: v_L, number: v_v }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+            if (!fire({ L: v_L, v: v_v, O: v_O.slice(), left: v_left }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -1204,10 +1323,16 @@ export interface IsolatedBinding {
   c: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface IsolatedSays {
+  terms: {  };
+  marks: { outline: readonly number[]; };
+}
+
 const isolatedFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function isolated(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<IsolatedBinding> | null): number {
+export function isolated(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<IsolatedBinding, IsolatedSays> | null): number {
   const facts = isolatedFacts;
   let fired = 0;
   let changed = false;
@@ -1260,7 +1385,10 @@ export function isolated(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Isolated
     if (!(true)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ F: v_F, c: v_c }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: {  }, marks: { outline: sp.adj4[v_c].slice() } };
+        if (!fire({ F: v_F, c: v_c }, facts, _says)) return 1;
+      }
     }
   }
   return fired;
@@ -1273,17 +1401,24 @@ export interface GrowBinding {
   E: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface GrowSays {
+  terms: { length: number; };
+  marks: { outline: readonly number[]; };
+}
+
 const growFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^0.5. */
-export function grow(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<GrowBinding> | null): number {
+export function grow(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<GrowBinding, GrowSays> | null): number {
   const _g35: number[] = [];
   const _g43: number[] = [];
+  const _g87: number[] = [];
   const facts = growFacts;
   let fired = 0;
   let changed = false;
-  const _m87_0 = b.made[0];
-  const _m88_1 = b.made[1];
+  const _m93_0 = b.made[0];
+  const _m94_1 = b.made[1];
   const _a30 = cellsValued(b, sp.cells, 1);
   R1:
   for (let _i31 = 0; _i31 < _a30.length; _i31++) {
@@ -1335,7 +1470,7 @@ export function grow(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<GrowBinding>
           const v_E = _g43;
           const _h60 = v_E.length;
           if (!(((_h60 === 1) && full(b, sp, cl, _h42)))) break L59;
-          if (b.made[0] !== _m87_0 || b.made[1] !== _m88_1) {
+          if (b.made[0] !== _m93_0 || b.made[1] !== _m94_1) {
             if (!(((b.grid[v_c] || -1) === 1))) { continue R1; }
           }
           if (DEV && staleChecking) {
@@ -1391,7 +1526,18 @@ export function grow(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<GrowBinding>
           if (!(_q83)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ c: v_c, L: v_L, G: v_G.slice(), E: v_E.slice() }, facts)) return 1;
+            if (fire !== null) {
+              _g87.length = 0;
+              G88: {
+                const _a91 = v_G;
+                for (let _i92 = 0; _i92 < _a91.length; _i92++) {
+                  const v_x = _a91[_i92];
+                  _g87.push(v_x);
+                }
+              }
+              const _says = { terms: { length: _h42 }, marks: { outline: _g87.slice() } };
+              if (!fire({ c: v_c, L: v_L, G: v_G.slice(), E: v_E.slice() }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -1409,17 +1555,27 @@ export interface OnlyFitBinding {
   b: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface OnlyFitSays {
+  terms: { size: number; };
+  marks: { outline: readonly number[]; };
+}
+
 const onlyFitFacts: number[] = [];
+const onlyFit_st154 = stamps();
 
 /** Its dearest read grows with the board as n^1.5. */
-export function onlyFit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyFitBinding> | null): number {
+export function onlyFit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyFitBinding, OnlyFitSays> | null): number {
   const _g52: number[] = [];
+  const _g116: number[] = [];
+  const _g167: number[] = [];
+  const _g189: number[] = [];
   const facts = onlyFitFacts;
   let fired = 0;
   let changed = false;
   const _k74 = boatsOfKept.board(cl);
-  const _m116_0 = b.made[0];
-  const _m117_1 = b.made[1];
+  const _m198_0 = b.made[0];
+  const _m199_1 = b.made[1];
   let _g37 = -1;
   G38: {
     for (let v_k = 0; v_k < cl.fleet.n; v_k++) {
@@ -1506,7 +1662,7 @@ export function onlyFit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyFitBi
         L75: {
           const v_b = ((_k74[v_m] ?? boatsOf(sp, cl, v_m)) - done(b, sp, v_m));
           if (!(((v_b === 1) && (taking(b, sp, cl, v_m) === 1)))) break L75;
-          if (b.made[0] !== _m116_0 || b.made[1] !== _m117_1) {
+          if (b.made[0] !== _m198_0 || b.made[1] !== _m199_1) {
             let _g76 = -1;
             G77: {
               for (let v_k = 0; v_k < cl.fleet.n; v_k++) {
@@ -1622,7 +1778,101 @@ export function onlyFit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyFitBi
           if (!(_q105)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ M: v_M, L: v_L, c: v_c, R: v_R.slice(), m: v_m, b: v_b }, facts)) return 1;
+            if (fire !== null) {
+              _g116.length = 0;
+              onlyFit_st154.pass++;
+              G117: {
+                const _a155 = sp.lines;
+                for (let _i156 = 0; _i156 < _a155.length; _i156++) {
+                  const v_K = _a155[_i156];
+                  const _h179 = clueAt(cl.n, v_K);
+                  const _h180 = (_h179 < 0);
+                  const _a157 = sp.lineCells[v_K];
+                  for (let _i158 = 0; _i158 < _a157.length; _i158++) {
+                    const v_d = _a157[_i158];
+                    const _h163 = (v_d % sp.w);
+                    const _h164 = ((v_d / sp.w) | 0);
+                    const _h165 = (_h163 + _h164);
+                    let _c166: boolean = ((b.grid[v_d] || -1) !== 2);
+                    if (_c166) {
+                      let _q159 = false;
+                      Q160: {
+                        const _a161 = sp.adj4[v_d];
+                        for (let _i162 = 0; _i162 < _a161.length; _i162++) {
+                          const v_p = _a161[_i162];
+                          if (!(((sp.lineCells[v_K].includes(v_p)) && (((v_p % sp.w) + ((v_p / sp.w) | 0)) < _h165)))) continue;
+                          if (((b.grid[v_p] || -1) !== 2)) {
+                            _q159 = true;
+                            break Q160;
+                          }
+                        }
+                      }
+                      _c166 = !(_q159);
+                    }
+                    let _c188: boolean = _c166;
+                    if (_c188) {
+                      _g167.length = 0;
+                      G168: {
+                        const _a171 = sp.lineCells[v_K];
+                        for (let _i172 = 0; _i172 < _a171.length; _i172++) {
+                          const v_x = _a171[_i172];
+                          if (!(((b.grid[v_x] || -1) !== 2))) continue;
+                          _g167.push(v_x);
+                        }
+                      }
+                      const _t173 = stretch(sp.lineCells[v_K], v_d, _g167);
+                      const _h178 = _t173.length;
+                      let _g174 = 0;
+                      G175: {
+                        const _a176 = _t173;
+                        for (let _i177 = 0; _i177 < _a176.length; _i177++) {
+                          const v_c = _a176[_i177];
+                          if (!(((b.grid[v_c] || -1) === 1))) continue;
+                          _g174++;
+                        }
+                      }
+                      let _c187: boolean = ((_g174 < _h178) && (_h178 >= v_m));
+                      if (_c187) {
+                        let _c186: boolean = _h180;
+                        if (!_c186) {
+                          const _t181 = sp.lineCells[v_K];
+                          let _g182 = 0;
+                          G183: {
+                            const _a184 = _t181;
+                            for (let _i185 = 0; _i185 < _a184.length; _i185++) {
+                              const v_c = _a184[_i185];
+                              if (!(((b.grid[v_c] || -1) === 1))) continue;
+                              _g182++;
+                            }
+                          }
+                          _c186 = (((_h179 - _g182) + _g174) >= v_m);
+                        }
+                        _c187 = _c186;
+                      }
+                      _c188 = _c187;
+                    }
+                    if (!(_c188)) continue;
+                    _g189.length = 0;
+                    G190: {
+                      const _a193 = sp.lineCells[v_K];
+                      for (let _i194 = 0; _i194 < _a193.length; _i194++) {
+                        const v_x = _a193[_i194];
+                        if (!(((b.grid[v_x] || -1) !== 2))) continue;
+                        _g189.push(v_x);
+                      }
+                    }
+                    const _a195 = stretch(sp.lineCells[v_K], v_d, _g189);
+                    for (let _i196 = 0; _i196 < _a195.length; _i196++) {
+                      const v_x = _a195[_i196];
+                      const _t197 = v_x;
+                      if (_g116.length < 16) { if (!_g116.includes(_t197)) _g116.push(_t197); } else addOnce(_g116, onlyFit_st154, _t197);
+                    }
+                  }
+                }
+              }
+              const _says = { terms: { size: v_m }, marks: { outline: _g116.slice() } };
+              if (!fire({ M: v_M, L: v_L, c: v_c, R: v_R.slice(), m: v_m, b: v_b }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -1638,10 +1888,16 @@ export interface CenterRoomBinding {
   S: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CenterRoomSays {
+  terms: { line: number; number: number; };
+  marks: { outline: readonly number[]; stripes: readonly number[]; reads: readonly number[]; };
+}
+
 const centerRoomFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function centerRoom(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CenterRoomBinding> | null): number {
+export function centerRoom(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CenterRoomBinding, CenterRoomSays> | null): number {
   const _g32: number[] = [];
   const facts = centerRoomFacts;
   let fired = 0;
@@ -1748,7 +2004,10 @@ export function centerRoom(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Center
           if (!(_q66)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ c: v_c, L: v_L, v: v_v, S: v_S.slice() }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { line: v_L, number: v_v }, marks: { outline: setOf(v_c).slice(), stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+              if (!fire({ c: v_c, L: v_L, v: v_v, S: v_S.slice() }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -1762,17 +2021,29 @@ export interface TooLongBinding {
   c: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface TooLongSays {
+  terms: { joined: number; largest: number; };
+  marks: { outline: readonly number[]; };
+}
+
 const tooLongFacts: number[] = [];
+const tooLong_st112 = stamps();
 
 /** Its dearest read grows with the board as n^1.5. */
-export function tooLong(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooLongBinding> | null): number {
+export function tooLong(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooLongBinding, TooLongSays> | null): number {
   const _g35: number[] = [];
   const _g42: number[] = [];
+  const _g79: number[] = [];
+  const _g86: number[] = [];
+  const _g92: number[] = [];
+  const _g116: number[] = [];
+  const _g123: number[] = [];
   const facts = tooLongFacts;
   let fired = 0;
   let changed = false;
-  const _m74_0 = b.made[0];
-  const _m75_1 = b.made[1];
+  const _m132_0 = b.made[0];
+  const _m133_1 = b.made[1];
   let _g25 = -1;
   G26: {
     for (let v_k = 0; v_k < cl.fleet.n; v_k++) {
@@ -1819,7 +2090,7 @@ export function tooLong(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooLongBi
       _c48 = ((1 + _g30) > v_M);
     }
     if (!(_c48)) continue;
-    if (b.made[0] !== _m74_0 || b.made[1] !== _m75_1) {
+    if (b.made[0] !== _m132_0 || b.made[1] !== _m133_1) {
       let _g49 = -1;
       G50: {
         for (let v_k = 0; v_k < cl.fleet.n; v_k++) {
@@ -1880,7 +2151,74 @@ export function tooLong(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooLongBi
     if (!(true)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ M: v_M, c: v_c }, facts)) return 1;
+      if (fire !== null) {
+        let _g74 = 0;
+        G75: {
+          const _a76 = sp.adj4[v_c];
+          for (let _i77 = 0; _i77 < _a76.length; _i77++) {
+            const v_a = _a76[_i77];
+            if (!(((b.grid[v_a] || -1) === 1))) continue;
+            const _t78 = sp.rowOf[v_a];
+            _g79.length = 0;
+            G80: {
+              const _a83 = sp.lineCells[_t78];
+              for (let _i84 = 0; _i84 < _a83.length; _i84++) {
+                const v_x = _a83[_i84];
+                if (!(((b.grid[v_x] || -1) === 1))) continue;
+                _g79.push(v_x);
+              }
+            }
+            const _t85 = sp.colOf[v_a];
+            _g86.length = 0;
+            G87: {
+              const _a90 = sp.lineCells[_t85];
+              for (let _i91 = 0; _i91 < _a90.length; _i91++) {
+                const v_x = _a90[_i91];
+                if (!(((b.grid[v_x] || -1) === 1))) continue;
+                _g86.push(v_x);
+              }
+            }
+            _g74 += union(stretch(sp.lineCells[sp.rowOf[v_a]], v_a, _g79), stretch(sp.lineCells[sp.colOf[v_a]], v_a, _g86)).length;
+          }
+        }
+        _g92.length = 0;
+        tooLong_st112.pass++;
+        G93: {
+          const _a113 = sp.adj4[v_c];
+          for (let _i114 = 0; _i114 < _a113.length; _i114++) {
+            const v_a = _a113[_i114];
+            if (!(((b.grid[v_a] || -1) === 1))) continue;
+            const _t115 = sp.rowOf[v_a];
+            _g116.length = 0;
+            G117: {
+              const _a120 = sp.lineCells[_t115];
+              for (let _i121 = 0; _i121 < _a120.length; _i121++) {
+                const v_x = _a120[_i121];
+                if (!(((b.grid[v_x] || -1) === 1))) continue;
+                _g116.push(v_x);
+              }
+            }
+            const _t122 = sp.colOf[v_a];
+            _g123.length = 0;
+            G124: {
+              const _a127 = sp.lineCells[_t122];
+              for (let _i128 = 0; _i128 < _a127.length; _i128++) {
+                const v_x = _a127[_i128];
+                if (!(((b.grid[v_x] || -1) === 1))) continue;
+                _g123.push(v_x);
+              }
+            }
+            const _a129 = union(stretch(sp.lineCells[sp.rowOf[v_a]], v_a, _g116), stretch(sp.lineCells[sp.colOf[v_a]], v_a, _g123));
+            for (let _i130 = 0; _i130 < _a129.length; _i130++) {
+              const v_x = _a129[_i130];
+              const _t131 = v_x;
+              if (_g92.length < 16) { if (!_g92.includes(_t131)) _g92.push(_t131); } else addOnce(_g92, tooLong_st112, _t131);
+            }
+          }
+        }
+        const _says = { terms: { joined: (1 + _g74), largest: v_M }, marks: { outline: _g92.slice() } };
+        if (!fire({ M: v_M, c: v_c }, facts, _says)) return 1;
+      }
     }
   }
   return fired;
@@ -1893,12 +2231,19 @@ export interface ShortRunBinding {
   O: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ShortRunSays {
+  terms: { length: number; };
+  marks: { outline: readonly number[]; };
+}
+
 const shortRunFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^1.5. */
-export function shortRun(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ShortRunBinding> | null): number {
+export function shortRun(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ShortRunBinding, ShortRunSays> | null): number {
   const _g23: number[] = [];
   const _g31: number[] = [];
+  const _g55: number[] = [];
   const facts = shortRunFacts;
   let fired = 0;
   let changed = false;
@@ -1972,7 +2317,18 @@ export function shortRun(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ShortRun
           if (!(_q51)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, c: v_c, R: v_R.slice(), O: v_O.slice() }, facts)) return 1;
+            if (fire !== null) {
+              _g55.length = 0;
+              G56: {
+                const _a59 = v_R;
+                for (let _i60 = 0; _i60 < _a59.length; _i60++) {
+                  const v_x = _a59[_i60];
+                  _g55.push(v_x);
+                }
+              }
+              const _says = { terms: { length: _h30 }, marks: { outline: _g55.slice() } };
+              if (!fire({ L: v_L, c: v_c, R: v_R.slice(), O: v_O.slice() }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -1988,10 +2344,16 @@ export interface HiddenBinding {
   left: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
+export type HiddenSays =
+  | { arm: "satisfied"; terms: { line: number; number: number; }; marks: { stripes: readonly number[]; reads: readonly number[]; } }
+  | { arm: "forced"; terms: { line: number; number: number; }; marks: { stripes: readonly number[]; reads: readonly number[]; } }
+;
+
 const hiddenFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^0.5. */
-export function hidden(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<HiddenBinding> | null): number {
+export function hidden(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<HiddenBinding, HiddenSays> | null): number {
   const _g21: number[] = [];
   const facts = hiddenFacts;
   let fired = 0;
@@ -2097,7 +2459,19 @@ export function hidden(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<HiddenBind
         if (!(_c58)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, O: v_O.slice(), v: v_v, left: v_left }, facts)) return 1;
+          if (fire !== null) {
+            let _arm = -1;
+            if ((v_left === 0)) _arm = 0; else if ((v_left === _h28)) _arm = 1;
+            let _says: HiddenSays | null = null;
+            if (_arm === 0) {
+              _says = { arm: "satisfied", terms: { line: v_L, number: v_v }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+            }
+            if (_arm === 1) {
+              _says = { arm: "forced", terms: { line: v_L, number: v_v }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+            }
+            if (_says === null) throw new Error("hidden: no arm of says holds");
+            if (!fire({ L: v_L, O: v_O.slice(), v: v_v, left: v_left }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -2115,18 +2489,28 @@ export interface OnlyRunsBinding {
   r: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface OnlyRunsSays {
+  terms: { size: number; runs: number; };
+  marks: { outline: readonly number[]; };
+}
+
 const onlyRunsFacts: number[] = [];
+const onlyRuns_st183 = stamps();
 
 /** Its dearest read grows with the board as n^1.5. */
-export function onlyRuns(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRunsBinding> | null): number {
+export function onlyRuns(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRunsBinding, OnlyRunsSays> | null): number {
   const _g65: number[] = [];
   const _g88: number[] = [];
+  const _g145: number[] = [];
+  const _g196: number[] = [];
+  const _g218: number[] = [];
   const facts = onlyRunsFacts;
   let fired = 0;
   let changed = false;
   const _k97 = boatsOfKept.board(cl);
-  const _m145_0 = b.made[0];
-  const _m146_1 = b.made[1];
+  const _m227_0 = b.made[0];
+  const _m228_1 = b.made[1];
   let _g49 = -1;
   G50: {
     for (let v_k = 0; v_k < cl.fleet.n; v_k++) {
@@ -2230,7 +2614,7 @@ export function onlyRuns(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRuns
             L98: {
               const v_r = taking(b, sp, cl, v_m);
               if (!(((v_r === v_b) && !(wide(b, sp, cl, v_m))))) break L98;
-              if (b.made[0] !== _m145_0 || b.made[1] !== _m146_1) {
+              if (b.made[0] !== _m227_0 || b.made[1] !== _m228_1) {
                 let _g99 = -1;
                 G100: {
                   for (let v_k = 0; v_k < cl.fleet.n; v_k++) {
@@ -2355,7 +2739,101 @@ export function onlyRuns(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRuns
               if (!(_q134)) return -1;
               if (changed || facts.length > 0) {
                 fired = 1;
-                if (fire !== null && !fire({ m: v_m, L: v_L, c: v_c, R: v_R.slice(), C: v_C.slice(), b: v_b, r: v_r }, facts)) return 1;
+                if (fire !== null) {
+                  _g145.length = 0;
+                  onlyRuns_st183.pass++;
+                  G146: {
+                    const _a184 = sp.lines;
+                    for (let _i185 = 0; _i185 < _a184.length; _i185++) {
+                      const v_K = _a184[_i185];
+                      const _h208 = clueAt(cl.n, v_K);
+                      const _h209 = (_h208 < 0);
+                      const _a186 = sp.lineCells[v_K];
+                      for (let _i187 = 0; _i187 < _a186.length; _i187++) {
+                        const v_d = _a186[_i187];
+                        const _h192 = (v_d % sp.w);
+                        const _h193 = ((v_d / sp.w) | 0);
+                        const _h194 = (_h192 + _h193);
+                        let _c195: boolean = ((b.grid[v_d] || -1) !== 2);
+                        if (_c195) {
+                          let _q188 = false;
+                          Q189: {
+                            const _a190 = sp.adj4[v_d];
+                            for (let _i191 = 0; _i191 < _a190.length; _i191++) {
+                              const v_p = _a190[_i191];
+                              if (!(((sp.lineCells[v_K].includes(v_p)) && (((v_p % sp.w) + ((v_p / sp.w) | 0)) < _h194)))) continue;
+                              if (((b.grid[v_p] || -1) !== 2)) {
+                                _q188 = true;
+                                break Q189;
+                              }
+                            }
+                          }
+                          _c195 = !(_q188);
+                        }
+                        let _c217: boolean = _c195;
+                        if (_c217) {
+                          _g196.length = 0;
+                          G197: {
+                            const _a200 = sp.lineCells[v_K];
+                            for (let _i201 = 0; _i201 < _a200.length; _i201++) {
+                              const v_x = _a200[_i201];
+                              if (!(((b.grid[v_x] || -1) !== 2))) continue;
+                              _g196.push(v_x);
+                            }
+                          }
+                          const _t202 = stretch(sp.lineCells[v_K], v_d, _g196);
+                          const _h207 = _t202.length;
+                          let _g203 = 0;
+                          G204: {
+                            const _a205 = _t202;
+                            for (let _i206 = 0; _i206 < _a205.length; _i206++) {
+                              const v_c = _a205[_i206];
+                              if (!(((b.grid[v_c] || -1) === 1))) continue;
+                              _g203++;
+                            }
+                          }
+                          let _c216: boolean = ((_g203 < _h207) && (_h207 >= v_m));
+                          if (_c216) {
+                            let _c215: boolean = _h209;
+                            if (!_c215) {
+                              const _t210 = sp.lineCells[v_K];
+                              let _g211 = 0;
+                              G212: {
+                                const _a213 = _t210;
+                                for (let _i214 = 0; _i214 < _a213.length; _i214++) {
+                                  const v_c = _a213[_i214];
+                                  if (!(((b.grid[v_c] || -1) === 1))) continue;
+                                  _g211++;
+                                }
+                              }
+                              _c215 = (((_h208 - _g211) + _g203) >= v_m);
+                            }
+                            _c216 = _c215;
+                          }
+                          _c217 = _c216;
+                        }
+                        if (!(_c217)) continue;
+                        _g218.length = 0;
+                        G219: {
+                          const _a222 = sp.lineCells[v_K];
+                          for (let _i223 = 0; _i223 < _a222.length; _i223++) {
+                            const v_x = _a222[_i223];
+                            if (!(((b.grid[v_x] || -1) !== 2))) continue;
+                            _g218.push(v_x);
+                          }
+                        }
+                        const _a224 = stretch(sp.lineCells[v_K], v_d, _g218);
+                        for (let _i225 = 0; _i225 < _a224.length; _i225++) {
+                          const v_x = _a224[_i225];
+                          const _t226 = v_x;
+                          if (_g145.length < 16) { if (!_g145.includes(_t226)) _g145.push(_t226); } else addOnce(_g145, onlyRuns_st183, _t226);
+                        }
+                      }
+                    }
+                  }
+                  const _says = { terms: { size: v_m, runs: v_r }, marks: { outline: _g145.slice() } };
+                  if (!fire({ m: v_m, L: v_L, c: v_c, R: v_R.slice(), C: v_C.slice(), b: v_b, r: v_r }, facts, _says)) return 1;
+                }
               }
             }
           }
@@ -2376,11 +2854,19 @@ export interface SharedBinding {
   s: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SharedSays {
+  terms: { line: number; number: number; room: number; middle: boolean; };
+  marks: { outline: readonly number[]; stripes: readonly number[]; reads: readonly number[]; };
+}
+
 const sharedFacts: number[] = [];
 let sharedCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBinding> | null): number {
+export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBinding, SharedSays> | null): number {
+  const _g81: number[] = [];
+  const _g87: number[] = [];
   const facts = sharedFacts;
   let fired = 0;
   let changed = false;
@@ -2392,8 +2878,8 @@ export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBind
   R1:
   for (let _i26 = 0; _i26 < _a25.length; _i26++) {
     const v_L = _a25[_i26];
-    const _m75_0 = b.made[0];
-    const _m76_1 = b.made[1];
+    const _m103_0 = b.made[0];
+    const _m104_1 = b.made[1];
     L27: {
       const v_v = numMarked(b, sp, cl, cands, v_L);
       if (!((v_v >= 0))) break L27;
@@ -2449,7 +2935,7 @@ export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBind
           L49: {
             const v_s = (_g35 + _g39);
             if (!((v_s > v_t))) break L49;
-            if (b.made[0] !== _m75_0 || b.made[1] !== _m76_1) {
+            if (b.made[0] !== _m103_0 || b.made[1] !== _m104_1) {
               if (!((v_v === numMarked(b, sp, cl, cands, v_L)))) { continue R1; }
               let _g50 = 0;
               G51: {
@@ -2523,7 +3009,55 @@ export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBind
             if (!(_q71)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ L: v_L, v: v_v, t: v_t, k: v_k, K: v_K, j: v_j, s: v_s }, facts)) return 1;
+              if (fire !== null) {
+                let _c80: boolean = (!((b.grid[v_k] !== 0)) && (v_j >= 0));
+                if (_c80) {
+                  const _t75 = sp.lineCells[v_K];
+                  let _g76 = 0;
+                  G77: {
+                    const _a78 = _t75;
+                    for (let _i79 = 0; _i79 < _a78.length; _i79++) {
+                      const v_c = _a78[_i79];
+                      if (!(((b.grid[v_c] || -1) === 1))) continue;
+                      _g76++;
+                    }
+                  }
+                  _c80 = ((v_j - _g76) === 1);
+                }
+                _g81.length = 0;
+                G82: {
+                  const _a85 = sp.adj4[v_k];
+                  for (let _i86 = 0; _i86 < _a85.length; _i86++) {
+                    const v_x = _a85[_i86];
+                    if (!(((sp.lineCells[v_L].includes(v_x)) && !((b.grid[v_x] !== 0))))) continue;
+                    _g81.push(v_x);
+                  }
+                }
+                _g87.length = 0;
+                G88: {
+                  for (let _i96 = 0; _i96 < 1; _i96++) {
+                    const v_x = v_k;
+                    let _c102: boolean = (!((b.grid[v_k] !== 0)) && _h42);
+                    if (_c102) {
+                      const _t97 = sp.lineCells[v_K];
+                      let _g98 = 0;
+                      G99: {
+                        const _a100 = _t97;
+                        for (let _i101 = 0; _i101 < _a100.length; _i101++) {
+                          const v_c = _a100[_i101];
+                          if (!(((b.grid[v_c] || -1) === 1))) continue;
+                          _g98++;
+                        }
+                      }
+                      _c102 = ((v_j - _g98) === 1);
+                    }
+                    if (!(_c102)) continue;
+                    _g87.push(v_x);
+                  }
+                }
+                const _says = { terms: { line: v_L, number: v_v, room: v_t, middle: _c80 }, marks: { outline: union(_g81, _g87).slice(), stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+                if (!fire({ L: v_L, v: v_v, t: v_t, k: v_k, K: v_K, j: v_j, s: v_s }, facts, _says)) return 1;
+              }
               cands.fill(-1);
               numMarkedKept.clear();
             }
@@ -2546,6 +3080,12 @@ export interface LastWaterBinding {
   H: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LastWaterSays {
+  terms: { horizontal: boolean; crossing: boolean; };
+  marks: {  };
+}
+
 const lastWaterFacts: number[] = [];
 let lastWaterCands = new Int32Array(0);
 const lastWater_st351 = stamps();
@@ -2556,7 +3096,7 @@ const lastWater_st558 = stamps();
 const lastWater_st592 = stamps();
 
 /** Its dearest read grows with the board as n^2. */
-export function lastWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastWaterBinding> | null): number {
+export function lastWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastWaterBinding, LastWaterSays> | null): number {
   const _g316: number[] = [];
   const _g322: number[] = [];
   const _g332: number[] = [];
@@ -2591,8 +3131,8 @@ export function lastWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastWat
   R1:
   for (let _i299 = 0; _i299 < _a298.length; _i299++) {
     const v_L = _a298[_i299];
-    const _m898_0 = b.made[0];
-    const _m899_1 = b.made[1];
+    const _m902_0 = b.made[0];
+    const _m903_1 = b.made[1];
     let _q300 = false;
     Q301: {
       const _a302 = sp.lineCells[v_L];
@@ -2971,7 +3511,7 @@ export function lastWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastWat
             _c608 = _q421;
           }
           if (!(_c608)) break L343;
-          if (b.made[0] !== _m898_0 || b.made[1] !== _m899_1) {
+          if (b.made[0] !== _m902_0 || b.made[1] !== _m903_1) {
             if (!((v_v === numMarked(b, sp, cl, cands, v_L)))) { continue R1; }
             let _c613: boolean = (v_v >= 0);
             if (_c613) {
@@ -3338,7 +3878,19 @@ export function lastWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastWat
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ T: v_T, L: v_L, v: v_v, c: v_c, K: v_K, j: v_j, t: v_t, H: v_H.slice() }, facts)) return 1;
+            if (fire !== null) {
+              let _g898 = 0;
+              G899: {
+                const _a900 = v_H;
+                for (let _i901 = 0; _i901 < _a900.length; _i901++) {
+                  const v_x = _a900[_i901];
+                  if (!(!(sp.lineCells[v_L].includes(v_x)))) continue;
+                  _g898++;
+                }
+              }
+              const _says = { terms: { horizontal: !((((sp.lineCells[v_L][0] ?? -1) % sp.w) === ((sp.lineCells[v_L][1] ?? -1) % sp.w))), crossing: (_g898 > 0) }, marks: {  } };
+              if (!fire({ T: v_T, L: v_L, v: v_v, c: v_c, K: v_K, j: v_j, t: v_t, H: v_H.slice() }, facts, _says)) return 1;
+            }
             cands.fill(-1);
             numMarkedKept.clear();
           }
@@ -3360,6 +3912,12 @@ export interface LastShipBinding {
   W: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LastShipSays {
+  terms: { horizontal: boolean; crossing: boolean; };
+  marks: {  };
+}
+
 const lastShipFacts: number[] = [];
 let lastShipCands = new Int32Array(0);
 const lastShip_st355 = stamps();
@@ -3370,7 +3928,7 @@ const lastShip_st562 = stamps();
 const lastShip_st596 = stamps();
 
 /** Its dearest read grows with the board as n^2. */
-export function lastShip(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastShipBinding> | null): number {
+export function lastShip(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastShipBinding, LastShipSays> | null): number {
   const _g320: number[] = [];
   const _g326: number[] = [];
   const _g336: number[] = [];
@@ -3405,8 +3963,8 @@ export function lastShip(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastShip
   R1:
   for (let _i301 = 0; _i301 < _a300.length; _i301++) {
     const v_L = _a300[_i301];
-    const _m905_0 = b.made[0];
-    const _m906_1 = b.made[1];
+    const _m909_0 = b.made[0];
+    const _m910_1 = b.made[1];
     let _q302 = false;
     Q303: {
       const _a304 = sp.lineCells[v_L];
@@ -3787,7 +4345,7 @@ export function lastShip(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastShip
             _c612 = _q425;
           }
           if (!(_c612)) break L347;
-          if (b.made[0] !== _m905_0 || b.made[1] !== _m906_1) {
+          if (b.made[0] !== _m909_0 || b.made[1] !== _m910_1) {
             if (!((v_v === numMarked(b, sp, cl, cands, v_L)))) { continue R1; }
             let _c618: boolean = (v_v >= 0);
             if (_c618) {
@@ -4157,7 +4715,19 @@ export function lastShip(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastShip
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ T: v_T, L: v_L, v: v_v, c: v_c, K: v_K, j: v_j, u: v_u, W: v_W.slice() }, facts)) return 1;
+            if (fire !== null) {
+              let _g905 = 0;
+              G906: {
+                const _a907 = v_W;
+                for (let _i908 = 0; _i908 < _a907.length; _i908++) {
+                  const v_x = _a907[_i908];
+                  if (!(!(sp.lineCells[v_L].includes(v_x)))) continue;
+                  _g905++;
+                }
+              }
+              const _says = { terms: { horizontal: !((((sp.lineCells[v_L][0] ?? -1) % sp.w) === ((sp.lineCells[v_L][1] ?? -1) % sp.w))), crossing: (_g905 > 0) }, marks: {  } };
+              if (!fire({ T: v_T, L: v_L, v: v_v, c: v_c, K: v_K, j: v_j, u: v_u, W: v_W.slice() }, facts, _says)) return 1;
+            }
             cands.fill(-1);
             numMarkedKept.clear();
           }
@@ -4175,6 +4745,12 @@ export interface CenterTrialBinding {
   S: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CenterTrialSays {
+  terms: { center: number; vertical: boolean; };
+  marks: { outline: readonly number[]; };
+}
+
 const centerTrialFacts: number[] = [];
 let centerTrialCands = new Int32Array(0);
 const centerTrial_st309 = stamps();
@@ -4185,7 +4761,7 @@ const centerTrial_st516 = stamps();
 const centerTrial_st550 = stamps();
 
 /** Its dearest read grows with the board as n. */
-export function centerTrial(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CenterTrialBinding> | null): number {
+export function centerTrial(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CenterTrialBinding, CenterTrialSays> | null): number {
   const _g284: number[] = [];
   const _g297: number[] = [];
   const _g303: number[] = [];
@@ -4913,7 +5489,10 @@ export function centerTrial(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Cente
         if (!(_q836)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ T: v_T, c: v_c, L: v_L, S: v_S.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { center: v_c, vertical: (((sp.lineCells[v_L][0] ?? -1) % sp.w) === ((sp.lineCells[v_L][1] ?? -1) % sp.w)) }, marks: { outline: setOf(v_c).slice() } };
+            if (!fire({ T: v_T, c: v_c, L: v_L, S: v_S.slice() }, facts, _says)) return 1;
+          }
           cands.fill(-1);
           numMarkedKept.clear();
         }

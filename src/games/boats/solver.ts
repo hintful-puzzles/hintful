@@ -18,7 +18,6 @@ import {
   clueList,
   describedSpace,
   type GridSpace,
-  PLACE,
   rangeMask,
 } from "../../engine/describe-runtime.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
@@ -28,15 +27,13 @@ import {
   describedLadder,
   type Ladder,
   ladderTechniques,
-  ladderWalk,
   runLadder,
-  type Taken,
+  type Said,
   TIERS,
   uncluedPlacingRung,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import { NO_SOLUTION, type SolveFailure } from "../../engine/solve-failure.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
 import * as boats from "./boats.compiled.ts";
 import {
@@ -47,7 +44,6 @@ import {
   cloneBoard,
   DIFF_EASY,
   DIFF_HARD,
-  DIFFCOUNT,
   EMPTY,
   isShip,
   NO_CLUE,
@@ -149,8 +145,8 @@ export function fillRow(
 
 /** A square's value as the description numbers it: a boat segment and
  * water. */
-const SHIP = 1;
-const SEA = 2;
+export const SHIP = 1;
+export const SEA = 2;
 
 const describedOf = (cell: number): number =>
   isShip(cell) ? SHIP : cell === WATER ? SEA : 0;
@@ -237,117 +233,27 @@ export type BoatsBreach =
    */
   | { kind: "unfinishable" };
 
-/**
- * The named technique that forced a firing, carrying exactly what its
- * narration needs, in the order the tiers introduce them.
- */
-export type BoatsTechnique =
-  // --- Easy ---
-  /** A given end cap or single says which way its boat runs. */
-  | { kind: "givenClue"; shape: number }
-  /** Boats never touch, so the diagonals of a segment are water. */
-  | { kind: "neverTouch" }
-  /** A line already shows all the ships its number allows. */
-  | { kind: "lineSatisfied"; line: BoatsLine }
-  /** A line has exactly as many free squares left as ships still to place. */
-  | { kind: "lineForced"; line: BoatsLine }
-  /** Every square of water is accounted for, so the rest is fleet. */
-  | { kind: "allWaterPlaced" }
-  /** A center segment with water to one side must run along the other axis. */
-  | { kind: "centerForced"; vertical: boolean; center: Point; water: Point }
-  /** Every 1-boat is placed, so a square hemmed in on all four sides is water. */
-  | { kind: "isolated" }
-  /** Every 1-boat is placed, so a segment hemmed in on three sides continues
-   * into the fourth. */
-  | { kind: "mustExtend" }
-  // --- Normal ---
-  /** A center segment's line cannot take the two more ships that direction needs. */
-  | { kind: "centerCount"; line: BoatsLine; vertical: boolean; room: number }
-  /** Filling a square would join runs into a boat longer than any left. */
-  | { kind: "growTooLong"; joined: number; largest: number }
-  /** Every boat of this length is placed, so an unfinished one must be longer. */
-  | { kind: "mustGrow"; length: number }
-  /** Every boat of this length is placed, so a run of exactly that length must
-   * not be filled. */
-  | { kind: "runTooShort"; length: number }
-  /** The runs that can still hold the largest missing boat are exactly as many
-   * as there are such boats, so every one of them is used. */
-  | { kind: "onlyRunsLeft"; size: number; runs: number }
-  // --- Tricky ---
-  /** Three squares in a nearly-full line can't all be water, and whichever is
-   * a ship, the middle one's two sides are water: an outer one touches them at
-   * a corner, and the middle one (`middle`, when it counts) would fill its own
-   * crossing line. */
-  | { kind: "sharedDiagonal"; line: BoatsLine; room: number; middle: Point | null }
-  // --- Hard ---
-  /** The opposite placement immediately contradicts the board. `center` is the
-   * given middle segment when the trial ran its boat one way through it
-   * (`vertical`), rather than trying a single square. */
-  | {
-      kind: "refuted";
-      trialShip: boolean;
-      breach: BoatsBreach;
-      center: { at: Point; vertical: boolean } | null;
-      /** A square's trial: the line it was the last of its kind in, filled
-       * with the other kind, and whether the crossing line was filled too.
-       * `null` for a middle segment's. */
-      filled: { horizontal: boolean; crossing: boolean } | null;
-    };
-
-/** The rungs a hint step can be: the techniques' kinds. */
-export const BOATS_RUNGS = [
-  "givenClue",
-  "neverTouch",
-  "lineSatisfied",
-  "lineForced",
-  "allWaterPlaced",
-  "centerForced",
-  "isolated",
-  "mustExtend",
-  "centerCount",
-  "growTooLong",
-  "mustGrow",
-  "runTooShort",
-  "onlyRunsLeft",
-  "sharedDiagonal",
-  "refuted",
-] as const;
-export type BoatsRung = (typeof BOATS_RUNGS)[number];
-
-/** One deduction: what it forces, what follows from that by the never-touch
- * rule, and the squares it reasons over. */
-export interface BoatsFiring {
-  technique: BoatsTechnique;
-  /** The squares the player is asked to decide — always still undecided. */
-  squares: BoatsSquare[];
-  /**
-   * Water that follows from this firing's own placements because boats never
-   * touch. Shown as part of the step so the player sees the rule doing its
-   * work, but never narrated separately.
-   */
-  consequences: BoatsSquare[];
-  /** The particular cells the deduction reasons from, outlined `COL_HINT_CELL`. */
-  evidence: Point[];
-  /** The row or column the sentence names ("Row 3 still needs…"), hatched with
-   * its clue; empty when it names none (docs/hints-marks.md § "Hatch the line
-   * the sentence names"). */
-  line: Point[];
-  /**
-   * The grid **as this firing fired** — every earlier firing applied, this one
-   * not yet. The step's move is built against it (a `fill` move is a rectangle
-   * that sets every still-empty cell in its span), and it is the board the
-   * narration and the shaded area describe.
-   */
-  grid: Int8Array;
+/** What a trial says beside what its description says of it: the rule its
+ * supposition breaks, and the squares that rule flags. */
+interface TrialSays<T> {
+  terms: T & { breach: BoatsBreach };
+  marks: {
+    outline: readonly number[];
+    stripes: readonly number[];
+    reads: readonly number[];
+  };
 }
 
-/** What a firing's reason carries: its technique, in the narration's terms,
- * and the squares and line it reasons from. */
-interface BoatsReason {
-  technique: BoatsTechnique;
-  evidence: readonly number[];
-  line: number;
-}
+/** What each technique says, as the hint's sentences read it: the compiled
+ * module's, with the three trials' completed by their reason callbacks. */
+export type BoatsSays = Omit<
+  boats.SaysById,
+  "lastWater" | "lastShip" | "centerTrial"
+> & {
+  lastWater: TrialSays<boats.SaysById["lastWater"]["terms"]>;
+  lastShip: TrialSays<boats.SaysById["lastShip"]["terms"]>;
+  centerTrial: TrialSays<boats.SaysById["centerTrial"]["terms"]>;
+};
 
 // --- the reasons, read off each firing's binding -----------------------------
 
@@ -355,23 +261,6 @@ interface BoatsReason {
 interface Board {
   b: BoatsBoard;
   sp: GridSpace;
-}
-
-const pointOf = (sp: GridSpace, c: number): Point => ({
-  x: c % sp.w,
-  y: (c / sp.w) | 0,
-});
-
-/** The square beside `c` in direction `d`, numbered as `step` numbers them:
- * 1 up, 2 down, 3 left, 4 right; -1 off the board. */
-function stepOf(sp: GridSpace, c: number, d: number): number {
-  const { w, h } = sp;
-  const x = c % w;
-  const y = (c / w) | 0;
-  if (d === 1) return y > 0 ? c - w : -1;
-  if (d === 2) return y < h - 1 ? c + w : -1;
-  if (d === 3) return x > 0 ? c - 1 : -1;
-  return x < w - 1 ? c + 1 : -1;
 }
 
 /** The number beside line `L`: shown, or read from the fleet where every
@@ -406,15 +295,6 @@ function lineOf(B: Board, m: CellMarks, L: number): BoatsLine {
     clue: numOf(B, m, L),
     deduced: b.borderClues[slotOfLine(b, L)] === NO_CLUE,
   };
-}
-
-/** The segments of the boat through ship `c`, along its row and its column. */
-function boatAt(sp: GridSpace, m: CellMarks, c: number): number[] {
-  const out = [c];
-  for (const d of [1, 2, 3, 4])
-    for (let x = stepOf(sp, c, d); x >= 0 && m.grid[x] === SHIP; x = stepOf(sp, x, d))
-      out.push(x);
-  return out;
 }
 
 /** The marks as the game's grid: a ship segment and water, the rest empty. */
@@ -502,16 +382,20 @@ function classifyBreach(
   return { breach: { kind: "unfinishable" }, cells: [] };
 }
 
-/** A Hard trial's reason: the board with `ships` and `waters` placed as the
- * trial supposes, and the rule that breaks. */
-function trialReason(
+/**
+ * A Hard trial's reason: what its description says of it, and the rule that
+ * breaks on the board with `ships` and `waters` placed as the trial supposes.
+ * A line that could no longer reach its number is the one line the sentence
+ * names, so it is hatched and not outlined.
+ */
+function trialReason<Binding, T extends object>(
   B: Board,
   m: CellMarks,
+  binding: Binding,
+  says: { terms: T; marks: { outline?: readonly number[] } },
   ships: readonly number[],
   waters: readonly number[],
-  technique: (breach: BoatsBreach) => BoatsTechnique,
-  evidence: readonly number[],
-): BoatsReason {
+): Said<Binding, TrialSays<T>> {
   const trial = cloneBoard(B.b);
   trial.grid.set(gameGrid(m));
   const { w } = B.sp;
@@ -519,287 +403,58 @@ function trialReason(
   for (const c of waters) placeWater(trial, c % w, (c / w) | 0);
   validateFullState(trial);
   const found = classifyBreach(B, m, trial);
-  // A line that could no longer reach its number is the one line the
-  // sentence names, so it is the hatch rather than an outline.
-  if (found.breach.kind === "count") {
-    const { line } = found.breach;
-    return {
-      technique: technique(found.breach),
-      evidence,
-      line: line.horizontal ? line.index : B.b.h + line.index,
-    };
-  }
+  const outline = says.marks.outline ?? [];
+  const { breach } = found;
+  const counted = breach.kind === "count";
+  const stripes = counted
+    ? B.sp.lineCells[
+        breach.line.horizontal ? breach.line.index : B.b.h + breach.line.index
+      ]
+    : [];
   return {
-    technique: technique(found.breach),
-    evidence: [...evidence, ...found.cells],
-    line: -1,
+    binding,
+    says: {
+      terms: { ...says.terms, breach: found.breach },
+      marks: {
+        outline: counted ? outline : [...outline, ...found.cells],
+        stripes: [...stripes],
+        reads: [...stripes],
+      },
+    },
   };
 }
 
-/** The runs that could take a boat of `size` along them, as `takes` reads
- * them, each as its squares. */
-function runsTaking(B: Board, m: CellMarks, size: number): number[][] {
-  const { b, sp } = B;
-  const out: number[][] = [];
-  for (let L = 0; L < b.w + b.h; L++) {
-    const cells = sp.lineCells[L];
-    const v = b.borderClues[slotOfLine(b, L)];
-    const lineShips = cells.filter((c) => m.grid[c] === SHIP).length;
-    let run: number[] = [];
-    for (let i = 0; i <= cells.length; i++) {
-      if (i < cells.length && m.grid[cells[i]] !== SEA) {
-        run.push(cells[i]);
-        continue;
-      }
-      const ships = run.filter((c) => m.grid[c] === SHIP).length;
-      if (
-        run.length >= size &&
-        ships < run.length &&
-        (v === NO_CLUE || v - lineShips + ships >= size)
-      )
-        out.push(run);
-      run = [];
-    }
-  }
-  return out;
-}
-
-/** The ladder over the dealt board, each technique with its reason. */
+/** The ladder over the dealt board: each technique records what it says
+ * for the hint, the three trials adding the rule they break. */
 function boatsLadder(B: Board, dl: boats.Dealt): Ladder {
-  const { b, sp } = B;
-  const none: readonly number[] = [];
-  // A line's number decides its open squares: boat segments, or water.
-  const line = (L: number, ships: boolean, m: CellMarks): BoatsReason => {
-    const ln = lineOf(B, m, L);
-    return {
-      technique: ships
-        ? { kind: "lineForced", line: ln }
-        : { kind: "lineSatisfied", line: ln },
-      evidence: none,
-      line: L,
-    };
-  };
   return describedLadder(boats, {
-    given: compiledRung(
-      boats.given,
-      dl,
-      ({ c, v }): BoatsReason => ({
-        technique: { kind: "givenClue", shape: v },
-        evidence: [c],
-        line: -1,
-      }),
-    ),
-    near: uncluedRung(
-      boats.near,
-      ({ c }): BoatsReason => ({
-        technique: { kind: "neverTouch" },
-        evidence: [c],
-        line: -1,
-      }),
-    ),
+    given: compiledRung(boats.given, dl),
+    near: uncluedRung(boats.near),
     touch: uncluedPlacingRung(boats.touch),
-    lineShips: compiledRung(boats.lineShips, dl, ({ L }, _c, _n, m) =>
-      line(L, true, m),
+    lineShips: compiledRung(boats.lineShips, dl),
+    total: compiledRung(boats.total, dl),
+    center: compiledRung(boats.center, dl),
+    extend: compiledRung(boats.extend, dl),
+    lineWater: compiledRung(boats.lineWater, dl),
+    isolated: compiledRung(boats.isolated, dl),
+    grow: compiledRung(boats.grow, dl),
+    onlyFit: compiledRung(boats.onlyFit, dl),
+    centerRoom: compiledRung(boats.centerRoom, dl),
+    tooLong: compiledRung(boats.tooLong, dl),
+    shortRun: compiledRung(boats.shortRun, dl),
+    hidden: compiledRung(boats.hidden, dl),
+    onlyRuns: compiledRung(boats.onlyRuns, dl),
+    shared: compiledRung(boats.shared, dl),
+    lastWater: compiledRung(boats.lastWater, dl, (binding, _c, _n, m, says) =>
+      trialReason(B, m, binding, says, binding.H, [binding.c]),
     ),
-    total: compiledRung(
-      boats.total,
-      dl,
-      (): BoatsReason => ({
-        technique: { kind: "allWaterPlaced" },
-        evidence: none,
-        line: -1,
-      }),
+    lastShip: compiledRung(boats.lastShip, dl, (binding, _c, _n, m, says) =>
+      trialReason(B, m, binding, says, [binding.c], binding.W),
     ),
-    center: compiledRung(boats.center, dl, ({ c, a, b: o }, _c, _n, m): BoatsReason => {
-      // The side that is water, or off the board, which counts as water and
-      // the narration names as the board's edge.
-      const d =
-        [a, o].find((e) => stepOf(sp, c, e) < 0 || m.grid[stepOf(sp, c, e)] === SEA) ??
-        a;
-      const x = stepOf(sp, c, d);
-      return {
-        technique: {
-          kind: "centerForced",
-          vertical: a === 3,
-          center: pointOf(sp, c),
-          water: x >= 0 ? pointOf(sp, x) : offBoard(sp, c, d),
-        },
-        evidence: x >= 0 ? [c, x] : [c],
-        line: -1,
-      };
-    }),
-    extend: compiledRung(
-      boats.extend,
-      dl,
-      ({ c }): BoatsReason => ({
-        technique: { kind: "mustExtend" },
-        evidence: [c],
-        line: -1,
-      }),
-    ),
-    lineWater: compiledRung(boats.lineWater, dl, ({ L }, _c, _n, m) =>
-      line(L, false, m),
-    ),
-    isolated: compiledRung(
-      boats.isolated,
-      dl,
-      ({ c }): BoatsReason => ({
-        technique: { kind: "isolated" },
-        evidence: [1, 2, 3, 4].map((d) => stepOf(sp, c, d)).filter((x) => x >= 0),
-        line: -1,
-      }),
-    ),
-    grow: compiledRung(
-      boats.grow,
-      dl,
-      ({ G }): BoatsReason => ({
-        technique: { kind: "mustGrow", length: G.length },
-        evidence: G,
-        line: -1,
-      }),
-    ),
-    onlyFit: compiledRung(
-      boats.onlyFit,
-      dl,
-      ({ m: size }, _c, _n, m): BoatsReason => ({
-        technique: { kind: "onlyRunsLeft", size, runs: 1 },
-        evidence: runsTaking(B, m, size).flat(),
-        line: -1,
-      }),
-    ),
-    centerRoom: compiledRung(
-      boats.centerRoom,
-      dl,
-      ({ c, L, v }, _c, _n, m): BoatsReason => ({
-        technique: {
-          kind: "centerCount",
-          line: lineOf(B, m, L),
-          vertical: L < b.h,
-          room: v - sp.lineCells[L].filter((x) => m.grid[x] === SHIP).length,
-        },
-        evidence: [c],
-        line: L,
-      }),
-    ),
-    tooLong: compiledRung(boats.tooLong, dl, ({ M, c }, _c, _n, m): BoatsReason => {
-      const segs = [1, 2, 3, 4]
-        .map((d) => stepOf(sp, c, d))
-        .filter((x) => x >= 0 && m.grid[x] === SHIP)
-        .flatMap((x) => boatAt(sp, m, x));
-      return {
-        technique: {
-          kind: "growTooLong",
-          joined: 1 + segs.length,
-          largest: Math.max(M, 0),
-        },
-        evidence: segs,
-        line: -1,
-      };
-    }),
-    shortRun: compiledRung(
-      boats.shortRun,
-      dl,
-      ({ R }): BoatsReason => ({
-        technique: { kind: "runTooShort", length: R.length },
-        evidence: R,
-        line: -1,
-      }),
-    ),
-    hidden: compiledRung(boats.hidden, dl, ({ L }, _c, n, m) => line(L, n === SHIP, m)),
-    onlyRuns: compiledRung(
-      boats.onlyRuns,
-      dl,
-      ({ m: size, r }, _c, _n, m): BoatsReason => ({
-        technique: { kind: "onlyRunsLeft", size, runs: r },
-        evidence: runsTaking(B, m, size).flat(),
-        line: -1,
-      }),
-    ),
-    shared: compiledRung(boats.shared, dl, ({ L, t, k, K }, _c, _n, m): BoatsReason => {
-      const outer = [1, 2, 3, 4]
-        .map((d) => stepOf(sp, k, d))
-        .filter((x) => x >= 0 && sp.lineCells[L].includes(x) && !m.known(x));
-      const kNum = numOf(B, m, K);
-      const middle =
-        !m.known(k) &&
-        kNum >= 0 &&
-        kNum - sp.lineCells[K].filter((x) => m.grid[x] === SHIP).length === 1;
-      return {
-        technique: {
-          kind: "sharedDiagonal",
-          line: lineOf(B, m, L),
-          room: t,
-          middle: middle ? pointOf(sp, k) : null,
-        },
-        evidence: middle ? [k, ...outer] : outer,
-        line: L,
-      };
-    }),
-    lastWater: compiledRung(boats.lastWater, dl, ({ L, c, H }, _c, _n, m) =>
-      trialReason(
-        B,
-        m,
-        H,
-        [c],
-        (breach) => ({
-          kind: "refuted",
-          trialShip: false,
-          breach,
-          center: null,
-          filled: {
-            horizontal: L < b.h,
-            crossing: H.some((x) => !sp.lineCells[L].includes(x)),
-          },
-        }),
-        none,
-      ),
-    ),
-    lastShip: compiledRung(boats.lastShip, dl, ({ L, c, W }, _c, _n, m) =>
-      trialReason(
-        B,
-        m,
-        [c],
-        W,
-        (breach) => ({
-          kind: "refuted",
-          trialShip: true,
-          breach,
-          center: null,
-          filled: {
-            horizontal: L < b.h,
-            crossing: W.some((x) => !sp.lineCells[L].includes(x)),
-          },
-        }),
-        none,
-      ),
-    ),
-    centerTrial: compiledRung(boats.centerTrial, dl, ({ c, L, S }, _c, _n, m) =>
-      trialReason(
-        B,
-        m,
-        S,
-        none,
-        (breach) => ({
-          kind: "refuted",
-          trialShip: true,
-          breach,
-          center: { at: pointOf(sp, c), vertical: L >= b.h },
-          filled: null,
-        }),
-        [c],
-      ),
+    centerTrial: compiledRung(boats.centerTrial, dl, (binding, _c, _n, m, says) =>
+      trialReason(B, m, binding, says, binding.S, []),
     ),
   });
-}
-
-/** The point just off the board beside square `c` in direction `d`, which
- * the narration names as the board's edge. */
-function offBoard(sp: GridSpace, c: number, d: number): Point {
-  const { x, y } = pointOf(sp, c);
-  if (d === 1) return { x, y: y - 1 };
-  if (d === 2) return { x, y: y + 1 };
-  if (d === 3) return { x: x - 1, y };
-  return { x: x + 1, y };
 }
 
 /** The marks over `grid`, a value a square and 0 for none. False where two
@@ -906,100 +561,30 @@ export function findMistakes(state: BoatsState): readonly BoatsMistake[] {
   return out;
 }
 
-// --- the hint's plan ---------------------------------------------------------
-
-/** Runaway/UX cap on plan length, matching Spokes and Bricks: a player rarely
- * follows more than a few steps before diverging, and a recompute yields the
- * next batch. */
-const HINT_PLAN_MAX = 40;
-
-export interface BoatsPlan {
-  firings: BoatsFiring[];
-  /** The difficulty cap the plan was walked at. */
-  diff: number;
-}
+// --- the hint's walk ---------------------------------------------------------
 
 /**
- * The lowest cap at which the puzzle solves from its clues alone, so the
- * walk teaches the tier the board needs and does not move as the player
- * plays (docs/hints-search.md § "Recompute-stable plans").
+ * What a hint walks: the ladder over the player's own board, as
+ * marks that leave the water round a segment to `touch`, so the walk shows it
+ * as part of the step that places the segment. Null where the board's marks
+ * clash.
  */
-function lowestSolvingDiff(state: BoatsState): number {
-  const result = solveBoats(boardOf(state), DIFF_HARD);
-  return result.kind === "solved" ? result.diff : DIFF_HARD;
-}
-
-const squareOf = (sp: GridSpace, c: number, ship: boolean): BoatsSquare => ({
-  ...pointOf(sp, c),
-  ship,
-});
-
-/**
- * The ladder walked from the player's board at `cap`, one firing at a time
- * (`ladderWalk`).
- */
-function planAt(state: BoatsState, cap: number): BoatsPlan {
+export function hintWalk(
+  state: BoatsState,
+): { marks: CellMarks; entries: Ladder["entries"] } | null {
   const b = boardOf(state);
   const sp = describedSpace(boats.units, b.w, b.h);
-  const B: Board = { b, sp };
-  const ladder = boatsLadder(B, dealtOf(b));
-  const grid = Uint8Array.from(b.grid, describedOf);
-  const firings: BoatsFiring[] = [];
-  const m = marksOf(sp, grid, ladder);
-  if (m === null) return { firings, diff: cap };
-  m.budget = stepBudget("boats hint");
-  // What a firing rests on, with the squares it decides: its evidence and its
-  // line. A player works round the boats just placed.
-  const reads = ({ facts, reasons }: Taken): number[] => {
-    const r = reasons[0] as BoatsReason;
-    const out = [...r.evidence];
-    if (r.line >= 0) out.push(...sp.lineCells[r.line]);
-    for (let i = 0; i < facts.length; i += 3) out.push(facts[i + 1]);
-    return out;
-  };
-  const walk = ladderWalk(m, ladder.entries, { [TIERS]: cap }, reads);
-  while (firings.length < HINT_PLAN_MAX) {
-    const before = gameGrid(m);
-    const taken = walk.next();
-    if (taken === null || taken === "contradiction") break;
-    const { facts, reasons } = taken;
-    const r = reasons[0] as BoatsReason;
-    const primary = new Set<number>();
-    const squares: BoatsSquare[] = [];
-    for (let i = 0; i < facts.length; i += 3) {
-      if (facts[i] !== PLACE) continue;
-      const c = facts[i + 1];
-      if (before[c] !== EMPTY || primary.has(c)) continue;
-      primary.add(c);
-      squares.push(squareOf(sp, c, facts[i + 2] === SHIP));
-    }
-    const consequences: BoatsSquare[] = [];
-    for (let c = 0; c < grid.length; c++)
-      if (before[c] === EMPTY && grid[c] !== 0 && !primary.has(c))
-        consequences.push(squareOf(sp, c, grid[c] === SHIP));
-    firings.push({
-      technique: r.technique,
-      squares,
-      consequences,
-      evidence: r.evidence.filter((c) => !primary.has(c)).map((c) => pointOf(sp, c)),
-      line: r.line >= 0 ? sp.lineCells[r.line].map((c) => pointOf(sp, c)) : [],
-      grid: before,
-    });
-  }
-  return { firings, diff: cap };
+  const ladder = boatsLadder({ b, sp }, dealtOf(b));
+  const m = marksOf(sp, Uint8Array.from(b.grid, describedOf), ladder);
+  return m === null ? null : { marks: m, entries: ladder.entries };
 }
 
 /**
- * Walk the deduction from the player's board, one firing at a time.
- *
- * Starts at the puzzle's own difficulty and escalates only if that tier has
- * nothing left to say — so the plan teaches the simplest technique that works,
- * while a board the player has walked into a harder corner still gets advice.
+ * The lowest tier at which the puzzle solves from its clues alone, so the walk
+ * teaches the tier the board needs and does not move as the player plays
+ * (docs/hints-search.md § "Recompute-stable plans").
  */
-export function deduceBoatsPlan(state: BoatsState): BoatsPlan {
-  const lowest = lowestSolvingDiff(state);
-  let last = planAt(state, lowest);
-  for (let d = lowest + 1; d < DIFFCOUNT && last.firings.length === 0; d++)
-    last = planAt(state, d);
-  return last;
+export function lowestSolvingDiff(state: BoatsState): number {
+  const result = solveBoats(boardOf(state), DIFF_HARD);
+  return result.kind === "solved" ? result.diff : DIFF_HARD;
 }
