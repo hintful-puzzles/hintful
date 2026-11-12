@@ -1,11 +1,7 @@
 // Progressive Web App utils
 import { computed, signal } from "@lit-labs/signals";
 import * as Sentry from "@sentry/browser";
-import {
-  Workbox,
-  type WorkboxLifecycleEvent,
-  type WorkboxMessageEvent,
-} from "workbox-window";
+import { Workbox, type WorkboxLifecycleEvent } from "workbox-window";
 import { settings } from "../store/settings.ts";
 import {
   applyPrecacheMessage,
@@ -324,8 +320,11 @@ class PWAManager {
     // cross-tab activation of updated service workers.
     this.wb.addEventListener("controlling", this.handleSWControlling);
 
-    // Get download progress events
-    this.wb.addEventListener("message", this.handleSWMessage);
+    // Get download progress events. Not through Workbox: it drops a message
+    // from a worker it does not count as its own, which is every update found
+    // more than a minute after registering and every one after the first, so
+    // a page left open would show a download with no progress.
+    navigator.serviceWorker.addEventListener("message", this.handleSWMessage);
 
     // Register the service worker
     try {
@@ -431,7 +430,7 @@ class PWAManager {
     this.reloadApp();
   };
 
-  private handleSWMessage = (event: WorkboxMessageEvent) => {
+  private handleSWMessage = (event: MessageEvent) => {
     switch (event.data?.type) {
       case "PRECACHE_START":
       case "PRECACHE_PROGRESS":
