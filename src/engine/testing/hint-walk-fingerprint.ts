@@ -84,7 +84,9 @@ export function fingerprint(
   n: number,
 ): string {
   const { lines, end } = walkLines(game, params, n);
-  const text = lines.join("\n");
+  // The rung is a name the engine may change (a step's kind is its technique's
+  // id), so the hash holds the words and marks and the census holds the rungs.
+  const text = lines.map((l) => l.slice(l.indexOf(" | ") + 3)).join("\n");
   // What the walk looked at: a rung no board reaches is not held by the hash.
   const rungs = new Map<string, number>();
   for (const l of lines) {
