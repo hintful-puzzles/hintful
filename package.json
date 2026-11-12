@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "~2.4.12",
-    "@fission-ai/openspec": "1.14.1",
+    "@fission-ai/openspec": "2.0.0",
     "@lit/reactive-element": "^2.1.2",
     "@mdit/plugin-attrs": "^1.1.1",
     "@mdit/plugin-icon": "^1.0.2",
