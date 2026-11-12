@@ -3,7 +3,7 @@
 ## 1. Trial
 
 - [x] 1.1 Write the design: a step's terms, a conclusion's named arms, mark roles, how a firing is shown, and the adapter, read against the earlier withdrawals
-- [ ] 1.2 Build the comparison of every hint walk's words and marks, and see it fail on a planted change
+- [x] 1.2 Build the comparison of every hint walk's words and marks, and see it fail on a planted change (`src/engine/hint-walk-fingerprint.test.ts`, snapshots taken at `HEAD` for Unruly, Singles and Boats; a planted outline-to-stripes swap failed Unruly's)
 - [ ] 1.3 Move Unruly, Singles and one of Boats or Bridges onto it, and measure the lines that went against the report's prediction
 
 ## 2. The catalog

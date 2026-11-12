@@ -1,0 +1,8 @@
+5x5 Easy #0: 12 steps, solved, 2fef3af5ec2b85e7 [adjBlack:3 boxedIn:2 corner4:1 sameLine:3 sandwich:3]
+5x5 Easy #1: 13 steps, solved, d449601b1ef90259 [adjBlack:6 sameLine:6 sandwich:1]
+5x5 Easy #2: 14 steps, solved, bc576a3c496b569e [adjBlack:6 boxedIn:1 sameLine:6 sandwich:1]
+5x5 Easy #3: 17 steps, solved, 543294e8637f7920 [adjBlack:5 boxedIn:5 corner2:1 sameLine:5 sandwich:1]
+5x5 Normal #0: 16 steps, solved, 1469999f3c1d725f [adjBlack:6 boxedIn:1 sameLine:7 sandwich:2]
+5x5 Normal #1: 19 steps, solved, f161ec08cad3d4b4 [adjBlack:4 boxedIn:2 corner2:2 offset:1 pair:1 sameLine:5 sandwich:3 split:1]
+5x5 Normal #2: 19 steps, solved, a4515b80dbf58a9a [adjBlack:4 boxedIn:3 corner2:1 offset:2 sameLine:6 sandwich:3]
+5x5 Normal #3: 16 steps, solved, 2e9e260df758137f [adjBlack:5 boxedIn:1 corner2:2 sameLine:4 sandwich:2 split:2]
