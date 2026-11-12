@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { changedCells, trackTargets } from "./hint-track.ts";
+import { changedCells, trackLeg, trackTargets } from "./hint-track.ts";
 
 /** Squares 1, 2 and 3 should each become 9; `board` is the board after the
  * move, `changes` what the move changed. */
@@ -44,6 +44,27 @@ describe("trackTargets", () => {
       verdict: "completed",
       left: [],
     });
+  });
+});
+
+describe("trackLeg", () => {
+  /** A leg asks squares 1 and 2 to become 9; `now` is the board after the move. */
+  const judgeLeg = (now: Record<number, number>, targets = [1, 2]) =>
+    trackLeg({ targets, want: () => 9, was: () => 0, now: (t) => now[t] ?? 0 });
+
+  it("completes once every square of the leg holds, and is on track with some", () => {
+    expect(judgeLeg({ 1: 9, 2: 9 })).toBe("completed");
+    expect(judgeLeg({ 1: 9 })).toBe("onTrack");
+    expect(judgeLeg({})).toBe("off");
+  });
+
+  it("is off for a square set to what the leg does not ask, even beside a right one", () => {
+    expect(judgeLeg({ 1: 9, 2: 7 })).toBe("off");
+  });
+
+  it("is off for a leg with no squares, and ignores a change elsewhere", () => {
+    expect(judgeLeg({ 4: 9 }, [])).toBe("off");
+    expect(judgeLeg({ 1: 9, 2: 9, 4: 5 })).toBe("completed");
   });
 });
 

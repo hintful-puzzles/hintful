@@ -51,6 +51,30 @@ export function trackTargets<Target, Key, Value>(
 }
 
 /**
+ * Following one leg of a journey: a step the player makes whole, in any order
+ * of its squares, that the step does not shrink to. Judged by the leg's own
+ * squares alone: `"completed"` once every one holds, `"onTrack"` once some do,
+ * and `"off"` for a leg with no squares, or where the move set one of them to
+ * what the leg does not ask. What the move did elsewhere is no part of it.
+ */
+export function trackLeg<Target, Value>(spec: {
+  targets: readonly Target[];
+  want(t: Target): Value;
+  /** What the target's square held before the move, and holds after it. */
+  was(t: Target): Value;
+  now(t: Target): Value;
+}): HintTrackVerdict {
+  if (spec.targets.length === 0) return "off";
+  let done = 0;
+  for (const t of spec.targets) {
+    if (spec.now(t) === spec.want(t)) done++;
+    else if (spec.now(t) !== spec.was(t)) return "off";
+  }
+  if (done === spec.targets.length) return "completed";
+  return done > 0 ? "onTrack" : "off";
+}
+
+/**
  * The {@link TargetTrack.changes} of a board with one value per cell: every
  * index in `[0, size)` whose value differs, with the value it now holds.
  * A game whose elements are not simply its cells (edges, links) keys its own.
