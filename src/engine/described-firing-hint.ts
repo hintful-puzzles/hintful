@@ -166,8 +166,9 @@ export type FiringHintSpec<
 > = FiringShape<State, Move, Target, Says, H> &
   (
     | {
-        /** The move that makes these targets. */
-        move(targets: readonly Target[]): Move;
+        /** The move that makes these targets (`state` for a game whose move
+         * names a cell by its place in a board of a width). */
+        move(targets: readonly Target[], state: State): Move;
         journey?: never;
       }
     | { journey: Journey<Move, Target, State>; move?: never }
@@ -291,7 +292,7 @@ export function describedFiringHint<
         ) as H;
         const step = { rung: kind, explanation: words.text, words, highlights };
         if (spec.journey === undefined) {
-          steps.push({ ...step, move: spec.move(targets) });
+          steps.push({ ...step, move: spec.move(targets, state) });
           continue;
         }
         const { journey } = spec;
@@ -351,7 +352,7 @@ export function describedFiringHint<
         holds: (t) => spec.valueAt(after, index(t)) === spec.want(t),
       });
       if (verdict === "onTrack") {
-        Object.assign(step, narrowedTo(step, left));
+        Object.assign(step, narrowedTo(step, left, state));
       }
       return verdict;
     },
@@ -365,7 +366,7 @@ export function describedFiringHint<
       if (left.length === 0) return null;
       return left.length === hl.targets.length
         ? step
-        : { ...step, ...narrowedTo(step, left) };
+        : { ...step, ...narrowedTo(step, left, state) };
     },
   };
 
@@ -374,9 +375,10 @@ export function describedFiringHint<
   function narrowedTo(
     step: HintStep<Move, H>,
     left: Target[],
+    state: State,
   ): Pick<HintStep<Move, H>, "move" | "highlights" | "words" | "explanation"> {
     const narrowed = {
-      move: spec.move?.(left) ?? step.move,
+      move: spec.move?.(left, state) ?? step.move,
       highlights: { ...(step.highlights as H), targets: left },
     };
     if (!step.words) return { ...narrowed, explanation: step.explanation };

@@ -24,11 +24,11 @@ import {
   compiledRung,
   describedLadder,
   type Ladder,
+  type LadderEntry,
   ladderTechniques,
-  ladderWalk,
   runLadder,
+  type Said,
   TIERS as SCALE,
-  type Taken,
 } from "../../engine/ladder-runtime.ts";
 import { type RandomState, randomBits } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
@@ -52,34 +52,12 @@ import {
 
 // --- the described ladder ---------------------------------------------------
 
-/** The steps a hint can be, simplest first: two readings of one number,
- * then two of a pair. */
-export const MOSAIC_RUNGS = ["met", "needsAll", "needsMore", "sameNeed"] as const;
+/** The kinds of step a hint can be, simplest first: two readings of one
+ * number (`met`: it has its shaded squares, so the rest of its block is clear;
+ * `needsAll`: it needs every square it has left), then two of a pair
+ * (`needsMore`, `sameNeed`), which the description's `says` names. */
+export const MOSAIC_RUNGS = mosaic.SAYS_KINDS;
 export type MosaicRung = (typeof MOSAIC_RUNGS)[number];
-
-/**
- * Why a firing decides its squares. Squares and numbers are indices into the
- * board.
- *
- * - `met`: `clue` has its shaded squares, so the rest of its block is clear.
- * - `needsAll`: `clue` needs every square it has left, so they are shaded.
- * - `needsMore`: `clue` needs `by` more shaded squares than `other` does, and
- *   has `by` empty squares outside `other`'s block, which are shaded.
- * - `sameNeed`: `clue` and `other` need the same number more, and `clue` has
- *   no empty square outside `other`'s block, so `other`'s outside `clue`'s
- *   are clear.
- */
-export type MosaicReason =
-  | { readonly rung: "met" | "needsAll"; readonly clue: number }
-  | {
-      readonly rung: "needsMore" | "sameNeed";
-      readonly clue: number;
-      readonly other: number;
-      /** The shaded squares `clue` still needs. */
-      readonly need: number;
-      /** How many more that is than `other` needs: none for `sameNeed`. */
-      readonly by: number;
-    };
 
 /** The board's numbers as the description reads them. */
 function dealtOf(board: MosaicBoard): mosaic.Dealt {
@@ -96,25 +74,8 @@ function dealtOf(board: MosaicBoard): mosaic.Dealt {
 /** The ladder over the numbers `dealt` deals. */
 function mosaicLadder(dealt: mosaic.Dealt): Ladder {
   return describedLadder(mosaic, {
-    alone: compiledRung(
-      mosaic.alone,
-      dealt,
-      ({ c, n }): MosaicReason => ({
-        rung: n === 0 ? "met" : "needsAll",
-        clue: c,
-      }),
-    ),
-    compared: compiledRung(
-      mosaic.compared,
-      dealt,
-      ({ c, b, n, by }): MosaicReason => ({
-        rung: by > 0 ? "needsMore" : "sameNeed",
-        clue: c,
-        other: b,
-        need: n,
-        by,
-      }),
-    ),
+    alone: compiledRung(mosaic.alone, dealt),
+    compared: compiledRung(mosaic.compared, dealt),
   });
 }
 
@@ -172,7 +133,7 @@ function deduceAt(
   const m = marksOf(board, grid);
   if (fired) {
     m.recorder = (rec) => {
-      fired((rec.reason as MosaicReason).clue);
+      fired((rec.reason as Said<{ c: number }, unknown>).binding.c);
     };
     m.budget = stepBudget("mosaic deduction");
     m.wholePasses = true;
@@ -217,37 +178,17 @@ export function deductionTier(board: MosaicBoard): number | null {
   return verdict === "solved" ? Math.max(grade, DIFF_EASY) : null;
 }
 
-/**
- * The hint's walk over the ladder from `grid`, a copy of the player's marks,
- * one firing a call: the one that carries on from the squares the last
- * decided (`ladderWalk`).
- */
-export function mosaicWalk(
-  board: MosaicBoard,
-  grid: Uint8Array,
-): () => Taken | null | "contradiction" {
-  const m = marksOf(board, grid);
-  m.budget = stepBudget("mosaic hint");
-  const { width: w, height: h } = board;
-  const block = (c: number): number[] => {
-    const out: number[] = [];
-    const x = c % w;
-    const y = (c / w) | 0;
-    for (let j = Math.max(0, y - 1); j <= Math.min(h - 1, y + 1); j++)
-      for (let i = Math.max(0, x - 1); i <= Math.min(w - 1, x + 1); i++)
-        out.push(j * w + i);
-    return out;
+/** What a hint walks: the marks over the player's squares and the ladder's
+ * techniques. */
+export function hintWalk(state: MosaicState): {
+  marks: CellMarks;
+  entries: readonly LadderEntry[];
+} {
+  const grid = state.cells.map((v) => v & STATE_MARK_MASK);
+  return {
+    marks: marksOf(state.board, grid),
+    entries: mosaicLadder(dealtOf(state.board)).entries,
   };
-  // The blocks of the numbers a firing counts.
-  const reads = ({ reasons }: Taken): number[] => {
-    const reason = reasons[0] as MosaicReason;
-    return "other" in reason
-      ? [...block(reason.clue), ...block(reason.other)]
-      : block(reason.clue);
-  };
-  const { entries } = mosaicLadder(dealtOf(board));
-  const walk = ladderWalk(m, entries, { [SCALE]: DIFF_NORMAL }, reads);
-  return () => walk.next();
 }
 
 // --- the search for a board's answers ---------------------------------------

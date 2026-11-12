@@ -108,6 +108,16 @@ techniques:
       n >= 0 and r >= v(k)
       and (n = 0 implies (forall d in block(c) where not known(d): place(d, 2)))
       and (n = 0 or (forall d in block(c) where not known(d): place(d, 1)))
+    # The hint names the number, what it says and the size of its block, and
+    # reads that block.
+    says:
+      terms: { clue: c, value: v(k), size: "|block(c)|" }
+      marks: { reads: "block(c)" }
+      arms:
+        met:
+          when: "n = 0"
+        needsAll:
+          when: "n > 0"
   # Two numbers whose blocks overlap both count the squares they share, so
   # they differ by the squares only one counts. One that needs more than the
   # other, by as many as it has empty squares outside the other's block, O,
@@ -125,3 +135,14 @@ techniques:
     conclude: >-
       by = |O| and (forall d in O: place(d, 1))
       and (by > 0 or (forall d in only(b, c): place(d, 2)))
+    # The hint names both numbers, what each says, and how many shaded squares
+    # the first still needs and by how many that is more than the second; it
+    # reads both blocks.
+    says:
+      terms: { clue: c, other: b, value: v(k), otherValue: "clue(count, b)", need: n, by: by }
+      marks: { reads: "block(c) + block(b)" }
+      arms:
+        needsMore:
+          when: "by > 0"
+        sameNeed:
+          when: "by = 0"

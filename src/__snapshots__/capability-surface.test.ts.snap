@@ -1122,6 +1122,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hintRungs",
       "paramConfig",
       "preferredTileSize",
+      "refreshHintStep",
       "revealOne",
       "solve",
       "statusbarText",

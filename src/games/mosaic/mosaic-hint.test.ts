@@ -40,15 +40,16 @@ const pinned = describeHintPins({
   params: [P, U],
   pins: {
     /** Held on 699 of 738 positions walked. */
-    met: "10x10:0c4a5c2a3456b5a25a655b3b55a5a20a22a44b11c4a232c14a3c5f5c8d44d4b3d5c",
+    "alone.met":
+      "10x10:0c4a5c2a3456b5a25a655b3b55a5a20a22a44b11c4a232c14a3c5f5c8d44d4b3d5c",
     /** Held on 698 of 738 positions walked. */
-    needsAll:
+    "alone.needsAll":
       "10x10:c3c4442a4a5a44b3a4a4d53b3a133b23a3b4a7a1a2a5b3c323g212a5b5a0b32a2e02e2",
     /** Held on 193 of 738 positions walked. */
-    needsMore:
+    "compared.needsMore":
       "10x10du:3a21j44b5b8a4a6a5c87c45a3477a4a45d86412b4a36a4f4c554a43a5k23a44a",
     /** Held on 193 of 738 positions walked. */
-    sameNeed: {
+    "compared.sameNeed": {
       id: "10x10du:3a21j44b5b8a4a6a5c87c45a3477a4a45d86412b4a36a4f4c554a43a5k23a44a",
       moves:
         '[{"type":"fill","cells":[32,42,52],"mark":1},{"type":"fill","cells":[41,43,53,63],"mark":1}]',
@@ -66,6 +67,15 @@ function followed(state: MosaicState): HintStep<MosaicMove, unknown, string>[] {
       state = executeMove(state, step.move);
     }
   return steps;
+}
+
+/** A step's squares as indices into the grid, and the mark each is given. */
+function decides(step: { highlights?: unknown }): { cells: number[]; mark: number } {
+  const { targets } = step.highlights as MosaicHint;
+  return {
+    cells: targets.map((t) => t.y * P.width + t.x),
+    mark: targets[0]?.value ?? 0,
+  };
 }
 
 /** The values of the numbers a frame circles, one per circle: a circle is
@@ -87,7 +97,7 @@ describe("Mosaic's hint", () => {
     if (!solution) throw new Error("no solution");
     const decided = new Set<number>();
     for (const step of followed(state)) {
-      const { cells, mark } = step.highlights as MosaicHint;
+      const { cells, mark } = decides(step);
       for (const c of cells) {
         expect(solution[c], `square ${c}`).toBe(mark);
         decided.add(c);
@@ -97,11 +107,11 @@ describe("Mosaic's hint", () => {
   });
 
   it.each([
-    ["clear", "met", STATE_BLANK, /already has its|allows no/],
-    ["shaded", "needsAll", STATE_MARKED, /needs/],
+    ["clear", "alone.met", STATE_BLANK, /already has its|allows no/],
+    ["shaded", "alone.needsAll", STATE_MARKED, /needs/],
   ] as const)("a step that makes squares %s is drawn and said", (_, rung, mark, words) => {
     const { recording, hint } = renderPinnedHint(mosaicGame, pinned(rung));
-    const hl = hint?.highlights as MosaicHint;
+    const hl = decides(hint ?? {});
     expect(hl.mark).toBe(mark);
     expect(hint?.explanation).toMatch(words);
     // Each decided square is ringed, never filled with the mark it gets.
@@ -126,19 +136,19 @@ describe("Mosaic's hint", () => {
   it.each([
     [
       "needs more than",
-      "needsMore",
+      "compared.needsMore",
       STATE_MARKED,
       /needs \d more .+ than .+, so these squares outside .+ block must be/,
     ],
     [
       "needs as many as",
-      "sameNeed",
+      "compared.sameNeed",
       STATE_BLANK,
       /both need .+, and the .+ all lie in .+ block/i,
     ],
   ] as const)("a step where one number %s another is drawn and said", (_, rung, mark, words) => {
     const { recording, hint } = renderPinnedHint(mosaicGame, pinned(rung));
-    const hl = hint?.highlights as MosaicHint;
+    const hl = decides(hint ?? {});
     expect(hl.mark).toBe(mark);
     expect(hint?.explanation).toMatch(words);
     expectRing(recording.ops, { rings: hl.cells.length });
@@ -244,8 +254,8 @@ describe("Mosaic's hint", () => {
       const decided = new Set<number>();
       let comparing = 0;
       for (const step of followed(state)) {
-        const { cells, mark } = step.highlights as MosaicHint;
-        if (step.rung === "needsMore" || step.rung === "sameNeed") comparing++;
+        const { cells, mark } = decides(step);
+        if (step.rung.startsWith("compared.")) comparing++;
         for (const c of cells) {
           expect(solution[c], `seed ${seed}, square ${c}`).toBe(mark);
           decided.add(c);
@@ -264,8 +274,8 @@ describe("Mosaic's hint", () => {
       if (answer.kind !== "one") throw new Error("no answer");
       const decided = new Set<number>();
       for (const step of followed(state)) {
-        const { cells, mark } = step.highlights as MosaicHint;
-        if (step.rung === "needsMore" || step.rung === "sameNeed") comparing++;
+        const { cells, mark } = decides(step);
+        if (step.rung.startsWith("compared.")) comparing++;
         for (const c of cells) {
           expect(answer.solution[c], `seed ${seed}, square ${c}`).toBe(mark);
           decided.add(c);

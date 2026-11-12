@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/mosaic/mosaic.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, freshBinding, keptStore, rangeMask, sameSet, staleChecking, type Kept, within } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, freshBinding, keptStore, rangeMask, sameSet, staleChecking, type Kept, union, within } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -17,6 +17,16 @@ export const units: readonly string[] = [];
 
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "alone" | "compared";
+
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  alone: AloneSays;
+  compared: ComparedSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["alone.met","alone.needsAll","compared.needsMore","compared.sameNeed"] as const;
 
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
@@ -82,10 +92,16 @@ export interface AloneBinding {
   r: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
+export type AloneSays =
+  | { arm: "met"; terms: { clue: number; value: number; size: number; }; marks: { reads: readonly number[]; } }
+  | { arm: "needsAll"; terms: { clue: number; value: number; size: number; }; marks: { reads: readonly number[]; } }
+;
+
 const aloneFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBinding> | null): number {
+export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBinding, AloneSays> | null): number {
   const facts = aloneFacts;
   let fired = 0;
   let changed = false;
@@ -182,7 +198,19 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
       if (!(_c39)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ k: v_k, c: v_c, n: v_n, r: v_r }, facts)) return 1;
+        if (fire !== null) {
+          let _arm = -1;
+          if ((v_n === 0)) _arm = 0; else if ((v_n > 0)) _arm = 1;
+          let _says: AloneSays | null = null;
+          if (_arm === 0) {
+            _says = { arm: "met", terms: { clue: v_c, value: cl.count.v[v_k], size: within(sp, v_c, 1).length }, marks: { reads: within(sp, v_c, 1).slice() } };
+          }
+          if (_arm === 1) {
+            _says = { arm: "needsAll", terms: { clue: v_c, value: cl.count.v[v_k], size: within(sp, v_c, 1).length }, marks: { reads: within(sp, v_c, 1).slice() } };
+          }
+          if (_says === null) throw new Error("alone: no arm of says holds");
+          if (!fire({ k: v_k, c: v_c, n: v_n, r: v_r }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -198,10 +226,16 @@ export interface ComparedBinding {
   O: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
+export type ComparedSays =
+  | { arm: "needsMore"; terms: { clue: number; other: number; value: number; otherValue: number; need: number; by: number; }; marks: { reads: readonly number[]; } }
+  | { arm: "sameNeed"; terms: { clue: number; other: number; value: number; otherValue: number; need: number; by: number; }; marks: { reads: readonly number[]; } }
+;
+
 const comparedFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ComparedBinding> | null): number {
+export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ComparedBinding, ComparedSays> | null): number {
   const _g53: number[] = [];
   const _g63: number[] = [];
   const _g115: number[] = [];
@@ -210,9 +244,10 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
   let changed = false;
   R1:
   for (let v_k = 0; v_k < cl.count.at.length; v_k++) {
+    const _h125 = cl.count.v[v_k];
     L36: {
       const v_c = cl.count.at[v_k];
-      const _m125_0 = b.made[0];
+      const _m126_0 = b.made[0];
       let _q37 = false;
       Q38: {
         const _a39 = within(sp, v_c, 1);
@@ -290,7 +325,7 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
             _c72 = _c71;
           }
           if (!(_c72)) break L61;
-          if (b.made[0] !== _m125_0) {
+          if (b.made[0] !== _m126_0) {
             let _q73 = false;
             Q74: {
               const _a75 = within(sp, v_c, 1);
@@ -427,7 +462,19 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
           if (!(_c124)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ k: v_k, c: v_c, b: v_b, n: v_n, by: v_by, O: v_O.slice() }, facts)) return 1;
+            if (fire !== null) {
+              let _arm = -1;
+              if ((v_by > 0)) _arm = 0; else if ((v_by === 0)) _arm = 1;
+              let _says: ComparedSays | null = null;
+              if (_arm === 0) {
+                _says = { arm: "needsMore", terms: { clue: v_c, other: v_b, value: _h125, otherValue: _h43, need: v_n, by: v_by }, marks: { reads: union(within(sp, v_c, 1), within(sp, v_b, 1)).slice() } };
+              }
+              if (_arm === 1) {
+                _says = { arm: "sameNeed", terms: { clue: v_c, other: v_b, value: _h125, otherValue: _h43, need: v_n, by: v_by }, marks: { reads: union(within(sp, v_c, 1), within(sp, v_b, 1)).slice() } };
+              }
+              if (_says === null) throw new Error("compared: no arm of says holds");
+              if (!fire({ k: v_k, c: v_c, b: v_b, n: v_n, by: v_by, O: v_O.slice() }, facts, _says)) return 1;
+            }
           }
         }
       }

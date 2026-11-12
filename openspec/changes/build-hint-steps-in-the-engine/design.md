@@ -309,6 +309,28 @@ defect found in the game, said which.
   reads steps; one assertion that the discount set holds two squares went, the
   sentences no longer saying "one of them".
 
+### Mosaic, built (2026-11-12)
+
+- **The plainest cell game so far**: `alone` (arms `met`, `needsAll`) and
+  `compared` (arms `needsMore`, `sameNeed`) each say their numbers as terms and
+  `reads` the block of each number they count (`block(c) + block(b)`). No
+  outline, strand or stripes: the sentences draw the block through their own
+  `BLOCK` mark, which is words, not highlights.
+- **`move(targets, state)`**: Mosaic's `fill` move names a square by its index,
+  which needs the board's width. `describedFiringHint`'s `move` takes the state
+  (and `narrowedTo` passes it), so a game whose move is not in points needs no
+  override.
+- **`refreshHintStep` came with it**: Mosaic had none, so a step the player had
+  half made and then undone showed stale; the engine's now does.
+- **The comparison.** 7 sizes (3x3 to 15x15) x 3 tiers x both `aggressive` x 4
+  boards, HEAD against the new tree: 5,583 steps, every line (words, marks,
+  move) the same, all four kinds met (2,316, 2,252, 454, 393). The rung names
+  are the arms' (`alone.met`) and the highlights are `{targets, strand}` for
+  `{cells, mark, w}`, so those two fields were cut from the lines.
+- **Lines.** `hint.ts` 128 to 69, `solver.ts` -45 (`MosaicReason`, the reason
+  callbacks and `mosaicWalk`'s glue), the description +21 of `says`,
+  `hint-text.ts` +25 of sentence glue.
+
 ### Read off Boats (2026-11-12, `boats/solver.ts` and `index.ts`), before it was built
 
 Sixteen of its nineteen techniques are what `says` already carries (terms,

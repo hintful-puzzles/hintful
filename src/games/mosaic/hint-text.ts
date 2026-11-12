@@ -9,6 +9,7 @@
  */
 
 import { apartByPosition } from "../../engine/apart-by-position.ts";
+import type { FiringSpoken } from "../../engine/described-firing-hint.ts";
 import {
   CELL,
   mark,
@@ -20,6 +21,7 @@ import {
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import type { Point } from "../../engine/types.ts";
 import { BLOCK } from "./hint-marks.ts";
+import type { SaysById } from "./mosaic.compiled.ts";
 
 /** What a step marks: the number it reasons from, its value, and the squares
  * it decides. */
@@ -124,5 +126,28 @@ export const say = {
         ? phrase`${mark.as("outline", BLOCK, [m.clue, m.other.clue], `Both ${m.n}s`)} need ${shadeds(m.need)}, and the ${where(m)} ${m.n}'s all lie in the ${where(m.other)} ${m.n}'s block`
         : phrase`${first} and ${other} both need ${shadeds(m.need)}, and the ${m.n}'s all lie in ${again}'s block`;
     return so({ look, move: phrase`${theseSquares(m)} must be ${UNSHADED_NAME}` });
+  },
+};
+
+type Spoken<K extends keyof SaysById> = FiringSpoken<SaysById[K]>;
+
+/** Each technique's sentence, from what its description says of a firing
+ * (`engine/described-firing-hint.ts`). */
+export const sentences = {
+  alone: (s: Spoken<"alone">): Sentence => {
+    const m = { clue: s.at(s.terms.clue), n: s.terms.value, cells: s.targets };
+    return s.arm === "met" ? say.met(m) : say.needsAll(m, s.terms.size);
+  },
+  compared: (s: Spoken<"compared">): Sentence => {
+    const { terms: t } = s;
+    const pair = {
+      clue: s.at(t.clue),
+      n: t.value,
+      other: { clue: s.at(t.other), n: t.otherValue },
+      need: t.need,
+      by: t.by,
+      cells: s.targets,
+    };
+    return s.arm === "needsMore" ? say.needsMore(pair) : say.sameNeed(pair);
   },
 };

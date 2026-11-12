@@ -4,14 +4,15 @@
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { validateDesc } from "../../engine/desc-error.ts";
+import { filledBy, spokenOf } from "../../engine/described-hint.ts";
+import { ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { mosaicGame } from "./index.ts";
 import {
   deductionTier,
   encodeSolution,
   findMistakes,
-  type MosaicReason,
-  mosaicWalk,
+  hintWalk,
   newDesc,
   solveGameActual,
 } from "./solver.ts";
@@ -30,18 +31,40 @@ const boardOf = (side: number, desc: string) =>
     .board;
 
 /** Every firing the hint's walk makes from `grid` (all empty where none is
- * given), each its reason and the squares it decides, and how the walk ended. */
+ * given), each the arm it says, the numbers it names and the squares it
+ * decides, and how the walk ended. */
 function walked(side: number, desc: string, grid = new Uint8Array(side * side)) {
-  const next = mosaicWalk(boardOf(side, desc), grid);
-  const fired: (MosaicReason & { cells: number[] })[] = [];
-  let f = next();
-  for (; f !== null && f !== "contradiction"; f = next()) {
-    const cells: number[] = [];
-    for (let i = 0; i < f.facts.length; i += 3) cells.push(f.facts[i + 1] as number);
-    fired.push({ ...(f.reasons[0] as MosaicReason), cells });
+  const state = {
+    ...newState({ width: side, height: side, aggressive: true, diff: DIFF_EASY }, desc),
+    cells: grid,
+  };
+  const { marks, entries } = hintWalk(state);
+  const walk = ladderWalk(marks, entries, { [TIERS]: DIFF_NORMAL }, () => []);
+  const fired: {
+    rung: string;
+    clue: number;
+    other?: number;
+    need?: number;
+    by?: number;
+    cells: number[];
+  }[] = [];
+  let f = walk.next();
+  for (; f !== null && f !== "contradiction"; f = walk.next()) {
+    const { says } = spokenOf<{ arm: string; terms: Record<string, number> }>(f);
+    const { clue, other, need, by } = says.terms;
+    fired.push({
+      rung: says.arm,
+      clue,
+      ...(other === undefined ? {} : { other, need, by }),
+      cells: filledBy(f),
+    });
   }
   const verdict =
-    f === "contradiction" ? f : grid.includes(STATE_UNMARKED) ? "stuck" : "solved";
+    f === "contradiction"
+      ? f
+      : marks.grid.includes(STATE_UNMARKED)
+        ? "stuck"
+        : "solved";
   return { verdict, fired };
 }
 
