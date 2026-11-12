@@ -1,0 +1,5 @@
+# No spec delta: no capability spec describes the offline status, and the
+# earlier change on this feature (shrink-the-download) had none either.
+schema: spec-driven
+created: 2026-11-12
+skip_specs: true
