@@ -19,6 +19,21 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "fit" | "uncovered" | "boxed" | "reach" | "overlap" | "starve" | "line";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  fit: FitSays;
+  uncovered: UncoveredSays;
+  boxed: BoxedSays;
+  reach: ReachSays;
+  overlap: OverlapSays;
+  starve: StarveSays;
+  line: LineSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["fit","uncovered","boxed","reach","overlap","starve","line"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -228,10 +243,16 @@ export interface FitBinding {
   F: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface FitSays {
+  terms: { q: number; F: readonly number[]; };
+  marks: {  };
+}
+
 const fitFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function fit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FitBinding> | null): number {
+export function fit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FitBinding, FitSays> | null): number {
   const facts = fitFacts;
   let fired = 0;
   let changed = false;
@@ -293,7 +314,10 @@ export function fit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FitBinding> |
     if (!(_c16)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ q: v_q, F: v_F.slice() }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { q: v_q, F: v_F.slice() }, marks: {  } };
+        if (!fire({ q: v_q, F: v_F.slice() }, facts, _says)) return 1;
+      }
     }
   }
   return fired;
@@ -303,10 +327,16 @@ export interface UncoveredBinding {
   c: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface UncoveredSays {
+  terms: { c: number; };
+  marks: {  };
+}
+
 const uncoveredFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function uncovered(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<UncoveredBinding> | null): number {
+export function uncovered(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<UncoveredBinding, UncoveredSays> | null): number {
   const facts = uncoveredFacts;
   let fired = 0;
   let changed = false;
@@ -321,7 +351,10 @@ export function uncovered(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Uncover
     if (!((reachers(b, sp, cl, v_c).length > 0))) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ c: v_c }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { c: v_c }, marks: {  } };
+        if (!fire({ c: v_c }, facts, _says)) return 1;
+      }
     }
   }
   return fired;
@@ -333,10 +366,16 @@ export interface BoxedBinding {
   r: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface BoxedSays {
+  terms: { q: number; r: number; };
+  marks: {  };
+}
+
 const boxedFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function boxed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoxedBinding> | null): number {
+export function boxed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoxedBinding, BoxedSays> | null): number {
   const facts = boxedFacts;
   let fired = 0;
   let changed = false;
@@ -413,7 +452,10 @@ export function boxed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoxedBindin
         if (!(_c28)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ q: v_q, F: v_F.slice(), r: v_r }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { q: v_q, r: v_r }, marks: {  } };
+            if (!fire({ q: v_q, F: v_F.slice(), r: v_r }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -429,10 +471,16 @@ export interface ReachBinding {
   r: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ReachSays {
+  terms: { c: number; q: number; r: number; };
+  marks: {  };
+}
+
 const reachFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBinding> | null): number {
+export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBinding, ReachSays> | null): number {
   const _g15: number[] = [];
   const facts = reachFacts;
   let fired = 0;
@@ -504,7 +552,10 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
         if (!(_c37)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, Q: v_Q.slice(), q: v_q, F: v_F.slice(), r: v_r }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { c: v_c, q: v_q, r: v_r }, marks: {  } };
+            if (!fire({ c: v_c, Q: v_Q.slice(), q: v_q, F: v_F.slice(), r: v_r }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -521,10 +572,16 @@ export interface OverlapBinding {
   r: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface OverlapSays {
+  terms: { p: number; K: readonly number[]; q: number; F: readonly number[]; r: number; };
+  marks: {  };
+}
+
 const overlapFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^2. */
-export function overlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OverlapBinding> | null): number {
+export function overlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OverlapBinding, OverlapSays> | null): number {
   const _g26: number[] = [];
   const facts = overlapFacts;
   let fired = 0;
@@ -638,7 +695,10 @@ export function overlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OverlapBi
             if (!(_c64)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ p: v_p, K: v_K.slice(), q: v_q, F: v_F.slice(), G: v_G.slice(), r: v_r }, facts)) return 1;
+              if (fire !== null) {
+                const _says = { terms: { p: v_p, K: v_K.slice(), q: v_q, F: v_F.slice(), r: v_r }, marks: {  } };
+                if (!fire({ p: v_p, K: v_K.slice(), q: v_q, F: v_F.slice(), G: v_G.slice(), r: v_r }, facts, _says)) return 1;
+              }
             }
           }
         }
@@ -657,11 +717,17 @@ export interface StarveBinding {
   U: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface StarveSays {
+  terms: { q: number; r: number; Z: readonly number[]; U: readonly number[]; };
+  marks: {  };
+}
+
 const starveFacts: number[] = [];
 let starveCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n^2. */
-export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBinding> | null): number {
+export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBinding, StarveSays> | null): number {
   const _g57: number[] = [];
   const _g65: number[] = [];
   const _g85: number[] = [];
@@ -882,7 +948,10 @@ export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBind
         if (!(_c171)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ q: v_q, F: v_F.slice(), G: v_G.slice(), r: v_r, Z: v_Z.slice(), U: v_U.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { q: v_q, r: v_r, Z: v_Z.slice(), U: v_U.slice() }, marks: {  } };
+            if (!fire({ q: v_q, F: v_F.slice(), G: v_G.slice(), r: v_r, Z: v_Z.slice(), U: v_U.slice() }, facts, _says)) return 1;
+          }
           cands.fill(-1);
           starvesMarkedKept.clear();
         }
@@ -902,13 +971,19 @@ export interface LineBinding {
   M: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LineSays {
+  terms: { e: number; C: readonly number[]; O: readonly number[]; T: readonly number[]; M: readonly number[]; };
+  marks: {  };
+}
+
 const lineFacts: number[] = [];
 let lineCands = new Int32Array(0);
 const line_st155 = stamps();
 const line_st177 = stamps();
 
 /** Its dearest read grows with the board as n^2. */
-export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding> | null): number {
+export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding, LineSays> | null): number {
   const _g94: number[] = [];
   const _g122: number[] = [];
   const _g145: number[] = [];
@@ -1218,7 +1293,10 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ e: v_e, a: v_a, b: v_b, C: v_C.slice(), O: v_O.slice(), T: v_T.slice(), M: v_M.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { e: v_e, C: v_C.slice(), O: v_O.slice(), T: v_T.slice(), M: v_M.slice() }, marks: {  } };
+          if (!fire({ e: v_e, a: v_a, b: v_b, C: v_C.slice(), O: v_O.slice(), T: v_T.slice(), M: v_M.slice() }, facts, _says)) return 1;
+        }
         cands.fill(-1);
         ownedMarkedKept.clear();
       }

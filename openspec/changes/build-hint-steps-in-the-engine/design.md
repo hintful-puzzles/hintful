@@ -691,6 +691,30 @@ defect found in the game, said which.
   its steps so far). A test changed: "the plan finishes the board" asks again as
   the plan runs out.
 
+### Rect, built (2026-11-13): a link game whose firing draws a whole rectangle
+
+- **No engine addition.** `describedEdgeHint` took Rect as it stood. `says` is
+  `terms` of the binding for every technique (`q, F`; `c`; `q, r`; `c, q, r`;
+  `p, K, q, F, r`; `q, r, Z, U`; `e, C, O, T, M`) and `marks: {}`. The ~350
+  lines of `RectReason` callbacks in `solver.ts` became one `reasonOf(edges,
+  dl, kind, terms)`, a switch over the terms, read on the edges as they stood
+  before the firing (the live marks with the firing's facts reset to open);
+  `fitReason` reads only `{sp, grid}`, so no `CellMarks` is needed.
+- **The walk's board is the ctx**: `done` is `isSolved` of it, `step` advances it
+  with `executeMove`, and a firing that draws nothing the player has not drawn
+  returns no legs. Rungs are the technique ids, as before (no arm), so no name
+  moved. `hintWalk`, `firstFiring`, `RectFiring` and the game's own `deduceHintPlan`
+  call are gone.
+- **Comparison.** 4,749 lines at `HEAD` (the presets, 4 boards, 0/15/35/60% of the
+  solution's lines played, every recomputed plan listed, plan cap lifted):
+  byte-identical, rungs included. `rect` joins the fingerprint's moved games, its
+  snapshot taken on the new tree.
+- **Changes of behavior**: the plan holds 40 steps (it held every firing); a
+  contradiction mid-walk is the unlocalized refusal.
+- **Tests changed**: the ones that read `firstFiring` read `rectHint`'s steps
+  (kinds of line step are told by their marks, a plan is asked again as it runs
+  out).
+
 ### What Pearl, Tracks, Path and Spokes needed beyond `describedEdgeHint` (2026-11-13, read before they were built)
 
 *All four are built (above); this is what the read expected. The carry-on hook it predicted was not needed.*

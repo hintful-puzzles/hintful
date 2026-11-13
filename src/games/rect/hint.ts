@@ -10,23 +10,33 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { narratedStep } from "../../engine/game.ts";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+import {
+  describedEdgeHint,
+  type EdgeSpoken,
+  type Fired,
+} from "../../engine/described-edge-hint.ts";
+import { spokenOf } from "../../engine/described-hint.ts";
+import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
+import type { CellMarks, Ladder, Taken } from "../../engine/ladder-runtime.ts";
 import type { Rect } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
 import { executeMove, isSolved, readClaims } from "./moves.ts";
+import type * as rect from "./rect.compiled.ts";
 import {
-  hintWalk,
+  deduction,
+  HINT_TIER,
   lineOf,
-  type RectFiring,
+  type RectReason,
   type RectRung,
+  readsOf,
+  reasonOf,
   spaceOf,
   WALL,
 } from "./solver.ts";
 import type { RectMove, RectState } from "./state.ts";
+
+export type { RectRung } from "./solver.ts";
 
 /** A step's highlights: nothing but the move's own data, which keep-track and
  * refresh compare against. The marks are the words' (`stepMarks`). */
@@ -75,69 +85,124 @@ function isDrawn(s: RectState, r: Rect): boolean {
 /** Whether `f` changes the board: a rectangle or a line the player has not
  * already drawn. A side of a rectangle that may still grow is not a line to
  * the walk, so a firing can prove one the player drew. */
-function drawsSomething(s: RectState, f: RectFiring): boolean {
+function drawsSomething(s: RectState, f: RectReason): boolean {
   if (f.kind === "line")
     return !(f.edge.edge === "h" ? s.hedge : s.vedge)[f.edge.y * s.w + f.edge.x];
   return !(isDrawn(s, f.rect) && !crossesLine(s, f.rect));
 }
 
 /** The move a firing makes. */
-export function moveOf(f: RectFiring): RectMove {
+function moveOf(f: RectReason): RectMove {
   if (f.kind === "line") return { type: "edge", ...f.edge };
   return { type: "rect", erasing: false, ...f.rect };
 }
 
-function stepOf(s: RectState, f: RectFiring): HintStep<RectMove, RectHint, RectRung> {
-  return narratedStep({
-    move: moveOf(f),
-    rung: f.kind,
-    words: say.firing(s, f),
-    highlights: null,
-  });
+/** What each technique says, as the hint's sentences read it. */
+type RectSays = rect.SaysById;
+
+/** What the walk reads a firing by: the board as the plan's steps have drawn
+ * it, and the marks. */
+interface RectWalkContext {
+  board: RectState;
+  dl: rect.Dealt;
+  marks: CellMarks;
 }
 
-/** The first firing the walk from the player's marks gives that draws
- * something, or `null` where the ladder has none. */
-export function firstFiring(state: RectState): RectFiring | null {
-  const next = hintWalk(
-    state.w,
-    state.h,
-    state,
-    marksOf(state),
-    stepBudget("rect hint"),
+/** What a sentence is told of its step: why the firing holds. */
+interface RectMarked {
+  reason: RectReason;
+}
+
+/** Every technique's sentence is `say.firing` of its reason. */
+const sentence = (
+  _spoken: unknown,
+  { reason }: RectMarked,
+  state: RectState,
+): Sentence => say.firing(state, reason);
+
+const sentences: {
+  [K in keyof RectSays]: (
+    spoken: EdgeSpoken<RectSays[K]>,
+    marked: RectMarked,
+    state: RectState,
+  ) => Sentence;
+} = {
+  fit: sentence,
+  uncovered: sentence,
+  boxed: sentence,
+  reach: sentence,
+  overlap: sentence,
+  starve: sentence,
+  line: sentence,
+};
+
+/** Why a taken firing drew what it did, from the edges as they stood before
+ * it: `grid`. */
+function reasonBefore(
+  taken: Taken,
+  ctx: RectWalkContext,
+  grid: ArrayLike<number>,
+): RectReason {
+  const { says } = spokenOf<{ terms: rect.SaysById[RectRung]["terms"] }>(taken);
+  return reasonOf(
+    { sp: ctx.marks.sp, grid },
+    ctx.dl,
+    taken.entry.id as RectRung,
+    says.terms,
   );
-  for (let f = next(); f !== null; f = next()) if (drawsSomething(state, f)) return f;
-  return null;
+}
+
+/** A firing's step: the rectangle or line it draws on the walk's board. A
+ * rectangle the player drew already, proved whole, or a side of one proved a
+ * line, is no step: nothing is left to draw. */
+function stepOf(
+  fired: Fired<RectSays[keyof RectSays], RectWalkContext>,
+): { move: RectMove; highlights: RectHint; marked: RectMarked }[] {
+  const { taken, ctx, marks: m } = fired;
+  // The edges as they stood before the firing: every edge it sets was open.
+  const before = Uint8Array.from(m.grid);
+  for (let i = 0; i < taken.facts.length; i += 3) before[taken.facts[i + 1]] = 0;
+  const reason = reasonBefore(taken, ctx, before);
+  if (!drawsSomething(ctx.board, reason)) return [];
+  const move = moveOf(reason);
+  ctx.board = executeMove(ctx.board, move);
+  return [{ move, highlights: null, marked: { reason } }];
+}
+
+/** The ladder over the player's lines, and the inside of each rectangle they
+ * drew round a clue. */
+function rectWalk(state: RectState): {
+  marks: CellMarks;
+  entries: Ladder["entries"];
+  ctx: RectWalkContext;
+} {
+  const { m, ladder, dl } = deduction(state.w, state.h, state, marksOf(state));
+  return { marks: m, entries: ladder.entries, ctx: { board: state, dl, marks: m } };
 }
 
 /**
  * The plan from the player's lines to the end, a step per rectangle or line.
  * Stops where the ladder runs out.
  */
-export function rectHint(state: RectState): HintResult<RectMove, RectHint, RectRung> {
-  const budget = stepBudget("rect hint");
-  const next = hintWalk(state.w, state.h, state, marksOf(state), budget);
-  const board = { s: state };
-  const steps: HintStep<RectMove, RectHint, RectRung>[] = [];
-  deduceHintPlan({
-    board,
-    status: (b) => isSolved(b.s),
-    incomplete: false,
-    next: () => {
-      const f = next();
-      // A rectangle the player drew already, proved whole, or a side of one
-      // proved a line, is no step: nothing is left to draw.
-      if (f !== null && drawsSomething(board.s, f)) {
-        steps.push(stepOf(board.s, f));
-        board.s = executeMove(board.s, moveOf(f));
-      }
-      return f;
-    },
-    budget,
-  });
-  if (steps.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  return { ok: true, steps };
-}
+export const rectHint = describedEdgeHint<
+  RectState,
+  RectMove,
+  RectHint,
+  RectMarked,
+  RectWalkContext,
+  RectSays,
+  RectRung
+>({
+  name: "rect hint",
+  walk: rectWalk,
+  tiers: { lowest: () => HINT_TIER, count: HINT_TIER + 1 },
+  plan: 40,
+  done: (_marks, ctx) => isSolved(ctx.board),
+  reads: (taken, ctx) =>
+    readsOf(ctx.marks.sp, reasonBefore(taken, ctx, ctx.marks.grid)),
+  step: stepOf,
+  say: sentences,
+});
 
 /**
  * The step is done when the player's move leaves exactly the lines the step's

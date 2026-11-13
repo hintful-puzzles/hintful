@@ -32,6 +32,7 @@ const MOVED = [
   "path",
   "spokes",
   "signpost",
+  "rect",
 ];
 
 /** The boards dealt a preset: more than one, so a rare rung is more likely met. */

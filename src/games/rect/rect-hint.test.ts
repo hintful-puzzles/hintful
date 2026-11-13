@@ -10,11 +10,11 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newDesc } from "./generator.ts";
-import { firstFiring, moveOf, rectHint, rectKeepTrack } from "./hint.ts";
+import { rectHint, rectKeepTrack } from "./hint.ts";
 import { rectGame } from "./index.ts";
 import { executeMove, isSolved, newState } from "./moves.ts";
 import { COL_HINT_CELL } from "./render.ts";
-import { ladderFinishes, RECT_RUNGS, type RectReason } from "./solver.ts";
+import { ladderFinishes, RECT_RUNGS } from "./solver.ts";
 import {
   MODE_RECT,
   type RectMove,
@@ -32,11 +32,8 @@ const params = (w: number, h: number, expandfactor = 0): RectParams => ({
 });
 const P7 = params(7, 7);
 
-/** The line a step opens with, when one clue alone has fits across it. */
-function soleCrossing(state: RectState): Extract<RectReason, { kind: "line" }> | null {
-  const f = firstFiring(state);
-  return f?.kind === "line" && f.clues.length === 1 ? f : null;
-}
+/** A line step's words when one clue alone has fits across the edge. */
+const SOLE_CLUE = /^Only the outlined \d+ can cross this edge/;
 
 const finishes = (s: RectState, cap?: number): boolean =>
   ladderFinishes(s.w, s.h, s, cap);
@@ -60,19 +57,17 @@ const pinned = describeHintPins({
   params: [P7, params(9, 9), params(10, 10, 0.5)],
   seeds: 400,
   kinds: {
-    lineTakes: (step, state) => {
-      const c = soleCrossing(state);
-      return (
-        step.rung === "line" &&
-        c !== null &&
-        c.misses.length === 0 &&
-        c.owners.length === 1
-      );
-    },
-    lineMisses: (step, state) => {
-      const c = soleCrossing(state);
-      return step.rung === "line" && c !== null && c.takes.length === 0;
-    },
+    // The squares a fit would take are striped, and one it would miss are
+    // outlined: the marks say which reason a line has.
+    lineTakes: (step) =>
+      step.rung === "line" &&
+      SOLE_CLUE.test(step.explanation) &&
+      stepMarks(step).of("stripes", CELL).length > 0 &&
+      !step.explanation.includes("would miss"),
+    lineMisses: (step) =>
+      step.rung === "line" &&
+      SOLE_CLUE.test(step.explanation) &&
+      stepMarks(step).of("stripes", CELL).length === 0,
     rectangle: (step) => step.move.type === "rect" && step.move.w * step.move.h > 1,
     // A fit outlines only the clues its other rectangles would take in.
     blockedByClue: (step) =>
@@ -121,13 +116,17 @@ describe("rect hint rungs", () => {
       for (let seed = 0; seed < 6; seed++) {
         const p = { ...params(9, 9, seed % 2), diff };
         let s = newState(p, newDesc(p, randomNew(`afresh-${seed}`)).desc);
-        const plan = rectHint(s);
-        // An Unreasonable board can be one the ladder has nothing to say of.
-        for (const step of plan.ok ? plan.steps : []) {
-          if (step.rung) rungs.add(step.rung);
-          s = executeMove(s, step.move);
+        // A plan holds a batch of steps: ask again as one runs out. An
+        // Unreasonable board can be one the ladder has nothing to say of.
+        for (let round = 0; round < 20 && !isSolved(s); round++) {
+          const plan = rectHint(s);
+          if (!plan.ok) break;
+          for (const step of plan.steps) {
+            if (step.rung) rungs.add(step.rung);
+            s = executeMove(s, step.move);
+          }
         }
-        expect(isSolved(s) || firstFiring(s) === null).toBe(true);
+        expect(isSolved(s) || !rectHint(s).ok).toBe(true);
       }
     expect([...rungs].sort()).toEqual(
       RECT_RUNGS.filter((r) => !(r in UNREACHED)).sort(),
@@ -165,30 +164,29 @@ describe("rect hint rungs", () => {
 
   it("several clues across one edge share a clause", () => {
     const p = params(15, 15, 1);
+    const said =
+      "Only the outlined 12, 24 and 24 can cross this edge, and each would take another outlined clue's striped square, so the edge is a line.";
     let s = newState(p, "h12e8d15zc6a12k40d24e10zk24ze24k20zl10t20h");
-    let f = firstFiring(s);
-    while (f && !(f.kind === "line" && f.clues.length > 1)) {
-      s = executeMove(s, moveOf(f));
-      f = firstFiring(s);
+    // Play each first step until the board reaches the one that says it.
+    for (let i = 0; i < 500; i++) {
+      const res = rectHint(s);
+      if (!res.ok) throw new Error(res.error);
+      if (res.steps[0].explanation === said) return;
+      s = executeMove(s, res.steps[0].move);
     }
-    expect(f?.kind).toBe("line");
-    const res = rectHint(s);
-    if (!res.ok) throw new Error(res.error);
-    expect(res.steps[0].explanation).toBe(
-      "Only the outlined 12, 24 and 24 can cross this edge, and each would take another outlined clue's striped square, so the edge is a line.",
-    );
+    throw new Error("no step on the way says it");
   });
 
   it("a line cuts a fit: every fit across the edge it draws is gone after it", () => {
     // A line no fit crosses would change nothing a later step reads, so the
     // rung leaves such an edge alone.
     const { state } = pinned("lineTakes");
-    const f = firstFiring(state);
-    if (f?.kind !== "line") throw new Error("no line");
-    expect(f.clues.length).toBeGreaterThan(0);
     const before = rectHint(state);
-    const after = rectHint(executeMove(state, moveOf(f)));
-    if (!before.ok || !after.ok) throw new Error("no plan");
+    if (!before.ok) throw new Error("no plan");
+    const [first] = before.steps;
+    expect(first.rung).toBe("line");
+    const after = rectHint(executeMove(state, first.move));
+    if (!after.ok) throw new Error("no plan");
     expect(after.steps.length).toBe(before.steps.length - 1);
   });
 

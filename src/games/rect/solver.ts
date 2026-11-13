@@ -11,7 +11,8 @@
  * error ({@link searchAnswers}) counts a board's answers to two: it serves
  * the Solve command and `findMistakes`, and deals the Unreasonable tier.
  *
- * A hint walks the same ladder, one firing at a time ({@link hintWalk}).
+ * A hint walks the same ladder, one firing at a time (`hint.ts`), and tells
+ * each from {@link reasonOf}.
  */
 
 import {
@@ -22,6 +23,7 @@ import {
   searchAnswers as searchBoard,
   solvedPositions,
 } from "../../engine/answer-search.ts";
+import { assertNever } from "../../engine/assert-never.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
   clueAt,
@@ -41,13 +43,9 @@ import {
   describedLadder,
   type Ladder,
   ladderTechniques,
-  ladderWalk,
-  type ReasonOf,
   runLadder,
-  type Taken,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import type { StepBudget } from "../../engine/step-budget.ts";
 import type { Rect } from "../../engine/types.ts";
 import type { RectEdge } from "./hint-marks.ts";
 import * as rect from "./rect.compiled.ts";
@@ -169,13 +167,19 @@ export type RectReason =
 export const RECT_RUNGS = rect.ladder.map((e) => e.id);
 export type RectRung = rect.LadderId;
 
+/** The edges as a firing found them: all a reason reads of the marks. */
+interface EdgesView {
+  readonly sp: GridSpace;
+  readonly grid: ArrayLike<number>;
+}
+
 /**
- * Why the other rectangles round the clue at `c` fail, on the marks the
+ * Why the other rectangles round the clue at `c` fail, on the edges the
  * firing read: off the board, taking in another clue, crossing a line, or
  * leaving out a square an open edge joins to them, which is part of the
  * clue's own drawn rectangle or of another's.
  */
-function fitReason(m: CellMarks, dl: rect.Dealt, q: number, r: number): RectReason {
+function fitReason(m: EdgesView, dl: rect.Dealt, q: number, r: number): RectReason {
   const { sp } = m;
   const { w, h } = sp;
   const c = dl.number.at[q];
@@ -225,91 +229,82 @@ function fitReason(m: CellMarks, dl: rect.Dealt, q: number, r: number): RectReas
   };
 }
 
-/** A reason built once a firing, from its binding, and shared by each of its
- * edges: a firing draws a whole rectangle. */
-function perFiring<B extends object>(
-  build: (binding: B, m: CellMarks) => RectReason,
-): ReasonOf<B> {
-  let last: B | null = null;
-  let reason: RectReason | null = null;
-  return (binding, _at, _n, m) => {
-    if (binding !== last || reason === null) {
-      last = binding;
-      reason = build(binding, m);
-    }
-    return reason;
-  };
-}
-
 const sorted = (xs: Iterable<number>): number[] => [...xs].sort((a, b) => a - b);
 
-/** The ladder over the dealt board, each technique with its reason: built
- * from the binding, on the marks before the firing. */
-function rectLadder(dl: rect.Dealt): Ladder {
+/**
+ * Why the firing of technique `kind` drew what it did, from the terms it
+ * says (its binding) and the edges as they stood before it.
+ */
+export function reasonOf(
+  m: EdgesView,
+  dl: rect.Dealt,
+  kind: RectRung,
+  terms: rect.SaysById[RectRung]["terms"],
+): RectReason {
+  const { sp } = m;
   const at = (q: number): number => dl.number.at[q];
-  return describedLadder(rect, {
-    fit: compiledRung(
-      rect.fit,
-      dl,
-      perFiring(({ q, F }: rect.FitBinding, m) => fitReason(m, dl, q, F[0])),
-    ),
-    uncovered: compiledRung(rect.uncovered, dl, () => {
+  switch (kind) {
+    case "fit": {
+      const { q, F } = terms as rect.SaysById["fit"]["terms"];
+      return fitReason(m, dl, q, F[0]);
+    }
+    case "uncovered":
       throw new Error("an uncovered square makes no fact, only a contradiction");
-    }),
-    boxed: compiledRung(
-      rect.boxed,
-      dl,
-      perFiring(({ q, r }: rect.BoxedBinding, m) => ({
-        kind: "boxed",
-        clue: at(q),
-        rect: rectOf(m.sp, r),
-      })),
-    ),
-    reach: compiledRung(
-      rect.reach,
-      dl,
-      perFiring(({ c, q, r }: rect.ReachBinding, m) => ({
-        kind: "reach",
-        clue: at(q),
-        rect: rectOf(m.sp, r),
-        square: c,
-      })),
-    ),
-    overlap: compiledRung(
-      rect.overlap,
-      dl,
-      perFiring(({ p, K, q, F, r }: rect.OverlapBinding, m) => ({
+    case "boxed": {
+      const { q, r } = terms as rect.SaysById["boxed"]["terms"];
+      return { kind: "boxed", clue: at(q), rect: rectOf(sp, r) };
+    }
+    case "reach": {
+      const { c, q, r } = terms as rect.SaysById["reach"]["terms"];
+      return { kind: "reach", clue: at(q), rect: rectOf(sp, r), square: c };
+    }
+    case "overlap": {
+      const { p, K, q, F, r } = terms as rect.SaysById["overlap"]["terms"];
+      return {
         kind: "overlap",
         clue: at(q),
-        rect: rectOf(m.sp, r),
+        rect: rectOf(sp, r),
         other: at(p),
         // The squares of the core some fit of the clue would take.
-        core: K.filter((x) => F.some((s) => rectHolds(m.sp, s, x))),
-      })),
-    ),
-    starve: compiledRung(
-      rect.starve,
-      dl,
-      perFiring(({ q, r, Z, U }: rect.StarveBinding, m) => ({
+        core: K.filter((x) => F.some((s) => rectHolds(sp, s, x))),
+      };
+    }
+    case "starve": {
+      const { q, r, Z, U } = terms as rect.SaysById["starve"]["terms"];
+      return {
         kind: "starve",
         clue: at(q),
-        rect: rectOf(m.sp, r),
+        rect: rectOf(sp, r),
         starved: sorted(Z.map(at)),
         stranded: sorted(U),
-      })),
-    ),
-    line: compiledRung(
-      rect.line,
-      dl,
-      perFiring(({ e, C, O, T, M }: rect.LineBinding, m) => ({
+      };
+    }
+    case "line": {
+      const { e, C, O, T, M } = terms as rect.SaysById["line"]["terms"];
+      return {
         kind: "line",
-        edge: lineOf(m.sp, e),
+        edge: lineOf(sp, e),
         clues: C.map(at),
         takes: sorted(T),
         owners: O.map(at),
         misses: sorted(M),
-      })),
-    ),
+      };
+    }
+    default:
+      return assertNever(kind, "rect reason");
+  }
+}
+
+/** The ladder over the dealt board: the description's techniques, compiled. */
+function rectLadder(dl: rect.Dealt): Ladder {
+  return describedLadder(rect, {
+    fit: compiledRung(rect.fit, dl),
+    uncovered: compiledRung(rect.uncovered, dl),
+    boxed: compiledRung(rect.boxed, dl),
+    reach: compiledRung(rect.reach, dl),
+    overlap: compiledRung(rect.overlap, dl),
+    starve: compiledRung(rect.starve, dl),
+    line: compiledRung(rect.line, dl),
   });
 }
 
@@ -317,7 +312,7 @@ function rectLadder(dl: rect.Dealt): Ladder {
 
 /** The working state of a deduction: the marks on the edges, and the ladder
  * over the board's clues. */
-interface Deduction {
+export interface Deduction {
   m: CellMarks;
   ladder: Ladder;
   dl: rect.Dealt;
@@ -325,7 +320,7 @@ interface Deduction {
 
 /** The marks over `grid`, a value an edge and 0 where none is known: every
  * edge undecided where none is given. */
-function deduction(
+export function deduction(
   w: number,
   h: number,
   clues: RectClues,
@@ -503,11 +498,8 @@ export function answerOf(state: RectClues & { w: number; h: number }): RectAnswe
 
 // --- the hint's walk ---------------------------------------------------------
 
-/** One firing, in the player's terms: why, and the edges it decided. */
-export type RectFiring = RectReason & { facts: readonly number[] };
-
 /** The squares a firing's reason turns on, which a plan continues from. */
-function readsOf(sp: GridSpace, r: RectReason): number[] {
+export function readsOf(sp: GridSpace, r: RectReason): number[] {
   const cells = (x: Rect): number[] => {
     const out: number[] = [];
     for (let y = x.y; y < x.y + x.h; y++)
@@ -538,27 +530,5 @@ function readsOf(sp: GridSpace, r: RectReason): number[] {
   }
 }
 
-/**
- * The ladder's firings from the marks `grid` (the player's lines, and the
- * inside of each rectangle they drew round a clue), one a call, each the one
- * that carries on from the rectangles the plan is working on (`ladderWalk`),
- * or `null` when the ladder has nothing left.
- */
-export function hintWalk(
-  w: number,
-  h: number,
-  clues: RectClues,
-  grid: Uint8Array,
-  budget: StepBudget,
-): () => RectFiring | null {
-  const { m, ladder } = deduction(w, h, clues, grid);
-  m.budget = budget;
-  const walk = ladderWalk(m, ladder.entries, { [TIERS]: TOP }, (f: Taken) =>
-    readsOf(m.sp, f.reasons[0] as RectReason),
-  );
-  return () => {
-    const taken = walk.next();
-    if (taken === null || taken === "contradiction") return null;
-    return { ...(taken.reasons[0] as RectReason), facts: taken.facts };
-  };
-}
+/** The tier the hint's walk runs at: every technique. */
+export const HINT_TIER = TOP;

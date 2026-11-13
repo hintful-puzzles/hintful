@@ -219,12 +219,18 @@ techniques:
     conclude: >-
       |F| > 0 and (|F| = 1 implies (forall r in F:
       (forall e in inner(r): place(e, 2)) and (forall e in rim(r): place(e, 1))))
+    says:
+      terms: { q: q, F: F }
+      marks: {}
   # A square no clue has a fit over leaves the marks with no answer, as a
   # clue with no fit does.
   - id: uncovered
     tier: Easy
     for: "c in cells"
     conclude: "|reachers(c)| > 0"
+    says:
+      terms: { c: c }
+      marks: {}
   # A fit of clue q whose every side is a line is closed round q alone, and
   # every square inside lines is some clue's inside them, so it is q's: a
   # rectangle drawn round a clue that names no size.
@@ -234,6 +240,9 @@ techniques:
       q in clues(number), F = fits(q) where |F| > 1,
       r in F where forall e in rim(r): value(e) = 1
     conclude: "(forall e in inner(r): place(e, 2)) and (forall e in rim(r): place(e, 1))"
+    says:
+      terms: { q: q, r: r }
+      marks: {}
   # Every square is some clue's. A square only one clue can reach is that
   # clue's, and where one fit of it covers the square, the clue takes it.
   - id: reach
@@ -242,6 +251,9 @@ techniques:
       c in cells, Q = reachers(c) where |Q| = 1, q = nth(Q, 0),
       F = {r in fits(q) where c in cells(r)} where |F| = 1, r = nth(F, 0)
     conclude: "(forall e in inner(r): place(e, 2)) and (forall e in rim(r): place(e, 1))"
+    says:
+      terms: { c: c, q: q, r: r }
+      marks: {}
   # Wherever clue p goes, it covers its core, so a fit of another clue q
   # that takes a square of it is out. Where one fit of q is left, q takes
   # it.
@@ -253,6 +265,9 @@ techniques:
       G = {r in F where not (exists x in K: x in cells(r))} where |G| = 1 and |G| < |F|,
       r = nth(G, 0)
     conclude: "(forall e in inner(r): place(e, 2)) and (forall e in rim(r): place(e, 1))"
+    says:
+      terms: { p: p, K: K, q: q, F: F, r: r }
+      marks: {}
   # A fit of clue q that would leave another clue no fit (Z), or a square
   # outside it that no other clue could still cover (U), is out. Where one
   # fit is left, q takes it.
@@ -266,6 +281,9 @@ techniques:
       U = {x in cells where exists s in F where s != r and x not in cells(s):
       not (exists j in reachers(x) where j != q, t in fits(j) where x in cells(t): not meets(t, s))}
     conclude: "(forall e in inner(r): place(e, 2)) and (forall e in rim(r): place(e, 1))"
+    says:
+      terms: { q: q, r: r, Z: Z, U: U }
+      marks: {}
   # Where every fit across an edge is out, for taking a square another
   # clue's core holds (T, of the clues O) or for leaving out a square only
   # its own clue reaches (M), the squares either side are in different
@@ -286,3 +304,6 @@ techniques:
       M = set(m over q in C, r in fits(q) where a in cells(r) and b in cells(r)
       and not owned(q, r), m = nth({x in sole(q) where x not in cells(r)}, 0))
     conclude: "place(e, 1)"
+    says:
+      terms: { e: e, C: C, O: O, T: T, M: M }
+      marks: {}
