@@ -16,6 +16,7 @@ import {
   phrase,
   type Sentence,
   so,
+  unshaped,
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
@@ -69,10 +70,10 @@ function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
           : said.n === 4
             ? "at their shared corner"
             : "they touch";
-      return so({
-        look: phrase`A galaxy covers the cells its dot sits on`,
-        move: phrase`${cells} must belong to ${ringedDot(p, `the ${dot(said.black)}`)} ${where}`,
-      });
+      return unshaped(
+        phrase`${cells} must belong to ${ringedDot(p, `the ${dot(said.black)}`)} ${where}.`.capitalized(),
+        "bare",
+      );
     }
 
     // A cell that *holds* its own dot draws no arrow — there is nothing to point
