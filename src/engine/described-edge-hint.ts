@@ -74,11 +74,13 @@ export interface EdgeHintSpec<
   /** A name for the walk's step budget. */
   name: string;
   /** What to walk: the state as the description's marks, the ladder with no
-   * technique above tier `cap`, and what the game reads its firings by. */
+   * technique above tier `cap`, and what the game reads its firings by (made
+   * afresh for each plan). `null` where the player's own marks clash, which
+   * leaves a hint nothing to walk from. */
   walk(
     state: State,
     cap: number,
-  ): { marks: CellMarks; entries: readonly LadderEntry[]; ctx: Ctx };
+  ): { marks: CellMarks; entries: readonly LadderEntry[]; ctx: Ctx } | null;
   /** The walk begins at the lowest tier that solves the board and goes up a
    * tier only where one has nothing to say. */
   tiers: { lowest(state: State): number; count: number };
@@ -92,6 +94,10 @@ export interface EdgeHintSpec<
   /** The elements a firing writes, which the walk continues from. Left out, a
    * firing writes the two cells each of its edges lies between. */
   writes?(taken: Taken, ctx: Ctx): readonly number[];
+  /** The elements a firing reads beyond the marks it says (its outline and
+   * `reads`), which the walk continues from too: the squares its own facts
+   * touch, where the reason names others. */
+  reads?(taken: Taken, ctx: Ctx): readonly number[];
   /** A firing's legs, one move each, with their highlights and what each leg's
    * words are told of them. A firing is one step unless it is a journey of
    * edges, one leg an edge: the legs after the first continue it. */
@@ -129,8 +135,10 @@ export function describedEdgeHint<
 
   /** The steps the ladder makes from `state` at tier `cap`, or the refusal
    * where its marks contradict themselves. */
-  const stepsAt = (state: State, cap: number): Step[] | "contradiction" => {
-    const { marks: m, entries, ctx } = spec.walk(state, cap);
+  const stepsAt = (state: State, cap: number): Step[] | "contradiction" | "clash" => {
+    const walked = spec.walk(state, cap);
+    if (walked === null) return "clash";
+    const { marks: m, entries, ctx } = walked;
     m.budget = stepBudget(spec.name);
     const walk = ladderWalk(
       m,
@@ -138,7 +146,11 @@ export function describedEdgeHint<
       { [TIERS]: cap },
       (taken) => {
         const { marks } = spokenOf<SaysOf>(taken).says;
-        return [...(marks.reads ?? []), ...(marks.outline ?? [])];
+        return [
+          ...(marks.reads ?? []),
+          ...(marks.outline ?? []),
+          ...(spec.reads?.(taken, ctx) ?? []),
+        ];
       },
       spec.writes === undefined
         ? {}
@@ -190,6 +202,7 @@ export function describedEdgeHint<
       cap++
     )
       steps = stepsAt(state, cap);
+    if (steps === "clash") return { ok: false, error: DEDUCTION_EXHAUSTED };
     // A contradiction here is the player's own: the mistake check re-solves
     // from the clues and finds none to name, so it is left unlocalized.
     if (steps === "contradiction")

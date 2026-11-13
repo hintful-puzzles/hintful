@@ -26,6 +26,11 @@ const MOVED = [
   "sticks",
   "separate",
   "palisade",
+  "dominosa",
+  "pearl",
+  "tracks",
+  "path",
+  "spokes",
 ];
 
 /** The boards dealt a preset: more than one, so a rare rung is more likely met. */

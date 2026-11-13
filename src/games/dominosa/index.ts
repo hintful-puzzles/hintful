@@ -12,20 +12,9 @@
 import { solveFromAnswer } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
-import type {
-  Game,
-  HintResult,
-  HintStep,
-  HintTrackVerdict,
-  SolveResult,
-  UiUpdate,
-} from "../../engine/game.ts";
+import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
 import { numberItem } from "../../engine/params.ts";
 import {
   digitOf,
@@ -36,7 +25,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import {
   interpretTargetVerbs,
   rulingOut,
@@ -46,7 +34,13 @@ import {
 } from "../../engine/target-verb.ts";
 import type { Point, ReferenceItem, ReferenceModel } from "../../engine/types.ts";
 import { newDominosaDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import {
+  DOMINOSA_RUNGS,
+  type DominosaHint,
+  type DominosaRung,
+  dominosaHint,
+  dominosaHintKeepTrack,
+} from "./hint.ts";
 import {
   border,
   colors,
@@ -56,14 +50,7 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import {
-  answerOf,
-  DOMINOSA_RUNGS,
-  type DominosaFiring,
-  type DominosaRung,
-  hintFirings,
-  solveNumbers,
-} from "./solver.ts";
+import { answerOf, solveNumbers } from "./solver.ts";
 import {
   cloneState,
   DCOUNT,
@@ -394,116 +381,6 @@ function revealOne(state: DominosaState, solved: DominosaState): DominosaMove | 
   return i < 0 ? null : { type: "domino", d1: i, d2: solved.grid[i] };
 }
 
-// --- hint ------------------------------------------------------------------
-
-/** What a dominosa hint step's ringed spot asks for, which the words do not
- * carry: a domino placed there (its two squares ringed as one shape), or a
- * barrier between its two squares (each ringed, with the wall between them
- * recolored). */
-export interface DominosaHint {
-  kind: "place" | "barrier";
-}
-
-const pointOf = (i: number, w: number): Point => ({ x: i % w, y: Math.floor(i / w) });
-
-const edgeKey = (a: number, b: number): string => (a < b ? `${a}-${b}` : `${b}-${a}`);
-
-/** The squares a step's words outline: those its reason rests on. */
-function evidenceOf(f: DominosaFiring): number[] {
-  switch (f.kind) {
-    case "onlySpot":
-    case "parity":
-      return [];
-    case "squareOnly":
-    case "squareSingleDomino":
-    case "localDuplicate":
-      return [f.square];
-    case "mustOverlap":
-    case "localDuplicate2":
-    case "set":
-    case "setDoubles":
-      return f.squares;
-  }
-}
-
-function hint(
-  state: DominosaState,
-): HintResult<DominosaMove, DominosaHint, DominosaRung> {
-  const { w, numbers, grid, edges, params } = state;
-  const wh = numbers.length;
-
-  // A hint teaches a *forced* deduction; a board with several answers has none.
-  if (answerOf(state).kind !== "one")
-    return { ok: false, error: PUZZLE_NOT_REASONABLE };
-
-  const walk = hintFirings(params, numbers, grid, stepBudget("dominosa hint"));
-  if (walk === null) return { ok: false, error: DEDUCTION_EXHAUSTED };
-
-  // Barriers the player already drew (or we've already emitted) — skip display.
-  const seenEdges = new Set<string>();
-  for (let i = 0; i < wh; i++) {
-    if (edges[i] & EDGE_R) seenEdges.add(edgeKey(i, i + 1));
-    if (edges[i] & EDGE_B) seenEdges.add(edgeKey(i, i + w));
-  }
-
-  const steps: HintStep<DominosaMove, DominosaHint, DominosaRung>[] = [];
-  for (let firing = walk.next(); firing !== null; firing = walk.next()) {
-    const evidence = evidenceOf(firing).map((i) => pointOf(i, w));
-    // The numbers the domino or barrier would show name it in the sentence,
-    // whose words are `hint-text.ts`'s.
-    if (firing.kind === "onlySpot" || firing.kind === "squareOnly") {
-      if (!firing.place) throw new Error(`dominosa: ${firing.kind} placed no domino`);
-      const [a, b] = firing.place;
-      const words = say.place(firing, numbers[a], numbers[b], [a, b], evidence);
-      steps.push({
-        move: { type: "domino", d1: a, d2: b },
-        rung: firing.kind,
-        explanation: words.text,
-        words,
-        highlights: { kind: "place" },
-      });
-      continue;
-    }
-    const fresh = firing.barriers.filter(([a, b]) => !seenEdges.has(edgeKey(a, b)));
-    for (let idx = 0; idx < fresh.length; idx++) {
-      const [a, b] = fresh[idx];
-      seenEdges.add(edgeKey(a, b));
-      // A later barrier of the same firing does not repeat the reason.
-      const words =
-        idx > 0
-          ? say.barrierNext([a, b], evidence)
-          : say.barrier(firing, numbers[a], numbers[b], [a, b], evidence);
-      steps.push({
-        move: { type: "edge", d1: a, d2: b },
-        rung: firing.kind,
-        explanation: words.text,
-        words,
-        ...(idx > 0 ? { continuesPrevious: true } : {}),
-        highlights: { kind: "barrier" },
-      });
-    }
-  }
-
-  if (steps.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  return { ok: true, steps };
-}
-
-/** The player's move completes the step iff it is the step's exact
- * domino/edge move; anything else drops the plan to recompute. */
-function hintKeepTrack(
-  m: DominosaMove,
-  step: HintStep<DominosaMove, DominosaHint>,
-  _state: DominosaState,
-): HintTrackVerdict {
-  const sm = step.move;
-  if (m.type !== sm.type) return "off";
-  if (m.type === "domino" && sm.type === "domino")
-    return m.d1 === sm.d1 && m.d2 === sm.d2 ? "completed" : "off";
-  if (m.type === "edge" && sm.type === "edge")
-    return m.d1 === sm.d1 && m.d2 === sm.d2 ? "completed" : "off";
-  return "off";
-}
-
 // --- text format (upstream game_text_format / draw_domino) -----------------
 
 function drawDomino(
@@ -719,7 +596,7 @@ export const dominosaGame: Game<
   revealOne,
   reference,
   selectReference,
-  hint,
+  hint: dominosaHint,
   hintMarks: {
     roles: {
       ring: "the spot the step is about, round its two squares as one domino: empty where a domino must go, or with a thick line across its middle where one can't. That line is the one the step asks you to draw.",
@@ -728,7 +605,7 @@ export const dominosaGame: Game<
     },
   },
   hintRungs: DOMINOSA_RUNGS,
-  hintKeepTrack,
+  hintKeepTrack: dominosaHintKeepTrack,
   hintGesture: (s, ui, ds, m) => {
     if (m.type === "solve") throw new Error("dominosa: a hint never solves");
     const { d1, d2 } = m;

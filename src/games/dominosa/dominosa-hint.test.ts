@@ -8,8 +8,9 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectPieceRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newDominosaDesc } from "./generator.ts";
+import type { DominosaHint } from "./hint.ts";
 import { SPOT } from "./hint-text.ts";
-import { type DominosaHint, dominosaGame } from "./index.ts";
+import { dominosaGame } from "./index.ts";
 import { border, PREFERRED_TILE_SIZE } from "./render.ts";
 import { solveNumbers } from "./solver.ts";
 import {

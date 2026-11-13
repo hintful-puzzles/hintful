@@ -130,6 +130,8 @@ techniques:
       a in range(0, n), b in range(a, n), P = spotsOf(a, b) where |P| = 1,
       e = nth(P, 0) where not known(e)
     conclude: "place(e, 1)"
+    says:
+      marks: {}
   # A square with one spot left round it is covered there; with none, the
   # marks are inconsistent.
   - id: squareOnly
@@ -138,6 +140,8 @@ techniques:
       c in cells, S = spots(c)
       where |S| <= 1 and not (exists f in S: known(f))
     conclude: "|S| = 1 and place(nth(S, 0), 1)"
+    says:
+      marks: { outline: "{c}" }
   # A square whose spots left are all one domino's takes that domino: its
   # other spots are out.
   - id: squareSingleDomino
@@ -148,6 +152,8 @@ techniques:
     conclude: >-
       forall f in edges where f not in S and value(f) != 2 and same(f, s):
       place(f, 2)
+    says:
+      marks: { outline: "{c}" }
   # A spot that shares a square with every spot left for a domino would leave
   # it nowhere to go: it is out. Such a spot touches each of them, so it is
   # found beside the first.
@@ -161,6 +167,8 @@ techniques:
       where edge(x, y) not in P and value(edge(x, y)) != 2
       and (forall f in P: touch(f, edge(x, y))):
       place(edge(x, y), 2)
+    says:
+      marks: { outline: "set(z over f in P, z in {end1(f), end2(f)})" }
   # A domino on spot p rules out the spot q beside it, and where every other
   # spot left round q's far square y is p's domino, y could then be covered
   # only by a second copy of it: p is out.
@@ -171,6 +179,8 @@ techniques:
       q = edge(x, y) where q != p and value(q) != 2
       and (forall r in spots(y) where r != q: same(r, p))
     conclude: "place(p, 2)"
+    says:
+      marks: { outline: "{y}" }
   # A domino on spot p rules out two spots beside it, whose far squares y and
   # z could then each be covered only by one domino, the same for both, on
   # two different spots: p is out.
@@ -186,6 +196,8 @@ techniques:
       S = {r in spots(z) where r != q2}
       where |S| >= 1 and (forall r in S: same(r, d) and not touch(r, q))
     conclude: "place(p, 2)"
+    says:
+      marks: { outline: "{y, z}" }
   # A spot whose domino would cut its squares' group, the squares the spots
   # left join, into two parts each of an even count would leave each part an
   # odd count of squares to cover: it is out. A spot on a ring of four spots
@@ -199,6 +211,8 @@ techniques:
       where end2(p) not in A and |A| mod 2 = 0
       and |through(end2(p), Q)| mod 2 = 0
     conclude: "place(p, 2)"
+    says:
+      marks: {}
   # Squares T showing a, no two of them joined by a spot left, whose spots
   # left show as many other numbers between them as there are squares, take
   # those dominoes between them: their spots away from T are out. Read only
@@ -215,6 +229,8 @@ techniques:
     conclude: >-
       forall x in S, y in adj4(x), f = edge(x, y)
       where value(f) != 2 and away(f, T) and num(y) in O: place(f, 2)
+    says:
+      marks: { outline: T }
   # The same where a spot left joins two squares of T, so the double a-a may
   # cover two of them. With one other number fewer than squares, T takes
   # every domino of a and those numbers, the double over two of its squares;
@@ -234,3 +250,5 @@ techniques:
       or (|O| < |T| and num(end1(f)) = num(end2(f))
       and not (end1(f) in T and end2(f) in T))):
       place(f, 2)
+    says:
+      marks: { outline: T }

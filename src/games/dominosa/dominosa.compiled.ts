@@ -19,6 +19,23 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "onlySpot" | "squareOnly" | "squareSingleDomino" | "mustOverlap" | "localDuplicate" | "localDuplicate2" | "parity" | "set" | "setDoubles";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  onlySpot: OnlySpotSays;
+  squareOnly: SquareOnlySays;
+  squareSingleDomino: SquareSingleDominoSays;
+  mustOverlap: MustOverlapSays;
+  localDuplicate: LocalDuplicateSays;
+  localDuplicate2: LocalDuplicate2Says;
+  parity: ParitySays;
+  set: SetSays;
+  setDoubles: SetDoublesSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["onlySpot","squareOnly","squareSingleDomino","mustOverlap","localDuplicate","localDuplicate2","parity","set","setDoubles"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "placed";
 
@@ -290,11 +307,17 @@ export interface OnlySpotBinding {
   e: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface OnlySpotSays {
+  terms: {  };
+  marks: {  };
+}
+
 const onlySpotFacts: number[] = [];
 const onlySpot_st24 = stamps();
 
 /** Its dearest read grows with the board as 1. */
-export function onlySpot(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlySpotBinding> | null): number {
+export function onlySpot(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlySpotBinding, OnlySpotSays> | null): number {
   const _g18: number[] = [];
   const facts = onlySpotFacts;
   let fired = 0;
@@ -351,7 +374,10 @@ export function onlySpot(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlySpot
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ a: v_a, b: v_b, P: v_P.slice(), e: v_e }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: {  }, marks: {  } };
+              if (!fire({ a: v_a, b: v_b, P: v_P.slice(), e: v_e }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -365,11 +391,17 @@ export interface SquareOnlyBinding {
   S: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SquareOnlySays {
+  terms: {  };
+  marks: { outline: readonly number[]; };
+}
+
 const squareOnlyFacts: number[] = [];
 const squareOnly_st22 = stamps();
 
 /** Its dearest read grows with the board as n. */
-export function squareOnly(b: Marks, sp: GridSpace, fire: Fire<SquareOnlyBinding> | null): number {
+export function squareOnly(b: Marks, sp: GridSpace, fire: Fire<SquareOnlyBinding, SquareOnlySays> | null): number {
   const _g18: number[] = [];
   const facts = squareOnlyFacts;
   let fired = 0;
@@ -445,7 +477,10 @@ export function squareOnly(b: Marks, sp: GridSpace, fire: Fire<SquareOnlyBinding
       if (!(_c47)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, S: v_S.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: {  }, marks: { outline: setOf(v_c).slice() } };
+          if (!fire({ c: v_c, S: v_S.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -458,11 +493,17 @@ export interface SquareSingleDominoBinding {
   s: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SquareSingleDominoSays {
+  terms: {  };
+  marks: { outline: readonly number[]; };
+}
+
 const squareSingleDominoFacts: number[] = [];
 const squareSingleDomino_st33 = stamps();
 
 /** Its dearest read grows with the board as n^2. */
-export function squareSingleDomino(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareSingleDominoBinding> | null): number {
+export function squareSingleDomino(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareSingleDominoBinding, SquareSingleDominoSays> | null): number {
   const _g29: number[] = [];
   const facts = squareSingleDominoFacts;
   let fired = 0;
@@ -610,7 +651,10 @@ export function squareSingleDomino(b: Marks, sp: GridSpace, cl: Dealt, fire: Fir
         if (!(_q84)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, S: v_S.slice(), s: v_s }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: {  }, marks: { outline: setOf(v_c).slice() } };
+            if (!fire({ c: v_c, S: v_S.slice(), s: v_s }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -625,12 +669,20 @@ export interface MustOverlapBinding {
   e: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface MustOverlapSays {
+  terms: {  };
+  marks: { outline: readonly number[]; };
+}
+
 const mustOverlapFacts: number[] = [];
 const mustOverlap_st23 = stamps();
+const mustOverlap_st68 = stamps();
 
 /** Its dearest read grows with the board as 1. */
-export function mustOverlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MustOverlapBinding> | null): number {
+export function mustOverlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MustOverlapBinding, MustOverlapSays> | null): number {
   const _g17: number[] = [];
+  const _g61: number[] = [];
   const facts = mustOverlapFacts;
   let fired = 0;
   let changed = false;
@@ -720,7 +772,26 @@ export function mustOverlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MustO
         if (!(_q45)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ a: v_a, b: v_b, P: v_P.slice(), e: v_e }, facts)) return 1;
+          if (fire !== null) {
+            _g61.length = 0;
+            mustOverlap_st68.pass++;
+            G62: {
+              const _a69 = v_P;
+              for (let _i70 = 0; _i70 < _a69.length; _i70++) {
+                const v_f = _a69[_i70];
+                const _t71 = sp.edgeEnds[2 * v_f];
+                const _t72 = sp.edgeEnds[2 * v_f + 1];
+                for (let _i73 = 0; _i73 < 2; _i73++) {
+                  const v_z = _i73 === 0 ? _t71 : _t72;
+                  if (_i73 === 1 && (v_z === _t71)) continue;
+                  const _t74 = v_z;
+                  if (_g61.length < 16) { if (!_g61.includes(_t74)) _g61.push(_t74); } else addOnce(_g61, mustOverlap_st68, _t74);
+                }
+              }
+            }
+            const _says = { terms: {  }, marks: { outline: _g61.slice() } };
+            if (!fire({ a: v_a, b: v_b, P: v_P.slice(), e: v_e }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -735,11 +806,17 @@ export interface LocalDuplicateBinding {
   q: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LocalDuplicateSays {
+  terms: {  };
+  marks: { outline: readonly number[]; };
+}
+
 const localDuplicateFacts: number[] = [];
 const localDuplicate_st49 = stamps();
 
 /** Its dearest read grows with the board as n. */
-export function localDuplicate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LocalDuplicateBinding> | null): number {
+export function localDuplicate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LocalDuplicateBinding, LocalDuplicateSays> | null): number {
   const _g44: number[] = [];
   const facts = localDuplicateFacts;
   let fired = 0;
@@ -871,7 +948,10 @@ export function localDuplicate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Lo
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ p: v_p, x: v_x, y: v_y, q: v_q }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: {  }, marks: { outline: setOf(v_y).slice() } };
+              if (!fire({ p: v_p, x: v_x, y: v_y, q: v_q }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -893,13 +973,19 @@ export interface LocalDuplicate2Binding {
   S: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LocalDuplicate2Says {
+  terms: {  };
+  marks: { outline: readonly number[]; };
+}
+
 const localDuplicate2Facts: number[] = [];
 const localDuplicate2_st119 = stamps();
 const localDuplicate2_st172 = stamps();
 const localDuplicate2_st217 = stamps();
 
 /** Its dearest read grows with the board as n. */
-export function localDuplicate2(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LocalDuplicate2Binding> | null): number {
+export function localDuplicate2(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LocalDuplicate2Binding, LocalDuplicate2Says> | null): number {
   const _g101: number[] = [];
   const _g114: number[] = [];
   const _g157: number[] = [];
@@ -1199,7 +1285,10 @@ export function localDuplicate2(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<L
                       if (!(true)) return -1;
                       if (changed || facts.length > 0) {
                         fired = 1;
-                        if (fire !== null && !fire({ p: v_p, x: v_x, y: v_y, q: v_q, R: v_R.slice(), d: v_d, x2: v_x2, z: v_z, q2: v_q2, S: v_S.slice() }, facts)) return 1;
+                        if (fire !== null) {
+                          const _says = { terms: {  }, marks: { outline: setOf(v_y, v_z).slice() } };
+                          if (!fire({ p: v_p, x: v_x, y: v_y, q: v_q, R: v_R.slice(), d: v_d, x2: v_x2, z: v_z, q2: v_q2, S: v_S.slice() }, facts, _says)) return 1;
+                        }
                       }
                     }
                   }
@@ -1221,10 +1310,16 @@ export interface ParityBinding {
   A: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ParitySays {
+  terms: {  };
+  marks: {  };
+}
+
 const parityFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^2. */
-export function parity(b: Marks, sp: GridSpace, fire: Fire<ParityBinding> | null): number {
+export function parity(b: Marks, sp: GridSpace, fire: Fire<ParityBinding, ParitySays> | null): number {
   const _g17: number[] = [];
   const _g40: number[] = [];
   const facts = parityFacts;
@@ -1326,7 +1421,10 @@ export function parity(b: Marks, sp: GridSpace, fire: Fire<ParityBinding> | null
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ P: v_P.slice(), p: v_p, Q: v_Q.slice(), A: v_A.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: {  }, marks: {  } };
+          if (!fire({ P: v_P.slice(), p: v_p, Q: v_Q.slice(), A: v_A.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -1341,10 +1439,16 @@ export interface SetBinding {
   O: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SetSays {
+  terms: {  };
+  marks: { outline: readonly number[]; };
+}
+
 const setFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function set(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetBinding> | null): number {
+export function set(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetBinding, SetSays> | null): number {
   const _g43: number[] = [];
   const _g60: number[] = [];
   const _g89: number[] = [];
@@ -1538,7 +1642,10 @@ export function set(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetBinding> |
           if (!(_q135)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ a: v_a, S: v_S.slice(), U: v_U.slice(), T: v_T.slice(), O: v_O }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: {  }, marks: { outline: v_T.slice() } };
+              if (!fire({ a: v_a, S: v_S.slice(), U: v_U.slice(), T: v_T.slice(), O: v_O }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -1555,10 +1662,16 @@ export interface SetDoublesBinding {
   O: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SetDoublesSays {
+  terms: {  };
+  marks: { outline: readonly number[]; };
+}
+
 const setDoublesFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function setDoubles(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetDoublesBinding> | null): number {
+export function setDoubles(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetDoublesBinding, SetDoublesSays> | null): number {
   const _g43: number[] = [];
   const _g60: number[] = [];
   const _g89: number[] = [];
@@ -1781,7 +1894,10 @@ export function setDoubles(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetDou
           if (!(_q135)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ a: v_a, S: v_S.slice(), U: v_U.slice(), T: v_T.slice(), O: v_O }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: {  }, marks: { outline: v_T.slice() } };
+              if (!fire({ a: v_a, S: v_S.slice(), U: v_U.slice(), T: v_T.slice(), O: v_O }, facts, _says)) return 1;
+            }
           }
         }
       }

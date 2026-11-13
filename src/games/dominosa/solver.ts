@@ -12,7 +12,7 @@
  * chains dealt it. A board of a tier below is one the ladder finishes at
  * that tier and not below it.
  *
- * A hint walks the same ladder, one firing at a time ({@link hintFirings}).
+ * A hint walks the same ladder, one firing at a time ({@link dominosaWalk}).
  */
 
 import {
@@ -28,15 +28,11 @@ import {
   describedLadder,
   type Ladder,
   ladderTechniques,
-  ladderWalk,
   placingRung,
-  type ReasonOf,
   runLadder,
-  type Taken,
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import type { StepBudget } from "../../engine/step-budget.ts";
 import * as dominosa from "./dominosa.compiled.ts";
 import {
   DIFF_BASIC,
@@ -49,123 +45,27 @@ import {
   spaceOf,
 } from "./state.ts";
 
-/** The rungs a hint step can be: the techniques, in the ladder's order. */
-export const DOMINOSA_RUNGS = dominosa.ladder.map((e) => e.id);
-export type DominosaRung = dominosa.LadderId;
-/** The techniques that place a domino; every other rules spots out. */
-export type PlaceTechnique = "onlySpot" | "squareOnly";
-export type BarrierTechnique = Exclude<DominosaRung, PlaceTechnique>;
-
-/** Why a firing decided its spots: which technique, and the squares its
- * premise names, read before the firing acted. */
-export type DominosaReason =
-  | { kind: "onlySpot" }
-  | { kind: "squareOnly"; square: number }
-  | { kind: "squareSingleDomino"; square: number }
-  /** The squares of every spot left for the domino. */
-  | { kind: "mustOverlap"; squares: number[] }
-  /** The far square that only a second copy could then cover. */
-  | { kind: "localDuplicate"; square: number }
-  /** The two far squares that would need one domino between them. */
-  | { kind: "localDuplicate2"; squares: [number, number] }
-  | { kind: "parity" }
-  /** The squares that take a set of dominoes between them. */
-  | { kind: "set" | "setDoubles"; squares: number[] };
-
-/** One firing in the player's terms: its reason, and the spots it decides,
- * each the pair of squares it joins, lower first. A placing technique's
- * firing places one domino; any other's rules spots out. */
-export type DominosaFiring = DominosaReason & {
-  place: [number, number] | null;
-  barriers: [number, number][];
-};
+/** What each technique says, as the hint's sentences read it. */
+export type DominosaSays = dominosa.SaysById;
 
 /** The two squares spot `e` joins, lower first. */
-function endsOf(sp: GridSpace, e: number): [number, number] {
+export function endsOf(sp: GridSpace, e: number): [number, number] {
   return [sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]];
 }
 
-/** A reason built once a firing, from its binding, and shared by each of its
- * spots: a firing may rule many out. */
-function perFiring<B extends object>(
-  build: (binding: B, sp: GridSpace) => DominosaReason,
-): ReasonOf<B> {
-  let last: B | null = null;
-  let reason: DominosaReason | null = null;
-  return (binding, _at, _n, m) => {
-    if (binding !== last || reason === null) {
-      last = binding;
-      reason = build(binding, m.sp);
-    }
-    return reason;
-  };
-}
-
-/** The ladder over the dealt numbers, each technique with its reason. */
+/** The ladder over the dealt numbers. */
 function dominosaLadder(dl: dominosa.Dealt): Ladder {
   return describedLadder(dominosa, {
     placed: placingRung(dominosa.placed, dl),
-    onlySpot: compiledRung(
-      dominosa.onlySpot,
-      dl,
-      perFiring(() => ({ kind: "onlySpot" })),
-    ),
-    squareOnly: uncluedRung(
-      dominosa.squareOnly,
-      perFiring(({ c }: dominosa.SquareOnlyBinding) => ({
-        kind: "squareOnly",
-        square: c,
-      })),
-    ),
-    squareSingleDomino: compiledRung(
-      dominosa.squareSingleDomino,
-      dl,
-      perFiring(({ c }: dominosa.SquareSingleDominoBinding) => ({
-        kind: "squareSingleDomino",
-        square: c,
-      })),
-    ),
-    mustOverlap: compiledRung(
-      dominosa.mustOverlap,
-      dl,
-      perFiring(({ P }: dominosa.MustOverlapBinding, sp) => ({
-        kind: "mustOverlap",
-        squares: P.flatMap((f) => endsOf(sp, f)),
-      })),
-    ),
-    localDuplicate: compiledRung(
-      dominosa.localDuplicate,
-      dl,
-      perFiring(({ y }: dominosa.LocalDuplicateBinding) => ({
-        kind: "localDuplicate",
-        square: y,
-      })),
-    ),
-    localDuplicate2: compiledRung(
-      dominosa.localDuplicate2,
-      dl,
-      perFiring(({ y, z }: dominosa.LocalDuplicate2Binding) => ({
-        kind: "localDuplicate2",
-        squares: [y, z],
-      })),
-    ),
-    parity: uncluedRung(
-      dominosa.parity,
-      perFiring(() => ({ kind: "parity" })),
-    ),
-    set: compiledRung(
-      dominosa.set,
-      dl,
-      perFiring(({ T }: dominosa.SetBinding) => ({ kind: "set", squares: [...T] })),
-    ),
-    setDoubles: compiledRung(
-      dominosa.setDoubles,
-      dl,
-      perFiring(({ T }: dominosa.SetDoublesBinding) => ({
-        kind: "setDoubles",
-        squares: [...T],
-      })),
-    ),
+    onlySpot: compiledRung(dominosa.onlySpot, dl),
+    squareOnly: uncluedRung(dominosa.squareOnly),
+    squareSingleDomino: compiledRung(dominosa.squareSingleDomino, dl),
+    mustOverlap: compiledRung(dominosa.mustOverlap, dl),
+    localDuplicate: compiledRung(dominosa.localDuplicate, dl),
+    localDuplicate2: compiledRung(dominosa.localDuplicate2, dl),
+    parity: uncluedRung(dominosa.parity),
+    set: compiledRung(dominosa.set, dl),
+    setDoubles: compiledRung(dominosa.setDoubles, dl),
   });
 }
 
@@ -416,60 +316,30 @@ export function dealsAt(
 
 // --- the hint's walk ---------------------------------------------------------
 
-/** The squares a firing's reason turns on, which a plan continues from. */
-function readsOf(sp: GridSpace, f: Taken): number[] {
-  const r = f.reasons[0] as DominosaReason;
-  const own: number[] = [];
-  for (let i = 0; i < f.facts.length; i += 3) own.push(...endsOf(sp, f.facts[i + 1]));
-  switch (r.kind) {
-    case "onlySpot":
-    case "parity":
-      return own;
-    case "squareOnly":
-    case "squareSingleDomino":
-    case "localDuplicate":
-      return [r.square, ...own];
-    case "mustOverlap":
-    case "localDuplicate2":
-    case "set":
-    case "setDoubles":
-      return [...r.squares, ...own];
-  }
+/** What the hint's steps need of the board besides what a firing says: its
+ * space, and the spots whose barrier a plan has already shown or the player
+ * has drawn (a plan is walked once with one context). */
+export interface DominosaWalkContext {
+  sp: GridSpace;
+  seen: Set<string>;
 }
 
 /**
- * The ladder's firings from the player's dominoes, one a call, each the one
- * that carries on from the squares the plan is working on (`ladderWalk`),
- * or `null` when the ladder has nothing left. The player's lines between
- * squares are not read: a wrong one must not mislead the hint, which works
- * each out again. Null where the player's dominoes clash.
+ * The marks over the player's dominoes and the ladder, for the engine's walk
+ * to take a firing at a time (`engine/described-edge-hint.ts`). The player's
+ * lines between squares are not read: a wrong one must not mislead the hint,
+ * which works each out again. Null where the player's dominoes clash.
  */
-export function hintFirings(
+export function dominosaWalk(
   shape: DominosaShape,
   numbers: ArrayLike<number>,
   partner: ArrayLike<number>,
-  budget: StepBudget,
-): { next: () => DominosaFiring | null } | null {
+): { marks: CellMarks; entries: Ladder["entries"]; ctx: DominosaWalkContext } | null {
   const d = deduction(shape, numbers, partner);
   if (d === null) return null;
-  const { m, ladder } = d;
-  m.budget = budget;
-  const walk = ladderWalk(m, ladder.entries, { [TIERS]: DIFF_EXTREME }, (f) =>
-    readsOf(m.sp, f),
-  );
   return {
-    next() {
-      const taken = walk.next();
-      if (taken === null || taken === "contradiction") return null;
-      const reason = taken.reasons[0] as DominosaReason;
-      let place: [number, number] | null = null;
-      const barriers: [number, number][] = [];
-      for (let i = 0; i < taken.facts.length; i += 3) {
-        const spot = endsOf(m.sp, taken.facts[i + 1]);
-        if (taken.facts[i + 2] === DOMINO) place = spot;
-        else barriers.push(spot);
-      }
-      return { ...reason, place, barriers };
-    },
+    marks: d.m,
+    entries: d.ladder.entries,
+    ctx: { sp: d.m.sp, seen: new Set() },
   };
 }

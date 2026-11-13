@@ -1,0 +1,8 @@
+6x6 Easy #0: 26 steps, solved, 6e3ab6e9a478cd59 [square:25 whiteTurnsOpposite:1]
+6x6 Easy #1: 27 steps, solved, bfc1ae7d99b36a67 [blackCannotRunOn:1 square:25 whiteTurnsOpposite:1]
+6x6 Easy #2: 30 steps, solved, af1d4662b0a0a2b0 [blackCannotRunOn:2 square:25 whiteTurnsOpposite:3]
+6x6 Easy #3: 27 steps, solved, 652e06c9ff48dd15 [blackCannotRunOn:1 square:24 whiteTurnsOpposite:2]
+6x6 Normal #0: 28 steps, solved, bdd38f9804543984 [closesEarly:1 square:26 whiteTurnsOpposite:1]
+6x6 Normal #1: 30 steps, solved, 105fdc70eb02c682 [blackCannotRunOn:3 closesEarly:1 square:24 whiteTurnsOpposite:2]
+6x6 Normal #2: 28 steps, solved, 0b712b6d5cfd60b7 [blackCannotRunOn:2 closesEarly:1 square:23 whiteTurnsOpposite:2]
+6x6 Normal #3: 28 steps, solved, deecf91a42e469ac [closesEarly:1 square:24 whiteTurnsOpposite:3]

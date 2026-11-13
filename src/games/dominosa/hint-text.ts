@@ -1,8 +1,8 @@
 /**
  * Every sentence Dominosa's hint speaks, and the words inside them.
  *
- * The deduction decides which sentence and with what values (`index.ts`'s
- * `hint`, which reads the two numbers off the board); this file decides only
+ * The deduction decides which sentence and with what values (`hint.ts`, which
+ * reads the two numbers off the board); this file decides only
  * how it reads. Every word that points at the board is a reference to the mark
  * it points at (`engine/hint-words.ts`): the spot a step decides is ringed, and
  * the squares it reasons from are outlined.
@@ -20,7 +20,11 @@ import {
   so,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import type { BarrierTechnique, PlaceTechnique } from "./solver.ts";
+import type { SAYS_KINDS } from "./dominosa.compiled.ts";
+
+/** The techniques that place a domino; every other rules spots out. */
+export type PlaceTechnique = "onlySpot" | "squareOnly";
+export type BarrierTechnique = Exclude<(typeof SAYS_KINDS)[number], PlaceTechnique>;
 
 /** A spot: two neighboring squares, by index, which a domino could cover. A
  * step decides one, and rings its two squares as one domino, with a line drawn
@@ -48,7 +52,7 @@ const outlined = (cells: readonly Point[], noun: string, det?: string): Narratio
 export const say = {
   /** A placement of the domino showing `a` and `b`. */
   place: (
-    { kind: technique }: { kind: PlaceTechnique },
+    technique: PlaceTechnique,
     a: number,
     b: number,
     spot: Spot,
@@ -80,7 +84,7 @@ export const say = {
 
   /** A barrier between two squares showing `a` and `b`. */
   barrier: (
-    { kind: technique }: { kind: BarrierTechnique },
+    technique: BarrierTechnique,
     a: number,
     b: number,
     spot: Spot,

@@ -536,6 +536,34 @@ defect found in the game, said which.
 - **A test changed**: the one that read the firings' edges walks the ladder and
   reads the `anchor` term.
 
+### Dominosa, built (2026-11-13)
+
+- **Two step kinds in one `step`**: a firing's facts are read for the spot each
+  decides, a placed domino (a leg of its own) or a barrier for each spot struck
+  that the player has not drawn. The ones already shown are the walk's context
+  (`seen`, made afresh for each plan and seeded from the player's barriers), so
+  the later legs of a firing say "for the same reason" by their place among the
+  barriers actually shown. The numbers a spot shows are the leg's, from the state.
+- **Two engine additions**: `walk` may return `null` where the player's own marks
+  clash (a hint with nothing to walk from: `DEDUCTION_EXHAUSTED`, as before), and
+  an optional `reads(taken, ctx)`, the elements a firing reads beyond the marks it
+  says: the old walk continued from the squares of the spots a firing struck, which
+  no `says` mark can name for a firing of several. The refusal where
+  `answerOf` is not `one` (`PUZZLE_NOT_REASONABLE`) stays the game's, ahead of the
+  engine's hint.
+- **`says` is an outline**: the square or squares the reason rests on (`{c}`,
+  `{y, z}`, `T`, the ends of the domino's spots), and `{}` for `onlySpot` and
+  `parity`. No terms, no `define`: the soundness check is not re-opened.
+- **Comparison.** 32,555 lines at `HEAD` over 4 presets, 12 boards each, 4 shares
+  of the solution's dominoes (and from 35% some barriers drawn), every recomputed
+  plan listed, plan cap lifted: the same words, marks, move and continues, but
+  15 steps the old walk showed twice. A firing that struck one spot twice had
+  both shown (the old filter read the seen set before the loop added to it); a
+  barrier is now shown once. The fingerprint's snapshot moved on two boards: one
+  that duplicate, one the plan cap.
+- **Changes of behavior**: the plan holds 40 steps; a contradiction found mid-walk
+  is the unlocalized refusal (the old plan ended there with the steps so far).
+
 ### What blocks the rest (2026-11-13, a survey by reading, to be re-checked per game)
 
 The first read of the remaining games found one that is a plain Clusters-shaped

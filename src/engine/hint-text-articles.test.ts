@@ -89,11 +89,10 @@ describe("a number after an article gets the article it is pronounced with", () 
 
   it("Dominosa's duplicate dominoes", () => {
     const spot = [0, 1] as const;
-    const why = { kind: "localDuplicate" } as const;
-    expect(dominosa.barrier(why, 8, 8, spot, []).text).toMatch(
+    expect(dominosa.barrier("localDuplicate", 8, 8, spot, []).text).toMatch(
       /^An 8–8 domino on the ringed spot/,
     );
-    expect(dominosa.barrier(why, 1, 8, spot, []).text).toMatch(
+    expect(dominosa.barrier("localDuplicate", 1, 8, spot, []).text).toMatch(
       /^A 1–8 domino on the ringed spot/,
     );
   });
