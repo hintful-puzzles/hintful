@@ -68,7 +68,7 @@ export const say = {
     // the owner's choice. The two-3s arm keeps its count, because there the
     // bound is exact and the count is the whole argument.
     return so({
-      look: phrase`${derived(mark.this("outline", CELL, clues, "clue"))} would need a shared region of at least ${8 - c - d} cells, but every region holds ${k}`,
+      look: phrase`${derived(mark.this("outline", CELL, clues, "clue"))} would need a shared region of at least ${8 - c - d} cells`,
       move,
     });
   },
@@ -124,7 +124,7 @@ export const say = {
       look:
         joined === null
           ? phrase`Joining ${regions} would leave more than the ${k} cells a region holds`
-          : phrase`Joining ${regions} would make ${joined} cells, but every region holds ${k}`,
+          : phrase`Joining ${regions} would make ${joined} cells`,
       move: phrase`${thisEdge(edges)} must be a wall`,
     });
   },
