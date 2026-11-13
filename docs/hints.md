@@ -737,8 +737,8 @@ against the picture.
 State on a step only the premise that makes this move follow. A fact true of
 the whole board on every step is a rule: teach it on the help page and leave
 it out of the sentence. Keep a rule in a sentence only where it is the
-technique ("This row never slides, so only a column move shifts this
-corner").
+technique. Netslide's frozen line is not: its step names the piece and the
+way it slides, and says nothing of what cannot be done.
 
 - **Diagnose by length times frequency.** Plan a number of fresh boards and
   tally each narration branch by count, share and mean length before

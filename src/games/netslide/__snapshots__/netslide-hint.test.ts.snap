@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`netslide hint rendering > marks the tile, its destination and the arrow to press 1`] = `
+exports[`netslide hint rendering > marks the tile and the arrow to press, and nothing else 1`] = `
 [
   {
     "color": 0,
@@ -1359,16 +1359,6 @@ exports[`netslide hint rendering > marks the tile, its destination and the arrow
     "y": 86,
   },
   {
-    "color": 13,
-    "h": 47,
-    "op": "hatch",
-    "period": 16,
-    "rgb": "rgb(194, 85, 22)",
-    "w": 47,
-    "x": 38,
-    "y": 86,
-  },
-  {
     "color": 3,
     "h": 26,
     "op": "rect",
@@ -1637,16 +1627,6 @@ exports[`netslide hint rendering > marks the tile, its destination and the arrow
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
-    "w": 47,
-    "x": 86,
-    "y": 86,
-  },
-  {
-    "color": 13,
-    "h": 47,
-    "op": "hatch",
-    "period": 16,
-    "rgb": "rgb(194, 85, 22)",
     "w": 47,
     "x": 86,
     "y": 86,
@@ -1963,16 +1943,6 @@ exports[`netslide hint rendering > marks the tile, its destination and the arrow
     "y": 86,
   },
   {
-    "color": 13,
-    "h": 47,
-    "op": "hatch",
-    "period": 16,
-    "rgb": "rgb(194, 85, 22)",
-    "w": 47,
-    "x": 134,
-    "y": 86,
-  },
-  {
     "color": 3,
     "h": 3,
     "op": "rect",
@@ -3121,28 +3091,6 @@ exports[`netslide hint rendering > marks the tile, its destination and the arrow
     "y": 181,
   },
   {
-    "color": 12,
-    "h": 41,
-    "op": "ring",
-    "radius": 21,
-    "rgb": "rgb(21, 113, 233)",
-    "thickness": 3,
-    "w": 41,
-    "x": 41,
-    "y": 137,
-  },
-  {
-    "color": 12,
-    "h": 41,
-    "op": "ring",
-    "radius": 21,
-    "rgb": "rgb(21, 113, 233)",
-    "thickness": 3,
-    "w": 41,
-    "x": 89,
-    "y": 137,
-  },
-  {
     "op": "unclip",
   },
 ]
@@ -3150,12 +3098,12 @@ exports[`netslide hint rendering > marks the tile, its destination and the arrow
 
 exports[`netslide: pinned hint positions > says, at each pin 1`] = `
 {
-  "aimsAlongItsSlide": "Working on this corner: take it to the two ringed squares (setting up).",
-  "besideSource": "This T-piece belongs beside the source. Take it to the two ringed squares: that sets it up.",
-  "frozenLine": "This column never slides, so only row moves shift this loose end. Take it to the ringed square: that's where it belongs.",
-  "journey": "Working on this straight: take it to the two ringed squares (setting up).",
-  "offFrozenColumn": "This column never slides, so only row moves shift this loose end. Take it to the ringed square: that's where it belongs.",
-  "offFrozenRow": "This row never slides, so only column moves shift this loose end. Take it to the ringed square: that's where it belongs.",
-  "working": "Working on this corner: take it to the two ringed squares (setting up).",
+  "besideSource": "This T-piece belongs beside the source. Slide it down: that sets it up.",
+  "frozenLine": "Slide this loose end right: that's where it belongs.",
+  "journey": "Slide this straight up: that sets it up.",
+  "movesItsTile": "Slide this corner right: that sets it up.",
+  "offFrozenColumn": "Slide this loose end right: that's where it belongs.",
+  "offFrozenRow": "Slide this loose end up: that's where it belongs.",
+  "working": "Slide this corner right: that sets it up.",
 }
 `;

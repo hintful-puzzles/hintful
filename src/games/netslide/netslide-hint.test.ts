@@ -58,16 +58,6 @@ function board(params: NetslideParams, seed: string) {
 const marksOf = (step: { highlights?: unknown }): NetslideHint =>
   step.highlights as NetslideHint;
 
-/** Whether `cell` lies on the line a slide moves. */
-const onSlidLine = (
-  state: NetslideState,
-  slide: NetslideMove & { type: "slide" },
-  cell: number,
-): boolean =>
-  slide.axis === "row"
-    ? Math.floor(cell / state.w) === slide.index
-    : cell % state.w === slide.index;
-
 /** The steps the narration and animation tests read, each pinned on a position
  * whose hint opens with one. A plan here is a search, so the scan follows only
  * the first few hints of each board. */
@@ -92,12 +82,9 @@ const pinned = describeHintPins({
     // A tile that needs more than one slide to get home: the opening step's
     // plan has a continuation leg straight after it.
     journey: (_step, _state, steps) => steps[1]?.continuesPrevious === true,
-    // A step that moves a tile and aims at a cell on the line being slid, the
-    // only case where a cell mark riding the shift would be visible.
-    aimsAlongItsSlide: (step, state) =>
-      step.move.type === "slide" &&
-      onSlidLine(state, step.move, marksOf(step).destination) &&
-      marksOf(step).landing !== marksOf(step).tile,
+    // A step whose slide moves the tile it names: the ring has to ride with it.
+    movesItsTile: (step) =>
+      step.move.type === "slide" && marksOf(step).landing !== marksOf(step).tile,
   },
   pins: {
     /** Held on 15 of 128 positions walked. */
@@ -107,7 +94,7 @@ const pinned = describeHintPins({
     /** Held on 20 of 128 positions walked. */
     journey: "4x4b1:6v97h4hd5hbvh382d4h8vbv24",
     /** Held on 81 of 128 positions walked. */
-    aimsAlongItsSlide: "4x4b1:1h1v7hdch6h26h9d7h1cv2v1c",
+    movesItsTile: "4x4b1:1h1v7hdch6h26h9d7h1cv2v1c",
     /** Held on 103 of 128 positions walked. */
     frozenLine: "4x4b1:chb4h2h8v9v43h1ah7h457dv5",
     /** Held on 96 of 128 positions walked. */
@@ -391,24 +378,41 @@ describe("netslide hint narration", () => {
     }
   });
 
-  it("teaches the frozen line, striped, when that is what the move turns on", () => {
-    // The one thing Netslide can prove *about a move*: a tile sitting in the
-    // source's row can only be shifted by its column (and the other way about).
-    // The line is "this row", striped, never a number (the board draws none) and
-    // never "the center row", false on an even-sized board, where the source
-    // sits at ⌊w/2⌋ and the player can see it.
-    const row = pinned("offFrozenRow");
-    expect(row.step.explanation).toContain("This row never slides");
-    expect(row.step.explanation).toContain("only column moves shift");
-    expect(marksOf(row.step).line).toEqual(
-      Array.from({ length: row.state.w }, (_, x) => row.state.cy * row.state.w + x),
-    );
-    const col = pinned("offFrozenColumn");
-    expect(col.step.explanation).toContain("This column never slides");
-    expect(col.step.explanation).toContain("only row moves shift");
-    expect(marksOf(col.step).line).toEqual(
-      Array.from({ length: col.state.h }, (_, y) => y * col.state.w + col.state.cx),
-    );
+  it("says a tile on a frozen line as piece and direction, not as what cannot be done", () => {
+    // That a line never slides is a rule of the game, so it is the board's and
+    // the help page's: the step names the piece and the way it slides, and the
+    // fixed line is neither said nor striped.
+    for (const [kind, heading] of [
+      // A tile in the source's row is shifted by its column, and the other way.
+      ["offFrozenRow", /slide this .+ (up|down)\b/i],
+      ["offFrozenColumn", /slide this .+ (left|right)\b/i],
+    ] as const) {
+      const { step } = pinned(kind);
+      expect(step.explanation).toMatch(heading);
+      expect(step.explanation).not.toMatch(/never slides|only (row|column) moves/);
+    }
+  });
+
+  it("says the way the tile travels, which is the way the arrow shifts it", () => {
+    let checked = 0;
+    for (const { steps } of narrationCorpus()) {
+      for (const step of steps) {
+        if (step.move.type !== "slide") continue;
+        // `dir` is the arrow's direction; the tile travels the other way.
+        const travel = -step.move.dir;
+        const words =
+          step.move.axis === "row"
+            ? travel === 1
+              ? "right"
+              : "left"
+            : travel === 1
+              ? "down"
+              : "up";
+        expect(step.explanation).toMatch(new RegExp(`\\b${words}\\b`));
+        checked++;
+      }
+    }
+    expect(checked, "no slide step was examined").toBeGreaterThan(20);
   });
 
   it("never calls the source the center, and never says a tile belongs twice", () => {
@@ -439,7 +443,7 @@ describe("netslide hint narration", () => {
     const { state, step } = pinned("besideSource");
     // No preamble: the sentence opens on the tile or on the imperative,
     // never on a lecture about what the source can and cannot do.
-    expect(step.explanation).toMatch(/^(This|Take this) /);
+    expect(step.explanation).toMatch(/^(This|Slide this) /);
     // …and the claim it makes is true of the step it is attached to.
     const marks = marksOf(step);
     const dx = Math.abs((marks.destination % state.w) - state.cx);
@@ -457,7 +461,7 @@ describe("netslide hint narration", () => {
     // A continuation leg works the same tile the leg before it did, and it
     // does not re-explain itself.
     for (const leg of legs)
-      expect(leg.explanation).toMatch(/^Working on this [-a-zA-Z ]+: take it on to/);
+      expect(leg.explanation).toMatch(/^Working on this [-a-zA-Z ]+: slide it /);
   });
 });
 
@@ -608,7 +612,7 @@ describe("netslide hint rendering", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("marks the tile, its destination and the arrow to press", () => {
+  it("marks the tile and the arrow to press, and nothing else", () => {
     // A `params:desc` id carries no `aux`, so the hint plans against the
     // solution it reconstructs from the board.
     const result = renderScenario({
@@ -617,38 +621,26 @@ describe("netslide hint rendering", () => {
       showHint: true,
     });
 
-    // The tile being placed, each square the slide takes it to, and the arrow
-    // the player should press are ringed; the arrow is drawn inside its ring in
-    // the ring's ink — exactly one.
+    // The tile being placed and the arrow the player should press are ringed;
+    // the arrow is drawn inside its ring in the ring's ink — exactly one. The
+    // sentence says the way by a word, so no square is ringed and no line is
+    // hatched.
     const ops = result.recording.ops;
-    const squares = new Set([
-      (result.hint?.highlights as NetslideHint).landing,
-      (result.hint?.highlights as NetslideHint).destination,
-    ]);
-    expectRing(ops, { rings: 2 + squares.size });
+    expectRing(ops, { rings: 2 });
     const ink = ringsOf(ops)[0].color;
     expect(opsOfKind(ops, "polygon").filter((op) => op.fill === ink)).toHaveLength(1);
-
-    // This step says a line never slides, so that line is hatched: one hatch
-    // per cell of it, and nothing more.
-    expect(result.hint?.explanation).toMatch(/never slides/);
-    const line = (result.hint?.highlights as NetslideHint).line;
-    expect(line).toHaveLength(3);
-    expect(opsOfKind(result.recording.ops, "hatch")).toHaveLength(line.length);
+    expect(opsOfKind(ops, "hatch")).toHaveLength(0);
 
     expect(result.recording.ops).toMatchSnapshot();
   });
 });
 
 describe("the hint marks while the hinted slide animates", () => {
-  // Mid-slide, the two marks behave differently:
-  //
-  //  - The *tile* mark is on a **tile**, and the tile is moving. The step's cell
-  //    index is the cell the tile came *from* (the midend advances the plan only
-  //    when the animation ends), so painting there would mark whatever slid into
-  //    that cell. It must ride with the tile, painted on the cell it lands in.
-  //  - The *destination* mark is on a **cell**, and cells do not move. It must
-  //    stay put while the line slides under it.
+  // The *tile* mark is on a **tile**, and mid-slide the tile is moving. The
+  // step's cell index is the cell the tile came *from* (the midend advances the
+  // plan only when the animation ends), so painting there would mark whatever
+  // slid into that cell. It must ride with the tile, painted on the cell it
+  // lands in.
   const TS = 32;
   const TILE_BORDER = 1;
   const border = (ts: number) => Math.floor((3 * ts) / 4) + 1;
@@ -667,7 +659,7 @@ describe("the hint marks while the hinted slide animates", () => {
   /** A mid-slide frame of a hinted move that both moves a tile and aims at a
    * cell on the line being slid. */
   function animatingFrame() {
-    const pin = pinned("aimsAlongItsSlide");
+    const pin = pinned("movesItsTile");
     const { state } = pin;
     const step = pin.step as HintStep<NetslideMove, NetslideHint>;
     const marks = marksOf(step);
@@ -739,17 +731,5 @@ describe("the hint marks while the hinted slide animates", () => {
         ).toBe(true);
       }
     }
-  });
-
-  it("leaves the destination mark where the destination is", () => {
-    const { after, marks, rec } = animatingFrame();
-
-    // The destination is a *cell*. The line slides under it; it does not move.
-    const dx = marks.destination % after.w;
-    const dy = Math.floor(marks.destination / after.w);
-    expect(
-      ringAt(rec.ops, border(TS) + TS * dx, border(TS) + TS * dy),
-      "the destination is not ringed at all",
-    ).toBe(true);
   });
 });

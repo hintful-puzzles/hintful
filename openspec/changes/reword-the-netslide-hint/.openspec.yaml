@@ -1,4 +1,2 @@
-# A wording change to one game's sentences: no spec-level behavior changes.
 schema: spec-driven
 created: 2026-11-13
-skip_specs: true

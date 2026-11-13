@@ -54,12 +54,6 @@ export interface NetslideHint {
   /** The border arrow to press, as a ring cell just outside the grid. */
   arrowX: number;
   arrowY: number;
-  /** Flat cells of the row or column the sentence names as never sliding,
-   * hatched; empty when it names none (docs/hints-marks.md § "Hatch the line
-   * the sentence names"). */
-  line: number[];
-  /** The grid width the flat cells are in. */
-  w: number;
 }
 
 /** The forward-search budget. Netslide slides only ±1, so its plans are several
@@ -622,8 +616,6 @@ function narrateStep(
     destination: focus.destination,
     belongs: focus.belongs,
     ...arrowFor(s, move),
-    line: [],
-    w,
   };
 
   // "Where it belongs" is a claim, so it is only made when the finished board
@@ -637,7 +629,8 @@ function narrateStep(
 
   // The single degree of freedom. A tile in the source's row sits on a line that
   // never slides, so the only line that can move it is its column — and the other
-  // way about. The row is "this row", striped: the board draws no numbers.
+  // way about. That is the rung, and the words are the working ones: the line is
+  // a rule, not evidence for the move.
   let words: (m: Marked) => Sentence;
   let rung: NetslideRung;
   if (journey !== null) {
@@ -645,12 +638,10 @@ function narrateStep(
     words = (m) => say.next(m, arrivesHome);
   } else if (row === cy && m.axis === "col") {
     rung = "frozenLine";
-    words = (m) => say.rowFixed(m, arrivesHome);
-    highlights.line = Array.from({ length: w }, (_, x) => cy * w + x);
+    words = (m) => say.working(m, arrivesHome);
   } else if (col === cx && m.axis === "row") {
     rung = "frozenLine";
-    words = (m) => say.colFixed(m, arrivesHome);
-    highlights.line = Array.from({ length: s.h }, (_, y) => y * w + cx);
+    words = (m) => say.working(m, arrivesHome);
   } else if (focus.belongs && isBesideSource(focus.destination, w, cx, cy)) {
     rung = "besideSource";
     words = (m) => say.besideSource(m, arrivesHome);
@@ -659,7 +650,7 @@ function narrateStep(
     words = (m) => say.working(m, arrivesHome);
   }
 
-  const said = words({ ...markedOf(highlights), mask });
+  const said = words({ ...markedOf(highlights, m), mask });
   return {
     move,
     rung,
@@ -671,12 +662,11 @@ function narrateStep(
 }
 
 /** A step's highlights as the marks its words name, less the tile's shape. */
-function markedOf(hl: NetslideHint): Omit<Marked, "mask"> {
+function markedOf(hl: NetslideHint, m: SlideMove): Omit<Marked, "mask"> {
+  const forward = m.delta === 1;
   return {
     tile: hl.tile,
-    landing: hl.landing,
-    destination: hl.destination,
-    line: hl.line.map((i) => ({ x: i % hl.w, y: Math.floor(i / hl.w) })),
+    heading: m.axis === "row" ? (forward ? "right" : "left") : forward ? "down" : "up",
   };
 }
 

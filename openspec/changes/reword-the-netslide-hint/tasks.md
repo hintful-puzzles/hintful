@@ -2,15 +2,16 @@
 
 ## 1. Decide
 
-- [ ] 1.1 Read Netslide's walks in the running app and choose the reason the sentence gives (shape, stated reason, other); say why in the change
-- [ ] 1.2 Check whether a step carries the direction as a word
+- [x] 1.1 Reason: the shape names the piece ("this loose end") and the closing says what the slide does ("that's where it belongs" / "that sets it up"); a tile beside the source keeps its stated reason ("it belongs beside the source"). A stated reason per step would be the planner's choice dressed as logic, and the shape is what the player can see.
+- [x] 1.2 The step carried the direction only as the arrow; `markedOf` now derives it from the slide's `delta` (row +1 right, column +1 down), and a test checks it against `dir`.
 
 ## 2. Reword
 
-- [ ] 2.1 Replace `rowFixed` and `colFixed` and the `look` and `follows` of the others with the piece, the reason and the direction; drop the destination rings and the fixed line's stripe
-- [ ] 2.2 Update the Netslide hint tests, and the walk fingerprint where the words change (moves must not)
-- [ ] 2.3 Update the help page where it quotes a hint
+- [x] 2.1 `rowFixed` and `colFixed` gone (the `frozenLine` rung stays, its words are `working`); destination rings, the `SQUARE` mark, the fixed line's stripe and the renderer's `HINT_SQUARE`/`HINT_LINE` removed
+- [x] 2.2 Hint tests and the render snapshot updated (the moves are unchanged)
+- [x] 2.3 The help page quotes no hint; the mark legend in `index.ts` and `docs/hints.md` no longer cite the frozen line
 
 ## 3. Show
 
-- [ ] 3.1 Run the app: the first click lands on the tile, a walk finishes the board, and bring the words to the owner
+- [x] 3.1 Ran 3x3 easy: first click rings the tile and arrow only; "Slide this loose end down: that sets it up.", then "Working on this loose end: slide it right, where it belongs."; the walk finished the board in 6 moves
+- [ ] 3.2 The owner accepts the words in the running app; then archive

@@ -19,8 +19,7 @@ import {
 } from "../../engine/color/palette.ts";
 import { netslideLowlight } from "../../engine/color/palette-games.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import {
   anticlockwise,
@@ -38,7 +37,7 @@ import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
 import { wireDistance } from "../../engine/wires.ts";
 import type { NetslideHint } from "./hint.ts";
-import { SQUARE, TILE } from "./hint-text.ts";
+import { TILE } from "./hint-text.ts";
 import {
   ACTIVE,
   computeActive,
@@ -113,10 +112,6 @@ export function colors(defaultBackground: Color): Color[] {
 
 /** The tile the hint is placing. */
 const HINT_TILE = 0x40;
-/** A square the slide takes it to: where it lands, or where it belongs. */
-const HINT_SQUARE = 0x80;
-/** On the line the sentence names as never sliding — hatched. */
-const HINT_LINE = 0x200;
 /** With `FLASHING`: the highlight on this tile is its leading edge. */
 const FLASHING_LEAD = 0x400;
 
@@ -243,7 +238,6 @@ function drawTile(
     h: ts - TILE_BORDER,
   };
   dr.drawRect(face, COL_CELL);
-  if (tile & HINT_LINE) dr.drawHatch(face, hatchPeriod(ts));
 
   const cx = TILE_BORDER + (ts - TILE_BORDER) / 2 - 0.5;
   const cy = cx;
@@ -368,34 +362,6 @@ function drawTile(
 /** The stroke of every hint ring Netslide draws. */
 function ringThickness(ts: number): number {
   return Math.max(2, Math.round(ts / 16));
-}
-
-/**
- * Where the hinted tile is headed: each square ringed, inset past the tile
- * border so a barrier drawn along that edge does not paint over it.
- *
- * A mark on a **cell**, so it is drawn after every tile at the cell's unshifted
- * position, not inside `drawTile`, where it would slide with the line under it.
- * Painting last also keeps a tile sliding across the cell from covering it.
- */
-function drawHintTargets(
-  dr: GameDrawing,
-  ds: NetslideDrawState,
-  squares: readonly number[],
-): void {
-  const ts = ds.tileSize;
-  const b = border(ts);
-  const inset = TILE_BORDER + 1;
-  for (const cell of squares) {
-    const bx = b + ts * (cell % ds.w);
-    const by = b + ts * Math.floor(cell / ds.w);
-    dr.drawRing(
-      { x: bx + inset, y: by + inset, w: ts - 2 * inset, h: ts - 2 * inset },
-      NOTHING_TO_CLEAR,
-      ringThickness(ts),
-    );
-    dr.drawUpdate({ x: bx, y: by, w: ts + TILE_BORDER, h: ts + TILE_BORDER });
-  }
 }
 
 /** The quarter of a barrier junction that belongs to tile `(x, y)`. Phase 0
@@ -667,8 +633,6 @@ export function redraw(
   const words = stepMarks(hint);
   const [named] = words.of("ring", TILE);
   const tiled = plan !== undefined && named !== undefined;
-  const squares = words.of("ring", SQUARE);
-  const hintLine = new Set(words.of("stripes", CELL).map((p) => p.y * ds.w + p.x));
   const hintArrowX = tiled ? plan.arrowX : -2;
   const hintArrowY = tiled ? plan.arrowY : -2;
 
@@ -761,10 +725,6 @@ export function redraw(
 
       // The hint overlay goes into the cache word (see the HINT_* bits).
       if (i === hintTile) c |= HINT_TILE;
-      // `drawHintTargets` draws the squares' rings; their bit is keyed here so
-      // the tile under a stale ring repaints once the hint moves on.
-      if (squares.includes(i)) c |= HINT_SQUARE;
-      if (hintLine.has(i)) c |= HINT_LINE;
 
       if (reach !== null && reach[i] >= 0) {
         const tone = flash.win(reach[i]);
@@ -806,9 +766,6 @@ export function redraw(
       drawTileBarriers(dr, ds, state, x, y);
     }
   }
-
-  // Last, so no sliding tile paints across them.
-  drawHintTargets(dr, ds, squares);
 
   dr.unclip();
 }
