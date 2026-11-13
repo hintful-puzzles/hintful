@@ -512,6 +512,14 @@ does not fit a convention is a question about the convention).
   firings, Map's removed-color dots), candidate marks (Abcd, Seismic, Undead,
   Crossing; the candidate games already have their own task). Bridges'
   `describedEdgeHint` is the edge precedent.
+- **Re-read after Sticks (2026-11-13).** Evidence per placed square is built
+  (`says.fact`), and so is a firing's later squares continuing the first
+  (`shown: legs`); neither remains a blocker. No game is left that moves with
+  the cell engine alone: what is left is the edge, link and state-between-steps
+  shapes above, and the candidate games'. The walk's reads hold what a step
+  outlines and its facts, so a mark the old walk read and the outline need not
+  hold (Sticks' number or block) is a `reads` mark.
+
 - **Star Battle** read as firing-only (13 techniques, stars and crosses), with
   trial rungs whose `ruled`, `completes` and `touches` are derived from the
   square; the first read of what is next. Range and Bricks are one technique
