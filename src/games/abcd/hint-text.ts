@@ -128,7 +128,7 @@ export const say = {
   /** A placement's own strikes, as the leg after it, from the letter just
    * placed at `placed`. */
   cull: (placed: Point, n: number, diag: boolean): Narration =>
-    phrase`${mark.as("outline", CELL, [placed], `The ${L(n)} just placed`)} can't repeat in a cell ${around(diag, "it")}`,
+    phrase`${mark.as("outline", CELL, [placed], `The ${L(n)} just placed`)} can't repeat in any cell ${around(diag, "it")}`,
 
   /** What a cull strikes. */
   culled: (n: number): string => `those ${L(n)}s`,
