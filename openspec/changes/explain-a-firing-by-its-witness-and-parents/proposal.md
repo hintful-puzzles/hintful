@@ -1,6 +1,7 @@
 # explain-a-firing-by-its-witness-and-parents
 
-**Status: draft, filed on the owner's word (2026-11-10), for later.** Third
+**Status: started 2026-11-13; tasks.md and design.md written, code not
+begun.** Filed on the owner's word (2026-11-10). Third
 in the plan of
 [`derive-hint-steps-from-the-description/report.md`](../archive/2026-11-10-derive-hint-steps-from-the-description/report.md).
 It waits for `build-hint-steps-in-the-engine`, whose firings it extends, and
