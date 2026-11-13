@@ -59,7 +59,7 @@ export const say = {
     // never exceeds `k`, so the general arm below cannot reach this.
     if (c === 3 && d === 3) {
       return so({
-        look: phrase`Open as each 3's only gap, ${theseEdges(edges, "the edge")} between ${derived(mark.as("outline", CELL, clues, "these 3s"))} would seal 2 cells where regions hold ${k}`,
+        look: phrase`Open as each 3's only gap, ${theseEdges(edges, "the edge")} between ${derived(mark.as("outline", CELL, clues, "these 3s"))} would seal 2 squares where regions hold ${k}`,
         move: phrase`it must be a wall`,
       });
     }
@@ -68,7 +68,7 @@ export const say = {
     // the owner's choice. The two-3s arm keeps its count, because there the
     // bound is exact and the count is the whole argument.
     return so({
-      look: phrase`${derived(mark.this("outline", CELL, clues, "clue"))} would need a shared region of at least ${8 - c - d} cells`,
+      look: phrase`${derived(mark.this("outline", CELL, clues, "clue"))} would need a shared region of at least ${8 - c - d} squares`,
       move,
     });
   },
@@ -123,8 +123,8 @@ export const say = {
     return so({
       look:
         joined === null
-          ? phrase`Joining ${regions} would leave more than the ${k} cells a region holds`
-          : phrase`Joining ${regions} would make ${joined} cells`,
+          ? phrase`Joining ${regions} would leave more than the ${k} squares a region holds`
+          : phrase`Joining ${regions} would make ${joined} squares`,
       move: phrase`${thisEdge(edges)} must be a wall`,
     });
   },
@@ -146,8 +146,8 @@ export const say = {
     return so({
       look:
         size === null
-          ? phrase`${region} is short of its ${k} cells and has ${way}`
-          : phrase`${region} has ${size} of its ${k} cells and ${way}`,
+          ? phrase`${region} is short of its ${k} squares and has ${way}`
+          : phrase`${region} has ${size} of its ${k} squares and ${way}`,
       move: multi
         ? phrase`${theseEdges(edges, "these edges")} can't be walls`
         : phrase`${thisEdge(edges)} can't be a wall`,

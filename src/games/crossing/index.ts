@@ -800,7 +800,7 @@ export const crossingGame: Game<
   prefs: [
     {
       kw: "fit-highlight",
-      name: "Color the clue list by where each number could go from the selected cell",
+      name: "Color the clue list by where each number could go from the selected square",
       type: "boolean",
       get: (ui) => ui.fitHighlight,
       set: (ui, v) => {
@@ -809,7 +809,7 @@ export const crossingGame: Game<
     },
     {
       kw: "highlight-runs",
-      name: "Highlight the across and down numbers running through the selected cell",
+      name: "Highlight the across and down numbers running through the selected square",
       type: "boolean",
       get: (ui) => ui.highlightRuns,
       set: (ui, v) => {

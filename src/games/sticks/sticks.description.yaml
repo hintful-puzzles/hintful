@@ -3,11 +3,11 @@
 game: sticks
 help:
   rules: |-
-    You are given a grid with several blocks. Fill every blank cell with a line, which connects two cell edges and goes horizontally or vertically through the center of the cell. The lines must follow these rules:
+    You are given a grid with several blocks. Fill every blank square with a line, which connects two square edges and goes horizontally or vertically through the center of the square. The lines must follow these rules:
 
     1. A number overlapping a line indicates the length of that line.
     2. A line can't overlap more than one number.
-    3. Numbers in blocks indicate the amount of lines connected to the cell.
+    3. Numbers in blocks indicate the amount of lines connected to the square.
   controls: |-
     {{controls}}
 
@@ -16,7 +16,7 @@ help:
     - heading: When a line connects to a block
       body: |-
         A line is connected to a block when it *runs into* it: a horizontal line
-        in the cell to its left or right, or a vertical line in the cell above or
+        in the square to its left or right, or a vertical line in the square above or
         below. A line lying alongside a block — a vertical line beside it, or a
         horizontal line above it — does not connect to it, and can never come to.
         That is why a block can run out of usable sides long before its number is
