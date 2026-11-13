@@ -37,6 +37,27 @@ new language.
 - **One wording a kind of deduction**, wherever games share the kind: the
   count met, the count starved, the last place, the last candidate, the
   neighbor ruled out, "this would break".
+- **A hint states only what is specific to this board.** It never restates a
+  rule of the game, a mechanic the interface already shows, or why a kind of
+  move exists: the player has the rules, and each such clause is reading load
+  before the useful part. Where a sentence opens with one, the clause is
+  dropped, not reworded. The first case (owner, 2026-11-13): Netslide's
+  "This column never slides, so only row moves shift this loose end."
+  spends its first clause on how the game's moves work.
+  **The test** (the census of 2026-11-13 found the line between a taught rule
+  and a cited reason is not obvious): drop the clause, and ask whether a
+  player who knows the rules can still see why this board forces the move. If
+  so, drop it. If not, it is the reason: keep it, in the fewest words, and
+  point at the board. Tents' "tents never touch, so the ringed squares around
+  this tent must be grass" is a reason; "so there is something to cross out"
+  is not.
+- **What a hint points at is the position.** Its first mark, and what it rings,
+  are things that depend on the board: never a fixed fact of the layout (a
+  line that never slides), and a destination is not ringed when the sentence
+  already says where to go ("right"). Netslide's first click showed a fixed
+  column's stripe (owner, 2026-11-13); the rule is
+  `point-the-first-hint-beat-at-the-board`, and Netslide's own sentence is
+  `reword-the-netslide-hint`, left to an agent working on that game alone.
 - **A game keeps a word of its own only where it needs it**, and says why.
 
 ## The bar
@@ -58,10 +79,15 @@ choose, not a suffix a sentence adds.
 ## Before it applies anything
 
 1. **Take the census by kind of deduction**, not by word: for each kind the
-   report names, every game's sentence for it, side by side.
+   report names, every game's sentence for it, side by side. It also flags,
+   per game, each clause that explains a rule, an interface mechanic or why a
+   move kind exists. The census is read-only and starts at once, beside
+   `build-hint-steps-in-the-engine`; only applying its result waits.
 2. **Propose the lexicon and each kind's one wording**, and show the owner
-   one page: each kind, its sentences today, the sentence proposed, and each
-   exception a game would keep with its reason.
+   one page: each kind, its sentences today, the sentence proposed, each
+   clause proposed for dropping or keeping as the reason (columns "drop",
+   "keep as the reason" and "reword"), and each exception a game would keep
+   with its reason.
 3. **Wait for the owner's word.** Every sentence a player reads is theirs to
    accept.
 
@@ -75,4 +101,6 @@ help pages' `## Hints` sections where they quote a hint's words, and the
 ## Acceptance
 
 The owner accepts the page before anything is applied, and the applied words
-in the deployed app after. A word the lexicon holds is written in no game.
+in the deployed app after. No hint text is edited, and nothing a player reads
+changes, until then. A word the lexicon holds is written in no game, and no
+hint opens with a clause that restates a rule.
