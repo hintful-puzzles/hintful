@@ -15,6 +15,7 @@ import {
   type Said,
   type Sentence,
   sentence,
+  unshaped,
 } from "../../engine/hint-words.ts";
 
 /** A grid square, by its index in the arena. */
@@ -42,25 +43,21 @@ export const say = {
   /** The roll picks up the paint of the square it lands on, leaving `left`
    * painted squares on the arena. */
   collect: (dest: number, left: number): Sentence =>
-    sentence({
-      move: rollOnto(dest),
-      relation: {
-        kind: "effect",
-        effect:
-          left === 0
-            ? phrase`a plain face picks up the last of the paint`
-            : phrase`a plain face picks up its paint, leaving ${paintedSquares(left)}`,
-      },
-    }),
+    unshaped(
+      phrase`${rollOnto(dest).capitalized()}, leaving ${left === 0 ? "no painted squares" : paintedSquares(left)}.`,
+      "bare",
+    ),
 
   /** The roll changes no paint on its way to the goal: a painted square, or
    * null where no outline can name it (`hint.ts`'s `narrate`). */
   travel: (dest: number, goal: number | null): Sentence =>
-    sentence({
-      ...aimAt(goal),
-      move: rollOnto(dest),
-      relation: { kind: "effect", effect: phrase`no paint changes` },
-    }),
+    goal === null
+      ? unshaped(phrase`${rollOnto(dest).capitalized()}.`, "bare")
+      : sentence({
+          aim: theGoal(goal),
+          move: rollOnto(dest),
+          relation: { kind: "serves" },
+        }),
 
   /** The goal is one roll away, and that roll would land a painted face on it. */
   comeRound: (dest: number, goal: number): Sentence =>
