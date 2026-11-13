@@ -26,7 +26,6 @@ import {
   describedLadder,
   type Ladder,
   ladderTechniques,
-  type ReasonOf,
   runLadder,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
@@ -49,7 +48,7 @@ export interface PearlGeometry extends SquareTiling {
 const geometries = new Map<string, PearlGeometry>();
 
 /** The tiling of a `w × h` board, built once a shape. */
-export function geometryOf(w: number, h: number): PearlGeometry {
+function geometryOf(w: number, h: number): PearlGeometry {
   const key = `${w}x${h}`;
   let g = geometries.get(key);
   if (g === undefined) {
@@ -78,38 +77,21 @@ function dealtOf(clues: Uint8Array): pearl.Dealt {
   return { pearl: clueList(at, v, clues.length) };
 }
 
-/** Why one firing of the ladder holds: its technique and its binding, read
- * before the firing changes anything. */
-export interface Fired {
-  readonly kind: pearl.LadderId;
-  readonly b: Readonly<Record<string, unknown>>;
-}
-
-const fired =
-  <B extends object>(kind: pearl.LadderId): ReasonOf<B> =>
-  (b): Fired => ({ kind, b: { ...(b as Record<string, unknown>) } });
-
-/** The ladder over the dealt pearls, each technique with its reason. */
+/** The ladder over the dealt pearls. */
 function pearlLadder(dl: pearl.Dealt): Ladder {
   const rung = <B extends object>(
-    kind: pearl.LadderId,
     run: (b: never, sp: GridSpace, cl: pearl.Dealt, fire: never) => number,
-  ) =>
-    compiledRung(
-      run as Parameters<typeof compiledRung<B, pearl.Dealt>>[0],
-      dl,
-      fired<B>(kind),
-    );
+  ) => compiledRung(run as Parameters<typeof compiledRung<B, pearl.Dealt>>[0], dl);
   return describedLadder(pearl, {
-    square: rung("square", pearl.square),
-    blackPearl: rung("blackPearl", pearl.blackPearl),
-    blackRunsOn: rung("blackRunsOn", pearl.blackRunsOn),
-    blackCannotRunOn: rung("blackCannotRunOn", pearl.blackCannotRunOn),
-    whiteCannotTurn: rung("whiteCannotTurn", pearl.whiteCannotTurn),
-    whiteTurnsOpposite: rung("whiteTurnsOpposite", pearl.whiteTurnsOpposite),
-    closed: rung("closed", pearl.closed),
-    earlyLoop: rung("earlyLoop", pearl.earlyLoop),
-    earlyThrough: rung("earlyThrough", pearl.earlyThrough),
+    square: rung(pearl.square),
+    blackPearl: rung(pearl.blackPearl),
+    blackRunsOn: rung(pearl.blackRunsOn),
+    blackCannotRunOn: rung(pearl.blackCannotRunOn),
+    whiteCannotTurn: rung(pearl.whiteCannotTurn),
+    whiteTurnsOpposite: rung(pearl.whiteTurnsOpposite),
+    closed: rung(pearl.closed),
+    earlyLoop: rung(pearl.earlyLoop),
+    earlyThrough: rung(pearl.earlyThrough),
   });
 }
 

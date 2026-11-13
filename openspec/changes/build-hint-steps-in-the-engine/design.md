@@ -608,9 +608,67 @@ defect found in the game, said which.
   counted firings; a contradiction mid-walk is the unlocalized refusal (the old
   plan ended there with its steps so far).
 
-### What Pearl, Tracks, Path and Spokes need beyond `describedEdgeHint` (2026-11-13, read, not built)
+### Pearl, built (2026-11-13), and the carry-on hook that was not needed
 
-*Path and Spokes are built (above) and needed nothing beyond Dominosa's two additions; the rest of this section is about Pearl and Tracks.*
+- **No carry-on hook.** The `step` of `describedEdgeHint` is handed the live
+  marks and runs after the firing and before the next one is taken, so a step
+  that draws more than the firing did (Pearl's black-pearl run-on and white-pearl
+  carry, `m.place(e, LINE)`) does it there, and what the sentence is told of the
+  carried lines is its own `marked`. The same holds for state kept beside the
+  marks (Tracks' board, below): it is the walk's `ctx`, changed in `step`. The
+  hook the earlier read expected is therefore this one-line contract, not an
+  addition; Slant, Net, Magnets and Map should be read against it first.
+- **`says` is `terms` of the binding** (`c`; `c, e`; `e`; none for `closed`) and
+  `marks: {}`: the game's `reasonOf` turns a technique and its terms into its
+  premise on the edges as they stood before the firing. `reads` (a hook) gives
+  the premise's squares; the walk asks it before a firing is taken, so the live
+  marks are the "before" there, and in `step` they are the marks with the
+  firing's facts reset to open.
+- **`closed` makes no step** (the loop only confirms): `step` returns no legs,
+  and `done` ends the plan on the flag it set. A firing whose edges the board
+  already shows (crosses beside a full square) is no step either.
+- **Rungs are now technique ids**: `blackPearl` (was part of `square`),
+  `earlyLoop` (was `closesEarly`), `earlyThrough` (was `closesEarlyThrough`).
+  `closed` is not a rung a player meets. Pins, the quality ledger and the
+  render scenario's pin keys follow.
+- **Comparison.** 32,200 lines at `HEAD` (presets, 14 boards each, 0/15/35/60% of
+  the solution's lines and some crosses played, every recomputed plan listed,
+  plan cap lifted) are the same as at `HEAD`, words, marks, highlights and move,
+  but for the rung's name; the pinned positions' 3,035 lines (every rung, the
+  rare `earlyThrough` included) likewise. The fingerprint's snapshot moved on the
+  rung census and on boards of more than 24 steps (the plan cap, checked by
+  running `HEAD` with a cap of 40).
+- **Changes of behavior**: the plan holds 40 steps (24 firings before);
+  a contradiction mid-walk is the unlocalized refusal (it was
+  `PUZZLE_NOT_REASONABLE`).
+- **A test dropped**: "every step stands on the board the player can see" read
+  the plan's internal edges, which no longer exist; plan purity (the cross-game
+  guard) holds the same claim.
+
+### Tracks, built (2026-11-13)
+
+- **Two engine additions**: `roles` (`prerequisite`, `fallback`) passed to the
+  walk, and `tiers.count` as a function of the state (the board's own difficulty
+  is the cap, with no escalation above it).
+- **The board kept beside the marks** is the walk's `ctx` (`board`), changed in
+  `step` once the premise is read from it, so the next firing's `reads` and
+  premise see it as the firing left it. `says` is `terms` of the binding (`c`;
+  `L`; `e, G`; `e, G, H`; `L, p, q`), `marks: {}`; the picture (rings, outlines,
+  clue digits, hatch) is the game's own `TracksPicture` into `marked`, as before.
+- **Rungs are technique ids**: `oneWayIn`, `closeLoop`, `strand`, `finishEarly`,
+  `looseEnd`, `parity`, and `sharedFateEmpties` apart from `sharedFate`.
+- **Comparison.** 19,307 lines at `HEAD` (4 presets, 4 boards each, 4 shares of
+  the solution's marks, every plan listed, cap lifted) identical but for the
+  rung's name and the refusal text where the player's marks clash (48 positions,
+  refused at the same places). The snapshot moved on seven boards: the plan cap
+  (checked as Pearl's).
+- **A test dropped**: "no firing the walk makes concludes what the board already
+  decides" read unshown firings; the plan shows every firing, so the test over the
+  shown steps holds the same. The rung census reads every step of every plan.
+
+### What Pearl, Tracks, Path and Spokes needed beyond `describedEdgeHint` (2026-11-13, read before they were built)
+
+*All four are built (above); this is what the read expected. The carry-on hook it predicted was not needed.*
 
 
 - **Pearl and Tracks are on the older plan engine** (`deduceHintPlan`, plan cap

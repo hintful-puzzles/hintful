@@ -3,14 +3,15 @@
 exports[`tracks: pinned hint positions > says, at each pin 1`] = `
 {
   "bothSidesLeft": "The track can't cross the outlined sides, so it must run through the ringed one.",
+  "closeLoop": "The outlined track already joins the squares this side separates, so crossing it would close a loop: it must be blocked.",
   "clueExact": "Clue 8 is the length of this row, so every square in it must carry track.",
   "clueFull": "By clue 2, this row's track squares are the outlined ones, so every other square in it must be empty.",
-  "crossingParity": "Every entry to the striped block needs an exit, and it has 1 outlined crossing, so this last side must carry track.",
-  "looseEndSpans": "This row has 2 track squares left, and none of the outlined ones can cross it, so the loose end must run on (ringed).",
-  "onlyOneSideLeft": "The outlined sides leave the ringed square one way in, and track needs two, so it must be empty.",
+  "finishEarly": "Crossing this side would finish the track from A to B short of this column's outlined clue, so the side must be blocked.",
+  "looseEnd": "This row has 2 track squares left, and none of the outlined ones can cross it, so the loose end must run on (ringed).",
+  "oneWayIn": "The outlined sides leave the ringed square one way in, and track needs two, so it must be empty.",
+  "parity": "Every entry to the striped block needs an exit, and it has 1 outlined crossing, so this last side must carry track.",
   "sharedFate": "The outlined sides send track in this square to the right, but this row's clue 1 allows one more, so it must be empty.",
-  "wouldCloseLoop": "The outlined track already joins the squares this side separates, so crossing it would close a loop: it must be blocked.",
-  "wouldFinishEarly": "Crossing this side would finish the track from A to B short of this column's outlined clue, so the side must be blocked.",
-  "wouldStrandTrack": "Crossing this side would finish the track from A to B, stranding the outlined track, so the side must be blocked.",
+  "sharedFateEmpties": "Emptying this square empties the outlined one too, but this column's clue 7 spares one more, so it must carry track.",
+  "strand": "Crossing this side would finish the track from A to B, stranding the outlined track, so the side must be blocked.",
 }
 `;

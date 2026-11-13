@@ -61,7 +61,7 @@ const pinned = describeHintKindPins({
     // A black pearl read off its own edges, drawing a line.
     blackPearlArm: {
       leg: (step, state) =>
-        step.rung === "square" &&
+        step.rung === "blackPearl" &&
         (step.highlights as PearlHint).targets.some((t) => t.line) &&
         stepMarks(step)
           .of("outline", SQUARE)

@@ -9,17 +9,17 @@
  * struck it.
  */
 
+import {
+  describedEdgeHint,
+  type EdgeSpoken,
+  type Fired as FiredOf,
+} from "../../engine/described-edge-hint.ts";
+import { spokenOf } from "../../engine/described-hint.ts";
 import { EDGE } from "../../engine/edge-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  type HintRefusal,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
-import { ladderWalk, type Taken, TIERS } from "../../engine/ladder-runtime.ts";
+import type { CellMarks, Ladder, Taken } from "../../engine/ladder-runtime.ts";
 import {
   bitDirection,
   D,
@@ -40,9 +40,8 @@ import {
   say,
 } from "./hint-text.ts";
 import { executeMove } from "./moves.ts";
-import type * as pearl from "./pearl.compiled.ts";
+import * as pearl from "./pearl.compiled.ts";
 import {
-  type Fired,
   LINE,
   ladderOf,
   marksOn,
@@ -65,7 +64,7 @@ import {
  * way, and the plan is recomputed then anyway; it also keeps `hint()` cheap
  * enough for the cross-game resume walk, which asks after every move.
  */
-const PLAN_CAP = 24;
+const PLAN_CAP = 40;
 
 /** An edge a step decides: the side of square `sq` toward `dir` (`R` or `D`,
  * so each edge has one name), and whether it carries the line. */
@@ -86,7 +85,7 @@ export interface PearlHint {
  * binding. Squares are cell indices (`y * w + x`); a direction is a single
  * `R`/`U`/`L`/`D` bit.
  */
-export type PearlReason =
+type PearlReason =
   /** A square's pearl and edges leave it one way to take some edge. */
   | { kind: "square"; sq: number }
   /** A black pearl's line runs straight through the next square along `dir`. */
@@ -118,8 +117,6 @@ interface View {
 
 /** One firing on the hint path. */
 interface PearlFiring {
-  /** Why it holds; `null` for the closed loop, which only confirms. */
-  reason: PearlReason | null;
   /** The edges it decided. */
   ops: PearlEdgeOp[];
   /** The edges just before it fired, which is what its sentence describes. */
@@ -218,11 +215,15 @@ function leftOut(v: View, piece: readonly number[], also: number | null): LeftOu
  * The firing's premise, as the narration names it, from its technique's
  * binding on the edges before it fired. `null` for the closed loop.
  */
-function reasonOf(v: View, fired: Fired, before: Uint8Array): PearlReason | null {
-  const b = fired.b;
-  const c = b["c"] as number;
-  const e = b["e"] as number;
-  switch (fired.kind) {
+function reasonOf(
+  v: View,
+  kind: pearl.LadderId,
+  terms: { c?: number; e?: number },
+  before: ArrayLike<number>,
+): PearlReason | null {
+  const c = terms.c as number;
+  const e = terms.e as number;
+  switch (kind) {
     case "square":
     case "blackPearl":
       return { kind: "square", sq: c };
@@ -468,7 +469,7 @@ function areaOf(v: View, reason: PearlReason): number[] {
 
 /** The player's edges as the description reads them: a line, a cross, or
  * open. */
-export function recordedEdges(state: PearlState, g: PearlGeometry): Uint8Array {
+function recordedEdges(state: PearlState, g: PearlGeometry): Uint8Array {
   const known = new Uint8Array(g.sp.edges.length);
   for (let e = 0; e < known.length; e++) {
     const i = g.edgeSquare[e];
@@ -492,17 +493,116 @@ function evident(v: View, op: PearlEdgeOp): boolean {
   );
 }
 
-/** The hint's rungs: the kinds of premise the narration speaks. */
-export const PEARL_RUNGS = [
-  "square",
-  "blackRunsOn",
-  "blackCannotRunOn",
-  "whiteCannotTurn",
-  "whiteTurnsOpposite",
-  "closesEarly",
-  "closesEarlyThrough",
-] as const;
-export type PearlRung = (typeof PEARL_RUNGS)[number];
+/** What each technique says, as the hint's sentences read it. */
+type PearlSays = pearl.SaysById;
+
+/** The rungs, the techniques a step can speak: every one but the closed loop,
+ * which only confirms. */
+export const PEARL_RUNGS = pearl.SAYS_KINDS.filter((k) => k !== "closed");
+export type PearlRung = Exclude<pearl.LadderId, "closed">;
+
+/** What the walk reads a firing by: the board's edges, live as the marks hold
+ * them, and whether the lines have closed into the loop. */
+interface PearlWalkContext {
+  view: View;
+  closed: boolean;
+}
+
+/** The firing's premise from what it says, on `grid` as the edges stood before
+ * it fired. */
+function premiseOf(
+  view: View,
+  taken: Taken,
+  grid: ArrayLike<number>,
+): PearlReason | null {
+  const { says } = spokenOf<{ terms: { c?: number; e?: number } }>(taken);
+  return reasonOf(view, taken.entry.id as pearl.LadderId, says.terms, grid);
+}
+
+/** What a sentence is told of its step: the firing, why it holds, and the
+ * board it reads. */
+interface PearlMarked {
+  view: View;
+  firing: ShownFiring;
+  reason: PearlReason;
+}
+
+/** Every technique's sentence is the one `narrate` says for its premise. */
+const sentence = (_spoken: unknown, { view, firing, reason }: PearlMarked): Sentence =>
+  narrate(view, firing, reason);
+
+const sentences: {
+  [K in keyof PearlSays]: (
+    spoken: EdgeSpoken<PearlSays[K]>,
+    marked: PearlMarked,
+  ) => Sentence;
+} = {
+  closed: () => {
+    throw new Error("pearl hint: the closed loop makes no step");
+  },
+  square: sentence,
+  blackPearl: sentence,
+  blackRunsOn: sentence,
+  blackCannotRunOn: sentence,
+  whiteCannotTurn: sentence,
+  whiteTurnsOpposite: sentence,
+  earlyLoop: sentence,
+  earlyThrough: sentence,
+};
+
+/** A firing's step: the edges it decided and the lines the pearls carry on
+ * from them, drawn on the working board in the same step. */
+function stepOf(fired: FiredOf<PearlSays[keyof PearlSays], PearlWalkContext>): {
+  move: PearlMove;
+  highlights: PearlHint;
+  marked: PearlMarked;
+}[] {
+  const { taken, ctx, marks: m } = fired;
+  const { view } = ctx;
+  // The edges as they stood before the firing: every edge it sets was open.
+  const before = Uint8Array.from(m.grid);
+  for (let i = 0; i < taken.facts.length; i += 3) before[taken.facts[i + 1]] = 0;
+  const reason = premiseOf(view, taken, before);
+  if ((taken.entry.id as pearl.LadderId) === "closed") ctx.closed = true;
+  const ops: PearlEdgeOp[] = [];
+  for (let e = 0; e < m.grid.length; e++)
+    if (m.grid[e] !== before[e]) ops.push(opOf(view.g, e, m.grid[e] === LINE));
+  const carried = carryOn(view, (e) => m.place(e, LINE), ops);
+  const shown = [...ops, ...carried.map((c) => c.op)].filter(
+    (op) => !evident(view, op),
+  );
+  // The closed loop only confirms, and a firing whose edges the board already
+  // shows has nothing to ask of the player.
+  if (reason === null || shown.length === 0) return [];
+  return [
+    {
+      move: moveOf(view, shown),
+      highlights: { targets: shown },
+      marked: { view, firing: { ops, before, carried, shown }, reason },
+    },
+  ];
+}
+
+/**
+ * The ladder over the player's lines and crosses, for the engine's hint to
+ * walk (`engine/described-edge-hint.ts`).
+ */
+function pearlWalk(state: PearlState): {
+  marks: CellMarks;
+  entries: Ladder["entries"];
+  ctx: PearlWalkContext;
+} {
+  const { g, ladder } = ladderOf(state.w, state.h, state.clues);
+  const marks = marksOn(g, recordedEdges(state, g));
+  const view: View = {
+    w: state.w,
+    h: state.h,
+    clues: state.clues,
+    g,
+    grid: marks.grid,
+  };
+  return { marks, entries: ladder.entries, ctx: { view, closed: false } };
+}
 
 /**
  * Deduce the plan from the player's lines and crosses.
@@ -511,95 +611,28 @@ export type PearlRung = (typeof PEARL_RUNGS)[number];
  * takes a Normal firing while an Easy one is left, which is the
  * easiest-first order a hint wants anyway.
  */
-export function pearlHint(
-  state: PearlState,
-):
-  | { ok: true; steps: HintStep<PearlMove, PearlHint, PearlRung>[] }
-  | { ok: false; error: HintRefusal } {
-  const { view, impossible, plan } = pearlPlan(state);
-
-  // `findMistakes` vouches for every line and cross, so a contradiction here
-  // would mean the deduction is unsound: say the honest thing.
-  if (impossible) return { ok: false, error: PUZZLE_NOT_REASONABLE };
-  if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-
-  return {
-    ok: true,
-    steps: plan.map((f) => {
-      // `showable` admits only firings with a premise.
-      const { reason } = f;
-      if (!reason) throw new Error("pearl hint: a step with no premise was shown");
-      const words = narrate(view, f, reason);
-      return {
-        move: moveOf(view, f.shown),
-        rung: reason.kind,
-        explanation: words.text,
-        words,
-        highlights: { targets: f.shown },
-      };
-    }),
-  };
-}
-
-/** The firings a plan shows, each with the edges it was found on. */
-export function pearlPlan(state: PearlState): {
-  view: View;
-  impossible: boolean;
-  plan: ShownFiring[];
-} {
-  const { g, ladder } = ladderOf(state.w, state.h, state.clues);
-  const m = marksOn(g, recordedEdges(state, g));
-  const view: View = { w: state.w, h: state.h, clues: state.clues, g, grid: m.grid };
-  const reasons = new WeakMap<object, PearlReason | null>();
-  let before = Uint8Array.from(m.grid);
-  const reasonFor = (taken: Taken): PearlReason | null => {
-    const fired = taken.reasons[0] as Fired;
-    let r = reasons.get(fired);
-    if (r === undefined) {
-      r = reasonOf(view, fired, before);
-      reasons.set(fired, r);
-    }
-    return r;
-  };
-  const walk = ladderWalk(
-    m,
-    ladder.entries,
-    { [TIERS]: ladder.entries.length },
-    (t) => {
-      const r = reasonFor(t);
-      return r ? premise(view, r) : [];
-    },
-  );
-  let broken = false;
-  let closed = false;
-  const { plan } = deduceHintPlan<View, ShownFiring, string>({
-    board: view,
-    status: () => (broken ? "broken" : closed || !m.grid.includes(0) ? "done" : "open"),
-    incomplete: "open",
-    next: (v) => {
-      before = Uint8Array.from(m.grid);
-      const taken = walk.next();
-      if (taken === null) return null;
-      if (taken === "contradiction") {
-        broken = true;
-        return null;
-      }
-      const reason = reasonFor(taken);
-      if ((taken.entry.id as pearl.LadderId) === "closed") closed = true;
-      const ops: PearlEdgeOp[] = [];
-      for (let e = 0; e < m.grid.length; e++)
-        if (m.grid[e] !== before[e]) ops.push(opOf(g, e, m.grid[e] === LINE));
-      const carried = carryOn(v, (e) => m.place(e, LINE), ops);
-      const shown = [...ops, ...carried.map((c) => c.op)].filter(
-        (op) => !evident(v, op),
-      );
-      return { reason, ops, before, carried, shown };
-    },
-    showable: (_v, f) => f.reason !== null && f.shown.length > 0,
-    planCap: PLAN_CAP,
-  });
-  return { view, impossible: broken, plan };
-}
+export const pearlHint = describedEdgeHint<
+  PearlState,
+  PearlMove,
+  PearlHint,
+  PearlMarked,
+  PearlWalkContext,
+  PearlSays,
+  PearlRung
+>({
+  name: "pearl hint",
+  walk: pearlWalk,
+  tiers: { lowest: () => pearl.tiers.length - 1, count: pearl.tiers.length },
+  done: (m, ctx) => ctx.closed || !m.grid.includes(0),
+  plan: PLAN_CAP,
+  // The squares the premise reads, as the board stands before the firing.
+  reads: (taken, ctx) => {
+    const reason = premiseOf(ctx.view, taken, ctx.view.grid);
+    return reason === null ? [] : premise(ctx.view, reason);
+  },
+  step: stepOf,
+  say: sentences,
+});
 
 /** The move that makes these edges: each a line or a cross, set on the squares
  * either side of it. */

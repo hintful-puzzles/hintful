@@ -30,7 +30,6 @@ import {
   describedLadder,
   type Ladder,
   ladderTechniques,
-  type ReasonOf,
   runLadder,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
@@ -108,40 +107,23 @@ function dealtOf(b: Board): tracks.Dealt {
   };
 }
 
-/** Why one firing of the ladder holds: its technique and its binding, read
- * before the firing changes anything. */
-export interface Fired {
-  readonly kind: tracks.LadderId;
-  readonly b: Readonly<Record<string, unknown>>;
-}
-
-const fired =
-  <B extends object>(kind: tracks.LadderId): ReasonOf<B> =>
-  (b): Fired => ({ kind, b: { ...(b as Record<string, unknown>) } });
-
-/** The ladder over the dealt clues, each technique with its reason. */
+/** The ladder over the dealt clues. */
 function tracksLadder(dl: tracks.Dealt): Ladder {
   const rung = <B extends object>(
-    kind: tracks.LadderId,
     run: (b: never, sp: GridSpace, cl: tracks.Dealt, fire: never) => number,
-  ) =>
-    compiledRung(
-      run as Parameters<typeof compiledRung<B, tracks.Dealt>>[0],
-      dl,
-      fired<B>(kind),
-    );
+  ) => compiledRung(run as Parameters<typeof compiledRung<B, tracks.Dealt>>[0], dl);
   return describedLadder(tracks, {
-    oneWayIn: rung("oneWayIn", tracks.oneWayIn),
-    bothSidesLeft: rung("bothSidesLeft", tracks.bothSidesLeft),
-    clueFull: rung("clueFull", tracks.clueFull),
-    clueExact: rung("clueExact", tracks.clueExact),
-    closeLoop: rung("closeLoop", tracks.closeLoop),
-    strand: rung("strand", tracks.strand),
-    finishEarly: rung("finishEarly", tracks.finishEarly),
-    looseEnd: rung("looseEnd", tracks.looseEnd),
-    sharedFate: rung("sharedFate", tracks.sharedFate),
-    sharedFateEmpties: rung("sharedFateEmpties", tracks.sharedFateEmpties),
-    parity: rung("parity", tracks.parity),
+    oneWayIn: rung(tracks.oneWayIn),
+    bothSidesLeft: rung(tracks.bothSidesLeft),
+    clueFull: rung(tracks.clueFull),
+    clueExact: rung(tracks.clueExact),
+    closeLoop: rung(tracks.closeLoop),
+    strand: rung(tracks.strand),
+    finishEarly: rung(tracks.finishEarly),
+    looseEnd: rung(tracks.looseEnd),
+    sharedFate: rung(tracks.sharedFate),
+    sharedFateEmpties: rung(tracks.sharedFateEmpties),
+    parity: rung(tracks.parity),
   });
 }
 

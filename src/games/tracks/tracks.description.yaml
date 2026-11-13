@@ -146,6 +146,9 @@ techniques:
     tier: Easy
     for: "c in cells where not off(c) and |open(c)| + drawn(c) < 2"
     conclude: "not on(c) and strike(c, 1)"
+    says:
+      terms: { c: c }
+      marks: {}
   # A track square with as many sides left as it still needs rails: the
   # track crosses every one.
   - id: bothSidesLeft
@@ -154,12 +157,18 @@ techniques:
       c in cells where on(c) and drawn(c) < 2,
       F = open(c) where |F| > 0 and |F| + drawn(c) <= 2
     conclude: "|F| + drawn(c) = 2 and (forall y in F: place(edge(c, y), 1))"
+    says:
+      terms: { c: c }
+      marks: {}
   # A row or column with all the track squares its clue allows: the rest
   # hold none. One with more is inconsistent.
   - id: clueFull
     tier: Easy
     for: "L in lines, O = undecided(L) where |O| > 0 and laid(L) >= clue(count, L)"
     conclude: "laid(L) = clue(count, L) and (forall c in O: strike(c, 1))"
+    says:
+      terms: { L: L }
+      marks: {}
   # A row or column with all the empty squares its clue allows: the rest
   # hold track. One with more is inconsistent.
   - id: clueExact
@@ -169,6 +178,9 @@ techniques:
       O = undecided(L) where |O| > 0 and |cells(L)| - emptied(L) <= clue(count, L)
     conclude: >-
       |cells(L)| - emptied(L) = clue(count, L) and (forall c in O: strike(c, 2))
+    says:
+      terms: { L: L }
+      marks: {}
   # An open side between two track squares the rails already join: crossing
   # it would close a loop.
   - id: closeLoop
@@ -179,6 +191,9 @@ techniques:
       and not shut(end1(e), end2(e)),
       G = through(end1(e), R) where end2(e) in G
     conclude: "place(e, 2)"
+    says:
+      terms: { e: e, G: G }
+      marks: {}
   # An open side between two track squares the rails join to the track's
   # two ends: crossing it would finish the track, leaving a track square
   # off it.
@@ -192,6 +207,9 @@ techniques:
       where end2(e) not in G and ended(G) and ended(H)
       and (exists c in cells: on(c) and c not in G and c not in H)
     conclude: "place(e, 2)"
+    says:
+      terms: { e: e, G: G, H: H }
+      marks: {}
   # The same, where crossing it would finish the track short of a row's or
   # column's clue.
   - id: finishEarly
@@ -205,6 +223,9 @@ techniques:
       and (exists L in lines:
       count(c in cells(L) where c in G or c in H) < clue(count, L))
     conclude: "place(e, 2)"
+    says:
+      terms: { e: e, G: G, H: H }
+      marks: {}
   # A row or column two track squares short of its clue, besides its
   # finished ones, with one loose end running along it, and no square
   # unfinished in it that the track could cross it through: the loose end
@@ -223,6 +244,9 @@ techniques:
       p = nth(P, 0),
       Q = {y in adj4(p) where y in cells(L) and value(edge(p, y)) != 1}
     conclude: "|Q| = 1 and (forall y in Q: place(edge(p, y), 1))"
+    says:
+      terms: { L: L }
+      marks: {}
   # A row or column one track square short of its clue: a square whose
   # only way on, were it track, is into the next square along the line
   # would take two, so it holds none.
@@ -234,6 +258,9 @@ techniques:
       q in adj4(p) where q in undecided(L)
       and count(y in adj4(p) where y != q and not shut(p, y)) < 2
     conclude: "strike(p, 1)"
+    says:
+      terms: { L: L, p: p, q: q }
+      marks: {}
   # A row or column one empty square short of its clue: the same square
   # left empty would empty the next too, so the next holds track.
   - id: sharedFateEmpties
@@ -244,6 +271,9 @@ techniques:
       q in adj4(p) where q in undecided(L)
       and count(y in adj4(p) where y != q and not shut(p, y)) < 2
     conclude: "strike(q, 2)"
+    says:
+      terms: { L: L, p: p, q: q }
+      marks: {}
   # An open side whose squares no other open side joins: the track crosses
   # into the block on one side of it as often as it leaves, its ends
   # counted, so the side carries track where the block's crossings so far
@@ -260,3 +290,6 @@ techniques:
       k = sum(c in G of count(y in adj4(c) where y not in G and value(edge(c, y)) = 1)
       + exits(c))
     conclude: "(k mod 2 = 1 implies place(e, 1)) and (k mod 2 = 0 implies place(e, 2))"
+    says:
+      terms: { e: e, G: G }
+      marks: {}

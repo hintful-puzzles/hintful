@@ -19,6 +19,25 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "oneWayIn" | "bothSidesLeft" | "clueFull" | "clueExact" | "closeLoop" | "strand" | "finishEarly" | "looseEnd" | "sharedFate" | "sharedFateEmpties" | "parity";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  oneWayIn: OneWayInSays;
+  bothSidesLeft: BothSidesLeftSays;
+  clueFull: ClueFullSays;
+  clueExact: ClueExactSays;
+  closeLoop: CloseLoopSays;
+  strand: StrandSays;
+  finishEarly: FinishEarlySays;
+  looseEnd: LooseEndSays;
+  sharedFate: SharedFateSays;
+  sharedFateEmpties: SharedFateEmptiesSays;
+  parity: ParitySays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["oneWayIn","bothSidesLeft","clueFull","clueExact","closeLoop","strand","finishEarly","looseEnd","sharedFate","sharedFateEmpties","parity"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -202,10 +221,16 @@ export interface OneWayInBinding {
   c: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface OneWayInSays {
+  terms: { c: number; };
+  marks: {  };
+}
+
 const oneWayInFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function oneWayIn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneWayInBinding> | null): number {
+export function oneWayIn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneWayInBinding, OneWayInSays> | null): number {
   const _g42: number[] = [];
   const facts = oneWayInFacts;
   let fired = 0;
@@ -342,7 +367,10 @@ export function oneWayIn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneWayIn
     if (!(_c122)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ c: v_c }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { c: v_c }, marks: {  } };
+        if (!fire({ c: v_c }, facts, _says)) return 1;
+      }
     }
   }
   return fired;
@@ -353,10 +381,16 @@ export interface BothSidesLeftBinding {
   F: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface BothSidesLeftSays {
+  terms: { c: number; };
+  marks: {  };
+}
+
 const bothSidesLeftFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function bothSidesLeft(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BothSidesLeftBinding> | null): number {
+export function bothSidesLeft(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BothSidesLeftBinding, BothSidesLeftSays> | null): number {
   const _g64: number[] = [];
   const facts = bothSidesLeftFacts;
   let fired = 0;
@@ -549,7 +583,10 @@ export function bothSidesLeft(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Bot
       if (!(_c155)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, F: v_F.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { c: v_c }, marks: {  } };
+          if (!fire({ c: v_c, F: v_F.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -561,11 +598,17 @@ export interface ClueFullBinding {
   O: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ClueFullSays {
+  terms: { L: number; };
+  marks: {  };
+}
+
 const clueFullFacts: number[] = [];
 let clueFullCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function clueFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueFullBinding> | null): number {
+export function clueFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueFullBinding, ClueFullSays> | null): number {
   const _g22: number[] = [];
   const facts = clueFullFacts;
   let fired = 0;
@@ -650,7 +693,10 @@ export function clueFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueFull
       if (!(_c63)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ L: v_L, O: v_O.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { L: v_L }, marks: {  } };
+          if (!fire({ L: v_L, O: v_O.slice() }, facts, _says)) return 1;
+        }
         cands.fill(-1);
         laidMarkedKept.clear();
       }
@@ -664,10 +710,16 @@ export interface ClueExactBinding {
   O: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ClueExactSays {
+  terms: { L: number; };
+  marks: {  };
+}
+
 const clueExactFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function clueExact(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueExactBinding> | null): number {
+export function clueExact(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueExactBinding, ClueExactSays> | null): number {
   const _g27: number[] = [];
   const facts = clueExactFacts;
   let fired = 0;
@@ -783,7 +835,10 @@ export function clueExact(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueExa
       if (!(_c82)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ L: v_L, O: v_O.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { L: v_L }, marks: {  } };
+          if (!fire({ L: v_L, O: v_O.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -796,10 +851,16 @@ export interface CloseLoopBinding {
   G: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CloseLoopSays {
+  terms: { e: number; G: readonly number[]; };
+  marks: {  };
+}
+
 const closeLoopFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function closeLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CloseLoopBinding> | null): number {
+export function closeLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CloseLoopBinding, CloseLoopSays> | null): number {
   const _g38: number[] = [];
   const facts = closeLoopFacts;
   let fired = 0;
@@ -986,7 +1047,10 @@ export function closeLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CloseLo
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ R: v_R.slice(), e: v_e, G: v_G.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { e: v_e, G: v_G.slice() }, marks: {  } };
+          if (!fire({ R: v_R.slice(), e: v_e, G: v_G.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -1000,10 +1064,16 @@ export interface StrandBinding {
   H: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface StrandSays {
+  terms: { e: number; G: readonly number[]; H: readonly number[]; };
+  marks: {  };
+}
+
 const strandFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^2. */
-export function strand(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StrandBinding> | null): number {
+export function strand(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StrandBinding, StrandSays> | null): number {
   const _g54: number[] = [];
   const facts = strandFacts;
   let fired = 0;
@@ -1299,7 +1369,10 @@ export function strand(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StrandBind
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ R: v_R.slice(), e: v_e, G: v_G.slice(), H: v_H.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { e: v_e, G: v_G.slice(), H: v_H.slice() }, marks: {  } };
+          if (!fire({ R: v_R.slice(), e: v_e, G: v_G.slice(), H: v_H.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -1313,10 +1386,16 @@ export interface FinishEarlyBinding {
   H: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface FinishEarlySays {
+  terms: { e: number; G: readonly number[]; H: readonly number[]; };
+  marks: {  };
+}
+
 const finishEarlyFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^2. */
-export function finishEarly(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FinishEarlyBinding> | null): number {
+export function finishEarly(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FinishEarlyBinding, FinishEarlySays> | null): number {
   const _g53: number[] = [];
   const facts = finishEarlyFacts;
   let fired = 0;
@@ -1607,7 +1686,10 @@ export function finishEarly(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Finis
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ R: v_R.slice(), e: v_e, G: v_G.slice(), H: v_H.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { e: v_e, G: v_G.slice(), H: v_H.slice() }, marks: {  } };
+          if (!fire({ R: v_R.slice(), e: v_e, G: v_G.slice(), H: v_H.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -1622,11 +1704,17 @@ export interface LooseEndBinding {
   Q: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LooseEndSays {
+  terms: { L: number; };
+  marks: {  };
+}
+
 const looseEndFacts: number[] = [];
 let looseEndCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function looseEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LooseEndBinding> | null): number {
+export function looseEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LooseEndBinding, LooseEndSays> | null): number {
   const _g62: number[] = [];
   const _g89: number[] = [];
   const _g119: number[] = [];
@@ -1854,7 +1942,10 @@ export function looseEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LooseEnd
         if (!(_c186)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, F: v_F.slice(), P: v_P.slice(), p: v_p, Q: v_Q.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { L: v_L }, marks: {  } };
+            if (!fire({ L: v_L, F: v_F.slice(), P: v_P.slice(), p: v_p, Q: v_Q.slice() }, facts, _says)) return 1;
+          }
           cands.fill(-1);
           crossableMarkedKept.clear();
         }
@@ -1870,11 +1961,17 @@ export interface SharedFateBinding {
   q: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SharedFateSays {
+  terms: { L: number; p: number; q: number; };
+  marks: {  };
+}
+
 const sharedFateFacts: number[] = [];
 let sharedFateCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function sharedFate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedFateBinding> | null): number {
+export function sharedFate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedFateBinding, SharedFateSays> | null): number {
   const _g60: number[] = [];
   const _g82: number[] = [];
   const _g115: number[] = [];
@@ -2107,7 +2204,10 @@ export function sharedFate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shared
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, p: v_p, q: v_q }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { L: v_L, p: v_p, q: v_q }, marks: {  } };
+            if (!fire({ L: v_L, p: v_p, q: v_q }, facts, _says)) return 1;
+          }
           cands.fill(-1);
           laidMarkedKept.clear();
         }
@@ -2123,10 +2223,16 @@ export interface SharedFateEmptiesBinding {
   q: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SharedFateEmptiesSays {
+  terms: { L: number; p: number; q: number; };
+  marks: {  };
+}
+
 const sharedFateEmptiesFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function sharedFateEmpties(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedFateEmptiesBinding> | null): number {
+export function sharedFateEmpties(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedFateEmptiesBinding, SharedFateEmptiesSays> | null): number {
   const _g68: number[] = [];
   const _g90: number[] = [];
   const _g127: number[] = [];
@@ -2381,7 +2487,10 @@ export function sharedFateEmpties(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, p: v_p, q: v_q }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { L: v_L, p: v_p, q: v_q }, marks: {  } };
+            if (!fire({ L: v_L, p: v_p, q: v_q }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -2396,10 +2505,16 @@ export interface ParityBinding {
   k: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ParitySays {
+  terms: { e: number; G: readonly number[]; };
+  marks: {  };
+}
+
 const parityFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function parity(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ParityBinding> | null): number {
+export function parity(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ParityBinding, ParitySays> | null): number {
   const _g45: number[] = [];
   const _g90: number[] = [];
   const facts = parityFacts;
@@ -2602,7 +2717,10 @@ export function parity(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ParityBind
     if (!(_c168)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ O: v_O.slice(), e: v_e, G: v_G.slice(), k: v_k }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { e: v_e, G: v_G.slice() }, marks: {  } };
+        if (!fire({ O: v_O.slice(), e: v_e, G: v_G.slice(), k: v_k }, facts, _says)) return 1;
+      }
     }
   }
   return fired;

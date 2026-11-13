@@ -28,11 +28,9 @@ import { D, dirX, dirY, opposite, R, U } from "../../engine/square-edges.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import {
   narrate,
-  type TracksFiring,
   type TracksPicture,
   type TracksReason,
   type TracksRung,
-  tracksSteps,
 } from "./hint.ts";
 import { PIECE } from "./hint-text.ts";
 import { tracksGame } from "./index.ts";
@@ -77,19 +75,27 @@ function outlinedBy(step: { words?: Narration }) {
  * step it ever showed. One walk covers far more firings than one plan does. */
 function walk(params: TracksParams, seed: string) {
   const { desc } = tracksGame.newDesc(params, randomNew(seed));
+  return walkDesc(params, desc, seed);
+}
+
+/** {@link walk} on a board given by its description. */
+function walkDesc(params: TracksParams, desc: string, seed: string) {
   let state = tracksGame.newState(params, desc);
   const steps: { step: (typeof out)[number]; before: TracksState }[] = [];
   const out: HintStep<TracksMove, unknown, TracksRung>[] = [];
+  /** The rung of every step of every plan asked for, not only the first. */
+  const planned = new Set<string>();
   for (let i = 0; i < 900; i++) {
     if (tracksGame.status(state) === "solved") break;
     const res = tracksGame.hint?.(state);
     if (!res?.ok) throw new Error(`${seed}: refused after ${i}: ${res?.error}`);
+    for (const s of res.steps) planned.add(s.rung);
     const step = res.steps[0];
     out.push(step);
     steps.push({ step, before: state });
     state = tracksGame.executeMove(state, step.move);
   }
-  return { steps, solved: tracksGame.status(state) === "solved" };
+  return { steps, planned, solved: tracksGame.status(state) === "solved" };
 }
 
 describe("every move a Tracks hint asks for is one the player may make", () => {
@@ -138,52 +144,14 @@ function contraryRefused(before: Board, op: TracksOp): boolean {
     : !uiCanFlipEdge(before, op.x, op.y, op.dir ?? 0, op.track);
 }
 
-/** Every firing the hint's walk makes on a board, shown or not, each with the
- * board as it stood before the firing and as it stands straight after. */
-function* walkedFirings(
-  params: TracksParams,
-  desc: string,
-): Generator<{ f: TracksFiring; before: Board; after: Board }> {
-  const steps = tracksSteps(tracksGame.newState(params, desc));
-  const { board } = steps;
-  for (;;) {
-    const before: Board = { ...board, sflags: Int32Array.from(board.sflags) };
-    const f = steps.next();
-    if (f === null || f === "contradiction") return;
-    // Consumed before the next `next()` call, so `after` is this firing's board.
-    yield { f, before, after: board };
-  }
-}
-
-/** {@link walkedFirings} on a board dealt from `seed`. */
-const recordedFirings = (params: TracksParams, seed: string) =>
-  walkedFirings(params, tracksGame.newDesc(params, randomNew(seed)).desc);
-
 describe("what the plan hides is exactly what the board already says", () => {
-  it("no firing the walk makes concludes what the board already decides", () => {
+  it("no step a player is shown is one their board already decides", () => {
     // The plan shows every firing, which is right only while the description
     // reads what the board says (a rail lays a square, closed sides shut it)
-    // before any technique concludes it.
-    let firings = 0;
-    for (const params of SHAPES) {
-      for (const seed of SEEDS) {
-        for (const { f, before } of recordedFirings(
-          params,
-          `agree-${params.w}-${params.diff}-${seed}`,
-        )) {
-          firings++;
-          const decided = f.ops.filter((op) => contraryRefused(before, op));
-          expect(decided, `${f.reason.kind}: ${JSON.stringify(decided)}`).toEqual([]);
-        }
-      }
-    }
-    expect(firings).toBeGreaterThan(200);
-  });
-
-  it("no step a player is shown is one their board already decides", () => {
-    // A guard over what reaches the screen: no step asks for sides the player
-    // has already closed off. Every op, not just the step as a whole, so a step
-    // cannot smuggle a redundant op in beside a real one.
+    // before any technique concludes it. So a guard over what reaches the
+    // screen: no step asks for sides the player has already closed off. Every
+    // op, not just the step as a whole, so a step cannot smuggle a redundant op
+    // in beside a real one.
     let shown = 0;
     for (const params of SHAPES) {
       for (const seed of SEEDS) {
@@ -282,7 +250,7 @@ describe("the picture holds exactly the number the sentence states", () => {
       const params = SHAPES[2];
       const { steps } = walk(params, `parity-${seed}`);
       for (const { step } of steps) {
-        if (step.rung !== "crossingParity") continue;
+        if (step.rung !== "parity") continue;
         checked++;
         const said = /no crossing is marked yet/.test(step.explanation)
           ? 0
@@ -310,41 +278,46 @@ describeHintPins({
   game: tracksGame,
   params: SHAPES,
   pins: {
-    /** Held on 1021 of 1664 positions walked. */
-    onlyOneSideLeft: "8x8de:k3l6c5e6v9f,4,S7,6,6,6,5,6,2,8,6,7,S6,6,5,2,2",
+    /** Held on 1066 of 1664 positions walked. */
+    oneWayIn: "8x8de:k3l6c5e6v9f,4,S7,6,6,6,5,6,2,8,6,7,S6,6,5,2,2",
     /** Held on 1664 of 1664 positions walked. */
     bothSidesLeft: "8x8de:h6eCzvA,2,4,2,2,1,4,7,S6,2,S6,5,4,2,3,3,3",
-    /** Held on 1402 of 1664 positions walked. */
+    /** Held on 1410 of 1664 positions walked. */
     clueFull: "8x8de:c5zbCm3n9b,2,4,3,5,1,S2,8,2,6,4,2,2,S5,4,2,2",
-    /** Held on 1318 of 1664 positions walked. */
+    /** Held on 1372 of 1664 positions walked. */
     clueExact: "8x8dt:p6zo9e,3,1,S2,4,6,4,2,6,8,4,S2,3,3,4,2,2",
-    /** Held on 623 of 1664 positions walked. */
-    wouldCloseLoop: {
+    /** Held on 724 of 1664 positions walked. */
+    closeLoop: {
       id: "10x10dh:zdCo956zaAp3cCb,3,2,1,4,6,4,10,S8,6,6,4,3,3,S5,6,6,9,7,3,4",
       moves:
         '[{"ops":[{"kind":"square","x":6,"y":0,"track":true,"set":true},{"kind":"square","x":6,"y":1,"track":true,"set":true},{"kind":"square","x":6,"y":2,"track":true,"set":true},{"kind":"square","x":6,"y":3,"track":true,"set":true}]},{"ops":[{"kind":"square","x":0,"y":9,"track":false,"set":true},{"kind":"square","x":1,"y":9,"track":false,"set":true},{"kind":"square","x":2,"y":9,"track":false,"set":true},{"kind":"square","x":5,"y":9,"track":false,"set":true},{"kind":"square","x":8,"y":9,"track":false,"set":true},{"kind":"square","x":9,"y":9,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":4,"y":9,"dir":2,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":6,"y":9,"dir":2,"track":true,"set":true}]},{"ops":[{"kind":"square","x":0,"y":8,"track":false,"set":true},{"kind":"square","x":1,"y":8,"track":false,"set":true},{"kind":"square","x":2,"y":8,"track":false,"set":true},{"kind":"square","x":5,"y":8,"track":false,"set":true},{"kind":"square","x":7,"y":8,"track":false,"set":true},{"kind":"square","x":8,"y":8,"track":false,"set":true},{"kind":"square","x":9,"y":8,"track":false,"set":true}]}]',
     },
-    /** Held on 107 of 1664 positions walked. */
-    wouldStrandTrack: {
+    /** Held on 157 of 1664 positions walked. */
+    strand: {
       id: "10x10dh:z5jC9z9dCf5oAa5d,2,2,1,S3,6,6,8,6,7,5,2,5,5,6,4,3,3,S9,5,4",
       moves:
         '[{"ops":[{"kind":"edge","x":4,"y":8,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"square","x":0,"y":9,"track":false,"set":true},{"kind":"square","x":1,"y":9,"track":false,"set":true},{"kind":"square","x":2,"y":9,"track":false,"set":true},{"kind":"square","x":7,"y":9,"track":false,"set":true},{"kind":"square","x":8,"y":9,"track":false,"set":true},{"kind":"square","x":9,"y":9,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":0,"y":8,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":6,"y":8,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"square","x":2,"y":8,"track":false,"set":true},{"kind":"square","x":5,"y":8,"track":false,"set":true},{"kind":"square","x":7,"y":8,"track":false,"set":true},{"kind":"square","x":8,"y":8,"track":false,"set":true},{"kind":"square","x":9,"y":8,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":1,"y":7,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":6,"y":7,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":4,"y":7,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"square","x":0,"y":0,"track":false,"set":true},{"kind":"square","x":0,"y":1,"track":false,"set":true},{"kind":"square","x":0,"y":2,"track":false,"set":true},{"kind":"square","x":0,"y":3,"track":false,"set":true},{"kind":"square","x":0,"y":4,"track":false,"set":true},{"kind":"square","x":0,"y":5,"track":false,"set":true},{"kind":"square","x":0,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"square","x":1,"y":0,"track":false,"set":true},{"kind":"square","x":1,"y":1,"track":false,"set":true},{"kind":"square","x":1,"y":2,"track":false,"set":true},{"kind":"square","x":1,"y":3,"track":false,"set":true},{"kind":"square","x":1,"y":4,"track":false,"set":true},{"kind":"square","x":1,"y":5,"track":false,"set":true},{"kind":"square","x":1,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":1,"y":7,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"square","x":2,"y":0,"track":false,"set":true},{"kind":"square","x":2,"y":1,"track":false,"set":true},{"kind":"square","x":2,"y":2,"track":false,"set":true},{"kind":"square","x":2,"y":3,"track":false,"set":true},{"kind":"square","x":2,"y":4,"track":false,"set":true},{"kind":"square","x":2,"y":5,"track":false,"set":true},{"kind":"square","x":2,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":2,"y":7,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"square","x":9,"y":7,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":8,"y":6,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"square","x":3,"y":6,"track":false,"set":true},{"kind":"square","x":4,"y":6,"track":false,"set":true},{"kind":"square","x":7,"y":6,"track":false,"set":true},{"kind":"square","x":9,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":6,"y":5,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":8,"y":5,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"square","x":3,"y":0,"track":false,"set":true},{"kind":"square","x":3,"y":1,"track":false,"set":true},{"kind":"square","x":3,"y":2,"track":false,"set":true},{"kind":"square","x":3,"y":3,"track":false,"set":true},{"kind":"square","x":3,"y":4,"track":false,"set":true},{"kind":"square","x":3,"y":5,"track":false,"set":true}]},{"ops":[{"kind":"square","x":4,"y":3,"track":true,"set":true},{"kind":"square","x":5,"y":3,"track":true,"set":true}]}]',
     },
     /** Kept by hand: see `FINISHES_EARLY`. */
-    wouldFinishEarly: FINISHES_EARLY,
-    /** Held on 196 of 1664 positions walked. */
-    looseEndSpans: {
+    finishEarly: FINISHES_EARLY,
+    /** Held on 233 of 1664 positions walked. */
+    looseEnd: {
       id: "8x8dt:h6q6r5e5kA,4,7,5,5,5,4,6,S4,3,S3,6,5,6,7,7,3",
       moves: [{ ops: [{ kind: "edge", x: 0, y: 0, dir: 1, track: true, set: true }] }],
     },
-    /** Held on 680 of 1664 positions walked. */
+    /** Held on 690 of 1664 positions walked. */
     sharedFate: {
       id: "10x10dh:zb3k6zzc9c,5,3,2,1,2,3,S2,5,4,5,6,8,6,2,S2,1,2,2,1,2",
       moves:
         '[{"ops":[{"kind":"square","x":0,"y":9,"track":false,"set":true},{"kind":"square","x":1,"y":9,"track":false,"set":true},{"kind":"square","x":2,"y":9,"track":false,"set":true},{"kind":"square","x":3,"y":9,"track":false,"set":true},{"kind":"square","x":4,"y":9,"track":false,"set":true},{"kind":"square","x":5,"y":9,"track":false,"set":true},{"kind":"square","x":8,"y":9,"track":false,"set":true},{"kind":"square","x":9,"y":9,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":7,"y":9,"dir":2,"track":true,"set":true}]},{"ops":[{"kind":"square","x":0,"y":8,"track":false,"set":true},{"kind":"square","x":1,"y":8,"track":false,"set":true},{"kind":"square","x":2,"y":8,"track":false,"set":true},{"kind":"square","x":3,"y":8,"track":false,"set":true},{"kind":"square","x":4,"y":8,"track":false,"set":true},{"kind":"square","x":5,"y":8,"track":false,"set":true},{"kind":"square","x":6,"y":8,"track":false,"set":true},{"kind":"square","x":8,"y":8,"track":false,"set":true},{"kind":"square","x":9,"y":8,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":7,"y":8,"dir":2,"track":true,"set":true}]}]',
     },
-    /** Held on 33 of 1664 positions walked. */
-    crossingParity: {
+    /** Held on 272 of 1664 positions walked. */
+    sharedFateEmpties: {
+      id: "10x10dh:fCk9eAzeAa3uClAf,2,3,3,S7,7,7,8,3,7,6,4,7,6,5,3,3,3,7,S9,6",
+      moves:
+        '[{"ops":[{"kind":"edge","x":0,"y":9,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"square","x":0,"y":5,"track":false,"set":true},{"kind":"square","x":1,"y":5,"track":false,"set":true},{"kind":"square","x":2,"y":5,"track":false,"set":true},{"kind":"square","x":3,"y":5,"track":false,"set":true},{"kind":"square","x":4,"y":5,"track":false,"set":true},{"kind":"square","x":5,"y":5,"track":false,"set":true},{"kind":"square","x":7,"y":5,"track":false,"set":true}]},{"ops":[{"kind":"square","x":0,"y":0,"track":false,"set":true},{"kind":"square","x":0,"y":1,"track":false,"set":true},{"kind":"square","x":0,"y":2,"track":false,"set":true},{"kind":"square","x":0,"y":3,"track":false,"set":true},{"kind":"square","x":0,"y":4,"track":false,"set":true},{"kind":"square","x":0,"y":6,"track":false,"set":true},{"kind":"square","x":0,"y":7,"track":false,"set":true}]},{"ops":[{"kind":"square","x":1,"y":4,"track":false,"set":true}]},{"ops":[{"kind":"square","x":2,"y":4,"track":false,"set":true}]},{"ops":[{"kind":"square","x":3,"y":4,"track":false,"set":true}]},{"ops":[{"kind":"square","x":4,"y":4,"track":false,"set":true}]}]',
+    },
+    parity: {
       id: "10x10dh:zd6lAeCf96o9i3dCiAa,2,3,4,5,4,4,5,4,S4,4,2,2,3,S3,4,6,4,6,6,3",
       moves:
         '[{"ops":[{"kind":"square","x":9,"y":9,"track":false,"set":true}]},{"ops":[{"kind":"square","x":9,"y":8,"track":false,"set":true}]},{"ops":[{"kind":"square","x":0,"y":0,"track":false,"set":true},{"kind":"square","x":0,"y":1,"track":false,"set":true},{"kind":"square","x":0,"y":4,"track":false,"set":true},{"kind":"square","x":0,"y":5,"track":false,"set":true},{"kind":"square","x":0,"y":6,"track":false,"set":true},{"kind":"square","x":0,"y":7,"track":false,"set":true},{"kind":"square","x":0,"y":8,"track":false,"set":true},{"kind":"square","x":0,"y":9,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":0,"y":2,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"square","x":3,"y":0,"track":false,"set":true},{"kind":"square","x":3,"y":1,"track":false,"set":true},{"kind":"square","x":3,"y":2,"track":false,"set":true},{"kind":"square","x":3,"y":6,"track":false,"set":true},{"kind":"square","x":3,"y":9,"track":false,"set":true}]},{"ops":[{"kind":"square","x":1,"y":4,"track":false,"set":true},{"kind":"square","x":2,"y":4,"track":false,"set":true},{"kind":"square","x":4,"y":4,"track":false,"set":true},{"kind":"square","x":5,"y":4,"track":false,"set":true},{"kind":"square","x":6,"y":4,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":4,"y":7,"dir":8,"track":false,"set":true}]},{"ops":[{"kind":"square","x":1,"y":3,"track":false,"set":true}]},{"ops":[{"kind":"square","x":9,"y":3,"track":false,"set":true}]},{"ops":[{"kind":"square","x":9,"y":2,"track":false,"set":true}]}]',
@@ -353,19 +326,20 @@ describeHintPins({
 });
 
 describe("every narratable premise is reached", () => {
-  // Adding a variant to `TracksReason` breaks this object until it is listed,
-  // which is what stops the census silently shrinking.
-  const ALL_KINDS: Record<TracksReason["kind"], true> = {
-    onlyOneSideLeft: true,
+  // Adding a technique breaks this object until it is listed, which is what
+  // stops the census silently shrinking.
+  const ALL_KINDS: Record<TracksRung, true> = {
+    oneWayIn: true,
     bothSidesLeft: true,
     clueFull: true,
     clueExact: true,
-    wouldCloseLoop: true,
-    wouldStrandTrack: true,
-    wouldFinishEarly: true,
-    looseEndSpans: true,
+    closeLoop: true,
+    strand: true,
+    finishEarly: true,
+    looseEnd: true,
     sharedFate: true,
-    crossingParity: true,
+    sharedFateEmpties: true,
+    parity: true,
   };
 
   it("reaches every premise", () => {
@@ -385,10 +359,9 @@ describe("every narratable premise is reached", () => {
       { params: tracksGame.decodeParams(small), desc: smallDesc },
     ];
     for (const { params, desc } of boards) {
-      for (const { f } of walkedFirings(params, desc)) {
-        firings++;
-        seen.add(f.reason.kind);
-      }
+      const walked = walkDesc(params, desc, desc);
+      firings += walked.steps.length;
+      for (const rung of walked.planned) seen.add(rung);
     }
     expect(firings, "the census walked no firings").toBeGreaterThan(200);
     expect([...seen].sort()).toEqual(Object.keys(ALL_KINDS).sort());

@@ -75,7 +75,7 @@ const MAX_AVOIDABLE = 0.05;
 
 describe("ladder hint plans continue from their latest step where they can", () => {
   it("finds the games that continue", () => {
-    expect(CONTINUING).toContain("path");
+    expect(CONTINUING).toContain("crossing");
   });
 
   it("accounts for every game on deduceHintPlan that does not", () => {

@@ -83,7 +83,14 @@ export interface EdgeHintSpec<
   ): { marks: CellMarks; entries: readonly LadderEntry[]; ctx: Ctx } | null;
   /** The walk begins at the lowest tier that solves the board and goes up a
    * tier only where one has nothing to say. */
-  tiers: { lowest(state: State): number; count: number };
+  tiers: { lowest(state: State): number; count: number | ((state: State) => number) };
+  /** The techniques the walk takes before any other (`prerequisite`) and only
+   * where nothing else follows (`fallback`), by id: a square's own sides before
+   * a clue is counted. */
+  roles?: {
+    readonly prerequisite?: readonly string[];
+    readonly fallback?: readonly string[];
+  };
   /** Whether the marks already are the answer: a plan ends there, though the
    * ladder may still have a mark to make (Separate's no-wall marks, once its
    * walls divide the board). */
@@ -152,9 +159,12 @@ export function describedEdgeHint<
           ...(spec.reads?.(taken, ctx) ?? []),
         ];
       },
-      spec.writes === undefined
-        ? {}
-        : { writes: (taken) => spec.writes?.(taken, ctx) ?? [] },
+      {
+        ...spec.roles,
+        ...(spec.writes === undefined
+          ? {}
+          : { writes: (taken: Taken) => spec.writes?.(taken, ctx) ?? [] }),
+      },
     );
     const steps: Step[] = [];
     while (steps.length < spec.plan && !spec.done?.(m, ctx)) {
@@ -195,10 +205,11 @@ export function describedEdgeHint<
 
   return (state) => {
     const { tiers } = spec;
+    const count = typeof tiers.count === "number" ? tiers.count : tiers.count(state);
     let steps = stepsAt(state, tiers.lowest(state));
     for (
       let cap = tiers.lowest(state) + 1;
-      Array.isArray(steps) && steps.length === 0 && cap < tiers.count;
+      Array.isArray(steps) && steps.length === 0 && cap < count;
       cap++
     )
       steps = stepsAt(state, cap);

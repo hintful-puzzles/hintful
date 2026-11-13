@@ -141,7 +141,7 @@ const LONG_NARRATIONS: {
     // Spoken over the limit on 18 of 300 boards from 6x6 to 10x12, none of
     // them a board the walk deals (2026-10-27): pinned on one.
     games: ["pearl"],
-    rungs: ["closesEarlyThrough"],
+    rungs: ["earlyThrough"],
     why: PEARL_CARRIES_ON,
     spokenOn: {
       pearl: "8x10dt:BbBBbBjWdBbWdBWhBaBWbBbBaBgWaWeWaWaBeWa",

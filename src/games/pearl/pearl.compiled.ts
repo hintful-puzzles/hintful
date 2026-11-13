@@ -18,6 +18,23 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "square" | "blackPearl" | "blackRunsOn" | "blackCannotRunOn" | "whiteCannotTurn" | "whiteTurnsOpposite" | "closed" | "earlyLoop" | "earlyThrough";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  square: SquareSays;
+  blackPearl: BlackPearlSays;
+  blackRunsOn: BlackRunsOnSays;
+  blackCannotRunOn: BlackCannotRunOnSays;
+  whiteCannotTurn: WhiteCannotTurnSays;
+  whiteTurnsOpposite: WhiteTurnsOppositeSays;
+  closed: ClosedSays;
+  earlyLoop: EarlyLoopSays;
+  earlyThrough: EarlyThroughSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["square","blackPearl","blackRunsOn","blackCannotRunOn","whiteCannotTurn","whiteTurnsOpposite","closed","earlyLoop","earlyThrough"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -282,6 +299,12 @@ export interface SquareBinding {
   N: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SquareSays {
+  terms: { c: number; };
+  marks: {  };
+}
+
 const squareFacts: number[] = [];
 let squareCands = new Int32Array(0);
 let square_p154 = new Int32Array(0);
@@ -297,7 +320,7 @@ let square_l207: readonly number[] = [];
 const squareFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as n. */
-export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBinding> | null): number {
+export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBinding, SquareSays> | null): number {
   const _g122: number[] = [];
   const _g130: number[] = [];
   if (square_p154.length < sp.edges.length) square_p154 = new Int32Array(sp.edges.length);
@@ -687,7 +710,10 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
         if (!(_q320)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, F: v_F.slice(), W: v_W.slice(), N: v_N.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { c: v_c }, marks: {  } };
+            if (!fire({ c: v_c, F: v_F.slice(), W: v_W.slice(), N: v_N.slice() }, facts, _says)) return 1;
+          }
           cands.fill(-1);
           _epoch++;
         }
@@ -702,6 +728,12 @@ export interface BlackPearlBinding {
   e: number;
   A: boolean;
   B: boolean;
+}
+
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface BlackPearlSays {
+  terms: { c: number; };
+  marks: {  };
 }
 
 const blackPearlFacts: number[] = [];
@@ -719,7 +751,7 @@ let blackPearl_l75: readonly number[] = [];
 const blackPearlFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as 1. */
-export function blackPearl(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BlackPearlBinding> | null): number {
+export function blackPearl(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BlackPearlBinding, BlackPearlSays> | null): number {
   if (blackPearl_p47.length < sp.edges.length) blackPearl_p47 = new Int32Array(sp.edges.length);
   else blackPearl_p47.fill(0);
   blackPearl_l48 = [];
@@ -1018,7 +1050,10 @@ export function blackPearl(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BlackP
         if (!(_c129)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, e: v_e, A: v_A, B: v_B }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { c: v_c }, marks: {  } };
+            if (!fire({ c: v_c, e: v_e, A: v_A, B: v_B }, facts, _says)) return 1;
+          }
           cands.fill(-1);
           _epoch++;
         }
@@ -1034,13 +1069,19 @@ export interface BlackRunsOnBinding {
   j: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface BlackRunsOnSays {
+  terms: { c: number; e: number; };
+  marks: {  };
+}
+
 const blackRunsOnFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const blackRunsOnFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"},{"steps":["cellEdges","edgeEnds","cellEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as 1. */
-export function blackRunsOn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BlackRunsOnBinding> | null): number {
+export function blackRunsOn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BlackRunsOnBinding, BlackRunsOnSays> | null): number {
   const facts = blackRunsOnFacts;
   let fired = 0;
   let changed = false;
@@ -1129,7 +1170,10 @@ export function blackRunsOn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Black
         if (!(_c35)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, e: v_e, j: v_j }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { c: v_c, e: v_e }, marks: {  } };
+            if (!fire({ c: v_c, e: v_e, j: v_j }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -1143,6 +1187,12 @@ export interface BlackCannotRunOnBinding {
   j: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface BlackCannotRunOnSays {
+  terms: { c: number; e: number; };
+  marks: {  };
+}
+
 const blackCannotRunOnFacts: number[] = [];
 let blackCannotRunOnCands = new Int32Array(0);
 let blackCannotRunOn_f38 = new Int32Array(0);
@@ -1152,7 +1202,7 @@ let blackCannotRunOn_l39: readonly number[] = [];
 const blackCannotRunOnFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"},{"steps":["cellEdges","edgeEnds","cellEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as 1. */
-export function blackCannotRunOn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BlackCannotRunOnBinding> | null): number {
+export function blackCannotRunOn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BlackCannotRunOnBinding, BlackCannotRunOnSays> | null): number {
   if (blackCannotRunOn_f38.length < sp.edges.length) blackCannotRunOn_f38 = new Int32Array(sp.edges.length).fill(-1);
   else blackCannotRunOn_f38.fill(-1);
   blackCannotRunOn_l39 = [];
@@ -1333,7 +1383,10 @@ export function blackCannotRunOn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, e: v_e, j: v_j }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { c: v_c, e: v_e }, marks: {  } };
+            if (!fire({ c: v_c, e: v_e, j: v_j }, facts, _says)) return 1;
+          }
           cands.fill(-1);
         }
       }
@@ -1349,6 +1402,12 @@ export interface WhiteCannotTurnBinding {
   P: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface WhiteCannotTurnSays {
+  terms: { c: number; e: number; };
+  marks: {  };
+}
+
 const whiteCannotTurnFacts: number[] = [];
 let whiteCannotTurnCands = new Int32Array(0);
 let whiteCannotTurn_p82 = new Int32Array(0);
@@ -1362,7 +1421,7 @@ let whiteCannotTurn_l116: readonly number[] = [];
 const whiteCannotTurnFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"},{"steps":["cellEdges","edgeEnds","cellEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as 1. */
-export function whiteCannotTurn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WhiteCannotTurnBinding> | null): number {
+export function whiteCannotTurn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WhiteCannotTurnBinding, WhiteCannotTurnSays> | null): number {
   if (whiteCannotTurn_p82.length < sp.edges.length) whiteCannotTurn_p82 = new Int32Array(sp.edges.length);
   else whiteCannotTurn_p82.fill(0);
   whiteCannotTurn_l83 = [];
@@ -1817,7 +1876,10 @@ export function whiteCannotTurn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<W
         if (!(_c216)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, e: v_e, f: v_f, P: v_P.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { c: v_c, e: v_e }, marks: {  } };
+            if (!fire({ c: v_c, e: v_e, f: v_f, P: v_P.slice() }, facts, _says)) return 1;
+          }
           cands.fill(-1);
           _epoch++;
         }
@@ -1837,6 +1899,12 @@ export interface WhiteTurnsOppositeBinding {
   N: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface WhiteTurnsOppositeSays {
+  terms: { c: number; e: number; };
+  marks: {  };
+}
+
 const whiteTurnsOppositeFacts: number[] = [];
 let whiteTurnsOppositeCands = new Int32Array(0);
 let whiteTurnsOpposite_p180 = new Int32Array(0);
@@ -1854,7 +1922,7 @@ let whiteTurnsOpposite_l329: readonly number[] = [];
 const whiteTurnsOppositeFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"},{"steps":["cellEdges","edgeEnds","cellEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as 1. */
-export function whiteTurnsOpposite(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WhiteTurnsOppositeBinding> | null): number {
+export function whiteTurnsOpposite(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WhiteTurnsOppositeBinding, WhiteTurnsOppositeSays> | null): number {
   if (whiteTurnsOpposite_p180.length < sp.edges.length) whiteTurnsOpposite_p180 = new Int32Array(sp.edges.length);
   else whiteTurnsOpposite_p180.fill(0);
   whiteTurnsOpposite_l181 = [];
@@ -2630,7 +2698,10 @@ export function whiteTurnsOpposite(b: Marks, sp: GridSpace, cl: Dealt, fire: Fir
               if (!(_q515)) return -1;
               if (changed || facts.length > 0) {
                 fired = 1;
-                if (fire !== null && !fire({ c: v_c, e: v_e, f: v_f, k: v_k, F: v_F.slice(), W: v_W.slice(), N: v_N.slice() }, facts)) return 1;
+                if (fire !== null) {
+                  const _says = { terms: { c: v_c, e: v_e }, marks: {  } };
+                  if (!fire({ c: v_c, e: v_e, f: v_f, k: v_k, F: v_F.slice(), W: v_W.slice(), N: v_N.slice() }, facts, _says)) return 1;
+                }
                 cands.fill(-1);
                 _epoch++;
               }
@@ -2649,10 +2720,16 @@ export interface ClosedBinding {
   G: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ClosedSays {
+  terms: {  };
+  marks: {  };
+}
+
 const closedFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function closed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClosedBinding> | null): number {
+export function closed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClosedBinding, ClosedSays> | null): number {
   const _g22: number[] = [];
   const facts = closedFacts;
   let fired = 0;
@@ -2812,7 +2889,10 @@ export function closed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClosedBind
     if (!(_c78)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ L: v_L.slice(), g: v_g, G: v_G.slice() }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: {  }, marks: {  } };
+        if (!fire({ L: v_L.slice(), g: v_g, G: v_G.slice() }, facts, _says)) return 1;
+      }
     }
   }
   return fired;
@@ -2824,10 +2904,16 @@ export interface EarlyLoopBinding {
   G: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface EarlyLoopSays {
+  terms: { e: number; };
+  marks: {  };
+}
+
 const earlyLoopFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^2. */
-export function earlyLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyLoopBinding> | null): number {
+export function earlyLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyLoopBinding, EarlyLoopSays> | null): number {
   const _g21: number[] = [];
   const facts = earlyLoopFacts;
   let fired = 0;
@@ -2941,7 +3027,10 @@ export function earlyLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyLo
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ L: v_L.slice(), e: v_e, G: v_G.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { e: v_e }, marks: {  } };
+          if (!fire({ L: v_L.slice(), e: v_e, G: v_G.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -2957,6 +3046,12 @@ export interface EarlyThroughBinding {
   N: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface EarlyThroughSays {
+  terms: { c: number; };
+  marks: {  };
+}
+
 const earlyThroughFacts: number[] = [];
 let earlyThroughCands = new Int32Array(0);
 let earlyThrough_p206 = new Int32Array(0);
@@ -2969,7 +3064,7 @@ let earlyThrough_f260 = new Int32Array(0);
 let earlyThrough_l261: readonly number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function earlyThrough(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyThroughBinding> | null): number {
+export function earlyThrough(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyThroughBinding, EarlyThroughSays> | null): number {
   const _g145: number[] = [];
   const _g151: number[] = [];
   const _g174: number[] = [];
@@ -3482,7 +3577,10 @@ export function earlyThrough(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Earl
         if (!(_q422)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L.slice(), Q: v_Q.slice(), c: v_c, F: v_F.slice(), W: v_W.slice(), N: v_N.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { c: v_c }, marks: {  } };
+            if (!fire({ L: v_L.slice(), Q: v_Q.slice(), c: v_c, F: v_F.slice(), W: v_W.slice(), N: v_N.slice() }, facts, _says)) return 1;
+          }
           cands.fill(-1);
           _epoch++;
         }

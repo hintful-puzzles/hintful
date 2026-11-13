@@ -199,6 +199,9 @@ techniques:
     conclude: >-
       forall e in F: (e in W or e in N)
       and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
+    says:
+      terms: { c: c }
+      marks: {}
   # A black pearl's edge its ways agree on. It turns, so of each two edges
   # across from each other it takes exactly one: an edge is settled where
   # the other across from it is, or is off the board.
@@ -208,6 +211,9 @@ techniques:
       c in cells where clue(pearl, c) = 1, e in edges(c) where not known(e),
       A = turnsAt(c, e, 1), B = turnsAt(c, e, 2) where not A or not B
     conclude: "(A or B) and (not A implies place(e, 2)) and (not B implies place(e, 1))"
+    says:
+      terms: { c: c }
+      marks: {}
   # A black pearl's line runs straight on through the next square: on out
   # of its far side, and off neither of its others.
   - id: blackRunsOn
@@ -220,6 +226,9 @@ techniques:
       (exists x in edges(j): x != e and not bent(x, e))
       and (forall x in edges(j) where x != e:
       (bent(x, e) implies place(x, 2)) and (not bent(x, e) implies place(x, 1)))
+    says:
+      terms: { c: c, e: e }
+      marks: {}
   # A black pearl's edge into a square that cannot carry a line straight
   # through from it is empty.
   - id: blackCannotRunOn
@@ -228,6 +237,9 @@ techniques:
       c in cells where clue(pearl, c) = 1, e in edges(c) where not known(e),
       j = other(e, c) where not runs(j, e)
     conclude: "place(e, 2)"
+    says:
+      terms: { c: c, e: e }
+      marks: {}
   # A white pearl whose squares along one line can neither turn into it
   # runs along the other line.
   - id: whiteCannotTurn
@@ -242,6 +254,9 @@ techniques:
       P = {x in edges(c) where x != e and x != f}
     conclude: >-
       place(e, 2) and place(f, 2) and |P| = 2 and (forall x in P: place(x, 1))
+    says:
+      terms: { c: c, e: e }
+      marks: {}
   # A white pearl whose line runs straight on through the square on one
   # side turns in the square on the other, where that square could still
   # run straight: every edge there its ways of turning agree on. A black
@@ -260,6 +275,9 @@ techniques:
     conclude: >-
       forall x in F: (x in W or x in N)
       and (x not in W implies place(x, 2)) and (x not in N implies place(x, 1))
+    says:
+      terms: { c: c, e: e }
+      marks: {}
   # The lines are closed, each square with one line or none: they are the
   # loop, and every other edge is empty. One that leaves a line or a pearl
   # off it is inconsistent.
@@ -274,6 +292,9 @@ techniques:
       (forall x in L: end1(x) in G)
       and (forall c in cells where clue(pearl, c) != none: c in G)
       and (forall e in edges where not known(e): place(e, 2))
+    says:
+      terms: {}
+      marks: {}
   # An open edge whose squares the lines already join, while a pearl or a
   # line lies off them: a line there would close a loop that leaves it out.
   - id: earlyLoop
@@ -284,6 +305,9 @@ techniques:
       where end2(e) in G
       and (exists c in cells: c not in G and (clue(pearl, c) != none or drawn(c) > 0))
     conclude: "place(e, 2)"
+    says:
+      terms: { e: e }
+      marks: {}
   # A square with no line whose ways through would join two squares the
   # lines already join, while a pearl or a line lies off them: those ways
   # would close a loop that leaves it out, and the rest agree.
@@ -299,3 +323,6 @@ techniques:
     conclude: >-
       forall e in F: (e in W or e in N)
       and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
+    says:
+      terms: { c: c }
+      marks: {}
