@@ -117,6 +117,10 @@ techniques:
     tier: Easy
     for: "c in cells where value(c) = 1"
     conclude: "forall p in adj4(c): value(p) != 1 and place(p, 2)"
+    # The hint outlines the shaded square a neighbor touches.
+    says:
+      shown: each
+      marks: { outline: "{c}" }
   # A number's view along one arm runs at least as far as it is known to and
   # at most as far as the other arms, as short as they can be, leave it
   # room for. Where the two meet, the square past the view is shaded. A
@@ -128,6 +132,16 @@ techniques:
       a in adj4(k), R = ray(k, a), s = seen(R)
       where far(R, s, n - W + s, open(R)) = s
     conclude: "W <= n and (s = |R| or place(nth(R, s), 1))"
+    # The hint names the number and outlines what it sees, itself among it.
+    says:
+      shown: each
+      terms: { clue: k, value: n }
+      marks: { outline: "{k} + set(p over b in adj4(k), B = ray(k, b), p in B where index(p, B) < seen(B))" }
+      arms:
+        satisfied:
+          when: "W = n"
+        overrun:
+          when: "W != n"
   # With every other arm of a number's view as long as it can be, the view
   # along this one must still run far enough to make up the count, so the
   # squares that far are clear. A number that cannot see its count however
@@ -139,6 +153,22 @@ techniques:
       M = 1 + sum(b in adj4(k), B = ray(k, b), t = seen(B) of far(B, t, n - W + t, open(B))),
       a in adj4(k), R = ray(k, a), s = seen(R), f = far(R, s, n - W + s, open(R))
     conclude: "M >= n and (forall p in R where index(p, R) < n - M + f: place(p, 2))"
+    # The hint outlines what the number sees along its other arms, and for each
+    # square what it would see past it once the squares up to it are clear;
+    # and stripes the run from the number to that square: the run its view must
+    # take.
+    says:
+      shown: each
+      terms: { clue: k, value: n }
+      marks:
+        outline: "set(p over b in adj4(k), B = ray(k, b), p in B where b != a and index(p, B) < seen(B))"
+      fact:
+        marks:
+          outline: >-
+            {q in R where index(q, R) > index(p, R)
+            and (forall r in R where index(r, R) > index(p, R) and index(r, R) <= index(q, R):
+            value(r) = 2)}
+          stripes: "{k} + {q in R where index(q, R) < index(p, R)}"
   # A square without which the squares not shaded would not be one group is
   # clear: shaded, it would cut some of them off from the rest. Squares not
   # shaded that are already apart break the rules.
@@ -146,3 +176,8 @@ techniques:
     tier: Easy
     for: "U = unshaded, K = cuts(U), c in K where not known(c)"
     conclude: "connected(U) and place(c, 2)"
+    # The hint outlines the squares around it that are not shaded, which
+    # shading it would cut apart.
+    says:
+      shown: each
+      marks: { outline: "{p in adj4(c) where value(p) != 1}" }

@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
+import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import type { RangeHint } from "./hint.ts";
 import { CLUE } from "./hint-text.ts";
-import { type RangeHint, rangeGame } from "./index.ts";
-import { answerOf, deduceHintPlan } from "./solver.ts";
+import { rangeGame } from "./index.ts";
+import { answerOf } from "./solver.ts";
 import {
   BLACK,
   decodeParams,
@@ -13,7 +15,6 @@ import {
   type RangeCellValue,
   type RangeMove,
   type RangeState,
-  WHITE,
 } from "./state.ts";
 
 function fromSeed(params: string, seed: string): RangeState {
@@ -22,41 +23,47 @@ function fromSeed(params: string, seed: string): RangeState {
   return newState(p, desc);
 }
 
-/** Every rule, on a board whose plan speaks it. */
+/** Every kind of step, on a board whose plan speaks it. */
 describeHintPins({
   game: rangeGame,
   params: [decodeParams("9x6")],
   pins: {
-    /** Held on 482 of 483 positions walked. */
-    adjacency: {
-      id: "9x6:d6c3d4f4l12f6d3c9d",
-      moves:
-        '[{"sets":[{"r":2,"c":6,"value":"white"}]},{"sets":[{"r":3,"c":5,"value":"white"}]},{"sets":[{"r":3,"c":4,"value":"white"}]},{"sets":[{"r":2,"c":4,"value":"black"}]},{"sets":[{"r":3,"c":3,"value":"white"}]},{"sets":[{"r":3,"c":2,"value":"white"}]},{"sets":[{"r":5,"c":5,"value":"white"}]},{"sets":[{"r":5,"c":6,"value":"white"}]},{"sets":[{"r":5,"c":3,"value":"white"}]},{"sets":[{"r":4,"c":0,"value":"white"}]},{"sets":[{"r":4,"c":5,"value":"white"}]},{"sets":[{"r":5,"c":2,"value":"white"}]},{"sets":[{"r":5,"c":1,"value":"black"}]},{"sets":[{"r":3,"c":0,"value":"white"}]},{"sets":[{"r":2,"c":0,"value":"black"}]},{"sets":[{"r":5,"c":7,"value":"white"}]},{"sets":[{"r":5,"c":8,"value":"white"}]}]',
+    /** Held on 471 of 482 positions walked. */
+    besideShaded: {
+      id: "9x6de:f3a8e2b7b7e8_7e3b5b6e4a7f",
+      moves: [{ sets: [{ r: 5, c: 1, value: "black" }] }],
     },
-    /** Held on 483 of 483 positions walked. */
-    satisfied: {
-      id: "9x6:a3_7c5b7b6j8f4j12b4b6c8_5a",
-      moves: [{ sets: [{ r: 1, c: 1, value: "white" }] }],
+    /** Held on 476 of 482 positions walked. */
+    "capped.satisfied": {
+      id: "9x6de:9a9g2c7k12_5k3c5g4a6",
+      moves: [{ sets: [{ r: 0, c: 1, value: "white" }] }],
     },
-    /** Held on 332 of 483 positions walked. */
-    overrun: {
-      id: "9x6:d6c3d4f4l12f6d3c9d",
+    /** Held on 382 of 482 positions walked. */
+    "capped.overrun": "9x6de:f3a8e2b7b7e8_7e3b5b6e4a7f",
+    /** Held on 479 of 482 positions walked. */
+    reach: "9x6de:a4d6a4_9e7e7j6e10e4_6a5d8a",
+    /** Held on 173 of 482 positions walked. */
+    cut: {
+      id: "9x6de:3e11h9a5c10j6c5a8h11e12",
       moves:
-        '[{"sets":[{"r":2,"c":6,"value":"white"}]},{"sets":[{"r":3,"c":5,"value":"white"}]},{"sets":[{"r":3,"c":4,"value":"white"}]}]',
-    },
-    /** Held on 461 of 483 positions walked. */
-    reach: "9x6:a4d6a4_9e7e7j6e10e4_6a5d8a",
-    /** Held on 208 of 483 positions walked. */
-    connect: {
-      id: "9x6:3e11h9a5c10j6c5a8h11e12",
-      moves:
-        '[{"sets":[{"r":2,"c":6,"value":"white"}]},{"sets":[{"r":0,"c":5,"value":"white"}]},{"sets":[{"r":0,"c":4,"value":"white"}]},{"sets":[{"r":0,"c":3,"value":"white"}]},{"sets":[{"r":1,"c":0,"value":"white"}]},{"sets":[{"r":1,"c":5,"value":"white"}]},{"sets":[{"r":2,"c":4,"value":"white"}]},{"sets":[{"r":5,"c":3,"value":"white"}]},{"sets":[{"r":5,"c":4,"value":"white"}]},{"sets":[{"r":5,"c":5,"value":"white"}]},{"sets":[{"r":3,"c":2,"value":"white"}]},{"sets":[{"r":4,"c":8,"value":"white"}]},{"sets":[{"r":3,"c":8,"value":"white"}]},{"sets":[{"r":2,"c":8,"value":"white"}]},{"sets":[{"r":0,"c":8,"value":"black"}]},{"sets":[{"r":3,"c":6,"value":"white"}]},{"sets":[{"r":0,"c":2,"value":"white"}]},{"sets":[{"r":0,"c":1,"value":"black"}]},{"sets":[{"r":2,"c":0,"value":"white"}]},{"sets":[{"r":3,"c":0,"value":"black"}]},{"sets":[{"r":4,"c":6,"value":"white"}]},{"sets":[{"r":5,"c":6,"value":"white"}]},{"sets":[{"r":0,"c":7,"value":"white"}]},{"sets":[{"r":1,"c":7,"value":"black"}]},{"sets":[{"r":1,"c":4,"value":"white"}]},{"sets":[{"r":1,"c":3,"value":"white"}]},{"sets":[{"r":1,"c":2,"value":"black"}]},{"sets":[{"r":4,"c":1,"value":"white"}]},{"sets":[{"r":4,"c":3,"value":"white"}]},{"sets":[{"r":4,"c":4,"value":"white"}]},{"sets":[{"r":5,"c":0,"value":"black"}]},{"sets":[{"r":4,"c":5,"value":"black"}]},{"sets":[{"r":2,"c":2,"value":"white"}]},{"sets":[{"r":5,"c":7,"value":"white"}]},{"sets":[{"r":5,"c":1,"value":"white"}]},{"sets":[{"r":1,"c":1,"value":"white"}]},{"sets":[{"r":2,"c":7,"value":"white"}]},{"sets":[{"r":3,"c":1,"value":"white"}]}]',
+        '[{"sets":[{"r":2,"c":6,"value":"white"}]},{"sets":[{"r":0,"c":5,"value":"white"}]},{"sets":[{"r":0,"c":4,"value":"white"}]},{"sets":[{"r":0,"c":3,"value":"white"}]},{"sets":[{"r":1,"c":0,"value":"white"}]},{"sets":[{"r":1,"c":5,"value":"white"}]},{"sets":[{"r":2,"c":4,"value":"white"}]},{"sets":[{"r":3,"c":2,"value":"white"}]},{"sets":[{"r":5,"c":3,"value":"white"}]},{"sets":[{"r":5,"c":4,"value":"white"}]},{"sets":[{"r":5,"c":5,"value":"white"}]},{"sets":[{"r":4,"c":8,"value":"white"}]},{"sets":[{"r":3,"c":8,"value":"white"}]},{"sets":[{"r":2,"c":8,"value":"white"}]},{"sets":[{"r":0,"c":8,"value":"black"}]},{"sets":[{"r":0,"c":7,"value":"white"}]},{"sets":[{"r":1,"c":7,"value":"black"}]},{"sets":[{"r":2,"c":7,"value":"white"}]},{"sets":[{"r":3,"c":6,"value":"white"}]},{"sets":[{"r":0,"c":2,"value":"white"}]},{"sets":[{"r":0,"c":1,"value":"black"}]},{"sets":[{"r":1,"c":1,"value":"white"}]},{"sets":[{"r":2,"c":0,"value":"white"}]},{"sets":[{"r":3,"c":0,"value":"black"}]},{"sets":[{"r":3,"c":1,"value":"white"}]},{"sets":[{"r":4,"c":6,"value":"white"}]},{"sets":[{"r":5,"c":6,"value":"white"}]},{"sets":[{"r":1,"c":4,"value":"white"}]},{"sets":[{"r":1,"c":3,"value":"white"}]},{"sets":[{"r":1,"c":2,"value":"black"}]},{"sets":[{"r":2,"c":2,"value":"white"}]},{"sets":[{"r":4,"c":1,"value":"white"}]},{"sets":[{"r":4,"c":3,"value":"white"}]},{"sets":[{"r":4,"c":4,"value":"white"}]},{"sets":[{"r":4,"c":5,"value":"black"}]},{"sets":[{"r":5,"c":0,"value":"black"}]},{"sets":[{"r":5,"c":1,"value":"white"}]},{"sets":[{"r":5,"c":7,"value":"white"}]}]',
     },
   },
 });
 
-describe("deduceHintPlan", () => {
-  it("records an adjacency reason for a black cell's neighbor", () => {
+/** The steps of the hint on a state, none where it refuses. */
+function stepsOf(state: RangeState): HintStep<RangeMove, RangeHint, string>[] {
+  const res = rangeGame.hint?.(state);
+  return res?.ok ? (res.steps as HintStep<RangeMove, RangeHint, string>[]) : [];
+}
+
+/** The square a step decides: its place, and the value it asks. */
+const decided = (
+  step: HintStep<RangeMove, RangeHint>,
+): { r: number; c: number; value: string } => step.move.sets[0];
+
+describe("the hint's steps", () => {
+  it("outlines a black cell beside the neighbor it forces clear", () => {
     // 3x3, center black, no clues — adjacency forces the 4 neighbors white.
     const grid = Int8Array.from([
       EMPTY,
@@ -69,13 +76,12 @@ describe("deduceHintPlan", () => {
       EMPTY,
       EMPTY,
     ]);
-    const plan = deduceHintPlan(grid, 3, 3);
-    const adj = plan.find((m) => m.reason.kind === "adjacency");
+    const plan = stepsOf({ w: 3, h: 3, grid, clues: new Int8Array(9) });
+    const adj = plan.find((m) => m.rung === "besideShaded");
     expect(adj).toBeDefined();
-    expect(adj?.value).toBe(WHITE);
-    if (adj?.reason.kind === "adjacency") {
-      expect(adj.reason.from).toEqual({ r: 1, c: 1 });
-    }
+    if (!adj) return;
+    expect(decided(adj).value).toBe("white");
+    expect(stepMarks(adj).of("outline", CELL)).toEqual([{ x: 1, y: 1 }]);
   });
 
   it("takes the ladder's first rung first, one step a square", () => {
@@ -97,21 +103,23 @@ describe("deduceHintPlan", () => {
       .filter(([y, x]) => y >= 0 && y < 6 && x >= 0 && x < 9)
       .map(([y, x]) => y * 9 + x)
       .filter((p) => grid[p] === EMPTY);
-    const plan = deduceHintPlan(grid, 9, 6);
+    const plan = stepsOf({ ...st, grid });
     const first = plan.slice(0, open.length);
-    expect(first.map((m) => m.reason.kind)).toEqual(open.map(() => "adjacency"));
-    expect(new Set(first.map((m) => m.r * 9 + m.c))).toEqual(new Set(open));
-    expect(plan.slice(open.length).some((m) => m.reason.kind !== "adjacency")).toBe(
-      true,
+    expect(first.map((m) => m.rung)).toEqual(open.map(() => "besideShaded"));
+    expect(new Set(first.map((m) => decided(m).r * 9 + decided(m).c))).toEqual(
+      new Set(open),
     );
+    expect(plan.slice(open.length).some((m) => m.rung !== "besideShaded")).toBe(true);
   });
 
-  it("records a clue reason on a generated board", () => {
+  it("has a clue's step on a generated board", () => {
     const st = fromSeed("9x6", "range-hint-reason");
-    const plan = deduceHintPlan(st.grid, st.w, st.h);
+    const plan = stepsOf(st);
     expect(plan.length).toBeGreaterThan(0);
     expect(
-      plan.some((m) => ["satisfied", "overrun", "reach"].includes(m.reason.kind)),
+      plan.some((m) =>
+        ["capped.satisfied", "capped.overrun", "reach"].includes(m.rung),
+      ),
     ).toBe(true);
   });
 });
@@ -144,16 +152,14 @@ describe("hint", () => {
       const res = rangeGame.hint?.(st);
       if (!res?.ok) throw new Error("expected a plan");
       for (const step of res.steps) {
-        const hl = step.highlights as RangeHint;
+        const [target] = (step.highlights as RangeHint).targets;
         const marks = stepMarks(step);
         const outlined = marks.of("outline", CELL);
         const run = marks.of("stripes", CELL);
         expect(outlined.length + run.length).toBeGreaterThan(0);
         // Neither the outline nor the run includes the target cell itself.
         for (const cells of [outlined, run])
-          expect(cells.some((a) => a.y === hl.target.r && a.x === hl.target.c)).toBe(
-            false,
-          );
+          expect(cells.some((a) => a.y === target.y && a.x === target.x)).toBe(false);
       }
     }
   });
@@ -173,10 +179,6 @@ describe("hint", () => {
       for (let round = 0; round < 40; round++) {
         const res = rangeGame.hint?.(cur);
         if (!res?.ok) break;
-        // `hint()` builds one step per plan entry, in order, so the reason and
-        // the sentence it produced line up index for index.
-        const plan = deduceHintPlan(cur.grid, cur.w, cur.h);
-        expect(plan.length).toBe(res.steps.length);
         for (let i = 0; i < res.steps.length; i++) {
           const step = res.steps[i];
           kinds.add(step.rung);
@@ -205,11 +207,11 @@ describe("hint", () => {
     // assertion above while measuring nothing.
     expect(checked).toBeGreaterThan(50);
     expect([...kinds].sort()).toEqual([
-      "adjacency",
-      "connect",
-      "overrun",
+      "besideShaded",
+      "capped.overrun",
+      "capped.satisfied",
+      "cut",
       "reach",
-      "satisfied",
     ]);
   });
 
@@ -242,8 +244,12 @@ describe("hintKeepTrack", () => {
     const res = rangeGame.hint?.(st);
     if (!res?.ok) throw new Error("expected a plan");
     const step = res.steps[0];
-    const target = (step.highlights as RangeHint | undefined)?.target;
-    if (!target) throw new Error("expected a target");
+    const [hinted] = (step.highlights as RangeHint).targets;
+    const target = {
+      r: hinted.y,
+      c: hinted.x,
+      value: (hinted.value === 1 ? "black" : "white") as RangeCellValue,
+    };
 
     // The move that sets the hinted cell to the hinted value → completed.
     const right: RangeMove = {
@@ -259,8 +265,11 @@ describe("hintKeepTrack", () => {
     expect(rangeGame.hintKeepTrack?.(wrong, step, st)).toBe("off");
 
     // A different cell → off.
+    const other = st.grid.findIndex(
+      (v, i) => v <= 0 && i !== target.r * st.w + target.c,
+    );
     const elsewhere: RangeMove = {
-      sets: [{ r: (target.r + 1) % st.h, c: target.c, value: target.value }],
+      sets: [{ r: Math.floor(other / st.w), c: other % st.w, value: target.value }],
     };
     expect(rangeGame.hintKeepTrack?.(elsewhere, step, st)).toBe("off");
   });

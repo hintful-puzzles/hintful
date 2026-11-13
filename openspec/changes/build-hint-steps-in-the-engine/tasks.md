@@ -20,8 +20,11 @@
   - [x] Mosaic (design § "Mosaic, built"): `move(targets, state)`, `refreshHintStep`
   - [x] Clusters (design § "Clusters, built"): `each`, five arms of `refute`, tile terms
   - [x] Star Battle (design § "Star Battle, built"): `each`-free firings, thirteen techniques, fifteen kinds
-  - [ ] Design the per-fact `says` (design § "What blocks the rest") for Bricks, Range, Sticks and Seismic's `cull`
-  - [ ] The other cell games that place or strike a firing's squares (`describedFiringHint`): Tents, Star Battle, Range, Bricks, Separate, Abcd, Sticks, Dominosa, Pearl, Slant, Magnets, Net, Tracks, Palisade, Path, Spokes, Undead, Seismic, Map, Galaxies, Rect, Crossing, Signpost
+  - [x] The per-fact `says` (design § "Bricks, built"): `says.fact`, read at each `place` or `strike`
+  - [x] Bricks (design § "Bricks, built"): every technique `each`, `three`'s run per square
+  - [x] Range (design § "Range, built"): `each`, `reach`'s run and sight per square
+  - [ ] Sticks: needs `continuesPrevious` and a `later` flag on `each` steps first (design § "Range, built"); Seismic's `cull` strikes candidates, so it waits for the candidate games' shape
+  - [ ] The other cell games that place or strike a firing's squares (`describedFiringHint`): Tents, Separate, Abcd, Sticks, Dominosa, Pearl, Slant, Magnets, Net, Tracks, Palisade, Path, Spokes, Undead, Seismic, Map, Galaxies, Rect, Crossing, Signpost
   - [ ] The candidate games (a Latin family's `latinPremise` and `runLatinCandidatePlan`: Unequal, Adjacent, Keen, Towers, Group, Solo, Mathrax, Rome, Salad): the engine's candidate-elimination shape is a design of its own, read first
 - [ ] 2.2 Remove what no game uses, and update `docs/descriptions.md`, `docs/hints.md` and the skeletons
 - [x] 2.3 Check and fix the two defects named under "Fixed in passing" (Mines' dead region arm removed in `1118d723`; Loopy's `closed` throw is unreachable, since a closed loop with every clue met is solved and one with a clue unmet is a mistake, so it stays as the invariant's guard)

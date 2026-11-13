@@ -15,7 +15,7 @@ import {
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
-import { assertNever } from "../../engine/assert-never.ts";
+import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
@@ -79,7 +79,7 @@ export interface RangeUi {
   cursor: GridCursor;
 }
 
-export function cellValueToGrid(v: RangeCellValue): number {
+function cellValueToGrid(v: RangeCellValue): number {
   if (v === "black") return BLACK;
   if (v === "white") return WHITE;
   if (v === "empty") return EMPTY;
@@ -88,6 +88,22 @@ export function cellValueToGrid(v: RangeCellValue): number {
 
 export function gridValueToCell(v: number): RangeCellValue {
   return v === BLACK ? "black" : v === WHITE ? "white" : "empty";
+}
+
+export function executeMove(state: RangeState, move: RangeMove): RangeState {
+  // A move is a list of cell settings, not a union, so there is no discriminant
+  // to narrow to `never`: check the one field the dispatch reads. (The `value`
+  // inside each setting *is* a union — `cellValueToGrid` asserts on it.)
+  if (!Array.isArray(move.sets)) rejectMove(move, "range: executeMove");
+
+  const next = cloneState(state);
+  for (const { r, c, value } of move.sets) {
+    if (outOfBounds(r, c, next.w, next.h)) throw new Error("Range move out of bounds");
+    const cell = idx(r, c, next.w);
+    if (next.grid[cell] > 0) throw new Error("Range move targets a clue cell");
+    next.grid[cell] = cellValueToGrid(value);
+  }
+  return next;
 }
 
 // --- params ----------------------------------------------------------------
@@ -225,7 +241,7 @@ export function newState(p: RangeParams, desc: string): RangeState {
   return { w: p.w, h: p.h, grid, clues: grid.slice() };
 }
 
-export function cloneState(s: RangeState): RangeState {
+function cloneState(s: RangeState): RangeState {
   return { ...s, grid: s.grid.slice() };
 }
 

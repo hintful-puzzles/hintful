@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
+import type { RangeHint } from "./hint.ts";
 import { rangeGame } from "./index.ts";
 import { answerOf } from "./solver.ts";
 import { BLACK, decodeParams, idx, newState, type RangeMove, WHITE } from "./state.ts";
@@ -64,14 +65,12 @@ describe("midend integration", () => {
     // keep-track, which advances+hides the plan) → the banner clears.
     const plan = rangeGame.hint?.(newState(params, desc));
     if (!plan?.ok) throw new Error("expected a plan");
-    const t = (
-      plan.steps[0].highlights as { target: { r: number; c: number; value: string } }
-    ).target;
+    const [t] = (plan.steps[0].highlights as RangeHint).targets;
     const ts = 32;
     const b = ts / 2;
-    const x = b + ts * t.c + ts / 2;
-    const y = b + ts * t.r + ts / 2;
-    m.processInput(x, y, t.value === "white" ? RIGHT_BUTTON : LEFT_BUTTON);
+    const x = b + ts * t.x + ts / 2;
+    const y = b + ts * t.y + ts / 2;
+    m.processInput(x, y, t.value === 2 ? RIGHT_BUTTON : LEFT_BUTTON);
     expect(hintBanner() ?? "").toBe("");
   });
 

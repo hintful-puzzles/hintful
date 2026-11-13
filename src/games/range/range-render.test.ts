@@ -12,8 +12,9 @@ import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-draw
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
+import type { RangeHint } from "./hint.ts";
 import { CLUE, say } from "./hint-text.ts";
-import { type RangeHint, rangeGame } from "./index.ts";
+import { rangeGame } from "./index.ts";
 import {
   COL_CELL,
   COL_ERROR,
@@ -76,10 +77,10 @@ describe("hint color legend", () => {
     });
     const step: HintStep<RangeMove, RangeHint> = {
       move: { sets: [{ r: 0, c: 1, value: "white" }] },
-      rung: "adjacency",
+      rung: "besideShaded",
       explanation: words.text,
       words,
-      highlights: { target: { r: 0, c: 1, value: "white" } },
+      highlights: { targets: [{ x: 1, y: 0, value: 2 }], strand: [] },
     };
     const rec = new RecordingDrawing(palette);
     const ds = newDrawState(state, 32);

@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/range/range.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, cellsValued, clueAt, connected, cuts, freshBinding, keptStore, ray, sameSet, staleChecking, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, cellsValued, clueAt, connected, cuts, freshBinding, keptStore, ray, sameSet, setOf, staleChecking, stamps, type Kept, union } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -17,6 +17,21 @@ export const units: readonly string[] = [];
 
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "besideShaded" | "capped" | "reach" | "cut";
+
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  besideShaded: BesideShadedSays;
+  capped: CappedSays;
+  reach: ReachSays;
+  cut: CutSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["besideShaded","capped.satisfied","capped.overrun","reach","cut"] as const;
+
+/** The techniques whose step is made for each square the firing decides. */
+export const SAYS_EACH: readonly (keyof SaysById)[] = ["besideShaded","capped","reach","cut"];
 
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
@@ -139,10 +154,16 @@ export interface BesideShadedBinding {
   c: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface BesideShadedSays {
+  terms: {  };
+  marks: { outline: readonly number[]; };
+}
+
 const besideShadedFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function besideShaded(b: Marks, sp: GridSpace, fire: Fire<BesideShadedBinding> | null): number {
+export function besideShaded(b: Marks, sp: GridSpace, fire: Fire<BesideShadedBinding, BesideShadedSays> | null): number {
   const facts = besideShadedFacts;
   let fired = 0;
   let changed = false;
@@ -174,7 +195,10 @@ export function besideShaded(b: Marks, sp: GridSpace, fire: Fire<BesideShadedBin
     if (!(_q5)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ c: v_c }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: {  }, marks: { outline: setOf(v_c).slice() } };
+        if (!fire({ c: v_c }, facts, _says)) return 1;
+      }
     }
   }
   return fired;
@@ -189,10 +213,20 @@ export interface CappedBinding {
   s: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
+export type CappedSays =
+  | { arm: "satisfied"; terms: { clue: number; value: number; }; marks: { outline: readonly number[]; } }
+  | { arm: "overrun"; terms: { clue: number; value: number; }; marks: { outline: readonly number[]; } }
+;
+
 const cappedFacts: number[] = [];
+const capped_st58 = stamps();
+const capped_st76 = stamps();
 
 /** Its dearest read grows with the board as n^1.5. */
-export function capped(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CappedBinding> | null): number {
+export function capped(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CappedBinding, CappedSays> | null): number {
+  const _g49: number[] = [];
+  const _g67: number[] = [];
   const facts = cappedFacts;
   let fired = 0;
   let changed = false;
@@ -204,11 +238,13 @@ export function capped(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CappedBind
     L20: {
       const v_n = _h19;
       if (!((v_n > 0))) break L20;
-      const _m47_0 = b.made[0];
-      const _m48_1 = b.made[1];
+      const _m85_0 = b.made[0];
+      const _m86_1 = b.made[1];
       const v_W = sees(b, sp, v_k);
       const _h27 = (v_n - v_W);
       const _h43 = (v_W <= v_n);
+      const _h47 = (v_W === v_n);
+      const _h48 = (v_W !== v_n);
       const _a21 = sp.adj4[v_k];
       for (let _i22 = 0; _i22 < _a21.length; _i22++) {
         const v_a = _a21[_i22];
@@ -242,7 +278,7 @@ export function capped(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CappedBind
             }
           }
           if (!((_g31 === v_s))) break L26;
-          if (b.made[0] !== _m47_0 || b.made[1] !== _m48_1) {
+          if (b.made[0] !== _m85_0 || b.made[1] !== _m86_1) {
             if (!((v_W === sees(b, sp, v_k)))) { continue R1; }
           }
           if (DEV && staleChecking) {
@@ -291,7 +327,69 @@ export function capped(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CappedBind
           if (!(_c46)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ k: v_k, n: v_n, W: v_W, a: v_a, R: v_R.slice(), s: v_s }, facts)) return 1;
+            if (fire !== null) {
+              let _arm = -1;
+              if (_h47) _arm = 0; else if (_h48) _arm = 1;
+              let _says: CappedSays | null = null;
+              if (_arm === 0) {
+                _g49.length = 0;
+                capped_st58.pass++;
+                G50: {
+                  const _a59 = sp.adj4[v_k];
+                  for (let _i60 = 0; _i60 < _a59.length; _i60++) {
+                    const v_b = _a59[_i60];
+                    const v_B = ray(sp, v_k, v_b);
+                    const _h65 = v_B.length;
+                    const _a61 = v_B;
+                    for (let _i62 = 0; _i62 < _a61.length; _i62++) {
+                      const v_p = _a61[_i62];
+                      let _g63 = -1;
+                      G64: {
+                        for (let v_i = 0; v_i <= _h65; v_i++) {
+                          if (!(((v_i === _h65) || ((b.grid[(v_B[v_i] ?? -1)] || -1) !== 2)))) continue;
+                          _g63 = v_i;
+                          break G64;
+                        }
+                      }
+                      if (!((_i62 < _g63))) continue;
+                      const _t66 = v_p;
+                      if (_g49.length < 16) { if (!_g49.includes(_t66)) _g49.push(_t66); } else addOnce(_g49, capped_st58, _t66);
+                    }
+                  }
+                }
+                _says = { arm: "satisfied", terms: { clue: v_k, value: v_n }, marks: { outline: union(setOf(v_k), _g49).slice() } };
+              }
+              if (_arm === 1) {
+                _g67.length = 0;
+                capped_st76.pass++;
+                G68: {
+                  const _a77 = sp.adj4[v_k];
+                  for (let _i78 = 0; _i78 < _a77.length; _i78++) {
+                    const v_b = _a77[_i78];
+                    const v_B = ray(sp, v_k, v_b);
+                    const _h83 = v_B.length;
+                    const _a79 = v_B;
+                    for (let _i80 = 0; _i80 < _a79.length; _i80++) {
+                      const v_p = _a79[_i80];
+                      let _g81 = -1;
+                      G82: {
+                        for (let v_i = 0; v_i <= _h83; v_i++) {
+                          if (!(((v_i === _h83) || ((b.grid[(v_B[v_i] ?? -1)] || -1) !== 2)))) continue;
+                          _g81 = v_i;
+                          break G82;
+                        }
+                      }
+                      if (!((_i80 < _g81))) continue;
+                      const _t84 = v_p;
+                      if (_g67.length < 16) { if (!_g67.includes(_t84)) _g67.push(_t84); } else addOnce(_g67, capped_st76, _t84);
+                    }
+                  }
+                }
+                _says = { arm: "overrun", terms: { clue: v_k, value: v_n }, marks: { outline: union(setOf(v_k), _g67).slice() } };
+              }
+              if (_says === null) throw new Error("capped: no arm of says holds");
+              if (!fire({ k: v_k, n: v_n, W: v_W, a: v_a, R: v_R.slice(), s: v_s }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -311,10 +409,28 @@ export interface ReachBinding {
   f: number;
 }
 
+/** What a square the firing decides has of its own, read where it is made. */
+export interface ReachSaysFact {
+  terms: {  };
+  marks: { outline: readonly number[]; stripes: readonly number[]; };
+}
+
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; and `facts`, what each of its facts has of its own. */
+export interface ReachSays {
+  terms: { clue: number; value: number; };
+  marks: { outline: readonly number[]; };
+  facts: ReachSaysFact[];
+}
+
 const reachFacts: number[] = [];
+const reachFactSays: ReachSaysFact[] = [];
+const reach_st137 = stamps();
 
 /** Its dearest read grows with the board as n^1.5. */
-export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBinding> | null): number {
+export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBinding, ReachSays> | null): number {
+  const _g102: number[] = [];
+  const _g120: number[] = [];
+  const _g127: number[] = [];
   const facts = reachFacts;
   let fired = 0;
   let changed = false;
@@ -326,8 +442,8 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
     L33: {
       const v_n = _h32;
       if (!((v_n > 0))) break L33;
-      const _m103_0 = b.made[0];
-      const _m104_1 = b.made[1];
+      const _m148_0 = b.made[0];
+      const _m149_1 = b.made[1];
       const v_W = sees(b, sp, v_k);
       const _h41 = (v_n - v_W);
       let _g34 = 0;
@@ -402,7 +518,7 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
         }
         const v_f = _g55;
         const _h101 = (_h100 + v_f);
-        if (b.made[0] !== _m103_0 || b.made[1] !== _m104_1) {
+        if (b.made[0] !== _m148_0 || b.made[1] !== _m149_1) {
           if (!((v_W === sees(b, sp, v_k)))) { continue R1; }
           let _g57 = 0;
           G58: {
@@ -514,28 +630,105 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
           freshBinding("reach", [(sp.cells.includes(v_k)), (v_n === clueAt(cl.number, v_k)), (v_n > 0), (v_W === sees(b, sp, v_k)), (v_M === (1 + _g71)), (sp.adj4[v_k].includes(v_a)), sameSet(v_R, ray(sp, v_k, v_a)), (v_s === _g85), (v_f === _g92)], ["k in", "n =", "where of n", "W =", "M =", "a in", "R =", "s =", "f ="]);
         }
         facts.length = 0;
+        reachFactSays.length = 0;
         changed = false;
-        let _c102: boolean = _h95;
-        if (_c102) {
+        let _c126: boolean = _h95;
+        if (_c126) {
           let _q96 = true;
           Q97: {
             const _a98 = v_R;
             for (let _i99 = 0; _i99 < _a98.length; _i99++) {
               const v_p = _a98[_i99];
               if (!((_i99 < _h101))) continue;
-              if (!(b.grid[v_p] !== 0)) { if (fire === null) { b.placeAt(v_p, 2); changed = true; } else facts.push(PLACE, v_p, 2); }
+              const _h113 = _i99;
+              if (!(b.grid[v_p] !== 0)) {
+                if (fire === null) { b.placeAt(v_p, 2); changed = true; }
+                if (fire !== null) {
+                  _g102.length = 0;
+                  G103: {
+                    const _a111 = v_R;
+                    for (let _i112 = 0; _i112 < _a111.length; _i112++) {
+                      const v_q = _a111[_i112];
+                      const _h118 = _i112;
+                      let _c119: boolean = (_i112 > _h113);
+                      if (_c119) {
+                        let _q114 = true;
+                        Q115: {
+                          const _a116 = v_R;
+                          for (let _i117 = 0; _i117 < _a116.length; _i117++) {
+                            const v_r = _a116[_i117];
+                            if (!(((_i117 > _h113) && (_i117 <= _h118)))) continue;
+                            if (!(((b.grid[v_r] || -1) === 2))) {
+                              _q114 = false;
+                              break Q115;
+                            }
+                          }
+                        }
+                        _c119 = _q114;
+                      }
+                      if (!(_c119)) continue;
+                      _g102.push(v_q);
+                    }
+                  }
+                  _g120.length = 0;
+                  G121: {
+                    const _a124 = v_R;
+                    for (let _i125 = 0; _i125 < _a124.length; _i125++) {
+                      const v_q = _a124[_i125];
+                      if (!((_i125 < _h113))) continue;
+                      _g120.push(v_q);
+                    }
+                  }
+                  facts.push(PLACE, v_p, 2);
+                  reachFactSays.push({ terms: {  }, marks: { outline: _g102.slice(), stripes: union(setOf(v_k), _g120).slice() } });
+                }
+              }
               if (!(true)) {
                 _q96 = false;
                 break Q97;
               }
             }
           }
-          _c102 = _q96;
+          _c126 = _q96;
         }
-        if (!(_c102)) return -1;
+        if (!(_c126)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ k: v_k, n: v_n, W: v_W, M: v_M, a: v_a, R: v_R.slice(), s: v_s, f: v_f }, facts)) return 1;
+          if (fire !== null) {
+            if (reachFactSays.length * 3 !== facts.length) throw new Error("reach: a fact of its conclusion is made where says.fact is not read");
+            _g127.length = 0;
+            reach_st137.pass++;
+            G128: {
+              const _a138 = sp.adj4[v_k];
+              for (let _i139 = 0; _i139 < _a138.length; _i139++) {
+                const v_b = _a138[_i139];
+                const _h142 = (v_b !== v_a);
+                const v_B = ray(sp, v_k, v_b);
+                const _h145 = v_B.length;
+                const _a140 = v_B;
+                for (let _i141 = 0; _i141 < _a140.length; _i141++) {
+                  const v_p = _a140[_i141];
+                  let _c146: boolean = _h142;
+                  if (_c146) {
+                    let _g143 = -1;
+                    G144: {
+                      for (let v_i = 0; v_i <= _h145; v_i++) {
+                        if (!(((v_i === _h145) || ((b.grid[(v_B[v_i] ?? -1)] || -1) !== 2)))) continue;
+                        _g143 = v_i;
+                        break G144;
+                      }
+                    }
+                    _c146 = (_i141 < _g143);
+                  }
+                  if (!(_c146)) continue;
+                  const _t147 = v_p;
+                  if (_g127.length < 16) { if (!_g127.includes(_t147)) _g127.push(_t147); } else addOnce(_g127, reach_st137, _t147);
+                }
+              }
+            }
+            const _says = { terms: { clue: v_k, value: v_n }, marks: { outline: _g127.slice() }, facts: reachFactSays.slice() };
+            if (!fire({ k: v_k, n: v_n, W: v_W, M: v_M, a: v_a, R: v_R.slice(), s: v_s, f: v_f }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -549,16 +742,23 @@ export interface CutBinding {
   c: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CutSays {
+  terms: {  };
+  marks: { outline: readonly number[]; };
+}
+
 const cutFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function cut(b: Marks, sp: GridSpace, fire: Fire<CutBinding> | null): number {
+export function cut(b: Marks, sp: GridSpace, fire: Fire<CutBinding, CutSays> | null): number {
   const _g9: number[] = [];
   const _g17: number[] = [];
+  const _g31: number[] = [];
   const facts = cutFacts;
   let fired = 0;
   let changed = false;
-  const _m31_0 = b.made[0];
+  const _m37_0 = b.made[0];
   _g9.length = 0;
   G10: {
     const _a13 = sp.cells;
@@ -575,7 +775,7 @@ export function cut(b: Marks, sp: GridSpace, fire: Fire<CutBinding> | null): num
   for (let _i16 = 0; _i16 < _a15.length; _i16++) {
     const v_c = _a15[_i16];
     if (!(!((b.grid[v_c] !== 0)))) continue;
-    if (b.made[0] !== _m31_0) {
+    if (b.made[0] !== _m37_0) {
       _g17.length = 0;
       G18: {
         const _a21 = sp.cells;
@@ -609,7 +809,19 @@ export function cut(b: Marks, sp: GridSpace, fire: Fire<CutBinding> | null): num
     if (!(_c30)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ U: v_U.slice(), K: v_K.slice(), c: v_c }, facts)) return 1;
+      if (fire !== null) {
+        _g31.length = 0;
+        G32: {
+          const _a35 = sp.adj4[v_c];
+          for (let _i36 = 0; _i36 < _a35.length; _i36++) {
+            const v_p = _a35[_i36];
+            if (!(((b.grid[v_p] || -1) !== 1))) continue;
+            _g31.push(v_p);
+          }
+        }
+        const _says = { terms: {  }, marks: { outline: _g31.slice() } };
+        if (!fire({ U: v_U.slice(), K: v_K.slice(), c: v_c }, facts, _says)) return 1;
+      }
     }
   }
   return fired;

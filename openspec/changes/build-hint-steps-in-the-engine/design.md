@@ -431,6 +431,36 @@ defect found in the game, said which.
   moved to `state.ts` (the hint needs it and `index.ts` imports `hint.ts`), the
   description +24 of `says`, `hint-text.ts` +19.
 
+### Range, built (2026-11-13)
+
+- **`describedFiringHint` with `shown: each` on all four techniques.** `capped`
+  has two arms (`satisfied`, `overrun`: the old reason's `W === n`), the kinds
+  are the techniques' ids and the arms' (`capped.satisfied`). `reach` is the
+  per-fact `says`: its stripes are the run from the number to each square
+  (`{k} + {q in R where index(q, R) < index(p, R)}`, `p` the `forall` binder) and
+  its outline, per square, the squares the number would see past it once the
+  squares up to it are clear (the old plan outlined the sight on the grid with
+  the move made, which runs on through the target), plus the other arms' at the
+  firing.
+- **A change of behavior, the one the comparison could not remove**: the walk
+  now carries on from every square a firing outlines, where the old one read
+  the number or the shaded square only (`readsOf`). With the walk's reads
+  narrowed to the old ones (a temporary switch in the engine, not kept) all 60
+  boards (4x4 to 12x12, both tiers, 2,087 lines) are the same lines as at
+  `HEAD`, words, marks and move, all five kinds met; with the engine's reads, 37
+  of 60 boards take a different next firing at some step. The engine's rule
+  stays: a game that wants narrower reads than its outline is a question the
+  engine has not been asked yet.
+- **Lines.** `solver.ts` and `index.ts` lose the reasons, `markedOf`,
+  `lineOfSight`, `reachLine`, `nonBlackNeighbors` and the plan; `executeMove`
+  moved to `state.ts`; the description +40 of `says`; `hint.ts` 70.
+- **Seismic's `cull` is not this**: it strikes candidates (`strike(p, n)`), and
+  `describedFiringHint` is a cell game's, a fact a placement. It waits for the
+  candidate games' engine shape.
+- **Sticks wants a second engine feature first**: a firing's later squares are
+  steps that continue the first (`continuesPrevious`), and its sentence for
+  them is another (`later`); `each` has neither.
+
 ### What blocks the rest (2026-11-13, a survey by reading, to be re-checked per game)
 
 The first read of the remaining games found one that is a plain Clusters-shaped

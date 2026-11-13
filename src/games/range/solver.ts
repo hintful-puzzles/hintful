@@ -41,21 +41,18 @@ import {
   compiledRung,
   describedLadder,
   type Ladder,
+  type LadderEntry,
   ladderTechniques,
-  ladderWalk,
   runLadder,
-  type Taken,
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import * as range from "./range.compiled.ts";
 import {
   BLACK,
-  type Cell,
   EMPTY,
   idx,
   outOfBounds,
@@ -75,32 +72,12 @@ import {
  * is worth it only because it keeps the *suite* fast; do not read it as a rule
  * against shared constants. `docs/testing.md` § "Timing anything under
  * vitest". */
-export const DR = [1, 0, -1, 0];
-export const DC = [0, 1, 0, -1];
+const DR = [1, 0, -1, 0];
+const DC = [0, 1, 0, -1];
 
 /** What the description reads a square as holding. */
 const SHADED = 1;
 const CLEAR = 2;
-
-/** Why a cell is forced — the premise the hint narrates and highlights. */
-export type HintReason =
-  | { kind: "adjacency"; from: Cell } // a neighbor of this black must be white
-  | { kind: "satisfied"; clue: Cell; n: number } // clue's run is full → cap it black
-  | { kind: "overrun"; clue: Cell; n: number } // white here would exceed the clue
-  | { kind: "reach"; clue: Cell; n: number } // clue can only reach its count this way
-  | { kind: "connect" }; // black here would disconnect the white region
-
-export interface HintMove {
-  r: number;
-  c: number;
-  value: number;
-  reason: HintReason;
-  /** The solver's working grid at the moment this move fired (this move
-   * and every prior deduction applied) — the board state the hint's area
-   * highlight is computed against, so the shaded run reflects what the
-   * player sees as they follow the plan. */
-  grid: Int8Array;
-}
 
 // --- the board as the description reads it -----------------------------------
 
@@ -140,27 +117,13 @@ function writeBack(grid: Int8Array, values: ArrayLike<number>): void {
       grid[c] = values[c] === SHADED ? BLACK : WHITE;
 }
 
-const at = (sp: GridSpace, c: number): Cell => ({ r: (c / sp.w) | 0, c: c % sp.w });
-
-/** The ladder over the dealt board, each technique with its reason: built
- * from the binding, on the marks before the firing. */
+/** The ladder over the dealt board. */
 function rangeLadder(dl: range.Dealt): Ladder {
   return describedLadder(range, {
-    besideShaded: uncluedRung(range.besideShaded, ({ c }, _p, _to, m) => ({
-      kind: "adjacency",
-      from: at(m.sp, c),
-    })),
-    capped: compiledRung(range.capped, dl, ({ k, n, W }, _p, _to, m) => ({
-      kind: W === n ? "satisfied" : "overrun",
-      clue: at(m.sp, k),
-      n,
-    })),
-    reach: compiledRung(range.reach, dl, ({ k, n }, _p, _to, m) => ({
-      kind: "reach",
-      clue: at(m.sp, k),
-      n,
-    })),
-    cut: uncluedRung(range.cut, () => ({ kind: "connect" })),
+    besideShaded: uncluedRung(range.besideShaded),
+    capped: compiledRung(range.capped, dl),
+    reach: compiledRung(range.reach, dl),
+    cut: uncluedRung(range.cut),
   });
 }
 
@@ -214,57 +177,24 @@ export function isSolved(grid: Int8Array, w: number, h: number): boolean {
 
 // --- the hint's walk ---------------------------------------------------------
 
-/** The cells a firing's premise reads, besides those it decides: its number
- * or the shaded square beside it. */
-function readsOf(reason: HintReason): Cell[] {
-  if ("clue" in reason) return [reason.clue];
-  if ("from" in reason) return [reason.from];
-  return [];
-}
+/** The kinds of step a hint can be, which the description's `says` names. */
+export const RANGE_RUNGS = range.SAYS_KINDS;
+export type RangeRung = (typeof RANGE_RUNGS)[number];
 
 /**
- * The ladder's firings from `grid` (the player's current marks), every
- * forced cell recorded in order with the reason that forces it — the data a
- * hint plan narrates — each with the grid as it stands once that cell is
- * made.
- *
- * One firing at a time, each the one that carries on from the cells the plan
- * has just decided (`ladderWalk`), so a plan finishes the clue it is working
- * on before it moves on.
+ * What a hint walks from the player's own marks: the marks over their grid and
+ * the ladder's techniques, or nothing where the grid holds a value a square
+ * cannot. A firing is taken one at a time, the one that carries on from the
+ * squares the last decided (`ladderWalk`), so a plan finishes the clue it is
+ * working on before it moves on.
  */
-export function deduceHintPlan(grid: Int8Array, w: number, h: number): HintMove[] {
-  const d = deduction(grid, w, h);
-  if (d === null) return [];
-  const { m, ladder } = d;
-  m.budget = stepBudget("range hint");
-  const walk = ladderWalk(
-    m,
-    ladder.entries,
-    { [TIERS]: 0 },
-    ({ facts, reasons }: Taken) => [
-      ...facts.filter((_, i) => i % 3 === 1),
-      ...(reasons as HintReason[]).flatMap(readsOf).map((p) => idx(p.r, p.c, w)),
-    ],
-  );
-  const plan: HintMove[] = [];
-  const now = grid.slice();
-  for (;;) {
-    const taken = walk.next();
-    if (taken === null || taken === "contradiction") break;
-    const { facts, reasons } = taken;
-    for (let i = 0; i < facts.length; i += 3) {
-      const cell = facts[i + 1];
-      const value = facts[i + 2] === SHADED ? BLACK : WHITE;
-      now[cell] = value;
-      plan.push({
-        ...at(m.sp, cell),
-        value,
-        reason: reasons[i / 3] as HintReason,
-        grid: now.slice(),
-      });
-    }
-  }
-  return plan;
+export function hintWalk(state: {
+  grid: Int8Array;
+  w: number;
+  h: number;
+}): { marks: CellMarks; entries: readonly LadderEntry[] } | null {
+  const d = deduction(state.grid, state.w, state.h);
+  return d === null ? null : { marks: d.m, entries: d.ladder.entries };
 }
 
 // --- the live error overlay --------------------------------------------------

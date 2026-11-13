@@ -24,6 +24,7 @@
  * value alone does not say which (see `RangeHint.clue`).
  */
 
+import type { FiringSpoken } from "../../engine/described-firing-hint.ts";
 import {
   CELL,
   type MarkKind,
@@ -37,6 +38,7 @@ import {
 } from "../../engine/hint-words.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import type { Point } from "../../engine/types.ts";
+import type { SaysById } from "./range.compiled.ts";
 
 /** A clue's number, redrawn in the action color: an element apart from its
  * cell, whose outline is the line of sight's. */
@@ -111,5 +113,51 @@ export const say = {
     so({
       look: phrase`making ${thisCell(m)} ${SHADED_NAME} would cut some of ${mark.the("outline", CELL, m.area, "cell")} around it off from the rest`,
       move: phrase`it must stay ${UNSHADED_NAME}`,
+    }),
+};
+
+type Spoken<K extends keyof SaysById> = FiringSpoken<SaysById[K]>;
+
+/** Each technique's sentence, from what its description says of a firing
+ * (`engine/described-firing-hint.ts`): every step is for one square. */
+export const sentences = {
+  besideShaded: (s: Spoken<"besideShaded">): Sentence =>
+    say.adjacency({
+      target: s.targets[0],
+      area: [],
+      blacks: s.outline,
+      run: [],
+      clue: null,
+    }),
+  capped: (s: Spoken<"capped">): Sentence => {
+    const m = {
+      target: s.targets[0],
+      area: s.outline,
+      blacks: [],
+      run: [],
+      clue: s.at(s.terms.clue),
+    };
+    return s.arm === "satisfied"
+      ? say.satisfied(m, s.terms.value)
+      : say.overrun(m, s.terms.value);
+  },
+  reach: (s: Spoken<"reach">): Sentence =>
+    say.reach(
+      {
+        target: s.targets[0],
+        area: s.outline,
+        blacks: [],
+        run: s.stripes,
+        clue: s.at(s.terms.clue),
+      },
+      s.terms.value,
+    ),
+  cut: (s: Spoken<"cut">): Sentence =>
+    say.connect({
+      target: s.targets[0],
+      area: s.outline,
+      blacks: [],
+      run: [],
+      clue: null,
     }),
 };
