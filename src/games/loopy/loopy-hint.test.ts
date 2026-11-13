@@ -44,9 +44,14 @@ import {
   LOOPY_GRIDS,
   type LoopyParams,
 } from "./params.ts";
-import type { CornerWhy, LoopyReason, RelationWhy } from "./record.ts";
 import { COL_HINT_CELL, COL_MISTAKE, PREFERRED_TILE_SIZE } from "./render.ts";
-import { uniqueSolution } from "./solver.ts";
+import {
+  type CornerWhy,
+  type LoopyReason,
+  type Note,
+  type RelationWhy,
+  uniqueSolution,
+} from "./solver.ts";
 import {
   AF_ADAPTIVE,
   AF_FIXED,
@@ -64,6 +69,16 @@ interface Board {
   name: string;
   id: string;
   state: LoopyState;
+}
+
+/** What plan step `k` rests on, as the ids of the walk's facts. */
+function closureOf(found: ReturnType<typeof deduceLoopyPlan>, k: number): Set<number> {
+  const { graph, plan } = found;
+  return new Set(
+    graph.facts
+      .filter((f) => f.firing === plan[k].firing)
+      .flatMap((f) => graph.restsOn(f.id).facts.map((q) => q.id)),
+  );
 }
 
 /** A step that marks nothing, for reading a sentence apart from any board. */
@@ -567,7 +582,8 @@ describe("Loopy hint: a step reasons only from notes on the board", () => {
     let checked = 0;
     let moved = 0;
     for (const b of corpus()) {
-      const { facts, tickOf } = deduceLoopyPlan(b.state);
+      const found = deduceLoopyPlan(b.state);
+      const { graph, notes } = found;
       const g = b.state.grid;
       let state = b.state;
       let firings = 0;
@@ -577,17 +593,19 @@ describe("Loopy hint: a step reasons only from notes on the board", () => {
           const lines = state.lines;
           const open = (edges: readonly ({ index: number } | null)[]) =>
             edges.filter((e) => e !== null && lines[e.index] === LINE_UNKNOWN).length;
-          facts.forEach((f, id) => {
-            if (f.kind !== "relation" || f.why.kind === "note") return;
-            if (new Set([...f.edges, move.a, move.b]).size !== 2) return;
-            if (firings > tickOf[id]) moved++;
+          for (const [id, f] of notes) {
+            if (f.kind !== "relation") continue;
+            if (new Set([...f.edges, move.a, move.b]).size !== 2) continue;
+            // Found after as many line firings as ran before its own.
+            const tick = found.plan.filter((p) => p.firing < graph.facts[id].firing);
+            if (firings > tick.length) moved++;
             const w = f.why;
             let holds = true;
             if (w.kind === "faceParity") holds = open(g.faces[w.face].edges) === 2;
             else if (w.kind === "dotParity") holds = open(g.dots[w.dot].edges) === 2;
             else if (w.kind === "faceLink") holds = open(g.faces[w.face].edges) === 4;
             else if (w.kind === "dotLink") holds = open(g.dots[w.dot].edges) === 4;
-            else return;
+            else continue;
             checked++;
             if (w.kind === "faceParity" || w.kind === "dotParity") {
               holds &&= f.edges.every((e) => lines[e] === LINE_UNKNOWN);
@@ -596,7 +614,7 @@ describe("Loopy hint: a step reasons only from notes on the board", () => {
               holds,
               `${b.name}: "${step.explanation}" is shown after it stopped being true`,
             ).toBe(true);
-          });
+          }
         } else if (move.kind === "set") {
           firings++;
         }
@@ -648,14 +666,14 @@ describe("Loopy hint: a step reasons only from notes on the board", () => {
     let expiring = 0;
     let composed = 0;
     for (const b of corpus()) {
-      const { plan, facts } = deduceLoopyPlan(b.state);
+      const found = deduceLoopyPlan(b.state);
+      const { plan, notes } = found;
 
       /** Every recorded fact a note move could be placing; the player's own are not
        * among them, and a corner move names a dline rather than a fact. */
       const matching = (move: LoopyMove): number[] => {
         const out: number[] = [];
-        facts.forEach((f, id) => {
-          if (f.why.kind === "note") return;
+        for (const [id, f] of notes) {
           if (move.kind === "corner" && f.kind === "corner" && f.dline === move.dline)
             out.push(id);
           if (move.kind === "pair" && f.kind === "relation") {
@@ -663,7 +681,7 @@ describe("Loopy hint: a step reasons only from notes on the board", () => {
             if ((x === move.a && y === move.b) || (x === move.b && y === move.a))
               out.push(id);
           }
-        });
+        }
         return out;
       };
 
@@ -674,7 +692,7 @@ describe("Loopy hint: a step reasons only from notes on the board", () => {
           pending.push(step);
           continue;
         }
-        const closure = new Set(plan[k].closure);
+        const closure = closureOf(found, k);
         for (const note of pending) {
           const at = `${b.name}: "${note.explanation}"`;
           const ids = matching(note.move);
@@ -689,7 +707,8 @@ describe("Loopy hint: a step reasons only from notes on the board", () => {
           }
           total++;
           if (ids.some((id) => closure.has(id))) cited++;
-          if (ids.some((id) => sentenceExpires(b.state, facts[id]))) expiring++;
+          if (ids.some((id) => sentenceExpires(b.state, notes.get(id) as Note)))
+            expiring++;
         }
         pending = [];
         k++;
@@ -719,19 +738,15 @@ describe("Loopy hint: a step reasons only from notes on the board", () => {
     let noteOnly = 0;
     let lineAlone = 0;
     for (const b of corpus()) {
-      const { plan, facts } = deduceLoopyPlan(b.state);
-      const cites = (id: number): readonly number[] => {
-        const f = facts[id];
-        return f.kind === "corner" && f.why.kind === "clue"
-          ? [...f.parents, ...f.why.witness.corners]
-          : f.parents;
-      };
+      const found = deduceLoopyPlan(b.state);
+      const { plan, graph, notes } = found;
+      const cites = (id: number): readonly number[] => graph.facts[id].parents ?? [];
       /** The recorded facts a note move places, and no fact an earlier move did;
        * empty for a composed pair. */
       const done = new Set<number>();
       const placing = (move: LoopyMove): number[] => {
-        const ids = facts.flatMap((f, id) => {
-          if (f.why.kind === "note" || done.has(id)) return [];
+        const ids = [...notes].flatMap(([id, f]) => {
+          if (done.has(id)) return [];
           if (move.kind === "corner") {
             const bit = f.kind === "corner" && f.bound === "atMostOne" ? 2 : 1;
             return f.kind === "corner" && f.dline === move.dline && move.bits & bit
@@ -771,7 +786,7 @@ describe("Loopy hint: a step reasons only from notes on the board", () => {
           lineJourneys++;
           if (legs.length > 1) withNotes++;
           else lineAlone++;
-          const closure = new Set(plan[firing].closure);
+          const closure = closureOf(found, firing);
           for (const ids of notes) {
             if (ids.length === 0) continue;
             expect(
@@ -789,7 +804,7 @@ describe("Loopy hint: a step reasons only from notes on the board", () => {
         // after them on its own.
         const placed = new Set(notes.flat());
         if (placed.size === 0) continue;
-        const dsf = new Dsf(facts.length);
+        const dsf = new Dsf(graph.facts.length);
         for (const id of placed)
           for (const c of cites(id)) if (placed.has(c)) dsf.merge(id, c);
         for (const ids of notes) for (const id of ids) dsf.merge(id, ids[0]);
@@ -826,7 +841,7 @@ const REASONS: Record<LoopyReason["kind"], true> = {
   earlyLoop: true,
 };
 
-const CORNER_WHYS: Record<Exclude<CornerWhy["kind"], "note">, true> = {
+const CORNER_WHYS: Record<CornerWhy["kind"], true> = {
   lineElsewhere: true,
   onlyWayOn: true,
   clue: true,
@@ -835,7 +850,7 @@ const CORNER_WHYS: Record<Exclude<CornerWhy["kind"], "note">, true> = {
   opposites: true,
 };
 
-const RELATION_WHYS: Record<Exclude<RelationWhy["kind"], "note">, true> = {
+const RELATION_WHYS: Record<RelationWhy["kind"], true> = {
   faceParity: true,
   dotParity: true,
   exactlyOneAtCorner: true,
@@ -851,11 +866,14 @@ describe("Loopy hint: the premises the corpus reaches", () => {
     const whys = new Set<string>();
     const states = [...corpus().map((b) => b.state), pinned("related").state];
     for (const state of states) {
-      const { plan, facts } = deduceLoopyPlan(state);
-      for (const p of plan) {
+      const found = deduceLoopyPlan(state);
+      found.plan.forEach((p, k) => {
         reached.add(p.reason.kind);
-        for (const id of p.closure) whys.add(facts[id].why.kind);
-      }
+        for (const id of closureOf(found, k)) {
+          const why = found.notes.get(id)?.why.kind;
+          if (why !== undefined) whys.add(why);
+        }
+      });
     }
     expect(Object.keys(REASONS).filter((k) => !reached.has(k))).toEqual([]);
     for (const why of [...Object.keys(CORNER_WHYS), ...Object.keys(RELATION_WHYS)])

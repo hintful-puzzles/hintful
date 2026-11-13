@@ -1083,9 +1083,10 @@ mark exactly that reach.**
   its parents. A union-find answers only that two things are joined, so a
   cited chain is a shortest path through the recorded merges, cited by the
   firing (`ladderWalk`'s `roles.citing`) and placed by `placeNotes`, which
-  puts a note before the first step resting on it. Exemplars:
-  [`loopy/record.ts`](../src/games/loopy/record.ts), Slant's `deduceHintPlan`
-  (`slant/solver.ts`).
+  puts a note (one fact) before the first step resting on it. Exemplars:
+  `hintWalk` in [`loopy/solver.ts`](../src/games/loopy/solver.ts) (a firing
+  cites the corner bits it counts, `Reads.edgeValues`, and the chain of pairs
+  it narrates), Slant's `deduceHintPlan` (`slant/solver.ts`).
 - **Let the notation's gesture carry the placement it explains**, where the
   player would make both at once; a player who makes the placement alone is
   on track, and the step shrinks to the note. Exemplar: the link in
@@ -1134,8 +1135,8 @@ derivations".
   returns the shallowest move it can leaves the long tail unchanged.
 
 Exemplars: `planSteps`, `sentenceExpires` and `sentenceHolds` in
-[`loopy/hint.ts`](../src/games/loopy/hint.ts) with `seedNotes` in its
-solver; `markRuleOuts` and `canHold` in
+[`loopy/hint.ts`](../src/games/loopy/hint.ts), whose player's notes are the
+walk's roots; `markRuleOuts` and `canHold` in
 [`subsets/solver.ts`](../src/games/subsets/solver.ts), where one predicate
 answers the aid, the hint's premises and "is this already on the board";
 `drawLinkFor` in [`tents/solver.ts`](../src/games/tents/solver.ts).

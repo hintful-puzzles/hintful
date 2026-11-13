@@ -369,7 +369,8 @@ description author acts on:
   alike, `{2}` opposite and `{1, 2}` unrelated, `related(e)` the edges
   related to `e`, and `relate(e, f, d)` concludes one. The marks keep the
   relation closed (`EdgeRelation`), so a chain of pairs reads as one, and a
-  hint that cites one names its links (`LoopyRecorder.path`).
+  hint that cites one names its links (`Relations.path` in `loopy/solver.ts`,
+  whose chain's keys the firing reports in `Reads.relations`).
 - **A rectangle on the grid is a sort** (Rect's): `rects(c, n)` is the
   rectangles holding cell `c` of `n` cells, or of any size where `n` is 0,
   narrowest first; `cells(r)`, `width(r)` and `height(r)` read one, and

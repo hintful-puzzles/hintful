@@ -21,10 +21,13 @@ import {
   clueList,
   type GridSpace,
   RELATE,
+  type Reads,
   rangeMask,
+  relationKey,
   STRIKE_EDGE,
   tilingSpace,
 } from "../../engine/describe-runtime.ts";
+import type { FactGraph } from "../../engine/fact-graph.ts";
 import type { Grid } from "../../engine/grid/index.ts";
 import {
   CellMarks,
@@ -43,14 +46,6 @@ import {
 import type { StepBudget } from "../../engine/step-budget.ts";
 import * as loopy from "./loopy.compiled.ts";
 import { DIFF_HARD } from "./params.ts";
-import {
-  type BoundWitness,
-  type CornerWhy,
-  type LoopyReason,
-  LoopyRecorder,
-  type RecordedOp,
-  type RelationWhy,
-} from "./record.ts";
 import {
   checkCompletion,
   cloneState,
@@ -99,9 +94,10 @@ interface Fired {
   readonly witness?: Witness;
 }
 
-/** A count of some of a face's edges: each edge counted one, and each corner
- * counted one for its two edges, as angles. */
-interface Witness {
+/** What a clue's count of its other edges rests on: the edges counted one
+ * each (lines drawn, or edges still open), and the corners counted one for
+ * their two edges, as angles. */
+export interface Witness {
   readonly edges: readonly number[];
   readonly corners: readonly number[];
   readonly total: number;
@@ -325,20 +321,157 @@ export function uniqueSolution(state: LoopyState): Uint8Array | null {
 const solutions = new WeakMap<Grid, Uint8Array | null>();
 
 // --- the hint's walk ---------------------------------------------------------
+//
+// **Two kinds of fact live beside the lines.** From Normal the solver reasons
+// about *corners* (two edges adjacent around a dot, known to carry at most one
+// or at least one line between them) and from Hard about *pairs* (two edges
+// known to be both lines or both empty, or exactly one of each). The player
+// notes both (`LoopyState.corners` and `pairs`). The walk's graph holds each
+// firing's facts and what each rests on (`engine/fact-graph.ts`); a corner is a
+// `STRIKE_EDGE` about its angle, a pair a `RELATE` about its two edges. What
+// the graph cannot say, because only Loopy knows it, is kept here beside it:
+// why each note holds (`Note`) and the chain of pairs a firing narrates.
+
+/** Which of a corner's two bits a fact sets. */
+export type Bound = "atMostOne" | "atLeastOne";
+
+/** The candidate a corner's fact strikes from its angle: of 0, 1 or 2 lines,
+ * the 0 for at least one, the 2 for at most one. */
+const AT_LEAST_ONE = 0;
+const AT_MOST_ONE = 2;
+
+/** Two edges one noted or found relation joins: both lines or both empty, or
+ * exactly one of each. */
+export interface Link {
+  readonly edges: readonly [number, number];
+  readonly opposite: boolean;
+}
+
+/** Why a corner carries at most one line, or at least one. */
+export type CornerWhy =
+  /** Its dot already has a line along some other edge, so a line through both
+   * would give the dot three. */
+  | { kind: "lineElsewhere" }
+  /** Its dot has one line and these two are its only other edges still open. */
+  | { kind: "onlyWayOn" }
+  /** A clued face's other edges already need, or can only hold, so many lines
+   * that this corner of it is decided. */
+  | { kind: "clue"; face: number; witness: Witness }
+  /** The corner across the dot (`from`) carries at least one line, and a dot
+   * takes two lines at most. */
+  | { kind: "acrossTheDot"; from: number }
+  /** The corner across the dot (`from`) carries exactly one line, and this dot
+   * has no line yet and four open edges, so the loop's other line here is in
+   * this corner. */
+  | { kind: "exactlyOneAcross"; from: number }
+  /** Its two edges are opposites, so exactly one of them is a line: `path` is
+   * the chain of relations between them. */
+  | { kind: "opposites"; path: readonly Link[] };
+
+/** Why two edges are known to match, or to be opposites. */
+export type RelationWhy =
+  /** Only these two of a clued face's edges are still open, so the clue's parity
+   * decides whether they match. */
+  | { kind: "faceParity"; face: number }
+  /** Only these two of a dot's edges are still open, so the dot's parity (it takes
+   * zero or two lines) decides whether they match. */
+  | { kind: "dotParity"; dot: number }
+  /** They make a corner (`from`) carrying exactly one line. */
+  | { kind: "exactlyOneAtCorner"; dot: number; from: number }
+  /** A clued face has four open edges and two of them are related, which relates
+   * the other two by the clue's parity. `path` is the chain between the first
+   * pair. */
+  | { kind: "faceLink"; face: number; path: readonly Link[] }
+  /** The same, at a dot with four open edges. */
+  | { kind: "dotLink"; dot: number; path: readonly Link[] };
+
+/** A fact of the walk that is no line, as the hint says it: `id` is its place
+ * in the walk's graph. */
+export type CornerNote = {
+  readonly kind: "corner";
+  readonly id: number;
+  /** The dline the fact is a bit of, as `dlines.ts` indexes it. */
+  readonly dline: number;
+  readonly dot: number;
+  readonly edges: readonly [number, number];
+  readonly bound: Bound;
+  readonly why: CornerWhy;
+};
+
+export type RelationNote = {
+  readonly kind: "relation";
+  readonly id: number;
+  readonly edges: readonly [number, number];
+  readonly opposite: boolean;
+  readonly why: RelationWhy;
+};
+
+export type Note = CornerNote | RelationNote;
+
+/** The premise behind one firing: a change to one or more lines. Where it
+ * rests on a corner, that is the dline, and where on pairs, their chain. */
+export type LoopyReason =
+  /** A clue already has its lines, so its other edges are empty. */
+  | { kind: "clueFull"; face: number }
+  /** A clue has only as many edges left open as it needs, so all are lines. */
+  | { kind: "clueStarved"; face: number }
+  /** A clue needs all but one of its open edges, and two of them at a dot that
+   * already has a line cannot both be lines, so every other open edge is. */
+  | { kind: "clueOneShort"; face: number; dot: number; pair: readonly [number, number] }
+  /** A clue needs all but one of its open edges, and two dots next to each other
+   * around it already have a line, so the edge between them cannot be one and
+   * every other open edge must be. */
+  | {
+      kind: "clueBlockedPair";
+      face: number;
+      dots: readonly [number, number];
+      between: number;
+    }
+  /** A dot with no line and one open edge: a line there would dead-end. */
+  | { kind: "deadEnd"; dot: number }
+  /** A dot with one line and one open edge: the line must continue along it. */
+  | { kind: "lineContinues"; dot: number }
+  /** A dot with two lines takes no more. */
+  | { kind: "dotFull"; dot: number }
+  /** A clue's other edges already need all its lines (the edge is empty) or can
+   * hold one fewer (the edge is a line). */
+  | { kind: "clueBound"; face: number; edge: number; witness: Witness }
+  /** A corner settles its edges against the dot's lines, and the ops say what
+   * it forced. */
+  | { kind: "corner"; dot: number; dline: number; bound: Bound }
+  /** A dot with no line has three open edges and a corner carrying exactly one
+   * line, so the loop leaves along the third. */
+  | { kind: "cornerExit"; dot: number; dline: number }
+  /** Two matching open edges of a clue with room for one more line (both empty)
+   * or one more empty edge (both lines). `path` is the chain of relations. */
+  | { kind: "matchingPair"; face: number; path: readonly Link[] }
+  /** Three open edges of a clue or a dot, two of them related, so the parity
+   * decides the third. */
+  | { kind: "parity"; face: number | null; dot: number | null; path: readonly Link[] }
+  /** An edge related to one whose state is known takes the state the relation
+   * gives it. `from` is the known edge. */
+  | { kind: "related"; from: number; path: readonly Link[] }
+  /** The edge would close a loop that is not the whole answer. */
+  | { kind: "earlyLoop"; because: "strayLines" | "unmetClues" };
+
+export interface RecordedOp {
+  edge: number;
+  state: LineState;
+}
 
 /** One firing on the hint path that draws lines: the lines it changed, why,
- * and its tier. */
+ * its tier, and its place in the walk's graph. */
 export interface LoopyFiring {
   readonly reason: LoopyReason;
   readonly ops: readonly RecordedOp[];
   readonly tier: number;
+  readonly firing: number;
 }
 
 /** The board a hint plans on: the player's, a copy, its lines kept as the
- * walk draws them, and the facts the walk has found. */
+ * walk draws them. */
 export interface HintBoard {
   readonly state: LoopyState;
-  readonly rec: LoopyRecorder;
   status: "mistake" | "incomplete";
 }
 
@@ -348,28 +481,86 @@ export function hintBoardSolved(board: HintBoard): boolean {
   return checkCompletion(board.state);
 }
 
+/** Every relation noted or found so far, both ways round. The ladder's
+ * relation answers *whether* two edges are related; only this answers
+ * *through what*. */
+class Relations {
+  private readonly at: { to: number; link: Link }[][];
+
+  constructor(numEdges: number) {
+    this.at = Array.from({ length: numEdges }, () => []);
+  }
+
+  add(link: Link): void {
+    const [a, b] = link.edges;
+    this.at[a].push({ to: b, link });
+    this.at[b].push({ to: a, link });
+  }
+
+  /**
+   * The links joining edge `a` to edge `b`, in order from `a`, by the shortest
+   * chain. The ladder's relation said they are related, so a chain exists; not
+   * finding one means a relation went unrecorded.
+   */
+  path(a: number, b: number): Link[] {
+    if (a === b) return [];
+    const via = new Map<number, { from: number; link: Link }>();
+    const queue = [a];
+    via.set(a, { from: -1, link: { edges: [a, a], opposite: false } });
+    for (let i = 0; i < queue.length; i++) {
+      const at = queue[i];
+      for (const r of this.at[at]) {
+        if (via.has(r.to)) continue;
+        via.set(r.to, { from: at, link: r.link });
+        if (r.to === b) {
+          const links: Link[] = [];
+          for (let e = b; e !== a; ) {
+            const step = via.get(e);
+            if (!step) break;
+            links.push(step.link);
+            e = step.from;
+          }
+          return links.reverse();
+        }
+        queue.push(r.to);
+      }
+    }
+    throw new Error(`loopy hint: no recorded relation joins edges ${a} and ${b}`);
+  }
+}
+
 /**
  * The ladder walked from the player's lines and notes, one firing a call
  * (`ladderWalk`, which takes the firing beside the line the plan is
  * drawing, and never one harder than the ladder's own next): each firing
  * that draws lines, with why. A firing that only narrows a corner or
- * relates two edges is no step of its own: it is recorded as a fact, with
- * the facts it rests on, for the plan to place as a note where a line cites
- * it. The player's own notes are facts whose premise is that they are on
- * the board.
+ * relates two edges is no step of its own: its facts are in the graph and in
+ * `notes`, for the plan to place as notes where a line cites them. The
+ * player's own notes are roots: no fact, and nothing to place.
  */
 export function hintWalk(
   state: LoopyState,
   budget: StepBudget,
-): { board: HintBoard; next: () => LoopyFiring | null } {
+): {
+  board: HintBoard;
+  graph: FactGraph;
+  /** The notes the walk's firings made, by their facts' places in the graph. */
+  notes: ReadonlyMap<number, Note>;
+  angleEdges: (angle: number) => readonly [number, number];
+  next: () => LoopyFiring | null;
+} {
   const { ladder } = ladderOf(state);
   const work = cloneState(state);
   const m = marksOf(work, true);
   m.budget = budget;
   const sp = m.sp;
-  const rec = new LoopyRecorder(sp.edges.length);
-  const board: HintBoard = { state: work, rec, status: "incomplete" };
-  seedNotes(sp, rec, state);
+  const board: HintBoard = { state: work, status: "incomplete" };
+  const relations = new Relations(sp.edges.length);
+  for (const { a, b, opposite } of state.pairs)
+    relations.add({ edges: [a, b], opposite });
+  const notes = new Map<number, Note>();
+  /** The chain each firing cites, found as it was asked what it cites. */
+  const chains = new Map<Taken, readonly Link[]>();
   // The dots a firing reads, which a plan continues from: its face's, its
   // dot's or its corner's, and those of the lines it settles.
   const reads = ({ facts, reasons }: Taken): number[] => {
@@ -386,6 +577,79 @@ export function hintWalk(
     }
     return out;
   };
+  // What a firing rests on: the corners its count or its dot reads, and the
+  // chain of relations it narrates, asked before the firing's facts are made.
+  // A line is no premise: the player sees it.
+  const citing = (f: Taken): Reads | readonly Reads[] => {
+    const r = f.reasons[0] as Fired;
+    // A corner bit is the candidate struck from its angle: 0 for at least one
+    // line, 2 for at most one. A firing rests on the bits it names, not on
+    // the angle's other.
+    const bits: [number, number][] = [];
+    const both = (a: number): void => {
+      bits.push([a, AT_LEAST_ONE], [a, AT_MOST_ONE]);
+    };
+    let chain: readonly Link[] = [];
+    switch (r.kind) {
+      case "clueBound": {
+        // Empty where the others already need every line, which counts the
+        // fewest; a line where they can hold one fewer, which counts the most.
+        const bit = r.b["P"] ? AT_LEAST_ONE : AT_MOST_ONE;
+        for (const a of (r.witness as Witness).corners) bits.push([a, bit]);
+        break;
+      }
+      case "cornerFromClue":
+        // A strike each, each resting on its own count: the fewest lines
+        // where the corner takes at most one, the most where at least one.
+        chains.set(f, chain);
+        return (f.reasons as readonly Fired[]).map((s) => ({
+          cells: [],
+          edges: [],
+          edgeValues: (s.witness as Witness).corners.map((a): [number, number] => [
+            a,
+            s.b["d"] === 2 ? AT_LEAST_ONE : AT_MOST_ONE,
+          ]),
+        }));
+      case "cornerOther": {
+        // At most one where a line is, at least one where an edge is empty.
+        const a = num(r, "a");
+        bits.push([a, m.grid[num(r, "e")] === LINE ? AT_MOST_ONE : AT_LEAST_ONE]);
+        break;
+      }
+      case "cornerBoth": {
+        const a = num(r, "a");
+        // Both edges empty where at most one line, both lines where at least one.
+        bits.push([a, (m.edgeCands[a] & 4) === 0 ? AT_MOST_ONE : AT_LEAST_ONE]);
+        break;
+      }
+      case "cornerAcross":
+        bits.push([num(r, "a"), AT_LEAST_ONE]);
+        break;
+      case "cornerExit":
+      case "cornerOppositeExit":
+      case "pairFromCorner":
+        both(num(r, "a"));
+        break;
+      case "matchingPair":
+      case "parityClue":
+      case "parityDot":
+      case "linkClue":
+      case "linkDot":
+      case "cornerFromPair":
+        chain = relations.path(num(r, "e"), num(r, "g"));
+        break;
+      case "related":
+        chain = relations.path(num(r, "g"), num(r, "e"));
+        break;
+    }
+    chains.set(f, chain);
+    return {
+      cells: [],
+      edges: [],
+      edgeValues: bits,
+      relations: chain.map((l) => relationKey(l.edges[0], l.edges[1])),
+    };
+  };
   // The solve runs the dots' techniques first, which is cheaper; a hint
   // counts a clue before a dot where nothing continues its last step.
   const dots = new Set(["deadEnd", "lineContinues", "dotFull"]);
@@ -396,216 +660,119 @@ export function hintWalk(
     ...clues,
     ...ladder.entries.slice(firstDot).filter((e) => !clues.includes(e)),
   ];
-  const walk = ladderWalk(m, order, { [TIERS]: DIFF_HARD }, reads);
+  const walk = ladderWalk(m, order, { [TIERS]: DIFF_HARD }, reads, { citing });
+  const angleEdges = (a: number): readonly [number, number] => [
+    sp.angleEdges[a][0],
+    sp.angleEdges[a][1],
+  ];
+  let count = 0;
   const next = (): LoopyFiring | null => {
     for (;;) {
-      const before = { grid: m.grid.slice(), corners: m.edgeCands.slice() };
-      const taken = walk.next();
-      if (taken === null) return null;
-      if (taken === "contradiction") {
+      const before = m.grid.slice();
+      const first = walk.graph.facts.length;
+      const got = walk.next();
+      if (got === null) return null;
+      if (got === "contradiction") {
         board.status = "mistake";
         return null;
       }
-      const r = taken.reasons[0] as Fired;
+      const firing = count++;
       const ops: RecordedOp[] = [];
       for (const e of sp.edges)
-        if (m.grid[e] !== before.grid[e]) {
+        if (m.grid[e] !== before[e]) {
           const line = lineOf(m.grid[e]);
           work.lines[e] = line;
           ops.push({ edge: e, state: line });
         }
-      if (ops.length === 0) {
-        recordFacts(sp, rec, taken.reasons, before.corners, m);
-        continue;
+      const r = got.reasons[0] as Fired;
+      for (let i = 0; i < got.facts.length; i += 3) {
+        const noting = got.facts[i] === STRIKE_EDGE || got.facts[i] === RELATE;
+        if (noting === ops.length > 0)
+          throw new Error(`loopy hint: ${r.kind} both draws lines and makes notes`);
+        if (!noting) continue;
+        const note = noteOf(got, i, first + i / 3);
+        notes.set(note.id, note);
+        if (note.kind === "relation")
+          relations.add({ edges: note.edges, opposite: note.opposite });
       }
+      if (ops.length === 0) continue;
       return {
-        reason: lineReason(sp, rec, r, before.grid, ops),
+        reason: lineReason(sp, r, before, ops, chains.get(got) ?? []),
         ops,
-        tier: taken.entry.tier,
+        tier: got.entry.tier,
+        firing,
       };
     }
   };
-  return { board, next };
-}
-
-/** The player's notes, as facts whose premise is that they are on the
- * board. */
-function seedNotes(sp: GridSpace, rec: LoopyRecorder, state: LoopyState): void {
-  state.corners.forEach((bits, a) => {
-    const note = (bound: "atLeastOne" | "atMostOne"): void => {
-      rec.corner(a, {
-        kind: "corner",
-        dot: sp.angleCell[a],
-        edges: [sp.angleEdges[a][0], sp.angleEdges[a][1]],
-        bound,
-        why: { kind: "note" },
-        parents: [],
-      });
+  const noteOf = (got: Taken, i: number, id: number): Note => {
+    const at = got.facts[i + 1];
+    const v = got.facts[i + 2];
+    const s = got.reasons[i / 3] as Fired;
+    const chain = chains.get(got) ?? [];
+    if (got.facts[i] === RELATE) {
+      const edges: readonly [number, number] = [at, v >> 2];
+      const opposite = (v & 3) === 2;
+      return { kind: "relation", id, edges, opposite, why: relationWhy(s, chain) };
+    }
+    const bound: Bound = v === AT_MOST_ONE ? "atMostOne" : "atLeastOne";
+    return {
+      kind: "corner",
+      id,
+      dline: at,
+      dot: sp.angleCell[at],
+      edges: angleEdges(at),
+      bound,
+      why: cornerWhy(s, bound, chain),
     };
-    if (bits & 1) note("atLeastOne");
-    if (bits & 2) note("atMostOne");
-  });
-  for (const { a, b, opposite } of state.pairs)
-    rec.relate({
-      kind: "relation",
-      edges: [a, b],
-      opposite,
-      why: { kind: "note" },
-      parents: [],
-    });
+  };
+  const relationWhy = (s: Fired, chain: readonly Link[]): RelationWhy => {
+    switch (s.kind) {
+      case "pairFromCorner":
+        return {
+          kind: "exactlyOneAtCorner",
+          dot: sp.angleCell[num(s, "a")],
+          from: num(s, "a"),
+        };
+      case "pairAtClue":
+        return { kind: "faceParity", face: num(s, "f") };
+      case "pairAtDot":
+        return { kind: "dotParity", dot: num(s, "c") };
+      case "linkClue":
+        return { kind: "faceLink", face: num(s, "f"), path: chain };
+      case "linkDot":
+        return { kind: "dotLink", dot: num(s, "c"), path: chain };
+      default:
+        throw new Error(`loopy hint: ${s.kind} relates no edges`);
+    }
+  };
+  const cornerWhy = (s: Fired, bound: Bound, chain: readonly Link[]): CornerWhy => {
+    switch (s.kind) {
+      case "cornerAtDot":
+        return { kind: bound === "atMostOne" ? "lineElsewhere" : "onlyWayOn" };
+      case "cornerFromClue":
+        return { kind: "clue", face: num(s, "f"), witness: s.witness as Witness };
+      case "cornerAcross":
+        return { kind: "acrossTheDot", from: num(s, "a") };
+      case "cornerOppositeExit":
+        return { kind: "exactlyOneAcross", from: num(s, "a") };
+      case "cornerFromPair":
+        return { kind: "opposites", path: chain };
+      default:
+        throw new Error(`loopy hint: ${s.kind} narrows no corner`);
+    }
+  };
+  return { board, graph: walk.graph, notes, angleEdges, next };
 }
 
 const num = (r: Fired, k: string): number => r.b[k] as number;
 
-/** The fact ids of a witness's corners, each read as its count's bound. */
-const witnessOf = (
-  rec: LoopyRecorder,
-  w: Witness,
-  bound: "atMostOne" | "atLeastOne",
-): BoundWitness => ({
-  edges: w.edges,
-  corners: w.corners.map((a) => rec.cornerFact(a, bound)),
-  total: w.total,
-});
-
-/**
- * Record what a firing that draws no line found: each corner bit it struck,
- * as a fact with why it holds and the facts it rests on, and each pair it
- * related.
- */
-function recordFacts(
-  sp: GridSpace,
-  rec: LoopyRecorder,
-  all: readonly object[],
-  before: Int32Array,
-  m: CellMarks,
-): void {
-  const r = all[0] as Fired;
-  const corner = (
-    a: number,
-    bound: "atMostOne" | "atLeastOne",
-    why: CornerWhy,
-    parents: readonly number[],
-  ): void => {
-    const bit = bound === "atMostOne" ? 4 : 1;
-    if ((before[a] & bit) === 0 || (m.edgeCands[a] & bit) !== 0) return;
-    rec.corner(a, {
-      kind: "corner",
-      dot: sp.angleCell[a],
-      edges: [sp.angleEdges[a][0], sp.angleEdges[a][1]],
-      bound,
-      why,
-      parents,
-    });
-  };
-  const relate = (
-    e: number,
-    g: number,
-    opposite: boolean,
-    why: RelationWhy,
-    parents: readonly number[],
-  ): void => {
-    rec.relate({ kind: "relation", edges: [e, g], opposite, why, parents });
-  };
-  const opposite = (d: number): boolean => d === 2;
-  switch (r.kind) {
-    case "cornerAtDot": {
-      const a = num(r, "a");
-      corner(a, "atMostOne", { kind: "lineElsewhere" }, []);
-      corner(a, "atLeastOne", { kind: "onlyWayOn" }, []);
-      return;
-    }
-    case "cornerFromClue": {
-      // A reason a strike, each with the count it rests on: the fewest
-      // lines where the corner takes at most one, the most where at least
-      // one.
-      for (const s of all as readonly Fired[]) {
-        const a = num(s, "a");
-        const face = num(s, "f");
-        const w = s.witness as Witness;
-        if (s.b["d"] === 2)
-          corner(
-            a,
-            "atMostOne",
-            { kind: "clue", face, witness: witnessOf(rec, w, "atLeastOne") },
-            [],
-          );
-        else
-          corner(
-            a,
-            "atLeastOne",
-            { kind: "clue", face, witness: witnessOf(rec, w, "atMostOne") },
-            [],
-          );
-      }
-      return;
-    }
-    case "cornerAcross":
-      corner(num(r, "b"), "atMostOne", { kind: "acrossTheDot" }, [
-        rec.cornerFact(num(r, "a"), "atLeastOne"),
-      ]);
-      return;
-    case "cornerOppositeExit": {
-      const a = num(r, "a");
-      const parents = [rec.cornerFact(a, "atLeastOne"), rec.cornerFact(a, "atMostOne")];
-      corner(num(r, "b"), "atLeastOne", { kind: "exactlyOneAcross" }, parents);
-      corner(num(r, "b"), "atMostOne", { kind: "exactlyOneAcross" }, parents);
-      return;
-    }
-    case "cornerFromPair": {
-      const a = num(r, "a");
-      const path = rec.path(num(r, "e"), num(r, "g"));
-      corner(a, "atMostOne", { kind: "opposites" }, path);
-      corner(a, "atLeastOne", { kind: "opposites" }, path);
-      return;
-    }
-    case "pairFromCorner": {
-      const a = num(r, "a");
-      relate(
-        num(r, "e"),
-        num(r, "g"),
-        true,
-        { kind: "exactlyOneAtCorner", dot: sp.angleCell[a] },
-        [rec.cornerFact(a, "atMostOne"), rec.cornerFact(a, "atLeastOne")],
-      );
-      return;
-    }
-    case "pairAtClue":
-    case "pairAtDot": {
-      const e = num(r, "e");
-      const g = num(r, "g");
-      const d = m.pairOf(e, g) === 4 ? 2 : 1;
-      const why: RelationWhy =
-        r.kind === "pairAtClue"
-          ? { kind: "faceParity", face: num(r, "f") }
-          : { kind: "dotParity", dot: num(r, "c") };
-      relate(e, g, opposite(d), why, []);
-      return;
-    }
-    case "linkClue":
-    case "linkDot": {
-      const h = num(r, "h");
-      const k = num(r, "k");
-      const d = m.pairOf(h, k) === 4 ? 2 : 1;
-      const why: RelationWhy =
-        r.kind === "linkClue"
-          ? { kind: "faceLink", face: num(r, "f") }
-          : { kind: "dotLink", dot: num(r, "c") };
-      relate(h, k, opposite(d), why, rec.path(num(r, "e"), num(r, "g")));
-      return;
-    }
-    default:
-      throw new Error(`loopy hint: ${r.kind} draws no line and records nothing`);
-  }
-}
-
 /** Why a firing that draws lines holds, in the hint's terms. */
 function lineReason(
   sp: GridSpace,
-  rec: LoopyRecorder,
   r: Fired,
   before: ArrayLike<number>,
   ops: readonly RecordedOp[],
+  chain: readonly Link[],
 ): LoopyReason {
   switch (r.kind) {
     case "clueFull":
@@ -647,46 +814,31 @@ function lineReason(
       const a = num(r, "a");
       // At most one where a line, or both edges, were made empty.
       const bound = ops[0].state === LINE_NO ? "atMostOne" : "atLeastOne";
-      return { kind: "corner", dot: sp.angleCell[a], fact: rec.cornerFact(a, bound) };
+      return { kind: "corner", dot: sp.angleCell[a], dline: a, bound };
     }
-    case "clueBound": {
-      const w = r.witness as Witness;
-      // Empty where the others already need every line, which counts the
-      // fewest; a line where they can hold one fewer, which counts the most.
-      const bound = r.b["P"] ? "atLeastOne" : "atMostOne";
+    case "clueBound":
       return {
         kind: "clueBound",
         face: num(r, "f"),
         edge: num(r, "e"),
-        witness: witnessOf(rec, w, bound),
+        witness: r.witness as Witness,
       };
-    }
     case "cornerExit": {
       const a = num(r, "a");
-      return {
-        kind: "cornerExit",
-        dot: sp.angleCell[a],
-        facts: [rec.cornerFact(a, "atLeastOne"), rec.cornerFact(a, "atMostOne")],
-      };
+      return { kind: "cornerExit", dot: sp.angleCell[a], dline: a };
     }
     case "matchingPair":
-      return {
-        kind: "matchingPair",
-        face: num(r, "f"),
-        path: rec.path(num(r, "e"), num(r, "g")),
-      };
+      return { kind: "matchingPair", face: num(r, "f"), path: chain };
     case "parityClue":
     case "parityDot":
       return {
         kind: "parity",
         face: r.kind === "parityClue" ? num(r, "f") : null,
         dot: r.kind === "parityDot" ? num(r, "c") : null,
-        path: rec.path(num(r, "e"), num(r, "g")),
+        path: chain,
       };
-    case "related": {
-      const g = num(r, "g");
-      return { kind: "related", from: g, path: rec.path(g, num(r, "e")) };
-    }
+    case "related":
+      return { kind: "related", from: num(r, "g"), path: chain };
     default:
       throw new Error(`loopy hint: ${r.kind} draws no line a hint narrates`);
   }

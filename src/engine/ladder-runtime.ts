@@ -1140,9 +1140,10 @@ export function ladderWalk<S extends CellMarks>(
      * formula's reads: a firing that reads a whole set of marks (every edge a
      * path may cross) but cites one path through it (Slant's `same`). Asked
      * on the marks as they stand before the firing's facts are made;
-     * `null` keeps what the formula read.
+     * `null` keeps what the formula read. One `Reads` for each fact of the
+     * firing, in order, where the facts rest on different things.
      */
-    readonly citing?: (firing: Taken<S>) => Reads | null;
+    readonly citing?: (firing: Taken<S>) => Reads | null | readonly (Reads | null)[];
   } = {},
 ): LadderWalk<S> {
   // An edge's mark, or value, is written as its two cells are.

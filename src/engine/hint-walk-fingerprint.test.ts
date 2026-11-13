@@ -11,8 +11,8 @@ import { describe, expect, it } from "vitest";
 import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 import { fingerprint, walkLines } from "./testing/hint-walk-fingerprint.ts";
 
-/** The games moved onto the engine's steps so far, and Slant, whose words are
- * held while it moves onto the fact graph
+/** The games moved onto the engine's steps so far, and Slant and Loopy, whose
+ * words are held while they move onto the fact graph
  * (`explain-a-firing-by-its-witness-and-parents` 3.4). */
 const MOVED = [
   "unruly",
@@ -40,6 +40,7 @@ const MOVED = [
   "magnets",
   "map",
   "slant",
+  "loopy",
 ];
 
 /** The boards dealt a preset: more than one, so a rare rung is more likely met. */

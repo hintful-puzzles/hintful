@@ -20,6 +20,7 @@
  */
 
 import { Dsf } from "../../engine/dsf.ts";
+import { type FactGraph, placeNotes } from "../../engine/fact-graph.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
@@ -37,16 +38,14 @@ import {
 } from "./hint-text.ts";
 import type { LoopyMove, LoopyOp } from "./index.ts";
 import {
-  type CornerFact,
-  firingRoots,
-  type LoopyFact,
-  type RelationFact,
-} from "./record.ts";
-import {
+  type CornerNote,
   type HintBoard,
   hintBoardSolved,
   hintWalk,
+  type Link,
   type LoopyFiring,
+  type Note,
+  type RelationNote,
 } from "./solver.ts";
 import {
   AF_ADAPTIVE,
@@ -98,26 +97,27 @@ export type LoopyRung = (typeof LOOPY_RUNGS)[number];
 
 type Step = HintStep<LoopyMove, unknown, LoopyRung>;
 
-/** One firing as the plan keeps it: the board just before it, and the facts it
- * rests on, deepest first. */
+/** One firing as the plan keeps it: the board just before it. */
 interface Planned extends LoopyFiring {
   readonly before: Uint8Array;
-  readonly closure: readonly number[];
 }
 
 type PlanStatus = "solved" | "incomplete";
 
-/** The line firings from the player's position, and every fact the recorder found
- * on the way. `contradiction` when the solver found the marks inconsistent, which
- * only a board no solution vouches for can reach. */
+/** The line firings from the player's position, the walk's graph of facts, and
+ * the notes among them. `contradiction` when the solver found the marks
+ * inconsistent, which only a board no solution vouches for can reach. */
 export function deduceLoopyPlan(state: LoopyState): {
   plan: Planned[];
-  facts: readonly LoopyFact[];
-  tickOf: readonly number[];
+  graph: FactGraph;
+  notes: ReadonlyMap<number, Note>;
+  angleEdges: (angle: number) => readonly [number, number];
   contradiction: boolean;
 } {
-  const { board, next } = hintWalk(state, stepBudget("loopy hint plan"));
-  const rec = board.rec;
+  const { board, graph, notes, angleEdges, next } = hintWalk(
+    state,
+    stepBudget("loopy hint plan"),
+  );
   const { plan } = deduceHintPlan<HintBoard, Planned, PlanStatus>({
     board,
     status: (b) => (hintBoardSolved(b) ? "solved" : "incomplete"),
@@ -127,16 +127,10 @@ export function deduceLoopyPlan(state: LoopyState): {
       if (f === null) return null;
       const before = b.state.lines.slice();
       for (const op of f.ops) before[op.edge] = LINE_UNKNOWN;
-      rec.tick++;
-      return { ...f, before, closure: rec.closure(firingRoots(f.reason)) };
+      return { ...f, before };
     },
   });
-  return {
-    plan,
-    facts: rec.facts,
-    tickOf: rec.tickOf,
-    contradiction: board.status === "mistake",
-  };
+  return { plan, graph, notes, angleEdges, contradiction: board.status === "mistake" };
 }
 
 const BIT = { atLeastOne: 1, atMostOne: 2 } as const;
@@ -167,7 +161,7 @@ class Notes {
 
 interface Planner {
   readonly state: LoopyState;
-  readonly facts: readonly LoopyFact[];
+  readonly angleEdges: (angle: number) => readonly [number, number];
   readonly notes: Notes;
   readonly steps: Step[];
 }
@@ -197,20 +191,6 @@ function push(
   pl.steps.push({ move, rung, explanation: said.text, words: said });
 }
 
-function cornerOf(pl: Planner, id: number): CornerFact {
-  const f = pl.facts[id];
-  if (f.kind !== "corner")
-    throw new Error("loopy hint: a corner premise that is not a corner");
-  return f;
-}
-
-function relationOf(pl: Planner, id: number): RelationFact {
-  const f = pl.facts[id];
-  if (f.kind !== "relation")
-    throw new Error("loopy hint: a pair premise that is not a pair");
-  return f;
-}
-
 const yesAround = (
   edges: readonly ({ index: number } | null)[],
   lines: Uint8Array,
@@ -220,8 +200,7 @@ const yesAround = (
  * The one pair a chain of relations comes to, placing it a link at a time: from
  * A–B and B–C on the board, a step marks A–C, and so on to the chain's far end.
  */
-function chainPair(pl: Planner, path: readonly number[]): LoopyPair {
-  const links = path.map((id) => relationOf(pl, id));
+function chainPair(pl: Planner, links: readonly Link[]): LoopyPair {
   const [x, y] = links[0].edges;
   if (links.length === 1) return pairOf(x, y, links[0].opposite);
   const start = links[1].edges.includes(x) ? y : x;
@@ -260,13 +239,13 @@ const AT_DOT = new Set(["lineElsewhere", "onlyWayOn"]);
 
 /** Whether two facts about one corner place one note together: both bits read off
  * the dot's own line, or both off one pair. */
-const together = (f: CornerFact, g: CornerFact): boolean =>
+const together = (f: CornerNote, g: CornerNote): boolean =>
   f.dline === g.dline &&
   ((AT_DOT.has(f.why.kind) && AT_DOT.has(g.why.kind)) ||
     (f.why.kind === "opposites" && g.why.kind === "opposites"));
 
 /** A step placing one corner note: one fact, or two facts from one premise. */
-function placeCorner(pl: Planner, group: readonly CornerFact[]): void {
+function placeCorner(pl: Planner, group: readonly CornerNote[]): void {
   const f = group[0];
   let bits = 0;
   for (const g of group) bits |= BIT[g.bound];
@@ -280,8 +259,6 @@ function placeCorner(pl: Planner, group: readonly CornerFact[]): void {
   let marks: Partial<Marks>;
   const why = f.why;
   switch (why.kind) {
-    case "note":
-      return;
     case "lineElsewhere":
     case "onlyWayOn":
       rung = "cornerAtDot";
@@ -291,24 +268,21 @@ function placeCorner(pl: Planner, group: readonly CornerFact[]): void {
     case "clue":
       rung = "cornerFromClue";
       words = (m) => say.cornerFromClue(clue(why.face), why.witness.total, f.bound, m);
-      marks = {
-        faces: [why.face],
-        corners: why.witness.corners.map((id) => cornerOf(pl, id).dline),
-      };
+      marks = { faces: [why.face], corners: [...why.witness.corners] };
       break;
     case "acrossTheDot":
       rung = "cornerAcross";
       words = say.cornerAcross;
-      marks = { dots: [f.dot], corners: [cornerOf(pl, f.parents[0]).dline] };
+      marks = { dots: [f.dot], corners: [why.from] };
       break;
     case "exactlyOneAcross":
       rung = "cornerOppositeExit";
       words = say.cornerOppositeExit;
-      marks = { dots: [f.dot], corners: [cornerOf(pl, f.parents[0]).dline] };
+      marks = { dots: [f.dot], corners: [why.from] };
       break;
     case "opposites":
       rung = "cornerFromPair";
-      marks = { pairs: [chainPair(pl, f.parents)] };
+      marks = { pairs: [chainPair(pl, why.path)] };
       words = (m) => say.cornerFromPair(bound, m);
       break;
   }
@@ -321,7 +295,7 @@ function placeCorner(pl: Planner, group: readonly CornerFact[]): void {
 }
 
 /** A step placing one pair note. */
-function placePair(pl: Planner, f: RelationFact, before: Uint8Array): void {
+function placePair(pl: Planner, f: RelationNote, before: Uint8Array): void {
   const [a, b] = f.edges;
   if (pl.notes.hasPair(a, b)) return;
   const g = pl.state.grid;
@@ -334,8 +308,6 @@ function placePair(pl: Planner, f: RelationFact, before: Uint8Array): void {
   let marks: Partial<Marks>;
   const why = f.why;
   switch (why.kind) {
-    case "note":
-      return;
     case "faceParity": {
       rung = "pairAtClue";
       const clue = pl.state.clues[why.face];
@@ -354,11 +326,11 @@ function placePair(pl: Planner, f: RelationFact, before: Uint8Array): void {
     case "exactlyOneAtCorner":
       rung = "pairAtCorner";
       words = say.pairAtCorner;
-      marks = { corners: [cornerOf(pl, f.parents[0]).dline] };
+      marks = { corners: [why.from] };
       break;
     case "faceLink": {
       rung = "pairAcrossClue";
-      const pair = chainPair(pl, f.parents);
+      const pair = chainPair(pl, why.path);
       const clue = pl.state.clues[why.face];
       const more = needed(why.face);
       words = (m) => say.pairAcrossClue(clue, more, pair.opposite, f.opposite, m);
@@ -367,7 +339,7 @@ function placePair(pl: Planner, f: RelationFact, before: Uint8Array): void {
     }
     case "dotLink": {
       rung = "pairAcrossDot";
-      const pair = chainPair(pl, f.parents);
+      const pair = chainPair(pl, why.path);
       const lines = dotLines(why.dot);
       words = (m) => say.pairAcrossDot(lines, pair.opposite, f.opposite, m);
       marks = { dots: [why.dot], pairs: [pair] };
@@ -470,19 +442,14 @@ function narrate(pl: Planner, p: Planned): { words: Words; marks: Partial<Marks>
       const c = clue(r.face);
       return {
         words: (m) => (line ? say.boundLine(c, m) : say.boundEmpty(c, m)),
-        marks: {
-          faces: [r.face],
-          corners: r.witness.corners.map((id) => cornerOf(pl, id).dline),
-        },
+        marks: { faces: [r.face], corners: [...r.witness.corners] },
       };
     }
 
     case "corner":
     case "cornerExit": {
-      const ids = r.kind === "corner" ? [r.fact] : [...r.facts];
-      const first = cornerOf(pl, ids[0]);
-      const bound: CornerBound = ids.length === 2 ? "exactlyOne" : first.bound;
-      const [a, b] = first.edges;
+      const bound: CornerBound = r.kind === "cornerExit" ? "exactlyOne" : r.bound;
+      const [a, b] = pl.angleEdges(r.dline);
       const bothOpen = p.before[a] === LINE_UNKNOWN && p.before[b] === LINE_UNKNOWN;
       let then: CornerThen;
       if (r.kind === "cornerExit") then = "exit";
@@ -491,7 +458,7 @@ function narrate(pl: Planner, p: Planned): { words: Words; marks: Partial<Marks>
       const ringed = then === "bothLines" || then === "neither" || then === "exit";
       return {
         words: (m) => say.corner(bound, then, m),
-        marks: { corners: [first.dline], dots: ringed ? [r.dot] : [] },
+        marks: { corners: [r.dline], dots: ringed ? [r.dot] : [] },
       };
     }
 
@@ -540,12 +507,12 @@ function narrate(pl: Planner, p: Planned): { words: Words; marks: Partial<Marks>
  * `pairAtCorner` is monotone. `findings.md` § "Which note sentences survive being
  * deferred" classifies all of them.
  */
-export function sentenceExpires(state: LoopyState, f: LoopyFact): boolean {
+export function sentenceExpires(state: LoopyState, f: Note): boolean {
   if (f.kind === "relation") {
     // "Only these two edges are still open", and the "four open edges" of the
     // across-a-clue pairs, both name a set that only shrinks. `pairAtCorner` cites
     // a corner note, which stays put.
-    return f.why.kind !== "exactlyOneAtCorner" && f.why.kind !== "note";
+    return f.why.kind !== "exactlyOneAtCorner";
   }
   if (f.why.kind !== "clue" || f.bound !== "atMostOne") return false;
   // Of `cornerFromClue`'s branches only "already give it N" counts drawn lines, and
@@ -564,8 +531,8 @@ const openAround = (edges: readonly ({ index: number } | null)[], lines: Uint8Ar
  */
 function sentenceHolds(
   state: LoopyState,
-  facts: readonly LoopyFact[],
-  f: LoopyFact,
+  angleEdges: (angle: number) => readonly [number, number],
+  f: Note,
   lines: Uint8Array,
 ): boolean {
   if (!sentenceExpires(state, f)) return true;
@@ -587,20 +554,12 @@ function sentenceHolds(
   if (f.why.kind !== "clue") return true;
   // "Already give it N": no line has joined the ones the count was taken over.
   const counted = new Set<number>(f.edges);
-  for (const id of f.why.witness.corners)
-    for (const e of facts[id].edges) counted.add(e);
+  for (const a of f.why.witness.corners) for (const e of angleEdges(a)) counted.add(e);
   const drawn = g.faces[f.why.face].edges.filter(
     (e) => e !== null && !counted.has(e.index) && lines[e.index] === LINE_YES,
   ).length;
   return drawn === f.why.witness.edges.length;
 }
-
-/** The facts a fact's placement cites: its parents, and the corners a clue's count
- * rests on. */
-const citesOf = (f: LoopyFact): readonly number[] =>
-  f.kind === "corner" && f.why.kind === "clue"
-    ? [...f.parents, ...f.why.witness.corners]
-    : f.parents;
 
 /**
  * The facts placed at one plan position, split into the separate deductions they
@@ -608,17 +567,42 @@ const citesOf = (f: LoopyFact): readonly number[] =>
  * together. Each group comes out deepest first, a branch at a time, so one leg
  * follows from the leg before it wherever the derivation allows.
  */
-function deductions(facts: readonly LoopyFact[], ids: readonly number[]): number[][] {
+function deductions(
+  graph: FactGraph,
+  notes: ReadonlyMap<number, Note>,
+  ids: readonly number[],
+): number[][] {
+  const facts = (id: number): Note => {
+    const note = notes.get(id);
+    if (note === undefined) throw new Error(`loopy hint: fact ${id} is no note`);
+    return note;
+  };
+  /** What a fact cites, in the order its legs read: the two bits of one corner
+   * with "at least one" first, so "exactly one" reads from its parts. */
+  const citesOf = (id: number): readonly number[] => {
+    const parents = graph.facts[id].parents ?? [];
+    const firstOf = new Map<number, number>();
+    for (const p of parents) {
+      const n = notes.get(p);
+      if (n?.kind === "corner" && !firstOf.has(n.dline)) firstOf.set(n.dline, p);
+    }
+    const key = (p: number): [number, number] => {
+      const n = notes.get(p);
+      if (n?.kind !== "corner") return [p, 0];
+      return [firstOf.get(n.dline) as number, n.bound === "atLeastOne" ? 0 : 1];
+    };
+    return [...parents].sort((x, y) => key(x)[0] - key(y)[0] || key(x)[1] - key(y)[1]);
+  };
   const here = new Set(ids);
-  const dsf = new Dsf(facts.length);
+  const dsf = new Dsf(graph.facts.length);
   const join = (a: number, b: number): void => dsf.merge(a, b);
   const partner = new Map<number, number>();
   for (const id of ids) {
-    const f = facts[id];
-    for (const c of citesOf(f)) if (here.has(c)) join(id, c);
+    const f = facts(id);
+    for (const c of citesOf(id)) if (here.has(c)) join(id, c);
     if (f.kind !== "corner" || partner.has(id)) continue;
     const g = ids.find((o) => {
-      const h = facts[o];
+      const h = facts(o);
       return o !== id && !partner.has(o) && h.kind === "corner" && together(f, h);
     });
     if (g !== undefined) {
@@ -633,7 +617,7 @@ function deductions(facts: readonly LoopyFact[], ids: readonly number[]): number
     const r = dsf.canonify(id);
     groups.set(r, [...(groups.get(r) ?? []), id]);
   }
-  const cited = new Set(ids.flatMap((id) => citesOf(facts[id])));
+  const cited = new Set(ids.flatMap((id) => citesOf(id)));
   return [...groups.values()].map((group) => {
     const out: number[] = [];
     const seen = new Set<number>();
@@ -642,9 +626,8 @@ function deductions(facts: readonly LoopyFact[], ids: readonly number[]): number
       seen.add(id);
       const mate = partner.get(id);
       if (mate !== undefined) seen.add(mate);
-      for (const c of citesOf(facts[id])) if (here.has(c)) visit(c);
-      if (mate !== undefined)
-        for (const c of citesOf(facts[mate])) if (here.has(c)) visit(c);
+      for (const c of citesOf(id)) if (here.has(c)) visit(c);
+      if (mate !== undefined) for (const c of citesOf(mate)) if (here.has(c)) visit(c);
       // A shared note is narrated from its first fact, the one found first.
       if (mate === undefined) out.push(id);
       else out.push(Math.min(id, mate), Math.max(id, mate));
@@ -678,39 +661,37 @@ function deductions(facts: readonly LoopyFact[], ids: readonly number[]): number
  */
 function planSteps(
   state: LoopyState,
-  plan: readonly Planned[],
-  facts: readonly LoopyFact[],
-  tickOf: readonly number[],
+  { plan, graph, notes, angleEdges }: ReturnType<typeof deduceLoopyPlan>,
 ): Step[] {
-  const pl: Planner = { state, facts, notes: new Notes(state), steps: [] };
-  const firstUse = new Map<number, number>();
-  plan.forEach((p, i) => {
-    for (const id of p.closure) if (!firstUse.has(id)) firstUse.set(id, i);
+  const pl: Planner = { state, angleEdges, notes: new Notes(state), steps: [] };
+  const stepOf = new Map(plan.map((p, i) => [p.firing, i]));
+  const factsOf = new Map<number, number[]>();
+  for (const f of graph.facts) {
+    const list = factsOf.get(f.firing);
+    if (list === undefined) factsOf.set(f.firing, [f.id]);
+    else list.push(f.id);
+  }
+  /** What each step rests on, deepest first. */
+  const closure = plan.map(
+    (p) =>
+      new Set(
+        (factsOf.get(p.firing) ?? []).flatMap((id) =>
+          graph.restsOn(id).facts.map((f) => f.id),
+        ),
+      ),
+  );
+  const { steps: stepFirings, before } = placeNotes(graph, {
+    isNote: (f) => f.about.space !== "cells",
+    expired: (note, step) =>
+      !sentenceHolds(
+        state,
+        angleEdges,
+        notes.get(note) as Note,
+        plan[stepOf.get(step) as number].before,
+      ),
   });
-
-  const slot = new Map<number, number>();
-  for (const [id, use] of firstUse) {
-    let at = Math.min(tickOf[id], use);
-    while (at < use && sentenceHolds(state, facts, facts[id], plan[at + 1].before))
-      at++;
-    slot.set(id, at);
-  }
-  // A note may not follow one that cites it. A fact's parents always have smaller
-  // ids, so one descending pass pulls each back to its earliest dependent.
-  for (const id of [...slot.keys()].sort((x, y) => y - x)) {
-    const at = slot.get(id) as number;
-    for (const p of citesOf(facts[id])) {
-      const was = slot.get(p);
-      if (was !== undefined && was > at) slot.set(p, at);
-    }
-  }
-
-  const found = new Map<number, number[]>();
-  for (const id of [...slot.keys()].sort((x, y) => x - y)) {
-    if (facts[id].why.kind === "note") continue;
-    const at = slot.get(id) as number;
-    found.set(at, [...(found.get(at) ?? []), id]);
-  }
+  if (stepFirings.some((f, i) => f !== plan[i].firing))
+    throw new Error("loopy hint: the graph's steps are not the line firings");
 
   /** Flag every leg after `start` as continuing the journey `start` leads. */
   const journey = (start: number): void => {
@@ -719,10 +700,9 @@ function planSteps(
   };
 
   plan.forEach((p, i) => {
-    const closure = new Set(p.closure);
-    const groups = deductions(facts, found.get(i) ?? []);
+    const groups = deductions(graph, notes, before[i]);
     const uses = (group: readonly number[]): boolean =>
-      group.some((id) => closure.has(id));
+      group.some((id) => closure[i].has(id));
     // The groups this firing does not rest on first, so its own come straight before it.
     const ordered = [...groups.filter((g) => !uses(g)), ...groups.filter(uses)];
     let lastStart = -1;
@@ -730,12 +710,12 @@ function planSteps(
     for (const group of ordered) {
       const start = pl.steps.length;
       for (let k = 0; k < group.length; k++) {
-        const f = facts[group[k]];
+        const f = notes.get(group[k]) as Note;
         if (f.kind === "relation") {
           placePair(pl, f, p.before);
           continue;
         }
-        const g = k + 1 < group.length ? facts[group[k + 1]] : null;
+        const g = k + 1 < group.length ? (notes.get(group[k + 1]) as Note) : null;
         if (g?.kind === "corner" && together(f, g)) {
           placeCorner(pl, [f, g]);
           k++;
@@ -769,14 +749,14 @@ function planSteps(
 }
 
 export function hint(state: LoopyState): HintResult<LoopyMove, unknown, LoopyRung> {
-  const { plan, facts, tickOf, contradiction } = deduceLoopyPlan(state);
-  if (plan.length === 0) {
+  const found = deduceLoopyPlan(state);
+  if (found.plan.length === 0) {
     return {
       ok: false,
-      error: contradiction ? CONTRADICTION_UNLOCALIZED : DEDUCTION_EXHAUSTED,
+      error: found.contradiction ? CONTRADICTION_UNLOCALIZED : DEDUCTION_EXHAUSTED,
     };
   }
-  return { ok: true, steps: planSteps(state, plan, facts, tickOf) };
+  return { ok: true, steps: planSteps(state, found) };
 }
 
 /**

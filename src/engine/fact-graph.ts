@@ -21,7 +21,10 @@
  * A relation fact (`RELATE`) is about the pair of edges it relates
  * ({@link relationKey}), so a firing that used a relation says so in
  * `Reads.relations`; the game says which, since a relation holds through a
- * chain of facts and only the game knows the chain it narrates.
+ * chain of facts and only the game knows the chain it narrates. Likewise a
+ * firing that rests on one struck value of an edge mark says so in
+ * `Reads.edgeValues`, and one whose facts rest on different things gives
+ * {@link FactGraph.record} a `Reads` for each.
  */
 
 import {
@@ -90,8 +93,10 @@ export function readsOf(firing: Pick<Firing, "reasons">): Reads | null {
 
 export class FactGraph {
   readonly facts: Fact[] = [];
-  /** What each firing read, by its place in the walk. */
-  private readonly reads: (Reads | null)[] = [];
+  /** What each fact's firing read for it, by the fact's place. */
+  private readonly readsOfFact: (Reads | null)[] = [];
+  /** How many firings were recorded. */
+  private firings = 0;
   /** The ids of the facts about each element, in the order made. */
   private readonly about: Record<Space, Map<number, number[]>> = {
     cells: new Map(),
@@ -103,27 +108,41 @@ export class FactGraph {
    * Keep a firing's facts, made now: each with the parents its reads name.
    * Call it before the firing's own facts change the marks the next firing
    * reads, in the order the walk takes them. Returns the new facts' ids.
+   *
+   * `reads` is the firing's, or, where its facts have each a reason of their
+   * own (a clue's count strikes two bits of a corner, each resting on its own
+   * corners), one for each fact, in order.
    */
-  record(facts: Facts, reads: Reads | null): readonly number[] {
-    const firing = this.reads.length;
-    this.reads.push(reads);
-    const parents =
-      reads === null
+  record(
+    facts: Facts,
+    reads: Reads | null | readonly (Reads | null)[],
+  ): readonly number[] {
+    const firing = this.firings++;
+    const parentsOf = (r: Reads | null): number[] | null =>
+      r === null
         ? null
         : [
             ...new Set([
-              ...reads.cells.flatMap((x) => this.about.cells.get(x) ?? []),
-              ...reads.edges.flatMap((x) => this.about.edges.get(x) ?? []),
-              ...(reads.relations ?? []).flatMap(
-                (x) => this.about.relations.get(x) ?? [],
+              ...r.cells.flatMap((x) => this.about.cells.get(x) ?? []),
+              ...r.edges.flatMap((x) => this.about.edges.get(x) ?? []),
+              ...(r.relations ?? []).flatMap((x) => this.about.relations.get(x) ?? []),
+              ...(r.edgeValues ?? []).flatMap(([x, v]) =>
+                this.factsAbout("edges", x)
+                  .filter((f) => f.value === v)
+                  .map((f) => f.id),
               ),
             ]),
           ].sort((a, b) => a - b);
+    const shared = Array.isArray(reads) ? null : (reads as Reads | null);
+    const sharedParents = parentsOf(shared);
     const made: number[] = [];
     for (let i = 0; i < facts.length; i += 3) {
       const kind = facts[i];
       const space = spaceOf(kind);
       const id = this.facts.length;
+      const own = Array.isArray(reads) ? (reads[i / 3] ?? null) : shared;
+      const parents = Array.isArray(reads) ? parentsOf(own) : sharedParents;
+      this.readsOfFact.push(own);
       this.facts.push({
         id,
         firing,
@@ -179,14 +198,11 @@ export class FactGraph {
     const start = this.facts[id];
     if (start === undefined) throw new Error(`no fact ${id} in the graph`);
     visit(start);
-    // The roots: the elements a firing in the chain read that no fact made
-    // before it. Facts of one firing share their reads, so each is visited once.
-    const firings = new Set([
-      start.firing,
-      ...[...seen].map((p) => this.facts[p].firing),
-    ]);
-    for (const firing of firings) {
-      const reads = this.reads[firing];
+    // The roots: the elements a fact in the chain read that no fact made
+    // before it.
+    for (const f of [start, ...[...seen].map((p) => this.facts[p])]) {
+      const { firing } = f;
+      const reads = this.readsOfFact[f.id];
       if (reads === null) continue;
       for (const space of ["cells", "edges", "relations"] as const)
         for (const x of reads[space] ?? []) {
@@ -194,6 +210,10 @@ export class FactGraph {
           if (first === undefined || this.facts[first].firing >= firing)
             roots[space].add(x);
         }
+      for (const [x, v] of reads.edgeValues ?? []) {
+        const first = this.factsAbout("edges", x).find((f) => f.value === v);
+        if (first === undefined || first.firing >= firing) roots.edges.add(x);
+      }
     }
     return {
       facts: [...seen].sort((a, b) => a - b).map((p) => this.facts[p]),
@@ -219,8 +239,8 @@ export interface NotePlacement {
    */
   readonly isStep?: (fact: Fact) => boolean;
   /**
-   * Whether the sentence of the note made by firing `note` has stopped
-   * holding by the time step `step` (both by place in the walk): a note whose
+   * Whether the sentence of the note `note` (a fact's id) has stopped holding
+   * by the time step `step` (a firing's place in the walk): a note whose
    * sentence quotes the board goes at its own tick, not beside its consumer.
    * Without it a note is never expired.
    */
@@ -230,14 +250,17 @@ export interface NotePlacement {
 /**
  * Where the notes go in a hint's steps. A firing that makes only notes is not
  * a step; every other firing is, in the order made. Each note a step rests on
- * (transitively) is placed just before the first step that does, in firing
- * order, as one journey with it, and a note nothing cites is placed nowhere.
- * A note whose sentence has expired by its first consumer is placed instead at
- * its own tick, before the first step made after it. A note rests on notes
+ * (transitively) is placed just before the first step that does, in the order
+ * made, as one journey with it, and a note nothing cites is placed nowhere. A
+ * note is one fact: another fact of its firing is placed where it is used.
+ * A note whose sentence has expired by its first consumer is placed instead as
+ * late as the sentence holds, counting from its own tick (before the first
+ * step made after it), so it never sits ahead of what it narrates. A note
+ * rests on notes
  * too, and is never placed after one that rests on it.
  *
- * Returns the steps (firings, in order) and, for each, the note firings placed
- * before it, in firing order.
+ * Returns the steps (firings, in order) and, for each, the notes (fact ids)
+ * placed before it, in the order made.
  */
 export function placeNotes(
   graph: FactGraph,
@@ -254,29 +277,35 @@ export function placeNotes(
   }
   const firings = [...made.keys()].sort((a, b) => a - b);
   const steps = firings.filter((x) => (made.get(x) ?? []).some(isStep));
-  const restsNotes = (firing: number): Set<number> => {
+  /** The notes (fact ids) some of `facts` rest on. */
+  const restsNotes = (facts: readonly Fact[]): Set<number> => {
     const out = new Set<number>();
-    for (const fact of made.get(firing) ?? [])
-      for (const p of graph.restsOn(fact.id).facts) if (isNote(p)) out.add(p.firing);
-    out.delete(firing);
+    for (const fact of facts)
+      for (const p of graph.restsOn(fact.id).facts) if (isNote(p)) out.add(p.id);
     return out;
   };
   const at = new Map<number, number>();
   steps.forEach((firing, i) => {
-    for (const note of restsNotes(firing)) if (!at.has(note)) at.set(note, i);
+    for (const note of restsNotes(made.get(firing) ?? []))
+      if (!at.has(note)) at.set(note, i);
   });
-  // A note's own tick: the first step made after it.
+  // A note's own tick: the first step made after its firing.
   const own = (note: number): number => {
-    const i = steps.findIndex((s) => s > note);
+    const firing = graph.facts[note].firing;
+    const i = steps.findIndex((s) => s > firing);
     return i < 0 ? steps.length - 1 : i;
   };
   // Latest first, so a note's place is final before its parents are moved by it.
   for (const note of [...at.keys()].sort((a, b) => b - a)) {
     const first = at.get(note) as number;
-    if (expired?.(note, steps[first]) === true)
-      at.set(note, Math.min(first, own(note)));
+    if (expired?.(note, steps[first]) === true) {
+      // From its own tick on, as late as its sentence still holds.
+      let late = Math.min(first, own(note));
+      while (late < first && expired(note, steps[late + 1]) !== true) late++;
+      at.set(note, late);
+    }
     const here = at.get(note) as number;
-    for (const p of restsNotes(note)) {
+    for (const p of restsNotes([graph.facts[note]])) {
       const there = at.get(p);
       if (there === undefined || there > here) at.set(p, here);
     }

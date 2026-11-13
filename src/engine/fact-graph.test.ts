@@ -120,6 +120,45 @@ describe("what a fact rests on", () => {
     expect(g.restsOn(s).complete).toBe(false);
   });
 
+  it("rests on one struck value of an edge mark where a firing reads only that, and on a value no fact struck as a root", () => {
+    const g = new FactGraph();
+    // Edge 4's candidates 0 and 2 are struck by firings of their own.
+    const [zero] = g.record([STRIKE_EDGE, 4, 0], reads([]));
+    const [two] = g.record([STRIKE_EDGE, 4, 2], reads([]));
+    const [p] = g.record([PLACE, 9, 1], {
+      cells: [],
+      edges: [],
+      edgeValues: [
+        [4, 2],
+        [5, 0],
+      ],
+    });
+    // Reading the whole mark would have taken `zero` too.
+    expect(g.facts[p].parents).toEqual([two]);
+    expect(zero).not.toBe(two);
+    expect(g.restsOn(p)).toMatchObject({
+      facts: [{ id: two }],
+      roots: { edges: [5] },
+      complete: true,
+    });
+  });
+
+  it("rests each fact of a firing on its own reads where the firing gives one for each", () => {
+    const g = new FactGraph();
+    const [a] = g.record([STRIKE_EDGE, 1, 0], reads([]));
+    const [b] = g.record([STRIKE_EDGE, 2, 0], reads([]));
+    // One firing strikes edges 5 and 6, each resting on a different edge.
+    const [x, y] = g.record(
+      [STRIKE_EDGE, 5, 2, STRIKE_EDGE, 6, 2],
+      [reads([], [1]), reads([], [2, 3])],
+    );
+    expect(g.facts[x].parents).toEqual([a]);
+    expect(g.facts[y].parents).toEqual([b]);
+    expect(g.restsOn(x)).toMatchObject({ facts: [{ id: a }], roots: { edges: [] } });
+    expect(g.restsOn(y)).toMatchObject({ facts: [{ id: b }], roots: { edges: [3] } });
+    expect(g.facts[x].firing).toBe(g.facts[y].firing);
+  });
+
   it("says it is not complete where a firing reported no reads", () => {
     const g = new FactGraph();
     const [a] = g.record([STRIKE, 1, 0], null);
@@ -251,5 +290,36 @@ describe("where the notes go", () => {
     g.record([PLACE, 22, 1], reads([2]));
     const { before } = placeNotes(g, { isNote, expired: (note) => note === 1 });
     expect(before).toEqual([[0, 1], [], []]);
+  });
+
+  it("puts an expired note as late as its sentence holds, counting from its own tick", () => {
+    const g = new FactGraph();
+    g.record([MARK, 1, 0], reads([10]));
+    g.record([MARK, 2, 0], reads([1]));
+    g.record([PLACE, 20, 1], reads([30]));
+    g.record([PLACE, 21, 1], reads([30]));
+    g.record([PLACE, 22, 1], reads([2]));
+    // Note 1 holds before the second step, and has expired by the third.
+    const { steps, before } = placeNotes(g, {
+      isNote,
+      expired: (note, step) => note === 1 && step >= 4,
+    });
+    expect(steps).toEqual([2, 3, 4]);
+    expect(before).toEqual([[], [0, 1], []]);
+  });
+
+  it("places only the facts a step rests on, where its firing made others", () => {
+    const g = new FactGraph();
+    // One firing strikes two bits of edge 1; the step reads only the second.
+    g.record([STRIKE_EDGE, 1, 0, STRIKE_EDGE, 1, 2], reads([], []));
+    g.record([PLACE, 20, 1], {
+      cells: [],
+      edges: [],
+      edgeValues: [[1, 2]],
+    });
+    const { before } = placeNotes(g, {
+      isNote: (f) => f.kind === STRIKE_EDGE,
+    });
+    expect(before).toEqual([[1]]);
   });
 });

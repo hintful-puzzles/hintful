@@ -665,24 +665,18 @@ export function slantHint(
     i === 0 ? state.soln : firings[i - 1].grid;
   const stepOf = new Map(firings.map((f, i) => [f.id, i]));
 
-  // The merges each firing made, by their facts.
-  const madeBy = new Map<number, { fact: number; merge: SlantMerge }[]>();
-  for (const [fact, merge] of plan.merges) {
-    const { firing } = plan.graph.facts[fact];
-    const list = madeBy.get(firing) ?? [];
-    list.push({ fact, merge });
-    madeBy.set(firing, list);
-  }
+  const mergeOf = (fact: number): SlantMerge => {
+    const merge = plan.merges.get(fact);
+    if (merge === undefined) throw new Error(`slant hint: fact ${fact} is no merge`);
+    return merge;
+  };
   // Where each mark goes: before the first step that rests on it, and on the
   // marks it rests on, unless its sentence has expired by then.
   const { steps: stepFirings, before } = placeNotes(plan.graph, {
     isNote: (f) => plan.merges.has(f.id),
     isStep: (f) => f.kind === PLACE,
     expired: (note, step) =>
-      (madeBy.get(note) ?? []).some(
-        ({ merge }) =>
-          !cluePremiseHolds(merge, boardBefore(stepOf.get(step) ?? 0), w, h),
-      ),
+      !cluePremiseHolds(mergeOf(note), boardBefore(stepOf.get(step) ?? 0), w, h),
   });
   if (stepFirings.some((f, i) => f !== firings[i].id))
     throw new Error("slant hint: the graph's steps are not the firings");
@@ -699,19 +693,18 @@ export function slantHint(
       steps.push(first ? step : { ...step, continuesPrevious: true });
       first = false;
     };
-    for (const note of before[i])
-      for (const { fact, merge } of madeBy.get(note) ?? [])
-        push(
-          markStep(
-            merge,
-            (key) => plan.vWhy(key, fact),
-            boardBefore(i),
-            state.clues,
-            marksOf(cites.get(note)?.path ?? []),
-            w,
-            h,
-          ),
-        );
+    for (const fact of before[i])
+      push(
+        markStep(
+          mergeOf(fact),
+          (key) => plan.vWhy(key, fact),
+          boardBefore(i),
+          state.clues,
+          marksOf(cites.get(plan.graph.facts[fact].firing)?.path ?? []),
+          w,
+          h,
+        ),
+      );
     const cited = cites.get(firing.id);
     for (let leg = 0; leg < firing.moves.length; leg++) {
       const highlights = firingHighlights(firing, leg, w, h);

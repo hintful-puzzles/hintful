@@ -325,11 +325,15 @@ export type Witness =
  * edges. What a firing rests on is the facts that made these what they are.
  * `relations`, where a game reads any, are the pairs of edges whose relation
  * a firing used, each as {@link relationKey} names it (Loopy's pairs).
+ * `edgeValues`, where a game says it, are edge marks a firing rests on by one
+ * struck value only (`[at, value]`), where `edges` would take every strike
+ * there: Loopy's corner bit, whose other bit the firing does not use.
  */
 export interface Reads {
   cells: number[];
   edges: number[];
   relations?: number[];
+  edgeValues?: (readonly [at: number, value: number])[];
 }
 
 /** The element a relation between two edges is about, whichever way round
