@@ -801,6 +801,41 @@ defect found in the game, said which.
 - **A test changed**: the one that read the plan's count of hidden firings reads
   that the reported board has a dot inside a cell, which is the class.
 
+### Magnets, read before it was built (2026-11-13, by reading `magnets/hint.ts`, `solver.ts` and the yaml)
+
+- **The shape is `describedEdgeHint`'s, with `settle` taking the "before".** The
+  old walk captures `snapshot(b)` before every firing and again after it, and
+  derives what the firing placed or marked from the two (`placed`, `marked`):
+  `settle(marks, ctx)` runs at exactly that point, so it can store the snapshot in
+  the walk's `ctx` and return `true`; `step` takes the second one from the live
+  marks and returns no legs where neither list is longer than none (the old
+  `showable`). No new hook; the doc of `settle` should say it may note the board
+  as well as bring it up to date.
+- **The reasons are pure in the terms.** Every `MagnetsReason` but `lineExact` /
+  `lineFull` is its technique's binding (`single` {c}, `oddGap` {L, d}, `marked`
+  {L}, `oneNeutral` {L}, `everyTile` {L, d}, `onlyEnd` {L, d}); `count`'s two are
+  the old `holds(L, d) < v` read on the marks before the firing, so `count` says
+  `terms: { L, d, v, h: holds(L, d) }` (or two `arms`, `exact` and `full`, whose
+  kinds are then `count.exact` and `count.full`; pick by which the pins and the
+  ledger in `magnets-hint.test.ts` read more easily). Rungs become technique ids:
+  the ledger, `MAGNETS_RUNGS` and the pins' keys follow, as Pearl's did.
+- **What stays the game's.** `reading.ts` (`whyNot`, `lineTarget`, `placedIn`)
+  reads the `Snapshot` and so do all the sentences (`tell`, `tellForce`,
+  `tellCount`), which is why the snapshot is taken in `settle` and the sentence
+  built in `step` into `marked`, as Tents'. `legsOf` (the journey) is `step`'s
+  legs. The hidden premises (`marked`, `lineFull` of a pole) set only "cannot be"
+  bits and make no leg.
+- **Tests that read the old internals**: `magnets-hint.test.ts` (the `KINDS`
+  census and `recordingPass`/`seedMarks`) and `magnets-reading.test.ts` (the
+  firing's premises are all readable, walked with `recordingPass` and `snapshot`).
+  The reading test's claim is about each firing's `before` snapshot, so it is best
+  kept by exporting a small walk that yields `{ taken, before, after }` from the
+  engine's pieces (the way `tentsWalk` and `settleLinks` are exported), not by
+  dropping it.
+- **A hint refused where `seedMarks` finds the player's marks clash** was
+  `PUZZLE_NOT_REASONABLE`: `walk` returning `null` is `DEDUCTION_EXHAUSTED`, as
+  Tents'.
+
 ### What Pearl, Tracks, Path and Spokes needed beyond `describedEdgeHint` (2026-11-13, read before they were built)
 
 *All four are built (above); this is what the read expected. The carry-on hook it predicted was not needed.*
