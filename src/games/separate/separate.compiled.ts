@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/separate/separate.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, edgeGroups, freshBinding, keptEdgeGroups, rangeMask, sameSet, staleChecking, stamps, through } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, edgeGroups, freshBinding, keptEdgeGroups, rangeMask, sameSet, staleChecking, stamps, through, union } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -18,6 +18,17 @@ export const units: readonly string[] = [];
 
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "sharedLetter" | "walledApart" | "onlyWay";
+
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  sharedLetter: SharedLetterSays;
+  walledApart: WalledApartSays;
+  onlyWay: OnlyWaySays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["sharedLetter","walledApart","onlyWay"] as const;
 
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
@@ -155,16 +166,22 @@ export interface SharedLetterBinding {
   y: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SharedLetterSays {
+  terms: { letter: number; };
+  marks: { stripes: readonly number[]; outline: readonly number[]; reads: readonly number[]; };
+}
+
 const sharedLetterFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^2. */
-export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedLetterBinding> | null): number {
+export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedLetterBinding, SharedLetterSays> | null): number {
   const _g36: number[] = [];
   const _g113: number[] = [];
   const facts = sharedLetterFacts;
   let fired = 0;
   let changed = false;
-  const _m121_0 = b.made[0];
+  const _m122_0 = b.made[0];
   _g36.length = 0;
   G37: {
     const _a40 = sp.edges;
@@ -175,7 +192,7 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
     }
   }
   const v_O = _g36;
-  const _m122_1 = b.made[1];
+  const _m123_1 = b.made[1];
   const _eg44 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   const _a42 = sp.edges;
   R1:
@@ -187,6 +204,7 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
       const v_b = sp.edgeEnds[2 * v_e + 1];
       if (!(!(_eg44.of(v_b) === v_A))) break L45;
       const v_B = _eg44.of(v_b);
+      const _h121 = union(v_A, v_B);
       let _g46 = 0;
       G47: {
         const _a50 = v_B;
@@ -240,7 +258,7 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
             const v_y = _a71[_i72];
             const _h73 = clueAt(cl.letter, v_y);
             if (!((_h73 === v_d))) continue;
-            if (b.made[0] !== _m121_0 || b.made[1] !== _m122_1) {
+            if (b.made[0] !== _m122_0 || b.made[1] !== _m123_1) {
               const _now74 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e]);
               if (!(_now74 === _eg44.of(sp.edgeEnds[2 * v_e]) || sameSet(_now74, _eg44.of(sp.edgeEnds[2 * v_e])))) { continue R1; }
               const _now75 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_b);
@@ -345,7 +363,10 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
             if (!(_q111)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ O: v_O.slice(), e: v_e, A: v_A.slice(), b: v_b, B: v_B.slice(), L: v_L, d: v_d, x: v_x, y: v_y }, facts)) return 1;
+              if (fire !== null) {
+                const _says = { terms: { letter: v_d }, marks: { stripes: v_A.slice(), outline: v_B.slice(), reads: _h121.slice() } };
+                if (!fire({ O: v_O.slice(), e: v_e, A: v_A.slice(), b: v_b, B: v_B.slice(), L: v_L, d: v_d, x: v_x, y: v_y }, facts, _says)) return 1;
+              }
             }
           }
         }
@@ -363,10 +384,16 @@ export interface WalledApartBinding {
   B: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface WalledApartSays {
+  terms: {  };
+  marks: { stripes: readonly number[]; outline: readonly number[]; reads: readonly number[]; };
+}
+
 const walledApartFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^2. */
-export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBinding> | null): number {
+export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBinding, WalledApartSays> | null): number {
   const _g17: number[] = [];
   const _g51: number[] = [];
   const facts = walledApartFacts;
@@ -474,7 +501,10 @@ export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBindi
         if (!(_q49)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ O: v_O.slice(), e: v_e, A: v_A.slice(), b: v_b, B: v_B.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: {  }, marks: { stripes: v_A.slice(), outline: v_B.slice(), reads: union(v_A, v_B).slice() } };
+            if (!fire({ O: v_O.slice(), e: v_e, A: v_A.slice(), b: v_b, B: v_B.slice() }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -489,17 +519,23 @@ export interface OnlyWayBinding {
   S: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface OnlyWaySays {
+  terms: { letter: number; size: number; };
+  marks: { stripes: readonly number[]; reads: readonly number[]; };
+}
+
 const onlyWayFacts: number[] = [];
 const onlyWay_st37 = stamps();
 
 /** Its dearest read grows with the board as n. */
-export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBinding> | null): number {
+export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBinding, OnlyWaySays> | null): number {
   const _g20: number[] = [];
   const _g31: number[] = [];
   const facts = onlyWayFacts;
   let fired = 0;
   let changed = false;
-  const _m71_0 = b.made[0];
+  const _m72_0 = b.made[0];
   _g20.length = 0;
   G21: {
     const _a24 = sp.edges;
@@ -510,7 +546,7 @@ export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBi
     }
   }
   const v_O = _g20;
-  const _m72_1 = b.made[1];
+  const _m73_1 = b.made[1];
   const _eg28 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   const _a26 = sp.cells;
   R1:
@@ -520,6 +556,7 @@ export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBi
       const v_A = _eg28.of(v_c);
       const _h30 = v_A.length;
       if (!(((v_c === (v_A[0] ?? -1)) && (_h30 < cl.k)))) break L29;
+      const _h71 = clueAt(cl.letter, (v_A[0] ?? -1));
       _g31.length = 0;
       onlyWay_st37.pass++;
       G32: {
@@ -537,7 +574,7 @@ export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBi
       }
       const v_S = _g31;
       const _h61 = v_S.length;
-      if (b.made[0] !== _m71_0 || b.made[1] !== _m72_1) {
+      if (b.made[0] !== _m72_0 || b.made[1] !== _m73_1) {
         const _now43 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_c);
         if (!(_now43 === _eg28.of(v_c) || sameSet(_now43, _eg28.of(v_c)))) { continue R1; }
       }
@@ -598,7 +635,10 @@ export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBi
       if (!(_c70)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ O: v_O.slice(), c: v_c, A: v_A.slice(), S: v_S.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { letter: _h71, size: cl.k }, marks: { stripes: v_A.slice(), reads: union(v_A, v_S).slice() } };
+          if (!fire({ O: v_O.slice(), c: v_c, A: v_A.slice(), S: v_S.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }

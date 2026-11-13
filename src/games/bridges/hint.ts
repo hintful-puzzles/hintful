@@ -144,7 +144,7 @@ function namesFocus(id: string, terms: { at: number }): boolean {
 function stepOf(
   fired: Fired<BridgesSays[keyof BridgesSays], BridgesWalkContext>,
   state: BridgesState,
-): { move: BridgesMove; highlights: BridgesHighlights; marked: BridgesHighlights } {
+): { move: BridgesMove; highlights: BridgesHighlights; marked: BridgesHighlights }[] {
   const { taken, says, ctx, before, marks } = fired;
   const { terms } = says;
   const { geo } = ctx;
@@ -180,7 +180,7 @@ function stepOf(
       .map(at),
     spans: "links" in terms ? spansOf(geo, terms.links) : [],
   };
-  return { move: { ops }, highlights, marked: highlights };
+  return [{ move: { ops }, highlights, marked: highlights }];
 }
 
 // --- the plan -------------------------------------------------------------

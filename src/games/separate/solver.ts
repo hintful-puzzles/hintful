@@ -29,9 +29,6 @@ import {
   BORDER_R,
   BORDER_U,
   DISABLED,
-  DX,
-  DY,
-  FLIP,
   initBorders,
 } from "../../engine/border-grid.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
@@ -48,53 +45,20 @@ import {
   describedLadder,
   type Ladder,
   ladderTechniques,
-  ladderWalk,
   runLadder,
-  type Taken,
+  type Said,
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import type { StepBudget } from "../../engine/step-budget.ts";
 import * as separate from "./separate.compiled.ts";
 import type { SeparateShape } from "./state.ts";
 
 /** What the description reads an edge as holding. */
-const WALL = 1;
+export const WALL = 1;
 const OPEN = 2;
 
-/** One edge a firing sets, on the square `(x, y)`'s `dir` side. */
-export interface SeparateEdge {
-  x: number;
-  y: number;
-  dir: number;
-  kind: "wall" | "nowall";
-}
-
-/** Why a firing set its edges: which rung, and the squares its premise names
- * (read before the rung acted). */
-export type SeparateReason =
-  | {
-      kind: "sharedLetter";
-      /** The two groups, as square lists. */
-      a: number[];
-      b: number[];
-      letter: number;
-      /** The square in `a`, then in `b`, carrying `letter`. */
-      holders: [number, number];
-    }
-  | { kind: "walledApart"; a: number[]; b: number[] }
-  | {
-      kind: "onlyWay";
-      /** The group that must grow. */
-      region: number[];
-      /** The one square it can grow into. */
-      square: number;
-    };
-
-/** One firing, in the player's terms: its reason and the edges it set, the
- * squares of its first group in reading order, each square's sides from the
- * top clockwise. */
-export type SeparateFiring = SeparateReason & { edges: SeparateEdge[] };
+/** What each technique says, as the hint's sentences read it. */
+export type SeparateSays = separate.SaysById;
 
 // --- the board as the description reads it -----------------------------------
 
@@ -114,7 +78,11 @@ function dealtOf(p: SeparateShape, letters: Uint8Array): separate.Dealt {
 }
 
 /** The side of square `a` that edge `e` is, and the square across it. */
-function sideOf(sp: GridSpace, e: number, a: number): { dir: number; to: number } {
+export function sideOf(
+  sp: GridSpace,
+  e: number,
+  a: number,
+): { dir: number; to: number } {
   const p = sp.edgeEnds[2 * e];
   const q = sp.edgeEnds[2 * e + 1];
   // A grid one square wide has its squares below one another `p + 1` apart.
@@ -150,54 +118,12 @@ export function isSolved(
   return separate.isAnswer(g, sp, dealtOf({ w, h, k }, letters));
 }
 
-/** A reason built once a firing, from its binding, and shared by each of its
- * edges: a firing walls or opens many, and its reason copies its groups. */
-function perFiring<B extends object>(
-  build: (binding: B) => SeparateReason,
-): (binding: B) => SeparateReason {
-  let last: B | null = null;
-  let reason: SeparateReason | null = null;
-  return (binding) => {
-    if (binding !== last || reason === null) {
-      last = binding;
-      reason = build(binding);
-    }
-    return reason;
-  };
-}
-
-/** The ladder over the dealt board, each technique with its reason: built
- * from the binding, on the marks before the firing. */
+/** The ladder over the dealt board. */
 function separateLadder(dl: separate.Dealt): Ladder {
   return describedLadder(separate, {
-    sharedLetter: compiledRung(
-      separate.sharedLetter,
-      dl,
-      perFiring(({ A, B, d, x, y }: separate.SharedLetterBinding) => ({
-        kind: "sharedLetter",
-        a: [...A],
-        b: [...B],
-        letter: d,
-        holders: [x, y],
-      })),
-    ),
-    walledApart: uncluedRung(
-      separate.walledApart,
-      perFiring(({ A, B }: separate.WalledApartBinding) => ({
-        kind: "walledApart",
-        a: [...A],
-        b: [...B],
-      })),
-    ),
-    onlyWay: compiledRung(
-      separate.onlyWay,
-      dl,
-      perFiring(({ A, S }: separate.OnlyWayBinding) => ({
-        kind: "onlyWay",
-        region: [...A],
-        square: S[0],
-      })),
-    ),
+    sharedLetter: compiledRung(separate.sharedLetter, dl),
+    walledApart: uncluedRung(separate.walledApart),
+    onlyWay: compiledRung(separate.onlyWay, dl),
   });
 }
 
@@ -272,10 +198,11 @@ export function deduce(
   const { m, ladder, dl } = d;
   if (read !== null) {
     m.recorder = (rec) => {
-      const reason = rec.reason as SeparateReason;
-      if (reason.kind !== "sharedLetter") return;
-      read[reason.holders[0]] = 1;
-      read[reason.holders[1]] = 1;
+      const said = rec.reason as Said<separate.SharedLetterBinding, unknown>;
+      // Only `sharedLetter`'s binding names the squares that hold the letter.
+      if (!("d" in said.binding)) return;
+      read[said.binding.x] = 1;
+      read[said.binding.y] = 1;
     };
     m.wholePasses = true;
   }
@@ -421,76 +348,34 @@ export function answerOf(
 
 // --- the hint's walk ---------------------------------------------------------
 
-/** A firing's edges in the player's terms, each named on the side of its
- * first group's square, in that group's reading order and each square's sides
- * from the top clockwise. */
-function edgesOf(
-  sp: GridSpace,
-  facts: readonly number[],
-  first: readonly number[],
-): SeparateEdge[] {
-  const inFirst = new Set(first);
-  const out: (SeparateEdge & { at: number })[] = [];
-  for (let i = 0; i < facts.length; i += 3) {
-    const e = facts[i + 1];
-    const p = sp.edgeEnds[2 * e];
-    const at = inFirst.has(p) ? p : sp.edgeEnds[2 * e + 1];
-    const { dir } = sideOf(sp, e, at);
-    out.push({
-      at,
-      x: at % sp.w,
-      y: (at / sp.w) | 0,
-      dir,
-      kind: facts[i + 2] === WALL ? "wall" : "nowall",
-    });
-  }
-  out.sort((a, b) => a.at - b.at || a.dir - b.dir);
-  return out.map(({ x, y, dir, kind }) => ({ x, y, dir, kind }));
+/** What the hint's sentences need of the board besides what a firing says. */
+export interface SeparateWalkContext {
+  sp: GridSpace;
+  dl: separate.Dealt;
 }
 
-/** The squares a firing's reason turns on: a player follows a region as it
- * grows. */
-function readsOf(r: SeparateReason): number[] {
-  return r.kind === "onlyWay" ? [...r.region, r.square] : [...r.a, ...r.b];
+/** Whether the walls the marks hold are the answer, an edge not walled being
+ * read as open, marked or not. */
+export function wallsAreAnswer(m: CellMarks, { dl }: SeparateWalkContext): boolean {
+  return separate.isAnswer(
+    m.grid.map((v) => (v === WALL ? WALL : OPEN)),
+    m.sp,
+    dl,
+  );
 }
 
 /**
- * The ladder's firings from the player's `borders` (their no-wall marks
- * joining squares, their walls keeping groups apart), one a call, each the
- * one that carries on from the regions the plan is working on
- * (`ladderWalk`), or `null` when the ladder has nothing left. The marks
- * advance with each firing; `borders` is the board they stand for.
+ * The marks over the player's `borders` (their no-wall marks joining squares,
+ * their walls keeping groups apart) and the ladder, for the engine's walk to
+ * take a firing at a time (`engine/described-edge-hint.ts`).
  */
-export function hintFirings(
-  p: SeparateShape,
-  letters: Uint8Array,
-  borders: Uint8Array,
-  budget: StepBudget,
-): { borders: Uint8Array; next: () => SeparateFiring | null } {
-  const d = deduction(p, letters, borders);
-  const { m, ladder } = d;
-  m.budget = budget;
-  const walk = ladderWalk(m, ladder.entries, { [TIERS]: 0 }, (f: Taken) =>
-    readsOf(f.reasons[0] as SeparateReason),
-  );
-  const board = borders.slice();
-  return {
-    borders: board,
-    next() {
-      const taken = walk.next();
-      if (taken === null || taken === "contradiction") return null;
-      const reason = taken.reasons[0] as SeparateReason;
-      const edges = edgesOf(
-        m.sp,
-        taken.facts,
-        reason.kind === "onlyWay" ? reason.region : reason.a,
-      );
-      for (const { x, y, dir, kind } of edges) {
-        const mark = (b: number): number => (kind === "wall" ? b : DISABLED(b));
-        board[y * m.sp.w + x] |= mark(BORDER(dir));
-        board[(y + DY[dir]) * m.sp.w + x + DX[dir]] |= mark(BORDER(FLIP(dir)));
-      }
-      return { ...reason, edges };
-    },
-  };
+export function separateWalk(
+  state: SeparateShape & { letters: Uint8Array; borders: Uint8Array },
+): {
+  marks: CellMarks;
+  entries: Ladder["entries"];
+  ctx: SeparateWalkContext;
+} {
+  const d = deduction(state, state.letters, state.borders);
+  return { marks: d.m, entries: d.ladder.entries, ctx: { sp: d.m.sp, dl: d.dl } };
 }

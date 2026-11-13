@@ -96,6 +96,9 @@ techniques:
       d in set(clue(letter, x) over x in A) where d in L and not apart(A, B),
       x in A where clue(letter, x) = d, y in B where clue(letter, y) = d
     conclude: "forall f in between(A, B): place(f, 1)"
+    says:
+      terms: { letter: d }
+      marks: { stripes: A, outline: B, reads: A + B }
   # Two groups with a wall between them already are different regions: wall
   # the rest of the edges between them.
   - id: walledApart
@@ -105,6 +108,8 @@ techniques:
       A = through(end1(e), O), b = end2(e) where b not in A,
       B = through(b, O) where apart(A, B)
     conclude: "forall f in between(A, B): place(f, 1)"
+    says:
+      marks: { stripes: A, outline: B, reads: A + B }
   # A group short of k squares grows into a square beside it that no wall
   # keeps from it. Where only one such square is left, it takes that one;
   # where none is, the marks are inconsistent. Run once the rungs above have
@@ -118,3 +123,6 @@ techniques:
     conclude: >-
       |S| > 0 and (|S| = 1 implies
       forall x in A, y in adj4(x) where y in S: place(edge(x, y), 2))
+    says:
+      terms: { letter: "clue(letter, nth(A, 0))", size: k }
+      marks: { stripes: A, reads: A + S }

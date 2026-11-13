@@ -22,31 +22,22 @@ import {
 import {
   BORDER_RING_LEGEND,
   type BorderHint,
-  borderHintJourney,
-  borderHintKeepTrack,
   borderStepEdge,
-  type ForcedBorderEdge,
 } from "../../engine/border-grid-hint.ts";
-import type {
-  Game,
-  HintResult,
-  HintStep,
-  HintTrackVerdict,
-  UiUpdate,
-} from "../../engine/game.ts";
+import type { Game, UiUpdate } from "../../engine/game.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { edgeContinuation } from "../../engine/hint-text.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import { interpretTargetVerbs, verbClicks } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSeparateDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import {
+  SEPARATE_RUNGS,
+  type SeparateRung,
+  separateHint,
+  separateHintKeepTrack,
+} from "./hint.ts";
 import {
   colors,
   computeSize,
@@ -55,13 +46,7 @@ import {
   redraw,
   type SeparateDrawState,
 } from "./render.ts";
-import {
-  answerOf,
-  hintFirings,
-  isSolved,
-  type SeparateFiring,
-  solveToBorders,
-} from "./solver.ts";
+import { answerOf, solveToBorders } from "./solver.ts";
 import {
   decodeParams,
   defaultParams,
@@ -128,108 +113,6 @@ function findMistakes(state: SeparateState): readonly SeparateMistake[] {
   return out;
 }
 
-// --- hint ------------------------------------------------------------------
-
-/** The first leg's sentence for a firing; later legs continue it. The words
- * are [`hint-text.ts`](./hint-text.ts)'s. */
-function explain(
-  f: SeparateFiring,
-  letters: Uint8Array,
-  w: number,
-  k: number,
-  leg: number,
-  left: readonly ForcedBorderEdge[],
-): Sentence {
-  const at = (sqs: readonly number[]): Point[] =>
-    sqs.map((i) => ({ x: i % w, y: Math.floor(i / w) }));
-  const { striped, outlined } = evidence(f);
-  if (leg > 0) {
-    const letter = f.kind === "sharedLetter" ? f.letter : 0;
-    return edgeContinuation(left, say.basis(at(striped), at(outlined), letter));
-  }
-  switch (f.kind) {
-    case "sharedLetter":
-      return say.sharedLetter(f.letter, at(striped), at(outlined), left);
-    case "walledApart":
-      return say.walledApart(at(striped), at(outlined), left);
-    case "onlyWay":
-      return say.onlyWay(at(f.region), k, letters[f.region[0]], left);
-  }
-}
-
-/**
- * Which of a firing's regions the sentence stripes and which it outlines. Of
- * two, the first is striped unless it is the lone square of a mixed pair, which
- * the sentence names by its letter and so wants outlined; two lone squares are
- * both just letters, and both outlined.
- */
-function evidence(f: SeparateFiring): { striped: number[]; outlined: number[] } {
-  switch (f.kind) {
-    case "sharedLetter": {
-      if (f.a.length === 1 && f.b.length === 1)
-        return { striped: [], outlined: [...f.a, ...f.b] };
-      return f.a.length === 1 && f.b.length > 1
-        ? { striped: f.b, outlined: f.a }
-        : { striped: f.a, outlined: f.b };
-    }
-    case "walledApart":
-      return { striped: f.a, outlined: f.b };
-    case "onlyWay":
-      return { striped: f.region, outlined: [] };
-  }
-}
-
-/** The hint's rungs: the kinds of the solver's firings. */
-export const SEPARATE_RUNGS = ["sharedLetter", "walledApart", "onlyWay"] as const;
-export type SeparateRung = (typeof SEPARATE_RUNGS)[number];
-
-/**
- * The deduction from the player's own marks to the end, as one journey per
- * firing. Refuses only when the deduction has nothing left to set, which on
- * an Unreasonable board is before the end.
- */
-function hint(
-  state: SeparateState,
-): HintResult<SeparateMove, BorderHint, SeparateRung> {
-  const walk = hintFirings(
-    state,
-    state.letters,
-    state.borders,
-    stepBudget("separate hint"),
-  );
-  const { w, h, k, letters } = state;
-  const { plan } = deduceHintPlan<Uint8Array, SeparateFiring, boolean>({
-    board: walk.borders,
-    status: (borders) => isSolved(w, h, k, letters, borders),
-    incomplete: false,
-    next: () => walk.next(),
-  });
-  if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-
-  const steps = plan.flatMap((f) =>
-    borderHintJourney<SeparateMove, SeparateRung>(
-      f.kind,
-      f.edges,
-      (leg, left) => explain(f, state.letters, state.w, state.k, leg, left),
-      (edits): SeparateMove => ({ type: "edges", edits }),
-    ),
-  );
-  return { ok: true, steps };
-}
-
-function hintKeepTrack(
-  m: SeparateMove,
-  step: HintStep<SeparateMove, BorderHint>,
-  state: SeparateState,
-): HintTrackVerdict {
-  return borderHintKeepTrack(
-    m.type === "edges" ? m.edits : null,
-    step,
-    state.w,
-    state.borders,
-  );
-}
-
 // --- Game object -----------------------------------------------------------
 
 export const separateGame: Game<
@@ -285,7 +168,7 @@ export const separateGame: Game<
     const edits = revealBorderEdge(state, solved);
     return edits === null ? null : { type: "edges", edits };
   },
-  hint,
+  hint: separateHint,
   hintMarks: {
     roles: {
       ring: BORDER_RING_LEGEND,
@@ -295,12 +178,18 @@ export const separateGame: Game<
     },
   },
   hintRungs: SEPARATE_RUNGS,
-  hintKeepTrack,
+  hintKeepTrack: separateHintKeepTrack,
   hintGesture: (s, ui, ds, m, step) => {
     if (m.type !== "edges") throw new Error("separate: a hint only sets edges");
-    return verbClicks(targetVerbs, { executeMove, hintKeepTrack }, s, ui, ds, step, [
-      borderStepEdge(m.edits),
-    ]);
+    return verbClicks(
+      targetVerbs,
+      { executeMove, hintKeepTrack: separateHintKeepTrack },
+      s,
+      ui,
+      ds,
+      step,
+      [borderStepEdge(m.edits)],
+    );
   },
 
   textFormat,

@@ -16,16 +16,17 @@ import { BORDER, DISABLED, DX, DY, FLIP } from "../../engine/border-grid.ts";
 import { type BorderHint, EDGE } from "../../engine/border-grid-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newSeparateDesc } from "./generator.ts";
-import { type SeparateRung, separateGame } from "./index.ts";
+import type { SeparateRung } from "./hint.ts";
+import { separateGame } from "./index.ts";
 import { COL_HINT_CELL } from "./render.ts";
-import { hintFirings, solveToBorders } from "./solver.ts";
+import { deduction, solveToBorders } from "./solver.ts";
 import {
   executeMove,
   newState,
@@ -185,7 +186,6 @@ describe("the ledgered arm, reached directly", () => {
     // 4x2, letters ABBA / CDDC. The player has joined the L (0,0),(1,0),(0,1)
     // and walled (1,0)|(2,0), so the L's one square left is the notch (1,1),
     // which it touches on two edges.
-    const letters = Uint8Array.from("ABBACDDC", (c) => c.charCodeAt(0) - 65);
     const p = easy(4, 2, 4);
     let st = newState(p, "ABBACDDC");
     const mark = (x: number, y: number, dir: number, wall: boolean): void => {
@@ -201,11 +201,15 @@ describe("the ledgered arm, reached directly", () => {
     mark(0, 0, 1, false);
     mark(0, 0, 2, false);
     mark(1, 0, 1, true);
-    const { next } = hintFirings(p, letters, st.borders, stepBudget("test"));
-    const firings = [];
-    for (let f = next(); f; f = next()) firings.push(f);
-    const onlyWay = firings.find((f) => f.kind === "onlyWay");
-    expect(onlyWay?.edges.map((e) => e.kind)).toEqual(["nowall", "nowall"]);
+    // The ladder is walked here and not asked for a hint: this firing's marks
+    // are no-wall notation on a board whose walls are complete, which a hint
+    // stops short of (`done`).
+    const { m, ladder } = deduction(p, st.letters, st.borders);
+    const walk = ladderWalk(m, ladder.entries, { [TIERS]: 0 }, () => []);
+    const onlyWay = [];
+    for (let f = walk.next(); f !== null && f !== "contradiction"; f = walk.next())
+      if (f.entry.id === "onlyWay") onlyWay.push(f);
+    expect(onlyWay.map((f) => f.facts.length / 3)).toContain(2);
   });
 });
 

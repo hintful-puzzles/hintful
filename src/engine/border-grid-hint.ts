@@ -99,15 +99,21 @@ export function borderHintJourney<M, Rung extends string>(
     const said = words(leg, edges.slice(leg));
     return narratedStep<M, BorderHint, Rung>({
       rung,
-      move: toMove([
-        { x, y, flag: edgeFlag(dir, kind) },
-        { x: x + DX[dir], y: y + DY[dir], flag: edgeFlag(FLIP(dir), kind) },
-      ]),
+      move: toMove(borderEdgeEdits(e)),
       words: said,
       ...(leg > 0 ? { continuesPrevious: true } : {}),
       highlights: { x, y, dir, kind },
     });
   });
+}
+
+/** The two-sided edit that sets `e`: its own square's bit, and the bit the
+ * square across holds for the same edge. */
+export function borderEdgeEdits({ x, y, dir, kind }: ForcedBorderEdge): BorderEdit[] {
+  return [
+    { x, y, flag: edgeFlag(dir, kind) },
+    { x: x + DX[dir], y: y + DY[dir], flag: edgeFlag(FLIP(dir), kind) },
+  ];
 }
 
 function edgeFlag(dir: number, kind: ForcedBorderEdge["kind"]): number {

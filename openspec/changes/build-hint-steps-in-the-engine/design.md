@@ -488,6 +488,34 @@ defect found in the game, said which.
   the helpers that recomputed the supposed lines; `executeMove` moved to
   `state.ts`; the description +45 of `says`; `hint.ts` 80.
 
+### Separate, built (2026-11-13), and the edge family's shape
+
+- **`describedEdgeHint` is the edge family's engine**, with three additions the
+  border-grid games need: `step` returns the firing's *legs* (an array; Bridges
+  returns one), the engine marking every leg after the first `continuesPrevious`
+  and asking the technique's sentence once a leg, with the leg's own `marked`;
+  `done(marks, ctx)` ends a plan where the marks already are the answer (the
+  ladder may still have no-wall notation to make: the old plan stopped at
+  `isSolved`); and `writes` is optional, the walk's default being the two cells
+  an edge lies between (a game that left it out had its steps in another order).
+- **The border grid's pieces stay the border grid's**: `borderEdgeEdits` was cut
+  out of `borderHintJourney` so a game builds a leg's move itself, and
+  `borderHintKeepTrack` is the game's `hintKeepTrack` as before. Palisade, which
+  shares both, takes the same shape.
+- **`says` over regions**: `stripes` is the firing's first group (the edges are
+  named from it), `outline` the second, `reads` both; the swap of which is
+  striped for a lone square is the sentence's, from the spoken sets. The
+  generator's recorder reads the holders off the `Said` binding (`x`, `y`), so no
+  reason callback is left.
+- **Comparison.** 128 walks (8 sizes, 4x4 to 10x10, four boards, four shares of the
+  solution's edges already on the board, every recomputed plan listed, 381,206
+  lines, 1,710 continuing legs) the same lines as at `HEAD`, words, marks and move,
+  with the plan cap lifted; the fingerprint's snapshot (taken at `HEAD`) matches.
+- **A change of behavior**: the plan holds 40 steps (it held to the end).
+- **A test changed**: the one arm no hint reaches (an only-way firing of two
+  edges) is a no-wall mark on a board whose walls are complete, which a hint
+  stops short of, so it reads the ladder's firings.
+
 ### What blocks the rest (2026-11-13, a survey by reading, to be re-checked per game)
 
 The first read of the remaining games found one that is a plain Clusters-shaped

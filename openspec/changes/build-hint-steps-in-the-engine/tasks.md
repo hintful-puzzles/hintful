@@ -26,7 +26,7 @@
   - [x] Sticks (design § "Sticks, built"): `shown: legs`, five techniques with per-fact terms and outline
   - [ ] Seismic: its `cull` strikes candidates, so it waits for the candidate games' shape
   - [ ] **Next, in this order** (2026-11-13: the survey in design.md found no game left that is a plain Clusters-shaped move, so each family needs its engine shape designed first, from the game that is nearest it, then the family's games moved one at a time):
-    - [ ] The edge shape: Separate, Palisade, Dominosa, Pearl, Tracks, Path, Spokes, on Bridges' `describedEdgeHint` (`engine/described-edge-hint.ts`); read what it left per game and what the others need beyond it
+    - [ ] The edge shape (designed and built on Separate, design § "Separate, built"; Palisade next, then Dominosa, Pearl, Tracks, Path, Spokes): Separate, Palisade, Dominosa, Pearl, Tracks, Path, Spokes, on Bridges' `describedEdgeHint` (`engine/described-edge-hint.ts`); read what it left per game and what the others need beyond it
     - [ ] The link shape: Tents, Galaxies, Signpost, Rect
     - [ ] The shape for state the walk updates between steps: Slant (merge marks), Net (notes), Magnets (hidden firings), Map (removed-color dots)
   - [ ] The other cell games that place or strike a firing's squares (`describedFiringHint`): Tents, Separate, Abcd, Dominosa, Pearl, Slant, Magnets, Net, Tracks, Palisade, Path, Spokes, Undead, Seismic, Map, Galaxies, Rect, Crossing, Signpost

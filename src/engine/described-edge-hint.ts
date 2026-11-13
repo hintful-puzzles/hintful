@@ -82,16 +82,23 @@ export interface EdgeHintSpec<
   /** The walk begins at the lowest tier that solves the board and goes up a
    * tier only where one has nothing to say. */
   tiers: { lowest(state: State): number; count: number };
+  /** Whether the marks already are the answer: a plan ends there, though the
+   * ladder may still have a mark to make (Separate's no-wall marks, once its
+   * walls divide the board). */
+  done?(marks: CellMarks, ctx: Ctx): boolean;
   /** The most firings a plan holds: a player rarely follows more, and a
    * recompute yields the next batch. */
   plan: number;
-  /** The elements a firing writes, which the walk continues from. */
-  writes(taken: Taken, ctx: Ctx): readonly number[];
-  /** A firing's move, its highlights, and what its words are told of them. */
+  /** The elements a firing writes, which the walk continues from. Left out, a
+   * firing writes the two cells each of its edges lies between. */
+  writes?(taken: Taken, ctx: Ctx): readonly number[];
+  /** A firing's legs, one move each, with their highlights and what each leg's
+   * words are told of them. A firing is one step unless it is a journey of
+   * edges, one leg an edge: the legs after the first continue it. */
   step(
     fired: Fired<Says[keyof Says & string], Ctx>,
     state: State,
-  ): { move: Move; highlights: H; marked: Marked };
+  ): { move: Move; highlights: H; marked: Marked }[];
   /** Each technique's sentence. */
   say: {
     [K in keyof Says & string]: (
@@ -133,37 +140,42 @@ export function describedEdgeHint<
         const { marks } = spokenOf<SaysOf>(taken).says;
         return [...(marks.reads ?? []), ...(marks.outline ?? [])];
       },
-      { writes: (taken) => spec.writes(taken, ctx) },
+      spec.writes === undefined
+        ? {}
+        : { writes: (taken) => spec.writes?.(taken, ctx) ?? [] },
     );
     const steps: Step[] = [];
-    while (steps.length < spec.plan) {
+    while (steps.length < spec.plan && !spec.done?.(m, ctx)) {
       const before = m.cands.slice();
       const taken = walk.next();
       if (taken === "contradiction") return taken;
       if (taken === null) break;
       const { says } = spokenOf<SaysOf>(taken);
-      const { move, highlights, marked } = spec.step(
+      const legs = spec.step(
         { taken, says: says as Says[keyof Says & string], ctx, before, marks: m },
         state,
       );
-      const words = say[taken.entry.id](
-        {
-          terms: says.terms,
-          arm: says.arm,
-          outline: says.marks.outline ?? [],
-          stripes: says.marks.stripes ?? [],
-        },
-        marked,
-        state,
-      );
-      steps.push({
-        move,
-        rung: (says.arm === undefined
-          ? taken.entry.id
-          : `${taken.entry.id}.${says.arm}`) as Kind,
-        explanation: words.text,
-        words,
-        highlights,
+      legs.forEach(({ move, highlights, marked }, leg) => {
+        const words = say[taken.entry.id](
+          {
+            terms: says.terms,
+            arm: says.arm,
+            outline: says.marks.outline ?? [],
+            stripes: says.marks.stripes ?? [],
+          },
+          marked,
+          state,
+        );
+        steps.push({
+          move,
+          rung: (says.arm === undefined
+            ? taken.entry.id
+            : `${taken.entry.id}.${says.arm}`) as Kind,
+          explanation: words.text,
+          words,
+          highlights,
+          ...(leg > 0 ? { continuesPrevious: true } : {}),
+        });
       });
     }
     return steps;
