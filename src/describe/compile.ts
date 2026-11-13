@@ -1088,6 +1088,17 @@ function supposing(
   env: Env,
   out: Out,
 ): Val {
+  return compileExpr(e.body, scope, suppose(e, scope, env, out).env, out);
+}
+
+/** The environment `e`'s body is read in, and the names its cell and value
+ * are held in, which `with` has written. */
+function suppose(
+  e: Extract<Expr, { k: "with" }>,
+  scope: Scope,
+  env: Env,
+  out: Out,
+): { env: Env; cell: string; value: string } {
   if (env.answer !== null || env.position !== null)
     throw new CompileError(
       "with supposes a value on the marks, which only a technique reads",
@@ -1108,7 +1119,92 @@ function supposing(
   };
   // A truth in a premise, and a set where a `says` reads one under a
   // supposition; whoever reads it checks its sort.
-  return compileExpr(e.body, scope, inner, out);
+  return { env: inner, cell, value };
+}
+
+/**
+ * What held in `e`, which is true here, as the code of a `Witness` value
+ * (`describe-runtime.ts`) or `null` where nothing in it is worth reporting,
+ * with the statements that compute it written to `out`. It is written only
+ * where a hint reads it, on the marks before a firing's facts are made, so a
+ * part is read here a second time and the solve path never runs it.
+ *
+ * It follows `and` (each side), `or` (the side that held, the left first),
+ * `exists` (the first member the body held for), `with` and a definition's
+ * body. Anything else, a `not`, a `forall`, an aggregate, has no witness: a
+ * `forall` has no one member, and what a `not` holds is a fact about
+ * something that did not happen.
+ */
+function witnessOf(e: Expr, scope: Scope, env: Env, out: Out): string | null {
+  const bool = (x: Expr, sc: Scope = scope): Val => {
+    const v = compileExpr(x, sc, env, out);
+    expect(v, "bool", "witness");
+    return once(v, out);
+  };
+  const of = (w: string | null): string => w ?? "null";
+  if (e.k === "name" && !scope.has(e.name)) {
+    const def = env.defs.get(e.name);
+    if (def === undefined || def.params.length > 0) return null;
+    return `{ held: "def", name: ${JSON.stringify(e.name)}, of: ${of(witnessOf(def.body, scope, env, out))} }`;
+  }
+  const body = inlined(e, scope, env);
+  if (body !== e && e.k === "call")
+    return `{ held: "def", name: ${JSON.stringify(e.fn)}, of: ${of(witnessOf(body, scope, env, out))} }`;
+  if (e.k === "bin" && e.op === "and") {
+    const parts = [e.a, e.b]
+      .map((x) => witnessOf(x, scope, env, out))
+      .filter((w): w is string => w !== null);
+    if (parts.length === 0) return null;
+    env.used.add("witnessAll");
+    return parts.length === 1 ? parts[0] : `witnessAll(${parts.join(", ")})`;
+  }
+  if (e.k === "bin" && e.op === "or") {
+    const r = Out.fresh("_wo");
+    out.emit(`let ${r}: Witness | null = null;`);
+    const left = bool(e.a);
+    out.open(`if (${left.code}) {`);
+    out.emit(
+      `${r} = { held: "arm", arm: 0, of: ${of(witnessOf(e.a, scope, env, out))} };`,
+    );
+    out.close();
+    out.open(`if (!${left.code}) {`);
+    out.emit(
+      `${r} = { held: "arm", arm: 1, of: ${of(witnessOf(e.b, scope, env, out))} };`,
+    );
+    out.close();
+    return r;
+  }
+  if (e.k === "with") {
+    const s = suppose(e, scope, env, out);
+    const inner = witnessOf(e.body, scope, s.env, out);
+    return `{ held: "supposing", cell: ${s.cell}, value: ${s.value}, of: ${of(inner)} }`;
+  }
+  if (e.k === "quant" && e.q === "exists") {
+    const r = Out.fresh("_wm");
+    const label = Out.fresh("W");
+    out.emit(`let ${r}: Witness | null = null;`);
+    out.open(`${label}: {`);
+    bindingLoops(e.binders, scope, env, out, (sc) => {
+      const v = bool(e.body, sc);
+      out.open(`if (${v.code}) {`);
+      const member = e.binders
+        .filter((b) => b.kind !== "fill")
+        .map((b) => {
+          const val = sc.get(b.name);
+          if (val === undefined) throw new Error(`witness: ${b.name} is not bound`);
+          return `${b.name}: ${val.code}${isArray(val.sort) ? ".slice()" : ""}`;
+        });
+      const inner = witnessOf(e.body, sc, env, out);
+      out.emit(
+        `${r} = { held: "member", member: { ${member.join(", ")} }, of: ${of(inner)} };`,
+      );
+      out.emit(`break ${label};`);
+      out.close();
+    });
+    out.close();
+    return r;
+  }
+  return null;
 }
 
 /** `known(c)`, `value(c)` or `cand(c)` of cell `c`: the grid's in the answer
@@ -6216,6 +6312,36 @@ function techniqueFunction(
         body.emit(
           `if (${tenv.factSays.buffer}.length * 3 !== facts.length) throw new Error(${JSON.stringify(`${t.id}: a fact of its conclusion is made where says.fact is not read`)});`,
         );
+      // What held in the technique's `where`s and `premise`, read on the
+      // same marks as the terms.
+      if (t.says.witness) {
+        env.used.add("type Witness");
+        env.used.add("witnessAll");
+        const held = [
+          ...t.binders.flatMap((b) => (b.kind === "fill" ? [] : [b.where])),
+          t.premise,
+        ].filter((x): x is Expr => x !== null);
+        const parts = held
+          // Its buffers are declared where it is read, not once a call.
+          .map((x) =>
+            witnessOf(
+              x,
+              sc,
+              { ...tenv, shared: { made: new Map() }, scratch: null },
+              body,
+            ),
+          )
+          .filter((w): w is string => w !== null);
+        body.emit(
+          `const _w: Witness | null = ${
+            parts.length === 0
+              ? "null"
+              : parts.length === 1
+                ? parts[0]
+                : `witnessAll(${parts.join(", ")})`
+          };`,
+        );
+      }
       if (arms) body.emit(`let _says: ${saysType} | null = null;`);
       for (const [i, v] of variants.entries()) {
         const fields = { terms: [] as string[], marks: [] as string[] };
@@ -6237,7 +6363,7 @@ function techniqueFunction(
         const own =
           tenv.factSays === undefined ? "" : `, facts: ${tenv.factSays.buffer}.slice()`;
         body.emit(
-          `${arms ? "" : "const "}_says = { ${arms ? `arm: ${JSON.stringify(v.name)}, ` : ""}terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} }${own} };`,
+          `${arms ? "" : "const "}_says = { ${arms ? `arm: ${JSON.stringify(v.name)}, ` : ""}terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} }${own}${t.says.witness ? ", witness: _w" : ""} };`,
         );
         if (arms) body.close();
         saysFields.variants.push({ name: v.name, ...fields });
@@ -6393,13 +6519,14 @@ function techniqueFunction(
                 `  terms: { ${saysFields.variants[0].terms.join(" ")} };`,
                 `  marks: { ${saysFields.variants[0].marks.join(" ")} };`,
                 ...(tenv.factSays === undefined ? [] : [`  facts: ${saysType}Fact[];`]),
+                ...(t.says.witness ? ["  witness: Witness | null;"] : []),
                 "}",
               ]
             : [
                 `export type ${saysType} =`,
                 ...saysFields.variants.map(
                   (v) =>
-                    `  | { arm: ${JSON.stringify(v.name)}; terms: { ${v.terms.join(" ")} }; marks: { ${v.marks.join(" ")} }${tenv.factSays === undefined ? "" : `; facts: ${saysType}Fact[]`} }`,
+                    `  | { arm: ${JSON.stringify(v.name)}; terms: { ${v.terms.join(" ")} }; marks: { ${v.marks.join(" ")} }${tenv.factSays === undefined ? "" : `; facts: ${saysType}Fact[]`}${t.says?.witness ? "; witness: Witness | null" : ""} }`,
                 ),
                 ";",
               ]),

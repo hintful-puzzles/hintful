@@ -1074,6 +1074,23 @@ island read, `reads`), and what is an edge or a line (a group's bridges) is a
 term, which the game reads off its geometry. The game's own `hintKeepTrack`
 stays: a bridge is drawn a drag at a time, which no fact is.
 
+**A technique whose words need what held says `witness: true`**: the
+compiler then reads, on the same marks as the terms and only on a hint's
+path, what held in its `for` clauses' `where`s and its `premise`, and the
+firing's `says.witness` carries it (`Witness`, `engine/describe-runtime.ts`).
+It is a tree over the formula: the side of an `or` that held (`arm`, the left
+tried first), the first member an `exists` held for (`member`: the binders'
+values), the cell and value a `with` supposed and what held under it
+(`supposing`), each definition read (`def`, by name: `witnessOfDef` finds
+one) and the parts of an `and` (`all`). A `not`, a `forall` and an aggregate
+have none: a `forall` has no one member. Nothing in the conclusion is
+witnessed yet. It is a second read of the formula, so a part is compiled twice
+and a technique that says it costs about half again its module's size
+(Path's `lineBreaks`, 2026-11-13); only the hint path runs it, and the solve
+path's code is the same as without it (`compile.test.ts`, "a witness is
+written for a hint only"). Exemplar: Path's `lineBreaks`
+(`path-witness.test.ts`).
+
 A rule that only a run of the validator can name
 (Boats' three trials) stays a reason callback, which receives what the
 technique says and returns it with the rule added: the description cannot

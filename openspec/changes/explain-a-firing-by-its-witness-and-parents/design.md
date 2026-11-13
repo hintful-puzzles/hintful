@@ -66,9 +66,27 @@ sentence quotes the board is placed at its own tick, while the sentence holds.
    a clause a technique that strikes states.
 6. **The candidate plan on any space** (Map, Undead).
 
-## Left open
+## `exists fill`, sorted (2026-11-13, from the four descriptions)
 
-`exists fill` (Net, Pattern, Tents, Pearl). Decide in step 4 whether to state
-the specific technique ahead of the general one instead of a witness; this
-design assumes the witness covers `or`, `exists` over a set, and `with`, and
-not `exists fill`.
+The witness covers `or`, `exists` over a set and `with` (done: `compile.ts`
+`witnessOf`). `exists fill` is sorted by what a player needs said:
+
+- **Pattern** (`line`): the reason a square is the same in every filling is
+  the overlap of the line's runs: a technique of its own stated ahead of
+  `line` (the leftmost and rightmost fit of each run). No witness; a new
+  technique, whose soundness the gate checks.
+- **Tents** (`fits`, with `spread`): the reason is counting (`k` tents in
+  `|O|` open squares, none side by side). The specific techniques state that
+  count ahead of the general fill. No witness.
+- **Net and Pearl**: the descriptions are already layered: `fits`, then
+  `loopFits`, `sealFits`, `strandFits` each add one conjunct to the one
+  before, and each layer is a technique's rung. What the words need is, per
+  filling that failed, the first conjunct it failed and where, which is a
+  witness of a `not exists fill`, a **refutation**: for each filling, the
+  index of the first false conjunct. Net's `explain.ts` is that, by hand.
+  Step 4 builds it for Net and checks it by the hint-walk fingerprint; Pearl
+  follows.
+
+So `exists fill` needs a refutation witness only where its conjuncts are
+layered and each way's failure is named (Net, Pearl); the two other games
+take a technique of their own.

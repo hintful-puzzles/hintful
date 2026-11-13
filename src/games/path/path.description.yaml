@@ -237,6 +237,7 @@ techniques:
     says:
       terms: { e: e }
       marks: {}
+      witness: true
   # A square that takes two more lines from three edges left, where lines
   # on two of them would break the board: the third takes a line.
   - id: pairBreaks

@@ -239,3 +239,49 @@ describe("a technique states how its dearest read grows with the board", () => {
     ).toThrow(/grows with the board as n\^4/);
   });
 });
+
+describe("a witness is written for a hint only", () => {
+  const technique = (witness: boolean) =>
+    compileLibrary(
+      {
+        library: "t",
+        techniques: {
+          x: {
+            for: "c in cells where exists d in adj4(c): |{x in adj4(d) where known(x)}| = 0 or (with place(c, 1): known(d))",
+            conclude: "strike(c, 1)",
+            says: { terms: { c: "c" }, marks: {}, witness },
+          },
+        },
+      },
+      "t",
+      "./runtime.ts",
+    );
+  /** The technique's lines without the block a hint alone runs: the
+   * `if (fire !== null) {` block and all it holds. */
+  const solvePath = (code: string): string[] => {
+    const all = code.split("\n");
+    const kept: string[] = [];
+    let skipping: string | null = null;
+    for (const l of all.slice(
+      all.findIndex((x) => x.startsWith("export function x(")),
+    )) {
+      if (skipping !== null) {
+        if (l === `${skipping}}`) skipping = null;
+        continue;
+      }
+      const m = /^( *)if \(fire !== null\) \{$/.exec(l);
+      if (m === null) kept.push(l);
+      else skipping = m[1];
+    }
+    return kept;
+  };
+
+  it("so the solve path's code is what it is without one", () => {
+    const [stated, absent] = [technique(true), technique(false)];
+    expect(stated).toContain('held: "member"');
+    expect(absent).not.toContain("held: ");
+    // The block a hint runs is dropped from both, and what is left is equal.
+    expect(solvePath(stated).length).toBeGreaterThan(20);
+    expect(solvePath(stated)).toEqual(solvePath(absent));
+  });
+});

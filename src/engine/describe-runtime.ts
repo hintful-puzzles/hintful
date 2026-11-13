@@ -297,6 +297,51 @@ export class EdgeRelation {
 }
 
 /**
+ * What held in a firing's `for ... where` and `premise`, read on the marks
+ * before its facts are made: the part of a formula a firing's words need and
+ * its binding does not say. A node is there only for a part that was visited
+ * and was true (a false branch is never in it).
+ *
+ * - `arm`: which side of an `or` held, the left (0) tried first.
+ * - `member`: the binders' values of the first member an `exists` held for.
+ * - `supposing`: the cell and value a `with` placed, and what held under it.
+ * - `def`: a definition read, and what held in its body.
+ * - `all`: the parts of an `and` that have any.
+ */
+export type Witness =
+  | { held: "arm"; arm: 0 | 1; of: Witness | null }
+  | {
+      held: "member";
+      member: Readonly<Record<string, number | readonly number[]>>;
+      of: Witness | null;
+    }
+  | { held: "supposing"; cell: number; value: number; of: Witness | null }
+  | { held: "def"; name: string; of: Witness | null }
+  | { held: "all"; of: readonly Witness[] };
+
+/** The parts of an `and` that have a witness: `null` for none, the part
+ * itself for one. */
+export function witnessAll(...parts: (Witness | null)[]): Witness | null {
+  const some = parts.filter((p): p is Witness => p !== null);
+  if (some.length === 0) return null;
+  return some.length === 1 ? some[0] : { held: "all", of: some };
+}
+
+/** The first node of `w`, outermost first, that is the definition `name`'s. */
+export function witnessOfDef(w: Witness | null, name: string): Witness | null {
+  if (w === null) return null;
+  if (w.held === "def" && w.name === name) return w;
+  if (w.held === "all") {
+    for (const part of w.of) {
+      const found = witnessOfDef(part, name);
+      if (found !== null) return found;
+    }
+    return null;
+  }
+  return witnessOfDef(w.of, name);
+}
+
+/**
  * Called once a binding's conclusion has facts that change the marks, with
  * the binding's names and the facts, before any is applied: what a hint
  * records. It returns whether the technique goes on to its later bindings.
