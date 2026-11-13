@@ -18,35 +18,39 @@ ladder, whose hint is a search or a heuristic, opens
 
 Each step names the file of `src/skeleton/grid/` that already does it.
 
-1. **Run the solver's rungs one firing at a time.** `solver.ts` holds the
-   reason union, the rung list `SKELETON_RUNGS` and `skeletonWalk`, built on
-   `ladderWalk` (§ "Recording the deduction", § "Name the rung a step
-   speaks").
-2. **Build the plan from the player's own marks.** `hint.ts`'s `skeletonHint`
-   hands a copy of the board, the walk and a `stepBudget` to `deduceHintPlan`,
-   and returns a `HintRefusal` where there is no step (§ "The shared plan
-   loop: deduceHintPlan", § "The step budget", § "Refusal wording comes from
-   one module").
-3. **Turn each firing into a `HintStep`**: its `move`, its reason's kind as
-   its `rung`, its `words` and `explanation: words.text` (`stepOf` in
-   `hint.ts`).
-4. **Write every sentence in `hint-text.ts`**, exported as `say`, as a
-   `Sentence` whose pointing words are references to marks (§ "Writing the
-   narration").
-5. **Judge the player's move against the step** in `skeletonKeepTrack`, with
-   `trackTargets` and `changedCells` from `engine/hint-track.ts`, narrowing
-   the words when a step shrinks (§ "The hooks a hinted game implements").
-6. **Declare the hooks in `index.ts`**: `hint`, `hintRungs`, `hintMarks`,
-   `hintKeepTrack` and `hintGesture` (§ "Every step is a gesture").
-7. **Paint the marks from the words** in `render.ts`, from `stepMarks(hint)`.
+1. **Say each technique's terms and marks in the description.** A technique's
+   `says` in `skeleton.description.yaml` names what its sentence reads and
+   what its step outlines, stripes and reads; `solver.ts` holds the rung list
+   `SKELETON_RUNGS` (the compiled module's `SAYS_KINDS`) and `hintWalk`, the
+   player's marks and the ladder for the engine to walk (§ "Recording the
+   deduction", § "Name the rung a step speaks").
+2. **Let the engine build the plan from the player's own marks.** `hint.ts`'s
+   `describedFiringHint` (`describedEdgeHint` for edges) walks one firing at a
+   time, takes the move that makes a firing's squares, and returns a
+   `HintRefusal` where there is no step (§ "The shared plan loop:
+   deduceHintPlan", § "The step budget", § "Refusal wording comes from one
+   module").
+3. **Write every sentence in `hint-text.ts`** as a function of a technique's
+   typed terms and the squares its step marks, exported as `sentences`, each a
+   `Sentence` whose pointing words are references to marks (§
+   "Writing the narration"). The step's `rung`, `words` and `explanation` are
+   the engine's.
+4. **Judge the player's move against the step** with the keep-track and
+   `refreshHintStep` that `describedFiringHint` builds (`skeletonKeepTrack`,
+   `skeletonRefreshHintStep`), which narrow the words when a step shrinks (§
+   "The hooks a hinted game implements").
+5. **Declare the hooks in `index.ts`**: `hint`, `hintRungs`, `hintMarks`,
+   `hintKeepTrack`, `refreshHintStep` and `hintGesture` (§ "Every step is a
+   gesture").
+6. **Paint the marks from the words** in `render.ts`, from `stepMarks(hint)`.
    How is [`hints-marks.md`](./hints-marks.md).
-8. **Write the help page's `## Hints` section**, with `{{hint-marks}}`
+7. **Write the help page's `## Hints` section**, with `{{hint-marks}}`
    (the `hints` of `<id>.description.yaml`; § "The help teaches the
    marks").
-9. **Pin a position for every rung and test the plan** in
+8. **Pin a position for every rung and test the plan** in
    `skeleton-hint.test.ts`: `describeHintPins`, `npm run hint-scan`, and
    `renderPinnedHint` for a frame (§ "Verifying a hint in-process").
-10. **Run the app and read each sentence against its frame.**
+9. **Run the app and read each sentence against its frame.**
 
 ## Sections
 
@@ -966,7 +970,7 @@ record. What the ladder gives is the walk and a certified rung list:
   breaking ties, at no harder a tier than the ladder's own order would fire,
   so it finishes the work in front of the player before it starts elsewhere.
   `ladder-continuity.test.ts` holds every game that walks so.
-  Exemplars: `skeletonWalk` in
+  Exemplars: `hintWalk` in
   [`skeleton/grid/solver.ts`](../src/skeleton/grid/solver.ts), and
   `minesWalk` in [`mines/solver.ts`](../src/games/mines/solver.ts), which
   drives `singleFirings` itself.

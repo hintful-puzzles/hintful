@@ -128,6 +128,11 @@ techniques:
       c in cells, n = 2 - lines(c), U = ways(c)
       where n < 0 or (n > 0 and |U| <= n)
     conclude: "n >= 0 and |U| = n and (forall y in U: place(edge(c, y), 1))"
+    # The hint outlines the square and says how many lines it still needs; it
+    # reads the squares round it.
+    says:
+      terms: { c: "c", need: "n" }
+      marks: { outline: "{c}", reads: "{c} + adj4(c)" }
   # A square with no line and three edges left, where lines on two of them
   # would break the board: the third takes a line. Each of the three is
   # asked to be open still, since a solve places the line of one binding
@@ -140,3 +145,8 @@ techniques:
       where not known(edge(c, k)) and not known(edge(c, i))
       and not known(edge(c, j)) and bothBreak(c, i, j)
     conclude: "place(edge(c, k), 1)"
+    # The hint draws thin the two edges tried; it reads the squares they run
+    # between.
+    says:
+      terms: { c: "c", first: "edge(c, i)", second: "edge(c, j)" }
+      marks: { reads: "{c} + {i} + {j}" }

@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/skeleton/grid/skeleton.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, freshBinding, keptStore, minus, rangeMask, sameSet, staleChecking, subsetOf, type Kept, within } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, freshBinding, keptStore, minus, rangeMask, sameSet, setOf, staleChecking, subsetOf, type Kept, union, within } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -17,6 +17,16 @@ export const units: readonly string[] = [];
 
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "count" | "shared";
+
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  count: CountSays;
+  shared: SharedSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["count","shared"] as const;
 
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
@@ -86,10 +96,16 @@ export interface CountBinding {
   O: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CountSays {
+  terms: { c: number; value: number; need: number; open: number; };
+  marks: { outline: readonly number[]; reads: readonly number[]; };
+}
+
 const countFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBinding> | null): number {
+export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBinding, CountSays> | null): number {
   const _g17: number[] = [];
   const facts = countFacts;
   let fired = 0;
@@ -187,7 +203,10 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
       if (!(_c47)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ k: v_k, c: v_c, n: v_n, O: v_O.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { c: v_c, value: _h12, need: v_n, open: _h25 }, marks: { outline: setOf(v_c).slice(), reads: union(setOf(v_c), sp.adj4[v_c]).slice() } };
+          if (!fire({ k: v_k, c: v_c, n: v_n, O: v_O.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -204,10 +223,16 @@ export interface SharedBinding {
   R: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SharedSays {
+  terms: { c: number; value: number; need: number; b: number; bValue: number; bNeed: number; by: number; };
+  marks: { outline: readonly number[]; stripes: readonly number[]; reads: readonly number[]; };
+}
+
 const sharedFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBinding> | null): number {
+export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBinding, SharedSays> | null): number {
   const _g26: number[] = [];
   const _g38: number[] = [];
   const _g53: number[] = [];
@@ -217,7 +242,8 @@ export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBind
   R1:
   for (let v_k = 0; v_k < cl.count.at.length; v_k++) {
     const v_c = cl.count.at[v_k];
-    const _m91_0 = b.made[0];
+    const _h91 = clueAt(cl.count, v_c);
+    const _m96_0 = b.made[0];
     _g26.length = 0;
     G27: {
       const _a30 = sp.adj4[v_c];
@@ -265,7 +291,7 @@ export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBind
             const v_R = minus(v_O, v_M);
             const _h52 = v_R.length;
             if (!(((v_by <= 0) || (v_by >= _h52)))) break L51;
-            if (b.made[0] !== _m91_0) {
+            if (b.made[0] !== _m96_0) {
               _g53.length = 0;
               G54: {
                 const _a57 = sp.adj4[v_c];
@@ -361,7 +387,19 @@ export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBind
             if (!(_c90)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ k: v_k, c: v_c, O: v_O.slice(), b: v_b, M: v_M.slice(), by: v_by, R: v_R.slice() }, facts)) return 1;
+              if (fire !== null) {
+                let _g92 = 0;
+                G93: {
+                  const _a94 = sp.adj4[v_b];
+                  for (let _i95 = 0; _i95 < _a94.length; _i95++) {
+                    const v_d = _a94[_i95];
+                    if (!(((b.grid[v_d] || -1) === 1))) continue;
+                    _g92++;
+                  }
+                }
+                const _says = { terms: { c: v_c, value: _h91, need: need(b, sp, cl, v_c), b: v_b, bValue: _h37, bNeed: (_h37 - _g92), by: v_by }, marks: { outline: union(setOf(v_c), setOf(v_b)).slice(), stripes: v_M.slice(), reads: union(union(union(setOf(v_c), sp.adj4[v_c]), setOf(v_b)), sp.adj4[v_b]).slice() } };
+                if (!fire({ k: v_k, c: v_c, O: v_O.slice(), b: v_b, M: v_M.slice(), by: v_by, R: v_R.slice() }, facts, _says)) return 1;
+              }
             }
           }
         }

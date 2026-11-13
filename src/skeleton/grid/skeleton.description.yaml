@@ -63,6 +63,12 @@ techniques:
       n >= 0 and n <= |O|
       and (n = 0 implies (forall d in O: place(d, 2)))
       and (n = 0 or (forall d in O: place(d, 1)))
+    # The hint names the number, how many it counts, how many it still needs
+    # and how many open squares it has, and outlines it; it reads the squares
+    # round it.
+    says:
+      terms: { c: "c", value: "clue(count, c)", need: "n", open: "|O|" }
+      marks: { outline: "{c}", reads: "{c} + adj4(c)" }
   # Two numbers, every open square of b's also one of c's: those are where
   # the two meet, M, and b gets exactly what it needs there, so c needs the
   # difference, by, on the rest of its own, R. With none, they are clear;
@@ -80,3 +86,8 @@ techniques:
       by >= 0 and by <= |R|
       and (by = 0 implies (forall d in R: place(d, 2)))
       and (by = 0 or (forall d in R: place(d, 1)))
+    # The hint names both numbers and what each still needs, outlines them and
+    # stripes the squares they share; it reads the squares round both.
+    says:
+      terms: { c: "c", value: "clue(count, c)", need: "need(c)", b: "b", bValue: "clue(count, b)", bNeed: "need(b)", by: "by" }
+      marks: { outline: "{c} + {b}", stripes: "M", reads: "{c} + adj4(c) + {b} + adj4(b)" }

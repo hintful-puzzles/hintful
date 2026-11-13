@@ -101,7 +101,7 @@ then the techniques the hint narrates, so no board is accepted on a technique
 the hint cannot explain. `solve()` and `findMistakes` reuse the same solver
 and do not grow a second opinion. Read
 [`skeleton/grid/solver.ts`](../src/skeleton/grid/solver.ts): `solveSkeleton`
-is the first projection and `skeletonWalk` the second, over one `ladder`.
+is the first projection and `hintWalk` the second, over one `ladder`.
 
 ## The deduction fixpoint
 

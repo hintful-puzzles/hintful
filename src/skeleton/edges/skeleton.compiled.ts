@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/skeleton/edges/skeleton.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, edgeGroups, freshBinding, keptStore, minus, rangeMask, sameSet, setOf, staleChecking, throughWhere, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, edgeGroups, freshBinding, keptStore, minus, rangeMask, sameSet, setOf, staleChecking, throughWhere, type Kept, union } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -17,6 +17,16 @@ export const units: readonly string[] = [];
 
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "forced" | "pairBreaks";
+
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  forced: ForcedSays;
+  pairBreaks: PairBreaksSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["forced","pairBreaks"] as const;
 
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
@@ -120,10 +130,16 @@ export interface ForcedBinding {
   U: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ForcedSays {
+  terms: { c: number; need: number; };
+  marks: { outline: readonly number[]; reads: readonly number[]; };
+}
+
 const forcedFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function forced(b: Marks, sp: GridSpace, fire: Fire<ForcedBinding> | null): number {
+export function forced(b: Marks, sp: GridSpace, fire: Fire<ForcedBinding, ForcedSays> | null): number {
   const facts = forcedFacts;
   let fired = 0;
   let changed = false;
@@ -176,7 +192,10 @@ export function forced(b: Marks, sp: GridSpace, fire: Fire<ForcedBinding> | null
       if (!(_c25)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, n: v_n, U: v_U.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { c: v_c, need: v_n }, marks: { outline: setOf(v_c).slice(), reads: union(setOf(v_c), sp.adj4[v_c]).slice() } };
+          if (!fire({ c: v_c, n: v_n, U: v_U.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -192,10 +211,16 @@ export interface PairBreaksBinding {
   j: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface PairBreaksSays {
+  terms: { c: number; first: number; second: number; };
+  marks: { reads: readonly number[]; };
+}
+
 const pairBreaksFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^2. */
-export function pairBreaks(b: Marks, sp: GridSpace, fire: Fire<PairBreaksBinding> | null): number {
+export function pairBreaks(b: Marks, sp: GridSpace, fire: Fire<PairBreaksBinding, PairBreaksSays> | null): number {
   const _g167: number[] = [];
   const _g215: number[] = [];
   const facts = pairBreaksFacts;
@@ -559,7 +584,10 @@ export function pairBreaks(b: Marks, sp: GridSpace, fire: Fire<PairBreaksBinding
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ c: v_c, U: v_U.slice(), k: v_k, I: v_I.slice(), i: v_i, j: v_j }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { c: v_c, first: sp.edgeOf(v_c, v_i), second: sp.edgeOf(v_c, v_j) }, marks: { reads: union(union(setOf(v_c), setOf(v_i)), setOf(v_j)).slice() } };
+              if (!fire({ c: v_c, U: v_U.slice(), k: v_k, I: v_I.slice(), i: v_i, j: v_j }, facts, _says)) return 1;
+            }
           }
         }
       }

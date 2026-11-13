@@ -25,7 +25,12 @@ import {
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSkeletonDesc } from "./generator.ts";
-import { skeletonHint, skeletonKeepTrack } from "./hint.ts";
+import {
+  type SkeletonHint,
+  skeletonHint,
+  skeletonKeepTrack,
+  skeletonRefreshHintStep,
+} from "./hint.ts";
 import {
   border,
   colors,
@@ -166,7 +171,7 @@ function hintGesture(
   ui: SkeletonUi,
   ds: SkeletonDrawState,
   move: SkeletonMove,
-  step: HintStep<SkeletonMove>,
+  step: HintStep<SkeletonMove, SkeletonHint>,
 ): readonly PointerAction[] {
   if (move.kind !== "mark") return [];
   const { w } = state;
@@ -188,7 +193,7 @@ export const skeletonGame: Game<
   SkeletonUi,
   SkeletonDrawState,
   SkeletonMistake,
-  unknown,
+  SkeletonHint,
   SkeletonRung
 > = {
   id: "skeleton",
@@ -226,6 +231,7 @@ export const skeletonGame: Game<
     },
   },
   hintKeepTrack: skeletonKeepTrack,
+  refreshHintStep: skeletonRefreshHintStep,
   hintGesture,
 
   colors,

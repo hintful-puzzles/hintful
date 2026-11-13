@@ -9,28 +9,26 @@
  * words outline them, and never played.
  */
 
+import {
+  describedEdgeHint,
+  type EdgeSpoken,
+} from "../../engine/described-edge-hint.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { type ShapedEdge, trackEdgeStep } from "../../engine/edge-hint.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
+import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { LINE, OPEN } from "../../engine/line-drawing.ts";
 import { pieceThrough, squareEdges } from "../../engine/square-edges.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Clash, say } from "./hint-text.ts";
 import {
-  isComplete,
-  type SkeletonBoard,
-  type SkeletonFiring,
   type SkeletonRung,
+  type SkeletonSays,
+  type SkeletonWalkContext,
   skeletonWalk,
 } from "./solver.ts";
 import {
+  DIFF_NORMAL,
   executeMove,
   LINES_PER_SQUARE,
   type SkeletonMove,
@@ -46,8 +44,6 @@ const PLAN_CAP = 24;
 export interface SkeletonHighlights {
   tried: readonly ShapedEdge[];
 }
-
-type SkeletonStep = HintStep<SkeletonMove, SkeletonHighlights, SkeletonRung>;
 
 /**
  * What lines on `tried` would break at once, on `edges` as the ladder had
@@ -102,84 +98,67 @@ function clashOf(
   throw new Error(`skeleton: lines on ${tried} break nothing`);
 }
 
-/** The words for one firing on `state` with `edges` as the ladder had them
+/** What a sentence is told besides the technique's terms: the edges the firing
+ * decides, as the game numbers them, and the edges as the ladder had them
  * when it fired. */
-function wordsOf(
-  state: SkeletonState,
-  edges: Uint8Array,
-  firing: SkeletonFiring,
-): Sentence {
-  const { w } = state;
-  const { reason } = firing;
-  switch (reason.kind) {
-    case "forced":
-      return say.forced(
-        { x: reason.cell % w, y: (reason.cell / w) | 0 },
-        reason.need,
-        firing.edges,
-      );
-    case "pairBreaks":
-      return say.pairBreaks(
-        reason.tried,
-        firing.edges[0],
-        clashOf(state, edges, reason.tried),
-      );
-  }
+interface Fired {
+  edges: number[];
+  before: Uint8Array;
+  /** The edges a Check tries lines on, none for a count. */
+  tried: number[];
 }
 
-function stepOf(
-  state: SkeletonState,
-  edges: Uint8Array,
-  firing: SkeletonFiring,
-): SkeletonStep {
-  const words = wordsOf(state, edges, firing);
-  const { reason } = firing;
-  return {
-    move: {
-      kind: "edges",
-      changes: firing.edges.map((edge) => ({ edge, mark: firing.mark })),
-    },
-    rung: reason.kind,
-    explanation: words.text,
-    words,
-    highlights: {
-      tried:
-        reason.kind === "forced"
-          ? []
-          : reason.tried.map((edge) => ({ edge, mark: LINE })),
-    },
-  };
-}
+const sentences: {
+  [K in keyof SkeletonSays]: (
+    spoken: EdgeSpoken<SkeletonSays[K]>,
+    marked: Fired,
+    state: SkeletonState,
+  ) => Sentence;
+} = {
+  forced: ({ terms }, { edges }, { w }) =>
+    say.forced({ x: terms.c % w, y: (terms.c / w) | 0 }, terms.need, edges),
+  pairBreaks: (_spoken, { edges, before, tried }, state) =>
+    say.pairBreaks(tried, edges[0], clashOf(state, before, tried)),
+};
 
 /** The plan from the player's lines and crosses. */
-export function skeletonHint(
-  state: SkeletonState,
-): HintResult<SkeletonMove, SkeletonHighlights, SkeletonRung> {
-  const board: SkeletonBoard = { ...state, edges: state.edges.slice() };
-  const next = skeletonWalk(board, stepBudget("skeleton hint"));
-  let impossible = false;
-  // Each firing is narrated against the edges as they stood when it fired.
-  const before: Uint8Array[] = [];
-  const { plan } = deduceHintPlan<SkeletonBoard, SkeletonFiring, "open" | "done">({
-    board,
-    status: (b) => (isComplete(b) ? "done" : "open"),
-    incomplete: "open",
-    next: () => {
-      const edges = board.edges.slice();
-      const firing = next();
-      if (firing === "contradiction") impossible = true;
-      if (firing === null || firing === "contradiction") return null;
-      before.push(edges);
-      return firing;
-    },
-    planCap: PLAN_CAP,
-  });
-  // The mistake check vouches for every line and cross, so a contradiction
-  // here means the board itself has no answer.
-  if (impossible) return { ok: false, error: PUZZLE_NOT_REASONABLE };
-  if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  return { ok: true, steps: plan.map((firing, k) => stepOf(state, before[k], firing)) };
-}
+export const skeletonHint = describedEdgeHint<
+  SkeletonState,
+  SkeletonMove,
+  SkeletonHighlights,
+  Fired,
+  SkeletonWalkContext,
+  SkeletonSays,
+  SkeletonRung
+>({
+  name: "skeleton hint",
+  walk: (state) => skeletonWalk(state),
+  // The whole ladder, from the Easy rung up.
+  tiers: { lowest: () => DIFF_NORMAL, count: DIFF_NORMAL + 1 },
+  done: (_marks, ctx) => ctx.complete(),
+  plan: PLAN_CAP,
+  step: ({ taken, says, ctx }) => {
+    const edges = ctx.decided(taken);
+    // Every edge a firing sets was open before it.
+    const before = ctx.edges();
+    for (const e of edges) before[e] = OPEN;
+    const tried =
+      "first" in says.terms
+        ? [says.terms.first, says.terms.second].map((e) => ctx.edgeOf(e))
+        : [];
+    return [
+      {
+        move: {
+          kind: "edges",
+          changes: edges.map((edge) => ({ edge, mark: ctx.markOf(taken) })),
+        },
+        highlights: { tried: tried.map((edge) => ({ edge, mark: LINE })) },
+        marked: { edges, before, tried },
+      },
+    ];
+  },
+  say: sentences,
+});
 
 /** Judge a move against the step on show by what it did to the edges, which
  * a solve never makes a step of. */

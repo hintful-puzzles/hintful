@@ -1,164 +1,62 @@
 /**
- * Skeleton's explained hint: the solver's rungs run one firing at a time from
- * the player's own marks, and each firing turned into a step
- * (docs/hints.md § "Recording the deduction").
+ * Skeleton's explained hint: the compiled ladder (`solver.ts`) walked from the
+ * player's own marks, a step a firing, built by the engine from what
+ * `skeleton.description.yaml` says of a firing
+ * (`engine/described-firing-hint.ts`; docs/hints.md § "Recording the
+ * deduction").
  *
  * Every fact a step rests on is a number or a mark the player has made: the
  * ladder reads nothing else.
  */
 
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
-  DEDUCTION_EXHAUSTED,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
-import { changedCells, trackTargets } from "../../engine/hint-track.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+  describedFiringHint,
+  type FiringHint,
+} from "../../engine/described-firing-hint.ts";
 import type { Point } from "../../engine/types.ts";
-import { type Counted, say } from "./hint-text.ts";
+import { sentences } from "./hint-text.ts";
+import type { SaysById } from "./skeleton.compiled.ts";
+import { hintWalk, type SkeletonBoard, type SkeletonRung } from "./solver.ts";
 import {
-  isComplete,
-  type SkeletonBoard,
-  type SkeletonReason,
-  type SkeletonRung,
-  skeletonWalk,
-} from "./solver.ts";
-import {
-  type CROSSED,
+  BLANK,
   executeMove,
-  FILLED,
   type SkeletonMark,
   type SkeletonMove,
   type SkeletonState,
 } from "./state.ts";
 
-/** How far ahead the plan is computed. A player rarely follows more than a
- * few steps before going their own way, and the plan is asked for again
- * then. */
-const PLAN_CAP = 24;
-
-type SkeletonStep = HintStep<SkeletonMove, unknown, SkeletonRung>;
-
-/** One deduction: `cells` all take `mark`, for `reason`. */
-interface SkeletonFiring {
-  reason: SkeletonReason;
-  cells: number[];
-  mark: typeof FILLED | typeof CROSSED;
+/** A square a step marks and the mark it asks. */
+export interface SkeletonTarget extends Point {
+  value: SkeletonMark;
 }
 
-/** What a firing says, with the squares it decides ringed. */
-function wordsOf(state: SkeletonState, firing: SkeletonFiring): Sentence {
-  const { w, clues } = state;
-  const at = (i: number): Point => ({ x: i % w, y: (i / w) | 0 });
-  const cells = firing.cells.map(at);
-  const { reason } = firing;
-  const counted = (clue: number, need: number): Counted => ({
-    at: at(clue),
-    value: clues[clue],
-    need,
-  });
-  switch (reason.kind) {
-    case "count": {
-      const c = counted(reason.clue, reason.need);
-      return reason.need === 0
-        ? say.countMet(c, cells)
-        : say.countAll(c, reason.open, cells);
-    }
-    case "shared":
-      return say.shared(
-        counted(reason.clue, reason.need),
-        counted(reason.inner, reason.innerNeed),
-        reason.meet.map(at),
-        cells,
-        firing.mark === FILLED ? "shaded" : "clear",
-      );
-  }
-}
+/** What a step decides: its squares, each with the mark it asks. */
+export type SkeletonHint = FiringHint<SkeletonTarget>;
 
-function stepOf(state: SkeletonState, firing: SkeletonFiring): SkeletonStep {
-  const words = wordsOf(state, firing);
-  return {
-    move: {
-      kind: "mark",
-      cells: firing.cells.map((index) => ({ index, mark: firing.mark })),
-    },
-    rung: firing.reason.kind,
-    explanation: words.text,
-    words,
-  };
-}
+const described = describedFiringHint<
+  SkeletonState,
+  SkeletonMove,
+  SkeletonTarget,
+  SaysById,
+  SkeletonRung,
+  SkeletonHint
+>({
+  name: "skeleton hint",
+  walk: (state: SkeletonBoard) => hintWalk(state, 0),
+  plan: 24,
+  width: (s) => s.w,
+  size: (s) => s.w * s.h,
+  valueAt: (s, cell) => (s.grid[cell] === BLANK ? 0 : s.grid[cell]),
+  execute: executeMove,
+  foreign: (m) => m.kind !== "mark",
+  target: (at, n) => ({ ...at, value: n as SkeletonMark }),
+  want: (t) => t.value,
+  move: (targets, state) => ({
+    kind: "mark",
+    cells: targets.map((t) => ({ index: t.y * state.w + t.x, mark: t.value })),
+  }),
+  say: sentences,
+});
 
-/**
- * The plan from the player's marks. No tier cap: a board that arrives by its
- * ID carries no tier, and the ladder tries the easy rung first, which is the
- * order a hint wants anyway.
- */
-export function skeletonHint(
-  state: SkeletonState,
-): HintResult<SkeletonMove, unknown, SkeletonRung> {
-  const board: SkeletonBoard = { ...state, grid: state.grid.slice() };
-  const walk = skeletonWalk(board, stepBudget("skeleton hint"));
-  let impossible = false;
-  const { plan } = deduceHintPlan<SkeletonBoard, SkeletonFiring, "open" | "done">({
-    board,
-    status: (b) => (isComplete(b) ? "done" : "open"),
-    incomplete: "open",
-    next: () => {
-      const taken = walk.next();
-      if (taken === "contradiction") impossible = true;
-      if (taken === null || taken === "contradiction") return null;
-      const cells: number[] = [];
-      for (let i = 0; i < taken.facts.length; i += 3) cells.push(taken.facts[i + 1]);
-      // Every fact of a firing places the one mark its technique concludes.
-      const mark = taken.facts[2] as typeof FILLED | typeof CROSSED;
-      return { reason: taken.reasons[0] as SkeletonReason, cells, mark };
-    },
-    planCap: PLAN_CAP,
-  });
-  // The mistake check vouches for every mark, so a contradiction here means
-  // the board itself has no answer.
-  if (impossible) return { ok: false, error: PUZZLE_NOT_REASONABLE };
-  if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  return { ok: true, steps: plan.map((firing) => stepOf(state, firing)) };
-}
-
-/**
- * Judge a move against the step on show by what it did to the board, so a
- * click, a drag and a key that make the same change are the same
- * (`engine/hint-track.ts`). A step that decides several squares shrinks to
- * the ones left.
- */
-export function skeletonKeepTrack(
-  move: SkeletonMove,
-  step: HintStep<SkeletonMove>,
-  state: SkeletonState,
-): HintTrackVerdict {
-  if (move.kind !== "mark" || step.move.kind !== "mark") return "off";
-  const after = executeMove(state, move);
-  const { verdict, left } = trackTargets({
-    targets: step.move.cells,
-    changes: changedCells<SkeletonMark>(
-      state.grid.length,
-      (i) => state.grid[i] as SkeletonMark,
-      (i) => after.grid[i] as SkeletonMark,
-    ),
-    key: (t) => t.index,
-    want: (t) => t.mark,
-    holds: (t) => after.grid[t.index] === t.mark,
-  });
-  if (verdict === "onTrack") {
-    step.move = { kind: "mark", cells: left };
-    // The rings are read from the words, so the words shrink with the move.
-    const { w } = state;
-    const kept = new Set(left.map((t) => `${t.index % w},${(t.index / w) | 0}`));
-    if (step.words) {
-      step.words = step.words.narrow(
-        (role, kind, key) => role !== "ring" || kind !== "cell" || kept.has(key),
-      );
-      step.explanation = step.words.text;
-    }
-  }
-  return verdict;
-}
+export const { hint: skeletonHint, hintKeepTrack: skeletonKeepTrack } = described;
+export const skeletonRefreshHintStep = described.refreshHintStep;

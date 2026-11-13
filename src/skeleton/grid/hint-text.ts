@@ -1,9 +1,9 @@
 /**
  * Every sentence Skeleton's hint speaks, and every word inside one.
  *
- * The deduction decides which sentence and with what values
- * ([`hint.ts`](./hint.ts)); this file decides only how it reads. Each sentence
- * says what to look at and then what must follow (docs/hints.md
+ * The description's `says` decides which sentence and with what values
+ * (`skeleton.description.yaml`); this file decides only how it reads. Each
+ * sentence says what to look at and then what must follow (docs/hints.md
  * § "Writing the narration"). Every word that points at the board is a
  * reference to the mark it points at (`engine/hint-words.ts`): the squares a
  * step decides are ringed, the numbers it reasons from are outlined and
@@ -14,6 +14,7 @@
  * ringed squares is a reference that re-renders from them.
  */
 
+import type { FiringSpoken } from "../../engine/described-firing-hint.ts";
 import {
   CELL,
   mark,
@@ -24,6 +25,7 @@ import {
 } from "../../engine/hint-words.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import type { Point } from "../../engine/types.ts";
+import type { SaysById } from "./skeleton.compiled.ts";
 
 const squares = (n: number): string => (n === 1 ? "square" : "squares");
 
@@ -43,51 +45,41 @@ const mustBe = (cells: readonly Point[], what: string): Narration =>
 const number = (at: Point, value: number, lead = "the outlined"): Narration =>
   mark.as("outline", CELL, [at], `${lead} ${value}`);
 
-/** A number as a count rung reads it. */
-export interface Counted {
-  at: Point;
-  value: number;
-  /** How many more shaded squares it needs. */
-  need: number;
+type Spoken<K extends keyof SaysById> = FiringSpoken<SaysById[K]>;
+
+/** One number: it has the shaded squares it counts, or needs every open square
+ * beside it. */
+function count({ terms: t, targets, at }: Spoken<"count">): Sentence {
+  const cells = targets;
+  if (t.need === 0)
+    return so({
+      look:
+        t.value === 0
+          ? phrase`${number(at(t.c), t.value)} has no ${SHADED_NAME} square beside it`
+          : phrase`${number(at(t.c), t.value)} already has its ${t.value} ${SHADED_NAME} ${squares(t.value)} beside it`,
+      move: phrase`${these(cells)} must be ${UNSHADED_NAME}`,
+    });
+  return so({
+    look: phrase`${number(at(t.c), t.value)} needs ${needs(t.need, t.value - t.need)} and has only ${t.open} open ${squares(t.open)} beside it`,
+    move: phrase`${these(cells)} must be ${SHADED_NAME}`,
+  });
 }
 
-export const say = {
-  /** The number has every shaded square it counts. */
-  countMet: (c: Counted, cells: readonly Point[]): Sentence =>
-    so({
-      look:
-        c.value === 0
-          ? phrase`${number(c.at, c.value)} has no ${SHADED_NAME} square beside it`
-          : phrase`${number(c.at, c.value)} already has its ${c.value} ${SHADED_NAME} ${squares(c.value)} beside it`,
-      move: phrase`${these(cells)} must be ${UNSHADED_NAME}`,
-    }),
+/**
+ * Two numbers read together. The first is beside the ringed squares and the
+ * second is not, which is how the words tell two numbers of one value apart:
+ * every open square beside the second is beside the first too. Those squares
+ * are the area the sentence is about, and are striped.
+ */
+function shared({ terms: t, targets, stripes, at }: Spoken<"shared">): Sentence {
+  const taken = t.by === 0 ? (t.bNeed === 1 ? "it" : "them all") : `${t.bNeed}`;
+  const meet = mark.as("stripes", CELL, stripes, "the striped squares");
+  return so({
+    look: phrase`${number(at(t.c), t.value, "the")} beside ${these(targets)} needs ${t.need}; ${number(at(t.b), t.bValue, "the other outlined")} puts ${taken} in ${meet}`,
+    move: mustBe(targets, t.by > 0 ? SHADED_NAME : UNSHADED_NAME),
+  });
+}
 
-  /** The number needs every open square beside it. */
-  countAll: (c: Counted, open: number, cells: readonly Point[]): Sentence =>
-    so({
-      look: phrase`${number(c.at, c.value)} needs ${needs(c.need, c.value - c.need)} and has only ${open} open ${squares(open)} beside it`,
-      move: phrase`${these(cells)} must be ${SHADED_NAME}`,
-    }),
-
-  /**
-   * Two numbers read together. `outer` is beside the ringed squares and
-   * `inner` is not, which is how the words tell two numbers of one value
-   * apart: every open square beside `inner` is beside `outer` too. Those
-   * squares, `meet`, are the area the sentence is about, and are striped.
-   */
-  shared: (
-    outer: Counted,
-    inner: Counted,
-    meet: readonly Point[],
-    cells: readonly Point[],
-    mark_: "shaded" | "clear",
-  ): Sentence => {
-    const left = outer.need - inner.need;
-    const taken = left === 0 ? (inner.need === 1 ? "it" : "them all") : `${inner.need}`;
-    const shared = mark.as("stripes", CELL, meet, "the striped squares");
-    return so({
-      look: phrase`${number(outer.at, outer.value, "the")} beside ${these(cells)} needs ${outer.need}; ${number(inner.at, inner.value, "the other outlined")} puts ${taken} in ${shared}`,
-      move: mustBe(cells, mark_ === "shaded" ? SHADED_NAME : UNSHADED_NAME),
-    });
-  },
-};
+/** Each technique's sentence, from what its description says of a firing
+ * (`engine/described-firing-hint.ts`). */
+export const sentences = { count, shared };

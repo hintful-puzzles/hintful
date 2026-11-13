@@ -1,15 +1,14 @@
 /**
  * Skeleton's solver: the ladder `skeleton.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/ladder-runtime.ts`), with the
- * reason each technique records for the hint, and the answer check its rules
- * compile to.
+ * on the engine's marks and runner (`engine/ladder-runtime.ts`), and the
+ * answer check its rules compile to.
  *
  * The answer is on the edges between squares side by side, each a line or
  * none; a cross, a wall and an edge no line will take are all "none".
  * {@link solveSkeleton} runs the ladder to a fixpoint, which is how the
  * generator grades a board and how Solve and the mistake check find the
- * answer. {@link skeletonWalk} takes it one firing at a time, and the hint
- * narrates each (docs/solver-and-generator.md § "One engine, two
+ * answer. {@link skeletonWalk} hands the engine the ladder to take one firing
+ * at a time, and the hint narrates each (docs/solver-and-generator.md § "One engine, two
  * projections").
  *
  * Every technique decides an edge only where the rules force it, so a board
@@ -28,17 +27,14 @@ import {
   CellMarks,
   describedLadder,
   type Ladder,
-  type LadderWalk,
   ladderTechniques,
-  ladderWalk,
-  type ReasonOf,
   runLadder,
   TIERS as SCALE,
+  type Taken,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import { CROSS, type EdgeMark, LINE, OPEN } from "../../engine/line-drawing.ts";
 import { type SquareEdges, squareEdges } from "../../engine/square-edges.ts";
-import type { StepBudget } from "../../engine/step-budget.ts";
 import * as skeleton from "./skeleton.compiled.ts";
 import { DIFF_NORMAL, LINES_PER_SQUARE } from "./state.ts";
 
@@ -46,17 +42,11 @@ import { DIFF_NORMAL, LINES_PER_SQUARE } from "./state.ts";
 const LINED = 1;
 const NONE = 2;
 
-/** Why a firing decides its edges, its edges numbered as the game's. */
-export type SkeletonReason =
-  /** The square has only as many live edges as it still needs lines. */
-  | { kind: "forced"; cell: number; need: number }
-  /** Lines on `tried`, two of the three edges square `cell` has left, would
-   * break the board at once, so it takes the third. */
-  | { kind: "pairBreaks"; cell: number; tried: number[] };
-
 /** The rungs, easiest first: the ladder's techniques. */
-export const SKELETON_RUNGS = skeleton.ladder.map((e) => e.id);
-export type SkeletonRung = skeleton.LadderId;
+export const SKELETON_RUNGS = skeleton.SAYS_KINDS;
+export type SkeletonRung = (typeof SKELETON_RUNGS)[number];
+/** What each technique says of a firing. */
+export type SkeletonSays = skeleton.SaysById;
 
 /** The board the ladder works on: the walls, and the edges it writes as it
  * goes, each `OPEN`, `LINE` or `CROSS`. */
@@ -107,40 +97,11 @@ function dealtOf(board: SkeletonBoard, geo: Geometry): skeleton.Dealt {
   };
 }
 
-/** A reason built once a firing, from its binding, and shared by each of its
- * facts. */
-function perFiring<B extends object>(
-  build: (binding: B) => SkeletonReason,
-): ReasonOf<B> {
-  let last: B | null = null;
-  let reason: SkeletonReason | null = null;
-  return (binding) => {
-    if (binding !== last || reason === null) {
-      last = binding;
-      reason = build(binding);
-    }
-    return reason;
-  };
-}
-
-/** The ladder, each technique with its reason. It reads the walls as the
- * marks hold them, crossed out. */
-function skeletonLadder(geo: Geometry): Ladder {
-  const { sp, toGame } = geo;
-  const edge = (c: number, y: number): number => toGame[sp.edgeOf(c, y)];
+/** The ladder. It reads the walls as the marks hold them, crossed out. */
+function skeletonLadder(): Ladder {
   return describedLadder(skeleton, {
-    forced: uncluedRung(
-      skeleton.forced,
-      perFiring(({ c, n }) => ({ kind: "forced", cell: c, need: n })),
-    ),
-    pairBreaks: uncluedRung(
-      skeleton.pairBreaks,
-      perFiring(({ c, i, j }) => ({
-        kind: "pairBreaks",
-        cell: c,
-        tried: [edge(c, i), edge(c, j)],
-      })),
-    ),
+    forced: uncluedRung(skeleton.forced),
+    pairBreaks: uncluedRung(skeleton.pairBreaks),
   });
 }
 
@@ -162,7 +123,7 @@ function deduction(board: SkeletonBoard): Deduction {
   }
   const m = new CellMarks(geo.sp, rangeMask(LINED, NONE), grid, null, "edge");
   m.seed(grid);
-  return { geo, m, ladder: skeletonLadder(geo) };
+  return { geo, m, ladder: skeletonLadder() };
 }
 
 /** Write the marks back onto `board`: a line, a cross where the marks say
@@ -231,58 +192,57 @@ export function answerOf(
   return Array.from(board.edges, (m) => (m === LINE ? LINE : OPEN));
 }
 
-/** A firing a walk took: its edges, as the game numbers them, all `mark`. */
-export interface SkeletonFiring {
-  reason: SkeletonReason;
-  edges: number[];
-  mark: typeof LINE | typeof CROSS;
+/** What the hint's steps are built from besides the technique's terms. */
+export interface SkeletonWalkContext {
+  /** Whether the lines already are the answer. */
+  complete(): boolean;
+  /** The edges' marks as the game numbers them, as the walk's marks hold them
+   * now (a wall reads as open). */
+  edges(): Uint8Array;
+  /** The game's edge for one of the space's. */
+  edgeOf(spaceEdge: number): number;
+  /** The edges a taken firing decides, as the game numbers them. */
+  decided(taken: Taken): number[];
+  /** The mark a taken firing makes on each. */
+  markOf(taken: Taken): typeof LINE | typeof CROSS;
 }
 
 /**
- * The hint's walk over the ladder from `board`'s lines and crosses, one
- * firing a call: the one that carries on from the squares the last decided
- * (`ladderWalk`). Each is written onto `board` as it is taken. No tier cap:
- * a board that arrives by its ID carries no tier, and the ladder tries the
- * Easy technique first, which is the order a hint wants anyway.
+ * The ladder over `state`'s lines and crosses, for the engine's hint to walk
+ * (`engine/described-edge-hint.ts`). No tier cap: a board that arrives by its
+ * ID carries no tier, and the ladder tries the Easy technique first, which is
+ * the order a hint wants anyway.
  */
-export function skeletonWalk(
-  board: SkeletonBoard,
-  budget: StepBudget,
-): () => SkeletonFiring | null | "contradiction" {
+export function skeletonWalk(state: SkeletonBoard): {
+  marks: CellMarks;
+  entries: Ladder["entries"];
+  ctx: SkeletonWalkContext;
+} {
+  const board: SkeletonBoard = { ...state, edges: state.edges.slice() };
   const d = deduction(board);
-  const { geo, m, ladder } = d;
-  m.budget = budget;
-  const { g, toGame } = geo;
-  // A firing reads a square and the squares around it, or the squares of
-  // the edges it tries lines on.
-  const reads = ({ reasons }: { reasons: readonly object[] }): number[] => {
-    const reason = reasons[0] as SkeletonReason;
-    if (reason.kind !== "forced") return reason.tried.flatMap((e) => [g.a[e], g.b[e]]);
-    const out = [reason.cell];
-    for (let k = 0; k < 4; k++) {
-      const e = g.around[reason.cell * 4 + k];
-      if (e >= 0) out.push(g.a[e] === reason.cell ? g.b[e] : g.a[e]);
-    }
-    return out;
-  };
-  const walk: LadderWalk = ladderWalk(
-    m,
-    ladder.entries,
-    { [SCALE]: DIFF_NORMAL },
-    reads,
-  );
-  return () => {
-    const taken = walk.next();
-    if (taken === null || taken === "contradiction") return taken;
+  const { geo } = d;
+  const edges = (): Uint8Array => {
     writeBack(d, board);
-    const edges: number[] = [];
-    for (let i = 0; i < taken.facts.length; i += 3)
-      edges.push(toGame[taken.facts[i + 1]]);
-    return {
-      reason: taken.reasons[0] as SkeletonReason,
+    return board.edges.slice();
+  };
+  return {
+    marks: d.m,
+    entries: d.ladder.entries,
+    ctx: {
+      complete: () => {
+        writeBack(d, board);
+        return isComplete(board);
+      },
       edges,
+      edgeOf: (e) => geo.toGame[e],
+      decided: (taken) => {
+        const out: number[] = [];
+        for (let i = 0; i < taken.facts.length; i += 3)
+          out.push(geo.toGame[taken.facts[i + 1]]);
+        return out;
+      },
       // Every fact of a firing places the one value its technique concludes.
-      mark: taken.facts[2] === LINED ? LINE : CROSS,
-    };
+      markOf: (taken) => (taken.facts[2] === LINED ? LINE : CROSS),
+    },
   };
 }
