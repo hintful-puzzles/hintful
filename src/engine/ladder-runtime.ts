@@ -861,6 +861,20 @@ export interface Ladder<S extends CellMarks = CellMarks> {
   striking: readonly StrikeRung[];
 }
 
+/** Every firing the technique `id` of `ladder` could make on `m`, none where it
+ * finds the marks inconsistent, which the mistake check rules out wherever a
+ * hint runs. An id the ladder lacks is a bug in the caller. */
+export function techniqueFirings<S extends CellMarks>(
+  ladder: Ladder<S>,
+  id: string,
+  m: S,
+): readonly Firing[] {
+  const entry = ladder.entries.find((e) => e.id === id);
+  if (entry === undefined) throw new Error(`no technique ${id} in the ladder`);
+  const got = entry.run.firings(m);
+  return got === "contradiction" ? [] : got;
+}
+
 /** A game's own ids among a compiled module's: a library's are written
  * `<library>.<technique>`. */
 export type OwnId<Id extends string> = Exclude<Id, `${string}.${string}`>;

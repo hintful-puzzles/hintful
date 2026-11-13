@@ -39,7 +39,12 @@ import { rangeMask } from "../../engine/describe-runtime.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { candidateConclusions } from "../../engine/hint-text.ts";
-import { CellMarks, type Ladder, type Said } from "../../engine/ladder-runtime.ts";
+import {
+  CellMarks,
+  type Ladder,
+  type Said,
+  techniqueFirings,
+} from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";
 import type { Point } from "../../engine/types.ts";
@@ -165,9 +170,7 @@ function lineFirings(
   const m = new CellMarks(abcdSpace(p), rangeMask(1, p.n), grid);
   for (let i = 0; i < grid.length; i++)
     m.cands[i] = grid[i] ? 1 << grid[i] : shown[i] << 1;
-  const got = ladder.entries.find((e) => e.id === id)?.run.firings?.(m);
-  if (got === undefined || got === "contradiction") return [];
-  return got.map(({ facts, reasons }) => {
+  return techniqueFirings(ladder, id, m).map(({ facts, reasons }) => {
     const { L, d, v } = (reasons[0] as Said<unknown, SaysById[typeof id]>).says.terms;
     const cells: number[] = [];
     for (let i = 0; i < facts.length; i += 3) cells.push(facts[i + 1]);

@@ -51,6 +51,7 @@ import type {
   Said,
   Taken,
 } from "../../engine/ladder-runtime.ts";
+import { techniqueFirings } from "../../engine/ladder-runtime.ts";
 import { type Conclusion, colorsOf, say } from "./hint-text.ts";
 import * as map from "./map.compiled.ts";
 import { dealtOf, gridOf, mapLadder, mapMarks } from "./solver.ts";
@@ -108,14 +109,6 @@ function marksOf(w: Work): CellMarks {
   for (let r = 0; r < w.coloring.length; r++)
     m.cands[r] = (w.coloring[r] >= 0 ? 1 << w.coloring[r] : colorsLeft(w, r)) << 1;
   return m;
-}
-
-/** Every firing the technique `id` could make on `m`, none where it finds the
- * marks inconsistent, which the mistake check rules out wherever a hint runs. */
-function firingsOf(ladder: Ladder, id: string, m: CellMarks): readonly Firing[] {
-  const got = ladder.entries.find((e) => e.id === id)?.run.firings?.(m);
-  if (got === undefined) throw new Error(`map hint: no technique ${id}`);
-  return got === "contradiction" ? [] : got;
 }
 
 /** The ops taking region `r` from dots `from` to dots `to`, one toggle each. */
@@ -283,7 +276,7 @@ const weighKey = ({ m, x, E }: Terms<"weigh">): string => `${m},${x},${E}`;
 function weighingsOf(walk: Walk): Map<string, number[]> {
   if (walk.weighings === null) {
     const found = new Map<string, number[]>();
-    for (const f of firingsOf(walk.ladder, "weigh", marksOf(walk.w))) {
+    for (const f of techniqueFirings(walk.ladder, "weigh", marksOf(walk.w))) {
       const key = weighKey(termsOf<"weigh">(f));
       const ks = found.get(key);
       if (ks) ks.push(f.facts[1]);
