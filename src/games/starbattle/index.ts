@@ -276,7 +276,7 @@ export const starbattleGame: Game<
       stripes:
         "the row, column or region the step is about, or several rows or columns counted together.",
       outline:
-        "what else it reasons from: a star, a region, or the squares a star would rule out.",
+        "what else it reasons from: a star, a region, or the squares a star would block.",
     },
   },
   hintKeepTrack: starbattleKeepTrack,

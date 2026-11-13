@@ -386,8 +386,8 @@ const IDIOMS: Record<string, (step: NarratedStep) => boolean> = {
   // (docs/hints-marks.md § "Group one firing into one step"; owner-endorsed with the Filling hint).
   filling: (s) => /fits exactly into/.test(s.explanation),
 
-  // Loopy's blocked-pair rung: "Both outlined dots already have a line, so
-  // joining them leaves this 2 short: that edge is out and the other 2 are
+  // Loopy's blocked-pair rung: "Both outlined dots have a line, so joining
+  // them leaves this 2 short: that edge can't be one and the rest must be
   // lines." The necessity is in "leaves this 2 short" — the clue could not be
   // met — and the conclusion is then stated in Loopy's own board word, where an
   // edge that is *out* is one ruled out (the same word its other sentences use:
@@ -397,7 +397,7 @@ const IDIOMS: Record<string, (step: NarratedStep) => boolean> = {
   // engine's form for a look, what follows from it, and the move. Reached only
   // at Hard, so only a walk over the presets menu, not the first preset, hears
   // it.
-  loopy: (s) => /leaves this \d+ short: that edge is out/.test(s.explanation),
+  loopy: (s) => /leaves this \d+ short: that edge can't be one/.test(s.explanation),
 };
 
 /**

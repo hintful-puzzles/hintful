@@ -9,10 +9,10 @@ exports[`galaxies: pinned hint positions > says, at each pin 1`] = `
   "exclave": "The striped squares can reach their ringed dot only through this square, so it and its partner must be that dot's too.",
   "mirrorWall": "The outlined square is its own partner across the outlined white dot, so this wall must match the outlined board edge.",
   "onlyReach": "No other galaxy reaches this square, so it and its partner must join the ringed white dot and its striped reach.",
-  "separate": "These two squares go with different outlined dots, so they belong to different galaxies: the ringed edge must be a wall.",
+  "separate": "These two squares go with different outlined dots, so they're in different galaxies: the ringed edge must be a wall.",
   "severalCells": "Both ringed squares must belong to the white dot between them.",
   "soleOwner": "No galaxy around another dot can stretch to this square, so it and its partner must belong to the ringed white dot.",
-  "wallMirroredAboutOwnCell": "The outlined square is its own partner across the outlined white dot, so the outlined wall must be mirrored by this wall.",
+  "wallMirroredAboutOwnCell": "The outlined square is its own partner across the outlined white dot, so this wall must match the outlined wall.",
   "wallMirroredOffEdge": "The outlined squares are partners across the outlined white dot, so this wall must match the outlined board edge.",
 }
 `;

@@ -130,12 +130,12 @@ function refute(s: Spoken<"refute">): Sentence {
   );
   if (s.arm === "nearSurrounded") {
     return so({
-      look: phrase`Painting ${thisCell} ${t} would seal ${neighbor} off from its own color`,
+      look: phrase`Painting ${thisCell} ${t} would seal ${neighbor} off from its color`,
       move: thisMust,
     });
   }
   return so({
-    look: phrase`If ${thisCell} were ${t}, ${neighbor} could never touch two ${f} tiles`,
+    look: phrase`If ${thisCell} were ${t}, ${neighbor} couldn't touch two ${f} tiles`,
     move: thisMust,
   });
 }

@@ -5,8 +5,8 @@ exports[`clusters: pinned hint positions > says, at each pin 1`] = `
   "countFull": "The outlined yellow dot's last yellow must also touch the outlined purple dot, so this square must be purple.",
   "countShort": "The outlined yellow dot allows at most one yellow beside the outlined yellow tile, so this square must be yellow.",
   "refute.dotOvercount": "The outlined yellow dot beside this square already touches its one yellow tile, so this square must be purple.",
-  "refute.nearReach": "If this square were yellow, its outlined purple neighbor could never touch two purple tiles, so this square must be purple.",
-  "refute.nearSurrounded": "Painting this square purple would seal its outlined yellow neighbor off from its own color, so this square must be yellow.",
+  "refute.nearReach": "If this square were yellow, its outlined purple neighbor couldn't touch two purple tiles, so this square must be purple.",
+  "refute.nearSurrounded": "Painting this square purple would seal its outlined yellow neighbor off from its color, so this square must be yellow.",
   "refute.selfReach": "If this square were purple, at most one neighbor could ever match it, but it needs to touch two, so it must be yellow.",
   "refute.selfSurrounded": "Every neighbor of this square is yellow. As purple, it could never touch another purple tile, so it must be yellow.",
 }

@@ -487,7 +487,7 @@ export const spokesGame: Game<
   hint: spokesHint,
   hintMarks: {
     roles: {
-      ring: "each spoke the step decides: a line in the hint color is one to draw, and a ring round a dot on a hub's rim is one to rule out by marking that dot as unused, as described above.",
+      ring: "each spoke the step decides: a line in the hint color is one to draw, and a ring round a dot on a hub's rim is a spoke that must be unused, which you mark on that dot, as described above.",
       outline: "the hubs the step reasons from, with a halo in a second color.",
     },
   },

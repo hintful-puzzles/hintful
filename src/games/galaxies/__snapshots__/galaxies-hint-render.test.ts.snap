@@ -6975,6 +6975,6 @@ exports[`galaxies: pinned hint positions > says, at each pin 1`] = `
   "everyMark": "This square's ways out (outlined) all lead into the striped galaxy, so it and its partner must join the ringed white dot.",
   "evidence": "This square's ways out (outlined) all lead into the striped galaxy, so it and its partner must join the ringed white dot.",
   "oneCellAndItsPartner": "No galaxy around another dot can stretch to this square, so it and its partner must belong to the ringed white dot.",
-  "wall": "These two squares go with different outlined dots, so they belong to different galaxies: the ringed edge must be a wall.",
+  "wall": "These two squares go with different outlined dots, so they're in different galaxies: the ringed edge must be a wall.",
 }
 `;

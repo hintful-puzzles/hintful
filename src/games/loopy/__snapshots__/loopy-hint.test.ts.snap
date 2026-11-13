@@ -4408,7 +4408,7 @@ exports[`Loopy hint frames > rings the pair a step places, and draws the pairs i
 
 exports[`loopy: pinned hint positions > says, at each pin 1`] = `
 {
-  "clueBlockedPair": "Both outlined dots already have a line, so joining them leaves this 2 short: that edge is out and the other 2 are lines.",
+  "clueBlockedPair": "Both outlined dots have a line, so joining them leaves this 2 short: that edge can't be one and the rest must be lines.",
   "clueBound": "This 3's other edges can give it only 2, counting the marked corner as one, so this edge must be a line.",
   "clueFull": "This 0 takes no lines, so each ringed edge can't be a line.",
   "clueOneShort": "This 3 can spare one edge and must spare it at the outlined dot, which has a line, so each ringed edge must be a line.",

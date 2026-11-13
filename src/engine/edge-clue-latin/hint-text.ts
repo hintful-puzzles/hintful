@@ -14,7 +14,7 @@ import { displayChar } from "./state.ts";
 
 /** The value vocabulary for the shared generic-Latin arms. */
 export function edgeClueVocab(order: number): LatinVocab {
-  return { noun: "number", value: (n) => displayChar(n, order) };
+  return { noun: "number", cell: "cell", value: (n) => displayChar(n, order) };
 }
 
 /** Values that all go ("clashes with 1 and 2"), as the board prints them. */

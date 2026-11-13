@@ -641,7 +641,12 @@ function buildSteps(
       words: narrate(reason, m, w, id, continues),
     }),
     strikeWords: (marks, reason) => premise(reason, marks, id),
-    notes: { noun: "element", placedVerb: "placed", value: (n) => toChar(n, id) },
+    notes: {
+      noun: "element",
+      placedVerb: "placed",
+      cell: "cell",
+      value: (n) => toChar(n, id),
+    },
     rungs: [leads],
     placement: placing,
   });
@@ -804,12 +809,12 @@ export const groupGame: Game<
   hintRungs: GROUP_RUNGS,
   hintMarks: {
     roles: {
-      ring: "the square the step fills in with a letter.",
+      ring: "the cell the step fills in with a letter.",
       strike: "the pencil marks the step crosses out.",
       outline:
-        "what the step reasons from: “this square”, whose pencil marks it crosses out, the three products an associativity step reads, the product that gives away (or rules out) the identity, a group of squares that between them already account for the letters being crossed out, the letter just placed, or “the middle square” a step weighs and the squares it reads.",
+        "what the step reasons from: “this cell”, whose pencil marks it crosses out, the three products an associativity step reads, the product that gives away (or rules out) the identity, a group of cells that between them already account for the letters being crossed out, the letter just placed, or “the middle cell” a step weighs and the cells it reads.",
       stripes:
-        'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one letter fits only the outlined squares.',
+        'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one letter fits only the outlined cells.',
     },
   },
   hintKeepTrack,

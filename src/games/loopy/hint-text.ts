@@ -238,20 +238,21 @@ export const say = {
    * the clue's count of lines, whether or not some edge was already ruled out. */
   clueBlockedPair: (clue: number, between: number, m: Marked): Sentence =>
     so({
-      look: phrase`${dot(m, "Both outlined dots")} already have a line`,
+      look: phrase`${dot(m, "Both outlined dots")} have a line`,
       follows: phrase`joining them leaves ${thisClue(m, clue)} short`,
-      // The owner's words (2026-09-19), each half its own reference.
+      // Each half its own reference (owner, 2026-09-19); the closings are the
+      // game's own, "can't be a line" and "must be lines" (2026-11-13).
       move: phrase`${mark.as(
         "ring",
         EDGE,
         m.targets.filter((e) => e === between),
         "that edge",
-      )} is out and ${mark.as(
+      )} can't be one and ${mark.as(
         "ring",
         EDGE,
         m.targets.filter((e) => e !== between),
-        `the other ${clue}`,
-      )} are lines`,
+        "the rest",
+      )} must be lines`,
     }),
 
   deadEnd: (m: Marked): Sentence =>

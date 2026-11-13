@@ -83,7 +83,7 @@ function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
     case "separate":
       return so({
         look: phrase`${mark.as("outline", CELL, p.area, "These two squares")} ${said.points ? "point at" : "go with"} ${mark.as("outline", DOT, p.refDots, "different outlined dots")}`,
-        follows: phrase`they belong to different galaxies`,
+        follows: phrase`they're in different galaxies`,
         move: phrase`${mark.the("ring", WALL, p.targetWalls, "edge")} must be a wall`,
       });
 
@@ -111,7 +111,7 @@ function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
           })
         : so({
             look: pair,
-            move: phrase`${mark.the("outline", WALL, p.walls, "wall")} must be mirrored by ${wall}`,
+            move: phrase`${wall} must match ${mark.the("outline", WALL, p.walls, "wall")}`,
           });
     }
 

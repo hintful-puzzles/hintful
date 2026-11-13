@@ -161,7 +161,12 @@ function buildSteps(
     // The narration names a cell's relationship to its neighbor, so a firing is
     // one leg per cell: a link's two ends, greater and lesser, are two legs.
     strikeAxis: (op) => op.y * o + op.x,
-    notes: { noun: "number", placedVerb: "standing", value: edgeClueVocab(o).value },
+    notes: {
+      noun: "number",
+      placedVerb: "standing",
+      cell: "cell",
+      value: edgeClueVocab(o).value,
+    },
   });
   return steps;
 }
@@ -244,12 +249,12 @@ export const unequalGame: Game<
   hintRungs: UNEQUAL_RUNGS,
   hintMarks: {
     roles: {
-      ring: "the square the step fills in with a number.",
+      ring: "the cell the step fills in with a number.",
       strike: "the pencil marks the step crosses out.",
       outline:
-        'what the step reasons from: the two squares either side of a sign (the one whose marks are struck, and "the outlined smaller side" or "larger side" across it), the squares that already account for the numbers being crossed out, the number just placed, or "the middle square" a step weighs and the squares it reads.',
+        'what the step reasons from: the two cells either side of a sign (the one whose marks are struck, and "the outlined smaller side" or "larger side" across it), the cells that already account for the numbers being crossed out, the number just placed, or "the middle cell" a step weighs and the cells it reads.',
       stripes:
-        'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one number fits only the outlined squares.',
+        'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one number fits only the outlined cells.',
     },
   },
   hintKeepTrack,

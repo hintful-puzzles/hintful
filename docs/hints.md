@@ -73,6 +73,7 @@ Each step names the file of `src/skeleton/grid/` that already does it.
 | – The sentences live in one file per game | you add, move or reword a sentence |
 | – No em-dashes | a sentence wants a dash |
 | – Conclude with the action the move makes | a step strikes candidates, or its words claim a placement |
+| – One noun, two closings | a sentence says "cell" or "square", or closes a move on a mark or a struck value |
 | – Sanity-read at the degenerate extremes | a sentence interpolates a clue, a count or a size |
 | – Name elements by what the player can see | a sentence names a tile, a line or a place on the board |
 | – Rules belong in the help | a sentence opens with a fact true of every step |
@@ -658,13 +659,45 @@ Make the conclusion clause match the move's type:
 - **A placement keeps the positive necessity voice** ("it can only be 4").
 - **Never imply a placement the rule does not establish.** A sentence that
   claims a unique value belongs to a step that places it: `pencilStrike` is
-  "rule out", `set` is "must be".
+  "must go", `set` is "must be".
 
 On the candidate walk the conclusion is not the game's to write: a strike's
 words are its premise, and the walk ends the sentence by the move the step
 makes (`hints-candidates.md` § "The shared candidate-hint machinery"). The
 game's sentences there only have to read well before ", so …". Exemplar:
 `premise` in [`towers/index.ts`](../src/games/towers/index.ts).
+
+### One noun, two closings
+
+The collection says one word for a board position, and ends a move in one of
+two ways (owner, 2026-11-13, `standardize-hint-vocabulary`).
+
+- **The noun is "square".** The engine's defaults (`engine/hint-text.ts`'s
+  `populateText`, `cleanObviousText`, `thisCell`, the Latin arms, `wingHelp`)
+  say "square", and a game's own sentences and its help say it too. A game
+  keeps "cell" only where its theme needs it, and **declares it once**, with
+  the reason beside the declaration: a `cell` in its `notes` or `LatinVocab`,
+  or a local `thisCellNamed("cell")`. The ones that do: the Latin and Sudoku
+  family (a "square" is also the whole grid, "Latin square": Abcd, Adjacent,
+  Group, Keen, Mathrax, Seismic, Solo, Towers, Unequal), Subsets and Unruly (their help says "cell"
+  about twice as often as "square"), and Bricks (the board is hexagons). The
+  help page uses the same noun; one that says "cell" where the hint says
+  "square" is fixed with the hint (`{{wing:cell}}` in a keeping game's help).
+- **A mark ends "must be {the game's off-mark}"**: grass, water, blocked,
+  empty, unused, "a line", "crossed out". One word per game, the one its help
+  teaches. **A struck value or note ends "must go"** (§ "Conclude with the
+  action the move makes").
+- **"rule out" and "is out" are retired as closings**, and so is ", so there
+  is something to cross out" (the notes are on the board). Mastermind keeps
+  "is out" for a color that is out of the answer, where no mark of the
+  player's is involved. `hint-retired-phrases.test.ts` scans every hinting
+  game's source and the engine's for them.
+- **One form per kind of deduction**, where games say the same thing: a
+  last candidate is "Every other {value} has been ruled out in {this}"; a met
+  count is "{This row} already has {its one / both / all k} {thing}" and does
+  not restate the clue ("its number allows"); a neighbor's cull is "The {v}
+  just placed can't repeat in {its row and column}". A game keeps its own form
+  where its mark differs, and the form says why.
 
 ### Sanity-read at the degenerate extremes
 
