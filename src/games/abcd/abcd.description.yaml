@@ -97,6 +97,9 @@ techniques:
     tier: Easy
     for: "L in lines, d in domain, v = clue(count, L, d) where v >= 0 and holds(L, d) >= v"
     conclude: "holds(L, d) = v and (forall c in cells(L) where not known(c): strike(c, d))"
+    says:
+      terms: { L: L, d: d, v: v }
+      marks: {}
   # A square down to one letter holds it. One with none left makes the marks
   # inconsistent.
   - id: single
@@ -117,3 +120,6 @@ techniques:
     conclude: >-
       forall c in O where |stretch(L, c, O)| mod 2 = 1 and index(c, stretch(L, c, O)) mod 2 = 0:
       place(c, d)
+    says:
+      terms: { L: L, d: d, v: v }
+      marks: {}

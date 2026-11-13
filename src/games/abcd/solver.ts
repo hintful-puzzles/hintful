@@ -165,33 +165,18 @@ export function dealtOf(p: AbcdParams, numbers: Int32Array): abcd.Dealt {
   return { count: clueList(at, v, perPlace(p.w + p.h, 0)), n: p.n };
 }
 
-/** Why a line's technique fired, for the hint: the line, the letter (one
- * more than its index), and the line's number for it. */
-export interface LineReason {
-  kind: "satisfied" | "runs";
-  line: number;
-  d: number;
-  clue: number;
-}
-
-/** The ladder over the dealt numbers, each technique with its reason. */
+/** The ladder over the dealt numbers. A line technique's firing says its line,
+ * its letter (one more than its index) and the line's number for it
+ * (`says` in the description). */
 export function abcdLadder(p: AbcdParams, dl: abcd.Dealt): Ladder {
   return describedLadder(
     abcd,
     {
       placed: uncluedPlacingRung(abcd.placed),
       placedDiagonal: uncluedPlacingRung(abcd.placedDiagonal),
-      satisfied: compiledRung(
-        abcd.satisfied,
-        dl,
-        ({ L, d, v }): LineReason => ({ kind: "satisfied", line: L, d, clue: v }),
-      ),
+      satisfied: compiledRung(abcd.satisfied, dl),
       single: uncluedRung(abcd.single, () => ({ kind: "single" })),
-      runs: compiledRung(
-        abcd.runs,
-        dl,
-        ({ L, d, v }): LineReason => ({ kind: "runs", line: L, d, clue: v }),
-      ),
+      runs: compiledRung(abcd.runs, dl),
     },
     undefined,
     variationsOf(p),

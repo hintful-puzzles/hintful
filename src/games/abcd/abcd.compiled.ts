@@ -19,6 +19,16 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "satisfied" | "single" | "runs";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  satisfied: SatisfiedSays;
+  runs: RunsSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["satisfied","runs"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "placed" | "placedDiagonal";
 
@@ -159,10 +169,16 @@ export interface SatisfiedBinding {
   v: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SatisfiedSays {
+  terms: { L: number; d: number; v: number; };
+  marks: {  };
+}
+
 const satisfiedFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function satisfied(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SatisfiedBinding> | null): number {
+export function satisfied(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SatisfiedBinding, SatisfiedSays> | null): number {
   const facts = satisfiedFacts;
   let fired = 0;
   let changed = false;
@@ -238,7 +254,10 @@ export function satisfied(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Satisfi
         if (!(_c36)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, d: v_d, v: v_v }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { L: v_L, d: v_d, v: v_v }, marks: {  } };
+            if (!fire({ L: v_L, d: v_d, v: v_v }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -293,10 +312,16 @@ export interface RunsBinding {
   O: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface RunsSays {
+  terms: { L: number; d: number; v: number; };
+  marks: {  };
+}
+
 const runsFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function runs(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RunsBinding> | null): number {
+export function runs(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RunsBinding, RunsSays> | null): number {
   const _g33: number[] = [];
   const facts = runsFacts;
   let fired = 0;
@@ -398,7 +423,10 @@ export function runs(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RunsBinding>
           if (!(_q62)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, d: v_d, v: v_v, O: v_O.slice() }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { L: v_L, d: v_d, v: v_v }, marks: {  } };
+              if (!fire({ L: v_L, d: v_d, v: v_v, O: v_O.slice() }, facts, _says)) return 1;
+            }
           }
         }
       }

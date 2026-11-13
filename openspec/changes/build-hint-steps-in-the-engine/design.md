@@ -960,6 +960,27 @@ does not fit a convention is a question about the convention).
   square; the first read of what is next. Range and Bricks are one technique
   each away from it (`reach`, `three`).
 
+### The candidate games, read from Abcd (2026-11-13)
+
+- **What a candidate game still writes** (`abcd/hint.ts`, `seismic/hint.ts`):
+  the walk is already the engine's (`runCandidatePlan`), so what is per game is
+  (a) a `Rung` wrapper per line technique that turns the compiled firings into
+  legs and a reason object, (b) `placeWords` and `strikeWords` switching on that
+  reason's kind, and (c) the move adapter. Only (a) and (b) are what
+  `says` could replace; (c) is a notation fact (`bit`, the move names) and stays.
+- **Done on Abcd**: its `satisfied` and `runs` now `say` their `L`, `d`, `v`, so
+  the solver's two reason callbacks (`LineReason`) are gone and the hint reads
+  the terms. That is all that moves without an engine piece; the wrappers and
+  the words are unchanged and the hint tests pass as they were.
+- **The engine piece that remains** is a `describedCandidateRungs`: a technique's
+  firing becomes a candidate-walk `Rung` from its `says` (a `strike` conclusion a
+  strike leg, a `place` a placement leg), with the words given per kind from
+  `FiringSpoken`, as `describedFiringHint` does for cells. Its unknowns are the
+  walk's `reads` for a firing taken off the player's notes (`shown`, not the
+  solver's candidates), the `populated` and `nothingEarlier` gates the wrappers
+  read, and the Latin games' `latinPremise`. Design it against Abcd and Seismic
+  together, then Undead and Crossing, then the Latin family.
+
 ### The per-fact `says` (a design, 2026-11-13, read against `compile.ts`)
 
 Where a technique places several squares and each has its own evidence (Bricks'

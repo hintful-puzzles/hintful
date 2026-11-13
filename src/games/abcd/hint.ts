@@ -39,18 +39,13 @@ import { rangeMask } from "../../engine/describe-runtime.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { candidateConclusions } from "../../engine/hint-text.ts";
-import { CellMarks, type Ladder } from "../../engine/ladder-runtime.ts";
+import { CellMarks, type Ladder, type Said } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";
 import type { Point } from "../../engine/types.ts";
+import type { SaysById } from "./abcd.compiled.ts";
 import { LETTERS, type LineMarks, type LineWord, say } from "./hint-text.ts";
-import {
-  abcdLadder,
-  abcdSpace,
-  dealtOf,
-  type LineReason,
-  neighbors,
-} from "./solver.ts";
+import { abcdLadder, abcdSpace, dealtOf, neighbors } from "./solver.ts";
 import {
   type AbcdMove,
   type AbcdParams,
@@ -173,10 +168,10 @@ function lineFirings(
   const got = ladder.entries.find((e) => e.id === id)?.run.firings?.(m);
   if (got === undefined || got === "contradiction") return [];
   return got.map(({ facts, reasons }) => {
-    const { line, d, clue } = reasons[0] as LineReason;
+    const { L, d, v } = (reasons[0] as Said<unknown, SaysById[typeof id]>).says.terms;
     const cells: number[] = [];
     for (let i = 0; i < facts.length; i += 3) cells.push(facts[i + 1]);
-    return { line, n: d, clue, cells };
+    return { line: L, n: d, clue: v, cells };
   });
 }
 
