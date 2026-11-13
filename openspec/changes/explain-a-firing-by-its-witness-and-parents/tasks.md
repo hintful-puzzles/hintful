@@ -22,7 +22,7 @@
 
 ## 4. Candidates a player cannot write
 
-- [ ] 4.1 A technique that strikes states a clause; a step resting on a struck candidate says its parents' clauses
+- [ ] 4.1 A technique that strikes states a clause; a step resting on a struck candidate says its parents' clauses. **Scoped 2026-11-13 (ninth session), nothing built**: read, not measured. (a) Magnets and Filling already run `ladderWalk` over compiled techniques (Magnets' `says.marks.reads`), so the fact graph (`walk.graph`, `restsOn`) is available to them now; Ascent and Salad are hand recorders and wait for `hint-candidate-games-from-firings`. (b) Magnets' `reading.ts` (`whyNot`: touch / full / partner) does not re-derive a hidden candidate: its module doc says every bit the solver sets is one the board already shows, and `magnets-reading.test.ts` holds that. A clause in its place must name what `whyNot` names (touch, a full line counting marked magnets, the partner end) or the words move; judge by the hint test's snapshots before the module's size. (c) First step for the next session: opt Magnets' techniques into `says.reads` and compare `restsOn` for a struck bit with `whyNot`'s answer over the hint test's boards. If they agree, a technique's clause can replace `NotReason`; if not, 4.2 is declined for Magnets with the disagreements as the reason
 - [ ] 4.2 Magnets, Ascent, Filling, Salad drop their re-derivations
 - [ ] 4.3 The candidate plan runs on any space; Map and Undead drop their own
 
