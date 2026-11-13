@@ -121,7 +121,7 @@ export const say = {
   /** A placement: `bits` is the one monster the cell's notes still allow. */
   single: (bits: number, m: Marked): Sentence =>
     so({
-      look: phrase`Every other monster is crossed out in ${thisCell(m)}`,
+      look: phrase`Every other monster has been ruled out in ${thisCell(m)}`,
       move: phrase`it can only be a ${joinMonsters(bits)}`,
     }),
 };

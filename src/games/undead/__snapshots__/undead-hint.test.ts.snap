@@ -7288,7 +7288,7 @@ exports[`undead: pinned hint positions > says, at each pin 1`] = `
   "populate": "Start by penciling every monster into each empty square.",
   "sightline": "This sightline's 0 and 0 leave no room for a ghost or zombie in this square, so the struck ghost and zombie must go.",
   "sightlineStrike": "This sightline's 0 and 0 leave no room for a ghost or zombie in this square, so the struck ghost and zombie must go.",
-  "single": "Every other monster is crossed out in this square, so it can only be a vampire.",
+  "single": "Every other monster has been ruled out in this square, so it can only be a vampire.",
   "strike": "This sightline's 0 and 0 leave no room for a ghost or zombie in this square, so the struck ghost and zombie must go.",
   "total": "No vampires are left to place, so no undecided square can be one: the struck vampires in these squares must go.",
 }

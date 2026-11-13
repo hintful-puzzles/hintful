@@ -194,7 +194,7 @@ export const say = {
             move: phrase`${ringed(m.waters, "every other square in it")} must be water`,
           })
         : so({
-            look: phrase`${line} already has the ${t.line.clue} boat square${plural(t.line.clue)} its number allows`,
+            look: phrase`${line} already has ${t.line.clue === 1 ? "its one boat square" : t.line.clue === 2 ? "both its boat squares" : `all ${t.line.clue} of its boat squares`}`,
             move: phrase`${ringed(m.waters, "every remaining square in it")} must be water`,
           });
   },
