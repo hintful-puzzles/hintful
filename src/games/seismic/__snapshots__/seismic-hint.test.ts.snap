@@ -7,7 +7,7 @@ exports[`seismic: pinned hint positions > says, at each pin 1`] = `
   "hidden": "No other cell in the striped area can still be 3, so this cell must be 3.",
   "note": "Only 2 and 3 aren't already in this cell's area or within reach along its row or column, so pencil them in.",
   "placement": "Every other number is already in this cell's area or within reach along its row or column, so it can only be 1.",
-  "populate": "Start by penciling every candidate number into each empty cell, so there is something to cross out.",
+  "populate": "Start by penciling every candidate number into each empty cell.",
   "regionsFull": "Every other number is already in this cell's area or within reach along its row or column, so it can only be 1.",
   "severalNotes": "The striped area's 4 can only go in a cell touching each of these cells, so their 4s must go.",
   "single": "Every other number has been ruled out in this cell, so it can only be 3.",

@@ -5150,7 +5150,7 @@ exports[`rome: pinned hint positions > says, at each pin 1`] = `
   "opensOnLoop": "The arrow in the square below points back to this square, so this square's down mark must go.",
   "opposite": "Its left neighbor in this area must point right (a loop) or left (two lefts), so this square must point right.",
   "pair": "Two squares of this area must take up or down between them, so the up mark of the area must go.",
-  "populate": "Start by penciling every candidate arrow into each empty square, so there is something to cross out.",
+  "populate": "Start by penciling every candidate arrow into each empty square.",
   "reach": "Every square needs a goal, and only one mark in this square leads to the striped group, so its other marks must go.",
   "regionsFull": "Every other way this square can point is already used in its area, so it must point left.",
   "single": "Every other arrow has been ruled out in this square, so it must point down.",

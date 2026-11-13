@@ -104,9 +104,7 @@ function conclude(
 export const say = {
   /** The populate reading's opening, the Mark-all press's fill. */
   fillAll: unshaped(
-    Narration.plain(
-      "Start by dotting all four colors into each blank region, so there is something to cross out.",
-    ),
+    Narration.plain("Start by dotting all four colors into each blank region."),
     "setup",
   ),
 

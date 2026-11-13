@@ -973,12 +973,9 @@ export const MODULES = [
       {
         within: "populateText",
         why: "the populate opener says “cell” for a game whose board positions are squares",
-        find:
-          "  return `Start by penciling every candidate ${noun} into each empty ${cell}, " +
-          "so there is something to cross out.`;",
+        find: "  return `Start by penciling every candidate ${noun} into each empty ${cell}.`;",
         replace:
-          "  return `Start by penciling every candidate ${noun} into each empty cell, " +
-          "so there is something to cross out.`;",
+          "  return `Start by penciling every candidate ${noun} into each empty cell.`;",
       },
     ],
   },

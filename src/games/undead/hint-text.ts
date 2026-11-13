@@ -80,9 +80,7 @@ export const say = {
   // Undead's opener is its own: it pencils monsters, not the candidate games'
   // values (`engine/hint-text.ts`'s `populateText`).
   populate: unshaped(
-    Narration.plain(
-      "Start by penciling every monster into each empty cell, so there is something to cross out.",
-    ),
+    Narration.plain("Start by penciling every monster into each empty cell."),
     "setup",
   ),
 

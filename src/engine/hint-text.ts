@@ -110,7 +110,7 @@ export function edgeContinuation(
  * ("penciling every monster into…") is structurally different and stays
  * game-local. */
 export function populateText(noun: string, cell = "cell"): string {
-  return `Start by penciling every candidate ${noun} into each empty ${cell}, so there is something to cross out.`;
+  return `Start by penciling every candidate ${noun} into each empty ${cell}.`;
 }
 
 /** Narration for the obvious-cleanup step, parameterized by the game's noun,

@@ -11,7 +11,7 @@ exports[`group: pinned hint positions > says, at each pin 1`] = `
   "liveStrike": "The product b·a = d, not b as it would be if a were the identity, so a's identity marks must go.",
   "note": "Only a, b, c, e, g and h aren't already placed in this cell's row or column, so pencil them in.",
   "placement": "The grid shows d·b = c, b·c = f and d·(b·c) = e. In any group, (d·b)·c = d·(b·c), so (d·b)·c must also be e.",
-  "populate": "Start by penciling every candidate element into each empty cell, so there is something to cross out.",
+  "populate": "Start by penciling every candidate element into each empty cell.",
   "regionsFull": "This cell's row and column already hold every other element, so it can only be e.",
   "set": "The outlined cells already account for c and f between them, so c and f must go.",
   "single": "Every other element has been ruled out in this cell, so it can only be c.",
@@ -20,6 +20,6 @@ exports[`group: pinned hint positions > says, at each pin 1`] = `
 
 exports[`group: pinned hint positions > says, at each pin 2`] = `
 {
-  "populate": "Start by penciling every candidate element into each empty cell, so there is something to cross out.",
+  "populate": "Start by penciling every candidate element into each empty cell.",
 }
 `;

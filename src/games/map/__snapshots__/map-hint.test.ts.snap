@@ -17519,7 +17519,7 @@ exports[`map: pinned hint positions > says, at each pin 1`] = `
 {
   "clean": "Now clear the easy ones: remove from each blank region the dot of every color a neighbor already shows.",
   "deadDots": "This region's other dots match its neighbors' colors, so it must be violet.",
-  "fill": "Start by dotting all four colors into each blank region, so there is something to cross out.",
+  "fill": "Start by dotting all four colors into each blank region.",
   "lone": "This region touches pink, teal and violet, so it must be yellow.",
   "pair": "This region's neighbors show pink and violet, so it can only be yellow or teal: dot those.",
   "pairDot": "This region's neighbors show pink and violet, so it can only be yellow or teal: dot those.",

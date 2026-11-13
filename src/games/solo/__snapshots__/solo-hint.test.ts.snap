@@ -6703,7 +6703,7 @@ exports[`solo: pinned hint positions > says, at each pin 1`] = `
   "hiddenSingle": "Every other cell in this column rules out 5, so this cell must be 5.",
   "intersect": "In this column, every cell that can still take 6 lies in one block, so the 6 must go from the rest of the block.",
   "note": "Nothing in this cell's row, column, block or cage rules out a number yet, so pencil in every one.",
-  "populate": "Start by penciling every candidate number into each empty cell, so there is something to cross out.",
+  "populate": "Start by penciling every candidate number into each empty cell.",
   "regionsFull": "This cell's row, column and block already hold every other number, so it can only be 3.",
   "set": "Other cells in this block already account for 2 and 8, so this cell can only be 1 or 6.",
   "single": "Every other number has been ruled out in this cell, so it can only be 1.",

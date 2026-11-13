@@ -7285,7 +7285,7 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
 exports[`undead: pinned hint positions > says, at each pin 1`] = `
 {
   "onlyCells": "Exactly as many cells can still hold a vampire as there are vampires left to place, so this cell can only be a vampire.",
-  "populate": "Start by penciling every monster into each empty cell, so there is something to cross out.",
+  "populate": "Start by penciling every monster into each empty cell.",
   "sightline": "This sightline's 0 and 0 leave no room for a ghost or zombie in this cell, so the struck ghost and zombie must go.",
   "sightlineStrike": "This sightline's 0 and 0 leave no room for a ghost or zombie in this cell, so the struck ghost and zombie must go.",
   "single": "Every other monster is crossed out in this cell, so it can only be a vampire.",

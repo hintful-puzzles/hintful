@@ -103,7 +103,7 @@ export function say(mode: number) {
   const square = (at: Point): Narration => thisCell(at, "square");
 
   return {
-    populate: `Start by penciling every candidate ${noun} into each empty square that has none yet, so there is something to cross out.`,
+    populate: `Start by penciling every candidate ${noun} into each empty square that has none yet.`,
 
     cleanObvious: cleanObviousText(noun, "placed", "row or column", "square"),
 

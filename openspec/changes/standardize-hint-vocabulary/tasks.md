@@ -9,4 +9,16 @@
 
 ## 2. Apply
 
-- [ ] 2.1 Written once `build-hint-steps-in-the-engine` is archived
+Written 2026-11-13 once `build-hint-steps-in-the-engine` was archived, from the
+owner's answers at the top of `proposal-page.md` (their word: "square" where it
+can be used; every §3 verdict holds; two closings). Each task is its own commit,
+with the pins and snapshots it moves regenerated in it; the sentences' words are
+the only thing that changes.
+
+- [ ] 2.1 The drop rows of `proposal-page.md` §3, one commit a clause (the engine's ", so there is something to cross out" **done 2026-11-13**: the engine line, Map's, Undead's and Salad's own, 15 snapshot lines over 13 games, no other line moved; then Blackbox, the "Undo until" tails after checking each against "tell the player what to do", Galaxies, Group's "The grid shows", Tents' opener, Palisade's region size, Range, Inertia, Magnets, Cube)
+- [ ] 2.2 The reword rows: Palisade's corner, Adjacent's bar, Boats' one "and the water around it", Group's law kept as the reason
+- [ ] 2.3 The two closings: a game declares its off-mark word once ("grass", "water", "blocked", "empty") and the engine's arms and the games' sentences end "must be {off-mark}"; a struck value or note ends "must go"; "is out" and "rule out" retire (Mastermind keeps "is out", `proposal-page.md` §4)
+- [ ] 2.4 The noun: "square" wherever it can be used. The engine's `cell` defaults (`engine/hint-text.ts`) become "square"; a game that keeps "cell" declares it with the reason its theme gives. The 19 games whose hint noun disagrees with their help page are read one by one; a help page that says "cell" where "square" would do is fixed with it
+- [ ] 2.5 The kinds' standard forms in the engine's `compose` frame (`engine/hint-words.ts`): count met, count starved, last candidate, neighbor ruled out, would break; each game's own sentence for a kind replaced by the standard one where it says the same thing, and kept (with the reason) where its mark differs
+- [ ] 2.6 A guard that fails on a retired phrase ("is out" outside Mastermind, "rule out", "something to cross out") over every game's sentences, seen to fail on a planted one; `docs/hints.md` states the lexicon (the noun rule, the closings, the kinds); help pages that quote a changed wording are updated in the same commit
+- [ ] 2.7 Run the app on a board of each changed family and read each sentence against its frame
