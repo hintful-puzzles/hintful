@@ -186,6 +186,24 @@ describe("where the notes go", () => {
     expect(placeNotes(g, { isNote }).before).toEqual([[], [0, 1]]);
   });
 
+  it("takes a step to be what isStep says, and a note to be one fact of its firing", () => {
+    // Edge 1 is struck by firing 0 (half) and firing 1 (the strike that
+    // completes it: the note). Firing 2 reads the edge, and places a cell.
+    const g = new FactGraph();
+    g.record([STRIKE_EDGE, 1, 1], reads([], [4]));
+    g.record([STRIKE_EDGE, 1, 2], reads([], [4]));
+    g.record([PLACE, 20, 1], reads([], [1]));
+    const completing = (f: { id: number }) => f.id === 1;
+    const { steps, before } = placeNotes(g, {
+      isNote: completing,
+      isStep: (f) => f.kind === PLACE,
+    });
+    // Firing 0 is neither: no step, and no note since it does not complete.
+    expect(steps).toEqual([2]);
+    expect(before).toEqual([[1]]);
+    expect(g.factsAbout("edges", 1).map((f) => f.id)).toEqual([0, 1]);
+  });
+
   it("puts an expired note at its own tick, with the notes it rests on", () => {
     const g = new FactGraph();
     g.record([MARK, 1, 0], reads([10]));

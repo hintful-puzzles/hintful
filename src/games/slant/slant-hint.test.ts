@@ -9,7 +9,7 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { newDesc } from "./generator.ts";
 import type { SlantHint } from "./hint.ts";
 import { slantGame } from "./index.ts";
-import { solveFromClues } from "./solver.ts";
+import { deduceHintPlan, solveFromClues } from "./solver.ts";
 import {
   DIFF_EASY,
   DIFF_HARD,
@@ -139,6 +139,33 @@ describe("slant hint", () => {
         expect(hasEvidence).toBe(true);
       }
     }
+  });
+
+  test("a firing cites only pairs made alike before it, never by its own placement", () => {
+    // A square's own placement leaves its pair slanting alike. A step placing
+    // that square that cited the pair showed a mark before the diagonal it
+    // rests on, and said of the square it was about to draw that it was drawn
+    // (7 `equiv` firings in 150 boards, in the walk this replaced).
+    let cited = 0;
+    for (const [w, h] of [
+      [5, 5],
+      [7, 7],
+      [10, 8],
+    ]) {
+      for (let seed = 0; seed < 25; seed++) {
+        const s = freshState(w, h, DIFF_HARD, `drawn-${w}.${h}.${seed}`);
+        const plan = deduceHintPlan(w, h, s.clues, s.soln, s.alike);
+        for (const [firing, { path }] of plan.cites)
+          for (const e of path)
+            for (const f of plan.graph.factsAbout("edges", e)) {
+              // A pair the player marked has no fact; any other was made first.
+              expect(f.firing).toBeLessThan(firing);
+              cited++;
+            }
+      }
+    }
+    // Hundreds of cited pairs over 75 boards.
+    expect(cited).toBeGreaterThan(100);
   });
 
   test("clue firings lead with the indication and group as one journey", () => {

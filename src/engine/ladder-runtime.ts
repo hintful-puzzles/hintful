@@ -125,7 +125,8 @@ export class CellMarks implements Marks {
   budget?: StepBudget;
   /** The facts a walk keeps ({@link ladderWalk}), where one is walking: a
    * placing technique's strikes are made inside the placement, so it records
-   * them here as a firing of their own. */
+   * them here as a firing of their own. Set before {@link seed} to keep the
+   * strikes the given values make; {@link ladderWalk} then keeps this one. */
   graph?: FactGraph;
   /** Whether a recorded run takes every firing of a technique's pass, as the
    * solve path does, rather than one a pass. For a caller that asks which
@@ -1164,7 +1165,9 @@ export function ladderWalk<S extends CellMarks>(
     return out;
   };
   let taken: Taken<S> | null = null;
-  const graph = new FactGraph();
+  // A graph the caller set keeps what it recorded before the walk: the
+  // strikes a given diagonal made as the marks were seeded.
+  const graph = m.graph ?? new FactGraph();
   m.graph = graph;
   const techniques = entries
     .filter((e) => admits(e, caps))

@@ -1081,8 +1081,11 @@ mark exactly that reach.**
   in [`slant/hint.ts`](../src/games/slant/hint.ts).
 - **Record why each fact holds where it is derived**, with its premise and
   its parents. A union-find answers only that two things are joined, so a
-  cited chain is a shortest path through the recorded merges. Exemplars:
-  [`loopy/record.ts`](../src/games/loopy/record.ts), `SlantTrace`.
+  cited chain is a shortest path through the recorded merges, cited by the
+  firing (`ladderWalk`'s `roles.citing`) and placed by `placeNotes`, which
+  puts a note before the first step resting on it. Exemplars:
+  [`loopy/record.ts`](../src/games/loopy/record.ts), Slant's `deduceHintPlan`
+  (`slant/solver.ts`).
 - **Let the notation's gesture carry the placement it explains**, where the
   player would make both at once; a player who makes the placement alone is
   on track, and the step shrinks to the note. Exemplar: the link in

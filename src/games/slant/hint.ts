@@ -5,10 +5,13 @@
  * The solver's equivalence classes are facts the board did not show, so a
  * firing that uses one cites the marks joining its two squares, and every
  * merge on that path the player has not marked becomes a step placing the
- * mark, narrated by why the merge holds (`SlantTrace`).
+ * mark, narrated by why the merge holds. Where each mark goes is the walk's
+ * fact graph's (`placeNotes`).
  */
 
+import { PLACE } from "../../engine/describe-runtime.ts";
 import { Dsf } from "../../engine/dsf.ts";
+import { placeNotes } from "../../engine/fact-graph.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { Narration, Sentence } from "../../engine/hint-words.ts";
@@ -18,7 +21,6 @@ import {
   deduceHintPlan,
   type SlantFiring,
   type SlantMerge,
-  type SlantTrace,
   type VWhy,
 } from "./solver.ts";
 import type { AlikeDir, SlantMove, SlantState } from "./state.ts";
@@ -148,6 +150,10 @@ function whereOf(sq: number, horizontal: boolean, pt: number, w: number): string
   return pt % W === sq % w ? "on the left" : "on the right";
 }
 
+/** Why a v-shape (`sq * 4 + bit`) is ruled out, as the step being narrated
+ * finds it. */
+type WhyOf = (key: number) => VWhy | null;
+
 /** What a v-shape argument reads, gathered while narrating it. */
 interface VEvidence {
   clues: number[];
@@ -162,7 +168,7 @@ interface VEvidence {
  * diagonal for the first kind and a 3 or a placed diagonal for the second.
  */
 function lineReason(
-  trace: SlantTrace,
+  vWhy: WhyOf,
   key: number,
   two: number,
   touch: boolean,
@@ -173,7 +179,7 @@ function lineReason(
   let hops = 1;
   let last = two;
   for (;;) {
-    const why = trace.vWhy[key];
+    const why = vWhy(key);
     if (why === null) throw new Error("slant hint: a v-shape with no reason");
     const g = vGeometry(key >> 2, key & 3, w);
     ev.squares.push(key >> 2, g.partner);
@@ -235,14 +241,14 @@ function beyondOf(
 
 /** The clause saying why the pair can't form v-shape `key`. */
 function vClause(
-  trace: SlantTrace,
+  vWhy: WhyOf,
   key: number,
   w: number,
   soln: Int8Array,
   clues: Int8Array,
   ev: VEvidence,
 ): Narration {
-  const why: VWhy | null = trace.vWhy[key];
+  const why: VWhy | null = vWhy(key);
   const sq = key >> 2;
   const g = vGeometry(sq, key & 3, w);
   if (why === null) throw new Error("slant hint: a v-shape with no reason");
@@ -264,7 +270,7 @@ function vClause(
       const where = whereOf(sq, g.horizontal, why.pt, w);
       const touch = why.pt === g.meet;
       const sub: VEvidence = { clues: [], squares: [] };
-      const { end } = lineReason(trace, why.from, why.pt, touch, w, soln, sub);
+      const { end } = lineReason(vWhy, why.from, why.pt, touch, w, soln, sub);
       ev.clues.push(...sub.clues);
       ev.squares.push(...sub.squares);
       const beyond = beyondOf(sub, clues, w, [why.pt], []);
@@ -276,14 +282,14 @@ function vClause(
 /** The clauses for a pair's two ruled-out v-shapes, `keys`: one each, or one
  * for both when a 1 (or a 3) sits at each end. */
 function vClauses(
-  trace: SlantTrace,
+  vWhy: WhyOf,
   keys: number[],
   w: number,
   soln: Int8Array,
   clues: Int8Array,
   ev: VEvidence,
 ): Narration[] {
-  const whys = keys.map((k) => trace.vWhy[k]);
+  const whys = keys.map((k) => vWhy(k));
   const [a, b] = whys;
   if (a?.kind === "clue" && b?.kind === "clue" && a.c === b.c) {
     ev.clues.push(a.pt, b.pt);
@@ -291,9 +297,9 @@ function vClauses(
   }
   // A clause carried across a 2 has its own "as", so it goes last, where the
   // sentence's closing "so" cannot be read as part of the other clause.
-  const across = (k: number) => (trace.vWhy[k]?.kind === "two" ? 1 : 0);
+  const across = (k: number) => (vWhy(k)?.kind === "two" ? 1 : 0);
   const ordered = [...keys].sort((x, y) => across(x) - across(y));
-  return ordered.map((k) => vClause(trace, k, w, soln, clues, ev));
+  return ordered.map((k) => vClause(vWhy, k, w, soln, clues, ev));
 }
 
 /** One end of a line of 2s: how many 2s lie between the pair and the cap,
@@ -314,13 +320,13 @@ interface LineEnd {
 
 /** The end of the pair's line that ruled-out v-shape `key` reaches. */
 function lineEnd(
-  trace: SlantTrace,
+  vWhy: WhyOf,
   key: number,
   w: number,
   soln: Int8Array,
   ev: VEvidence,
 ): LineEnd {
-  const why = trace.vWhy[key];
+  const why = vWhy(key);
   if (why === null) throw new Error("slant hint: a v-shape with no reason");
   const g = vGeometry(key >> 2, key & 3, w);
   switch (why.kind) {
@@ -342,7 +348,7 @@ function lineEnd(
     case "two": {
       ev.clues.push(why.pt);
       const touch = why.pt === g.meet;
-      const r = lineReason(trace, why.from, why.pt, touch, w, soln, ev);
+      const r = lineReason(vWhy, why.from, why.pt, touch, w, soln, ev);
       return {
         at: why.pt,
         twos: r.hops,
@@ -362,7 +368,7 @@ function lineEnd(
  * one such line.
  */
 function vLine(
-  trace: SlantTrace,
+  vWhy: WhyOf,
   keys: number[],
   mark: SlantMark,
   pair: readonly number[],
@@ -374,7 +380,7 @@ function vLine(
   // One scratch per end, so the words can tell the pair across a 2 from the
   // pairs beyond it.
   const scratches: VEvidence[] = keys.map(() => ({ clues: [], squares: [] }));
-  const [a, b] = keys.map((k, i) => lineEnd(trace, k, w, soln, scratches[i]));
+  const [a, b] = keys.map((k, i) => lineEnd(vWhy, k, w, soln, scratches[i]));
   // A placed diagonal caps the line at the end it does not miss, and its kind
   // is the other end's: the pair gives that end exactly what the far side
   // lets it.
@@ -441,44 +447,6 @@ function vLine(
 
 // --- the plan ---------------------------------------------------------------
 
-/** The merges joining `from` to the nearest square `goal` accepts, through the
- * first `bound` merges; shortest first, ties by merge order. */
-function linkPath(
-  merges: readonly SlantMerge[],
-  bound: number,
-  from: number,
-  goal: (sq: number) => boolean,
-): { path: number[]; end: number } {
-  const adj = new Map<number, { to: number; m: number }[]>();
-  for (let i = 0; i < bound; i++) {
-    const { a, b } = merges[i];
-    for (const [u, v] of [
-      [a, b],
-      [b, a],
-    ]) {
-      const list = adj.get(u) ?? [];
-      list.push({ to: v, m: i });
-      adj.set(u, list);
-    }
-  }
-  const prev = new Map<number, { from: number; m: number } | null>([[from, null]]);
-  const queue = [from];
-  for (let qi = 0; qi < queue.length; qi++) {
-    const u = queue[qi];
-    if (u !== from && goal(u)) {
-      const path: number[] = [];
-      for (let p = prev.get(u); p; p = prev.get(p.from)) path.push(p.m);
-      return { path, end: u };
-    }
-    for (const e of adj.get(u) ?? []) {
-      if (prev.has(e.to)) continue;
-      prev.set(e.to, { from: u, m: e.m });
-      queue.push(e.to);
-    }
-  }
-  throw new Error("slant hint: an equivalence with no recorded path");
-}
-
 /** Whether a clue-pair merge's sentence still holds on `grid`: the clue's
  * only open squares, beside the pair it counts, are the merge's two, and it
  * needs exactly one more line. */
@@ -510,7 +478,7 @@ function cluePremiseHolds(
 /** Narrate the step placing merge `m`'s mark, with its evidence. */
 function markStep(
   m: SlantMerge,
-  trace: SlantTrace,
+  vWhy: WhyOf,
   grid: Int8Array,
   clues: Int8Array,
   cites: SlantMark[],
@@ -540,8 +508,8 @@ function markStep(
     const ev: VEvidence = { clues: [], squares: [] };
     const keys = bits.map((bit) => lo * 4 + bit);
     words =
-      vLine(trace, keys, mark, [m.a, m.b], w, grid, clues, ev) ??
-      say.markV(mark, vClauses(trace, keys, w, grid, clues, ev));
+      vLine(vWhy, keys, mark, [m.a, m.b], w, grid, clues, ev) ??
+      say.markV(mark, vClauses(vWhy, keys, w, grid, clues, ev));
     const read = [...new Set(ev.clues)].map((p) => ({
       x: p % W,
       y: Math.floor(p / W),
@@ -690,58 +658,40 @@ export function slantHint(
   state: SlantState,
 ): HintResult<SlantMove, SlantHint, SlantRung> {
   const { w, h } = state;
-  const { firings, trace } = deduceHintPlan(w, h, state.clues, state.soln, state.alike);
+  const plan = deduceHintPlan(w, h, state.clues, state.soln, state.alike);
+  const { firings, cites } = plan;
   if (firings.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  const merges = trace.merges;
   const boardBefore = (i: number): Int8Array =>
     i === 0 ? state.soln : firings[i - 1].grid;
-  const boundAt = (tick: number): number => {
-    let n = 0;
-    while (n < merges.length && merges[n].tick <= tick) n++;
-    return n;
-  };
+  const stepOf = new Map(firings.map((f, i) => [f.id, i]));
 
-  // What each firing and each clue-pair merge cites.
-  const firingCites: number[][] = [];
-  const anchors: (number | null)[] = [];
-  firings.forEach((f, i) => {
-    const bound = boundAt(i);
-    if (f.technique === "equiv") {
-      const t = f.moves[0].y * w + f.moves[0].x;
-      const board = boardBefore(i);
-      const { path, end } = linkPath(merges, bound, t, (sq) => board[sq] !== 0);
-      firingCites.push(path);
-      anchors.push(end);
-    } else if (f.pair) {
-      const [a, b] = f.pair;
-      firingCites.push(linkPath(merges, bound, a, (sq) => sq === b).path);
-      anchors.push(null);
-    } else {
-      firingCites.push([]);
-      anchors.push(null);
-    }
-  });
-  const mergeCites = merges.map((m, i) => {
-    if (m.why.kind !== "clue" || m.why.pair === null) return [];
-    const [a, b] = m.why.pair;
-    return linkPath(merges, i, a, (sq) => sq === b).path;
-  });
-
-  // Where each needed mark goes: before the first firing citing it, or the
-  // first mark citing it, whichever comes first.
-  const pos = new Array<number>(merges.length).fill(Number.POSITIVE_INFINITY);
-  firingCites.forEach((cites, i) => {
-    for (const m of cites) pos[m] = Math.min(pos[m], i);
-  });
-  for (let m = merges.length - 1; m >= 0; m--) {
-    if (pos[m] === Number.POSITIVE_INFINITY || merges[m].why.kind === "note") continue;
-    if (!cluePremiseHolds(merges[m], boardBefore(pos[m]), w, h))
-      pos[m] = merges[m].tick;
-    for (const d of mergeCites[m]) pos[d] = Math.min(pos[d], pos[m]);
+  // The merges each firing made, by their facts.
+  const madeBy = new Map<number, { fact: number; merge: SlantMerge }[]>();
+  for (const [fact, merge] of plan.merges) {
+    const { firing } = plan.graph.facts[fact];
+    const list = madeBy.get(firing) ?? [];
+    list.push({ fact, merge });
+    madeBy.set(firing, list);
   }
+  // Where each mark goes: before the first step that rests on it, and on the
+  // marks it rests on, unless its sentence has expired by then.
+  const { steps: stepFirings, before } = placeNotes(plan.graph, {
+    isNote: (f) => plan.merges.has(f.id),
+    isStep: (f) => f.kind === PLACE,
+    expired: (note, step) =>
+      (madeBy.get(note) ?? []).some(
+        ({ merge }) =>
+          !cluePremiseHolds(merge, boardBefore(stepOf.get(step) ?? 0), w, h),
+      ),
+  });
+  if (stepFirings.some((f, i) => f !== firings[i].id))
+    throw new Error("slant hint: the graph's steps are not the firings");
 
-  const marksOf = (path: number[]) =>
-    path.map((m) => markOf(merges[m].a, merges[m].b, w));
+  const marksOf = (path: readonly number[]) =>
+    path.map((e) => {
+      const [a, b] = plan.ends(e);
+      return markOf(a, b, w);
+    });
   const steps: Step[] = [];
   firings.forEach((firing, i) => {
     let first = true;
@@ -749,25 +699,25 @@ export function slantHint(
       steps.push(first ? step : { ...step, continuesPrevious: true });
       first = false;
     };
-    for (let m = 0; m < merges.length; m++) {
-      if (pos[m] !== i || merges[m].why.kind === "note") continue;
-      push(
-        markStep(
-          merges[m],
-          trace,
-          boardBefore(i),
-          state.clues,
-          marksOf(mergeCites[m]),
-          w,
-          h,
-        ),
-      );
-    }
-    const cites = firingCites[i];
+    for (const note of before[i])
+      for (const { fact, merge } of madeBy.get(note) ?? [])
+        push(
+          markStep(
+            merge,
+            (key) => plan.vWhy(key, fact),
+            boardBefore(i),
+            state.clues,
+            marksOf(cites.get(note)?.path ?? []),
+            w,
+            h,
+          ),
+        );
+    const cited = cites.get(firing.id);
     for (let leg = 0; leg < firing.moves.length; leg++) {
       const highlights = firingHighlights(firing, leg, w, h);
-      if (leg === 0 && cites.length) highlights.marks = marksOf(cites);
-      const anchor = anchors[i];
+      if (leg === 0 && cited && cited.path.length)
+        highlights.marks = marksOf(cited.path);
+      const anchor = cited?.anchor ?? null;
       if (anchor !== null) highlights.ref = pointOf(anchor, w);
       const words = narrate(firing, leg, highlights, w);
       push({

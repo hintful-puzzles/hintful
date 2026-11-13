@@ -139,6 +139,11 @@ export class FactGraph {
     return made;
   }
 
+  /** The facts about one element, in the order made. */
+  factsAbout(space: Space, at: number): readonly Fact[] {
+    return (this.about[space].get(at) ?? []).map((id) => this.facts[id]);
+  }
+
   /** What fact `id` rests on: what its firing read, and what those facts
    * read in turn, from the position the fact was made at. */
   restsOn(id: number): Rests {
@@ -190,6 +195,13 @@ export interface NotePlacement {
   /** Whether a fact is one the player cannot see as a mark on the board. */
   readonly isNote: (fact: Fact) => boolean;
   /**
+   * Whether a fact makes its firing a step. Absent, every fact that is not a
+   * note does. A game whose notes are some of an element's facts (Slant's
+   * merge is the strike that completes it; the strike before is no note and
+   * no step) says it.
+   */
+  readonly isStep?: (fact: Fact) => boolean;
+  /**
    * Whether the sentence of the note made by firing `note` has stopped
    * holding by the time step `step` (both by place in the walk): a note whose
    * sentence quotes the board goes at its own tick, not beside its consumer.
@@ -212,7 +224,7 @@ export interface NotePlacement {
  */
 export function placeNotes(
   graph: FactGraph,
-  { isNote, expired }: NotePlacement,
+  { isNote, isStep = (f) => !isNote(f), expired }: NotePlacement,
 ): {
   readonly steps: readonly number[];
   readonly before: readonly (readonly number[])[];
@@ -224,7 +236,7 @@ export function placeNotes(
     else list.push(f);
   }
   const firings = [...made.keys()].sort((a, b) => a - b);
-  const steps = firings.filter((x) => !(made.get(x) ?? []).every(isNote));
+  const steps = firings.filter((x) => (made.get(x) ?? []).some(isStep));
   const restsNotes = (firing: number): Set<number> => {
     const out = new Set<number>();
     for (const fact of made.get(firing) ?? [])

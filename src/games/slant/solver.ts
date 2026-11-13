@@ -14,10 +14,11 @@ import {
   clueList,
   describedSpace,
   type GridSpace,
+  type Reads,
   rangeMask,
   slash,
 } from "../../engine/describe-runtime.ts";
-import type { FactGraph } from "../../engine/fact-graph.ts";
+import { FactGraph } from "../../engine/fact-graph.ts";
 import {
   CellMarks,
   compiledRung,
@@ -169,10 +170,13 @@ function marksOf(
   grid: Uint8Array,
   ladder: Ladder,
   alike: Uint8Array | null,
+  graph: FactGraph | null = null,
 ): CellMarks {
   const m = new CellMarks(sp, rangeMask(1, 2), grid);
   m.placing = ladder.placing;
   m.striking = ladder.striking;
+  // A diagonal given strikes v-shapes as it is seeded: a hint keeps those.
+  if (graph !== null) m.graph = graph;
   // A diagonal seeded strikes the v-shapes it rules out (`drawn`).
   m.edgeCands.fill(VEES);
   m.seed(grid);
@@ -241,6 +245,8 @@ export interface SlantPlacement {
 /** A firing that draws diagonals, as the hint narrates it. */
 export interface SlantFiring {
   technique: SlantTechnique;
+  /** Its place in the walk's graph. */
+  id: number;
   /** The squares this one firing forces (1, or up to 4 for a clue), round
    * a clue in the order upstream went round it. */
   moves: SlantPlacement[];
@@ -266,34 +272,48 @@ export type VWhy =
 /**
  * Why two adjacent squares slant alike: a clue with one line left and only
  * these two open squares around it (`pair` is a same-slant pair the clue
- * counted as one line), both of the pair's v-shapes ruled out, or the
- * player's own mark.
+ * counted as one line), or both of the pair's v-shapes ruled out. A pair the
+ * player marked is no merge: nothing made it.
  */
 export type MergeWhy =
   | { kind: "clue"; pt: number; c: number; pair: [number, number] | null }
-  | { kind: "vshape" }
-  | { kind: "note" };
+  | { kind: "vshape" };
 
 /** One same-slant merge, between two edge-adjacent squares. */
 export interface SlantMerge {
   a: number;
   b: number;
   why: MergeWhy;
-  /** The number of firings recorded before it. */
-  tick: number;
 }
 
-/** Why each same-slant fact holds, which the hint cites. */
-export class SlantTrace {
-  /** Per `sq * 4 + bit`, why that v-shape was ruled out: bit 0 a pair with
-   * the square to the right meeting below, 1 above; bit 2 a pair with the
-   * square below meeting right, 3 left. */
-  readonly vWhy: (VWhy | null)[];
-  readonly merges: SlantMerge[] = [];
-  tick = 0;
-  constructor(w: number, h: number) {
-    this.vWhy = new Array<VWhy | null>(w * h * 4).fill(null);
-  }
+/** What a firing cites of the same-slant marks: the edges of the path of
+ * pairs joining two squares it needs alike, and the square with a diagonal
+ * that path ends at, where the firing takes its diagonal from one. */
+export interface SlantCites {
+  path: readonly number[];
+  anchor: number | null;
+}
+
+/**
+ * The hint's walk: every firing that draws a diagonal, in order, and the
+ * facts the walk made with what the hint says of them. The walk's graph
+ * (`engine/fact-graph.ts`) holds which fact rests on which; what only Slant
+ * knows is kept beside it by fact or firing.
+ */
+export interface SlantPlan {
+  firings: SlantFiring[];
+  graph: FactGraph;
+  /** The merge a fact made, by that fact: the strike that left its pair
+   * slanting alike, which is the note a step may place. */
+  merges: ReadonlyMap<number, SlantMerge>;
+  /** What each firing cites, by its place in the graph. */
+  cites: ReadonlyMap<number, SlantCites>;
+  /** Why the v-shape `sq * 4 + bit` is ruled out, as the walk stood after
+   * fact `at`, where a fact's own firing ruled it out; `null` where only the
+   * pair itself, marked alike, does. */
+  vWhy(key: number, at: number): VWhy | null;
+  /** The two squares of a pair, by its edge. */
+  ends(e: number): readonly [number, number];
 }
 
 /** The bit of edge `e`'s first square for its mark's value `n`, 1 at the
@@ -302,6 +322,17 @@ function bitOf(sp: GridSpace, e: number, n: number): number {
   const a = sp.edgeEnds[2 * e];
   const across = sp.edgeEnds[2 * e + 1] === a + 1;
   return a * 4 + (across ? (n === 1 ? 1 : 0) : n === 1 ? 3 : 2);
+}
+
+/** The edge and the mark's value that `bitOf` made `key` from. */
+function edgeOfBit(sp: GridSpace, key: number): { e: number; n: number } {
+  const a = key >> 2;
+  const bit = key & 3;
+  const across = bit < 2;
+  return {
+    e: sp.edgeOf(a, across ? a + 1 : a + sp.w),
+    n: bit === 1 || bit === 3 ? 1 : 2,
+  };
 }
 
 /** The squares round point `k` in the order upstream goes round it: above
@@ -325,6 +356,48 @@ function roundOf(sp: GridSpace, k: number): number[] {
 const NORMAL = DIFF_HARD;
 
 /**
+ * The edges joining `from` to the nearest square `goal` accepts, through the
+ * pairs `order` holds slanting alike; shortest first, ties by the order the
+ * pairs became alike. `null` where there is none.
+ */
+function linkPath(
+  sp: GridSpace,
+  order: readonly number[],
+  from: number,
+  goal: (sq: number) => boolean,
+): { path: number[]; end: number } | null {
+  const adj = new Map<number, { to: number; e: number }[]>();
+  for (const e of order) {
+    const a = sp.edgeEnds[2 * e];
+    const b = sp.edgeEnds[2 * e + 1];
+    for (const [u, v] of [
+      [a, b],
+      [b, a],
+    ]) {
+      const list = adj.get(u) ?? [];
+      list.push({ to: v, e });
+      adj.set(u, list);
+    }
+  }
+  const prev = new Map<number, { from: number; e: number } | null>([[from, null]]);
+  const queue = [from];
+  for (let qi = 0; qi < queue.length; qi++) {
+    const u = queue[qi];
+    if (u !== from && goal(u)) {
+      const path: number[] = [];
+      for (let p = prev.get(u); p; p = prev.get(p.from)) path.push(p.e);
+      return { path, end: u };
+    }
+    for (const x of adj.get(u) ?? []) {
+      if (prev.has(x.to)) continue;
+      prev.set(x.to, { from: u, e: x.e });
+      queue.push(x.to);
+    }
+  }
+  return null;
+}
+
+/**
  * The ladder walked from the player's diagonals and same-slant marks, one
  * firing at a time (`ladderWalk`): every firing that draws a diagonal, in
  * order, and why each same-slant fact it rests on holds. A firing that only
@@ -337,25 +410,116 @@ export function deduceHintPlan(
   clues: Int8Array,
   soln: Int8Array,
   alike: Uint8Array,
-): { firings: SlantFiring[]; trace: SlantTrace; graph: FactGraph } {
+): SlantPlan {
   const dl = dealtOf(clues);
   const ladder = slantLadder(dl);
   const sp = describedSpace(slant.units, w, h);
   const grid = Uint8Array.from(soln, describedOf);
-  const m = marksOf(sp, grid, ladder, alike);
-  m.budget = stepBudget("slant hint");
-  const trace = new SlantTrace(w, h);
-  // What the player's diagonals rule out, past what their marks say.
+  // What the player's marks say alone, to tell what a diagonal rules out.
   const marked = marksOf(sp, new Uint8Array(w * h), ladder, alike).edgeCands;
-  drawnWhy(sp, trace, grid, marked, m.edgeCands);
+  const graph = new FactGraph();
+  const m = marksOf(sp, grid, ladder, alike, graph);
+  m.budget = stepBudget("slant hint");
+  const initial = grid.slice();
+  /** The board each firing of the graph was made on, by its place. */
+  const boardOf: Uint8Array[] = [];
+  let board = initial;
+  let stamped = 0;
+  const stamp = (): void => {
+    const last = graph.facts.at(-1);
+    for (; last !== undefined && stamped <= last.firing; stamped++)
+      boardOf[stamped] = board;
+  };
+  stamp();
+  const reasonOf = new Map<number, SlantReason>();
+  const ends = (e: number): [number, number] => [
+    sp.edgeEnds[2 * e],
+    sp.edgeEnds[2 * e + 1],
+  ];
+
+  /** A diagonal on `b` in a square of edge `e`'s pair that misses the
+   * corner v-shape `n` meets at. */
+  const slashWhy = (e: number, n: number, b: Uint8Array): VWhy | null => {
+    const pair = ends(e);
+    const side = sp.cellPoints[pair[0]].filter((k) =>
+      sp.cellPoints[pair[1]].includes(k),
+    );
+    const sq = pair.find((c) => b[c] !== 0 && b[c] !== slash(sp, c, side[n - 1]));
+    return sq === undefined ? null : { kind: "slash", sq };
+  };
+  /** Why v-shape `key` was ruled out by a fact before `limit`, a diagonal
+   * read on `at` where no number's reason says. */
+  const strikeWhy = (key: number, limit: number, at: Uint8Array): VWhy | null => {
+    const { e, n } = edgeOfBit(sp, key);
+    const f = graph.factsAbout("edges", e).find((q) => q.id < limit && q.value === n);
+    let why: VWhy | null = null;
+    if (f !== undefined) {
+      const r = reasonOf.get(f.id);
+      if (r === undefined) why = slashWhy(e, n, boardOf[f.firing]);
+      else if (r.kind === "number") why = { kind: "clue", pt: r.k, c: r.c };
+      else if (r.kind === "two") {
+        const from = bitOf(sp, r.from, r.value);
+        if (strikeWhy(from, f.id, boardOf[f.firing]) !== null)
+          why = { kind: "two", pt: r.k, from };
+      }
+    }
+    return why ?? slashWhy(e, n, initial) ?? slashWhy(e, n, at);
+  };
+
+  // The pairs slanting alike, in the order they became so, which breaks the
+  // ties of a path.
+  const order: number[] = [];
+  const known = new Set<number>();
+  const merges = new Map<number, SlantMerge>();
+  /** The fact that left edge `e`, which held `mask`, slanting alike, among
+   * those made from fact `from` on. */
+  const completing = (e: number, mask: number, from: number): number => {
+    for (const f of graph.factsAbout("edges", e)) {
+      if (f.id < from) continue;
+      mask &= ~(1 << f.value);
+      if (mask === ALIKE) return f.id;
+    }
+    throw new Error("slant hint: a pair left alike by no fact");
+  };
+  const mergeOf = (e: number, fact: number): SlantMerge => {
+    const r = reasonOf.get(fact);
+    const [a, b] = ends(e);
+    if (r?.kind === "share")
+      return {
+        a,
+        b,
+        why: { kind: "clue", pt: r.k, c: clues[r.k], pair: pairOf(r.pair) },
+      };
+    if (r?.kind === "two") {
+      // Across a 2 from a pair no v-shape rules out, which the player or a
+      // number marked alike: the 2 has its one line from them, and needs one
+      // from these.
+      const fact0 = graph.facts[fact];
+      if (
+        strikeWhy(bitOf(sp, r.from, r.value), fact0.id, boardOf[fact0.firing]) === null
+      )
+        return {
+          a,
+          b,
+          why: { kind: "clue", pt: r.k, c: 2, pair: ends(r.from) },
+        };
+    }
+    return { a, b, why: { kind: "vshape" } };
+  };
+  // The pairs a given diagonal leaves alike come first, then the player's.
+  const seeded: number[] = [];
+  const marks: number[] = [];
   for (const e of sp.edges)
-    if (m.edgeCands[e] === ALIKE)
-      trace.merges.push({
-        a: sp.edgeEnds[2 * e],
-        b: sp.edgeEnds[2 * e + 1],
-        why: { kind: "note" },
-        tick: 0,
-      });
+    if (m.edgeCands[e] === ALIKE) (marked[e] !== ALIKE ? seeded : marks).push(e);
+  for (const e of seeded) {
+    const fact = completing(e, marked[e], 0);
+    merges.set(fact, mergeOf(e, fact));
+  }
+  for (const e of [...seeded, ...marks]) {
+    order.push(e);
+    known.add(e);
+  }
+
   // What a firing rests on, with the squares it fills: the squares round
   // the number it reads, the squares slanting alike with the one it decides,
   // or the squares round that one, whose diagonals close the loop or the
@@ -375,150 +539,91 @@ export function deduceHintPlan(
     }
     return out;
   };
-  const walk = ladderWalk(m, ladder.entries, { [TIERS]: NORMAL }, reads);
+  // What a firing cites is one path of pairs, which a player can follow, and
+  // not every pair the formula read (`alike` reads them all): the pairs
+  // joining the squares it needs alike, and the square it takes its
+  // diagonal from.
+  const cites = new Map<number, SlantCites>();
+  const pending: { cites: SlantCites | null } = { cites: null };
+  const cite = (f: Taken): Reads | null => {
+    const r = f.reasons[0] as SlantReason;
+    let link: { path: number[]; end: number } | null = null;
+    if (r.kind === "same") {
+      link = linkPath(sp, order, f.facts[1], (sq) => grid[sq] !== 0);
+      if (link === null) throw new Error("slant hint: an equivalence with no path");
+    } else if ((r.kind === "clue" || r.kind === "share") && r.pair !== null) {
+      const [a, b] = r.pair;
+      link = linkPath(sp, order, a, (sq) => sq === b);
+      if (link === null) throw new Error("slant hint: a pair with no path");
+    } else if (r.kind === "two") {
+      // The pair across a 2 that the player or a number marked alike.
+      const open = (f.reasons as SlantReason[]).some(
+        (q) =>
+          q.kind === "two" &&
+          strikeWhy(bitOf(sp, q.from, q.value), graph.facts.length, grid) === null,
+      );
+      if (open) {
+        const [a, b] = ends(r.from);
+        link = linkPath(sp, order, a, (sq) => sq === b);
+      }
+    }
+    if (link === null) return null;
+    const anchor = r.kind === "same" ? link.end : null;
+    pending.cites = { path: link.path, anchor };
+    return { cells: anchor === null ? [] : [anchor], edges: link.path };
+  };
+  const walk = ladderWalk(m, ladder.entries, { [TIERS]: NORMAL }, reads, {
+    citing: cite,
+  });
   const firings: SlantFiring[] = [];
   for (;;) {
     const before = Int32Array.from(m.edgeCands);
+    const first = graph.facts.length;
+    pending.cites = null;
     const taken = walk.next();
     if (taken === null || taken === "contradiction") break;
     const { facts, reasons } = taken;
-    const r0 = reasons[0] as SlantReason;
+    const id = graph.facts[first].firing;
+    for (let i = 0; i < reasons.length; i++)
+      reasonOf.set(first + i, reasons[i] as SlantReason);
     const placed = new Map<number, number>();
     for (let i = 0; i < facts.length; i += 3)
       if (facts[i] === 1) placed.set(facts[i + 1], facts[i + 2]);
     if (placed.size > 0) {
-      firings.push(firingOf(sp, clues, r0, placed, Int8Array.from(grid, slashOf)));
-      drawnWhy(sp, trace, grid, before, m.edgeCands);
-      trace.tick++;
-      continue;
-    }
-    // A pair's mark narrowed: why each v-shape is ruled out, and the pairs
-    // it leaves slanting alike.
-    for (let i = 0; i < facts.length; i += 3) {
-      const e = facts[i + 1];
-      const r = reasons[i / 3] as SlantReason;
-      if (before[e] === m.edgeCands[e]) continue;
-      if (r.kind === "share") {
-        if (m.edgeCands[e] === ALIKE && before[e] !== ALIKE)
-          trace.merges.push({
-            a: sp.edgeEnds[2 * e],
-            b: sp.edgeEnds[2 * e + 1],
-            why: { kind: "clue", pt: r.k, c: clues[r.k], pair: pairOf(r.pair) },
-            tick: trace.tick,
-          });
-        before[e] = m.edgeCands[e];
-        continue;
-      }
-      const why = vWhyOf(sp, r, trace, grid);
-      if (why === null) {
-        // Across a 2 from a pair slanting alike, which no v-shape says: the
-        // 2 has its one line from them, and needs one from these.
-        if (r.kind !== "two") throw new Error("slant hint: a v-shape with no reason");
-        if (m.edgeCands[e] === ALIKE && before[e] !== ALIKE)
-          trace.merges.push({
-            a: sp.edgeEnds[2 * e],
-            b: sp.edgeEnds[2 * e + 1],
-            why: {
-              kind: "clue",
-              pt: r.k,
-              c: 2,
-              pair: [sp.edgeEnds[2 * r.from], sp.edgeEnds[2 * r.from + 1]],
-            },
-            tick: trace.tick,
-          });
-        before[e] = m.edgeCands[e];
-        continue;
-      }
-      const n = facts[i + 2];
-      trace.vWhy[bitOf(sp, e, n)] = why;
-      if (m.edgeCands[e] === ALIKE && (before[e] & ~(1 << n)) === ALIKE)
-        trace.merges.push({
-          a: sp.edgeEnds[2 * e],
-          b: sp.edgeEnds[2 * e + 1],
-          why: { kind: "vshape" },
-          tick: trace.tick,
-        });
-      before[e] &= ~(1 << n);
-    }
-  }
-  return { firings, trace, graph: walk.graph };
-}
-
-/**
- * Why each v-shape struck between `before` and `after` is ruled out: a
- * diagonal in `grid` missing that end of the pair's side, which `drawn`
- * follows as it is drawn; and the pairs that leaves slanting alike.
- */
-function drawnWhy(
-  sp: GridSpace,
-  trace: SlantTrace,
-  grid: Uint8Array,
-  before: Int32Array,
-  after: Int32Array,
-): void {
-  for (const e of sp.edges) {
-    const gone = before[e] & ~after[e];
-    if (gone === 0) continue;
-    const ends = [sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]];
-    const side = sp.cellPoints[ends[0]].filter((k) =>
-      sp.cellPoints[ends[1]].includes(k),
-    );
-    for (let n = 1; n <= 2; n++) {
-      if (!((gone >> n) & 1)) continue;
-      const sq = ends.find(
-        (c) => grid[c] !== 0 && grid[c] !== slash(sp, c, side[n - 1]),
-      );
-      if (sq === undefined)
-        throw new Error("slant hint: a v-shape struck by no diagonal");
-      trace.vWhy[bitOf(sp, e, n)] = { kind: "slash", sq };
-    }
-    if (after[e] === ALIKE && before[e] !== ALIKE)
-      trace.merges.push({
-        a: ends[0],
-        b: ends[1],
-        why: { kind: "vshape" },
-        tick: trace.tick,
+      board = grid.slice();
+      firings.push({
+        ...firingOf(
+          sp,
+          clues,
+          reasons[0] as SlantReason,
+          placed,
+          Int8Array.from(grid, slashOf),
+        ),
+        id,
       });
+    }
+    stamp();
+    if (pending.cites !== null) cites.set(id, pending.cites);
+    for (const e of sp.edges) {
+      if (m.edgeCands[e] !== ALIKE || known.has(e)) continue;
+      known.add(e);
+      order.push(e);
+      const fact = completing(e, before[e], first);
+      merges.set(fact, mergeOf(e, fact));
+    }
   }
+  return {
+    firings,
+    graph,
+    merges,
+    cites,
+    vWhy: (key, at) => strikeWhy(key, at + 1, boardOf[graph.facts[at].firing]),
+    ends,
+  };
 }
 
 const pairOf = (p: readonly [number, number] | null): [number, number] | null =>
   p === null ? null : [p[0], p[1]];
-
-/**
- * Why a v-shape is ruled out, in the trace's words; `null` where it is ruled
- * out across a 2 from a pair whose v-shapes no reason rules out, a pair the
- * player or a number marked alike with its squares still open. A pair marked
- * alike that has since a diagonal is read by it, as a v-shape a diagonal
- * rules out is.
- */
-function vWhyOf(
-  sp: GridSpace,
-  r: SlantReason,
-  trace: SlantTrace,
-  grid: Uint8Array,
-): VWhy | null {
-  switch (r.kind) {
-    case "number":
-      return { kind: "clue", pt: r.k, c: r.c };
-    case "two": {
-      const from = bitOf(sp, r.from, r.value);
-      if (trace.vWhy[from] === null) {
-        const ends = [sp.edgeEnds[2 * r.from], sp.edgeEnds[2 * r.from + 1]];
-        const side = sp.cellPoints[ends[0]].filter((k) =>
-          sp.cellPoints[ends[1]].includes(k),
-        );
-        const at = side[r.value - 1];
-        const sq = ends.find((c) => grid[c] !== 0 && grid[c] !== slash(sp, c, at));
-        if (sq === undefined) return null;
-        trace.vWhy[from] = { kind: "slash", sq };
-      }
-      return { kind: "two", pt: r.k, from };
-    }
-    default:
-      throw new Error(`slant hint: ${r.kind} narrows no v-shape`);
-  }
-}
 
 /** A firing that draws diagonals, as the hint narrates it. */
 function firingOf(
@@ -527,7 +632,7 @@ function firingOf(
   r: SlantReason,
   placed: ReadonlyMap<number, number>,
   grid: Int8Array,
-): SlantFiring {
+): Omit<SlantFiring, "id"> {
   const { w } = sp;
   const W = w + 1;
   const move = (c: number): SlantPlacement => ({
