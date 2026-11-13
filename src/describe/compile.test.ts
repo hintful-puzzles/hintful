@@ -241,7 +241,7 @@ describe("a technique states how its dearest read grows with the board", () => {
 });
 
 describe("a witness is written for a hint only", () => {
-  const technique = (witness: boolean) =>
+  const technique = (witness: boolean, reads = false) =>
     compileLibrary(
       {
         library: "t",
@@ -249,7 +249,7 @@ describe("a witness is written for a hint only", () => {
           x: {
             for: "c in cells where exists d in adj4(c): |{x in adj4(d) where known(x)}| = 0 or (with place(c, 1): known(d))",
             conclude: "strike(c, 1)",
-            says: { terms: { c: "c" }, marks: {}, witness },
+            says: { terms: { c: "c" }, marks: {}, witness, reads },
           },
         },
       },
@@ -281,6 +281,14 @@ describe("a witness is written for a hint only", () => {
     expect(stated).toContain('held: "member"');
     expect(absent).not.toContain("held: ");
     // The block a hint runs is dropped from both, and what is left is equal.
+    expect(solvePath(stated).length).toBeGreaterThan(20);
+    expect(solvePath(stated)).toEqual(solvePath(absent));
+  });
+
+  it("and so are the reads", () => {
+    const [stated, absent] = [technique(false, true), technique(false)];
+    expect(stated).toContain("_rc.push(");
+    expect(absent).not.toContain("_rc");
     expect(solvePath(stated).length).toBeGreaterThan(20);
     expect(solvePath(stated)).toEqual(solvePath(absent));
   });

@@ -1091,6 +1091,18 @@ path's code is the same as without it (`compile.test.ts`, "a witness is
 written for a hint only"). Exemplar: Path's `lineBreaks`
 (`path-witness.test.ts`).
 
+**A technique whose firing must say what it rests on says `reads: true`**: in
+the same hint-only block, the `for` clauses' `where`s and `premise` are
+compiled a further time with every read of a mark (`known`, `value`, `cand`,
+`in cand`, an edge's mark) recording its element, and the firing's
+`says.reads` (`Reads`, `engine/describe-runtime.ts`) lists the answer elements
+(`cells`) and edge-mark elements (`edges`) read on the path the formula took,
+each once, first read first. A read under a `with` of the supposed element is
+not a read of the board and is not recorded. Cost (Path's `lineBreaks`,
+2026-11-13): no measurable time on a firing (9–12 ms for 44 firings either
+way), about 980 lines of compiled module, so opt in only where the engine
+consumes it. Exemplar: `path-witness.test.ts`.
+
 **The witness is read where the sentence is built, by the name of what it
 holds**, not written into a term: `witnessOfDef(w, "shortNear")` finds the
 definition's node (null where that part of the formula did not hold, so its

@@ -319,6 +319,16 @@ export type Witness =
   | { held: "def"; name: string; of: Witness | null }
   | { held: "all"; of: readonly Witness[] };
 
+/**
+ * The elements whose marks a firing's `for ... where` and `premise` read, in
+ * the order first read, each once: cells (or the game's own elements) and
+ * edges. What a firing rests on is the facts that made these what they are.
+ */
+export interface Reads {
+  cells: number[];
+  edges: number[];
+}
+
 /** The parts of an `and` that have a witness: `null` for none, the part
  * itself for one. */
 export function witnessAll(...parts: (Witness | null)[]): Witness | null {

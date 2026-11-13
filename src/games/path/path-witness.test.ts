@@ -61,4 +61,33 @@ describe("a lineBreaks firing's witness", () => {
     // What the check looked at.
     expect(seen).toBeGreaterThan(20);
   });
+
+  it("carries the elements read, each once, the firing's own edge among them", () => {
+    let seen = 0;
+    let reads = 0;
+    for (const n of [6, 7])
+      for (let seed = 0; seed < 25; seed++) {
+        const p = { w: n, h: n, diff: DIFF_NORMAL, mode: MODE_PATH };
+        const state = newState(p, pathGame.newDesc(p, randomNew(`r${seed}`)).desc);
+        const { marks, entries } = pathWalk(state);
+        const others = entries.filter((e) => e.id !== "lineBreaks");
+        runLadder(marks, ladderTechniques(marks, others, { [TIERS]: 99 }, {}));
+        const firings = techniqueFirings(
+          { entries, placing: [], striking: [] },
+          "lineBreaks",
+          marks,
+        );
+        for (const f of firings) {
+          const said = f.reasons[0] as Said<LineBreaksBinding, LineBreaksSays>;
+          const { cells } = said.says.reads;
+          expect(new Set(cells).size).toBe(cells.length);
+          // `live` reads the edge's own mark before the `with` supposes it.
+          expect(cells).toContain(said.binding.e);
+          reads += cells.length;
+          seen++;
+        }
+      }
+    expect(seen).toBeGreaterThan(20);
+    expect(reads).toBeGreaterThan(seen);
+  });
 });

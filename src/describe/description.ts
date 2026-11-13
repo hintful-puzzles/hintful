@@ -215,6 +215,9 @@ export interface StatedSays {
   /** Report what held in the technique's `where`s and `premise` with the
    * firing (`Witness`). */
   witness?: boolean;
+  /** Report the elements whose marks the `where`s and `premise` read
+   * (`Reads`). */
+  reads?: boolean;
   terms?: Record<string, string>;
   marks?: Partial<Record<SaidRole, string>>;
   /** What each square the firing decides has of its own, read where the
@@ -537,6 +540,8 @@ export interface Says {
   legs: boolean;
   /** Whether a firing carries what held in its `where`s and `premise`. */
   witness: boolean;
+  /** Whether a firing carries the elements its `where`s and `premise` read. */
+  reads: boolean;
   /** What each fact has of its own, read in the conclusion's scope where it is
    * made; `null` where none does. */
   fact: {
@@ -694,6 +699,7 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
     };
   };
   const witness = stated.witness === true;
+  const reads = stated.reads === true;
   const legs = stated.shown === "legs";
   const each = legs || stated.shown === "each";
   const fact =
@@ -709,11 +715,12 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
           ),
         };
   if (stated.arms === undefined)
-    return { each, legs, witness, fact, variants: [variant(null, null, {})] };
+    return { each, legs, witness, reads, fact, variants: [variant(null, null, {})] };
   return {
     each,
     legs,
     witness,
+    reads,
     fact,
     variants: Object.entries(stated.arms).map(([name, arm]) =>
       variant(name, at(`says ${name} when`, arm.when), arm),

@@ -513,6 +513,10 @@ interface Env {
   /** Set where a technique's body reads a cell's candidates through
    * `cands`, which it then keeps; absent outside a technique. */
   readsCands?: { yes: boolean };
+  /** Set where the code records what it reads, as the names of the arrays a
+   * read of a cell's marks or an edge's pushes its element to: the hint's
+   * second pass, never the solve (`says.reads`). */
+  reads?: { cells: string; edges: string };
   /** Whether the code reads what the board deals, its clues or partitions,
    * so the function takes them. */
   readsClues: { yes: boolean };
@@ -740,7 +744,18 @@ function sameSort(a: Sort, b: Sort): boolean {
 /** A cell's candidates through the function's `cands`, read once a cell. */
 function candOf(c: string, env: Env): string {
   if (env.readsCands) env.readsCands.yes = true;
-  return `(cands[${c}] >= 0 ? cands[${c}] : (cands[${c}] = ${marksRead("cand", c)}))`;
+  return tapped(
+    c,
+    `(cands[${c}] >= 0 ? cands[${c}] : (cands[${c}] = ${marksRead("cand", c)}))`,
+    env,
+  );
+}
+
+/** `code`, a read of element `c`'s marks, which also records `c` where the
+ * code records its reads. */
+function tapped(c: string, code: string, env: Env, edge = false): string {
+  if (env.reads === undefined) return code;
+  return `(${edge ? env.reads.edges : env.reads.cells}.push(${c}), ${code})`;
 }
 
 /**
@@ -748,16 +763,24 @@ function candOf(c: string, env: Env): string {
  * call here was 5 to 20% of a described game's deal, because a compiled
  * technique is past V8's inlining budget and each read stayed a call.
  */
-function marksRead(fn: "known" | "value" | "cand", c: string): string {
-  if (fn === "known") return `(b.grid[${c}] !== 0)`;
-  if (fn === "value") return `(b.grid[${c}] || -1)`;
-  return `b.cands[${c}]`;
+function marksRead(fn: "known" | "value" | "cand", c: string, env?: Env): string {
+  const code =
+    fn === "known"
+      ? `(b.grid[${c}] !== 0)`
+      : fn === "value"
+        ? `(b.grid[${c}] || -1)`
+        : `b.cands[${c}]`;
+  return env === undefined ? code : tapped(c, code, env);
 }
 
 /** Whether cell `c` may still hold `d`, read in place as {@link marksRead},
  * or of a wide domain's words. */
 const hasRead = (c: string, d: string, env: Env): string =>
-  env.wide ? `b.has(${c}, ${d})` : `(((b.cands[${c}] >> ${d}) & 1) !== 0)`;
+  tapped(
+    c,
+    env.wide ? `b.has(${c}, ${d})` : `(((b.cands[${c}] >> ${d}) & 1) !== 0)`,
+    env,
+  );
 
 /** A wide domain's candidates read otherwise than through its methods. */
 const NOT_WIDE =
@@ -1224,20 +1247,20 @@ function markRead(fn: "known" | "value" | "cand", c: Val, env: Env, out: Out): V
   }
   if (env.supposed.length === 0 && !(fn === "cand" && env.memo)) {
     const sort = fn === "known" ? BOOL : fn === "value" ? NUM : setOf(NUM);
-    return { code: marksRead(fn, c.code), sort };
+    return { code: marksRead(fn, c.code, env), sort };
   }
   const x = once(c, out).code;
   if (fn === "known")
     return {
-      code: supposedRead(x, env, () => "true", marksRead("known", x)),
+      code: supposedRead(x, env, () => "true", marksRead("known", x, env)),
       sort: BOOL,
     };
   if (fn === "value")
     return {
-      code: supposedRead(x, env, (s) => s.value, marksRead("value", x)),
+      code: supposedRead(x, env, (s) => s.value, marksRead("value", x, env)),
       sort: NUM,
     };
-  const plain = env.memo ? candOf(x, env) : marksRead("cand", x);
+  const plain = env.memo ? candOf(x, env) : marksRead("cand", x, env);
   return {
     code: supposedRead(x, env, (s) => `(1 << ${s.value})`, plain),
     sort: setOf(NUM),
@@ -2494,7 +2517,7 @@ function fillLoop(
           e,
           env,
           (s) => `(1 << ${s.value})`,
-          env.memo ? candOf(e, env) : marksRead("cand", e),
+          env.memo ? candOf(e, env) : marksRead("cand", e, env),
         );
   const r = Out.fresh("_r");
   const once0 = Out.fresh("_o");
@@ -2972,7 +2995,7 @@ function fitsCall(
           x,
           env,
           (sup) => `(1 << ${sup.value})`,
-          env.memo ? candOf(x, env) : marksRead("cand", x),
+          env.memo ? candOf(x, env) : marksRead("cand", x, env),
         );
   out.open(`for (let ${i} = 0; ${i} < ${S.code}.length; ${i}++) {`);
   out.emit(`const ${x} = ${S.code}[${i}];`);
@@ -4065,7 +4088,10 @@ function diagonalCall(fn: string, vs: readonly Val[], env: Env): Val | null {
     arity(1);
     if (env.answer) throw new CompileError("a rule reads the answer, never the marks");
     expectElem(vs[0], env.edgeMarkSort, fn);
-    return { code: `b.edgeCand(${vs[0].code})`, sort: setOf(NUM) };
+    return {
+      code: tapped(vs[0].code, `b.edgeCand(${vs[0].code})`, env, true),
+      sort: setOf(NUM),
+    };
   }
   switch (fn) {
     case "cells": {
@@ -6342,6 +6368,31 @@ function techniqueFunction(
           };`,
         );
       }
+      // The elements those same formulas read, a second time on the same
+      // marks, recording each read of a mark.
+      if (t.says.reads) {
+        env.used.add("type Reads");
+        body.emit(`const _rc: number[] = [];`);
+        body.emit(`const _re: number[] = [];`);
+        const readEnv: Env = {
+          ...tenv,
+          shared: { made: new Map() },
+          scratch: null,
+          reads: { cells: "_rc", edges: "_re" },
+        };
+        for (const x of [
+          ...t.binders.flatMap((b) => (b.kind === "fill" ? [] : [b.where])),
+          t.premise,
+        ]) {
+          if (x === null) continue;
+          const v = compileExpr(x, sc, readEnv, body);
+          expect(v, "bool", "reads");
+          once(v, body);
+        }
+        body.emit(
+          `const _r: Reads = { cells: [...new Set(_rc)], edges: [...new Set(_re)] };`,
+        );
+      }
       if (arms) body.emit(`let _says: ${saysType} | null = null;`);
       for (const [i, v] of variants.entries()) {
         const fields = { terms: [] as string[], marks: [] as string[] };
@@ -6363,7 +6414,7 @@ function techniqueFunction(
         const own =
           tenv.factSays === undefined ? "" : `, facts: ${tenv.factSays.buffer}.slice()`;
         body.emit(
-          `${arms ? "" : "const "}_says = { ${arms ? `arm: ${JSON.stringify(v.name)}, ` : ""}terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} }${own}${t.says.witness ? ", witness: _w" : ""} };`,
+          `${arms ? "" : "const "}_says = { ${arms ? `arm: ${JSON.stringify(v.name)}, ` : ""}terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} }${own}${t.says.witness ? ", witness: _w" : ""}${t.says.reads ? ", reads: _r" : ""} };`,
         );
         if (arms) body.close();
         saysFields.variants.push({ name: v.name, ...fields });
@@ -6520,13 +6571,14 @@ function techniqueFunction(
                 `  marks: { ${saysFields.variants[0].marks.join(" ")} };`,
                 ...(tenv.factSays === undefined ? [] : [`  facts: ${saysType}Fact[];`]),
                 ...(t.says.witness ? ["  witness: Witness | null;"] : []),
+                ...(t.says.reads ? ["  reads: Reads;"] : []),
                 "}",
               ]
             : [
                 `export type ${saysType} =`,
                 ...saysFields.variants.map(
                   (v) =>
-                    `  | { arm: ${JSON.stringify(v.name)}; terms: { ${v.terms.join(" ")} }; marks: { ${v.marks.join(" ")} }${tenv.factSays === undefined ? "" : `; facts: ${saysType}Fact[]`}${t.says?.witness ? "; witness: Witness | null" : ""} }`,
+                    `  | { arm: ${JSON.stringify(v.name)}; terms: { ${v.terms.join(" ")} }; marks: { ${v.marks.join(" ")} }${tenv.factSays === undefined ? "" : `; facts: ${saysType}Fact[]`}${t.says?.witness ? "; witness: Witness | null" : ""}${t.says?.reads ? "; reads: Reads" : ""} }`,
                 ),
                 ";",
               ]),

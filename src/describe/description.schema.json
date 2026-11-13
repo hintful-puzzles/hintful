@@ -58,6 +58,10 @@
               "type": "boolean",
               "description": "Report, with the firing, what held in its `for ... where` and `premise`: the arm of an `or` that held, the member an `exists` held for, the supposition a `with` made, and each definition read. Read on a hint's path only."
             },
+            "reads": {
+              "type": "boolean",
+              "description": "Report, with the firing, the elements whose marks its `for ... where` and `premise` read (`reads.cells`, `reads.edges`), for the engine to find what the firing rests on. Read on a hint's path only."
+            },
             "terms": {
               "type": "object",
               "description": "Named values the step's sentence reads, by name.",

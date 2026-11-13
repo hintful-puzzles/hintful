@@ -4,7 +4,7 @@
 
 - [x] 1.1 Read Loopy's `record.ts`, Slant's `SlantTrace` and `engine/candidate-hint.ts` side by side, and write the one model (design.md)
 - [x] 1.2 Sort the `exists fill` cases apart (Net, Pattern, Tents, Pearl): witness, or a specific technique stated ahead of the general one (design.md § "`exists fill`, sorted")
-- [ ] 1.3 Measure the walk's cost with reads recorded, on the games whose walks are longest, against the commit before; and a solve's compiled output unchanged. Done for the witness (Path's `lineBreaks`, all firings over 80 boards: about 18 ms without, 19–30 ms with, on a busy machine); the reads' cost is measured in 3.1, where they exist
+- [ ] 1.3 Measure the walk's cost with reads recorded, on the games whose walks are longest, against the commit before; and a solve's compiled output unchanged. Done for the witness (Path's `lineBreaks`, all firings over 80 boards: about 18 ms without, 19–30 ms with, on a busy machine); the reads' cost, in 3.1: Path's `lineBreaks`, 44 firings over 50 boards, 9–12 ms with and without, +980 lines of compiled module (2026-11-13). The longest walks wait for a consumer to opt in
 
 ## 2. The witness
 
@@ -14,7 +14,7 @@
 
 ## 3. Reads and the fact graph
 
-- [ ] 3.1 A firing carries what it read; the engine keeps each fact with its firing and parents. Scoped 2026-11-13: a read is not one function: `compile.ts` reads marks in place at several sites (`marksRead`, `hasRead`, `candOf`, edge and relation reads, `piece`/group terms), so the reads are recorded the way the witness is, in the hint block's second pass over the formula, never on the solve path; measure the cost (1.3) on Path and the longest walks first
+- [ ] 3.1 A firing carries what it read; the engine keeps each fact with its firing and parents. Done 2026-11-13: `says.reads` (`tapped` in `compile.ts` at `marksRead`, `hasRead`, `candOf`, `edgeCand`; a second pass in the hint block; solve path equal, `compile.test.ts` "and so are the reads"); Path's `lineBreaks` opts in. Open: group/piece terms are not recorded as reads (`throughWhere`'s closure reads are), and the engine keeping facts with parents is 3.2's. Scoped 2026-11-13: a read is not one function: `compile.ts` reads marks in place at several sites (`marksRead`, `hasRead`, `candOf`, edge and relation reads, `piece`/group terms), so the reads are recorded the way the witness is, in the hint block's second pass over the formula, never on the solve path; measure the cost (1.3) on Path and the longest walks first
 - [ ] 3.2 The engine answers "what does this fact rest on?" for any fact from any position (what `check-the-last-move` asks)
 - [ ] 3.3 The engine places a note before its first consumer, as one journey, and nowhere where nothing cites it
 - [ ] 3.4 Slant moves onto it (its `SlantTrace` goes), then Loopy (its `record.ts` goes); each compared by the fingerprint
