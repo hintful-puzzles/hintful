@@ -31,6 +31,7 @@ import {
 import type { Point } from "../../engine/types.ts";
 import type { SaysById } from "./bricks.compiled.ts";
 
+/** The board is hexagonal, so a position is a cell and never a square. */
 const thisCell = (target: Point): Narration =>
   mark.this("ring", CELL, [target], "cell");
 

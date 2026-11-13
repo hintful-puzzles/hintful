@@ -56,6 +56,8 @@ export interface LegMarks {
   spotlight: readonly Point[];
 }
 
+/** Subsets' help calls a board position a cell, about twice as often as a
+ * square, so its hints do too (the default noun is "square"). */
 const outlinedCell = (cells: readonly Point[], noun = "cell"): Narration =>
   mark.the("outline", CELL, cells, noun);
 

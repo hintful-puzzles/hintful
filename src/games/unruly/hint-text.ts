@@ -29,6 +29,8 @@ export const colorName = (c: number): ColorWord => TWO_NAMES[pairIndex(c)];
 const oppositeName = (c: number): ColorWord => colorName(c === ONE ? ZERO : ONE);
 const lineName = (horizontal: boolean): string => (horizontal ? "row" : "column");
 
+/** Unruly's help calls a board position a cell, about twice as often as a
+ * square, so its hints do too (the default noun is "square"). */
 const thisCell = (s: Spoken<unknown>): Narration =>
   mark.this("ring", CELL, [s.target], "cell");
 const thisLine = (s: Spoken<unknown>, horizontal: boolean): Narration =>
