@@ -1017,6 +1017,13 @@ step refresh, and the frontier, which takes a key of the game's choosing (§
 - **A game that plans without the walk and writes a cell's notes only when
   a narrowing needs them** reads [`hints-marks.md`](./hints-marks.md) §
   "Place the notes a fixpoint rests on".
+- **A struck candidate the board already shows is not re-spoken from the
+  fact graph.** Magnets' `reading.ts` names a bit's reason (touch, a full
+  line, the partner end) off the board; the graph names the firing that
+  struck it, which is the same reason in another order where several hold,
+  so the words would move for no player-visible gain. Take `walk.graph` /
+  `restsOn` only where the candidate is one a player cannot write and no
+  board reading names it.
 
 ## A graph, not a grid (Map)
 
