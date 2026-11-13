@@ -14,7 +14,7 @@
 
 ## 3. Reads and the fact graph
 
-- [ ] 3.1 A firing carries what it read; the engine keeps each fact with its firing and parents
+- [ ] 3.1 A firing carries what it read; the engine keeps each fact with its firing and parents. Scoped 2026-11-13: a read is not one function: `compile.ts` reads marks in place at several sites (`marksRead`, `hasRead`, `candOf`, edge and relation reads, `piece`/group terms), so the reads are recorded the way the witness is, in the hint block's second pass over the formula, never on the solve path; measure the cost (1.3) on Path and the longest walks first
 - [ ] 3.2 The engine answers "what does this fact rest on?" for any fact from any position (what `check-the-last-move` asks)
 - [ ] 3.3 The engine places a note before its first consumer, as one journey, and nowhere where nothing cites it
 - [ ] 3.4 Slant moves onto it (its `SlantTrace` goes), then Loopy (its `record.ts` goes); each compared by the fingerprint
