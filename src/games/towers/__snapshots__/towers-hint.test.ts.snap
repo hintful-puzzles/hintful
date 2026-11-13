@@ -10760,7 +10760,7 @@ exports[`towers: pinned hint positions > says, at each pin 1`] = `
   "hiddenSingle": "No other cell in this row can be height 5, so this cell must be 5.",
   "lineFull": "Clue 2 already sees 1 tower in the line, so the cell nearest it must top all between; height 1 can't, so this cell can only be 2, 3 or 4.",
   "lowerBound": "Clue 2 sees exactly 2 towers along its line; height 5 so near it would hide too many, so this cell can only be 1, 2, 3 or 4.",
-  "note": "No height is standing in this cell's row or column yet, so pencil in every one.",
+  "note": "No height is standing in this cell's row or column yet, so every one must be penciled in.",
   "populate": "Start by penciling every candidate height into each empty cell.",
   "regionsFull": "This cell's row and column already hold every other height, so it can only be 5.",
   "set": "These 2 columns fit 5 only in the outlined cells, taking the 5 of 2 rows, so the 5 must go.",

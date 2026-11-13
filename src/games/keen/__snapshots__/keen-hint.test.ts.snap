@@ -6088,7 +6088,7 @@ exports[`keen: pinned hint positions > says, at each pin 1`] = `
   "clean": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",
   "dup": "The 3 just placed can't repeat in its row and column, so the 3 must go from the other cells.",
   "hiddenSingle": "No other cell in this column can be 3, so this cell must be 3.",
-  "note": "No number is standing in this cell's row or column yet, so pencil in every one.",
+  "note": "No number is standing in this cell's row or column yet, so every one must be penciled in.",
   "populate": "Start by penciling every candidate number into each empty cell.",
   "regionsFull": "This cell's row and column already hold every other number, so it can only be 2.",
   "set": "These 3 columns fit 5 only in the outlined cells, taking the 5 of 3 rows, so this cell can only be 1, 2, 3, 4 or 6.",

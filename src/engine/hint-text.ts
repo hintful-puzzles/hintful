@@ -154,7 +154,7 @@ export function noteText(
   if (every)
     return so({
       look: phrase`No ${noun} is ${placedVerb} in ${here}'s ${regions} yet`,
-      move: phrase`pencil in every one`,
+      move: phrase`every one must be penciled in`,
     });
   const one = values.length === 1;
   return so({

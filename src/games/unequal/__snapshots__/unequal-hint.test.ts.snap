@@ -2832,7 +2832,7 @@ exports[`unequal: pinned hint positions > says, at each pin 1`] = `
   "greater": "The larger side of this greater-than sign can't hold the smallest number, so the 1 must go.",
   "hiddenSingle": "No other cell in this row can be 5, so this cell must be 5.",
   "lesser": "The smaller side of this greater-than sign can't hold the largest number, so the 5 must go.",
-  "note": "No number is standing in this cell's row or column yet, so pencil in every one.",
+  "note": "No number is standing in this cell's row or column yet, so every one must be penciled in.",
   "populate": "Start by penciling every candidate number into each empty cell.",
   "regionsFull": "This cell's row and column already hold every other number, so it can only be 2.",
   "set": "The outlined cells already account for 4 and 5 between them, so 4 and 5 must go.",
