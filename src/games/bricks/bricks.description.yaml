@@ -99,6 +99,10 @@ techniques:
       and (forall c in below(a) where not known(c)
       and (forall p in below(a) where p != c: value(p) = 2):
       place(c, 1))
+    # The hint outlines the brick that would be stranded.
+    says:
+      shown: each
+      marks: { outline: "{a}" }
   # Clearing a square would leave a number too few squares to reach it.
   - id: undercount
     tier: Easy
@@ -106,6 +110,11 @@ techniques:
     conclude: >-
       open(k) >= n
       and (open(k) > n or (forall c in around(k) where not known(c): place(c, 1)))
+    # The hint names the number and outlines it.
+    says:
+      shown: each
+      terms: { clue: k, value: n }
+      marks: { outline: "{k}" }
   # Shading a square would make three in a row.
   - id: three
     tier: Easy
@@ -115,11 +124,21 @@ techniques:
       and (forall c in cells(L) where not known(c)
       and (with place(c, 1): |run(c)| > 2):
       place(c, 2))
+    # Each square has the run its shading would make, which the hint outlines.
+    says:
+      shown: each
+      fact:
+        marks: { outline: "with place(c, 1): run(c)" }
   # Shading a square would leave it nothing beneath it to rest on.
   - id: unsupported
     tier: Easy
     for: "c in cells where not known(c) and y(c) < h - 1 and not supportable(c)"
     conclude: "place(c, 2)"
+    # The hint outlines what the square could rest on, the squares beneath it
+    # that are on the board.
+    says:
+      shown: each
+      marks: { outline: "{p in below(c) where clue(hole, p) < 0}" }
   # Shading a square would give a number too many shaded around it.
   - id: overcount
     tier: Easy
@@ -127,3 +146,8 @@ techniques:
     conclude: >-
       shaded(k) <= n
       and (shaded(k) < n or (forall c in around(k) where not known(c): place(c, 2)))
+    # The hint names the number and outlines it.
+    says:
+      shown: each
+      terms: { clue: k, value: n }
+      marks: { outline: "{k}" }

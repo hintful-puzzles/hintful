@@ -638,6 +638,8 @@ export type ReasonOf<B, S extends CellMarks = CellMarks, Y = undefined> = (
   n: number,
   m: S,
   says: Y,
+  /** Which of the firing's facts this is, from 0. */
+  fact: number,
 ) => object;
 
 /** What a firing of a technique that `says` records for each of its facts,
@@ -646,6 +648,9 @@ export type ReasonOf<B, S extends CellMarks = CellMarks, Y = undefined> = (
 export interface Said<B, Y> {
   readonly binding: B;
   readonly says: Y;
+  /** What the fact has of its own (`says.fact`), where the technique reads
+   * one: the entry of `says.facts` at the fact. */
+  readonly fact?: object;
 }
 
 /**
@@ -660,7 +665,13 @@ export function compiledRung<B, C, S extends CellMarks = CellMarks, Y = undefine
   reason?: ReasonOf<B, S, Y>,
 ): Rung<S> {
   const reasonOf: ReasonOf<B, S, Y> =
-    reason ?? ((binding, _c, _n, _m, says) => ({ binding, says }) satisfies Said<B, Y>);
+    reason ??
+    ((binding, _c, _n, _m, says, fact) =>
+      ({
+        binding,
+        says,
+        fact: (says as { facts?: readonly object[] } | undefined)?.facts?.[fact],
+      }) satisfies Said<B, Y>);
   // The compiled technique passes what it says only where it says anything.
   const hear = (f: (binding: B, facts: Facts, says: Y) => boolean): Fire<B, Y> =>
     f as Fire<B, Y>;
@@ -672,7 +683,7 @@ export function compiledRung<B, C, S extends CellMarks = CellMarks, Y = undefine
       m.recorder
         ? hear((binding, facts, says) => {
             m.applyFacts(facts, (i) =>
-              reasonOf(binding, facts[i + 1], facts[i + 2], m, says),
+              reasonOf(binding, facts[i + 1], facts[i + 2], m, says, i / 3),
             );
             return m.wholePasses;
           })
@@ -689,7 +700,7 @@ export function compiledRung<B, C, S extends CellMarks = CellMarks, Y = undefine
       hear((binding, facts, says) => {
         const reasons: object[] = [];
         for (let i = 0; i < facts.length; i += 3)
-          reasons.push(reasonOf(binding, facts[i + 1], facts[i + 2], m, says));
+          reasons.push(reasonOf(binding, facts[i + 1], facts[i + 2], m, says, i / 3));
         out.push({ facts: facts.slice(), reasons });
         return true;
       }),

@@ -401,6 +401,36 @@ defect found in the game, said which.
 - **Lines.** `solver.ts` -207, `hint.ts` -113, `hint-text.ts` +108 (a
   sentence a technique), the description +78 of `says` and defines.
 
+### Bricks, built (2026-11-13), and the per-fact `says` it came with
+
+- **The per-fact `says` is built as designed below**, with three differences.
+  The records ride inside the firing's `says` (`says.facts[i]`, typed
+  `<Id>SaysFact`), not as a fourth argument of `fire`: the buffer is reset with
+  `facts` and copied into `_says`, so `Fire`'s signature and `compiledRung`'s
+  `fire` are unchanged, and `reasonOf` takes the fact's ordinal and the default
+  `Said` carries `fact`. A fact made by anything but a cell `place` or `strike`
+  throws where the technique concludes (`facts.length` and the records are
+  counted), so a record cannot fall out of step. `FiringSpoken` gained `facts`
+  (the step's squares each with its own terms) and its `outline`, `stripes` and
+  `strand` hold the firing's marks with those of the step's squares. A `with`
+  now returns whatever its body is (a set for a `says`); a premise that needs a
+  truth still checks it.
+- **One `shown: each` firing a square, no change of walk.** Bricks' five
+  techniques each decide several squares and the old plan made a step of each,
+  which `each` does; `three`'s run is its fact's outline
+  (`with place(c, 1): run(c)`), and `unsupported` outlines `{p in below(c) where
+  clue(hole, p) < 0}`, the squares it could rest on that are on the board.
+- **A change of behavior**: the plan's cap (40) counts firings, where the old
+  one counted squares, so a board whose walk is past forty squares has its next
+  batch begin at a firing's edge. With the cap lifted on both sides all 78
+  boards (4x4 to 14x14, both tiers, six each; 4,201 lines) are the same lines
+  as at `HEAD`, words, marks and move, and all five kinds are met.
+- **Lines.** `git show --stat` for the commit: `index.ts` and `solver.ts` lose
+  their hint (`BricksReason`, `ForcedMove`, `readsOf`, `movesOf`, the plan and
+  `belowOf`), `hint.ts` 95 and `executeMove`
+  moved to `state.ts` (the hint needs it and `index.ts` imports `hint.ts`), the
+  description +24 of `says`, `hint-text.ts` +19.
+
 ### What blocks the rest (2026-11-13, a survey by reading, to be re-checked per game)
 
 The first read of the remaining games found one that is a plain Clusters-shaped

@@ -212,6 +212,12 @@ export interface StatedSays {
   shown?: "each";
   terms?: Record<string, string>;
   marks?: Partial<Record<SaidRole, string>>;
+  /** What each square the firing decides has of its own, read where the
+   * conclusion's `place` or `strike` makes it. */
+  fact?: {
+    terms?: Record<string, string>;
+    marks?: Partial<Record<SaidRole, string>>;
+  };
   arms?: Record<
     string,
     {
@@ -521,6 +527,12 @@ export interface Technique {
 export interface Says {
   /** Whether a step is made for each square the firing decides. */
   each: boolean;
+  /** What each fact has of its own, read in the conclusion's scope where it is
+   * made; `null` where none does. */
+  fact: {
+    terms: { name: string; expr: Expr }[];
+    marks: { role: SaidRole; expr: Expr }[];
+  } | null;
   variants: {
     name: string | null;
     when: Expr | null;
@@ -672,9 +684,23 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
     };
   };
   const each = stated.shown === "each";
-  if (stated.arms === undefined) return { each, variants: [variant(null, null, {})] };
+  const fact =
+    stated.fact === undefined
+      ? null
+      : {
+          terms: Object.entries(stated.fact.terms ?? {}).map(([n, src]) => ({
+            name: n,
+            expr: at(`says fact ${n}`, src),
+          })),
+          marks: (Object.entries(stated.fact.marks ?? {}) as [SaidRole, string][]).map(
+            ([role, src]) => ({ role, expr: at(`says fact ${role}`, src) }),
+          ),
+        };
+  if (stated.arms === undefined)
+    return { each, fact, variants: [variant(null, null, {})] };
   return {
     each,
+    fact,
     variants: Object.entries(stated.arms).map(([name, arm]) =>
       variant(name, at(`says ${name} when`, arm.when), arm),
     ),

@@ -1,0 +1,8 @@
+6x7 Easy #0: 32 steps, solved, 064e2eb9c571318b [overcount:7 strandSupport:8 three:3 undercount:10 unsupported:4]
+6x7 Easy #1: 32 steps, solved, 7fa7cebecbff94f8 [overcount:1 strandSupport:4 three:3 undercount:16 unsupported:8]
+6x7 Easy #2: 33 steps, solved, 87415d1ac68780ce [overcount:4 strandSupport:7 three:3 undercount:15 unsupported:4]
+6x7 Easy #3: 33 steps, solved, dcee3b989b5fb8e4 [overcount:6 strandSupport:10 three:5 undercount:10 unsupported:2]
+6x7 Unreasonable #0: 20 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 67444a1a04eb630a [overcount:3 strandSupport:3 undercount:9 unsupported:5]
+6x7 Unreasonable #1: 27 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 254cd1715957dc93 [overcount:7 strandSupport:5 three:3 undercount:9 unsupported:3]
+6x7 Unreasonable #2: 17 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 85f8434132d9654d [overcount:1 strandSupport:2 three:1 undercount:10 unsupported:3]
+6x7 Unreasonable #3: 11 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., c74b001c52f99c9e [strandSupport:1 three:2 undercount:7 unsupported:1]

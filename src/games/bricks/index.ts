@@ -14,12 +14,9 @@
  */
 
 import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
-import { assertNever } from "../../engine/assert-never.ts";
 import {
   type Game,
-  type HintResult,
   type HintStep,
-  type HintTrackVerdict,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -27,11 +24,6 @@ import {
 import { fromCoord } from "../../engine/geometry.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import { UNSHADED_NAME } from "../../engine/piece.ts";
 import {
   cursorDelta,
@@ -62,7 +54,12 @@ import {
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newBricksDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import {
+  type BricksHint,
+  bricksHint,
+  bricksKeepTrack,
+  bricksRefreshHintStep,
+} from "./hint.ts";
 import {
   type BricksDrawState,
   colors,
@@ -76,8 +73,8 @@ import {
 import {
   answerColors,
   answerOf,
-  type BricksReason,
-  deduceBricksPlan,
+  BRICKS_RUNGS,
+  type BricksRung,
   deductionFinishes,
   findMistakes,
   isSolved,
@@ -91,18 +88,17 @@ import {
   bitsColor,
   type CellColor,
   COL_MASK,
-  cloneState,
   colorBits,
   decodeParams,
   defaultParams,
   encodeParams,
+  executeMove,
   F_BOUND,
   F_EMPTY,
   F_SHADE,
   F_UNSHADE,
   FE_WRONG,
   menu,
-  NUM_MASK,
   newState,
   paramConfig,
   textFormat,
@@ -330,24 +326,6 @@ function interpretMove(
   return interpretTargetVerbs(targetVerbs, state, ui, ds, pt, rawButton);
 }
 
-function executeMove(state: BricksState, move: BricksMove): BricksState {
-  const next = cloneState(state);
-  const { w, h } = next;
-  if (move.kind === "solve") {
-    for (let i = 0; i < w * h; i++) {
-      if (!(state.grid[i] & COL_MASK)) continue;
-      next.grid[i] = colorBits(move.grid[i]);
-    }
-  } else if (move.kind === "paint") {
-    for (const { index, to } of move.cells) {
-      if (state.grid[index] & COL_MASK) next.grid[index] = colorBits(to);
-    }
-  } else {
-    return assertNever(move, "bricks: executeMove");
-  }
-  return next;
-}
-
 function status(s: BricksState): GameStatus {
   return isSolved(s) ? "solved" : "ongoing";
 }
@@ -386,106 +364,6 @@ function solve(orig: BricksState): SolveResult<BricksMove> {
   }));
 }
 
-// --- hint (the compiled ladder's firings) -----------------------------------
-
-/** Plan data for a Bricks hint step, read by `hintKeepTrack`: the forced cell
- * (`target`, an index into the padded grid) and the color it is forced to
- * (`forced` — the narration says which; the render never pre-places it). */
-export interface BricksHint {
-  target: number;
-  forced: CellColor;
-}
-
-const pointOf = (i: number, w: number): Point => ({ x: i % w, y: Math.floor(i / w) });
-
-/** The evidence cells a reason reasons over (padded indices). */
-function evidenceOf(reason: BricksReason): number[] {
-  switch (reason.kind) {
-    case "three":
-      return reason.cells;
-    case "unsupported":
-      return reason.below;
-    case "overcount":
-    case "undercount":
-      return [reason.clue];
-    case "strandSupport":
-      return [reason.above];
-  }
-}
-
-/** Narrate *why* the move is forced, against the `evidence` the frame outlines
- * rather than the raw reason. The words are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(
-  reason: BricksReason,
-  state: BricksState,
-  targetIndex: number,
-  evidenceIndices: readonly number[],
-): Sentence {
-  const clueVal = (i: number): number => state.grid[i] & NUM_MASK;
-  const at = (i: number): Point => pointOf(i, state.w);
-  const target = at(targetIndex);
-  const evidence = evidenceIndices.map(at);
-  switch (reason.kind) {
-    case "three":
-      return say.three(target, evidence);
-    case "unsupported":
-      return say.unsupported(target, evidence);
-    case "overcount":
-      return say.overcount(target, at(reason.clue), clueVal(reason.clue));
-    case "strandSupport":
-      return say.strandSupport(target, at(reason.above));
-    case "undercount":
-      return say.undercount(target, at(reason.clue), clueVal(reason.clue));
-  }
-}
-
-/** Why a cell is forced, by the `kind` of the reason the solver records. */
-export const BRICKS_RUNGS = [
-  "three",
-  "unsupported",
-  "overcount",
-  "strandSupport",
-  "undercount",
-] as const satisfies readonly BricksReason["kind"][];
-export type BricksRung = (typeof BRICKS_RUNGS)[number];
-
-function hint(state: BricksState): HintResult<BricksMove, BricksHint, BricksRung> {
-  // The plan deduces onward from the player's marks, which `findMistakes` has
-  // compared with the answer wherever there is one. A board the search found
-  // no one answer to has none, and no plan to trust.
-  if (answerOf(state).kind !== "one")
-    return { ok: false, error: PUZZLE_NOT_REASONABLE };
-
-  const plan = deduceBricksPlan(state);
-  if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  const steps: HintStep<BricksMove, BricksHint, BricksRung>[] = plan.map((m) => {
-    const evidence = evidenceOf(m.reason).filter((c) => c !== m.index);
-    const highlights: BricksHint = { target: m.index, forced: m.to };
-    const words = narrate(m.reason, state, m.index, evidence);
-    return {
-      move: { kind: "paint", cells: [{ index: m.index, to: m.to }] },
-      rung: m.reason.kind,
-      explanation: words.text,
-      words,
-      highlights,
-    };
-  });
-  return { ok: true, steps };
-}
-
-/** A move completes the step when it paints the target cell to the hinted
- * color; touching the target with a different color, or not touching it, is
- * off-plan (Bricks steps are single-cell — no partial-subset case). */
-function hintKeepTrack(
-  m: BricksMove,
-  step: HintStep<BricksMove, BricksHint>,
-): HintTrackVerdict {
-  const hl = step.highlights;
-  if (m.kind !== "paint" || !hl) return "off";
-  const cell = m.cells.find((c) => c.index === hl.target);
-  return cell?.to === hl.forced ? "completed" : "off";
-}
-
 /** A tap on each cell the step paints. */
 function hintGesture(
   state: BricksState,
@@ -501,7 +379,7 @@ function hintGesture(
   }));
   return verbClicks(
     targetVerbs,
-    { executeMove, hintKeepTrack },
+    { executeMove, hintKeepTrack: bricksKeepTrack },
     state,
     ui,
     ds,
@@ -554,7 +432,7 @@ export const bricksGame: Game<
 
   solve,
   difficulty,
-  hint,
+  hint: bricksHint,
   hintRungs: BRICKS_RUNGS,
   hintMarks: {
     roles: {
@@ -563,7 +441,8 @@ export const bricksGame: Game<
         "what the step reasons from, as a smaller ring inside the cell: a number, the shaded bricks beside the cell, the cells beneath it or the brick above it.",
     },
   },
-  hintKeepTrack,
+  hintKeepTrack: bricksKeepTrack,
+  refreshHintStep: bricksRefreshHintStep,
   hintGesture,
   findMistakes,
   clearMistakes,

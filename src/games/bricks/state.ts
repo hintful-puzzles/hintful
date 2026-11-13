@@ -17,6 +17,7 @@
  * and cursor flags upstream ORs into the same word never reach state here.
  */
 
+import { assertNever } from "../../engine/assert-never.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
@@ -125,6 +126,24 @@ export interface BricksMistake {
 
 export function colorBits(c: CellColor): number {
   return c === "shade" ? F_SHADE : c === "unshade" ? F_UNSHADE : F_EMPTY;
+}
+
+export function executeMove(state: BricksState, move: BricksMove): BricksState {
+  const next = cloneState(state);
+  const { w, h } = next;
+  if (move.kind === "solve") {
+    for (let i = 0; i < w * h; i++) {
+      if (!(state.grid[i] & COL_MASK)) continue;
+      next.grid[i] = colorBits(move.grid[i]);
+    }
+  } else if (move.kind === "paint") {
+    for (const { index, to } of move.cells) {
+      if (state.grid[index] & COL_MASK) next.grid[index] = colorBits(to);
+    }
+  } else {
+    return assertNever(move, "bricks: executeMove");
+  }
+  return next;
 }
 
 export function bitsColor(bits: number): CellColor {
@@ -311,7 +330,7 @@ export function encodeDesc(grid: Uint16Array, w: number, h: number): string {
   return out;
 }
 
-export function cloneState(s: BricksState): BricksState {
+function cloneState(s: BricksState): BricksState {
   return { ...s, grid: s.grid.slice() };
 }
 

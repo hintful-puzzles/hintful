@@ -25,6 +25,7 @@ import {
   type MarkSort,
   parseTechnique,
   relationMarkOf,
+  type Says,
   type Technique,
   UNPLACED,
   withEveryVariation,
@@ -460,6 +461,14 @@ interface Env {
   held?: string[];
   /** Whether `strike` and `place` may be called: in a conclusion only. */
   concluding: boolean;
+  /** Where a technique's `says.fact` is read: at each `place` and `strike`
+   * of its conclusion, beside the fact, on a hint's path only. `fields` is
+   * the type of what it reads, set where it is compiled. */
+  factSays?: {
+    says: NonNullable<Says["fact"]>;
+    buffer: string;
+    fields: { terms: string[]; marks: string[] };
+  };
   /** Where the code is the answer check, which reads a whole grid's values
    * (`g`) rather than the marks: whether the description has a repeated
    * value, which the check then reads with its count from the description
@@ -1097,9 +1106,9 @@ function supposing(
     supposed: [{ cell, value }, ...env.supposed],
     hoist: env.hoist === null ? null : { ...env.hoist, marks: false },
   };
-  const body = compileExpr(e.body, scope, inner, out);
-  expect(body, "bool", "with");
-  return body;
+  // A truth in a premise, and a set where a `says` reads one under a
+  // supposition; whoever reads it checks its sort.
+  return compileExpr(e.body, scope, inner, out);
 }
 
 /** `known(c)`, `value(c)` or `cand(c)` of cell `c`: the grid's in the answer
@@ -4336,6 +4345,52 @@ function clueCall(args: readonly Expr[], scope: Scope, env: Env, out: Out): Val 
   return { code: `clueAt(cl.${a.name}, ${place})`, sort: kind.v };
 }
 
+/**
+ * A `place` or `strike` whose technique `says` something of each fact: on a
+ * hint's path it reads what the fact has of its own where the fact is made,
+ * in the conclusion's scope (the `forall` binders, and any `with` it writes),
+ * and records it beside the fact, in step with `facts`.
+ */
+function factWithSays(
+  fn: "strike" | "place",
+  c: string,
+  d: string,
+  site: NonNullable<Env["factSays"]>,
+  scope: Scope,
+  env: Env,
+  out: Out,
+): void {
+  const cond = fn === "strike" ? hasRead(c, d, env) : `!${marksRead("known", c)}`;
+  out.open(`if (${cond}) {`);
+  out.emit(`if (fire === null) { b.${fn}At(${c}, ${d}); changed = true; }`);
+  out.open("if (fire !== null) {");
+  const inner: Env = {
+    ...env,
+    concluding: false,
+    shared: { made: new Map() },
+    recheck: undefined,
+  };
+  const fields = { terms: [] as string[], marks: [] as string[] };
+  const read = (e: Expr, group: "terms" | "marks", name: string): string => {
+    const r = compileExpr(e, scope, inner, out);
+    if (group === "marks" && !isArray(r.sort))
+      throw new CompileError(`says fact marks ${name} is not a set of elements`);
+    fields[group].push(`${name}: ${tsType(r.sort)};`);
+    return `${name}: ${isArray(r.sort) ? `${r.code}.slice()` : r.code}`;
+  };
+  const terms = site.says.terms.map((x) => read(x.expr, "terms", x.name));
+  const marks = site.says.marks.map((x) => read(x.expr, "marks", x.role));
+  site.fields.terms = fields.terms;
+  site.fields.marks = fields.marks;
+  out.emit(`facts.push(${fn === "strike" ? "STRIKE" : "PLACE"}, ${c}, ${d});`);
+  out.emit(
+    `${site.buffer}.push({ terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} } });`,
+  );
+  out.close();
+  out.close();
+  env.used.add(fn === "strike" ? "STRIKE" : "PLACE");
+}
+
 function call(
   fn: string,
   args: readonly Expr[],
@@ -4788,6 +4843,10 @@ function call(
       const d = once(vs[1], out);
       // A fact that changes nothing is left out, so a binding fires only
       // where its conclusion changes the marks.
+      if (env.factSays !== undefined) {
+        factWithSays(fn, c.code, d.code, env.factSays, scope, env, out);
+        return { code: "true", sort: BOOL };
+      }
       out.emit(
         fn === "strike"
           ? `if (${hasRead(c.code, d.code, env)}) { if (fire === null) { b.strikeAt(${c.code}, ${d.code}); changed = true; } else facts.push(STRIKE, ${c.code}, ${d.code}); }`
@@ -6042,6 +6101,14 @@ function techniqueFunction(
     hoist: null,
     boardRoot: null,
     epoch: onPlace ? null : epoch,
+    factSays:
+      t.says?.fact == null
+        ? undefined
+        : {
+            says: t.says.fact,
+            buffer: `${fnName}FactSays`,
+            fields: { terms: [], marks: [] },
+          },
   };
   if (t.binders.some((b) => b.kind === "fill"))
     throw new CompileError(`${t.id}: a filling binds in a quantifier, not a technique`);
@@ -6104,6 +6171,7 @@ function techniqueFunction(
       body.emit(`if (!(${p.code})) continue;`);
     }
     body.emit("facts.length = 0;");
+    if (tenv.factSays !== undefined) body.emit(`${tenv.factSays.buffer}.length = 0;`);
     body.emit("changed = false;");
     const c = compileExpr(t.conclude, sc, { ...tenv, concluding: true, shared }, body);
     expect(c, "bool", "conclusion");
@@ -6144,6 +6212,10 @@ function techniqueFunction(
             ),
         );
       }
+      if (tenv.factSays !== undefined)
+        body.emit(
+          `if (${tenv.factSays.buffer}.length * 3 !== facts.length) throw new Error(${JSON.stringify(`${t.id}: a fact of its conclusion is made where says.fact is not read`)});`,
+        );
       if (arms) body.emit(`let _says: ${saysType} | null = null;`);
       for (const [i, v] of variants.entries()) {
         const fields = { terms: [] as string[], marks: [] as string[] };
@@ -6162,8 +6234,10 @@ function techniqueFunction(
         };
         const terms = v.terms.map((x) => read(x.expr, "terms", x.name));
         const marks = v.marks.map((x) => read(x.expr, "marks", x.role));
+        const own =
+          tenv.factSays === undefined ? "" : `, facts: ${tenv.factSays.buffer}.slice()`;
         body.emit(
-          `${arms ? "" : "const "}_says = { ${arms ? `arm: ${JSON.stringify(v.name)}, ` : ""}terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} } };`,
+          `${arms ? "" : "const "}_says = { ${arms ? `arm: ${JSON.stringify(v.name)}, ` : ""}terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} }${own} };`,
         );
         if (arms) body.close();
         saysFields.variants.push({ name: v.name, ...fields });
@@ -6302,25 +6376,39 @@ function techniqueFunction(
     ...(t.says === null
       ? []
       : [
-          `/** What a step for a firing of it speaks of: its terms, and the elements it marks by role${saysFields.variants[0].name === null ? "" : "; the arm that holds says which way it reads"}. */`,
+          ...(tenv.factSays === undefined
+            ? []
+            : [
+                `/** What a square the firing decides has of its own, read where it is made. */`,
+                `export interface ${saysType}Fact {`,
+                `  terms: { ${tenv.factSays.fields.terms.join(" ")} };`,
+                `  marks: { ${tenv.factSays.fields.marks.join(" ")} };`,
+                "}",
+                "",
+              ]),
+          `/** What a step for a firing of it speaks of: its terms, and the elements it marks by role${saysFields.variants[0].name === null ? "" : "; the arm that holds says which way it reads"}${tenv.factSays === undefined ? "" : "; and `facts`, what each of its facts has of its own"}. */`,
           ...(saysFields.variants[0].name === null
             ? [
                 `export interface ${saysType} {`,
                 `  terms: { ${saysFields.variants[0].terms.join(" ")} };`,
                 `  marks: { ${saysFields.variants[0].marks.join(" ")} };`,
+                ...(tenv.factSays === undefined ? [] : [`  facts: ${saysType}Fact[];`]),
                 "}",
               ]
             : [
                 `export type ${saysType} =`,
                 ...saysFields.variants.map(
                   (v) =>
-                    `  | { arm: ${JSON.stringify(v.name)}; terms: { ${v.terms.join(" ")} }; marks: { ${v.marks.join(" ")} } }`,
+                    `  | { arm: ${JSON.stringify(v.name)}; terms: { ${v.terms.join(" ")} }; marks: { ${v.marks.join(" ")} }${tenv.factSays === undefined ? "" : `; facts: ${saysType}Fact[]`} }`,
                 ),
                 ";",
               ]),
           "",
         ]),
     `const ${fnName}Facts: number[] = [];`,
+    ...(tenv.factSays === undefined
+      ? []
+      : [`const ${fnName}FactSays: ${saysType}Fact[] = [];`]),
     ...(readsCands.yes ? [`let ${buffer} = new Int32Array(0);`] : []),
     ...held,
     ...(foot === null

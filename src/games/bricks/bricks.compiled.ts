@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/bricks/bricks.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, cellsValued, clueAt, freshBinding, keptStore, staleChecking, stretch, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, cellsValued, clueAt, freshBinding, keptStore, setOf, staleChecking, stretch, type Kept } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -18,6 +18,22 @@ export const units: readonly string[] = [];
 
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "strandSupport" | "undercount" | "three" | "unsupported" | "overcount";
+
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  strandSupport: StrandSupportSays;
+  undercount: UndercountSays;
+  three: ThreeSays;
+  unsupported: UnsupportedSays;
+  overcount: OvercountSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["strandSupport","undercount","three","unsupported","overcount"] as const;
+
+/** The techniques whose step is made for each square the firing decides. */
+export const SAYS_EACH: readonly (keyof SaysById)[] = ["strandSupport","undercount","three","unsupported","overcount"];
 
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
@@ -158,10 +174,16 @@ export interface StrandSupportBinding {
   a: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface StrandSupportSays {
+  terms: {  };
+  marks: { outline: readonly number[]; };
+}
+
 const strandSupportFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function strandSupport(b: Marks, sp: GridSpace, fire: Fire<StrandSupportBinding> | null): number {
+export function strandSupport(b: Marks, sp: GridSpace, fire: Fire<StrandSupportBinding, StrandSupportSays> | null): number {
   const facts = strandSupportFacts;
   let fired = 0;
   let changed = false;
@@ -212,7 +234,10 @@ export function strandSupport(b: Marks, sp: GridSpace, fire: Fire<StrandSupportB
     if (!(_c16)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ a: v_a }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: {  }, marks: { outline: setOf(v_a).slice() } };
+        if (!fire({ a: v_a }, facts, _says)) return 1;
+      }
     }
   }
   return fired;
@@ -223,10 +248,16 @@ export interface UndercountBinding {
   n: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface UndercountSays {
+  terms: { clue: number; value: number; };
+  marks: { outline: readonly number[]; };
+}
+
 const undercountFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function undercount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<UndercountBinding> | null): number {
+export function undercount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<UndercountBinding, UndercountSays> | null): number {
   const facts = undercountFacts;
   let fired = 0;
   let changed = false;
@@ -267,7 +298,10 @@ export function undercount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Underc
       if (!(_c14)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ k: v_k, n: v_n }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { clue: v_k, value: v_n }, marks: { outline: setOf(v_k).slice() } };
+          if (!fire({ k: v_k, n: v_n }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -278,12 +312,27 @@ export interface ThreeBinding {
   L: number;
 }
 
+/** What a square the firing decides has of its own, read where it is made. */
+export interface ThreeSaysFact {
+  terms: {  };
+  marks: { outline: readonly number[]; };
+}
+
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; and `facts`, what each of its facts has of its own. */
+export interface ThreeSays {
+  terms: {  };
+  marks: {  };
+  facts: ThreeSaysFact[];
+}
+
 const threeFacts: number[] = [];
+const threeFactSays: ThreeSaysFact[] = [];
 
 /** Its dearest read grows with the board as n^1.5. */
-export function three(b: Marks, sp: GridSpace, fire: Fire<ThreeBinding> | null): number {
+export function three(b: Marks, sp: GridSpace, fire: Fire<ThreeBinding, ThreeSays> | null): number {
   const _g9: number[] = [];
   const _g21: number[] = [];
+  const _g30: number[] = [];
   const facts = threeFacts;
   let fired = 0;
   let changed = false;
@@ -294,6 +343,7 @@ export function three(b: Marks, sp: GridSpace, fire: Fire<ThreeBinding> | null):
       freshBinding("three", [(sp.rows.includes(v_L))], ["L in"]);
     }
     facts.length = 0;
+    threeFactSays.length = 0;
     changed = false;
     let _q5 = true;
     Q6: {
@@ -316,8 +366,8 @@ export function three(b: Marks, sp: GridSpace, fire: Fire<ThreeBinding> | null):
         }
       }
     }
-    let _c28: boolean = _q5;
-    if (_c28) {
+    let _c36: boolean = _q5;
+    if (_c36) {
       let _q15 = true;
       Q16: {
         const _a17 = sp.lineCells[v_L];
@@ -339,19 +389,40 @@ export function three(b: Marks, sp: GridSpace, fire: Fire<ThreeBinding> | null):
             _c27 = (stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g21).length > 2);
           }
           if (!(_c27)) continue;
-          if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, 2); changed = true; } else facts.push(PLACE, v_c, 2); }
+          if (!(b.grid[v_c] !== 0)) {
+            if (fire === null) { b.placeAt(v_c, 2); changed = true; }
+            if (fire !== null) {
+              const _wc28 = v_c;
+              const _wd29 = 1;
+              _g30.length = 0;
+              G31: {
+                const _a34 = sp.lineCells[sp.rowOf[v_c]];
+                for (let _i35 = 0; _i35 < _a34.length; _i35++) {
+                  const v_x = _a34[_i35];
+                  if (!(((v_x === _wc28 ? _wd29 : (b.grid[v_x] || -1)) === 1))) continue;
+                  _g30.push(v_x);
+                }
+              }
+              facts.push(PLACE, v_c, 2);
+              threeFactSays.push({ terms: {  }, marks: { outline: stretch(sp.lineCells[sp.rowOf[v_c]], v_c, _g30).slice() } });
+            }
+          }
           if (!(true)) {
             _q15 = false;
             break Q16;
           }
         }
       }
-      _c28 = _q15;
+      _c36 = _q15;
     }
-    if (!(_c28)) return -1;
+    if (!(_c36)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ L: v_L }, facts)) return 1;
+      if (fire !== null) {
+        if (threeFactSays.length * 3 !== facts.length) throw new Error("three: a fact of its conclusion is made where says.fact is not read");
+        const _says = { terms: {  }, marks: {  }, facts: threeFactSays.slice() };
+        if (!fire({ L: v_L }, facts, _says)) return 1;
+      }
     }
   }
   return fired;
@@ -361,14 +432,22 @@ export interface UnsupportedBinding {
   c: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface UnsupportedSays {
+  terms: {  };
+  marks: { outline: readonly number[]; };
+}
+
 const unsupportedFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function unsupported(b: Marks, sp: GridSpace, fire: Fire<UnsupportedBinding> | null): number {
+export function unsupported(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<UnsupportedBinding, UnsupportedSays> | null): number {
+  const _g6: number[] = [];
   const facts = unsupportedFacts;
   let fired = 0;
   let changed = false;
   const _h5 = (sp.h - 1);
+  const _k10 = belowKept.board(sp);
   const _a3 = sp.cells;
   for (let _i4 = 0; _i4 < _a3.length; _i4++) {
     const v_c = _a3[_i4];
@@ -382,7 +461,20 @@ export function unsupported(b: Marks, sp: GridSpace, fire: Fire<UnsupportedBindi
     if (!(true)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ c: v_c }, facts)) return 1;
+      if (fire !== null) {
+        _g6.length = 0;
+        G7: {
+          const _a11 = (_k10[v_c] ?? below(sp, v_c));
+          for (let _i12 = 0; _i12 < _a11.length; _i12++) {
+            const v_p = _a11[_i12];
+            const _h13 = clueAt(cl.hole, v_p);
+            if (!((_h13 < 0))) continue;
+            _g6.push(v_p);
+          }
+        }
+        const _says = { terms: {  }, marks: { outline: _g6.slice() } };
+        if (!fire({ c: v_c }, facts, _says)) return 1;
+      }
     }
   }
   return fired;
@@ -393,10 +485,16 @@ export interface OvercountBinding {
   n: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface OvercountSays {
+  terms: { clue: number; value: number; };
+  marks: { outline: readonly number[]; };
+}
+
 const overcountFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function overcount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OvercountBinding> | null): number {
+export function overcount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OvercountBinding, OvercountSays> | null): number {
   const facts = overcountFacts;
   let fired = 0;
   let changed = false;
@@ -437,7 +535,10 @@ export function overcount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Overcou
       if (!(_c14)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ k: v_k, n: v_n }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { clue: v_k, value: v_n }, marks: { outline: setOf(v_k).slice() } };
+          if (!fire({ k: v_k, n: v_n }, facts, _says)) return 1;
+        }
       }
     }
   }

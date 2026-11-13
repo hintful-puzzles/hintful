@@ -68,23 +68,39 @@ interface Journey<Move, Target extends Point, State> {
 interface SaysOf {
   arm?: string;
   terms: object;
-  marks: {
-    outline?: readonly number[];
-    stripes?: readonly number[];
-    strand?: readonly number[];
-    reads?: readonly number[];
-  };
+  marks: SaidMarks;
+  /** What each square the firing decides has of its own (`says.fact`), by
+   * fact, in the order of the firing's facts. */
+  facts?: readonly { terms: object; marks: SaidMarks }[];
+}
+
+interface SaidMarks {
+  outline?: readonly number[];
+  stripes?: readonly number[];
+  strand?: readonly number[];
+  reads?: readonly number[];
 }
 
 /** What a sentence is built from: the technique's terms (and, where it has
  * arms, which arm held, so narrowing on `arm` narrows `terms`), and the squares
  * its step marks. `targets` are the squares the firing decides; `outline` is
  * what the technique outlines less those and less `strand`, which is drawn
- * apart; `stripes` is the line it hatches. */
+ * apart; `stripes` is the line it hatches. Where a technique reads what each
+ * square has of its own (`says.fact`), `outline`, `stripes` and `strand` hold
+ * the firing's with those of the squares the step is about, and `facts` has
+ * each of those squares with its own terms. */
 export type FiringSpoken<S> = S extends { terms: infer T }
   ? {
       terms: T;
       arm: S extends { arm: infer A } ? A : undefined;
+      facts: readonly {
+        at: Point;
+        terms: S extends { facts: readonly (infer F)[] }
+          ? F extends { terms: infer FT }
+            ? FT
+            : never
+          : undefined;
+      }[];
       targets: readonly Point[];
       outline: readonly Point[];
       stripes: readonly Point[];
@@ -221,11 +237,13 @@ export function describedFiringHint<
     // apart, those it decides, and what it says it reads beyond them. A line
     // it only hatches is not read.
     const reads = (taken: Parameters<typeof filledBy>[0]): number[] => {
-      const { marks } = spokenOf<SaysOf>(taken).says;
+      const { marks, facts } = spokenOf<SaysOf>(taken).says;
       return [
-        ...(marks.reads ?? []),
-        ...(marks.outline ?? []),
-        ...(marks.strand ?? []),
+        ...[marks, ...(facts ?? []).map((x) => x.marks)].flatMap((x) => [
+          ...(x.reads ?? []),
+          ...(x.outline ?? []),
+          ...(x.strand ?? []),
+        ]),
         ...filledBy(taken),
       ];
     };
@@ -242,11 +260,14 @@ export function describedFiringHint<
       // The squares the firing decides, still open as it found them.
       const decided: Target[] = [];
       const seen = new Set<number>();
+      const own = new Map<number, { terms: object; marks: SaidMarks }>();
       for (let i = 0; i < f.facts.length; i += 3) {
         const c = f.facts[i + 1];
         if (f.facts[i] !== PLACE || before[c] !== 0 || seen.has(c)) continue;
         seen.add(c);
         decided.push(spec.target(pointOf(c), f.facts[i + 2]));
+        const fact = says.facts?.[i / 3];
+        if (fact !== undefined) own.set(c, fact);
       }
       // The squares its placing techniques went on to decide.
       const followed: Target[] = [];
@@ -260,8 +281,17 @@ export function describedFiringHint<
       for (const group of each ? decided.map((t) => [t]) : [decided]) {
         const targets = [...group, ...followed];
         const fills = new Set(each ? group.map((t) => t.y * w + t.x) : filledBy(f));
-        const strand = (says.marks.strand ?? []).filter((c) => !fills.has(c));
-        const outline = (says.marks.outline ?? []).filter(
+        // What the squares of this step have of their own joins the firing's.
+        const squares = group.map((t) => t.y * w + t.x);
+        const marksOf = (role: "outline" | "stripes" | "strand"): number[] => [
+          ...new Set([
+            ...(says.marks[role] ?? []),
+            ...squares.flatMap((c) => own.get(c)?.marks[role] ?? []),
+          ]),
+        ];
+        const stripes = marksOf("stripes");
+        const strand = marksOf("strand").filter((c) => !fills.has(c));
+        const outline = marksOf("outline").filter(
           (c) => !fills.has(c) && !strand.includes(c),
         );
         const bare = (t: Point): Point => ({ x: t.x, y: t.y });
@@ -269,9 +299,13 @@ export function describedFiringHint<
           {
             terms: says.terms,
             arm: says.arm,
+            facts: group.map((t) => ({
+              at: bare(t),
+              terms: own.get(t.y * w + t.x)?.terms,
+            })),
             targets: group.map(bare),
             outline: outline.map(pointOf),
-            stripes: (says.marks.stripes ?? []).map(pointOf),
+            stripes: stripes.map(pointOf),
             strand: strand.map(pointOf),
             at: pointOf,
             consequences: followed.map(bare),
@@ -282,7 +316,7 @@ export function describedFiringHint<
         const marked: Marked<Target> = {
           targets,
           outline: outline.map(pointOf),
-          stripes: (says.marks.stripes ?? []).map(pointOf),
+          stripes: stripes.map(pointOf),
           strand: strand.map(pointOf),
         };
         const highlights = (

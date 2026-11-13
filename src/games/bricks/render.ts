@@ -44,7 +44,7 @@ import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts"
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
-import type { BricksHint } from "./index.ts";
+import type { BricksHint } from "./hint.ts";
 import { bricksValidate } from "./solver.ts";
 import {
   type BricksMistake,

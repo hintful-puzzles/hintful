@@ -1,5 +1,5 @@
 /**
- * Bricks explained-hint tests. Each technique's reason is pinned on crafted
+ * Bricks explained-hint tests. Each technique's step is pinned on crafted
  * minimal grids (one rule each), the plan's stop where only the search
  * progresses on a Tricky fixture, and the whole `hint()` — refusals, plan
  * stability, narration, `hintKeepTrack`, and the render overlay — on a real
@@ -19,14 +19,14 @@ import {
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
+import { type BricksHint, bricksSteps } from "./hint.ts";
 import { say } from "./hint-text.ts";
-import { type BricksHint, bricksGame } from "./index.ts";
+import { bricksGame } from "./index.ts";
 import { COL_HINT_CELL, tileOrigin } from "./render.ts";
 import {
   answerColors,
   answerOf,
   bricksValidate,
-  deduceBricksPlan,
   findMistakes,
   isSolved,
 } from "./solver.ts";
@@ -62,6 +62,18 @@ const FIX_ID = `${encodeParams(FIX_PARAMS, true)}:${FIX.desc}`;
  * carries `BricksHint`. */
 const hl = (s: HintStep<BricksMove>): BricksHint => s.highlights as BricksHint;
 
+/** The steps of the walk from `st`, none where it has nothing to say. */
+function plan(st: BricksState): HintStep<BricksMove, BricksHint, string>[] {
+  const r = bricksSteps(st);
+  return r.ok ? r.steps : [];
+}
+
+/** The square a step decides and the color it asks. */
+function decided(step: HintStep<BricksMove>): { index: number; to: string } {
+  if (step.move.kind !== "paint") throw new Error("not a paint");
+  return step.move.cells[0];
+}
+
 /** Every reason, on a board whose plan speaks it. */
 describeHintPins({
   game: bricksGame,
@@ -71,23 +83,23 @@ describeHintPins({
   ],
   seeds: 40,
   pins: {
-    /** Held on 2824 of 3649 positions walked. */
+    /** Held on 3388 of 3610 positions walked. */
+    strandSupport: {
+      id: "6x7de:1a2cc1a3c1_4af2a3_2be3_2b2b",
+      moves: [{ kind: "paint", cells: [{ index: 8, to: "shade" }] }],
+    },
+    /** Held on 3416 of 3610 positions walked. */
+    undercount: "6x7de:1a2cc1a3c1_4af2a3_2be3_2b2b",
+    /** Held on 2618 of 3610 positions walked. */
     three: {
       id: "6x7de:1c4a3ee4c5b3eb3_4b2e",
       moves:
         '[{"kind":"paint","cells":[{"index":4,"to":"shade"}]},{"kind":"paint","cells":[{"index":6,"to":"shade"}]}]',
     },
-    /** Held on 2593 of 3649 positions walked. */
+    /** Held on 2848 of 3610 positions walked. */
     unsupported: "6x7de:d2aa3dfd1_0a2b4ab4b2a4d",
-    /** Held on 3094 of 3649 positions walked. */
+    /** Held on 3477 of 3610 positions walked. */
     overcount: "6x7de:b0_0be1_1_3dd6af3a5a5af",
-    /** Held on 3588 of 3649 positions walked. */
-    strandSupport: {
-      id: "6x7de:1a2cc1a3c1_4af2a3_2be3_2b2b",
-      moves: [{ kind: "paint", cells: [{ index: 8, to: "shade" }] }],
-    },
-    /** Held on 3519 of 3649 positions walked. */
-    undercount: "6x7de:1a2cc1a3c1_4af2a3_2be3_2b2b",
   },
 });
 
@@ -113,12 +125,13 @@ function solvedBits(st: BricksState): number[] {
   return answerColors(answer.solution).map(colorBits);
 }
 
-describe("bricks hint — each technique's reason", () => {
+describe("bricks hint — each technique's step", () => {
   it("three-in-a-row forces the middle cell clear", () => {
     // A single row S . S — shading the gap makes three in a row.
     const st = grid([["S", ".", "S"]]);
-    const [m] = deduceBricksPlan(st);
-    expect(m).toMatchObject({ index: 1, to: "unshade", reason: { kind: "three" } });
+    const [m] = plan(st);
+    expect(m.rung).toBe("three");
+    expect(decided(m)).toEqual({ index: 1, to: "unshade" });
   });
 
   it("an unsupportable cell is forced clear", () => {
@@ -127,12 +140,9 @@ describe("bricks hint — each technique's reason", () => {
       [".", "."],
       ["U", "U"],
     ]);
-    const [m] = deduceBricksPlan(st);
-    expect(m).toMatchObject({
-      index: 0,
-      to: "unshade",
-      reason: { kind: "unsupported" },
-    });
+    const [m] = plan(st);
+    expect(m.rung).toBe("unsupported");
+    expect(decided(m)).toEqual({ index: 0, to: "unshade" });
   });
 
   it("an over-filled clue forces a neighbor clear", () => {
@@ -141,8 +151,9 @@ describe("bricks hint — each technique's reason", () => {
       ["0", ".", "."],
       ["U", ".", "."],
     ]);
-    const [m] = deduceBricksPlan(st);
-    expect(m).toMatchObject({ index: 1, to: "unshade", reason: { kind: "overcount" } });
+    const [m] = plan(st);
+    expect(m.rung).toBe("overcount");
+    expect(decided(m)).toEqual({ index: 1, to: "unshade" });
   });
 
   it("a brick's last support is forced shaded", () => {
@@ -151,12 +162,9 @@ describe("bricks hint — each technique's reason", () => {
       ["S", "."],
       [".", "U"],
     ]);
-    const [m] = deduceBricksPlan(st);
-    expect(m).toMatchObject({
-      index: 2,
-      to: "shade",
-      reason: { kind: "strandSupport" },
-    });
+    const [m] = plan(st);
+    expect(m.rung).toBe("strandSupport");
+    expect(decided(m)).toEqual({ index: 2, to: "shade" });
   });
 
   it("a clue that can no longer reach its count forces a neighbor shaded", () => {
@@ -166,8 +174,9 @@ describe("bricks hint — each technique's reason", () => {
       ["1", "U"],
       [".", "."],
     ]);
-    const [m] = deduceBricksPlan(st);
-    expect(m).toMatchObject({ index: 2, to: "shade", reason: { kind: "undercount" } });
+    const [m] = plan(st);
+    expect(m.rung).toBe("undercount");
+    expect(decided(m)).toEqual({ index: 2, to: "shade" });
   });
 
   it("a number with all its bricks clears its other neighbors, one step each", () => {
@@ -177,11 +186,12 @@ describe("bricks hint — each technique's reason", () => {
       [".", "1", "."],
       ["S", ".", "U"],
     ]);
-    const overcount = { kind: "overcount", clue: 1 };
-    expect(deduceBricksPlan(st)).toEqual([
-      { index: 2, to: "unshade", reason: overcount },
-      { index: 4, to: "unshade", reason: overcount },
-      { index: 0, to: "unshade", reason: overcount },
+    const steps = plan(st);
+    expect(steps.map((m) => m.rung)).toEqual(["overcount", "overcount", "overcount"]);
+    expect(steps.map(decided)).toEqual([
+      { index: 2, to: "unshade" },
+      { index: 4, to: "unshade" },
+      { index: 0, to: "unshade" },
     ]);
   });
 });
@@ -192,10 +202,13 @@ describe("bricks hint — where the search takes over", () => {
     // plan ends and the search still finds the board its one answer.
     const tricky = fixtures.find((f) => f.diff === 2) as Fixture;
     let st = newState({ w: tricky.w, h: tricky.h, diff: tricky.diff }, tricky.desc);
-    for (let plan = deduceBricksPlan(st); plan.length > 0; plan = deduceBricksPlan(st))
+    for (let steps = plan(st); steps.length > 0; steps = plan(st))
       st = bricksGame.executeMove(st, {
         kind: "paint",
-        cells: plan.map((m) => ({ index: m.index, to: m.to })),
+        cells: steps.map((m) => decided(m)) as {
+          index: number;
+          to: "shade" | "unshade";
+        }[],
       });
     // The hint has nothing more to say here…
     expect(bricksGame.status(st)).toBe("ongoing");
@@ -215,7 +228,7 @@ describe("bricks hint — the full hint()", () => {
     for (const step of r.steps) {
       expect(step.explanation.length).toBeGreaterThan(0);
       expect(step.move).toMatchObject({ kind: "paint" });
-      expect(hl(step).target).toBeGreaterThanOrEqual(0);
+      expect(hl(step).targets).toHaveLength(1);
       // The target is never in its own evidence.
       const [target] = stepMarks(step).of("ring", CELL);
       expect(stepMarks(step).of("outline", CELL)).not.toContainEqual(target);
@@ -224,9 +237,11 @@ describe("bricks hint — the full hint()", () => {
 
   it("the plan applied in order drives the board to completion", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
-    const plan = deduceBricksPlan(st);
     const g = st.grid.slice();
-    for (const m of plan) g[m.index] = colorBits(m.to);
+    for (const step of plan(st)) {
+      const { index, to } = decided(step);
+      g[index] = colorBits(to as "shade" | "unshade");
+    }
     // 7x6 easy has fewer than the plan cap of empties, so one plan finishes it.
     expect(g.some((c) => (c & COL_MASK) === F_EMPTY)).toBe(false);
     expect(isSolved({ ...st, grid: g })).toBe(true);
@@ -241,7 +256,7 @@ describe("bricks hint — the full hint()", () => {
     const r1 = bricksGame.hint?.(next);
     if (!r1?.ok) throw new Error();
     // The recomputed plan's first step is what was step 1 before.
-    expect(hl(r1.steps[0]).target).toBe(hl(r0.steps[1]).target);
+    expect(hl(r1.steps[0]).targets).toEqual(hl(r0.steps[1]).targets);
   });
 });
 
@@ -381,10 +396,10 @@ describe("bricks hint — hintKeepTrack", () => {
     if (!r?.ok) throw new Error();
     const step = r.steps[0];
     expect(bricksGame.hintKeepTrack?.(step.move, step, st)).toBe("completed");
-    const target = hl(step).target ?? -1;
+    const { index, to } = decided(step);
     const wrong: BricksMove = {
       kind: "paint",
-      cells: [{ index: target, to: hl(step).forced === "shade" ? "unshade" : "shade" }],
+      cells: [{ index, to: to === "shade" ? "unshade" : "shade" }],
     };
     expect(bricksGame.hintKeepTrack?.(wrong, step, st)).toBe("off");
   });

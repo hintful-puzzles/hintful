@@ -27,11 +27,9 @@ import {
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
 import {
-  clueAt,
   clueList,
   describedSpace,
   type GridSpace,
-  stretch,
 } from "../../engine/describe-runtime.ts";
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import {
@@ -39,14 +37,12 @@ import {
   compiledRung,
   describedLadder,
   type Ladder,
+  type LadderEntry,
   ladderTechniques,
-  ladderWalk,
   runLadder,
-  type Taken,
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import * as bricks from "./bricks.compiled.ts";
 import {
   BRICKS_STEPS,
@@ -80,29 +76,6 @@ interface Board {
   w: number;
   h: number;
   grid: Uint16Array;
-}
-
-/**
- * *Why* a square is forced: the rule its other color would break at once.
- * Every cell field is a padded index. One variant a technique.
- */
-export type BricksReason =
-  /** Shading the square makes these, it among them, three or more in a row. */
-  | { kind: "three"; cells: number[] }
-  /** The shaded square would rest on none of these. */
-  | { kind: "unsupported"; below: number[] }
-  /** Shading the square gives this number too many. */
-  | { kind: "overcount"; clue: number }
-  /** Clearing the square leaves this shaded brick nothing to rest on. */
-  | { kind: "strandSupport"; above: number }
-  /** Clearing the square leaves this number too few to reach it. */
-  | { kind: "undercount"; clue: number };
-
-/** One forced square with the reason that forces it. */
-export interface ForcedMove {
-  index: number;
-  to: CellColor;
-  reason: BricksReason;
 }
 
 /** The values the description reads off a padded grid: a number or a hole
@@ -153,53 +126,14 @@ function bricksMarks(sp: GridSpace, dl: bricks.Dealt, values: Uint8Array): CellM
   return m;
 }
 
-/** The squares `c` rests on, those on the grid and no hole: the
- * description's `below(c)`. */
-function belowOf(sp: GridSpace, dl: bricks.Dealt, c: number): number[] {
-  const x = c % sp.w;
-  const y = (c / sp.w) | 0;
-  return sp.adj8[c].filter((p) => {
-    const dx = (p % sp.w) - x;
-    const dy = ((p / sp.w) | 0) - y;
-    return dy > 0 && dx !== dy && clueAt(dl.hole, p) < 0;
-  });
-}
-
-/** The ladder over the dealt board, each technique with its reason: built
- * from the binding and the square placed, on the marks before the firing. */
+/** The ladder over the dealt board. */
 function bricksLadder(dl: bricks.Dealt): Ladder {
   return describedLadder(bricks, {
-    strandSupport: uncluedRung(
-      bricks.strandSupport,
-      ({ a }): BricksReason => ({ kind: "strandSupport", above: a }),
-    ),
-    undercount: compiledRung(
-      bricks.undercount,
-      dl,
-      ({ k }): BricksReason => ({ kind: "undercount", clue: k }),
-    ),
-    three: uncluedRung(bricks.three, ({ L }, c, _to, m): BricksReason => {
-      // The run with the square supposed shaded.
-      const row = m.sp.lineCells[L];
-      const run = stretch(
-        row,
-        c,
-        row.filter((x) => x === c || m.value(x) === SHADED),
-      );
-      return { kind: "three", cells: [...run] };
-    }),
-    unsupported: uncluedRung(
-      bricks.unsupported,
-      ({ c }, _c, _to, m): BricksReason => ({
-        kind: "unsupported",
-        below: belowOf(m.sp, dl, c),
-      }),
-    ),
-    overcount: compiledRung(
-      bricks.overcount,
-      dl,
-      ({ k }): BricksReason => ({ kind: "overcount", clue: k }),
-    ),
+    strandSupport: uncluedRung(bricks.strandSupport),
+    undercount: compiledRung(bricks.undercount, dl),
+    three: uncluedRung(bricks.three),
+    unsupported: compiledRung(bricks.unsupported, dl),
+    overcount: compiledRung(bricks.overcount, dl),
   });
 }
 
@@ -311,60 +245,25 @@ export function answerColors(solution: Uint8Array): CellColor[] {
 
 // --- the hint's walk ---------------------------------------------------------
 
-/** The cells a reason's premise reads: the bricks or number the supposition
- * broke. */
-function readsOf(reason: BricksReason): number[] {
-  switch (reason.kind) {
-    case "three":
-      return reason.cells;
-    case "unsupported":
-      return reason.below;
-    case "overcount":
-    case "undercount":
-      return [reason.clue];
-    case "strandSupport":
-      return [reason.above];
-  }
-}
-
-/** The squares a firing decides, each with its reason, in the order the
- * technique found them. */
-function movesOf({ facts, reasons }: Taken): ForcedMove[] {
-  const out: ForcedMove[] = [];
-  for (let i = 0; i < facts.length; i += 3)
-    out.push({
-      index: facts[i + 1],
-      to: facts[i + 2] === SHADED ? "shade" : "unshade",
-      reason: reasons[i / 3] as BricksReason,
-    });
-  return out;
-}
-
-/** Runaway/UX cap on plan length — the player rarely follows more than a few
- * before diverging, and a recompute yields the next batch. */
-const HINT_PLAN_MAX = 40;
+/** The kinds of step a hint can be, which the description's `says` names. */
+export const BRICKS_RUNGS = bricks.SAYS_KINDS;
+export type BricksRung = (typeof BRICKS_RUNGS)[number];
 
 /**
- * The ordered plan of forced moves from the player's own board, one square a
- * step: the squares of the firing that carries on from those the last
- * decided first (`ladderWalk`), each with its reason. The caller guarantees
- * the board agrees with the unique answer, so every move is correct.
+ * What a hint walks from the player's own marks: the marks over the squares
+ * they have shaded or cleared, and the ladder's techniques. The caller
+ * guarantees the board agrees with its unique answer, so every firing is
+ * correct.
  */
-export function deduceBricksPlan(state: BricksState): ForcedMove[] {
+export function hintWalk(state: BricksState): {
+  marks: CellMarks;
+  entries: readonly LadderEntry[];
+} {
   const dl = dealtOf(state);
-  const m = bricksMarks(bricksSpace(state.w, state.h), dl, valuesOf(state.grid));
-  m.budget = stepBudget("bricks hint");
-  const walk = ladderWalk(m, bricksLadder(dl).entries, { [TIERS]: 0 }, (f) => [
-    ...(f.reasons as BricksReason[]).flatMap(readsOf),
-    ...movesOf(f).map((g) => g.index),
-  ]);
-  const plan: ForcedMove[] = [];
-  while (plan.length < HINT_PLAN_MAX) {
-    const taken = walk.next();
-    if (taken === null || taken === "contradiction") break;
-    plan.push(...movesOf(taken));
-  }
-  return plan;
+  return {
+    marks: bricksMarks(bricksSpace(state.w, state.h), dl, valuesOf(state.grid)),
+    entries: bricksLadder(dl).entries,
+  };
 }
 
 /**

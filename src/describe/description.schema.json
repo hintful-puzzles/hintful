@@ -71,6 +71,28 @@
                 "reads": { "$ref": "#/$defs/formula" }
               }
             },
+            "fact": {
+              "type": "object",
+              "description": "What a square the firing decides has of its own, read where the conclusion's `place` or `strike` makes it, in the conclusion's scope (a `forall` binder is live, and a `with` may be written): the step for that square takes these in place of the firing's, and a step for the firing takes the union of its squares' marks.",
+              "additionalProperties": false,
+              "properties": {
+                "terms": {
+                  "type": "object",
+                  "additionalProperties": { "$ref": "#/$defs/formula" }
+                },
+                "marks": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "outline": { "$ref": "#/$defs/formula" },
+                    "stripes": { "$ref": "#/$defs/formula" },
+                    "strike": { "$ref": "#/$defs/formula" },
+                    "strand": { "$ref": "#/$defs/formula" },
+                    "reads": { "$ref": "#/$defs/formula" }
+                  }
+                }
+              }
+            },
             "arms": {
               "type": "object",
               "description": "Where a step reads differently by what holds of the binding: each arm is a name and a condition, tried in order, the first true one winning, and adds its own `terms` and `marks` to the shared ones above. The step's kind is `<id>.<arm>`.",

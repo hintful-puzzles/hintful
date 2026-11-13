@@ -19,6 +19,7 @@
  * brick-wall supports one row down/up.
  */
 
+import type { FiringSpoken } from "../../engine/described-firing-hint.ts";
 import {
   CELL,
   mark,
@@ -28,6 +29,7 @@ import {
   so,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
+import type { SaysById } from "./bricks.compiled.ts";
 
 const thisCell = (target: Point): Narration =>
   mark.this("ring", CELL, [target], "cell");
@@ -87,4 +89,21 @@ export const say = {
       look: phrase`${outlined([clue], `The outlined ${n}`)} beside ${thisCell(target)} can't reach ${n} shaded neighbor${n === 1 ? "" : "s"} without it`,
       move: beShaded,
     }),
+};
+
+type Spoken<K extends keyof SaysById> = FiringSpoken<SaysById[K]>;
+
+/** Each technique's sentence, from what its description says of a firing
+ * (`engine/described-firing-hint.ts`): every step is for one square, which a
+ * technique that places several has each of. */
+export const sentences = {
+  three: (s: Spoken<"three">): Sentence => say.three(s.targets[0], s.outline),
+  unsupported: (s: Spoken<"unsupported">): Sentence =>
+    say.unsupported(s.targets[0], s.outline),
+  overcount: (s: Spoken<"overcount">): Sentence =>
+    say.overcount(s.targets[0], s.at(s.terms.clue), s.terms.value),
+  strandSupport: (s: Spoken<"strandSupport">): Sentence =>
+    say.strandSupport(s.targets[0], s.outline[0]),
+  undercount: (s: Spoken<"undercount">): Sentence =>
+    say.undercount(s.targets[0], s.at(s.terms.clue), s.terms.value),
 };

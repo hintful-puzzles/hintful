@@ -1040,7 +1040,16 @@ cell it covers) is a set expression over the cells' own state, as `sameLine`'s.
 `describedFiringHint` then makes a step for every square the firing decides,
 the evidence of each being the outline less that square alone (Light Up's two
 discount sets, which rule out a square for a reason that is its own). The
-compiled module's `SAYS_EACH` lists them. **A game whose placing techniques
+compiled module's `SAYS_EACH` lists them. **Where each square has evidence of
+its own** (Bricks' `three`: the run its shading would make), the technique says
+`fact`, a `terms` and `marks` read at each `place` or `strike` of the
+conclusion, in the conclusion's scope, so a `forall` binder is live and a `with`
+may be written (`outline: "with place(c, 1): run(c)"`). The module types it as
+`<Id>SaysFact`, held in `says.facts` in step with the firing's facts, and a
+sentence reads `spoken.facts` (each square of its step, with its own terms) and
+`spoken.outline`, which holds the firing's marks and those of the step's
+squares. The walk reads the facts' marks too. Only a cell game's `place` and
+`strike` read one; a fact made elsewhere throws. **A game whose placing techniques
 decide what the board already shows** (a bulb lights its lines, and a player
 crosses none) passes `consequences: false`, so a step asks only for its
 firing's squares. `describedFiringHint` also owns `refreshHintStep` (a step the
