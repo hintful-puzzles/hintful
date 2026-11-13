@@ -57,7 +57,7 @@ export const say = {
   twoOnes: (m: Marked): Sentence =>
     so({
       look: phrase`Connecting ${hub(m, "the outlined 1-hubs")} would strand them from the rest`,
-      move: phrase`rule out ${spokes(m)}`,
+      move: phrase`${spokes(m)} must be unused`,
     }),
 
   /** The hub's count leaves exactly its free spokes, `count` of them. */
@@ -76,7 +76,7 @@ export const say = {
     so({
       look: phrase`${hub(m)} already has all its lines`,
       follows: phrase`none of its other spokes can be one`,
-      move: phrase`rule out ${spokes(m)}`,
+      move: phrase`${spokes(m)} must be unused`,
     }),
 
   /**

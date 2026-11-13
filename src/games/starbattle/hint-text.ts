@@ -113,7 +113,7 @@ function trial(t: Trial): Sentence {
         look: phrase`A star on ${here} would ${cause}, leaving ${unit} ${t.own ? `nowhere for ${still}` : "no open square"}`,
         move,
       });
-    const does = t.touches ? "touch" : "rule out";
+    const does = t.touches ? "touch" : "block";
     return so({
       look: t.own
         ? phrase`A star on ${here} would ${does} the rest of ${unit}, which would still need ${t.need} ${starWord(t.need)}`
@@ -125,9 +125,9 @@ function trial(t: Trial): Sentence {
   // inside the line the collection draws.
   const of = t.own ? " more" : t.room === 1 ? " star" : "";
   const left = `${t.room}${of}, not ${t.need}`;
-  const does = cause ?? (t.touches ? "touch" : "rule out");
+  const does = cause ?? (t.touches ? "touch" : "block");
   // Named by its cause, a star's effect needs no outline; otherwise the
-  // squares it rules out are the outlined ones.
+  // squares it blocks are the outlined ones.
   const what = cause ? "" : phrase` ${mark.the("outline", CELL, t.ruled, "square")}`;
   return so({
     look: phrase`A star on ${here} would ${does}${what}, leaving ${unit} room for ${left}`,

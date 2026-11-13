@@ -866,7 +866,7 @@ describe("positions from the owner's playtest", () => {
     const step = stepOf(first);
     expect(first.cell).toBe(0);
     expect(step.explanation).toBe(
-      "No other run can reach this square, and 3 steps from 67 and 2 from 72 rule out the rest, so it must be 70.",
+      "No other run can reach this square, and 3 steps from 67 and 2 from 72 leave no other number, so it must be 70.",
     );
     expect(outlines(step)).toEqual([at(67), at(72)]);
     expect(step.highlights?.hatch).toEqual([]);

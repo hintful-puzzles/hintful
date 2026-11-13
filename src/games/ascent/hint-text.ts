@@ -312,8 +312,8 @@ export const say = {
     if (counts.length === 0) return so({ look: why, move });
     const rest =
       counts.length === 2
-        ? phrase`${counts[0].d} steps from ${num(counts[0])} and ${counts[1].d} from ${num(counts[1])} rule out the rest`
-        : phrase`${counts[0].d} steps from ${num(counts[0])} rules out anything ${counts[0].side}`;
+        ? phrase`${counts[0].d} steps from ${num(counts[0])} and ${counts[1].d} from ${num(counts[1])} leave no other number`
+        : phrase`${counts[0].d} steps from ${num(counts[0])} leaves nothing ${counts[0].side}`;
     return so({ look: phrase`${why}, and ${rest}`, move });
   },
 
@@ -439,7 +439,7 @@ export const say = {
     // too would name it twice.
     // It still names each rival, so it may run past the limit
     // (`LONG_NARRATIONS` in `hint-quality.test.ts`).
-    return so({ look: phrase`${lead}, and ${drawn} rule out all but one`, move });
+    return so({ look: phrase`${lead}, and ${drawn} leave only one`, move });
   },
 
   /**

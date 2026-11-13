@@ -4,9 +4,9 @@ exports[`ascent: pinned hint positions > says, at each pin 1`] = `
 {
   "deadEnd": "Only the outlined square leads into the ringed one, so the path must end on it: with 1 placed, it must be 36.",
   "lines": "2 must be on its row, within a step of 1's column and 3's column. Only this square is, so it must be 2.",
-  "only": "No other run comes close to this square, and 8 steps from 12 and 4 from 24 rule out the rest, so it must be 20.",
+  "only": "No other run comes close to this square, and 8 steps from 12 and 4 from 24 leave no other number, so it must be 20.",
   "onlyBeside": "Only 25, between 24 and 26, can reach the ringed square (its area, striped), so it must be 25.",
-  "pointers": "Of the missing numbers, only 3, 7, 10 and 14 point here (ringed), and the striped lines rule out all but one, so it must be 10.",
+  "pointers": "Of the missing numbers, only 3, 7, 10 and 14 point here (ringed), and the striped lines leave only one, so it must be 10.",
   "reach": "11 must be next to 10 and within 2 steps of 13, and only this empty square is, so it must be 11.",
   "route": "The run between 11 and 16 must step through the outlined squares, so 15 can only go in the ringed square.",
   "routeBeside": "Only 13, between 12 and 14, steps to the ringed square by the striped squares, so it must be 13.",

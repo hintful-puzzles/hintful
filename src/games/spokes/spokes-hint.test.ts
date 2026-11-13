@@ -254,7 +254,7 @@ describe("narration states the premise, in the necessity voice", () => {
     const text = pinned("twoOnes").step.explanation;
     expect(text).toMatch(/outlined 1-hubs/);
     expect(text).toMatch(/strand/);
-    expect(text).toMatch(/rule out this spoke/);
+    expect(text).toMatch(/this spoke must be unused/);
     expect(text.length).toBeLessThan(120);
   });
 
@@ -268,7 +268,7 @@ describe("narration states the premise, in the necessity voice", () => {
   it("exhaustion says the hub is done and rules out the rest", () => {
     const text = pinned("exhaustion").step.explanation;
     expect(text).toMatch(/already has all its lines/);
-    expect(text).toMatch(/: rule out (?:this spoke|these spokes)\.$/);
+    expect(text).toMatch(/: (?:this spoke|these spokes) must be unused\.$/);
     expect(text.length).toBeLessThan(120);
   });
 
