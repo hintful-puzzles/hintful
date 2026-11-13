@@ -129,6 +129,9 @@ techniques:
     tier: Easy
     for: "c in cells where not known(c) and |cand(c)| < 2"
     conclude: "|cand(c)| = 1 and place(c, first(cand(c)))"
+    says:
+      terms: { c: c }
+      marks: {}
   # Two bordering regions down to the same two colors use both, so a region
   # bordering both is neither. One pair a firing.
   - id: pair
@@ -140,6 +143,9 @@ techniques:
     conclude: >-
       forall k in borders(a) where k in borders(b) and not known(k),
       d in cand(a): strike(k, d)
+    says:
+      terms: { a: a, b: b, colors: cand(a) }
+      marks: {}
   # Every color but x the middle region m can be leaves x alone in a region
   # it borders that is down to that color and x, so a region t bordering one
   # such end for each cannot be x; where m could be x itself, t borders m
@@ -158,3 +164,6 @@ techniques:
       E = set(first({k in borders(m) where not known(k) and cand(k) = {a, x}
       and k != t and k in borders(t)}) over a in R)
     conclude: "strike(t, x)"
+    says:
+      terms: { m: m, x: x, E: E, self: "x in cand(m)" }
+      marks: {}

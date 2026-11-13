@@ -42,23 +42,6 @@ const SOLVER_STUCK = 2;
 /** The four colors, as the marks hold them: color `i` is value `i + 1`. */
 const COLORS = rangeMask(1, 4);
 
-/** Why a technique fired, as the hint narrates it. Colors are the marks'
- * values, one more than a color's index. */
-export type MapRecordReason =
-  /** The region is down to one color. */
-  | { kind: "lone" }
-  /** `a` and `b` border each other and are down to the colors `colors`. */
-  | { kind: "pair"; a: number; b: number; colors: number }
-  /** Every color `middle` can take but `x` leaves `x` alone in one of `ends`,
-   * each bordering the struck region; `self` where `middle` could be `x`. */
-  | {
-      kind: "weigh";
-      middle: number;
-      x: number;
-      ends: readonly number[];
-      self: boolean;
-    };
-
 const dealt = new WeakMap<Int32Array, map.Dealt>();
 
 /** The board as the description deals it: which region borders which, from
@@ -76,28 +59,9 @@ export function dealtOf(graph: Int32Array, n: number): map.Dealt {
 export function mapLadder(dl: map.Dealt): Ladder {
   return describedLadder(map, {
     placed: placingRung(map.placed, dl),
-    lone: uncluedRung(map.lone, (): MapRecordReason => ({ kind: "lone" })),
-    pair: compiledRung(
-      map.pair,
-      dl,
-      ({ a, b }, _c, _n, m): MapRecordReason => ({
-        kind: "pair",
-        a,
-        b,
-        colors: m.cand(a),
-      }),
-    ),
-    weigh: compiledRung(
-      map.weigh,
-      dl,
-      ({ m: middle, x, E }, _c, _n, m): MapRecordReason => ({
-        kind: "weigh",
-        middle,
-        x,
-        ends: E.slice(),
-        self: m.has(middle, x),
-      }),
-    ),
+    lone: uncluedRung(map.lone),
+    pair: compiledRung(map.pair, dl),
+    weigh: compiledRung(map.weigh, dl),
   });
 }
 

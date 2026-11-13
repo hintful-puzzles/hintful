@@ -18,6 +18,17 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "lone" | "pair" | "weigh";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  lone: LoneSays;
+  pair: PairSays;
+  weigh: WeighSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["lone","pair","weigh"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "placed";
 
@@ -119,11 +130,17 @@ export interface LoneBinding {
   c: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LoneSays {
+  terms: { c: number; };
+  marks: {  };
+}
+
 const loneFacts: number[] = [];
 let loneCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function lone(b: Marks, sp: GridSpace, fire: Fire<LoneBinding> | null): number {
+export function lone(b: Marks, sp: GridSpace, fire: Fire<LoneBinding, LoneSays> | null): number {
   const facts = loneFacts;
   let fired = 0;
   let changed = false;
@@ -148,7 +165,10 @@ export function lone(b: Marks, sp: GridSpace, fire: Fire<LoneBinding> | null): n
     if (!(_c6)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ c: v_c }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { c: v_c }, marks: {  } };
+        if (!fire({ c: v_c }, facts, _says)) return 1;
+      }
       cands.fill(-1);
     }
   }
@@ -160,11 +180,17 @@ export interface PairBinding {
   b: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface PairSays {
+  terms: { a: number; b: number; colors: number; };
+  marks: {  };
+}
+
 const pairFacts: number[] = [];
 let pairCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding> | null): number {
+export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding, PairSays> | null): number {
   const facts = pairFacts;
   let fired = 0;
   let changed = false;
@@ -213,7 +239,10 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
       if (!(_q12)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ a: v_a, b: v_b }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { a: v_a, b: v_b, colors: (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])) }, marks: {  } };
+          if (!fire({ a: v_a, b: v_b }, facts, _says)) return 1;
+        }
         cands.fill(-1);
       }
     }
@@ -229,12 +258,18 @@ export interface WeighBinding {
   E: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface WeighSays {
+  terms: { m: number; x: number; E: readonly number[]; self: boolean; };
+  marks: {  };
+}
+
 const weighFacts: number[] = [];
 let weighCands = new Int32Array(0);
 const weigh_st78 = stamps();
 
 /** Its dearest read grows with the board as n^2. */
-export function weigh(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighBinding> | null): number {
+export function weigh(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighBinding, WeighSays> | null): number {
   const _g69: number[] = [];
   const _g80: number[] = [];
   const facts = weighFacts;
@@ -445,7 +480,10 @@ export function weigh(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighBindin
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ m: v_m, x: v_x, R: v_R, t: v_t, E: v_E.slice() }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { m: v_m, x: v_x, E: v_E.slice(), self: (((b.cands[v_m] >> v_x) & 1) !== 0) }, marks: {  } };
+              if (!fire({ m: v_m, x: v_x, R: v_R, t: v_t, E: v_E.slice() }, facts, _says)) return 1;
+            }
             cands.fill(-1);
           }
         }

@@ -40,23 +40,20 @@
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { popcount } from "../../engine/describe-runtime.ts";
-import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { HintFrontier } from "../../engine/hint-frontier.ts";
+import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
+import { spokenOf, techniqueOf } from "../../engine/described-hint.ts";
+import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import type {
   CellMarks,
-  Firing as Fired,
+  Firing,
   Ladder,
+  Said,
+  Taken,
 } from "../../engine/ladder-runtime.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import { type Conclusion, colorsOf, say } from "./hint-text.ts";
-import {
-  dealtOf,
-  gridOf,
-  type MapRecordReason,
-  mapLadder,
-  mapMarks,
-} from "./solver.ts";
+import * as map from "./map.compiled.ts";
+import { dealtOf, gridOf, mapLadder, mapMarks } from "./solver.ts";
 import type { MapMove, MapOp, MapState } from "./state.ts";
 
 const ALL = 0xf;
@@ -81,10 +78,9 @@ export interface MapHint {
 type SingleWant = { color: number } | { dots: number };
 
 /** Every rung a Map step can be: the two halves of the Mark-all press, by
- * `markAll`'s own names, and the description's three techniques, by their
- * ids. The legs that dot a pair's or a weighing's premise share that
- * firing's rung. */
-export const MAP_RUNGS = ["fill", "clean", "lone", "pair", "weigh"] as const;
+ * `markAll`'s own names, and the kinds the description's techniques say. The
+ * legs that dot a pair's or a weighing's premise share that firing's rung. */
+export const MAP_RUNGS = ["fill", "clean", ...map.SAYS_KINDS] as const;
 export type MapRung = (typeof MAP_RUNGS)[number];
 
 export type MapHintStep = HintStep<MapMove, MapHint, MapRung>;
@@ -116,7 +112,7 @@ function marksOf(w: Work): CellMarks {
 
 /** Every firing the technique `id` could make on `m`, none where it finds the
  * marks inconsistent, which the mistake check rules out wherever a hint runs. */
-function firingsOf(ladder: Ladder, id: string, m: CellMarks): readonly Fired[] {
+function firingsOf(ladder: Ladder, id: string, m: CellMarks): readonly Firing[] {
   const got = ladder.entries.find((e) => e.id === id)?.run.firings?.(m);
   if (got === undefined) throw new Error(`map hint: no technique ${id}`);
   return got === "contradiction" ? [] : got;
@@ -211,87 +207,63 @@ function apply(w: Work, r: number, want: SingleWant): void {
   } else w.pencil[r] = want.dots;
 }
 
-/** One firing: the regions its premise reads, and the steps it takes, built
- * against the working board as it stands when taken, leg by leg, so a later
- * leg sees what an earlier one decided. */
-interface Firing {
-  reads: number[];
-  legs(w: Work): MapHintStep[];
+/** What a firing's sentence is told: the words its leg's reading made. */
+interface Marked {
+  words: Sentence;
 }
 
-function step(
-  w: Work,
-  rung: MapRung,
-  r: number,
-  want: SingleWant,
-  words: Sentence,
-): MapHintStep {
-  const s: MapHintStep = {
+/** One leg of a firing: a step's move, highlights and words, built against the
+ * working board as it stands when taken, so a later leg sees what an earlier
+ * one decided. */
+interface Leg {
+  move: MapMove;
+  highlights: MapHint;
+  marked: Marked;
+}
+
+function leg(w: Work, r: number, want: SingleWant, words: Sentence): Leg {
+  const made: Leg = {
     move: moveFor(r, w.pencil[r], want),
-    rung,
-    explanation: words.text,
-    words,
     highlights: { targets: [r], want },
+    marked: { words },
   };
   apply(w, r, want);
-  return s;
+  return made;
 }
 
 /** Legs ruling `struck` out of each of `targets`, skipping one an earlier leg
  * already settled. */
 function narrowLegs(
   w: Work,
-  rung: MapRung,
   targets: readonly number[],
   struck: number,
   speak: (k: number, c: Conclusion) => Sentence,
-): MapHintStep[] {
-  const out: MapHintStep[] = [];
+): Leg[] {
+  const out: Leg[] = [];
   for (const k of targets) {
     if (w.coloring[k] >= 0 || !(colorsLeft(w, k) & struck)) continue;
     const c = narrowing(w, k, struck);
-    const s = step(w, rung, k, wantOf(w, k, c), speak(k, c));
-    if (out.length > 0) s.continuesPrevious = true;
-    out.push(s);
+    out.push(leg(w, k, wantOf(w, k, c), speak(k, c)));
   }
   return out;
 }
 
 // --- the rungs --------------------------------------------------------------
 
-function singles(w: Work, fired: readonly Fired[]): Firing[] {
-  return fired.map(({ facts }) => {
-    const r = facts[1];
-    const color = facts[2] - 1;
-    const dots = w.pencil[r];
-    const base = dots || ALL;
-    // The neighbors whose colors took something from what the region started
-    // with: all of its colored neighbors when it has no dots, and only the
-    // ones matching a dot when it has. The premise, and what the frontier
-    // continues from, but not outlined: their fills are the evidence, and
-    // outlines around a small region's neighbors swamp the region itself
-    // (owner playtest, 2026-09-25).
-    const cited: number[] = [];
-    let others = 0;
-    for (const k of w.borders[r]) {
-      const c = w.coloring[k];
-      if (c >= 0 && base & (1 << c)) {
-        cited.push(k);
-        others |= 1 << c;
-      }
-    }
-    const words =
-      dots === 0
-        ? say.touchesTheRest(r, color, others)
-        : others === 0
-          ? say.lastDot(r, color)
-          : say.deadDots(r, color);
-    return {
-      reads: [r, ...cited],
-      legs: (w: Work) => [step(w, "lone", r, { color }, words)],
-    };
-  });
+/** What the walk carries: the working board, the ladder, and the weighings the
+ * marks hold, by the middle region, color and ends they share. */
+interface Walk {
+  readonly w: Work;
+  readonly ladder: Ladder;
+  weighings: Map<string, number[]> | null;
 }
+
+/** What a firing of technique `K` said: its terms. */
+type Terms<K extends keyof map.SaysById> = map.SaysById[K]["terms"];
+
+/** The terms a firing of `K` recorded for its first fact. */
+const termsOf = <K extends keyof map.SaysById>(f: Firing): Terms<K> =>
+  (f.reasons[0] as Said<unknown, map.SaysById[K]>).says.terms;
 
 /** The regions a firing strikes from, each once, in the order it strikes. */
 function struckRegions(facts: readonly number[]): number[] {
@@ -301,55 +273,133 @@ function struckRegions(facts: readonly number[]): number[] {
   return out;
 }
 
-function pairs(fired: readonly Fired[]): Firing[] {
-  return fired.map(({ facts, reasons }) => {
-    const r = reasons[0] as Extract<MapRecordReason, { kind: "pair" }>;
-    const v = r.colors >> 1;
-    const ks = struckRegions(facts);
-    return {
-      reads: [r.a, r.b, ...ks],
-      legs: (w) => {
-        const pair = [{ region: r.a }, { region: r.b }];
-        return journey([
-          ...premiseDots(w, "pair", [r.a, r.b]),
-          ...narrowLegs(w, "pair", ks, v, (k, c) => say.pair(k, pair, v, c)),
-        ]);
-      },
-    };
-  });
+const weighKey = ({ m, x, E }: Terms<"weigh">): string => `${m},${x},${E}`;
+
+/**
+ * A weighing strikes one region a firing, and the firings that share a middle
+ * region, a color and their ends are one step's targets: the regions each
+ * strikes, from the marks as the working board shows them.
+ */
+function weighingsOf(walk: Walk): Map<string, number[]> {
+  if (walk.weighings === null) {
+    const found = new Map<string, number[]>();
+    for (const f of firingsOf(walk.ladder, "weigh", marksOf(walk.w))) {
+      const key = weighKey(termsOf<"weigh">(f));
+      const ks = found.get(key);
+      if (ks) ks.push(f.facts[1]);
+      else found.set(key, [f.facts[1]]);
+    }
+    walk.weighings = found;
+  }
+  return walk.weighings;
 }
 
-/** A weighing strikes one region a firing, and the firings that share a
- * middle region, a color and their ends are one step's targets. */
-function weighs(fired: readonly Fired[]): Firing[] {
-  const found = new Map<
-    string,
-    { r: Extract<MapRecordReason, { kind: "weigh" }>; ks: number[] }
-  >();
-  for (const { facts, reasons } of fired) {
-    const r = reasons[0] as Extract<MapRecordReason, { kind: "weigh" }>;
-    const key = `${r.middle},${r.x},${r.ends}`;
-    const f = found.get(key);
-    if (f) f.ks.push(facts[1]);
-    else found.set(key, { r, ks: [facts[1]] });
+/** The regions a weighing firing strikes, with every other firing's that shares
+ * its middle region, color and ends. */
+const weighStruck = (walk: Walk, taken: Taken): number[] =>
+  weighingsOf(walk).get(weighKey(spokenOf<map.WeighSays>(taken).says.terms)) ?? [
+    taken.facts[1],
+  ];
+
+/** The neighbors of blank region `r` whose colors took something from what it
+ * started with: all of its colored neighbors when it has no dots, and only the
+ * ones matching a dot when it has. */
+function citedBy(w: Work, r: number): number[] {
+  const base = w.pencil[r] || ALL;
+  return w.borders[r].filter((k) => w.coloring[k] >= 0 && base & (1 << w.coloring[k]));
+}
+
+/** The regions a firing's premise reads, which the walk continues from. */
+function readsOf(taken: Taken, walk: Walk): number[] {
+  switch (techniqueOf(taken)) {
+    case "lone":
+      // The neighbors that are the premise are read, but not outlined: their
+      // fills are the evidence, and outlines around a small region's neighbors
+      // swamp the region itself (owner playtest, 2026-09-25).
+      return [taken.facts[1], ...citedBy(walk.w, taken.facts[1])];
+    case "pair": {
+      const { a, b } = spokenOf<map.PairSays>(taken).says.terms;
+      return [a, b, ...struckRegions(taken.facts)];
+    }
+    default: {
+      const { m, E } = spokenOf<map.WeighSays>(taken).says.terms;
+      return [m, ...E, ...weighStruck(walk, taken)];
+    }
   }
-  return [...found.values()].map(({ r: { middle, x, ends, self }, ks }) => ({
-    reads: [middle, ...ends, ...ks],
-    legs: (w) =>
-      journey([
-        ...premiseDots(w, "weigh", [middle, ...ends]),
-        ...narrowLegs(w, "weigh", ks, 1 << (x - 1), (k, c) =>
+}
+
+/** The regions a firing's legs write: the premise regions that are dotted, and
+ * the ones struck from. */
+function writesOf(taken: Taken, walk: Walk): number[] {
+  switch (techniqueOf(taken)) {
+    case "lone":
+      return [taken.facts[1]];
+    case "pair": {
+      const { a, b } = spokenOf<map.PairSays>(taken).says.terms;
+      return [...undotted(walk.w, [a, b]), ...struckRegions(taken.facts)];
+    }
+    default: {
+      const { m, E } = spokenOf<map.WeighSays>(taken).says.terms;
+      return [...undotted(walk.w, [m, ...E]), ...weighStruck(walk, taken)];
+    }
+  }
+}
+
+/** The regions of `regions` whose dots are not yet the colors they can be. */
+const undotted = (w: Work, regions: readonly number[]): number[] =>
+  regions.filter((r) => w.pencil[r] !== colorsLeft(w, r));
+
+/** The legs of a firing, built against the working board as the firing found
+ * it, which each leg then advances. */
+function legsOf({
+  taken,
+  says,
+  ctx,
+}: Fired<map.SaysById[keyof map.SaysById], Walk>): Leg[] {
+  const { w } = ctx;
+  switch (techniqueOf(taken)) {
+    case "lone": {
+      const r = taken.facts[1];
+      const color = taken.facts[2] - 1;
+      const dots = w.pencil[r];
+      let others = 0;
+      for (const k of citedBy(w, r)) others |= 1 << w.coloring[k];
+      const words =
+        dots === 0
+          ? say.touchesTheRest(r, color, others)
+          : others === 0
+            ? say.lastDot(r, color)
+            : say.deadDots(r, color);
+      return [leg(w, r, { color }, words)];
+    }
+    case "pair": {
+      const { a, b, colors } = says.terms as Terms<"pair">;
+      const v = colors >> 1;
+      const pair = [{ region: a }, { region: b }];
+      return [
+        ...premiseDots(w, [a, b]),
+        ...narrowLegs(w, struckRegions(taken.facts), v, (k, c) =>
+          say.pair(k, pair, v, c),
+        ),
+      ];
+    }
+    default: {
+      const { m, x, E, self } = says.terms as Terms<"weigh">;
+      return [
+        ...premiseDots(w, [m, ...E]),
+        ...narrowLegs(w, weighStruck(ctx, taken), 1 << (x - 1), (k, c) =>
           say.weigh(
             k,
-            { region: middle },
-            ends.map((region) => ({ region })),
+            { region: m },
+            E.map((region) => ({ region })),
             x - 1,
             self,
             c,
           ),
         ),
-      ]),
-  }));
+      ];
+    }
+  }
 }
 
 /**
@@ -361,12 +411,8 @@ function weighs(fired: readonly Fired[]): Firing[] {
  * notation a player solving alone would make, and the deduction's step then
  * reads straight off it.
  */
-function premiseDots(
-  w: Work,
-  rung: MapRung,
-  regions: readonly number[],
-): MapHintStep[] {
-  const out: MapHintStep[] = [];
+function premiseDots(w: Work, regions: readonly number[]): Leg[] {
+  const out: Leg[] = [];
   for (const r of regions) {
     const two = colorsLeft(w, r);
     if (w.pencil[r] === two) continue;
@@ -374,17 +420,9 @@ function premiseDots(
     for (const k of w.borders[r]) if (w.coloring[k] >= 0) touched |= 1 << w.coloring[k];
     const said =
       w.pencil[r] === 0 ? say.premiseDot(r, touched, two) : say.premiseTrim(r, two);
-    out.push(step(w, rung, r, { dots: two }, said));
+    out.push(leg(w, r, { dots: two }, said));
   }
   return out;
-}
-
-/** One firing's legs as one journey: every leg after the first continues it. */
-function journey(legs: MapHintStep[]): MapHintStep[] {
-  legs.forEach((s, i) => {
-    s.continuesPrevious = i > 0;
-  });
-  return legs;
 }
 
 /**
@@ -415,37 +453,78 @@ function setUp(w: Work, steps: MapHintStep[]): void {
   }
 }
 
-/** The whole remaining plan from `state`'s board: empty when deduction has run
- * out, which the caller refuses. */
-export function buildSteps(state: MapState, reading: CandidateReading): MapHintStep[] {
-  const { graph, n } = state.map;
-  const dl = dealtOf(graph, n);
-  const ladder = mapLadder(dl);
-  const w: Work = {
+/** The working board of `state`. */
+function workOf(state: MapState): Work {
+  return {
     state,
     coloring: Int32Array.from(state.coloring),
     pencil: Int32Array.from(state.pencil),
-    borders: dl.borders,
+    borders: dealtOf(state.map.graph, state.map.n).borders,
   };
+}
+
+const sentence = (_spoken: unknown, { words }: Marked): Sentence => words;
+
+/**
+ * The deduction, walked by the engine one firing a step. A region's colors are
+ * its dots and what its neighbors show (see the file comment), which the marks
+ * are not left to carry: before every firing they are brought down to the
+ * working board, which the legs of the steps so far have advanced.
+ */
+const deduction = describedEdgeHint<
+  MapState,
+  MapMove,
+  MapHint,
+  Marked,
+  Walk,
+  map.SaysById,
+  MapRung
+>({
+  name: "map hint plan",
+  walk: (state) => {
+    const w = workOf(state);
+    const ladder = mapLadder(dealtOf(state.map.graph, state.map.n));
+    return {
+      marks: marksOf(w),
+      entries: ladder.entries.filter((e) =>
+        (map.SAYS_KINDS as readonly string[]).includes(e.id),
+      ),
+      ctx: { w, ladder, weighings: null },
+    };
+  },
+  // Map's tiers are its rungs: the walk offers the lowest that fires.
+  tiers: { lowest: () => map.tiers.length - 1, count: map.tiers.length },
+  plan: 40,
+  done: (_m, { w }) => !w.coloring.includes(-1),
+  settle: (m, walk) => {
+    const left = marksOf(walk.w);
+    for (let r = 0; r < m.cands.length; r++) {
+      for (let d = 1; d <= 4; d++) if (m.has(r, d) && !left.has(r, d)) m.strikeAt(r, d);
+      // A leg that colored a region the firing only narrowed.
+      if (m.grid[r] === 0 && left.grid[r] !== 0) m.place(r, left.grid[r]);
+    }
+    walk.weighings = null;
+    return true;
+  },
+  reads: readsOf,
+  writes: writesOf,
+  step: (fired) => legsOf(fired),
+  say: { lone: sentence, pair: sentence, weigh: sentence },
+});
+
+/** The whole plan from `state`'s board, opening with the Mark-all press where
+ * the player reads dots that way: a refusal where deduction has run out and
+ * the board needs no press. */
+export function mapHint(
+  state: MapState,
+  reading: CandidateReading,
+): HintResult<MapMove, MapHint, MapRung> {
+  const w = workOf(state);
   const steps: MapHintStep[] = [];
   if (reading === "populate") setUp(w, steps);
-  const frontier = new HintFrontier<number>((r) => r);
-  const budget = stepBudget("map hint plan");
-  for (;;) {
-    budget.tick();
-    if (!w.coloring.includes(-1)) return steps;
-    const m = marksOf(w);
-    let rung = singles(w, firingsOf(ladder, "lone", m));
-    if (rung.length === 0) rung = pairs(firingsOf(ladder, "pair", m));
-    if (rung.length === 0) rung = weighs(firingsOf(ladder, "weigh", m));
-    const offered = rung.map((f) => ({
-      reads: () => f.reads,
-      take: () => {
-        for (const s of f.legs(w)) steps.push(s);
-      },
-    }));
-    if (!frontier.take([offered], steps)) return steps;
-  }
+  const got = deduction({ ...state, pencil: w.pencil });
+  if (got.ok) return { ok: true, steps: [...steps, ...got.steps] };
+  return steps.length > 0 ? { ok: true, steps } : got;
 }
 
 /** The dots a step wants, per region, or `null` for a placement. */

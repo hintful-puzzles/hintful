@@ -20,10 +20,7 @@ import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import type { Game, HintResult, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { markAllPress, type PointerAction } from "../../engine/hint-gesture.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { colorKeys, digitKeyCode } from "../../engine/key-labels.ts";
 import {
   dragEnteredNoteTakingCell,
@@ -65,11 +62,11 @@ import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { GameStatus, KeyLabel, Point } from "../../engine/types.ts";
 import { newMapDesc } from "./generator.ts";
 import {
-  buildSteps,
   hintKeepTrack,
   MAP_RUNGS,
   type MapHint,
   type MapRung,
+  mapHint,
   markAll,
   refreshHintStep,
   regionsMove,
@@ -472,12 +469,10 @@ function hint(
   _aux?: string,
   ui?: MapUi,
 ): HintResult<MapMove, MapHint, MapRung> {
-  const steps = buildSteps(state, (ui ?? newUi(state)).candidateReading);
   // Map's three rungs finish every board of the three tiers below Unreasonable
-  // (`difficulty-contract.test.ts` holds each board to its tier), so an empty
-  // plan here is a board whose tier permits search.
-  if (steps.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  return { ok: true, steps };
+  // (`difficulty-contract.test.ts` holds each board to its tier), so a refusal
+  // here is a board whose tier permits search.
+  return mapHint(state, (ui ?? newUi(state)).candidateReading);
 }
 
 // --- register --------------------------------------------------------

@@ -895,6 +895,34 @@ defect found in the game, said which.
   (`src/engine/__snapshots__/hint-walk-<game>.txt`, in `MOVED`): they hold the
   words of the old walk until the game is moved.
 
+### Map, built (2026-11-13): `settle` brings the marks down to the working board
+
+- **The shape for state the walk updates between steps** needs no new hook:
+  the game's working board (colors and dots) is the walk's `ctx`, the legs of
+  `step` advance it, and `settle` strikes and places on the walk's marks until
+  they equal the board as the legs left it (`strikeAt`, and `place` for a region
+  a leg colored that the firing only narrowed: without it `lone` fires again on
+  a colored region). The old code rebuilt the marks each iteration; this is the
+  same reading done in place.
+- **`says`** is `terms` of the binding for `lone`, `pair` (`a`, `b`, `colors`)
+  and `weigh` (`m`, `x`, `E`, `self`), `marks: {}`; the reason records are gone.
+  `placed` is no entry of the walk (the working board already shows a neighbor's
+  color). A weighing firing strikes one region, so the legs of a firing are the
+  group sharing its middle, color and ends, found by `weighingsOf` on the board
+  before the firing; its siblings then no longer exist after `settle`.
+- **The populate reading's Mark-all press** stays the game's: `mapHint` makes its
+  steps, advances the board, and hands the engine the state after it.
+- **Comparison.** 384 plans and their recomputes after step 0 (every preset, 12
+  boards, both readings, 0/15/35/60% of the regions colored, 11,117 lines, plan
+  cap lifted): byte-identical to `HEAD`. The fingerprint's snapshot, taken at
+  `HEAD` with a cap of 40 steps emulated, equals the new tree's.
+- **Changes of behavior**: the plan holds 40 steps (it was unbounded).
+- **Slant and Net stay as they are for now**: Slant's steps place same-slant marks
+  from the solver's own merge trace, and Net's words come from `explain.ts`'s
+  record of each side's source. Both are the witness-and-parents machinery that
+  `explain-a-firing-by-its-witness-and-parents` takes, not a step built from a
+  firing's terms, so they move with it.
+
 ### What blocks the rest (2026-11-13, a survey by reading, to be re-checked per game)
 
 The first read of the remaining games found one that is a plain Clusters-shaped
