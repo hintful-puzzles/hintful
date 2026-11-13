@@ -22,6 +22,16 @@ The measurement that change took (2026-11-09, 5,506 steps) found stripes were
 the first non-ring mark in 18% of steps. How many of those stripe a fixed fact
 of the layout is not known.
 
+## Since filing (2026-11-13)
+
+`reword-the-netslide-hint` is archived: Netslide no longer stripes the fixed
+line, and its first beat is the ring on the tile (the owner saw it in the
+running app). So Netslide is no longer a case the census can find; it is the
+sanity check that the census, run on the tree before that commit
+(`git log` for `src/games/netslide/hint.ts`), would have found it. Plant the
+old stripe back to see the new guard fail, and take the other games from the
+census.
+
 ## What Changes
 
 - **A rule**: a step's first beat shows something that depends on the board's
