@@ -30,8 +30,7 @@ help:
     When a step says a tile must be a magnet but not which way round, it
     asks you for a ? mark: right-click the tile until the ? shows. Since a ?
     tile lying along a line brings one + and one − to it, the hint counts it
-    toward both of the line's numbers, and says "counting marked magnets"
-    when a number is met only that way.
+    toward both of the line's numbers.
 
     A few ideas are worth learning by name:
 

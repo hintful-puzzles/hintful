@@ -119,11 +119,6 @@ const thisLine = (m: LineMarks, axis: Axis): Narration =>
 const lineWord = (hatched: LineEl | null, axis: Axis): Narration | string =>
   hatched ? mark.as("stripes", LINE, [hatched], axis) : axis;
 
-/** How a met count was met: a marked magnet lying along the line brings one +
- * and one − to it whichever way round it turns, and the help says so. */
-const counting = (c: { marked: boolean }): string =>
-  c.marked ? ", counting marked magnets" : "";
-
 type Full = Cause & { kind: "full" };
 
 /** "its row's clue", with the row striped when it is the one hatched. The clue
@@ -143,7 +138,7 @@ function because(pole: number, c: Cause): Narration {
   if (c.kind === "touch")
     return phrase`beside ${outlined([c.at], `another ${glyph(pole)}`)}`;
   // "Already" gives way to the counting clause, which says the same thing.
-  return phrase`as its ${lineWord(c.hatched, c.axis)} ${c.marked ? "" : "already "}has ${clue([c.clue], `all its ${glyphs(pole)}`)}${counting(c)}`;
+  return phrase`as its ${lineWord(c.hatched, c.axis)} ${c.marked ? "" : "already "}has ${clue([c.clue], `all its ${glyphs(pole)}`)}`;
 }
 
 /** What `pole` at a square would do: "touch a +", "exceed its row's clue". Two
@@ -332,7 +327,7 @@ export const say = {
    * would add one more. */
   alongFull: (targets: readonly number[], pole: number, c: Full): Sentence =>
     so({
-      look: phrase`${ring(targets, "This tile")} lies along a ${lineWord(c.hatched, c.axis)} with ${clue([c.clue], `all its ${glyphs(pole)}`)}${counting(c)}`,
+      look: phrase`${ring(targets, "This tile")} lies along a ${lineWord(c.hatched, c.axis)} with ${clue([c.clue], `all its ${glyphs(pole)}`)}`,
       move: NEUTRAL_WORDS,
     }),
 
@@ -340,7 +335,7 @@ export const say = {
    * met. */
   bothInFull: (targets: readonly number[], pole: number, a: Full, b: Full): Sentence =>
     so({
-      look: phrase`Both ends of ${ring(targets, "this tile")} are in ${a.axis}s with ${clue([a.clue, b.clue], `all their ${glyphs(pole)}`)}${a.marked || b.marked ? ", counting marked magnets" : ""}`,
+      look: phrase`Both ends of ${ring(targets, "this tile")} are in ${a.axis}s with ${clue([a.clue, b.clue], `all their ${glyphs(pole)}`)}`,
       move: NEUTRAL_WORDS,
     }),
 
