@@ -621,12 +621,12 @@ describe("netslide hint rendering", () => {
       showHint: true,
     });
 
-    // The tile being placed and the arrow the player should press are ringed;
-    // the arrow is drawn inside its ring in the ring's ink — exactly one. The
+    // The tile being placed is ringed; the arrow the player should press is
+    // filled in the ring's ink, with no ring of its own — exactly one. The
     // sentence says the way by a word, so no square is ringed and no line is
     // hatched.
     const ops = result.recording.ops;
-    expectRing(ops, { rings: 2 });
+    expectRing(ops, { rings: 1 });
     const ink = ringsOf(ops)[0].color;
     expect(opsOfKind(ops, "polygon").filter((op) => op.fill === ink)).toHaveLength(1);
     expect(opsOfKind(ops, "hatch")).toHaveLength(0);

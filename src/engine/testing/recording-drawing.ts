@@ -55,6 +55,9 @@ export type DrawOp =
       fillRgb: string;
       outline: number;
       outlineRgb: string;
+      /** Drawn by `drawRingInkPolygon`: a control the hint says to press,
+       * which is allowed in the ring's ink without a ring. */
+      hintControl?: true;
     }
   | {
       op: "circle";
@@ -185,6 +188,12 @@ export class RecordingDrawing implements GameDrawing {
       color,
       rgb: this.rgb(color),
     });
+  }
+
+  drawRingInkPolygon(coords: Point[], outlineColor: number): void {
+    this.drawPolygon(coords, this.palette.length - 2, outlineColor);
+    const last = this.ops[this.ops.length - 1];
+    if (last.op === "polygon") last.hintControl = true;
   }
 
   drawPolygon(coords: Point[], fillColor: number, outlineColor: number): void {

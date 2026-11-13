@@ -267,22 +267,6 @@ not the center.
   center, which on an even-sized board would name a tile the player can see it
   is not
 
-### Requirement: Hint: The hint leads with the tile's one degree of freedom
-
-The hint SHALL lead with what the game can prove about this move: a tile in
-the source's row can only be moved by sliding its column, and a tile in the
-source's column only by sliding its row. That is the single degree of freedom
-that is the game's technique. The line that cannot be slid SHALL be named as
-"this row" or "this column" and hatched on the board, which draws no row or
-column numbers.
-
-#### Scenario: A frozen line is named and hatched
-
-- **WHEN** a hint step turns on the single degree of freedom: the tile sits in
-  the source's row, so only its column can shift it
-- **THEN** the explanation says "This row never slides", the row is hatched,
-  and the explanation says that only a column move shifts the tile
-
 ### Requirement: Hint: The hint does not restate the rules
 
 The hint SHALL NOT restate the rules of the game step after step. That the
@@ -451,35 +435,35 @@ in, and SHALL NOT mark the vacated cell, which by then holds a different tile.
 - **THEN** the tile highlight is drawn on the tile being placed, at the offset
   position that tile is drawn at, and not on the cell it has left
 
-### Requirement: Hint: The destination mark stays on its cell during a slide
+### Requirement: Hint: The hint names the piece, its way and its effect
 
-The destination mark marks a cell, which does not move, so it SHALL stay where
-the cell is while the line slides underneath it, and SHALL NOT be drawn with
-the animation's offset.
+The hint SHALL name the piece to slide, by its shape, with the way it slides
+as a word ("left", "right", "up" or "down") and what the slide does for it. It
+SHALL NOT say what cannot be done: that a line never slides is a rule the
+board shows and the help page teaches, and a step SHALL NOT stripe the line.
+The tile to slide is ringed, with the arrow to click, and nothing else is
+marked.
 
-#### Scenario: The destination mark stays put mid-slide
+#### Scenario: A tile on a frozen line is sent along the other line
 
-- **WHEN** a frame is captured partway through a slide whose line contains the
-  cell the hint is taking the tile to
-- **THEN** that cell's outline is drawn at the cell's own position, unshifted by
-  the animation
+- **WHEN** a hint step moves a tile that sits in the source's row
+- **THEN** the explanation says to slide this piece up or down, and does not
+  say that the row never slides
+- **AND** only the tile and the arrow are ringed, and no line is hatched
 
-### Requirement: Hint: A Netslide journey opens on the first reason that holds
+### Requirement: Hint: A Netslide journey opens on its stated reason
 
-The step that opens a journey SHALL say that the source's row, or column,
-never slides where its tile sits in that line and the slide crosses it;
-failing that, that the tile belongs beside the source where the journey ends
-on a square sharing a side with the source and the finished grid wants the
-tile's wires there; and failing that, only where the slide takes the tile. A
-later leg SHALL say that it takes the tile on.
+The step that opens a journey SHALL say that the tile belongs beside the
+source where the journey ends on a square sharing a side with the source and
+the finished grid wants the tile's wires there; failing that, only the piece,
+the way it slides and what that does. A later leg SHALL say the way it slides
+the same tile on.
 
-#### Scenario: A tile in the source's row that belongs beside the source
+#### Scenario: A tile that belongs beside the source
 
-- **WHEN** a journey opens by sliding a column to shift a tile that sits in
-  the source's row, and ends on a square beside the source where the tile
-  belongs
-- **THEN** the opening step says "This row never slides", and not that the
-  tile belongs beside the source
+- **WHEN** a journey opens on a tile whose destination is a square beside the
+  source, where the finished grid wants its wires
+- **THEN** the opening step says it belongs beside the source
 
 ### Requirement: Status bar: Netslide's status bar reads moves, then the target, then the tiles lit
 

@@ -114,13 +114,13 @@ export function expectRing(
     ).toEqual([]);
 }
 
-/** The ops not drawn inside a ring, rings aside: the recorder draws a ring's
+/** The ops not drawn inside a ring, rings and hint controls aside: the recorder draws a ring's
  * `inside` between a clip to it and an unclip, straight after the ring. */
 export function outsideRings(ops: readonly DrawOp[]): DrawOp[] {
   const out: DrawOp[] = [];
   let depth = 0;
   ops.forEach((o, i) => {
-    if (o.op === "ring") return;
+    if (o.op === "ring" || (o.op === "polygon" && o.hintControl)) return;
     if (o.op === "clip" && ops[i - 1]?.op === "ring") depth = 1;
     else if (depth > 0 && o.op === "clip") depth++;
     else if (depth > 0 && o.op === "unclip") depth--;

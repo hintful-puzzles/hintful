@@ -168,6 +168,10 @@ export class Drawing implements GameDrawing<Blitter> {
     this.context.fillRect(p2.x, p2.y, 1, 1);
   }
 
+  drawRingInkPolygon(coords: Point[], outlinecolor: number): void {
+    this.drawPolygon(coords, this.palette.length - 2, outlinecolor);
+  }
+
   drawPolygon(coords: Point[], fillcolor: number, outlinecolor: number): void {
     // Drawing API points are pixel center; canvas is pixel top left.
     this.context.beginPath();

@@ -348,6 +348,10 @@ export interface GameDrawing<Blitter = unknown> {
   drawRect(rect: Rect, color: number): void;
   drawLine(p1: Point, p2: Point, color: number, thickness: number): void;
   drawPolygon(coords: Point[], fillColor: number, outlineColor: number): void;
+  /** {@link drawPolygon} filled in the ring ink (`HINT_RING`), for a hint mark
+   * that is a shape of its own, such as a control to press, and wants no ring
+   * round it. */
+  drawRingInkPolygon(coords: Point[], outlineColor: number): void;
   drawCircle(
     center: Point,
     radius: number,

@@ -316,7 +316,7 @@ export const netslideGame: Game<
   hintRungs: NETSLIDE_RUNGS,
   hintMarks: {
     roles: {
-      ring: "what the step decides: the piece to slide and the arrow to click. The words give the way it slides (left, right, up or down), say whether the piece then belongs there or is being set up for a later move, and name the piece by its shape: a *loose end*, a *straight*, a *corner*, a *T-piece* or a *cross*.",
+      ring: "what the step decides: the piece to slide, and the arrow to click, which is filled blue. The words give the way it slides (left, right, up or down), say whether the piece then belongs there or is being set up for a later move, and name the piece by its shape: a *loose end*, a *straight*, a *corner*, a *T-piece* or a *cross*.",
     },
   },
   hintKeepTrack,

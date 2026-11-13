@@ -14,4 +14,5 @@
 ## 3. Show
 
 - [x] 3.1 Ran 3x3 easy: first click rings the tile and arrow only; "Slide this loose end down: that sets it up.", then "Working on this loose end: slide it right, where it belongs."; the walk finished the board in 6 moves
-- [ ] 3.2 The owner accepts the words in the running app; then archive
+- [x] 3.2 The owner accepted the words in the running app (2026-11-13)
+- [x] 3.3 The owner asked that the arrow to click be only turned blue, with no ring and no second outline: it is filled in the ring ink (`GameDrawing.drawRingInkPolygon`, the engine's: a game cannot name the ink) and the stale outlined arrow no longer shows under it

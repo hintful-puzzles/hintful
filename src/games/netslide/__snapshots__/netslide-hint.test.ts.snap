@@ -1181,62 +1181,42 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 183,
   },
   {
-    "color": 12,
-    "h": 33,
-    "op": "ring",
-    "radius": 17,
-    "rgb": "rgb(21, 113, 233)",
-    "thickness": 3,
-    "w": 45,
-    "x": 39,
-    "y": 185,
-  },
-  {
-    "h": 33,
-    "op": "clip",
-    "w": 45,
-    "x": 39,
-    "y": 185,
-  },
-  {
     "fill": 12,
     "fillRgb": "rgb(21, 113, 233)",
+    "hintControl": true,
     "op": "polygon",
     "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
         61,
-        213,
+        217,
       ],
       [
         49,
-        201,
+        205,
       ],
       [
         55,
-        201,
+        205,
       ],
       [
         55,
-        189,
+        193,
       ],
       [
         67,
-        189,
+        193,
       ],
       [
         67,
-        201,
+        205,
       ],
       [
         73,
-        201,
+        205,
       ],
     ],
-  },
-  {
-    "op": "unclip",
   },
   {
     "h": 145,

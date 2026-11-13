@@ -79,6 +79,9 @@ const COL_CURSOR = 9;
 const COL_CELL = 10; // a tile's face
 /** A tile's powered wires under the win flash's leading edge. */
 export const COL_FLASHING_LEAD = 11;
+/** An arrow fill: the hint's ring ink, which the engine owns, so the arrow the
+ * hint says to press turns blue. */
+const HINTED = "hinted";
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -484,7 +487,7 @@ function drawArrow(
   gy: number,
   xdx: number,
   xdy: number,
-  fill: number,
+  fill: number | typeof HINTED,
 ): void {
   const b = border(ds.tileSize);
   drawArrowFrom(
@@ -507,7 +510,7 @@ function drawArrowFrom(
   oy: number,
   xdx: number,
   xdy: number,
-  fill: number,
+  fill: number | typeof HINTED,
 ): void {
   const ydy = -xdx;
   const ydx = xdy;
@@ -527,25 +530,24 @@ function drawArrowFrom(
     point(ts / 4, ts / 2), // left corner
   ];
 
-  dr.drawPolygon(coords, fill, COL_TEXT);
+  if (fill === HINTED) dr.drawRingInkPolygon(coords, COL_TEXT);
+  else dr.drawPolygon(coords, fill, COL_TEXT);
 }
 
 /**
- * One border arrow, addressed by its ring position, filled `fill` or ringed.
+ * One border arrow, addressed by its ring position, filled `fill`.
  *
- * Its slot in the gutter is cleared first, so a ring the arrow last wore goes
+ * Its slot in the gutter is cleared first, so what the arrow last wore goes
  * with it: the gutter's width by the line's, short of the pixel beside the
- * grid that an exterior barrier takes. A ringed arrow is drawn inside its
- * ring at the slot's center, which the plain arrow, overhanging the gutter's
- * outer edge as upstream's does, is not quite at: the ring has no room round
- * it there.
+ * grid that an exterior barrier takes. The hint's arrow is the same shape in
+ * the hint's color and wears no ring: the color alone says which to press.
  */
 function drawArrowAt(
   dr: GameDrawing,
   ds: NetslideDrawState,
   cx: number,
   cy: number,
-  fill: number | "ringed",
+  fill: number | typeof HINTED,
 ): void {
   if (cx === -1 && cy === -1) return; // no arrow here
 
@@ -573,15 +575,7 @@ function drawArrowAt(
   } else throw new Error(`(${cx}, ${cy}) is not a border-arrow position`);
 
   dr.drawRect(slot, COL_BACKGROUND);
-  if (fill === "ringed") {
-    // The footprint's corner that puts the arrow's middle at the slot's.
-    const across = (ts / 2) * (xdx + xdy);
-    const ox = slot.x + slot.w / 2 - across;
-    const oy = slot.y + slot.h / 2 - (ts / 2) * (xdy - xdx);
-    dr.drawRing(slot, NOTHING_TO_CLEAR, ringThickness(ts), {
-      inside: (ink) => drawArrowFrom(dr, ts, ox, oy, xdx, xdy, ink),
-    });
-  } else drawArrow(dr, ds, gx, gy, xdx, xdy, fill);
+  drawArrow(dr, ds, gx, gy, xdx, xdy, fill);
   dr.drawUpdate(slot);
 }
 
@@ -594,9 +588,9 @@ function arrowFill(
   curY: number,
   hintX: number,
   hintY: number,
-): number | "ringed" {
+): number | typeof HINTED {
   if (cx === curX && cy === curY) return COL_CURSOR;
-  if (cx === hintX && cy === hintY) return "ringed";
+  if (cx === hintX && cy === hintY) return HINTED;
   return COL_LOWLIGHT;
 }
 
