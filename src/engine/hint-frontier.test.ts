@@ -198,9 +198,6 @@ const OWN_FRONTIER: Record<string, string> = {
     "each technique places on a reading of the player's board, no compiled " +
     "rung on the marks; ascent-hint.test.ts holds that a run is followed " +
     "to its end in one journey",
-  map:
-    "its elements are regions of a graph; map-hint.test.ts holds that a " +
-    "placement's newly single neighbor is where the plan goes next",
 };
 
 describe("the continuity instrument", () => {
