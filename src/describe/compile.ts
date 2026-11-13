@@ -6378,16 +6378,27 @@ function techniqueFunction(
           ...tenv,
           shared: { made: new Map() },
           scratch: null,
+          // In place: a read moved out of its loop would run before `_rc`
+          // is declared, and one shared with the solve path's is not made.
+          hoist: null,
+          boardRoot: null,
           reads: { cells: "_rc", edges: "_re" },
         };
+        // What a binder is drawn from or defined as is read too: a number's
+        // lines left are the marks round it, bound before any `where`.
         for (const x of [
-          ...t.binders.flatMap((b) => (b.kind === "fill" ? [] : [b.where])),
+          ...t.binders.flatMap((b) => (b.kind === "fill" ? [] : [b.of, b.where])),
           t.premise,
         ]) {
           if (x === null) continue;
           const v = compileExpr(x, sc, readEnv, body);
-          expect(v, "bool", "reads");
-          once(v, body);
+          if (x === t.premise || t.binders.some((b) => b.where === x)) {
+            expect(v, "bool", "reads");
+            once(v, body);
+          } else if (/_r[ce]\.push\(/.test(v.code)) {
+            // A value is wanted for its reads alone.
+            body.emit(`void (${v.code});`);
+          }
         }
         body.emit(
           `const _r: Reads = { cells: [...new Set(_rc)], edges: [...new Set(_re)] };`,

@@ -1092,8 +1092,10 @@ written for a hint only"). Exemplar: Path's `lineBreaks`
 (`path-witness.test.ts`).
 
 **A technique whose firing must say what it rests on says `reads: true`**: in
-the same hint-only block, the `for` clauses' `where`s and `premise` are
-compiled a further time with every read of a mark (`known`, `value`, `cand`,
+the same hint-only block, the `for` clauses' `where`s and `premise`, and what
+each binder is drawn from or defined as (`n = |{...}|`, `a in open(k)`), are
+compiled a further time, in place (nothing hoisted out of its loop, or the read
+would run before `_rc` is declared), with every read of a mark (`known`, `value`, `cand`,
 `in cand`, an edge's mark) recording its element, and the firing's
 `says.reads` (`Reads`, `engine/describe-runtime.ts`) lists the answer elements
 (`cells`) and edge-mark elements (`edges`) read on the path the formula took,
@@ -1101,7 +1103,12 @@ each once, first read first. A read under a `with` of the supposed element is
 not a read of the board and is not recorded. Cost (Path's `lineBreaks`,
 2026-11-13): no measurable time on a firing (9–12 ms for 44 firings either
 way), about 980 lines of compiled module, so opt in only where the engine
-consumes it. Exemplar: `path-witness.test.ts`.
+consumes it. **A set built over the whole board reads all of it**: Slant's
+`alike` (`{e in edges where vee(e) = {3}}`), bound by `pair`, `share` and
+`same`, reads every edge, so every firing after it rests on every earlier edge
+strike. A technique whose firing should rest on a few marks reads those
+(`through(c, alike)` in place of a bound `A`), or the graph over-cites.
+Exemplar: `path-witness.test.ts`.
 
 **What a fact rests on is the engine's, derived from the reads**: `ladderWalk`
 keeps a `FactGraph` (`engine/fact-graph.ts`, `walk.graph`) of every fact the

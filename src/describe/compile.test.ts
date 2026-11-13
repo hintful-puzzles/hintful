@@ -285,6 +285,28 @@ describe("a witness is written for a hint only", () => {
     expect(solvePath(stated)).toEqual(solvePath(absent));
   });
 
+  it("the reads include what a binder is drawn from, declared before any is made", () => {
+    const code = compileLibrary(
+      {
+        library: "t",
+        techniques: {
+          x: {
+            // A read in the `=` binder alone, and one a loop-invariant
+            // `known(c)` would move out of the loop.
+            for: "c in cells where known(c), d in adj4(c) where known(c), n = |{x in adj4(d) where known(x)}| where n = 0",
+            conclude: "strike(d, 1)",
+            says: { terms: {}, marks: {}, reads: true },
+          },
+        },
+      },
+      "t",
+      "./runtime.ts",
+    );
+    const hint = code.slice(code.indexOf("const _rc: number[]"));
+    expect(hint).toContain("_rc.push(");
+    expect(code.indexOf("_rc.push(")).toBeGreaterThan(code.indexOf("const _rc"));
+  });
+
   it("and so are the reads", () => {
     const [stated, absent] = [technique(false, true), technique(false)];
     expect(stated).toContain("_rc.push(");
