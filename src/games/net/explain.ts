@@ -25,9 +25,12 @@
  */
 
 import { Dsf } from "../../engine/dsf.ts";
+import type { FactGraph } from "../../engine/fact-graph.ts";
+import type { CellMarks } from "../../engine/ladder-runtime.ts";
 import { anticlockwise, DIRECTIONS, opposite } from "../../engine/square-edges.ts";
 import { offset } from "../../engine/wires.ts";
-import type { NetGeometry } from "./solver.ts";
+import type { Dealt } from "./net.compiled.ts";
+import { type Fired, type NetGeometry, NONE, recordedMarks, WIRE } from "./solver.ts";
 import {
   LOCKED,
   type NetState,
@@ -53,92 +56,115 @@ export interface Side {
   readonly dir: number;
 }
 
-/** The recorded facts, read from a state and extended as a plan records more. */
+/**
+ * What is known, read off the walk's marks and the graph of the facts its
+ * firings made: a side is known where the marks have it, and it comes from
+ * the player's own record (a wall, a note, the lowest-index locked tile
+ * beside it) or from the firing that placed it. The walk returns with a
+ * firing's facts already on the marks, so {@link before} reads them as not
+ * yet known, which is how the firing's sentence found the board.
+ */
 export class Facts {
   readonly w: number;
   readonly h: number;
-  /** Per tile, its wire mask (orientation irrelevant until locked). */
+  /** Per tile, its wire mask: as the board shows it until the hint locks the
+   * tile, then as the lock turns it (orientation is irrelevant before). */
   readonly wires: Uint8Array;
+  /** Per tile, whether the player or the hint has locked it. */
   readonly locked: Uint8Array;
   /** How many tiles there are, each with a wire: the size of the network. */
   readonly area: number;
-  /** Per tile and direction (`i * 16 + dir`), what is known of that side. */
-  private readonly known: Uint8Array;
-  private readonly source: SideSource[];
+  /** Per edge, what the player's own record says: the marks' seed. */
+  private readonly rooted: Uint8Array;
+  /** The edges the firing being explained placed, which it found open. */
+  private hidden: ReadonlySet<number> = new Set();
+  /** The sides `assuming` supposes, by edge, and the tile it locks. */
+  private readonly supposed = new Map<number, Known>();
+  private supposedAt = -1;
 
   constructor(
     readonly s: NetState,
     readonly g: NetGeometry,
+    dl: Dealt,
+    private readonly m: CellMarks,
+    private readonly graph: FactGraph,
+    /** The firings the walk took, by their place in the graph. */
+    private readonly fired: readonly Fired[],
   ) {
-    const n = s.w * s.h;
     this.w = s.w;
     this.h = s.h;
     this.wires = Uint8Array.from(s.tiles, (t) => t & 0xf);
     this.locked = Uint8Array.from(s.tiles, (t) => (t & LOCKED ? 1 : 0));
-    this.area = n;
-    this.known = new Uint8Array(n * 16);
-    this.source = new Array(n * 16);
-    for (let i = 0; i < n; i++)
-      for (const d of DIRECTIONS) {
-        const x = i % s.w;
-        const y = Math.floor(i / s.w);
-        // A side that joins no tile, across the edge of a grid that does
-        // not wrap there, is the wall the board draws round it.
-        if (s.barriers[i] & d || g.sideEdge[i * 16 + d] < 0)
-          this.put(i, d, NOTE_NONE, { kind: "wall" });
-        const note = s.sides[sideIndex(s, x, y, d)] as Known;
-        if (note !== NOTE_UNKNOWN && this.get(i, d) === NOTE_UNKNOWN)
-          this.put(i, d, note, { kind: "note" });
-      }
-    for (let i = 0; i < n; i++) if (this.locked[i]) this.lock(i, s.tiles[i] & 0xf);
+    this.area = s.w * s.h;
+    this.rooted = recordedMarks(s, g, dl);
   }
 
   neighbor(i: number, d: number): number {
     const o = offset(i % this.w, Math.floor(i / this.w), d, this.w, this.h);
     return o.y * this.w + o.x;
   }
+  /** What is known of side `d` of tile `i`. A side that joins no tile, across
+   * the edge of a grid that does not wrap there, is the wall the board draws
+   * round it. */
   get(i: number, d: number): Known {
-    return this.known[i * 16 + d] as Known;
+    const e = this.g.sideEdge[i * 16 + d];
+    if (e < 0) return NOTE_NONE;
+    const supposed = this.supposed.get(e);
+    if (supposed !== undefined) return supposed;
+    if (this.hidden.has(e)) return NOTE_UNKNOWN;
+    const v = this.m.grid[e];
+    return v === WIRE ? NOTE_WIRE : v === NONE ? NOTE_NONE : NOTE_UNKNOWN;
   }
+  /** Where the known side `d` of tile `i` comes from. */
   from(i: number, d: number): SideSource {
-    return this.source[i * 16 + d];
-  }
-  private put(i: number, d: number, v: Known, src: SideSource): void {
+    const { s } = this;
+    const e = this.g.sideEdge[i * 16 + d];
     const j = this.neighbor(i, d);
-    this.known[i * 16 + d] = v;
-    this.source[i * 16 + d] = src;
-    if (this.g.sideEdge[i * 16 + d] < 0) return;
-    this.known[j * 16 + opposite(d)] = v;
-    this.source[j * 16 + opposite(d)] = src;
+    if (e < 0 || s.barriers[i] & d || s.barriers[j] & opposite(d))
+      return { kind: "wall" };
+    if (this.supposed.has(e)) return { kind: "lock", at: this.supposedAt };
+    if (this.rooted[e] !== 0) {
+      const sideNote = s.sides[sideIndex(s, i % s.w, Math.floor(i / s.w), d)];
+      if (sideNote !== NOTE_UNKNOWN) return { kind: "note" };
+      return {
+        kind: "lock",
+        at: Math.min(...[i, j].filter((t) => s.tiles[t] & LOCKED)),
+      };
+    }
+    // A side is placed as the edge's own value, a fact about a "cell".
+    const by = this.fired[this.graph.factsAbout("cells", e)[0].firing];
+    return by.e === undefined ? { kind: "lock", at: by.c } : { kind: "note" };
   }
-  /** Record a note on side `d` of tile `i`. */
-  note(i: number, d: number, v: Known): void {
-    this.put(i, d, v, { kind: "note" });
+  /** What `look` reads with the edges `placed` (a firing's) as they were
+   * before it. */
+  before<T>(placed: ReadonlySet<number>, look: () => T): T {
+    this.hidden = placed;
+    try {
+      return look();
+    } finally {
+      this.hidden = new Set();
+    }
   }
-  /** Record tile `i` locked showing `wires`. A side already known keeps its
-   * source: a note stays the reason a later step cites. */
+  /** Record tile `i` locked by the hint, showing `wires`. */
   lock(i: number, wires: number): void {
     this.locked[i] = 1;
     this.wires[i] = wires;
-    for (const d of DIRECTIONS)
-      if (this.get(i, d) === NOTE_UNKNOWN)
-        this.put(i, d, wires & d ? NOTE_WIRE : NOTE_NONE, { kind: "lock", at: i });
   }
   /** What `look` reads with tile `i` locked showing `wires`. The lock is
    * taken back after. */
   assuming<T>(i: number, wires: number, look: () => T): T {
     const was = this.wires[i];
-    const wasLocked = this.locked[i];
     const open = DIRECTIONS.filter((d) => this.get(i, d) === NOTE_UNKNOWN);
-    this.lock(i, wires);
-    const seen = look();
-    for (const d of open) {
-      this.known[i * 16 + d] = NOTE_UNKNOWN;
-      this.known[this.neighbor(i, d) * 16 + opposite(d)] = NOTE_UNKNOWN;
+    this.wires[i] = wires;
+    this.supposedAt = i;
+    for (const d of open)
+      this.supposed.set(this.g.sideEdge[i * 16 + d], wires & d ? NOTE_WIRE : NOTE_NONE);
+    try {
+      return look();
+    } finally {
+      for (const d of open) this.supposed.delete(this.g.sideEdge[i * 16 + d]);
+      this.wires[i] = was;
     }
-    this.locked[i] = wasLocked;
-    this.wires[i] = was;
-    return seen;
   }
 }
 
@@ -412,8 +438,8 @@ export type Step =
       readonly because: readonly { readonly wires: number; readonly why: Why }[];
     };
 
-/** Apply a step's fact to `f`. */
+/** Record the lock a lock step makes on `f`; a note step is on the marks
+ * already. */
 export function record(f: Facts, step: Step): void {
-  if (step.kind === "note") f.note(step.at, step.dir, step.value);
-  else f.lock(step.at, step.wires);
+  if (step.kind === "lock") f.lock(step.at, step.wires);
 }

@@ -268,8 +268,9 @@ export function netHint(
   ui: NetUi,
 ): HintResult<NetMove, NetHint, NetRung> {
   const { g, dl, ladder } = ladderOf(state);
-  const f = new Facts(state, g);
   const m = marksOn(g, recordedMarks(state, g, dl));
+  // The firings the walk takes, by their place in its graph.
+  const firings: Fired[] = [];
   // The tiles a firing reads: its own, and those across its sides.
   const reads = (taken: { reasons: readonly object[] }): number[] => {
     const { c } = taken.reasons[0] as Fired;
@@ -286,6 +287,7 @@ export function netHint(
   const walk = ladderWalk(m, ladder.entries, { [TIERS]: 0 }, reads, {
     fallback: ids.slice(1),
   });
+  const f = new Facts(state, g, dl, m, walk.graph, firings);
   let s = state;
   const steps: HintStep<NetMove, NetHint, NetRung>[] = [];
   const say1 = (step: Step, rung: NetRung): void => {
@@ -361,8 +363,13 @@ export function netHint(
     taken = walk.next()
   ) {
     const fired = taken.reasons[0] as Fired;
-    const step = stepOf(f, fired, taken.facts);
-    say1(step, fired.kind);
+    firings.push(fired);
+    const placed = new Set<number>();
+    for (let i = 0; i < taken.facts.length; i += 3)
+      if (taken.facts[i] === PLACE) placed.add(taken.facts[i + 1]);
+    // The walk returns with the firing's sides on the marks; its sentence
+    // finds them open.
+    f.before(placed, () => say1(stepOf(f, fired, taken.facts), fired.kind));
     for (const c of reads(taken)) lockIfSettled(c);
   }
   if (steps.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
