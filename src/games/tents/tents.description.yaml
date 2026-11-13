@@ -142,11 +142,17 @@ techniques:
     tier: Easy
     for: "c in cells where value(c) = 1 and link(c) = none, K = free(c) where |K| < 2"
     conclude: "|K| > 0 and (forall q in K: mark(c, q))"
+    says:
+      terms: { c: c, K: K }
+      marks: {}
   # The open squares beside no tree are grass, every one at once.
   - id: noTree
     tier: Easy
     for: "S = {c in cells where blank(c) and |trees(c)| = 0} where |S| > 0"
     conclude: "forall c in S: place(c, 2)"
+    says:
+      terms: { S: S }
+      marks: {}
   # The open squares round a tree with its tent, beside no tree still
   # without one, are grass.
   - id: treesDone
@@ -155,12 +161,18 @@ techniques:
       q in clues(tree) where has(q),
       S = {c in adj4(at(q)) where blank(c) and |free(c)| = 0} where |S| > 0
     conclude: "forall c in S: place(c, 2)"
+    says:
+      terms: { S: S }
+      marks: {}
   # The open squares round a tent are grass. A tent touching another makes
   # the marks inconsistent.
   - id: nextToTent
     tier: Easy
     for: "t in cells where value(t) = 1, S = {x in adj8(t) where blank(x)} where |S| > 0"
     conclude: "(forall x in adj8(t): value(x) != 1) and (forall x in S: place(x, 2))"
+    says:
+      terms: { t: t, S: S }
+      marks: {}
   # A tree without its tent, with one square left that could hold it, and
   # that square open: the tent is there, and the tree's. One with none left
   # makes the marks inconsistent.
@@ -170,12 +182,18 @@ techniques:
       q in clues(tree) where not has(q),
       R = room(q) where |R| < 2 and (forall x in R: blank(x))
     conclude: "|R| > 0 and (forall x in R: place(x, 1) and mark(x, q))"
+    says:
+      terms: { q: q, R: R }
+      marks: {}
   # A tree without its tent whose one square left holds a tent: the tent is
   # the tree's.
   - id: treeLink
     tier: Easy
     for: "q in clues(tree) where not has(q), R = room(q) where |R| = 1, x = nth(R, 0) where value(x) = 1"
     conclude: "mark(x, q)"
+    says:
+      terms: { q: q, x: x }
+      marks: {}
   # A tree without its tent whose two squares left sit round a corner from
   # each other: whichever holds its tent, the square between them, at the
   # tree's corner, touches it, so it is grass.
@@ -186,6 +204,9 @@ techniques:
       a = nth(R, 0), b = nth(R, 1) where x(a) != x(b) and y(a) != y(b),
       z = cell(x(a) + x(b) - x(at(q)), y(a) + y(b) - y(at(q))) where blank(z)
     conclude: "place(z, 2)"
+    says:
+      terms: { q: q, a: a, b: b, z: z }
+      marks: {}
   # A row or column's count, over its own open squares: a square that holds
   # a tent in every way to place the tents it still needs, none side by
   # side, is a tent, and one that holds grass in every way is grass. A line
@@ -199,6 +220,9 @@ techniques:
     conclude: >-
       forall x in O: (x in T or x in G)
       and (x not in T implies place(x, 2)) and (x not in G implies place(x, 1))
+    says:
+      terms: { L: L }
+      marks: {}
   # A row or column's count, over the lines either side of it: an open
   # square there that every way to place the line's tents touches is grass.
   - id: lineNeighbors
@@ -211,3 +235,6 @@ techniques:
       z in N where (forall y in O where y in adj8(z): f(y) = 2))
       where (exists z in N: z not in U)
     conclude: "forall z in N where z not in U: place(z, 2)"
+    says:
+      terms: { L: L }
+      marks: {}

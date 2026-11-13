@@ -1,0 +1,8 @@
+8x8 Easy #0: 22 steps, solved, 9efd5ceec20ca8e4 [lineCount:8 nextToTent:8 noTree:1 treeSingle:5]
+8x8 Easy #1: 25 steps, solved, a4e9b2590f4aee8d [lineCount:11 nextToTent:8 noTree:1 treeSingle:4 treesDone:1]
+8x8 Easy #2: 22 steps, solved, 7d56fde1baaaffbf [lineCount:9 nextToTent:3 noTree:1 treeSingle:9]
+8x8 Easy #3: 22 steps, solved, bca0b31b4aa77a83 [lineCount:7 nextToTent:6 noTree:1 treeSingle:7 treesDone:1]
+8x8 Normal #0: 25 steps, solved, 5546046882596474 [lineCount:7 lineNeighbors:4 nextToTent:9 noTree:1 treeDiagonal:1 treeSingle:3]
+8x8 Normal #1: 23 steps, solved, 43979031ae002d03 [lineCount:8 lineNeighbors:3 nextToTent:6 noTree:1 treeSingle:5]
+8x8 Normal #2: 23 steps, solved, b62e1d3c3968f74a [lineCount:10 lineNeighbors:1 nextToTent:7 noTree:1 treeSingle:4]
+8x8 Normal #3: 23 steps, solved, 306dec3c9950af92 [lineCount:8 lineNeighbors:1 nextToTent:6 noTree:1 treeDiagonal:2 treeSingle:5]

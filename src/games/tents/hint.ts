@@ -1,34 +1,37 @@
 /**
  * Tents' explained hint: the narration of the ladder's firings, which
- * `tentsHintWalk` in [`solver.ts`](./solver.ts) takes one at a time. This
- * file turns each firing into its steps, sentences and picture.
+ * `describedEdgeHint` walks one at a time (the engine's walk, plan and tiers).
+ * This file turns each firing into its steps, sentences and picture.
  *
  * **Every fact a step rests on is a tent, grass, a tree, a clue or a link.**
  * The ladder ties tents to trees as it goes, and the player sees a pairing
  * only where they have drawn it or can read it off the board at a glance. So
- * the walk reads the links afresh before every firing, and a pairing the
- * ladder needs beyond that is drawn by a step of its own
- * (docs/hints-marks.md § "Give the facts a notation", and
+ * the walk reads the links afresh before every firing
+ * ({@link settleLinks}), and a pairing the ladder needs beyond that is drawn by
+ * a step of its own (docs/hints-marks.md § "Give the facts a notation", and
  * `add-tents-hint`'s design).
  */
 
+import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
+import { spokenOf, techniqueOf } from "../../engine/described-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  type HintRefusal,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import { lineSquares, pointOf } from "./hint-marks.ts";
 import { type Counted, type Dir, type LineKind, say } from "./hint-text.ts";
 import {
-  isSolved,
-  type TentsFiring,
+  boardBefore,
+  decidedBy,
+  drawLinks,
+  marksSolved,
+  readsOf,
+  reasonOf,
+  settleLinks,
   type TentsReason,
-  tentsHintWalk,
+  type TentsRung,
+  type TentsWalkContext,
+  tentsWalk,
+  writesOf,
 } from "./solver.ts";
 import {
   BLANK,
@@ -46,68 +49,100 @@ import {
   TREE,
   U,
 } from "./state.ts";
+import * as tents from "./tents.compiled.ts";
+
+export type { TentsRung } from "./solver.ts";
+
+/** One firing as its sentences read it. */
+interface TentsFiring {
+  reason: TentsReason;
+  /** The board just before it fired: the squares, and the links as the
+   * player sees them. */
+  before: { soln: Int8Array; links: Int8Array };
+  /** The squares it decided, and their values. */
+  cells: { i: number; v: number }[];
+}
+
+/** A leg of a firing: the move it asks for, and its words. */
+interface TentsLeg {
+  move: TentsMove;
+  words: Sentence;
+}
+
+/** What a sentence is told of its step: the words the firing's reading made. */
+interface TentsMarked {
+  words: Sentence;
+}
+
+/** Every technique's sentence is read from the firing's reason, on the board
+ * the firing found, in {@link stepsOf}. */
+const sentence = (_spoken: unknown, { words }: TentsMarked): Sentence => words;
+
+const sentences: {
+  [K in keyof tents.SaysById]: (spoken: unknown, marked: TentsMarked) => Sentence;
+} = {
+  tentLink: sentence,
+  noTree: sentence,
+  treesDone: sentence,
+  nextToTent: sentence,
+  treeSingle: sentence,
+  treeLink: sentence,
+  treeDiagonal: sentence,
+  lineCount: sentence,
+  lineNeighbors: sentence,
+};
+
+/** A firing's legs, from the board the walk made it on. */
+function stepOf(
+  fired: Fired<tents.SaysById[keyof tents.SaysById], TentsWalkContext>,
+  state: TentsState,
+): { move: TentsMove; highlights: null; marked: TentsMarked }[] {
+  const { taken, ctx, marks: m } = fired;
+  const reason = reasonOf(ctx.b, techniqueOf(taken) as TentsRung, spokenOf(taken));
+  const legs = stepsOf(state, {
+    reason,
+    before: boardBefore(ctx.b, m, taken),
+    cells: decidedBy(ctx.b, taken).cells,
+  });
+  drawLinks(ctx, taken);
+  return legs.map(({ move, words }) => ({
+    move,
+    highlights: null,
+    marked: { words },
+  }));
+}
 
 /**
- * How far ahead the plan is computed: a UX bound, not a correctness one. A
- * player rarely follows more than a handful of steps before going their own
- * way, and the plan is recomputed then anyway; it also keeps `hint()` cheap
- * enough for the cross-game resume walk, which asks after every move.
- */
-const PLAN_CAP = 24;
-
-/** The ladder's techniques, by the `kind` of the reason a firing carries. */
-export const TENTS_RUNGS = [
-  "noTree",
-  "treesDone",
-  "nextToTent",
-  "treeSingle",
-  "treeDiagonal",
-  "lineCount",
-  "lineNeighbors",
-  "tentLink",
-  "treeLink",
-] as const satisfies readonly TentsReason["kind"][];
-export type TentsRung = (typeof TENTS_RUNGS)[number];
-
-type TentsStep = HintStep<TentsMove, unknown, TentsRung>;
-
-/**
- * Deduce the plan from the player's tents, grass and links.
+ * The plan from the player's tents, grass and links to the end, a step a
+ * firing (two legs where a count decides tents and grass together).
  *
  * No tier cap: a shared game ID carries no difficulty, and the ladder tries
- * the Easy techniques before the Normal ones, which is the order a hint wants anyway.
+ * the Easy techniques before the Normal ones, which is the order a hint wants
+ * anyway. A plan holds forty steps: a UX bound, not a correctness one. A
+ * player rarely follows more than a handful of steps before going their own
+ * way, and the plan is recomputed then anyway.
  */
-export function tentsHint(
-  state: TentsState,
-): { ok: true; steps: TentsStep[] } | { ok: false; error: HintRefusal } {
-  const { impossible, plan } = tentsPlan(state);
-  // `findMistakes` vouches for every tent, grass square and link, so a
-  // contradiction here would mean the deduction is unsound: say so honestly.
-  if (impossible) return { ok: false, error: PUZZLE_NOT_REASONABLE };
-  if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  return { ok: true, steps: plan.flatMap((p) => p.steps) };
-}
-
-/** The plan as firings, each with the steps it makes: what `tentsHint` shows,
- * and what a test reads to hold each premise to the board it was shown on. */
-export function tentsPlan(state: TentsState): {
-  impossible: boolean;
-  plan: { firing: TentsFiring; steps: TentsStep[] }[];
-} {
-  const { w, h, grid, numbers, links } = state;
-  const walk = tentsHintWalk(w, h, grid, numbers, links, stepBudget("tents hint"));
-  const { plan } = deduceHintPlan<null, TentsFiring, "open" | "done">({
-    board: null,
-    status: () => (isSolved(w, h, walk.soln(), numbers) ? "done" : "open"),
-    incomplete: "open",
-    next: () => walk.next(),
-    planCap: PLAN_CAP,
-  });
-  return {
-    impossible: walk.impossible(),
-    plan: plan.map((firing) => ({ firing, steps: stepsOf(state, firing) })),
-  };
-}
+export const tentsHint = describedEdgeHint<
+  TentsState,
+  TentsMove,
+  null,
+  TentsMarked,
+  TentsWalkContext,
+  tents.SaysById,
+  TentsRung
+>({
+  name: "tents hint",
+  walk: tentsWalk,
+  settle: settleLinks,
+  tiers: { lowest: () => tents.tiers.length - 1, count: tents.tiers.length },
+  roles: { fallback: ["linkForNear", "linkForAny"] },
+  plan: 40,
+  done: (m, ctx) => marksSolved(ctx.b, m),
+  writes: (taken, ctx) => writesOf(ctx.b, taken),
+  reads: (taken, ctx) => readsOf(ctx.b, taken),
+  step: stepOf,
+  say: sentences,
+});
 
 // --- reading a firing --------------------------------------------------------
 
@@ -191,43 +226,32 @@ function room(squares: number[], open: number[]): number {
 /** One leg: set `cells` to `v`, saying `words`. */
 function cellsLeg(
   state: TentsState,
-  rung: TentsRung,
   cells: number[],
   v: number,
   words: Sentence,
-): TentsStep {
+): TentsLeg {
   const { w } = state;
   return {
     move: {
       type: "cells",
       cells: cells.map((i) => ({ x: i % w, y: Math.floor(i / w), v })),
     },
-    rung,
-    explanation: words.text,
     words,
   };
 }
 
-/** A step that asks for a link, which may also place its tent. */
-function linkStep(
-  state: TentsState,
-  rung: TentsRung,
-  sq: number,
-  d: number,
-  words: Sentence,
-): TentsStep {
+/** A leg that asks for a link, which may also place its tent. */
+function linkLeg(state: TentsState, sq: number, d: number, words: Sentence): TentsLeg {
   const { w } = state;
   return {
     move: { type: "link", x: sq % w, y: Math.floor(sq / w), d, on: true },
-    rung,
-    explanation: words.text,
     words,
   };
 }
 
-/** The steps one firing makes: one, or two legs of one journey when a count
- * decides tents and grass together. */
-function stepsOf(state: TentsState, f: TentsFiring): TentsStep[] {
+/** The legs one firing makes: one, or two when a count decides tents and
+ * grass together. */
+function stepsOf(state: TentsState, f: TentsFiring): TentsLeg[] {
   const { w } = state;
   const { reason } = f;
   const tents = f.cells.filter((c) => c.v === TENT).map((c) => c.i);
@@ -235,9 +259,8 @@ function stepsOf(state: TentsState, f: TentsFiring): TentsStep[] {
   const at = (i: number) => pointOf(i, w);
   const pts = (is: readonly number[]) => is.map(at);
   const leg = (cells: number[], v: number, words: Sentence) =>
-    cellsLeg(state, reason.kind, cells, v, words);
-  const link = (sq: number, d: number, words: Sentence) =>
-    linkStep(state, reason.kind, sq, d, words);
+    cellsLeg(state, cells, v, words);
+  const link = (sq: number, d: number, words: Sentence) => linkLeg(state, sq, d, words);
 
   switch (reason.kind) {
     case "tentLink": {
@@ -319,11 +342,11 @@ function lineSteps(
   line: number,
   tents: number[],
   grass: number[],
-): TentsStep[] {
+): TentsLeg[] {
   const { squares, open, need, counted } = lineOf(state, f, line);
   const pts = (is: readonly number[]) => is.map((i) => pointOf(i, state.w));
   const leg = (cells: number[], v: number, words: Sentence) =>
-    cellsLeg(state, f.reason.kind, cells, v, words);
+    cellsLeg(state, cells, v, words);
 
   if (need === 0)
     return [
@@ -335,13 +358,7 @@ function lineSteps(
     return [leg(tents, TENT, say.allOpen(counted, need, pts(tents)))];
   const first = leg(tents, TENT, say.noSpareRoom(counted, need, pts(tents)));
   if (grass.length === 0) return [first];
-  return [
-    first,
-    {
-      ...leg(grass, NONTENT, say.betweenThem(counted, pts(grass))),
-      continuesPrevious: true,
-    },
-  ];
+  return [first, leg(grass, NONTENT, say.betweenThem(counted, pts(grass)))];
 }
 
 // --- following the plan ------------------------------------------------------

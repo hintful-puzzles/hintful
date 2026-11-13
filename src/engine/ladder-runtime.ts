@@ -651,6 +651,9 @@ export interface Said<B, Y> {
   /** What the fact has of its own (`says.fact`), where the technique reads
    * one: the entry of `says.facts` at the fact. */
   readonly fact?: object;
+  /** The technique whose firing it is, where the rung it came from runs
+   * others ({@link keptRung}); absent where the rung's own entry is it. */
+  readonly technique?: string;
 }
 
 /**
@@ -727,26 +730,34 @@ export function uncluedRung<B, S extends CellMarks = CellMarks, Y = undefined>(
  * the reasons `keep` gives it (one a fact), and run as its first: how a hint
  * takes a technique's firing only where it serves another (Tents' links).
  * Where `keep` keeps none and `anyway` is set, the first firing offered is
- * kept as it came. Its facts are the compiled rungs' own, so it is one.
+ * kept as it came. Its facts are the compiled rungs' own, so it is one. Each
+ * reason is stamped with the id of the technique that offered the firing
+ * ({@link Said.technique}), since the entry this rung runs under is not it.
  */
 export function keptRung<S extends CellMarks = CellMarks>(
-  rungs: readonly Rung<S>[],
+  rungs: Readonly<Record<string, Rung<S>>>,
   keep: (m: S, firing: Firing) => readonly object[] | null,
   anyway = false,
 ): Rung<S> {
   const firings = (m: S): readonly Firing[] | "contradiction" => {
-    const offered: Firing[] = [];
-    for (const r of rungs) {
+    const offered: { id: string; firing: Firing }[] = [];
+    for (const [id, r] of Object.entries(rungs)) {
       const found = r.firings(m);
       if (found === "contradiction") return found;
-      offered.push(...found);
+      for (const firing of found) offered.push({ id, firing });
     }
+    const stamped = (id: string, facts: Facts, reasons: readonly object[]): Firing => ({
+      facts,
+      reasons: reasons.map((r) => ({ ...r, technique: id })),
+    });
     const out: Firing[] = [];
-    for (const f of offered) {
-      const reasons = keep(m, f);
-      if (reasons !== null) out.push({ facts: f.facts, reasons });
+    for (const { id, firing } of offered) {
+      const reasons = keep(m, firing);
+      if (reasons !== null) out.push(stamped(id, firing.facts, reasons));
     }
-    return out.length > 0 || !anyway ? out : offered.slice(0, 1);
+    if (out.length > 0 || !anyway || offered.length === 0) return out;
+    const [{ id, firing }] = offered;
+    return [stamped(id, firing.facts, firing.reasons)];
   };
   const rung = (m: S): number => {
     const found = firings(m);

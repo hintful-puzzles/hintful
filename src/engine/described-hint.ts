@@ -88,6 +88,11 @@ const sameMove = (a: unknown, b: unknown): boolean =>
 export const spokenOf = <Y>(taken: Taken): Said<unknown, Y> =>
   taken.reasons[0] as Said<unknown, Y>;
 
+/** The technique a firing is of: its entry's, unless the entry is a rung
+ * that offers the firings of others ({@link keptRung}'s stamp). */
+export const techniqueOf = (taken: Taken): string =>
+  spokenOf<unknown>(taken).technique ?? taken.entry.id;
+
 /** The cells of the facts a firing makes. */
 export const filledBy = (taken: Taken): number[] => {
   const out: number[] = [];

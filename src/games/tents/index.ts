@@ -56,7 +56,7 @@ import {
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newTentsDesc } from "./generator.ts";
-import { TENTS_RUNGS, type TentsRung, tentsHint, tentsKeepTrack } from "./hint.ts";
+import { tentsHint, tentsKeepTrack } from "./hint.ts";
 import {
   cellCenter,
   colors,
@@ -70,7 +70,7 @@ import {
   type TentsDrawState,
   TLBORDER,
 } from "./render.ts";
-import { status, tentsSolve } from "./solver.ts";
+import { status, TENTS_RUNGS, type TentsRung, tentsSolve } from "./solver.ts";
 import {
   BLANK,
   canJoin,

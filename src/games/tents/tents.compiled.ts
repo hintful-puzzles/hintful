@@ -19,6 +19,23 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "tentLink" | "noTree" | "treesDone" | "nextToTent" | "treeSingle" | "treeLink" | "treeDiagonal" | "lineCount" | "lineNeighbors";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  tentLink: TentLinkSays;
+  noTree: NoTreeSays;
+  treesDone: TreesDoneSays;
+  nextToTent: NextToTentSays;
+  treeSingle: TreeSingleSays;
+  treeLink: TreeLinkSays;
+  treeDiagonal: TreeDiagonalSays;
+  lineCount: LineCountSays;
+  lineNeighbors: LineNeighborsSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["tentLink","noTree","treesDone","nextToTent","treeSingle","treeLink","treeDiagonal","lineCount","lineNeighbors"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -152,10 +169,16 @@ export interface TentLinkBinding {
   K: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface TentLinkSays {
+  terms: { c: number; K: readonly number[]; };
+  marks: {  };
+}
+
 const tentLinkFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function tentLink(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TentLinkBinding> | null): number {
+export function tentLink(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TentLinkBinding, TentLinkSays> | null): number {
   const facts = tentLinkFacts;
   let fired = 0;
   let changed = false;
@@ -193,7 +216,10 @@ export function tentLink(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TentLink
       if (!(_c14)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, K: v_K.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { c: v_c, K: v_K.slice() }, marks: {  } };
+          if (!fire({ c: v_c, K: v_K.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -204,10 +230,16 @@ export interface NoTreeBinding {
   S: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface NoTreeSays {
+  terms: { S: readonly number[]; };
+  marks: {  };
+}
+
 const noTreeFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function noTree(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NoTreeBinding> | null): number {
+export function noTree(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NoTreeBinding, NoTreeSays> | null): number {
   const _g8: number[] = [];
   const facts = noTreeFacts;
   let fired = 0;
@@ -256,7 +288,10 @@ export function noTree(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NoTreeBind
     if (!(_q24)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ S: v_S.slice() }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { S: v_S.slice() }, marks: {  } };
+        if (!fire({ S: v_S.slice() }, facts, _says)) return 1;
+      }
     }
   }
   return fired;
@@ -267,10 +302,16 @@ export interface TreesDoneBinding {
   S: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface TreesDoneSays {
+  terms: { S: readonly number[]; };
+  marks: {  };
+}
+
 const treesDoneFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function treesDone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TreesDoneBinding> | null): number {
+export function treesDone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TreesDoneBinding, TreesDoneSays> | null): number {
   const _g16: number[] = [];
   const facts = treesDoneFacts;
   let fired = 0;
@@ -342,7 +383,10 @@ export function treesDone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TreesDo
       if (!(_q35)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ q: v_q, S: v_S.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { S: v_S.slice() }, marks: {  } };
+          if (!fire({ q: v_q, S: v_S.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -354,10 +398,16 @@ export interface NextToTentBinding {
   S: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface NextToTentSays {
+  terms: { t: number; S: readonly number[]; };
+  marks: {  };
+}
+
 const nextToTentFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function nextToTent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NextToTentBinding> | null): number {
+export function nextToTent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NextToTentBinding, NextToTentSays> | null): number {
   const _g12: number[] = [];
   const facts = nextToTentFacts;
   let fired = 0;
@@ -424,7 +474,10 @@ export function nextToTent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NextTo
       if (!(_c35)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ t: v_t, S: v_S.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { t: v_t, S: v_S.slice() }, marks: {  } };
+          if (!fire({ t: v_t, S: v_S.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -436,10 +489,16 @@ export interface TreeSingleBinding {
   R: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface TreeSingleSays {
+  terms: { q: number; R: readonly number[]; };
+  marks: {  };
+}
+
 const treeSingleFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function treeSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TreeSingleBinding> | null): number {
+export function treeSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TreeSingleBinding, TreeSingleSays> | null): number {
   const _g21: number[] = [];
   const facts = treeSingleFacts;
   let fired = 0;
@@ -552,7 +611,10 @@ export function treeSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TreeSi
       if (!(_c57)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ q: v_q, R: v_R.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { q: v_q, R: v_R.slice() }, marks: {  } };
+          if (!fire({ q: v_q, R: v_R.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -565,10 +627,16 @@ export interface TreeLinkBinding {
   x: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface TreeLinkSays {
+  terms: { q: number; x: number; };
+  marks: {  };
+}
+
 const treeLinkFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function treeLink(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TreeLinkBinding> | null): number {
+export function treeLink(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TreeLinkBinding, TreeLinkSays> | null): number {
   const _g18: number[] = [];
   const facts = treeLinkFacts;
   let fired = 0;
@@ -637,7 +705,10 @@ export function treeLink(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TreeLink
         if (!(_mk41)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ q: v_q, R: v_R.slice(), x: v_x }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { q: v_q, x: v_x }, marks: {  } };
+            if (!fire({ q: v_q, R: v_R.slice(), x: v_x }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -653,10 +724,16 @@ export interface TreeDiagonalBinding {
   z: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface TreeDiagonalSays {
+  terms: { q: number; a: number; b: number; z: number; };
+  marks: {  };
+}
+
 const treeDiagonalFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function treeDiagonal(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TreeDiagonalBinding> | null): number {
+export function treeDiagonal(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TreeDiagonalBinding, TreeDiagonalSays> | null): number {
   const _g18: number[] = [];
   const facts = treeDiagonalFacts;
   let fired = 0;
@@ -725,7 +802,10 @@ export function treeDiagonal(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Tree
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ q: v_q, R: v_R.slice(), a: v_a, b: v_b, z: v_z }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { q: v_q, a: v_a, b: v_b, z: v_z }, marks: {  } };
+              if (!fire({ q: v_q, R: v_R.slice(), a: v_a, b: v_b, z: v_z }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -742,6 +822,12 @@ export interface LineCountBinding {
   G: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LineCountSays {
+  terms: { L: number; };
+  marks: {  };
+}
+
 const lineCountFacts: number[] = [];
 let lineCountCands = new Int32Array(0);
 let lineCount_p163 = new Int32Array(0);
@@ -754,7 +840,7 @@ let lineCount_f223 = new Int32Array(0);
 let lineCount_l224: readonly number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function lineCount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineCountBinding> | null): number {
+export function lineCount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineCountBinding, LineCountSays> | null): number {
   const _g126: number[] = [];
   const _g135: number[] = [];
   if (lineCount_p163.length < sp.cells.length) lineCount_p163 = new Int32Array(sp.cells.length);
@@ -1188,7 +1274,10 @@ export function lineCount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineCou
         if (!(_q360)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, k: v_k, O: v_O.slice(), T: v_T.slice(), G: v_G.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { L: v_L }, marks: {  } };
+            if (!fire({ L: v_L, k: v_k, O: v_O.slice(), T: v_T.slice(), G: v_G.slice() }, facts, _says)) return 1;
+          }
           cands.fill(-1);
           _epoch++;
         }
@@ -1206,6 +1295,12 @@ export interface LineNeighborsBinding {
   U: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LineNeighborsSays {
+  terms: { L: number; };
+  marks: {  };
+}
+
 const lineNeighborsFacts: number[] = [];
 let lineNeighborsCands = new Int32Array(0);
 const lineNeighbors_st106 = stamps();
@@ -1214,7 +1309,7 @@ let lineNeighbors_f145 = new Int32Array(0);
 let lineNeighbors_l146: readonly number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function lineNeighbors(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineNeighborsBinding> | null): number {
+export function lineNeighbors(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineNeighborsBinding, LineNeighborsSays> | null): number {
   const _g91: number[] = [];
   const _g100: number[] = [];
   const _g115: number[] = [];
@@ -1512,7 +1607,10 @@ export function lineNeighbors(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Lin
           if (!(_q256)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, k: v_k, O: v_O.slice(), N: v_N.slice(), U: v_U.slice() }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { L: v_L }, marks: {  } };
+              if (!fire({ L: v_L, k: v_k, O: v_O.slice(), N: v_N.slice(), U: v_U.slice() }, facts, _says)) return 1;
+            }
             cands.fill(-1);
           }
         }

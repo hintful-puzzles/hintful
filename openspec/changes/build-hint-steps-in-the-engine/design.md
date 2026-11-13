@@ -738,6 +738,40 @@ defect found in the game, said which.
   shown), which is Magnets' hidden-firings shape; read it with Magnets and
   design the hook once.
 
+### Tents, built (2026-11-13): two small engine additions, and the walk's reads stay the game's
+
+- **`settle(marks, ctx)` on `describedEdgeHint`** runs before every firing is
+  taken and returns `false` where the board contradicts itself, which the engine
+  ends as the unlocalized refusal. That is the way out of the walk the read above
+  asked for: Tents' `readLinks` (the links the board shows at a glance, read
+  afresh from the drawn ones) is it, and `step` needed none of its own.
+- **A firing's technique is not always its entry's.** Tents' two link entries
+  (`linkForNear`, `linkForAny`) are rungs of the hint's own that offer the
+  firings of `tentLink` and `treeLink`; `keptRung` now takes its rungs by id and
+  stamps each reason it keeps with the id that offered it (`Said.technique`), and
+  `techniqueOf(taken)` is what the engine says and names the rung by. The `serves`
+  a link carries is a field beside it on the same record.
+- **`says` is `terms` of the binding** for all nine techniques, `marks: {}`;
+  `reasonOf(b, kind, said)` turns them into the `TentsReason` the sentences read,
+  and the premise (`readsOf`) and the writes (`writesOf`) are the game's hooks as
+  they were. The board before the firing is the live marks with the firing's facts
+  undone (`boardBefore`: a place was made on an open square, a link on a tent with
+  none), and the drawn links are the walk's `ctx`, changed in `step`.
+- **Rungs are the technique ids** and were already: no name moved.
+- **Comparison.** 39,822 lines at `HEAD` (2 presets, 24 boards each, 0/15/35/60% of
+  the solution's tents and grass played, links on a tent with one tree from 35%,
+  every recomputed plan listed, plan cap lifted on both): byte-identical, 134
+  `tentLink` and 50 `treeLink` steps and 26 continuing legs among them. The
+  fingerprint's snapshot, taken at `HEAD` with the cap at 40, is the new tree's.
+- **Changes of behavior**: the plan holds 40 steps (it held 24 firings); a
+  contradiction mid-walk, or squares that clash with the trees, is the
+  unlocalized refusal and `DEDUCTION_EXHAUSTED` (it was `PUZZLE_NOT_REASONABLE`).
+- **A test changed**: "every firing's premise snapshot is the player's board" read
+  the firing's `before`, which is no longer a thing the plan holds; the test keeps
+  what it measured beyond that (the reading shows links the player never drew),
+  and the claim itself is `settle`'s by construction. The pins' positions moved
+  with the plan cap (`hint-scan`).
+
 ### What Pearl, Tracks, Path and Spokes needed beyond `describedEdgeHint` (2026-11-13, read before they were built)
 
 *All four are built (above); this is what the read expected. The carry-on hook it predicted was not needed.*

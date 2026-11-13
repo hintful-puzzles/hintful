@@ -12,7 +12,7 @@
  * player makes along an edge (a bridge a drag at a time) are not the facts.
  */
 
-import { spokenOf } from "./described-hint.ts";
+import { spokenOf, techniqueOf } from "./described-hint.ts";
 import type { HintResult, HintStep } from "./game.ts";
 import { CONTRADICTION_UNLOCALIZED, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import type { Sentence } from "./hint-words.ts";
@@ -95,6 +95,11 @@ export interface EdgeHintSpec<
    * ladder may still have a mark to make (Separate's no-wall marks, once its
    * walls divide the board). */
   done?(marks: CellMarks, ctx: Ctx): boolean;
+  /** Brings the marks up to what the board shows before each firing is
+   * taken (links the player can read at a glance, say), where that is more
+   * than the steps made so far have left on them. `false` where the board
+   * contradicts itself, which ends the hint as a contradiction does. */
+  settle?(marks: CellMarks, ctx: Ctx): boolean;
   /** The most firings a plan holds: a player rarely follows more, and a
    * recompute yields the next batch. */
   plan: number;
@@ -168,17 +173,19 @@ export function describedEdgeHint<
     );
     const steps: Step[] = [];
     while (steps.length < spec.plan && !spec.done?.(m, ctx)) {
+      if (spec.settle?.(m, ctx) === false) return "contradiction";
       const before = m.cands.slice();
       const taken = walk.next();
       if (taken === "contradiction") return taken;
       if (taken === null) break;
+      const technique = techniqueOf(taken);
       const { says } = spokenOf<SaysOf>(taken);
       const legs = spec.step(
         { taken, says: says as Says[keyof Says & string], ctx, before, marks: m },
         state,
       );
       legs.forEach(({ move, highlights, marked }, leg) => {
-        const words = say[taken.entry.id](
+        const words = say[technique](
           {
             terms: says.terms,
             arm: says.arm,
@@ -191,8 +198,8 @@ export function describedEdgeHint<
         steps.push({
           move,
           rung: (says.arm === undefined
-            ? taken.entry.id
-            : `${taken.entry.id}.${says.arm}`) as Kind,
+            ? technique
+            : `${technique}.${says.arm}`) as Kind,
           explanation: words.text,
           words,
           highlights,
