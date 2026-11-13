@@ -12,6 +12,7 @@ import {
   borderEdgeEdits,
   borderHintKeepTrack,
   type ForcedBorderEdge,
+  forcedEdgesOf,
 } from "../../engine/border-grid-hint.ts";
 import {
   describedEdgeHint,
@@ -21,7 +22,6 @@ import {
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { edgeContinuation } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
-import type { Taken } from "../../engine/ladder-runtime.ts";
 import type { Point } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
 import { SAYS_KINDS } from "./separate.compiled.ts";
@@ -29,7 +29,6 @@ import {
   type SeparateSays,
   type SeparateWalkContext,
   separateWalk,
-  sideOf,
   WALL,
   wallsAreAnswer,
 } from "./solver.ts";
@@ -51,32 +50,6 @@ interface Leg {
   leg: number;
   left: readonly ForcedBorderEdge[];
   w: number;
-}
-
-/** The squares a firing's first group holds, then its edges named on the side
- * of that group's square, in the group's reading order and each square's
- * sides from the top clockwise. */
-function edgesOf(
-  { sp }: SeparateWalkContext,
-  taken: Taken,
-  first: readonly number[],
-): ForcedBorderEdge[] {
-  const inFirst = new Set(first);
-  const out: (ForcedBorderEdge & { at: number })[] = [];
-  for (let i = 0; i < taken.facts.length; i += 3) {
-    const e = taken.facts[i + 1];
-    const p = sp.edgeEnds[2 * e];
-    const at = inFirst.has(p) ? p : sp.edgeEnds[2 * e + 1];
-    out.push({
-      at,
-      x: at % sp.w,
-      y: (at / sp.w) | 0,
-      dir: sideOf(sp, e, at).dir,
-      kind: taken.facts[i + 2] === WALL ? "wall" : "nowall",
-    });
-  }
-  out.sort((a, b) => a.at - b.at || a.dir - b.dir);
-  return out.map(({ x, y, dir, kind }) => ({ x, y, dir, kind }));
 }
 
 /**
@@ -145,7 +118,13 @@ function stepOf(
   fired: Fired<SeparateSays[keyof SeparateSays], SeparateWalkContext>,
   state: SeparateState,
 ): { move: SeparateMove; highlights: BorderHint; marked: Leg }[] {
-  const edges = edgesOf(fired.ctx, fired.taken, fired.says.marks.stripes);
+  // The edges are named from the firing's first group, the striped one.
+  const edges = forcedEdgesOf(
+    fired.ctx.sp,
+    fired.taken.facts,
+    fired.says.marks.stripes,
+    WALL,
+  );
   return edges.map((edge, leg) => ({
     move: { type: "edges", edits: borderEdgeEdits(edge) },
     highlights: edge,

@@ -25,6 +25,7 @@ const MOVED = [
   "range",
   "sticks",
   "separate",
+  "palisade",
 ];
 
 /** The boards dealt a preset: more than one, so a rare rung is more likely met. */

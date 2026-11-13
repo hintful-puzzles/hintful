@@ -1,0 +1,8 @@
+5x5 Easy, regions of size 5 #0: 35 steps, solved, 089706afcd169707 [equivalentEdges:4 noDanglingEdges:1 notTooBig:12 notTooSmall:5 numberExhausted:13]
+5x5 Easy, regions of size 5 #1: 40 steps, solved, 785afe1b6f061377 [cluesVersusRegionSize:1 equivalentEdges:4 noDanglingEdges:2 notTooBig:10 notTooSmall:8 numberExhausted:15]
+5x5 Easy, regions of size 5 #2: 35 steps, solved, 126f135230ff3c94 [equivalentEdges:2 noDanglingEdges:1 notTooBig:13 notTooSmall:8 numberExhausted:11]
+5x5 Easy, regions of size 5 #3: 35 steps, solved, 939422eac42f48ce [inside:1 noDanglingEdges:2 notTooBig:12 notTooSmall:8 numberExhausted:12]
+5x5 Unreasonable, regions of size 5 #0: 9 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 222713f23c60a090 [equivalentEdges:2 notTooBig:1 notTooSmall:1 numberExhausted:5]
+5x5 Unreasonable, regions of size 5 #1: 12 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 34055fa69641c132 [notTooBig:3 numberExhausted:9]
+5x5 Unreasonable, regions of size 5 #2: 19 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 534a27158aefdc27 [equivalentEdges:4 notTooBig:4 numberExhausted:11]
+5x5 Unreasonable, regions of size 5 #3: 22 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 8c57b03e82fcc82a [equivalentEdges:2 notTooBig:8 notTooSmall:3 numberExhausted:9]

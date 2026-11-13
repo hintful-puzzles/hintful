@@ -120,6 +120,9 @@ techniques:
       d = clue(number, b) where d != none
       and (8 - v(q) - d > k or (v(q) = 3 and d = 3 and k != 2))
     conclude: "place(edge(a, b), 1)"
+    says:
+      terms: { anchor: "{a}", c: "v(q)", d: d, size: k }
+      marks: { outline: "{a, b}" }
   # A number with all its walls has no more: its other edges are open. One
   # that reaches its count only with every edge left a wall has them all.
   # One with more walls, or too few edges left, makes the marks inconsistent.
@@ -132,6 +135,9 @@ techniques:
       n <= v(q) and n + |U| >= v(q)
       and (n = v(q) implies forall y in U: place(edge(c, y), 2))
       and (n < v(q) implies forall y in U: place(edge(c, y), 1))
+    says:
+      terms: { anchor: "{c}", clue: "v(q)" }
+      marks: { outline: "{c}" }
   # Two groups whose squares together outnumber a region are different
   # regions: wall the edge between them.
   - id: notTooBig
@@ -141,6 +147,9 @@ techniques:
       A = through(end1(e), O), b = end2(e) where b not in A,
       B = through(b, O) where |A| + |B| > k
     conclude: "place(e, 1)"
+    says:
+      terms: { anchor: A, joined: "|A| + |B|", size: k }
+      marks: { outline: A + B }
   # A group short of k squares grows across an edge still to decide. Where
   # every such edge leads into one other group, it joins that group: every
   # edge between them is open. With no edge to grow across, or past k
@@ -155,6 +164,9 @@ techniques:
       and (forall B = through(nth(S, 0), O):
       (forall s in S: s in B) implies
       forall x in A, y in adj4(x) where y in B: place(edge(x, y), 2))
+    says:
+      terms: { anchor: A, have: "|A|", size: k }
+      marks: { stripes: A, reads: A }
   # A wall cannot stop at a corner where four squares meet: of the four
   # edges there, never exactly one is a wall. With one wall and one edge
   # left, that edge is a wall.
@@ -167,6 +179,9 @@ techniques:
       and count(e in F where value(e) = 1) = 1
       and count(e in F where not known(e)) = 1
     conclude: "place(f, 1)"
+    says:
+      terms: { anchor: C }
+      marks: { outline: C }
   # Two edges still to decide between a number's square and one group: the
   # square joins the group, both open, or is walled from it, both walls. So
   # where both walls would pass the number, both are open, and where both
@@ -182,6 +197,9 @@ techniques:
       place(edge(c, y), 2) and place(edge(c, z), 2))
       and (walls(c) + 2 <= v(q) and opens(c) + 2 > 4 - v(q) implies
       place(edge(c, y), 1) and place(edge(c, z), 1))
+    says:
+      terms: { anchor: "{c}", clue: "v(q)" }
+      marks: { stripes: R, reads: "{c} + R" }
   # Two squares side by side that the open edges already join are one
   # region: the edge between them is open. With a wall on it, the marks are
   # inconsistent.
@@ -191,3 +209,6 @@ techniques:
       O = joined, e in edges where value(e) != 2
       and end2(e) in through(end1(e), O)
     conclude: "place(e, 2)"
+    says:
+      terms: { anchor: "through(end1(e), O)" }
+      marks: { stripes: "through(end1(e), O)", reads: "through(end1(e), O)" }

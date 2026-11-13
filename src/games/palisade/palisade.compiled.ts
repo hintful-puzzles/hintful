@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/palisade/palisade.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, before, clueAt, edgeGroups, freshBinding, keptEdgeGroups, keptStore, rangeMask, sameSet, staleChecking, stamps, through, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, before, clueAt, edgeGroups, freshBinding, keptEdgeGroups, keptStore, rangeMask, sameSet, setOf, staleChecking, stamps, through, type Kept, union } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -18,6 +18,21 @@ export const units: readonly string[] = [];
 
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "cluesVersusRegionSize" | "numberExhausted" | "notTooBig" | "notTooSmall" | "noDanglingEdges" | "equivalentEdges" | "inside";
+
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  cluesVersusRegionSize: CluesVersusRegionSizeSays;
+  numberExhausted: NumberExhaustedSays;
+  notTooBig: NotTooBigSays;
+  notTooSmall: NotTooSmallSays;
+  noDanglingEdges: NoDanglingEdgesSays;
+  equivalentEdges: EquivalentEdgesSays;
+  inside: InsideSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["cluesVersusRegionSize","numberExhausted","notTooBig","notTooSmall","noDanglingEdges","equivalentEdges","inside"] as const;
 
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
@@ -139,10 +154,16 @@ export interface CluesVersusRegionSizeBinding {
   d: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CluesVersusRegionSizeSays {
+  terms: { anchor: readonly number[]; c: number; d: number; size: number; };
+  marks: { outline: readonly number[]; };
+}
+
 const cluesVersusRegionSizeFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function cluesVersusRegionSize(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CluesVersusRegionSizeBinding> | null): number {
+export function cluesVersusRegionSize(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CluesVersusRegionSizeBinding, CluesVersusRegionSizeSays> | null): number {
   const facts = cluesVersusRegionSizeFacts;
   let fired = 0;
   let changed = false;
@@ -170,7 +191,10 @@ export function cluesVersusRegionSize(b: Marks, sp: GridSpace, cl: Dealt, fire: 
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ q: v_q, a: v_a, b: v_b, d: v_d }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { anchor: setOf(v_a).slice(), c: _h8, d: v_d, size: cl.k }, marks: { outline: setOf(v_a, v_b).slice() } };
+            if (!fire({ q: v_q, a: v_a, b: v_b, d: v_d }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -185,10 +209,16 @@ export interface NumberExhaustedBinding {
   n: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface NumberExhaustedSays {
+  terms: { anchor: readonly number[]; clue: number; };
+  marks: { outline: readonly number[]; };
+}
+
 const numberExhaustedFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function numberExhausted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NumberExhaustedBinding> | null): number {
+export function numberExhausted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NumberExhaustedBinding, NumberExhaustedSays> | null): number {
   const _g12: number[] = [];
   const facts = numberExhaustedFacts;
   let fired = 0;
@@ -284,7 +314,10 @@ export function numberExhausted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<N
       if (!(_c47)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ q: v_q, c: v_c, U: v_U.slice(), n: v_n }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { anchor: setOf(v_c).slice(), clue: cl.number.v[v_q] }, marks: { outline: setOf(v_c).slice() } };
+          if (!fire({ q: v_q, c: v_c, U: v_U.slice(), n: v_n }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -299,10 +332,16 @@ export interface NotTooBigBinding {
   B: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface NotTooBigSays {
+  terms: { anchor: readonly number[]; joined: number; size: number; };
+  marks: { outline: readonly number[]; };
+}
+
 const notTooBigFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function notTooBig(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTooBigBinding> | null): number {
+export function notTooBig(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTooBigBinding, NotTooBigSays> | null): number {
   const _g11: number[] = [];
   const facts = notTooBigFacts;
   let fired = 0;
@@ -359,7 +398,10 @@ export function notTooBig(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTooB
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ O: v_O.slice(), e: v_e, A: v_A.slice(), b: v_b, B: v_B.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { anchor: v_A.slice(), joined: (_h22 + _h23), size: cl.k }, marks: { outline: union(v_A, v_B).slice() } };
+            if (!fire({ O: v_O.slice(), e: v_e, A: v_A.slice(), b: v_b, B: v_B.slice() }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -374,11 +416,17 @@ export interface NotTooSmallBinding {
   S: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface NotTooSmallSays {
+  terms: { anchor: readonly number[]; have: number; size: number; };
+  marks: { stripes: readonly number[]; reads: readonly number[]; };
+}
+
 const notTooSmallFacts: number[] = [];
 const notTooSmall_st55 = stamps();
 
 /** Its dearest read grows with the board as n. */
-export function notTooSmall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTooSmallBinding> | null): number {
+export function notTooSmall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTooSmallBinding, NotTooSmallSays> | null): number {
   const _g32: number[] = [];
   const _g43: number[] = [];
   const _g58: number[] = [];
@@ -521,7 +569,10 @@ export function notTooSmall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTo
       if (!(_c113)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ O: v_O.slice(), c: v_c, A: v_A.slice(), S: v_S.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { anchor: v_A.slice(), have: _h42, size: cl.k }, marks: { stripes: v_A.slice(), reads: v_A.slice() } };
+          if (!fire({ O: v_O.slice(), c: v_c, A: v_A.slice(), S: v_S.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -535,11 +586,17 @@ export interface NoDanglingEdgesBinding {
   f: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface NoDanglingEdgesSays {
+  terms: { anchor: readonly number[]; };
+  marks: { outline: readonly number[]; };
+}
+
 const noDanglingEdgesFacts: number[] = [];
 const noDanglingEdges_st34 = stamps();
 
 /** Its dearest read grows with the board as n. */
-export function noDanglingEdges(b: Marks, sp: GridSpace, fire: Fire<NoDanglingEdgesBinding> | null): number {
+export function noDanglingEdges(b: Marks, sp: GridSpace, fire: Fire<NoDanglingEdgesBinding, NoDanglingEdgesSays> | null): number {
   const _g28: number[] = [];
   const facts = noDanglingEdgesFacts;
   let fired = 0;
@@ -644,7 +701,10 @@ export function noDanglingEdges(b: Marks, sp: GridSpace, fire: Fire<NoDanglingEd
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ p: v_p, C: v_C.slice(), F: v_F.slice(), f: v_f }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { anchor: v_C.slice() }, marks: { outline: v_C.slice() } };
+          if (!fire({ p: v_p, C: v_C.slice(), F: v_F.slice(), f: v_f }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -660,17 +720,23 @@ export interface EquivalentEdgesBinding {
   z: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface EquivalentEdgesSays {
+  terms: { anchor: readonly number[]; clue: number; };
+  marks: { stripes: readonly number[]; reads: readonly number[]; };
+}
+
 const equivalentEdgesFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EquivalentEdgesBinding> | null): number {
+export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EquivalentEdgesBinding, EquivalentEdgesSays> | null): number {
   const _g20: number[] = [];
   const _g27: number[] = [];
   const _g41: number[] = [];
   const facts = equivalentEdgesFacts;
   let fired = 0;
   let changed = false;
-  const _m70_0 = b.made[0];
+  const _m71_0 = b.made[0];
   _g20.length = 0;
   G21: {
     const _a24 = sp.edges;
@@ -681,7 +747,7 @@ export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<E
     }
   }
   const v_O = _g20;
-  const _m71_1 = b.made[1];
+  const _m72_1 = b.made[1];
   const _eg35 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   for (let v_q = 0; v_q < cl.number.at.length; v_q++) {
     const _h60 = cl.number.v[v_q];
@@ -707,12 +773,13 @@ export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<E
         L36: {
           const v_R = _eg35.of(v_y);
           if (!(!(_eg35.of(v_c) === v_R))) break L36;
+          const _h70 = union(setOf(v_c), v_R);
           const _a37 = sp.adj4[v_c];
           const _n38 = _a37.indexOf(v_y);
           for (let _i39 = 0; _i39 < _n38; _i39++) {
             const v_z = _a37[_i39];
             if (!((!((b.grid[sp.adj4Edges[v_c][_i39]] !== 0)) && (_eg35.of(v_z) === v_R)))) continue;
-            if (b.made[0] !== _m70_0 || b.made[1] !== _m71_1) {
+            if (b.made[0] !== _m71_0 || b.made[1] !== _m72_1) {
               const _now40 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_y);
               if (!(_now40 === _eg35.of(v_y) || sameSet(_now40, _eg35.of(v_y)))) { continue R2; }
               _g41.length = 0;
@@ -780,7 +847,10 @@ export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<E
             if (!(_c69)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ O: v_O.slice(), q: v_q, c: v_c, y: v_y, R: v_R.slice(), z: v_z }, facts)) return 1;
+              if (fire !== null) {
+                const _says = { terms: { anchor: setOf(v_c).slice(), clue: _h60 }, marks: { stripes: v_R.slice(), reads: _h70.slice() } };
+                if (!fire({ O: v_O.slice(), q: v_q, c: v_c, y: v_y, R: v_R.slice(), z: v_z }, facts, _says)) return 1;
+              }
             }
           }
         }
@@ -795,10 +865,16 @@ export interface InsideBinding {
   e: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface InsideSays {
+  terms: { anchor: readonly number[]; };
+  marks: { stripes: readonly number[]; reads: readonly number[]; };
+}
+
 const insideFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function inside(b: Marks, sp: GridSpace, fire: Fire<InsideBinding> | null): number {
+export function inside(b: Marks, sp: GridSpace, fire: Fire<InsideBinding, InsideSays> | null): number {
   const _g9: number[] = [];
   const facts = insideFacts;
   let fired = 0;
@@ -844,7 +920,10 @@ export function inside(b: Marks, sp: GridSpace, fire: Fire<InsideBinding> | null
     if (!(true)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ O: v_O.slice(), e: v_e }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { anchor: _eg17.of(sp.edgeEnds[2 * v_e]).slice() }, marks: { stripes: _eg17.of(sp.edgeEnds[2 * v_e]).slice(), reads: _eg17.of(sp.edgeEnds[2 * v_e]).slice() } };
+        if (!fire({ O: v_O.slice(), e: v_e }, facts, _says)) return 1;
+      }
     }
   }
   return fired;

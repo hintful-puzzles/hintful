@@ -516,6 +516,26 @@ defect found in the game, said which.
   edges) is a no-wall mark on a board whose walls are complete, which a hint
   stops short of, so it reads the ladder's firings.
 
+### Palisade, built (2026-11-13)
+
+- **The shape took Palisade unchanged**, seven techniques that `say`. Where
+  Separate names a journey's edges from its striped group, Palisade's anchor
+  differs by technique (a clue's square, the first of two groups, a corner), so
+  it is a term of its own, `anchor`, a set. The engine's `forcedEdgesOf`
+  (`border-grid-hint.ts`) now makes the legs' edges for both, which each game had
+  copied; `borderHintJourney` went, with no game left to call it.
+- **A technique's `reads` is a decision, as before**: `notTooSmall` and
+  `inside` read the region they stripe, which the engine's reads (outline,
+  strand, `reads`) do not hold, so they say `reads`. Left out, the walk took a
+  different next firing at 4 of the first 25 steps.
+- **Comparison.** 792,760 lines over 112 walks (7 sizes 5x5 to 12x15, four boards,
+  four shares of the solution's edges on the board, every recomputed plan listed,
+  127,853 continuing legs) are the same as at `HEAD`, words, marks and move, with
+  the plan cap lifted; the fingerprint's snapshot (taken at `HEAD`) matches.
+- **A change of behavior**: the plan holds 40 steps, as Separate's.
+- **A test changed**: the one that read the firings' edges walks the ladder and
+  reads the `anchor` term.
+
 ### What blocks the rest (2026-11-13, a survey by reading, to be re-checked per game)
 
 The first read of the remaining games found one that is a plain Clusters-shaped

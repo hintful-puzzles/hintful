@@ -28,9 +28,6 @@ import {
   BORDER_R,
   BORDER_U,
   DISABLED,
-  DX,
-  DY,
-  FLIP,
   initBorders,
 } from "../../engine/border-grid.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
@@ -47,14 +44,10 @@ import {
   describedLadder,
   type Ladder,
   ladderTechniques,
-  ladderWalk,
-  type ReasonOf,
   runLadder,
-  type Taken,
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import type { StepBudget } from "../../engine/step-budget.ts";
 import * as palisade from "./palisade.compiled.ts";
 import type { PalisadeShape } from "./state.ts";
 
@@ -70,51 +63,8 @@ export const palisadeLadderIds: readonly PalisadeRule[] = palisade.ladder.map(
   (e) => e.id,
 );
 
-/** One edge a firing sets, on the square `(x, y)`'s `dir` side. */
-export interface PalisadeEdge {
-  x: number;
-  y: number;
-  dir: number;
-  kind: "wall" | "nowall";
-}
-
-/** Why a firing set its edges: which rung, and the squares its premise names
- * (read before the rung acted). */
-export type PalisadeReason =
-  | {
-      kind: "cluesVersusRegionSize";
-      /** The two numbers' squares, the edge between them. */
-      clues: [number, number];
-    }
-  | { kind: "numberExhausted"; clue: number }
-  | {
-      kind: "notTooBig";
-      /** The two groups the edge would join. */
-      a: number[];
-      b: number[];
-    }
-  | { kind: "notTooSmall"; region: number[] }
-  | {
-      kind: "noDanglingEdges";
-      /** The four squares round the corner. */
-      corner: number[];
-    }
-  | {
-      kind: "equivalentEdges";
-      clue: number;
-      /** The group both edges lead into. */
-      region: number[];
-    }
-  | {
-      kind: "inside";
-      /** The group that already holds both squares. */
-      region: number[];
-    };
-
-/** One firing, in the player's terms: its reason and the edges it set, each
- * named on the side of the square the reason is about, in that square's or
- * group's reading order and each square's sides from the top clockwise. */
-export type PalisadeFiring = PalisadeReason & { edges: PalisadeEdge[] };
+/** What each technique says, as the hint's sentences read it. */
+export type PalisadeSays = palisade.SaysById;
 
 // --- the board as the description reads it -----------------------------------
 
@@ -183,91 +133,17 @@ export function isSolved(
   return wallsAnswer(valuesOf(sp, borders), sp, dealtOf(p, clues));
 }
 
-/** A reason built once a firing, from its binding, and shared by each of its
- * edges: a firing walls or opens many, and its reason copies its groups. */
-function perFiring<B extends object>(
-  build: (binding: B, sp: GridSpace) => PalisadeReason,
-): ReasonOf<B> {
-  let last: B | null = null;
-  let reason: PalisadeReason | null = null;
-  return (binding, _at, _n, m) => {
-    if (binding !== last || reason === null) {
-      last = binding;
-      reason = build(binding, m.sp);
-    }
-    return reason;
-  };
-}
-
-/** The ladder over the dealt board, each technique with its reason: built
- * from the binding, on the marks before the firing. */
+/** The ladder over the dealt board. */
 function palisadeLadder(dl: palisade.Dealt): Ladder {
   return describedLadder(palisade, {
-    cluesVersusRegionSize: compiledRung(
-      palisade.cluesVersusRegionSize,
-      dl,
-      perFiring(({ a, b }: palisade.CluesVersusRegionSizeBinding) => ({
-        kind: "cluesVersusRegionSize",
-        clues: [a, b],
-      })),
-    ),
-    numberExhausted: compiledRung(
-      palisade.numberExhausted,
-      dl,
-      perFiring(({ c }: palisade.NumberExhaustedBinding) => ({
-        kind: "numberExhausted",
-        clue: c,
-      })),
-    ),
-    notTooBig: compiledRung(
-      palisade.notTooBig,
-      dl,
-      perFiring(({ A, B }: palisade.NotTooBigBinding) => ({
-        kind: "notTooBig",
-        a: [...A],
-        b: [...B],
-      })),
-    ),
-    notTooSmall: compiledRung(
-      palisade.notTooSmall,
-      dl,
-      perFiring(({ A }: palisade.NotTooSmallBinding) => ({
-        kind: "notTooSmall",
-        region: [...A],
-      })),
-    ),
-    noDanglingEdges: uncluedRung(
-      palisade.noDanglingEdges,
-      perFiring(({ C }: palisade.NoDanglingEdgesBinding) => ({
-        kind: "noDanglingEdges",
-        corner: [...C],
-      })),
-    ),
-    equivalentEdges: compiledRung(
-      palisade.equivalentEdges,
-      dl,
-      perFiring(({ c, R }: palisade.EquivalentEdgesBinding) => ({
-        kind: "equivalentEdges",
-        clue: c,
-        region: [...R],
-      })),
-    ),
-    inside: uncluedRung(
-      palisade.inside,
-      perFiring(({ O, e }: palisade.InsideBinding, sp) => ({
-        kind: "inside",
-        region: groupOf(sp, O, e),
-      })),
-    ),
+    cluesVersusRegionSize: compiledRung(palisade.cluesVersusRegionSize, dl),
+    numberExhausted: compiledRung(palisade.numberExhausted, dl),
+    notTooBig: compiledRung(palisade.notTooBig, dl),
+    notTooSmall: compiledRung(palisade.notTooSmall, dl),
+    noDanglingEdges: uncluedRung(palisade.noDanglingEdges),
+    equivalentEdges: compiledRung(palisade.equivalentEdges, dl),
+    inside: uncluedRung(palisade.inside),
   });
-}
-
-/** The squares the open edges `O` join to edge `e`'s first square. */
-function groupOf(sp: GridSpace, O: readonly number[], e: number): number[] {
-  const dsf = new Dsf(sp.cells.length);
-  for (const o of O) dsf.merge(sp.edgeEnds[2 * o], sp.edgeEnds[2 * o + 1]);
-  const root = dsf.canonify(sp.edgeEnds[2 * e]);
-  return sp.cells.filter((c) => dsf.canonify(c) === root);
 }
 
 /** The working state of a deduction: the marks on the edges, and the ladder
@@ -492,104 +368,30 @@ export function answerOf(state: PalisadeShape & { clues: Int8Array }): PalisadeA
 
 // --- the hint's walk ---------------------------------------------------------
 
-/** The square or group a firing's edges are named from. */
-function anchorOf(r: PalisadeReason): number[] {
-  switch (r.kind) {
-    case "cluesVersusRegionSize":
-      return [r.clues[0]];
-    case "numberExhausted":
-    case "equivalentEdges":
-      return [r.clue];
-    case "notTooBig":
-      return r.a;
-    case "notTooSmall":
-    case "inside":
-      return r.region;
-    case "noDanglingEdges":
-      return r.corner;
-  }
+/** What the hint's sentences need of the board besides what a firing says. */
+export interface PalisadeWalkContext {
+  sp: GridSpace;
+  dl: palisade.Dealt;
 }
 
-/** The squares a firing's reason turns on: a player follows a region as it
- * grows. */
-function readsOf(r: PalisadeReason): number[] {
-  switch (r.kind) {
-    case "cluesVersusRegionSize":
-      return [...r.clues];
-    case "numberExhausted":
-      return [r.clue];
-    case "notTooBig":
-      return [...r.a, ...r.b];
-    case "notTooSmall":
-    case "inside":
-      return r.region;
-    case "noDanglingEdges":
-      return r.corner;
-    case "equivalentEdges":
-      return [r.clue, ...r.region];
-  }
-}
-
-/** A firing's edges in the player's terms, each named on the side of its
- * anchor's square, in the anchor's reading order and each square's sides
- * from the top clockwise. */
-function edgesOf(
-  sp: GridSpace,
-  facts: readonly number[],
-  anchor: readonly number[],
-): PalisadeEdge[] {
-  const inAnchor = new Set(anchor);
-  const out: (PalisadeEdge & { at: number })[] = [];
-  for (let i = 0; i < facts.length; i += 3) {
-    const e = facts[i + 1];
-    const p = sp.edgeEnds[2 * e];
-    const at = inAnchor.has(p) ? p : sp.edgeEnds[2 * e + 1];
-    const { dir } = sideOf(sp, e, at);
-    out.push({
-      at,
-      x: at % sp.w,
-      y: (at / sp.w) | 0,
-      dir,
-      kind: facts[i + 2] === WALL ? "wall" : "nowall",
-    });
-  }
-  out.sort((a, b) => a.at - b.at || a.dir - b.dir);
-  return out.map(({ x, y, dir, kind }) => ({ x, y, dir, kind }));
+/** Whether the walls the marks hold are the answer, an edge not walled being
+ * read as open, marked or not. */
+export function wallsAreAnswer(m: CellMarks, { dl }: PalisadeWalkContext): boolean {
+  return wallsAnswer(m.grid, m.sp, dl);
 }
 
 /**
- * The ladder's firings from the player's `borders` (their no-wall marks
- * joining squares, their walls keeping groups apart), one a call, each the
- * one that carries on from the regions the plan is working on
- * (`ladderWalk`), or `null` when the ladder has nothing left. The marks
- * advance with each firing; `borders` is the board they stand for.
+ * The marks over the player's `borders` (their no-wall marks joining squares,
+ * their walls keeping groups apart) and the ladder, for the engine's walk to
+ * take a firing at a time (`engine/described-edge-hint.ts`).
  */
-export function hintFirings(
-  p: PalisadeShape,
-  clues: Int8Array,
-  borders: Uint8Array,
-  budget: StepBudget,
-): { borders: Uint8Array; next: () => PalisadeFiring | null } {
-  const d = deduction(p, clues, borders);
-  const { m, ladder } = d;
-  m.budget = budget;
-  const walk = ladderWalk(m, ladder.entries, { [TIERS]: 0 }, (f: Taken) =>
-    readsOf(f.reasons[0] as PalisadeReason),
-  );
-  const board = borders.slice();
-  return {
-    borders: board,
-    next() {
-      const taken = walk.next();
-      if (taken === null || taken === "contradiction") return null;
-      const reason = taken.reasons[0] as PalisadeReason;
-      const edges = edgesOf(m.sp, taken.facts, anchorOf(reason));
-      for (const { x, y, dir, kind } of edges) {
-        const mark = (b: number): number => (kind === "wall" ? b : DISABLED(b));
-        board[y * m.sp.w + x] |= mark(BORDER(dir));
-        board[(y + DY[dir]) * m.sp.w + x + DX[dir]] |= mark(BORDER(FLIP(dir)));
-      }
-      return { ...reason, edges };
-    },
-  };
+export function palisadeWalk(
+  state: PalisadeShape & { clues: Int8Array; borders: Uint8Array },
+): {
+  marks: CellMarks;
+  entries: Ladder["entries"];
+  ctx: PalisadeWalkContext;
+} {
+  const d = deduction(state, state.clues, state.borders);
+  return { marks: d.m, entries: d.ladder.entries, ctx: { sp: d.m.sp, dl: d.dl } };
 }

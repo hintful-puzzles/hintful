@@ -17,33 +17,21 @@ import {
   DISABLED,
   revealBorderEdge,
 } from "../../engine/border-grid.ts";
-import {
-  BORDER_RING_LEGEND,
-  borderHintJourney,
-  borderHintKeepTrack,
-  borderStepEdge,
-  type ForcedBorderEdge,
-} from "../../engine/border-grid-hint.ts";
-import type {
-  Game,
-  HintResult,
-  HintStep,
-  HintTrackVerdict,
-  UiUpdate,
-} from "../../engine/game.ts";
+import { BORDER_RING_LEGEND, borderStepEdge } from "../../engine/border-grid-hint.ts";
+import type { Game, UiUpdate } from "../../engine/game.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { edgeContinuation } from "../../engine/hint-text.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import { interpretTargetVerbs, verbClicks } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import {
+  PALISADE_RUNGS,
+  type PalisadeRung,
+  palisadeHint,
+  palisadeHintKeepTrack,
+} from "./hint.ts";
 import {
   colors,
   computeSize,
@@ -52,15 +40,7 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import {
-  answerOf,
-  hintFirings,
-  isSolved,
-  type PalisadeFiring,
-  type PalisadeRule,
-  palisadeLadderIds,
-  solveToBorders,
-} from "./solver.ts";
+import { answerOf, solveToBorders } from "./solver.ts";
 import {
   decodeParams,
   defaultParams,
@@ -128,112 +108,7 @@ function findMistakes(state: PalisadeState): readonly PalisadeMistake[] {
   return out;
 }
 
-// --- hint ------------------------------------------------------------------
-
-/** The first leg's sentence for a firing; later legs continue it, pointing
- * back to the evidence the first named. The words, and why each reads as it
- * does, are [`hint-text.ts`](./hint-text.ts)'s. */
-function explain(
-  f: PalisadeFiring,
-  clues: Int8Array,
-  w: number,
-  k: number,
-  leg: number,
-  left: readonly ForcedBorderEdge[],
-): Sentence {
-  const at = (i: number): Point => ({ x: i % w, y: Math.floor(i / w) });
-  const cells = (sqs: readonly number[]): Point[] => sqs.map(at);
-  const multi = f.edges.length > 1;
-  switch (f.kind) {
-    case "cluesVersusRegionSize": {
-      const [a, b] = f.clues;
-      if (leg > 0)
-        return edgeContinuation(left, say.basis.outlined(cells(f.clues), "clue"));
-      return say.cluesVersusRegionSize(cells(f.clues), clues[a], clues[b], k, left);
-    }
-    case "numberExhausted":
-      if (leg > 0)
-        return edgeContinuation(left, say.basis.clue(at(f.clue), clues[f.clue]));
-      return say.numberExhausted(at(f.clue), clues[f.clue], left, multi);
-    case "notTooBig": {
-      const both = [...f.a, ...f.b];
-      if (leg > 0)
-        return edgeContinuation(left, say.basis.outlined(cells(both), "region"));
-      return say.notTooBig(cells(both), both.length, k, left);
-    }
-    case "notTooSmall":
-      if (leg > 0) return edgeContinuation(left, say.basis.region(cells(f.region)));
-      return say.notTooSmall(cells(f.region), f.region.length, k, left, multi);
-    case "noDanglingEdges":
-      if (leg > 0)
-        return edgeContinuation(
-          left,
-          say.basis.outlined(cells(f.corner), ["corner", "corner"]),
-        );
-      return say.noDanglingEdges(cells(f.corner), left);
-    case "equivalentEdges":
-      if (leg > 0) return edgeContinuation(left, say.basis.region(cells(f.region)));
-      return say.equivalentEdges(cells(f.region), clues[f.clue], left, multi);
-    case "inside":
-      if (leg > 0) return edgeContinuation(left, say.basis.region(cells(f.region)));
-      return say.inside(cells(f.region), left);
-  }
-}
-
-/** The hint's rungs: the ladder's techniques, in its order. */
-const PALISADE_RUNGS = palisadeLadderIds;
-type PalisadeRung = PalisadeRule;
-
-/**
- * The deduction from the player's own marks to the end, as one journey per
- * firing. Refuses only when the deduction has nothing left to set, which on
- * an Unreasonable board is before the end.
- */
-function hint(
-  state: PalisadeState,
-): HintResult<PalisadeMove, PalisadeHint, PalisadeRung> {
-  const walk = hintFirings(
-    state,
-    state.clues,
-    state.borders,
-    stepBudget("palisade hint"),
-  );
-  const { plan } = deduceHintPlan<Uint8Array, PalisadeFiring, boolean>({
-    board: walk.borders,
-    status: (borders) => isSolved(state, state.clues, borders),
-    incomplete: false,
-    next: () => walk.next(),
-  });
-  if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-
-  const steps = plan.flatMap((f) =>
-    borderHintJourney<PalisadeMove, PalisadeRung>(
-      f.kind,
-      f.edges,
-      // The one region a sentence is about is striped (docs/hints-marks.md
-      // § "Hatch the line the sentence names"); a clue, a corner or the two
-      // regions a join would merge are outlined. The words say which.
-      (leg, left) => explain(f, state.clues, state.w, state.k, leg, left),
-      (edits): PalisadeMove => ({ type: "edges", edits }),
-    ),
-  );
-  return { ok: true, steps };
-}
-
 // --- Game object -----------------------------------------------------------
-
-function hintKeepTrack(
-  m: PalisadeMove,
-  step: HintStep<PalisadeMove, PalisadeHint>,
-  state: PalisadeState,
-): HintTrackVerdict {
-  return borderHintKeepTrack(
-    m.type === "edges" ? m.edits : null,
-    step,
-    state.w,
-    state.borders,
-  );
-}
 
 export const palisadeGame: Game<
   PalisadeParams,
@@ -287,7 +162,7 @@ export const palisadeGame: Game<
     const edits = revealBorderEdge(state, solved);
     return edits === null ? null : { type: "edges", edits };
   },
-  hint,
+  hint: palisadeHint,
   hintMarks: {
     roles: {
       ring: BORDER_RING_LEGEND,
@@ -298,12 +173,18 @@ export const palisadeGame: Game<
     },
   },
   hintRungs: PALISADE_RUNGS,
-  hintKeepTrack,
+  hintKeepTrack: palisadeHintKeepTrack,
   hintGesture: (s, ui, ds, m, step) => {
     if (m.type !== "edges") throw new Error("palisade: a hint only sets edges");
-    return verbClicks(targetVerbs, { executeMove, hintKeepTrack }, s, ui, ds, step, [
-      borderStepEdge(m.edits),
-    ]);
+    return verbClicks(
+      targetVerbs,
+      { executeMove, hintKeepTrack: palisadeHintKeepTrack },
+      s,
+      ui,
+      ds,
+      step,
+      [borderStepEdge(m.edits)],
+    );
   },
 
   textFormat,

@@ -78,11 +78,7 @@ function dealtOf(p: SeparateShape, letters: Uint8Array): separate.Dealt {
 }
 
 /** The side of square `a` that edge `e` is, and the square across it. */
-export function sideOf(
-  sp: GridSpace,
-  e: number,
-  a: number,
-): { dir: number; to: number } {
+function sideOf(sp: GridSpace, e: number, a: number): { dir: number; to: number } {
   const p = sp.edgeEnds[2 * e];
   const q = sp.edgeEnds[2 * e + 1];
   // A grid one square wide has its squares below one another `p + 1` apart.

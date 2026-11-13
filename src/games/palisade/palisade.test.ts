@@ -9,15 +9,21 @@ import {
   DY,
   FLIP,
 } from "../../engine/border-grid.ts";
-import { EDGE } from "../../engine/border-grid-hint.ts";
+import {
+  EDGE,
+  type ForcedBorderEdge,
+  forcedEdgesOf,
+} from "../../engine/border-grid-hint.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   descBadCharacter,
   validateDesc,
 } from "../../engine/desc-error.ts";
+import { spokenOf } from "../../engine/described-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -25,12 +31,7 @@ import { stepBudget } from "../../engine/step-budget.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { newDesc } from "./generator.ts";
 import { palisadeGame } from "./index.ts";
-import {
-  hintFirings,
-  isSolved,
-  type PalisadeFiring,
-  solveToBorders,
-} from "./solver.ts";
+import { isSolved, palisadeWalk, solveToBorders, WALL } from "./solver.ts";
 import {
   bitcount,
   decodeParams,
@@ -410,12 +411,27 @@ describe("palisade hint", () => {
    * dealt from `seed` or given as its desc. */
   const firingsOf = (
     board: { seed: string } | { desc: string },
-  ): { clues: Int8Array; firings: PalisadeFiring[] } => {
+  ): {
+    clues: Int8Array;
+    firings: { kind: string; anchor: readonly number[]; edges: ForcedBorderEdge[] }[];
+  } => {
     const desc = "desc" in board ? board.desc : newDesc(P, randomNew(board.seed)).desc;
     const s0 = newState(P, desc);
-    const walk = hintFirings(P, s0.clues, s0.borders, stepBudget("palisade test"));
-    const firings: PalisadeFiring[] = [];
-    for (let f = walk.next(); f !== null; f = walk.next()) firings.push(f);
+    const { marks, entries, ctx } = palisadeWalk(s0);
+    marks.budget = stepBudget("palisade test");
+    type Says = { terms: { anchor: readonly number[] }; marks: { outline?: number[] } };
+    const walk = ladderWalk(marks, entries, { [TIERS]: 0 }, (t) => [
+      ...(spokenOf<Says>(t).says.marks.outline ?? []),
+    ]);
+    const firings = [];
+    for (let f = walk.next(); f !== null && f !== "contradiction"; f = walk.next()) {
+      const { anchor } = spokenOf<Says>(f).says.terms;
+      firings.push({
+        kind: f.entry.id,
+        anchor,
+        edges: forcedEdgesOf(ctx.sp, f.facts, anchor, WALL),
+      });
+    }
     return { clues: s0.clues, firings };
   };
 
@@ -442,7 +458,11 @@ describe("palisade hint", () => {
     const pairs = firings.filter((f) => f.kind === "cluesVersusRegionSize");
     expect(pairs.length).toBeGreaterThan(0);
     for (const f of pairs) {
-      const [a, b] = f.clues;
+      // The firing is anchored at the first number's square; the edge's other
+      // end is the second.
+      const [a] = f.anchor;
+      const { dir } = f.edges[0];
+      const b = a + DY[dir] * P.w + DX[dir];
       expect(clues[a]).not.toBe(-1);
       expect(clues[b]).not.toBe(-1);
       // The wall is the edge between them, named from the first.

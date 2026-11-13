@@ -28,8 +28,9 @@ import {
   DY,
   FLIP,
 } from "./border-grid.ts";
-import { type HintStep, type HintTrackVerdict, narratedStep } from "./game.ts";
-import type { MarkKind, Sentence } from "./hint-words.ts";
+import type { GridSpace } from "./describe-runtime.ts";
+import type { HintStep, HintTrackVerdict } from "./game.ts";
+import type { MarkKind } from "./hint-words.ts";
 
 /** An edge, named on the square `(x, y)`'s `dir` side. */
 export interface BorderEdge {
@@ -78,33 +79,39 @@ export function borderStepEdge(edits: readonly BorderEdit[]): BorderEdge {
 export type BorderHint = ForcedBorderEdge;
 
 /**
- * One firing as one journey (docs/hints-marks.md § "Group one firing into one
- * step"): a leg per edge, each leg's move the two-sided edit that sets it,
- * wrapped by the game's `toMove`, and the legs after the first flagged
- * `continuesPrevious`. Each leg shows the edges still to come, so the whole set
- * is lit on the first leg and drops off as the legs complete.
- *
- * `words(leg, left)` is the game's sentence for that leg, where `left` is the
- * edges it rings: its own and the ones still to come. The squares it outlines
- * and the region it stripes are the leg's evidence.
+ * The edges a firing's facts set (`[kind, edge, value]` triples, `wall` the value
+ * that is a wall, any other a no-wall mark), each named on the side of its
+ * `anchor` square, in the anchor's reading order and each square's sides from
+ * the top clockwise: the order a journey's legs go in. A firing is one journey
+ * (docs/hints-marks.md § "Group one firing into one step"): a leg per edge,
+ * each leg showing the edges still to come, so the whole set is lit on the first
+ * leg and drops off as the legs complete.
  */
-export function borderHintJourney<M, Rung extends string>(
-  rung: Rung,
-  edges: readonly ForcedBorderEdge[],
-  words: (leg: number, left: readonly ForcedBorderEdge[]) => Sentence,
-  toMove: (edits: BorderEdit[]) => M,
-): HintStep<M, BorderHint, Rung>[] {
-  return edges.map((e, leg) => {
-    const { x, y, dir, kind } = e;
-    const said = words(leg, edges.slice(leg));
-    return narratedStep<M, BorderHint, Rung>({
-      rung,
-      move: toMove(borderEdgeEdits(e)),
-      words: said,
-      ...(leg > 0 ? { continuesPrevious: true } : {}),
-      highlights: { x, y, dir, kind },
+export function forcedEdgesOf(
+  sp: GridSpace,
+  facts: readonly number[],
+  anchor: readonly number[],
+  wall: number,
+): ForcedBorderEdge[] {
+  const inAnchor = new Set(anchor);
+  const out: (ForcedBorderEdge & { at: number })[] = [];
+  for (let i = 0; i < facts.length; i += 3) {
+    const e = facts[i + 1];
+    const p = sp.edgeEnds[2 * e];
+    const q = sp.edgeEnds[2 * e + 1];
+    const at = inAnchor.has(p) ? p : q;
+    // A grid one square wide has its squares below one another `p + 1` apart.
+    const down = q === p + sp.w;
+    out.push({
+      at,
+      x: at % sp.w,
+      y: (at / sp.w) | 0,
+      dir: at === p ? (down ? 2 : 1) : down ? 0 : 3,
+      kind: facts[i + 2] === wall ? "wall" : "nowall",
     });
-  });
+  }
+  out.sort((a, b) => a.at - b.at || a.dir - b.dir);
+  return out.map(({ x, y, dir, kind }) => ({ x, y, dir, kind }));
 }
 
 /** The two-sided edit that sets `e`: its own square's bit, and the bit the
