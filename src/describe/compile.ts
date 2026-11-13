@@ -6825,6 +6825,16 @@ export function compileGame(
                 "",
               ]
             : []),
+          ...(own.some((t) => t.says?.legs)
+            ? [
+                "/** The techniques whose later squares' steps continue the first (a subset of",
+                " * `SAYS_EACH`). */",
+                `export const SAYS_LEGS: readonly (keyof SaysById)[] = ${JSON.stringify(
+                  own.filter((t) => t.says?.legs).map((t) => t.id),
+                )};`,
+                "",
+              ]
+            : []),
         ]
       : []),
     "/** Every technique run as each value is placed, by id. */",

@@ -131,6 +131,14 @@ techniques:
       and (forall c in adj4(b) where blank(c), a in cand(c)
       where (with place(c, a): count(p in adj4(b) where meets(p, b)) > n):
       place(c, 3 - a))
+    # The hint names the block and outlines the lines that would run into it
+    # with the square's supposed line among them.
+    says:
+      shown: legs
+      terms: { clue: b, value: n }
+      marks: { reads: "{b}" }
+      fact:
+        marks: { outline: "with place(c, a): {p in adj4(b) where meets(p, b)}" }
   # A line would carry two numbers. Before a line too long, which such a
   # line usually is too, since joining the numbers is the rule it breaks.
   - id: twoClues
@@ -141,6 +149,14 @@ techniques:
       and (forall c in cells(row(k)) + cells(col(k)) where blank(c), a in cand(c)
       where (with place(c, a): count(j in stick(k) where numbered(j)) > 1):
       place(c, 3 - a))
+    # The hint names the numbers the supposed line would join, and outlines it.
+    says:
+      shown: legs
+      terms: { clue: k }
+      marks: { reads: "{k}" }
+      fact:
+        terms: { clues: "with place(c, a): {j in stick(k) where numbered(j)}" }
+        marks: { outline: "with place(c, a): stick(k)" }
   # A number's line would run longer than it.
   - id: tooLong
     tier: Easy
@@ -150,6 +166,14 @@ techniques:
       and (forall c in cells(row(k)) + cells(col(k)) where blank(c), a in cand(c)
       where (with place(c, a): |stick(k)| > v):
       place(c, 3 - a))
+    # The hint names the number and outlines the line it would run to.
+    says:
+      shown: legs
+      terms: { clue: k, value: v }
+      marks: { reads: "{k}" }
+      fact:
+        terms: { size: "with place(c, a): |stick(k)|" }
+        marks: { outline: "with place(c, a): stick(k)" }
   # A block would be left fewer sides a line could run into it from than its
   # number.
   - id: starved
@@ -160,6 +184,14 @@ techniques:
       and (forall c in adj4(b) where blank(c), a in cand(c)
       where (with place(c, a): sides(b) < n):
       place(c, 3 - a))
+    # The hint names the block and outlines the sides a line could still reach
+    # it from.
+    says:
+      shown: legs
+      terms: { clue: b, value: n }
+      marks:
+        reads: "{b}"
+        outline: "{p in adj4(b) where clue(block, p) < 0 and (not known(p) or meets(p, b))}"
   # A number's line would be left no room to reach its length.
   - id: unreachable
     tier: Easy
@@ -169,3 +201,16 @@ techniques:
       and (forall c in cells(row(k)) + cells(col(k)) where blank(c), a in cand(c)
       where (with place(c, a): known(k) and reach(k) < v):
       place(c, 3 - a))
+    # The hint names the number and outlines the squares its line could still
+    # reach, with the square's supposed line.
+    says:
+      shown: legs
+      terms: { clue: k, value: v }
+      marks: { reads: "{k}" }
+      fact:
+        terms: { max: "with place(c, a): reach(k)" }
+        marks:
+          outline: >-
+            with place(c, a):
+            stretch(row(k), k, {x in cells(row(k)) where free(x, k, row(k), 1)})
+            + stretch(col(k), k, {x in cells(col(k)) where free(x, k, col(k), 2)})

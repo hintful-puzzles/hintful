@@ -461,6 +461,33 @@ defect found in the game, said which.
   steps that continue the first (`continuesPrevious`), and its sentence for
   them is another (`later`); `each` has neither.
 
+### Sticks, built (2026-11-13), and `shown: legs` it came with
+
+- **`says.shown: legs`** is `each` whose later squares continue the first: the
+  compiled module's `SAYS_LEGS` (a subset of `SAYS_EACH`), the engine's `legs`,
+  `continuesPrevious` on every step of a firing after its first and `later` on
+  `FiringSpoken`, which the sentence reads to say the leg as a continuation.
+- **All five techniques say per fact.** The supposed line is the fact's
+  (`with place(c, a): stick(k)`: its run, its size, the numbers it joins,
+  `reach(k)` and the span), and a block's `overConnected` outlines the lines that
+  would run into it per square; `starved`'s open sides need no fact. A firing's
+  `reads` mark holds the number or block, which the old walk read and the outline
+  need not hold. No `define` was added, so the soundness check is not re-opened.
+- **The square in the evidence.** The engine takes a step's own square out of
+  its outline. The three length arguments (`tooLong`, `twoClues`) measure a run
+  that holds it, so their sentences put it back (`marksOf`'s `kept`);
+  `unreachable`'s span never holds it (the supposition shrinks the room), and the
+  two block arguments never counted it.
+- **Comparison.** 72 boards (4x4 to 8x10, both tiers, eight each; 2,499 lines):
+  every one the same lines as at `HEAD`, words, marks, move and which steps
+  continue, all five kinds met. The plan cap (40 firings) is the engine's `plan`.
+- **A change of behavior**: keep-track is the engine's, so a move that sets the
+  hinted square as asked and also other squares is judged by all of them (the old
+  one looked at the hinted square alone).
+- **Lines.** `index.ts` and `solver.ts` lose the reasons, `narrate`, the plan and
+  the helpers that recomputed the supposed lines; `executeMove` moved to
+  `state.ts`; the description +45 of `says`; `hint.ts` 80.
+
 ### What blocks the rest (2026-11-13, a survey by reading, to be re-checked per game)
 
 The first read of the remaining games found one that is a plain Clusters-shaped

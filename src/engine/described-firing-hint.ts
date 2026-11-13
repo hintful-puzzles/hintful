@@ -105,6 +105,8 @@ export type FiringSpoken<S> = S extends { terms: infer T }
       outline: readonly Point[];
       stripes: readonly Point[];
       strand: readonly Point[];
+      /** Whether this step continues the firing's first (`says.shown: legs`). */
+      later: boolean;
       /** The point of a cell a term names. */
       at(cell: number): Point;
       /** The squares the firing's placing techniques follow with, which the
@@ -141,6 +143,10 @@ interface FiringShape<
   /** The techniques whose step is made for each square the firing decides
    * (`says.shown: each`): the compiled module's `SAYS_EACH`. */
   each?: readonly string[];
+  /** Of those, the techniques whose steps after the first continue it
+   * (`continuesPrevious`), and are said as a later leg (`later`): the compiled
+   * module's `SAYS_LEGS`. */
+  legs?: readonly string[];
   /** Whether the squares a firing's placing techniques decide are shown and
    * made with it. `false` where they are what the board already shows: a bulb
    * lights its lines, and a player does not cross each. Default `true`. */
@@ -278,7 +284,11 @@ export function describedFiringHint<
       // A step for the firing, or one for each square it decides, which is then
       // the only square the evidence is taken less.
       const each = spec.each?.includes(f.entry.id) === true;
-      for (const group of each ? decided.map((t) => [t]) : [decided]) {
+      const continued = spec.legs?.includes(f.entry.id) === true;
+      for (const [leg, group] of (each
+        ? decided.map((t) => [t])
+        : [decided]
+      ).entries()) {
         const targets = [...group, ...followed];
         const fills = new Set(each ? group.map((t) => t.y * w + t.x) : filledBy(f));
         // What the squares of this step have of their own joins the firing's.
@@ -307,6 +317,7 @@ export function describedFiringHint<
             outline: outline.map(pointOf),
             stripes: stripes.map(pointOf),
             strand: strand.map(pointOf),
+            later: continued && leg > 0,
             at: pointOf,
             consequences: followed.map(bare),
             placing: (n: number) => group.filter((t) => spec.want(t) === n).map(bare),
@@ -326,7 +337,11 @@ export function describedFiringHint<
         ) as H;
         const step = { rung: kind, explanation: words.text, words, highlights };
         if (spec.journey === undefined) {
-          steps.push({ ...step, move: spec.move(targets, state) });
+          steps.push({
+            ...step,
+            move: spec.move(targets, state),
+            ...(continued && leg > 0 ? { continuesPrevious: true } : {}),
+          });
           continue;
         }
         const { journey } = spec;

@@ -23,9 +23,9 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { newSticksDesc } from "./generator.ts";
-import { STICKS_RUNGS, sticksGame } from "./index.ts";
+import { sticksGame } from "./index.ts";
 import { COL_HINT_CELL, COL_LINE } from "./render.ts";
-import { deduceSticksPlan, type SticksReason } from "./solver.ts";
+import { STICKS_RUNGS } from "./solver.ts";
 import {
   defaultParams,
   F_BLOCK,
@@ -47,51 +47,67 @@ function board(seed: number): { id: string; state: SticksState } {
 
 const KINDS = STICKS_RUNGS;
 
+/** The steps a hint gives from a state. */
+function stepsOf(state: SticksState) {
+  const r = sticksGame.hint?.(state);
+  if (!r?.ok) throw new Error("expected a hint");
+  return r.steps;
+}
+
+/** The square a step decides and the orientation it asks. */
+function decides(step: ReturnType<typeof stepsOf>[number]): {
+  index: number;
+  to: "hor" | "ver";
+} {
+  if (step.move.kind !== "set") throw new Error("a hint step sets squares");
+  const [{ index, line }] = step.move.changes;
+  if (line === "none") throw new Error("a hint step asks for a line");
+  return { index, to: line };
+}
+
 /** A position for each rung, whose plan opens with it, and one whose plan
  * opens with a firing that decides more than one square. */
 const pinned = describeHintPins({
   game: sticksGame,
   params: [PARAMS],
   kinds: {
-    journey: (_step, state) => deduceSticksPlan(state)[0].length > 1,
+    journey: (_step, state) => stepsOf(state)[1]?.continuesPrevious === true,
   },
   pins: {
     /** Held on 100 of 485 positions walked. */
     journey: "7x7b20s2de:a2b2B_3aB0B1b2d3cBBa2_3BB2a2_2hB1B2a1B0a1_3b",
-    /** Held on 430 of 485 positions walked. */
-    tooLong: {
-      id: "7x7b20s2de:4b1B2aB1bB2a1_2_1a2Bb4b1B1aB1_1a3cB1_1b3bB3_1aBaB2b2a",
-      moves: [{ kind: "set", changes: [{ index: 40, line: "hor" }] }],
-    },
-    /** Held on 482 of 485 positions walked. */
-    unreachable: "7x7b20s2de:a1aB2a1aB1d1aB1a1_4_3a1d1g2B_2eB_1_3_3B_3_2a",
+    /** Held on 327 of 485 positions walked. */
+    overConnected: "7x7b20s2de:a2b2B_3aB0B1b2d3cBBa2_3BB2a2_2hB1B2a1B0a1_3b",
     /** Held on 329 of 485 positions walked. */
     twoClues: {
       id: "7x7b20s2de:aBb2Ba1a3aB3a1a1_2_1b2_1B1a3_2Bf1_2a2B1b3bB1b1B1a",
       moves:
         '[{"kind":"set","changes":[{"index":4,"line":"hor"}]},{"kind":"set","changes":[{"index":12,"line":"hor"}]},{"kind":"set","changes":[{"index":13,"line":"ver"}]}]',
     },
-    /** Held on 327 of 485 positions walked. */
-    overConnected: "7x7b20s2de:a2b2B_3aB0B1b2d3cBBa2_3BB2a2_2hB1B2a1B0a1_3b",
+    /** Held on 430 of 485 positions walked. */
+    tooLong: {
+      id: "7x7b20s2de:4b1B2aB1bB2a1_2_1a2Bb4b1B1aB1_1a3cB1_1b3bB3_1aBaB2b2a",
+      moves: [{ kind: "set", changes: [{ index: 40, line: "hor" }] }],
+    },
     /** Held on 353 of 485 positions walked. */
     starved: "7x7b20s2de:aB2aB1B_1a1_2_1B2b1e3B1_1a2c1B2a1_1_3a2a3aB3c2aBB1aB1_1",
+    /** Held on 482 of 485 positions walked. */
+    unreachable: "7x7b20s2de:a1aB2a1aB1d1aB1a1_4_3a1d1g2B_2eB_1_3_3B_3_2a",
   },
 });
 
 describe("sticks hint — technique coverage", () => {
   it("every one of the five contradiction kinds fires on generated boards", () => {
     // A rung that never fires is a rung nothing tests. Sticks' five are the
-    // whole of its description's techniques, and the sentence a pin opens
-    // with is the one for the reason its technique recorded there.
-    for (const kind of KINDS)
-      expect(deduceSticksPlan(pinned(kind).state)[0][0].reason.kind).toBe(kind);
+    // whole of its description's techniques.
+    for (const kind of KINDS) expect(pinned(kind).step.rung).toBe(kind);
   });
 
   it("the deduction narrates every board to completion — no un-narrated residue", () => {
     for (let seed = 0; seed < 6; seed++) {
       const { state } = board(seed);
       const blanks = [...state.grid].filter((t) => t === 0).length;
-      const cells = deduceSticksPlan(state).flat().length;
+      const cells = stepsOf(state).length;
       // The plan is capped for UX, so it either solves the board or hits the cap.
       expect(cells).toBeGreaterThanOrEqual(Math.min(blanks, 40));
     }
@@ -127,17 +143,12 @@ describe("sticks hint — narration", () => {
     // starkest: a black 0 has no line running into it at all.
     let seen = 0;
     for (let seed = 0; seed < 12; seed++) {
-      // One step a firing, in the plan's order.
-      const firings = deduceSticksPlan(board(seed).state).flat();
-      stepsFor(seed).forEach((s, i) => {
-        const { reason } = firings[i];
-        if (reason.kind === "overConnected" && reason.value === 0) {
-          expect(s.rung).toBe("overConnected");
-          expect(s.explanation).toMatch(/[Tt]he 0 block/);
+      for (const s of stepsFor(seed)) {
+        if (s.rung === "overConnected" && /[Tt]he 0 block/.test(s.explanation)) {
           expect(s.explanation).not.toMatch(/as well|another/);
           seen++;
         }
-      });
+      }
     }
     expect(seen, "no step narrated a black 0 — the phrase has changed").toBeGreaterThan(
       0,
@@ -159,18 +170,26 @@ describe("sticks hint — narration", () => {
 });
 
 describe("sticks hint — evidence counts out against the words", () => {
-  const reasons = (seed: number): SticksReason[] =>
-    deduceSticksPlan(board(seed).state)
-      .flat()
-      .map((f) => f.reason);
+  /** The squares a step outlines. */
+  const evidenceOf = (s: ReturnType<typeof stepsOf>[number]): string[] =>
+    stepMarks(s)
+      .of("outline", CELL)
+      .map((p) => `${p.x},${p.y}`);
+
+  /** Every step of twelve boards that a technique said, with its words. */
+  const stepsOfKind = (rung: string) => {
+    const out: ReturnType<typeof stepsOf> = [];
+    for (let seed = 0; seed < 12; seed++)
+      out.push(...stepsOf(board(seed).state).filter((s) => s.rung === rung));
+    expect(out.length, `no \`${rung}\` step across twelve seeds`).toBeGreaterThan(0);
+    return out;
+  };
 
   it("every step shows evidence on the board", () => {
     for (let seed = 0; seed < 6; seed++) {
-      const r = sticksGame.hint?.(board(seed).state);
-      if (!r?.ok) throw new Error("expected a hint");
-      for (const s of r.steps) {
+      for (const s of stepsOf(board(seed).state)) {
         const marks = stepMarks(s);
-        const evidence = marks.of("outline", CELL).map((p) => `${p.x},${p.y}`);
+        const evidence = evidenceOf(s);
         expect(evidence.length, s.explanation).toBeGreaterThan(0);
         // A black clue's counted lines never include the one being ruled out.
         const [target] = marks.of("ring", CELL);
@@ -181,69 +200,39 @@ describe("sticks hint — evidence counts out against the words", () => {
   });
 
   it("a length argument shades exactly the run it narrates", () => {
-    let seen = 0;
-    for (let seed = 0; seed < 12; seed++) {
-      for (const r of reasons(seed)) {
-        if (r.kind === "tooLong") {
-          expect(r.segment.length).toBe(r.size);
-          seen++;
-        }
-      }
+    for (const s of stepsOfKind("tooLong")) {
+      const size = /to (\d+) squares/.exec(s.explanation)?.[1];
+      expect(evidenceOf(s).length, s.explanation).toBe(Number(size));
     }
-    expect(seen, "no `tooLong` reason fired across twelve seeds").toBeGreaterThan(0);
   });
 
   it("a reachability argument shades exactly the span the walk covered", () => {
     // The span is the premise, so an approximated one would make the sentence
-    // false. The reason computes it again from the description's `reach`, and
-    // one that came out as long as the number would say so here.
-    let seen = 0;
-    for (let seed = 0; seed < 12; seed++) {
-      for (const r of reasons(seed)) {
-        if (r.kind === "unreachable") {
-          expect(r.span.length).toBe(r.max);
-          expect(r.max).toBeLessThan(r.value);
-          seen++;
-        }
-      }
+    // false. The number itself is outlined too, so a span of none is that
+    // number alone.
+    for (const s of stepsOfKind("unreachable")) {
+      const room = /(\d+) squares?/.exec(s.explanation)?.[1];
+      expect(evidenceOf(s).length, s.explanation).toBe(Math.max(Number(room), 1));
     }
-    expect(seen, "no `unreachable` reason fired across twelve seeds").toBeGreaterThan(
-      0,
-    );
   });
 
   it("a black clue's argument marks as many sides as it claims", () => {
-    let seen = 0;
-    for (let seed = 0; seed < 12; seed++) {
-      for (const r of reasons(seed)) {
-        // Counted on the trial board: over-connected has gained the offending
-        // line (value + 1), starved has just lost one of its value open sides.
-        if (r.kind === "overConnected") {
-          expect(r.lines.length).toBe(r.value + 1);
-          seen++;
-        }
-        if (r.kind === "starved") {
-          expect(r.open.length).toBe(r.value - 1);
-          seen++;
-        }
-      }
+    // The block itself, and then the lines already running into it for
+    // over-connected, or for starved the sides still open once this one is
+    // closed: one fewer than the number.
+    for (const s of stepsOfKind("overConnected")) {
+      const value = Number(/[Tt]he (\d+) block/.exec(s.explanation)?.[1]);
+      expect(evidenceOf(s).length, s.explanation).toBe(value + 1);
     }
-    expect(seen, "neither black-clue reason fired across twelve seeds").toBeGreaterThan(
-      0,
-    );
+    for (const s of stepsOfKind("starved")) {
+      const value = Number(/[Tt]he (\d+) block/.exec(s.explanation)?.[1]);
+      expect(evidenceOf(s).length, s.explanation).toBe(value);
+    }
   });
 
   it("a two-numbers argument names both numbers and shades the run holding them", () => {
-    let seen = 0;
-    for (let seed = 0; seed < 12; seed++) {
-      for (const r of reasons(seed)) {
-        if (r.kind !== "twoClues") continue;
-        expect(r.clues.length).toBeGreaterThanOrEqual(2);
-        for (const c of r.clues) expect(r.segment).toContain(c);
-        seen++;
-      }
-    }
-    expect(seen, "no `twoClues` reason fired across twelve seeds").toBeGreaterThan(0);
+    for (const s of stepsOfKind("twoClues"))
+      expect(evidenceOf(s).length, s.explanation).toBeGreaterThanOrEqual(2);
   });
 
   it("a line joining two numbers is said as the join, though too long for each", () => {
@@ -255,9 +244,9 @@ describe("sticks hint — evidence counts out against the words", () => {
       grid: new Uint8Array([F_HOR, 0, F_HOR, 0, 0, 0]),
       numbers: new Int16Array([2, -1, 1, -1, -1, -1]),
     };
-    const [first] = deduceSticksPlan(state);
-    expect(first[0]).toMatchObject({ index: 1, to: "ver" });
-    expect(first[0].reason.kind).toBe("twoClues");
+    const [first] = stepsOf(state);
+    expect(decides(first)).toEqual({ index: 1, to: "ver" });
+    expect(first.rung).toBe("twoClues");
   });
 });
 
@@ -266,25 +255,21 @@ describe("sticks hint — grouping", () => {
     // ~a fifth of firings decide more than one square, and a black clue that
     // has run out of lines is the commonest.
     let journeys = 0;
-    for (const group of deduceSticksPlan(pinned("journey").state)) {
-      if (group.length < 2) continue;
+    const steps = stepsOf(pinned("journey").state);
+    steps.forEach((s, i) => {
+      if (!s.continuesPrevious) return;
+      // A later leg is the same technique's, about the same number.
+      expect(s.rung).toBe(steps[i - 1].rung);
       journeys++;
-      const first = group[0].reason;
-      for (const f of group) {
-        expect(f.reason.kind).toBe(first.kind);
-        if (f.reason.kind !== "twoClues" && first.kind !== "twoClues")
-          expect(f.reason.clue).toBe(first.clue);
-      }
-    }
+    });
     expect(journeys).toBeGreaterThan(0);
   });
 
   it("a journey's first leg opens it and the rest continue it", () => {
     for (let seed = 0; seed < 6; seed++) {
-      const r = sticksGame.hint?.(board(seed).state);
-      if (!r?.ok) throw new Error("expected a hint");
-      expect(r.steps[0].continuesPrevious).toBe(false);
-      for (const s of r.steps) {
+      const steps = stepsOf(board(seed).state);
+      expect(steps[0].continuesPrevious).toBeFalsy();
+      for (const s of steps) {
         if (s.continuesPrevious)
           expect(s.explanation).toMatch(
             /^…and this (square|\d) must be (horizontal|vertical), for /,
@@ -302,28 +287,23 @@ describe("sticks hint — lifecycle", () => {
     const { state } = board(3);
     let cur = state;
     // Play the first few forced squares by hand, out of the plan's order.
-    const plan = deduceSticksPlan(cur).flat();
-    for (const f of [plan[2], plan[0], plan[5]]) {
-      cur = sticksGame.executeMove(cur, {
-        kind: "set",
-        changes: [{ index: f.index, line: f.to }],
-      });
-    }
+    const plan = stepsOf(cur);
+    for (const step of [plan[2], plan[0], plan[5]])
+      cur = sticksGame.executeMove(cur, step.move);
     const r = sticksGame.hint?.(cur);
     expect(r?.ok).toBe(true);
     if (!r?.ok) return;
     expect(r.steps.length).toBeGreaterThan(0);
     // And it does not re-suggest anything already on the board.
     for (const s of r.steps) {
-      const hl = s.highlights as { target: number };
-      expect(cur.grid[hl.target] & (F_HOR | F_VER | F_BLOCK)).toBe(0);
+      const { index } = decides(s);
+      expect(cur.grid[index] & (F_HOR | F_VER | F_BLOCK)).toBe(0);
     }
   });
 
   it("flags a wrong square, so the midend refuses a hint", () => {
     const { state } = board(1);
-    const plan = deduceSticksPlan(state).flat();
-    const wrong = plan[0];
+    const wrong = decides(stepsOf(state)[0]);
     const bad = sticksGame.executeMove(state, {
       kind: "set",
       changes: [{ index: wrong.index, line: wrong.to === "hor" ? "ver" : "hor" }],
@@ -343,18 +323,18 @@ describe("sticks hint — lifecycle", () => {
     const r = sticksGame.hint?.(state);
     if (!r?.ok) throw new Error("expected a hint");
     const step = r.steps[0];
-    const hl = step.highlights as { target: number; to: "hor" | "ver" };
+    const hl = decides(step);
     const other = hl.to === "hor" ? "ver" : "hor";
     expect(
       sticksGame.hintKeepTrack?.(
-        { kind: "set", changes: [{ index: hl.target, line: hl.to }] },
+        { kind: "set", changes: [{ index: hl.index, line: hl.to }] },
         step,
         state,
       ),
     ).toBe("completed");
     expect(
       sticksGame.hintKeepTrack?.(
-        { kind: "set", changes: [{ index: hl.target, line: other }] },
+        { kind: "set", changes: [{ index: hl.index, line: other }] },
         step,
         state,
       ),

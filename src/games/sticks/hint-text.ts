@@ -18,6 +18,7 @@
  * ways.
  */
 
+import type { FiringSpoken } from "../../engine/described-firing-hint.ts";
 import {
   CELL,
   mark,
@@ -28,10 +29,11 @@ import {
   so,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import type { SticksFiring, SticksReason } from "./solver.ts";
+import type { SticksState } from "./state.ts";
+import type { SaysById } from "./sticks.compiled.ts";
 
-type R<K extends SticksReason["kind"]> = Extract<SticksReason, { kind: K }>;
-type To = SticksFiring["to"];
+/** The way a step's square is forced to run. */
+type To = "hor" | "ver";
 
 const ORIENT = { hor: "horizontal", ver: "vertical" } as const;
 
@@ -80,7 +82,12 @@ const cellsRef = (m: SticksMarks, words: string): Narration =>
   mark.as("outline", CELL, m.cells, words);
 
 export const say = {
-  tooLong: (reason: R<"tooLong">, to: To, m: SticksMarks, later: boolean): Sentence => {
+  tooLong: (
+    reason: { value: number; size: number },
+    to: To,
+    m: SticksMarks,
+    later: boolean,
+  ): Sentence => {
     const { bad, supposed, move } = frame(to, m);
     const run = cellsRef(m, `${reason.size} squares`);
     return later
@@ -98,7 +105,7 @@ export const say = {
   // to learn to look for here is a number running out of room, which they will
   // not spot from the square being acted on.
   unreachable: (
-    reason: R<"unreachable">,
+    reason: { value: number; max: number },
     to: To,
     m: SticksMarks,
     later: boolean,
@@ -143,7 +150,7 @@ export const say = {
   // false exactly where the rule is starkest (docs/hints.md
   // § "Sanity-read at the degenerate extremes").
   overConnected: (
-    reason: R<"overConnected">,
+    reason: { value: number },
     to: To,
     m: SticksMarks,
     later: boolean,
@@ -170,7 +177,12 @@ export const say = {
     );
   },
 
-  starved: (reason: R<"starved">, to: To, m: SticksMarks, later: boolean): Sentence => {
+  starved: (
+    reason: { value: number },
+    to: To,
+    m: SticksMarks,
+    later: boolean,
+  ): Sentence => {
     const { bad, supposed, move } = frame(to, m);
     const black = clueRef(m, `The ${reason.value} block`);
     if (later)
@@ -183,6 +195,75 @@ export const say = {
         ? phrase`${black} has one open side, and ${supposed} would close it`
         : phrase`${black} needs ${cellsRef(m, `${reason.value === 2 ? "both" : `${reason.value}`} outlined sides`)}, and ${supposed} shuts one`,
       move,
+    );
+  },
+};
+
+type Spoken<K extends keyof SaysById> = FiringSpoken<SaysById[K]>;
+
+/** What a step's marks are, read off what the description says of a firing: the
+ * square it decides, the clue cells its sentence names, and the rest of the
+ * evidence. `kept` is where the square belongs to the evidence: the run a
+ * length argument measures contains the square being decided (the outline is
+ * less it), where the lines a block already counts, and the room a number is
+ * left, do not. */
+function marksOf(
+  s: Spoken<keyof SaysById>,
+  state: SticksState,
+  clues: readonly number[],
+  kept: boolean,
+): { m: SticksMarks; to: To } {
+  const [target] = s.targets;
+  return {
+    m: {
+      target,
+      // The square's own clue, or -1: what the closing sentence names it by.
+      clue: state.numbers[target.y * state.w + target.x],
+      clues: clues.map(s.at),
+      cells: kept ? [...s.outline, ...s.targets] : s.outline,
+    },
+    to: s.placing(1).length > 0 ? "hor" : "ver",
+  };
+}
+
+/** Each technique's sentence, from what its description says of a firing
+ * (`engine/described-firing-hint.ts`): a step a square, the later squares of a
+ * firing continuing the first. */
+export const sentences = {
+  overConnected: (s: Spoken<"overConnected">, state: SticksState): Sentence => {
+    const { m, to } = marksOf(s, state, [s.terms.clue], false);
+    return say.overConnected({ value: s.terms.value }, to, m, s.later);
+  },
+  twoClues: (s: Spoken<"twoClues">, state: SticksState): Sentence => {
+    const joined = s.facts[0].terms.clues;
+    const { m, to } = marksOf(s, state, joined, true);
+    return say.twoClues(
+      joined.map((c) => state.numbers[c]),
+      to,
+      m,
+      s.later,
+    );
+  },
+  tooLong: (s: Spoken<"tooLong">, state: SticksState): Sentence => {
+    const { m, to } = marksOf(s, state, [s.terms.clue], true);
+    return say.tooLong(
+      { value: s.terms.value, size: s.facts[0].terms.size },
+      to,
+      m,
+      s.later,
+    );
+  },
+  starved: (s: Spoken<"starved">, state: SticksState): Sentence => {
+    const { m, to } = marksOf(s, state, [s.terms.clue], false);
+    return say.starved({ value: s.terms.value }, to, m, s.later);
+  },
+  unreachable: (s: Spoken<"unreachable">, state: SticksState): Sentence => {
+    const { m, to } = marksOf(s, state, [s.terms.clue], false);
+    return say.unreachable(
+      { value: s.terms.value, max: s.facts[0].terms.max },
+      to,
+      m,
+      s.later,
     );
   },
 };

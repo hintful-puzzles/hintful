@@ -1040,7 +1040,12 @@ cell it covers) is a set expression over the cells' own state, as `sameLine`'s.
 `describedFiringHint` then makes a step for every square the firing decides,
 the evidence of each being the outline less that square alone (Light Up's two
 discount sets, which rule out a square for a reason that is its own). The
-compiled module's `SAYS_EACH` lists them. **Where each square has evidence of
+compiled module's `SAYS_EACH` lists them. **`shown: legs`** is `each` where the
+squares are one insight (a number that rules out several squares by one rule,
+Sticks'): the later squares' steps continue the first (`continuesPrevious`), and
+`spoken.later` says so, for a sentence that drops what the first has taught
+(`SAYS_LEGS`). The engine takes a step's own square out of its outline, so a
+sentence whose evidence holds that square adds `spoken.targets` back. **Where each square has evidence of
 its own** (Bricks' `three`: the run its shading would make), the technique says
 `fact`, a `terms` and `marks` read at each `place` or `strike` of the
 conclusion, in the conclusion's scope, so a `forall` binder is live and a `with`

@@ -51,8 +51,8 @@
           "additionalProperties": false,
           "properties": {
             "shown": {
-              "enum": ["each"],
-              "description": "`each`: a step for every square the firing decides, each its own argument (its evidence is the outline less that square alone). Absent, one step for the firing."
+              "enum": ["each", "legs"],
+              "description": "`each`: a step for every square the firing decides, each its own argument (its evidence is the outline less that square alone). `legs`: the same, the steps after the first continuing it. Absent, one step for the firing."
             },
             "terms": {
               "type": "object",

@@ -25,11 +25,9 @@ import {
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
 import {
-  clueAt,
   clueList,
   describedSpace,
   type GridSpace,
-  stretch,
 } from "../../engine/describe-runtime.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import {
@@ -37,22 +35,23 @@ import {
   compiledRung,
   describedLadder,
   type Ladder,
+  type LadderEntry,
   ladderTechniques,
-  ladderWalk,
   runLadder,
-  type Taken,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import {
   F_BLOCK,
   F_HOR,
   F_VER,
-  type SticksLine,
   type SticksMistake,
   type SticksState,
 } from "./state.ts";
 import * as sticks from "./sticks.compiled.ts";
+
+/** The kinds of step a hint can be, which the description's `says` names. */
+export const STICKS_RUNGS = sticks.SAYS_KINDS;
+export type SticksRung = (typeof STICKS_RUNGS)[number];
 
 /** What the description reads a square as holding: a line across, a line up
  * and down, or a block. */
@@ -66,35 +65,6 @@ interface Board {
   h: number;
   grid: Uint8Array;
   numbers: Int16Array;
-}
-
-/**
- * *Why* a square's line cannot run one way: the number the supposed line
- * would break, its value, and the cells the argument reasons over, which are
- * the hint's evidence area, so the picture cannot disagree with the words.
- * One variant a technique.
- */
-export type SticksReason =
-  /** The number's line would run longer than it. */
-  | { kind: "tooLong"; clue: number; value: number; size: number; segment: number[] }
-  /** The number's line could no longer stretch far enough to reach it. */
-  | { kind: "unreachable"; clue: number; value: number; max: number; span: number[] }
-  /** One line would carry two numbers. */
-  | { kind: "twoClues"; clues: number[]; segment: number[] }
-  /** A block would gain more lines than it counts. */
-  | { kind: "overConnected"; clue: number; value: number; lines: number[] }
-  /**
-   * A block would lose a side it still needed a line from. `open` is every
-   * side a line could still reach it from once the square is closed: one
-   * already carrying a line counts, an off-board or block side does not.
-   */
-  | { kind: "starved"; clue: number; value: number; open: number[] };
-
-/** One forced square with the reason that forces it. */
-export interface SticksFiring {
-  index: number;
-  to: Exclude<SticksLine, "none">;
-  reason: SticksReason;
 }
 
 /** The values the description reads off a grid of flag bytes. */
@@ -139,110 +109,14 @@ function sticksMarks(sp: GridSpace, dl: sticks.Dealt, values: Uint8Array): CellM
   return m;
 }
 
-/** The value square `x` holds with `c` supposed to hold `a`. */
-const held = (m: CellMarks, c: number, a: number, x: number): number =>
-  x === c ? a : m.value(x);
-
-/** The squares of the line square `k` holds a line along, the way it runs:
- * its row for a line across, its column for one up and down. */
-function lineOf(sp: GridSpace, k: number, d: number): readonly number[] {
-  return sp.lineCells[d === ACROSS ? sp.rowOf[k] : sp.colOf[k]];
-}
-
-/** The line through square `k`, with `c` supposed to hold `a`: the
- * description's `stick(k)`. */
-function stickUnder(m: CellMarks, k: number, c: number, a: number): number[] {
-  const d = held(m, c, a, k);
-  if (d !== ACROSS && d !== DOWN) return [];
-  const L = lineOf(m.sp, k, d);
-  return [
-    ...stretch(
-      L,
-      k,
-      L.filter((x) => held(m, c, a, x) === d),
-    ),
-  ];
-}
-
-/** The squares numbered square `k`'s line can still reach, with `c`
- * supposed to hold `a`: the description's `reach(k)`, as squares. */
-function reachUnder(
-  m: CellMarks,
-  dl: sticks.Dealt,
-  k: number,
-  c: number,
-  a: number,
-): number[] {
-  const d = held(m, c, a, k);
-  if (d !== ACROSS && d !== DOWN) return [];
-  const L = lineOf(m.sp, k, d);
-  const free = (x: number): boolean =>
-    clueAt(dl.block, x) < 0 &&
-    (!(x === c || m.known(x)) || held(m, c, a, x) === d) &&
-    stretch(
-      L,
-      x,
-      L.filter((z) => held(m, c, a, z) === d || z === x),
-    ).every((y) => y === k || clueAt(dl.length, y) < 0);
-  return [...stretch(L, k, L.filter(free))];
-}
-
-/** Whether square `p`'s line runs into block `b` beside it, with `c`
- * supposed to hold `a` where they are given. */
-function meets(m: CellMarks, p: number, b: number, c = -1, a = 0): boolean {
-  const { sp } = m;
-  const v = held(m, c, a, p);
-  return (
-    (v === ACROSS && sp.rowOf[p] === sp.rowOf[b]) ||
-    (v === DOWN && sp.colOf[p] === sp.colOf[b])
-  );
-}
-
-/** The ladder over the dealt board, each technique with its reason: built
- * from the binding and the square placed, on the marks before the firing.
- * The square's line was supposed the other way. */
+/** The ladder over the dealt board. */
 function sticksLadder(dl: sticks.Dealt): Ladder {
   return describedLadder(sticks, {
-    overConnected: compiledRung(
-      sticks.overConnected,
-      dl,
-      ({ b, n }, c, to, m): SticksReason => ({
-        kind: "overConnected",
-        clue: b,
-        value: n,
-        // On the supposed board, so the square's own line is among them.
-        lines: m.sp.adj4[b].filter((p) => meets(m, p, b, c, 3 - to)),
-      }),
-    ),
-    tooLong: compiledRung(sticks.tooLong, dl, ({ k, v }, c, to, m): SticksReason => {
-      const segment = stickUnder(m, k, c, 3 - to);
-      return { kind: "tooLong", clue: k, value: v, size: segment.length, segment };
-    }),
-    twoClues: compiledRung(sticks.twoClues, dl, ({ k }, c, to, m): SticksReason => {
-      const segment = stickUnder(m, k, c, 3 - to);
-      const clues = segment.filter((x) => clueAt(dl.length, x) >= 0);
-      return { kind: "twoClues", clues, segment };
-    }),
-    starved: compiledRung(
-      sticks.starved,
-      dl,
-      ({ b, n }, c, _to, m): SticksReason => ({
-        kind: "starved",
-        clue: b,
-        value: n,
-        open: m.sp.adj4[b].filter(
-          (p) => p !== c && clueAt(dl.block, p) < 0 && (!m.known(p) || meets(m, p, b)),
-        ),
-      }),
-    ),
-    unreachable: compiledRung(
-      sticks.unreachable,
-      dl,
-      ({ k, v }, c, to, m): SticksReason => {
-        const span = reachUnder(m, dl, k, c, 3 - to);
-        return { kind: "unreachable", clue: k, value: v, max: span.length, span };
-      },
-    ),
+    overConnected: compiledRung(sticks.overConnected, dl),
+    tooLong: compiledRung(sticks.tooLong, dl),
+    twoClues: compiledRung(sticks.twoClues, dl),
+    starved: compiledRung(sticks.starved, dl),
+    unreachable: compiledRung(sticks.unreachable, dl),
   });
 }
 
@@ -333,62 +207,21 @@ export function answerOf(state: SticksState): SticksAnswer {
 
 // --- the hint's walk ---------------------------------------------------------
 
-/** The cells a reason's premise reads: its clues and the line or lines its
- * supposition broke. */
-function readsOf(reason: SticksReason): number[] {
-  switch (reason.kind) {
-    case "tooLong":
-      return [reason.clue, ...reason.segment];
-    case "unreachable":
-      return [reason.clue, ...reason.span];
-    case "twoClues":
-      return [...reason.clues, ...reason.segment];
-    case "overConnected":
-      return [reason.clue, ...reason.lines];
-    case "starved":
-      return [reason.clue, ...reason.open];
-  }
-}
-
-/** The squares a firing decides, each with its reason, in the order the
- * technique found them. */
-function firingOf({ facts, reasons }: Taken): SticksFiring[] {
-  const out: SticksFiring[] = [];
-  for (let i = 0; i < facts.length; i += 3)
-    out.push({
-      index: facts[i + 1],
-      to: facts[i + 2] === ACROSS ? "hor" : "ver",
-      reason: reasons[i / 3] as SticksReason,
-    });
-  return out;
-}
-
-/** Runaway/UX cap on plan length — the player rarely follows more than a few
- * steps before diverging, and a recompute yields the next batch. */
-const HINT_PLAN_MAX = 40;
-
 /**
- * The ordered plan from the player's own board: one entry a firing, each
- * holding the squares one number decides by one rule, the firing that carries
- * on from the squares the last decided first (`ladderWalk`). The caller
- * guarantees the board agrees with the unique answer, so every move is
- * correct.
+ * What the hint walks: a state's lines as the description's marks and its
+ * ladder, whose firings the hint says (`hint.ts`). The walk carries on from the
+ * squares the last firing decided (`ladderWalk`), so a hint finishes the number
+ * it is working on before it moves on.
  */
-export function deduceSticksPlan(state: SticksState): SticksFiring[][] {
+export function hintWalk(state: SticksState): {
+  marks: CellMarks;
+  entries: readonly LadderEntry[];
+} {
   const dl = dealtOf(state);
-  const m = sticksMarks(sticksSpace(state.w, state.h), dl, valuesOf(state.grid));
-  m.budget = stepBudget("sticks hint");
-  const walk = ladderWalk(m, sticksLadder(dl).entries, { [TIERS]: 0 }, (f) => [
-    ...(f.reasons as SticksReason[]).flatMap(readsOf),
-    ...firingOf(f).map((g) => g.index),
-  ]);
-  const plan: SticksFiring[][] = [];
-  while (plan.length < HINT_PLAN_MAX) {
-    const taken = walk.next();
-    if (taken === null || taken === "contradiction") break;
-    plan.push(firingOf(taken));
-  }
-  return plan;
+  return {
+    marks: sticksMarks(sticksSpace(state.w, state.h), dl, valuesOf(state.grid)),
+    entries: sticksLadder(dl).entries,
+  };
 }
 
 /**

@@ -43,12 +43,12 @@ import {
   type WinTone,
   winSlot,
 } from "../../engine/win-wave.ts";
+import type { SticksHint } from "./hint.ts";
 import { findLiveErrors } from "./solver.ts";
 import {
   F_BLOCK,
   F_HOR,
   F_VER,
-  type SticksHint,
   type SticksMistake,
   type SticksMove,
   type SticksParams,
@@ -322,7 +322,7 @@ export function redraw(
   const marks = stepMarks(hint);
   const at = (p: Point): number => p.y * w + p.x;
   const hintTargets = new Set(marks.of("ring", CELL).map(at));
-  const hintBits = hint?.highlights?.to === "hor" ? F_HOR : F_VER;
+  const hintBits = hint?.highlights?.targets[0].value === 1 ? F_HOR : F_VER;
   const hintEvidence = new Set(marks.of("outline", CELL).map(at));
 
   for (let y = 0; y < h; y++) {

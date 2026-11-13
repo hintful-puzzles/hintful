@@ -17,6 +17,7 @@ import {
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
+import { assertNever } from "../../engine/assert-never.ts";
 import { isDigit } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
@@ -99,18 +100,6 @@ export interface SticksUi {
 /** A white cell whose placed line contradicts the unique solution. */
 export interface SticksMistake {
   index: number;
-}
-
-/**
- * Plan data for a hint step: the forced square (`target`), which keep-track
- * compares a move against, and the orientation it is forced to (`to` — drawn
- * as a bar inside the ring round the square, the game's own line shape in the
- * ring's ink; a ring alone could not express an orientation, which is the
- * whole of the move).
- */
-export interface SticksHint {
-  target: number;
-  to: Exclude<SticksLine, "none">;
 }
 
 // --- params -----------------------------------------------------------------
@@ -311,7 +300,28 @@ export function encodeDesc(
   return out;
 }
 
-export function cloneState(s: SticksState): SticksState {
+const lineBits = (line: SticksLine): number =>
+  line === "hor" ? F_HOR : line === "ver" ? F_VER : 0;
+
+export function executeMove(state: SticksState, move: SticksMove): SticksState {
+  const next = cloneState(state);
+  if (move.kind === "solve") {
+    for (let i = 0; i < next.grid.length; i++) {
+      if (state.grid[i] & F_BLOCK) continue;
+      next.grid[i] = lineBits(move.grid[i]);
+    }
+  } else if (move.kind === "set") {
+    for (const { index, line } of move.changes) {
+      if (state.grid[index] & F_BLOCK) continue;
+      next.grid[index] = lineBits(line);
+    }
+  } else {
+    return assertNever(move, "sticks: executeMove");
+  }
+  return next;
+}
+
+function cloneState(s: SticksState): SticksState {
   // The clues are shared, not copied: no move changes one, and they are the
   // part of a board every state of one game holds in common (`answerOf`).
   return { ...s, grid: s.grid.slice() };

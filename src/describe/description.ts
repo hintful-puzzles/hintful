@@ -208,8 +208,10 @@ export interface StatedTechnique {
  * to the shared ones (an arm's names win). */
 export interface StatedSays {
   /** `each`: a step for every square the firing decides, each its own argument
-   * (Light Up's discounts); absent, one step for the firing. */
-  shown?: "each";
+   * (Light Up's discounts); `legs`, the same with the later squares continuing
+   * the first (Sticks: a number's one reason over several squares); absent, one
+   * step for the firing. */
+  shown?: "each" | "legs";
   terms?: Record<string, string>;
   marks?: Partial<Record<SaidRole, string>>;
   /** What each square the firing decides has of its own, read where the
@@ -527,6 +529,9 @@ export interface Technique {
 export interface Says {
   /** Whether a step is made for each square the firing decides. */
   each: boolean;
+  /** Whether the steps after the first are the same insight continued (the
+   * squares' steps are then `each`'s). */
+  legs: boolean;
   /** What each fact has of its own, read in the conclusion's scope where it is
    * made; `null` where none does. */
   fact: {
@@ -683,7 +688,8 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
       ).map(([role, src]) => ({ role, expr: at(`${label} ${role}`, src) })),
     };
   };
-  const each = stated.shown === "each";
+  const legs = stated.shown === "legs";
+  const each = legs || stated.shown === "each";
   const fact =
     stated.fact === undefined
       ? null
@@ -697,9 +703,10 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
           ),
         };
   if (stated.arms === undefined)
-    return { each, fact, variants: [variant(null, null, {})] };
+    return { each, legs, fact, variants: [variant(null, null, {})] };
   return {
     each,
+    legs,
     fact,
     variants: Object.entries(stated.arms).map(([name, arm]) =>
       variant(name, at(`says ${name} when`, arm.when), arm),

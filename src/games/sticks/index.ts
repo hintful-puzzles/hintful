@@ -16,20 +16,15 @@
  */
 
 import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
-import { assertNever } from "../../engine/assert-never.ts";
 import {
   type Game,
-  type HintResult,
   type HintStep,
-  type HintTrackVerdict,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
-import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_LEFT,
@@ -60,7 +55,12 @@ import {
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSticksDesc } from "./generator.ts";
-import { type SticksMarks, say } from "./hint-text.ts";
+import {
+  type SticksHint,
+  sticksHint,
+  sticksKeepTrack,
+  sticksRefreshHintStep,
+} from "./hint.ts";
 import {
   border,
   colors,
@@ -72,24 +72,23 @@ import {
 } from "./render.ts";
 import {
   answerOf,
-  deduceSticksPlan,
   deductionFinishes,
   findMistakes,
   isSolved,
-  type SticksFiring,
+  STICKS_RUNGS,
+  type SticksRung,
 } from "./solver.ts";
 import {
-  cloneState,
   decodeParams,
   defaultParams,
   encodeParams,
+  executeMove,
   F_BLOCK,
   F_HOR,
   F_VER,
   menu,
   newState,
   paramConfig,
-  type SticksHint,
   type SticksLine,
   type SticksMistake,
   type SticksMove,
@@ -112,9 +111,6 @@ function newUi(_state: SticksState): SticksUi {
     dragMove: [],
   };
 }
-
-const lineBits = (line: SticksLine): number =>
-  line === "hor" ? F_HOR : line === "ver" ? F_VER : 0;
 
 const bitsLine = (bits: number): SticksLine =>
   bits & F_HOR ? "hor" : bits & F_VER ? "ver" : "none";
@@ -330,24 +326,6 @@ function interpretMove(
   return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
-function executeMove(state: SticksState, move: SticksMove): SticksState {
-  const next = cloneState(state);
-  if (move.kind === "solve") {
-    for (let i = 0; i < next.grid.length; i++) {
-      if (state.grid[i] & F_BLOCK) continue;
-      next.grid[i] = lineBits(move.grid[i]);
-    }
-  } else if (move.kind === "set") {
-    for (const { index, line } of move.changes) {
-      if (state.grid[index] & F_BLOCK) continue;
-      next.grid[index] = lineBits(line);
-    }
-  } else {
-    return assertNever(move, "sticks: executeMove");
-  }
-  return next;
-}
-
 function status(s: SticksState): GameStatus {
   return isSolved(s) ? "solved" : "ongoing";
 }
@@ -368,132 +346,6 @@ function revealOne(state: SticksState, solved: SticksState): SticksMove | null {
   return null;
 }
 
-// --- hint (the ladder's firings, narrated) ----------------------------------
-
-/**
- * Narrate *why* the square can only take one orientation, reading the clue
- * numbers the sentence names off the board. `continues` is a later leg of the
- * same firing. The words are [`hint-text.ts`](./hint-text.ts)'s.
- *
- * The cells it outlines are exactly what its sentence claims, so the player
- * can count the picture against the words. The forced square is deliberately
- * **kept** in the three length arguments and left out of the two black-clue
- * ones, because that is where it honestly belongs: the run a length argument
- * measures does contain the square being decided ("would run the 2's line to
- * 3 squares" shades all three, with the blue bar on the one to act on), while
- * the lines a black clue already counts do not include the one being ruled
- * out. Dropping it everywhere leaves an `unreachable` step whose whole
- * evidence *is* the target with nothing on the board (docs/hints-marks.md
- * § "Show the evidence as an area").
- */
-function narrate(
-  firing: SticksFiring,
-  state: SticksState,
-  continues: boolean,
-): Sentence {
-  const { reason, to } = firing;
-  const at = (i: number): Point => pointOf(i, state.w);
-  // The evidence, split by the part each cell plays in the sentence.
-  const [clues, cells] = ((): [number[], number[]] => {
-    switch (reason.kind) {
-      case "tooLong":
-        return [[reason.clue], reason.segment];
-      case "unreachable":
-        return [[reason.clue], reason.span];
-      case "twoClues":
-        return [reason.clues, reason.segment];
-      case "overConnected":
-        return [[reason.clue], reason.lines.filter((c) => c !== firing.index)];
-      case "starved":
-        return [[reason.clue], reason.open];
-    }
-  })();
-  const m: SticksMarks = {
-    target: at(firing.index),
-    // The square's own clue, or -1: what the closing sentence names it by.
-    clue: state.numbers[firing.index],
-    clues: clues.map(at),
-    cells: cells.map(at),
-  };
-  switch (reason.kind) {
-    case "tooLong":
-      return say.tooLong(reason, to, m, continues);
-    case "unreachable":
-      return say.unreachable(reason, to, m, continues);
-    case "twoClues":
-      return say.twoClues(
-        reason.clues.map((c) => state.numbers[c]),
-        to,
-        m,
-        continues,
-      );
-    case "overConnected":
-      return say.overConnected(reason, to, m, continues);
-    case "starved":
-      return say.starved(reason, to, m, continues);
-  }
-}
-
-const pointOf = (i: number, w: number): Point => ({ x: i % w, y: Math.floor(i / w) });
-
-/** A step's rung is the contradiction its firing rests on: `SticksReason`'s
- * kinds. The squares one firing decides share it. */
-export const STICKS_RUNGS = [
-  "tooLong",
-  "unreachable",
-  "twoClues",
-  "overConnected",
-  "starved",
-] as const;
-type SticksRung = (typeof STICKS_RUNGS)[number];
-
-function hint(state: SticksState): HintResult<SticksMove, SticksHint, SticksRung> {
-  const plan = deduceSticksPlan(state);
-  if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-
-  const steps: HintStep<SticksMove, SticksHint, SticksRung>[] = [];
-  for (const group of plan) {
-    // One firing = one journey: a clue that rules out several squares at once
-    // is one insight, so its later squares continue the step rather than
-    // queueing up as separate hints (quality-bar rule 2).
-    group.forEach((f, leg) => {
-      const words = narrate(f, state, leg > 0);
-      steps.push({
-        move: { kind: "set", changes: [{ index: f.index, line: f.to }] },
-        rung: f.reason.kind,
-        explanation: words.text,
-        words,
-        highlights: { target: f.index, to: f.to },
-        continuesPrevious: leg > 0,
-      });
-    });
-  }
-  return { ok: true, steps };
-}
-
-/**
- * A move completes the step when it sets the hinted square to the hinted
- * orientation. Steps are single-square (a journey's legs arrive one at a time),
- * so there is no partial-subset `"onTrack"` case; a drag that sweeps the target
- * still completes it, and any move that leaves the target alone is off-plan.
- *
- * No `refreshHintStep`: Sticks has no pencil notes and no preference
- * that edits the board, so a kept step cannot be silently resolved by a side
- * effect — only by the player making its own move, which the midend sees.
- */
-function hintKeepTrack(
-  m: SticksMove,
-  step: HintStep<SticksMove, SticksHint>,
-  _state: SticksState,
-): HintTrackVerdict {
-  const hl = step.highlights;
-  if (!hl || m.kind !== "set") return "off";
-  for (const c of m.changes) {
-    if (c.index === hl.target) return c.line === hl.to ? "completed" : "off";
-  }
-  return "off";
-}
-
 /** A tap on each square the step sets. */
 function hintGesture(
   state: SticksState,
@@ -507,7 +359,7 @@ function hintGesture(
   const squares = m.changes.map(({ index }) => ({ x: index % w, y: (index / w) | 0 }));
   return verbClicks(
     targetVerbs,
-    { executeMove, hintKeepTrack },
+    { executeMove, hintKeepTrack: sticksKeepTrack },
     state,
     ui,
     ds,
@@ -565,7 +417,7 @@ export const sticksGame: Game<
           },
         ],
   revealOne,
-  hint,
+  hint: sticksHint,
   hintRungs: STICKS_RUNGS,
   hintMarks: {
     roles: {
@@ -574,7 +426,8 @@ export const sticksGame: Game<
         "the cells the step reasons from: the cells a numbered line runs through or could still reach, or a block together with the lines already running into it or the cells beside it where one still could.",
     },
   },
-  hintKeepTrack,
+  hintKeepTrack: sticksKeepTrack,
+  refreshHintStep: sticksRefreshHintStep,
   hintGesture,
   textFormat,
 
