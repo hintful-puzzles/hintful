@@ -29,8 +29,8 @@ export const say = {
   adjacent: (p: CluePair, bar: boolean, v: number, order: number): Narration => {
     const beside = across(p, `the ${displayChar(v, order)} beside it`);
     return bar
-      ? phrase`${theClue(p, "A bar")} joins ${thisCell(p.at)} to ${beside}, and they must differ by exactly 1`
-      : phrase`${theClue(p, "No bar")} joins ${thisCell(p.at)} to ${beside}, and they can't differ by 1`;
+      ? phrase`${theClue(p, "A bar")} joins ${thisCell(p.at)} to ${beside}: they differ by 1`
+      : phrase`${theClue(p, "No bar")} joins ${thisCell(p.at)} to ${beside}: they can't differ by 1`;
   },
 
   /** The same, against a neighbor that is still undecided: a struck value

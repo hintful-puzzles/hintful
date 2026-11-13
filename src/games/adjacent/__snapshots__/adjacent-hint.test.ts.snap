@@ -2611,7 +2611,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
 
 exports[`adjacent: pinned hint positions > says, at each pin 1`] = `
 {
-  "adjacent": "No bar joins this cell to the 1 beside it, and they can't differ by 1, so the 2 must go.",
+  "adjacent": "No bar joins this cell to the 1 beside it: they can't differ by 1, so the 2 must go.",
   "adjacentSet": "A bar joins this cell to its neighbor with nothing open one away from 1, so the 1 must go.",
   "clean": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",
   "dup": "The 2 just placed can't repeat in its row and column, so the 2 must go from the other cells.",
@@ -2627,6 +2627,6 @@ exports[`adjacent: pinned hint positions > says, at each pin 1`] = `
 
 exports[`adjacent: pinned hint positions > says, at each pin 2`] = `
 {
-  "barStrike": "No bar joins this cell to the 1 beside it, and they can't differ by 1, so the 2 must go.",
+  "barStrike": "No bar joins this cell to the 1 beside it: they can't differ by 1, so the 2 must go.",
 }
 `;

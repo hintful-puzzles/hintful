@@ -157,7 +157,7 @@ export const say = {
   /** The four squares `corner` meet where a wall would dangle. */
   noDanglingEdges: (corner: readonly Point[], edges: Edges): Sentence =>
     so({
-      look: phrase`A wall can't stop in mid-air at ${mark.as("outline", CELL, corner, "this corner")}`,
+      look: phrase`A wall must continue at ${mark.as("outline", CELL, corner, "this corner")}`,
       move: phrase`${thisEdge(edges)} must be a wall`,
     }),
 

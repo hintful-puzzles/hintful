@@ -7,7 +7,7 @@ exports[`palisade hint > palisade: pinned hint positions > says, at each pin 1`]
   "inside": "This region already holds the squares either side of this edge, so it can't be a wall.",
   "join": "This region has 1 of its 5 cells and only one region left to grow into, so these edges can't be walls.",
   "journey": "Clue 0 allows no walls, so none of its remaining edges can be walls.",
-  "noDanglingEdges": "A wall can't stop in mid-air at this corner, so this edge must be a wall.",
+  "noDanglingEdges": "A wall must continue at this corner, so this edge must be a wall.",
   "noWall": "Clue 0 allows no walls, so none of its remaining edges can be walls.",
   "notTooBig": "Joining these two regions would make 6 cells, so this edge must be a wall.",
   "notTooSmall": "This region has 3 of its 5 cells and just one way left to grow, so this edge can't be a wall.",

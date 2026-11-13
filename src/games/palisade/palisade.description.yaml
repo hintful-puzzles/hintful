@@ -41,7 +41,7 @@ help:
       still short of its size, with just one edge left to grow through, must
       grow through it; when several edges are left and they all lead into the
       same other region, the two must join, so none of those edges is a wall.
-    * **A wall can't stop in mid-air.** Where a wall arrives at a corner and
+    * **A wall must continue at a corner.** Where a wall arrives at a corner and
       only one other edge there could carry it on, that edge must be a wall.
     * **Two clues side by side.** If the edge between two neighboring clues
       were open, each clue's walls would all have to go on its other three
