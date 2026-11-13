@@ -127,6 +127,30 @@ describe("what a fact rests on", () => {
     expect(checked).toBeGreaterThan(5);
     expect(withParents).toBeGreaterThan(0);
   });
+
+  it("rests, where the game says what a firing cites, on that and not on what the formula read", () => {
+    const p = { w: 7, h: 7, diff: DIFF_NORMAL, mode: MODE_PATH };
+    const walkWith = (citing?: () => ReturnType<typeof reads> | null) => {
+      const state = newState(p, pathGame.newDesc(p, randomNew("g1")).desc);
+      const { marks, entries } = pathWalk(state);
+      const walk = ladderWalk(marks, entries, { [TIERS]: 99 }, () => [], { citing });
+      while (true) {
+        const taken = walk.next();
+        if (taken === null || taken === "contradiction") break;
+      }
+      return walk.graph.facts;
+    };
+    const plain = walkWith();
+    // Without the hook some fact rests on an earlier one; with a hook that
+    // cites nothing none does, and with `null` the walk is as it was.
+    expect(plain.some((f) => (f.parents?.length ?? 0) > 0)).toBe(true);
+    expect(walkWith(() => reads([])).every((f) => (f.parents?.length ?? 0) === 0)).toBe(
+      true,
+    );
+    expect(walkWith(() => null).map((f) => f.parents)).toEqual(
+      plain.map((f) => f.parents),
+    );
+  });
 });
 
 describe("where the notes go", () => {

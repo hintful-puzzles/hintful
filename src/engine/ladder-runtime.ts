@@ -1134,6 +1134,14 @@ export function ladderWalk<S extends CellMarks>(
     readonly prerequisite?: readonly string[];
     readonly fallback?: readonly string[];
     readonly writes?: (firing: Taken<S>) => readonly number[];
+    /**
+     * What a firing rests on where the game knows a narrower answer than the
+     * formula's reads: a firing that reads a whole set of marks (every edge a
+     * path may cross) but cites one path through it (Slant's `same`). Asked
+     * on the marks as they stand before the firing's facts are made;
+     * `null` keeps what the formula read.
+     */
+    readonly citing?: (firing: Taken<S>) => Reads | null;
   } = {},
 ): LadderWalk<S> {
   // An edge's mark, or value, is written as its two cells are.
@@ -1177,7 +1185,7 @@ export function ladderWalk<S extends CellMarks>(
               reads: () => reads(f),
               writes: () => (roles.writes ? roles.writes(f) : cellsOf(f.facts)),
               take: () => {
-                graph.record(f.facts, readsOf(f));
+                graph.record(f.facts, roles.citing?.(f) ?? readsOf(f));
                 m.group++;
                 m.applyFacts(f.facts, (i) => f.reasons[i / 3]);
                 taken = f;
