@@ -169,7 +169,7 @@ export const say = {
   /** The balls on the board send every laser where it went. */
   done: (): Sentence =>
     sentence({
-      move: phrase`press ${mark.the("ring", BUTTON, ["button"], "button")} to check your answer`,
+      move: phrase`press ${mark.the("ring", BUTTON, ["button"], "button")}`,
       relation: {
         kind: "effect",
         effect: phrase`the balls you have send every laser where it went`,
