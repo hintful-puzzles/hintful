@@ -2682,23 +2682,23 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
 
 exports[`boats: pinned hint positions > says, at each pin 1`] = `
 {
-  "center": "This middle segment has the board's edge above or below, so its boat must fill the squares beside it, with its water.",
+  "center": "This middle segment has the board's edge above or below, so its boat must fill the squares beside it, and the water around it follows.",
   "centerRoom": "This row has no room for a boat running across through this middle segment, so the square to its right must be water.",
   "centerTrial": "If the boat through this middle segment ran across, the striped row couldn't reach its 4, so the square to its right must be water.",
-  "extend": "Every 1-boat is placed and this segment is shut in on three sides, so its boat must use the ringed fourth, with its water.",
-  "given": "This segment is a boat's top end, so its boat must continue into the square below it, with its water.",
+  "extend": "Every 1-boat is placed and this segment is shut in on three sides, so its boat must use the ringed fourth, and the water around it follows.",
+  "given": "This segment is a boat's top end, so its boat must continue into the square below it, and the water around it follows.",
   "grow": "Every 2-boat is already placed, so this unfinished boat can't stop at 2: it must continue into this square.",
   "hidden.forced": "This column's hidden number can only be 2, so it needs one more: its one free square must hold a boat segment.",
   "hidden.satisfied": "This row's hidden number can only be 4, and it already has that many boat squares, so every other square in it must be water.",
   "isolated": "Every 1-boat is already placed, and water or the board's edge surrounds this square, so it must be water.",
   "lastShip": "If this square held its row's last boat segment, it would make one boat (outlined) too many, so it must be water.",
   "lastWater": "If this square were its row's last water, the striped column couldn't reach its 3, so it must hold a boat segment.",
-  "lineShips": "This row needs 3 more boat squares and has 3 free squares (ringed), so each must hold a boat segment, with its water.",
+  "lineShips": "This row needs 3 more boat squares and has 3 free squares (ringed), so each must hold a boat segment, and the water around it follows.",
   "lineWater": "This row's number is 0, so every square in it must be water.",
   "lineWaterOfSeveral": "This row's number is 0, so every square in it must be water.",
   "near": "Boats never touch, not even at a corner, so the ringed squares diagonally beside this segment must be water.",
-  "onlyFit": "Only the outlined run can hold the 3-boat, so every ringed square is covered wherever it sits, with its water.",
-  "onlyRuns": "Only the outlined run can hold the 4-boat, so every ringed square is covered wherever it sits, with its water.",
+  "onlyFit": "Only the outlined run can hold the 3-boat, so every ringed square is covered wherever it sits, and the water around it follows.",
+  "onlyRuns": "Only the outlined run can hold the 4-boat, so every ringed square is covered wherever it sits, and the water around it follows.",
   "shared": "This column has 1 water left, so an outlined square must be a boat, which fills its row if central: the ringed sides are water.",
   "shortRun": "Filling this run would make a boat of 2, but every 2-boat is already placed, so its free square must be water.",
   "tooLong": "Filling this square joins the outlined segments into a boat of 4; the largest still missing is 3, so it must be water.",
@@ -2708,6 +2708,6 @@ exports[`boats: pinned hint positions > says, at each pin 1`] = `
 
 exports[`boats: pinned hint positions > says, at each pin 2`] = `
 {
-  "evidence": "This segment is a boat's top end, so its boat must continue into the square below it, with its water.",
+  "evidence": "This segment is a boat's top end, so its boat must continue into the square below it, and the water around it follows.",
 }
 `;

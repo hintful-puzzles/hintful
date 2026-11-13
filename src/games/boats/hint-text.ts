@@ -107,7 +107,9 @@ const lineIntro = (line: BoatsLine, m: BoatsMarks): Narration | string =>
  * round the boat (`also`). */
 const follows = (m: BoatsMarks, also: readonly Point[] = []): Narration | string => {
   const water = [...also, ...m.follows];
-  return water.length ? phrase`, with ${ringed(water, "its water")}` : "";
+  return water.length
+    ? phrase`, and ${ringed(water, "the water around it")} follows`
+    : "";
 };
 
 /** The consequence clause of a refutation — the rule the rejected trial broke,
