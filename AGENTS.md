@@ -49,7 +49,7 @@ incident only what a later session acts on: the rule, and the shape to look for.
   internal design decision is yours: change it and record the reason.
 - **Own everything in the repo.** Never call a problem "pre-existing",
   "unrelated" or "out of scope". Fix it, or raise it with a recommendation.
-- **Continue by default; never halt on size.** A large change is no reason to stop: wrap up a part and hand the rest to a new session, which is yours to do. Stop only when the owner asks, or for a real decision (a trade-off with no clear winner, two readings, something irreversible). **A turn never ends on "I'll report when it finishes"**: a running gate or push is waited on with a Monitor, and the next step starts meanwhile or at once after. A reply that says work remains and does not name a real decision is the halt. A queued CI run does not hold the handoff; the next session checks it.
+- **A session never halts, except for an issue that genuinely needs the owner.** Every turn ends in one of two ways: work goes on in this session, or a fresh session is started on the rest (`mcp__continue-session__continueInNewSession`, last action of the turn). A summary that lists what is "still open" and stops is the halt, whether the open part is large, a browser look, a follow-up or a doubt you could settle yourself. Size is no reason: wrap up a part and hand the rest on. The only reasons to stop are the owner asking, or a real decision (a trade-off with no clear winner, two readings, something irreversible), named in the reply. **A turn never ends on "I'll report when it finishes"**: a running gate or push is waited on with a Monitor, and the next step starts meanwhile or at once after. A queued CI run does not hold the handoff; the next session checks it.
 - **Finish your own work: implement, verify, commit, push to `main` and
   archive, without asking.** There is no approval step after proposing a
   change. A push deploys, and the deployment is how the owner sees the work, so
@@ -188,10 +188,11 @@ with openspec, through its skills; one change per coherent unit of work.
   proposal, design, tasks or spec delta, or move from one to another, open it
   with the `herdr-app-open` skill so they can follow along. Once per file, not
   per edit: each call replaces what they are reading.
-- **When a change is archived, and nothing the owner asked or doubted is
-  open, pick the next one yourself and hand it to a fresh session; never ask
-  which.** Read the open changes, take one that can
-  start without an answer from the owner, commit, push and leave the tree
+- **When you finish a change, or stop part-way through one, and nothing the
+  owner asked or doubted is open, hand on to a fresh session; never ask
+  which.** Part-way: the session continues the same change, its open items
+  recorded in its `tasks.md`. Finished: pick the next change yourself, one that
+  can start without an answer from the owner. Commit, push and leave the tree
   clean, then call `mcp__continue-session__continueInNewSession` with the
   prompt `Hi, please take on openspec/changes/<id>` as the last action of the
   turn. Nothing carries over but the repo. A question for the owner goes in
