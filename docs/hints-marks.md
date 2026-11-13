@@ -50,7 +50,7 @@ already does it.
 | Section | Read it when |
 | --- | --- |
 | Highlight, never perform | your renderer draws the cell a step acts on |
-| Echo the move's shape in the hint color | your game's moves come in more than one visible kind, or decide something that is not a cell |
+| Echo the move's shape in the hint color | your game's moves come in more than one visible kind, decide something that is not a cell, or are made by pressing a control |
 | Shade vs ring | you choose the mark for a target or for evidence |
 | – A mark on something that is not a cell | your game decides edges, spans, regions or faces |
 | – A piece is ringed as one shape | a step's target or evidence is a piece of several squares |
@@ -121,10 +121,21 @@ already draws for that action.** It never invents a shape the player has to
 translate, and never shows the wrong action's shape: a line drawn for a
 rule-out says "connect these", the opposite of its sentence.
 
-The shape goes in `drawRing`'s `inside`, which is clipped to the ring and is
-the only way to the ring's ink, so it adds to the ring and never stands in
-for it: "ringed" names the round mark round it (requirement "A move's shape
-is shown inside its ring"). The hint shows where and which action without
+The shape goes in `drawRing`'s `inside`, which is clipped to the ring, so it
+adds to the ring and never stands in for it: "ringed" names the round mark
+round it (requirement "A move's shape is shown inside its ring").
+
+**A control the player presses is filled; an element the step acts on is
+ringed.** A control is an arrow or button in the board's margin that the
+player clicks to make the move, such as Netslide's and Sixteen's arrows. The
+hint draws it in its own shape filled with the ring ink
+(`GameDrawing.drawRingInkPolygon`), with no ring round it. A ring with the
+arrow drawn again inside it is two marks for one thing (the owner,
+2026-11-13: "just turning it blue is enough"). The recorder flags the op
+`hintControl`, and the stray-ink guard reads that flag, not a list of games.
+An arrow drawn in a cell to give the move's direction (Inertia's ball,
+Twiddle's rotation) is the move's shape, not a control, and stays inside its
+cell's ring. The hint shows where and which action without
 performing it (§ "Highlight, never perform"); a uniform tint cannot express
 an orientation or a kind. Exemplar: `drawHintMarks` in
 [`tracks/render.ts`](../src/games/tracks/render.ts), a pill across a side

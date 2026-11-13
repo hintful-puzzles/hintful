@@ -1074,7 +1074,7 @@ describe("Sixteen hint", () => {
 });
 
 describe("Sixteen hint rendering", () => {
-  it("rings the hint's tile, its target squares and the arrow to click", () => {
+  it("rings the hint's tile and its target squares, and fills the arrow to click", () => {
     const rng = randomNew("render-test");
     const { desc } = newDesc(defaultParams(), rng);
     const s = newState(defaultParams(), desc);
@@ -1088,14 +1088,15 @@ describe("Sixteen hint rendering", () => {
     const { dr, ops } = recordingDrawing();
     sixteenGame.redraw?.(dr, ds, null, s, 1, ui, 0, NO_FLASH, result.steps[0]);
 
-    // The tile, each square its journey lands on, and the arrow, which is
-    // drawn inside its ring in the ring's ink.
+    // The tile and each square its journey lands on are ringed; the arrow is
+    // filled in the ring's ink, with no ring of its own.
     const hl = result.steps[0].highlights as SixteenHintHighlights;
-    expectRing(ops, { rings: 3 + (hl.ultimatePos === null ? 0 : 1) });
+    expectRing(ops, { rings: 2 + (hl.ultimatePos === null ? 0 : 1) });
     const arrows = opsOfKind(ops, "polygon").filter(
       (o) => o.fill === ringsOf(ops)[0].color,
     );
     expect(arrows).toHaveLength(1);
+    expect(arrows[0].hintControl).toBe(true);
   });
 
   it("supports two-leg step narration and double-target highlights", () => {

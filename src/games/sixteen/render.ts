@@ -24,7 +24,7 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
+import { textBox } from "../../engine/ring.ts";
 import type {
   Color,
   DrawTextOptions,
@@ -64,6 +64,9 @@ const COL_CURSOR = 6;
  * its leading edge. */
 export const COL_FLASH = 7;
 export const COL_FLASH_LEAD = 8;
+/** An arrow fill: the hint's ring ink, which the engine owns, so the arrow the
+ * hint says to click turns blue. */
+const HINTED = "hinted";
 
 // --- hint highlights --------------------------------------------------
 
@@ -258,7 +261,7 @@ export function redraw(
     }
     // Draw new arrow highlight.
     if (hintArrowX !== null && hintArrowY !== null) {
-      drawArrowAt(dr, ts, state.w, state.h, hintArrowX, hintArrowY, "ringed");
+      drawArrowAt(dr, ts, state.w, state.h, hintArrowX, hintArrowY, HINTED);
     }
     ds.hintArrowX = hintArrowX;
     ds.hintArrowY = hintArrowY;
@@ -485,7 +488,7 @@ function drawArrow(
   y: number,
   xdx: number,
   xdy: number,
-  fillColor: number,
+  fill: number | typeof HINTED,
 ): void {
   const ydy = -xdx;
   const ydx = xdy;
@@ -505,7 +508,8 @@ function drawArrow(
     point(ts / 4, ts / 2), // left corner
   ];
 
-  dr.drawPolygon(coords, fillColor, COL_TEXT);
+  if (fill === HINTED) dr.drawRingInkPolygon(coords, COL_TEXT);
+  else dr.drawPolygon(coords, fill, COL_TEXT);
 }
 
 /** The stroke of every hint ring Sixteen draws. */
@@ -513,10 +517,10 @@ function ringThickness(ts: number): number {
   return Math.max(2, Math.floor(ts / 16));
 }
 
-/** The gutter arrow at (`ax`, `ay`), filled `fill`, or ringed: the ring round
- * it with the arrow drawn inside in the ring's ink. Its square is cleared
- * first, inside the playfield bevel that runs along its inner side, so a ring
- * the arrow last wore goes with it. */
+/** The gutter arrow at (`ax`, `ay`), filled `fill`. Its square is cleared
+ * first, inside the playfield bevel that runs along its inner side. The hint's
+ * arrow is the same shape in the hint's color and wears no ring: the color
+ * alone says which to click. */
 function drawArrowAt(
   dr: GameDrawing,
   ts: number,
@@ -524,9 +528,9 @@ function drawArrowAt(
   h: number,
   ax: number,
   ay: number,
-  fill: number | "ringed",
+  fill: number | typeof HINTED,
 ): void {
-  let arrow: (ink: number) => void;
+  let arrow: (ink: number | typeof HINTED) => void;
   if (ax === -1) {
     arrow = (ink) => drawArrow(dr, ts, coord(0, ts), coord(ay + 1, ts), 0, -1, ink);
   } else if (ax === w) {
@@ -545,9 +549,7 @@ function drawArrowAt(
     h: ts - 2 * hw,
   };
   dr.drawRect(square, COL_BACKGROUND);
-  if (fill === "ringed")
-    dr.drawRing(square, NOTHING_TO_CLEAR, ringThickness(ts), { inside: arrow });
-  else arrow(fill);
+  arrow(fill);
   dr.drawUpdate({ x: coord(ax, ts), y: coord(ay, ts), w: ts, h: ts });
 }
 
@@ -587,7 +589,7 @@ function drawArrowForCursor(
   const fill = cur
     ? COL_CURSOR
     : curX === ds.hintArrowX && curY === ds.hintArrowY
-      ? "ringed"
+      ? HINTED
       : COL_ARROW;
   drawArrowAt(dr, ts, ds.w, ds.h, curX, curY, fill);
 }
