@@ -719,8 +719,8 @@ candidates the board shows".
 - **The walk classifies with `classifyPlacementInRegions`**
   ([`engine/latin-hint.ts`](../src/engine/latin-hint.ts)) over the game's
   `regionsOf`.
-- **A hidden single names its region** ("Every other cell in this row rules
-  out 3, so this cell must be 3") and shades the whole of it.
+- **A hidden single names its region** ("No other cell in this row can be
+  3, so this cell must be 3") and shades the whole of it.
 - **Reclassify only a recorded `single`.** A placement with a reason of its
   own (a clue, a cage) keeps it.
 

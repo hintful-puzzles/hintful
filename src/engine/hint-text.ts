@@ -151,12 +151,9 @@ export function noteText(
 ): Sentence {
   const { noun, placedVerb, regions } = vocab;
   const here = thisCell(at, vocab.cell);
-  // The noun is a word ("element"), not a letter name, so `indefinite` would
-  // misread it ("an number").
-  const a = /^[aeiou]/i.test(noun) ? "an" : "a";
   if (every)
     return so({
-      look: phrase`Nothing in ${here}'s ${regions} rules out ${a} ${noun} yet`,
+      look: phrase`No ${noun} is ${placedVerb} in ${here}'s ${regions} yet`,
       move: phrase`pencil in every one`,
     });
   const one = values.length === 1;
@@ -347,7 +344,7 @@ export function narrateLatinReason(
             };
       const line = mark.this("stripes", whole(CELL), unit.cells, unit.name);
       return so({
-        look: phrase`Every other ${cell} in ${line} rules out ${v(reason.n)}`,
+        look: phrase`No other ${cell} in ${line} can be ${v(reason.n)}`,
         move: phrase`${here} must be ${v(reason.n)}`,
       });
     }

@@ -623,7 +623,7 @@ describe("runLatinCandidatePlan", () => {
       ],
     });
     expect(steps[0].explanation).toBe(
-      "Every other square in this row rules out 1, so this square must be 1.",
+      "No other square in this row can be 1, so this square must be 1.",
     );
     // "In this row" is striped; nothing is outlined, since no particular cell
     // is the reason.

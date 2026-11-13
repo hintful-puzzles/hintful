@@ -3,7 +3,7 @@
 exports[`abcd: pinned hint positions > says, at each pin 1`] = `
 {
   "clean": "Now clear the easy ones: cross out any letter already beside, above or below the cell.",
-  "dup": "The B just placed rules out B in every cell beside, above or below it, so those Bs must go.",
+  "dup": "The B just placed can't repeat in a cell beside, above or below it, so those Bs must go.",
   "multiNoteStrike": "This row must hold no B, so the Bs in it must go.",
   "note": "No letter stands next to this cell yet, so pencil in every one.",
   "packed": "This row needs 3 As, and the outlined cells fit only 3 apart, so each stretch is full: this cell must be A.",

@@ -82,7 +82,7 @@ export const say = {
   note: (at: Point, ns: number[], every: boolean): Sentence => {
     if (every)
       return so({
-        look: phrase`Nothing in ${here(at)}'s area rules out a way it can point yet`,
+        look: phrase`Nothing in ${here(at)}'s area limits the way it can point yet`,
         move: phrase`pencil in every one`,
       });
     const one = ns.length === 1;

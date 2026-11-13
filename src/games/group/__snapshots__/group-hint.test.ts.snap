@@ -5,7 +5,7 @@ exports[`group: pinned hint positions > says, at each pin 1`] = `
   "associativity": "In any group, (d·b)·c = d·(b·c), and d·b = c, b·c = f and d·(b·c) = e, so (d·b)·c must also be e.",
   "clean": "Now clear the easy ones: cross out any element already placed in its cell's row or column.",
   "dup": "The e just placed can't repeat in its row and column, so the e must go from the other cells.",
-  "hiddenSingle": "Every other cell in this column rules out b, so this cell must be b.",
+  "hiddenSingle": "No other cell in this column can be b, so this cell must be b.",
   "identityElim": "The product b·a = d, not b as it would be if a were the identity, so a's identity marks must go.",
   "identityFill": "The product b·b = b shows b is the identity, so row b and column b are just the element labels: this cell must be a.",
   "liveStrike": "The product b·a = d, not b as it would be if a were the identity, so a's identity marks must go.",

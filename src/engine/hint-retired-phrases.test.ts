@@ -21,7 +21,7 @@ import {
 import { codeLinesMatching, SCANNED_SOURCE_FILES } from "./testing/enrollment.ts";
 import { HINT_GAMES } from "./testing/hint-games.ts";
 
-const RETIRED = /\brule out\b|something to cross out/i;
+const RETIRED = /\brule out\b|phrase`[^`]*\brules out\b|something to cross out/i;
 const IS_OUT = /\b(?:is|are) out\b/i;
 
 /** Loopy's preference label, which names a setting and not a hint step; a

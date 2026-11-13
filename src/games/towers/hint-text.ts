@@ -134,7 +134,7 @@ export const say = {
   ): Sentence => {
     const name = kind === "row" ? "row" : "column";
     return so({
-      look: phrase`Every other cell in ${mark.this("stripes", whole(CELL), cells, name)} rules out height ${n}`,
+      look: phrase`No other cell in ${mark.this("stripes", whole(CELL), cells, name)} can be height ${n}`,
       move: phrase`${thisCell(at)} must be ${n}`,
     });
   },

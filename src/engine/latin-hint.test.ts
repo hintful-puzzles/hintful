@@ -211,7 +211,7 @@ describe("narrateLatinReason and latinPremise (shared row/column-game narration)
       3,
     );
     expect(hidden.text).toBe(
-      "Every other square in this column rules out 2, so this square must be 2.",
+      "No other square in this column can be 2, so this square must be 2.",
     );
     // "this column" stripes the whole column; "this square" rings the one.
     expect(keys(hidden)).toEqual([

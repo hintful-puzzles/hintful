@@ -6087,8 +6087,8 @@ exports[`keen: pinned hint positions > says, at each pin 1`] = `
   "cageLine": "This cage must multiply to 10, and every way to fill it places a 1 and a 2 in its row, so 1 and 2 must go.",
   "clean": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",
   "dup": "The 3 just placed can't repeat in its row and column, so the 3 must go from the other cells.",
-  "hiddenSingle": "Every other cell in this column rules out 3, so this cell must be 3.",
-  "note": "Nothing in this cell's row or column rules out a number yet, so pencil in every one.",
+  "hiddenSingle": "No other cell in this column can be 3, so this cell must be 3.",
+  "note": "No number is standing in this cell's row or column yet, so pencil in every one.",
   "populate": "Start by penciling every candidate number into each empty cell.",
   "regionsFull": "This cell's row and column already hold every other number, so it can only be 2.",
   "set": "These 3 columns fit 5 only in the outlined cells, taking the 5 of 3 rows, so this cell can only be 1, 2, 3, 4 or 6.",
@@ -6099,8 +6099,8 @@ exports[`keen: pinned hint positions > says, at each pin 1`] = `
 
 exports[`keen: pinned hint positions > says, at each pin 2`] = `
 {
-  "hiddenSingle": "Every other cell in this row rules out 5, so this cell must be 5.",
-  "hiddenSingleSmall": "Every other cell in this row rules out 2, so this cell must be 2.",
+  "hiddenSingle": "No other cell in this row can be 5, so this cell must be 5.",
+  "hiddenSingleSmall": "No other cell in this row can be 2, so this cell must be 2.",
   "populate": "Start by penciling every candidate number into each empty cell.",
 }
 `;

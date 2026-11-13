@@ -3,8 +3,8 @@
 exports[`seismic: pinned hint positions > says, at each pin 1`] = `
 {
   "clean": "Now clear the easy ones: cross out any number already in its cell's area or in a cell touching it.",
-  "dup": "The 3 just placed rules out 3 in its area and within 3 cells of it in its row and column, so those 3s must go.",
-  "hidden": "No other cell in the striped area can still be 3, so this cell must be 3.",
+  "dup": "The 3 just placed can't repeat in its area or within 3 cells of it in its row and column, so those 3s must go.",
+  "hidden": "No other cell in the striped area can be 3, so this cell must be 3.",
   "note": "Only 2 and 3 aren't already in this cell's area or within reach along its row or column, so pencil them in.",
   "placement": "Every other number is already in this cell's area or within reach along its row or column, so it can only be 1.",
   "populate": "Start by penciling every candidate number into each empty cell.",

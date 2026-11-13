@@ -114,7 +114,7 @@ export const say = {
 
   hidden: (area: readonly Point[], at: Point, n: number): Sentence =>
     so({
-      look: phrase`No other cell in ${stripedArea(area)} can still be ${n}`,
+      look: phrase`No other cell in ${stripedArea(area)} can be ${n}`,
       move: phrase`${thisCell(at)} must be ${n}`,
     }),
 
@@ -123,8 +123,8 @@ export const say = {
   cull: (at: Point, n: number, tectonic: boolean): Narration => {
     const placed = mark.as("outline", CELL, [at], `The ${n} just placed`);
     return tectonic
-      ? phrase`${placed} rules out ${n} in its area and in the cells touching it`
-      : phrase`${placed} rules out ${n} in its area and within ${cells(n)} of it in its row and column`;
+      ? phrase`${placed} can't repeat in its area or in the cells touching it`
+      : phrase`${placed} can't repeat in its area or within ${cells(n)} of it in its row and column`;
   },
 
   /**

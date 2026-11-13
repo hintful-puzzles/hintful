@@ -368,7 +368,7 @@ describe("keen hint", () => {
     const m = step.move as { type: string; x: number; y: number; n: number };
     // The narration is a placement, never the naked-single phrasing.
     expect(step.explanation).not.toMatch(/Every other number has been ruled out/);
-    expect(step.explanation).toMatch(/in this (row|column) rules out/);
+    expect(step.explanation).toMatch(/in this (row|column) can be/);
     // The hatch is exactly one full line (w cells) through the target.
     const area = (step.highlights?.hatch ?? []) as { x: number; y: number }[];
     expect(area.length).toBe(w);
@@ -524,7 +524,7 @@ describe("keen hint render", () => {
     expect(midend.hint()).toBeNull();
     for (let i = 0; i < 20; i++) {
       if (
-        /rules out 3, so this cell must be 3/.test(
+        /can be 3, so this cell must be 3/.test(
           midend.activeHintStep()?.explanation ?? "",
         )
       )
@@ -532,7 +532,7 @@ describe("keen hint render", () => {
       midend.executeHint();
     }
     const step = midend.activeHintStep() as AnyStep;
-    expect(step?.explanation).toMatch(/rules out 3, so this cell must be 3/);
+    expect(step?.explanation).toMatch(/can be 3, so this cell must be 3/);
     const recording = new RecordingDrawing(
       resolvePalette(keenGame, DEFAULT_BACKGROUND),
     );
@@ -554,7 +554,7 @@ describe("keen hint render", () => {
       pinnedFresh("hiddenSingleSmall"),
       { defaultBackground: DEFAULT_BACKGROUND },
     );
-    expect(hint?.explanation).toMatch(/in this (row|column) rules out/);
+    expect(hint?.explanation).toMatch(/in this (row|column) can be/);
     // One hatch per cell of the line, all in one strip, and no outline: the
     // line is the hatch, and nothing in it is a particular reason.
     const hatches = opsOfKind(recording.ops, "hatch");
