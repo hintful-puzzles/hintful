@@ -136,7 +136,7 @@ function narrate(
   if (path.gems.length > 0) {
     return {
       rung: "collect",
-      words: say.collect(m, path.gems.length - 1, only, path.stopper),
+      words: say.collect(m, path.gems.length - 1, only),
     };
   }
   if (only) return { rung: "forced", words: say.forced(m, only) };

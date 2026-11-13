@@ -20,7 +20,6 @@ import {
   type Sentence,
   sentence,
 } from "../../engine/hint-words.ts";
-import type { SlidePath } from "./state.ts";
 
 /** The arrow on the ball, by the direction it points. */
 export const ARROW: MarkKind<number> = { name: "arrow", key: String };
@@ -52,14 +51,6 @@ const NUMBER_WORDS = ["no", "a", "two", "three", "four", "five", "six"] as const
 const gemsPhrase = (n: number): string =>
   n === 1 ? "a gem" : `${NUMBER_WORDS[n] ?? n} gems`;
 
-/** What brings the ball to a halt — the rule the whole game turns on, so the
- * collecting narration always names it. */
-function stopClause(stopper: SlidePath["stopper"]): string {
-  return stopper === "stop"
-    ? "the stop square at the end catches you"
-    : "the wall at the end brings you up short";
-}
-
 /** Why this is the only move: every other way is walled off, or runs onto a
  * mine. */
 export interface Only {
@@ -87,12 +78,7 @@ const onlyBecause = (only: Only): Narration =>
 export const say = {
   /** The leg's payoff: the slide sweeps up the goal gem, after `extras`
    * others on the way, and stops against `stopper`. */
-  collect: (
-    m: Marked,
-    extras: number,
-    only: Only | null,
-    stopper: SlidePath["stopper"],
-  ): Sentence => {
+  collect: (m: Marked, extras: number, only: Only | null): Sentence => {
     const sweep = extras
       ? phrase`it sweeps up ${gemsPhrase(extras)} and then ${theGem(m)}`
       : phrase`it sweeps up ${theGem(m)}`;
@@ -107,7 +93,7 @@ export const say = {
       move: slideWay(m),
       relation: {
         kind: "effect",
-        effect: phrase`${sweep}, and ${stopClause(stopper)}`,
+        effect: sweep,
       },
     });
   },
@@ -129,7 +115,7 @@ export const say = {
   /** Sliding `grab` would take the gem but strand `stranded` others. */
   strands: (m: Marked, grab: number, stranded: number): Sentence =>
     sentence({
-      look: phrase`Sliding ${DIR_NAMES[grab]} grabs ${theGem(m)}, but you can't pick where you stop and it strands ${gemsPhrase(stranded)}`,
+      look: phrase`Sliding ${DIR_NAMES[grab]} grabs ${theGem(m)} but strands ${gemsPhrase(stranded)}`,
       move: slideWay(m),
       relation: { kind: "answers", how: "One safe way" },
     }),

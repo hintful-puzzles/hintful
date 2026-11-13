@@ -217,16 +217,11 @@ describe("inertia hint plan", () => {
 // --- the narration ---------------------------------------------------
 
 describe("inertia hint narration", () => {
-  it("names what a collecting slide sweeps up and what stops it", () => {
-    // The ball can only stop where the board lets it — the rule beginners fight,
-    // so the collecting narration always says what brought it to a halt.
+  it("names what a collecting slide sweeps up, and not what stops it", () => {
     const stopped = firstStep(stateOf(["bbbbb", "Sbbgs", "bbbbb"]));
     expect(stopped.explanation).toContain("Slide east");
     expect(stopped.explanation).toContain("sweeps up the outlined gem");
-    expect(stopped.explanation).toContain("the stop square at the end catches you");
-
-    const walled = firstStep(stateOf(["bbbbb", "Sbbbg", "bbbbb"]));
-    expect(walled.explanation).toContain("the wall at the end brings you up short");
+    expect(stopped.explanation).not.toContain("catches you");
   });
 
   it("counts the gems a slide sweeps up on its way to the marked one", () => {
@@ -373,10 +368,9 @@ describe("inertia hint narration", () => {
 
     const step = firstStep(s);
     expect(step.explanation).toContain("Sliding east grabs the outlined gem");
-    expect(step.explanation).toContain("you can't pick where you stop");
     // "strands" is the proved claim (`unreachableGems`): a gem the ball can
     // never reach again.
-    expect(step.explanation).toContain("it strands a gem");
+    expect(step.explanation).toContain("but strands a gem");
     // And the move it actually suggests is the safe approach, said as the
     // answer to the stranding.
     expect(step.explanation).toContain("One safe way: slide north.");
