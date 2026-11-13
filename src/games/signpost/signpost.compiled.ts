@@ -19,6 +19,16 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "onlyNext" | "onlyBefore";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  onlyNext: OnlyNextSays;
+  onlyBefore: OnlyBeforeSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["onlyNext","onlyBefore"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -142,11 +152,17 @@ export interface OnlyNextBinding {
   U: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface OnlyNextSays {
+  terms: {  };
+  marks: {  };
+}
+
 const onlyNextFacts: number[] = [];
 let onlyNextCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function onlyNext(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyNextBinding> | null): number {
+export function onlyNext(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyNextBinding, OnlyNextSays> | null): number {
   const facts = onlyNextFacts;
   let fired = 0;
   let changed = false;
@@ -196,7 +212,10 @@ export function onlyNext(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyNext
       if (!(_c28)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, U: v_U }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: {  }, marks: {  } };
+          if (!fire({ c: v_c, U: v_U }, facts, _says)) return 1;
+        }
         cands.fill(-1);
         mayMarkedKept.clear();
         fitsMarkedKept.clear();
@@ -211,11 +230,17 @@ export interface OnlyBeforeBinding {
   P: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface OnlyBeforeSays {
+  terms: {  };
+  marks: {  };
+}
+
 const onlyBeforeFacts: number[] = [];
 let onlyBeforeCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function onlyBefore(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyBeforeBinding> | null): number {
+export function onlyBefore(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyBeforeBinding, OnlyBeforeSays> | null): number {
   const _g13: number[] = [];
   const facts = onlyBeforeFacts;
   let fired = 0;
@@ -282,7 +307,10 @@ export function onlyBefore(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyBe
       if (!(_c34)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ j: v_j, P: v_P.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: {  }, marks: {  } };
+          if (!fire({ j: v_j, P: v_P.slice() }, facts, _says)) return 1;
+        }
         cands.fill(-1);
         mayMarkedKept.clear();
         fitsMarkedKept.clear();

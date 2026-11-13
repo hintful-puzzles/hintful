@@ -55,14 +55,26 @@ describe("signpost hint from the player's own positions", () => {
       it(`${p.w}x${p.h} ${seed}: finishes from fresh and from halfway`, () => {
         const { desc } = newSignpostDesc(p, randomNew(`signpost-hint-${seed}`));
         const fresh = signpostGame.newState(p, desc);
+        // A plan holds the next few steps only, so the board is finished by
+        // asking again.
+        const finish = (from: SignpostState): SignpostState => {
+          let s = from;
+          for (
+            let round = 0;
+            round < 20 && signpostGame.status(s) !== "solved";
+            round++
+          )
+            s = play(s, hintOf(s));
+          return s;
+        };
         const plan = hintOf(fresh);
         for (const step of plan)
           reached.set(arm(step), (reached.get(arm(step)) ?? 0) + 1);
-        expect(signpostGame.status(play(fresh, plan))).toBe("solved");
+        expect(signpostGame.status(finish(fresh))).toBe("solved");
 
-        // Halfway through, the plan from there finishes too.
+        // Halfway through, asking from there finishes too.
         const half = play(fresh, plan.slice(0, plan.length >> 1));
-        expect(signpostGame.status(play(half, hintOf(half)))).toBe("solved");
+        expect(signpostGame.status(finish(half))).toBe("solved");
       });
     }
 

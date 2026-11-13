@@ -27,7 +27,7 @@
   - [ ] Seismic: its `cull` strikes candidates, so it waits for the candidate games' shape
   - [ ] **Next, in this order** (2026-11-13: the survey in design.md found no game left that is a plain Clusters-shaped move, so each family needs its engine shape designed first, from the game that is nearest it, then the family's games moved one at a time):
     - [ ] The edge shape (designed and built on Separate, design § "Separate, built"; Palisade done, § "Palisade, built"; Dominosa done, § "Dominosa, built" (`b5de66ac9`); Path and Spokes done, § "Path, built" and § "Spokes, built"; Pearl and Tracks done, § "Pearl, built" (which found no carry-on hook is needed: a step may change the marks and the walk's `ctx`) and § "Tracks, built"): the edge shape is finished
-    - [ ] The link shape: Tents, Galaxies, Signpost, Rect
+    - [ ] The link shape: Tents, Galaxies, Signpost, Rect (Signpost done on `describedEdgeHint` unchanged, design § "Signpost, built"; Tents, Galaxies and Rect next)
     - [ ] The shape for state the walk updates between steps: Slant (merge marks), Net (notes), Magnets (hidden firings), Map (removed-color dots)
   - [ ] The other cell games that place or strike a firing's squares (`describedFiringHint`): Tents, Separate, Abcd, Dominosa, Pearl, Slant, Magnets, Net, Tracks, Palisade, Path, Spokes, Undead, Seismic, Map, Galaxies, Rect, Crossing, Signpost
   - [ ] The candidate games (a Latin family's `latinPremise` and `runLatinCandidatePlan`: Unequal, Adjacent, Keen, Towers, Group, Solo, Mathrax, Rome, Salad): the engine's candidate-elimination shape is a design of its own, read first

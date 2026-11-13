@@ -146,6 +146,9 @@ techniques:
       U = {d in cand(c) where may(c, compass(c, clue(arrow, c), d - 1))}
       where |U| < 2
     conclude: "|U| = 1 and place(c, first(U))"
+    says:
+      terms: {}
+      marks: {}
   # Of the arrows pointing at a square, only one can lead into it, the
   # others ruled out the same way, or already linking elsewhere. It links
   # into it. Every square but the first has one, so one with none left
@@ -159,3 +162,6 @@ techniques:
     conclude: >-
       |P| = 1 and (forall p in P, d in cand(p)
       where compass(p, clue(arrow, p), d - 1) = j: place(p, d))
+    says:
+      terms: {}
+      marks: {}

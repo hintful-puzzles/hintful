@@ -120,7 +120,7 @@ function valuesOf(s: SignpostState): Uint8Array {
 }
 
 /** The square `i`'s value `d` links it to, -1 for none. */
-const linkOf = (s: SignpostState, i: number, d: number): number =>
+export const linkOf = (s: SignpostState, i: number, d: number): number =>
   compass(spaceOf(s.w, s.h), i, s.dirs[i] + 1, d - 1);
 
 /** The squares `i`'s arrow points at, nearest first. */
@@ -152,15 +152,16 @@ const reasons = (rivals: readonly Rival[]): Rival[] =>
   (["taken", "chain", "number"] as const).filter((r) => rivals.includes(r));
 
 /** A firing's link and the reasons its rivals are ruled out, read off the
- * marks before it. */
-function firingOf(
+ * marks' `grid` as it stood before the firing. */
+export function firingOf(
   kind: SignpostRung,
   s: SignpostState,
-  m: CellMarks,
+  grid: ArrayLike<number>,
   from: number,
   to: number,
 ): SignpostFiring {
-  const next = Int32Array.from(m.grid, (d, i) => (d > LAST ? linkOf(s, i, d) : -1));
+  const m = { grid };
+  const next = Int32Array.from(grid, (d, i) => (d > LAST ? linkOf(s, i, d) : -1));
   if (kind === "onlyNext") {
     const line = arrowLine(s, from);
     return {
@@ -185,16 +186,11 @@ function firingOf(
   };
 }
 
-/** The ladder over the dealt board, each technique with the link it makes
- * and why: built from the binding, on the marks before the firing. */
-function signpostLadder(s: SignpostState, dl: signpost.Dealt): Ladder {
+/** The ladder over the dealt board. */
+function signpostLadder(dl: signpost.Dealt): Ladder {
   return describedLadder(signpost, {
-    onlyNext: compiledRung(signpost.onlyNext, dl, ({ c }, _at, d, m) =>
-      firingOf("onlyNext", s, m, c, linkOf(s, c, d)),
-    ),
-    onlyBefore: compiledRung(signpost.onlyBefore, dl, ({ j }, p, _d, m) =>
-      firingOf("onlyBefore", s, m, p, j),
-    ),
+    onlyNext: compiledRung(signpost.onlyNext, dl),
+    onlyBefore: compiledRung(signpost.onlyBefore, dl),
   });
 }
 
@@ -208,7 +204,7 @@ export function deduction(
   // A link is at most the longer side less one, and the last square's 1.
   const m = new CellMarks(sp, rangeMask(1, Math.max(s.w, s.h)), valuesOf(s));
   if (!m.seed(m.grid, (c) => signpost.domainOf(sp, dl, c))) return null;
-  return { m, ladder: signpostLadder(s, dl), dl };
+  return { m, ladder: signpostLadder(dl), dl };
 }
 
 /** Whether a board's links are its answer, by the description's rules. */

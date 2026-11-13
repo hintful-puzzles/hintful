@@ -666,6 +666,31 @@ defect found in the game, said which.
   decides" read unshown firings; the plan shows every firing, so the test over the
   shown steps holds the same. The rung census reads every step of every plan.
 
+### Signpost, built (2026-11-13): the first link game, on `describedEdgeHint`
+
+- **No engine addition, and no new shape.** A link is a step the walk makes on
+  cell marks (each square's link as a value), and `describedEdgeHint` asks
+  nothing of its facts but the game's `writes`, `reads` and `step`, so Signpost
+  took it as it stood. The link shape for Tents, Galaxies and Rect is to be read
+  against this first, not designed: what differs there is how many facts a firing
+  has and what its legs are, which `step` returning legs already carries.
+- **`says` is empty** (`terms: {}`, `marks: {}`) for both techniques: the sentence
+  is told the link, the squares the arrow points at and the rivals' reasons by
+  the game's `firingOf`, read on the marks as they stood before the firing (the
+  live marks, with the firing's cell reset to open), and the highlights the game
+  made.
+- **The walk's board is the ctx**: each link is drawn on a copy as `executeMove`
+  leaves it (numbers settled, links between consecutive numbers made), and the
+  marks the board then implies are placed on the live marks in `step`.
+- **Comparison.** 6,774 lines at `HEAD` (presets, 10 boards each, 0/15/35/60% of
+  the solution's links played, every recomputed plan listed, nothing capped at
+  `HEAD`) byte-identical, rungs included; `signpost` joins the fingerprint's
+  moved games, its snapshot taken on the new tree.
+- **Changes of behavior**: the plan holds 40 steps (it held every forced link); a
+  contradiction mid-walk is the unlocalized refusal (the old plan ended there with
+  its steps so far). A test changed: "the plan finishes the board" asks again as
+  the plan runs out.
+
 ### What Pearl, Tracks, Path and Spokes needed beyond `describedEdgeHint` (2026-11-13, read before they were built)
 
 *All four are built (above); this is what the read expected. The carry-on hook it predicted was not needed.*
