@@ -1,5 +1,12 @@
 # Hint vocabulary: the page for the owner
 
+**ANSWERED 2026-11-13.** (1) Noun: follow the help page, but use one noun,
+"square", everywhere it can be used; a game keeps "cell" only where its theme
+needs it, with the reason stated (this replaces §1's "help majority" rule as the
+default). (2) Every drop / keep / reword verdict in §3 holds as listed.
+(3) Two closings: "must be {off-mark}" and "must go"; "is out" and "rule out"
+retire. §§1-3 below are the proposal as drawn; these answers override them.
+
 Drawn 2026-11-13 from `census/raw-1.md` to `raw-5.md` (tree at `8ecc915a4`) and
 two measurements made today. **Nothing is applied.** Each row asks for your word.
 Netslide's sentence is not here (`reword-the-netslide-hint`).
